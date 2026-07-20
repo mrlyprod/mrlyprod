@@ -1,0 +1,110 @@
+{
+  "tick": 5,
+  "route": {
+    "app": "font",
+    "view": "main",
+    "params": {}
+  },
+  "view": {
+    "app": "font",
+    "params": {},
+    "state": {
+      "char": "a",
+      "work": "a",
+      "name": "LATIN SMALL LETTER A",
+      "index": 26,
+      "total": 108,
+      "revealing": true,
+      "glyph": {
+        "text": "a",
+        "width": 5,
+        "height": 5,
+        "rows": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "actions": [
+      {
+        "verb": "font.page",
+        "args": {
+          "dir": "next | prev"
+        }
+      },
+      {
+        "verb": "font.pick",
+        "args": {
+          "char": "string"
+        }
+      },
+      {
+        "verb": "font.set",
+        "args": {
+          "key": "work",
+          "value": "string"
+        }
+      },
+      {
+        "verb": "font.scramble",
+        "args": {}
+      },
+      {
+        "verb": "font.tick",
+        "args": {}
+      },
+      {
+        "verb": "font.export",
+        "args": {
+          "format": "json | ttf | woff | woff2"
+        }
+      }
+    ],
+    "beat": {
+      "verb": "font.tick",
+      "args": {}
+    }
+  },
+  "last": {
+    "ok": true,
+    "data": {
+      "shown": 2,
+      "done": false
+    },
+    "note": null
+  },
+  "sync": "synced"
+}

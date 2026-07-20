@@ -1,0 +1,91 @@
+/* SHELL */
+
+.mrly {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  margin: 0 auto;
+  max-width: var(--max-width);
+  width: 100%;
+}
+
+.mrly .column {
+  --unit: clamp(3px, 1cqi, var(--unit-max));
+  container-name: window;
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+@container window (max-width: 380px) {
+  .border-box > .form-box {
+    min-width: 100%;
+  }
+}
+
+.mrly .bar {
+  flex-wrap: nowrap;
+  min-height: calc(var(--box-height) + var(--padding) * 2);
+}
+
+.mrly .bar > button {
+  align-items: center;
+  display: flex;
+  flex: 1 1 0;
+  font-size: calc(var(--font-size) * 1.5);
+  justify-content: center;
+  min-width: 0;
+  padding: calc(var(--padding) / 2);
+}
+
+.mrly > .splash {
+  display: none;
+}
+
+.mrly.splashed > * {
+  display: none;
+}
+
+.mrly.splashed > .splash {
+  display: block;
+  inset: 0;
+  position: fixed;
+  z-index: 100;
+}
+
+.mrly .view {
+  width: 100%;
+}
+
+/* TOAST */
+
+.toast {
+  bottom: calc(var(--box-height) + var(--gap));
+  left: 50%;
+  max-width: 90vw;
+  pointer-events: none;
+  position: fixed;
+  text-align: center;
+  transform: translateX(-50%);
+  z-index: 10000;
+}
+
+.toast .info-box {
+  white-space: nowrap;
+}
+
+.toast[hidden] {
+  display: none;
+}
+
+.sheet .overlay-box {
+  align-items: flex-start;
+  overflow-y: auto;
+  padding: calc(var(--padding) * 2);
+}
+
+.sheet .overlay-box > .list-box {
+  margin: auto;
+  max-width: var(--max-width);
+}

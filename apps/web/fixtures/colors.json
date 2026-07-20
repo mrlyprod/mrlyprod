@@ -1,0 +1,118 @@
+{
+  "tick": 3,
+  "route": {
+    "app": "colors",
+    "view": "main",
+    "params": {}
+  },
+  "view": {
+    "app": "colors",
+    "params": {},
+    "state": {
+      "index": 7,
+      "count": 15,
+      "name": "teal",
+      "work": "teal",
+      "hex": "#00cad8",
+      "rgb": {
+        "r": 0,
+        "g": 202,
+        "b": 216
+      },
+      "palette": [
+        {
+          "name": "black",
+          "hex": "#000000"
+        },
+        {
+          "name": "white",
+          "hex": "#ffffff"
+        },
+        {
+          "name": "red",
+          "hex": "#ff3d40"
+        },
+        {
+          "name": "orange",
+          "hex": "#ff8f2c"
+        },
+        {
+          "name": "yellow",
+          "hex": "#ffd100"
+        },
+        {
+          "name": "green",
+          "hex": "#32cc58"
+        },
+        {
+          "name": "mint",
+          "hex": "#00d1bb"
+        },
+        {
+          "name": "teal",
+          "hex": "#00cad8"
+        },
+        {
+          "name": "cyan",
+          "hex": "#1ec9f3"
+        },
+        {
+          "name": "blue",
+          "hex": "#008cff"
+        },
+        {
+          "name": "indigo",
+          "hex": "#6768fa"
+        },
+        {
+          "name": "purple",
+          "hex": "#d332e9"
+        },
+        {
+          "name": "pink",
+          "hex": "#ff325a"
+        },
+        {
+          "name": "brown",
+          "hex": "#b18462"
+        },
+        {
+          "name": "gray",
+          "hex": "#8e8e93"
+        }
+      ]
+    },
+    "actions": [
+      {
+        "verb": "colors.page",
+        "args": {
+          "dir": "next | prev"
+        }
+      },
+      {
+        "verb": "colors.set",
+        "args": {
+          "key": "name",
+          "value": "string"
+        }
+      },
+      {
+        "verb": "colors.reset",
+        "args": {}
+      },
+      {
+        "verb": "colors.export",
+        "args": {}
+      }
+    ]
+  },
+  "last": {
+    "ok": true,
+    "data": {
+      "key": "name",
+      "value": "teal"
+    },
+    "note": null
+  },
+  "sync": "synced"
+}

@@ -1,0 +1,83 @@
+{
+  "tick": 3,
+  "route": {
+    "app": "timer",
+    "view": "main",
+    "params": {}
+  },
+  "view": {
+    "app": "timer",
+    "params": {},
+    "state": {
+      "mode": "countdown",
+      "armed": true,
+      "remaining": 0,
+      "rung": true,
+      "running": false,
+      "elapsed": 0,
+      "laps": []
+    },
+    "actions": [
+      {
+        "verb": "timer.start",
+        "args": {
+          "minutes": "f64"
+        }
+      },
+      {
+        "verb": "timer.set",
+        "args": {
+          "key": "duration",
+          "value": "any"
+        }
+      },
+      {
+        "verb": "timer.pause",
+        "args": {}
+      },
+      {
+        "verb": "timer.resume",
+        "args": {}
+      },
+      {
+        "verb": "timer.check",
+        "args": {}
+      },
+      {
+        "verb": "timer.clear",
+        "args": {}
+      },
+      {
+        "verb": "timer.mode",
+        "args": {
+          "mode": "countdown | stopwatch"
+        }
+      }
+    ]
+  },
+  "last": {
+    "ok": true,
+    "data": {
+      "remaining": 0,
+      "rung": true
+    },
+    "note": null
+  },
+  "sync": "synced",
+  "effects": [
+    {
+      "kind": "notify",
+      "data": {
+        "title": "timer",
+        "body": "time is up"
+      }
+    }
+  ],
+  "notices": [
+    {
+      "title": "timer",
+      "body": "time is up",
+      "at": 1783600556000
+    }
+  ]
+}

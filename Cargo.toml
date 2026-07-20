@@ -1,0 +1,10 @@
+[workspace]
+resolver = "2"
+members = [
+    "pkgs/mrlyrs",
+    "pkgs/mrlypy",
+    "pkgs/mrlyjs",
+]
+default-members = [
+    "pkgs/mrlyrs",
+]

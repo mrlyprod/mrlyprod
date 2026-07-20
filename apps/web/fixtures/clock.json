@@ -1,0 +1,48 @@
+{
+  "tick": 2,
+  "route": {
+    "app": "clock",
+    "view": "main",
+    "params": {}
+  },
+  "view": {
+    "app": "clock",
+    "params": {},
+    "state": {
+      "now": 1783600496000,
+      "work": {
+        "h": 0,
+        "m": 0
+      },
+      "stage": {
+        "h": 0,
+        "m": 0
+      }
+    },
+    "actions": [
+      {
+        "verb": "clock.tick",
+        "args": {}
+      },
+      {
+        "verb": "clock.set",
+        "args": {
+          "key": "hour | minute | work",
+          "value": "any"
+        }
+      }
+    ],
+    "beat": {
+      "verb": "clock.tick",
+      "args": {}
+    }
+  },
+  "last": {
+    "ok": true,
+    "data": {
+      "now": 1783600496000
+    },
+    "note": null
+  },
+  "sync": "synced"
+}

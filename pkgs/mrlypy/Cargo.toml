@@ -1,0 +1,13 @@
+[package]
+name = "mrlypy"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "mrlypy"
+crate-type = ["cdylib"]
+
+[dependencies]
+mrly = { path = "../mrlyrs" }
+pyo3 = { version = "0.22", features = ["extension-module", "abi3-py39"] }
+serde_json = "1"

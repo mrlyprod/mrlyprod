@@ -1,0 +1,57 @@
+{
+  "tick": 4,
+  "route": {
+    "app": "photos",
+    "view": "main",
+    "params": {}
+  },
+  "view": {
+    "app": "photos",
+    "params": {},
+    "state": {
+      "shots": 2,
+      "waiting": 1,
+      "photos": [
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+      ]
+    },
+    "actions": [
+      {
+        "verb": "photos.load",
+        "args": {}
+      },
+      {
+        "verb": "photos.land",
+        "args": {
+          "data": "base64",
+          "mime": "string"
+        }
+      },
+      {
+        "verb": "photos.clear",
+        "args": {}
+      }
+    ]
+  },
+  "last": {
+    "ok": true,
+    "data": {
+      "url": "https://picsum.photos/seed/mrly-2/300/200"
+    },
+    "note": null
+  },
+  "sync": "synced",
+  "effects": [
+    {
+      "kind": "fetch",
+      "data": {
+        "url": "https://picsum.photos/seed/mrly-2/300/200",
+        "as": "bytes"
+      },
+      "call": {
+        "verb": "photos.land",
+        "args": {}
+      }
+    }
+  ]
+}

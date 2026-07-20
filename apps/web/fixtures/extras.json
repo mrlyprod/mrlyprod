@@ -1,0 +1,73 @@
+{
+  "tick": 2,
+  "route": {
+    "app": "extras",
+    "view": "main",
+    "params": {}
+  },
+  "view": {
+    "app": "extras",
+    "params": {},
+    "state": {
+      "socials": [
+        {
+          "name": "instagram",
+          "url": "https://instagram.com/mrlyprod"
+        },
+        {
+          "name": "reddit",
+          "url": "https://reddit.com/r/mrlyprod"
+        },
+        {
+          "name": "twitter",
+          "url": "https://twitter.com/mrlyprod"
+        }
+      ],
+      "actions": [
+        {
+          "name": "donate",
+          "url": "https://donate.stripe.com/dRm3cu3XLfHj19e6WW5kk00"
+        },
+        {
+          "name": "help",
+          "url": "mailto:help@mrlyprod.com"
+        }
+      ],
+      "pages": [
+        {
+          "name": "privacy",
+          "url": "/privacy"
+        },
+        {
+          "name": "terms",
+          "url": "/terms"
+        }
+      ],
+      "cycle": {
+        "lines": [
+          "this is the way",
+          "why is the secret",
+          "#mrlywear #wearmrly",
+          "#mrlyshop #shopmrly",
+          "powered by mrly"
+        ],
+        "index": 1
+      },
+      "copyright": "copyright © 2026 mrlyprod, inc. all rights reserved."
+    },
+    "actions": [
+      {
+        "verb": "extras.cycle",
+        "args": {}
+      }
+    ]
+  },
+  "last": {
+    "ok": true,
+    "data": {
+      "index": 1
+    },
+    "note": null
+  },
+  "sync": "synced"
+}

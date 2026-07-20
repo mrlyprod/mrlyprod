@@ -1,0 +1,225 @@
+{
+  "tick": 4,
+  "route": {
+    "app": "calendar",
+    "view": "main",
+    "params": {}
+  },
+  "view": {
+    "app": "calendar",
+    "params": {},
+    "state": {
+      "year": 2026,
+      "month": 7,
+      "title": "July 2026",
+      "days": [
+        "M",
+        "T",
+        "W",
+        "T",
+        "F",
+        "S",
+        "S"
+      ],
+      "weeks": [
+        [
+          {
+            "day": 29,
+            "faded": true
+          },
+          {
+            "day": 30,
+            "faded": true
+          },
+          {
+            "day": 1,
+            "faded": false
+          },
+          {
+            "day": 2,
+            "faded": false
+          },
+          {
+            "day": 3,
+            "faded": false
+          },
+          {
+            "day": 4,
+            "faded": false
+          },
+          {
+            "day": 5,
+            "faded": false
+          }
+        ],
+        [
+          {
+            "day": 6,
+            "faded": false
+          },
+          {
+            "day": 7,
+            "faded": false
+          },
+          {
+            "day": 8,
+            "faded": false
+          },
+          {
+            "day": 9,
+            "faded": false
+          },
+          {
+            "day": 10,
+            "faded": false
+          },
+          {
+            "day": 11,
+            "faded": false
+          },
+          {
+            "day": 12,
+            "faded": false
+          }
+        ],
+        [
+          {
+            "day": 13,
+            "faded": false
+          },
+          {
+            "day": 14,
+            "faded": false
+          },
+          {
+            "day": 15,
+            "faded": false
+          },
+          {
+            "day": 16,
+            "faded": false
+          },
+          {
+            "day": 17,
+            "faded": false
+          },
+          {
+            "day": 18,
+            "faded": false
+          },
+          {
+            "day": 19,
+            "faded": false
+          }
+        ],
+        [
+          {
+            "day": 20,
+            "faded": false
+          },
+          {
+            "day": 21,
+            "faded": false
+          },
+          {
+            "day": 22,
+            "faded": false
+          },
+          {
+            "day": 23,
+            "faded": false
+          },
+          {
+            "day": 24,
+            "faded": false
+          },
+          {
+            "day": 25,
+            "faded": false
+          },
+          {
+            "day": 26,
+            "faded": false
+          }
+        ],
+        [
+          {
+            "day": 27,
+            "faded": false
+          },
+          {
+            "day": 28,
+            "faded": false
+          },
+          {
+            "day": 29,
+            "faded": false
+          },
+          {
+            "day": 30,
+            "faded": false
+          },
+          {
+            "day": 31,
+            "faded": false
+          },
+          {
+            "day": 1,
+            "faded": true
+          },
+          {
+            "day": 2,
+            "faded": true
+          }
+        ]
+      ],
+      "today": 9,
+      "work": {
+        "year": 1970,
+        "month": 1,
+        "day": 1
+      }
+    },
+    "actions": [
+      {
+        "verb": "calendar.flip",
+        "args": {
+          "n": "int"
+        }
+      },
+      {
+        "verb": "calendar.goto",
+        "args": {
+          "year": "int 1..9999",
+          "month": "int 1..12"
+        }
+      },
+      {
+        "verb": "calendar.today",
+        "args": {}
+      },
+      {
+        "verb": "calendar.pick",
+        "args": {
+          "day": "int"
+        }
+      },
+      {
+        "verb": "calendar.set",
+        "args": {
+          "key": "work",
+          "value": "{year,month,day}"
+        }
+      }
+    ]
+  },
+  "last": {
+    "ok": true,
+    "data": {
+      "year": 2026,
+      "month": 7
+    },
+    "note": null
+  },
+  "sync": "synced"
+}

@@ -1,0 +1,50 @@
+/* TOKENS */
+
+:root {
+  --unit-max: 5px;
+  --unit: clamp(3px, 1vw, var(--unit-max));
+  --max-width: 500px;
+
+  --body-color: white;
+  --background-color: white;
+  --border-color: black;
+
+  --border-radius: var(--unit);
+  --border-style: solid;
+  --border-width: 0px;
+  --inner-radius: max(0px, calc(var(--border-radius) - var(--padding)));
+
+  --gap: var(--unit);
+  --padding: var(--unit);
+
+  --font-color: black;
+  --font-size: clamp(5px, 3vw, 15px);
+  --box-height: calc(var(--font-size) * 3.5);
+  --font-mono: "mrly-mono", "SFMono-Regular", "Menlo", "Monaco", "Consolas", monospace;
+  --font-sans: "mrly-sans", -apple-system, "Helvetica Neue", sans-serif;
+  --font-serif: "mrly-serif", "Georgia", serif;
+  --font-display: "mrly-display", "MrlyFont", monospace;
+  --font-mrly: "MrlyFont", var(--font-mono);
+  --font: var(--font-mono);
+
+  --accent-color: var(--c-blue);
+  --muted-color: var(--c-gray);
+  --pace: 150ms;
+  --scrim-color: rgba(0, 0, 0, 0.5);
+
+  --glass-opacity: 62%;
+  --glass-blur: 12px;
+  --glass-fill: 40%;
+}
+
+body.darkmode {
+  --body-color: black;
+  --background-color: black;
+  --border-color: white;
+  --font-color: white;
+  --scrim-color: rgba(0, 0, 0, 0.7);
+
+  --glass-opacity: 50%;
+  --glass-fill: 55%;
+}
+

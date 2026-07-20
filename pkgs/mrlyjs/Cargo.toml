@@ -1,0 +1,14 @@
+[package]
+name = "mrlyjs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "mrlyjs"
+crate-type = ["cdylib"]
+
+[dependencies]
+getrandom = { version = "0.2", features = ["js"] }
+mrly = { path = "../mrlyrs" }
+serde_json = "1"
+wasm-bindgen = "0.2"

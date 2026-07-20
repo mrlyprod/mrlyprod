@@ -1,0 +1,34 @@
+# SECRETS
+.env
+
+# CLAUDE
+.claude/settings.local.json
+.claude/worktrees/
+
+# OUTPUT
+data/
+*.zip
+
+# PYTHON
+__pycache__/
+*.pyc
+.venv/
+dist/
+*.egg-info/
+.mypy_cache/
+.pytest_cache/
+
+# RUST
+target/
+
+# WASM
+pkg/
+
+# NODE
+node_modules/
+
+# IDE
+.vscode
+
+# OS
+.DS_Store

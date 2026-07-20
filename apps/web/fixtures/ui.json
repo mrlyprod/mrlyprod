@@ -1,0 +1,37 @@
+{
+  "tick": 3,
+  "route": {
+    "app": "ui",
+    "view": "main",
+    "params": {}
+  },
+  "view": {
+    "app": "ui",
+    "params": {},
+    "state": {
+      "sample": "the quick brown fox",
+      "overlay": true,
+      "toggle": false,
+      "pick": "beta",
+      "span": 5.0
+    },
+    "actions": [
+      {
+        "verb": "ui.set",
+        "args": {
+          "key": "string",
+          "value": "any"
+        }
+      }
+    ]
+  },
+  "last": {
+    "ok": true,
+    "data": {
+      "key": "overlay",
+      "value": true
+    },
+    "note": null
+  },
+  "sync": "synced"
+}

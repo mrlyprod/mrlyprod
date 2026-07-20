@@ -1,0 +1,53 @@
+{
+  "tick": 4,
+  "route": {
+    "app": "settings",
+    "view": "main",
+    "params": {}
+  },
+  "view": {
+    "app": "settings",
+    "params": {},
+    "state": {
+      "launchpad": "list",
+      "darkmode": false,
+      "color": "blue",
+      "fill": "random",
+      "font": "mono",
+      "emoji": "system",
+      "scale": 4.0,
+      "radius": 3.0,
+      "pace": 150.0,
+      "sound": true,
+      "haptics": true,
+      "note": "random",
+      "wave": "sine",
+      "duration": 150.0,
+      "background": "white",
+      "width": 500.0,
+      "render": "cpu",
+      "material": "solid",
+      "wallpaper": "color",
+      "seed": 0.0,
+      "detail": 96.0
+    },
+    "actions": [
+      {
+        "verb": "settings.set",
+        "args": {
+          "key": "string",
+          "value": "any"
+        }
+      }
+    ]
+  },
+  "last": {
+    "ok": true,
+    "data": {
+      "key": "scale",
+      "value": 4.0
+    },
+    "note": null
+  },
+  "sync": "synced"
+}

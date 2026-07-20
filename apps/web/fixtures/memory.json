@@ -1,0 +1,293 @@
+{
+  "tick": 20,
+  "route": {
+    "app": "memory",
+    "view": "main",
+    "params": {}
+  },
+  "view": {
+    "app": "memory",
+    "params": {},
+    "state": {
+      "score": 0,
+      "steps": 2,
+      "over": false,
+      "rounds": 0,
+      "look": 0,
+      "seed": 7,
+      "settings": {
+        "pairs": 4,
+        "cols": 3,
+        "sudden": false,
+        "reward_match": 1.0,
+        "reward_miss": 0.0,
+        "tile": 4,
+        "design": "carpet",
+        "surface": "grid",
+        "skin": "tiles"
+      },
+      "board": [
+        [
+          1,
+          2,
+          null
+        ],
+        [
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null
+        ]
+      ],
+      "matched": [
+        [
+          false,
+          false,
+          false
+        ],
+        [
+          false,
+          false,
+          false
+        ],
+        [
+          false,
+          false,
+          false
+        ]
+      ],
+      "colors": [
+        "#1ec9f3",
+        "#32cc58",
+        "#00cad8",
+        "#00d1bb",
+        "#00cad8"
+      ],
+      "frame": {
+        "width": 12,
+        "height": 12,
+        "rows": [
+          [
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            2,
+            2,
+            2,
+            2
+          ],
+          [
+            0,
+            3,
+            0,
+            3,
+            1,
+            3,
+            1,
+            3,
+            2,
+            2,
+            2,
+            2
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            2,
+            2,
+            2,
+            2
+          ],
+          [
+            0,
+            3,
+            0,
+            3,
+            1,
+            3,
+            1,
+            3,
+            2,
+            2,
+            2,
+            2
+          ],
+          [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ],
+          [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ],
+          [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ],
+          [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ],
+          [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ],
+          [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ],
+          [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ],
+          [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        ],
+        "palette": [
+          "#32cc58",
+          "#00cad8",
+          "#ff325a",
+          "#ffffff"
+        ]
+      }
+    },
+    "actions": [
+      {
+        "verb": "memory.flip",
+        "args": {
+          "card": "int"
+        }
+      },
+      {
+        "verb": "memory.reset",
+        "args": {
+          "seed": "int"
+        }
+      },
+      {
+        "verb": "memory.set",
+        "args": {
+          "key": "string",
+          "value": "any"
+        }
+      }
+    ]
+  },
+  "last": {
+    "ok": true,
+    "data": {
+      "card": 1,
+      "matched": false
+    },
+    "note": null
+  },
+  "sync": "synced",
+  "effects": [
+    {
+      "kind": "sound",
+      "data": {
+        "op": "note",
+        "freq": 207.65234375,
+        "ms": 160,
+        "gain": 0.3
+      }
+    }
+  ]
+}

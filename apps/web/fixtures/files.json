@@ -1,0 +1,51 @@
+{
+  "tick": 3,
+  "route": {
+    "app": "files",
+    "view": "main",
+    "params": {}
+  },
+  "view": {
+    "app": "files",
+    "params": {},
+    "state": {
+      "count": 1,
+      "files": [
+        {
+          "name": "palette.json",
+          "mime": "application/json",
+          "uri": "data:application/json;base64,WwogIHsKICAgICJuYW1lIjogImJsYWNrIiwKICAgICJoZXgiOiAiIzAwMDAwMCIKICB9LAogIHsKICAgICJuYW1lIjogIndoaXRlIiwKICAgICJoZXgiOiAiI2ZmZmZmZiIKICB9LAogIHsKICAgICJuYW1lIjogInJlZCIsCiAgICAiaGV4IjogIiNmZjNkNDAiCiAgfSwKICB7CiAgICAibmFtZSI6ICJvcmFuZ2UiLAogICAgImhleCI6ICIjZmY4ZjJjIgogIH0sCiAgewogICAgIm5hbWUiOiAieWVsbG93IiwKICAgICJoZXgiOiAiI2ZmZDEwMCIKICB9LAogIHsKICAgICJuYW1lIjogImdyZWVuIiwKICAgICJoZXgiOiAiIzMyY2M1OCIKICB9LAogIHsKICAgICJuYW1lIjogIm1pbnQiLAogICAgImhleCI6ICIjMDBkMWJiIgogIH0sCiAgewogICAgIm5hbWUiOiAidGVhbCIsCiAgICAiaGV4IjogIiMwMGNhZDgiCiAgfSwKICB7CiAgICAibmFtZSI6ICJjeWFuIiwKICAgICJoZXgiOiAiIzFlYzlmMyIKICB9LAogIHsKICAgICJuYW1lIjogImJsdWUiLAogICAgImhleCI6ICIjMDA4Y2ZmIgogIH0sCiAgewogICAgIm5hbWUiOiAiaW5kaWdvIiwKICAgICJoZXgiOiAiIzY3NjhmYSIKICB9LAogIHsKICAgICJuYW1lIjogInB1cnBsZSIsCiAgICAiaGV4IjogIiNkMzMyZTkiCiAgfSwKICB7CiAgICAibmFtZSI6ICJwaW5rIiwKICAgICJoZXgiOiAiI2ZmMzI1YSIKICB9LAogIHsKICAgICJuYW1lIjogImJyb3duIiwKICAgICJoZXgiOiAiI2IxODQ2MiIKICB9LAogIHsKICAgICJuYW1lIjogImdyYXkiLAogICAgImhleCI6ICIjOGU4ZTkzIgogIH0KXQ==",
+          "size": 763,
+          "tick": 1783600496000
+        }
+      ]
+    },
+    "actions": [
+      {
+        "verb": "files.drop",
+        "args": {
+          "index": "number"
+        }
+      },
+      {
+        "verb": "files.clear",
+        "args": {}
+      }
+    ]
+  },
+  "last": {
+    "ok": true,
+    "data": {
+      "app": "files"
+    },
+    "note": null
+  },
+  "sync": "synced",
+  "notices": [
+    {
+      "title": "saved",
+      "body": "palette.json → files",
+      "at": 1783600496000
+    }
+  ]
+}

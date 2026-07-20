@@ -1,0 +1,404 @@
+{
+  "tick": 0,
+  "route": {
+    "app": "menu",
+    "view": "main",
+    "params": {}
+  },
+  "view": {
+    "app": "menu",
+    "params": {},
+    "state": {
+      "apps": [
+        {
+          "route": "calculator",
+          "emoji": "🧮",
+          "title": "calculator",
+          "category": "tools",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "notes",
+          "emoji": "📝",
+          "title": "notes",
+          "category": "creativity",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "settings",
+          "emoji": "⚙️",
+          "title": "settings",
+          "category": "system",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "ui",
+          "emoji": "🧪",
+          "title": "specimen",
+          "category": "system",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "life",
+          "emoji": "🧫",
+          "title": "life",
+          "category": "math",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "clock",
+          "emoji": "🕐",
+          "title": "clock",
+          "category": "tools",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "timer",
+          "emoji": "⏱️",
+          "title": "timer",
+          "category": "tools",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "calendar",
+          "emoji": "📅",
+          "title": "calendar",
+          "category": "tools",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "dice",
+          "emoji": "🎲",
+          "title": "dice",
+          "category": "tools",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "photos",
+          "emoji": "📷",
+          "title": "photos",
+          "category": "creativity",
+          "hidden": false,
+          "internet": true
+        },
+        {
+          "route": "pages",
+          "emoji": "📄",
+          "title": "pages",
+          "category": "company",
+          "hidden": false,
+          "internet": true
+        },
+        {
+          "route": "snake",
+          "emoji": "🐍",
+          "title": "snake",
+          "category": "games",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "julia",
+          "emoji": "🌀",
+          "title": "julia",
+          "category": "toys",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "mandelbrot",
+          "emoji": "🌌",
+          "title": "mandelbrot",
+          "category": "toys",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "matrix",
+          "emoji": "🟩",
+          "title": "matrix",
+          "category": "toys",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "sleep",
+          "emoji": "💤",
+          "title": "sleep",
+          "category": "toys",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "ttt",
+          "emoji": "⭕",
+          "title": "tic tac toe",
+          "category": "puzzles",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "memory",
+          "emoji": "🧠",
+          "title": "memory",
+          "category": "puzzles",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "mines",
+          "emoji": "💣",
+          "title": "mines",
+          "category": "puzzles",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "twenty48",
+          "emoji": "🔢",
+          "title": "2048",
+          "category": "puzzles",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "crush",
+          "emoji": "🍬",
+          "title": "crush",
+          "category": "games",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "tennis",
+          "emoji": "🎾",
+          "title": "tennis",
+          "category": "games",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "escape",
+          "emoji": "👻",
+          "title": "escape",
+          "category": "games",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "quiz",
+          "emoji": "❓",
+          "title": "quiz",
+          "category": "puzzles",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "captcha",
+          "emoji": "🧩",
+          "title": "captcha",
+          "category": "puzzles",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "pixel",
+          "emoji": "🎨",
+          "title": "pixel",
+          "category": "design",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "solids",
+          "emoji": "🧊",
+          "title": "solids",
+          "category": "toys",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "font",
+          "emoji": "🔤",
+          "title": "font",
+          "category": "design",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "text",
+          "emoji": "🍎",
+          "title": "text",
+          "category": "design",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "two",
+          "emoji": "🔳",
+          "title": "two",
+          "category": "math",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "three",
+          "emoji": "🧱",
+          "title": "three",
+          "category": "math",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "bang",
+          "emoji": "💥",
+          "title": "bang",
+          "category": "math",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "tile",
+          "emoji": "🀄",
+          "title": "tile",
+          "category": "math",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "six",
+          "emoji": "💠",
+          "title": "six",
+          "category": "math",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "waves",
+          "emoji": "🌊",
+          "title": "waves",
+          "category": "physics",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "billiards",
+          "emoji": "🎱",
+          "title": "billiards",
+          "category": "physics",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "lasers",
+          "emoji": "🔦",
+          "title": "lasers",
+          "category": "physics",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "chess",
+          "emoji": "♟️",
+          "title": "chess",
+          "category": "puzzles",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "moire",
+          "emoji": "🌀",
+          "title": "moire",
+          "category": "math",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "hash",
+          "emoji": "🧬",
+          "title": "hash",
+          "category": "tools",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "colors",
+          "emoji": "🌈",
+          "title": "colors",
+          "category": "design",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "emoji",
+          "emoji": "😀",
+          "title": "emoji",
+          "category": "design",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "piano",
+          "emoji": "🎹",
+          "title": "piano",
+          "category": "creativity",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "extras",
+          "emoji": "🔗",
+          "title": "extras",
+          "category": "company",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "log",
+          "emoji": "📜",
+          "title": "log",
+          "category": "system",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "files",
+          "emoji": "📁",
+          "title": "files",
+          "category": "system",
+          "hidden": false,
+          "internet": false
+        },
+        {
+          "route": "iden",
+          "emoji": "👤",
+          "title": "identity",
+          "category": "system",
+          "hidden": false,
+          "internet": false
+        }
+      ],
+      "query": "",
+      "mode": "grid"
+    },
+    "actions": [
+      {
+        "verb": "menu.search",
+        "args": {
+          "q": "string"
+        }
+      }
+    ]
+  },
+  "last": null,
+  "sync": "synced"
+}

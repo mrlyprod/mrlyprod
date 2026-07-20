@@ -1,0 +1,62 @@
+{
+  "tick": 4,
+  "route": {
+    "app": "log",
+    "view": "main",
+    "params": {}
+  },
+  "view": {
+    "app": "log",
+    "params": {},
+    "state": {
+      "entries": [
+        {
+          "verb": "nav.open",
+          "args": {
+            "app": "log"
+          },
+          "now": 1783600496000,
+          "tick": 4
+        },
+        {
+          "verb": "notes.add",
+          "args": {
+            "text": "book the ferry"
+          },
+          "now": 1783600496000,
+          "tick": 3
+        },
+        {
+          "verb": "notes.add",
+          "args": {
+            "text": "buy oat milk"
+          },
+          "now": 1783600496000,
+          "tick": 2
+        },
+        {
+          "verb": "nav.open",
+          "args": {
+            "app": "notes"
+          },
+          "now": 0,
+          "tick": 1
+        }
+      ]
+    },
+    "actions": [
+      {
+        "verb": "log.export",
+        "args": {}
+      }
+    ]
+  },
+  "last": {
+    "ok": true,
+    "data": {
+      "app": "log"
+    },
+    "note": null
+  },
+  "sync": "synced"
+}
