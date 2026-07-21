@@ -556,7 +556,7 @@ mrlyprod
 │   └── tree.py
 ├── .gitignore
 ├── .python-version
-├── CLAUDE.md
+├── AGENTS.md
 ├── COMMANDS.md
 ├── CONTRIBUTING.md
 ├── Cargo.lock

@@ -1,4 +1,4 @@
-# Hey Claude
+# Hey Codex
 
 Light, stable rules only. Anything that evolves (design, architecture, API) lives in `docs/`, not here.
 
@@ -11,12 +11,12 @@ Light, stable rules only. Anything that evolves (design, architecture, API) live
 - NEVER write a comment. The one exception is a CAPITALISED section delimiter.
 - If code is truly important or confusing, explain it in `docs/COMMENTS.md`, never inline.
 - One empty line between sections, never two.
-- No em-dash in code (.md okay), use a hyphen instead.
-- Be pro-active about this! If you see comments in code, delete them!
+- No em-dash in code, use a hyphen instead.
+- Do not add inline comments. Preserve existing comments unless the task calls for changing them.
 
 ## Writing
 - Less is more!
-- Keep all written files lean and clean, short and vague, not long and drift-prone.
+- Keep all written files lean, clear, and durable.
 - This repo is public. Never reference files that live outside it.
 
 ## Web
