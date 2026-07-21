@@ -35,6 +35,7 @@ type State = {
   wallpaper: string
   seed: number
   render: string
+  detail: number
   sound: boolean
   haptics: boolean
   note: string
@@ -51,6 +52,7 @@ export function settings(state: unknown, _send: Send): Node {
       <Section keyName="system" label="system">
         <choice key="launchpad" value={s.launchpad} options={MODES} call={turn("launchpad")} arg="value" label="launchpad" mode="row" />
         <choice key="render" value={s.render} options={RENDERS} call={turn("render")} arg="value" label="render" mode="row" />
+        <range key="detail" value={s.detail} min={32} max={160} step={1} call={turn("detail")} arg="value" label="detail" />
       </Section>
       <Section keyName="paint" label="paint">
         <toggle key="darkmode" on={s.darkmode} call={turn("darkmode")} arg="value" label="dark mode" />

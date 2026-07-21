@@ -54,10 +54,10 @@ replaces the route.
 - **Strips** - life ships the generations of its last run as a `strip`; the
   shell plays them out across the beat window. Pixels only.
 
-## Known leaks vs vision/AI.md
+## Known leaks vs the labeled-film claim
 
-`vision/AI.md` claims every screenshot is a labeled projection of known
-kernel state, so a lived session replays into perfectly labeled film. True
+The claim: every screenshot is a labeled projection of known kernel
+state, so a lived session replays into perfectly labeled film. True
 for kernel-known pixels, but a handful of unjournaled things break it for a
 raw browser screenshot: the picking overlay, toast timing (plus the
 unjournaled discard toast), random tints, the mark frame, and mid-tween

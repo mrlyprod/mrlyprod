@@ -9,7 +9,6 @@ type State = {
   spin: number
   camera: { yaw: number; pitch: number; dist: number; pan: [number, number]; ortho: boolean }
   settings: {
-    size: number
     bands: number
     speed: number
     light_yaw: number
@@ -59,7 +58,6 @@ export function solids(state: unknown, _send: Send): Node {
         <range key="alpha" value={s.settings.alpha} min={32} max={255} step={1} call={turn("alpha")} arg="value" label="alpha" />
       </card>
       <card key="settings">
-        <range key="size" value={s.settings.size} min={32} max={160} step={1} call={turn("size")} arg="value" label="size" />
         <range key="bands" value={s.settings.bands} min={2} max={8} step={1} call={turn("bands")} arg="value" label="bands" />
         <range key="speed" value={s.settings.speed} min={0} max={16} step={1} call={turn("speed")} arg="value" label="speed" />
         <range key="light-yaw" value={s.settings.light_yaw} min={0} max={255} step={1} call={turn("light_yaw")} arg="value" label="light yaw" />

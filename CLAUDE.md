@@ -17,6 +17,7 @@ Light, stable rules only. Anything that evolves (design, architecture, API) live
 ## Writing
 - Less is more!
 - Keep all written files lean and clean, short and vague, not long and drift-prone.
+- This repo is public. Never reference files that live outside it.
 
 ## Web
 - Rebuild wasm after any change to the mrlyrs/mrlyjs/mrlynet pipeline.
