@@ -72,7 +72,7 @@ const send = (call: Call, beat = false) => {
   }
 }
 
-const ui = mount(document.getElementById("mrly") as HTMLElement, send, routes, registry.apps, app => peek(handle, app))
+const ui = mount(document.getElementById("mrly") as HTMLElement, send, routes, registry.apps)
 
 if (looks?.render === "gpu" && navigator.gpu === undefined) {
   send({ verb: "settings.set", args: { key: "render", value: "cpu" } })

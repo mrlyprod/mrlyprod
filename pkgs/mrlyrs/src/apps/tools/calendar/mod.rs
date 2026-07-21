@@ -55,9 +55,9 @@ pub struct Calendar {
     year: i32,
     month: u32,
     now: i64,
-    stage_year: i32,
-    stage_month: u32,
-    stage_day: u32,
+    picked_year: i32,
+    picked_month: u32,
+    picked_day: u32,
 }
 
 impl Default for Calendar {
@@ -72,9 +72,9 @@ impl Calendar {
             year: 1970,
             month: 1,
             now: 0,
-            stage_year: 1970,
-            stage_month: 1,
-            stage_day: 1,
+            picked_year: 1970,
+            picked_month: 1,
+            picked_day: 1,
         }
     }
     pub fn title(&self) -> String {
@@ -156,7 +156,7 @@ impl App for Calendar {
             "days": DAYS,
             "weeks": self.weeks(),
             "today": self.today(),
-            "work": { "year": self.stage_year, "month": self.stage_month, "day": self.stage_day },
+            "picked": { "year": self.picked_year, "month": self.picked_month, "day": self.picked_day },
         })
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
@@ -168,10 +168,6 @@ impl App for Calendar {
             ),
             Verb::new("calendar.today", json!({})),
             Verb::new("calendar.pick", json!({ "day": "int" })),
-            Verb::new(
-                "calendar.set",
-                json!({ "key": "work", "value": "{year,month,day}" }),
-            ),
         ]
     }
     fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
@@ -238,48 +234,13 @@ impl App for Calendar {
                 if !(1..=days(self.year, self.month) as u64).contains(&day) {
                     return Outcome::fail("no such day");
                 }
-                self.stage_year = self.year;
-                self.stage_month = self.month;
-                self.stage_day = day as u32;
+                self.picked_year = self.year;
+                self.picked_month = self.month;
+                self.picked_day = day as u32;
                 Outcome::ok(json!({
-                    "year": self.stage_year,
-                    "month": self.stage_month,
-                    "day": self.stage_day,
-                }))
-            }
-            "calendar.set" => {
-                let key = call.arg("key").as_str().unwrap_or("");
-                if key != "work" {
-                    return Outcome::fail("no such key");
-                }
-                let value = call.arg("value");
-                let Some(year) = value["year"].as_i64() else {
-                    return Outcome::fail("bad date");
-                };
-                if !(1..=9999).contains(&year) {
-                    return Outcome::fail("bad date");
-                }
-                let Some(month) = value["month"].as_u64() else {
-                    return Outcome::fail("bad date");
-                };
-                if !(1..=12).contains(&month) {
-                    return Outcome::fail("bad date");
-                }
-                let Some(day) = value["day"].as_u64() else {
-                    return Outcome::fail("bad date");
-                };
-                if !(1..=days(year as i32, month as u32) as u64).contains(&day) {
-                    return Outcome::fail("bad date");
-                }
-                self.year = year as i32;
-                self.month = month as u32;
-                self.stage_year = self.year;
-                self.stage_month = self.month;
-                self.stage_day = day as u32;
-                Outcome::ok(json!({
-                    "year": self.year,
-                    "month": self.month,
-                    "day": self.stage_day,
+                    "year": self.picked_year,
+                    "month": self.picked_month,
+                    "day": self.picked_day,
                 }))
             }
             _ => Outcome::fail("unknown verb"),
@@ -471,48 +432,24 @@ mod tests {
         assert_eq!(c.state(&iden())["title"], json!("January 1970"));
     }
     #[test]
-    fn work_defaults_to_epoch() {
+    fn picked_defaults_to_epoch() {
         let c = Calendar::new();
         assert_eq!(
-            c.state(&iden())["work"],
+            c.state(&iden())["picked"],
             json!({ "year": 1970, "month": 1, "day": 1 })
         );
     }
     #[test]
-    fn pick_stages_a_day() {
+    fn pick_selects_a_day() {
         let mut c = Calendar::new();
         send(&mut c, "calendar.goto", json!({ "year": 2025, "month": 6 }));
         assert!(send(&mut c, "calendar.pick", json!({ "day": 15 })).ok);
         assert_eq!(
-            c.state(&iden())["work"],
+            c.state(&iden())["picked"],
             json!({ "year": 2025, "month": 6, "day": 15 })
         );
         assert!(!send(&mut c, "calendar.pick", json!({ "day": 31 })).ok);
         assert!(!send(&mut c, "calendar.pick", json!({ "day": 0 })).ok);
-    }
-    #[test]
-    fn set_work_gotos_and_stages() {
-        let mut c = Calendar::new();
-        assert!(
-            send(
-                &mut c,
-                "calendar.set",
-                json!({ "key": "work", "value": { "year": 2026, "month": 7, "day": 9 } })
-            )
-            .ok
-        );
-        let state = c.state(&iden());
-        assert_eq!(state["title"], json!("July 2026"));
-        assert_eq!(state["work"], json!({ "year": 2026, "month": 7, "day": 9 }));
-        assert!(
-            !send(
-                &mut c,
-                "calendar.set",
-                json!({ "key": "work", "value": { "year": 2026, "month": 2, "day": 30 } })
-            )
-            .ok
-        );
-        assert!(!send(&mut c, "calendar.set", json!({ "key": "nope" })).ok);
     }
     #[test]
     fn actions_offer_the_natural_verbs() {
@@ -525,7 +462,6 @@ mod tests {
                 "calendar.goto",
                 "calendar.today",
                 "calendar.pick",
-                "calendar.set",
             ]
         );
     }

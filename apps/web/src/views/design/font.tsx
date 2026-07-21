@@ -16,8 +16,8 @@ export function font(state: unknown, _send: Send): Node {
         <text key="facts" role="note">{`${s.name} · ${s.glyph.width}x${s.glyph.height} · ${s.index + 1}/${s.total}`}</text>
       </card>
       <card key="browse">
-        <button key="prev" call={call("font.prev")}>←</button>
-        <button key="next" call={call("font.next")}>→</button>
+        <button key="prev" call={call("font.page", { dir: "prev" })}>←</button>
+        <button key="next" call={call("font.page", { dir: "next" })}>→</button>
         <field key="pick" value="" live={false} call={call("font.pick")} arg="char" hint="char" />
         <button key="scramble" call={call("font.scramble")}>scramble</button>
       </card>

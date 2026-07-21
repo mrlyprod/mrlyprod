@@ -9,27 +9,12 @@
     "app": "clock",
     "params": {},
     "state": {
-      "now": 1783600496000,
-      "work": {
-        "h": 0,
-        "m": 0
-      },
-      "stage": {
-        "h": 0,
-        "m": 0
-      }
+      "now": 1783600496000
     },
     "actions": [
       {
         "verb": "clock.tick",
         "args": {}
-      },
-      {
-        "verb": "clock.set",
-        "args": {
-          "key": "hour | minute | work",
-          "value": "any"
-        }
       }
     ],
     "beat": {

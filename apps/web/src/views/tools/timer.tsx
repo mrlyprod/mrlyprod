@@ -1,4 +1,4 @@
-import { call, pickOpen, raster } from "../../builders.ts"
+import { call, pickTime, raster } from "../../builders.ts"
 import { h } from "../../jsx.ts"
 import type { Node, Raster, Send } from "../../types.ts"
 
@@ -55,7 +55,7 @@ function controls(s: State): Node[] {
         <button key={`m${m}`} call={call("timer.start", { minutes: m })}>{`${m}m`}</button>
       ))}
     </grid>,
-    <button key="pick" call={pickOpen("clock", "timer", "duration", { h: 0, m: 0 })}>pick duration</button>,
+    <button key="pick" call={pickTime("timer", "duration", { h: 0, m: 0 })}>pick duration</button>,
     s.running ? <button key="pause" call={call("timer.pause")}>pause</button> : null,
     !s.running && s.armed && !s.rung
       ? <button key="resume" call={call("timer.resume")}>resume</button>

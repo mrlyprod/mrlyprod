@@ -1,6 +1,6 @@
-import init, { act as rawAct, boot, describe as rawDescribe, frame as rawFrame, geometry as rawGeometry, html as rawHtml, mark as rawMark, palette as rawPalette, peek as rawPeek, shaders as rawShaders } from "../../../pkgs/mrlyjs/pkg/mrlyjs.js"
+import init, { act as rawAct, boot, describe as rawDescribe, designs as rawDesigns, frame as rawFrame, geometry as rawGeometry, glyphs as rawGlyphs, html as rawHtml, mark as rawMark, palette as rawPalette, peek as rawPeek, shaders as rawShaders } from "../../../pkgs/mrlyjs/pkg/mrlyjs.js"
 import type { Handle, InitInput } from "../../../pkgs/mrlyjs/pkg/mrlyjs.js"
-import type { Call, Mark, Observation, Palette, Registry, Shaders, View } from "./types.ts"
+import type { Call, Designs, DesignsReq, GlyphSet, Mark, Observation, Palette, Registry, Shaders, View } from "./types.ts"
 
 export { boot }
 export type { Handle }
@@ -19,6 +19,14 @@ export function shaders(): Shaders {
 
 export function palette(): Palette {
   return JSON.parse(rawPalette()) as Palette
+}
+
+export function glyphs(set: string): GlyphSet[] {
+  return JSON.parse(rawGlyphs(set)) as GlyphSet[]
+}
+
+export function designs(req: DesignsReq): Designs {
+  return JSON.parse(rawDesigns(JSON.stringify(req))) as Designs
 }
 
 export function html(md: string): string {

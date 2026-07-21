@@ -1,7 +1,7 @@
-use super::helpers::{closest_nesting, default_paint, int, nearest, source_label};
+use super::helpers::{closest_nesting, default_paint, int, nearest};
 use super::render::{blank, two_tone};
-use super::rules::{resize, validate_work};
-use super::{Tile, BUDGETS, CEILING, MIN, THUMBS};
+use super::rules::resize;
+use super::{Tile, BUDGETS, MIN, THUMBS};
 use crate::core::paint::{self, Edition, Ink, Paint, Scheme, Target};
 use crate::core::tile::{
     generals, nestings, powers, products, Catalog, Group, Parity, Source, Tile as Model,
@@ -9,6 +9,7 @@ use crate::core::tile::{
 use crate::math::bang;
 use crate::math::two::tile as tile2d;
 use crate::ui::frame;
+use crate::ui::picker::source_label;
 use serde_json::{json, Value as Json};
 
 impl Tile {
@@ -75,13 +76,6 @@ impl Tile {
                 json!({ "level": level, "frame": fact })
             })
             .collect()
-    }
-    pub fn work(&self) -> Json {
-        json!({
-            "v": 1,
-            "tile": self.tile.to_json(),
-            "paint": self.paint.as_ref().map(|p| p.to_json()).unwrap_or(Json::Null),
-        })
     }
     pub fn numbers_options(&self) -> Vec<Vec<usize>> {
         match self.tile.group {
@@ -555,35 +549,8 @@ impl Tile {
                 self.coating().primary = primary;
                 Ok(value.clone())
             }
-            "work" => {
-                let (model, coating) = validate_work(value)?;
-                self.adopt(model, coating);
-                Ok(value.clone())
-            }
             _ => Err("no such key"),
         }
-    }
-    pub fn adopt(&mut self, model: Model, coating: Option<Paint>) {
-        if model.sources.iter().any(|s| matches!(s, Source::Code(_))) {
-            self.catalog = Catalog::Universe;
-        } else {
-            self.catalog = Catalog::Classics;
-        }
-        if self.budget < model.max_size() {
-            self.budget = *BUDGETS
-                .iter()
-                .find(|&&b| b >= model.max_size())
-                .unwrap_or(&CEILING);
-        }
-        let mut dims = model.numbers.clone();
-        if matches!(model.group, Group::Special | Group::Mosaic) {
-            dims.push(model.factor);
-        }
-        if !dims.iter().all(|&n| self.parity.keep(n)) {
-            self.parity = Parity::Both;
-        }
-        self.tile = model;
-        self.paint = coating;
     }
     pub fn roll_paint(&mut self) {
         let rolled = match &self.paint {

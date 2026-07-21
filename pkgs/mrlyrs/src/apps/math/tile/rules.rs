@@ -84,9 +84,9 @@ pub fn check_model(model: &Model) -> Result<(), &'static str> {
     }
 }
 
-pub fn validate_work(value: &Json) -> Result<(Model, Option<Paint>), &'static str> {
+pub fn validate_saved(value: &Json) -> Result<(Model, Option<Paint>), &'static str> {
     if !value.is_object() {
-        return Err("work must be an object");
+        return Err("saved tile must be an object");
     }
     let model = Model::from_json(&value["tile"]).map_err(|_| "bad tile")?;
     check_model(&model)?;

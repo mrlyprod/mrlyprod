@@ -13,13 +13,13 @@ type State = {
   today: number | null
   year: number
   month: number
-  work: { year: number; month: number; day: number }
+  picked: { year: number; month: number; day: number }
 }
 
 function cell(c: Cell, i: number, s: State): Node {
   const key = `c-${i}`
   if (c.faded) return <text key={key} role="note">{String(c.day)}</text>
-  const staged = s.work.year === s.year && s.work.month === s.month && c.day === s.work.day
+  const staged = s.picked.year === s.year && s.picked.month === s.month && c.day === s.picked.day
   const bg = staged ? "var(--accent-color)" : c.day === s.today ? "var(--muted-color)" : undefined
   return <button key={key} call={call("calendar.pick", { day: c.day })} bg={bg}>{String(c.day)}</button>
 }

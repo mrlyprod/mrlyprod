@@ -4,7 +4,7 @@ import { Meter } from "../../components/Meter.tsx"
 import { Shot } from "../../components/Shot.tsx"
 import { Board } from "../../components/Board.tsx"
 import { DPad } from "../../components/DPad.tsx"
-import { pickOpen, set } from "../../builders.ts"
+import { pickTile, set } from "../../builders.ts"
 import { h } from "../../jsx.ts"
 import type { Node, Send } from "../../types.ts"
 
@@ -25,8 +25,7 @@ type State = {
   frame: { rows: number[][]; palette: string[] }
 }
 
-const pick = (s: State, key: "head" | "body" | "food") =>
-  pickOpen("tile", "snake", key, s.settings[key])
+const pick = (key: "head" | "body" | "food") => pickTile("snake", key)
 
 export function snake(state: unknown, _send: Send): Node {
   const s = state as State
@@ -51,9 +50,9 @@ export function snake(state: unknown, _send: Send): Node {
         <range key="speed" value={s.settings.speed} min={1} max={8} call={set("snake", "speed")} arg="value" step={1} label="speed" />
       </Section>
       <Section keyName="look" label="look">
-        <button key="head" call={pick(s, "head")}>head tile</button>
-        <button key="body" call={pick(s, "body")}>body tile</button>
-        <button key="food" call={pick(s, "food")}>food tile</button>
+        <button key="head" call={pick("head")}>head tile</button>
+        <button key="body" call={pick("body")}>body tile</button>
+        <button key="food" call={pick("food")}>food tile</button>
       </Section>
     </stack>
   )

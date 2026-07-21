@@ -1,4 +1,4 @@
-import { call, setter, pickOpen } from "../../builders.ts"
+import { call, setter, pickColor } from "../../builders.ts"
 import { Section } from "../../components/Section.tsx"
 import { h } from "../../jsx.ts"
 import type { Node, Send } from "../../types.ts"
@@ -56,10 +56,10 @@ export function settings(state: unknown, _send: Send): Node {
       </Section>
       <Section keyName="paint" label="paint">
         <toggle key="darkmode" on={s.darkmode} call={turn("darkmode")} arg="value" label="dark mode" />
-        <button key="color" call={pickOpen("colors", "settings", "color", s.color)}>{`accent · ${s.color}`}</button>
-        <button key="fill" call={pickOpen("colors", "settings", "fill", s.fill)}>{`fill · ${s.fill}`}</button>
+        <button key="color" call={pickColor("settings", "color", s.color)}>{`accent · ${s.color}`}</button>
+        <button key="fill" call={pickColor("settings", "fill", s.fill)}>{`fill · ${s.fill}`}</button>
         <button key="fill-random" call={call("settings.set", { key: "fill", value: "random" })}>random fill</button>
-        <button key="background" call={pickOpen("colors", "settings", "background", s.background)}>{`background · ${s.background}`}</button>
+        <button key="background" call={pickColor("settings", "background", s.background)}>{`background · ${s.background}`}</button>
       </Section>
       <Section keyName="stage" label="stage">
         <choice key="material" value={s.material} options={MATERIALS} call={turn("material")} arg="value" label="material" mode="row" />

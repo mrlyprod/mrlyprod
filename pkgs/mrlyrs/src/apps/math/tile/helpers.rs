@@ -1,5 +1,5 @@
 use crate::core::paint::{Edition, Ink, Paint};
-use crate::core::tile::{Catalog, Source};
+use crate::core::tile::Catalog;
 use serde_json::Value as Json;
 
 pub fn int(value: &Json) -> usize {
@@ -46,12 +46,5 @@ pub fn catalog_name(catalog: &Catalog) -> &'static str {
     match catalog {
         Catalog::Universe => "Universe",
         _ => "Classics",
-    }
-}
-
-pub fn source_label(source: &Source) -> String {
-    match source {
-        Source::Classic(design) => design.name().to_string(),
-        Source::Code(code) => format!("mrly_{code:02}"),
     }
 }

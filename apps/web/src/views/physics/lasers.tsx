@@ -1,4 +1,4 @@
-import { call, setter, pickOpen } from "../../builders.ts"
+import { call, setter, pickColor } from "../../builders.ts"
 import { Board } from "../../components/Board.tsx"
 import { Shot } from "../../components/Shot.tsx"
 import { DESIGNS_VOID, NUMBERS, LEVELS, SUBPIXELS } from "../../components/options.ts"
@@ -51,7 +51,7 @@ export function lasers(state: unknown, _send: Send): Node {
         <choice key="spread" value={s.settings.spread} options={SPREADS} call={turn("spread")} arg="value" label="spread" mode="row" />
         <choice key="spin" value={String(s.settings.spin)} options={SPINS} call={turn("spin")} arg="value" label="spin" mode="row" />
         <choice key="subpixel" value={String(s.settings.subpixel)} options={SUBPIXELS} call={turn("subpixel")} arg="value" label="subpixel" mode="row" />
-        <button key="accent" call={pickOpen("colors", "lasers", "accent", s.settings.accent)}>{`accent · ${s.settings.accent}`}</button>
+        <button key="accent" call={pickColor("lasers", "accent", s.settings.accent)}>{`accent · ${s.settings.accent}`}</button>
         <Shot />
       </card>
       <card key="physics">

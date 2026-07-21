@@ -174,7 +174,7 @@
         ]
       ],
       "today": 9,
-      "work": {
+      "picked": {
         "year": 1970,
         "month": 1,
         "day": 1
@@ -202,13 +202,6 @@
         "verb": "calendar.pick",
         "args": {
           "day": "int"
-        }
-      },
-      {
-        "verb": "calendar.set",
-        "args": {
-          "key": "work",
-          "value": "{year,month,day}"
         }
       }
     ]

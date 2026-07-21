@@ -9,47 +9,44 @@
     "app": "tile",
     "params": {},
     "state": {
-      "work": {
+      "tile": {
         "v": 1,
-        "tile": {
-          "v": 1,
-          "group": "Special",
-          "factor": 3,
-          "sources": [
-            {
-              "code": 0
-            }
-          ],
-          "numbers": [
-            3
-          ],
-          "levels": [
-            1
-          ],
-          "rotations": [
-            0
-          ],
-          "anti": [
-            false
-          ],
-          "invert": false,
-          "flip": false,
-          "base": 2,
-          "width": 9,
-          "height": 9
-        },
-        "paint": {
-          "v": 1,
-          "edition": "Layers",
-          "scheme": "Multicolor",
-          "target": "Void",
-          "primary": "White",
-          "secondary": [
-            "Purple",
-            "Mint"
-          ],
-          "shades": []
-        }
+        "group": "Special",
+        "factor": 3,
+        "sources": [
+          {
+            "code": 0
+          }
+        ],
+        "numbers": [
+          3
+        ],
+        "levels": [
+          1
+        ],
+        "rotations": [
+          0
+        ],
+        "anti": [
+          false
+        ],
+        "invert": false,
+        "flip": false,
+        "base": 2,
+        "width": 9,
+        "height": 9
+      },
+      "paint": {
+        "v": 1,
+        "edition": "Layers",
+        "scheme": "Multicolor",
+        "target": "Void",
+        "primary": "White",
+        "secondary": [
+          "Purple",
+          "Mint"
+        ],
+        "shades": []
       },
       "catalog": "Universe",
       "parity": "Odds",

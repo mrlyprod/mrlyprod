@@ -10,7 +10,6 @@
     "params": {},
     "state": {
       "char": "a",
-      "work": "a",
       "name": "LATIN SMALL LETTER A",
       "index": 26,
       "total": 108,
@@ -69,13 +68,6 @@
         "verb": "font.pick",
         "args": {
           "char": "string"
-        }
-      },
-      {
-        "verb": "font.set",
-        "args": {
-          "key": "work",
-          "value": "string"
         }
       },
       {

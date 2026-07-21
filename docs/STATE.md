@@ -8,8 +8,8 @@ second's look.
 
 Every verb not prefixed `journal.` is stamped with `now`, pushed to the
 journal, then run. Replay fires every stamped call bare, in order, on boot.
-Covers user app verbs, `nav.*`, `sys.shot`, `sys.dismiss`, and the `.set`
-calls picking produces.
+Covers user app verbs, `nav.*`, `sys.shot`, `sys.dismiss`, and the host
+`.set` calls a pick produces.
 
 **Beat** - the 8/s `setInterval` drives the focused app's `slot.beat` call.
 Beats are journaled like any verb, but consecutive step beats coalesce: the
@@ -27,9 +27,10 @@ replaces the route.
 
 ## Tier 2 - shell-intercepted verbs (client-side, never reaches the kernel)
 
-- **`pick.*`** - open/close/apply live entirely in shell state (`picking`).
-  Only the eventual `.set` outcome is journaled; which picker is open and
-  what it's mid-editing is not.
+- **`sheet.*`** - open/turn/close live entirely in shell state (`picking`).
+  Only the host `.set` a pick fires is journaled; which picker is open and
+  what it's mid-editing (category, steppers, tile page) is not. See
+  PICKERS.md.
 - **`face.full`** - calls fullscreen on a DOM element. No kernel involvement.
 - **`splash.*`** - on/off hides or restores the whole shell (the splash
   screen, spec in SPLASH.md). Pure client state; beats pause while hidden.
@@ -41,7 +42,7 @@ replaces the route.
 - **`toast`** - content comes from journaled kernel notices, but the 4s
   visibility window is a local timer. The build-mismatch discard toast has no
   kernel notice behind it at all.
-- **`picking`** overlay - its presence on screen is pure client state.
+- **`picking`** sheet - the picker overlay on screen is pure client state.
 - **Tints** - header/card/footer colors from an unseeded `Math.random()` pool,
   cached on the DOM node. Deterministic only when `settings.fill` is pinned
   off `"random"`.
@@ -59,7 +60,7 @@ replaces the route.
 The claim: every screenshot is a labeled projection of known kernel
 state, so a lived session replays into perfectly labeled film. True
 for kernel-known pixels, but a handful of unjournaled things break it for a
-raw browser screenshot: the picking overlay, toast timing (plus the
+raw browser screenshot: the picker sheet, toast timing (plus the
 unjournaled discard toast), random tints, the mark frame, and mid-tween
 projector/strip frames.
 

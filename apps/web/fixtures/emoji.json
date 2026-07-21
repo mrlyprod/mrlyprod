@@ -1,5 +1,5 @@
 {
-  "tick": 3,
+  "tick": 2,
   "route": {
     "app": "emoji",
     "view": "main",
@@ -10,7 +10,6 @@
     "params": {},
     "state": {
       "category": "food",
-      "work": "🍕",
       "categories": [
         "smileys",
         "gestures",
@@ -129,7 +128,7 @@
       {
         "verb": "emoji.set",
         "args": {
-          "key": "category | work",
+          "key": "category",
           "value": "string"
         }
       }
@@ -138,8 +137,8 @@
   "last": {
     "ok": true,
     "data": {
-      "key": "work",
-      "value": "🍕"
+      "key": "category",
+      "value": "food"
     },
     "note": null
   },

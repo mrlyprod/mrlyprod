@@ -1,5 +1,5 @@
 import { readFileSync, readdirSync } from "node:fs"
-import { act, boot, describe, frame, load, mark, shaders } from "./src/kernel.ts"
+import { act, boot, describe, designs, frame, glyphs, load, mark, shaders } from "./src/kernel.ts"
 import type { Call, Node, Observation, Shade } from "./src/types.ts"
 import { views } from "./src/views/index.ts"
 
@@ -226,10 +226,9 @@ send("life.fill", { which: "survive", seq: "odds" })
 check("a sequence fills the survive set", JSON.stringify(settings()["survive"]) === JSON.stringify([3, 5, 7]))
 send("life.reset", { pattern: "soup" })
 check("soup seeds a living board", (state()["population"] as number) > 0 && state()["generation"] === 0)
-visit("tile")
-const seedWork = state()["work"]
+const catalog = designs({})
 visit("life")
-const picked = send("life.set", { key: "seed", value: seedWork })
+const picked = send("life.set", { key: "seed", value: catalog.designs[0]?.value })
 check("a picked seed tile rebuilds the board", picked.last?.ok === true && state()["length"] === 1)
 send("life.run", { on: false })
 send("life.paint", { points: [[0, 0]] })
@@ -237,18 +236,21 @@ check("painting toggles a cell while paused", (state()["population"] as number) 
 
 visit("tile")
 send("tile.set", { key: "group", value: "Magic" })
-const staged = () => state()["work"] as { tile: { group: string }; paint: unknown }
-check("tile stages a magic structure", staged().tile.group === "Magic", staged().tile.group)
+const shaped = () => state() as { tile: { group: string }; paint: unknown }
+check("tile shapes a magic structure", shaped().tile.group === "Magic", shaped().tile.group)
 send("tile.paint", { seed: 7 })
-check("the paint dice stages a coat", staged().paint !== null)
-const work = staged()
+check("the paint dice lands a coat", shaped().paint !== null)
 send("tile.reset")
-check("tile.reset clears the studio", staged().paint === null)
-send("tile.set", { key: "work", value: work })
-check("staged work reads back", JSON.stringify(staged()) === JSON.stringify(work))
+check("tile.reset clears the studio", shaped().paint === null)
 const tileTree = views["tile"]?.(focused(look()), () => {}) as Node
 check("the tile view hangs a preview canvas", nodes(tileTree).some(n => n.kind === "Canvas"))
 checkBox("tile", tileTree)
+
+const smileys = glyphs("emoji")
+check("glyphs emoji names its categories", smileys.length > 1 && (smileys[0]?.glyphs.length ?? 0) > 0, String(smileys.length))
+const typeface = glyphs("font")
+check("glyphs font gives a single set", typeface.length === 1 && typeface[0]?.name === "font" && (typeface[0]?.glyphs.length ?? 0) > 0, String(typeface[0]?.glyphs.length))
+check("designs returns a vocab and thumbnails", catalog.vocab.groups.length > 0 && catalog.designs.length > 0 && (catalog.designs[0]?.frame.width ?? 0) > 0)
 
 const PNG =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="

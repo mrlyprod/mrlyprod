@@ -11,20 +11,18 @@ type Source = { design?: string; code?: number }
 type Paint = { edition: string; scheme: string; target: string; primary: string }
 
 type State = {
-  work: {
-    tile: {
-      group: string
-      factor: number
-      sources: Source[]
-      numbers: number[]
-      levels: number[]
-      rotations: number[]
-      anti: boolean[]
-      invert: boolean
-      flip: boolean
-    }
-    paint: Paint | null
+  tile: {
+    group: string
+    factor: number
+    sources: Source[]
+    numbers: number[]
+    levels: number[]
+    rotations: number[]
+    anti: boolean[]
+    invert: boolean
+    flip: boolean
   }
+  paint: Paint | null
   catalog: string
   parity: string
   budget: number
@@ -58,7 +56,7 @@ const label = (source: Source) =>
   source.design ?? `mrly_${String(source.code ?? 0).padStart(2, "0")}`
 
 function slotCard(s: State, i: number): Node {
-  const tile = s.work.tile
+  const tile = s.tile
   const thumbs = tile.group === "Fractal" && i === 0 && s.thumbs.length > 0
   return (
     <Section keyName={`slot-${i}`} label={`slot ${i}`}>
@@ -125,8 +123,8 @@ function slotCard(s: State, i: number): Node {
 
 export function tile(state: unknown, _send: Send): Node {
   const s = state as State
-  const t = s.work.tile
-  const paint = s.work.paint
+  const t = s.tile
+  const paint = s.paint
   return (
     <stack key="tile">
       <card key="preview">

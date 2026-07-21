@@ -593,10 +593,6 @@ fn emoji_frame_is_golden() {
         "emoji.set",
         json!({ "key": "category", "value": "food" }),
     ));
-    os.act(Call::new(
-        "emoji.set",
-        json!({ "key": "work", "value": "🍕" }),
-    ));
     assert_eq!(os.frame().to_json(), fixture("emoji"));
 }
 

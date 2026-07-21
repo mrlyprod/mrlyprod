@@ -53,7 +53,6 @@ impl App for Font {
         };
         json!({
             "char": c.to_string(),
-            "work": c.to_string(),
             "name": crate::font::name_of(c),
             "index": self.at,
             "total": self.order.len(),
@@ -65,7 +64,6 @@ impl App for Font {
         vec![
             Verb::new("font.page", json!({ "dir": "next | prev" })),
             Verb::new("font.pick", json!({ "char": "string" })),
-            Verb::new("font.set", json!({ "key": "work", "value": "string" })),
             Verb::new("font.scramble", json!({})),
             Verb::new("font.tick", json!({})),
             Verb::new(
@@ -99,22 +97,6 @@ impl App for Font {
                 self.at = pos;
                 self.reveal = None;
                 Outcome::ok(json!({ "char": c.to_string() }))
-            }
-            "font.set" => {
-                let key = call.arg("key").as_str().unwrap_or("");
-                if key != "work" {
-                    return Outcome::fail("no such key");
-                }
-                if let Some(s) = call.arg("value").as_str() {
-                    let mut chars = s.chars();
-                    if let (Some(c), None) = (chars.next(), chars.next()) {
-                        if let Some(pos) = self.order.iter().position(|&x| x == c) {
-                            self.at = pos;
-                            self.reveal = None;
-                        }
-                    }
-                }
-                Outcome::ok(json!({ "key": key, "char": self.order[self.at].to_string() }))
             }
             "font.scramble" => {
                 let c = self.order[self.at];
@@ -250,27 +232,6 @@ mod tests {
         assert_eq!(f.state(&iden())["char"], json!("a"));
     }
     #[test]
-    fn work_mirrors_the_glyph() {
-        let mut f = Font::new();
-        let state = f.state(&iden());
-        assert_eq!(state["work"], state["char"]);
-        send(&mut f, "font.pick", json!({ "char": "b" }));
-        assert_eq!(f.state(&iden())["work"], json!("b"));
-    }
-    #[test]
-    fn set_work_moves_and_soft_fails() {
-        let mut f = Font::new();
-        let out = send(&mut f, "font.set", json!({ "key": "work", "value": "c" }));
-        assert!(out.ok);
-        assert_eq!(f.state(&iden())["char"], json!("c"));
-        let out = send(&mut f, "font.set", json!({ "key": "work", "value": "🍏" }));
-        assert!(out.ok);
-        assert_eq!(f.state(&iden())["char"], json!("c"));
-        let out = send(&mut f, "font.set", json!({ "key": "nope", "value": "a" }));
-        assert!(!out.ok);
-        assert_eq!(out.note.as_deref(), Some("no such key"));
-    }
-    #[test]
     fn scramble_and_tick_reveal_progressively() {
         let mut f = Font::new();
         send(&mut f, "font.pick", json!({ "char": "a" }));
@@ -384,7 +345,6 @@ mod tests {
             vec![
                 "font.page",
                 "font.pick",
-                "font.set",
                 "font.scramble",
                 "font.tick",
                 "font.export"

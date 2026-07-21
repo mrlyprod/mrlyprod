@@ -1,9 +1,8 @@
-import { call, raster } from "../../builders.ts"
-import { Section } from "../../components/Section.tsx"
+import { raster } from "../../builders.ts"
 import { h } from "../../jsx.ts"
 import type { Node, Raster, Send } from "../../types.ts"
 
-type State = { now: number; glyph?: Raster; stage: { h: number; m: number }; work: { h: number; m: number } }
+type State = { now: number; glyph?: Raster }
 
 const div = (a: number, n: number) => Math.floor(a / n)
 
@@ -45,15 +44,6 @@ export function clock(state: unknown, _send: Send): Node {
         {shown}
         <text key="date" role="note">{date(s.now)}</text>
       </card>
-      <Section keyName="stage" label="duration">
-        <text key="staged">{`${pad(s.stage.h)}:${pad(s.stage.m)}`}</text>
-        <grid key="steppers" cols={2}>
-          <button key="h-dec" call={call("clock.set", { key: "hour", value: Math.max(0, s.stage.h - 1) })}>- hr</button>
-          <button key="h-inc" call={call("clock.set", { key: "hour", value: Math.min(23, s.stage.h + 1) })}>+ hr</button>
-          <button key="m-dec" call={call("clock.set", { key: "minute", value: Math.max(0, s.stage.m - 1) })}>- min</button>
-          <button key="m-inc" call={call("clock.set", { key: "minute", value: Math.min(59, s.stage.m + 1) })}>+ min</button>
-        </grid>
-      </Section>
     </stack>
   )
 }

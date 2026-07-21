@@ -31,7 +31,6 @@ impl App for Colors {
             "index": self.index,
             "count": PALETTE.len(),
             "name": NAMES[self.index],
-            "work": NAMES[self.index],
             "hex": color.to_hex(),
             "rgb": { "r": color.r, "g": color.g, "b": color.b },
             "palette": NAMES
@@ -62,7 +61,7 @@ impl App for Colors {
             }
             "colors.set" => {
                 let key = call.arg("key").as_str().unwrap_or("");
-                if key != "name" && key != "work" {
+                if key != "name" {
                     return Outcome::fail("no such key");
                 }
                 let value = call.arg("value").as_str().unwrap_or("");
@@ -135,31 +134,6 @@ mod tests {
                 &mut c,
                 "colors.set",
                 json!({ "key": "hue", "value": "teal" })
-            )
-            .ok
-        );
-    }
-    #[test]
-    fn work_seeds_and_reads_back() {
-        let mut c = Colors::new();
-        assert!(
-            send(
-                &mut c,
-                "colors.set",
-                json!({ "key": "work", "value": "brown" })
-            )
-            .ok
-        );
-        assert_eq!(c.state(&iden())["work"], json!("brown"));
-        assert_eq!(c.state(&iden())["name"], json!("brown"));
-        send(&mut c, "colors.page", json!({ "dir": "next" }));
-        let state = c.state(&iden());
-        assert_eq!(state["work"], state["name"]);
-        assert!(
-            !send(
-                &mut c,
-                "colors.set",
-                json!({ "key": "work", "value": "beige" })
             )
             .ok
         );

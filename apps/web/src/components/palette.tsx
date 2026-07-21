@@ -1,11 +1,11 @@
-import { call, pickOpen } from "../builders.ts"
+import { call, pickColor } from "../builders.ts"
 import { h } from "../jsx.ts"
 import type { Node } from "../types.ts"
 
 export function palette(app: string, host: string, colors: string[]): Node[] {
   return [
     ...colors.map((hex, i) => (
-      <button key={`slot-${i}`} bg={hex} call={pickOpen("colors", host, `palette.${i}`)}>{" "}</button>
+      <button key={`slot-${i}`} bg={hex} call={pickColor(host, `palette.${i}`)}>{" "}</button>
     )),
     ...(colors.length > 1
       ? colors.map((_, i) => (

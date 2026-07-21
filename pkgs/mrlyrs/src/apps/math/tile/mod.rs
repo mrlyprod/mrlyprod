@@ -11,7 +11,7 @@ use crate::os::kernel::{App, Call, Iden, Manifest, Outcome, Verb};
 use crate::ui::frame;
 use helpers::catalog_name;
 use render::{blank, two_tone};
-use rules::{carpet, validate_work};
+use rules::{carpet, validate_saved};
 use serde_json::{json, Value as Json};
 
 const BUDGETS: [usize; 3] = [16, 32, 64];
@@ -89,7 +89,8 @@ impl App for Tile {
     }
     fn state(&self, _iden: &Iden) -> Json {
         json!({
-            "work": self.work(),
+            "tile": self.tile.to_json(),
+            "paint": self.paint.as_ref().map(|p| p.to_json()).unwrap_or(Json::Null),
             "catalog": catalog_name(&self.catalog),
             "parity": self.parity.name(),
             "budget": self.budget,
@@ -173,7 +174,8 @@ impl App for Tile {
     }
     fn save(&self) -> Json {
         json!({
-            "work": self.work(),
+            "tile": self.tile.to_json(),
+            "paint": self.paint.as_ref().map(|p| p.to_json()).unwrap_or(Json::Null),
             "catalog": catalog_name(&self.catalog),
             "parity": self.parity.name(),
             "budget": self.budget,
@@ -192,8 +194,9 @@ impl App for Tile {
         if state["catalog"].as_str() == Some("Universe") {
             self.catalog = Catalog::Universe;
         }
-        if let Ok((model, coating)) = validate_work(&state["work"]) {
-            self.adopt(model, coating);
+        if let Ok((model, coating)) = validate_saved(state) {
+            self.tile = model;
+            self.paint = coating;
         }
         self.snap();
         self.repaint();
@@ -202,13 +205,13 @@ impl App for Tile {
 
 #[cfg(test)]
 mod tests {
-    use super::helpers::source_label;
     use super::rules::{carpet, check_model, resize};
     use super::*;
     use crate::core::paint::{Edition, Target};
     use crate::core::state::guard;
     use crate::core::tile::{Design, Source};
     use crate::os::kernel::testkit::{iden, send};
+    use crate::ui::picker::source_label;
 
     fn app() -> Tile {
         Tile::new()
@@ -360,54 +363,22 @@ mod tests {
         assert_eq!(back.frame, frame);
     }
     #[test]
-    fn work_loads_a_full_bundle() {
-        let _g = guard();
-        let mut donor = app();
-        assert!(send(&mut donor, "tile.roll", json!({ "seed": 3 })).ok);
-        assert!(send(&mut donor, "tile.paint", json!({ "seed": 4 })).ok);
-        let work = donor.work();
-        let mut t = app();
-        let out = send(&mut t, "tile.set", json!({ "key": "work", "value": work }));
-        assert!(out.ok);
-        assert_eq!(t.frame, donor.frame);
-        assert_eq!(t.work(), donor.work());
-    }
-    #[test]
-    fn work_rejects_garbage() {
+    fn load_rejects_bad_bundles() {
         let mut t = app();
         let before = t.state(&iden());
-        assert!(!set(&mut t, "work", json!("soup")).ok);
-        assert!(!set(&mut t, "work", json!({ "tile": { "group": "General" } })).ok);
+        t.load(&json!({ "tile": { "group": "General" }, "paint": Json::Null }));
+        assert_eq!(t.state(&iden()), before);
         let mut oversize = carpet();
         oversize.levels = vec![5];
         resize(&mut oversize);
-        assert!(
-            !set(
-                &mut t,
-                "work",
-                json!({ "v": 1, "tile": oversize.to_json(), "paint": Json::Null })
-            )
-            .ok
-        );
+        t.load(&json!({ "tile": oversize.to_json(), "paint": Json::Null }));
+        assert_eq!(t.state(&iden()), before);
         let mut flipped = carpet();
         flipped.flip = true;
-        assert!(
-            !set(
-                &mut t,
-                "work",
-                json!({ "v": 1, "tile": flipped.to_json(), "paint": Json::Null })
-            )
-            .ok
-        );
+        t.load(&json!({ "tile": flipped.to_json(), "paint": Json::Null }));
+        assert_eq!(t.state(&iden()), before);
         let sane = carpet();
-        assert!(
-            !set(
-                &mut t,
-                "work",
-                json!({ "v": 1, "tile": sane.to_json(), "paint": { "edition": "Sparkle" } })
-            )
-            .ok
-        );
+        t.load(&json!({ "tile": sane.to_json(), "paint": { "edition": "Sparkle" } }));
         assert_eq!(t.state(&iden()), before);
     }
     #[test]
@@ -455,7 +426,7 @@ mod tests {
     #[test]
     fn load_survives_garbage() {
         let mut t = app();
-        t.load(&json!({ "work": 7, "budget": "soup", "parity": [1] }));
+        t.load(&json!({ "tile": 7, "budget": "soup", "parity": [1] }));
         assert_eq!(t.state(&iden()), app().state(&iden()));
     }
     #[test]
@@ -480,8 +451,7 @@ mod tests {
     fn state_carries_the_studio() {
         let t = app();
         let state = t.state(&iden());
-        assert_eq!(state["work"]["v"], json!(1));
-        assert_eq!(state["work"]["paint"], Json::Null);
+        assert_eq!(state["paint"], Json::Null);
         assert_eq!(state["catalog"], json!("Classics"));
         assert_eq!(state["parity"], json!("Odds"));
         assert_eq!(state["budget"], json!(64));
@@ -489,7 +459,7 @@ mod tests {
         assert_eq!(state["options"]["groups"].as_array().unwrap().len(), 5);
         assert!(state["options"]["sources"][0]["label"].is_string());
         assert!(state["frame"]["rows"].is_array());
-        let back = Model::from_json(&state["work"]["tile"]).unwrap();
+        let back = Model::from_json(&state["tile"]).unwrap();
         assert_eq!(back, t.tile);
     }
     #[test]

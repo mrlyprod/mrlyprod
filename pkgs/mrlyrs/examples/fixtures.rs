@@ -428,10 +428,6 @@ fn main() {
         "emoji.set",
         json!({ "key": "category", "value": "food" }),
     ));
-    os.act(Call::new(
-        "emoji.set",
-        json!({ "key": "work", "value": "🍕" }),
-    ));
     write("emoji", &os);
 
     let mut os = boot();
