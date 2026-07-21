@@ -1,4 +1,5 @@
-import { call, setter, pickGlyph } from "../../builders.ts"
+import { call, setter } from "../../builders.ts"
+import { library } from "../../components/library.tsx"
 import { Pager } from "../../components/Pager.tsx"
 import { DESIGNS_VOID, NUMBERS, LEVELS } from "../../components/options.ts"
 import { h } from "../../jsx.ts"
@@ -33,9 +34,9 @@ export function text(state: unknown, _send: Send): Node {
         <choice key="number" value={String(s.number)} options={NUMBERS} call={turn("number")} arg="value" label="number" mode="row" />
         <choice key="level" value={String(s.level)} options={LEVELS} call={turn("level")} arg="value" label="level" mode="row" />
         <field key="fill" value={s.fill} live={false} call={turn("fill")} arg="value" label="fill" />
-        <button key="fill-pick" call={pickGlyph("text", "fill", "emoji", s.fill)}>pick fill</button>
+        {library("emoji", "text", "fill", s.fill)}
         <field key="void" value={s.void} live={false} call={turn("void")} arg="value" label="void" />
-        <button key="void-pick" call={pickGlyph("text", "void", "font", s.void)}>pick void</button>
+        {library("font", "text", "void", s.void)}
       </card>
       <card key="facts">
         <text key="size" role="note">{`${s.cols}x${s.rows}`}</text>

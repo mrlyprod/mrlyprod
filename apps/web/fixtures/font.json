@@ -55,7 +55,13 @@
             0
           ]
         ]
-      }
+      },
+      "library": [
+        "A",
+        "a",
+        "0",
+        "#"
+      ]
     },
     "actions": [
       {
@@ -82,6 +88,18 @@
         "verb": "font.export",
         "args": {
           "format": "json | ttf | woff | woff2"
+        }
+      },
+      {
+        "verb": "font.keep",
+        "args": {
+          "char": "string"
+        }
+      },
+      {
+        "verb": "font.drop",
+        "args": {
+          "char": "string"
         }
       }
     ],

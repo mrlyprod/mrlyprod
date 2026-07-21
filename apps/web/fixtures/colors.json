@@ -79,6 +79,23 @@
           "name": "gray",
           "hex": "#8e8e93"
         }
+      ],
+      "library": [
+        "black",
+        "white",
+        "red",
+        "orange",
+        "yellow",
+        "green",
+        "mint",
+        "teal",
+        "cyan",
+        "blue",
+        "indigo",
+        "purple",
+        "pink",
+        "brown",
+        "gray"
       ]
     },
     "actions": [
@@ -102,6 +119,16 @@
       {
         "verb": "colors.export",
         "args": {}
+      },
+      {
+        "verb": "colors.keep",
+        "args": {}
+      },
+      {
+        "verb": "colors.drop",
+        "args": {
+          "name": "string"
+        }
       }
     ]
   },

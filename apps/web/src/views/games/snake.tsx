@@ -1,10 +1,11 @@
 import { GameOver } from "../../components/GameOver.tsx"
+import { library } from "../../components/library.tsx"
 import { Section } from "../../components/Section.tsx"
 import { Meter } from "../../components/Meter.tsx"
 import { Shot } from "../../components/Shot.tsx"
 import { Board } from "../../components/Board.tsx"
 import { DPad } from "../../components/DPad.tsx"
-import { pickTile, set } from "../../builders.ts"
+import { set } from "../../builders.ts"
 import { h } from "../../jsx.ts"
 import type { Node, Send } from "../../types.ts"
 
@@ -24,8 +25,6 @@ type State = {
   }
   frame: { rows: number[][]; palette: string[] }
 }
-
-const pick = (key: "head" | "body" | "food") => pickTile("snake", key)
 
 export function snake(state: unknown, _send: Send): Node {
   const s = state as State
@@ -50,9 +49,12 @@ export function snake(state: unknown, _send: Send): Node {
         <range key="speed" value={s.settings.speed} min={1} max={8} call={set("snake", "speed")} arg="value" step={1} label="speed" />
       </Section>
       <Section keyName="look" label="look">
-        <button key="head" call={pick("head")}>head tile</button>
-        <button key="body" call={pick("body")}>body tile</button>
-        <button key="food" call={pick("food")}>food tile</button>
+        <text key="head-label" role="note">head</text>
+        {library("tile", "snake", "head")}
+        <text key="body-label" role="note">body</text>
+        {library("tile", "snake", "body")}
+        <text key="food-label" role="note">food</text>
+        {library("tile", "snake", "food")}
       </Section>
     </stack>
   )

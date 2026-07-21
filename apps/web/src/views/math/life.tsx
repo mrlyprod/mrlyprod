@@ -1,5 +1,6 @@
-import { call, pickColor, pickTile, setter } from "../../builders.ts"
+import { call, setter } from "../../builders.ts"
 import { Board } from "../../components/Board.tsx"
+import { library } from "../../components/library.tsx"
 import { Shot } from "../../components/Shot.tsx"
 import { h } from "../../jsx.ts"
 import type { Flip, Node, Send } from "../../types.ts"
@@ -116,13 +117,13 @@ export function life(state: unknown, _send: Send): Node {
       </card>
       <card key="seed">
         <text key="seed-label" role="label">seed tile</text>
-        <button key="pick-seed" call={pickTile("life", "seed")}>pick seed</button>
+        {library("tile", "life", "seed")}
         <range key="tiling" value={s.settings.tiling} min={1} max={8} step={1} call={turn("tiling")} arg="value" label="tiling" />
         <range key="padding" value={s.settings.padding} min={0} max={8} step={1} call={turn("padding")} arg="value" label="padding" />
       </card>
       <card key="mask">
         <text key="mask-label" role="label">neighborhood</text>
-        <button key="pick-mask" call={pickTile("life", "mask")}>pick mask</button>
+        {library("tile", "life", "mask")}
       </card>
       <card key="rules">
         <text key="birth-label" role="label">birth</text>
@@ -142,8 +143,10 @@ export function life(state: unknown, _send: Send): Node {
       </card>
       <card key="colors">
         <text key="colors-label" role="label">colors</text>
-        <button key="fill" call={pickColor("life", "fill", s.settings.fill)}>{`fill · ${s.settings.fill}`}</button>
-        <button key="void" call={pickColor("life", "void", s.settings.void)}>{`void · ${s.settings.void}`}</button>
+        <text key="fill-label" role="note">fill</text>
+        {library("colors", "life", "fill", s.settings.fill)}
+        <text key="void-label" role="note">void</text>
+        {library("colors", "life", "void", s.settings.void)}
       </card>
     </stack>
   )

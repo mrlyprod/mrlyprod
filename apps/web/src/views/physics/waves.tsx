@@ -1,5 +1,6 @@
-import { call, setter, pickColor } from "../../builders.ts"
+import { call, setter } from "../../builders.ts"
 import { Board } from "../../components/Board.tsx"
+import { library } from "../../components/library.tsx"
 import { Shot } from "../../components/Shot.tsx"
 import { DESIGNS_VOID, NUMBERS, LEVELS, SUBPIXELS } from "../../components/options.ts"
 import { h } from "../../jsx.ts"
@@ -50,8 +51,8 @@ export function waves(state: unknown, _send: Send): Node {
         <choice key="level" value={String(s.settings.level)} options={LEVELS} call={turn("level")} arg="value" label="level" mode="row" />
         <range key="padding" value={s.settings.padding} min={0} max={48} step={1} call={turn("padding")} arg="value" label="padding" />
         <choice key="subpixel" value={String(s.settings.subpixel)} options={SUBPIXELS} call={turn("subpixel")} arg="value" label="subpixel" mode="row" />
-        <button key="accent" call={pickColor("waves", "accent", s.settings.accent)}>{`accent · ${s.settings.accent}`}</button>
-        <button key="anti" call={pickColor("waves", "anti", s.settings.anti)}>{`anti · ${s.settings.anti}`}</button>
+        {library("colors", "waves", "accent", s.settings.accent)}
+        {library("colors", "waves", "anti", s.settings.anti)}
         <Shot />
       </card>
       <card key="physics">

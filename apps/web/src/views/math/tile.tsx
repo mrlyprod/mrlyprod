@@ -43,6 +43,7 @@ type State = {
     factors: number[]
   }
   thumbs: { level: number; frame: Fact }[]
+  library: { id: number; name: string; value: unknown; frame: Fact }[]
   frame: Fact
 }
 
@@ -245,8 +246,20 @@ export function tile(state: unknown, _send: Send): Node {
       <card key="actions">
         <button key="roll" call={call("tile.roll")}>roll</button>
         <button key="reset" call={call("tile.reset")}>reset</button>
+        <button key="save" call={call("tile.save")}>save</button>
         <Shot />
       </card>
+      <Section keyName="library" label="library">
+        <grid key="entries" cols={3}>
+          {s.library.map(entry => [
+            <cell key={`thumb-${entry.id}`}>
+              <canvas key="canvas" handle={`lib-${entry.id}`} rows={entry.frame.rows} palette={entry.frame.palette} />
+            </cell>,
+            <field key={`name-${entry.id}`} value={entry.name} live={false} call={call("tile.name", { id: entry.id })} arg="name" />,
+            <button key={`drop-${entry.id}`} call={call("tile.drop", { id: entry.id })}>×</button>,
+          ])}
+        </grid>
+      </Section>
     </stack>
   )
 }

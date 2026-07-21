@@ -6,18 +6,6 @@ export const set = (app: string, key: string): Call => ({ verb: `${app}.set`, ar
 
 export const setter = (app: string) => (key: string): Call => set(app, key)
 
-export const pickColor = (host: string, key: string, value?: string): Call =>
-  call("sheet.open", value === undefined ? { picker: "color", host, key } : { picker: "color", host, key, value })
-
-export const pickGlyph = (host: string, key: string, set: string, value?: string): Call =>
-  call("sheet.open", value === undefined ? { picker: "glyph", host, key, set } : { picker: "glyph", host, key, set, value })
-
-export const pickTime = (host: string, key: string, value: { h: number; m: number }): Call =>
-  call("sheet.open", { picker: "time", host, key, value })
-
-export const pickTile = (host: string, key: string): Call =>
-  call("sheet.open", { picker: "tile", host, key })
-
 export const raster = (key: string, handle: string, glyph: Raster): Node => ({
   kind: "Canvas",
   key,

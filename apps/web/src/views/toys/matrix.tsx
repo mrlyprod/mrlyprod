@@ -30,7 +30,7 @@ export function matrix(state: unknown, _send: Send): Node {
       </card>
       <card key="paint">
         <field key="charset" value={s.settings.charset} live={false} call={turn("charset")} arg="value" label="charset" />
-        {palette("matrix", "matrix", s.settings.palette)}
+        {palette("matrix", s.settings.palette)}
       </card>
     </stack>
   )

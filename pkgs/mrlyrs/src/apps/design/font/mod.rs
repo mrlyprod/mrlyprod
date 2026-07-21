@@ -6,6 +6,7 @@ pub struct Font {
     order: Vec<char>,
     at: usize,
     reveal: Option<Reveal>,
+    library: Vec<char>,
 }
 
 struct Reveal {
@@ -25,8 +26,13 @@ impl Font {
             order: crate::font::supported(),
             at: 0,
             reveal: None,
+            library: seed(),
         }
     }
+}
+
+fn seed() -> Vec<char> {
+    vec!['A', 'a', '0', '#']
 }
 
 impl App for Font {
@@ -58,6 +64,7 @@ impl App for Font {
             "total": self.order.len(),
             "revealing": self.reveal.is_some(),
             "glyph": { "text": c.to_string(), "width": width, "height": height, "rows": rows },
+            "library": self.library.iter().map(|c| c.to_string()).collect::<Vec<_>>(),
         })
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
@@ -70,6 +77,8 @@ impl App for Font {
                 "font.export",
                 json!({ "format": "json | ttf | woff | woff2" }),
             ),
+            Verb::new("font.keep", json!({ "char": "string" })),
+            Verb::new("font.drop", json!({ "char": "string" })),
         ]
     }
     fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
@@ -172,6 +181,48 @@ impl App for Font {
                     json!({ "name": name, "mime": mime, "data": data }),
                 ))
             }
+            "font.keep" => {
+                let arg = call.arg("char");
+                let c = if arg.is_null() {
+                    self.order[self.at]
+                } else {
+                    let Some(s) = arg.as_str() else {
+                        return Outcome::fail("unknown char");
+                    };
+                    let mut chars = s.chars();
+                    let (Some(c), None) = (chars.next(), chars.next()) else {
+                        return Outcome::fail("unknown char");
+                    };
+                    c
+                };
+                if crate::font::glyph(c).is_none() {
+                    return Outcome::fail("unknown char");
+                }
+                if self.library.contains(&c) {
+                    return Outcome::fail("already kept");
+                }
+                if self.library.len() >= 24 {
+                    return Outcome::fail("library is full");
+                }
+                self.library.push(c);
+                Outcome::ok(json!({ "char": c.to_string() }))
+            }
+            "font.drop" => {
+                let Some(s) = call.arg("char").as_str() else {
+                    return Outcome::fail("not in the library");
+                };
+                let mut chars = s.chars();
+                let (Some(c), None) = (chars.next(), chars.next()) else {
+                    return Outcome::fail("not in the library");
+                };
+                match self.library.iter().position(|&x| x == c) {
+                    Some(i) => {
+                        self.library.remove(i);
+                        Outcome::ok(json!({ "char": c.to_string() }))
+                    }
+                    None => Outcome::fail("not in the library"),
+                }
+            }
             _ => Outcome::fail("unknown verb"),
         }
     }
@@ -183,20 +234,41 @@ impl App for Font {
         }
     }
     fn save(&self) -> Json {
-        json!({ "char": self.order[self.at].to_string() })
+        json!({
+            "char": self.order[self.at].to_string(),
+            "library": self.library.iter().map(|c| c.to_string()).collect::<Vec<_>>(),
+        })
     }
     fn load(&mut self, state: &Json) {
         self.reveal = None;
-        let Some(s) = state["char"].as_str() else {
-            return;
-        };
-        let mut chars = s.chars();
-        let (Some(c), None) = (chars.next(), chars.next()) else {
-            return;
-        };
-        if let Some(pos) = self.order.iter().position(|&x| x == c) {
-            self.at = pos;
+        if let Some(s) = state["char"].as_str() {
+            let mut chars = s.chars();
+            if let (Some(c), None) = (chars.next(), chars.next()) {
+                if let Some(pos) = self.order.iter().position(|&x| x == c) {
+                    self.at = pos;
+                }
+            }
         }
+        self.library = match state["library"].as_array() {
+            Some(items) => {
+                let mut library: Vec<char> = Vec::new();
+                for item in items {
+                    if let Some(s) = item.as_str() {
+                        let mut chars = s.chars();
+                        if let (Some(c), None) = (chars.next(), chars.next()) {
+                            if crate::font::glyph(c).is_some()
+                                && !library.contains(&c)
+                                && library.len() < 24
+                            {
+                                library.push(c);
+                            }
+                        }
+                    }
+                }
+                library
+            }
+            None => seed(),
+        };
     }
 }
 
@@ -347,9 +419,60 @@ mod tests {
                 "font.pick",
                 "font.scramble",
                 "font.tick",
-                "font.export"
+                "font.export",
+                "font.keep",
+                "font.drop"
             ]
         );
+    }
+    #[test]
+    fn library_seeds_are_supported() {
+        let f = Font::new();
+        let library = f.state(&iden())["library"].clone();
+        assert_eq!(library, json!(["A", "a", "0", "#"]));
+        for value in library.as_array().unwrap() {
+            let c = value.as_str().unwrap().chars().next().unwrap();
+            assert!(crate::font::glyph(c).is_some());
+        }
+    }
+    #[test]
+    fn keep_defaults_to_current_char() {
+        let mut f = Font::new();
+        send(&mut f, "font.pick", json!({ "char": "Z" }));
+        assert!(send(&mut f, "font.keep", json!({})).ok);
+        assert!(f.state(&iden())["library"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("Z")));
+    }
+    #[test]
+    fn keep_and_drop_round_trip() {
+        let mut f = Font::new();
+        assert!(send(&mut f, "font.keep", json!({ "char": "Q" })).ok);
+        assert!(f.state(&iden())["library"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("Q")));
+        let dup = send(&mut f, "font.keep", json!({ "char": "Q" }));
+        assert!(!dup.ok);
+        assert_eq!(dup.note.as_deref(), Some("already kept"));
+        let unknown = send(&mut f, "font.keep", json!({ "char": "€" }));
+        assert_eq!(unknown.note.as_deref(), Some("unknown char"));
+        assert!(send(&mut f, "font.drop", json!({ "char": "Q" })).ok);
+        assert!(!f.state(&iden())["library"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("Q")));
+        let gone = send(&mut f, "font.drop", json!({ "char": "Q" }));
+        assert_eq!(gone.note.as_deref(), Some("not in the library"));
+    }
+    #[test]
+    fn load_sanitizes_the_library() {
+        let mut f = Font::new();
+        f.load(&json!({ "library": "garbage" }));
+        assert_eq!(f.state(&iden())["library"], json!(["A", "a", "0", "#"]));
+        f.load(&json!({ "library": ["A", "€", "A", "0"] }));
+        assert_eq!(f.state(&iden())["library"], json!(["A", "0"]));
     }
     #[test]
     fn export_emits_the_requested_asset() {

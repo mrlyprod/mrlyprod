@@ -37,20 +37,6 @@ export type Palette = { names: string[]; hex: Record<string, string>; canvas: { 
 
 export type Mark = { rows: number; cols: number; fps: number; frames: number[][] }
 
-export type GlyphSet = { name: string; glyphs: string[] }
-
-export type DesignFrame = { width: number; height: number; rows: number[][]; palette: string[] }
-
-export type Design = { name: string; frame: DesignFrame; value: unknown }
-
-export type DesignsReq = { group?: string; catalog?: string; page?: number; dark?: boolean }
-
-export type Designs = {
-  config: { group: string; catalog: string; page: number; dark: boolean }
-  vocab: { groups: string[]; catalogs: string[]; count: number; pages: number; size: number }
-  designs: Design[]
-}
-
 export type Node =
   | { kind: "Stack"; key?: string; children: Node[] }
   | { kind: "Grid"; key?: string; cols: number; mode?: "snap"; children: Node[] }

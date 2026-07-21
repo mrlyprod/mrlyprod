@@ -1,4 +1,4 @@
-use super::helpers::{closest_nesting, default_paint, int, nearest};
+use super::helpers::{closest_nesting, default_paint, int, nearest, source_label, work};
 use super::render::{blank, two_tone};
 use super::rules::resize;
 use super::{Tile, BUDGETS, MIN, THUMBS};
@@ -9,7 +9,6 @@ use crate::core::tile::{
 use crate::math::bang;
 use crate::math::two::tile as tile2d;
 use crate::ui::frame;
-use crate::ui::picker::source_label;
 use serde_json::{json, Value as Json};
 
 impl Tile {
@@ -47,6 +46,20 @@ impl Tile {
             })
             .collect()
     }
+    pub fn preview(&self, model: &Model) -> Json {
+        let board = crate::ui::frame::board(self.dark);
+        let fill = crate::ui::frame::ink(self.dark);
+        match tile2d::build(model) {
+            Ok(cell) => frame::field(
+                cell.width(),
+                cell.height(),
+                two_tone(&cell, board, fill),
+                board,
+            )
+            .fact(),
+            Err(_) => blank(board),
+        }
+    }
     pub fn thumbs(&self) -> Vec<Json> {
         if self.tile.group != Group::Fractal {
             return Vec::new();
@@ -55,25 +68,26 @@ impl Tile {
         if levels.is_empty() || levels.len() > THUMBS {
             return Vec::new();
         }
-        let board = crate::ui::frame::board(self.dark);
-        let fill = crate::ui::frame::ink(self.dark);
         levels
             .iter()
             .map(|&level| {
                 let mut probe = self.tile.clone();
                 probe.levels = vec![level];
                 resize(&mut probe);
-                let fact = match tile2d::build(&probe) {
-                    Ok(cell) => frame::field(
-                        cell.width(),
-                        cell.height(),
-                        two_tone(&cell, board, fill),
-                        board,
-                    )
-                    .fact(),
-                    Err(_) => blank(board),
-                };
-                json!({ "level": level, "frame": fact })
+                json!({ "level": level, "frame": self.preview(&probe) })
+            })
+            .collect()
+    }
+    pub fn shelf(&self) -> Vec<Json> {
+        self.library
+            .iter()
+            .map(|entry| {
+                json!({
+                    "id": entry.id,
+                    "name": entry.name,
+                    "value": work(&entry.tile, &entry.paint),
+                    "frame": self.preview(&entry.tile),
+                })
             })
             .collect()
     }

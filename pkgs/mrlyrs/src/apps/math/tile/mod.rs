@@ -5,19 +5,41 @@ mod state;
 
 use crate::core::paint::{self, Paint};
 use crate::core::state::seed;
-use crate::core::tile::{Catalog, Group, Parity, Tile as Model};
+use crate::core::tile::{Catalog, Design, Group, Parity, Tile as Model};
 use crate::math::two::tile as tile2d;
 use crate::os::kernel::{App, Call, Iden, Manifest, Outcome, Verb};
 use crate::ui::frame;
-use helpers::catalog_name;
+use helpers::{catalog_name, source_label, work};
 use render::{blank, two_tone};
-use rules::{carpet, validate_saved};
+use rules::{carpet, starter, validate_saved};
 use serde_json::{json, Value as Json};
 
 const BUDGETS: [usize; 3] = [16, 32, 64];
 const MIN: usize = 2;
 const CEILING: usize = 64;
 const THUMBS: usize = 6;
+const SHELF: usize = 12;
+const STARTERS: [Design; 4] = [Design::Carpet, Design::Net, Design::Htree, Design::Vtree];
+
+struct Entry {
+    id: u64,
+    name: String,
+    tile: Model,
+    paint: Option<Paint>,
+}
+
+fn seed_library() -> Vec<Entry> {
+    STARTERS
+        .iter()
+        .enumerate()
+        .map(|(i, &design)| Entry {
+            id: (i + 1) as u64,
+            name: design.name().to_lowercase(),
+            tile: starter(design),
+            paint: None,
+        })
+        .collect()
+}
 
 pub struct Tile {
     tile: Model,
@@ -27,6 +49,8 @@ pub struct Tile {
     budget: usize,
     frame: Json,
     dark: bool,
+    library: Vec<Entry>,
+    next: u64,
 }
 
 impl Default for Tile {
@@ -45,6 +69,8 @@ impl Tile {
             budget: 64,
             frame: Json::Null,
             dark: false,
+            library: seed_library(),
+            next: STARTERS.len() as u64 + 1,
         };
         app.repaint();
         app
@@ -96,6 +122,7 @@ impl App for Tile {
             "budget": self.budget,
             "options": self.options(),
             "thumbs": self.thumbs(),
+            "library": self.shelf(),
             "frame": self.frame,
         })
     }
@@ -109,6 +136,9 @@ impl App for Tile {
             Verb::new("tile.paint", json!({ "seed": "int" })),
             Verb::new("tile.strip", json!({})),
             Verb::new("tile.reset", json!({})),
+            Verb::new("tile.save", json!({ "name": "string" })),
+            Verb::new("tile.name", json!({ "id": "int", "name": "string" })),
+            Verb::new("tile.drop", json!({ "id": "int" })),
         ]
     }
     fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
@@ -169,6 +199,62 @@ impl App for Tile {
                 *self = Tile::new();
                 Outcome::ok(json!({}))
             }
+            "tile.save" => {
+                if self.library.len() >= SHELF {
+                    return Outcome::fail("library is full");
+                }
+                let bundle = work(&self.tile, &self.paint);
+                if self
+                    .library
+                    .iter()
+                    .any(|e| work(&e.tile, &e.paint) == bundle)
+                {
+                    return Outcome::fail("already saved");
+                }
+                let id = self.next;
+                let provided = call.arg("name").as_str().unwrap_or("").trim().to_string();
+                let name = if provided.is_empty() {
+                    self.tile
+                        .sources
+                        .first()
+                        .map(source_label)
+                        .unwrap_or_else(|| format!("tile {id}"))
+                } else {
+                    provided
+                };
+                self.library.push(Entry {
+                    id,
+                    name: name.clone(),
+                    tile: self.tile.clone(),
+                    paint: self.paint.clone(),
+                });
+                self.next += 1;
+                Outcome::ok(json!({ "id": id, "name": name }))
+            }
+            "tile.name" => {
+                let id = call.arg("id").as_u64().unwrap_or(0);
+                let name = call.arg("name").as_str().unwrap_or("").trim().to_string();
+                if name.is_empty() {
+                    return Outcome::fail("empty name");
+                }
+                match self.library.iter_mut().find(|e| e.id == id) {
+                    Some(entry) => {
+                        entry.name = name.clone();
+                        Outcome::ok(json!({ "id": id, "name": name }))
+                    }
+                    None => Outcome::fail("unknown tile"),
+                }
+            }
+            "tile.drop" => {
+                let id = call.arg("id").as_u64().unwrap_or(0);
+                match self.library.iter().position(|e| e.id == id) {
+                    Some(index) => {
+                        self.library.remove(index);
+                        Outcome::ok(json!({ "id": id }))
+                    }
+                    None => Outcome::fail("unknown tile"),
+                }
+            }
             _ => Outcome::fail("unknown verb"),
         }
     }
@@ -179,6 +265,19 @@ impl App for Tile {
             "catalog": catalog_name(&self.catalog),
             "parity": self.parity.name(),
             "budget": self.budget,
+            "library": self
+                .library
+                .iter()
+                .map(|e| {
+                    json!({
+                        "id": e.id,
+                        "name": e.name,
+                        "tile": e.tile.to_json(),
+                        "paint": e.paint.as_ref().map(|p| p.to_json()).unwrap_or(Json::Null),
+                    })
+                })
+                .collect::<Vec<_>>(),
+            "next": self.next,
         })
     }
     fn load(&mut self, state: &Json) {
@@ -198,6 +297,33 @@ impl App for Tile {
             self.tile = model;
             self.paint = coating;
         }
+        if let Some(entries) = state["library"].as_array() {
+            let mut library = Vec::new();
+            let mut top: u64 = 0;
+            for entry in entries {
+                if let Ok((tile, paint)) = validate_saved(entry) {
+                    let id = entry["id"].as_u64().unwrap_or(0);
+                    let trimmed = entry["name"].as_str().unwrap_or("").trim();
+                    let name = if trimmed.is_empty() {
+                        tile.sources
+                            .first()
+                            .map(source_label)
+                            .unwrap_or_else(|| format!("tile {id}"))
+                    } else {
+                        trimmed.to_string()
+                    };
+                    top = top.max(id);
+                    library.push(Entry {
+                        id,
+                        name,
+                        tile,
+                        paint,
+                    });
+                }
+            }
+            self.library = library;
+            self.next = state["next"].as_u64().unwrap_or(0).max(top + 1);
+        }
         self.snap();
         self.repaint();
     }
@@ -211,7 +337,6 @@ mod tests {
     use crate::core::state::guard;
     use crate::core::tile::{Design, Source};
     use crate::os::kernel::testkit::{iden, send};
-    use crate::ui::picker::source_label;
 
     fn app() -> Tile {
         Tile::new()
@@ -473,8 +598,162 @@ mod tests {
                 "tile.roll",
                 "tile.paint",
                 "tile.strip",
-                "tile.reset"
+                "tile.reset",
+                "tile.save",
+                "tile.name",
+                "tile.drop"
             ]
         );
+    }
+    #[test]
+    fn library_seeds_four_buildable_starters() {
+        let _g = guard();
+        seed(1);
+        let a = app();
+        seed(99);
+        let b = app();
+        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.library.len(), 4);
+        let names: Vec<&str> = a.library.iter().map(|e| e.name.as_str()).collect();
+        assert_eq!(names, vec!["carpet", "net", "htree", "vtree"]);
+        for (i, entry) in a.library.iter().enumerate() {
+            assert_eq!(entry.id, (i + 1) as u64);
+            assert!(entry.paint.is_none());
+            assert!(tile2d::build(&entry.tile).is_ok());
+        }
+        assert_eq!(a.next, 5);
+    }
+    #[test]
+    fn library_value_parses_back_to_a_model() {
+        let t = app();
+        let cards = t.state(&iden())["library"].as_array().unwrap().clone();
+        assert_eq!(cards.len(), 4);
+        assert_eq!(cards[0]["id"], json!(1));
+        assert_eq!(cards[0]["name"], json!("carpet"));
+        for card in &cards {
+            assert_eq!(card["value"]["v"], json!(1));
+            assert_eq!(card["value"]["paint"], Json::Null);
+            let tile = Model::from_json(&card["value"]["tile"]).unwrap();
+            assert!(tile2d::build(&tile).is_ok());
+            assert!(card["frame"]["rows"].is_array());
+        }
+    }
+    #[test]
+    fn save_dedupes_and_names() {
+        let mut t = app();
+        let out = send(&mut t, "tile.save", json!({}));
+        assert!(!out.ok);
+        assert_eq!(out.note.as_deref(), Some("already saved"));
+        assert!(set(&mut t, "group", json!("General")).ok);
+        let out = send(&mut t, "tile.save", json!({ "name": "  keeper  " }));
+        assert!(out.ok);
+        assert_eq!(out.data["name"], json!("keeper"));
+        assert_eq!(out.data["id"], json!(5));
+        assert_eq!(t.library.len(), 5);
+        assert_eq!(t.next, 6);
+        assert_eq!(
+            send(&mut t, "tile.save", json!({})).note.as_deref(),
+            Some("already saved")
+        );
+    }
+    #[test]
+    fn save_auto_names_from_the_source() {
+        let mut t = app();
+        assert!(set(&mut t, "group", json!("General")).ok);
+        let out = send(&mut t, "tile.save", json!({}));
+        assert!(out.ok);
+        let label = source_label(&t.tile.sources[0]);
+        assert_eq!(out.data["name"], json!(label));
+    }
+    #[test]
+    fn save_caps_the_library() {
+        let mut t = app();
+        while t.library.len() < SHELF {
+            let id = t.next;
+            t.library.push(Entry {
+                id,
+                name: format!("x{id}"),
+                tile: carpet(),
+                paint: None,
+            });
+            t.next += 1;
+        }
+        let out = send(&mut t, "tile.save", json!({}));
+        assert!(!out.ok);
+        assert_eq!(out.note.as_deref(), Some("library is full"));
+    }
+    #[test]
+    fn name_and_drop_edit_the_library() {
+        let mut t = app();
+        let out = send(&mut t, "tile.name", json!({ "id": 2, "name": "  webby  " }));
+        assert!(out.ok);
+        assert_eq!(out.data["name"], json!("webby"));
+        assert_eq!(t.library[1].name, "webby");
+        assert_eq!(
+            send(&mut t, "tile.name", json!({ "id": 2, "name": "   " }))
+                .note
+                .as_deref(),
+            Some("empty name")
+        );
+        assert_eq!(
+            send(&mut t, "tile.name", json!({ "id": 99, "name": "x" }))
+                .note
+                .as_deref(),
+            Some("unknown tile")
+        );
+        let out = send(&mut t, "tile.drop", json!({ "id": 1 }));
+        assert!(out.ok);
+        assert_eq!(t.library.len(), 3);
+        assert!(!t.library.iter().any(|e| e.id == 1));
+        assert_eq!(
+            send(&mut t, "tile.drop", json!({ "id": 1 }))
+                .note
+                .as_deref(),
+            Some("unknown tile")
+        );
+    }
+    #[test]
+    fn save_load_carries_the_library() {
+        let _g = guard();
+        let mut a = app();
+        assert!(send(&mut a, "tile.roll", json!({ "seed": 9 })).ok);
+        assert!(send(&mut a, "tile.paint", json!({ "seed": 2 })).ok);
+        assert!(send(&mut a, "tile.save", json!({ "name": "keeper" })).ok);
+        let mut b = app();
+        b.load(&a.save());
+        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.save(), b.save());
+        assert_eq!(b.library.len(), 5);
+        assert_eq!(b.next, a.next);
+    }
+    #[test]
+    fn load_reseeds_starters_when_library_missing() {
+        let mut t = app();
+        send(&mut t, "tile.drop", json!({ "id": 1 }));
+        t.load(&json!({ "tile": carpet().to_json(), "paint": Json::Null }));
+        assert_eq!(t.library.len(), 4);
+        assert_eq!(t.library[0].name, "carpet");
+        assert_eq!(t.next, 5);
+    }
+    #[test]
+    fn load_drops_invalid_library_entries() {
+        let mut t = app();
+        let mut oversize = carpet();
+        oversize.levels = vec![5];
+        resize(&mut oversize);
+        t.load(&json!({
+            "tile": carpet().to_json(),
+            "paint": Json::Null,
+            "library": [
+                { "id": 10, "name": "keep", "tile": carpet().to_json(), "paint": Json::Null },
+                { "id": 11, "name": "toobig", "tile": oversize.to_json(), "paint": Json::Null },
+                { "id": 12, "name": "junk", "tile": 7, "paint": Json::Null },
+            ],
+            "next": 3,
+        }));
+        assert_eq!(t.library.len(), 1);
+        assert_eq!(t.library[0].id, 10);
+        assert_eq!(t.library[0].name, "keep");
+        assert_eq!(t.next, 11);
     }
 }

@@ -27,10 +27,8 @@ replaces the route.
 
 ## Tier 2 - shell-intercepted verbs (client-side, never reaches the kernel)
 
-- **`sheet.*`** - open/turn/close live entirely in shell state (`picking`).
-  Only the host `.set` a pick fires is journaled; which picker is open and
-  what it's mid-editing (category, steppers, tile page) is not. See
-  PICKERS.md.
+- **`ask.*`** - yes/no resolve the shell's confirm promise (journal
+  reset/import guards). Never journaled.
 - **`face.full`** - calls fullscreen on a DOM element. No kernel involvement.
 - **`splash.*`** - on/off hides or restores the whole shell (the splash
   screen, spec in SPLASH.md). Pure client state; beats pause while hidden.
@@ -42,7 +40,8 @@ replaces the route.
 - **`toast`** - content comes from journaled kernel notices, but the 4s
   visibility window is a local timer. The build-mismatch discard toast has no
   kernel notice behind it at all.
-- **`picking`** sheet - the picker overlay on screen is pure client state.
+- **Confirm** - the `ask` dialog on screen is pure client state, the one
+  floating overlay left.
 - **Tints** - header/card/footer colors from an unseeded `Math.random()` pool,
   cached on the DOM node. Deterministic only when `settings.fill` is pinned
   off `"random"`.
@@ -60,7 +59,7 @@ replaces the route.
 The claim: every screenshot is a labeled projection of known kernel
 state, so a lived session replays into perfectly labeled film. True
 for kernel-known pixels, but a handful of unjournaled things break it for a
-raw browser screenshot: the picker sheet, toast timing (plus the
+raw browser screenshot: the confirm dialog, toast timing (plus the
 unjournaled discard toast), random tints, the mark frame, and mid-tween
 projector/strip frames.
 

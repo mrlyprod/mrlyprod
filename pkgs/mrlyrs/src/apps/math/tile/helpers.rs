@@ -1,6 +1,21 @@
 use crate::core::paint::{Edition, Ink, Paint};
-use crate::core::tile::Catalog;
-use serde_json::Value as Json;
+use crate::core::tile::{Catalog, Source, Tile as Model};
+use serde_json::{json, Value as Json};
+
+pub fn source_label(source: &Source) -> String {
+    match source {
+        Source::Classic(design) => design.name().to_string(),
+        Source::Code(code) => format!("mrly_{code:02}"),
+    }
+}
+
+pub fn work(tile: &Model, paint: &Option<Paint>) -> Json {
+    json!({
+        "v": 1,
+        "tile": tile.to_json(),
+        "paint": paint.as_ref().map(|p| p.to_json()).unwrap_or(Json::Null),
+    })
+}
 
 pub fn int(value: &Json) -> usize {
     value

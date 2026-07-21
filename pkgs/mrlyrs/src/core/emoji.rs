@@ -111,6 +111,10 @@ pub fn has(name: &str) -> bool {
     CATEGORIES.iter().any(|c| c.name == name)
 }
 
+pub fn known(value: &str) -> bool {
+    CATEGORIES.iter().any(|c| c.emojis.contains(&value))
+}
+
 pub fn grid(name: &str) -> &'static [&'static str] {
     CATEGORIES
         .iter()
@@ -167,6 +171,13 @@ mod tests {
         assert!(!has("nope"));
         assert!(!grid(first()).is_empty());
         assert!(grid("nope").is_empty());
+    }
+    #[test]
+    fn known_spots_catalog_members() {
+        assert!(known("🍎"));
+        assert!(known("🎲"));
+        assert!(!known("x"));
+        assert!(!known(""));
     }
     #[test]
     fn is_grapheme_accepts_emoji_rejects_junk() {

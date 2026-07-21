@@ -2,13 +2,7 @@ import { call } from "../../builders.ts"
 import { h } from "../../jsx.ts"
 import type { Node, Send } from "../../types.ts"
 
-type State = { category: string; categories: string[]; grid: string[] }
-
-const chunk = (items: string[], cols: number): string[][] => {
-  const rows: string[][] = []
-  for (let i = 0; i < items.length; i += cols) rows.push(items.slice(i, i + cols))
-  return rows
-}
+type State = { category: string; categories: string[]; grid: string[]; library: string[] }
 
 export function emoji(state: unknown, _send: Send): Node {
   const s = state as State
@@ -18,7 +12,19 @@ export function emoji(state: unknown, _send: Send): Node {
         <choice key="category" value={s.category} options={s.categories} call={call("emoji.set", { key: "category" })} arg="value" mode="row" />
       </card>
       <card key="grid">
-        <cells key="emojis" rows={chunk(s.grid, 8)} />
+        <grid key="emojis" cols={8}>
+          {s.grid.map(value => (
+            <button key={`e-${value}`} call={call("emoji.keep", { value })}>{value}</button>
+          ))}
+        </grid>
+      </card>
+      <card key="library">
+        <text key="drop-hint" role="note">tap to drop</text>
+        <grid key="lib" cols={8}>
+          {s.library.map(value => (
+            <button key={`lib-${value}`} call={call("emoji.drop", { value })}>{value}</button>
+          ))}
+        </grid>
       </card>
     </stack>
   )

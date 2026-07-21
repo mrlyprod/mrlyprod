@@ -24,17 +24,14 @@ mrlyprod
 │       ├── src
 │       │   ├── components
 │       │   │   ├── Board.tsx
-│       │   │   ├── ColorPicker.tsx
 │       │   │   ├── DPad.tsx
 │       │   │   ├── GameOver.tsx
-│       │   │   ├── GlyphPicker.tsx
 │       │   │   ├── Meter.tsx
 │       │   │   ├── Pager.tsx
 │       │   │   ├── Section.tsx
 │       │   │   ├── Shot.tsx
-│       │   │   ├── TilePicker.tsx
-│       │   │   ├── TimePicker.tsx
 │       │   │   ├── fractal.tsx
+│       │   │   ├── library.tsx
 │       │   │   ├── options.ts
 │       │   │   └── palette.tsx
 │       │   ├── render
@@ -119,6 +116,7 @@ mrlyprod
 │       │   ├── kernel.ts
 │       │   ├── main.ts
 │       │   ├── palette.ts
+│       │   ├── peeks.ts
 │       │   ├── router.ts
 │       │   ├── sound.ts
 │       │   ├── types.ts
@@ -147,7 +145,7 @@ mrlyprod
 ├── docs
 │   ├── COMMENTS.md
 │   ├── LAYERS.md
-│   ├── PICKERS.md
+│   ├── LIBRARY.md
 │   └── STATE.md
 ├── files
 │   ├── mrlyfont
@@ -538,7 +536,6 @@ mrlyprod
 │       │   │   ├── card.rs
 │       │   │   ├── frame.rs
 │       │   │   ├── mod.rs
-│       │   │   ├── picker.rs
 │       │   │   ├── raster.rs
 │       │   │   └── scene.rs
 │       │   └── lib.rs

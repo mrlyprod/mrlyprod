@@ -122,6 +122,12 @@
         "🍹",
         "🍾",
         "🧉"
+      ],
+      "library": [
+        "🍎",
+        "🍏",
+        "⭐",
+        "🎲"
       ]
     },
     "actions": [
@@ -129,6 +135,18 @@
         "verb": "emoji.set",
         "args": {
           "key": "category",
+          "value": "string"
+        }
+      },
+      {
+        "verb": "emoji.keep",
+        "args": {
+          "value": "string"
+        }
+      },
+      {
+        "verb": "emoji.drop",
+        "args": {
           "value": "string"
         }
       }

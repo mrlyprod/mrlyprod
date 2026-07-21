@@ -3,6 +3,7 @@ import { act, boot, describe, frame, geometry, load, palette, peek, shaders } fr
 import type { Journal } from "./journal.ts"
 import { Store } from "./journal.ts"
 import { install } from "./palette.ts"
+import { install as installPeeks } from "./peeks.ts"
 import { theme } from "./render/theme.ts"
 import { router } from "./router.ts"
 import { mount } from "./shell/mount.ts"
@@ -11,6 +12,7 @@ import type { Call, Observation } from "./types.ts"
 await load(fetch("/mrlyjs_bg.wasm"))
 const handle = boot()
 install(palette())
+installPeeks(app => peek(handle, app))
 const registry = describe()
 gpu.init(shaders(), route => geometry(handle, route))
 

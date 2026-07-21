@@ -1,5 +1,6 @@
 import { readFileSync, readdirSync } from "node:fs"
-import { act, boot, describe, designs, frame, glyphs, load, mark, shaders } from "./src/kernel.ts"
+import { act, boot, describe, frame, load, mark, peek, shaders } from "./src/kernel.ts"
+import { install as installPeeks } from "./src/peeks.ts"
 import type { Call, Node, Observation, Shade } from "./src/types.ts"
 import { views } from "./src/views/index.ts"
 
@@ -7,6 +8,7 @@ const wasm = readFileSync(new URL("../../pkgs/mrlyjs/pkg/mrlyjs_bg.wasm", import
 await load(wasm)
 
 const handle = boot()
+installPeeks(app => peek(handle, app))
 const registry = describe()
 let now = 1783600496000
 let failures = 0
@@ -226,10 +228,11 @@ send("life.fill", { which: "survive", seq: "odds" })
 check("a sequence fills the survive set", JSON.stringify(settings()["survive"]) === JSON.stringify([3, 5, 7]))
 send("life.reset", { pattern: "soup" })
 check("soup seeds a living board", (state()["population"] as number) > 0 && state()["generation"] === 0)
-const catalog = designs({})
+const tileLibrary = (peek(handle, "tile")?.state as { library: { value: unknown }[] }).library
+check("tile keeps a non-empty library", tileLibrary.length > 0, String(tileLibrary.length))
 visit("life")
-const picked = send("life.set", { key: "seed", value: catalog.designs[0]?.value })
-check("a picked seed tile rebuilds the board", picked.last?.ok === true && state()["length"] === 1)
+const picked = send("life.set", { key: "seed", value: tileLibrary[0]?.value })
+check("a saved tile seeds the board", picked.last?.ok === true && state()["length"] === 1)
 send("life.run", { on: false })
 send("life.paint", { points: [[0, 0]] })
 check("painting toggles a cell while paused", (state()["population"] as number) >= 1 && state()["fate"] === null)
@@ -246,11 +249,14 @@ const tileTree = views["tile"]?.(focused(look()), () => {}) as Node
 check("the tile view hangs a preview canvas", nodes(tileTree).some(n => n.kind === "Canvas"))
 checkBox("tile", tileTree)
 
-const smileys = glyphs("emoji")
-check("glyphs emoji names its categories", smileys.length > 1 && (smileys[0]?.glyphs.length ?? 0) > 0, String(smileys.length))
-const typeface = glyphs("font")
-check("glyphs font gives a single set", typeface.length === 1 && typeface[0]?.name === "font" && (typeface[0]?.glyphs.length ?? 0) > 0, String(typeface[0]?.glyphs.length))
-check("designs returns a vocab and thumbnails", catalog.vocab.groups.length > 0 && catalog.designs.length > 0 && (catalog.designs[0]?.frame.width ?? 0) > 0)
+const kept = (app: string) => (peek(handle, app)?.state as { library: unknown[] }).library
+check("colors keeps the full name library", kept("colors").length === 15, String(kept("colors").length))
+check("emoji keeps a non-empty library", kept("emoji").length > 0, String(kept("emoji").length))
+check("font keeps a non-empty library", kept("font").length > 0, String(kept("font").length))
+visit("tile")
+send("tile.roll")
+const saved = send("tile.save")
+check("tile.save keeps the current tile", saved.last?.ok === true, String(saved.last?.note))
 
 const PNG =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="

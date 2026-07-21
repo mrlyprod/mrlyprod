@@ -2,7 +2,7 @@ import { call, raster } from "../../builders.ts"
 import { h } from "../../jsx.ts"
 import type { Node, Raster, Send } from "../../types.ts"
 
-type State = { char: string; name: string; index: number; total: number; revealing: boolean; glyph: Raster }
+type State = { char: string; name: string; index: number; total: number; revealing: boolean; glyph: Raster; library: string[] }
 
 const FORMATS = ["json", "ttf", "woff", "woff2"]
 
@@ -20,11 +20,20 @@ export function font(state: unknown, _send: Send): Node {
         <button key="next" call={call("font.page", { dir: "next" })}>→</button>
         <field key="pick" value="" live={false} call={call("font.pick")} arg="char" hint="char" />
         <button key="scramble" call={call("font.scramble")}>scramble</button>
+        <button key="keep" call={call("font.keep")}>keep</button>
       </card>
       <card key="export">
         {FORMATS.map(f => (
           <button key={f} call={call("font.export", { format: f })}>{f}</button>
         ))}
+      </card>
+      <card key="library">
+        <text key="drop-hint" role="note">tap to drop</text>
+        <grid key="lib" cols={8}>
+          {s.library.map(char => (
+            <button key={`lib-${char}`} call={call("font.drop", { char })}>{char}</button>
+          ))}
+        </grid>
       </card>
     </stack>
   )

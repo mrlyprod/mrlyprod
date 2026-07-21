@@ -5,13 +5,17 @@ use crate::math::two::tile as tile2d;
 use serde_json::Value as Json;
 
 pub fn carpet() -> Model {
-    let mut tile = Model::new(Group::Fractal).size(9, 9);
-    tile.sources = vec![Source::Classic(Design::Carpet)];
+    starter(Design::Carpet)
+}
+
+pub fn starter(design: Design) -> Model {
+    let mut tile = Model::new(Group::Fractal);
+    tile.sources = vec![Source::Classic(design)];
     tile.numbers = vec![3];
     tile.levels = vec![2];
     tile.rotations = vec![0];
     tile.anti = vec![false];
-    tile.factor = 3;
+    resize(&mut tile);
     tile
 }
 

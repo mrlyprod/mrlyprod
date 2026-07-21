@@ -29,7 +29,7 @@ export function sleep(state: unknown, _send: Send): Node {
         <range key="speed" value={s.settings.speed} min={0.1} max={2.0} step={0.1} call={turn("speed")} arg="value" label="speed" />
       </card>
       <card key="paint">
-        {palette("sleep", "sleep", s.settings.palette)}
+        {palette("sleep", s.settings.palette)}
       </card>
     </stack>
   )

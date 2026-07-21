@@ -1,10 +1,19 @@
-import { call, pickTime, raster } from "../../builders.ts"
+import { call, raster } from "../../builders.ts"
 import { h } from "../../jsx.ts"
 import type { Node, Raster, Send } from "../../types.ts"
 
 const MODES = ["countdown", "stopwatch"]
 
 const PRESETS = [1, 3, 5, 10]
+
+const STEPS: { label: string; delta: number }[] = [
+  { label: "-1h", delta: -60 },
+  { label: "-1m", delta: -1 },
+  { label: "+1m", delta: 1 },
+  { label: "+1h", delta: 60 },
+]
+
+const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n))
 
 type State = {
   mode: string
@@ -48,6 +57,7 @@ function controls(s: State): Node[] {
       <button key="clear" call={call("timer.clear")}>clear</button>,
     ].filter((node): node is Node => node !== null)
   }
+  const minutes = s.armed ? Math.max(1, Math.ceil(s.remaining / 60000)) : 0
   return [
     <field key="minutes" value="" live={false} call={call("timer.start")} arg="minutes" hint="minutes" />,
     <grid key="presets" cols={4}>
@@ -55,7 +65,12 @@ function controls(s: State): Node[] {
         <button key={`m${m}`} call={call("timer.start", { minutes: m })}>{`${m}m`}</button>
       ))}
     </grid>,
-    <button key="pick" call={pickTime("timer", "duration", { h: 0, m: 0 })}>pick duration</button>,
+    <grid key="steps" cols={4}>
+      {STEPS.map(step => {
+        const target = clamp(minutes + step.delta, 1, 1440)
+        return <button key={step.label} call={call("timer.set", { key: "duration", value: { h: Math.floor(target / 60), m: target % 60 } })}>{step.label}</button>
+      })}
+    </grid>,
     s.running ? <button key="pause" call={call("timer.pause")}>pause</button> : null,
     !s.running && s.armed && !s.rung
       ? <button key="resume" call={call("timer.resume")}>resume</button>

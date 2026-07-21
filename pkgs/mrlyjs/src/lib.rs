@@ -76,17 +76,6 @@ pub fn palette() -> String {
 }
 
 #[wasm_bindgen]
-pub fn glyphs(set: &str) -> String {
-    mrly::ui::picker::glyphs(set).to_string()
-}
-
-#[wasm_bindgen]
-pub fn designs(req: &str) -> String {
-    let parsed: Value = serde_json::from_str(req).unwrap_or(json!({}));
-    mrly::ui::picker::designs(&parsed).to_string()
-}
-
-#[wasm_bindgen]
 pub fn html(md: &str) -> String {
     mrly::core::md::html(md)
 }

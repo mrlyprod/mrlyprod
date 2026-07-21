@@ -4,6 +4,7 @@ use serde_json::{json, Value as Json};
 
 pub struct Colors {
     index: usize,
+    library: Vec<String>,
 }
 
 impl Default for Colors {
@@ -14,8 +15,15 @@ impl Default for Colors {
 
 impl Colors {
     pub fn new() -> Colors {
-        Colors { index: 0 }
+        Colors {
+            index: 0,
+            library: seed(),
+        }
     }
+}
+
+fn seed() -> Vec<String> {
+    NAMES.iter().map(|&n| n.to_string()).collect()
 }
 
 impl App for Colors {
@@ -38,6 +46,7 @@ impl App for Colors {
                 .zip(PALETTE.iter())
                 .map(|(name, color)| json!({ "name": name, "hex": color.to_hex() }))
                 .collect::<Vec<_>>(),
+            "library": self.library.clone(),
         })
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
@@ -46,6 +55,8 @@ impl App for Colors {
             Verb::new("colors.set", json!({ "key": "name", "value": "string" })),
             Verb::new("colors.reset", json!({})),
             Verb::new("colors.export", json!({})),
+            Verb::new("colors.keep", json!({})),
+            Verb::new("colors.drop", json!({ "name": "string" })),
         ]
     }
     fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
@@ -90,11 +101,29 @@ impl App for Colors {
                     json!({ "name": "palette.json", "mime": "application/json", "data": data }),
                 ))
             }
+            "colors.keep" => {
+                let name = NAMES[self.index];
+                if self.library.iter().any(|n| n == name) {
+                    return Outcome::fail("already kept");
+                }
+                self.library.push(name.to_string());
+                Outcome::ok(json!({ "name": name }))
+            }
+            "colors.drop" => {
+                let name = call.arg("name").as_str().unwrap_or("");
+                match self.library.iter().position(|n| n == name) {
+                    Some(i) => {
+                        self.library.remove(i);
+                        Outcome::ok(json!({ "name": name }))
+                    }
+                    None => Outcome::fail("not in the library"),
+                }
+            }
             _ => Outcome::fail("unknown verb"),
         }
     }
     fn save(&self) -> Json {
-        json!({ "index": self.index })
+        json!({ "index": self.index, "library": self.library.clone() })
     }
     fn load(&mut self, state: &Json) {
         self.index = state["index"]
@@ -102,6 +131,22 @@ impl App for Colors {
             .filter(|&i| (i as usize) < PALETTE.len())
             .map(|i| i as usize)
             .unwrap_or(0);
+        self.library = match state["library"].as_array() {
+            Some(items) => {
+                let mut library: Vec<String> = Vec::new();
+                for item in items {
+                    if let Some(name) = item.as_str() {
+                        if crate::core::colors::named(name).is_ok()
+                            && !library.iter().any(|n| n == name)
+                        {
+                            library.push(name.to_string());
+                        }
+                    }
+                }
+                library
+            }
+            None => seed(),
+        };
     }
 }
 
@@ -179,8 +224,54 @@ mod tests {
         let names: Vec<String> = c.actions(&iden()).iter().map(|v| v.name.clone()).collect();
         assert_eq!(
             names,
-            vec!["colors.page", "colors.set", "colors.reset", "colors.export"]
+            vec![
+                "colors.page",
+                "colors.set",
+                "colors.reset",
+                "colors.export",
+                "colors.keep",
+                "colors.drop"
+            ]
         );
+    }
+    #[test]
+    fn library_seeds_with_every_name() {
+        let c = Colors::new();
+        let library = c.state(&iden())["library"].clone();
+        assert_eq!(library, json!(NAMES));
+        assert_eq!(library.as_array().unwrap().len(), 15);
+    }
+    #[test]
+    fn keep_restores_a_dropped_color() {
+        let mut c = Colors::new();
+        assert!(send(&mut c, "colors.drop", json!({ "name": "black" })).ok);
+        assert!(!c.state(&iden())["library"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("black")));
+        assert!(send(&mut c, "colors.keep", json!({})).ok);
+        assert!(c.state(&iden())["library"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("black")));
+        let dup = send(&mut c, "colors.keep", json!({}));
+        assert!(!dup.ok);
+        assert_eq!(dup.note.as_deref(), Some("already kept"));
+    }
+    #[test]
+    fn drop_unknown_errs() {
+        let mut c = Colors::new();
+        let out = send(&mut c, "colors.drop", json!({ "name": "chartreuse" }));
+        assert!(!out.ok);
+        assert_eq!(out.note.as_deref(), Some("not in the library"));
+    }
+    #[test]
+    fn load_sanitizes_the_library() {
+        let mut c = Colors::new();
+        c.load(&json!({ "library": "garbage" }));
+        assert_eq!(c.state(&iden())["library"].as_array().unwrap().len(), 15);
+        c.load(&json!({ "library": ["black", "chartreuse", "black", 5, "white"] }));
+        assert_eq!(c.state(&iden())["library"], json!(["black", "white"]));
     }
     #[test]
     fn export_emits_a_palette_file() {
