@@ -1,8 +1,8 @@
-use mrly::core::cell::Cell;
-use mrly::core::colors::Color;
-use mrly::core::tensor::Tensor;
-use mrly::core::MrlyError;
-use mrly::io;
+use mrlycore::cell::Cell;
+use mrlycore::colors::Color;
+use mrlycore::io;
+use mrlycore::tensor::Tensor;
+use mrlycore::MrlyError;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 

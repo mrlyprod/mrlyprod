@@ -9,6 +9,9 @@ crate-type = ["cdylib"]
 
 [dependencies]
 getrandom = { version = "0.2", features = ["js"] }
-mrly = { path = "../mrlyrs" }
+mrlycore = { path = "../mrlyrs/mrlycore" }
+mrlynet = { path = "../mrlyrs/mrlynet" }
+mrlyos = { path = "../mrlyrs/mrlyos" }
+mrlyui = { path = "../mrlyrs/mrlyui" }
 serde_json = "1"
 wasm-bindgen = "0.2"

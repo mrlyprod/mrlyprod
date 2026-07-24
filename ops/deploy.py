@@ -67,7 +67,7 @@ def copy_public():
 # ROUTES
 
 def read_example(name):
-    cmd = ["cargo", "run", "-p", "mrly", "--example", name]
+    cmd = ["cargo", "run", "-p", "mrlynet", "--example", name]
     result = subprocess.run(cmd, cwd=ROOT_DIR, capture_output=True, text=True)
     if result.returncode != 0:
         print(f"deploy (step failed: {' '.join(cmd)})")
@@ -81,7 +81,7 @@ def read_pages():
     return read_example("pages")
 
 def write_og():
-    cmd = ["cargo", "run", "-p", "mrly", "--example", "og", "--", os.path.join(DIST_DIR, "og")]
+    cmd = ["cargo", "run", "-p", "mrlynet", "--example", "og", "--", os.path.join(DIST_DIR, "og")]
     result = subprocess.run(cmd, cwd=ROOT_DIR)
     if result.returncode != 0:
         print(f"deploy (step failed: {' '.join(cmd)})")

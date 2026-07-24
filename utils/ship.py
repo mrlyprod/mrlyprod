@@ -35,8 +35,8 @@ def ship(fast=False):
     if not fast:
         if rust:
             steps = [
-                ["cargo", "run", "-p", "mrly", "--example", "fixtures"],
-                ["cargo", "test", "-p", "mrly"],
+                ["cargo", "run", "-p", "mrlynet", "--example", "fixtures"],
+                ["cargo", "test", "--workspace"],
                 ["uv", "run", "python", "utils/layers.py"],
                 ["wasm-pack", "build", "pkgs/mrlyjs", "--target", "web"],
             ]

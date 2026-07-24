@@ -1,10 +1,10 @@
-use mrly::os::kernel::{Call, Iden, Os};
+use mrlyos::kernel::{Call, Iden, Os};
 use serde_json::{json, Value};
 use wasm_bindgen::prelude::*;
 
 fn build() -> Os {
     let mut os = Os::new(Iden::new("guest"));
-    for app in mrly::net::registry::catalogue() {
+    for app in mrlynet::registry::catalogue() {
         os = os.install(app);
     }
     os
@@ -62,7 +62,7 @@ pub fn describe() -> String {
 
 #[wasm_bindgen]
 pub fn palette() -> String {
-    use mrly::core::colors::{BOARD_DARK, BOARD_LIGHT, NAMES, PALETTE};
+    use mrlycore::colors::{BOARD_DARK, BOARD_LIGHT, NAMES, PALETTE};
     let mut hex = serde_json::Map::new();
     for (name, color) in NAMES.iter().zip(PALETTE.iter()) {
         hex.insert(name.to_string(), json!(color.to_hex()));
@@ -77,13 +77,13 @@ pub fn palette() -> String {
 
 #[wasm_bindgen]
 pub fn html(md: &str) -> String {
-    mrly::core::md::html(md)
+    mrlycore::md::html(md)
 }
 
 #[wasm_bindgen]
 pub fn shaders() -> String {
     let mut out = serde_json::Map::new();
-    for (name, source) in mrly::ui::shaders::all() {
+    for (name, source) in mrlyui::shaders::all() {
         out.insert(name.to_string(), json!(source));
     }
     Value::Object(out).to_string()
@@ -92,10 +92,10 @@ pub fn shaders() -> String {
 #[wasm_bindgen]
 pub fn mark() -> String {
     json!({
-        "rows": mrly::ui::mark::ROWS,
-        "cols": mrly::ui::mark::COLS,
-        "fps": mrly::ui::mark::FPS,
-        "frames": mrly::ui::mark::animation(),
+        "rows": mrlyui::mark::ROWS,
+        "cols": mrlyui::mark::COLS,
+        "fps": mrlyui::mark::FPS,
+        "frames": mrlyui::mark::animation(),
     })
     .to_string()
 }

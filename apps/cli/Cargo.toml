@@ -4,5 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-mrly = { path = "../../pkgs/mrlyrs" }
+mrlynet = { path = "../../pkgs/mrlyrs/mrlynet" }
+mrlyos = { path = "../../pkgs/mrlyrs/mrlyos" }
 serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }

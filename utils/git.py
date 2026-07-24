@@ -30,7 +30,7 @@ def status():
 # CHECKS
 
 CHECKS = [
-    ["cargo", "test", "-p", "mrly"],
+    ["cargo", "test", "--workspace"],
     ["uv", "run", "python", "utils/layers.py"],
     ["bunx", "tsc", "--noEmit", "--project", "apps/web"],
 ]

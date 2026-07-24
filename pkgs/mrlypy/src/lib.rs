@@ -1,12 +1,12 @@
 mod graphics;
 
-use mrly::os::kernel::{Call, Iden, Os};
+use mrlyos::kernel::{Call, Iden, Os};
 use pyo3::prelude::*;
 use serde_json::{json, Value};
 
 fn build() -> Os {
     let mut os = Os::new(Iden::new("guest"));
-    for app in mrly::net::registry::catalogue() {
+    for app in mrlynet::registry::catalogue() {
         os = os.install(app);
     }
     os

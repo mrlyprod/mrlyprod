@@ -183,23 +183,34 @@ dependencies = [
 ]
 
 [[package]]
-name = "mrly"
+name = "mrlyapps"
 version = "0.2.0"
 dependencies = [
- "png",
- "rand",
- "rand_chacha",
- "serde",
+ "mrlycore",
+ "mrlymath",
+ "mrlyos",
+ "mrlyui",
  "serde_json",
- "thiserror",
 ]
 
 [[package]]
 name = "mrlycli"
 version = "0.1.0"
 dependencies = [
- "mrly",
+ "mrlynet",
+ "mrlyos",
  "serde_json",
+]
+
+[[package]]
+name = "mrlycore"
+version = "0.2.0"
+dependencies = [
+ "png",
+ "rand",
+ "rand_chacha",
+ "serde_json",
+ "thiserror",
 ]
 
 [[package]]
@@ -207,17 +218,59 @@ name = "mrlyjs"
 version = "0.1.0"
 dependencies = [
  "getrandom",
- "mrly",
+ "mrlycore",
+ "mrlynet",
+ "mrlyos",
+ "mrlyui",
  "serde_json",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "mrlymath"
+version = "0.2.0"
+dependencies = [
+ "mrlycore",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "mrlynet"
+version = "0.2.0"
+dependencies = [
+ "mrlyapps",
+ "mrlycore",
+ "mrlyos",
+ "mrlyui",
+ "serde_json",
+]
+
+[[package]]
+name = "mrlyos"
+version = "0.2.0"
+dependencies = [
+ "mrlycore",
+ "serde_json",
 ]
 
 [[package]]
 name = "mrlypy"
 version = "0.1.0"
 dependencies = [
- "mrly",
+ "mrlycore",
+ "mrlynet",
+ "mrlyos",
  "pyo3",
+ "serde_json",
+]
+
+[[package]]
+name = "mrlyui"
+version = "0.2.0"
+dependencies = [
+ "mrlycore",
+ "mrlymath",
  "serde_json",
 ]
 

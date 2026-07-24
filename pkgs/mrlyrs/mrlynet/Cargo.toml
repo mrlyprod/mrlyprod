@@ -1,0 +1,13 @@
+[package]
+name = "mrlynet"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+mrlyapps.workspace = true
+mrlyos.workspace = true
+
+[dev-dependencies]
+mrlycore.workspace = true
+mrlyui.workspace = true
+serde_json.workspace = true

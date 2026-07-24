@@ -11,7 +11,6 @@ uv run python utils/ship.py fast   # no gates
 
 ```sh
 uv run python utils/tree.py        # regenerate TREE.md (ship runs it too)
-uv run python utils/parity.py     # build rust/js/py and diff their traces
 uv run python utils/spaghetti.py  # remove target, .venv, node_modules, __pycache__, .DS_Store
 ```
 
@@ -38,15 +37,14 @@ uv lock                     # refresh the lockfile
 ## RUST
 
 ```sh
-cd pkgs/mrlyrs
 cargo build
 cargo test                              # fast; skips slow #[ignore] tests
 cargo test -- --ignored                 # the slow statistical tests (hash metrics)
-uv run python utils/layers.py           # layer-DAG import check; run alongside the tests
+uv run python utils/layers.py           # apps never import apps; run alongside the tests
 cargo fmt
 cargo clippy -- -D warnings
-cargo run --example <name>              # examples live in pkgs/mrlyrs/examples/
-cargo run -p mrly --example fixtures    # regenerate apps/web/fixtures/*.json from frame()
+cargo run -p mrlynet --example <name>   # examples live in pkgs/mrlyrs/mrlynet/examples/
+cargo run -p mrlynet --example fixtures # regenerate apps/web/fixtures/*.json from frame()
 cargo doc --open
 cargo clean
 ```
@@ -80,7 +78,7 @@ rm -rf .venv && uv sync && uv run maturin develop --manifest-path pkgs/mrlypy/Ca
 rustup target add wasm32-unknown-unknown
 brew install wasm-pack                      # or: cargo install wasm-pack
 wasm-pack build pkgs/mrlyjs --target web    # outputs pkgs/mrlyjs/pkg/
-cargo test -p mrly --test golden            # fixtures vs frame(), after vocabulary changes
+cargo test -p mrlynet --test golden         # fixtures vs frame(), after vocabulary changes
 ```
 
 ## WEB (dev server + golden screenshots)

@@ -1,0 +1,14 @@
+[package]
+name = "mrlycore"
+version.workspace = true
+edition.workspace = true
+
+[features]
+testkit = []
+
+[dependencies]
+png.workspace = true
+rand.workspace = true
+rand_chacha.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
