@@ -1,5 +1,15 @@
-pub fn html(md: &str) -> String {
-    let mut blocks: Vec<String> = Vec::new();
+#[derive(Clone, Debug, PartialEq)]
+pub enum Block {
+    H1(String),
+    H2(String),
+    Para(String),
+    Bullets(Vec<String>),
+    Numbers(Vec<String>),
+    Code(Vec<String>),
+}
+
+pub fn blocks(md: &str) -> Vec<Block> {
+    let mut out: Vec<Block> = Vec::new();
     let mut para: Vec<String> = Vec::new();
     let mut items: Vec<String> = Vec::new();
     let mut ordered = false;
@@ -8,84 +18,113 @@ pub fn html(md: &str) -> String {
         let line = raw.trim_end();
         if let Some(lines) = code.as_mut() {
             if line.starts_with("```") {
-                blocks.push(format!("<pre><code>{}</code></pre>", lines.join("\n")));
+                out.push(Block::Code(std::mem::take(lines)));
                 code = None;
             } else {
-                lines.push(escape(line));
+                lines.push(line.to_string());
             }
             continue;
         }
         if line.starts_with("```") {
-            flush_para(&mut blocks, &mut para);
-            flush_list(&mut blocks, &mut items, ordered);
+            flush_para(&mut out, &mut para);
+            flush_list(&mut out, &mut items, ordered);
             code = Some(Vec::new());
             continue;
         }
         if line.is_empty() {
-            flush_para(&mut blocks, &mut para);
-            flush_list(&mut blocks, &mut items, ordered);
+            flush_para(&mut out, &mut para);
+            flush_list(&mut out, &mut items, ordered);
             continue;
         }
         if let Some(rest) = line.strip_prefix("## ") {
-            flush_para(&mut blocks, &mut para);
-            flush_list(&mut blocks, &mut items, ordered);
-            blocks.push(format!("<h2>{}</h2>", inline(rest)));
+            flush_para(&mut out, &mut para);
+            flush_list(&mut out, &mut items, ordered);
+            out.push(Block::H2(rest.to_string()));
             continue;
         }
         if let Some(rest) = line.strip_prefix("# ") {
-            flush_para(&mut blocks, &mut para);
-            flush_list(&mut blocks, &mut items, ordered);
-            blocks.push(format!("<h1>{}</h1>", inline(rest)));
+            flush_para(&mut out, &mut para);
+            flush_list(&mut out, &mut items, ordered);
+            out.push(Block::H1(rest.to_string()));
             continue;
         }
         if let Some(rest) = line.strip_prefix("- ") {
-            flush_para(&mut blocks, &mut para);
+            flush_para(&mut out, &mut para);
             if ordered {
-                flush_list(&mut blocks, &mut items, ordered);
+                flush_list(&mut out, &mut items, ordered);
             }
             ordered = false;
-            items.push(inline(rest));
+            items.push(rest.to_string());
             continue;
         }
         if let Some(rest) = numbered(line) {
-            flush_para(&mut blocks, &mut para);
+            flush_para(&mut out, &mut para);
             if !ordered {
-                flush_list(&mut blocks, &mut items, ordered);
+                flush_list(&mut out, &mut items, ordered);
             }
             ordered = true;
-            items.push(inline(rest));
+            items.push(rest.to_string());
             continue;
         }
-        flush_list(&mut blocks, &mut items, ordered);
+        flush_list(&mut out, &mut items, ordered);
         para.push(line.to_string());
     }
     if let Some(lines) = code {
-        blocks.push(format!("<pre><code>{}</code></pre>", lines.join("\n")));
+        out.push(Block::Code(lines));
     }
-    flush_para(&mut blocks, &mut para);
-    flush_list(&mut blocks, &mut items, ordered);
-    blocks.join("\n")
+    flush_para(&mut out, &mut para);
+    flush_list(&mut out, &mut items, ordered);
+    out
 }
 
-fn flush_para(blocks: &mut Vec<String>, para: &mut Vec<String>) {
+pub fn html(md: &str) -> String {
+    blocks(md)
+        .iter()
+        .map(|block| match block {
+            Block::H1(text) => format!("<h1>{}</h1>", inline(text)),
+            Block::H2(text) => format!("<h2>{}</h2>", inline(text)),
+            Block::Para(text) => format!("<p>{}</p>", inline(text)),
+            Block::Bullets(items) => list_html("ul", items),
+            Block::Numbers(items) => list_html("ol", items),
+            Block::Code(lines) => format!(
+                "<pre><code>{}</code></pre>",
+                lines
+                    .iter()
+                    .map(|line| escape(line))
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            ),
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+fn list_html(tag: &str, items: &[String]) -> String {
+    let list = items
+        .iter()
+        .map(|item| format!("<li>{}</li>", inline(item)))
+        .collect::<String>();
+    format!("<{tag}>{list}</{tag}>")
+}
+
+fn flush_para(blocks: &mut Vec<Block>, para: &mut Vec<String>) {
     if para.is_empty() {
         return;
     }
-    blocks.push(format!("<p>{}</p>", inline(&para.join(" "))));
+    blocks.push(Block::Para(para.join(" ")));
     para.clear();
 }
 
-fn flush_list(blocks: &mut Vec<String>, items: &mut Vec<String>, ordered: bool) {
+fn flush_list(blocks: &mut Vec<Block>, items: &mut Vec<String>, ordered: bool) {
     if items.is_empty() {
         return;
     }
-    let tag = if ordered { "ol" } else { "ul" };
-    let list = items
-        .iter()
-        .map(|item| format!("<li>{item}</li>"))
-        .collect::<String>();
-    blocks.push(format!("<{tag}>{list}</{tag}>"));
-    items.clear();
+    let taken = std::mem::take(items);
+    blocks.push(if ordered {
+        Block::Numbers(taken)
+    } else {
+        Block::Bullets(taken)
+    });
 }
 
 fn numbered(line: &str) -> Option<&str> {
@@ -300,5 +339,30 @@ mod tests {
         let md = "# Dummy\n\nA fixture for the pages app.\n\n## Checklist\n\n- render **bold**\n- render *italic*\n- follow [home](./home.md)\n\n1. parse\n2. render\n\n```\ncargo test -p mrly\n```\n\nVisit [mrly](https://mrly.net).";
         let expected = "<h1>Dummy</h1>\n<p>A fixture for the pages app.</p>\n<h2>Checklist</h2>\n<ul><li>render <strong>bold</strong></li><li>render <em>italic</em></li><li>follow <a data-slug=\"home\">home</a></li></ul>\n<ol><li>parse</li><li>render</li></ol>\n<pre><code>cargo test -p mrly</code></pre>\n<p>Visit <a href=\"https://mrly.net\" target=\"_blank\" rel=\"noopener\">mrly</a>.</p>";
         assert_eq!(html(md), expected);
+    }
+
+    #[test]
+    fn blocks_carry_raw_text() {
+        let md =
+            "# Title\n\nkeep **stars** raw\nacross lines\n\n- item *one*\n\n```\ncode < here\n```";
+        let expected = vec![
+            Block::H1("Title".to_string()),
+            Block::Para("keep **stars** raw across lines".to_string()),
+            Block::Bullets(vec!["item *one*".to_string()]),
+            Block::Code(vec!["code < here".to_string()]),
+        ];
+        assert_eq!(blocks(md), expected);
+    }
+
+    #[test]
+    fn blocks_degrade_like_html() {
+        let md = "### deep\n1. first\n- one\n```\nopen";
+        let expected = vec![
+            Block::Para("### deep".to_string()),
+            Block::Numbers(vec!["first".to_string()]),
+            Block::Bullets(vec!["one".to_string()]),
+            Block::Code(vec!["open".to_string()]),
+        ];
+        assert_eq!(blocks(md), expected);
     }
 }

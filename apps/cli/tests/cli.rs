@@ -151,6 +151,54 @@ fn shot_fails_on_a_frameless_app() {
 }
 
 #[test]
+fn face_writes_a_png_for_a_frameless_app() {
+    let dir = std::env::temp_dir().join(format!("mrlycli_face_{}.png", std::process::id()));
+    let mut child = mrlycli()
+        .args(["face", "--out", dir.to_str().unwrap()])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .unwrap();
+    child
+        .stdin
+        .take()
+        .unwrap()
+        .write_all(b"{\"verb\":\"nav.open\",\"args\":{\"app\":\"calculator\"}}\n")
+        .unwrap();
+    assert!(child.wait().unwrap().success());
+    let bytes = std::fs::read(&dir).unwrap();
+    assert_eq!(&bytes[..8], b"\x89PNG\r\n\x1a\n");
+    std::fs::remove_file(&dir).ok();
+}
+
+#[test]
+fn face_writes_a_png_with_a_canvas() {
+    let dir = std::env::temp_dir().join(format!("mrlycli_face_live_{}.png", std::process::id()));
+    let script = concat!(
+        "{\"verb\":\"nav.open\",\"args\":{\"app\":\"snake\"}}\n",
+        "{\"verb\":\"snake.reset\",\"args\":{\"seed\":7},\"now\":0}\n"
+    );
+    let mut child = mrlycli()
+        .args(["face", "--out", dir.to_str().unwrap()])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .unwrap();
+    child
+        .stdin
+        .take()
+        .unwrap()
+        .write_all(script.as_bytes())
+        .unwrap();
+    assert!(child.wait().unwrap().success());
+    let bytes = std::fs::read(&dir).unwrap();
+    assert_eq!(&bytes[..8], b"\x89PNG\r\n\x1a\n");
+    std::fs::remove_file(&dir).ok();
+}
+
+#[test]
 fn verbs_lists_one_app_with_args() {
     let out = mrlycli().args(["verbs", "snake"]).output().unwrap();
     assert!(out.status.success());

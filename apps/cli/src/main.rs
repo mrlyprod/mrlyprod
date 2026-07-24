@@ -12,6 +12,7 @@ fn main() {
         Some("run") => run(&args[2..]),
         Some("render") => render(args.get(2).map(String::as_str)),
         Some("shot") => shot(&args[2..]),
+        Some("face") => face(&args[2..]),
         Some("describe") => describe(),
         Some("verbs") => verbs(args.get(2).map(String::as_str)),
         Some("help") | Some("-h") | Some("--help") => usage(),
@@ -32,13 +33,14 @@ fn usage() {
     );
     eprintln!("  mrlycli render [file] draw the final frame as colored blocks");
     eprintln!("  mrlycli shot [file]   write the final frame as a PNG (--out path)");
+    eprintln!("  mrlycli face [file]   write the default face as a PNG, any app (--out path)");
     eprintln!("  mrlycli describe      print the kernel surface as JSON");
     eprintln!("  mrlycli verbs [app]   list apps, or one app's verbs and args");
     eprintln!("  mrlycli help          show this message");
     eprintln!();
     eprintln!("repl:");
     eprintln!("  verb [json]          act, e.g. nav.open {{\"app\":\"snake\"}}");
-    eprintln!("  :help :frame :render :verbs :shot :describe :apps :open <app> :reset :quit");
+    eprintln!("  :help :frame :render :verbs :shot :face :describe :apps :open <app> :reset :quit");
 }
 
 // BOOT
@@ -242,6 +244,17 @@ fn repl() {
                         Err(e) => eprintln!("! {app}: {e}"),
                     }
                 }
+                "face" => {
+                    let out = if arg.is_empty() { "face.png" } else { arg };
+                    let app = os.frame().route.map(|r| r.app).unwrap_or_default();
+                    match mrlynet::face::face_png(&os, &app) {
+                        Ok(bytes) => match std::fs::write(out, &bytes) {
+                            Ok(()) => eprintln!("face: {app} -> {out} ({} bytes)", bytes.len()),
+                            Err(e) => eprintln!("! write failed: {e}"),
+                        },
+                        Err(e) => eprintln!("! {app}: {e}"),
+                    }
+                }
                 "apps" => eprintln!("{}", os.catalogue().join(", ")),
                 "open" => match os.open(arg) {
                     Ok(()) => emit(&os, visual),
@@ -285,6 +298,7 @@ fn meta_help() {
     eprintln!(":describe          print the kernel surface");
     eprintln!(":verbs [app]       verbs and args (current app by default)");
     eprintln!(":shot [path]       write the current frame as a PNG");
+    eprintln!(":face [path]       write the default face as a PNG");
     eprintln!(":apps              list installed apps");
     eprintln!(":open <app>        open an app");
     eprintln!(":reset             boot a fresh session");
@@ -349,6 +363,39 @@ fn shot(args: &[String]) {
     match os.snapshot(&app) {
         Ok(bytes) => match std::fs::write(&out, &bytes) {
             Ok(()) => eprintln!("shot: {app} -> {out} ({} bytes)", bytes.len()),
+            Err(e) => {
+                eprintln!("! write failed: {e}");
+                std::process::exit(1);
+            }
+        },
+        Err(e) => {
+            eprintln!("! {app}: {e}");
+            std::process::exit(1);
+        }
+    }
+}
+
+// FACE
+
+fn face(args: &[String]) {
+    let mut out = "face.png".to_string();
+    let mut path: Option<&str> = None;
+    let mut it = args.iter();
+    while let Some(a) = it.next() {
+        match a.as_str() {
+            "--out" | "-o" => {
+                if let Some(p) = it.next() {
+                    out = p.clone();
+                }
+            }
+            other => path = Some(other),
+        }
+    }
+    let os = replay(path);
+    let app = os.frame().route.map(|r| r.app).unwrap_or_default();
+    match mrlynet::face::face_png(&os, &app) {
+        Ok(bytes) => match std::fs::write(&out, &bytes) {
+            Ok(()) => eprintln!("face: {app} -> {out} ({} bytes)", bytes.len()),
             Err(e) => {
                 eprintln!("! write failed: {e}");
                 std::process::exit(1);

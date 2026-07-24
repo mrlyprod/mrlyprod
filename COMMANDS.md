@@ -45,6 +45,7 @@ cargo fmt
 cargo clippy -- -D warnings
 cargo run -p mrlynet --example <name>   # examples live in pkgs/mrlyrs/mrlynet/examples/
 cargo run -p mrlynet --example fixtures # regenerate apps/web/fixtures/*.json from frame()
+cargo run -p mrlynet --example face     # every app's default face into data/face/, six -live gauntlet shots included
 cargo doc --open
 cargo clean
 ```
@@ -57,7 +58,8 @@ cargo run -p mrlycli -- verbs snake              # one app's verbs and args
 cargo run -p mrlycli -- verbs                     # every app and its verb count
 echo '<calls>' | cargo run -p mrlycli -- run --facts   # replay, print state, grids collapsed
 echo '<calls>' | cargo run -p mrlycli -- shot --out f.png   # replay, write the frame as a PNG
-cargo run -p mrlycli -- repl                      # interactive; :verbs :shot :render :help
+echo '<calls>' | cargo run -p mrlycli -- face --out f.png   # replay, write the default face as a PNG (any app)
+cargo run -p mrlycli -- repl                      # interactive; :verbs :shot :face :render :help
 ```
 
 Calls are JSON lines or a JSON array, e.g. `{"verb":"nav.open","args":{"app":"snake"}}`.
@@ -68,7 +70,7 @@ Calls are JSON lines or a JSON array, e.g. `{"verb":"nav.open","args":{"app":"sn
 uv run maturin develop --manifest-path pkgs/mrlypy/Cargo.toml --release
 uv run python pkgs/mrlypy/tests/smoke.py
 uv run pytest pkgs/mrlypy
-uv run python lab/demo.py            # drive mrlynet from python: calculator, theme, a snake round
+uv run python lab/demo.py            # drive mrlynet from python: calculator, theme, a snake round, capture -> ndarray, face PNG
 rm -rf .venv && uv sync && uv run maturin develop --manifest-path pkgs/mrlypy/Cargo.toml --release   # clean rebuild
 ```
 

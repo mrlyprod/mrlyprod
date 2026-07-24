@@ -67,3 +67,6 @@ projector/strip frames.
 verb, rendered by the kernel from state it already knows (the focused app's
 `frame` field), never from the live page. A `sys.shot` capture replays
 bit-for-bit; a real browser screenshot does not.
+
+The face shot (docs/FACE.md) is a surface-side projection of known kernel
+state - a pure read over `peek`, never a journaled verb.

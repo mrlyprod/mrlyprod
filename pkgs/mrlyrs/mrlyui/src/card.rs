@@ -1,3 +1,4 @@
+use crate::draw::{blit, fill_rect, fit};
 use mrlycore::colors::{mix, Color, PALETTE};
 use mrlycore::errors::Result;
 use mrlycore::tensor::Tensor;
@@ -29,25 +30,43 @@ pub fn card(route: &str, title: &str) -> Result<Vec<[u8; 4]>> {
     for r in 0..ROWS {
         for c in 0..COLS {
             if grid[r * COLS + c] & 1 == 1 {
-                fill_rect(&mut buf, c * CELL, r * CELL, CELL, CELL, live);
+                fill_rect(
+                    &mut buf,
+                    WIDTH,
+                    HEIGHT,
+                    c * CELL,
+                    r * CELL,
+                    CELL,
+                    CELL,
+                    live,
+                );
             }
         }
     }
-    fill_rect(&mut buf, 13, 36, 54, 54, rgba(BACKGROUND));
+    fill_rect(&mut buf, WIDTH, HEIGHT, 13, 36, 54, 54, rgba(BACKGROUND));
     let icon: Vec<Vec<u8>> = fingerprint_cell(&d, 12)
         .chunks(12)
         .map(|c| c.to_vec())
         .collect();
-    blit(&mut buf, &icon, MARGIN, 39, 4, accent);
-    let (title_rows, title_scale, _) = fit_title(title);
+    blit(&mut buf, WIDTH, HEIGHT, &icon, MARGIN, 39, 4, accent);
+    let (title_rows, title_scale, _) = fit(title, FIELD, &[3, 2]);
     let title_h = title_rows.len() * title_scale;
     let brand_rows = crate::font::raster("mrly.net");
     let brand_h = brand_rows.len();
     let total = title_h + 6 + brand_h;
     let mut y = HEIGHT.saturating_sub(total) / 2;
-    blit(&mut buf, &title_rows, FIELD_X, y, title_scale, WHITE);
+    blit(
+        &mut buf,
+        WIDTH,
+        HEIGHT,
+        &title_rows,
+        FIELD_X,
+        y,
+        title_scale,
+        WHITE,
+    );
     y += title_h + 6;
-    blit(&mut buf, &brand_rows, FIELD_X, y, 1, accent);
+    blit(&mut buf, WIDTH, HEIGHT, &brand_rows, FIELD_X, y, 1, accent);
     Ok(buf)
 }
 
@@ -100,59 +119,6 @@ fn texture(d: &Digest) -> Vec<u8> {
     }
 }
 
-fn fit_title(title: &str) -> (Vec<Vec<u8>>, usize, String) {
-    let rows = crate::font::raster(title);
-    let w = rows.first().map(Vec::len).unwrap_or(0);
-    if w * 3 <= FIELD {
-        return (rows, 3, title.to_string());
-    }
-    if w * 2 <= FIELD {
-        return (rows, 2, title.to_string());
-    }
-    let mut chars: Vec<char> = title.chars().collect();
-    while !chars.is_empty() {
-        chars.pop();
-        let text: String = chars.iter().collect();
-        let cut = crate::font::raster(&text);
-        let cw = cut.first().map(Vec::len).unwrap_or(0);
-        if cw * 2 <= FIELD {
-            return (cut, 2, text);
-        }
-    }
-    (Vec::new(), 2, String::new())
-}
-
-fn fill_rect(buf: &mut [[u8; 4]], x0: usize, y0: usize, w: usize, h: usize, color: [u8; 4]) {
-    for dy in 0..h {
-        for dx in 0..w {
-            let px = x0 + dx;
-            let py = y0 + dy;
-            if px < WIDTH && py < HEIGHT {
-                buf[py * WIDTH + px] = color;
-            }
-        }
-    }
-}
-
-fn blit(buf: &mut [[u8; 4]], rows: &[Vec<u8>], x: usize, y: usize, scale: usize, color: [u8; 4]) {
-    for (ry, row) in rows.iter().enumerate() {
-        for (rx, &bit) in row.iter().enumerate() {
-            if bit & 1 == 0 {
-                continue;
-            }
-            for dy in 0..scale {
-                for dx in 0..scale {
-                    let px = x + rx * scale + dx;
-                    let py = y + ry * scale + dy;
-                    if px < WIDTH && py < HEIGHT {
-                        buf[py * WIDTH + px] = color;
-                    }
-                }
-            }
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -189,7 +155,7 @@ mod tests {
         assert_eq!(title.chars().count(), 40);
         let raster = card("clock", title).unwrap();
         assert_eq!(raster.len(), WIDTH * HEIGHT);
-        let (_, scale, text) = fit_title(title);
+        let (_, scale, text) = fit(title, FIELD, &[3, 2]);
         assert_eq!(scale, 2);
         assert!(text.chars().count() < 40);
     }

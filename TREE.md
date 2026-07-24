@@ -151,6 +151,7 @@ mrlyprod
 │       └── terms.md
 ├── docs
 │   ├── COMMENTS.md
+│   ├── FACE.md
 │   ├── LAYERS.md
 │   ├── LIBRARY.md
 │   └── STATE.md
@@ -206,6 +207,7 @@ mrlyprod
 │   │   │   └── lib.rs
 │   │   ├── tests
 │   │   │   ├── smoke.py
+│   │   │   ├── test_capture.py
 │   │   │   └── test_kernel.py
 │   │   ├── Cargo.toml
 │   │   ├── pyproject.toml
@@ -494,15 +496,18 @@ mrlyprod
 │       │   └── Cargo.toml
 │       ├── mrlynet
 │       │   ├── examples
+│       │   │   ├── face.rs
 │       │   │   ├── fixtures.rs
 │       │   │   ├── og.rs
 │       │   │   ├── pages.rs
 │       │   │   └── routes.rs
 │       │   ├── src
+│       │   │   ├── face.rs
 │       │   │   ├── lib.rs
 │       │   │   └── registry.rs
 │       │   ├── tests
 │       │   │   ├── card.rs
+│       │   │   ├── face.rs
 │       │   │   └── golden.rs
 │       │   └── Cargo.toml
 │       ├── mrlyos
@@ -523,7 +528,14 @@ mrlyprod
 │       │   ├── Cargo.toml
 │       │   └── build.rs
 │       └── mrlyui
+│           ├── examples
 │           ├── src
+│           │   ├── face
+│           │   │   ├── layout.rs
+│           │   │   ├── md.rs
+│           │   │   ├── mod.rs
+│           │   │   ├── paint.rs
+│           │   │   └── text.rs
 │           │   ├── font
 │           │   │   ├── glyphs.rs
 │           │   │   ├── letters.rs
@@ -555,6 +567,7 @@ mrlyprod
 │           │   │   ├── vertex.wgsl
 │           │   │   └── waves.wgsl
 │           │   ├── card.rs
+│           │   ├── draw.rs
 │           │   ├── frame.rs
 │           │   ├── lib.rs
 │           │   ├── raster.rs
