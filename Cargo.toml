@@ -4,6 +4,7 @@ members = [
     "pkgs/mrlyrs",
     "pkgs/mrlypy",
     "pkgs/mrlyjs",
+    "apps/cli",
 ]
 default-members = [
     "pkgs/mrlyrs",

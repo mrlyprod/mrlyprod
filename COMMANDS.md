@@ -51,6 +51,19 @@ cargo doc --open
 cargo clean
 ```
 
+## CLI (a terminal face for the kernel; drive apps without a browser)
+
+```sh
+cargo run -p mrlycli -- describe                 # kernel surface as JSON
+cargo run -p mrlycli -- verbs snake              # one app's verbs and args
+cargo run -p mrlycli -- verbs                     # every app and its verb count
+echo '<calls>' | cargo run -p mrlycli -- run --facts   # replay, print state, grids collapsed
+echo '<calls>' | cargo run -p mrlycli -- shot --out f.png   # replay, write the frame as a PNG
+cargo run -p mrlycli -- repl                      # interactive; :verbs :shot :render :help
+```
+
+Calls are JSON lines or a JSON array, e.g. `{"verb":"nav.open","args":{"app":"snake"}}`.
+
 ## MRLYPY (Rust -> Python via maturin)
 
 ```sh

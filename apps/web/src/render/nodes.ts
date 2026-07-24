@@ -231,7 +231,7 @@ export function create(node: Node, send: Send): Held {
       const el = make("button", "mrly-box link-box")
       el.addEventListener("click", () => {
         const node = held(el) as Extract<Node, { kind: "Button" }>
-        if (node.press === undefined) send(node.call)
+        if (node.press === undefined && node.call !== undefined) send(node.call)
       })
       let down = false
       el.addEventListener("pointerdown", () => {
@@ -475,6 +475,8 @@ export function patch(el: Held, node: Node, send: Send): void {
     }
     case "Button":
       el.className = node.big ? "mrly-box link-box swatch-big" : "mrly-box link-box"
+      el.classList.toggle("active", node.active === true)
+      ;(el as HTMLButtonElement).disabled = node.call === undefined && node.press === undefined
       if (el.textContent !== node.label) el.textContent = node.label
       el.style.backgroundColor = node.bg ?? ""
       if (node.press !== undefined) el.dataset.press = "1"
@@ -492,7 +494,7 @@ export function patch(el: Held, node: Node, send: Send): void {
       const wipe = el.querySelector("button.clear") as HTMLElement
       wipe.style.display = node.clear === true && node.value !== "" ? "" : "none"
       input.placeholder = node.hint ?? ""
-      if (!(document.activeElement === input && input.value === node.value)) input.value = node.value
+      if (document.activeElement !== input) input.value = node.value
       input.__committed = node.value
       break
     }

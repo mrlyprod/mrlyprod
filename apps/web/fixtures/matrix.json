@@ -12,12 +12,12 @@
       "steps": 3,
       "over": false,
       "seed": 7,
+      "play": true,
       "settings": {
         "cols": 32,
         "rows": 24,
         "speed": 1,
         "trail": 8,
-        "rainbow": false,
         "charset": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
         "palette": [
           "#32cc58",

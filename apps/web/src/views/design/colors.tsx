@@ -1,4 +1,5 @@
 import { call } from "../../builders.ts"
+import { colorpicker } from "../../components/colorpicker.tsx"
 import { h } from "../../jsx.ts"
 import { hex } from "../../palette.ts"
 import type { Node, Send } from "../../types.ts"
@@ -19,11 +20,7 @@ export function colors(state: unknown, _send: Send): Node {
     <stack key="colors">
       <card key="browse">
         <button key="active" call={call("colors.page", { dir: "next" })} bg={s.hex} big={true}></button>
-        <grid key="palette" cols={5}>
-          {s.palette.map(p => (
-            <button key={`swatch-${p.name}`} call={call("colors.set", { key: "name", value: p.name })} bg={p.hex}>{p.name === s.name ? "✓" : ""}</button>
-          ))}
-        </grid>
+        {colorpicker("palette", s.palette, name => name === s.name, name => call("colors.set", { key: "name", value: name }))}
         <button key="keep" call={call("colors.keep")}>keep</button>
       </card>
       <card key="facts">

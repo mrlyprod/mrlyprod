@@ -12,8 +12,6 @@ const EMOJIS = ["system", "noto"]
 
 const MATERIALS = ["solid", "glass"]
 
-const WALLPAPERS = ["color", "pattern"]
-
 const RENDERS = ["cpu", "gpu"]
 
 const NOTES = ["random", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
@@ -50,25 +48,41 @@ export function settings(state: unknown, _send: Send): Node {
   const s = state as State
   return (
     <stack key="settings">
-      <Section keyName="system" label="system">
-        <choice key="launchpad" value={s.launchpad} options={MODES} call={turn("launchpad")} arg="value" label="launchpad" mode="row" />
-        <choice key="render" value={s.render} options={RENDERS} call={turn("render")} arg="value" label="render" mode="row" />
+      <Section keyName="launchpad" label="launchpad">
+        <choice key="launchpad" value={s.launchpad} options={MODES} call={turn("launchpad")} arg="value" mode="row" />
+      </Section>
+      <Section keyName="render" label="render">
+        <choice key="render" value={s.render} options={RENDERS} call={turn("render")} arg="value" mode="row" />
+      </Section>
+      <Section keyName="detail" label="detail">
         <range key="detail" value={s.detail} min={32} max={160} step={1} call={turn("detail")} arg="value" label="detail" />
       </Section>
-      <Section keyName="paint" label="paint">
-        <toggle key="darkmode" on={s.darkmode} call={turn("darkmode")} arg="value" label="dark mode" />
-        <text key="color-label" role="note">accent</text>
+      <Section keyName="mode" label="mode">
+        <grid key="mode-options" cols={2}>
+          <button key="light" active={!s.darkmode} call={call("settings.set", { key: "darkmode", value: false })}>light</button>
+          <button key="dark" active={s.darkmode} call={call("settings.set", { key: "darkmode", value: true })}>dark</button>
+        </grid>
+      </Section>
+      <Section keyName="accent" label="accent">
         {library("colors", "settings", "color", s.color)}
-        <text key="fill-label" role="note">fill</text>
+      </Section>
+      <Section keyName="fill" label="fill">
         {library("colors", "settings", "fill", s.fill)}
         <button key="fill-random" call={call("settings.set", { key: "fill", value: "random" })}>random fill</button>
-        <text key="background-label" role="note">background</text>
+      </Section>
+      <Section keyName="background" label="background">
         {library("colors", "settings", "background", s.background)}
       </Section>
-      <Section keyName="stage" label="stage">
-        <choice key="material" value={s.material} options={MATERIALS} call={turn("material")} arg="value" label="material" mode="row" />
-        <choice key="wallpaper" value={s.wallpaper} options={WALLPAPERS} call={turn("wallpaper")} arg="value" label="wallpaper" mode="row" />
-        <range key="seed" value={s.seed} min={0} max={999} call={turn("seed")} arg="value" step={1} label="seed" />
+      <Section keyName="material" label="material">
+        <choice key="material" value={s.material} options={MATERIALS} call={turn("material")} arg="value" mode="row" />
+      </Section>
+      <Section keyName="pattern" label="pattern">
+        <grid key="pattern-options" cols={4}>
+          <button key="none">none</button>
+          <button key="emoji">emoji</button>
+          <button key="tile">tile</button>
+          <button key="glyph">glyph</button>
+        </grid>
       </Section>
       <Section keyName="fonts" label="fonts">
         <choice key="font" value={s.font} options={FONTS} call={turn("font")} arg="value" mode="row" />
@@ -90,9 +104,11 @@ export function settings(state: unknown, _send: Send): Node {
         <toggle key="haptics" on={s.haptics} call={turn("haptics")} arg="value" label="haptics" />
       </Section>
       <Section keyName="session" label="session">
-        <button key="export" call={call("journal.export")}>export</button>
-        <button key="import" call={call("journal.import")}>import</button>
-        <button key="reset" call={call("journal.reset")}>reset</button>
+        <grid key="session-tabs" cols={3}>
+          <button key="export" call={call("journal.export")}>export</button>
+          <button key="import" call={call("journal.import")}>import</button>
+          <button key="reset" call={call("journal.reset")}>reset</button>
+        </grid>
       </Section>
     </stack>
   )

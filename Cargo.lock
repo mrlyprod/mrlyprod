@@ -195,6 +195,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "mrlycli"
+version = "0.1.0"
+dependencies = [
+ "mrly",
+ "serde_json",
+]
+
+[[package]]
 name = "mrlyjs"
 version = "0.1.0"
 dependencies = [

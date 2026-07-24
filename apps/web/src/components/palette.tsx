@@ -1,5 +1,5 @@
 import { call } from "../builders.ts"
-import { h } from "../jsx.ts"
+import { colorpicker } from "./colorpicker.tsx"
 import { hex, names } from "../palette.ts"
 import { peeked } from "../peeks.ts"
 import type { Node } from "../types.ts"
@@ -7,20 +7,13 @@ import type { Node } from "../types.ts"
 export function palette(app: string, colors: string[]): Node[] {
   const lib = (peeked("colors")?.state as { library?: string[] } | undefined)?.library ?? []
   const pool = lib.length > 0 ? lib : names()
-  const byHex = new Map(names().map(name => [hex(name).toLowerCase(), name]))
-  const cycle = (slot: string) => {
-    const at = pool.indexOf(byHex.get(slot.toLowerCase()) ?? "")
-    return pool[(at + 1) % pool.length] ?? pool[0]
+  const picked = new Set(colors.map(c => c.toLowerCase()))
+  const swatches = pool.map(name => ({ name, hex: hex(name) }))
+  const on = (name: string) => picked.has(hex(name).toLowerCase())
+  const pick = (name: string) => {
+    const swatch = hex(name)
+    const next = on(name) ? colors.filter(c => c.toLowerCase() !== swatch.toLowerCase()) : [...colors, swatch]
+    return call(`${app}.set`, { key: "palette", value: next })
   }
-  return [
-    ...colors.map((slot, i) => (
-      <button key={`slot-${i}`} bg={slot} call={call(`${app}.set`, { key: `palette.${i}`, value: cycle(slot) })}>{" "}</button>
-    )),
-    ...(colors.length > 1
-      ? colors.map((_, i) => (
-          <button key={`drop-${i}`} call={call(`${app}.set`, { key: "palette", value: colors.filter((_, j) => j !== i) })}>{`× ${i + 1}`}</button>
-        ))
-      : []),
-    <button key="add" call={call(`${app}.set`, { key: "palette", value: [...colors, colors[colors.length - 1] ?? "#ffffff"] })}>+</button>,
-  ]
+  return [colorpicker("palette", swatches, on, pick)]
 }

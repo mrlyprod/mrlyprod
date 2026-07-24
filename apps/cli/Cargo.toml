@@ -1,0 +1,8 @@
+[package]
+name = "mrlycli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+mrly = { path = "../../pkgs/mrlyrs" }
+serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }

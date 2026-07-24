@@ -30,6 +30,14 @@ fn shot_png(frame: &Json) -> Result<Vec<u8>, &'static str> {
 }
 
 impl Os {
+    pub fn snapshot(&self, app: &str) -> Result<Vec<u8>, &'static str> {
+        let i = self.find(app).ok_or("no such app")?;
+        let frame = self.apps[i].capture(&self.iden);
+        if frame.is_null() {
+            return Err("nothing to shoot here");
+        }
+        shot_png(&frame)
+    }
     pub fn shot(&mut self) -> Outcome {
         let Some(app) = self.focused().map(|r| r.app.clone()) else {
             return Outcome::fail("no current app");

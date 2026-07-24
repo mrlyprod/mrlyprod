@@ -3,7 +3,7 @@
 :root {
   --unit-max: 5px;
   --unit: clamp(3px, 1vw, var(--unit-max));
-  --max-width: 500px;
+  --max-width: 1000px;
 
   --body-color: white;
   --background-color: white;

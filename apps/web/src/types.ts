@@ -47,7 +47,7 @@ export type Node =
   | { kind: "Label"; key?: string; symbol?: Sym; text?: string; note?: string; mode: "row" | "stack" | "icon" | "text"; call?: Call; href?: string; fx?: "scramble" }
   | { kind: "Image"; key?: string; src: string; alt: string }
   | { kind: "Canvas"; key?: string; handle: string; rows: number[][]; palette?: string[]; shade?: Shade; strip?: Flip[]; tap?: Call; drag?: Call; turn?: Call; zoom?: Call; pan?: Call; grid?: [number, number] }
-  | { kind: "Button"; key?: string; label: string; call: Call; bg?: string; big?: boolean; press?: Call; lift?: Call }
+  | { kind: "Button"; key?: string; label: string; call?: Call; active?: boolean; bg?: string; big?: boolean; press?: Call; lift?: Call }
   | { kind: "Field"; key?: string; value: string; live: boolean; call: Call; arg: string; label?: string; hint?: string; icon?: string; clear?: boolean; enter?: Call }
   | { kind: "Toggle"; key?: string; on: boolean; call: Call; arg: string; label?: string }
   | { kind: "Choice"; key?: string; value: string; options: string[]; call: Call; arg: string; label?: string; mode?: "row" | "cycle" | "select" }

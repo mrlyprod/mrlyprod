@@ -1,4 +1,5 @@
 import { call } from "../builders.ts"
+import { colorpicker } from "./colorpicker.tsx"
 import { h } from "../jsx.ts"
 import { hex } from "../palette.ts"
 import { peeked } from "../peeks.ts"
@@ -14,13 +15,8 @@ export function library(kind: "colors" | "emoji" | "font" | "tile", host: string
   if (!Array.isArray(lib) || lib.length === 0) return []
   const set = (value: unknown) => call(`${host}.set`, { key, value })
   if (kind === "colors") {
-    return [
-      <grid key={`lib-${key}`} cols={5}>
-        {(lib as string[]).map(name => (
-          <button key={`${key}-${name}`} bg={hex(name)} call={set(name)}>{name === current ? "✓" : " "}</button>
-        ))}
-      </grid>,
-    ]
+    const swatches = (lib as string[]).map(name => ({ name, hex: hex(name) }))
+    return [colorpicker(`lib-${key}`, swatches, name => name === current, set, true)]
   }
   if (kind === "emoji" || kind === "font") {
     return [

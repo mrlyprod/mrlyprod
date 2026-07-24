@@ -22,7 +22,6 @@ struct Set {
     rows: i64,
     speed: i64,
     trail: i64,
-    rainbow: bool,
     charset: String,
     palette: Vec<[u8; 4]>,
 }
@@ -34,7 +33,6 @@ impl Set {
             rows: 24,
             speed: 1,
             trail: 8,
-            rainbow: false,
             charset: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".to_string(),
             palette: vec![
                 frame::hex_of("#32cc58"),
@@ -71,11 +69,6 @@ impl Set {
                     _ => self.trail = n,
                 }
                 Ok(json!(n))
-            }
-            "rainbow" => {
-                let on = value.as_bool().ok_or("value must be a bool")?;
-                self.rainbow = on;
-                Ok(json!(on))
             }
             "charset" => {
                 let s = value.as_str().ok_or("value must be a string")?;
@@ -115,7 +108,6 @@ impl Set {
             "rows": self.rows,
             "speed": self.speed,
             "trail": self.trail,
-            "rainbow": self.rainbow,
             "charset": self.charset,
             "palette": self.palette.iter().map(|c| frame::hex(*c)).collect::<Vec<_>>(),
         })
@@ -136,6 +128,7 @@ pub struct Matrix {
     rng: Rng,
     seed: u64,
     steps: u64,
+    play: bool,
     cache: Vec<Tensor>,
     gw: usize,
     gh: usize,
@@ -159,6 +152,7 @@ impl Matrix {
             rng: Rng::new(0),
             seed: 0,
             steps: 0,
+            play: true,
             cache: Vec::new(),
             gw: 1,
             gh: 1,
@@ -204,7 +198,7 @@ impl Matrix {
         }
     }
     fn column_color(&mut self) -> [u8; 4] {
-        if self.set.rainbow || self.set.palette.is_empty() {
+        if self.set.palette.is_empty() {
             [
                 self.rng.range(40, 255) as u8,
                 self.rng.range(40, 255) as u8,
@@ -322,6 +316,7 @@ impl App for Matrix {
             "steps": self.steps,
             "over": false,
             "seed": self.seed,
+            "play": self.play,
             "settings": self.set.to_json(),
             "frame": self.render().fact(),
         })
@@ -356,10 +351,20 @@ impl App for Matrix {
             }
             "matrix.set" => {
                 let key = call.arg("key").as_str().unwrap_or("").to_string();
+                if key == "play" {
+                    return match call.arg("value").as_bool() {
+                        Some(on) => {
+                            self.play = on;
+                            Outcome::ok(json!({ "key": "play", "value": on }))
+                        }
+                        None => Outcome::fail("value must be a bool"),
+                    };
+                }
                 match self.set.apply(&key, call.arg("value")) {
                     Ok(value) => {
                         let seed = self.seed;
                         self.reset(seed);
+                        self.play = false;
                         Outcome::ok(json!({ "key": key, "value": value }))
                     }
                     Err(note) => Outcome::fail(note),
@@ -369,12 +374,17 @@ impl App for Matrix {
         }
     }
     fn beat(&self) -> Option<Call> {
-        Some(Call::new("matrix.step", json!({})))
+        if self.play {
+            Some(Call::new("matrix.step", json!({})))
+        } else {
+            None
+        }
     }
     fn save(&self) -> Json {
         json!({
             "settings": self.set.to_json(),
             "seed": self.seed,
+            "play": self.play,
             "pos": self.rng.pos() as u64,
             "steps": self.steps,
             "heads": self.heads,
@@ -385,6 +395,7 @@ impl App for Matrix {
     }
     fn load(&mut self, state: &Json) {
         self.set = Set::from_json(&state["settings"]);
+        self.play = state["play"].as_bool().unwrap_or(true);
         self.reset(state["seed"].as_u64().unwrap_or(0));
         let cols = self.set.cols as usize;
         let rows = self.set.rows as usize;
@@ -489,15 +500,48 @@ mod tests {
         assert_eq!(state["settings"]["cols"], json!(8));
         assert_eq!(state["steps"], json!(0));
         assert!(!send(&mut m, "matrix.set", json!({ "key": "cols", "value": 999 })).ok);
+        assert!(!send(&mut m, "matrix.set", json!({ "key": "volume", "value": 1 })).ok);
+    }
+    #[test]
+    fn set_pauses_the_animation() {
+        let mut m = matrix(4);
+        assert_eq!(m.beat(), Some(Call::new("matrix.step", json!({}))));
+        send(&mut m, "matrix.set", json!({ "key": "cols", "value": 8 }));
+        assert_eq!(m.beat(), None);
+        assert_eq!(m.state(&iden())["play"], json!(false));
+    }
+    #[test]
+    fn play_toggles_without_resetting() {
+        let mut m = matrix(4);
+        send(&mut m, "matrix.step", json!({ "n": 3 }));
+        assert!(
+            send(
+                &mut m,
+                "matrix.set",
+                json!({ "key": "play", "value": false })
+            )
+            .ok
+        );
+        assert_eq!(m.beat(), None);
+        assert_eq!(m.state(&iden())["steps"], json!(3));
+        assert!(
+            send(
+                &mut m,
+                "matrix.set",
+                json!({ "key": "play", "value": true })
+            )
+            .ok
+        );
+        assert_eq!(m.beat(), Some(Call::new("matrix.step", json!({}))));
+        assert_eq!(m.state(&iden())["steps"], json!(3));
         assert!(
             !send(
                 &mut m,
                 "matrix.set",
-                json!({ "key": "rainbow", "value": "yes" })
+                json!({ "key": "play", "value": "no" })
             )
             .ok
         );
-        assert!(!send(&mut m, "matrix.set", json!({ "key": "volume", "value": 1 })).ok);
     }
     #[test]
     fn palette_accepts_hex_strings() {
