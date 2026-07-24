@@ -5,7 +5,9 @@ edition.workspace = true
 
 [dependencies]
 mrlycore.workspace = true
+mrlyfont.workspace = true
 mrlymath.workspace = true
+mrlymusic.workspace = true
 mrlyos.workspace = true
 mrlyui.workspace = true
 serde_json.workspace = true

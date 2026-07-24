@@ -1,5 +1,5 @@
 use mrlyos::kernel::{App, Call, Effect, Iden, Manifest, Outcome, Verb};
-use mrlyui::music::cue;
+use mrlymusic::cue;
 use serde_json::{json, Value as Json};
 
 pub struct Timer {

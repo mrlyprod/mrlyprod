@@ -3,7 +3,7 @@ use mrlycore::rng::Rng;
 use mrlycore::tensor::Tensor;
 use mrlyos::kernel::{App, Call, Effect, Iden, Manifest, Outcome, Verb};
 use mrlyui::frame::{bake, hex, motif_tile, solid_tile, Frame, Layer, TileSet};
-use mrlyui::music::cue;
+use mrlymusic::cue;
 use serde_json::{json, Value as Json};
 
 const DESIGNS: [&str; 5] = ["carpet", "net", "vtree", "htree", "solid"];
@@ -633,7 +633,7 @@ mod tests {
         let out = send(&mut m, "memory.flip", json!({ "card": c }));
         assert!(out.ok);
         assert!(m.over);
-        assert_eq!(out.effects[0].data, mrlyui::music::cue::payload("lose"));
+        assert_eq!(out.effects[0].data, mrlymusic::cue::payload("lose"));
         assert!(!send(&mut m, "memory.flip", json!({ "card": 0 })).ok);
     }
     #[test]

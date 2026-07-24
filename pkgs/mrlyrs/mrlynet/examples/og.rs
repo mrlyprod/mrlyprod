@@ -13,11 +13,11 @@ fn main() {
         if m.hidden {
             continue;
         }
-        let png = mrlyui::card::card_png(&m.route, &m.title).unwrap();
+        let png = mrlynet::card::card_png(&m.route, &m.title).unwrap();
         fs::write(format!("{outdir}/{}.png", m.route), png).unwrap();
         count += 1;
     }
-    let png = mrlyui::card::card_png("home", "mrlyprod").unwrap();
+    let png = mrlynet::card::card_png("home", "mrlyprod").unwrap();
     fs::write(format!("{outdir}/home.png"), png).unwrap();
     if let Ok(entries) = fs::read_dir("cdn/pages") {
         let mut slugs: Vec<String> = entries
@@ -32,7 +32,7 @@ fn main() {
                 .find_map(|line| line.strip_prefix("# "))
                 .unwrap_or("MrlyProd")
                 .to_string();
-            let png = mrlyui::card::card_png(&format!("pages/{slug}"), &title).unwrap();
+            let png = mrlynet::card::card_png(&format!("pages/{slug}"), &title).unwrap();
             fs::write(format!("{outdir}/pages-{slug}.png"), png).unwrap();
             count += 1;
         }

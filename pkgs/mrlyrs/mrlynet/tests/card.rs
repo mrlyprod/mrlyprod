@@ -1,5 +1,5 @@
 use mrlynet::registry::catalogue;
-use mrlyui::card::card_png;
+use mrlynet::card::card_png;
 
 #[test]
 fn golden_clock_card_is_pinned() {

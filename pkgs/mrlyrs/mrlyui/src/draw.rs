@@ -50,7 +50,7 @@ pub fn blit(
 }
 
 pub fn fit(text: &str, field: usize, scales: &[usize]) -> (Vec<Vec<u8>>, usize, String) {
-    let rows = crate::font::raster(text);
+    let rows = mrlyfont::raster(text);
     let w = rows.first().map(Vec::len).unwrap_or(0);
     for &scale in scales {
         if w * scale <= field {
@@ -62,7 +62,7 @@ pub fn fit(text: &str, field: usize, scales: &[usize]) -> (Vec<Vec<u8>>, usize, 
     while !chars.is_empty() {
         chars.pop();
         let cut_text: String = chars.iter().collect();
-        let cut = crate::font::raster(&cut_text);
+        let cut = mrlyfont::raster(&cut_text);
         let cw = cut.first().map(Vec::len).unwrap_or(0);
         if cw * scale <= field {
             return (cut, scale, cut_text);

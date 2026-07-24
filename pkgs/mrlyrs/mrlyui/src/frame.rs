@@ -76,7 +76,7 @@ pub fn motif_tile(name: &str, k: usize, fg: [u8; 4], bg: [u8; 4]) -> Cell2d {
 }
 
 pub fn bake(tile: &mut Cell2d, label: &str, k: usize, ink: [u8; 4]) {
-    let mask = crate::font::raster(label);
+    let mask = mrlyfont::raster(label);
     let mask_h = mask.len();
     let mask_w = mask.first().map(Vec::len).unwrap_or(0);
     if mask_h + 2 > k || mask_w + 2 > k {
@@ -427,7 +427,7 @@ pub fn sprite_fact(cell: &Cell2d) -> Value {
 }
 
 pub fn glyph_fact(text: &str) -> Value {
-    let rows = crate::font::raster(text);
+    let rows = mrlyfont::raster(text);
     json!({
         "text": text,
         "width": rows.first().map(Vec::len).unwrap_or(0),
@@ -651,7 +651,7 @@ mod tests {
     #[test]
     fn glyph_fact_wraps_the_raster() {
         let fact = glyph_fact("42");
-        let rows = crate::font::raster("42");
+        let rows = mrlyfont::raster("42");
         assert_eq!(fact["text"], "42");
         assert_eq!(fact["height"], json!(5));
         assert_eq!(fact["width"], json!(rows[0].len()));

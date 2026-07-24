@@ -3,7 +3,7 @@ use mrlycore::rng::Rng;
 use mrlycore::tensor::Tensor;
 use mrlyos::kernel::{drive, int, pick, real, App, Call, Effect, Iden, Manifest, Outcome, Verb};
 use mrlyui::frame::{bake, hex, motif_tile, solid_tile, Frame, Layer, TileSet};
-use mrlyui::music::cue;
+use mrlymusic::cue;
 use serde_json::{json, Value as Json};
 
 const DESIGNS: [&str; 5] = ["carpet", "net", "vtree", "htree", "solid"];
@@ -654,7 +654,7 @@ mod tests {
         let out = send(&mut g, "twenty48.slide", json!({ "dir": "left" }));
         assert_eq!(out.effects.len(), 1);
         assert_eq!(out.effects[0].kind, "sound");
-        assert_eq!(out.effects[0].data, mrlyui::music::cue::payload("good"));
+        assert_eq!(out.effects[0].data, mrlymusic::cue::payload("good"));
         let mut b = Twenty48::new();
         b.load(&g.save());
         assert_eq!(b.state(&iden()), g.state(&iden()));

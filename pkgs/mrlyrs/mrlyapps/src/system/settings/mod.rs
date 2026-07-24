@@ -114,12 +114,12 @@ impl Settings {
                     "fill" => pick == "random" || COLORS.contains(&pick),
                     "font" => FONTS.contains(&pick),
                     "emoji" => EMOJIS.contains(&pick),
-                    "note" => pick == "random" || mrlyui::music::theory::NAMES.contains(&pick),
+                    "note" => pick == "random" || mrlymusic::theory::NAMES.contains(&pick),
                     "background" => COLORS.contains(&pick),
                     "render" => RENDERS.contains(&pick),
                     "material" => MATERIALS.contains(&pick),
                     "wallpaper" => WALLPAPERS.contains(&pick),
-                    _ => mrlyui::music::wave::NAMES.contains(&pick),
+                    _ => mrlymusic::wave::NAMES.contains(&pick),
                 };
                 if !allowed {
                     return Err("no such option");

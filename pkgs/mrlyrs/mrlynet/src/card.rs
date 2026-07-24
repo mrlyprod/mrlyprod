@@ -1,4 +1,4 @@
-use crate::draw::{blit, fill_rect, fit};
+use mrlyui::draw::{blit, fill_rect, fit};
 use mrlycore::colors::{mix, Color, PALETTE};
 use mrlycore::errors::Result;
 use mrlycore::tensor::Tensor;
@@ -51,7 +51,7 @@ pub fn card(route: &str, title: &str) -> Result<Vec<[u8; 4]>> {
     blit(&mut buf, WIDTH, HEIGHT, &icon, MARGIN, 39, 4, accent);
     let (title_rows, title_scale, _) = fit(title, FIELD, &[3, 2]);
     let title_h = title_rows.len() * title_scale;
-    let brand_rows = crate::font::raster("mrly.net");
+    let brand_rows = mrlyfont::raster("mrly.net");
     let brand_h = brand_rows.len();
     let total = title_h + 6 + brand_h;
     let mut y = HEIGHT.saturating_sub(total) / 2;

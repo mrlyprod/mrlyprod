@@ -3,7 +3,7 @@ use mrlycore::tensor::Tensor;
 use mrlymath::two::Cell2d;
 use mrlyos::kernel::{App, Call, Effect, Iden, Manifest, Outcome, Verb};
 use mrlyui::frame::{sprite_fact, Frame, Layer, TileSet};
-use mrlyui::music::cue;
+use mrlymusic::cue;
 use serde_json::{json, Value as Json};
 
 pub const SIDES: [u32; 7] = [2, 4, 6, 8, 10, 12, 20];
@@ -48,7 +48,7 @@ fn pip_cell(value: u32, k: usize, fg: [u8; 4], bg: [u8; 4]) -> Cell2d {
 fn digit_cell(value: u32, k: usize, fg: [u8; 4], bg: [u8; 4]) -> Cell2d {
     let mut mask = Tensor::new(vec![k, k]);
     let mut colors = vec![bg; k * k];
-    let glyph = mrlyui::font::raster(&value.to_string());
+    let glyph = mrlyfont::raster(&value.to_string());
     let gh = glyph.len();
     let gw = glyph.first().map(Vec::len).unwrap_or(0);
     if gh <= k && gw <= k {

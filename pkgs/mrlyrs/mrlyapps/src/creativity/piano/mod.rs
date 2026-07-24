@@ -1,6 +1,6 @@
 use mrlyos::kernel::{App, Call, Effect, Iden, Manifest, Outcome, Verb};
-use mrlyui::music::render::VOLUME;
-use mrlyui::music::theory;
+use mrlymusic::render::VOLUME;
+use mrlymusic::theory;
 use serde_json::{json, Value as Json};
 
 const GRID: [u8; 25] = [

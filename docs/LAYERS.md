@@ -1,8 +1,9 @@
 # Layers
 
 The layers are crates. Cargo enforces the DAG through the
-`pkgs/mrlyrs/*` manifests: core ← math ← ui; os leans only on core;
-apps sees all four; net sees everything. Nothing imports net.
+`pkgs/mrlyrs/*` manifests: core ← math ← ui and core ← font ← ui;
+core ← music ← apps; os leans only on core; apps sees all of those;
+net sees everything and owns the card. Nothing imports net.
 
 ## The one lint
 
@@ -13,5 +14,5 @@ Run it before shipping (ship.py does).
 ## Inside a crate
 
 Module boundaries inside a merged crate (math/physics/crypto in
-mrlymath, font/music in mrlyui) are convention, not compiler-checked.
-Families keep talking through their mod.rs face.
+mrlymath) are convention, not compiler-checked. Families keep
+talking through their mod.rs face.

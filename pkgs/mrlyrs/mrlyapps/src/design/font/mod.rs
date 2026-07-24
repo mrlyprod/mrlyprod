@@ -23,7 +23,7 @@ impl Default for Font {
 impl Font {
     pub fn new() -> Font {
         Font {
-            order: mrlyui::font::supported(),
+            order: mrlyfont::supported(),
             at: 0,
             reveal: None,
             library: seed(),
@@ -44,7 +44,7 @@ impl App for Font {
     }
     fn state(&self, _iden: &Iden) -> Json {
         let c = self.order[self.at];
-        let g = mrlyui::font::glyph(c).unwrap();
+        let g = mrlyfont::glyph(c).unwrap();
         let width = g.width();
         let height = g.height();
         let rows = match &self.reveal {
@@ -55,11 +55,11 @@ impl App for Font {
                 }
                 grid
             }
-            None => mrlyui::font::to_lists(&g),
+            None => mrlyfont::to_lists(&g),
         };
         json!({
             "char": c.to_string(),
-            "name": mrlyui::font::name_of(c),
+            "name": mrlyfont::name_of(c),
             "index": self.at,
             "total": self.order.len(),
             "revealing": self.reveal.is_some(),
@@ -109,9 +109,9 @@ impl App for Font {
             }
             "font.scramble" => {
                 let c = self.order[self.at];
-                let g = mrlyui::font::glyph(c).unwrap();
+                let g = mrlyfont::glyph(c).unwrap();
                 let width = g.width();
-                let rows = mrlyui::font::to_lists(&g);
+                let rows = mrlyfont::to_lists(&g);
                 let mut pixels: Vec<usize> = Vec::new();
                 for (y, row) in rows.iter().enumerate() {
                     for (x, &v) in row.iter().enumerate() {
@@ -195,7 +195,7 @@ impl App for Font {
                     };
                     c
                 };
-                if mrlyui::font::glyph(c).is_none() {
+                if mrlyfont::glyph(c).is_none() {
                     return Outcome::fail("unknown char");
                 }
                 if self.library.contains(&c) {
@@ -256,7 +256,7 @@ impl App for Font {
                     if let Some(s) = item.as_str() {
                         let mut chars = s.chars();
                         if let (Some(c), None) = (chars.next(), chars.next()) {
-                            if mrlyui::font::glyph(c).is_some()
+                            if mrlyfont::glyph(c).is_some()
                                 && !library.contains(&c)
                                 && library.len() < 24
                             {
@@ -332,10 +332,10 @@ mod tests {
                 assert_eq!(state["revealing"], json!(true));
             }
         }
-        let g = mrlyui::font::glyph('a').unwrap();
+        let g = mrlyfont::glyph('a').unwrap();
         assert_eq!(
             f.state(&iden())["glyph"]["rows"],
-            json!(mrlyui::font::to_lists(&g))
+            json!(mrlyfont::to_lists(&g))
         );
     }
     #[test]
@@ -406,7 +406,7 @@ mod tests {
         let f = Font::new();
         let state = f.state(&iden());
         assert_eq!(state["total"], json!(108));
-        assert_eq!(state["name"], json!(mrlyui::font::name_of(f.order[0])));
+        assert_eq!(state["name"], json!(mrlyfont::name_of(f.order[0])));
     }
     #[test]
     fn actions_offer_the_natural_verbs() {
@@ -432,7 +432,7 @@ mod tests {
         assert_eq!(library, json!(["A", "a", "0", "#"]));
         for value in library.as_array().unwrap() {
             let c = value.as_str().unwrap().chars().next().unwrap();
-            assert!(mrlyui::font::glyph(c).is_some());
+            assert!(mrlyfont::glyph(c).is_some());
         }
     }
     #[test]

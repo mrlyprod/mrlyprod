@@ -1,4 +1,4 @@
-use crate::font::{glyph, trim};
+use mrlyfont::{glyph, trim};
 
 pub(crate) const LINE: usize = 7;
 

@@ -3,7 +3,7 @@ use mrlycore::rng::Rng;
 use mrlycore::tensor::Tensor;
 use mrlyos::kernel::{drive, int, pick, real, App, Call, Effect, Iden, Manifest, Outcome, Verb};
 use mrlyui::frame::{bake, hex, motif_tile, solid_tile, Frame, Layer, TileSet};
-use mrlyui::music::cue;
+use mrlymusic::cue;
 use serde_json::{json, Value as Json};
 
 const DESIGNS: [&str; 5] = ["carpet", "net", "vtree", "htree", "solid"];
@@ -800,11 +800,11 @@ mod tests {
         assert_eq!(out.effects.len(), 1);
         assert_eq!(out.effects[0].kind, "sound");
         let out = send(&mut m, "mines.flag", json!({ "cell": 0 }));
-        assert_eq!(out.effects[0].data, mrlyui::music::cue::payload("blip"));
+        assert_eq!(out.effects[0].data, mrlymusic::cue::payload("blip"));
         send(&mut m, "mines.flag", json!({ "cell": 0 }));
         let mine_cell = (0..m.size()).find(|&i| m.mine[i]).unwrap();
         let out = send(&mut m, "mines.reveal", json!({ "cell": mine_cell }));
-        assert_eq!(out.effects[0].data, mrlyui::music::cue::payload("lose"));
+        assert_eq!(out.effects[0].data, mrlymusic::cue::payload("lose"));
     }
     #[test]
     fn state_carries_an_indexed_frame() {

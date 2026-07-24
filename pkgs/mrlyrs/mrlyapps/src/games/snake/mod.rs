@@ -5,7 +5,7 @@ use mrlycore::tensor::Tensor;
 use mrlycore::tile::{Design, Group, Source, Tile as Model};
 use mrlyos::kernel::{drive, flag, int, App, Call, Effect, Iden, Manifest, Outcome, Verb};
 use mrlyui::frame::{probe, solid_tile, tile_cell, work_cell, Frame, Layer, TileSet};
-use mrlyui::music::cue;
+use mrlymusic::cue;
 use serde_json::{json, Value as Json};
 
 const DIRS: [&str; 4] = ["up", "down", "left", "right"];

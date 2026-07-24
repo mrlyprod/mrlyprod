@@ -1,7 +1,6 @@
 use mrlycore::rng::Rng;
 use mrlycore::tensor::Tensor;
 use mrlyos::kernel::{App, Call, Iden, Manifest, Outcome, Verb};
-use mrlyui::font;
 use mrlyui::frame::{self, Frame};
 use serde_json::{json, Value as Json};
 
@@ -168,8 +167,8 @@ impl Matrix {
     fn build_cache(&mut self) {
         let mut lists: Vec<Vec<Vec<u8>>> = Vec::new();
         for ch in self.set.charset.chars() {
-            if let Some(g) = font::glyph(ch) {
-                lists.push(font::to_lists(&g));
+            if let Some(g) = mrlyfont::glyph(ch) {
+                lists.push(mrlyfont::to_lists(&g));
             }
         }
         self.gh = lists.iter().map(|l| l.len()).max().unwrap_or(1).max(1);

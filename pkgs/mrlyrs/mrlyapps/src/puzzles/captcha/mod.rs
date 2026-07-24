@@ -5,7 +5,7 @@ use mrlymath::pick;
 use mrlymath::two::Cell2d;
 use mrlyos::kernel::{App, Call, Effect, Iden, Manifest, Outcome, Verb};
 use mrlyui::frame::{sprite_fact, Frame, Layer, TileSet};
-use mrlyui::music::cue;
+use mrlymusic::cue;
 use serde_json::{json, Value as Json};
 
 const SURFACES: [&str; 2] = ["grid", "canvas"];

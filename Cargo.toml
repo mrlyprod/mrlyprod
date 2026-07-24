@@ -3,8 +3,10 @@ resolver = "2"
 members = [
     "pkgs/mrlyrs/mrlycore",
     "pkgs/mrlyrs/mrlymath",
+    "pkgs/mrlyrs/mrlyfont",
     "pkgs/mrlyrs/mrlyui",
     "pkgs/mrlyrs/mrlyos",
+    "pkgs/mrlyrs/mrlymusic",
     "pkgs/mrlyrs/mrlyapps",
     "pkgs/mrlyrs/mrlynet",
     "pkgs/mrlypy",
@@ -14,8 +16,10 @@ members = [
 default-members = [
     "pkgs/mrlyrs/mrlycore",
     "pkgs/mrlyrs/mrlymath",
+    "pkgs/mrlyrs/mrlyfont",
     "pkgs/mrlyrs/mrlyui",
     "pkgs/mrlyrs/mrlyos",
+    "pkgs/mrlyrs/mrlymusic",
     "pkgs/mrlyrs/mrlyapps",
     "pkgs/mrlyrs/mrlynet",
 ]
@@ -27,8 +31,10 @@ edition = "2021"
 [workspace.dependencies]
 mrlycore = { path = "pkgs/mrlyrs/mrlycore" }
 mrlymath = { path = "pkgs/mrlyrs/mrlymath" }
+mrlyfont = { path = "pkgs/mrlyrs/mrlyfont" }
 mrlyui = { path = "pkgs/mrlyrs/mrlyui" }
 mrlyos = { path = "pkgs/mrlyrs/mrlyos" }
+mrlymusic = { path = "pkgs/mrlyrs/mrlymusic" }
 mrlyapps = { path = "pkgs/mrlyrs/mrlyapps" }
 mrlynet = { path = "pkgs/mrlyrs/mrlynet" }
 png = "0.17"

@@ -187,7 +187,9 @@ name = "mrlyapps"
 version = "0.2.0"
 dependencies = [
  "mrlycore",
+ "mrlyfont",
  "mrlymath",
+ "mrlymusic",
  "mrlyos",
  "mrlyui",
  "serde_json",
@@ -214,6 +216,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "mrlyfont"
+version = "0.2.0"
+dependencies = [
+ "serde_json",
+]
+
+[[package]]
 name = "mrlyjs"
 version = "0.1.0"
 dependencies = [
@@ -236,11 +245,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "mrlymusic"
+version = "0.2.0"
+dependencies = [
+ "mrlycore",
+ "serde_json",
+]
+
+[[package]]
 name = "mrlynet"
 version = "0.2.0"
 dependencies = [
  "mrlyapps",
  "mrlycore",
+ "mrlyfont",
+ "mrlymath",
  "mrlyos",
  "mrlyui",
  "serde_json",
@@ -270,6 +289,7 @@ name = "mrlyui"
 version = "0.2.0"
 dependencies = [
  "mrlycore",
+ "mrlyfont",
  "mrlymath",
  "serde_json",
 ]
