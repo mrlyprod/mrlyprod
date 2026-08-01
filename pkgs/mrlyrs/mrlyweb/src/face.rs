@@ -17,11 +17,18 @@ fn input(os: &Os, app: &str) -> Result<FaceInput, &'static str> {
         .peek("settings", None)
         .map(|v| v.state["darkmode"] == true)
         .unwrap_or(false);
+    let mut state = view.state;
+    if !state["frame"].is_null() && mrlyui::face::decode(&state["frame"]).is_none() {
+        let twin = os.capture(app);
+        if mrlyui::face::decode(&twin).is_some() {
+            state["frame"] = twin;
+        }
+    }
     Ok(FaceInput {
         app: app.to_string(),
         title,
         params: view.params,
-        state: view.state,
+        state,
         actions: view
             .actions
             .into_iter()

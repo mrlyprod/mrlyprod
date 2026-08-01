@@ -110,3 +110,19 @@ fn canvas_rgba_matches_the_fact() {
     assert_eq!(buf.len(), w * h * 4);
     assert!(mrlyweb::face::canvas_rgba(&os, "calculator").is_err());
 }
+
+#[test]
+fn gpu_mode_still_shows_the_cpu_twin() {
+    let mut driver = mrlyweb::drive::Driver::scripted(0);
+    driver.open("julia");
+    driver.act("julia.step", mrlycore::json!({ "n": 4 }));
+    let cpu = driver.frame_fnv();
+    driver.act(
+        "settings.set",
+        mrlycore::json!({ "key": "render", "value": "gpu" }),
+    );
+    driver.open("julia");
+    assert_eq!(driver.frame_fnv(), cpu, "gpu mode blanked the face");
+    let empty = mrlyui::face::decode(&mrlyui::frame::empty_fact(100, 100));
+    assert!(empty.is_none(), "an empty fact must not decode");
+}

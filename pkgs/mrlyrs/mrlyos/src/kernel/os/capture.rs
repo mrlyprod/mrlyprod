@@ -11,6 +11,12 @@ fn shot_png(frame: &Json) -> Result<Vec<u8>, &'static str> {
 }
 
 impl Os {
+    pub fn capture(&self, app: &str) -> Json {
+        match self.find(app) {
+            Some(i) => self.apps[i].capture(&self.iden),
+            None => Json::Null,
+        }
+    }
     pub fn snapshot(&self, app: &str) -> Result<Vec<u8>, &'static str> {
         let i = self.find(app).ok_or("no such app")?;
         let frame = self.apps[i].capture(&self.iden);
