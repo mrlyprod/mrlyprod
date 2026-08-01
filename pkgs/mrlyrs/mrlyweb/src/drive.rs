@@ -4,10 +4,11 @@ use mrlycore::{json, Json};
 use mrlyos::kernel::{Call, Effect, Os};
 use mrlyui::face::keys::Tap;
 pub use mrlyui::face::{Act, Hit, Scene};
-use mrlyui::face::{Edit, UiState, HEIGHT, SCALE, WIDTH};
+use mrlyui::face::{Bar, Edit, UiState, HEIGHT, SCALE, WIDTH};
 
 pub const BEAT: i64 = 125;
 const EFFECTS: usize = 64;
+const HINTS: usize = 5;
 
 pub enum KeyPress {
     Char(char),
@@ -392,6 +393,7 @@ impl Driver {
                 self.refresh();
             }
             Act::Cap(tap) => self.tap_cap(tap),
+            Act::Fill { text } => self.ask_fill(&text),
             Act::Shut => {
                 self.ui.menu = None;
                 self.refresh();
@@ -724,7 +726,113 @@ impl Driver {
         true
     }
 
+    pub fn ask(&mut self) {
+        self.ui.bar = Some(Bar::default());
+        self.hint();
+        self.refresh();
+    }
+
+    pub fn asking(&self) -> bool {
+        self.ui.bar.is_some()
+    }
+
+    fn verbs(&self) -> Vec<String> {
+        let surface = self.os.describe(None);
+        let mut names = Vec::new();
+        if let Some(list) = surface["nav"].as_array() {
+            names.extend(
+                list.iter()
+                    .filter_map(|v| v["verb"].as_str().map(str::to_string)),
+            );
+        }
+        if let Some(groups) = surface["verbs"].as_array() {
+            for group in groups {
+                if let Some(list) = group["verbs"].as_array() {
+                    names.extend(
+                        list.iter()
+                            .filter_map(|v| v["verb"].as_str().map(str::to_string)),
+                    );
+                }
+            }
+        }
+        names.sort();
+        names.dedup();
+        names
+    }
+
+    fn hint(&mut self) {
+        let Some(bar) = self.ui.bar.clone() else {
+            return;
+        };
+        let head = bar.line.split(' ').next().unwrap_or("").to_string();
+        let hints: Vec<String> = self
+            .verbs()
+            .into_iter()
+            .filter(|name| head.is_empty() || name.starts_with(&head))
+            .take(HINTS)
+            .collect();
+        self.ui.bar = Some(Bar { hints, ..bar });
+    }
+
+    pub fn ask_type(&mut self, c: char) {
+        let Some(bar) = &mut self.ui.bar else {
+            return;
+        };
+        if c.is_ascii_graphic() || c == ' ' {
+            bar.line.push(c);
+        }
+        self.hint();
+        self.refresh();
+    }
+
+    pub fn ask_back(&mut self) {
+        let Some(bar) = &mut self.ui.bar else {
+            return;
+        };
+        bar.line.pop();
+        self.hint();
+        self.refresh();
+    }
+
+    pub fn ask_fill(&mut self, text: &str) {
+        let Some(bar) = &mut self.ui.bar else {
+            return;
+        };
+        bar.line = format!("{text} ");
+        self.hint();
+        self.refresh();
+    }
+
+    pub fn ask_run(&mut self) -> Result<(), String> {
+        let Some(bar) = self.ui.bar.take() else {
+            return Err("no command bar".to_string());
+        };
+        self.refresh();
+        let line = bar.line.trim().to_string();
+        if line.is_empty() {
+            return Ok(());
+        }
+        let (verb, rest) = match line.split_once(' ') {
+            Some((verb, rest)) => (verb.to_string(), rest.trim().to_string()),
+            None => (line, String::new()),
+        };
+        if !self.verbs().contains(&verb) {
+            return Err(format!("no verb {verb}"));
+        }
+        let args = match rest.is_empty() {
+            true => json!({}),
+            false => mrlycore::json::parse(&rest).map_err(|_| format!("bad args {rest}"))?,
+        };
+        self.act(&verb, args);
+        Ok(())
+    }
+
     pub fn escape(&mut self) {
+        if self.ui.bar.is_some() {
+            self.ui.bar = None;
+            self.refresh();
+            return;
+        }
         if self.ui.ring.is_some() && self.ui.edit.is_none() {
             self.ui.ring = None;
             self.refresh();
@@ -967,6 +1075,7 @@ fn hit_json(hit: &Hit) -> Json {
             };
             ("cap", json!({ "tap": name }))
         }
+        Act::Fill { text } => ("fill", json!({ "text": text })),
         Act::Shut => ("shut", json!({})),
         Act::Mute => ("mute", json!({})),
     };

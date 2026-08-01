@@ -57,6 +57,7 @@ pub struct UiState {
     pub menu: Option<String>,
     pub hover: Option<Act>,
     pub ring: Option<Act>,
+    pub bar: Option<Bar>,
     pub dock: Option<Edit>,
     pub shade: Option<String>,
     pub rise: u8,
@@ -71,12 +72,19 @@ impl Default for UiState {
             menu: None,
             hover: None,
             ring: None,
+            bar: None,
             dock: None,
             shade: None,
             rise: FULL,
             veil: FULL,
         }
     }
+}
+
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Bar {
+    pub line: String,
+    pub hints: Vec<String>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -131,6 +139,9 @@ pub enum Act {
         id: String,
     },
     Cap(keys::Tap),
+    Fill {
+        text: String,
+    },
     Shut,
     Mute,
 }
@@ -284,20 +295,23 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
     let mut sheet = vec![theme.board; WIDTH * HEIGHT];
     paint::paint_into(&mut sheet, WIDTH, HEIGHT, &layout::title_ops(input, &theme));
 
+    let asking = ui.bar.as_ref();
     let docked = ui.dock.as_ref().or(ui.edit.as_ref());
     let strip =
         docked.map(|e| keys::strip(e.keys.as_deref().unwrap_or("text"), e.shift, e.page, &theme));
-    let bar = if strip.is_some() {
+    let bar = if strip.is_some() || asking.is_some() {
         Vec::new()
     } else {
         layout::action_bar(input, &theme)
     };
+    let asked = asking.map_or(0, |b| EDGE + PAD + (1 + b.hints.len()) * CONTROL + PAD);
     let full = strip.as_ref().map_or(0, |(_, _, h)| *h);
     let risen = full * ui.rise.max(1) as usize / FULL as usize;
-    let bar_h = strip.as_ref().map_or_else(
-        || PAD + bar.iter().map(|i| i.height).sum::<usize>(),
-        |_| risen,
-    );
+    let bar_h = match (strip.is_some(), asking) {
+        (true, _) => risen,
+        (false, Some(_)) => asked,
+        (false, None) => PAD + bar.iter().map(|i| i.height).sum::<usize>(),
+    };
     let y0 = HEADER + PAD;
     let y1 = HEIGHT.saturating_sub(bar_h + PAD);
     let window = y1.saturating_sub(y0);
@@ -350,6 +364,61 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
                     hits.push(hit);
                 }
             }
+        }
+        None if asking.is_some() => {
+            let ask = asking.expect("a bar");
+            let top = HEIGHT - bar_h;
+            let mut ops = vec![layout::Op::Rect {
+                x: 0,
+                y: top,
+                w: WIDTH,
+                h: EDGE,
+                color: theme.faint,
+            }];
+            let mut y = top + EDGE + PAD;
+            for (i, hint) in ask.hints.iter().enumerate() {
+                let call = Call::new(hint, mrlycore::json!({}));
+                ops.push(layout::Op::text(
+                    PAD + CONTROL,
+                    y + (CONTROL - crate::tokens::LINE) / 2,
+                    hint.clone(),
+                    1,
+                    theme.muted,
+                ));
+                hits.push(Hit {
+                    x: 0,
+                    y,
+                    w: WIDTH,
+                    h: CONTROL,
+                    act: Act::Fill { text: hint.clone() },
+                });
+                let _ = (i, call);
+                y += CONTROL;
+            }
+            ops.push(layout::Op::text(
+                PAD,
+                y + (CONTROL - crate::tokens::LINE) / 2,
+                "/".to_string(),
+                1,
+                theme.accent,
+            ));
+            let typed = ask.line.clone();
+            let tw = crate::face::text::width(&typed, 1);
+            ops.push(layout::Op::text(
+                PAD + CONTROL,
+                y + (CONTROL - crate::tokens::LINE) / 2,
+                typed,
+                1,
+                theme.ink,
+            ));
+            ops.push(layout::Op::Rect {
+                x: PAD + CONTROL + tw + EDGE,
+                y: y + (CONTROL - crate::tokens::LINE) / 2,
+                w: EDGE,
+                h: crate::tokens::LINE,
+                color: theme.accent,
+            });
+            paint::paint_into(&mut sheet, WIDTH, HEIGHT, &ops);
         }
         None => {
             let mut bar_ops = vec![layout::Op::Rect {

@@ -177,6 +177,24 @@ impl Face {
         if event.state != ElementState::Pressed {
             return;
         }
+        if self.driver.asking() {
+            match event.logical_key.as_ref() {
+                Key::Named(NamedKey::Escape) => self.driver.escape(),
+                Key::Named(NamedKey::Enter) => {
+                    let _ = self.driver.ask_run();
+                }
+                Key::Named(NamedKey::Backspace) => self.driver.ask_back(),
+                Key::Named(NamedKey::Space) => self.driver.ask_type(' '),
+                Key::Character(ch) => {
+                    for c in ch.chars() {
+                        self.driver.ask_type(c);
+                    }
+                }
+                _ => {}
+            }
+            self.sync();
+            return;
+        }
         if self.driver.editing() {
             match event.logical_key.as_ref() {
                 Key::Named(NamedKey::Escape) => self.driver.key(KeyPress::Escape),
@@ -194,6 +212,7 @@ impl Face {
             return;
         }
         match event.logical_key.as_ref() {
+            Key::Character("/") => self.driver.ask(),
             Key::Named(NamedKey::Tab) => self.driver.tab(),
             Key::Named(NamedKey::Enter) if self.driver.ringed() => {
                 self.driver.enter();

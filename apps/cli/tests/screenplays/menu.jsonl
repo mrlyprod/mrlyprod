@@ -21,3 +21,6 @@
 {"walk": "down"}
 {"walk": "up"}
 {"assert": {"frame": "16751805235744316362"}}
+{"ask": "nav.open {\"app\":\"twenty48\"}"}
+{"run": true}
+{"assert": {"route": "twenty48"}}
