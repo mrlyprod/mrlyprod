@@ -1,0 +1,12 @@
+{"open": "twenty48"}
+{"assert": {"route": "twenty48"}}
+{"assert": {"verb": "twenty48.slide"}}
+{"call": {"verb": "twenty48.reset", "args": {"seed": 5}}}
+{"assert": {"state": ["twenty48/seed", 5]}}
+{"assert": {"state": ["twenty48/steps", 0]}}
+{"tap": {"verb": "twenty48.slide", "args": {"dir": "left"}}}
+{"assert": {"state": ["twenty48/steps", 1]}}
+{"slide": {"verb": "twenty48.set", "value": 6}}
+{"assert": {"state": ["twenty48/settings/grid", 6]}}
+{"assert": {"state": ["twenty48/steps", 0]}}
+{"assert": {"frame": "17807389894312501931"}}

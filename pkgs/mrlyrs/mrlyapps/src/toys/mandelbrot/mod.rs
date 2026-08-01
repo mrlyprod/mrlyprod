@@ -1,5 +1,8 @@
+mod view;
+
 use mrlycore::rng::Rng;
 use mrlycore::trig::{FracIndex, N as TRIG_N};
+use mrlycore::ui;
 use mrlycore::{json, Json};
 use mrlymath::fractal::{self, Viewport, Wayfinder};
 use mrlyos::kernel::{int, App, Call, Iden, Manifest, Outcome, Verb};
@@ -148,7 +151,7 @@ impl Mandelbrot {
         self.rotation = 0;
         self.fill();
     }
-    fn view(&self) -> Viewport {
+    fn viewport(&self) -> Viewport {
         let vw = (self.start.xmax - self.start.xmin) as i128;
         let vh = (self.start.ymax - self.start.ymin) as i128;
         let hw = (vw * MICRO as i128 / (2 * self.zoom as i128)) as i64;
@@ -167,7 +170,7 @@ impl Mandelbrot {
         let w = self.set.width as usize;
         let h = self.set.height as usize;
         let depth = self.set.depth;
-        let [xmin, xmax, ymin, ymax] = self.view().reals();
+        let [xmin, xmax, ymin, ymax] = self.viewport().reals();
         let center = ((xmin + xmax) * 0.5, (ymin + ymax) * 0.5);
         let vw = xmax - xmin;
         let vh = ymax - ymin;
@@ -272,7 +275,7 @@ impl App for Mandelbrot {
         self.render().fact()
     }
     fn uniforms(&self) -> Option<Vec<f32>> {
-        let [xmin, xmax, ymin, ymax] = self.view().reals();
+        let [xmin, xmax, ymin, ymax] = self.viewport().reals();
         let p = self.set.primary;
         let a = self.set.accent;
         let mut u = vec![0.0; 20];
@@ -299,6 +302,9 @@ impl App for Mandelbrot {
             Verb::new("mandelbrot.reset", json!({ "seed": "int" })),
             Verb::new("mandelbrot.set", json!({ "key": "string", "value": "any" })),
         ]
+    }
+    fn view(&self, iden: &Iden) -> Option<ui::Node> {
+        view::tree(self, iden)
     }
     fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
@@ -538,5 +544,29 @@ mod tests {
         assert!(gpu["rows"].as_array().unwrap().is_empty());
         assert!(gpu["palette"].as_array().unwrap().is_empty());
         assert_eq!(m.capture(&iden()), cpu);
+    }
+    #[test]
+    fn view_carries_the_frame_and_every_dial() {
+        let m = mandelbrot(5);
+        let ui::Node::Column { children } = m.view(&iden()).unwrap() else {
+            panic!()
+        };
+        assert!(matches!(children[0], ui::Node::Image { .. }));
+        let ranges: Vec<String> = children
+            .iter()
+            .filter_map(|n| match n {
+                ui::Node::Range { label, .. } => Some(label.clone()),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(
+            ranges,
+            ["zoom", "cycle", "drift", "spin", "band", "fade", "depth"]
+        );
+        let fields = children
+            .iter()
+            .filter(|n| matches!(n, ui::Node::Field { .. }))
+            .count();
+        assert_eq!(fields, 2);
     }
 }

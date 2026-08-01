@@ -245,6 +245,28 @@ fn drive_plays_the_snake_screenplay() {
 }
 
 #[test]
+fn drive_plays_the_twenty48_screenplay() {
+    let status = mrlycli()
+        .args(["drive", "tests/screenplays/twenty48.jsonl"])
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status()
+        .unwrap();
+    assert!(status.success());
+}
+
+#[test]
+fn drive_plays_the_mandelbrot_screenplay() {
+    let status = mrlycli()
+        .args(["drive", "tests/screenplays/mandelbrot.jsonl"])
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status()
+        .unwrap();
+    assert!(status.success());
+}
+
+#[test]
 fn drive_refuses_a_wrong_route() {
     let mut child = mrlycli()
         .args(["drive"])

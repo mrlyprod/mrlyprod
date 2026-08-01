@@ -1,6 +1,9 @@
+mod view;
+
 use mrlycore::colors::ROLLABLE;
 use mrlycore::rng::Rng;
 use mrlycore::tensor::Tensor;
+use mrlycore::ui;
 use mrlycore::{json, Json};
 use mrlymusic::cue;
 use mrlyos::kernel::{drive, int, pick, App, Call, Effect, Iden, Manifest, Outcome, Verb};
@@ -347,6 +350,9 @@ impl App for Twenty48 {
             json!({ "key": "string", "value": "any" }),
         ));
         out
+    }
+    fn view(&self, iden: &Iden) -> Option<ui::Node> {
+        view::tree(self, iden)
     }
     fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
@@ -783,5 +789,53 @@ mod tests {
             .clone()
             .unwrap()
             .contains(&board));
+    }
+    fn button_labels(node: &ui::Node, out: &mut Vec<String>) {
+        match node {
+            ui::Node::Column { children }
+            | ui::Node::Grid { children, .. }
+            | ui::Node::Group { children } => {
+                for child in children {
+                    button_labels(child, out);
+                }
+            }
+            ui::Node::Button { label, .. } => out.push(label.clone()),
+            _ => {}
+        }
+    }
+    #[test]
+    fn view_swaps_dpad_for_game_over() {
+        let mut g = game(3);
+        let mut live = Vec::new();
+        button_labels(&g.view(&iden()).unwrap(), &mut live);
+        for d in ["<", "^", "v", ">"] {
+            assert!(live.contains(&d.to_string()));
+        }
+        assert!(!live.contains(&"play again".to_string()));
+        g.over = true;
+        let mut over = Vec::new();
+        button_labels(&g.view(&iden()).unwrap(), &mut over);
+        assert!(over.contains(&"play again".to_string()));
+        assert!(!over.contains(&"^".to_string()));
+    }
+    #[test]
+    fn view_never_offers_the_emoji_skin() {
+        let g = game(3);
+        fn skins(node: &ui::Node, out: &mut Vec<String>) {
+            match node {
+                ui::Node::Column { children } => {
+                    for child in children {
+                        skins(child, out);
+                    }
+                }
+                ui::Node::Choice { label, options, .. } if label == "skin" => {
+                    out.extend(options.clone());
+                }
+                _ => {}
+            }
+        }
+        let mut options = Vec::new();
+        skins(&g.view(&iden()).unwrap(), &mut options);
+        assert_eq!(options, vec!["tiles".to_string(), "digits".to_string()]);
     }
 }

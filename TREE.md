@@ -10,8 +10,10 @@ mrlyprod
 │   │   │   └── tui.rs
 │   │   ├── tests
 │   │   │   ├── screenplays
+│   │   │   │   ├── mandelbrot.jsonl
 │   │   │   │   ├── menu.jsonl
-│   │   │   │   └── snake.jsonl
+│   │   │   │   ├── snake.jsonl
+│   │   │   │   └── twenty48.jsonl
 │   │   │   └── cli.rs
 │   │   └── Cargo.toml
 │   ├── git
@@ -620,7 +622,8 @@ mrlyprod
 │   │   │   │   │   │   └── mod.rs
 │   │   │   │   │   ├── twenty48
 │   │   │   │   │   │   ├── README.md
-│   │   │   │   │   │   └── mod.rs
+│   │   │   │   │   │   ├── mod.rs
+│   │   │   │   │   │   └── view.rs
 │   │   │   │   │   └── mod.rs
 │   │   │   │   ├── system
 │   │   │   │   │   ├── files
@@ -669,7 +672,8 @@ mrlyprod
 │   │   │   │   │   │   └── mod.rs
 │   │   │   │   │   ├── mandelbrot
 │   │   │   │   │   │   ├── README.md
-│   │   │   │   │   │   └── mod.rs
+│   │   │   │   │   │   ├── mod.rs
+│   │   │   │   │   │   └── view.rs
 │   │   │   │   │   ├── matrix
 │   │   │   │   │   │   ├── README.md
 │   │   │   │   │   │   └── mod.rs
