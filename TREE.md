@@ -10,7 +10,8 @@ mrlyprod
 │   │   │   └── tui.rs
 │   │   ├── tests
 │   │   │   ├── screenplays
-│   │   │   │   └── menu.jsonl
+│   │   │   │   ├── menu.jsonl
+│   │   │   │   └── snake.jsonl
 │   │   │   └── cli.rs
 │   │   └── Cargo.toml
 │   ├── git

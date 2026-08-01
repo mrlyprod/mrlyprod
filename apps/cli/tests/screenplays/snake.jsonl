@@ -1,0 +1,21 @@
+{"open": "snake"}
+{"assert": {"route": "snake"}}
+{"assert": {"verb": "snake.turn"}}
+{"call": {"verb": "snake.reset", "args": {"seed": 5}}}
+{"assert": {"state": ["snake/seed", 5]}}
+{"assert": {"state": ["snake/dir", "right"]}}
+{"slide": {"verb": "snake.set", "value": 8}}
+{"assert": {"state": ["snake/settings/grid", 8]}}
+{"tap": {"verb": "snake.set", "args": {"key": "wrap"}}}
+{"assert": {"state": ["snake/settings/wrap", false]}}
+{"tap": {"verb": "snake.turn", "args": {"dir": "up"}}}
+{"assert": {"state": ["snake/dir", "up"]}}
+{"call": {"verb": "snake.step", "args": {"n": 3}}}
+{"assert": {"state": ["snake/steps", 3]}}
+{"call": {"verb": "snake.step", "args": {"n": 1024}}}
+{"assert": {"state": ["snake/over", true]}}
+{"assert": {"verb": "snake.reset"}}
+{"tap": {"verb": "snake.reset", "args": {}}}
+{"assert": {"state": ["snake/over", false]}}
+{"assert": {"state": ["snake/steps", 0]}}
+{"assert": {"frame": "7370752036921262326"}}

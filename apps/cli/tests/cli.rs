@@ -234,6 +234,17 @@ fn drive_plays_the_menu_screenplay() {
 }
 
 #[test]
+fn drive_plays_the_snake_screenplay() {
+    let status = mrlycli()
+        .args(["drive", "tests/screenplays/snake.jsonl"])
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status()
+        .unwrap();
+    assert!(status.success());
+}
+
+#[test]
 fn drive_refuses_a_wrong_route() {
     let mut child = mrlycli()
         .args(["drive"])
@@ -255,6 +266,17 @@ fn drive_refuses_a_wrong_route() {
 fn monkey_survives_a_menu_mash() {
     let status = mrlycli()
         .args(["monkey", "menu", "--seed", "3", "--steps", "40"])
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status()
+        .unwrap();
+    assert!(status.success());
+}
+
+#[test]
+fn monkey_survives_a_snake_mash() {
+    let status = mrlycli()
+        .args(["monkey", "snake", "--seed", "3", "--steps", "40"])
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .status()

@@ -3,6 +3,7 @@ use mrlycore::paint::Paint;
 use mrlycore::rng::Rng;
 use mrlycore::tensor::Tensor;
 use mrlycore::tile::{Design, Group, Source, Tile as Model};
+use mrlycore::ui;
 use mrlycore::{json, Json};
 use mrlymusic::cue;
 use mrlyos::kernel::{drive, flag, int, App, Call, Effect, Iden, Manifest, Outcome, Verb};
@@ -399,6 +400,74 @@ impl App for Snake {
         ));
         out
     }
+    fn view(&self, _iden: &Iden) -> Option<ui::Node> {
+        let set = |key: &str| ui::Call::new("snake.set", json!({ "key": key }));
+        let turn = |dir: &str| ui::Call::new("snake.turn", json!({ "dir": dir }));
+        let mut nodes = vec![ui::Node::image(self.render().fact())];
+        if self.over {
+            nodes.push(ui::Node::group(vec![
+                ui::Node::text("game over", ui::Role::Title),
+                ui::Node::text(&format!("score {}", self.score), ui::Role::Note),
+                ui::Node::button("play again", ui::Call::new("snake.reset", json!({}))),
+            ]));
+        } else {
+            nodes.push(ui::Node::grid(
+                4,
+                vec![
+                    ui::Node::button("<", turn("left")),
+                    ui::Node::button("^", turn("up")),
+                    ui::Node::button("v", turn("down")),
+                    ui::Node::button(">", turn("right")),
+                ],
+            ));
+            nodes.push(ui::Node::text(
+                &format!("score {} - steps {}", self.score, self.steps),
+                ui::Role::Note,
+            ));
+        }
+        nodes.push(ui::Node::text("rules", ui::Role::Label));
+        nodes.push(ui::Node::range(
+            "grid",
+            self.set.grid,
+            5,
+            64,
+            1,
+            set("grid"),
+            "value",
+        ));
+        nodes.push(ui::Node::range(
+            "apples",
+            self.set.apples,
+            1,
+            16,
+            1,
+            set("apples"),
+            "value",
+        ));
+        nodes.push(ui::Node::toggle(
+            "wrap",
+            self.set.wrap,
+            set("wrap"),
+            "value",
+        ));
+        nodes.push(ui::Node::toggle(
+            "self collision",
+            self.set.self_collision,
+            set("self_collision"),
+            "value",
+        ));
+        nodes.push(ui::Node::text("speed", ui::Role::Label));
+        nodes.push(ui::Node::range(
+            "speed",
+            self.set.speed,
+            1,
+            8,
+            1,
+            set("speed"),
+            "value",
+        ));
+        Some(ui::Node::column(nodes))
+    }
     fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "snake.turn" => {
@@ -784,6 +853,42 @@ mod tests {
             names,
             vec!["snake.turn", "snake.step", "snake.reset", "snake.set"]
         );
+    }
+    fn button_labels(node: &ui::Node, out: &mut Vec<String>) {
+        match node {
+            ui::Node::Column { children }
+            | ui::Node::Row { children }
+            | ui::Node::Grid { children, .. }
+            | ui::Node::Group { children }
+            | ui::Node::Wrap { children } => {
+                for child in children {
+                    button_labels(child, out);
+                }
+            }
+            ui::Node::Button { label, .. } => out.push(label.clone()),
+            _ => {}
+        }
+    }
+    #[test]
+    fn view_swaps_dpad_for_game_over() {
+        let mut s = snake(3);
+        let mut live = Vec::new();
+        button_labels(&s.view(&iden()).unwrap(), &mut live);
+        for d in ["<", "^", "v", ">"] {
+            assert!(live.contains(&d.to_string()));
+        }
+        assert!(!live.contains(&"play again".to_string()));
+        send(
+            &mut s,
+            "snake.set",
+            json!({ "key": "wrap", "value": false }),
+        );
+        send(&mut s, "snake.step", json!({ "n": 1024 }));
+        assert!(s.over);
+        let mut over = Vec::new();
+        button_labels(&s.view(&iden()).unwrap(), &mut over);
+        assert!(over.contains(&"play again".to_string()));
+        assert!(!over.contains(&"^".to_string()));
     }
     #[test]
     fn state_carries_an_indexed_frame() {
