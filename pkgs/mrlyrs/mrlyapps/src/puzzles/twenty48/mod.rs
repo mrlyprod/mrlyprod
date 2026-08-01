@@ -50,9 +50,6 @@ impl Set {
                 if !SURFACES.contains(&v) {
                     return Err("no such option");
                 }
-                if v == "canvas" && self.skin == "emojis" {
-                    return Err("emojis need the grid");
-                }
                 self.surface = v.to_string();
                 Ok(json!(v))
             }
@@ -61,20 +58,10 @@ impl Set {
                 if !SKINS.contains(&v) {
                     return Err("no such option");
                 }
-                if v == "emojis" && self.surface == "canvas" {
-                    return Err("emojis need the grid");
-                }
                 self.skin = v.to_string();
                 Ok(json!(v))
             }
             _ => Err("no such key"),
-        }
-    }
-    fn legal(&mut self) {
-        if self.surface == "canvas" && self.skin == "emojis" {
-            let fresh = Set::new();
-            self.surface = fresh.surface;
-            self.skin = fresh.skin;
         }
     }
     fn to_json(&self) -> Json {
@@ -93,7 +80,6 @@ impl Set {
         drive(value, |k, v| {
             let _ = set.apply(k, v);
         });
-        set.legal();
         set
     }
 }
@@ -279,12 +265,15 @@ impl Twenty48 {
     fn skin(&self) -> Skin {
         mrlyui::skin::twenty48::skin(&self.set.skin, &self.set.design, &self.colors)
     }
+    fn k(&self) -> usize {
+        mrlyui::skin::pixels(self.set.tile as usize, &self.set.skin)
+    }
     fn tileset(&self) -> TileSet {
         self.skin()
-            .tileset(self.set.tile as usize, mrlyui::frame::board(self.dark))
+            .tileset(self.k(), mrlyui::frame::board(self.dark))
     }
     fn render(&self) -> Frame {
-        let k = self.set.tile as usize;
+        let k = self.k();
         let side = self.n() * k;
         let mut frame = Frame::new(side, side, mrlyui::frame::board(self.dark));
         frame.push(Layer::Tiles {
@@ -701,47 +690,23 @@ mod tests {
         assert_eq!(b.state(&iden()), g.state(&iden()));
     }
     #[test]
-    fn surface_and_skin_reject_emojis_off_the_grid() {
+    fn emojis_ride_either_surface() {
         let mut g = game(4);
-        assert!(
-            send(
-                &mut g,
-                "twenty48.set",
-                json!({ "key": "surface", "value": "canvas" })
-            )
-            .ok
-        );
-        let out = send(
-            &mut g,
-            "twenty48.set",
-            json!({ "key": "skin", "value": "emojis" }),
-        );
-        assert!(!out.ok);
-        assert_eq!(out.note.as_deref(), Some("emojis need the grid"));
-        assert!(
-            send(
-                &mut g,
-                "twenty48.set",
-                json!({ "key": "surface", "value": "grid" })
-            )
-            .ok
-        );
-        assert!(
-            send(
-                &mut g,
-                "twenty48.set",
-                json!({ "key": "skin", "value": "emojis" })
-            )
-            .ok
-        );
-        assert!(
-            !send(
-                &mut g,
-                "twenty48.set",
-                json!({ "key": "surface", "value": "canvas" })
-            )
-            .ok
-        );
+        for (key, value) in [("surface", "canvas"), ("skin", "emojis")] {
+            assert!(
+                send(
+                    &mut g,
+                    "twenty48.set",
+                    json!({ "key": key, "value": value })
+                )
+                .ok
+            );
+        }
+        let settings = g.state(&iden())["settings"].clone();
+        assert_eq!(settings["surface"], json!("canvas"));
+        assert_eq!(settings["skin"], json!("emojis"));
+        let tile = g.tileset().tiles[1].cell.colors.clone().unwrap();
+        assert!(tile.iter().any(|px| px[3] > 0), "the canvas baked nothing");
         assert!(
             !send(
                 &mut g,
@@ -752,11 +717,12 @@ mod tests {
         );
     }
     #[test]
-    fn from_json_resets_illegal_combos() {
+    fn from_json_keeps_every_combo() {
         let mut g = Twenty48::new();
         g.load(&json!({ "seed": 3, "settings": { "skin": "emojis", "surface": "canvas" } }));
         let settings = g.state(&iden())["settings"].clone();
-        assert!(!(settings["surface"] == json!("canvas") && settings["skin"] == json!("emojis")));
+        assert_eq!(settings["surface"], json!("canvas"));
+        assert_eq!(settings["skin"], json!("emojis"));
         let mut g = Twenty48::new();
         g.load(&json!({ "seed": 3, "settings": { "grid": 5 } }));
         let settings = g.state(&iden())["settings"].clone();
@@ -819,7 +785,7 @@ mod tests {
         assert!(!over.contains(&"^".to_string()));
     }
     #[test]
-    fn view_never_offers_the_emoji_skin() {
+    fn the_view_offers_every_skin() {
         let g = game(3);
         fn skins(node: &ui::Node, out: &mut Vec<String>) {
             match node {
@@ -836,6 +802,6 @@ mod tests {
         }
         let mut options = Vec::new();
         skins(&g.view(&iden()).unwrap(), &mut options);
-        assert_eq!(options, vec!["tiles".to_string(), "digits".to_string()]);
+        assert_eq!(options, SKINS.map(str::to_string).to_vec());
     }
 }

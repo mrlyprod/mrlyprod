@@ -83,6 +83,13 @@ pub struct Skin {
     pub visuals: Vec<Visual>,
 }
 
+pub fn pixels(tile: usize, variant: &str) -> usize {
+    match variant {
+        "emojis" => tile.max(crate::tokens::SYMBOL),
+        _ => tile,
+    }
+}
+
 impl Skin {
     pub fn new(visuals: Vec<Visual>) -> Skin {
         Skin { visuals }
@@ -124,12 +131,26 @@ impl Skin {
 pub mod chess;
 pub mod memory;
 pub mod mines;
+pub mod ttt;
 pub mod twenty48;
 pub mod two;
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn emoji_tiles_bake_big_enough_to_read() {
+        assert_eq!(pixels(3, "emojis"), crate::tokens::SYMBOL);
+        assert_eq!(pixels(40, "emojis"), 40);
+        assert_eq!(pixels(3, "digits"), 3);
+        let k = pixels(3, "emojis");
+        let set = twenty48::skin("emojis", "carpet", &[[0, 0, 0, 0]; 4]).tileset(k, [0, 0, 0, 255]);
+        let tile = set.tiles[1].cell.colors.clone().unwrap();
+        let lit = tile.iter().filter(|px| px[3] > 0).count();
+        assert!(lit > k * k / 8, "a canvas emoji baked {lit} of {}", k * k);
+        assert!(tile.iter().any(|px| px[0] != px[1]), "baked without color");
+    }
 
     #[test]
     fn visual_json_omits_absent_parts() {

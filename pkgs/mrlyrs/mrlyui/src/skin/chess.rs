@@ -9,6 +9,10 @@ const GLYPHS: [[&str; 5]; 6] = [
     ["00000", "01110", "01110", "01110", "00000"],
 ];
 
+pub fn emoji(kind: usize, team: usize) -> &'static str {
+    EMOJIS[kind.min(5)][team.min(1)]
+}
+
 const EMOJIS: [[&str; 2]; 6] = [
     ["♙", "♟"],
     ["♘", "♞"],

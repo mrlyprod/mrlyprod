@@ -4,7 +4,7 @@ use mrlycore::tensor::Tensor;
 use mrlycore::{json, Json};
 use mrlymusic::cue;
 use mrlyos::kernel::{int, App, Call, Effect, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{motif_tile, solid_tile, sprite_fact, Frame, Layer, TileSet};
+use mrlyui::frame::{motif_tile, sprite_fact, Frame, Layer, TileSet};
 
 const DESIGNS: [&str; 5] = ["carpet", "net", "vtree", "htree", "solid"];
 const MARKS: [&str; 2] = ["x", "o"];
@@ -45,11 +45,6 @@ impl Set {
             skin: "tiles".to_string(),
         }
     }
-    fn legalize(&mut self) {
-        if self.surface == "canvas" && self.skin == "emojis" {
-            self.skin = "tiles".to_string();
-        }
-    }
     fn apply(&mut self, key: &str, value: &Json) -> Result<Json, &'static str> {
         match key {
             "tile" => {
@@ -83,12 +78,6 @@ impl Set {
                 let legal: &[&str] = if key == "surface" { &SURFACES } else { &SKINS };
                 if !legal.contains(&s) {
                     return Err("no such option");
-                }
-                if key == "surface" && s == "canvas" && self.skin == "emojis" {
-                    return Err("emojis is grid only");
-                }
-                if key == "skin" && s == "emojis" && self.surface == "canvas" {
-                    return Err("emojis is grid only");
                 }
                 match key {
                     "surface" => self.surface = s.to_string(),
@@ -138,7 +127,6 @@ impl Set {
                 set.soak(key, val);
             }
         }
-        set.legalize();
         set
     }
 }
@@ -272,21 +260,19 @@ impl Ttt {
         }
         grid
     }
+    fn k(&self) -> usize {
+        mrlyui::skin::pixels(self.set.tile as usize, &self.set.skin)
+    }
     fn tileset(&self) -> TileSet {
-        let k = self.set.tile as usize;
-        let clear = [0, 0, 0, 0];
-        let d = self.set.design.as_str();
-        TileSet::new(
-            k,
-            vec![
-                solid_tile(k, clear),
-                motif_tile(d, k, self.x_color, clear),
-                motif_tile(d, k, self.o_color, clear),
-            ],
+        mrlyui::skin::ttt::skin(
+            &self.set.skin,
+            &self.set.design,
+            [self.x_color, self.o_color],
         )
+        .tileset(self.k(), mrlyui::frame::board(self.dark))
     }
     fn render(&self) -> Frame {
-        let k = self.set.tile as usize;
+        let k = self.k();
         let side = 3 * k;
         let mut frame = Frame::new(side, side, mrlyui::frame::board(self.dark));
         frame.push(Layer::Tiles {
@@ -599,50 +585,19 @@ mod tests {
     fn look_keys_validate_without_resetting() {
         let mut t = hotseat(4);
         send(&mut t, "ttt.place", json!({ "cell": 0 }));
-        assert!(
-            send(
-                &mut t,
-                "ttt.set",
-                json!({ "key": "surface", "value": "canvas" })
-            )
-            .ok
-        );
+        for (key, value) in [("surface", "canvas"), ("skin", "emojis")] {
+            assert!(send(&mut t, "ttt.set", json!({ "key": key, "value": value })).ok);
+        }
         assert_eq!(t.state(&iden())["steps"], json!(1));
-        assert!(
-            !send(
-                &mut t,
-                "ttt.set",
-                json!({ "key": "skin", "value": "emojis" })
-            )
-            .ok
-        );
-        send(
-            &mut t,
-            "ttt.set",
-            json!({ "key": "surface", "value": "grid" }),
-        );
-        assert!(
-            send(
-                &mut t,
-                "ttt.set",
-                json!({ "key": "skin", "value": "emojis" })
-            )
-            .ok
-        );
-        assert!(
-            !send(
-                &mut t,
-                "ttt.set",
-                json!({ "key": "surface", "value": "canvas" })
-            )
-            .ok
-        );
+        let tile = t.tileset().tiles[1].cell.colors.clone().unwrap();
+        assert!(tile.iter().any(|px| px[3] > 0), "the canvas baked nothing");
+        assert!(!send(&mut t, "ttt.set", json!({ "key": "skin", "value": "wax" })).ok);
     }
     #[test]
-    fn from_json_resets_the_illegal_combo() {
+    fn from_json_keeps_every_combo() {
         let set = Set::from_json(&json!({ "skin": "emojis", "surface": "canvas" }));
         assert_eq!(set.surface, "canvas");
-        assert_eq!(set.skin, "tiles");
+        assert_eq!(set.skin, "emojis");
     }
     #[test]
     fn old_saves_default_to_the_legacy_look() {

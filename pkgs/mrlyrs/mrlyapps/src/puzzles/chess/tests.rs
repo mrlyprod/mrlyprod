@@ -512,61 +512,35 @@ fn check_sounds_the_alarm() {
 #[test]
 fn surface_and_skin_validate() {
     let mut g = game();
-    let out = g.act(
-        &iden(),
-        &Call::new("chess.set", json!({ "key": "surface", "value": "canvas" })),
-    );
-    assert!(out.ok);
-    assert!(
-        !g.act(
-            &iden(),
-            &Call::new("chess.set", json!({ "key": "skin", "value": "emojis" }))
-        )
-        .ok
-    );
-    assert!(
-        !g.act(
-            &iden(),
-            &Call::new("chess.set", json!({ "key": "skin", "value": "tiles" }))
-        )
-        .ok
-    );
-    assert!(
-        !g.act(
-            &iden(),
-            &Call::new("chess.set", json!({ "key": "surface", "value": "cube" }))
-        )
-        .ok
-    );
-    let out = g.act(
-        &iden(),
-        &Call::new("chess.set", json!({ "key": "surface", "value": "grid" })),
-    );
-    assert!(out.ok);
-    let out = g.act(
-        &iden(),
-        &Call::new("chess.set", json!({ "key": "skin", "value": "emojis" })),
-    );
-    assert!(out.ok);
-    assert!(
-        !g.act(
-            &iden(),
-            &Call::new("chess.set", json!({ "key": "surface", "value": "canvas" }))
-        )
-        .ok
-    );
+    let set =
+        |key: &str, value: &str| Call::new("chess.set", json!({ "key": key, "value": value }));
+    for (key, value) in [("surface", "canvas"), ("skin", "emojis")] {
+        assert!(g.act(&iden(), &set(key, value)).ok);
+    }
+    let frame = g.render();
+    let mrlyui::frame::Layer::Tiles { set: pieces, .. } = &frame.layers[1] else {
+        panic!("no pieces layer")
+    };
+    let tile = pieces.tiles[1].cell.colors.clone().unwrap();
+    assert!(tile.iter().any(|px| px[3] > 0), "the canvas baked nothing");
+    assert!(!g.act(&iden(), &set("skin", "tiles")).ok);
+    assert!(!g.act(&iden(), &set("surface", "cube")).ok);
+    assert!(g.act(&iden(), &set("surface", "grid")).ok);
+    assert!(g.act(&iden(), &set("skin", "digits")).ok);
 }
 #[test]
-fn from_json_resets_legality() {
+fn from_json_keeps_every_combo() {
     let set = Set::from_json(&json!({ "surface": "canvas", "skin": "emojis" }));
-    assert!(!(set.skin == "emojis" && set.surface != "grid"));
+    assert_eq!(set.surface, "canvas");
+    assert_eq!(set.skin, "emojis");
     let set = Set::from_json(&json!({ "tile": 8 }));
     assert_eq!(set.surface, "grid");
     assert_eq!(set.skin, "digits");
     let mut g = Chess::new();
     g.load(&json!({ "seed": 3, "settings": { "surface": "canvas", "skin": "emojis" } }));
     let settings = g.state(&iden())["settings"].clone();
-    assert!(!(settings["skin"] == json!("emojis") && settings["surface"] == json!("canvas")));
+    assert_eq!(settings["surface"], json!("canvas"));
+    assert_eq!(settings["skin"], json!("emojis"));
 }
 #[test]
 fn selection_is_transient_across_save() {

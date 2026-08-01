@@ -81,7 +81,7 @@ impl Chess {
         grid
     }
     fn glyph(&self, mask: &[u8; 25], fg: [u8; 4]) -> mrlymath::two::Cell2d {
-        let k = self.set.tile as usize;
+        let k = self.k();
         let clear = [0, 0, 0, 0];
         let mut types = vec![0u8; k * k];
         let mut colors = vec![clear; k * k];
@@ -99,20 +99,33 @@ impl Chess {
         cell.cell.colors = Some(colors);
         cell
     }
+    fn k(&self) -> usize {
+        mrlyui::skin::pixels(self.set.tile as usize, &self.set.skin)
+    }
+    fn piece(&self, kind: usize, team: usize) -> mrlymath::two::Cell2d {
+        let k = self.k();
+        if self.set.skin != "emojis" {
+            return self.glyph(&self.glyphs[kind], self.piece_colors[team]);
+        }
+        let mut tile = solid_tile(k, [0, 0, 0, 0]);
+        let value = mrlyui::skin::chess::emoji(kind, team);
+        mrlyui::symbol::bake(&mut tile, value, k, self.piece_colors[team]);
+        tile
+    }
     fn pieces_set(&self) -> TileSet {
-        let k = self.set.tile as usize;
+        let k = self.k();
         let mut tiles = Vec::with_capacity(13);
         tiles.push(solid_tile(k, [0, 0, 0, 0]));
         for kind in 0..6 {
-            tiles.push(self.glyph(&self.glyphs[kind], self.piece_colors[0]));
+            tiles.push(self.piece(kind, 0));
         }
         for kind in 0..6 {
-            tiles.push(self.glyph(&self.glyphs[kind], self.piece_colors[1]));
+            tiles.push(self.piece(kind, 1));
         }
         TileSet::new(k, tiles)
     }
     fn board_set(&self) -> TileSet {
-        let k = self.set.tile as usize;
+        let k = self.k();
         TileSet::new(
             k,
             vec![
@@ -122,7 +135,7 @@ impl Chess {
         )
     }
     pub fn render(&self) -> Frame {
-        let k = self.set.tile as usize;
+        let k = self.k();
         let mut frame = Frame::new(self.w * k, self.h * k, mrlyui::frame::board(self.dark));
         frame.push(Layer::Tiles {
             ids: self.board_ids(),

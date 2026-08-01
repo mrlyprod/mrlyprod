@@ -10,6 +10,9 @@ pub const SIDES: [u32; 7] = [2, 4, 6, 8, 10, 12, 20];
 
 const SURFACES: [&str; 2] = ["grid", "canvas"];
 const SKINS: [&str; 3] = ["tiles", "emojis", "digits"];
+const DIE: [&str; 6] = [
+    "\u{2680}", "\u{2681}", "\u{2682}", "\u{2683}", "\u{2684}", "\u{2685}",
+];
 const HISTORY: usize = 8;
 const K: usize = 12;
 
@@ -110,10 +113,15 @@ impl Dice {
     fn face_cell(&self) -> Cell2d {
         let clear = [0, 0, 0, 0];
         let ink = mrlyui::frame::ink(self.dark);
-        if self.skin == "tiles" {
-            pip_cell(self.face, K, ink, clear)
-        } else {
-            digit_cell(self.face, K, ink, clear)
+        let die = DIE.get(self.face as usize - 1);
+        match (self.skin.as_str(), die) {
+            ("tiles", _) => pip_cell(self.face, K, ink, clear),
+            ("emojis", Some(face)) => {
+                let mut tile = mrlyui::frame::solid_tile(K, clear);
+                mrlyui::symbol::bake(&mut tile, face, K, ink);
+                tile
+            }
+            _ => digit_cell(self.face, K, ink, clear),
         }
     }
     fn render(&self) -> Frame {
@@ -139,12 +147,6 @@ impl Dice {
                 let legal: &[&str] = if key == "surface" { &SURFACES } else { &SKINS };
                 if !legal.contains(&s) {
                     return Err("no such option");
-                }
-                if key == "surface" && s == "canvas" && self.skin == "emojis" {
-                    return Err("emojis is grid only");
-                }
-                if key == "skin" && s == "emojis" && self.surface == "canvas" {
-                    return Err("emojis is grid only");
                 }
                 match key {
                     "surface" => self.surface = s.to_string(),
@@ -256,9 +258,6 @@ impl App for Dice {
                 self.skin = skin.to_string();
             }
         }
-        if self.surface == "canvas" && self.skin == "emojis" {
-            self.skin = "digits".to_string();
-        }
         self.reset(state["seed"].as_u64().unwrap_or(0));
         self.steps = state["steps"].as_u64().unwrap_or(0);
         if let Some(face) = state["face"].as_u64() {
@@ -357,46 +356,17 @@ mod tests {
         assert!(!send(&mut d, "dice.set", json!({ "key": "color", "value": 6 })).ok);
     }
     #[test]
-    fn look_keys_reject_the_illegal_combo() {
+    fn look_keys_take_emojis_on_either_surface() {
         let mut d = dice(7);
         send(&mut d, "dice.roll", json!({}));
-        assert!(
-            send(
-                &mut d,
-                "dice.set",
-                json!({ "key": "surface", "value": "canvas" })
-            )
-            .ok
-        );
-        assert!(
-            !send(
-                &mut d,
-                "dice.set",
-                json!({ "key": "skin", "value": "emojis" })
-            )
-            .ok
-        );
+        for (key, value) in [("surface", "canvas"), ("skin", "emojis")] {
+            assert!(send(&mut d, "dice.set", json!({ "key": key, "value": value })).ok);
+        }
         assert_eq!(d.state(&iden())["steps"], json!(1));
-        send(
-            &mut d,
-            "dice.set",
-            json!({ "key": "surface", "value": "grid" }),
-        );
+        let face = d.face_cell().cell.colors.clone().unwrap();
         assert!(
-            send(
-                &mut d,
-                "dice.set",
-                json!({ "key": "skin", "value": "emojis" })
-            )
-            .ok
-        );
-        assert!(
-            !send(
-                &mut d,
-                "dice.set",
-                json!({ "key": "surface", "value": "canvas" })
-            )
-            .ok
+            face.iter().any(|px| px[3] > 0),
+            "the die face baked nothing"
         );
         assert!(!send(&mut d, "dice.set", json!({ "key": "skin", "value": "wax" })).ok);
     }

@@ -9,4 +9,7 @@
 {"slide": {"verb": "twenty48.set", "value": 6}}
 {"assert": {"state": ["twenty48/settings/grid", 6]}}
 {"assert": {"state": ["twenty48/steps", 0]}}
-{"assert": {"frame": "1440146878777591996"}}
+{"assert": {"frame": "10654273752043300324"}}
+{"tap": {"verb": "twenty48.set", "args": {"key": "skin", "value": "emojis"}}}
+{"assert": {"state": ["twenty48/settings/skin", "emojis"]}}
+{"assert": {"frame": "14258056852309529541"}}

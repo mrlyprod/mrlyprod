@@ -85,9 +85,6 @@ impl Set {
                 if name != "grid" && name != "canvas" {
                     return Err("surface must be grid or canvas");
                 }
-                if name == "canvas" && self.skin == "emojis" {
-                    return Err("emojis need the grid surface");
-                }
                 self.surface = name.to_string();
                 Ok(json!(name))
             }
@@ -98,9 +95,6 @@ impl Set {
                 }
                 if name != "digits" && name != "emojis" {
                     return Err("skin must be digits or emojis");
-                }
-                if name == "emojis" && self.surface != "grid" {
-                    return Err("emojis need the grid surface");
                 }
                 self.skin = name.to_string();
                 Ok(json!(name))
@@ -153,9 +147,6 @@ impl Set {
             for (key, val) in obj {
                 let _ = set.apply(key, val);
             }
-        }
-        if set.skin == "emojis" && set.surface != "grid" {
-            set.skin = "digits".to_string();
         }
         set
     }

@@ -25,7 +25,7 @@ pub(super) fn tree(game: &Twenty48, _iden: &Iden) -> Option<kit::Node> {
     nodes.push(kit::segments(
         "skin",
         &game.set.skin,
-        vec!["tiles".to_string(), "digits".to_string()],
+        super::SKINS.iter().map(|s| s.to_string()).collect(),
         set("skin"),
     ));
     nodes.push(kit::cycle(

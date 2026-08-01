@@ -79,9 +79,6 @@ impl Set {
                 if !SURFACES.contains(&v) {
                     return Err("no such option");
                 }
-                if v == "canvas" && self.skin == "emojis" {
-                    return Err("emojis need the grid");
-                }
                 self.surface = v.to_string();
                 Ok(json!(v))
             }
@@ -90,20 +87,10 @@ impl Set {
                 if !SKINS.contains(&v) {
                     return Err("no such option");
                 }
-                if v == "emojis" && self.surface == "canvas" {
-                    return Err("emojis need the grid");
-                }
                 self.skin = v.to_string();
                 Ok(json!(v))
             }
             _ => Err("no such key"),
-        }
-    }
-    fn legal(&mut self) {
-        if self.surface == "canvas" && self.skin == "emojis" {
-            let fresh = Set::new();
-            self.surface = fresh.surface;
-            self.skin = fresh.skin;
         }
     }
     fn to_json(&self) -> Json {
@@ -126,7 +113,6 @@ impl Set {
                 let _ = set.apply(key, val);
             }
         }
-        set.legal();
         set
     }
 }
@@ -307,12 +293,15 @@ impl Memory {
     fn skin(&self) -> Skin {
         mrlyui::skin::memory::skin(&self.set.skin, &self.set.design, &self.colors, self.back)
     }
+    fn k(&self) -> usize {
+        mrlyui::skin::pixels(self.set.tile as usize, &self.set.skin)
+    }
     fn tileset(&self) -> TileSet {
         self.skin()
-            .tileset(self.set.tile as usize, mrlyui::frame::board(self.dark))
+            .tileset(self.k(), mrlyui::frame::board(self.dark))
     }
     fn render(&self) -> Frame {
-        let k = self.set.tile as usize;
+        let k = self.k();
         let mut frame = Frame::new(
             self.cols() * k,
             self.rows() * k,
@@ -657,47 +646,16 @@ mod tests {
         }
     }
     #[test]
-    fn surface_and_skin_reject_emojis_off_the_grid() {
+    fn emojis_ride_either_surface() {
         let mut m = memory(4);
-        assert!(
-            send(
-                &mut m,
-                "memory.set",
-                json!({ "key": "surface", "value": "canvas" })
-            )
-            .ok
-        );
-        let out = send(
-            &mut m,
-            "memory.set",
-            json!({ "key": "skin", "value": "emojis" }),
-        );
-        assert!(!out.ok);
-        assert_eq!(out.note.as_deref(), Some("emojis need the grid"));
-        assert!(
-            send(
-                &mut m,
-                "memory.set",
-                json!({ "key": "surface", "value": "grid" })
-            )
-            .ok
-        );
-        assert!(
-            send(
-                &mut m,
-                "memory.set",
-                json!({ "key": "skin", "value": "emojis" })
-            )
-            .ok
-        );
-        assert!(
-            !send(
-                &mut m,
-                "memory.set",
-                json!({ "key": "surface", "value": "canvas" })
-            )
-            .ok
-        );
+        for (key, value) in [("surface", "canvas"), ("skin", "emojis")] {
+            assert!(send(&mut m, "memory.set", json!({ "key": key, "value": value })).ok);
+        }
+        let settings = m.state(&iden())["settings"].clone();
+        assert_eq!(settings["surface"], json!("canvas"));
+        assert_eq!(settings["skin"], json!("emojis"));
+        let tile = m.tileset().tiles[1].cell.colors.clone().unwrap();
+        assert!(tile.iter().any(|px| px[3] > 0), "the canvas baked nothing");
         assert!(
             !send(
                 &mut m,
@@ -708,11 +666,12 @@ mod tests {
         );
     }
     #[test]
-    fn from_json_resets_illegal_combos() {
+    fn from_json_keeps_every_combo() {
         let mut m = Memory::new();
         m.load(&json!({ "seed": 3, "settings": { "skin": "emojis", "surface": "canvas" } }));
         let settings = m.state(&iden())["settings"].clone();
-        assert!(!(settings["surface"] == json!("canvas") && settings["skin"] == json!("emojis")));
+        assert_eq!(settings["surface"], json!("canvas"));
+        assert_eq!(settings["skin"], json!("emojis"));
         let mut m = Memory::new();
         m.load(&json!({ "seed": 3, "settings": { "pairs": 6 } }));
         let settings = m.state(&iden())["settings"].clone();
