@@ -89,6 +89,7 @@ impl Driver {
                 binds: Vec::new(),
                 body: 0,
                 window: 0,
+                scroll: 0,
             },
             clock,
             drag: None,
@@ -153,6 +154,7 @@ impl Driver {
 
     fn refresh(&mut self) {
         if let Ok(scene) = face_scene(&self.os, &self.route, &self.ui) {
+            self.ui.scroll = scene.scroll;
             self.scene = scene;
         }
         self.dirty = true;
@@ -280,11 +282,7 @@ impl Driver {
                 id, value, keys, ..
             } => {
                 self.commit();
-                self.ui.edit = Some(Edit {
-                    id,
-                    buffer: value,
-                    keys,
-                });
+                self.ui.edit = Some(Edit::new(id, value, keys));
                 self.refresh();
             }
             Act::Menu { id } => {
@@ -470,6 +468,12 @@ impl Driver {
                     self.commit();
                 }
             }
+            Tap::Shift => {
+                if let Some(edit) = &mut self.ui.edit {
+                    edit.shift = !edit.shift;
+                    self.refresh();
+                }
+            }
         }
     }
 
@@ -477,6 +481,7 @@ impl Driver {
         let want = match name {
             "back" => Tap::Back,
             "enter" => Tap::Enter,
+            "shift" => Tap::Shift,
             "space" => Tap::Char(' '),
             _ => {
                 let mut chars = name.chars();
@@ -611,11 +616,7 @@ impl Driver {
         match found {
             Some((id, value, keys)) => {
                 self.commit();
-                self.ui.edit = Some(Edit {
-                    id,
-                    buffer: value,
-                    keys,
-                });
+                self.ui.edit = Some(Edit::new(id, value, keys));
                 self.refresh();
                 Ok(())
             }
@@ -733,6 +734,7 @@ fn hit_json(hit: &Hit) -> Json {
                 Tap::Put(text) => text.clone(),
                 Tap::Back => "back".to_string(),
                 Tap::Enter => "enter".to_string(),
+                Tap::Shift => "shift".to_string(),
             };
             ("cap", json!({ "tap": name }))
         }

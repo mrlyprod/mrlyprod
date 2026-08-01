@@ -1,4 +1,4 @@
-use crate::tokens::{Theme, ACTIONS, BODY, CONTENT, CONTROL, EDGE, HEADER, PAD, PANEL};
+use crate::tokens::{Theme, ACTIONS, BODY, CONTENT, CONTROL, EDGE, GAP, HEADER, PAD, PANEL};
 use mrlycore::errors::Result;
 use mrlycore::ui::{Call, Node};
 use mrlycore::Json;
@@ -34,6 +34,18 @@ pub struct Edit {
     pub id: String,
     pub buffer: String,
     pub keys: Option<String>,
+    pub shift: bool,
+}
+
+impl Edit {
+    pub fn new(id: String, buffer: String, keys: Option<String>) -> Edit {
+        Edit {
+            id,
+            buffer,
+            keys,
+            shift: false,
+        }
+    }
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -105,6 +117,28 @@ pub struct Scene {
     pub binds: Vec<Act>,
     pub body: usize,
     pub window: usize,
+    pub scroll: usize,
+}
+
+fn reveal(hits: &[Hit], ui: &UiState, body: usize, window: usize) -> usize {
+    let rest = body.saturating_sub(window);
+    let mut scroll = ui.scroll.min(rest);
+    let Some(edit) = &ui.edit else {
+        return scroll;
+    };
+    let found = hits
+        .iter()
+        .find(|hit| matches!(&hit.act, Act::Edit { id, .. } if *id == edit.id));
+    let Some(hit) = found else {
+        return scroll;
+    };
+    if hit.y + hit.h + GAP > scroll + window {
+        scroll = hit.y + hit.h + GAP - window;
+    }
+    if hit.y.saturating_sub(GAP) < scroll {
+        scroll = hit.y.saturating_sub(GAP);
+    }
+    scroll.min(rest)
 }
 
 fn clip(hit: Hit, scroll: usize, y0: usize, y1: usize) -> Option<Hit> {
@@ -224,7 +258,7 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
     let strip = ui
         .edit
         .as_ref()
-        .map(|e| keys::strip(e.keys.as_deref().unwrap_or("text"), &theme));
+        .map(|e| keys::strip(e.keys.as_deref().unwrap_or("text"), e.shift, &theme));
     let bar = if strip.is_some() {
         Vec::new()
     } else {
@@ -238,7 +272,7 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
     let y1 = HEIGHT.saturating_sub(bar_h + PAD);
     let window = y1.saturating_sub(y0);
 
-    let scroll = ui.scroll.min(body.saturating_sub(window));
+    let scroll = reveal(&out.hits, ui, body, window);
     let mut canvas = vec![theme.board; WIDTH * body];
     paint::paint_into(&mut canvas, WIDTH, body, &out.ops);
     for row in 0..window.min(body.saturating_sub(scroll)) {
@@ -328,6 +362,7 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
         binds,
         body,
         window,
+        scroll,
     }
 }
 
@@ -638,11 +673,7 @@ mod tests {
             })
             .unwrap();
         let editing = UiState {
-            edit: Some(Edit {
-                id,
-                buffer: String::new(),
-                keys: None,
-            }),
+            edit: Some(Edit::new(id, String::new(), None)),
             ..UiState::default()
         };
         let scene = render(&input, &editing);
@@ -654,7 +685,7 @@ mod tests {
                 _ => None,
             })
             .collect();
-        assert_eq!(caps.len(), 39);
+        assert_eq!(caps.len(), 40);
         assert!(caps.contains(&&keys::Tap::Char('q')));
         assert!(caps.contains(&&keys::Tap::Back));
         assert!(caps.contains(&&keys::Tap::Enter));
@@ -679,11 +710,7 @@ mod tests {
         };
         assert_eq!(keys.as_deref(), Some("colors"));
         let editing = UiState {
-            edit: Some(Edit {
-                id,
-                buffer: String::new(),
-                keys,
-            }),
+            edit: Some(Edit::new(id, String::new(), keys)),
             ..UiState::default()
         };
         let opened = render(&input, &editing);
@@ -693,6 +720,124 @@ mod tests {
             .filter(|h| matches!(&h.act, Act::Cap(keys::Tap::Put(_))))
             .count();
         assert_eq!(puts, 15);
+    }
+
+    #[test]
+    fn shift_swaps_the_board_under_the_same_field() {
+        let input = widget_input();
+        let id = render(&input, &UiState::default())
+            .binds
+            .iter()
+            .find_map(|a| match a {
+                Act::Edit { id, .. } => Some(id.clone()),
+                _ => None,
+            })
+            .unwrap();
+        let low = UiState {
+            edit: Some(Edit::new(id.clone(), String::new(), None)),
+            ..UiState::default()
+        };
+        let up = UiState {
+            edit: Some(Edit {
+                shift: true,
+                ..Edit::new(id, String::new(), None)
+            }),
+            ..UiState::default()
+        };
+        let taps = |ui| {
+            render(&input, ui)
+                .hits
+                .iter()
+                .filter_map(|h| match &h.act {
+                    Act::Cap(tap) => Some(tap.clone()),
+                    _ => None,
+                })
+                .collect::<Vec<_>>()
+        };
+        let (down, over) = (taps(&low), taps(&up));
+        assert!(down.contains(&keys::Tap::Char('q')));
+        assert!(!down.contains(&keys::Tap::Char('Q')));
+        assert!(over.contains(&keys::Tap::Char('Q')));
+        assert!(over.contains(&keys::Tap::Char('!')));
+        assert_eq!(down.len(), over.len());
+        assert!(down.contains(&keys::Tap::Shift));
+        let pixels = |ui| {
+            fnv(&render(&input, ui)
+                .frame
+                .composite()
+                .cell
+                .colors
+                .unwrap_or_default())
+        };
+        assert_ne!(pixels(&low), pixels(&up));
+    }
+
+    #[test]
+    fn focus_pulls_a_buried_field_into_view() {
+        let mut input = bare("lister", Json::Null);
+        let mut rows: Vec<Node> = (0..40)
+            .map(|i| {
+                Node::button(
+                    &format!("row {i}"),
+                    Call::new("list.pick", json!({ "i": i })),
+                )
+            })
+            .collect();
+        rows.push(Node::field(
+            "",
+            "last",
+            Call::new("list.find", json!({})),
+            "q",
+        ));
+        input.ui = Some(Node::column(rows));
+        let idle = render(&input, &UiState::default());
+        assert_eq!(idle.scroll, 0);
+        let id = idle
+            .binds
+            .iter()
+            .find_map(|a| match a {
+                Act::Edit { id, .. } => Some(id.clone()),
+                _ => None,
+            })
+            .unwrap();
+        let focused = render(
+            &input,
+            &UiState {
+                edit: Some(Edit::new(id.clone(), String::new(), None)),
+                ..UiState::default()
+            },
+        );
+        assert!(focused.scroll > 0);
+        assert!(focused.scroll <= focused.body - focused.window);
+        let seen = focused
+            .hits
+            .iter()
+            .find(|h| matches!(&h.act, Act::Edit { id: at, .. } if *at == id))
+            .expect("the focused field is on screen");
+        assert!(seen.y + seen.h <= HEIGHT);
+        assert_eq!(seen.h, CONTROL);
+    }
+
+    #[test]
+    fn a_visible_field_never_moves_the_scroll() {
+        let input = widget_input();
+        let idle = render(&input, &UiState::default());
+        let id = idle
+            .binds
+            .iter()
+            .find_map(|a| match a {
+                Act::Edit { id, .. } => Some(id.clone()),
+                _ => None,
+            })
+            .unwrap();
+        let focused = render(
+            &input,
+            &UiState {
+                edit: Some(Edit::new(id, String::new(), None)),
+                ..UiState::default()
+            },
+        );
+        assert_eq!(focused.scroll, 0);
     }
 
     #[test]

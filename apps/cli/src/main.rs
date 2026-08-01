@@ -847,6 +847,12 @@ fn check(driver: &mrlyweb::drive::Driver, want: &Json) -> Result<(), String> {
             return Err(format!("frame is {got}, pinned {pin}"));
         }
     }
+    if let Some(to) = want["scroll"].as_u64() {
+        let got = driver.ui().scroll as u64;
+        if got != to {
+            return Err(format!("scroll is {got}, wanted {to}"));
+        }
+    }
     if let Some(pair) = want["state"].as_array() {
         let target = pair
             .first()
