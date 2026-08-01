@@ -115,6 +115,7 @@ pub enum Node {
         arg: String,
         enter: Option<Call>,
         keys: Option<String>,
+        icon: Option<String>,
     },
     Cell {
         on: bool,
@@ -266,6 +267,7 @@ impl Node {
             arg: arg.to_string(),
             enter: None,
             keys: None,
+            icon: None,
         }
     }
     pub fn cell(call: Option<Call>) -> Node {
@@ -331,6 +333,12 @@ impl Node {
     pub fn keys(mut self, name: &str) -> Node {
         if let Node::Field { keys, .. } = &mut self {
             *keys = Some(name.to_string());
+        }
+        self
+    }
+    pub fn icon(mut self, name: &str) -> Node {
+        if let Node::Field { icon, .. } = &mut self {
+            *icon = Some(name.to_string());
         }
         self
     }

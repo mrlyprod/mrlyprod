@@ -94,7 +94,7 @@ pub fn select(label: &str, value: &str, options: Vec<String>, call: Call) -> Nod
 }
 
 pub fn search(value: &str, hint: &str, call: Call, key: &str, enter: Option<Call>) -> Node {
-    let field = Node::field(value, hint, call, key).live();
+    let field = Node::field(value, hint, call, key).live().icon("search");
     match enter {
         Some(go) => field.enter(go),
         None => field,

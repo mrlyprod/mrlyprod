@@ -60,6 +60,21 @@ fn tone(name: &str, t: &Theme, fallback: [u8; 4]) -> [u8; 4] {
     }
 }
 
+fn glyph(out: &mut Out, name: &str, x: usize, y: usize, k: usize, ink: [u8; 4]) -> bool {
+    let Some(sprite) = crate::symbol::sprite(name, k, ink) else {
+        return false;
+    };
+    out.ops.push(Op::Image {
+        x,
+        y,
+        w: k,
+        h: k,
+        scale: 1,
+        pixels: sprite.to_vec(),
+    });
+    true
+}
+
 fn outline(out: &mut Out, x: usize, y: usize, w: usize, h: usize, thick: usize, color: [u8; 4]) {
     out.ops.push(Op::Rect {
         x,
@@ -376,6 +391,13 @@ fn segments(
     }
 }
 
+fn chevron(out: &mut Out, name: &str, x: usize, y: usize, ink: [u8; 4], spare: &str) {
+    if glyph(out, name, x, y + (CONTROL - CHEV) / 2, CHEV, ink) {
+        return;
+    }
+    line(out, spare, x, y + INSET, CHEV, TEXT, ink);
+}
+
 fn choice(
     node: &Node,
     x: usize,
@@ -428,7 +450,7 @@ fn choice(
                 TEXT,
                 ink,
             );
-            line(out, ">", x + w - CHEV, y + dy + INSET, CHEV, TEXT, t.muted);
+            chevron(out, "chevron_right", x + w - CHEV, y + dy, t.muted, ">");
             if let Some(call) = wish {
                 out.hits.push(Hit {
                     x,
@@ -459,7 +481,14 @@ fn choice(
                 TEXT,
                 if lit { contrast(fill) } else { t.ink },
             );
-            line(out, "v", x + w - CHEV, y + dy + INSET, CHEV, TEXT, t.muted);
+            chevron(
+                out,
+                "keyboard_arrow_down",
+                x + w - CHEV,
+                y + dy,
+                t.muted,
+                "v",
+            );
             out.hits.push(Hit {
                 x,
                 y: y + dy,
@@ -576,6 +605,7 @@ fn field(
         arg,
         enter,
         keys,
+        icon,
     } = node
     else {
         return 0;
@@ -589,31 +619,18 @@ fn field(
         t.faint
     };
     outline(out, x, y, w, CONTROL, EDGE, border);
+    let led = lead(icon, out, x, y, t);
+    let tx = x + INSET + led;
+    let field = w.saturating_sub(2 * INSET + led);
     let shown = focused.map_or(value.as_str(), |e| e.buffer.as_str());
     if shown.is_empty() && focused.is_none() {
-        line(
-            out,
-            hint,
-            x + INSET,
-            y + INSET,
-            w.saturating_sub(2 * INSET),
-            TEXT,
-            t.muted,
-        );
+        line(out, hint, tx, y + INSET, field, TEXT, t.muted);
     } else {
-        let cut = text::truncate(shown, w.saturating_sub(2 * INSET + GAP), TEXT);
-        line(
-            out,
-            &cut,
-            x + INSET,
-            y + INSET,
-            w.saturating_sub(2 * INSET),
-            TEXT,
-            t.ink,
-        );
+        let cut = text::truncate(shown, field.saturating_sub(GAP), TEXT);
+        line(out, &cut, tx, y + INSET, field, TEXT, t.ink);
         if focused.is_some() {
             out.ops.push(Op::Rect {
-                x: x + INSET + TIGHT + text::width(&cut, TEXT),
+                x: tx + TIGHT + text::width(&cut, TEXT),
                 y: y + (CONTROL - LINE - TIGHT) / 2,
                 w: EDGE,
                 h: LINE + TIGHT,
@@ -637,6 +654,17 @@ fn field(
         },
     });
     CONTROL
+}
+
+fn lead(icon: &Option<String>, out: &mut Out, x: usize, y: usize, t: &Theme) -> usize {
+    let Some(name) = icon else {
+        return 0;
+    };
+    let k = SYMBOL;
+    match glyph(out, name, x + TIGHT, y + (CONTROL - k) / 2, k, t.muted) {
+        true => k + TIGHT,
+        false => 0,
+    }
 }
 
 fn cell(
@@ -710,15 +738,18 @@ fn item(node: &Node, x: usize, y: usize, w: usize, t: &Theme, out: &mut Out) -> 
     }
     let mut tx = x;
     if let Some(sym) = symbol {
-        line(
-            out,
-            sym,
-            x,
-            y + (CONTROL - LINE * TEXT) / 2,
-            SLOT,
-            TEXT,
-            t.accent,
-        );
+        let k = SYMBOL;
+        if !glyph(out, sym, x, y + (CONTROL - k) / 2, k, t.accent) {
+            line(
+                out,
+                sym,
+                x,
+                y + (CONTROL - LINE * TEXT) / 2,
+                SLOT,
+                TEXT,
+                t.accent,
+            );
+        }
         tx += SLOT + TIGHT;
     }
     let (text_ink, note_ink) = if call.is_some() {

@@ -11,8 +11,8 @@
 {"tap": {"verb": "nav.open", "args": {"app": "settings"}}}
 {"assert": {"route": "settings"}}
 {"open": "menu"}
-{"assert": {"frame": "17949768563406623168"}}
+{"assert": {"frame": "9308193693075623546"}}
 {"hover": [160, 200]}
-{"assert": {"frame": "17346457522176067192"}}
+{"assert": {"frame": "3688097881732317794"}}
 {"hover": []}
-{"assert": {"frame": "17949768563406623168"}}
+{"assert": {"frame": "9308193693075623546"}}
