@@ -12,6 +12,7 @@ use winit::keyboard::{Key, NamedKey};
 use winit::window::{Window, WindowId};
 
 mod audio;
+mod glass;
 
 const BEAT: Duration = Duration::from_millis(125);
 const FRAME: Duration = Duration::from_millis(16);
@@ -24,6 +25,7 @@ fn main() {
         window: None,
         context: None,
         surface: None,
+        glass: None,
         route: String::new(),
         next: Instant::now(),
         port: (0, 0, 1),
@@ -42,6 +44,7 @@ struct Face {
     window: Option<Arc<Window>>,
     context: Option<Context<Arc<Window>>>,
     surface: Option<Surface<Arc<Window>, Arc<Window>>>,
+    glass: Option<glass::Glass>,
     route: String,
     next: Instant,
     port: (usize, usize, usize),
@@ -59,11 +62,14 @@ impl ApplicationHandler for Face {
             .with_title("mrly")
             .with_inner_size(size);
         let window = Arc::new(el.create_window(attrs).unwrap());
-        let context = Context::new(window.clone()).unwrap();
-        let surface = Surface::new(&context, window.clone()).unwrap();
+        self.glass = glass::Glass::new(window.clone());
+        if self.glass.is_none() {
+            let context = Context::new(window.clone()).unwrap();
+            let surface = Surface::new(&context, window.clone()).unwrap();
+            self.context = Some(context);
+            self.surface = Some(surface);
+        }
         self.window = Some(window);
-        self.context = Some(context);
-        self.surface = Some(surface);
         self.sync();
     }
 
@@ -146,6 +152,13 @@ impl ApplicationHandler for Face {
             None => el.set_control_flow(ControlFlow::Wait),
         }
     }
+}
+
+fn fit(bw: usize, bh: usize, fw: usize, fh: usize) -> (usize, usize, usize) {
+    let scale = (bw / fw.max(1)).min(bh / fh.max(1)).max(1);
+    let ox = bw.saturating_sub(fw * scale) / 2;
+    let oy = bh.saturating_sub(fh * scale) / 2;
+    (ox, oy, scale)
 }
 
 // INPUT
@@ -279,6 +292,10 @@ impl Face {
     }
 
     fn paint(&mut self) {
+        if self.glass.is_some() {
+            self.shine();
+            return;
+        }
         let (Some(window), Some(surface)) = (&self.window, self.surface.as_mut()) else {
             return;
         };
@@ -300,11 +317,9 @@ impl Face {
         };
         let bw = size.width as usize;
         let bh = size.height as usize;
-        let scale = (bw / fw).min(bh / fh).max(1);
+        let (ox, oy, scale) = fit(bw, bh, fw, fh);
         let sw = fw * scale;
         let sh = fh * scale;
-        let ox = bw.saturating_sub(sw) / 2;
-        let oy = bh.saturating_sub(sh) / 2;
         self.port = (ox, oy, scale);
         let bg = pack(colors[0]);
         for y in 0..bh {
@@ -321,5 +336,23 @@ impl Face {
             }
         }
         buffer.present().ok();
+    }
+
+    fn shine(&mut self) {
+        let (Some(window), Some(glass)) = (&self.window, self.glass.as_mut()) else {
+            return;
+        };
+        let size = window.inner_size();
+        glass.resize(size.width, size.height);
+        let frame = &self.driver.scene().frame;
+        let Some(colors) = frame.composite().cell.colors else {
+            return;
+        };
+        let (fw, fh) = (frame.width, frame.height);
+        let (bw, bh) = glass.size();
+        let (ox, oy, scale) = fit(bw, bh, fw, fh);
+        self.port = (ox, oy, scale);
+        let board = colors.first().copied().unwrap_or([0, 0, 0, 255]);
+        glass.present(&colors, fw, fh, board, scale);
     }
 }

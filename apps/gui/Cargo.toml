@@ -6,6 +6,7 @@ edition.workspace = true
 [dependencies]
 winit = "0.30"
 softbuffer = "0.4"
+wgpu = "30"
 cpal = "0.15"
 mrlycore = { path = "../../pkgs/mrlyrs/mrlycore" }
 mrlymusic = { path = "../../pkgs/mrlyrs/mrlymusic" }
