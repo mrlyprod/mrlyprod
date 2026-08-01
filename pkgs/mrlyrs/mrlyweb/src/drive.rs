@@ -253,7 +253,19 @@ impl Driver {
         }
     }
 
+    fn dials(&mut self) {
+        let Some(view) = self.os.peek("settings", None) else {
+            return;
+        };
+        if let Some(ms) = view.state["pace"].as_i64() {
+            if self.clock.is_none() {
+                self.pace = ms.max(0);
+            }
+        }
+    }
+
     fn refresh(&mut self) {
+        self.dials();
         self.stage();
         if let Ok(scene) = face_scene(&self.os, &self.route, &self.ui) {
             self.ui.scroll = scene.scroll;

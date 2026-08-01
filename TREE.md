@@ -13,6 +13,7 @@ mrlyprod
 │   │   │   │   ├── keys.jsonl
 │   │   │   │   ├── mandelbrot.jsonl
 │   │   │   │   ├── menu.jsonl
+│   │   │   │   ├── settings.jsonl
 │   │   │   │   ├── snake.jsonl
 │   │   │   │   └── twenty48.jsonl
 │   │   │   └── cli.rs
@@ -660,7 +661,8 @@ mrlyprod
 │   │   │   │   │   │   └── view.rs
 │   │   │   │   │   ├── settings
 │   │   │   │   │   │   ├── README.md
-│   │   │   │   │   │   └── mod.rs
+│   │   │   │   │   │   ├── mod.rs
+│   │   │   │   │   │   └── view.rs
 │   │   │   │   │   ├── ui
 │   │   │   │   │   │   ├── README.md
 │   │   │   │   │   │   └── mod.rs

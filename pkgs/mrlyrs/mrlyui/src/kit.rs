@@ -105,6 +105,14 @@ pub fn color(value: [u8; 4], call: Call) -> Node {
     Node::field(&frame::hex(value), "#rrggbb", call, ARG).keys("colors")
 }
 
+pub fn swatch(value: &str, call: Call) -> Node {
+    Node::field(value, "colour", call, ARG).keys("colors")
+}
+
+pub fn dead(label: &str, value: &str) -> Node {
+    Node::label(label, value, None)
+}
+
 // PIECES
 pub fn icon(name: &str) -> Node {
     Node::symbol(name).sized(tokens::SYMBOL)

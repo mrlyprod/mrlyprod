@@ -1,0 +1,17 @@
+{"open": "settings"}
+{"assert": {"route": "settings"}}
+{"assert": {"verb": "settings.set"}}
+{"tap": {"verb": "settings.set", "args": {"key": "launchpad", "value": "list"}}}
+{"assert": {"state": ["settings/launchpad", "list"]}}
+{"tap": {"verb": "settings.set", "args": {"key": "darkmode", "value": true}}}
+{"assert": {"state": ["settings/darkmode", true]}}
+{"slide": {"verb": "settings.set", "value": 4}}
+{"assert": {"state": ["settings/scale", 4]}}
+{"focus": {"verb": "settings.set"}}
+{"cap": "teal"}
+{"assert": {"state": ["settings/background", "teal"]}}
+{"assert": {"frame": "15537608508489048577"}}
+{"tap": {"verb": "settings.set", "args": {"key": "darkmode", "value": false}}}
+{"ask": "settings.set {\"key\":\"pace\",\"value\":0}"}
+{"run": true}
+{"assert": {"state": ["settings/pace", 0]}}

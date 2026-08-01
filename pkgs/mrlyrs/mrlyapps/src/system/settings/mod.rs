@@ -3,6 +3,27 @@ use mrlyos::kernel::{int, App, Call, Iden, Manifest, Outcome, Verb};
 
 use mrlycore::colors::NAMES as COLORS;
 
+mod view;
+
+pub(crate) fn fills() -> Vec<String> {
+    let mut out = vec!["random".to_string()];
+    out.extend(COLORS.iter().map(|c| c.to_string()));
+    out
+}
+
+pub(crate) fn notes() -> Vec<String> {
+    let mut out = vec!["random".to_string()];
+    out.extend(mrlymusic::theory::NAMES.iter().map(|c| c.to_string()));
+    out
+}
+
+pub(crate) fn waves() -> Vec<String> {
+    mrlymusic::wave::NAMES
+        .iter()
+        .map(|c| c.to_string())
+        .collect()
+}
+
 pub const MODES: [&str; 2] = ["grid", "list"];
 
 pub const FONTS: [&str; 5] = ["mono", "sans", "serif", "display", "mrly"];
@@ -16,27 +37,27 @@ pub const MATERIALS: [&str; 2] = ["solid", "glass"];
 pub const WALLPAPERS: [&str; 2] = ["color", "pattern"];
 
 pub struct Settings {
-    launchpad: String,
-    darkmode: bool,
-    color: String,
-    fill: String,
-    font: String,
-    emoji: String,
-    scale: i64,
-    radius: i64,
-    pace: i64,
-    sound: bool,
-    haptics: bool,
-    note: String,
-    wave: String,
-    duration: i64,
-    background: String,
-    width: i64,
-    render: String,
-    material: String,
-    wallpaper: String,
-    seed: i64,
-    detail: i64,
+    pub(crate) launchpad: String,
+    pub(crate) darkmode: bool,
+    pub(crate) color: String,
+    pub(crate) fill: String,
+    pub(crate) font: String,
+    pub(crate) emoji: String,
+    pub(crate) scale: i64,
+    pub(crate) radius: i64,
+    pub(crate) pace: i64,
+    pub(crate) sound: bool,
+    pub(crate) haptics: bool,
+    pub(crate) note: String,
+    pub(crate) wave: String,
+    pub(crate) duration: i64,
+    pub(crate) background: String,
+    pub(crate) width: i64,
+    pub(crate) render: String,
+    pub(crate) material: String,
+    pub(crate) wallpaper: String,
+    pub(crate) seed: i64,
+    pub(crate) detail: i64,
 }
 
 impl Default for Settings {
@@ -183,6 +204,9 @@ impl App for Settings {
     }
     fn manifest(&self) -> Manifest {
         Manifest::new("settings").emoji("⚙️").category("system")
+    }
+    fn view(&self, iden: &Iden) -> Option<mrlycore::ui::Node> {
+        view::tree(self, iden)
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
         vec![Verb::new(
