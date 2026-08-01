@@ -109,6 +109,9 @@ export function settings(state: unknown, _send: Send): Node {
           <button key="import" call={call("journal.import")}>import</button>
           <button key="reset" call={call("journal.reset")}>reset</button>
         </grid>
+        <grid key="device-tabs" cols={1}>
+          <button key="install" call={call("device.install")}>install</button>
+        </grid>
       </Section>
     </stack>
   )

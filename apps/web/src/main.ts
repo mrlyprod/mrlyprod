@@ -4,6 +4,7 @@ import type { Journal } from "./journal.ts"
 import { Store } from "./journal.ts"
 import { board, install } from "./palette.ts"
 import { install as installPeeks } from "./peeks.ts"
+import * as pwa from "./pwa.ts"
 import { theme } from "./render/theme.ts"
 import { router } from "./router.ts"
 import { mount } from "./shell/mount.ts"
@@ -84,6 +85,10 @@ if (looks?.render === "gpu" && navigator.gpu === undefined) {
   send({ verb: "settings.set", args: { key: "render", value: "cpu" } })
 }
 
+pwa.watch()
+routes.on("device.install", () => {
+  void pwa.install().then(note => ui.pop(note))
+})
 routes.on("journal.reset", async () => {
   if (!(await ui.ask("wipe the session and reboot?"))) return
   await Store.wipe("guest")
