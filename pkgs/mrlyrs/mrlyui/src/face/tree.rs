@@ -156,7 +156,13 @@ fn slim(node: &Node, w: usize) -> Option<usize> {
     let natural = match node {
         Node::Button { label, .. } => text::width(label, 1) + 14,
         Node::Text { text: txt, .. } => text::width(txt, 1) + 2,
-        Node::Symbol { value } => text::width(value, 2) + 4,
+        Node::Symbol { value } => {
+            if crate::symbol::known(value) {
+                20
+            } else {
+                text::width(value, 2) + 4
+            }
+        }
         Node::Label {
             text: txt, note, ..
         } => text::width(txt, 1) + text::width(note, 1) + 12,
@@ -707,16 +713,27 @@ pub(crate) fn lay(
         }
         Node::Image { fact } => picture(fact, x, y, w, t, out).0,
         Node::Symbol { value } => {
-            let tw = text::width(value, 2);
-            line(
-                out,
-                value,
-                x + (w.saturating_sub(tw)) / 2,
-                y + 2,
-                w,
-                2,
-                t.ink,
-            );
+            if let Some(sprite) = crate::symbol::sprite(value, 16, t.ink) {
+                out.ops.push(Op::Image {
+                    x: x + w.saturating_sub(16) / 2,
+                    y: y + 1,
+                    w: 16,
+                    h: 16,
+                    scale: 1,
+                    pixels: sprite.to_vec(),
+                });
+            } else {
+                let tw = text::width(value, 2);
+                line(
+                    out,
+                    value,
+                    x + (w.saturating_sub(tw)) / 2,
+                    y + 2,
+                    w,
+                    2,
+                    t.ink,
+                );
+            }
             18
         }
         Node::Doc { md } => {

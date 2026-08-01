@@ -50,7 +50,7 @@ cargo fmt                               # ship runs it too
 cargo clippy -- -D warnings
 cargo run -p mrlyweb --example <name>   # examples live in pkgs/mrlyrs/mrlyweb/examples/
 cargo run -p mrlyweb --example fixtures # regenerate apps/web/fixtures/*.json from frame()
-cargo run -p mrlydoor                   # regenerate files/emoji/ atlas from the vendored TTF + catalog
+cargo run -p mrlydoor                   # regenerate the files/emoji/ and files/symbols/ atlases from files/vendor/
 cargo run -p mrlyweb --example face     # every app's default face into data/face/, six -live gauntlet shots included
 cargo doc --open
 cargo clean

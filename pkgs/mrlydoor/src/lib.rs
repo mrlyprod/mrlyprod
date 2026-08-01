@@ -1,6 +1,9 @@
 use mrlycore::errors::{value_error, Result};
 use mrlycore::{json, unpng, Json};
+use std::collections::HashMap;
 use ttf_parser::{Face, RasterImageFormat};
+
+pub mod raster;
 
 pub const CELL: usize = 32;
 
@@ -43,6 +46,68 @@ pub fn emoji_atlas(font: &[u8], entries: &[String]) -> Result<(Vec<u8>, Json)> {
         sprites.push(shrink(&pixels, width, height));
         map[name.as_str()] = json!(index);
     }
+    pack(sprites, map)
+}
+
+pub fn symbol_atlas(
+    material: &[u8],
+    codepoints: &str,
+    symbols2: &[u8],
+    entries: &[String],
+) -> Result<(Vec<u8>, Json)> {
+    let Ok(material) = Face::parse(material, 0) else {
+        return value_error("unreadable symbols font.");
+    };
+    let Ok(symbols2) = Face::parse(symbols2, 0) else {
+        return value_error("unreadable symbols2 font.");
+    };
+    if entries.is_empty() {
+        return value_error("empty catalog.");
+    }
+    let mut points = HashMap::new();
+    for line in codepoints.lines() {
+        if let Some((name, code)) = line.split_once(' ') {
+            let Ok(code) = u32::from_str_radix(code.trim(), 16) else {
+                return value_error(format!("bad codepoint line: {line}."));
+            };
+            let Some(single) = char::from_u32(code) else {
+                return value_error(format!("bad codepoint line: {line}."));
+            };
+            points.insert(name.to_string(), single);
+        }
+    }
+    let mut sprites = Vec::with_capacity(entries.len());
+    let mut map = json!({});
+    for (index, entry) in entries.iter().enumerate() {
+        if map.get(entry.as_str()).is_some() {
+            return value_error(format!("duplicate entry: {entry}."));
+        }
+        let (face, single) = match points.get(entry.as_str()) {
+            Some(&single) => (&material, single),
+            None => {
+                let mut chars = entry.chars();
+                let (Some(single), None) = (chars.next(), chars.next()) else {
+                    return value_error(format!("not an icon name or symbol: {entry}."));
+                };
+                (&symbols2, single)
+            }
+        };
+        let Some(glyph) = face.glyph_index(single) else {
+            return value_error(format!("no glyph for {entry}."));
+        };
+        let mut outline = raster::Outline::new();
+        if face.outline_glyph(glyph, &mut outline).is_none() || outline.is_empty() {
+            return value_error(format!("no outline for {entry}."));
+        }
+        let cover = raster::coverage(&outline, face.units_per_em() as f64, CELL);
+        let cell = cover.iter().map(|&c| [c, c, c, c]).collect();
+        sprites.push((CELL, CELL, cell));
+        map[entry.as_str()] = json!(index);
+    }
+    pack(sprites, map)
+}
+
+fn pack(sprites: Vec<(usize, usize, Vec<[u8; 4]>)>, map: Json) -> Result<(Vec<u8>, Json)> {
     let cols = (1usize..).find(|c| c * c >= sprites.len()).unwrap_or(1);
     let rows = sprites.len().div_ceil(cols);
     let width = cols * CELL;
@@ -149,6 +214,45 @@ mod tests {
         assert!(emoji_atlas(&font, &catalog("💣 💣")).is_err());
         assert!(emoji_atlas(&font, &catalog("ab")).is_err());
         assert!(emoji_atlas(&font, &catalog("♔")).is_err());
+    }
+
+    #[test]
+    fn small_symbol_atlas_serves_both_fonts() {
+        let material = fs::read(format!("{ROOT}/files/vendor/symbols.ttf")).unwrap();
+        let codepoints =
+            fs::read_to_string(format!("{ROOT}/files/vendor/symbols.codepoints")).unwrap();
+        let symbols2 = fs::read(format!("{ROOT}/files/vendor/symbols2.ttf")).unwrap();
+        let entries = catalog("close ♔");
+        let (png, manifest) = symbol_atlas(&material, &codepoints, &symbols2, &entries).unwrap();
+        assert_eq!(manifest["map"]["close"], json!(0));
+        assert_eq!(manifest["map"]["♔"], json!(1));
+        let (w, h, pixels) = unpng(&png).unwrap();
+        assert_eq!((w, h), (2 * CELL, CELL));
+        assert!(pixels.iter().filter(|p| p[3] > 0).count() > CELL * CELL / 8);
+        assert!(pixels
+            .iter()
+            .all(|p| p[0] == p[3] && p[1] == p[3] && p[2] == p[3]));
+        let unknown = symbol_atlas(&material, &codepoints, &symbols2, &catalog("nonsuch_zz"));
+        assert!(unknown.is_err());
+    }
+
+    #[test]
+    fn shipped_symbol_atlas_matches_the_catalog() {
+        let material = fs::read(format!("{ROOT}/files/vendor/symbols.ttf")).unwrap();
+        let codepoints =
+            fs::read_to_string(format!("{ROOT}/files/vendor/symbols.codepoints")).unwrap();
+        let symbols2 = fs::read(format!("{ROOT}/files/vendor/symbols2.ttf")).unwrap();
+        let entries =
+            catalog(&fs::read_to_string(format!("{ROOT}/files/symbols/catalog.txt")).unwrap());
+        let (png, manifest) = symbol_atlas(&material, &codepoints, &symbols2, &entries).unwrap();
+        for piece in "♔♕♖♗♘♙♚♛♜♝♞♟".chars() {
+            assert!(manifest["map"].get(piece.to_string().as_str()).is_some());
+        }
+        let shipped_png = fs::read(format!("{ROOT}/files/symbols/atlas.png")).unwrap();
+        let shipped_manifest =
+            fs::read_to_string(format!("{ROOT}/files/symbols/atlas.json")).unwrap();
+        assert_eq!(png, shipped_png);
+        assert_eq!(manifest.pretty(), shipped_manifest.trim_end());
     }
 
     #[test]

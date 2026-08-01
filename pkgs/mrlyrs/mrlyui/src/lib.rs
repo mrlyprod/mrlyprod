@@ -7,5 +7,6 @@ pub mod raster;
 pub mod scene;
 pub mod shaders;
 pub mod skin;
+pub mod symbol;
 
 pub use frame::{Frame, Hud, Layer, Sprite, TileSet};

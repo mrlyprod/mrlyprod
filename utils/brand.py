@@ -107,6 +107,8 @@ CSS2 = "https://fonts.googleapis.com/css2"
 OFL = "https://raw.githubusercontent.com/google/fonts/main/ofl/{}/OFL.txt"
 APACHE = "https://raw.githubusercontent.com/google/material-design-icons/master/LICENSE"
 NOTO_TTF = "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/fonts/NotoColorEmoji.ttf"
+MATERIAL = "https://raw.githubusercontent.com/google/material-design-icons/master/variablefont/MaterialSymbolsOutlined%5BFILL%2CGRAD%2Copsz%2Cwght%5D"
+SYMBOLS2_TTF = "https://raw.githubusercontent.com/google/fonts/main/ofl/notosanssymbols2/NotoSansSymbols2-Regular.ttf"
 AXES = "Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
 
 def get(url):
@@ -145,6 +147,11 @@ def emoji():
     save("emoji.css", ("\n".join(out) + "\n").encode())
     save("emoji.ttf", get(NOTO_TTF))
 
+def symbols():
+    save("symbols.ttf", get(MATERIAL + ".ttf"))
+    save("symbols.codepoints", get(MATERIAL + ".codepoints"))
+    save("symbols2.ttf", get(SYMBOLS2_TTF))
+
 def fonts():
     out = []
     for role, family in FAMILIES.items():
@@ -161,6 +168,7 @@ def fonts():
 def licenses():
     save("LICENSE-icons.txt", get(APACHE))
     save("LICENSE-emoji.txt", get(OFL.format("notocoloremoji")))
+    save("LICENSE-symbols2.txt", get(OFL.format("notosanssymbols2")))
     for role, family in FAMILIES.items():
         save(f"LICENSE-{role}.txt", get(OFL.format(family.lower().replace(" ", ""))))
 
@@ -168,6 +176,7 @@ def fetch():
     os.makedirs(VENDOR, exist_ok=True)
     subsets()
     emoji()
+    symbols()
     fonts()
     licenses()
 

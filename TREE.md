@@ -395,6 +395,10 @@ mrlyprod
 │   │   ├── MrlyFont.ttf
 │   │   ├── MrlyFont.woff
 │   │   └── MrlyFont.woff2
+│   ├── symbols
+│   │   ├── atlas.json
+│   │   ├── atlas.png
+│   │   └── catalog.txt
 │   └── vendor
 │       ├── seti
 │       │   ├── LICENSE-seti.txt
@@ -433,7 +437,10 @@ mrlyprod
 │       ├── mono.woff2
 │       ├── sans.woff2
 │       ├── serif.woff2
-│       └── site.woff2
+│       ├── site.woff2
+│       ├── symbols.codepoints
+│       ├── symbols.ttf
+│       └── symbols2.ttf
 ├── pkgs
 │   ├── mrlycss
 │   │   ├── base.css
@@ -465,7 +472,8 @@ mrlyprod
 │   ├── mrlydoor
 │   │   ├── src
 │   │   │   ├── lib.rs
-│   │   │   └── main.rs
+│   │   │   ├── main.rs
+│   │   │   └── raster.rs
 │   │   └── Cargo.toml
 │   ├── mrlygpu
 │   │   ├── src
@@ -932,7 +940,8 @@ mrlyprod
 │   │   │   │   ├── frame.rs
 │   │   │   │   ├── lib.rs
 │   │   │   │   ├── raster.rs
-│   │   │   │   └── scene.rs
+│   │   │   │   ├── scene.rs
+│   │   │   │   └── symbol.rs
 │   │   │   └── Cargo.toml
 │   │   └── mrlyweb
 │   │       ├── examples

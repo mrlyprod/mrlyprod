@@ -1,5 +1,13 @@
 use crate::frame::{bake, hex, motif_tile, solid_tile, TileSet};
 use mrlycore::{json, Json};
+use std::collections::HashSet;
+use std::sync::OnceLock;
+
+fn lettered(text: &str) -> bool {
+    static SET: OnceLock<HashSet<char>> = OnceLock::new();
+    let set = SET.get_or_init(|| mrlyfont::supported().into_iter().collect());
+    !text.is_empty() && text.chars().all(|c| set.contains(&c))
+}
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Face {
@@ -94,8 +102,16 @@ impl Skin {
                     None => solid_tile(k, color),
                 };
                 match &v.face {
-                    Some(Face::Glyph(text)) => bake(&mut tile, text, k, ink),
-                    Some(Face::Emoji(value)) => crate::emoji::bake(&mut tile, value, k),
+                    Some(Face::Glyph(text)) if lettered(text) => bake(&mut tile, text, k, ink),
+                    Some(Face::Glyph(value)) | Some(Face::Emoji(value)) => {
+                        if crate::emoji::known(value) {
+                            crate::emoji::bake(&mut tile, value, k);
+                        } else if crate::symbol::known(value) {
+                            crate::symbol::bake(&mut tile, value, k, ink);
+                        } else if let Some(Face::Glyph(text)) = &v.face {
+                            bake(&mut tile, text, k, ink);
+                        }
+                    }
                     _ => {}
                 }
                 tile
@@ -163,6 +179,28 @@ mod tests {
             .iter()
             .any(|c| c[3] > 0));
     }
+    #[test]
+    fn tileset_serves_chess_symbols_tinted() {
+        let ink = [220, 10, 10, 255];
+        let skin = Skin::new(vec![
+            Visual::none().emoji("♔"),
+            Visual::none().glyph("♞"),
+            Visual::none().glyph("A"),
+        ]);
+        let set = skin.tileset(16, ink);
+        for tile in &set.tiles {
+            let colors = tile.cell.colors.as_ref().unwrap();
+            assert!(colors.iter().any(|c| c[3] > 0));
+        }
+        assert!(set.tiles[0]
+            .cell
+            .colors
+            .as_ref()
+            .unwrap()
+            .iter()
+            .any(|c| c[3] > 0 && c[0] == ink[0]));
+    }
+
     #[test]
     fn mines_variants_dress_the_roles() {
         let colors = [[10, 10, 10, 255]; 9];
