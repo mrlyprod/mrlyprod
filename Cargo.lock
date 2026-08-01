@@ -859,6 +859,14 @@ name = "mrlycore"
 version = "0.2.0"
 
 [[package]]
+name = "mrlydoor"
+version = "0.2.0"
+dependencies = [
+ "mrlycore",
+ "ttf-parser",
+]
+
+[[package]]
 name = "mrlyfont"
 version = "0.2.0"
 dependencies = [

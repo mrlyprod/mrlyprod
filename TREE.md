@@ -386,6 +386,10 @@ mrlyprod
 │   │   ├── mark.svg
 │   │   ├── mrlyprod.png
 │   │   └── mrlyprod.svg
+│   ├── emoji
+│   │   ├── atlas.json
+│   │   ├── atlas.png
+│   │   └── catalog.txt
 │   ├── mrlyfont
 │   │   ├── MrlyFont.json
 │   │   ├── MrlyFont.ttf
@@ -423,6 +427,7 @@ mrlyprod
 │       ├── emoji.8.woff2
 │       ├── emoji.9.woff2
 │       ├── emoji.css
+│       ├── emoji.ttf
 │       ├── fonts.css
 │       ├── icons.woff2
 │       ├── mono.woff2
@@ -457,6 +462,11 @@ mrlyprod
 │   │   │   └── theme.ts
 │   │   ├── package.json
 │   │   └── tsconfig.json
+│   ├── mrlydoor
+│   │   ├── src
+│   │   │   ├── lib.rs
+│   │   │   └── main.rs
+│   │   └── Cargo.toml
 │   ├── mrlygpu
 │   │   ├── src
 │   │   │   ├── index.ts
@@ -918,6 +928,7 @@ mrlyprod
 │   │   │   │   │   ├── twenty48.rs
 │   │   │   │   │   └── two.rs
 │   │   │   │   ├── draw.rs
+│   │   │   │   ├── emoji.rs
 │   │   │   │   ├── frame.rs
 │   │   │   │   ├── lib.rs
 │   │   │   │   ├── raster.rs

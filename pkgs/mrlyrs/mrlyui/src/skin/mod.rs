@@ -93,8 +93,10 @@ impl Skin {
                     Some(name) => motif_tile(name, k, color, clear),
                     None => solid_tile(k, color),
                 };
-                if let Some(Face::Glyph(text)) = &v.face {
-                    bake(&mut tile, text, k, ink);
+                match &v.face {
+                    Some(Face::Glyph(text)) => bake(&mut tile, text, k, ink),
+                    Some(Face::Emoji(value)) => crate::emoji::bake(&mut tile, value, k),
+                    _ => {}
                 }
                 tile
             })
@@ -153,10 +155,13 @@ mod tests {
             motif_tile("carpet", 8, red, [0, 0, 0, 0]).cell.colors
         );
         assert!(set.tiles[2].cell.colors.as_ref().unwrap().contains(&ink));
-        assert_eq!(
-            set.tiles[3].cell.colors,
-            solid_tile(8, [0, 0, 0, 0]).cell.colors
-        );
+        assert!(set.tiles[3]
+            .cell
+            .colors
+            .as_ref()
+            .unwrap()
+            .iter()
+            .any(|c| c[3] > 0));
     }
     #[test]
     fn mines_variants_dress_the_roles() {

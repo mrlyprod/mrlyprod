@@ -106,6 +106,7 @@ UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML,
 CSS2 = "https://fonts.googleapis.com/css2"
 OFL = "https://raw.githubusercontent.com/google/fonts/main/ofl/{}/OFL.txt"
 APACHE = "https://raw.githubusercontent.com/google/material-design-icons/master/LICENSE"
+NOTO_TTF = "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/fonts/NotoColorEmoji.ttf"
 AXES = "Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
 
 def get(url):
@@ -142,6 +143,7 @@ def emoji():
         block = block.replace("font-family: 'Noto Color Emoji';", "font-family: 'noto';")
         out.append(block)
     save("emoji.css", ("\n".join(out) + "\n").encode())
+    save("emoji.ttf", get(NOTO_TTF))
 
 def fonts():
     out = []

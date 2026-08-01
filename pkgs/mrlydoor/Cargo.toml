@@ -1,0 +1,8 @@
+[package]
+name = "mrlydoor"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+mrlycore = { workspace = true }
+ttf-parser = "0.25"

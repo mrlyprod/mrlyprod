@@ -13,6 +13,7 @@ members = [
     "pkgs/mrlypy/math",
     "pkgs/mrlyjs/web",
     "pkgs/mrlyjs/math",
+    "pkgs/mrlydoor",
     "apps/cli",
     "apps/gui",
 ]

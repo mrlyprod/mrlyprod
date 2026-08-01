@@ -20,7 +20,7 @@ pub mod trig;
 pub mod ui;
 
 pub use cell::Cell;
-pub use codec::{base64, png};
+pub use codec::{base64, png, unpng};
 pub use colors::Color;
 pub use enums::Mode;
 pub use errors::{MrlyError, Result};

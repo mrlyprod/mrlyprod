@@ -260,6 +260,369 @@ fn adler32(bytes: &[u8]) -> u32 {
     high << 16 | low
 }
 
+pub fn unpng(bytes: &[u8]) -> Result<(usize, usize, Vec<[u8; 4]>)> {
+    if bytes.len() < 8 || bytes[..8] != PNG_SIGNATURE {
+        return value_error("not a png.");
+    }
+    let mut at = 8;
+    let mut width = 0;
+    let mut height = 0;
+    let mut color = 0u8;
+    let mut depth = 0usize;
+    let mut headed = false;
+    let mut palette: Vec<[u8; 4]> = Vec::new();
+    let mut idat = Vec::new();
+    while at + 12 <= bytes.len() {
+        let len = u32::from_be_bytes([bytes[at], bytes[at + 1], bytes[at + 2], bytes[at + 3]]);
+        let len = len as usize;
+        if at + 12 + len > bytes.len() {
+            return value_error("truncated png chunk.");
+        }
+        let kind = &bytes[at + 4..at + 8];
+        let body = &bytes[at + 8..at + 8 + len];
+        match kind {
+            b"IHDR" => {
+                if len != 13 || body[10] != 0 || body[11] != 0 || body[12] != 0 {
+                    return value_error("unsupported png header.");
+                }
+                width = u32::from_be_bytes([body[0], body[1], body[2], body[3]]) as usize;
+                height = u32::from_be_bytes([body[4], body[5], body[6], body[7]]) as usize;
+                depth = body[8] as usize;
+                color = body[9];
+                headed = true;
+            }
+            b"PLTE" => palette = body.chunks(3).map(|c| [c[0], c[1], c[2], 255]).collect(),
+            b"tRNS" => {
+                for (i, &alpha) in body.iter().enumerate() {
+                    if i < palette.len() {
+                        palette[i][3] = alpha;
+                    }
+                }
+            }
+            b"IDAT" => idat.extend_from_slice(body),
+            b"IEND" => break,
+            _ => {}
+        }
+        at += 12 + len;
+    }
+    if !headed || width == 0 || height == 0 {
+        return value_error("missing png header.");
+    }
+    let channels = match color {
+        0 => 1,
+        2 => 3,
+        3 => 1,
+        4 => 2,
+        6 => 4,
+        _ => return value_error("unsupported png color type."),
+    };
+    let packed = matches!(color, 0 | 3) && matches!(depth, 1 | 2 | 4);
+    if depth != 8 && !packed {
+        return value_error("unsupported png bit depth.");
+    }
+    let raw = inflate(&idat)?;
+    let line = (width * channels * depth).div_ceil(8);
+    if raw.len() != height * (line + 1) {
+        return value_error("bad png data length.");
+    }
+    let bpp = (channels * depth).div_ceil(8);
+    let data = unfilter(&raw, line, height, bpp)?;
+    let sample = |y: usize, i: usize| {
+        if depth == 8 {
+            data[y * line + i]
+        } else {
+            let byte = data[y * line + i * depth / 8];
+            byte >> (8 - depth - i * depth % 8) & ((1 << depth) - 1)
+        }
+    };
+    let full = ((1u32 << depth) - 1) as u8;
+    let mut colors = Vec::with_capacity(width * height);
+    for y in 0..height {
+        for x in 0..width {
+            let px = |c: usize| sample(y, x * channels + c);
+            colors.push(match color {
+                0 => {
+                    let g = (px(0) as u32 * 255 / full as u32) as u8;
+                    [g, g, g, 255]
+                }
+                2 => [px(0), px(1), px(2), 255],
+                3 => match palette.get(px(0) as usize) {
+                    Some(&entry) => entry,
+                    None => return value_error("palette index out of range."),
+                },
+                4 => [px(0), px(0), px(0), px(1)],
+                _ => [px(0), px(1), px(2), px(3)],
+            });
+        }
+    }
+    Ok((width, height, colors))
+}
+
+fn unfilter(raw: &[u8], stride: usize, height: usize, bpp: usize) -> Result<Vec<u8>> {
+    let mut out = vec![0u8; stride * height];
+    for row in 0..height {
+        let kind = raw[row * (stride + 1)];
+        let line = &raw[row * (stride + 1) + 1..(row + 1) * (stride + 1)];
+        for x in 0..stride {
+            let left = if x >= bpp {
+                out[row * stride + x - bpp]
+            } else {
+                0
+            };
+            let up = if row > 0 {
+                out[(row - 1) * stride + x]
+            } else {
+                0
+            };
+            let corner = if row > 0 && x >= bpp {
+                out[(row - 1) * stride + x - bpp]
+            } else {
+                0
+            };
+            let guess = match kind {
+                0 => 0,
+                1 => left,
+                2 => up,
+                3 => ((left as u32 + up as u32) / 2) as u8,
+                4 => paeth(left, up, corner),
+                _ => return value_error("bad png filter."),
+            };
+            out[row * stride + x] = line[x].wrapping_add(guess);
+        }
+    }
+    Ok(out)
+}
+
+fn paeth(a: u8, b: u8, c: u8) -> u8 {
+    let p = a as i32 + b as i32 - c as i32;
+    let pa = (p - a as i32).abs();
+    let pb = (p - b as i32).abs();
+    let pc = (p - c as i32).abs();
+    if pa <= pb && pa <= pc {
+        a
+    } else if pb <= pc {
+        b
+    } else {
+        c
+    }
+}
+
+fn inflate(stream: &[u8]) -> Result<Vec<u8>> {
+    if stream.len() < 6 || stream[0] & 0x0f != 8 || stream[1] & 0x20 != 0 {
+        return value_error("bad zlib stream.");
+    }
+    let mut reader = BitReader {
+        data: &stream[2..stream.len() - 4],
+        byte: 0,
+        bit: 0,
+    };
+    let mut out = Vec::new();
+    loop {
+        let last = reader.take(1)?;
+        match reader.take(2)? {
+            0 => stored(&mut reader, &mut out)?,
+            1 => block(&mut reader, &mut out, &fixed_lengths(), &[5u8; 30])?,
+            2 => {
+                let (lit, dist) = dynamic_lengths(&mut reader)?;
+                block(&mut reader, &mut out, &lit, &dist)?;
+            }
+            _ => return value_error("bad deflate block."),
+        }
+        if last == 1 {
+            break;
+        }
+    }
+    if stream[stream.len() - 4..] != adler32(&out).to_be_bytes() {
+        return value_error("bad zlib checksum.");
+    }
+    Ok(out)
+}
+
+fn stored(reader: &mut BitReader, out: &mut Vec<u8>) -> Result<()> {
+    reader.align();
+    let low = reader.raw()?;
+    let high = reader.raw()?;
+    let len = u16::from_le_bytes([low, high]);
+    let nlow = reader.raw()?;
+    let nhigh = reader.raw()?;
+    if len ^ u16::from_le_bytes([nlow, nhigh]) != 0xffff {
+        return value_error("bad stored block.");
+    }
+    for _ in 0..len {
+        out.push(reader.raw()?);
+    }
+    Ok(())
+}
+
+fn block(reader: &mut BitReader, out: &mut Vec<u8>, lit: &[u8], dist: &[u8]) -> Result<()> {
+    let lit = huffman(lit);
+    let dist = huffman(dist);
+    loop {
+        let symbol = decode(reader, &lit)?;
+        if symbol == 256 {
+            return Ok(());
+        }
+        if symbol < 256 {
+            out.push(symbol as u8);
+            continue;
+        }
+        let s = symbol as usize - 257;
+        if s >= LENGTH_BASE.len() {
+            return value_error("bad length symbol.");
+        }
+        let len = (LENGTH_BASE[s] + reader.take(LENGTH_EXTRA[s])?) as usize;
+        let d = decode(reader, &dist)? as usize;
+        if d >= DIST_BASE.len() {
+            return value_error("bad distance symbol.");
+        }
+        let far = (DIST_BASE[d] + reader.take(DIST_EXTRA[d])?) as usize;
+        if far > out.len() {
+            return value_error("bad distance.");
+        }
+        let from = out.len() - far;
+        for k in 0..len {
+            out.push(out[from + k]);
+        }
+    }
+}
+
+fn fixed_lengths() -> Vec<u8> {
+    let mut lengths = vec![8u8; 288];
+    for length in &mut lengths[144..256] {
+        *length = 9;
+    }
+    for length in &mut lengths[256..280] {
+        *length = 7;
+    }
+    lengths
+}
+
+const CODE_ORDER: [usize; 19] = [
+    16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15,
+];
+
+fn dynamic_lengths(reader: &mut BitReader) -> Result<(Vec<u8>, Vec<u8>)> {
+    let hlit = reader.take(5)? as usize + 257;
+    let hdist = reader.take(5)? as usize + 1;
+    let hclen = reader.take(4)? as usize + 4;
+    let mut meta = [0u8; 19];
+    for &slot in CODE_ORDER.iter().take(hclen) {
+        meta[slot] = reader.take(3)? as u8;
+    }
+    let codes = huffman(&meta);
+    let mut lengths = Vec::with_capacity(hlit + hdist);
+    while lengths.len() < hlit + hdist {
+        let symbol = decode(reader, &codes)?;
+        match symbol {
+            0..=15 => lengths.push(symbol as u8),
+            16 => {
+                let Some(&last) = lengths.last() else {
+                    return value_error("bad length repeat.");
+                };
+                for _ in 0..3 + reader.take(2)? {
+                    lengths.push(last);
+                }
+            }
+            17 => {
+                for _ in 0..3 + reader.take(3)? {
+                    lengths.push(0);
+                }
+            }
+            _ => {
+                for _ in 0..11 + reader.take(7)? {
+                    lengths.push(0);
+                }
+            }
+        }
+    }
+    if lengths.len() != hlit + hdist {
+        return value_error("bad length counts.");
+    }
+    let dist = lengths.split_off(hlit);
+    Ok((lengths, dist))
+}
+
+struct Huffman {
+    counts: [u16; 16],
+    symbols: Vec<u16>,
+}
+
+fn huffman(lengths: &[u8]) -> Huffman {
+    let mut counts = [0u16; 16];
+    for &length in lengths {
+        counts[length as usize] += 1;
+    }
+    counts[0] = 0;
+    let mut offsets = [0u16; 16];
+    for length in 1..16 {
+        offsets[length] = offsets[length - 1] + counts[length - 1];
+    }
+    let mut symbols = vec![0u16; offsets[15] as usize + counts[15] as usize];
+    for (symbol, &length) in lengths.iter().enumerate() {
+        if length > 0 {
+            symbols[offsets[length as usize] as usize] = symbol as u16;
+            offsets[length as usize] += 1;
+        }
+    }
+    Huffman { counts, symbols }
+}
+
+fn decode(reader: &mut BitReader, huff: &Huffman) -> Result<u32> {
+    let mut code = 0u32;
+    let mut first = 0u32;
+    let mut index = 0u32;
+    for length in 1..16 {
+        code |= reader.take(1)?;
+        let count = u32::from(huff.counts[length]);
+        if code < first + count {
+            return Ok(u32::from(huff.symbols[(index + code - first) as usize]));
+        }
+        index += count;
+        first = (first + count) << 1;
+        code <<= 1;
+    }
+    value_error("bad huffman code.")
+}
+
+struct BitReader<'a> {
+    data: &'a [u8],
+    byte: usize,
+    bit: u32,
+}
+
+impl BitReader<'_> {
+    fn take(&mut self, count: u32) -> Result<u32> {
+        let mut value = 0;
+        for i in 0..count {
+            if self.byte >= self.data.len() {
+                return value_error("truncated deflate stream.");
+            }
+            let bit = u32::from(self.data[self.byte]) >> self.bit & 1;
+            value |= bit << i;
+            self.bit += 1;
+            if self.bit == 8 {
+                self.bit = 0;
+                self.byte += 1;
+            }
+        }
+        Ok(value)
+    }
+    fn align(&mut self) {
+        if self.bit > 0 {
+            self.bit = 0;
+            self.byte += 1;
+        }
+    }
+    fn raw(&mut self) -> Result<u8> {
+        if self.byte >= self.data.len() {
+            return value_error("truncated deflate stream.");
+        }
+        let value = self.data[self.byte];
+        self.byte += 1;
+        Ok(value)
+    }
+}
+
 const BASE64_ALPHABET: &[u8; 64] =
     b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -325,7 +688,7 @@ mod tests {
         assert_eq!(&bytes[37..41], b"IDAT");
         let payload = &bytes[41..41 + idat_len];
         assert_eq!(payload, &zlib(&[0, 1, 2, 3, 4])[..]);
-        assert_eq!(inflate(payload), [0, 1, 2, 3, 4]);
+        assert_eq!(inflate(payload).unwrap(), [0, 1, 2, 3, 4]);
         let crc_at = 41 + idat_len;
         assert_eq!(
             &bytes[crc_at..crc_at + 4],
@@ -370,7 +733,7 @@ mod tests {
             noise,
         ];
         for data in &cases {
-            assert_eq!(&inflate(&zlib(data)), data);
+            assert_eq!(&inflate(&zlib(data)).unwrap(), data);
         }
     }
     #[test]
@@ -378,80 +741,72 @@ mod tests {
         let data = vec![9u8; 100_000];
         let stream = zlib(&data);
         assert!(stream.len() < 1000);
-        assert_eq!(inflate(&stream), data);
+        assert_eq!(inflate(&stream).unwrap(), data);
     }
-    fn inflate(stream: &[u8]) -> Vec<u8> {
-        assert_eq!(&stream[..2], &[0x78, 0x01]);
-        let mut reader = BitReader {
-            data: &stream[2..stream.len() - 4],
-            byte: 0,
-            bit: 0,
-        };
-        assert_eq!(reader.take(1), 1);
-        assert_eq!(reader.take(2), 1);
-        let mut out = Vec::new();
-        loop {
-            let symbol = read_symbol(&mut reader);
-            if symbol == 256 {
-                break;
-            }
-            if symbol < 256 {
-                out.push(symbol as u8);
-                continue;
-            }
-            let s = (symbol - 257) as usize;
-            let len = (LENGTH_BASE[s] + reader.take(LENGTH_EXTRA[s])) as usize;
-            let mut code = 0;
-            for _ in 0..5 {
-                code = code << 1 | reader.take(1);
-            }
-            let d = code as usize;
-            let dist = (DIST_BASE[d] + reader.take(DIST_EXTRA[d])) as usize;
-            let from = out.len() - dist;
-            for k in 0..len {
-                out.push(out[from + k]);
-            }
-        }
-        assert_eq!(&stream[stream.len() - 4..], &adler32(&out).to_be_bytes());
-        out
+    #[test]
+    fn inflate_reads_dynamic_huffman_streams() {
+        let mut data: Vec<u8> = (0..96u32).map(|i| ((i * 7 + i / 5) % 251) as u8).collect();
+        data.extend_from_slice(b"the door opens the door opens the door opens");
+        let stream = [
+            120, 218, 99, 96, 231, 19, 149, 81, 209, 54, 178, 116, 240, 240, 15, 139, 77, 201, 41,
+            174, 106, 236, 152, 48, 125, 222, 210, 53, 91, 118, 31, 58, 121, 225, 198, 253, 103,
+            111, 191, 48, 114, 240, 139, 201, 170, 234, 24, 91, 57, 122, 6, 132, 199, 165, 230,
+            150, 84, 55, 117, 78, 156, 49, 127, 217, 218, 173, 123, 14, 159, 186, 120, 243, 193,
+            243, 119, 95, 153, 56, 5, 196, 229, 212, 116, 77, 172, 157, 188, 2, 35, 226, 211, 242,
+            74, 107, 154, 187, 38, 205, 92, 176, 124, 221, 182, 146, 140, 84, 133, 148, 252, 252,
+            34, 133, 252, 130, 212, 188, 98, 5, 188, 92, 0, 94, 114, 59, 28,
+        ];
+        assert_eq!(inflate(&stream).unwrap(), data);
     }
-    fn read_symbol(reader: &mut BitReader) -> u32 {
-        let mut code = 0;
-        for _ in 0..7 {
-            code = code << 1 | reader.take(1);
-        }
-        if code <= 0x17 {
-            return 256 + code;
-        }
-        code = code << 1 | reader.take(1);
-        if (0x30..=0xbf).contains(&code) {
-            return code - 0x30;
-        }
-        if (0xc0..=0xc7).contains(&code) {
-            return 280 + code - 0xc0;
-        }
-        code = code << 1 | reader.take(1);
-        144 + code - 0x190
+    #[test]
+    fn inflate_reads_stored_blocks() {
+        let stream = [
+            120, 1, 1, 25, 0, 230, 255, 115, 116, 111, 114, 101, 100, 32, 98, 121, 116, 101, 115,
+            32, 112, 97, 115, 115, 32, 116, 104, 114, 111, 117, 103, 104, 127, 143, 9, 209,
+        ];
+        assert_eq!(inflate(&stream).unwrap(), b"stored bytes pass through");
     }
-    struct BitReader<'a> {
-        data: &'a [u8],
-        byte: usize,
-        bit: u32,
+    #[test]
+    fn inflate_rejects_broken_streams() {
+        assert!(inflate(&[]).is_err());
+        assert!(inflate(&[0x78, 0x01, 0x03]).is_err());
+        let mut stream = zlib(b"checksummed");
+        let at = stream.len() - 1;
+        stream[at] ^= 1;
+        assert!(inflate(&stream).is_err());
     }
-    impl BitReader<'_> {
-        fn take(&mut self, count: u32) -> u32 {
-            let mut value = 0;
-            for i in 0..count {
-                let bit = u32::from(self.data[self.byte]) >> self.bit & 1;
-                value |= bit << i;
-                self.bit += 1;
-                if self.bit == 8 {
-                    self.bit = 0;
-                    self.byte += 1;
-                }
-            }
-            value
-        }
+    #[test]
+    fn unpng_round_trips_the_encoder() {
+        let colors = vec![
+            [255, 0, 0, 255],
+            [0, 255, 0, 128],
+            [0, 0, 255, 0],
+            [7, 8, 9, 10],
+            [250, 251, 252, 253],
+            [1, 1, 1, 255],
+        ];
+        let bytes = png(&colors, 3, 2, 1).unwrap();
+        let (w, h, out) = unpng(&bytes).unwrap();
+        assert_eq!((w, h), (3, 2));
+        assert_eq!(out, colors);
+    }
+    #[test]
+    fn unpng_round_trips_scaled_output() {
+        let colors = vec![[9, 9, 9, 255], [0, 0, 0, 0]];
+        let bytes = png(&colors, 2, 1, 3).unwrap();
+        let (w, h, out) = unpng(&bytes).unwrap();
+        assert_eq!((w, h), (6, 3));
+        assert_eq!(out[0], [9, 9, 9, 255]);
+        assert_eq!(out[5], [0, 0, 0, 0]);
+        assert_eq!(out.len(), 18);
+    }
+    #[test]
+    fn unpng_rejects_garbage() {
+        assert!(unpng(&[]).is_err());
+        assert!(unpng(b"not a png at all").is_err());
+        let mut bytes = png(&[[1, 2, 3, 4]], 1, 1, 1).unwrap();
+        bytes[25] = 16;
+        assert!(unpng(&bytes).is_err());
     }
     #[test]
     fn base64_matches_rfc_4648_vectors() {
