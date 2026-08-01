@@ -1,4 +1,4 @@
-use crate::tokens::{Theme, ACTIONS, BODY, CONTENT, HEADER, PAD, PANEL};
+use crate::tokens::{Theme, ACTIONS, BODY, CONTENT, CONTROL, EDGE, HEADER, PAD, PANEL};
 use mrlycore::errors::Result;
 use mrlycore::ui::{Call, Node};
 use mrlycore::Json;
@@ -160,41 +160,42 @@ fn overlays(
             let mut out = tree::Out::new();
             let ph = tree::lay(&node, 0, 0, PANEL, theme, ui, &mut out);
             let px = (WIDTH - PANEL) / 2;
-            let py = (HEIGHT.saturating_sub(ph) / 2).max(HEADER + 4);
+            let py = (HEIGHT.saturating_sub(ph) / 2).max(HEADER + PAD);
+            let rim = 2 * PAD;
             let panel = vec![
                 layout::Op::Rect {
-                    x: px - 8,
-                    y: py.saturating_sub(8),
-                    w: PANEL + 16,
-                    h: ph + 16,
+                    x: px - rim,
+                    y: py.saturating_sub(rim),
+                    w: PANEL + 2 * rim,
+                    h: ph + 2 * rim,
                     color: theme.board,
                 },
                 layout::Op::Rect {
-                    x: px - 8,
-                    y: py.saturating_sub(8),
-                    w: PANEL + 16,
-                    h: 1,
+                    x: px - rim,
+                    y: py.saturating_sub(rim),
+                    w: PANEL + 2 * rim,
+                    h: EDGE,
                     color: theme.faint,
                 },
                 layout::Op::Rect {
-                    x: px - 8,
-                    y: py + ph + 7,
-                    w: PANEL + 16,
-                    h: 1,
+                    x: px - rim,
+                    y: py + ph + rim - EDGE,
+                    w: PANEL + 2 * rim,
+                    h: EDGE,
                     color: theme.faint,
                 },
                 layout::Op::Rect {
-                    x: px - 8,
-                    y: py.saturating_sub(8),
-                    w: 1,
-                    h: ph + 16,
+                    x: px - rim,
+                    y: py.saturating_sub(rim),
+                    w: EDGE,
+                    h: ph + 2 * rim,
                     color: theme.faint,
                 },
                 layout::Op::Rect {
-                    x: px + PANEL + 7,
-                    y: py.saturating_sub(8),
-                    w: 1,
-                    h: ph + 16,
+                    x: px + PANEL + rim - EDGE,
+                    y: py.saturating_sub(rim),
+                    w: EDGE,
+                    h: ph + 2 * rim,
                     color: theme.faint,
                 },
             ];
@@ -230,11 +231,11 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
         layout::action_bar(input, &theme)
     };
     let bar_h = strip.as_ref().map_or_else(
-        || 6 + bar.iter().map(|i| i.height).sum::<usize>(),
+        || PAD + bar.iter().map(|i| i.height).sum::<usize>(),
         |(_, _, h)| *h,
     );
     let y0 = HEADER + PAD;
-    let y1 = HEIGHT.saturating_sub(bar_h + 2);
+    let y1 = HEIGHT.saturating_sub(bar_h + PAD);
     let window = y1.saturating_sub(y0);
 
     let scroll = ui.scroll.min(body.saturating_sub(window));
@@ -259,16 +260,16 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
         .collect();
 
     if body > window && window > 0 {
-        let th = (window * window / body).clamp(8, window);
+        let th = (window * window / body).clamp(CONTROL / 3, window);
         let ty = y0 + (window - th) * scroll / body.saturating_sub(window).max(1);
         paint::paint_into(
             &mut sheet,
             WIDTH,
             HEIGHT,
             &[layout::Op::Rect {
-                x: WIDTH - 3,
+                x: WIDTH - 2 * EDGE,
                 y: ty,
-                w: 2,
+                w: 2 * EDGE,
                 h: th,
                 color: theme.muted,
             }],
@@ -293,10 +294,10 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
                 x: 0,
                 y: HEIGHT - bar_h,
                 w: WIDTH,
-                h: 1,
+                h: EDGE,
                 color: theme.faint,
             }];
-            let mut by = HEIGHT - bar_h + 6;
+            let mut by = HEIGHT - bar_h + PAD;
             for (i, item) in bar.into_iter().enumerate() {
                 let h = item.height;
                 bar_ops.extend(layout::shift(item.ops, 0, by));
@@ -543,7 +544,7 @@ mod tests {
     fn face_pixels_are_pinned() {
         let frame = face(&pinned_input());
         let colors = frame.composite().cell.colors.unwrap();
-        assert_eq!(fnv(&colors), 9385373485591055497);
+        assert_eq!(fnv(&colors), 17385575524451970432);
     }
 
     #[test]

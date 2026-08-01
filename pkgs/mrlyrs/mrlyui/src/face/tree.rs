@@ -2,9 +2,9 @@ use super::layout::{shift, Op};
 use super::text;
 use super::{Act, Hit, UiState};
 use crate::tokens::{
-    contrast, Theme, BAND, CANVAS, CHEV, CHROME, CONTROL, EDGE, GAP, GLYPH, GRIP, INSET, KNOB,
-    LABEL, LINE, PAD, RAIL, ROW, RULE, SLACK, SLOT, SPLIT, STUB, SWITCH_H, SWITCH_W, SYMBOL, TEXT,
-    THUMB, TIGHT, TILE, TITLE, TOGGLE,
+    contrast, Theme, CANVAS, CHEV, CHROME, CONTROL, EDGE, GAP, GLYPH, GRIP, INSET, KNOB, LINE, PAD,
+    RAIL, ROW, RULE, SLACK, SLOT, SPLIT, STUB, SWITCH_H, SWITCH_W, SYMBOL, TEXT, THUMB, TIGHT,
+    TILE, TITLE, UNIT,
 };
 use mrlycore::ui::{Call, Node, Pick, Role};
 use mrlycore::{json, Color};
@@ -267,13 +267,13 @@ fn toggle(
         out,
         label,
         x,
-        y + (TOGGLE - LINE) / 2,
+        y + (CONTROL - LINE) / 2,
         w.saturating_sub(SWITCH_W + PAD),
         TEXT,
         t.ink,
     );
     let tx = x + w - SWITCH_W;
-    let ty = y + (TOGGLE - SWITCH_H) / 2;
+    let ty = y + (CONTROL - SWITCH_H) / 2;
     let fill = if on { t.accent } else { t.faint };
     out.ops.push(Op::Rect {
         x: tx,
@@ -298,12 +298,12 @@ fn toggle(
         x,
         y,
         w,
-        h: TOGGLE,
+        h: CONTROL,
         act: Act::Tap {
             call: call.fill(arg, json!(!on)),
         },
     });
-    TOGGLE
+    CONTROL
 }
 
 fn segments(
@@ -377,7 +377,7 @@ fn choice(
     let mut dy = 0;
     if !label.is_empty() {
         line(out, label, x, y, w, TEXT, t.muted);
-        dy += LABEL;
+        dy += CONTROL;
     }
     match pick {
         Pick::Segments => segments(value, options, call, arg, x, y + dy, w, t, out),
@@ -427,7 +427,7 @@ fn choice(
                 value,
                 x + INSET,
                 y + dy + INSET,
-                w.saturating_sub(2 * INSET + CHEV),
+                w.saturating_sub(INSET + CHEV + TIGHT),
                 TEXT,
                 t.ink,
             );
@@ -476,7 +476,7 @@ fn range(node: &Node, x: usize, y: usize, w: usize, t: &Theme, out: &mut Out) ->
         out,
         label,
         x,
-        y,
+        y + UNIT,
         w.saturating_sub(vw + SPLIT),
         TEXT,
         t.muted,
@@ -485,17 +485,18 @@ fn range(node: &Node, x: usize, y: usize, w: usize, t: &Theme, out: &mut Out) ->
         out,
         &shown,
         x + w.saturating_sub(vw),
-        y,
+        y + UNIT,
         vw + TIGHT,
         TEXT,
         t.ink,
     );
-    let ty = y + LABEL;
+    let ty = y + UNIT + LINE * TEXT;
+    let band = CONTROL.saturating_sub(UNIT + LINE * TEXT);
     let span = (max - min).max(1);
     let frac = ((*value - min).clamp(0, span)) as f64 / span as f64;
     out.ops.push(Op::Rect {
         x,
-        y: ty + (BAND - RAIL) / 2,
+        y: ty + (band - RAIL) / 2,
         w,
         h: RAIL,
         color: t.faint,
@@ -503,23 +504,23 @@ fn range(node: &Node, x: usize, y: usize, w: usize, t: &Theme, out: &mut Out) ->
     let filled = (w as f64 * frac) as usize;
     out.ops.push(Op::Rect {
         x,
-        y: ty + (BAND - RAIL) / 2,
+        y: ty + (band - RAIL) / 2,
         w: filled,
         h: RAIL,
         color: t.accent,
     });
     out.ops.push(Op::Rect {
         x: (x + filled).min(x + w.saturating_sub(THUMB)),
-        y: ty + (BAND - GRIP) / 2,
+        y: ty + (band.saturating_sub(GRIP)) / 2,
         w: THUMB,
         h: GRIP,
         color: t.ink,
     });
     out.hits.push(Hit {
         x,
-        y: ty,
+        y,
         w,
-        h: BAND,
+        h: CONTROL,
         act: Act::Slide {
             call: call.clone(),
             arg: arg.clone(),
@@ -528,7 +529,7 @@ fn range(node: &Node, x: usize, y: usize, w: usize, t: &Theme, out: &mut Out) ->
             step: (*step).max(1),
         },
     });
-    LABEL + BAND
+    CONTROL
 }
 
 fn field(
@@ -669,7 +670,7 @@ fn item(node: &Node, x: usize, y: usize, w: usize, t: &Theme, out: &mut Out) -> 
             out,
             sym,
             x,
-            y + (LABEL - LINE * TEXT) / 2,
+            y + (CONTROL - LINE * TEXT) / 2,
             SLOT,
             TEXT,
             t.accent,
@@ -687,7 +688,7 @@ fn item(node: &Node, x: usize, y: usize, w: usize, t: &Theme, out: &mut Out) -> 
         out,
         txt,
         tx,
-        y + (LABEL - LINE * TEXT) / 2,
+        y + (CONTROL - LINE * TEXT) / 2,
         nx.saturating_sub(tx + PAD),
         TEXT,
         text_ink,
@@ -696,7 +697,7 @@ fn item(node: &Node, x: usize, y: usize, w: usize, t: &Theme, out: &mut Out) -> 
         out,
         note,
         nx,
-        y + (LABEL - LINE * TEXT) / 2,
+        y + (CONTROL - LINE * TEXT) / 2,
         nw + TIGHT,
         TEXT,
         note_ink,
@@ -706,11 +707,11 @@ fn item(node: &Node, x: usize, y: usize, w: usize, t: &Theme, out: &mut Out) -> 
             x,
             y,
             w,
-            h: LABEL,
+            h: CONTROL,
             act: Act::Tap { call: call.clone() },
         });
     }
-    LABEL
+    CONTROL
 }
 
 pub(crate) fn lay(
@@ -775,12 +776,12 @@ pub(crate) fn lay(
                     out,
                     txt,
                     x,
-                    y + (LABEL - LINE * TEXT) / 2,
+                    y + (CONTROL - LINE * TEXT) / 2,
                     w,
                     TEXT,
                     t.accent,
                 );
-                LABEL
+                CONTROL
             }
             Role::Note => wrapped(out, txt, x, y, w, t.muted),
             Role::Body => wrapped(out, txt, x, y, w, t.ink),

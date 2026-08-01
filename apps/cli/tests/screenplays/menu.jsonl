@@ -11,4 +11,4 @@
 {"tap": {"verb": "nav.open", "args": {"app": "settings"}}}
 {"assert": {"route": "settings"}}
 {"open": "menu"}
-{"assert": {"frame": "14380995949034563744"}}
+{"assert": {"frame": "17949768563406623168"}}

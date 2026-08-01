@@ -9,4 +9,4 @@
 {"slide": {"verb": "twenty48.set", "value": 6}}
 {"assert": {"state": ["twenty48/settings/grid", 6]}}
 {"assert": {"state": ["twenty48/steps", 0]}}
-{"assert": {"frame": "17807389894312501931"}}
+{"assert": {"frame": "1440146878777591996"}}

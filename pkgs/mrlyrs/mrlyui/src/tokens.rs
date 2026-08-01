@@ -5,17 +5,6 @@ pub const WIDTH: usize = 320;
 pub const HEIGHT: usize = 452;
 pub const SCALE: usize = 3;
 
-// SPACE
-pub const PAD: usize = 6;
-pub const GAP: usize = 4;
-pub const TIGHT: usize = 2;
-pub const EDGE: usize = 1;
-pub const SPLIT: usize = 8;
-pub const INDENT: usize = 10;
-pub const RADIUS: usize = 0;
-pub const INSET: usize = (CONTROL - LINE) / 2;
-pub const CONTENT: usize = WIDTH - 2 * PAD;
-
 // TYPE
 pub const LINE: usize = 7;
 pub const LEAD: usize = 4;
@@ -23,32 +12,41 @@ pub const TEXT: usize = 1;
 pub const TITLE: usize = 2;
 pub const ROW: usize = LINE * TEXT + LEAD;
 
+// SPACE
+pub const UNIT: usize = 3;
+pub const EDGE: usize = 1;
+pub const GAP: usize = UNIT;
+pub const PAD: usize = UNIT;
+pub const TIGHT: usize = UNIT;
+pub const SPLIT: usize = 2 * UNIT;
+pub const INDENT: usize = 3 * UNIT;
+pub const RADIUS: usize = 0;
+pub const INSET: usize = (CONTROL - LINE) / 2;
+pub const CONTENT: usize = WIDTH - 2 * PAD;
+
 // SIZE
-pub const CONTROL: usize = 18;
-pub const TOGGLE: usize = 14;
-pub const LABEL: usize = 12;
-pub const HEADER: usize = 20;
+pub const CONTROL: usize = 24;
+pub const HEADER: usize = CONTROL;
+pub const RULE: usize = 2 * UNIT;
 pub const SYMBOL: usize = 16;
 pub const GLYPH: usize = SYMBOL + 2 * EDGE;
-pub const RULE: usize = 5;
 pub const CANVAS: usize = 192;
 pub const PANEL: usize = 240;
 
 // PARTS
-pub const MARK: usize = 8;
-pub const SLOT: usize = 12;
-pub const CHEV: usize = 10;
-pub const SWITCH_W: usize = 22;
-pub const SWITCH_H: usize = 10;
-pub const KNOB: usize = 8;
-pub const RAIL: usize = 4;
-pub const THUMB: usize = 3;
-pub const GRIP: usize = 10;
-pub const BAND: usize = 12;
-pub const CHROME: usize = 14;
-pub const SLACK: usize = 12;
-pub const STUB: usize = 16;
-pub const TILE: usize = 20;
+pub const MARK: usize = CONTROL / 3;
+pub const SLOT: usize = CONTROL / 2;
+pub const CHEV: usize = CONTROL / 2;
+pub const SWITCH_W: usize = CONTROL;
+pub const SWITCH_H: usize = CONTROL / 2;
+pub const KNOB: usize = SWITCH_H - 2 * EDGE;
+pub const RAIL: usize = UNIT;
+pub const THUMB: usize = UNIT;
+pub const GRIP: usize = CONTROL / 2;
+pub const CHROME: usize = 4 * UNIT;
+pub const SLACK: usize = 4 * UNIT;
+pub const STUB: usize = 2 * CONTROL / 3;
+pub const TILE: usize = CONTROL;
 
 // GRID
 pub const LAUNCH: usize = 3;
