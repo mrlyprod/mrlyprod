@@ -56,6 +56,7 @@ pub struct UiState {
     pub edit: Option<Edit>,
     pub menu: Option<String>,
     pub hover: Option<Act>,
+    pub ring: Option<Act>,
     pub dock: Option<Edit>,
     pub shade: Option<String>,
     pub rise: u8,
@@ -69,6 +70,7 @@ impl Default for UiState {
             edit: None,
             menu: None,
             hover: None,
+            ring: None,
             dock: None,
             shade: None,
             rise: FULL,
@@ -381,6 +383,42 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
     }
 
     overlays(out.overlays, &theme, ui, &mut sheet, &mut hits);
+
+    if let Some(want) = &ui.ring {
+        if let Some(hit) = hits.iter().find(|hit| hit.act == *want) {
+            let rim = vec![
+                layout::Op::Rect {
+                    x: hit.x,
+                    y: hit.y,
+                    w: hit.w,
+                    h: EDGE,
+                    color: theme.accent,
+                },
+                layout::Op::Rect {
+                    x: hit.x,
+                    y: hit.y + hit.h.saturating_sub(EDGE),
+                    w: hit.w,
+                    h: EDGE,
+                    color: theme.accent,
+                },
+                layout::Op::Rect {
+                    x: hit.x,
+                    y: hit.y,
+                    w: EDGE,
+                    h: hit.h,
+                    color: theme.accent,
+                },
+                layout::Op::Rect {
+                    x: hit.x + hit.w.saturating_sub(EDGE),
+                    y: hit.y,
+                    w: EDGE,
+                    h: hit.h,
+                    color: theme.accent,
+                },
+            ];
+            paint::paint_into(&mut sheet, WIDTH, HEIGHT, &rim);
+        }
+    }
 
     Scene {
         frame: crate::frame::field(WIDTH, HEIGHT, sheet, theme.board),

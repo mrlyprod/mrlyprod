@@ -194,6 +194,14 @@ impl Face {
             return;
         }
         match event.logical_key.as_ref() {
+            Key::Named(NamedKey::Tab) => self.driver.tab(),
+            Key::Named(NamedKey::Enter) if self.driver.ringed() => {
+                self.driver.enter();
+            }
+            Key::Named(NamedKey::ArrowUp) if self.driver.walk("up") => {}
+            Key::Named(NamedKey::ArrowDown) if self.driver.walk("down") => {}
+            Key::Named(NamedKey::ArrowLeft) if self.driver.walk("left") => {}
+            Key::Named(NamedKey::ArrowRight) if self.driver.walk("right") => {}
             Key::Named(NamedKey::ArrowUp) => self.driver.bound("up"),
             Key::Named(NamedKey::ArrowDown) => self.driver.bound("down"),
             Key::Named(NamedKey::ArrowLeft) => self.driver.bound("left"),

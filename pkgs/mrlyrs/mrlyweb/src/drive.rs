@@ -636,7 +636,100 @@ impl Driver {
         Ok(())
     }
 
+    fn reachable(&self) -> Vec<Hit> {
+        self.scene
+            .hits
+            .iter()
+            .filter(|hit| {
+                matches!(
+                    hit.act,
+                    Act::Tap { .. } | Act::Edit { .. } | Act::Menu { .. } | Act::Slide { .. }
+                )
+            })
+            .cloned()
+            .collect()
+    }
+
+    pub fn tab(&mut self) {
+        let stops = self.reachable();
+        let Some(first) = stops.first() else {
+            return;
+        };
+        let at = self
+            .ui
+            .ring
+            .as_ref()
+            .and_then(|act| stops.iter().position(|hit| hit.act == *act));
+        let next = match at {
+            Some(i) => &stops[(i + 1) % stops.len()],
+            None => first,
+        };
+        self.ui.ring = Some(next.act.clone());
+        self.refresh();
+    }
+
+    pub fn ringed(&self) -> bool {
+        self.ui.ring.is_some()
+    }
+
+    pub fn walk(&mut self, dir: &str) -> bool {
+        let stops = self.reachable();
+        let Some(act) = self.ui.ring.clone() else {
+            return false;
+        };
+        let Some(from) = stops.iter().find(|hit| hit.act == act).cloned() else {
+            return false;
+        };
+        let (fx, fy) = (from.x + from.w / 2, from.y + from.h / 2);
+        let best = stops
+            .iter()
+            .filter(|hit| hit.act != act)
+            .filter_map(|hit| {
+                let (cx, cy) = (hit.x + hit.w / 2, hit.y + hit.h / 2);
+                let (dx, dy) = (cx as i64 - fx as i64, cy as i64 - fy as i64);
+                let ahead = match dir {
+                    "left" => -dx,
+                    "right" => dx,
+                    "up" => -dy,
+                    _ => dy,
+                };
+                if ahead <= 0 {
+                    return None;
+                }
+                let drift = match dir {
+                    "left" | "right" => dy.abs(),
+                    _ => dx.abs(),
+                };
+                Some((ahead + 4 * drift, hit.act.clone()))
+            })
+            .min_by_key(|(cost, _)| *cost);
+        match best {
+            Some((_, act)) => {
+                self.ui.ring = Some(act);
+                self.refresh();
+                true
+            }
+            None => true,
+        }
+    }
+
+    pub fn enter(&mut self) -> bool {
+        let Some(act) = self.ui.ring.clone() else {
+            return false;
+        };
+        let Some(hit) = self.scene.hits.iter().find(|hit| hit.act == act).cloned() else {
+            return false;
+        };
+        self.tap_at(hit.x + hit.w / 2, hit.y + hit.h / 2);
+        true
+    }
+
     pub fn escape(&mut self) {
+        if self.ui.ring.is_some() && self.ui.edit.is_none() {
+            self.ui.ring = None;
+            self.refresh();
+            return;
+        }
         if self.ui.edit.is_some() {
             self.key(KeyPress::Escape);
         } else if self.ui.menu.is_some() {

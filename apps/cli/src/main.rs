@@ -61,7 +61,7 @@ fn usage() {
     eprintln!("                        drive an app with random legal calls");
     eprintln!("  mrlycli drive [file]  play a gesture screenplay against the face");
     eprintln!("                        gestures: open call tap tap_at slide cell focus type");
-    eprintln!("                        hover key wheel scroll beat shot hits assert");
+    eprintln!("                        hover tab walk fire key wheel scroll beat shot hits assert");
     eprintln!("  mrlycli monkey <app> [--seed N] [--steps K]");
     eprintln!("                        mash random face hits with the pointer");
     eprintln!("  mrlycli describe      print the kernel surface as JSON");
@@ -798,6 +798,22 @@ fn gesture(driver: &mut mrlyweb::drive::Driver, g: &Json) -> Result<(), String> 
             "escape" => driver.key(KeyPress::Escape),
             "backspace" => driver.key(KeyPress::Backspace),
             other => return Err(format!("unknown key {other}")),
+        }
+        return Ok(());
+    }
+    if g["tab"] == json!(true) {
+        driver.tab();
+        return Ok(());
+    }
+    if let Some(dir) = g["walk"].as_str() {
+        if !driver.walk(dir) {
+            return Err(format!("no ring to walk {dir}"));
+        }
+        return Ok(());
+    }
+    if g["fire"] == json!(true) {
+        if !driver.enter() {
+            return Err("no ring to fire".to_string());
         }
         return Ok(());
     }
