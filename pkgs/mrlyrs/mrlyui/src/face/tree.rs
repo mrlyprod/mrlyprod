@@ -87,13 +87,7 @@ fn outline(out: &mut Out, x: usize, y: usize, w: usize, h: usize, thick: usize, 
 fn line(out: &mut Out, txt: &str, x: usize, y: usize, w: usize, scale: usize, color: [u8; 4]) {
     let cut = text::truncate(txt, w, scale);
     if !cut.is_empty() {
-        out.ops.push(Op::Text {
-            x,
-            y,
-            text: cut,
-            scale,
-            color,
-        });
+        out.ops.push(Op::text(x, y, cut, scale, color));
     }
 }
 

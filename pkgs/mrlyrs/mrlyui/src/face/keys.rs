@@ -244,13 +244,13 @@ pub(crate) fn strip(name: &str, up: bool, page: usize, t: &Theme) -> (Vec<Op>, V
                 };
                 let cut = text::truncate(&key.label, kw.saturating_sub(2 * TIGHT), key.scale);
                 let tw = text::width(&cut, key.scale);
-                ops.push(Op::Text {
-                    x: x + (kw.saturating_sub(tw)) / 2,
-                    y: y + (CONTROL.saturating_sub(LINE * key.scale)) / 2,
-                    text: cut,
-                    scale: key.scale,
-                    color: ink,
-                });
+                ops.push(Op::text(
+                    x + (kw.saturating_sub(tw)) / 2,
+                    y + (CONTROL.saturating_sub(LINE * key.scale)) / 2,
+                    cut,
+                    key.scale,
+                    ink,
+                ));
             }
             hits.push(Hit {
                 x,

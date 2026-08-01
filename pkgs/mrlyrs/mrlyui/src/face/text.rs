@@ -57,6 +57,10 @@ fn advance(c: char) -> usize {
     block(c)[0].len() + 1
 }
 
+pub(crate) fn gap(scale: usize) -> usize {
+    (advance(' ') + 1) * scale
+}
+
 pub(crate) fn width(text: &str, scale: usize) -> usize {
     let total: usize = text.chars().map(advance).sum();
     total.saturating_sub(1) * scale
@@ -127,6 +131,16 @@ mod tests {
         let b = width("b", 1);
         assert_eq!(width("ab", 1), a + b + 1);
         assert_eq!(width("ab", 2), (a + b + 1) * 2);
+    }
+
+    #[test]
+    fn the_word_gap_is_what_a_space_costs() {
+        for scale in [1, 2] {
+            assert_eq!(
+                width("a b", scale),
+                width("a", scale) + gap(scale) + width("b", scale)
+            );
+        }
     }
 
     #[test]

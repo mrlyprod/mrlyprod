@@ -1,5 +1,6 @@
 use super::layout::Op;
 use super::text;
+use crate::tokens::LINE;
 
 pub(crate) fn paint_into(buf: &mut [[u8; 4]], w: usize, h: usize, ops: &[Op]) {
     for op in ops {
@@ -23,7 +24,15 @@ pub(crate) fn paint_into(buf: &mut [[u8; 4]], w: usize, h: usize, ops: &[Op]) {
                 text,
                 scale,
                 color,
-            } => text::draw(buf, w, h, text, *x, *y, *scale, *color),
+                under,
+            } => {
+                text::draw(buf, w, h, text, *x, *y, *scale, *color);
+                if *under {
+                    let rule = text::width(text, *scale);
+                    let base = y + LINE * scale + scale;
+                    crate::draw::fill_rect(buf, w, h, *x, base, rule, *scale, *color);
+                }
+            }
             Op::Image {
                 x,
                 y,

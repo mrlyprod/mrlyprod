@@ -10,23 +10,18 @@ pub(crate) fn items(md: &str, theme: &Theme, width: usize) -> Vec<Item> {
             Block::H1(t) => out.push(row(strip(&t), 0, 2, theme.ink)),
             Block::H2(t) => out.push(row(strip(&t), 0, 1, theme.accent)),
             Block::Para(t) => {
-                for line in wrap(&strip(&t), width) {
-                    out.push(row(line, 0, 1, theme.ink));
+                for line in fold(words(&t), width) {
+                    out.push(runs(&line, PAD, theme.ink));
                 }
             }
             Block::Bullets(list) => {
                 for entry in &list {
-                    out.extend(list_item("-", &strip(entry), theme, width));
+                    out.extend(list_item("-", entry, theme, width));
                 }
             }
             Block::Numbers(list) => {
                 for (i, entry) in list.iter().enumerate() {
-                    out.extend(list_item(
-                        &format!("{}.", i + 1),
-                        &strip(entry),
-                        theme,
-                        width,
-                    ));
+                    out.extend(list_item(&format!("{}.", i + 1), entry, theme, width));
                 }
             }
             Block::Code(lines) => out.push(code_item(&lines, theme, width)),
@@ -36,8 +31,8 @@ pub(crate) fn items(md: &str, theme: &Theme, width: usize) -> Vec<Item> {
                 }
             }
             Block::Quote(t) => {
-                for line in wrap(&strip(&t), width) {
-                    out.push(row(line, 0, 1, theme.muted));
+                for line in fold(words(&t), width) {
+                    out.push(runs(&line, PAD, theme.muted));
                 }
             }
             Block::Table { head, rows } => {
@@ -64,26 +59,41 @@ fn list_item(marker: &str, entry: &str, theme: &Theme, width: usize) -> Vec<Item
     let hang = PAD + INDENT;
     let field = width.saturating_sub(INDENT);
     let mut out = Vec::new();
-    for (i, line) in wrap(entry, field).into_iter().enumerate() {
-        let mut ops = vec![Op::Text {
-            x: hang,
-            y: 0,
-            text: line,
-            scale: 1,
-            color: theme.ink,
-        }];
+    for (i, line) in fold(words(entry), field).into_iter().enumerate() {
+        let mut item = runs(&line, hang, theme.ink);
         if i == 0 {
-            ops.push(Op::Text {
-                x: PAD,
-                y: 0,
-                text: marker.to_string(),
-                scale: 1,
-                color: theme.muted,
-            });
+            item.ops
+                .push(Op::text(PAD, 0, marker.to_string(), 1, theme.muted));
         }
-        out.push(Item { height: ROW, ops });
+        out.push(item);
     }
     out
+}
+
+fn runs(line: &[Word], x: usize, color: [u8; 4]) -> Item {
+    let mut ops = Vec::new();
+    let mut at = x;
+    let mut i = 0;
+    while i < line.len() {
+        let link = line[i].1;
+        let mut j = i;
+        let mut run = String::new();
+        while j < line.len() && line[j].1 == link {
+            if j > i {
+                run.push(' ');
+            }
+            run.push_str(&line[j].0);
+            j += 1;
+        }
+        let w = text::width(&run, 1);
+        ops.push(match link {
+            true => Op::link(at, 0, run, 1, color),
+            false => Op::text(at, 0, run, 1, color),
+        });
+        at += w + text::gap(1);
+        i = j;
+    }
+    Item { height: ROW, ops }
 }
 
 fn code_item(lines: &[String], theme: &Theme, width: usize) -> Item {
@@ -97,13 +107,13 @@ fn code_item(lines: &[String], theme: &Theme, width: usize) -> Item {
         color: theme.faint,
     }];
     for (i, line) in lines.iter().enumerate() {
-        ops.push(Op::Text {
-            x: PAD + 4,
-            y: 3 + i * ROW,
-            text: text::truncate(line, width.saturating_sub(8), 1),
-            scale: 1,
-            color: theme.ink,
-        });
+        ops.push(Op::text(
+            PAD + 4,
+            3 + i * ROW,
+            text::truncate(line, width.saturating_sub(8), 1),
+            1,
+            theme.ink,
+        ));
     }
     Item {
         height: height + 4,
@@ -111,34 +121,37 @@ fn code_item(lines: &[String], theme: &Theme, width: usize) -> Item {
     }
 }
 
-pub(crate) fn wrap(paragraph: &str, field: usize) -> Vec<String> {
-    let mut lines = Vec::new();
-    let mut line = String::new();
+pub(crate) type Word = (String, bool);
+
+pub(crate) fn fold(words: Vec<Word>, field: usize) -> Vec<Vec<Word>> {
+    let mut lines: Vec<Vec<Word>> = Vec::new();
+    let mut line: Vec<Word> = Vec::new();
     let mut line_w = 0;
-    for word in paragraph.split_whitespace() {
-        let word_w = text::width(word, 1);
+    for (word, link) in words {
+        let word_w = text::width(&word, 1);
+        let long = word_w > field;
+        let cut = || (text::truncate(&word, field, 1), link);
         if line.is_empty() {
-            if word_w > field {
-                lines.push(text::truncate(word, field, 1));
+            if long {
+                lines.push(vec![cut()]);
             } else {
-                line = word.to_string();
                 line_w = word_w;
+                line.push((word, link));
             }
             continue;
         }
-        if line_w + 5 + word_w <= field {
-            line.push(' ');
-            line.push_str(word);
-            line_w += 5 + word_w;
+        if line_w + text::gap(1) + word_w <= field {
+            line_w += text::gap(1) + word_w;
+            line.push((word, link));
+            continue;
+        }
+        lines.push(std::mem::take(&mut line));
+        if long {
+            lines.push(vec![cut()]);
+            line_w = 0;
         } else {
-            lines.push(std::mem::take(&mut line));
-            if word_w > field {
-                lines.push(text::truncate(word, field, 1));
-                line_w = 0;
-            } else {
-                line = word.to_string();
-                line_w = word_w;
-            }
+            line_w = word_w;
+            line.push((word, link));
         }
     }
     if !line.is_empty() {
@@ -147,8 +160,29 @@ pub(crate) fn wrap(paragraph: &str, field: usize) -> Vec<String> {
     lines
 }
 
+pub(crate) fn wrap(paragraph: &str, field: usize) -> Vec<String> {
+    let plain = paragraph
+        .split_whitespace()
+        .map(|w| (w.to_string(), false))
+        .collect();
+    fold(plain, field)
+        .into_iter()
+        .map(|line| {
+            line.into_iter()
+                .map(|(w, _)| w)
+                .collect::<Vec<_>>()
+                .join(" ")
+        })
+        .collect()
+}
+
 fn strip(text: &str) -> String {
+    marked(text).0
+}
+
+fn marked(text: &str) -> (String, Vec<(usize, usize)>) {
     let mut out = String::new();
+    let mut links = Vec::new();
     let mut i = 0;
     while i < text.len() {
         let rest = &text[i..];
@@ -167,7 +201,9 @@ fn strip(text: &str) -> String {
         }
         if rest.starts_with('[') {
             if let Some((len, inner)) = link_text(rest) {
+                let at = out.len();
                 out.push_str(&strip(&inner));
+                links.push((at, out.len()));
                 i += len;
                 continue;
             }
@@ -175,6 +211,20 @@ fn strip(text: &str) -> String {
         let ch = rest.chars().next().unwrap();
         out.push(ch);
         i += ch.len_utf8();
+    }
+    (out, links)
+}
+
+pub(crate) fn words(text: &str) -> Vec<Word> {
+    let (flat, links) = marked(text);
+    let mut out = Vec::new();
+    let mut at = 0;
+    for word in flat.split_whitespace() {
+        let start = flat[at..].find(word).map_or(at, |i| at + i);
+        let end = start + word.len();
+        let link = links.iter().any(|(a, b)| start < *b && end > *a);
+        out.push((word.to_string(), link));
+        at = end;
     }
     out
 }
@@ -205,6 +255,33 @@ mod tests {
             })
             .collect();
         assert_eq!(texts, vec!["the goose", "h1  h2", "a  b", "so it goes"]);
+    }
+
+    #[test]
+    fn a_link_run_carries_the_flag() {
+        let theme = Theme::new("pages", false);
+        let out = items("Prose with a [link](https://mrly.net) inside.", &theme, 300);
+        let unders: Vec<String> = out
+            .iter()
+            .flat_map(|i| i.ops.iter())
+            .filter_map(|op| match op {
+                Op::Text {
+                    text, under: true, ..
+                } => Some(text.clone()),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(unders, vec!["link".to_string()]);
+        let plain: String = out
+            .iter()
+            .flat_map(|i| i.ops.iter())
+            .filter_map(|op| match op {
+                Op::Text { text, .. } => Some(text.clone()),
+                _ => None,
+            })
+            .collect::<Vec<_>>()
+            .join(" ");
+        assert_eq!(plain, "Prose with a link inside.");
     }
 
     #[test]
