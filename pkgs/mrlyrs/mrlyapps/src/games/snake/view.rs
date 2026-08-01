@@ -1,73 +1,44 @@
 use super::Snake;
-use mrlycore::json;
-use mrlycore::ui;
 use mrlyos::kernel::Iden;
+use mrlyui::kit;
 
-pub(super) fn tree(snake: &Snake, _iden: &Iden) -> Option<ui::Node> {
-    let set = |key: &str| ui::Call::new("snake.set", json!({ "key": key }));
-    let turn = |dir: &str| ui::Call::new("snake.turn", json!({ "dir": dir }));
-    let mut nodes = vec![ui::Node::image(snake.render().fact())];
+pub(super) fn tree(snake: &Snake, _iden: &Iden) -> Option<kit::Node> {
+    let set = |key: &str| kit::set("snake", key);
+    let mut nodes = vec![kit::board(snake.render().fact())];
     if snake.over {
-        nodes.push(ui::Node::group(vec![
-            ui::Node::text("game over", ui::Role::Title),
-            ui::Node::text(&format!("score {}", snake.score), ui::Role::Note),
-            ui::Node::button("play again", ui::Call::new("snake.reset", json!({}))),
-        ]));
+        nodes.push(kit::over(
+            "game over",
+            &format!("score {}", snake.score),
+            "play again",
+            kit::call("snake.reset"),
+        ));
     } else {
-        nodes.push(ui::Node::grid(
-            4,
-            vec![
-                ui::Node::button("\u{2190}", turn("left")),
-                ui::Node::button("\u{2191}", turn("up")),
-                ui::Node::button("\u{2193}", turn("down")),
-                ui::Node::button("\u{2192}", turn("right")),
-            ],
+        nodes.push(kit::dpad(
+            ["\u{2190}", "\u{2191}", "\u{2193}", "\u{2192}"],
+            "snake.turn",
         ));
-        nodes.push(ui::Node::text(
-            &format!("score {} - steps {}", snake.score, snake.steps),
-            ui::Role::Note,
-        ));
+        nodes.push(kit::meter(&format!(
+            "score {} - steps {}",
+            snake.score, snake.steps
+        )));
     }
-    nodes.push(ui::Node::text("rules", ui::Role::Label));
-    nodes.push(ui::Node::range(
-        "grid",
-        snake.set.grid,
-        5,
-        64,
-        1,
-        set("grid"),
-        "value",
-    ));
-    nodes.push(ui::Node::range(
+    nodes.push(kit::heading("rules"));
+    nodes.push(kit::range("grid", snake.set.grid, 5, 64, 1, set("grid")));
+    nodes.push(kit::range(
         "apples",
         snake.set.apples,
         1,
         16,
         1,
         set("apples"),
-        "value",
     ));
-    nodes.push(ui::Node::toggle(
-        "wrap",
-        snake.set.wrap,
-        set("wrap"),
-        "value",
-    ));
-    nodes.push(ui::Node::toggle(
+    nodes.push(kit::toggle("wrap", snake.set.wrap, set("wrap")));
+    nodes.push(kit::toggle(
         "self collision",
         snake.set.self_collision,
         set("self_collision"),
-        "value",
     ));
-    nodes.push(ui::Node::text("speed", ui::Role::Label));
-    nodes.push(ui::Node::range(
-        "speed",
-        snake.set.speed,
-        1,
-        8,
-        1,
-        set("speed"),
-        "value",
-    ));
-    Some(ui::Node::column(nodes))
+    nodes.push(kit::heading("speed"));
+    nodes.push(kit::range("speed", snake.set.speed, 1, 8, 1, set("speed")));
+    Some(kit::page(nodes))
 }

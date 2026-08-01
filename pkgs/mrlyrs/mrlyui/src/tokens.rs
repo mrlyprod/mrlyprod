@@ -50,6 +50,10 @@ pub const SLACK: usize = 12;
 pub const STUB: usize = 16;
 pub const TILE: usize = 20;
 
+// GRID
+pub const LAUNCH: usize = 3;
+pub const DPAD: usize = 4;
+
 // MOTION
 pub const PACE: u64 = 0;
 

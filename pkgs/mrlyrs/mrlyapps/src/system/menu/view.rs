@@ -1,22 +1,21 @@
 use super::Menu;
-use mrlycore::json;
-use mrlycore::ui;
 use mrlyos::kernel::Iden;
+use mrlyui::kit;
 
-pub(super) fn tree(menu: &Menu, _iden: &Iden) -> Option<ui::Node> {
+pub(super) fn tree(menu: &Menu, _iden: &Iden) -> Option<kit::Node> {
     let found = menu.found();
     let mut nodes = Vec::new();
-    let mut field = ui::Node::field(
+    let enter = found
+        .first()
+        .and_then(|m| m["route"].as_str())
+        .map(kit::open);
+    nodes.push(kit::search(
         &menu.query,
         "search",
-        ui::Call::new("menu.search", json!({})),
+        kit::call("menu.search"),
         "q",
-    )
-    .live();
-    if let Some(first) = found.first().and_then(|m| m["route"].as_str()) {
-        field = field.enter(ui::Call::new("nav.open", json!({ "app": first })));
-    }
-    nodes.push(field);
+        enter,
+    ));
     if menu.query.trim().is_empty() {
         let mut seen: Vec<&str> = Vec::new();
         for m in &menu.apps {
@@ -27,30 +26,33 @@ pub(super) fn tree(menu: &Menu, _iden: &Iden) -> Option<ui::Node> {
             }
         }
         if !seen.is_empty() {
-            nodes.push(ui::Node::wrap(
+            nodes.push(kit::pills(
                 seen.iter()
-                    .map(|c| ui::Node::button(c, ui::Call::new("menu.search", json!({ "q": c }))))
+                    .map(|c| kit::button(c, kit::arg("menu.search", "q", c)))
                     .collect(),
             ));
         }
     }
-    let rows: Vec<ui::Node> = found
+    let rows: Vec<kit::Node> = found
         .iter()
         .map(|m| {
             let route = m["route"].as_str().unwrap_or("");
             let title = m["title"].as_str().unwrap_or(route);
-            let open = ui::Call::new("nav.open", json!({ "app": route }));
             if menu.mode == "list" {
-                ui::Node::label(title, m["category"].as_str().unwrap_or(""), Some(open))
+                kit::item(
+                    title,
+                    m["category"].as_str().unwrap_or(""),
+                    Some(kit::open(route)),
+                )
             } else {
-                ui::Node::button(title, open)
+                kit::button(title, kit::open(route))
             }
         })
         .collect();
     nodes.push(if menu.mode == "list" {
-        ui::Node::column(rows)
+        kit::list(rows)
     } else {
-        ui::Node::grid(3, rows)
+        kit::launch(rows)
     });
-    Some(ui::Node::column(nodes))
+    Some(kit::page(nodes))
 }

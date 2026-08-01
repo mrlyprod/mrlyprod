@@ -58,6 +58,7 @@ def test(loud=False):
             ("fixtures", ["cargo", "run", "-p", "mrlyweb", "--example", "fixtures"]),
             ("test", ["cargo", "test", "--workspace"]),
             ("layers", ["uv", "run", "python", "utils/layers.py"]),
+            ("views", ["uv", "run", "python", "utils/views.py"]),
             ("wasm", ["wasm-pack", "build", "pkgs/mrlyjs/web", "--target", "web"]),
             ("wasm math", ["wasm-pack", "build", "pkgs/mrlyjs/math", "--target", "web"]),
         ]

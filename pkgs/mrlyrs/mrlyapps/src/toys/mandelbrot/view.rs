@@ -1,33 +1,24 @@
 use super::Mandelbrot;
-use mrlycore::json;
-use mrlycore::ui;
 use mrlyos::kernel::Iden;
-use mrlyui::frame;
+use mrlyui::kit;
 
-pub(super) fn tree(m: &Mandelbrot, _iden: &Iden) -> Option<ui::Node> {
-    let set = |key: &str| ui::Call::new("mandelbrot.set", json!({ "key": key }));
-    Some(ui::Node::column(vec![
-        ui::Node::image(m.render().fact()),
-        ui::Node::text(&format!("steps {}", m.steps), ui::Role::Note),
-        ui::Node::text("motion", ui::Role::Label),
-        ui::Node::range("zoom", m.set.zoom, 1000, 1050, 1, set("zoom"), "value").scaled(1000),
-        ui::Node::range("cycle", m.set.cycle, 30, 3000, 30, set("cycle"), "value"),
-        ui::Node::range("drift", m.set.drift, 0, 4000, 100, set("drift"), "value").scaled(1000),
-        ui::Node::range("spin", m.set.spin, 0, 50, 1, set("spin"), "value").scaled(1000),
-        ui::Node::text("paint", ui::Role::Label),
-        ui::Node::range("band", m.set.band, 2000, 64000, 1000, set("band"), "value").scaled(1000),
-        ui::Node::range("fade", m.set.fade, 0, 240, 8, set("fade"), "value"),
-        ui::Node::range("depth", m.set.depth, 16, 600, 8, set("depth"), "value"),
-        ui::Node::text("primary", ui::Role::Label),
-        ui::Node::field(
-            &frame::hex(m.set.primary),
-            "#rrggbb",
-            set("primary"),
-            "value",
-        )
-        .keys("colors"),
-        ui::Node::text("accent", ui::Role::Label),
-        ui::Node::field(&frame::hex(m.set.accent), "#rrggbb", set("accent"), "value")
-            .keys("colors"),
+pub(super) fn tree(m: &Mandelbrot, _iden: &Iden) -> Option<kit::Node> {
+    let set = |key: &str| kit::set("mandelbrot", key);
+    Some(kit::page(vec![
+        kit::board(m.render().fact()),
+        kit::meter(&format!("steps {}", m.steps)),
+        kit::heading("motion"),
+        kit::scaled("zoom", m.set.zoom, 1000, 1050, 1, 1000, set("zoom")),
+        kit::range("cycle", m.set.cycle, 30, 3000, 30, set("cycle")),
+        kit::scaled("drift", m.set.drift, 0, 4000, 100, 1000, set("drift")),
+        kit::scaled("spin", m.set.spin, 0, 50, 1, 1000, set("spin")),
+        kit::heading("paint"),
+        kit::scaled("band", m.set.band, 2000, 64000, 1000, 1000, set("band")),
+        kit::range("fade", m.set.fade, 0, 240, 8, set("fade")),
+        kit::range("depth", m.set.depth, 16, 600, 8, set("depth")),
+        kit::heading("primary"),
+        kit::color(m.set.primary, set("primary")),
+        kit::heading("accent"),
+        kit::color(m.set.accent, set("accent")),
     ]))
 }
