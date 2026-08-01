@@ -58,9 +58,11 @@ impl ApplicationHandler for Face {
             return;
         }
         let size = LogicalSize::new((WIDTH * 2) as f64, (HEIGHT * 2) as f64);
+        let least = LogicalSize::new(WIDTH as f64, HEIGHT as f64);
         let attrs = Window::default_attributes()
             .with_title("mrly")
-            .with_inner_size(size);
+            .with_inner_size(size)
+            .with_min_inner_size(least);
         let window = Arc::new(el.create_window(attrs).unwrap());
         self.glass = glass::Glass::new(window.clone());
         if self.glass.is_none() {
