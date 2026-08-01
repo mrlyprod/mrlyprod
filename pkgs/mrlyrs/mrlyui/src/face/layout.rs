@@ -1,12 +1,6 @@
 use super::text;
-use super::{FaceInput, Theme, WIDTH};
-
-pub(crate) const PAD: usize = 6;
-pub(crate) const FIELD: usize = WIDTH - 2 * PAD;
-pub(crate) const ROW: usize = 11;
-pub(crate) const INDENT: usize = 10;
-pub(crate) const TITLE_H: usize = 20;
-pub(crate) const ACTION_CAP: usize = 8;
+use super::FaceInput;
+use crate::tokens::{Theme, ACTIONS, HEADER, INDENT, LEAD, LINE, PAD, ROW, WIDTH};
 
 pub(crate) enum Op {
     Rect {
@@ -43,7 +37,7 @@ pub(crate) fn row(line: String, indent: usize, scale: usize, color: [u8; 4]) -> 
     let field = (WIDTH - PAD).saturating_sub(x);
     let cut = text::truncate(&line, field, scale);
     Item {
-        height: text::LINE * scale + 4,
+        height: LINE * scale + LEAD,
         ops: vec![Op::Text {
             x,
             y: 0,
@@ -87,7 +81,7 @@ pub(crate) fn title_ops(input: &FaceInput, theme: &Theme) -> Vec<Op> {
     });
     ops.push(Op::Rect {
         x: 0,
-        y: TITLE_H - 1,
+        y: HEADER - 1,
         w: WIDTH,
         h: 1,
         color: theme.faint,
@@ -100,7 +94,7 @@ pub(crate) fn action_bar(input: &FaceInput, theme: &Theme) -> Vec<Item> {
         return vec![row("no actions".to_string(), 0, 1, theme.muted)];
     }
     let mut items = Vec::new();
-    for verb in input.actions.iter().take(ACTION_CAP) {
+    for verb in input.actions.iter().take(ACTIONS) {
         let name_cut = text::truncate(&verb.name, 160, 1);
         let name_w = text::width(&name_cut, 1);
         let mut ops = vec![Op::Text {
@@ -138,9 +132,9 @@ pub(crate) fn action_bar(input: &FaceInput, theme: &Theme) -> Vec<Item> {
         }
         items.push(Item { height: ROW, ops });
     }
-    if input.actions.len() > ACTION_CAP {
+    if input.actions.len() > ACTIONS {
         items.push(row(
-            format!("+ {} more", input.actions.len() - ACTION_CAP),
+            format!("+ {} more", input.actions.len() - ACTIONS),
             0,
             1,
             theme.muted,

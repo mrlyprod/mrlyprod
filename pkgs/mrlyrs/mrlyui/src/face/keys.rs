@@ -1,11 +1,8 @@
-use super::layout::{Op, FIELD, PAD};
+use super::layout::Op;
 use super::text;
-use super::tree::contrast;
-use super::{Act, Hit, Theme, WIDTH};
+use super::{Act, Hit};
+use crate::tokens::{contrast, Theme, CONTENT, CONTROL, LINE, PAD, TIGHT, WIDTH};
 use mrlycore::colors;
-
-pub(crate) const KEY_H: usize = 18;
-const GAP: usize = 2;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Tap {
@@ -122,7 +119,7 @@ pub fn board(name: &str) -> Vec<Vec<Cap>> {
 
 pub(crate) fn strip(name: &str, t: &Theme) -> (Vec<Op>, Vec<Hit>, usize) {
     let rows = board(name);
-    let h = 9 + rows.len() * KEY_H + rows.len().saturating_sub(1) * GAP;
+    let h = 9 + rows.len() * CONTROL + rows.len().saturating_sub(1) * TIGHT;
     let mut ops = vec![Op::Rect {
         x: 0,
         y: 0,
@@ -134,25 +131,25 @@ pub(crate) fn strip(name: &str, t: &Theme) -> (Vec<Op>, Vec<Hit>, usize) {
     let mut y = 5;
     for band in rows {
         let spans: usize = band.iter().map(|c| c.span).sum::<usize>().max(1);
-        let unit = FIELD.saturating_sub((spans - 1) * GAP) / spans;
-        let wide = unit * spans + (spans - 1) * GAP;
-        let mut x = PAD + (FIELD - wide) / 2;
+        let unit = CONTENT.saturating_sub((spans - 1) * TIGHT) / spans;
+        let wide = unit * spans + (spans - 1) * TIGHT;
+        let mut x = PAD + (CONTENT - wide) / 2;
         for key in band {
-            let kw = unit * key.span + (key.span - 1) * GAP;
+            let kw = unit * key.span + (key.span - 1) * TIGHT;
             let fill = key.fill.unwrap_or(t.faint);
             ops.push(Op::Rect {
                 x,
                 y,
                 w: kw,
-                h: KEY_H,
+                h: CONTROL,
                 color: fill,
             });
             if key.fill.is_some() {
                 for (rx, ry, rw, rh) in [
                     (x, y, kw, 1),
-                    (x, y + KEY_H - 1, kw, 1),
-                    (x, y, 1, KEY_H),
-                    (x + kw - 1, y, 1, KEY_H),
+                    (x, y + CONTROL - 1, kw, 1),
+                    (x, y, 1, CONTROL),
+                    (x + kw - 1, y, 1, CONTROL),
                 ] {
                     ops.push(Op::Rect {
                         x: rx,
@@ -173,7 +170,7 @@ pub(crate) fn strip(name: &str, t: &Theme) -> (Vec<Op>, Vec<Hit>, usize) {
                 let tw = text::width(&cut, 1);
                 ops.push(Op::Text {
                     x: x + (kw.saturating_sub(tw)) / 2,
-                    y: y + (KEY_H - text::LINE) / 2,
+                    y: y + (CONTROL - LINE) / 2,
                     text: cut,
                     scale: 1,
                     color: ink,
@@ -183,12 +180,12 @@ pub(crate) fn strip(name: &str, t: &Theme) -> (Vec<Op>, Vec<Hit>, usize) {
                 x,
                 y,
                 w: kw,
-                h: KEY_H,
+                h: CONTROL,
                 act: Act::Cap(key.tap),
             });
-            x += kw + GAP;
+            x += kw + TIGHT;
         }
-        y += KEY_H + GAP;
+        y += CONTROL + TIGHT;
     }
     (ops, hits, h)
 }

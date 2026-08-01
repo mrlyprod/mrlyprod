@@ -1,4 +1,4 @@
-use mrlycore::colors::ROLLABLE;
+use crate::tokens::{Theme, ACTIONS, BODY, CONTENT, HEADER, PAD, PANEL};
 use mrlycore::errors::Result;
 use mrlycore::ui::{Call, Node};
 use mrlycore::Json;
@@ -11,11 +11,7 @@ mod paint;
 mod text;
 mod tree;
 
-pub const WIDTH: usize = 320;
-pub const HEIGHT: usize = 452;
-pub const SCALE: usize = 3;
-const BODY_CAP: usize = HEIGHT * 16;
-const PANEL_W: usize = 240;
+pub use crate::tokens::{HEIGHT, SCALE, WIDTH};
 
 pub struct FaceVerb {
     pub name: String,
@@ -111,38 +107,6 @@ pub struct Scene {
     pub window: usize,
 }
 
-pub(crate) struct Theme {
-    pub board: [u8; 4],
-    pub ink: [u8; 4],
-    pub muted: [u8; 4],
-    pub faint: [u8; 4],
-    pub accent: [u8; 4],
-}
-
-impl Theme {
-    pub(crate) fn new(app: &str, dark: bool) -> Theme {
-        let board = crate::frame::board(dark);
-        let ink = crate::frame::ink(dark);
-        let c = ROLLABLE[(hash(app) % ROLLABLE.len() as u64) as usize];
-        Theme {
-            board,
-            ink,
-            muted: crate::frame::mix(board, ink, 0.55),
-            faint: crate::frame::mix(board, ink, 0.12),
-            accent: [c.r, c.g, c.b, c.a],
-        }
-    }
-}
-
-fn hash(text: &str) -> u64 {
-    let mut h: u64 = 0xcbf29ce484222325;
-    for byte in text.as_bytes() {
-        h ^= *byte as u64;
-        h = h.wrapping_mul(0x100000001b3);
-    }
-    h
-}
-
 fn clip(hit: Hit, scroll: usize, y0: usize, y1: usize) -> Option<Hit> {
     let top = hit.y as i64 - scroll as i64 + y0 as i64;
     let bottom = top + hit.h as i64;
@@ -194,28 +158,28 @@ fn overlays(
                 act: scrim,
             });
             let mut out = tree::Out::new();
-            let ph = tree::lay(&node, 0, 0, PANEL_W, theme, ui, &mut out);
-            let px = (WIDTH - PANEL_W) / 2;
-            let py = (HEIGHT.saturating_sub(ph) / 2).max(layout::TITLE_H + 4);
+            let ph = tree::lay(&node, 0, 0, PANEL, theme, ui, &mut out);
+            let px = (WIDTH - PANEL) / 2;
+            let py = (HEIGHT.saturating_sub(ph) / 2).max(HEADER + 4);
             let panel = vec![
                 layout::Op::Rect {
                     x: px - 8,
                     y: py.saturating_sub(8),
-                    w: PANEL_W + 16,
+                    w: PANEL + 16,
                     h: ph + 16,
                     color: theme.board,
                 },
                 layout::Op::Rect {
                     x: px - 8,
                     y: py.saturating_sub(8),
-                    w: PANEL_W + 16,
+                    w: PANEL + 16,
                     h: 1,
                     color: theme.faint,
                 },
                 layout::Op::Rect {
                     x: px - 8,
                     y: py + ph + 7,
-                    w: PANEL_W + 16,
+                    w: PANEL + 16,
                     h: 1,
                     color: theme.faint,
                 },
@@ -227,7 +191,7 @@ fn overlays(
                     color: theme.faint,
                 },
                 layout::Op::Rect {
-                    x: px + PANEL_W + 7,
+                    x: px + PANEL + 7,
                     y: py.saturating_sub(8),
                     w: 1,
                     h: ph + 16,
@@ -250,8 +214,8 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
     let theme = Theme::new(&input.app, input.dark);
     let root = input.ui.clone().unwrap_or_else(|| dump::tree(input));
     let mut out = tree::Out::new();
-    let body = tree::lay(&root, layout::PAD, 0, layout::FIELD, &theme, ui, &mut out);
-    let body = body.clamp(1, BODY_CAP);
+    let body = tree::lay(&root, PAD, 0, CONTENT, &theme, ui, &mut out);
+    let body = body.clamp(1, BODY);
 
     let mut sheet = vec![theme.board; WIDTH * HEIGHT];
     paint::paint_into(&mut sheet, WIDTH, HEIGHT, &layout::title_ops(input, &theme));
@@ -269,7 +233,7 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
         || 6 + bar.iter().map(|i| i.height).sum::<usize>(),
         |(_, _, h)| *h,
     );
-    let y0 = layout::TITLE_H + layout::PAD;
+    let y0 = HEADER + PAD;
     let y1 = HEIGHT.saturating_sub(bar_h + 2);
     let window = y1.saturating_sub(y0);
 
@@ -337,8 +301,7 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
                 let h = item.height;
                 bar_ops.extend(layout::shift(item.ops, 0, by));
                 if let Some(verb) = input.actions.get(i) {
-                    if i < layout::ACTION_CAP && verb.args.as_object().is_none_or(|m| m.is_empty())
-                    {
+                    if i < ACTIONS && verb.args.as_object().is_none_or(|m| m.is_empty()) {
                         hits.push(Hit {
                             x: 0,
                             y: by,
@@ -388,6 +351,7 @@ pub fn decode(fact: &Json) -> Option<(usize, usize, Vec<[u8; 4]>)> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use mrlycore::colors::ROLLABLE;
     use mrlycore::json;
     use mrlycore::ui::Pick;
 

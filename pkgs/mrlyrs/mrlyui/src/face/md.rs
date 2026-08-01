@@ -1,6 +1,6 @@
-use super::layout::{row, Item, Op, INDENT, PAD, ROW};
+use super::layout::{row, Item, Op};
 use super::text;
-use super::Theme;
+use crate::tokens::{Theme, INDENT, PAD, ROW};
 use mrlycore::md::{blocks, Block};
 
 pub(crate) fn items(md: &str, theme: &Theme, width: usize) -> Vec<Item> {
@@ -194,7 +194,7 @@ mod tests {
         let theme = Theme::new("pages", false);
         let md =
             "![the goose](a/goose.png)\n\n| h1 | h2 |\n|---|---|\n| **a** | b |\n\n> so it *goes*";
-        let out = items(md, &theme, crate::face::layout::FIELD);
+        let out = items(md, &theme, crate::tokens::CONTENT);
         assert_eq!(out.len(), 4);
         let texts: Vec<String> = out
             .iter()

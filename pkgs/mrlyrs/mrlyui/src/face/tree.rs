@@ -1,16 +1,11 @@
-use super::layout::{shift, Op, PAD, ROW};
+use super::layout::{shift, Op};
 use super::text;
-use super::{Act, Hit, Theme, UiState};
+use super::{Act, Hit, UiState};
+use crate::tokens::{
+    contrast, Theme, CANVAS, CONTROL, GAP, LABEL, PAD, ROW, SYMBOL, TIGHT, TOGGLE,
+};
 use mrlycore::ui::{Call, Node, Pick, Role};
 use mrlycore::{json, Color};
-
-pub(crate) const GAP: usize = 4;
-const BTN_H: usize = 18;
-const LABEL_H: usize = 12;
-const TOGGLE_H: usize = 14;
-const FIELD_H: usize = 18;
-const CANVAS_MAX_H: usize = 192;
-const SEG_GAP: usize = 2;
 
 pub(crate) struct Out {
     pub ops: Vec<Op>,
@@ -43,15 +38,6 @@ fn id(call: &Call, arg: &str) -> String {
 
 fn tint(hex: &str, fallback: [u8; 4]) -> [u8; 4] {
     Color::from_hex(hex).map_or(fallback, |c| [c.r, c.g, c.b, c.a])
-}
-
-pub(crate) fn contrast(fill: [u8; 4]) -> [u8; 4] {
-    let luma = 0.299 * fill[0] as f64 + 0.587 * fill[1] as f64 + 0.114 * fill[2] as f64;
-    if luma > 140.0 {
-        [0, 0, 0, 255]
-    } else {
-        [255, 255, 255, 255]
-    }
 }
 
 fn outline(out: &mut Out, x: usize, y: usize, w: usize, h: usize, thick: usize, color: [u8; 4]) {
@@ -181,7 +167,7 @@ fn picture(
     out: &mut Out,
 ) -> (usize, Option<(usize, usize, usize, usize, usize)>) {
     if let Some((iw, ih, pixels)) = super::decode(fact) {
-        let scale = (w / iw.max(1)).min(CANVAS_MAX_H / ih.max(1));
+        let scale = (w / iw.max(1)).min(CANVAS / ih.max(1));
         if scale >= 1 {
             let px = x + (w - iw * scale) / 2;
             out.ops.push(Op::Image {
@@ -212,7 +198,7 @@ fn button(node: &Node, x: usize, y: usize, w: usize, t: &Theme, out: &mut Out) -
     else {
         return 0;
     };
-    let h = if *big { w } else { BTN_H };
+    let h = if *big { w } else { CONTROL };
     let fill = match (active, color) {
         (true, _) => t.accent,
         (false, Some(hex)) => tint(hex, t.faint),
@@ -286,12 +272,12 @@ fn toggle(
         x,
         y,
         w,
-        h: TOGGLE_H,
+        h: TOGGLE,
         act: Act::Tap {
             call: call.fill(arg, json!(!on)),
         },
     });
-    TOGGLE_H
+    TOGGLE
 }
 
 fn segments(
@@ -306,16 +292,16 @@ fn segments(
     out: &mut Out,
 ) {
     let n = options.len().max(1);
-    let cw = (w.saturating_sub((n - 1) * SEG_GAP)) / n;
+    let cw = (w.saturating_sub((n - 1) * TIGHT)) / n;
     for (i, option) in options.iter().enumerate() {
-        let ox = x + i * (cw + SEG_GAP);
+        let ox = x + i * (cw + TIGHT);
         let on = option == value;
         let fill = if on { t.accent } else { t.faint };
         out.ops.push(Op::Rect {
             x: ox,
             y,
             w: cw,
-            h: BTN_H,
+            h: CONTROL,
             color: fill,
         });
         let ink = if on { contrast(fill) } else { t.ink };
@@ -334,7 +320,7 @@ fn segments(
             x: ox,
             y,
             w: cw,
-            h: BTN_H,
+            h: CONTROL,
             act: Act::Tap {
                 call: call.fill(arg, json!(option)),
             },
@@ -365,7 +351,7 @@ fn choice(
     let mut dy = 0;
     if !label.is_empty() {
         line(out, label, x, y, w, 1, t.muted);
-        dy += LABEL_H;
+        dy += LABEL;
     }
     match pick {
         Pick::Segments => segments(value, options, call, arg, x, y + dy, w, t, out),
@@ -374,7 +360,7 @@ fn choice(
                 x,
                 y: y + dy,
                 w,
-                h: BTN_H,
+                h: CONTROL,
                 color: t.faint,
             });
             let cut = text::truncate(value, w.saturating_sub(24), 1);
@@ -395,7 +381,7 @@ fn choice(
                     x,
                     y: y + dy,
                     w,
-                    h: BTN_H,
+                    h: CONTROL,
                     act: Act::Tap {
                         call: call.fill(arg, json!(next)),
                     },
@@ -407,7 +393,7 @@ fn choice(
                 x,
                 y: y + dy,
                 w,
-                h: BTN_H,
+                h: CONTROL,
                 color: t.faint,
             });
             line(
@@ -425,7 +411,7 @@ fn choice(
                 x,
                 y: y + dy,
                 w,
-                h: BTN_H,
+                h: CONTROL,
                 act: Act::Menu { id: key.clone() },
             });
             if ui.menu.as_deref() == Some(key.as_str()) {
@@ -437,7 +423,7 @@ fn choice(
             }
         }
     }
-    dy + BTN_H
+    dy + CONTROL
 }
 
 fn range(node: &Node, x: usize, y: usize, w: usize, t: &Theme, out: &mut Out) -> usize {
@@ -462,7 +448,7 @@ fn range(node: &Node, x: usize, y: usize, w: usize, t: &Theme, out: &mut Out) ->
     let vw = text::width(&shown, 1);
     line(out, label, x, y, w.saturating_sub(vw + 8), 1, t.muted);
     line(out, &shown, x + w.saturating_sub(vw), y, vw + 2, 1, t.ink);
-    let ty = y + LABEL_H;
+    let ty = y + LABEL;
     let span = (max - min).max(1);
     let frac = ((*value - min).clamp(0, span)) as f64 / span as f64;
     out.ops.push(Op::Rect {
@@ -500,7 +486,7 @@ fn range(node: &Node, x: usize, y: usize, w: usize, t: &Theme, out: &mut Out) ->
             step: (*step).max(1),
         },
     });
-    LABEL_H + 12
+    LABEL + 12
 }
 
 fn field(
@@ -527,7 +513,7 @@ fn field(
     let key = id(call, arg);
     let focused = ui.edit.as_ref().filter(|e| e.id == key);
     let border = if focused.is_some() { t.accent } else { t.faint };
-    outline(out, x, y, w, FIELD_H, 1, border);
+    outline(out, x, y, w, CONTROL, 1, border);
     let shown = focused.map_or(value.as_str(), |e| e.buffer.as_str());
     if shown.is_empty() && focused.is_none() {
         line(out, hint, x + 5, y + 5, w.saturating_sub(10), 1, t.muted);
@@ -548,7 +534,7 @@ fn field(
         x,
         y,
         w,
-        h: FIELD_H,
+        h: CONTROL,
         act: Act::Edit {
             id: key,
             value: value.clone(),
@@ -559,7 +545,7 @@ fn field(
             keys: keys.clone(),
         },
     });
-    FIELD_H
+    CONTROL
 }
 
 fn cell(
@@ -638,11 +624,11 @@ fn item(node: &Node, x: usize, y: usize, w: usize, t: &Theme, out: &mut Out) -> 
             x,
             y,
             w,
-            h: LABEL_H,
+            h: LABEL,
             act: Act::Tap { call: call.clone() },
         });
     }
-    LABEL_H
+    LABEL
 }
 
 pub(crate) fn lay(
@@ -696,7 +682,7 @@ pub(crate) fn lay(
             }
             Role::Label => {
                 line(out, txt, x, y + 2, w, 1, t.accent);
-                LABEL_H
+                LABEL
             }
             Role::Note => wrapped(out, txt, x, y, w, t.muted),
             Role::Body => wrapped(out, txt, x, y, w, t.ink),
@@ -713,12 +699,12 @@ pub(crate) fn lay(
         }
         Node::Image { fact } => picture(fact, x, y, w, t, out).0,
         Node::Symbol { value } => {
-            if let Some(sprite) = crate::symbol::sprite(value, 16, t.ink) {
+            if let Some(sprite) = crate::symbol::sprite(value, SYMBOL, t.ink) {
                 out.ops.push(Op::Image {
-                    x: x + w.saturating_sub(16) / 2,
+                    x: x + w.saturating_sub(SYMBOL) / 2,
                     y: y + 1,
-                    w: 16,
-                    h: 16,
+                    w: SYMBOL,
+                    h: SYMBOL,
                     scale: 1,
                     pixels: sprite.to_vec(),
                 });

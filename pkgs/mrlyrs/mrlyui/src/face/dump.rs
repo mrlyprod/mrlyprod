@@ -1,8 +1,7 @@
 use super::FaceInput;
+use crate::tokens::LIST;
 use mrlycore::ui::{Node, Role};
 use mrlycore::Json;
-
-const LIST_CAP: usize = 12;
 
 pub(crate) fn scalar_text(value: &Json) -> String {
     match value {
@@ -79,12 +78,12 @@ fn value_nodes(key: &str, value: &Json) -> Vec<Node> {
             return vec![Node::label(key, &inline_list(items), None)];
         }
         let mut out = vec![Node::text(key, Role::Note)];
-        for item in items.iter().take(LIST_CAP) {
+        for item in items.iter().take(LIST) {
             out.push(Node::label(&format!("  {}", brief(item)), "", None));
         }
-        if items.len() > LIST_CAP {
+        if items.len() > LIST {
             out.push(Node::text(
-                &format!("  + {} more", items.len() - LIST_CAP),
+                &format!("  + {} more", items.len() - LIST),
                 Role::Note,
             ));
         }

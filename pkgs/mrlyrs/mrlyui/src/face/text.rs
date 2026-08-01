@@ -1,6 +1,5 @@
+use crate::tokens::LINE;
 use mrlyfont::{glyph, trim};
-
-pub(crate) const LINE: usize = 7;
 
 const BOX: [[u8; 5]; 5] = [
     [1, 1, 1, 1, 1],
