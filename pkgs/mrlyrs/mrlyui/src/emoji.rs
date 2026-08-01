@@ -34,15 +34,9 @@ pub fn tile(c: char, k: usize) -> Option<&'static [[u8; 4]]> {
     sprite(&c.to_string(), k)
 }
 
-pub fn bands() -> &'static [Vec<char>] {
-    static BANDS: OnceLock<Vec<Vec<char>>> = OnceLock::new();
-    BANDS.get_or_init(|| {
-        CATALOG
-            .split("\n\n")
-            .map(|band| band.split_whitespace().filter_map(one).collect())
-            .filter(|band: &Vec<char>| !band.is_empty())
-            .collect()
-    })
+pub fn catalog() -> &'static [char] {
+    static CHARS: OnceLock<Vec<char>> = OnceLock::new();
+    CHARS.get_or_init(|| CATALOG.split_whitespace().filter_map(one).collect())
 }
 
 fn one(value: &str) -> Option<char> {

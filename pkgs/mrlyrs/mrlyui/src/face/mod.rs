@@ -35,6 +35,7 @@ pub struct Edit {
     pub buffer: String,
     pub keys: Option<String>,
     pub shift: bool,
+    pub page: usize,
 }
 
 impl Edit {
@@ -44,6 +45,7 @@ impl Edit {
             buffer,
             keys,
             shift: false,
+            page: 0,
         }
     }
 }
@@ -258,7 +260,7 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
     let strip = ui
         .edit
         .as_ref()
-        .map(|e| keys::strip(e.keys.as_deref().unwrap_or("text"), e.shift, &theme));
+        .map(|e| keys::strip(e.keys.as_deref().unwrap_or("text"), e.shift, e.page, &theme));
     let bar = if strip.is_some() {
         Vec::new()
     } else {
@@ -685,7 +687,7 @@ mod tests {
                 _ => None,
             })
             .collect();
-        assert_eq!(caps.len(), 40);
+        assert_eq!(caps.len(), 41);
         assert!(caps.contains(&&keys::Tap::Char('q')));
         assert!(caps.contains(&&keys::Tap::Back));
         assert!(caps.contains(&&keys::Tap::Enter));

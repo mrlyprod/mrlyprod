@@ -1,11 +1,21 @@
 {"assert": {"route": "menu"}}
 {"focus": {"verb": "menu.search"}}
 {"cap": "shift"}
-{"assert": {"frame": "5569145615033213912"}}
+{"assert": {"frame": "7003213171173763251"}}
 {"cap": "S"}
 {"assert": {"state": ["menu/query", "S"]}}
 {"cap": "back"}
 {"cap": "shift"}
+{"cap": "emoji"}
+{"assert": {"frame": "18157357406373937490"}}
+{"cap": "😄"}
+{"assert": {"state": ["menu/query", "😄"]}}
+{"cap": "next"}
+{"cap": "😷"}
+{"assert": {"state": ["menu/query", "😄😷"]}}
+{"cap": "back"}
+{"cap": "back"}
+{"cap": "text"}
 {"cap": "s"}
 {"cap": "n"}
 {"cap": "a"}

@@ -433,7 +433,7 @@ impl Driver {
                 edit.buffer.pop();
             }
             KeyPress::Char(c) => {
-                if c.is_ascii_graphic() || c == ' ' {
+                if c.is_ascii_graphic() || c == ' ' || mrlyui::emoji::has(c) {
                     edit.buffer.push(c);
                 }
             }
@@ -474,6 +474,24 @@ impl Driver {
                     self.refresh();
                 }
             }
+            Tap::Board(name) => {
+                if let Some(edit) = &mut self.ui.edit {
+                    edit.keys = Some(name);
+                    edit.shift = false;
+                    edit.page = 0;
+                    self.refresh();
+                }
+            }
+            Tap::Page(on) => {
+                if let Some(edit) = &mut self.ui.edit {
+                    let pages = mrlyui::face::keys::pages(edit.keys.as_deref().unwrap_or("text"));
+                    edit.page = match on {
+                        true => (edit.page + 1) % pages,
+                        false => (edit.page + pages - 1) % pages,
+                    };
+                    self.refresh();
+                }
+            }
         }
     }
 
@@ -483,6 +501,9 @@ impl Driver {
             "enter" => Tap::Enter,
             "shift" => Tap::Shift,
             "space" => Tap::Char(' '),
+            "next" => Tap::Page(true),
+            "prev" => Tap::Page(false),
+            "text" | "emoji" | "digits" | "hex" | "colors" => Tap::Board(name.to_string()),
             _ => {
                 let mut chars = name.chars();
                 match (chars.next(), chars.next()) {
@@ -735,6 +756,9 @@ fn hit_json(hit: &Hit) -> Json {
                 Tap::Back => "back".to_string(),
                 Tap::Enter => "enter".to_string(),
                 Tap::Shift => "shift".to_string(),
+                Tap::Board(name) => name.clone(),
+                Tap::Page(true) => "next".to_string(),
+                Tap::Page(false) => "prev".to_string(),
             };
             ("cap", json!({ "tap": name }))
         }
