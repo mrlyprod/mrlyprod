@@ -1,11 +1,12 @@
 use crate::face::face_scene;
 use mrlycore::ui::Call as Wish;
 use mrlycore::{json, Json};
-use mrlyos::kernel::{Call, Os};
+use mrlyos::kernel::{Call, Effect, Os};
 pub use mrlyui::face::{Act, Hit, Scene};
 use mrlyui::face::{Edit, UiState, HEIGHT, SCALE, WIDTH};
 
 pub const BEAT: i64 = 125;
+const EFFECTS: usize = 64;
 
 pub enum KeyPress {
     Char(char),
@@ -50,6 +51,7 @@ pub struct Driver {
     clock: Option<i64>,
     drag: Option<Drag>,
     dirty: bool,
+    effects: Vec<Effect>,
 }
 
 fn wall_ms() -> i64 {
@@ -89,6 +91,7 @@ impl Driver {
             clock,
             drag: None,
             dirty: false,
+            effects: Vec::new(),
         };
         driver.act("nav.open", json!({ "app": "menu" }));
         driver
@@ -131,6 +134,7 @@ impl Driver {
     pub fn act(&mut self, verb: &str, args: Json) {
         let at = self.tick();
         self.os.act(Call::new(verb, args).at(at));
+        self.collect();
         let route = self.os.frame(None).route.map(|r| r.app).unwrap_or_default();
         if route != self.route {
             self.route = route;
@@ -163,8 +167,21 @@ impl Driver {
             };
             let at = self.tick();
             self.os.act(call.at(at));
+            self.collect();
         }
         self.refresh();
+    }
+
+    fn collect(&mut self) {
+        self.effects.extend_from_slice(self.os.effects());
+        let overflow = self.effects.len().saturating_sub(EFFECTS);
+        if overflow > 0 {
+            self.effects.drain(..overflow);
+        }
+    }
+
+    pub fn drain_effects(&mut self) -> Vec<Effect> {
+        std::mem::take(&mut self.effects)
     }
 
     fn over(&self, x: usize, y: usize) -> Option<Hit> {

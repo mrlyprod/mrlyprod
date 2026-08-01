@@ -71,6 +71,27 @@ pub fn pcm(samples: &[f32]) -> Vec<i16> {
         .collect()
 }
 
+pub const CYCLE: usize = 1024;
+
+pub fn cycle(wave: &Wave, hz: f32) -> Vec<f32> {
+    let mut out = vec![0.0f32; CYCLE];
+    for (mult, weight) in wave.recipe(VOICES) {
+        if hz * mult * 2.0 >= RATE as f32 {
+            continue;
+        }
+        for (i, s) in out.iter_mut().enumerate() {
+            *s += weight * Wave::Sine.sample(mult * i as f32 / CYCLE as f32);
+        }
+    }
+    let peak = out.iter().fold(0.0f32, |m, s| m.max(s.abs()));
+    if peak > 0.0 {
+        for s in out.iter_mut() {
+            *s /= peak;
+        }
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -99,5 +120,22 @@ mod tests {
     #[test]
     fn pcm_clamps_to_i16() {
         assert_eq!(pcm(&[2.0, -2.0, 0.0, 1.0]), vec![32767, -32767, 0, 32767]);
+    }
+    #[test]
+    fn cycle_peaks_at_unity() {
+        for wave in [Wave::Sine, Wave::Triangle, Wave::Square, Wave::Sawtooth] {
+            let table = cycle(&wave, 440.0);
+            assert_eq!(table.len(), CYCLE);
+            let peak = table.iter().fold(0.0f32, |m, s| m.max(s.abs()));
+            assert!((peak - 1.0).abs() < 1e-4, "{} {peak}", wave.name());
+        }
+    }
+    #[test]
+    fn cycle_mutes_above_nyquist() {
+        assert!(cycle(&Wave::Sine, 23000.0).iter().all(|s| *s == 0.0));
+    }
+    #[test]
+    fn cycle_thins_to_sine_near_nyquist() {
+        assert_eq!(cycle(&Wave::Square, 8000.0), cycle(&Wave::Sine, 8000.0));
     }
 }

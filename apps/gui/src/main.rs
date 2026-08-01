@@ -11,12 +11,15 @@ use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop};
 use winit::keyboard::{Key, NamedKey};
 use winit::window::{Window, WindowId};
 
+mod audio;
+
 const BEAT: Duration = Duration::from_millis(125);
 const WHEEL_STEP: f64 = 22.0;
 
 fn main() {
     let mut face = Face {
         driver: Driver::wall(),
+        audio: audio::Audio::new(),
         window: None,
         context: None,
         surface: None,
@@ -34,6 +37,7 @@ fn main() {
 
 struct Face {
     driver: Driver,
+    audio: Option<audio::Audio>,
     window: Option<Arc<Window>>,
     context: Option<Context<Arc<Window>>>,
     surface: Option<Surface<Arc<Window>, Arc<Window>>>,
@@ -211,6 +215,13 @@ fn pack(px: [u8; 4]) -> u32 {
 
 impl Face {
     fn sync(&mut self) {
+        for effect in self.driver.drain_effects() {
+            if effect.kind == "sound" {
+                if let Some(audio) = &self.audio {
+                    audio.perform(&effect.data);
+                }
+            }
+        }
         let route = self.driver.route().to_string();
         if route != self.route {
             self.route = route;

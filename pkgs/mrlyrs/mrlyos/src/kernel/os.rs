@@ -177,6 +177,9 @@ impl Os {
             _ => None,
         }
     }
+    pub fn effects(&self) -> &[Effect] {
+        &self.effects
+    }
     fn manifests(&self) -> Vec<Manifest> {
         self.apps.iter().map(|a| a.manifest()).collect()
     }

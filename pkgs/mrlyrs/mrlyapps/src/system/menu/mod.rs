@@ -1,3 +1,5 @@
+mod view;
+
 use mrlycore::ui;
 use mrlycore::{json, Json};
 use mrlyos::kernel::{App, Call, Iden, Manifest, Outcome, Verb};
@@ -58,58 +60,8 @@ impl App for Menu {
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
         vec![Verb::new("menu.search", json!({ "q": "string" }))]
     }
-    fn view(&self, _iden: &Iden) -> Option<ui::Node> {
-        let found = self.found();
-        let mut nodes = Vec::new();
-        let mut field = ui::Node::field(
-            &self.query,
-            "search",
-            ui::Call::new("menu.search", json!({})),
-            "q",
-        )
-        .live();
-        if let Some(first) = found.first().and_then(|m| m["route"].as_str()) {
-            field = field.enter(ui::Call::new("nav.open", json!({ "app": first })));
-        }
-        nodes.push(field);
-        if self.query.trim().is_empty() {
-            let mut seen: Vec<&str> = Vec::new();
-            for m in &self.apps {
-                if let Some(c) = m["category"].as_str() {
-                    if !seen.contains(&c) {
-                        seen.push(c);
-                    }
-                }
-            }
-            if !seen.is_empty() {
-                nodes.push(ui::Node::wrap(
-                    seen.iter()
-                        .map(|c| {
-                            ui::Node::button(c, ui::Call::new("menu.search", json!({ "q": c })))
-                        })
-                        .collect(),
-                ));
-            }
-        }
-        let rows: Vec<ui::Node> = found
-            .iter()
-            .map(|m| {
-                let route = m["route"].as_str().unwrap_or("");
-                let title = m["title"].as_str().unwrap_or(route);
-                let open = ui::Call::new("nav.open", json!({ "app": route }));
-                if self.mode == "list" {
-                    ui::Node::label(title, m["category"].as_str().unwrap_or(""), Some(open))
-                } else {
-                    ui::Node::button(title, open)
-                }
-            })
-            .collect();
-        nodes.push(if self.mode == "list" {
-            ui::Node::column(rows)
-        } else {
-            ui::Node::grid(3, rows)
-        });
-        Some(ui::Node::column(nodes))
+    fn view(&self, iden: &Iden) -> Option<ui::Node> {
+        view::tree(self, iden)
     }
     fn wear(&mut self, world: &Json) {
         self.apps = world["apps"]
