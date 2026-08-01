@@ -1,0 +1,20 @@
+{
+  "name": "mrlyprod",
+  "private": true,
+  "workspaces": [
+    "apps/git",
+    "apps/jsx",
+    "apps/net",
+    "apps/web",
+    "pkgs/mrlycss",
+    "pkgs/mrlydom",
+    "pkgs/mrlygpu"
+  ],
+  "devDependencies": {
+    "@types/bun": "^1.3.14",
+    "typescript": "~5.9.3"
+  },
+  "engines": {
+    "bun": ">=1.3"
+  }
+}

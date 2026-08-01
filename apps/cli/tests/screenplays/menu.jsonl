@@ -1,0 +1,14 @@
+{"assert": {"route": "menu"}}
+{"assert": {"verb": "nav.open"}}
+{"assert": {"verb": "menu.search"}}
+{"focus": {"verb": "menu.search"}}
+{"type": "sna"}
+{"assert": {"state": ["menu/query", "sna"]}}
+{"key": "enter"}
+{"assert": {"route": "snake"}}
+{"open": "menu"}
+{"call": {"verb": "menu.search", "args": {"q": ""}}}
+{"tap": {"verb": "nav.open", "args": {"app": "settings"}}}
+{"assert": {"route": "settings"}}
+{"open": "menu"}
+{"assert": {"frame": "14380995949034563744"}}

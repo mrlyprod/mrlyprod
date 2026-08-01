@@ -1,0 +1,16 @@
+[package]
+name = "mrlyapps"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+mrlycore.workspace = true
+mrlyfont.workspace = true
+mrlymath.workspace = true
+mrlymusic.workspace = true
+mrlyos.workspace = true
+mrlyui.workspace = true
+
+[dev-dependencies]
+mrlycore = { workspace = true, features = ["testkit"] }
+mrlyos = { workspace = true, features = ["testkit"] }

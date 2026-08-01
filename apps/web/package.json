@@ -1,0 +1,17 @@
+{
+  "name": "web",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun run index.ts",
+    "verify": "bun verify.ts",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "mrlygpu": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.14"
+  }
+}

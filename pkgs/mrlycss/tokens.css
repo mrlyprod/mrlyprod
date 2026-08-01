@@ -1,0 +1,133 @@
+/* SCALE */
+
+:root {
+  --unit: clamp(3px, 1vw, 5px);
+  --space-0: 0;
+  --space-1: var(--unit);
+  --space-2: calc(var(--unit) * 2);
+  --space-3: calc(var(--unit) * 3);
+  --space-4: calc(var(--unit) * 4);
+  --space-5: calc(var(--unit) * 5);
+  --space-6: calc(var(--unit) * 6);
+  --space-7: calc(var(--unit) * 7);
+  --space-8: calc(var(--unit) * 8);
+  --radius-sm: var(--unit);
+  --radius-md: calc(var(--unit) * 2);
+  --radius-lg: calc(var(--unit) * 3);
+  --radius-full: 9999px;
+}
+
+/* FRAME */
+
+:root {
+  --head: 3.5rem;
+  --gutter: 1.25rem;
+  --read-width: 48.5rem;
+  --main-width: 46rem;
+  --pane-width: 15rem;
+  --pane-min: 160px;
+  --pane-max: 448px;
+  --dock-gap: 2.5rem;
+  --status: 1.75rem;
+}
+
+/* TYPE */
+
+:root {
+  --font-size: 1rem;
+  --font-sm: 0.85rem;
+  --font-xs: 0.7rem;
+  --line-height: 1.6;
+  --font-system: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "mrly-mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-mrly: "MrlyFont", var(--font-mono);
+  --font-body: var(--font-system);
+  --font-heading: var(--font-system);
+  --font-subheading: var(--font-mono);
+}
+
+/* SURFACE */
+
+:root {
+  color-scheme: light;
+  --background-color: #ffffff;
+  --body-color: #ffffff;
+  --font-color: #1b1f24;
+  --muted-color: #62686f;
+  --border-color: #e3e6ea;
+  --accent-color: #0b62d6;
+  --on-accent: #ffffff;
+  --fill-color: color-mix(in srgb, var(--font-color) 6%, transparent);
+  --fill-strong: color-mix(in srgb, var(--font-color) 12%, transparent);
+  --scrim-color: color-mix(in srgb, var(--font-color) 25%, transparent);
+  --glass-opacity: 78%;
+  --glass-fill: 94%;
+  --glass-blur: 12px;
+}
+
+/* MOTION */
+
+:root {
+  --pace: 150ms;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* DEPTH */
+
+:root {
+  --shadow-color: 0, 0, 0;
+  --shadow-1: 0 1px 2px rgba(var(--shadow-color), 0.06), 0 1px 1px rgba(var(--shadow-color), 0.04);
+  --shadow-2: 0 6px 20px rgba(var(--shadow-color), 0.12), 0 1px 3px rgba(var(--shadow-color), 0.06);
+  --shadow-3: 0 18px 50px rgba(var(--shadow-color), 0.18), 0 4px 12px rgba(var(--shadow-color), 0.08);
+  --focus-ring: 2px solid var(--accent-color);
+}
+
+/* CODE */
+
+:root {
+  --code-mix: 60%;
+  --astro-code-background: transparent;
+  --astro-code-foreground: var(--font-color);
+  --astro-code-token-comment: var(--muted-color);
+  --astro-code-token-punctuation: var(--muted-color);
+  --astro-code-token-keyword: color-mix(in srgb, var(--c-purple) var(--code-mix), var(--font-color));
+  --astro-code-token-string: color-mix(in srgb, var(--c-green) var(--code-mix), var(--font-color));
+  --astro-code-token-string-expression: color-mix(in srgb, var(--c-green) var(--code-mix), var(--font-color));
+  --astro-code-token-constant: color-mix(in srgb, var(--c-orange) var(--code-mix), var(--font-color));
+  --astro-code-token-function: color-mix(in srgb, var(--c-blue) var(--code-mix), var(--font-color));
+  --astro-code-token-parameter: color-mix(in srgb, var(--c-teal) var(--code-mix), var(--font-color));
+  --astro-code-token-link: var(--accent-color);
+}
+
+/* DARK */
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background-color: #0d1117;
+  --body-color: #0d1117;
+  --font-color: #e6e9ec;
+  --muted-color: #9aa1a9;
+  --border-color: #262c36;
+  --accent-color: #6cb2ff;
+  --on-accent: #0d1117;
+  --scrim-color: color-mix(in srgb, var(--c-black) 55%, transparent);
+  --glass-opacity: 70%;
+  --code-mix: 72%;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --background-color: #0d1117;
+    --body-color: #0d1117;
+    --font-color: #e6e9ec;
+    --muted-color: #9aa1a9;
+    --border-color: #262c36;
+    --accent-color: #6cb2ff;
+    --on-accent: #0d1117;
+    --scrim-color: color-mix(in srgb, var(--c-black) 55%, transparent);
+    --glass-opacity: 70%;
+    --code-mix: 72%;
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "tick": 4,
+  "route": {
+    "app": "notes",
+    "view": "main",
+    "params": {}
+  },
+  "view": {
+    "app": "notes",
+    "params": {},
+    "state": {
+      "query": "",
+      "found": [
+        {
+          "id": 1,
+          "text": "buy oat milk"
+        },
+        {
+          "id": 2,
+          "text": "book the ferry"
+        },
+        {
+          "id": 3,
+          "text": "read the franel paper"
+        }
+      ]
+    },
+    "actions": [
+      {
+        "verb": "notes.add",
+        "args": {
+          "text": "string"
+        }
+      },
+      {
+        "verb": "notes.edit",
+        "args": {
+          "id": "u64",
+          "text": "string"
+        }
+      },
+      {
+        "verb": "notes.remove",
+        "args": {
+          "id": "u64"
+        }
+      },
+      {
+        "verb": "notes.clear",
+        "args": {}
+      },
+      {
+        "verb": "notes.search",
+        "args": {
+          "q": "string"
+        }
+      },
+      {
+        "verb": "notes.export",
+        "args": {}
+      }
+    ]
+  },
+  "last": {
+    "ok": true,
+    "data": {
+      "id": 3
+    },
+    "note": null
+  },
+  "sync": "synced"
+}

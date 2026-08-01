@@ -1,0 +1,12 @@
+[package]
+name = "mrlygui"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+winit = "0.30"
+softbuffer = "0.4"
+mrlycore = { path = "../../pkgs/mrlyrs/mrlycore" }
+mrlyui = { path = "../../pkgs/mrlyrs/mrlyui" }
+mrlyweb = { path = "../../pkgs/mrlyrs/mrlyweb" }
+mrlyos = { path = "../../pkgs/mrlyrs/mrlyos" }

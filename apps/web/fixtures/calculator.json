@@ -1,0 +1,64 @@
+{
+  "tick": 3,
+  "route": {
+    "app": "calculator",
+    "view": "main",
+    "params": {}
+  },
+  "view": {
+    "app": "calculator",
+    "params": {},
+    "state": {
+      "display": "42",
+      "previous": null,
+      "operator": null,
+      "waiting": false
+    },
+    "actions": [
+      {
+        "verb": "calculator.digit",
+        "args": {
+          "d": "u8"
+        }
+      },
+      {
+        "verb": "calculator.dot",
+        "args": {}
+      },
+      {
+        "verb": "calculator.op",
+        "args": {
+          "op": "add | sub | mul | div"
+        }
+      },
+      {
+        "verb": "calculator.equals",
+        "args": {}
+      },
+      {
+        "verb": "calculator.clear",
+        "args": {}
+      },
+      {
+        "verb": "calculator.negate",
+        "args": {}
+      },
+      {
+        "verb": "calculator.percent",
+        "args": {}
+      },
+      {
+        "verb": "calculator.copy",
+        "args": {}
+      }
+    ]
+  },
+  "last": {
+    "ok": true,
+    "data": {
+      "d": 2
+    },
+    "note": null
+  },
+  "sync": "synced"
+}

@@ -1,0 +1,127 @@
+/* GLYPH */
+
+.si {
+  flex: none;
+  width: 1.1rem;
+  font-family: "seti";
+  font-size: 1.1em;
+  line-height: 1;
+  text-align: center;
+}
+
+.si::before {
+  content: "\e023";
+  color: #d4d7d6;
+}
+
+/* TYPES */
+
+.si-c::before {
+  content: "\e00c";
+  color: #519aba;
+}
+
+.si-config::before {
+  content: "\e019";
+  color: #6d8086;
+}
+
+.si-css::before {
+  content: "\e01d";
+  color: #519aba;
+}
+
+.si-csv::before {
+  content: "\e01e";
+  color: #8dc149;
+}
+
+.si-cuda::before {
+  content: "\e01f";
+  color: #8dc149;
+}
+
+.si-favicon::before {
+  content: "\e02f";
+  color: #cbcb41;
+}
+
+.si-font::before {
+  content: "\e033";
+  color: #cc3e44;
+}
+
+.si-git::before {
+  content: "\e034";
+  color: #41535b;
+}
+
+.si-h::before {
+  content: "\e00c";
+  color: #a074c4;
+}
+
+.si-html::before {
+  content: "\e048";
+  color: #e37933;
+}
+
+.si-image::before {
+  content: "\e04c";
+  color: #a074c4;
+}
+
+.si-js::before {
+  content: "\e051";
+  color: #cbcb41;
+}
+
+.si-json::before {
+  content: "\e055";
+  color: #cbcb41;
+}
+
+.si-license::before {
+  content: "\e05a";
+  color: #cbcb41;
+}
+
+.si-lock::before {
+  content: "\e05d";
+  color: #8dc149;
+}
+
+.si-markdown::before {
+  content: "\e060";
+  color: #519aba;
+}
+
+.si-python::before {
+  content: "\e07b";
+  color: #519aba;
+}
+
+.si-react::before {
+  content: "\e07d";
+  color: #519aba;
+}
+
+.si-rust::before {
+  content: "\e082";
+  color: #6d8086;
+}
+
+.si-shell::before {
+  content: "\e089";
+  color: #8dc149;
+}
+
+.si-svg::before {
+  content: "\e091";
+  color: #a074c4;
+}
+
+.si-ts::before {
+  content: "\e099";
+  color: #519aba;
+}

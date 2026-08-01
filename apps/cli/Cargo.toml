@@ -1,0 +1,10 @@
+[package]
+name = "mrlycli"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+libc = "0.2"
+mrlycore = { path = "../../pkgs/mrlyrs/mrlycore" }
+mrlyweb = { path = "../../pkgs/mrlyrs/mrlyweb" }
+mrlyos = { path = "../../pkgs/mrlyrs/mrlyos" }

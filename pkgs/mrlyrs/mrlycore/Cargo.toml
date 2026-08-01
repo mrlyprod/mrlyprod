@@ -1,0 +1,9 @@
+[package]
+name = "mrlycore"
+version.workspace = true
+edition.workspace = true
+
+[features]
+testkit = []
+
+[dependencies]

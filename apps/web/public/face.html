@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mrly &#183; face</title>
+<style>
+  html, body { height: 100%; margin: 0; }
+  body { display: grid; place-items: center; background: #111; }
+  canvas { image-rendering: pixelated; }
+</style>
+</head>
+<body>
+<canvas></canvas>
+<script type="module">
+import init, { act, boot, describe, face, sheet } from "/mrlyjs.js"
+
+await init()
+const handle = boot()
+const [w, h] = sheet()
+const canvas = document.querySelector("canvas")
+canvas.width = w
+canvas.height = h
+const ctx = canvas.getContext("2d")
+
+const keys = {}
+for (const app of JSON.parse(describe()).apps) {
+  if (app.keys !== undefined) keys[app.route] = app.keys
+}
+
+const ARROWS = {
+  ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right",
+  w: "up", a: "left", s: "down", d: "right",
+  W: "up", A: "left", S: "down", D: "right",
+}
+
+let env = { tick: -1 }
+let drawn = -1
+
+function call(verb, args) {
+  env = JSON.parse(act(handle, JSON.stringify({ verb, args, now: Date.now() })))
+  paint()
+}
+
+function paint() {
+  if (env.tick === drawn) return
+  const route = env.view?.app
+  if (route === undefined) return
+  const bytes = face(handle, route)
+  if (bytes === undefined) return
+  ctx.putImageData(new ImageData(new Uint8ClampedArray(bytes), w, h), 0, 0)
+  document.body.style.background = `rgb(${bytes[0]}, ${bytes[1]}, ${bytes[2]})`
+  document.title = `mrly · ${route}`
+  drawn = env.tick
+}
+
+function fit() {
+  const scale = Math.max(1, Math.min(Math.floor(innerWidth / w), Math.floor(innerHeight / h)))
+  canvas.style.width = `${w * scale}px`
+  canvas.style.height = `${h * scale}px`
+}
+
+window.addEventListener("resize", fit)
+window.addEventListener("keydown", event => {
+  if (event.ctrlKey || event.metaKey || event.altKey) return
+  if (event.key === "Escape") return call("nav.open", { app: "menu" })
+  const dir = ARROWS[event.key]
+  if (dir !== undefined) {
+    const hit = keys[env.view?.app]?.[dir]
+    if (hit === undefined) return
+    event.preventDefault()
+    return call(hit.verb, hit.args)
+  }
+  const digit = Number(event.key)
+  if (Number.isInteger(digit) && digit >= 1 && digit <= 9) {
+    const action = env.view?.actions?.[digit - 1]
+    if (action === undefined) return
+    if (Object.keys(action.args ?? {}).length > 0) return
+    call(action.verb, {})
+  }
+})
+
+setInterval(() => {
+  const pulse = env.view?.beat
+  if (pulse !== undefined) call(pulse.verb, pulse.args)
+}, 125)
+
+fit()
+call("nav.open", { app: "menu" })
+</script>
+</body>
+</html>

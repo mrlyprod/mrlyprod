@@ -1,0 +1,12 @@
+[package]
+name = "mrlyweb"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+mrlyapps.workspace = true
+mrlycore.workspace = true
+mrlyfont.workspace = true
+mrlymath.workspace = true
+mrlyos.workspace = true
+mrlyui.workspace = true

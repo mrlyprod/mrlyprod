@@ -1,0 +1,73 @@
+/* DOC */
+
+.doc-box {
+  background-color: var(--body-color);
+  color: var(--font-color);
+  padding: calc(var(--padding) * 4);
+  border-radius: var(--border-radius);
+  font-family: var(--font-serif);
+  font-size: calc(var(--font-size) * 1.1);
+  line-height: 1.65;
+  overflow-wrap: break-word;
+  user-select: text;
+}
+
+.doc-box h1 {
+  font-size: 1.8em;
+  line-height: 1.25;
+  margin: 0 0 0.6em;
+}
+
+.doc-box h2 {
+  font-size: 1.3em;
+  line-height: 1.3;
+  margin: 1.4em 0 0.5em;
+}
+
+.doc-box p {
+  margin: 0 0 0.9em;
+}
+
+.doc-box ul,
+.doc-box ol {
+  margin: 0 0 0.9em;
+  padding-left: 1.6em;
+}
+
+.doc-box li {
+  margin: 0.25em 0;
+}
+
+.doc-box a {
+  color: var(--accent-color);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.doc-box pre {
+  background-color: color-mix(in srgb, var(--font-color) 8%, transparent);
+  padding: 0.8em;
+  border-radius: var(--inner-radius);
+  overflow-x: auto;
+  margin: 0 0 0.9em;
+}
+
+.doc-box code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+.doc-box > :last-child {
+  margin-bottom: 0;
+}
+
+.doc-box.code {
+  font-family: var(--font-mono);
+  font-size: calc(var(--font-size) * 0.95);
+  white-space: pre-wrap;
+}
+
+.doc-box:fullscreen {
+  overflow-y: auto;
+  padding: calc(var(--padding) * 8) max(calc(var(--padding) * 8), calc(50vw - 40ch));
+}
