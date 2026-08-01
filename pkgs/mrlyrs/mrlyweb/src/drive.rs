@@ -2,6 +2,7 @@ use crate::face::face_scene;
 use mrlycore::ui::Call as Wish;
 use mrlycore::{json, Json};
 use mrlyos::kernel::{Call, Effect, Os};
+use mrlyui::face::keys::Tap;
 pub use mrlyui::face::{Act, Hit, Scene};
 use mrlyui::face::{Edit, UiState, HEIGHT, SCALE, WIDTH};
 
@@ -85,6 +86,7 @@ impl Driver {
             scene: Scene {
                 frame: mrlyui::frame::field(1, 1, vec![[0, 0, 0, 255]], [0, 0, 0, 255]),
                 hits: Vec::new(),
+                binds: Vec::new(),
                 body: 0,
                 window: 0,
             },
@@ -197,7 +199,7 @@ impl Driver {
         let Some(edit) = self.ui.edit.take() else {
             return;
         };
-        let target = self.scene.hits.iter().find_map(|hit| match &hit.act {
+        let target = self.scene.binds.iter().find_map(|act| match act {
             Act::Edit {
                 id,
                 value,
@@ -274,9 +276,15 @@ impl Driver {
                     points: vec![cell],
                 });
             }
-            Act::Edit { id, value, .. } => {
+            Act::Edit {
+                id, value, keys, ..
+            } => {
                 self.commit();
-                self.ui.edit = Some(Edit { id, buffer: value });
+                self.ui.edit = Some(Edit {
+                    id,
+                    buffer: value,
+                    keys,
+                });
                 self.refresh();
             }
             Act::Menu { id } => {
@@ -284,6 +292,7 @@ impl Driver {
                 self.ui.menu = Some(id);
                 self.refresh();
             }
+            Act::Cap(tap) => self.tap_cap(tap),
             Act::Shut => {
                 self.ui.menu = None;
                 self.refresh();
@@ -412,7 +421,7 @@ impl Driver {
                 return;
             }
             KeyPress::Enter => {
-                let enter = self.scene.hits.iter().find_map(|hit| match &hit.act {
+                let enter = self.scene.binds.iter().find_map(|act| match act {
                     Act::Edit { id, enter, .. } if *id == edit.id => enter.clone(),
                     _ => None,
                 });
@@ -432,7 +441,7 @@ impl Driver {
             }
         }
         self.ui.edit = Some(edit.clone());
-        let live = self.scene.hits.iter().find_map(|hit| match &hit.act {
+        let live = self.scene.binds.iter().find_map(|act| match act {
             Act::Edit {
                 id,
                 live: true,
@@ -448,6 +457,45 @@ impl Driver {
             self.ui.edit = keep;
         }
         self.refresh();
+    }
+
+    fn tap_cap(&mut self, tap: Tap) {
+        match tap {
+            Tap::Char(c) => self.key(KeyPress::Char(c)),
+            Tap::Back => self.key(KeyPress::Backspace),
+            Tap::Enter => self.key(KeyPress::Enter),
+            Tap::Put(text) => {
+                if let Some(edit) = &mut self.ui.edit {
+                    edit.buffer = text;
+                    self.commit();
+                }
+            }
+        }
+    }
+
+    pub fn cap(&mut self, name: &str) -> Result<(), String> {
+        let want = match name {
+            "back" => Tap::Back,
+            "enter" => Tap::Enter,
+            "space" => Tap::Char(' '),
+            _ => {
+                let mut chars = name.chars();
+                match (chars.next(), chars.next()) {
+                    (Some(c), None) => Tap::Char(c),
+                    _ => Tap::Put(name.to_string()),
+                }
+            }
+        };
+        let shown = self
+            .scene
+            .hits
+            .iter()
+            .any(|hit| matches!(&hit.act, Act::Cap(tap) if *tap == want));
+        if !shown {
+            return Err(format!("no cap for {name}"));
+        }
+        self.tap_cap(want);
+        Ok(())
     }
 
     pub fn escape(&mut self) {
@@ -550,16 +598,24 @@ impl Driver {
     }
 
     pub fn focus(&mut self, verb: &str) -> Result<(), String> {
-        let found = self.scene.hits.iter().find_map(|hit| match &hit.act {
+        let found = self.scene.binds.iter().find_map(|act| match act {
             Act::Edit {
-                id, value, call, ..
-            } if call.verb == verb => Some((id.clone(), value.clone())),
+                id,
+                value,
+                call,
+                keys,
+                ..
+            } if call.verb == verb => Some((id.clone(), value.clone(), keys.clone())),
             _ => None,
         });
         match found {
-            Some((id, value)) => {
+            Some((id, value, keys)) => {
                 self.commit();
-                self.ui.edit = Some(Edit { id, buffer: value });
+                self.ui.edit = Some(Edit {
+                    id,
+                    buffer: value,
+                    keys,
+                });
                 self.refresh();
                 Ok(())
             }
@@ -670,6 +726,16 @@ fn hit_json(hit: &Hit) -> Json {
         ),
         Act::Edit { call, live, .. } => ("field", json!({ "verb": &call.verb, "live": *live })),
         Act::Menu { id } => ("menu", json!({ "id": id })),
+        Act::Cap(tap) => {
+            let name = match tap {
+                Tap::Char(' ') => "space".to_string(),
+                Tap::Char(c) => c.to_string(),
+                Tap::Put(text) => text.clone(),
+                Tap::Back => "back".to_string(),
+                Tap::Enter => "enter".to_string(),
+            };
+            ("cap", json!({ "tap": name }))
+        }
         Act::Shut => ("shut", json!({})),
         Act::Mute => ("mute", json!({})),
     };

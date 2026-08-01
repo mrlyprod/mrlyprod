@@ -24,8 +24,10 @@ pub(super) fn tree(m: &Mandelbrot, _iden: &Iden) -> Option<ui::Node> {
             "#rrggbb",
             set("primary"),
             "value",
-        ),
+        )
+        .keys("colors"),
         ui::Node::text("accent", ui::Role::Label),
-        ui::Node::field(&frame::hex(m.set.accent), "#rrggbb", set("accent"), "value"),
+        ui::Node::field(&frame::hex(m.set.accent), "#rrggbb", set("accent"), "value")
+            .keys("colors"),
     ]))
 }

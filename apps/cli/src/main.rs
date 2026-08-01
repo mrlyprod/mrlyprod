@@ -777,6 +777,9 @@ fn gesture(driver: &mut mrlyweb::drive::Driver, g: &Json) -> Result<(), String> 
         driver.type_str(text);
         return Ok(());
     }
+    if let Some(name) = g["cap"].as_str() {
+        return driver.cap(name);
+    }
     if let Some(key) = g["key"].as_str() {
         match key {
             "enter" => driver.key(KeyPress::Enter),

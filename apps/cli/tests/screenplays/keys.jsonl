@@ -1,0 +1,12 @@
+{"assert": {"route": "menu"}}
+{"focus": {"verb": "menu.search"}}
+{"cap": "s"}
+{"cap": "n"}
+{"cap": "a"}
+{"assert": {"state": ["menu/query", "sna"]}}
+{"cap": "enter"}
+{"assert": {"route": "snake"}}
+{"open": "mandelbrot"}
+{"focus": {"verb": "mandelbrot.set"}}
+{"cap": "cyan"}
+{"assert": {"state": ["mandelbrot/settings/primary", "#1ec9f3"]}}

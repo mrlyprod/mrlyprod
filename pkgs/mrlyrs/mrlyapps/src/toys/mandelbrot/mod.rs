@@ -58,8 +58,9 @@ impl Set {
             "fade" => int(&mut self.fade, value, (0, 240)),
             "spin" => int(&mut self.spin, value, (0, 50)),
             "primary" | "accent" => {
-                let s = value.as_str().ok_or("value must be a hex string")?;
-                let c = frame::hex_of(s);
+                let s = value.as_str().ok_or("value must be a color string")?;
+                let c = mrlycore::colors::named(s)
+                    .map_or_else(|_| frame::hex_of(s), |c| [c.r, c.g, c.b, c.a]);
                 match key {
                     "primary" => self.primary = c,
                     _ => self.accent = c,
@@ -427,6 +428,23 @@ mod tests {
         send(&mut m, "mandelbrot.step", json!({ "n": 30 }));
         assert_eq!(m.age, 0);
         assert_eq!(m.zoom, MICRO);
+    }
+    #[test]
+    fn set_takes_color_names_and_hex() {
+        let mut m = mandelbrot(2);
+        let out = send(
+            &mut m,
+            "mandelbrot.set",
+            json!({ "key": "primary", "value": "cyan" }),
+        );
+        assert!(out.ok);
+        assert_eq!(m.state(&iden())["settings"]["primary"], json!("#1ec9f3"));
+        send(
+            &mut m,
+            "mandelbrot.set",
+            json!({ "key": "accent", "value": "#ff8800" }),
+        );
+        assert_eq!(m.state(&iden())["settings"]["accent"], json!("#ff8800"));
     }
     #[test]
     fn zoom_accumulates_in_micro() {

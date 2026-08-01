@@ -10,6 +10,7 @@ mrlyprod
 │   │   │   └── tui.rs
 │   │   ├── tests
 │   │   │   ├── screenplays
+│   │   │   │   ├── keys.jsonl
 │   │   │   │   ├── mandelbrot.jsonl
 │   │   │   │   ├── menu.jsonl
 │   │   │   │   ├── snake.jsonl
@@ -888,6 +889,7 @@ mrlyprod
 │   │   │   ├── src
 │   │   │   │   ├── face
 │   │   │   │   │   ├── dump.rs
+│   │   │   │   │   ├── keys.rs
 │   │   │   │   │   ├── layout.rs
 │   │   │   │   │   ├── md.rs
 │   │   │   │   │   ├── mod.rs

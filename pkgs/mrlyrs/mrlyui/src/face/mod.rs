@@ -4,6 +4,7 @@ use mrlycore::ui::{Call, Node};
 use mrlycore::Json;
 
 mod dump;
+pub mod keys;
 mod layout;
 mod md;
 mod paint;
@@ -36,6 +37,7 @@ pub struct FaceInput {
 pub struct Edit {
     pub id: String,
     pub buffer: String,
+    pub keys: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -91,10 +93,12 @@ pub enum Act {
         call: Call,
         arg: String,
         enter: Option<Call>,
+        keys: Option<String>,
     },
     Menu {
         id: String,
     },
+    Cap(keys::Tap),
     Shut,
     Mute,
 }
@@ -102,6 +106,7 @@ pub enum Act {
 pub struct Scene {
     pub frame: crate::frame::Frame,
     pub hits: Vec<Hit>,
+    pub binds: Vec<Act>,
     pub body: usize,
     pub window: usize,
 }
@@ -251,8 +256,19 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
     let mut sheet = vec![theme.board; WIDTH * HEIGHT];
     paint::paint_into(&mut sheet, WIDTH, HEIGHT, &layout::title_ops(input, &theme));
 
-    let bar = layout::action_bar(input, &theme);
-    let bar_h = 6 + bar.iter().map(|i| i.height).sum::<usize>();
+    let strip = ui
+        .edit
+        .as_ref()
+        .map(|e| keys::strip(e.keys.as_deref().unwrap_or("text"), &theme));
+    let bar = if strip.is_some() {
+        Vec::new()
+    } else {
+        layout::action_bar(input, &theme)
+    };
+    let bar_h = strip.as_ref().map_or_else(
+        || 6 + bar.iter().map(|i| i.height).sum::<usize>(),
+        |(_, _, h)| *h,
+    );
     let y0 = layout::TITLE_H + layout::PAD;
     let y1 = HEIGHT.saturating_sub(bar_h + 2);
     let window = y1.saturating_sub(y0);
@@ -266,6 +282,12 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
         sheet[dst..dst + WIDTH].copy_from_slice(&canvas[src..src + WIDTH]);
     }
 
+    let binds: Vec<Act> = out
+        .hits
+        .iter()
+        .filter(|hit| matches!(hit.act, Act::Edit { .. }))
+        .map(|hit| hit.act.clone())
+        .collect();
     let mut hits: Vec<Hit> = out
         .hits
         .into_iter()
@@ -289,39 +311,57 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
         );
     }
 
-    let mut bar_ops = vec![layout::Op::Rect {
-        x: 0,
-        y: HEIGHT - bar_h,
-        w: WIDTH,
-        h: 1,
-        color: theme.faint,
-    }];
-    let mut by = HEIGHT - bar_h + 6;
-    for (i, item) in bar.into_iter().enumerate() {
-        let h = item.height;
-        bar_ops.extend(layout::shift(item.ops, 0, by));
-        if let Some(verb) = input.actions.get(i) {
-            if i < layout::ACTION_CAP && verb.args.as_object().is_none_or(|m| m.is_empty()) {
-                hits.push(Hit {
-                    x: 0,
-                    y: by,
-                    w: WIDTH,
-                    h,
-                    act: Act::Tap {
-                        call: Call::new(&verb.name, mrlycore::json!({})),
-                    },
-                });
+    match strip {
+        Some((ops, caps, h)) => {
+            paint::paint_into(
+                &mut sheet,
+                WIDTH,
+                HEIGHT,
+                &layout::shift(ops, 0, HEIGHT - h),
+            );
+            for mut hit in caps {
+                hit.y += HEIGHT - h;
+                hits.push(hit);
             }
         }
-        by += h;
+        None => {
+            let mut bar_ops = vec![layout::Op::Rect {
+                x: 0,
+                y: HEIGHT - bar_h,
+                w: WIDTH,
+                h: 1,
+                color: theme.faint,
+            }];
+            let mut by = HEIGHT - bar_h + 6;
+            for (i, item) in bar.into_iter().enumerate() {
+                let h = item.height;
+                bar_ops.extend(layout::shift(item.ops, 0, by));
+                if let Some(verb) = input.actions.get(i) {
+                    if i < layout::ACTION_CAP && verb.args.as_object().is_none_or(|m| m.is_empty())
+                    {
+                        hits.push(Hit {
+                            x: 0,
+                            y: by,
+                            w: WIDTH,
+                            h,
+                            act: Act::Tap {
+                                call: Call::new(&verb.name, mrlycore::json!({})),
+                            },
+                        });
+                    }
+                }
+                by += h;
+            }
+            paint::paint_into(&mut sheet, WIDTH, HEIGHT, &bar_ops);
+        }
     }
-    paint::paint_into(&mut sheet, WIDTH, HEIGHT, &bar_ops);
 
     overlays(out.overlays, &theme, ui, &mut sheet, &mut hits);
 
     Scene {
         frame: crate::frame::field(WIDTH, HEIGHT, sheet, theme.board),
         hits,
+        binds,
         body,
         window,
     }
@@ -581,13 +621,14 @@ mod tests {
             Call::new("piano.set", json!({ "key": "note" })),
             "value",
         ));
+        let key = "piano.set:value:{\"key\":\"note\"}";
         let closed = render(&input, &UiState::default());
         assert!(closed
             .hits
             .iter()
-            .any(|h| matches!(&h.act, Act::Menu { id } if id == "piano.set:value")));
+            .any(|h| matches!(&h.act, Act::Menu { id } if id == key)));
         let open = UiState {
-            menu: Some("piano.set:value".to_string()),
+            menu: Some(key.to_string()),
             ..UiState::default()
         };
         let opened = render(&input, &open);
@@ -595,6 +636,98 @@ mod tests {
         assert!(opened.hits.iter().any(
             |h| matches!(&h.act, Act::Tap { call } if call.args["value"].as_str() == Some("e"))
         ));
+    }
+
+    #[test]
+    fn sibling_fields_get_distinct_ids() {
+        let mut input = bare("fractal", Json::Null);
+        let set = |key: &str| Call::new("mandelbrot.set", json!({ "key": key }));
+        input.ui = Some(Node::column(vec![
+            Node::field("#000000", "#rrggbb", set("primary"), "value"),
+            Node::field("#1ec9f3", "#rrggbb", set("accent"), "value"),
+        ]));
+        let scene = render(&input, &UiState::default());
+        let ids: Vec<String> = scene
+            .binds
+            .iter()
+            .filter_map(|a| match a {
+                Act::Edit { id, .. } => Some(id.clone()),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(ids.len(), 2);
+        assert_ne!(ids[0], ids[1]);
+    }
+
+    #[test]
+    fn editing_swaps_the_bar_for_keycaps() {
+        let input = widget_input();
+        let idle = render(&input, &UiState::default());
+        assert!(!idle.hits.iter().any(|h| matches!(h.act, Act::Cap(_))));
+        let id = idle
+            .binds
+            .iter()
+            .find_map(|a| match a {
+                Act::Edit { id, .. } => Some(id.clone()),
+                _ => None,
+            })
+            .unwrap();
+        let editing = UiState {
+            edit: Some(Edit {
+                id,
+                buffer: String::new(),
+                keys: None,
+            }),
+            ..UiState::default()
+        };
+        let scene = render(&input, &editing);
+        let caps: Vec<&keys::Tap> = scene
+            .hits
+            .iter()
+            .filter_map(|h| match &h.act {
+                Act::Cap(tap) => Some(tap),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(caps.len(), 39);
+        assert!(caps.contains(&&keys::Tap::Char('q')));
+        assert!(caps.contains(&&keys::Tap::Back));
+        assert!(caps.contains(&&keys::Tap::Enter));
+        assert!(scene.window < idle.window);
+    }
+
+    #[test]
+    fn a_keyed_field_picks_its_board() {
+        let mut input = bare("fractal", Json::Null);
+        input.ui = Some(
+            Node::field(
+                "",
+                "",
+                Call::new("mandelbrot.set", json!({ "key": "primary" })),
+                "value",
+            )
+            .keys("colors"),
+        );
+        let scene = render(&input, &UiState::default());
+        let Some(Act::Edit { id, keys, .. }) = scene.binds.first().cloned() else {
+            panic!()
+        };
+        assert_eq!(keys.as_deref(), Some("colors"));
+        let editing = UiState {
+            edit: Some(Edit {
+                id,
+                buffer: String::new(),
+                keys,
+            }),
+            ..UiState::default()
+        };
+        let opened = render(&input, &editing);
+        let puts = opened
+            .hits
+            .iter()
+            .filter(|h| matches!(&h.act, Act::Cap(keys::Tap::Put(_))))
+            .count();
+        assert_eq!(puts, 15);
     }
 
     #[test]

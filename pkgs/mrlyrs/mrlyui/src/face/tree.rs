@@ -38,14 +38,14 @@ impl Out {
 }
 
 fn id(call: &Call, arg: &str) -> String {
-    format!("{}:{}", call.verb, arg)
+    format!("{}:{}:{}", call.verb, arg, call.args)
 }
 
 fn tint(hex: &str, fallback: [u8; 4]) -> [u8; 4] {
     Color::from_hex(hex).map_or(fallback, |c| [c.r, c.g, c.b, c.a])
 }
 
-fn contrast(fill: [u8; 4]) -> [u8; 4] {
+pub(crate) fn contrast(fill: [u8; 4]) -> [u8; 4] {
     let luma = 0.299 * fill[0] as f64 + 0.587 * fill[1] as f64 + 0.114 * fill[2] as f64;
     if luma > 140.0 {
         [0, 0, 0, 255]
@@ -513,6 +513,7 @@ fn field(
         call,
         arg,
         enter,
+        keys,
     } = node
     else {
         return 0;
@@ -549,6 +550,7 @@ fn field(
             call: call.clone(),
             arg: arg.clone(),
             enter: enter.clone(),
+            keys: keys.clone(),
         },
     });
     FIELD_H

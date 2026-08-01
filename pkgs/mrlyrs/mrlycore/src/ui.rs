@@ -112,6 +112,7 @@ pub enum Node {
         call: Call,
         arg: String,
         enter: Option<Call>,
+        keys: Option<String>,
     },
     Cell {
         on: bool,
@@ -240,6 +241,7 @@ impl Node {
             call,
             arg: arg.to_string(),
             enter: None,
+            keys: None,
         }
     }
     pub fn cell(call: Option<Call>) -> Node {
@@ -302,6 +304,12 @@ impl Node {
         }
         self
     }
+    pub fn keys(mut self, name: &str) -> Node {
+        if let Node::Field { keys, .. } = &mut self {
+            *keys = Some(name.to_string());
+        }
+        self
+    }
     pub fn scaled(mut self, by: i64) -> Node {
         if let Node::Range { scale, .. } = &mut self {
             *scale = by.max(1);
@@ -352,6 +360,17 @@ mod tests {
             _ => panic!(),
         }
         let plain = Node::text("hi", Role::Note).big();
+        assert_eq!(plain, Node::text("hi", Role::Note));
+    }
+
+    #[test]
+    fn keys_land_on_a_field_only() {
+        let field = Node::field("", "hint", Call::new("a.set", json!({})), "value").keys("hex");
+        match field {
+            Node::Field { keys, .. } => assert_eq!(keys.as_deref(), Some("hex")),
+            _ => panic!(),
+        }
+        let plain = Node::text("hi", Role::Note).keys("hex");
         assert_eq!(plain, Node::text("hi", Role::Note));
     }
 }
