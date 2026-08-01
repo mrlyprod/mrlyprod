@@ -17,10 +17,10 @@ pub(super) fn tree(snake: &Snake, _iden: &Iden) -> Option<ui::Node> {
         nodes.push(ui::Node::grid(
             4,
             vec![
-                ui::Node::button("<", turn("left")),
-                ui::Node::button("^", turn("up")),
-                ui::Node::button("v", turn("down")),
-                ui::Node::button(">", turn("right")),
+                ui::Node::button("\u{2190}", turn("left")),
+                ui::Node::button("\u{2191}", turn("up")),
+                ui::Node::button("\u{2193}", turn("down")),
+                ui::Node::button("\u{2192}", turn("right")),
             ],
         ));
         nodes.push(ui::Node::text(

@@ -811,7 +811,7 @@ mod tests {
         let mut s = snake(3);
         let mut live = Vec::new();
         button_labels(&s.view(&iden()).unwrap(), &mut live);
-        for d in ["<", "^", "v", ">"] {
+        for d in ["\u{2190}", "\u{2191}", "\u{2193}", "\u{2192}"] {
             assert!(live.contains(&d.to_string()));
         }
         assert!(!live.contains(&"play again".to_string()));
