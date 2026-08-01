@@ -1,11 +1,12 @@
 use crate::frame::over;
 use mrlycore::{json, unpng};
 use mrlymath::two::Cell2d;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, OnceLock};
 
 const ATLAS: &[u8] = include_bytes!("../../../../files/emoji/atlas.png");
 const MANIFEST: &str = include_str!("../../../../files/emoji/atlas.json");
+const CATALOG: &str = include_str!("../../../../files/emoji/catalog.txt");
 
 pub fn bake(tile: &mut Cell2d, value: &str, k: usize) {
     let Some(sprite) = sprite(value, k) else {
@@ -20,6 +21,42 @@ pub fn bake(tile: &mut Cell2d, value: &str, k: usize) {
 
 pub fn known(value: &str) -> bool {
     book().map.contains_key(&key(value))
+}
+
+pub fn has(c: char) -> bool {
+    !c.is_ascii() && singles().contains(&c)
+}
+
+pub fn tile(c: char, k: usize) -> Option<&'static [[u8; 4]]> {
+    if !has(c) {
+        return None;
+    }
+    sprite(&c.to_string(), k)
+}
+
+pub fn bands() -> &'static [Vec<char>] {
+    static BANDS: OnceLock<Vec<Vec<char>>> = OnceLock::new();
+    BANDS.get_or_init(|| {
+        CATALOG
+            .split("\n\n")
+            .map(|band| band.split_whitespace().filter_map(one).collect())
+            .filter(|band: &Vec<char>| !band.is_empty())
+            .collect()
+    })
+}
+
+fn one(value: &str) -> Option<char> {
+    let name = key(value);
+    let mut chars = name.chars();
+    match (chars.next(), chars.next()) {
+        (Some(c), None) => Some(c),
+        _ => None,
+    }
+}
+
+fn singles() -> &'static HashSet<char> {
+    static SINGLES: OnceLock<HashSet<char>> = OnceLock::new();
+    SINGLES.get_or_init(|| book().map.keys().filter_map(|name| one(name)).collect())
 }
 
 fn key(value: &str) -> String {
@@ -50,6 +87,13 @@ fn book() -> &'static Book {
     })
 }
 
+fn sheet() -> Option<&'static (usize, Vec<[u8; 4]>)> {
+    static SHEET: OnceLock<Option<(usize, Vec<[u8; 4]>)>> = OnceLock::new();
+    SHEET
+        .get_or_init(|| unpng(ATLAS).ok().map(|(w, _, pixels)| (w, pixels)))
+        .as_ref()
+}
+
 fn sprite(value: &str, k: usize) -> Option<&'static [[u8; 4]]> {
     static CACHE: OnceLock<Mutex<HashMap<(String, usize), &'static [[u8; 4]]>>> = OnceLock::new();
     if k == 0 {
@@ -63,7 +107,8 @@ fn sprite(value: &str, k: usize) -> Option<&'static [[u8; 4]]> {
     }
     let book = book();
     let &index = book.map.get(&name)?;
-    let (width, _, pixels) = unpng(ATLAS).ok()?;
+    let (width, pixels) = sheet()?;
+    let width = *width;
     let ox = (index % book.cols) * book.cell;
     let oy = (index / book.cols) * book.cell;
     let mut scaled = Vec::with_capacity(k * k);

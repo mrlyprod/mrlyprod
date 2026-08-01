@@ -49,6 +49,29 @@ pub fn blit(
     }
 }
 
+pub fn sprite(
+    buf: &mut [[u8; 4]],
+    w: usize,
+    h: usize,
+    pixels: &[[u8; 4]],
+    k: usize,
+    x: usize,
+    y: usize,
+) {
+    if pixels.len() != k * k {
+        return;
+    }
+    for sy in 0..k {
+        for sx in 0..k {
+            let px = x + sx;
+            let py = y + sy;
+            if px < w && py < h {
+                crate::frame::over(&mut buf[py * w + px], pixels[sy * k + sx]);
+            }
+        }
+    }
+}
+
 pub fn fit(text: &str, field: usize, scales: &[usize]) -> (Vec<Vec<u8>>, usize, String) {
     let rows = mrlyfont::raster(text);
     let w = rows.first().map(Vec::len).unwrap_or(0);

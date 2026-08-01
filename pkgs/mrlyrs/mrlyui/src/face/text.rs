@@ -1,5 +1,7 @@
 use crate::tokens::LINE;
 use mrlyfont::{glyph, trim};
+use std::collections::HashSet;
+use std::sync::OnceLock;
 
 const BOX: [[u8; 5]; 5] = [
     [1, 1, 1, 1, 1],
@@ -31,7 +33,27 @@ fn block(c: char) -> Vec<Vec<u8>> {
     out
 }
 
+fn joiner(c: char) -> bool {
+    c == '\u{fe0f}' || c == '\u{200d}'
+}
+
+fn lettered(c: char) -> bool {
+    static FONT: OnceLock<HashSet<char>> = OnceLock::new();
+    FONT.get_or_init(|| mrlyfont::supported().into_iter().collect())
+        .contains(&c)
+}
+
+fn tiled(c: char) -> bool {
+    crate::emoji::has(c) && !lettered(c)
+}
+
 fn advance(c: char) -> usize {
+    if joiner(c) {
+        return 0;
+    }
+    if tiled(c) {
+        return LINE + 1;
+    }
     block(c)[0].len() + 1
 }
 
@@ -77,6 +99,17 @@ pub(crate) fn draw(
 ) {
     let mut cx = x;
     for c in text.chars() {
+        if joiner(c) {
+            continue;
+        }
+        if tiled(c) {
+            let k = LINE * scale;
+            if let Some(pixels) = crate::emoji::tile(c, k) {
+                crate::draw::sprite(buf, w, h, pixels, k, cx, y);
+            }
+            cx += (LINE + 1) * scale;
+            continue;
+        }
         let rows = block(c);
         crate::draw::blit(buf, w, h, &rows, cx, y, scale, color);
         cx += (rows[0].len() + 1) * scale;
@@ -98,11 +131,44 @@ mod tests {
 
     #[test]
     fn unsupported_chars_get_a_visible_box() {
-        let rows = block('\u{1f600}');
+        let rows = block('\u{6f22}');
         assert_eq!(rows.len(), LINE);
         assert_eq!(rows[1], vec![1, 1, 1, 1, 1]);
         assert_eq!(rows[2], vec![1, 0, 0, 0, 1]);
         assert!(rows.iter().flatten().any(|&v| v == 1));
+        assert!(!tiled('\u{6f22}'));
+    }
+
+    #[test]
+    fn the_font_always_beats_the_atlas() {
+        for c in mrlyfont::supported() {
+            assert!(!tiled(c), "{c} would tile over its own glyph");
+        }
+    }
+
+    #[test]
+    fn atlas_emoji_tile_instead_of_boxing() {
+        assert!(tiled('\u{1f600}'));
+        assert!(!tiled('a'));
+        assert_eq!(advance('\u{1f600}'), LINE + 1);
+        assert_eq!(width("\u{1f600}", 1), LINE);
+        assert_eq!(width("\u{1f600}", 2), 2 * LINE);
+    }
+
+    #[test]
+    fn a_drawn_emoji_paints_its_own_colors() {
+        let (w, h) = (16, 16);
+        let mut buf = vec![[0, 0, 0, 0]; w * h];
+        draw(&mut buf, w, h, "\u{1f600}", 0, 0, 1, [0, 0, 0, 255]);
+        let lit: Vec<[u8; 4]> = buf.iter().copied().filter(|px| px[3] > 0).collect();
+        assert!(lit.len() > LINE * 2, "painted {}", lit.len());
+        assert!(lit.iter().any(|px| px[0] != px[2]), "no color");
+    }
+
+    #[test]
+    fn joiners_take_no_room() {
+        assert_eq!(advance('\u{fe0f}'), 0);
+        assert_eq!(width("\u{2620}\u{fe0f}", 1), width("\u{2620}", 1));
     }
 
     #[test]

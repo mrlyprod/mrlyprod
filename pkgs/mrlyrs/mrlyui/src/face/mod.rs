@@ -579,7 +579,7 @@ mod tests {
     fn face_pixels_are_pinned() {
         let frame = face(&pinned_input());
         let colors = frame.composite().cell.colors.unwrap();
-        assert_eq!(fnv(&colors), 17385575524451970432);
+        assert_eq!(fnv(&colors), 16299222511607485507);
     }
 
     #[test]
