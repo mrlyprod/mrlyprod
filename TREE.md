@@ -903,7 +903,6 @@ mrlyprod
 │   │   │   ├── Cargo.toml
 │   │   │   └── build.rs
 │   │   ├── mrlyui
-│   │   │   ├── examples
 │   │   │   ├── src
 │   │   │   │   ├── face
 │   │   │   │   │   ├── dump.rs

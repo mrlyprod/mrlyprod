@@ -2,9 +2,9 @@ use super::layout::{shift, Op};
 use super::text;
 use super::{Act, Hit, UiState};
 use crate::tokens::{
-    contrast, Theme, CANVAS, CHEV, CHROME, CONTROL, EDGE, GAP, GLYPH, GRIP, INSET, KNOB, LINE, PAD,
-    RAIL, ROW, RULE, SLACK, SLOT, SPLIT, STUB, SWITCH_H, SWITCH_W, SYMBOL, TEXT, THUMB, TIGHT,
-    TILE, TITLE, UNIT,
+    contrast, Theme, CANVAS, CHEV, CHROME, CONTROL, EDGE, GAP, GRIP, INSET, KNOB, LINE, PAD, RAIL,
+    ROW, RULE, SLACK, SLOT, SPLIT, STUB, SWITCH_H, SWITCH_W, SYMBOL, TEXT, THUMB, TIGHT, TILE,
+    TITLE, UNIT,
 };
 use mrlycore::ui::{Call, Node, Pick, Role};
 use mrlycore::{json, Color};
@@ -49,8 +49,15 @@ fn id(call: &Call, arg: &str) -> String {
     format!("{}:{}:{}", call.verb, arg, call.args)
 }
 
-fn tint(hex: &str, fallback: [u8; 4]) -> [u8; 4] {
-    Color::from_hex(hex).map_or(fallback, |c| [c.r, c.g, c.b, c.a])
+fn tone(name: &str, t: &Theme, fallback: [u8; 4]) -> [u8; 4] {
+    match name {
+        "board" => t.board,
+        "ink" => t.ink,
+        "muted" => t.muted,
+        "faint" => t.faint,
+        "accent" => t.accent,
+        hex => Color::from_hex(hex).map_or(fallback, |c| [c.r, c.g, c.b, c.a]),
+    }
 }
 
 fn outline(out: &mut Out, x: usize, y: usize, w: usize, h: usize, thick: usize, color: [u8; 4]) {
@@ -149,9 +156,10 @@ fn slim(node: &Node, w: usize) -> Option<usize> {
     let natural = match node {
         Node::Button { label, .. } => text::width(label, TEXT) + CHROME,
         Node::Text { text: txt, .. } => text::width(txt, TEXT) + TIGHT,
-        Node::Symbol { value } => {
+        Node::Symbol { value, size, .. } => {
+            let k = if *size == 0 { SYMBOL } else { *size };
             if crate::symbol::known(value) {
-                SYMBOL + 2 * TIGHT
+                k + 2 * TIGHT
             } else {
                 text::width(value, TITLE) + 2 * TIGHT
             }
@@ -220,7 +228,7 @@ fn button(node: &Node, x: usize, y: usize, w: usize, t: &Theme, out: &mut Out) -
     let lit = *active || call.as_ref().is_some_and(|c| out.hot(c));
     let fill = match (lit, color) {
         (true, _) => t.accent,
-        (false, Some(hex)) => tint(hex, t.faint),
+        (false, Some(hex)) => tone(hex, t, t.faint),
         (false, None) => t.faint,
     };
     out.ops.push(Op::Rect {
@@ -649,7 +657,9 @@ fn cell(
     else {
         return 0;
     };
-    let fill = color.as_deref().map_or(t.faint, |hex| tint(hex, t.faint));
+    let fill = color
+        .as_deref()
+        .map_or(t.faint, |hex| tone(hex, t, t.faint));
     out.ops.push(Op::Rect {
         x,
         y,
@@ -831,13 +841,16 @@ pub(crate) fn lay(
             RULE
         }
         Node::Image { fact } => picture(fact, x, y, w, t, out).0,
-        Node::Symbol { value } => {
-            if let Some(sprite) = crate::symbol::sprite(value, SYMBOL, t.ink) {
+        Node::Symbol { value, size, ink } => {
+            let k = if *size == 0 { SYMBOL } else { *size };
+            let paint = ink.as_deref().map_or(t.ink, |name| tone(name, t, t.ink));
+            let tall = k + 2 * EDGE;
+            if let Some(sprite) = crate::symbol::sprite(value, k, paint) {
                 out.ops.push(Op::Image {
-                    x: x + w.saturating_sub(SYMBOL) / 2,
-                    y: y + (GLYPH - SYMBOL) / 2,
-                    w: SYMBOL,
-                    h: SYMBOL,
+                    x: x + w.saturating_sub(k) / 2,
+                    y: y + (tall - k) / 2,
+                    w: k,
+                    h: k,
                     scale: 1,
                     pixels: sprite.to_vec(),
                 });
@@ -847,13 +860,13 @@ pub(crate) fn lay(
                     out,
                     value,
                     x + (w.saturating_sub(tw)) / 2,
-                    y + (GLYPH - LINE * TITLE) / 2,
+                    y + (tall.saturating_sub(LINE * TITLE)) / 2,
                     w,
                     TITLE,
-                    t.ink,
+                    paint,
                 );
             }
-            GLYPH
+            tall
         }
         Node::Doc { md } => {
             let mut dy = 0;

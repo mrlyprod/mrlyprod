@@ -106,6 +106,14 @@ pub fn color(value: [u8; 4], call: Call) -> Node {
 }
 
 // PIECES
+pub fn icon(name: &str) -> Node {
+    Node::symbol(name).sized(tokens::SYMBOL)
+}
+
+pub fn mark(name: &str) -> Node {
+    Node::symbol(name).sized(tokens::SYMBOL).inked("accent")
+}
+
 pub fn board(fact: Json) -> Node {
     Node::image(fact)
 }

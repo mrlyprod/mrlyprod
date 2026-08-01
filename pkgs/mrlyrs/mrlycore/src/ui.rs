@@ -67,6 +67,8 @@ pub enum Node {
     },
     Symbol {
         value: String,
+        size: usize,
+        ink: Option<String>,
     },
     Doc {
         md: String,
@@ -171,6 +173,28 @@ impl Node {
     pub fn symbol(value: &str) -> Node {
         Node::Symbol {
             value: value.to_string(),
+            size: 0,
+            ink: None,
+        }
+    }
+    pub fn sized(self, to: usize) -> Node {
+        match self {
+            Node::Symbol { value, ink, .. } => Node::Symbol {
+                value,
+                size: to,
+                ink,
+            },
+            other => other,
+        }
+    }
+    pub fn inked(self, tone: &str) -> Node {
+        match self {
+            Node::Symbol { value, size, .. } => Node::Symbol {
+                value,
+                size,
+                ink: Some(tone.to_string()),
+            },
+            other => other,
         }
     }
     pub fn doc(md: &str) -> Node {

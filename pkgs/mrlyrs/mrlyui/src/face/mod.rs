@@ -728,6 +728,28 @@ mod tests {
     }
 
     #[test]
+    fn a_symbol_takes_its_size_and_ink() {
+        let shot = |node: Node| {
+            let mut input = bare("iconed", Json::Null);
+            input.ui = Some(node);
+            let scene = render(&input, &UiState::default());
+            (
+                scene.body,
+                fnv(&scene.frame.composite().cell.colors.unwrap_or_default()),
+            )
+        };
+        let (plain_h, plain) = shot(Node::symbol("search"));
+        let (big_h, big) = shot(Node::symbol("search").sized(2 * CONTROL));
+        let (inked_h, inked) = shot(Node::symbol("search").inked("accent"));
+        assert!(big_h > plain_h, "a bigger symbol takes more room");
+        assert_eq!(inked_h, plain_h, "ink is not geometry");
+        assert_ne!(plain, big);
+        assert_ne!(plain, inked);
+        let (_, again) = shot(Node::symbol("search").inked("ink"));
+        assert_eq!(plain, again, "the default ink is the theme ink");
+    }
+
+    #[test]
     fn shift_swaps_the_board_under_the_same_field() {
         let input = widget_input();
         let id = render(&input, &UiState::default())

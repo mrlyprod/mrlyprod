@@ -29,7 +29,6 @@ pub const CONTROL: usize = 24;
 pub const HEADER: usize = CONTROL;
 pub const RULE: usize = 2 * UNIT;
 pub const SYMBOL: usize = 16;
-pub const GLYPH: usize = SYMBOL + 2 * EDGE;
 pub const CANVAS: usize = 192;
 pub const PANEL: usize = 240;
 
