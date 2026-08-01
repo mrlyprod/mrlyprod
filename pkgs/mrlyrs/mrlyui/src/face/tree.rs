@@ -496,7 +496,7 @@ fn choice(
                 h: CONTROL,
                 act: Act::Menu { id: key.clone() },
             });
-            if ui.menu.as_deref() == Some(key.as_str()) {
+            if ui.shade.as_deref() == Some(key.as_str()) {
                 let list = options
                     .iter()
                     .map(|o| Node::button(o, call.fill(arg, json!(o))).active(o == value))

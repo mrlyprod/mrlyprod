@@ -53,6 +53,20 @@ pub struct Driver {
     drag: Option<Drag>,
     dirty: bool,
     effects: Vec<Effect>,
+    pace: i64,
+    moves: Vec<Move>,
+}
+
+struct Move {
+    what: What,
+    start: i64,
+    out: bool,
+}
+
+#[derive(Clone, Copy, PartialEq)]
+enum What {
+    Rise,
+    Veil,
 }
 
 fn wall_ms() -> i64 {
@@ -95,9 +109,65 @@ impl Driver {
             drag: None,
             dirty: false,
             effects: Vec::new(),
+            pace: match clock {
+                Some(_) => 0,
+                None => mrlyui::tokens::PACE,
+            },
+            moves: Vec::new(),
         };
         driver.act("nav.open", json!({ "app": "menu" }));
         driver
+    }
+
+    fn now(&self) -> i64 {
+        self.clock.unwrap_or_else(wall_ms)
+    }
+
+    pub fn pace(&mut self, ms: i64) {
+        self.pace = ms.max(0);
+    }
+
+    fn start(&mut self, what: What, out: bool) {
+        let start = self.now();
+        self.moves.retain(|m| m.what != what);
+        self.moves.push(Move { what, start, out });
+        self.settle();
+    }
+
+    fn settle(&mut self) {
+        let now = self.now();
+        let pace = self.pace;
+        let mut live = Vec::new();
+        for m in std::mem::take(&mut self.moves) {
+            let at = mrlyui::tokens::eased(m.start, now, pace, m.out);
+            let value = if m.out { at } else { mrlyui::tokens::FULL - at };
+            match m.what {
+                What::Rise => self.ui.rise = value,
+                What::Veil => self.ui.veil = value,
+            }
+            if at < mrlyui::tokens::FULL {
+                live.push(m);
+            } else if !m.out {
+                match m.what {
+                    What::Rise => self.ui.dock = None,
+                    What::Veil => self.ui.shade = None,
+                }
+            }
+        }
+        self.moves = live;
+    }
+
+    pub fn moving(&self) -> bool {
+        !self.moves.is_empty()
+    }
+
+    pub fn animate(&mut self) -> bool {
+        if self.moves.is_empty() {
+            return false;
+        }
+        self.settle();
+        self.refresh();
+        true
     }
 
     fn tick(&mut self) -> i64 {
@@ -152,7 +222,38 @@ impl Driver {
         self.act(&wish.verb.clone(), wish.args.clone());
     }
 
+    fn stage(&mut self) {
+        let leaving = |moves: &[Move], what: What| moves.iter().any(|m| m.what == what && !m.out);
+        match (self.ui.edit.clone(), self.ui.dock.is_some()) {
+            (Some(edit), false) => {
+                self.ui.dock = Some(edit);
+                self.start(What::Rise, true);
+            }
+            (Some(edit), true) => self.ui.dock = Some(edit),
+            (None, true) => {
+                if !leaving(&self.moves, What::Rise) {
+                    self.start(What::Rise, false);
+                }
+            }
+            (None, false) => {}
+        }
+        match (self.ui.menu.clone(), self.ui.shade.is_some()) {
+            (Some(id), false) => {
+                self.ui.shade = Some(id);
+                self.start(What::Veil, true);
+            }
+            (Some(id), true) => self.ui.shade = Some(id),
+            (None, true) => {
+                if !leaving(&self.moves, What::Veil) {
+                    self.start(What::Veil, false);
+                }
+            }
+            (None, false) => {}
+        }
+    }
+
     fn refresh(&mut self) {
+        self.stage();
         if let Ok(scene) = face_scene(&self.os, &self.route, &self.ui) {
             self.ui.scroll = scene.scroll;
             self.scene = scene;

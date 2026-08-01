@@ -52,7 +52,22 @@ pub const LAUNCH: usize = 3;
 pub const DPAD: usize = 4;
 
 // MOTION
-pub const PACE: u64 = 0;
+pub const PACE: i64 = 150;
+pub const FULL: u8 = 255;
+
+pub fn eased(start: i64, now: i64, pace: i64, out: bool) -> u8 {
+    let span = pace.max(0);
+    let gone = (now - start).clamp(0, span.max(1));
+    let at = match span {
+        0 => 1.0,
+        _ => gone as f64 / span as f64,
+    };
+    let curve = match out {
+        true => 1.0 - (1.0 - at).powi(3),
+        false => at * at * at,
+    };
+    (curve * FULL as f64).round().clamp(0.0, FULL as f64) as u8
+}
 
 // CAP
 pub const ACTIONS: usize = 8;

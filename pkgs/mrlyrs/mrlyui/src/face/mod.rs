@@ -1,4 +1,4 @@
-use crate::tokens::{Theme, ACTIONS, BODY, CONTENT, CONTROL, EDGE, GAP, HEADER, PAD, PANEL};
+use crate::tokens::{Theme, ACTIONS, BODY, CONTENT, CONTROL, EDGE, FULL, GAP, HEADER, PAD, PANEL};
 use mrlycore::errors::Result;
 use mrlycore::ui::{Call, Node};
 use mrlycore::Json;
@@ -50,12 +50,31 @@ impl Edit {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct UiState {
     pub scroll: usize,
     pub edit: Option<Edit>,
     pub menu: Option<String>,
     pub hover: Option<Act>,
+    pub dock: Option<Edit>,
+    pub shade: Option<String>,
+    pub rise: u8,
+    pub veil: u8,
+}
+
+impl Default for UiState {
+    fn default() -> UiState {
+        UiState {
+            scroll: 0,
+            edit: None,
+            menu: None,
+            hover: None,
+            dock: None,
+            shade: None,
+            rise: FULL,
+            veil: FULL,
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -174,7 +193,9 @@ fn overlays(
     let mut queue = queue;
     while !queue.is_empty() {
         for (node, scrim) in std::mem::take(&mut queue) {
-            let veil = [theme.ink[0], theme.ink[1], theme.ink[2], 70];
+            let lift = ui.veil.max(1) as usize;
+            let shade = (70 * lift / FULL as usize) as u8;
+            let veil = [theme.ink[0], theme.ink[1], theme.ink[2], shade];
             paint::paint_into(
                 sheet,
                 WIDTH,
@@ -198,7 +219,8 @@ fn overlays(
             out.hover = ui.hover.clone();
             let ph = tree::lay(&node, 0, 0, PANEL, theme, ui, &mut out);
             let px = (WIDTH - PANEL) / 2;
-            let py = (HEIGHT.saturating_sub(ph) / 2).max(HEADER + PAD);
+            let sunk = (HEIGHT / 16) * (FULL as usize - lift) / FULL as usize;
+            let py = (HEIGHT.saturating_sub(ph) / 2).max(HEADER + PAD) + sunk;
             let rim = 2 * PAD;
             let panel = vec![
                 layout::Op::Rect {
@@ -260,18 +282,19 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
     let mut sheet = vec![theme.board; WIDTH * HEIGHT];
     paint::paint_into(&mut sheet, WIDTH, HEIGHT, &layout::title_ops(input, &theme));
 
-    let strip = ui
-        .edit
-        .as_ref()
-        .map(|e| keys::strip(e.keys.as_deref().unwrap_or("text"), e.shift, e.page, &theme));
+    let docked = ui.dock.as_ref().or(ui.edit.as_ref());
+    let strip =
+        docked.map(|e| keys::strip(e.keys.as_deref().unwrap_or("text"), e.shift, e.page, &theme));
     let bar = if strip.is_some() {
         Vec::new()
     } else {
         layout::action_bar(input, &theme)
     };
+    let full = strip.as_ref().map_or(0, |(_, _, h)| *h);
+    let risen = full * ui.rise.max(1) as usize / FULL as usize;
     let bar_h = strip.as_ref().map_or_else(
         || PAD + bar.iter().map(|i| i.height).sum::<usize>(),
-        |(_, _, h)| *h,
+        |_| risen,
     );
     let y0 = HEADER + PAD;
     let y1 = HEIGHT.saturating_sub(bar_h + PAD);
@@ -316,16 +339,14 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
     }
 
     match strip {
-        Some((ops, caps, h)) => {
-            paint::paint_into(
-                &mut sheet,
-                WIDTH,
-                HEIGHT,
-                &layout::shift(ops, 0, HEIGHT - h),
-            );
+        Some((ops, caps, _)) => {
+            let top = HEIGHT - risen;
+            paint::paint_into(&mut sheet, WIDTH, HEIGHT, &layout::shift(ops, 0, top));
             for mut hit in caps {
-                hit.y += HEIGHT - h;
-                hits.push(hit);
+                hit.y += top;
+                if hit.y < HEIGHT {
+                    hits.push(hit);
+                }
             }
         }
         None => {
@@ -634,6 +655,7 @@ mod tests {
             .any(|h| matches!(&h.act, Act::Menu { id } if id == key)));
         let open = UiState {
             menu: Some(key.to_string()),
+            shade: Some(key.to_string()),
             ..UiState::default()
         };
         let opened = render(&input, &open);

@@ -14,6 +14,7 @@ use winit::window::{Window, WindowId};
 mod audio;
 
 const BEAT: Duration = Duration::from_millis(125);
+const FRAME: Duration = Duration::from_millis(16);
 const WHEEL_STEP: f64 = 22.0;
 
 fn main() {
@@ -126,6 +127,12 @@ impl ApplicationHandler for Face {
     }
 
     fn about_to_wait(&mut self, el: &ActiveEventLoop) {
+        if self.driver.moving() {
+            self.driver.animate();
+            self.sync();
+            el.set_control_flow(ControlFlow::WaitUntil(Instant::now() + FRAME));
+            return;
+        }
         match self.driver.os().frame(None).view.and_then(|v| v.beat) {
             Some(_) => {
                 let now = Instant::now();
