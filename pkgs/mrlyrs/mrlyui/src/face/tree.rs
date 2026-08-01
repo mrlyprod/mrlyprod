@@ -2,7 +2,9 @@ use super::layout::{shift, Op};
 use super::text;
 use super::{Act, Hit, UiState};
 use crate::tokens::{
-    contrast, Theme, CANVAS, CONTROL, GAP, LABEL, PAD, ROW, SYMBOL, TIGHT, TOGGLE,
+    contrast, Theme, BAND, CANVAS, CHEV, CHROME, CONTROL, EDGE, GAP, GLYPH, GRIP, INSET, KNOB,
+    LABEL, LINE, PAD, RAIL, ROW, RULE, SLACK, SLOT, SPLIT, STUB, SWITCH_H, SWITCH_W, SYMBOL, TEXT,
+    THUMB, TIGHT, TILE, TITLE, TOGGLE,
 };
 use mrlycore::ui::{Call, Node, Pick, Role};
 use mrlycore::{json, Color};
@@ -87,7 +89,7 @@ fn line(out: &mut Out, txt: &str, x: usize, y: usize, w: usize, scale: usize, co
 fn wrapped(out: &mut Out, txt: &str, x: usize, y: usize, w: usize, color: [u8; 4]) -> usize {
     let mut dy = 0;
     for piece in super::md::wrap(txt, w) {
-        line(out, &piece, x, y + dy, w, 1, color);
+        line(out, &piece, x, y + dy, w, TEXT, color);
         dy += ROW;
     }
     dy
@@ -140,22 +142,22 @@ fn gridded(
 
 fn slim(node: &Node, w: usize) -> Option<usize> {
     let natural = match node {
-        Node::Button { label, .. } => text::width(label, 1) + 14,
-        Node::Text { text: txt, .. } => text::width(txt, 1) + 2,
+        Node::Button { label, .. } => text::width(label, TEXT) + CHROME,
+        Node::Text { text: txt, .. } => text::width(txt, TEXT) + TIGHT,
         Node::Symbol { value } => {
             if crate::symbol::known(value) {
-                20
+                SYMBOL + 2 * TIGHT
             } else {
-                text::width(value, 2) + 4
+                text::width(value, TITLE) + 2 * TIGHT
             }
         }
         Node::Label {
             text: txt, note, ..
-        } => text::width(txt, 1) + text::width(note, 1) + 12,
-        Node::Cell { .. } => 20,
+        } => text::width(txt, TEXT) + text::width(note, TEXT) + SLACK,
+        Node::Cell { .. } => TILE,
         _ => return None,
     };
-    Some(natural.clamp(16, w))
+    Some(natural.clamp(STUB, w))
 }
 
 fn picture(
@@ -178,12 +180,23 @@ fn picture(
                 scale,
                 pixels,
             });
-            return (ih * scale + 2, Some((px, y, iw * scale, ih * scale, scale)));
+            return (
+                ih * scale + TIGHT,
+                Some((px, y, iw * scale, ih * scale, scale)),
+            );
         }
     }
     let fw = fact["width"].as_u64().unwrap_or(0);
     let fh = fact["height"].as_u64().unwrap_or(0);
-    line(out, &format!("frame {fw}x{fh}"), x, y + 2, w, 1, t.muted);
+    line(
+        out,
+        &format!("frame {fw}x{fh}"),
+        x,
+        y + (ROW - LINE * TEXT) / 2,
+        w,
+        TEXT,
+        t.muted,
+    );
     (ROW, None)
 }
 
@@ -216,15 +229,15 @@ fn button(node: &Node, x: usize, y: usize, w: usize, t: &Theme, out: &mut Out) -
     } else {
         t.ink
     };
-    let cut = text::truncate(label, w.saturating_sub(8), 1);
-    let tw = text::width(&cut, 1);
+    let cut = text::truncate(label, w.saturating_sub(2 * GAP), TEXT);
+    let tw = text::width(&cut, TEXT);
     line(
         out,
         &cut,
         x + (w.saturating_sub(tw)) / 2,
-        y + (h.saturating_sub(7)) / 2,
+        y + (h.saturating_sub(LINE)) / 2,
         w,
-        1,
+        TEXT,
         ink,
     );
     if let Some(call) = call {
@@ -250,22 +263,35 @@ fn toggle(
     t: &Theme,
     out: &mut Out,
 ) -> usize {
-    line(out, label, x, y + 3, w.saturating_sub(28), 1, t.ink);
-    let tx = x + w - 22;
+    line(
+        out,
+        label,
+        x,
+        y + (TOGGLE - LINE) / 2,
+        w.saturating_sub(SWITCH_W + PAD),
+        TEXT,
+        t.ink,
+    );
+    let tx = x + w - SWITCH_W;
+    let ty = y + (TOGGLE - SWITCH_H) / 2;
     let fill = if on { t.accent } else { t.faint };
     out.ops.push(Op::Rect {
         x: tx,
-        y: y + 2,
-        w: 22,
-        h: 10,
+        y: ty,
+        w: SWITCH_W,
+        h: SWITCH_H,
         color: fill,
     });
-    let kx = if on { tx + 13 } else { tx + 1 };
+    let kx = if on {
+        tx + SWITCH_W - KNOB - EDGE
+    } else {
+        tx + EDGE
+    };
     out.ops.push(Op::Rect {
         x: kx,
-        y: y + 3,
-        w: 8,
-        h: 8,
+        y: ty + EDGE,
+        w: KNOB,
+        h: KNOB,
         color: t.board,
     });
     out.hits.push(Hit {
@@ -305,15 +331,15 @@ fn segments(
             color: fill,
         });
         let ink = if on { contrast(fill) } else { t.ink };
-        let cut = text::truncate(option, cw.saturating_sub(6), 1);
-        let tw = text::width(&cut, 1);
+        let cut = text::truncate(option, cw.saturating_sub(PAD), TEXT);
+        let tw = text::width(&cut, TEXT);
         line(
             out,
             &cut,
             ox + (cw.saturating_sub(tw)) / 2,
-            y + 5,
+            y + INSET,
             cw,
-            1,
+            TEXT,
             ink,
         );
         out.hits.push(Hit {
@@ -350,7 +376,7 @@ fn choice(
     };
     let mut dy = 0;
     if !label.is_empty() {
-        line(out, label, x, y, w, 1, t.muted);
+        line(out, label, x, y, w, TEXT, t.muted);
         dy += LABEL;
     }
     match pick {
@@ -363,18 +389,18 @@ fn choice(
                 h: CONTROL,
                 color: t.faint,
             });
-            let cut = text::truncate(value, w.saturating_sub(24), 1);
-            let tw = text::width(&cut, 1);
+            let cut = text::truncate(value, w.saturating_sub(2 * (CHEV + TIGHT)), TEXT);
+            let tw = text::width(&cut, TEXT);
             line(
                 out,
                 &cut,
                 x + (w.saturating_sub(tw)) / 2,
-                y + dy + 5,
+                y + dy + INSET,
                 w,
-                1,
+                TEXT,
                 t.ink,
             );
-            line(out, ">", x + w - 10, y + dy + 5, 10, 1, t.muted);
+            line(out, ">", x + w - CHEV, y + dy + INSET, CHEV, TEXT, t.muted);
             let at = options.iter().position(|o| o == value).unwrap_or(0);
             if let Some(next) = options.get((at + 1) % options.len().max(1)) {
                 out.hits.push(Hit {
@@ -399,13 +425,13 @@ fn choice(
             line(
                 out,
                 value,
-                x + 5,
-                y + dy + 5,
-                w.saturating_sub(20),
-                1,
+                x + INSET,
+                y + dy + INSET,
+                w.saturating_sub(2 * INSET + CHEV),
+                TEXT,
                 t.ink,
             );
-            line(out, "v", x + w - 10, y + dy + 5, 10, 1, t.muted);
+            line(out, "v", x + w - CHEV, y + dy + INSET, CHEV, TEXT, t.muted);
             let key = id(call, arg);
             out.hits.push(Hit {
                 x,
@@ -445,39 +471,55 @@ fn range(node: &Node, x: usize, y: usize, w: usize, t: &Theme, out: &mut Out) ->
     } else {
         value.to_string()
     };
-    let vw = text::width(&shown, 1);
-    line(out, label, x, y, w.saturating_sub(vw + 8), 1, t.muted);
-    line(out, &shown, x + w.saturating_sub(vw), y, vw + 2, 1, t.ink);
+    let vw = text::width(&shown, TEXT);
+    line(
+        out,
+        label,
+        x,
+        y,
+        w.saturating_sub(vw + SPLIT),
+        TEXT,
+        t.muted,
+    );
+    line(
+        out,
+        &shown,
+        x + w.saturating_sub(vw),
+        y,
+        vw + TIGHT,
+        TEXT,
+        t.ink,
+    );
     let ty = y + LABEL;
     let span = (max - min).max(1);
     let frac = ((*value - min).clamp(0, span)) as f64 / span as f64;
     out.ops.push(Op::Rect {
         x,
-        y: ty + 4,
+        y: ty + (BAND - RAIL) / 2,
         w,
-        h: 4,
+        h: RAIL,
         color: t.faint,
     });
     let filled = (w as f64 * frac) as usize;
     out.ops.push(Op::Rect {
         x,
-        y: ty + 4,
+        y: ty + (BAND - RAIL) / 2,
         w: filled,
-        h: 4,
+        h: RAIL,
         color: t.accent,
     });
     out.ops.push(Op::Rect {
-        x: (x + filled).min(x + w.saturating_sub(3)),
-        y: ty + 1,
-        w: 3,
-        h: 10,
+        x: (x + filled).min(x + w.saturating_sub(THUMB)),
+        y: ty + (BAND - GRIP) / 2,
+        w: THUMB,
+        h: GRIP,
         color: t.ink,
     });
     out.hits.push(Hit {
         x,
         y: ty,
         w,
-        h: 12,
+        h: BAND,
         act: Act::Slide {
             call: call.clone(),
             arg: arg.clone(),
@@ -486,7 +528,7 @@ fn range(node: &Node, x: usize, y: usize, w: usize, t: &Theme, out: &mut Out) ->
             step: (*step).max(1),
         },
     });
-    LABEL + 12
+    LABEL + BAND
 }
 
 fn field(
@@ -513,19 +555,35 @@ fn field(
     let key = id(call, arg);
     let focused = ui.edit.as_ref().filter(|e| e.id == key);
     let border = if focused.is_some() { t.accent } else { t.faint };
-    outline(out, x, y, w, CONTROL, 1, border);
+    outline(out, x, y, w, CONTROL, EDGE, border);
     let shown = focused.map_or(value.as_str(), |e| e.buffer.as_str());
     if shown.is_empty() && focused.is_none() {
-        line(out, hint, x + 5, y + 5, w.saturating_sub(10), 1, t.muted);
+        line(
+            out,
+            hint,
+            x + INSET,
+            y + INSET,
+            w.saturating_sub(2 * INSET),
+            TEXT,
+            t.muted,
+        );
     } else {
-        let cut = text::truncate(shown, w.saturating_sub(14), 1);
-        line(out, &cut, x + 5, y + 5, w.saturating_sub(10), 1, t.ink);
+        let cut = text::truncate(shown, w.saturating_sub(2 * INSET + GAP), TEXT);
+        line(
+            out,
+            &cut,
+            x + INSET,
+            y + INSET,
+            w.saturating_sub(2 * INSET),
+            TEXT,
+            t.ink,
+        );
         if focused.is_some() {
             out.ops.push(Op::Rect {
-                x: x + 7 + text::width(&cut, 1),
-                y: y + 4,
-                w: 1,
-                h: 9,
+                x: x + INSET + TIGHT + text::width(&cut, TEXT),
+                y: y + (CONTROL - LINE - TIGHT) / 2,
+                w: EDGE,
+                h: LINE + TIGHT,
                 color: t.accent,
             });
         }
@@ -575,13 +633,13 @@ fn cell(
         color: fill,
     });
     if *on {
-        outline(out, x, y, w, w, 2, t.accent);
+        outline(out, x, y, w, w, 2 * EDGE, t.accent);
     }
     if let Some(inner) = child {
         let mut scratch = Out::new();
-        let iw = w.saturating_sub(8);
+        let iw = w.saturating_sub(2 * GAP);
         let h = lay(inner, 0, 0, iw, t, ui, &mut scratch);
-        out.absorb(scratch, x + 4, y + (w.saturating_sub(h)) / 2);
+        out.absorb(scratch, x + GAP, y + (w.saturating_sub(h)) / 2);
     }
     if let Some(call) = call {
         out.hits.push(Hit {
@@ -607,18 +665,42 @@ fn item(node: &Node, x: usize, y: usize, w: usize, t: &Theme, out: &mut Out) -> 
     };
     let mut tx = x;
     if let Some(sym) = symbol {
-        line(out, sym, x, y + 2, 12, 1, t.accent);
-        tx += 14;
+        line(
+            out,
+            sym,
+            x,
+            y + (LABEL - LINE * TEXT) / 2,
+            SLOT,
+            TEXT,
+            t.accent,
+        );
+        tx += SLOT + TIGHT;
     }
     let (text_ink, note_ink) = if call.is_some() {
         (t.ink, t.muted)
     } else {
         (t.muted, t.ink)
     };
-    let nw = text::width(note, 1);
+    let nw = text::width(note, TEXT);
     let nx = x + w.saturating_sub(nw);
-    line(out, txt, tx, y + 2, nx.saturating_sub(tx + 6), 1, text_ink);
-    line(out, note, nx, y + 2, nw + 2, 1, note_ink);
+    line(
+        out,
+        txt,
+        tx,
+        y + (LABEL - LINE * TEXT) / 2,
+        nx.saturating_sub(tx + PAD),
+        TEXT,
+        text_ink,
+    );
+    line(
+        out,
+        note,
+        nx,
+        y + (LABEL - LINE * TEXT) / 2,
+        nw + TIGHT,
+        TEXT,
+        note_ink,
+    );
     if let Some(call) = call {
         out.hits.push(Hit {
             x,
@@ -646,10 +728,18 @@ pub(crate) fn lay(
         Node::Grid { cols, children } => gridded(children, *cols, x, y, w, t, ui, out),
         Node::Group { children } => {
             let mut scratch = Out::new();
-            let h = stacked(children, 0, 0, w.saturating_sub(12), t, ui, &mut scratch);
-            outline(out, x, y, w, h + 12, 1, t.faint);
-            out.absorb(scratch, x + 6, y + 6);
-            h + 12
+            let h = stacked(
+                children,
+                0,
+                0,
+                w.saturating_sub(2 * PAD),
+                t,
+                ui,
+                &mut scratch,
+            );
+            outline(out, x, y, w, h + 2 * PAD, EDGE, t.faint);
+            out.absorb(scratch, x + PAD, y + PAD);
+            h + 2 * PAD
         }
         Node::Wrap { children } => {
             let mut cx = 0;
@@ -677,11 +767,19 @@ pub(crate) fn lay(
         }
         Node::Text { text: txt, role } => match role {
             Role::Title => {
-                line(out, txt, x, y, w, 2, t.ink);
-                16
+                line(out, txt, x, y, w, TITLE, t.ink);
+                LINE * TITLE + TIGHT
             }
             Role::Label => {
-                line(out, txt, x, y + 2, w, 1, t.accent);
+                line(
+                    out,
+                    txt,
+                    x,
+                    y + (LABEL - LINE * TEXT) / 2,
+                    w,
+                    TEXT,
+                    t.accent,
+                );
                 LABEL
             }
             Role::Note => wrapped(out, txt, x, y, w, t.muted),
@@ -690,37 +788,37 @@ pub(crate) fn lay(
         Node::Rule => {
             out.ops.push(Op::Rect {
                 x,
-                y: y + 2,
+                y: y + (RULE - EDGE) / 2,
                 w,
-                h: 1,
+                h: EDGE,
                 color: t.faint,
             });
-            5
+            RULE
         }
         Node::Image { fact } => picture(fact, x, y, w, t, out).0,
         Node::Symbol { value } => {
             if let Some(sprite) = crate::symbol::sprite(value, SYMBOL, t.ink) {
                 out.ops.push(Op::Image {
                     x: x + w.saturating_sub(SYMBOL) / 2,
-                    y: y + 1,
+                    y: y + (GLYPH - SYMBOL) / 2,
                     w: SYMBOL,
                     h: SYMBOL,
                     scale: 1,
                     pixels: sprite.to_vec(),
                 });
             } else {
-                let tw = text::width(value, 2);
+                let tw = text::width(value, TITLE);
                 line(
                     out,
                     value,
                     x + (w.saturating_sub(tw)) / 2,
-                    y + 2,
+                    y + (GLYPH - LINE * TITLE) / 2,
                     w,
-                    2,
+                    TITLE,
                     t.ink,
                 );
             }
-            18
+            GLYPH
         }
         Node::Doc { md } => {
             let mut dy = 0;
@@ -738,7 +836,7 @@ pub(crate) fn lay(
             for (r, cells) in rows.iter().enumerate() {
                 let color = if r == 0 { t.accent } else { t.ink };
                 for (c, cell_text) in cells.iter().enumerate() {
-                    line(out, cell_text, x + c * (cw + GAP), y + dy, cw, 1, color);
+                    line(out, cell_text, x + c * (cw + GAP), y + dy, cw, TEXT, color);
                 }
                 dy += ROW;
             }

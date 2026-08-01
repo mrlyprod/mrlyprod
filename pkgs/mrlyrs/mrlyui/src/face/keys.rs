@@ -1,7 +1,7 @@
 use super::layout::Op;
 use super::text;
 use super::{Act, Hit};
-use crate::tokens::{contrast, Theme, CONTENT, CONTROL, LINE, PAD, TIGHT, WIDTH};
+use crate::tokens::{contrast, Theme, CONTENT, CONTROL, EDGE, GAP, INSET, PAD, TEXT, TIGHT, WIDTH};
 use mrlycore::colors;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -119,16 +119,16 @@ pub fn board(name: &str) -> Vec<Vec<Cap>> {
 
 pub(crate) fn strip(name: &str, t: &Theme) -> (Vec<Op>, Vec<Hit>, usize) {
     let rows = board(name);
-    let h = 9 + rows.len() * CONTROL + rows.len().saturating_sub(1) * TIGHT;
+    let h = EDGE + 2 * GAP + rows.len() * CONTROL + rows.len().saturating_sub(1) * TIGHT;
     let mut ops = vec![Op::Rect {
         x: 0,
         y: 0,
         w: WIDTH,
-        h: 1,
+        h: EDGE,
         color: t.faint,
     }];
     let mut hits = Vec::new();
-    let mut y = 5;
+    let mut y = EDGE + GAP;
     for band in rows {
         let spans: usize = band.iter().map(|c| c.span).sum::<usize>().max(1);
         let unit = CONTENT.saturating_sub((spans - 1) * TIGHT) / spans;
@@ -146,10 +146,10 @@ pub(crate) fn strip(name: &str, t: &Theme) -> (Vec<Op>, Vec<Hit>, usize) {
             });
             if key.fill.is_some() {
                 for (rx, ry, rw, rh) in [
-                    (x, y, kw, 1),
-                    (x, y + CONTROL - 1, kw, 1),
-                    (x, y, 1, CONTROL),
-                    (x + kw - 1, y, 1, CONTROL),
+                    (x, y, kw, EDGE),
+                    (x, y + CONTROL - 1, kw, EDGE),
+                    (x, y, EDGE, CONTROL),
+                    (x + kw - 1, y, EDGE, CONTROL),
                 ] {
                     ops.push(Op::Rect {
                         x: rx,
@@ -166,13 +166,13 @@ pub(crate) fn strip(name: &str, t: &Theme) -> (Vec<Op>, Vec<Hit>, usize) {
                 } else {
                     t.ink
                 };
-                let cut = text::truncate(&key.label, kw.saturating_sub(4), 1);
-                let tw = text::width(&cut, 1);
+                let cut = text::truncate(&key.label, kw.saturating_sub(2 * TIGHT), TEXT);
+                let tw = text::width(&cut, TEXT);
                 ops.push(Op::Text {
                     x: x + (kw.saturating_sub(tw)) / 2,
-                    y: y + (CONTROL - LINE) / 2,
+                    y: y + INSET,
                     text: cut,
-                    scale: 1,
+                    scale: TEXT,
                     color: ink,
                 });
             }
