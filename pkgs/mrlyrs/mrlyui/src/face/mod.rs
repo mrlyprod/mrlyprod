@@ -55,6 +55,7 @@ pub struct UiState {
     pub scroll: usize,
     pub edit: Option<Edit>,
     pub menu: Option<String>,
+    pub hover: Option<Act>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -194,6 +195,7 @@ fn overlays(
                 act: scrim,
             });
             let mut out = tree::Out::new();
+            out.hover = ui.hover.clone();
             let ph = tree::lay(&node, 0, 0, PANEL, theme, ui, &mut out);
             let px = (WIDTH - PANEL) / 2;
             let py = (HEIGHT.saturating_sub(ph) / 2).max(HEADER + PAD);
@@ -251,6 +253,7 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
     let theme = Theme::new(&input.app, input.dark);
     let root = input.ui.clone().unwrap_or_else(|| dump::tree(input));
     let mut out = tree::Out::new();
+    out.hover = ui.hover.clone();
     let body = tree::lay(&root, PAD, 0, CONTENT, &theme, ui, &mut out);
     let body = body.clamp(1, BODY);
 

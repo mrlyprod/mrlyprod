@@ -299,6 +299,17 @@ impl Driver {
         }
     }
 
+    pub fn hover(&mut self, at: Option<(usize, usize)>) {
+        let over = at
+            .and_then(|(x, y)| self.over(x, y))
+            .map(|hit| hit.act)
+            .filter(|act| matches!(act, Act::Tap { .. } | Act::Edit { .. } | Act::Menu { .. }));
+        if over != self.ui.hover {
+            self.ui.hover = over;
+            self.refresh();
+        }
+    }
+
     pub fn move_to(&mut self, x: usize, y: usize) {
         let Some(Drag::Board {
             last,

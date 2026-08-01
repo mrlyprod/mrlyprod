@@ -13,6 +13,7 @@ pub(crate) struct Out {
     pub ops: Vec<Op>,
     pub hits: Vec<Hit>,
     pub overlays: Vec<(Node, Act)>,
+    pub hover: Option<Act>,
 }
 
 impl Out {
@@ -21,7 +22,17 @@ impl Out {
             ops: Vec::new(),
             hits: Vec::new(),
             overlays: Vec::new(),
+            hover: None,
         }
+    }
+    fn scratch(&self) -> Out {
+        Out {
+            hover: self.hover.clone(),
+            ..Out::new()
+        }
+    }
+    fn hot(&self, call: &Call) -> bool {
+        matches!(&self.hover, Some(Act::Tap { call: over }) if over == call)
     }
     fn absorb(&mut self, other: Out, dx: usize, dy: usize) {
         self.ops.extend(shift(other.ops, dx, dy));
@@ -106,7 +117,7 @@ fn stacked(
 ) -> usize {
     let mut dy = 0;
     for child in children {
-        let mut scratch = Out::new();
+        let mut scratch = out.scratch();
         let h = lay(child, 0, 0, w, t, ui, &mut scratch);
         out.absorb(scratch, x, y + dy);
         dy += h + GAP;
@@ -130,7 +141,7 @@ fn gridded(
     for band in children.chunks(cols) {
         let mut tall = 0;
         for (i, child) in band.iter().enumerate() {
-            let mut scratch = Out::new();
+            let mut scratch = out.scratch();
             let h = lay(child, 0, 0, cw, t, ui, &mut scratch);
             out.absorb(scratch, x + i * (cw + GAP), y + dy);
             tall = tall.max(h);
@@ -212,7 +223,8 @@ fn button(node: &Node, x: usize, y: usize, w: usize, t: &Theme, out: &mut Out) -
         return 0;
     };
     let h = if *big { w } else { CONTROL };
-    let fill = match (active, color) {
+    let lit = *active || call.as_ref().is_some_and(|c| out.hot(c));
+    let fill = match (lit, color) {
         (true, _) => t.accent,
         (false, Some(hex)) => tint(hex, t.faint),
         (false, None) => t.faint,
@@ -224,7 +236,7 @@ fn button(node: &Node, x: usize, y: usize, w: usize, t: &Theme, out: &mut Out) -
         h,
         color: fill,
     });
-    let ink = if *active || color.is_some() {
+    let ink = if lit || color.is_some() {
         contrast(fill)
     } else {
         t.ink
@@ -263,6 +275,17 @@ fn toggle(
     t: &Theme,
     out: &mut Out,
 ) -> usize {
+    let wish = call.fill(arg, json!(!on));
+    let lit = out.hot(&wish);
+    if lit {
+        out.ops.push(Op::Rect {
+            x,
+            y,
+            w,
+            h: CONTROL,
+            color: t.faint,
+        });
+    }
     line(
         out,
         label,
@@ -299,9 +322,7 @@ fn toggle(
         y,
         w,
         h: CONTROL,
-        act: Act::Tap {
-            call: call.fill(arg, json!(!on)),
-        },
+        act: Act::Tap { call: wish },
     });
     CONTROL
 }
@@ -321,7 +342,8 @@ fn segments(
     let cw = (w.saturating_sub((n - 1) * TIGHT)) / n;
     for (i, option) in options.iter().enumerate() {
         let ox = x + i * (cw + TIGHT);
-        let on = option == value;
+        let wish = call.fill(arg, json!(option));
+        let on = option == value || out.hot(&wish);
         let fill = if on { t.accent } else { t.faint };
         out.ops.push(Op::Rect {
             x: ox,
@@ -347,9 +369,7 @@ fn segments(
             y,
             w: cw,
             h: CONTROL,
-            act: Act::Tap {
-                call: call.fill(arg, json!(option)),
-            },
+            act: Act::Tap { call: wish },
         });
     }
 }
@@ -382,12 +402,18 @@ fn choice(
     match pick {
         Pick::Segments => segments(value, options, call, arg, x, y + dy, w, t, out),
         Pick::Cycle => {
+            let at = options.iter().position(|o| o == value).unwrap_or(0);
+            let next = options.get((at + 1) % options.len().max(1));
+            let wish = next.map(|o| call.fill(arg, json!(o)));
+            let lit = wish.as_ref().is_some_and(|c| out.hot(c));
+            let fill = if lit { t.accent } else { t.faint };
+            let ink = if lit { contrast(fill) } else { t.ink };
             out.ops.push(Op::Rect {
                 x,
                 y: y + dy,
                 w,
                 h: CONTROL,
-                color: t.faint,
+                color: fill,
             });
             let cut = text::truncate(value, w.saturating_sub(2 * (CHEV + TIGHT)), TEXT);
             let tw = text::width(&cut, TEXT);
@@ -398,29 +424,29 @@ fn choice(
                 y + dy + INSET,
                 w,
                 TEXT,
-                t.ink,
+                ink,
             );
             line(out, ">", x + w - CHEV, y + dy + INSET, CHEV, TEXT, t.muted);
-            let at = options.iter().position(|o| o == value).unwrap_or(0);
-            if let Some(next) = options.get((at + 1) % options.len().max(1)) {
+            if let Some(call) = wish {
                 out.hits.push(Hit {
                     x,
                     y: y + dy,
                     w,
                     h: CONTROL,
-                    act: Act::Tap {
-                        call: call.fill(arg, json!(next)),
-                    },
+                    act: Act::Tap { call },
                 });
             }
         }
         Pick::Menu => {
+            let key = id(call, arg);
+            let lit = matches!(&out.hover, Some(Act::Menu { id }) if *id == key);
+            let fill = if lit { t.accent } else { t.faint };
             out.ops.push(Op::Rect {
                 x,
                 y: y + dy,
                 w,
                 h: CONTROL,
-                color: t.faint,
+                color: fill,
             });
             line(
                 out,
@@ -429,10 +455,9 @@ fn choice(
                 y + dy + INSET,
                 w.saturating_sub(INSET + CHEV + TIGHT),
                 TEXT,
-                t.ink,
+                if lit { contrast(fill) } else { t.ink },
             );
             line(out, "v", x + w - CHEV, y + dy + INSET, CHEV, TEXT, t.muted);
-            let key = id(call, arg);
             out.hits.push(Hit {
                 x,
                 y: y + dy,
@@ -555,7 +580,12 @@ fn field(
     };
     let key = id(call, arg);
     let focused = ui.edit.as_ref().filter(|e| e.id == key);
-    let border = if focused.is_some() { t.accent } else { t.faint };
+    let lit = matches!(&out.hover, Some(Act::Edit { id, .. }) if *id == key);
+    let border = if focused.is_some() || lit {
+        t.accent
+    } else {
+        t.faint
+    };
     outline(out, x, y, w, CONTROL, EDGE, border);
     let shown = focused.map_or(value.as_str(), |e| e.buffer.as_str());
     if shown.is_empty() && focused.is_none() {
@@ -633,11 +663,11 @@ fn cell(
         h: w,
         color: fill,
     });
-    if *on {
+    if *on || call.as_ref().is_some_and(|c| out.hot(c)) {
         outline(out, x, y, w, w, 2 * EDGE, t.accent);
     }
     if let Some(inner) = child {
-        let mut scratch = Out::new();
+        let mut scratch = out.scratch();
         let iw = w.saturating_sub(2 * GAP);
         let h = lay(inner, 0, 0, iw, t, ui, &mut scratch);
         out.absorb(scratch, x + GAP, y + (w.saturating_sub(h)) / 2);
@@ -664,6 +694,16 @@ fn item(node: &Node, x: usize, y: usize, w: usize, t: &Theme, out: &mut Out) -> 
     else {
         return 0;
     };
+    let lit = call.as_ref().is_some_and(|c| out.hot(c));
+    if lit {
+        out.ops.push(Op::Rect {
+            x,
+            y,
+            w,
+            h: CONTROL,
+            color: t.faint,
+        });
+    }
     let mut tx = x;
     if let Some(sym) = symbol {
         line(
@@ -728,7 +768,7 @@ pub(crate) fn lay(
         Node::Row { children } => gridded(children, children.len(), x, y, w, t, ui, out),
         Node::Grid { cols, children } => gridded(children, *cols, x, y, w, t, ui, out),
         Node::Group { children } => {
-            let mut scratch = Out::new();
+            let mut scratch = out.scratch();
             let h = stacked(
                 children,
                 0,
@@ -753,7 +793,7 @@ pub(crate) fn lay(
                     dy += tall + GAP;
                     tall = 0;
                 }
-                let mut scratch = Out::new();
+                let mut scratch = out.scratch();
                 let h = lay(child, 0, 0, cw, t, ui, &mut scratch);
                 out.absorb(scratch, x + cx, y + dy);
                 cx += cw + GAP;

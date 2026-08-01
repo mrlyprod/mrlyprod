@@ -12,3 +12,7 @@
 {"assert": {"route": "settings"}}
 {"open": "menu"}
 {"assert": {"frame": "17949768563406623168"}}
+{"hover": [160, 200]}
+{"assert": {"frame": "17346457522176067192"}}
+{"hover": []}
+{"assert": {"frame": "17949768563406623168"}}

@@ -61,7 +61,7 @@ fn usage() {
     eprintln!("                        drive an app with random legal calls");
     eprintln!("  mrlycli drive [file]  play a gesture screenplay against the face");
     eprintln!("                        gestures: open call tap tap_at slide cell focus type");
-    eprintln!("                        key wheel scroll beat shot hits assert");
+    eprintln!("                        hover key wheel scroll beat shot hits assert");
     eprintln!("  mrlycli monkey <app> [--seed N] [--steps K]");
     eprintln!("                        mash random face hits with the pointer");
     eprintln!("  mrlycli describe      print the kernel surface as JSON");
@@ -752,6 +752,18 @@ fn gesture(driver: &mut mrlyweb::drive::Driver, g: &Json) -> Result<(), String> 
     if !g["tap"].is_null() {
         let verb = g["tap"]["verb"].as_str().ok_or("tap needs a verb")?;
         return driver.tap(verb, &g["tap"]["args"]);
+    }
+    if let Some(at) = g["hover"].as_array() {
+        let spot = match at.len() {
+            0 => None,
+            _ => {
+                let x = at.first().and_then(Json::as_u64).unwrap_or(0) as usize;
+                let y = at.get(1).and_then(Json::as_u64).unwrap_or(0) as usize;
+                Some((x, y))
+            }
+        };
+        driver.hover(spot);
+        return Ok(());
     }
     if let Some(at) = g["tap_at"].as_array() {
         let x = at.first().and_then(Json::as_u64).unwrap_or(0) as usize;

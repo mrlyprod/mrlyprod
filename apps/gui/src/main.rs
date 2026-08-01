@@ -80,7 +80,15 @@ impl ApplicationHandler for Face {
                 if self.pressed {
                     let (sx, sy) = self.sheet_clamped();
                     self.driver.move_to(sx, sy);
+                } else {
+                    self.driver.hover(self.sheet_at());
+                    self.sync();
                 }
+            }
+            WindowEvent::CursorLeft { .. } => {
+                self.cursor = (-1.0, -1.0);
+                self.driver.hover(None);
+                self.sync();
             }
             WindowEvent::MouseWheel { delta, .. } => {
                 let dy = match delta {
