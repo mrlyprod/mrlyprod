@@ -110,6 +110,7 @@ pub enum Act {
     Slide {
         call: Call,
         arg: String,
+        value: i64,
         min: i64,
         max: i64,
         step: i64,
@@ -317,10 +318,11 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
     let window = y1.saturating_sub(y0);
 
     let scroll = reveal(&out.hits, ui, body, window);
-    let mut canvas = vec![theme.board; WIDTH * body];
-    paint::paint_into(&mut canvas, WIDTH, body, &out.ops);
+    let seen = window.min(body.saturating_sub(scroll)).max(1);
+    let mut canvas = vec![theme.board; WIDTH * seen];
+    paint::band(&mut canvas, WIDTH, seen, &out.ops, scroll);
     for row in 0..window.min(body.saturating_sub(scroll)) {
-        let src = (scroll + row) * WIDTH;
+        let src = row * WIDTH;
         let dst = (y0 + row) * WIDTH;
         sheet[dst..dst + WIDTH].copy_from_slice(&canvas[src..src + WIDTH]);
     }
@@ -400,7 +402,7 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
                 y + (CONTROL - crate::tokens::LINE) / 2,
                 "/".to_string(),
                 1,
-                theme.accent,
+                theme.pen,
             ));
             let typed = ask.line.clone();
             let tw = crate::face::text::width(&typed, 1);
@@ -416,7 +418,7 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
                 y: y + (CONTROL - crate::tokens::LINE) / 2,
                 w: EDGE,
                 h: crate::tokens::LINE,
-                color: theme.accent,
+                color: theme.pen,
             });
             paint::paint_into(&mut sheet, WIDTH, HEIGHT, &ops);
         }
@@ -454,35 +456,39 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
     overlays(out.overlays, &theme, ui, &mut sheet, &mut hits);
 
     if let Some(want) = &ui.ring {
-        if let Some(hit) = hits.iter().find(|hit| hit.act == *want) {
+        let scrim = hits
+            .iter()
+            .rposition(|hit| hit.w == WIDTH && hit.h == HEIGHT)
+            .map_or(0, |at| at + 1);
+        if let Some(hit) = hits[scrim..].iter().find(|hit| hit.act == *want) {
             let rim = vec![
                 layout::Op::Rect {
                     x: hit.x,
                     y: hit.y,
                     w: hit.w,
                     h: EDGE,
-                    color: theme.accent,
+                    color: theme.pen,
                 },
                 layout::Op::Rect {
                     x: hit.x,
                     y: hit.y + hit.h.saturating_sub(EDGE),
                     w: hit.w,
                     h: EDGE,
-                    color: theme.accent,
+                    color: theme.pen,
                 },
                 layout::Op::Rect {
                     x: hit.x,
                     y: hit.y,
                     w: EDGE,
                     h: hit.h,
-                    color: theme.accent,
+                    color: theme.pen,
                 },
                 layout::Op::Rect {
                     x: hit.x + hit.w.saturating_sub(EDGE),
                     y: hit.y,
                     w: EDGE,
                     h: hit.h,
-                    color: theme.accent,
+                    color: theme.pen,
                 },
             ];
             paint::paint_into(&mut sheet, WIDTH, HEIGHT, &rim);
@@ -497,6 +503,13 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
         window,
         scroll,
     }
+}
+
+pub fn fit(bw: usize, bh: usize, fw: usize, fh: usize) -> (usize, usize, usize) {
+    let scale = (bw / fw.max(1)).min(bh / fh.max(1)).max(1);
+    let ox = bw.saturating_sub(fw * scale) / 2;
+    let oy = bh.saturating_sub(fh * scale) / 2;
+    (ox, oy, scale)
 }
 
 pub fn face(input: &FaceInput) -> crate::frame::Frame {
@@ -1017,5 +1030,69 @@ mod tests {
         };
         let scrolled = render(&input, &deep);
         assert_eq!(scrolled.frame.height, HEIGHT);
+    }
+
+    #[test]
+    fn a_focused_field_follows_the_tail_of_a_long_buffer() {
+        let mut input = bare("typer", Json::Null);
+        input.ui = Some(Node::field(
+            "",
+            "type",
+            Call::new("typer.find", json!({})),
+            "q",
+        ));
+        let id = render(&input, &UiState::default())
+            .binds
+            .iter()
+            .find_map(|a| match a {
+                Act::Edit { id, .. } => Some(id.clone()),
+                _ => None,
+            })
+            .unwrap();
+        let typed =
+            |n: usize| -> String { (0..n).map(|i| (b'a' + (i % 26) as u8) as char).collect() };
+        let shot = |n: usize| {
+            fnv(&render(
+                &input,
+                &UiState {
+                    edit: Some(Edit::new(id.clone(), typed(n), None)),
+                    ..UiState::default()
+                },
+            )
+            .frame
+            .composite()
+            .cell
+            .colors
+            .unwrap_or_default())
+        };
+        let long = shot(120);
+        assert_ne!(long, shot(121), "the field froze past its width");
+        assert_ne!(shot(60), long, "the field never moved");
+    }
+
+    #[test]
+    fn the_body_only_rasters_the_band_it_shows() {
+        let mut input = bare("lister", Json::Null);
+        input.ui = Some(Node::column(
+            (0..60)
+                .map(|i| {
+                    Node::button(
+                        &format!("row {i}"),
+                        Call::new("list.pick", json!({ "i": i })),
+                    )
+                })
+                .collect(),
+        ));
+        let deep = render(
+            &input,
+            &UiState {
+                scroll: 400,
+                ..UiState::default()
+            },
+        );
+        assert!(deep.scroll > 0, "the list never scrolled");
+        assert_eq!(deep.frame.height, HEIGHT);
+        let seen = deep.hits.iter().filter(|h| h.y < HEIGHT).count();
+        assert!(seen > 0, "a scrolled body showed nothing");
     }
 }

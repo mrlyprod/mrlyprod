@@ -56,6 +56,7 @@ fn tone(name: &str, t: &Theme, fallback: [u8; 4]) -> [u8; 4] {
         "muted" => t.muted,
         "faint" => t.faint,
         "accent" => t.accent,
+        "pen" => t.pen,
         hex => Color::from_hex(hex).map_or(fallback, |c| [c.r, c.g, c.b, c.a]),
     }
 }
@@ -580,6 +581,7 @@ fn range(node: &Node, x: usize, y: usize, w: usize, t: &Theme, out: &mut Out) ->
         act: Act::Slide {
             call: call.clone(),
             arg: arg.clone(),
+            value: *value,
             min: *min,
             max: *max,
             step: (*step).max(1),
@@ -614,7 +616,7 @@ fn field(
     let focused = ui.edit.as_ref().filter(|e| e.id == key);
     let lit = matches!(&out.hover, Some(Act::Edit { id, .. }) if *id == key);
     let border = if focused.is_some() || lit {
-        t.accent
+        t.pen
     } else {
         t.faint
     };
@@ -626,7 +628,11 @@ fn field(
     if shown.is_empty() && focused.is_none() {
         line(out, hint, tx, y + INSET, field, TEXT, t.muted);
     } else {
-        let cut = text::truncate(shown, field.saturating_sub(GAP), TEXT);
+        let room = field.saturating_sub(GAP);
+        let cut = match focused.is_some() {
+            true => tail(shown, room),
+            false => text::truncate(shown, room, TEXT),
+        };
         line(out, &cut, tx, y + INSET, field, TEXT, t.ink);
         if focused.is_some() {
             out.ops.push(Op::Rect {
@@ -634,7 +640,7 @@ fn field(
                 y: y + (CONTROL - LINE - TIGHT) / 2,
                 w: EDGE,
                 h: LINE + TIGHT,
-                color: t.accent,
+                color: t.pen,
             });
         }
     }
@@ -654,6 +660,19 @@ fn field(
         },
     });
     CONTROL
+}
+
+fn tail(text: &str, room: usize) -> String {
+    let chars: Vec<char> = text.chars().collect();
+    let mut cut = 0;
+    while cut < chars.len() {
+        let kept: String = chars[cut..].iter().collect();
+        if crate::face::text::width(&kept, TEXT) <= room {
+            return kept;
+        }
+        cut += 1;
+    }
+    String::new()
 }
 
 fn lead(icon: &Option<String>, out: &mut Out, x: usize, y: usize, t: &Theme) -> usize {
@@ -696,7 +715,7 @@ fn cell(
         color: fill,
     });
     if *on || call.as_ref().is_some_and(|c| out.hot(c)) {
-        outline(out, x, y, w, w, 2 * EDGE, t.accent);
+        outline(out, x, y, w, w, 2 * EDGE, t.pen);
     }
     if let Some(inner) = child {
         let mut scratch = out.scratch();
@@ -739,7 +758,7 @@ fn item(node: &Node, x: usize, y: usize, w: usize, t: &Theme, out: &mut Out) -> 
     let mut tx = x;
     if let Some(sym) = symbol {
         let k = SYMBOL;
-        if !glyph(out, sym, x, y + (CONTROL - k) / 2, k, t.accent) {
+        if !glyph(out, sym, x, y + (CONTROL - k) / 2, k, t.pen) {
             line(
                 out,
                 sym,
@@ -747,7 +766,7 @@ fn item(node: &Node, x: usize, y: usize, w: usize, t: &Theme, out: &mut Out) -> 
                 y + (CONTROL - LINE * TEXT) / 2,
                 SLOT,
                 TEXT,
-                t.accent,
+                t.pen,
             );
         }
         tx += SLOT + TIGHT;
@@ -847,15 +866,7 @@ pub(crate) fn lay(
                 LINE * TITLE + TIGHT
             }
             Role::Label => {
-                line(
-                    out,
-                    txt,
-                    x,
-                    y + (CONTROL - LINE * TEXT) / 2,
-                    w,
-                    TEXT,
-                    t.accent,
-                );
+                line(out, txt, x, y + (CONTROL - LINE * TEXT) / 2, w, TEXT, t.pen);
                 CONTROL
             }
             Role::Note => wrapped(out, txt, x, y, w, t.muted),
@@ -913,7 +924,7 @@ pub(crate) fn lay(
             let cw = (w.saturating_sub((cols - 1) * GAP)) / cols;
             let mut dy = 0;
             for (r, cells) in rows.iter().enumerate() {
-                let color = if r == 0 { t.accent } else { t.ink };
+                let color = if r == 0 { t.pen } else { t.ink };
                 for (c, cell_text) in cells.iter().enumerate() {
                     line(out, cell_text, x + c * (cw + GAP), y + dy, cw, TEXT, color);
                 }

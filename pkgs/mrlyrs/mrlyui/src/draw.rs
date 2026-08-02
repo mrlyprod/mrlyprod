@@ -4,20 +4,26 @@ pub fn fill_rect(
     w: usize,
     h: usize,
     x0: usize,
-    y0: usize,
+    y0: i64,
     rw: usize,
     rh: usize,
     color: [u8; 4],
 ) {
-    for dy in 0..rh {
+    for dy in band(y0, rh, h) {
+        let py = (y0 + dy as i64) as usize;
         for dx in 0..rw {
             let px = x0 + dx;
-            let py = y0 + dy;
-            if px < w && py < h {
+            if px < w {
                 buf[py * w + px] = color;
             }
         }
     }
+}
+
+pub fn band(y: i64, tall: usize, h: usize) -> std::ops::Range<usize> {
+    let first = (-y).clamp(0, tall as i64) as usize;
+    let last = (h as i64 - y).clamp(0, tall as i64) as usize;
+    first..last.max(first)
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -27,20 +33,25 @@ pub fn blit(
     h: usize,
     rows: &[Vec<u8>],
     x: usize,
-    y: usize,
+    y: i64,
     scale: usize,
     color: [u8; 4],
 ) {
+    let seen = band(y, rows.len() * scale, h);
     for (ry, row) in rows.iter().enumerate() {
-        for (rx, &bit) in row.iter().enumerate() {
-            if bit & 1 == 0 {
+        for dy in 0..scale {
+            let step = ry * scale + dy;
+            if !seen.contains(&step) {
                 continue;
             }
-            for dy in 0..scale {
+            let py = (y + step as i64) as usize;
+            for (rx, &bit) in row.iter().enumerate() {
+                if bit & 1 == 0 {
+                    continue;
+                }
                 for dx in 0..scale {
                     let px = x + rx * scale + dx;
-                    let py = y + ry * scale + dy;
-                    if px < w && py < h {
+                    if px < w {
                         buf[py * w + px] = color;
                     }
                 }
@@ -56,16 +67,16 @@ pub fn sprite(
     pixels: &[[u8; 4]],
     k: usize,
     x: usize,
-    y: usize,
+    y: i64,
 ) {
     if pixels.len() != k * k {
         return;
     }
-    for sy in 0..k {
+    for sy in band(y, k, h) {
+        let py = (y + sy as i64) as usize;
         for sx in 0..k {
             let px = x + sx;
-            let py = y + sy;
-            if px < w && py < h {
+            if px < w {
                 crate::frame::over(&mut buf[py * w + px], pixels[sy * k + sx]);
             }
         }

@@ -67,9 +67,15 @@ impl Color {
     pub fn from_hex(hex: &str) -> Result<Color> {
         let code = hex.trim_start_matches('#');
         let byte = |i: usize| -> Result<u8> {
-            u8::from_str_radix(&code[i..i + 2], 16)
+            let pair = code
+                .get(i..i + 2)
+                .ok_or_else(|| MrlyError::Value(format!("invalid hex code {hex:?}.")))?;
+            u8::from_str_radix(pair, 16)
                 .map_err(|_| MrlyError::Value(format!("invalid hex code {hex:?}.")))
         };
+        if !code.is_ascii() {
+            return value_error("Hex code must be in format #RRGGBB or #RRGGBBAA");
+        }
         match code.len() {
             6 => Ok(Color::rgb(byte(0)?, byte(2)?, byte(4)?)),
             8 => Ok(Color::rgba(byte(0)?, byte(2)?, byte(4)?, byte(6)?)),
@@ -165,6 +171,20 @@ pub fn gradient(colors: &[Color], steps: usize) -> Result<Vec<Color>> {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn from_hex_errors_on_non_ascii_instead_of_panicking() {
+        use super::*;
+        for bad in [
+            "a\u{e9}bcd",
+            "\u{e9}\u{e9}\u{e9}",
+            "#a\u{e9}bcd",
+            "\u{1f600}\u{1f600}",
+        ] {
+            assert!(Color::from_hex(bad).is_err(), "{bad:?} must be an error");
+        }
+        assert_eq!(Color::from_hex("#ff0000").unwrap(), Color::rgb(255, 0, 0));
+    }
+
     use super::*;
     #[test]
     fn named_palette() {

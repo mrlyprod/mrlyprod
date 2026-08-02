@@ -119,7 +119,7 @@ pub fn icon(name: &str) -> Node {
 }
 
 pub fn mark(name: &str) -> Node {
-    Node::symbol(name).sized(tokens::SYMBOL).inked("accent")
+    Node::symbol(name).sized(tokens::SYMBOL).inked("pen")
 }
 
 pub fn board(fact: Json) -> Node {

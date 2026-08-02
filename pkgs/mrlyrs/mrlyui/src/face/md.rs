@@ -7,8 +7,8 @@ pub(crate) fn items(md: &str, theme: &Theme, width: usize) -> Vec<Item> {
     let mut out = Vec::new();
     for block in blocks(md) {
         match block {
-            Block::H1(t) => out.push(row(strip(&t), 0, 2, theme.ink)),
-            Block::H2(t) => out.push(row(strip(&t), 0, 1, theme.accent)),
+            Block::H1(t) => out.push(row(strip(&t), 0, 2, theme.ink, width)),
+            Block::H2(t) => out.push(row(strip(&t), 0, 1, theme.pen, width)),
             Block::Para(t) => {
                 for line in fold(words(&t), width) {
                     out.push(runs(&line, PAD, theme.ink));
@@ -27,7 +27,7 @@ pub(crate) fn items(md: &str, theme: &Theme, width: usize) -> Vec<Item> {
             Block::Code(lines) => out.push(code_item(&lines, theme, width)),
             Block::Image { alt, .. } => {
                 for line in wrap(&strip(&alt), width) {
-                    out.push(row(line, 0, 1, theme.muted));
+                    out.push(row(line, 0, 1, theme.muted, width));
                 }
             }
             Block::Quote(t) => {
@@ -36,9 +36,9 @@ pub(crate) fn items(md: &str, theme: &Theme, width: usize) -> Vec<Item> {
                 }
             }
             Block::Table { head, rows } => {
-                out.push(table_line(&head, theme.accent));
+                out.push(table_line(&head, theme.pen, width));
                 for cells in &rows {
-                    out.push(table_line(cells, theme.ink));
+                    out.push(table_line(cells, theme.ink, width));
                 }
             }
         }
@@ -46,13 +46,13 @@ pub(crate) fn items(md: &str, theme: &Theme, width: usize) -> Vec<Item> {
     out
 }
 
-fn table_line(cells: &[String], color: [u8; 4]) -> Item {
+fn table_line(cells: &[String], color: [u8; 4], width: usize) -> Item {
     let joined = cells
         .iter()
         .map(|cell| strip(cell))
         .collect::<Vec<_>>()
         .join("  ");
-    row(joined, 0, 1, color)
+    row(joined, 0, 1, color, width)
 }
 
 fn list_item(marker: &str, entry: &str, theme: &Theme, width: usize) -> Vec<Item> {

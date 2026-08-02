@@ -35,7 +35,7 @@ pub fn card(route: &str, title: &str) -> Result<Vec<[u8; 4]>> {
                     WIDTH,
                     HEIGHT,
                     c * CELL,
-                    r * CELL,
+                    (r * CELL) as i64,
                     CELL,
                     CELL,
                     live,
@@ -54,7 +54,7 @@ pub fn card(route: &str, title: &str) -> Result<Vec<[u8; 4]>> {
     let brand_rows = mrlyfont::raster("mrly.net");
     let brand_h = brand_rows.len();
     let total = title_h + 6 + brand_h;
-    let mut y = HEIGHT.saturating_sub(total) / 2;
+    let mut y = (HEIGHT.saturating_sub(total) / 2) as i64;
     blit(
         &mut buf,
         WIDTH,
@@ -65,7 +65,7 @@ pub fn card(route: &str, title: &str) -> Result<Vec<[u8; 4]>> {
         title_scale,
         WHITE,
     );
-    y += title_h + 6;
+    y += (title_h + 6) as i64;
     blit(&mut buf, WIDTH, HEIGHT, &brand_rows, FIELD_X, y, 1, accent);
     Ok(buf)
 }

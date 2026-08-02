@@ -51,6 +51,7 @@ pub struct Glass {
     flat: wgpu::Sampler,
     rect: wgpu::Buffer,
     sheet: Option<(wgpu::Texture, usize, usize)>,
+    again: bool,
 }
 
 impl Glass {
@@ -164,7 +165,12 @@ impl Glass {
             flat,
             rect,
             sheet: None,
+            again: false,
         })
+    }
+
+    pub fn again(&mut self) -> bool {
+        std::mem::take(&mut self.again)
     }
 
     pub fn size(&self) -> (usize, usize) {
@@ -265,10 +271,14 @@ impl Glass {
                 },
             ],
         });
-        let frame = match self.surface.get_current_texture() {
+        let taken = self.surface.get_current_texture();
+        let frame = match taken {
             wgpu::CurrentSurfaceTexture::Success(frame) => frame,
+            wgpu::CurrentSurfaceTexture::Suboptimal(frame) => frame,
             _ => {
+                drop(taken);
                 self.surface.configure(&self.device, &self.config);
+                self.again = true;
                 return;
             }
         };

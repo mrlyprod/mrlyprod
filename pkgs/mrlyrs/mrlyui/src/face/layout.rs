@@ -1,8 +1,8 @@
 use super::text;
 use super::FaceInput;
 use crate::tokens::{
-    Theme, ACTIONS, BEAT, EDGE, GAP, HEADER, INDENT, LEAD, LINE, MARK, PAD, ROW, SPLIT, TEXT,
-    TITLE, VERB, WIDTH,
+    Theme, ACTIONS, BEAT, CONTENT, EDGE, GAP, HEADER, INDENT, LEAD, LINE, MARK, PAD, ROW, SPLIT,
+    TEXT, TITLE, VERB, WIDTH,
 };
 
 pub(crate) enum Op {
@@ -59,9 +59,9 @@ pub(crate) struct Item {
     pub ops: Vec<Op>,
 }
 
-pub(crate) fn row(line: String, indent: usize, scale: usize, color: [u8; 4]) -> Item {
+pub(crate) fn row(line: String, indent: usize, scale: usize, color: [u8; 4], width: usize) -> Item {
     let x = PAD + indent * INDENT;
-    let field = (WIDTH - PAD).saturating_sub(x);
+    let field = width.saturating_sub(indent * INDENT);
     let cut = text::truncate(&line, field, scale);
     Item {
         height: LINE * scale + LEAD,
@@ -112,13 +112,13 @@ pub(crate) fn title_ops(input: &FaceInput, theme: &Theme) -> Vec<Op> {
 
 pub(crate) fn action_bar(input: &FaceInput, theme: &Theme) -> Vec<Item> {
     if input.actions.is_empty() {
-        return vec![row("no actions".to_string(), 0, TEXT, theme.muted)];
+        return vec![row("no actions".to_string(), 0, TEXT, theme.muted, CONTENT)];
     }
     let mut items = Vec::new();
     for verb in input.actions.iter().take(ACTIONS) {
         let name_cut = text::truncate(&verb.name, VERB, TEXT);
         let name_w = text::width(&name_cut, TEXT);
-        let mut ops = vec![Op::text(PAD, 0, name_cut, TEXT, theme.accent)];
+        let mut ops = vec![Op::text(PAD, 0, name_cut, TEXT, theme.pen)];
         let hint = verb
             .args
             .as_object()
@@ -153,6 +153,7 @@ pub(crate) fn action_bar(input: &FaceInput, theme: &Theme) -> Vec<Item> {
             0,
             TEXT,
             theme.muted,
+            CONTENT,
         ));
     }
     items

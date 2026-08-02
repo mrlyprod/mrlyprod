@@ -92,17 +92,28 @@ fn a_promoted_app_survives_a_mash() {
 fn the_sheet_is_whole_at_every_scale_it_can_take() {
     for scale in 1..=4usize {
         let (bw, bh) = (WIDTH * scale, HEIGHT * scale);
-        let fit = (bw / WIDTH).min(bh / HEIGHT).max(1);
-        assert_eq!(fit, scale, "a {scale}x window did not read as {scale}x");
+        let (ox, oy, got) = mrlyui::face::fit(bw, bh, WIDTH, HEIGHT);
+        assert_eq!(got, scale, "a {scale}x window did not read as {scale}x");
         assert!(
-            WIDTH * fit <= bw && HEIGHT * fit <= bh,
-            "the sheet overflows"
+            ox + WIDTH * got <= bw && oy + HEIGHT * got <= bh,
+            "the sheet overflows a {scale}x window"
         );
     }
-    let (bw, bh) = (WIDTH + WIDTH / 2, HEIGHT + HEIGHT / 2);
-    let fit = (bw / WIDTH).min(bh / HEIGHT).max(1);
-    assert_eq!(fit, 1, "a one-and-a-half window must stay at 1x");
-    assert!(WIDTH * fit <= bw, "the sheet must sit inside its window");
+    for (bw, bh) in [
+        (WIDTH + WIDTH / 2, HEIGHT + HEIGHT / 2),
+        (WIDTH * 4, HEIGHT),
+        (WIDTH, HEIGHT * 4),
+        (1, 1),
+    ] {
+        let (ox, oy, got) = mrlyui::face::fit(bw, bh, WIDTH, HEIGHT);
+        assert!(got >= 1, "the scale never drops below 1x");
+        assert!(
+            ox + WIDTH * got <= bw.max(WIDTH) && oy + HEIGHT * got <= bh.max(HEIGHT),
+            "a {bw}x{bh} window let the sheet run out"
+        );
+    }
+    let (_, _, lopsided) = mrlyui::face::fit(WIDTH * 4, HEIGHT, WIDTH, HEIGHT);
+    assert_eq!(lopsided, 1, "a wide-but-short window must stay at 1x");
 }
 
 #[test]

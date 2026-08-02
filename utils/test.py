@@ -42,7 +42,7 @@ def touches(paths, *prefixes):
 
 # TEST
 
-def test(loud=False):
+def test(loud=False, record=False):
     paths = changed()
     config = touches(paths, "utils/")
     ts = config or touches(paths, "package.json", "bun.lock", "tsconfig.base.json")
@@ -54,8 +54,9 @@ def test(loud=False):
     if not run("fmt", ["cargo", "fmt"], loud):
         return False
     if rust:
+        if record and not run("record", ["cargo", "run", "-p", "mrlyweb", "--example", "fixtures"], loud):
+            return False
         steps = [
-            ("fixtures", ["cargo", "run", "-p", "mrlyweb", "--example", "fixtures"]),
             ("test", ["cargo", "test", "--workspace"]),
             ("layers", ["uv", "run", "python", "utils/layers.py"]),
             ("views", ["uv", "run", "python", "utils/views.py"]),
@@ -116,6 +117,7 @@ def help():
     commands = [
         ("(no args)", "gate what changed, rebuild, regenerate tree + stats"),
         ("loud", "the same, streaming each command's output"),
+        ("record", "re-pin the golden fixtures first, then gate; only after a deliberate vocabulary change"),
     ]
     width = max(len(name) for name, _ in commands)
     print("mrlytest")
@@ -128,6 +130,8 @@ def terminal():
     match sys.argv[1:]:
         case []: sys.exit(0 if test() else 1)
         case ["loud"]: sys.exit(0 if test(loud=True) else 1)
+        case ["record"]: sys.exit(0 if test(record=True) else 1)
+        case ["record", "loud"] | ["loud", "record"]: sys.exit(0 if test(loud=True, record=True) else 1)
         case _: help()
 
 if __name__ == "__main__":

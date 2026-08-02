@@ -46,7 +46,14 @@ pub fn hex(c: [u8; 4]) -> String {
 
 pub fn hex_of(hex: &str) -> [u8; 4] {
     let code = hex.trim_start_matches('#');
-    let byte = |i: usize| u8::from_str_radix(&code[i..i + 2], 16).unwrap_or(0);
+    let byte = |i: usize| {
+        code.get(i..i + 2)
+            .and_then(|pair| u8::from_str_radix(pair, 16).ok())
+            .unwrap_or(0)
+    };
+    if !code.is_ascii() {
+        return [0, 0, 0, 255];
+    }
     match code.len() {
         6 => [byte(0), byte(2), byte(4), 255],
         8 => [byte(0), byte(2), byte(4), byte(6)],

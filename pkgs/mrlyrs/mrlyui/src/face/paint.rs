@@ -3,6 +3,11 @@ use super::text;
 use crate::tokens::LINE;
 
 pub(crate) fn paint_into(buf: &mut [[u8; 4]], w: usize, h: usize, ops: &[Op]) {
+    band(buf, w, h, ops, 0);
+}
+
+pub(crate) fn band(buf: &mut [[u8; 4]], w: usize, h: usize, ops: &[Op], off: usize) {
+    let off = off as i64;
     for op in ops {
         match op {
             Op::Rect {
@@ -12,10 +17,14 @@ pub(crate) fn paint_into(buf: &mut [[u8; 4]], w: usize, h: usize, ops: &[Op]) {
                 h: rh,
                 color,
             } => {
+                let ty = *y as i64 - off;
+                if outside(ty, *rh, h) {
+                    continue;
+                }
                 if color[3] == 255 {
-                    crate::draw::fill_rect(buf, w, h, *x, *y, *rw, *rh, *color);
+                    crate::draw::fill_rect(buf, w, h, *x, ty, *rw, *rh, *color);
                 } else {
-                    blend_rect(buf, w, h, *x, *y, *rw, *rh, *color);
+                    blend_rect(buf, w, h, *x, ty, *rw, *rh, *color);
                 }
             }
             Op::Text {
@@ -26,10 +35,14 @@ pub(crate) fn paint_into(buf: &mut [[u8; 4]], w: usize, h: usize, ops: &[Op]) {
                 color,
                 under,
             } => {
-                text::draw(buf, w, h, text, *x, *y, *scale, *color);
+                let ty = *y as i64 - off;
+                if outside(ty, LINE * scale + 2 * scale, h) {
+                    continue;
+                }
+                text::draw(buf, w, h, text, *x, ty, *scale, *color);
                 if *under {
                     let rule = text::width(text, *scale);
-                    let base = y + LINE * scale + scale;
+                    let base = ty + (LINE * scale + scale) as i64;
                     crate::draw::fill_rect(buf, w, h, *x, base, rule, *scale, *color);
                 }
             }
@@ -40,9 +53,19 @@ pub(crate) fn paint_into(buf: &mut [[u8; 4]], w: usize, h: usize, ops: &[Op]) {
                 h: ih,
                 scale,
                 pixels,
-            } => image(buf, w, h, *x, *y, *iw, *ih, *scale, pixels),
+            } => {
+                let ty = *y as i64 - off;
+                if outside(ty, ih * scale, h) {
+                    continue;
+                }
+                image(buf, w, h, *x, ty, *iw, *ih, *scale, pixels);
+            }
         }
     }
+}
+
+fn outside(y: i64, tall: usize, h: usize) -> bool {
+    y + tall as i64 <= 0 || y >= h as i64
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -51,16 +74,16 @@ fn blend_rect(
     w: usize,
     h: usize,
     x: usize,
-    y: usize,
+    y: i64,
     rw: usize,
     rh: usize,
     color: [u8; 4],
 ) {
-    for dy in 0..rh {
+    for dy in crate::draw::band(y, rh, h) {
+        let py = (y + dy as i64) as usize;
         for dx in 0..rw {
             let px = x + dx;
-            let py = y + dy;
-            if px < w && py < h {
+            if px < w {
                 crate::frame::over(&mut buf[py * w + px], color);
             }
         }
@@ -73,7 +96,7 @@ fn image(
     w: usize,
     h: usize,
     x: usize,
-    y: usize,
+    y: i64,
     iw: usize,
     ih: usize,
     scale: usize,
@@ -82,11 +105,11 @@ fn image(
     if pixels.len() != iw * ih {
         return;
     }
-    for sy in 0..ih * scale {
+    for sy in crate::draw::band(y, ih * scale, h) {
+        let py = (y + sy as i64) as usize;
         for sx in 0..iw * scale {
             let px = x + sx;
-            let py = y + sy;
-            if px >= w || py >= h {
+            if px >= w {
                 continue;
             }
             let src = pixels[(sy / scale) * iw + sx / scale];

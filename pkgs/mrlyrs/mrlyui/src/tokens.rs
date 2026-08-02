@@ -79,7 +79,8 @@ pub const BODY: usize = HEIGHT * 16;
 // COLOR
 pub const MUTED: f64 = 0.55;
 pub const FAINT: f64 = 0.12;
-pub const LUMA: f64 = 140.0;
+pub const READ: f64 = 4.5;
+pub const STEP: f64 = 0.05;
 
 pub struct Theme {
     pub board: [u8; 4],
@@ -87,6 +88,7 @@ pub struct Theme {
     pub muted: [u8; 4],
     pub faint: [u8; 4],
     pub accent: [u8; 4],
+    pub pen: [u8; 4],
 }
 
 impl Theme {
@@ -94,14 +96,42 @@ impl Theme {
         let board = crate::frame::board(dark);
         let ink = crate::frame::ink(dark);
         let c = ROLLABLE[(hash(app) % ROLLABLE.len() as u64) as usize];
+        let accent = [c.r, c.g, c.b, c.a];
         Theme {
             board,
             ink,
             muted: crate::frame::mix(board, ink, MUTED),
             faint: crate::frame::mix(board, ink, FAINT),
-            accent: [c.r, c.g, c.b, c.a],
+            accent,
+            pen: legible(accent, board, ink),
         }
     }
+}
+
+fn legible(accent: [u8; 4], board: [u8; 4], ink: [u8; 4]) -> [u8; 4] {
+    let mut pen = accent;
+    let mut at = 0.0;
+    while ratio(pen, board) < READ && at < 1.0 {
+        at += STEP;
+        pen = crate::frame::mix(accent, ink, at);
+    }
+    pen
+}
+
+fn luma(c: [u8; 4]) -> f64 {
+    let lift = |v: u8| {
+        let v = v as f64 / 255.0;
+        match v <= 0.04045 {
+            true => v / 12.92,
+            false => ((v + 0.055) / 1.055).powf(2.4),
+        }
+    };
+    0.2126 * lift(c[0]) + 0.7152 * lift(c[1]) + 0.0722 * lift(c[2])
+}
+
+pub fn ratio(a: [u8; 4], b: [u8; 4]) -> f64 {
+    let (x, y) = (luma(a), luma(b));
+    (x.max(y) + 0.05) / (x.min(y) + 0.05)
 }
 
 fn hash(text: &str) -> u64 {
@@ -114,10 +144,56 @@ fn hash(text: &str) -> u64 {
 }
 
 pub fn contrast(fill: [u8; 4]) -> [u8; 4] {
-    let luma = 0.299 * fill[0] as f64 + 0.587 * fill[1] as f64 + 0.114 * fill[2] as f64;
-    if luma > LUMA {
-        [0, 0, 0, 255]
+    let black = [0, 0, 0, 255];
+    let white = [255, 255, 255, 255];
+    if ratio(fill, black) >= ratio(fill, white) {
+        black
     } else {
-        [255, 255, 255, 255]
+        white
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_pen_always_reads_on_its_board() {
+        for dark in [false, true] {
+            for app in [
+                "snake",
+                "twenty48",
+                "menu",
+                "settings",
+                "lasers",
+                "mandelbrot",
+                "chess",
+            ] {
+                let t = Theme::new(app, dark);
+                assert!(
+                    ratio(t.pen, t.board) >= READ,
+                    "{app} dark={dark} pen {} reads at {:.2}",
+                    crate::frame::hex(t.pen),
+                    ratio(t.pen, t.board)
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn contrast_picks_whichever_ink_reads_better() {
+        let black = [0, 0, 0, 255];
+        let white = [255, 255, 255, 255];
+        for c in mrlycore::colors::ROLLABLE {
+            let fill = [c.r, c.g, c.b, c.a];
+            let ink = contrast(fill);
+            assert!(
+                ratio(fill, ink) >= ratio(fill, if ink == black { white } else { black }),
+                "{} took the worse ink",
+                crate::frame::hex(fill)
+            );
+        }
+        assert_eq!(contrast(white), black);
+        assert_eq!(contrast(black), white);
     }
 }

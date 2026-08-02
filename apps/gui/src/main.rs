@@ -1,4 +1,4 @@
-use mrlyui::face::{HEIGHT, WIDTH};
+use mrlyui::face::{fit, HEIGHT, WIDTH};
 use mrlyweb::drive::{Driver, KeyPress};
 use softbuffer::{Context, Surface};
 use std::num::NonZeroU32;
@@ -102,7 +102,7 @@ impl ApplicationHandler for Face {
             WindowEvent::MouseWheel { delta, .. } => {
                 let dy = match delta {
                     MouseScrollDelta::LineDelta(_, y) => y as f64 * WHEEL_STEP,
-                    MouseScrollDelta::PixelDelta(p) => p.y,
+                    MouseScrollDelta::PixelDelta(p) => p.y / self.port.2.max(1) as f64,
                 };
                 self.driver.wheel(dy, self.sheet_at());
                 self.sync();
@@ -154,13 +154,6 @@ impl ApplicationHandler for Face {
             None => el.set_control_flow(ControlFlow::Wait),
         }
     }
-}
-
-fn fit(bw: usize, bh: usize, fw: usize, fh: usize) -> (usize, usize, usize) {
-    let scale = (bw / fw.max(1)).min(bh / fh.max(1)).max(1);
-    let ox = bw.saturating_sub(fw * scale) / 2;
-    let oy = bh.saturating_sub(fh * scale) / 2;
-    (ox, oy, scale)
 }
 
 // INPUT
@@ -357,5 +350,8 @@ impl Face {
         let board = colors.first().copied().unwrap_or([0, 0, 0, 255]);
         let desk = self.driver.desk(board);
         glass.present(&colors, fw, fh, desk, scale);
+        if glass.again() {
+            window.request_redraw();
+        }
     }
 }

@@ -4,8 +4,12 @@
 
 ```sh
 uv run python utils/test.py
-uv run python utils/test.py loud   # the same, streaming each command's output
+uv run python utils/test.py loud     # the same, streaming each command's output
+uv run python utils/test.py record   # re-pin apps/web/fixtures/ first, then gate
 ```
+
+`record` is the only way the goldens move: the plain gate compares against them and fails on a
+mismatch, so a vocabulary change is a deliberate re-pin, never a silent one.
 
 ## UTILS (each runs standalone)
 

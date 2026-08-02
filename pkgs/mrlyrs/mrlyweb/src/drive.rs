@@ -55,6 +55,7 @@ pub struct Driver {
     dirty: bool,
     effects: Vec<Effect>,
     pace: i64,
+    paper: Option<[u8; 4]>,
     moves: Vec<Move>,
 }
 
@@ -114,6 +115,7 @@ impl Driver {
                 Some(_) => 0,
                 None => mrlyui::tokens::PACE,
             },
+            paper: None,
             moves: Vec::new(),
         };
         driver.act("nav.open", json!({ "app": "menu" }));
@@ -190,16 +192,7 @@ impl Driver {
     }
 
     pub fn desk(&self, spare: [u8; 4]) -> [u8; 4] {
-        let Some(view) = self.os.peek("settings", None) else {
-            return spare;
-        };
-        let Some(name) = view.state["background"].as_str() else {
-            return spare;
-        };
-        match mrlycore::colors::named(name) {
-            Ok(c) => [c.r, c.g, c.b, 255],
-            Err(_) => spare,
-        }
+        self.paper.unwrap_or(spare)
     }
 
     pub fn ui(&self) -> &UiState {
@@ -222,6 +215,7 @@ impl Driver {
         let at = self.tick();
         self.os.act(Call::new(verb, args).at(at));
         self.collect();
+        self.dials();
         let route = self.os.frame(None).route.map(|r| r.app).unwrap_or_default();
         if route != self.route {
             self.route = route;
@@ -243,7 +237,13 @@ impl Driver {
                 self.ui.dock = Some(edit);
                 self.start(What::Rise, true);
             }
-            (Some(edit), true) => self.ui.dock = Some(edit),
+            (Some(edit), true) => {
+                self.ui.dock = Some(edit);
+                if leaving(&self.moves, What::Rise) {
+                    self.moves.retain(|m| m.what != What::Rise);
+                    self.ui.rise = mrlyui::tokens::FULL;
+                }
+            }
             (None, true) => {
                 if !leaving(&self.moves, What::Rise) {
                     self.start(What::Rise, false);
@@ -256,7 +256,13 @@ impl Driver {
                 self.ui.shade = Some(id);
                 self.start(What::Veil, true);
             }
-            (Some(id), true) => self.ui.shade = Some(id),
+            (Some(id), true) => {
+                self.ui.shade = Some(id);
+                if leaving(&self.moves, What::Veil) {
+                    self.moves.retain(|m| m.what != What::Veil);
+                    self.ui.veil = mrlyui::tokens::FULL;
+                }
+            }
             (None, true) => {
                 if !leaving(&self.moves, What::Veil) {
                     self.start(What::Veil, false);
@@ -275,10 +281,13 @@ impl Driver {
                 self.pace = ms.max(0);
             }
         }
+        self.paper = view.state["background"]
+            .as_str()
+            .and_then(|name| mrlycore::colors::named(name).ok())
+            .map(|c| [c.r, c.g, c.b, 255]);
     }
 
     fn refresh(&mut self) {
-        self.dials();
         self.stage();
         if let Ok(scene) = face_scene(&self.os, &self.route, &self.ui) {
             self.ui.scroll = scene.scroll;
@@ -362,6 +371,7 @@ impl Driver {
                 min,
                 max,
                 step,
+                ..
             } => {
                 self.commit();
                 self.drag = Some(Drag::Slide {
@@ -409,7 +419,13 @@ impl Driver {
                 id, value, keys, ..
             } => {
                 self.commit();
-                self.ui.edit = Some(Edit::new(id, value, keys));
+                let fresh = self.scene.binds.iter().find_map(|act| match act {
+                    Act::Edit {
+                        id: at, value: now, ..
+                    } if *at == id => Some(now.clone()),
+                    _ => None,
+                });
+                self.ui.edit = Some(Edit::new(id, fresh.unwrap_or(value), keys));
                 self.refresh();
             }
             Act::Menu { id } => {
@@ -747,6 +763,23 @@ impl Driver {
         let Some(hit) = self.scene.hits.iter().find(|hit| hit.act == act).cloned() else {
             return false;
         };
+        if let Act::Slide {
+            call,
+            arg,
+            value,
+            min,
+            max,
+            step,
+        } = &hit.act
+        {
+            let step = (*step).max(1);
+            let next = match value + step > *max {
+                true => *min,
+                false => value + step,
+            };
+            self.fire(&call.fill(arg, Json::Int(next.clamp(*min, *max))));
+            return true;
+        }
         self.tap_at(hit.x + hit.w / 2, hit.y + hit.h / 2);
         true
     }
@@ -929,6 +962,7 @@ impl Driver {
                 min,
                 max,
                 step,
+                ..
             } if call.verb == verb => Some((call.clone(), arg.clone(), *min, *max, *step)),
             _ => None,
         });
@@ -1055,13 +1089,14 @@ fn hit_json(hit: &Hit) -> Json {
         Act::Tap { call } => ("tap", json!({ "verb": &call.verb, "args": &call.args })),
         Act::Slide {
             call,
+            value,
             min,
             max,
             step,
             ..
         } => (
             "slide",
-            json!({ "verb": &call.verb, "min": *min, "max": *max, "step": *step }),
+            json!({ "verb": &call.verb, "value": *value, "min": *min, "max": *max, "step": *step }),
         ),
         Act::Board {
             cols,

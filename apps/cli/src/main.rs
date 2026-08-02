@@ -712,11 +712,21 @@ fn script(path: Option<&str>) -> Vec<Json> {
             _ => Vec::new(),
         }
     } else {
-        text.lines()
-            .map(str::trim)
-            .filter(|line| !line.is_empty())
-            .filter_map(|line| mrlycore::json::parse(line).ok())
-            .collect()
+        let mut out = Vec::new();
+        for (i, line) in text.lines().enumerate() {
+            let line = line.trim();
+            if line.is_empty() {
+                continue;
+            }
+            match mrlycore::json::parse(line) {
+                Ok(gesture) => out.push(gesture),
+                Err(_) => {
+                    eprintln!("! line {}: not json", i + 1);
+                    std::process::exit(2);
+                }
+            }
+        }
+        out
     }
 }
 

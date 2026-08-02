@@ -1,6 +1,6 @@
 use crate::tokens::LINE;
 use mrlyfont::{glyph, trim};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::sync::OnceLock;
 
 const BOX: [[u8; 5]; 5] = [
@@ -11,8 +11,25 @@ const BOX: [[u8; 5]; 5] = [
     [1, 1, 1, 1, 1],
 ];
 
-fn block(c: char) -> Vec<Vec<u8>> {
+fn block(c: char) -> &'static Vec<Vec<u8>> {
+    static BOOK: OnceLock<HashMap<char, Vec<Vec<u8>>>> = OnceLock::new();
+    static SPARE: OnceLock<Vec<Vec<u8>>> = OnceLock::new();
+    let book = BOOK.get_or_init(|| {
+        let mut map = HashMap::new();
+        map.insert(' ', shaped(' '));
+        for c in mrlyfont::supported() {
+            map.insert(c, shaped(c));
+        }
+        map
+    });
     let c = if c.is_control() { ' ' } else { c };
+    match book.get(&c) {
+        Some(rows) => rows,
+        None => SPARE.get_or_init(|| shaped('\u{fffd}')),
+    }
+}
+
+fn shaped(c: char) -> Vec<Vec<u8>> {
     if c == ' ' {
         return vec![vec![0u8; 3]; LINE];
     }
@@ -97,7 +114,7 @@ pub(crate) fn draw(
     h: usize,
     text: &str,
     x: usize,
-    y: usize,
+    y: i64,
     scale: usize,
     color: [u8; 4],
 ) {
@@ -115,7 +132,7 @@ pub(crate) fn draw(
             continue;
         }
         let rows = block(c);
-        crate::draw::blit(buf, w, h, &rows, cx, y, scale, color);
+        crate::draw::blit(buf, w, h, rows, cx, y, scale, color);
         cx += (rows[0].len() + 1) * scale;
     }
 }

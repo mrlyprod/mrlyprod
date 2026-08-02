@@ -10,8 +10,14 @@
 {"focus": {"verb": "settings.set"}}
 {"cap": "teal"}
 {"assert": {"state": ["settings/background", "teal"]}}
-{"assert": {"frame": "15537608508489048577"}}
+{"assert": {"frame": "10367780506784865432"}}
 {"tap": {"verb": "settings.set", "args": {"key": "darkmode", "value": false}}}
 {"ask": "settings.set {\"key\":\"pace\",\"value\":0}"}
 {"run": true}
 {"assert": {"state": ["settings/pace", 0]}}
+{"focus": {"verb": "settings.set"}}
+{"cap": "red"}
+{"assert": {"state": ["settings/background", "red"]}}
+{"focus": {"verb": "settings.set"}}
+{"cap": "mint"}
+{"assert": {"state": ["settings/background", "mint"]}}
