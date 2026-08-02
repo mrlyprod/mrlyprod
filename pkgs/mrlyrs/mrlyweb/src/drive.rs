@@ -4,7 +4,7 @@ use mrlycore::{json, Json};
 use mrlyos::kernel::{Call, Effect, Os};
 use mrlyui::face::keys::Tap;
 pub use mrlyui::face::{Act, Hit, Scene};
-use mrlyui::face::{Bar, Edit, UiState, HEIGHT, SCALE, WIDTH};
+use mrlyui::face::{Bar, Edit, UiState, SCALE};
 
 pub const BEAT: i64 = 125;
 const EFFECTS: usize = 64;
@@ -56,6 +56,7 @@ pub struct Driver {
     effects: Vec<Effect>,
     pace: i64,
     paper: Option<[u8; 4]>,
+    rung: usize,
     moves: Vec<Move>,
 }
 
@@ -116,6 +117,7 @@ impl Driver {
                 None => mrlyui::tokens::PACE,
             },
             paper: None,
+            rung: mrlyui::tokens::RUNG,
             moves: Vec::new(),
         };
         driver.act("nav.open", json!({ "app": "menu" }));
@@ -189,6 +191,21 @@ impl Driver {
 
     pub fn scene(&self) -> &Scene {
         &self.scene
+    }
+
+    pub fn sheet(&self) -> (usize, usize) {
+        mrlyui::tokens::rung(self.rung)
+    }
+
+    pub fn fit_sheet(&mut self, bw: usize, bh: usize) -> bool {
+        let want = mrlyui::tokens::fits(bw, bh);
+        if want == self.rung {
+            return false;
+        }
+        self.rung = want;
+        self.ui.scroll = 0;
+        self.refresh();
+        true
     }
 
     pub fn desk(&self, spare: [u8; 4]) -> [u8; 4] {
@@ -289,7 +306,7 @@ impl Driver {
 
     fn refresh(&mut self) {
         self.stage();
-        if let Ok(scene) = face_scene(&self.os, &self.route, &self.ui) {
+        if let Ok(scene) = face_scene(&self.os, &self.route, &self.ui, self.rung) {
             self.ui.scroll = scene.scroll;
             self.scene = scene;
         }
@@ -1040,7 +1057,8 @@ impl Driver {
             .cell
             .colors
             .ok_or("no pixels")?;
-        mrlycore::png(&colors, WIDTH, HEIGHT, SCALE).map_err(|_| "could not encode")
+        let (w, h) = self.sheet();
+        mrlycore::png(&colors, w, h, SCALE).map_err(|_| "could not encode")
     }
 
     pub fn frame_fnv(&self) -> u64 {

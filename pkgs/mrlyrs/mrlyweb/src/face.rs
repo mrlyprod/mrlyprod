@@ -8,7 +8,7 @@ pub fn manifest(app: &str) -> Option<Manifest> {
         .map(|a| a.manifest())
 }
 
-fn input(os: &Os, app: &str) -> Result<FaceInput, &'static str> {
+fn input(os: &Os, app: &str, rung: usize) -> Result<FaceInput, &'static str> {
     let view = os.peek(app, None).ok_or("no such app")?;
     let title = manifest(app)
         .map(|m| m.title)
@@ -40,6 +40,7 @@ fn input(os: &Os, app: &str) -> Result<FaceInput, &'static str> {
         beat: view.beat.map(|c| c.verb),
         dark,
         ui: view.ui,
+        rung,
     })
 }
 
@@ -47,12 +48,13 @@ pub fn face_scene(
     os: &Os,
     app: &str,
     ui: &mrlyui::face::UiState,
+    rung: usize,
 ) -> Result<mrlyui::face::Scene, &'static str> {
-    Ok(mrlyui::face::render(&input(os, app)?, ui))
+    Ok(mrlyui::face::render(&input(os, app, rung)?, ui))
 }
 
 pub fn face_frame(os: &Os, app: &str) -> Result<mrlyui::frame::Frame, &'static str> {
-    Ok(mrlyui::face::face(&input(os, app)?))
+    Ok(mrlyui::face::face(&input(os, app, mrlyui::tokens::RUNG)?))
 }
 
 pub fn face_rgba(os: &Os, app: &str) -> Result<(usize, usize, Vec<u8>), &'static str> {
@@ -66,7 +68,8 @@ pub fn face_rgba(os: &Os, app: &str) -> Result<(usize, usize, Vec<u8>), &'static
 }
 
 pub fn face_png(os: &Os, app: &str) -> Result<Vec<u8>, &'static str> {
-    mrlyui::face::face_png(&input(os, app)?).map_err(|_| "could not render face")
+    mrlyui::face::face_png(&input(os, app, mrlyui::tokens::RUNG)?)
+        .map_err(|_| "could not render face")
 }
 
 pub fn canvas_rgba(os: &Os, app: &str) -> Result<(usize, usize, Vec<u8>), &'static str> {

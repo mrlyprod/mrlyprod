@@ -1,9 +1,7 @@
 use super::layout::Op;
 use super::text;
 use super::{Act, Hit};
-use crate::tokens::{
-    contrast, Theme, CONTENT, CONTROL, EDGE, GAP, LINE, PAD, TEXT, TIGHT, TITLE, WIDTH,
-};
+use crate::tokens::{contrast, Theme, CONTROL, EDGE, GAP, LINE, PAD, TEXT, TIGHT, TITLE};
 use mrlycore::colors;
 
 const DIGITS: &str = "1234567890";
@@ -189,7 +187,7 @@ pub(crate) fn strip(name: &str, up: bool, page: usize, t: &Theme) -> (Vec<Op>, V
     let mut ops = vec![Op::Rect {
         x: 0,
         y: 0,
-        w: WIDTH,
+        w: t.width,
         h: EDGE,
         color: t.faint,
     }];
@@ -201,11 +199,12 @@ pub(crate) fn strip(name: &str, up: bool, page: usize, t: &Theme) -> (Vec<Op>, V
         .max()
         .unwrap_or(1)
         .max(1);
-    let unit = CONTENT.saturating_sub((widest - 1) * TIGHT) / widest;
+    let content = t.content();
+    let unit = content.saturating_sub((widest - 1) * TIGHT) / widest;
     for band in rows {
         let spans: usize = band.iter().map(|c| c.span).sum::<usize>().max(1);
         let full = unit * spans + (spans - 1) * TIGHT;
-        let mut x = PAD + CONTENT.saturating_sub(full) / 2;
+        let mut x = PAD + content.saturating_sub(full) / 2;
         for key in band {
             let kw = unit * key.span + (key.span - 1) * TIGHT;
             let fill = match (key.on, key.fill) {
@@ -341,15 +340,18 @@ mod tests {
     }
 
     #[test]
-    fn every_board_fits_the_sheet() {
-        let t = Theme::new("keys", false);
-        for name in ["text", "digits", "hex", "colors", "emoji"] {
-            for up in [false, true] {
-                let (_, hits, h) = strip(name, up, 0, &t);
-                assert!(h < super::super::HEIGHT / 3);
-                for hit in hits {
-                    assert!(hit.x + hit.w <= WIDTH - PAD + 1, "{name}");
-                    assert!(hit.y + hit.h < h, "{name}");
+    fn every_board_fits_every_rung() {
+        for at in crate::tokens::FLOOR..crate::tokens::RUNGS.len() {
+            let t = Theme::new("keys", false).sized(at);
+            for name in ["text", "digits", "hex", "colors", "emoji"] {
+                for up in [false, true] {
+                    let (_, hits, h) = strip(name, up, 0, &t);
+                    let room = crate::tokens::HEADER + 2 * PAD + h + CONTROL;
+                    assert!(room <= t.height, "{name} at rung {at} leaves no body");
+                    for hit in hits {
+                        assert!(hit.x + hit.w <= t.width - PAD + 1, "{name} at rung {at}");
+                        assert!(hit.y + hit.h < h, "{name} at rung {at}");
+                    }
                 }
             }
         }

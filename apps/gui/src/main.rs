@@ -1,4 +1,5 @@
-use mrlyui::face::{fit, HEIGHT, WIDTH};
+use mrlyui::face::fit;
+use mrlyui::tokens::RUNGS;
 use mrlyweb::drive::{Driver, KeyPress};
 use softbuffer::{Context, Surface};
 use std::num::NonZeroU32;
@@ -57,8 +58,10 @@ impl ApplicationHandler for Face {
         if self.window.is_some() {
             return;
         }
-        let size = LogicalSize::new((WIDTH * 2) as f64, (HEIGHT * 2) as f64);
-        let least = LogicalSize::new(WIDTH as f64, HEIGHT as f64);
+        let (fw, fh) = self.driver.sheet();
+        let size = LogicalSize::new((fw * 2) as f64, (fh * 2) as f64);
+        let (lw, lh) = RUNGS[0];
+        let least = LogicalSize::new(lw as f64, lh as f64);
         let attrs = Window::default_attributes()
             .with_title("mrly")
             .with_inner_size(size)
@@ -161,6 +164,7 @@ impl ApplicationHandler for Face {
 impl Face {
     fn sheet_at(&self) -> Option<(usize, usize)> {
         let (ox, oy, scale) = self.port;
+        let (fw, fh) = self.driver.sheet();
         let x = self.cursor.0 as isize - ox as isize;
         let y = self.cursor.1 as isize - oy as isize;
         if x < 0 || y < 0 || scale == 0 {
@@ -168,7 +172,7 @@ impl Face {
         }
         let sx = x as usize / scale;
         let sy = y as usize / scale;
-        if sx >= WIDTH || sy >= HEIGHT {
+        if sx >= fw || sy >= fh {
             return None;
         }
         Some((sx, sy))
@@ -176,9 +180,22 @@ impl Face {
 
     fn sheet_clamped(&self) -> (usize, usize) {
         let (ox, oy, scale) = self.port;
+        let (fw, fh) = self.driver.sheet();
         let x = (self.cursor.0 as isize - ox as isize).max(0) as usize / scale.max(1);
         let y = (self.cursor.1 as isize - oy as isize).max(0) as usize / scale.max(1);
-        (x.min(WIDTH - 1), y.min(HEIGHT - 1))
+        (x.min(fw - 1), y.min(fh - 1))
+    }
+
+    fn climb(&mut self, bw: usize, bh: usize, dpi: f64) {
+        let blit = (dpi.round() as usize).max(1);
+        let (mut room_w, mut room_h) = (bw / blit, bh / blit);
+        if room_w < RUNGS[0].0 || room_h < RUNGS[0].1 {
+            room_w = bw;
+            room_h = bh;
+        }
+        if self.driver.fit_sheet(room_w, room_h) {
+            self.sync();
+        }
     }
 
     fn press(&mut self, el: &ActiveEventLoop, event: KeyEvent) {
@@ -287,6 +304,11 @@ impl Face {
     }
 
     fn paint(&mut self) {
+        if let Some(window) = &self.window {
+            let size = window.inner_size();
+            let dpi = window.scale_factor();
+            self.climb(size.width as usize, size.height as usize, dpi);
+        }
         if self.glass.is_some() {
             self.shine();
             return;

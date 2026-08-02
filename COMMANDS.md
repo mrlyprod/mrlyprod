@@ -56,6 +56,7 @@ cargo run -p mrlyweb --example <name>   # examples live in pkgs/mrlyrs/mrlyweb/e
 cargo run -p mrlyweb --example fixtures # regenerate apps/web/fixtures/*.json from frame()
 cargo run -p mrlydoor                   # regenerate the files/emoji/ and files/symbols/ atlases from files/vendor/
 cargo run -p mrlyweb --example face     # every app's default face into data/face/, six -live gauntlet shots included
+cargo run -p mrlyweb --example rungs -- <dir> [app]   # one shot per ladder rung, 113x160 up to 904x1280
 cargo doc --open
 cargo clean
 ```

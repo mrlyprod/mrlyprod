@@ -1,9 +1,34 @@
 use mrlycore::colors::ROLLABLE;
 
 // SHEET
-pub const WIDTH: usize = 320;
-pub const HEIGHT: usize = 452;
+pub const RUNGS: [(usize, usize); 7] = [
+    (113, 160),
+    (160, 226),
+    (226, 320),
+    (320, 452),
+    (452, 640),
+    (640, 904),
+    (904, 1280),
+];
+pub const RUNG: usize = 3;
+pub const FLOOR: usize = 1;
+pub const WIDTH: usize = RUNGS[RUNG].0;
+pub const HEIGHT: usize = RUNGS[RUNG].1;
 pub const SCALE: usize = 3;
+
+pub fn rung(at: usize) -> (usize, usize) {
+    RUNGS[at.min(RUNGS.len() - 1)]
+}
+
+pub fn fits(bw: usize, bh: usize) -> usize {
+    let mut at = FLOOR;
+    for (i, (w, h)) in RUNGS.iter().enumerate() {
+        if *w <= bw && *h <= bh {
+            at = i.max(FLOOR);
+        }
+    }
+    at
+}
 
 // TYPE
 pub const LINE: usize = 7;
@@ -22,7 +47,6 @@ pub const SPLIT: usize = 2 * UNIT;
 pub const INDENT: usize = 3 * UNIT;
 pub const RADIUS: usize = 0;
 pub const INSET: usize = (CONTROL - LINE) / 2;
-pub const CONTENT: usize = WIDTH - 2 * PAD;
 
 // SIZE
 pub const CONTROL: usize = 24;
@@ -30,7 +54,6 @@ pub const HEADER: usize = CONTROL;
 pub const RULE: usize = 2 * UNIT;
 pub const SYMBOL: usize = 16;
 pub const CANVAS: usize = 192;
-pub const PANEL: usize = 240;
 
 // PARTS
 pub const MARK: usize = CONTROL / 3;
@@ -74,7 +97,6 @@ pub const ACTIONS: usize = 8;
 pub const LIST: usize = 12;
 pub const BEAT: usize = 110;
 pub const VERB: usize = 160;
-pub const BODY: usize = HEIGHT * 16;
 
 // COLOR
 pub const MUTED: f64 = 0.55;
@@ -89,6 +111,8 @@ pub struct Theme {
     pub faint: [u8; 4],
     pub accent: [u8; 4],
     pub pen: [u8; 4],
+    pub width: usize,
+    pub height: usize,
 }
 
 impl Theme {
@@ -97,6 +121,7 @@ impl Theme {
         let ink = crate::frame::ink(dark);
         let c = ROLLABLE[(hash(app) % ROLLABLE.len() as u64) as usize];
         let accent = [c.r, c.g, c.b, c.a];
+        let (width, height) = rung(RUNG);
         Theme {
             board,
             ink,
@@ -104,7 +129,27 @@ impl Theme {
             faint: crate::frame::mix(board, ink, FAINT),
             accent,
             pen: legible(accent, board, ink),
+            width,
+            height,
         }
+    }
+    pub fn sized(mut self, at: usize) -> Theme {
+        let (width, height) = rung(at);
+        self.width = width;
+        self.height = height;
+        self
+    }
+    pub fn content(&self) -> usize {
+        self.width.saturating_sub(2 * PAD)
+    }
+    pub fn body(&self) -> usize {
+        self.height * 16
+    }
+    pub fn panel(&self) -> usize {
+        (self.width * 3 / 4).min(self.width.saturating_sub(4 * PAD))
+    }
+    pub fn canvas(&self) -> usize {
+        self.height * CANVAS / HEIGHT
     }
 }
 

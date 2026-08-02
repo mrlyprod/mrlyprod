@@ -2,9 +2,9 @@ use super::layout::{shift, Op};
 use super::text;
 use super::{Act, Hit, UiState};
 use crate::tokens::{
-    contrast, Theme, CANVAS, CHEV, CHROME, CONTROL, EDGE, GAP, GRIP, INSET, KNOB, LINE, PAD, RAIL,
-    ROW, RULE, SLACK, SLOT, SPLIT, STUB, SWITCH_H, SWITCH_W, SYMBOL, TEXT, THUMB, TIGHT, TILE,
-    TITLE, UNIT,
+    contrast, Theme, CHEV, CHROME, CONTROL, EDGE, GAP, GRIP, INSET, KNOB, LINE, PAD, RAIL, ROW,
+    RULE, SLACK, SLOT, SPLIT, STUB, SWITCH_H, SWITCH_W, SYMBOL, TEXT, THUMB, TIGHT, TILE, TITLE,
+    UNIT,
 };
 use mrlycore::ui::{Call, Node, Pick, Role};
 use mrlycore::{json, Color};
@@ -198,7 +198,7 @@ fn picture(
     out: &mut Out,
 ) -> (usize, Option<(usize, usize, usize, usize, usize)>) {
     if let Some((iw, ih, pixels)) = super::decode(fact) {
-        let scale = (w / iw.max(1)).min(CANVAS / ih.max(1));
+        let scale = (w / iw.max(1)).min(t.canvas() / ih.max(1));
         if scale >= 1 {
             let px = x + (w - iw * scale) / 2;
             out.ops.push(Op::Image {

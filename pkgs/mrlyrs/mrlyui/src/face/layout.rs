@@ -1,8 +1,8 @@
 use super::text;
 use super::FaceInput;
 use crate::tokens::{
-    Theme, ACTIONS, BEAT, CONTENT, EDGE, GAP, HEADER, INDENT, LEAD, LINE, MARK, PAD, ROW, SPLIT,
-    TEXT, TITLE, VERB, WIDTH,
+    Theme, ACTIONS, BEAT, EDGE, GAP, HEADER, INDENT, LEAD, LINE, MARK, PAD, ROW, SPLIT, TEXT,
+    TITLE, VERB,
 };
 
 pub(crate) enum Op {
@@ -77,11 +77,11 @@ pub(crate) fn title_ops(input: &FaceInput, theme: &Theme) -> Vec<Op> {
         h: MARK,
         color: theme.accent,
     }];
-    let mut right = WIDTH - PAD;
+    let mut right = theme.width - PAD;
     if let Some(beat) = &input.beat {
         let name = text::truncate(beat, BEAT, TEXT);
         let bw = text::width(&name, TEXT);
-        let bx = (WIDTH - PAD).saturating_sub(bw);
+        let bx = (theme.width - PAD).saturating_sub(bw);
         ops.push(Op::text(
             bx,
             (HEADER - LINE * TEXT) / 2,
@@ -103,7 +103,7 @@ pub(crate) fn title_ops(input: &FaceInput, theme: &Theme) -> Vec<Op> {
     ops.push(Op::Rect {
         x: 0,
         y: HEADER - 1,
-        w: WIDTH,
+        w: theme.width,
         h: EDGE,
         color: theme.faint,
     });
@@ -112,7 +112,13 @@ pub(crate) fn title_ops(input: &FaceInput, theme: &Theme) -> Vec<Op> {
 
 pub(crate) fn action_bar(input: &FaceInput, theme: &Theme) -> Vec<Item> {
     if input.actions.is_empty() {
-        return vec![row("no actions".to_string(), 0, TEXT, theme.muted, CONTENT)];
+        return vec![row(
+            "no actions".to_string(),
+            0,
+            TEXT,
+            theme.muted,
+            theme.content(),
+        )];
     }
     let mut items = Vec::new();
     for verb in input.actions.iter().take(ACTIONS) {
@@ -136,7 +142,7 @@ pub(crate) fn action_bar(input: &FaceInput, theme: &Theme) -> Vec<Item> {
             .unwrap_or_default();
         if !hint.is_empty() {
             let hx = PAD + name_w + SPLIT;
-            let field = (WIDTH - PAD).saturating_sub(hx);
+            let field = (theme.width - PAD).saturating_sub(hx);
             ops.push(Op::text(
                 hx,
                 0,
@@ -153,7 +159,7 @@ pub(crate) fn action_bar(input: &FaceInput, theme: &Theme) -> Vec<Item> {
             0,
             TEXT,
             theme.muted,
-            CONTENT,
+            theme.content(),
         ));
     }
     items

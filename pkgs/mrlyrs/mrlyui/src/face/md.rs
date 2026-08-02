@@ -244,7 +244,7 @@ mod tests {
         let theme = Theme::new("pages", false);
         let md =
             "![the goose](a/goose.png)\n\n| h1 | h2 |\n|---|---|\n| **a** | b |\n\n> so it *goes*";
-        let out = items(md, &theme, crate::tokens::CONTENT);
+        let out = items(md, &theme, theme.content());
         assert_eq!(out.len(), 4);
         let texts: Vec<String> = out
             .iter()

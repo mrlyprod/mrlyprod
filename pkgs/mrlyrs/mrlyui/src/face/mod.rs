@@ -1,4 +1,4 @@
-use crate::tokens::{Theme, ACTIONS, BODY, CONTENT, CONTROL, EDGE, FULL, GAP, HEADER, PAD, PANEL};
+use crate::tokens::{Theme, ACTIONS, CONTROL, EDGE, FULL, GAP, HEADER, PAD};
 use mrlycore::errors::Result;
 use mrlycore::ui::{Call, Node};
 use mrlycore::Json;
@@ -27,6 +27,7 @@ pub struct FaceInput {
     pub beat: Option<String>,
     pub dark: bool,
     pub ui: Option<Node>,
+    pub rung: usize,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -204,6 +205,8 @@ fn overlays(
     sheet: &mut [[u8; 4]],
     hits: &mut Vec<Hit>,
 ) {
+    let (width, height) = (theme.width, theme.height);
+    let panel = theme.panel();
     let mut queue = queue;
     while !queue.is_empty() {
         for (node, scrim) in std::mem::take(&mut queue) {
@@ -212,49 +215,49 @@ fn overlays(
             let veil = [theme.ink[0], theme.ink[1], theme.ink[2], shade];
             paint::paint_into(
                 sheet,
-                WIDTH,
-                HEIGHT,
+                width,
+                height,
                 &[layout::Op::Rect {
                     x: 0,
                     y: 0,
-                    w: WIDTH,
-                    h: HEIGHT,
+                    w: width,
+                    h: height,
                     color: veil,
                 }],
             );
             hits.push(Hit {
                 x: 0,
                 y: 0,
-                w: WIDTH,
-                h: HEIGHT,
+                w: width,
+                h: height,
                 act: scrim,
             });
             let mut out = tree::Out::new();
             out.hover = ui.hover.clone();
-            let ph = tree::lay(&node, 0, 0, PANEL, theme, ui, &mut out);
-            let px = (WIDTH - PANEL) / 2;
-            let sunk = (HEIGHT / 16) * (FULL as usize - lift) / FULL as usize;
-            let py = (HEIGHT.saturating_sub(ph) / 2).max(HEADER + PAD) + sunk;
+            let ph = tree::lay(&node, 0, 0, panel, theme, ui, &mut out);
+            let px = (width - panel) / 2;
+            let sunk = (height / 16) * (FULL as usize - lift) / FULL as usize;
+            let py = (height.saturating_sub(ph) / 2).max(HEADER + PAD) + sunk;
             let rim = 2 * PAD;
-            let panel = vec![
+            let frame = vec![
                 layout::Op::Rect {
                     x: px - rim,
                     y: py.saturating_sub(rim),
-                    w: PANEL + 2 * rim,
+                    w: panel + 2 * rim,
                     h: ph + 2 * rim,
                     color: theme.board,
                 },
                 layout::Op::Rect {
                     x: px - rim,
                     y: py.saturating_sub(rim),
-                    w: PANEL + 2 * rim,
+                    w: panel + 2 * rim,
                     h: EDGE,
                     color: theme.faint,
                 },
                 layout::Op::Rect {
                     x: px - rim,
                     y: py + ph + rim - EDGE,
-                    w: PANEL + 2 * rim,
+                    w: panel + 2 * rim,
                     h: EDGE,
                     color: theme.faint,
                 },
@@ -266,15 +269,15 @@ fn overlays(
                     color: theme.faint,
                 },
                 layout::Op::Rect {
-                    x: px + PANEL + rim - EDGE,
+                    x: px + panel + rim - EDGE,
                     y: py.saturating_sub(rim),
                     w: EDGE,
                     h: ph + 2 * rim,
                     color: theme.faint,
                 },
             ];
-            paint::paint_into(sheet, WIDTH, HEIGHT, &panel);
-            paint::paint_into(sheet, WIDTH, HEIGHT, &layout::shift(out.ops, px, py));
+            paint::paint_into(sheet, width, height, &frame);
+            paint::paint_into(sheet, width, height, &layout::shift(out.ops, px, py));
             for mut hit in out.hits {
                 hit.x += px;
                 hit.y += py;
@@ -286,15 +289,16 @@ fn overlays(
 }
 
 pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
-    let theme = Theme::new(&input.app, input.dark);
+    let theme = Theme::new(&input.app, input.dark).sized(input.rung);
+    let (width, height) = (theme.width, theme.height);
     let root = input.ui.clone().unwrap_or_else(|| dump::tree(input));
     let mut out = tree::Out::new();
     out.hover = ui.hover.clone();
-    let body = tree::lay(&root, PAD, 0, CONTENT, &theme, ui, &mut out);
-    let body = body.clamp(1, BODY);
+    let body = tree::lay(&root, PAD, 0, theme.content(), &theme, ui, &mut out);
+    let body = body.clamp(1, theme.body());
 
-    let mut sheet = vec![theme.board; WIDTH * HEIGHT];
-    paint::paint_into(&mut sheet, WIDTH, HEIGHT, &layout::title_ops(input, &theme));
+    let mut sheet = vec![theme.board; width * height];
+    paint::paint_into(&mut sheet, width, height, &layout::title_ops(input, &theme));
 
     let asking = ui.bar.as_ref();
     let docked = ui.dock.as_ref().or(ui.edit.as_ref());
@@ -314,17 +318,17 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
         (false, None) => PAD + bar.iter().map(|i| i.height).sum::<usize>(),
     };
     let y0 = HEADER + PAD;
-    let y1 = HEIGHT.saturating_sub(bar_h + PAD);
+    let y1 = height.saturating_sub(bar_h + PAD);
     let window = y1.saturating_sub(y0);
 
     let scroll = reveal(&out.hits, ui, body, window);
     let seen = window.min(body.saturating_sub(scroll)).max(1);
-    let mut canvas = vec![theme.board; WIDTH * seen];
-    paint::band(&mut canvas, WIDTH, seen, &out.ops, scroll);
+    let mut canvas = vec![theme.board; width * seen];
+    paint::band(&mut canvas, width, seen, &out.ops, scroll);
     for row in 0..window.min(body.saturating_sub(scroll)) {
-        let src = row * WIDTH;
-        let dst = (y0 + row) * WIDTH;
-        sheet[dst..dst + WIDTH].copy_from_slice(&canvas[src..src + WIDTH]);
+        let src = row * width;
+        let dst = (y0 + row) * width;
+        sheet[dst..dst + width].copy_from_slice(&canvas[src..src + width]);
     }
 
     let binds: Vec<Act> = out
@@ -344,10 +348,10 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
         let ty = y0 + (window - th) * scroll / body.saturating_sub(window).max(1);
         paint::paint_into(
             &mut sheet,
-            WIDTH,
-            HEIGHT,
+            width,
+            height,
             &[layout::Op::Rect {
-                x: WIDTH - 2 * EDGE,
+                x: width - 2 * EDGE,
                 y: ty,
                 w: 2 * EDGE,
                 h: th,
@@ -358,22 +362,22 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
 
     match strip {
         Some((ops, caps, _)) => {
-            let top = HEIGHT - risen;
-            paint::paint_into(&mut sheet, WIDTH, HEIGHT, &layout::shift(ops, 0, top));
+            let top = height - risen;
+            paint::paint_into(&mut sheet, width, height, &layout::shift(ops, 0, top));
             for mut hit in caps {
                 hit.y += top;
-                if hit.y < HEIGHT {
+                if hit.y < height {
                     hits.push(hit);
                 }
             }
         }
         None if asking.is_some() => {
             let ask = asking.expect("a bar");
-            let top = HEIGHT - bar_h;
+            let top = height - bar_h;
             let mut ops = vec![layout::Op::Rect {
                 x: 0,
                 y: top,
-                w: WIDTH,
+                w: width,
                 h: EDGE,
                 color: theme.faint,
             }];
@@ -390,7 +394,7 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
                 hits.push(Hit {
                     x: 0,
                     y,
-                    w: WIDTH,
+                    w: width,
                     h: CONTROL,
                     act: Act::Fill { text: hint.clone() },
                 });
@@ -420,17 +424,17 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
                 h: crate::tokens::LINE,
                 color: theme.pen,
             });
-            paint::paint_into(&mut sheet, WIDTH, HEIGHT, &ops);
+            paint::paint_into(&mut sheet, width, height, &ops);
         }
         None => {
             let mut bar_ops = vec![layout::Op::Rect {
                 x: 0,
-                y: HEIGHT - bar_h,
-                w: WIDTH,
+                y: height - bar_h,
+                w: width,
                 h: EDGE,
                 color: theme.faint,
             }];
-            let mut by = HEIGHT - bar_h + PAD;
+            let mut by = height - bar_h + PAD;
             for (i, item) in bar.into_iter().enumerate() {
                 let h = item.height;
                 bar_ops.extend(layout::shift(item.ops, 0, by));
@@ -439,7 +443,7 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
                         hits.push(Hit {
                             x: 0,
                             y: by,
-                            w: WIDTH,
+                            w: width,
                             h,
                             act: Act::Tap {
                                 call: Call::new(&verb.name, mrlycore::json!({})),
@@ -449,7 +453,7 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
                 }
                 by += h;
             }
-            paint::paint_into(&mut sheet, WIDTH, HEIGHT, &bar_ops);
+            paint::paint_into(&mut sheet, width, height, &bar_ops);
         }
     }
 
@@ -458,7 +462,7 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
     if let Some(want) = &ui.ring {
         let scrim = hits
             .iter()
-            .rposition(|hit| hit.w == WIDTH && hit.h == HEIGHT)
+            .rposition(|hit| hit.w == width && hit.h == height)
             .map_or(0, |at| at + 1);
         if let Some(hit) = hits[scrim..].iter().find(|hit| hit.act == *want) {
             let rim = vec![
@@ -491,12 +495,12 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
                     color: theme.pen,
                 },
             ];
-            paint::paint_into(&mut sheet, WIDTH, HEIGHT, &rim);
+            paint::paint_into(&mut sheet, width, height, &rim);
         }
     }
 
     Scene {
-        frame: crate::frame::field(WIDTH, HEIGHT, sheet, theme.board),
+        frame: crate::frame::field(width, height, sheet, theme.board),
         hits,
         binds,
         body,
@@ -547,6 +551,7 @@ mod tests {
             beat: None,
             dark: false,
             ui: None,
+            rung: crate::tokens::RUNG,
         }
     }
 
@@ -598,6 +603,7 @@ mod tests {
             beat: Some("pin.step".to_string()),
             dark: true,
             ui: None,
+            rung: crate::tokens::RUNG,
         }
     }
 
@@ -1094,5 +1100,45 @@ mod tests {
         assert_eq!(deep.frame.height, HEIGHT);
         let seen = deep.hits.iter().filter(|h| h.y < HEIGHT).count();
         assert!(seen > 0, "a scrolled body showed nothing");
+    }
+
+    #[test]
+    fn every_rung_renders_a_whole_sheet() {
+        for at in 0..crate::tokens::RUNGS.len() {
+            let (want_w, want_h) = crate::tokens::rung(at);
+            let mut input = widget_input();
+            input.rung = at;
+            let scene = render(&input, &UiState::default());
+            assert_eq!(scene.frame.width, want_w, "rung {at} width");
+            assert_eq!(scene.frame.height, want_h, "rung {at} height");
+            assert!(scene.window > 0, "rung {at} has no body");
+            for hit in &scene.hits {
+                assert!(hit.x + hit.w <= want_w, "rung {at} hit ran off the side");
+                assert!(hit.y + hit.h <= want_h, "rung {at} hit ran off the bottom");
+            }
+        }
+    }
+
+    #[test]
+    fn the_ratio_holds_at_every_rung() {
+        let root2 = 2.0f64.sqrt();
+        let mut last = 0;
+        for (w, h) in crate::tokens::RUNGS {
+            let off = ((h as f64 / w as f64) - root2).abs() / root2;
+            assert!(off < 0.003, "{w}x{h} is {:.2}% off root two", off * 100.0);
+            assert!(w > last, "the rungs must climb");
+            last = w;
+        }
+        assert_eq!(crate::tokens::rung(crate::tokens::RUNG), (WIDTH, HEIGHT));
+        assert_eq!(crate::tokens::fits(WIDTH, HEIGHT), crate::tokens::RUNG);
+        assert_eq!(
+            crate::tokens::fits(0, 0),
+            crate::tokens::FLOOR,
+            "a tiny window drops the blit scale, never the sheet"
+        );
+        assert_eq!(
+            crate::tokens::fits(9000, 9000),
+            crate::tokens::RUNGS.len() - 1
+        );
     }
 }

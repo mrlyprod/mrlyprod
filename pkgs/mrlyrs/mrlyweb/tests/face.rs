@@ -64,6 +64,7 @@ fn every_fixture_face_renders() {
             beat: view["beat"]["verb"].as_str().map(str::to_string),
             dark: false,
             ui: None,
+            rung: mrlyui::tokens::RUNG,
         };
         let png = mrlyui::face::face_png(&input).unwrap();
         assert_eq!(&png[..8], b"\x89PNG\r\n\x1a\n", "{}", path.display());
