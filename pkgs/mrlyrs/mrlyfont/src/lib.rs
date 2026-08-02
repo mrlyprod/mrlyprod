@@ -7,6 +7,7 @@ pub mod serializer;
 pub mod shape;
 
 use std::collections::BTreeMap;
+use std::sync::OnceLock;
 
 pub use letters::{all, digits, extras, lowers, specials, uppers};
 pub use models::Glyph;
@@ -15,12 +16,26 @@ pub use raster::raster;
 pub use serializer::{to_json, to_lists, to_strings};
 pub use shape::{descends, trim, DESCENDERS};
 
+fn book() -> &'static BTreeMap<char, Glyph> {
+    static BOOK: OnceLock<BTreeMap<char, Glyph>> = OnceLock::new();
+    BOOK.get_or_init(|| all().into_iter().map(|g| (g.char, g)).collect())
+}
+
+fn order() -> &'static Vec<char> {
+    static ORDER: OnceLock<Vec<char>> = OnceLock::new();
+    ORDER.get_or_init(|| all().iter().map(|g| g.char).collect())
+}
+
 pub fn glyph(c: char) -> Option<Glyph> {
-    all().into_iter().find(|g| g.char == c)
+    book().get(&c).cloned()
+}
+
+pub fn look(c: char) -> Option<&'static Glyph> {
+    book().get(&c)
 }
 
 pub fn supported() -> Vec<char> {
-    all().iter().map(|g| g.char).collect()
+    order().clone()
 }
 
 pub fn map() -> BTreeMap<char, Vec<String>> {
@@ -31,6 +46,30 @@ pub fn map() -> BTreeMap<char, Vec<String>> {
 mod tests {
     use super::*;
     const WORDMARK: &str = "MRLYPROD";
+
+    #[test]
+    fn the_book_never_reorders_the_font() {
+        let straight: Vec<char> = all().iter().map(|g| g.char).collect();
+        assert_eq!(
+            supported(),
+            straight,
+            "the font app seeds its order from supported()"
+        );
+        assert_eq!(supported().first(), Some(&'A'), "uppers still lead");
+    }
+
+    #[test]
+    fn the_cached_glyph_is_the_built_glyph() {
+        for want in all() {
+            assert_eq!(
+                glyph(want.char).as_ref(),
+                Some(&want),
+                "{} drifted",
+                want.char
+            );
+        }
+        assert_eq!(glyph('\u{6f22}'), None);
+    }
     #[test]
     fn mrlyprod_union_is_x() {
         let mut union = vec![vec!['0'; 5]; 5];
