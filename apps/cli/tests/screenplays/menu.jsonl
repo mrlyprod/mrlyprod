@@ -24,3 +24,8 @@
 {"ask": "nav.open {\"app\":\"twenty48\"}"}
 {"run": true}
 {"assert": {"route": "twenty48"}}
+{"open": "menu"}
+{"wheel": -60}
+{"assert": {"frame": "13352346820615895460"}}
+{"wheel": 60}
+{"assert": {"frame": "5890471714667213898"}}

@@ -173,3 +173,71 @@ fn the_desk_washes_from_the_board_down_to_a_colour() {
     let (_, other) = driver.wash(board);
     assert_ne!(snake, other, "each app washes toward its own accent");
 }
+
+#[test]
+fn a_wheel_glides_and_then_settles() {
+    let mut driver = Driver::wall();
+    driver.open("menu");
+    driver.pace(150);
+    assert!(!driver.moving(), "a still screen is not moving");
+    driver.wheel(-60.0, None);
+    assert!(driver.moving(), "the wheel did not start a glide");
+    let first = driver.ui().scroll;
+    assert!(first < 60, "the scroll snapped instead of gliding");
+    for _ in 0..400 {
+        if !driver.moving() {
+            break;
+        }
+        driver.animate();
+    }
+    assert!(!driver.moving(), "the glide never settled");
+    assert_eq!(driver.ui().scroll, 60, "the glide missed its target");
+    assert!(driver.dirty(), "the settling frame must be drawn");
+    assert!(!driver.animate(), "a settled scroll kept animating");
+    assert!(!driver.dirty(), "a settled scroll still asks for frames");
+}
+
+#[test]
+fn pace_zero_snaps_so_screenplays_stay_still() {
+    let mut driver = Driver::scripted(0);
+    driver.open("menu");
+    driver.wheel(-60.0, None);
+    assert!(!driver.moving(), "pace 0 must never glide");
+    assert_eq!(driver.ui().scroll, 60);
+}
+
+#[test]
+fn wheel_ticks_stack_onto_the_target() {
+    let mut driver = Driver::wall();
+    driver.open("menu");
+    driver.pace(150);
+    for _ in 0..4 {
+        driver.wheel(-10.0, None);
+    }
+    for _ in 0..400 {
+        if !driver.moving() {
+            break;
+        }
+        driver.animate();
+    }
+    assert_eq!(driver.ui().scroll, 40, "the ticks did not accumulate");
+}
+
+#[test]
+fn fractional_wheels_do_not_drift() {
+    let mut driver = Driver::wall();
+    driver.open("menu");
+    driver.pace(150);
+    driver.scroll_to(50);
+    for _ in 0..10 {
+        driver.wheel(0.3, None);
+    }
+    for _ in 0..400 {
+        if !driver.moving() {
+            break;
+        }
+        driver.animate();
+    }
+    let up = driver.ui().scroll;
+    assert_eq!(up, 47, "ten 0.3 ticks must move three rows, not ten");
+}

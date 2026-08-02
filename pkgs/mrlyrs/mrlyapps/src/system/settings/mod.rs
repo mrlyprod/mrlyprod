@@ -247,6 +247,45 @@ impl App for Settings {
 mod tests {
     use super::*;
 
+    fn controls(node: &mrlycore::ui::Node, out: &mut Vec<String>) {
+        use mrlycore::ui::Node;
+        let key = |call: &mrlycore::ui::Call| call.args["key"].as_str().unwrap_or("").to_string();
+        match node {
+            Node::Column { children } | Node::Group { children } => {
+                for child in children {
+                    controls(child, out);
+                }
+            }
+            Node::Toggle { call, .. }
+            | Node::Choice { call, .. }
+            | Node::Range { call, .. }
+            | Node::Field { call, .. } => out.push(key(call)),
+            _ => {}
+        }
+    }
+
+    #[test]
+    fn every_key_the_kernel_honours_has_a_live_control() {
+        let set = Settings::new();
+        let tree = view::tree(&set, &Iden::new("aria")).expect("a settings view");
+        let mut live = Vec::new();
+        controls(&tree, &mut live);
+        let web_only = ["emoji", "material", "haptics", "width"];
+        for key in Settings::KEYS {
+            if web_only.contains(&key) {
+                assert!(
+                    !live.contains(&key.to_string()),
+                    "{key} is filed web-only but live"
+                );
+                continue;
+            }
+            assert!(
+                live.contains(&key.to_string()),
+                "{key} is honoured by the kernel but has no native control"
+            );
+        }
+    }
+
     #[test]
     fn defaults_match_the_stylesheet() {
         let s = Settings::new();

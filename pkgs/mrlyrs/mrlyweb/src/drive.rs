@@ -58,6 +58,14 @@ pub struct Driver {
     paper: Option<[u8; 4]>,
     rung: usize,
     moves: Vec<Move>,
+    glide: Option<Glide>,
+    aimed: f64,
+}
+
+struct Glide {
+    from: usize,
+    to: usize,
+    start: i64,
 }
 
 struct Move {
@@ -119,6 +127,8 @@ impl Driver {
             paper: None,
             rung: mrlyui::tokens::RUNG,
             moves: Vec::new(),
+            glide: None,
+            aimed: 0.0,
         };
         driver.act("nav.open", json!({ "app": "menu" }));
         driver
@@ -160,14 +170,29 @@ impl Driver {
             }
         }
         self.moves = live;
+        self.coast();
+    }
+
+    fn coast(&mut self) {
+        let Some(glide) = &self.glide else {
+            return;
+        };
+        let at = mrlyui::tokens::eased(glide.start, self.now(), self.pace, true);
+        let span = glide.to as i64 - glide.from as i64;
+        let gone = span * at as i64 / mrlyui::tokens::FULL as i64;
+        self.ui.scroll = (glide.from as i64 + gone).max(0) as usize;
+        if at >= mrlyui::tokens::FULL {
+            self.ui.scroll = glide.to;
+            self.glide = None;
+        }
     }
 
     pub fn moving(&self) -> bool {
-        !self.moves.is_empty()
+        !self.moves.is_empty() || self.glide.is_some()
     }
 
     pub fn animate(&mut self) -> bool {
-        if self.moves.is_empty() {
+        if !self.moving() {
             return false;
         }
         self.settle();
@@ -246,6 +271,8 @@ impl Driver {
             self.route = route;
             self.ui = UiState::default();
             self.drag = None;
+            self.glide = None;
+            self.aimed = 0.0;
         }
         self.refresh();
     }
@@ -581,11 +608,32 @@ impl Driver {
             }
         }
         let cap = self.scene.body.saturating_sub(self.scene.window);
-        let next = (self.ui.scroll as f64 - dy).clamp(0.0, cap as f64) as usize;
-        if next != self.ui.scroll {
-            self.ui.scroll = next;
-            self.refresh();
+        let adrift = (self.aimed - self.ui.scroll as f64).abs() >= 1.0;
+        let base = match self.glide.is_some() || !adrift {
+            true => self.aimed,
+            false => self.ui.scroll as f64,
+        };
+        self.aimed = (base - dy).clamp(0.0, cap as f64);
+        let next = self.aimed.round() as usize;
+        if next == self.ui.scroll && self.glide.is_none() {
+            return;
         }
+        self.aim(next);
+        self.refresh();
+    }
+
+    fn aim(&mut self, to: usize) {
+        if self.pace == 0 {
+            self.glide = None;
+            self.ui.scroll = to;
+            return;
+        }
+        self.glide = Some(Glide {
+            from: self.ui.scroll,
+            to,
+            start: self.now(),
+        });
+        self.coast();
     }
 
     pub fn key(&mut self, press: KeyPress) {
@@ -1045,7 +1093,9 @@ impl Driver {
     pub fn scroll_to(&mut self, to: usize) {
         let cap = self.scene.body.saturating_sub(self.scene.window);
         let next = to.min(cap);
-        if next != self.ui.scroll {
+        if next != self.ui.scroll || self.glide.is_some() {
+            self.glide = None;
+            self.aimed = next as f64;
             self.ui.scroll = next;
             self.refresh();
         }
