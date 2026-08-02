@@ -323,7 +323,7 @@ impl Face {
         let sw = fw * scale;
         let sh = fh * scale;
         self.port = (ox, oy, scale);
-        let bg = pack(colors[0]);
+        let bg = pack(self.driver.desk(colors[0]));
         for y in 0..bh {
             let row = y * bw;
             let inside = y >= oy && y < oy + sh;
@@ -355,6 +355,7 @@ impl Face {
         let (ox, oy, scale) = fit(bw, bh, fw, fh);
         self.port = (ox, oy, scale);
         let board = colors.first().copied().unwrap_or([0, 0, 0, 255]);
-        glass.present(&colors, fw, fh, board, scale);
+        let desk = self.driver.desk(board);
+        glass.present(&colors, fw, fh, desk, scale);
     }
 }

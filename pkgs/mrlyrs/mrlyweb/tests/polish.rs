@@ -104,3 +104,22 @@ fn the_sheet_is_whole_at_every_scale_it_can_take() {
     assert_eq!(fit, 1, "a one-and-a-half window must stay at 1x");
     assert!(WIDTH * fit <= bw, "the sheet must sit inside its window");
 }
+
+#[test]
+fn the_desk_takes_its_colour_from_the_setting() {
+    let mut driver = Driver::scripted(0);
+    let spare = [1, 2, 3, 255];
+    driver.act(
+        "settings.set",
+        mrlycore::json!({ "key": "background", "value": "teal" }),
+    );
+    let teal = mrlycore::colors::named("teal").unwrap();
+    assert_eq!(driver.desk(spare), [teal.r, teal.g, teal.b, 255]);
+    driver.act(
+        "settings.set",
+        mrlycore::json!({ "key": "background", "value": "black" }),
+    );
+    let black = mrlycore::colors::named("black").unwrap();
+    assert_eq!(driver.desk(spare), [black.r, black.g, black.b, 255]);
+    assert_ne!(driver.desk(spare), spare, "the desk ignored the setting");
+}

@@ -189,6 +189,19 @@ impl Driver {
         &self.scene
     }
 
+    pub fn desk(&self, spare: [u8; 4]) -> [u8; 4] {
+        let Some(view) = self.os.peek("settings", None) else {
+            return spare;
+        };
+        let Some(name) = view.state["background"].as_str() else {
+            return spare;
+        };
+        match mrlycore::colors::named(name) {
+            Ok(c) => [c.r, c.g, c.b, 255],
+            Err(_) => spare,
+        }
+    }
+
     pub fn ui(&self) -> &UiState {
         &self.ui
     }

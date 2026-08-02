@@ -45,6 +45,7 @@ pub struct Glass {
     device: wgpu::Device,
     queue: wgpu::Queue,
     config: wgpu::SurfaceConfiguration,
+    most: u32,
     pipe: wgpu::RenderPipeline,
     layout: wgpu::BindGroupLayout,
     flat: wgpu::Sampler,
@@ -66,11 +67,12 @@ impl Glass {
         .ok()?;
         let (device, queue) = settle(adapter.request_device(&wgpu::DeviceDescriptor {
             label: Some("mrly"),
-            required_limits: wgpu::Limits::downlevel_defaults(),
+            required_limits: adapter.limits(),
             ..Default::default()
         }))
         .ok()?;
-        let mut config = surface.get_default_config(&adapter, w, h)?;
+        let most = device.limits().max_texture_dimension_2d;
+        let mut config = surface.get_default_config(&adapter, w.min(most), h.min(most))?;
         config.usage = wgpu::TextureUsages::RENDER_ATTACHMENT;
         config.present_mode = wgpu::PresentMode::AutoVsync;
         let format = config.format;
@@ -156,6 +158,7 @@ impl Glass {
             device,
             queue,
             config,
+            most,
             pipe,
             layout,
             flat,
@@ -169,6 +172,7 @@ impl Glass {
     }
 
     pub fn resize(&mut self, w: u32, h: u32) {
+        let (w, h) = (w.min(self.most), h.min(self.most));
         if w == 0 || h == 0 || (w == self.config.width && h == self.config.height) {
             return;
         }
