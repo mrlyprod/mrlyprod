@@ -184,13 +184,7 @@ pub fn board(name: &str, up: bool, page: usize) -> Vec<Vec<Cap>> {
 pub(crate) fn strip(name: &str, up: bool, page: usize, t: &Theme) -> (Vec<Op>, Vec<Hit>, usize) {
     let rows = board(name, up, page);
     let h = EDGE + 2 * GAP + rows.len() * CONTROL + rows.len().saturating_sub(1) * TIGHT;
-    let mut ops = vec![Op::Rect {
-        x: 0,
-        y: 0,
-        w: t.width,
-        h: EDGE,
-        color: t.faint,
-    }];
+    let mut ops = vec![Op::rect(0, 0, t.width, EDGE, t.faint)];
     let mut hits = Vec::new();
     let mut y = EDGE + GAP;
     let widest = rows
@@ -212,13 +206,7 @@ pub(crate) fn strip(name: &str, up: bool, page: usize, t: &Theme) -> (Vec<Op>, V
                 (false, Some(swatch)) => swatch,
                 (false, None) => t.faint,
             };
-            ops.push(Op::Rect {
-                x,
-                y,
-                w: kw,
-                h: CONTROL,
-                color: fill,
-            });
+            ops.push(Op::rect(x, y, kw, CONTROL, fill));
             if key.fill.is_some() {
                 for (rx, ry, rw, rh) in [
                     (x, y, kw, EDGE),
@@ -226,13 +214,7 @@ pub(crate) fn strip(name: &str, up: bool, page: usize, t: &Theme) -> (Vec<Op>, V
                     (x, y, EDGE, CONTROL),
                     (x + kw - EDGE, y, EDGE, CONTROL),
                 ] {
-                    ops.push(Op::Rect {
-                        x: rx,
-                        y: ry,
-                        w: rw,
-                        h: rh,
-                        color: t.faint,
-                    });
+                    ops.push(Op::rect(rx, ry, rw, rh, t.faint));
                 }
             }
             if !key.label.is_empty() {

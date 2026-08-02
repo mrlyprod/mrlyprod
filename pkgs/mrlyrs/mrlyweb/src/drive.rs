@@ -212,6 +212,14 @@ impl Driver {
         self.paper.unwrap_or(spare)
     }
 
+    pub fn wash(&self, board: [u8; 4]) -> ([u8; 4], [u8; 4]) {
+        let foot = match self.paper {
+            Some(paper) if paper != board => paper,
+            _ => mrlyui::tokens::accent_of(&self.route),
+        };
+        (board, foot)
+    }
+
     pub fn ui(&self) -> &UiState {
         &self.ui
     }

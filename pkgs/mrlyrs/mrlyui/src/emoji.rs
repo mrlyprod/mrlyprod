@@ -88,7 +88,7 @@ fn sheet() -> Option<&'static (usize, Vec<[u8; 4]>)> {
         .as_ref()
 }
 
-fn sprite(value: &str, k: usize) -> Option<&'static [[u8; 4]]> {
+pub(crate) fn sprite(value: &str, k: usize) -> Option<&'static [[u8; 4]]> {
     static CACHE: OnceLock<Mutex<HashMap<(String, usize), &'static [[u8; 4]]>>> = OnceLock::new();
     if k == 0 {
         return None;

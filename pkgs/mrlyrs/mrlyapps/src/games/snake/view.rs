@@ -22,23 +22,20 @@ pub(super) fn tree(snake: &Snake, _iden: &Iden) -> Option<kit::Node> {
             snake.score, snake.steps
         )));
     }
-    nodes.push(kit::heading("rules"));
-    nodes.push(kit::range("grid", snake.set.grid, 5, 64, 1, set("grid")));
-    nodes.push(kit::range(
-        "apples",
-        snake.set.apples,
-        1,
-        16,
-        1,
-        set("apples"),
-    ));
-    nodes.push(kit::toggle("wrap", snake.set.wrap, set("wrap")));
-    nodes.push(kit::toggle(
-        "self collision",
-        snake.set.self_collision,
-        set("self_collision"),
-    ));
-    nodes.push(kit::heading("speed"));
-    nodes.push(kit::range("speed", snake.set.speed, 1, 8, 1, set("speed")));
+    nodes.push(kit::card(vec![
+        kit::heading("rules"),
+        kit::range("grid", snake.set.grid, 5, 64, 1, set("grid")),
+        kit::range("apples", snake.set.apples, 1, 16, 1, set("apples")),
+        kit::toggle("wrap", snake.set.wrap, set("wrap")),
+        kit::toggle(
+            "self collision",
+            snake.set.self_collision,
+            set("self_collision"),
+        ),
+    ]));
+    nodes.push(kit::card(vec![
+        kit::heading("speed"),
+        kit::range("speed", snake.set.speed, 1, 8, 1, set("speed")),
+    ]));
     Some(kit::page(nodes))
 }

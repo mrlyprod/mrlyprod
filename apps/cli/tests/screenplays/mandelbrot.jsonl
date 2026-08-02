@@ -9,4 +9,4 @@
 {"assert": {"state": ["mandelbrot/settings/zoom", 1020]}}
 {"call": {"verb": "mandelbrot.set", "args": {"key": "accent", "value": "#ff8800"}}}
 {"assert": {"state": ["mandelbrot/settings/accent", "#ff8800"]}}
-{"assert": {"frame": "2757052817687808090"}}
+{"assert": {"frame": "8755972915379900986"}}

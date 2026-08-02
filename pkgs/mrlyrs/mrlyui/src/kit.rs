@@ -47,6 +47,15 @@ pub fn launch(children: Vec<Node>) -> Node {
     Node::grid(tokens::LAUNCH, children)
 }
 
+pub fn tile(emoji: &str, name: &str, call: Call) -> Node {
+    Node::cell(Some(call))
+        .tint(&frame::hex(tokens::accent_of(name)))
+        .hold(Node::column(vec![
+            Node::symbol(emoji).sized(tokens::ICON),
+            Node::text(name, Role::Note).mid(),
+        ]))
+}
+
 // TYPE
 pub fn title(text: &str) -> Node {
     Node::text(text, Role::Title)

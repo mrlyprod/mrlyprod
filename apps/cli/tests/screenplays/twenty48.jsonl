@@ -9,7 +9,7 @@
 {"slide": {"verb": "twenty48.set", "value": 6}}
 {"assert": {"state": ["twenty48/settings/grid", 6]}}
 {"assert": {"state": ["twenty48/steps", 0]}}
-{"assert": {"frame": "15395921153692568992"}}
+{"assert": {"frame": "15152774600982747837"}}
 {"tap": {"verb": "twenty48.set", "args": {"key": "skin", "value": "emojis"}}}
 {"assert": {"state": ["twenty48/settings/skin", "emojis"]}}
-{"assert": {"frame": "18164145235029776288"}}
+{"assert": {"frame": "7674662505444884247"}}

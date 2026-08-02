@@ -2,9 +2,9 @@ use super::layout::{shift, Op};
 use super::text;
 use super::{Act, Hit, UiState};
 use crate::tokens::{
-    contrast, Theme, CHEV, CHROME, CONTROL, EDGE, GAP, GRIP, INSET, KNOB, LINE, PAD, RAIL, ROW,
-    RULE, SLACK, SLOT, SPLIT, STUB, SWITCH_H, SWITCH_W, SYMBOL, TEXT, THUMB, TIGHT, TILE, TITLE,
-    UNIT,
+    contrast, Theme, CHEV, CHROME, CONTROL, EDGE, GAP, GRIP, INSET, KNOB, LINE, PAD, RAIL, RIM,
+    ROW, RULE, SLACK, SLOT, SPLIT, STUB, SWITCH_H, SWITCH_W, SYMBOL, TEXT, THUMB, TIGHT, TILE,
+    TITLE, UNIT,
 };
 use mrlycore::ui::{Call, Node, Pick, Role};
 use mrlycore::{json, Color};
@@ -14,6 +14,8 @@ pub(crate) struct Out {
     pub hits: Vec<Hit>,
     pub overlays: Vec<(Node, Act)>,
     pub hover: Option<Act>,
+    pub tint: [u8; 4],
+    pub cards: usize,
 }
 
 impl Out {
@@ -23,11 +25,15 @@ impl Out {
             hits: Vec::new(),
             overlays: Vec::new(),
             hover: None,
+            tint: [0, 0, 0, 0],
+            cards: 0,
         }
     }
     fn scratch(&self) -> Out {
         Out {
             hover: self.hover.clone(),
+            tint: self.tint,
+            cards: self.cards,
             ..Out::new()
         }
     }
@@ -35,6 +41,7 @@ impl Out {
         matches!(&self.hover, Some(Act::Tap { call: over }) if over == call)
     }
     fn absorb(&mut self, other: Out, dx: usize, dy: usize) {
+        self.cards = other.cards;
         self.ops.extend(shift(other.ops, dx, dy));
         for mut hit in other.hits {
             hit.x += dx;
@@ -62,7 +69,9 @@ fn tone(name: &str, t: &Theme, fallback: [u8; 4]) -> [u8; 4] {
 }
 
 fn glyph(out: &mut Out, name: &str, x: usize, y: usize, k: usize, ink: [u8; 4]) -> bool {
-    let Some(sprite) = crate::symbol::sprite(name, k, ink) else {
+    let Some(sprite) =
+        crate::symbol::sprite(name, k, ink).or_else(|| crate::emoji::sprite(name, k))
+    else {
         return false;
     };
     out.ops.push(Op::Image {
@@ -76,35 +85,33 @@ fn glyph(out: &mut Out, name: &str, x: usize, y: usize, k: usize, ink: [u8; 4]) 
     true
 }
 
-fn outline(out: &mut Out, x: usize, y: usize, w: usize, h: usize, thick: usize, color: [u8; 4]) {
-    out.ops.push(Op::Rect {
-        x,
-        y,
-        w,
-        h: thick,
-        color,
-    });
-    out.ops.push(Op::Rect {
-        x,
-        y: y + h.saturating_sub(thick),
-        w,
-        h: thick,
-        color,
-    });
-    out.ops.push(Op::Rect {
-        x,
-        y,
-        w: thick,
-        h,
-        color,
-    });
-    out.ops.push(Op::Rect {
-        x: x + w.saturating_sub(thick),
-        y,
-        w: thick,
-        h,
-        color,
-    });
+#[allow(clippy::too_many_arguments)]
+fn boxed(
+    out: &mut Out,
+    x: usize,
+    y: usize,
+    w: usize,
+    h: usize,
+    fill: [u8; 4],
+    rim: [u8; 4],
+    thick: usize,
+    t: &Theme,
+) {
+    let round = t.round;
+    if thick == 0 || rim == fill {
+        out.ops.push(Op::round(x, y, w, h, fill, round));
+        return;
+    }
+    let thick = thick.min(w / 2).min(h / 2).max(1);
+    out.ops.push(Op::round(x, y, w, h, rim, round));
+    out.ops.push(Op::round(
+        x + thick,
+        y + thick,
+        w.saturating_sub(2 * thick),
+        h.saturating_sub(2 * thick),
+        fill,
+        round.saturating_sub(thick),
+    ));
 }
 
 fn line(out: &mut Out, txt: &str, x: usize, y: usize, w: usize, scale: usize, color: [u8; 4]) {
@@ -114,10 +121,23 @@ fn line(out: &mut Out, txt: &str, x: usize, y: usize, w: usize, scale: usize, co
     }
 }
 
-fn wrapped(out: &mut Out, txt: &str, x: usize, y: usize, w: usize, color: [u8; 4]) -> usize {
+#[allow(clippy::too_many_arguments)]
+fn wrapped(
+    out: &mut Out,
+    txt: &str,
+    x: usize,
+    y: usize,
+    w: usize,
+    color: [u8; 4],
+    mid: bool,
+) -> usize {
     let mut dy = 0;
     for piece in super::md::wrap(txt, w) {
-        line(out, &piece, x, y + dy, w, TEXT, color);
+        let off = match mid {
+            true => w.saturating_sub(text::width(&piece, TEXT)) / 2,
+            false => 0,
+        };
+        line(out, &piece, x + off, y + dy, w, TEXT, color);
         dy += ROW;
     }
     dy
@@ -174,7 +194,7 @@ fn slim(node: &Node, w: usize) -> Option<usize> {
         Node::Text { text: txt, .. } => text::width(txt, TEXT) + TIGHT,
         Node::Symbol { value, size, .. } => {
             let k = if *size == 0 { SYMBOL } else { *size };
-            if crate::symbol::known(value) {
+            if crate::symbol::known(value) || crate::emoji::known(value) {
                 k + 2 * TIGHT
             } else {
                 text::width(value, TITLE) + 2 * TIGHT
@@ -242,22 +262,20 @@ fn button(node: &Node, x: usize, y: usize, w: usize, t: &Theme, out: &mut Out) -
     };
     let h = if *big { w } else { CONTROL };
     let lit = *active || call.as_ref().is_some_and(|c| out.hot(c));
-    let fill = match (lit, color) {
-        (true, _) => t.accent,
-        (false, Some(hex)) => tone(hex, t, t.faint),
-        (false, None) => t.faint,
+    let rim = match color {
+        Some(hex) => tone(hex, t, out.tint),
+        None => out.tint,
     };
-    out.ops.push(Op::Rect {
-        x,
-        y,
-        w,
-        h,
-        color: fill,
-    });
-    let ink = if lit || color.is_some() {
-        contrast(fill)
-    } else {
+    let fill = match (lit, color) {
+        (true, _) => rim,
+        (false, Some(_)) if call.is_none() => rim,
+        (false, _) => t.board,
+    };
+    boxed(out, x, y, w, h, fill, rim, RIM, t);
+    let ink = if fill == t.board {
         t.ink
+    } else {
+        contrast(fill)
     };
     let cut = text::truncate(label, w.saturating_sub(2 * GAP), TEXT);
     let tw = text::width(&cut, TEXT);
@@ -296,13 +314,7 @@ fn toggle(
     let wish = call.fill(arg, json!(!on));
     let lit = out.hot(&wish);
     if lit {
-        out.ops.push(Op::Rect {
-            x,
-            y,
-            w,
-            h: CONTROL,
-            color: t.faint,
-        });
+        out.ops.push(Op::round(x, y, w, CONTROL, t.faint, t.round));
     }
     line(
         out,
@@ -315,26 +327,16 @@ fn toggle(
     );
     let tx = x + w - SWITCH_W;
     let ty = y + (CONTROL - SWITCH_H) / 2;
-    let fill = if on { t.accent } else { t.faint };
-    out.ops.push(Op::Rect {
-        x: tx,
-        y: ty,
-        w: SWITCH_W,
-        h: SWITCH_H,
-        color: fill,
-    });
+    let fill = if on { out.tint } else { t.board };
+    boxed(out, tx, ty, SWITCH_W, SWITCH_H, fill, out.tint, RIM, t);
     let kx = if on {
         tx + SWITCH_W - KNOB - EDGE
     } else {
         tx + EDGE
     };
-    out.ops.push(Op::Rect {
-        x: kx,
-        y: ty + EDGE,
-        w: KNOB,
-        h: KNOB,
-        color: t.board,
-    });
+    let knob = if on { t.board } else { out.tint };
+    out.ops
+        .push(Op::round(kx, ty + EDGE, KNOB, KNOB, knob, t.round));
     out.hits.push(Hit {
         x,
         y,
@@ -362,14 +364,8 @@ fn segments(
         let ox = x + i * (cw + TIGHT);
         let wish = call.fill(arg, json!(option));
         let on = option == value || out.hot(&wish);
-        let fill = if on { t.accent } else { t.faint };
-        out.ops.push(Op::Rect {
-            x: ox,
-            y,
-            w: cw,
-            h: CONTROL,
-            color: fill,
-        });
+        let fill = if on { out.tint } else { t.board };
+        boxed(out, ox, y, cw, CONTROL, fill, out.tint, RIM, t);
         let ink = if on { contrast(fill) } else { t.ink };
         let cut = text::truncate(option, cw.saturating_sub(PAD), TEXT);
         let tw = text::width(&cut, TEXT);
@@ -431,15 +427,9 @@ fn choice(
             let next = options.get((at + 1) % options.len().max(1));
             let wish = next.map(|o| call.fill(arg, json!(o)));
             let lit = wish.as_ref().is_some_and(|c| out.hot(c));
-            let fill = if lit { t.accent } else { t.faint };
+            let fill = if lit { out.tint } else { t.board };
             let ink = if lit { contrast(fill) } else { t.ink };
-            out.ops.push(Op::Rect {
-                x,
-                y: y + dy,
-                w,
-                h: CONTROL,
-                color: fill,
-            });
+            boxed(out, x, y + dy, w, CONTROL, fill, out.tint, RIM, t);
             let cut = text::truncate(value, w.saturating_sub(2 * (CHEV + TIGHT)), TEXT);
             let tw = text::width(&cut, TEXT);
             line(
@@ -465,14 +455,8 @@ fn choice(
         Pick::Menu => {
             let key = id(call, arg);
             let lit = matches!(&out.hover, Some(Act::Menu { id }) if *id == key);
-            let fill = if lit { t.accent } else { t.faint };
-            out.ops.push(Op::Rect {
-                x,
-                y: y + dy,
-                w,
-                h: CONTROL,
-                color: fill,
-            });
+            let fill = if lit { out.tint } else { t.board };
+            boxed(out, x, y + dy, w, CONTROL, fill, out.tint, RIM, t);
             line(
                 out,
                 value,
@@ -551,28 +535,31 @@ fn range(node: &Node, x: usize, y: usize, w: usize, t: &Theme, out: &mut Out) ->
     let band = CONTROL.saturating_sub(UNIT + LINE * TEXT);
     let span = (max - min).max(1);
     let frac = ((*value - min).clamp(0, span)) as f64 / span as f64;
-    out.ops.push(Op::Rect {
+    out.ops.push(Op::round(
         x,
-        y: ty + (band - RAIL) / 2,
+        ty + (band - RAIL) / 2,
         w,
-        h: RAIL,
-        color: t.faint,
-    });
+        RAIL,
+        t.faint,
+        RAIL / 2,
+    ));
     let filled = (w as f64 * frac) as usize;
-    out.ops.push(Op::Rect {
+    let bar = out.tint;
+    out.ops.push(Op::round(
         x,
-        y: ty + (band - RAIL) / 2,
-        w: filled,
-        h: RAIL,
-        color: t.accent,
-    });
-    out.ops.push(Op::Rect {
-        x: (x + filled).min(x + w.saturating_sub(THUMB)),
-        y: ty + (band.saturating_sub(GRIP)) / 2,
-        w: THUMB,
-        h: GRIP,
-        color: t.ink,
-    });
+        ty + (band - RAIL) / 2,
+        filled,
+        RAIL,
+        bar,
+        RAIL / 2,
+    ));
+    out.ops.push(Op::rect(
+        (x + filled).min(x + w.saturating_sub(THUMB)),
+        ty + (band.saturating_sub(GRIP)) / 2,
+        THUMB,
+        GRIP,
+        t.ink,
+    ));
     out.hits.push(Hit {
         x,
         y,
@@ -618,9 +605,9 @@ fn field(
     let border = if focused.is_some() || lit {
         t.pen
     } else {
-        t.faint
+        out.tint
     };
-    outline(out, x, y, w, CONTROL, EDGE, border);
+    boxed(out, x, y, w, CONTROL, t.board, border, RIM, t);
     let led = lead(icon, out, x, y, t);
     let tx = x + INSET + led;
     let field = w.saturating_sub(2 * INSET + led);
@@ -635,13 +622,13 @@ fn field(
         };
         line(out, &cut, tx, y + INSET, field, TEXT, t.ink);
         if focused.is_some() {
-            out.ops.push(Op::Rect {
-                x: tx + TIGHT + text::width(&cut, TEXT),
-                y: y + (CONTROL - LINE - TIGHT) / 2,
-                w: EDGE,
-                h: LINE + TIGHT,
-                color: t.pen,
-            });
+            out.ops.push(Op::rect(
+                tx + TIGHT + text::width(&cut, TEXT),
+                y + (CONTROL - LINE - TIGHT) / 2,
+                EDGE,
+                LINE + TIGHT,
+                t.pen,
+            ));
         }
     }
     out.hits.push(Hit {
@@ -704,19 +691,12 @@ fn cell(
     else {
         return 0;
     };
-    let fill = color
+    let rim = color
         .as_deref()
-        .map_or(t.faint, |hex| tone(hex, t, t.faint));
-    out.ops.push(Op::Rect {
-        x,
-        y,
-        w,
-        h: w,
-        color: fill,
-    });
-    if *on || call.as_ref().is_some_and(|c| out.hot(c)) {
-        outline(out, x, y, w, w, 2 * EDGE, t.pen);
-    }
+        .map_or(out.tint, |hex| tone(hex, t, out.tint));
+    let lit = *on || call.as_ref().is_some_and(|c| out.hot(c));
+    let fill = if lit { rim } else { t.board };
+    boxed(out, x, y, w, w, fill, rim, RIM, t);
     if let Some(inner) = child {
         let mut scratch = out.scratch();
         let iw = w.saturating_sub(2 * GAP);
@@ -747,13 +727,7 @@ fn item(node: &Node, x: usize, y: usize, w: usize, t: &Theme, out: &mut Out) -> 
     };
     let lit = call.as_ref().is_some_and(|c| out.hot(c));
     if lit {
-        out.ops.push(Op::Rect {
-            x,
-            y,
-            w,
-            h: CONTROL,
-            color: t.faint,
-        });
+        out.ops.push(Op::round(x, y, w, CONTROL, t.faint, t.round));
     }
     let mut tx = x;
     if let Some(sym) = symbol {
@@ -822,19 +796,23 @@ pub(crate) fn lay(
         Node::Row { children } => gridded(children, children.len(), x, y, w, t, ui, out),
         Node::Grid { cols, children } => gridded(children, *cols, x, y, w, t, ui, out),
         Node::Group { children } => {
+            let colour = t.card(out.cards);
+            out.cards += 1;
+            let inset = PAD + RIM;
             let mut scratch = out.scratch();
+            scratch.tint = colour;
             let h = stacked(
                 children,
                 0,
                 0,
-                w.saturating_sub(2 * PAD),
+                w.saturating_sub(2 * inset),
                 t,
                 ui,
                 &mut scratch,
             );
-            outline(out, x, y, w, h + 2 * PAD, EDGE, t.faint);
-            out.absorb(scratch, x + PAD, y + PAD);
-            h + 2 * PAD
+            boxed(out, x, y, w, h + 2 * inset, t.board, colour, RIM, t);
+            out.absorb(scratch, x + inset, y + inset);
+            h + 2 * inset
         }
         Node::Wrap { children } => {
             let mut cx = 0;
@@ -860,7 +838,11 @@ pub(crate) fn lay(
             out.overlays.push((child.as_ref().clone(), act));
             0
         }
-        Node::Text { text: txt, role } => match role {
+        Node::Text {
+            text: txt,
+            role,
+            mid,
+        } => match role {
             Role::Title => {
                 line(out, txt, x, y, w, TITLE, t.ink);
                 LINE * TITLE + TIGHT
@@ -869,17 +851,12 @@ pub(crate) fn lay(
                 line(out, txt, x, y + (CONTROL - LINE * TEXT) / 2, w, TEXT, t.pen);
                 CONTROL
             }
-            Role::Note => wrapped(out, txt, x, y, w, t.muted),
-            Role::Body => wrapped(out, txt, x, y, w, t.ink),
+            Role::Note => wrapped(out, txt, x, y, w, t.muted, *mid),
+            Role::Body => wrapped(out, txt, x, y, w, t.ink, *mid),
         },
         Node::Rule => {
-            out.ops.push(Op::Rect {
-                x,
-                y: y + (RULE - EDGE) / 2,
-                w,
-                h: EDGE,
-                color: t.faint,
-            });
+            out.ops
+                .push(Op::rect(x, y + (RULE - EDGE) / 2, w, EDGE, t.faint));
             RULE
         }
         Node::Image { fact } => picture(fact, x, y, w, t, out).0,
@@ -887,7 +864,9 @@ pub(crate) fn lay(
             let k = if *size == 0 { SYMBOL } else { *size };
             let paint = ink.as_deref().map_or(t.ink, |name| tone(name, t, t.ink));
             let tall = k + 2 * EDGE;
-            if let Some(sprite) = crate::symbol::sprite(value, k, paint) {
+            if let Some(sprite) =
+                crate::symbol::sprite(value, k, paint).or_else(|| crate::emoji::sprite(value, k))
+            {
                 out.ops.push(Op::Image {
                     x: x + w.saturating_sub(k) / 2,
                     y: y + (tall - k) / 2,

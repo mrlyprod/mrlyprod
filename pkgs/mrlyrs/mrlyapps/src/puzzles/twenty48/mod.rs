@@ -789,7 +789,7 @@ mod tests {
         let g = game(3);
         fn skins(node: &ui::Node, out: &mut Vec<String>) {
             match node {
-                ui::Node::Column { children } => {
+                ui::Node::Column { children } | ui::Node::Group { children } => {
                     for child in children {
                         skins(child, out);
                     }

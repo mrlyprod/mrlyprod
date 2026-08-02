@@ -276,6 +276,17 @@ impl Face {
 
 // RENDER
 
+fn blend(top: [u8; 4], foot: [u8; 4], y: usize, h: usize) -> [u8; 4] {
+    let at = y as f64 / h.max(1) as f64;
+    let lerp = |a: u8, b: u8| (a as f64 + (b as f64 - a as f64) * at).round() as u8;
+    [
+        lerp(top[0], foot[0]),
+        lerp(top[1], foot[1]),
+        lerp(top[2], foot[2]),
+        255,
+    ]
+}
+
 fn pack(px: [u8; 4]) -> u32 {
     ((px[0] as u32) << 16) | ((px[1] as u32) << 8) | px[2] as u32
 }
@@ -338,10 +349,11 @@ impl Face {
         let sw = fw * scale;
         let sh = fh * scale;
         self.port = (ox, oy, scale);
-        let bg = pack(self.driver.desk(colors[0]));
+        let (top, foot) = self.driver.wash(colors[0]);
         for y in 0..bh {
             let row = y * bw;
             let inside = y >= oy && y < oy + sh;
+            let bg = pack(blend(top, foot, y, bh));
             for x in 0..bw {
                 buffer[row + x] = if inside && x >= ox && x < ox + sw {
                     let fy = (y - oy) / scale;
@@ -370,8 +382,8 @@ impl Face {
         let (ox, oy, scale) = fit(bw, bh, fw, fh);
         self.port = (ox, oy, scale);
         let board = colors.first().copied().unwrap_or([0, 0, 0, 255]);
-        let desk = self.driver.desk(board);
-        glass.present(&colors, fw, fh, desk, scale);
+        let wash = self.driver.wash(board);
+        glass.present(&colors, fw, fh, wash, scale);
         if glass.again() {
             window.request_redraw();
         }

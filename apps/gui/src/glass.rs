@@ -103,7 +103,7 @@ impl Glass {
                 },
                 wgpu::BindGroupLayoutEntry {
                     binding: 2,
-                    visibility: wgpu::ShaderStages::VERTEX,
+                    visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
                     ty: wgpu::BindingType::Buffer {
                         ty: wgpu::BufferBindingType::Uniform,
                         has_dynamic_offset: false,
@@ -150,7 +150,7 @@ impl Glass {
         });
         let rect = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("rect"),
-            size: 16,
+            size: 48,
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
@@ -213,7 +213,7 @@ impl Glass {
         pixels: &[[u8; 4]],
         w: usize,
         h: usize,
-        board: [u8; 4],
+        wash: ([u8; 4], [u8; 4]),
         scale: usize,
     ) {
         if w == 0 || h == 0 || pixels.len() < w * h {
@@ -239,11 +239,20 @@ impl Glass {
         );
         let (bw, bh) = (self.config.width as f32, self.config.height as f32);
         let (sw, sh) = ((w * scale) as f32, (h * scale) as f32);
+        let unit = |c: u8| c as f32 / 255.0;
         let rect = [
             ((bw - sw) / 2.0).max(0.0) / bw,
             ((bh - sh) / 2.0).max(0.0) / bh,
             sw / bw,
             sh / bh,
+            unit(wash.0[0]),
+            unit(wash.0[1]),
+            unit(wash.0[2]),
+            1.0,
+            unit(wash.1[0]),
+            unit(wash.1[1]),
+            unit(wash.1[2]),
+            1.0,
         ];
         self.queue
             .write_buffer(&self.rect, 0, bytemuck(&rect).as_slice());
@@ -298,7 +307,7 @@ impl Glass {
                     depth_slice: None,
                     resolve_target: None,
                     ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(desk(board)),
+                        load: wgpu::LoadOp::Clear(desk(wash.0)),
                         store: wgpu::StoreOp::Store,
                     },
                 })],
@@ -306,7 +315,7 @@ impl Glass {
             });
             pass.set_pipeline(&self.pipe);
             pass.set_bind_group(0, &bind, &[]);
-            pass.draw(0..4, 0..1);
+            pass.draw(0..4, 0..2);
         }
         self.queue.submit(Some(encoder.finish()));
         self.queue.present(frame);
@@ -329,6 +338,6 @@ fn desk(board: [u8; 4]) -> wgpu::Color {
     }
 }
 
-fn bytemuck(rect: &[f32; 4]) -> Vec<u8> {
+fn bytemuck(rect: &[f32; 12]) -> Vec<u8> {
     rect.iter().flat_map(|f| f.to_ne_bytes()).collect()
 }

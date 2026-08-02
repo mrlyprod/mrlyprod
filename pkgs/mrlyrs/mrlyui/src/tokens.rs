@@ -40,12 +40,12 @@ pub const ROW: usize = LINE * TEXT + LEAD;
 // SPACE
 pub const UNIT: usize = 3;
 pub const EDGE: usize = 1;
+pub const RIM: usize = 2 * EDGE;
 pub const GAP: usize = UNIT;
 pub const PAD: usize = UNIT;
 pub const TIGHT: usize = UNIT;
 pub const SPLIT: usize = 2 * UNIT;
 pub const INDENT: usize = 3 * UNIT;
-pub const RADIUS: usize = 0;
 pub const INSET: usize = (CONTROL - LINE) / 2;
 
 // SIZE
@@ -53,6 +53,7 @@ pub const CONTROL: usize = 24;
 pub const HEADER: usize = CONTROL;
 pub const RULE: usize = 2 * UNIT;
 pub const SYMBOL: usize = 16;
+pub const ICON: usize = 2 * CONTROL;
 pub const CANVAS: usize = 192;
 
 // PARTS
@@ -113,6 +114,8 @@ pub struct Theme {
     pub pen: [u8; 4],
     pub width: usize,
     pub height: usize,
+    pub round: usize,
+    pub seed: u64,
 }
 
 impl Theme {
@@ -122,6 +125,7 @@ impl Theme {
         let c = ROLLABLE[(hash(app) % ROLLABLE.len() as u64) as usize];
         let accent = [c.r, c.g, c.b, c.a];
         let (width, height) = rung(RUNG);
+        let seed = hash(app);
         Theme {
             board,
             ink,
@@ -131,7 +135,18 @@ impl Theme {
             pen: legible(accent, board, ink),
             width,
             height,
+            round: 0,
+            seed,
         }
+    }
+    pub fn rounded(mut self, key: usize) -> Theme {
+        self.round = key.min(4) * UNIT;
+        self
+    }
+    pub fn card(&self, n: usize) -> [u8; 4] {
+        let at = (self.seed.wrapping_add(n as u64 * 7)) % ROLLABLE.len() as u64;
+        let c = ROLLABLE[at as usize];
+        [c.r, c.g, c.b, c.a]
     }
     pub fn sized(mut self, at: usize) -> Theme {
         let (width, height) = rung(at);
@@ -186,6 +201,11 @@ fn hash(text: &str) -> u64 {
         h = h.wrapping_mul(0x100000001b3);
     }
     h
+}
+
+pub fn accent_of(app: &str) -> [u8; 4] {
+    let c = ROLLABLE[(hash(app) % ROLLABLE.len() as u64) as usize];
+    [c.r, c.g, c.b, c.a]
 }
 
 pub fn contrast(fill: [u8; 4]) -> [u8; 4] {

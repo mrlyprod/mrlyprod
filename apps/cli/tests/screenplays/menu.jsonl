@@ -11,16 +11,16 @@
 {"tap": {"verb": "nav.open", "args": {"app": "settings"}}}
 {"assert": {"route": "settings"}}
 {"open": "menu"}
-{"assert": {"frame": "4989796441306313709"}}
+{"assert": {"frame": "5890471714667213898"}}
 {"hover": [160, 200]}
-{"assert": {"frame": "4759452945921832289"}}
+{"assert": {"frame": "4107930254159978432"}}
 {"hover": []}
-{"assert": {"frame": "4989796441306313709"}}
+{"assert": {"frame": "5890471714667213898"}}
 {"tab": true}
-{"assert": {"frame": "5305803836002276709"}}
+{"assert": {"frame": "10703102966593046698"}}
 {"walk": "down"}
 {"walk": "up"}
-{"assert": {"frame": "5305803836002276709"}}
+{"assert": {"frame": "10703102966593046698"}}
 {"ask": "nav.open {\"app\":\"twenty48\"}"}
 {"run": true}
 {"assert": {"route": "twenty48"}}

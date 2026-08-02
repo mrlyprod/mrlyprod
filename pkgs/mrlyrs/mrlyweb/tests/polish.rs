@@ -134,3 +134,42 @@ fn the_desk_takes_its_colour_from_the_setting() {
     assert_eq!(driver.desk(spare), [black.r, black.g, black.b, 255]);
     assert_ne!(driver.desk(spare), spare, "the desk ignored the setting");
 }
+
+#[test]
+fn the_desk_washes_from_the_board_down_to_a_colour() {
+    let mut driver = Driver::scripted(0);
+    driver.open("menu");
+    let board = [255, 255, 255, 255];
+    let (top, foot) = driver.wash(board);
+    assert_eq!(top, board, "the wash starts at the board");
+    assert_ne!(
+        foot, board,
+        "an unset background still washes to the accent"
+    );
+    driver.act(
+        "settings.set",
+        mrlycore::json!({ "key": "background", "value": "teal" }),
+    );
+    driver.open("menu");
+    let (top, teal) = driver.wash(board);
+    assert_eq!(top, board);
+    assert_eq!(
+        teal,
+        [
+            mrlycore::colors::TEAL.r,
+            mrlycore::colors::TEAL.g,
+            mrlycore::colors::TEAL.b,
+            255
+        ],
+        "the background setting picks the base"
+    );
+    driver.act(
+        "settings.set",
+        mrlycore::json!({ "key": "background", "value": "white" }),
+    );
+    driver.open("snake");
+    let (_, snake) = driver.wash(board);
+    driver.open("twenty48");
+    let (_, other) = driver.wash(board);
+    assert_ne!(snake, other, "each app washes toward its own accent");
+}

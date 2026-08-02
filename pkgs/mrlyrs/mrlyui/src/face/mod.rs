@@ -28,6 +28,7 @@ pub struct FaceInput {
     pub dark: bool,
     pub ui: Option<Node>,
     pub rung: usize,
+    pub round: usize,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -217,13 +218,7 @@ fn overlays(
                 sheet,
                 width,
                 height,
-                &[layout::Op::Rect {
-                    x: 0,
-                    y: 0,
-                    w: width,
-                    h: height,
-                    color: veil,
-                }],
+                &[layout::Op::rect(0, 0, width, height, veil)],
             );
             hits.push(Hit {
                 x: 0,
@@ -234,47 +229,48 @@ fn overlays(
             });
             let mut out = tree::Out::new();
             out.hover = ui.hover.clone();
+            out.tint = theme.card(0);
             let ph = tree::lay(&node, 0, 0, panel, theme, ui, &mut out);
             let px = (width - panel) / 2;
             let sunk = (height / 16) * (FULL as usize - lift) / FULL as usize;
             let py = (height.saturating_sub(ph) / 2).max(HEADER + PAD) + sunk;
             let rim = 2 * PAD;
             let frame = vec![
-                layout::Op::Rect {
-                    x: px - rim,
-                    y: py.saturating_sub(rim),
-                    w: panel + 2 * rim,
-                    h: ph + 2 * rim,
-                    color: theme.board,
-                },
-                layout::Op::Rect {
-                    x: px - rim,
-                    y: py.saturating_sub(rim),
-                    w: panel + 2 * rim,
-                    h: EDGE,
-                    color: theme.faint,
-                },
-                layout::Op::Rect {
-                    x: px - rim,
-                    y: py + ph + rim - EDGE,
-                    w: panel + 2 * rim,
-                    h: EDGE,
-                    color: theme.faint,
-                },
-                layout::Op::Rect {
-                    x: px - rim,
-                    y: py.saturating_sub(rim),
-                    w: EDGE,
-                    h: ph + 2 * rim,
-                    color: theme.faint,
-                },
-                layout::Op::Rect {
-                    x: px + panel + rim - EDGE,
-                    y: py.saturating_sub(rim),
-                    w: EDGE,
-                    h: ph + 2 * rim,
-                    color: theme.faint,
-                },
+                layout::Op::rect(
+                    px - rim,
+                    py.saturating_sub(rim),
+                    panel + 2 * rim,
+                    ph + 2 * rim,
+                    theme.board,
+                ),
+                layout::Op::rect(
+                    px - rim,
+                    py.saturating_sub(rim),
+                    panel + 2 * rim,
+                    EDGE,
+                    theme.faint,
+                ),
+                layout::Op::rect(
+                    px - rim,
+                    py + ph + rim - EDGE,
+                    panel + 2 * rim,
+                    EDGE,
+                    theme.faint,
+                ),
+                layout::Op::rect(
+                    px - rim,
+                    py.saturating_sub(rim),
+                    EDGE,
+                    ph + 2 * rim,
+                    theme.faint,
+                ),
+                layout::Op::rect(
+                    px + panel + rim - EDGE,
+                    py.saturating_sub(rim),
+                    EDGE,
+                    ph + 2 * rim,
+                    theme.faint,
+                ),
             ];
             paint::paint_into(sheet, width, height, &frame);
             paint::paint_into(sheet, width, height, &layout::shift(out.ops, px, py));
@@ -289,11 +285,14 @@ fn overlays(
 }
 
 pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
-    let theme = Theme::new(&input.app, input.dark).sized(input.rung);
+    let theme = Theme::new(&input.app, input.dark)
+        .sized(input.rung)
+        .rounded(input.round);
     let (width, height) = (theme.width, theme.height);
     let root = input.ui.clone().unwrap_or_else(|| dump::tree(input));
     let mut out = tree::Out::new();
     out.hover = ui.hover.clone();
+    out.tint = theme.accent;
     let body = tree::lay(&root, PAD, 0, theme.content(), &theme, ui, &mut out);
     let body = body.clamp(1, theme.body());
 
@@ -350,13 +349,13 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
             &mut sheet,
             width,
             height,
-            &[layout::Op::Rect {
-                x: width - 2 * EDGE,
-                y: ty,
-                w: 2 * EDGE,
-                h: th,
-                color: theme.muted,
-            }],
+            &[layout::Op::rect(
+                width - 2 * EDGE,
+                ty,
+                2 * EDGE,
+                th,
+                theme.muted,
+            )],
         );
     }
 
@@ -374,13 +373,7 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
         None if asking.is_some() => {
             let ask = asking.expect("a bar");
             let top = height - bar_h;
-            let mut ops = vec![layout::Op::Rect {
-                x: 0,
-                y: top,
-                w: width,
-                h: EDGE,
-                color: theme.faint,
-            }];
+            let mut ops = vec![layout::Op::rect(0, top, width, EDGE, theme.faint)];
             let mut y = top + EDGE + PAD;
             for (i, hint) in ask.hints.iter().enumerate() {
                 let call = Call::new(hint, mrlycore::json!({}));
@@ -417,23 +410,23 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
                 1,
                 theme.ink,
             ));
-            ops.push(layout::Op::Rect {
-                x: PAD + CONTROL + tw + EDGE,
-                y: y + (CONTROL - crate::tokens::LINE) / 2,
-                w: EDGE,
-                h: crate::tokens::LINE,
-                color: theme.pen,
-            });
+            ops.push(layout::Op::rect(
+                PAD + CONTROL + tw + EDGE,
+                y + (CONTROL - crate::tokens::LINE) / 2,
+                EDGE,
+                crate::tokens::LINE,
+                theme.pen,
+            ));
             paint::paint_into(&mut sheet, width, height, &ops);
         }
         None => {
-            let mut bar_ops = vec![layout::Op::Rect {
-                x: 0,
-                y: height - bar_h,
-                w: width,
-                h: EDGE,
-                color: theme.faint,
-            }];
+            let mut bar_ops = vec![layout::Op::rect(
+                0,
+                height - bar_h,
+                width,
+                EDGE,
+                theme.faint,
+            )];
             let mut by = height - bar_h + PAD;
             for (i, item) in bar.into_iter().enumerate() {
                 let h = item.height;
@@ -466,34 +459,22 @@ pub fn render(input: &FaceInput, ui: &UiState) -> Scene {
             .map_or(0, |at| at + 1);
         if let Some(hit) = hits[scrim..].iter().find(|hit| hit.act == *want) {
             let rim = vec![
-                layout::Op::Rect {
-                    x: hit.x,
-                    y: hit.y,
-                    w: hit.w,
-                    h: EDGE,
-                    color: theme.pen,
-                },
-                layout::Op::Rect {
-                    x: hit.x,
-                    y: hit.y + hit.h.saturating_sub(EDGE),
-                    w: hit.w,
-                    h: EDGE,
-                    color: theme.pen,
-                },
-                layout::Op::Rect {
-                    x: hit.x,
-                    y: hit.y,
-                    w: EDGE,
-                    h: hit.h,
-                    color: theme.pen,
-                },
-                layout::Op::Rect {
-                    x: hit.x + hit.w.saturating_sub(EDGE),
-                    y: hit.y,
-                    w: EDGE,
-                    h: hit.h,
-                    color: theme.pen,
-                },
+                layout::Op::rect(hit.x, hit.y, hit.w, EDGE, theme.pen),
+                layout::Op::rect(
+                    hit.x,
+                    hit.y + hit.h.saturating_sub(EDGE),
+                    hit.w,
+                    EDGE,
+                    theme.pen,
+                ),
+                layout::Op::rect(hit.x, hit.y, EDGE, hit.h, theme.pen),
+                layout::Op::rect(
+                    hit.x + hit.w.saturating_sub(EDGE),
+                    hit.y,
+                    EDGE,
+                    hit.h,
+                    theme.pen,
+                ),
             ];
             paint::paint_into(&mut sheet, width, height, &rim);
         }
@@ -552,6 +533,7 @@ mod tests {
             dark: false,
             ui: None,
             rung: crate::tokens::RUNG,
+            round: 0,
         }
     }
 
@@ -604,6 +586,7 @@ mod tests {
             dark: true,
             ui: None,
             rung: crate::tokens::RUNG,
+            round: 0,
         }
     }
 
@@ -1140,5 +1123,66 @@ mod tests {
             crate::tokens::fits(9000, 9000),
             crate::tokens::RUNGS.len() - 1
         );
+    }
+
+    #[test]
+    fn every_card_wears_its_own_colour() {
+        let mut input = bare("carded", Json::Null);
+        input.ui = Some(Node::column(
+            (0..6)
+                .map(|i| {
+                    Node::group(vec![Node::text(
+                        &format!("card {i}"),
+                        mrlycore::ui::Role::Label,
+                    )])
+                })
+                .collect(),
+        ));
+        let theme = Theme::new("carded", false);
+        let seen: Vec<[u8; 4]> = (0..6).map(|i| theme.card(i)).collect();
+        for (i, colour) in seen.iter().enumerate() {
+            assert!(
+                !seen[..i].contains(colour),
+                "card {i} repeated a colour inside one screen"
+            );
+        }
+        let scene = render(&input, &UiState::default());
+        let colors = scene.frame.composite().cell.colors.unwrap_or_default();
+        for (i, colour) in seen.iter().enumerate() {
+            assert!(colors.contains(colour), "card {i} never reached the sheet");
+        }
+    }
+
+    #[test]
+    fn the_radius_key_rounds_the_corners() {
+        let shot = |round: usize| {
+            let mut input = widget_input();
+            input.round = round;
+            fnv(&render(&input, &UiState::default())
+                .frame
+                .composite()
+                .cell
+                .colors
+                .unwrap_or_default())
+        };
+        let square = shot(0);
+        let mut last = square;
+        for key in 1..=4 {
+            let now = shot(key);
+            assert_ne!(now, last, "radius {key} drew the same box as {}", key - 1);
+            last = now;
+        }
+        assert_eq!(square, shot(0), "the same key must draw the same box");
+    }
+
+    #[test]
+    fn a_box_keeps_its_rim_inside_its_bounds() {
+        let mut input = widget_input();
+        input.round = 4;
+        let scene = render(&input, &UiState::default());
+        for hit in &scene.hits {
+            assert!(hit.x + hit.w <= WIDTH, "a rounded box ran off the side");
+            assert!(hit.y + hit.h <= HEIGHT, "a rounded box ran off the bottom");
+        }
     }
 }

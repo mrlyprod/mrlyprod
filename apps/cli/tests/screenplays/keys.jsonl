@@ -1,13 +1,13 @@
 {"assert": {"route": "menu"}}
 {"focus": {"verb": "menu.search"}}
 {"cap": "shift"}
-{"assert": {"frame": "9960057518495571589"}}
+{"assert": {"frame": "6753760146726093981"}}
 {"cap": "S"}
 {"assert": {"state": ["menu/query", "S"]}}
 {"cap": "back"}
 {"cap": "shift"}
 {"cap": "emoji"}
-{"assert": {"frame": "7529966855838907084"}}
+{"assert": {"frame": "15456148252761151764"}}
 {"cap": "😄"}
 {"assert": {"state": ["menu/query", "😄"]}}
 {"cap": "next"}

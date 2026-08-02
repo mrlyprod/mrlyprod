@@ -19,20 +19,24 @@ pub(super) fn tree(game: &Twenty48, _iden: &Iden) -> Option<kit::Node> {
             game.score, game.steps
         )));
     }
-    nodes.push(kit::heading("rules"));
-    nodes.push(kit::range("grid", game.set.grid, 2, 8, 1, set("grid")));
-    nodes.push(kit::heading("look"));
-    nodes.push(kit::segments(
-        "skin",
-        &game.set.skin,
-        super::SKINS.iter().map(|s| s.to_string()).collect(),
-        set("skin"),
-    ));
-    nodes.push(kit::cycle(
-        "design",
-        &game.set.design,
-        super::DESIGNS.iter().map(|d| d.to_string()).collect(),
-        set("design"),
-    ));
+    nodes.push(kit::card(vec![
+        kit::heading("rules"),
+        kit::range("grid", game.set.grid, 2, 8, 1, set("grid")),
+    ]));
+    nodes.push(kit::card(vec![
+        kit::heading("look"),
+        kit::segments(
+            "skin",
+            &game.set.skin,
+            super::SKINS.iter().map(|s| s.to_string()).collect(),
+            set("skin"),
+        ),
+        kit::cycle(
+            "design",
+            &game.set.design,
+            super::DESIGNS.iter().map(|d| d.to_string()).collect(),
+            set("design"),
+        ),
+    ]));
     Some(kit::page(nodes))
 }

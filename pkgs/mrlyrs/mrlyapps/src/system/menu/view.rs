@@ -44,8 +44,9 @@ pub(super) fn tree(menu: &Menu, _iden: &Iden) -> Option<kit::Node> {
                     m["category"].as_str().unwrap_or(""),
                     Some(kit::open(route)),
                 )
+                .badge(m["emoji"].as_str().unwrap_or(""))
             } else {
-                kit::button(title, kit::open(route))
+                kit::tile(m["emoji"].as_str().unwrap_or(""), title, kit::open(route))
             }
         })
         .collect();

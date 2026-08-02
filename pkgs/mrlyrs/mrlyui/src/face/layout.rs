@@ -12,6 +12,7 @@ pub(crate) enum Op {
         w: usize,
         h: usize,
         color: [u8; 4],
+        round: usize,
     },
     Text {
         x: usize,
@@ -32,6 +33,33 @@ pub(crate) enum Op {
 }
 
 impl Op {
+    pub(crate) fn rect(x: usize, y: usize, w: usize, h: usize, color: [u8; 4]) -> Op {
+        Op::Rect {
+            x,
+            y,
+            w,
+            h,
+            color,
+            round: 0,
+        }
+    }
+    pub(crate) fn round(
+        x: usize,
+        y: usize,
+        w: usize,
+        h: usize,
+        color: [u8; 4],
+        round: usize,
+    ) -> Op {
+        Op::Rect {
+            x,
+            y,
+            w,
+            h,
+            color,
+            round: round.min(w / 2).min(h / 2),
+        }
+    }
     pub(crate) fn text(x: usize, y: usize, text: String, scale: usize, color: [u8; 4]) -> Op {
         Op::Text {
             x,
@@ -70,13 +98,7 @@ pub(crate) fn row(line: String, indent: usize, scale: usize, color: [u8; 4], wid
 }
 
 pub(crate) fn title_ops(input: &FaceInput, theme: &Theme) -> Vec<Op> {
-    let mut ops = vec![Op::Rect {
-        x: PAD,
-        y: (HEADER - MARK) / 2,
-        w: MARK,
-        h: MARK,
-        color: theme.accent,
-    }];
+    let mut ops = vec![Op::rect(PAD, (HEADER - MARK) / 2, MARK, MARK, theme.accent)];
     let mut right = theme.width - PAD;
     if let Some(beat) = &input.beat {
         let name = text::truncate(beat, BEAT, TEXT);
@@ -100,13 +122,7 @@ pub(crate) fn title_ops(input: &FaceInput, theme: &Theme) -> Vec<Op> {
         TITLE,
         theme.ink,
     ));
-    ops.push(Op::Rect {
-        x: 0,
-        y: HEADER - 1,
-        w: theme.width,
-        h: EDGE,
-        color: theme.faint,
-    });
+    ops.push(Op::rect(0, HEADER - 1, theme.width, EDGE, theme.faint));
     ops
 }
 
@@ -168,12 +184,20 @@ pub(crate) fn action_bar(input: &FaceInput, theme: &Theme) -> Vec<Item> {
 pub(crate) fn shift(ops: Vec<Op>, dx: usize, dy: usize) -> Vec<Op> {
     ops.into_iter()
         .map(|op| match op {
-            Op::Rect { x, y, w, h, color } => Op::Rect {
+            Op::Rect {
+                x,
+                y,
+                w,
+                h,
+                color,
+                round,
+            } => Op::Rect {
                 x: x + dx,
                 y: y + dy,
                 w,
                 h,
                 color,
+                round,
             },
             Op::Text {
                 x,

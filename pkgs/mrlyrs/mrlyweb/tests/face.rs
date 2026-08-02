@@ -65,6 +65,7 @@ fn every_fixture_face_renders() {
             dark: false,
             ui: None,
             rung: mrlyui::tokens::RUNG,
+            round: 0,
         };
         let png = mrlyui::face::face_png(&input).unwrap();
         assert_eq!(&png[..8], b"\x89PNG\r\n\x1a\n", "{}", path.display());

@@ -13,10 +13,16 @@ fn input(os: &Os, app: &str, rung: usize) -> Result<FaceInput, &'static str> {
     let title = manifest(app)
         .map(|m| m.title)
         .unwrap_or_else(|| app.to_string());
-    let dark = os
-        .peek("settings", None)
-        .map(|v| v.state["darkmode"] == true)
+    let dials = os.peek("settings", None).map(|v| v.state);
+    let dark = dials
+        .as_ref()
+        .map(|s| s["darkmode"] == true)
         .unwrap_or(false);
+    let round = dials
+        .as_ref()
+        .and_then(|s| s["radius"].as_i64())
+        .unwrap_or(0)
+        .clamp(0, 4) as usize;
     let mut state = view.state;
     if !state["frame"].is_null() && mrlyui::face::decode(&state["frame"]).is_none() {
         let twin = os.capture(app);
@@ -41,6 +47,7 @@ fn input(os: &Os, app: &str, rung: usize) -> Result<FaceInput, &'static str> {
         dark,
         ui: view.ui,
         rung,
+        round,
     })
 }
 

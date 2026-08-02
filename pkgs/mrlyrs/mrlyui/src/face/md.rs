@@ -99,13 +99,7 @@ fn runs(line: &[Word], x: usize, color: [u8; 4]) -> Item {
 fn code_item(lines: &[String], theme: &Theme, width: usize) -> Item {
     let shown = lines.len().max(1);
     let height = shown * ROW + 2;
-    let mut ops = vec![Op::Rect {
-        x: PAD,
-        y: 0,
-        w: width,
-        h: height - 4,
-        color: theme.faint,
-    }];
+    let mut ops = vec![Op::rect(PAD, 0, width, height - 4, theme.faint)];
     for (i, line) in lines.iter().enumerate() {
         ops.push(Op::text(
             PAD + 4,

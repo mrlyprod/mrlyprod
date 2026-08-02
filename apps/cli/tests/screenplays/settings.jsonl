@@ -10,7 +10,7 @@
 {"focus": {"verb": "settings.set"}}
 {"cap": "teal"}
 {"assert": {"state": ["settings/background", "teal"]}}
-{"assert": {"frame": "10367780506784865432"}}
+{"assert": {"frame": "15907198627751994119"}}
 {"tap": {"verb": "settings.set", "args": {"key": "darkmode", "value": false}}}
 {"ask": "settings.set {\"key\":\"pace\",\"value\":0}"}
 {"run": true}

@@ -1,4 +1,4 @@
-use super::{Settings, MATERIALS, MODES, RENDERS, WALLPAPERS};
+use super::{Settings, EMOJIS, FONTS, MATERIALS, MODES, RENDERS, WALLPAPERS};
 use mrlyos::kernel::Iden;
 use mrlyui::kit;
 
@@ -8,61 +8,64 @@ fn names(list: &[&str]) -> Vec<String> {
 
 pub(super) fn tree(set: &Settings, _iden: &Iden) -> Option<kit::Node> {
     let key = |name: &str| kit::set("settings", name);
-    let mut nodes = vec![kit::heading("desk")];
-    nodes.push(kit::segments(
-        "launchpad",
-        &set.launchpad,
-        names(&MODES),
-        key("launchpad"),
-    ));
-    nodes.push(kit::toggle("darkmode", set.darkmode, key("darkmode")));
-    nodes.push(kit::heading("background"));
-    nodes.push(kit::swatch(&set.background, key("background")));
-    nodes.push(kit::select("fill", &set.fill, super::fills(), key("fill")));
-    nodes.push(kit::heading("color"));
-    nodes.push(kit::swatch(&set.color, key("color")));
-
-    nodes.push(kit::heading("sheet"));
-    nodes.push(kit::range("scale", set.scale, 3, 6, 1, key("scale")));
-    nodes.push(kit::range("width", set.width, 500, 1500, 100, key("width")));
-    nodes.push(kit::range("pace", set.pace, 0, 400, 25, key("pace")));
-    nodes.push(kit::range("detail", set.detail, 32, 160, 16, key("detail")));
-    nodes.push(kit::segments(
-        "render",
-        &set.render,
-        names(&RENDERS),
-        key("render"),
-    ));
-
-    nodes.push(kit::heading("sound"));
-    nodes.push(kit::toggle("sound", set.sound, key("sound")));
-    nodes.push(kit::select("note", &set.note, super::notes(), key("note")));
-    nodes.push(kit::select("wave", &set.wave, super::waves(), key("wave")));
-    nodes.push(kit::range(
-        "duration",
-        set.duration,
-        50,
-        1000,
-        50,
-        key("duration"),
-    ));
-
-    nodes.push(kit::heading("pattern"));
-    nodes.push(kit::segments(
-        "wallpaper",
-        &set.wallpaper,
-        names(&WALLPAPERS),
-        key("wallpaper"),
-    ));
-    nodes.push(kit::range("seed", set.seed, 0, 999, 1, key("seed")));
-
-    nodes.push(kit::heading("web only"));
-    nodes.push(kit::dead("font", &set.font));
-    nodes.push(kit::dead("emoji", &set.emoji));
-    nodes.push(kit::dead("material", &set.material));
-    nodes.push(kit::dead("haptics", bool_word(set.haptics)));
-    nodes.push(kit::dead("radius", &set.radius.to_string()));
-    let _ = MATERIALS;
+    let nodes = vec![
+        kit::card(vec![
+            kit::heading("desk"),
+            kit::segments("launchpad", &set.launchpad, names(&MODES), key("launchpad")),
+            kit::toggle("darkmode", set.darkmode, key("darkmode")),
+        ]),
+        kit::card(vec![
+            kit::heading("background"),
+            kit::swatch(&set.background, key("background")),
+            kit::select("fill", &set.fill, super::fills(), key("fill")),
+        ]),
+        kit::card(vec![
+            kit::heading("accent"),
+            kit::swatch(&set.color, key("color")),
+        ]),
+        kit::card(vec![
+            kit::heading("measure"),
+            kit::range("scale", set.scale, 3, 6, 1, key("scale")),
+            kit::range("radius", set.radius, 0, 4, 1, key("radius")),
+            kit::range("pace", set.pace, 0, 400, 25, key("pace")),
+        ]),
+        kit::card(vec![
+            kit::heading("render"),
+            kit::segments("render", &set.render, names(&RENDERS), key("render")),
+            kit::range("detail", set.detail, 32, 160, 1, key("detail")),
+        ]),
+        kit::card(vec![
+            kit::heading("type"),
+            kit::segments("font", &set.font, names(&FONTS), key("font")),
+        ]),
+        kit::card(vec![
+            kit::heading("sound"),
+            kit::toggle("sound", set.sound, key("sound")),
+            kit::select("note", &set.note, super::notes(), key("note")),
+            kit::segments("wave", &set.wave, super::waves(), key("wave")),
+            kit::range("duration", set.duration, 50, 1000, 50, key("duration")),
+        ]),
+        kit::card(vec![
+            kit::heading("pattern"),
+            kit::segments(
+                "wallpaper",
+                &set.wallpaper,
+                names(&WALLPAPERS),
+                key("wallpaper"),
+            ),
+            kit::range("seed", set.seed, 0, 999, 1, key("seed")),
+        ]),
+        kit::card(vec![
+            kit::heading("web only"),
+            kit::dead("emoji", &set.emoji),
+            kit::dead("material", &set.material),
+            kit::dead("haptics", bool_word(set.haptics)),
+            kit::dead("width", &set.width.to_string()),
+            kit::dead("session", "export import reset"),
+            kit::dead("install", "browser"),
+        ]),
+    ];
+    let _ = (EMOJIS, MATERIALS);
     Some(kit::page(nodes))
 }
 

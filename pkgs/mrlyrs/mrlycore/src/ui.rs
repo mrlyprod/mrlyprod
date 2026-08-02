@@ -60,6 +60,7 @@ pub enum Node {
     Text {
         text: String,
         role: Role,
+        mid: bool,
     },
     Rule,
     Image {
@@ -166,6 +167,7 @@ impl Node {
         Node::Text {
             text: text.to_string(),
             role,
+            mid: false,
         }
     }
     pub fn image(fact: Json) -> Node {
@@ -345,6 +347,12 @@ impl Node {
     pub fn scaled(mut self, by: i64) -> Node {
         if let Node::Range { scale, .. } = &mut self {
             *scale = by.max(1);
+        }
+        self
+    }
+    pub fn mid(mut self) -> Node {
+        if let Node::Text { mid, .. } = &mut self {
+            *mid = true;
         }
         self
     }

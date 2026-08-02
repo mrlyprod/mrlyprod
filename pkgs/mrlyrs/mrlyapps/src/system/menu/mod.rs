@@ -186,14 +186,21 @@ mod tests {
             panic!();
         };
         assert_eq!(apps.len(), 2);
-        let ui::Node::Button {
-            call: Some(call), ..
+        let ui::Node::Cell {
+            call: Some(call),
+            child: Some(inner),
+            ..
         } = &apps[1]
         else {
             panic!();
         };
         assert_eq!(call.verb, "nav.open");
         assert_eq!(call.args["app"].as_str(), Some("clock"));
+        let ui::Node::Column { children: face } = inner.as_ref() else {
+            panic!();
+        };
+        assert!(matches!(&face[0], ui::Node::Symbol { value, .. } if value == "\u{1f550}"));
+        assert!(matches!(&face[1], ui::Node::Text { text, .. } if text == "clock"));
     }
     #[test]
     fn view_lists_when_shared_settings_say_so() {

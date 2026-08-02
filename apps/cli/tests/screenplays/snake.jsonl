@@ -18,4 +18,4 @@
 {"tap": {"verb": "snake.reset", "args": {}}}
 {"assert": {"state": ["snake/over", false]}}
 {"assert": {"state": ["snake/steps", 0]}}
-{"assert": {"frame": "7287518202463308886"}}
+{"assert": {"frame": "6725050880280585718"}}

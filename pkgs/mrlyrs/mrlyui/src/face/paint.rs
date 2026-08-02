@@ -16,16 +16,13 @@ pub(crate) fn band(buf: &mut [[u8; 4]], w: usize, h: usize, ops: &[Op], off: usi
                 w: rw,
                 h: rh,
                 color,
+                round,
             } => {
                 let ty = *y as i64 - off;
                 if outside(ty, *rh, h) {
                     continue;
                 }
-                if color[3] == 255 {
-                    crate::draw::fill_rect(buf, w, h, *x, ty, *rw, *rh, *color);
-                } else {
-                    blend_rect(buf, w, h, *x, ty, *rw, *rh, *color);
-                }
+                rounded(buf, w, h, *x, ty, *rw, *rh, *color, *round);
             }
             Op::Text {
                 x,
@@ -66,6 +63,58 @@ pub(crate) fn band(buf: &mut [[u8; 4]], w: usize, h: usize, ops: &[Op], off: usi
 
 fn outside(y: i64, tall: usize, h: usize) -> bool {
     y + tall as i64 <= 0 || y >= h as i64
+}
+
+#[allow(clippy::too_many_arguments)]
+fn rounded(
+    buf: &mut [[u8; 4]],
+    w: usize,
+    h: usize,
+    x: usize,
+    y: i64,
+    rw: usize,
+    rh: usize,
+    color: [u8; 4],
+    round: usize,
+) {
+    if round == 0 {
+        if color[3] == 255 {
+            crate::draw::fill_rect(buf, w, h, x, y, rw, rh, color);
+        } else {
+            blend_rect(buf, w, h, x, y, rw, rh, color);
+        }
+        return;
+    }
+    for dy in crate::draw::band(y, rh, h) {
+        let cut = corner(dy, rh, round);
+        let span = rw.saturating_sub(2 * cut);
+        if span == 0 {
+            continue;
+        }
+        let row = y + dy as i64;
+        if color[3] == 255 {
+            crate::draw::fill_rect(buf, w, h, x + cut, row, span, 1, color);
+        } else {
+            blend_rect(buf, w, h, x + cut, row, span, 1, color);
+        }
+    }
+}
+
+fn corner(row: usize, rh: usize, round: usize) -> usize {
+    let r = round.min(rh / 2);
+    if r == 0 {
+        return 0;
+    }
+    let reach = r as f64 - 0.5;
+    let off = if row < r {
+        (r - row) as f64 - 0.5
+    } else if row + r >= rh {
+        (row + r + 1 - rh) as f64 - 0.5
+    } else {
+        return 0;
+    };
+    let inside = (reach * reach - off * off).max(0.0).sqrt();
+    (reach - inside).round() as usize
 }
 
 #[allow(clippy::too_many_arguments)]
