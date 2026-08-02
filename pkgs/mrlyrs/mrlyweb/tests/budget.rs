@@ -59,3 +59,44 @@ fn a_still_screen_renders_nothing() {
     driver.hover(None);
     assert!(!driver.dirty(), "hovering nothing redrew");
 }
+
+const BOOT_MS: f64 = 400.0;
+const OPEN_MS: f64 = 400.0;
+
+#[test]
+fn a_cold_start_stays_inside_its_budget() {
+    let start = Instant::now();
+    let driver = Driver::wall();
+    let boot = start.elapsed().as_secs_f64() * 1000.0;
+    assert_eq!(driver.route(), "menu", "a cold start lands on the menu");
+    assert!(
+        boot < BOOT_MS,
+        "cold start costs {boot:.1}ms, over the {BOOT_MS}ms budget"
+    );
+}
+
+#[test]
+fn opening_any_app_stays_inside_its_budget() {
+    let mut driver = Driver::wall();
+    let apps: Vec<String> = mrlyweb::registry::catalogue()
+        .iter()
+        .map(|a| a.route().to_string())
+        .collect();
+    assert!(apps.len() >= 40, "the catalogue shrank to {}", apps.len());
+    let mut worst = (0.0, String::new());
+    for app in &apps {
+        let start = Instant::now();
+        driver.open(app);
+        let each = start.elapsed().as_secs_f64() * 1000.0;
+        if each > worst.0 {
+            worst = (each, app.clone());
+        }
+    }
+    println!("worst open: {} at {:.1}ms", worst.1, worst.0);
+    assert!(
+        worst.0 < OPEN_MS,
+        "{} takes {:.1}ms to open, over the {OPEN_MS}ms budget",
+        worst.1,
+        worst.0
+    );
+}

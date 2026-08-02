@@ -2,6 +2,7 @@ mod persist;
 mod render;
 mod rules;
 mod setup;
+mod view;
 
 #[cfg(test)]
 mod tests;
@@ -200,6 +201,43 @@ impl Chess {
         }
         out
     }
+    pub(crate) fn finished(&self) -> bool {
+        self.over
+    }
+    pub(crate) fn files(&self) -> usize {
+        self.w
+    }
+    pub(crate) fn ranks(&self) -> usize {
+        self.h
+    }
+    pub(crate) fn tile(&self) -> i64 {
+        self.set.tile
+    }
+    pub(crate) fn reskin(&self) -> i64 {
+        self.set.reskin
+    }
+    pub(crate) fn obfuscated(&self) -> bool {
+        self.set.obfuscate
+    }
+    pub(crate) fn skin_name(&self) -> &str {
+        &self.set.skin
+    }
+    pub(crate) fn surface_name(&self) -> &str {
+        &self.set.surface
+    }
+    pub(crate) fn standing(&self) -> String {
+        let turn = Chess::team_name(self.turn);
+        match self.in_check() {
+            true => format!("{turn} to move - check"),
+            false => format!("{turn} to move - ply {}", self.plies),
+        }
+    }
+    pub(crate) fn outcome(&self) -> String {
+        match self.winner {
+            Some(team) => format!("{} wins in {} plies", Chess::team_name(team), self.plies),
+            None => format!("stalemate after {} plies", self.plies),
+        }
+    }
     fn board_fact(&self) -> Json {
         let rows: Vec<Json> = (0..self.h)
             .map(|y| {
@@ -279,6 +317,9 @@ impl App for Chess {
             },
             "frame": self.render().fact(),
         })
+    }
+    fn view(&self, iden: &Iden) -> Option<mrlycore::ui::Node> {
+        view::tree(self, iden)
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
         let mut out = Vec::new();

@@ -327,3 +327,31 @@ fn monkey_survives_a_snake_mash() {
         .unwrap();
     assert!(status.success());
 }
+
+#[test]
+fn drive_plays_the_chess_screenplay() {
+    let status = mrlycli()
+        .args(["drive", "tests/screenplays/chess.jsonl"])
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status()
+        .unwrap();
+    assert!(status.success());
+}
+
+#[test]
+fn every_screenplay_is_in_the_gate() {
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/screenplays");
+    let gate = std::fs::read_to_string(
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/cli.rs"),
+    )
+    .unwrap();
+    for entry in std::fs::read_dir(&dir).unwrap() {
+        let path = entry.unwrap().path();
+        let name = path.file_name().unwrap().to_string_lossy().to_string();
+        assert!(
+            gate.contains(&format!("tests/screenplays/{name}")),
+            "{name} is not played by any test"
+        );
+    }
+}

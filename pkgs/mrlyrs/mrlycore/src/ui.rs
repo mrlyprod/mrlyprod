@@ -299,6 +299,12 @@ impl Node {
             pan: None,
         }
     }
+    pub fn squares(mut self, cols: usize, rows: usize) -> Node {
+        if let Node::Canvas { grid, .. } = &mut self {
+            *grid = Some((cols.max(1), rows.max(1)));
+        }
+        self
+    }
     pub fn active(mut self, is: bool) -> Node {
         match &mut self {
             Node::Button { active, .. } => *active = is,

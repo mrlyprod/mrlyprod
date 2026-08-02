@@ -1,0 +1,18 @@
+{"open": "chess"}
+{"assert": {"route": "chess"}}
+{"assert": {"verb": "chess.select"}}
+{"assert": {"state": ["chess/turn", "white"]}}
+{"cell": [4, 6]}
+{"assert": {"state": ["chess/selected", "e2"]}}
+{"cell": [4, 4]}
+{"assert": {"state": ["chess/selected", null]}}
+{"assert": {"state": ["chess/turn", "black"]}}
+{"assert": {"state": ["chess/steps", 1]}}
+{"tap": {"verb": "chess.set", "args": {"key": "skin", "value": "emojis"}}}
+{"assert": {"state": ["chess/settings/skin", "emojis"]}}
+{"tap": {"verb": "chess.set", "args": {"key": "surface", "value": "canvas"}}}
+{"assert": {"state": ["chess/settings/surface", "canvas"]}}
+{"assert": {"frame": "15272178733547534220"}}
+{"call": {"verb": "chess.reset", "args": {"seed": 3}}}
+{"assert": {"state": ["chess/turn", "white"]}}
+{"assert": {"state": ["chess/steps", 0]}}

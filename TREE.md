@@ -10,6 +10,7 @@ mrlyprod
 │   │   │   └── tui.rs
 │   │   ├── tests
 │   │   │   ├── screenplays
+│   │   │   │   ├── chess.jsonl
 │   │   │   │   ├── keys.jsonl
 │   │   │   │   ├── mandelbrot.jsonl
 │   │   │   │   ├── menu.jsonl
@@ -630,7 +631,8 @@ mrlyprod
 │   │   │   │   │   │   ├── render.rs
 │   │   │   │   │   │   ├── rules.rs
 │   │   │   │   │   │   ├── setup.rs
-│   │   │   │   │   │   └── tests.rs
+│   │   │   │   │   │   ├── tests.rs
+│   │   │   │   │   │   └── view.rs
 │   │   │   │   │   ├── memory
 │   │   │   │   │   │   ├── README.md
 │   │   │   │   │   │   └── mod.rs

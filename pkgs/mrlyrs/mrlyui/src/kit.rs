@@ -135,6 +135,10 @@ pub fn board(fact: Json) -> Node {
     Node::image(fact)
 }
 
+pub fn squares(fact: Json, cols: usize, rows: usize, call: Option<Call>) -> Node {
+    Node::canvas(fact, call, None).squares(cols, rows)
+}
+
 pub fn dpad(glyphs: [&str; 4], verb: &str) -> Node {
     Node::grid(
         tokens::DPAD,
