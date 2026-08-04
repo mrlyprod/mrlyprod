@@ -17,7 +17,7 @@ type State = {
   view: string
   fill: string
   census: { grid: number; fill: number; void: number }
-  frame: { rows: number[][]; palette: string[] }
+  tris: { pts: [number, number][]; color: string }[]
 }
 
 const turn = setter("six")
@@ -27,7 +27,7 @@ export function six(state: unknown, _send: Send): Node {
   return (
     <stack key="six">
       <card key="board">
-        <Board app="six" rows={s.frame.rows} palette={s.frame.palette} />
+        <Board app="six" rows={[]} tris={s.tris} />
       </card>
       <card key="page">
         <Pager app="six" current={s.index + 1} total={s.count} />

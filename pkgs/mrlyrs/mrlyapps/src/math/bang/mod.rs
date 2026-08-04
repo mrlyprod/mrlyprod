@@ -2,12 +2,9 @@ use mrlycore::colors::named;
 use mrlycore::tensor::Tensor;
 use mrlycore::{json, Json};
 use mrlymath::bang::{bang, factory, universe_codes};
-use mrlymath::space::{beam, project, view, Vec3};
-use mrlymath::three::{quads, Cell3d};
 use mrlymath::two::Cell2d;
 use mrlyos::kernel::{App, Call, Iden, Manifest, Outcome, Verb};
 use mrlyui::frame::{field, Frame};
-use mrlyui::raster::{paint, Tri};
 
 const BASE: usize = 2;
 const NUMBER: usize = 3;
@@ -16,23 +13,6 @@ const LEVEL_2D: usize = 5;
 const LEVEL_3D: usize = 2;
 const FILL: &str = "yellow";
 const VOID: &str = "black";
-const SIZE_3D: usize = 128;
-const LIGHT_YAW: i64 = 72;
-const LIGHT_PITCH: i64 = 28;
-const VIEW_YAW: i64 = 32;
-const VIEW_PITCH: i64 = 20;
-const BANDS: i64 = 4;
-const DIST: f32 = 3.0;
-
-fn shades(base: [u8; 4], bands: i64) -> Vec<[u8; 4]> {
-    (0..bands)
-        .map(|k| {
-            let t = (64 + 191 * k / (bands - 1)) as u32;
-            let mix = |c: u8| (c as u32 * t / 255) as u8;
-            [mix(base[0]), mix(base[1]), mix(base[2]), 255]
-        })
-        .collect()
-}
 
 pub struct Bang {
     dimension: usize,
@@ -120,47 +100,27 @@ impl Bang {
             .collect();
         field(w, h, colors, empty)
     }
-    fn render_3d(&self, tensor: Tensor) -> Frame {
-        let cell = Cell3d::new(tensor);
-        let eye = view(VIEW_YAW, VIEW_PITCH);
-        let light = beam(LIGHT_YAW, LIGHT_PITCH);
-        let focal = SIZE_3D as f32 * 1.2;
-        let fill_c = named(FILL).unwrap();
-        let base = [fill_c.r, fill_c.g, fill_c.b, 255];
-        let bands = shades(base, BANDS);
-        let mut tris = Vec::new();
-        for quad in quads(&cell) {
-            let n_eye = eye.apply(quad.normal);
-            let us: Vec<Vec3> = quad.verts.iter().map(|&v| eye.apply(v)).collect();
-            if n_eye.x * us[0].x + n_eye.y * us[0].y + n_eye.z * (us[0].z - DIST) >= 0.0 {
-                continue;
-            }
-            let lit = (quad.normal.dot(light) + 1.0) * 0.5;
-            let band = ((lit * BANDS as f32).floor() as i64).clamp(0, BANDS - 1);
-            let color = bands[band as usize];
-            for tri in [[0usize, 1, 2], [0, 2, 3]] {
-                let ps: Option<Vec<[f32; 3]>> = tri
-                    .iter()
-                    .map(|&idx| project(us[idx], DIST, SIZE_3D as f32, focal))
-                    .collect();
-                let Some(ps) = ps else { continue };
-                tris.push(Tri {
-                    x: [ps[0][0], ps[1][0], ps[2][0]],
-                    y: [ps[0][1], ps[1][1], ps[2][1]],
-                    z: [ps[0][2], ps[1][2], ps[2][2]],
-                    color,
-                });
-            }
-        }
-        paint(SIZE_3D, SIZE_3D, &tris, mrlyui::frame::board(self.dark))
-    }
     fn render(&self) -> Frame {
         let tensor = self.tensor();
         match self.dimension {
             1 => self.render_1d(tensor),
-            3 => self.render_3d(tensor),
             _ => self.render_2d(tensor),
         }
+    }
+    fn voxels(&self) -> Json {
+        let tensor = self.tensor();
+        let (d, h, w) = (tensor.shape[0], tensor.shape[1], tensor.shape[2]);
+        let bytes = tensor.bytes();
+        let planes: Vec<Json> = (0..d)
+            .map(|z| {
+                json!((0..h)
+                    .map(|y| json!((0..w)
+                        .map(|x| bytes[(z * h + y) * w + x])
+                        .collect::<Vec<_>>()))
+                    .collect::<Vec<_>>())
+            })
+            .collect();
+        json!(planes)
     }
 }
 
@@ -177,7 +137,7 @@ impl App for Bang {
     fn state(&self, _iden: &Iden) -> Json {
         let code = self.code();
         let design = bang(self.dimension).design(code);
-        json!({
+        let mut out = json!({
             "dimension": self.dimension,
             "base": BASE,
             "index": self.index,
@@ -186,8 +146,13 @@ impl App for Bang {
             "code": code.to_string(),
             "degree": design.degree(),
             "anf": design.anf(),
-            "frame": self.render().fact(),
-        })
+        });
+        if self.dimension == 3 {
+            out["voxels"] = self.voxels();
+        } else {
+            out["frame"] = self.render().fact();
+        }
+        out
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
         vec![
@@ -334,9 +299,9 @@ mod tests {
         assert_eq!(names, vec!["bang.page", "bang.set", "bang.reset"]);
     }
     #[test]
-    fn frame_renders_the_grid() {
+    fn flat_universes_colormap_and_solid_ones_ship_voxels() {
         let mut b = Bang::new();
-        for d in [1i64, 2, 3] {
+        for d in [1i64, 2] {
             send(
                 &mut b,
                 "bang.set",
@@ -346,6 +311,17 @@ mod tests {
             let rows = state["frame"]["rows"].as_array().unwrap();
             assert!(!rows.is_empty());
             assert!(!rows[0].as_array().unwrap().is_empty());
+            assert!(state["voxels"].is_null());
         }
+        send(
+            &mut b,
+            "bang.set",
+            json!({ "key": "dimension", "value": 3 }),
+        );
+        let state = b.state(&iden());
+        assert!(state["frame"].is_null());
+        let planes = state["voxels"].as_array().unwrap();
+        assert!(!planes.is_empty());
+        assert!(!planes[0].as_array().unwrap().is_empty());
     }
 }

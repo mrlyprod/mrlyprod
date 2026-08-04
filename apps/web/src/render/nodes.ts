@@ -2,7 +2,7 @@ import { spell } from "../glyphs.ts"
 import { html } from "../kernel.ts"
 import * as gpu from "mrlygpu"
 import { icon } from "../icons.ts"
-import type { Call, Flip, Glyph, Held, Node, Send, Sym } from "../types.ts"
+import type { Call, Flip, Glyph, Tri, Held, Node, Send, Sym } from "../types.ts"
 import { prune, remember } from "./boards.ts"
 import { scramble } from "./fx.ts"
 import { markCanvas } from "./mark.ts"
@@ -469,7 +469,8 @@ export function patch(el: Held, node: Node, send: Send): void {
       const dark = document.body.classList.contains("darkmode")
       const shading = node.shade !== undefined && render === "gpu" ? gpu.pull(node.shade) : null
       const marks = node.glyphs?.map(g => `${g.x},${g.y},${g.k},${g.ch},${g.tint ?? ""}`).join(";") ?? ""
-      const sig = `${render}:${dark}:${shading?.join(",") ?? ""}:${node.palette?.join(",") ?? ""}:${marks}:${node.rows.map(row => row.join(",")).join(";")}`
+      const shapes = node.tris?.map(t => `${t.pts.flat().join(",")}:${t.color}`).join(";") ?? ""
+      const sig = `${render}:${dark}:${shading?.join(",") ?? ""}:${node.palette?.join(",") ?? ""}:${marks}:${shapes}:${node.rows.map(row => row.join(",")).join(";")}`
       if (el.__committed === sig) break
       el.__committed = sig
       if (node.shade !== undefined && render === "gpu" && gpu.draw(surface, node, shading)) break
@@ -478,7 +479,7 @@ export function patch(el: Held, node: Node, send: Send): void {
         break
       }
       halt(surface)
-      fill(surface, node.rows, node.palette, node.glyphs)
+      fill(surface, node.rows, node.palette, node.glyphs, node.tris)
       break
     }
     case "Button":
@@ -639,7 +640,11 @@ function play(surface: HTMLCanvasElement, strip: Flip[]): void {
   step()
 }
 
-function fill(surface: HTMLCanvasElement, rows: number[][], palette?: string[], glyphs?: Glyph[]): void {
+function fill(surface: HTMLCanvasElement, rows: number[][], palette?: string[], glyphs?: Glyph[], tris?: Tri[]): void {
+  if (tris !== undefined && tris.length > 0) {
+    carve(surface, tris)
+    return
+  }
   const height = rows.length
   const width = rows[0]?.length ?? 0
   if (surface.width !== width) surface.width = width
@@ -669,6 +674,39 @@ function fill(surface: HTMLCanvasElement, rows: number[][], palette?: string[], 
     ctx.globalAlpha = 1
   }
   if (glyphs !== undefined && glyphs.length > 0) etch(surface, ctx, glyphs)
+}
+
+const SPAN = 128
+
+function carve(surface: HTMLCanvasElement, tris: Tri[]): void {
+  if (surface.width !== SPAN) surface.width = SPAN
+  if (surface.height !== SPAN) surface.height = SPAN
+  const ctx = surface.getContext("2d")
+  if (ctx === null) return
+  ctx.clearRect(0, 0, SPAN, SPAN)
+  const xs = tris.flatMap(t => t.pts.map(p => p[0]))
+  const ys = tris.flatMap(t => t.pts.map(p => p[1]))
+  const minX = Math.min(...xs)
+  const maxX = Math.max(...xs)
+  const minY = Math.min(...ys)
+  const maxY = Math.max(...ys)
+  const span = Math.max(maxX - minX, maxY - minY, 1)
+  const scale = (SPAN * 0.9) / span
+  const cx = (minX + maxX) / 2
+  const cy = (minY + maxY) / 2
+  const mid = SPAN / 2
+  for (const tri of tris) {
+    ctx.fillStyle = tri.color
+    ctx.beginPath()
+    tri.pts.forEach(([x, y], i) => {
+      const px = mid + (x - cx) * scale
+      const py = mid + (y - cy) * scale
+      if (i === 0) ctx.moveTo(px, py)
+      else ctx.lineTo(px, py)
+    })
+    ctx.closePath()
+    ctx.fill()
+  }
 }
 
 const STACK = `"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`

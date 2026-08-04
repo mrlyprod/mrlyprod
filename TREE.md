@@ -694,7 +694,6 @@ mrlyprod
 │   │   │   │   │   ├── serializer.rs
 │   │   │   │   │   └── tile.rs
 │   │   │   │   ├── space
-│   │   │   │   │   ├── camera.rs
 │   │   │   │   │   ├── mesh.rs
 │   │   │   │   │   ├── mesh.wgsl
 │   │   │   │   │   ├── mod.rs
@@ -786,8 +785,7 @@ mrlyprod
 │   │   │   │   │   └── two.rs
 │   │   │   │   ├── draw.rs
 │   │   │   │   ├── frame.rs
-│   │   │   │   ├── lib.rs
-│   │   │   │   └── raster.rs
+│   │   │   │   └── lib.rs
 │   │   │   ├── tests
 │   │   │   └── Cargo.toml
 │   │   └── mrlyweb

@@ -1,7 +1,6 @@
 pub mod draw;
 pub mod frame;
 pub mod mark;
-pub mod raster;
 pub mod shaders;
 pub mod skin;
 

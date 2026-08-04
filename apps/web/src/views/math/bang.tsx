@@ -16,7 +16,8 @@ type State = {
   code: string
   degree: number
   anf: string
-  frame: { rows: number[][]; palette: string[] }
+  frame?: { rows: number[][]; palette: string[] }
+  voxels?: number[][][]
 }
 
 export function bang(state: unknown, _send: Send): Node {
@@ -24,7 +25,7 @@ export function bang(state: unknown, _send: Send): Node {
   return (
     <stack key="bang">
       <card key="board">
-        <Board app="bang" rows={s.frame.rows} palette={s.frame.palette} />
+        <Board app="bang" rows={s.frame?.rows ?? []} palette={s.frame?.palette} />
       </card>
       <card key="page">
         <Pager app="bang" />

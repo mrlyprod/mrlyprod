@@ -6,15 +6,13 @@ use mrlymath::six::{
 };
 use mrlymath::three::{carpet, census, net, void, xtree, ytree, ztree, Cell3d};
 use mrlyos::kernel::{App, Call, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::Frame;
-use mrlyui::raster::{paint, Tri};
+use mrlyui::frame::hex;
 use std::collections::HashMap;
 
 const DESIGNS: [&str; 6] = ["carpet", "net", "xtree", "ytree", "ztree", "void"];
 const NUMBERS: [i64; 4] = [3, 5, 7, 9];
 const MAX_CELLS: u32 = 16;
 const VIEWS: [&str; 3] = ["iso", "pro", "cut"];
-const SIZE: usize = 128;
 
 struct Set {
     design: String,
@@ -140,7 +138,6 @@ impl Set {
 
 pub struct Six {
     set: Set,
-    dark: bool,
 }
 
 impl Default for Six {
@@ -151,10 +148,7 @@ impl Default for Six {
 
 impl Six {
     pub fn new() -> Six {
-        Six {
-            set: Set::new(),
-            dark: false,
-        }
+        Six { set: Set::new() }
     }
     fn cube(&self) -> Cell3d {
         let n = self.set.number as usize;
@@ -192,40 +186,18 @@ impl Six {
         map.insert(GRID, vec![ALPHA]);
         map
     }
-    fn render(&self) -> Frame {
+    fn tris(&self) -> Json {
         let painted = hex_paint(self.hex(), Some(&self.colors_map()), Some(Mode::Type));
         let tris = triangles(&painted).unwrap();
-        if tris.is_empty() {
-            return paint(SIZE, SIZE, &[], mrlyui::frame::board(self.dark));
-        }
-        let xs = tris.iter().flat_map(|(p, _)| p.iter().map(|q| q.0));
-        let ys = tris.iter().flat_map(|(p, _)| p.iter().map(|q| q.1));
-        let (min_x, max_x) = (xs.clone().min().unwrap(), xs.max().unwrap());
-        let (min_y, max_y) = (ys.clone().min().unwrap(), ys.max().unwrap());
-        let span = (max_x - min_x).max(max_y - min_y).max(1) as f32;
-        let scale = (SIZE as f32 * 0.9) / span;
-        let (cx, cy) = ((min_x + max_x) as f32 / 2.0, (min_y + max_y) as f32 / 2.0);
-        let mid = SIZE as f32 / 2.0;
-        let raster: Vec<Tri> = tris
+        json!(tris
             .iter()
             .map(|(pts, rgba)| {
-                let x: Vec<f32> = pts
-                    .iter()
-                    .map(|&(px, _)| mid + (px as f32 - cx) * scale)
-                    .collect();
-                let y: Vec<f32> = pts
-                    .iter()
-                    .map(|&(_, py)| mid + (py as f32 - cy) * scale)
-                    .collect();
-                Tri {
-                    x: [x[0], x[1], x[2]],
-                    y: [y[0], y[1], y[2]],
-                    z: [1.0, 1.0, 1.0],
-                    color: *rgba,
-                }
+                json!({
+                    "pts": pts.iter().map(|&(x, y)| json!([x, y])).collect::<Vec<_>>(),
+                    "color": hex(*rgba),
+                })
             })
-            .collect();
-        paint(SIZE, SIZE, &raster, mrlyui::frame::board(self.dark))
+            .collect::<Vec<_>>())
     }
 }
 
@@ -235,9 +207,6 @@ impl App for Six {
     }
     fn manifest(&self) -> Manifest {
         Manifest::new("six").emoji("💠").category("math")
-    }
-    fn wear(&mut self, world: &Json) {
-        self.dark = world["shared"]["settings"]["darkmode"] == true;
     }
     fn state(&self, _iden: &Iden) -> Json {
         let cube = self.cube();
@@ -253,7 +222,7 @@ impl App for Six {
             "view": &self.set.view,
             "fill": &self.set.fill,
             "census": { "grid": side, "fill": filled, "void": total - filled },
-            "frame": self.render().fact(),
+            "tris": self.tris(),
         })
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
@@ -391,20 +360,15 @@ mod tests {
         assert_eq!(names, vec!["six.page", "six.set", "six.reset"]);
     }
     #[test]
-    fn frame_renders_every_view() {
+    fn tris_serve_every_view() {
         for v in VIEWS {
             let mut s = Six::new();
             send(&mut s, "six.set", json!({ "key": "view", "value": v }));
             let state = s.state(&iden());
-            assert_eq!(
-                state["frame"]["rows"].as_array().unwrap().len(),
-                SIZE,
-                "{v}"
-            );
-            assert!(
-                state["frame"]["palette"].as_array().unwrap().len() > 1,
-                "{v}"
-            );
+            let tris = state["tris"].as_array().unwrap();
+            assert!(!tris.is_empty(), "{v}");
+            assert_eq!(tris[0]["pts"].as_array().unwrap().len(), 3, "{v}");
+            assert!(tris[0]["color"].as_str().unwrap().starts_with('#'), "{v}");
         }
     }
 }
