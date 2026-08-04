@@ -4,7 +4,7 @@ import type { Manifest, Node, Send } from "../../types.ts"
 
 type State = { apps: Manifest[]; query: string; mode: "grid" | "list" | "carousel" }
 
-const GROUPS = ["system", "tools", "creativity", "design", "math", "physics", "puzzles", "games", "toys", "company"]
+const GROUPS = ["system", "tools", "creativity", "design", "math", "physics", "puzzles", "games", "toys"]
 
 export function menu(state: unknown, _send: Send): Node {
   const { apps, query, mode } = state as State

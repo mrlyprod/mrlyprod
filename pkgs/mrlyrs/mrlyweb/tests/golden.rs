@@ -586,14 +586,6 @@ fn piano_frame_is_golden() {
 }
 
 #[test]
-fn extras_frame_is_golden() {
-    let mut os = boot();
-    os.call(Call::new("nav.open", json!({ "app": "extras" })));
-    os.call(Call::new("extras.cycle", json!({})));
-    assert_eq!(os.envelope(None).to_json(), fixture("extras"));
-}
-
-#[test]
 fn log_frame_is_golden() {
     let mut os = boot();
     os.call(Call::new("nav.open", json!({ "app": "notes" })));

@@ -11,7 +11,6 @@ import { emoji } from "./design/emoji.tsx"
 import { crush } from "./games/crush.tsx"
 import { dice } from "./tools/dice.tsx"
 import { escape } from "./games/escape.tsx"
-import { extras } from "./company/extras.tsx"
 import { files } from "./system/files.tsx"
 import { font } from "./design/font.tsx"
 import { hash } from "./tools/hash.tsx"
@@ -92,7 +91,6 @@ export const views: Record<string, View> = {
   colors,
   emoji,
   piano,
-  extras,
   log,
   files,
 }

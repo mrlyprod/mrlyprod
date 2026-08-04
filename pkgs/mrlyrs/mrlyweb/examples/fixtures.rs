@@ -426,11 +426,6 @@ fn main() {
     write("shot", &os);
 
     let mut os = boot();
-    os.call(Call::new("nav.open", json!({ "app": "extras" })));
-    os.call(Call::new("extras.cycle", json!({})));
-    write("extras", &os);
-
-    let mut os = boot();
     os.call(Call::new("nav.open", json!({ "app": "notes" })));
     os.call(Call::new("notes.add", json!({ "text": "buy oat milk" })).at(1783600496000));
     os.call(Call::new("notes.add", json!({ "text": "book the ferry" })));

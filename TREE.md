@@ -171,8 +171,6 @@ mrlyprod
 │   │   │   │   ├── effects.ts
 │   │   │   │   └── mount.ts
 │   │   │   ├── views
-│   │   │   │   ├── company
-│   │   │   │   │   └── extras.tsx
 │   │   │   │   ├── creativity
 │   │   │   │   │   ├── notes.tsx
 │   │   │   │   │   ├── photos.tsx
@@ -364,11 +362,6 @@ mrlyprod
 │   ├── mrlyrs
 │   │   ├── mrlyapps
 │   │   │   ├── src
-│   │   │   │   ├── company
-│   │   │   │   │   ├── extras
-│   │   │   │   │   │   ├── README.md
-│   │   │   │   │   │   └── mod.rs
-│   │   │   │   │   └── mod.rs
 │   │   │   │   ├── creativity
 │   │   │   │   │   ├── notes
 │   │   │   │   │   │   ├── README.md

@@ -1,6 +1,5 @@
 use mrlycore::Json;
 
-pub mod company;
 pub mod creativity;
 pub mod design;
 pub mod games;
@@ -11,7 +10,6 @@ pub mod system;
 pub mod tools;
 pub mod toys;
 
-pub use company::extras::Extras;
 pub use creativity::notes::Notes;
 pub use creativity::photos::Photos;
 pub use creativity::piano::Piano;
