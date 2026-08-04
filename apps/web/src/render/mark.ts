@@ -1,4 +1,4 @@
-import { mark } from "../kernel.ts"
+import markData from "../gen/mark.json"
 import type { Mark } from "../types.ts"
 import { tint } from "./paint.ts"
 
@@ -13,11 +13,8 @@ type Cell = {
 
 type Doodle = (cell: Cell) => void
 
-let cache: Mark | null = null
-
 function frames(): Mark {
-  cache ??= mark()
-  return cache
+  return markData as Mark
 }
 
 const squares: Doodle = ({ ctx, style, held, idx, x, y }) => {

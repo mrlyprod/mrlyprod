@@ -1,8 +1,7 @@
-use super::app::{Call, Verb};
-use super::os::Os;
 use mrlycore::json::Map;
 use mrlycore::rng::Rng;
 use mrlycore::{json, Json};
+use mrlyos::kernel::{Call, Os, Verb};
 
 const TRIES: usize = 8;
 const PATIENCE: u32 = 3;
@@ -24,7 +23,7 @@ impl Goose {
         }
     }
     pub fn step(&mut self, os: &mut Os) -> Option<Call> {
-        let verbs = os.frame(Some(&json!({}))).view?.actions;
+        let verbs = os.envelope(Some(&json!({}))).view?.actions;
         let pool: Vec<&Verb> = verbs
             .iter()
             .filter(|v| !v.name.ends_with(".reset"))
@@ -37,7 +36,7 @@ impl Goose {
             let verb = pool[self.rng.below(pool.len())];
             let args = Self::fill(&mut self.rng, &verb.args)?;
             let call = Call::new(&verb.name, args);
-            if os.act(call.clone()).ok {
+            if os.call(call.clone()).ok {
                 self.stalls = 0;
                 return Some(call);
             }
@@ -53,7 +52,7 @@ impl Goose {
         let verb = verbs.iter().find(|v| v.name.ends_with(".reset"))?;
         let args = Self::fill(&mut self.rng, &verb.args)?;
         let call = Call::new(&verb.name, args);
-        os.act(call.clone());
+        os.call(call.clone());
         Some(call)
     }
     fn fill(rng: &mut Rng, args: &Json) -> Option<Json> {
@@ -91,8 +90,7 @@ impl Goose {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::kernel::app::{App, Outcome};
-    use crate::kernel::iden::Iden;
+    use mrlyos::kernel::{App, Iden, Outcome};
 
     struct Toy {
         secret: i64,
@@ -116,7 +114,7 @@ mod tests {
             ));
             out
         }
-        fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+        fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
             match call.verb.as_str() {
                 "toy.pick" => {
                     if self.over {
@@ -151,7 +149,7 @@ mod tests {
                 Verb::new("wall.reset", json!({})),
             ]
         }
-        fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+        fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
             match call.verb.as_str() {
                 "wall.reset" => Outcome::ok(json!({})),
                 _ => Outcome::fail("bounced"),
@@ -194,7 +192,7 @@ mod tests {
     #[test]
     fn game_over_triggers_reset() {
         let mut os = boot();
-        os.act(Call::new("toy.pick", json!({ "n": 3 })));
+        os.call(Call::new("toy.pick", json!({ "n": 3 })));
         let mut goose = Goose::new(1);
         let call = goose.step(&mut os).expect("goose resets a finished game");
         assert_eq!(call.verb, "toy.reset");

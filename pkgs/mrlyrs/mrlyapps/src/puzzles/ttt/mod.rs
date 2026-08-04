@@ -4,7 +4,7 @@ use mrlycore::tensor::Tensor;
 use mrlycore::{json, Json};
 use mrlymusic::cue;
 use mrlyos::kernel::{int, App, Call, Effect, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{motif_tile, sprite_fact, Frame, Layer, TileSet};
+use mrlyui::frame::{motif_tile, sprite_fact, Atlas, Frame, Layer};
 
 const DESIGNS: [&str; 5] = ["carpet", "net", "vtree", "htree", "solid"];
 const MARKS: [&str; 2] = ["x", "o"];
@@ -263,13 +263,13 @@ impl Ttt {
     fn k(&self) -> usize {
         mrlyui::skin::pixels(self.set.tile as usize, &self.set.skin)
     }
-    fn tileset(&self) -> TileSet {
+    fn atlas(&self) -> Atlas {
         mrlyui::skin::ttt::skin(
             &self.set.skin,
             &self.set.design,
             [self.x_color, self.o_color],
         )
-        .tileset(self.k(), mrlyui::frame::board(self.dark))
+        .atlas(self.k(), mrlyui::frame::board(self.dark))
     }
     fn render(&self) -> Frame {
         let k = self.k();
@@ -277,7 +277,7 @@ impl Ttt {
         let mut frame = Frame::new(side, side, mrlyui::frame::board(self.dark));
         frame.push(Layer::Tiles {
             ids: self.ids(),
-            set: self.tileset(),
+            set: self.atlas(),
         });
         frame
     }
@@ -308,7 +308,7 @@ impl App for Ttt {
     fn wear(&mut self, world: &Json) {
         self.dark = world["shared"]["settings"]["darkmode"] == true;
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "score": 0,
             "steps": self.steps,
@@ -334,7 +334,7 @@ impl App for Ttt {
         ));
         out
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "ttt.place" => {
                 if self.over {
@@ -450,7 +450,7 @@ mod tests {
     }
     fn hotseat(seed: u64) -> Ttt {
         let mut t = ttt(seed);
-        t.act(
+        t.call(
             &iden(),
             &Call::new("ttt.set", json!({ "key": "opponent", "value": "off" })),
         );
@@ -465,7 +465,7 @@ mod tests {
             send(t, "ttt.place", json!({ "cell": 0 }));
             send(t, "ttt.place", json!({ "cell": 4 }));
         }
-        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.state(&iden(), None), b.state(&iden(), None));
         assert_eq!(a.save(), b.save());
     }
     #[test]
@@ -478,7 +478,7 @@ mod tests {
         let out = send(&mut t, "ttt.place", json!({ "cell": 2 }));
         assert!(out.ok);
         assert!(t.over);
-        assert_eq!(t.state(&iden())["winner"], json!("x"));
+        assert_eq!(t.state(&iden(), None)["winner"], json!("x"));
         assert_eq!(out.effects[0].data, cue::payload("win"));
     }
     #[test]
@@ -488,7 +488,7 @@ mod tests {
             send(&mut t, "ttt.place", json!({ "cell": cell }));
         }
         assert!(t.over);
-        assert_eq!(t.state(&iden())["winner"], json!("draw"));
+        assert_eq!(t.state(&iden(), None)["winner"], json!("draw"));
     }
     #[test]
     fn random_opponent_replies_in_the_same_act() {
@@ -496,7 +496,7 @@ mod tests {
         let out = send(&mut t, "ttt.place", json!({ "cell": 0 }));
         assert!(out.ok);
         assert!(out.data.get("reply").is_some());
-        let state = t.state(&iden());
+        let state = t.state(&iden(), None);
         let flat: Vec<Json> = state["board"]
             .as_array()
             .unwrap()
@@ -515,7 +515,7 @@ mod tests {
             send(t, "ttt.place", json!({ "cell": 4 }));
             send(t, "ttt.place", json!({ "cell": 0 }));
         }
-        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.state(&iden(), None), b.state(&iden(), None));
         assert_eq!(a.save(), b.save());
         assert_eq!(a.cells, b.cells);
     }
@@ -548,10 +548,10 @@ mod tests {
     #[test]
     fn reset_seed_defaults_to_now() {
         let mut t = Ttt::new();
-        let out = t.act(&iden(), &Call::new("ttt.reset", json!({})).at(5000));
+        let out = t.call(&iden(), &Call::new("ttt.reset", json!({})).at(5000));
         assert!(out.ok);
         assert_eq!(out.data["seed"], json!(5000));
-        assert_eq!(t.state(&iden())["seed"], json!(5000));
+        assert_eq!(t.state(&iden(), None)["seed"], json!(5000));
     }
     #[test]
     fn set_validates_and_resets_the_round() {
@@ -559,7 +559,7 @@ mod tests {
         send(&mut t, "ttt.place", json!({ "cell": 0 }));
         let out = send(&mut t, "ttt.set", json!({ "key": "tile", "value": 6 }));
         assert!(out.ok);
-        let state = t.state(&iden());
+        let state = t.state(&iden(), None);
         assert_eq!(state["settings"]["tile"], json!(6));
         assert_eq!(state["steps"], json!(0));
         assert!(!send(&mut t, "ttt.set", json!({ "key": "tile", "value": 999 })).ok);
@@ -588,8 +588,8 @@ mod tests {
         for (key, value) in [("surface", "canvas"), ("skin", "emojis")] {
             assert!(send(&mut t, "ttt.set", json!({ "key": key, "value": value })).ok);
         }
-        assert_eq!(t.state(&iden())["steps"], json!(1));
-        let set = t.tileset();
+        assert_eq!(t.state(&iden(), None)["steps"], json!(1));
+        let set = t.atlas();
         assert!(set.faces[1].is_some(), "the canvas lost its glyph");
         assert!(!send(&mut t, "ttt.set", json!({ "key": "skin", "value": "wax" })).ok);
     }
@@ -605,7 +605,7 @@ mod tests {
         t.load(
             &json!({ "seed": 3, "settings": { "tile": 6 }, "cells": [0, 0, 0, 0, 0, 0, 0, 0, 0] }),
         );
-        let settings = t.state(&iden())["settings"].clone();
+        let settings = t.state(&iden(), None)["settings"].clone();
         assert_eq!(settings["tile"], json!(6));
         assert_eq!(settings["opponent"], json!("random"));
         assert_eq!(settings["surface"], json!("grid"));
@@ -615,7 +615,7 @@ mod tests {
     fn sprites_track_the_played_marks() {
         let mut t = hotseat(1);
         send(&mut t, "ttt.place", json!({ "cell": 0 }));
-        let state = t.state(&iden());
+        let state = t.state(&iden(), None);
         let sprites = state["sprites"].as_array().unwrap();
         assert_eq!(sprites.len(), 9);
         assert!(!sprites[0].is_null());
@@ -634,20 +634,20 @@ mod tests {
         send(&mut a, "ttt.place", json!({ "cell": 0 }));
         let mut b = Ttt::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
         assert_eq!(b.save(), a.save());
         for t in [&mut a, &mut b] {
             let cell = t.empties()[0];
             send(t, "ttt.place", json!({ "cell": cell }));
         }
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
     }
     #[test]
     fn load_survives_garbage() {
         let mut t = Ttt::new();
         t.load(&json!({ "seed": "soup", "cells": [9, 9, 9], "settings": 7 }));
-        assert_eq!(t.state(&iden())["steps"], json!(0));
-        assert_eq!(t.state(&iden())["seed"], json!(0));
+        assert_eq!(t.state(&iden(), None)["steps"], json!(0));
+        assert_eq!(t.state(&iden(), None)["seed"], json!(0));
     }
     #[test]
     fn actions_offer_the_natural_verbs() {
@@ -658,7 +658,7 @@ mod tests {
     #[test]
     fn state_carries_an_indexed_frame() {
         let t = ttt(5);
-        let state = t.state(&iden());
+        let state = t.state(&iden(), None);
         let palette = state["frame"]["palette"].as_array().unwrap();
         assert!(!palette.is_empty());
         let rows = state["frame"]["rows"].as_array().unwrap();

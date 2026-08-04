@@ -134,7 +134,7 @@ impl App for Bang {
     fn wear(&mut self, world: &Json) {
         self.dark = world["shared"]["settings"]["darkmode"] == true;
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         let code = self.code();
         let design = bang(self.dimension).design(code);
         let mut out = json!({
@@ -161,7 +161,7 @@ impl App for Bang {
             Verb::new("bang.reset", json!({})),
         ]
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "bang.page" => {
                 let count = self.codes().len();
@@ -280,7 +280,7 @@ mod tests {
         send(&mut a, "bang.page", json!({ "dir": "next" }));
         let mut b = Bang::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
     }
     #[test]
     fn load_survives_garbage() {
@@ -307,7 +307,7 @@ mod tests {
                 "bang.set",
                 json!({ "key": "dimension", "value": d }),
             );
-            let state = b.state(&iden());
+            let state = b.state(&iden(), None);
             let rows = state["frame"]["rows"].as_array().unwrap();
             assert!(!rows.is_empty());
             assert!(!rows[0].as_array().unwrap().is_empty());
@@ -318,7 +318,7 @@ mod tests {
             "bang.set",
             json!({ "key": "dimension", "value": 3 }),
         );
-        let state = b.state(&iden());
+        let state = b.state(&iden(), None);
         assert!(state["frame"].is_null());
         let planes = state["voxels"].as_array().unwrap();
         assert!(!planes.is_empty());

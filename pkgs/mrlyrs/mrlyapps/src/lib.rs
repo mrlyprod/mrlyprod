@@ -1,3 +1,5 @@
+use mrlycore::Json;
+
 pub mod company;
 pub mod creativity;
 pub mod design;
@@ -56,3 +58,33 @@ pub use toys::mandelbrot::Mandelbrot;
 pub use toys::matrix::Matrix;
 pub use toys::sleep::Sleep;
 pub use toys::solids::Solids;
+
+pub fn asked(shape: Option<&Json>, key: &str) -> bool {
+    match shape.and_then(|s| s.as_object()) {
+        Some(keys) => keys.contains_key(key),
+        None => true,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use mrlycore::json;
+
+    #[test]
+    fn no_shape_asks_for_everything() {
+        assert!(asked(None, "frame"));
+    }
+
+    #[test]
+    fn a_take_all_shape_asks_for_everything() {
+        assert!(asked(Some(&json!(1)), "frame"));
+    }
+
+    #[test]
+    fn a_keyed_shape_asks_only_for_its_keys() {
+        let shape = json!({ "steps": 1 });
+        assert!(!asked(Some(&shape), "frame"));
+        assert!(asked(Some(&shape), "steps"));
+    }
+}

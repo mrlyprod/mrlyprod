@@ -31,7 +31,7 @@ impl App for Photos {
     fn manifest(&self) -> Manifest {
         Manifest::new("photos").emoji("📷").category("creativity")
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "shots": self.shots,
             "photos": self.photos.clone(),
@@ -40,7 +40,7 @@ impl App for Photos {
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
         vec![Verb::new("photos.clear", json!({}))]
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "photos.clear" => {
                 let count = self.photos.len();
@@ -101,7 +101,7 @@ mod tests {
             let out = send(&mut p, "photos.keep", json!({ "image": shot(n) }));
             assert!(out.ok);
         }
-        let state = p.state(&iden());
+        let state = p.state(&iden(), None);
         assert_eq!(state["photos"].as_array().unwrap().len(), 12);
         assert_eq!(state["photos"][0], shot(12));
         assert_eq!(state["shots"], json!(13));
@@ -118,7 +118,10 @@ mod tests {
             json!({ "image": { "width": 2, "height": 2, "rows": [[0]], "palette": ["#ffffff"] } }),
         );
         assert!(!ragged.ok);
-        assert_eq!(p.state(&iden())["photos"].as_array().unwrap().len(), 0);
+        assert_eq!(
+            p.state(&iden(), None)["photos"].as_array().unwrap().len(),
+            0
+        );
     }
     #[test]
     fn clear_empties_the_wall() {
@@ -127,7 +130,10 @@ mod tests {
         let out = send(&mut p, "photos.clear", json!({}));
         assert!(out.ok);
         assert_eq!(out.data["cleared"], json!(1));
-        assert_eq!(p.state(&iden())["photos"].as_array().unwrap().len(), 0);
+        assert_eq!(
+            p.state(&iden(), None)["photos"].as_array().unwrap().len(),
+            0
+        );
     }
     #[test]
     fn save_load_roundtrips() {
@@ -136,12 +142,15 @@ mod tests {
         send(&mut a, "photos.keep", json!({ "image": shot(2) }));
         let mut b = Photos::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
         assert_eq!(b.save(), a.save());
         let mut c = Photos::new();
         c.load(&json!({ "shots": "soup", "photos": ["javascript:alert(1)", { "width": 1 }] }));
-        assert_eq!(c.state(&iden())["shots"], json!(0));
-        assert_eq!(c.state(&iden())["photos"].as_array().unwrap().len(), 0);
+        assert_eq!(c.state(&iden(), None)["shots"], json!(0));
+        assert_eq!(
+            c.state(&iden(), None)["photos"].as_array().unwrap().len(),
+            0
+        );
     }
     #[test]
     fn keep_stays_off_the_verb_surface() {

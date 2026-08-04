@@ -2,29 +2,9 @@ use super::Os;
 use crate::kernel::app::{Call, Outcome};
 use crate::kernel::envelope::Notice;
 use mrlycore::image::Image;
-use mrlycore::{json, Json};
-
-fn shot_png(frame: &Json) -> Result<Vec<u8>, &'static str> {
-    let image = Image::from_json(frame).map_err(|_| "bad frame")?;
-    let scale = (512 / image.width.max(image.height).max(1)).max(1);
-    image.png(scale).map_err(|_| "could not render frame")
-}
+use mrlycore::json;
 
 impl Os {
-    pub fn capture(&self, app: &str) -> Json {
-        match self.find(app) {
-            Some(i) => self.apps[i].capture(&self.iden),
-            None => Json::Null,
-        }
-    }
-    pub fn snapshot(&self, app: &str) -> Result<Vec<u8>, &'static str> {
-        let i = self.find(app).ok_or("no such app")?;
-        let frame = self.apps[i].capture(&self.iden);
-        if frame.is_null() {
-            return Err("nothing to shoot here");
-        }
-        shot_png(&frame)
-    }
     pub fn shot(&mut self) -> Outcome {
         let Some(app) = self.focused().map(|r| r.app.clone()) else {
             return Outcome::fail("no current app");
@@ -42,7 +22,7 @@ impl Os {
         }
         if let Some(pi) = self.find("photos") {
             let kept =
-                self.apps[pi].act(&iden, &Call::new("photos.keep", json!({ "image": frame })));
+                self.apps[pi].call(&iden, &Call::new("photos.keep", json!({ "image": frame })));
             if kept.ok {
                 self.notices
                     .push(Notice::new("saved", "screenshot → photos", self.now));

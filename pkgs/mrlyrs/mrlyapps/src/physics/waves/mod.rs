@@ -300,7 +300,7 @@ impl App for Waves {
     fn wear(&mut self, world: &Json) {
         self.dark = world["shared"]["settings"]["darkmode"] == true;
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         let mask = self.sim.mask();
         json!({
             "settings": self.set.to_json(),
@@ -336,7 +336,7 @@ impl App for Waves {
             Verb::new("waves.set", json!({ "key": "string", "value": "any" })),
         ]
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "waves.drop" => {
                 let (Some(x), Some(y)) = (call.arg("x").as_i64(), call.arg("y").as_i64()) else {
@@ -444,7 +444,7 @@ mod tests {
             send(w, "waves.drop", json!({ "x": 20, "y": 20 }));
             send(w, "waves.step", json!({ "n": 5 }));
         }
-        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.state(&iden(), None), b.state(&iden(), None));
         assert_eq!(a.save(), b.save());
     }
     #[test]
@@ -455,26 +455,32 @@ mod tests {
         let saved = a.save();
         let mut b = Waves::new();
         b.load(&saved);
-        assert_eq!(b.state(&iden())["settings"], a.state(&iden())["settings"]);
-        assert_eq!(b.state(&iden())["sources"], a.state(&iden())["sources"]);
+        assert_eq!(
+            b.state(&iden(), None)["settings"],
+            a.state(&iden(), None)["settings"]
+        );
+        assert_eq!(
+            b.state(&iden(), None)["sources"],
+            a.state(&iden(), None)["sources"]
+        );
         let mut c = Waves::new();
         c.load(&saved);
         for w in [&mut b, &mut c] {
             send(w, "waves.step", json!({ "n": 4 }));
         }
-        assert_eq!(b.state(&iden()), c.state(&iden()));
+        assert_eq!(b.state(&iden(), None), c.state(&iden(), None));
     }
     #[test]
     fn load_survives_garbage() {
         let mut w = Waves::new();
         w.load(&json!({ "seed": "soup", "settings": 7, "sources": "nope" }));
-        assert_eq!(w.state(&iden())["seed"], json!(0));
-        assert_eq!(w.state(&iden())["sources"], json!(0));
+        assert_eq!(w.state(&iden(), None)["seed"], json!(0));
+        assert_eq!(w.state(&iden(), None)["sources"], json!(0));
     }
     #[test]
     fn reset_seed_defaults_to_now() {
         let mut w = Waves::new();
-        let out = w.act(&iden(), &Call::new("waves.reset", json!({})).at(5000));
+        let out = w.call(&iden(), &Call::new("waves.reset", json!({})).at(5000));
         assert!(out.ok);
         assert_eq!(out.data["seed"], json!(5000));
     }
@@ -497,9 +503,9 @@ mod tests {
     fn drop_and_step_grows_sources() {
         let mut w = waves(1);
         assert!(send(&mut w, "waves.drop", json!({ "x": 20, "y": 20 })).ok);
-        assert_eq!(w.state(&iden())["sources"], json!(1));
+        assert_eq!(w.state(&iden(), None)["sources"], json!(1));
         send(&mut w, "waves.step", json!({ "n": 1 }));
-        assert!(w.state(&iden())["sources"].as_u64().unwrap() <= 1);
+        assert!(w.state(&iden(), None)["sources"].as_u64().unwrap() <= 1);
     }
     #[test]
     fn set_validates_mask_and_config_keys() {
@@ -519,7 +525,7 @@ mod tests {
         assert!(send(&mut w, "waves.set", json!({ "key": "gain", "value": 8 })).ok);
         assert!(!send(&mut w, "waves.set", json!({ "key": "gain", "value": 99 })).ok);
         assert!(send(&mut w, "waves.set", json!({ "key": "damp", "value": 5 })).ok);
-        assert_eq!(w.state(&iden())["settings"]["damp"], json!(5));
+        assert_eq!(w.state(&iden(), None)["settings"]["damp"], json!(5));
         assert!(!send(&mut w, "waves.set", json!({ "key": "damp", "value": 21 })).ok);
         assert!(
             send(
@@ -575,7 +581,7 @@ mod tests {
     fn subpixel_validates_and_rebuilds() {
         let mut w = waves(1);
         send(&mut w, "waves.drop", json!({ "x": 20, "y": 20 }));
-        assert_eq!(w.state(&iden())["sources"], json!(1));
+        assert_eq!(w.state(&iden(), None)["sources"], json!(1));
         assert!(
             send(
                 &mut w,
@@ -584,8 +590,8 @@ mod tests {
             )
             .ok
         );
-        assert_eq!(w.state(&iden())["sources"], json!(0));
-        assert_eq!(w.state(&iden())["settings"]["subpixel"], json!(4));
+        assert_eq!(w.state(&iden(), None)["sources"], json!(0));
+        assert_eq!(w.state(&iden(), None)["settings"]["subpixel"], json!(4));
         assert!(
             send(
                 &mut w,
@@ -631,16 +637,19 @@ mod tests {
         );
         let mut b = Waves::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden())["settings"], a.state(&iden())["settings"]);
+        assert_eq!(
+            b.state(&iden(), None)["settings"],
+            a.state(&iden(), None)["settings"]
+        );
     }
     #[test]
     fn mask_key_change_rebuilds_and_clears_sources() {
         let mut w = waves(1);
         send(&mut w, "waves.drop", json!({ "x": 20, "y": 20 }));
-        assert_eq!(w.state(&iden())["sources"], json!(1));
+        assert_eq!(w.state(&iden(), None)["sources"], json!(1));
         send(&mut w, "waves.set", json!({ "key": "padding", "value": 4 }));
-        assert_eq!(w.state(&iden())["sources"], json!(0));
-        assert_eq!(w.state(&iden())["settings"]["padding"], json!(4));
+        assert_eq!(w.state(&iden(), None)["sources"], json!(0));
+        assert_eq!(w.state(&iden(), None)["settings"]["padding"], json!(4));
     }
     #[test]
     fn beat_gates_on_play() {

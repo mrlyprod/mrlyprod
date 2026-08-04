@@ -10,9 +10,7 @@ members = [
     "pkgs/mrlyrs/mrlyapps",
     "pkgs/mrlyrs/mrlyweb",
     "pkgs/mrlypy/web",
-    "pkgs/mrlypy/math",
     "pkgs/mrlyjs/web",
-    "pkgs/mrlyjs/math",
     "apps/cli",
 ]
 default-members = [

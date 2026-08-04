@@ -183,7 +183,7 @@ def fetch():
 # MARK
 
 def mark():
-    return mp.font.glyphs()["X"]
+    return mp.read(mp.boot(), "font/glyphs/X")
 
 def runs(row):
     spans = []

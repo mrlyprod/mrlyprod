@@ -254,7 +254,7 @@ impl App for Chess {
     fn wear(&mut self, world: &Json) {
         self.dark = world["shared"]["settings"]["darkmode"] == true;
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "score": 0,
             "steps": self.plies,
@@ -300,7 +300,7 @@ impl App for Chess {
         ));
         out
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "chess.select" => {
                 if self.over {

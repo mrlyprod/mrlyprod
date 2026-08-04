@@ -310,14 +310,18 @@ impl App for Matrix {
     fn wear(&mut self, world: &Json) {
         self.dark = world["shared"]["settings"]["darkmode"] == true;
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, shape: Option<&Json>) -> Json {
         json!({
             "steps": self.steps,
             "over": false,
             "seed": self.seed,
             "play": self.play,
             "settings": self.set.to_json(),
-            "frame": self.render().fact(),
+            "frame": if crate::asked(shape, "frame") {
+                self.render().fact()
+            } else {
+                frame::empty_fact(self.set.cols as usize * self.gw, self.set.rows as usize * self.gh)
+            },
         })
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
@@ -327,7 +331,7 @@ impl App for Matrix {
             Verb::new("matrix.set", json!({ "key": "string", "value": "any" })),
         ]
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "matrix.step" => {
                 let n = match call.arg("n") {
@@ -469,7 +473,7 @@ mod tests {
         for s in [&mut a, &mut b] {
             send(s, "matrix.step", json!({ "n": 50 }));
         }
-        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.state(&iden(), None), b.state(&iden(), None));
         assert_eq!(a.save(), b.save());
     }
     #[test]
@@ -485,7 +489,7 @@ mod tests {
         let out = send(&mut m, "matrix.step", json!({ "n": 5 }));
         assert!(out.ok);
         assert_eq!(out.data["steps"], json!(5));
-        assert_eq!(m.state(&iden())["steps"], json!(5));
+        assert_eq!(m.state(&iden(), None)["steps"], json!(5));
         assert!(!send(&mut m, "matrix.step", json!({ "n": 0 })).ok);
         assert!(!send(&mut m, "matrix.step", json!({ "n": 2000 })).ok);
     }
@@ -495,7 +499,7 @@ mod tests {
         send(&mut m, "matrix.step", json!({ "n": 3 }));
         let out = send(&mut m, "matrix.set", json!({ "key": "cols", "value": 8 }));
         assert!(out.ok);
-        let state = m.state(&iden());
+        let state = m.state(&iden(), None);
         assert_eq!(state["settings"]["cols"], json!(8));
         assert_eq!(state["steps"], json!(0));
         assert!(!send(&mut m, "matrix.set", json!({ "key": "cols", "value": 999 })).ok);
@@ -507,7 +511,7 @@ mod tests {
         assert_eq!(m.beat(), Some(Call::new("matrix.step", json!({}))));
         send(&mut m, "matrix.set", json!({ "key": "cols", "value": 8 }));
         assert_eq!(m.beat(), None);
-        assert_eq!(m.state(&iden())["play"], json!(false));
+        assert_eq!(m.state(&iden(), None)["play"], json!(false));
     }
     #[test]
     fn play_toggles_without_resetting() {
@@ -522,7 +526,7 @@ mod tests {
             .ok
         );
         assert_eq!(m.beat(), None);
-        assert_eq!(m.state(&iden())["steps"], json!(3));
+        assert_eq!(m.state(&iden(), None)["steps"], json!(3));
         assert!(
             send(
                 &mut m,
@@ -532,7 +536,7 @@ mod tests {
             .ok
         );
         assert_eq!(m.beat(), Some(Call::new("matrix.step", json!({}))));
-        assert_eq!(m.state(&iden())["steps"], json!(3));
+        assert_eq!(m.state(&iden(), None)["steps"], json!(3));
         assert!(
             !send(
                 &mut m,
@@ -552,7 +556,7 @@ mod tests {
         );
         assert!(out.ok);
         assert_eq!(
-            m.state(&iden())["settings"]["palette"],
+            m.state(&iden(), None)["settings"]["palette"],
             json!(["#ff0000", "#00ff00"])
         );
         let out = send(
@@ -561,7 +565,10 @@ mod tests {
             json!({ "key": "palette", "value": ["#0000ff"] }),
         );
         assert!(out.ok);
-        assert_eq!(m.state(&iden())["settings"]["palette"], json!(["#0000ff"]));
+        assert_eq!(
+            m.state(&iden(), None)["settings"]["palette"],
+            json!(["#0000ff"])
+        );
         assert!(
             !send(
                 &mut m,
@@ -588,7 +595,10 @@ mod tests {
             json!({ "key": "palette.1", "value": "teal" }),
         );
         assert!(out.ok);
-        assert_eq!(m.state(&iden())["settings"]["palette"][1], json!("#00cad8"));
+        assert_eq!(
+            m.state(&iden(), None)["settings"]["palette"][1],
+            json!("#00cad8")
+        );
         assert!(
             send(
                 &mut m,
@@ -597,7 +607,10 @@ mod tests {
             )
             .ok
         );
-        assert_eq!(m.state(&iden())["settings"]["palette"][0], json!("#ff0000"));
+        assert_eq!(
+            m.state(&iden(), None)["settings"]["palette"][0],
+            json!("#ff0000")
+        );
         assert!(
             !send(
                 &mut m,
@@ -629,20 +642,20 @@ mod tests {
         send(&mut a, "matrix.step", json!({ "n": 40 }));
         let mut b = Matrix::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
         assert_eq!(b.save(), a.save());
         for s in [&mut a, &mut b] {
             send(s, "matrix.step", json!({ "n": 6 }));
         }
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
     }
     #[test]
     fn load_survives_garbage() {
         let mut m = Matrix::new();
         m.load(&json!({ "seed": "soup", "heads": "nope", "settings": 7 }));
-        assert_eq!(m.state(&iden())["steps"], json!(0));
-        assert_eq!(m.state(&iden())["seed"], json!(0));
-        let frame = m.state(&iden())["frame"].clone();
+        assert_eq!(m.state(&iden(), None)["steps"], json!(0));
+        assert_eq!(m.state(&iden(), None)["seed"], json!(0));
+        let frame = m.state(&iden(), None)["frame"].clone();
         assert!(!frame["rows"].as_array().unwrap().is_empty());
     }
     #[test]
@@ -654,7 +667,7 @@ mod tests {
     #[test]
     fn state_carries_an_indexed_frame() {
         let m = matrix(5);
-        let state = m.state(&iden());
+        let state = m.state(&iden(), None);
         let palette = state["frame"]["palette"].as_array().unwrap();
         assert!(!palette.is_empty());
         let rows = state["frame"]["rows"].as_array().unwrap();
@@ -662,5 +675,18 @@ mod tests {
             rows.len(),
             state["frame"]["height"].as_u64().unwrap() as usize
         );
+    }
+    #[test]
+    fn a_shape_without_frame_skips_the_raster() {
+        let m = matrix(5);
+        let full = m.state(&iden(), None)["frame"].clone();
+        let shape = json!({ "steps": 1 });
+        let thin = m.state(&iden(), Some(&shape))["frame"].clone();
+        assert_eq!(thin["width"], full["width"]);
+        assert_eq!(thin["height"], full["height"]);
+        assert!(thin["rows"].as_array().unwrap().is_empty());
+        assert!(thin["palette"].as_array().unwrap().is_empty());
+        let asked = json!({ "frame": 1 });
+        assert_eq!(m.state(&iden(), Some(&asked))["frame"], full);
     }
 }

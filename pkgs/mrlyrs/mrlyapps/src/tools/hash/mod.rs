@@ -62,7 +62,7 @@ impl App for Hash {
     fn wear(&mut self, world: &Json) {
         self.dark = world["shared"]["settings"]["darkmode"] == true;
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         let d = self.compute();
         json!({
             "text": &self.text,
@@ -81,7 +81,7 @@ impl App for Hash {
             Verb::new("hash.reset", json!({})),
         ]
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "hash.digest" => {
                 let text = call.arg("text").as_str().unwrap_or("").to_string();
@@ -199,7 +199,10 @@ mod tests {
         send(&mut a, "hash.digest", json!({ "text": "alice" }));
         let mut b = Hash::new();
         send(&mut b, "hash.digest", json!({ "text": "bob" }));
-        assert_ne!(a.state(&iden())["frame"], b.state(&iden())["frame"]);
+        assert_ne!(
+            a.state(&iden(), None)["frame"],
+            b.state(&iden(), None)["frame"]
+        );
     }
     #[test]
     fn save_load_round_trips() {
@@ -216,7 +219,7 @@ mod tests {
         );
         let mut b = Hash::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
     }
     #[test]
     fn load_survives_garbage() {
@@ -237,7 +240,7 @@ mod tests {
     #[test]
     fn frame_renders() {
         let h = Hash::new();
-        let state = h.state(&iden());
+        let state = h.state(&iden(), None);
         let rows = state["frame"]["rows"].as_array().unwrap();
         assert_eq!(rows.len(), SIDE);
         assert_eq!(rows[0].as_array().unwrap().len(), SIDE);

@@ -4,7 +4,7 @@ use mrlycore::tensor::Tensor;
 use mrlycore::{json, Json};
 use mrlymusic::cue;
 use mrlyos::kernel::{drive, int, pick, App, Call, Effect, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{Frame, Layer, TileSet};
+use mrlyui::frame::{Atlas, Frame, Layer};
 use mrlyui::skin::Skin;
 
 const DESIGNS: [&str; 5] = ["carpet", "net", "vtree", "htree", "solid"];
@@ -265,9 +265,8 @@ impl Twenty48 {
     fn k(&self) -> usize {
         mrlyui::skin::pixels(self.set.tile as usize, &self.set.skin)
     }
-    fn tileset(&self) -> TileSet {
-        self.skin()
-            .tileset(self.k(), mrlyui::frame::board(self.dark))
+    fn atlas(&self) -> Atlas {
+        self.skin().atlas(self.k(), mrlyui::frame::board(self.dark))
     }
     fn render(&self) -> Frame {
         let k = self.k();
@@ -275,7 +274,7 @@ impl Twenty48 {
         let mut frame = Frame::new(side, side, mrlyui::frame::board(self.dark));
         frame.push(Layer::Tiles {
             ids: self.ids(),
-            set: self.tileset(),
+            set: self.atlas(),
         });
         frame
     }
@@ -307,7 +306,7 @@ impl App for Twenty48 {
     fn wear(&mut self, world: &Json) {
         self.dark = world["shared"]["settings"]["darkmode"] == true;
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "score": self.score,
             "steps": self.steps,
@@ -337,7 +336,7 @@ impl App for Twenty48 {
         ));
         out
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "twenty48.slide" => {
                 if self.over {
@@ -462,7 +461,7 @@ mod tests {
             send(g, "twenty48.slide", json!({ "dir": "left" }));
             send(g, "twenty48.slide", json!({ "dir": "up" }));
         }
-        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.state(&iden(), None), b.state(&iden(), None));
         assert_eq!(a.save(), b.save());
     }
     #[test]
@@ -475,7 +474,7 @@ mod tests {
         assert!(out.ok);
         assert_eq!(out.data["merged"], json!(4));
         assert_eq!(g.cells[0], 4);
-        assert_eq!(g.state(&iden())["score"], json!(4));
+        assert_eq!(g.state(&iden(), None)["score"], json!(4));
     }
     #[test]
     fn illegal_move_fails_honestly() {
@@ -496,10 +495,10 @@ mod tests {
     #[test]
     fn reset_seed_defaults_to_now() {
         let mut g = Twenty48::new();
-        let out = g.act(&iden(), &Call::new("twenty48.reset", json!({})).at(5000));
+        let out = g.call(&iden(), &Call::new("twenty48.reset", json!({})).at(5000));
         assert!(out.ok);
         assert_eq!(out.data["seed"], json!(5000));
-        assert_eq!(g.state(&iden())["seed"], json!(5000));
+        assert_eq!(g.state(&iden(), None)["seed"], json!(5000));
     }
     #[test]
     fn set_validates_and_resets_the_round() {
@@ -507,7 +506,7 @@ mod tests {
         send(&mut g, "twenty48.slide", json!({ "dir": "left" }));
         let out = send(&mut g, "twenty48.set", json!({ "key": "grid", "value": 6 }));
         assert!(out.ok);
-        let state = g.state(&iden());
+        let state = g.state(&iden(), None);
         assert_eq!(state["settings"]["grid"], json!(6));
         assert_eq!(state["steps"], json!(0));
         assert_eq!(state["score"], json!(0));
@@ -543,19 +542,19 @@ mod tests {
         send(&mut a, "twenty48.slide", json!({ "dir": "up" }));
         let mut b = Twenty48::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
         assert_eq!(b.save(), a.save());
         for g in [&mut a, &mut b] {
             send(g, "twenty48.slide", json!({ "dir": "right" }));
         }
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
     }
     #[test]
     fn load_survives_garbage() {
         let mut g = Twenty48::new();
         g.load(&json!({ "seed": "soup", "cells": [1, 2, 3], "settings": 7 }));
-        assert_eq!(g.state(&iden())["steps"], json!(0));
-        assert_eq!(g.state(&iden())["seed"], json!(0));
+        assert_eq!(g.state(&iden(), None)["steps"], json!(0));
+        assert_eq!(g.state(&iden(), None)["seed"], json!(0));
     }
     #[test]
     fn actions_offer_the_natural_verbs() {
@@ -575,14 +574,14 @@ mod tests {
             json!({ "key": "tile", "value": 12 }),
         );
         let board = mrlyui::frame::board(g.dark);
-        let colors = g.tileset().tiles[1].cell.colors.clone().unwrap();
+        let colors = g.atlas().tiles[1].cell.colors.clone().unwrap();
         assert!(colors.contains(&board));
     }
     #[test]
     fn small_tiles_have_no_room_for_the_glyphs() {
         let g = game(1);
         let board = mrlyui::frame::board(g.dark);
-        let colors = g.tileset().tiles[1].cell.colors.clone().unwrap();
+        let colors = g.atlas().tiles[1].cell.colors.clone().unwrap();
         assert!(!colors.contains(&board));
     }
     #[test]
@@ -608,7 +607,7 @@ mod tests {
     #[test]
     fn state_carries_an_indexed_frame() {
         let g = game(5);
-        let state = g.state(&iden());
+        let state = g.state(&iden(), None);
         let palette = state["frame"]["palette"].as_array().unwrap();
         assert!(!palette.is_empty());
         let rows = state["frame"]["rows"].as_array().unwrap();
@@ -623,7 +622,7 @@ mod tests {
         let mut g = game(1);
         g.cells = vec![0; g.n() * g.n()];
         g.cells[0] = 8;
-        let state = g.state(&iden());
+        let state = g.state(&iden(), None);
         assert_eq!(state["ids"][0][0], json!(3));
         assert_eq!(state["ids"][0][1], json!(0));
         assert_eq!(state["skin"][0], json!({}));
@@ -637,7 +636,7 @@ mod tests {
             "twenty48.set",
             json!({ "key": "skin", "value": "emojis" }),
         );
-        let skin = g.state(&iden())["skin"].clone();
+        let skin = g.state(&iden(), None)["skin"].clone();
         assert_eq!(skin[3]["face"]["as"], json!("emoji"));
         assert!(skin[3].get("bg").is_none());
         assert_eq!(skin.as_array().unwrap().len(), CAP + 1);
@@ -645,12 +644,12 @@ mod tests {
     #[test]
     fn last_spawn_and_merges_track_the_slide() {
         let mut g = game(1);
-        assert_eq!(g.state(&iden())["last_spawn"], Json::Null);
+        assert_eq!(g.state(&iden(), None)["last_spawn"], Json::Null);
         g.cells = vec![0; g.n() * g.n()];
         g.cells[0] = 2;
         g.cells[1] = 2;
         send(&mut g, "twenty48.slide", json!({ "dir": "left" }));
-        let state = g.state(&iden());
+        let state = g.state(&iden(), None);
         assert_eq!(state["last_merges"], json!([[0, 0]]));
         let spawn = state["last_spawn"].as_array().unwrap();
         let (r, c) = (spawn[0].as_u64().unwrap(), spawn[1].as_u64().unwrap());
@@ -665,7 +664,7 @@ mod tests {
         g.cells[2] = 2;
         g.cells[2 + n] = 2;
         send(&mut g, "twenty48.slide", json!({ "dir": "down" }));
-        let state = g.state(&iden());
+        let state = g.state(&iden(), None);
         assert_eq!(state["last_merges"], json!([[3, 2]]));
         assert_eq!(state["board"][3][2], json!(4));
     }
@@ -681,7 +680,7 @@ mod tests {
         assert_eq!(out.effects[0].data, mrlymusic::cue::payload("good"));
         let mut b = Twenty48::new();
         b.load(&g.save());
-        assert_eq!(b.state(&iden()), g.state(&iden()));
+        assert_eq!(b.state(&iden(), None), g.state(&iden(), None));
     }
     #[test]
     fn emojis_ride_either_surface() {
@@ -696,10 +695,10 @@ mod tests {
                 .ok
             );
         }
-        let settings = g.state(&iden())["settings"].clone();
+        let settings = g.state(&iden(), None)["settings"].clone();
         assert_eq!(settings["surface"], json!("canvas"));
         assert_eq!(settings["skin"], json!("emojis"));
-        let set = g.tileset();
+        let set = g.atlas();
         assert!(set.faces[1].is_some(), "the canvas lost its glyph");
         assert!(
             !send(
@@ -714,12 +713,12 @@ mod tests {
     fn from_json_keeps_every_combo() {
         let mut g = Twenty48::new();
         g.load(&json!({ "seed": 3, "settings": { "skin": "emojis", "surface": "canvas" } }));
-        let settings = g.state(&iden())["settings"].clone();
+        let settings = g.state(&iden(), None)["settings"].clone();
         assert_eq!(settings["surface"], json!("canvas"));
         assert_eq!(settings["skin"], json!("emojis"));
         let mut g = Twenty48::new();
         g.load(&json!({ "seed": 3, "settings": { "grid": 5 } }));
-        let settings = g.state(&iden())["settings"].clone();
+        let settings = g.state(&iden(), None)["settings"].clone();
         assert_eq!(settings["surface"], json!("grid"));
         assert_eq!(settings["skin"], json!("digits"));
     }
@@ -732,7 +731,7 @@ mod tests {
             json!({ "key": "tile", "value": 12 }),
         );
         let board = mrlyui::frame::board(g.dark);
-        assert!(g.tileset().tiles[1]
+        assert!(g.atlas().tiles[1]
             .cell
             .colors
             .clone()
@@ -743,7 +742,7 @@ mod tests {
             "twenty48.set",
             json!({ "key": "skin", "value": "tiles" }),
         );
-        assert!(!g.tileset().tiles[1]
+        assert!(!g.atlas().tiles[1]
             .cell
             .colors
             .clone()

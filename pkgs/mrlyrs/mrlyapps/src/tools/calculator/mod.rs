@@ -150,7 +150,7 @@ impl App for Calculator {
             Verb::new("calculator.copy", json!({})),
         ]
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         let mut out = self.save();
         if self.glyphs {
             out["glyph"] = mrlyui::frame::glyph_fact(&self.display);
@@ -174,7 +174,7 @@ impl App for Calculator {
         self.operator = state["operator"].as_str().and_then(Op::parse);
         self.waiting = state["waiting"].as_bool().unwrap_or(false);
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "calculator.digit" => match call.arg("d").as_u64() {
                 Some(d) if d <= 9 => {
@@ -385,25 +385,25 @@ mod tests {
         let iden = Iden::new("aria");
         let mut c = Calculator::new();
         assert!(
-            c.act(&iden, &Call::new("calculator.digit", json!({ "d": 6 })))
+            c.call(&iden, &Call::new("calculator.digit", json!({ "d": 6 })))
                 .ok
         );
         assert!(
-            c.act(&iden, &Call::new("calculator.op", json!({ "op": "mul" })))
+            c.call(&iden, &Call::new("calculator.op", json!({ "op": "mul" })))
                 .ok
         );
         assert!(
-            c.act(&iden, &Call::new("calculator.digit", json!({ "d": 7 })))
+            c.call(&iden, &Call::new("calculator.digit", json!({ "d": 7 })))
                 .ok
         );
-        assert!(c.act(&iden, &Call::new("calculator.equals", json!({}))).ok);
+        assert!(c.call(&iden, &Call::new("calculator.equals", json!({}))).ok);
         assert_eq!(c.display(), "42");
         assert!(
-            !c.act(&iden, &Call::new("calculator.op", json!({ "op": "pow" })))
+            !c.call(&iden, &Call::new("calculator.op", json!({ "op": "pow" })))
                 .ok
         );
         assert!(
-            !c.act(&iden, &Call::new("calculator.digit", json!({ "d": 12 })))
+            !c.call(&iden, &Call::new("calculator.digit", json!({ "d": 12 })))
                 .ok
         );
     }
@@ -426,7 +426,7 @@ mod tests {
         let mut c = Calculator::new();
         c.digit(4);
         c.digit(2);
-        let state = c.state(&Iden::new("aria"));
+        let state = c.state(&Iden::new("aria"), None);
         assert_eq!(state["display"], "42");
         assert_eq!(state, c.save());
     }
@@ -436,7 +436,7 @@ mod tests {
         let mut c = Calculator::new();
         c.digit(4);
         c.digit(2);
-        let out = c.act(&iden, &Call::new("calculator.copy", json!({})));
+        let out = c.call(&iden, &Call::new("calculator.copy", json!({})));
         assert!(out.ok);
         assert_eq!(out.effects.len(), 1);
         assert_eq!(out.effects[0].kind, "copy");
@@ -450,6 +450,6 @@ mod tests {
         c.wear(&json!({ "shared": { "settings": { "font": "mrly" } } }));
         c.digit(4);
         c.digit(2);
-        assert_eq!(c.state(&iden)["glyph"]["text"], json!("42"));
+        assert_eq!(c.state(&iden, None)["glyph"]["text"], json!("42"));
     }
 }

@@ -25,7 +25,7 @@ impl App for Identity {
             .title("identity")
             .category("system")
     }
-    fn state(&self, iden: &Iden) -> Json {
+    fn state(&self, iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "handle": &iden.handle,
             "id": &iden.id,
@@ -35,7 +35,7 @@ impl App for Identity {
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
         Vec::new()
     }
-    fn act(&mut self, _iden: &Iden, _call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, _call: &Call) -> Outcome {
         Outcome::fail("unknown verb")
     }
 }
@@ -56,7 +56,7 @@ mod tests {
     #[test]
     fn state_publishes_the_identity() {
         let app = Identity::new();
-        let state = app.state(&Iden::new("guest"));
+        let state = app.state(&Iden::new("guest"), None);
         assert_eq!(state["handle"], json!("@guest"));
         assert_eq!(state["id"], json!("guest"));
         assert_eq!(state["verified"], json!(false));
@@ -65,7 +65,7 @@ mod tests {
     fn any_verb_fails() {
         let mut app = Identity::new();
         assert!(
-            !app.act(&Iden::new("guest"), &Call::new("iden.edit", json!({})))
+            !app.call(&Iden::new("guest"), &Call::new("iden.edit", json!({})))
                 .ok
         );
     }

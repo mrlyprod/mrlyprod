@@ -118,11 +118,11 @@ pub trait App {
     fn manifest(&self) -> Manifest {
         Manifest::new(self.route())
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         self.save()
     }
     fn capture(&self, iden: &Iden) -> Json {
-        self.state(iden)["frame"].clone()
+        self.state(iden, None)["frame"].clone()
     }
     fn geometry(&self) -> Option<Vec<f32>> {
         None
@@ -131,7 +131,7 @@ pub trait App {
         None
     }
     fn actions(&self, iden: &Iden) -> Vec<Verb>;
-    fn act(&mut self, iden: &Iden, call: &Call) -> Outcome;
+    fn call(&mut self, iden: &Iden, call: &Call) -> Outcome;
     fn beat(&self) -> Option<Call> {
         None
     }
@@ -185,7 +185,7 @@ mod tests {
             fn actions(&self, _iden: &Iden) -> Vec<Verb> {
                 Vec::new()
             }
-            fn act(&mut self, _iden: &Iden, _call: &Call) -> Outcome {
+            fn call(&mut self, _iden: &Iden, _call: &Call) -> Outcome {
                 Outcome::ok(json!({}))
             }
         }
@@ -193,7 +193,7 @@ mod tests {
         assert_eq!(bare.save(), Json::Null);
         bare.load(&json!({ "ghost": true }));
         assert_eq!(bare.save(), Json::Null);
-        assert_eq!(bare.state(&Iden::new("aria")), Json::Null);
+        assert_eq!(bare.state(&Iden::new("aria"), None), Json::Null);
     }
     #[test]
     fn state_defaults_to_save() {
@@ -205,14 +205,17 @@ mod tests {
             fn actions(&self, _iden: &Iden) -> Vec<Verb> {
                 Vec::new()
             }
-            fn act(&mut self, _iden: &Iden, _call: &Call) -> Outcome {
+            fn call(&mut self, _iden: &Iden, _call: &Call) -> Outcome {
                 Outcome::ok(json!({}))
             }
             fn save(&self) -> Json {
                 json!({ "count": 3 })
             }
         }
-        assert_eq!(Counter.state(&Iden::new("aria")), json!({ "count": 3 }));
+        assert_eq!(
+            Counter.state(&Iden::new("aria"), None),
+            json!({ "count": 3 })
+        );
     }
     #[test]
     fn outcome_json_stays_effect_free() {

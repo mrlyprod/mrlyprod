@@ -1,5 +1,5 @@
 import { spell } from "../glyphs.ts"
-import { html } from "../kernel.ts"
+import { html } from "../md.ts"
 import * as gpu from "mrlygpu"
 import { icon } from "../icons.ts"
 import type { Call, Flip, Glyph, Tri, Held, Node, Send, Sym } from "../types.ts"

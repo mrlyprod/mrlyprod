@@ -8,7 +8,7 @@ use mrlymath::life::{counts, entropy, next_grid, Boundary, Sequence};
 use mrlymath::two::tile as tile2d;
 use mrlymath::two::Cell2d;
 use mrlyos::kernel::{App, Call, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{field, probe, sample_types};
+use mrlyui::frame::{empty_fact, field, probe, sample_types};
 use std::collections::VecDeque;
 
 const RING: usize = 512;
@@ -558,9 +558,13 @@ impl App for Life {
     fn manifest(&self) -> Manifest {
         Manifest::new("life").emoji("🧫").category("math")
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, shape: Option<&Json>) -> Json {
         let mut out = json!({
-            "frame": self.render().fact(),
+            "frame": if crate::asked(shape, "frame") {
+                self.render().fact()
+            } else {
+                empty_fact(self.set.size as usize, self.set.size as usize)
+            },
             "generation": self.generation(),
             "population": self.population(),
             "entropy": entropy(self.current()),
@@ -600,7 +604,7 @@ impl App for Life {
             Verb::new("life.paint", json!({ "points": "[[x, y], ...]" })),
         ]
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "life.step" => {
                 let n = match call.arg("n") {
@@ -808,7 +812,7 @@ mod tests {
     fn ring_replays_backward_and_forward() {
         let mut life = Life::new();
         send(&mut life, "life.step", json!({ "n": 8 }));
-        let frontier = life.state(&iden())["frame"].clone();
+        let frontier = life.state(&iden(), None)["frame"].clone();
         let len = life.timeline.len();
         assert_eq!(life.cursor, len - 1);
         send(&mut life, "life.back", json!({}));
@@ -819,15 +823,15 @@ mod tests {
         assert_eq!(life.generation(), 0);
         send(&mut life, "life.end", json!({}));
         assert_eq!(life.cursor, len - 1);
-        assert_eq!(life.state(&iden())["frame"], frontier);
+        assert_eq!(life.state(&iden(), None)["frame"], frontier);
     }
     #[test]
     fn pulsar_settles_into_a_loop() {
         let mut life = Life::new();
         send(&mut life, "life.reset", json!({ "pattern": "pulsar" }));
         send(&mut life, "life.step", json!({ "n": 16 }));
-        assert_eq!(life.state(&iden())["fate"], json!("loop"));
-        assert_eq!(life.state(&iden())["period"], json!(3));
+        assert_eq!(life.state(&iden(), None)["fate"], json!("loop"));
+        assert_eq!(life.state(&iden(), None)["period"], json!(3));
         assert_eq!(life.beat(), None);
     }
     #[test]
@@ -835,7 +839,7 @@ mod tests {
         let mut life = Life::new();
         send(&mut life, "life.reset", json!({ "pattern": "clear" }));
         send(&mut life, "life.step", json!({ "n": 3 }));
-        assert_eq!(life.state(&iden())["fate"], json!("dead"));
+        assert_eq!(life.state(&iden(), None)["fate"], json!("dead"));
         assert_eq!(life.population(), 0);
     }
     #[test]
@@ -848,7 +852,7 @@ mod tests {
             json!({ "points": [[10, 10], [11, 10], [10, 11], [11, 11]] }),
         );
         send(&mut life, "life.step", json!({ "n": 2 }));
-        assert_eq!(life.state(&iden())["fate"], json!("still"));
+        assert_eq!(life.state(&iden(), None)["fate"], json!("still"));
         assert_eq!(life.population(), 4);
     }
     #[test]
@@ -923,7 +927,7 @@ mod tests {
         assert_eq!(life.cursor, cursor);
         assert_eq!(life.cursor + 1, life.timeline.len());
         assert_eq!(life.population(), before + 1);
-        assert_eq!(life.state(&iden())["fate"], Json::Null);
+        assert_eq!(life.state(&iden(), None)["fate"], Json::Null);
     }
     #[test]
     fn set_size_rebuilds_the_board() {
@@ -1008,12 +1012,25 @@ mod tests {
     #[test]
     fn state_publishes_the_explorer_surface() {
         let life = Life::new();
-        let state = life.state(&iden());
+        let state = life.state(&iden(), None);
         assert!(!state["frame"]["palette"].as_array().unwrap().is_empty());
         assert_eq!(state["max_neighbors"], json!(8));
         assert_eq!(state["settings"]["birth"], json!([3]));
         assert_eq!(state["settings"]["seed"]["v"], json!(1));
         assert_eq!(state["length"], json!(1));
+    }
+    #[test]
+    fn a_shape_without_frame_skips_the_raster() {
+        let life = Life::new();
+        let full = life.state(&iden(), None)["frame"].clone();
+        let shape = json!({ "population": 1 });
+        let thin = life.state(&iden(), Some(&shape))["frame"].clone();
+        assert_eq!(thin["width"], full["width"]);
+        assert_eq!(thin["height"], full["height"]);
+        assert!(thin["rows"].as_array().unwrap().is_empty());
+        assert!(thin["palette"].as_array().unwrap().is_empty());
+        let asked = json!({ "frame": 1 });
+        assert_eq!(life.state(&iden(), Some(&asked))["frame"], full);
     }
     #[test]
     fn unknown_verb_fails() {
@@ -1025,7 +1042,7 @@ mod tests {
     fn multi_step_emits_a_strip_ending_at_the_frame() {
         let mut life = Life::new();
         send(&mut life, "life.step", json!({ "n": 6 }));
-        let state = life.state(&iden());
+        let state = life.state(&iden(), None);
         let strip = state["strip"].as_array().unwrap();
         assert!(strip.len() >= 2 && strip.len() <= 8);
         assert_eq!(strip.last().unwrap(), &state["frame"]);
@@ -1035,7 +1052,7 @@ mod tests {
         let mut life = Life::new();
         send(&mut life, "life.step", json!({ "n": 32 }));
         assert_eq!(life.generation(), 32);
-        let state = life.state(&iden());
+        let state = life.state(&iden(), None);
         let strip = state["strip"].as_array().unwrap();
         assert_eq!(strip.len(), 8);
         assert_eq!(strip.last().unwrap(), &state["frame"]);
@@ -1043,21 +1060,21 @@ mod tests {
     #[test]
     fn a_settled_or_paused_app_omits_the_strip() {
         let fresh = Life::new();
-        assert!(fresh.state(&iden()).get("strip").is_none());
+        assert!(fresh.state(&iden(), None).get("strip").is_none());
         let mut single = Life::new();
         send(&mut single, "life.step", json!({ "n": 1 }));
-        assert!(single.state(&iden()).get("strip").is_none());
+        assert!(single.state(&iden(), None).get("strip").is_none());
         let mut settled = Life::new();
         send(&mut settled, "life.reset", json!({ "pattern": "clear" }));
         send(&mut settled, "life.step", json!({ "n": 4 }));
-        assert!(settled.state(&iden()).get("strip").is_none());
+        assert!(settled.state(&iden(), None).get("strip").is_none());
     }
     #[test]
     fn scrubbing_back_drops_the_strip() {
         let mut life = Life::new();
         send(&mut life, "life.step", json!({ "n": 6 }));
-        assert!(life.state(&iden()).get("strip").is_some());
+        assert!(life.state(&iden(), None).get("strip").is_some());
         send(&mut life, "life.back", json!({}));
-        assert!(life.state(&iden()).get("strip").is_none());
+        assert!(life.state(&iden(), None).get("strip").is_none());
     }
 }

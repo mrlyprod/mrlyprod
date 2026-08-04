@@ -228,7 +228,7 @@ impl App for Two {
     fn manifest(&self) -> Manifest {
         Manifest::new("two").emoji("🔳").category("math")
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         let cell = self.cell();
         let side = cell.width().max(cell.height());
         let filled = fills(&cell);
@@ -257,7 +257,7 @@ impl App for Two {
             Verb::new("two.reset", json!({})),
         ]
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "two.page" => {
                 let idx = DESIGNS
@@ -350,12 +350,12 @@ mod tests {
         assert_eq!(t.set.design, "carpet");
         send(&mut t, "two.page", json!({ "dir": "next" }));
         assert_eq!(t.set.design, "net");
-        assert_eq!(t.state(&iden())["index"], json!(1));
-        assert_eq!(t.state(&iden())["count"], json!(5));
+        assert_eq!(t.state(&iden(), None)["index"], json!(1));
+        assert_eq!(t.state(&iden(), None)["count"], json!(5));
         send(&mut t, "two.page", json!({ "dir": "prev" }));
         send(&mut t, "two.page", json!({ "dir": "prev" }));
         assert_eq!(t.set.design, "void");
-        assert_eq!(t.state(&iden())["index"], json!(4));
+        assert_eq!(t.state(&iden(), None)["index"], json!(4));
         assert!(!send(&mut t, "two.page", json!({ "dir": "sideways" })).ok);
     }
     #[test]
@@ -371,12 +371,12 @@ mod tests {
         send(&mut a, "two.set", json!({ "key": "fill", "value": "cyan" }));
         let mut b = Two::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
         let mut c = glyphed();
         send(&mut c, "two.set", json!({ "key": "fill", "value": "#" }));
         let mut d = Two::new();
         d.load(&c.save());
-        assert_eq!(d.state(&iden()), c.state(&iden()));
+        assert_eq!(d.state(&iden(), None), c.state(&iden(), None));
     }
     #[test]
     fn load_survives_garbage() {
@@ -404,7 +404,7 @@ mod tests {
     fn frame_renders_the_grid() {
         let mut t = Two::new();
         send(&mut t, "two.reset", json!({}));
-        let state = t.state(&iden());
+        let state = t.state(&iden(), None);
         let side = state["census"]["grid"].as_u64().unwrap() as usize;
         assert_eq!(state["frame"]["rows"].as_array().unwrap().len(), side);
         assert_eq!(state["frame"]["rows"][0].as_array().unwrap().len(), side);
@@ -448,7 +448,7 @@ mod tests {
             "two.set",
             json!({ "key": "design", "value": "net" }),
         );
-        let state = t.state(&iden());
+        let state = t.state(&iden(), None);
         let side = state["census"]["grid"].as_u64().unwrap() as usize;
         let rows = state["ids"].as_array().unwrap();
         assert_eq!(rows.len(), side);

@@ -1,6 +1,5 @@
 pub mod app;
 pub mod envelope;
-pub mod goose;
 pub mod iden;
 pub mod manifest;
 pub mod os;
@@ -9,7 +8,6 @@ pub mod shape;
 
 pub use app::{App, Call, Effect, Outcome, Verb};
 pub use envelope::{Envelope, Notice, Route, Sync, View};
-pub use goose::Goose;
 pub use iden::Iden;
 pub use manifest::Manifest;
 pub use os::Os;

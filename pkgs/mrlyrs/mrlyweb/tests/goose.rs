@@ -1,4 +1,5 @@
-use mrlyos::kernel::{Goose, Os};
+use mrlyos::kernel::Os;
+use mrlyweb::Goose;
 
 fn boot() -> Os {
     mrlyweb::registry::boot()

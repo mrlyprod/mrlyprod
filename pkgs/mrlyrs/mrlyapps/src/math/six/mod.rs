@@ -208,7 +208,7 @@ impl App for Six {
     fn manifest(&self) -> Manifest {
         Manifest::new("six").emoji("💠").category("math")
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         let cube = self.cube();
         let side = cube.width().max(cube.height()).max(cube.depth());
         let filled = census::fills(&cube);
@@ -232,7 +232,7 @@ impl App for Six {
             Verb::new("six.reset", json!({})),
         ]
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "six.page" => {
                 let idx = DESIGNS
@@ -322,12 +322,12 @@ mod tests {
         assert_eq!(s.set.design, "carpet");
         send(&mut s, "six.page", json!({ "dir": "next" }));
         assert_eq!(s.set.design, "net");
-        assert_eq!(s.state(&iden())["index"], json!(1));
-        assert_eq!(s.state(&iden())["count"], json!(6));
+        assert_eq!(s.state(&iden(), None)["index"], json!(1));
+        assert_eq!(s.state(&iden(), None)["count"], json!(6));
         send(&mut s, "six.page", json!({ "dir": "prev" }));
         send(&mut s, "six.page", json!({ "dir": "prev" }));
         assert_eq!(s.set.design, "void");
-        assert_eq!(s.state(&iden())["index"], json!(5));
+        assert_eq!(s.state(&iden(), None)["index"], json!(5));
         assert!(!send(&mut s, "six.page", json!({ "dir": "sideways" })).ok);
     }
     #[test]
@@ -342,7 +342,7 @@ mod tests {
         send(&mut a, "six.set", json!({ "key": "fill", "value": "mint" }));
         let mut b = Six::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
     }
     #[test]
     fn load_survives_garbage() {
@@ -364,7 +364,7 @@ mod tests {
         for v in VIEWS {
             let mut s = Six::new();
             send(&mut s, "six.set", json!({ "key": "view", "value": v }));
-            let state = s.state(&iden());
+            let state = s.state(&iden(), None);
             let tris = state["tris"].as_array().unwrap();
             assert!(!tris.is_empty(), "{v}");
             assert_eq!(tris[0]["pts"].as_array().unwrap().len(), 3, "{v}");

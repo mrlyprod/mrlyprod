@@ -14,6 +14,7 @@ PIXEL = 125
 UPEM = 1000
 OUT = os.path.join(ROOT, "files", "mrlyfont")
 CREATED = datetime(2026, 1, 1, tzinfo=timezone.utc)
+HANDLE = mp.boot()
 
 def trim(rows):
     width = len(rows[0])
@@ -49,8 +50,8 @@ def notdef():
     return pen.glyph()
 
 def build(ttf_path):
-    glyphs = mp.font.glyphs()
-    descenders = set(mp.font.descenders())
+    glyphs = mp.read(HANDLE, "font/glyphs")
+    descenders = set(mp.read(HANDLE, "font/descenders"))
     order = [".notdef"] + sorted(glyphs)
     shapes = {".notdef": notdef()}
     metrics = {".notdef": (PIXEL * 3, PIXEL // 2)}
@@ -127,7 +128,7 @@ def web(ttf_path):
 def manifest():
     path = os.path.join(OUT, f"{NAME}.json")
     with open(path, "w", encoding="utf-8") as f:
-        f.write(mp.font.json())
+        f.write(mp.read(HANDLE, "font/json"))
         f.write("\n")
     print(f"Saved: {path}")
 

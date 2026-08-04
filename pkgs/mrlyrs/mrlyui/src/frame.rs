@@ -13,16 +13,16 @@ pub struct Glyph {
 }
 
 #[derive(Clone, Debug)]
-pub struct TileSet {
+pub struct Atlas {
     pub size: usize,
     pub tiles: Vec<Cell2d>,
     pub faces: Vec<Option<Glyph>>,
 }
 
-impl TileSet {
-    pub fn new(size: usize, tiles: Vec<Cell2d>) -> TileSet {
+impl Atlas {
+    pub fn new(size: usize, tiles: Vec<Cell2d>) -> Atlas {
         let faces = vec![None; tiles.len()];
-        TileSet { size, tiles, faces }
+        Atlas { size, tiles, faces }
     }
     pub fn face(&mut self, id: usize, ch: impl Into<String>, tint: Option<[u8; 4]>) {
         if id < self.faces.len() {
@@ -230,7 +230,7 @@ impl Sprite {
 
 #[derive(Clone, Debug)]
 pub enum Layer {
-    Tiles { ids: Tensor, set: TileSet },
+    Tiles { ids: Tensor, set: Atlas },
     Sprites(Vec<Sprite>),
     Field(Cell2d),
 }
@@ -584,7 +584,7 @@ mod tests {
     fn tiles_composite_to_pixels() {
         let red = [255, 0, 0, 255];
         let blue = [0, 0, 255, 255];
-        let set = TileSet::new(2, vec![solid_tile(2, red), solid_tile(2, blue)]);
+        let set = Atlas::new(2, vec![solid_tile(2, red), solid_tile(2, blue)]);
         let ids = Tensor::of(vec![0, 1, 1, 0], vec![2, 2]);
         let mut frame = Frame::new(4, 4, [0, 0, 0, 255]);
         frame.push(Layer::Tiles { ids, set });
@@ -635,7 +635,7 @@ mod tests {
     fn image_indexes_a_palette() {
         let red = [255, 0, 0, 255];
         let black = [0, 0, 0, 255];
-        let set = TileSet::new(1, vec![solid_tile(1, black), solid_tile(1, red)]);
+        let set = Atlas::new(1, vec![solid_tile(1, black), solid_tile(1, red)]);
         let ids = Tensor::of(vec![0, 1, 1, 0], vec![2, 2]);
         let mut frame = Frame::new(2, 2, black);
         frame.push(Layer::Tiles { ids, set });
@@ -652,7 +652,7 @@ mod tests {
     }
     #[test]
     fn transparent_shows_background() {
-        let set = TileSet::new(1, vec![solid_tile(1, [0, 0, 0, 0])]);
+        let set = Atlas::new(1, vec![solid_tile(1, [0, 0, 0, 0])]);
         let ids = Tensor::new(vec![1, 1]);
         let mut frame = Frame::new(1, 1, [9, 9, 9, 255]);
         frame.push(Layer::Tiles { ids, set });
@@ -663,7 +663,7 @@ mod tests {
     fn sprite_fact_matches_frame_fact_encoding() {
         let red = [255, 0, 0, 255];
         let black = [0, 0, 0, 255];
-        let set = TileSet::new(1, vec![solid_tile(1, black), solid_tile(1, red)]);
+        let set = Atlas::new(1, vec![solid_tile(1, black), solid_tile(1, red)]);
         let ids = Tensor::of(vec![0, 1, 1, 0], vec![2, 2]);
         let mut frame = Frame::new(2, 2, black);
         frame.push(Layer::Tiles { ids, set });

@@ -190,7 +190,7 @@ impl App for Settings {
             json!({ "key": "string", "value": "any" }),
         )]
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "settings.set" => {
                 let key = call.arg("key").as_str().unwrap_or("").to_string();
@@ -265,19 +265,19 @@ mod tests {
     fn act_applies_key_and_value() {
         let iden = Iden::new("aria");
         let mut s = Settings::new();
-        let out = s.act(
+        let out = s.call(
             &iden,
             &Call::new("settings.set", json!({ "key": "color", "value": "pink" })),
         );
         assert!(out.ok);
         assert_eq!(out.data, json!({ "key": "color", "value": "pink" }));
         assert_eq!(s.get("color"), json!("pink"));
-        let out = s.act(
+        let out = s.call(
             &iden,
             &Call::new("settings.set", json!({ "key": "color", "value": 7 })),
         );
         assert!(!out.ok);
-        let out = s.act(
+        let out = s.call(
             &iden,
             &Call::new("settings.set", json!({ "key": "volume", "value": 1 })),
         );
@@ -288,7 +288,7 @@ mod tests {
     fn act_applies_the_launchpad() {
         let iden = Iden::new("aria");
         let mut s = Settings::new();
-        let out = s.act(
+        let out = s.call(
             &iden,
             &Call::new(
                 "settings.set",
@@ -298,7 +298,7 @@ mod tests {
         assert!(out.ok);
         assert_eq!(out.data, json!({ "key": "launchpad", "value": "list" }));
         assert_eq!(s.get("launchpad"), json!("list"));
-        let out = s.act(
+        let out = s.call(
             &iden,
             &Call::new(
                 "settings.set",
@@ -313,7 +313,7 @@ mod tests {
     fn unknown_verb_fails() {
         let iden = Iden::new("aria");
         let mut s = Settings::new();
-        let out = s.act(&iden, &Call::new("settings.reset", json!({})));
+        let out = s.call(&iden, &Call::new("settings.reset", json!({})));
         assert!(!out.ok);
         assert_eq!(out.note.as_deref(), Some("unknown verb"));
     }
@@ -425,7 +425,7 @@ mod tests {
         a.apply("seed", &json!(42)).unwrap();
         let mut b = Settings::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden), a.state(&iden));
+        assert_eq!(b.state(&iden, None), a.state(&iden, None));
         assert_eq!(b.save(), a.save());
     }
     #[test]

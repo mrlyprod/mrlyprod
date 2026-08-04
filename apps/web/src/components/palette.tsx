@@ -1,11 +1,11 @@
 import { call } from "../builders.ts"
 import { colorpicker } from "./colorpicker.tsx"
 import { hex, names } from "../palette.ts"
-import { peeked } from "../peeks.ts"
+import { reading } from "../reads.ts"
 import type { Node } from "../types.ts"
 
 export function palette(app: string, colors: string[]): Node[] {
-  const lib = (peeked("colors")?.state as { library?: string[] } | undefined)?.library ?? []
+  const lib = (reading("colors/library") as string[] | null) ?? []
   const pool = lib.length > 0 ? lib : names()
   const picked = new Set(colors.map(c => c.toLowerCase()))
   const swatches = pool.map(name => ({ name, hex: hex(name) }))

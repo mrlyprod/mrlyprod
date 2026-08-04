@@ -25,8 +25,8 @@ fn piped(args: &[&str], input: &str) -> Vec<u8> {
 }
 
 #[test]
-fn describe_lists_the_surface() {
-    let out = mrlycli().arg("describe").output().unwrap();
+fn list_shows_the_surface() {
+    let out = mrlycli().arg("list").output().unwrap();
     assert!(out.status.success());
     let surface = mrlycore::json::parse(std::str::from_utf8(&out.stdout).unwrap()).unwrap();
     assert!(surface["version"].is_string());
@@ -273,4 +273,115 @@ fn every_screenplay_is_in_the_gate() {
             "{name} is not played by any test"
         );
     }
+}
+
+fn served(lines: &[&str]) -> Vec<mrlycore::Json> {
+    let input = lines.join("\n") + "\n";
+    let out = piped(&["mcp"], &input);
+    std::str::from_utf8(&out)
+        .unwrap()
+        .lines()
+        .map(|line| mrlycore::json::parse(line).unwrap())
+        .collect()
+}
+
+#[test]
+fn mcp_shakes_hands_and_stays_quiet_on_notifications() {
+    let replies = served(&[
+        r#"{"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}"#,
+        r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#,
+        r#"{"jsonrpc":"2.0","id":1,"method":"ping"}"#,
+    ]);
+    assert_eq!(replies.len(), 2);
+    assert_eq!(
+        replies[0]["result"]["protocolVersion"],
+        mrlycore::json!("2025-06-18")
+    );
+    assert_eq!(
+        replies[0]["result"]["serverInfo"]["name"],
+        mrlycore::json!("mrly")
+    );
+    assert_eq!(replies[1]["result"], mrlycore::json!({}));
+}
+
+#[test]
+fn mcp_lists_every_verb_as_a_tool_plus_the_read_door() {
+    let replies = served(&[r#"{"jsonrpc":"2.0","id":0,"method":"tools/list"}"#]);
+    let tools = replies[0]["result"]["tools"].as_array().unwrap();
+    let names: Vec<&str> = tools.iter().filter_map(|t| t["name"].as_str()).collect();
+    assert!(names.contains(&"nav_open"));
+    assert!(names.contains(&"snake_turn"));
+    assert!(names.contains(&"mrly_read"));
+    assert!(names.iter().all(|n| !n.contains('.')));
+    let turn = tools
+        .iter()
+        .find(|t| t["name"] == mrlycore::json!("snake_turn"))
+        .unwrap();
+    assert!(turn["inputSchema"]["properties"]["dir"]["enum"]
+        .as_array()
+        .is_some());
+}
+
+#[test]
+fn mcp_calls_journal_and_errors_stay_inside_results() {
+    let replies = served(&[
+        r#"{"jsonrpc":"2.0","id":0,"method":"tools/call","params":{"name":"nav_open","arguments":{"app":"snake","now":1000}}}"#,
+        r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"nav_open","arguments":{"app":"ghost","now":2000}}}"#,
+    ]);
+    let fine: Vec<&mrlycore::Json> = replies.iter().filter(|r| !r["id"].is_null()).collect();
+    assert_eq!(fine[0]["result"]["isError"], mrlycore::json!(false));
+    assert_eq!(fine[1]["result"]["isError"], mrlycore::json!(true));
+    let text = fine[1]["result"]["content"][0]["text"].as_str().unwrap();
+    assert!(text.contains("no such app"));
+}
+
+#[test]
+fn mcp_announces_a_moving_surface() {
+    let replies = served(&[
+        r#"{"jsonrpc":"2.0","id":0,"method":"tools/call","params":{"name":"nav_open","arguments":{"app":"timer","now":1000}}}"#,
+        r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"timer_mode","arguments":{"mode":"stopwatch","now":2000}}}"#,
+    ]);
+    let moved = replies
+        .iter()
+        .any(|r| r["method"] == mrlycore::json!("notifications/tools/list_changed"));
+    assert!(moved);
+}
+
+#[test]
+fn mcp_reads_ride_resources_and_the_read_tool() {
+    let replies = served(&[
+        r#"{"jsonrpc":"2.0","id":0,"method":"resources/read","params":{"uri":"mrly://read/snake/dir"}}"#,
+        r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"mrly_read","arguments":{"path":"snake/dir"}}}"#,
+        r#"{"jsonrpc":"2.0","id":2,"method":"resources/list"}"#,
+    ]);
+    let by_resource = replies[0]["result"]["contents"][0]["text"]
+        .as_str()
+        .unwrap();
+    let by_tool = replies[1]["result"]["content"][0]["text"].as_str().unwrap();
+    assert_eq!(by_resource, by_tool);
+    let listed = replies[2]["result"]["resources"].as_array().unwrap();
+    assert!(listed
+        .iter()
+        .any(|r| r["uri"] == mrlycore::json!("mrly://read/snake")));
+    assert!(!listed.iter().any(|r| r["name"] == mrlycore::json!("menu")));
+}
+
+#[test]
+fn mcp_refuses_malformed_protocol_with_codes() {
+    let replies = served(&[
+        r#"{"jsonrpc":"2.0","id":0,"method":"prompts/list"}"#,
+        r#"[{"jsonrpc":"2.0","id":1,"method":"ping"}]"#,
+        r#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"snake_step","arguments":{"n":1.5}}}"#,
+    ]);
+    assert_eq!(replies[0]["error"]["code"], mrlycore::json!(-32601));
+    assert_eq!(replies[1]["error"]["code"], mrlycore::json!(-32600));
+    let parse = replies
+        .iter()
+        .find(|r| r["error"]["code"] == mrlycore::json!(-32700))
+        .unwrap();
+    assert!(parse["id"].is_null());
+    assert!(parse["error"]["message"]
+        .as_str()
+        .unwrap()
+        .contains("floats"));
 }

@@ -220,7 +220,7 @@ impl App for Three {
     fn wear(&mut self, world: &Json) {
         self.dark = world["shared"]["settings"]["darkmode"] == true;
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         let cell = self.cell();
         let side = cell.width().max(cell.height()).max(cell.depth());
         let filled = census::fills(&cell);
@@ -284,7 +284,7 @@ impl App for Three {
             Verb::new("three.reset", json!({})),
         ]
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "three.page" => {
                 let idx = DESIGNS
@@ -374,12 +374,12 @@ mod tests {
         assert_eq!(t.set.design, "carpet");
         send(&mut t, "three.page", json!({ "dir": "next" }));
         assert_eq!(t.set.design, "net");
-        assert_eq!(t.state(&iden())["index"], json!(1));
-        assert_eq!(t.state(&iden())["count"], json!(6));
+        assert_eq!(t.state(&iden(), None)["index"], json!(1));
+        assert_eq!(t.state(&iden(), None)["count"], json!(6));
         send(&mut t, "three.page", json!({ "dir": "prev" }));
         send(&mut t, "three.page", json!({ "dir": "prev" }));
         assert_eq!(t.set.design, "void");
-        assert_eq!(t.state(&iden())["index"], json!(5));
+        assert_eq!(t.state(&iden(), None)["index"], json!(5));
         assert!(!send(&mut t, "three.page", json!({ "dir": "sideways" })).ok);
     }
     #[test]
@@ -397,7 +397,7 @@ mod tests {
         );
         let mut b = Three::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
     }
     #[test]
     fn load_survives_garbage() {
@@ -443,7 +443,7 @@ mod tests {
     fn the_census_counts_cells() {
         let mut t = Three::new();
         send(&mut t, "three.reset", json!({}));
-        let state = t.state(&iden());
+        let state = t.state(&iden(), None);
         assert!(state["census"]["fill"].as_u64().unwrap() > 0);
         assert!(state["census"]["grid"].as_u64().unwrap() > 0);
     }

@@ -1,7 +1,9 @@
 use mrlycore::{json, Json};
-use mrlyos::kernel::{Call, Goose, Os};
+use mrlyos::kernel::{Call, Os};
+use mrlyweb::goose::Goose;
 use std::io::{BufRead, Read};
 
+mod mcp;
 mod term;
 mod tui;
 
@@ -19,16 +21,17 @@ fn main() {
                 repl()
             }
         }
+        Some("mcp") => mcp::serve(),
         Some("repl") => repl(),
         Some("tui") => tui::run(),
         Some("run") => run(&args[2..]),
         Some("render") => render(args.get(2).map(String::as_str)),
         Some("shot") => shot(&args[2..]),
-        Some("peek") => peek(&args[2..]),
+        Some("read") => read(&args[2..]),
         Some("watch") => watch(&args[2..]),
         Some("goose") => goose(&args[2..]),
         Some("drive") => drive(&args[2..]),
-        Some("describe") => describe(),
+        Some("list") => list(),
         Some("verbs") => verbs(args.get(2).map(String::as_str)),
         Some("help") | Some("-h") | Some("--help") => usage(),
         Some(_) => {
@@ -46,24 +49,27 @@ fn usage() {
     eprintln!("  mrlycli tui           raw-mode terminal face");
     eprintln!("  mrlycli repl          line-by-line interactive session");
     eprintln!(
-        "  mrlycli run [file]    replay a call script, print the final frame (--facts trims grids)"
+        "  mrlycli mcp           an MCP server over stdio: tools/list, tools/call, resources/read"
+    );
+    eprintln!(
+        "  mrlycli run [file]    replay a call script, print the envelope (--facts trims grids)"
     );
     eprintln!("  mrlycli render [file] draw the final frame as colored blocks");
     eprintln!("  mrlycli shot [file]   write the final frame as a PNG (--out path)");
-    eprintln!("  mrlycli peek <app[/path]> [file] [shape]");
-    eprintln!("                        print an app's state, one field, or a shaped subtree");
+    eprintln!("  mrlycli read <app[/path]> [file] [shape]");
+    eprintln!("                        print an app's view, one field, or a shaped subtree");
     eprintln!("  mrlycli watch <app/path> [file]");
     eprintln!("                        poll the field and print it when it changes");
-    eprintln!("  mrlycli goose <app> [--seed N] [--steps K] [--trace] [--peek path]");
+    eprintln!("  mrlycli goose <app> [--seed N] [--steps K] [--trace] [--read path]");
     eprintln!("                        drive an app with random legal calls");
     eprintln!("  mrlycli drive [file]  play a wire screenplay: open, call, assert");
-    eprintln!("  mrlycli describe      print the kernel surface as JSON");
+    eprintln!("  mrlycli list          print the kernel surface as JSON");
     eprintln!("  mrlycli verbs [app]   list apps, or one app's verbs and args");
     eprintln!("  mrlycli help          show this message");
     eprintln!();
     eprintln!("repl:");
-    eprintln!("  verb [json]          act, e.g. nav.open {{\"app\":\"snake\"}}");
-    eprintln!("  :help :frame :render :verbs :peek :shot :describe :apps :open <app> :reset :quit");
+    eprintln!("  verb [json]          call, e.g. nav.open {{\"app\":\"snake\"}}");
+    eprintln!("  :help :read :render :verbs :shot :list :apps :open <app> :reset :quit");
 }
 
 // BOOT
@@ -72,16 +78,16 @@ pub(crate) fn build() -> Os {
     mrlyweb::registry::boot()
 }
 
-// DESCRIBE
+// LIST
 
-fn describe() {
-    println!("{}", build().describe(None).pretty());
+fn list() {
+    println!("{}", build().list(None).pretty());
 }
 
 // VERBS
 
 fn verbs(app: Option<&str>) {
-    if !list_verbs(&build().describe(None), app) {
+    if !list_verbs(&build().list(None), app) {
         eprintln!("! no such app: {}", app.unwrap_or(""));
         std::process::exit(1);
     }
@@ -170,7 +176,7 @@ fn replay(path: Option<&str>) -> Os {
     for wire in &wires {
         let call = call_from(wire);
         let verb = call.verb.clone();
-        let out = os.act(call);
+        let out = os.call(call);
         if !out.ok {
             let note = out.note.as_deref().unwrap_or("failed");
             eprintln!("! {verb}: {note}");
@@ -188,11 +194,11 @@ fn run(args: &[String]) {
             other => path = Some(other),
         }
     }
-    let mut frame = replay(path).frame(None).to_json();
+    let mut env = replay(path).read("", None).unwrap_or_default();
     if facts {
-        collapse(&mut frame);
+        collapse(&mut env);
     }
-    println!("{}", frame.pretty());
+    println!("{}", env.pretty());
 }
 
 fn collapse(value: &mut Json) {
@@ -235,35 +241,34 @@ fn repl() {
             match cmd {
                 "quit" | "q" => break,
                 "help" => meta_help(),
-                "frame" => emit(&os, visual),
                 "render" => {
                     visual = !visual;
                     eprintln!("render: {}", if visual { "visual" } else { "facts" });
                     emit(&os, visual);
                 }
-                "describe" => eprintln!("{}", os.describe(None).pretty()),
+                "list" => eprintln!("{}", os.list(None).pretty()),
                 "verbs" => {
                     let app = if arg.is_empty() {
-                        os.frame(None).route.map(|r| r.app)
+                        os.envelope(None).route.map(|r| r.app)
                     } else {
                         Some(arg.to_string())
                     };
-                    if !list_verbs(&os.describe(None), app.as_deref()) {
+                    if !list_verbs(&os.list(None), app.as_deref()) {
                         eprintln!("! no such app: {arg}");
                     }
                 }
-                "peek" => {
+                "read" => {
                     let mut it = arg.splitn(2, char::is_whitespace);
                     let target = it.next().unwrap_or("");
                     let rest = it.next().unwrap_or("").trim();
                     if target.is_empty() {
-                        eprintln!("! peek needs app[/path]");
+                        emit(&os, visual);
                     } else if rest.is_empty() {
-                        print_peek(&os, target, None);
+                        print_read(&os, target, None);
                     } else {
                         match mrlycore::json::parse(rest) {
                             Ok(shape) => {
-                                print_peek(&os, target, Some(&shape));
+                                print_read(&os, target, Some(&shape));
                             }
                             Err(e) => eprintln!("! bad shape: {e}"),
                         }
@@ -271,7 +276,7 @@ fn repl() {
                 }
                 "shot" => {
                     let out = if arg.is_empty() { "shot.png" } else { arg };
-                    let app = os.frame(None).route.map(|r| r.app).unwrap_or_default();
+                    let app = os.envelope(None).route.map(|r| r.app).unwrap_or_default();
                     match os.snapshot(&app) {
                         Ok(bytes) => match std::fs::write(out, &bytes) {
                             Ok(()) => eprintln!("shot: {app} -> {out} ({} bytes)", bytes.len()),
@@ -307,7 +312,7 @@ fn repl() {
                 }
             };
             if let Some(args) = args {
-                os.act(Call::new(verb, args).at(now_ms()));
+                os.call(Call::new(verb, args).at(now_ms()));
                 emit(&os, visual);
             }
         }
@@ -318,17 +323,16 @@ fn repl() {
 
 fn meta_help() {
     eprintln!(":help              this message");
-    eprintln!(":frame             reprint the current frame");
+    eprintln!(":read [app/path] [shape]   reprint the envelope, or read one field");
     eprintln!(":render            toggle visual blocks / raw facts");
-    eprintln!(":describe          print the kernel surface");
+    eprintln!(":list              print the kernel surface");
     eprintln!(":verbs [app]       verbs and args (current app by default)");
-    eprintln!(":peek app[/path] [shape]   print state, one field, or a shaped subtree");
     eprintln!(":shot [path]       write the current frame as a PNG");
     eprintln!(":apps              list installed apps");
     eprintln!(":open <app>        open an app");
     eprintln!(":reset             boot a fresh session");
     eprintln!(":quit :q           exit");
-    eprintln!("verb [json]        act, e.g. calculator.digit {{\"d\":4}}");
+    eprintln!("verb [json]        call, e.g. calculator.digit {{\"d\":4}}");
 }
 
 pub(crate) fn now_ms() -> i64 {
@@ -339,21 +343,21 @@ pub(crate) fn now_ms() -> i64 {
 }
 
 fn emit(os: &Os, visual: bool) {
-    let frame = os.frame(None);
-    let json = frame.to_json();
+    let env = os.envelope(None);
+    let json = env.to_json();
     if visual {
         println!("{}", paint(&json));
     } else {
         println!("{}", json.pretty());
     }
-    if let Some(last) = &frame.last {
+    if let Some(last) = &env.last {
         if !last.ok {
             if let Some(note) = &last.note {
                 eprintln!("! {note}");
             }
         }
     }
-    if let Some(view) = &frame.view {
+    if let Some(view) = &env.view {
         let names: Vec<&str> = view.actions.iter().map(|v| v.name.as_str()).collect();
         if !names.is_empty() {
             eprintln!("verbs: {}", names.join(", "));
@@ -364,7 +368,8 @@ fn emit(os: &Os, visual: bool) {
 // RENDER
 
 fn render(path: Option<&str>) {
-    println!("{}", paint(&replay(path).frame(None).to_json()));
+    let env = replay(path).read("", None).unwrap_or_default();
+    println!("{}", paint(&env));
 }
 
 // SHOT
@@ -384,7 +389,7 @@ fn shot(args: &[String]) {
         }
     }
     let os = replay(path);
-    let app = os.frame(None).route.map(|r| r.app).unwrap_or_default();
+    let app = os.envelope(None).route.map(|r| r.app).unwrap_or_default();
     match os.snapshot(&app) {
         Ok(bytes) => match std::fs::write(&out, &bytes) {
             Ok(()) => eprintln!("shot: {app} -> {out} ({} bytes)", bytes.len()),
@@ -400,36 +405,15 @@ fn shot(args: &[String]) {
     }
 }
 
-// PEEK
+// READ
 
-fn split_target(target: &str) -> (String, Vec<String>) {
-    let mut parts = target.split('/');
-    let app = parts.next().unwrap_or("").to_string();
-    (app, parts.map(str::to_string).collect())
-}
-
-fn drill<'a>(value: &'a Json, path: &[String]) -> Option<&'a Json> {
-    let mut cur = value;
-    for seg in path {
-        cur = match cur {
-            Json::Obj(map) => map.get(seg)?,
-            Json::Arr(items) => items.get(seg.parse::<usize>().ok()?)?,
-            _ => return None,
-        };
-    }
-    Some(cur)
-}
-
-fn peek_value(os: &Os, target: &str, shape: Option<&Json>) -> Result<Json, String> {
-    let (app, path) = split_target(target);
-    let view = os.peek(&app, shape).ok_or(format!("no such app: {app}"))?;
-    drill(&view.state, &path)
-        .cloned()
+fn read_value(os: &Os, target: &str, shape: Option<&Json>) -> Result<Json, String> {
+    os.read(target, shape)
         .ok_or(format!("no value at {target}"))
 }
 
-fn print_peek(os: &Os, target: &str, shape: Option<&Json>) -> bool {
-    match peek_value(os, target, shape) {
+fn print_read(os: &Os, target: &str, shape: Option<&Json>) -> bool {
+    match read_value(os, target, shape) {
         Ok(value) => {
             println!("{}", value.pretty());
             true
@@ -441,7 +425,7 @@ fn print_peek(os: &Os, target: &str, shape: Option<&Json>) -> bool {
     }
 }
 
-fn peek(args: &[String]) {
+fn read(args: &[String]) {
     let mut target: Option<&str> = None;
     let mut shape: Option<Json> = None;
     let mut file: Option<&str> = None;
@@ -461,14 +445,14 @@ fn peek(args: &[String]) {
         }
     }
     let Some(target) = target else {
-        eprintln!("! peek needs app[/path]");
+        eprintln!("! read needs app[/path]");
         std::process::exit(2);
     };
     let os = match file {
         Some(f) => replay(Some(f)),
         None => build(),
     };
-    if !print_peek(&os, target, shape.as_ref()) {
+    if !print_read(&os, target, shape.as_ref()) {
         std::process::exit(1);
     }
 }
@@ -493,20 +477,20 @@ fn watch(args: &[String]) {
         Some(f) => replay(Some(f)),
         None => build(),
     };
-    let (app, _) = split_target(target);
-    if os.open(&app).is_err() {
+    let app = target.split('/').next().unwrap_or("");
+    if os.open(app).is_err() {
         eprintln!("! no such app: {app}");
         std::process::exit(1);
     }
-    if let Err(note) = peek_value(&os, target, None) {
+    if let Err(note) = read_value(&os, target, None) {
         eprintln!("! {note}");
     }
     let mut last: Option<Json> = None;
     loop {
-        if let Some(beat) = os.frame(None).view.and_then(|v| v.beat) {
-            os.act(beat.at(now_ms()));
+        if let Some(beat) = os.envelope(None).view.and_then(|v| v.beat) {
+            os.call(beat.at(now_ms()));
         }
-        if let Ok(value) = peek_value(&os, target, None) {
+        if let Ok(value) = read_value(&os, target, None) {
             if last.as_ref() != Some(&value) {
                 println!("{value}");
                 last = Some(value);
@@ -538,7 +522,7 @@ fn goose(args: &[String]) {
                 }
             }
             "--trace" => trace = true,
-            "--peek" => {
+            "--read" => {
                 if let Some(v) = it.next() {
                     path = Some(v);
                 }
@@ -558,8 +542,8 @@ fn goose(args: &[String]) {
     let mut goose = Goose::new(seed);
     let mut now = 0;
     for _ in 0..steps {
-        if let Some(beat) = os.frame(None).view.and_then(|v| v.beat) {
-            os.act(beat.at(now));
+        if let Some(beat) = os.envelope(None).view.and_then(|v| v.beat) {
+            os.call(beat.at(now));
         }
         if let Some(call) = goose.step(&mut os) {
             if trace {
@@ -570,21 +554,21 @@ fn goose(args: &[String]) {
     }
     match path {
         Some(p) => {
-            if !print_peek(&os, &format!("{app}/{}", p.trim_start_matches('/')), None) {
+            if !print_read(&os, &format!("{app}/{}", p.trim_start_matches('/')), None) {
                 std::process::exit(1);
             }
         }
-        None => println!("{}", os.frame(None).to_json().pretty()),
+        None => println!("{}", os.read("", None).unwrap_or_default().pretty()),
     }
 }
 
-fn paint(frame: &Json) -> String {
-    let grid = &frame["view"]["state"]["frame"];
+fn paint(env: &Json) -> String {
+    let grid = &env["view"]["state"]["frame"];
     match (grid["rows"].as_array(), grid["palette"].as_array()) {
         (Some(rows), Some(palette)) if !rows.is_empty() => {
-            blocks(frame["view"]["app"].as_str().unwrap_or(""), rows, palette)
+            blocks(env["view"]["app"].as_str().unwrap_or(""), rows, palette)
         }
-        _ => frame.pretty(),
+        _ => env.pretty(),
     }
 }
 
@@ -705,7 +689,7 @@ fn step(os: &mut Os, s: &Json) -> Result<(), String> {
         } else {
             json!({})
         };
-        let out = os.act(Call::new(verb, args));
+        let out = os.call(Call::new(verb, args));
         if !out.ok {
             let note = out.note.as_deref().unwrap_or("failed");
             return Err(format!("{verb}: {note}"));
@@ -719,16 +703,16 @@ fn step(os: &mut Os, s: &Json) -> Result<(), String> {
 }
 
 fn check(os: &Os, want: &Json) -> Result<(), String> {
-    let frame = os.frame(None);
+    let env = os.envelope(None);
     if let Some(route) = want["route"].as_str() {
-        let at = frame.route.as_ref().map(|r| r.app.as_str()).unwrap_or("");
+        let at = env.route.as_ref().map(|r| r.app.as_str()).unwrap_or("");
         if at != route {
             return Err(format!("route is {at}, wanted {route}"));
         }
     }
     if let Some(verb) = want["verb"].as_str() {
-        let surface = os.describe(None);
-        let current = frame
+        let surface = os.list(None);
+        let current = env
             .route
             .as_ref()
             .map(|r| r.app.clone())
@@ -758,7 +742,7 @@ fn check(os: &Os, want: &Json) -> Result<(), String> {
             .and_then(Json::as_str)
             .ok_or("state needs a target")?;
         let wanted = pair.get(1).cloned().unwrap_or(Json::Null);
-        let got = peek_value(os, target, None)?;
+        let got = read_value(os, target, None)?;
         if got != wanted {
             return Err(format!("{target} is {got}, wanted {wanted}"));
         }

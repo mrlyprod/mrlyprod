@@ -33,7 +33,7 @@ impl App for Colors {
     fn manifest(&self) -> Manifest {
         Manifest::new("colors").emoji("🌈").category("design")
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         let color = PALETTE[self.index];
         json!({
             "index": self.index,
@@ -59,7 +59,7 @@ impl App for Colors {
             Verb::new("colors.drop", json!({ "name": "string" })),
         ]
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "colors.page" => {
                 let next = match call.arg("dir").as_str() {
@@ -203,7 +203,7 @@ mod tests {
         );
         let mut b = Colors::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
     }
     #[test]
     fn load_survives_garbage() {
@@ -237,7 +237,7 @@ mod tests {
     #[test]
     fn library_seeds_with_every_name() {
         let c = Colors::new();
-        let library = c.state(&iden())["library"].clone();
+        let library = c.state(&iden(), None)["library"].clone();
         assert_eq!(library, json!(NAMES.to_vec()));
         assert_eq!(library.as_array().unwrap().len(), 15);
     }
@@ -245,12 +245,12 @@ mod tests {
     fn keep_restores_a_dropped_color() {
         let mut c = Colors::new();
         assert!(send(&mut c, "colors.drop", json!({ "name": "black" })).ok);
-        assert!(!c.state(&iden())["library"]
+        assert!(!c.state(&iden(), None)["library"]
             .as_array()
             .unwrap()
             .contains(&json!("black")));
         assert!(send(&mut c, "colors.keep", json!({})).ok);
-        assert!(c.state(&iden())["library"]
+        assert!(c.state(&iden(), None)["library"]
             .as_array()
             .unwrap()
             .contains(&json!("black")));
@@ -269,9 +269,12 @@ mod tests {
     fn load_sanitizes_the_library() {
         let mut c = Colors::new();
         c.load(&json!({ "library": "garbage" }));
-        assert_eq!(c.state(&iden())["library"].as_array().unwrap().len(), 15);
+        assert_eq!(
+            c.state(&iden(), None)["library"].as_array().unwrap().len(),
+            15
+        );
         c.load(&json!({ "library": ["black", "chartreuse", "black", 5, "white"] }));
-        assert_eq!(c.state(&iden())["library"], json!(["black", "white"]));
+        assert_eq!(c.state(&iden(), None)["library"], json!(["black", "white"]));
     }
     #[test]
     fn export_emits_a_palette_file() {
@@ -294,7 +297,7 @@ mod tests {
                 "colors.set",
                 json!({ "key": "name", "value": name }),
             );
-            let state = c.state(&iden());
+            let state = c.state(&iden(), None);
             assert_eq!(state["name"], json!(NAMES[i]));
             assert_eq!(state["hex"], json!(PALETTE[i].to_hex()));
         }

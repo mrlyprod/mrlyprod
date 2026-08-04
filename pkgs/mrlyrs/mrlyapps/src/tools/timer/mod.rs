@@ -98,7 +98,7 @@ impl App for Timer {
     fn manifest(&self) -> Manifest {
         Manifest::new("timer").emoji("⏱️").category("tools")
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         let mut out = json!({
             "mode": if self.stopwatch { "stopwatch" } else { "countdown" },
             "armed": self.armed(),
@@ -137,7 +137,7 @@ impl App for Timer {
         ));
         out
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         self.now = call.now.unwrap_or(self.now);
         match call.verb.as_str() {
             "timer.mode" => match call.arg("mode").as_str() {
@@ -315,7 +315,7 @@ mod tests {
     fn set_arms_from_now() {
         let iden = Iden::new("aria");
         let mut t = Timer::new();
-        let out = t.act(
+        let out = t.call(
             &iden,
             &Call::new("timer.start", json!({ "secs": 60 })).at(1000),
         );
@@ -326,7 +326,7 @@ mod tests {
     fn set_accepts_strings() {
         let iden = Iden::new("aria");
         let mut t = Timer::new();
-        let out = t.act(
+        let out = t.call(
             &iden,
             &Call::new("timer.start", json!({ "secs": "30" })).at(0),
         );
@@ -338,7 +338,7 @@ mod tests {
         let mut t = Timer::new();
         for bad in [json!(0), json!(-1), json!("x"), json!(null), json!(90000)] {
             assert!(
-                !t.act(&iden, &Call::new("timer.start", json!({ "secs": bad })))
+                !t.call(&iden, &Call::new("timer.start", json!({ "secs": bad })))
                     .ok
             );
         }
@@ -347,7 +347,7 @@ mod tests {
     fn duration_arms_a_countdown() {
         let iden = Iden::new("aria");
         let mut t = Timer::new();
-        let out = t.act(
+        let out = t.call(
             &iden,
             &Call::new(
                 "timer.set",
@@ -357,8 +357,8 @@ mod tests {
         );
         assert!(out.ok);
         assert_eq!(out.data["deadline"], json!(61000));
-        assert_eq!(t.state(&iden)["mode"], json!("countdown"));
-        assert_eq!(t.state(&iden)["armed"], json!(true));
+        assert_eq!(t.state(&iden, None)["mode"], json!("countdown"));
+        assert_eq!(t.state(&iden, None)["armed"], json!(true));
     }
     #[test]
     fn duration_rejects_bad_input() {
@@ -366,7 +366,7 @@ mod tests {
         let mut t = Timer::new();
         for bad in [json!({ "h": 0, "m": 0 }), json!({ "h": 25, "m": 0 })] {
             assert!(
-                !t.act(
+                !t.call(
                     &iden,
                     &Call::new("timer.set", json!({ "key": "duration", "value": bad }))
                 )
@@ -374,7 +374,7 @@ mod tests {
             );
         }
         assert!(
-            !t.act(&iden, &Call::new("timer.set", json!({ "key": "nope" })))
+            !t.call(&iden, &Call::new("timer.set", json!({ "key": "nope" })))
                 .ok
         );
     }
@@ -382,12 +382,12 @@ mod tests {
     fn duration_switches_from_stopwatch() {
         let iden = Iden::new("aria");
         let mut t = Timer::new();
-        t.act(
+        t.call(
             &iden,
             &Call::new("timer.mode", json!({ "mode": "stopwatch" })),
         );
-        t.act(&iden, &Call::new("timer.start", json!({})).at(0));
-        t.act(
+        t.call(&iden, &Call::new("timer.start", json!({})).at(0));
+        t.call(
             &iden,
             &Call::new(
                 "timer.set",
@@ -395,7 +395,7 @@ mod tests {
             )
             .at(1000),
         );
-        let state = t.state(&iden);
+        let state = t.state(&iden, None);
         assert_eq!(state["mode"], json!("countdown"));
         assert_eq!(state["armed"], json!(true));
     }
@@ -403,19 +403,19 @@ mod tests {
     fn check_rings_once() {
         let iden = Iden::new("aria");
         let mut t = Timer::new();
-        t.act(
+        t.call(
             &iden,
             &Call::new("timer.start", json!({ "secs": 60 })).at(1000),
         );
-        let early = t.act(&iden, &Call::new("timer.check", json!({})).at(31000));
+        let early = t.call(&iden, &Call::new("timer.check", json!({})).at(31000));
         assert!(early.ok);
         assert_eq!(early.data["remaining"], json!(30000));
         assert!(early.effects.is_empty());
-        let ring = t.act(&iden, &Call::new("timer.check", json!({})).at(61000));
+        let ring = t.call(&iden, &Call::new("timer.check", json!({})).at(61000));
         assert_eq!(ring.effects.len(), 1);
         assert_eq!(ring.effects[0].kind, "notify");
         assert_eq!(ring.effects[0].data["title"], "timer");
-        let after = t.act(&iden, &Call::new("timer.check", json!({})).at(62000));
+        let after = t.call(&iden, &Call::new("timer.check", json!({})).at(62000));
         assert!(after.effects.is_empty());
         assert_eq!(after.data["rung"], json!(true));
     }
@@ -424,7 +424,7 @@ mod tests {
         let iden = Iden::new("aria");
         assert!(
             !Timer::new()
-                .act(&iden, &Call::new("timer.check", json!({})))
+                .call(&iden, &Call::new("timer.check", json!({})))
                 .ok
         );
     }
@@ -433,7 +433,7 @@ mod tests {
         let iden = Iden::new("aria");
         let mut t = Timer::new();
         assert!(t.beat().is_none());
-        t.act(
+        t.call(
             &iden,
             &Call::new("timer.start", json!({ "secs": 60 })).at(0),
         );
@@ -441,14 +441,14 @@ mod tests {
             t.beat().unwrap().to_json(),
             json!({ "verb": "timer.check", "args": {} })
         );
-        t.act(&iden, &Call::new("timer.check", json!({})).at(60000));
+        t.call(&iden, &Call::new("timer.check", json!({})).at(60000));
         assert!(t.beat().is_none());
-        t.act(
+        t.call(
             &iden,
             &Call::new("timer.start", json!({ "secs": 60 })).at(60000),
         );
         assert!(t.beat().is_some());
-        t.act(&iden, &Call::new("timer.clear", json!({})));
+        t.call(&iden, &Call::new("timer.clear", json!({})));
         assert!(t.beat().is_none());
     }
     #[test]
@@ -456,7 +456,7 @@ mod tests {
         let iden = Iden::new("aria");
         let mut t = Timer::new();
         assert_eq!(
-            t.state(&iden),
+            t.state(&iden, None),
             json!({
                 "mode": "countdown",
                 "armed": false,
@@ -467,18 +467,18 @@ mod tests {
                 "laps": [],
             })
         );
-        t.act(
+        t.call(
             &iden,
             &Call::new("timer.start", json!({ "secs": 60 })).at(1000),
         );
-        t.act(&iden, &Call::new("timer.check", json!({})).at(31000));
-        let state = t.state(&iden);
+        t.call(&iden, &Call::new("timer.check", json!({})).at(31000));
+        let state = t.state(&iden, None);
         assert_eq!(state["armed"], json!(true));
         assert_eq!(state["remaining"], json!(30000));
         assert_eq!(state["running"], json!(true));
         assert_eq!(state["rung"], json!(false));
-        t.act(&iden, &Call::new("timer.check", json!({})).at(61000));
-        let state = t.state(&iden);
+        t.call(&iden, &Call::new("timer.check", json!({})).at(61000));
+        let state = t.state(&iden, None);
         assert_eq!(state["remaining"], json!(0));
         assert_eq!(state["rung"], json!(true));
         assert_eq!(state["running"], json!(false));
@@ -487,132 +487,138 @@ mod tests {
     fn mode_switches_and_wipes() {
         let iden = Iden::new("aria");
         let mut t = Timer::new();
-        t.act(
+        t.call(
             &iden,
             &Call::new("timer.start", json!({ "secs": 60 })).at(0),
         );
-        let out = t.act(
+        let out = t.call(
             &iden,
             &Call::new("timer.mode", json!({ "mode": "stopwatch" })),
         );
         assert!(out.ok);
-        let state = t.state(&iden);
+        let state = t.state(&iden, None);
         assert_eq!(state["mode"], json!("stopwatch"));
         assert_eq!(state["armed"], json!(false));
         assert_eq!(state["remaining"], json!(0));
         assert!(
-            t.act(
+            t.call(
                 &iden,
                 &Call::new("timer.mode", json!({ "mode": "countdown" }))
             )
             .ok
         );
-        assert_eq!(t.state(&iden)["mode"], json!("countdown"));
+        assert_eq!(t.state(&iden, None)["mode"], json!("countdown"));
         assert!(
-            !t.act(&iden, &Call::new("timer.mode", json!({ "mode": "egg" })))
+            !t.call(&iden, &Call::new("timer.mode", json!({ "mode": "egg" })))
                 .ok
         );
-        assert!(!t.act(&iden, &Call::new("timer.mode", json!({}))).ok);
+        assert!(!t.call(&iden, &Call::new("timer.mode", json!({}))).ok);
     }
     #[test]
     fn countdown_pauses_and_resumes() {
         let iden = Iden::new("aria");
         let mut t = Timer::new();
-        assert!(!t.act(&iden, &Call::new("timer.pause", json!({}))).ok);
-        assert!(!t.act(&iden, &Call::new("timer.resume", json!({}))).ok);
-        t.act(
+        assert!(!t.call(&iden, &Call::new("timer.pause", json!({}))).ok);
+        assert!(!t.call(&iden, &Call::new("timer.resume", json!({}))).ok);
+        t.call(
             &iden,
             &Call::new("timer.start", json!({ "secs": 60 })).at(0),
         );
-        let out = t.act(&iden, &Call::new("timer.pause", json!({})).at(30000));
+        let out = t.call(&iden, &Call::new("timer.pause", json!({})).at(30000));
         assert!(out.ok);
         assert_eq!(out.data["remaining"], json!(30000));
         assert!(t.beat().is_none());
-        let held = t.act(&iden, &Call::new("timer.check", json!({})).at(50000));
+        let held = t.call(&iden, &Call::new("timer.check", json!({})).at(50000));
         assert_eq!(held.data["remaining"], json!(30000));
         assert!(
-            !t.act(&iden, &Call::new("timer.pause", json!({})).at(50000))
+            !t.call(&iden, &Call::new("timer.pause", json!({})).at(50000))
                 .ok
         );
-        let out = t.act(&iden, &Call::new("timer.resume", json!({})).at(60000));
+        let out = t.call(&iden, &Call::new("timer.resume", json!({})).at(60000));
         assert_eq!(out.data["deadline"], json!(90000));
         assert!(t.beat().is_some());
-        let ring = t.act(&iden, &Call::new("timer.check", json!({})).at(90000));
+        let ring = t.call(&iden, &Call::new("timer.check", json!({})).at(90000));
         assert_eq!(ring.effects.len(), 1);
     }
     #[test]
     fn stopwatch_runs_pauses_and_resumes() {
         let iden = Iden::new("aria");
         let mut t = Timer::new();
-        t.act(
+        t.call(
             &iden,
             &Call::new("timer.mode", json!({ "mode": "stopwatch" })),
         );
         assert!(t.beat().is_none());
-        assert!(!t.act(&iden, &Call::new("timer.resume", json!({})).at(0)).ok);
-        t.act(&iden, &Call::new("timer.start", json!({})).at(1000));
+        assert!(
+            !t.call(&iden, &Call::new("timer.resume", json!({})).at(0))
+                .ok
+        );
+        t.call(&iden, &Call::new("timer.start", json!({})).at(1000));
         assert!(t.beat().is_some());
-        let out = t.act(&iden, &Call::new("timer.check", json!({})).at(6000));
+        let out = t.call(&iden, &Call::new("timer.check", json!({})).at(6000));
         assert_eq!(out.data["elapsed"], json!(5000));
-        let out = t.act(&iden, &Call::new("timer.pause", json!({})).at(9000));
+        let out = t.call(&iden, &Call::new("timer.pause", json!({})).at(9000));
         assert_eq!(out.data["elapsed"], json!(8000));
         assert!(t.beat().is_none());
-        let held = t.act(&iden, &Call::new("timer.check", json!({})).at(20000));
+        let held = t.call(&iden, &Call::new("timer.check", json!({})).at(20000));
         assert_eq!(held.data["elapsed"], json!(8000));
-        let out = t.act(&iden, &Call::new("timer.resume", json!({})).at(21000));
+        let out = t.call(&iden, &Call::new("timer.resume", json!({})).at(21000));
         assert!(out.ok);
-        let out = t.act(&iden, &Call::new("timer.check", json!({})).at(23000));
+        let out = t.call(&iden, &Call::new("timer.check", json!({})).at(23000));
         assert_eq!(out.data["elapsed"], json!(10000));
-        t.act(&iden, &Call::new("timer.start", json!({})).at(30000));
-        assert_eq!(t.state(&iden)["elapsed"], json!(0));
+        t.call(&iden, &Call::new("timer.start", json!({})).at(30000));
+        assert_eq!(t.state(&iden, None)["elapsed"], json!(0));
     }
     #[test]
     fn laps_collect_and_blip() {
         let iden = Iden::new("aria");
         let mut t = Timer::new();
-        assert!(!t.act(&iden, &Call::new("timer.lap", json!({}))).ok);
-        t.act(
+        assert!(!t.call(&iden, &Call::new("timer.lap", json!({}))).ok);
+        t.call(
             &iden,
             &Call::new("timer.mode", json!({ "mode": "stopwatch" })),
         );
-        assert!(!t.act(&iden, &Call::new("timer.lap", json!({})).at(0)).ok);
-        t.act(&iden, &Call::new("timer.start", json!({})).at(0));
-        let out = t.act(&iden, &Call::new("timer.lap", json!({})).at(3000));
+        assert!(!t.call(&iden, &Call::new("timer.lap", json!({})).at(0)).ok);
+        t.call(&iden, &Call::new("timer.start", json!({})).at(0));
+        let out = t.call(&iden, &Call::new("timer.lap", json!({})).at(3000));
         assert!(out.ok);
         assert_eq!(out.data["lap"], json!(1));
         assert_eq!(out.effects.len(), 1);
         assert_eq!(out.effects[0].kind, "sound");
-        t.act(&iden, &Call::new("timer.lap", json!({})).at(7000));
-        assert_eq!(t.state(&iden)["laps"], json!([3000, 7000]));
-        t.act(&iden, &Call::new("timer.pause", json!({})).at(8000));
-        assert!(!t.act(&iden, &Call::new("timer.lap", json!({})).at(9000)).ok);
-        t.act(&iden, &Call::new("timer.clear", json!({})));
-        assert_eq!(t.state(&iden)["laps"], json!([]));
+        t.call(&iden, &Call::new("timer.lap", json!({})).at(7000));
+        assert_eq!(t.state(&iden, None)["laps"], json!([3000, 7000]));
+        t.call(&iden, &Call::new("timer.pause", json!({})).at(8000));
+        assert!(
+            !t.call(&iden, &Call::new("timer.lap", json!({})).at(9000))
+                .ok
+        );
+        t.call(&iden, &Call::new("timer.clear", json!({})));
+        assert_eq!(t.state(&iden, None)["laps"], json!([]));
     }
     #[test]
     fn save_load_roundtrips() {
         let iden = Iden::new("aria");
         let mut a = Timer::new();
-        a.act(
+        a.call(
             &iden,
             &Call::new("timer.start", json!({ "secs": 120 })).at(1000),
         );
-        a.act(&iden, &Call::new("timer.check", json!({})).at(31000));
+        a.call(&iden, &Call::new("timer.check", json!({})).at(31000));
         let mut b = Timer::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden), a.state(&iden));
+        assert_eq!(b.state(&iden, None), a.state(&iden, None));
         assert_eq!(b.beat(), a.beat());
         let mut c = Timer::new();
-        c.act(
+        c.call(
             &iden,
             &Call::new("timer.mode", json!({ "mode": "stopwatch" })),
         );
-        c.act(&iden, &Call::new("timer.start", json!({})).at(0));
-        c.act(&iden, &Call::new("timer.lap", json!({})).at(4000));
-        c.act(&iden, &Call::new("timer.pause", json!({})).at(6000));
+        c.call(&iden, &Call::new("timer.start", json!({})).at(0));
+        c.call(&iden, &Call::new("timer.lap", json!({})).at(4000));
+        c.call(&iden, &Call::new("timer.pause", json!({})).at(6000));
         let mut d = Timer::new();
         d.load(&c.save());
-        assert_eq!(d.state(&iden), c.state(&iden));
+        assert_eq!(d.state(&iden, None), c.state(&iden, None));
         assert_eq!(d.beat(), c.beat());
     }
     #[test]
@@ -626,19 +632,19 @@ mod tests {
             "banked": "soup",
             "laps": [1000, "x", -3, 2000],
         }));
-        let state = t.state(&iden);
+        let state = t.state(&iden, None);
         assert_eq!(state["mode"], json!("countdown"));
         assert_eq!(state["remaining"], json!(0));
         assert_eq!(state["elapsed"], json!(0));
         t.load(&json!("soup"));
-        assert_eq!(t.state(&iden)["armed"], json!(false));
+        assert_eq!(t.state(&iden, None)["armed"], json!(false));
     }
     #[test]
     fn unknown_verb_fails() {
         let iden = Iden::new("aria");
         assert!(
             !Timer::new()
-                .act(&iden, &Call::new("timer.fly", json!({})))
+                .call(&iden, &Call::new("timer.fly", json!({})))
                 .ok
         );
     }
@@ -647,19 +653,19 @@ mod tests {
         let iden = Iden::new("aria");
         let mut t = Timer::new();
         t.wear(&json!({ "shared": { "settings": { "font": "mrly" } } }));
-        t.act(
+        t.call(
             &iden,
             &Call::new("timer.start", json!({ "secs": 60 })).at(1000),
         );
-        t.act(&iden, &Call::new("timer.check", json!({})).at(31000));
-        assert_eq!(t.state(&iden)["glyph"]["text"], json!("00:30"));
-        t.act(
+        t.call(&iden, &Call::new("timer.check", json!({})).at(31000));
+        assert_eq!(t.state(&iden, None)["glyph"]["text"], json!("00:30"));
+        t.call(
             &iden,
             &Call::new("timer.mode", json!({ "mode": "stopwatch" })),
         );
-        assert_eq!(t.state(&iden)["glyph"]["text"], json!("00:00"));
-        t.act(&iden, &Call::new("timer.start", json!({})).at(31000));
-        t.act(&iden, &Call::new("timer.check", json!({})).at(96000));
-        assert_eq!(t.state(&iden)["glyph"]["text"], json!("01:05"));
+        assert_eq!(t.state(&iden, None)["glyph"]["text"], json!("00:00"));
+        t.call(&iden, &Call::new("timer.start", json!({})).at(31000));
+        t.call(&iden, &Call::new("timer.check", json!({})).at(96000));
+        assert_eq!(t.state(&iden, None)["glyph"]["text"], json!("01:05"));
     }
 }

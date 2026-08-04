@@ -24,7 +24,7 @@ impl App for Log {
     fn manifest(&self) -> Manifest {
         Manifest::new("log").emoji("📜").category("system")
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({ "entries": self.ring.iter().rev().cloned().collect::<Vec<_>>() })
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
@@ -33,7 +33,7 @@ impl App for Log {
     fn wear(&mut self, world: &Json) {
         self.ring = world["ring"].as_array().cloned().unwrap_or_default();
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "log.export" => {
                 let mut md = String::from("# session\n\n");
@@ -85,7 +85,7 @@ mod tests {
     fn state_lists_entries_newest_first() {
         let mut log = Log::new();
         log.wear(&world());
-        let state = log.state(&Iden::new("aria"));
+        let state = log.state(&Iden::new("aria"), None);
         assert_eq!(state["entries"][0]["verb"], "notes.add");
         assert_eq!(state["entries"][0]["tick"], json!(2));
         assert_eq!(state["entries"][1]["verb"], "nav.open");
@@ -95,13 +95,13 @@ mod tests {
         let mut log = Log::new();
         log.wear(&world());
         log.wear(&json!({}));
-        assert_eq!(log.state(&Iden::new("aria"))["entries"], json!([]));
+        assert_eq!(log.state(&Iden::new("aria"), None)["entries"], json!([]));
     }
     #[test]
     fn any_verb_fails() {
         let mut log = Log::new();
         assert!(
-            !log.act(&Iden::new("aria"), &Call::new("log.fly", json!({})))
+            !log.call(&Iden::new("aria"), &Call::new("log.fly", json!({})))
                 .ok
         );
     }
@@ -115,7 +115,7 @@ mod tests {
     fn export_emits_a_markdown_file() {
         let mut log = Log::new();
         log.wear(&world());
-        let out = log.act(&Iden::new("aria"), &Call::new("log.export", json!({})));
+        let out = log.call(&Iden::new("aria"), &Call::new("log.export", json!({})));
         assert!(out.ok);
         assert_eq!(out.effects.len(), 1);
         let effect = &out.effects[0];

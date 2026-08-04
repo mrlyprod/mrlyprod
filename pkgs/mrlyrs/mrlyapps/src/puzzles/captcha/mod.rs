@@ -6,7 +6,7 @@ use mrlymath::pick;
 use mrlymath::two::Cell2d;
 use mrlymusic::cue;
 use mrlyos::kernel::{int, App, Call, Effect, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{sprite_fact, Frame, Layer, TileSet};
+use mrlyui::frame::{sprite_fact, Atlas, Frame, Layer};
 
 const SURFACES: [&str; 2] = ["grid", "canvas"];
 const SKINS: [&str; 2] = ["tiles", "digits"];
@@ -171,9 +171,9 @@ impl Captcha {
             .map(|i| sprite_fact(&self.face(i)))
             .collect()
     }
-    fn tileset(&self) -> TileSet {
+    fn atlas(&self) -> Atlas {
         let k = self.set.size as usize;
-        TileSet::new(k, (0..self.cells()).map(|i| self.face(i)).collect())
+        Atlas::new(k, (0..self.cells()).map(|i| self.face(i)).collect())
     }
     fn ids(&self) -> Tensor {
         let (cols, rows) = (self.cols(), self.rows());
@@ -192,7 +192,7 @@ impl Captcha {
         );
         frame.push(Layer::Tiles {
             ids: self.ids(),
-            set: self.tileset(),
+            set: self.atlas(),
         });
         frame.say(self.prompt(), Vec::new());
         frame
@@ -228,7 +228,7 @@ impl App for Captcha {
     fn wear(&mut self, world: &Json) {
         self.dark = world["shared"]["settings"]["darkmode"] == true;
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "score": self.score,
             "steps": self.steps,
@@ -253,7 +253,7 @@ impl App for Captcha {
         ));
         out
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "captcha.pick" => {
                 if self.over {
@@ -387,7 +387,7 @@ mod tests {
             let text = c.prompt();
             send(c, "captcha.answer", json!({ "text": text }));
         }
-        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.state(&iden(), None), b.state(&iden(), None));
         assert_eq!(a.save(), b.save());
     }
     #[test]
@@ -444,7 +444,7 @@ mod tests {
     #[test]
     fn state_does_not_leak_the_target_cell() {
         let c = captcha(9);
-        let state = c.state(&iden());
+        let state = c.state(&iden(), None);
         assert!(state.get("codes").is_none());
         assert!(state.get("target").is_none());
         assert_eq!(state["prompt"], json!(pick::name(c.codes[c.target])));
@@ -479,10 +479,10 @@ mod tests {
     #[test]
     fn reset_seed_defaults_to_now() {
         let mut c = Captcha::new();
-        let out = c.act(&iden(), &Call::new("captcha.reset", json!({})).at(5000));
+        let out = c.call(&iden(), &Call::new("captcha.reset", json!({})).at(5000));
         assert!(out.ok);
         assert_eq!(out.data["seed"], json!(5000));
-        assert_eq!(c.state(&iden())["seed"], json!(5000));
+        assert_eq!(c.state(&iden(), None)["seed"], json!(5000));
     }
     #[test]
     fn set_validates_and_resets_the_round() {
@@ -491,7 +491,7 @@ mod tests {
         send(&mut c, "captcha.answer", json!({ "text": text }));
         let out = send(&mut c, "captcha.set", json!({ "key": "cols", "value": 4 }));
         assert!(out.ok);
-        let state = c.state(&iden());
+        let state = c.state(&iden(), None);
         assert_eq!(state["settings"]["cols"], json!(4));
         assert_eq!(state["steps"], json!(0));
         assert!(
@@ -536,7 +536,7 @@ mod tests {
             json!({ "key": "skin", "value": "digits" }),
         );
         assert!(out.ok);
-        let state = c.state(&iden());
+        let state = c.state(&iden(), None);
         assert_eq!(state["settings"]["surface"], json!("canvas"));
         assert_eq!(state["settings"]["skin"], json!("digits"));
         assert_eq!(state["steps"], json!(1));
@@ -567,7 +567,7 @@ mod tests {
             "captcha.set",
             json!({ "key": "skin", "value": "digits" }),
         );
-        let state = c.state(&iden());
+        let state = c.state(&iden(), None);
         for sprite in state["sprites"].as_array().unwrap() {
             for color in sprite["palette"].as_array().unwrap() {
                 let hex = color.as_str().unwrap();
@@ -579,7 +579,7 @@ mod tests {
     fn old_saves_default_to_the_legacy_look() {
         let mut c = Captcha::new();
         c.load(&json!({ "seed": 3, "settings": { "cols": 4, "rows": 4 } }));
-        let settings = c.state(&iden())["settings"].clone();
+        let settings = c.state(&iden(), None)["settings"].clone();
         assert_eq!(settings["cols"], json!(4));
         assert_eq!(settings["surface"], json!("grid"));
         assert_eq!(settings["skin"], json!("tiles"));
@@ -591,20 +591,20 @@ mod tests {
         send(&mut a, "captcha.answer", json!({ "text": text }));
         let mut b = Captcha::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
         assert_eq!(b.save(), a.save());
         for c in [&mut a, &mut b] {
             let text = c.prompt();
             send(c, "captcha.answer", json!({ "text": text }));
         }
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
     }
     #[test]
     fn load_survives_garbage() {
         let mut c = Captcha::new();
         c.load(&json!({ "seed": "soup", "codes": "nope", "settings": 7 }));
-        assert_eq!(c.state(&iden())["steps"], json!(0));
-        assert_eq!(c.state(&iden())["seed"], json!(0));
+        assert_eq!(c.state(&iden(), None)["steps"], json!(0));
+        assert_eq!(c.state(&iden(), None)["seed"], json!(0));
     }
     #[test]
     fn actions_offer_the_natural_verbs() {
@@ -623,7 +623,7 @@ mod tests {
     #[test]
     fn state_carries_an_indexed_frame() {
         let c = captcha(5);
-        let state = c.state(&iden());
+        let state = c.state(&iden(), None);
         let palette = state["frame"]["palette"].as_array().unwrap();
         assert!(!palette.is_empty());
         let rows = state["frame"]["rows"].as_array().unwrap();

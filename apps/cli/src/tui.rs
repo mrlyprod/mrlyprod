@@ -8,7 +8,7 @@ use std::sync::mpsc;
 use std::time::{Duration, Instant};
 
 const CURSOR: char = '\u{2588}';
-const HELP: &str = "arrows move · 1-9 act · : verb · esc menu · q quit";
+const HELP: &str = "arrows move · 1-9 call · : verb · esc menu · q quit";
 
 type Keys = HashMap<String, Vec<(String, Call)>>;
 type Titles = HashMap<String, (String, String)>;
@@ -52,15 +52,15 @@ pub fn run() {
                 }
             }
             Err(mpsc::RecvTimeoutError::Timeout) => {
-                if let Some(call) = os.frame(None).view.and_then(|v| v.beat) {
-                    os.act(call.at(crate::now_ms()));
+                if let Some(call) = os.envelope(None).view.and_then(|v| v.beat) {
+                    os.call(call.at(crate::now_ms()));
                 }
                 beat = Instant::now();
             }
             Err(mpsc::RecvTimeoutError::Disconnected) => alive = false,
         }
         let size = term::size();
-        let env = os.frame(None);
+        let env = os.envelope(None);
         if dirty || last != Some(env.tick) || shape != size {
             let next = render(&env, size, cmd.as_deref(), &titles);
             let bytes = term::diff(screen.as_ref(), &next);
@@ -106,7 +106,7 @@ fn press(os: &mut Os, keys: &Keys, cmd: &mut Option<String>, dirty: &mut bool, k
             *dirty = true;
         }
         Key::Esc => {
-            os.act(Call::new("nav.open", json!({ "app": "menu" })).at(crate::now_ms()));
+            os.call(Call::new("nav.open", json!({ "app": "menu" })).at(crate::now_ms()));
         }
         Key::Up | Key::Char('w') | Key::Char('W') => bound(os, keys, "up"),
         Key::Down | Key::Char('s') | Key::Char('S') => bound(os, keys, "down"),
@@ -154,12 +154,12 @@ fn submit(os: &mut Os, line: &str) -> bool {
             Err(_) => return false,
         }
     };
-    os.act(Call::new(verb, args).at(crate::now_ms()));
+    os.call(Call::new(verb, args).at(crate::now_ms()));
     true
 }
 
 fn bound(os: &mut Os, keys: &Keys, dir: &str) {
-    let Some(route) = os.frame(None).route.map(|r| r.app) else {
+    let Some(route) = os.envelope(None).route.map(|r| r.app) else {
         return;
     };
     let Some(call) = keys
@@ -169,11 +169,11 @@ fn bound(os: &mut Os, keys: &Keys, dir: &str) {
     else {
         return;
     };
-    os.act(call.at(crate::now_ms()));
+    os.call(call.at(crate::now_ms()));
 }
 
 fn nth(os: &mut Os, cmd: &mut Option<String>, dirty: &mut bool, index: usize) {
-    let Some(view) = os.frame(None).view else {
+    let Some(view) = os.envelope(None).view else {
         return;
     };
     let Some(verb) = view.actions.get(index) else {
@@ -181,7 +181,7 @@ fn nth(os: &mut Os, cmd: &mut Option<String>, dirty: &mut bool, index: usize) {
     };
     if verb.args.as_object().is_none_or(|args| args.is_empty()) {
         let call = Call::new(&verb.name, json!({})).at(crate::now_ms());
-        os.act(call);
+        os.call(call);
     } else {
         *cmd = Some(format!("{} ", verb.name));
         *dirty = true;
@@ -404,7 +404,7 @@ mod tests {
         let routes = os.catalogue();
         for route in routes {
             os.open(&route).unwrap();
-            let env = os.frame(None);
+            let env = os.envelope(None);
             for size in [(80, 24), (20, 6), (1, 1)] {
                 let screen = render(&env, size, None, &titles);
                 assert_eq!((screen.w, screen.h), size);
@@ -419,7 +419,7 @@ mod tests {
         let (_, titles) = maps();
         let mut os = crate::build();
         os.open("snake").unwrap();
-        let env = os.frame(None);
+        let env = os.envelope(None);
         let text = render(&env, (80, 24), None, &titles).dump();
         assert!(text.contains("snake"));
         assert!(text.contains("[1] snake.turn"));
@@ -433,8 +433,8 @@ mod tests {
         assert_eq!(binds.len(), 4);
         let mut os = crate::build();
         os.open("snake").unwrap();
-        let before = os.frame(None).tick;
+        let before = os.envelope(None).tick;
         bound(&mut os, &keys, "up");
-        assert!(os.frame(None).tick > before);
+        assert!(os.envelope(None).tick > before);
     }
 }

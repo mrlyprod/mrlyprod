@@ -1,24 +1,27 @@
 import * as gpu from "mrlygpu"
-import { act, boot, describe, frame, geometry, goose, load, palette, peek, shaders, uniforms } from "./kernel.ts"
+import paletteData from "./gen/palette.json"
+import shadersData from "./gen/shaders.json"
+import { boot, buffer, call, list, load, observe, read, view } from "./kernel.ts"
 import type { Journal } from "./journal.ts"
 import { Store } from "./journal.ts"
 import { board, install } from "./palette.ts"
-import { install as installPeeks } from "./peeks.ts"
+import { install as installReads } from "./reads.ts"
 import * as pwa from "./pwa.ts"
 import { aim, install as installOrbit } from "./render/orbit.ts"
 import { theme } from "./render/theme.ts"
+import { improvise } from "./roller.ts"
 import { router } from "./router.ts"
 import { mount } from "./shell/mount.ts"
-import type { Call, Observation } from "./types.ts"
+import type { Call, Observation, Palette, Shaders } from "./types.ts"
 
 await load(fetch("/mrlyjs_bg.wasm"))
 const handle = boot()
-install(palette())
-installPeeks(app => peek(handle, app))
-const registry = describe()
-gpu.init(shaders(), {
-  geometry: route => geometry(handle, route),
-  uniforms: route => aim(route, uniforms(handle, route)),
+install(paletteData as Palette)
+installReads(path => read(handle, path))
+const registry = list(handle)
+gpu.init(shadersData as Shaders, {
+  geometry: route => buffer(handle, `${route}/geometry`),
+  uniforms: route => aim(route, buffer(handle, `${route}/uniforms`)),
   board,
 })
 
@@ -33,10 +36,10 @@ if (params.has("fresh")) {
 const store = await Store.open("guest", registry.version)
 
 if (store.journal.snapshot !== undefined) {
-  act(handle, { verb: "sys.thaw", args: { state: store.journal.snapshot } })
+  call(handle, { verb: "sys.thaw", args: { state: store.journal.snapshot } })
 }
-for (const call of store.journal.calls) act(handle, call)
-const looks = peek(handle, "settings")?.state as Record<string, unknown> | undefined
+for (const kept of store.journal.calls) call(handle, kept)
+const looks = view(handle, "settings")?.state as Record<string, unknown> | undefined
 for (const [key, value] of Object.entries(looks ?? {})) theme(key, value)
 
 const path = (obs: Observation) => {
@@ -49,7 +52,7 @@ const path = (obs: Observation) => {
 const known = (app: string) => registry.apps.some(m => m.route === app)
 const opens = (app: string) => registry.verbs.some(v => v.app === app && v.verbs.some(x => x.verb === `${app}.open`))
 
-let atPath = path(frame(handle))
+let atPath = path(observe(handle))
 let quiet = false
 
 const routes = router()
@@ -62,12 +65,12 @@ routes.after("settings.set", (_call, obs) => {
   }
 })
 
-const send = (call: Call, beat = false) => {
-  if (routes.handle(call)) return
-  const stamped = { ...call, now: Date.now() }
+const send = (made: Call, beat = false) => {
+  if (routes.handle(made)) return
+  const stamped = { ...made, now: Date.now() }
   store.record(stamped, beat)
-  const obs = act(handle, stamped)
-  routes.observe(call, obs)
+  const obs = call(handle, stamped)
+  routes.observe(made, obs)
   ui.render(obs)
   const next = path(obs)
   if (next !== atPath) {
@@ -76,12 +79,18 @@ const send = (call: Call, beat = false) => {
   }
   quiet = false
   if (store.full()) {
-    const frozen = act(handle, { verb: "sys.freeze", args: {}, now: Date.now() })
+    const frozen = call(handle, { verb: "sys.freeze", args: {}, now: Date.now() })
     if (frozen.last?.ok) store.compact(frozen.last.data)
   }
 }
 
-const ui = mount(document.getElementById("mrly") as HTMLElement, send, routes, registry.apps, seed => goose(handle, seed))
+const stray = (): Observation => {
+  const env = observe(handle)
+  const made = improvise(env.view)
+  return made === null ? env : call(handle, made)
+}
+
+const ui = mount(document.getElementById("mrly") as HTMLElement, send, routes, registry.apps, stray)
 
 if (looks?.render === "gpu" && navigator.gpu === undefined) {
   send({ verb: "settings.set", args: { key: "render", value: "cpu" } })
@@ -146,7 +155,7 @@ const follow = (pathname: string) => {
   if (target === undefined) return
   const rest = landed.slice(1)
   if (!known(target)) return
-  const now = frame(handle)
+  const now = observe(handle)
   if (target !== now.route?.app) {
     quiet = true
     send({ verb: "nav.open", args: { app: target } })
@@ -165,4 +174,4 @@ window.addEventListener("popstate", () => {
   follow(location.pathname)
 })
 
-ui.render(frame(handle))
+ui.render(observe(handle))

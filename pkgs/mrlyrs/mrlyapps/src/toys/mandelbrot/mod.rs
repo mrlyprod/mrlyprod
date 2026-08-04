@@ -255,13 +255,13 @@ impl App for Mandelbrot {
     fn wear(&mut self, world: &Json) {
         self.gpu = world["shared"]["settings"]["render"] == "gpu";
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, shape: Option<&Json>) -> Json {
         json!({
             "steps": self.steps,
             "over": false,
             "seed": self.seed,
             "settings": self.set.to_json(),
-            "frame": if self.gpu {
+            "frame": if self.gpu || !crate::asked(shape, "frame") {
                 frame::empty_fact(self.set.width as usize, self.set.height as usize)
             } else {
                 self.render().fact()
@@ -301,7 +301,7 @@ impl App for Mandelbrot {
             Verb::new("mandelbrot.set", json!({ "key": "string", "value": "any" })),
         ]
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "mandelbrot.step" => {
                 let n = match call.arg("n") {
@@ -408,7 +408,7 @@ mod tests {
         for s in [&mut a, &mut b] {
             send(s, "mandelbrot.step", json!({ "n": 40 }));
         }
-        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.state(&iden(), None), b.state(&iden(), None));
         assert_eq!(a.save(), b.save());
     }
     #[test]
@@ -432,13 +432,19 @@ mod tests {
             json!({ "key": "primary", "value": "cyan" }),
         );
         assert!(out.ok);
-        assert_eq!(m.state(&iden())["settings"]["primary"], json!("#1ec9f3"));
+        assert_eq!(
+            m.state(&iden(), None)["settings"]["primary"],
+            json!("#1ec9f3")
+        );
         send(
             &mut m,
             "mandelbrot.set",
             json!({ "key": "accent", "value": "#ff8800" }),
         );
-        assert_eq!(m.state(&iden())["settings"]["accent"], json!("#ff8800"));
+        assert_eq!(
+            m.state(&iden(), None)["settings"]["accent"],
+            json!("#ff8800")
+        );
     }
     #[test]
     fn zoom_accumulates_in_micro() {
@@ -462,7 +468,7 @@ mod tests {
         let out = send(&mut m, "mandelbrot.step", json!({ "n": 5 }));
         assert!(out.ok);
         assert_eq!(out.data["steps"], json!(5));
-        assert_eq!(m.state(&iden())["steps"], json!(5));
+        assert_eq!(m.state(&iden(), None)["steps"], json!(5));
         assert!(!send(&mut m, "mandelbrot.step", json!({ "n": 0 })).ok);
         assert!(!send(&mut m, "mandelbrot.step", json!({ "n": 2000 })).ok);
     }
@@ -476,7 +482,7 @@ mod tests {
             json!({ "key": "width", "value": 48 }),
         );
         assert!(out.ok);
-        let state = m.state(&iden());
+        let state = m.state(&iden(), None);
         assert_eq!(state["settings"]["width"], json!(48));
         assert_eq!(state["steps"], json!(0));
         assert!(
@@ -510,20 +516,20 @@ mod tests {
         send(&mut a, "mandelbrot.step", json!({ "n": 300 }));
         let mut b = Mandelbrot::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
         assert_eq!(b.save(), a.save());
         for s in [&mut a, &mut b] {
             send(s, "mandelbrot.step", json!({ "n": 6 }));
         }
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
     }
     #[test]
     fn load_survives_garbage() {
         let mut m = Mandelbrot::new();
         m.load(&json!({ "seed": "soup", "start": "nope", "settings": 7 }));
-        assert_eq!(m.state(&iden())["steps"], json!(0));
-        assert_eq!(m.state(&iden())["seed"], json!(0));
-        let frame = m.state(&iden())["frame"].clone();
+        assert_eq!(m.state(&iden(), None)["steps"], json!(0));
+        assert_eq!(m.state(&iden(), None)["seed"], json!(0));
+        let frame = m.state(&iden(), None)["frame"].clone();
         assert!(!frame["rows"].as_array().unwrap().is_empty());
     }
     #[test]
@@ -535,7 +541,7 @@ mod tests {
     #[test]
     fn state_carries_an_indexed_frame() {
         let m = mandelbrot(5);
-        let state = m.state(&iden());
+        let state = m.state(&iden(), None);
         let palette = state["frame"]["palette"].as_array().unwrap();
         assert!(!palette.is_empty());
         let rows = state["frame"]["rows"].as_array().unwrap();
@@ -547,14 +553,27 @@ mod tests {
     #[test]
     fn gpu_mode_skips_the_cpu_raster() {
         let mut m = mandelbrot(5);
-        let cpu = m.state(&iden())["frame"].clone();
+        let cpu = m.state(&iden(), None)["frame"].clone();
         assert!(!cpu["rows"].as_array().unwrap().is_empty());
         m.wear(&json!({ "shared": { "settings": { "render": "gpu" } } }));
-        let gpu = m.state(&iden())["frame"].clone();
+        let gpu = m.state(&iden(), None)["frame"].clone();
         assert_eq!(gpu["width"], cpu["width"]);
         assert_eq!(gpu["height"], cpu["height"]);
         assert!(gpu["rows"].as_array().unwrap().is_empty());
         assert!(gpu["palette"].as_array().unwrap().is_empty());
         assert_eq!(m.capture(&iden()), cpu);
+    }
+    #[test]
+    fn a_shape_without_frame_skips_the_cpu_raster() {
+        let m = mandelbrot(5);
+        let shape = json!({ "steps": 1 });
+        let thin = m.state(&iden(), Some(&shape));
+        assert!(thin["frame"]["rows"].as_array().unwrap().is_empty());
+        assert_eq!(thin["steps"], json!(0));
+        let asked = json!({ "frame": 1 });
+        assert!(!m.state(&iden(), Some(&asked))["frame"]["rows"]
+            .as_array()
+            .unwrap()
+            .is_empty());
     }
 }

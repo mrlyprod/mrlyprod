@@ -7,4 +7,4 @@ edition.workspace = true
 libc = "0.2"
 mrlycore = { path = "../../pkgs/mrlyrs/mrlycore" }
 mrlyweb = { path = "../../pkgs/mrlyrs/mrlyweb" }
-mrlyos = { path = "../../pkgs/mrlyrs/mrlyos" }
+mrlyos = { path = "../../pkgs/mrlyrs/mrlyos", features = ["testkit"] }

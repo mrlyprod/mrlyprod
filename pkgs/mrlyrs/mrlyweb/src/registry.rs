@@ -88,6 +88,6 @@ mod tests {
             os = os.install(app);
         }
         assert_eq!(os.catalogue().len(), catalogue().len());
-        assert_eq!(os.frame(None).route.unwrap().app, "menu");
+        assert_eq!(os.envelope(None).route.unwrap().app, "menu");
     }
 }

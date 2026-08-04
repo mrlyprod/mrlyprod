@@ -3,7 +3,7 @@ use mrlycore::rng::Rng;
 use mrlycore::tensor::Tensor;
 use mrlycore::{json, Json};
 use mrlyos::kernel::{App, Call, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{motif_tile, solid_tile, Frame, Layer, TileSet};
+use mrlyui::frame::{motif_tile, solid_tile, Atlas, Frame, Layer};
 
 const DESIGNS: [&str; 5] = ["carpet", "net", "vtree", "htree", "solid"];
 
@@ -162,11 +162,11 @@ impl Pixel {
         }
         grid
     }
-    fn tileset(&self) -> TileSet {
+    fn atlas(&self) -> Atlas {
         let k = self.set.tile as usize;
         let clear = [0, 0, 0, 0];
         let d = self.set.design.as_str();
-        TileSet::new(
+        Atlas::new(
             k,
             vec![
                 solid_tile(k, clear),
@@ -183,7 +183,7 @@ impl Pixel {
         );
         frame.push(Layer::Tiles {
             ids: self.ids(),
-            set: self.tileset(),
+            set: self.atlas(),
         });
         frame
     }
@@ -209,7 +209,7 @@ impl App for Pixel {
     fn wear(&mut self, world: &Json) {
         self.dark = world["shared"]["settings"]["darkmode"] == true;
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "score": 0,
             "steps": self.steps,
@@ -229,7 +229,7 @@ impl App for Pixel {
             Verb::new("pixel.set", json!({ "key": "string", "value": "any" })),
         ]
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "pixel.stroke" => match self.parse_points(call.arg("points")) {
                 Ok(points) => {
@@ -312,13 +312,13 @@ mod app_tests {
         for p in [&mut a, &mut b] {
             send(p, "pixel.stroke", json!({ "points": [[1, 1], [2, 2]] }));
         }
-        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.state(&iden(), None), b.state(&iden(), None));
         assert_eq!(a.save(), b.save());
     }
     #[test]
     fn stroke_draws_and_clear_wipes() {
         let mut p = pixel(1);
-        let before = p.state(&iden())["frame"].clone();
+        let before = p.state(&iden(), None)["frame"].clone();
         let out = send(
             &mut p,
             "pixel.stroke",
@@ -326,12 +326,12 @@ mod app_tests {
         );
         assert!(out.ok);
         assert_eq!(out.data["points"], json!(3));
-        let after = p.state(&iden())["frame"].clone();
+        let after = p.state(&iden(), None)["frame"].clone();
         assert_ne!(before, after);
-        assert_eq!(p.state(&iden())["painted"], json!(3));
+        assert_eq!(p.state(&iden(), None)["painted"], json!(3));
         let out = send(&mut p, "pixel.clear", json!({}));
         assert!(out.ok);
-        assert_eq!(p.state(&iden())["painted"], json!(0));
+        assert_eq!(p.state(&iden(), None)["painted"], json!(0));
     }
     #[test]
     fn malformed_points_fail_honestly() {
@@ -344,10 +344,10 @@ mod app_tests {
     #[test]
     fn reset_seed_defaults_to_now() {
         let mut p = Pixel::new();
-        let out = p.act(&iden(), &Call::new("pixel.reset", json!({})).at(5000));
+        let out = p.call(&iden(), &Call::new("pixel.reset", json!({})).at(5000));
         assert!(out.ok);
         assert_eq!(out.data["seed"], json!(5000));
-        assert_eq!(p.state(&iden())["seed"], json!(5000));
+        assert_eq!(p.state(&iden(), None)["seed"], json!(5000));
     }
     #[test]
     fn set_validates_and_resets_the_round() {
@@ -355,7 +355,7 @@ mod app_tests {
         send(&mut p, "pixel.stroke", json!({ "points": [[0, 0]] }));
         let out = send(&mut p, "pixel.set", json!({ "key": "width", "value": 8 }));
         assert!(out.ok);
-        let state = p.state(&iden());
+        let state = p.state(&iden(), None);
         assert_eq!(state["settings"]["width"], json!(8));
         assert_eq!(state["steps"], json!(0));
         assert_eq!(state["painted"], json!(0));
@@ -380,19 +380,19 @@ mod app_tests {
         );
         let mut b = Pixel::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
         assert_eq!(b.save(), a.save());
         for p in [&mut a, &mut b] {
             send(p, "pixel.stroke", json!({ "points": [[3, 3]] }));
         }
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
     }
     #[test]
     fn load_survives_garbage() {
         let mut p = Pixel::new();
         p.load(&json!({ "seed": "soup", "canvas": [1, 2, 3], "settings": 7 }));
-        assert_eq!(p.state(&iden())["steps"], json!(0));
-        assert_eq!(p.state(&iden())["seed"], json!(0));
+        assert_eq!(p.state(&iden(), None)["steps"], json!(0));
+        assert_eq!(p.state(&iden(), None)["seed"], json!(0));
     }
     #[test]
     fn actions_offer_the_natural_verbs() {
@@ -406,7 +406,7 @@ mod app_tests {
     #[test]
     fn state_carries_an_indexed_frame() {
         let p = pixel(5);
-        let state = p.state(&iden());
+        let state = p.state(&iden(), None);
         let palette = state["frame"]["palette"].as_array().unwrap();
         assert!(!palette.is_empty());
         let rows = state["frame"]["rows"].as_array().unwrap();

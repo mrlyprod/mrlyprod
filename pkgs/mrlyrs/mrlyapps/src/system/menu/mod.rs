@@ -51,7 +51,7 @@ impl App for Menu {
     fn manifest(&self) -> Manifest {
         Manifest::new("menu").category("system").hidden()
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({ "apps": self.found(), "query": &self.query, "mode": &self.mode })
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
@@ -78,7 +78,7 @@ impl App for Menu {
     fn load(&mut self, state: &Json) {
         self.query = state["query"].as_str().unwrap_or("").to_string();
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "menu.search" => {
                 self.search(call.arg("q").as_str().unwrap_or(""));
@@ -115,7 +115,7 @@ mod tests {
     fn state_is_the_manifest_list() {
         let mut menu = Menu::new();
         menu.wear(&world());
-        let state = menu.state(&Iden::new("aria"));
+        let state = menu.state(&Iden::new("aria"), None);
         assert_eq!(state["apps"][0]["route"], "notes");
         assert_eq!(state["apps"][0]["emoji"], "📝");
         assert_eq!(state["apps"].as_array().unwrap().len(), 2);
@@ -131,7 +131,7 @@ mod tests {
     fn wear_defaults_mode_to_grid_when_nothing_is_shared() {
         let mut menu = Menu::new();
         menu.wear(&world());
-        let state = menu.state(&Iden::new("aria"));
+        let state = menu.state(&Iden::new("aria"), None);
         assert_eq!(state["mode"], "grid");
     }
     #[test]
@@ -140,7 +140,7 @@ mod tests {
         let mut shared = world();
         shared["shared"] = json!({ "settings": { "launchpad": "list" } });
         menu.wear(&shared);
-        let state = menu.state(&Iden::new("aria"));
+        let state = menu.state(&Iden::new("aria"), None);
         assert_eq!(state["mode"], "list");
     }
     #[test]
@@ -149,7 +149,7 @@ mod tests {
         let mut shared = world();
         shared["shared"] = json!({ "settings": { "launchpad": "carousel" } });
         menu.wear(&shared);
-        assert_eq!(menu.state(&Iden::new("aria"))["mode"], "grid");
+        assert_eq!(menu.state(&Iden::new("aria"), None)["mode"], "grid");
     }
     #[test]
     fn search_filters_found() {
@@ -166,7 +166,7 @@ mod tests {
         let mut menu = Menu::new();
         assert!(
             !menu
-                .act(&Iden::new("aria"), &Call::new("menu.fly", json!({})))
+                .call(&Iden::new("aria"), &Call::new("menu.fly", json!({})))
                 .ok
         );
     }

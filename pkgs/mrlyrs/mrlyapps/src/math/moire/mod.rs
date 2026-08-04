@@ -171,7 +171,7 @@ impl App for Moire {
     fn manifest(&self) -> Manifest {
         Manifest::new("moire").emoji("🌀").category("math")
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "offset": self.set.offset,
             "angle": self.set.angle,
@@ -185,7 +185,7 @@ impl App for Moire {
             Verb::new("moire.reset", json!({})),
         ]
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "moire.set" => {
                 let key = call.arg("key").as_str().unwrap_or("").to_string();
@@ -251,7 +251,7 @@ mod tests {
         );
         let mut b = Moire::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
     }
     #[test]
     fn load_survives_garbage() {
@@ -270,7 +270,7 @@ mod tests {
     #[test]
     fn frame_renders() {
         let m = Moire::new();
-        let state = m.state(&iden());
+        let state = m.state(&iden(), None);
         let rows = state["frame"]["rows"].as_array().unwrap();
         assert_eq!(rows.len(), SIZE);
         assert_eq!(rows[0].as_array().unwrap().len(), SIZE);
@@ -278,19 +278,19 @@ mod tests {
     }
     #[test]
     fn knobs_change_the_frame() {
-        let base = Moire::new().state(&iden())["frame"].clone();
+        let base = Moire::new().state(&iden(), None)["frame"].clone();
         let mut a = Moire::new();
         send(&mut a, "moire.set", json!({ "key": "offset", "value": -5 }));
-        assert_ne!(a.state(&iden())["frame"], base);
+        assert_ne!(a.state(&iden(), None)["frame"], base);
         let mut b = Moire::new();
         send(&mut b, "moire.set", json!({ "key": "angle", "value": 180 }));
-        assert_ne!(b.state(&iden())["frame"], base);
+        assert_ne!(b.state(&iden(), None)["frame"], base);
         let mut c = Moire::new();
         send(
             &mut c,
             "moire.set",
             json!({ "key": "lattice", "value": "hex" }),
         );
-        assert_ne!(c.state(&iden())["frame"], base);
+        assert_ne!(c.state(&iden(), None)["frame"], base);
     }
 }

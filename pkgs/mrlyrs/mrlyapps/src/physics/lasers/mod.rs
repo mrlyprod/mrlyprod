@@ -336,7 +336,7 @@ impl App for Lasers {
     fn wear(&mut self, world: &Json) {
         self.dark = world["shared"]["settings"]["darkmode"] == true;
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         let mask = self.sim.mask();
         json!({
             "settings": self.set.to_json(),
@@ -372,7 +372,7 @@ impl App for Lasers {
             Verb::new("lasers.set", json!({ "key": "string", "value": "any" })),
         ]
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "lasers.place" => {
                 let (Some(x), Some(y)) = (call.arg("x").as_i64(), call.arg("y").as_i64()) else {
@@ -508,7 +508,7 @@ mod tests {
             send(l, "lasers.place", json!({ "x": 20, "y": 20 }));
             send(l, "lasers.step", json!({ "n": 5 }));
         }
-        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.state(&iden(), None), b.state(&iden(), None));
         assert_eq!(a.save(), b.save());
     }
     #[test]
@@ -518,24 +518,24 @@ mod tests {
         send(&mut a, "lasers.step", json!({ "n": 4 }));
         let mut b = Lasers::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
         assert_eq!(b.save(), a.save());
         for l in [&mut a, &mut b] {
             send(l, "lasers.step", json!({ "n": 4 }));
         }
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
     }
     #[test]
     fn load_survives_garbage() {
         let mut l = Lasers::new();
         l.load(&json!({ "seed": "soup", "settings": 7, "emitters": "nope" }));
-        assert_eq!(l.state(&iden())["seed"], json!(0));
-        assert_eq!(l.state(&iden())["emitters"], json!(0));
+        assert_eq!(l.state(&iden(), None)["seed"], json!(0));
+        assert_eq!(l.state(&iden(), None)["emitters"], json!(0));
     }
     #[test]
     fn reset_seed_defaults_to_now() {
         let mut l = Lasers::new();
-        let out = l.act(&iden(), &Call::new("lasers.reset", json!({})).at(5000));
+        let out = l.call(&iden(), &Call::new("lasers.reset", json!({})).at(5000));
         assert!(out.ok);
         assert_eq!(out.data["seed"], json!(5000));
     }
@@ -558,7 +558,7 @@ mod tests {
     fn place_adds_an_emitter() {
         let mut l = lasers(1);
         assert!(send(&mut l, "lasers.place", json!({ "x": 20, "y": 20 })).ok);
-        assert_eq!(l.state(&iden())["emitters"], json!(1));
+        assert_eq!(l.state(&iden(), None)["emitters"], json!(1));
     }
     #[test]
     fn set_validates_mask_and_config_keys() {
@@ -646,7 +646,7 @@ mod tests {
     fn subpixel_validates_and_rebuilds() {
         let mut l = lasers(1);
         send(&mut l, "lasers.place", json!({ "x": 20, "y": 20 }));
-        assert_eq!(l.state(&iden())["emitters"], json!(1));
+        assert_eq!(l.state(&iden(), None)["emitters"], json!(1));
         assert!(
             send(
                 &mut l,
@@ -655,8 +655,8 @@ mod tests {
             )
             .ok
         );
-        assert_eq!(l.state(&iden())["emitters"], json!(0));
-        assert_eq!(l.state(&iden())["settings"]["subpixel"], json!(4));
+        assert_eq!(l.state(&iden(), None)["emitters"], json!(0));
+        assert_eq!(l.state(&iden(), None)["settings"]["subpixel"], json!(4));
         assert!(
             send(
                 &mut l,
@@ -697,20 +697,20 @@ mod tests {
         );
         let mut b = Lasers::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
     }
     #[test]
     fn mask_key_change_rebuilds_and_clears_emitters() {
         let mut l = lasers(1);
         send(&mut l, "lasers.place", json!({ "x": 20, "y": 20 }));
-        assert_eq!(l.state(&iden())["emitters"], json!(1));
+        assert_eq!(l.state(&iden(), None)["emitters"], json!(1));
         send(
             &mut l,
             "lasers.set",
             json!({ "key": "padding", "value": 4 }),
         );
-        assert_eq!(l.state(&iden())["emitters"], json!(0));
-        assert_eq!(l.state(&iden())["settings"]["padding"], json!(4));
+        assert_eq!(l.state(&iden(), None)["emitters"], json!(0));
+        assert_eq!(l.state(&iden(), None)["settings"]["padding"], json!(4));
     }
     #[test]
     fn beat_gates_on_play() {

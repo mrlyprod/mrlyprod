@@ -4,7 +4,7 @@ use mrlycore::{json, Json};
 use mrlymath::two::Cell2d;
 use mrlymusic::cue;
 use mrlyos::kernel::{App, Call, Effect, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{sprite_fact, Frame, Layer, TileSet};
+use mrlyui::frame::{sprite_fact, Atlas, Frame, Layer};
 
 pub const SIDES: [u32; 7] = [2, 4, 6, 8, 10, 12, 20];
 
@@ -123,7 +123,7 @@ impl Dice {
     fn render(&self) -> Frame {
         let mut frame = Frame::new(K, K, mrlyui::frame::board(self.dark));
         let (cell, die) = self.face_cell();
-        let mut set = TileSet::new(K, vec![cell]);
+        let mut set = Atlas::new(K, vec![cell]);
         if let Some(ch) = die {
             set.face(0, ch, Some(mrlyui::frame::ink(self.dark)));
         }
@@ -182,7 +182,7 @@ impl App for Dice {
     fn wear(&mut self, world: &Json) {
         self.dark = world["shared"]["settings"]["darkmode"] == true;
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "steps": self.steps,
             "seed": self.seed,
@@ -205,7 +205,7 @@ impl App for Dice {
             Verb::new("dice.set", json!({ "key": "string", "value": "any" })),
         ]
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "dice.roll" => {
                 self.face = self.rng.range(1, self.sides as i64) as u32;
@@ -323,7 +323,7 @@ mod tests {
                 send(&mut b, "dice.roll", json!({})).data
             );
         }
-        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.state(&iden(), None), b.state(&iden(), None));
         assert_eq!(a.save(), b.save());
     }
     #[test]
@@ -337,10 +337,10 @@ mod tests {
     #[test]
     fn nonce_tracks_the_roll_count() {
         let mut d = dice(3);
-        assert_eq!(d.state(&iden())["nonce"], json!(0));
+        assert_eq!(d.state(&iden(), None)["nonce"], json!(0));
         send(&mut d, "dice.roll", json!({}));
         send(&mut d, "dice.roll", json!({}));
-        assert_eq!(d.state(&iden())["nonce"], json!(2));
+        assert_eq!(d.state(&iden(), None)["nonce"], json!(2));
     }
     #[test]
     fn set_validates_the_seven() {
@@ -375,7 +375,7 @@ mod tests {
         for (key, value) in [("surface", "canvas"), ("skin", "emojis")] {
             assert!(send(&mut d, "dice.set", json!({ "key": key, "value": value })).ok);
         }
-        assert_eq!(d.state(&iden())["steps"], json!(1));
+        assert_eq!(d.state(&iden(), None)["steps"], json!(1));
         let (cell, die) = d.face_cell();
         assert!(die.is_some(), "the die face lost its glyph");
         assert!(cell.cell.colors.unwrap().iter().all(|px| px[3] == 0));
@@ -387,7 +387,7 @@ mod tests {
         send(&mut d, "dice.roll", json!({}));
         send(&mut d, "dice.roll", json!({}));
         send(&mut d, "dice.set", json!({ "key": "sides", "value": 12 }));
-        let state = d.state(&iden());
+        let state = d.state(&iden(), None);
         assert_eq!(state["steps"], json!(0));
         assert_eq!(state["face"], json!(1));
         assert_eq!(state["rolls"], json!([]));
@@ -397,10 +397,10 @@ mod tests {
     #[test]
     fn reset_seed_defaults_to_now() {
         let mut d = Dice::new();
-        let out = d.act(&iden(), &Call::new("dice.reset", json!({})).at(5000));
+        let out = d.call(&iden(), &Call::new("dice.reset", json!({})).at(5000));
         assert!(out.ok);
         assert_eq!(out.data["seed"], json!(5000));
-        assert_eq!(d.state(&iden())["seed"], json!(5000));
+        assert_eq!(d.state(&iden(), None)["seed"], json!(5000));
     }
     #[test]
     fn rolls_remember_the_last_eight() {
@@ -411,7 +411,7 @@ mod tests {
         }
         faces.reverse();
         faces.truncate(8);
-        let state = d.state(&iden());
+        let state = d.state(&iden(), None);
         assert_eq!(state["rolls"], Json::Arr(faces));
         assert_eq!(state["steps"], json!(12));
     }
@@ -429,18 +429,18 @@ mod tests {
         }
         let mut b = Dice::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
         assert_eq!(b.save(), a.save());
         for d in [&mut a, &mut b] {
             send(d, "dice.roll", json!({}));
         }
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
     }
     #[test]
     fn old_saves_default_to_the_legacy_look() {
         let mut d = Dice::new();
         d.load(&json!({ "seed": 3, "settings": { "sides": 20 } }));
-        let settings = d.state(&iden())["settings"].clone();
+        let settings = d.state(&iden(), None)["settings"].clone();
         assert_eq!(settings["sides"], json!(20));
         assert_eq!(settings["surface"], json!("grid"));
         assert_eq!(settings["skin"], json!("digits"));
@@ -449,7 +449,7 @@ mod tests {
     fn load_survives_garbage() {
         let mut d = Dice::new();
         d.load(&json!({ "seed": "soup", "settings": { "sides": 7 }, "face": 99, "rolls": 3 }));
-        let state = d.state(&iden());
+        let state = d.state(&iden(), None);
         assert_eq!(state["seed"], json!(0));
         assert_eq!(state["settings"]["sides"], json!(6));
         assert_eq!(state["face"], json!(1));
@@ -467,7 +467,7 @@ mod tests {
     #[test]
     fn state_carries_an_indexed_frame() {
         let d = dice(5);
-        let state = d.state(&iden());
+        let state = d.state(&iden(), None);
         let rows = state["frame"]["rows"].as_array().unwrap();
         assert_eq!(
             rows.len(),

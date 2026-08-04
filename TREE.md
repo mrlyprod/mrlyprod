@@ -6,6 +6,7 @@ mrlyprod
 │   ├── cli
 │   │   ├── src
 │   │   │   ├── main.rs
+│   │   │   ├── mcp.rs
 │   │   │   ├── term.rs
 │   │   │   └── tui.rs
 │   │   ├── tests
@@ -130,7 +131,6 @@ mrlyprod
 │   │   │   │   └── mrly_512_512.png
 │   │   │   ├── 404.html
 │   │   │   ├── emoji.css
-│   │   │   ├── face.html
 │   │   │   ├── favicon.ico
 │   │   │   ├── fonts.css
 │   │   │   ├── icons.css
@@ -152,6 +152,10 @@ mrlyprod
 │   │   │   │   ├── library.tsx
 │   │   │   │   ├── options.ts
 │   │   │   │   └── palette.tsx
+│   │   │   ├── gen
+│   │   │   │   ├── mark.json
+│   │   │   │   ├── palette.json
+│   │   │   │   └── shaders.json
 │   │   │   ├── render
 │   │   │   │   ├── boards.ts
 │   │   │   │   ├── fx.ts
@@ -232,9 +236,11 @@ mrlyprod
 │   │   │   ├── jsx.ts
 │   │   │   ├── kernel.ts
 │   │   │   ├── main.ts
+│   │   │   ├── md.ts
 │   │   │   ├── palette.ts
-│   │   │   ├── peeks.ts
 │   │   │   ├── pwa.ts
+│   │   │   ├── reads.ts
+│   │   │   ├── roller.ts
 │   │   │   ├── router.ts
 │   │   │   ├── skin.tsx
 │   │   │   ├── sound.ts
@@ -345,45 +351,16 @@ mrlyprod
 │   │   ├── package.json
 │   │   └── tsconfig.json
 │   ├── mrlyjs
-│   │   ├── math
-│   │   │   ├── src
-│   │   │   │   └── lib.rs
-│   │   │   └── Cargo.toml
 │   │   └── web
 │   │       ├── src
 │   │       │   └── lib.rs
 │   │       └── Cargo.toml
 │   ├── mrlypy
-│   │   ├── math
-│   │   │   ├── demos
-│   │   │   │   ├── anti.py
-│   │   │   │   ├── fromarray.py
-│   │   │   │   ├── heatmap.py
-│   │   │   │   ├── helpers.py
-│   │   │   │   ├── julia.py
-│   │   │   │   ├── mandelbrot.py
-│   │   │   │   ├── noise.py
-│   │   │   │   ├── objects.py
-│   │   │   │   ├── palette.py
-│   │   │   │   └── run_all.py
-│   │   │   ├── src
-│   │   │   │   ├── fractal.rs
-│   │   │   │   ├── lib.rs
-│   │   │   │   ├── three.rs
-│   │   │   │   └── two.rs
-│   │   │   ├── tests
-│   │   │   │   ├── test_serialization.py
-│   │   │   │   └── test_smoke.py
-│   │   │   ├── Cargo.toml
-│   │   │   └── pyproject.toml
 │   │   └── web
 │   │       ├── src
-│   │       │   ├── font.rs
-│   │       │   ├── graphics.rs
 │   │       │   └── lib.rs
 │   │       ├── tests
 │   │       │   ├── smoke.py
-│   │       │   ├── test_capture.py
 │   │       │   └── test_kernel.py
 │   │       ├── Cargo.toml
 │   │       └── pyproject.toml
@@ -579,7 +556,6 @@ mrlyprod
 │   │   │   │   ├── io.rs
 │   │   │   │   ├── json.rs
 │   │   │   │   ├── lib.rs
-│   │   │   │   ├── md.rs
 │   │   │   │   ├── paint.rs
 │   │   │   │   ├── ramp.rs
 │   │   │   │   ├── rng.rs
@@ -748,7 +724,6 @@ mrlyprod
 │   │   │   │   │   │   └── persist.rs
 │   │   │   │   │   ├── app.rs
 │   │   │   │   │   ├── envelope.rs
-│   │   │   │   │   ├── goose.rs
 │   │   │   │   │   ├── iden.rs
 │   │   │   │   │   ├── manifest.rs
 │   │   │   │   │   ├── mod.rs
@@ -790,9 +765,11 @@ mrlyprod
 │   │   │   └── Cargo.toml
 │   │   └── mrlyweb
 │   │       ├── examples
+│   │       │   ├── bake.rs
 │   │       │   └── fixtures.rs
 │   │       ├── src
 │   │       │   ├── card.rs
+│   │       │   ├── goose.rs
 │   │       │   ├── lib.rs
 │   │       │   └── registry.rs
 │   │       ├── tests
@@ -805,6 +782,7 @@ mrlyprod
 ├── utils
 │   ├── brand.py
 │   ├── config.py
+│   ├── doors.py
 │   ├── font.py
 │   ├── ignore.py
 │   ├── layers.py

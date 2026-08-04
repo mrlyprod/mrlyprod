@@ -159,7 +159,7 @@ impl App for Solids {
     fn wear(&mut self, world: &Json) {
         self.dark = world["shared"]["settings"]["darkmode"] == true;
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "seed": self.seed,
             "object": &self.object,
@@ -216,7 +216,7 @@ impl App for Solids {
             Verb::new("solids.set", json!({ "key": "string", "value": "any" })),
         ]
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "solids.step" => {
                 let n = match Solids::count(call, 1024) {
@@ -304,7 +304,7 @@ mod tests {
             send(s, "solids.pick", json!({ "solid": "octa" }));
             send(s, "solids.step", json!({ "n": 5 }));
         }
-        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.state(&iden(), None), b.state(&iden(), None));
         assert_eq!(a.save(), b.save());
     }
     #[test]
@@ -314,17 +314,17 @@ mod tests {
         send(&mut a, "solids.step", json!({ "n": 7 }));
         let mut b = Solids::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
         for s in [&mut a, &mut b] {
             send(s, "solids.step", json!({ "n": 4 }));
         }
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
     }
     #[test]
     fn load_survives_garbage() {
         let mut s = Solids::new();
         s.load(&json!({ "seed": "soup", "object": "sphere" }));
-        assert_eq!(s.state(&iden())["seed"], json!(0));
+        assert_eq!(s.state(&iden(), None)["seed"], json!(0));
         assert_eq!(s.object, "icosa");
     }
     #[test]
@@ -368,7 +368,7 @@ mod tests {
     #[test]
     fn reset_seed_defaults_to_now() {
         let mut s = Solids::new();
-        let out = s.act(&iden(), &Call::new("solids.reset", json!({})).at(5000));
+        let out = s.call(&iden(), &Call::new("solids.reset", json!({})).at(5000));
         assert!(out.ok);
         assert_eq!(out.data["seed"], json!(5000));
     }

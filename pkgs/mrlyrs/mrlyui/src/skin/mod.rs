@@ -1,4 +1,4 @@
-use crate::frame::{bake, hex, motif_tile, solid_tile, Glyph, TileSet};
+use crate::frame::{bake, hex, motif_tile, solid_tile, Atlas, Glyph};
 use mrlycore::{json, Json};
 use std::collections::HashSet;
 use std::sync::OnceLock;
@@ -99,9 +99,9 @@ impl Skin {
     pub fn to_json(&self) -> Json {
         json!(self.visuals.iter().map(Visual::to_json).collect::<Vec<_>>())
     }
-    pub fn tileset(&self, k: usize, ink: [u8; 4]) -> TileSet {
+    pub fn atlas(&self, k: usize, ink: [u8; 4]) -> Atlas {
         let clear = [0, 0, 0, 0];
-        let mut set = TileSet::new(k, Vec::new());
+        let mut set = Atlas::new(k, Vec::new());
         for v in &self.visuals {
             let color = v.bg.unwrap_or(clear);
             let mut tile = match &v.motif {
@@ -149,7 +149,7 @@ mod tests {
         assert_eq!(pixels(40, "emojis"), 40);
         assert_eq!(pixels(3, "digits"), 3);
         let k = pixels(3, "emojis");
-        let set = twenty48::skin("emojis", "carpet", &[[0, 0, 0, 0]; 4]).tileset(k, [0, 0, 0, 255]);
+        let set = twenty48::skin("emojis", "carpet", &[[0, 0, 0, 0]; 4]).atlas(k, [0, 0, 0, 255]);
         let glyph = set.faces[1].as_ref().expect("an emoji face");
         assert!(!glyph.ch.is_empty());
         assert_eq!(glyph.tint, None);
@@ -182,7 +182,7 @@ mod tests {
         assert_eq!(out[1]["bg"], json!("#0000ff"));
     }
     #[test]
-    fn tileset_builds_solid_motif_and_baked() {
+    fn atlas_builds_solid_motif_and_baked() {
         let red = [255, 0, 0, 255];
         let ink = [0, 0, 0, 255];
         let skin = Skin::new(vec![
@@ -191,7 +191,7 @@ mod tests {
             Visual::solid(red).glyph("8"),
             Visual::none().emoji("💣"),
         ]);
-        let set = skin.tileset(8, ink);
+        let set = skin.atlas(8, ink);
         assert_eq!(set.size, 8);
         assert_eq!(set.tiles.len(), 4);
         assert_eq!(set.tiles[0].cell.colors, solid_tile(8, red).cell.colors);
@@ -209,14 +209,14 @@ mod tests {
         );
     }
     #[test]
-    fn tileset_serves_chess_symbols_tinted() {
+    fn atlas_serves_chess_symbols_tinted() {
         let ink = [220, 10, 10, 255];
         let skin = Skin::new(vec![
             Visual::none().emoji("♔"),
             Visual::none().glyph("♞"),
             Visual::none().glyph("A"),
         ]);
-        let set = skin.tileset(16, ink);
+        let set = skin.atlas(16, ink);
         assert_eq!(
             set.faces[0],
             Some(Glyph {

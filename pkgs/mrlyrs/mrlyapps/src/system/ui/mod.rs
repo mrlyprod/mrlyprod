@@ -69,7 +69,7 @@ impl App for Ui {
             .title("specimen")
             .category("system")
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "sample": &self.sample,
             "overlay": self.overlay,
@@ -84,7 +84,7 @@ impl App for Ui {
             json!({ "key": "string", "value": "any" }),
         )]
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "ui.set" => {
                 let key = call.arg("key").as_str().unwrap_or("").to_string();
@@ -105,7 +105,7 @@ mod tests {
     #[test]
     fn state_carries_every_control() {
         let m = Ui::new();
-        let state = m.state(&Iden::new("aria"));
+        let state = m.state(&Iden::new("aria"), None);
         assert_eq!(state["sample"], json!("the quick brown fox"));
         assert_eq!(state["overlay"], json!(false));
         assert_eq!(state["toggle"], json!(false));
@@ -116,14 +116,14 @@ mod tests {
     fn act_applies_key_and_value() {
         let iden = Iden::new("aria");
         let mut m = Ui::new();
-        let out = m.act(
+        let out = m.call(
             &iden,
             &Call::new("ui.set", json!({ "key": "pick", "value": "beta" })),
         );
         assert!(out.ok);
         assert_eq!(out.data, json!({ "key": "pick", "value": "beta" }));
-        assert_eq!(m.state(&iden)["pick"], json!("beta"));
-        let out = m.act(
+        assert_eq!(m.state(&iden, None)["pick"], json!("beta"));
+        let out = m.call(
             &iden,
             &Call::new("ui.set", json!({ "key": "volume", "value": 1 })),
         );
@@ -150,6 +150,6 @@ mod tests {
         m.apply("toggle", &json!(true)).unwrap();
         assert_eq!(m.save(), Json::Null);
         m.load(&json!({ "toggle": true }));
-        assert_eq!(m.state(&Iden::new("aria"))["toggle"], json!(true));
+        assert_eq!(m.state(&Iden::new("aria"), None)["toggle"], json!(true));
     }
 }

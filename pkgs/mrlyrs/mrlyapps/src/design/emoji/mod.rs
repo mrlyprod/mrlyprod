@@ -37,7 +37,7 @@ impl App for Emoji {
     fn manifest(&self) -> Manifest {
         Manifest::new("emoji").emoji("😀").category("design")
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "category": &self.category,
             "categories": crate::design::emoji::data::names(),
@@ -52,7 +52,7 @@ impl App for Emoji {
             Verb::new("emoji.drop", json!({ "value": "string" })),
         ]
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "emoji.set" => {
                 let key = call.arg("key").as_str().unwrap_or("");
@@ -132,7 +132,7 @@ mod tests {
     #[test]
     fn boot_shows_the_first_category() {
         let e = Emoji::new();
-        let state = e.state(&iden());
+        let state = e.state(&iden(), None);
         assert_eq!(
             state["category"],
             json!(crate::design::emoji::data::first())
@@ -150,7 +150,7 @@ mod tests {
             )
             .ok
         );
-        assert_eq!(e.state(&iden())["category"], json!("food"));
+        assert_eq!(e.state(&iden(), None)["category"], json!("food"));
         assert!(
             !send(
                 &mut e,
@@ -171,14 +171,14 @@ mod tests {
         );
         let mut b = Emoji::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
     }
     #[test]
     fn load_survives_garbage() {
         let mut e = Emoji::new();
         e.load(&json!({ "category": "nope" }));
         assert_eq!(
-            e.state(&iden())["category"],
+            e.state(&iden(), None)["category"],
             json!(crate::design::emoji::data::first())
         );
     }
@@ -191,7 +191,7 @@ mod tests {
     #[test]
     fn library_seeds_are_known() {
         let e = Emoji::new();
-        let library = e.state(&iden())["library"].clone();
+        let library = e.state(&iden(), None)["library"].clone();
         assert_eq!(library, json!(["🍎", "🍏", "⭐", "🎲"]));
         for value in library.as_array().unwrap() {
             assert!(crate::design::emoji::data::known(value.as_str().unwrap()));
@@ -201,7 +201,7 @@ mod tests {
     fn keep_and_drop_round_trip() {
         let mut e = Emoji::new();
         assert!(send(&mut e, "emoji.keep", json!({ "value": "🍐" })).ok);
-        assert!(e.state(&iden())["library"]
+        assert!(e.state(&iden(), None)["library"]
             .as_array()
             .unwrap()
             .contains(&json!("🍐")));
@@ -211,7 +211,7 @@ mod tests {
         let unknown = send(&mut e, "emoji.keep", json!({ "value": "x" }));
         assert_eq!(unknown.note.as_deref(), Some("unknown emoji"));
         assert!(send(&mut e, "emoji.drop", json!({ "value": "🍐" })).ok);
-        assert!(!e.state(&iden())["library"]
+        assert!(!e.state(&iden(), None)["library"]
             .as_array()
             .unwrap()
             .contains(&json!("🍐")));
@@ -224,7 +224,10 @@ mod tests {
         for &value in crate::design::emoji::data::grid("food") {
             send(&mut e, "emoji.keep", json!({ "value": value }));
         }
-        assert_eq!(e.state(&iden())["library"].as_array().unwrap().len(), 24);
+        assert_eq!(
+            e.state(&iden(), None)["library"].as_array().unwrap().len(),
+            24
+        );
         let full = send(&mut e, "emoji.keep", json!({ "value": "🌋" }));
         assert!(!full.ok);
         assert_eq!(full.note.as_deref(), Some("library is full"));
@@ -233,8 +236,11 @@ mod tests {
     fn load_sanitizes_the_library() {
         let mut e = Emoji::new();
         e.load(&json!({ "library": "garbage" }));
-        assert_eq!(e.state(&iden())["library"], json!(["🍎", "🍏", "⭐", "🎲"]));
+        assert_eq!(
+            e.state(&iden(), None)["library"],
+            json!(["🍎", "🍏", "⭐", "🎲"])
+        );
         e.load(&json!({ "library": ["🍎", "notemoji", "🍎", "⭐"] }));
-        assert_eq!(e.state(&iden())["library"], json!(["🍎", "⭐"]));
+        assert_eq!(e.state(&iden(), None)["library"], json!(["🍎", "⭐"]));
     }
 }

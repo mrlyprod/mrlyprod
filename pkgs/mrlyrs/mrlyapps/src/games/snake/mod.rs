@@ -6,7 +6,7 @@ use mrlycore::tile::{Design, Group, Source, Tile as Model};
 use mrlycore::{json, Json};
 use mrlymusic::cue;
 use mrlyos::kernel::{drive, flag, int, App, Call, Effect, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{probe, solid_tile, tile_cell, work_cell, Frame, Layer, TileSet};
+use mrlyui::frame::{probe, solid_tile, tile_cell, work_cell, Atlas, Frame, Layer};
 
 const DIRS: [&str; 4] = ["up", "down", "left", "right"];
 const DELTAS: [(i32, i32); 4] = [(-1, 0), (1, 0), (0, -1), (0, 1)];
@@ -161,7 +161,7 @@ pub struct Snake {
     body_color: [u8; 4],
     food_color: [u8; 4],
     dark: bool,
-    tiles: TileSet,
+    tiles: Atlas,
 }
 
 impl Default for Snake {
@@ -186,7 +186,7 @@ impl Snake {
             body_color: [200, 200, 200, 255],
             food_color: [255, 0, 0, 255],
             dark: false,
-            tiles: TileSet::new(1, Vec::new()),
+            tiles: Atlas::new(1, Vec::new()),
         };
         snake.reset(0);
         snake
@@ -255,7 +255,7 @@ impl Snake {
             Some(coating) => work_cell(&part.tile, coating, k, clear),
             None => tile_cell(&part.tile, k, color, clear),
         };
-        self.tiles = TileSet::new(
+        self.tiles = Atlas::new(
             k,
             vec![
                 solid_tile(k, clear),
@@ -371,7 +371,7 @@ impl App for Snake {
     fn wear(&mut self, world: &Json) {
         self.dark = world["shared"]["settings"]["darkmode"] == true;
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "score": self.score,
             "steps": self.steps,
@@ -399,7 +399,7 @@ impl App for Snake {
         ));
         out
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "snake.turn" => {
                 if self.over {
@@ -534,7 +534,7 @@ mod tests {
             send(s, "snake.turn", json!({ "dir": "up" }));
             send(s, "snake.step", json!({}));
         }
-        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.state(&iden(), None), b.state(&iden(), None));
         assert_eq!(a.save(), b.save());
     }
     #[test]
@@ -577,17 +577,17 @@ mod tests {
         let out = send(&mut s, "snake.step", json!({ "n": 5 }));
         assert!(out.ok);
         assert_eq!(out.data["steps"], json!(5));
-        assert_eq!(s.state(&iden())["steps"], json!(5));
+        assert_eq!(s.state(&iden(), None)["steps"], json!(5));
         assert!(!send(&mut s, "snake.step", json!({ "n": 0 })).ok);
         assert!(!send(&mut s, "snake.step", json!({ "n": 2000 })).ok);
     }
     #[test]
     fn reset_seed_defaults_to_now() {
         let mut s = Snake::new();
-        let out = s.act(&iden(), &Call::new("snake.reset", json!({})).at(5000));
+        let out = s.call(&iden(), &Call::new("snake.reset", json!({})).at(5000));
         assert!(out.ok);
         assert_eq!(out.data["seed"], json!(5000));
-        assert_eq!(s.state(&iden())["seed"], json!(5000));
+        assert_eq!(s.state(&iden(), None)["seed"], json!(5000));
     }
     #[test]
     fn set_validates_and_resets_the_round() {
@@ -595,7 +595,7 @@ mod tests {
         send(&mut s, "snake.step", json!({ "n": 3 }));
         let out = send(&mut s, "snake.set", json!({ "key": "grid", "value": 8 }));
         assert!(out.ok);
-        let state = s.state(&iden());
+        let state = s.state(&iden(), None);
         assert_eq!(state["settings"]["grid"], json!(8));
         assert_eq!(state["steps"], json!(0));
         assert_eq!(state["board"].as_array().unwrap().len(), 8);
@@ -621,7 +621,7 @@ mod tests {
             );
             assert!(out.ok, "key {key}");
         }
-        let settings = s.state(&iden())["settings"].clone();
+        let settings = s.state(&iden(), None)["settings"].clone();
         for key in ["head", "body", "food"] {
             assert_eq!(settings[key]["tile"]["sources"][0]["design"], "Net");
             assert_eq!(settings[key]["paint"], Json::Null);
@@ -707,18 +707,18 @@ mod tests {
     fn legacy_design_saves_migrate() {
         let mut s = Snake::new();
         s.load(&json!({ "seed": 3, "settings": { "design": "net" } }));
-        let settings = s.state(&iden())["settings"].clone();
+        let settings = s.state(&iden(), None)["settings"].clone();
         for key in ["head", "body", "food"] {
             assert_eq!(settings[key]["tile"]["sources"][0]["design"], "Net");
         }
         let mut s = Snake::new();
         s.load(&json!({ "seed": 3, "settings": { "design": "solid" } }));
-        let head = s.state(&iden())["settings"]["head"].clone();
+        let head = s.state(&iden(), None)["settings"]["head"].clone();
         assert_eq!(head["tile"]["sources"][0]["design"], "Void");
         assert_eq!(head["tile"]["invert"], json!(true));
         let mut s = Snake::new();
         s.load(&json!({ "seed": 3, "settings": { "design": "sparkles" } }));
-        let head = s.state(&iden())["settings"]["head"].clone();
+        let head = s.state(&iden(), None)["settings"]["head"].clone();
         assert_eq!(head["tile"]["sources"][0]["design"], "Carpet");
     }
     #[test]
@@ -733,19 +733,19 @@ mod tests {
         send(&mut a, "snake.step", json!({ "n": 4 }));
         let mut b = Snake::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
         assert_eq!(b.save(), a.save());
         for s in [&mut a, &mut b] {
             send(s, "snake.step", json!({ "n": 6 }));
         }
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
     }
     #[test]
     fn load_survives_garbage() {
         let mut s = Snake::new();
         s.load(&json!({ "seed": "soup", "body": [[99, 0]], "settings": 7 }));
-        assert_eq!(s.state(&iden())["steps"], json!(0));
-        assert_eq!(s.state(&iden())["seed"], json!(0));
+        assert_eq!(s.state(&iden(), None)["steps"], json!(0));
+        assert_eq!(s.state(&iden(), None)["seed"], json!(0));
         assert!(!s.body.is_empty());
     }
     #[test]
@@ -758,7 +758,7 @@ mod tests {
         let mut s = snake(3);
         let out = send(&mut s, "snake.set", json!({ "key": "speed", "value": 5 }));
         assert!(out.ok);
-        assert_eq!(s.state(&iden())["settings"]["speed"], json!(5));
+        assert_eq!(s.state(&iden(), None)["settings"]["speed"], json!(5));
         assert_eq!(s.beat(), Some(Call::new("snake.step", json!({ "n": 5 }))));
         assert!(!send(&mut s, "snake.set", json!({ "key": "speed", "value": 0 })).ok);
         assert!(!send(&mut s, "snake.set", json!({ "key": "speed", "value": 9 })).ok);
@@ -788,7 +788,7 @@ mod tests {
     #[test]
     fn state_carries_an_indexed_frame() {
         let s = snake(5);
-        let state = s.state(&iden());
+        let state = s.state(&iden(), None);
         let palette = state["frame"]["palette"].as_array().unwrap();
         assert!(!palette.is_empty());
         let rows = state["frame"]["rows"].as_array().unwrap();

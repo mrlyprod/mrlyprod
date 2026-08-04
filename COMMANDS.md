@@ -50,10 +50,12 @@ cargo build
 cargo test                              # fast; skips slow #[ignore] tests
 cargo test -- --ignored                 # the slow statistical tests (hash metrics)
 uv run python utils/layers.py           # apps never import apps; run alongside the tests
+uv run python utils/doors.py            # the wire has four doors; both bindings, no side modules
 cargo fmt                               # ship runs it too
 cargo clippy -- -D warnings
 cargo run -p mrlyweb --example <name>   # examples live in pkgs/mrlyrs/mrlyweb/examples/
-cargo run -p mrlyweb --example fixtures # regenerate apps/web/fixtures/*.json from frame()
+cargo run -p mrlyweb --example fixtures # regenerate apps/web/fixtures/*.json from the envelope
+cargo run -p mrlyweb --example bake     # regenerate apps/web/src/gen/*.json (palette, shaders, mark)
 cargo doc --open
 cargo clean
 ```
@@ -62,7 +64,7 @@ cargo clean
 
 ```sh
 curl -fsSL mrly.net/install.sh | sh              # install the released binary as ~/.local/bin/mrly
-cargo run -p mrlycli -- describe                 # kernel surface as JSON
+cargo run -p mrlycli -- list                     # kernel surface as JSON
 cargo run -p mrlycli -- verbs snake              # one app's verbs and args
 cargo run -p mrlycli -- verbs                     # every app and its verb count
 echo '<calls>' | cargo run -p mrlycli -- run --facts   # replay, print state, grids collapsed
@@ -73,14 +75,12 @@ cargo run -p mrlycli -- repl                      # interactive; :verbs :shot :r
 
 Calls are JSON lines or a JSON array, e.g. `{"verb":"nav.open","args":{"app":"snake"}}`.
 
-## MRLYPY (Rust -> Python via maturin; web imports as mrlyweb, math as mrlymath)
+## MRLYPY (Rust -> Python via maturin; imports as mrlyweb)
 
 ```sh
 uv run maturin develop --manifest-path pkgs/mrlypy/web/Cargo.toml --release
-uv run maturin develop --manifest-path pkgs/mrlypy/math/Cargo.toml --release
-uv run pytest pkgs/mrlypy                    # both crates' tests
+uv run python -m pytest pkgs/mrlypy/web/tests
 uv run python pkgs/mrlypy/web/tests/smoke.py
-uv run python pkgs/mrlypy/math/demos/run_all.py   # every math demo: PNGs + .obj into pkgs/mrlypy/math/demos/data/
 rm -rf .venv && uv sync && uv run maturin develop --manifest-path pkgs/mrlypy/web/Cargo.toml --release   # clean rebuild
 ```
 
@@ -90,8 +90,7 @@ rm -rf .venv && uv sync && uv run maturin develop --manifest-path pkgs/mrlypy/we
 rustup target add wasm32-unknown-unknown
 brew install wasm-pack                      # or: cargo install wasm-pack
 wasm-pack build pkgs/mrlyjs/web --target web   # the os kernel -> pkgs/mrlyjs/web/pkg/
-wasm-pack build pkgs/mrlyjs/math --target web     # the designer geometry -> pkgs/mrlyjs/math/pkg/
-cargo test -p mrlyweb --test golden         # fixtures vs frame(), after vocabulary changes
+cargo test -p mrlyweb --test golden         # fixtures vs the envelope, after vocabulary changes
 ```
 
 ## WEB (dev server + golden screenshots)
@@ -117,7 +116,7 @@ bun run index.ts                 # run a file directly (no node)
 bun update                       # refresh the lockfile
 bunx <cmd>                       # run a bin without installing (= npx)
 bunx tsc --noEmit --project apps/web    # typecheck the web face (pre-push gate; works from the repo root)
-bunx tsc --noEmit --project apps/net        # typecheck the net site
+bunx tsc --noEmit --project apps/net        # typecheck the net site (out of the gate: /build rode the dead math island)
 bunx tsc --noEmit --project apps/git        # typecheck the git site
 bun run --cwd apps/net dev       # the landing site on :5173
 bun run --cwd apps/net links     # resolve every link and image on the site, nonzero on a miss

@@ -60,7 +60,7 @@ impl App for Extras {
     fn manifest(&self) -> Manifest {
         Manifest::new("extras").emoji("🔗").category("company")
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "socials": Extras::links(&SOCIALS),
             "actions": Extras::links(&ACTIONS),
@@ -72,7 +72,7 @@ impl App for Extras {
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
         vec![Verb::new("extras.cycle", json!({}))]
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "extras.cycle" => {
                 self.index = (self.index + 1) % LINES.len();
@@ -119,7 +119,7 @@ mod tests {
     #[test]
     fn state_carries_the_fixed_content() {
         let e = Extras::new();
-        let state = e.state(&iden());
+        let state = e.state(&iden(), None);
         assert_eq!(state["socials"][0]["name"], json!("instagram"));
         assert_eq!(
             state["socials"][0]["url"],
@@ -157,21 +157,21 @@ mod tests {
         send(&mut a, "extras.cycle", json!({}));
         let mut b = Extras::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
         assert_eq!(b.save(), a.save());
         send(&mut a, "extras.cycle", json!({}));
         send(&mut b, "extras.cycle", json!({}));
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
     }
     #[test]
     fn load_survives_garbage() {
         let mut e = Extras::new();
         e.load(&json!({ "index": "soup" }));
-        assert_eq!(e.state(&iden())["cycle"]["index"], json!(0));
+        assert_eq!(e.state(&iden(), None)["cycle"]["index"], json!(0));
         e.load(&json!({ "index": 99 }));
-        assert_eq!(e.state(&iden())["cycle"]["index"], json!(0));
+        assert_eq!(e.state(&iden(), None)["cycle"]["index"], json!(0));
         e.load(&json!({ "index": 3 }));
-        assert_eq!(e.state(&iden())["cycle"]["index"], json!(3));
+        assert_eq!(e.state(&iden(), None)["cycle"]["index"], json!(3));
     }
     #[test]
     fn unknown_verb_fails() {

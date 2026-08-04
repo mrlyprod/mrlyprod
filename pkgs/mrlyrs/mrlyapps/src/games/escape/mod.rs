@@ -4,7 +4,7 @@ use mrlycore::tensor::Tensor;
 use mrlycore::{json, Json};
 use mrlymusic::cue;
 use mrlyos::kernel::{int, App, Call, Effect, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{motif_tile, solid_tile, Frame, Layer, TileSet};
+use mrlyui::frame::{motif_tile, solid_tile, Atlas, Frame, Layer};
 
 const MAP_CHOICES: [&str; 4] = ["random", "0", "1", "2"];
 const DESIGNS: [&str; 5] = ["carpet", "net", "vtree", "htree", "solid"];
@@ -320,11 +320,11 @@ impl Escape {
         let c = ROLLABLE[self.rng.below(ROLLABLE.len())];
         [c.r, c.g, c.b, 255]
     }
-    fn tileset(&self) -> TileSet {
+    fn atlas(&self) -> Atlas {
         let k = self.set.tile as usize;
         let clear = [0, 0, 0, 0];
         let d = self.set.design.as_str();
-        TileSet::new(
+        Atlas::new(
             k,
             vec![
                 solid_tile(k, clear),
@@ -342,7 +342,7 @@ impl Escape {
         let mut frame = Frame::new(side, side, mrlyui::frame::board(self.dark));
         frame.push(Layer::Tiles {
             ids: self.ids(),
-            set: self.tileset(),
+            set: self.atlas(),
         });
         frame
     }
@@ -441,7 +441,7 @@ impl App for Escape {
     fn wear(&mut self, world: &Json) {
         self.dark = world["shared"]["settings"]["darkmode"] == true;
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "score": self.score,
             "steps": self.steps,
@@ -472,7 +472,7 @@ impl App for Escape {
         ));
         out
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "escape.turn" => {
                 if self.over {
@@ -639,7 +639,7 @@ mod tests {
             send(e, "escape.turn", json!({ "dir": "up" }));
             send(e, "escape.step", json!({}));
         }
-        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.state(&iden(), None), b.state(&iden(), None));
         assert_eq!(a.save(), b.save());
     }
     #[test]
@@ -654,7 +654,7 @@ mod tests {
         let out = send(&mut e, "escape.step", json!({}));
         assert!(out.ok);
         assert_eq!((e.px, e.py), (7, 5));
-        assert_eq!(e.state(&iden())["held"], json!("right"));
+        assert_eq!(e.state(&iden(), None)["held"], json!("right"));
     }
     #[test]
     fn steps_idle_until_first_turn() {
@@ -662,8 +662,8 @@ mod tests {
         let out = send(&mut e, "escape.step", json!({ "n": 5 }));
         assert!(out.ok);
         assert_eq!(out.data["steps"], json!(0));
-        assert_eq!(e.state(&iden())["steps"], json!(0));
-        assert_eq!(e.state(&iden())["held"], Json::Null);
+        assert_eq!(e.state(&iden(), None)["steps"], json!(0));
+        assert_eq!(e.state(&iden(), None)["held"], Json::Null);
     }
     #[test]
     fn eating_blips() {
@@ -692,7 +692,7 @@ mod tests {
         assert!(out
             .effects
             .contains(&Effect::new("sound", cue::payload("good"))));
-        let state = e.state(&iden());
+        let state = e.state(&iden(), None);
         assert_eq!(state["level"], json!(2));
         assert_eq!(state["score"], json!(3));
         assert_eq!(state["over"], json!(false));
@@ -713,9 +713,9 @@ mod tests {
             send(e, "escape.turn", json!({ "dir": "up" }));
             send(e, "escape.step", json!({}));
         }
-        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.state(&iden(), None), b.state(&iden(), None));
         assert_eq!(a.save(), b.save());
-        assert_eq!(a.state(&iden())["level"], json!(2));
+        assert_eq!(a.state(&iden(), None)["level"], json!(2));
         assert_ne!(a.map_index(), was);
     }
     #[test]
@@ -726,11 +726,11 @@ mod tests {
             "escape.set",
             json!({ "key": "ghost_ratio", "value": 4 }),
         );
-        assert_eq!(e.state(&iden())["ghost_pace"], json!(4));
+        assert_eq!(e.state(&iden(), None)["ghost_pace"], json!(4));
         e.level = 2;
-        assert_eq!(e.state(&iden())["ghost_pace"], json!(3));
+        assert_eq!(e.state(&iden(), None)["ghost_pace"], json!(3));
         e.level = 9;
-        assert_eq!(e.state(&iden())["ghost_pace"], json!(1));
+        assert_eq!(e.state(&iden(), None)["ghost_pace"], json!(1));
         let mut slow = escape(4);
         send(
             &mut slow,
@@ -776,7 +776,7 @@ mod tests {
         assert_eq!(e.beat(), Some(Call::new("escape.step", json!({ "n": 1 }))));
         let out = send(&mut e, "escape.set", json!({ "key": "speed", "value": 3 }));
         assert!(out.ok);
-        assert_eq!(e.state(&iden())["settings"]["speed"], json!(3));
+        assert_eq!(e.state(&iden(), None)["settings"]["speed"], json!(3));
         assert_eq!(e.beat(), Some(Call::new("escape.step", json!({ "n": 3 }))));
         assert!(!send(&mut e, "escape.set", json!({ "key": "speed", "value": 0 })).ok);
         assert!(!send(&mut e, "escape.set", json!({ "key": "speed", "value": 5 })).ok);
@@ -792,10 +792,10 @@ mod tests {
     #[test]
     fn reset_seed_defaults_to_now() {
         let mut e = Escape::new();
-        let out = e.act(&iden(), &Call::new("escape.reset", json!({})).at(5000));
+        let out = e.call(&iden(), &Call::new("escape.reset", json!({})).at(5000));
         assert!(out.ok);
         assert_eq!(out.data["seed"], json!(5000));
-        assert_eq!(e.state(&iden())["seed"], json!(5000));
+        assert_eq!(e.state(&iden(), None)["seed"], json!(5000));
     }
     #[test]
     fn set_validates_and_resets_the_round() {
@@ -804,7 +804,7 @@ mod tests {
         send(&mut e, "escape.step", json!({}));
         let out = send(&mut e, "escape.set", json!({ "key": "map", "value": "1" }));
         assert!(out.ok);
-        let state = e.state(&iden());
+        let state = e.state(&iden(), None);
         assert_eq!(state["settings"]["map"], json!("1"));
         assert_eq!(state["steps"], json!(0));
         assert!(!send(&mut e, "escape.set", json!({ "key": "map", "value": "9" })).ok);
@@ -825,20 +825,20 @@ mod tests {
         send(&mut a, "escape.step", json!({ "n": 2 }));
         let mut b = Escape::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
         assert_eq!(b.save(), a.save());
         for e in [&mut a, &mut b] {
             send(e, "escape.turn", json!({ "dir": "up" }));
             send(e, "escape.step", json!({}));
         }
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
     }
     #[test]
     fn load_survives_garbage() {
         let mut e = Escape::new();
         e.load(&json!({ "seed": "soup", "base": [1, 2, 3], "settings": 7 }));
-        assert_eq!(e.state(&iden())["steps"], json!(0));
-        assert_eq!(e.state(&iden())["seed"], json!(0));
+        assert_eq!(e.state(&iden(), None)["steps"], json!(0));
+        assert_eq!(e.state(&iden(), None)["seed"], json!(0));
     }
     #[test]
     fn actions_offer_the_natural_verbs() {
@@ -852,7 +852,7 @@ mod tests {
     #[test]
     fn state_carries_an_indexed_frame() {
         let e = escape(5);
-        let state = e.state(&iden());
+        let state = e.state(&iden(), None);
         let palette = state["frame"]["palette"].as_array().unwrap();
         assert!(!palette.is_empty());
         let rows = state["frame"]["rows"].as_array().unwrap();

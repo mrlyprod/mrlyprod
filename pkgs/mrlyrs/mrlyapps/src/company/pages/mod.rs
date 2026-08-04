@@ -52,7 +52,7 @@ impl App for Pages {
             .category("company")
             .internet()
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "slug": &self.slug,
             "md": &self.md,
@@ -68,7 +68,7 @@ impl App for Pages {
             Verb::new("pages.flip", json!({})),
         ]
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "pages.open" => {
                 let Some(slug) = call.arg("slug").as_str() else {
@@ -158,7 +158,7 @@ mod tests {
         assert!(out.ok);
         assert!(out.effects.is_empty());
         assert_eq!(out.data["slug"], json!("dummy"));
-        let state = p.state(&iden());
+        let state = p.state(&iden(), None);
         assert_eq!(state["status"], json!("ready"));
         assert_eq!(state["mode"], json!("preview"));
         assert_eq!(state["source"], json!(""));
@@ -175,7 +175,7 @@ mod tests {
         assert_eq!(effect.data["url"], json!("/cdn/pages/privacy.md"));
         assert_eq!(effect.data["as"], json!("text"));
         assert_eq!(effect.call.as_ref().unwrap().verb, "pages.land");
-        let state = p.state(&iden());
+        let state = p.state(&iden(), None);
         assert_eq!(state["status"], json!("loading"));
         assert_eq!(state["source"], json!("/cdn/pages/privacy.md"));
     }
@@ -186,7 +186,7 @@ mod tests {
         let out = send(&mut p, "pages.land", json!({ "data": "# Privacy\n\nHi." }));
         assert!(out.ok);
         assert_eq!(out.data["chars"], json!(14));
-        let state = p.state(&iden());
+        let state = p.state(&iden(), None);
         assert_eq!(state["status"], json!("ready"));
         assert_eq!(state["md"], json!("# Privacy\n\nHi."));
     }
@@ -201,7 +201,7 @@ mod tests {
         );
         assert!(!out.ok);
         assert_eq!(out.note.as_deref(), Some("not found"));
-        assert_eq!(p.state(&iden())["status"], json!("error"));
+        assert_eq!(p.state(&iden(), None)["status"], json!("error"));
     }
     #[test]
     fn land_error_fails_honestly() {
@@ -210,7 +210,7 @@ mod tests {
         let out = send(&mut p, "pages.land", json!({ "error": "offline" }));
         assert!(!out.ok);
         assert_eq!(out.note.as_deref(), Some("offline"));
-        let state = p.state(&iden());
+        let state = p.state(&iden(), None);
         assert_eq!(state["status"], json!("error"));
         assert_eq!(state["md"], json!(""));
     }
@@ -261,14 +261,14 @@ mod tests {
         send(&mut a, "pages.flip", json!({}));
         let mut b = Pages::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
         assert_eq!(b.save(), a.save());
     }
     #[test]
     fn malformed_load_falls_back() {
         let mut p = Pages::new();
         p.load(&json!({ "slug": 7, "md": true, "mode": "wild", "status": "soup" }));
-        let state = p.state(&iden());
+        let state = p.state(&iden(), None);
         assert_eq!(state["slug"], json!(""));
         assert_eq!(state["md"], json!(""));
         assert_eq!(state["mode"], json!("preview"));

@@ -6,7 +6,7 @@ use mrlymath::pick;
 use mrlymath::two::Cell2d;
 use mrlymusic::cue;
 use mrlyos::kernel::{int, App, Call, Effect, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{sprite_fact, Frame, Layer, TileSet};
+use mrlyui::frame::{sprite_fact, Atlas, Frame, Layer};
 
 const SURFACES: [&str; 2] = ["grid", "canvas"];
 const SKINS: [&str; 2] = ["tiles", "digits"];
@@ -168,8 +168,8 @@ impl Quiz {
         };
         pick::tile(self.target, k, fg, [0, 0, 0, 0])
     }
-    fn tileset(&self) -> TileSet {
-        TileSet::new(self.set.size as usize, vec![self.face()])
+    fn atlas(&self) -> Atlas {
+        Atlas::new(self.set.size as usize, vec![self.face()])
     }
     fn position(&self) -> u64 {
         if self.over {
@@ -183,7 +183,7 @@ impl Quiz {
         let mut frame = Frame::new(k, k, mrlyui::frame::board(self.dark));
         frame.push(Layer::Tiles {
             ids: Tensor::new(vec![1, 1]),
-            set: self.tileset(),
+            set: self.atlas(),
         });
         frame.say("", self.option_names());
         frame
@@ -209,7 +209,7 @@ impl App for Quiz {
     fn wear(&mut self, world: &Json) {
         self.dark = world["shared"]["settings"]["darkmode"] == true;
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "score": self.score,
             "steps": self.steps,
@@ -236,7 +236,7 @@ impl App for Quiz {
         ));
         out
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "quiz.answer" => {
                 if self.over {
@@ -360,7 +360,7 @@ mod tests {
             let text = q.option_names()[q.correct].clone();
             send(q, "quiz.answer", json!({ "text": &text }));
         }
-        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.state(&iden(), None), b.state(&iden(), None));
         assert_eq!(a.save(), b.save());
     }
     #[test]
@@ -408,21 +408,21 @@ mod tests {
     #[test]
     fn position_counts_against_the_total() {
         let mut q = quiz(7);
-        let state = q.state(&iden());
+        let state = q.state(&iden(), None);
         assert_eq!(state["position"], json!(1));
         assert_eq!(state["total"], json!(10));
         let text = q.option_names()[q.correct].clone();
         send(&mut q, "quiz.answer", json!({ "text": &text }));
-        assert_eq!(q.state(&iden())["position"], json!(2));
+        assert_eq!(q.state(&iden(), None)["position"], json!(2));
         let names = q.option_names();
         let wrong = names[(q.correct + 1) % names.len()].clone();
         send(&mut q, "quiz.answer", json!({ "text": &wrong }));
-        assert_eq!(q.state(&iden())["position"], json!(2));
+        assert_eq!(q.state(&iden(), None)["position"], json!(2));
     }
     #[test]
     fn state_masks_the_correct_answer() {
         let q = quiz(9);
-        let state = q.state(&iden());
+        let state = q.state(&iden(), None);
         assert!(state.get("target").is_none());
         assert!(state.get("correct").is_none());
         assert_eq!(state["options"].as_array().unwrap().len(), q.options.len());
@@ -452,10 +452,10 @@ mod tests {
     #[test]
     fn reset_seed_defaults_to_now() {
         let mut q = Quiz::new();
-        let out = q.act(&iden(), &Call::new("quiz.reset", json!({})).at(5000));
+        let out = q.call(&iden(), &Call::new("quiz.reset", json!({})).at(5000));
         assert!(out.ok);
         assert_eq!(out.data["seed"], json!(5000));
-        assert_eq!(q.state(&iden())["seed"], json!(5000));
+        assert_eq!(q.state(&iden(), None)["seed"], json!(5000));
     }
     #[test]
     fn set_validates_and_resets_the_round() {
@@ -464,7 +464,7 @@ mod tests {
         send(&mut q, "quiz.answer", json!({ "text": &text }));
         let out = send(&mut q, "quiz.set", json!({ "key": "options", "value": 5 }));
         assert!(out.ok);
-        let state = q.state(&iden());
+        let state = q.state(&iden(), None);
         assert_eq!(state["settings"]["options"], json!(5));
         assert_eq!(state["steps"], json!(0));
         assert!(
@@ -507,7 +507,7 @@ mod tests {
             )
             .ok
         );
-        let state = q.state(&iden());
+        let state = q.state(&iden(), None);
         assert_eq!(state["settings"]["surface"], json!("canvas"));
         assert_eq!(state["settings"]["skin"], json!("digits"));
         assert_eq!(state["steps"], json!(1));
@@ -532,7 +532,7 @@ mod tests {
     fn old_saves_default_to_the_legacy_look() {
         let mut q = Quiz::new();
         q.load(&json!({ "seed": 3, "settings": { "options": 4 } }));
-        let settings = q.state(&iden())["settings"].clone();
+        let settings = q.state(&iden(), None)["settings"].clone();
         assert_eq!(settings["options"], json!(4));
         assert_eq!(settings["surface"], json!("grid"));
         assert_eq!(settings["skin"], json!("tiles"));
@@ -545,20 +545,20 @@ mod tests {
         send(&mut a, "quiz.answer", json!({ "text": &text }));
         let mut b = Quiz::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
         assert_eq!(b.save(), a.save());
         for q in [&mut a, &mut b] {
             let text = q.option_names()[q.correct].clone();
             send(q, "quiz.answer", json!({ "text": &text }));
         }
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
     }
     #[test]
     fn load_survives_garbage() {
         let mut q = Quiz::new();
         q.load(&json!({ "seed": "soup", "options": "nope", "settings": 7 }));
-        assert_eq!(q.state(&iden())["steps"], json!(0));
-        assert_eq!(q.state(&iden())["seed"], json!(0));
+        assert_eq!(q.state(&iden(), None)["steps"], json!(0));
+        assert_eq!(q.state(&iden(), None)["seed"], json!(0));
     }
     #[test]
     fn actions_offer_the_natural_verbs() {
@@ -569,7 +569,7 @@ mod tests {
     #[test]
     fn state_carries_an_indexed_frame() {
         let q = quiz(5);
-        let state = q.state(&iden());
+        let state = q.state(&iden(), None);
         let palette = state["frame"]["palette"].as_array().unwrap();
         assert!(!palette.is_empty());
         let rows = state["frame"]["rows"].as_array().unwrap();

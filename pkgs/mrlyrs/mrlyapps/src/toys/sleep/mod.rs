@@ -240,7 +240,7 @@ impl App for Sleep {
     fn wear(&mut self, world: &Json) {
         self.dark = world["shared"]["settings"]["darkmode"] == true;
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "steps": self.steps,
             "over": false,
@@ -256,7 +256,7 @@ impl App for Sleep {
             Verb::new("sleep.set", json!({ "key": "string", "value": "any" })),
         ]
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "sleep.step" => {
                 let n = match call.arg("n") {
@@ -363,7 +363,7 @@ mod tests {
         for s in [&mut a, &mut b] {
             send(s, "sleep.step", json!({ "n": 120 }));
         }
-        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.state(&iden(), None), b.state(&iden(), None));
         assert_eq!(a.save(), b.save());
     }
     #[test]
@@ -394,7 +394,7 @@ mod tests {
         let out = send(&mut s, "sleep.step", json!({ "n": 5 }));
         assert!(out.ok);
         assert_eq!(out.data["steps"], json!(5));
-        assert_eq!(s.state(&iden())["steps"], json!(5));
+        assert_eq!(s.state(&iden(), None)["steps"], json!(5));
         assert!(!send(&mut s, "sleep.step", json!({ "n": 0 })).ok);
         assert!(!send(&mut s, "sleep.step", json!({ "n": 2000 })).ok);
     }
@@ -404,7 +404,7 @@ mod tests {
         send(&mut s, "sleep.step", json!({ "n": 3 }));
         let out = send(&mut s, "sleep.set", json!({ "key": "cols", "value": 20 }));
         assert!(out.ok);
-        let state = s.state(&iden());
+        let state = s.state(&iden(), None);
         assert_eq!(state["settings"]["cols"], json!(20));
         assert_eq!(state["steps"], json!(0));
         assert!(!send(&mut s, "sleep.set", json!({ "key": "cols", "value": 999 })).ok);
@@ -428,7 +428,7 @@ mod tests {
         );
         assert!(out.ok);
         assert_eq!(
-            s.state(&iden())["settings"]["palette"],
+            s.state(&iden(), None)["settings"]["palette"],
             json!(["#ff0000", "#00ff00"])
         );
         let out = send(
@@ -437,7 +437,10 @@ mod tests {
             json!({ "key": "palette", "value": ["#0000ff"] }),
         );
         assert!(out.ok);
-        assert_eq!(s.state(&iden())["settings"]["palette"], json!(["#0000ff"]));
+        assert_eq!(
+            s.state(&iden(), None)["settings"]["palette"],
+            json!(["#0000ff"])
+        );
         assert!(!send(&mut s, "sleep.set", json!({ "key": "palette", "value": 7 })).ok);
         assert!(
             !send(
@@ -459,7 +462,10 @@ mod tests {
             )
             .ok
         );
-        assert_eq!(s.state(&iden())["settings"]["palette"][1], json!("#00cad8"));
+        assert_eq!(
+            s.state(&iden(), None)["settings"]["palette"][1],
+            json!("#00cad8")
+        );
         assert!(
             send(
                 &mut s,
@@ -499,20 +505,20 @@ mod tests {
         send(&mut a, "sleep.step", json!({ "n": 40 }));
         let mut b = Sleep::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
         assert_eq!(b.save(), a.save());
         for s in [&mut a, &mut b] {
             send(s, "sleep.step", json!({ "n": 6 }));
         }
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
     }
     #[test]
     fn load_survives_garbage() {
         let mut s = Sleep::new();
         s.load(&json!({ "seed": "soup", "x": "nope", "settings": 7 }));
-        assert_eq!(s.state(&iden())["steps"], json!(0));
-        assert_eq!(s.state(&iden())["seed"], json!(0));
-        let frame = s.state(&iden())["frame"].clone();
+        assert_eq!(s.state(&iden(), None)["steps"], json!(0));
+        assert_eq!(s.state(&iden(), None)["seed"], json!(0));
+        let frame = s.state(&iden(), None)["frame"].clone();
         assert!(!frame["rows"].as_array().unwrap().is_empty());
     }
     #[test]
@@ -524,7 +530,7 @@ mod tests {
     #[test]
     fn state_carries_an_indexed_frame() {
         let s = sleep(5);
-        let state = s.state(&iden());
+        let state = s.state(&iden(), None);
         let palette = state["frame"]["palette"].as_array().unwrap();
         assert!(!palette.is_empty());
         let rows = state["frame"]["rows"].as_array().unwrap();

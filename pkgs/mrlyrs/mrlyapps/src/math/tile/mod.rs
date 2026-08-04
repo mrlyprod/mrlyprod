@@ -113,7 +113,7 @@ impl App for Tile {
         self.dark = world["shared"]["settings"]["darkmode"] == true;
         self.repaint();
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "tile": self.tile.to_json(),
             "paint": self.paint.as_ref().map(|p| p.to_json()).unwrap_or(Json::Null),
@@ -141,7 +141,7 @@ impl App for Tile {
             Verb::new("tile.drop", json!({ "id": "int" })),
         ]
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "tile.set" => {
                 let key = call.arg("key").as_str().unwrap_or("").to_string();
@@ -352,7 +352,7 @@ mod tests {
         let a = app();
         seed(99);
         let b = app();
-        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.state(&iden(), None), b.state(&iden(), None));
         assert_eq!(a.tile.group, Group::Fractal);
         assert_eq!(a.tile.numbers, vec![3]);
         assert_eq!(a.tile.levels, vec![2]);
@@ -454,7 +454,7 @@ mod tests {
         for t in [&mut a, &mut b] {
             assert!(send(t, "tile.roll", json!({ "seed": 7 })).ok);
         }
-        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.state(&iden(), None), b.state(&iden(), None));
         assert!(a.tile.max_size() <= 64);
         assert!(check_model(&a.tile).is_ok());
     }
@@ -468,7 +468,7 @@ mod tests {
             assert!(set(t, "target", json!("Void")).ok);
             assert!(send(t, "tile.paint", json!({ "seed": 7 })).ok);
         }
-        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.state(&iden(), None), b.state(&iden(), None));
         let coating = a.paint.as_ref().unwrap();
         assert_eq!(coating.edition, Edition::Layers);
         assert_eq!(coating.target, Target::Void);
@@ -490,21 +490,21 @@ mod tests {
     #[test]
     fn load_rejects_bad_bundles() {
         let mut t = app();
-        let before = t.state(&iden());
+        let before = t.state(&iden(), None);
         t.load(&json!({ "tile": { "group": "General" }, "paint": Json::Null }));
-        assert_eq!(t.state(&iden()), before);
+        assert_eq!(t.state(&iden(), None), before);
         let mut oversize = carpet();
         oversize.levels = vec![5];
         resize(&mut oversize);
         t.load(&json!({ "tile": oversize.to_json(), "paint": Json::Null }));
-        assert_eq!(t.state(&iden()), before);
+        assert_eq!(t.state(&iden(), None), before);
         let mut flipped = carpet();
         flipped.flip = true;
         t.load(&json!({ "tile": flipped.to_json(), "paint": Json::Null }));
-        assert_eq!(t.state(&iden()), before);
+        assert_eq!(t.state(&iden(), None), before);
         let sane = carpet();
         t.load(&json!({ "tile": sane.to_json(), "paint": { "edition": "Sparkle" } }));
-        assert_eq!(t.state(&iden()), before);
+        assert_eq!(t.state(&iden(), None), before);
     }
     #[test]
     fn strip_clears_the_paint() {
@@ -545,14 +545,14 @@ mod tests {
         assert!(set(&mut a, "budget", json!(32)).ok);
         let mut b = app();
         b.load(&a.save());
-        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.state(&iden(), None), b.state(&iden(), None));
         assert_eq!(a.save(), b.save());
     }
     #[test]
     fn load_survives_garbage() {
         let mut t = app();
         t.load(&json!({ "tile": 7, "budget": "soup", "parity": [1] }));
-        assert_eq!(t.state(&iden()), app().state(&iden()));
+        assert_eq!(t.state(&iden(), None), app().state(&iden(), None));
     }
     #[test]
     fn reset_restores_the_defaults() {
@@ -560,7 +560,7 @@ mod tests {
         let mut t = app();
         assert!(send(&mut t, "tile.roll", json!({ "seed": 5 })).ok);
         assert!(send(&mut t, "tile.reset", json!({})).ok);
-        assert_eq!(t.state(&iden()), app().state(&iden()));
+        assert_eq!(t.state(&iden(), None), app().state(&iden(), None));
     }
     #[test]
     fn thumbs_ride_the_fractal_levels() {
@@ -575,7 +575,7 @@ mod tests {
     #[test]
     fn state_carries_the_studio() {
         let t = app();
-        let state = t.state(&iden());
+        let state = t.state(&iden(), None);
         assert_eq!(state["paint"], Json::Null);
         assert_eq!(state["catalog"], json!("Classics"));
         assert_eq!(state["parity"], json!("Odds"));
@@ -612,7 +612,7 @@ mod tests {
         let a = app();
         seed(99);
         let b = app();
-        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.state(&iden(), None), b.state(&iden(), None));
         assert_eq!(a.library.len(), 4);
         let names: Vec<&str> = a.library.iter().map(|e| e.name.as_str()).collect();
         assert_eq!(names, vec!["carpet", "net", "htree", "vtree"]);
@@ -626,7 +626,10 @@ mod tests {
     #[test]
     fn library_value_parses_back_to_a_model() {
         let t = app();
-        let cards = t.state(&iden())["library"].as_array().unwrap().clone();
+        let cards = t.state(&iden(), None)["library"]
+            .as_array()
+            .unwrap()
+            .clone();
         assert_eq!(cards.len(), 4);
         assert_eq!(cards[0]["id"], json!(1));
         assert_eq!(cards[0]["name"], json!("carpet"));
@@ -721,7 +724,7 @@ mod tests {
         assert!(send(&mut a, "tile.save", json!({ "name": "keeper" })).ok);
         let mut b = app();
         b.load(&a.save());
-        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.state(&iden(), None), b.state(&iden(), None));
         assert_eq!(a.save(), b.save());
         assert_eq!(b.library.len(), 5);
         assert_eq!(b.next, a.next);

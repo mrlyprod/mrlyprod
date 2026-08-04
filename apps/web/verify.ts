@@ -1,15 +1,17 @@
 import { readFileSync, readdirSync } from "node:fs"
-import { act, boot, describe, frame, load, mark, peek, shaders, uniforms } from "./src/kernel.ts"
-import { install as installPeeks } from "./src/peeks.ts"
-import type { Call, Node, Observation, Shade } from "./src/types.ts"
+import markData from "./src/gen/mark.json"
+import shadersData from "./src/gen/shaders.json"
+import { boot, buffer, call, list, load, observe, read } from "./src/kernel.ts"
+import { install as installReads } from "./src/reads.ts"
+import type { Call, Mark, Node, Observation, Shade, Shaders } from "./src/types.ts"
 import { views } from "./src/views/index.ts"
 
 const wasm = readFileSync(new URL("../../pkgs/mrlyjs/web/pkg/mrlyjs_bg.wasm", import.meta.url))
 await load(wasm)
 
 const handle = boot()
-installPeeks(app => peek(handle, app))
-const registry = describe()
+installReads(path => read(handle, path))
+const registry = list(handle)
 let now = 1783600496000
 let failures = 0
 
@@ -20,11 +22,11 @@ function check(name: string, ok: boolean, detail = "") {
 
 function send(verb: string, args: Call["args"] = {}): Observation {
   now += 1000
-  return act(handle, { verb, args, now })
+  return call(handle, { verb, args, now })
 }
 
 function look(): Observation {
-  return frame(handle)
+  return observe(handle)
 }
 
 function focused(obs: Observation): Record<string, unknown> {
@@ -63,20 +65,20 @@ function checkBox(route: string, tree: Node) {
   if (violations.length > 0) boxless.push(`${route}: ${violations.join(", ")}`)
 }
 
-const booted = frame(handle)
+const booted = observe(handle)
 check("boots at menu, tick 0", booted.route?.app === "menu" && booted.tick === 0)
 check("registry names a version", typeof registry.version === "string" && registry.version !== "")
 
-const anim = mark()
+const anim = markData as Mark
 check(
-  "the mark animation rides the wasm",
+  "the mark animation is baked",
   anim.rows === 7 && anim.cols === 49 && anim.fps === 25 && anim.frames.length > 100,
   `${anim.frames.length} frames`,
 )
 
-const programs = shaders()
+const programs = shadersData as Shaders
 check(
-  "the shader programs ride the wasm",
+  "the shader programs are baked",
   Object.keys(programs).length > 0 && Object.values(programs).every(source => source.includes("fn vs_main") && source.includes("fn fs_main")),
   Object.keys(programs).join(" "),
 )
@@ -228,7 +230,7 @@ send("life.fill", { which: "survive", seq: "odds" })
 check("a sequence fills the survive set", JSON.stringify(settings()["survive"]) === JSON.stringify([3, 5, 7]))
 send("life.reset", { pattern: "soup" })
 check("soup seeds a living board", (state()["population"] as number) > 0 && state()["generation"] === 0)
-const tileLibrary = (peek(handle, "tile")?.state as { library: { value: unknown }[] }).library
+const tileLibrary = read(handle, "tile/library") as { value: unknown }[]
 check("tile keeps a non-empty library", tileLibrary.length > 0, String(tileLibrary.length))
 visit("life")
 const picked = send("life.set", { key: "seed", value: tileLibrary[0]?.value })
@@ -249,7 +251,7 @@ const tileTree = views["tile"]?.(focused(look()), () => {}) as Node
 check("the tile view hangs a preview canvas", nodes(tileTree).some(n => n.kind === "Canvas"))
 checkBox("tile", tileTree)
 
-const kept = (app: string) => (peek(handle, app)?.state as { library: unknown[] }).library
+const kept = (app: string) => read(handle, `${app}/library`) as unknown[]
 check("colors keeps the full name library", kept("colors").length === 15, String(kept("colors").length))
 check("emoji keeps a non-empty library", kept("emoji").length > 0, String(kept("emoji").length))
 check("font keeps a non-empty library", kept("font").length > 0, String(kept("font").length))
@@ -286,7 +288,7 @@ for (const app of registry.apps) {
     continue
   }
   const shade = (focused(obs) as { shade?: Shade })?.shade
-  const vector = shade === undefined ? undefined : uniforms(handle, shade.route ?? shade.program)
+  const vector = shade === undefined ? undefined : buffer(handle, `${shade.route ?? shade.program}/uniforms`)
   if (shade !== undefined && (programs[shade.program] === undefined || vector === undefined || vector.length < 12)) {
     misshaded.push(app.route)
   }

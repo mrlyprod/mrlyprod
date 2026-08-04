@@ -1,7 +1,7 @@
 use super::Chess;
 use mrlycore::colors::PALETTE;
 use mrlycore::tensor::Tensor;
-use mrlyui::frame::{solid_tile, Frame, Layer, TileSet};
+use mrlyui::frame::{solid_tile, Atlas, Frame, Layer};
 use mrlyui::skin::Skin;
 
 impl Chess {
@@ -109,7 +109,7 @@ impl Chess {
         }
         solid_tile(k, [0, 0, 0, 0])
     }
-    fn pieces_set(&self) -> TileSet {
+    fn pieces_set(&self) -> Atlas {
         let k = self.k();
         let mut tiles = Vec::with_capacity(13);
         tiles.push(solid_tile(k, [0, 0, 0, 0]));
@@ -119,7 +119,7 @@ impl Chess {
         for kind in 0..6 {
             tiles.push(self.piece(kind, 1));
         }
-        let mut set = TileSet::new(k, tiles);
+        let mut set = Atlas::new(k, tiles);
         if self.set.skin == "emojis" {
             for team in 0..2 {
                 for kind in 0..6 {
@@ -133,9 +133,9 @@ impl Chess {
         }
         set
     }
-    fn board_set(&self) -> TileSet {
+    fn board_set(&self) -> Atlas {
         let k = self.k();
-        TileSet::new(
+        Atlas::new(
             k,
             vec![
                 solid_tile(k, self.board_colors[0]),

@@ -60,7 +60,7 @@ impl App for Clock {
     fn manifest(&self) -> Manifest {
         Manifest::new("clock").emoji("🕐").category("tools")
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         let mut out = json!({ "now": self.now });
         if self.glyphs {
             let face = if self.now == 0 {
@@ -75,7 +75,7 @@ impl App for Clock {
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
         vec![Verb::new("clock.tick", json!({}))]
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "clock.tick" => {
                 self.now = call.now.unwrap_or(self.now);
@@ -126,15 +126,15 @@ mod tests {
     fn tick_reads_now_from_the_call() {
         let iden = Iden::new("aria");
         let mut clock = Clock::new();
-        let out = clock.act(&iden, &Call::new("clock.tick", json!({})).at(1783600496000));
+        let out = clock.call(&iden, &Call::new("clock.tick", json!({})).at(1783600496000));
         assert!(out.ok);
         assert_eq!(out.data["now"], json!(1783600496000i64));
-        assert_eq!(clock.state(&iden)["now"], json!(1783600496000i64));
+        assert_eq!(clock.state(&iden, None)["now"], json!(1783600496000i64));
     }
     #[test]
     fn unset_clock_is_honest() {
         let iden = Iden::new("aria");
-        assert_eq!(Clock::new().state(&iden)["now"], json!(0));
+        assert_eq!(Clock::new().state(&iden, None)["now"], json!(0));
     }
     #[test]
     fn beat_is_the_tick() {
@@ -147,20 +147,20 @@ mod tests {
     fn save_load_roundtrips() {
         let iden = Iden::new("aria");
         let mut a = Clock::new();
-        a.act(&iden, &Call::new("clock.tick", json!({})).at(1783600496000));
+        a.call(&iden, &Call::new("clock.tick", json!({})).at(1783600496000));
         let mut b = Clock::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden), a.state(&iden));
+        assert_eq!(b.state(&iden, None), a.state(&iden, None));
         let mut c = Clock::new();
         c.load(&json!({}));
-        assert_eq!(c.state(&iden)["now"], json!(0));
+        assert_eq!(c.state(&iden, None)["now"], json!(0));
     }
     #[test]
     fn unknown_verb_fails() {
         let iden = Iden::new("aria");
         assert!(
             !Clock::new()
-                .act(&iden, &Call::new("clock.fly", json!({})))
+                .call(&iden, &Call::new("clock.fly", json!({})))
                 .ok
         );
     }
@@ -169,13 +169,13 @@ mod tests {
         let iden = Iden::new("aria");
         let mut clock = Clock::new();
         clock.wear(&json!({ "shared": { "settings": { "font": "mrly" } } }));
-        assert_eq!(clock.state(&iden)["glyph"]["text"], json!("--:--:--"));
-        clock.act(&iden, &Call::new("clock.tick", json!({})).at(45296000));
-        assert_eq!(clock.state(&iden)["glyph"]["text"], json!("12:34:56"));
+        assert_eq!(clock.state(&iden, None)["glyph"]["text"], json!("--:--:--"));
+        clock.call(&iden, &Call::new("clock.tick", json!({})).at(45296000));
+        assert_eq!(clock.state(&iden, None)["glyph"]["text"], json!("12:34:56"));
     }
     #[test]
     fn unworn_clock_has_no_glyph() {
         let iden = Iden::new("aria");
-        assert!(Clock::new().state(&iden)["glyph"].is_null());
+        assert!(Clock::new().state(&iden, None)["glyph"].is_null());
     }
 }

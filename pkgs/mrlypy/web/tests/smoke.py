@@ -1,14 +1,15 @@
 import mrlyweb
 
-world = mrlyweb.describe()
+os = mrlyweb.boot()
+
+world = mrlyweb.list(os)
 assert world["apps"]
 
-os = mrlyweb.boot()
-obs = mrlyweb.act(os, {"verb": "nav.open", "args": {"app": "notes"}})
-obs = mrlyweb.act(os, {"verb": "notes.add", "args": {"text": "hi"}})
-assert obs["view"]["state"]["found"][0]["text"] == "hi"
+mrlyweb.call(os, {"verb": "nav.open", "args": {"app": "notes"}})
+env = mrlyweb.call(os, {"verb": "notes.add", "args": {"text": "hi"}})
+assert env["view"]["state"]["found"][0]["text"] == "hi"
 
-mrlyweb.act(os, {"verb": "nav.open", "args": {"app": "snake"}})
-assert any(mrlyweb.goose_step(os, 7) for _ in range(10))
+assert mrlyweb.read(os, "notes/found/0/text") == "hi"
+assert mrlyweb.read(os, "notes/nowhere") is None
 
-print("smoke:", len(world["apps"]), "apps, tick", obs["tick"])
+print("smoke:", len(world["apps"]), "apps, tick", env["tick"])

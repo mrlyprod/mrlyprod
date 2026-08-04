@@ -4,7 +4,7 @@ use mrlycore::tensor::Tensor;
 use mrlycore::{json, Json};
 use mrlymusic::cue;
 use mrlyos::kernel::{int, App, Call, Effect, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{Frame, Layer, TileSet};
+use mrlyui::frame::{Atlas, Frame, Layer};
 use mrlyui::skin::Skin;
 
 const DESIGNS: [&str; 5] = ["carpet", "net", "vtree", "htree", "solid"];
@@ -296,9 +296,8 @@ impl Memory {
     fn k(&self) -> usize {
         mrlyui::skin::pixels(self.set.tile as usize, &self.set.skin)
     }
-    fn tileset(&self) -> TileSet {
-        self.skin()
-            .tileset(self.k(), mrlyui::frame::board(self.dark))
+    fn atlas(&self) -> Atlas {
+        self.skin().atlas(self.k(), mrlyui::frame::board(self.dark))
     }
     fn render(&self) -> Frame {
         let k = self.k();
@@ -309,7 +308,7 @@ impl Memory {
         );
         frame.push(Layer::Tiles {
             ids: self.ids(),
-            set: self.tileset(),
+            set: self.atlas(),
         });
         frame
     }
@@ -325,7 +324,7 @@ impl App for Memory {
     fn wear(&mut self, world: &Json) {
         self.dark = world["shared"]["settings"]["darkmode"] == true;
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "score": self.score,
             "steps": self.steps,
@@ -353,7 +352,7 @@ impl App for Memory {
         ));
         out
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "memory.flip" => {
                 if self.over {
@@ -512,12 +511,12 @@ mod tests {
 
     fn drain(m: &mut Memory) {
         while m.looking() {
-            m.act(&iden(), &Call::new("memory.tick", json!({})));
+            m.call(&iden(), &Call::new("memory.tick", json!({})));
         }
     }
     fn memory(seed: u64) -> Memory {
         let mut m = Memory::new();
-        m.act(&iden(), &Call::new("memory.reset", json!({ "seed": seed })));
+        m.call(&iden(), &Call::new("memory.reset", json!({ "seed": seed })));
         drain(&mut m);
         m
     }
@@ -530,7 +529,7 @@ mod tests {
             send(m, "memory.flip", json!({ "card": 0 }));
             send(m, "memory.flip", json!({ "card": 1 }));
         }
-        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.state(&iden(), None), b.state(&iden(), None));
         assert_eq!(a.save(), b.save());
     }
     #[test]
@@ -542,7 +541,7 @@ mod tests {
         let out = send(&mut m, "memory.flip", json!({ "card": b }));
         assert!(out.ok);
         assert_eq!(out.data["matched"], json!(true));
-        assert_eq!(m.state(&iden())["score"], json!(1));
+        assert_eq!(m.state(&iden(), None)["score"], json!(1));
     }
     #[test]
     fn failed_pair_flip_peeks_then_hides() {
@@ -579,7 +578,7 @@ mod tests {
     fn solving_a_round_deals_the_next_and_keeps_score() {
         let mut m = memory(3);
         solve(&mut m);
-        let state = m.state(&iden());
+        let state = m.state(&iden(), None);
         assert!(!m.over);
         assert_eq!(state["rounds"], json!(1));
         assert_eq!(state["score"], json!(4));
@@ -587,8 +586,8 @@ mod tests {
         assert!(!send(&mut m, "memory.flip", json!({ "card": 0 })).ok);
         drain(&mut m);
         solve(&mut m);
-        assert_eq!(m.state(&iden())["rounds"], json!(2));
-        assert_eq!(m.state(&iden())["score"], json!(8));
+        assert_eq!(m.state(&iden(), None)["rounds"], json!(2));
+        assert_eq!(m.state(&iden(), None)["score"], json!(8));
     }
     #[test]
     fn sudden_death_ends_on_a_mismatch() {
@@ -611,10 +610,10 @@ mod tests {
     #[test]
     fn look_phase_shows_then_hides_and_gates_flips() {
         let mut m = Memory::new();
-        m.act(&iden(), &Call::new("memory.reset", json!({ "seed": 3 })));
+        m.call(&iden(), &Call::new("memory.reset", json!({ "seed": 3 })));
         assert!(m.looking());
-        assert_eq!(m.state(&iden())["look"], json!(LOOK));
-        for row in m.state(&iden())["board"].as_array().unwrap() {
+        assert_eq!(m.state(&iden(), None)["look"], json!(LOOK));
+        for row in m.state(&iden(), None)["board"].as_array().unwrap() {
             for cell in row.as_array().unwrap() {
                 assert!(!cell.is_null() || cell == &Json::Null);
             }
@@ -629,8 +628,8 @@ mod tests {
     #[test]
     fn look_reveals_but_settled_hides() {
         let mut m = Memory::new();
-        m.act(&iden(), &Call::new("memory.reset", json!({ "seed": 9 })));
-        let shown = m.state(&iden())["board"].clone();
+        m.call(&iden(), &Call::new("memory.reset", json!({ "seed": 9 })));
+        let shown = m.state(&iden(), None)["board"].clone();
         assert!(shown
             .as_array()
             .unwrap()
@@ -638,7 +637,7 @@ mod tests {
             .flat_map(|r| r.as_array().unwrap())
             .any(|c| c.is_number()));
         drain(&mut m);
-        let board = m.state(&iden())["board"].clone();
+        let board = m.state(&iden(), None)["board"].clone();
         for row in board.as_array().unwrap() {
             for cell in row.as_array().unwrap() {
                 assert!(cell.is_null() || cell == "void");
@@ -651,10 +650,10 @@ mod tests {
         for (key, value) in [("surface", "canvas"), ("skin", "emojis")] {
             assert!(send(&mut m, "memory.set", json!({ "key": key, "value": value })).ok);
         }
-        let settings = m.state(&iden())["settings"].clone();
+        let settings = m.state(&iden(), None)["settings"].clone();
         assert_eq!(settings["surface"], json!("canvas"));
         assert_eq!(settings["skin"], json!("emojis"));
-        let tile = m.tileset().tiles[1].cell.colors.clone().unwrap();
+        let tile = m.atlas().tiles[1].cell.colors.clone().unwrap();
         assert!(tile.iter().any(|px| px[3] > 0), "the canvas baked nothing");
         assert!(
             !send(
@@ -669,22 +668,22 @@ mod tests {
     fn from_json_keeps_every_combo() {
         let mut m = Memory::new();
         m.load(&json!({ "seed": 3, "settings": { "skin": "emojis", "surface": "canvas" } }));
-        let settings = m.state(&iden())["settings"].clone();
+        let settings = m.state(&iden(), None)["settings"].clone();
         assert_eq!(settings["surface"], json!("canvas"));
         assert_eq!(settings["skin"], json!("emojis"));
         let mut m = Memory::new();
         m.load(&json!({ "seed": 3, "settings": { "pairs": 6 } }));
-        let settings = m.state(&iden())["settings"].clone();
+        let settings = m.state(&iden(), None)["settings"].clone();
         assert_eq!(settings["surface"], json!("grid"));
         assert_eq!(settings["skin"], json!("tiles"));
     }
     #[test]
     fn reset_seed_defaults_to_now() {
         let mut m = Memory::new();
-        let out = m.act(&iden(), &Call::new("memory.reset", json!({})).at(5000));
+        let out = m.call(&iden(), &Call::new("memory.reset", json!({})).at(5000));
         assert!(out.ok);
         assert_eq!(out.data["seed"], json!(5000));
-        assert_eq!(m.state(&iden())["seed"], json!(5000));
+        assert_eq!(m.state(&iden(), None)["seed"], json!(5000));
     }
     #[test]
     fn set_validates_and_resets_the_round() {
@@ -692,7 +691,7 @@ mod tests {
         send(&mut m, "memory.flip", json!({ "card": 0 }));
         let out = send(&mut m, "memory.set", json!({ "key": "pairs", "value": 6 }));
         assert!(out.ok);
-        let state = m.state(&iden());
+        let state = m.state(&iden(), None);
         assert_eq!(state["settings"]["pairs"], json!(6));
         assert_eq!(state["steps"], json!(0));
         assert!(!send(&mut m, "memory.set", json!({ "key": "pairs", "value": 99 })).ok);
@@ -715,25 +714,25 @@ mod tests {
         send(&mut a, "memory.flip", json!({ "card": y }));
         let mut b = Memory::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
         assert_eq!(b.save(), a.save());
         let next = (0..a.total()).find(|&i| i != x && i != y).unwrap();
         for m in [&mut a, &mut b] {
             send(m, "memory.flip", json!({ "card": next }));
         }
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
     }
     #[test]
     fn load_survives_garbage() {
         let mut m = Memory::new();
         m.load(&json!({ "seed": "soup", "matched": [1, 2, 3], "settings": 7 }));
-        assert_eq!(m.state(&iden())["steps"], json!(0));
-        assert_eq!(m.state(&iden())["seed"], json!(0));
+        assert_eq!(m.state(&iden(), None)["steps"], json!(0));
+        assert_eq!(m.state(&iden(), None)["seed"], json!(0));
     }
     #[test]
     fn state_does_not_leak_hidden_cards_but_save_restores_them() {
         let m = memory(9);
-        let board = m.state(&iden())["board"].clone();
+        let board = m.state(&iden(), None)["board"].clone();
         for row in board.as_array().unwrap() {
             for cell in row.as_array().unwrap() {
                 assert!(cell.is_null() || cell == "void");
@@ -755,7 +754,7 @@ mod tests {
         let mut m = memory(3);
         send(&mut m, "memory.set", json!({ "key": "cols", "value": 4 }));
         drain(&mut m);
-        let state = m.state(&iden());
+        let state = m.state(&iden(), None);
         assert_eq!(state["ids"][0][0], json!(BACK));
         assert_eq!(state["ids"][m.rows() - 1][m.cols() - 1], json!(VOID));
         assert_eq!(state["skin"][VOID as usize], json!({}));
@@ -768,7 +767,7 @@ mod tests {
             json!({ "key": "skin", "value": "digits" }),
         );
         assert_eq!(
-            m.state(&iden())["skin"][2]["face"],
+            m.state(&iden(), None)["skin"][2]["face"],
             json!({ "as": "glyph", "value": "1" })
         );
         send(
@@ -776,12 +775,15 @@ mod tests {
             "memory.set",
             json!({ "key": "skin", "value": "emojis" }),
         );
-        assert_eq!(m.state(&iden())["skin"][2]["face"]["as"], json!("emoji"));
+        assert_eq!(
+            m.state(&iden(), None)["skin"][2]["face"]["as"],
+            json!("emoji")
+        );
     }
     #[test]
     fn state_carries_an_indexed_frame() {
         let m = memory(5);
-        let state = m.state(&iden());
+        let state = m.state(&iden(), None);
         let palette = state["frame"]["palette"].as_array().unwrap();
         assert!(!palette.is_empty());
         let rows = state["frame"]["rows"].as_array().unwrap();

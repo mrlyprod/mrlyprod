@@ -1,11 +1,6 @@
-use mrlycore::json::Map;
 use mrlycore::{json, Json};
-use mrlyos::kernel::{Call, Goose, Os};
+use mrlyos::kernel::{Call, Os};
 use wasm_bindgen::prelude::*;
-
-fn build() -> Os {
-    mrlyweb::registry::boot()
-}
 
 fn shape_of(text: Option<String>) -> Option<Json> {
     let text = text?;
@@ -15,22 +10,33 @@ fn shape_of(text: Option<String>) -> Option<Json> {
     mrlycore::json::parse(&text).ok()
 }
 
+fn text_of(found: Option<Json>) -> String {
+    match found {
+        Some(json) => json.to_string(),
+        None => "null".to_string(),
+    }
+}
+
 #[wasm_bindgen]
 pub struct Handle {
     os: Os,
-    goose: Option<(u64, Goose)>,
 }
 
 #[wasm_bindgen]
 pub fn boot() -> Handle {
     Handle {
-        os: build(),
-        goose: None,
+        os: mrlyweb::registry::boot(),
     }
 }
 
 #[wasm_bindgen]
-pub fn act(handle: &mut Handle, req: &str) -> String {
+pub fn list(handle: &Handle, shape: Option<String>) -> String {
+    let shape = shape_of(shape);
+    handle.os.list(shape.as_ref()).to_string()
+}
+
+#[wasm_bindgen]
+pub fn call(handle: &mut Handle, req: &str) -> String {
     let parsed = mrlycore::json::parse(req).unwrap_or(json!({}));
     let verb = parsed["verb"].as_str().unwrap_or("").to_string();
     let args = if parsed["args"].is_object() {
@@ -38,92 +44,16 @@ pub fn act(handle: &mut Handle, req: &str) -> String {
     } else {
         json!({})
     };
-    let mut call = Call::new(&verb, args);
+    let mut made = Call::new(&verb, args);
     if let Some(now) = parsed["now"].as_i64() {
-        call = call.at(now);
+        made = made.at(now);
     }
-    handle.os.act(call);
-    frame(handle, None)
+    handle.os.call(made);
+    text_of(handle.os.read("", None))
 }
 
 #[wasm_bindgen]
-pub fn goose(handle: &mut Handle, seed: u64) -> String {
-    if handle.goose.as_ref().map(|(s, _)| *s) != Some(seed) {
-        handle.goose = Some((seed, Goose::new(seed)));
-    }
-    if let Some((_, goose)) = handle.goose.as_mut() {
-        goose.step(&mut handle.os);
-    }
-    frame(handle, None)
-}
-
-#[wasm_bindgen]
-pub fn frame(handle: &Handle, shape: Option<String>) -> String {
+pub fn read(handle: &Handle, path: &str, shape: Option<String>) -> String {
     let shape = shape_of(shape);
-    handle.os.frame(shape.as_ref()).to_json().to_string()
-}
-
-#[wasm_bindgen]
-pub fn geometry(handle: &Handle, app: &str) -> Option<Vec<f32>> {
-    handle.os.geometry(app)
-}
-
-#[wasm_bindgen]
-pub fn uniforms(handle: &Handle, app: &str) -> Option<Vec<f32>> {
-    handle.os.uniforms(app)
-}
-
-#[wasm_bindgen]
-pub fn peek(handle: &Handle, app: &str, shape: Option<String>) -> String {
-    let shape = shape_of(shape);
-    match handle.os.peek(app, shape.as_ref()) {
-        Some(view) => view.to_json().to_string(),
-        None => "null".to_string(),
-    }
-}
-
-#[wasm_bindgen]
-pub fn describe(shape: Option<String>) -> String {
-    let shape = shape_of(shape);
-    build().describe(shape.as_ref()).to_string()
-}
-
-#[wasm_bindgen]
-pub fn palette() -> String {
-    use mrlycore::colors::{BOARD_DARK, BOARD_LIGHT, NAMES, PALETTE};
-    let mut hex = Map::new();
-    for (name, color) in NAMES.iter().zip(PALETTE.iter()) {
-        hex.insert(name.to_string(), json!(color.to_hex()));
-    }
-    json!({
-        "names": NAMES.to_vec(),
-        "hex": hex,
-        "canvas": { "dark": BOARD_DARK.to_hex(), "light": BOARD_LIGHT.to_hex() },
-    })
-    .to_string()
-}
-
-#[wasm_bindgen]
-pub fn html(md: &str) -> String {
-    mrlycore::md::html(md)
-}
-
-#[wasm_bindgen]
-pub fn shaders() -> String {
-    let mut out = Map::new();
-    for (name, source) in mrlyui::shaders::all() {
-        out.insert(name.to_string(), json!(source));
-    }
-    Json::Obj(out).to_string()
-}
-
-#[wasm_bindgen]
-pub fn mark() -> String {
-    json!({
-        "rows": mrlyui::mark::ROWS,
-        "cols": mrlyui::mark::COLS,
-        "fps": mrlyui::mark::FPS,
-        "frames": mrlyui::mark::animation(),
-    })
-    .to_string()
+    text_of(handle.os.read(path, shape.as_ref()))
 }

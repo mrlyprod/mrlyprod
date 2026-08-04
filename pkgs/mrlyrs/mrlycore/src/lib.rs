@@ -8,7 +8,6 @@ pub mod errors;
 pub mod image;
 pub mod io;
 pub mod json;
-pub mod md;
 pub mod paint;
 pub mod ramp;
 pub mod rng;

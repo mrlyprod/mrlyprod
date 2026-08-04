@@ -4,7 +4,7 @@ use mrlycore::tensor::Tensor;
 use mrlycore::{json, Json};
 use mrlymusic::cue;
 use mrlyos::kernel::{drive, int, pick, App, Call, Effect, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{Frame, Layer, TileSet};
+use mrlyui::frame::{Atlas, Frame, Layer};
 use mrlyui::skin::Skin;
 
 const DESIGNS: [&str; 5] = ["carpet", "net", "vtree", "htree", "solid"];
@@ -311,9 +311,8 @@ impl Mines {
     fn k(&self) -> usize {
         mrlyui::skin::pixels(self.set.tile as usize, &self.set.skin)
     }
-    fn tileset(&self) -> TileSet {
-        self.skin()
-            .tileset(self.k(), mrlyui::frame::board(self.dark))
+    fn atlas(&self) -> Atlas {
+        self.skin().atlas(self.k(), mrlyui::frame::board(self.dark))
     }
     fn render(&self) -> Frame {
         let k = self.k();
@@ -324,7 +323,7 @@ impl Mines {
         );
         frame.push(Layer::Tiles {
             ids: self.ids(),
-            set: self.tileset(),
+            set: self.atlas(),
         });
         frame
     }
@@ -340,7 +339,7 @@ impl App for Mines {
     fn wear(&mut self, world: &Json) {
         self.dark = world["shared"]["settings"]["darkmode"] == true;
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         let flags = self.flagged.iter().filter(|&&f| f).count() as i64;
         json!({
             "score": self.revealed_safe(),
@@ -372,7 +371,7 @@ impl App for Mines {
         ));
         out
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "mines.reveal" => {
                 if self.over {
@@ -528,7 +527,7 @@ mod tests {
         for m in [&mut a, &mut b] {
             send(m, "mines.reveal", json!({ "cell": 40 }));
         }
-        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.state(&iden(), None), b.state(&iden(), None));
         assert_eq!(a.save(), b.save());
     }
     #[test]
@@ -546,7 +545,7 @@ mod tests {
         let out = send(&mut m, "mines.flag", json!({ "cell": 3 }));
         assert!(out.ok);
         assert_eq!(out.data["flagged"], json!(true));
-        assert_eq!(m.state(&iden())["flags"][0][3], json!(true));
+        assert_eq!(m.state(&iden(), None)["flags"][0][3], json!(true));
         let out = send(&mut m, "mines.flag", json!({ "cell": 3 }));
         assert_eq!(out.data["flagged"], json!(false));
         assert!(!send(&mut m, "mines.reveal", json!({ "cell": -1 })).ok);
@@ -559,7 +558,7 @@ mod tests {
         let out = send(&mut m, "mines.reveal", json!({ "cell": mine_cell }));
         assert!(out.ok);
         assert!(m.over);
-        assert_eq!(m.state(&iden())["won"], json!(false));
+        assert_eq!(m.state(&iden(), None)["won"], json!(false));
         assert!(!send(&mut m, "mines.reveal", json!({ "cell": 0 })).ok);
     }
     #[test]
@@ -584,10 +583,10 @@ mod tests {
     #[test]
     fn reset_seed_defaults_to_now() {
         let mut m = Mines::new();
-        let out = m.act(&iden(), &Call::new("mines.reset", json!({})).at(5000));
+        let out = m.call(&iden(), &Call::new("mines.reset", json!({})).at(5000));
         assert!(out.ok);
         assert_eq!(out.data["seed"], json!(5000));
-        assert_eq!(m.state(&iden())["seed"], json!(5000));
+        assert_eq!(m.state(&iden(), None)["seed"], json!(5000));
     }
     #[test]
     fn set_validates_and_resets_the_round() {
@@ -595,7 +594,7 @@ mod tests {
         send(&mut m, "mines.reveal", json!({ "cell": 0 }));
         let out = send(&mut m, "mines.set", json!({ "key": "cols", "value": 6 }));
         assert!(out.ok);
-        let state = m.state(&iden());
+        let state = m.state(&iden(), None);
         assert_eq!(state["settings"]["cols"], json!(6));
         assert_eq!(state["steps"], json!(0));
         assert!(!send(&mut m, "mines.set", json!({ "key": "cols", "value": 999 })).ok);
@@ -615,25 +614,25 @@ mod tests {
         send(&mut a, "mines.reveal", json!({ "cell": 40 }));
         let mut b = Mines::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
         assert_eq!(b.save(), a.save());
         let next = (0..a.size()).find(|&i| !a.shown[i] && !a.mine[i]).unwrap();
         for m in [&mut a, &mut b] {
             send(m, "mines.reveal", json!({ "cell": next }));
         }
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
     }
     #[test]
     fn load_survives_garbage() {
         let mut m = Mines::new();
         m.load(&json!({ "seed": "soup", "mine": [1, 2, 3], "settings": 7 }));
-        assert_eq!(m.state(&iden())["steps"], json!(0));
-        assert_eq!(m.state(&iden())["seed"], json!(0));
+        assert_eq!(m.state(&iden(), None)["steps"], json!(0));
+        assert_eq!(m.state(&iden(), None)["seed"], json!(0));
     }
     #[test]
     fn state_does_not_leak_unrevealed_mines_but_save_restores_them() {
         let m = mines(9);
-        let board = m.state(&iden())["board"].clone();
+        let board = m.state(&iden(), None)["board"].clone();
         for row in board.as_array().unwrap() {
             for cell in row.as_array().unwrap() {
                 assert!(cell.is_null());
@@ -662,23 +661,23 @@ mod tests {
     #[test]
     fn tool_switches_saves_and_rejects_garbage() {
         let mut m = mines(3);
-        assert_eq!(m.state(&iden())["tool"], json!("dig"));
+        assert_eq!(m.state(&iden(), None)["tool"], json!("dig"));
         let out = send(&mut m, "mines.tool", json!({ "tool": "flag" }));
         assert!(out.ok);
-        assert_eq!(m.state(&iden())["tool"], json!("flag"));
+        assert_eq!(m.state(&iden(), None)["tool"], json!("flag"));
         assert!(!send(&mut m, "mines.tool", json!({ "tool": "hammer" })).ok);
         let mut b = Mines::new();
         b.load(&m.save());
-        assert_eq!(b.state(&iden())["tool"], json!("flag"));
+        assert_eq!(b.state(&iden(), None)["tool"], json!("flag"));
     }
     #[test]
     fn remaining_counts_down_with_flags() {
         let mut m = mines(5);
-        assert_eq!(m.state(&iden())["remaining"], json!(10));
+        assert_eq!(m.state(&iden(), None)["remaining"], json!(10));
         send(&mut m, "mines.flag", json!({ "cell": 3 }));
-        assert_eq!(m.state(&iden())["remaining"], json!(9));
+        assert_eq!(m.state(&iden(), None)["remaining"], json!(9));
         send(&mut m, "mines.flag", json!({ "cell": 3 }));
-        assert_eq!(m.state(&iden())["remaining"], json!(10));
+        assert_eq!(m.state(&iden(), None)["remaining"], json!(10));
     }
     #[test]
     fn reveal_accepts_grid_coordinates() {
@@ -686,7 +685,7 @@ mod tests {
         let mut b = mines(9);
         send(&mut a, "mines.reveal", json!({ "cell": 40 }));
         send(&mut b, "mines.reveal", json!({ "x": 4, "y": 4 }));
-        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.state(&iden(), None), b.state(&iden(), None));
         assert!(!send(&mut b, "mines.reveal", json!({ "x": 99, "y": 0 })).ok);
     }
     #[test]
@@ -695,10 +694,10 @@ mod tests {
         for (key, value) in [("surface", "canvas"), ("skin", "emojis")] {
             assert!(send(&mut m, "mines.set", json!({ "key": key, "value": value })).ok);
         }
-        let settings = m.state(&iden())["settings"].clone();
+        let settings = m.state(&iden(), None)["settings"].clone();
         assert_eq!(settings["surface"], json!("canvas"));
         assert_eq!(settings["skin"], json!("emojis"));
-        let tile = m.tileset().tiles[10].cell.colors.clone().unwrap();
+        let tile = m.atlas().tiles[10].cell.colors.clone().unwrap();
         assert!(tile.iter().any(|px| px[3] > 0), "the canvas baked nothing");
         assert!(
             !send(
@@ -713,12 +712,12 @@ mod tests {
     fn from_json_keeps_every_combo() {
         let mut m = Mines::new();
         m.load(&json!({ "seed": 3, "settings": { "skin": "emojis", "surface": "canvas" } }));
-        let settings = m.state(&iden())["settings"].clone();
+        let settings = m.state(&iden(), None)["settings"].clone();
         assert_eq!(settings["surface"], json!("canvas"));
         assert_eq!(settings["skin"], json!("emojis"));
         let mut m = Mines::new();
         m.load(&json!({ "seed": 3, "settings": { "cols": 6 } }));
-        let settings = m.state(&iden())["settings"].clone();
+        let settings = m.state(&iden(), None)["settings"].clone();
         assert_eq!(settings["surface"], json!("grid"));
         assert_eq!(settings["skin"], json!("emojis"));
     }
@@ -732,14 +731,14 @@ mod tests {
             json!({ "key": "skin", "value": "tiles" }),
         );
         let board = mrlyui::frame::board(m.dark);
-        let plain = m.tileset().tiles[2].cell.colors.clone().unwrap();
+        let plain = m.atlas().tiles[2].cell.colors.clone().unwrap();
         assert!(!plain.contains(&board));
         send(
             &mut m,
             "mines.set",
             json!({ "key": "skin", "value": "digits" }),
         );
-        let baked = m.tileset().tiles[2].cell.colors.clone().unwrap();
+        let baked = m.atlas().tiles[2].cell.colors.clone().unwrap();
         assert!(baked.contains(&board));
     }
     #[test]
@@ -758,7 +757,7 @@ mod tests {
     #[test]
     fn state_carries_an_indexed_frame() {
         let m = mines(5);
-        let state = m.state(&iden());
+        let state = m.state(&iden(), None);
         let palette = state["frame"]["palette"].as_array().unwrap();
         assert!(!palette.is_empty());
         let rows = state["frame"]["rows"].as_array().unwrap();

@@ -15,7 +15,7 @@ export type Ui = {
   ask: (text: string) => Promise<boolean>
 }
 
-export function mount(root: HTMLElement, send: Send, routes: Router, apps: Manifest[], goose: (seed: number) => Observation): Ui {
+export function mount(root: HTMLElement, send: Send, routes: Router, apps: Manifest[], stray: () => Observation): Ui {
   root.className = "mrly splashed"
   let pending: Call | null = null
   routes.on("face.full", call => {
@@ -162,8 +162,7 @@ export function mount(root: HTMLElement, send: Send, routes: Router, apps: Manif
     if (idle) return
     idle = true
     start.hidden = false
-    const seed = Date.now()
-    if (!calm.matches) strut = setInterval(() => render(goose(seed)), 250)
+    if (!calm.matches) strut = setInterval(() => render(stray()), 250)
   }
   const shoo = () => {
     idle = false

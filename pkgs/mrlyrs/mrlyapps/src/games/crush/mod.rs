@@ -4,7 +4,7 @@ use mrlycore::tensor::Tensor;
 use mrlycore::{json, Json};
 use mrlymusic::cue;
 use mrlyos::kernel::{drive, int, pick, App, Call, Effect, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{motif_tile, solid_tile, Frame, Layer, TileSet};
+use mrlyui::frame::{motif_tile, solid_tile, Atlas, Frame, Layer};
 
 const DESIGNS: [&str; 5] = ["carpet", "net", "vtree", "htree", "solid"];
 
@@ -290,7 +290,7 @@ impl Crush {
         }
         grid
     }
-    fn tileset(&self) -> TileSet {
+    fn atlas(&self) -> Atlas {
         let k = self.set.tile as usize;
         let clear = [0, 0, 0, 0];
         let dn = self.set.design.as_str();
@@ -302,7 +302,7 @@ impl Crush {
         for _ in 1..=d {
             tiles.push(motif_tile(dn, k, self.crush_color, clear));
         }
-        TileSet::new(k, tiles)
+        Atlas::new(k, tiles)
     }
     fn render(&self) -> Frame {
         let k = self.set.tile as usize;
@@ -313,7 +313,7 @@ impl Crush {
         );
         frame.push(Layer::Tiles {
             ids: self.ids(),
-            set: self.tileset(),
+            set: self.atlas(),
         });
         frame
     }
@@ -335,7 +335,7 @@ impl App for Crush {
     fn wear(&mut self, world: &Json) {
         self.dark = world["shared"]["settings"]["darkmode"] == true;
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "score": self.score,
             "steps": self.steps,
@@ -363,7 +363,7 @@ impl App for Crush {
         ));
         out
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "crush.move" => {
                 if self.over {
@@ -554,7 +554,7 @@ mod tests {
             send(c, "crush.step", json!({ "n": 3 }));
             send(c, "crush.drop", json!({}));
         }
-        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.state(&iden(), None), b.state(&iden(), None));
         assert_eq!(a.save(), b.save());
     }
     #[test]
@@ -602,7 +602,7 @@ mod tests {
         assert!(out
             .effects
             .contains(&Effect::new("sound", cue::payload("good"))));
-        assert_eq!(c.state(&iden())["score"], json!(3));
+        assert_eq!(c.state(&iden(), None)["score"], json!(3));
         assert_eq!(c.cells[i0], 0);
     }
     #[test]
@@ -613,7 +613,7 @@ mod tests {
         assert!(out.ok);
         assert_eq!(out.data["steps"], json!(3));
         assert_eq!(c.active.unwrap(), (x, 3, c.active.unwrap().2));
-        assert_eq!(c.state(&iden())["steps"], json!(3));
+        assert_eq!(c.state(&iden(), None)["steps"], json!(3));
         let out = send(&mut c, "crush.step", json!({ "n": 1 }));
         assert_eq!(out.data["steps"], json!(0));
         assert_eq!(c.active.unwrap().1, 3);
@@ -626,7 +626,7 @@ mod tests {
         assert_eq!(c.beat(), Some(Call::new("crush.step", json!({ "n": 1 }))));
         let out = send(&mut c, "crush.set", json!({ "key": "speed", "value": 4 }));
         assert!(out.ok);
-        assert_eq!(c.state(&iden())["settings"]["speed"], json!(4));
+        assert_eq!(c.state(&iden(), None)["settings"]["speed"], json!(4));
         assert_eq!(c.beat(), Some(Call::new("crush.step", json!({ "n": 4 }))));
         assert!(!send(&mut c, "crush.set", json!({ "key": "speed", "value": 0 })).ok);
         assert!(!send(&mut c, "crush.set", json!({ "key": "speed", "value": 9 })).ok);
@@ -666,17 +666,17 @@ mod tests {
     #[test]
     fn reset_seed_defaults_to_now() {
         let mut c = Crush::new();
-        let out = c.act(&iden(), &Call::new("crush.reset", json!({})).at(5000));
+        let out = c.call(&iden(), &Call::new("crush.reset", json!({})).at(5000));
         assert!(out.ok);
         assert_eq!(out.data["seed"], json!(5000));
-        assert_eq!(c.state(&iden())["seed"], json!(5000));
+        assert_eq!(c.state(&iden(), None)["seed"], json!(5000));
     }
     #[test]
     fn set_validates_and_resets_the_round() {
         let mut c = crush(4);
         let out = send(&mut c, "crush.set", json!({ "key": "cols", "value": 6 }));
         assert!(out.ok);
-        let state = c.state(&iden());
+        let state = c.state(&iden(), None);
         assert_eq!(state["settings"]["cols"], json!(6));
         assert_eq!(state["steps"], json!(0));
         assert_eq!(state["score"], json!(0));
@@ -698,20 +698,20 @@ mod tests {
         send(&mut a, "crush.drop", json!({}));
         let mut b = Crush::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
         assert_eq!(b.save(), a.save());
         for c in [&mut a, &mut b] {
             send(c, "crush.drop", json!({}));
             send(c, "crush.step", json!({ "n": 2 }));
         }
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
     }
     #[test]
     fn load_survives_garbage() {
         let mut c = Crush::new();
         c.load(&json!({ "seed": "soup", "cells": [1, 2, 3], "settings": 7 }));
-        assert_eq!(c.state(&iden())["steps"], json!(0));
-        assert_eq!(c.state(&iden())["seed"], json!(0));
+        assert_eq!(c.state(&iden(), None)["steps"], json!(0));
+        assert_eq!(c.state(&iden(), None)["seed"], json!(0));
     }
     #[test]
     fn actions_offer_the_natural_verbs() {
@@ -732,7 +732,7 @@ mod tests {
     #[test]
     fn state_carries_an_indexed_frame() {
         let c = crush(5);
-        let state = c.state(&iden());
+        let state = c.state(&iden(), None);
         let palette = state["frame"]["palette"].as_array().unwrap();
         assert!(!palette.is_empty());
         let rows = state["frame"]["rows"].as_array().unwrap();

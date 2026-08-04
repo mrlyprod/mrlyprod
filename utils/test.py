@@ -47,7 +47,7 @@ def test(loud=False, record=False):
     config = touches(paths, "utils/")
     ts = config or touches(paths, "package.json", "bun.lock", "tsconfig.base.json")
     rust = config or touches(paths, "pkgs/", "apps/cli", "Cargo.toml")
-    sites = ts or touches(paths, "apps/net/", "apps/git/", "pkgs/mrlycss", "pkgs/mrlydom", "pkgs/mrlygpu")
+    sites = ts or touches(paths, "apps/git/", "pkgs/mrlycss", "pkgs/mrlydom", "pkgs/mrlygpu")
     web = ts or touches(paths, "apps/web")
     print("mrlytest")
     if not run("fmt", ["cargo", "fmt"], loud):
@@ -55,11 +55,15 @@ def test(loud=False, record=False):
     if rust:
         if record and not run("record", ["cargo", "run", "-p", "mrlyweb", "--example", "fixtures"], loud):
             return False
+        if record and not run("bake", ["cargo", "run", "-p", "mrlyweb", "--example", "bake"], loud):
+            return False
         steps = [
             ("test", ["cargo", "test", "--workspace"]),
             ("layers", ["uv", "run", "python", "utils/layers.py"]),
+            ("doors", ["uv", "run", "python", "utils/doors.py"]),
             ("wasm", ["wasm-pack", "build", "pkgs/mrlyjs/web", "--target", "web"]),
-            ("wasm math", ["wasm-pack", "build", "pkgs/mrlyjs/math", "--target", "web"]),
+            ("maturin", ["uv", "run", "maturin", "develop", "--manifest-path", "pkgs/mrlypy/web/Cargo.toml", "--release"]),
+            ("pytest", ["uv", "run", "python", "-m", "pytest", "pkgs/mrlypy/web/tests", "-q"]),
         ]
         for label, cmd in steps:
             if not run(label, cmd, loud):
@@ -69,13 +73,9 @@ def test(loud=False, record=False):
             return False
     if sites:
         steps = [
-            ("tsc net", ["bun", "run", "--cwd", "apps/net", "check"], None),
             ("tsc git", ["bun", "run", "--cwd", "apps/git", "check"], None),
-            ("vite net", ["bun", "run", "--cwd", "apps/net", "site"], {"MRLY_OUT": "../../data/net/check"}),
             ("vite git", ["bun", "run", "--cwd", "apps/git", "site"], {"MRLY_OUT": "../../data/git/check"}),
-            ("data net", ["bun", "run", "--cwd", "apps/net", "data"], {"MRLY_OUT": "../../data/net/check"}),
             ("data git", ["bun", "run", "--cwd", "apps/git", "data"], {"MRLY_OUT": "../../data/git/check"}),
-            ("links net", ["bun", "run", "--cwd", "apps/net", "links"], None),
             ("links git", ["bun", "run", "--cwd", "apps/git", "links"], None),
         ]
         for label, cmd, env in steps:

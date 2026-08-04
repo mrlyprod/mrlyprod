@@ -94,7 +94,7 @@ impl App for Notes {
     fn manifest(&self) -> Manifest {
         Manifest::new("notes").emoji("📝").category("creativity")
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "query": &self.query,
             "found": self.found().iter().map(|n| json!({ "id": n.id, "text": &n.text })).collect::<Vec<_>>(),
@@ -135,7 +135,7 @@ impl App for Notes {
         self.next = state["next"].as_u64().unwrap_or(1);
         self.query = state["query"].as_str().unwrap_or("").to_string();
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "notes.add" => match self.add(call.arg("text").as_str().unwrap_or("")) {
                 Some(id) => Outcome::ok(json!({ "id": id })),
@@ -249,7 +249,7 @@ mod tests {
         n.add("buy oat milk").unwrap();
         n.add("book the ferry").unwrap();
         n.search("milk");
-        let state = n.state(&Iden::new("aria"));
+        let state = n.state(&Iden::new("aria"), None);
         assert_eq!(state["query"], "milk");
         assert_eq!(state["found"], json!([{ "id": 1, "text": "buy oat milk" }]));
     }
@@ -264,7 +264,7 @@ mod tests {
         let mut b = Notes::new();
         b.load(&a.save());
         let iden = Iden::new("aria");
-        assert_eq!(b.state(&iden), a.state(&iden));
+        assert_eq!(b.state(&iden, None), a.state(&iden, None));
         assert_eq!(b.save(), a.save());
         assert_eq!(b.add("eggs"), Some(4));
     }
@@ -289,7 +289,7 @@ mod tests {
         let mut n = Notes::new();
         n.add("milk").unwrap();
         n.add("ferry").unwrap();
-        let out = n.act(&Iden::new("aria"), &Call::new("notes.export", json!({})));
+        let out = n.call(&Iden::new("aria"), &Call::new("notes.export", json!({})));
         assert!(out.ok);
         assert_eq!(out.effects.len(), 1);
         let effect = &out.effects[0];

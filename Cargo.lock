@@ -84,21 +84,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "mrlyjs-math"
-version = "0.1.0"
-dependencies = [
- "mrlycore",
- "mrlymath",
- "wasm-bindgen",
-]
-
-[[package]]
 name = "mrlyjs-web"
 version = "0.1.0"
 dependencies = [
  "mrlycore",
  "mrlyos",
- "mrlyui",
  "mrlyweb",
  "wasm-bindgen",
 ]
@@ -122,15 +112,6 @@ name = "mrlyos"
 version = "0.2.0"
 dependencies = [
  "mrlycore",
-]
-
-[[package]]
-name = "mrlypy-math"
-version = "0.1.0"
-dependencies = [
- "mrlycore",
- "mrlymath",
- "pyo3",
 ]
 
 [[package]]

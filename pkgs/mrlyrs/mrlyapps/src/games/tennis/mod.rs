@@ -500,7 +500,7 @@ impl App for Tennis {
             .key("left", Call::new("tennis.move", json!({ "dir": "left" })))
             .key("right", Call::new("tennis.move", json!({ "dir": "right" })))
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "score": self.score,
             "steps": self.steps,
@@ -528,7 +528,7 @@ impl App for Tennis {
         ));
         out
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "tennis.move" => {
                 if self.over {
@@ -675,7 +675,7 @@ mod tests {
             send(t, "tennis.move", json!({ "dir": "down" }));
             send(t, "tennis.step", json!({ "n": 10 }));
         }
-        assert_eq!(a.state(&iden()), b.state(&iden()));
+        assert_eq!(a.state(&iden(), None), b.state(&iden(), None));
         assert_eq!(a.save(), b.save());
     }
     #[test]
@@ -703,7 +703,7 @@ mod tests {
         let mut t = tennis(3);
         let out = send(&mut t, "tennis.set", json!({ "key": "speed", "value": 2 }));
         assert!(out.ok);
-        assert_eq!(t.state(&iden())["settings"]["speed"], json!(2));
+        assert_eq!(t.state(&iden(), None)["settings"]["speed"], json!(2));
         assert_eq!(t.beat(), Some(Call::new("tennis.step", json!({ "n": 2 }))));
         assert!(!send(&mut t, "tennis.set", json!({ "key": "speed", "value": 0 })).ok);
         assert!(!send(&mut t, "tennis.set", json!({ "key": "speed", "value": 9 })).ok);
@@ -717,7 +717,7 @@ mod tests {
             json!({ "key": "physics", "value": 500 }),
         );
         assert!(out.ok);
-        assert_eq!(t.state(&iden())["settings"]["physics"], json!(500));
+        assert_eq!(t.state(&iden(), None)["settings"]["physics"], json!(500));
         assert_eq!(t.bdy, -500);
         assert!(
             !send(
@@ -790,10 +790,10 @@ mod tests {
     #[test]
     fn reset_seed_defaults_to_now() {
         let mut t = Tennis::new();
-        let out = t.act(&iden(), &Call::new("tennis.reset", json!({})).at(5000));
+        let out = t.call(&iden(), &Call::new("tennis.reset", json!({})).at(5000));
         assert!(out.ok);
         assert_eq!(out.data["seed"], json!(5000));
-        assert_eq!(t.state(&iden())["seed"], json!(5000));
+        assert_eq!(t.state(&iden(), None)["seed"], json!(5000));
     }
     #[test]
     fn set_validates_and_resets_the_round() {
@@ -801,7 +801,7 @@ mod tests {
         send(&mut t, "tennis.step", json!({ "n": 3 }));
         let out = send(&mut t, "tennis.set", json!({ "key": "board", "value": 12 }));
         assert!(out.ok);
-        let state = t.state(&iden());
+        let state = t.state(&iden(), None);
         assert_eq!(state["settings"]["board"], json!(12));
         assert_eq!(state["steps"], json!(0));
         assert!(
@@ -829,19 +829,19 @@ mod tests {
         send(&mut a, "tennis.step", json!({ "n": 4 }));
         let mut b = Tennis::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
         assert_eq!(b.save(), a.save());
         for t in [&mut a, &mut b] {
             send(t, "tennis.step", json!({ "n": 6 }));
         }
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
     }
     #[test]
     fn load_survives_garbage() {
         let mut t = Tennis::new();
         t.load(&json!({ "seed": "soup", "blocks": [[9, 9]], "settings": 7 }));
-        assert_eq!(t.state(&iden())["steps"], json!(0));
-        assert_eq!(t.state(&iden())["seed"], json!(0));
+        assert_eq!(t.state(&iden(), None)["steps"], json!(0));
+        assert_eq!(t.state(&iden(), None)["seed"], json!(0));
         assert!(!t.blocks.is_empty());
     }
     #[test]
@@ -856,7 +856,7 @@ mod tests {
     #[test]
     fn state_carries_an_indexed_frame() {
         let t = tennis(5);
-        let state = t.state(&iden());
+        let state = t.state(&iden(), None);
         let palette = state["frame"]["palette"].as_array().unwrap();
         assert!(!palette.is_empty());
         let rows = state["frame"]["rows"].as_array().unwrap();

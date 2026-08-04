@@ -38,7 +38,7 @@ impl App for Files {
     fn manifest(&self) -> Manifest {
         Manifest::new("files").emoji("📁").category("system")
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "count": self.items.len(),
             "files": self.items.iter().map(|f| json!({
@@ -56,7 +56,7 @@ impl App for Files {
             Verb::new("files.clear", json!({})),
         ]
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "files.keep" => {
                 let Some(name) = call.arg("name").as_str().filter(|s| !s.is_empty()) else {
@@ -132,7 +132,7 @@ mod tests {
     use mrlyos::kernel::testkit::{iden, send};
 
     fn keep(f: &mut Files, name: &str) -> Outcome {
-        f.act(
+        f.call(
             &iden(),
             &Call::new(
                 "files.keep",
@@ -147,7 +147,7 @@ mod tests {
         for n in 0..27 {
             assert!(keep(&mut f, &format!("f{n}.txt")).ok);
         }
-        let state = f.state(&iden());
+        let state = f.state(&iden(), None);
         assert_eq!(state["count"], json!(24));
         assert_eq!(state["files"].as_array().unwrap().len(), 24);
         assert_eq!(state["files"][0]["name"], json!("f26.txt"));
@@ -156,7 +156,7 @@ mod tests {
     fn keep_derives_uri_and_size() {
         let mut f = Files::new();
         keep(&mut f, "hi.txt");
-        let state = f.state(&iden());
+        let state = f.state(&iden(), None);
         assert_eq!(
             state["files"][0]["uri"],
             json!("data:text/plain;base64,aGVsbG8=")
@@ -166,7 +166,7 @@ mod tests {
     #[test]
     fn keep_stamps_the_tick() {
         let mut f = Files::new();
-        let out = f.act(
+        let out = f.call(
             &iden(),
             &Call::new(
                 "files.keep",
@@ -175,7 +175,7 @@ mod tests {
             .at(5000),
         );
         assert!(out.ok);
-        assert_eq!(f.state(&iden())["files"][0]["tick"], json!(5000));
+        assert_eq!(f.state(&iden(), None)["files"][0]["tick"], json!(5000));
     }
     #[test]
     fn keep_requires_name_and_data() {
@@ -183,7 +183,7 @@ mod tests {
         assert!(!send(&mut f, "files.keep", json!({ "data": "aGk=" })).ok);
         assert!(!send(&mut f, "files.keep", json!({ "name": "a.txt" })).ok);
         assert!(!send(&mut f, "files.keep", json!({ "name": "a.txt", "data": "" })).ok);
-        assert_eq!(f.state(&iden())["count"], json!(0));
+        assert_eq!(f.state(&iden(), None)["count"], json!(0));
     }
     #[test]
     fn drop_removes_by_index() {
@@ -192,7 +192,7 @@ mod tests {
         keep(&mut f, "b.txt");
         let out = send(&mut f, "files.drop", json!({ "index": 0 }));
         assert!(out.ok);
-        assert_eq!(f.state(&iden())["files"][0]["name"], json!("a.txt"));
+        assert_eq!(f.state(&iden(), None)["files"][0]["name"], json!("a.txt"));
         assert!(!send(&mut f, "files.drop", json!({ "index": 9 })).ok);
     }
     #[test]
@@ -202,7 +202,7 @@ mod tests {
         let out = send(&mut f, "files.clear", json!({}));
         assert!(out.ok);
         assert_eq!(out.data["cleared"], json!(1));
-        assert_eq!(f.state(&iden())["count"], json!(0));
+        assert_eq!(f.state(&iden(), None)["count"], json!(0));
     }
     #[test]
     fn keep_stays_off_the_verb_surface() {
@@ -213,7 +213,7 @@ mod tests {
     #[test]
     fn save_load_roundtrips_and_filters_junk() {
         let mut a = Files::new();
-        a.act(
+        a.call(
             &iden(),
             &Call::new(
                 "files.keep",
@@ -223,11 +223,11 @@ mod tests {
         );
         let mut b = Files::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
         assert_eq!(b.save(), a.save());
         let mut c = Files::new();
         c.load(&json!({ "files": [{ "name": 7, "mime": "x", "data": "y" }, "nope"] }));
-        assert_eq!(c.state(&iden())["count"], json!(0));
+        assert_eq!(c.state(&iden(), None)["count"], json!(0));
     }
     #[test]
     fn unknown_verb_fails() {

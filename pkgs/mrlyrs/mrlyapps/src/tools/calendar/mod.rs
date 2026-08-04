@@ -148,7 +148,7 @@ impl App for Calendar {
     fn manifest(&self) -> Manifest {
         Manifest::new("calendar").emoji("📅").category("tools")
     }
-    fn state(&self, _iden: &Iden) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "year": self.year,
             "month": self.month,
@@ -170,7 +170,7 @@ impl App for Calendar {
             Verb::new("calendar.pick", json!({ "day": "int" })),
         ]
     }
-    fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         self.now = call.now.unwrap_or(self.now);
         match call.verb.as_str() {
             "calendar.flip" => {
@@ -318,16 +318,16 @@ mod tests {
         let mut c = Calendar::new();
         send(&mut c, "calendar.goto", json!({ "year": 2025, "month": 1 }));
         send(&mut c, "calendar.flip", json!({ "n": -1 }));
-        assert_eq!(c.state(&iden())["title"], json!("December 2024"));
+        assert_eq!(c.state(&iden(), None)["title"], json!("December 2024"));
         send(&mut c, "calendar.flip", json!({ "n": 13 }));
-        assert_eq!(c.state(&iden())["title"], json!("January 2026"));
+        assert_eq!(c.state(&iden(), None)["title"], json!("January 2026"));
     }
     #[test]
     fn flip_defaults_to_one_page() {
         let mut c = Calendar::new();
         let out = send(&mut c, "calendar.flip", json!({}));
         assert!(out.ok);
-        assert_eq!(c.state(&iden())["title"], json!("February 1970"));
+        assert_eq!(c.state(&iden(), None)["title"], json!("February 1970"));
         assert!(!send(&mut c, "calendar.flip", json!({ "n": "soup" })).ok);
         assert!(!send(&mut c, "calendar.flip", json!({ "n": 999999 })).ok);
     }
@@ -344,7 +344,7 @@ mod tests {
             .ok
         );
         assert!(!send(&mut c, "calendar.goto", json!({ "year": 2026 })).ok);
-        assert_eq!(c.state(&iden())["title"], json!("January 1970"));
+        assert_eq!(c.state(&iden(), None)["title"], json!("January 1970"));
     }
     #[test]
     fn goto_takes_names_and_strings() {
@@ -357,7 +357,7 @@ mod tests {
             )
             .ok
         );
-        assert_eq!(c.state(&iden())["title"], json!("March 2026"));
+        assert_eq!(c.state(&iden(), None)["title"], json!("March 2026"));
         assert!(
             send(
                 &mut c,
@@ -366,7 +366,7 @@ mod tests {
             )
             .ok
         );
-        assert_eq!(c.state(&iden())["title"], json!("February 2031"));
+        assert_eq!(c.state(&iden(), None)["title"], json!("February 2031"));
         assert!(
             !send(
                 &mut c,
@@ -387,9 +387,9 @@ mod tests {
     #[test]
     fn today_reads_the_stamp() {
         let mut c = Calendar::new();
-        let out = c.act(&iden(), &Call::new("calendar.today", json!({})).at(JULY));
+        let out = c.call(&iden(), &Call::new("calendar.today", json!({})).at(JULY));
         assert!(out.ok);
-        let state = c.state(&iden());
+        let state = c.state(&iden(), None);
         assert_eq!(state["title"], json!("July 2026"));
         assert_eq!(state["today"], json!(9));
     }
@@ -398,21 +398,21 @@ mod tests {
         let mut c = Calendar::new();
         send(&mut c, "calendar.flip", json!({ "n": 700 }));
         send(&mut c, "calendar.today", json!({}));
-        assert_eq!(c.state(&iden())["title"], json!("January 1970"));
-        assert_eq!(c.state(&iden())["today"], json!(1));
+        assert_eq!(c.state(&iden(), None)["title"], json!("January 1970"));
+        assert_eq!(c.state(&iden(), None)["today"], json!(1));
     }
     #[test]
     fn today_fact_clears_off_month() {
         let mut c = Calendar::new();
-        c.act(&iden(), &Call::new("calendar.today", json!({})).at(JULY));
+        c.call(&iden(), &Call::new("calendar.today", json!({})).at(JULY));
         send(&mut c, "calendar.flip", json!({}));
-        assert_eq!(c.state(&iden())["today"], Json::Null);
+        assert_eq!(c.state(&iden(), None)["today"], Json::Null);
     }
     #[test]
     fn state_carries_the_weeks() {
         let mut c = Calendar::new();
-        c.act(&iden(), &Call::new("calendar.today", json!({})).at(JULY));
-        let state = c.state(&iden());
+        c.call(&iden(), &Call::new("calendar.today", json!({})).at(JULY));
+        let state = c.state(&iden(), None);
         assert_eq!(state["days"].as_array().unwrap().len(), 7);
         let weeks = state["weeks"].as_array().unwrap();
         assert!(weeks.iter().all(|w| w.as_array().unwrap().len() == 7));
@@ -422,20 +422,20 @@ mod tests {
     #[test]
     fn save_load_roundtrips() {
         let mut a = Calendar::new();
-        a.act(&iden(), &Call::new("calendar.today", json!({})).at(JULY));
+        a.call(&iden(), &Call::new("calendar.today", json!({})).at(JULY));
         send(&mut a, "calendar.flip", json!({ "n": -3 }));
         let mut b = Calendar::new();
         b.load(&a.save());
-        assert_eq!(b.state(&iden()), a.state(&iden()));
+        assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
         let mut c = Calendar::new();
         c.load(&json!({ "year": "soup", "month": 99 }));
-        assert_eq!(c.state(&iden())["title"], json!("January 1970"));
+        assert_eq!(c.state(&iden(), None)["title"], json!("January 1970"));
     }
     #[test]
     fn picked_defaults_to_epoch() {
         let c = Calendar::new();
         assert_eq!(
-            c.state(&iden())["picked"],
+            c.state(&iden(), None)["picked"],
             json!({ "year": 1970, "month": 1, "day": 1 })
         );
     }
@@ -445,7 +445,7 @@ mod tests {
         send(&mut c, "calendar.goto", json!({ "year": 2025, "month": 6 }));
         assert!(send(&mut c, "calendar.pick", json!({ "day": 15 })).ok);
         assert_eq!(
-            c.state(&iden())["picked"],
+            c.state(&iden(), None)["picked"],
             json!({ "year": 2025, "month": 6, "day": 15 })
         );
         assert!(!send(&mut c, "calendar.pick", json!({ "day": 31 })).ok);
