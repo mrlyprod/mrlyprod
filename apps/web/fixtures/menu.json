@@ -91,14 +91,6 @@
           "internet": false
         },
         {
-          "route": "pages",
-          "emoji": "📄",
-          "title": "pages",
-          "category": "company",
-          "hidden": false,
-          "internet": true
-        },
-        {
           "route": "snake",
           "emoji": "🐍",
           "title": "snake",

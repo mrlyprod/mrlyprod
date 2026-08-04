@@ -27,7 +27,6 @@ import { memory } from "./puzzles/memory.tsx"
 import { mines } from "./puzzles/mines.tsx"
 import { moire } from "./math/moire.tsx"
 import { notes } from "./creativity/notes.tsx"
-import { pages } from "./company/pages.tsx"
 import { photos } from "./creativity/photos.tsx"
 import { piano } from "./creativity/piano.tsx"
 import { pixel } from "./design/pixel.tsx"
@@ -61,7 +60,6 @@ export const views: Record<string, View> = {
   timer,
   calendar,
   dice,
-  pages,
   photos,
   snake,
   julia,

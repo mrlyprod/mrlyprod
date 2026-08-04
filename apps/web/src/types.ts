@@ -61,7 +61,6 @@ export type Node =
   | { kind: "Range"; key?: string; value: number; min: number; max: number; step?: number; scale?: number; call: Call; arg: string; label?: string }
   | { kind: "Overlay"; key?: string; child: Node; close?: Call }
   | { kind: "Cell"; key?: string; child?: Node; call?: Call; on?: boolean; bg?: string }
-  | { kind: "Doc"; key?: string; md: string; code?: string; handle?: string; open?: Call }
   | { kind: "Cells"; key?: string; rows: string[][] }
   | { kind: "Mark"; key?: string; doodle?: string }
 

@@ -44,7 +44,6 @@ const kinds: Record<string, Kind> = {
   range: "Range",
   overlay: "Overlay",
   cell: "Cell",
-  doc: "Doc",
   cells: "Cells",
   mark: "Mark",
 }

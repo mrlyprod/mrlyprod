@@ -1,5 +1,4 @@
 import { spell } from "../glyphs.ts"
-import { html } from "../md.ts"
 import * as gpu from "mrlygpu"
 import { icon } from "../icons.ts"
 import type { Call, Flip, Glyph, Tri, Held, Node, Send, Sym } from "../types.ts"
@@ -350,18 +349,6 @@ export function create(node: Node, send: Send): Held {
       })
       return el
     }
-    case "Doc": {
-      const el = make("article", "mrly-box doc-box")
-      el.addEventListener("click", event => {
-        const hit = (event.target as HTMLElement).closest("a[data-slug]") as HTMLElement | null
-        if (hit === null) return
-        event.preventDefault()
-        const node = held(el) as Extract<Node, { kind: "Doc" }>
-        const slug = hit.dataset.slug
-        if (node.open !== undefined && slug !== undefined) send({ verb: node.open.verb, args: { ...node.open.args, slug } })
-      })
-      return el
-    }
     case "Cells":
       return make("div", "text-grid")
     case "Mark":
@@ -575,18 +562,6 @@ export function patch(el: Held, node: Node, send: Send): void {
       const button = el as unknown as HTMLButtonElement
       button.disabled = node.call === undefined
       reconcile(el, node.child === undefined ? [] : [node.child], send)
-      break
-    }
-    case "Doc": {
-      if (node.handle !== undefined) el.dataset.handle = node.handle
-      else delete el.dataset.handle
-      const sig = node.code !== undefined ? `code:${node.code}` : `md:${node.md}`
-      if (el.__committed !== sig) {
-        el.__committed = sig
-        el.classList.toggle("code", node.code !== undefined)
-        if (node.code !== undefined) el.textContent = node.code
-        else el.innerHTML = html(node.md)
-      }
       break
     }
     case "Cells": {

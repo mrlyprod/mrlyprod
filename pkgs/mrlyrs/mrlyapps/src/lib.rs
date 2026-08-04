@@ -12,7 +12,6 @@ pub mod tools;
 pub mod toys;
 
 pub use company::extras::Extras;
-pub use company::pages::Pages;
 pub use creativity::notes::Notes;
 pub use creativity::photos::Photos;
 pub use creativity::piano::Piano;

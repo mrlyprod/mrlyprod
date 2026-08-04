@@ -172,8 +172,7 @@ mrlyprod
 │   │   │   │   └── mount.ts
 │   │   │   ├── views
 │   │   │   │   ├── company
-│   │   │   │   │   ├── extras.tsx
-│   │   │   │   │   └── pages.tsx
+│   │   │   │   │   └── extras.tsx
 │   │   │   │   ├── creativity
 │   │   │   │   │   ├── notes.tsx
 │   │   │   │   │   ├── photos.tsx
@@ -236,7 +235,6 @@ mrlyprod
 │   │   │   ├── jsx.ts
 │   │   │   ├── kernel.ts
 │   │   │   ├── main.ts
-│   │   │   ├── md.ts
 │   │   │   ├── palette.ts
 │   │   │   ├── pwa.ts
 │   │   │   ├── reads.ts
@@ -247,7 +245,6 @@ mrlyprod
 │   │   │   └── types.ts
 │   │   ├── styles
 │   │   │   ├── boxes.css
-│   │   │   ├── doc.css
 │   │   │   ├── fonts.css
 │   │   │   ├── forms.css
 │   │   │   ├── motion.css
@@ -370,10 +367,6 @@ mrlyprod
 │   │   │   │   ├── company
 │   │   │   │   │   ├── extras
 │   │   │   │   │   │   ├── README.md
-│   │   │   │   │   │   └── mod.rs
-│   │   │   │   │   ├── pages
-│   │   │   │   │   │   ├── README.md
-│   │   │   │   │   │   ├── dummy.md
 │   │   │   │   │   │   └── mod.rs
 │   │   │   │   │   └── mod.rs
 │   │   │   │   ├── creativity
