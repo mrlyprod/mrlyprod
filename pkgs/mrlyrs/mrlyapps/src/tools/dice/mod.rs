@@ -110,27 +110,40 @@ impl Dice {
         self.face = 1;
         self.rolls.clear();
     }
-    fn face_cell(&self) -> Cell2d {
+    fn face_cell(&self) -> (Cell2d, Option<&'static str>) {
         let clear = [0, 0, 0, 0];
         let ink = mrlyui::frame::ink(self.dark);
         let die = DIE.get(self.face as usize - 1);
         match (self.skin.as_str(), die) {
-            ("tiles", _) => pip_cell(self.face, K, ink, clear),
-            ("emojis", Some(face)) => {
-                let mut tile = mrlyui::frame::solid_tile(K, clear);
-                mrlyui::symbol::bake(&mut tile, face, K, ink);
-                tile
-            }
-            _ => digit_cell(self.face, K, ink, clear),
+            ("tiles", _) => (pip_cell(self.face, K, ink, clear), None),
+            ("emojis", Some(face)) => (mrlyui::frame::solid_tile(K, clear), Some(*face)),
+            _ => (digit_cell(self.face, K, ink, clear), None),
         }
     }
     fn render(&self) -> Frame {
         let mut frame = Frame::new(K, K, mrlyui::frame::board(self.dark));
+        let (cell, die) = self.face_cell();
+        let mut set = TileSet::new(K, vec![cell]);
+        if let Some(ch) = die {
+            set.face(0, ch, Some(mrlyui::frame::ink(self.dark)));
+        }
         frame.push(Layer::Tiles {
             ids: Tensor::new(vec![1, 1]),
-            set: TileSet::new(K, vec![self.face_cell()]),
+            set,
         });
         frame
+    }
+    fn sprite(&self) -> Json {
+        let (cell, die) = self.face_cell();
+        let mut out = sprite_fact(&cell);
+        if let Some(ch) = die {
+            let ink = mrlyui::frame::ink(self.dark);
+            out["glyphs"] = json!([{
+                "x": 0, "y": 0, "k": K, "ch": ch,
+                "tint": mrlyui::frame::hex(ink),
+            }]);
+        }
+        out
     }
     fn apply(&mut self, key: &str, value: &Json) -> Result<Json, &'static str> {
         match key {
@@ -181,7 +194,7 @@ impl App for Dice {
             "face": self.face,
             "nonce": self.steps,
             "rolls": self.rolls.clone(),
-            "sprite": sprite_fact(&self.face_cell()),
+            "sprite": self.sprite(),
             "frame": self.render().fact(),
         })
     }
@@ -363,11 +376,9 @@ mod tests {
             assert!(send(&mut d, "dice.set", json!({ "key": key, "value": value })).ok);
         }
         assert_eq!(d.state(&iden())["steps"], json!(1));
-        let face = d.face_cell().cell.colors.clone().unwrap();
-        assert!(
-            face.iter().any(|px| px[3] > 0),
-            "the die face baked nothing"
-        );
+        let (cell, die) = d.face_cell();
+        assert!(die.is_some(), "the die face lost its glyph");
+        assert!(cell.cell.colors.unwrap().iter().all(|px| px[3] == 0));
         assert!(!send(&mut d, "dice.set", json!({ "key": "skin", "value": "wax" })).ok);
     }
     #[test]

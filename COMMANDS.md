@@ -54,9 +54,6 @@ cargo fmt                               # ship runs it too
 cargo clippy -- -D warnings
 cargo run -p mrlyweb --example <name>   # examples live in pkgs/mrlyrs/mrlyweb/examples/
 cargo run -p mrlyweb --example fixtures # regenerate apps/web/fixtures/*.json from frame()
-cargo run -p mrlydoor                   # regenerate the files/emoji/ and files/symbols/ atlases from files/vendor/
-cargo run -p mrlyweb --example face     # every app's default face into data/face/, six -live gauntlet shots included
-cargo run -p mrlyweb --example rungs -- <dir> [app]   # one shot per ladder rung, 113x160 up to 904x1280
 cargo doc --open
 cargo clean
 ```
@@ -70,9 +67,8 @@ cargo run -p mrlycli -- verbs snake              # one app's verbs and args
 cargo run -p mrlycli -- verbs                     # every app and its verb count
 echo '<calls>' | cargo run -p mrlycli -- run --facts   # replay, print state, grids collapsed
 echo '<calls>' | cargo run -p mrlycli -- shot --out f.png   # replay, write the frame as a PNG
-echo '<calls>' | cargo run -p mrlycli -- face --out f.png   # replay, write the default face as a PNG (any app)
 cargo run -p mrlycli -- goose snake --seed 7 --steps 50 --trace   # random legal calls, one JSON line each
-cargo run -p mrlycli -- repl                      # interactive; :verbs :shot :face :render :help
+cargo run -p mrlycli -- repl                      # interactive; :verbs :shot :render :help
 ```
 
 Calls are JSON lines or a JSON array, e.g. `{"verb":"nav.open","args":{"app":"snake"}}`.
@@ -103,7 +99,7 @@ cargo test -p mrlyweb --test golden         # fixtures vs frame(), after vocabul
 ```sh
 cd apps/web && bun run index.ts             # dev server on :3000 (rebuild wasm first if the core changed)
 bun utils/shot.ts                           # every site, every route, into data/<site>/*.png (boots servers itself)
-bun utils/shot.ts web snake                 # one site, chosen routes; sites: web net git jsx
+bun utils/shot.ts web snake                 # one site, chosen routes; sites: web net git
 bun utils/shot.ts --size 390x844 net        # any viewport
 bun utils/shot.ts http://localhost:3000/snake out.png   # any url
 bun run apps/web/verify.ts                  # smoke the web face in code: wasm kernel + verbs + every view (no server, no browser)

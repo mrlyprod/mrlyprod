@@ -4,12 +4,10 @@
 {"call": {"verb": "twenty48.reset", "args": {"seed": 5}}}
 {"assert": {"state": ["twenty48/seed", 5]}}
 {"assert": {"state": ["twenty48/steps", 0]}}
-{"tap": {"verb": "twenty48.slide", "args": {"dir": "left"}}}
+{"call": {"verb": "twenty48.slide", "args": {"dir": "left"}}}
 {"assert": {"state": ["twenty48/steps", 1]}}
-{"slide": {"verb": "twenty48.set", "value": 6}}
+{"call": {"verb": "twenty48.set", "args": {"key": "grid", "value": 6}}}
 {"assert": {"state": ["twenty48/settings/grid", 6]}}
 {"assert": {"state": ["twenty48/steps", 0]}}
-{"assert": {"frame": "15152774600982747837"}}
-{"tap": {"verb": "twenty48.set", "args": {"key": "skin", "value": "emojis"}}}
+{"call": {"verb": "twenty48.set", "args": {"key": "skin", "value": "emojis"}}}
 {"assert": {"state": ["twenty48/settings/skin", "emojis"]}}
-{"assert": {"frame": "7674662505444884247"}}

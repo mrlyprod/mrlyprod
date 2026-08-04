@@ -3,27 +3,6 @@ use mrlyos::kernel::{int, App, Call, Iden, Manifest, Outcome, Verb};
 
 use mrlycore::colors::NAMES as COLORS;
 
-mod view;
-
-pub(crate) fn fills() -> Vec<String> {
-    let mut out = vec!["random".to_string()];
-    out.extend(COLORS.iter().map(|c| c.to_string()));
-    out
-}
-
-pub(crate) fn notes() -> Vec<String> {
-    let mut out = vec!["random".to_string()];
-    out.extend(mrlymusic::theory::NAMES.iter().map(|c| c.to_string()));
-    out
-}
-
-pub(crate) fn waves() -> Vec<String> {
-    mrlymusic::wave::NAMES
-        .iter()
-        .map(|c| c.to_string())
-        .collect()
-}
-
 pub const MODES: [&str; 2] = ["grid", "list"];
 
 pub const FONTS: [&str; 5] = ["mono", "sans", "serif", "display", "mrly"];
@@ -205,9 +184,6 @@ impl App for Settings {
     fn manifest(&self) -> Manifest {
         Manifest::new("settings").emoji("⚙️").category("system")
     }
-    fn view(&self, iden: &Iden) -> Option<mrlycore::ui::Node> {
-        view::tree(self, iden)
-    }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
         vec![Verb::new(
             "settings.set",
@@ -246,45 +222,6 @@ impl App for Settings {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn controls(node: &mrlycore::ui::Node, out: &mut Vec<String>) {
-        use mrlycore::ui::Node;
-        let key = |call: &mrlycore::ui::Call| call.args["key"].as_str().unwrap_or("").to_string();
-        match node {
-            Node::Column { children } | Node::Group { children } => {
-                for child in children {
-                    controls(child, out);
-                }
-            }
-            Node::Toggle { call, .. }
-            | Node::Choice { call, .. }
-            | Node::Range { call, .. }
-            | Node::Field { call, .. } => out.push(key(call)),
-            _ => {}
-        }
-    }
-
-    #[test]
-    fn every_key_the_kernel_honours_has_a_live_control() {
-        let set = Settings::new();
-        let tree = view::tree(&set, &Iden::new("aria")).expect("a settings view");
-        let mut live = Vec::new();
-        controls(&tree, &mut live);
-        let web_only = ["emoji", "material", "haptics", "width"];
-        for key in Settings::KEYS {
-            if web_only.contains(&key) {
-                assert!(
-                    !live.contains(&key.to_string()),
-                    "{key} is filed web-only but live"
-                );
-                continue;
-            }
-            assert!(
-                live.contains(&key.to_string()),
-                "{key} is honoured by the kernel but has no native control"
-            );
-        }
-    }
 
     #[test]
     fn defaults_match_the_stylesheet() {

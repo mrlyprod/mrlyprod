@@ -107,10 +107,7 @@ impl Chess {
         if self.set.skin != "emojis" {
             return self.glyph(&self.glyphs[kind], self.piece_colors[team]);
         }
-        let mut tile = solid_tile(k, [0, 0, 0, 0]);
-        let value = mrlyui::skin::chess::emoji(kind, team);
-        mrlyui::symbol::bake(&mut tile, value, k, self.piece_colors[team]);
-        tile
+        solid_tile(k, [0, 0, 0, 0])
     }
     fn pieces_set(&self) -> TileSet {
         let k = self.k();
@@ -122,7 +119,19 @@ impl Chess {
         for kind in 0..6 {
             tiles.push(self.piece(kind, 1));
         }
-        TileSet::new(k, tiles)
+        let mut set = TileSet::new(k, tiles);
+        if self.set.skin == "emojis" {
+            for team in 0..2 {
+                for kind in 0..6 {
+                    set.face(
+                        1 + team * 6 + kind,
+                        mrlyui::skin::chess::emoji(kind, team),
+                        Some(self.piece_colors[team]),
+                    );
+                }
+            }
+        }
+        set
     }
     fn board_set(&self) -> TileSet {
         let k = self.k();

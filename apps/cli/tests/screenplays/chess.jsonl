@@ -2,17 +2,16 @@
 {"assert": {"route": "chess"}}
 {"assert": {"verb": "chess.select"}}
 {"assert": {"state": ["chess/turn", "white"]}}
-{"cell": [4, 6]}
+{"call": {"verb": "chess.select", "args": {"square": "e2"}}}
 {"assert": {"state": ["chess/selected", "e2"]}}
-{"cell": [4, 4]}
+{"call": {"verb": "chess.move", "args": {"from": "e2", "to": "e4"}}}
 {"assert": {"state": ["chess/selected", null]}}
 {"assert": {"state": ["chess/turn", "black"]}}
 {"assert": {"state": ["chess/steps", 1]}}
-{"tap": {"verb": "chess.set", "args": {"key": "skin", "value": "emojis"}}}
+{"call": {"verb": "chess.set", "args": {"key": "skin", "value": "emojis"}}}
 {"assert": {"state": ["chess/settings/skin", "emojis"]}}
-{"tap": {"verb": "chess.set", "args": {"key": "surface", "value": "canvas"}}}
+{"call": {"verb": "chess.set", "args": {"key": "surface", "value": "canvas"}}}
 {"assert": {"state": ["chess/settings/surface", "canvas"]}}
-{"assert": {"frame": "15272178733547534220"}}
 {"call": {"verb": "chess.reset", "args": {"seed": 3}}}
 {"assert": {"state": ["chess/turn", "white"]}}
 {"assert": {"state": ["chess/steps", 0]}}

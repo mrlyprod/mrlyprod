@@ -1,11 +1,8 @@
-mod view;
-
 use mrlycore::colors::ROLLABLE;
 use mrlycore::paint::Paint;
 use mrlycore::rng::Rng;
 use mrlycore::tensor::Tensor;
 use mrlycore::tile::{Design, Group, Source, Tile as Model};
-use mrlycore::ui;
 use mrlycore::{json, Json};
 use mrlymusic::cue;
 use mrlyos::kernel::{drive, flag, int, App, Call, Effect, Iden, Manifest, Outcome, Verb};
@@ -402,9 +399,6 @@ impl App for Snake {
         ));
         out
     }
-    fn view(&self, iden: &Iden) -> Option<ui::Node> {
-        view::tree(self, iden)
-    }
     fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "snake.turn" => {
@@ -790,42 +784,6 @@ mod tests {
             names,
             vec!["snake.turn", "snake.step", "snake.reset", "snake.set"]
         );
-    }
-    fn button_labels(node: &ui::Node, out: &mut Vec<String>) {
-        match node {
-            ui::Node::Column { children }
-            | ui::Node::Row { children }
-            | ui::Node::Grid { children, .. }
-            | ui::Node::Group { children }
-            | ui::Node::Wrap { children } => {
-                for child in children {
-                    button_labels(child, out);
-                }
-            }
-            ui::Node::Button { label, .. } => out.push(label.clone()),
-            _ => {}
-        }
-    }
-    #[test]
-    fn view_swaps_dpad_for_game_over() {
-        let mut s = snake(3);
-        let mut live = Vec::new();
-        button_labels(&s.view(&iden()).unwrap(), &mut live);
-        for d in ["\u{2190}", "\u{2191}", "\u{2193}", "\u{2192}"] {
-            assert!(live.contains(&d.to_string()));
-        }
-        assert!(!live.contains(&"play again".to_string()));
-        send(
-            &mut s,
-            "snake.set",
-            json!({ "key": "wrap", "value": false }),
-        );
-        send(&mut s, "snake.step", json!({ "n": 1024 }));
-        assert!(s.over);
-        let mut over = Vec::new();
-        button_labels(&s.view(&iden()).unwrap(), &mut over);
-        assert!(over.contains(&"play again".to_string()));
-        assert!(!over.contains(&"^".to_string()));
     }
     #[test]
     fn state_carries_an_indexed_frame() {

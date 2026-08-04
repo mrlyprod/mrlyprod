@@ -46,10 +46,9 @@ def test(loud=False, record=False):
     paths = changed()
     config = touches(paths, "utils/")
     ts = config or touches(paths, "package.json", "bun.lock", "tsconfig.base.json")
-    rust = config or touches(paths, "pkgs/", "apps/cli", "apps/gui", "Cargo.toml")
+    rust = config or touches(paths, "pkgs/", "apps/cli", "Cargo.toml")
     sites = ts or touches(paths, "apps/net/", "apps/git/", "pkgs/mrlycss", "pkgs/mrlydom", "pkgs/mrlygpu")
     web = ts or touches(paths, "apps/web")
-    jsx = ts or touches(paths, "apps/jsx")
     print("mrlytest")
     if not run("fmt", ["cargo", "fmt"], loud):
         return False
@@ -59,7 +58,6 @@ def test(loud=False, record=False):
         steps = [
             ("test", ["cargo", "test", "--workspace"]),
             ("layers", ["uv", "run", "python", "utils/layers.py"]),
-            ("views", ["uv", "run", "python", "utils/views.py"]),
             ("wasm", ["wasm-pack", "build", "pkgs/mrlyjs/web", "--target", "web"]),
             ("wasm math", ["wasm-pack", "build", "pkgs/mrlyjs/math", "--target", "web"]),
         ]
@@ -94,15 +92,7 @@ def test(loud=False, record=False):
         for label, cmd in steps:
             if not run(label, cmd, loud):
                 return False
-    if jsx:
-        steps = [
-            ("tsc jsx", ["bun", "run", "--cwd", "apps/jsx", "check"], None),
-            ("vite jsx", ["bun", "run", "--cwd", "apps/jsx", "build"], {"MRLY_OUT": "../../data/jsx/check"}),
-        ]
-        for label, cmd, env in steps:
-            if not run(label, cmd, loud, env):
-                return False
-    if not rust and not sites and not web and not jsx:
+    if not rust and not sites and not web:
         print("mrlyprod (no source changed, gates skipped)")
     if not run("tree", ["uv", "run", "python", "utils/tree.py"], loud):
         return False

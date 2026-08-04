@@ -207,14 +207,13 @@ impl Os {
     }
     pub fn frame(&self, shape: Option<&Json>) -> Envelope {
         let view = self.route.as_ref().map(|route| {
-            let (state, actions, beat, ui) = match self.find(&route.app) {
+            let (state, actions, beat) = match self.find(&route.app) {
                 Some(i) => (
                     self.apps[i].state(&self.iden),
                     self.apps[i].actions(&self.iden),
                     self.apps[i].beat(),
-                    self.apps[i].view(&self.iden),
                 ),
-                None => (Json::Null, Vec::new(), None, None),
+                None => (Json::Null, Vec::new(), None),
             };
             let state = match shape {
                 Some(s) => prune(&state, s),
@@ -226,7 +225,6 @@ impl Os {
                 state,
                 actions,
                 beat,
-                ui,
             }
         });
         Envelope {
@@ -260,7 +258,6 @@ impl Os {
             state,
             actions: self.apps[i].actions(&self.iden),
             beat: None,
-            ui: self.apps[i].view(&self.iden),
         })
     }
     pub fn describe(&self, shape: Option<&Json>) -> Json {

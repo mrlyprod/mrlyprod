@@ -1,8 +1,5 @@
-mod view;
-
 use mrlycore::rng::Rng;
 use mrlycore::trig::{FracIndex, N as TRIG_N};
-use mrlycore::ui;
 use mrlycore::{json, Json};
 use mrlymath::fractal::{self, Viewport, Wayfinder};
 use mrlyos::kernel::{int, App, Call, Iden, Manifest, Outcome, Verb};
@@ -304,9 +301,6 @@ impl App for Mandelbrot {
             Verb::new("mandelbrot.set", json!({ "key": "string", "value": "any" })),
         ]
     }
-    fn view(&self, iden: &Iden) -> Option<ui::Node> {
-        view::tree(self, iden)
-    }
     fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
             "mandelbrot.step" => {
@@ -562,29 +556,5 @@ mod tests {
         assert!(gpu["rows"].as_array().unwrap().is_empty());
         assert!(gpu["palette"].as_array().unwrap().is_empty());
         assert_eq!(m.capture(&iden()), cpu);
-    }
-    #[test]
-    fn view_carries_the_frame_and_every_dial() {
-        let m = mandelbrot(5);
-        let ui::Node::Column { children } = m.view(&iden()).unwrap() else {
-            panic!()
-        };
-        assert!(matches!(children[0], ui::Node::Image { .. }));
-        let ranges: Vec<String> = children
-            .iter()
-            .filter_map(|n| match n {
-                ui::Node::Range { label, .. } => Some(label.clone()),
-                _ => None,
-            })
-            .collect();
-        assert_eq!(
-            ranges,
-            ["zoom", "cycle", "drift", "spin", "band", "fade", "depth"]
-        );
-        let fields = children
-            .iter()
-            .filter(|n| matches!(n, ui::Node::Field { .. }))
-            .count();
-        assert_eq!(fields, 2);
     }
 }

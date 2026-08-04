@@ -133,9 +133,21 @@ fn capture(
     app: Option<&str>,
 ) -> PyResult<(usize, usize, PyObject)> {
     let app = target(handle, app)?;
-    let (w, h, buf) =
-        mrlyweb::face::canvas_rgba(&handle.os, &app).map_err(PyValueError::new_err)?;
-    Ok((w, h, PyBytes::new_bound(py, &buf).into()))
+    let view = handle
+        .os
+        .peek(&app, None)
+        .ok_or_else(|| PyValueError::new_err("no such app"))?;
+    let image = mrlycore::image::Image::from_json(&view.state["frame"])
+        .map_err(|_| PyValueError::new_err("nothing to shoot here"))?;
+    let mut buf = Vec::with_capacity(image.width * image.height * 4);
+    for c in image.colors() {
+        buf.extend_from_slice(&c);
+    }
+    Ok((
+        image.width,
+        image.height,
+        PyBytes::new_bound(py, &buf).into(),
+    ))
 }
 
 #[pyfunction]
@@ -143,22 +155,6 @@ fn capture(
 fn capture_png(py: Python<'_>, handle: &Handle, app: Option<&str>) -> PyResult<PyObject> {
     let app = target(handle, app)?;
     let bytes = handle.os.snapshot(&app).map_err(PyValueError::new_err)?;
-    Ok(PyBytes::new_bound(py, &bytes).into())
-}
-
-#[pyfunction]
-#[pyo3(signature = (handle, app=None))]
-fn face(py: Python<'_>, handle: &Handle, app: Option<&str>) -> PyResult<(usize, usize, PyObject)> {
-    let app = target(handle, app)?;
-    let (w, h, buf) = mrlyweb::face::face_rgba(&handle.os, &app).map_err(PyValueError::new_err)?;
-    Ok((w, h, PyBytes::new_bound(py, &buf).into()))
-}
-
-#[pyfunction]
-#[pyo3(signature = (handle, app=None))]
-fn face_png(py: Python<'_>, handle: &Handle, app: Option<&str>) -> PyResult<PyObject> {
-    let app = target(handle, app)?;
-    let bytes = mrlyweb::face::face_png(&handle.os, &app).map_err(PyValueError::new_err)?;
     Ok(PyBytes::new_bound(py, &bytes).into())
 }
 
@@ -174,8 +170,6 @@ fn web(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(peek, m)?)?;
     m.add_function(wrap_pyfunction!(capture, m)?)?;
     m.add_function(wrap_pyfunction!(capture_png, m)?)?;
-    m.add_function(wrap_pyfunction!(face, m)?)?;
-    m.add_function(wrap_pyfunction!(face_png, m)?)?;
     graphics::register(m.py(), m)?;
     font::register(m.py(), m)?;
     Ok(())

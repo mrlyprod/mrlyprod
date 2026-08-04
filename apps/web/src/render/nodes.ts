@@ -2,7 +2,7 @@ import { spell } from "../glyphs.ts"
 import { html } from "../kernel.ts"
 import * as gpu from "mrlygpu"
 import { icon } from "../icons.ts"
-import type { Call, Flip, Held, Node, Send, Sym } from "../types.ts"
+import type { Call, Flip, Glyph, Held, Node, Send, Sym } from "../types.ts"
 import { prune, remember } from "./boards.ts"
 import { scramble } from "./fx.ts"
 import { markCanvas } from "./mark.ts"
@@ -468,7 +468,8 @@ export function patch(el: Held, node: Node, send: Send): void {
           : ""
       const dark = document.body.classList.contains("darkmode")
       const shading = node.shade !== undefined && render === "gpu" ? gpu.pull(node.shade) : null
-      const sig = `${render}:${dark}:${shading?.join(",") ?? ""}:${node.palette?.join(",") ?? ""}:${node.rows.map(row => row.join(",")).join(";")}`
+      const marks = node.glyphs?.map(g => `${g.x},${g.y},${g.k},${g.ch},${g.tint ?? ""}`).join(";") ?? ""
+      const sig = `${render}:${dark}:${shading?.join(",") ?? ""}:${node.palette?.join(",") ?? ""}:${marks}:${node.rows.map(row => row.join(",")).join(";")}`
       if (el.__committed === sig) break
       el.__committed = sig
       if (node.shade !== undefined && render === "gpu" && gpu.draw(surface, node, shading)) break
@@ -477,7 +478,7 @@ export function patch(el: Held, node: Node, send: Send): void {
         break
       }
       halt(surface)
-      fill(surface, node.rows, node.palette)
+      fill(surface, node.rows, node.palette, node.glyphs)
       break
     }
     case "Button":
@@ -638,7 +639,7 @@ function play(surface: HTMLCanvasElement, strip: Flip[]): void {
   step()
 }
 
-function fill(surface: HTMLCanvasElement, rows: number[][], palette?: string[]): void {
+function fill(surface: HTMLCanvasElement, rows: number[][], palette?: string[], glyphs?: Glyph[]): void {
   const height = rows.length
   const width = rows[0]?.length ?? 0
   if (surface.width !== width) surface.width = width
@@ -654,17 +655,32 @@ function fill(surface: HTMLCanvasElement, rows: number[][], palette?: string[]):
         ctx.fillRect(x, y, 1, 1)
       }
     }
-    return
-  }
-  ctx.fillStyle = getComputedStyle(surface).color
-  for (let y = 0; y < height; y++) {
-    const row = rows[y] as number[]
-    for (let x = 0; x < width; x++) {
-      const cell = row[x] as number
-      if (cell === 0) continue
-      ctx.globalAlpha = cell / 255
-      ctx.fillRect(x, y, 1, 1)
+  } else {
+    ctx.fillStyle = getComputedStyle(surface).color
+    for (let y = 0; y < height; y++) {
+      const row = rows[y] as number[]
+      for (let x = 0; x < width; x++) {
+        const cell = row[x] as number
+        if (cell === 0) continue
+        ctx.globalAlpha = cell / 255
+        ctx.fillRect(x, y, 1, 1)
+      }
     }
+    ctx.globalAlpha = 1
   }
-  ctx.globalAlpha = 1
+  if (glyphs !== undefined && glyphs.length > 0) etch(surface, ctx, glyphs)
+}
+
+const STACK = `"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`
+
+function etch(surface: HTMLCanvasElement, ctx: CanvasRenderingContext2D, glyphs: Glyph[]): void {
+  const family = getComputedStyle(surface).getPropertyValue("--font-emoji").trim()
+  const stack = family === "" ? STACK : `${family}, ${STACK}`
+  ctx.textAlign = "center"
+  ctx.textBaseline = "middle"
+  for (const glyph of glyphs) {
+    ctx.font = `${glyph.k}px ${stack}`
+    ctx.fillStyle = glyph.tint ?? "#000000"
+    ctx.fillText(glyph.ch, glyph.x + glyph.k / 2, glyph.y + glyph.k / 2)
+  }
 }

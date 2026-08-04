@@ -11,7 +11,6 @@ mrlyprod
 │   │   ├── tests
 │   │   │   ├── screenplays
 │   │   │   │   ├── chess.jsonl
-│   │   │   │   ├── keys.jsonl
 │   │   │   │   ├── mandelbrot.jsonl
 │   │   │   │   ├── menu.jsonl
 │   │   │   │   ├── settings.jsonl
@@ -66,137 +65,9 @@ mrlyprod
 │   │   ├── package.json
 │   │   ├── tsconfig.json
 │   │   └── vite.config.ts
-│   ├── gui
-│   │   ├── src
-│   │   │   ├── audio.rs
-│   │   │   ├── glass.rs
-│   │   │   ├── main.rs
-│   │   │   └── sheet.wgsl
-│   │   └── Cargo.toml
 │   ├── jsx
-│   │   ├── public
-│   │   │   ├── icons
-│   │   │   ├── colors.json
-│   │   │   ├── favicon.ico
-│   │   │   ├── fonts.css
-│   │   │   ├── manifest.json
-│   │   │   ├── mrlyprod.png
-│   │   │   ├── mrlyprod.svg
-│   │   │   ├── robots.txt
-│   │   │   └── sw.js
-│   │   ├── src
-│   │   │   ├── apps
-│   │   │   ├── components
-│   │   │   │   ├── Settings
-│   │   │   │   │   ├── SettingRow.tsx
-│   │   │   │   │   ├── SettingStepper.tsx
-│   │   │   │   │   ├── SettingSwatches.tsx
-│   │   │   │   │   └── SettingToggle.tsx
-│   │   │   │   ├── Carousel.tsx
-│   │   │   │   ├── ComingSoon.tsx
-│   │   │   │   ├── Controls.tsx
-│   │   │   │   ├── Cycle.tsx
-│   │   │   │   ├── Emoji.tsx
-│   │   │   │   ├── Game.tsx
-│   │   │   │   ├── Header.tsx
-│   │   │   │   ├── Home.tsx
-│   │   │   │   ├── Keyboard.tsx
-│   │   │   │   ├── Keypad.tsx
-│   │   │   │   ├── MrlyHex.tsx
-│   │   │   │   ├── MrlyIcon.tsx
-│   │   │   │   ├── MrlyProd.tsx
-│   │   │   │   ├── MrlyTile.tsx
-│   │   │   │   ├── ScreenshotButton.tsx
-│   │   │   │   ├── Skeleton.tsx
-│   │   │   │   ├── System.tsx
-│   │   │   │   └── TilePicker.tsx
-│   │   │   ├── contexts
-│   │   │   │   ├── HeaderContext.tsx
-│   │   │   │   ├── SettingsContext.tsx
-│   │   │   │   └── ThemeContext.tsx
-│   │   │   ├── hooks
-│   │   │   │   ├── useDesigner.ts
-│   │   │   │   ├── useFractalScreensaver.ts
-│   │   │   │   ├── useGameLoop.ts
-│   │   │   │   ├── useMusic.ts
-│   │   │   │   └── useSongPlayer.ts
-│   │   │   ├── lib
-│   │   │   │   ├── audio
-│   │   │   │   │   ├── music.ts
-│   │   │   │   │   └── synth.ts
-│   │   │   │   ├── browser
-│   │   │   │   │   ├── clipboard.ts
-│   │   │   │   │   ├── images.ts
-│   │   │   │   │   ├── screenshot.ts
-│   │   │   │   │   └── storage.ts
-│   │   │   │   ├── render
-│   │   │   │   │   ├── six.ts
-│   │   │   │   │   ├── three.ts
-│   │   │   │   │   └── two.ts
-│   │   │   │   ├── animation.ts
-│   │   │   │   ├── colors.json
-│   │   │   │   ├── colors.ts
-│   │   │   │   ├── formulas.ts
-│   │   │   │   ├── fractal.ts
-│   │   │   │   ├── frames.ts
-│   │   │   │   ├── mrlyfont.json
-│   │   │   │   ├── mrlyfont.ts
-│   │   │   │   └── tiles.ts
-│   │   │   ├── mrly
-│   │   │   │   ├── life
-│   │   │   │   │   ├── animate.ts
-│   │   │   │   │   ├── chaos.ts
-│   │   │   │   │   ├── config.ts
-│   │   │   │   │   ├── enums.ts
-│   │   │   │   │   ├── index.ts
-│   │   │   │   │   ├── models.ts
-│   │   │   │   │   ├── sequences.ts
-│   │   │   │   │   └── step.ts
-│   │   │   │   ├── six
-│   │   │   │   │   ├── geometry.ts
-│   │   │   │   │   ├── index.ts
-│   │   │   │   │   ├── models.ts
-│   │   │   │   │   └── painter.ts
-│   │   │   │   ├── three
-│   │   │   │   │   ├── designs.ts
-│   │   │   │   │   ├── geometry.ts
-│   │   │   │   │   ├── index.ts
-│   │   │   │   │   ├── models.ts
-│   │   │   │   │   ├── painter.ts
-│   │   │   │   │   └── serializer.ts
-│   │   │   │   ├── two
-│   │   │   │   │   ├── designs.ts
-│   │   │   │   │   ├── geometry.ts
-│   │   │   │   │   ├── index.ts
-│   │   │   │   │   ├── models.ts
-│   │   │   │   │   ├── painter.ts
-│   │   │   │   │   └── serializer.ts
-│   │   │   │   ├── binary.ts
-│   │   │   │   ├── colors.ts
-│   │   │   │   ├── config.ts
-│   │   │   │   ├── enums.ts
-│   │   │   │   ├── errors.ts
-│   │   │   │   ├── formulas.ts
-│   │   │   │   ├── index.ts
-│   │   │   │   ├── julia.ts
-│   │   │   │   ├── mandelbrot.ts
-│   │   │   │   ├── state.ts
-│   │   │   │   ├── wayfinder.ts
-│   │   │   │   └── webgl.ts
-│   │   │   ├── router
-│   │   │   │   ├── RouterContext.tsx
-│   │   │   │   ├── index.ts
-│   │   │   │   └── types.ts
-│   │   │   ├── App.tsx
-│   │   │   ├── apps.json
-│   │   │   ├── main.tsx
-│   │   │   ├── mrly.css
-│   │   │   └── registry.ts
-│   │   ├── index.html
-│   │   ├── package.json
-│   │   ├── tsconfig.json
-│   │   ├── tsconfig.tsbuildinfo
-│   │   └── vite.config.ts
+│   │   └── src
+│   │       └── apps
 │   ├── net
 │   │   ├── blog
 │   │   │   ├── README.md
@@ -286,6 +157,7 @@ mrlyprod
 │   │   │   │   ├── fx.ts
 │   │   │   │   ├── mark.ts
 │   │   │   │   ├── nodes.ts
+│   │   │   │   ├── orbit.ts
 │   │   │   │   ├── paint.ts
 │   │   │   │   ├── reconcile.ts
 │   │   │   │   ├── theme.ts
@@ -391,19 +263,11 @@ mrlyprod
 │   │   ├── mark.svg
 │   │   ├── mrlyprod.png
 │   │   └── mrlyprod.svg
-│   ├── emoji
-│   │   ├── atlas.json
-│   │   ├── atlas.png
-│   │   └── catalog.txt
 │   ├── mrlyfont
 │   │   ├── MrlyFont.json
 │   │   ├── MrlyFont.ttf
 │   │   ├── MrlyFont.woff
 │   │   └── MrlyFont.woff2
-│   ├── symbols
-│   │   ├── atlas.json
-│   │   ├── atlas.png
-│   │   └── catalog.txt
 │   └── vendor
 │       ├── seti
 │       │   ├── LICENSE-seti.txt
@@ -474,12 +338,6 @@ mrlyprod
 │   │   │   └── theme.ts
 │   │   ├── package.json
 │   │   └── tsconfig.json
-│   ├── mrlydoor
-│   │   ├── src
-│   │   │   ├── lib.rs
-│   │   │   ├── main.rs
-│   │   │   └── raster.rs
-│   │   └── Cargo.toml
 │   ├── mrlygpu
 │   │   ├── src
 │   │   │   ├── index.ts
@@ -576,8 +434,7 @@ mrlyprod
 │   │   │   │   │   │   └── mod.rs
 │   │   │   │   │   ├── snake
 │   │   │   │   │   │   ├── README.md
-│   │   │   │   │   │   ├── mod.rs
-│   │   │   │   │   │   └── view.rs
+│   │   │   │   │   │   └── mod.rs
 │   │   │   │   │   ├── tennis
 │   │   │   │   │   │   ├── README.md
 │   │   │   │   │   │   └── mod.rs
@@ -631,8 +488,7 @@ mrlyprod
 │   │   │   │   │   │   ├── render.rs
 │   │   │   │   │   │   ├── rules.rs
 │   │   │   │   │   │   ├── setup.rs
-│   │   │   │   │   │   ├── tests.rs
-│   │   │   │   │   │   └── view.rs
+│   │   │   │   │   │   └── tests.rs
 │   │   │   │   │   ├── memory
 │   │   │   │   │   │   ├── README.md
 │   │   │   │   │   │   └── mod.rs
@@ -647,8 +503,7 @@ mrlyprod
 │   │   │   │   │   │   └── mod.rs
 │   │   │   │   │   ├── twenty48
 │   │   │   │   │   │   ├── README.md
-│   │   │   │   │   │   ├── mod.rs
-│   │   │   │   │   │   └── view.rs
+│   │   │   │   │   │   └── mod.rs
 │   │   │   │   │   └── mod.rs
 │   │   │   │   ├── system
 │   │   │   │   │   ├── files
@@ -662,12 +517,10 @@ mrlyprod
 │   │   │   │   │   │   └── mod.rs
 │   │   │   │   │   ├── menu
 │   │   │   │   │   │   ├── README.md
-│   │   │   │   │   │   ├── mod.rs
-│   │   │   │   │   │   └── view.rs
+│   │   │   │   │   │   └── mod.rs
 │   │   │   │   │   ├── settings
 │   │   │   │   │   │   ├── README.md
-│   │   │   │   │   │   ├── mod.rs
-│   │   │   │   │   │   └── view.rs
+│   │   │   │   │   │   └── mod.rs
 │   │   │   │   │   ├── ui
 │   │   │   │   │   │   ├── README.md
 │   │   │   │   │   │   └── mod.rs
@@ -698,8 +551,7 @@ mrlyprod
 │   │   │   │   │   │   └── mod.rs
 │   │   │   │   │   ├── mandelbrot
 │   │   │   │   │   │   ├── README.md
-│   │   │   │   │   │   ├── mod.rs
-│   │   │   │   │   │   └── view.rs
+│   │   │   │   │   │   └── mod.rs
 │   │   │   │   │   ├── matrix
 │   │   │   │   │   │   ├── README.md
 │   │   │   │   │   │   └── mod.rs
@@ -735,8 +587,7 @@ mrlyprod
 │   │   │   │   ├── tensor.rs
 │   │   │   │   ├── tile.rs
 │   │   │   │   ├── time.rs
-│   │   │   │   ├── trig.rs
-│   │   │   │   └── ui.rs
+│   │   │   │   └── trig.rs
 │   │   │   ├── tests
 │   │   │   │   └── json.rs
 │   │   │   └── Cargo.toml
@@ -911,15 +762,6 @@ mrlyprod
 │   │   │   └── build.rs
 │   │   ├── mrlyui
 │   │   │   ├── src
-│   │   │   │   ├── face
-│   │   │   │   │   ├── dump.rs
-│   │   │   │   │   ├── keys.rs
-│   │   │   │   │   ├── layout.rs
-│   │   │   │   │   ├── md.rs
-│   │   │   │   │   ├── mod.rs
-│   │   │   │   │   ├── paint.rs
-│   │   │   │   │   ├── text.rs
-│   │   │   │   │   └── tree.rs
 │   │   │   │   ├── mark
 │   │   │   │   │   ├── animation.rs
 │   │   │   │   │   ├── frames.rs
@@ -943,40 +785,23 @@ mrlyprod
 │   │   │   │   │   ├── twenty48.rs
 │   │   │   │   │   └── two.rs
 │   │   │   │   ├── draw.rs
-│   │   │   │   ├── emoji.rs
 │   │   │   │   ├── frame.rs
-│   │   │   │   ├── kit.rs
 │   │   │   │   ├── lib.rs
-│   │   │   │   ├── raster.rs
-│   │   │   │   ├── scene.rs
-│   │   │   │   ├── symbol.rs
-│   │   │   │   └── tokens.rs
+│   │   │   │   └── raster.rs
 │   │   │   ├── tests
 │   │   │   └── Cargo.toml
 │   │   └── mrlyweb
 │   │       ├── examples
-│   │       │   ├── face.rs
-│   │       │   ├── fixtures.rs
-│   │       │   └── rungs.rs
+│   │       │   └── fixtures.rs
 │   │       ├── src
 │   │       │   ├── card.rs
-│   │       │   ├── drive.rs
-│   │       │   ├── face.rs
 │   │       │   ├── lib.rs
 │   │       │   └── registry.rs
 │   │       ├── tests
-│   │       │   ├── bar.rs
-│   │       │   ├── budget.rs
 │   │       │   ├── card.rs
-│   │       │   ├── effects.rs
-│   │       │   ├── face.rs
 │   │       │   ├── golden.rs
 │   │       │   ├── goose.rs
-│   │       │   ├── hover.rs
-│   │       │   ├── keys.rs
-│   │       │   ├── motion.rs
-│   │       │   ├── polish.rs
-│   │       │   └── ring.rs
+│   │       │   └── keys.rs
 │   │       └── Cargo.toml
 │   └── README.md
 ├── utils
@@ -990,8 +815,7 @@ mrlyprod
 │   ├── stats.py
 │   ├── test.py
 │   ├── tree.py
-│   ├── tsconfig.json
-│   └── views.py
+│   └── tsconfig.json
 ├── .gitignore
 ├── .python-version
 ├── CLONE.md

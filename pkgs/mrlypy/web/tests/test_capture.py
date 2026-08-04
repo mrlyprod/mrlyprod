@@ -10,21 +10,6 @@ def boot_snake():
     return os
 
 
-def test_face_tuple_is_sane():
-    os = mrlyweb.boot()
-    w, h, buf = mrlyweb.face(os, "settings")
-    assert w == 320
-    assert 160 <= h <= 512
-    assert isinstance(buf, bytes)
-    assert len(buf) == w * h * 4
-
-
-def test_face_png_has_the_magic():
-    os = mrlyweb.boot()
-    png = mrlyweb.face_png(os)
-    assert png[:8] == b"\x89PNG\r\n\x1a\n"
-
-
 def test_snake_canvas_is_48x48():
     os = boot_snake()
     w, h, buf = mrlyweb.capture(os)
@@ -34,13 +19,11 @@ def test_snake_canvas_is_48x48():
     assert png[:8] == b"\x89PNG\r\n\x1a\n"
 
 
-def test_frameless_capture_raises_but_faces():
+def test_frameless_capture_raises():
     os = mrlyweb.boot()
     mrlyweb.act(os, {"verb": "nav.open", "args": {"app": "calculator"}})
     with pytest.raises(ValueError, match="nothing to shoot here"):
         mrlyweb.capture(os)
-    w, h, buf = mrlyweb.face(os)
-    assert len(buf) == w * h * 4
 
 
 def test_numpy_roundtrip():

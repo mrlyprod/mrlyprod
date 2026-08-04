@@ -589,8 +589,8 @@ mod tests {
             assert!(send(&mut t, "ttt.set", json!({ "key": key, "value": value })).ok);
         }
         assert_eq!(t.state(&iden())["steps"], json!(1));
-        let tile = t.tileset().tiles[1].cell.colors.clone().unwrap();
-        assert!(tile.iter().any(|px| px[3] > 0), "the canvas baked nothing");
+        let set = t.tileset();
+        assert!(set.faces[1].is_some(), "the canvas lost its glyph");
         assert!(!send(&mut t, "ttt.set", json!({ "key": "skin", "value": "wax" })).ok);
     }
     #[test]

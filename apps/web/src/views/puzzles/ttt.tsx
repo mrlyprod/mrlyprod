@@ -5,7 +5,7 @@ import { Board } from "../../components/Board.tsx"
 import { SURFACES, SKINS, DESIGNS_SOLID as DESIGNS } from "../../components/options.ts"
 import { call, set } from "../../builders.ts"
 import { h } from "../../jsx.ts"
-import type { Node, Send } from "../../types.ts"
+import type { Glyph, Node, Send } from "../../types.ts"
 
 const OPPONENTS = ["off", "random"]
 const EMOJI: Record<string, string> = { x: "❌", o: "⭕" }
@@ -21,7 +21,7 @@ type State = {
   winner: string | null
   turn: string
   settings: { opponent: string; surface: string; skin: string; design: string }
-  frame: { rows: number[][]; palette: string[] }
+  frame: { rows: number[][]; palette: string[]; glyphs?: Glyph[] }
 }
 
 function face(s: State, mark: string, sprite: Sprite | null, i: number): Node | undefined {
@@ -49,7 +49,7 @@ export function ttt(state: unknown, _send: Send): Node {
                 ),
               )}
             </grid>
-          : <Board app="ttt" rows={s.frame.rows} palette={s.frame.palette} />}
+          : <Board app="ttt" rows={s.frame.rows} palette={s.frame.palette} glyphs={s.frame.glyphs} />}
       </card>
       {s.over && <GameOver app="ttt" emoji="⭕" status={status} />}
       <card key="meter">

@@ -6,15 +6,31 @@ use mrlycore::{json, Json};
 use mrlymath::two::tile as tile2d;
 use mrlymath::two::{designs, Cell2d};
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct Glyph {
+    pub ch: String,
+    pub tint: Option<[u8; 4]>,
+}
+
 #[derive(Clone, Debug)]
 pub struct TileSet {
     pub size: usize,
     pub tiles: Vec<Cell2d>,
+    pub faces: Vec<Option<Glyph>>,
 }
 
 impl TileSet {
     pub fn new(size: usize, tiles: Vec<Cell2d>) -> TileSet {
-        TileSet { size, tiles }
+        let faces = vec![None; tiles.len()];
+        TileSet { size, tiles, faces }
+    }
+    pub fn face(&mut self, id: usize, ch: impl Into<String>, tint: Option<[u8; 4]>) {
+        if id < self.faces.len() {
+            self.faces[id] = Some(Glyph {
+                ch: ch.into(),
+                tint,
+            });
+        }
     }
 }
 
@@ -319,7 +335,38 @@ impl Frame {
         cell
     }
     pub fn fact(&self) -> Json {
-        self.image().to_json()
+        let mut out = self.image().to_json();
+        let glyphs = self.glyphs();
+        if !glyphs.is_empty() {
+            out["glyphs"] = json!(glyphs);
+        }
+        out
+    }
+    fn glyphs(&self) -> Vec<Json> {
+        let mut out = Vec::new();
+        for layer in &self.layers {
+            let Layer::Tiles { ids, set } = layer else {
+                continue;
+            };
+            if set.faces.iter().all(Option::is_none) {
+                continue;
+            }
+            let k = set.size;
+            for r in 0..ids.shape[0] {
+                for c in 0..ids.shape[1] {
+                    let id = ids.get(&[r, c]) as usize;
+                    let Some(Some(glyph)) = set.faces.get(id) else {
+                        continue;
+                    };
+                    let mut g = json!({ "x": c * k, "y": r * k, "k": k, "ch": glyph.ch });
+                    if let Some(tint) = glyph.tint {
+                        g["tint"] = json!(hex(tint));
+                    }
+                    out.push(g);
+                }
+            }
+        }
+        out
     }
     pub fn image(&self) -> Image {
         let pixels = self.composite().cell.colors.unwrap_or_default();

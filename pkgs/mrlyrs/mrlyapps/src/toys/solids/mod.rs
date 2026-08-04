@@ -1,13 +1,10 @@
 use mrlycore::colors::ROLLABLE;
 use mrlycore::rng::Rng;
 use mrlycore::{json, Json};
-use mrlymath::space::{beam, solid, Mat3, Rig, PAN_MAX, PITCH_MAX, SOLIDS, TURN};
+use mrlymath::space::{axis_edges, solid, Pack, PITCH_MAX, SOLIDS, TURN};
 use mrlyos::kernel::{App, Call, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{board, ink, Frame};
-use mrlyui::scene::{axes, axis_edges, Pack, Scene};
+use mrlyui::frame::ink;
 use std::f64::consts::TAU;
-
-const ORBIT: i64 = 8;
 
 struct Set {
     bands: i64,
@@ -97,11 +94,8 @@ pub struct Solids {
     seed: u64,
     object: String,
     spin: i64,
-    rig: Rig,
     base: [u8; 4],
     dark: bool,
-    gpu: bool,
-    detail: usize,
 }
 
 impl Default for Solids {
@@ -118,11 +112,8 @@ impl Solids {
             seed: 0,
             object: "icosa".to_string(),
             spin: 0,
-            rig: Rig::new(),
             base: [255, 255, 255, 255],
             dark: false,
-            gpu: false,
-            detail: 96,
         };
         solids.reset(0);
         solids
@@ -133,55 +124,6 @@ impl Solids {
         let c = ROLLABLE[self.rng.below(ROLLABLE.len())];
         self.base = [c.r, c.g, c.b, 255];
         self.spin = 0;
-        self.rig = Rig::new();
-        self.rig.view("iso");
-    }
-    fn shades(&self) -> Vec<[u8; 4]> {
-        let bands = self.set.bands;
-        (0..bands)
-            .map(|k| {
-                let t = (64 + 191 * k / (bands - 1)) as u32;
-                let mix = |c: u8| (c as u32 * t / 255) as u8;
-                [mix(self.base[0]), mix(self.base[1]), mix(self.base[2]), 255]
-            })
-            .collect()
-    }
-    fn scene(&self) -> Scene {
-        let mesh = solid(&self.object);
-        let spin = Mat3::yaw(self.spin);
-        let light = beam(self.set.light_yaw, self.set.light_pitch);
-        let shades = self.shades();
-        let alpha = self.set.alpha as u8;
-        let mut scene = Scene::new();
-        if !self.set.wireframe {
-            for (i, face) in mesh.faces.iter().enumerate() {
-                let normal = spin.apply(mesh.normals[i]);
-                let verts = face.map(|v| spin.apply(mesh.verts[v]));
-                let lit = (normal.dot(light) + 1.0) * 0.5;
-                let band =
-                    ((lit * self.set.bands as f32).floor() as i64).clamp(0, self.set.bands - 1);
-                let mut color = shades[band as usize];
-                color[3] = alpha;
-                scene.face(verts, normal, color);
-            }
-        }
-        if self.set.edges || self.set.wireframe {
-            for [a, b] in mesh.edges() {
-                scene.edge(
-                    spin.apply(mesh.verts[a]),
-                    spin.apply(mesh.verts[b]),
-                    ink(self.dark),
-                );
-            }
-        }
-        if self.set.axes {
-            axes(&mut scene, ink(self.dark));
-        }
-        scene
-    }
-    fn render_at(&self, size: usize) -> Frame {
-        self.scene()
-            .paint(&self.rig.camera(), size, board(self.dark))
     }
     fn signature(&self) -> String {
         format!(
@@ -216,22 +158,15 @@ impl App for Solids {
     }
     fn wear(&mut self, world: &Json) {
         self.dark = world["shared"]["settings"]["darkmode"] == true;
-        self.gpu = world["shared"]["settings"]["render"] == "gpu";
-        self.detail = world["shared"]["settings"]["detail"].as_i64().unwrap_or(96) as usize;
     }
     fn state(&self, _iden: &Iden) -> Json {
         json!({
             "seed": self.seed,
             "object": &self.object,
             "spin": self.spin,
-            "camera": self.rig.to_json(),
             "settings": self.set.to_json(),
-            "frame": self.render_at(if self.gpu { 96 } else { self.detail }).fact(),
             "shade": self.shade(),
         })
-    }
-    fn capture(&self, _iden: &Iden) -> Json {
-        self.render_at(self.detail).fact()
     }
     fn geometry(&self) -> Option<Vec<f32>> {
         let mesh = solid(&self.object);
@@ -265,12 +200,6 @@ impl App for Solids {
         u[10] = self.base[2] as f64 / 255.0;
         u[11] = self.set.bands as f64;
         u[12] = self.spin as f64 * rad;
-        u[13] = self.rig.yaw as f64 * rad;
-        u[14] = self.rig.pitch as f64 * rad;
-        u[15] = self.rig.dist as f64 / 4.0;
-        u[16] = self.rig.pan[0] as f64 / 16.0;
-        u[17] = self.rig.pan[1] as f64 / 16.0;
-        u[18] = if self.rig.ortho { 1.0 } else { 0.0 };
         u[19] = self.set.alpha as f64 / 255.0;
         u[20] = self.set.light_yaw as f64 * rad;
         u[21] = self.set.light_pitch as f64 * rad;
@@ -278,13 +207,6 @@ impl App for Solids {
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
         vec![
-            Verb::new(
-                "solids.orbit",
-                json!({ "dir": "up | down | left | right", "n": "int" }),
-            ),
-            Verb::new("solids.turn", json!({ "dyaw": "int", "dpitch": "int" })),
-            Verb::new("solids.zoom", json!({ "dir": "in | out", "n": "int" })),
-            Verb::new("solids.pan", json!({ "dx": "int", "dy": "int" })),
             Verb::new("solids.step", json!({ "n": "int" })),
             Verb::new(
                 "solids.pick",
@@ -296,50 +218,6 @@ impl App for Solids {
     }
     fn act(&mut self, _iden: &Iden, call: &Call) -> Outcome {
         match call.verb.as_str() {
-            "solids.orbit" => {
-                let n = match Solids::count(call, 32) {
-                    Ok(n) => n,
-                    Err(note) => return Outcome::fail(note),
-                };
-                match call.arg("dir").as_str() {
-                    Some("left") => self.rig.orbit(-ORBIT * n, 0),
-                    Some("right") => self.rig.orbit(ORBIT * n, 0),
-                    Some("up") => self.rig.orbit(0, ORBIT * n),
-                    Some("down") => self.rig.orbit(0, -ORBIT * n),
-                    _ => return Outcome::fail("dir must be up, down, left, or right"),
-                }
-                Outcome::ok(json!({ "yaw": self.rig.yaw, "pitch": self.rig.pitch }))
-            }
-            "solids.turn" => {
-                let dyaw = call.arg("dyaw").as_i64().unwrap_or(0);
-                let dpitch = call.arg("dpitch").as_i64().unwrap_or(0);
-                if dyaw.abs() > TURN || dpitch.abs() > TURN {
-                    return Outcome::fail("delta out of range");
-                }
-                self.rig.orbit(dyaw, dpitch);
-                Outcome::ok(json!({ "yaw": self.rig.yaw, "pitch": self.rig.pitch }))
-            }
-            "solids.pan" => {
-                let dx = call.arg("dx").as_i64().unwrap_or(0);
-                let dy = call.arg("dy").as_i64().unwrap_or(0);
-                if dx.abs() > 2 * PAN_MAX || dy.abs() > 2 * PAN_MAX {
-                    return Outcome::fail("delta out of range");
-                }
-                self.rig.pan(dx, dy);
-                Outcome::ok(json!({ "pan": self.rig.pan.to_vec() }))
-            }
-            "solids.zoom" => {
-                let n = match Solids::count(call, 24) {
-                    Ok(n) => n,
-                    Err(note) => return Outcome::fail(note),
-                };
-                match call.arg("dir").as_str() {
-                    Some("in") => self.rig.zoom(-n),
-                    Some("out") => self.rig.zoom(n),
-                    _ => return Outcome::fail("dir must be in or out"),
-                }
-                Outcome::ok(json!({ "dist": self.rig.dist }))
-            }
             "solids.step" => {
                 let n = match Solids::count(call, 1024) {
                     Ok(n) => n,
@@ -368,13 +246,6 @@ impl App for Solids {
             }
             "solids.set" => {
                 let key = call.arg("key").as_str().unwrap_or("").to_string();
-                if key == "ortho" {
-                    let Some(b) = call.arg("value").as_bool() else {
-                        return Outcome::fail("value must be a boolean");
-                    };
-                    self.rig.ortho = b;
-                    return Outcome::ok(json!({ "key": key, "value": b }));
-                }
                 match self.set.apply(&key, call.arg("value")) {
                     Ok(value) => Outcome::ok(json!({ "key": key, "value": value })),
                     Err(note) => Outcome::fail(note),
@@ -397,7 +268,6 @@ impl App for Solids {
             "pos": self.rng.pos() as u64,
             "object": &self.object,
             "spin": self.spin,
-            "camera": self.rig.to_json(),
         })
     }
     fn load(&mut self, state: &Json) {
@@ -411,7 +281,6 @@ impl App for Solids {
         if let Some(spin) = state["spin"].as_i64() {
             self.spin = spin.rem_euclid(TURN);
         }
-        self.rig.load(&state["camera"]);
         if let Some(pos) = state["pos"].as_u64() {
             self.rng.seek(pos as u128);
         }
@@ -421,7 +290,6 @@ impl App for Solids {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mrlymath::space::{DIST_MAX, DIST_MIN};
     use mrlyos::kernel::testkit::{iden, seeded, send};
 
     fn solids(seed: u64) -> Solids {
@@ -434,7 +302,6 @@ mod tests {
         let mut b = solids(123);
         for s in [&mut a, &mut b] {
             send(s, "solids.pick", json!({ "solid": "octa" }));
-            send(s, "solids.orbit", json!({ "dir": "left", "n": 3 }));
             send(s, "solids.step", json!({ "n": 5 }));
         }
         assert_eq!(a.state(&iden()), b.state(&iden()));
@@ -444,7 +311,6 @@ mod tests {
     fn save_load_continues() {
         let mut a = solids(11);
         send(&mut a, "solids.pick", json!({ "solid": "tetra" }));
-        send(&mut a, "solids.orbit", json!({ "dir": "up", "n": 2 }));
         send(&mut a, "solids.step", json!({ "n": 7 }));
         let mut b = Solids::new();
         b.load(&a.save());
@@ -457,31 +323,9 @@ mod tests {
     #[test]
     fn load_survives_garbage() {
         let mut s = Solids::new();
-        s.load(&json!({ "seed": "soup", "object": "sphere", "camera": { "dist": 999 } }));
+        s.load(&json!({ "seed": "soup", "object": "sphere" }));
         assert_eq!(s.state(&iden())["seed"], json!(0));
         assert_eq!(s.object, "icosa");
-        assert_eq!(s.rig.dist, 12);
-    }
-    #[test]
-    fn orbit_wraps_and_clamps() {
-        let mut s = solids(1);
-        send(&mut s, "solids.orbit", json!({ "dir": "left", "n": 32 }));
-        assert!((0..TURN).contains(&s.rig.yaw));
-        send(&mut s, "solids.orbit", json!({ "dir": "up", "n": 32 }));
-        assert_eq!(s.rig.pitch, PITCH_MAX);
-        send(&mut s, "solids.orbit", json!({ "dir": "down", "n": 32 }));
-        assert_eq!(s.rig.pitch, -PITCH_MAX);
-        assert!(!send(&mut s, "solids.orbit", json!({ "dir": "north" })).ok);
-        assert!(!send(&mut s, "solids.orbit", json!({ "dir": "up", "n": 0 })).ok);
-    }
-    #[test]
-    fn zoom_clamps() {
-        let mut s = solids(1);
-        send(&mut s, "solids.zoom", json!({ "dir": "in", "n": 24 }));
-        assert_eq!(s.rig.dist, DIST_MIN);
-        send(&mut s, "solids.zoom", json!({ "dir": "out", "n": 24 }));
-        assert_eq!(s.rig.dist, DIST_MAX);
-        assert!(!send(&mut s, "solids.zoom", json!({ "dir": "sideways" })).ok);
     }
     #[test]
     fn step_spins_by_speed() {
@@ -529,67 +373,18 @@ mod tests {
         assert_eq!(out.data["seed"], json!(5000));
     }
     #[test]
-    fn every_solid_draws_something() {
-        let mut s = solids(5);
-        for name in SOLIDS {
-            send(&mut s, "solids.pick", json!({ "solid": name }));
-            let state = s.state(&iden());
-            let palette = state["frame"]["palette"].as_array().unwrap().len();
-            assert!(palette > 2, "{name} painted {palette} colors");
-            assert_eq!(state["frame"]["rows"].as_array().unwrap().len(), 96);
-        }
-    }
-    #[test]
-    fn the_frame_is_deterministic() {
-        let a = solids(42);
-        let b = solids(42);
-        assert_eq!(a.state(&iden())["frame"], b.state(&iden())["frame"]);
-    }
-    #[test]
     fn actions_offer_the_natural_verbs() {
         let s = solids(3);
         let names: Vec<String> = s.actions(&iden()).iter().map(|v| v.name.clone()).collect();
         assert_eq!(
             names,
-            vec![
-                "solids.orbit",
-                "solids.turn",
-                "solids.zoom",
-                "solids.pan",
-                "solids.step",
-                "solids.pick",
-                "solids.reset",
-                "solids.set"
-            ]
+            vec!["solids.step", "solids.pick", "solids.reset", "solids.set"]
         );
     }
     #[test]
-    fn turn_pan_and_ortho_drive_the_rig() {
-        let mut s = solids(1);
-        send(&mut s, "solids.turn", json!({ "dyaw": -5, "dpitch": 3 }));
-        assert_eq!((s.rig.yaw, s.rig.pitch), (27, 23));
-        assert!(!send(&mut s, "solids.turn", json!({ "dyaw": 999 })).ok);
-        send(&mut s, "solids.pan", json!({ "dx": 4, "dy": -6 }));
-        assert_eq!(s.rig.pan, [4, -6]);
-        assert!(!send(&mut s, "solids.pan", json!({ "dx": 999 })).ok);
-        assert!(
-            send(
-                &mut s,
-                "solids.set",
-                json!({ "key": "ortho", "value": true })
-            )
-            .ok
-        );
-        assert!(s.rig.ortho);
-        assert!(!send(&mut s, "solids.set", json!({ "key": "ortho", "value": 2 })).ok);
-        let mut b = Solids::new();
-        b.load(&s.save());
-        assert_eq!(b.state(&iden()), s.state(&iden()));
-    }
-    #[test]
-    fn looks_validate_and_change_the_frame() {
+    fn looks_validate_and_change_the_pack() {
         let mut s = solids(9);
-        let plain = s.state(&iden())["frame"].clone();
+        let plain = s.geometry().unwrap();
         assert!(
             send(
                 &mut s,
@@ -599,18 +394,8 @@ mod tests {
             .ok
         );
         assert!(!send(&mut s, "solids.set", json!({ "key": "edges", "value": 3 })).ok);
-        let edged = s.state(&iden())["frame"].clone();
-        assert_ne!(plain, edged);
-        assert!(
-            send(
-                &mut s,
-                "solids.set",
-                json!({ "key": "wireframe", "value": true })
-            )
-            .ok
-        );
-        let wired = s.state(&iden())["frame"].clone();
-        assert_ne!(edged, wired);
+        let edged = s.geometry().unwrap();
+        assert!(edged[1] > plain[1]);
         assert!(
             send(
                 &mut s,
@@ -619,36 +404,15 @@ mod tests {
             )
             .ok
         );
-        assert_ne!(wired, s.state(&iden())["frame"]);
+        assert!(s.geometry().unwrap()[1] > edged[1]);
     }
     #[test]
     fn alpha_makes_glass() {
         let mut s = solids(9);
-        let plain = s.state(&iden())["frame"].clone();
+        let plain = s.uniforms().unwrap();
         assert!(send(&mut s, "solids.set", json!({ "key": "alpha", "value": 96 })).ok);
         assert!(!send(&mut s, "solids.set", json!({ "key": "alpha", "value": 8 })).ok);
-        assert_ne!(plain, s.state(&iden())["frame"]);
-    }
-    #[test]
-    fn gpu_mode_keeps_a_small_real_frame() {
-        let mut s = solids(5);
-        s.wear(&json!({ "shared": { "settings": { "render": "gpu", "detail": 128 } } }));
-        let gpu = s.state(&iden())["frame"].clone();
-        assert_eq!(gpu["width"], json!(96));
-        assert_eq!(gpu["height"], json!(96));
-        assert_eq!(gpu["rows"].as_array().unwrap().len(), 96);
-        assert!(gpu["palette"].as_array().unwrap().len() > 2);
-        let shot = s.capture(&iden());
-        assert_eq!(shot["width"], json!(128));
-        assert_eq!(shot["rows"].as_array().unwrap().len(), 128);
-    }
-    #[test]
-    fn detail_sizes_the_cpu_frame() {
-        let mut s = solids(5);
-        s.wear(&json!({ "shared": { "settings": { "detail": 64 } } }));
-        let frame = s.state(&iden())["frame"].clone();
-        assert_eq!(frame["width"], json!(64));
-        assert_eq!(s.capture(&iden()), frame);
+        assert_ne!(plain, s.uniforms().unwrap());
     }
     #[test]
     fn geometry_packs_the_picked_solid() {
@@ -672,7 +436,6 @@ mod tests {
         let mut s = solids(5);
         let sig = |s: &Solids| s.shade()["mesh"].as_str().unwrap().to_string();
         let held = sig(&s);
-        send(&mut s, "solids.orbit", json!({ "dir": "left", "n": 2 }));
         send(&mut s, "solids.step", json!({ "n": 3 }));
         send(&mut s, "solids.set", json!({ "key": "bands", "value": 3 }));
         send(&mut s, "solids.set", json!({ "key": "alpha", "value": 96 }));

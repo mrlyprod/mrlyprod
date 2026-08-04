@@ -3,7 +3,6 @@
   "private": true,
   "workspaces": [
     "apps/git",
-    "apps/jsx",
     "apps/net",
     "apps/web",
     "pkgs/mrlycss",

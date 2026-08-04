@@ -52,18 +52,6 @@ const SITES: Record<string, Site> = {
     settle: 1500,
     routes: () => [""],
   },
-  jsx: {
-    port: 5175,
-    dir: "apps/jsx",
-    cmd: vite(5175),
-    settle: 2000,
-    routes: () => {
-      const list = JSON.parse(readFileSync(join(root, "apps/jsx/src/apps.json"), "utf8")) as {
-        apps: { id: string }[]
-      }
-      return ["", ...list.apps.map(app => app.id)]
-    },
-  },
 }
 
 // CHROME

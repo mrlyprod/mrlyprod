@@ -24,12 +24,10 @@ fn main() {
         Some("run") => run(&args[2..]),
         Some("render") => render(args.get(2).map(String::as_str)),
         Some("shot") => shot(&args[2..]),
-        Some("face") => face(&args[2..]),
         Some("peek") => peek(&args[2..]),
         Some("watch") => watch(&args[2..]),
         Some("goose") => goose(&args[2..]),
         Some("drive") => drive(&args[2..]),
-        Some("monkey") => monkey(&args[2..]),
         Some("describe") => describe(),
         Some("verbs") => verbs(args.get(2).map(String::as_str)),
         Some("help") | Some("-h") | Some("--help") => usage(),
@@ -52,28 +50,20 @@ fn usage() {
     );
     eprintln!("  mrlycli render [file] draw the final frame as colored blocks");
     eprintln!("  mrlycli shot [file]   write the final frame as a PNG (--out path)");
-    eprintln!("  mrlycli face [file]   write the default face as a PNG, any app (--out path)");
     eprintln!("  mrlycli peek <app[/path]> [file] [shape]");
     eprintln!("                        print an app's state, one field, or a shaped subtree");
     eprintln!("  mrlycli watch <app/path> [file]");
     eprintln!("                        poll the field and print it when it changes");
     eprintln!("  mrlycli goose <app> [--seed N] [--steps K] [--trace] [--peek path]");
     eprintln!("                        drive an app with random legal calls");
-    eprintln!("  mrlycli drive [file]  play a gesture screenplay against the face");
-    eprintln!("                        gestures: open call tap tap_at slide cell focus type");
-    eprintln!("                        hover tab walk fire ask run key wheel scroll beat");
-    eprintln!("                        shot hits assert");
-    eprintln!("  mrlycli monkey <app> [--seed N] [--steps K]");
-    eprintln!("                        mash random face hits with the pointer");
+    eprintln!("  mrlycli drive [file]  play a wire screenplay: open, call, assert");
     eprintln!("  mrlycli describe      print the kernel surface as JSON");
     eprintln!("  mrlycli verbs [app]   list apps, or one app's verbs and args");
     eprintln!("  mrlycli help          show this message");
     eprintln!();
     eprintln!("repl:");
     eprintln!("  verb [json]          act, e.g. nav.open {{\"app\":\"snake\"}}");
-    eprintln!(
-        "  :help :frame :render :verbs :peek :shot :face :describe :apps :open <app> :reset :quit"
-    );
+    eprintln!("  :help :frame :render :verbs :peek :shot :describe :apps :open <app> :reset :quit");
 }
 
 // BOOT
@@ -290,17 +280,6 @@ fn repl() {
                         Err(e) => eprintln!("! {app}: {e}"),
                     }
                 }
-                "face" => {
-                    let out = if arg.is_empty() { "face.png" } else { arg };
-                    let app = os.frame(None).route.map(|r| r.app).unwrap_or_default();
-                    match mrlyweb::face::face_png(&os, &app) {
-                        Ok(bytes) => match std::fs::write(out, &bytes) {
-                            Ok(()) => eprintln!("face: {app} -> {out} ({} bytes)", bytes.len()),
-                            Err(e) => eprintln!("! write failed: {e}"),
-                        },
-                        Err(e) => eprintln!("! {app}: {e}"),
-                    }
-                }
                 "apps" => eprintln!("{}", os.catalogue().join(", ")),
                 "open" => match os.open(arg) {
                     Ok(()) => emit(&os, visual),
@@ -345,7 +324,6 @@ fn meta_help() {
     eprintln!(":verbs [app]       verbs and args (current app by default)");
     eprintln!(":peek app[/path] [shape]   print state, one field, or a shaped subtree");
     eprintln!(":shot [path]       write the current frame as a PNG");
-    eprintln!(":face [path]       write the default face as a PNG");
     eprintln!(":apps              list installed apps");
     eprintln!(":open <app>        open an app");
     eprintln!(":reset             boot a fresh session");
@@ -410,39 +388,6 @@ fn shot(args: &[String]) {
     match os.snapshot(&app) {
         Ok(bytes) => match std::fs::write(&out, &bytes) {
             Ok(()) => eprintln!("shot: {app} -> {out} ({} bytes)", bytes.len()),
-            Err(e) => {
-                eprintln!("! write failed: {e}");
-                std::process::exit(1);
-            }
-        },
-        Err(e) => {
-            eprintln!("! {app}: {e}");
-            std::process::exit(1);
-        }
-    }
-}
-
-// FACE
-
-fn face(args: &[String]) {
-    let mut out = "face.png".to_string();
-    let mut path: Option<&str> = None;
-    let mut it = args.iter();
-    while let Some(a) = it.next() {
-        match a.as_str() {
-            "--out" | "-o" => {
-                if let Some(p) = it.next() {
-                    out = p.clone();
-                }
-            }
-            other => path = Some(other),
-        }
-    }
-    let os = replay(path);
-    let app = os.frame(None).route.map(|r| r.app).unwrap_or_default();
-    match mrlyweb::face::face_png(&os, &app) {
-        Ok(bytes) => match std::fs::write(&out, &bytes) {
-            Ok(()) => eprintln!("face: {app} -> {out} ({} bytes)", bytes.len()),
             Err(e) => {
                 eprintln!("! write failed: {e}");
                 std::process::exit(1);
@@ -735,171 +680,76 @@ fn drive(args: &[String]) {
     for a in args {
         path = Some(a);
     }
-    let gestures = script(path);
-    if gestures.is_empty() {
+    let steps = script(path);
+    if steps.is_empty() {
         eprintln!("! empty screenplay");
         std::process::exit(2);
     }
-    let mut driver = mrlyweb::drive::Driver::scripted(0);
-    for (i, g) in gestures.iter().enumerate() {
-        if let Err(note) = gesture(&mut driver, g) {
-            eprintln!("! gesture {}: {note}", i + 1);
+    let mut os = build();
+    for (i, s) in steps.iter().enumerate() {
+        if let Err(note) = step(&mut os, s) {
+            eprintln!("! step {}: {note}", i + 1);
             std::process::exit(1);
         }
     }
 }
 
-fn gesture(driver: &mut mrlyweb::drive::Driver, g: &Json) -> Result<(), String> {
-    use mrlyweb::drive::KeyPress;
-    if let Some(app) = g["open"].as_str() {
-        driver.open(app);
-        return Ok(());
+fn step(os: &mut Os, s: &Json) -> Result<(), String> {
+    if let Some(app) = s["open"].as_str() {
+        return os.open(app).map_err(str::to_string);
     }
-    if !g["call"].is_null() {
-        let verb = g["call"]["verb"].as_str().ok_or("call needs a verb")?;
-        driver.act(verb, g["call"]["args"].clone());
-        return Ok(());
-    }
-    if !g["tap"].is_null() {
-        let verb = g["tap"]["verb"].as_str().ok_or("tap needs a verb")?;
-        return driver.tap(verb, &g["tap"]["args"]);
-    }
-    if let Some(at) = g["hover"].as_array() {
-        let spot = match at.len() {
-            0 => None,
-            _ => {
-                let x = at.first().and_then(Json::as_u64).unwrap_or(0) as usize;
-                let y = at.get(1).and_then(Json::as_u64).unwrap_or(0) as usize;
-                Some((x, y))
-            }
+    if !s["call"].is_null() {
+        let verb = s["call"]["verb"].as_str().ok_or("call needs a verb")?;
+        let args = if s["call"]["args"].is_object() {
+            s["call"]["args"].clone()
+        } else {
+            json!({})
         };
-        driver.hover(spot);
-        return Ok(());
-    }
-    if let Some(at) = g["tap_at"].as_array() {
-        let x = at.first().and_then(Json::as_u64).unwrap_or(0) as usize;
-        let y = at.get(1).and_then(Json::as_u64).unwrap_or(0) as usize;
-        driver.tap_at(x, y);
-        return Ok(());
-    }
-    if !g["slide"].is_null() {
-        let verb = g["slide"]["verb"].as_str().ok_or("slide needs a verb")?;
-        let value = g["slide"]["value"].as_i64().ok_or("slide needs a value")?;
-        return driver.slide(verb, value);
-    }
-    if let Some(at) = g["cell"].as_array() {
-        let col = at.first().and_then(Json::as_u64).unwrap_or(0) as usize;
-        let row = at.get(1).and_then(Json::as_u64).unwrap_or(0) as usize;
-        return driver.cell(col, row);
-    }
-    if !g["focus"].is_null() {
-        let verb = g["focus"]["verb"].as_str().ok_or("focus needs a verb")?;
-        return driver.focus(verb);
-    }
-    if let Some(text) = g["type"].as_str() {
-        driver.type_str(text);
-        return Ok(());
-    }
-    if let Some(name) = g["cap"].as_str() {
-        return driver.cap(name);
-    }
-    if let Some(key) = g["key"].as_str() {
-        match key {
-            "enter" => driver.key(KeyPress::Enter),
-            "escape" => driver.key(KeyPress::Escape),
-            "backspace" => driver.key(KeyPress::Backspace),
-            other => return Err(format!("unknown key {other}")),
+        let out = os.act(Call::new(verb, args));
+        if !out.ok {
+            let note = out.note.as_deref().unwrap_or("failed");
+            return Err(format!("{verb}: {note}"));
         }
         return Ok(());
     }
-    if let Some(line) = g["ask"].as_str() {
-        driver.ask();
-        for c in line.chars() {
-            driver.ask_type(c);
-        }
-        return Ok(());
+    if !s["assert"].is_null() {
+        return check(os, &s["assert"]);
     }
-    if g["run"] == json!(true) {
-        return driver.ask_run();
-    }
-    if g["tab"] == json!(true) {
-        driver.tab();
-        return Ok(());
-    }
-    if let Some(dir) = g["walk"].as_str() {
-        if !driver.walk(dir) {
-            return Err(format!("no ring to walk {dir}"));
-        }
-        return Ok(());
-    }
-    if g["fire"] == json!(true) {
-        if !driver.enter() {
-            return Err("no ring to fire".to_string());
-        }
-        return Ok(());
-    }
-    if let Some(dy) = g["wheel"].as_i64() {
-        driver.wheel(dy as f64, None);
-        return Ok(());
-    }
-    if let Some(to) = g["scroll"].as_u64() {
-        driver.scroll_to(to as usize);
-        return Ok(());
-    }
-    if let Some(n) = g["beat"].as_u64() {
-        driver.beat(n as usize);
-        return Ok(());
-    }
-    if let Some(out) = g["shot"].as_str() {
-        let png = driver.shot().map_err(str::to_string)?;
-        return std::fs::write(out, png).map_err(|e| e.to_string());
-    }
-    if g["hits"] == json!(true) {
-        println!("{}", driver.hits_json().pretty());
-        return Ok(());
-    }
-    if !g["assert"].is_null() {
-        return check(driver, &g["assert"]);
-    }
-    Err(format!("unknown gesture {g}"))
+    Err("a step is open, call, or assert".to_string())
 }
 
-fn check(driver: &mrlyweb::drive::Driver, want: &Json) -> Result<(), String> {
+fn check(os: &Os, want: &Json) -> Result<(), String> {
+    let frame = os.frame(None);
     if let Some(route) = want["route"].as_str() {
-        if driver.route() != route {
-            return Err(format!("route is {}, wanted {route}", driver.route()));
+        let at = frame.route.as_ref().map(|r| r.app.as_str()).unwrap_or("");
+        if at != route {
+            return Err(format!("route is {at}, wanted {route}"));
         }
     }
     if let Some(verb) = want["verb"].as_str() {
-        let hits = driver.hits_json();
-        let found = hits["hits"].as_array().is_some_and(|list| {
-            list.iter().any(|h| {
-                let act = &h["act"];
-                ["verb", "tap", "drag", "turn", "zoom", "pan"]
-                    .iter()
-                    .any(|k| act[*k].as_str() == Some(verb))
-            })
-        });
-        if !found {
-            return Err(format!("no hit carries {verb}"));
-        }
-    }
-    if let Some(n) = want["hits"].as_u64() {
-        let got = driver.scene().hits.len() as u64;
-        if got != n {
-            return Err(format!("{got} hits, wanted {n}"));
-        }
-    }
-    if let Some(pin) = want["frame"].as_str() {
-        let got = driver.frame_fnv().to_string();
-        if got != pin {
-            return Err(format!("frame is {got}, pinned {pin}"));
-        }
-    }
-    if let Some(to) = want["scroll"].as_u64() {
-        let got = driver.ui().scroll as u64;
-        if got != to {
-            return Err(format!("scroll is {got}, wanted {to}"));
+        let surface = os.describe(None);
+        let current = frame
+            .route
+            .as_ref()
+            .map(|r| r.app.clone())
+            .unwrap_or_default();
+        let named = |v: &Json| v["verb"].as_str() == Some(verb);
+        let empty = Vec::new();
+        let offered = surface["nav"]
+            .as_array()
+            .unwrap_or(&empty)
+            .iter()
+            .any(named)
+            || surface["verbs"]
+                .as_array()
+                .unwrap_or(&empty)
+                .iter()
+                .any(|g| {
+                    g["app"].as_str() == Some(current.as_str())
+                        && g["verbs"].as_array().unwrap_or(&empty).iter().any(named)
+                });
+        if !offered {
+            return Err(format!("{verb} is not offered here"));
         }
     }
     if let Some(pair) = want["state"].as_array() {
@@ -908,76 +758,10 @@ fn check(driver: &mrlyweb::drive::Driver, want: &Json) -> Result<(), String> {
             .and_then(Json::as_str)
             .ok_or("state needs a target")?;
         let wanted = pair.get(1).cloned().unwrap_or(Json::Null);
-        let got = peek_value(driver.os(), target, None)?;
+        let got = peek_value(os, target, None)?;
         if got != wanted {
             return Err(format!("{target} is {got}, wanted {wanted}"));
         }
     }
     Ok(())
-}
-
-// MONKEY
-
-fn monkey(args: &[String]) {
-    let mut app = None;
-    let mut seed: u64 = 1;
-    let mut steps: usize = 100;
-    let mut it = args.iter();
-    while let Some(a) = it.next() {
-        match a.as_str() {
-            "--seed" => seed = it.next().and_then(|v| v.parse().ok()).unwrap_or(1),
-            "--steps" => steps = it.next().and_then(|v| v.parse().ok()).unwrap_or(100),
-            other => app = Some(other.to_string()),
-        }
-    }
-    let Some(app) = app else {
-        eprintln!("! monkey needs an app");
-        std::process::exit(2);
-    };
-    let mut driver = mrlyweb::drive::Driver::scripted(0);
-    driver.open(&app);
-    let mut rng = mrlycore::Rng::new(seed);
-    let mut acted = 0;
-    for _ in 0..steps {
-        let hits: Vec<mrlyweb::drive::Hit> = driver
-            .scene()
-            .hits
-            .iter()
-            .filter(|h| !matches!(h.act, mrlyweb::drive::Act::Mute))
-            .cloned()
-            .collect();
-        if hits.is_empty() {
-            driver.beat(1);
-            continue;
-        }
-        let hit = &hits[rng.below(hits.len())];
-        let cx = hit.x + hit.w / 2;
-        let cy = hit.y + hit.h / 2;
-        match &hit.act {
-            mrlyweb::drive::Act::Slide { .. } => {
-                driver.press(cx, cy);
-                let to = hit.x + rng.below(hit.w.max(1));
-                driver.release(to, cy);
-            }
-            mrlyweb::drive::Act::Board { .. } => {
-                let px = hit.x + rng.below(hit.w.max(1));
-                let py = hit.y + rng.below(hit.h.max(1));
-                driver.tap_at(px, py);
-            }
-            mrlyweb::drive::Act::Edit { .. } => {
-                driver.press(cx, cy);
-                for _ in 0..3 {
-                    let c = (b'a' + rng.below(26) as u8) as char;
-                    driver.key(mrlyweb::drive::KeyPress::Char(c));
-                }
-                driver.key(mrlyweb::drive::KeyPress::Enter);
-            }
-            _ => driver.tap_at(cx, cy),
-        }
-        acted += 1;
-    }
-    println!(
-        "{acted} gestures on {app} (seed {seed}), route now {}",
-        driver.route()
-    );
 }

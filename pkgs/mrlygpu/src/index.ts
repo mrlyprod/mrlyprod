@@ -313,9 +313,9 @@ export function drop(canvas: HTMLCanvasElement): void {
 const animating = new Set<HTMLCanvasElement>()
 let looping = false
 
-const calm = matchMedia("(prefers-reduced-motion: reduce)")
-calm.addEventListener("change", () => {
-  if (!calm.matches) return
+const calm = typeof matchMedia === "undefined" ? null : matchMedia("(prefers-reduced-motion: reduce)")
+calm?.addEventListener("change", () => {
+  if (calm === null || !calm.matches) return
   for (const canvas of animating) {
     const slot = slots.get(canvas)
     if (slot !== undefined) {
@@ -336,7 +336,7 @@ function commit(canvas: HTMLCanvasElement, slot: Slot, node: Scene, next: number
   const prev = slot.tween !== null ? blend(slot, now) : slot.sent
   const smooth =
     spec !== undefined &&
-    !calm.matches &&
+    calm?.matches !== true &&
     prev !== null &&
     held !== undefined &&
     held.program === shade.program &&

@@ -17,7 +17,6 @@ pub mod tensor;
 pub mod tile;
 pub mod time;
 pub mod trig;
-pub mod ui;
 
 pub use cell::Cell;
 pub use codec::{base64, png, unpng};

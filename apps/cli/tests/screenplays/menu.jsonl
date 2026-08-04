@@ -1,31 +1,14 @@
 {"assert": {"route": "menu"}}
 {"assert": {"verb": "nav.open"}}
 {"assert": {"verb": "menu.search"}}
-{"focus": {"verb": "menu.search"}}
-{"type": "sna"}
+{"call": {"verb": "menu.search", "args": {"q": "sna"}}}
 {"assert": {"state": ["menu/query", "sna"]}}
-{"key": "enter"}
+{"call": {"verb": "nav.open", "args": {"app": "snake"}}}
 {"assert": {"route": "snake"}}
 {"open": "menu"}
 {"call": {"verb": "menu.search", "args": {"q": ""}}}
-{"tap": {"verb": "nav.open", "args": {"app": "settings"}}}
+{"call": {"verb": "nav.open", "args": {"app": "settings"}}}
 {"assert": {"route": "settings"}}
 {"open": "menu"}
-{"assert": {"frame": "5890471714667213898"}}
-{"hover": [160, 200]}
-{"assert": {"frame": "4107930254159978432"}}
-{"hover": []}
-{"assert": {"frame": "5890471714667213898"}}
-{"tab": true}
-{"assert": {"frame": "10703102966593046698"}}
-{"walk": "down"}
-{"walk": "up"}
-{"assert": {"frame": "10703102966593046698"}}
-{"ask": "nav.open {\"app\":\"twenty48\"}"}
-{"run": true}
+{"call": {"verb": "nav.open", "args": {"app": "twenty48"}}}
 {"assert": {"route": "twenty48"}}
-{"open": "menu"}
-{"wheel": -60}
-{"assert": {"frame": "13352346820615895460"}}
-{"wheel": 60}
-{"assert": {"frame": "5890471714667213898"}}

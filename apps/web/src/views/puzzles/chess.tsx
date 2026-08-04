@@ -6,7 +6,7 @@ import { SURFACES } from "../../components/options.ts"
 import { call, set } from "../../builders.ts"
 import { face as skinFace, visual, type Skin } from "../../skin.tsx"
 import { h } from "../../jsx.ts"
-import type { Node, Send } from "../../types.ts"
+import type { Glyph, Node, Send } from "../../types.ts"
 
 type State = {
   steps: number
@@ -21,7 +21,7 @@ type State = {
   selected: string | null
   targets: string[]
   last_move: { from: string; to: string } | null
-  frame: { rows: number[][]; palette: string[] }
+  frame: { rows: number[][]; palette: string[]; glyphs?: Glyph[] }
 }
 
 const BOARD = ["#f0d9b1", "#b58863"]
@@ -82,7 +82,7 @@ export function chess(state: unknown, _send: Send): Node {
     <stack key="chess">
       <card key="board">
         {s.settings.surface === "canvas"
-          ? <Board app="chess" rows={s.frame.rows} palette={s.frame.palette} tap={s.over ? undefined : call("chess.select")} grid={[files, s.board.length]} />
+          ? <Board app="chess" rows={s.frame.rows} palette={s.frame.palette} glyphs={s.frame.glyphs} tap={s.over ? undefined : call("chess.select")} grid={[files, s.board.length]} />
           : board(s)}
       </card>
       {s.over && <GameOver app="chess" emoji="♟️" status={status} />}

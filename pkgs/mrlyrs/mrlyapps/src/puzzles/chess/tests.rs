@@ -521,8 +521,9 @@ fn surface_and_skin_validate() {
     let mrlyui::frame::Layer::Tiles { set: pieces, .. } = &frame.layers[1] else {
         panic!("no pieces layer")
     };
-    let tile = pieces.tiles[1].cell.colors.clone().unwrap();
-    assert!(tile.iter().any(|px| px[3] > 0), "the canvas baked nothing");
+    let glyph = pieces.faces[1].as_ref().expect("a piece face");
+    assert!(!glyph.ch.is_empty());
+    assert!(glyph.tint.is_some(), "a piece face lost its tint");
     assert!(!g.act(&iden(), &set("skin", "tiles")).ok);
     assert!(!g.act(&iden(), &set("surface", "cube")).ok);
     assert!(g.act(&iden(), &set("surface", "grid")).ok);

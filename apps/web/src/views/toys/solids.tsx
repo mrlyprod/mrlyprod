@@ -2,12 +2,12 @@ import { call, setter } from "../../builders.ts"
 import { Board } from "../../components/Board.tsx"
 import { Shot } from "../../components/Shot.tsx"
 import { h } from "../../jsx.ts"
+import { orbit } from "../../render/orbit.ts"
 import type { Node, Send, Shade } from "../../types.ts"
 
 type State = {
   object: string
   spin: number
-  camera: { yaw: number; pitch: number; dist: number; pan: [number, number]; ortho: boolean }
   settings: {
     bands: number
     speed: number
@@ -18,7 +18,6 @@ type State = {
     wireframe: boolean
     axes: boolean
   }
-  frame: { rows: number[][]; palette: string[] }
   shade?: Shade
 }
 
@@ -32,12 +31,11 @@ export function solids(state: unknown, _send: Send): Node {
         <Board
           app="solids"
           keyName="solid"
-          rows={s.frame.rows}
-          palette={s.frame.palette}
+          rows={[]}
           shade={s.shade}
-          turn={call("solids.turn")}
-          zoom={call("solids.zoom")}
-          pan={call("solids.pan")}
+          turn={call("orbit.turn", { app: "solids" })}
+          zoom={call("orbit.zoom", { app: "solids" })}
+          pan={call("orbit.pan", { app: "solids" })}
         />
       </card>
       <card key="solids">
@@ -54,7 +52,7 @@ export function solids(state: unknown, _send: Send): Node {
         <toggle key="edges" on={s.settings.edges} call={turn("edges")} arg="value" label="edges" />
         <toggle key="wireframe" on={s.settings.wireframe} call={turn("wireframe")} arg="value" label="wireframe" />
         <toggle key="axes" on={s.settings.axes} call={turn("axes")} arg="value" label="axes" />
-        <toggle key="ortho" on={s.camera.ortho} call={turn("ortho")} arg="value" label="ortho" />
+        <toggle key="ortho" on={orbit("solids").ortho} call={call("orbit.ortho", { app: "solids" })} arg="value" label="ortho" />
         <range key="alpha" value={s.settings.alpha} min={32} max={255} step={1} call={turn("alpha")} arg="value" label="alpha" />
       </card>
       <card key="settings">

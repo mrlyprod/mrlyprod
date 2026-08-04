@@ -118,18 +118,6 @@ pub fn shaders() -> String {
 }
 
 #[wasm_bindgen]
-pub fn face(handle: &Handle, app: &str) -> Option<Vec<u8>> {
-    mrlyweb::face::face_rgba(&handle.os, app)
-        .ok()
-        .map(|(_, _, rgba)| rgba)
-}
-
-#[wasm_bindgen]
-pub fn sheet() -> Vec<u32> {
-    vec![mrlyui::face::WIDTH as u32, mrlyui::face::HEIGHT as u32]
-}
-
-#[wasm_bindgen]
 pub fn mark() -> String {
     json!({
         "rows": mrlyui::mark::ROWS,

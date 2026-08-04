@@ -8,7 +8,7 @@ import { SURFACES, SKINS, DESIGNS_SOLID as DESIGNS } from "../../components/opti
 import { set } from "../../builders.ts"
 import { face, visual, type Skin } from "../../skin.tsx"
 import { h } from "../../jsx.ts"
-import type { Node, Send } from "../../types.ts"
+import type { Glyph, Node, Send } from "../../types.ts"
 
 type State = {
   score: number
@@ -19,7 +19,7 @@ type State = {
   last_merges: [number, number][]
   skin: Skin
   settings: { grid: number; surface: string; skin: string; design: string }
-  frame: { rows: number[][]; palette: string[] }
+  frame: { rows: number[][]; palette: string[]; glyphs?: Glyph[] }
 }
 
 function fresh(s: State, r: number, c: number): boolean {
@@ -47,7 +47,7 @@ export function twenty48(state: unknown, _send: Send): Node {
           ? <grid key="grid" cols={s.settings.grid}>
               {s.ids.flatMap((row, r) => row.map((id, c) => tile(s, id, r, c)))}
             </grid>
-          : <Board app="twenty48" rows={s.frame.rows} palette={s.frame.palette} />}
+          : <Board app="twenty48" rows={s.frame.rows} palette={s.frame.palette} glyphs={s.frame.glyphs} />}
       </card>
       {s.over && <GameOver app="twenty48" emoji="🔢" status={`score ${s.score}`} />}
       <card key="controls">

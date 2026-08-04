@@ -1,4 +1,4 @@
-use crate::frame::{bake, hex, motif_tile, solid_tile, TileSet};
+use crate::frame::{bake, hex, motif_tile, solid_tile, Glyph, TileSet};
 use mrlycore::{json, Json};
 use std::collections::HashSet;
 use std::sync::OnceLock;
@@ -83,9 +83,11 @@ pub struct Skin {
     pub visuals: Vec<Visual>,
 }
 
+pub const SYMBOL: usize = 16;
+
 pub fn pixels(tile: usize, variant: &str) -> usize {
     match variant {
-        "emojis" => tile.max(crate::tokens::SYMBOL),
+        "emojis" => tile.max(SYMBOL),
         _ => tile,
     }
 }
@@ -99,32 +101,34 @@ impl Skin {
     }
     pub fn tileset(&self, k: usize, ink: [u8; 4]) -> TileSet {
         let clear = [0, 0, 0, 0];
-        let tiles = self
-            .visuals
-            .iter()
-            .map(|v| {
-                let color = v.bg.unwrap_or(clear);
-                let mut tile = match &v.motif {
-                    Some(name) => motif_tile(name, k, color, clear),
-                    None => solid_tile(k, color),
-                };
-                match &v.face {
-                    Some(Face::Glyph(text)) if lettered(text) => bake(&mut tile, text, k, ink),
-                    Some(Face::Glyph(value)) | Some(Face::Emoji(value)) => {
-                        if crate::emoji::known(value) {
-                            crate::emoji::bake(&mut tile, value, k);
-                        } else if crate::symbol::known(value) {
-                            crate::symbol::bake(&mut tile, value, k, ink);
-                        } else if let Some(Face::Glyph(text)) = &v.face {
-                            bake(&mut tile, text, k, ink);
-                        }
-                    }
-                    _ => {}
+        let mut set = TileSet::new(k, Vec::new());
+        for v in &self.visuals {
+            let color = v.bg.unwrap_or(clear);
+            let mut tile = match &v.motif {
+                Some(name) => motif_tile(name, k, color, clear),
+                None => solid_tile(k, color),
+            };
+            let mut face = None;
+            match &v.face {
+                Some(Face::Glyph(text)) if lettered(text) => bake(&mut tile, text, k, ink),
+                Some(Face::Glyph(value)) => {
+                    face = Some(Glyph {
+                        ch: value.clone(),
+                        tint: Some(ink),
+                    })
                 }
-                tile
-            })
-            .collect();
-        TileSet::new(k, tiles)
+                Some(Face::Emoji(value)) => {
+                    face = Some(Glyph {
+                        ch: value.clone(),
+                        tint: None,
+                    })
+                }
+                _ => {}
+            }
+            set.tiles.push(tile);
+            set.faces.push(face);
+        }
+        set
     }
 }
 
@@ -140,16 +144,20 @@ mod tests {
     use super::*;
 
     #[test]
-    fn emoji_tiles_bake_big_enough_to_read() {
-        assert_eq!(pixels(3, "emojis"), crate::tokens::SYMBOL);
+    fn emoji_tiles_carry_faces_not_pixels() {
+        assert_eq!(pixels(3, "emojis"), SYMBOL);
         assert_eq!(pixels(40, "emojis"), 40);
         assert_eq!(pixels(3, "digits"), 3);
         let k = pixels(3, "emojis");
         let set = twenty48::skin("emojis", "carpet", &[[0, 0, 0, 0]; 4]).tileset(k, [0, 0, 0, 255]);
+        let glyph = set.faces[1].as_ref().expect("an emoji face");
+        assert!(!glyph.ch.is_empty());
+        assert_eq!(glyph.tint, None);
         let tile = set.tiles[1].cell.colors.clone().unwrap();
-        let lit = tile.iter().filter(|px| px[3] > 0).count();
-        assert!(lit > k * k / 8, "a canvas emoji baked {lit} of {}", k * k);
-        assert!(tile.iter().any(|px| px[0] != px[1]), "baked without color");
+        assert!(
+            tile.iter().all(|px| px[3] == 0),
+            "an emoji tile baked pixels"
+        );
     }
 
     #[test]
@@ -192,13 +200,13 @@ mod tests {
             motif_tile("carpet", 8, red, [0, 0, 0, 0]).cell.colors
         );
         assert!(set.tiles[2].cell.colors.as_ref().unwrap().contains(&ink));
-        assert!(set.tiles[3]
-            .cell
-            .colors
-            .as_ref()
-            .unwrap()
-            .iter()
-            .any(|c| c[3] > 0));
+        assert_eq!(
+            set.faces[3],
+            Some(Glyph {
+                ch: "💣".into(),
+                tint: None
+            })
+        );
     }
     #[test]
     fn tileset_serves_chess_symbols_tinted() {
@@ -209,17 +217,28 @@ mod tests {
             Visual::none().glyph("A"),
         ]);
         let set = skin.tileset(16, ink);
-        for tile in &set.tiles {
-            let colors = tile.cell.colors.as_ref().unwrap();
-            assert!(colors.iter().any(|c| c[3] > 0));
-        }
-        assert!(set.tiles[0]
+        assert_eq!(
+            set.faces[0],
+            Some(Glyph {
+                ch: "♔".into(),
+                tint: None
+            })
+        );
+        assert_eq!(
+            set.faces[1],
+            Some(Glyph {
+                ch: "♞".into(),
+                tint: Some(ink)
+            })
+        );
+        assert_eq!(set.faces[2], None);
+        assert!(set.tiles[2]
             .cell
             .colors
             .as_ref()
             .unwrap()
             .iter()
-            .any(|c| c[3] > 0 && c[0] == ink[0]));
+            .any(|c| c[3] > 0));
     }
 
     #[test]

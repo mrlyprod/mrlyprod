@@ -1,6 +1,3 @@
-mod view;
-
-use mrlycore::ui;
 use mrlycore::{json, Json};
 use mrlyos::kernel::{App, Call, Iden, Manifest, Outcome, Verb};
 
@@ -59,9 +56,6 @@ impl App for Menu {
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
         vec![Verb::new("menu.search", json!({ "q": "string" }))]
-    }
-    fn view(&self, iden: &Iden) -> Option<ui::Node> {
-        view::tree(self, iden)
     }
     fn wear(&mut self, world: &Json) {
         self.apps = world["apps"]
@@ -166,57 +160,6 @@ mod tests {
         assert_eq!(menu.found()[0]["route"], "notes");
         menu.search("");
         assert_eq!(menu.found().len(), 2);
-    }
-    #[test]
-    fn view_opens_apps_by_tap_and_enter() {
-        let mut menu = Menu::new();
-        menu.wear(&world());
-        let Some(ui::Node::Column { children }) = menu.view(&Iden::new("aria")) else {
-            panic!();
-        };
-        let ui::Node::Field { live, enter, .. } = &children[0] else {
-            panic!();
-        };
-        assert!(live);
-        assert_eq!(
-            enter.as_ref().map(|c| c.args["app"].as_str().unwrap_or("")),
-            Some("notes")
-        );
-        let ui::Node::Grid { children: apps, .. } = children.last().unwrap() else {
-            panic!();
-        };
-        assert_eq!(apps.len(), 2);
-        let ui::Node::Cell {
-            call: Some(call),
-            child: Some(inner),
-            ..
-        } = &apps[1]
-        else {
-            panic!();
-        };
-        assert_eq!(call.verb, "nav.open");
-        assert_eq!(call.args["app"].as_str(), Some("clock"));
-        let ui::Node::Column { children: face } = inner.as_ref() else {
-            panic!();
-        };
-        assert!(matches!(&face[0], ui::Node::Symbol { value, .. } if value == "\u{1f550}"));
-        assert!(matches!(&face[1], ui::Node::Text { text, .. } if text == "clock"));
-    }
-    #[test]
-    fn view_lists_when_shared_settings_say_so() {
-        let mut menu = Menu::new();
-        let mut shared = world();
-        shared["shared"] = json!({ "settings": { "launchpad": "list" } });
-        menu.wear(&shared);
-        menu.search("clock");
-        let Some(ui::Node::Column { children }) = menu.view(&Iden::new("aria")) else {
-            panic!();
-        };
-        assert_eq!(children.len(), 2);
-        let ui::Node::Column { children: rows } = children.last().unwrap() else {
-            panic!();
-        };
-        assert!(matches!(&rows[0], ui::Node::Label { call: Some(_), .. }));
     }
     #[test]
     fn any_verb_fails() {

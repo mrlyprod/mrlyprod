@@ -64,7 +64,6 @@ pub struct View {
     pub state: Json,
     pub actions: Vec<Verb>,
     pub beat: Option<Call>,
-    pub ui: Option<mrlycore::ui::Node>,
 }
 
 impl View {

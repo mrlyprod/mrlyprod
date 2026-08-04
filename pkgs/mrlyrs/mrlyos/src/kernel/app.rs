@@ -130,9 +130,6 @@ pub trait App {
     fn uniforms(&self) -> Option<Vec<f32>> {
         None
     }
-    fn view(&self, _iden: &Iden) -> Option<mrlycore::ui::Node> {
-        None
-    }
     fn actions(&self, iden: &Iden) -> Vec<Verb>;
     fn act(&mut self, iden: &Iden, call: &Call) -> Outcome;
     fn beat(&self) -> Option<Call> {

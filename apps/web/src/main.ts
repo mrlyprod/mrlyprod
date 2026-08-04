@@ -5,6 +5,7 @@ import { Store } from "./journal.ts"
 import { board, install } from "./palette.ts"
 import { install as installPeeks } from "./peeks.ts"
 import * as pwa from "./pwa.ts"
+import { aim, install as installOrbit } from "./render/orbit.ts"
 import { theme } from "./render/theme.ts"
 import { router } from "./router.ts"
 import { mount } from "./shell/mount.ts"
@@ -17,7 +18,7 @@ installPeeks(app => peek(handle, app))
 const registry = describe()
 gpu.init(shaders(), {
   geometry: route => geometry(handle, route),
-  uniforms: route => uniforms(handle, route),
+  uniforms: route => aim(route, uniforms(handle, route)),
   board,
 })
 
@@ -52,6 +53,7 @@ let atPath = path(frame(handle))
 let quiet = false
 
 const routes = router()
+installOrbit(routes)
 
 routes.after("settings.set", (_call, obs) => {
   if (obs.last?.ok) {
