@@ -1,6 +1,5 @@
 import type {
   GPUBindGroup,
-  GPUBindGroupEntry,
   GPUBindGroupLayout,
   GPUBlendState,
   GPUBuffer,
@@ -9,7 +8,6 @@ import type {
   GPUDevice,
   GPUPrimitiveTopology,
   GPURenderPipeline,
-  GPUSampler,
   GPUTexture,
   GPUTextureFormat,
   GPUVertexBufferLayout,
@@ -19,7 +17,7 @@ export type Shaders = Record<string, string>
 
 export type Shade = { program: string; route?: string; mesh?: string }
 
-export type Scene = { rows: number[][]; palette?: string[]; shade?: Shade }
+export type Scene = { shade?: Shade }
 
 export type Steer = { yaw: number; pitch: number; dist: number; panx?: number; pany?: number }
 
@@ -28,8 +26,6 @@ export type Feeds = {
   uniforms?: (route: string) => Float32Array | undefined
   board?: (dark: boolean) => string
 }
-
-type Program = { pipeline: GPURenderPipeline; textured: boolean }
 
 type Spec = { linear: number[]; angle: number[]; viewport: number[] }
 
@@ -55,7 +51,6 @@ type MeshPipes = {
 type Slot = {
   context: GPUCanvasContext
   buffer: GPUBuffer | null
-  texture: GPUTexture | null
   group: GPUBindGroup | null
   program: string
   node: Scene
@@ -87,9 +82,8 @@ let sources: Shaders = {}
 let feeds: Feeds = {}
 let device: GPUDevice | null = null
 let format: GPUTextureFormat = "bgra8unorm"
-let sampler: GPUSampler | null = null
 let meshPipes: MeshPipes | null = null
-const programs = new Map<string, Program>()
+const programs = new Map<string, GPURenderPipeline>()
 const slots = new WeakMap<HTMLCanvasElement, Slot>()
 const tints = new Map<string, [number, number, number, number]>()
 
@@ -113,7 +107,7 @@ export function init(shaders: Shaders, hooks: Feeds = {}): void {
     .catch(() => undefined)
 }
 
-function program(name: string): Program | null {
+function program(name: string): GPURenderPipeline | null {
   const found = programs.get(name)
   if (found !== undefined) return found
   const wgsl = sources[name]
@@ -125,9 +119,8 @@ function program(name: string): Program | null {
     fragment: { module, entryPoint: "fs_main", targets: [{ format }] },
     primitive: { topology: "triangle-list" },
   })
-  const made = { pipeline, textured: wgsl.includes("texture_2d") }
-  programs.set(name, made)
-  return made
+  programs.set(name, pipeline)
+  return pipeline
 }
 
 function mesh(): MeshPipes | null {
@@ -289,7 +282,7 @@ export function draw(canvas: HTMLCanvasElement, node: Scene, next: number[] | nu
       if (held !== undefined && canvas.isConnected) paint(canvas, held)
     })
     watcher.observe(canvas)
-    slot = { context, buffer: null, texture: null, group: null, program: "", node, watcher, sent: null, stamp: 0, tween: null, steer: null, shape: null }
+    slot = { context, buffer: null, group: null, program: "", node, watcher, sent: null, stamp: 0, tween: null, steer: null, shape: null }
     slots.set(canvas, slot)
   }
   commit(canvas, slot, node, next)
@@ -302,7 +295,6 @@ export function drop(canvas: HTMLCanvasElement): void {
   if (slot === undefined) return
   slot.watcher.disconnect()
   slot.buffer?.destroy()
-  slot.texture?.destroy()
   slot.shape?.tris?.destroy()
   slot.shape?.lines?.destroy()
   slot.shape?.depth?.destroy()
@@ -503,15 +495,12 @@ function paint(canvas: HTMLCanvasElement, slot: Slot): void {
     slot.group = null
   }
   device.queue.writeBuffer(slot.buffer, 0, data)
-  if (made.textured && !upload(slot)) return
   let group = slot.group
   if (group === null || slot.program !== shade.program) {
-    const entries: GPUBindGroupEntry[] = [{ binding: 0, resource: { buffer: slot.buffer } }]
-    if (made.textured && slot.texture !== null) {
-      sampler ??= device.createSampler({ magFilter: "linear", minFilter: "linear" })
-      entries.push({ binding: 1, resource: slot.texture.createView() }, { binding: 2, resource: sampler })
-    }
-    group = device.createBindGroup({ layout: made.pipeline.getBindGroupLayout(0), entries })
+    group = device.createBindGroup({
+      layout: made.getBindGroupLayout(0),
+      entries: [{ binding: 0, resource: { buffer: slot.buffer } }],
+    })
     slot.group = group
     slot.program = shade.program
   }
@@ -526,7 +515,7 @@ function paint(canvas: HTMLCanvasElement, slot: Slot): void {
       },
     ],
   })
-  pass.setPipeline(made.pipeline)
+  pass.setPipeline(made)
   pass.setBindGroup(0, group)
   pass.draw(3)
   pass.end()
@@ -541,36 +530,4 @@ function tint(hex: string): [number, number, number, number] {
   const made: [number, number, number, number] = [part(0, 0), part(2, 0), part(4, 0), part(6, 255)]
   tints.set(hex, made)
   return made
-}
-
-function upload(slot: Slot): boolean {
-  if (device === null) return false
-  const rows = slot.node.rows
-  const palette = (slot.node.palette ?? []).map(tint)
-  const height = rows.length
-  const width = rows[0]?.length ?? 0
-  if (width === 0 || height === 0 || palette.length === 0) return false
-  const pixels = new Uint8Array(width * height * 4)
-  for (let y = 0; y < height; y++) {
-    const row = rows[y] as number[]
-    for (let x = 0; x < width; x++) {
-      const [r, g, b, a] = palette[row[x] as number] ?? [0, 0, 0, 255]
-      const i = (y * width + x) * 4
-      pixels[i] = r
-      pixels[i + 1] = g
-      pixels[i + 2] = b
-      pixels[i + 3] = a
-    }
-  }
-  if (slot.texture === null || slot.texture.width !== width || slot.texture.height !== height) {
-    slot.texture?.destroy()
-    slot.texture = device.createTexture({
-      size: [width, height],
-      format: "rgba8unorm-srgb",
-      usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
-    })
-    slot.group = null
-  }
-  device.queue.writeTexture({ texture: slot.texture }, pixels, { bytesPerRow: width * 4 }, [width, height])
-  return true
 }

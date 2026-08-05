@@ -2,9 +2,12 @@ use mrlycore::colors::named;
 use mrlycore::tensor::Tensor;
 use mrlycore::{json, Json};
 use mrlymath::bang::{bang, factory, universe_codes};
+use mrlymath::space::{Pack, TURN};
+use mrlymath::three::{quads, Cell3d};
 use mrlymath::two::Cell2d;
 use mrlyos::kernel::{App, Call, Iden, Manifest, Outcome, Verb};
 use mrlyui::frame::{field, Frame};
+use std::f64::consts::TAU;
 
 const BASE: usize = 2;
 const NUMBER: usize = 3;
@@ -13,6 +16,9 @@ const LEVEL_2D: usize = 5;
 const LEVEL_3D: usize = 2;
 const FILL: &str = "yellow";
 const VOID: &str = "black";
+const LIGHT_YAW: i64 = 72;
+const LIGHT_PITCH: i64 = 28;
+const BANDS: i64 = 4;
 
 pub struct Bang {
     dimension: usize,
@@ -107,20 +113,11 @@ impl Bang {
             _ => self.render_2d(tensor),
         }
     }
-    fn voxels(&self) -> Json {
-        let tensor = self.tensor();
-        let (d, h, w) = (tensor.shape[0], tensor.shape[1], tensor.shape[2]);
-        let bytes = tensor.bytes();
-        let planes: Vec<Json> = (0..d)
-            .map(|z| {
-                json!((0..h)
-                    .map(|y| json!((0..w)
-                        .map(|x| bytes[(z * h + y) * w + x])
-                        .collect::<Vec<_>>()))
-                    .collect::<Vec<_>>())
-            })
-            .collect();
-        json!(planes)
+    fn signature(&self) -> String {
+        self.code().to_string()
+    }
+    fn shade(&self) -> Json {
+        json!({ "program": "mesh", "route": "bang", "mesh": self.signature() })
     }
 }
 
@@ -148,11 +145,42 @@ impl App for Bang {
             "anf": design.anf(),
         });
         if self.dimension == 3 {
-            out["voxels"] = self.voxels();
+            out["shade"] = self.shade();
         } else {
             out["frame"] = self.render().fact();
         }
         out
+    }
+    fn geometry(&self) -> Option<Vec<f32>> {
+        if self.dimension != 3 {
+            return None;
+        }
+        let cell = Cell3d::new(self.tensor());
+        let mut pack = Pack::new();
+        for quad in quads(&cell) {
+            pack.quad(quad.verts, quad.normal);
+        }
+        Some(pack.buffer())
+    }
+    fn uniforms(&self) -> Option<Vec<f32>> {
+        if self.dimension != 3 {
+            return None;
+        }
+        let rad = TAU / TURN as f64;
+        let fill = named(FILL).unwrap();
+        let void = named(VOID).unwrap();
+        let mut u = vec![0.0; 24];
+        u[4] = void.r as f64 / 255.0;
+        u[5] = void.g as f64 / 255.0;
+        u[6] = void.b as f64 / 255.0;
+        u[8] = fill.r as f64 / 255.0;
+        u[9] = fill.g as f64 / 255.0;
+        u[10] = fill.b as f64 / 255.0;
+        u[11] = BANDS as f64;
+        u[19] = 1.0;
+        u[20] = LIGHT_YAW as f64 * rad;
+        u[21] = LIGHT_PITCH as f64 * rad;
+        Some(u.into_iter().map(|v| v as f32).collect())
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
         vec![
@@ -299,7 +327,7 @@ mod tests {
         assert_eq!(names, vec!["bang.page", "bang.set", "bang.reset"]);
     }
     #[test]
-    fn flat_universes_colormap_and_solid_ones_ship_voxels() {
+    fn flat_universes_colormap_and_solid_ones_shade_mesh() {
         let mut b = Bang::new();
         for d in [1i64, 2] {
             send(
@@ -311,7 +339,9 @@ mod tests {
             let rows = state["frame"]["rows"].as_array().unwrap();
             assert!(!rows.is_empty());
             assert!(!rows[0].as_array().unwrap().is_empty());
-            assert!(state["voxels"].is_null());
+            assert!(state["shade"].is_null());
+            assert!(b.geometry().is_none());
+            assert!(b.uniforms().is_none());
         }
         send(
             &mut b,
@@ -320,8 +350,24 @@ mod tests {
         );
         let state = b.state(&iden(), None);
         assert!(state["frame"].is_null());
-        let planes = state["voxels"].as_array().unwrap();
-        assert!(!planes.is_empty());
-        assert!(!planes[0].as_array().unwrap().is_empty());
+        assert_eq!(state["shade"]["program"], json!("mesh"));
+        assert_eq!(state["shade"]["route"], json!("bang"));
+        assert_eq!(b.uniforms().unwrap().len(), 24);
+        let mut solid = false;
+        for _ in 0..universe_codes(3).len() {
+            if b.geometry().unwrap()[0] > 0.0 {
+                solid = true;
+                break;
+            }
+            send(&mut b, "bang.page", json!({ "dir": "next" }));
+        }
+        assert!(solid);
+        let held = b.state(&iden(), None)["shade"]["mesh"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        send(&mut b, "bang.page", json!({ "dir": "next" }));
+        let turned = b.state(&iden(), None);
+        assert_ne!(turned["shade"]["mesh"].as_str().unwrap(), held);
     }
 }

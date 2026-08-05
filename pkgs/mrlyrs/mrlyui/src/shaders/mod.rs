@@ -2,12 +2,9 @@ use mrlymath::space::MESH_WGSL;
 
 const VERTEX: &str = include_str!("vertex.wgsl");
 
-const PROGRAMS: [(&str, &str, usize); 6] = [
+const PROGRAMS: [(&str, &str, usize); 3] = [
     ("mandelbrot", include_str!("mandelbrot.wgsl"), 20),
     ("julia", include_str!("julia.wgsl"), 24),
-    ("waves", include_str!("waves.wgsl"), 16),
-    ("billiards", include_str!("billiards.wgsl"), 16),
-    ("lasers", include_str!("lasers.wgsl"), 16),
     ("mesh", MESH_WGSL, 24),
 ];
 

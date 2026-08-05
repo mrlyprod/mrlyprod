@@ -381,30 +381,6 @@
           "internet": false
         },
         {
-          "route": "waves",
-          "emoji": "🌊",
-          "title": "waves",
-          "category": "physics",
-          "hidden": false,
-          "internet": false
-        },
-        {
-          "route": "billiards",
-          "emoji": "🎱",
-          "title": "billiards",
-          "category": "physics",
-          "hidden": false,
-          "internet": false
-        },
-        {
-          "route": "lasers",
-          "emoji": "🔦",
-          "title": "lasers",
-          "category": "physics",
-          "hidden": false,
-          "internet": false
-        },
-        {
           "route": "chess",
           "emoji": "♟️",
           "title": "chess",

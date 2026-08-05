@@ -6,7 +6,7 @@ export type Orbit = { yaw: number; pitch: number; dist: number; pan: [number, nu
 
 const TAU = Math.PI * 2
 const TURN = 256
-const RIGGED = new Set(["solids", "three"])
+const RIGGED = new Set(["bang", "solids", "three"])
 const rigs = new Map<string, Orbit>()
 
 const clamp = (value: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, value))

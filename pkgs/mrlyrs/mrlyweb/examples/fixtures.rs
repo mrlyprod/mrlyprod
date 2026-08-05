@@ -317,45 +317,6 @@ fn main() {
     write("six", &os);
 
     let mut os = boot();
-    os.call(Call::new("nav.open", json!({ "app": "waves" })));
-    os.call(Call::new("waves.reset", json!({ "seed": 7 })));
-    os.call(Call::new("waves.set", json!({ "key": "gain", "value": 6 })));
-    os.call(Call::new("waves.set", json!({ "key": "damp", "value": 5 })));
-    os.call(Call::new("waves.drop", json!({ "x": 2, "y": 2 })));
-    os.call(Call::new("waves.step", json!({ "n": 3 })));
-    write("waves", &os);
-
-    let mut os = boot();
-    os.call(Call::new("nav.open", json!({ "app": "billiards" })));
-    os.call(Call::new("billiards.reset", json!({ "seed": 7 })));
-    os.call(Call::new(
-        "billiards.set",
-        json!({ "key": "count", "value": 8 }),
-    ));
-    os.call(Call::new(
-        "billiards.set",
-        json!({ "key": "speed", "value": 200 }),
-    ));
-    os.call(Call::new("billiards.break", json!({ "x": 2, "y": 2 })));
-    os.call(Call::new("billiards.step", json!({ "n": 3 })));
-    write("billiards", &os);
-
-    let mut os = boot();
-    os.call(Call::new("nav.open", json!({ "app": "lasers" })));
-    os.call(Call::new("lasers.reset", json!({ "seed": 7 })));
-    os.call(Call::new(
-        "lasers.set",
-        json!({ "key": "rays", "value": 8 }),
-    ));
-    os.call(Call::new(
-        "lasers.set",
-        json!({ "key": "spread", "value": "narrow" }),
-    ));
-    os.call(Call::new("lasers.place", json!({ "x": 2, "y": 2 })));
-    os.call(Call::new("lasers.step", json!({ "n": 3 })));
-    write("lasers", &os);
-
-    let mut os = boot();
     os.call(Call::new("nav.open", json!({ "app": "chess" })));
     os.call(Call::new("chess.reset", json!({ "seed": 7 })));
     os.call(Call::new("chess.move", json!({ "from": "e2", "to": "e4" })));

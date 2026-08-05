@@ -193,10 +193,6 @@ mrlyprod
 │   │   │   │   │   ├── three.tsx
 │   │   │   │   │   ├── tile.tsx
 │   │   │   │   │   └── two.tsx
-│   │   │   │   ├── physics
-│   │   │   │   │   ├── billiards.tsx
-│   │   │   │   │   ├── lasers.tsx
-│   │   │   │   │   └── waves.tsx
 │   │   │   │   ├── puzzles
 │   │   │   │   │   ├── captcha.tsx
 │   │   │   │   │   ├── chess.tsx
@@ -429,17 +425,6 @@ mrlyprod
 │   │   │   │   │   │   ├── README.md
 │   │   │   │   │   │   └── mod.rs
 │   │   │   │   │   └── mod.rs
-│   │   │   │   ├── physics
-│   │   │   │   │   ├── billiards
-│   │   │   │   │   │   ├── README.md
-│   │   │   │   │   │   └── mod.rs
-│   │   │   │   │   ├── lasers
-│   │   │   │   │   │   ├── README.md
-│   │   │   │   │   │   └── mod.rs
-│   │   │   │   │   ├── waves
-│   │   │   │   │   │   ├── README.md
-│   │   │   │   │   │   └── mod.rs
-│   │   │   │   │   └── mod.rs
 │   │   │   │   ├── puzzles
 │   │   │   │   │   ├── captcha
 │   │   │   │   │   │   ├── README.md
@@ -633,15 +618,6 @@ mrlyprod
 │   │   │   │   │   ├── render.rs
 │   │   │   │   │   ├── sample.rs
 │   │   │   │   │   └── stack.rs
-│   │   │   │   ├── physics
-│   │   │   │   │   ├── billiards.rs
-│   │   │   │   │   ├── field.rs
-│   │   │   │   │   ├── lasers.rs
-│   │   │   │   │   ├── mask.rs
-│   │   │   │   │   ├── mod.rs
-│   │   │   │   │   ├── rng.rs
-│   │   │   │   │   ├── waves.rs
-│   │   │   │   │   └── waves_luts.rs
 │   │   │   │   ├── pick
 │   │   │   │   │   └── mod.rs
 │   │   │   │   ├── six
@@ -729,13 +705,10 @@ mrlyprod
 │   │   │   │   │   ├── mod.rs
 │   │   │   │   │   └── render.rs
 │   │   │   │   ├── shaders
-│   │   │   │   │   ├── billiards.wgsl
 │   │   │   │   │   ├── julia.wgsl
-│   │   │   │   │   ├── lasers.wgsl
 │   │   │   │   │   ├── mandelbrot.wgsl
 │   │   │   │   │   ├── mod.rs
-│   │   │   │   │   ├── vertex.wgsl
-│   │   │   │   │   └── waves.wgsl
+│   │   │   │   │   └── vertex.wgsl
 │   │   │   │   ├── skin
 │   │   │   │   │   ├── chess.rs
 │   │   │   │   │   ├── memory.rs

@@ -1,6 +1,5 @@
 import type { Manifest, Node, Send } from "../types.ts"
 import { bang } from "./math/bang.tsx"
-import { billiards } from "./physics/billiards.tsx"
 import { calculator } from "./tools/calculator.tsx"
 import { calendar } from "./tools/calendar.tsx"
 import { captcha } from "./puzzles/captcha.tsx"
@@ -16,7 +15,6 @@ import { font } from "./design/font.tsx"
 import { hash } from "./tools/hash.tsx"
 import { menu } from "./system/menu.tsx"
 import { iden } from "./system/iden.tsx"
-import { lasers } from "./physics/lasers.tsx"
 import { julia } from "./toys/julia.tsx"
 import { life } from "./math/life.tsx"
 import { log } from "./system/log.tsx"
@@ -43,7 +41,6 @@ import { ttt } from "./puzzles/ttt.tsx"
 import { twenty48 } from "./puzzles/twenty48.tsx"
 import { two } from "./math/two.tsx"
 import { ui } from "./system/ui.tsx"
-import { waves } from "./physics/waves.tsx"
 
 export type View = (state: unknown, send: Send) => Node
 
@@ -83,9 +80,6 @@ export const views: Record<string, View> = {
   bang,
   tile,
   six,
-  waves,
-  billiards,
-  lasers,
   moire,
   hash,
   colors,

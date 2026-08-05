@@ -1,8 +1,8 @@
 use mrlyapps::{
-    Bang, Billiards, Calculator, Calendar, Captcha, Chess, Clock, Colors, Crush, Dice, Emoji,
-    Escape, Files, Font, Hash, Identity, Julia, Lasers, Life, Log, Mandelbrot, Matrix, Memory,
-    Menu, Mines, Moire, Notes, Photos, Piano, Pixel, Quiz, Settings, Six, Sleep, Snake, Solids,
-    Tennis, Three, Tile, Timer, Ttt, Twenty48, Two, Ui, Waves,
+    Bang, Calculator, Calendar, Captcha, Chess, Clock, Colors, Crush, Dice, Emoji, Escape, Files,
+    Font, Hash, Identity, Julia, Life, Log, Mandelbrot, Matrix, Memory, Menu, Mines, Moire, Notes,
+    Photos, Piano, Pixel, Quiz, Settings, Six, Sleep, Snake, Solids, Tennis, Three, Tile, Timer,
+    Ttt, Twenty48, Two, Ui,
 };
 use mrlyos::kernel::{App, Iden, Os};
 
@@ -41,9 +41,6 @@ pub fn catalogue() -> Vec<Box<dyn App>> {
         Box::new(Bang::new()),
         Box::new(Tile::new()),
         Box::new(Six::new()),
-        Box::new(Waves::new()),
-        Box::new(Billiards::new()),
-        Box::new(Lasers::new()),
         Box::new(Chess::new()),
         Box::new(Moire::new()),
         Box::new(Hash::new()),

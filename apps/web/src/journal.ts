@@ -5,11 +5,9 @@ const STORE = "journals"
 const LIMIT = 500
 
 const RUNS: Record<string, number> = {
-  "billiards.step": 64,
   "crush.step": 1024,
   "escape.step": 1024,
   "julia.step": 1024,
-  "lasers.step": 64,
   "life.step": 1024,
   "mandelbrot.step": 1024,
   "matrix.step": 1024,
@@ -17,7 +15,6 @@ const RUNS: Record<string, number> = {
   "snake.step": 1024,
   "solids.step": 1024,
   "tennis.step": 1024,
-  "waves.step": 64,
 }
 
 export type Journal = {

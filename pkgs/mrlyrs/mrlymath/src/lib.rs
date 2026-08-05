@@ -9,7 +9,6 @@ pub mod fractal;
 pub mod graph;
 pub mod life;
 pub mod moire;
-pub mod physics;
 pub mod pick;
 pub mod rules;
 pub mod six;
