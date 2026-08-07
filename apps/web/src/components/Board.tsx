@@ -1,5 +1,5 @@
 import { h } from "../jsx.ts"
-import type { Call, Cells, Flip, Glyph, Node, Shade, Tri } from "../types.ts"
+import type { Call, Cells, Flip, Glyph, Node, Shade } from "../types.ts"
 
 type Props = {
   app: string
@@ -9,7 +9,7 @@ type Props = {
   cells?: Cells
   palette?: string[]
   glyphs?: Glyph[]
-  tris?: Tri[]
+  tris?: number[]
   shade?: Shade
   strip?: Flip[]
   tap?: Call

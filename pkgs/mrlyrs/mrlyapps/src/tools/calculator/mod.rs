@@ -40,7 +40,6 @@ pub struct Calculator {
     previous: Option<String>,
     operator: Option<Op>,
     waiting: bool,
-    glyphs: bool,
 }
 
 impl Default for Calculator {
@@ -56,7 +55,6 @@ impl Calculator {
             previous: None,
             operator: None,
             waiting: false,
-            glyphs: false,
         }
     }
     pub fn display(&self) -> &str {
@@ -151,14 +149,7 @@ impl App for Calculator {
         ]
     }
     fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
-        let mut out = self.save();
-        if self.glyphs {
-            out["glyph"] = mrlyui::frame::glyph_fact(&self.display);
-        }
-        out
-    }
-    fn wear(&mut self, world: &Json) {
-        self.glyphs = world["shared"]["settings"]["font"] == "mrly";
+        self.save()
     }
     fn save(&self) -> Json {
         json!({
@@ -444,12 +435,14 @@ mod tests {
         assert_eq!(c.display(), "42");
     }
     #[test]
-    fn worn_calculator_shows_the_glyph_face() {
+    fn worn_calculator_keeps_a_plain_face() {
         let iden = Iden::new("aria");
         let mut c = Calculator::new();
         c.wear(&json!({ "shared": { "settings": { "font": "mrly" } } }));
         c.digit(4);
         c.digit(2);
-        assert_eq!(c.state(&iden, None)["glyph"]["text"], json!("42"));
+        let state = c.state(&iden, None);
+        assert_eq!(state["display"], "42");
+        assert!(state["glyph"].is_null());
     }
 }

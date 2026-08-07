@@ -559,15 +559,15 @@ mod tests {
     fn shared_facts_reach_the_worn_app() {
         let mut os = Os::new(Iden::new("aria"))
             .install(Box::new(mrlyapps::Settings::new()))
-            .install(Box::new(mrlyapps::Clock::new()));
+            .install(Box::new(mrlyapps::Piano::new()));
         os.call(Call::new(
             "settings.set",
-            json!({ "key": "font", "value": "mrly" }),
+            json!({ "key": "wave", "value": "square" }),
         ));
-        os.call(Call::new("nav.open", json!({ "app": "clock" })));
-        os.call(Call::new("clock.tick", json!({})).at(45296000));
-        let state = focused_state(&os);
-        assert_eq!(state["glyph"]["text"], json!("12:34:56"));
-        assert_eq!(state["glyph"]["height"], json!(5));
+        os.call(Call::new("nav.open", json!({ "app": "piano" })));
+        os.call(Call::new("piano.press", json!({ "midi": 55 })));
+        let frame = os.read("", None).unwrap();
+        assert_eq!(frame["effects"][0]["kind"], json!("sound"));
+        assert_eq!(frame["effects"][0]["data"]["wave"], json!("square"));
     }
 }

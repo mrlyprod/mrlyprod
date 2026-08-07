@@ -57,6 +57,42 @@ fn every_shade_resolves_a_program() {
 }
 
 #[test]
+fn every_tris_buffer_resolves() {
+    let iden = Iden::new("guest");
+    let mut carved = 0;
+    for app in mrlyweb::registry::catalogue() {
+        let route = app.route();
+        let state = app.state(&iden, None);
+        assert!(
+            state.get("tris").is_none(),
+            "{route} carries an old-style tris state key"
+        );
+        let Some(buf) = app.tris() else {
+            continue;
+        };
+        assert!(buf.len() > 1, "{route} tris buffer is empty");
+        assert_eq!(
+            buf[0] as usize,
+            buf.len() - 1,
+            "{route} tris header disagrees with the payload"
+        );
+        assert_eq!((buf.len() - 1) % 10, 0, "{route} tris stride is broken");
+        for tri in buf[1..].chunks(10) {
+            assert!(
+                tri[..6].iter().all(|c| c.is_finite()),
+                "{route} tris coord is not finite"
+            );
+            assert!(
+                tri[6..].iter().all(|&c| (0.0..=1.0).contains(&c)),
+                "{route} tris color leaves 0..=1"
+            );
+        }
+        carved += 1;
+    }
+    assert!(carved >= 1);
+}
+
+#[test]
 fn every_cells_fact_resolves_a_skin() {
     let iden = Iden::new("guest");
     let corpus = mrlyui::skin::corpus();

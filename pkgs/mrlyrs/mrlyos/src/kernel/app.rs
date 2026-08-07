@@ -130,6 +130,9 @@ pub trait App {
     fn uniforms(&self) -> Option<Vec<f32>> {
         None
     }
+    fn tris(&self) -> Option<Vec<f32>> {
+        None
+    }
     fn actions(&self, iden: &Iden) -> Vec<Verb>;
     fn call(&mut self, iden: &Iden, call: &Call) -> Outcome;
     fn beat(&self) -> Option<Call> {

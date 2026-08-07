@@ -1,6 +1,6 @@
-import { call, raster } from "../../builders.ts"
+import { call } from "../../builders.ts"
 import { h } from "../../jsx.ts"
-import type { Node, Raster, Send } from "../../types.ts"
+import type { Node, Send } from "../../types.ts"
 
 const MODES = ["countdown", "stopwatch"]
 
@@ -23,7 +23,6 @@ type State = {
   running: boolean
   elapsed: number
   laps: number[]
-  glyph?: Raster
 }
 
 const pad = (n: number) => String(n).padStart(2, "0")
@@ -84,7 +83,7 @@ export function timer(state: unknown, _send: Send): Node {
   return (
     <stack key="timer">
       <card key="panel">
-        {s.glyph !== undefined ? raster("face", "timer", s.glyph) : <symbol key="face" as="glyph" value={face(s)} />}
+        <symbol key="face" as="glyph" value={face(s)} />
         <text key="status" role="note">{status(s)}</text>
       </card>
       <card key="controls">{controls(s)}</card>

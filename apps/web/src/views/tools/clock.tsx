@@ -1,8 +1,7 @@
-import { raster } from "../../builders.ts"
 import { h } from "../../jsx.ts"
-import type { Node, Raster, Send } from "../../types.ts"
+import type { Node, Send } from "../../types.ts"
 
-type State = { now: number; glyph?: Raster }
+type State = { now: number }
 
 const div = (a: number, n: number) => Math.floor(a / n)
 
@@ -37,11 +36,10 @@ function date(now: number): string {
 
 export function clock(state: unknown, _send: Send): Node {
   const s = state as State
-  const shown = s.glyph !== undefined ? raster("face", "clock", s.glyph) : <symbol key="face" as="glyph" value={face(s.now)} />
   return (
     <stack key="clock">
       <card key="face">
-        {shown}
+        <symbol key="face" as="glyph" value={face(s.now)} />
         <text key="date" role="note">{date(s.now)}</text>
       </card>
     </stack>

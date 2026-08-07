@@ -1,8 +1,8 @@
-import { call, raster } from "../../builders.ts"
+import { call } from "../../builders.ts"
 import { h } from "../../jsx.ts"
-import type { Call, Node, Raster, Send } from "../../types.ts"
+import type { Call, Node, Send } from "../../types.ts"
 
-type State = { display: string; glyph?: Raster }
+type State = { display: string }
 
 export function calculator(state: unknown, _send: Send): Node {
   const s = state as State
@@ -16,11 +16,7 @@ export function calculator(state: unknown, _send: Send): Node {
     <stack key="calculator">
       <card key="panel">
         <stack key="pad">
-          {s.glyph !== undefined ? (
-            raster("readout", "calculator", s.glyph)
-          ) : (
-            <label key="readout" mode="icon" symbol={{ as: "glyph", value: s.display }} text={s.display} call={verb("copy")} />
-          )}
+          <label key="readout" mode="icon" symbol={{ as: "glyph", value: s.display }} text={s.display} call={verb("copy")} />
           <grid key="keys" cols={4}>
             {key("clear", "AC", verb("clear"))}
             {key("negate", "+/-", verb("negate"))}

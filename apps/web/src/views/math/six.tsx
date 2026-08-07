@@ -4,6 +4,7 @@ import { Shot } from "../../components/Shot.tsx"
 import { Pager } from "../../components/Pager.tsx"
 import { colors, NUMBERS } from "../../components/options.ts"
 import { h } from "../../jsx.ts"
+import { floats } from "../../reads.ts"
 import type { Node, Send } from "../../types.ts"
 
 const VIEWS = ["iso", "pro", "cut"]
@@ -17,7 +18,6 @@ type State = {
   view: string
   fill: string
   census: { grid: number; fill: number; void: number }
-  tris: { pts: [number, number][]; color: string }[]
 }
 
 const turn = setter("six")
@@ -27,7 +27,7 @@ export function six(state: unknown, _send: Send): Node {
   return (
     <stack key="six">
       <card key="board">
-        <Board app="six" rows={[]} tris={s.tris} />
+        <Board app="six" rows={[]} tris={floats("six/tris")} />
       </card>
       <card key="page">
         <Pager app="six" current={s.index + 1} total={s.count} />

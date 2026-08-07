@@ -11,7 +11,6 @@ pub struct Timer {
     banked: i64,
     laps: Vec<i64>,
     now: i64,
-    glyphs: bool,
 }
 
 impl Default for Timer {
@@ -43,7 +42,6 @@ impl Timer {
             banked: 0,
             laps: Vec::new(),
             now: 0,
-            glyphs: false,
         }
     }
     fn remaining(&self) -> i64 {
@@ -78,17 +76,6 @@ impl Timer {
         self.banked = 0;
         self.laps.clear();
     }
-    fn face(&self) -> String {
-        if self.stopwatch {
-            let secs = self.elapsed() / 1000;
-            format!("{:02}:{:02}", secs / 60, secs % 60)
-        } else if self.armed() {
-            let secs = (self.remaining() + 999) / 1000;
-            format!("{:02}:{:02}", secs / 60, secs % 60)
-        } else {
-            "--:--".to_string()
-        }
-    }
 }
 
 impl App for Timer {
@@ -99,7 +86,7 @@ impl App for Timer {
         Manifest::new("timer").emoji("⏱️").category("tools")
     }
     fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
-        let mut out = json!({
+        json!({
             "mode": if self.stopwatch { "stopwatch" } else { "countdown" },
             "armed": self.armed(),
             "remaining": self.remaining(),
@@ -107,11 +94,7 @@ impl App for Timer {
             "running": self.running(),
             "elapsed": self.elapsed(),
             "laps": self.laps.clone(),
-        });
-        if self.glyphs {
-            out["glyph"] = mrlyui::frame::glyph_fact(&self.face());
-        }
-        out
+        })
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
         let start = if self.stopwatch {
@@ -272,9 +255,6 @@ impl App for Timer {
         } else {
             None
         }
-    }
-    fn wear(&mut self, world: &Json) {
-        self.glyphs = world["shared"]["settings"]["font"] == "mrly";
     }
     fn save(&self) -> Json {
         json!({
@@ -649,7 +629,7 @@ mod tests {
         );
     }
     #[test]
-    fn worn_timer_shows_the_glyph_face() {
+    fn worn_timer_keeps_a_plain_face() {
         let iden = Iden::new("aria");
         let mut t = Timer::new();
         t.wear(&json!({ "shared": { "settings": { "font": "mrly" } } }));
@@ -658,14 +638,8 @@ mod tests {
             &Call::new("timer.start", json!({ "secs": 60 })).at(1000),
         );
         t.call(&iden, &Call::new("timer.check", json!({})).at(31000));
-        assert_eq!(t.state(&iden, None)["glyph"]["text"], json!("00:30"));
-        t.call(
-            &iden,
-            &Call::new("timer.mode", json!({ "mode": "stopwatch" })),
-        );
-        assert_eq!(t.state(&iden, None)["glyph"]["text"], json!("00:00"));
-        t.call(&iden, &Call::new("timer.start", json!({})).at(31000));
-        t.call(&iden, &Call::new("timer.check", json!({})).at(96000));
-        assert_eq!(t.state(&iden, None)["glyph"]["text"], json!("01:05"));
+        let state = t.state(&iden, None);
+        assert_eq!(state["remaining"], json!(30000));
+        assert!(state["glyph"].is_null());
     }
 }

@@ -35,7 +35,6 @@ pub use mrlycore::time::civil;
 
 pub struct Clock {
     now: i64,
-    glyphs: bool,
 }
 
 impl Default for Clock {
@@ -46,10 +45,7 @@ impl Default for Clock {
 
 impl Clock {
     pub fn new() -> Clock {
-        Clock {
-            now: 0,
-            glyphs: false,
-        }
+        Clock { now: 0 }
     }
 }
 
@@ -61,16 +57,7 @@ impl App for Clock {
         Manifest::new("clock").emoji("🕐").category("tools")
     }
     fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
-        let mut out = json!({ "now": self.now });
-        if self.glyphs {
-            let face = if self.now == 0 {
-                "--:--:--".to_string()
-            } else {
-                Time::from(((self.now / 1000).rem_euclid(86400)) as u32).text()
-            };
-            out["glyph"] = mrlyui::frame::glyph_fact(&face);
-        }
-        out
+        json!({ "now": self.now })
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
         vec![Verb::new("clock.tick", json!({}))]
@@ -86,9 +73,6 @@ impl App for Clock {
     }
     fn beat(&self) -> Option<Call> {
         Some(Call::new("clock.tick", json!({})))
-    }
-    fn wear(&mut self, world: &Json) {
-        self.glyphs = world["shared"]["settings"]["font"] == "mrly";
     }
     fn save(&self) -> Json {
         json!({ "now": self.now })
@@ -165,17 +149,13 @@ mod tests {
         );
     }
     #[test]
-    fn worn_clock_shows_the_glyph_face() {
+    fn worn_clock_keeps_a_plain_face() {
         let iden = Iden::new("aria");
         let mut clock = Clock::new();
         clock.wear(&json!({ "shared": { "settings": { "font": "mrly" } } }));
-        assert_eq!(clock.state(&iden, None)["glyph"]["text"], json!("--:--:--"));
         clock.call(&iden, &Call::new("clock.tick", json!({})).at(45296000));
-        assert_eq!(clock.state(&iden, None)["glyph"]["text"], json!("12:34:56"));
-    }
-    #[test]
-    fn unworn_clock_has_no_glyph() {
-        let iden = Iden::new("aria");
-        assert!(Clock::new().state(&iden, None)["glyph"].is_null());
+        let state = clock.state(&iden, None);
+        assert_eq!(state["now"], json!(45296000));
+        assert!(state["glyph"].is_null());
     }
 }

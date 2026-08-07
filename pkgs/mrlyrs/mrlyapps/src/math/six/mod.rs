@@ -6,7 +6,6 @@ use mrlymath::six::{
 };
 use mrlymath::three::{carpet, census, net, void, xtree, ytree, ztree, Cell3d};
 use mrlyos::kernel::{App, Call, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::hex;
 use std::collections::HashMap;
 
 const DESIGNS: [&str; 6] = ["carpet", "net", "xtree", "ytree", "ztree", "void"];
@@ -186,19 +185,6 @@ impl Six {
         map.insert(GRID, vec![ALPHA]);
         map
     }
-    fn tris(&self) -> Json {
-        let painted = hex_paint(self.hex(), Some(&self.colors_map()), Some(Mode::Type));
-        let tris = triangles(&painted).unwrap();
-        json!(tris
-            .iter()
-            .map(|(pts, rgba)| {
-                json!({
-                    "pts": pts.iter().map(|&(x, y)| json!([x, y])).collect::<Vec<_>>(),
-                    "color": hex(*rgba),
-                })
-            })
-            .collect::<Vec<_>>())
-    }
 }
 
 impl App for Six {
@@ -222,8 +208,19 @@ impl App for Six {
             "view": &self.set.view,
             "fill": &self.set.fill,
             "census": { "grid": side, "fill": filled, "void": total - filled },
-            "tris": self.tris(),
         })
+    }
+    fn tris(&self) -> Option<Vec<f32>> {
+        let painted = hex_paint(self.hex(), Some(&self.colors_map()), Some(Mode::Type));
+        let tris = triangles(&painted).unwrap();
+        let mut out = vec![(tris.len() * 10) as f32];
+        for (pts, rgba) in &tris {
+            for &(x, y) in pts {
+                out.extend([x as f32, y as f32]);
+            }
+            out.extend(rgba.map(|c| c as f32 / 255.0));
+        }
+        Some(out)
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
         vec![
@@ -364,11 +361,15 @@ mod tests {
         for v in VIEWS {
             let mut s = Six::new();
             send(&mut s, "six.set", json!({ "key": "view", "value": v }));
-            let state = s.state(&iden(), None);
-            let tris = state["tris"].as_array().unwrap();
-            assert!(!tris.is_empty(), "{v}");
-            assert_eq!(tris[0]["pts"].as_array().unwrap().len(), 3, "{v}");
-            assert!(tris[0]["color"].as_str().unwrap().starts_with('#'), "{v}");
+            let buf = s.tris().unwrap();
+            assert!(buf.len() > 1, "{v}");
+            assert_eq!(buf[0] as usize, buf.len() - 1, "{v}");
+            assert_eq!((buf.len() - 1) % 10, 0, "{v}");
+            for tri in buf[1..].chunks(10) {
+                assert!(tri[..6].iter().all(|c| c.is_finite()), "{v}");
+                assert!(tri[6..].iter().all(|&c| (0.0..=1.0).contains(&c)), "{v}");
+            }
+            assert!(s.state(&iden(), None).get("tris").is_none(), "{v}");
         }
     }
 }

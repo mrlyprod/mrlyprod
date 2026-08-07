@@ -441,16 +441,6 @@ pub fn sprite_fact(cell: &Cell2d) -> Json {
     Image::from_pixels(w, h, &pixels).to_json()
 }
 
-pub fn glyph_fact(text: &str) -> Json {
-    let rows = mrlyfont::raster(text);
-    json!({
-        "text": text,
-        "width": rows.first().map(Vec::len).unwrap_or(0),
-        "height": rows.len(),
-        "rows": rows,
-    })
-}
-
 pub fn empty_fact(width: usize, height: usize) -> Json {
     Image::new(width, height, Vec::new(), Vec::new()).to_json()
 }
@@ -669,19 +659,5 @@ mod tests {
         frame.push(Layer::Tiles { ids, set });
         let fact = sprite_fact(&frame.composite());
         assert_eq!(fact, frame.fact());
-    }
-    #[test]
-    fn glyph_fact_wraps_the_raster() {
-        let fact = glyph_fact("42");
-        let rows = mrlyfont::raster("42");
-        assert_eq!(fact["text"], "42");
-        assert_eq!(fact["height"], json!(5));
-        assert_eq!(fact["width"], json!(rows[0].len()));
-    }
-    #[test]
-    fn glyph_fact_of_empty_text_is_empty() {
-        let fact = glyph_fact("");
-        assert_eq!(fact["width"], json!(0));
-        assert_eq!(fact["height"], json!(0));
     }
 }

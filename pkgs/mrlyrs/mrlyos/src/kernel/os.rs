@@ -250,13 +250,14 @@ impl Os {
         let (app, path) = split(path);
         let i = self.find(&app)?;
         if let Some(head) = path.first() {
-            if head == "geometry" || head == "uniforms" {
+            if head == "geometry" || head == "uniforms" || head == "tris" {
                 if path.len() > 1 {
                     return None;
                 }
                 let values = match head.as_str() {
                     "geometry" => self.apps[i].geometry(),
-                    _ => self.apps[i].uniforms(),
+                    "uniforms" => self.apps[i].uniforms(),
+                    _ => self.apps[i].tris(),
                 };
                 return Some(buffer(&values?));
             }
@@ -362,6 +363,9 @@ mod tests {
         fn geometry(&self) -> Option<Vec<f32>> {
             Some(vec![1.0, -2.0])
         }
+        fn tris(&self) -> Option<Vec<f32>> {
+            Some(vec![0.5])
+        }
         fn actions(&self, _iden: &Iden) -> Vec<Verb> {
             vec![Verb::new("toy.poke", json!({}))]
         }
@@ -464,9 +468,14 @@ mod tests {
             os.read("toy/geometry", None),
             Some(json!({ "dtype": "f32", "data": "AACAPwAAAMA=" }))
         );
+        assert_eq!(
+            os.read("toy/tris", None),
+            Some(json!({ "dtype": "f32", "data": "AAAAPw==" }))
+        );
         assert_eq!(os.read("toy/uniforms", None), None);
         assert_eq!(os.read("toy/geometry/0", None), None);
         assert_eq!(os.read("bare/geometry", None), None);
+        assert_eq!(os.read("bare/tris", None), None);
     }
 
     #[test]

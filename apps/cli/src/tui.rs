@@ -267,7 +267,12 @@ fn render(env: &Envelope, size: (usize, usize), cmd: Option<&str>, titles: &Titl
                 if y >= body {
                     break;
                 }
-                if key == "frame" || key == "cells" || key == "shade" || key == "md" {
+                if key == "frame"
+                    || key == "cells"
+                    || key == "shade"
+                    || key == "md"
+                    || key == "tris"
+                {
                     continue;
                 }
                 screen.text(0, y, &format!("{key}: {}", brief(value)), None, false);

@@ -171,11 +171,10 @@ send("settings.set", { key: "wave", value: "sine" })
 
 send("settings.set", { key: "font", value: "mrly" })
 const worn = visit("calculator")
-const glyph = focused(worn)["glyph"] as { text?: string; rows?: number[][] } | undefined
-check("the glyph flag rasters the readout", glyph?.text === "42" && glyph.rows?.length === 5, JSON.stringify(glyph?.text))
+check("the worn face keeps a plain state", focused(worn)["glyph"] === undefined && focused(worn)["display"] === "42")
 const readout = views["calculator"]?.(focused(worn), () => {})
-check("the raster rides the view as a canvas", readout !== undefined && nodes(readout).some(n => n.kind === "Canvas"))
-if (readout !== undefined) checkBox("calculator (glyph)", readout)
+check("the readout spells the display as glyphs", readout !== undefined && nodes(readout).some(n => n.kind === "Label" && n.symbol?.as === "glyph" && n.symbol.value === "42"))
+if (readout !== undefined) checkBox("calculator (worn)", readout)
 visit("settings")
 send("settings.set", { key: "font", value: "mono" })
 visit("calculator")
@@ -315,6 +314,8 @@ check("every installed app has a view", viewless.length === 0, viewless.join(", 
 check("every view renders its boot state", broken.length === 0, broken.join(", "))
 check("every published shade resolves a wasm program", misshaded.length === 0, misshaded.join(", "))
 check("every published shade rides its canvas", unforwarded.length === 0, unforwarded.join(", "))
+const carved = buffer(handle, "six/tris")
+check("the six tris buffer arrives on the wire", carved !== undefined && carved[0] === carved.length - 1 && (carved.length - 1) % 10 === 0, String(carved?.length))
 check("every view keeps each node in exactly one border-box", boxless.length === 0, boxless.join(" | "))
 
 const unbound: string[] = []
