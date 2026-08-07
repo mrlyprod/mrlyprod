@@ -1,0 +1,52 @@
+/* PANES */
+
+.panes {
+  align-items: flex-start;
+  display: flex;
+  gap: var(--gap);
+  padding: var(--gap);
+  width: 100%;
+}
+
+.panes > .pane {
+  flex: 0 0 auto;
+  max-height: calc(100dvh - var(--head) - var(--space-2) * 2);
+  overflow-y: auto;
+  position: sticky;
+  top: calc(var(--head) + var(--gap));
+}
+
+.panes > .pane.left {
+  width: var(--left-w, 16.25rem);
+}
+
+.panes > .pane.right {
+  width: var(--right-w, 16.25rem);
+}
+
+.panes > .main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* GRIP */
+
+.grip {
+  align-self: stretch;
+  border-radius: var(--radius-full);
+  cursor: col-resize;
+  flex: 0 0 auto;
+  min-height: var(--box-height);
+  touch-action: none;
+  width: max(var(--space-2), 0.5rem);
+}
+
+.grip:hover,
+.grip:focus-visible {
+  background-color: var(--fill-strong);
+}
+
+html.dragging {
+  cursor: col-resize;
+  user-select: none;
+}

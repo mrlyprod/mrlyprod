@@ -77,9 +77,6 @@
   --fill-strong: color-mix(in srgb, var(--font-color) 12%, transparent);
   --hairline-color: color-mix(in srgb, var(--font-color) 20%, transparent);
   --scrim-color: color-mix(in srgb, var(--c-black) 32%, transparent);
-  --glass-opacity: 78%;
-  --glass-fill: 94%;
-  --glass-blur: 12px;
 }
 
 /* MOTION */
@@ -128,7 +125,6 @@
   --accent-color: color-mix(in srgb, var(--c-blue) 62%, var(--c-white));
   --on-accent: var(--c-black);
   --scrim-color: color-mix(in srgb, var(--c-black) 55%, transparent);
-  --glass-opacity: 70%;
   --code-mix: 72%;
 }
 
@@ -141,7 +137,6 @@
     --accent-color: color-mix(in srgb, var(--c-blue) 62%, var(--c-white));
     --on-accent: var(--c-black);
     --scrim-color: color-mix(in srgb, var(--c-black) 55%, transparent);
-    --glass-opacity: 70%;
     --code-mix: 72%;
   }
 }

@@ -9,8 +9,6 @@
 .scrim {
   align-items: center;
   animation: veil var(--pace) var(--ease-out);
-  -webkit-backdrop-filter: blur(calc(var(--glass-blur) / 2));
-  backdrop-filter: blur(calc(var(--glass-blur) / 2));
   background-color: var(--scrim-color);
   display: flex;
   inset: var(--head-offset, 0px) 0 0 0;
@@ -229,17 +227,6 @@
 
   to {
     transform: none;
-  }
-}
-
-/* GLASS */
-
-@supports (backdrop-filter: blur(1px)) {
-  .drawer,
-  .sheet {
-    -webkit-backdrop-filter: blur(var(--glass-blur));
-    backdrop-filter: blur(var(--glass-blur));
-    background-color: color-mix(in srgb, var(--body-color) var(--glass-opacity), transparent);
   }
 }
 

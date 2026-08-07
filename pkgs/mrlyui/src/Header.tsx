@@ -2,10 +2,9 @@ import { useEffect } from "react"
 import { cx } from "./lib"
 import { Letters } from "./Letters"
 
-export type HeaderPane = "" | "menu" | "iden"
-
-export function Header({ open = "", onMenu, onMark, onIden, className }: {
-  open?: HeaderPane
+export function Header({ menu = false, iden = false, onMenu, onMark, onIden, className }: {
+  menu?: boolean
+  iden?: boolean
   onMenu?: () => void
   onMark?: () => void
   onIden?: () => void
@@ -22,11 +21,11 @@ export function Header({ open = "", onMenu, onMark, onIden, className }: {
       <button
         type="button"
         className="header-glyph"
-        aria-label={open === "menu" ? "Close menu" : "Open menu"}
-        aria-expanded={open === "menu"}
+        aria-label={menu ? "Close menu" : "Open menu"}
+        aria-expanded={menu}
         onClick={onMenu}
       >
-        <Letters text={open === "menu" ? "×" : "+"} pace={150} label="" />
+        <Letters text={menu ? "×" : "+"} pace={150} label="" />
       </button>
       <button type="button" className="header-glyph header-mark" aria-label="mrly" onClick={onMark}>
         <Letters text="X" scramble={false} label="" />
@@ -34,11 +33,11 @@ export function Header({ open = "", onMenu, onMark, onIden, className }: {
       <button
         type="button"
         className="header-glyph"
-        aria-label={open === "iden" ? "Close identity" : "Open identity"}
-        aria-expanded={open === "iden"}
+        aria-label={iden ? "Close identity" : "Open identity"}
+        aria-expanded={iden}
         onClick={onIden}
       >
-        <Letters text={open === "iden" ? "×" : "O"} pace={150} label="" />
+        <Letters text={iden ? "×" : "O"} pace={150} label="" />
       </button>
     </header>
   )

@@ -140,24 +140,6 @@ button.card:active {
   transform: scale(0.97);
 }
 
-/* GLASS */
-
-@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .glass {
-    background-color: color-mix(in srgb, var(--plate, var(--body-color)) var(--glass-opacity), transparent);
-    -webkit-backdrop-filter: blur(var(--glass-blur));
-    backdrop-filter: blur(var(--glass-blur));
-  }
-
-  @media (prefers-reduced-transparency: reduce) {
-    .glass {
-      background-color: var(--plate, var(--body-color));
-      -webkit-backdrop-filter: none;
-      backdrop-filter: none;
-    }
-  }
-}
-
 /* FILL */
 
 .fill {

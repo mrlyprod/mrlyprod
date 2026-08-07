@@ -1,13 +1,17 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react"
 import { read, write } from "./lib"
 import * as sound from "./sound"
 import type { ColorName } from "./colors"
+
+export type Fill = ColorName | "random" | ""
 
 export type Prefs = {
   unit: number
   border: number
   radius: number
   accent: ColorName | ""
+  fill: Fill
+  background: ColorName | ""
   sound: boolean
   haptics: boolean
   note: string
@@ -20,11 +24,32 @@ export const PREF_DEFAULTS: Prefs = {
   border: 1,
   radius: 2,
   accent: "",
+  fill: "",
+  background: "",
   sound: true,
   haptics: true,
   note: "random",
   wave: "sine",
   duration: 150,
+}
+
+let fillHeld: Fill = ""
+const fillSubs = new Set<() => void>()
+
+export function setFill(next: Fill): void {
+  if (next === fillHeld) return
+  fillHeld = next
+  for (const sub of fillSubs) sub()
+}
+
+export function useFill(): Fill {
+  return useSyncExternalStore(
+    sub => {
+      fillSubs.add(sub)
+      return () => fillSubs.delete(sub)
+    },
+    () => fillHeld,
+  )
 }
 
 const KEY = "mrly-prefs"
@@ -49,6 +74,8 @@ export function applyPrefs(prefs: Prefs): void {
   set("--border-width", prefs.border === 1 ? "" : `${prefs.border}px`)
   set("--radius", prefs.radius === 2 ? "" : `calc(var(--unit) * ${prefs.radius})`)
   set("--accent-color", prefs.accent === "" ? "" : `var(--c-${prefs.accent})`)
+  set("--background-color", prefs.background === "" ? "" : `var(--c-${prefs.background})`)
+  setFill(prefs.fill)
   sound.pref("sound", prefs.sound)
   sound.pref("haptics", prefs.haptics)
   sound.pref("note", prefs.note)

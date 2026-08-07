@@ -1,16 +1,20 @@
 import { useMemo } from "react"
-import type { CSSProperties, ReactNode } from "react"
+import type { CSSProperties, ReactNode, Ref } from "react"
 import { cx } from "./lib"
 import { css, randomColor } from "./colors"
 import type { ColorName } from "./colors"
+import { useFill } from "./prefs"
 
 // PLATE
 
 function usePlate(plate: ColorName | "auto" | undefined): string | undefined {
+  const fill = useFill()
   return useMemo(() => {
-    if (!plate) return undefined
-    return css(plate === "auto" ? randomColor() : plate)
-  }, [plate])
+    if (plate) return css(plate === "auto" ? randomColor() : plate)
+    if (fill === "random") return css(randomColor())
+    if (fill !== "") return css(fill)
+    return undefined
+  }, [plate, fill])
 }
 
 function plated(style: CSSProperties | undefined, color: string | undefined): CSSProperties | undefined {
@@ -20,16 +24,17 @@ function plated(style: CSSProperties | undefined, color: string | undefined): CS
 
 // BOX
 
-export function Box({ children, className, style, onClick, plate }: {
+export function Box({ children, className, style, onClick, plate, ref }: {
   children?: ReactNode
   className?: string
   style?: CSSProperties
   onClick?: () => void
   plate?: ColorName | "auto"
+  ref?: Ref<HTMLDivElement>
 }) {
   const color = usePlate(plate)
   return (
-    <div className={cx("box", className)} style={plated(style, color)} onClick={onClick}>
+    <div className={cx("box", className)} style={plated(style, color)} onClick={onClick} ref={ref}>
       {children}
     </div>
   )
@@ -63,13 +68,15 @@ export function Stack({ children, className, style, tight, airy }: {
   )
 }
 
-export function Section({ label, children, className }: {
+export function Section({ label, children, className, plate }: {
   label: string
   children?: ReactNode
   className?: string
+  plate?: ColorName | "auto"
 }) {
+  const color = usePlate(plate)
   return (
-    <section className={cx("box", "section", className)}>
+    <section className={cx("box", "section", className)} style={plated(undefined, color)}>
       <h2 className="title">{label}</h2>
       {children}
     </section>

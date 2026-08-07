@@ -103,8 +103,7 @@
   --variant-color: var(--font-color);
   align-items: center;
   animation: enter var(--pace) var(--ease-spring);
-  backdrop-filter: blur(var(--glass-blur));
-  background-color: color-mix(in srgb, var(--body-color) var(--glass-opacity), transparent);
+  background-color: var(--body-color);
   border: var(--border-width) var(--border-style) var(--hairline-color);
   border-radius: var(--radius-full);
   box-shadow: var(--shadow-3);

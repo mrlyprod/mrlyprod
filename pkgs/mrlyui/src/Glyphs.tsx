@@ -27,6 +27,8 @@ export type SymbolName =
   | "info"
   | "keyboard_arrow_down"
   | "keyboard_arrow_up"
+  | "keyboard_double_arrow_left"
+  | "keyboard_double_arrow_right"
   | "light_mode"
   | "list"
   | "mail"

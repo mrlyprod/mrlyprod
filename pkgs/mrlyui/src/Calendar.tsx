@@ -41,6 +41,10 @@ export function Calendar({ value, onSelect }: {
     setView(new Date(year, month + delta, 1))
   }
 
+  const leap = (delta: number) => {
+    setView(new Date(year + delta, month, 1))
+  }
+
   const rove = (delta: number) => {
     const next = new Date(focus.getFullYear(), focus.getMonth(), focus.getDate() + delta)
     roving.current = true
@@ -70,6 +74,14 @@ export function Calendar({ value, onSelect }: {
         <button
           type="button"
           className="calendar-nav"
+          aria-label="Previous year"
+          onClick={() => leap(-1)}
+        >
+          <Symbol name="keyboard_double_arrow_left" size="var(--font-lg)" />
+        </button>
+        <button
+          type="button"
+          className="calendar-nav"
           aria-label="Previous month"
           onClick={() => shift(-1)}
         >
@@ -85,6 +97,14 @@ export function Calendar({ value, onSelect }: {
           onClick={() => shift(1)}
         >
           <Symbol name="chevron_right" size="var(--font-lg)" />
+        </button>
+        <button
+          type="button"
+          className="calendar-nav"
+          aria-label="Next year"
+          onClick={() => leap(1)}
+        >
+          <Symbol name="keyboard_double_arrow_right" size="var(--font-lg)" />
         </button>
       </div>
       <div className="calendar-grid" ref={grid} onKeyDown={keys}>
@@ -123,41 +143,86 @@ export function Calendar({ value, onSelect }: {
   )
 }
 
-export function DatePicker({ value, onChange, placeholder = "Pick a date" }: {
+function iso(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+  return `${String(date.getFullYear())}-${month}-${day}`
+}
+
+function parse(text: string): Date | null {
+  const clean = text.trim()
+  if (clean === "") return null
+  const exact = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(clean)
+  if (exact) {
+    const parsed = new Date(Number(exact[1]), Number(exact[2]) - 1, Number(exact[3]))
+    return Number.isNaN(parsed.getTime()) ? null : parsed
+  }
+  const loose = new Date(clean)
+  return Number.isNaN(loose.getTime()) ? null : loose
+}
+
+export function DatePicker({ value, onChange, placeholder = "yyyy-mm-dd" }: {
   value?: Date
   onChange: (date: Date) => void
   placeholder?: string
 }) {
+  const [text, setText] = useState(() => (value ? iso(value) : ""))
+  const held = useRef(value ? iso(value) : "")
+
+  useEffect(() => {
+    const next = value ? iso(value) : ""
+    if (next !== held.current) {
+      held.current = next
+      setText(next)
+    }
+  }, [value])
+
+  const commit = () => {
+    const parsed = parse(text)
+    if (parsed !== null) {
+      held.current = iso(parsed)
+      setText(held.current)
+      onChange(parsed)
+    }
+  }
+
   return (
-    <Popover
-      trigger={({ open, toggle }) => (
-        <button
-          type="button"
-          className={cx("select-trigger", open && "open")}
-          aria-haspopup="dialog"
-          aria-expanded={open}
-          onClick={toggle}
-        >
-          <span className={cx("select-value", !value && "placeholder")}>
-            {value
-              ? value.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
-              : placeholder}
-          </span>
-          <span className="select-chevron">
+    <div className="datepicker">
+      <input
+        className="input"
+        value={text}
+        placeholder={placeholder}
+        onChange={event => setText(event.target.value)}
+        onBlur={commit}
+        onKeyDown={event => {
+          if (event.key === "Enter") commit()
+        }}
+      />
+      <Popover
+        trigger={({ open, toggle }) => (
+          <button
+            type="button"
+            className={cx("picker-button", open && "open")}
+            aria-label="Open calendar"
+            aria-haspopup="dialog"
+            aria-expanded={open}
+            onClick={toggle}
+          >
             <Symbol name="calendar_month" size="var(--font-lg)" />
-          </span>
-        </button>
-      )}
-    >
-      {(close) => (
-        <Calendar
-          value={value}
-          onSelect={(date) => {
-            onChange(date)
-            close()
-          }}
-        />
-      )}
-    </Popover>
+          </button>
+        )}
+        align="right"
+      >
+        {(close) => (
+          <Calendar
+            value={value}
+            onSelect={(date) => {
+              onChange(date)
+              close()
+            }}
+          />
+        )}
+      </Popover>
+    </div>
   )
 }

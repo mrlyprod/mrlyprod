@@ -103,9 +103,7 @@
 /* HEADER */
 
 .header {
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  backdrop-filter: blur(var(--glass-blur));
-  background-color: color-mix(in srgb, var(--background-color) var(--glass-opacity), transparent);
+  background-color: var(--background-color);
   display: flex;
   gap: var(--gap);
   padding: var(--space-2) var(--space-4);

@@ -9,7 +9,6 @@ import {
   Board,
   Box,
   Button,
-  Calendar,
   Card,
   Cell,
   Checkbox,
@@ -34,6 +33,7 @@ import {
   Modal,
   POOL,
   Pager,
+  Panes,
   Popover,
   Progress,
   Radio,
@@ -60,6 +60,7 @@ import {
   Toggle,
   Tooltip,
   useFont,
+  usePanes,
   usePrefs,
   useTheme,
   write,
@@ -115,6 +116,37 @@ function SettingsPane() {
         <Stack>
           <Text className="caption">accent</Text>
           <ColorPicker auto value={prefs.accent === "" ? null : prefs.accent} onChange={c => patch({ accent: c ?? "" })} />
+        </Stack>
+      </Box>
+      <Box>
+        <Stack>
+          <Text className="caption">fill</Text>
+          <Cluster>
+            <Chip active={prefs.fill === ""} onClick={() => patch({ fill: "" })}>
+              mono
+            </Chip>
+            <Chip active={prefs.fill === "random"} onClick={() => patch({ fill: "random" })}>
+              random
+            </Chip>
+          </Cluster>
+          <ColorPicker
+            value={prefs.fill === "" || prefs.fill === "random" ? null : prefs.fill}
+            onChange={c => patch({ fill: c ?? "random" })}
+          />
+        </Stack>
+      </Box>
+      <Box>
+        <Stack>
+          <Text className="caption">background</Text>
+          <Cluster>
+            <Chip active={prefs.background === ""} onClick={() => patch({ background: "" })}>
+              mono
+            </Chip>
+          </Cluster>
+          <ColorPicker
+            value={prefs.background === "" ? null : prefs.background}
+            onChange={c => patch({ background: c ?? "" })}
+          />
         </Stack>
       </Box>
       <Box>
@@ -447,7 +479,6 @@ function Pickers() {
   const [query, setQuery] = useState("")
   const [picked, setPicked] = useState("")
   const [date, setDate] = useState<Date>()
-  const [day, setDay] = useState<Date>()
   return (
     <Stack>
       <Field label="select">
@@ -485,9 +516,8 @@ function Pickers() {
         />
       </Field>
       <Field label="date">
-        <DatePicker value={date} onChange={setDate} placeholder="pick a day" />
+        <DatePicker value={date} onChange={setDate} />
       </Field>
-      <Calendar value={day} onSelect={setDay} />
     </Stack>
   )
 }
@@ -604,7 +634,7 @@ function Overlays() {
 }
 
 export function Sink() {
-  const [pane, setPane] = useState<"" | "menu" | "iden">("")
+  const panes = usePanes()
   const [marked, setMarked] = useState(false)
 
   useEffect(() => {
@@ -617,21 +647,17 @@ export function Sink() {
   return (
     <>
       <Header
-        open={pane}
-        onMenu={() => setPane(pane === "menu" ? "" : "menu")}
+        menu={panes.left.open}
+        iden={panes.right.open}
+        onMenu={panes.left.toggle}
         onMark={() => setMarked(true)}
-        onIden={() => setPane(pane === "iden" ? "" : "iden")}
+        onIden={panes.right.toggle}
       />
-      <Drawer open={pane === "menu"} onClose={() => setPane("")} side="left" title="settings">
-        <SettingsPane />
-      </Drawer>
-      <Drawer open={pane === "iden"} onClose={() => setPane("")} side="right" title="iden">
-        <IdenPane />
-      </Drawer>
       <Toast open={marked} onClose={() => setMarked(false)}>
         mrly
       </Toast>
-      <Frame>
+      <Panes panes={panes} left={<SettingsPane />} right={<IdenPane />} leftTitle="settings" rightTitle="iden">
+        <Frame>
         <Stack airy>
           <header className="masthead">
             <Letters text="mrlyui" />
@@ -671,7 +697,8 @@ export function Sink() {
             <Overlays />
           </Section>
         </Stack>
-      </Frame>
+        </Frame>
+      </Panes>
     </>
   )
 }
