@@ -13,14 +13,33 @@
 
 .box {
   overflow: hidden;
-  padding: var(--padding);
+  padding: var(--padding-box);
+}
+
+.box .box {
+  background-color: var(--plate, var(--fill-color));
+  border-color: var(--hairline-color);
+}
+
+/* SECTION */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-box);
+  padding: var(--padding-section);
+}
+
+.section > .title {
+  margin-bottom: var(--space-2);
 }
 
 /* FRAME */
 
 .frame {
   margin: 0 auto;
-  max-width: var(--frame-width);
+  max-width: calc(var(--frame-width) + var(--space-4) * 2);
+  padding: var(--space-8) var(--space-4);
   width: 100%;
 }
 
@@ -29,8 +48,16 @@
 .stack {
   display: flex;
   flex-direction: column;
-  gap: var(--gap);
+  gap: var(--gap-box);
   width: 100%;
+}
+
+.stack.tight {
+  gap: var(--gap);
+}
+
+.stack.airy {
+  gap: var(--gap-section);
 }
 
 .row {

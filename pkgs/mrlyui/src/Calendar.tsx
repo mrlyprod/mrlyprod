@@ -144,7 +144,7 @@ export function DatePicker({ value, onChange, placeholder = "Pick a date" }: {
               : placeholder}
           </span>
           <span className="select-chevron">
-            <Symbol name="keyboard_arrow_down" size="var(--font-lg)" />
+            <Symbol name="calendar_month" size="var(--font-lg)" />
           </span>
         </button>
       )}

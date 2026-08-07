@@ -49,15 +49,30 @@ export function Frame({ children, className, style }: {
   )
 }
 
-export function Stack({ children, className, style }: {
+export function Stack({ children, className, style, tight, airy }: {
   children?: ReactNode
   className?: string
   style?: CSSProperties
+  tight?: boolean
+  airy?: boolean
 }) {
   return (
-    <div className={cx("stack", className)} style={style}>
+    <div className={cx("stack", tight && "tight", airy && "airy", className)} style={style}>
       {children}
     </div>
+  )
+}
+
+export function Section({ label, children, className }: {
+  label: string
+  children?: ReactNode
+  className?: string
+}) {
+  return (
+    <section className={cx("box", "section", className)}>
+      <h2 className="title">{label}</h2>
+      {children}
+    </section>
   )
 }
 

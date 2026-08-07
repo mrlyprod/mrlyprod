@@ -1,3 +1,5 @@
+import { Symbol } from "./Glyphs";
+
 export function Stepper({
   value,
   onChange,
@@ -23,7 +25,7 @@ export function Stepper({
         disabled={value <= min}
         onClick={() => set(value - step)}
       >
-        <span aria-hidden="true">-</span>
+        <Symbol name="remove" />
       </button>
       <span className="stepper-value">{format ? format(value) : value}</span>
       <button
@@ -33,7 +35,7 @@ export function Stepper({
         disabled={value >= max}
         onClick={() => set(value + step)}
       >
-        <span aria-hidden="true">+</span>
+        <Symbol name="add" />
       </button>
     </div>
   );

@@ -56,6 +56,12 @@ def web_icons():
         body = f.read().split("{", 1)[1].split("}", 1)[0]
     return sorted(set(re.findall(r'"([a-z0-9_]+)"', body)))
 
+def ui_icons():
+    with open(os.path.join(ROOT, "pkgs", "mrlyui", "src", "Glyphs.tsx"), encoding="utf-8") as f:
+        body = f.read().split("SymbolName =", 1)[1].split("// SIZE", 1)[0]
+    names = set(re.findall(r'"([a-z0-9_]+)"', body))
+    return sorted(names | set(site_icons()) | set(web_icons()))
+
 MANIFEST = {
     "net": {
         "public": "apps/net/public",
@@ -94,10 +100,12 @@ MANIFEST = {
 SUBSETS = {
     "site.woff2": site_icons,
     "icons.woff2": web_icons,
+    "ui.woff2": ui_icons,
 }
 
 PACKAGES = {
     "pkgs/mrlycss/faces.css": ["mono", "mrlyfont", "site", "seti"],
+    "pkgs/mrlyui/styles/faces.css": ["mono", "sans", "serif", "display", "mrlyfont", "emoji", "ui", "seti"],
 }
 
 # FETCH
@@ -328,6 +336,7 @@ def shared(urls):
     out["emoji"] = [face("noto", urls[name], "swap", rng) for name, rng in parsed("emoji.css")]
     out["site"] = [face("mrly-icons", urls["site.woff2"], "block", None)]
     out["icons"] = [face("mrly-icons", urls["icons.woff2"], "block", None)]
+    out["ui"] = [face("mrly-icons", urls["ui.woff2"], "block", None)]
     out["seti"] = [face("seti", urls["seti.woff2"], "block", None)]
     return out
 

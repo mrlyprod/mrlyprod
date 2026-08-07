@@ -99,3 +99,49 @@
   height: var(--box-height);
   justify-content: center;
 }
+
+/* HEADER */
+
+.header {
+  display: flex;
+  gap: var(--gap);
+  width: 100%;
+}
+
+.header-glyph {
+  align-items: center;
+  background-color: var(--body-color);
+  border: var(--border);
+  border-radius: var(--radius);
+  color: var(--font-color);
+  cursor: pointer;
+  display: flex;
+  flex: 0 0 auto;
+  height: var(--box-height);
+  justify-content: center;
+  transition:
+    background-color var(--pace) var(--ease-out),
+    color var(--pace) var(--ease-out);
+  user-select: none;
+  width: var(--box-height);
+}
+
+.header-glyph .letters {
+  height: calc(var(--font-size) * 1.25);
+}
+
+.header-mark {
+  flex: 1 1 auto;
+}
+
+.header-glyph:active {
+  background-color: var(--font-color);
+  color: var(--body-color);
+}
+
+@media (hover: hover) {
+  .header-glyph:hover {
+    background-color: var(--font-color);
+    color: var(--body-color);
+  }
+}

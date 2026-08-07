@@ -1,5 +1,5 @@
 import { useState } from "react"
-import type { ReactNode } from "react"
+import "./sink.css"
 import {
   Alert,
   Autocomplete,
@@ -23,6 +23,7 @@ import {
   Field,
   Frame,
   GraphemeInput,
+  Header,
   Grid,
   Icon,
   Input,
@@ -35,6 +36,7 @@ import {
   Radio,
   Row,
   Search,
+  Section,
   Select,
   Sheet,
   Slider,
@@ -59,15 +61,6 @@ import type { ColorName, Variant } from "mrlyui"
 const VARIANTS: Variant[] = ["info", "success", "warn", "danger"]
 
 const FRUIT = ["apple", "banana", "cherry", "grape", "lemon", "mango", "melon", "peach", "pear", "plum"]
-
-function Section({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <Box className="section">
-      <Title>{label}</Title>
-      <Stack>{children}</Stack>
-    </Box>
-  )
-}
 
 function set(name: string, value: string) {
   if (value === "") document.documentElement.style.removeProperty(name)
@@ -280,53 +273,71 @@ function Controls() {
   const [ink, setInk] = useState<ColorName | null>("blue")
   return (
     <Stack>
-      <Field label="name" hint="a controlled input">
-        <Input value={name} onChange={setName} placeholder="type here" />
-      </Field>
-      <Field label="notes">
-        <Textarea value={notes} onChange={setNotes} placeholder="a few lines" rows={3} />
-      </Field>
-      <Field label="search">
-        <Search value={query} onChange={setQuery} onClear={() => setQuery("")} placeholder="find" />
-      </Field>
-      <Field label="glyph" hint="keeps the last grapheme">
-        <GraphemeInput value={glyph} onChange={setGlyph} />
-      </Field>
-      <Row>
-        <Toggle value={on} onChange={setOn} />
-        <Checkbox checked={checked} onChange={setChecked} label="agreed" />
-      </Row>
-      <Field label="mode">
-        <Radio
-          options={[
-            { label: "fill", value: "fill" },
-            { label: "carve", value: "carve" },
-            { label: "shade", value: "shade" },
-          ]}
-          value={mode}
-          onChange={setMode}
-        />
-      </Field>
-      <Field label="count">
-        <Stepper value={count} onChange={setCount} min={1} max={9} />
-      </Field>
-      <Field label="level" error={level > 80 ? "too hot" : undefined}>
-        <Slider min={0} max={100} value={level} onChange={setLevel} />
-      </Field>
-      <Field label="pace">
-        <StepSlider
-          steps={[
-            { label: "slow", value: "slow" },
-            { label: "steady", value: "steady" },
-            { label: "fast", value: "fast" },
-          ]}
-          value={pace}
-          onChange={setPace}
-        />
-      </Field>
-      <Field label="ink">
-        <ColorPicker value={ink} onChange={setInk} />
-      </Field>
+      <Box>
+        <Stack>
+          <Text className="caption">words</Text>
+          <Field label="name" hint="a controlled input">
+            <Input value={name} onChange={setName} placeholder="type here" />
+          </Field>
+          <Field label="notes">
+            <Textarea value={notes} onChange={setNotes} placeholder="a few lines" rows={3} />
+          </Field>
+          <Field label="search">
+            <Search value={query} onChange={setQuery} onClear={() => setQuery("")} placeholder="find" />
+          </Field>
+          <Field label="glyph" hint="keeps the last grapheme">
+            <GraphemeInput value={glyph} onChange={setGlyph} />
+          </Field>
+        </Stack>
+      </Box>
+      <Box>
+        <Stack>
+          <Text className="caption">switches</Text>
+          <Row>
+            <Toggle value={on} onChange={setOn} />
+            <Checkbox checked={checked} onChange={setChecked} label="agreed" />
+          </Row>
+          <Field label="mode">
+            <Radio
+              options={[
+                { label: "fill", value: "fill" },
+                { label: "carve", value: "carve" },
+                { label: "shade", value: "shade" },
+              ]}
+              value={mode}
+              onChange={setMode}
+            />
+          </Field>
+        </Stack>
+      </Box>
+      <Box>
+        <Stack>
+          <Text className="caption">amounts</Text>
+          <Field label="count">
+            <Stepper value={count} onChange={setCount} min={1} max={9} />
+          </Field>
+          <Field label="level" error={level > 80 ? "too hot" : undefined}>
+            <Slider min={0} max={100} value={level} onChange={setLevel} />
+          </Field>
+          <Field label="pace">
+            <StepSlider
+              steps={[
+                { label: "slow", value: "slow" },
+                { label: "steady", value: "steady" },
+                { label: "fast", value: "fast" },
+              ]}
+              value={pace}
+              onChange={setPace}
+            />
+          </Field>
+        </Stack>
+      </Box>
+      <Box>
+        <Stack>
+          <Text className="caption">ink</Text>
+          <ColorPicker value={ink} onChange={setInk} />
+        </Stack>
+      </Box>
     </Stack>
   )
 }
@@ -475,13 +486,30 @@ function Overlays() {
 }
 
 export function Sink() {
+  const [pane, setPane] = useState<"" | "menu" | "iden">("")
+  const [marked, setMarked] = useState(false)
   return (
     <Frame>
-      <Stack>
-        <Row className="masthead">
+      <Stack airy>
+        <Header
+          open={pane}
+          onMenu={() => setPane(pane === "menu" ? "" : "menu")}
+          onMark={() => setMarked(true)}
+          onIden={() => setPane(pane === "iden" ? "" : "iden")}
+        />
+        <Drawer open={pane === "menu"} onClose={() => setPane("")} side="left" title="menu">
+          <Text>The menu drawer, opened by the plus.</Text>
+        </Drawer>
+        <Modal open={pane === "iden"} onClose={() => setPane("")} title="iden">
+          <Text>The identity pane, opened by the O.</Text>
+        </Modal>
+        <Toast open={marked} onClose={() => setMarked(false)}>
+          mrly
+        </Toast>
+        <header className="masthead">
           <Letters text="mrlyui" />
           <Text className="caption">one unit, many boxes</Text>
-        </Row>
+        </header>
         <Section label="theme">
           <Knobs />
         </Section>

@@ -13,6 +13,10 @@
   --space-8: calc(var(--unit) * 8);
   --gap: var(--space-1);
   --padding: var(--space-1);
+  --gap-box: var(--space-3);
+  --gap-section: var(--space-6);
+  --padding-box: var(--space-4);
+  --padding-section: var(--space-6);
 }
 
 /* SHAPE */

@@ -80,8 +80,16 @@ mrlyprod
 │   │   ├── tsconfig.json
 │   │   └── vite.config.ts
 │   ├── jsx
+│   │   ├── public
+│   │   │   ├── icons
+│   │   │   ├── favicon.ico
+│   │   │   ├── fonts.css
+│   │   │   ├── mrlyprod.png
+│   │   │   └── mrlyprod.svg
 │   │   └── src
-│   │       └── apps
+│   │       ├── apps
+│   │       └── lib
+│   │           └── mrlyfont.json
 │   ├── net
 │   │   ├── blog
 │   │   │   ├── README.md
@@ -322,7 +330,8 @@ mrlyprod
 │       ├── site.woff2
 │       ├── symbols.codepoints
 │       ├── symbols.ttf
-│       └── symbols2.ttf
+│       ├── symbols2.ttf
+│       └── ui.woff2
 ├── pkgs
 │   ├── mrlycss
 │   │   ├── base.css
@@ -766,7 +775,8 @@ mrlyprod
 │   │   ├── demo
 │   │   │   ├── src
 │   │   │   │   ├── Sink.tsx
-│   │   │   │   └── main.tsx
+│   │   │   │   ├── main.tsx
+│   │   │   │   └── sink.css
 │   │   │   └── index.html
 │   │   ├── src
 │   │   │   ├── gen
@@ -787,6 +797,7 @@ mrlyprod
 │   │   │   ├── Dropdown.tsx
 │   │   │   ├── Field.tsx
 │   │   │   ├── Glyphs.tsx
+│   │   │   ├── Header.tsx
 │   │   │   ├── Input.tsx
 │   │   │   ├── Letters.tsx
 │   │   │   ├── Modal.tsx
