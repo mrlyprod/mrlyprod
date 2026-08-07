@@ -118,6 +118,15 @@
   width: auto;
 }
 
+/* BRAND */
+
+.brand {
+  fill: currentColor;
+  flex: none;
+  height: var(--symbol-size, var(--font-lg));
+  width: var(--symbol-size, var(--font-lg));
+}
+
 /* MARK */
 
 .mark {

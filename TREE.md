@@ -49,26 +49,21 @@ mrlyprod
 │   │   │   └── scan.ts
 │   │   ├── src
 │   │   │   ├── components
-│   │   │   │   ├── Grip.tsx
+│   │   │   │   ├── Finder.tsx
 │   │   │   │   ├── Listing.tsx
 │   │   │   │   ├── More.tsx
 │   │   │   │   ├── Panel.tsx
-│   │   │   │   ├── Search.tsx
 │   │   │   │   ├── Shell.tsx
-│   │   │   │   ├── Skeleton.tsx
-│   │   │   │   ├── Status.tsx
-│   │   │   │   └── Tree.tsx
+│   │   │   │   └── Status.tsx
 │   │   │   ├── lib
 │   │   │   │   ├── code.ts
 │   │   │   │   ├── data.ts
 │   │   │   │   ├── find.ts
 │   │   │   │   ├── langs.ts
 │   │   │   │   ├── md.ts
-│   │   │   │   ├── panes.ts
 │   │   │   │   ├── repo.ts
 │   │   │   │   ├── site.ts
 │   │   │   │   ├── text.ts
-│   │   │   │   ├── theme.ts
 │   │   │   │   └── tree.ts
 │   │   │   ├── views
 │   │   │   │   ├── NotFound.tsx
@@ -123,7 +118,6 @@ mrlyprod
 │   │   │   └── scan.ts
 │   │   ├── src
 │   │   │   ├── components
-│   │   │   │   ├── Build.tsx
 │   │   │   │   ├── Cart.tsx
 │   │   │   │   ├── Landing.tsx
 │   │   │   │   ├── Menu.tsx
@@ -808,6 +802,7 @@ mrlyprod
 │   │   │   ├── Banner.tsx
 │   │   │   ├── Board.tsx
 │   │   │   ├── Box.tsx
+│   │   │   ├── Brand.tsx
 │   │   │   ├── Button.tsx
 │   │   │   ├── Calendar.tsx
 │   │   │   ├── Checkbox.tsx
@@ -817,6 +812,8 @@ mrlyprod
 │   │   │   ├── Drawer.tsx
 │   │   │   ├── Dropdown.tsx
 │   │   │   ├── Field.tsx
+│   │   │   ├── Fold.tsx
+│   │   │   ├── Footer.tsx
 │   │   │   ├── Glyphs.tsx
 │   │   │   ├── Grip.tsx
 │   │   │   ├── Header.tsx
@@ -833,6 +830,7 @@ mrlyprod
 │   │   │   ├── Select.tsx
 │   │   │   ├── Setting.tsx
 │   │   │   ├── Sheet.tsx
+│   │   │   ├── Skeleton.tsx
 │   │   │   ├── Slider.tsx
 │   │   │   ├── Spinner.tsx
 │   │   │   ├── Stepper.tsx
@@ -842,12 +840,14 @@ mrlyprod
 │   │   │   ├── Toast.tsx
 │   │   │   ├── Toggle.tsx
 │   │   │   ├── Tooltip.tsx
+│   │   │   ├── Tree.tsx
 │   │   │   ├── colors.ts
 │   │   │   ├── index.ts
 │   │   │   ├── lib.ts
 │   │   │   ├── pane.ts
 │   │   │   ├── prefs.ts
 │   │   │   ├── route.ts
+│   │   │   ├── seti.ts
 │   │   │   ├── sound.ts
 │   │   │   ├── theme.ts
 │   │   │   └── variant.ts
@@ -869,9 +869,11 @@ mrlyprod
 │   │   │   ├── panes.css
 │   │   │   ├── pickers.css
 │   │   │   ├── reset.css
+│   │   │   ├── seti.css
 │   │   │   ├── text.css
 │   │   │   └── tokens.css
 │   │   ├── README.md
+│   │   ├── boot.js
 │   │   ├── package.json
 │   │   ├── tsconfig.json
 │   │   └── vite.config.ts

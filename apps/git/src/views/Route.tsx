@@ -1,20 +1,19 @@
 import { useEffect, useState } from "react"
-import { Crumbs } from "mrlydom"
-import type { Section } from "mrlydom"
+import { Crumbs, Row, Skeleton } from "mrlyui"
 import { Listing } from "../components/Listing"
 import { More } from "../components/More"
 import { Shell } from "../components/Shell"
-import { Skeleton } from "../components/Skeleton"
 import { Status } from "../components/Status"
 import { raw } from "../lib/data"
 import { lang } from "../lib/langs"
+import type { Anchor } from "../lib/md"
 import type { Ctx } from "../lib/repo"
 import { desc, lastSegment, title } from "../lib/repo"
 import { RAW, ROOT } from "../lib/site"
 
 // BODY
 
-type Held = { html: string; toc: Section[]; lines: number }
+type Held = { html: string; toc: Anchor[]; lines: number }
 
 const BLANK: Held = { html: "", toc: [], lines: 0 }
 
@@ -72,27 +71,25 @@ export function Route({ ctx, route }: { ctx: Ctx; route: string }) {
   const code = file !== undefined && !file.doc
   const name = code ? lastSegment(file.path) : ""
   const updated = ctx.updated.get(route)
-  const status = code ? (
-    <Status lang={lang(file.path)} lines={held.lines} />
-  ) : (
-    <Status updated={updated} />
-  )
   return (
     <Shell
       ctx={ctx}
       route={route}
+      current={route}
       title={title(ctx, route)}
       desc={desc(ctx, route)}
       toc={held.toc}
-      status={status}
     >
       <Crumbs root={ROOT} route={route}>
-        {path !== undefined && <More href={`${RAW}${path}`} />}
         {updated !== undefined && <span className="updated">{updated}</span>}
       </Crumbs>
-      {name !== "" && <h1>{name}</h1>}
-      {held.html !== "" && <div dangerouslySetInnerHTML={{ __html: held.html }} />}
-      {held.html === "" && path !== undefined && <Skeleton />}
+      <Row>
+        {name !== "" && <h1 className="title">{name}</h1>}
+        {path !== undefined && <More href={`${RAW}${path}`} />}
+      </Row>
+      {code && <Status lang={lang(file.path)} lines={held.lines} />}
+      {held.html !== "" && <div className="doc" dangerouslySetInnerHTML={{ __html: held.html }} />}
+      {held.html === "" && path !== undefined && <Skeleton head lines={3} block />}
       {dir !== undefined && <Listing route={route} dir={dir} />}
     </Shell>
   )

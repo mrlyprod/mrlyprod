@@ -59,12 +59,13 @@ function sized(name: string, size: number | string | undefined): CSSProperties |
 
 // SYMBOL
 
-export function Symbol({ name, size }: {
+export function Symbol({ name, size, className }: {
   name: SymbolName
   size?: number | string
+  className?: string
 }) {
   return (
-    <span className="symbol" aria-hidden="true" style={sized("--symbol-size", size)}>
+    <span className={cx("symbol", className)} aria-hidden="true" style={sized("--symbol-size", size)}>
       {name}
     </span>
   )

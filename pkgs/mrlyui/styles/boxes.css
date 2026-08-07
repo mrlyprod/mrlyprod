@@ -57,6 +57,10 @@
   width: 100%;
 }
 
+.frame.wide {
+  max-width: calc(var(--read-width) + var(--space-4) * 2);
+}
+
 /* FLOW */
 
 .stack {

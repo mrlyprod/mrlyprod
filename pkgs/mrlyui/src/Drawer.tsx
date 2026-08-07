@@ -1,9 +1,10 @@
-import { useId, useRef } from "react"
+import { useEffect, useId, useRef } from "react"
 import type { ReactNode } from "react"
 import { createPortal } from "react-dom"
 import { Symbol } from "./Glyphs"
 import { cx } from "./lib"
 import { useOverlay } from "./Modal"
+import { useRoute } from "./route"
 
 export function Drawer({
   open,
@@ -20,7 +21,13 @@ export function Drawer({
 }) {
   const panel = useRef<HTMLDivElement>(null)
   const id = useId()
+  const route = useRoute()
+  const from = useRef(route)
   useOverlay(open, onClose, panel)
+  useEffect(() => {
+    if (open && route !== from.current) onClose()
+    else from.current = route
+  }, [open, route, onClose])
   if (!open || typeof document === "undefined") return null
   return createPortal(
     <div

@@ -5,11 +5,13 @@ export function Search({
   onChange,
   placeholder = "Search",
   onClear,
+  autoFocus,
 }: {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   onClear?: () => void;
+  autoFocus?: boolean;
 }) {
   return (
     <div className="search" role="search">
@@ -22,6 +24,7 @@ export function Search({
         value={value}
         placeholder={placeholder}
         aria-label={placeholder}
+        autoFocus={autoFocus}
         onChange={(event) => onChange(event.target.value)}
       />
       {value && (

@@ -34,9 +34,3 @@ export function firstPara(md: string): string {
 export function plain(text: string): string {
   return text.replace(/\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/\*/g, "")
 }
-
-// ESCAPE
-
-export function esc(text: string): string {
-  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
-}

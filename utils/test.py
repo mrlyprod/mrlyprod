@@ -47,7 +47,8 @@ def test(loud=False, record=False):
     config = touches(paths, "utils/")
     ts = config or touches(paths, "package.json", "bun.lock", "tsconfig.base.json")
     rust = config or touches(paths, "pkgs/", "apps/cli", "Cargo.toml")
-    sites = ts or touches(paths, "apps/git/", "pkgs/mrlycss", "pkgs/mrlydom", "pkgs/mrlygpu")
+    sites = ts or touches(paths, "apps/git/", "pkgs/mrlyui", "pkgs/mrlygpu")
+    net = ts or touches(paths, "apps/net/", "pkgs/mrlycss", "pkgs/mrlydom")
     ui = ts or touches(paths, "pkgs/mrlyui")
     web = ts or touches(paths, "apps/web")
     print("mrlytest")
@@ -84,6 +85,16 @@ def test(loud=False, record=False):
         for label, cmd, env in steps:
             if not run(label, cmd, loud, env):
                 return False
+    if net:
+        steps = [
+            ("tsc net", ["bun", "run", "--cwd", "apps/net", "check"], None),
+            ("vite net", ["bun", "run", "--cwd", "apps/net", "site"], {"MRLY_OUT": "../../data/net/check"}),
+            ("data net", ["bun", "run", "--cwd", "apps/net", "data"], {"MRLY_OUT": "../../data/net/check"}),
+            ("links net", ["bun", "run", "--cwd", "apps/net", "links"], None),
+        ]
+        for label, cmd, env in steps:
+            if not run(label, cmd, loud, env):
+                return False
     if ui:
         steps = [
             ("tsc ui", ["bun", "run", "--cwd", "pkgs/mrlyui", "check"], None),
@@ -103,7 +114,7 @@ def test(loud=False, record=False):
         for label, cmd in steps:
             if not run(label, cmd, loud):
                 return False
-    if not rust and not sites and not ui and not web:
+    if not rust and not sites and not net and not ui and not web:
         print("mrlyprod (no source changed, gates skipped)")
     if not run("tree", ["uv", "run", "python", "utils/tree.py"], loud):
         return False

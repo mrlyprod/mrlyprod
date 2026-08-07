@@ -1,5 +1,4 @@
-import { write } from "mrlydom"
-import { BUILD, HELP, LEAD, PRESET } from "../lib/site"
+import { HELP, LEAD } from "../lib/site"
 
 export function Panel({ preset }: { preset?: string }) {
   if (preset === undefined) {
@@ -14,16 +13,13 @@ export function Panel({ preset }: { preset?: string }) {
   }
   return (
     <div className="buy">
-      <p className="lead">Design yours.</p>
+      <p className="lead">Order yours.</p>
       <p className="act">
-        <a className="build" href={`/${BUILD}`} data-preset={preset} onClick={() => write(PRESET, preset)}>
-          Open the designer
+        <a className="build" href={HELP}>
+          Get in touch
         </a>
       </p>
       <p className="fine">{LEAD}</p>
-      <p className="fine">
-        <a href={HELP}>Questions? Say hello.</a>
-      </p>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react"
+import { useCallback, useEffect, useSyncExternalStore } from "react"
 import { read, write } from "./lib"
 import * as sound from "./sound"
 import type { ColorName } from "./colors"
@@ -88,24 +88,36 @@ export function applyPrefs(prefs: Prefs): void {
   sound.pref("duration", prefs.duration)
 }
 
+let prefsHeld: Prefs = loadPrefs()
+const prefSubs = new Set<() => void>()
+
+function keepPrefs(next: Prefs): void {
+  prefsHeld = next
+  for (const sub of prefSubs) sub()
+}
+
 export function usePrefs(): [Prefs, (patch: Partial<Prefs>) => void, () => void] {
-  const [prefs, setPrefs] = useState(loadPrefs)
+  const prefs = useSyncExternalStore(
+    sub => {
+      prefSubs.add(sub)
+      return () => prefSubs.delete(sub)
+    },
+    () => prefsHeld,
+  )
 
   useEffect(() => {
     applyPrefs(prefs)
   }, [prefs])
 
   const patch = useCallback((part: Partial<Prefs>) => {
-    setPrefs(held => {
-      const next = { ...held, ...part }
-      write(KEY, JSON.stringify(next))
-      return next
-    })
+    const next = { ...prefsHeld, ...part }
+    write(KEY, JSON.stringify(next))
+    keepPrefs(next)
   }, [])
 
   const reset = useCallback(() => {
     write(KEY, "")
-    setPrefs(PREF_DEFAULTS)
+    keepPrefs(PREF_DEFAULTS)
   }, [])
 
   return [prefs, patch, reset]

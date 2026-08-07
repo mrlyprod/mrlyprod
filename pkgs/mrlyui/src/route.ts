@@ -15,6 +15,7 @@ export function here(): string {
 export function go(href: string): void {
   history.pushState(null, "", href)
   dispatchEvent(new Event(MOVE))
+  document.querySelector<HTMLElement>(".main")?.scrollTo(0, 0)
   scrollTo(0, 0)
 }
 

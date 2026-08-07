@@ -1,9 +1,9 @@
 import { useRef } from "react"
-import type { KeyboardEvent } from "react"
+import type { KeyboardEvent, ReactNode } from "react"
 import { cx } from "./lib"
 
 export function Tabs<T extends string>({ tabs, value, onChange }: {
-  tabs: { label: string; value: T }[]
+  tabs: { label: ReactNode; value: T; title?: string }[]
   value: T
   onChange: (value: T) => void
 }) {
@@ -29,6 +29,8 @@ export function Tabs<T extends string>({ tabs, value, onChange }: {
           key={tab.value}
           type="button"
           role="tab"
+          title={tab.title}
+          aria-label={tab.title}
           aria-selected={value === tab.value}
           tabIndex={value === tab.value ? 0 : -1}
           className={cx("tab", value === tab.value && "active")}

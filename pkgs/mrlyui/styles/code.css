@@ -109,3 +109,19 @@
     content: none;
   }
 }
+
+/* CLONE */
+
+.clone {
+  background-color: var(--fill-color);
+  border: var(--border);
+  border-radius: var(--radius-full);
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--font-xs);
+  margin: 0 auto var(--space-3);
+  max-width: min(100%, var(--frame-width));
+  overflow-wrap: anywhere;
+  padding: var(--space-2) var(--space-4);
+  width: fit-content;
+}

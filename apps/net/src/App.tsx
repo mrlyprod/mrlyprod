@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { Crumbs, useLinks, useRoute, useScrolled } from "mrlydom"
 import { Cart } from "./components/Cart"
 import { Landing } from "./components/Landing"
@@ -6,11 +6,9 @@ import { Menu } from "./components/Menu"
 import { Shell } from "./components/Shell"
 import { load, NONE } from "./lib/data"
 import type { Site } from "./lib/data"
-import { CATALOG, DESIGNER, ORDERS, ROOT } from "./lib/site"
+import { CATALOG, ORDERS, ROOT } from "./lib/site"
 import { NotFound } from "./views/NotFound"
 import { Page } from "./views/Page"
-
-const Build = lazy(() => import("./components/Build").then(held => ({ default: held.Build })))
 
 // VIEWS
 
@@ -18,21 +16,6 @@ function Home({ site }: { site: Site }) {
   return (
     <Shell site={site} route="" title={site.home[0]} desc={site.home[1]}>
       <Landing site={site} />
-    </Shell>
-  )
-}
-
-function Designer({ site }: { site: Site }) {
-  return (
-    <Shell site={site} route={DESIGNER.route} title={DESIGNER.title} desc={DESIGNER.desc}>
-      <Crumbs root={ROOT} route={DESIGNER.route} />
-      <div className="product">
-        <h1>Build</h1>
-        <p>Set the numbers, turn the shape. Ordering comes later.</p>
-      </div>
-      <Suspense fallback={null}>
-        <Build />
-      </Suspense>
     </Shell>
   )
 }
@@ -84,8 +67,6 @@ export function App() {
     case "":
     case "home":
       return <Home site={site} />
-    case DESIGNER.route:
-      return <Designer site={site} />
     case ORDERS.route:
       return <Basket site={site} />
     case CATALOG.route:

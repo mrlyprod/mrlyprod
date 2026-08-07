@@ -62,13 +62,14 @@ export function Box({ children, className, style, onClick, plate, level, ref }: 
 
 // FLOW
 
-export function Frame({ children, className, style }: {
+export function Frame({ children, className, style, wide }: {
   children?: ReactNode
   className?: string
   style?: CSSProperties
+  wide?: boolean
 }) {
   return (
-    <div className={cx("frame", className)} style={style}>
+    <div className={cx("frame", wide === true && "wide", className)} style={style}>
       {children}
     </div>
   )

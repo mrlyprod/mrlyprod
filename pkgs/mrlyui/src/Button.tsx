@@ -3,6 +3,7 @@ import { cx } from "./lib";
 
 export function Button({
   children,
+  href,
   onClick,
   active,
   disabled,
@@ -11,6 +12,7 @@ export function Button({
   className,
 }: {
   children: ReactNode;
+  href?: string;
   onClick?: () => void;
   active?: boolean;
   disabled?: boolean;
@@ -18,10 +20,29 @@ export function Button({
   wide?: boolean;
   className?: string;
 }) {
+  const skin = cx("button", active && "active", primary && "primary", wide && "wide", className);
+  if (href !== undefined) {
+    return (
+      <a
+        href={href}
+        className={cx(skin, disabled && "disabled")}
+        aria-disabled={disabled}
+        onClick={(event) => {
+          if (disabled) {
+            event.preventDefault();
+            return;
+          }
+          onClick?.();
+        }}
+      >
+        {children}
+      </a>
+    );
+  }
   return (
     <button
       type="button"
-      className={cx("button", active && "active", primary && "primary", wide && "wide", className)}
+      className={skin}
       onClick={onClick}
       disabled={disabled}
     >

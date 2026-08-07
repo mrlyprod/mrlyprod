@@ -1,6 +1,8 @@
-import type { Link } from "mrlydom"
+import type { BrandName, SymbolName } from "mrlyui"
 
 // SITE
+
+export type Link = readonly [string, string, BrandName | SymbolName]
 
 export const BASE = "https://git.mrly.net"
 
@@ -30,9 +32,3 @@ export const SOCIALS: Link[] = [
   ["donate", "https://donate.stripe.com/dRm3cu3XLfHj19e6WW5kk00", "volunteer_activism"],
   ["help", "mailto:help@mrlyprod.com", "alternate_email"],
 ]
-
-// META
-
-export function raw(path: string): string {
-  return `${RAW}${path}`
-}

@@ -8,6 +8,7 @@ import {
   Banner,
   Board,
   Box,
+  Brand,
   Button,
   Card,
   Cell,
@@ -22,6 +23,8 @@ import {
   Dropdown,
   Emoji,
   Field,
+  Fold,
+  Footer,
   Frame,
   GraphemeInput,
   Grid,
@@ -47,6 +50,7 @@ import {
   Select,
   Setting,
   Sheet,
+  Skeleton,
   Slider,
   sound,
   Spinner,
@@ -62,13 +66,15 @@ import {
   Toast,
   Toggle,
   Tooltip,
+  Tree,
   useFont,
   usePanes,
   usePrefs,
+  useScrolled,
   useTheme,
   write,
 } from "mrlyui"
-import type { ColorName, Fill, Fills, Variant } from "mrlyui"
+import type { ColorName, Fill, Fills, TreeNode, Variant } from "mrlyui"
 
 const VARIANTS: Variant[] = ["info", "success", "warn", "danger"]
 
@@ -77,6 +83,38 @@ const FRUIT = ["apple", "banana", "cherry", "grape", "lemon", "mango", "melon", 
 const STEPS = [0, 2, 4, 5, 7, 9, 11]
 
 const WHITE_KEYS = ["C", "D", "E", "F", "G", "A", "B"]
+
+const MARKS = ["github", "discord", "x", "instagram", "reddit", "tiktok", "youtube"] as const
+
+const NODES: TreeNode[] = [
+  {
+    name: "src",
+    href: "#src",
+    nodes: [
+      { name: "Tree.tsx", href: "#src/Tree.tsx" },
+      { name: "seti.ts", href: "#src/seti.ts" },
+      { name: "index.ts", href: "#src/index.ts" },
+      {
+        name: "gen",
+        href: "#src/gen",
+        nodes: [{ name: "mark.json", href: "#src/gen/mark.json" }],
+      },
+    ],
+  },
+  {
+    name: "styles",
+    href: "#styles",
+    nodes: [
+      { name: "mrly.css", href: "#styles/mrly.css" },
+      { name: "seti.css", href: "#styles/seti.css" },
+    ],
+  },
+  { name: "boot.js", href: "#boot.js" },
+  { name: "README.md", href: "#README.md" },
+  { name: "LICENSE", href: "#LICENSE" },
+]
+
+const CONTENTS = ["plates", "boxes", "words", "glyphs"]
 
 function download(name: string, text: string, type: string) {
   const url = URL.createObjectURL(new Blob([text], { type }))
@@ -341,6 +379,14 @@ function Boxes() {
         <Box>of</Box>
         <Box>boxes</Box>
       </Row>
+      <Box>
+        <Frame>
+          <Box>frame holds prose to the reading measure</Box>
+        </Frame>
+        <Frame wide>
+          <Box>frame wide holds code and tables to the wider measure</Box>
+        </Frame>
+      </Box>
       <Board cols={8} rows={4}>
         <Cell x={1} y={1}>
           <Emoji glyph="🐍" />
@@ -362,6 +408,9 @@ function Words() {
       <Title>The title row</Title>
       <Text>Body text carries the reading voice of the system.</Text>
       <Text className="caption">A caption whispers under it.</Text>
+      <Text className="lead">The lead opens a page.</Text>
+      <Text className="out">The standfirst carries it on.</Text>
+      <Text className="fine">The fine print closes it out.</Text>
       <div className="doc">
         <h2>Prose</h2>
         <p>
@@ -405,6 +454,11 @@ function Glyphs() {
         <Emoji glyph="🧱" size="3rem" />
         <Emoji glyph="🧱" size="4rem" />
       </Row>
+      <Cluster>
+        {MARKS.map(name => (
+          <Brand key={name} name={name} />
+        ))}
+      </Cluster>
       <Box>
         <Mark />
       </Box>
@@ -611,6 +665,7 @@ function Feedback() {
       </Field>
       <Progress value={progress} />
       <Progress />
+      <Skeleton head lines={3} block />
       <Toast open={toast} onClose={() => setToast(false)} variant="success">
         Toasted.
       </Toast>
@@ -635,6 +690,45 @@ function Navigation() {
       <Text>the {tab} pane</Text>
       <Crumbs root="mrlyui" route="demo/sink" />
       <Pager current={page} total={5} onPrev={() => setPage(page - 1)} onNext={() => setPage(page + 1)} />
+    </Stack>
+  )
+}
+
+function Explorer() {
+  return (
+    <Stack>
+      <Box>
+        <Tree nodes={NODES} current="#src/Tree.tsx" root={{ name: "mrlyui", href: "#" }} />
+      </Box>
+      <Box>
+        <Stack tight>
+          <Fold icon="toc" label="contents" open>
+            <ol className="toc">
+              {CONTENTS.map(name => (
+                <li key={name}>
+                  <a href={`#${name}`}>{name}</a>
+                </li>
+              ))}
+            </ol>
+          </Fold>
+          <Fold icon="explore" label="places" grid>
+            <a href="#home">
+              <Brand name="home" /> home
+            </a>
+            <a href="#mail">
+              <Brand name="mail" /> mail
+            </a>
+          </Fold>
+          <Fold icon="groups" label="socials" grid>
+            {MARKS.map(name => (
+              <a key={name} href={`#${name}`}>
+                <Brand name={name} /> {name}
+              </a>
+            ))}
+          </Fold>
+        </Stack>
+      </Box>
+      <code className="clone">curl -fsSL https://cdn.mrly.net/mrlyprod.tar.gz | tar xz</code>
     </Stack>
   )
 }
@@ -674,6 +768,7 @@ function Overlays() {
 export function Sink() {
   const panes = usePanes()
   const [marked, setMarked] = useState(false)
+  useScrolled()
 
   useEffect(() => {
     applyPrefs(loadPrefs())
@@ -732,10 +827,16 @@ export function Sink() {
           <Section label="navigation">
             <Navigation />
           </Section>
+          <Section label="explorer">
+            <Explorer />
+          </Section>
           <Section label="overlays">
             <Overlays />
           </Section>
         </Stack>
+        <Footer>
+          <Letters text="mrlyui" scramble={false} />
+        </Footer>
         </Frame>
       </Panes>
     </Chrome>

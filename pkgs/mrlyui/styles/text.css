@@ -33,6 +33,27 @@
   white-space: nowrap;
 }
 
+/* LEAD */
+
+.lead {
+  font-size: var(--font-lg);
+  line-height: var(--line-tight);
+}
+
+/* OUT */
+
+.out {
+  color: var(--muted-color);
+  font-size: var(--font-size);
+}
+
+/* FINE */
+
+.fine {
+  color: var(--muted-color);
+  font-size: var(--font-sm);
+}
+
 /* MRLYFONT */
 
 .mrlyfont {

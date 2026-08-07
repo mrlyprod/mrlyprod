@@ -12,7 +12,10 @@
   color: var(--muted-color);
   cursor: pointer;
   display: flex;
+  gap: var(--space-2);
   height: var(--box-height);
+  justify-content: center;
+  min-width: var(--box-height);
   position: relative;
   transition: color var(--pace) var(--ease-out);
   user-select: none;
@@ -113,6 +116,7 @@
   padding: var(--gap);
   position: sticky;
   top: var(--gap);
+  transition: box-shadow var(--pace) var(--ease-out);
   z-index: 150;
 }
 
@@ -160,4 +164,174 @@
     background-color: var(--font-color);
     color: var(--body-color);
   }
+}
+
+/* SCROLL */
+
+:root.scrolled .header {
+  box-shadow: var(--shadow-2);
+}
+
+/* FOOTER */
+
+.footer {
+  align-items: center;
+  border-top: var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  margin-top: var(--gap-section);
+  padding: var(--padding-section) var(--padding-box);
+  text-align: center;
+  width: 100%;
+}
+
+/* TURN */
+
+.turn {
+  color: var(--muted-color);
+  flex: none;
+  transition: rotate var(--pace) var(--ease);
+}
+
+details[open] > summary > .turn {
+  rotate: 90deg;
+}
+
+/* FOLD */
+
+.fold > summary {
+  --symbol-size: var(--font-size);
+  align-items: center;
+  border-radius: var(--radius);
+  color: var(--muted-color);
+  cursor: pointer;
+  display: flex;
+  font-size: var(--font-xs);
+  gap: var(--gap);
+  letter-spacing: 0.08em;
+  list-style: none;
+  padding: var(--space-1) var(--space-2);
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.fold > summary::-webkit-details-marker {
+  display: none;
+}
+
+.fold > summary:hover {
+  background-color: var(--fill-color);
+  color: var(--font-color);
+}
+
+.fold > summary > .turn {
+  margin-left: auto;
+}
+
+.fold-body {
+  margin-top: var(--space-1);
+}
+
+.fold-body a {
+  border-radius: var(--radius);
+  color: var(--muted-color);
+  display: block;
+  font-size: var(--font-sm);
+  overflow-wrap: anywhere;
+  padding: var(--space-1) var(--space-2);
+}
+
+.fold-body a:hover {
+  background-color: var(--fill-color);
+  color: var(--font-color);
+}
+
+.fold-grid {
+  --symbol-size: var(--font-size);
+  column-gap: var(--gap);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.fold-grid a,
+.fold-grid button {
+  align-items: center;
+  border-radius: var(--radius);
+  color: var(--muted-color);
+  display: flex;
+  font-size: var(--font-sm);
+  gap: var(--gap);
+  padding: var(--space-1) var(--space-2);
+  text-align: left;
+}
+
+.fold-grid a:hover,
+.fold-grid button:hover {
+  background-color: var(--fill-color);
+  color: var(--font-color);
+}
+
+/* TREE */
+
+.tree {
+  --symbol-size: var(--font-size);
+  font-size: var(--font-sm);
+}
+
+.tree a {
+  border-radius: var(--radius);
+  color: var(--muted-color);
+  display: block;
+  overflow-wrap: anywhere;
+  padding: var(--space-1) var(--space-2);
+}
+
+.tree a:hover {
+  background-color: var(--fill-color);
+  color: var(--font-color);
+}
+
+.tree a[aria-current] {
+  color: var(--accent-color);
+}
+
+.tree .root {
+  color: var(--font-color);
+  margin-bottom: var(--space-1);
+}
+
+.tree summary {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  list-style: none;
+}
+
+.tree summary::-webkit-details-marker {
+  display: none;
+}
+
+.tree summary > a {
+  flex: 1 1 auto;
+}
+
+.tree .sub {
+  border-left: var(--border);
+  margin-left: var(--space-1);
+  padding-left: var(--space-2);
+}
+
+.tree .leaf {
+  align-items: center;
+  display: flex;
+  gap: var(--space-1);
+}
+
+/* TOC */
+
+.toc {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
 }

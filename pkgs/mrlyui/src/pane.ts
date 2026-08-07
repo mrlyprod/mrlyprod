@@ -3,9 +3,9 @@ import { read, write } from "./lib"
 
 export const DOCK = "(min-width: 74rem)"
 
-export const PANE_MIN = 32
+export const PANE_MIN = 160
 
-export const PANE_MAX = 4096
+export const PANE_MAX = 448
 
 export const PANE_WIDE = 260
 
