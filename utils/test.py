@@ -48,6 +48,7 @@ def test(loud=False, record=False):
     ts = config or touches(paths, "package.json", "bun.lock", "tsconfig.base.json")
     rust = config or touches(paths, "pkgs/", "apps/cli", "Cargo.toml")
     sites = ts or touches(paths, "apps/git/", "pkgs/mrlycss", "pkgs/mrlydom", "pkgs/mrlygpu")
+    ui = ts or touches(paths, "pkgs/mrlyui")
     web = ts or touches(paths, "apps/web")
     print("mrlytest")
     if not run("fmt", ["cargo", "fmt"], loud):
@@ -83,6 +84,14 @@ def test(loud=False, record=False):
         for label, cmd, env in steps:
             if not run(label, cmd, loud, env):
                 return False
+    if ui:
+        steps = [
+            ("tsc ui", ["bun", "run", "--cwd", "pkgs/mrlyui", "check"], None),
+            ("vite ui", ["bun", "run", "--cwd", "pkgs/mrlyui", "site"], {"MRLY_OUT": "../../../data/ui/check"}),
+        ]
+        for label, cmd, env in steps:
+            if not run(label, cmd, loud, env):
+                return False
     if rust or web:
         if not os.path.exists(os.path.join(DIR, "pkgs", "mrlyjs", "web", "pkg", "mrlyjs.d.ts")):
             if not run("wasm", ["wasm-pack", "build", "pkgs/mrlyjs/web", "--target", "web"], loud):
@@ -94,7 +103,7 @@ def test(loud=False, record=False):
         for label, cmd in steps:
             if not run(label, cmd, loud):
                 return False
-    if not rust and not sites and not web:
+    if not rust and not sites and not ui and not web:
         print("mrlyprod (no source changed, gates skipped)")
     if not run("tree", ["uv", "run", "python", "utils/tree.py"], loud):
         return False

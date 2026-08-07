@@ -125,4 +125,6 @@ bun run --cwd apps/net dev       # the landing site on :5173
 bun run --cwd apps/net links     # resolve every link and image on the site, nonzero on a miss
 bun run --cwd apps/git dev       # the projection on :5173, serving /raw/** and /manifest.json from the working tree
 bun run --cwd apps/git links     # resolve every link and image in every tracked .md, nonzero on a miss
+bun run --cwd pkgs/mrlyui dev    # the design system kitchen sink on :5173
+bunx tsc --noEmit --project pkgs/mrlyui     # typecheck the design system (pre-push gate)
 ```

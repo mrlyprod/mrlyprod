@@ -7,7 +7,8 @@
     "apps/web",
     "pkgs/mrlycss",
     "pkgs/mrlydom",
-    "pkgs/mrlygpu"
+    "pkgs/mrlygpu",
+    "pkgs/mrlyui"
   ],
   "devDependencies": {
     "@types/bun": "^1.3.14",

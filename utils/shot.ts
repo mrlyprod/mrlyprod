@@ -52,6 +52,13 @@ const SITES: Record<string, Site> = {
     settle: 1500,
     routes: () => [""],
   },
+  ui: {
+    port: 5175,
+    dir: "pkgs/mrlyui",
+    cmd: vite(5175),
+    settle: 1500,
+    routes: () => [""],
+  },
 }
 
 // CHROME

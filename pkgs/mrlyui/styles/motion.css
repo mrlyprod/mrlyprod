@@ -1,0 +1,69 @@
+/* KEYFRAMES */
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-2)) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes leave {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(var(--space-2)) scale(0.98);
+  }
+}
+
+@keyframes spring {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+
+  60% {
+    transform: scale(1.02);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+/* STATES */
+
+.enter {
+  animation: enter var(--pace) var(--ease-out);
+}
+
+.leaving {
+  animation: leave var(--pace) var(--ease) forwards;
+}
+
+/* CALM */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

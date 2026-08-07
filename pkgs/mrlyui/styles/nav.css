@@ -1,0 +1,101 @@
+/* TABS */
+
+.tabs {
+  border-bottom: var(--border-width) var(--border-style) var(--hairline-color);
+  display: flex;
+  gap: var(--space-4);
+  overflow-x: auto;
+}
+
+.tab {
+  align-items: center;
+  color: var(--muted-color);
+  cursor: pointer;
+  display: flex;
+  height: var(--box-height);
+  position: relative;
+  transition: color var(--pace) var(--ease-out);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.tab:hover,
+.tab.active {
+  color: var(--font-color);
+}
+
+.tab.active::after {
+  background-color: var(--accent-color);
+  border-radius: var(--radius-full);
+  bottom: calc(var(--border-width) * -1);
+  content: "";
+  height: calc(var(--unit) * 0.6);
+  left: 0;
+  position: absolute;
+  right: 0;
+}
+
+/* CRUMBS */
+
+.crumbs {
+  color: var(--muted-color);
+  display: flow-root;
+  font-size: var(--font-sm);
+}
+
+.crumbs a {
+  color: var(--muted-color);
+  transition: color var(--pace) var(--ease-out);
+}
+
+.crumbs a:hover {
+  color: var(--font-color);
+}
+
+.crumbs .updated {
+  float: right;
+}
+
+/* PAGER */
+
+.pager {
+  align-items: center;
+  display: flex;
+  gap: var(--gap);
+  width: 100%;
+}
+
+.pager-step {
+  align-items: center;
+  background-color: var(--body-color);
+  border: var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex: 0 0 auto;
+  height: var(--box-height);
+  justify-content: center;
+  transition: background-color var(--pace) var(--ease-out), color var(--pace) var(--ease-out);
+  user-select: none;
+  width: var(--box-height);
+}
+
+.pager-step:hover:not(:disabled) {
+  background-color: var(--font-color);
+  color: var(--body-color);
+}
+
+.pager-step:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.pager-count {
+  align-items: center;
+  border: var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex: 1 1 auto;
+  font-variant-numeric: tabular-nums;
+  height: var(--box-height);
+  justify-content: center;
+}

@@ -1,0 +1,41 @@
+/* TITLE */
+
+.title {
+  font-family: var(--font-heading);
+  font-size: var(--font-lg);
+  font-weight: bold;
+  line-height: var(--line-tight);
+}
+
+/* TEXT */
+
+.text {
+  font-family: var(--font-body);
+  font-size: var(--font-size);
+  line-height: var(--line-height);
+}
+
+/* CAPTION */
+
+.caption {
+  color: var(--muted-color);
+  font-size: var(--font-sm);
+}
+
+/* LABEL */
+
+.label {
+  font-size: var(--font-sm);
+  letter-spacing: 0.01em;
+  line-height: var(--line-tight);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* MRLYFONT */
+
+.mrlyfont {
+  --font-body: var(--font-mrly);
+  --font-heading: var(--font-mrly);
+}

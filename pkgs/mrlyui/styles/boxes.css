@@ -1,0 +1,140 @@
+/* SKIN */
+
+.box,
+.board,
+.cell,
+.card {
+  background-color: var(--plate, var(--body-color));
+  border: var(--border);
+  border-radius: var(--radius);
+}
+
+/* BOX */
+
+.box {
+  overflow: hidden;
+  padding: var(--padding);
+}
+
+/* FRAME */
+
+.frame {
+  margin: 0 auto;
+  max-width: var(--frame-width);
+  width: 100%;
+}
+
+/* FLOW */
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  width: 100%;
+}
+
+.row {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  gap: var(--gap);
+}
+
+.cluster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap);
+}
+
+/* GRID */
+
+.grid {
+  display: grid;
+  gap: var(--gap);
+  grid-template-columns: repeat(var(--grid-cols, auto-fill), minmax(var(--min-col-width, 100px), 1fr));
+  width: 100%;
+}
+
+/* BOARD */
+
+.board {
+  aspect-ratio: var(--board-cols, 16) / var(--board-rows, 16);
+  display: grid;
+  gap: 0;
+  grid-template-columns: repeat(var(--board-cols, 16), 1fr);
+  grid-template-rows: repeat(var(--board-rows, 16), 1fr);
+  overflow: hidden;
+  width: 100%;
+}
+
+.cell {
+  align-items: center;
+  aspect-ratio: 1 / 1;
+  container-type: size;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  width: 100%;
+}
+
+/* CARD */
+
+.card {
+  align-items: center;
+  aspect-ratio: 1 / 1;
+  container-type: size;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  text-align: center;
+  transition:
+    background-color var(--pace) var(--ease),
+    color var(--pace) var(--ease),
+    transform var(--pace) var(--ease);
+}
+
+.card.active {
+  background-color: var(--font-color);
+  color: var(--body-color);
+}
+
+button.card {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+button.card:active {
+  transform: scale(0.97);
+}
+
+/* GLASS */
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background-color: color-mix(in srgb, var(--plate, var(--body-color)) var(--glass-opacity), transparent);
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    backdrop-filter: blur(var(--glass-blur));
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .glass {
+      background-color: var(--plate, var(--body-color));
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+}
+
+/* FILL */
+
+.fill {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
