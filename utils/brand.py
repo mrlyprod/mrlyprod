@@ -61,30 +61,14 @@ MANIFEST = {
     "net": {
         "public": "apps/net/public",
         "brand": ["favicon.ico", "mark.svg", "icons/mrly_192_192.png", "icons/mrly_512_512.png"],
-        "copy": [],
-        "css": {},
     },
     "git": {
         "public": "apps/git/public",
         "brand": ["favicon.ico", "mark.svg", "icons/mrly_192_192.png", "icons/mrly_512_512.png"],
-        "copy": [],
-        "css": {},
     },
     "web": {
         "public": "apps/web/public",
         "brand": ["favicon.ico", "mrlyprod.png", "mrlyprod.svg", "icons/mrly_192_192.png", "icons/mrly_512_512.png"],
-        "copy": [],
-        "css": {},
-    },
-    "jsx": {
-        "public": "apps/jsx/public",
-        "brand": ["favicon.ico", "mrlyprod.png", "mrlyprod.svg", "icons/mrly_192_192.png", "icons/mrly_512_512.png"],
-        "copy": [
-            ("mrlyfont/MrlyFont.json", "apps/jsx/src/lib/mrlyfont.json"),
-        ],
-        "css": {
-            "fonts.css": ["mrlyfont"],
-        },
     },
 }
 
@@ -355,10 +339,6 @@ def emit():
         public = os.path.join(ROOT, site["public"])
         for rel in site["brand"]:
             copy(os.path.join(BRAND, rel), os.path.join(public, rel))
-        for src, dst in site["copy"]:
-            copy(os.path.join(FILES, src), os.path.join(ROOT, dst))
-        for name, keys in site["css"].items():
-            write(os.path.join(public, name), sheet(keys, faces))
     for rel, keys in PACKAGES.items():
         write(os.path.join(ROOT, rel), sheet(keys, faces))
 

@@ -4,7 +4,7 @@ from ignore import is_ignored
 
 OUTPUT = os.path.join(ROOT, "TREE.md")
 
-STUBS = {"apps/web/fixtures", "apps/jsx/src/apps", "apps/jsx/public/icons"}
+STUBS = {"apps/web/fixtures"}
 
 def build_tree(directory, prefix=""):
     entries = sorted(os.listdir(directory))

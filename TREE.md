@@ -74,17 +74,6 @@ mrlyprod
 │   │   ├── package.json
 │   │   ├── tsconfig.json
 │   │   └── vite.config.ts
-│   ├── jsx
-│   │   ├── public
-│   │   │   ├── icons
-│   │   │   ├── favicon.ico
-│   │   │   ├── fonts.css
-│   │   │   ├── mrlyprod.png
-│   │   │   └── mrlyprod.svg
-│   │   └── src
-│   │       ├── apps
-│   │       └── lib
-│   │           └── mrlyfont.json
 │   ├── net
 │   │   ├── blog
 │   │   │   ├── README.md
