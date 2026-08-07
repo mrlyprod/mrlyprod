@@ -31,6 +31,7 @@ fn main() {
         Some("watch") => watch(&args[2..]),
         Some("goose") => goose(&args[2..]),
         Some("drive") => drive(&args[2..]),
+        Some("frame") => frame(&args[2..]),
         Some("list") => list(),
         Some("verbs") => verbs(args.get(2).map(String::as_str)),
         Some("help") | Some("-h") | Some("--help") => usage(),
@@ -63,6 +64,10 @@ fn usage() {
     eprintln!("  mrlycli goose <app> [--seed N] [--steps K] [--trace] [--read path]");
     eprintln!("                        drive an app with random legal calls");
     eprintln!("  mrlycli drive [file]  play a wire screenplay: open, call, assert");
+    eprintln!("  mrlycli frame [file] [WxH]");
+    eprintln!("                        replay a screenplay and print the TUI screen as text");
+    eprintln!("  mrlycli frame --record");
+    eprintln!("                        re-pin every frame golden in tests/frames");
     eprintln!("  mrlycli list          print the kernel surface as JSON");
     eprintln!("  mrlycli verbs [app]   list apps, or one app's verbs and args");
     eprintln!("  mrlycli help          show this message");
@@ -137,7 +142,7 @@ fn verb_line(verb: &Json) -> String {
 
 // RUN
 
-fn call_from(wire: &Json) -> Call {
+pub(crate) fn call_from(wire: &Json) -> Call {
     let verb = wire["verb"].as_str().unwrap_or("").to_string();
     let args = if wire["args"].is_object() {
         wire["args"].clone()
@@ -151,17 +156,9 @@ fn call_from(wire: &Json) -> Call {
     call
 }
 
-fn replay(path: Option<&str>) -> Os {
-    let text = match path {
-        Some(p) => std::fs::read_to_string(p).unwrap_or_default(),
-        None => {
-            let mut buf = String::new();
-            std::io::stdin().read_to_string(&mut buf).ok();
-            buf
-        }
-    };
-    let wires: Vec<Json> = if text.trim_start().starts_with('[') {
-        match mrlycore::json::parse(&text) {
+pub(crate) fn wires(text: &str) -> Vec<Json> {
+    if text.trim_start().starts_with('[') {
+        match mrlycore::json::parse(text) {
             Ok(Json::Arr(items)) => items,
             _ => Vec::new(),
         }
@@ -171,7 +168,19 @@ fn replay(path: Option<&str>) -> Os {
             .filter(|line| !line.is_empty())
             .filter_map(|line| mrlycore::json::parse(line).ok())
             .collect()
+    }
+}
+
+fn replay(path: Option<&str>) -> Os {
+    let text = match path {
+        Some(p) => std::fs::read_to_string(p).unwrap_or_default(),
+        None => {
+            let mut buf = String::new();
+            std::io::stdin().read_to_string(&mut buf).ok();
+            buf
+        }
     };
+    let wires = wires(&text);
     let mut os = build();
     for wire in &wires {
         let call = call_from(wire);
@@ -201,7 +210,7 @@ fn run(args: &[String]) {
     println!("{}", env.pretty());
 }
 
-fn collapse(value: &mut Json) {
+pub(crate) fn collapse(value: &mut Json) {
     match value {
         Json::Arr(items) => {
             if items.first().is_some_and(Json::is_array) {
@@ -638,6 +647,50 @@ pub(crate) fn rgb(hex: &str) -> (u8, u8, u8) {
             .unwrap_or(0)
     };
     (byte(0), byte(2), byte(4))
+}
+
+// FRAME
+
+fn frame(args: &[String]) {
+    if args.first().map(String::as_str) == Some("--record") {
+        let root = env!("CARGO_MANIFEST_DIR");
+        let plays = format!("{root}/tests/screenplays");
+        let frames = format!("{root}/tests/frames");
+        std::fs::create_dir_all(&frames).ok();
+        let mut paths: Vec<std::path::PathBuf> = std::fs::read_dir(&plays)
+            .map(|it| {
+                it.filter_map(Result::ok)
+                    .map(|entry| entry.path())
+                    .collect()
+            })
+            .unwrap_or_default();
+        paths.sort();
+        let mut count = 0;
+        for path in paths {
+            let Some(name) = path.file_stem().and_then(|stem| stem.to_str()) else {
+                continue;
+            };
+            let text = std::fs::read_to_string(&path).unwrap_or_default();
+            for (w, h) in [(80, 24), (20, 6)] {
+                let screen = tui::frame(&text, (w, h));
+                std::fs::write(format!("{frames}/{name}.{w}x{h}.txt"), screen).ok();
+                count += 1;
+            }
+        }
+        println!("{count} frames");
+        return;
+    }
+    let Some(path) = args.first() else {
+        usage();
+        std::process::exit(2);
+    };
+    let size: (usize, usize) = args
+        .get(1)
+        .and_then(|arg| arg.split_once('x'))
+        .and_then(|(w, h)| Some((w.parse().ok()?, h.parse().ok()?)))
+        .unwrap_or((80, 24));
+    let text = std::fs::read_to_string(path).unwrap_or_default();
+    print!("{}", tui::frame(&text, size));
 }
 
 // DRIVE

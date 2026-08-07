@@ -5,7 +5,7 @@
 ```sh
 uv run python utils/test.py
 uv run python utils/test.py loud     # the same, streaming each command's output
-uv run python utils/test.py record   # re-pin apps/web/fixtures/ first, then gate
+uv run python utils/test.py record   # re-pin apps/web/fixtures/ + apps/cli/tests/frames/ first, then gate
 ```
 
 `record` is the only way the goldens move: the plain gate compares against them and fails on a
@@ -71,6 +71,9 @@ echo '<calls>' | cargo run -p mrlycli -- run --facts   # replay, print state, gr
 echo '<calls>' | cargo run -p mrlycli -- shot --out f.png   # replay, write the frame as a PNG
 cargo run -p mrlycli -- goose snake --seed 7 --steps 50 --trace   # random legal calls, one JSON line each
 cargo run -p mrlycli -- repl                      # interactive; :verbs :shot :render :help
+cargo run -p mrlycli -- tui                       # the raw-mode face; / commands, arrows play
+cargo run -p mrlycli -- frame apps/cli/tests/screenplays/snake.jsonl 80x24   # a TUI screen as text
+cargo run -p mrlycli -- frame --record            # re-pin apps/cli/tests/frames/ (test.py record runs it)
 ```
 
 Calls are JSON lines or a JSON array, e.g. `{"verb":"nav.open","args":{"app":"snake"}}`.

@@ -226,7 +226,7 @@ pub fn wide(ch: char) -> bool {
         || (0x1f000..=0x1faff).contains(&c)
 }
 
-fn zero(ch: char) -> bool {
+pub(crate) fn zero(ch: char) -> bool {
     matches!(ch, '\u{fe0e}' | '\u{fe0f}' | '\u{200d}')
 }
 
@@ -342,7 +342,6 @@ fn dress(out: &mut String, pen: &mut Cell, cell: &Cell) {
     pen.dim = cell.dim;
 }
 
-#[cfg(test)]
 impl Screen {
     pub fn dump(&self) -> String {
         let mut out = String::new();

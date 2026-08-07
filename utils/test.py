@@ -57,6 +57,8 @@ def test(loud=False, record=False):
             return False
         if record and not run("bake", ["cargo", "run", "-p", "mrlyweb", "--example", "bake"], loud):
             return False
+        if record and not run("frames", ["cargo", "run", "-p", "mrlycli", "--", "frame", "--record"], loud):
+            return False
         steps = [
             ("test", ["cargo", "test", "--workspace"]),
             ("layers", ["uv", "run", "python", "utils/layers.py"]),

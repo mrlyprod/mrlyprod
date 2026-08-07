@@ -275,6 +275,33 @@ fn every_screenplay_is_in_the_gate() {
     }
 }
 
+#[test]
+fn every_frame_matches_its_golden() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let mut count = 0;
+    for entry in std::fs::read_dir(root.join("tests/frames")).unwrap() {
+        let path = entry.unwrap().path();
+        let name = path.file_stem().unwrap().to_string_lossy().to_string();
+        let (play, size) = name.rsplit_once('.').unwrap();
+        let out = mrlycli()
+            .args(["frame", &format!("tests/screenplays/{play}.jsonl"), size])
+            .output()
+            .unwrap();
+        assert!(out.status.success());
+        let golden = std::fs::read_to_string(&path).unwrap();
+        assert_eq!(
+            String::from_utf8_lossy(&out.stdout),
+            golden,
+            "{name} drifted; re-pin with test.py record"
+        );
+        count += 1;
+    }
+    let plays = std::fs::read_dir(root.join("tests/screenplays"))
+        .unwrap()
+        .count();
+    assert_eq!(count, plays * 2, "every screenplay is framed at both sizes");
+}
+
 fn served(lines: &[&str]) -> Vec<mrlycore::Json> {
     let input = lines.join("\n") + "\n";
     let out = piped(&["mcp"], &input);

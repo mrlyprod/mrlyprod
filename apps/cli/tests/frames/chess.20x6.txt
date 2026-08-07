@@ -1,0 +1,6 @@
+♟  chess            
+[1] chess.select    
+> chess.reset {"seed
+tick 5              
+>                   
+mrly · chess · tick 

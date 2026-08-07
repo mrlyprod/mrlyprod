@@ -10,6 +10,19 @@ mrlyprod
 │   │   │   ├── term.rs
 │   │   │   └── tui.rs
 │   │   ├── tests
+│   │   │   ├── frames
+│   │   │   │   ├── chess.20x6.txt
+│   │   │   │   ├── chess.80x24.txt
+│   │   │   │   ├── mandelbrot.20x6.txt
+│   │   │   │   ├── mandelbrot.80x24.txt
+│   │   │   │   ├── menu.20x6.txt
+│   │   │   │   ├── menu.80x24.txt
+│   │   │   │   ├── settings.20x6.txt
+│   │   │   │   ├── settings.80x24.txt
+│   │   │   │   ├── snake.20x6.txt
+│   │   │   │   ├── snake.80x24.txt
+│   │   │   │   ├── twenty48.20x6.txt
+│   │   │   │   └── twenty48.80x24.txt
 │   │   │   ├── screenplays
 │   │   │   │   ├── chess.jsonl
 │   │   │   │   ├── mandelbrot.jsonl
