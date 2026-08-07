@@ -132,19 +132,20 @@ export function Cluster({ children, className, style }: {
 
 // GRID
 
-export function Grid({ children, className, style, cols, min }: {
+export function Grid({ children, className, style, cols, min, snap }: {
   children?: ReactNode
   className?: string
   style?: CSSProperties
   cols?: number
   min?: number
+  snap?: boolean
 }) {
   const vars: Record<string, string | number> = {}
   if (cols) vars["--grid-cols"] = cols
   if (min) vars["--min-col-width"] = `${min}px`
   else if (cols) vars["--min-col-width"] = "0px"
   return (
-    <div className={cx("grid", className)} style={{ ...style, ...vars } as CSSProperties}>
+    <div className={cx("grid", snap && "snap", className)} style={{ ...style, ...vars } as CSSProperties}>
       {children}
     </div>
   )

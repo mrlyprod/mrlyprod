@@ -100,6 +100,18 @@
   width: 100%;
 }
 
+.grid.snap {
+  grid-auto-columns: calc((100% - (var(--grid-cols, 2) - 1) * var(--gap)) / var(--grid-cols, 2));
+  grid-auto-flow: column;
+  grid-template-columns: none;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+}
+
+.grid.snap > * {
+  scroll-snap-align: start;
+}
+
 /* BOARD */
 
 .board {
@@ -123,6 +135,46 @@
   user-select: none;
   -webkit-user-select: none;
   width: 100%;
+}
+
+button.cell {
+  cursor: pointer;
+}
+
+.cell.on,
+.cell.on * {
+  background-color: var(--font-color);
+  color: var(--body-color);
+}
+
+/* SURFACE */
+
+.canvas,
+.image {
+  aspect-ratio: 1 / 1;
+  background-color: var(--body-color);
+  border: var(--border);
+  border-radius: var(--radius);
+  width: 100%;
+}
+
+.canvas {
+  color: var(--font-color);
+  image-rendering: pixelated;
+}
+
+.canvas.crisp {
+  image-rendering: auto;
+}
+
+.canvas:fullscreen {
+  background-color: var(--background-color);
+  border-radius: 0;
+  object-fit: contain;
+}
+
+.image {
+  object-fit: cover;
 }
 
 /* CARD */

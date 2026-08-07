@@ -19,23 +19,31 @@ export function Board({ cols, rows, children, className }: {
 
 // CELL
 
-export function Cell({ x, y, z, onClick, children }: {
-  x: number
-  y: number
+export function Cell({ x, y, z, on, bg, onClick, children, className }: {
+  x?: number
+  y?: number
   z?: number
+  on?: boolean
+  bg?: string
   onClick?: () => void
   children?: ReactNode
+  className?: string
 }) {
-  const spot: CSSProperties = { gridColumn: x + 1, gridRow: y + 1, zIndex: z }
+  const spot: CSSProperties = {}
+  if (x !== undefined) spot.gridColumn = x + 1
+  if (y !== undefined) spot.gridRow = y + 1
+  if (z !== undefined) spot.zIndex = z
+  if (bg !== undefined) spot.backgroundColor = bg
+  const skin = cx("cell", on && "on", className)
   if (onClick) {
     return (
-      <button type="button" className="cell" style={spot} onClick={onClick}>
+      <button type="button" className={skin} style={spot} onClick={onClick}>
         {children}
       </button>
     )
   }
   return (
-    <div className="cell" style={spot}>
+    <div className={skin} style={spot}>
       {children}
     </div>
   )

@@ -25,12 +25,74 @@
 /* LABEL */
 
 .label {
-  font-size: var(--font-sm);
+  align-items: center;
+  background-color: var(--plate, var(--body-color));
+  border: var(--border);
+  border-radius: var(--radius);
+  color: var(--font-color);
+  display: flex;
+  gap: var(--gap);
+  justify-content: center;
+  min-height: var(--box-height);
+  overflow: hidden;
+  padding: var(--padding-box);
+  text-align: center;
+  width: 100%;
+}
+
+.label-symbol {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+}
+
+.label-text {
   letter-spacing: 0.01em;
   line-height: var(--line-tight);
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+}
+
+.label-note {
+  color: var(--muted-color);
+  font-size: var(--font-sm);
+}
+
+.label:not(.row) .label-note {
+  display: none;
+}
+
+.label.stack {
+  aspect-ratio: 1 / 1;
+  container-type: size;
+  flex-direction: column;
+}
+
+.label.stack .label-symbol {
+  --emoji-size: 40cqmin;
+  --symbol-size: 40cqmin;
+}
+
+button.label,
+a.label {
+  cursor: pointer;
+  transition:
+    background-color var(--pace) var(--ease-out),
+    color var(--pace) var(--ease-out);
+}
+
+a.label .label-text {
+  text-decoration: underline;
+}
+
+@media (hover: hover) {
+  button.label:hover,
+  button.label:hover *,
+  a.label:hover,
+  a.label:hover * {
+    background-color: var(--font-color);
+    color: var(--body-color);
+  }
 }
 
 /* LEAD */

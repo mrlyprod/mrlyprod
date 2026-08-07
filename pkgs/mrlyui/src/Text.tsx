@@ -38,15 +38,3 @@ export function Caption({ children, className, style }: {
     </div>
   )
 }
-
-export function Label({ children, className, style }: {
-  children?: ReactNode
-  className?: string
-  style?: CSSProperties
-}) {
-  return (
-    <span className={cx("label", className)} style={style}>
-      {children}
-    </span>
-  )
-}

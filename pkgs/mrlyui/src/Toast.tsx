@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import type { ReactNode } from "react"
 import { createPortal } from "react-dom"
 import { Symbol } from "./Glyphs"
@@ -15,6 +15,21 @@ function layer(): HTMLElement {
   }
   return held
 }
+
+function Body({ variant, children }: { variant?: Variant; children: ReactNode }) {
+  return (
+    <div className={cx("toast", variant)} role="status">
+      {variant && (
+        <span className="toast-icon" aria-hidden="true">
+          <Symbol name={VARIANT_ICON[variant]} size="var(--font-size)" />
+        </span>
+      )}
+      <span>{children}</span>
+    </div>
+  )
+}
+
+// TOAST
 
 export function Toast({ open, children, variant, duration = 2500, onClose }: {
   open: boolean
@@ -33,15 +48,54 @@ export function Toast({ open, children, variant, duration = 2500, onClose }: {
     return () => clearTimeout(id)
   }, [open, duration])
   if (!open || typeof document === "undefined") return null
+  return createPortal(<Body variant={variant}>{children}</Body>, layer())
+}
+
+// QUEUE
+
+type Note = { id: number; body: ReactNode; variant: Variant | undefined }
+
+let notes: Note[] = []
+let seq = 0
+const watchers = new Set<(notes: Note[]) => void>()
+
+function publish(): void {
+  for (const watcher of watchers) watcher(notes)
+}
+
+function dismiss(id: number): void {
+  notes = notes.filter(note => note.id !== id)
+  publish()
+}
+
+export function toast(body: ReactNode, variant?: Variant): void {
+  seq += 1
+  notes = [...notes, { id: seq, body, variant }]
+  publish()
+}
+
+function Popped({ note, duration }: { note: Note; duration: number }) {
+  useEffect(() => {
+    const id = setTimeout(() => dismiss(note.id), duration)
+    return () => clearTimeout(id)
+  }, [note.id, duration])
+  return <Body variant={note.variant}>{note.body}</Body>
+}
+
+// TOASTER
+
+export function Toaster({ duration = 4000 }: { duration?: number }) {
+  const [shown, setShown] = useState<Note[]>(notes)
+  useEffect(() => {
+    watchers.add(setShown)
+    setShown(notes)
+    return () => {
+      watchers.delete(setShown)
+    }
+  }, [])
+  if (typeof document === "undefined") return null
   return createPortal(
-    <div className={cx("toast", variant)} role="status">
-      {variant && (
-        <span className="toast-icon" aria-hidden="true">
-          <Symbol name={VARIANT_ICON[variant]} size="var(--font-size)" />
-        </span>
-      )}
-      <span>{children}</span>
-    </div>,
+    shown.map(note => <Popped key={note.id} note={note} duration={duration} />),
     layer(),
   )
 }

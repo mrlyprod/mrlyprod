@@ -71,6 +71,17 @@
   width: 100%;
 }
 
+.button.big {
+  aspect-ratio: 1 / 1;
+  height: auto;
+  padding: 0;
+  width: 100%;
+}
+
+.button.cycle {
+  width: 100%;
+}
+
 .button:disabled,
 .button.disabled {
   cursor: default;
@@ -179,6 +190,26 @@
   cursor: default;
   opacity: 0.5;
   pointer-events: none;
+}
+
+/* CHOICE */
+
+.choice {
+  align-items: center;
+  display: flex;
+  gap: var(--gap);
+  width: 100%;
+}
+
+.choice-label {
+  color: var(--muted-color);
+  flex: 0 0 auto;
+  font-size: var(--font-sm);
+  white-space: nowrap;
+}
+
+.choice > .radio {
+  flex: 1 1 auto;
 }
 
 /* RADIO */
@@ -494,6 +525,10 @@
   gap: var(--gap);
   grid-template-columns: repeat(auto-fill, minmax(calc(var(--box-height) * 1.2), 1fr));
   width: 100%;
+}
+
+.swatches.big {
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--box-height) * 2), 1fr));
 }
 
 .swatch {

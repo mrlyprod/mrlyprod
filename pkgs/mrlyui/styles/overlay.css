@@ -287,3 +287,29 @@
 .tooltip:focus-within .tooltip-bubble.right {
   transform: translate(0, 50%);
 }
+
+/* SPLASH */
+
+.splash {
+  align-items: center;
+  background-color: var(--background-color);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-box);
+  inset: 0;
+  justify-content: center;
+  padding: var(--padding-section);
+  position: fixed;
+  z-index: 100;
+}
+
+/* START */
+
+.button.start {
+  bottom: calc((var(--box-height) + var(--gap)) * 2);
+  left: 50%;
+  position: fixed;
+  transform: translateX(-50%);
+  width: auto;
+  z-index: 100;
+}

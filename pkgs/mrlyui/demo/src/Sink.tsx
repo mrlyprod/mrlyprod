@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import "./sink.css"
 import {
   Alert,
@@ -10,10 +10,12 @@ import {
   Box,
   Brand,
   Button,
+  Canvas,
   Card,
   Cell,
   Checkbox,
   Chip,
+  Choice,
   Chrome,
   Cluster,
   ColorPicker,
@@ -28,10 +30,13 @@ import {
   Frame,
   GraphemeInput,
   Grid,
+  HEX,
   Header,
   Icon,
+  Image,
   Input,
   isoDate,
+  Label,
   Letters,
   loadPrefs,
   Mark,
@@ -54,7 +59,9 @@ import {
   Slider,
   sound,
   Spinner,
+  Splash,
   Stack,
+  Start,
   StepSlider,
   Stepper,
   Symbol,
@@ -64,9 +71,12 @@ import {
   THEME_ICONS,
   Title,
   Toast,
+  toast,
+  Toaster,
   Toggle,
   Tooltip,
   Tree,
+  useAttract,
   useFont,
   usePanes,
   usePrefs,
@@ -74,7 +84,7 @@ import {
   useTheme,
   write,
 } from "mrlyui"
-import type { ColorName, Fill, Fills, TreeNode, Variant } from "mrlyui"
+import type { ColorName, Fill, Fills, Mode, Steer, Swatch, TreeNode, Variant } from "mrlyui"
 
 const VARIANTS: Variant[] = ["info", "success", "warn", "danger"]
 
@@ -115,6 +125,36 @@ const NODES: TreeNode[] = [
 ]
 
 const CONTENTS = ["plates", "boxes", "words", "glyphs"]
+
+const SIDE = 16
+
+const SHOT = `data:image/svg+xml;utf8,${encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 4" shape-rendering="crispEdges"><rect width="4" height="4" fill="#1ec9f3"/><rect x="1" y="1" width="2" height="2" fill="#ffd100"/><rect y="3" width="1" height="1" fill="#ff325a"/><rect x="3" width="1" height="1" fill="#32cc58"/></svg>',
+)}`
+
+const NOTES = `data:text/plain;charset=utf-8,${encodeURIComponent("one unit, many boxes")}`
+
+const MODES: { label: string; value: Mode }[] = [
+  { label: "row", value: "row" },
+  { label: "stack", value: "stack" },
+  { label: "icon", value: "icon" },
+  { label: "text", value: "text" },
+]
+
+const PACES: { label: string; value: "slow" | "steady" | "fast" }[] = [
+  { label: "slow", value: "slow" },
+  { label: "steady", value: "steady" },
+  { label: "fast", value: "fast" },
+]
+
+const PENS: Swatch<string>[] = [
+  { name: "ink", color: "#0d1117" },
+  { name: "sky", color: "#1ec9f3" },
+  { name: "moss", color: "#32cc58" },
+  { name: "sun", color: "#ffd100" },
+  { name: "rose", color: "#ff325a" },
+  { name: "plum", color: "#d332e9" },
+]
 
 function download(name: string, text: string, type: string) {
   const url = URL.createObjectURL(new Blob([text], { type }))
@@ -397,6 +437,138 @@ function Boxes() {
           <Emoji glyph="🍎" />
         </Cell>
       </Board>
+      <Text className="caption">cells in flow</Text>
+      <Grid cols={cols}>
+        {Array.from({ length: 6 }, (_, i) => (
+          <Cell key={i} on={on === i} bg={on === i ? undefined : HEX[POOL[i] ?? "gray"]} onClick={() => setOn(i)}>
+            <Text>{i + 1}</Text>
+          </Cell>
+        ))}
+      </Grid>
+      <Text className="caption">grid snap</Text>
+      <Grid cols={3} snap>
+        {Array.from({ length: 9 }, (_, i) => (
+          <Card key={i}>
+            <Text>{i + 1}</Text>
+          </Card>
+        ))}
+      </Grid>
+    </Stack>
+  )
+}
+
+function Eyes() {
+  const [ink, setInk] = useState<ColorName>("blue")
+  const [cells, setCells] = useState<string[]>(() => Array<string>(SIDE * SIDE).fill(""))
+  const [crisp, setCrisp] = useState(false)
+  const [mode, setMode] = useState<Mode>("row")
+  const [turn, setTurn] = useState(0)
+  const [dist, setDist] = useState(0)
+  const [steer, setSteer] = useState<Steer | null>(null)
+
+  const put = (points: [number, number][]) => {
+    setCells(held => {
+      const next = [...held]
+      for (const [x, y] of points) next[y * SIDE + x] = HEX[ink]
+      return next
+    })
+  }
+
+  const paint = useCallback(
+    (surface: HTMLCanvasElement) => {
+      if (surface.width !== SIDE) surface.width = SIDE
+      if (surface.height !== SIDE) surface.height = SIDE
+      const ctx = surface.getContext("2d")
+      if (ctx === null) return
+      ctx.clearRect(0, 0, SIDE, SIDE)
+      cells.forEach((color, i) => {
+        if (color === "") return
+        ctx.fillStyle = color
+        ctx.fillRect(i % SIDE, Math.floor(i / SIDE), 1, 1)
+      })
+    },
+    [cells],
+  )
+
+  const yaw = turn + (steer?.yaw ?? 0) * 40
+  const reach = dist + (steer?.dist ?? 0) * 4
+
+  return (
+    <Stack>
+      <Text className="caption">tap or drag to paint, {SIDE}x{SIDE}</Text>
+      <Canvas grid={[SIDE, SIDE]} crisp={crisp} paint={paint} onTap={(x, y) => put([[x, y]])} onDrag={put} />
+      <Setting label="crisp" hint="pixelated when off">
+        <Toggle value={crisp} onChange={setCrisp} />
+      </Setting>
+      <ColorPicker value={ink} onChange={color => setInk(color ?? "blue")} />
+      <Button wide onClick={() => setCells(Array<string>(SIDE * SIDE).fill(""))}>
+        clear
+      </Button>
+      <Text className="caption">drag to turn, wheel or pinch to zoom</Text>
+      <Canvas
+        sig={`dial:${Math.round(yaw)}:${Math.round(reach)}`}
+        paint={surface => {
+          const rect = surface.getBoundingClientRect()
+          const side = Math.max(1, Math.round(rect.width))
+          if (surface.width !== side) surface.width = side
+          if (surface.height !== side) surface.height = side
+          const ctx = surface.getContext("2d")
+          if (ctx === null) return
+          ctx.clearRect(0, 0, side, side)
+          ctx.strokeStyle = getComputedStyle(surface).color
+          ctx.lineWidth = 2
+          const r = Math.max(8, side / 2 - 12 - reach * 3)
+          ctx.beginPath()
+          ctx.arc(side / 2, side / 2, r, 0, Math.PI * 2)
+          ctx.stroke()
+          ctx.beginPath()
+          ctx.moveTo(side / 2, side / 2)
+          ctx.lineTo(side / 2 + Math.cos(yaw / 20) * r, side / 2 + Math.sin(yaw / 20) * r)
+          ctx.stroke()
+        }}
+        onTurn={dyaw => setTurn(held => held + dyaw)}
+        onZoom={(dir, n) => setDist(held => held + (dir === "in" ? -n : n))}
+        onSteer={setSteer}
+      />
+      <Text className="caption">
+        yaw {Math.round(turn)} dist {Math.round(dist)}
+      </Text>
+      <Image src={SHOT} alt="four squares" />
+      <Choice options={MODES} value={mode} onChange={setMode} mode="row" label="label" />
+      <Label mode={mode} symbol={{ as: "emoji", value: "🍎" }} text="apple" note="a fruit" />
+      <Label mode={mode} symbol={{ as: "icon", value: "settings" }} text="settings" note="the knobs" />
+      <Label mode={mode} symbol={{ as: "glyph", value: "mrly" }} text="mrly" note="the mark" />
+      <Label mode={mode} symbol={{ as: "icon", value: "download" }} text="notes.txt" note="saves the file" href={NOTES} />
+      <Label mode={mode} symbol={{ as: "icon", value: "star" }} text="press me" note="fires onClick" onClick={() => toast("label pressed")} />
+    </Stack>
+  )
+}
+
+function Attract() {
+  const [splashed, setSplashed] = useState(false)
+  const [armed, setArmed] = useState(false)
+  const [beats, setBeats] = useState(0)
+  const { idle, wake } = useAttract(armed, () => setBeats(n => n + 1), 500)
+  const rouse = () => {
+    setArmed(false)
+    wake()
+  }
+  return (
+    <Stack>
+      <Setting label="attract" hint="ticks while idle">
+        <Toggle value={armed} onChange={setArmed} />
+      </Setting>
+      <Text>{idle ? `idle, ${beats} beats` : "awake"}</Text>
+      <Button wide onClick={() => setSplashed(true)}>
+        splash
+      </Button>
+      {idle && <Start onClick={rouse} />}
+      {splashed && (
+        <Splash onDismiss={() => setSplashed(false)}>
+          <Letters text="mrly" />
+          <Text className="caption">tap to enter</Text>
+        </Splash>
+      )}
     </Stack>
   )
 }
@@ -468,6 +640,8 @@ function Glyphs() {
 
 function Buttons() {
   const [armed, setArmed] = useState(false)
+  const [held, setHeld] = useState(0)
+  const [down, setDown] = useState(false)
   return (
     <Stack>
       <Row>
@@ -479,6 +653,24 @@ function Buttons() {
         <Button disabled>disabled</Button>
       </Row>
       <Button wide>wide</Button>
+      <Button
+        wide
+        active={down}
+        onPress={() => {
+          setDown(true)
+          setHeld(n => n + 1)
+        }}
+        onLift={() => setDown(false)}
+      >
+        {down ? "holding" : `press and lift, ${held} presses`}
+      </Button>
+      <Grid cols={6}>
+        {POOL.slice(0, 6).map(name => (
+          <Button key={name} big bg={HEX[name]} onClick={() => toast(name)}>
+            {" "}
+          </Button>
+        ))}
+      </Grid>
     </Stack>
   )
 }
@@ -562,6 +754,13 @@ function Controls() {
           <ColorPicker value={ink} onChange={setInk} />
         </Stack>
       </Box>
+      <Box>
+        <Stack>
+          <Choice options={PACES} value={pace} onChange={setPace} mode="row" label="row" />
+          <Choice options={PACES} value={pace} onChange={setPace} mode="cycle" label="cycle" />
+          <Choice options={PACES} value={pace} onChange={setPace} mode="select" label="select" />
+        </Stack>
+      </Box>
     </Stack>
   )
 }
@@ -571,6 +770,7 @@ function Pickers() {
   const [query, setQuery] = useState("")
   const [picked, setPicked] = useState("")
   const [date, setDate] = useState<Date>()
+  const [pens, setPens] = useState<string[]>(["sky", "sun"])
   return (
     <Stack>
       <Field label="select">
@@ -610,6 +810,17 @@ function Pickers() {
       <Field label="date">
         <DatePicker value={date} onChange={setDate} />
       </Field>
+      <Field label="palette" hint={pens.length === 0 ? "none picked" : pens.join(", ")}>
+        <ColorPicker
+          big
+          swatches={PENS}
+          value={pens}
+          onChange={name => {
+            if (name === null) return
+            setPens(held => (held.includes(name) ? held.filter(pen => pen !== name) : [...held, name]))
+          }}
+        />
+      </Field>
     </Stack>
   )
 }
@@ -633,7 +844,7 @@ function Sounds() {
 }
 
 function Feedback() {
-  const [toast, setToast] = useState(false)
+  const [toasted, setToasted] = useState(false)
   const [banner, setBanner] = useState(true)
   const [progress, setProgress] = useState(64)
   return (
@@ -649,7 +860,8 @@ function Feedback() {
         </Alert>
       ))}
       <Row>
-        <Button onClick={() => setToast(true)}>toast</Button>
+        <Button onClick={() => setToasted(true)}>toast</Button>
+        <Button onClick={() => toast("popped from anywhere", "info")}>pop</Button>
         <Badge variant="info">3</Badge>
         <Badge variant="danger">9+</Badge>
         <Badge dot variant="success" />
@@ -666,7 +878,7 @@ function Feedback() {
       <Progress value={progress} />
       <Progress />
       <Skeleton head lines={3} block />
-      <Toast open={toast} onClose={() => setToast(false)} variant="success">
+      <Toast open={toasted} onClose={() => setToasted(false)} variant="success">
         Toasted.
       </Toast>
     </Stack>
@@ -790,6 +1002,7 @@ export function Sink() {
       <Toast open={marked} onClose={() => setMarked(false)}>
         mrly
       </Toast>
+      <Toaster />
       <Panes panes={panes} left={<SettingsPane />} right={<IdenPane />} leftTitle="settings" rightTitle="iden">
         <Frame>
         <Stack airy>
@@ -802,6 +1015,9 @@ export function Sink() {
           </Section>
           <Section label="boxes">
             <Boxes />
+          </Section>
+          <Section label="eyes">
+            <Eyes />
           </Section>
           <Section label="words">
             <Words />
@@ -832,6 +1048,9 @@ export function Sink() {
           </Section>
           <Section label="overlays">
             <Overlays />
+          </Section>
+          <Section label="attract">
+            <Attract />
           </Section>
         </Stack>
         <Footer>
