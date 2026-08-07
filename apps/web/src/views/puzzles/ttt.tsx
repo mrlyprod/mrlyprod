@@ -4,52 +4,52 @@ import { Shot } from "../../components/Shot.tsx"
 import { Board } from "../../components/Board.tsx"
 import { SURFACES, SKINS, DESIGNS_SOLID as DESIGNS } from "../../components/options.ts"
 import { call, set } from "../../builders.ts"
+import { face, visual } from "../../cells.tsx"
 import { h } from "../../jsx.ts"
-import type { Glyph, Node, Send } from "../../types.ts"
+import type { Cells, Node, Send } from "../../types.ts"
 
 const OPPONENTS = ["off", "random"]
-const EMOJI: Record<string, string> = { x: "❌", o: "⭕" }
-
-type Sprite = { rows: number[][]; palette: string[] }
 
 type State = {
   score: number
   steps: number
   over: boolean
   board: (string | null)[][]
-  sprites: (Sprite | null)[]
   winner: string | null
   turn: string
   settings: { opponent: string; surface: string; skin: string; design: string }
-  frame: { rows: number[][]; palette: string[]; glyphs?: Glyph[] }
+  cells: Cells
 }
 
-function face(s: State, mark: string, sprite: Sprite | null, i: number): Node | undefined {
-  if (s.settings.skin === "emojis") return <symbol key="face" as="emoji" value={EMOJI[mark] ?? mark} />
-  if (s.settings.skin === "digits") return <symbol key="face" as="glyph" value={mark.toUpperCase()} />
-  if (sprite === null) return <symbol key="face" as="glyph" value={mark.toUpperCase()} />
-  return <canvas key="face" handle={`ttt-${i}`} rows={sprite.rows} palette={sprite.palette} />
+function mark(s: State, id: number, i: number): Node {
+  const worn = face(visual("ttt", s.cells, id))
+  if (worn !== undefined) return <cell key={`c-${i}`}>{worn}</cell>
+  return (
+    <cell key={`c-${i}`}>
+      <canvas key="face" handle={`ttt-${i}`} cells={{ app: "ttt", ...s.cells, ids: [[id]] }} />
+    </cell>
+  )
 }
 
 export function ttt(state: unknown, _send: Send): Node {
   const s = state as State
   const grid = s.settings.surface === "grid"
-  const marks = s.board.flat()
+  const marks = s.cells.ids.flat()
   const status = s.winner === null ? "draw" : `winner ${s.winner}`
   return (
     <stack key="ttt">
       <card key="board">
         {grid
           ? <grid key="grid" cols={3}>
-              {marks.map((mark, i) =>
-                mark === null ? (
+              {marks.map((id, i) =>
+                id === 0 ? (
                   <cell key={`c-${i}`} call={s.over ? undefined : call("ttt.place", { cell: i })} />
                 ) : (
-                  <cell key={`c-${i}`}>{face(s, mark, s.sprites[i] ?? null, i)}</cell>
+                  mark(s, id, i)
                 ),
               )}
             </grid>
-          : <Board app="ttt" rows={s.frame.rows} palette={s.frame.palette} glyphs={s.frame.glyphs} />}
+          : <Board app="ttt" cells={s.cells} />}
       </card>
       {s.over && <GameOver app="ttt" emoji="⭕" status={status} />}
       <card key="meter">

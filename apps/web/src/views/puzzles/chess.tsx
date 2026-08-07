@@ -4,9 +4,9 @@ import { Shot } from "../../components/Shot.tsx"
 import { Board } from "../../components/Board.tsx"
 import { SURFACES } from "../../components/options.ts"
 import { call, set } from "../../builders.ts"
-import { face as skinFace, visual, type Skin } from "../../skin.tsx"
+import { face as worn, visual } from "../../cells.tsx"
 import { h } from "../../jsx.ts"
-import type { Glyph, Node, Send } from "../../types.ts"
+import type { Cells, Node, Send } from "../../types.ts"
 
 type State = {
   steps: number
@@ -16,30 +16,34 @@ type State = {
   check: boolean
   winner: string | null
   board: (string | null)[][]
-  ids: number[][]
-  skin: Skin
   selected: string | null
   targets: string[]
   last_move: { from: string; to: string } | null
-  frame: { rows: number[][]; palette: string[]; glyphs?: Glyph[] }
+  cells: Cells
 }
 
+const BLOCK = 13
 const BOARD = ["#f0d9b1", "#b58863"]
 const LAST = ["#f0dc82", "#cbaa4e"]
-const TEAMS = ["#ffffff", "#111111"]
 const DOT = [[0, 0, 0], [0, 1, 0], [0, 0, 0]]
 const SKINS = ["digits", "emojis"]
 
-const face = (s: State, id: number, nonce: string): Node | undefined => {
-  const v = visual(s.skin, id)
-  if (v.face?.as !== "sprite") return skinFace(v, `piece${nonce}`)
-  const ink = TEAMS[id > 6 ? 1 : 0] ?? "#ffffff"
-  return <canvas key={`piece${nonce}`} handle="chess" rows={v.face.rows ?? []} palette={["transparent", ink]} />
+function pen(s: State, id: number): string {
+  const tint = visual("chess", s.cells, id).face?.tint
+  if (tint === undefined || tint === "ink") return "#ffffff"
+  return s.cells.pens[tint.pen] ?? "#ffffff"
 }
 
-const dot = (turn: string): Node => (
-  <canvas key="dot" handle="chess" rows={DOT} palette={["transparent", turn === "white" ? "#ffffff" : "#111111"]} />
-)
+const face = (s: State, id: number, nonce: string): Node | undefined => {
+  const v = visual("chess", s.cells, id)
+  if (v.face?.as !== "sprite") return worn(v, `piece${nonce}`)
+  return <canvas key={`piece${nonce}`} handle="chess" rows={v.face.rows ?? []} palette={["transparent", pen(s, id)]} />
+}
+
+const dot = (s: State): Node => {
+  const team = s.turn === "white" ? 1 : 7
+  return <canvas key="dot" handle="chess" rows={DOT} palette={["transparent", pen(s, team)]} />
+}
 
 function board(s: State): Node {
   const ranks = s.board.length
@@ -49,7 +53,7 @@ function board(s: State): Node {
     for (let x = 0; x < files; x++) {
       const square = `${String.fromCharCode(97 + x)}${ranks - y}`
       const letter = s.board[y]?.[x] ?? null
-      const id = s.ids[y]?.[x] ?? 0
+      const id = s.cells.ids[y]?.[x] ?? 0
       const target = s.targets.includes(square)
       const picked = s.selected === square
       const last = s.last_move !== null && (s.last_move.from === square || s.last_move.to === square)
@@ -58,7 +62,7 @@ function board(s: State): Node {
       const moved = s.last_move !== null && s.last_move.to === square
       const royal = letter !== null && letter.toLowerCase() === "k" && (s.turn === "white") === (letter === "K")
       const nonce = (s.check && royal) || moved ? String(s.steps) : ""
-      const child = id > 0 ? face(s, id, nonce) : target ? dot(s.turn) : undefined
+      const child = id % BLOCK > 0 ? face(s, id, nonce) : target ? dot(s) : undefined
       cells.push(
         <cell
           key={square}
@@ -82,7 +86,7 @@ export function chess(state: unknown, _send: Send): Node {
     <stack key="chess">
       <card key="board">
         {s.settings.surface === "canvas"
-          ? <Board app="chess" rows={s.frame.rows} palette={s.frame.palette} glyphs={s.frame.glyphs} tap={s.over ? undefined : call("chess.select")} grid={[files, s.board.length]} />
+          ? <Board app="chess" cells={s.cells} tap={s.over ? undefined : call("chess.select")} grid={[files, s.board.length]} />
           : board(s)}
       </card>
       {s.over && <GameOver app="chess" emoji="♟️" status={status} />}

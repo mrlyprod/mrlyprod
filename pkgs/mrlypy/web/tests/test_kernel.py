@@ -69,7 +69,7 @@ def test_read_drills_and_prunes():
     os = snake()
     assert mrlyweb.read(os, "snake/seed") == 7
     assert mrlyweb.read(os, "snake", {"seed": 1})["state"] == {"seed": 7}
-    assert mrlyweb.read(os, "snake/frame", {"width": 1}) == {"width": 48}
+    assert mrlyweb.read(os, "snake/cells", {"skin": 1}) == {"skin": "tiles"}
 
 
 def test_missing_paths_read_none():
@@ -78,25 +78,28 @@ def test_missing_paths_read_none():
     assert mrlyweb.read(os, "snake/nowhere") is None
 
 
-def test_snake_frame_is_a_48_grid():
+def test_snake_cells_are_a_16_grid():
     os = snake()
-    frame = mrlyweb.read(os, "snake/frame")
-    assert (frame["width"], frame["height"]) == (48, 48)
-    assert len(frame["rows"]) == 48
-    assert all(len(row) == 48 for row in frame["rows"])
-    assert frame["palette"]
-    assert max(max(row) for row in frame["rows"]) < len(frame["palette"])
+    cells = mrlyweb.read(os, "snake/cells")
+    ids = cells["ids"]
+    assert len(ids) == 16
+    assert all(len(row) == 16 for row in ids)
+    assert cells["skin"] == "tiles"
+    assert len(cells["pens"]) == 3
+    assert all(pen.startswith("#") for pen in cells["pens"])
+    assert max(max(row) for row in ids) < 4
 
 
 def test_frameless_app_has_no_frame():
     os = mrlyweb.boot()
     mrlyweb.call(os, {"verb": "nav.open", "args": {"app": "calculator"}})
     assert mrlyweb.read(os, "calculator/frame") is None
+    assert mrlyweb.read(snake(), "snake/frame") is None
 
 
-def test_replay_rebuilds_the_same_frame():
-    first = mrlyweb.read(snake(), "snake/frame")
-    second = mrlyweb.read(snake(), "snake/frame")
+def test_replay_rebuilds_the_same_cells():
+    first = mrlyweb.read(snake(), "snake/cells")
+    second = mrlyweb.read(snake(), "snake/cells")
     assert first == second
 
 

@@ -2,7 +2,7 @@ use mrlycore::{json, Json};
 use mrlymath::two::{carpet, fills, htree, net, void, vtree, Cell2d};
 use mrlyos::kernel::{App, Call, Iden, Manifest, Outcome, Verb};
 use mrlyui::frame::{field, Frame};
-use mrlyui::skin::{two as dress, Skin};
+use mrlyui::skin::{two as dress, Ink, Skin};
 
 const DESIGNS: [&str; 5] = ["carpet", "net", "htree", "vtree", "void"];
 const NUMBERS: [i64; 4] = [3, 5, 7, 9];
@@ -209,7 +209,10 @@ impl Two {
         let (w, h) = (cell.width(), cell.height());
         let skin = self.skin();
         let clear = [0, 0, 0, 0];
-        let paint = |role: usize| skin.visuals.get(role).and_then(|v| v.bg).unwrap_or(clear);
+        let paint = |role: usize| match skin.visuals.get(role).and_then(|v| v.bg.clone()) {
+            Some(Ink::Hex(color)) => color,
+            _ => clear,
+        };
         let (empty, fill) = (paint(0), paint(1));
         let colors: Vec<[u8; 4]> = cell
             .types()

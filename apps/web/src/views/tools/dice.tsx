@@ -4,7 +4,7 @@ import { Board } from "../../components/Board.tsx"
 import { SURFACES, SKINS } from "../../components/options.ts"
 import { call, set } from "../../builders.ts"
 import { h } from "../../jsx.ts"
-import type { Glyph, Node, Send } from "../../types.ts"
+import type { Cells, Node, Send } from "../../types.ts"
 
 const SIDES = [2, 4, 6, 8, 10, 12, 20]
 
@@ -13,9 +13,8 @@ type State = {
   face: number
   nonce: number
   rolls: number[]
-  sprite: { rows: number[][]; palette: string[]; glyphs?: Glyph[] }
   settings: { sides: number; surface: string; skin: string }
-  frame: { rows: number[][]; palette: string[]; glyphs?: Glyph[] }
+  cells: Cells
 }
 
 export function dice(state: unknown, _send: Send): Node {
@@ -26,10 +25,10 @@ export function dice(state: unknown, _send: Send): Node {
       <card key="face">
         {grid
           ? <cell key="die" call={call("dice.roll")}>
-              <canvas key={`face-${s.nonce}`} handle="dice" rows={s.sprite.rows} palette={s.sprite.palette} glyphs={s.sprite.glyphs} />
+              <canvas key={`face-${s.nonce}`} handle="dice" cells={{ app: "dice", ...s.cells }} />
             </cell>
           : [
-              <Board app="dice" rows={s.frame.rows} palette={s.frame.palette} glyphs={s.frame.glyphs} />,
+              <Board app="dice" cells={s.cells} />,
               <button key="roll" call={call("dice.roll")}>roll</button>,
             ]}
         <Shot />

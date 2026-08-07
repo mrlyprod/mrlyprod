@@ -202,7 +202,7 @@ fn deterministic_appearance() {
     }
     assert_eq!(a.piece_colors, b.piece_colors);
     assert_eq!(a.board_colors, b.board_colors);
-    assert_eq!(a.glyphs, b.glyphs);
+    assert_eq!(a.guise, b.guise);
     let mut ob = game();
     ob.call(
         &iden(),
@@ -213,64 +213,57 @@ fn deterministic_appearance() {
         &iden(),
         &Call::new("chess.set", json!({ "key": "obfuscate", "value": true })),
     );
-    assert_eq!(ob.glyphs, ob2.glyphs);
-    assert_ne!(ob.glyphs, mrlyui::skin::chess::glyphs());
+    assert_eq!(ob.guise, ob2.guise);
+    assert_ne!(ob.guise, [0, 1, 2, 3, 4, 5]);
 }
 #[test]
-fn skin_dict_follows_the_knob() {
+fn cells_follow_the_skin_knob() {
     let mut g = game();
     let state = g.state(&iden(), None);
-    assert_eq!(state["skin"].as_array().unwrap().len(), 13);
-    assert_eq!(state["skin"][0], json!({}));
-    assert_eq!(state["skin"][1]["face"]["as"], json!("sprite"));
-    assert_eq!(state["skin"][1]["face"]["rows"][1], json!([0, 0, 1, 0, 0]));
+    assert_eq!(state["cells"]["skin"], json!("digits"));
     g.call(
         &iden(),
         &Call::new("chess.set", json!({ "key": "skin", "value": "emojis" })),
     );
-    let state = g.state(&iden(), None);
-    assert_eq!(
-        state["skin"][1]["face"],
-        json!({ "as": "emoji", "value": "♙" })
-    );
-    assert_eq!(
-        state["skin"][7]["face"],
-        json!({ "as": "emoji", "value": "♟" })
-    );
+    assert_eq!(g.state(&iden(), None)["cells"]["skin"], json!("emojis"));
 }
 #[test]
-fn obfuscation_flows_into_the_dict() {
-    let scrambled = |seed: u64| {
+fn obfuscation_flows_into_the_ids() {
+    let ids = |seed: u64, obfuscate: bool| {
         let mut g = Chess::new();
         g.call(&iden(), &Call::new("chess.reset", json!({ "seed": seed })));
         g.call(
             &iden(),
-            &Call::new("chess.set", json!({ "key": "obfuscate", "value": true })),
+            &Call::new(
+                "chess.set",
+                json!({ "key": "obfuscate", "value": obfuscate }),
+            ),
         );
-        g.state(&iden(), None)["skin"].clone()
+        g.state(&iden(), None)["cells"]["ids"].clone()
     };
-    let a = scrambled(9);
-    let b = scrambled(9);
+    let a = ids(9, true);
+    let b = ids(9, true);
     assert_eq!(a, b);
-    let plain = mrlyui::skin::chess::skin("digits", &mrlyui::skin::chess::glyphs()).to_json();
-    assert_ne!(a, plain);
-    assert_eq!(a[1]["face"]["as"], json!("sprite"));
+    assert_ne!(a, ids(9, false));
 }
 #[test]
 fn ids_mirror_the_board() {
     let g = game();
-    let state = g.state(&iden(), None);
-    let ids = state["ids"].as_array().unwrap();
+    let cells = g.state(&iden(), None)["cells"].clone();
+    let ids = cells["ids"].as_array().unwrap();
     assert_eq!(ids.len(), 8);
-    assert_eq!(state["ids"][0][0], json!(10));
-    assert_eq!(state["ids"][6][0], json!(1));
-    assert_eq!(state["ids"][7][4], json!(6));
-    assert_eq!(state["ids"][3][3], json!(0));
+    assert_eq!(cells["ids"][0][0], json!(10));
+    assert_eq!(cells["ids"][6][0], json!(1));
+    assert_eq!(cells["ids"][7][4], json!(19));
+    assert_eq!(cells["ids"][3][3], json!(0));
+    assert_eq!(cells["ids"][3][4], json!(13));
 }
 #[test]
-fn renders_two_layers() {
+fn cells_raster_paints_the_board() {
     let g = game();
-    let cell = g.render().composite();
+    let cells = g.state(&iden(), None)["cells"].clone();
+    let frame = mrlyui::skin::raster("chess", &cells, 5, false).expect("a frame");
+    let cell = frame.composite();
     assert_eq!(cell.width(), 8 * 5);
     assert_eq!(cell.height(), 8 * 5);
     let colors = cell.cell.colors.clone().unwrap();
@@ -520,9 +513,10 @@ fn surface_and_skin_validate() {
     for (key, value) in [("surface", "canvas"), ("skin", "emojis")] {
         assert!(g.call(&iden(), &set(key, value)).ok);
     }
-    let frame = g.render();
-    let mrlyui::frame::Layer::Tiles { set: pieces, .. } = &frame.layers[1] else {
-        panic!("no pieces layer")
+    let cells = g.state(&iden(), None)["cells"].clone();
+    let frame = mrlyui::skin::raster("chess", &cells, 5, false).expect("a frame");
+    let mrlyui::frame::Layer::Tiles { set: pieces, .. } = &frame.layers[0] else {
+        panic!("no tiles layer")
     };
     let glyph = pieces.faces[1].as_ref().expect("a piece face");
     assert!(!glyph.ch.is_empty());
@@ -587,9 +581,8 @@ fn facts_stay_semantic() {
         keys,
         vec![
             "board",
+            "cells",
             "check",
-            "frame",
-            "ids",
             "last_move",
             "moves",
             "over",
@@ -597,7 +590,6 @@ fn facts_stay_semantic() {
             "seed",
             "selected",
             "settings",
-            "skin",
             "steps",
             "targets",
             "turn",
@@ -607,15 +599,20 @@ fn facts_stay_semantic() {
 }
 
 #[test]
-fn state_carries_an_indexed_frame() {
+fn state_carries_the_cells_fact() {
     let g = game();
     let state = g.state(&iden(), None);
-    let palette = state["frame"]["palette"].as_array().unwrap();
-    assert!(!palette.is_empty());
-    let rows = state["frame"]["rows"].as_array().unwrap();
-    assert_eq!(
-        rows.len(),
-        state["frame"]["height"].as_u64().unwrap() as usize
-    );
+    let cells = &state["cells"];
+    assert_eq!(cells["ids"].as_array().unwrap().len(), 8);
+    assert_eq!(cells["skin"], json!("digits"));
+    assert!(cells.get("design").is_none());
+    let pens = cells["pens"].as_array().unwrap();
+    assert_eq!(pens.len(), 4);
+    assert!(pens.iter().all(|p| p.as_str().unwrap().starts_with('#')));
+    assert_ne!(pens[0], pens[1]);
+    assert_ne!(pens[2], pens[3]);
+    assert!(state.get("frame").is_none());
+    assert!(state.get("skin").is_none());
+    assert!(state.get("ids").is_none());
     assert_eq!(state["board"].as_array().unwrap().len(), 8);
 }

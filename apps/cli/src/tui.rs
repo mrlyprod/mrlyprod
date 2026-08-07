@@ -255,13 +255,19 @@ fn render(env: &Envelope, size: (usize, usize), cmd: Option<&str>, titles: &Titl
                 y += 1;
             }
         }
-        y = canvas(&mut screen, &view.state["frame"], y, body);
+        let board = match view.state.get("cells") {
+            Some(cells) => mrlyui::skin::raster(&view.app, cells, 4, true)
+                .map(|f| f.fact())
+                .unwrap_or(Json::Null),
+            None => view.state["frame"].clone(),
+        };
+        y = canvas(&mut screen, &board, y, body);
         if let Some(state) = view.state.as_object() {
             for (key, value) in state.iter() {
                 if y >= body {
                     break;
                 }
-                if key == "frame" || key == "shade" || key == "md" {
+                if key == "frame" || key == "cells" || key == "shade" || key == "md" {
                     continue;
                 }
                 screen.text(0, y, &format!("{key}: {}", brief(value)), None, false);

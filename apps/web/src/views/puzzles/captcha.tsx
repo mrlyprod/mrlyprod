@@ -5,20 +5,17 @@ import { Board } from "../../components/Board.tsx"
 import { SURFACES } from "../../components/options.ts"
 import { call, set } from "../../builders.ts"
 import { h } from "../../jsx.ts"
-import type { Node, Send } from "../../types.ts"
+import type { Cells, Node, Send } from "../../types.ts"
 
 const SKINS = ["tiles", "digits"]
-
-type Sprite = { rows: number[][]; palette: string[] }
 
 type State = {
   score: number
   steps: number
   over: boolean
   prompt: string
-  sprites: Sprite[]
   settings: { cols: number; rows: number; size: number; surface: string; skin: string }
-  frame: { rows: number[][]; palette: string[] }
+  cells: Cells
 }
 
 export function captcha(state: unknown, _send: Send): Node {
@@ -30,13 +27,13 @@ export function captcha(state: unknown, _send: Send): Node {
       <card key="board">
         {grid
           ? <grid key="grid" cols={s.settings.cols}>
-              {s.sprites.map((sprite, i) => (
+              {s.cells.ids.flat().map((id, i) => (
                 <cell key={`c-${i}`} call={s.over ? undefined : call("captcha.pick", { cell: i })}>
-                  <canvas key="face" handle={`captcha-${i}`} rows={sprite.rows} palette={sprite.palette} />
+                  <canvas key="face" handle={`captcha-${i}`} cells={{ app: "captcha", ...s.cells, ids: [[id]] }} />
                 </cell>
               ))}
             </grid>
-          : <Board app="captcha" rows={s.frame.rows} palette={s.frame.palette} />}
+          : <Board app="captcha" cells={s.cells} />}
         <text key="prompt" role="note">{`find: ${s.prompt}`}</text>
       </card>
       {s.over

@@ -1,11 +1,10 @@
 use mrlycore::colors::ROLLABLE;
 use mrlycore::rng::Rng;
-use mrlycore::tensor::Tensor;
 use mrlycore::{json, Json};
 use mrlymusic::cue;
 use mrlyos::kernel::{int, App, Call, Effect, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{Atlas, Frame, Layer};
-use mrlyui::skin::Skin;
+use mrlyui::frame::hex;
+use mrlyui::skin::memory::FACES;
 
 const DESIGNS: [&str; 5] = ["carpet", "net", "vtree", "htree", "solid"];
 const SURFACES: [&str; 2] = ["grid", "canvas"];
@@ -132,7 +131,6 @@ pub struct Memory {
     peek: Vec<usize>,
     colors: Vec<[u8; 4]>,
     back: [u8; 4],
-    dark: bool,
 }
 
 impl Default for Memory {
@@ -158,7 +156,6 @@ impl Memory {
             peek: Vec::new(),
             colors: Vec::new(),
             back: [70, 70, 78, 255],
-            dark: false,
         };
         memory.reset(0);
         memory
@@ -212,9 +209,8 @@ impl Memory {
         self.over = false;
         self.rounds = 0;
         self.score = 0;
-        let faces = self.pairs() + 1;
         self.deal();
-        self.colors = (0..faces).map(|_| self.palette()).collect();
+        self.colors = (0..FACES).map(|_| self.palette()).collect();
         self.back = self.palette();
     }
     fn target(&self, call: &Call) -> Result<usize, &'static str> {
@@ -276,41 +272,21 @@ impl Memory {
             BACK
         }
     }
-    fn ids(&self) -> Tensor {
-        let (cols, rows) = (self.cols(), self.rows());
-        let mut grid = Tensor::new(vec![rows, cols]);
-        for p in 0..rows * cols {
-            grid.set(&[p / cols, p % cols], self.id_at(p));
-        }
-        grid
-    }
     fn ids_facts(&self) -> Vec<Vec<u8>> {
         let (cols, rows) = (self.cols(), self.rows());
         (0..rows)
             .map(|r| (0..cols).map(|c| self.id_at(r * cols + c)).collect())
             .collect()
     }
-    fn skin(&self) -> Skin {
-        mrlyui::skin::memory::skin(&self.set.skin, &self.set.design, &self.colors, self.back)
-    }
-    fn k(&self) -> usize {
-        mrlyui::skin::pixels(self.set.tile as usize, &self.set.skin)
-    }
-    fn atlas(&self) -> Atlas {
-        self.skin().atlas(self.k(), mrlyui::frame::board(self.dark))
-    }
-    fn render(&self) -> Frame {
-        let k = self.k();
-        let mut frame = Frame::new(
-            self.cols() * k,
-            self.rows() * k,
-            mrlyui::frame::board(self.dark),
-        );
-        frame.push(Layer::Tiles {
-            ids: self.ids(),
-            set: self.atlas(),
-        });
-        frame
+    fn cells_fact(&self) -> Json {
+        let mut pens = vec![hex(self.back)];
+        pens.extend(self.colors.iter().map(|&c| hex(c)));
+        json!({
+            "ids": self.ids_facts(),
+            "skin": &self.set.skin,
+            "pens": pens,
+            "design": &self.set.design,
+        })
     }
 }
 
@@ -320,9 +296,6 @@ impl App for Memory {
     }
     fn manifest(&self) -> Manifest {
         Manifest::new("memory").emoji("🧠").category("puzzles")
-    }
-    fn wear(&mut self, world: &Json) {
-        self.dark = world["shared"]["settings"]["darkmode"] == true;
     }
     fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
@@ -334,10 +307,8 @@ impl App for Memory {
             "seed": self.seed,
             "settings": self.set.to_json(),
             "board": self.board_facts(),
-            "ids": self.ids_facts(),
             "matched": self.matched_facts(),
-            "skin": self.skin().to_json(),
-            "frame": self.render().fact(),
+            "cells": self.cells_fact(),
         })
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
@@ -650,11 +621,11 @@ mod tests {
         for (key, value) in [("surface", "canvas"), ("skin", "emojis")] {
             assert!(send(&mut m, "memory.set", json!({ "key": key, "value": value })).ok);
         }
-        let settings = m.state(&iden(), None)["settings"].clone();
-        assert_eq!(settings["surface"], json!("canvas"));
-        assert_eq!(settings["skin"], json!("emojis"));
-        let tile = m.atlas().tiles[1].cell.colors.clone().unwrap();
-        assert!(tile.iter().any(|px| px[3] > 0), "the canvas baked nothing");
+        let state = m.state(&iden(), None);
+        assert_eq!(state["settings"]["surface"], json!("canvas"));
+        assert_eq!(state["cells"]["skin"], json!("emojis"));
+        let frame = mrlyui::skin::raster("memory", &state["cells"], 4, false).expect("a frame");
+        assert_eq!(frame.width, m.cols() * mrlyui::skin::SYMBOL);
         assert!(
             !send(
                 &mut m,
@@ -750,46 +721,35 @@ mod tests {
         assert_eq!(names, vec!["memory.flip", "memory.reset", "memory.set"]);
     }
     #[test]
-    fn state_carries_a_role_grid_and_a_skin() {
+    fn cells_track_the_cards() {
         let mut m = memory(3);
         send(&mut m, "memory.set", json!({ "key": "cols", "value": 4 }));
         drain(&mut m);
         let state = m.state(&iden(), None);
-        assert_eq!(state["ids"][0][0], json!(BACK));
-        assert_eq!(state["ids"][m.rows() - 1][m.cols() - 1], json!(VOID));
-        assert_eq!(state["skin"][VOID as usize], json!({}));
-        assert!(state["skin"][BACK as usize]["bg"].is_string());
-        assert_eq!(state["skin"].as_array().unwrap().len(), m.pairs() + 3);
-        assert!(state["skin"][2].get("face").is_none());
+        let cells = &state["cells"];
+        assert_eq!(cells["ids"][0][0], json!(BACK));
+        assert_eq!(cells["ids"][m.rows() - 1][m.cols() - 1], json!(VOID));
+        assert_eq!(cells["skin"], json!("tiles"));
+        assert_eq!(cells["design"], json!("carpet"));
+        let pens = cells["pens"].as_array().unwrap();
+        assert_eq!(pens.len(), 1 + FACES);
+        assert_eq!(pens[0], json!(hex(m.back)));
+        assert!(pens.iter().all(|p| p.as_str().unwrap().starts_with('#')));
         send(
             &mut m,
             "memory.set",
             json!({ "key": "skin", "value": "digits" }),
         );
-        assert_eq!(
-            m.state(&iden(), None)["skin"][2]["face"],
-            json!({ "as": "glyph", "value": "1" })
-        );
-        send(
-            &mut m,
-            "memory.set",
-            json!({ "key": "skin", "value": "emojis" }),
-        );
-        assert_eq!(
-            m.state(&iden(), None)["skin"][2]["face"]["as"],
-            json!("emoji")
-        );
+        assert_eq!(m.state(&iden(), None)["cells"]["skin"], json!("digits"));
     }
     #[test]
-    fn state_carries_an_indexed_frame() {
+    fn state_carries_the_cells_fact() {
         let m = memory(5);
         let state = m.state(&iden(), None);
-        let palette = state["frame"]["palette"].as_array().unwrap();
-        assert!(!palette.is_empty());
-        let rows = state["frame"]["rows"].as_array().unwrap();
-        assert_eq!(
-            rows.len(),
-            state["frame"]["height"].as_u64().unwrap() as usize
-        );
+        assert_eq!(state["cells"]["ids"].as_array().unwrap().len(), m.rows());
+        assert!(state.get("frame").is_none());
+        assert!(state.get("skin").is_none());
+        assert!(state.get("ids").is_none());
+        assert!(state.get("sprites").is_none());
     }
 }

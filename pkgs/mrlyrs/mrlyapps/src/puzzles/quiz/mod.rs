@@ -1,19 +1,16 @@
 use mrlycore::colors::ROLLABLE;
 use mrlycore::rng::Rng;
-use mrlycore::tensor::Tensor;
 use mrlycore::{json, Json};
 use mrlymath::pick;
-use mrlymath::two::Cell2d;
 use mrlymusic::cue;
 use mrlyos::kernel::{int, App, Call, Effect, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{sprite_fact, Atlas, Frame, Layer};
+use mrlyui::frame::hex;
 
 const SURFACES: [&str; 2] = ["grid", "canvas"];
 const SKINS: [&str; 2] = ["tiles", "digits"];
 
 struct Set {
     options: i64,
-    size: i64,
     length: i64,
     surface: String,
     skin: String,
@@ -25,7 +22,6 @@ impl Set {
     fn new() -> Set {
         Set {
             options: 3,
-            size: 8,
             length: 10,
             surface: "grid".to_string(),
             skin: "tiles".to_string(),
@@ -35,11 +31,10 @@ impl Set {
     }
     fn apply(&mut self, key: &str, value: &Json) -> Result<Json, &'static str> {
         match key {
-            "options" | "size" | "length" => {
+            "options" | "length" => {
                 let n = value.as_i64().ok_or("value must be an integer")?;
                 let (min, max) = match key {
                     "options" => (2, 8),
-                    "size" => (2, 16),
                     _ => (2, 32),
                 };
                 if !(min..=max).contains(&n) {
@@ -47,7 +42,6 @@ impl Set {
                 }
                 match key {
                     "options" => self.options = n,
-                    "size" => self.size = n,
                     _ => self.length = n,
                 }
                 Ok(json!(n))
@@ -71,8 +65,7 @@ impl Set {
     }
     fn to_json(&self) -> Json {
         json!({
-            "options": self.options.clone(),
-            "size": self.size,
+            "options": self.options,
             "length": self.length,
             "surface": &self.surface,
             "skin": &self.skin,
@@ -103,7 +96,6 @@ pub struct Quiz {
     options: Vec<usize>,
     correct: usize,
     color: [u8; 4],
-    dark: bool,
 }
 
 impl Default for Quiz {
@@ -126,7 +118,6 @@ impl Quiz {
             options: Vec::new(),
             correct: 0,
             color: [255, 255, 255, 255],
-            dark: false,
         };
         quiz.reset(0);
         quiz
@@ -159,18 +150,6 @@ impl Quiz {
     fn option_names(&self) -> Vec<String> {
         self.options.iter().map(|&c| pick::name(c).into()).collect()
     }
-    fn face(&self) -> Cell2d {
-        let k = self.set.size as usize;
-        let fg = if self.set.skin == "digits" {
-            mrlyui::frame::ink(self.dark)
-        } else {
-            self.color
-        };
-        pick::tile(self.target, k, fg, [0, 0, 0, 0])
-    }
-    fn atlas(&self) -> Atlas {
-        Atlas::new(self.set.size as usize, vec![self.face()])
-    }
     fn position(&self) -> u64 {
         if self.over {
             self.steps
@@ -178,15 +157,12 @@ impl Quiz {
             self.steps + 1
         }
     }
-    fn render(&self) -> Frame {
-        let k = self.set.size as usize;
-        let mut frame = Frame::new(k, k, mrlyui::frame::board(self.dark));
-        frame.push(Layer::Tiles {
-            ids: Tensor::new(vec![1, 1]),
-            set: self.atlas(),
-        });
-        frame.say("", self.option_names());
-        frame
+    fn cells_fact(&self) -> Json {
+        json!({
+            "ids": [[self.target]],
+            "skin": &self.set.skin,
+            "pens": [hex(self.color)],
+        })
     }
     fn reset(&mut self, seed: u64) {
         self.rng = Rng::new(seed);
@@ -206,9 +182,6 @@ impl App for Quiz {
     fn manifest(&self) -> Manifest {
         Manifest::new("quiz").emoji("❓").category("puzzles")
     }
-    fn wear(&mut self, world: &Json) {
-        self.dark = world["shared"]["settings"]["darkmode"] == true;
-    }
     fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "score": self.score,
@@ -220,8 +193,7 @@ impl App for Quiz {
             "total": self.set.length,
             "settings": self.set.to_json(),
             "options": self.option_names(),
-            "sprite": sprite_fact(&self.face()),
-            "frame": self.render().fact(),
+            "cells": self.cells_fact(),
         })
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
@@ -426,13 +398,6 @@ mod tests {
         assert!(state.get("target").is_none());
         assert!(state.get("correct").is_none());
         assert_eq!(state["options"].as_array().unwrap().len(), q.options.len());
-        let keys: Vec<&str> = state["sprite"]
-            .as_object()
-            .unwrap()
-            .keys()
-            .map(String::as_str)
-            .collect();
-        assert_eq!(keys, vec!["width", "height", "rows", "palette"]);
         let saved = q.save();
         assert!(saved.get("target").is_some());
     }
@@ -567,15 +532,18 @@ mod tests {
         assert_eq!(names, vec!["quiz.answer", "quiz.reset", "quiz.set"]);
     }
     #[test]
-    fn state_carries_an_indexed_frame() {
+    fn state_carries_the_cells_fact() {
         let q = quiz(5);
         let state = q.state(&iden(), None);
-        let palette = state["frame"]["palette"].as_array().unwrap();
-        assert!(!palette.is_empty());
-        let rows = state["frame"]["rows"].as_array().unwrap();
-        assert_eq!(
-            rows.len(),
-            state["frame"]["height"].as_u64().unwrap() as usize
-        );
+        let cells = &state["cells"];
+        assert_eq!(cells["ids"][0][0], json!(q.target));
+        assert_eq!(cells["skin"], json!("tiles"));
+        assert_eq!(cells["pens"], json!([hex(q.color)]));
+        assert!(cells.get("design").is_none());
+        assert!(state.get("frame").is_none());
+        assert!(state.get("sprite").is_none());
+        assert!(state.get("skin").is_none());
+        let frame = mrlyui::skin::raster("quiz", cells, 8, false).expect("a frame");
+        assert_eq!(frame.width, 8);
     }
 }

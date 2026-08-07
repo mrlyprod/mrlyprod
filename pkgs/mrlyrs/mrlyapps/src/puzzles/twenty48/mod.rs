@@ -1,17 +1,15 @@
 use mrlycore::colors::ROLLABLE;
 use mrlycore::rng::Rng;
-use mrlycore::tensor::Tensor;
 use mrlycore::{json, Json};
 use mrlymusic::cue;
 use mrlyos::kernel::{drive, int, pick, App, Call, Effect, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{Atlas, Frame, Layer};
-use mrlyui::skin::Skin;
+use mrlyui::frame::hex;
+use mrlyui::skin::twenty48::CAP;
 
 const DESIGNS: [&str; 5] = ["carpet", "net", "vtree", "htree", "solid"];
 const SURFACES: [&str; 2] = ["grid", "canvas"];
 const SKINS: [&str; 3] = ["tiles", "emojis", "digits"];
 const DIRS: [&str; 4] = ["up", "down", "left", "right"];
-const CAP: usize = 18;
 
 struct Set {
     grid: i64,
@@ -92,7 +90,6 @@ pub struct Twenty48 {
     last_spawn: Option<usize>,
     last_merges: Vec<usize>,
     colors: Vec<[u8; 4]>,
-    dark: bool,
 }
 
 impl Default for Twenty48 {
@@ -114,7 +111,6 @@ impl Twenty48 {
             last_spawn: None,
             last_merges: Vec::new(),
             colors: Vec::new(),
-            dark: false,
         };
         game.reset(0);
         game
@@ -237,14 +233,6 @@ impl Twenty48 {
             .map(|r| (0..n).map(|c| self.cells[r * n + c]).collect())
             .collect()
     }
-    fn ids(&self) -> Tensor {
-        let n = self.n();
-        let mut grid = Tensor::new(vec![n, n]);
-        for (i, &v) in self.cells.iter().enumerate() {
-            grid.set(&[i / n, i % n], Twenty48::exponent(v));
-        }
-        grid
-    }
     fn ids_facts(&self) -> Vec<Vec<u8>> {
         let n = self.n();
         (0..n)
@@ -259,24 +247,13 @@ impl Twenty48 {
         let c = ROLLABLE[self.rng.below(ROLLABLE.len())];
         [c.r, c.g, c.b, 255]
     }
-    fn skin(&self) -> Skin {
-        mrlyui::skin::twenty48::skin(&self.set.skin, &self.set.design, &self.colors)
-    }
-    fn k(&self) -> usize {
-        mrlyui::skin::pixels(self.set.tile as usize, &self.set.skin)
-    }
-    fn atlas(&self) -> Atlas {
-        self.skin().atlas(self.k(), mrlyui::frame::board(self.dark))
-    }
-    fn render(&self) -> Frame {
-        let k = self.k();
-        let side = self.n() * k;
-        let mut frame = Frame::new(side, side, mrlyui::frame::board(self.dark));
-        frame.push(Layer::Tiles {
-            ids: self.ids(),
-            set: self.atlas(),
-        });
-        frame
+    fn cells_fact(&self) -> Json {
+        json!({
+            "ids": self.ids_facts(),
+            "skin": &self.set.skin,
+            "pens": self.colors[1..].iter().map(|&c| hex(c)).collect::<Vec<_>>(),
+            "design": &self.set.design,
+        })
     }
 }
 
@@ -303,9 +280,6 @@ impl App for Twenty48 {
                 Call::new("twenty48.slide", json!({ "dir": "right" })),
             )
     }
-    fn wear(&mut self, world: &Json) {
-        self.dark = world["shared"]["settings"]["darkmode"] == true;
-    }
     fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "score": self.score,
@@ -314,11 +288,9 @@ impl App for Twenty48 {
             "seed": self.seed,
             "settings": self.set.to_json(),
             "board": self.board_facts(),
-            "ids": self.ids_facts(),
             "last_spawn": self.last_spawn.map(|i| self.coords(i)).unwrap_or(Json::Null),
             "last_merges": self.last_merges.iter().map(|&i| self.coords(i)).collect::<Vec<_>>(),
-            "skin": self.skin().to_json(),
-            "frame": self.render().fact(),
+            "cells": self.cells_fact(),
         })
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
@@ -566,25 +538,6 @@ mod tests {
         );
     }
     #[test]
-    fn big_tiles_carry_the_value_in_glyphs() {
-        let mut g = game(1);
-        send(
-            &mut g,
-            "twenty48.set",
-            json!({ "key": "tile", "value": 12 }),
-        );
-        let board = mrlyui::frame::board(g.dark);
-        let colors = g.atlas().tiles[1].cell.colors.clone().unwrap();
-        assert!(colors.contains(&board));
-    }
-    #[test]
-    fn small_tiles_have_no_room_for_the_glyphs() {
-        let g = game(1);
-        let board = mrlyui::frame::board(g.dark);
-        let colors = g.atlas().tiles[1].cell.colors.clone().unwrap();
-        assert!(!colors.contains(&board));
-    }
-    #[test]
     fn tile_setting_is_widened_to_forty() {
         let mut g = game(1);
         assert!(
@@ -605,41 +558,21 @@ mod tests {
         );
     }
     #[test]
-    fn state_carries_an_indexed_frame() {
-        let g = game(5);
-        let state = g.state(&iden(), None);
-        let palette = state["frame"]["palette"].as_array().unwrap();
-        assert!(!palette.is_empty());
-        let rows = state["frame"]["rows"].as_array().unwrap();
-        assert_eq!(
-            rows.len(),
-            state["frame"]["height"].as_u64().unwrap() as usize
-        );
-        assert_eq!(state["board"].as_array().unwrap().len(), 4);
-    }
-    #[test]
-    fn state_carries_a_role_grid_and_a_skin() {
+    fn state_carries_the_cells_fact() {
         let mut g = game(1);
         g.cells = vec![0; g.n() * g.n()];
         g.cells[0] = 8;
         let state = g.state(&iden(), None);
-        assert_eq!(state["ids"][0][0], json!(3));
-        assert_eq!(state["ids"][0][1], json!(0));
-        assert_eq!(state["skin"][0], json!({}));
-        assert_eq!(
-            state["skin"][3]["face"],
-            json!({ "as": "glyph", "value": "8" })
-        );
-        assert!(state["skin"][3]["bg"].is_string());
-        send(
-            &mut g,
-            "twenty48.set",
-            json!({ "key": "skin", "value": "emojis" }),
-        );
-        let skin = g.state(&iden(), None)["skin"].clone();
-        assert_eq!(skin[3]["face"]["as"], json!("emoji"));
-        assert!(skin[3].get("bg").is_none());
-        assert_eq!(skin.as_array().unwrap().len(), CAP + 1);
+        let cells = &state["cells"];
+        assert_eq!(cells["ids"][0][0], json!(3));
+        assert_eq!(cells["ids"][0][1], json!(0));
+        assert_eq!(cells["skin"], json!("digits"));
+        assert_eq!(cells["design"], json!("carpet"));
+        assert_eq!(cells["pens"].as_array().unwrap().len(), CAP);
+        assert!(state.get("frame").is_none());
+        assert!(state.get("skin").is_none());
+        assert!(state.get("ids").is_none());
+        assert_eq!(state["board"].as_array().unwrap().len(), 4);
     }
     #[test]
     fn last_spawn_and_merges_track_the_slide() {
@@ -695,11 +628,10 @@ mod tests {
                 .ok
             );
         }
-        let settings = g.state(&iden(), None)["settings"].clone();
-        assert_eq!(settings["surface"], json!("canvas"));
-        assert_eq!(settings["skin"], json!("emojis"));
-        let set = g.atlas();
-        assert!(set.faces[1].is_some(), "the canvas lost its glyph");
+        let state = g.state(&iden(), None);
+        assert_eq!(state["settings"]["surface"], json!("canvas"));
+        assert_eq!(state["settings"]["skin"], json!("emojis"));
+        assert_eq!(state["cells"]["skin"], json!("emojis"));
         assert!(
             !send(
                 &mut g,
@@ -721,32 +653,5 @@ mod tests {
         let settings = g.state(&iden(), None)["settings"].clone();
         assert_eq!(settings["surface"], json!("grid"));
         assert_eq!(settings["skin"], json!("digits"));
-    }
-    #[test]
-    fn tiles_skin_drops_the_baked_glyphs() {
-        let mut g = game(1);
-        send(
-            &mut g,
-            "twenty48.set",
-            json!({ "key": "tile", "value": 12 }),
-        );
-        let board = mrlyui::frame::board(g.dark);
-        assert!(g.atlas().tiles[1]
-            .cell
-            .colors
-            .clone()
-            .unwrap()
-            .contains(&board));
-        send(
-            &mut g,
-            "twenty48.set",
-            json!({ "key": "skin", "value": "tiles" }),
-        );
-        assert!(!g.atlas().tiles[1]
-            .cell
-            .colors
-            .clone()
-            .unwrap()
-            .contains(&board));
     }
 }

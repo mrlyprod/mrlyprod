@@ -54,7 +54,7 @@ pub fn skin(mode: &str, fill: &str, void: &str) -> Skin {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::skin::Face;
+    use crate::skin::{Face, Ink};
 
     #[test]
     fn modes_carry_their_own_defaults() {
@@ -76,7 +76,7 @@ mod tests {
         let solid = skin("solid", "red", "black");
         assert_eq!(solid.visuals.len(), 2);
         assert_eq!(solid.visuals[0], Visual::solid([0, 0, 0, 255]));
-        assert_eq!(solid.visuals[1].bg, Some(ink("red", SOLID_FILL)));
+        assert_eq!(solid.visuals[1].bg, Some(Ink::Hex(ink("red", SOLID_FILL))));
         assert_eq!(solid.visuals[1].face, None);
         let dressed = skin("glyphs", "🍎", "#");
         assert_eq!(dressed.visuals[0].face, Some(Face::Glyph("#".into())));

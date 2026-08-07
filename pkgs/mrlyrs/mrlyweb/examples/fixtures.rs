@@ -1,9 +1,17 @@
-use mrlycore::json;
+use mrlycore::{json, Json};
 use mrlyos::kernel::{Call, Os};
 use std::fs;
 
 fn boot() -> Os {
     mrlyweb::registry::boot()
+}
+
+fn shoot(os: &Os, app: &str) -> Json {
+    let cells = os.read(&format!("{app}/cells"), None).unwrap();
+    mrlyui::skin::raster(app, &cells, 8, false)
+        .unwrap()
+        .image()
+        .to_json()
 }
 
 fn write(name: &str, os: &Os) {
@@ -102,8 +110,11 @@ fn main() {
     let mut os = boot();
     os.call(Call::new("nav.open", json!({ "app": "life" })));
     os.call(Call::new("sys.shot", json!({})));
-    os.call(Call::new("nav.open", json!({ "app": "two" })));
-    os.call(Call::new("sys.shot", json!({})));
+    os.call(Call::new("nav.open", json!({ "app": "ttt" })));
+    os.call(Call::new("ttt.reset", json!({ "seed": 7 })));
+    os.call(Call::new("ttt.place", json!({ "cell": 4 })));
+    let image = shoot(&os, "ttt");
+    os.call(Call::new("sys.shot", json!({ "image": image })));
     os.call(Call::new("nav.open", json!({ "app": "photos" })));
     write("photos", &os);
 
@@ -112,19 +123,7 @@ fn main() {
     os.call(Call::new("snake.reset", json!({ "seed": 7 })));
     os.call(Call::new(
         "snake.set",
-        json!({ "key": "head", "value": {
-            "v": 1,
-            "tile": {
-                "v": 1, "group": "General", "factor": 3,
-                "sources": [{ "design": "Net" }],
-                "numbers": [3], "levels": [1], "rotations": [1], "anti": [false],
-                "invert": false, "flip": false, "base": 2, "width": 3, "height": 3,
-            },
-            "paint": {
-                "v": 1, "edition": "Simple", "scheme": "Multicolor", "target": "Fill",
-                "primary": "Black", "secondary": ["Red"], "shades": [],
-            },
-        } }),
+        json!({ "key": "design", "value": "net" }),
     ));
     os.call(Call::new("snake.turn", json!({ "dir": "left" })));
     os.call(Call::new("snake.step", json!({})));
@@ -381,8 +380,11 @@ fn main() {
     write("piano", &os);
 
     let mut os = boot();
-    os.call(Call::new("nav.open", json!({ "app": "two" })));
-    os.call(Call::new("sys.shot", json!({})));
+    os.call(Call::new("nav.open", json!({ "app": "twenty48" })));
+    os.call(Call::new("twenty48.reset", json!({ "seed": 7 })));
+    os.call(Call::new("twenty48.slide", json!({ "dir": "left" })));
+    let image = shoot(&os, "twenty48");
+    os.call(Call::new("sys.shot", json!({ "image": image })));
     os.call(Call::new("nav.open", json!({ "app": "photos" })));
     write("shot", &os);
 

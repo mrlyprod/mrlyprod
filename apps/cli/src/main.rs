@@ -277,7 +277,7 @@ fn repl() {
                 "shot" => {
                     let out = if arg.is_empty() { "shot.png" } else { arg };
                     let app = os.envelope(None).route.map(|r| r.app).unwrap_or_default();
-                    match os.snapshot(&app) {
+                    match snap(&os, &app) {
                         Ok(bytes) => match std::fs::write(out, &bytes) {
                             Ok(()) => eprintln!("shot: {app} -> {out} ({} bytes)", bytes.len()),
                             Err(e) => eprintln!("! write failed: {e}"),
@@ -374,6 +374,18 @@ fn render(path: Option<&str>) {
 
 // SHOT
 
+fn snap(os: &Os, app: &str) -> Result<Vec<u8>, &'static str> {
+    let cells = os.read(&format!("{app}/cells"), None);
+    let Some(cells) = cells.filter(|c| c.as_object().is_some()) else {
+        return os.snapshot(app);
+    };
+    let image = mrlyui::skin::raster(app, &cells, 8, true)
+        .ok_or("nothing to shoot here")?
+        .image();
+    let scale = (512 / image.width.max(image.height).max(1)).max(1);
+    image.png(scale).map_err(|_| "could not render frame")
+}
+
 fn shot(args: &[String]) {
     let mut out = "shot.png".to_string();
     let mut path: Option<&str> = None;
@@ -390,7 +402,7 @@ fn shot(args: &[String]) {
     }
     let os = replay(path);
     let app = os.envelope(None).route.map(|r| r.app).unwrap_or_default();
-    match os.snapshot(&app) {
+    match snap(&os, &app) {
         Ok(bytes) => match std::fs::write(&out, &bytes) {
             Ok(()) => eprintln!("shot: {app} -> {out} ({} bytes)", bytes.len()),
             Err(e) => {
@@ -563,11 +575,16 @@ fn goose(args: &[String]) {
 }
 
 fn paint(env: &Json) -> String {
-    let grid = &env["view"]["state"]["frame"];
+    let app = env["view"]["app"].as_str().unwrap_or("");
+    let state = &env["view"]["state"];
+    let grid = match state.get("cells") {
+        Some(cells) => mrlyui::skin::raster(app, cells, 4, true)
+            .map(|f| f.fact())
+            .unwrap_or(Json::Null),
+        None => state["frame"].clone(),
+    };
     match (grid["rows"].as_array(), grid["palette"].as_array()) {
-        (Some(rows), Some(palette)) if !rows.is_empty() => {
-            blocks(env["view"]["app"].as_str().unwrap_or(""), rows, palette)
-        }
+        (Some(rows), Some(palette)) if !rows.is_empty() => blocks(app, rows, palette),
         _ => env.pretty(),
     }
 }

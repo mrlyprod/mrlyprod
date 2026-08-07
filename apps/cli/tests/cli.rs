@@ -101,7 +101,7 @@ fn run_facts_collapses_grids() {
     let frame = mrlycore::json::parse(std::str::from_utf8(&stdout).unwrap()).unwrap();
     let state = &frame["view"]["state"];
     assert_eq!(state["seed"], 7);
-    assert!(state["frame"]["rows"]
+    assert!(state["cells"]["ids"]
         .as_str()
         .is_some_and(|s| s.starts_with("grid ")));
 }

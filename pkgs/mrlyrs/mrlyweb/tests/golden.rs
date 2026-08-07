@@ -6,6 +6,14 @@ fn boot() -> Os {
     mrlyweb::registry::boot()
 }
 
+fn shoot(os: &Os, app: &str) -> Json {
+    let cells = os.read(&format!("{app}/cells"), None).unwrap();
+    mrlyui::skin::raster(app, &cells, 8, false)
+        .unwrap()
+        .image()
+        .to_json()
+}
+
 fn fixture(name: &str) -> Json {
     let path = format!(
         "{}/../../../apps/web/fixtures/{name}.json",
@@ -46,6 +54,66 @@ fn every_shade_resolves_a_program() {
         shaded += 1;
     }
     assert!(shaded >= 2);
+}
+
+#[test]
+fn every_cells_fact_resolves_a_skin() {
+    let iden = Iden::new("guest");
+    let corpus = mrlyui::skin::corpus();
+    let designs = ["carpet", "net", "vtree", "htree", "solid"];
+    let motifs = ["carpet", "net", "vtree", "htree", "design"];
+    let mut dressed = 0;
+    for app in mrlyweb::registry::catalogue() {
+        let state = app.state(&iden, None);
+        let route = app.route();
+        let Some(cells) = state.get("cells") else {
+            continue;
+        };
+        assert!(
+            cells.as_object().is_some(),
+            "{route} cells is not the decreed fact"
+        );
+        for gone in ["frame", "sprites", "skin"] {
+            assert!(
+                state.get(gone).is_none(),
+                "{route} carries cells and {gone}"
+            );
+        }
+        let variant = cells["skin"].as_str().expect("cells.skin");
+        let visuals = corpus[route][variant]
+            .as_array()
+            .unwrap_or_else(|| panic!("{route} misses skin {variant}"));
+        assert!(!visuals.is_empty(), "{route} skin {variant} is empty");
+        let pens = cells["pens"].as_array().expect("cells.pens");
+        for pen in pens {
+            let hex = pen.as_str().expect("a pen hex");
+            assert!(hex.starts_with('#'), "{route} pen {hex} is not a color");
+        }
+        if let Some(design) = cells.get("design") {
+            let name = design.as_str().expect("cells.design");
+            assert!(designs.contains(&name), "{route} design {name} is foreign");
+        }
+        for row in cells["ids"].as_array().expect("cells.ids") {
+            for id in row.as_array().expect("an ids row") {
+                let id = id.as_u64().expect("an id") as usize;
+                assert!(id < visuals.len(), "{route} id {id} names no role");
+            }
+        }
+        for visual in visuals {
+            if let Some(n) = visual["bg"]["pen"].as_u64() {
+                assert!((n as usize) < pens.len(), "{route} bg pen {n} missing");
+            }
+            if let Some(n) = visual["face"]["tint"]["pen"].as_u64() {
+                assert!((n as usize) < pens.len(), "{route} tint pen {n} missing");
+            }
+            if let Some(motif) = visual.get("motif") {
+                let name = motif.as_str().expect("a motif name");
+                assert!(motifs.contains(&name), "{route} motif {name} is foreign");
+            }
+        }
+        dressed += 1;
+    }
+    assert!(dressed >= 2);
 }
 
 #[test]
@@ -165,8 +233,11 @@ fn photos_frame_is_golden() {
     let mut os = boot();
     os.call(Call::new("nav.open", json!({ "app": "life" })));
     os.call(Call::new("sys.shot", json!({})));
-    os.call(Call::new("nav.open", json!({ "app": "two" })));
-    os.call(Call::new("sys.shot", json!({})));
+    os.call(Call::new("nav.open", json!({ "app": "ttt" })));
+    os.call(Call::new("ttt.reset", json!({ "seed": 7 })));
+    os.call(Call::new("ttt.place", json!({ "cell": 4 })));
+    let image = shoot(&os, "ttt");
+    os.call(Call::new("sys.shot", json!({ "image": image })));
     os.call(Call::new("nav.open", json!({ "app": "photos" })));
     assert_eq!(os.envelope(None).to_json(), fixture("photos"));
 }
@@ -174,8 +245,11 @@ fn photos_frame_is_golden() {
 #[test]
 fn shot_frame_is_golden() {
     let mut os = boot();
-    os.call(Call::new("nav.open", json!({ "app": "two" })));
-    os.call(Call::new("sys.shot", json!({})));
+    os.call(Call::new("nav.open", json!({ "app": "twenty48" })));
+    os.call(Call::new("twenty48.reset", json!({ "seed": 7 })));
+    os.call(Call::new("twenty48.slide", json!({ "dir": "left" })));
+    let image = shoot(&os, "twenty48");
+    os.call(Call::new("sys.shot", json!({ "image": image })));
     os.call(Call::new("nav.open", json!({ "app": "photos" })));
     assert_eq!(os.envelope(None).to_json(), fixture("shot"));
 }
@@ -187,19 +261,7 @@ fn snake_frame_is_golden() {
     os.call(Call::new("snake.reset", json!({ "seed": 7 })));
     os.call(Call::new(
         "snake.set",
-        json!({ "key": "head", "value": {
-            "v": 1,
-            "tile": {
-                "v": 1, "group": "General", "factor": 3,
-                "sources": [{ "design": "Net" }],
-                "numbers": [3], "levels": [1], "rotations": [1], "anti": [false],
-                "invert": false, "flip": false, "base": 2, "width": 3, "height": 3,
-            },
-            "paint": {
-                "v": 1, "edition": "Simple", "scheme": "Multicolor", "target": "Fill",
-                "primary": "Black", "secondary": ["Red"], "shades": [],
-            },
-        } }),
+        json!({ "key": "design", "value": "net" }),
     ));
     os.call(Call::new("snake.turn", json!({ "dir": "left" })));
     os.call(Call::new("snake.step", json!({})));

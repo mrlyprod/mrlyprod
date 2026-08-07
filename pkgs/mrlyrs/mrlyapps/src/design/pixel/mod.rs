@@ -1,17 +1,13 @@
-use mrlycore::colors::ROLLABLE;
+use mrlycore::colors::{BLACK, ROLLABLE};
 use mrlycore::rng::Rng;
-use mrlycore::tensor::Tensor;
 use mrlycore::{json, Json};
 use mrlyos::kernel::{App, Call, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{motif_tile, solid_tile, Atlas, Frame, Layer};
-
-const DESIGNS: [&str; 5] = ["carpet", "net", "vtree", "htree", "solid"];
+use mrlyui::frame::hex;
 
 struct Set {
     width: i64,
     height: i64,
     tile: i64,
-    design: String,
 }
 
 impl Set {
@@ -20,7 +16,6 @@ impl Set {
             width: 24,
             height: 24,
             tile: 3,
-            design: "carpet".to_string(),
         }
     }
     fn apply(&mut self, key: &str, value: &Json) -> Result<Json, &'static str> {
@@ -42,14 +37,6 @@ impl Set {
                 }
                 Ok(json!(n))
             }
-            "design" => {
-                let d = value.as_str().ok_or("value must be a string")?;
-                if !DESIGNS.contains(&d) {
-                    return Err("no such option");
-                }
-                self.design = d.to_string();
-                Ok(json!(d))
-            }
             _ => Err("no such key"),
         }
     }
@@ -58,7 +45,6 @@ impl Set {
             "width": self.width,
             "height": self.height,
             "tile": self.tile,
-            "design": &self.design,
         })
     }
     fn from_json(value: &Json) -> Set {
@@ -79,7 +65,6 @@ pub struct Pixel {
     steps: u64,
     canvas: Vec<bool>,
     ink_color: [u8; 4],
-    dark: bool,
 }
 
 impl Default for Pixel {
@@ -97,7 +82,6 @@ impl Pixel {
             steps: 0,
             canvas: Vec::new(),
             ink_color: [255, 255, 255, 255],
-            dark: false,
         };
         pixel.reset(0);
         pixel
@@ -150,42 +134,26 @@ impl Pixel {
             .map(|r| (0..w).map(|c| self.canvas[r * w + c]).collect())
             .collect()
     }
-    fn ids(&self) -> Tensor {
-        let (w, h) = (self.width(), self.height());
-        let mut grid = Tensor::new(vec![h, w]);
-        for r in 0..h {
-            for c in 0..w {
-                if self.canvas[r * w + c] {
-                    grid.set(&[r, c], 1);
-                }
-            }
+    fn ids(&self) -> Vec<Vec<u8>> {
+        let w = self.width();
+        (0..self.height())
+            .map(|r| (0..w).map(|c| u8::from(self.canvas[r * w + c])).collect())
+            .collect()
+    }
+    fn pens(&self) -> Vec<String> {
+        let mut out = vec![hex([0, 0, 0, 0]), hex(self.ink_color)];
+        for c in ROLLABLE {
+            out.push(hex([c.r, c.g, c.b, 255]));
         }
-        grid
+        out.push(hex([BLACK.r, BLACK.g, BLACK.b, 255]));
+        out
     }
-    fn atlas(&self) -> Atlas {
-        let k = self.set.tile as usize;
-        let clear = [0, 0, 0, 0];
-        let d = self.set.design.as_str();
-        Atlas::new(
-            k,
-            vec![
-                solid_tile(k, clear),
-                motif_tile(d, k, self.ink_color, clear),
-            ],
-        )
-    }
-    fn render(&self) -> Frame {
-        let k = self.set.tile as usize;
-        let mut frame = Frame::new(
-            self.width() * k,
-            self.height() * k,
-            mrlyui::frame::board(self.dark),
-        );
-        frame.push(Layer::Tiles {
-            ids: self.ids(),
-            set: self.atlas(),
-        });
-        frame
+    fn cells_fact(&self) -> Json {
+        json!({
+            "ids": self.ids(),
+            "skin": "tiles",
+            "pens": self.pens(),
+        })
     }
     fn reset(&mut self, seed: u64) {
         self.rng = Rng::new(seed);
@@ -206,9 +174,6 @@ impl App for Pixel {
     fn manifest(&self) -> Manifest {
         Manifest::new("pixel").emoji("🎨").category("design")
     }
-    fn wear(&mut self, world: &Json) {
-        self.dark = world["shared"]["settings"]["darkmode"] == true;
-    }
     fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "score": 0,
@@ -218,7 +183,7 @@ impl App for Pixel {
             "settings": self.set.to_json(),
             "canvas": self.canvas_facts(),
             "painted": self.painted(),
-            "frame": self.render().fact(),
+            "cells": self.cells_fact(),
         })
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
@@ -318,7 +283,6 @@ mod app_tests {
     #[test]
     fn stroke_draws_and_clear_wipes() {
         let mut p = pixel(1);
-        let before = p.state(&iden(), None)["frame"].clone();
         let out = send(
             &mut p,
             "pixel.stroke",
@@ -326,12 +290,15 @@ mod app_tests {
         );
         assert!(out.ok);
         assert_eq!(out.data["points"], json!(3));
-        let after = p.state(&iden(), None)["frame"].clone();
-        assert_ne!(before, after);
-        assert_eq!(p.state(&iden(), None)["painted"], json!(3));
+        let state = p.state(&iden(), None);
+        assert_eq!(state["cells"]["ids"][0][0], json!(1));
+        assert_eq!(state["cells"]["ids"][0][3], json!(0));
+        assert_eq!(state["painted"], json!(3));
         let out = send(&mut p, "pixel.clear", json!({}));
         assert!(out.ok);
-        assert_eq!(p.state(&iden(), None)["painted"], json!(0));
+        let state = p.state(&iden(), None);
+        assert_eq!(state["painted"], json!(0));
+        assert_eq!(state["cells"]["ids"][0][0], json!(0));
     }
     #[test]
     fn malformed_points_fail_honestly() {
@@ -360,14 +327,6 @@ mod app_tests {
         assert_eq!(state["steps"], json!(0));
         assert_eq!(state["painted"], json!(0));
         assert!(!send(&mut p, "pixel.set", json!({ "key": "width", "value": 999 })).ok);
-        assert!(
-            !send(
-                &mut p,
-                "pixel.set",
-                json!({ "key": "design", "value": "nope" })
-            )
-            .ok
-        );
         assert!(!send(&mut p, "pixel.set", json!({ "key": "volume", "value": 1 })).ok);
     }
     #[test]
@@ -404,16 +363,19 @@ mod app_tests {
         );
     }
     #[test]
-    fn state_carries_an_indexed_frame() {
+    fn state_carries_the_cells_fact() {
         let p = pixel(5);
         let state = p.state(&iden(), None);
-        let palette = state["frame"]["palette"].as_array().unwrap();
-        assert!(!palette.is_empty());
-        let rows = state["frame"]["rows"].as_array().unwrap();
-        assert_eq!(
-            rows.len(),
-            state["frame"]["height"].as_u64().unwrap() as usize
-        );
+        let cells = &state["cells"];
+        assert_eq!(cells["skin"], json!("tiles"));
+        assert_eq!(cells["ids"].as_array().unwrap().len(), 24);
+        assert_eq!(cells["ids"][0].as_array().unwrap().len(), 24);
+        let pens = cells["pens"].as_array().unwrap();
+        assert_eq!(pens.len(), 16);
+        assert!(pens.iter().all(|p| p.as_str().unwrap().starts_with('#')));
+        assert_eq!(pens[0], json!("#00000000"));
+        assert!(state.get("frame").is_none());
+        assert!(state.get("sprites").is_none());
         assert_eq!(state["score"], json!(0));
         assert_eq!(state["over"], json!(false));
     }

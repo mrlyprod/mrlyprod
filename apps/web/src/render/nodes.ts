@@ -3,6 +3,7 @@ import * as gpu from "mrlygpu"
 import { icon } from "../icons.ts"
 import type { Call, Flip, Glyph, Tri, Held, Node, Send, Sym } from "../types.ts"
 import { prune, remember } from "./boards.ts"
+import { crisp } from "./cells.ts"
 import { scramble } from "./fx.ts"
 import { markCanvas } from "./mark.ts"
 import { make, paint } from "./paint.ts"
@@ -93,7 +94,8 @@ export function create(node: Node, send: Send): Held {
       const el = make("canvas", "mrly-box canvas")
       const cell = (event: PointerEvent): [number, number] | null => {
         const node = held(el) as Extract<Node, { kind: "Canvas" }>
-        const [cols, rows] = node.grid ?? [node.rows[0]?.length ?? 0, node.rows.length]
+        const facts = node.cells?.ids ?? node.rows ?? []
+        const [cols, rows] = node.grid ?? [facts[0]?.length ?? 0, facts.length]
         if (cols === 0 || rows === 0) return null
         const rect = el.getBoundingClientRect()
         const x = Math.floor(((event.clientX - rect.left) / rect.width) * cols)
@@ -445,19 +447,30 @@ export function patch(el: Held, node: Node, send: Send): void {
       const surface = el as unknown as HTMLCanvasElement
       prune()
       remember(surface, node)
-      const height = node.rows.length
-      const width = node.rows[0]?.length ?? 0
+      const rows = node.cells?.ids ?? node.rows ?? []
+      const height = rows.length
+      const width = rows[0]?.length ?? 0
       const [cols, lines] = node.grid ?? [width, height]
       surface.style.aspectRatio = `${Math.max(cols, 1)} / ${Math.max(lines, 1)}`
       surface.style.touchAction =
         node.tap !== undefined || node.drag !== undefined || node.turn !== undefined || node.pan !== undefined || node.zoom !== undefined
           ? "none"
           : ""
+      el.classList.toggle("crisp", node.cells !== undefined)
       const dark = document.body.classList.contains("darkmode")
+      if (node.cells !== undefined) {
+        const board = node.cells
+        const sig = `cells:${dark}:${board.app}:${board.skin}:${board.design ?? ""}:${board.pens.join(",")}:${board.ids.map(row => row.join(",")).join(";")}`
+        if (el.__committed === sig) break
+        el.__committed = sig
+        halt(surface)
+        crisp(surface, board, dark)
+        break
+      }
       const shading = node.shade !== undefined && render === "gpu" ? gpu.pull(node.shade) : null
       const marks = node.glyphs?.map(g => `${g.x},${g.y},${g.k},${g.ch},${g.tint ?? ""}`).join(";") ?? ""
       const shapes = node.tris?.map(t => `${t.pts.flat().join(",")}:${t.color}`).join(";") ?? ""
-      const sig = `${render}:${dark}:${shading?.join(",") ?? ""}:${node.palette?.join(",") ?? ""}:${marks}:${shapes}:${node.rows.map(row => row.join(",")).join(";")}`
+      const sig = `${render}:${dark}:${shading?.join(",") ?? ""}:${node.palette?.join(",") ?? ""}:${marks}:${shapes}:${rows.map(row => row.join(",")).join(";")}`
       if (el.__committed === sig) break
       el.__committed = sig
       if (node.shade !== undefined && render === "gpu" && gpu.draw(surface, node, shading)) break
@@ -466,7 +479,7 @@ export function patch(el: Held, node: Node, send: Send): void {
         break
       }
       halt(surface)
-      fill(surface, node.rows, node.palette, node.glyphs, node.tris)
+      fill(surface, rows, node.palette, node.glyphs, node.tris)
       break
     }
     case "Button":

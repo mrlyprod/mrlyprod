@@ -1,12 +1,12 @@
 use mrlycore::colors::ROLLABLE;
 use mrlycore::rng::Rng;
-use mrlycore::tensor::Tensor;
 use mrlycore::{json, Json};
 use mrlymusic::cue;
 use mrlyos::kernel::{drive, int, pick, App, Call, Effect, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{motif_tile, solid_tile, Atlas, Frame, Layer};
+use mrlyui::frame::hex;
 
 const DESIGNS: [&str; 5] = ["carpet", "net", "vtree", "htree", "solid"];
+const KINDS: u8 = 8;
 
 struct Set {
     cols: i64,
@@ -75,7 +75,6 @@ pub struct Crush {
     active: Option<(i32, i32, u8)>,
     colors: Vec<[u8; 4]>,
     crush_color: [u8; 4],
-    dark: bool,
 }
 
 impl Default for Crush {
@@ -99,7 +98,6 @@ impl Crush {
             active: None,
             colors: Vec::new(),
             crush_color: [245, 245, 245, 255],
-            dark: false,
         };
         crush.reset(0);
         crush
@@ -243,7 +241,7 @@ impl Crush {
         self.cells = vec![0; n];
         self.crushable = vec![false; n];
         self.active = None;
-        self.colors = (0..=self.d() as usize).map(|_| self.palette()).collect();
+        self.colors = (0..KINDS).map(|_| self.palette()).collect();
         self.crush_color = self.palette();
         self.spawn();
     }
@@ -274,48 +272,30 @@ impl Crush {
         if kind == 0 {
             0
         } else if self.crushable[i] {
-            self.d() + kind
+            KINDS + kind
         } else {
             kind
         }
     }
-    fn ids(&self) -> Tensor {
+    fn ids(&self) -> Vec<Vec<u8>> {
         let (cols, rows) = (self.cols() as usize, self.rows() as usize);
-        let mut grid = Tensor::new(vec![rows, cols]);
-        for i in 0..self.cells.len() {
-            grid.set(&[i / cols, i % cols], self.id_at(i));
-        }
+        let mut grid: Vec<Vec<u8>> = (0..rows)
+            .map(|r| (0..cols).map(|c| self.id_at(r * cols + c)).collect())
+            .collect();
         if let Some((x, y, kind)) = self.active {
-            grid.set(&[y as usize, x as usize], kind);
+            grid[y as usize][x as usize] = kind;
         }
         grid
     }
-    fn atlas(&self) -> Atlas {
-        let k = self.set.tile as usize;
-        let clear = [0, 0, 0, 0];
-        let dn = self.set.design.as_str();
-        let d = self.d() as usize;
-        let mut tiles = vec![solid_tile(k, clear)];
-        for kind in 1..=d {
-            tiles.push(motif_tile(dn, k, self.colors[kind], clear));
-        }
-        for _ in 1..=d {
-            tiles.push(motif_tile(dn, k, self.crush_color, clear));
-        }
-        Atlas::new(k, tiles)
-    }
-    fn render(&self) -> Frame {
-        let k = self.set.tile as usize;
-        let mut frame = Frame::new(
-            self.cols() as usize * k,
-            self.rows() as usize * k,
-            mrlyui::frame::board(self.dark),
-        );
-        frame.push(Layer::Tiles {
-            ids: self.ids(),
-            set: self.atlas(),
-        });
-        frame
+    fn cells_fact(&self) -> Json {
+        let mut pens: Vec<String> = self.colors.iter().map(|&c| hex(c)).collect();
+        pens.push(hex(self.crush_color));
+        json!({
+            "ids": self.ids(),
+            "skin": "tiles",
+            "pens": pens,
+            "design": &self.set.design,
+        })
     }
 }
 
@@ -332,9 +312,6 @@ impl App for Crush {
             .key("left", Call::new("crush.move", json!({ "dir": "left" })))
             .key("right", Call::new("crush.move", json!({ "dir": "right" })))
     }
-    fn wear(&mut self, world: &Json) {
-        self.dark = world["shared"]["settings"]["darkmode"] == true;
-    }
     fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "score": self.score,
@@ -345,7 +322,7 @@ impl App for Crush {
             "board": self.board_facts(),
             "crushable": self.crushable_facts(),
             "active": self.active_facts(),
-            "frame": self.render().fact(),
+            "cells": self.cells_fact(),
         })
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
@@ -730,15 +707,33 @@ mod tests {
         );
     }
     #[test]
-    fn state_carries_an_indexed_frame() {
+    fn state_carries_the_cells_fact() {
         let c = crush(5);
         let state = c.state(&iden(), None);
-        let palette = state["frame"]["palette"].as_array().unwrap();
-        assert!(!palette.is_empty());
-        let rows = state["frame"]["rows"].as_array().unwrap();
-        assert_eq!(
-            rows.len(),
-            state["frame"]["height"].as_u64().unwrap() as usize
-        );
+        let cells = &state["cells"];
+        assert_eq!(cells["skin"], json!("tiles"));
+        assert_eq!(cells["design"], json!("carpet"));
+        assert_eq!(cells["ids"].as_array().unwrap().len(), 9);
+        assert_eq!(cells["ids"][0].as_array().unwrap().len(), 9);
+        let pens = cells["pens"].as_array().unwrap();
+        assert_eq!(pens.len(), 9);
+        assert!(pens.iter().all(|p| p.as_str().unwrap().starts_with('#')));
+        assert!(state.get("frame").is_none());
+        assert!(state.get("sprites").is_none());
+    }
+    #[test]
+    fn crushable_cells_wear_the_crush_roles() {
+        let mut c = crush(8);
+        c.active = None;
+        let r = c.rows() - 1;
+        let (i0, i1, i2) = (c.idx(0, r), c.idx(1, r), c.idx(2, r));
+        c.cells[i0] = 2;
+        c.cells[i1] = 2;
+        c.cells[i2] = 2;
+        c.crushable = vec![false; c.cells.len()];
+        c.mark_matches();
+        let ids = c.ids();
+        assert_eq!(ids[r as usize][0], KINDS + 2);
+        assert_eq!(ids[r as usize][1], KINDS + 2);
     }
 }

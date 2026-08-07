@@ -1,10 +1,9 @@
 use mrlycore::colors::ROLLABLE;
 use mrlycore::rng::Rng;
-use mrlycore::tensor::Tensor;
 use mrlycore::{json, Json};
 use mrlymusic::cue;
 use mrlyos::kernel::{int, App, Call, Effect, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{motif_tile, solid_tile, Atlas, Frame, Layer};
+use mrlyui::frame::hex;
 
 const MAP_CHOICES: [&str; 4] = ["random", "0", "1", "2"];
 const DESIGNS: [&str; 5] = ["carpet", "net", "vtree", "htree", "solid"];
@@ -159,8 +158,7 @@ pub struct Escape {
     ghosts: Vec<(i32, i32)>,
     px: i32,
     py: i32,
-    colors: [[u8; 4]; 6],
-    dark: bool,
+    colors: [[u8; 4]; 5],
 }
 
 impl Default for Escape {
@@ -186,8 +184,7 @@ impl Escape {
             ghosts: Vec::new(),
             px: 5,
             py: 5,
-            colors: [[0, 0, 0, 255]; 6],
-            dark: false,
+            colors: [[0, 0, 0, 255]; 5],
         };
         escape.reset(0);
         escape
@@ -307,44 +304,22 @@ impl Escape {
             }
         }
     }
-    fn ids(&self) -> Tensor {
-        let mut grid = Tensor::new(vec![SIZE, SIZE]);
-        for y in 0..SIZE {
-            for x in 0..SIZE {
-                grid.set(&[y, x], self.id_at(x as i32, y as i32));
-            }
-        }
-        grid
+    fn ids(&self) -> Vec<Vec<u8>> {
+        (0..SIZE)
+            .map(|y| (0..SIZE).map(|x| self.id_at(x as i32, y as i32)).collect())
+            .collect()
     }
     fn palette(&mut self) -> [u8; 4] {
         let c = ROLLABLE[self.rng.below(ROLLABLE.len())];
         [c.r, c.g, c.b, 255]
     }
-    fn atlas(&self) -> Atlas {
-        let k = self.set.tile as usize;
-        let clear = [0, 0, 0, 0];
-        let d = self.set.design.as_str();
-        Atlas::new(
-            k,
-            vec![
-                solid_tile(k, clear),
-                motif_tile(d, k, self.colors[1], clear),
-                solid_tile(k, self.colors[2]),
-                solid_tile(k, self.colors[3]),
-                motif_tile("void", k, self.colors[4], clear),
-                motif_tile("net", k, self.colors[5], clear),
-            ],
-        )
-    }
-    fn render(&self) -> Frame {
-        let k = self.set.tile as usize;
-        let side = SIZE * k;
-        let mut frame = Frame::new(side, side, mrlyui::frame::board(self.dark));
-        frame.push(Layer::Tiles {
-            ids: self.ids(),
-            set: self.atlas(),
-        });
-        frame
+    fn cells_fact(&self) -> Json {
+        json!({
+            "ids": self.ids(),
+            "skin": "tiles",
+            "pens": self.colors.iter().map(|&c| hex(c)).collect::<Vec<_>>(),
+            "design": &self.set.design,
+        })
     }
     fn build(&mut self, idx: usize) {
         self.base = Escape::parse(idx);
@@ -372,7 +347,7 @@ impl Escape {
         self.level = 1;
         self.over = false;
         self.escaped = None;
-        let picked: Vec<[u8; 4]> = (0..6).map(|_| self.palette()).collect();
+        let picked: Vec<[u8; 4]> = (0..5).map(|_| self.palette()).collect();
         self.colors.copy_from_slice(&picked);
     }
     fn advance_level(&mut self) {
@@ -438,9 +413,6 @@ impl App for Escape {
             .key("left", Call::new("escape.turn", json!({ "dir": "left" })))
             .key("right", Call::new("escape.turn", json!({ "dir": "right" })))
     }
-    fn wear(&mut self, world: &Json) {
-        self.dark = world["shared"]["settings"]["darkmode"] == true;
-    }
     fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "score": self.score,
@@ -453,7 +425,7 @@ impl App for Escape {
             "settings": self.set.to_json(),
             "escaped": self.escaped,
             "pos": [self.px, self.py],
-            "frame": self.render().fact(),
+            "cells": self.cells_fact(),
         })
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
@@ -850,16 +822,20 @@ mod tests {
         );
     }
     #[test]
-    fn state_carries_an_indexed_frame() {
+    fn state_carries_the_cells_fact() {
         let e = escape(5);
         let state = e.state(&iden(), None);
-        let palette = state["frame"]["palette"].as_array().unwrap();
-        assert!(!palette.is_empty());
-        let rows = state["frame"]["rows"].as_array().unwrap();
-        assert_eq!(
-            rows.len(),
-            state["frame"]["height"].as_u64().unwrap() as usize
-        );
+        let cells = &state["cells"];
+        assert_eq!(cells["skin"], json!("tiles"));
+        assert_eq!(cells["design"], json!("carpet"));
+        assert_eq!(cells["ids"].as_array().unwrap().len(), SIZE);
+        assert_eq!(cells["ids"][0].as_array().unwrap().len(), SIZE);
+        assert_eq!(cells["ids"][5][5], json!(5));
+        let pens = cells["pens"].as_array().unwrap();
+        assert_eq!(pens.len(), 5);
+        assert!(pens.iter().all(|p| p.as_str().unwrap().starts_with('#')));
+        assert!(state.get("frame").is_none());
+        assert!(state.get("sprites").is_none());
         assert_eq!(state["pos"], json!([5, 5]));
     }
 }

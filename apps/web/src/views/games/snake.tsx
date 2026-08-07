@@ -1,13 +1,13 @@
 import { GameOver } from "../../components/GameOver.tsx"
-import { library } from "../../components/library.tsx"
 import { Section } from "../../components/Section.tsx"
 import { Meter } from "../../components/Meter.tsx"
 import { Shot } from "../../components/Shot.tsx"
 import { Board } from "../../components/Board.tsx"
 import { DPad } from "../../components/DPad.tsx"
+import { DESIGNS_SOLID as DESIGNS } from "../../components/options.ts"
 import { set } from "../../builders.ts"
 import { h } from "../../jsx.ts"
-import type { Node, Send } from "../../types.ts"
+import type { Cells, Node, Send } from "../../types.ts"
 
 type State = {
   score: number
@@ -19,11 +19,9 @@ type State = {
     wrap: boolean
     self_collision: boolean
     speed: number
-    head: unknown
-    body: unknown
-    food: unknown
+    design: string
   }
-  frame: { rows: number[][]; palette: string[] }
+  cells: Cells
 }
 
 export function snake(state: unknown, _send: Send): Node {
@@ -31,7 +29,7 @@ export function snake(state: unknown, _send: Send): Node {
   return (
     <stack key="snake">
       <card key="board">
-        <Board app="snake" rows={s.frame.rows} palette={s.frame.palette} />
+        <Board app="snake" cells={s.cells} />
       </card>
       {s.over && <GameOver app="snake" emoji="🐍" status={`score ${s.score}`} />}
       <card key="controls">
@@ -49,12 +47,7 @@ export function snake(state: unknown, _send: Send): Node {
         <range key="speed" value={s.settings.speed} min={1} max={8} call={set("snake", "speed")} arg="value" step={1} label="speed" />
       </Section>
       <Section keyName="look" label="look">
-        <text key="head-label" role="note">head</text>
-        {library("tile", "snake", "head")}
-        <text key="body-label" role="note">body</text>
-        {library("tile", "snake", "body")}
-        <text key="food-label" role="note">food</text>
-        {library("tile", "snake", "food")}
+        <choice key="design" value={s.settings.design} options={DESIGNS} call={set("snake", "design")} arg="value" label="design" mode="cycle" />
       </Section>
     </stack>
   )

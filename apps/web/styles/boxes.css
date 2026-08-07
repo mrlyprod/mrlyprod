@@ -420,6 +420,10 @@ img {
   image-rendering: pixelated;
 }
 
+.canvas.crisp {
+  image-rendering: auto;
+}
+
 .image {
   object-fit: cover;
 }

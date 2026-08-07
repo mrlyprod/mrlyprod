@@ -48,11 +48,7 @@ impl Chess {
                 .collect::<Vec<_>>(),
             "piece_colors": Chess::colors_fact(&self.piece_colors),
             "board_colors": Chess::colors_fact(&self.board_colors),
-            "glyphs": self
-                .glyphs
-                .iter()
-                .map(|g| json!(g.to_vec()))
-                .collect::<Vec<_>>(),
+            "guise": self.guise.to_vec(),
         })
     }
     pub fn restore(&mut self, state: &Json) {
@@ -102,18 +98,14 @@ impl Chess {
             });
             Chess::colors_load(&state["piece_colors"], &mut self.piece_colors);
             Chess::colors_load(&state["board_colors"], &mut self.board_colors);
-            if let Some(given) = state["glyphs"].as_array() {
+            if let Some(given) = state["guise"].as_array() {
                 if given.len() == 6 {
-                    for (slot, g) in self.glyphs.iter_mut().zip(given) {
-                        let Some(bits) = g.as_array() else {
-                            continue;
-                        };
-                        if bits.len() != 25 {
-                            continue;
-                        }
-                        for (i, bit) in bits.iter().enumerate() {
-                            slot[i] = bit.as_u64().map(|b| (b as u8).min(1)).unwrap_or(0);
-                        }
+                    let worn: Option<Vec<u8>> = given
+                        .iter()
+                        .map(|v| v.as_u64().filter(|&g| g < 6).map(|g| g as u8))
+                        .collect();
+                    if let Some(worn) = worn {
+                        self.guise = [worn[0], worn[1], worn[2], worn[3], worn[4], worn[5]];
                     }
                 }
             }

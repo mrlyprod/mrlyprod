@@ -1,3 +1,4 @@
+import { shoot } from "../components/Shot.tsx"
 import { prune } from "../render/boards.ts"
 import { markCanvas } from "../render/mark.ts"
 import { make, paint } from "../render/paint.ts"
@@ -28,8 +29,9 @@ export function mount(root: HTMLElement, send: Send, routes: Router, apps: Manif
   const emit: Send = (call, beat) => {
     if (routes.handle(call)) return
     if (idle && beat !== true) wake()
-    pending = call
-    send(call, beat)
+    const made = call.verb === "sys.shot" ? shoot(view, call) : call
+    pending = made
+    send(made, beat)
   }
 
   const splash = make("div", "splash")

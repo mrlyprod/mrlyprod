@@ -6,20 +6,18 @@ import { Board } from "../../components/Board.tsx"
 import { DPad } from "../../components/DPad.tsx"
 import { SURFACES, SKINS, DESIGNS_SOLID as DESIGNS } from "../../components/options.ts"
 import { set } from "../../builders.ts"
-import { face, visual, type Skin } from "../../skin.tsx"
+import { face, paint, visual } from "../../cells.tsx"
 import { h } from "../../jsx.ts"
-import type { Glyph, Node, Send } from "../../types.ts"
+import type { Cells, Node, Send } from "../../types.ts"
 
 type State = {
   score: number
   steps: number
   over: boolean
-  ids: number[][]
   last_spawn: [number, number] | null
   last_merges: [number, number][]
-  skin: Skin
   settings: { grid: number; surface: string; skin: string; design: string }
-  frame: { rows: number[][]; palette: string[]; glyphs?: Glyph[] }
+  cells: Cells
 }
 
 function fresh(s: State, r: number, c: number): boolean {
@@ -28,10 +26,10 @@ function fresh(s: State, r: number, c: number): boolean {
 }
 
 function tile(s: State, id: number, r: number, c: number): Node {
-  const v = visual(s.skin, id)
+  const v = visual("twenty48", s.cells, id)
   const nonce = fresh(s, r, c) ? `-${s.steps}` : ""
   return (
-    <cell key={`t-${r}-${c}`} bg={v.bg}>
+    <cell key={`t-${r}-${c}`} bg={paint(v, s.cells)}>
       {face(v, `face${nonce}`)}
     </cell>
   )
@@ -45,9 +43,9 @@ export function twenty48(state: unknown, _send: Send): Node {
       <card key="board">
         {grid
           ? <grid key="grid" cols={s.settings.grid}>
-              {s.ids.flatMap((row, r) => row.map((id, c) => tile(s, id, r, c)))}
+              {s.cells.ids.flatMap((row, r) => row.map((id, c) => tile(s, id, r, c)))}
             </grid>
-          : <Board app="twenty48" rows={s.frame.rows} palette={s.frame.palette} glyphs={s.frame.glyphs} />}
+          : <Board app="twenty48" cells={s.cells} />}
       </card>
       {s.over && <GameOver app="twenty48" emoji="🔢" status={`score ${s.score}`} />}
       <card key="controls">

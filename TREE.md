@@ -155,9 +155,11 @@ mrlyprod
 │   │   │   ├── gen
 │   │   │   │   ├── mark.json
 │   │   │   │   ├── palette.json
-│   │   │   │   └── shaders.json
+│   │   │   │   ├── shaders.json
+│   │   │   │   └── skins.json
 │   │   │   ├── render
 │   │   │   │   ├── boards.ts
+│   │   │   │   ├── cells.ts
 │   │   │   │   ├── fx.ts
 │   │   │   │   ├── mark.ts
 │   │   │   │   ├── nodes.ts
@@ -223,6 +225,7 @@ mrlyprod
 │   │   │   │   │   └── solids.tsx
 │   │   │   │   └── index.ts
 │   │   │   ├── builders.ts
+│   │   │   ├── cells.tsx
 │   │   │   ├── glyphs.ts
 │   │   │   ├── icons.ts
 │   │   │   ├── journal.ts
@@ -234,7 +237,6 @@ mrlyprod
 │   │   │   ├── reads.ts
 │   │   │   ├── roller.ts
 │   │   │   ├── router.ts
-│   │   │   ├── skin.tsx
 │   │   │   ├── sound.ts
 │   │   │   └── types.ts
 │   │   ├── styles
@@ -433,7 +435,6 @@ mrlyprod
 │   │   │   │   │   │   ├── README.md
 │   │   │   │   │   │   ├── mod.rs
 │   │   │   │   │   │   ├── persist.rs
-│   │   │   │   │   │   ├── render.rs
 │   │   │   │   │   │   ├── rules.rs
 │   │   │   │   │   │   ├── setup.rs
 │   │   │   │   │   │   └── tests.rs
@@ -710,10 +711,17 @@ mrlyprod
 │   │   │   │   │   ├── mod.rs
 │   │   │   │   │   └── vertex.wgsl
 │   │   │   │   ├── skin
+│   │   │   │   │   ├── captcha.rs
 │   │   │   │   │   ├── chess.rs
+│   │   │   │   │   ├── crush.rs
+│   │   │   │   │   ├── dice.rs
+│   │   │   │   │   ├── escape.rs
 │   │   │   │   │   ├── memory.rs
 │   │   │   │   │   ├── mines.rs
 │   │   │   │   │   ├── mod.rs
+│   │   │   │   │   ├── pixel.rs
+│   │   │   │   │   ├── quiz.rs
+│   │   │   │   │   ├── snake.rs
 │   │   │   │   │   ├── ttt.rs
 │   │   │   │   │   ├── twenty48.rs
 │   │   │   │   │   └── two.rs

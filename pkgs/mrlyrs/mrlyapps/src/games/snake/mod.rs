@@ -1,63 +1,17 @@
 use mrlycore::colors::ROLLABLE;
-use mrlycore::paint::Paint;
 use mrlycore::rng::Rng;
 use mrlycore::tensor::Tensor;
-use mrlycore::tile::{Design, Group, Source, Tile as Model};
 use mrlycore::{json, Json};
 use mrlymusic::cue;
-use mrlyos::kernel::{drive, flag, int, App, Call, Effect, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{probe, solid_tile, tile_cell, work_cell, Atlas, Frame, Layer};
+use mrlyos::kernel::{drive, flag, int, pick, App, Call, Effect, Iden, Manifest, Outcome, Verb};
+use mrlyui::frame::hex;
 
+const DESIGNS: [&str; 5] = ["carpet", "net", "vtree", "htree", "solid"];
 const DIRS: [&str; 4] = ["up", "down", "left", "right"];
 const DELTAS: [(i32, i32); 4] = [(-1, 0), (1, 0), (0, -1), (0, 1)];
-const CEILING: usize = 64;
 
 fn opposite(a: usize, b: usize) -> bool {
     matches!((a, b), (0, 1) | (1, 0) | (2, 3) | (3, 2))
-}
-
-#[derive(Clone)]
-struct Part {
-    tile: Model,
-    paint: Option<Paint>,
-}
-
-impl Part {
-    fn motif(design: Design, invert: bool) -> Part {
-        let mut tile = Model::new(Group::General).size(3, 3);
-        tile.sources = vec![Source::Classic(design)];
-        tile.numbers = vec![3];
-        tile.levels = vec![1];
-        tile.rotations = vec![0];
-        tile.anti = vec![false];
-        tile.factor = 3;
-        tile.invert = invert;
-        Part { tile, paint: None }
-    }
-    fn carpet() -> Part {
-        Part::motif(Design::Carpet, false)
-    }
-    fn work(&self) -> Json {
-        json!({
-            "v": 1,
-            "tile": self.tile.to_json(),
-            "paint": self.paint.as_ref().map(|p| p.to_json()).unwrap_or(Json::Null),
-        })
-    }
-    fn from_work(value: &Json) -> Result<Part, &'static str> {
-        if !value.is_object() {
-            return Err("value must be a work bundle");
-        }
-        let tile = Model::from_json(&value["tile"]).map_err(|_| "bad tile")?;
-        if tile.max_size() > CEILING || !probe(&tile) {
-            return Err("tile does not build");
-        }
-        let paint = match &value["paint"] {
-            Json::Null => None,
-            given => Some(Paint::from_json(given).map_err(|_| "bad paint")?),
-        };
-        Ok(Part { tile, paint })
-    }
 }
 
 struct Set {
@@ -67,9 +21,7 @@ struct Set {
     self_collision: bool,
     speed: i64,
     tile: i64,
-    head: Part,
-    body: Part,
-    food: Part,
+    design: String,
 }
 
 impl Set {
@@ -81,24 +33,8 @@ impl Set {
             self_collision: true,
             speed: 1,
             tile: 3,
-            head: Part::carpet(),
-            body: Part::carpet(),
-            food: Part::carpet(),
+            design: "carpet".to_string(),
         }
-    }
-    fn legacy(&mut self, name: &str) -> Result<(), &'static str> {
-        let part = match name {
-            "carpet" => Part::motif(Design::Carpet, false),
-            "net" => Part::motif(Design::Net, false),
-            "vtree" => Part::motif(Design::Vtree, false),
-            "htree" => Part::motif(Design::Htree, false),
-            "solid" => Part::motif(Design::Void, true),
-            _ => return Err("no such option"),
-        };
-        self.head = part.clone();
-        self.body = part.clone();
-        self.food = part;
-        Ok(())
     }
     fn apply(&mut self, key: &str, value: &Json) -> Result<Json, &'static str> {
         match key {
@@ -108,20 +44,7 @@ impl Set {
             "tile" => int(&mut self.tile, value, (1, 8)),
             "wrap" => flag(&mut self.wrap, value),
             "self_collision" => flag(&mut self.self_collision, value),
-            "head" | "body" | "food" => {
-                let part = Part::from_work(value)?;
-                match key {
-                    "head" => self.head = part,
-                    "body" => self.body = part,
-                    _ => self.food = part,
-                }
-                Ok(value.clone())
-            }
-            "design" => {
-                let name = value.as_str().ok_or("value must be a string")?;
-                self.legacy(name)?;
-                Ok(json!(name))
-            }
+            "design" => pick(&mut self.design, value, &DESIGNS),
             _ => Err("no such key"),
         }
     }
@@ -133,9 +56,7 @@ impl Set {
             "self_collision": self.self_collision,
             "speed": self.speed,
             "tile": self.tile,
-            "head": self.head.work(),
-            "body": self.body.work(),
-            "food": self.food.work(),
+            "design": &self.design,
         })
     }
     fn from_json(value: &Json) -> Set {
@@ -160,8 +81,6 @@ pub struct Snake {
     head_color: [u8; 4],
     body_color: [u8; 4],
     food_color: [u8; 4],
-    dark: bool,
-    tiles: Atlas,
 }
 
 impl Default for Snake {
@@ -185,8 +104,6 @@ impl Snake {
             head_color: [255, 255, 255, 255],
             body_color: [200, 200, 200, 255],
             food_color: [255, 0, 0, 255],
-            dark: false,
-            tiles: Atlas::new(1, Vec::new()),
         };
         snake.reset(0);
         snake
@@ -246,24 +163,6 @@ impl Snake {
         self.score = 0;
         self.steps = 0;
         self.over = false;
-        self.retile();
-    }
-    fn retile(&mut self) {
-        let k = self.set.tile as usize;
-        let clear = [0, 0, 0, 0];
-        let cell = |part: &Part, color: [u8; 4]| match &part.paint {
-            Some(coating) => work_cell(&part.tile, coating, k, clear),
-            None => tile_cell(&part.tile, k, color, clear),
-        };
-        self.tiles = Atlas::new(
-            k,
-            vec![
-                solid_tile(k, clear),
-                cell(&self.set.head, self.head_color),
-                cell(&self.set.body, self.body_color),
-                cell(&self.set.food, self.food_color),
-            ],
-        );
     }
     fn advance(&mut self, n: u64) -> u64 {
         let mut taken = 0;
@@ -330,15 +229,17 @@ impl Snake {
             .map(|r| (0..ids.shape[1]).map(|c| ids.get(&[r, c])).collect())
             .collect()
     }
-    fn render(&self) -> Frame {
-        let k = self.set.tile as usize;
-        let side = self.set.grid as usize * k;
-        let mut frame = Frame::new(side, side, mrlyui::frame::board(self.dark));
-        frame.push(Layer::Tiles {
-            ids: self.ids(),
-            set: self.tiles.clone(),
-        });
-        frame
+    fn cells_fact(&self) -> Json {
+        json!({
+            "ids": self.board(),
+            "skin": "tiles",
+            "pens": [
+                hex(self.head_color),
+                hex(self.body_color),
+                hex(self.food_color),
+            ],
+            "design": &self.set.design,
+        })
     }
     fn cells(&self, value: &Json) -> Option<Vec<(i32, i32)>> {
         let g = self.grid() as i64;
@@ -368,9 +269,6 @@ impl App for Snake {
             .key("left", Call::new("snake.turn", json!({ "dir": "left" })))
             .key("right", Call::new("snake.turn", json!({ "dir": "right" })))
     }
-    fn wear(&mut self, world: &Json) {
-        self.dark = world["shared"]["settings"]["darkmode"] == true;
-    }
     fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "score": self.score,
@@ -380,7 +278,7 @@ impl App for Snake {
             "settings": self.set.to_json(),
             "dir": DIRS[self.dir],
             "board": self.board(),
-            "frame": self.render().fact(),
+            "cells": self.cells_fact(),
         })
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
@@ -519,10 +417,6 @@ mod tests {
     fn snake(seed: u64) -> Snake {
         seeded(Snake::new(), "snake.reset", seed)
     }
-    fn net_work() -> Json {
-        let part = Part::motif(Design::Net, false);
-        part.work()
-    }
 
     #[test]
     fn seed_reproduces() {
@@ -611,115 +505,37 @@ mod tests {
         assert!(!send(&mut s, "snake.set", json!({ "key": "volume", "value": 1 })).ok);
     }
     #[test]
-    fn work_keys_accept_bundles() {
+    fn design_dresses_the_cells() {
         let mut s = snake(4);
-        for key in ["head", "body", "food"] {
-            let out = send(
-                &mut s,
-                "snake.set",
-                json!({ "key": key, "value": net_work() }),
-            );
-            assert!(out.ok, "key {key}");
-        }
-        let settings = s.state(&iden(), None)["settings"].clone();
-        for key in ["head", "body", "food"] {
-            assert_eq!(settings[key]["tile"]["sources"][0]["design"], "Net");
-            assert_eq!(settings[key]["paint"], Json::Null);
-        }
-    }
-    #[test]
-    fn work_keys_reject_garbage() {
-        let mut s = snake(4);
-        assert!(
-            !send(
-                &mut s,
-                "snake.set",
-                json!({ "key": "head", "value": "soup" })
-            )
-            .ok
-        );
-        assert!(
-            !send(
-                &mut s,
-                "snake.set",
-                json!({ "key": "head", "value": { "tile": 7 } })
-            )
-            .ok
-        );
-        let mut giant = Part::carpet();
-        giant.tile.numbers = vec![81];
-        giant.tile.factor = 81;
-        giant.tile.width = 81;
-        giant.tile.height = 81;
-        assert!(
-            !send(
-                &mut s,
-                "snake.set",
-                json!({ "key": "head", "value": giant.work() })
-            )
-            .ok
-        );
-        let sane = net_work();
-        let broken = json!({ "v": 1, "tile": &sane["tile"], "paint": { "edition": "Sparkle" } });
-        assert!(
-            !send(
-                &mut s,
-                "snake.set",
-                json!({ "key": "head", "value": broken })
-            )
-            .ok
-        );
-    }
-    #[test]
-    fn painted_part_renders_via_coat() {
-        let mut s = snake(4);
-        let plain = s.tiles.tiles[1].clone();
-        let work = json!({
-            "v": 1,
-            "tile": Part::carpet().tile.to_json(),
-            "paint": {
-                "v": 1,
-                "edition": "Simple",
-                "scheme": "Multicolor",
-                "target": "Fill",
-                "primary": "Black",
-                "secondary": ["Red"],
-                "shades": [],
-            },
-        });
         let out = send(
             &mut s,
             "snake.set",
-            json!({ "key": "head", "value": &work }),
+            json!({ "key": "design", "value": "net" }),
         );
         assert!(out.ok);
-        let painted = s.tiles.tiles[1].clone();
-        assert_ne!(plain.cell.colors, painted.cell.colors);
-        let mut again = snake(4);
-        send(
-            &mut again,
-            "snake.set",
-            json!({ "key": "head", "value": &work }),
+        let state = s.state(&iden(), None);
+        assert_eq!(state["settings"]["design"], json!("net"));
+        assert_eq!(state["cells"]["design"], json!("net"));
+        assert!(
+            !send(
+                &mut s,
+                "snake.set",
+                json!({ "key": "design", "value": "sparkles" })
+            )
+            .ok
         );
-        assert_eq!(painted.cell.colors, again.tiles.tiles[1].cell.colors);
     }
     #[test]
     fn legacy_design_saves_migrate() {
         let mut s = Snake::new();
         s.load(&json!({ "seed": 3, "settings": { "design": "net" } }));
-        let settings = s.state(&iden(), None)["settings"].clone();
-        for key in ["head", "body", "food"] {
-            assert_eq!(settings[key]["tile"]["sources"][0]["design"], "Net");
-        }
-        let mut s = Snake::new();
-        s.load(&json!({ "seed": 3, "settings": { "design": "solid" } }));
-        let head = s.state(&iden(), None)["settings"]["head"].clone();
-        assert_eq!(head["tile"]["sources"][0]["design"], "Void");
-        assert_eq!(head["tile"]["invert"], json!(true));
+        assert_eq!(s.state(&iden(), None)["settings"]["design"], json!("net"));
         let mut s = Snake::new();
         s.load(&json!({ "seed": 3, "settings": { "design": "sparkles" } }));
-        let head = s.state(&iden(), None)["settings"]["head"].clone();
-        assert_eq!(head["tile"]["sources"][0]["design"], "Carpet");
+        assert_eq!(
+            s.state(&iden(), None)["settings"]["design"],
+            json!("carpet")
+        );
     }
     #[test]
     fn save_load_roundtrips_and_continues() {
@@ -727,7 +543,7 @@ mod tests {
         send(
             &mut a,
             "snake.set",
-            json!({ "key": "head", "value": net_work() }),
+            json!({ "key": "design", "value": "net" }),
         );
         send(&mut a, "snake.turn", json!({ "dir": "left" }));
         send(&mut a, "snake.step", json!({ "n": 4 }));
@@ -786,18 +602,21 @@ mod tests {
         );
     }
     #[test]
-    fn state_carries_an_indexed_frame() {
+    fn state_carries_the_cells_fact() {
         let s = snake(5);
         let state = s.state(&iden(), None);
-        let palette = state["frame"]["palette"].as_array().unwrap();
-        assert!(!palette.is_empty());
-        let rows = state["frame"]["rows"].as_array().unwrap();
-        assert_eq!(
-            rows.len(),
-            state["frame"]["height"].as_u64().unwrap() as usize
-        );
+        let cells = &state["cells"];
+        assert_eq!(cells["skin"], json!("tiles"));
+        assert_eq!(cells["design"], json!("carpet"));
+        assert_eq!(cells["ids"].as_array().unwrap().len(), 16);
+        let pens = cells["pens"].as_array().unwrap();
+        assert_eq!(pens.len(), 3);
+        assert!(pens.iter().all(|p| p.as_str().unwrap().starts_with('#')));
+        let head = s.body[0];
+        assert_eq!(cells["ids"][head.0 as usize][head.1 as usize], json!(1));
+        assert!(state.get("frame").is_none());
+        assert!(state.get("sprites").is_none());
         assert_eq!(state["board"].as_array().unwrap().len(), 16);
         assert!(DIRS.contains(&state["dir"].as_str().unwrap()));
-        assert_eq!(state["settings"]["head"]["v"], json!(1));
     }
 }

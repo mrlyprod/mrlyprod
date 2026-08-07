@@ -5,7 +5,7 @@ import { Board } from "../../components/Board.tsx"
 import { SURFACES } from "../../components/options.ts"
 import { call, set } from "../../builders.ts"
 import { h } from "../../jsx.ts"
-import type { Node, Send } from "../../types.ts"
+import type { Cells, Node, Send } from "../../types.ts"
 
 const SKINS = ["tiles", "digits"]
 
@@ -16,17 +16,16 @@ type State = {
   position: number
   total: number
   options: string[]
-  sprite: { rows: number[][]; palette: string[] }
-  settings: { options: number; length: number; size: number; surface: string; skin: string }
-  frame: { rows: number[][]; palette: string[] }
+  settings: { options: number; length: number; surface: string; skin: string }
+  cells: Cells
 }
 
 export function quiz(state: unknown, _send: Send): Node {
   const s = state as State
   const grid = s.settings.surface === "grid"
   const prompt = grid
-    ? <canvas key="prompt" handle="quiz-prompt" rows={s.sprite.rows} palette={s.sprite.palette} />
-    : <Board app="quiz" rows={s.frame.rows} palette={s.frame.palette} />
+    ? <canvas key="prompt" handle="quiz-prompt" cells={{ app: "quiz", ...s.cells }} />
+    : <Board app="quiz" cells={s.cells} />
   const settings = [
     <Section keyName="rules" label="rules">
       <range key="options" value={s.settings.options} min={2} max={8} call={set("quiz", "options")} arg="value" step={1} label="options" />

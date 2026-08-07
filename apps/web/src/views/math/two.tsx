@@ -4,7 +4,6 @@ import { Shot } from "../../components/Shot.tsx"
 import { Pager } from "../../components/Pager.tsx"
 import { library } from "../../components/library.tsx"
 import { colors, MODES, NUMBERS, LEVELS } from "../../components/options.ts"
-import { visual, type Skin } from "../../skin.tsx"
 import { h } from "../../jsx.ts"
 import type { Node, Send } from "../../types.ts"
 
@@ -13,7 +12,6 @@ type State = {
   index: number
   count: number
   census: { grid: number; fill: number; void: number }
-  skin: Skin
   ids: number[][] | null
   frame: { rows: number[][]; palette: string[] } | null
 }
@@ -22,7 +20,7 @@ const turn = setter("two")
 
 function board(s: State): Node {
   if (s.ids !== null) {
-    const rows = s.ids.map(row => row.map(id => visual(s.skin, id).face?.value ?? " "))
+    const rows = s.ids.map(row => row.map(id => (id === 1 ? s.settings.fill : s.settings.void)))
     return <cells key="grid" rows={rows} />
   }
   return <Board app="two" rows={s.frame?.rows ?? []} palette={s.frame?.palette} />

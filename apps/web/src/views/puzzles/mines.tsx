@@ -5,9 +5,9 @@ import { Shot } from "../../components/Shot.tsx"
 import { Board } from "../../components/Board.tsx"
 import { SURFACES, SKINS, DESIGNS_SOLID as DESIGNS } from "../../components/options.ts"
 import { call, set } from "../../builders.ts"
-import { face, visual, type Skin } from "../../skin.tsx"
+import { face, paint, visual } from "../../cells.tsx"
 import { h } from "../../jsx.ts"
-import type { Glyph, Node, Send } from "../../types.ts"
+import type { Cells, Node, Send } from "../../types.ts"
 
 const FLAG = 11
 
@@ -18,26 +18,32 @@ type State = {
   won: boolean | null
   tool: string
   remaining: number
-  ids: number[][]
   flags: boolean[][]
-  skin: Skin
   settings: { cols: number; rows: number; mines: number; surface: string; skin: string; design: string }
-  frame: { rows: number[][]; palette: string[]; glyphs?: Glyph[] }
+  cells: Cells
 }
 
 function tile(s: State, id: number, flagged: boolean, r: number, c: number): Node {
-  const v = visual(s.skin, id)
+  const v = visual("mines", s.cells, id)
   if (id === 0) {
     const verb = flagged || s.tool === "flag" ? "mines.flag" : "mines.reveal"
     return (
-      <cell key={`c-${r}-${c}`} call={s.over ? undefined : call(verb, { x: c, y: r })} bg={v.bg}>
-        {flagged ? face(visual(s.skin, FLAG)) : undefined}
+      <cell key={`c-${r}-${c}`} call={s.over ? undefined : call(verb, { x: c, y: r })} bg={paint(v, s.cells)}>
+        {flagged ? face(visual("mines", s.cells, FLAG)) : undefined}
+      </cell>
+    )
+  }
+  const worn = face(v)
+  if (worn === undefined && v.motif !== undefined) {
+    return (
+      <cell key={`c-${r}-${c}`}>
+        <canvas key="face" handle={`mines-${r}-${c}`} cells={{ app: "mines", ...s.cells, ids: [[id]] }} />
       </cell>
     )
   }
   return (
-    <cell key={`c-${r}-${c}`} bg={v.bg}>
-      {face(v)}
+    <cell key={`c-${r}-${c}`} bg={paint(v, s.cells)}>
+      {worn}
     </cell>
   )
 }
@@ -50,9 +56,9 @@ export function mines(state: unknown, _send: Send): Node {
       <card key="board">
         {grid
           ? <grid key="grid" cols={s.settings.cols}>
-              {s.ids.flatMap((row, r) => row.map((id, c) => tile(s, id, s.flags[r]?.[c] ?? false, r, c)))}
+              {s.cells.ids.flatMap((row, r) => row.map((id, c) => tile(s, id, s.flags[r]?.[c] ?? false, r, c)))}
             </grid>
-          : <Board app="mines" rows={s.frame.rows} palette={s.frame.palette} glyphs={s.frame.glyphs} />}
+          : <Board app="mines" cells={s.cells} />}
       </card>
       {s.over && <GameOver app="mines" emoji="💣" status={s.won ? `cleared · ${s.score} revealed` : "boom"} />}
       <card key="controls">

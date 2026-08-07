@@ -1,10 +1,9 @@
 use mrlycore::colors::ROLLABLE;
 use mrlycore::rng::Rng;
-use mrlycore::tensor::Tensor;
 use mrlycore::{json, Json};
 use mrlymusic::cue;
 use mrlyos::kernel::{int, App, Call, Effect, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{motif_tile, sprite_fact, Atlas, Frame, Layer};
+use mrlyui::frame::hex;
 
 const DESIGNS: [&str; 5] = ["carpet", "net", "vtree", "htree", "solid"];
 const MARKS: [&str; 2] = ["x", "o"];
@@ -141,7 +140,6 @@ pub struct Ttt {
     turn: u8,
     x_color: [u8; 4],
     o_color: [u8; 4],
-    dark: bool,
 }
 
 impl Default for Ttt {
@@ -162,7 +160,6 @@ impl Ttt {
             turn: 1,
             x_color: [255, 255, 255, 255],
             o_color: [200, 200, 200, 255],
-            dark: false,
         };
         ttt.reset(0);
         ttt
@@ -201,13 +198,6 @@ impl Ttt {
             }
         }
     }
-    fn mark_color(&self, mark: u8) -> [u8; 4] {
-        if mark == 1 {
-            self.x_color
-        } else {
-            self.o_color
-        }
-    }
     fn place(&mut self, cell: usize) -> bool {
         self.cells[cell] = self.turn;
         self.steps += 1;
@@ -231,18 +221,6 @@ impl Ttt {
             })
             .collect()
     }
-    fn sprites(&self) -> Vec<Json> {
-        let k = self.set.tile as usize;
-        let clear = [0, 0, 0, 0];
-        let d = self.set.design.as_str();
-        self.cells
-            .iter()
-            .map(|&v| match v {
-                0 => Json::Null,
-                mark => sprite_fact(&motif_tile(d, k, self.mark_color(mark), clear)),
-            })
-            .collect()
-    }
     fn winner_fact(&self) -> Json {
         if !self.over {
             return Json::Null;
@@ -253,33 +231,18 @@ impl Ttt {
             _ => json!("draw"),
         }
     }
-    fn ids(&self) -> Tensor {
-        let mut grid = Tensor::new(vec![3, 3]);
-        for (i, &v) in self.cells.iter().enumerate() {
-            grid.set(&[i / 3, i % 3], v);
-        }
-        grid
+    fn ids(&self) -> Vec<Vec<u8>> {
+        (0..3)
+            .map(|r| (0..3).map(|c| self.cells[r * 3 + c]).collect())
+            .collect()
     }
-    fn k(&self) -> usize {
-        mrlyui::skin::pixels(self.set.tile as usize, &self.set.skin)
-    }
-    fn atlas(&self) -> Atlas {
-        mrlyui::skin::ttt::skin(
-            &self.set.skin,
-            &self.set.design,
-            [self.x_color, self.o_color],
-        )
-        .atlas(self.k(), mrlyui::frame::board(self.dark))
-    }
-    fn render(&self) -> Frame {
-        let k = self.k();
-        let side = 3 * k;
-        let mut frame = Frame::new(side, side, mrlyui::frame::board(self.dark));
-        frame.push(Layer::Tiles {
-            ids: self.ids(),
-            set: self.atlas(),
-        });
-        frame
+    fn cells_fact(&self) -> Json {
+        json!({
+            "ids": self.ids(),
+            "skin": &self.set.skin,
+            "pens": [hex(self.x_color), hex(self.o_color)],
+            "design": &self.set.design,
+        })
     }
     fn cue(&self, mover: u8) -> Effect {
         let name = if !self.over {
@@ -305,9 +268,6 @@ impl App for Ttt {
             .title("tic tac toe")
             .category("puzzles")
     }
-    fn wear(&mut self, world: &Json) {
-        self.dark = world["shared"]["settings"]["darkmode"] == true;
-    }
     fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "score": 0,
@@ -316,10 +276,9 @@ impl App for Ttt {
             "seed": self.seed,
             "settings": self.set.to_json(),
             "board": self.board_facts(),
-            "sprites": self.sprites(),
             "winner": self.winner_fact(),
             "turn": MARKS[(self.turn - 1) as usize],
-            "frame": self.render().fact(),
+            "cells": self.cells_fact(),
         })
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
@@ -588,9 +547,9 @@ mod tests {
         for (key, value) in [("surface", "canvas"), ("skin", "emojis")] {
             assert!(send(&mut t, "ttt.set", json!({ "key": key, "value": value })).ok);
         }
-        assert_eq!(t.state(&iden(), None)["steps"], json!(1));
-        let set = t.atlas();
-        assert!(set.faces[1].is_some(), "the canvas lost its glyph");
+        let state = t.state(&iden(), None);
+        assert_eq!(state["steps"], json!(1));
+        assert_eq!(state["cells"]["skin"], json!("emojis"));
         assert!(!send(&mut t, "ttt.set", json!({ "key": "skin", "value": "wax" })).ok);
     }
     #[test]
@@ -612,21 +571,17 @@ mod tests {
         assert_eq!(settings["skin"], json!("tiles"));
     }
     #[test]
-    fn sprites_track_the_played_marks() {
+    fn cells_track_the_played_marks() {
         let mut t = hotseat(1);
         send(&mut t, "ttt.place", json!({ "cell": 0 }));
         let state = t.state(&iden(), None);
-        let sprites = state["sprites"].as_array().unwrap();
-        assert_eq!(sprites.len(), 9);
-        assert!(!sprites[0].is_null());
-        assert!(sprites[1].is_null());
-        let keys: Vec<&str> = sprites[0]
-            .as_object()
-            .unwrap()
-            .keys()
-            .map(String::as_str)
-            .collect();
-        assert_eq!(keys, vec!["width", "height", "rows", "palette"]);
+        let cells = &state["cells"];
+        assert_eq!(cells["ids"][0][0], json!(1));
+        assert_eq!(cells["ids"][0][1], json!(0));
+        let pens = cells["pens"].as_array().unwrap();
+        assert_eq!(pens.len(), 2);
+        assert!(pens.iter().all(|p| p.as_str().unwrap().starts_with('#')));
+        assert_ne!(pens[0], pens[1]);
     }
     #[test]
     fn save_load_roundtrips_and_continues() {
@@ -656,16 +611,15 @@ mod tests {
         assert_eq!(names, vec!["ttt.place", "ttt.reset", "ttt.set"]);
     }
     #[test]
-    fn state_carries_an_indexed_frame() {
+    fn state_carries_the_cells_fact() {
         let t = ttt(5);
         let state = t.state(&iden(), None);
-        let palette = state["frame"]["palette"].as_array().unwrap();
-        assert!(!palette.is_empty());
-        let rows = state["frame"]["rows"].as_array().unwrap();
-        assert_eq!(
-            rows.len(),
-            state["frame"]["height"].as_u64().unwrap() as usize
-        );
+        let cells = &state["cells"];
+        assert_eq!(cells["ids"].as_array().unwrap().len(), 3);
+        assert_eq!(cells["skin"], json!("tiles"));
+        assert_eq!(cells["design"], json!("carpet"));
+        assert!(state.get("frame").is_none());
+        assert!(state.get("sprites").is_none());
         assert_eq!(state["board"].as_array().unwrap().len(), 3);
     }
 }

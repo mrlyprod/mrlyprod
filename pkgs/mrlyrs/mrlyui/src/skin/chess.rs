@@ -1,4 +1,8 @@
-use super::{Skin, Visual};
+use super::{Skin, Tint, Visual};
+
+pub const VARIANTS: [&str; 2] = ["digits", "emojis"];
+
+pub const BLOCK: usize = 13;
 
 const GLYPHS: [[&str; 5]; 6] = [
     ["00000", "00100", "01110", "00100", "00000"],
@@ -9,10 +13,6 @@ const GLYPHS: [[&str; 5]; 6] = [
     ["00000", "01110", "01110", "01110", "00000"],
 ];
 
-pub fn emoji(kind: usize, team: usize) -> &'static str {
-    EMOJIS[kind.min(5)][team.min(1)]
-}
-
 const EMOJIS: [[&str; 2]; 6] = [
     ["♙", "♟"],
     ["♘", "♞"],
@@ -22,68 +22,67 @@ const EMOJIS: [[&str; 2]; 6] = [
     ["♔", "♚"],
 ];
 
-pub fn glyphs() -> [[u8; 25]; 6] {
-    let mut out = [[0u8; 25]; 6];
-    for (kind, rows) in GLYPHS.iter().enumerate() {
-        for (y, row) in rows.iter().enumerate() {
-            for (x, ch) in row.chars().enumerate() {
-                out[kind][y * 5 + x] = u8::from(ch == '1');
+fn rows(mask: &[&str; 5]) -> Vec<Vec<u8>> {
+    mask.iter()
+        .map(|row| row.chars().map(|ch| u8::from(ch == '1')).collect())
+        .collect()
+}
+
+pub fn skin(variant: &str) -> Skin {
+    let mut visuals = Vec::new();
+    for parity in 0..2usize {
+        visuals.push(Visual::pen(2 + parity));
+        for team in 0..2usize {
+            for kind in 0..6usize {
+                let square = Visual::pen(2 + parity);
+                visuals.push(match variant {
+                    "emojis" => square.glyph(EMOJIS[kind][team]).tinted(Tint::Pen(team)),
+                    _ => square.sprite(rows(&GLYPHS[kind])).tinted(Tint::Pen(team)),
+                });
             }
-        }
-    }
-    out
-}
-
-fn rows(mask: &[u8; 25]) -> Vec<Vec<u8>> {
-    (0..5).map(|y| mask[y * 5..y * 5 + 5].to_vec()).collect()
-}
-
-pub fn skin(variant: &str, glyphs: &[[u8; 25]; 6]) -> Skin {
-    let mut visuals = vec![Visual::none()];
-    for team in 0..2usize {
-        for (kind, mask) in glyphs.iter().enumerate() {
-            visuals.push(match variant {
-                "emojis" => Visual::none().emoji(EMOJIS[kind][team]),
-                _ => Visual::none().sprite(rows(mask)),
-            });
         }
     }
     Skin::new(visuals)
 }
 
+pub fn corpus() -> Vec<(&'static str, Skin)> {
+    VARIANTS.into_iter().map(|v| (v, skin(v))).collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::skin::Face;
+    use crate::skin::{Face, Ink};
 
     #[test]
-    fn roles_cover_empty_then_both_teams() {
-        let s = skin("digits", &glyphs());
-        assert_eq!(s.visuals.len(), 13);
-        assert_eq!(s.visuals[0], Visual::none());
+    fn roles_cover_both_parities_and_teams() {
+        let s = skin("digits");
+        assert_eq!(s.visuals.len(), 2 * BLOCK);
+        assert_eq!(s.visuals[0], Visual::pen(2));
+        assert_eq!(s.visuals[BLOCK], Visual::pen(3));
         let Some(Face::Sprite(rows)) = &s.visuals[1].face else {
             panic!("pawn should be a sprite");
         };
         assert_eq!(rows.len(), 5);
         assert_eq!(rows[1], vec![0, 0, 1, 0, 0]);
         assert_eq!(s.visuals[1].face, s.visuals[7].face);
+        assert_eq!(s.visuals[1].face, s.visuals[BLOCK + 1].face);
+        assert_eq!(s.visuals[1].tint, Some(Tint::Pen(0)));
+        assert_eq!(s.visuals[7].tint, Some(Tint::Pen(1)));
+        assert_eq!(s.visuals[BLOCK + 7].bg, Some(Ink::Pen(3)));
     }
     #[test]
     fn emojis_split_the_teams() {
-        let s = skin("emojis", &glyphs());
-        assert_eq!(s.visuals[1].face, Some(Face::Emoji("♙".into())));
-        assert_eq!(s.visuals[7].face, Some(Face::Emoji("♟".into())));
-        assert_eq!(s.visuals[6].face, Some(Face::Emoji("♔".into())));
-        assert_eq!(s.visuals[12].face, Some(Face::Emoji("♚".into())));
+        let s = skin("emojis");
+        assert_eq!(s.visuals[1].face, Some(Face::Glyph("♙".into())));
+        assert_eq!(s.visuals[7].face, Some(Face::Glyph("♟".into())));
+        assert_eq!(s.visuals[6].face, Some(Face::Glyph("♔".into())));
+        assert_eq!(s.visuals[12].face, Some(Face::Glyph("♚".into())));
+        assert_eq!(s.visuals[12].tint, Some(Tint::Pen(1)));
     }
     #[test]
-    fn scrambled_masks_flow_through() {
-        let mut masks = glyphs();
-        masks[0] = [1; 25];
-        let s = skin("digits", &masks);
-        let Some(Face::Sprite(rows)) = &s.visuals[1].face else {
-            panic!("pawn should be a sprite");
-        };
-        assert_eq!(rows[0], vec![1, 1, 1, 1, 1]);
+    fn corpus_lists_every_variant() {
+        let names: Vec<&str> = corpus().into_iter().map(|(v, _)| v).collect();
+        assert_eq!(names, VARIANTS.to_vec());
     }
 }

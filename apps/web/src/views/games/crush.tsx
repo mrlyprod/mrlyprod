@@ -6,7 +6,7 @@ import { Board } from "../../components/Board.tsx"
 import { DESIGNS_SOLID as DESIGNS } from "../../components/options.ts"
 import { call, set } from "../../builders.ts"
 import { h } from "../../jsx.ts"
-import type { Node, Send } from "../../types.ts"
+import type { Cells, Node, Send } from "../../types.ts"
 
 type State = {
   score: number
@@ -19,7 +19,7 @@ type State = {
     speed: number
     design: string
   }
-  frame: { rows: number[][]; palette: string[] }
+  cells: Cells
 }
 
 export function crush(state: unknown, _send: Send): Node {
@@ -27,7 +27,7 @@ export function crush(state: unknown, _send: Send): Node {
   return (
     <stack key="crush">
       <card key="board">
-        <Board app="crush" rows={s.frame.rows} palette={s.frame.palette} />
+        <Board app="crush" cells={s.cells} />
       </card>
       {s.over && <GameOver app="crush" emoji="🍬" status={`score ${s.score}`} />}
       <card key="controls">

@@ -1,12 +1,10 @@
 use mrlycore::colors::ROLLABLE;
 use mrlycore::rng::Rng;
-use mrlycore::tensor::Tensor;
 use mrlycore::{json, Json};
 use mrlymath::pick;
-use mrlymath::two::Cell2d;
 use mrlymusic::cue;
 use mrlyos::kernel::{int, App, Call, Effect, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{sprite_fact, Atlas, Frame, Layer};
+use mrlyui::frame::hex;
 
 const SURFACES: [&str; 2] = ["grid", "canvas"];
 const SKINS: [&str; 2] = ["tiles", "digits"];
@@ -101,7 +99,6 @@ pub struct Captcha {
     codes: Vec<usize>,
     colors: Vec<[u8; 4]>,
     target: usize,
-    dark: bool,
 }
 
 impl Default for Captcha {
@@ -122,7 +119,6 @@ impl Captcha {
             codes: Vec::new(),
             colors: Vec::new(),
             target: 0,
-            dark: false,
         };
         captcha.reset(0);
         captcha
@@ -152,50 +148,23 @@ impl Captcha {
         self.codes = (0..n).map(|_| rest[self.rng.below(rest.len())]).collect();
         self.target = self.rng.below(n);
         self.codes[self.target] = hero;
-        self.colors = (0..n).map(|_| self.palette()).collect();
+        self.colors = (0..pick::NAMES.len()).map(|_| self.palette()).collect();
     }
     fn prompt(&self) -> String {
         pick::name(self.codes[self.target]).to_string()
     }
-    fn face(&self, i: usize) -> Cell2d {
-        let k = self.set.size as usize;
-        let fg = if self.set.skin == "digits" {
-            mrlyui::frame::ink(self.dark)
-        } else {
-            self.colors[i]
-        };
-        pick::tile(self.codes[i], k, fg, [0, 0, 0, 0])
-    }
-    fn sprites(&self) -> Vec<Json> {
-        (0..self.cells())
-            .map(|i| sprite_fact(&self.face(i)))
+    fn ids(&self) -> Vec<Vec<u8>> {
+        let cols = self.cols();
+        (0..self.rows())
+            .map(|r| (0..cols).map(|c| self.codes[r * cols + c] as u8).collect())
             .collect()
     }
-    fn atlas(&self) -> Atlas {
-        let k = self.set.size as usize;
-        Atlas::new(k, (0..self.cells()).map(|i| self.face(i)).collect())
-    }
-    fn ids(&self) -> Tensor {
-        let (cols, rows) = (self.cols(), self.rows());
-        let mut grid = Tensor::new(vec![rows, cols]);
-        for i in 0..self.cells() {
-            grid.set(&[i / cols, i % cols], i as u8);
-        }
-        grid
-    }
-    fn render(&self) -> Frame {
-        let k = self.set.size as usize;
-        let mut frame = Frame::new(
-            self.cols() * k,
-            self.rows() * k,
-            mrlyui::frame::board(self.dark),
-        );
-        frame.push(Layer::Tiles {
-            ids: self.ids(),
-            set: self.atlas(),
-        });
-        frame.say(self.prompt(), Vec::new());
-        frame
+    fn cells_fact(&self) -> Json {
+        json!({
+            "ids": self.ids(),
+            "skin": &self.set.skin,
+            "pens": self.colors.iter().map(|&c| hex(c)).collect::<Vec<_>>(),
+        })
     }
     fn reset(&mut self, seed: u64) {
         self.rng = Rng::new(seed);
@@ -225,9 +194,6 @@ impl App for Captcha {
     fn manifest(&self) -> Manifest {
         Manifest::new("captcha").emoji("🧩").category("puzzles")
     }
-    fn wear(&mut self, world: &Json) {
-        self.dark = world["shared"]["settings"]["darkmode"] == true;
-    }
     fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "score": self.score,
@@ -236,8 +202,7 @@ impl App for Captcha {
             "seed": self.seed,
             "settings": self.set.to_json(),
             "prompt": self.prompt(),
-            "sprites": self.sprites(),
-            "frame": self.render().fact(),
+            "cells": self.cells_fact(),
         })
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
@@ -355,7 +320,7 @@ impl App for Captcha {
                         .collect()
                 });
                 if let Some(colors) = colors {
-                    if colors.len() == self.codes.len() {
+                    if colors.len() == pick::NAMES.len() {
                         self.colors = colors;
                     }
                 }
@@ -442,23 +407,13 @@ mod tests {
         assert!(!send(&mut c, "captcha.pick", json!({})).ok);
     }
     #[test]
-    fn state_does_not_leak_the_target_cell() {
+    fn state_keeps_the_answer_keys_out() {
         let c = captcha(9);
         let state = c.state(&iden(), None);
         assert!(state.get("codes").is_none());
         assert!(state.get("target").is_none());
+        assert!(state.get("sprites").is_none());
         assert_eq!(state["prompt"], json!(pick::name(c.codes[c.target])));
-        let sprites = state["sprites"].as_array().unwrap();
-        assert_eq!(sprites.len(), c.cells());
-        for sprite in sprites {
-            let keys: Vec<&str> = sprite
-                .as_object()
-                .unwrap()
-                .keys()
-                .map(String::as_str)
-                .collect();
-            assert_eq!(keys, vec!["width", "height", "rows", "palette"]);
-        }
         let saved = c.save();
         assert!(saved.get("codes").is_some());
         assert!(saved.get("target").is_some());
@@ -560,7 +515,7 @@ mod tests {
         assert!(!send(&mut c, "captcha.set", json!({ "key": "skin", "value": 3 })).ok);
     }
     #[test]
-    fn digits_skin_bleaches_the_sprites() {
+    fn skin_setting_rides_the_cells_fact() {
         let mut c = captcha(4);
         send(
             &mut c,
@@ -568,12 +523,7 @@ mod tests {
             json!({ "key": "skin", "value": "digits" }),
         );
         let state = c.state(&iden(), None);
-        for sprite in state["sprites"].as_array().unwrap() {
-            for color in sprite["palette"].as_array().unwrap() {
-                let hex = color.as_str().unwrap();
-                assert!(hex == "#000000" || hex == "#00000000");
-            }
-        }
+        assert_eq!(state["cells"]["skin"], json!("digits"));
     }
     #[test]
     fn old_saves_default_to_the_legacy_look() {
@@ -621,15 +571,24 @@ mod tests {
         );
     }
     #[test]
-    fn state_carries_an_indexed_frame() {
+    fn state_carries_the_cells_fact() {
         let c = captcha(5);
         let state = c.state(&iden(), None);
-        let palette = state["frame"]["palette"].as_array().unwrap();
-        assert!(!palette.is_empty());
-        let rows = state["frame"]["rows"].as_array().unwrap();
-        assert_eq!(
-            rows.len(),
-            state["frame"]["height"].as_u64().unwrap() as usize
-        );
+        let cells = &state["cells"];
+        assert_eq!(cells["skin"], json!("tiles"));
+        let rows = cells["ids"].as_array().unwrap();
+        assert_eq!(rows.len(), c.rows());
+        assert_eq!(rows[0].as_array().unwrap().len(), c.cols());
+        for row in rows {
+            for id in row.as_array().unwrap() {
+                let id = id.as_u64().unwrap() as usize;
+                assert!((1..pick::NAMES.len() - 1).contains(&id));
+            }
+        }
+        let pens = cells["pens"].as_array().unwrap();
+        assert_eq!(pens.len(), pick::NAMES.len());
+        assert!(pens.iter().all(|p| p.as_str().unwrap().starts_with('#')));
+        assert!(state.get("frame").is_none());
+        assert!(cells.get("design").is_none());
     }
 }

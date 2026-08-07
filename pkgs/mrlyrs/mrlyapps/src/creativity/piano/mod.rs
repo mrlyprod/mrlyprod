@@ -68,7 +68,7 @@ impl App for Piano {
         Manifest::new("piano").emoji("🎹").category("creativity")
     }
     fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
-        let cells: Vec<Json> = keys()
+        let board: Vec<Json> = keys()
             .iter()
             .map(|slot| match slot {
                 Some(midi) => json!({
@@ -79,7 +79,7 @@ impl App for Piano {
                 None => Json::Null,
             })
             .collect();
-        json!({ "cols": 5, "cells": cells, "held": self.held.clone() })
+        json!({ "cols": 5, "keys": board, "held": self.held.clone() })
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
         vec![

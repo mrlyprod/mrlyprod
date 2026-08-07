@@ -10,7 +10,7 @@
     "params": {},
     "state": {
       "cols": 5,
-      "cells": [
+      "keys": [
         {
           "midi": 43,
           "name": "G2",

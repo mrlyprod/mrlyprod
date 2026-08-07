@@ -44,4 +44,5 @@ fn main() {
     write("palette", &palette());
     write("shaders", &shaders());
     write("mark", &mark());
+    write("skins", &mrlyui::skin::corpus());
 }

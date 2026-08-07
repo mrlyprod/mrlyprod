@@ -7,7 +7,7 @@ import { DPad } from "../../components/DPad.tsx"
 import { DESIGNS_SOLID as DESIGNS } from "../../components/options.ts"
 import { set } from "../../builders.ts"
 import { h } from "../../jsx.ts"
-import type { Node, Send } from "../../types.ts"
+import type { Cells, Node, Send } from "../../types.ts"
 
 const MAPS = ["random", "0", "1", "2"]
 
@@ -23,7 +23,7 @@ type State = {
     speed: number
     design: string
   }
-  frame: { rows: number[][]; palette: string[] }
+  cells: Cells
 }
 
 export function escape(state: unknown, _send: Send): Node {
@@ -31,7 +31,7 @@ export function escape(state: unknown, _send: Send): Node {
   return (
     <stack key="escape">
       <card key="board">
-        <Board app="escape" rows={s.frame.rows} palette={s.frame.palette} />
+        <Board app="escape" cells={s.cells} />
       </card>
       {s.over && <GameOver app="escape" emoji="👻" status={s.escaped ? `escaped · ate ${s.score}` : `caught · level ${s.level}`} />}
       <card key="controls">

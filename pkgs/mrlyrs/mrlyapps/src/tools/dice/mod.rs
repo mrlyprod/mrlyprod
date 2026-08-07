@@ -1,75 +1,13 @@
 use mrlycore::rng::Rng;
-use mrlycore::tensor::Tensor;
 use mrlycore::{json, Json};
-use mrlymath::two::Cell2d;
 use mrlymusic::cue;
 use mrlyos::kernel::{App, Call, Effect, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{sprite_fact, Atlas, Frame, Layer};
 
 pub const SIDES: [u32; 7] = [2, 4, 6, 8, 10, 12, 20];
 
 const SURFACES: [&str; 2] = ["grid", "canvas"];
 const SKINS: [&str; 3] = ["tiles", "emojis", "digits"];
-const DIE: [&str; 6] = [
-    "\u{2680}", "\u{2681}", "\u{2682}", "\u{2683}", "\u{2684}", "\u{2685}",
-];
 const HISTORY: usize = 8;
-const K: usize = 12;
-
-fn pips(value: u32) -> &'static [(usize, usize)] {
-    match value {
-        1 => &[(1, 1)],
-        2 => &[(0, 0), (2, 2)],
-        3 => &[(0, 0), (1, 1), (2, 2)],
-        4 => &[(0, 0), (0, 2), (2, 0), (2, 2)],
-        5 => &[(0, 0), (0, 2), (1, 1), (2, 0), (2, 2)],
-        6 => &[(0, 0), (0, 2), (1, 0), (1, 2), (2, 0), (2, 2)],
-        _ => &[],
-    }
-}
-
-fn pip_cell(value: u32, k: usize, fg: [u8; 4], bg: [u8; 4]) -> Cell2d {
-    let spots = pips(value);
-    if spots.is_empty() {
-        return digit_cell(value, k, fg, bg);
-    }
-    let mut mask = Tensor::new(vec![k, k]);
-    let mut colors = vec![bg; k * k];
-    for &(pr, pc) in spots {
-        for y in (pr * k / 3)..((pr + 1) * k / 3) {
-            for x in (pc * k / 3)..((pc + 1) * k / 3) {
-                mask.set(&[y, x], 1);
-                colors[y * k + x] = fg;
-            }
-        }
-    }
-    let mut cell = Cell2d::new(mask);
-    cell.cell.colors = Some(colors);
-    cell
-}
-
-fn digit_cell(value: u32, k: usize, fg: [u8; 4], bg: [u8; 4]) -> Cell2d {
-    let mut mask = Tensor::new(vec![k, k]);
-    let mut colors = vec![bg; k * k];
-    let glyph = mrlyfont::raster(&value.to_string());
-    let gh = glyph.len();
-    let gw = glyph.first().map(Vec::len).unwrap_or(0);
-    if gh <= k && gw <= k {
-        let oy = (k - gh) / 2;
-        let ox = (k - gw) / 2;
-        for (y, row) in glyph.iter().enumerate() {
-            for (x, &v) in row.iter().enumerate() {
-                if v == 1 {
-                    mask.set(&[oy + y, ox + x], 1);
-                    colors[(oy + y) * k + (ox + x)] = fg;
-                }
-            }
-        }
-    }
-    let mut cell = Cell2d::new(mask);
-    cell.cell.colors = Some(colors);
-    cell
-}
 
 pub struct Dice {
     rng: Rng,
@@ -80,7 +18,6 @@ pub struct Dice {
     rolls: Vec<u32>,
     surface: String,
     skin: String,
-    dark: bool,
 }
 
 impl Default for Dice {
@@ -100,7 +37,6 @@ impl Dice {
             rolls: Vec::new(),
             surface: "grid".to_string(),
             skin: "digits".to_string(),
-            dark: false,
         }
     }
     fn reset(&mut self, seed: u64) {
@@ -110,40 +46,12 @@ impl Dice {
         self.face = 1;
         self.rolls.clear();
     }
-    fn face_cell(&self) -> (Cell2d, Option<&'static str>) {
-        let clear = [0, 0, 0, 0];
-        let ink = mrlyui::frame::ink(self.dark);
-        let die = DIE.get(self.face as usize - 1);
-        match (self.skin.as_str(), die) {
-            ("tiles", _) => (pip_cell(self.face, K, ink, clear), None),
-            ("emojis", Some(face)) => (mrlyui::frame::solid_tile(K, clear), Some(*face)),
-            _ => (digit_cell(self.face, K, ink, clear), None),
-        }
-    }
-    fn render(&self) -> Frame {
-        let mut frame = Frame::new(K, K, mrlyui::frame::board(self.dark));
-        let (cell, die) = self.face_cell();
-        let mut set = Atlas::new(K, vec![cell]);
-        if let Some(ch) = die {
-            set.face(0, ch, Some(mrlyui::frame::ink(self.dark)));
-        }
-        frame.push(Layer::Tiles {
-            ids: Tensor::new(vec![1, 1]),
-            set,
-        });
-        frame
-    }
-    fn sprite(&self) -> Json {
-        let (cell, die) = self.face_cell();
-        let mut out = sprite_fact(&cell);
-        if let Some(ch) = die {
-            let ink = mrlyui::frame::ink(self.dark);
-            out["glyphs"] = json!([{
-                "x": 0, "y": 0, "k": K, "ch": ch,
-                "tint": mrlyui::frame::hex(ink),
-            }]);
-        }
-        out
+    fn cells_fact(&self) -> Json {
+        json!({
+            "ids": [[self.face]],
+            "skin": &self.skin,
+            "pens": [],
+        })
     }
     fn apply(&mut self, key: &str, value: &Json) -> Result<Json, &'static str> {
         match key {
@@ -179,9 +87,6 @@ impl App for Dice {
     fn manifest(&self) -> Manifest {
         Manifest::new("dice").emoji("🎲").category("tools")
     }
-    fn wear(&mut self, world: &Json) {
-        self.dark = world["shared"]["settings"]["darkmode"] == true;
-    }
     fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "steps": self.steps,
@@ -194,8 +99,7 @@ impl App for Dice {
             "face": self.face,
             "nonce": self.steps,
             "rolls": self.rolls.clone(),
-            "sprite": self.sprite(),
-            "frame": self.render().fact(),
+            "cells": self.cells_fact(),
         })
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
@@ -375,10 +279,11 @@ mod tests {
         for (key, value) in [("surface", "canvas"), ("skin", "emojis")] {
             assert!(send(&mut d, "dice.set", json!({ "key": key, "value": value })).ok);
         }
-        assert_eq!(d.state(&iden(), None)["steps"], json!(1));
-        let (cell, die) = d.face_cell();
-        assert!(die.is_some(), "the die face lost its glyph");
-        assert!(cell.cell.colors.unwrap().iter().all(|px| px[3] == 0));
+        let state = d.state(&iden(), None);
+        assert_eq!(state["steps"], json!(1));
+        assert_eq!(state["cells"]["skin"], json!("emojis"));
+        let frame = mrlyui::skin::raster("dice", &state["cells"], 12, false).expect("a frame");
+        assert_eq!(frame.width, mrlyui::skin::SYMBOL);
         assert!(!send(&mut d, "dice.set", json!({ "key": "skin", "value": "wax" })).ok);
     }
     #[test]
@@ -465,13 +370,17 @@ mod tests {
         assert!(!send(&mut Dice::new(), "dice.juggle", json!({})).ok);
     }
     #[test]
-    fn state_carries_an_indexed_frame() {
-        let d = dice(5);
+    fn state_carries_the_cells_fact() {
+        let mut d = dice(5);
+        send(&mut d, "dice.roll", json!({}));
         let state = d.state(&iden(), None);
-        let rows = state["frame"]["rows"].as_array().unwrap();
-        assert_eq!(
-            rows.len(),
-            state["frame"]["height"].as_u64().unwrap() as usize
-        );
+        let cells = &state["cells"];
+        assert_eq!(cells["ids"][0][0], state["face"]);
+        assert_eq!(cells["skin"], json!("digits"));
+        assert_eq!(cells["pens"].as_array().unwrap().len(), 0);
+        assert!(cells.get("design").is_none());
+        assert!(state.get("frame").is_none());
+        assert!(state.get("sprite").is_none());
+        assert!(state.get("skin").is_none());
     }
 }

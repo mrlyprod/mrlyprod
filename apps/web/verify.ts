@@ -1,9 +1,10 @@
 import { readFileSync, readdirSync } from "node:fs"
 import markData from "./src/gen/mark.json"
 import shadersData from "./src/gen/shaders.json"
+import skinsData from "./src/gen/skins.json"
 import { boot, buffer, call, list, load, observe, read } from "./src/kernel.ts"
 import { install as installReads } from "./src/reads.ts"
-import type { Call, Mark, Node, Observation, Shade, Shaders } from "./src/types.ts"
+import type { Call, Mark, Node, Observation, Shade, Shaders, Skins } from "./src/types.ts"
 import { views } from "./src/views/index.ts"
 
 const wasm = readFileSync(new URL("../../pkgs/mrlyjs/web/pkg/mrlyjs_bg.wasm", import.meta.url))
@@ -81,6 +82,13 @@ check(
   "the shader programs are baked",
   Object.keys(programs).length > 0 && Object.values(programs).every(source => source.includes("fn vs_main") && source.includes("fn fs_main")),
   Object.keys(programs).join(" "),
+)
+
+const skins = skinsData as Skins
+check(
+  "the app skins are baked",
+  Object.keys(skins).length >= 12 && (skins["ttt"]?.["tiles"]?.length ?? 0) > 0 && (skins["twenty48"]?.["digits"]?.length ?? 0) > 0,
+  Object.keys(skins).join(" "),
 )
 
 visit("calculator")

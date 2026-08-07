@@ -1,15 +1,17 @@
 mod persist;
-mod render;
 mod rules;
 mod setup;
 
 #[cfg(test)]
 mod tests;
 
+use mrlycore::colors::PALETTE;
 use mrlycore::rng::Rng;
 use mrlycore::{json, Json};
 use mrlymusic::cue;
 use mrlyos::kernel::{App, Call, Effect, Iden, Manifest, Outcome, Verb};
+use mrlyui::frame::hex;
+use mrlyui::skin::chess::BLOCK;
 
 use self::persist::PROMOTIONS;
 use self::rules::Status;
@@ -34,8 +36,7 @@ pub struct Chess {
     last_move: Option<(usize, usize)>,
     piece_colors: [[u8; 4]; 2],
     board_colors: [[u8; 4]; 2],
-    glyphs: [[u8; 25]; 6],
-    dark: bool,
+    guise: [u8; 6],
 }
 
 impl Default for Chess {
@@ -65,8 +66,7 @@ impl Chess {
             last_move: None,
             piece_colors: [[255, 255, 255, 255], [40, 40, 40, 255]],
             board_colors: [[181, 136, 99, 255], [240, 217, 181, 255]],
-            glyphs: mrlyui::skin::chess::glyphs(),
-            dark: false,
+            guise: [0, 1, 2, 3, 4, 5],
         };
         chess.reset(0);
         chess
@@ -242,6 +242,73 @@ impl Chess {
     fn in_check(&self) -> bool {
         self.find_king(&self.board, self.turn).is_some() && !self.king_safe(&self.board, self.turn)
     }
+    fn palette(&mut self) -> [u8; 4] {
+        let c = PALETTE[self.rng.below(PALETTE.len())];
+        [c.r, c.g, c.b, 255]
+    }
+    fn shuffle(&mut self) -> [u8; 6] {
+        let plain = [0u8, 1, 2, 3, 4, 5];
+        loop {
+            let mut out = plain;
+            for i in (1..6).rev() {
+                let j = self.rng.below(i + 1);
+                out.swap(i, j);
+            }
+            if out != plain {
+                return out;
+            }
+        }
+    }
+    fn roll(&mut self) {
+        self.piece_colors[0] = self.palette();
+        loop {
+            self.piece_colors[1] = self.palette();
+            if self.piece_colors[1] != self.piece_colors[0] {
+                break;
+            }
+        }
+        self.board_colors[0] = self.palette();
+        loop {
+            self.board_colors[1] = self.palette();
+            if self.board_colors[1] != self.board_colors[0] {
+                break;
+            }
+        }
+        self.guise = if self.set.obfuscate {
+            self.shuffle()
+        } else {
+            [0, 1, 2, 3, 4, 5]
+        };
+    }
+    fn ids(&self) -> Vec<Vec<u8>> {
+        (0..self.h)
+            .map(|y| {
+                (0..self.w)
+                    .map(|x| {
+                        let parity = ((x + y) % 2) as u8 * BLOCK as u8;
+                        let sq = self.board[self.cell(x, y)];
+                        if sq.kind == 0 {
+                            parity
+                        } else {
+                            parity + 1 + self.guise[(sq.kind - 1) as usize] + sq.team * 6
+                        }
+                    })
+                    .collect()
+            })
+            .collect()
+    }
+    fn cells_fact(&self) -> Json {
+        json!({
+            "ids": self.ids(),
+            "skin": &self.set.skin,
+            "pens": [
+                hex(self.piece_colors[0]),
+                hex(self.piece_colors[1]),
+                hex(self.board_colors[0]),
+                hex(self.board_colors[1]),
+            ],
+        })
+    }
 }
 
 impl App for Chess {
@@ -250,9 +317,6 @@ impl App for Chess {
     }
     fn manifest(&self) -> Manifest {
         Manifest::new("chess").emoji("♟️").category("puzzles")
-    }
-    fn wear(&mut self, world: &Json) {
-        self.dark = world["shared"]["settings"]["darkmode"] == true;
     }
     fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
@@ -265,8 +329,6 @@ impl App for Chess {
             "check": self.in_check(),
             "winner": self.winner_fact(),
             "board": self.board_fact(),
-            "ids": self.ids_facts(),
-            "skin": self.skin().to_json(),
             "moves": self.moves(),
             "selected": match self.selected {
                 Some(c) => json!(self.alg(c)),
@@ -277,7 +339,7 @@ impl App for Chess {
                 Some((f, t)) => json!({ "from": self.alg(f), "to": self.alg(t) }),
                 None => Json::Null,
             },
-            "frame": self.render().fact(),
+            "cells": self.cells_fact(),
         })
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {

@@ -1,11 +1,9 @@
 use mrlycore::colors::ROLLABLE;
 use mrlycore::rng::Rng;
-use mrlycore::tensor::Tensor;
 use mrlycore::{json, Json};
 use mrlymusic::cue;
 use mrlyos::kernel::{drive, int, pick, App, Call, Effect, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{Atlas, Frame, Layer};
-use mrlyui::skin::Skin;
+use mrlyui::frame::hex;
 
 const DESIGNS: [&str; 5] = ["carpet", "net", "vtree", "htree", "solid"];
 const SURFACES: [&str; 2] = ["grid", "canvas"];
@@ -109,7 +107,6 @@ pub struct Mines {
     colors: Vec<[u8; 4]>,
     hidden: [u8; 4],
     mine_color: [u8; 4],
-    dark: bool,
 }
 
 impl Default for Mines {
@@ -136,7 +133,6 @@ impl Mines {
             colors: Vec::new(),
             hidden: [70, 70, 78, 255],
             mine_color: [220, 40, 40, 255],
-            dark: false,
         };
         mines.reset(0);
         mines
@@ -267,14 +263,6 @@ impl Mines {
             1 + self.adj[i]
         }
     }
-    fn ids(&self) -> Tensor {
-        let cols = self.cols();
-        let mut grid = Tensor::new(vec![self.rows(), cols]);
-        for i in 0..self.size() {
-            grid.set(&[i / cols, i % cols], self.id_at(i));
-        }
-        grid
-    }
     fn target(&self, call: &Call) -> Result<usize, &'static str> {
         let cell = match call.arg("cell").as_i64() {
             Some(cell) => cell,
@@ -293,39 +281,22 @@ impl Mines {
         }
         Ok(cell as usize)
     }
-    fn skin(&self) -> Skin {
-        mrlyui::skin::mines::skin(
-            &self.set.skin,
-            &self.set.design,
-            &self.colors,
-            self.hidden,
-            self.mine_color,
-        )
-    }
     fn ids_facts(&self) -> Vec<Vec<u8>> {
         let cols = self.cols();
         (0..self.rows())
             .map(|r| (0..cols).map(|c| self.id_at(r * cols + c)).collect())
             .collect()
     }
-    fn k(&self) -> usize {
-        mrlyui::skin::pixels(self.set.tile as usize, &self.set.skin)
-    }
-    fn atlas(&self) -> Atlas {
-        self.skin().atlas(self.k(), mrlyui::frame::board(self.dark))
-    }
-    fn render(&self) -> Frame {
-        let k = self.k();
-        let mut frame = Frame::new(
-            self.cols() * k,
-            self.rows() * k,
-            mrlyui::frame::board(self.dark),
-        );
-        frame.push(Layer::Tiles {
-            ids: self.ids(),
-            set: self.atlas(),
-        });
-        frame
+    fn cells_fact(&self) -> Json {
+        let mut pens = vec![hex(self.hidden)];
+        pens.extend(self.colors.iter().map(|&c| hex(c)));
+        pens.push(hex(self.mine_color));
+        json!({
+            "ids": self.ids_facts(),
+            "skin": &self.set.skin,
+            "pens": pens,
+            "design": &self.set.design,
+        })
     }
 }
 
@@ -335,9 +306,6 @@ impl App for Mines {
     }
     fn manifest(&self) -> Manifest {
         Manifest::new("mines").emoji("💣").category("puzzles")
-    }
-    fn wear(&mut self, world: &Json) {
-        self.dark = world["shared"]["settings"]["darkmode"] == true;
     }
     fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         let flags = self.flagged.iter().filter(|&&f| f).count() as i64;
@@ -350,11 +318,9 @@ impl App for Mines {
             "tool": &self.tool,
             "remaining": self.mine_count() as i64 - flags,
             "board": self.board_facts(),
-            "ids": self.ids_facts(),
             "flags": self.flags_facts(),
-            "skin": self.skin().to_json(),
             "won": self.won,
-            "frame": self.render().fact(),
+            "cells": self.cells_fact(),
         })
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
@@ -694,11 +660,11 @@ mod tests {
         for (key, value) in [("surface", "canvas"), ("skin", "emojis")] {
             assert!(send(&mut m, "mines.set", json!({ "key": key, "value": value })).ok);
         }
-        let settings = m.state(&iden(), None)["settings"].clone();
-        assert_eq!(settings["surface"], json!("canvas"));
-        assert_eq!(settings["skin"], json!("emojis"));
-        let tile = m.atlas().tiles[10].cell.colors.clone().unwrap();
-        assert!(tile.iter().any(|px| px[3] > 0), "the canvas baked nothing");
+        let state = m.state(&iden(), None);
+        assert_eq!(state["settings"]["surface"], json!("canvas"));
+        assert_eq!(state["cells"]["skin"], json!("emojis"));
+        let frame = mrlyui::skin::raster("mines", &state["cells"], 3, false).expect("a frame");
+        assert_eq!(frame.width, 9 * mrlyui::skin::SYMBOL);
         assert!(
             !send(
                 &mut m,
@@ -722,24 +688,19 @@ mod tests {
         assert_eq!(settings["skin"], json!("emojis"));
     }
     #[test]
-    fn digits_skin_bakes_counts_into_the_canvas() {
+    fn cells_pens_bind_hidden_counts_and_mine() {
         let mut m = mines(4);
-        send(&mut m, "mines.set", json!({ "key": "tile", "value": 8 }));
-        send(
-            &mut m,
-            "mines.set",
-            json!({ "key": "skin", "value": "tiles" }),
-        );
-        let board = mrlyui::frame::board(m.dark);
-        let plain = m.atlas().tiles[2].cell.colors.clone().unwrap();
-        assert!(!plain.contains(&board));
-        send(
-            &mut m,
-            "mines.set",
-            json!({ "key": "skin", "value": "digits" }),
-        );
-        let baked = m.atlas().tiles[2].cell.colors.clone().unwrap();
-        assert!(baked.contains(&board));
+        send(&mut m, "mines.reveal", json!({ "cell": 40 }));
+        let cells = m.state(&iden(), None)["cells"].clone();
+        let pens = cells["pens"].as_array().unwrap();
+        assert_eq!(pens.len(), 11);
+        assert_eq!(pens[0], json!(hex(m.hidden)));
+        assert_eq!(pens[1], json!(hex(m.colors[0])));
+        assert_eq!(pens[10], json!(hex(m.mine_color)));
+        assert_eq!(cells["design"], json!("carpet"));
+        let shown = (0..m.size()).find(|&i| m.shown[i]).unwrap();
+        let (r, c) = (shown / m.cols(), shown % m.cols());
+        assert_eq!(cells["ids"][r][c], json!(1 + m.adj[shown]));
     }
     #[test]
     fn moves_ring_the_right_cues() {
@@ -755,15 +716,16 @@ mod tests {
         assert_eq!(out.effects[0].data, mrlymusic::cue::payload("lose"));
     }
     #[test]
-    fn state_carries_an_indexed_frame() {
+    fn state_carries_the_cells_fact() {
         let m = mines(5);
         let state = m.state(&iden(), None);
-        let palette = state["frame"]["palette"].as_array().unwrap();
-        assert!(!palette.is_empty());
-        let rows = state["frame"]["rows"].as_array().unwrap();
-        assert_eq!(
-            rows.len(),
-            state["frame"]["height"].as_u64().unwrap() as usize
-        );
+        let cells = &state["cells"];
+        assert_eq!(cells["ids"].as_array().unwrap().len(), 9);
+        assert_eq!(cells["ids"][0][0], json!(0));
+        assert_eq!(cells["skin"], json!("emojis"));
+        assert!(state.get("frame").is_none());
+        assert!(state.get("skin").is_none());
+        assert!(state.get("ids").is_none());
+        assert!(state.get("sprites").is_none());
     }
 }

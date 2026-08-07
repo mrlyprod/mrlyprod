@@ -104,7 +104,7 @@ impl Os {
             }
             "sys.freeze" => Outcome::ok(self.freeze()),
             "sys.thaw" => self.thaw(call.arg("state")),
-            "sys.shot" => self.shot(),
+            "sys.shot" => self.shot(call.arg("image")),
             "sys.dismiss" => {
                 let count = self.notices.len();
                 self.notices.clear();
