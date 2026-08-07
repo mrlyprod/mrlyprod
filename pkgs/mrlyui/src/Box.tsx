@@ -1,42 +1,62 @@
-import { useMemo } from "react"
+import { createContext, useContext, useMemo } from "react"
 import type { CSSProperties, ReactNode, Ref } from "react"
 import { cx } from "./lib"
 import { css, randomColor } from "./colors"
 import type { ColorName } from "./colors"
-import { useFill } from "./prefs"
+import { useFills } from "./prefs"
+
+// LEVEL
+
+export type Level = 0 | 1 | 2
+
+const Altitude = createContext<Level>(2)
+
+export function useLevel(): Level {
+  return useContext(Altitude)
+}
+
+function below(level: Level): Level {
+  return level > 0 ? ((level - 1) as Level) : 0
+}
 
 // PLATE
 
-function usePlate(plate: ColorName | "auto" | undefined): string | undefined {
-  const fill = useFill()
+export function usePlate(plate: ColorName | "auto" | undefined, level: Level): string | undefined {
+  const fills = useFills()
   return useMemo(() => {
     if (plate) return css(plate === "auto" ? randomColor() : plate)
+    const fill = fills[level]
     if (fill === "random") return css(randomColor())
-    if (fill !== "") return css(fill)
+    if (fill !== undefined && fill !== "") return css(fill)
     return undefined
-  }, [plate, fill])
+  }, [plate, fills, level])
 }
 
-function plated(style: CSSProperties | undefined, color: string | undefined): CSSProperties | undefined {
+export function plated(style: CSSProperties | undefined, color: string | undefined): CSSProperties | undefined {
   if (!color) return style
   return { ...style, "--plate": color } as CSSProperties
 }
 
 // BOX
 
-export function Box({ children, className, style, onClick, plate, ref }: {
+export function Box({ children, className, style, onClick, plate, level, ref }: {
   children?: ReactNode
   className?: string
   style?: CSSProperties
   onClick?: () => void
   plate?: ColorName | "auto"
+  level?: Level
   ref?: Ref<HTMLDivElement>
 }) {
-  const color = usePlate(plate)
+  const held = useLevel()
+  const at = level ?? held
+  const color = usePlate(plate, at)
   return (
-    <div className={cx("box", className)} style={plated(style, color)} onClick={onClick} ref={ref}>
-      {children}
-    </div>
+    <Altitude.Provider value={below(at)}>
+      <div className={cx("box", `l${at}`, className)} style={plated(style, color)} onClick={onClick} ref={ref}>
+        {children}
+      </div>
+    </Altitude.Provider>
   )
 }
 
@@ -74,12 +94,14 @@ export function Section({ label, children, className, plate }: {
   className?: string
   plate?: ColorName | "auto"
 }) {
-  const color = usePlate(plate)
+  const color = usePlate(plate, 2)
   return (
-    <section className={cx("box", "section", className)} style={plated(undefined, color)}>
-      <h2 className="title">{label}</h2>
-      {children}
-    </section>
+    <Altitude.Provider value={1}>
+      <section className={cx("box", "l2", "section", className)} style={plated(undefined, color)}>
+        <h2 className="title">{label}</h2>
+        {children}
+      </section>
+    </Altitude.Provider>
   )
 }
 
@@ -137,7 +159,8 @@ export function Card({ children, className, style, active, onClick, plate }: {
   onClick?: () => void
   plate?: ColorName | "auto"
 }) {
-  const color = usePlate(plate)
+  const held = useLevel()
+  const color = usePlate(plate, held)
   const skin = cx("card", active && "active", className)
   const paint = plated(style, color)
   if (onClick) {

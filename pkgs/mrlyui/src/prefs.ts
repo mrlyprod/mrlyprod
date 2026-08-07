@@ -5,12 +5,15 @@ import type { ColorName } from "./colors"
 
 export type Fill = ColorName | "random" | ""
 
+export type Fills = [Fill, Fill, Fill]
+
 export type Prefs = {
   unit: number
   border: number
   radius: number
   accent: ColorName | ""
-  fill: Fill
+  line: ColorName | ""
+  fills: Fills
   background: ColorName | ""
   sound: boolean
   haptics: boolean
@@ -24,7 +27,8 @@ export const PREF_DEFAULTS: Prefs = {
   border: 1,
   radius: 2,
   accent: "",
-  fill: "",
+  line: "",
+  fills: ["", "", ""],
   background: "",
   sound: true,
   haptics: true,
@@ -33,22 +37,22 @@ export const PREF_DEFAULTS: Prefs = {
   duration: 150,
 }
 
-let fillHeld: Fill = ""
+let fillsHeld: Fills = ["", "", ""]
 const fillSubs = new Set<() => void>()
 
-export function setFill(next: Fill): void {
-  if (next === fillHeld) return
-  fillHeld = next
+export function setFills(next: Fills): void {
+  if (next.join("|") === fillsHeld.join("|")) return
+  fillsHeld = [...next]
   for (const sub of fillSubs) sub()
 }
 
-export function useFill(): Fill {
+export function useFills(): Fills {
   return useSyncExternalStore(
     sub => {
       fillSubs.add(sub)
       return () => fillSubs.delete(sub)
     },
-    () => fillHeld,
+    () => fillsHeld,
   )
 }
 
@@ -75,7 +79,8 @@ export function applyPrefs(prefs: Prefs): void {
   set("--radius", prefs.radius === 2 ? "" : `calc(var(--unit) * ${prefs.radius})`)
   set("--accent-color", prefs.accent === "" ? "" : `var(--c-${prefs.accent})`)
   set("--background-color", prefs.background === "" ? "" : `var(--c-${prefs.background})`)
-  setFill(prefs.fill)
+  set("--border-color", prefs.line === "" ? "" : `var(--c-${prefs.line})`)
+  setFills(prefs.fills)
   sound.pref("sound", prefs.sound)
   sound.pref("haptics", prefs.haptics)
   sound.pref("note", prefs.note)

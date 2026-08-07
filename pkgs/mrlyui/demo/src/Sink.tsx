@@ -13,6 +13,7 @@ import {
   Cell,
   Checkbox,
   Chip,
+  Chrome,
   Cluster,
   ColorPicker,
   Crumbs,
@@ -27,10 +28,12 @@ import {
   Header,
   Icon,
   Input,
+  isoDate,
   Letters,
   loadPrefs,
   Mark,
   Modal,
+  parseDate,
   POOL,
   Pager,
   Panes,
@@ -65,7 +68,7 @@ import {
   useTheme,
   write,
 } from "mrlyui"
-import type { ColorName, Variant } from "mrlyui"
+import type { ColorName, Fill, Fills, Variant } from "mrlyui"
 
 const VARIANTS: Variant[] = ["info", "success", "warn", "danger"]
 
@@ -84,10 +87,39 @@ function download(name: string, text: string, type: string) {
   URL.revokeObjectURL(url)
 }
 
+function FillRow({ label, value, onPick }: {
+  label: string
+  value: Fill
+  onPick: (next: Fill) => void
+}) {
+  return (
+    <Stack>
+      <Text className="caption">{label}</Text>
+      <Cluster>
+        <Chip active={value === ""} onClick={() => onPick("")}>
+          mono
+        </Chip>
+        <Chip active={value === "random"} onClick={() => onPick("random")}>
+          random
+        </Chip>
+      </Cluster>
+      <ColorPicker
+        value={value === "" || value === "random" ? null : value}
+        onChange={c => onPick(c ?? "random")}
+      />
+    </Stack>
+  )
+}
+
 function SettingsPane() {
   const [prefs, patch, reset] = usePrefs()
   const [theme, cycle] = useTheme()
   const [mrly, toggleFont] = useFont()
+  const paint = (level: number) => (next: Fill) => {
+    const fills: Fills = [...prefs.fills]
+    fills[level] = next
+    patch({ fills })
+  }
   return (
     <Stack>
       <Setting label="theme">
@@ -119,19 +151,25 @@ function SettingsPane() {
         </Stack>
       </Box>
       <Box>
+        <FillRow label="plates" value={prefs.fills[2]} onPick={paint(2)} />
+      </Box>
+      <Box>
+        <FillRow label="boxes" value={prefs.fills[1]} onPick={paint(1)} />
+      </Box>
+      <Box>
+        <FillRow label="bricks" value={prefs.fills[0]} onPick={paint(0)} />
+      </Box>
+      <Box>
         <Stack>
-          <Text className="caption">fill</Text>
+          <Text className="caption">lines</Text>
           <Cluster>
-            <Chip active={prefs.fill === ""} onClick={() => patch({ fill: "" })}>
-              mono
-            </Chip>
-            <Chip active={prefs.fill === "random"} onClick={() => patch({ fill: "random" })}>
-              random
+            <Chip active={prefs.line === ""} onClick={() => patch({ line: "" })}>
+              ink
             </Chip>
           </Cluster>
           <ColorPicker
-            value={prefs.fill === "" || prefs.fill === "random" ? null : prefs.fill}
-            onChange={c => patch({ fill: c ?? "random" })}
+            value={prefs.line === "" ? null : prefs.line}
+            onChange={c => patch({ line: c ?? "" })}
           />
         </Stack>
       </Box>
@@ -231,8 +269,8 @@ function IdenPane() {
       </Field>
       <Field label="born">
         <DatePicker
-          value={iden.born === "" ? undefined : new Date(iden.born)}
-          onChange={d => patch({ born: d ? d.toISOString().slice(0, 10) : "" })}
+          value={iden.born === "" ? undefined : parseDate(iden.born) ?? undefined}
+          onChange={d => patch({ born: isoDate(d) })}
           placeholder="pick a day"
         />
       </Field>
@@ -645,13 +683,14 @@ export function Sink() {
   }, [])
 
   return (
-    <>
+    <Chrome>
       <Header
         menu={panes.left.open}
         iden={panes.right.open}
         onMenu={panes.left.toggle}
         onMark={() => setMarked(true)}
         onIden={panes.right.toggle}
+        panes={panes}
       />
       <Toast open={marked} onClose={() => setMarked(false)}>
         mrly
@@ -699,6 +738,6 @@ export function Sink() {
         </Stack>
         </Frame>
       </Panes>
-    </>
+    </Chrome>
   )
 }

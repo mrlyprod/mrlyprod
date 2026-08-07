@@ -143,13 +143,13 @@ export function Calendar({ value, onSelect }: {
   )
 }
 
-function iso(date: Date): string {
+export function isoDate(date: Date): string {
   const month = String(date.getMonth() + 1).padStart(2, "0")
   const day = String(date.getDate()).padStart(2, "0")
   return `${String(date.getFullYear())}-${month}-${day}`
 }
 
-function parse(text: string): Date | null {
+export function parseDate(text: string): Date | null {
   const clean = text.trim()
   if (clean === "") return null
   const exact = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(clean)
@@ -166,11 +166,11 @@ export function DatePicker({ value, onChange, placeholder = "yyyy-mm-dd" }: {
   onChange: (date: Date) => void
   placeholder?: string
 }) {
-  const [text, setText] = useState(() => (value ? iso(value) : ""))
-  const held = useRef(value ? iso(value) : "")
+  const [text, setText] = useState(() => (value ? isoDate(value) : ""))
+  const held = useRef(value ? isoDate(value) : "")
 
   useEffect(() => {
-    const next = value ? iso(value) : ""
+    const next = value ? isoDate(value) : ""
     if (next !== held.current) {
       held.current = next
       setText(next)
@@ -178,9 +178,9 @@ export function DatePicker({ value, onChange, placeholder = "yyyy-mm-dd" }: {
   }, [value])
 
   const commit = () => {
-    const parsed = parse(text)
+    const parsed = parseDate(text)
     if (parsed !== null) {
-      held.current = iso(parsed)
+      held.current = isoDate(parsed)
       setText(held.current)
       onChange(parsed)
     }

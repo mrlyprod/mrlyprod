@@ -103,14 +103,25 @@
 /* HEADER */
 
 .header {
-  background-color: var(--background-color);
+  background-color: var(--plate, var(--body-color));
+  border: var(--border);
+  border-radius: var(--radius);
   display: flex;
+  flex: 0 0 auto;
   gap: var(--gap);
-  padding: var(--space-2) var(--space-4);
+  margin: var(--gap) var(--gap) 0;
+  padding: var(--gap);
   position: sticky;
-  top: 0;
-  width: 100%;
+  top: var(--gap);
   z-index: 150;
+}
+
+.header-glyph.sized-left {
+  width: var(--left-w, 16.25rem);
+}
+
+.header-glyph.sized-right {
+  width: var(--right-w, 16.25rem);
 }
 
 .header-glyph {

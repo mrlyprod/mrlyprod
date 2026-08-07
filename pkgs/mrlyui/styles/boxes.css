@@ -16,6 +16,21 @@
   padding: var(--padding-box);
 }
 
+.box.l2 {
+  --level-gap: var(--gap-box);
+  padding: var(--padding-section);
+}
+
+.box.l1 {
+  --level-gap: var(--gap-box);
+  padding: var(--padding-box);
+}
+
+.box.l0 {
+  --level-gap: var(--gap);
+  padding: var(--space-2);
+}
+
 .box .box {
   background-color: var(--plate, var(--fill-color));
   border-color: var(--hairline-color);
@@ -27,7 +42,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--gap-box);
-  padding: var(--padding-section);
 }
 
 .section > .title {
@@ -48,7 +62,7 @@
 .stack {
   display: flex;
   flex-direction: column;
-  gap: var(--gap-box);
+  gap: var(--level-gap, var(--gap-box));
   width: 100%;
 }
 

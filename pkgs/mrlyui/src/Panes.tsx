@@ -29,21 +29,25 @@ export function Panes({ panes, left, right, leftTitle = "menu", rightTitle = "id
     <div className="panes">
       {panes.left.open && (
         <>
-          <Box className="pane left" ref={panes.left.hold}>
+          <Box className="pane left" level={2} ref={panes.left.hold}>
             {left}
           </Box>
           <Grip side="left" pane={panes.left} />
         </>
       )}
-      <Box className="main">{children}</Box>
+      <Box className="main" level={2}>{children}</Box>
       {panes.right.open && (
         <>
           <Grip side="right" pane={panes.right} />
-          <Box className="pane right" ref={panes.right.hold}>
+          <Box className="pane right" level={2} ref={panes.right.hold}>
             {right}
           </Box>
         </>
       )}
     </div>
   )
+}
+
+export function Chrome({ children, className }: { children?: ReactNode; className?: string }) {
+  return <div className={className ? `chrome ${className}` : "chrome"}>{children}</div>
 }
