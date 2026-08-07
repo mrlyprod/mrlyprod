@@ -1,11 +1,13 @@
 import { setter } from "../../builders.ts"
-import { fractalBoard, fractalPanel } from "../../components/fractal.tsx"
+import { fractalPanel, shadeBoard } from "../../components/fractal.tsx"
 import { h } from "../../jsx.ts"
 import type { Node, Send, Shade } from "../../types.ts"
 
 type State = {
   steps: number
   settings: {
+    width: number
+    height: number
     zoom: number
     cycle: number
     band: number
@@ -16,7 +18,6 @@ type State = {
     primary: string
     accent: string
   }
-  frame: { width: number; height: number; rows: number[][]; palette: string[] }
   shade?: Shade
 }
 
@@ -27,7 +28,7 @@ export function mandelbrot(state: unknown, _send: Send): Node {
   return (
     <stack key="mandelbrot">
       <card key="board">
-        {fractalBoard("mandelbrot", "mandelbrot", s.frame, { steps: s.steps, shade: s.shade })}
+        {shadeBoard("mandelbrot", s.shade, [s.settings.width, s.settings.height], s.steps)}
       </card>
       {fractalPanel(turn, s.settings)}
     </stack>

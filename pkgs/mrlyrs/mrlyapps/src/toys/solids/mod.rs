@@ -1,9 +1,9 @@
+use mrlycore::colors::ink;
 use mrlycore::colors::ROLLABLE;
 use mrlycore::rng::Rng;
 use mrlycore::{json, Json};
 use mrlymath::space::{axis_edges, solid, Pack, PITCH_MAX, SOLIDS, TURN};
 use mrlyos::kernel::{App, Call, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::ink;
 use std::f64::consts::TAU;
 
 struct Set {
@@ -190,7 +190,7 @@ impl App for Solids {
     }
     fn uniforms(&self) -> Option<Vec<f32>> {
         let rad = TAU / TURN as f64;
-        let board = mrlyui::frame::board(self.dark);
+        let board = mrlycore::colors::board(self.dark);
         let mut u = vec![0.0; 24];
         u[4] = board[0] as f64 / 255.0;
         u[5] = board[1] as f64 / 255.0;

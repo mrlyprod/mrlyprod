@@ -1,17 +1,13 @@
 import { h } from "../jsx.ts"
-import type { Call, Cells, Flip, Glyph, Node, Shade } from "../types.ts"
+import type { Call, Cells, Node, Shade } from "../types.ts"
 
 type Props = {
   app: string
   handle?: string
   keyName?: string
-  rows?: number[][]
   cells?: Cells
-  palette?: string[]
-  glyphs?: Glyph[]
   tris?: number[]
   shade?: Shade
-  strip?: Flip[]
   tap?: Call
   drag?: Call
   turn?: Call
@@ -20,18 +16,14 @@ type Props = {
   grid?: [number, number]
 }
 
-export function Board({ app, handle, keyName = "frame", rows, cells, palette, glyphs, tris, shade, strip, tap, drag, turn, zoom, pan, grid }: Props): Node {
+export function Board({ app, handle, keyName = "frame", cells, tris, shade, tap, drag, turn, zoom, pan, grid }: Props): Node {
   return (
     <canvas
       key={keyName}
       handle={handle ?? app}
-      rows={rows}
       cells={cells === undefined ? undefined : { app, ...cells }}
-      palette={palette}
-      glyphs={glyphs}
       tris={tris}
       shade={shade}
-      strip={strip}
       tap={tap}
       drag={drag}
       turn={turn}

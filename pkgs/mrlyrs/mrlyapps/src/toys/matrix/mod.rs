@@ -1,14 +1,18 @@
+use mrlycore::colors::{hex, hex_of};
 use mrlycore::rng::Rng;
 use mrlycore::tensor::Tensor;
 use mrlycore::{json, Json};
 use mrlyos::kernel::{App, Call, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{self, Frame};
+use mrlyui::skin::matrix::{ALPHABET, BANDS};
+
+const GLYPHS: usize = ALPHABET.len();
+const FADE: [u8; BANDS] = [255, 192, 112, 48];
 
 fn slot(value: &Json) -> Result<[u8; 4], &'static str> {
     let s = value.as_str().ok_or("value must be a string")?;
     if let Some(code) = s.strip_prefix('#') {
         if (code.len() == 6 || code.len() == 8) && code.chars().all(|c| c.is_ascii_hexdigit()) {
-            return Ok(frame::hex_of(s));
+            return Ok(hex_of(s));
         }
         return Err("bad hex");
     }
@@ -21,7 +25,6 @@ struct Set {
     rows: i64,
     speed: i64,
     trail: i64,
-    charset: String,
     palette: Vec<[u8; 4]>,
 }
 
@@ -32,12 +35,7 @@ impl Set {
             rows: 24,
             speed: 1,
             trail: 8,
-            charset: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".to_string(),
-            palette: vec![
-                frame::hex_of("#32cc58"),
-                frame::hex_of("#00d1bb"),
-                frame::hex_of("#1ec9f3"),
-            ],
+            palette: vec![hex_of("#32cc58"), hex_of("#00d1bb"), hex_of("#1ec9f3")],
         }
     }
     fn apply(&mut self, key: &str, value: &Json) -> Result<Json, &'static str> {
@@ -47,7 +45,7 @@ impl Set {
                 return Err("palette index out of range");
             }
             self.palette[i] = slot(value)?;
-            return Ok(json!(frame::hex(self.palette[i])));
+            return Ok(json!(hex(self.palette[i])));
         }
         match key {
             "cols" | "rows" | "speed" | "trail" => {
@@ -69,34 +67,23 @@ impl Set {
                 }
                 Ok(json!(n))
             }
-            "charset" => {
-                let s = value.as_str().ok_or("value must be a string")?;
-                self.charset = s.to_string();
-                Ok(json!(s))
-            }
             "palette" => {
                 let parsed: Vec<[u8; 4]> = match value {
                     Json::Str(s) => s
                         .split([',', ' '])
                         .filter(|t| !t.is_empty())
-                        .map(frame::hex_of)
+                        .map(hex_of)
                         .collect(),
                     Json::Arr(arr) => {
                         if !arr.iter().all(|v| v.is_string()) {
                             return Err("value must be hex strings");
                         }
-                        arr.iter()
-                            .filter_map(|v| v.as_str())
-                            .map(frame::hex_of)
-                            .collect()
+                        arr.iter().filter_map(|v| v.as_str()).map(hex_of).collect()
                     }
                     _ => return Err("value must be hex strings"),
                 };
                 self.palette = parsed.clone();
-                Ok(json!(parsed
-                    .iter()
-                    .map(|c| frame::hex(*c))
-                    .collect::<Vec<_>>()))
+                Ok(json!(parsed.iter().map(|c| hex(*c)).collect::<Vec<_>>()))
             }
             _ => Err("no such key"),
         }
@@ -107,8 +94,7 @@ impl Set {
             "rows": self.rows,
             "speed": self.speed,
             "trail": self.trail,
-            "charset": &self.charset,
-            "palette": self.palette.iter().map(|c| frame::hex(*c)).collect::<Vec<_>>(),
+            "palette": self.palette.iter().map(|c| hex(*c)).collect::<Vec<_>>(),
         })
     }
     fn from_json(value: &Json) -> Set {
@@ -128,14 +114,9 @@ pub struct Matrix {
     seed: u64,
     steps: u64,
     play: bool,
-    cache: Vec<Tensor>,
-    gw: usize,
-    gh: usize,
     heads: Vec<i32>,
-    colors: Vec<[u8; 4]>,
     ages: Tensor,
     glyphs: Tensor,
-    dark: bool,
 }
 
 impl Default for Matrix {
@@ -152,70 +133,20 @@ impl Matrix {
             seed: 0,
             steps: 0,
             play: true,
-            cache: Vec::new(),
-            gw: 1,
-            gh: 1,
             heads: Vec::new(),
-            colors: Vec::new(),
             ages: Tensor::new(vec![1, 1]),
             glyphs: Tensor::new(vec![1, 1]),
-            dark: false,
         };
         matrix.reset(0);
         matrix
     }
-    fn build_cache(&mut self) {
-        let mut lists: Vec<Vec<Vec<u8>>> = Vec::new();
-        for ch in self.set.charset.chars() {
-            if let Some(g) = mrlyfont::glyph(ch) {
-                lists.push(mrlyfont::to_lists(&g));
-            }
-        }
-        self.gh = lists.iter().map(|l| l.len()).max().unwrap_or(1).max(1);
-        self.gw = lists
-            .iter()
-            .flat_map(|l| l.iter().map(|r| r.len()))
-            .max()
-            .unwrap_or(1)
-            .max(1);
-        self.cache = lists
-            .iter()
-            .map(|l| {
-                let mut t = Tensor::new(vec![self.gh, self.gw]);
-                for (y, row) in l.iter().enumerate() {
-                    for (x, &v) in row.iter().enumerate() {
-                        if v != 0 {
-                            t.set(&[y, x], 1);
-                        }
-                    }
-                }
-                t
-            })
-            .collect();
-        if self.cache.is_empty() {
-            self.cache.push(Tensor::full(vec![self.gh, self.gw], 1));
-        }
-    }
-    fn column_color(&mut self) -> [u8; 4] {
-        if self.set.palette.is_empty() {
-            [
-                self.rng.range(40, 255) as u8,
-                self.rng.range(40, 255) as u8,
-                self.rng.range(40, 255) as u8,
-                255,
-            ]
-        } else {
-            *self.rng.choice(&self.set.palette.clone())
-        }
-    }
     fn glyph(&mut self) -> u8 {
-        self.rng.below(self.cache.len()) as u8
+        self.rng.below(GLYPHS) as u8
     }
     fn reset(&mut self, seed: u64) {
         self.rng = Rng::new(seed);
         self.seed = seed;
         self.steps = 0;
-        self.build_cache();
         let cols = self.set.cols as usize;
         let rows = self.set.rows;
         self.ages = Tensor::new(vec![rows as usize, cols]);
@@ -223,7 +154,6 @@ impl Matrix {
         self.heads = (0..cols)
             .map(|_| -(self.rng.below(rows as usize) as i32))
             .collect();
-        self.colors = (0..cols).map(|_| self.column_color()).collect();
     }
     fn step_once(&mut self) {
         let cols = self.set.cols as usize;
@@ -251,7 +181,6 @@ impl Matrix {
             }
             if head >= rows && self.rng.chance(0.025) {
                 self.heads[c] = 0;
-                self.colors[c] = self.column_color();
             }
         }
     }
@@ -262,42 +191,46 @@ impl Matrix {
         self.steps += n;
         n
     }
-    fn render(&self) -> Frame {
-        let cols = self.set.cols as usize;
-        let rows = self.set.rows as usize;
-        let w = cols * self.gw;
-        let h = rows * self.gh;
-        let trail = self.set.trail as usize;
-        let board = mrlyui::frame::board(self.dark);
-        let mut colors = vec![board; w * h];
-        for r in 0..rows {
-            for c in 0..cols {
-                let age = self.ages.get(&[r, c]);
-                if age == 0 {
-                    continue;
-                }
-                let gi = self.glyphs.get(&[r, c]) as usize % self.cache.len();
-                let mask = &self.cache[gi];
-                let faded = fade(self.colors[c], age, trail, board);
-                for ty in 0..self.gh {
-                    for tx in 0..self.gw {
-                        if mask.get(&[ty, tx]) == 1 {
-                            let x = c * self.gw + tx;
-                            let y = r * self.gh + ty;
-                            colors[y * w + x] = faded;
-                        }
-                    }
-                }
-            }
-        }
-        frame::field(w, h, colors, board)
+    fn band(&self, age: u8) -> usize {
+        let trail = self.set.trail.max(1) as usize;
+        ((age as usize - 1) * BANDS / trail).min(BANDS - 1)
     }
-}
-
-fn fade(color: [u8; 4], age: u8, trail: usize, bg: [u8; 4]) -> [u8; 4] {
-    let t = (age.saturating_sub(1)) as f64 / trail.max(1) as f64;
-    let factor = (1.0 - t).clamp(0.0, 1.0);
-    frame::mix(bg, color, factor)
+    fn pens(&self) -> Vec<String> {
+        let base = if self.set.palette.is_empty() {
+            vec![hex_of("#32cc58")]
+        } else {
+            self.set.palette.clone()
+        };
+        (0..BANDS)
+            .map(|b| {
+                let [r, g, bl, _] = base[b * base.len() / BANDS];
+                hex([r, g, bl, FADE[b]])
+            })
+            .collect()
+    }
+    fn cells_fact(&self) -> Json {
+        let rows = self.set.rows as usize;
+        let cols = self.set.cols as usize;
+        let ids: Vec<Vec<u8>> = (0..rows)
+            .map(|r| {
+                (0..cols)
+                    .map(|c| {
+                        let age = self.ages.get(&[r, c]);
+                        if age == 0 {
+                            return 0;
+                        }
+                        let g = self.glyphs.get(&[r, c]) as usize % GLYPHS;
+                        (1 + self.band(age) * GLYPHS + g) as u8
+                    })
+                    .collect()
+            })
+            .collect();
+        json!({
+            "ids": ids,
+            "skin": "lettered",
+            "pens": self.pens(),
+        })
+    }
 }
 
 impl App for Matrix {
@@ -307,21 +240,14 @@ impl App for Matrix {
     fn manifest(&self) -> Manifest {
         Manifest::new("matrix").emoji("🟩").category("toys")
     }
-    fn wear(&mut self, world: &Json) {
-        self.dark = world["shared"]["settings"]["darkmode"] == true;
-    }
-    fn state(&self, _iden: &Iden, shape: Option<&Json>) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "steps": self.steps,
             "over": false,
             "seed": self.seed,
             "play": self.play,
             "settings": self.set.to_json(),
-            "frame": if crate::asked(shape, "frame") {
-                self.render().fact()
-            } else {
-                frame::empty_fact(self.set.cols as usize * self.gw, self.set.rows as usize * self.gh)
-            },
+            "cells": self.cells_fact(),
         })
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
@@ -391,7 +317,6 @@ impl App for Matrix {
             "pos": self.rng.pos() as u64,
             "steps": self.steps,
             "heads": self.heads.clone(),
-            "colors": self.colors.iter().map(|c| c.to_vec()).collect::<Vec<_>>(),
             "ages": self.ages.bytes(),
             "glyphs": self.glyphs.bytes(),
         })
@@ -408,27 +333,6 @@ impl App for Matrix {
             if let Some(h) = parsed {
                 if h.len() == cols {
                     self.heads = h;
-                }
-            }
-        }
-        if let Some(colors) = state["colors"].as_array() {
-            let parsed: Option<Vec<[u8; 4]>> = colors
-                .iter()
-                .map(|c| {
-                    let a = c.as_array()?;
-                    if a.len() != 4 {
-                        return None;
-                    }
-                    let mut out = [0u8; 4];
-                    for (i, slot) in out.iter_mut().enumerate() {
-                        *slot = a[i].as_u64()? as u8;
-                    }
-                    Some(out)
-                })
-                .collect();
-            if let Some(c) = parsed {
-                if c.len() == cols {
-                    self.colors = c;
                 }
             }
         }
@@ -484,7 +388,7 @@ mod tests {
         assert!(m.ages.bytes().iter().all(|&a| a <= 6));
     }
     #[test]
-    fn step_counts_and_frame_skips() {
+    fn step_counts_and_validates() {
         let mut m = matrix(9);
         let out = send(&mut m, "matrix.step", json!({ "n": 5 }));
         assert!(out.ok);
@@ -655,8 +559,8 @@ mod tests {
         m.load(&json!({ "seed": "soup", "heads": "nope", "settings": 7 }));
         assert_eq!(m.state(&iden(), None)["steps"], json!(0));
         assert_eq!(m.state(&iden(), None)["seed"], json!(0));
-        let frame = m.state(&iden(), None)["frame"].clone();
-        assert!(!frame["rows"].as_array().unwrap().is_empty());
+        let cells = m.state(&iden(), None)["cells"].clone();
+        assert!(!cells["ids"].as_array().unwrap().is_empty());
     }
     #[test]
     fn beat_steps_forever() {
@@ -665,28 +569,68 @@ mod tests {
         assert_eq!(m.beat(), Some(Call::new("matrix.step", json!({}))));
     }
     #[test]
-    fn state_carries_an_indexed_frame() {
+    fn state_carries_the_cells_fact() {
         let m = matrix(5);
         let state = m.state(&iden(), None);
-        let palette = state["frame"]["palette"].as_array().unwrap();
-        assert!(!palette.is_empty());
-        let rows = state["frame"]["rows"].as_array().unwrap();
-        assert_eq!(
-            rows.len(),
-            state["frame"]["height"].as_u64().unwrap() as usize
-        );
+        assert!(state.get("frame").is_none());
+        let cells = &state["cells"];
+        assert_eq!(cells["skin"], json!("lettered"));
+        let pens = cells["pens"].as_array().unwrap();
+        assert_eq!(pens.len(), BANDS);
+        assert!(pens.iter().all(|p| p.as_str().unwrap().starts_with('#')));
+        let ids = cells["ids"].as_array().unwrap();
+        assert_eq!(ids.len(), 24);
+        assert_eq!(ids[0].as_array().unwrap().len(), 32);
     }
     #[test]
-    fn a_shape_without_frame_skips_the_raster() {
-        let m = matrix(5);
-        let full = m.state(&iden(), None)["frame"].clone();
-        let shape = json!({ "steps": 1 });
-        let thin = m.state(&iden(), Some(&shape))["frame"].clone();
-        assert_eq!(thin["width"], full["width"]);
-        assert_eq!(thin["height"], full["height"]);
-        assert!(thin["rows"].as_array().unwrap().is_empty());
-        assert!(thin["palette"].as_array().unwrap().is_empty());
-        let asked = json!({ "frame": 1 });
-        assert_eq!(m.state(&iden(), Some(&asked))["frame"], full);
+    fn ids_stay_in_the_skin() {
+        let mut m = matrix(7);
+        send(&mut m, "matrix.step", json!({ "n": 60 }));
+        let cells = m.state(&iden(), None)["cells"].clone();
+        let cap = 1 + BANDS * GLYPHS;
+        let mut lit = 0;
+        for row in cells["ids"].as_array().unwrap() {
+            for id in row.as_array().unwrap() {
+                let id = id.as_u64().unwrap() as usize;
+                assert!(id < cap);
+                if id > 0 {
+                    lit += 1;
+                }
+            }
+        }
+        assert!(lit > 0);
+    }
+    #[test]
+    fn fade_quantizes_to_bands() {
+        let mut m = matrix(3);
+        send(&mut m, "matrix.set", json!({ "key": "trail", "value": 8 }));
+        assert_eq!(m.band(1), 0);
+        assert_eq!(m.band(8), BANDS - 1);
+        assert!(m.band(4) <= m.band(6));
+    }
+    #[test]
+    fn pens_quantize_the_palette() {
+        let mut m = matrix(4);
+        send(
+            &mut m,
+            "matrix.set",
+            json!({ "key": "palette", "value": "#ff0000" }),
+        );
+        let pens = m.state(&iden(), None)["cells"]["pens"].clone();
+        assert_eq!(pens[0], json!("#ff0000"));
+        let tail = pens[BANDS - 1].as_str().unwrap();
+        assert!(tail.starts_with("#ff0000"));
+        assert_eq!(tail.len(), 9);
+        send(
+            &mut m,
+            "matrix.set",
+            json!({ "key": "palette", "value": [] }),
+        );
+        let pens = m.state(&iden(), None)["cells"]["pens"]
+            .as_array()
+            .unwrap()
+            .clone();
+        assert_eq!(pens.len(), BANDS);
+        assert!(pens[0].as_str().unwrap().starts_with("#32cc58"));
     }
 }

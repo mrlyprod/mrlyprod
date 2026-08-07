@@ -109,7 +109,8 @@ fn main() {
 
     let mut os = boot();
     os.call(Call::new("nav.open", json!({ "app": "life" })));
-    os.call(Call::new("sys.shot", json!({})));
+    let image = shoot(&os, "life");
+    os.call(Call::new("sys.shot", json!({ "image": image })));
     os.call(Call::new("nav.open", json!({ "app": "ttt" })));
     os.call(Call::new("ttt.reset", json!({ "seed": 7 })));
     os.call(Call::new("ttt.place", json!({ "cell": 4 })));

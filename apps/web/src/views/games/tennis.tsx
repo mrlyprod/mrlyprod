@@ -6,7 +6,7 @@ import { Board } from "../../components/Board.tsx"
 import { DPad } from "../../components/DPad.tsx"
 import { set } from "../../builders.ts"
 import { h } from "../../jsx.ts"
-import type { Node, Send } from "../../types.ts"
+import type { Cells, Node, Send } from "../../types.ts"
 
 type State = {
   score: number
@@ -20,7 +20,7 @@ type State = {
     physics: number
     speed: number
   }
-  frame: { rows: number[][]; palette: string[] }
+  cells: Cells
 }
 
 export function tennis(state: unknown, _send: Send): Node {
@@ -28,7 +28,7 @@ export function tennis(state: unknown, _send: Send): Node {
   return (
     <stack key="tennis">
       <card key="board">
-        <Board app="tennis" rows={s.frame.rows} palette={s.frame.palette} />
+        <Board app="tennis" cells={s.cells} />
       </card>
       {s.over && <GameOver app="tennis" emoji="🎾" status={`score ${s.score}`} />}
       <card key="controls">

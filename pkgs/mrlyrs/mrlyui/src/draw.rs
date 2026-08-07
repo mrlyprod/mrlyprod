@@ -20,7 +20,7 @@ pub fn fill_rect(
     }
 }
 
-pub fn band(y: i64, tall: usize, h: usize) -> std::ops::Range<usize> {
+fn band(y: i64, tall: usize, h: usize) -> std::ops::Range<usize> {
     let first = (-y).clamp(0, tall as i64) as usize;
     let last = (h as i64 - y).clamp(0, tall as i64) as usize;
     first..last.max(first)
@@ -55,29 +55,6 @@ pub fn blit(
                         buf[py * w + px] = color;
                     }
                 }
-            }
-        }
-    }
-}
-
-pub fn sprite(
-    buf: &mut [[u8; 4]],
-    w: usize,
-    h: usize,
-    pixels: &[[u8; 4]],
-    k: usize,
-    x: usize,
-    y: i64,
-) {
-    if pixels.len() != k * k {
-        return;
-    }
-    for sy in band(y, k, h) {
-        let py = (y + sy as i64) as usize;
-        for sx in 0..k {
-            let px = x + sx;
-            if px < w {
-                crate::frame::over(&mut buf[py * w + px], pixels[sy * k + sx]);
             }
         }
     }

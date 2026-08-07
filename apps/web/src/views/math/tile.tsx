@@ -1,10 +1,9 @@
 import { call, setter } from "../../builders.ts"
+import { Board } from "../../components/Board.tsx"
 import { Section } from "../../components/Section.tsx"
 import { Shot } from "../../components/Shot.tsx"
 import { h } from "../../jsx.ts"
-import type { Node, Send } from "../../types.ts"
-
-type Fact = { rows: number[][]; palette: string[] }
+import type { Cells, Node, Send } from "../../types.ts"
 
 type Source = { design?: string; code?: number }
 
@@ -42,9 +41,9 @@ type State = {
     counts: number[]
     factors: number[]
   }
-  thumbs: { level: number; frame: Fact }[]
-  library: { id: number; name: string; value: unknown; frame: Fact }[]
-  frame: Fact
+  thumbs: { level: number; cells: Cells }[]
+  library: { id: number; name: string; value: unknown; cells: Cells }[]
+  cells: Cells
 }
 
 const set = setter("tile")
@@ -85,8 +84,7 @@ function slotCard(s: State, i: number): Node {
             <canvas
               key={`thumb-${thumb.level}`}
               handle="tile"
-              rows={thumb.frame.rows}
-              palette={thumb.frame.palette}
+              cells={{ app: "tile", ...thumb.cells }}
               tap={call("tile.set", { key: "level", slot: 0, value: thumb.level })}
             />
           ))}
@@ -129,7 +127,7 @@ export function tile(state: unknown, _send: Send): Node {
   return (
     <stack key="tile">
       <card key="preview">
-        <canvas key="frame" handle="tile" rows={s.frame.rows} palette={s.frame.palette} />
+        <Board app="tile" cells={s.cells} />
       </card>
       <Section keyName="shape" label="shape">
         <choice
@@ -253,7 +251,7 @@ export function tile(state: unknown, _send: Send): Node {
         <grid key="entries" cols={3}>
           {s.library.map(entry => [
             <cell key={`thumb-${entry.id}`}>
-              <canvas key="canvas" handle={`lib-${entry.id}`} rows={entry.frame.rows} palette={entry.frame.palette} />
+              <canvas key="canvas" handle={`lib-${entry.id}`} cells={{ app: "tile", ...entry.cells }} />
             </cell>,
             <field key={`name-${entry.id}`} value={entry.name} live={false} call={call("tile.name", { id: entry.id })} arg="name" />,
             <button key={`drop-${entry.id}`} call={call("tile.drop", { id: entry.id })}>×</button>,

@@ -12,8 +12,6 @@ const EMOJIS = ["system", "noto"]
 
 const MATERIALS = ["solid", "glass"]
 
-const RENDERS = ["cpu", "gpu"]
-
 const NOTES = ["random", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 
 const WAVES = ["sine", "triangle", "square", "sawtooth"]
@@ -33,7 +31,6 @@ type State = {
   material: string
   wallpaper: string
   seed: number
-  render: string
   detail: number
   sound: boolean
   haptics: boolean
@@ -50,9 +47,6 @@ export function settings(state: unknown, _send: Send): Node {
     <stack key="settings">
       <Section keyName="launchpad" label="launchpad">
         <choice key="launchpad" value={s.launchpad} options={MODES} call={turn("launchpad")} arg="value" mode="row" />
-      </Section>
-      <Section keyName="render" label="render">
-        <choice key="render" value={s.render} options={RENDERS} call={turn("render")} arg="value" mode="row" />
       </Section>
       <Section keyName="detail" label="detail">
         <range key="detail" value={s.detail} min={32} max={160} step={1} call={turn("detail")} arg="value" label="detail" />

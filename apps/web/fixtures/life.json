@@ -9,10 +9,8 @@
     "app": "life",
     "params": {},
     "state": {
-      "frame": {
-        "width": 32,
-        "height": 32,
-        "rows": [
+      "cells": {
+        "ids": [
           [
             0,
             0,
@@ -1102,7 +1100,8 @@
             0
           ]
         ],
-        "palette": [
+        "skin": "tiles",
+        "pens": [
           "#000000",
           "#32cc58"
         ]

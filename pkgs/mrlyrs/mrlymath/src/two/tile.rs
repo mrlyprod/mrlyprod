@@ -116,6 +116,38 @@ pub fn build(tile: &Tile) -> Result<Cell2d> {
     Ok(c)
 }
 
+fn shaped(tile: &Tile) -> bool {
+    let slots = tile.sources.len();
+    let wanted = match tile.group {
+        Group::Mosaic => 3,
+        Group::Magic => 2,
+        _ => 1,
+    };
+    slots >= wanted
+        && tile.numbers.len() == slots
+        && tile.levels.len() == slots
+        && tile.rotations.len() == slots
+        && tile.numbers.iter().all(|&n| n >= 1)
+}
+
+pub fn probe(tile: &Tile) -> bool {
+    shaped(tile)
+        && build(tile)
+            .map(|c| c.width() == tile.width && c.height() == tile.height)
+            .unwrap_or(false)
+}
+
+pub fn sample_types(cell: &Cell2d, k: usize) -> Tensor {
+    let (w, h) = (cell.width(), cell.height());
+    let mut out = Tensor::new(vec![k, k]);
+    for y in 0..k {
+        for x in 0..k {
+            out.set(&[y, x], cell.types().get(&[y * h / k, x * w / k]));
+        }
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

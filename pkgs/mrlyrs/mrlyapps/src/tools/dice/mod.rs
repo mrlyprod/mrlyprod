@@ -283,7 +283,7 @@ mod tests {
         assert_eq!(state["steps"], json!(1));
         assert_eq!(state["cells"]["skin"], json!("emojis"));
         let frame = mrlyui::skin::raster("dice", &state["cells"], 12, false).expect("a frame");
-        assert_eq!(frame.width, mrlyui::skin::SYMBOL);
+        assert_eq!(frame.width(), mrlyui::skin::SYMBOL);
         assert!(!send(&mut d, "dice.set", json!({ "key": "skin", "value": "wax" })).ok);
     }
     #[test]

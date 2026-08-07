@@ -4,14 +4,14 @@ mod rules;
 mod state;
 
 use helpers::{catalog_name, source_label, work};
+use mrlycore::colors::ink;
 use mrlycore::paint::{self, Paint};
 use mrlycore::state::seed;
 use mrlycore::tile::{Catalog, Design, Group, Parity, Tile as Model};
 use mrlycore::{json, Json};
 use mrlymath::two::tile as tile2d;
 use mrlyos::kernel::{App, Call, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame;
-use render::{blank, two_tone};
+use render::{blank, cells, two_tone};
 use rules::{carpet, starter, validate_saved};
 
 const BUDGETS: [usize; 3] = [16, 32, 64];
@@ -47,7 +47,7 @@ pub struct Tile {
     catalog: Catalog,
     parity: Parity,
     budget: usize,
-    frame: Json,
+    cells: Json,
     dark: bool,
     library: Vec<Entry>,
     next: u64,
@@ -67,7 +67,7 @@ impl Tile {
             catalog: Catalog::Classics,
             parity: Parity::Odds,
             budget: 64,
-            frame: Json::Null,
+            cells: Json::Null,
             dark: false,
             library: seed_library(),
             next: STARTERS.len() as u64 + 1,
@@ -76,28 +76,19 @@ impl Tile {
         app
     }
     fn repaint(&mut self) {
-        let board = mrlyui::frame::board(self.dark);
-        let fill = mrlyui::frame::ink(self.dark);
-        self.frame = match tile2d::build(&self.tile) {
+        self.cells = match tile2d::build(&self.tile) {
             Ok(mut cell) => {
                 let (w, h) = (cell.width(), cell.height());
                 let colors = match &self.paint {
                     Some(coating) if paint::coat(&mut cell.cell, coating, None).is_ok() => (0
                         ..cell.cell.size())
-                        .map(|i| {
-                            let c = cell.cell.color_at(i);
-                            if c[3] == 0 {
-                                board
-                            } else {
-                                c
-                            }
-                        })
+                        .map(|i| cell.cell.color_at(i))
                         .collect(),
-                    _ => two_tone(&cell, board, fill),
+                    _ => two_tone(&cell, ink(self.dark)),
                 };
-                frame::field(w, h, colors, board).fact()
+                cells(w, h, colors)
             }
-            Err(_) => blank(board),
+            Err(_) => blank(),
         };
     }
 }
@@ -123,7 +114,7 @@ impl App for Tile {
             "options": self.options(),
             "thumbs": self.thumbs(),
             "library": self.shelf(),
-            "frame": &self.frame,
+            "cells": &self.cells,
         })
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
@@ -479,13 +470,13 @@ mod tests {
         let _g = guard();
         let mut t = app();
         assert!(send(&mut t, "tile.paint", json!({ "seed": 11 })).ok);
-        let frame = t.frame.clone();
+        let fact = t.cells.clone();
         let mut back = app();
         back.load(&t.save());
-        assert_eq!(back.frame, frame);
+        assert_eq!(back.cells, fact);
         seed(555);
         back.repaint();
-        assert_eq!(back.frame, frame);
+        assert_eq!(back.cells, fact);
     }
     #[test]
     fn load_rejects_bad_bundles() {
@@ -512,10 +503,10 @@ mod tests {
         let mut t = app();
         assert!(send(&mut t, "tile.paint", json!({ "seed": 7 })).ok);
         assert!(t.paint.is_some());
-        let bare = app().frame.clone();
+        let bare = app().cells.clone();
         assert!(send(&mut t, "tile.strip", json!({})).ok);
         assert!(t.paint.is_none());
-        assert_eq!(t.frame, bare);
+        assert_eq!(t.cells, bare);
     }
     #[test]
     fn paint_knobs_stage_a_default_paint() {
@@ -583,7 +574,13 @@ mod tests {
         assert_eq!(state["options"]["budgets"], json!([16, 32, 64]));
         assert_eq!(state["options"]["groups"].as_array().unwrap().len(), 5);
         assert!(state["options"]["sources"][0]["label"].is_string());
-        assert!(state["frame"]["rows"].is_array());
+        let cells = &state["cells"];
+        assert_eq!(cells["skin"], json!("tiles"));
+        assert_eq!(cells["ids"].as_array().unwrap().len(), 9);
+        let pens = cells["pens"].as_array().unwrap();
+        assert_eq!(pens.len(), 16);
+        assert!(pens.iter().all(|p| p.as_str().unwrap().starts_with('#')));
+        assert!(state.get("frame").is_none());
         let back = Model::from_json(&state["tile"]).unwrap();
         assert_eq!(back, t.tile);
     }
@@ -638,7 +635,7 @@ mod tests {
             assert_eq!(card["value"]["paint"], Json::Null);
             let tile = Model::from_json(&card["value"]["tile"]).unwrap();
             assert!(tile2d::build(&tile).is_ok());
-            assert!(card["frame"]["rows"].is_array());
+            assert!(card["cells"]["ids"].is_array());
         }
     }
     #[test]

@@ -1,16 +1,14 @@
-use mrlycore::colors::{gradient, BLACK, CYAN};
+use mrlycore::colors::{BLACK, CYAN};
 use mrlycore::{json, Json};
 use mrlymath::bang::{code_to_corners, corners_to_code};
-use mrlymath::moire::{layer, Field, Lattice, Layer, Spec};
+use mrlymath::moire::sample::membership;
+use mrlymath::moire::Spec;
 use mrlyos::kernel::{App, Call, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{field, Frame};
 
 const CODE: u128 = 7;
 const BASE: usize = 2;
 const DIM: usize = 2;
 const NUMBER: i64 = 9;
-const SIZE: usize = 100;
-const LEVELS: usize = 9;
 const OFFSET_MIN: i64 = -6;
 const OFFSET_MAX: i64 = 6;
 const ANGLES: [i64; 4] = [0, 90, 180, 270];
@@ -120,47 +118,13 @@ impl Moire {
     pub fn new() -> Moire {
         Moire { set: Set::new() }
     }
-    fn lattice(&self) -> Lattice {
-        match self.set.lattice.as_str() {
-            "hex" => Lattice::Hex,
-            _ => Lattice::Square,
+    fn table(spec: Spec) -> [f32; 4] {
+        let hits = membership(spec.code, spec.base, spec.dimension).unwrap();
+        let mut table = [0.0; 4];
+        for (slot, hit) in table.iter_mut().zip(hits.iter()) {
+            *slot = *hit as u8 as f32;
         }
-    }
-    fn interference(&self) -> Field {
-        let spec = Spec::new(CODE, BASE, DIM);
-        let lattice = self.lattice();
-        let mut base = Layer::new(spec, NUMBER as usize);
-        base.lattice = lattice;
-        base.size = SIZE;
-        let mask_a = layer(&base).unwrap();
-        let times = (self.set.angle / 90).rem_euclid(4) as u8;
-        let over_spec = rotate(spec, times);
-        let number_b = (NUMBER + self.set.offset).max(1) as usize;
-        let mut over = Layer::new(over_spec, number_b);
-        over.lattice = lattice;
-        over.size = SIZE;
-        let mask_b = layer(&over).unwrap();
-        let data: Vec<f32> = mask_a
-            .iter()
-            .zip(mask_b.iter())
-            .map(|(&a, &b)| a as u8 as f32 + b as u8 as f32)
-            .collect();
-        Field::from_data(data, SIZE)
-    }
-    fn render(&self) -> Frame {
-        let interference = self.interference();
-        let norm = interference.normalized(false);
-        let ramp = gradient(&[BLACK, CYAN], LEVELS).unwrap();
-        let background = [BLACK.r, BLACK.g, BLACK.b, 255];
-        let colors: Vec<[u8; 4]> = norm
-            .iter()
-            .map(|&v| {
-                let idx = ((v * (LEVELS - 1) as f32).round() as usize).min(LEVELS - 1);
-                let c = ramp[idx];
-                [c.r, c.g, c.b, 255]
-            })
-            .collect();
-        field(SIZE, SIZE, colors, background)
+        table
     }
 }
 
@@ -176,8 +140,25 @@ impl App for Moire {
             "offset": self.set.offset,
             "angle": self.set.angle,
             "lattice": &self.set.lattice,
-            "frame": self.render().fact(),
+            "shade": json!({ "program": "moire" }),
         })
+    }
+    fn uniforms(&self) -> Option<Vec<f32>> {
+        let spec = Spec::new(CODE, BASE, DIM);
+        let times = (self.set.angle / 90).rem_euclid(4) as u8;
+        let mut u = vec![0.0f32; 24];
+        u[4] = BLACK.r as f32 / 255.0;
+        u[5] = BLACK.g as f32 / 255.0;
+        u[6] = BLACK.b as f32 / 255.0;
+        u[8] = CYAN.r as f32 / 255.0;
+        u[9] = CYAN.g as f32 / 255.0;
+        u[10] = CYAN.b as f32 / 255.0;
+        u[12..16].copy_from_slice(&Moire::table(spec));
+        u[16..20].copy_from_slice(&Moire::table(rotate(spec, times)));
+        u[20] = NUMBER as f32;
+        u[21] = (NUMBER + self.set.offset).max(1) as f32;
+        u[22] = (self.set.lattice == "hex") as u8 as f32;
+        Some(u)
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
         vec![
@@ -252,6 +233,7 @@ mod tests {
         let mut b = Moire::new();
         b.load(&a.save());
         assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
+        assert_eq!(b.uniforms(), a.uniforms());
     }
     #[test]
     fn load_survives_garbage() {
@@ -268,29 +250,37 @@ mod tests {
         assert_eq!(names, vec!["moire.set", "moire.reset"]);
     }
     #[test]
-    fn frame_renders() {
+    fn state_carries_the_shade() {
         let m = Moire::new();
         let state = m.state(&iden(), None);
-        let rows = state["frame"]["rows"].as_array().unwrap();
-        assert_eq!(rows.len(), SIZE);
-        assert_eq!(rows[0].as_array().unwrap().len(), SIZE);
-        assert!(state["frame"]["palette"].as_array().unwrap().len() >= 2);
+        assert_eq!(state["shade"]["program"], json!("moire"));
+        assert!(state["frame"].is_null());
     }
     #[test]
-    fn knobs_change_the_frame() {
-        let base = Moire::new().state(&iden(), None)["frame"].clone();
+    fn uniforms_carry_the_interference() {
+        let u = Moire::new().uniforms().unwrap();
+        assert_eq!(u.len(), 24);
+        assert_eq!(&u[12..16], &[1.0, 1.0, 1.0, 0.0]);
+        assert_eq!(&u[16..20], &[1.0, 1.0, 0.0, 1.0]);
+        assert_eq!(u[20], 9.0);
+        assert_eq!(u[21], 13.0);
+        assert_eq!(u[22], 0.0);
+    }
+    #[test]
+    fn knobs_change_the_uniforms() {
+        let base = Moire::new().uniforms().unwrap();
         let mut a = Moire::new();
         send(&mut a, "moire.set", json!({ "key": "offset", "value": -5 }));
-        assert_ne!(a.state(&iden(), None)["frame"], base);
+        assert_eq!(a.uniforms().unwrap()[21], 4.0);
         let mut b = Moire::new();
         send(&mut b, "moire.set", json!({ "key": "angle", "value": 180 }));
-        assert_ne!(b.state(&iden(), None)["frame"], base);
+        assert_ne!(&b.uniforms().unwrap()[16..20], &base[16..20]);
         let mut c = Moire::new();
         send(
             &mut c,
             "moire.set",
             json!({ "key": "lattice", "value": "hex" }),
         );
-        assert_ne!(c.state(&iden(), None)["frame"], base);
+        assert_eq!(c.uniforms().unwrap()[22], 1.0);
     }
 }

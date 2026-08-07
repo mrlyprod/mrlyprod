@@ -3,11 +3,9 @@ import { colorpicker } from "./colorpicker.tsx"
 import { h } from "../jsx.ts"
 import { hex } from "../palette.ts"
 import { reading } from "../reads.ts"
-import type { Node } from "../types.ts"
+import type { Cells, Node } from "../types.ts"
 
-type Frame = { width: number; height: number; rows: number[][]; palette: string[] }
-
-type Slab = { id: number; name: string; value: unknown; frame: Frame }
+type Slab = { id: number; name: string; value: unknown; cells: Cells }
 
 export function library(kind: "colors" | "emoji" | "font" | "tile", host: string, key: string, current?: unknown): Node[] {
   const lib = reading(`${kind}/library`)
@@ -30,7 +28,7 @@ export function library(kind: "colors" | "emoji" | "font" | "tile", host: string
     <grid key={`lib-${key}`} cols={3}>
       {(lib as Slab[]).map(entry => (
         <cell key={`${key}-${entry.id}`} call={set(entry.value)}>
-          <canvas key="thumb" handle={`lib-${host}-${key}-${entry.id}`} rows={entry.frame.rows} palette={entry.frame.palette} />
+          <canvas key="thumb" handle={`lib-${host}-${key}-${entry.id}`} cells={{ app: "tile", ...entry.cells }} />
         </cell>
       ))}
     </grid>,

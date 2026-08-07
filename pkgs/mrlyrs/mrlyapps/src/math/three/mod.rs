@@ -1,9 +1,9 @@
+use mrlycore::colors::ink;
 use mrlycore::colors::named;
 use mrlycore::{json, Json};
 use mrlymath::space::{axis_edges, Pack, TURN};
 use mrlymath::three::{carpet, census, net, quads, void, wires, xtree, ytree, ztree, Cell3d};
 use mrlyos::kernel::{App, Call, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::ink;
 use std::f64::consts::TAU;
 
 const DESIGNS: [&str; 6] = ["carpet", "net", "xtree", "ytree", "ztree", "void"];
@@ -263,7 +263,7 @@ impl App for Three {
     fn uniforms(&self) -> Option<Vec<f32>> {
         let rad = TAU / TURN as f64;
         let fill = named(&self.set.fill).unwrap();
-        let board = mrlyui::frame::board(self.dark);
+        let board = mrlycore::colors::board(self.dark);
         let mut u = vec![0.0; 24];
         u[4] = board[0] as f64 / 255.0;
         u[5] = board[1] as f64 / 255.0;

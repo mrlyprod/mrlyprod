@@ -375,10 +375,10 @@ fn render(path: Option<&str>) {
 // SHOT
 
 fn snap(os: &Os, app: &str) -> Result<Vec<u8>, &'static str> {
-    let cells = os.read(&format!("{app}/cells"), None);
-    let Some(cells) = cells.filter(|c| c.as_object().is_some()) else {
-        return os.snapshot(app);
-    };
+    let cells = os
+        .read(&format!("{app}/cells"), None)
+        .filter(|c| c.as_object().is_some())
+        .ok_or("nothing to shoot here")?;
     let image = mrlyui::skin::raster(app, &cells, 8, true)
         .ok_or("nothing to shoot here")?
         .image();
@@ -577,12 +577,11 @@ fn goose(args: &[String]) {
 fn paint(env: &Json) -> String {
     let app = env["view"]["app"].as_str().unwrap_or("");
     let state = &env["view"]["state"];
-    let grid = match state.get("cells") {
-        Some(cells) => mrlyui::skin::raster(app, cells, 4, true)
-            .map(|f| f.fact())
-            .unwrap_or(Json::Null),
-        None => state["frame"].clone(),
-    };
+    let grid = state
+        .get("cells")
+        .and_then(|cells| mrlyui::skin::raster(app, cells, 4, true))
+        .map(|f| f.fact())
+        .unwrap_or(Json::Null);
     match (grid["rows"].as_array(), grid["palette"].as_array()) {
         (Some(rows), Some(palette)) if !rows.is_empty() => blocks(app, rows, palette),
         _ => env.pretty(),

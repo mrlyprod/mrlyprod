@@ -7,8 +7,8 @@ use mrlycore::codec::base64;
 use mrlycore::json::Map;
 use mrlycore::{json, Json};
 
-mod capture;
 mod persist;
+mod shot;
 
 const RING: usize = 100;
 
@@ -299,11 +299,6 @@ impl Os {
     }
     fn find(&self, app: &str) -> Option<usize> {
         self.apps.iter().position(|a| a.route() == app)
-    }
-    #[cfg(any(test, feature = "testkit"))]
-    pub(crate) fn shoot(&self, app: &str) -> Option<Json> {
-        let i = self.find(app)?;
-        Some(self.apps[i].capture(&self.iden))
     }
 }
 

@@ -1,9 +1,7 @@
 import { pref } from "../sound.ts"
 import type { Held } from "../types.ts"
-import { entries, forget } from "./boards.ts"
-import { create, engine, patch } from "./nodes.ts"
+import { entries } from "./boards.ts"
 import { pin } from "./paint.ts"
-import { courier } from "./reconcile.ts"
 import { refresh, setSeed, setSource } from "./wallpaper.ts"
 
 export function theme(key: string, value: unknown): void {
@@ -30,20 +28,6 @@ export function theme(key: string, value: unknown): void {
     case "fill":
       pin(value === "random" ? null : String(value))
       break
-    case "render": {
-      engine(value)
-      const send = courier()
-      for (const [surface, node] of entries()) {
-        forget(surface)
-        if (send === undefined || !surface.isConnected) continue
-        const worn = surface as unknown as Held
-        const fresh = create(node, send)
-        if (worn.dataset.id !== undefined) fresh.dataset.id = worn.dataset.id
-        worn.replaceWith(fresh)
-        patch(fresh, node, send)
-      }
-      break
-    }
     case "background":
       document.body.style.setProperty("--background-color", `var(--c-${String(value)})`)
       refresh()

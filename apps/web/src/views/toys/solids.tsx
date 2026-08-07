@@ -31,7 +31,6 @@ export function solids(state: unknown, _send: Send): Node {
         <Board
           app="solids"
           keyName="solid"
-          rows={[]}
           shade={s.shade}
           turn={call("orbit.turn", { app: "solids" })}
           zoom={call("orbit.zoom", { app: "solids" })}

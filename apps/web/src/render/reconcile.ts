@@ -1,19 +1,12 @@
 import type { Held, Node, Send } from "../types.ts"
 import { create, patch } from "./nodes.ts"
 
-let sender: Send | undefined
-
-export function courier(): Send | undefined {
-  return sender
-}
-
 function identity(node: Node, index: number): string {
   const id = `${node.kind}:${node.key ?? `#${index}`}`
   return node.kind === "Choice" ? `${id}:${node.mode ?? "select"}` : id
 }
 
 export function reconcile(parent: HTMLElement, nodes: Node[], send: Send): void {
-  sender = send
   const existing = new Map<string, Held>()
   for (const child of Array.from(parent.children)) {
     const el = child as Held

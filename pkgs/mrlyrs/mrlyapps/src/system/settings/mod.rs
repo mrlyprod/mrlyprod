@@ -9,8 +9,6 @@ pub const FONTS: [&str; 5] = ["mono", "sans", "serif", "display", "mrly"];
 
 pub const EMOJIS: [&str; 2] = ["system", "noto"];
 
-pub const RENDERS: [&str; 2] = ["cpu", "gpu"];
-
 pub const MATERIALS: [&str; 2] = ["solid", "glass"];
 
 pub const WALLPAPERS: [&str; 2] = ["color", "pattern"];
@@ -32,7 +30,6 @@ pub struct Settings {
     pub(crate) duration: i64,
     pub(crate) background: String,
     pub(crate) width: i64,
-    pub(crate) render: String,
     pub(crate) material: String,
     pub(crate) wallpaper: String,
     pub(crate) seed: i64,
@@ -46,7 +43,7 @@ impl Default for Settings {
 }
 
 impl Settings {
-    const KEYS: [&'static str; 21] = [
+    const KEYS: [&'static str; 20] = [
         "launchpad",
         "darkmode",
         "color",
@@ -63,7 +60,6 @@ impl Settings {
         "duration",
         "background",
         "width",
-        "render",
         "material",
         "wallpaper",
         "seed",
@@ -87,7 +83,6 @@ impl Settings {
             duration: 150,
             background: "white".to_string(),
             width: 500,
-            render: "cpu".to_string(),
             material: "solid".to_string(),
             wallpaper: "color".to_string(),
             seed: 0,
@@ -106,7 +101,7 @@ impl Settings {
                 Ok(json!(on))
             }
             "launchpad" | "color" | "fill" | "font" | "emoji" | "note" | "wave" | "background"
-            | "render" | "material" | "wallpaper" => {
+            | "material" | "wallpaper" => {
                 let pick = value.as_str().ok_or("value must be a string")?;
                 let allowed = match key {
                     "launchpad" => MODES.contains(&pick),
@@ -116,7 +111,6 @@ impl Settings {
                     "emoji" => EMOJIS.contains(&pick),
                     "note" => pick == "random" || mrlymusic::theory::NAMES.contains(&pick),
                     "background" => COLORS.contains(&pick),
-                    "render" => RENDERS.contains(&pick),
                     "material" => MATERIALS.contains(&pick),
                     "wallpaper" => WALLPAPERS.contains(&pick),
                     _ => mrlymusic::wave::NAMES.contains(&pick),
@@ -132,7 +126,6 @@ impl Settings {
                     "emoji" => self.emoji = pick.to_string(),
                     "note" => self.note = pick.to_string(),
                     "background" => self.background = pick.to_string(),
-                    "render" => self.render = pick.to_string(),
                     "material" => self.material = pick.to_string(),
                     "wallpaper" => self.wallpaper = pick.to_string(),
                     _ => self.wave = pick.to_string(),
@@ -167,7 +160,6 @@ impl Settings {
             "duration" => json!(self.duration),
             "background" => json!(&self.background),
             "width" => json!(self.width),
-            "render" => json!(&self.render),
             "material" => json!(&self.material),
             "wallpaper" => json!(&self.wallpaper),
             "seed" => json!(self.seed),
@@ -242,7 +234,6 @@ mod tests {
         assert_eq!(s.get("duration"), json!(150));
         assert_eq!(s.get("background"), json!("white"));
         assert_eq!(s.get("width"), json!(500));
-        assert_eq!(s.get("render"), json!("cpu"));
         assert_eq!(s.get("material"), json!("solid"));
         assert_eq!(s.get("wallpaper"), json!("color"));
         assert_eq!(s.get("seed"), json!(0));
@@ -365,9 +356,6 @@ mod tests {
         assert_eq!(s.apply("width", &json!(300)), Err("out of range"));
         assert_eq!(s.apply("width", &json!(2000)), Err("out of range"));
         assert_eq!(s.apply("width", &json!(750)), Ok(json!(750)));
-        assert_eq!(s.apply("render", &json!("webgl")), Err("no such option"));
-        assert_eq!(s.apply("render", &json!(1)), Err("value must be a string"));
-        assert_eq!(s.apply("render", &json!("gpu")), Ok(json!("gpu")));
         assert_eq!(
             s.apply("material", &json!("frosted")),
             Err("no such option")
@@ -447,10 +435,6 @@ mod tests {
         assert_eq!(s.get("launchpad"), json!("grid"));
         s.load(&json!({ "launchpad": "list" }));
         assert_eq!(s.get("launchpad"), json!("list"));
-        s.load(&json!({ "render": "webgl" }));
-        assert_eq!(s.get("render"), json!("cpu"));
-        s.load(&json!({ "render": "gpu" }));
-        assert_eq!(s.get("render"), json!("gpu"));
         s.load(&json!({ "material": "frosted" }));
         assert_eq!(s.get("material"), json!("solid"));
         s.load(&json!({ "material": "glass" }));

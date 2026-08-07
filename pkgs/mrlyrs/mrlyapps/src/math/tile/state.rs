@@ -1,7 +1,8 @@
 use super::helpers::{closest_nesting, default_paint, int, nearest, source_label, work};
-use super::render::{blank, two_tone};
+use super::render::{blank, cells, two_tone};
 use super::rules::resize;
 use super::{Tile, BUDGETS, MIN, THUMBS};
+use mrlycore::colors::ink;
 use mrlycore::paint::{self, Edition, Ink, Paint, Scheme, Target};
 use mrlycore::tile::{
     generals, nestings, powers, products, Catalog, Group, Parity, Source, Tile as Model,
@@ -9,7 +10,6 @@ use mrlycore::tile::{
 use mrlycore::{json, Json};
 use mrlymath::bang;
 use mrlymath::two::tile as tile2d;
-use mrlyui::frame;
 
 impl Tile {
     pub fn sources(&self) -> Vec<Source> {
@@ -47,17 +47,9 @@ impl Tile {
             .collect()
     }
     pub fn preview(&self, model: &Model) -> Json {
-        let board = mrlyui::frame::board(self.dark);
-        let fill = mrlyui::frame::ink(self.dark);
         match tile2d::build(model) {
-            Ok(cell) => frame::field(
-                cell.width(),
-                cell.height(),
-                two_tone(&cell, board, fill),
-                board,
-            )
-            .fact(),
-            Err(_) => blank(board),
+            Ok(cell) => cells(cell.width(), cell.height(), two_tone(&cell, ink(self.dark))),
+            Err(_) => blank(),
         }
     }
     pub fn thumbs(&self) -> Vec<Json> {
@@ -74,7 +66,7 @@ impl Tile {
                 let mut probe = self.tile.clone();
                 probe.levels = vec![level];
                 resize(&mut probe);
-                json!({ "level": level, "frame": self.preview(&probe) })
+                json!({ "level": level, "cells": self.preview(&probe) })
             })
             .collect()
     }
@@ -86,7 +78,7 @@ impl Tile {
                     "id": entry.id,
                     "name": &entry.name,
                     "value": work(&entry.tile, &entry.paint),
-                    "frame": self.preview(&entry.tile),
+                    "cells": self.preview(&entry.tile),
                 })
             })
             .collect()

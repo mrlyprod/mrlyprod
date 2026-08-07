@@ -1,5 +1,5 @@
 import { setter } from "../../builders.ts"
-import { fractalBoard, fractalPanel } from "../../components/fractal.tsx"
+import { fractalPanel, shadeBoard } from "../../components/fractal.tsx"
 import { h } from "../../jsx.ts"
 import type { Node, Send, Shade } from "../../types.ts"
 
@@ -16,6 +16,8 @@ const PRESETS = [
 type State = {
   steps: number
   settings: {
+    width: number
+    height: number
     preset: string
     cre: number
     cim: number
@@ -29,7 +31,6 @@ type State = {
     primary: string
     accent: string
   }
-  frame: { width: number; height: number; rows: number[][]; palette: string[] }
   shade?: Shade
 }
 
@@ -40,7 +41,7 @@ export function julia(state: unknown, _send: Send): Node {
   return (
     <stack key="julia">
       <card key="board">
-        {fractalBoard("julia", "julia", s.frame, { steps: s.steps, shade: s.shade })}
+        {shadeBoard("julia", s.shade, [s.settings.width, s.settings.height], s.steps)}
       </card>
       <card key="seed">
         <choice key="preset" value={s.settings.preset} options={PRESETS} call={turn("preset")} arg="value" label="preset" />

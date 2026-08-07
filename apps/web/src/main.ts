@@ -92,10 +92,6 @@ const stray = (): Observation => {
 
 const ui = mount(document.getElementById("mrly") as HTMLElement, send, routes, registry.apps, stray)
 
-if (looks?.render === "gpu" && navigator.gpu === undefined) {
-  send({ verb: "settings.set", args: { key: "render", value: "cpu" } })
-}
-
 pwa.watch()
 routes.on("device.install", () => {
   void pwa.install().then(note => ui.pop(note))

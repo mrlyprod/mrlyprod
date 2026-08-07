@@ -1,8 +1,7 @@
 import { call, setter } from "../../builders.ts"
-import { Board } from "../../components/Board.tsx"
 import { Shot } from "../../components/Shot.tsx"
 import { h } from "../../jsx.ts"
-import type { Node, Send } from "../../types.ts"
+import type { Node, Send, Shade } from "../../types.ts"
 
 const ANGLES = ["0", "90", "180", "270"]
 
@@ -12,7 +11,7 @@ type State = {
   offset: number
   angle: number
   lattice: string
-  frame: { rows: number[][]; palette: string[] }
+  shade?: Shade
 }
 
 const turn = setter("moire")
@@ -22,7 +21,8 @@ export function moire(state: unknown, _send: Send): Node {
   return (
     <stack key="moire">
       <card key="board">
-        <Board app="moire" rows={s.frame.rows} palette={s.frame.palette} />
+        <canvas key="frame" handle="moire" shade={s.shade} grid={[1, 1]} />
+        <button key="full" call={call("face.full", { handle: "moire" })}>fullscreen</button>
       </card>
       <card key="controls">
         <range key="offset" value={s.offset} min={-6} max={6} step={1} call={turn("offset")} arg="value" label="offset" />

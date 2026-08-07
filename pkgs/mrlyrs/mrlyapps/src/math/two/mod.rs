@@ -1,56 +1,42 @@
+use mrlycore::colors::hex;
+use mrlycore::colors::named;
 use mrlycore::{json, Json};
 use mrlymath::two::{carpet, fills, htree, net, void, vtree, Cell2d};
 use mrlyos::kernel::{App, Call, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{field, Frame};
-use mrlyui::skin::{two as dress, Ink, Skin};
+use mrlyui::skin::pixel::PENS;
 
 const DESIGNS: [&str; 5] = ["carpet", "net", "htree", "vtree", "void"];
 const NUMBERS: [i64; 4] = [3, 5, 7, 9];
 const MAX_SIDE: u32 = 256;
-const MAX_CELLS: u32 = 2500;
 
 struct Set {
     design: String,
     number: i64,
     level: i64,
-    skin: String,
     fill: String,
     void: String,
 }
 
 impl Set {
     fn new() -> Set {
-        let skin = dress::MODES[0];
-        let (fill, void) = dress::defaults(skin);
         Set {
             design: "carpet".to_string(),
             number: 5,
             level: 2,
-            skin: skin.to_string(),
-            fill: fill.to_string(),
-            void: void.to_string(),
+            fill: "red".to_string(),
+            void: "black".to_string(),
         }
     }
     fn side(number: i64, level: i64) -> u32 {
         (number as u32).saturating_pow(level as u32)
     }
-    fn fits(skin: &str, number: i64, level: i64) -> bool {
-        let side = Set::side(number, level);
-        match dress::glyphs(skin) {
-            true => side.saturating_mul(side) <= MAX_CELLS,
-            false => side <= MAX_SIDE,
-        }
+    fn fits(number: i64, level: i64) -> bool {
+        Set::side(number, level) <= MAX_SIDE
     }
     fn int(value: &Json) -> Option<i64> {
         value
             .as_i64()
             .or_else(|| value.as_str().and_then(|s| s.parse::<i64>().ok()))
-    }
-    fn dress(&mut self, skin: &str) {
-        let (fill, void) = dress::defaults(skin);
-        self.skin = skin.to_string();
-        self.fill = fill.to_string();
-        self.void = void.to_string();
     }
     fn apply(&mut self, key: &str, value: &Json) -> Result<Json, &'static str> {
         match key {
@@ -67,7 +53,7 @@ impl Set {
                 if !NUMBERS.contains(&n) {
                     return Err("number must be 3, 5, 7, or 9");
                 }
-                if !Set::fits(&self.skin, n, self.level) {
+                if !Set::fits(n, self.level) {
                     return Err("too many cells");
                 }
                 self.number = n;
@@ -78,28 +64,17 @@ impl Set {
                 if n < 1 {
                     return Err("level must be at least 1");
                 }
-                if !Set::fits(&self.skin, self.number, n) {
+                if !Set::fits(self.number, n) {
                     return Err("too many cells");
                 }
                 self.level = n;
                 Ok(json!(n))
             }
-            "skin" => {
-                let name = value.as_str().ok_or("value must be a string")?;
-                if !dress::MODES.contains(&name) {
-                    return Err("no such skin");
-                }
-                if !Set::fits(name, self.number, self.level) {
-                    return Err("too many cells");
-                }
-                if name != self.skin {
-                    self.dress(name);
-                }
-                Ok(json!(name))
-            }
             "fill" | "void" => {
                 let name = value.as_str().ok_or("value must be a string")?;
-                dress::accepts(&self.skin, name)?;
+                if named(name).is_err() {
+                    return Err("unknown color");
+                }
                 match key {
                     "fill" => self.fill = name.to_string(),
                     _ => self.void = name.to_string(),
@@ -114,18 +89,12 @@ impl Set {
             "design": &self.design,
             "number": self.number,
             "level": self.level,
-            "skin": &self.skin,
             "fill": &self.fill,
             "void": &self.void,
         })
     }
     fn from_json(value: &Json) -> Set {
         let mut set = Set::new();
-        if let Some(name) = value["skin"].as_str() {
-            if dress::MODES.contains(&name) {
-                set.dress(name);
-            }
-        }
         if let Some(name) = value["design"].as_str() {
             if DESIGNS.contains(&name) {
                 set.design = name.to_string();
@@ -142,19 +111,19 @@ impl Set {
             }
         }
         if let Some(name) = value["fill"].as_str() {
-            if dress::accepts(&set.skin, name).is_ok() {
+            if named(name).is_ok() {
                 set.fill = name.to_string();
             }
         }
         if let Some(name) = value["void"].as_str() {
-            if dress::accepts(&set.skin, name).is_ok() {
+            if named(name).is_ok() {
                 set.void = name.to_string();
             }
         }
-        if !Set::fits(&set.skin, set.number, set.level) {
+        if !Set::fits(set.number, set.level) {
             let defaults = Set::new();
             set.level = defaults.level;
-            if !Set::fits(&set.skin, set.number, set.level) {
+            if !Set::fits(set.number, set.level) {
                 set.number = defaults.number;
             }
         }
@@ -188,11 +157,10 @@ impl Two {
         }
         .unwrap()
     }
-    fn skin(&self) -> Skin {
-        dress::skin(&self.set.skin, &self.set.fill, &self.set.void)
-    }
-    fn glyphs(&self) -> bool {
-        dress::glyphs(&self.set.skin)
+    fn ink(name: &str) -> [u8; 4] {
+        named(name)
+            .map(|c| [c.r, c.g, c.b, 255])
+            .unwrap_or([0, 0, 0, 255])
     }
     fn ids(&self, cell: &Cell2d) -> Vec<Vec<u8>> {
         let w = cell.width();
@@ -205,22 +173,14 @@ impl Two {
             })
             .collect()
     }
-    fn render(&self, cell: &Cell2d) -> Frame {
-        let (w, h) = (cell.width(), cell.height());
-        let skin = self.skin();
-        let clear = [0, 0, 0, 0];
-        let paint = |role: usize| match skin.visuals.get(role).and_then(|v| v.bg.clone()) {
-            Some(Ink::Hex(color)) => color,
-            _ => clear,
-        };
-        let (empty, fill) = (paint(0), paint(1));
-        let colors: Vec<[u8; 4]> = cell
-            .types()
-            .bytes()
-            .iter()
-            .map(|&v| if v == 1 { fill } else { empty })
-            .collect();
-        field(w, h, colors, empty)
+    fn cells_fact(&self, cell: &Cell2d) -> Json {
+        let mut pens = vec![Two::ink(&self.set.void), Two::ink(&self.set.fill)];
+        pens.resize(PENS, [0, 0, 0, 0]);
+        json!({
+            "ids": self.ids(cell),
+            "skin": "tiles",
+            "pens": pens.iter().map(|&p| hex(p)).collect::<Vec<_>>(),
+        })
     }
 }
 
@@ -236,21 +196,12 @@ impl App for Two {
         let side = cell.width().max(cell.height());
         let filled = fills(&cell);
         let total = cell.width() * cell.height();
-        let glyphs = self.glyphs();
         json!({
             "settings": self.set.to_json(),
             "index": DESIGNS.iter().position(|&d| d == self.set.design).unwrap_or(0),
             "count": DESIGNS.len(),
             "census": { "grid": side, "fill": filled, "void": total - filled },
-            "skin": self.skin().to_json(),
-            "ids": match glyphs {
-                true => json!(self.ids(&cell)),
-                false => Json::Null,
-            },
-            "frame": match glyphs {
-                true => Json::Null,
-                false => self.render(&cell).fact(),
-            },
+            "cells": self.cells_fact(&cell),
         })
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
@@ -302,16 +253,6 @@ mod tests {
     use super::*;
     use mrlyos::kernel::testkit::{iden, send};
 
-    fn glyphed() -> Two {
-        let mut t = Two::new();
-        send(
-            &mut t,
-            "two.set",
-            json!({ "key": "skin", "value": "glyphs" }),
-        );
-        t
-    }
-
     #[test]
     fn set_validates() {
         let mut t = Two::new();
@@ -345,6 +286,7 @@ mod tests {
             )
             .ok
         );
+        assert!(!send(&mut t, "two.set", json!({ "key": "fill", "value": "🍎" })).ok);
         assert!(!send(&mut t, "two.set", json!({ "key": "volume", "value": 1 })).ok);
     }
     #[test]
@@ -362,6 +304,14 @@ mod tests {
         assert!(!send(&mut t, "two.page", json!({ "dir": "sideways" })).ok);
     }
     #[test]
+    fn budgets_cap_the_side() {
+        let mut t = Two::new();
+        assert!(send(&mut t, "two.set", json!({ "key": "number", "value": 3 })).ok);
+        assert!(send(&mut t, "two.set", json!({ "key": "level", "value": 5 })).ok);
+        assert!(!send(&mut t, "two.set", json!({ "key": "level", "value": 6 })).ok);
+        assert!(!send(&mut t, "two.set", json!({ "key": "number", "value": 9 })).ok);
+    }
+    #[test]
     fn save_load_round_trips() {
         let mut a = Two::new();
         send(
@@ -372,14 +322,14 @@ mod tests {
         send(&mut a, "two.set", json!({ "key": "number", "value": 9 }));
         send(&mut a, "two.set", json!({ "key": "level", "value": 2 }));
         send(&mut a, "two.set", json!({ "key": "fill", "value": "cyan" }));
+        send(
+            &mut a,
+            "two.set",
+            json!({ "key": "void", "value": "white" }),
+        );
         let mut b = Two::new();
         b.load(&a.save());
         assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
-        let mut c = glyphed();
-        send(&mut c, "two.set", json!({ "key": "fill", "value": "#" }));
-        let mut d = Two::new();
-        d.load(&c.save());
-        assert_eq!(d.state(&iden(), None), c.state(&iden(), None));
     }
     #[test]
     fn load_survives_garbage() {
@@ -388,14 +338,13 @@ mod tests {
         assert_eq!(t.set.design, "carpet");
         assert_eq!(t.set.number, 5);
         assert_eq!(t.set.level, 2);
-        assert_eq!(t.set.skin, "solid");
         assert_eq!(t.set.fill, "red");
         let mut g = Two::new();
-        g.load(&json!({ "skin": "glyphs", "number": 9, "level": 3, "fill": "xy" }));
-        assert_eq!(g.set.number, 5);
+        g.load(&json!({ "skin": "glyphs", "number": 9, "level": 3, "fill": "🍎", "void": "🍏" }));
+        assert_eq!(g.set.number, 9);
         assert_eq!(g.set.level, 2);
-        assert_eq!(g.set.fill, "🍎");
-        assert_eq!(g.set.void, "🍏");
+        assert_eq!(g.set.fill, "red");
+        assert_eq!(g.set.void, "black");
     }
     #[test]
     fn actions_offer_the_natural_verbs() {
@@ -404,85 +353,29 @@ mod tests {
         assert_eq!(names, vec!["two.page", "two.set", "two.reset"]);
     }
     #[test]
-    fn frame_renders_the_grid() {
+    fn state_carries_the_cells_fact() {
         let mut t = Two::new();
-        send(&mut t, "two.reset", json!({}));
+        send(&mut t, "two.set", json!({ "key": "fill", "value": "cyan" }));
         let state = t.state(&iden(), None);
         let side = state["census"]["grid"].as_u64().unwrap() as usize;
-        assert_eq!(state["frame"]["rows"].as_array().unwrap().len(), side);
-        assert_eq!(state["frame"]["rows"][0].as_array().unwrap().len(), side);
-        assert!(state["frame"]["palette"].as_array().unwrap().len() >= 2);
-        assert!(state["census"]["fill"].as_u64().unwrap() > 0);
-        assert!(state["ids"].is_null());
-        assert!(state["skin"][1]["bg"].is_string());
-        assert!(state["skin"][1]["face"].is_null());
-    }
-    #[test]
-    fn glyph_skin_swaps_the_alphabet() {
-        let mut t = glyphed();
-        assert_eq!(t.set.fill, "🍎");
-        assert_eq!(t.set.void, "🍏");
-        assert!(send(&mut t, "two.set", json!({ "key": "fill", "value": "x" })).ok);
-        assert!(!send(&mut t, "two.set", json!({ "key": "fill", "value": "xy" })).ok);
-        assert!(!send(&mut t, "two.set", json!({ "key": "fill", "value": "red" })).ok);
-        assert!(
-            !send(
-                &mut t,
-                "two.set",
-                json!({ "key": "skin", "value": "velvet" })
-            )
-            .ok
-        );
-        assert!(
-            send(
-                &mut t,
-                "two.set",
-                json!({ "key": "skin", "value": "solid" })
-            )
-            .ok
-        );
-        assert_eq!(t.set.fill, "red");
-    }
-    #[test]
-    fn glyph_skin_emits_ids_and_faces() {
-        let mut t = glyphed();
-        send(
-            &mut t,
-            "two.set",
-            json!({ "key": "design", "value": "net" }),
-        );
-        let state = t.state(&iden(), None);
-        let side = state["census"]["grid"].as_u64().unwrap() as usize;
-        let rows = state["ids"].as_array().unwrap();
+        let cells = &state["cells"];
+        assert_eq!(cells["skin"], json!("tiles"));
+        let rows = cells["ids"].as_array().unwrap();
         assert_eq!(rows.len(), side);
         assert_eq!(rows[0].as_array().unwrap().len(), side);
-        assert!(state["frame"].is_null());
-        assert_eq!(state["skin"][0]["face"]["value"], json!("🍏"));
-        assert_eq!(state["skin"][1]["face"]["value"], json!("🍎"));
-        assert_eq!(state["skin"][1]["face"]["as"], json!("emoji"));
+        let pens = cells["pens"].as_array().unwrap();
+        assert_eq!(pens.len(), 16);
+        assert_eq!(pens[0], json!("#000000"));
+        assert_eq!(pens[1], json!("#1ec9f3"));
+        assert!(state.get("frame").is_none());
+        assert!(state.get("skin").is_none());
+        assert!(state.get("ids").is_none());
+        assert!(state["census"]["fill"].as_u64().unwrap() > 0);
         let flat: Vec<u64> = rows
             .iter()
             .flat_map(|row| row.as_array().unwrap().iter().map(|v| v.as_u64().unwrap()))
             .collect();
         assert!(flat.contains(&0));
         assert!(flat.contains(&1));
-    }
-    #[test]
-    fn budgets_differ_by_skin() {
-        let mut t = Two::new();
-        send(&mut t, "two.set", json!({ "key": "number", "value": 9 }));
-        assert!(send(&mut t, "two.set", json!({ "key": "level", "value": 2 })).ok);
-        assert!(
-            !send(
-                &mut t,
-                "two.set",
-                json!({ "key": "skin", "value": "glyphs" })
-            )
-            .ok
-        );
-        let mut g = glyphed();
-        assert!(send(&mut g, "two.set", json!({ "key": "number", "value": 7 })).ok);
-        assert!(!send(&mut g, "two.set", json!({ "key": "number", "value": 9 })).ok);
-        assert!(!send(&mut g, "two.set", json!({ "key": "level", "value": 3 })).ok);
     }
 }

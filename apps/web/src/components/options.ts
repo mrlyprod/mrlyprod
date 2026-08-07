@@ -15,5 +15,3 @@ export const DESIGNS_SOLID = ["carpet", "net", "vtree", "htree", "solid"]
 export const DESIGNS_VOID = ["carpet", "net", "htree", "vtree", "void"]
 
 export const SKINS = ["tiles", "emojis", "digits"]
-
-export const MODES = ["solid", "glyphs"]

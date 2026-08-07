@@ -3,7 +3,7 @@ import { Board } from "../../components/Board.tsx"
 import { library } from "../../components/library.tsx"
 import { Shot } from "../../components/Shot.tsx"
 import { h } from "../../jsx.ts"
-import type { Flip, Node, Send } from "../../types.ts"
+import type { Cells, Node, Send } from "../../types.ts"
 
 const PRESETS = ["seed", "clear", "soup"]
 const CLASSICS = ["glider", "pulsar", "pentomino"]
@@ -12,8 +12,7 @@ const SEQS = ["evens", "odds", "primes", "fibonacci"]
 type Work = unknown
 
 type State = {
-  frame: { rows: number[][]; palette: string[] }
-  strip?: Flip[]
+  cells: Cells
   generation: number
   population: number
   entropy: number
@@ -91,9 +90,7 @@ export function life(state: unknown, _send: Send): Node {
       <card key="board">
         <Board
           app="life"
-          rows={s.frame.rows}
-          palette={s.frame.palette}
-          strip={s.strip}
+          cells={s.cells}
           grid={[s.settings.size, s.settings.size]}
           drag={s.running ? undefined : call("life.paint")}
         />

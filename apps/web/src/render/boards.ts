@@ -17,7 +17,3 @@ export function prune(): void {
 export function entries(): [HTMLCanvasElement, Board][] {
   return Array.from(boards)
 }
-
-export function forget(el: HTMLCanvasElement): void {
-  boards.delete(el)
-}

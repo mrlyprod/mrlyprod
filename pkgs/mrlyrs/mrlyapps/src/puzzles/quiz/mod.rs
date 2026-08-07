@@ -1,10 +1,10 @@
+use mrlycore::colors::hex;
 use mrlycore::colors::ROLLABLE;
 use mrlycore::rng::Rng;
 use mrlycore::{json, Json};
 use mrlymath::pick;
 use mrlymusic::cue;
 use mrlyos::kernel::{int, App, Call, Effect, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::hex;
 
 const SURFACES: [&str; 2] = ["grid", "canvas"];
 const SKINS: [&str; 2] = ["tiles", "digits"];
@@ -544,6 +544,6 @@ mod tests {
         assert!(state.get("sprite").is_none());
         assert!(state.get("skin").is_none());
         let frame = mrlyui::skin::raster("quiz", cells, 8, false).expect("a frame");
-        assert_eq!(frame.width, 8);
+        assert_eq!(frame.width(), 8);
     }
 }

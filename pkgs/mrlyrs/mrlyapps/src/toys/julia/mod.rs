@@ -1,14 +1,22 @@
+use mrlycore::colors::Color;
 use mrlycore::rng::Rng;
 use mrlycore::trig::{FracIndex, N as TRIG_N};
 use mrlycore::{json, Json};
 use mrlymath::fractal::{self, presets, real, Viewport, Wayfinder, FEMTO};
 use mrlyos::kernel::{int, App, Call, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{self, Frame};
 use std::f64::consts::TAU;
 
 const MILLI: i64 = 1000;
 const MICRO: i64 = 1_000_000;
 const TURN_MILLI: i64 = TRIG_N as i64 * MILLI;
+
+fn tone(value: &str) -> [u8; 4] {
+    Color::from_hex(value).map_or([0, 0, 0, 255], |c| [c.r, c.g, c.b, c.a])
+}
+
+fn code(color: [u8; 4]) -> String {
+    Color::rgba(color[0], color[1], color[2], color[3]).to_hex()
+}
 
 const PRESETS: [&str; 7] = [
     "-0.4+0.6i",
@@ -54,8 +62,8 @@ impl Set {
             drift: 400,
             fade: 24,
             spin: 0,
-            primary: frame::hex_of("#000000"),
-            accent: frame::hex_of("#ff5db1"),
+            primary: tone("#000000"),
+            accent: tone("#ff5db1"),
         }
     }
     fn apply(&mut self, key: &str, value: &Json) -> Result<Json, &'static str> {
@@ -82,12 +90,12 @@ impl Set {
             }
             "primary" | "accent" => {
                 let s = value.as_str().ok_or("value must be a hex string")?;
-                let c = frame::hex_of(s);
+                let c = tone(s);
                 match key {
                     "primary" => self.primary = c,
                     _ => self.accent = c,
                 }
-                Ok(json!(frame::hex(c)))
+                Ok(json!(code(c)))
             }
             _ => Err("no such key"),
         }
@@ -107,8 +115,8 @@ impl Set {
             "drift": self.drift,
             "fade": self.fade,
             "spin": self.spin,
-            "primary": frame::hex(self.primary),
-            "accent": frame::hex(self.accent),
+            "primary": code(self.primary),
+            "accent": code(self.accent),
         })
     }
     fn from_json(value: &Json) -> Set {
@@ -134,8 +142,6 @@ pub struct Julia {
     age: usize,
     phase: i64,
     rotation: i64,
-    iters: Vec<i64>,
-    gpu: bool,
 }
 
 impl Default for Julia {
@@ -158,8 +164,6 @@ impl Julia {
             age: 0,
             phase: 0,
             rotation: 0,
-            iters: Vec::new(),
-            gpu: false,
         };
         julia.reset(0);
         julia
@@ -190,7 +194,6 @@ impl Julia {
         self.zoom = MICRO;
         self.age = 0;
         self.rotation = 0;
-        self.fill();
     }
     fn view(&self) -> Viewport {
         let vw = (self.start.xmax - self.start.xmin) as i128;
@@ -199,35 +202,9 @@ impl Julia {
         let hh = (vh * MICRO as i128 / (2 * self.zoom as i128)) as i64;
         Viewport::around(self.target.0, self.target.1, hw, hh)
     }
-    fn tilt(&self) -> (f64, f64) {
-        let (c, s) = FracIndex::new(self.rotation as f32 / MILLI as f32).unit();
-        (c as f64, s as f64)
-    }
     fn angle(&self) -> f64 {
         let idx = FracIndex::new(self.rotation as f32 / MILLI as f32).index();
         idx as f64 * TAU / TRIG_N as f64
-    }
-    fn fill(&mut self) {
-        let w = self.set.width as usize;
-        let h = self.set.height as usize;
-        let depth = self.set.depth;
-        let (cr, ci) = (real(self.c.0), real(self.c.1));
-        let [xmin, xmax, ymin, ymax] = self.view().reals();
-        let center = ((xmin + xmax) * 0.5, (ymin + ymax) * 0.5);
-        let vw = xmax - xmin;
-        let vh = ymax - ymin;
-        let (ca, sa) = self.tilt();
-        self.iters = vec![0; w * h];
-        for py in 0..h {
-            let uy = (py as f64 + 0.5) / h as f64;
-            for px in 0..w {
-                let ux = (px as f64 + 0.5) / w as f64;
-                let zr = xmin + ux * vw;
-                let zi = ymax - uy * vh;
-                let (zr, zi) = fractal::rotate(zr, zi, center, ca, sa);
-                self.iters[py * w + px] = fractal::julia(zr, zi, cr, ci, depth);
-            }
-        }
     }
     fn fade(&self) -> f64 {
         let fade = self.set.fade;
@@ -257,8 +234,6 @@ impl Julia {
         }
         if self.age >= self.set.cycle as usize {
             self.begin();
-        } else {
-            self.fill();
         }
     }
     fn advance(&mut self, n: u64) -> u64 {
@@ -267,26 +242,6 @@ impl Julia {
         }
         self.steps += n;
         n
-    }
-    fn render(&self) -> Frame {
-        let w = self.set.width as usize;
-        let h = self.set.height as usize;
-        let depth = self.set.depth;
-        let primary = self.set.primary;
-        let accent = self.set.accent;
-        let f = self.fade();
-        let phase = self.phase as f64 / MILLI as f64;
-        let band = self.set.band as f64 / MILLI as f64;
-        let mut colors = vec![primary; w * h];
-        for (slot, &it) in colors.iter_mut().zip(self.iters.iter()) {
-            let c = fractal::shade(it, depth, phase, band, primary, accent);
-            *slot = if f < 1.0 {
-                frame::mix(primary, c, f)
-            } else {
-                c
-            };
-        }
-        frame::field(w, h, colors, primary)
     }
 }
 
@@ -297,25 +252,14 @@ impl App for Julia {
     fn manifest(&self) -> Manifest {
         Manifest::new("julia").emoji("🌀").category("toys")
     }
-    fn wear(&mut self, world: &Json) {
-        self.gpu = world["shared"]["settings"]["render"] == "gpu";
-    }
-    fn state(&self, _iden: &Iden, shape: Option<&Json>) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "steps": self.steps,
             "over": false,
             "seed": self.seed,
             "settings": self.set.to_json(),
-            "frame": if self.gpu || !crate::asked(shape, "frame") {
-                frame::empty_fact(self.set.width as usize, self.set.height as usize)
-            } else {
-                self.render().fact()
-            },
             "shade": json!({ "program": "julia" }),
         })
-    }
-    fn capture(&self, _iden: &Iden) -> Json {
-        self.render().fact()
     }
     fn uniforms(&self) -> Option<Vec<f32>> {
         let [xmin, xmax, ymin, ymax] = self.view().reals();
@@ -439,7 +383,6 @@ impl App for Julia {
         if let Some(pos) = state["pos"].as_u64() {
             self.rng.seek(pos as u128);
         }
-        self.fill();
     }
 }
 
@@ -494,7 +437,7 @@ mod tests {
         assert_eq!(j.c, (100_000_000_000_000, -200_000_000_000_000));
     }
     #[test]
-    fn step_counts_and_frame_skips() {
+    fn step_counts() {
         let mut j = julia(9);
         let out = send(&mut j, "julia.step", json!({ "n": 5 }));
         assert!(out.ok);
@@ -549,8 +492,7 @@ mod tests {
         j.load(&json!({ "seed": "soup", "c": "nope", "settings": 7 }));
         assert_eq!(j.state(&iden(), None)["steps"], json!(0));
         assert_eq!(j.state(&iden(), None)["seed"], json!(0));
-        let frame = j.state(&iden(), None)["frame"].clone();
-        assert!(!frame["rows"].as_array().unwrap().is_empty());
+        assert_eq!(j.uniforms().unwrap().len(), 24);
     }
     #[test]
     fn beat_steps_forever() {
@@ -559,41 +501,22 @@ mod tests {
         assert_eq!(j.beat(), Some(Call::new("julia.step", json!({}))));
     }
     #[test]
-    fn state_carries_an_indexed_frame() {
+    fn state_carries_the_shade() {
         let j = julia(5);
         let state = j.state(&iden(), None);
-        let palette = state["frame"]["palette"].as_array().unwrap();
-        assert!(!palette.is_empty());
-        let rows = state["frame"]["rows"].as_array().unwrap();
-        assert_eq!(
-            rows.len(),
-            state["frame"]["height"].as_u64().unwrap() as usize
-        );
+        assert_eq!(state["shade"]["program"], json!("julia"));
+        assert!(state["frame"].is_null());
     }
     #[test]
-    fn gpu_mode_skips_the_cpu_raster() {
-        let mut j = julia(5);
-        let cpu = j.state(&iden(), None)["frame"].clone();
-        assert!(!cpu["rows"].as_array().unwrap().is_empty());
-        j.wear(&json!({ "shared": { "settings": { "render": "gpu" } } }));
-        let gpu = j.state(&iden(), None)["frame"].clone();
-        assert_eq!(gpu["width"], cpu["width"]);
-        assert_eq!(gpu["height"], cpu["height"]);
-        assert!(gpu["rows"].as_array().unwrap().is_empty());
-        assert!(gpu["palette"].as_array().unwrap().is_empty());
-        assert_eq!(j.capture(&iden()), cpu);
-    }
-    #[test]
-    fn a_shape_without_frame_skips_the_cpu_raster() {
+    fn uniforms_carry_the_view() {
         let j = julia(5);
-        let shape = json!({ "steps": 1 });
-        let thin = j.state(&iden(), Some(&shape));
-        assert!(thin["frame"]["rows"].as_array().unwrap().is_empty());
-        assert_eq!(thin["steps"], json!(0));
-        let asked = json!({ "frame": 1 });
-        assert!(!j.state(&iden(), Some(&asked))["frame"]["rows"]
-            .as_array()
-            .unwrap()
-            .is_empty());
+        let u = j.uniforms().unwrap();
+        assert_eq!(u.len(), 24);
+        assert!(u[12] < u[13]);
+        assert!(u[14] < u[15]);
+        assert!(u[16].abs() <= 2.0 && u[17].abs() <= 2.0);
+        assert_eq!(u[18], 96.0);
+        assert_eq!(u[19], 10.0);
+        assert_eq!(u[20], 0.0);
     }
 }

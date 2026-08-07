@@ -1,14 +1,22 @@
+use mrlycore::colors::{named, Color};
 use mrlycore::rng::Rng;
 use mrlycore::trig::{FracIndex, N as TRIG_N};
 use mrlycore::{json, Json};
 use mrlymath::fractal::{self, Viewport, Wayfinder};
 use mrlyos::kernel::{int, App, Call, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{self, Frame};
 use std::f64::consts::TAU;
 
 const MILLI: i64 = 1000;
 const MICRO: i64 = 1_000_000;
 const TURN_MILLI: i64 = TRIG_N as i64 * MILLI;
+
+fn tone(value: &str) -> [u8; 4] {
+    Color::from_hex(value).map_or([0, 0, 0, 255], |c| [c.r, c.g, c.b, c.a])
+}
+
+fn code(color: [u8; 4]) -> String {
+    Color::rgba(color[0], color[1], color[2], color[3]).to_hex()
+}
 
 struct Set {
     width: i64,
@@ -38,8 +46,8 @@ impl Set {
             drift: 400,
             fade: 24,
             spin: 0,
-            primary: frame::hex_of("#000000"),
-            accent: frame::hex_of("#1ec9f3"),
+            primary: tone("#000000"),
+            accent: tone("#1ec9f3"),
         }
     }
     fn apply(&mut self, key: &str, value: &Json) -> Result<Json, &'static str> {
@@ -56,13 +64,12 @@ impl Set {
             "spin" => int(&mut self.spin, value, (0, 50)),
             "primary" | "accent" => {
                 let s = value.as_str().ok_or("value must be a color string")?;
-                let c = mrlycore::colors::named(s)
-                    .map_or_else(|_| frame::hex_of(s), |c| [c.r, c.g, c.b, c.a]);
+                let c = named(s).map_or_else(|_| tone(s), |c| [c.r, c.g, c.b, c.a]);
                 match key {
                     "primary" => self.primary = c,
                     _ => self.accent = c,
                 }
-                Ok(json!(frame::hex(c)))
+                Ok(json!(code(c)))
             }
             _ => Err("no such key"),
         }
@@ -79,8 +86,8 @@ impl Set {
             "drift": self.drift,
             "fade": self.fade,
             "spin": self.spin,
-            "primary": frame::hex(self.primary),
-            "accent": frame::hex(self.accent),
+            "primary": code(self.primary),
+            "accent": code(self.accent),
         })
     }
     fn from_json(value: &Json) -> Set {
@@ -105,8 +112,6 @@ pub struct Mandelbrot {
     age: usize,
     phase: i64,
     rotation: i64,
-    iters: Vec<i64>,
-    gpu: bool,
 }
 
 impl Default for Mandelbrot {
@@ -128,8 +133,6 @@ impl Mandelbrot {
             age: 0,
             phase: 0,
             rotation: 0,
-            iters: Vec::new(),
-            gpu: false,
         };
         mandelbrot.reset(0);
         mandelbrot
@@ -147,7 +150,6 @@ impl Mandelbrot {
         self.zoom = MICRO;
         self.age = 0;
         self.rotation = 0;
-        self.fill();
     }
     fn viewport(&self) -> Viewport {
         let vw = (self.start.xmax - self.start.xmin) as i128;
@@ -156,34 +158,9 @@ impl Mandelbrot {
         let hh = (vh * MICRO as i128 / (2 * self.zoom as i128)) as i64;
         Viewport::around(self.target.0, self.target.1, hw, hh)
     }
-    fn tilt(&self) -> (f64, f64) {
-        let (c, s) = FracIndex::new(self.rotation as f32 / MILLI as f32).unit();
-        (c as f64, s as f64)
-    }
     fn angle(&self) -> f64 {
         let idx = FracIndex::new(self.rotation as f32 / MILLI as f32).index();
         idx as f64 * TAU / TRIG_N as f64
-    }
-    fn fill(&mut self) {
-        let w = self.set.width as usize;
-        let h = self.set.height as usize;
-        let depth = self.set.depth;
-        let [xmin, xmax, ymin, ymax] = self.viewport().reals();
-        let center = ((xmin + xmax) * 0.5, (ymin + ymax) * 0.5);
-        let vw = xmax - xmin;
-        let vh = ymax - ymin;
-        let (ca, sa) = self.tilt();
-        self.iters = vec![0; w * h];
-        for py in 0..h {
-            let uy = (py as f64 + 0.5) / h as f64;
-            for px in 0..w {
-                let ux = (px as f64 + 0.5) / w as f64;
-                let cr = xmin + ux * vw;
-                let ci = ymax - uy * vh;
-                let (cr, ci) = fractal::rotate(cr, ci, center, ca, sa);
-                self.iters[py * w + px] = fractal::mandelbrot(cr, ci, depth);
-            }
-        }
     }
     fn fade(&self) -> f64 {
         let fade = self.set.fade;
@@ -212,8 +189,6 @@ impl Mandelbrot {
         }
         if self.age >= self.set.cycle as usize {
             self.begin();
-        } else {
-            self.fill();
         }
     }
     fn advance(&mut self, n: u64) -> u64 {
@@ -222,26 +197,6 @@ impl Mandelbrot {
         }
         self.steps += n;
         n
-    }
-    fn render(&self) -> Frame {
-        let w = self.set.width as usize;
-        let h = self.set.height as usize;
-        let depth = self.set.depth;
-        let primary = self.set.primary;
-        let accent = self.set.accent;
-        let f = self.fade();
-        let phase = self.phase as f64 / MILLI as f64;
-        let band = self.set.band as f64 / MILLI as f64;
-        let mut colors = vec![primary; w * h];
-        for (slot, &it) in colors.iter_mut().zip(self.iters.iter()) {
-            let c = fractal::shade(it, depth, phase, band, primary, accent);
-            *slot = if f < 1.0 {
-                frame::mix(primary, c, f)
-            } else {
-                c
-            };
-        }
-        frame::field(w, h, colors, primary)
     }
 }
 
@@ -252,25 +207,14 @@ impl App for Mandelbrot {
     fn manifest(&self) -> Manifest {
         Manifest::new("mandelbrot").emoji("🌌").category("toys")
     }
-    fn wear(&mut self, world: &Json) {
-        self.gpu = world["shared"]["settings"]["render"] == "gpu";
-    }
-    fn state(&self, _iden: &Iden, shape: Option<&Json>) -> Json {
+    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         json!({
             "steps": self.steps,
             "over": false,
             "seed": self.seed,
             "settings": self.set.to_json(),
-            "frame": if self.gpu || !crate::asked(shape, "frame") {
-                frame::empty_fact(self.set.width as usize, self.set.height as usize)
-            } else {
-                self.render().fact()
-            },
             "shade": json!({ "program": "mandelbrot" }),
         })
-    }
-    fn capture(&self, _iden: &Iden) -> Json {
-        self.render().fact()
     }
     fn uniforms(&self) -> Option<Vec<f32>> {
         let [xmin, xmax, ymin, ymax] = self.viewport().reals();
@@ -388,7 +332,6 @@ impl App for Mandelbrot {
         if let Some(pos) = state["pos"].as_u64() {
             self.rng.seek(pos as u128);
         }
-        self.fill();
     }
 }
 
@@ -463,7 +406,7 @@ mod tests {
         assert_eq!(m.start.ymax, 3 * f);
     }
     #[test]
-    fn step_counts_and_frame_skips() {
+    fn step_counts() {
         let mut m = mandelbrot(9);
         let out = send(&mut m, "mandelbrot.step", json!({ "n": 5 }));
         assert!(out.ok);
@@ -529,8 +472,7 @@ mod tests {
         m.load(&json!({ "seed": "soup", "start": "nope", "settings": 7 }));
         assert_eq!(m.state(&iden(), None)["steps"], json!(0));
         assert_eq!(m.state(&iden(), None)["seed"], json!(0));
-        let frame = m.state(&iden(), None)["frame"].clone();
-        assert!(!frame["rows"].as_array().unwrap().is_empty());
+        assert_eq!(m.uniforms().unwrap().len(), 20);
     }
     #[test]
     fn beat_steps_forever() {
@@ -539,41 +481,21 @@ mod tests {
         assert_eq!(m.beat(), Some(Call::new("mandelbrot.step", json!({}))));
     }
     #[test]
-    fn state_carries_an_indexed_frame() {
+    fn state_carries_the_shade() {
         let m = mandelbrot(5);
         let state = m.state(&iden(), None);
-        let palette = state["frame"]["palette"].as_array().unwrap();
-        assert!(!palette.is_empty());
-        let rows = state["frame"]["rows"].as_array().unwrap();
-        assert_eq!(
-            rows.len(),
-            state["frame"]["height"].as_u64().unwrap() as usize
-        );
+        assert_eq!(state["shade"]["program"], json!("mandelbrot"));
+        assert!(state["frame"].is_null());
     }
     #[test]
-    fn gpu_mode_skips_the_cpu_raster() {
-        let mut m = mandelbrot(5);
-        let cpu = m.state(&iden(), None)["frame"].clone();
-        assert!(!cpu["rows"].as_array().unwrap().is_empty());
-        m.wear(&json!({ "shared": { "settings": { "render": "gpu" } } }));
-        let gpu = m.state(&iden(), None)["frame"].clone();
-        assert_eq!(gpu["width"], cpu["width"]);
-        assert_eq!(gpu["height"], cpu["height"]);
-        assert!(gpu["rows"].as_array().unwrap().is_empty());
-        assert!(gpu["palette"].as_array().unwrap().is_empty());
-        assert_eq!(m.capture(&iden()), cpu);
-    }
-    #[test]
-    fn a_shape_without_frame_skips_the_cpu_raster() {
+    fn uniforms_carry_the_view() {
         let m = mandelbrot(5);
-        let shape = json!({ "steps": 1 });
-        let thin = m.state(&iden(), Some(&shape));
-        assert!(thin["frame"]["rows"].as_array().unwrap().is_empty());
-        assert_eq!(thin["steps"], json!(0));
-        let asked = json!({ "frame": 1 });
-        assert!(!m.state(&iden(), Some(&asked))["frame"]["rows"]
-            .as_array()
-            .unwrap()
-            .is_empty());
+        let u = m.uniforms().unwrap();
+        assert_eq!(u.len(), 20);
+        assert!(u[12] < u[13]);
+        assert!(u[14] < u[15]);
+        assert_eq!(u[16], 96.0);
+        assert_eq!(u[17], 10.0);
+        assert_eq!(u[18], 0.0);
     }
 }

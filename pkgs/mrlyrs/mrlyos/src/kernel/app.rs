@@ -121,9 +121,6 @@ pub trait App {
     fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
         self.save()
     }
-    fn capture(&self, iden: &Iden) -> Json {
-        self.state(iden, None)["frame"].clone()
-    }
     fn geometry(&self) -> Option<Vec<f32>> {
         None
     }

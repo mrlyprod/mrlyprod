@@ -15,11 +15,11 @@ type Dials = {
   accent: string
 }
 
-export function fractalBoard(app: string, handle: string, frame: { width: number; height: number; rows: number[][]; palette: string[] }, opts: { steps: number; shade?: Shade }): Node[] {
+export function shadeBoard(handle: string, shade: Shade | undefined, grid: [number, number], steps: number): Node[] {
   return [
-    <canvas key="frame" handle={handle} rows={frame.rows} palette={frame.palette} shade={opts.shade} grid={[frame.width, frame.height]} />,
+    <canvas key="frame" handle={handle} shade={shade} grid={grid} />,
     <button key="full" call={call("face.full", { handle })}>fullscreen</button>,
-    <text key="meter" role="note">{`steps ${opts.steps}`}</text>,
+    <text key="meter" role="note">{`steps ${steps}`}</text>,
     <Shot />,
   ]
 }

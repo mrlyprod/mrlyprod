@@ -4,7 +4,7 @@ import { Pager } from "../../components/Pager.tsx"
 import { Shot } from "../../components/Shot.tsx"
 import { h } from "../../jsx.ts"
 import { orbit } from "../../render/orbit.ts"
-import type { Node, Send, Shade } from "../../types.ts"
+import type { Cells, Node, Send, Shade } from "../../types.ts"
 
 const DIMENSIONS = ["1", "2", "3"]
 
@@ -17,7 +17,7 @@ type State = {
   code: string
   degree: number
   anf: string
-  frame?: { rows: number[][]; palette: string[] }
+  cells?: Cells
   shade?: Shade
 }
 
@@ -30,14 +30,13 @@ export function bang(state: unknown, _send: Send): Node {
         {solid ? (
           <Board
             app="bang"
-            rows={[]}
             shade={s.shade}
             turn={call("orbit.turn", { app: "bang" })}
             zoom={call("orbit.zoom", { app: "bang" })}
             pan={call("orbit.pan", { app: "bang" })}
           />
         ) : (
-          <Board app="bang" rows={s.frame?.rows ?? []} palette={s.frame?.palette} />
+          <Board app="bang" cells={s.cells} />
         )}
       </card>
       <card key="page">

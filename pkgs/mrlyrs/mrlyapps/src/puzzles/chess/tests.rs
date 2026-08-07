@@ -514,11 +514,8 @@ fn surface_and_skin_validate() {
         assert!(g.call(&iden(), &set(key, value)).ok);
     }
     let cells = g.state(&iden(), None)["cells"].clone();
-    let frame = mrlyui::skin::raster("chess", &cells, 5, false).expect("a frame");
-    let mrlyui::frame::Layer::Tiles { set: pieces, .. } = &frame.layers[0] else {
-        panic!("no tiles layer")
-    };
-    let glyph = pieces.faces[1].as_ref().expect("a piece face");
+    let shot = mrlyui::skin::raster("chess", &cells, 5, false).expect("a raster");
+    let glyph = shot.set.faces[1].as_ref().expect("a piece face");
     assert!(!glyph.ch.is_empty());
     assert!(glyph.tint.is_some(), "a piece face lost its tint");
     assert!(!g.call(&iden(), &set("skin", "tiles")).ok);

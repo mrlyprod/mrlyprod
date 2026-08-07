@@ -27,7 +27,7 @@ export function six(state: unknown, _send: Send): Node {
   return (
     <stack key="six">
       <card key="board">
-        <Board app="six" rows={[]} tris={floats("six/tris")} />
+        <Board app="six" tris={floats("six/tris")} />
       </card>
       <card key="page">
         <Pager app="six" current={s.index + 1} total={s.count} />

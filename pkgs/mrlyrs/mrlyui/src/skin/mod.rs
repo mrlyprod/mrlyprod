@@ -1,6 +1,5 @@
-use crate::frame::{
-    bake, board, hex, hex_of, ink, motif_tile, solid_tile, Atlas, Frame, Glyph, Layer,
-};
+use crate::paint::{bake, motif_tile, solid_tile, Atlas, Glyph, Raster};
+use mrlycore::colors::{board, hex, hex_of, ink};
 use mrlycore::json::Map;
 use mrlycore::tensor::Tensor;
 use mrlycore::{json, Json};
@@ -217,25 +216,30 @@ impl Skin {
     }
 }
 
-const APPS: [&str; 12] = [
-    "captcha", "chess", "crush", "dice", "escape", "memory", "mines", "pixel", "quiz", "snake",
-    "ttt", "twenty48",
+const APPS: [&str; 19] = [
+    "bang", "captcha", "chess", "crush", "dice", "escape", "hash", "life", "matrix", "memory",
+    "mines", "pixel", "quiz", "snake", "tennis", "tile", "ttt", "twenty48", "two",
 ];
 
 fn wardrobe(app: &str) -> Vec<(&'static str, Skin)> {
     match app {
+        "bang" | "hash" | "life" => duo::corpus(),
         "captcha" => captcha::corpus(),
         "chess" => chess::corpus(),
         "crush" => crush::corpus(),
         "dice" => dice::corpus(),
         "escape" => escape::corpus(),
+        "matrix" => matrix::corpus(),
         "memory" => memory::corpus(),
         "mines" => mines::corpus(),
         "pixel" => pixel::corpus(),
         "quiz" => quiz::corpus(),
         "snake" => snake::corpus(),
+        "tennis" => snake::corpus(),
+        "tile" => pixel::corpus(),
         "ttt" => ttt::corpus(),
         "twenty48" => twenty48::corpus(),
+        "two" => pixel::corpus(),
         _ => Vec::new(),
     }
 }
@@ -259,7 +263,7 @@ pub fn dressed(app: &str, variant: &str) -> Option<Skin> {
         .map(|(_, skin)| skin)
 }
 
-pub fn raster(app: &str, cells: &Json, tile: usize, dark: bool) -> Option<Frame> {
+pub fn raster(app: &str, cells: &Json, tile: usize, dark: bool) -> Option<Raster> {
     let variant = cells["skin"].as_str()?;
     let skin = dressed(app, variant)?;
     let facts = cells["ids"].as_array()?;
@@ -281,16 +285,16 @@ pub fn raster(app: &str, cells: &Json, tile: usize, dark: bool) -> Option<Frame>
     let design = cells["design"].as_str().unwrap_or("");
     let k = pixels(tile, variant);
     let set = skin.atlas(k, ink(dark), &pens, design);
-    let mut frame = Frame::new(cols * k, rows * k, board(dark));
-    frame.push(Layer::Tiles { ids, set });
-    Some(frame)
+    Some(Raster::new(ids, set, board(dark)))
 }
 
 pub mod captcha;
 pub mod chess;
 pub mod crush;
 pub mod dice;
+pub mod duo;
 pub mod escape;
+pub mod matrix;
 pub mod memory;
 pub mod mines;
 pub mod pixel;
@@ -298,7 +302,6 @@ pub mod quiz;
 pub mod snake;
 pub mod ttt;
 pub mod twenty48;
-pub mod two;
 
 #[cfg(test)]
 mod tests {
@@ -494,7 +497,6 @@ mod tests {
             }
         }
         assert_eq!(all.as_object().unwrap().len(), APPS.len());
-        assert!(all.get("two").is_none());
         assert_eq!(all["ttt"]["tiles"][1]["bg"], json!({ "pen": 0 }));
         assert_eq!(all["ttt"]["tiles"][1]["motif"], json!("design"));
         assert_eq!(
@@ -504,23 +506,23 @@ mod tests {
         assert_eq!(all["pixel"]["tiles"][7]["bg"], json!({ "pen": 7 }));
     }
     #[test]
-    fn raster_paints_cells_like_the_old_frames() {
+    fn raster_paints_the_cells_fact() {
         let cells = json!({
             "ids": [[0, 1], [2, 0]],
             "skin": "tiles",
             "pens": ["#ff0000", "#0000ff"],
             "design": "carpet",
         });
-        let frame = raster("ttt", &cells, 4, false).expect("a frame");
-        assert_eq!(frame.width, 8);
-        assert_eq!(frame.height, 8);
-        let colors = frame.composite().cell.colors.unwrap();
+        let shot = raster("ttt", &cells, 4, false).expect("a raster");
+        assert_eq!(shot.width(), 8);
+        assert_eq!(shot.height(), 8);
+        let colors = shot.composite().cell.colors.unwrap();
         let x = motif_tile("carpet", 4, [255, 0, 0, 255], [0, 0, 0, 0]);
         assert_eq!(colors[4], x.cell.color_at(0));
         assert!(raster("ttt", &json!({ "skin": "wax", "ids": [[0]] }), 4, false).is_none());
-        assert!(raster("two", &cells, 4, false).is_none());
-        let painting = raster("pixel", &cells, 4, false).expect("a pixel frame");
-        assert_eq!(painting.width, 8);
+        assert!(raster("notes", &cells, 4, false).is_none());
+        let painting = raster("pixel", &cells, 4, false).expect("a pixel raster");
+        assert_eq!(painting.width(), 8);
         let colors = painting.composite().cell.colors.unwrap();
         assert_eq!(colors[4], [0, 0, 255, 255]);
     }

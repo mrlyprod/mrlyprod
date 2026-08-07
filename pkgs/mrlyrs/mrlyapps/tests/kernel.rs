@@ -403,7 +403,12 @@ mod tests {
             .install(Box::new(mrlyapps::Two::new()))
             .install(Box::new(mrlyapps::Photos::new()));
         os.call(Call::new("nav.open", json!({ "app": "two" })));
-        let out = os.call(Call::new("sys.shot", json!({})).at(5000));
+        let cells = os.read("two/cells", None).unwrap();
+        let image = mrlyui::skin::raster("two", &cells, 8, false)
+            .unwrap()
+            .image()
+            .to_json();
+        let out = os.call(Call::new("sys.shot", json!({ "image": image })).at(5000));
         assert!(out.ok);
         assert_eq!(out.data["shot"], json!("two"));
         let frame = os.read("", None).unwrap();
@@ -422,7 +427,7 @@ mod tests {
         assert!(photos[0]["palette"][0].as_str().unwrap().starts_with('#'));
     }
     #[test]
-    fn shot_fails_without_a_frame() {
+    fn shot_fails_without_an_image() {
         let mut os = Os::new(Iden::new("aria"))
             .install(Box::new(mrlyapps::Colors::new()))
             .install(Box::new(mrlyapps::Photos::new()));

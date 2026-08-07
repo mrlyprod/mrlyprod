@@ -72,6 +72,8 @@ const TWEENS: Record<string, Spec> = {
   mandelbrot: { linear: [2, 11, 18], angle: [], viewport: [12, 13, 14, 15] },
   julia: { linear: [2, 11, 16, 17, 20], angle: [], viewport: [12, 13, 14, 15] },
   mesh: { linear: [15, 16, 17, 19], angle: [12, 13, 14, 20, 21], viewport: [] },
+  moire: { linear: [20, 21], angle: [], viewport: [] },
+  sleep: { linear: [14, 15], angle: [], viewport: [] },
 }
 
 const STEER: Record<string, Steer> = {

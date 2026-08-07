@@ -1,20 +1,29 @@
+use mrlycore::colors::{named, Color, BOARD_DARK, BOARD_LIGHT};
 use mrlycore::rng::Rng;
 use mrlycore::{json, Json};
 use mrlyos::kernel::{int, App, Call, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{hex, hex_of, solid_rect, Frame, Layer, Sprite};
 
 const MILLI: i64 = 1000;
 const CENTI: i64 = 100;
 
+fn tone(value: &str) -> [u8; 4] {
+    Color::from_hex(value).map_or([0, 0, 0, 255], |c| [c.r, c.g, c.b, c.a])
+}
+
+fn code(color: [u8; 4]) -> String {
+    Color::rgba(color[0], color[1], color[2], color[3]).to_hex()
+}
+
 fn slot(value: &Json) -> Result<[u8; 4], &'static str> {
     let s = value.as_str().ok_or("value must be a string")?;
-    if let Some(code) = s.strip_prefix('#') {
-        if (code.len() == 6 || code.len() == 8) && code.chars().all(|c| c.is_ascii_hexdigit()) {
-            return Ok(hex_of(s));
+    if let Some(digits) = s.strip_prefix('#') {
+        if (digits.len() == 6 || digits.len() == 8) && digits.chars().all(|c| c.is_ascii_hexdigit())
+        {
+            return Ok(tone(s));
         }
         return Err("bad hex");
     }
-    let c = mrlycore::colors::named(s).map_err(|_| "unknown color")?;
+    let c = named(s).map_err(|_| "unknown color")?;
     Ok([c.r, c.g, c.b, c.a])
 }
 
@@ -23,7 +32,6 @@ struct Set {
     rows: i64,
     size: i64,
     speed: i64,
-    scale: i64,
     palette: Vec<[u8; 4]>,
 }
 
@@ -34,13 +42,12 @@ impl Set {
             rows: 24,
             size: 4,
             speed: 50,
-            scale: 8,
             palette: vec![
-                hex_of("#32cc58"),
-                hex_of("#00d1bb"),
-                hex_of("#1ec9f3"),
-                hex_of("#f5a623"),
-                hex_of("#ff5d73"),
+                tone("#32cc58"),
+                tone("#00d1bb"),
+                tone("#1ec9f3"),
+                tone("#f5a623"),
+                tone("#ff5d73"),
             ],
         }
     }
@@ -51,46 +58,30 @@ impl Set {
                 return Err("palette index out of range");
             }
             self.palette[i] = slot(value)?;
-            return Ok(json!(hex(self.palette[i])));
+            return Ok(json!(code(self.palette[i])));
         }
         match key {
-            "cols" | "rows" | "size" | "scale" => {
-                let n = value.as_i64().ok_or("value must be an integer")?;
-                let (min, max) = match key {
-                    "cols" => (8, 64),
-                    "rows" => (8, 48),
-                    "size" => (2, 12),
-                    _ => (2, 16),
-                };
-                if !(min..=max).contains(&n) {
-                    return Err("out of range");
-                }
-                match key {
-                    "cols" => self.cols = n,
-                    "rows" => self.rows = n,
-                    "size" => self.size = n,
-                    _ => self.scale = n,
-                }
-                Ok(json!(n))
-            }
+            "cols" => int(&mut self.cols, value, (8, 64)),
+            "rows" => int(&mut self.rows, value, (8, 48)),
+            "size" => int(&mut self.size, value, (2, 12)),
             "speed" => int(&mut self.speed, value, (10, 200)),
             "palette" => {
                 let parsed: Vec<[u8; 4]> = match value {
                     Json::Str(s) => s
                         .split([',', ' '])
                         .filter(|t| !t.is_empty())
-                        .map(hex_of)
+                        .map(tone)
                         .collect(),
                     Json::Arr(arr) => {
                         if !arr.iter().all(|v| v.is_string()) {
                             return Err("value must be hex strings");
                         }
-                        arr.iter().filter_map(|v| v.as_str()).map(hex_of).collect()
+                        arr.iter().filter_map(|v| v.as_str()).map(tone).collect()
                     }
                     _ => return Err("value must be hex strings"),
                 };
                 self.palette = parsed.clone();
-                Ok(json!(parsed.iter().map(|c| hex(*c)).collect::<Vec<_>>()))
+                Ok(json!(parsed.iter().map(|c| code(*c)).collect::<Vec<_>>()))
             }
             _ => Err("no such key"),
         }
@@ -101,8 +92,7 @@ impl Set {
             "rows": self.rows,
             "size": self.size,
             "speed": self.speed,
-            "scale": self.scale,
-            "palette": self.palette.iter().map(|c| hex(*c)).collect::<Vec<_>>(),
+            "palette": self.palette.iter().map(|c| code(*c)).collect::<Vec<_>>(),
         })
     }
     fn from_json(value: &Json) -> Set {
@@ -215,19 +205,6 @@ impl Sleep {
         self.steps += n;
         n
     }
-    fn render(&self) -> Frame {
-        let s = self.set.scale as usize;
-        let w = self.set.cols as usize * s;
-        let h = self.set.rows as usize * s;
-        let span = self.set.size as usize * s;
-        let mut frame = Frame::new(w, h, mrlyui::frame::board(self.dark));
-        frame.push(Layer::Sprites(vec![Sprite::new(
-            self.x as f64 * s as f64 / MILLI as f64,
-            self.y as f64 * s as f64 / MILLI as f64,
-            solid_rect(span, span, self.color),
-        )]));
-        frame
-    }
 }
 
 impl App for Sleep {
@@ -246,8 +223,25 @@ impl App for Sleep {
             "over": false,
             "seed": self.seed,
             "settings": self.set.to_json(),
-            "frame": self.render().fact(),
+            "shade": json!({ "program": "sleep" }),
         })
+    }
+    fn uniforms(&self) -> Option<Vec<f32>> {
+        let board = if self.dark { BOARD_DARK } else { BOARD_LIGHT };
+        let c = self.color;
+        let mut u = vec![0.0f32; 20];
+        u[4] = board.r as f32 / 255.0;
+        u[5] = board.g as f32 / 255.0;
+        u[6] = board.b as f32 / 255.0;
+        u[8] = c[0] as f32 / 255.0;
+        u[9] = c[1] as f32 / 255.0;
+        u[10] = c[2] as f32 / 255.0;
+        u[12] = self.set.cols as f32;
+        u[13] = self.set.rows as f32;
+        u[14] = self.x as f32 / MILLI as f32;
+        u[15] = self.y as f32 / MILLI as f32;
+        u[16] = self.set.size as f32;
+        Some(u)
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
         vec![
@@ -365,6 +359,7 @@ mod tests {
         }
         assert_eq!(a.state(&iden(), None), b.state(&iden(), None));
         assert_eq!(a.save(), b.save());
+        assert_eq!(a.uniforms(), b.uniforms());
     }
     #[test]
     fn stays_in_bounds() {
@@ -389,7 +384,7 @@ mod tests {
         assert!(s.x != x0 || s.y != y0);
     }
     #[test]
-    fn step_counts_and_frame_skips() {
+    fn step_counts() {
         let mut s = sleep(9);
         let out = send(&mut s, "sleep.step", json!({ "n": 5 }));
         assert!(out.ok);
@@ -511,6 +506,7 @@ mod tests {
             send(s, "sleep.step", json!({ "n": 6 }));
         }
         assert_eq!(b.state(&iden(), None), a.state(&iden(), None));
+        assert_eq!(b.uniforms(), a.uniforms());
     }
     #[test]
     fn load_survives_garbage() {
@@ -518,8 +514,7 @@ mod tests {
         s.load(&json!({ "seed": "soup", "x": "nope", "settings": 7 }));
         assert_eq!(s.state(&iden(), None)["steps"], json!(0));
         assert_eq!(s.state(&iden(), None)["seed"], json!(0));
-        let frame = s.state(&iden(), None)["frame"].clone();
-        assert!(!frame["rows"].as_array().unwrap().is_empty());
+        assert_eq!(s.uniforms().unwrap().len(), 20);
     }
     #[test]
     fn beat_steps_forever() {
@@ -528,15 +523,30 @@ mod tests {
         assert_eq!(s.beat(), Some(Call::new("sleep.step", json!({}))));
     }
     #[test]
-    fn state_carries_an_indexed_frame() {
+    fn state_carries_the_shade() {
         let s = sleep(5);
         let state = s.state(&iden(), None);
-        let palette = state["frame"]["palette"].as_array().unwrap();
-        assert!(!palette.is_empty());
-        let rows = state["frame"]["rows"].as_array().unwrap();
-        assert_eq!(
-            rows.len(),
-            state["frame"]["height"].as_u64().unwrap() as usize
-        );
+        assert_eq!(state["shade"]["program"], json!("sleep"));
+        assert!(state["frame"].is_null());
+    }
+    #[test]
+    fn uniforms_carry_the_sprite() {
+        let s = sleep(5);
+        let u = s.uniforms().unwrap();
+        assert_eq!(u.len(), 20);
+        assert_eq!(u[12], 32.0);
+        assert_eq!(u[13], 24.0);
+        assert_eq!(u[16], 4.0);
+        assert!((0.0..=28.0).contains(&u[14]));
+        assert!((0.0..=20.0).contains(&u[15]));
+        let sprite = [u[8], u[9], u[10]];
+        assert!(sprite.iter().any(|&v| v > 0.0));
+    }
+    #[test]
+    fn wear_paints_the_board() {
+        let mut s = sleep(5);
+        assert_eq!(&s.uniforms().unwrap()[4..7], &[1.0, 1.0, 1.0]);
+        s.wear(&json!({ "shared": { "settings": { "darkmode": true } } }));
+        assert_eq!(&s.uniforms().unwrap()[4..7], &[0.0, 0.0, 0.0]);
     }
 }

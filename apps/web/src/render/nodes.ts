@@ -1,7 +1,7 @@
 import { spell } from "../glyphs.ts"
 import * as gpu from "mrlygpu"
 import { icon } from "../icons.ts"
-import type { Call, Flip, Glyph, Held, Node, Send, Sym } from "../types.ts"
+import type { Call, Held, Node, Send, Sym } from "../types.ts"
 import { prune, remember } from "./boards.ts"
 import { carve } from "./carve.ts"
 import { crisp } from "./cells.ts"
@@ -11,12 +11,6 @@ import { make, paint } from "./paint.ts"
 import { reconcile } from "./reconcile.ts"
 
 // HELPERS
-
-let render = "cpu"
-
-export function engine(value: unknown): void {
-  render = value === "gpu" ? "gpu" : "cpu"
-}
 
 function mark(sym: Sym): string {
   return sym.as === "icon" ? icon(sym.value) : sym.value
@@ -464,7 +458,6 @@ export function patch(el: Held, node: Node, send: Send): void {
         const sig = `cells:${dark}:${board.app}:${board.skin}:${board.design ?? ""}:${board.pens.join(",")}:${board.ids.map(row => row.join(",")).join(";")}`
         if (el.__committed === sig) break
         el.__committed = sig
-        halt(surface)
         crisp(surface, board, dark)
         break
       }
@@ -472,22 +465,21 @@ export function patch(el: Held, node: Node, send: Send): void {
         const sig = `tris:${node.tris.join(",")}`
         if (el.__committed === sig) break
         el.__committed = sig
-        halt(surface)
         carve(surface, node.tris)
         break
       }
-      const shading = node.shade !== undefined && render === "gpu" ? gpu.pull(node.shade) : null
-      const marks = node.glyphs?.map(g => `${g.x},${g.y},${g.k},${g.ch},${g.tint ?? ""}`).join(";") ?? ""
-      const sig = `${render}:${dark}:${shading?.join(",") ?? ""}:${node.palette?.join(",") ?? ""}:${marks}:${rows.map(row => row.join(",")).join(";")}`
-      if (el.__committed === sig) break
-      el.__committed = sig
-      if (node.shade !== undefined && render === "gpu" && gpu.draw(surface, node, shading)) break
-      if (node.strip !== undefined && node.strip.length > 1 && !calm.matches) {
-        play(surface, node.strip)
+      if (node.shade !== undefined) {
+        const shading = gpu.pull(node.shade)
+        const sig = `shade:${dark}:${shading?.join(",") ?? ""}`
+        if (el.__committed === sig) break
+        el.__committed = sig
+        gpu.draw(surface, node, shading)
         break
       }
-      halt(surface)
-      fill(surface, rows, node.palette, node.glyphs)
+      const sig = `${dark}:${node.palette?.join(",") ?? ""}:${rows.map(row => row.join(",")).join(";")}`
+      if (el.__committed === sig) break
+      el.__committed = sig
+      fill(surface, rows, node.palette)
       break
     }
     case "Button":
@@ -607,36 +599,7 @@ export function patch(el: Held, node: Node, send: Send): void {
   }
 }
 
-const BEAT = 125
-const calm = matchMedia("(prefers-reduced-motion: reduce)")
-const reels = new WeakMap<HTMLCanvasElement, number>()
-
-function halt(surface: HTMLCanvasElement): void {
-  const id = reels.get(surface)
-  if (id !== undefined) cancelAnimationFrame(id)
-  reels.delete(surface)
-}
-
-function play(surface: HTMLCanvasElement, strip: Flip[]): void {
-  halt(surface)
-  const from = performance.now()
-  let shown = -1
-  const step = () => {
-    reels.delete(surface)
-    if (!surface.isConnected) return
-    const t = (performance.now() - from) / BEAT
-    const i = Math.min(strip.length - 1, Math.floor(t * strip.length))
-    const frame = strip[i]
-    if (frame !== undefined && i !== shown) {
-      shown = i
-      fill(surface, frame.rows, frame.palette)
-    }
-    if (i < strip.length - 1) reels.set(surface, requestAnimationFrame(step))
-  }
-  step()
-}
-
-function fill(surface: HTMLCanvasElement, rows: number[][], palette?: string[], glyphs?: Glyph[]): void {
+function fill(surface: HTMLCanvasElement, rows: number[][], palette?: string[]): void {
   const height = rows.length
   const width = rows[0]?.length ?? 0
   if (surface.width !== width) surface.width = width
@@ -664,20 +627,5 @@ function fill(surface: HTMLCanvasElement, rows: number[][], palette?: string[], 
       }
     }
     ctx.globalAlpha = 1
-  }
-  if (glyphs !== undefined && glyphs.length > 0) etch(surface, ctx, glyphs)
-}
-
-const STACK = `"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`
-
-function etch(surface: HTMLCanvasElement, ctx: CanvasRenderingContext2D, glyphs: Glyph[]): void {
-  const family = getComputedStyle(surface).getPropertyValue("--font-emoji").trim()
-  const stack = family === "" ? STACK : `${family}, ${STACK}`
-  ctx.textAlign = "center"
-  ctx.textBaseline = "middle"
-  for (const glyph of glyphs) {
-    ctx.font = `${glyph.k}px ${stack}`
-    ctx.fillStyle = glyph.tint ?? "#000000"
-    ctx.fillText(glyph.ch, glyph.x + glyph.k / 2, glyph.y + glyph.k / 2)
   }
 }

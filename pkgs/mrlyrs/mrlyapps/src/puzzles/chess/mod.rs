@@ -5,12 +5,12 @@ mod setup;
 #[cfg(test)]
 mod tests;
 
+use mrlycore::colors::hex;
 use mrlycore::colors::PALETTE;
 use mrlycore::rng::Rng;
 use mrlycore::{json, Json};
 use mrlymusic::cue;
 use mrlyos::kernel::{App, Call, Effect, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::hex;
 use mrlyui::skin::chess::BLOCK;
 
 use self::persist::PROMOTIONS;

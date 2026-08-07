@@ -12,10 +12,8 @@
       "text": "counting universe",
       "hex": "3ccb696b54df6ac540b87f10a47897f49a0cd1f673a5ab1374454eb20860913b",
       "rule": "maze",
-      "frame": {
-        "width": 64,
-        "height": 64,
-        "rows": [
+      "cells": {
+        "ids": [
           [
             0,
             0,
@@ -4241,7 +4239,8 @@
             0
           ]
         ],
-        "palette": [
+        "skin": "tiles",
+        "pens": [
           "#ffffff",
           "#6768fa"
         ]

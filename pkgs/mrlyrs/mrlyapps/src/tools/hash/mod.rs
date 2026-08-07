@@ -1,8 +1,8 @@
 use mrlycore::colors::ROLLABLE;
+use mrlycore::colors::{board, hex};
 use mrlycore::{json, Json};
 use mrlymath::crypto::hash::{digest, fingerprint_cell, Config, Digest, Rule};
 use mrlyos::kernel::{App, Call, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{field, Frame};
 
 const SIDE: usize = 64;
 const MAX_TEXT: usize = 256;
@@ -36,19 +36,18 @@ impl Hash {
     fn compute(&self) -> Digest {
         digest(self.text.as_bytes(), &self.config()).unwrap()
     }
-    fn render(&self) -> Frame {
+    fn cells_fact(&self) -> Json {
         let d = self.compute();
         let grid = fingerprint_cell(&d, SIDE);
         let bytes = d.to_bytes();
         let first = bytes.first().copied().unwrap_or(0) as usize;
         let ink = ROLLABLE[first % ROLLABLE.len()];
-        let fill = [ink.r, ink.g, ink.b, 255];
-        let empty = mrlyui::frame::board(self.dark);
-        let colors: Vec<[u8; 4]> = grid
-            .iter()
-            .map(|&v| if v == 1 { fill } else { empty })
-            .collect();
-        field(SIDE, SIDE, colors, empty)
+        let ids: Vec<Vec<u8>> = grid.chunks(SIDE).map(<[u8]>::to_vec).collect();
+        json!({
+            "ids": ids,
+            "skin": "tiles",
+            "pens": [hex(board(self.dark)), hex([ink.r, ink.g, ink.b, 255])],
+        })
     }
 }
 
@@ -68,7 +67,7 @@ impl App for Hash {
             "text": &self.text,
             "hex": d.hex(),
             "rule": self.rule.name(),
-            "frame": self.render().fact(),
+            "cells": self.cells_fact(),
         })
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
@@ -194,14 +193,14 @@ mod tests {
         assert!(send(&mut h, "hash.digest", json!({ "text": ok })).ok);
     }
     #[test]
-    fn digest_changes_the_frame() {
+    fn digest_changes_the_cells() {
         let mut a = Hash::new();
         send(&mut a, "hash.digest", json!({ "text": "alice" }));
         let mut b = Hash::new();
         send(&mut b, "hash.digest", json!({ "text": "bob" }));
         assert_ne!(
-            a.state(&iden(), None)["frame"],
-            b.state(&iden(), None)["frame"]
+            a.state(&iden(), None)["cells"],
+            b.state(&iden(), None)["cells"]
         );
     }
     #[test]
@@ -238,12 +237,28 @@ mod tests {
         assert_eq!(names, vec!["hash.digest", "hash.set", "hash.reset"]);
     }
     #[test]
-    fn frame_renders() {
+    fn state_carries_the_cells_fact() {
         let h = Hash::new();
         let state = h.state(&iden(), None);
-        let rows = state["frame"]["rows"].as_array().unwrap();
-        assert_eq!(rows.len(), SIDE);
-        assert_eq!(rows[0].as_array().unwrap().len(), SIDE);
-        assert!(state["frame"]["palette"].as_array().unwrap().len() >= 2);
+        let cells = &state["cells"];
+        assert_eq!(cells["skin"], json!("tiles"));
+        assert_eq!(cells["ids"].as_array().unwrap().len(), SIDE);
+        assert_eq!(cells["ids"][0].as_array().unwrap().len(), SIDE);
+        let pens = cells["pens"].as_array().unwrap();
+        assert_eq!(pens.len(), 2);
+        assert!(pens.iter().all(|p| p.as_str().unwrap().starts_with('#')));
+        assert!(state.get("frame").is_none());
+    }
+    #[test]
+    fn darkmode_flips_the_empty_pen() {
+        let mut h = Hash::new();
+        let light = h.state(&iden(), None)["cells"]["pens"][0].clone();
+        h.wear(&json!({ "shared": { "settings": { "darkmode": true } } }));
+        let dark = h.state(&iden(), None)["cells"]["pens"][0].clone();
+        assert_ne!(light, dark);
+        assert_eq!(
+            h.state(&iden(), None)["cells"]["ids"],
+            Hash::new().state(&iden(), None)["cells"]["ids"]
+        );
     }
 }

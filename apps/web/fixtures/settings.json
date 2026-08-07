@@ -25,7 +25,6 @@
       "duration": 150,
       "background": "white",
       "width": 500,
-      "render": "cpu",
       "material": "solid",
       "wallpaper": "color",
       "seed": 0,

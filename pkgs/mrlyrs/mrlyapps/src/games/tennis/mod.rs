@@ -1,10 +1,10 @@
+use mrlycore::colors::hex;
 use mrlycore::colors::ROLLABLE;
 use mrlycore::rng::Rng;
 use mrlycore::tensor::Tensor;
 use mrlycore::{json, Json};
 use mrlymusic::cue;
 use mrlyos::kernel::{int, App, Call, Effect, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{solid_rect, Frame, Layer, Sprite};
 
 const DIRS: [&str; 4] = ["up", "down", "left", "right"];
 const TICK_BASE_MAX: i64 = 12;
@@ -127,7 +127,6 @@ pub struct Tennis {
     ball_color: [u8; 4],
     paddle_color: [u8; 4],
     block_color: [u8; 4],
-    board_color: [u8; 4],
 }
 
 impl Default for Tennis {
@@ -158,7 +157,6 @@ impl Tennis {
             ball_color: [255, 255, 255, 255],
             paddle_color: [200, 200, 200, 255],
             block_color: [255, 80, 80, 255],
-            board_color: [10, 10, 14, 255],
         };
         tennis.reset(0);
         tennis
@@ -437,34 +435,17 @@ impl Tennis {
         }
         (taken, hits)
     }
-    fn render(&self) -> Frame {
-        let s = self.set.scale as usize;
-        let side = self.set.board as usize * s;
-        let mut frame = Frame::new(side, side, self.board_color);
-        let mut sprites = Vec::new();
-        let bw = self.set.block as usize;
-        for b in &self.blocks {
-            if b.active {
-                sprites.push(Sprite::new(
-                    b.x as f64 * s as f64,
-                    b.y as f64 * s as f64,
-                    solid_rect(bw * s, s, self.block_color),
-                ));
-            }
-        }
-        let unit = MILLI as f64;
-        sprites.push(Sprite::new(
-            self.px as f64 * s as f64 / unit,
-            self.py as f64 * s as f64 / unit,
-            solid_rect(self.set.paddle as usize * s, s, self.paddle_color),
-        ));
-        sprites.push(Sprite::new(
-            self.bx as f64 * s as f64 / unit,
-            self.by as f64 * s as f64 / unit,
-            solid_rect(s, s, self.ball_color),
-        ));
-        frame.push(Layer::Sprites(sprites));
-        frame
+    fn cells_fact(&self) -> Json {
+        json!({
+            "ids": self.board_facts(),
+            "skin": "tiles",
+            "pens": [
+                hex(self.block_color),
+                hex(self.paddle_color),
+                hex(self.ball_color),
+            ],
+            "design": "solid",
+        })
     }
     fn blocks_json(&self) -> Json {
         json!(self
@@ -509,7 +490,7 @@ impl App for Tennis {
             "settings": self.set.to_json(),
             "dir": self.dir.map(|d| DIRS[d]),
             "board": self.board_facts(),
-            "frame": self.render().fact(),
+            "cells": self.cells_fact(),
         })
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
@@ -854,16 +835,20 @@ mod tests {
         );
     }
     #[test]
-    fn state_carries_an_indexed_frame() {
+    fn state_carries_the_cells_fact() {
         let t = tennis(5);
         let state = t.state(&iden(), None);
-        let palette = state["frame"]["palette"].as_array().unwrap();
-        assert!(!palette.is_empty());
-        let rows = state["frame"]["rows"].as_array().unwrap();
-        assert_eq!(
-            rows.len(),
-            state["frame"]["height"].as_u64().unwrap() as usize
-        );
+        let cells = &state["cells"];
+        assert_eq!(cells["skin"], json!("tiles"));
+        assert_eq!(cells["design"], json!("solid"));
+        assert_eq!(cells["ids"].as_array().unwrap().len(), 18);
+        let pens = cells["pens"].as_array().unwrap();
+        assert_eq!(pens.len(), 3);
+        assert!(pens.iter().all(|p| p.as_str().unwrap().starts_with('#')));
+        let (bx, by) = (t.bx.div_euclid(MILLI), t.by.div_euclid(MILLI));
+        assert_eq!(cells["ids"][by as usize][bx as usize], json!(3));
+        assert!(state.get("frame").is_none());
+        assert!(state.get("sprites").is_none());
         assert_eq!(state["board"].as_array().unwrap().len(), 18);
     }
 }

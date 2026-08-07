@@ -50,6 +50,27 @@ pub fn named(name: &str) -> Result<Color> {
     }
 }
 
+pub fn board(dark: bool) -> [u8; 4] {
+    let c = if dark { BOARD_DARK } else { BOARD_LIGHT };
+    [c.r, c.g, c.b, c.a]
+}
+
+pub fn ink(dark: bool) -> [u8; 4] {
+    let c = if dark { WHITE } else { BLACK };
+    [c.r, c.g, c.b, c.a]
+}
+
+pub fn hex(c: [u8; 4]) -> String {
+    Color::rgba(c[0], c[1], c[2], c[3]).to_hex()
+}
+
+pub fn hex_of(hex: &str) -> [u8; 4] {
+    match Color::from_hex(hex) {
+        Ok(c) => [c.r, c.g, c.b, c.a],
+        Err(_) => [0, 0, 0, 255],
+    }
+}
+
 impl Color {
     pub const fn rgb(r: u8, g: u8, b: u8) -> Color {
         Color { r, g, b, a: 255 }
@@ -210,6 +231,16 @@ mod tests {
         assert_eq!(g[0], BLACK);
         assert_eq!(g[4], WHITE);
         assert_eq!(g[2], Color::rgb(127, 127, 127));
+    }
+    #[test]
+    fn raw_hex_helpers_never_fail() {
+        assert_eq!(hex([255, 61, 64, 255]), "#ff3d40");
+        assert_eq!(hex([0, 0, 0, 0]), "#00000000");
+        assert_eq!(hex_of("#ff3d40"), [255, 61, 64, 255]);
+        assert_eq!(hex_of("#00000000"), [0, 0, 0, 0]);
+        assert_eq!(hex_of("junk"), [0, 0, 0, 255]);
+        assert_eq!(ink(true), [255, 255, 255, 255]);
+        assert_eq!(board(false), [255, 255, 255, 255]);
     }
     #[test]
     fn mix_and_lightness() {

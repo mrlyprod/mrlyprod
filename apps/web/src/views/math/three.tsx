@@ -31,7 +31,6 @@ export function three(state: unknown, _send: Send): Node {
       <card key="board">
         <Board
           app="three"
-          rows={[]}
           shade={s.shade}
           turn={call("orbit.turn", { app: "three" })}
           zoom={call("orbit.zoom", { app: "three" })}

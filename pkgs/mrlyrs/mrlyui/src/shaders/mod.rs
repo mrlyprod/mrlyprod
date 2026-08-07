@@ -2,10 +2,12 @@ use mrlymath::space::MESH_WGSL;
 
 const VERTEX: &str = include_str!("vertex.wgsl");
 
-const PROGRAMS: [(&str, &str, usize); 3] = [
+const PROGRAMS: [(&str, &str, usize); 5] = [
     ("mandelbrot", include_str!("mandelbrot.wgsl"), 20),
     ("julia", include_str!("julia.wgsl"), 24),
     ("mesh", MESH_WGSL, 24),
+    ("moire", include_str!("moire.wgsl"), 24),
+    ("sleep", include_str!("sleep.wgsl"), 20),
 ];
 
 fn assemble(name: &str, fragment: &str) -> String {

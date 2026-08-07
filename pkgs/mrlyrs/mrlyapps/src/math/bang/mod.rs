@@ -1,3 +1,4 @@
+use mrlycore::colors::hex;
 use mrlycore::colors::named;
 use mrlycore::tensor::Tensor;
 use mrlycore::{json, Json};
@@ -6,7 +7,6 @@ use mrlymath::space::{Pack, TURN};
 use mrlymath::three::{quads, Cell3d};
 use mrlymath::two::Cell2d;
 use mrlyos::kernel::{App, Call, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::{field, Frame};
 use std::f64::consts::TAU;
 
 const BASE: usize = 2;
@@ -78,40 +78,27 @@ impl Bang {
             _ => factory::create(code, NUMBER, 2, BASE, LEVEL_2D).unwrap(),
         }
     }
-    fn render_1d(&self, tensor: Tensor) -> Frame {
-        let side = tensor.shape[0];
-        let fill_c = named(FILL).unwrap();
-        let void_c = named(VOID).unwrap();
-        let fill = [fill_c.r, fill_c.g, fill_c.b, 255];
-        let empty = [void_c.r, void_c.g, void_c.b, 255];
-        let colors: Vec<[u8; 4]> = tensor
-            .bytes()
-            .iter()
-            .map(|&v| if v == 1 { fill } else { empty })
-            .collect();
-        field(side, 1, colors, empty)
-    }
-    fn render_2d(&self, tensor: Tensor) -> Frame {
-        let cell = Cell2d::new(tensor);
-        let (w, h) = (cell.width(), cell.height());
-        let fill_c = named(FILL).unwrap();
-        let void_c = named(VOID).unwrap();
-        let fill = [fill_c.r, fill_c.g, fill_c.b, 255];
-        let empty = [void_c.r, void_c.g, void_c.b, 255];
-        let colors: Vec<[u8; 4]> = cell
-            .types()
-            .bytes()
-            .iter()
-            .map(|&v| if v == 1 { fill } else { empty })
-            .collect();
-        field(w, h, colors, empty)
-    }
-    fn render(&self) -> Frame {
+    fn cells_fact(&self) -> Json {
         let tensor = self.tensor();
-        match self.dimension {
-            1 => self.render_1d(tensor),
-            _ => self.render_2d(tensor),
-        }
+        let ids: Vec<Vec<u8>> = match self.dimension {
+            1 => vec![tensor.bytes().iter().map(|&v| u8::from(v == 1)).collect()],
+            _ => {
+                let cell = Cell2d::new(tensor);
+                let w = cell.width();
+                cell.types()
+                    .bytes()
+                    .chunks(w)
+                    .map(|row| row.iter().map(|&v| u8::from(v == 1)).collect())
+                    .collect()
+            }
+        };
+        let fill = named(FILL).unwrap();
+        let void = named(VOID).unwrap();
+        json!({
+            "ids": ids,
+            "skin": "tiles",
+            "pens": [hex([void.r, void.g, void.b, 255]), hex([fill.r, fill.g, fill.b, 255])],
+        })
     }
     fn signature(&self) -> String {
         self.code().to_string()
@@ -147,7 +134,7 @@ impl App for Bang {
         if self.dimension == 3 {
             out["shade"] = self.shade();
         } else {
-            out["frame"] = self.render().fact();
+            out["cells"] = self.cells_fact();
         }
         out
     }
@@ -327,7 +314,7 @@ mod tests {
         assert_eq!(names, vec!["bang.page", "bang.set", "bang.reset"]);
     }
     #[test]
-    fn flat_universes_colormap_and_solid_ones_shade_mesh() {
+    fn flat_universes_speak_cells_and_solid_ones_shade_mesh() {
         let mut b = Bang::new();
         for d in [1i64, 2] {
             send(
@@ -336,9 +323,17 @@ mod tests {
                 json!({ "key": "dimension", "value": d }),
             );
             let state = b.state(&iden(), None);
-            let rows = state["frame"]["rows"].as_array().unwrap();
-            assert!(!rows.is_empty());
-            assert!(!rows[0].as_array().unwrap().is_empty());
+            let cells = &state["cells"];
+            assert_eq!(cells["skin"], json!("tiles"));
+            assert_eq!(cells["pens"], json!(["#000000", "#ffd100"]));
+            let ids = cells["ids"].as_array().unwrap();
+            assert!(!ids.is_empty());
+            assert!(!ids[0].as_array().unwrap().is_empty());
+            if d == 1 {
+                assert_eq!(ids.len(), 1);
+            } else {
+                assert_eq!(ids.len(), ids[0].as_array().unwrap().len());
+            }
             assert!(state["shade"].is_null());
             assert!(b.geometry().is_none());
             assert!(b.uniforms().is_none());
@@ -349,6 +344,7 @@ mod tests {
             json!({ "key": "dimension", "value": 3 }),
         );
         let state = b.state(&iden(), None);
+        assert!(state["cells"].is_null());
         assert!(state["frame"].is_null());
         assert_eq!(state["shade"]["program"], json!("mesh"));
         assert_eq!(state["shade"]["route"], json!("bang"));

@@ -8,4 +8,4 @@ libc = "0.2"
 mrlycore = { path = "../../pkgs/mrlyrs/mrlycore" }
 mrlyui = { path = "../../pkgs/mrlyrs/mrlyui" }
 mrlyweb = { path = "../../pkgs/mrlyrs/mrlyweb" }
-mrlyos = { path = "../../pkgs/mrlyrs/mrlyos", features = ["testkit"] }
+mrlyos = { path = "../../pkgs/mrlyrs/mrlyos" }

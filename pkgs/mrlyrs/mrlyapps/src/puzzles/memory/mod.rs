@@ -1,9 +1,9 @@
+use mrlycore::colors::hex;
 use mrlycore::colors::ROLLABLE;
 use mrlycore::rng::Rng;
 use mrlycore::{json, Json};
 use mrlymusic::cue;
 use mrlyos::kernel::{int, App, Call, Effect, Iden, Manifest, Outcome, Verb};
-use mrlyui::frame::hex;
 use mrlyui::skin::memory::FACES;
 
 const DESIGNS: [&str; 5] = ["carpet", "net", "vtree", "htree", "solid"];
@@ -625,7 +625,7 @@ mod tests {
         assert_eq!(state["settings"]["surface"], json!("canvas"));
         assert_eq!(state["cells"]["skin"], json!("emojis"));
         let frame = mrlyui::skin::raster("memory", &state["cells"], 4, false).expect("a frame");
-        assert_eq!(frame.width, m.cols() * mrlyui::skin::SYMBOL);
+        assert_eq!(frame.width(), m.cols() * mrlyui::skin::SYMBOL);
         assert!(
             !send(
                 &mut m,
