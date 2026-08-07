@@ -1,60 +1,64 @@
-import { call } from "../../builders.ts"
-import { h } from "../../jsx.ts"
-import type { Manifest, Node, Send } from "../../types.ts"
+import {
+  Box,
+  Caption,
+  Chip,
+  Cluster,
+  Grid,
+  Label,
+  Search,
+  Stack,
+} from "mrlyui"
+import { call } from "../../builders"
+import { useApps, useSend } from "../../send"
+import type { Manifest } from "../../types"
 
-type State = { apps: Manifest[]; query: string; mode: "grid" | "list" | "carousel" }
+type State = { apps: Manifest[]; query: string; mode: "grid" | "list" }
 
-const GROUPS = ["system", "tools", "creativity", "design", "math", "physics", "puzzles", "games", "toys"]
-
-export function menu(state: unknown, _send: Send): Node {
-  const { apps, query, mode } = state as State
-  const layout: "row" | "stack" = mode === "list" ? "row" : "stack"
-  const cols = mode === "list" ? 1 : 3
-  const top = apps[0]
-
-  const cards = apps.map(app => (
-    <card key={app.route}>
-      <label
-        key={app.route}
-        mode={layout}
-        symbol={{ as: "emoji", value: app.emoji }}
-        text={app.title}
-        call={call("nav.open", { app: app.route })}
-      />
-    </card>
-  ))
-
+export function Menu({ state }: { state: unknown }) {
+  const s = state as State
+  const send = useSend()
+  const apps = useApps()
+  const groups = [...new Set(apps.filter(app => !app.hidden).map(app => app.category))]
+  const list = s.mode === "list"
+  const seek = (q: string) => send(call("menu.search", { q }))
   return (
-    <stack key="menu">
-      <card key="search">
-        <field
-          key="search"
-          value={query}
-          live={true}
-          call={call("menu.search")}
-          arg="q"
-          hint="search"
-          icon="search"
-          clear={true}
-          enter={top !== undefined ? call("nav.open", { app: top.route }) : undefined}
-        />
-      </card>
-      {query === "" && (
-        <card key="chips">
-          <pills key="groups">
-            {GROUPS.map(group => (
-              <label key={group} mode="text" text={group} call={call("menu.search", { q: group })} />
-            ))}
-          </pills>
-        </card>
+    <Stack>
+      <Box>
+        <Search value={s.query} onChange={seek} placeholder="search" />
+      </Box>
+      <Box>
+        <Cluster>
+          {groups.map(group => (
+            <Chip key={group} active={s.query === group} onClick={() => seek(s.query === group ? "" : group)}>
+              {group}
+            </Chip>
+          ))}
+        </Cluster>
+      </Box>
+      {s.apps.length === 0 ? (
+        <Box>
+          <Caption>nothing answers to that</Caption>
+        </Box>
+      ) : (
+        <Grid cols={list ? 1 : 3}>
+          {s.apps.map(app => (
+            <Box key={app.route} onClick={() => send(call("nav.open", { app: app.route }))}>
+              <Label
+                mode={list ? "row" : "stack"}
+                symbol={{ as: "emoji", value: app.emoji }}
+                text={app.title}
+                note={list ? app.category : undefined}
+              />
+            </Box>
+          ))}
+        </Grid>
       )}
-      <grid key="apps" cols={cols} mode={mode === "carousel" ? "snap" : undefined}>
-        {cards}
-      </grid>
-      <card key="footer">
-        <label key="privacy" mode="text" text="privacy" href="/privacy" />
-        <label key="terms" mode="text" text="terms" href="/terms" />
-      </card>
-    </stack>
+      <Box>
+        <Cluster>
+          <Label mode="text" text="privacy" href="/privacy" />
+          <Label mode="text" text="terms" href="/terms" />
+        </Cluster>
+      </Box>
+    </Stack>
   )
 }

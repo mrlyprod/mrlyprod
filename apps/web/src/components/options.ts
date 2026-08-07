@@ -1,4 +1,4 @@
-import { names } from "../palette.ts"
+import { names } from "../palette"
 
 export const SURFACES = ["grid", "canvas"]
 
@@ -15,3 +15,6 @@ export const DESIGNS_SOLID = ["carpet", "net", "vtree", "htree", "solid"]
 export const DESIGNS_VOID = ["carpet", "net", "htree", "vtree", "void"]
 
 export const SKINS = ["tiles", "emojis", "digits"]
+
+export const opts = (values: readonly string[]): { label: string; value: string }[] =>
+  values.map(value => ({ label: value, value }))

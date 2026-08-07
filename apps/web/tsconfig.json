@@ -1,11 +1,3 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "types": [
-      "bun"
-    ],
-    "jsx": "react",
-    "jsxFactory": "h",
-    "allowImportingTsExtensions": true
-  }
+  "extends": "../../tsconfig.base.json"
 }

@@ -1,4 +1,4 @@
-import type { Call, View } from "./types.ts"
+import type { Call, View } from "./types"
 
 const WORDS = ["moon", "ferry", "jazz", "milk", "totem"]
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"]

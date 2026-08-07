@@ -1,11 +1,26 @@
-import { GameOver } from "../../components/GameOver.tsx"
-import { Section } from "../../components/Section.tsx"
-import { Shot } from "../../components/Shot.tsx"
-import { Board } from "../../components/Board.tsx"
-import { SURFACES } from "../../components/options.ts"
-import { call, set } from "../../builders.ts"
-import { h } from "../../jsx.ts"
-import type { Cells, Node, Send } from "../../types.ts"
+import { useState } from "react"
+import {
+  Board,
+  Box,
+  Button,
+  Caption,
+  Cell,
+  Choice,
+  Field,
+  Input,
+  Section,
+  Slider,
+  Stack,
+} from "mrlyui"
+import { call, set } from "../../builders"
+import { GameOver } from "../../components/GameOver"
+import { SURFACES, opts } from "../../components/options"
+import { Shot } from "../../components/Shot"
+import { Cells } from "../../eyes/Cells"
+import { Face } from "../../eyes/Face"
+import { paint, visual } from "../../eyes/skin"
+import { useSend } from "../../send"
+import type { Cells as Deck, Visual } from "../../types"
 
 const SKINS = ["tiles", "digits"]
 
@@ -15,47 +30,102 @@ type State = {
   over: boolean
   prompt: string
   settings: { cols: number; rows: number; size: number; surface: string; skin: string }
-  cells: Cells
+  cells: Deck
 }
 
-export function captcha(state: unknown, _send: Send): Node {
+function inked(v: Visual): boolean {
+  const f = v.face
+  return f !== undefined && f.as !== "sprite" && f.value !== undefined && f.value !== ""
+}
+
+export function Captcha({ state }: { state: unknown }) {
   const s = state as State
+  const send = useSend()
+  const [text, setText] = useState("")
   const grid = s.settings.surface === "grid"
-  const meterText = `solved ${s.score} · tries ${s.steps}`
+  const across = s.cells.ids[0]?.length ?? s.settings.cols
+  const down = s.cells.ids.length
+
+  const answer = () => {
+    if (text === "") return
+    send(call("captcha.answer", { text }))
+    setText("")
+  }
+
+  const tile = (id: number, i: number) => {
+    const v = visual("captcha", s.cells, id)
+    const pick = s.over ? undefined : () => send(call("captcha.pick", { cell: i }))
+    if (inked(v)) {
+      return (
+        <Cell key={i} bg={paint(v, s.cells)} onClick={pick}>
+          <Face visual={v} />
+        </Cell>
+      )
+    }
+    return (
+      <Cell key={i} onClick={pick}>
+        <Cells app="captcha" cells={{ ...s.cells, ids: [[id]] }} />
+      </Cell>
+    )
+  }
+
   return (
-    <stack key="captcha">
-      <card key="board">
-        {grid
-          ? <grid key="grid" cols={s.settings.cols}>
-              {s.cells.ids.flat().map((id, i) => (
-                <cell key={`c-${i}`} call={s.over ? undefined : call("captcha.pick", { cell: i })}>
-                  <canvas key="face" handle={`captcha-${i}`} cells={{ app: "captcha", ...s.cells, ids: [[id]] }} />
-                </cell>
-              ))}
-            </grid>
-          : <Board app="captcha" cells={s.cells} />}
-        <text key="prompt" role="note">{`find: ${s.prompt}`}</text>
-      </card>
-      {s.over
-        ? <GameOver app="captcha" emoji="🧩" status={`solved ${s.score}`} />
-        : grid
-          ? undefined
-          : <card key="controls">
-              <field key="answer" value="" live={false} call={call("captcha.answer")} arg="text" hint="type what you see" />
-            </card>}
-      <card key="meter">
-        {!s.over && <text key="meter" role="note">{meterText}</text>}
+    <Stack>
+      <Box>
+        <Caption>{`find: ${s.prompt}`}</Caption>
+        {grid ? (
+          <Board cols={across} rows={down}>
+            {s.cells.ids.flat().map((id, i) => tile(id, i))}
+          </Board>
+        ) : (
+          <Cells
+            app="captcha"
+            cells={s.cells}
+            grid={[across, down]}
+            onTap={s.over ? undefined : (x, y) => send(call("captcha.pick", { x, y }))}
+          />
+        )}
+      </Box>
+      {s.over ? <GameOver app="captcha" emoji="🧩" status={`solved ${s.score}`} /> : null}
+      {s.over || grid ? null : (
+        <Box>
+          <Field label="answer" hint="type what you see">
+            <Input value={text} onChange={setText} />
+          </Field>
+          <Button onClick={answer}>answer</Button>
+        </Box>
+      )}
+      <Box>
+        {s.over ? null : <Caption>{`solved ${s.score} · tries ${s.steps}`}</Caption>}
         <Shot />
-      </card>
-      <Section keyName="rules" label="rules">
-        <range key="cols" value={s.settings.cols} min={2} max={5} call={set("captcha", "cols")} arg="value" step={1} label="cols" />
-        <range key="rows" value={s.settings.rows} min={2} max={5} call={set("captcha", "rows")} arg="value" step={1} label="rows" />
-        <range key="size" value={s.settings.size} min={2} max={16} call={set("captcha", "size")} arg="value" step={1} label="size" />
+      </Box>
+      <Section label="rules">
+        <Field label="cols">
+          <Slider min={2} max={5} step={1} value={s.settings.cols} onChange={v => send(set("captcha", "cols", v))} />
+        </Field>
+        <Field label="rows">
+          <Slider min={2} max={5} step={1} value={s.settings.rows} onChange={v => send(set("captcha", "rows", v))} />
+        </Field>
+        <Field label="size">
+          <Slider min={2} max={16} step={1} value={s.settings.size} onChange={v => send(set("captcha", "size", v))} />
+        </Field>
       </Section>
-      <Section keyName="look" label="look">
-        <choice key="surface" value={s.settings.surface} options={SURFACES} call={set("captcha", "surface")} arg="value" label="surface" mode="row" />
-        <choice key="skin" value={s.settings.skin} options={SKINS} call={set("captcha", "skin")} arg="value" label="skin" mode="row" />
+      <Section label="look">
+        <Choice
+          label="surface"
+          mode="row"
+          options={opts(SURFACES)}
+          value={s.settings.surface}
+          onChange={v => send(set("captcha", "surface", v))}
+        />
+        <Choice
+          label="skin"
+          mode="row"
+          options={opts(SKINS)}
+          value={s.settings.skin}
+          onChange={v => send(set("captcha", "skin", v))}
+        />
       </Section>
-    </stack>
+    </Stack>
   )
 }

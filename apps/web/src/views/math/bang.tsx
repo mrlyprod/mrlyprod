@@ -1,10 +1,24 @@
-import { call } from "../../builders.ts"
-import { Board } from "../../components/Board.tsx"
-import { Pager } from "../../components/Pager.tsx"
-import { Shot } from "../../components/Shot.tsx"
-import { h } from "../../jsx.ts"
-import { orbit } from "../../render/orbit.ts"
-import type { Cells, Node, Send, Shade } from "../../types.ts"
+import {
+  Box,
+  Button,
+  Caption,
+  Chip,
+  Choice,
+  Cluster,
+  Field,
+  Pager,
+  Section,
+  Stack,
+  Toggle,
+} from "mrlyui"
+import { call, setter } from "../../builders"
+import { opts } from "../../components/options"
+import { Shot } from "../../components/Shot"
+import { Cells } from "../../eyes/Cells"
+import { useOrbit } from "../../eyes/orbit"
+import { Shader } from "../../eyes/Shader"
+import { useSend } from "../../send"
+import type { Cells as Deck, Shade } from "../../types"
 
 const DIMENSIONS = ["1", "2", "3"]
 
@@ -17,42 +31,60 @@ type State = {
   code: string
   degree: number
   anf: string
-  cells?: Cells
+  cells?: Deck
   shade?: Shade
 }
 
-export function bang(state: unknown, _send: Send): Node {
+export function Bang({ state }: { state: unknown }) {
   const s = state as State
+  const send = useSend()
+  const turn = setter("bang")
+  const { rig, turn: spin, pan, zoom, onOrtho } = useOrbit("bang")
   const solid = s.dimension === 3
   return (
-    <stack key="bang">
-      <card key="board">
-        {solid ? (
-          <Board
-            app="bang"
-            shade={s.shade}
-            turn={call("orbit.turn", { app: "bang" })}
-            zoom={call("orbit.zoom", { app: "bang" })}
-            pan={call("orbit.pan", { app: "bang" })}
-          />
+    <Stack>
+      <Box>
+        {solid || s.cells === undefined ? (
+          <Shader shade={s.shade} handle="bang" turn={spin} pan={pan} zoom={zoom} />
         ) : (
-          <Board app="bang" cells={s.cells} />
+          <Cells app="bang" cells={s.cells} handle="bang" />
         )}
-      </card>
-      <card key="page">
-        <Pager app="bang" />
-        <button key="reset" call={call("bang.reset")}>reset</button>
-        <Shot />
-      </card>
-      <card key="controls">
-        <choice key="dimension" value={String(s.dimension)} options={DIMENSIONS} call={call("bang.set", { key: "dimension" })} arg="value" label="dimension" mode="row" />
-        {solid && <toggle key="ortho" on={orbit("bang").ortho} call={call("orbit.ortho", { app: "bang" })} arg="value" label="ortho" />}
-      </card>
-      <card key="facts">
-        <text key="name" role="note">{s.name}</text>
-        <text key="code" role="note">{`code ${s.code} · degree ${s.degree} · anf ${s.anf}`}</text>
-        <text key="position" role="note">{`${s.index + 1} / ${s.count}`}</text>
-      </card>
-    </stack>
+      </Box>
+      <Box>
+        <Pager
+          current={s.index + 1}
+          total={s.count}
+          onPrev={() => send(call("bang.page", { dir: "prev" }))}
+          onNext={() => send(call("bang.page", { dir: "next" }))}
+        />
+        <Cluster>
+          <Button onClick={() => send(call("face.full", { handle: "bang" }))}>fullscreen</Button>
+          <Button onClick={() => send(call("bang.reset"))}>reset</Button>
+          <Shot />
+        </Cluster>
+      </Box>
+      <Section label="walk">
+        <Choice
+          label="dimension"
+          mode="row"
+          value={String(s.dimension)}
+          options={opts(DIMENSIONS)}
+          onChange={v => send(turn("dimension", v))}
+        />
+        {solid && (
+          <Field label="ortho">
+            <Toggle value={rig.ortho} onChange={onOrtho} />
+          </Field>
+        )}
+      </Section>
+      <Section label={s.name}>
+        <Cluster>
+          <Chip>{`base ${s.base}`}</Chip>
+          <Chip>{`code ${s.code}`}</Chip>
+          <Chip>{`degree ${s.degree}`}</Chip>
+        </Cluster>
+        <Caption>{s.anf}</Caption>
+      </Section>
+    </Stack>
   )
 }

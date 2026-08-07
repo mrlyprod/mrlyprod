@@ -1,7 +1,19 @@
-import { call, setter } from "../../builders.ts"
-import { Shot } from "../../components/Shot.tsx"
-import { h } from "../../jsx.ts"
-import type { Node, Send, Shade } from "../../types.ts"
+import {
+  Box,
+  Button,
+  Choice,
+  Cluster,
+  Field,
+  Section,
+  Slider,
+  Stack,
+} from "mrlyui"
+import { call, setter } from "../../builders"
+import { opts } from "../../components/options"
+import { Shot } from "../../components/Shot"
+import { Shader } from "../../eyes/Shader"
+import { useSend } from "../../send"
+import type { Shade } from "../../types"
 
 const ANGLES = ["0", "90", "180", "270"]
 
@@ -14,23 +26,40 @@ type State = {
   shade?: Shade
 }
 
-const turn = setter("moire")
-
-export function moire(state: unknown, _send: Send): Node {
+export function Moire({ state }: { state: unknown }) {
   const s = state as State
+  const send = useSend()
+  const turn = setter("moire")
   return (
-    <stack key="moire">
-      <card key="board">
-        <canvas key="frame" handle="moire" shade={s.shade} grid={[1, 1]} />
-        <button key="full" call={call("face.full", { handle: "moire" })}>fullscreen</button>
-      </card>
-      <card key="controls">
-        <range key="offset" value={s.offset} min={-6} max={6} step={1} call={turn("offset")} arg="value" label="offset" />
-        <choice key="angle" value={String(s.angle)} options={ANGLES} call={turn("angle")} arg="value" label="angle" mode="row" />
-        <choice key="lattice" value={s.lattice} options={LATTICES} call={turn("lattice")} arg="value" label="lattice" mode="row" />
-        <button key="reset" call={call("moire.reset")}>reset</button>
-        <Shot />
-      </card>
-    </stack>
+    <Stack>
+      <Box>
+        <Shader shade={s.shade} grid={[1, 1]} handle="moire" />
+        <Cluster>
+          <Button onClick={() => send(call("face.full", { handle: "moire" }))}>fullscreen</Button>
+          <Button onClick={() => send(call("moire.reset"))}>reset</Button>
+          <Shot />
+        </Cluster>
+      </Box>
+      <Section label="overlay">
+        <Field label="offset">
+          <Slider min={-6} max={6} step={1} value={s.offset} onChange={v => send(turn("offset", v))} />
+        </Field>
+        <Choice
+          label="angle"
+          mode="row"
+          value={String(s.angle)}
+          options={opts(ANGLES)}
+          onChange={v => send(turn("angle", v))}
+        />
+      </Section>
+      <Section label="lattice">
+        <Choice
+          mode="row"
+          value={s.lattice}
+          options={opts(LATTICES)}
+          onChange={v => send(turn("lattice", v))}
+        />
+      </Section>
+    </Stack>
   )
 }

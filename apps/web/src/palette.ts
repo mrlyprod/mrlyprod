@@ -1,4 +1,4 @@
-import type { Palette } from "./types.ts"
+import type { Palette } from "./types"
 
 let store: Palette | null = null
 

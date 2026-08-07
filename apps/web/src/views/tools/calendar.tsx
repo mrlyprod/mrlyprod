@@ -1,54 +1,84 @@
-import { call } from "../../builders.ts"
-import { h } from "../../jsx.ts"
-import type { Node, Send } from "../../types.ts"
+import {
+  Board,
+  Box,
+  Button,
+  Caption,
+  Cell,
+  DatePicker,
+  Grid,
+  Section,
+  Setting,
+  Stack,
+  Symbol,
+  Title,
+} from "mrlyui"
+import { call } from "../../builders"
+import { useSend } from "../../send"
 
-const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
-
-type Cell = { day: number; faded: boolean }
+type Slot = { day: number; faded: boolean }
 
 type State = {
   title: string
   days: string[]
-  weeks: Cell[][]
+  weeks: Slot[][]
   today: number | null
   year: number
   month: number
   picked: { year: number; month: number; day: number }
 }
 
-function cell(c: Cell, i: number, s: State): Node {
-  const key = `c-${i}`
-  if (c.faded) return <text key={key} role="note">{String(c.day)}</text>
-  const staged = s.picked.year === s.year && s.picked.month === s.month && c.day === s.picked.day
-  const bg = staged ? "var(--accent-color)" : c.day === s.today ? "var(--muted-color)" : undefined
-  return <button key={key} call={call("calendar.pick", { day: c.day })} bg={bg}>{String(c.day)}</button>
+function staged(s: State, slot: Slot): boolean {
+  if (slot.faded) return false
+  return s.picked.year === s.year && s.picked.month === s.month && s.picked.day === slot.day
 }
 
-export function calendar(state: unknown, _send: Send): Node {
+export function Calendar({ state }: { state: unknown }) {
   const s = state as State
-  const cells = s.weeks.flat()
+  const send = useSend()
+  const slots = s.weeks.flat()
+  const stage = new Date(s.year, s.month - 1, 1)
+  const jump = (date: Date) => {
+    send(call("calendar.goto", { year: date.getFullYear(), month: date.getMonth() + 1 }))
+    send(call("calendar.pick", { day: date.getDate() }))
+  }
   return (
-    <stack key="calendar">
-      <card key="month">
-        <text key="month" role="title">{s.title}</text>
-        <grid key="controls" cols={3}>
-          <button key="prev" call={call("calendar.flip", { n: -1 })}>‹</button>
-          <button key="now" call={call("calendar.today")}>today</button>
-          <button key="next" call={call("calendar.flip", { n: 1 })}>›</button>
-        </grid>
-        <grid key="jump" cols={2}>
-          <choice key="jump-month" value={MONTHS[s.month - 1] ?? ""} options={MONTHS} call={call("calendar.goto", { year: s.year })} arg="month" mode="select" />
-          <field key="jump-year" value={String(s.year)} live={false} call={call("calendar.goto", { month: s.month })} arg="year" label="year" />
-        </grid>
-      </card>
-      <card key="sheet">
-        <grid key="sheet" cols={7}>
-          {s.days.map((d, i) => (
-            <text key={`h-${i}`} role="note">{d}</text>
+    <Stack>
+      <Box>
+        <Title>{s.title}</Title>
+        <Grid cols={3}>
+          <Button onClick={() => send(call("calendar.flip", { n: -1 }))}>
+            <Symbol name="chevron_left" />
+          </Button>
+          <Button onClick={() => send(call("calendar.today"))}>today</Button>
+          <Button onClick={() => send(call("calendar.flip", { n: 1 }))}>
+            <Symbol name="chevron_right" />
+          </Button>
+        </Grid>
+      </Box>
+      <Box>
+        <Board cols={7} rows={s.weeks.length + 1}>
+          {s.days.map((day, i) => (
+            <Cell key={`head-${String(i)}`}>
+              <Caption>{day}</Caption>
+            </Cell>
           ))}
-          {cells.map((c, i) => cell(c, i, s))}
-        </grid>
-      </card>
-    </stack>
+          {slots.map((slot, i) => (
+            <Cell
+              key={`slot-${String(i)}`}
+              on={!slot.faded && slot.day === s.today}
+              bg={staged(s, slot) ? "var(--accent-color)" : undefined}
+              onClick={slot.faded ? undefined : () => send(call("calendar.pick", { day: slot.day }))}
+            >
+              {slot.faded ? <Caption>{slot.day}</Caption> : slot.day}
+            </Cell>
+          ))}
+        </Board>
+      </Box>
+      <Section label="jump">
+        <Setting label="month">
+          <DatePicker value={stage} onChange={jump} />
+        </Setting>
+      </Section>
+    </Stack>
   )
 }

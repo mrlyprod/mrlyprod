@@ -1,11 +1,25 @@
-import { GameOver } from "../../components/GameOver.tsx"
-import { Section } from "../../components/Section.tsx"
-import { Shot } from "../../components/Shot.tsx"
-import { Board } from "../../components/Board.tsx"
-import { SURFACES } from "../../components/options.ts"
-import { call, set } from "../../builders.ts"
-import { h } from "../../jsx.ts"
-import type { Cells, Node, Send } from "../../types.ts"
+import {
+  Board,
+  Box,
+  Button,
+  Caption,
+  Cell,
+  Choice,
+  Field,
+  Grid,
+  Section,
+  Slider,
+  Stack,
+} from "mrlyui"
+import { call, set } from "../../builders"
+import { GameOver } from "../../components/GameOver"
+import { SURFACES, opts } from "../../components/options"
+import { Shot } from "../../components/Shot"
+import { Cells } from "../../eyes/Cells"
+import { Face } from "../../eyes/Face"
+import { paint, visual } from "../../eyes/skin"
+import { useSend } from "../../send"
+import type { Cells as Deck, Visual } from "../../types"
 
 const SKINS = ["tiles", "digits"]
 
@@ -13,44 +27,85 @@ type State = {
   score: number
   steps: number
   over: boolean
+  won: boolean
   position: number
   total: number
   options: string[]
   settings: { options: number; length: number; surface: string; skin: string }
-  cells: Cells
+  cells: Deck
 }
 
-export function quiz(state: unknown, _send: Send): Node {
+function inked(v: Visual): boolean {
+  const f = v.face
+  return f !== undefined && f.as !== "sprite" && f.value !== undefined && f.value !== ""
+}
+
+export function Quiz({ state }: { state: unknown }) {
   const s = state as State
+  const send = useSend()
   const grid = s.settings.surface === "grid"
-  const prompt = grid
-    ? <canvas key="prompt" handle="quiz-prompt" cells={{ app: "quiz", ...s.cells }} />
-    : <Board app="quiz" cells={s.cells} />
-  const settings = [
-    <Section keyName="rules" label="rules">
-      <range key="options" value={s.settings.options} min={2} max={8} call={set("quiz", "options")} arg="value" step={1} label="options" />
-      <range key="length" value={s.settings.length} min={2} max={32} call={set("quiz", "length")} arg="value" step={1} label="length" />
-    </Section>,
-    <Section keyName="look" label="look">
-      <choice key="surface" value={s.settings.surface} options={SURFACES} call={set("quiz", "surface")} arg="value" label="surface" mode="row" />
-      <choice key="skin" value={s.settings.skin} options={SKINS} call={set("quiz", "skin")} arg="value" label="skin" mode="row" />
-    </Section>,
-  ]
+  const id = s.cells.ids[0]?.[0] ?? 0
+  const tile = visual("quiz", s.cells, id)
+  const cols = Math.min(3, Math.max(1, s.options.length))
+
   return (
-    <stack key="quiz">
-      <card key="board">{prompt}</card>
-      {s.over
-        ? <GameOver app="quiz" emoji="❓" status={`score ${s.score}`} />
-        : <card key="options">
-            {s.options.map((text, i) => (
-              <button key={`option-${i}`} call={call("quiz.answer", { text })}>{text}</button>
+    <Stack>
+      <Box>
+        {grid && inked(tile) ? (
+          <Board cols={1} rows={1}>
+            <Cell bg={paint(tile, s.cells)}>
+              <Face visual={tile} />
+            </Cell>
+          </Board>
+        ) : (
+          <Cells app="quiz" cells={s.cells} />
+        )}
+      </Box>
+      {s.over ? (
+        <GameOver
+          app="quiz"
+          emoji={s.won ? "🏆" : "❓"}
+          status={s.won ? `cleared · score ${s.score}` : `wrong answer · score ${s.score}`}
+        />
+      ) : (
+        <Box>
+          <Grid cols={cols}>
+            {s.options.map(text => (
+              <Button key={text} onClick={() => send(call("quiz.answer", { text }))}>
+                {text}
+              </Button>
             ))}
-          </card>}
-      <card key="meter">
-        {!s.over && <text key="meter" role="note">{`score ${s.score} · ${s.position} / ${s.total}`}</text>}
+          </Grid>
+        </Box>
+      )}
+      <Box>
+        {s.over ? null : <Caption>{`score ${s.score} · ${s.position} / ${s.total}`}</Caption>}
         <Shot />
-      </card>
-      {settings}
-    </stack>
+      </Box>
+      <Section label="rules">
+        <Field label="options">
+          <Slider min={2} max={8} step={1} value={s.settings.options} onChange={v => send(set("quiz", "options", v))} />
+        </Field>
+        <Field label="length">
+          <Slider min={2} max={32} step={1} value={s.settings.length} onChange={v => send(set("quiz", "length", v))} />
+        </Field>
+      </Section>
+      <Section label="look">
+        <Choice
+          label="surface"
+          mode="row"
+          options={opts(SURFACES)}
+          value={s.settings.surface}
+          onChange={v => send(set("quiz", "surface", v))}
+        />
+        <Choice
+          label="skin"
+          mode="row"
+          options={opts(SKINS)}
+          value={s.settings.skin}
+          onChange={v => send(set("quiz", "skin", v))}
+        />
+      </Section>
+    </Stack>
   )
 }

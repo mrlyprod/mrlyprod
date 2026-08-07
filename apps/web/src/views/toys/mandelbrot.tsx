@@ -1,7 +1,6 @@
-import { setter } from "../../builders.ts"
-import { fractalPanel, shadeBoard } from "../../components/fractal.tsx"
-import { h } from "../../jsx.ts"
-import type { Node, Send, Shade } from "../../types.ts"
+import { Stack } from "mrlyui"
+import { Fractal, Panel } from "../../components/Fractal"
+import type { Shade } from "../../types"
 
 type State = {
   steps: number
@@ -21,16 +20,17 @@ type State = {
   shade?: Shade
 }
 
-const turn = setter("mandelbrot")
-
-export function mandelbrot(state: unknown, _send: Send): Node {
+export function Mandelbrot({ state }: { state: unknown }) {
   const s = state as State
   return (
-    <stack key="mandelbrot">
-      <card key="board">
-        {shadeBoard("mandelbrot", s.shade, [s.settings.width, s.settings.height], s.steps)}
-      </card>
-      {fractalPanel(turn, s.settings)}
-    </stack>
+    <Stack>
+      <Fractal
+        app="mandelbrot"
+        shade={s.shade}
+        grid={[s.settings.width, s.settings.height]}
+        steps={s.steps}
+      />
+      <Panel app="mandelbrot" dials={s.settings} />
+    </Stack>
   )
 }

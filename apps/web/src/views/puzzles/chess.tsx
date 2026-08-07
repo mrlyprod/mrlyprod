@@ -1,12 +1,42 @@
-import { GameOver } from "../../components/GameOver.tsx"
-import { Section } from "../../components/Section.tsx"
-import { Shot } from "../../components/Shot.tsx"
-import { Board } from "../../components/Board.tsx"
-import { SURFACES } from "../../components/options.ts"
-import { call, set } from "../../builders.ts"
-import { face as worn, visual } from "../../cells.tsx"
-import { h } from "../../jsx.ts"
-import type { Cells, Node, Send } from "../../types.ts"
+import { useState } from "react"
+import {
+  Board,
+  Box,
+  Button,
+  Caption,
+  Cell,
+  Choice,
+  Field,
+  Input,
+  Section,
+  Slider,
+  Stack,
+  Toggle,
+} from "mrlyui"
+import { call, set } from "../../builders"
+import { GameOver } from "../../components/GameOver"
+import { SURFACES, opts } from "../../components/options"
+import { Shot } from "../../components/Shot"
+import { Bits } from "../../eyes/Bits"
+import { Cells } from "../../eyes/Cells"
+import { Face } from "../../eyes/Face"
+import { visual } from "../../eyes/skin"
+import { useSend } from "../../send"
+import type { Cells as Deck } from "../../types"
+
+const BLOCK = 13
+
+const LIGHT = "#f0d9b1"
+
+const DARK = "#b58863"
+
+const LIGHT_LAST = "#f0dc82"
+
+const DARK_LAST = "#cbaa4e"
+
+const DOT = [[0, 0, 0], [0, 1, 0], [0, 0, 0]]
+
+const SKINS = ["digits", "emojis"]
 
 type State = {
   steps: number
@@ -18,15 +48,10 @@ type State = {
   board: (string | null)[][]
   selected: string | null
   targets: string[]
+  moves: { from: string; to: string }[]
   last_move: { from: string; to: string } | null
-  cells: Cells
+  cells: Deck
 }
-
-const BLOCK = 13
-const BOARD = ["#f0d9b1", "#b58863"]
-const LAST = ["#f0dc82", "#cbaa4e"]
-const DOT = [[0, 0, 0], [0, 1, 0], [0, 0, 0]]
-const SKINS = ["digits", "emojis"]
 
 function pen(s: State, id: number): string {
   const tint = visual("chess", s.cells, id).face?.tint
@@ -34,75 +59,108 @@ function pen(s: State, id: number): string {
   return s.cells.pens[tint.pen] ?? "#ffffff"
 }
 
-const face = (s: State, id: number, nonce: string): Node | undefined => {
-  const v = visual("chess", s.cells, id)
-  if (v.face?.as !== "sprite") return worn(v, `piece${nonce}`)
-  return <canvas key={`piece${nonce}`} handle="chess" rows={v.face.rows ?? []} palette={["transparent", pen(s, id)]} />
-}
-
-const dot = (s: State): Node => {
-  const team = s.turn === "white" ? 1 : 7
-  return <canvas key="dot" handle="chess" rows={DOT} palette={["transparent", pen(s, team)]} />
-}
-
-function board(s: State): Node {
+export function Chess({ state }: { state: unknown }) {
+  const s = state as State
+  const send = useSend()
+  const [layout, setLayout] = useState(s.settings.layout)
   const ranks = s.board.length
   const files = s.board[0]?.length ?? 0
-  const cells: Node[] = []
-  for (let y = 0; y < ranks; y++) {
-    for (let x = 0; x < files; x++) {
-      const square = `${String.fromCharCode(97 + x)}${ranks - y}`
-      const letter = s.board[y]?.[x] ?? null
-      const id = s.cells.ids[y]?.[x] ?? 0
-      const target = s.targets.includes(square)
-      const picked = s.selected === square
-      const last = s.last_move !== null && (s.last_move.from === square || s.last_move.to === square)
-      const shade = (x + y) % 2
-      const on = picked || (target && letter !== null)
-      const moved = s.last_move !== null && s.last_move.to === square
-      const royal = letter !== null && letter.toLowerCase() === "k" && (s.turn === "white") === (letter === "K")
-      const nonce = (s.check && royal) || moved ? String(s.steps) : ""
-      const child = id % BLOCK > 0 ? face(s, id, nonce) : target ? dot(s) : undefined
-      cells.push(
-        <cell
-          key={square}
-          call={s.over ? undefined : call("chess.select", { square })}
-          on={on || undefined}
-          bg={on ? undefined : last ? LAST[shade] : BOARD[shade]}
-        >
-          {child}
-        </cell>,
-      )
-    }
-  }
-  return <grid key="squares" cols={files}>{cells}</grid>
-}
-
-export function chess(state: unknown, _send: Send): Node {
-  const s = state as State
   const status = s.winner === "draw" ? "stalemate · draw" : `checkmate · ${s.winner} wins`
-  const files = s.board[0]?.length ?? 0
+
+  const piece = (id: number, nonce: string) => {
+    const v = visual("chess", s.cells, id)
+    if (v.face?.as !== "sprite") return <Face key={`p${nonce}`} visual={v} />
+    return <Bits key={`p${nonce}`} rows={v.face.rows ?? []} palette={["transparent", pen(s, id)]} crisp />
+  }
+
+  const dot = () => {
+    const team = s.turn === "white" ? 1 : 7
+    return <Bits key="dot" rows={DOT} palette={["transparent", pen(s, team)]} crisp />
+  }
+
+  const square = (x: number, y: number) => {
+    const name = `${String.fromCharCode(97 + x)}${ranks - y}`
+    const letter = s.board[y]?.[x] ?? null
+    const id = s.cells.ids[y]?.[x] ?? 0
+    const target = s.targets.includes(name)
+    const picked = s.selected === name
+    const last = s.last_move !== null && (s.last_move.from === name || s.last_move.to === name)
+    const dusk = (x + y) % 2 === 1
+    const on = picked || (target && letter !== null)
+    const moved = s.last_move !== null && s.last_move.to === name
+    const royal = letter !== null && letter.toLowerCase() === "k" && (s.turn === "white") === (letter === "K")
+    const nonce = (s.check && royal) || moved ? String(s.steps) : ""
+    const bg = last ? (dusk ? DARK_LAST : LIGHT_LAST) : dusk ? DARK : LIGHT
+    return (
+      <Cell
+        key={name}
+        on={on}
+        bg={on ? undefined : bg}
+        onClick={s.over ? undefined : () => send(call("chess.select", { square: name }))}
+      >
+        {id % BLOCK > 0 ? piece(id, nonce) : target ? dot() : null}
+      </Cell>
+    )
+  }
+
+  const grid = () => {
+    const spots = []
+    for (let y = 0; y < ranks; y++) {
+      for (let x = 0; x < files; x++) spots.push(square(x, y))
+    }
+    return spots
+  }
+
   return (
-    <stack key="chess">
-      <card key="board">
-        {s.settings.surface === "canvas"
-          ? <Board app="chess" cells={s.cells} tap={s.over ? undefined : call("chess.select")} grid={[files, s.board.length]} />
-          : board(s)}
-      </card>
-      {s.over && <GameOver app="chess" emoji="♟️" status={status} />}
-      <card key="meter">
-        {!s.over && <text key="meter" role="note">{`${s.turn} to move${s.check ? " · check" : ""} · ply ${s.steps}`}</text>}
+    <Stack>
+      <Box>
+        <Caption>{s.over ? status : `${s.turn} to move${s.check ? " · check" : ""}`}</Caption>
+        {s.settings.surface === "grid" ? (
+          <Board cols={files} rows={ranks}>
+            {grid()}
+          </Board>
+        ) : (
+          <Cells
+            app="chess"
+            cells={s.cells}
+            grid={[files, ranks]}
+            onTap={s.over ? undefined : (x, y) => send(call("chess.select", { x, y }))}
+          />
+        )}
+      </Box>
+      {s.over ? <GameOver app="chess" emoji={s.winner === "draw" ? "🤝" : "👑"} status={status} /> : null}
+      <Box>
+        {s.over ? null : <Caption>{`ply ${s.steps} · ${s.moves.length} legal moves`}</Caption>}
         <Shot />
-      </card>
-      <Section keyName="rules" label="rules">
-        <field key="layout" value={s.settings.layout} live={false} call={set("chess", "layout")} arg="value" label="layout" />
-        <toggle key="obfuscate" on={s.settings.obfuscate} call={set("chess", "obfuscate")} arg="value" label="obfuscate" />
-        <range key="reskin" value={s.settings.reskin} min={0} max={50} step={1} call={set("chess", "reskin")} arg="value" label="reskin" />
+      </Box>
+      <Section label="rules">
+        <Field label="layout" hint="ranks from black to white, digits skip files">
+          <Input value={layout} onChange={setLayout} />
+        </Field>
+        <Button onClick={() => send(set("chess", "layout", layout))}>deal</Button>
+        <Field label="obfuscate" hint="hide which piece is which">
+          <Toggle value={s.settings.obfuscate} onChange={v => send(set("chess", "obfuscate", v))} />
+        </Field>
+        <Field label="reskin" hint="plies between reskins, 0 never">
+          <Slider min={0} max={50} step={1} value={s.settings.reskin} onChange={v => send(set("chess", "reskin", v))} />
+        </Field>
       </Section>
-      <Section keyName="look" label="look">
-        <choice key="surface" value={s.settings.surface} options={SURFACES} call={set("chess", "surface")} arg="value" label="surface" mode="row" />
-        <choice key="skin" value={s.settings.skin} options={SKINS} call={set("chess", "skin")} arg="value" label="skin" mode="row" />
+      <Section label="look">
+        <Choice
+          label="surface"
+          mode="row"
+          options={opts(SURFACES)}
+          value={s.settings.surface}
+          onChange={v => send(set("chess", "surface", v))}
+        />
+        <Choice
+          label="skin"
+          mode="row"
+          options={opts(SKINS)}
+          value={s.settings.skin}
+          onChange={v => send(set("chess", "skin", v))}
+        />
       </Section>
-    </stack>
+    </Stack>
   )
 }

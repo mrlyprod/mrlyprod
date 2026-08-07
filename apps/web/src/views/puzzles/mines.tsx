@@ -1,13 +1,24 @@
-import { GameOver } from "../../components/GameOver.tsx"
-import { Section } from "../../components/Section.tsx"
-import { Meter } from "../../components/Meter.tsx"
-import { Shot } from "../../components/Shot.tsx"
-import { Board } from "../../components/Board.tsx"
-import { SURFACES, SKINS, DESIGNS_SOLID as DESIGNS } from "../../components/options.ts"
-import { call, set } from "../../builders.ts"
-import { face, paint, visual } from "../../cells.tsx"
-import { h } from "../../jsx.ts"
-import type { Cells, Node, Send } from "../../types.ts"
+import {
+  Board,
+  Box,
+  Button,
+  Caption,
+  Cell,
+  Choice,
+  Field,
+  Section,
+  Slider,
+  Stack,
+} from "mrlyui"
+import { call, set } from "../../builders"
+import { GameOver } from "../../components/GameOver"
+import { DESIGNS_SOLID as DESIGNS, SKINS, SURFACES, opts } from "../../components/options"
+import { Shot } from "../../components/Shot"
+import { Cells } from "../../eyes/Cells"
+import { Face } from "../../eyes/Face"
+import { paint, visual } from "../../eyes/skin"
+import { useSend } from "../../send"
+import type { Cells as Deck, Visual } from "../../types"
 
 const FLAG = 11
 
@@ -20,62 +31,120 @@ type State = {
   remaining: number
   flags: boolean[][]
   settings: { cols: number; rows: number; mines: number; surface: string; skin: string; design: string }
-  cells: Cells
+  cells: Deck
 }
 
-function tile(s: State, id: number, flagged: boolean, r: number, c: number): Node {
-  const v = visual("mines", s.cells, id)
-  if (id === 0) {
-    const verb = flagged || s.tool === "flag" ? "mines.flag" : "mines.reveal"
-    return (
-      <cell key={`c-${r}-${c}`} call={s.over ? undefined : call(verb, { x: c, y: r })} bg={paint(v, s.cells)}>
-        {flagged ? face(visual("mines", s.cells, FLAG)) : undefined}
-      </cell>
-    )
-  }
-  const worn = face(v)
-  if (worn === undefined && v.motif !== undefined) {
-    return (
-      <cell key={`c-${r}-${c}`}>
-        <canvas key="face" handle={`mines-${r}-${c}`} cells={{ app: "mines", ...s.cells, ids: [[id]] }} />
-      </cell>
-    )
-  }
-  return (
-    <cell key={`c-${r}-${c}`} bg={paint(v, s.cells)}>
-      {worn}
-    </cell>
-  )
+function inked(v: Visual): boolean {
+  const f = v.face
+  return f !== undefined && f.as !== "sprite" && f.value !== undefined && f.value !== ""
 }
 
-export function mines(state: unknown, _send: Send): Node {
+export function Mines({ state }: { state: unknown }) {
   const s = state as State
+  const send = useSend()
   const grid = s.settings.surface === "grid"
+  const across = s.cells.ids[0]?.length ?? s.settings.cols
+  const down = s.cells.ids.length
+  const digging = s.tool === "dig"
+
+  const tile = (id: number, r: number, c: number) => {
+    const flagged = s.flags[r]?.[c] ?? false
+    const v = visual("mines", s.cells, id)
+    if (id === 0) {
+      const verb = flagged || s.tool === "flag" ? "mines.flag" : "mines.reveal"
+      return (
+        <Cell
+          key={`${r}-${c}`}
+          bg={paint(v, s.cells)}
+          onClick={s.over ? undefined : () => send(call(verb, { x: c, y: r }))}
+        >
+          {flagged ? <Face visual={visual("mines", s.cells, FLAG)} /> : null}
+        </Cell>
+      )
+    }
+    if (inked(v)) {
+      return (
+        <Cell key={`${r}-${c}`} bg={paint(v, s.cells)}>
+          <Face visual={v} />
+        </Cell>
+      )
+    }
+    return (
+      <Cell key={`${r}-${c}`}>
+        <Cells app="mines" cells={{ ...s.cells, ids: [[id]] }} />
+      </Cell>
+    )
+  }
+
   return (
-    <stack key="mines">
-      <card key="board">
-        {grid
-          ? <grid key="grid" cols={s.settings.cols}>
-              {s.cells.ids.flatMap((row, r) => row.map((id, c) => tile(s, id, s.flags[r]?.[c] ?? false, r, c)))}
-            </grid>
-          : <Board app="mines" cells={s.cells} />}
-      </card>
-      {s.over && <GameOver app="mines" emoji="💣" status={s.won ? `cleared · ${s.score} revealed` : "boom"} />}
-      <card key="controls">
-        {!s.over && <button key="tool" call={call("mines.tool", { tool: s.tool === "dig" ? "flag" : "dig" })}>{s.tool === "dig" ? "⛏ dig" : "⛳ flag"}</button>}
+    <Stack>
+      <Box>
+        <Caption>{`💣 ${s.remaining} · moves ${s.steps}`}</Caption>
+        {grid ? (
+          <Board cols={across} rows={down}>
+            {s.cells.ids.flatMap((row, r) => row.map((id, c) => tile(id, r, c)))}
+          </Board>
+        ) : (
+          <Cells
+            app="mines"
+            cells={s.cells}
+            grid={[across, down]}
+            onTap={s.over ? undefined : (x, y) => send(call(digging ? "mines.reveal" : "mines.flag", { x, y }))}
+          />
+        )}
+      </Box>
+      {s.over ? (
+        <GameOver
+          app="mines"
+          emoji={s.won === true ? "🏆" : "💣"}
+          status={s.won === true ? `cleared · ${s.score} revealed` : "boom"}
+        />
+      ) : null}
+      <Box>
+        {s.over ? null : (
+          <Button
+            active={!digging}
+            onClick={() => send(call("mines.tool", { tool: digging ? "flag" : "dig" }))}
+          >
+            {digging ? "⛏ dig" : "⛳ flag"}
+          </Button>
+        )}
         <Shot />
-      </card>
-      {!s.over && <Meter keyName="meter" text={`mines left ${s.remaining} · moves ${s.steps}`} />}
-      <Section keyName="rules" label="rules">
-        <range key="cols" value={s.settings.cols} min={4} max={30} call={set("mines", "cols")} arg="value" step={1} label="cols" />
-        <range key="rows" value={s.settings.rows} min={4} max={30} call={set("mines", "rows")} arg="value" step={1} label="rows" />
-        <range key="mines" value={s.settings.mines} min={1} max={200} call={set("mines", "mines")} arg="value" step={1} label="mines" />
+      </Box>
+      <Section label="rules">
+        <Field label="cols">
+          <Slider min={4} max={30} step={1} value={s.settings.cols} onChange={v => send(set("mines", "cols", v))} />
+        </Field>
+        <Field label="rows">
+          <Slider min={4} max={30} step={1} value={s.settings.rows} onChange={v => send(set("mines", "rows", v))} />
+        </Field>
+        <Field label="mines">
+          <Slider min={1} max={200} step={1} value={s.settings.mines} onChange={v => send(set("mines", "mines", v))} />
+        </Field>
       </Section>
-      <Section keyName="look" label="look">
-        <choice key="surface" value={s.settings.surface} options={SURFACES} call={set("mines", "surface")} arg="value" label="surface" mode="row" />
-        <choice key="skin" value={s.settings.skin} options={SKINS} call={set("mines", "skin")} arg="value" label="skin" mode="row" />
-        <choice key="design" value={s.settings.design} options={DESIGNS} call={set("mines", "design")} arg="value" label="design" mode="cycle" />
+      <Section label="look">
+        <Choice
+          label="surface"
+          mode="row"
+          options={opts(SURFACES)}
+          value={s.settings.surface}
+          onChange={v => send(set("mines", "surface", v))}
+        />
+        <Choice
+          label="skin"
+          mode="row"
+          options={opts(SKINS)}
+          value={s.settings.skin}
+          onChange={v => send(set("mines", "skin", v))}
+        />
+        <Choice
+          label="design"
+          mode="cycle"
+          options={opts(DESIGNS)}
+          value={s.settings.design}
+          onChange={v => send(set("mines", "design", v))}
+        />
       </Section>
-    </stack>
+    </Stack>
   )
 }

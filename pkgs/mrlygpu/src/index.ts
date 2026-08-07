@@ -470,8 +470,15 @@ function fit(canvas: HTMLCanvasElement): { width: number; height: number } {
   return { width, height }
 }
 
+function nightfall(): boolean {
+  const theme = document.documentElement.dataset["theme"]
+  if (theme === "dark") return true
+  if (theme === "light") return false
+  return typeof matchMedia !== "undefined" && matchMedia("(prefers-color-scheme: dark)").matches
+}
+
 function clearColor(): { r: number; g: number; b: number; a: number } {
-  const dark = document.body.classList.contains("darkmode")
+  const dark = nightfall()
   const [br, bg, bb] = tint(feeds.board?.(dark) ?? "")
   return { r: br / 255, g: bg / 255, b: bb / 255, a: 1 }
 }

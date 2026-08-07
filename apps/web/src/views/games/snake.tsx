@@ -1,13 +1,21 @@
-import { GameOver } from "../../components/GameOver.tsx"
-import { Section } from "../../components/Section.tsx"
-import { Meter } from "../../components/Meter.tsx"
-import { Shot } from "../../components/Shot.tsx"
-import { Board } from "../../components/Board.tsx"
-import { DPad } from "../../components/DPad.tsx"
-import { DESIGNS_SOLID as DESIGNS } from "../../components/options.ts"
-import { set } from "../../builders.ts"
-import { h } from "../../jsx.ts"
-import type { Cells, Node, Send } from "../../types.ts"
+import {
+  Box,
+  Caption,
+  Choice,
+  Field,
+  Section,
+  Slider,
+  Stack,
+  Toggle,
+} from "mrlyui"
+import { set } from "../../builders"
+import { DPad } from "../../components/DPad"
+import { GameOver } from "../../components/GameOver"
+import { DESIGNS_SOLID as DESIGNS, opts } from "../../components/options"
+import { Shot } from "../../components/Shot"
+import { Cells } from "../../eyes/Cells"
+import { useSend } from "../../send"
+import type { Cells as Deck } from "../../types"
 
 type State = {
   score: number
@@ -21,34 +29,54 @@ type State = {
     speed: number
     design: string
   }
-  cells: Cells
+  cells: Deck
 }
 
-export function snake(state: unknown, _send: Send): Node {
+export function Snake({ state }: { state: unknown }) {
   const s = state as State
+  const send = useSend()
   return (
-    <stack key="snake">
-      <card key="board">
-        <Board app="snake" cells={s.cells} />
-      </card>
-      {s.over && <GameOver app="snake" emoji="🐍" status={`score ${s.score}`} />}
-      <card key="controls">
-        {!s.over && <DPad app="snake" verb="turn" />}
+    <Stack>
+      <Box>
+        <Caption>{`🍎 ${s.score} · steps ${s.steps}`}</Caption>
+        <Cells app="snake" cells={s.cells} />
+      </Box>
+      {s.over ? <GameOver app="snake" emoji="🐍" status={`score ${s.score}`} /> : null}
+      <Box>
+        {s.over ? null : <DPad app="snake" verb="turn" />}
         <Shot />
-      </card>
-      {!s.over && <Meter text={`score ${s.score} · steps ${s.steps}`} />}
-      <Section keyName="rules" label="rules">
-        <range key="grid" value={s.settings.grid} min={5} max={64} call={set("snake", "grid")} arg="value" step={1} label="grid" />
-        <range key="apples" value={s.settings.apples} min={1} max={16} call={set("snake", "apples")} arg="value" step={1} label="apples" />
-        <toggle key="wrap" on={s.settings.wrap} call={set("snake", "wrap")} arg="value" label="wrap" />
-        <toggle key="self_collision" on={s.settings.self_collision} call={set("snake", "self_collision")} arg="value" label="self collision" />
+      </Box>
+      <Section label="rules">
+        <Field label="grid">
+          <Slider min={5} max={64} step={1} value={s.settings.grid} onChange={v => send(set("snake", "grid", v))} />
+        </Field>
+        <Field label="apples">
+          <Slider min={1} max={16} step={1} value={s.settings.apples} onChange={v => send(set("snake", "apples", v))} />
+        </Field>
+        <Field label="wrap">
+          <Toggle value={s.settings.wrap} onChange={v => send(set("snake", "wrap", v))} />
+        </Field>
+        <Field label="self collision">
+          <Toggle
+            value={s.settings.self_collision}
+            onChange={v => send(set("snake", "self_collision", v))}
+          />
+        </Field>
       </Section>
-      <Section keyName="speed" label="speed">
-        <range key="speed" value={s.settings.speed} min={1} max={8} call={set("snake", "speed")} arg="value" step={1} label="speed" />
+      <Section label="speed">
+        <Field label="speed">
+          <Slider min={1} max={8} step={1} value={s.settings.speed} onChange={v => send(set("snake", "speed", v))} />
+        </Field>
       </Section>
-      <Section keyName="look" label="look">
-        <choice key="design" value={s.settings.design} options={DESIGNS} call={set("snake", "design")} arg="value" label="design" mode="cycle" />
+      <Section label="look">
+        <Choice
+          label="design"
+          mode="cycle"
+          options={opts(DESIGNS)}
+          value={s.settings.design}
+          onChange={v => send(set("snake", "design", v))}
+        />
       </Section>
-    </stack>
+    </Stack>
   )
 }

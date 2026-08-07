@@ -1,13 +1,21 @@
-import { h } from "../../jsx.ts"
-import type { Node, Send } from "../../types.ts"
+import {
+  Box,
+  Caption,
+  Letters,
+  Stack,
+} from "mrlyui"
 
 type State = { now: number }
+
+const WEEK = ["thu", "fri", "sat", "sun", "mon", "tue", "wed"]
 
 const div = (a: number, n: number) => Math.floor(a / n)
 
 const mod = (a: number, n: number) => ((a % n) + n) % n
 
 const pad = (n: number, width = 2) => String(n).padStart(width, "0")
+
+// FACE
 
 function face(now: number): string {
   if (now === 0) return "--:--:--"
@@ -30,18 +38,21 @@ function civil(days: number): [number, number, number] {
 
 function date(now: number): string {
   if (now === 0) return "waiting for time"
-  const [year, month, day] = civil(div(now, 86400000))
-  return `${pad(year, 4)}-${pad(month)}-${pad(day)} utc`
+  const days = div(now, 86400000)
+  const [year, month, day] = civil(days)
+  return `${WEEK[mod(days, 7)] ?? ""} ${pad(year, 4)}-${pad(month)}-${pad(day)} utc`
 }
 
-export function clock(state: unknown, _send: Send): Node {
+// CLOCK
+
+export function Clock({ state }: { state: unknown }) {
   const s = state as State
   return (
-    <stack key="clock">
-      <card key="face">
-        <symbol key="face" as="glyph" value={face(s.now)} />
-        <text key="date" role="note">{date(s.now)}</text>
-      </card>
-    </stack>
+    <Stack>
+      <Box>
+        <Letters text={face(s.now)} scramble={false} />
+        <Caption>{date(s.now)}</Caption>
+      </Box>
+    </Stack>
   )
 }

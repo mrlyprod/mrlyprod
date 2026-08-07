@@ -1,15 +1,24 @@
-import { call } from "../builders.ts"
-import type { Call, Node } from "../types.ts"
+import { Button } from "mrlyui"
+import { call } from "../builders"
+import { useSend } from "../send"
+import type { Call } from "../types"
 
 const SIDE = 320
 
-export function Shot(): Node {
-  return { kind: "Button", key: "shot", label: "screenshot", call: call("sys.shot") }
+let frame: HTMLElement | null = null
+
+export function hold(el: HTMLElement | null): void {
+  frame = el
 }
 
-export function shoot(region: HTMLElement, made: Call): Call {
+export function Shot() {
+  const send = useSend()
+  return <Button onClick={() => send(call("sys.shot"))}>screenshot</Button>
+}
+
+export function shoot(made: Call): Call {
   if (made.args["image"] !== undefined) return made
-  const surface = region.querySelector("canvas")
+  const surface = frame?.querySelector("canvas") ?? null
   if (surface === null || surface.width === 0 || surface.height === 0) return made
   const image = photo(surface)
   return image === null ? made : { verb: made.verb, args: { image } }

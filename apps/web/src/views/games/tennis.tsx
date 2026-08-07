@@ -1,12 +1,18 @@
-import { GameOver } from "../../components/GameOver.tsx"
-import { Section } from "../../components/Section.tsx"
-import { Meter } from "../../components/Meter.tsx"
-import { Shot } from "../../components/Shot.tsx"
-import { Board } from "../../components/Board.tsx"
-import { DPad } from "../../components/DPad.tsx"
-import { set } from "../../builders.ts"
-import { h } from "../../jsx.ts"
-import type { Cells, Node, Send } from "../../types.ts"
+import {
+  Box,
+  Caption,
+  Field,
+  Section,
+  Slider,
+  Stack,
+} from "mrlyui"
+import { set } from "../../builders"
+import { DPad } from "../../components/DPad"
+import { GameOver } from "../../components/GameOver"
+import { Shot } from "../../components/Shot"
+import { Cells } from "../../eyes/Cells"
+import { useSend } from "../../send"
+import type { Cells as Deck } from "../../types"
 
 type State = {
   score: number
@@ -20,32 +26,52 @@ type State = {
     physics: number
     speed: number
   }
-  cells: Cells
+  cells: Deck
 }
 
-export function tennis(state: unknown, _send: Send): Node {
+export function Tennis({ state }: { state: unknown }) {
   const s = state as State
+  const send = useSend()
   return (
-    <stack key="tennis">
-      <card key="board">
-        <Board app="tennis" cells={s.cells} />
-      </card>
-      {s.over && <GameOver app="tennis" emoji="🎾" status={`score ${s.score}`} />}
-      <card key="controls">
-        {!s.over && <DPad app="tennis" verb="move" />}
+    <Stack>
+      <Box>
+        <Caption>{`🧱 ${s.score} · steps ${s.steps}`}</Caption>
+        <Cells app="tennis" cells={s.cells} />
+      </Box>
+      {s.over ? <GameOver app="tennis" emoji="🎾" status={`score ${s.score}`} /> : null}
+      <Box>
+        {s.over ? null : <DPad app="tennis" verb="move" />}
         <Shot />
-      </card>
-      {!s.over && <Meter text={`score ${s.score} · steps ${s.steps}`} />}
-      <Section keyName="rules" label="rules">
-        <range key="board" value={s.settings.board} min={8} max={40} call={set("tennis", "board")} arg="value" step={1} label="board" />
-        <range key="paddle" value={s.settings.paddle} min={2} max={10} call={set("tennis", "paddle")} arg="value" step={1} label="paddle" />
-        <range key="block" value={s.settings.block} min={1} max={6} call={set("tennis", "block")} arg="value" step={1} label="block" />
-        <range key="rows" value={s.settings.rows} min={1} max={10} call={set("tennis", "rows")} arg="value" step={1} label="rows" />
-        <range key="physics" value={s.settings.physics} min={100} max={900} scale={1000} call={set("tennis", "physics")} arg="value" step={100} label="physics" />
+      </Box>
+      <Section label="rules">
+        <Field label="board">
+          <Slider min={8} max={40} step={1} value={s.settings.board} onChange={v => send(set("tennis", "board", v))} />
+        </Field>
+        <Field label="paddle">
+          <Slider min={2} max={10} step={1} value={s.settings.paddle} onChange={v => send(set("tennis", "paddle", v))} />
+        </Field>
+        <Field label="block">
+          <Slider min={1} max={6} step={1} value={s.settings.block} onChange={v => send(set("tennis", "block", v))} />
+        </Field>
+        <Field label="rows">
+          <Slider min={1} max={10} step={1} value={s.settings.rows} onChange={v => send(set("tennis", "rows", v))} />
+        </Field>
+        <Field label="physics" hint="how much bounce the paddle keeps">
+          <Slider
+            min={0.1}
+            max={0.9}
+            step={0.1}
+            value={s.settings.physics / 1000}
+            format={v => v.toFixed(1)}
+            onChange={v => send(set("tennis", "physics", Math.round(v * 1000)))}
+          />
+        </Field>
       </Section>
-      <Section keyName="speed" label="speed">
-        <range key="speed" value={s.settings.speed} min={1} max={8} call={set("tennis", "speed")} arg="value" step={1} label="speed" />
+      <Section label="speed">
+        <Field label="speed">
+          <Slider min={1} max={8} step={1} value={s.settings.speed} onChange={v => send(set("tennis", "speed", v))} />
+        </Field>
       </Section>
-    </stack>
+    </Stack>
   )
 }

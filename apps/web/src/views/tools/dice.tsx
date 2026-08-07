@@ -1,12 +1,22 @@
-import { Section } from "../../components/Section.tsx"
-import { Shot } from "../../components/Shot.tsx"
-import { Board } from "../../components/Board.tsx"
-import { SURFACES, SKINS } from "../../components/options.ts"
-import { call, set } from "../../builders.ts"
-import { h } from "../../jsx.ts"
-import type { Cells, Node, Send } from "../../types.ts"
+import {
+  Box,
+  Button,
+  Caption,
+  Choice,
+  Grid,
+  Section,
+  Stack,
+} from "mrlyui"
+import { call, set } from "../../builders"
+import { opts, SKINS, SURFACES } from "../../components/options"
+import { Shot } from "../../components/Shot"
+import { Cells } from "../../eyes/Cells"
+import { useSend } from "../../send"
+import type { Cells as Deck } from "../../types"
 
 const SIDES = [2, 4, 6, 8, 10, 12, 20]
+
+const HISTORY = 8
 
 type State = {
   steps: number
@@ -14,41 +24,49 @@ type State = {
   nonce: number
   rolls: number[]
   settings: { sides: number; surface: string; skin: string }
-  cells: Cells
+  cells: Deck
 }
 
-export function dice(state: unknown, _send: Send): Node {
+export function Dice({ state }: { state: unknown }) {
   const s = state as State
-  const grid = s.settings.surface === "grid"
+  const send = useSend()
+  const roll = () => send(call("dice.roll"))
+  const tail = s.rolls.slice(-HISTORY)
   return (
-    <stack key="dice">
-      <card key="face">
-        {grid
-          ? <cell key="die" call={call("dice.roll")}>
-              <canvas key={`face-${s.nonce}`} handle="dice" cells={{ app: "dice", ...s.cells }} />
-            </cell>
-          : [
-              <Board app="dice" cells={s.cells} />,
-              <button key="roll" call={call("dice.roll")}>roll</button>,
-            ]}
-        <Shot />
-      </card>
-      <card key="sides">
-        <grid key="sides" cols={7}>
-          {SIDES.map(n =>
-            n === s.settings.sides ? (
-              <text key={`d-${n}`} role="note">{`d${n}`}</text>
-            ) : (
-              <button key={`d-${n}`} call={call("dice.set", { key: "sides", value: n })}>{`d${n}`}</button>
-            ),
-          )}
-        </grid>
-        <text key="meter" role="note">{s.rolls.length === 0 ? "unrolled" : `rolls ${s.rolls.join(" ")}`}</text>
-      </card>
-      <Section keyName="look" label="look">
-        <choice key="surface" value={s.settings.surface} options={SURFACES} call={set("dice", "surface")} arg="value" label="surface" mode="row" />
-        <choice key="skin" value={s.settings.skin} options={SKINS} call={set("dice", "skin")} arg="value" label="skin" mode="row" />
+    <Stack>
+      <Box>
+        <Cells app="dice" cells={s.cells} crisp={s.settings.surface === "grid"} onTap={roll} />
+        <Grid cols={2}>
+          <Button onClick={roll}>roll</Button>
+          <Shot />
+        </Grid>
+      </Box>
+      <Box>
+        <Grid cols={7}>
+          {SIDES.map(n => (
+            <Button key={n} active={n === s.settings.sides} onClick={() => send(set("dice", "sides", n))}>
+              {`d${String(n)}`}
+            </Button>
+          ))}
+        </Grid>
+        <Caption>{tail.length === 0 ? "unrolled" : `rolls ${tail.join(" ")}`}</Caption>
+      </Box>
+      <Section label="look">
+        <Choice
+          label="surface"
+          mode="row"
+          options={opts(SURFACES)}
+          value={s.settings.surface}
+          onChange={v => send(set("dice", "surface", v))}
+        />
+        <Choice
+          label="skin"
+          mode="row"
+          options={opts(SKINS)}
+          value={s.settings.skin}
+          onChange={v => send(set("dice", "skin", v))}
+        />
       </Section>
-    </stack>
+    </Stack>
   )
 }

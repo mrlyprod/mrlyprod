@@ -1,6 +1,6 @@
 import init, { boot, call as rawCall, list as rawList, read as rawRead } from "../../../pkgs/mrlyjs/web/pkg/mrlyjs.js"
 import type { Handle, InitInput } from "../../../pkgs/mrlyjs/web/pkg/mrlyjs.js"
-import type { Call, Observation, Registry, View } from "./types.ts"
+import type { Call, Observation, Registry, View } from "./types"
 
 export { boot }
 export type { Handle }

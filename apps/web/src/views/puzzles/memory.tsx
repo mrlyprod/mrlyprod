@@ -1,13 +1,24 @@
-import { GameOver } from "../../components/GameOver.tsx"
-import { Section } from "../../components/Section.tsx"
-import { Meter } from "../../components/Meter.tsx"
-import { Shot } from "../../components/Shot.tsx"
-import { Board } from "../../components/Board.tsx"
-import { SURFACES, SKINS, DESIGNS_SOLID as DESIGNS } from "../../components/options.ts"
-import { call, set } from "../../builders.ts"
-import { face, paint, visual } from "../../cells.tsx"
-import { h } from "../../jsx.ts"
-import type { Cells, Node, Send } from "../../types.ts"
+import {
+  Board,
+  Box,
+  Caption,
+  Cell,
+  Choice,
+  Field,
+  Section,
+  Slider,
+  Stack,
+  Toggle,
+} from "mrlyui"
+import { call, set } from "../../builders"
+import { GameOver } from "../../components/GameOver"
+import { DESIGNS_SOLID as DESIGNS, SKINS, SURFACES, opts } from "../../components/options"
+import { Shot } from "../../components/Shot"
+import { Cells } from "../../eyes/Cells"
+import { Face } from "../../eyes/Face"
+import { paint, visual } from "../../eyes/skin"
+import { useSend } from "../../send"
+import type { Cells as Deck, Visual } from "../../types"
 
 const VOID = 0
 const BACK = 1
@@ -20,60 +31,106 @@ type State = {
   look: number
   matched: boolean[][]
   settings: { pairs: number; cols: number; sudden: boolean; surface: string; skin: string; design: string }
-  cells: Cells
+  cells: Deck
 }
 
-function tile(s: State, id: number, done: boolean, r: number, c: number): Node {
-  const v = visual("memory", s.cells, id)
-  if (id === VOID) return <cell key={`k-${r}-${c}`} />
-  if (id === BACK) {
-    const live = !s.over && s.look === 0
-    return <cell key={`k-${r}-${c}`} call={live ? call("memory.flip", { x: c, y: r }) : undefined} bg={paint(v, s.cells)} />
-  }
-  const key = done ? "m" : `face-${s.steps}`
-  const worn = face(v, key)
-  if (worn === undefined && v.motif !== undefined) {
+function inked(v: Visual): boolean {
+  const f = v.face
+  return f !== undefined && f.as !== "sprite" && f.value !== undefined && f.value !== ""
+}
+
+export function Memory({ state }: { state: unknown }) {
+  const s = state as State
+  const send = useSend()
+  const grid = s.settings.surface === "grid"
+  const live = !s.over && s.look === 0
+  const across = s.cells.ids[0]?.length ?? s.settings.cols
+  const down = s.cells.ids.length
+  const status = s.look > 0 ? "look!" : `🍐 ${s.score} · round ${s.rounds + 1} · flips ${s.steps}`
+
+  const tile = (id: number, r: number, c: number) => {
+    const done = s.matched[r]?.[c] ?? false
+    const v = visual("memory", s.cells, id)
+    if (id === VOID) return <Cell key={`${r}-${c}`} />
+    if (id === BACK) {
+      return (
+        <Cell
+          key={`${r}-${c}`}
+          bg={paint(v, s.cells)}
+          onClick={live ? () => send(call("memory.flip", { x: c, y: r })) : undefined}
+        />
+      )
+    }
+    const nonce = done ? "held" : `turn-${s.steps}`
+    if (inked(v)) {
+      return (
+        <Cell key={`${r}-${c}`} on={done} bg={paint(v, s.cells)}>
+          <Face key={nonce} visual={v} />
+        </Cell>
+      )
+    }
     return (
-      <cell key={`k-${r}-${c}`} on={done}>
-        <canvas key={key} handle={`memory-${r}-${c}`} cells={{ app: "memory", ...s.cells, ids: [[id]] }} />
-      </cell>
+      <Cell key={`${r}-${c}`} on={done}>
+        <Cells app="memory" cells={{ ...s.cells, ids: [[id]] }} />
+      </Cell>
     )
   }
-  return (
-    <cell key={`k-${r}-${c}`} on={done} bg={paint(v, s.cells)}>
-      {worn}
-    </cell>
-  )
-}
 
-export function memory(state: unknown, _send: Send): Node {
-  const s = state as State
-  const grid = s.settings.surface === "grid"
-  const status = s.look > 0 ? "look!" : `pairs ${s.score} · round ${s.rounds + 1} · flips ${s.steps}`
   return (
-    <stack key="memory">
-      <card key="board">
-        {grid
-          ? <grid key="grid" cols={s.settings.cols}>
-              {s.cells.ids.flatMap((row, r) => row.map((id, c) => tile(s, id, s.matched[r]?.[c] ?? false, r, c)))}
-            </grid>
-          : <Board app="memory" cells={s.cells} />}
-      </card>
-      {s.over && <GameOver app="memory" emoji="🧠" status={`${s.score} pairs · ${s.rounds} rounds`} />}
-      <card key="controls">
+    <Stack>
+      <Box>
+        <Caption>{status}</Caption>
+        {grid ? (
+          <Board cols={across} rows={down}>
+            {s.cells.ids.flatMap((row, r) => row.map((id, c) => tile(id, r, c)))}
+          </Board>
+        ) : (
+          <Cells
+            app="memory"
+            cells={s.cells}
+            grid={[across, down]}
+            onTap={live ? (x, y) => send(call("memory.flip", { x, y })) : undefined}
+          />
+        )}
+      </Box>
+      {s.over ? <GameOver app="memory" emoji="🧠" status={`${s.score} pairs · ${s.rounds} rounds`} /> : null}
+      <Box>
         <Shot />
-      </card>
-      {!s.over && <Meter keyName="meter" text={status} />}
-      <Section keyName="rules" label="rules">
-        <range key="pairs" value={s.settings.pairs} min={2} max={8} call={set("memory", "pairs")} arg="value" step={1} label="pairs" />
-        <range key="cols" value={s.settings.cols} min={2} max={8} call={set("memory", "cols")} arg="value" step={1} label="cols" />
-        <toggle key="sudden" on={s.settings.sudden} call={set("memory", "sudden")} arg="value" label="sudden death" />
+      </Box>
+      <Section label="rules">
+        <Field label="pairs">
+          <Slider min={2} max={8} step={1} value={s.settings.pairs} onChange={v => send(set("memory", "pairs", v))} />
+        </Field>
+        <Field label="cols">
+          <Slider min={2} max={8} step={1} value={s.settings.cols} onChange={v => send(set("memory", "cols", v))} />
+        </Field>
+        <Field label="sudden death" hint="one miss ends the run">
+          <Toggle value={s.settings.sudden} onChange={v => send(set("memory", "sudden", v))} />
+        </Field>
       </Section>
-      <Section keyName="look" label="look">
-        <choice key="surface" value={s.settings.surface} options={SURFACES} call={set("memory", "surface")} arg="value" label="surface" mode="row" />
-        <choice key="skin" value={s.settings.skin} options={SKINS} call={set("memory", "skin")} arg="value" label="skin" mode="row" />
-        <choice key="design" value={s.settings.design} options={DESIGNS} call={set("memory", "design")} arg="value" label="design" mode="cycle" />
+      <Section label="look">
+        <Choice
+          label="surface"
+          mode="row"
+          options={opts(SURFACES)}
+          value={s.settings.surface}
+          onChange={v => send(set("memory", "surface", v))}
+        />
+        <Choice
+          label="skin"
+          mode="row"
+          options={opts(SKINS)}
+          value={s.settings.skin}
+          onChange={v => send(set("memory", "skin", v))}
+        />
+        <Choice
+          label="design"
+          mode="cycle"
+          options={opts(DESIGNS)}
+          value={s.settings.design}
+          onChange={v => send(set("memory", "design", v))}
+        />
       </Section>
-    </stack>
+    </Stack>
   )
 }

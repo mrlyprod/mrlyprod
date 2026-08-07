@@ -1,36 +1,55 @@
-import { call } from "../builders.ts"
-import { colorpicker } from "./colorpicker.tsx"
-import { h } from "../jsx.ts"
-import { hex } from "../palette.ts"
-import { reading } from "../reads.ts"
-import type { Cells, Node } from "../types.ts"
+import { Button, ColorPicker, Grid } from "mrlyui"
+import { call } from "../builders"
+import { Cells } from "../eyes/Cells"
+import { hex } from "../palette"
+import { reading } from "../reads"
+import { useSend } from "../send"
+import type { Cells as Deck } from "../types"
 
-type Slab = { id: number; name: string; value: unknown; cells: Cells }
+type Slab = { id: number; name: string; value: unknown; cells: Deck }
 
-export function library(kind: "colors" | "emoji" | "font" | "tile", host: string, key: string, current?: unknown): Node[] {
+export function Library({ kind, host, name, current }: {
+  kind: "colors" | "emoji" | "font" | "tile"
+  host: string
+  name: string
+  current?: unknown
+}) {
+  const send = useSend()
   const lib = reading(`${kind}/library`)
-  if (!Array.isArray(lib) || lib.length === 0) return []
-  const set = (value: unknown) => call(`${host}.set`, { key, value })
+  if (!Array.isArray(lib) || lib.length === 0) return null
+  const set = (value: unknown) => send(call(`${host}.set`, { key: name, value }))
+
   if (kind === "colors") {
-    const swatches = (lib as string[]).map(name => ({ name, hex: hex(name) }))
-    return [colorpicker(`lib-${key}`, swatches, name => name === current, set, true)]
+    const swatches = (lib as string[]).map(one => ({ name: one, color: hex(one) }))
+    return (
+      <ColorPicker
+        big
+        swatches={swatches}
+        value={typeof current === "string" ? current : null}
+        onChange={one => set(one)}
+      />
+    )
   }
+
   if (kind === "emoji" || kind === "font") {
-    return [
-      <grid key={`lib-${key}`} cols={8}>
+    return (
+      <Grid cols={8}>
         {(lib as string[]).map(value => (
-          <button key={`${key}-${value}`} call={set(value)}>{value}</button>
+          <Button key={value} onClick={() => set(value)}>
+            {value}
+          </Button>
         ))}
-      </grid>,
-    ]
+      </Grid>
+    )
   }
-  return [
-    <grid key={`lib-${key}`} cols={3}>
+
+  return (
+    <Grid cols={3}>
       {(lib as Slab[]).map(entry => (
-        <cell key={`${key}-${entry.id}`} call={set(entry.value)}>
-          <canvas key="thumb" handle={`lib-${host}-${key}-${entry.id}`} cells={{ app: "tile", ...entry.cells }} />
-        </cell>
+        <Button key={entry.id} onClick={() => set(entry.value)}>
+          <Cells app="tile" cells={entry.cells} handle={`lib-${host}-${name}-${entry.id}`} />
+        </Button>
       ))}
-    </grid>,
-  ]
+    </Grid>
+  )
 }

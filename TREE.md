@@ -143,49 +143,35 @@ mrlyprod
 │   │   │   │   ├── mrly_192_192.png
 │   │   │   │   └── mrly_512_512.png
 │   │   │   ├── 404.html
-│   │   │   ├── emoji.css
+│   │   │   ├── boot.js
 │   │   │   ├── favicon.ico
-│   │   │   ├── fonts.css
-│   │   │   ├── icons.css
 │   │   │   ├── manifest.json
 │   │   │   ├── mrlyprod.png
 │   │   │   ├── mrlyprod.svg
 │   │   │   └── robots.txt
 │   │   ├── src
 │   │   │   ├── components
-│   │   │   │   ├── Board.tsx
 │   │   │   │   ├── DPad.tsx
+│   │   │   │   ├── Fractal.tsx
 │   │   │   │   ├── GameOver.tsx
-│   │   │   │   ├── Meter.tsx
-│   │   │   │   ├── Pager.tsx
-│   │   │   │   ├── Section.tsx
+│   │   │   │   ├── Library.tsx
+│   │   │   │   ├── Palette.tsx
 │   │   │   │   ├── Shot.tsx
-│   │   │   │   ├── colorpicker.tsx
-│   │   │   │   ├── fractal.tsx
-│   │   │   │   ├── library.tsx
-│   │   │   │   ├── options.ts
-│   │   │   │   └── palette.tsx
+│   │   │   │   └── options.ts
+│   │   │   ├── eyes
+│   │   │   │   ├── Bits.tsx
+│   │   │   │   ├── Carve.tsx
+│   │   │   │   ├── Cells.tsx
+│   │   │   │   ├── Face.tsx
+│   │   │   │   ├── Shader.tsx
+│   │   │   │   ├── orbit.ts
+│   │   │   │   ├── skin.ts
+│   │   │   │   ├── theme.ts
+│   │   │   │   └── wallpaper.ts
 │   │   │   ├── gen
-│   │   │   │   ├── mark.json
 │   │   │   │   ├── palette.json
 │   │   │   │   ├── shaders.json
 │   │   │   │   └── skins.json
-│   │   │   ├── render
-│   │   │   │   ├── boards.ts
-│   │   │   │   ├── carve.ts
-│   │   │   │   ├── cells.ts
-│   │   │   │   ├── fx.ts
-│   │   │   │   ├── mark.ts
-│   │   │   │   ├── nodes.ts
-│   │   │   │   ├── orbit.ts
-│   │   │   │   ├── paint.ts
-│   │   │   │   ├── reconcile.ts
-│   │   │   │   ├── theme.ts
-│   │   │   │   └── wallpaper.ts
-│   │   │   ├── shell
-│   │   │   │   ├── chrome.ts
-│   │   │   │   ├── effects.ts
-│   │   │   │   └── mount.ts
 │   │   │   ├── views
 │   │   │   │   ├── creativity
 │   │   │   │   │   ├── notes.tsx
@@ -237,35 +223,29 @@ mrlyprod
 │   │   │   │   │   ├── matrix.tsx
 │   │   │   │   │   ├── sleep.tsx
 │   │   │   │   │   └── solids.tsx
-│   │   │   │   └── index.ts
+│   │   │   │   └── index.tsx
+│   │   │   ├── App.tsx
+│   │   │   ├── ask.tsx
+│   │   │   ├── boot.ts
 │   │   │   ├── builders.ts
-│   │   │   ├── cells.tsx
-│   │   │   ├── glyphs.ts
-│   │   │   ├── icons.ts
+│   │   │   ├── effects.ts
+│   │   │   ├── eyes.css
 │   │   │   ├── journal.ts
-│   │   │   ├── jsx.ts
 │   │   │   ├── kernel.ts
-│   │   │   ├── main.ts
+│   │   │   ├── main.tsx
 │   │   │   ├── palette.ts
 │   │   │   ├── pwa.ts
 │   │   │   ├── reads.ts
 │   │   │   ├── roller.ts
 │   │   │   ├── router.ts
-│   │   │   ├── sound.ts
+│   │   │   ├── send.ts
+│   │   │   ├── splash.ts
 │   │   │   └── types.ts
-│   │   ├── styles
-│   │   │   ├── boxes.css
-│   │   │   ├── fonts.css
-│   │   │   ├── forms.css
-│   │   │   ├── motion.css
-│   │   │   ├── shell.css
-│   │   │   └── tokens.css
 │   │   ├── index.html
-│   │   ├── index.ts
-│   │   ├── mrly.css
 │   │   ├── package.json
 │   │   ├── tsconfig.json
-│   │   └── verify.ts
+│   │   ├── verify.ts
+│   │   └── vite.config.ts
 │   └── README.md
 ├── files
 │   ├── brand
@@ -880,7 +860,6 @@ mrlyprod
 ├── STATS.md
 ├── TREE.md
 ├── bun.lock
-├── bunfig.toml
 ├── clone.sh
 ├── git.py
 ├── package.json

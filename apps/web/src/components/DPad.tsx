@@ -1,14 +1,23 @@
-import { call } from "../builders.ts"
-import { h } from "../jsx.ts"
-import type { Node } from "../types.ts"
+import { Button, Grid } from "mrlyui"
+import { call } from "../builders"
+import { useSend } from "../send"
 
-export function DPad({ app, verb }: { app: string; verb: string }): Node {
+const DIRS = [
+  ["left", "←"],
+  ["up", "↑"],
+  ["down", "↓"],
+  ["right", "→"],
+]
+
+export function DPad({ app, verb }: { app: string; verb: string }) {
+  const send = useSend()
   return (
-    <grid key="dpad" cols={4}>
-      <button key="left" call={call(`${app}.${verb}`, { dir: "left" })}>←</button>
-      <button key="up" call={call(`${app}.${verb}`, { dir: "up" })}>↑</button>
-      <button key="down" call={call(`${app}.${verb}`, { dir: "down" })}>↓</button>
-      <button key="right" call={call(`${app}.${verb}`, { dir: "right" })}>→</button>
-    </grid>
+    <Grid cols={4}>
+      {DIRS.map(([dir, glyph]) => (
+        <Button key={dir} onClick={() => send(call(`${app}.${verb}`, { dir }))}>
+          {glyph}
+        </Button>
+      ))}
+    </Grid>
   )
 }

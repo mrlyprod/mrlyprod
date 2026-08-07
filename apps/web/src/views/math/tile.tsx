@@ -1,13 +1,28 @@
-import { call, setter } from "../../builders.ts"
-import { Board } from "../../components/Board.tsx"
-import { Section } from "../../components/Section.tsx"
-import { Shot } from "../../components/Shot.tsx"
-import { h } from "../../jsx.ts"
-import type { Cells, Node, Send } from "../../types.ts"
+import {
+  Box,
+  Card,
+  Button,
+  Choice,
+  Cluster,
+  Field,
+  Grid,
+  Input,
+  Section,
+  Stack,
+  Toggle,
+} from "mrlyui"
+import { call, setter } from "../../builders"
+import { opts } from "../../components/options"
+import { Shot } from "../../components/Shot"
+import { Cells } from "../../eyes/Cells"
+import { useSend } from "../../send"
+import type { Cells as Deck } from "../../types"
 
 type Source = { design?: string; code?: number }
 
 type Paint = { edition: string; scheme: string; target: string; primary: string }
+
+type Slab = { id: number; name: string; value: unknown; cells: Deck }
 
 type State = {
   tile: {
@@ -41,223 +56,207 @@ type State = {
     counts: number[]
     factors: number[]
   }
-  thumbs: { level: number; cells: Cells }[]
-  library: { id: number; name: string; value: unknown; cells: Cells }[]
-  cells: Cells
+  thumbs: { level: number; cells: Deck }[]
+  library: Slab[]
+  cells: Deck
 }
 
-const set = setter("tile")
+const strings = (ns: number[]): string[] => ns.map(String)
 
-const slotted = (key: string, slot: number) => call("tile.set", { key, slot })
-
-const strings = (ns: number[]) => ns.map(String)
-
-const label = (source: Source) =>
+const naming = (source: Source): string =>
   source.design ?? `mrly_${String(source.code ?? 0).padStart(2, "0")}`
 
-function slotCard(s: State, i: number): Node {
-  const tile = s.tile
-  const thumbs = tile.group === "Fractal" && i === 0 && s.thumbs.length > 0
+// SLOT
+
+function Slot({ s, i }: { s: State; i: number }) {
+  const send = useSend()
+  const t = s.tile
+  const pick = (key: string, value: unknown) => send(call("tile.set", { key, slot: i, value }))
+  const thumbs = t.group === "Fractal" && i === 0 && s.thumbs.length > 0
   return (
-    <Section keyName={`slot-${i}`} label={`slot ${i}`}>
-      <choice
-        key={`slot-${i}-source`}
-        value={label(tile.sources[i] ?? {})}
-        options={s.options.sources.map(o => o.label)}
-        call={slotted("source", i)}
-        arg="value"
+    <Section label={`slot ${i + 1}`}>
+      <Choice
         label="source"
+        value={naming(t.sources[i] ?? {})}
+        options={s.options.sources}
+        onChange={v => pick("source", v)}
       />
-      {tile.group === "Magic" && (
-        <choice
-          key={`slot-${i}-number`}
-          value={String(tile.numbers[i])}
-          options={strings(s.options.numbers[i] ?? [])}
-          call={slotted("number", i)}
-          arg="value"
+      {t.group === "Magic" && (
+        <Choice
           label="number"
+          value={String(t.numbers[i] ?? 0)}
+          options={opts(strings(s.options.numbers[i] ?? []))}
+          onChange={v => pick("number", v)}
         />
       )}
       {thumbs && (
-        <grid key={`slot-${i}-thumbs`} cols={3}>
+        <Grid cols={3}>
           {s.thumbs.map(thumb => (
-            <canvas
-              key={`thumb-${thumb.level}`}
-              handle="tile"
-              cells={{ app: "tile", ...thumb.cells }}
-              tap={call("tile.set", { key: "level", slot: 0, value: thumb.level })}
-            />
+            <Card
+              key={thumb.level}
+              active={t.levels[0] === thumb.level}
+              onClick={() => send(call("tile.set", { key: "level", slot: 0, value: thumb.level }))}
+            >
+              <Cells app="tile" cells={thumb.cells} handle={`thumb-${thumb.level}`} />
+            </Card>
           ))}
-        </grid>
+        </Grid>
       )}
-      {!thumbs && tile.group === "Fractal" && i === 0 && (
-        <choice
-          key={`slot-${i}-level`}
-          value={String(tile.levels[i])}
-          options={strings(s.options.levels)}
-          call={slotted("level", i)}
-          arg="value"
+      {!thumbs && t.group === "Fractal" && i === 0 && (
+        <Choice
           label="level"
+          value={String(t.levels[i] ?? 0)}
+          options={opts(strings(s.options.levels))}
+          onChange={v => pick("level", v)}
         />
       )}
-      <choice
-        key={`slot-${i}-rotation`}
-        value={String(tile.rotations[i])}
-        options={strings(s.options.rotations)}
-        call={slotted("rotation", i)}
-        arg="value"
+      <Choice
         label="rotation"
         mode="row"
+        value={String(t.rotations[i] ?? 0)}
+        options={opts(strings(s.options.rotations))}
+        onChange={v => pick("rotation", v)}
       />
-      <toggle
-        key={`slot-${i}-anti`}
-        on={tile.anti[i] ?? false}
-        call={slotted("anti", i)}
-        arg="value"
-        label="anti"
-      />
+      <Field label="anti">
+        <Toggle value={t.anti[i] ?? false} onChange={v => pick("anti", v)} />
+      </Field>
     </Section>
   )
 }
 
-export function tile(state: unknown, _send: Send): Node {
+// TILE
+
+export function Tile({ state }: { state: unknown }) {
   const s = state as State
+  const send = useSend()
+  const turn = setter("tile")
   const t = s.tile
   const paint = s.paint
   return (
-    <stack key="tile">
-      <card key="preview">
-        <Board app="tile" cells={s.cells} />
-      </card>
-      <Section keyName="shape" label="shape">
-        <choice
-          key="group"
-          value={t.group}
-          options={s.options.groups}
-          call={set("group")}
-          arg="value"
+    <Stack>
+      <Box>
+        <Cells app="tile" cells={s.cells} handle="tile" />
+      </Box>
+      <Box>
+        <Cluster>
+          <Button onClick={() => send(call("tile.roll"))}>roll</Button>
+          <Button onClick={() => send(call("tile.reset"))}>reset</Button>
+          <Button onClick={() => send(call("tile.save"))}>save</Button>
+          <Shot />
+        </Cluster>
+      </Box>
+      <Section label="shape">
+        <Choice
           label="group"
+          value={t.group}
+          options={opts(s.options.groups)}
+          onChange={v => send(turn("group", v))}
         />
         {s.options.counts.length > 0 && (
-          <choice
-            key="count"
-            value={String(t.numbers.length)}
-            options={strings(s.options.counts)}
-            call={set("count")}
-            arg="value"
+          <Choice
             label="count"
+            value={String(t.numbers.length)}
+            options={opts(strings(s.options.counts))}
+            onChange={v => send(turn("count", v))}
           />
         )}
         {s.options.factors.length > 0 && (
-          <choice
-            key="factor"
-            value={String(t.factor)}
-            options={strings(s.options.factors)}
-            call={set("factor")}
-            arg="value"
+          <Choice
             label="factor"
+            value={String(t.factor)}
+            options={opts(strings(s.options.factors))}
+            onChange={v => send(turn("factor", v))}
           />
         )}
         {t.group !== "Magic" && (
-          <choice
-            key="number"
-            value={String(t.numbers[0])}
-            options={strings(s.options.numbers[0] ?? [])}
-            call={set("number")}
-            arg="value"
+          <Choice
             label="number"
+            value={String(t.numbers[0] ?? 0)}
+            options={opts(strings(s.options.numbers[0] ?? []))}
+            onChange={v => send(turn("number", v))}
           />
         )}
       </Section>
-      {t.sources.map((_, i) => slotCard(s, i))}
-      <Section keyName="tile" label="tile">
-        <toggle key="invert" on={t.invert} call={set("invert")} arg="value" label="invert" />
-        {t.group === "Special" && (
-          <toggle key="flip" on={t.flip} call={set("flip")} arg="value" label="flip" />
-        )}
-        <choice
-          key="parity"
-          value={s.parity}
-          options={s.options.parities}
-          call={set("parity")}
-          arg="value"
-          label="parity"
-          mode="row"
-        />
-        <choice
-          key="catalog"
-          value={s.catalog}
-          options={s.options.catalogs}
-          call={set("catalog")}
-          arg="value"
+      {t.sources.map((_, i) => (
+        <Slot key={i} s={s} i={i} />
+      ))}
+      <Section label="tile">
+        <Choice
           label="catalog"
           mode="row"
+          value={s.catalog}
+          options={opts(s.options.catalogs)}
+          onChange={v => send(turn("catalog", v))}
         />
-        <choice
-          key="budget"
-          value={String(s.budget)}
-          options={strings(s.options.budgets)}
-          call={set("budget")}
-          arg="value"
+        <Choice
+          label="parity"
+          mode="row"
+          value={s.parity}
+          options={opts(s.options.parities)}
+          onChange={v => send(turn("parity", v))}
+        />
+        <Choice
           label="budget"
           mode="row"
+          value={String(s.budget)}
+          options={opts(strings(s.options.budgets))}
+          onChange={v => send(turn("budget", v))}
         />
+        <Field label="invert">
+          <Toggle value={t.invert} onChange={v => send(turn("invert", v))} />
+        </Field>
+        {t.group === "Special" && (
+          <Field label="flip">
+            <Toggle value={t.flip} onChange={v => send(turn("flip", v))} />
+          </Field>
+        )}
       </Section>
-      <Section keyName="paint" label="paint">
-        <choice
-          key="edition"
-          value={paint?.edition ?? ""}
-          options={s.options.editions}
-          call={set("edition")}
-          arg="value"
+      <Section label="paint">
+        <Choice
           label="edition"
+          value={paint?.edition ?? ""}
+          options={opts(s.options.editions)}
+          onChange={v => send(turn("edition", v))}
         />
-        <choice
-          key="scheme"
-          value={paint?.scheme ?? ""}
-          options={s.options.schemes}
-          call={set("scheme")}
-          arg="value"
+        <Choice
           label="scheme"
+          value={paint?.scheme ?? ""}
+          options={opts(s.options.schemes)}
+          onChange={v => send(turn("scheme", v))}
         />
-        <choice
-          key="target"
-          value={paint?.target ?? ""}
-          options={s.options.targets}
-          call={set("target")}
-          arg="value"
+        <Choice
           label="target"
           mode="row"
+          value={paint?.target ?? ""}
+          options={opts(s.options.targets)}
+          onChange={v => send(turn("target", v))}
         />
-        <choice
-          key="primary"
-          value={paint?.primary ?? ""}
-          options={s.options.primaries}
-          call={set("primary")}
-          arg="value"
+        <Choice
           label="primary"
           mode="row"
+          value={paint?.primary ?? ""}
+          options={opts(s.options.primaries)}
+          onChange={v => send(turn("primary", v))}
         />
-        <button key="repaint" call={call("tile.paint")}>{paint === null ? "paint" : "repaint"}</button>
-        {paint !== null && <button key="strip" call={call("tile.strip")}>strip</button>}
+        <Cluster>
+          <Button onClick={() => send(call("tile.paint"))}>{paint === null ? "paint" : "repaint"}</Button>
+          {paint !== null && <Button onClick={() => send(call("tile.strip"))}>strip</Button>}
+        </Cluster>
       </Section>
-      <card key="actions">
-        <button key="roll" call={call("tile.roll")}>roll</button>
-        <button key="reset" call={call("tile.reset")}>reset</button>
-        <button key="save" call={call("tile.save")}>save</button>
-        <Shot />
-      </card>
-      <Section keyName="library" label="library">
-        <grid key="entries" cols={3}>
-          {s.library.map(entry => [
-            <cell key={`thumb-${entry.id}`}>
-              <canvas key="canvas" handle={`lib-${entry.id}`} cells={{ app: "tile", ...entry.cells }} />
-            </cell>,
-            <field key={`name-${entry.id}`} value={entry.name} live={false} call={call("tile.name", { id: entry.id })} arg="name" />,
-            <button key={`drop-${entry.id}`} call={call("tile.drop", { id: entry.id })}>×</button>,
-          ])}
-        </grid>
+      <Section label="library">
+        <Grid cols={3}>
+          {s.library.map(entry => (
+            <Box key={entry.id}>
+              <Cells app="tile" cells={entry.cells} handle={`lib-${entry.id}`} />
+              <Input
+                value={entry.name}
+                onChange={v => send(call("tile.name", { id: entry.id, name: v }))}
+              />
+              <Button onClick={() => send(call("tile.drop", { id: entry.id }))}>drop</Button>
+            </Box>
+          ))}
+        </Grid>
       </Section>
-    </stack>
+    </Stack>
   )
 }

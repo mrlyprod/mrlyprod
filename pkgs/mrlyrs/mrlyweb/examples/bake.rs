@@ -2,13 +2,17 @@ use mrlycore::json::Map;
 use mrlycore::{json, Json};
 use std::fs;
 
-fn write(name: &str, value: &Json) {
-    let dir = format!("{}/../../../apps/web/src/gen", env!("CARGO_MANIFEST_DIR"));
+fn write(home: &str, name: &str, value: &Json) {
+    let dir = format!("{}/../../../{home}", env!("CARGO_MANIFEST_DIR"));
     fs::create_dir_all(&dir).unwrap();
     let path = format!("{dir}/{name}.json");
     fs::write(&path, value.to_string() + "\n").unwrap();
     println!("wrote {path}");
 }
+
+const WEB: &str = "apps/web/src/gen";
+
+const UI: &str = "pkgs/mrlyui/src/gen";
 
 fn palette() -> Json {
     use mrlycore::colors::{BOARD_DARK, BOARD_LIGHT, NAMES, PALETTE};
@@ -41,8 +45,8 @@ fn mark() -> Json {
 }
 
 fn main() {
-    write("palette", &palette());
-    write("shaders", &shaders());
-    write("mark", &mark());
-    write("skins", &mrlyui::skin::corpus());
+    write(WEB, "palette", &palette());
+    write(WEB, "shaders", &shaders());
+    write(WEB, "skins", &mrlyui::skin::corpus());
+    write(UI, "mark", &mark());
 }

@@ -1,13 +1,20 @@
-import { GameOver } from "../../components/GameOver.tsx"
-import { Section } from "../../components/Section.tsx"
-import { Meter } from "../../components/Meter.tsx"
-import { Shot } from "../../components/Shot.tsx"
-import { Board } from "../../components/Board.tsx"
-import { DPad } from "../../components/DPad.tsx"
-import { DESIGNS_SOLID as DESIGNS } from "../../components/options.ts"
-import { set } from "../../builders.ts"
-import { h } from "../../jsx.ts"
-import type { Cells, Node, Send } from "../../types.ts"
+import {
+  Box,
+  Caption,
+  Choice,
+  Field,
+  Section,
+  Slider,
+  Stack,
+} from "mrlyui"
+import { set } from "../../builders"
+import { DPad } from "../../components/DPad"
+import { GameOver } from "../../components/GameOver"
+import { DESIGNS_SOLID as DESIGNS, opts } from "../../components/options"
+import { Shot } from "../../components/Shot"
+import { Cells } from "../../eyes/Cells"
+import { useSend } from "../../send"
+import type { Cells as Deck } from "../../types"
 
 const MAPS = ["random", "0", "1", "2"]
 
@@ -23,32 +30,56 @@ type State = {
     speed: number
     design: string
   }
-  cells: Cells
+  cells: Deck
 }
 
-export function escape(state: unknown, _send: Send): Node {
+export function Escape({ state }: { state: unknown }) {
   const s = state as State
+  const send = useSend()
+  const done = s.escaped === true ? `escaped · ate ${s.score}` : `caught · level ${s.level}`
   return (
-    <stack key="escape">
-      <card key="board">
-        <Board app="escape" cells={s.cells} />
-      </card>
-      {s.over && <GameOver app="escape" emoji="👻" status={s.escaped ? `escaped · ate ${s.score}` : `caught · level ${s.level}`} />}
-      <card key="controls">
-        {!s.over && <DPad app="escape" verb="turn" />}
+    <Stack>
+      <Box>
+        <Caption>{`🚪 level ${s.level} · ate ${s.score}`}</Caption>
+        <Cells app="escape" cells={s.cells} />
+      </Box>
+      {s.over ? <GameOver app="escape" emoji={s.escaped === true ? "🚪" : "👻"} status={done} /> : null}
+      <Box>
+        {s.over ? null : <DPad app="escape" verb="turn" />}
         <Shot />
-      </card>
-      {!s.over && <Meter text={`level ${s.level} · ate ${s.score}`} />}
-      <Section keyName="rules" label="rules">
-        <choice key="map" value={s.settings.map} options={MAPS} call={set("escape", "map")} arg="value" label="map" mode="cycle" />
-        <range key="ghost_ratio" value={s.settings.ghost_ratio} min={1} max={4} call={set("escape", "ghost_ratio")} arg="value" step={1} label="ghosts" />
+      </Box>
+      <Section label="rules">
+        <Choice
+          label="map"
+          mode="cycle"
+          options={opts(MAPS)}
+          value={s.settings.map}
+          onChange={v => send(set("escape", "map", v))}
+        />
+        <Field label="ghosts">
+          <Slider
+            min={1}
+            max={4}
+            step={1}
+            value={s.settings.ghost_ratio}
+            onChange={v => send(set("escape", "ghost_ratio", v))}
+          />
+        </Field>
       </Section>
-      <Section keyName="speed" label="speed">
-        <range key="speed" value={s.settings.speed} min={1} max={4} call={set("escape", "speed")} arg="value" step={1} label="speed" />
+      <Section label="speed">
+        <Field label="speed">
+          <Slider min={1} max={4} step={1} value={s.settings.speed} onChange={v => send(set("escape", "speed", v))} />
+        </Field>
       </Section>
-      <Section keyName="look" label="look">
-        <choice key="design" value={s.settings.design} options={DESIGNS} call={set("escape", "design")} arg="value" label="design" mode="cycle" />
+      <Section label="look">
+        <Choice
+          label="design"
+          mode="cycle"
+          options={opts(DESIGNS)}
+          value={s.settings.design}
+          onChange={v => send(set("escape", "design", v))}
+        />
       </Section>
-    </stack>
+    </Stack>
   )
 }

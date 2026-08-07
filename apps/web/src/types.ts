@@ -48,26 +48,6 @@ export type Palette = { names: string[]; hex: Record<string, string>; canvas: { 
 
 export type Mark = { rows: number; cols: number; fps: number; frames: number[][] }
 
-export type Node =
-  | { kind: "Stack"; key?: string; children: Node[] }
-  | { kind: "Grid"; key?: string; cols: number; mode?: "snap"; children: Node[] }
-  | { kind: "Card"; key?: string; children: Node[] }
-  | { kind: "Pills"; key?: string; children: Node[] }
-  | { kind: "Text"; key?: string; text: string; role?: "title" | "label" | "note" | "body"; fx?: "scramble" }
-  | { kind: "Symbol"; key?: string; as: Sym["as"]; value: string }
-  | { kind: "Label"; key?: string; symbol?: Sym; text?: string; note?: string; mode: "row" | "stack" | "icon" | "text"; call?: Call; href?: string; fx?: "scramble" }
-  | { kind: "Image"; key?: string; src: string; alt: string }
-  | { kind: "Canvas"; key?: string; handle: string; rows?: number[][]; cells?: Cells & { app: string }; palette?: string[]; tris?: number[]; shade?: Shade; tap?: Call; drag?: Call; turn?: Call; zoom?: Call; pan?: Call; grid?: [number, number] }
-  | { kind: "Button"; key?: string; label: string; call?: Call; active?: boolean; bg?: string; big?: boolean; press?: Call; lift?: Call }
-  | { kind: "Field"; key?: string; value: string; live: boolean; call: Call; arg: string; label?: string; hint?: string; icon?: string; clear?: boolean; enter?: Call }
-  | { kind: "Toggle"; key?: string; on: boolean; call: Call; arg: string; label?: string }
-  | { kind: "Choice"; key?: string; value: string; options: string[]; call: Call; arg: string; label?: string; mode?: "row" | "cycle" | "select" }
-  | { kind: "Range"; key?: string; value: number; min: number; max: number; step?: number; scale?: number; call: Call; arg: string; label?: string }
-  | { kind: "Overlay"; key?: string; child: Node; close?: Call }
-  | { kind: "Cell"; key?: string; child?: Node; call?: Call; on?: boolean; bg?: string }
-  | { kind: "Cells"; key?: string; rows: string[][] }
-  | { kind: "Mark"; key?: string; doodle?: string }
-
 export type View = {
   app: string
   params: Args
@@ -88,11 +68,11 @@ export type Observation = {
 
 export type Send = (call: Call, beat?: boolean) => void
 
+export type Slot = { state: unknown }
+
 export type Registry = {
   version: string
   apps: Manifest[]
   verbs: { app: string; verbs: Verb[] }[]
   nav: Verb[]
 }
-
-export type Held = HTMLElement & { __node?: Node; __committed?: string; __tint?: string }

@@ -1,8 +1,8 @@
-import { call, setter } from "../../builders.ts"
-import { library } from "../../components/library.tsx"
-import { Section } from "../../components/Section.tsx"
-import { h } from "../../jsx.ts"
-import type { Node, Send } from "../../types.ts"
+import { Button, Choice, Grid, Section, Setting, Slider, Stack, Toggle } from "mrlyui"
+import { call, set } from "../../builders"
+import { Library } from "../../components/Library"
+import { opts } from "../../components/options"
+import { useSend } from "../../send"
 
 const MODES = ["grid", "list"]
 
@@ -11,6 +11,8 @@ const FONTS = ["mono", "sans", "serif", "display", "mrly"]
 const EMOJIS = ["system", "noto"]
 
 const MATERIALS = ["solid", "glass"]
+
+const WALLPAPERS = ["color", "pattern"]
 
 const NOTES = ["random", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 
@@ -39,74 +41,104 @@ type State = {
   duration: number
 }
 
-const turn = setter("settings")
+const px = (n: number) => `${String(n)}px`
 
-export function settings(state: unknown, _send: Send): Node {
+const ms = (n: number) => `${String(n)}ms`
+
+export function Settings({ state }: { state: unknown }) {
   const s = state as State
+  const send = useSend()
+  const turn = (key: string, value: unknown) => send(set("settings", key, value))
   return (
-    <stack key="settings">
-      <Section keyName="launchpad" label="launchpad">
-        <choice key="launchpad" value={s.launchpad} options={MODES} call={turn("launchpad")} arg="value" mode="row" />
+    <Stack>
+      <Section label="mode">
+        <Grid cols={2}>
+          <Button active={!s.darkmode} onClick={() => turn("darkmode", false)}>
+            light
+          </Button>
+          <Button active={s.darkmode} onClick={() => turn("darkmode", true)}>
+            dark
+          </Button>
+        </Grid>
+        <Setting label="material" hint="the kernel keeps it, nothing paints it">
+          <Choice mode="row" options={opts(MATERIALS)} value={s.material} onChange={v => turn("material", v)} />
+        </Setting>
+        <Setting label="launchpad">
+          <Choice mode="row" options={opts(MODES)} value={s.launchpad} onChange={v => turn("launchpad", v)} />
+        </Setting>
       </Section>
-      <Section keyName="detail" label="detail">
-        <range key="detail" value={s.detail} min={32} max={160} step={1} call={turn("detail")} arg="value" label="detail" />
+      <Section label="accent">
+        <Library kind="colors" host="settings" name="color" current={s.color} />
       </Section>
-      <Section keyName="mode" label="mode">
-        <grid key="mode-options" cols={2}>
-          <button key="light" active={!s.darkmode} call={call("settings.set", { key: "darkmode", value: false })}>light</button>
-          <button key="dark" active={s.darkmode} call={call("settings.set", { key: "darkmode", value: true })}>dark</button>
-        </grid>
+      <Section label="background">
+        <Library kind="colors" host="settings" name="background" current={s.background} />
       </Section>
-      <Section keyName="accent" label="accent">
-        {library("colors", "settings", "color", s.color)}
+      <Section label="fill">
+        <Library kind="colors" host="settings" name="fill" current={s.fill} />
+        <Button wide active={s.fill === "random"} onClick={() => turn("fill", "random")}>
+          random
+        </Button>
       </Section>
-      <Section keyName="fill" label="fill">
-        {library("colors", "settings", "fill", s.fill)}
-        <button key="fill-random" call={call("settings.set", { key: "fill", value: "random" })}>random fill</button>
+      <Section label="type">
+        <Setting label="font">
+          <Choice options={opts(FONTS)} value={s.font} onChange={v => turn("font", v)} />
+        </Setting>
+        <Setting label="emoji">
+          <Choice mode="row" options={opts(EMOJIS)} value={s.emoji} onChange={v => turn("emoji", v)} />
+        </Setting>
       </Section>
-      <Section keyName="background" label="background">
-        {library("colors", "settings", "background", s.background)}
+      <Section label="measure">
+        <Setting label="scale">
+          <Slider min={3} max={6} step={1} value={s.scale} onChange={v => turn("scale", v)} format={px} />
+        </Setting>
+        <Setting label="radius">
+          <Slider min={0} max={4} step={1} value={s.radius} onChange={v => turn("radius", v)} />
+        </Setting>
+        <Setting label="width">
+          <Slider min={500} max={1500} step={250} value={s.width} onChange={v => turn("width", v)} format={px} />
+        </Setting>
+        <Setting label="pace">
+          <Slider min={0} max={400} step={50} value={s.pace} onChange={v => turn("pace", v)} format={ms} />
+        </Setting>
+        <Setting label="detail">
+          <Slider min={32} max={160} step={1} value={s.detail} onChange={v => turn("detail", v)} />
+        </Setting>
       </Section>
-      <Section keyName="material" label="material">
-        <choice key="material" value={s.material} options={MATERIALS} call={turn("material")} arg="value" mode="row" />
+      <Section label="wallpaper">
+        <Setting label="source">
+          <Choice mode="row" options={opts(WALLPAPERS)} value={s.wallpaper} onChange={v => turn("wallpaper", v)} />
+        </Setting>
+        <Setting label="seed">
+          <Slider min={0} max={999} step={1} value={s.seed} onChange={v => turn("seed", v)} />
+        </Setting>
       </Section>
-      <Section keyName="pattern" label="pattern">
-        <grid key="pattern-options" cols={4}>
-          <button key="none">none</button>
-          <button key="emoji">emoji</button>
-          <button key="tile">tile</button>
-          <button key="glyph">glyph</button>
-        </grid>
+      <Section label="sound">
+        <Setting label="sound">
+          <Toggle value={s.sound} onChange={v => turn("sound", v)} />
+        </Setting>
+        <Setting label="haptics">
+          <Toggle value={s.haptics} onChange={v => turn("haptics", v)} />
+        </Setting>
+        <Setting label="note">
+          <Choice options={opts(NOTES)} value={s.note} onChange={v => turn("note", v)} />
+        </Setting>
+        <Setting label="wave">
+          <Choice mode="row" options={opts(WAVES)} value={s.wave} onChange={v => turn("wave", v)} />
+        </Setting>
+        <Setting label="duration">
+          <Slider min={50} max={1000} step={50} value={s.duration} onChange={v => turn("duration", v)} format={ms} />
+        </Setting>
       </Section>
-      <Section keyName="fonts" label="fonts">
-        <choice key="font" value={s.font} options={FONTS} call={turn("font")} arg="value" mode="row" />
+      <Section label="session">
+        <Grid cols={3}>
+          <Button onClick={() => send(call("journal.export"))}>export</Button>
+          <Button onClick={() => send(call("journal.import"))}>import</Button>
+          <Button onClick={() => send(call("journal.reset"))}>reset</Button>
+        </Grid>
+        <Button wide onClick={() => send(call("device.install"))}>
+          install
+        </Button>
       </Section>
-      <Section keyName="emojis" label="emojis">
-        <choice key="emoji" value={s.emoji} options={EMOJIS} call={turn("emoji")} arg="value" mode="row" />
-      </Section>
-      <Section keyName="measure" label="measure">
-        <range key="scale" value={s.scale} min={3} max={6} call={turn("scale")} arg="value" step={1} label="scale" />
-        <range key="radius" value={s.radius} min={0} max={4} call={turn("radius")} arg="value" step={1} label="radius" />
-        <range key="width" value={s.width} min={500} max={1500} call={turn("width")} arg="value" step={250} label="width" />
-        <range key="pace" value={s.pace} min={0} max={400} call={turn("pace")} arg="value" step={50} label="pace" />
-      </Section>
-      <Section keyName="sound" label="sound">
-        <toggle key="sound" on={s.sound} call={turn("sound")} arg="value" label="sound" />
-        <choice key="note" value={s.note} options={NOTES} call={turn("note")} arg="value" label="note" />
-        <choice key="wave" value={s.wave} options={WAVES} call={turn("wave")} arg="value" mode="row" />
-        <range key="duration" value={s.duration} min={50} max={1000} call={turn("duration")} arg="value" step={50} label="duration" />
-        <toggle key="haptics" on={s.haptics} call={turn("haptics")} arg="value" label="haptics" />
-      </Section>
-      <Section keyName="session" label="session">
-        <grid key="session-tabs" cols={3}>
-          <button key="export" call={call("journal.export")}>export</button>
-          <button key="import" call={call("journal.import")}>import</button>
-          <button key="reset" call={call("journal.reset")}>reset</button>
-        </grid>
-        <grid key="device-tabs" cols={1}>
-          <button key="install" call={call("device.install")}>install</button>
-        </grid>
-      </Section>
-    </stack>
+    </Stack>
   )
 }

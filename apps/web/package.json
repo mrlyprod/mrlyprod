@@ -1,17 +1,25 @@
 {
   "name": "web",
-  "module": "index.ts",
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun run index.ts",
+    "dev": "bun x --bun vite",
+    "site": "bun x --bun vite build",
+    "preview": "bun run site && bun x --bun vite preview",
     "verify": "bun verify.ts",
     "check": "tsc --noEmit"
   },
   "dependencies": {
-    "mrlygpu": "workspace:*"
+    "mrlygpu": "workspace:*",
+    "mrlyui": "workspace:*",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "@types/bun": "^1.3.14"
+    "@types/bun": "^1.3.14",
+    "@types/react": "^19.2.5",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "vite": "^8.0.16"
   }
 }

@@ -1,4 +1,4 @@
-import type { Call } from "./types.ts"
+import type { Call } from "./types"
 
 const DB = "mrly"
 const STORE = "journals"

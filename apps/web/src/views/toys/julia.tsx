@@ -1,7 +1,11 @@
-import { setter } from "../../builders.ts"
-import { fractalPanel, shadeBoard } from "../../components/fractal.tsx"
-import { h } from "../../jsx.ts"
-import type { Node, Send, Shade } from "../../types.ts"
+import { Choice, Field, Section, Slider, Stack } from "mrlyui"
+import { setter } from "../../builders"
+import { Fractal, Panel } from "../../components/Fractal"
+import { opts } from "../../components/options"
+import { useSend } from "../../send"
+import type { Shade } from "../../types"
+
+const FEMTO = 1e15
 
 const PRESETS = [
   "-0.4+0.6i",
@@ -34,21 +38,42 @@ type State = {
   shade?: Shade
 }
 
-const turn = setter("julia")
-
-export function julia(state: unknown, _send: Send): Node {
+export function Julia({ state }: { state: unknown }) {
   const s = state as State
+  const send = useSend()
+  const turn = setter("julia")
   return (
-    <stack key="julia">
-      <card key="board">
-        {shadeBoard("julia", s.shade, [s.settings.width, s.settings.height], s.steps)}
-      </card>
-      <card key="seed">
-        <choice key="preset" value={s.settings.preset} options={PRESETS} call={turn("preset")} arg="value" label="preset" />
-        <range key="cre" value={s.settings.cre} min={-2e15} max={2e15} step={1e13} scale={1e15} call={turn("cre")} arg="value" label="cre" />
-        <range key="cim" value={s.settings.cim} min={-2e15} max={2e15} step={1e13} scale={1e15} call={turn("cim")} arg="value" label="cim" />
-      </card>
-      {fractalPanel(turn, s.settings)}
-    </stack>
+    <Stack>
+      <Fractal app="julia" shade={s.shade} grid={[s.settings.width, s.settings.height]} steps={s.steps} />
+      <Section label="seed">
+        <Choice
+          label="preset"
+          value={s.settings.preset}
+          options={opts(PRESETS)}
+          onChange={v => send(turn("preset", v))}
+        />
+        <Field label="cre">
+          <Slider
+            min={-2}
+            max={2}
+            step={0.01}
+            value={s.settings.cre / FEMTO}
+            format={v => v.toFixed(2)}
+            onChange={v => send(turn("cre", Math.round(v * FEMTO)))}
+          />
+        </Field>
+        <Field label="cim">
+          <Slider
+            min={-2}
+            max={2}
+            step={0.01}
+            value={s.settings.cim / FEMTO}
+            format={v => v.toFixed(2)}
+            onChange={v => send(turn("cim", Math.round(v * FEMTO)))}
+          />
+        </Field>
+      </Section>
+      <Panel app="julia" dials={s.settings} />
+    </Stack>
   )
 }

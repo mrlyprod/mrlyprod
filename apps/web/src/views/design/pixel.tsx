@@ -1,41 +1,68 @@
-import { call, setter } from "../../builders.ts"
-import { Board } from "../../components/Board.tsx"
-import { Shot } from "../../components/Shot.tsx"
-import { h } from "../../jsx.ts"
-import type { Cells, Node, Send } from "../../types.ts"
+import {
+  Box,
+  Button,
+  Caption,
+  Cluster,
+  Field,
+  Section,
+  Slider,
+  Stack,
+} from "mrlyui"
+import { call, set } from "../../builders"
+import { Shot } from "../../components/Shot"
+import { Cells } from "../../eyes/Cells"
+import { useSend } from "../../send"
+import type { Cells as Deck } from "../../types"
 
 type State = {
   steps: number
   painted: number
   settings: { width: number; height: number }
-  cells: Cells
+  cells: Deck
 }
 
-const turn = setter("pixel")
-
-export function pixel(state: unknown, _send: Send): Node {
+export function Pixel({ state }: { state: unknown }) {
   const s = state as State
+  const send = useSend()
   return (
-    <stack key="pixel">
-      <card key="board">
-        <Board
+    <Stack>
+      <Box>
+        <Cells
           app="pixel"
           cells={s.cells}
-          drag={call("pixel.stroke")}
           grid={[s.settings.width, s.settings.height]}
+          handle="pixel"
+          onDrag={points => send(call("pixel.stroke", { points }))}
         />
-      </card>
-      <card key="controls">
-        <button key="clear" call={call("pixel.clear")}>clear</button>
-        <Shot />
-      </card>
-      <card key="meter">
-        <text key="meter" role="note">{`painted ${s.painted} · strokes ${s.steps}`}</text>
-      </card>
-      <card key="settings">
-        <range key="width" value={s.settings.width} min={4} max={64} step={1} call={turn("width")} arg="value" label="width" />
-        <range key="height" value={s.settings.height} min={4} max={64} step={1} call={turn("height")} arg="value" label="height" />
-      </card>
-    </stack>
+      </Box>
+      <Box>
+        <Cluster>
+          <Button onClick={() => send(call("pixel.clear"))}>clear</Button>
+          <Button onClick={() => send(call("pixel.reset"))}>new ink</Button>
+          <Shot />
+        </Cluster>
+        <Caption>{`painted ${s.painted} · strokes ${s.steps}`}</Caption>
+      </Box>
+      <Section label="canvas">
+        <Field label="width">
+          <Slider
+            min={4}
+            max={64}
+            step={1}
+            value={s.settings.width}
+            onChange={v => send(set("pixel", "width", v))}
+          />
+        </Field>
+        <Field label="height">
+          <Slider
+            min={4}
+            max={64}
+            step={1}
+            value={s.settings.height}
+            onChange={v => send(set("pixel", "height", v))}
+          />
+        </Field>
+      </Section>
+    </Stack>
   )
 }

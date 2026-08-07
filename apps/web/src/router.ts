@@ -1,4 +1,4 @@
-import type { Call, Observation } from "./types.ts"
+import type { Call, Observation } from "./types"
 
 type Handler = (call: Call) => void
 type Observer = (call: Call, obs: Observation) => void

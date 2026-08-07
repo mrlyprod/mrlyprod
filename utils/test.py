@@ -50,7 +50,7 @@ def test(loud=False, record=False):
     sites = ts or touches(paths, "apps/git/", "pkgs/mrlyui", "pkgs/mrlygpu")
     net = ts or touches(paths, "apps/net/", "pkgs/mrlyui")
     ui = ts or touches(paths, "pkgs/mrlyui")
-    web = ts or touches(paths, "apps/web")
+    web = ts or touches(paths, "apps/web", "pkgs/mrlyui")
     print("mrlytest")
     if not run("fmt", ["cargo", "fmt"], loud):
         return False
@@ -110,6 +110,7 @@ def test(loud=False, record=False):
         steps = [
             ("tsc web", ["bun", "run", "--cwd", "apps/web", "check"]),
             ("verify", ["bun", "run", "apps/web/verify.ts"]),
+            ("site web", ["bun", "run", "--cwd", "apps/web", "site"]),
         ]
         for label, cmd in steps:
             if not run(label, cmd, loud):

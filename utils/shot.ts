@@ -22,9 +22,9 @@ const vite = (port: number) => ["bun", "x", "--bun", "vite", "--port", String(po
 
 const SITES: Record<string, Site> = {
   web: {
-    port: 3000,
+    port: 5176,
     dir: "apps/web",
-    cmd: ["bun", "run", "index.ts"],
+    cmd: vite(5176),
     settle: 3000,
     enter: true,
     routes: () =>

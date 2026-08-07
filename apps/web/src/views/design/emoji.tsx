@@ -1,31 +1,52 @@
-import { call } from "../../builders.ts"
-import { h } from "../../jsx.ts"
-import type { Node, Send } from "../../types.ts"
+import {
+  Box,
+  Button,
+  Caption,
+  Choice,
+  Emoji,
+  Grid,
+  Section,
+  Stack,
+} from "mrlyui"
+import { call } from "../../builders"
+import { opts } from "../../components/options"
+import { useSend } from "../../send"
 
 type State = { category: string; categories: string[]; grid: string[]; library: string[] }
 
-export function emoji(state: unknown, _send: Send): Node {
+export function Emojis({ state }: { state: unknown }) {
   const s = state as State
+  const send = useSend()
   return (
-    <stack key="emoji">
-      <card key="cats">
-        <choice key="category" value={s.category} options={s.categories} call={call("emoji.set", { key: "category" })} arg="value" mode="row" />
-      </card>
-      <card key="grid">
-        <grid key="emojis" cols={8}>
-          {s.grid.map(value => (
-            <button key={`e-${value}`} call={call("emoji.keep", { value })}>{value}</button>
+    <Stack>
+      <Box>
+        <Choice
+          label="category"
+          options={opts(s.categories)}
+          value={s.category}
+          onChange={value => send(call("emoji.set", { key: "category", value }))}
+        />
+        <Caption>tap to keep</Caption>
+      </Box>
+      <Section label={s.category}>
+        <Grid cols={8}>
+          {s.grid.map(glyph => (
+            <Button key={glyph} onClick={() => send(call("emoji.keep", { value: glyph }))}>
+              <Emoji glyph={glyph} label={glyph} />
+            </Button>
           ))}
-        </grid>
-      </card>
-      <card key="library">
-        <text key="drop-hint" role="note">tap to drop</text>
-        <grid key="lib" cols={8}>
-          {s.library.map(value => (
-            <button key={`lib-${value}`} call={call("emoji.drop", { value })}>{value}</button>
+        </Grid>
+      </Section>
+      <Section label="library">
+        <Caption>tap to drop</Caption>
+        <Grid cols={8}>
+          {s.library.map(glyph => (
+            <Button key={glyph} onClick={() => send(call("emoji.drop", { value: glyph }))}>
+              <Emoji glyph={glyph} label={glyph} />
+            </Button>
           ))}
-        </grid>
-      </card>
-    </stack>
+        </Grid>
+      </Section>
+    </Stack>
   )
 }

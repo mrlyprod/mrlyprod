@@ -1,40 +1,83 @@
-import { call, raster } from "../../builders.ts"
-import { h } from "../../jsx.ts"
-import type { Node, Raster, Send } from "../../types.ts"
+import {
+  Box,
+  Button,
+  Caption,
+  Cluster,
+  Field,
+  GraphemeInput,
+  Grid,
+  Section,
+  Stack,
+  Symbol,
+  Title,
+} from "mrlyui"
+import { call } from "../../builders"
+import { Bits } from "../../eyes/Bits"
+import { useSend } from "../../send"
+import type { Raster } from "../../types"
 
-type State = { char: string; name: string; index: number; total: number; revealing: boolean; glyph: Raster; library: string[] }
+type State = {
+  char: string
+  name: string
+  index: number
+  total: number
+  revealing: boolean
+  glyph: Raster
+  library: string[]
+}
 
 const FORMATS = ["json", "ttf", "woff", "woff2"]
 
-export function font(state: unknown, _send: Send): Node {
+export function Font({ state }: { state: unknown }) {
   const s = state as State
+  const send = useSend()
+  const rows = s.glyph.rows.map(row => row.map(cell => (cell === 0 ? 0 : 255)))
+  const pick = (char: string) => {
+    if (char !== "") send(call("font.pick", { char }))
+  }
   return (
-    <stack key="font">
-      <card key="detail">
-        {raster("glyph", "font", s.glyph)}
-        <text key="char" role="title">{s.char}</text>
-        <text key="facts" role="note">{`${s.name} · ${s.glyph.width}x${s.glyph.height} · ${s.index + 1}/${s.total}`}</text>
-      </card>
-      <card key="browse">
-        <button key="prev" call={call("font.page", { dir: "prev" })}>←</button>
-        <button key="next" call={call("font.page", { dir: "next" })}>→</button>
-        <field key="pick" value="" live={false} call={call("font.pick")} arg="char" hint="char" />
-        <button key="scramble" call={call("font.scramble")}>scramble</button>
-        <button key="keep" call={call("font.keep")}>keep</button>
-      </card>
-      <card key="export">
-        {FORMATS.map(f => (
-          <button key={f} call={call("font.export", { format: f })}>{f}</button>
-        ))}
-      </card>
-      <card key="library">
-        <text key="drop-hint" role="note">tap to drop</text>
-        <grid key="lib" cols={8}>
-          {s.library.map(char => (
-            <button key={`lib-${char}`} call={call("font.drop", { char })}>{char}</button>
+    <Stack>
+      <Box>
+        <Bits rows={rows} handle="font" crisp />
+        <Title>{s.char}</Title>
+        <Caption>{`${s.name.toLowerCase()} · ${s.glyph.width}x${s.glyph.height} · ${s.index + 1} of ${s.total}`}</Caption>
+      </Box>
+      <Box>
+        <Cluster>
+          <Button onClick={() => send(call("font.page", { dir: "prev" }))}>
+            <Symbol name="chevron_left" />
+          </Button>
+          <Button onClick={() => send(call("font.page", { dir: "next" }))}>
+            <Symbol name="chevron_right" />
+          </Button>
+          <Button active={s.revealing} onClick={() => send(call("font.scramble"))}>
+            scramble
+          </Button>
+          <Button onClick={() => send(call("font.keep"))}>keep</Button>
+        </Cluster>
+        <Field label="jump" hint="type any glyph">
+          <GraphemeInput value={s.char} onChange={pick} />
+        </Field>
+      </Box>
+      <Section label="export">
+        <Grid cols={4}>
+          {FORMATS.map(format => (
+            <Button key={format} onClick={() => send(call("font.export", { format }))}>
+              {format}
+            </Button>
           ))}
-        </grid>
-      </card>
-    </stack>
+        </Grid>
+      </Section>
+      <Section label="library">
+        <Caption>tap to drop</Caption>
+        <Grid cols={8}>
+          {s.library.map(char => (
+            <Button key={char} onClick={() => send(call("font.drop", { char }))}>
+              {char}
+            </Button>
+          ))}
+        </Grid>
+      </Section>
+    </Stack>
   )
 }

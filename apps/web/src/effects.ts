@@ -1,11 +1,11 @@
-import { buzz, play, start, stop } from "../sound.ts"
-import type { Args, Effect, Send } from "../types.ts"
+import { sound } from "mrlyui"
+import type { Args, Effect, Send } from "./types"
 
 export function perform(effect: Effect, emit: Send): void {
   switch (effect.kind) {
     case "notify": {
       const data = effect.data as { title?: string; body?: string }
-      buzz([30, 50, 30])
+      sound.buzz([30, 50, 30])
       if ("Notification" in window && Notification.permission === "granted") {
         new Notification(data.title ?? "", { body: data.body ?? "" })
       }
@@ -15,9 +15,9 @@ export function perform(effect: Effect, emit: Send): void {
       const data = effect.data as { op?: string; id?: string; freq?: number; wave?: string; ms?: number; gain?: number }
       const hz = data.freq === undefined ? undefined : data.freq / 1000
       const level = data.gain === undefined ? undefined : data.gain / 100
-      if (data.op === "note" && hz !== undefined) play(hz, data.wave, data.ms, level)
-      else if (data.op === "start" && data.id !== undefined && hz !== undefined) start(data.id, hz, data.wave, level)
-      else if (data.op === "stop" && data.id !== undefined) stop(data.id)
+      if (data.op === "note" && hz !== undefined) sound.play(hz, data.wave, data.ms, level)
+      else if (data.op === "start" && data.id !== undefined && hz !== undefined) sound.start(data.id, hz, data.wave, level)
+      else if (data.op === "stop" && data.id !== undefined) sound.stop(data.id)
       break
     }
     case "copy": {

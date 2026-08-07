@@ -1,38 +1,27 @@
+import { useCallback, useEffect, useRef } from "react"
+import { Canvas } from "mrlyui"
+import type { Point } from "mrlyui"
 import paletteData from "../gen/palette.json"
-import skinsData from "../gen/skins.json"
-import type { Cells, Palette, Skins, Visual } from "../types.ts"
+import { visual } from "./skin"
+import { dark } from "./theme"
+import type { Cells as Deck, Palette, Pen, Visual } from "../types"
 
-type Fact = Cells & { app: string }
+type Fact = Deck & { app: string }
 
-const skins = skinsData as Skins
 const palette = paletteData as Palette
+
 const GRAIN = 8
+
 const STACK = `"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`
 
-const held = new WeakMap<HTMLCanvasElement, { fact: Fact; dark: boolean }>()
-const watcher =
-  typeof ResizeObserver === "undefined"
-    ? null
-    : new ResizeObserver(hits => {
-        for (const hit of hits) {
-          const surface = hit.target as HTMLCanvasElement
-          const kept = held.get(surface)
-          if (kept !== undefined) draw(surface, kept.fact, kept.dark)
-        }
-      })
+// PAINT
 
-export function crisp(surface: HTMLCanvasElement, fact: Fact, dark: boolean): void {
-  held.set(surface, { fact, dark })
-  watcher?.observe(surface)
-  draw(surface, fact, dark)
-}
-
-function pick(fact: Fact, choice: string | { pen: number } | undefined): string | undefined {
+function pick(fact: Fact, choice: string | Pen | undefined): string | undefined {
   if (choice === undefined) return undefined
   return typeof choice === "string" ? choice : fact.pens[choice.pen]
 }
 
-function draw(surface: HTMLCanvasElement, fact: Fact, dark: boolean): void {
+function draw(surface: HTMLCanvasElement, fact: Fact, night: boolean): void {
   const down = fact.ids.length
   const across = fact.ids[0]?.length ?? 0
   if (down === 0 || across === 0) return
@@ -45,10 +34,9 @@ function draw(surface: HTMLCanvasElement, fact: Fact, dark: boolean): void {
   if (surface.height !== height) surface.height = height
   const ctx = surface.getContext("2d")
   if (ctx === null) return
-  const board = dark ? palette.canvas.dark : palette.canvas.light
+  const board = night ? palette.canvas.dark : palette.canvas.light
   ctx.fillStyle = board
   ctx.fillRect(0, 0, width, height)
-  const looks = skins[fact.app]?.[fact.skin] ?? []
   const style = getComputedStyle(surface)
   const ink = style.color
   const family = style.getPropertyValue("--font-emoji").trim()
@@ -57,8 +45,7 @@ function draw(surface: HTMLCanvasElement, fact: Fact, dark: boolean): void {
   const ys = Array.from({ length: down + 1 }, (_, r) => Math.round((r * height) / down))
   for (let r = 0; r < down; r++) {
     for (let c = 0; c < across; c++) {
-      const v = looks[fact.ids[r]?.[c] ?? 0]
-      if (v === undefined) continue
+      const v = visual(fact.app, fact, fact.ids[r]?.[c] ?? 0)
       const x = xs[c] as number
       const y = ys[r] as number
       const w = (xs[c + 1] as number) - x
@@ -108,15 +95,7 @@ function cell(
   ctx.fillText(text, x + w / 2, y + h / 2)
 }
 
-function weave(
-  ctx: CanvasRenderingContext2D,
-  name: string,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  board: string,
-): boolean {
+function weave(ctx: CanvasRenderingContext2D, name: string, x: number, y: number, w: number, h: number, board: string): boolean {
   const uw = w / GRAIN
   const uh = h / GRAIN
   switch (name) {
@@ -148,15 +127,7 @@ function weave(
   return false
 }
 
-function blocks(
-  ctx: CanvasRenderingContext2D,
-  rows: number[][],
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  tint: string,
-): void {
+function blocks(ctx: CanvasRenderingContext2D, rows: number[][], x: number, y: number, w: number, h: number, tint: string): void {
   const down = rows.length
   const across = rows[0]?.length ?? 0
   if (down === 0 || across === 0) return
@@ -171,4 +142,56 @@ function blocks(
       ctx.fillRect(bx, by, bw, bh)
     }
   }
+}
+
+// CELLS
+
+export function Cells({ app, cells, grid, crisp = true, handle, className, onTap, onDrag }: {
+  app: string
+  cells: Deck
+  grid?: Point
+  crisp?: boolean
+  handle?: string
+  className?: string
+  onTap?: (x: number, y: number) => void
+  onDrag?: (points: Point[]) => void
+}) {
+  const own = useRef<HTMLCanvasElement | null>(null)
+  const night = dark()
+  const held = useRef<{ fact: Fact; night: boolean }>({ fact: { app, ...cells }, night })
+  held.current = { fact: { app, ...cells }, night }
+
+  const paint = useCallback((surface: HTMLCanvasElement) => {
+    draw(surface, held.current.fact, held.current.night)
+  }, [])
+
+  useEffect(() => {
+    const el = own.current
+    if (el === null || typeof ResizeObserver === "undefined") return
+    const watcher = new ResizeObserver(() => draw(el, held.current.fact, held.current.night))
+    watcher.observe(el)
+    return () => watcher.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const el = own.current
+    if (el === null || handle === undefined) return
+    el.dataset.handle = handle
+  }, [handle])
+
+  const sig = `${night}:${app}:${cells.skin}:${cells.design ?? ""}:${cells.pens.join(",")}:${cells.ids.map(row => row.join(",")).join(";")}`
+  const shape: Point = grid ?? [cells.ids[0]?.length ?? 0, cells.ids.length]
+
+  return (
+    <Canvas
+      ref={own}
+      grid={shape}
+      paint={paint}
+      sig={sig}
+      crisp={crisp}
+      className={className}
+      onTap={onTap}
+      onDrag={onDrag}
+    />
+  )
 }

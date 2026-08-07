@@ -1,24 +1,11 @@
+import { useCallback, useEffect, useRef } from "react"
+import { Canvas } from "mrlyui"
+
 const STRIDE = 10
 
-const held = new WeakMap<HTMLCanvasElement, number[]>()
-const watcher =
-  typeof ResizeObserver === "undefined"
-    ? null
-    : new ResizeObserver(hits => {
-        for (const hit of hits) {
-          const surface = hit.target as HTMLCanvasElement
-          const kept = held.get(surface)
-          if (kept !== undefined) draw(surface, kept)
-        }
-      })
+// DRAW
 
-export function carve(surface: HTMLCanvasElement, buf: number[]): void {
-  held.set(surface, buf)
-  watcher?.observe(surface)
-  draw(surface, buf)
-}
-
-function draw(surface: HTMLCanvasElement, buf: number[]): void {
+function carve(surface: HTMLCanvasElement, buf: number[]): void {
   if (buf.length <= 1) return
   const rect = surface.getBoundingClientRect()
   if (rect.width === 0 || rect.height === 0) return
@@ -64,4 +51,37 @@ function draw(surface: HTMLCanvasElement, buf: number[]): void {
     ctx.closePath()
     ctx.fill()
   }
+}
+
+// CARVE
+
+export function Carve({ tris, crisp = true, handle, className }: {
+  tris: number[]
+  crisp?: boolean
+  handle?: string
+  className?: string
+}) {
+  const own = useRef<HTMLCanvasElement | null>(null)
+  const held = useRef(tris)
+  held.current = tris
+
+  const paint = useCallback((surface: HTMLCanvasElement) => {
+    carve(surface, held.current)
+  }, [])
+
+  useEffect(() => {
+    const el = own.current
+    if (el === null || typeof ResizeObserver === "undefined") return
+    const watcher = new ResizeObserver(() => carve(el, held.current))
+    watcher.observe(el)
+    return () => watcher.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const el = own.current
+    if (el === null || handle === undefined) return
+    el.dataset.handle = handle
+  }, [handle])
+
+  return <Canvas ref={own} paint={paint} sig={tris.join(",")} crisp={crisp} className={className} />
 }

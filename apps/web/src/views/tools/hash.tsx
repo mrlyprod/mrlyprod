@@ -1,8 +1,21 @@
-import { call, setter } from "../../builders.ts"
-import { Board } from "../../components/Board.tsx"
-import { Shot } from "../../components/Shot.tsx"
-import { h } from "../../jsx.ts"
-import type { Cells, Node, Send } from "../../types.ts"
+import { useEffect, useState } from "react"
+import {
+  Box,
+  Button,
+  Caption,
+  Choice,
+  Field,
+  Grid,
+  Input,
+  Section,
+  Stack,
+} from "mrlyui"
+import { call, set } from "../../builders"
+import { opts } from "../../components/options"
+import { Shot } from "../../components/Shot"
+import { Cells } from "../../eyes/Cells"
+import { useSend } from "../../send"
+import type { Cells as Deck } from "../../types"
 
 const RULES = ["life", "maze", "replicator", "anneal"]
 
@@ -10,29 +23,45 @@ type State = {
   text: string
   hex: string
   rule: string
-  cells: Cells
+  cells: Deck
 }
 
-const turn = setter("hash")
-
-export function hash(state: unknown, _send: Send): Node {
+export function Hash({ state }: { state: unknown }) {
   const s = state as State
-  const hex = s.hex.length > 32 ? `${s.hex.slice(0, 32)}…` : s.hex
+  const send = useSend()
+  const [draft, setDraft] = useState(s.text)
+  useEffect(() => setDraft(s.text), [s.text])
+  const digest = () => {
+    if (draft.trim() !== "") send(call("hash.digest", { text: draft }))
+  }
   return (
-    <stack key="hash">
-      <card key="board">
-        <Board app="hash" cells={s.cells} />
-      </card>
-      <card key="digest">
-        <field key="text" value={s.text} live={false} call={call("hash.digest")} arg="text" label="text" />
-        <button key="go" call={call("hash.digest", { text: s.text })}>digest</button>
-        <choice key="rule" value={s.rule} options={RULES} call={turn("rule")} arg="value" label="rule" mode="row" />
-        <button key="reset" call={call("hash.reset")}>reset</button>
+    <Stack>
+      <Box>
+        <Cells app="hash" cells={s.cells} />
+      </Box>
+      <Section label="digest">
+        <Field label="text" hint="up to 256 characters">
+          <Input value={draft} onChange={setDraft} />
+        </Field>
+        <Grid cols={2}>
+          <Button primary onClick={digest}>
+            digest
+          </Button>
+          <Button onClick={() => send(call("hash.reset"))}>reset</Button>
+        </Grid>
+        <Choice
+          label="rule"
+          mode="row"
+          options={opts(RULES)}
+          value={s.rule}
+          onChange={v => send(set("hash", "rule", v))}
+        />
         <Shot />
-      </card>
-      <card key="facts">
-        <text key="hex" role="note">{hex}</text>
-      </card>
-    </stack>
+      </Section>
+      <Box>
+        <Caption>{s.hex.slice(0, 32)}</Caption>
+        <Caption>{s.hex.slice(32)}</Caption>
+      </Box>
+    </Stack>
   )
 }

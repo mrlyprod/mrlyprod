@@ -1,39 +1,41 @@
-import { call } from "../../builders.ts"
-import { Section } from "../../components/Section.tsx"
-import { h } from "../../jsx.ts"
-import type { Node, Send } from "../../types.ts"
+import { Button, Caption, Grid, Section, Stack, Text } from "mrlyui"
+import { call } from "../../builders"
+import { useSend } from "../../send"
 
-type Key = { midi: number; name: string; held: boolean } | null
+type Key = { midi: number; name: string; held: boolean }
 
-type State = { cols: number; keys: Key[]; held: number[] }
+type State = { cols: number; keys: (Key | null)[]; held: number[] }
 
-export function piano(state: unknown, _send: Send): Node {
+export function Piano({ state }: { state: unknown }) {
   const s = state as State
-  const names = s.keys.filter((k): k is Exclude<Key, null> => k !== null && k.held).map(k => k.name)
+  const send = useSend()
+  const names = s.keys.filter((k): k is Key => k !== null && k.held).map(k => k.name)
   return (
-    <stack key="piano">
-      <Section keyName="keys" label="keys">
-        <grid key="board" cols={s.cols}>
+    <Stack>
+      <Section label="keys">
+        <Grid cols={s.cols}>
           {s.keys.map((key, i) =>
             key === null ? (
-              <text key={`gap-${i}`}></text>
+              <Caption key={`gap-${i}`} />
             ) : (
-              <button
-                key={`key-${key.midi}`}
-                call={call("piano.press", { midi: key.midi })}
-                press={call("piano.press", { midi: key.midi })}
-                lift={call("piano.lift", { midi: key.midi })}
-                bg={key.held ? "var(--accent-color)" : undefined}
+              <Button
+                key={key.midi}
+                active={key.held}
+                onPress={() => send(call("piano.press", { midi: key.midi }))}
+                onLift={() => send(call("piano.lift", { midi: key.midi }))}
               >
                 {key.name}
-              </button>
+              </Button>
             ),
           )}
-        </grid>
+        </Grid>
       </Section>
-      <Section keyName="held" label="held">
-        <text key="held-notes">{names.length === 0 ? "silence" : names.join(" ")}</text>
+      <Section label="held">
+        <Text>{names.length === 0 ? "quiet" : names.join(" ")}</Text>
+        <Button disabled={names.length === 0} onClick={() => send(call("piano.silence"))}>
+          silence
+        </Button>
       </Section>
-    </stack>
+    </Stack>
   )
 }

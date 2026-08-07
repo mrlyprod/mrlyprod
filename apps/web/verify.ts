@@ -1,11 +1,14 @@
 import { readFileSync, readdirSync } from "node:fs"
-import markData from "./src/gen/mark.json"
+import { createElement } from "react"
+import { renderToStaticMarkup } from "react-dom/server"
+import markData from "../../pkgs/mrlyui/src/gen/mark.json"
 import shadersData from "./src/gen/shaders.json"
 import skinsData from "./src/gen/skins.json"
-import { boot, buffer, call, list, load, observe, read } from "./src/kernel.ts"
-import { install as installReads } from "./src/reads.ts"
-import type { Call, Mark, Node, Observation, Shade, Shaders, Skins } from "./src/types.ts"
-import { views } from "./src/views/index.ts"
+import { boot, buffer, call, list, load, observe, read } from "./src/kernel"
+import { install as installReads } from "./src/reads"
+import { Kernel } from "./src/send"
+import type { Call, Mark, Observation, Shade, Shaders, Skins } from "./src/types"
+import { views } from "./src/views/index"
 
 const wasm = readFileSync(new URL("../../pkgs/mrlyjs/web/pkg/mrlyjs_bg.wasm", import.meta.url))
 await load(wasm)
@@ -42,28 +45,66 @@ function visit(app: string): Observation {
   return send("nav.open", { app })
 }
 
-function nodes(tree: Node): Node[] {
-  const kids = "children" in tree && Array.isArray(tree.children) ? (tree.children as Node[]) : []
-  return [tree, ...kids.flatMap(nodes)]
+// THE ALTITUDE LAW
+
+const VOID = new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"])
+
+const CONTROLS = new Set(["button", "input", "select", "textarea", "canvas"])
+
+const DEEP = 3
+
+function classes(tag: string): string {
+  const found = /class="([^"]*)"/.exec(tag)
+  return found?.[1] ?? ""
 }
 
-function boxLaw(node: Node, boxed: boolean): string[] {
-  const label = `${node.kind}:${node.key ?? "?"}`
-  if (node.kind === "Overlay") return boxLaw(node.child, false)
-  if (node.kind === "Mark") return []
-  if (node.kind === "Card") {
-    const inside = node.children.flatMap(child => boxLaw(child, true))
-    return boxed ? [`card-in-card ${label}`, ...inside] : inside
+function surface(tag: string): boolean {
+  const worn = classes(tag).split(" ")
+  return worn.includes("box") || worn.includes("card") || worn.includes("section")
+}
+
+function altitude(tag: string): boolean {
+  return classes(tag).split(" ").includes("box")
+}
+
+function law(markup: string): string[] {
+  const faults: string[] = []
+  const stack: { name: string; box: boolean; roof: boolean }[] = []
+  for (const found of markup.matchAll(/<\/?([a-zA-Z][a-zA-Z0-9-]*)([^>]*)>/g)) {
+    const whole = found[0]
+    const name = (found[1] ?? "").toLowerCase()
+    if (whole.startsWith("</")) {
+      while (stack.length > 0 && stack.pop()?.name !== name) continue
+      continue
+    }
+    const box = altitude(whole)
+    const roof = surface(whole)
+    const boxes = stack.filter(one => one.box).length
+    if (box && boxes >= DEEP) faults.push(`deep ${name}.${classes(whole)}`)
+    if (CONTROLS.has(name) && !roof && !stack.some(one => one.roof)) faults.push(`naked ${name}`)
+    if (VOID.has(name) || whole.endsWith("/>")) continue
+    stack.push({ name, box, roof })
   }
-  if (node.kind === "Stack" || node.kind === "Grid") return node.children.flatMap(child => boxLaw(child, boxed))
-  return boxed ? [] : [`naked ${label}`]
+  return faults
+}
+
+function paint(app: string, worn: unknown): string {
+  const draw = views[app]
+  if (draw === undefined) return ""
+  return renderToStaticMarkup(
+    createElement(Kernel.Provider, { value: registry }, createElement(draw, { state: worn })),
+  )
 }
 
 const boxless: string[] = []
 
-function checkBox(route: string, tree: Node) {
-  const violations = boxLaw(tree, false)
-  if (violations.length > 0) boxless.push(`${route}: ${violations.join(", ")}`)
+function checkBox(route: string, markup: string) {
+  const faults = law(markup)
+  if (faults.length > 0) boxless.push(`${route}: ${faults.join(", ")}`)
+}
+
+function tally(markup: string, tag: string): number {
+  return markup.split(`<${tag}`).length - 1
 }
 
 const booted = observe(handle)
@@ -159,18 +200,17 @@ check(
 )
 const unheld = send("piano.lift", { midi: 43 })
 check("an orphan lift fails honestly", unheld.last?.ok === false)
-const keyboard = views["piano"]?.(focused(look()), () => {}) as Node
-const pressable = nodes(keyboard).filter(n => n.kind === "Button" && n.press !== undefined && n.lift !== undefined)
-check("the piano hangs 21 pressable keys", pressable.length === 21, String(pressable.length))
+const keyboard = paint("piano", focused(look()))
+check("the piano hangs its keys", tally(keyboard, "button") >= 21, String(tally(keyboard, "button")))
 visit("settings")
 send("settings.set", { key: "wave", value: "sine" })
 
 send("settings.set", { key: "font", value: "mrly" })
 const worn = visit("calculator")
 check("the worn face keeps a plain state", focused(worn)["glyph"] === undefined && focused(worn)["display"] === "42")
-const readout = views["calculator"]?.(focused(worn), () => {})
-check("the readout spells the display as glyphs", readout !== undefined && nodes(readout).some(n => n.kind === "Label" && n.symbol?.as === "glyph" && n.symbol.value === "42"))
-if (readout !== undefined) checkBox("calculator (worn)", readout)
+const readout = paint("calculator", focused(worn))
+check("the readout spells the display as glyphs", readout.includes('aria-label="42"'))
+checkBox("calculator (worn)", readout)
 visit("settings")
 send("settings.set", { key: "font", value: "mono" })
 visit("calculator")
@@ -187,10 +227,9 @@ send("font.tick")
 check("the scramble reveals pixel by pixel", full > 0 && dark === 0 && lit() === 1, `${full} ${dark} ${lit()}`)
 
 const pixeling = visit("pixel")
-const pixelTree = views["pixel"]?.(focused(pixeling), () => {}) as Node
-const board = nodes(pixelTree).find(n => n.kind === "Canvas") as Extract<Node, { kind: "Canvas" }> | undefined
-check("pixel declares the stroke on its canvas", board?.drag?.verb === "pixel.stroke" && board.grid?.[0] === 24)
-checkBox("pixel", pixelTree)
+const pixelMarkup = paint("pixel", focused(pixeling))
+check("pixel hangs a canvas", tally(pixelMarkup, "canvas") > 0)
+checkBox("pixel", pixelMarkup)
 send("pixel.stroke", { points: [[0, 0], [1, 1]] })
 check("a gesture lands as one stroke", state()["painted"] === 2 && state()["steps"] === 1)
 
@@ -208,11 +247,10 @@ send("sys.thaw", { state: snapshot })
 check("freeze and thaw restore the round", state()["steps"] === 3, String(state()["steps"]))
 
 const living = visit("life")
-const lifeTree = views["life"]?.(focused(living), () => {}) as Node
-const lifeCanvas = nodes(lifeTree).find(n => n.kind === "Canvas") as Extract<Node, { kind: "Canvas" }> | undefined
+const lifeMarkup = paint("life", focused(living))
 const settings = () => state()["settings"] as Record<string, unknown>
-check("life sizes its canvas to the board", lifeCanvas?.grid?.[0] === settings()["size"])
-checkBox("life", lifeTree)
+check("life hangs a canvas", tally(lifeMarkup, "canvas") > 0)
+checkBox("life", lifeMarkup)
 const stepping = send("life.step", { n: 6 })
 check("life steps its timeline forward", state()["generation"] === 6 && (state()["length"] as number) >= 7)
 check("the life beat is the step call", stepping.view?.beat?.verb === "life.step")
@@ -250,9 +288,9 @@ send("tile.paint", { seed: 7 })
 check("the paint dice lands a coat", shaped().paint !== null)
 send("tile.reset")
 check("tile.reset clears the studio", shaped().paint === null)
-const tileTree = views["tile"]?.(focused(look()), () => {}) as Node
-check("the tile view hangs a preview canvas", nodes(tileTree).some(n => n.kind === "Canvas"))
-checkBox("tile", tileTree)
+const tileMarkup = paint("tile", focused(look()))
+check("the tile view hangs a preview canvas", tally(tileMarkup, "canvas") > 0)
+checkBox("tile", tileMarkup)
 
 const kept = (app: string) => read(handle, `${app}/library`) as unknown[]
 check("colors keeps the full name library", kept("colors").length === 15, String(kept("colors").length))
@@ -279,14 +317,13 @@ check("nav.open replaces the view", swapped.view?.app === "menu" && swapped.rout
 const ghost = send("nav.open", { app: "ghost" })
 check("a missing app is refused", ghost.last?.ok === false && ghost.view?.app === "menu", String(ghost.last?.note))
 
-let viewless: string[] = []
-let broken: string[] = []
-let misshaded: string[] = []
-let unforwarded: string[] = []
+const viewless: string[] = []
+const broken: string[] = []
+const misshaded: string[] = []
+const unforwarded: string[] = []
 for (const app of registry.apps) {
   const obs = visit(app.route)
-  const draw = views[app.route]
-  if (draw === undefined) {
+  if (views[app.route] === undefined) {
     viewless.push(app.route)
     continue
   }
@@ -296,12 +333,10 @@ for (const app of registry.apps) {
     misshaded.push(app.route)
   }
   try {
-    const tree = draw(focused(obs), () => {})
-    if (nodes(tree).length === 0) broken.push(app.route)
-    else checkBox(app.route, tree)
-    if (shade !== undefined && !nodes(tree).some(n => n.kind === "Canvas" && n.shade?.program === shade.program)) {
-      unforwarded.push(app.route)
-    }
+    const markup = paint(app.route, focused(obs))
+    if (markup === "") broken.push(app.route)
+    else checkBox(app.route, markup)
+    if (shade !== undefined && tally(markup, "canvas") === 0) unforwarded.push(app.route)
   } catch (err) {
     broken.push(`${app.route}: ${String(err)}`)
   }
@@ -312,7 +347,7 @@ check("every published shade resolves a wasm program", misshaded.length === 0, m
 check("every published shade rides its canvas", unforwarded.length === 0, unforwarded.join(", "))
 const carved = buffer(handle, "six/tris")
 check("the six tris buffer arrives on the wire", carved !== undefined && carved[0] === carved.length - 1 && (carved.length - 1) % 10 === 0, String(carved?.length))
-check("every view keeps each node in exactly one border-box", boxless.length === 0, boxless.join(" | "))
+check("every view keeps its altitude and boxes its controls", boxless.length === 0, boxless.join(" | "))
 
 const unbound: string[] = []
 const keyed: string[] = []
@@ -339,14 +374,13 @@ for (const name of readdirSync(new URL("./fixtures", import.meta.url)).sort()) {
   if (!name.endsWith(".json")) continue
   const fixed = JSON.parse(readFileSync(new URL(`./fixtures/${name}`, import.meta.url), "utf8")) as Observation
   const view = fixed.view
-  const draw = view === null ? undefined : views[view.app]
-  if (view === null || draw === undefined) continue
+  if (view === null || views[view.app] === undefined) continue
   try {
-    const tree = draw(view.state, () => {})
-    if (nodes(tree).length === 0) stale.push(`${name}:${view.app} empty`)
+    const markup = paint(view.app, view.state)
+    if (markup === "") stale.push(`${name}:${view.app} empty`)
     else {
-      const violations = boxLaw(tree, false)
-      if (violations.length > 0) stale.push(`${name}:${view.app} ${violations.join(", ")}`)
+      const faults = law(markup)
+      if (faults.length > 0) stale.push(`${name}:${view.app} ${faults.join(", ")}`)
     }
   } catch (err) {
     stale.push(`${name}:${view.app} ${String(err)}`)

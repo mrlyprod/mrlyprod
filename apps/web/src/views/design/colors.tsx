@@ -1,8 +1,16 @@
-import { call } from "../../builders.ts"
-import { colorpicker } from "../../components/colorpicker.tsx"
-import { h } from "../../jsx.ts"
-import { hex } from "../../palette.ts"
-import type { Node, Send } from "../../types.ts"
+import {
+  Box,
+  Button,
+  Caption,
+  Cluster,
+  ColorPicker,
+  Section,
+  Stack,
+  Text,
+  Title,
+} from "mrlyui"
+import { call } from "../../builders"
+import { useSend } from "../../send"
 
 type State = {
   index: number
@@ -14,31 +22,38 @@ type State = {
   library: string[]
 }
 
-export function colors(state: unknown, _send: Send): Node {
+export function Colors({ state }: { state: unknown }) {
   const s = state as State
+  const send = useSend()
+  const swatches = s.palette.map(one => ({ name: one.name, color: one.hex }))
+  const kept = swatches.filter(one => s.library.includes(one.name))
+  const pick = (name: string | null) => {
+    if (name !== null) send(call("colors.set", { key: "name", value: name }))
+  }
+  const drop = (name: string | null) => {
+    if (name !== null) send(call("colors.drop", { name }))
+  }
   return (
-    <stack key="colors">
-      <card key="browse">
-        <button key="active" call={call("colors.page", { dir: "next" })} bg={s.hex} big={true}></button>
-        {colorpicker("palette", s.palette, name => name === s.name, name => call("colors.set", { key: "name", value: name }))}
-        <button key="keep" call={call("colors.keep")}>keep</button>
-      </card>
-      <card key="facts">
-        <text key="name" role="label">{s.name}</text>
-        <text key="hex">{s.hex}</text>
-        <text key="rgb" role="note">{`${s.rgb.r} ${s.rgb.g} ${s.rgb.b}`}</text>
-      </card>
-      <card key="export">
-        <button key="export" call={call("colors.export")}>export</button>
-      </card>
-      <card key="library">
-        <text key="drop-hint" role="note">tap to drop</text>
-        <grid key="lib" cols={5}>
-          {s.library.map(name => (
-            <button key={`lib-${name}`} bg={hex(name)} call={call("colors.drop", { name })}>{" "}</button>
-          ))}
-        </grid>
-      </card>
-    </stack>
+    <Stack>
+      <Box>
+        <Title>{s.name}</Title>
+        <Button big bg={s.hex} onClick={() => send(call("colors.page", { dir: "next" }))}>
+          {" "}
+        </Button>
+        <Text>{s.hex}</Text>
+        <Caption>{`rgb ${s.rgb.r} ${s.rgb.g} ${s.rgb.b} · ${s.index + 1} of ${s.count}`}</Caption>
+      </Box>
+      <Section label="palette">
+        <ColorPicker swatches={swatches} value={s.name} onChange={pick} big />
+      </Section>
+      <Section label="library">
+        <Caption>tap to drop</Caption>
+        <ColorPicker swatches={kept} value={s.library} onChange={drop} />
+        <Cluster>
+          <Button onClick={() => send(call("colors.keep"))}>keep</Button>
+          <Button onClick={() => send(call("colors.export"))}>export</Button>
+        </Cluster>
+      </Section>
+    </Stack>
   )
 }

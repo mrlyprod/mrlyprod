@@ -1,18 +1,31 @@
-import { call, setter } from "../../builders.ts"
-import { Board } from "../../components/Board.tsx"
-import { library } from "../../components/library.tsx"
-import { Shot } from "../../components/Shot.tsx"
-import { h } from "../../jsx.ts"
-import type { Cells, Node, Send } from "../../types.ts"
+import {
+  Box,
+  Button,
+  Caption,
+  Chip,
+  Cluster,
+  Field,
+  Section,
+  Slider,
+  Stack,
+  Symbol,
+  Toggle,
+} from "mrlyui"
+import { call, setter } from "../../builders"
+import { Library } from "../../components/Library"
+import { Shot } from "../../components/Shot"
+import { Cells } from "../../eyes/Cells"
+import { useSend } from "../../send"
+import type { Cells as Deck } from "../../types"
 
-const PRESETS = ["seed", "clear", "soup"]
-const CLASSICS = ["glider", "pulsar", "pentomino"]
+const SEEDS = ["seed", "clear", "soup", "glider", "pulsar", "pentomino"]
+
 const SEQS = ["evens", "odds", "primes", "fibonacci"]
 
 type Work = unknown
 
 type State = {
-  cells: Cells
+  cells: Deck
   generation: number
   population: number
   entropy: number
@@ -40,111 +53,141 @@ type State = {
   }
 }
 
-const turn = setter("life")
+// RULE
 
-function status(s: State): string {
-  const base = `gen ${s.generation} · pop ${s.population} · H ${(s.entropy / 1000).toFixed(3)}`
-  if (s.fate === null) return base
-  return s.period > 1 ? `${base} · ${s.fate} · p${s.period}` : `${base} · ${s.fate}`
-}
-
-function transport(s: State): Node[] {
-  const settled = s.fate !== null && s.cursor === s.length - 1
-  return [
-    s.cursor > 0 ? <button key="start" call={call("life.start")}>⏮</button> : null,
-    s.cursor > 0 ? <button key="back" call={call("life.back")}>◀</button> : null,
-    s.running
-      ? <button key="pause" call={call("life.run", { on: false })}>pause</button>
-      : <button key="run" call={call("life.run", { on: true })}>run</button>,
-    !settled ? <button key="step" call={call("life.step")}>▶</button> : null,
-    s.cursor < s.length - 1 ? <button key="end" call={call("life.end")}>⏭</button> : null,
-  ].filter((node): node is Node => node !== null)
-}
-
-function chips(s: State, which: "birth" | "survive"): Node {
-  const on = which === "birth" ? s.settings.birth : s.settings.survive
-  const counts = Array.from({ length: s.max_neighbors + 1 }, (_, n) => n)
+function Rule({ label, which, counts, worn }: {
+  label: string
+  which: "birth" | "survive"
+  counts: number[]
+  worn: number[]
+}) {
+  const send = useSend()
   return (
-    <grid key={`${which}-chips`} cols={s.max_neighbors + 1}>
-      {counts.map(n => (
-        <toggle key={`${which}${n}`} on={on.includes(n)} call={call("life.rule", { which, n })} arg="on" label={String(n)} />
-      ))}
-    </grid>
+    <Section label={label}>
+      <Cluster>
+        {counts.map(n => (
+          <Chip
+            key={n}
+            active={worn.includes(n)}
+            onClick={() => send(call("life.rule", { which, n, on: !worn.includes(n) }))}
+          >
+            {n}
+          </Chip>
+        ))}
+      </Cluster>
+      <Cluster>
+        {SEQS.map(seq => (
+          <Button key={seq} onClick={() => send(call("life.fill", { which, seq }))}>
+            {seq}
+          </Button>
+        ))}
+      </Cluster>
+    </Section>
   )
 }
 
-function fills(which: "birth" | "survive"): Node {
-  return (
-    <grid key={`${which}-fills`} cols={SEQS.length}>
-      {SEQS.map(seq => (
-        <button key={`${which}-${seq}`} call={call("life.fill", { which, seq })}>{seq}</button>
-      ))}
-    </grid>
-  )
-}
+// LIFE
 
-export function life(state: unknown, _send: Send): Node {
+export function Life({ state }: { state: unknown }) {
   const s = state as State
+  const send = useSend()
+  const turn = setter("life")
+  const counts = Array.from({ length: s.max_neighbors + 1 }, (_, n) => n)
+  const settled = s.fate !== null && s.cursor === s.length - 1
   return (
-    <stack key="life">
-      <card key="board">
-        <Board
+    <Stack>
+      <Box>
+        <Cells
           app="life"
           cells={s.cells}
           grid={[s.settings.size, s.settings.size]}
-          drag={s.running ? undefined : call("life.paint")}
+          handle="life"
+          onDrag={s.running ? undefined : points => send(call("life.paint", { points }))}
         />
-      </card>
-      <card key="transport">
-        {transport(s)}
-        <Shot />
-      </card>
-      <card key="status">
-        <text key="meter" role="note">{status(s)}</text>
-      </card>
-      <card key="presets">
-        <text key="presets-label" role="label">seed</text>
-        {PRESETS.map(p => (
-          <button key={p} call={call("life.reset", { pattern: p })}>{p}</button>
-        ))}
-        <range key="density" value={s.settings.density} min={1} max={99} step={1} call={turn("density")} arg="value" label="density" />
-        {CLASSICS.map(p => (
-          <button key={p} call={call("life.reset", { pattern: p })}>{p}</button>
-        ))}
-      </card>
-      <card key="seed">
-        <text key="seed-label" role="label">seed tile</text>
-        {library("tile", "life", "seed")}
-        <range key="tiling" value={s.settings.tiling} min={1} max={8} step={1} call={turn("tiling")} arg="value" label="tiling" />
-        <range key="padding" value={s.settings.padding} min={0} max={8} step={1} call={turn("padding")} arg="value" label="padding" />
-      </card>
-      <card key="mask">
-        <text key="mask-label" role="label">neighborhood</text>
-        {library("tile", "life", "mask")}
-      </card>
-      <card key="rules">
-        <text key="birth-label" role="label">birth</text>
-        {chips(s, "birth")}
-        {fills("birth")}
-        <text key="survive-label" role="label">survive</text>
-        {chips(s, "survive")}
-        {fills("survive")}
-        <toggle key="zeros" on={s.settings.zeros} call={turn("zeros")} arg="value" label="zeros" />
-        <toggle key="ones" on={s.settings.ones} call={turn("ones")} arg="value" label="ones" />
-        <toggle key="wrap" on={s.settings.wrap} call={turn("wrap")} arg="value" label="wrap" />
-      </card>
-      <card key="board-speed">
-        <text key="bs-label" role="label">board</text>
-        <range key="size" value={s.settings.size} min={8} max={64} step={1} call={turn("size")} arg="value" label="size" />
-        <range key="speed" value={s.settings.speed} min={1} max={32} step={1} call={turn("speed")} arg="value" label="speed" />
-      </card>
-      <card key="colors">
-        <text key="colors-label" role="label">colors</text>
-        <text key="fill-label" role="note">fill</text>
-        {library("colors", "life", "fill", s.settings.fill)}
-        <text key="void-label" role="note">void</text>
-        {library("colors", "life", "void", s.settings.void)}
-      </card>
-    </stack>
+      </Box>
+      <Box>
+        <Cluster>
+          <Button disabled={s.cursor === 0} onClick={() => send(call("life.start"))}>
+            <Symbol name="keyboard_double_arrow_left" />
+          </Button>
+          <Button disabled={s.cursor === 0} onClick={() => send(call("life.back"))}>
+            <Symbol name="chevron_left" />
+          </Button>
+          <Button
+            active={s.running}
+            disabled={settled && !s.running}
+            onClick={() => send(call("life.run", { on: !s.running }))}
+          >
+            <Symbol name={s.running ? "pause" : "play_arrow"} />
+          </Button>
+          <Button disabled={settled} onClick={() => send(call("life.step"))}>
+            <Symbol name="chevron_right" />
+          </Button>
+          <Button disabled={s.cursor === s.length - 1} onClick={() => send(call("life.end"))}>
+            <Symbol name="keyboard_double_arrow_right" />
+          </Button>
+          <Shot />
+        </Cluster>
+      </Box>
+      <Section label="timeline">
+        <Cluster>
+          <Chip>{`gen ${s.generation}`}</Chip>
+          <Chip>{`pop ${s.population}`}</Chip>
+          <Chip>{`H ${(s.entropy / 1000).toFixed(3)}`}</Chip>
+          <Chip>{`${s.cursor + 1} / ${s.length}`}</Chip>
+          {s.fate !== null && <Chip active>{s.period > 1 ? `${s.fate} p${s.period}` : s.fate}</Chip>}
+        </Cluster>
+        <Field label="speed">
+          <Slider min={1} max={32} step={1} value={s.settings.speed} onChange={v => send(turn("speed", v))} />
+        </Field>
+      </Section>
+      <Section label="seed">
+        <Cluster>
+          {SEEDS.map(pattern => (
+            <Button key={pattern} onClick={() => send(call("life.reset", { pattern }))}>
+              {pattern}
+            </Button>
+          ))}
+        </Cluster>
+        <Field label="density">
+          <Slider min={1} max={99} step={1} value={s.settings.density} onChange={v => send(turn("density", v))} />
+        </Field>
+      </Section>
+      <Section label="tile">
+        <Library kind="tile" host="life" name="seed" current={s.settings.seed} />
+        <Field label="tiling">
+          <Slider min={1} max={8} step={1} value={s.settings.tiling} onChange={v => send(turn("tiling", v))} />
+        </Field>
+        <Field label="padding">
+          <Slider min={0} max={8} step={1} value={s.settings.padding} onChange={v => send(turn("padding", v))} />
+        </Field>
+      </Section>
+      <Section label="neighborhood">
+        <Caption>{`${s.max_neighbors} neighbors`}</Caption>
+        <Library kind="tile" host="life" name="mask" current={s.settings.mask} />
+      </Section>
+      <Rule label="birth" which="birth" counts={counts} worn={s.settings.birth} />
+      <Rule label="survive" which="survive" counts={counts} worn={s.settings.survive} />
+      <Section label="board">
+        <Field label="size">
+          <Slider min={8} max={64} step={1} value={s.settings.size} onChange={v => send(turn("size", v))} />
+        </Field>
+        <Field label="wrap">
+          <Toggle value={s.settings.wrap} onChange={v => send(turn("wrap", v))} />
+        </Field>
+        <Field label="zeros">
+          <Toggle value={s.settings.zeros} onChange={v => send(turn("zeros", v))} />
+        </Field>
+        <Field label="ones">
+          <Toggle value={s.settings.ones} onChange={v => send(turn("ones", v))} />
+        </Field>
+      </Section>
+      <Section label="fill">
+        <Library kind="colors" host="life" name="fill" current={s.settings.fill} />
+      </Section>
+      <Section label="void">
+        <Library kind="colors" host="life" name="void" current={s.settings.void} />
+      </Section>
+    </Stack>
   )
 }

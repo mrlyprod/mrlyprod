@@ -51,16 +51,11 @@ def site_icons():
         "volunteer_activism",
     ]
 
-def web_icons():
-    with open(os.path.join(ROOT, "apps", "web", "src", "icons.ts"), encoding="utf-8") as f:
-        body = f.read().split("{", 1)[1].split("}", 1)[0]
-    return sorted(set(re.findall(r'"([a-z0-9_]+)"', body)))
-
 def ui_icons():
     with open(os.path.join(ROOT, "pkgs", "mrlyui", "src", "Glyphs.tsx"), encoding="utf-8") as f:
         body = f.read().split("SymbolName =", 1)[1].split("// SIZE", 1)[0]
     names = set(re.findall(r'"([a-z0-9_]+)"', body))
-    return sorted(names | set(site_icons()) | set(web_icons()))
+    return sorted(names | set(site_icons()))
 
 MANIFEST = {
     "net": {
@@ -79,11 +74,7 @@ MANIFEST = {
         "public": "apps/web/public",
         "brand": ["favicon.ico", "mrlyprod.png", "mrlyprod.svg", "icons/mrly_192_192.png", "icons/mrly_512_512.png"],
         "copy": [],
-        "css": {
-            "fonts.css": ["mono", "sans", "serif", "display", "mrlyfont"],
-            "icons.css": ["icons"],
-            "emoji.css": ["emoji"],
-        },
+        "css": {},
     },
     "jsx": {
         "public": "apps/jsx/public",
@@ -99,7 +90,6 @@ MANIFEST = {
 
 SUBSETS = {
     "site.woff2": site_icons,
-    "icons.woff2": web_icons,
     "ui.woff2": ui_icons,
 }
 
@@ -336,7 +326,6 @@ def shared(urls):
     out["mrlyfont"] = [face("MrlyFont", urls["MrlyFont.woff2"], "swap", None)]
     out["emoji"] = [face("noto", urls[name], "swap", rng) for name, rng in parsed("emoji.css")]
     out["site"] = [face("mrly-icons", urls["site.woff2"], "block", None)]
-    out["icons"] = [face("mrly-icons", urls["icons.woff2"], "block", None)]
     out["ui"] = [face("mrly-icons", urls["ui.woff2"], "block", None)]
     out["seti"] = [face("seti", urls["seti.woff2"], "block", None)]
     return out

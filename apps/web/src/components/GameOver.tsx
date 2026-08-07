@@ -1,15 +1,21 @@
-import { call } from "../builders.ts"
-import type { Node } from "../types.ts"
+import {
+  Box,
+  Button,
+  Caption,
+  Emoji,
+  Title,
+} from "mrlyui"
+import { call } from "../builders"
+import { useSend } from "../send"
 
-export function GameOver({ app, emoji, status }: { app: string; emoji: string; status: string }): Node {
-  return {
-    kind: "Card",
-    key: "over",
-    children: [
-      { kind: "Symbol", key: "over-emoji", as: "emoji", value: emoji },
-      { kind: "Text", key: "over-title", text: "game over", role: "title" },
-      { kind: "Text", key: "over-status", text: status, role: "note" },
-      { kind: "Button", key: "again", label: "play again", call: call(`${app}.reset`) },
-    ],
-  }
+export function GameOver({ app, emoji, status }: { app: string; emoji: string; status: string }) {
+  const send = useSend()
+  return (
+    <Box>
+      <Emoji glyph={emoji} />
+      <Title>game over</Title>
+      <Caption>{status}</Caption>
+      <Button primary onClick={() => send(call(`${app}.reset`))}>play again</Button>
+    </Box>
+  )
 }

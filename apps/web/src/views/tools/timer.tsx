@@ -1,6 +1,17 @@
-import { call } from "../../builders.ts"
-import { h } from "../../jsx.ts"
-import type { Node, Send } from "../../types.ts"
+import {
+  Box,
+  Button,
+  Caption,
+  Choice,
+  Grid,
+  Letters,
+  Section,
+  Setting,
+  Stack,
+} from "mrlyui"
+import { call } from "../../builders"
+import { opts } from "../../components/options"
+import { useSend } from "../../send"
 
 const MODES = ["countdown", "stopwatch"]
 
@@ -15,6 +26,8 @@ const STEPS: { label: string; delta: number }[] = [
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n))
 
+const pad = (n: number) => String(n).padStart(2, "0")
+
 type State = {
   mode: string
   armed: boolean
@@ -25,15 +38,16 @@ type State = {
   laps: number[]
 }
 
-const pad = (n: number) => String(n).padStart(2, "0")
+// FACE
 
 const clock = (ms: number) => `${pad(Math.floor(ms / 60000))}:${pad(Math.floor(ms / 1000) % 60)}`
+
+const fine = (ms: number) => `${clock(ms)}.${pad(Math.floor((ms % 1000) / 10))}`
 
 function face(s: State): string {
   if (s.mode === "stopwatch") return clock(s.elapsed)
   if (!s.armed) return "--:--"
-  const secs = Math.floor((s.remaining + 999) / 1000)
-  return `${pad(Math.floor(secs / 60))}:${pad(secs % 60)}`
+  return clock(Math.ceil(s.remaining / 1000) * 1000)
 }
 
 function status(s: State): string {
@@ -43,60 +57,88 @@ function status(s: State): string {
   return s.running ? "running" : "paused"
 }
 
-function controls(s: State): Node[] {
-  if (s.mode === "stopwatch") {
-    return [
-      <button key="start" call={call("timer.start")}>start</button>,
-      s.running ? <button key="lap" call={call("timer.lap")}>lap</button> : null,
-      s.running
-        ? <button key="pause" call={call("timer.pause")}>pause</button>
-        : s.armed
-          ? <button key="resume" call={call("timer.resume")}>resume</button>
-          : null,
-      <button key="clear" call={call("timer.clear")}>clear</button>,
-    ].filter((node): node is Node => node !== null)
-  }
-  const minutes = s.armed ? Math.max(1, Math.ceil(s.remaining / 60000)) : 0
-  return [
-    <field key="secs" value="" live={false} call={call("timer.start")} arg="secs" hint="seconds" />,
-    <grid key="presets" cols={4}>
-      {PRESETS.map(m => (
-        <button key={`m${m}`} call={call("timer.start", { secs: m * 60 })}>{`${m}m`}</button>
-      ))}
-    </grid>,
-    <grid key="steps" cols={4}>
-      {STEPS.map(step => {
-        const target = clamp(minutes + step.delta, 1, 1440)
-        return <button key={step.label} call={call("timer.set", { key: "duration", value: { h: Math.floor(target / 60), m: target % 60 } })}>{step.label}</button>
-      })}
-    </grid>,
-    s.running ? <button key="pause" call={call("timer.pause")}>pause</button> : null,
-    !s.running && s.armed && !s.rung
-      ? <button key="resume" call={call("timer.resume")}>resume</button>
-      : null,
-    <button key="clear" call={call("timer.clear")}>clear</button>,
-  ].filter((node): node is Node => node !== null)
-}
+// TIMER
 
-export function timer(state: unknown, _send: Send): Node {
+export function Timer({ state }: { state: unknown }) {
   const s = state as State
+  const send = useSend()
+  const watch = s.mode === "stopwatch"
+  const minutes = s.armed ? Math.max(1, Math.ceil(s.remaining / 60000)) : 0
+  const hold = (target: number) =>
+    call("timer.set", { key: "duration", value: { h: Math.floor(target / 60), m: target % 60 } })
   return (
-    <stack key="timer">
-      <card key="panel">
-        <symbol key="face" as="glyph" value={face(s)} />
-        <text key="status" role="note">{status(s)}</text>
-      </card>
-      <card key="controls">{controls(s)}</card>
-      {s.laps.length > 0 && (
-        <card key="laps">
+    <Stack>
+      <Box>
+        <Letters text={face(s)} scramble={false} />
+        <Caption>{status(s)}</Caption>
+        <Caption>{fine(watch ? s.elapsed : s.remaining)}</Caption>
+      </Box>
+      <Box>
+        {watch ? (
+          <Grid cols={3}>
+            {s.running ? (
+              <Button onClick={() => send(call("timer.pause"))}>pause</Button>
+            ) : (
+              <Button primary onClick={() => send(call(s.armed ? "timer.resume" : "timer.start"))}>
+                {s.armed ? "resume" : "start"}
+              </Button>
+            )}
+            <Button disabled={!s.running} onClick={() => send(call("timer.lap"))}>
+              lap
+            </Button>
+            <Button onClick={() => send(call("timer.clear"))}>clear</Button>
+          </Grid>
+        ) : (
+          <Stack>
+            <Grid cols={4}>
+              {PRESETS.map(m => (
+                <Button
+                  key={m}
+                  active={s.armed && !s.rung && minutes === m}
+                  onClick={() => send(call("timer.start", { secs: m * 60 }))}
+                >
+                  {`${String(m)}m`}
+                </Button>
+              ))}
+            </Grid>
+            <Grid cols={4}>
+              {STEPS.map(step => (
+                <Button key={step.label} onClick={() => send(hold(clamp(minutes + step.delta, 1, 1440)))}>
+                  {step.label}
+                </Button>
+              ))}
+            </Grid>
+            <Grid cols={2}>
+              {s.running ? (
+                <Button onClick={() => send(call("timer.pause"))}>pause</Button>
+              ) : (
+                <Button primary disabled={!s.armed || s.rung} onClick={() => send(call("timer.resume"))}>
+                  resume
+                </Button>
+              )}
+              <Button onClick={() => send(call("timer.clear"))}>clear</Button>
+            </Grid>
+          </Stack>
+        )}
+      </Box>
+      {s.laps.length === 0 ? null : (
+        <Section label="laps">
           {s.laps.map((ms, i) => (
-            <text key={`lap${i}`} role="note">{`lap ${i + 1} · ${clock(ms)}`}</text>
+            <Setting key={`lap-${String(i)}`} label={`lap ${String(i + 1)}`}>
+              <Caption>{fine(ms)}</Caption>
+            </Setting>
           ))}
-        </card>
+        </Section>
       )}
-      <card key="settings">
-        <choice key="mode" value={s.mode} options={MODES} call={call("timer.mode")} arg="mode" label="mode" mode="row" />
-      </card>
-    </stack>
+      <Box>
+        <Choice
+          label="mode"
+          mode="row"
+          options={opts(MODES)}
+          value={s.mode}
+          onChange={v => send(call("timer.mode", { mode: v }))}
+        />
+      </Box>
+    </Stack>
   )
 }

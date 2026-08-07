@@ -53,6 +53,7 @@ export function useFills(): Fills {
       return () => fillSubs.delete(sub)
     },
     () => fillsHeld,
+    () => fillsHeld,
   )
 }
 
@@ -102,6 +103,7 @@ export function usePrefs(): [Prefs, (patch: Partial<Prefs>) => void, () => void]
       prefSubs.add(sub)
       return () => prefSubs.delete(sub)
     },
+    () => prefsHeld,
     () => prefsHeld,
   )
 

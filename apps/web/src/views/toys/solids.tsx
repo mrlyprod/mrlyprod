@@ -1,9 +1,22 @@
-import { call, setter } from "../../builders.ts"
-import { Board } from "../../components/Board.tsx"
-import { Shot } from "../../components/Shot.tsx"
-import { h } from "../../jsx.ts"
-import { orbit } from "../../render/orbit.ts"
-import type { Node, Send, Shade } from "../../types.ts"
+import {
+  Box,
+  Button,
+  Chip,
+  Cluster,
+  Field,
+  Section,
+  Slider,
+  Stack,
+  Toggle,
+} from "mrlyui"
+import { call, setter } from "../../builders"
+import { Shot } from "../../components/Shot"
+import { useOrbit } from "../../eyes/orbit"
+import { Shader } from "../../eyes/Shader"
+import { useSend } from "../../send"
+import type { Shade } from "../../types"
+
+const SOLIDS = ["cube", "tetra", "octa", "icosa"]
 
 type State = {
   object: string
@@ -21,45 +34,76 @@ type State = {
   shade?: Shade
 }
 
-const turn = setter("solids")
-
-export function solids(state: unknown, _send: Send): Node {
+export function Solids({ state }: { state: unknown }) {
   const s = state as State
+  const send = useSend()
+  const turn = setter("solids")
+  const { rig, turn: orbit, pan, zoom, onOrtho } = useOrbit("solids")
   return (
-    <stack key="solids">
-      <card key="board">
-        <Board
-          app="solids"
-          keyName="solid"
-          shade={s.shade}
-          turn={call("orbit.turn", { app: "solids" })}
-          zoom={call("orbit.zoom", { app: "solids" })}
-          pan={call("orbit.pan", { app: "solids" })}
-        />
-      </card>
-      <card key="solids">
-        <button key="cube" call={call("solids.pick", { solid: "cube" })}>cube</button>
-        <button key="tetra" call={call("solids.pick", { solid: "tetra" })}>tetra</button>
-        <button key="octa" call={call("solids.pick", { solid: "octa" })}>octa</button>
-        <button key="icosa" call={call("solids.pick", { solid: "icosa" })}>icosa</button>
-        <Shot />
-      </card>
-      <card key="meter">
-        <text key="meter" role="note">{`${s.object} · spin ${s.spin}`}</text>
-      </card>
-      <card key="looks">
-        <toggle key="edges" on={s.settings.edges} call={turn("edges")} arg="value" label="edges" />
-        <toggle key="wireframe" on={s.settings.wireframe} call={turn("wireframe")} arg="value" label="wireframe" />
-        <toggle key="axes" on={s.settings.axes} call={turn("axes")} arg="value" label="axes" />
-        <toggle key="ortho" on={orbit("solids").ortho} call={call("orbit.ortho", { app: "solids" })} arg="value" label="ortho" />
-        <range key="alpha" value={s.settings.alpha} min={32} max={255} step={1} call={turn("alpha")} arg="value" label="alpha" />
-      </card>
-      <card key="settings">
-        <range key="bands" value={s.settings.bands} min={2} max={8} step={1} call={turn("bands")} arg="value" label="bands" />
-        <range key="speed" value={s.settings.speed} min={0} max={16} step={1} call={turn("speed")} arg="value" label="speed" />
-        <range key="light-yaw" value={s.settings.light_yaw} min={0} max={255} step={1} call={turn("light_yaw")} arg="value" label="light yaw" />
-        <range key="light-pitch" value={s.settings.light_pitch} min={-56} max={56} step={1} call={turn("light_pitch")} arg="value" label="light pitch" />
-      </card>
-    </stack>
+    <Stack>
+      <Box>
+        <Shader shade={s.shade} handle="solids" turn={orbit} pan={pan} zoom={zoom} />
+        <Cluster>
+          <Button onClick={() => send(call("face.full", { handle: "solids" }))}>fullscreen</Button>
+          <Button onClick={() => send(call("solids.reset"))}>reset</Button>
+          <Shot />
+        </Cluster>
+      </Box>
+      <Section label="solid">
+        <Cluster>
+          {SOLIDS.map(solid => (
+            <Button key={solid} active={s.object === solid} onClick={() => send(call("solids.pick", { solid }))}>
+              {solid}
+            </Button>
+          ))}
+        </Cluster>
+        <Cluster>
+          <Chip>{`spin ${s.spin}`}</Chip>
+        </Cluster>
+        <Field label="speed">
+          <Slider min={0} max={16} step={1} value={s.settings.speed} onChange={v => send(turn("speed", v))} />
+        </Field>
+      </Section>
+      <Section label="look">
+        <Field label="edges">
+          <Toggle value={s.settings.edges} onChange={v => send(turn("edges", v))} />
+        </Field>
+        <Field label="wireframe">
+          <Toggle value={s.settings.wireframe} onChange={v => send(turn("wireframe", v))} />
+        </Field>
+        <Field label="axes">
+          <Toggle value={s.settings.axes} onChange={v => send(turn("axes", v))} />
+        </Field>
+        <Field label="ortho">
+          <Toggle value={rig.ortho} onChange={onOrtho} />
+        </Field>
+        <Field label="alpha">
+          <Slider min={32} max={255} step={1} value={s.settings.alpha} onChange={v => send(turn("alpha", v))} />
+        </Field>
+      </Section>
+      <Section label="light">
+        <Field label="bands">
+          <Slider min={2} max={8} step={1} value={s.settings.bands} onChange={v => send(turn("bands", v))} />
+        </Field>
+        <Field label="yaw">
+          <Slider
+            min={0}
+            max={255}
+            step={1}
+            value={s.settings.light_yaw}
+            onChange={v => send(turn("light_yaw", v))}
+          />
+        </Field>
+        <Field label="pitch">
+          <Slider
+            min={-56}
+            max={56}
+            step={1}
+            value={s.settings.light_pitch}
+            onChange={v => send(turn("light_pitch", v))}
+          />
+        </Field>
+      </Section>
+    </Stack>
   )
 }

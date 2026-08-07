@@ -1,49 +1,58 @@
-import { call } from "../../builders.ts"
-import { h } from "../../jsx.ts"
-import type { Call, Node, Send } from "../../types.ts"
+import {
+  Box,
+  Button,
+  Grid,
+  Letters,
+  Stack,
+} from "mrlyui"
+import { call } from "../../builders"
+import { useSend } from "../../send"
+import type { Call } from "../../types"
 
 type State = { display: string }
 
-export function calculator(state: unknown, _send: Send): Node {
+export function Calculator({ state }: { state: unknown }) {
   const s = state as State
-  const verb = (name: string) => call(`calculator.${name}`)
-  const key = (k: string, glyph: string, action: Call) => (
-    <label key={k} mode="icon" symbol={{ as: "glyph", value: glyph }} text={glyph} call={action} />
+  const send = useSend()
+  const pad = (glyph: string, made: Call) => (
+    <Button onClick={() => send(made)}>
+      <Letters text={glyph} scramble={false} />
+    </Button>
   )
-  const digit = (d: number) => key(`d${d}`, String(d), call("calculator.digit", { d }))
-  const op = (name: string, glyph: string) => key(name, glyph, call("calculator.op", { op: name }))
+  const digit = (d: number) => pad(String(d), call("calculator.digit", { d }))
+  const op = (name: string, glyph: string) => pad(glyph, call("calculator.op", { op: name }))
   return (
-    <stack key="calculator">
-      <card key="panel">
-        <stack key="pad">
-          <label key="readout" mode="icon" symbol={{ as: "glyph", value: s.display }} text={s.display} call={verb("copy")} />
-          <grid key="keys" cols={4}>
-            {key("clear", "AC", verb("clear"))}
-            {key("negate", "+/-", verb("negate"))}
-            {key("percent", "%", verb("percent"))}
-            {op("div", "÷")}
-            {digit(7)}
-            {digit(8)}
-            {digit(9)}
-            {op("mul", "×")}
-            {digit(4)}
-            {digit(5)}
-            {digit(6)}
-            {op("sub", "−")}
-            {digit(1)}
-            {digit(2)}
-            {digit(3)}
-            {op("add", "+")}
-          </grid>
-          <grid key="base" cols={2}>
-            {digit(0)}
-            <grid key="tail" cols={2}>
-              {key("dot", ".", verb("dot"))}
-              {key("equals", "=", verb("equals"))}
-            </grid>
-          </grid>
-        </stack>
-      </card>
-    </stack>
+    <Stack>
+      <Box>
+        <Button wide onClick={() => send(call("calculator.copy"))}>
+          <Letters text={s.display} />
+        </Button>
+        <Grid cols={4}>
+          {pad("AC", call("calculator.clear"))}
+          {pad("+/-", call("calculator.negate"))}
+          {pad("%", call("calculator.percent"))}
+          {op("div", "÷")}
+          {digit(7)}
+          {digit(8)}
+          {digit(9)}
+          {op("mul", "×")}
+          {digit(4)}
+          {digit(5)}
+          {digit(6)}
+          {op("sub", "−")}
+          {digit(1)}
+          {digit(2)}
+          {digit(3)}
+          {op("add", "+")}
+        </Grid>
+        <Grid cols={2}>
+          {digit(0)}
+          <Grid cols={2}>
+            {pad(".", call("calculator.dot"))}
+            {pad("=", call("calculator.equals"))}
+          </Grid>
+        </Grid>
+      </Box>
+    </Stack>
   )
 }

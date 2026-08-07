@@ -55,7 +55,7 @@ cargo fmt                               # ship runs it too
 cargo clippy -- -D warnings
 cargo run -p mrlyweb --example <name>   # examples live in pkgs/mrlyrs/mrlyweb/examples/
 cargo run -p mrlyweb --example fixtures # regenerate apps/web/fixtures/*.json from the envelope
-cargo run -p mrlyweb --example bake     # regenerate apps/web/src/gen/*.json (palette, shaders, mark)
+cargo run -p mrlyweb --example bake     # regenerate the baked json: web gets palette, shaders, skins; mrlyui gets mark
 cargo doc --open
 cargo clean
 ```
@@ -99,12 +99,13 @@ cargo test -p mrlyweb --test golden         # fixtures vs the envelope, after vo
 ## WEB (dev server + golden screenshots)
 
 ```sh
-cd apps/web && bun run index.ts             # dev server on :3000 (rebuild wasm first if the core changed)
+bun run --cwd apps/web dev                  # vite dev server (rebuild wasm first if the core changed)
 bun utils/shot.ts                           # every site, every route, into data/<site>/*.png (boots servers itself)
 bun utils/shot.ts web snake                 # one site, chosen routes; sites: web net git
 bun utils/shot.ts --size 390x844 net        # any viewport
-bun utils/shot.ts http://localhost:3000/snake out.png   # any url
+bun utils/shot.ts http://localhost:5176/snake out.png   # any url
 bun run apps/web/verify.ts                  # smoke the web face in code: wasm kernel + verbs + every view (no server, no browser)
+bun run --cwd apps/web site                 # build the face into data/web/dist
 ```
 
 ## BUN (runtime + package manager; brew-managed)
@@ -115,7 +116,7 @@ bun install                      # install from bun.lock into node_modules/
 bun add <pkg>                    # add a runtime dependency
 bun add --dev <pkg>              # add a dev-only dependency
 bun run <script>                 # run a package.json script
-bun run index.ts                 # run a file directly (no node)
+bun run <file>.ts                # run a file directly (no node)
 bun update                       # refresh the lockfile
 bunx <cmd>                       # run a bin without installing (= npx)
 bunx tsc --noEmit --project apps/web    # typecheck the web face (pre-push gate; works from the repo root)

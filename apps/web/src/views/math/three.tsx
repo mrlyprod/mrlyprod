@@ -1,11 +1,25 @@
-import { call, setter } from "../../builders.ts"
-import { Board } from "../../components/Board.tsx"
-import { Shot } from "../../components/Shot.tsx"
-import { Pager } from "../../components/Pager.tsx"
-import { colors, NUMBERS } from "../../components/options.ts"
-import { h } from "../../jsx.ts"
-import { orbit } from "../../render/orbit.ts"
-import type { Node, Send, Shade } from "../../types.ts"
+import {
+  Box,
+  Button,
+  Chip,
+  Choice,
+  Cluster,
+  Field,
+  Pager,
+  Section,
+  Slider,
+  Stack,
+  Toggle,
+} from "mrlyui"
+import { call, setter } from "../../builders"
+import { colors, NUMBERS, opts } from "../../components/options"
+import { Shot } from "../../components/Shot"
+import { useOrbit } from "../../eyes/orbit"
+import { Shader } from "../../eyes/Shader"
+import { useSend } from "../../send"
+import type { Shade } from "../../types"
+
+const LEVELS = ["1", "2", "3"]
 
 type State = {
   design: string
@@ -22,41 +36,72 @@ type State = {
   shade?: Shade
 }
 
-const turn = setter("three")
-
-export function three(state: unknown, _send: Send): Node {
+export function Three({ state }: { state: unknown }) {
   const s = state as State
+  const send = useSend()
+  const turn = setter("three")
+  const { rig, turn: spin, pan, zoom, onOrtho } = useOrbit("three")
   return (
-    <stack key="three">
-      <card key="board">
-        <Board
-          app="three"
-          shade={s.shade}
-          turn={call("orbit.turn", { app: "three" })}
-          zoom={call("orbit.zoom", { app: "three" })}
-          pan={call("orbit.pan", { app: "three" })}
+    <Stack>
+      <Box>
+        <Shader shade={s.shade} handle="three" turn={spin} pan={pan} zoom={zoom} />
+      </Box>
+      <Box>
+        <Pager
+          current={s.index + 1}
+          total={s.count}
+          onPrev={() => send(call("three.page", { dir: "prev" }))}
+          onNext={() => send(call("three.page", { dir: "next" }))}
         />
-      </card>
-      <card key="page">
-        <Pager app="three" current={s.index + 1} total={s.count} />
-        <button key="reset" call={call("three.reset")}>reset</button>
-        <Shot />
-      </card>
-      <card key="controls">
-        <choice key="number" value={String(s.number)} options={NUMBERS} call={turn("number")} arg="value" label="number" mode="row" />
-        <choice key="level" value={String(s.level)} options={["1", "2", "3"]} call={turn("level")} arg="value" label="level" mode="row" />
-        <choice key="fill" value={s.fill} options={colors()} call={turn("fill")} arg="value" label="fill" />
-      </card>
-      <card key="looks">
-        <toggle key="edges" on={s.edges} call={turn("edges")} arg="value" label="edges" />
-        <toggle key="wireframe" on={s.wireframe} call={turn("wireframe")} arg="value" label="wireframe" />
-        <toggle key="axes" on={s.axes} call={turn("axes")} arg="value" label="axes" />
-        <toggle key="ortho" on={orbit("three").ortho} call={call("orbit.ortho", { app: "three" })} arg="value" label="ortho" />
-        <range key="alpha" value={s.alpha} min={32} max={255} step={1} call={turn("alpha")} arg="value" label="alpha" />
-      </card>
-      <card key="meter">
-        <text key="meter" role="note">{`${s.design} · ${s.census.grid}^3 · fill ${s.census.fill} · void ${s.census.void}`}</text>
-      </card>
-    </stack>
+        <Cluster>
+          <Button onClick={() => send(call("face.full", { handle: "three" }))}>fullscreen</Button>
+          <Button onClick={() => send(call("three.reset"))}>reset</Button>
+          <Shot />
+        </Cluster>
+      </Box>
+      <Section label={s.design}>
+        <Cluster>
+          <Chip>{`grid ${s.census.grid}^3`}</Chip>
+          <Chip>{`fill ${s.census.fill}`}</Chip>
+          <Chip>{`void ${s.census.void}`}</Chip>
+        </Cluster>
+      </Section>
+      <Section label="shape">
+        <Choice
+          label="number"
+          mode="row"
+          value={String(s.number)}
+          options={opts(NUMBERS)}
+          onChange={v => send(turn("number", v))}
+        />
+        <Choice
+          label="level"
+          mode="row"
+          value={String(s.level)}
+          options={opts(LEVELS)}
+          onChange={v => send(turn("level", v))}
+        />
+      </Section>
+      <Section label="paint">
+        <Choice label="fill" value={s.fill} options={opts(colors())} onChange={v => send(turn("fill", v))} />
+        <Field label="alpha">
+          <Slider min={32} max={255} step={1} value={s.alpha} onChange={v => send(turn("alpha", v))} />
+        </Field>
+      </Section>
+      <Section label="look">
+        <Field label="edges">
+          <Toggle value={s.edges} onChange={v => send(turn("edges", v))} />
+        </Field>
+        <Field label="wireframe">
+          <Toggle value={s.wireframe} onChange={v => send(turn("wireframe", v))} />
+        </Field>
+        <Field label="axes">
+          <Toggle value={s.axes} onChange={v => send(turn("axes", v))} />
+        </Field>
+        <Field label="ortho">
+          <Toggle value={rig.ortho} onChange={onOrtho} />
+        </Field>
+      </Section>
+    </Stack>
   )
 }

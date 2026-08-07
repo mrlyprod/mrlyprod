@@ -1,19 +1,25 @@
-import { call } from "../builders.ts"
-import { colorpicker } from "./colorpicker.tsx"
-import { hex, names } from "../palette.ts"
-import { reading } from "../reads.ts"
-import type { Node } from "../types.ts"
+import { ColorPicker } from "mrlyui"
+import { call } from "../builders"
+import { hex, names } from "../palette"
+import { reading } from "../reads"
+import { useSend } from "../send"
 
-export function palette(app: string, colors: string[]): Node[] {
+export function Palette({ app, colors }: { app: string; colors: string[] }) {
+  const send = useSend()
   const lib = (reading("colors/library") as string[] | null) ?? []
   const pool = lib.length > 0 ? lib : names()
-  const picked = new Set(colors.map(c => c.toLowerCase()))
-  const swatches = pool.map(name => ({ name, hex: hex(name) }))
-  const on = (name: string) => picked.has(hex(name).toLowerCase())
-  const pick = (name: string) => {
-    const swatch = hex(name)
-    const next = on(name) ? colors.filter(c => c.toLowerCase() !== swatch.toLowerCase()) : [...colors, swatch]
-    return call(`${app}.set`, { key: "palette", value: next })
+  const worn = new Set(colors.map(one => one.toLowerCase()))
+  const swatches = pool.map(one => ({ name: one, color: hex(one) }))
+  const value = pool.filter(one => worn.has(hex(one).toLowerCase()))
+
+  const pick = (one: string | null) => {
+    if (one === null) return
+    const swatch = hex(one)
+    const next = worn.has(swatch.toLowerCase())
+      ? colors.filter(c => c.toLowerCase() !== swatch.toLowerCase())
+      : [...colors, swatch]
+    send(call(`${app}.set`, { key: "palette", value: next }))
   }
-  return [colorpicker("palette", swatches, on, pick)]
+
+  return <ColorPicker swatches={swatches} value={value} onChange={pick} />
 }
