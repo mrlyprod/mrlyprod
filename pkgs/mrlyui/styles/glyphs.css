@@ -117,3 +117,11 @@
   shape-rendering: crispEdges;
   width: auto;
 }
+
+/* MARK */
+
+.mark {
+  height: auto;
+  image-rendering: pixelated;
+  width: 100%;
+}

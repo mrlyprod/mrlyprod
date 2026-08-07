@@ -223,10 +223,13 @@
 /* CALENDAR */
 
 .calendar {
+  background-color: var(--body-color);
+  border: var(--border);
+  border-radius: var(--radius);
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  padding: var(--space-2);
+  padding: var(--space-3);
   width: calc(var(--box-height) * 7 + var(--space-3));
 }
 

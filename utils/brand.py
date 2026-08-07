@@ -103,9 +103,11 @@ SUBSETS = {
     "ui.woff2": ui_icons,
 }
 
+UI_FACES = ["mono", "sans", "serif", "display", "mrlyfont", "emoji", "ui", "seti"]
+
 PACKAGES = {
     "pkgs/mrlycss/faces.css": ["mono", "mrlyfont", "site", "seti"],
-    "pkgs/mrlyui/styles/faces.css": ["mono", "sans", "serif", "display", "mrlyfont", "emoji", "ui", "seti"],
+    "pkgs/mrlyui/styles/faces.css": UI_FACES,
 }
 
 # FETCH
@@ -385,10 +387,22 @@ def icons():
     subsets()
     emit()
 
+def bundle():
+    target = os.path.join(ROOT, "pkgs", "mrlyui", "fonts")
+    os.makedirs(target, exist_ok=True)
+    urls = {}
+    for src, prefix, name in payload():
+        if prefix != "fonts":
+            continue
+        shutil.copyfile(src, os.path.join(target, name))
+        urls[os.path.basename(src)] = f"../fonts/{name}"
+    write(os.path.join(ROOT, "pkgs", "mrlyui", "styles", "faces-local.css"), sheet(UI_FACES, shared(urls)))
+
 def terminal():
     match sys.argv[1:]:
         case ["fetch"]: main(refetch=True)
         case ["icons"]: icons()
+        case ["bundle"]: bundle()
         case _: main()
 
 if __name__ == "__main__":

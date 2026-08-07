@@ -31,3 +31,5 @@ node_modules/
 
 # OS
 .DS_Store
+pkgs/mrlyui/fonts/
+pkgs/mrlyui/styles/faces-local.css

@@ -38,6 +38,7 @@
   --frame-width: 31.25rem;
   --read-width: 48.5rem;
   --box-height: calc(var(--font-size) * 3.5);
+  --head: calc(var(--box-height) + var(--space-2) * 2);
 }
 
 /* TYPE */

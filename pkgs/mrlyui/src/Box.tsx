@@ -112,6 +112,7 @@ export function Grid({ children, className, style, cols, min }: {
   const vars: Record<string, string | number> = {}
   if (cols) vars["--grid-cols"] = cols
   if (min) vars["--min-col-width"] = `${min}px`
+  else if (cols) vars["--min-col-width"] = "0px"
   return (
     <div className={cx("grid", className)} style={{ ...style, ...vars } as CSSProperties}>
       {children}

@@ -1,7 +1,8 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import "./sink.css"
 import {
   Alert,
+  applyPrefs,
   Autocomplete,
   Badge,
   Banner,
@@ -23,23 +24,28 @@ import {
   Field,
   Frame,
   GraphemeInput,
-  Header,
   Grid,
+  Header,
   Icon,
   Input,
   Letters,
+  loadPrefs,
+  Mark,
   Modal,
   POOL,
   Pager,
   Popover,
   Progress,
   Radio,
+  read,
   Row,
   Search,
   Section,
   Select,
+  Setting,
   Sheet,
   Slider,
+  sound,
   Spinner,
   Stack,
   StepSlider,
@@ -54,7 +60,9 @@ import {
   Toggle,
   Tooltip,
   useFont,
+  usePrefs,
   useTheme,
+  write,
 } from "mrlyui"
 import type { ColorName, Variant } from "mrlyui"
 
@@ -62,69 +70,154 @@ const VARIANTS: Variant[] = ["info", "success", "warn", "danger"]
 
 const FRUIT = ["apple", "banana", "cherry", "grape", "lemon", "mango", "melon", "peach", "pear", "plum"]
 
-function set(name: string, value: string) {
-  if (value === "") document.documentElement.style.removeProperty(name)
-  else document.documentElement.style.setProperty(name, value)
+const STEPS = [0, 2, 4, 5, 7, 9, 11]
+
+const WHITE_KEYS = ["C", "D", "E", "F", "G", "A", "B"]
+
+function download(name: string, text: string, type: string) {
+  const url = URL.createObjectURL(new Blob([text], { type }))
+  const a = document.createElement("a")
+  a.href = url
+  a.download = name
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
-function Knobs() {
+function SettingsPane() {
+  const [prefs, patch, reset] = usePrefs()
   const [theme, cycle] = useTheme()
   const [mrly, toggleFont] = useFont()
-  const [unit, setUnit] = useState(0)
-  const [border, setBorder] = useState(1)
-  const [radius, setRadius] = useState(2)
-  const [accent, setAccent] = useState<ColorName | null>(null)
+  return (
+    <Stack>
+      <Setting label="theme">
+        <Button onClick={cycle}>
+          <Symbol name={THEME_ICONS[theme]} /> {theme === "" ? "auto" : theme}
+        </Button>
+      </Setting>
+      <Setting label="mrlyfont">
+        <Toggle value={mrly} onChange={toggleFont} />
+      </Setting>
+      <Box>
+        <Stack>
+          <Text className="caption">measure</Text>
+          <Setting label="unit" hint="0 keeps the clamp">
+            <Slider min={0} max={8} value={prefs.unit} onChange={v => patch({ unit: v })} />
+          </Setting>
+          <Setting label="border">
+            <Slider min={0} max={5} value={prefs.border} onChange={v => patch({ border: v })} />
+          </Setting>
+          <Setting label="radius">
+            <Slider min={0} max={8} value={prefs.radius} onChange={v => patch({ radius: v })} />
+          </Setting>
+        </Stack>
+      </Box>
+      <Box>
+        <Stack>
+          <Text className="caption">accent</Text>
+          <ColorPicker auto value={prefs.accent === "" ? null : prefs.accent} onChange={c => patch({ accent: c ?? "" })} />
+        </Stack>
+      </Box>
+      <Box>
+        <Stack>
+          <Text className="caption">sound</Text>
+          <Setting label="sound">
+            <Toggle value={prefs.sound} onChange={v => patch({ sound: v })} />
+          </Setting>
+          <Setting label="haptics">
+            <Toggle value={prefs.haptics} onChange={v => patch({ haptics: v })} />
+          </Setting>
+          <Setting label="note">
+            <Select
+              options={["random", ...sound.NOTES].map(n => ({ label: n, value: n }))}
+              value={prefs.note}
+              onChange={n => patch({ note: n })}
+            />
+          </Setting>
+          <Field label="wave">
+            <Radio
+              options={sound.WAVES.map(w => ({ label: w, value: w }))}
+              value={prefs.wave}
+              onChange={w => patch({ wave: w })}
+            />
+          </Field>
+          <Setting label="duration">
+            <Slider min={50} max={1000} step={50} value={prefs.duration} onChange={v => patch({ duration: v })} />
+          </Setting>
+        </Stack>
+      </Box>
+      <Button wide onClick={reset}>
+        reset
+      </Button>
+    </Stack>
+  )
+}
 
-  const tune = (next: number) => {
-    setUnit(next)
-    set("--unit", next === 0 ? "" : `${next}px`)
+type Iden = {
+  name: string
+  born: string
+  favorite: ColorName | null
+  bio: string
+}
+
+const IDEN_KEY = "mrly-iden"
+
+function loadIden(): Iden {
+  const held = read(IDEN_KEY)
+  if (held === "") return { name: "", born: "", favorite: null, bio: "" }
+  try {
+    return JSON.parse(held) as Iden
+  } catch {
+    return { name: "", born: "", favorite: null, bio: "" }
+  }
+}
+
+function IdenPane() {
+  const [iden, setIden] = useState(loadIden)
+
+  const patch = (part: Partial<Iden>) => {
+    setIden(held => {
+      const next = { ...held, ...part }
+      write(IDEN_KEY, JSON.stringify(next))
+      return next
+    })
   }
 
-  const fence = (next: number) => {
-    setBorder(next)
-    set("--border-width", `${next}px`)
-  }
-
-  const round = (next: number) => {
-    setRadius(next)
-    set("--radius", next === 0 ? "0px" : `calc(var(--unit) * ${next})`)
-  }
-
-  const paint = (next: ColorName | null) => {
-    setAccent(next)
-    set("--accent-color", next === null ? "" : `var(--c-${next})`)
-  }
-
-  const reset = () => {
-    tune(0)
-    fence(1)
-    round(2)
-    paint(null)
-  }
+  const md = () =>
+    [
+      `# ${iden.name || "someone"}`,
+      "",
+      `- born: ${iden.born || "unknown"}`,
+      `- favorite: ${iden.favorite ?? "unknown"}`,
+      "",
+      iden.bio,
+    ].join("\n")
 
   return (
     <Stack>
+      <Field label="name">
+        <Input value={iden.name} onChange={v => patch({ name: v })} placeholder="who are you" />
+      </Field>
+      <Field label="born">
+        <DatePicker
+          value={iden.born === "" ? undefined : new Date(iden.born)}
+          onChange={d => patch({ born: d ? d.toISOString().slice(0, 10) : "" })}
+          placeholder="pick a day"
+        />
+      </Field>
+      <Field label="favorite">
+        <ColorPicker value={iden.favorite} onChange={c => patch({ favorite: c })} />
+      </Field>
+      <Field label="bio">
+        <Textarea value={iden.bio} onChange={v => patch({ bio: v })} placeholder="a few words" rows={4} />
+      </Field>
       <Row>
-        <Button onClick={cycle}>
-          <Symbol name={THEME_ICONS[theme]} /> theme
+        <Button onClick={() => download("iden.json", JSON.stringify(iden, null, 2), "application/json")}>
+          <Symbol name="download" /> json
         </Button>
-        <Button active={mrly} onClick={toggleFont}>
-          mrlyfont
+        <Button onClick={() => download("iden.md", md(), "text/markdown")}>
+          <Symbol name="download" /> md
         </Button>
-        <Button onClick={reset}>reset</Button>
       </Row>
-      <Field label="unit" hint="0 keeps the fluid clamp">
-        <Slider min={0} max={8} value={unit} onChange={tune} />
-      </Field>
-      <Field label="border">
-        <Slider min={0} max={5} value={border} onChange={fence} />
-      </Field>
-      <Field label="radius">
-        <Slider min={0} max={8} value={radius} onChange={round} />
-      </Field>
-      <Field label="accent">
-        <ColorPicker auto value={accent} onChange={paint} />
-      </Field>
     </Stack>
   )
 }
@@ -222,10 +315,14 @@ function Glyphs() {
         <Symbol name="close" />
         <Symbol name="check" />
         <Symbol name="info" />
+        <Symbol name="warning" />
+        <Symbol name="error" />
+        <Symbol name="add" />
+        <Symbol name="remove" />
+        <Symbol name="menu" />
+        <Symbol name="star" />
         <Symbol name="light_mode" />
         <Symbol name="dark_mode" />
-        <Symbol name="chevron_left" />
-        <Symbol name="chevron_right" />
       </Cluster>
       <Row>
         <Icon emoji="🐍" label="snake" active={app === "snake"} onClick={() => setApp("snake")} />
@@ -238,6 +335,9 @@ function Glyphs() {
         <Emoji glyph="🧱" size="3rem" />
         <Emoji glyph="🧱" size="4rem" />
       </Row>
+      <Box>
+        <Mark />
+      </Box>
     </Stack>
   )
 }
@@ -392,6 +492,24 @@ function Pickers() {
   )
 }
 
+function Sounds() {
+  return (
+    <Stack>
+      <Grid cols={7}>
+        {WHITE_KEYS.map((n, i) => (
+          <Card key={n} onClick={() => sound.play(sound.freq(60 + (STEPS[i] ?? 0)))}>
+            <Text>{n}</Text>
+          </Card>
+        ))}
+      </Grid>
+      <Row>
+        <Button onClick={() => sound.tap()}>tap</Button>
+        <Text className="caption">every tap rolls a note from the major scale</Text>
+      </Row>
+    </Stack>
+  )
+}
+
 function Feedback() {
   const [toast, setToast] = useState(false)
   const [banner, setBanner] = useState(true)
@@ -459,7 +577,7 @@ function Overlays() {
   const [sheet, setSheet] = useState(false)
   return (
     <Stack>
-      <Row>
+      <Cluster>
         <Button onClick={() => setModal(true)}>modal</Button>
         <Button onClick={() => setDrawer(true)}>drawer</Button>
         <Button onClick={() => setSheet(true)}>sheet</Button>
@@ -471,7 +589,7 @@ function Overlays() {
         <Tooltip label="a hint">
           <Button>hover me</Button>
         </Tooltip>
-      </Row>
+      </Cluster>
       <Modal open={modal} onClose={() => setModal(false)} title="A modal">
         <Text>Esc, backdrop, or the close button.</Text>
       </Modal>
@@ -488,62 +606,72 @@ function Overlays() {
 export function Sink() {
   const [pane, setPane] = useState<"" | "menu" | "iden">("")
   const [marked, setMarked] = useState(false)
+
+  useEffect(() => {
+    applyPrefs(loadPrefs())
+    const arm = () => sound.unlock()
+    window.addEventListener("pointerdown", arm, { once: true })
+    return () => window.removeEventListener("pointerdown", arm)
+  }, [])
+
   return (
-    <Frame>
-      <Stack airy>
-        <Header
-          open={pane}
-          onMenu={() => setPane(pane === "menu" ? "" : "menu")}
-          onMark={() => setMarked(true)}
-          onIden={() => setPane(pane === "iden" ? "" : "iden")}
-        />
-        <Drawer open={pane === "menu"} onClose={() => setPane("")} side="left" title="menu">
-          <Text>The menu drawer, opened by the plus.</Text>
-        </Drawer>
-        <Modal open={pane === "iden"} onClose={() => setPane("")} title="iden">
-          <Text>The identity pane, opened by the O.</Text>
-        </Modal>
-        <Toast open={marked} onClose={() => setMarked(false)}>
-          mrly
-        </Toast>
-        <header className="masthead">
-          <Letters text="mrlyui" />
-          <Text className="caption">one unit, many boxes</Text>
-        </header>
-        <Section label="theme">
-          <Knobs />
-        </Section>
-        <Section label="plates">
-          <Plates />
-        </Section>
-        <Section label="boxes">
-          <Boxes />
-        </Section>
-        <Section label="words">
-          <Words />
-        </Section>
-        <Section label="glyphs">
-          <Glyphs />
-        </Section>
-        <Section label="buttons">
-          <Buttons />
-        </Section>
-        <Section label="controls">
-          <Controls />
-        </Section>
-        <Section label="pickers">
-          <Pickers />
-        </Section>
-        <Section label="feedback">
-          <Feedback />
-        </Section>
-        <Section label="navigation">
-          <Navigation />
-        </Section>
-        <Section label="overlays">
-          <Overlays />
-        </Section>
-      </Stack>
-    </Frame>
+    <>
+      <Header
+        open={pane}
+        onMenu={() => setPane(pane === "menu" ? "" : "menu")}
+        onMark={() => setMarked(true)}
+        onIden={() => setPane(pane === "iden" ? "" : "iden")}
+      />
+      <Drawer open={pane === "menu"} onClose={() => setPane("")} side="left" title="settings">
+        <SettingsPane />
+      </Drawer>
+      <Drawer open={pane === "iden"} onClose={() => setPane("")} side="right" title="iden">
+        <IdenPane />
+      </Drawer>
+      <Toast open={marked} onClose={() => setMarked(false)}>
+        mrly
+      </Toast>
+      <Frame>
+        <Stack airy>
+          <header className="masthead">
+            <Letters text="mrlyui" />
+            <Text className="caption">one unit, many boxes</Text>
+          </header>
+          <Section label="plates">
+            <Plates />
+          </Section>
+          <Section label="boxes">
+            <Boxes />
+          </Section>
+          <Section label="words">
+            <Words />
+          </Section>
+          <Section label="glyphs">
+            <Glyphs />
+          </Section>
+          <Section label="buttons">
+            <Buttons />
+          </Section>
+          <Section label="controls">
+            <Controls />
+          </Section>
+          <Section label="pickers">
+            <Pickers />
+          </Section>
+          <Section label="sound">
+            <Sounds />
+          </Section>
+          <Section label="feedback">
+            <Feedback />
+          </Section>
+          <Section label="navigation">
+            <Navigation />
+          </Section>
+          <Section label="overlays">
+            <Overlays />
+          </Section>
+        </Stack>
+      </Frame>
+    </>
   )
 }

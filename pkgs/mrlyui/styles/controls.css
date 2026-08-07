@@ -521,3 +521,40 @@
   box-shadow: none;
   color: var(--body-color);
 }
+
+/* SETTING */
+
+.setting {
+  align-items: center;
+  display: flex;
+  gap: var(--space-3);
+  min-height: var(--box-height);
+  width: 100%;
+}
+
+.setting-lead {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  max-width: 40%;
+}
+
+.setting-label {
+  font-size: var(--font-sm);
+}
+
+.setting-hint {
+  color: var(--muted-color);
+  font-size: var(--font-xs);
+}
+
+.setting-control {
+  align-items: center;
+  display: flex;
+  flex: 1 1 auto;
+  justify-content: flex-end;
+}
+
+.setting-control > * {
+  max-width: 100%;
+}

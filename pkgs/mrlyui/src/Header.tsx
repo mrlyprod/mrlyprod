@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import { cx } from "./lib"
 import { Letters } from "./Letters"
 
@@ -10,6 +11,12 @@ export function Header({ open = "", onMenu, onMark, onIden, className }: {
   onIden?: () => void
   className?: string
 }) {
+  useEffect(() => {
+    document.documentElement.style.setProperty("--head-offset", "var(--head)")
+    return () => {
+      document.documentElement.style.removeProperty("--head-offset")
+    }
+  }, [])
   return (
     <header className={cx("header", className)}>
       <button
