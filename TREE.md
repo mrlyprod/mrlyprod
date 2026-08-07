@@ -118,7 +118,6 @@ mrlyprod
 │   │   │   └── scan.ts
 │   │   ├── src
 │   │   │   ├── components
-│   │   │   │   ├── Cart.tsx
 │   │   │   │   ├── Landing.tsx
 │   │   │   │   ├── Menu.tsx
 │   │   │   │   ├── Panel.tsx
@@ -126,7 +125,6 @@ mrlyprod
 │   │   │   ├── lib
 │   │   │   │   ├── data.ts
 │   │   │   │   ├── md.ts
-│   │   │   │   ├── orders.ts
 │   │   │   │   ├── site.ts
 │   │   │   │   └── text.ts
 │   │   │   ├── views
@@ -327,33 +325,6 @@ mrlyprod
 │       ├── symbols2.ttf
 │       └── ui.woff2
 ├── pkgs
-│   ├── mrlycss
-│   │   ├── base.css
-│   │   ├── code.css
-│   │   ├── colors.css
-│   │   ├── doc.css
-│   │   ├── faces.css
-│   │   ├── fonts.css
-│   │   ├── mrly.css
-│   │   ├── package.json
-│   │   ├── seti.css
-│   │   ├── site.css
-│   │   └── tokens.css
-│   ├── mrlydom
-│   │   ├── src
-│   │   │   ├── Aside.tsx
-│   │   │   ├── Brand.tsx
-│   │   │   ├── Crumbs.tsx
-│   │   │   ├── Fold.tsx
-│   │   │   ├── Footer.tsx
-│   │   │   ├── Glyph.tsx
-│   │   │   ├── Letters.tsx
-│   │   │   ├── head.ts
-│   │   │   ├── index.ts
-│   │   │   ├── router.ts
-│   │   │   └── theme.ts
-│   │   ├── package.json
-│   │   └── tsconfig.json
 │   ├── mrlygpu
 │   │   ├── src
 │   │   │   ├── index.ts

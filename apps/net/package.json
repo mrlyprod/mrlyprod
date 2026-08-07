@@ -12,8 +12,7 @@
     "check": "tsc --noEmit"
   },
   "dependencies": {
-    "mrlycss": "workspace:*",
-    "mrlydom": "workspace:*",
+    "mrlyui": "workspace:*",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "rehype-raw": "^7.0.0",

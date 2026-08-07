@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises"
 import { join, resolve } from "node:path"
-import { BASE, CATALOG, ORDERS } from "../src/lib/site"
+import { BASE, CATALOG } from "../src/lib/site"
 import { scan } from "./scan"
 
 // PATHS
@@ -29,7 +29,7 @@ function sitemap(routes: string[]): string {
 // MAIN
 
 const { site } = scan(APP)
-const routes = ["", ...Object.keys(site.products), ...Object.keys(site.pages), CATALOG.route, ORDERS.route]
+const routes = ["", ...Object.keys(site.products), ...Object.keys(site.pages), CATALOG.route]
 await mkdir(OUT, { recursive: true })
 await writeFile(join(OUT, "sitemap.xml"), sitemap(routes))
 await writeFile(join(OUT, "site.json"), JSON.stringify(site))

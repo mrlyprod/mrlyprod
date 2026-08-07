@@ -48,7 +48,7 @@ def test(loud=False, record=False):
     ts = config or touches(paths, "package.json", "bun.lock", "tsconfig.base.json")
     rust = config or touches(paths, "pkgs/", "apps/cli", "Cargo.toml")
     sites = ts or touches(paths, "apps/git/", "pkgs/mrlyui", "pkgs/mrlygpu")
-    net = ts or touches(paths, "apps/net/", "pkgs/mrlycss", "pkgs/mrlydom")
+    net = ts or touches(paths, "apps/net/", "pkgs/mrlyui")
     ui = ts or touches(paths, "pkgs/mrlyui")
     web = ts or touches(paths, "apps/web")
     print("mrlytest")

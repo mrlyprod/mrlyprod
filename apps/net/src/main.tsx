@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client"
-import "mrlycss/mrly.css"
+import "mrlyui/mrly.css"
 import { App } from "./App"
 
 document.documentElement.classList.add("js")

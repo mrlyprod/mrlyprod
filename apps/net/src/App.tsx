@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react"
-import { Crumbs, useLinks, useRoute, useScrolled } from "mrlydom"
-import { Cart } from "./components/Cart"
+import { Crumbs, Title, useLinks, useRoute, useScrolled } from "mrlyui"
 import { Landing } from "./components/Landing"
 import { Menu } from "./components/Menu"
 import { Shell } from "./components/Shell"
 import { load, NONE } from "./lib/data"
 import type { Site } from "./lib/data"
-import { CATALOG, ORDERS, ROOT } from "./lib/site"
+import { CATALOG, ROOT } from "./lib/site"
 import { NotFound } from "./views/NotFound"
 import { Page } from "./views/Page"
 
@@ -20,22 +19,12 @@ function Home({ site }: { site: Site }) {
   )
 }
 
-function Basket({ site }: { site: Site }) {
-  return (
-    <Shell site={site} route={ORDERS.route} title={ORDERS.title} desc={ORDERS.desc}>
-      <Crumbs root={ROOT} route={ORDERS.route} />
-      <h1>Cart</h1>
-      <Cart />
-    </Shell>
-  )
-}
-
 function Catalog({ site }: { site: Site }) {
   return (
     <Shell site={site} route={CATALOG.route} title={CATALOG.title} desc={CATALOG.desc}>
       <Crumbs root={ROOT} route={CATALOG.route} />
-      <h1>Menu</h1>
-      <Menu site={site} route={CATALOG.route} sheet />
+      <Title>Menu</Title>
+      <Menu site={site} route={CATALOG.route} />
     </Shell>
   )
 }
@@ -54,7 +43,7 @@ export function App() {
   }, [])
   if (site === undefined) {
     return (
-      <Shell site={NONE} route={route} title={ROOT} desc="" cart={false}>
+      <Shell site={NONE} route={route} title={ROOT} desc="">
         {null}
       </Shell>
     )
@@ -67,8 +56,6 @@ export function App() {
     case "":
     case "home":
       return <Home site={site} />
-    case ORDERS.route:
-      return <Basket site={site} />
     case CATALOG.route:
       return <Catalog site={site} />
     default:

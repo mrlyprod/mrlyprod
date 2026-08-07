@@ -106,7 +106,6 @@ SUBSETS = {
 UI_FACES = ["mono", "sans", "serif", "display", "mrlyfont", "emoji", "ui", "seti"]
 
 PACKAGES = {
-    "pkgs/mrlycss/faces.css": ["mono", "mrlyfont", "site", "seti"],
     "pkgs/mrlyui/styles/faces.css": UI_FACES,
 }
 

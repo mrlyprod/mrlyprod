@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react"
-import { Crumbs } from "mrlydom"
-import type { Section } from "mrlydom"
+import { Crumbs } from "mrlyui"
 import { Panel } from "../components/Panel"
 import { Shell } from "../components/Shell"
 import { raw, routesOf } from "../lib/data"
 import type { Site } from "../lib/data"
+import type { Anchor } from "../lib/md"
 import type { Doc } from "../lib/site"
 import { DESIGNED, ROOT } from "../lib/site"
 
 // BODY
 
-type Held = { html: string; toc: Section[] }
+type Held = { html: string; toc: Anchor[] }
 
 const BLANK: Held = { html: "", toc: [] }
 
@@ -52,8 +52,8 @@ export function Page({ site, doc, product = false }: { site: Site; doc: Doc; pro
   return (
     <Shell site={site} route={doc.route} title={doc.title} desc={doc.desc} toc={held.toc}>
       <Crumbs root={ROOT} route={doc.route} />
-      <div className={product ? "product" : undefined} dangerouslySetInnerHTML={{ __html: held.html }} />
-      {product && <Panel preset={DESIGNED.includes(doc.route) ? doc.route : undefined} />}
+      <div className="doc" dangerouslySetInnerHTML={{ __html: held.html }} />
+      {product && <Panel designed={DESIGNED.includes(doc.route)} />}
     </Shell>
   )
 }

@@ -6,13 +6,14 @@ import remarkRehype from "remark-rehype"
 import rehypeRaw from "rehype-raw"
 import rehypeStringify from "rehype-stringify"
 import type { Element, Root } from "hast"
-import type { Section } from "mrlydom"
 
 // SHAPE
 
+export type Anchor = { id: string; text: string }
+
 export type Miss = { route: string; value: string }
 
-export type Doc = { html: string; toc: Section[]; misses: Miss[] }
+export type Doc = { html: string; toc: Anchor[]; misses: Miss[] }
 
 type Parent = Root | Element
 
@@ -47,7 +48,7 @@ function slug(text: string): string {
     .replace(/ /g, "-")
 }
 
-const heads: Plugin<[Section[]], Root> = function (toc) {
+const heads: Plugin<[Anchor[]], Root> = function (toc) {
   return tree => {
     const seen = new Map<string, number>()
     walk(tree, node => {
@@ -96,7 +97,7 @@ const refs: Plugin<[string, string[], Miss[]], Root> = function (from, routes, m
 // RENDER
 
 export async function render(route: string, body: string, routes: string[]): Promise<Doc> {
-  const toc: Section[] = []
+  const toc: Anchor[] = []
   const misses: Miss[] = []
   const file = await unified()
     .use(remarkParse)

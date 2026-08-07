@@ -5,8 +5,6 @@
     "apps/git",
     "apps/net",
     "apps/web",
-    "pkgs/mrlycss",
-    "pkgs/mrlydom",
     "pkgs/mrlygpu",
     "pkgs/mrlyui"
   ],

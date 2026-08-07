@@ -1,7 +1,9 @@
-import type { Link } from "mrlydom"
+import type { BrandName, SymbolName } from "mrlyui"
 import type { Site } from "./data"
 
 // SITE
+
+export type Link = readonly [string, string, BrandName | SymbolName]
 
 export const BASE = "https://mrly.net"
 
@@ -39,10 +41,6 @@ export const SOCIALS: Link[] = [
   ["help", "mailto:help@mrlyprod.com", "alternate_email"],
 ]
 
-// KEYS
-
-export const BASKET = "mrly-orders"
-
 // DOCS
 
 export type Doc = { route: string; title: string; desc: string }
@@ -52,8 +50,6 @@ export const DESIGNED = ["math", "bricks", "sheets"]
 export const PLAIN = ["about", "contact", "privacy", "terms"]
 
 export const CATALOG: Doc = { route: "menu", title: "Menu", desc: `Every page on ${ROOT}.` }
-
-export const ORDERS: Doc = { route: "cart", title: "Cart", desc: "Pre-orders waiting to be placed." }
 
 // MENU
 

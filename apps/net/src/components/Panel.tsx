@@ -1,25 +1,18 @@
+import { Box, Button, Caption, Cluster, Stack, Title } from "mrlyui"
 import { HELP, LEAD } from "../lib/site"
 
-export function Panel({ preset }: { preset?: string }) {
-  if (preset === undefined) {
-    return (
-      <div className="buy">
-        <p className="lead">Coming soon.</p>
-        <p className="fine">
-          <a href={HELP}>Want it sooner? Say hello.</a>
-        </p>
-      </div>
-    )
-  }
+export function Panel({ designed }: { designed: boolean }) {
   return (
-    <div className="buy">
-      <p className="lead">Order yours.</p>
-      <p className="act">
-        <a className="build" href={HELP}>
-          Get in touch
-        </a>
-      </p>
-      <p className="fine">{LEAD}</p>
-    </div>
+    <Box>
+      <Stack tight>
+        <Title>{designed ? "Order yours." : "Coming soon."}</Title>
+        <Caption>{designed ? LEAD : "Want it sooner?"}</Caption>
+        <Cluster>
+          <Button href={HELP} primary>
+            {designed ? "Get in touch" : "Say hello"}
+          </Button>
+        </Cluster>
+      </Stack>
+    </Box>
   )
 }
