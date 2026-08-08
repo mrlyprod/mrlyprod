@@ -14,7 +14,7 @@ PIXEL = 125
 UPEM = 1000
 OUT = os.path.join(ROOT, "files", "mrlyfont")
 CREATED = datetime(2026, 1, 1, tzinfo=timezone.utc)
-HANDLE = mp.boot()
+HANDLE = mp.boot("full")
 
 def trim(rows):
     width = len(rows[0])

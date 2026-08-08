@@ -1,6 +1,6 @@
 import mrlyweb
 
-os = mrlyweb.boot()
+os = mrlyweb.boot("full")
 
 world = mrlyweb.list(os)
 assert world["apps"]

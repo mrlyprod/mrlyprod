@@ -134,9 +134,10 @@ export function App({ face }: { face: Face }) {
     return () => window.removeEventListener("pointerdown", unlock)
   }, [])
 
-  const title = (apps.find(app => app.route === route)?.title ?? route).toUpperCase()
+  const manifest = apps.find(app => app.route === route)
+  const title = (manifest?.title ?? route).toUpperCase()
   const resets = slot?.actions.some(verb => verb.verb === `${route}.reset`) ?? false
-  const Draw = views[route]
+  const Draw = manifest === undefined ? undefined : views[route]
 
   return (
     <Wire.Provider value={send}>

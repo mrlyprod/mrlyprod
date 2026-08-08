@@ -14,7 +14,7 @@ Reads are addresses: mrly_read with a path like chess/board returns one small su
 while a bare app name returns its whole view. Prefer the deepest address that answers.";
 
 pub fn serve() {
-    let mut os = mrlyweb::registry::boot();
+    let mut os = mrlyweb::registry::boot("full");
     let mut names: HashMap<String, String> = HashMap::new();
     let mut rendered = tools(&os, &mut names).to_string();
     let stdin = std::io::stdin();

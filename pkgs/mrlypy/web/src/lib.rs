@@ -41,9 +41,9 @@ pub struct Handle {
 }
 
 #[pyfunction]
-fn boot() -> Handle {
+fn boot(loadout: &str) -> Handle {
     Handle {
-        os: mrlyweb::registry::boot(),
+        os: mrlyweb::registry::boot(loadout),
     }
 }
 

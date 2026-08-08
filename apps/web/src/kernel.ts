@@ -1,12 +1,15 @@
-import init, { boot, call as rawCall, list as rawList, read as rawRead } from "../../../pkgs/mrlyjs/web/pkg/mrlyjs.js"
+import init, { boot as rawBoot, call as rawCall, list as rawList, read as rawRead } from "../../../pkgs/mrlyjs/web/pkg/mrlyjs.js"
 import type { Handle, InitInput } from "../../../pkgs/mrlyjs/web/pkg/mrlyjs.js"
 import type { Call, Observation, Registry, View } from "./types"
 
-export { boot }
 export type { Handle }
 
 export async function load(module_or_path: InitInput | Promise<InitInput>): Promise<void> {
   await init({ module_or_path })
+}
+
+export function boot(loadout: string): Handle {
+  return rawBoot(loadout)
 }
 
 function pack(shape?: unknown): string | undefined {

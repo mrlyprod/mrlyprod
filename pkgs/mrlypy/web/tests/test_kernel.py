@@ -8,14 +8,14 @@ def focused(env):
 
 
 def snake():
-    os = mrlyweb.boot()
+    os = mrlyweb.boot("full")
     mrlyweb.call(os, {"verb": "nav.open", "args": {"app": "snake"}})
     mrlyweb.call(os, {"verb": "snake.reset", "args": {"seed": 7}})
     return os
 
 
 def test_boot_reads_the_envelope():
-    os = mrlyweb.boot()
+    os = mrlyweb.boot("full")
     env = mrlyweb.read(os)
     assert env["tick"] == 0
     assert env["route"]["app"] == "menu"
@@ -23,7 +23,7 @@ def test_boot_reads_the_envelope():
 
 
 def test_call_takes_dict_or_str():
-    os = mrlyweb.boot()
+    os = mrlyweb.boot("full")
     a = mrlyweb.call(os, {"verb": "nav.open", "args": {"app": "calculator"}})
     assert a["route"]["app"] == "calculator"
     b = mrlyweb.call(os, '{"verb": "calculator.digit", "args": {"d": 4}}')
@@ -31,7 +31,7 @@ def test_call_takes_dict_or_str():
 
 
 def test_list_covers_the_surface():
-    os = mrlyweb.boot()
+    os = mrlyweb.boot("full")
     world = mrlyweb.list(os)
     routes = [a["route"] for a in world["apps"]]
     assert "snake" in routes
@@ -41,12 +41,12 @@ def test_list_covers_the_surface():
 
 
 def test_list_prunes_with_a_shape():
-    os = mrlyweb.boot()
+    os = mrlyweb.boot("full")
     assert sorted(mrlyweb.list(os, {"version": 1}).keys()) == ["version"]
 
 
 def test_snake_round():
-    os = mrlyweb.boot()
+    os = mrlyweb.boot("full")
     mrlyweb.call(os, {"verb": "nav.open", "args": {"app": "snake"}})
     env = mrlyweb.call(os, {"verb": "snake.reset", "args": {"seed": 7}})
     assert focused(env)["seed"] == 7
@@ -58,7 +58,7 @@ def test_snake_round():
 
 
 def test_read_leaves_focus_alone():
-    os = mrlyweb.boot()
+    os = mrlyweb.boot("full")
     view = mrlyweb.read(os, "colors")
     assert view["app"] == "colors"
     assert view["state"]
@@ -91,7 +91,7 @@ def test_snake_cells_are_a_16_grid():
 
 
 def test_frameless_app_has_no_frame():
-    os = mrlyweb.boot()
+    os = mrlyweb.boot("full")
     mrlyweb.call(os, {"verb": "nav.open", "args": {"app": "calculator"}})
     assert mrlyweb.read(os, "calculator/frame") is None
     assert mrlyweb.read(snake(), "snake/frame") is None
@@ -104,7 +104,7 @@ def test_replay_rebuilds_the_same_cells():
 
 
 def test_geometry_is_base64_f32():
-    os = mrlyweb.boot()
+    os = mrlyweb.boot("full")
     buffer = mrlyweb.read(os, "solids/geometry")
     assert buffer["dtype"] == "f32"
     assert len(base64.b64decode(buffer["data"])) % 4 == 0

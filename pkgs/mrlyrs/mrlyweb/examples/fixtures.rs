@@ -3,7 +3,7 @@ use mrlyos::kernel::{Call, Os};
 use std::fs;
 
 fn boot() -> Os {
-    mrlyweb::registry::boot()
+    mrlyweb::registry::boot("full")
 }
 
 fn shoot(os: &Os, app: &str) -> Json {

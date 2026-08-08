@@ -13,7 +13,7 @@ import { views } from "./src/views/index"
 const wasm = readFileSync(new URL("../../pkgs/mrlyjs/web/pkg/mrlyjs_bg.wasm", import.meta.url))
 await load(wasm)
 
-const handle = boot()
+const handle = boot("full")
 installReads(path => read(handle, path))
 const registry = list(handle)
 let now = 1783600496000
@@ -387,6 +387,25 @@ for (const name of readdirSync(new URL("./fixtures", import.meta.url)).sort()) {
   }
 }
 check("every fixture state renders through its view", stale.length === 0, stale.join(" | "))
+
+// LOADOUTS
+
+const trimmed = boot("arcade")
+const shelved = list(trimmed).apps.map(app => app.route)
+const coco = ["notes", "calculator", "calendar", "clock", "timer", "photos", "piano", "colors", "emoji", "font", "pixel", "dice", "hash"]
+check(
+  "the arcade boots the system and the games and nothing else",
+  shelved.length === 29 && shelved.length + coco.length === registry.apps.length,
+  String(shelved.length),
+)
+check(
+  "the arcade leads with the menu and keeps its games",
+  shelved[0] === "menu" && shelved.includes("snake") && shelved.includes("solids"),
+  shelved.join(" "),
+)
+check("no coco app rides the arcade", !coco.some(route => shelved.includes(route)), coco.filter(route => shelved.includes(route)).join(" "))
+const trespass = call(trimmed, { verb: "nav.open", args: { app: "notes" }, now: now + 1000 })
+check("the arcade refuses a route it never booted", trespass.last?.ok === false && trespass.view?.app === "menu", String(trespass.last?.note))
 
 console.log(failures === 0 ? "verify green" : `verify red: ${failures} failing`)
 if (failures > 0) process.exit(1)

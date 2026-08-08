@@ -80,7 +80,7 @@ fn usage() {
 // BOOT
 
 pub(crate) fn build() -> Os {
-    mrlyweb::registry::boot()
+    mrlyweb::registry::boot("full")
 }
 
 // LIST

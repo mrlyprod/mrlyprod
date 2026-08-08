@@ -30,7 +30,7 @@ const KERNEL = new URL("../../../pkgs/mrlyjs/web/pkg/mrlyjs_bg.wasm", import.met
 
 export async function boot(): Promise<Face> {
   await load(fetch(KERNEL))
-  const handle = wake()
+  const handle = wake("arcade")
   install(paletteData as Palette)
   installReads(path => read(handle, path))
   const registry = list(handle)
