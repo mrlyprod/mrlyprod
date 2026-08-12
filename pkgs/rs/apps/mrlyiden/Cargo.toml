@@ -1,0 +1,13 @@
+[package]
+name = "mrlyiden"
+version.workspace = true
+edition.workspace = true
+description = "The identity card: your handle, your id and whether you are verified, on one read-only screen."
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+
+[dependencies]
+mrlycore.workspace = true
+mrlyos.workspace = true

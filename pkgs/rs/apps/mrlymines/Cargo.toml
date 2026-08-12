@@ -1,0 +1,18 @@
+[package]
+name = "mrlymines"
+version.workspace = true
+edition.workspace = true
+description = "Minesweeper with a guaranteed safe opening: seeded fields up to 30x30, drawn as emoji, digits or tiles."
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+
+[dependencies]
+mrlycore.workspace = true
+mrlyos.workspace = true
+mrlyskin.workspace = true
+
+[dev-dependencies]
+mrlycore = { workspace = true, features = ["testkit"] }
+mrlyos = { workspace = true, features = ["testkit"] }

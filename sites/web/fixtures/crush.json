@@ -1,0 +1,408 @@
+{
+  "tick": 4,
+  "route": {
+    "app": "crush",
+    "view": "main",
+    "params": {}
+  },
+  "view": {
+    "app": "crush",
+    "params": {},
+    "state": {
+      "score": 0,
+      "steps": 2,
+      "over": false,
+      "seed": 7,
+      "settings": {
+        "cols": 9,
+        "rows": 9,
+        "kinds": 5,
+        "speed": 1,
+        "reward_crush": 1000,
+        "tile": 3,
+        "design": "carpet"
+      },
+      "board": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "crushable": [
+        [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ]
+      ],
+      "active": {
+        "x": 1,
+        "y": 2,
+        "kind": 3
+      },
+      "cells": {
+        "ids": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            3,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "skin": "tiles",
+        "pens": [
+          "#ffd100",
+          "#ffd100",
+          "#d332e9",
+          "#d332e9",
+          "#00d1bb",
+          "#ff8f2c",
+          "#b18462",
+          "#00d1bb",
+          "#ffd100"
+        ],
+        "design": "carpet"
+      }
+    },
+    "actions": [
+      {
+        "verb": "crush.move",
+        "args": {
+          "dir": "left | right"
+        }
+      },
+      {
+        "verb": "crush.drop",
+        "args": {}
+      },
+      {
+        "verb": "crush.crush",
+        "args": {}
+      },
+      {
+        "verb": "crush.step",
+        "args": {
+          "n": "int"
+        }
+      },
+      {
+        "verb": "crush.reset",
+        "args": {
+          "seed": "int"
+        }
+      },
+      {
+        "verb": "crush.set",
+        "args": {
+          "key": {
+            "cols": "int 4..16",
+            "rows": "int 4..16",
+            "kinds": "int 2..8",
+            "speed": "int 1..8",
+            "tile": "int 1..8",
+            "reward_crush": "int 0..10000",
+            "design": "carpet | net | vtree | htree | solid"
+          },
+          "value": "of key"
+        }
+      }
+    ],
+    "beat": {
+      "verb": "crush.step",
+      "args": {
+        "n": 1
+      }
+    }
+  },
+  "last": {
+    "ok": true,
+    "data": {
+      "steps": 1,
+      "over": false
+    },
+    "note": null
+  },
+  "sync": "synced"
+}

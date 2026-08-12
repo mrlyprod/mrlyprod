@@ -1,0 +1,12 @@
+/* MASTHEAD */
+
+.masthead {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-6) 0;
+}
+
+.masthead .letters {
+  height: 2.5rem;
+}

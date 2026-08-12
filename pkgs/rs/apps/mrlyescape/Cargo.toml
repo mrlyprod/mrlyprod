@@ -1,0 +1,18 @@
+[package]
+name = "mrlyescape"
+version.workspace = true
+edition.workspace = true
+description = "A seeded maze chase: eat the floor, dodge the ghosts, escape through the doors."
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+
+[dependencies]
+mrlycore.workspace = true
+mrlyos.workspace = true
+mrlyskin.workspace = true
+
+[dev-dependencies]
+mrlycore = { workspace = true, features = ["testkit"] }
+mrlyos = { workspace = true, features = ["testkit"] }

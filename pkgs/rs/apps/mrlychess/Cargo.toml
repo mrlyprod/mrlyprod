@@ -1,0 +1,18 @@
+[package]
+name = "mrlychess"
+version.workspace = true
+edition.workspace = true
+description = "The full game of chess with the rules written from scratch: both sides played by hand on one board dealt from a layout string."
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+
+[dependencies]
+mrlycore.workspace = true
+mrlyos.workspace = true
+mrlyskin.workspace = true
+
+[dev-dependencies]
+mrlycore = { workspace = true, features = ["testkit"] }
+mrlyos = { workspace = true, features = ["testkit"] }

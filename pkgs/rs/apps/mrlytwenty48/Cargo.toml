@@ -1,0 +1,18 @@
+[package]
+name = "mrlytwenty48"
+version.workspace = true
+edition.workspace = true
+description = "2048 on any grid from 2x2 to 8x8: seeded spawns, merges that score, and a round that ends when nothing can move."
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+
+[dependencies]
+mrlycore.workspace = true
+mrlyos.workspace = true
+mrlyskin.workspace = true
+
+[dev-dependencies]
+mrlycore = { workspace = true, features = ["testkit"] }
+mrlyos = { workspace = true, features = ["testkit"] }

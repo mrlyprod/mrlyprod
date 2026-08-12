@@ -1,0 +1,17 @@
+/* SURFACE */
+
+.cell > .canvas {
+  border: none;
+  border-radius: 0;
+}
+
+.canvas:fullscreen {
+  max-height: 100dvh;
+  max-width: 100vw;
+}
+
+/* GLYPH */
+
+.cell > .letters {
+  height: 45cqmin;
+}

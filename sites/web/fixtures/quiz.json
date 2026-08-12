@@ -1,0 +1,86 @@
+{
+  "tick": 3,
+  "route": {
+    "app": "quiz",
+    "view": "main",
+    "params": {}
+  },
+  "view": {
+    "app": "quiz",
+    "params": {},
+    "state": {
+      "score": 0,
+      "steps": 1,
+      "over": true,
+      "won": false,
+      "seed": 7,
+      "position": 1,
+      "total": 10,
+      "settings": {
+        "options": 3,
+        "length": 10,
+        "surface": "grid",
+        "skin": "tiles",
+        "reward_right": 1000,
+        "reward_wrong": 0
+      },
+      "options": [
+        "mesh",
+        "grid",
+        "dot"
+      ],
+      "cells": {
+        "ids": [
+          [
+            11
+          ]
+        ],
+        "skin": "tiles",
+        "pens": [
+          "#32cc58"
+        ]
+      }
+    },
+    "actions": [
+      {
+        "verb": "quiz.reset",
+        "args": {
+          "seed": "int"
+        }
+      },
+      {
+        "verb": "quiz.set",
+        "args": {
+          "key": {
+            "options": "int 2..8",
+            "length": "int 2..32",
+            "surface": "grid | canvas",
+            "skin": "tiles | digits",
+            "reward_right": "int 0..10000",
+            "reward_wrong": "int -10000..0"
+          },
+          "value": "of key"
+        }
+      }
+    ]
+  },
+  "last": {
+    "ok": true,
+    "data": {
+      "correct": false
+    },
+    "note": null
+  },
+  "sync": "synced",
+  "effects": [
+    {
+      "kind": "sound",
+      "data": {
+        "op": "note",
+        "freq": 207652,
+        "ms": 160,
+        "gain": 30
+      }
+    }
+  ]
+}

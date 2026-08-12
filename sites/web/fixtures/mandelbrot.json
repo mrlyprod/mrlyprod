@@ -1,0 +1,80 @@
+{
+  "tick": 3,
+  "route": {
+    "app": "mandelbrot",
+    "view": "main",
+    "params": {}
+  },
+  "view": {
+    "app": "mandelbrot",
+    "params": {},
+    "state": {
+      "steps": 3,
+      "over": false,
+      "seed": 7,
+      "settings": {
+        "width": 100,
+        "height": 100,
+        "depth": 96,
+        "zoom": 1012,
+        "cycle": 240,
+        "start": 500,
+        "band": 10000,
+        "drift": 400,
+        "fade": 24,
+        "spin": 0,
+        "primary": "#000000",
+        "accent": "#1ec9f3"
+      },
+      "shade": {
+        "program": "mandelbrot"
+      }
+    },
+    "actions": [
+      {
+        "verb": "mandelbrot.step",
+        "args": {
+          "n": "int"
+        }
+      },
+      {
+        "verb": "mandelbrot.reset",
+        "args": {
+          "seed": "int"
+        }
+      },
+      {
+        "verb": "mandelbrot.set",
+        "args": {
+          "key": {
+            "width": "int 16..512",
+            "height": "int 16..512",
+            "depth": "int 16..600",
+            "zoom": "int 1000..1050",
+            "cycle": "int 30..3000",
+            "start": "int 250..4000",
+            "band": "int 2000..64000",
+            "drift": "int 0..4000",
+            "fade": "int 0..240",
+            "spin": "int 0..50",
+            "primary": "#000000 | #ffffff | #ff3d40 | #ff8f2c | #ffd100 | #32cc58 | #00d1bb | #00cad8 | #1ec9f3 | #008cff | #6768fa | #d332e9 | #ff325a | #b18462 | #8e8e93",
+            "accent": "#000000 | #ffffff | #ff3d40 | #ff8f2c | #ffd100 | #32cc58 | #00d1bb | #00cad8 | #1ec9f3 | #008cff | #6768fa | #d332e9 | #ff325a | #b18462 | #8e8e93"
+          },
+          "value": "of key"
+        }
+      }
+    ],
+    "beat": {
+      "verb": "mandelbrot.step",
+      "args": {}
+    }
+  },
+  "last": {
+    "ok": true,
+    "data": {
+      "steps": 3
+    },
+    "note": null
+  },
+  "sync": "synced"
+}

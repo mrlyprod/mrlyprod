@@ -1,0 +1,19 @@
+[package]
+name = "mrlylife"
+version.workspace = true
+edition.workspace = true
+description = "Conway's Game of Life with the rules pried open: a neighbourhood you draw, birth and survival counts you pick, and 512 generations to scrub."
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+
+[dependencies]
+mrlycore.workspace = true
+mrlymath.workspace = true
+mrlyos.workspace = true
+mrlyskin.workspace = true
+
+[dev-dependencies]
+mrlycore = { workspace = true, features = ["testkit"] }
+mrlyos = { workspace = true, features = ["testkit"] }

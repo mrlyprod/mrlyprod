@@ -1,0 +1,14 @@
+[package]
+name = "mrlyskin"
+version.workspace = true
+edition.workspace = true
+description = "Grids of role integers in, dressed pixels out."
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+
+[dependencies]
+mrlycore.workspace = true
+mrlyfont.workspace = true
+mrlymath.workspace = true

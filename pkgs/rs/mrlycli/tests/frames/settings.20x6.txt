@@ -1,0 +1,6 @@
+⚙  settings         
+[1] settings.set    
+> settings.set {"key
+tick 8              
+>                   
+mrly · settings · ti

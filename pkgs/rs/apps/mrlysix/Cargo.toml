@@ -1,0 +1,18 @@
+[package]
+name = "mrlysix"
+version.workspace = true
+edition.workspace = true
+description = "Three-dimensional fractal tilings flattened onto a hexagonal grid, seen as blocks, faces or a slice."
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+
+[dependencies]
+mrlycore.workspace = true
+mrlymath.workspace = true
+mrlyos.workspace = true
+
+[dev-dependencies]
+mrlycore = { workspace = true, features = ["testkit"] }
+mrlyos = { workspace = true, features = ["testkit"] }

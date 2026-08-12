@@ -1,0 +1,17 @@
+[package]
+name = "mrlycolors"
+version.workspace = true
+edition.workspace = true
+description = "A browser for the house palette of fifteen named colors, one page each, with a library of favorites to trim."
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+
+[dependencies]
+mrlycore.workspace = true
+mrlyos.workspace = true
+
+[dev-dependencies]
+mrlycore = { workspace = true, features = ["testkit"] }
+mrlyos = { workspace = true, features = ["testkit"] }

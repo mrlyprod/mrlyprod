@@ -1,0 +1,24 @@
+🔢  2048                                  {                                      
+                   ▀                       "tick": 4,                           
+                                           "route": {                           
+                 ▀                           "app": "twenty48",                 
+score: 0                                     "view": "main",                    
+steps: 0                                     "params": {}                       
+over: false                                },                                   
+seed: 5                                    "view": {                            
+settings: {"grid":6,"reward_merge":1000      "app": "twenty48",                 
+board: grid 6x6                              "params": {},                      
+[1] twenty48.slide [2] twenty48.reset        "state": {                         
+                                                                                
+                                                                                
+> open twenty48                                                                 
+> twenty48.reset {"seed":5}                                                     
+tick 1                                                                          
+> twenty48.slide {"dir":"left"}                                                 
+tick 2 · sound                                                                  
+> twenty48.set {"key":"grid","value":6}                                         
+tick 3                                                                          
+> twenty48.set {"key":"skin","value":"emojis"}                                  
+tick 4                                                                          
+>                                                                               
+mrly · twenty48 · tick 4   arrows play · 1-9 act · / command · esc menu · q quit

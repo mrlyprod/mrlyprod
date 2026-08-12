@@ -1,0 +1,41 @@
+# SECRETS
+.env
+*.env
+
+# CLAUDE
+.claude/
+
+# RUNTIME
+/logs/
+/locks/
+/memory/
+
+# OUTPUT
+data/
+dist/
+pkg/
+*.zip
+pkgs/js/mrlyui/styles/faces-local.css
+pkgs/js/mrlyui/styles/fonts/
+
+# PYTHON
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.mypy_cache/
+.pytest_cache/
+
+# RUST
+target/
+
+# NODE
+node_modules/
+.astro/
+.wrangler/
+
+# IDE
+.vscode/
+
+# OS
+.DS_Store

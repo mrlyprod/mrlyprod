@@ -1,0 +1,24 @@
+⚙  settings                              {                                      
+launchpad: "list"                          "tick": 8,                           
+darkmode: false                            "route": {                           
+color: "blue"                                "app": "settings",                 
+fill: "random"                               "view": "main",                    
+font: "mono"                                 "params": {}                       
+emoji: "system"                            },                                   
+scale: 4                                   "view": {                            
+radius: 2                                    "app": "settings",                 
+pace: 0                                      "params": {},                      
+[1] settings.set                             "state": {                         
+tick 3                                                                          
+> settings.set {"key":"background","value":"teal"}                              
+tick 4                                                                          
+> settings.set {"key":"darkmode","value":false}                                 
+tick 5                                                                          
+> settings.set {"key":"pace","value":0}                                         
+tick 6                                                                          
+> settings.set {"key":"background","value":"red"}                               
+tick 7                                                                          
+> settings.set {"key":"background","value":"mint"}                              
+tick 8                                                                          
+>                                                                               
+mrly · settings · tick 8   arrows play · 1-9 act · / command · esc menu · q quit

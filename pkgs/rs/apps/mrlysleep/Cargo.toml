@@ -1,0 +1,17 @@
+[package]
+name = "mrlysleep"
+version.workspace = true
+edition.workspace = true
+description = "A screensaver to fall asleep to: one soft square drifting across an empty field, recolored at every bounce."
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+
+[dependencies]
+mrlycore.workspace = true
+mrlyos.workspace = true
+
+[dev-dependencies]
+mrlycore = { workspace = true, features = ["testkit"] }
+mrlyos = { workspace = true, features = ["testkit"] }

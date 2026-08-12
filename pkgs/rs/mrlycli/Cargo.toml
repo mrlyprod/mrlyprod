@@ -1,0 +1,19 @@
+[package]
+name = "mrlycli"
+version.workspace = true
+edition.workspace = true
+description = "Mrly in a terminal: REPL, TUI and MCP behind one mrly binary."
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+
+[[bin]]
+name = "mrly"
+path = "src/main.rs"
+
+[dependencies]
+libc = "0.2"
+mrlycore = { workspace = true }
+mrlyweb = { workspace = true }
+mrlyos = { workspace = true }

@@ -1,0 +1,13 @@
+{"open": "twenty48"}
+{"assert": {"route": "twenty48"}}
+{"assert": {"verb": "twenty48.slide"}}
+{"call": {"verb": "twenty48.reset", "args": {"seed": 5}}}
+{"assert": {"state": ["twenty48/seed", 5]}}
+{"assert": {"state": ["twenty48/steps", 0]}}
+{"call": {"verb": "twenty48.slide", "args": {"dir": "left"}}}
+{"assert": {"state": ["twenty48/steps", 1]}}
+{"call": {"verb": "twenty48.set", "args": {"key": "grid", "value": 6}}}
+{"assert": {"state": ["twenty48/settings/grid", 6]}}
+{"assert": {"state": ["twenty48/steps", 0]}}
+{"call": {"verb": "twenty48.set", "args": {"key": "skin", "value": "emojis"}}}
+{"assert": {"state": ["twenty48/settings/skin", "emojis"]}}

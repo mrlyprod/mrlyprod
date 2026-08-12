@@ -1,0 +1,15 @@
+[package]
+name = "mrlymath"
+version.workspace = true
+edition.workspace = true
+description = "The mathematics of Mrly: automata, fractals, graphs, spaces, crypto, fft."
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+
+[dependencies]
+mrlycore.workspace = true
+
+[dev-dependencies]
+mrlycore = { workspace = true, features = ["testkit"] }

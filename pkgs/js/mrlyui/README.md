@@ -1,0 +1,16 @@
+# mrlyui
+
+- The mrly design system: one stylesheet, one component kit.
+- React 19 peers; the visual truth lives in the CSS.
+- `import "mrlyui/mrly.css"`, then compose the components.
+- Fonts ride cdn.mrly.net by default; `utils/brand.py bundle` bakes them local.
+- After bundling, `import "mrlyui/styles/local.css"` needs no network at all.
+- Copy `boot.js` into the site head so theme, font and prefs land before first paint.
+- The sink shows every piece on one page: `bun run dev` here.
+- Boxes compose; skin and shape stay orthogonal.
+- Tokens cascade from one `--unit`; retune by scope, never fork.
+- Ink and paper invert for interaction; accent means meaning.
+- `Fold`, `Tree` and `Footer` carry the site chrome; `Skeleton` holds the space while it loads.
+- `Brand` is the one sanctioned SVG; every other icon is a Material Symbols ligature.
+- `seti(path)` names a file-type class; those colors are content, so they stay hardcoded.
+- `.scrolled` rides on `<html>` from `useScrolled()` and lifts the header off the page.

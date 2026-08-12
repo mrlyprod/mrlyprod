@@ -1,0 +1,13 @@
+[package]
+name = "mrlymenu"
+version.workspace = true
+edition.workspace = true
+description = "The launcher behind the desktop: every visible app, filtered live as you type."
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+
+[dependencies]
+mrlycore.workspace = true
+mrlyos.workspace = true

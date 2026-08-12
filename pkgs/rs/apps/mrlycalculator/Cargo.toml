@@ -1,0 +1,13 @@
+[package]
+name = "mrlycalculator"
+version.workspace = true
+edition.workspace = true
+description = "The Mrly calculator app: four functions, chained left to right, exact decimal to twelve places."
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+
+[dependencies]
+mrlycore.workspace = true
+mrlyos.workspace = true

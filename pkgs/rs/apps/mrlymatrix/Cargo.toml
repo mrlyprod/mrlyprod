@@ -1,0 +1,18 @@
+[package]
+name = "mrlymatrix"
+version.workspace = true
+edition.workspace = true
+description = "The digital rain: seeded columns of glyphs streaming down, bright at the head and fading along the tail."
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+
+[dependencies]
+mrlycore.workspace = true
+mrlyos.workspace = true
+mrlyskin.workspace = true
+
+[dev-dependencies]
+mrlycore = { workspace = true, features = ["testkit"] }
+mrlyos = { workspace = true, features = ["testkit"] }

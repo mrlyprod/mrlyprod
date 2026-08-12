@@ -1,0 +1,17 @@
+[package]
+name = "mrlyemojis"
+version.workspace = true
+edition.workspace = true
+description = "An emoji picker over nine categories, with a kept library of up to 24 favorites."
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+
+[dependencies]
+mrlycore.workspace = true
+mrlyos.workspace = true
+
+[dev-dependencies]
+mrlycore = { workspace = true, features = ["testkit"] }
+mrlyos = { workspace = true, features = ["testkit"] }

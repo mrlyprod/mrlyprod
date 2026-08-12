@@ -1,0 +1,14 @@
+[package]
+name = "mrlycore"
+version.workspace = true
+edition.workspace = true
+description = "The zero-dependency core of Mrly: atoms, cells, tensors, images, colors, sound, rng, json."
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+
+[features]
+testkit = []
+
+[dependencies]

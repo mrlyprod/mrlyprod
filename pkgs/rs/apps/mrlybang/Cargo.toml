@@ -1,0 +1,19 @@
+[package]
+name = "mrlybang"
+version.workspace = true
+edition.workspace = true
+description = "The Mrly bang app: a walk through the universe of base-2 designs in one, two and three dimensions."
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+
+[dependencies]
+mrlycore.workspace = true
+mrlymath.workspace = true
+mrlyos.workspace = true
+mrlyskin.workspace = true
+
+[dev-dependencies]
+mrlycore = { workspace = true, features = ["testkit"] }
+mrlyos = { workspace = true, features = ["testkit"] }

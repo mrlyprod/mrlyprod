@@ -1,0 +1,18 @@
+[package]
+name = "mrlythree"
+version.workspace = true
+edition.workspace = true
+description = "An orbit-camera viewer for three-dimensional fractal tilings, rendered as a lit, banded mesh."
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+
+[dependencies]
+mrlycore.workspace = true
+mrlymath.workspace = true
+mrlyos.workspace = true
+
+[dev-dependencies]
+mrlycore = { workspace = true, features = ["testkit"] }
+mrlyos = { workspace = true, features = ["testkit"] }

@@ -1,0 +1,76 @@
+{
+  "tick": 3,
+  "route": {
+    "app": "sleep",
+    "view": "main",
+    "params": {}
+  },
+  "view": {
+    "app": "sleep",
+    "params": {},
+    "state": {
+      "steps": 3,
+      "over": false,
+      "seed": 7,
+      "settings": {
+        "cols": 32,
+        "rows": 24,
+        "size": 4,
+        "speed": 50,
+        "palette": [
+          "#32cc58",
+          "#00d1bb",
+          "#1ec9f3",
+          "#f5a623",
+          "#ff5d73"
+        ]
+      },
+      "shade": {
+        "program": "sleep"
+      }
+    },
+    "actions": [
+      {
+        "verb": "sleep.step",
+        "args": {
+          "n": "int"
+        }
+      },
+      {
+        "verb": "sleep.reset",
+        "args": {
+          "seed": "int"
+        }
+      },
+      {
+        "verb": "sleep.set",
+        "args": {
+          "key": {
+            "cols": "int 8..64",
+            "rows": "int 8..48",
+            "size": "int 2..12",
+            "speed": "int 10..200",
+            "palette.0": "#000000 | #ffffff | #ff3d40 | #ff8f2c | #ffd100 | #32cc58 | #00d1bb | #00cad8 | #1ec9f3 | #008cff | #6768fa | #d332e9 | #ff325a | #b18462 | #8e8e93",
+            "palette.1": "#000000 | #ffffff | #ff3d40 | #ff8f2c | #ffd100 | #32cc58 | #00d1bb | #00cad8 | #1ec9f3 | #008cff | #6768fa | #d332e9 | #ff325a | #b18462 | #8e8e93",
+            "palette.2": "#000000 | #ffffff | #ff3d40 | #ff8f2c | #ffd100 | #32cc58 | #00d1bb | #00cad8 | #1ec9f3 | #008cff | #6768fa | #d332e9 | #ff325a | #b18462 | #8e8e93",
+            "palette.3": "#000000 | #ffffff | #ff3d40 | #ff8f2c | #ffd100 | #32cc58 | #00d1bb | #00cad8 | #1ec9f3 | #008cff | #6768fa | #d332e9 | #ff325a | #b18462 | #8e8e93",
+            "palette.4": "#000000 | #ffffff | #ff3d40 | #ff8f2c | #ffd100 | #32cc58 | #00d1bb | #00cad8 | #1ec9f3 | #008cff | #6768fa | #d332e9 | #ff325a | #b18462 | #8e8e93"
+          },
+          "value": "of key"
+        }
+      }
+    ],
+    "beat": {
+      "verb": "sleep.step",
+      "args": {}
+    }
+  },
+  "last": {
+    "ok": true,
+    "data": {
+      "steps": 3
+    },
+    "note": null
+  },
+  "sync": "synced"
+}

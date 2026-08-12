@@ -1,0 +1,19 @@
+[package]
+name = "mrlyquiz"
+version.workspace = true
+edition.workspace = true
+description = "A seeded picture quiz: name the design shown against a shuffled list, ten in a row to win, one wrong answer ends the run."
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+
+[dependencies]
+mrlycore.workspace = true
+mrlymath.workspace = true
+mrlyos.workspace = true
+mrlyskin.workspace = true
+
+[dev-dependencies]
+mrlycore = { workspace = true, features = ["testkit"] }
+mrlyos = { workspace = true, features = ["testkit"] }

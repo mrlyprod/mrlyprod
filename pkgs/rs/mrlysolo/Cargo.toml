@@ -1,0 +1,11 @@
+[package]
+name = "mrlysolo"
+version.workspace = true
+edition.workspace = true
+description = "The Mrly coin's engine: an integer ledger that replays."
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+
+[dependencies]

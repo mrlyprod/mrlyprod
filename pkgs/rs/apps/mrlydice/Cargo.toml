@@ -1,0 +1,18 @@
+[package]
+name = "mrlydice"
+version.workspace = true
+edition.workspace = true
+description = "Seven seeded dice in one cup: replayable rolls from d2 to d20 with a short history."
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+
+[dependencies]
+mrlycore.workspace = true
+mrlyos.workspace = true
+mrlyskin.workspace = true
+
+[dev-dependencies]
+mrlycore = { workspace = true, features = ["testkit"] }
+mrlyos = { workspace = true, features = ["testkit"] }

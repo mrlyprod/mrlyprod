@@ -1,0 +1,18 @@
+[package]
+name = "mrlyfonts"
+version.workspace = true
+edition.workspace = true
+description = "A specimen book for the Mrly font: one page per glyph, scrambled and relit pixel by pixel."
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+
+[dependencies]
+mrlycore.workspace = true
+mrlyfont.workspace = true
+mrlyos.workspace = true
+
+[dev-dependencies]
+mrlycore = { workspace = true, features = ["testkit"] }
+mrlyos = { workspace = true, features = ["testkit"] }

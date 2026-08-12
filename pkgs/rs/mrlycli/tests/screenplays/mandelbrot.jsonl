@@ -1,0 +1,13 @@
+{"open": "mandelbrot"}
+{"assert": {"route": "mandelbrot"}}
+{"assert": {"verb": "mandelbrot.set"}}
+{"call": {"verb": "mandelbrot.reset", "args": {"seed": 5}}}
+{"assert": {"state": ["mandelbrot/seed", 5]}}
+{"call": {"verb": "mandelbrot.step", "args": {"n": 3}}}
+{"assert": {"state": ["mandelbrot/steps", 3]}}
+{"call": {"verb": "mandelbrot.set", "args": {"key": "zoom", "value": 1020}}}
+{"assert": {"state": ["mandelbrot/settings/zoom", 1020]}}
+{"call": {"verb": "mandelbrot.set", "args": {"key": "accent", "value": "#ff8800"}}}
+{"assert": {"state": ["mandelbrot/settings/accent", "#ff8800"]}}
+{"call": {"verb": "mandelbrot.set", "args": {"key": "primary", "value": "#1ec9f3"}}}
+{"assert": {"state": ["mandelbrot/settings/primary", "#1ec9f3"]}}

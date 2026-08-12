@@ -1,0 +1,558 @@
+#![doc = include_str!("../README.md")]
+#![deny(missing_docs)]
+
+use mrlycore::rng::Rng;
+use mrlycore::{json, Json};
+use mrlyos::kernel::{App, Call, Effect, Iden, Manifest, Outcome, Verb};
+
+/// The specimen book: the page it is open at, any reveal in progress and the library of kept characters.
+pub struct Fonts {
+    order: Vec<char>,
+    at: usize,
+    reveal: Option<Reveal>,
+    library: Vec<char>,
+}
+
+struct Reveal {
+    pixels: Vec<usize>,
+    shown: usize,
+}
+
+impl Default for Fonts {
+    fn default() -> Fonts {
+        Fonts::new()
+    }
+}
+
+impl Fonts {
+    /// Opens the book at the first supported glyph, with A, a, 0 and # already kept.
+    pub fn new() -> Fonts {
+        Fonts {
+            order: mrlyfont::supported(),
+            at: 0,
+            reveal: None,
+            library: seed(),
+        }
+    }
+}
+
+fn seed() -> Vec<char> {
+    vec!['A', 'a', '0', '#']
+}
+
+fn wanted(shape: Option<&Json>, key: &str) -> bool {
+    shape.is_some() && asked(shape, key)
+}
+
+fn glyphs_fact(shape: Option<&Json>) -> Json {
+    if !wanted(shape, "glyphs") {
+        return json!({});
+    }
+    let mut map = mrlycore::json::Map::new();
+    for (c, rows) in mrlyfont::map() {
+        map.insert(c.to_string(), json!(rows));
+    }
+    Json::Obj(map)
+}
+
+fn descenders_fact(shape: Option<&Json>) -> Json {
+    if !wanted(shape, "descenders") {
+        return json!([]);
+    }
+    json!(mrlyfont::DESCENDERS
+        .iter()
+        .map(|c| c.to_string())
+        .collect::<Vec<_>>())
+}
+
+fn json_fact(shape: Option<&Json>) -> Json {
+    if !wanted(shape, "json") {
+        return json!("");
+    }
+    json!(mrlyfont::to_json(&mrlyfont::all()))
+}
+
+impl App for Fonts {
+    fn route(&self) -> &str {
+        "fonts"
+    }
+    fn manifest(&self) -> Manifest {
+        Manifest::new("fonts").emoji("🔤").category("design")
+    }
+    fn state(&self, _iden: &Iden, shape: Option<&Json>) -> Json {
+        let c = self.order[self.at];
+        let g = mrlyfont::glyph(c).unwrap();
+        let width = g.width();
+        let height = g.height();
+        let rows = match &self.reveal {
+            Some(reveal) => {
+                let mut grid = vec![vec![0u8; width]; height];
+                for &idx in reveal.pixels.iter().take(reveal.shown) {
+                    grid[idx / width][idx % width] = 1;
+                }
+                grid
+            }
+            None => mrlyfont::to_lists(&g),
+        };
+        json!({
+            "char": c.to_string(),
+            "name": mrlyfont::name_of(c),
+            "index": self.at,
+            "total": self.order.len(),
+            "revealing": self.reveal.is_some(),
+            "glyph": { "text": c.to_string(), "width": width, "height": height, "rows": rows },
+            "library": self.library.iter().map(|c| c.to_string()).collect::<Vec<_>>(),
+            "glyphs": glyphs_fact(shape),
+            "descenders": descenders_fact(shape),
+            "json": json_fact(shape),
+        })
+    }
+    fn actions(&self, _iden: &Iden) -> Vec<Verb> {
+        vec![
+            Verb::new("fonts.page", json!({ "dir": "next | prev" })),
+            Verb::new("fonts.pick", json!({ "char": "string" })),
+            Verb::new("fonts.scramble", json!({})),
+            Verb::new("fonts.tick", json!({})),
+            Verb::new(
+                "fonts.export",
+                json!({ "format": "json | ttf | woff | woff2" }),
+            ),
+            Verb::new("fonts.keep", json!({ "char": "string" })),
+            Verb::new("fonts.drop", json!({ "char": "string" })),
+        ]
+    }
+    fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
+        match call.verb.as_str() {
+            "fonts.page" => {
+                self.at = match call.arg("dir").as_str() {
+                    Some("next") => (self.at + 1) % self.order.len(),
+                    Some("prev") => (self.at + self.order.len() - 1) % self.order.len(),
+                    _ => return Outcome::fail("dir must be next or prev"),
+                };
+                self.reveal = None;
+                Outcome::ok(json!({ "char": self.order[self.at].to_string() }))
+            }
+            "fonts.pick" => {
+                let Some(s) = call.arg("char").as_str() else {
+                    return Outcome::fail("no such glyph");
+                };
+                let mut chars = s.chars();
+                let (Some(c), None) = (chars.next(), chars.next()) else {
+                    return Outcome::fail("no such glyph");
+                };
+                let Some(pos) = self.order.iter().position(|&x| x == c) else {
+                    return Outcome::fail("no such glyph");
+                };
+                self.at = pos;
+                self.reveal = None;
+                Outcome::ok(json!({ "char": c.to_string() }))
+            }
+            "fonts.scramble" => {
+                let c = self.order[self.at];
+                let g = mrlyfont::glyph(c).unwrap();
+                let width = g.width();
+                let rows = mrlyfont::to_lists(&g);
+                let mut pixels: Vec<usize> = Vec::new();
+                for (y, row) in rows.iter().enumerate() {
+                    for (x, &v) in row.iter().enumerate() {
+                        if v == 1 {
+                            pixels.push(y * width + x);
+                        }
+                    }
+                }
+                let seed = call.now.unwrap_or(0).max(0) as u64;
+                let mut rng = Rng::new(seed);
+                for i in (1..pixels.len()).rev() {
+                    let j = rng.below(i + 1);
+                    pixels.swap(i, j);
+                }
+                let n = pixels.len();
+                self.reveal = Some(Reveal { pixels, shown: 0 });
+                Outcome::ok(json!({ "pixels": n }))
+            }
+            "fonts.tick" => {
+                let Some(reveal) = self.reveal.as_mut() else {
+                    return Outcome::fail("nothing revealing");
+                };
+                reveal.shown += 1;
+                let shown = reveal.shown;
+                let done = shown >= reveal.pixels.len();
+                if done {
+                    self.reveal = None;
+                }
+                Outcome::ok(json!({ "shown": shown, "done": done }))
+            }
+            "fonts.export" => {
+                let Some((bytes, mime)) =
+                    mrlyfont::assets::format(call.arg("format").as_str().unwrap_or(""))
+                else {
+                    return Outcome::fail("no such format");
+                };
+                let name = format!("MrlyFont.{}", call.arg("format").as_str().unwrap());
+                let data = mrlycore::base64(bytes);
+                Outcome::ok(json!({ "name": name.clone() })).emit(Effect::new(
+                    "file",
+                    json!({ "name": name, "mime": mime, "data": data }),
+                ))
+            }
+            "fonts.keep" => {
+                let arg = call.arg("char");
+                let c = if arg.is_null() {
+                    self.order[self.at]
+                } else {
+                    let Some(s) = arg.as_str() else {
+                        return Outcome::fail("unknown char");
+                    };
+                    let mut chars = s.chars();
+                    let (Some(c), None) = (chars.next(), chars.next()) else {
+                        return Outcome::fail("unknown char");
+                    };
+                    c
+                };
+                if mrlyfont::glyph(c).is_none() {
+                    return Outcome::fail("unknown char");
+                }
+                if self.library.contains(&c) {
+                    return Outcome::fail("already kept");
+                }
+                if self.library.len() >= 24 {
+                    return Outcome::fail("library is full");
+                }
+                self.library.push(c);
+                Outcome::ok(json!({ "char": c.to_string() }))
+            }
+            "fonts.drop" => {
+                let Some(s) = call.arg("char").as_str() else {
+                    return Outcome::fail("not in the library");
+                };
+                let mut chars = s.chars();
+                let (Some(c), None) = (chars.next(), chars.next()) else {
+                    return Outcome::fail("not in the library");
+                };
+                match self.library.iter().position(|&x| x == c) {
+                    Some(i) => {
+                        self.library.remove(i);
+                        Outcome::ok(json!({ "char": c.to_string() }))
+                    }
+                    None => Outcome::fail("not in the library"),
+                }
+            }
+            _ => Outcome::fail("unknown verb"),
+        }
+    }
+    fn beat(&self) -> Option<Call> {
+        if self.reveal.is_some() {
+            Some(Call::new("fonts.tick", json!({})))
+        } else {
+            None
+        }
+    }
+    fn save(&self) -> Json {
+        json!({
+            "char": self.order[self.at].to_string(),
+            "library": self.library.iter().map(|c| c.to_string()).collect::<Vec<_>>(),
+        })
+    }
+    fn load(&mut self, state: &Json) {
+        self.reveal = None;
+        if let Some(s) = state["char"].as_str() {
+            let mut chars = s.chars();
+            if let (Some(c), None) = (chars.next(), chars.next()) {
+                if let Some(pos) = self.order.iter().position(|&x| x == c) {
+                    self.at = pos;
+                }
+            }
+        }
+        self.library = match state["library"].as_array() {
+            Some(items) => {
+                let mut library: Vec<char> = Vec::new();
+                for item in items {
+                    if let Some(s) = item.as_str() {
+                        let mut chars = s.chars();
+                        if let (Some(c), None) = (chars.next(), chars.next()) {
+                            if mrlyfont::glyph(c).is_some()
+                                && !library.contains(&c)
+                                && library.len() < 24
+                            {
+                                library.push(c);
+                            }
+                        }
+                    }
+                }
+                library
+            }
+            None => seed(),
+        };
+    }
+}
+
+fn asked(shape: Option<&Json>, key: &str) -> bool {
+    match shape.and_then(|s| s.as_object()) {
+        Some(keys) => keys.contains_key(key),
+        None => true,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use mrlyos::kernel::testkit::{iden, send};
+
+    #[test]
+    fn no_shape_asks_for_everything() {
+        assert!(asked(None, "frame"));
+    }
+
+    #[test]
+    fn a_take_all_shape_asks_for_everything() {
+        assert!(asked(Some(&json!(1)), "frame"));
+    }
+
+    #[test]
+    fn a_keyed_shape_asks_only_for_its_keys() {
+        let shape = json!({ "steps": 1 });
+        assert!(!asked(Some(&shape), "frame"));
+        assert!(asked(Some(&shape), "steps"));
+    }
+
+    #[test]
+    fn next_and_prev_wrap() {
+        let mut f = Fonts::new();
+        let total = f.order.len();
+        let out = send(&mut f, "fonts.page", json!({ "dir": "next" }));
+        assert!(out.ok);
+        assert_eq!(f.state(&iden(), None)["index"], json!(1));
+        let mut f = Fonts::new();
+        let out = send(&mut f, "fonts.page", json!({ "dir": "prev" }));
+        assert!(out.ok);
+        assert_eq!(f.state(&iden(), None)["index"], json!(total - 1));
+    }
+    #[test]
+    fn pick_finds_and_rejects() {
+        let mut f = Fonts::new();
+        let out = send(&mut f, "fonts.pick", json!({ "char": "a" }));
+        assert!(out.ok);
+        assert_eq!(f.state(&iden(), None)["char"], json!("a"));
+        let out = send(&mut f, "fonts.pick", json!({ "char": "zz" }));
+        assert!(!out.ok);
+        assert_eq!(out.note.as_deref(), Some("no such glyph"));
+        let out = send(&mut f, "fonts.pick", json!({ "char": "€" }));
+        assert!(!out.ok);
+        assert_eq!(out.note.as_deref(), Some("no such glyph"));
+        assert_eq!(f.state(&iden(), None)["char"], json!("a"));
+    }
+    #[test]
+    fn scramble_and_tick_reveal_progressively() {
+        let mut f = Fonts::new();
+        send(&mut f, "fonts.pick", json!({ "char": "a" }));
+        let out = f.call(&iden(), &Call::new("fonts.scramble", json!({})).at(42));
+        assert!(out.ok);
+        let pixels = out.data["pixels"].as_u64().unwrap();
+        assert!(pixels > 0);
+        for i in 1..=pixels {
+            let tick = send(&mut f, "fonts.tick", json!({}));
+            assert!(tick.ok);
+            assert_eq!(tick.data["shown"], json!(i));
+            let state = f.state(&iden(), None);
+            let sum: u64 = state["glyph"]["rows"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .flat_map(|r| r.as_array().unwrap())
+                .map(|v| v.as_u64().unwrap())
+                .sum();
+            assert_eq!(sum, i);
+            if i == pixels {
+                assert_eq!(tick.data["done"], json!(true));
+                assert_eq!(state["revealing"], json!(false));
+            } else {
+                assert_eq!(tick.data["done"], json!(false));
+                assert_eq!(state["revealing"], json!(true));
+            }
+        }
+        let g = mrlyfont::glyph('a').unwrap();
+        assert_eq!(
+            f.state(&iden(), None)["glyph"]["rows"],
+            json!(mrlyfont::to_lists(&g))
+        );
+    }
+    #[test]
+    fn tick_without_reveal_fails() {
+        let mut f = Fonts::new();
+        let out = send(&mut f, "fonts.tick", json!({}));
+        assert!(!out.ok);
+        assert_eq!(out.note.as_deref(), Some("nothing revealing"));
+    }
+    #[test]
+    fn beat_only_while_revealing() {
+        let mut f = Fonts::new();
+        assert!(f.beat().is_none());
+        f.call(&iden(), &Call::new("fonts.scramble", json!({})).at(1));
+        assert_eq!(
+            f.beat().unwrap().to_json(),
+            json!({ "verb": "fonts.tick", "args": {} })
+        );
+    }
+    #[test]
+    fn reveal_clears_on_navigation() {
+        let mut f = Fonts::new();
+        f.call(&iden(), &Call::new("fonts.scramble", json!({})).at(1));
+        assert_eq!(f.state(&iden(), None)["revealing"], json!(true));
+        send(&mut f, "fonts.page", json!({ "dir": "next" }));
+        assert_eq!(f.state(&iden(), None)["revealing"], json!(false));
+        f.call(&iden(), &Call::new("fonts.scramble", json!({})).at(1));
+        send(&mut f, "fonts.page", json!({ "dir": "prev" }));
+        assert_eq!(f.state(&iden(), None)["revealing"], json!(false));
+        f.call(&iden(), &Call::new("fonts.scramble", json!({})).at(1));
+        send(&mut f, "fonts.pick", json!({ "char": "b" }));
+        assert_eq!(f.state(&iden(), None)["revealing"], json!(false));
+    }
+    #[test]
+    fn reveal_survives_unrelated_failures() {
+        let mut f = Fonts::new();
+        f.call(&iden(), &Call::new("fonts.scramble", json!({})).at(1));
+        send(&mut f, "fonts.pick", json!({ "char": "zz" }));
+        assert_eq!(f.state(&iden(), None)["revealing"], json!(true));
+    }
+    #[test]
+    fn save_load_roundtrips() {
+        let mut a = Fonts::new();
+        send(&mut a, "fonts.pick", json!({ "char": "z" }));
+        let mut b = Fonts::new();
+        b.load(&a.save());
+        assert_eq!(b.state(&iden(), None)["char"], json!("z"));
+    }
+    #[test]
+    fn load_survives_garbage() {
+        let mut f = Fonts::new();
+        f.load(&json!({ "char": "€" }));
+        assert_eq!(f.state(&iden(), None)["index"], json!(0));
+        f.load(&json!({ "char": 5 }));
+        assert_eq!(f.state(&iden(), None)["index"], json!(0));
+        f.load(&json!({}));
+        assert_eq!(f.state(&iden(), None)["index"], json!(0));
+    }
+    #[test]
+    fn load_clears_reveal() {
+        let mut f = Fonts::new();
+        f.call(&iden(), &Call::new("fonts.scramble", json!({})).at(1));
+        f.load(&json!({ "char": "a" }));
+        assert_eq!(f.state(&iden(), None)["revealing"], json!(false));
+    }
+    #[test]
+    fn the_catalog_answers_only_when_asked() {
+        let f = Fonts::new();
+        let bare = f.state(&iden(), None);
+        assert_eq!(bare["glyphs"], json!({}));
+        assert_eq!(bare["descenders"], json!([]));
+        assert_eq!(bare["json"], json!(""));
+        let asked = f.state(
+            &iden(),
+            Some(&json!({ "glyphs": 1, "descenders": 1, "json": 1 })),
+        );
+        assert_eq!(
+            asked["glyphs"]["A"],
+            json!(mrlyfont::map().get(&'A').unwrap())
+        );
+        assert_eq!(asked["glyphs"].as_object().unwrap().len(), 108);
+        assert!(!asked["descenders"].as_array().unwrap().is_empty());
+        assert_eq!(
+            asked["json"].as_str().unwrap(),
+            mrlyfont::to_json(&mrlyfont::all())
+        );
+    }
+    #[test]
+    fn state_carries_name_and_total() {
+        let f = Fonts::new();
+        let state = f.state(&iden(), None);
+        assert_eq!(state["total"], json!(108));
+        assert_eq!(state["name"], json!(mrlyfont::name_of(f.order[0])));
+    }
+    #[test]
+    fn actions_offer_the_natural_verbs() {
+        let f = Fonts::new();
+        let names: Vec<String> = f.actions(&iden()).iter().map(|v| v.name.clone()).collect();
+        assert_eq!(
+            names,
+            vec![
+                "fonts.page",
+                "fonts.pick",
+                "fonts.scramble",
+                "fonts.tick",
+                "fonts.export",
+                "fonts.keep",
+                "fonts.drop"
+            ]
+        );
+    }
+    #[test]
+    fn library_seeds_are_supported() {
+        let f = Fonts::new();
+        let library = f.state(&iden(), None)["library"].clone();
+        assert_eq!(library, json!(["A", "a", "0", "#"]));
+        for value in library.as_array().unwrap() {
+            let c = value.as_str().unwrap().chars().next().unwrap();
+            assert!(mrlyfont::glyph(c).is_some());
+        }
+    }
+    #[test]
+    fn keep_defaults_to_current_char() {
+        let mut f = Fonts::new();
+        send(&mut f, "fonts.pick", json!({ "char": "Z" }));
+        assert!(send(&mut f, "fonts.keep", json!({})).ok);
+        assert!(f.state(&iden(), None)["library"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("Z")));
+    }
+    #[test]
+    fn keep_and_drop_round_trip() {
+        let mut f = Fonts::new();
+        assert!(send(&mut f, "fonts.keep", json!({ "char": "Q" })).ok);
+        assert!(f.state(&iden(), None)["library"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("Q")));
+        let dup = send(&mut f, "fonts.keep", json!({ "char": "Q" }));
+        assert!(!dup.ok);
+        assert_eq!(dup.note.as_deref(), Some("already kept"));
+        let unknown = send(&mut f, "fonts.keep", json!({ "char": "€" }));
+        assert_eq!(unknown.note.as_deref(), Some("unknown char"));
+        assert!(send(&mut f, "fonts.drop", json!({ "char": "Q" })).ok);
+        assert!(!f.state(&iden(), None)["library"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("Q")));
+        let gone = send(&mut f, "fonts.drop", json!({ "char": "Q" }));
+        assert_eq!(gone.note.as_deref(), Some("not in the library"));
+    }
+    #[test]
+    fn load_sanitizes_the_library() {
+        let mut f = Fonts::new();
+        f.load(&json!({ "library": "garbage" }));
+        assert_eq!(
+            f.state(&iden(), None)["library"],
+            json!(["A", "a", "0", "#"])
+        );
+        f.load(&json!({ "library": ["A", "€", "A", "0"] }));
+        assert_eq!(f.state(&iden(), None)["library"], json!(["A", "0"]));
+    }
+    #[test]
+    fn export_emits_the_requested_asset() {
+        let mut f = Fonts::new();
+        let out = send(&mut f, "fonts.export", json!({ "format": "woff2" }));
+        assert!(out.ok);
+        assert_eq!(out.effects.len(), 1);
+        let effect = &out.effects[0];
+        assert_eq!(effect.kind, "file");
+        assert_eq!(effect.data["name"], json!("MrlyFont.woff2"));
+        assert_eq!(effect.data["mime"], json!("font/woff2"));
+        assert!(!effect.data["data"].as_str().unwrap().is_empty());
+        assert!(!send(&mut f, "fonts.export", json!({ "format": "otf" })).ok);
+        assert!(!send(&mut f, "fonts.export", json!({})).ok);
+    }
+    #[test]
+    fn unknown_verb_fails() {
+        assert!(!send(&mut Fonts::new(), "fonts.fly", json!({})).ok);
+    }
+}

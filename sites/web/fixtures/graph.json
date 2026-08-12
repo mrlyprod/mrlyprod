@@ -1,0 +1,78 @@
+{
+  "tick": 5,
+  "route": {
+    "app": "graph",
+    "view": "main",
+    "params": {}
+  },
+  "view": {
+    "app": "graph",
+    "params": {},
+    "state": {
+      "design": "net",
+      "index": 1,
+      "count": 6,
+      "number": 3,
+      "level": 2,
+      "kind": "tunnel",
+      "fill": "mint",
+      "alpha": 96,
+      "particles": true,
+      "segments": true,
+      "ghost": true,
+      "axes": false,
+      "census": {
+        "nodes": 680,
+        "branches": 1704,
+        "tips": 0,
+        "junctions": 680,
+        "components": 1,
+        "length": 1704000,
+        "dimension": 2471964868025615
+      },
+      "shade": {
+        "program": "mesh",
+        "route": "graph",
+        "mesh": "net:3:2:tunnel:mint:p1s1g1a0d0"
+      }
+    },
+    "actions": [
+      {
+        "verb": "graph.page",
+        "args": {
+          "dir": "next | prev"
+        }
+      },
+      {
+        "verb": "graph.set",
+        "args": {
+          "key": {
+            "design": "carpet | net | xtree | ytree | ztree | void",
+            "number": "3 | 5 | 7 | 9",
+            "level": "int 1..3",
+            "kind": "core | tunnel | edge",
+            "fill": "black | white | red | orange | yellow | green | mint | teal | cyan | blue | indigo | purple | pink | brown | gray",
+            "alpha": "int 32..255",
+            "particles": "bool",
+            "segments": "bool",
+            "ghost": "bool",
+            "axes": "bool"
+          },
+          "value": "of key"
+        }
+      },
+      {
+        "verb": "graph.reset",
+        "args": {}
+      }
+    ]
+  },
+  "last": {
+    "ok": true,
+    "data": {
+      "design": "net"
+    },
+    "note": null
+  },
+  "sync": "synced"
+}

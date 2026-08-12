@@ -1,0 +1,162 @@
+{
+  "tick": 4,
+  "route": {
+    "app": "twenty48",
+    "view": "main",
+    "params": {}
+  },
+  "view": {
+    "app": "twenty48",
+    "params": {},
+    "state": {
+      "score": 4,
+      "steps": 2,
+      "over": false,
+      "seed": 7,
+      "settings": {
+        "grid": 4,
+        "reward_merge": 1000,
+        "reward_lose": 0,
+        "tile": 3,
+        "design": "carpet",
+        "surface": "grid",
+        "skin": "digits"
+      },
+      "board": [
+        [
+          4,
+          2,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "last_spawn": [
+        2,
+        1
+      ],
+      "last_merges": [
+        [
+          0,
+          0
+        ]
+      ],
+      "cells": {
+        "ids": [
+          [
+            2,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "skin": "digits",
+        "pens": [
+          "#ffd100",
+          "#d332e9",
+          "#d332e9",
+          "#00d1bb",
+          "#ff8f2c",
+          "#b18462",
+          "#00d1bb",
+          "#ffd100",
+          "#1ec9f3",
+          "#32cc58",
+          "#00cad8",
+          "#00d1bb",
+          "#00cad8",
+          "#ff325a",
+          "#ff3d40",
+          "#32cc58",
+          "#1ec9f3",
+          "#b18462"
+        ],
+        "design": "carpet"
+      }
+    },
+    "actions": [
+      {
+        "verb": "twenty48.slide",
+        "args": {
+          "dir": "up | down | left | right"
+        }
+      },
+      {
+        "verb": "twenty48.reset",
+        "args": {
+          "seed": "int"
+        }
+      },
+      {
+        "verb": "twenty48.set",
+        "args": {
+          "key": {
+            "grid": "int 2..8",
+            "tile": "int 1..40",
+            "reward_merge": "int 0..10000",
+            "reward_lose": "int -100000..0",
+            "design": "carpet | net | vtree | htree | solid",
+            "surface": "grid | canvas",
+            "skin": "tiles | emojis | digits"
+          },
+          "value": "of key"
+        }
+      }
+    ]
+  },
+  "last": {
+    "ok": true,
+    "data": {
+      "dir": "up",
+      "merged": 4
+    },
+    "note": null
+  },
+  "sync": "synced",
+  "effects": [
+    {
+      "kind": "sound",
+      "data": {
+        "op": "note",
+        "freq": 587330,
+        "ms": 140,
+        "gain": 30
+      }
+    }
+  ]
+}

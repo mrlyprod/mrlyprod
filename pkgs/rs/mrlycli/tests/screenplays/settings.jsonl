@@ -1,0 +1,18 @@
+{"open": "settings"}
+{"assert": {"route": "settings"}}
+{"assert": {"verb": "settings.set"}}
+{"call": {"verb": "settings.set", "args": {"key": "launchpad", "value": "list"}}}
+{"assert": {"state": ["settings/launchpad", "list"]}}
+{"call": {"verb": "settings.set", "args": {"key": "darkmode", "value": true}}}
+{"assert": {"state": ["settings/darkmode", true]}}
+{"call": {"verb": "settings.set", "args": {"key": "scale", "value": 4}}}
+{"assert": {"state": ["settings/scale", 4]}}
+{"call": {"verb": "settings.set", "args": {"key": "background", "value": "teal"}}}
+{"assert": {"state": ["settings/background", "teal"]}}
+{"call": {"verb": "settings.set", "args": {"key": "darkmode", "value": false}}}
+{"call": {"verb": "settings.set", "args": {"key": "pace", "value": 0}}}
+{"assert": {"state": ["settings/pace", 0]}}
+{"call": {"verb": "settings.set", "args": {"key": "background", "value": "red"}}}
+{"assert": {"state": ["settings/background", "red"]}}
+{"call": {"verb": "settings.set", "args": {"key": "background", "value": "mint"}}}
+{"assert": {"state": ["settings/background", "mint"]}}

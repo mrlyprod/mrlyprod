@@ -1,0 +1,73 @@
+{
+  "tick": 4,
+  "route": {
+    "app": "settings",
+    "view": "main",
+    "params": {}
+  },
+  "view": {
+    "app": "settings",
+    "params": {},
+    "state": {
+      "launchpad": "list",
+      "darkmode": false,
+      "color": "blue",
+      "fill": "random",
+      "font": "mono",
+      "emoji": "system",
+      "scale": 4,
+      "radius": 3,
+      "pace": 150,
+      "sound": true,
+      "haptics": true,
+      "note": "random",
+      "wave": "sine",
+      "duration": 150,
+      "background": "white",
+      "width": 500,
+      "material": "solid",
+      "wallpaper": "color",
+      "seed": 0,
+      "detail": 96
+    },
+    "actions": [
+      {
+        "verb": "settings.set",
+        "args": {
+          "key": {
+            "launchpad": "grid | list",
+            "darkmode": "bool",
+            "color": "black | white | red | orange | yellow | green | mint | teal | cyan | blue | indigo | purple | pink | brown | gray",
+            "fill": "random | black | white | red | orange | yellow | green | mint | teal | cyan | blue | indigo | purple | pink | brown | gray",
+            "font": "mono | sans | serif | display | mrly",
+            "emoji": "system | noto",
+            "scale": "int 3..6",
+            "radius": "int 0..4",
+            "pace": "int 0..400",
+            "sound": "bool",
+            "haptics": "bool",
+            "note": "random | C | C# | D | D# | E | F | F# | G | G# | A | A# | B",
+            "wave": "sine | triangle | square | sawtooth",
+            "duration": "int 50..1000",
+            "background": "black | white | red | orange | yellow | green | mint | teal | cyan | blue | indigo | purple | pink | brown | gray",
+            "width": "int 500..1500",
+            "material": "solid | glass",
+            "wallpaper": "color | pattern",
+            "seed": "int 0..999",
+            "detail": "int 32..160"
+          },
+          "value": "of key"
+        }
+      }
+    ]
+  },
+  "last": {
+    "ok": true,
+    "data": {
+      "key": "scale",
+      "value": 4
+    },
+    "note": null
+  },
+  "sync": "synced"
+}

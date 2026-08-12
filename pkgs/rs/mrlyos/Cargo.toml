@@ -1,0 +1,15 @@
+[package]
+name = "mrlyos"
+version.workspace = true
+edition.workspace = true
+description = "The Mrly kernel: one deterministic world of apps, verbs and journals, in plain data."
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+
+[features]
+testkit = []
+
+[dependencies]
+mrlycore.workspace = true

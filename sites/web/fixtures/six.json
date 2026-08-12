@@ -1,0 +1,59 @@
+{
+  "tick": 5,
+  "route": {
+    "app": "six",
+    "view": "main",
+    "params": {}
+  },
+  "view": {
+    "app": "six",
+    "params": {},
+    "state": {
+      "design": "ytree",
+      "index": 3,
+      "count": 6,
+      "number": 3,
+      "level": 2,
+      "view": "pro",
+      "fill": "pink",
+      "census": {
+        "grid": 9,
+        "fill": 144,
+        "void": 585
+      }
+    },
+    "actions": [
+      {
+        "verb": "six.page",
+        "args": {
+          "dir": "next | prev"
+        }
+      },
+      {
+        "verb": "six.set",
+        "args": {
+          "key": {
+            "design": "carpet | net | xtree | ytree | ztree | void",
+            "number": "3 | 5 | 7 | 9",
+            "level": "int 1..2",
+            "view": "iso | pro | cut",
+            "fill": "black | white | red | orange | yellow | green | mint | teal | cyan | blue | indigo | purple | pink | brown | gray"
+          },
+          "value": "of key"
+        }
+      },
+      {
+        "verb": "six.reset",
+        "args": {}
+      }
+    ]
+  },
+  "last": {
+    "ok": true,
+    "data": {
+      "design": "ytree"
+    },
+    "note": null
+  },
+  "sync": "synced"
+}

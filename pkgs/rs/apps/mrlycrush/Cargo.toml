@@ -1,0 +1,18 @@
+[package]
+name = "mrlycrush"
+version.workspace = true
+edition.workspace = true
+description = "A match-3 played like a falling-block game: tiles drop one at a time, and three of a kind crush for a point apiece."
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+
+[dependencies]
+mrlycore.workspace = true
+mrlyos.workspace = true
+mrlyskin.workspace = true
+
+[dev-dependencies]
+mrlycore = { workspace = true, features = ["testkit"] }
+mrlyos = { workspace = true, features = ["testkit"] }

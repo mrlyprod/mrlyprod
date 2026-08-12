@@ -1,0 +1,417 @@
+{
+  "tick": 4,
+  "route": {
+    "app": "mines",
+    "view": "main",
+    "params": {}
+  },
+  "view": {
+    "app": "mines",
+    "params": {},
+    "state": {
+      "score": 1,
+      "steps": 1,
+      "over": false,
+      "seed": 7,
+      "settings": {
+        "cols": 9,
+        "rows": 9,
+        "mines": 10,
+        "reward_reveal": 0,
+        "reward_win": 1000,
+        "reward_lose": -1000,
+        "tile": 3,
+        "design": "carpet",
+        "surface": "grid",
+        "skin": "emojis"
+      },
+      "tool": "dig",
+      "remaining": 9,
+      "board": [
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          1,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "flags": [
+        [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ]
+      ],
+      "won": null,
+      "cells": {
+        "ids": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "skin": "emojis",
+        "pens": [
+          "#1ec9f3",
+          "#ffd100",
+          "#ffd100",
+          "#d332e9",
+          "#d332e9",
+          "#00d1bb",
+          "#ff8f2c",
+          "#b18462",
+          "#00d1bb",
+          "#ffd100",
+          "#32cc58"
+        ],
+        "design": "carpet"
+      }
+    },
+    "actions": [
+      {
+        "verb": "mines.reveal",
+        "args": {
+          "cell": "int"
+        }
+      },
+      {
+        "verb": "mines.flag",
+        "args": {
+          "cell": "int"
+        }
+      },
+      {
+        "verb": "mines.tool",
+        "args": {
+          "tool": "dig | flag"
+        }
+      },
+      {
+        "verb": "mines.reset",
+        "args": {
+          "seed": "int"
+        }
+      },
+      {
+        "verb": "mines.set",
+        "args": {
+          "key": {
+            "cols": "int 4..30",
+            "rows": "int 4..30",
+            "mines": "int 1..200",
+            "tile": "int 1..8",
+            "reward_reveal": "int 0..1000",
+            "reward_win": "int 0..10000",
+            "reward_lose": "int -10000..0",
+            "design": "carpet | net | vtree | htree | solid",
+            "surface": "grid | canvas",
+            "skin": "tiles | emojis | digits"
+          },
+          "value": "of key"
+        }
+      }
+    ]
+  },
+  "last": {
+    "ok": true,
+    "data": {
+      "cell": 0,
+      "flagged": true
+    },
+    "note": null
+  },
+  "sync": "synced",
+  "effects": [
+    {
+      "kind": "sound",
+      "data": {
+        "op": "note",
+        "freq": 391995,
+        "ms": 90,
+        "gain": 25
+      }
+    }
+  ]
+}
