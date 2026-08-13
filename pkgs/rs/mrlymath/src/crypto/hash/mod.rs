@@ -68,6 +68,6 @@ impl Rule {
 
 pub use config::Config;
 pub use fingerprint::{fingerprint, fingerprint_cell};
-pub use hasher::{digest, hexdigest, keyed_hexdigest, Digest};
+pub use hasher::{digest, hexdigest, keyed_hexdigest, quick_hexdigest, Digest};
 pub use permute::permute;
 pub use sponge::sponge_hash;

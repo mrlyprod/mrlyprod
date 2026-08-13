@@ -1,5 +1,6 @@
 use crate::two::{self, tile as tile2d};
 use mrlycore::errors::{value_error, MrlyError, Result};
+use mrlycore::json::{field, optional, string, u64_at, usize_at};
 use mrlycore::paint::{self as engine, Config as PaintConfig, Edition, Ink, Paint};
 use mrlycore::state::{randint, seed};
 use mrlycore::tile::Tile;
@@ -28,6 +29,13 @@ impl File {
     /// Returns the file's width and height as JSON.
     pub fn to_json(&self) -> Json {
         json!({ "width": self.width, "height": self.height })
+    }
+    /// Decodes a file from its JSON object, or an error naming the broken field.
+    pub fn from_json(value: &Json) -> Result<File> {
+        Ok(File::new(
+            usize_at(value, "width")?,
+            usize_at(value, "height")?,
+        ))
     }
 }
 
@@ -87,17 +95,68 @@ impl Variation {
     pub fn is_prime(&self) -> bool {
         matches!(self.edition, Edition::Layers | Edition::Neighbors)
     }
-    /// Returns the variation's key, seed, tile, mask and files as JSON.
+    /// Returns the variation's key, seed, edition, primaries, tile, mask, paint and files as JSON.
     pub fn to_json(&self) -> Json {
         json!({
             "v": 1,
             "key": &self.key,
             "seed": self.seed,
+            "edition": self.edition.name(),
+            "primaries": self
+                .primaries
+                .as_ref()
+                .map(|inks| inks.iter().map(|ink| ink.name()).collect::<Vec<_>>()),
             "tile": self.tile.to_json(),
             "mask": self.mask.as_ref().map(|m| m.to_json()),
+            "paint": self.paint.as_ref().map(|p| p.to_json()),
             "files": self.files.iter().map(|f| f.to_json()).collect::<Vec<_>>(),
         })
     }
+    /// Decodes a variation from its JSON object, or an error naming the broken field.
+    pub fn from_json(value: &Json) -> Result<Variation> {
+        let primaries = match optional(value, "primaries")? {
+            Some(list) => Some(ink_list(list)?),
+            None => None,
+        };
+        let mask = match optional(value, "mask")? {
+            Some(m) => Some(Tile::from_json(m)?),
+            None => None,
+        };
+        let paint = match optional(value, "paint")? {
+            Some(p) => Some(Paint::from_json(p)?),
+            None => None,
+        };
+        let files = field(value, "files")?
+            .as_array()
+            .ok_or_else(|| MrlyError::Value("field \"files\" must be a list.".into()))?
+            .iter()
+            .map(File::from_json)
+            .collect::<Result<Vec<File>>>()?;
+        Ok(Variation {
+            key: string(value, "key")?,
+            seed: u64_at(value, "seed")?,
+            edition: Edition::parse(string(value, "edition")?.as_str())?,
+            primaries,
+            tile: Tile::from_json(field(value, "tile")?)?,
+            mask,
+            paint,
+            base: None,
+            files,
+        })
+    }
+}
+
+fn ink_list(value: &Json) -> Result<Vec<Ink>> {
+    let array = value
+        .as_array()
+        .ok_or_else(|| MrlyError::Value("field \"primaries\" must be a list.".into()))?;
+    array
+        .iter()
+        .map(|v| match v.as_str() {
+            Some(name) => Ink::parse(name),
+            None => value_error("field \"primaries\" must hold strings."),
+        })
+        .collect()
 }
 
 fn hex_key(length: usize) -> String {
@@ -125,7 +184,7 @@ pub fn create(config: &Config) -> Result<Variation> {
         let mask_config = tile2d::Config {
             min_size: 3,
             max_size: 3,
-            ..config.tile.clone()
+            ..tile2d::Config::default()
         };
         Some(tile2d::create(&mask_config)?)
     } else {
@@ -203,6 +262,7 @@ pub fn render(mut variation: Variation, scale: usize) -> Result<Variation> {
 mod tests {
     use super::*;
     use mrlycore::state::guard;
+    use mrlycore::tile::Parity;
     fn config() -> Config {
         Config {
             tile: tile2d::Config {
@@ -215,10 +275,30 @@ mod tests {
             files: vec![(1, 1), (3, 3)],
         }
     }
+    fn edition_config(edition: Edition) -> Config {
+        Config {
+            paint: PaintConfig {
+                editions: Some(vec![edition]),
+                ..PaintConfig::default()
+            },
+            ..config()
+        }
+    }
+    fn png_size(png: &[u8]) -> (usize, usize) {
+        let w = u32::from_be_bytes(png[16..20].try_into().unwrap()) as usize;
+        let h = u32::from_be_bytes(png[20..24].try_into().unwrap()) as usize;
+        (w, h)
+    }
+    fn bare_png(variation: &Variation, file: &File, scale: usize) -> Vec<u8> {
+        let base = variation.base.as_ref().unwrap();
+        let bare = two::Cell2d::new(base.types().clone()).tile(file.width, file.height);
+        two::png(&bare, scale).unwrap()
+    }
     #[test]
     fn full_pipeline_produces_png_bytes() {
         let _g = guard();
-        for _ in 0..20 {
+        for s in 0..20 {
+            seed(s);
             let v = create(&config()).unwrap();
             let v = generate(v, &config()).unwrap();
             let v = render(v, 4).unwrap();
@@ -231,6 +311,11 @@ mod tests {
                     file.height
                 );
                 assert_eq!(&file.png[1..4], b"PNG", "not a png header");
+                let expected = (
+                    v.tile.width * file.width * 4,
+                    v.tile.height * file.height * 4,
+                );
+                assert_eq!(png_size(&file.png), expected, "png size seed {s}");
             }
         }
     }
@@ -247,21 +332,115 @@ mod tests {
         assert_eq!(a.edition, b.edition);
     }
     #[test]
+    fn editions_keep_their_palette() {
+        let _g = guard();
+        for (i, edition) in Edition::all().into_iter().enumerate() {
+            let config = edition_config(edition);
+            let mut differed = false;
+            for s in 0..8 {
+                seed(1000 * (i as u64 + 1) + s);
+                let v = create(&config).unwrap();
+                let v = generate(v, &config).unwrap();
+                let v = render(v, 2).unwrap();
+                if v.files.iter().all(|f| f.png != bare_png(&v, f, 2)) {
+                    differed = true;
+                    break;
+                }
+            }
+            assert!(differed, "edition {edition:?} never rendered its palette");
+        }
+    }
+    #[test]
+    fn layers_edition_keeps_its_palette() {
+        let _g = guard();
+        let config = edition_config(Edition::Layers);
+        seed(7);
+        let v = create(&config).unwrap();
+        assert_eq!(v.edition, Edition::Layers);
+        let v = generate(v, &config).unwrap();
+        assert!(v.base.as_ref().unwrap().cell.colors.is_some());
+        let v = render(v, 2).unwrap();
+        for file in &v.files {
+            assert_ne!(file.png, bare_png(&v, file, 2), "default mapping leaked");
+        }
+    }
+    #[test]
     fn neighbors_edition_gets_a_mask() {
         let _g = guard();
-        let config = Config {
-            paint: PaintConfig {
-                editions: Some(vec![Edition::Neighbors]),
-                ..PaintConfig::default()
-            },
-            ..config()
-        };
+        let config = edition_config(Edition::Neighbors);
+        seed(3);
         let v = create(&config).unwrap();
         assert_eq!(v.edition, Edition::Neighbors);
         assert!(v.mask.is_some());
         let v = generate(v, &config).unwrap();
-        let v = render(v, 4).unwrap();
-        assert!(v.files.iter().all(|f| !f.png.is_empty()));
+        assert!(v.base.as_ref().unwrap().cell.colors.is_some());
+        let v = render(v, 2).unwrap();
+        for file in &v.files {
+            assert_ne!(file.png, bare_png(&v, file, 2), "default mapping leaked");
+        }
+    }
+    #[test]
+    fn neighbors_mask_builds_under_evens_parity() {
+        let _g = guard();
+        let config = Config {
+            tile: tile2d::Config {
+                min_size: 4,
+                max_size: 16,
+                parity: Parity::Evens,
+                anti: Some(false),
+                ..tile2d::Config::default()
+            },
+            paint: PaintConfig {
+                editions: Some(vec![Edition::Neighbors]),
+                ..PaintConfig::default()
+            },
+            files: vec![(1, 1)],
+        };
+        for s in 0..10 {
+            seed(s);
+            let v = create(&config).unwrap();
+            let mask = v.mask.as_ref().unwrap();
+            assert_eq!((mask.width, mask.height), (3, 3));
+            let v = generate(v, &config).unwrap();
+            let v = render(v, 2).unwrap();
+            assert!(!v.files[0].png.is_empty());
+        }
+    }
+    #[test]
+    fn json_round_trips_the_record() {
+        let _g = guard();
+        for (i, edition) in Edition::all().into_iter().enumerate() {
+            let config = edition_config(edition);
+            seed(500 + i as u64);
+            let a = create(&config).unwrap();
+            let b = Variation::from_json(&a.to_json()).unwrap();
+            assert_eq!(b.key, a.key);
+            assert_eq!(b.seed, a.seed);
+            assert_eq!(b.edition, a.edition);
+            assert_eq!(b.primaries, a.primaries);
+            assert_eq!(b.tile, a.tile);
+            assert_eq!(b.mask, a.mask);
+            assert_eq!(b.paint, a.paint);
+            seed(a.seed);
+            let a = generate(a, &config).unwrap();
+            let a = render(a, 2).unwrap();
+            seed(b.seed);
+            let b = generate(b, &config).unwrap();
+            let b = render(b, 2).unwrap();
+            assert_eq!(a.paint, b.paint);
+            for (fa, fb) in a.files.iter().zip(&b.files) {
+                assert_eq!((fa.width, fa.height), (fb.width, fb.height));
+                assert!(!fa.png.is_empty());
+                assert_eq!(fa.png, fb.png, "edition {edition:?}");
+            }
+            let c = Variation::from_json(&a.to_json()).unwrap();
+            assert_eq!(c.paint, a.paint);
+        }
+    }
+    #[test]
+    fn variation_json_rejects_garbage() {
+        assert!(Variation::from_json(&json!({})).is_err());
+        assert!(File::from_json(&json!({ "width": 2 })).is_err());
     }
     #[test]
     fn json_round_trips_tile() {

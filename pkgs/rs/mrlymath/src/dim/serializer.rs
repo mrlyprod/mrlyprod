@@ -1,4 +1,6 @@
-use mrlycore::errors::{MrlyError, Result};
+use super::models::dtype_for;
+use mrlycore::errors::{value_error, MrlyError, Result};
+use mrlycore::tensor::Tensor;
 use mrlycore::Json;
 
 /// Parses JSON text into a value tree, or a parse error.
@@ -46,6 +48,48 @@ pub fn byte_grid(value: &Json) -> Result<Vec<Vec<u8>>> {
 /// Reads a triply nested JSON array into layers of byte rows.
 pub fn byte_cube(value: &Json) -> Result<Vec<Vec<Vec<u8>>>> {
     items(value)?.iter().map(byte_grid).collect()
+}
+
+fn count(value: &Json) -> Result<i64> {
+    match value.as_i64() {
+        Some(n) if n >= 0 => Ok(n),
+        _ => Err(MrlyError::Value("expected a count.".to_string())),
+    }
+}
+
+fn counts(value: &Json) -> Result<Vec<i64>> {
+    items(value)?.iter().map(count).collect()
+}
+
+/// Reads a nested JSON array of counts into one flat run, however wide the counts read.
+pub fn count_grid(value: &Json) -> Result<Vec<i64>> {
+    Ok(items(value)?
+        .iter()
+        .map(counts)
+        .collect::<Result<Vec<Vec<i64>>>>()?
+        .concat())
+}
+
+/// Reads a triply nested JSON array of counts into one flat run, however wide the counts read.
+pub fn count_cube(value: &Json) -> Result<Vec<i64>> {
+    Ok(items(value)?
+        .iter()
+        .map(count_grid)
+        .collect::<Result<Vec<Vec<i64>>>>()?
+        .concat())
+}
+
+/// Packs a flat run of counts into a tensor of the shape, at the narrowest dtype that holds them.
+pub fn tag_layer(counts: &[i64], shape: Vec<usize>) -> Result<Tensor> {
+    if counts.len() != shape.iter().product::<usize>() {
+        return value_error("tags must match the cell's shape.");
+    }
+    let peak = counts.iter().copied().max().unwrap_or(0);
+    let mut tags = Tensor::typed(shape, dtype_for(peak));
+    for (flat, &value) in counts.iter().enumerate() {
+        tags.put(flat, value);
+    }
+    Ok(tags)
 }
 
 /// Reads a nested JSON array into rows of four-channel colors.

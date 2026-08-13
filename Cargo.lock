@@ -182,6 +182,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "mrlygame"
+version = "0.2.0"
+dependencies = [
+ "mrlycore",
+ "mrlymath",
+]
+
+[[package]]
 name = "mrlygraph"
 version = "0.2.0"
 dependencies = [

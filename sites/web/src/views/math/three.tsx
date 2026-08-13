@@ -32,6 +32,7 @@ type State = {
   edges: boolean
   wireframe: boolean
   axes: boolean
+  anti: boolean
   census: { grid: number; fill: number; void: number }
   shade?: Shade
 }
@@ -56,6 +57,7 @@ export function Three({ state }: { state: unknown }) {
         <Cluster>
           <Button onClick={() => send(call("face.full", { handle: "three" }))}>fullscreen</Button>
           <Button onClick={() => send(call("three.reset"))}>reset</Button>
+          <Button onClick={() => send(call("three.obj"))}>obj</Button>
           <Shot />
         </Cluster>
       </Box>
@@ -81,6 +83,9 @@ export function Three({ state }: { state: unknown }) {
           options={opts(LEVELS)}
           onChange={v => send(turn("level", v))}
         />
+        <Field label="anti">
+          <Toggle value={s.anti} onChange={v => send(turn("anti", v))} />
+        </Field>
       </Section>
       <Section label="paint">
         <Choice label="fill" value={s.fill} options={opts(colors())} onChange={v => send(turn("fill", v))} />

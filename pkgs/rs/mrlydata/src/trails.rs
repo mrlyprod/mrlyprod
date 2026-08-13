@@ -76,7 +76,7 @@ fn row(route: &str, seed: u64, step: usize, call: &Call, os: &Os) -> Json {
     let envelope = os.envelope(Some(&shape));
     let mut out = json!({
         "app": route,
-        "seed": crate::press::clip(seed),
+        "seed": mrlycore::json::clip(seed),
         "step": step,
         "verb": &call.verb,
         "args": call.args.clone(),

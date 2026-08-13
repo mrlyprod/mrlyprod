@@ -19,6 +19,7 @@ fn prepare(seed: &Cell2d, config: &Config) -> Cell2d {
 /// Runs a seed under a config until it fixes, loops or times out, recording every generation.
 pub fn animate(seed: &Cell2d, config: &Config) -> Result<Life> {
     let mask = config.mask.types().clone();
+    let (birth, survive) = config.counts()?;
     let mut current = prepare(seed, config);
     let mut grids = vec![current.clone()];
     let mut history: HashMap<Vec<u8>, usize> = HashMap::new();
@@ -26,13 +27,7 @@ pub fn animate(seed: &Cell2d, config: &Config) -> Result<Life> {
     let mut fate = Fate::Timeout;
     let mut loop_length = 0;
     for i in 1..config.max_generations {
-        let next = next_grid(
-            &current,
-            &config.birth,
-            &config.survive,
-            &mask,
-            config.boundary,
-        )?;
+        let next = next_grid(&current, &birth, &survive, &mask, config.boundary)?;
         if next.types() == current.types() {
             fate = if next.types().sum() == 0 {
                 Fate::Dead
@@ -63,14 +58,8 @@ pub fn animate(seed: &Cell2d, config: &Config) -> Result<Life> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::life::Boundary;
-    use mrlycore::atoms;
+    use crate::life::{moore, Boundary};
     use mrlycore::tensor::Tensor;
-    fn moore_mask() -> Cell2d {
-        let mut m = atoms::carpet_2d(3);
-        m.set(&[1, 1], 0);
-        Cell2d::new(m)
-    }
     fn conway(mask: Cell2d) -> Config {
         Config {
             boundary: Boundary::Constant,
@@ -84,7 +73,7 @@ mod tests {
         t.set(&[1, 2], 1);
         t.set(&[2, 2], 1);
         t.set(&[3, 2], 1);
-        let life = animate(&Cell2d::new(t), &conway(moore_mask())).unwrap();
+        let life = animate(&Cell2d::new(t), &conway(moore())).unwrap();
         assert_eq!(life.fate, Fate::Loop);
         assert_eq!(life.loop_length, 2);
     }
@@ -94,7 +83,7 @@ mod tests {
         for (y, x) in [(1, 1), (1, 2), (2, 1), (2, 2)] {
             t.set(&[y, x], 1);
         }
-        let life = animate(&Cell2d::new(t), &conway(moore_mask())).unwrap();
+        let life = animate(&Cell2d::new(t), &conway(moore())).unwrap();
         assert_eq!(life.fate, Fate::Alive);
         assert_eq!(life.count, 1);
     }
@@ -104,7 +93,7 @@ mod tests {
         t.set(&[1, 2], 1);
         t.set(&[2, 2], 1);
         t.set(&[3, 2], 1);
-        let life = animate(&Cell2d::new(t), &conway(moore_mask())).unwrap();
+        let life = animate(&Cell2d::new(t), &conway(moore())).unwrap();
         for grid in &life.grids {
             let binarized = grid.clone().binarize(1);
             assert_eq!(binarized.types(), grid.types());

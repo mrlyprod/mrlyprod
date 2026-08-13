@@ -41,6 +41,20 @@ pub fn code_to_corners(code: Code, dimension: usize, base: usize) -> Result<Vec<
         .collect())
 }
 
+/// Returns the code of the design filled wherever a corner's residue sum lands in the levels.
+///
+/// ```
+/// assert_eq!(mrlymath::bang::factory::levels_code(3, 2, &[0, 1]), 23);
+/// assert_eq!(mrlymath::bang::factory::levels_code(2, 2, &[0, 1]), 7);
+/// ```
+pub fn levels_code(dimension: usize, base: usize, levels: &[usize]) -> Code {
+    let filled: Vec<Vec<u8>> = residue_corners(dimension, base)
+        .into_iter()
+        .filter(|corner| levels.contains(&corner.iter().map(|&b| b as usize).sum()))
+        .collect();
+    corners_to_code(&filled, dimension, base)
+}
+
 /// Packs filled residue corners back into their code.
 pub fn corners_to_code(filled: &[Vec<u8>], dimension: usize, base: usize) -> Code {
     let cells = residue_corners(dimension, base);
@@ -106,29 +120,21 @@ pub fn create_from_corners(
 #[cfg(test)]
 mod tests {
     use super::*;
-    fn levels_code(dimension: usize, levels: &[usize]) -> Code {
-        let cells = residue_corners(dimension, 2);
-        let filled: Vec<Vec<u8>> = cells
-            .into_iter()
-            .filter(|c| levels.contains(&c.iter().map(|&b| b as usize).sum()))
-            .collect();
-        corners_to_code(&filled, dimension, 2)
-    }
     #[test]
     fn menger_carpet_code() {
-        assert_eq!(levels_code(3, &[0, 1]), 23);
+        assert_eq!(levels_code(3, 2, &[0, 1]), 23);
         let truth = create(23, 3, 3, 2, 1).unwrap();
         assert_eq!(create_named("mrly_bang_d3_23", 3, 1).unwrap(), truth);
         assert_eq!(truth.sum(), 20);
         assert_eq!(truth.shape, vec![3, 3, 3]);
     }
     #[test]
-    fn menger_matches_python_exactly() {
+    fn menger_holds_its_pinned_bytes() {
         let truth = create(23, 3, 3, 2, 1).unwrap();
-        let python = vec![
+        let pinned = vec![
             1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1,
         ];
-        assert_eq!(truth.bytes(), python);
+        assert_eq!(truth.bytes(), pinned);
     }
     #[test]
     fn create_named_takes_the_canonical_name_only() {
@@ -165,7 +171,7 @@ mod tests {
     }
     #[test]
     fn fractal_level() {
-        let code = levels_code(3, &[0, 1]);
+        let code = levels_code(3, 2, &[0, 1]);
         let base = create(code, 3, 3, 2, 1).unwrap();
         let lvl3 = create(code, 3, 3, 2, 3).unwrap();
         assert_eq!(lvl3.sum(), base.sum().pow(3));

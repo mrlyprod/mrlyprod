@@ -1,6 +1,7 @@
 use super::models::Cell3d;
 use crate::dim::geometry;
-use crate::dim::models::Cell2d;
+use crate::dim::models::{dtype_for, Cell2d};
+use mrlycore::cell::remap;
 use mrlycore::errors::{value_error, Result};
 use mrlycore::tensor::Tensor;
 use std::sync::OnceLock;
@@ -54,7 +55,24 @@ pub fn special(mask: &Tensor, cell: &Cell3d) -> Result<Cell3d> {
     merge(&oriented, mask.shape[1], mask.shape[0], mask.shape[2])
 }
 
-/// Takes the flat cell left when one axis of the cube is fixed at an index, dropping colors and tags.
+fn slice_map(cube: &[usize], axis: usize, index: usize) -> (Vec<usize>, Vec<usize>) {
+    let strides = [cube[1] * cube[2], cube[2], 1];
+    let kept: Vec<usize> = (0..3).filter(|&a| a != axis).collect();
+    let shape = vec![cube[kept[0]], cube[kept[1]]];
+    let mut map = Vec::with_capacity(shape[0] * shape[1]);
+    for row in 0..shape[0] {
+        for col in 0..shape[1] {
+            let mut at = [0usize; 3];
+            at[axis] = index;
+            at[kept[0]] = row;
+            at[kept[1]] = col;
+            map.push(at[0] * strides[0] + at[1] * strides[1] + at[2]);
+        }
+    }
+    (shape, map)
+}
+
+/// Takes the flat cell left when one axis of the cube is fixed at an index, colors and tags with it.
 ///
 /// ```
 /// let sponge = mrlymath::three::carpet(3, 2).unwrap();
@@ -62,7 +80,88 @@ pub fn special(mask: &Tensor, cell: &Cell3d) -> Result<Cell3d> {
 /// assert_eq!(front, mrlymath::two::carpet(3, 2).unwrap());
 /// ```
 pub fn slice(cell: &Cell3d, axis: usize, index: usize) -> Result<Cell2d> {
-    Ok(Cell2d::new(cell.types().slice(axis, index)?))
+    if axis > 2 {
+        return value_error("slice axis is past the cube's rank.");
+    }
+    if index >= cell.types().shape[axis] {
+        return value_error("slice index is past the axis.");
+    }
+    let (shape, map) = slice_map(&cell.types().shape, axis, index);
+    Ok(Cell2d {
+        cell: remap(&cell.cell, &map, &shape),
+    })
+}
+
+// EXTRUDE
+
+fn lift_map(shape: &[usize], axis: usize, depth: usize) -> (Vec<usize>, Vec<usize>) {
+    let mut lifted = shape.to_vec();
+    lifted.insert(axis, depth);
+    let strides = [lifted[1] * lifted[2], lifted[2], 1];
+    let (height, width) = (shape[0], shape[1]);
+    let mut map = vec![0usize; lifted.iter().product()];
+    for plane in 0..depth {
+        for y in 0..height {
+            for x in 0..width {
+                let mut at = vec![y, x];
+                at.insert(axis, plane);
+                map[at[0] * strides[0] + at[1] * strides[1] + at[2]] = y * width + x;
+            }
+        }
+    }
+    (lifted, map)
+}
+
+/// Lifts a flat cell into a cube by repeating it depth times along a new axis, colors and tags with it.
+///
+/// This is the inverse of slice: every slice of the lift on that axis is the flat cell again.
+///
+/// ```
+/// let flat = mrlymath::two::carpet(3, 2).unwrap();
+/// let cube = mrlymath::three::extrude(&flat, 2, 4).unwrap();
+/// assert_eq!(cube.depth(), 4);
+/// assert_eq!(mrlymath::three::slice(&cube, 2, 3).unwrap(), flat);
+/// ```
+pub fn extrude(cell: &Cell2d, axis: usize, depth: usize) -> Result<Cell3d> {
+    if axis > 2 {
+        return value_error("extrude axis must be 0, 1 or 2.");
+    }
+    if depth == 0 {
+        return value_error("extrude depth must be at least 1.");
+    }
+    let (shape, map) = lift_map(&cell.types().shape, axis, depth);
+    Ok(Cell3d {
+        cell: remap(&cell.cell, &map, &shape),
+    })
+}
+
+// LAYERS
+
+/// Tags every site with its Manhattan distance from the cube's center, the diamond shells.
+///
+/// The cell's own layers count Chebyshev shells, which are boxes; these are octahedra.
+pub fn manhattan_layers(mut cell: Cell3d) -> Cell3d {
+    let shape = cell.types().shape.clone();
+    let strides = [shape[1] * shape[2], shape[2], 1];
+    let mut rings = vec![0i64; shape.iter().product()];
+    for i in 0..shape[0] {
+        for j in 0..shape[1] {
+            for k in 0..shape[2] {
+                let at = [i, j, k];
+                let reach: f64 = (0..3)
+                    .map(|axis| (at[axis] as f64 - (shape[axis] as f64 - 1.0) / 2.0).abs())
+                    .sum();
+                rings[i * strides[0] + j * strides[1] + k] = reach.floor() as i64;
+            }
+        }
+    }
+    let peak = rings.iter().copied().max().unwrap_or(0);
+    let mut tags = Tensor::typed(shape, dtype_for(peak));
+    for (flat, &ring) in rings.iter().enumerate() {
+        tags.put(flat, ring);
+    }
+    cell.cell.tags = Some(tags);
+    cell
 }
 
 #[cfg(test)]
@@ -131,5 +230,77 @@ mod tests {
                 assert_ne!(ztree, two::vtree(n, level).unwrap());
             }
         }
+    }
+    #[test]
+    fn extrude_undoes_slice_on_every_axis() {
+        use mrlycore::cell::mapping;
+        use mrlycore::enums::Mode;
+        let flat = two::carpet(3, 2)
+            .unwrap()
+            .layers()
+            .paint(&mapping(), Mode::Index);
+        for axis in 0..3 {
+            let cube = extrude(&flat, axis, 4).unwrap();
+            assert_eq!(cube.types().shape[axis], 4);
+            for index in 0..4 {
+                assert_eq!(slice(&cube, axis, index).unwrap(), flat);
+            }
+            assert_eq!(cube.types().sum(), 4 * flat.types().sum());
+        }
+        assert!(extrude(&flat, 3, 2).is_err());
+        assert!(extrude(&flat, 0, 0).is_err());
+        assert!(slice(&extrude(&flat, 2, 1).unwrap(), 3, 0).is_err());
+        assert!(slice(&extrude(&flat, 2, 1).unwrap(), 2, 1).is_err());
+    }
+    #[test]
+    fn extrude_lifts_a_flat_face_of_a_cube_back() {
+        let sponge = designs::carpet(3, 2).unwrap();
+        let face = slice(&sponge, 2, 0).unwrap();
+        let column = extrude(&face, 2, sponge.depth()).unwrap();
+        assert_eq!(column.types().shape, sponge.types().shape);
+        assert_eq!(slice(&column, 2, 5).unwrap(), face);
+    }
+    #[test]
+    fn extrude_carries_colors_and_tags() {
+        use mrlycore::cell::mapping;
+        use mrlycore::enums::Mode;
+        let flat = two::carpet(3, 1)
+            .unwrap()
+            .layers()
+            .paint(&mapping(), Mode::Type);
+        let cube = extrude(&flat, 0, 3).unwrap();
+        let colors = cube.cell.colors.as_ref().unwrap();
+        let tags = cube.cell.tags.as_ref().unwrap();
+        let flat_colors = flat.cell.colors.as_ref().unwrap();
+        let flat_tags = flat.cell.tags.as_ref().unwrap();
+        assert_eq!(colors.len(), 27);
+        assert_eq!(tags.shape, vec![3, 3, 3]);
+        for plane in 0..3 {
+            for site in 0..9 {
+                assert_eq!(colors[plane * 9 + site], flat_colors[site]);
+                assert_eq!(tags.at(plane * 9 + site), flat_tags.at(site));
+            }
+        }
+    }
+    #[test]
+    fn manhattan_layers_are_diamond_shells() {
+        let cube = manhattan_layers(designs::ones(3, 1).unwrap());
+        let tags = cube.cell.tags.as_ref().unwrap();
+        assert_eq!(tags.get(&[1, 1, 1]), 0);
+        assert_eq!(tags.get(&[0, 1, 1]), 1);
+        assert_eq!(tags.get(&[0, 0, 1]), 2);
+        assert_eq!(tags.get(&[0, 0, 0]), 3);
+        let boxes = designs::ones(3, 1).unwrap().layers();
+        assert_eq!(boxes.cell.tags.as_ref().unwrap().get(&[0, 0, 0]), 1);
+    }
+    #[test]
+    fn manhattan_layers_widen_past_a_byte() {
+        use mrlycore::tensor::Dtype;
+        let small = manhattan_layers(designs::ones(3, 1).unwrap());
+        assert_eq!(small.cell.tags.as_ref().unwrap().dtype(), Dtype::U8);
+        let long = manhattan_layers(Cell3d::new(Tensor::full(vec![1, 1, 600], 1)));
+        let tags = long.cell.tags.as_ref().unwrap();
+        assert_eq!(tags.dtype(), Dtype::U16);
+        assert_eq!(tags.at(0), 299);
     }
 }

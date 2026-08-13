@@ -27,10 +27,14 @@ pub mod io;
 pub mod json;
 /// The natural logarithm, written from a series.
 pub mod logs;
+/// The composer: voices walking chord pools into frames of midi notes.
+pub mod music;
 /// The editions that distribute a palette over a cell.
 pub mod paint;
 /// The colorizers that turn counter values into colors.
 pub mod ramp;
+/// The pixel resamplers and the hex squash.
+pub mod resample;
 /// The seeded, seekable random stream.
 pub mod rng;
 /// The global random state: seed once, every draw replays.
@@ -44,15 +48,17 @@ pub mod time;
 /// Table trig: one turn in a fixed count of samples.
 pub mod trig;
 
-pub use audio::{Note, Wave};
+pub use audio::{Note, Timbre, Wave};
 pub use cell::Cell;
-pub use codec::{base64, deflate, inflate, png, unpng};
+pub use codec::{base64, deflate, gif, inflate, png, unpng, wav};
 pub use colors::Color;
 pub use enums::Mode;
 pub use errors::{MrlyError, Result};
 pub use image::Image;
 pub use json::{Json, Map};
+pub use music::{compose, mix, track, ChordType, Movement, Voice};
 pub use ramp::Colorizer;
+pub use resample::{hex_fit, hex_size, resample, Filter};
 pub use rng::Rng;
 pub use tensor::{Dtype, Tensor};
 pub use tile::{Base, Group, Parity, Tile};

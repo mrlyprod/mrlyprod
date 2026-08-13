@@ -8,6 +8,6 @@ A tensor is a small grid of bytes; an atom fills one with a carpet, a net, strip
 
 - **tensor** and **atoms** make and pattern the byte grids.
 - **cell**, **paint**, **ramp**, and **colors** dress them in ink.
-- **image** and **codec** turn colors into pngs and back.
+- **image**, **codec**, and **resample** turn colors into pngs and gifs and back.
 - **audio**, **rng**, **chacha**, and **state** make sound and seeded chance.
 - **json**, **errors**, **io**, **time**, **trig**, and **logs** carry the plumbing.

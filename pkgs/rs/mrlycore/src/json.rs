@@ -872,6 +872,51 @@ impl<'a> Parser<'a> {
     }
 }
 
+/// Returns the value at a key, or an error naming the missing field.
+pub fn field<'a>(value: &'a Json, key: &str) -> Result<&'a Json> {
+    value
+        .get(key)
+        .ok_or_else(|| MrlyError::Value(format!("missing field {key:?}.")))
+}
+
+/// Returns the value at a key, or None where the field is present but null.
+pub fn optional<'a>(value: &'a Json, key: &str) -> Result<Option<&'a Json>> {
+    match field(value, key)? {
+        Json::Null => Ok(None),
+        present => Ok(Some(present)),
+    }
+}
+
+/// Returns the string at a key, or an error naming the field.
+pub fn string(value: &Json, key: &str) -> Result<String> {
+    field(value, key)?
+        .as_str()
+        .map(|s| s.to_string())
+        .ok_or_else(|| MrlyError::Value(format!("field {key:?} must be a string.")))
+}
+
+/// Returns the unsigned integer at a key, or an error naming the field.
+pub fn u64_at(value: &Json, key: &str) -> Result<u64> {
+    field(value, key)?
+        .as_u64()
+        .ok_or_else(|| MrlyError::Value(format!("field {key:?} must be an integer.")))
+}
+
+/// Returns the unsigned integer at a key narrowed to a usize, or an error naming the field.
+pub fn usize_at(value: &Json, key: &str) -> Result<usize> {
+    Ok(u64_at(value, key)? as usize)
+}
+
+/// Narrows an unsigned integer into the signed range a Json integer holds.
+///
+/// ```
+/// assert_eq!(mrlycore::json::clip(7), mrlycore::Json::Int(7));
+/// assert_eq!(mrlycore::json::clip(u64::MAX), mrlycore::Json::Int(i64::MAX));
+/// ```
+pub fn clip(value: u64) -> Json {
+    Json::Int((value & i64::MAX as u64) as i64)
+}
+
 /// Builds a Json value from JSON-shaped literal syntax.
 #[macro_export]
 macro_rules! json {

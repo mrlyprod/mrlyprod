@@ -1,4 +1,4 @@
-use super::cell::Cell;
+use super::cell::{moore, Cell};
 use super::colors::{gradient, Color};
 use super::colors::{
     BLACK, BLUE, BROWN, CYAN, GRAY, GREEN, INDIGO, MINT, ORANGE, PINK, PURPLE, RED, TEAL, WHITE,
@@ -9,6 +9,7 @@ use super::errors::{value_error, MrlyError, Result};
 use super::rng::Rng;
 use super::state::{choice, randint, sample, shuffle};
 use super::tensor::{Dtype, Tensor};
+use crate::json::{field, string};
 use crate::{json, Json};
 use std::collections::HashMap;
 
@@ -327,19 +328,6 @@ impl Paint {
     }
 }
 
-fn field<'a>(value: &'a Json, key: &str) -> Result<&'a Json> {
-    value
-        .get(key)
-        .ok_or_else(|| MrlyError::Value(format!("missing field {key:?}.")))
-}
-
-fn string(value: &Json, key: &str) -> Result<String> {
-    field(value, key)?
-        .as_str()
-        .map(|s| s.to_string())
-        .ok_or_else(|| MrlyError::Value(format!("field {key:?} must be a string.")))
-}
-
 fn string_list(value: &Json, key: &str) -> Result<Vec<String>> {
     let array = field(value, key)?
         .as_array()
@@ -502,22 +490,6 @@ fn apply_colors(mut paint: Paint, max_val: usize) -> Paint {
     paint
 }
 
-fn von_neumann(dimension: usize) -> Tensor {
-    let shape = vec![3usize; dimension];
-    let mut mask = Tensor::new(shape);
-    for flat in 0..mask.bytes().len() {
-        let mut rem = flat;
-        let mut distance = 0usize;
-        for _ in 0..dimension {
-            let coord = rem % 3;
-            rem /= 3;
-            distance += (coord as isize - 1).unsigned_abs();
-        }
-        mask.bytes_mut()[flat] = u8::from(distance == 1);
-    }
-    mask
-}
-
 /// Tags the cell for the Layers and Neighbors editions and returns the distinct tag count on the secondary side.
 pub fn tag(
     cell: &mut Cell,
@@ -535,7 +507,7 @@ pub fn tag(
             let neighbor_mask = match mask {
                 Some(m) => m,
                 None => {
-                    owned = von_neumann(cell.types.shape.len());
+                    owned = moore(cell.types.shape.len());
                     &owned
                 }
             };
@@ -805,6 +777,28 @@ mod tests {
             coat(&mut coated, &p, None).unwrap();
             assert_eq!(lived.colors, coated.colors, "edition {:?}", edition);
         }
+    }
+    #[test]
+    fn default_neighbors_mask_is_the_moore_ring() {
+        let offsets: [(usize, usize); 8] = [
+            (0, 0),
+            (0, 1),
+            (0, 2),
+            (1, 0),
+            (1, 2),
+            (2, 0),
+            (2, 1),
+            (2, 2),
+        ];
+        let mut types = Tensor::new(vec![45, 5]);
+        for count in 0..9 {
+            for &(dy, dx) in offsets.iter().take(count) {
+                types.set(&[5 * count + 1 + dy, 1 + dx], 1);
+            }
+        }
+        let mut cell = Cell::new(types);
+        let classes = tag(&mut cell, Edition::Neighbors, Target::Fill, None).unwrap();
+        assert_eq!(classes, 9);
     }
     #[test]
     fn tag_is_deterministic() {

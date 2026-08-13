@@ -1,0 +1,17 @@
+MRLYCOLORS
+
+black   #000000   0   0   0
+white   #ffffff 255 255 255
+red     #ff3d40 255  61  64
+orange  #ff8f2c 255 143  44
+yellow  #ffd100 255 209   0
+green   #32cc58  50 204  88
+mint    #00d1bb   0 209 187
+teal    #00cad8   0 202 216
+cyan    #1ec9f3  30 201 243
+blue    #008cff   0 140 255
+indigo  #6768fa 103 104 250
+purple  #d332e9 211  50 233
+pink    #ff325a 255  50  90
+brown   #b18462 177 132  98
+gray    #8e8e93 142 142 147

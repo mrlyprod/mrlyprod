@@ -1,5 +1,5 @@
 use super::models::Cell2d;
-use crate::dim::serializer::{byte_grid, color_grid, parse, types_field};
+use crate::dim::serializer::{byte_grid, color_grid, count_grid, parse, tag_layer, types_field};
 use mrlycore::errors::{value_error, MrlyError, Result};
 use mrlycore::tensor::Tensor;
 use mrlycore::{json, Json};
@@ -92,9 +92,8 @@ pub fn from_json(text: &str) -> Result<Cell2d> {
         cell.cell.colors = Some(nested.into_iter().flatten().collect());
     }
     if let Some(tags) = data.get("tags") {
-        let nested = byte_grid(tags)?;
         let shape = vec![cell.height(), cell.width()];
-        cell.cell.tags = Some(Tensor::of(nested.into_iter().flatten().collect(), shape));
+        cell.cell.tags = Some(tag_layer(&count_grid(tags)?, shape)?);
     }
     Ok(cell)
 }
@@ -105,6 +104,7 @@ mod tests {
     use crate::two::designs;
     use mrlycore::cell::mapping;
     use mrlycore::enums::Mode;
+    use mrlycore::tensor::Dtype;
     #[test]
     fn json_round_trip() {
         let c = designs::carpet(3, 2).unwrap();
@@ -119,6 +119,21 @@ mod tests {
             .paint(&mapping(), Mode::Type);
         let restored = from_json(&to_json(&c)).unwrap();
         assert_eq!(c, restored);
+    }
+    #[test]
+    fn json_round_trip_with_tags_past_a_byte() {
+        let mut mask = Tensor::full(vec![17, 17], 1);
+        mask.set(&[8, 8], 0);
+        let c = designs::ones(21, 1)
+            .unwrap()
+            .neighbors(&mask, 1, true)
+            .unwrap();
+        let tags = c.cell.tags.as_ref().unwrap();
+        assert_eq!(tags.dtype(), Dtype::U16);
+        assert_eq!(tags.at(0), 288);
+        let restored = from_json(&to_json(&c)).unwrap();
+        assert_eq!(restored, c);
+        assert_eq!(restored.cell.tags.as_ref().unwrap().at(0), 288);
     }
     #[test]
     fn strings_round_trip() {

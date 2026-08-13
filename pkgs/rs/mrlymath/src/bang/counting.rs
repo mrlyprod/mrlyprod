@@ -1,3 +1,4 @@
+use crate::formulas::gcd;
 use mrlycore::errors::{value_error, Result};
 use std::collections::BTreeMap;
 
@@ -23,14 +24,6 @@ fn mobius(n: usize) -> i128 {
 
 fn divisors(n: usize) -> Vec<usize> {
     (1..=n).filter(|d| n.is_multiple_of(*d)).collect()
-}
-
-fn gcd(a: usize, b: usize) -> usize {
-    if b == 0 {
-        a
-    } else {
-        gcd(b, a % b)
-    }
 }
 
 fn factorial(n: usize) -> u128 {
@@ -83,7 +76,7 @@ fn combine(c1: &Cycles, c2: &Cycles) -> Cycles {
     let mut out = Cycles::new();
     for (&l1, &n1) in c1 {
         for (&l2, &n2) in c2 {
-            let g = gcd(l1, l2);
+            let g = gcd(l1 as u128, l2 as u128) as usize;
             *out.entry(l1 * l2 / g).or_insert(0) += n1 * n2 * g as u128;
         }
     }

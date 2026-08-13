@@ -3,13 +3,8 @@ use super::sbox;
 use super::Boundary;
 use crate::life::{self, Boundary as LifeBoundary};
 use crate::two::Cell2d;
-use mrlycore::atoms::carpet_2d;
 use mrlycore::errors::Result;
 use mrlycore::tensor::Tensor;
-
-fn moore() -> Tensor {
-    carpet_2d(3)
-}
 
 fn life_boundary(b: Boundary) -> LifeBoundary {
     match b {
@@ -21,11 +16,12 @@ fn life_boundary(b: Boundary) -> LifeBoundary {
 fn ca_pass(grid: &Tensor, config: &Config) -> Result<Tensor> {
     let (birth, survive) = config.rule.counts();
     let cell = Cell2d::new(grid.clone());
+    let mask = life::moore();
     let next = life::next_grid(
         &cell,
         &birth,
         &survive,
-        &moore(),
+        mask.types(),
         life_boundary(config.boundary),
     )?;
     Ok(next.types().clone())

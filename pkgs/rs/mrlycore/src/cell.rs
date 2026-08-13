@@ -88,12 +88,16 @@ impl Cell {
         self.tags = None;
         Ok(self)
     }
-    /// Repeats the cell reps times along each axis, dropping colors.
-    pub fn tile(mut self, reps: &[usize]) -> Cell {
-        self.types = self.types.tile(reps);
-        self.colors = None;
-        self.tags = self.tags.map(|t| t.tile(reps));
-        self
+    /// Repeats the cell reps times along each axis, carrying colors and tags along.
+    pub fn tile(self, reps: &[usize]) -> Cell {
+        let shape: Vec<usize> = self
+            .types
+            .shape
+            .iter()
+            .zip(reps)
+            .map(|(n, r)| n * r)
+            .collect();
+        remap(&self, &tile_map(&self.types.shape, reps), &shape)
     }
     /// Tags every cell with its concentric shell distance from the center.
     pub fn layers(mut self, dtype: Dtype) -> Cell {
@@ -146,8 +150,10 @@ impl Cell {
             .colors
             .take()
             .unwrap_or_else(|| vec![[0, 0, 0, 0]; size]);
-        for (&key, palette) in mapping {
-            let rgba: Vec<[u8; 4]> = palette.iter().map(|c| [c.r, c.g, c.b, c.a]).collect();
+        let mut keys: Vec<u8> = mapping.keys().copied().collect();
+        keys.sort_unstable();
+        for key in keys {
+            let rgba: Vec<[u8; 4]> = mapping[&key].iter().map(|c| [c.r, c.g, c.b, c.a]).collect();
             if rgba.is_empty() {
                 continue;
             }
@@ -196,6 +202,64 @@ fn axis_index(t: &Tensor, flat: usize, axis: usize) -> usize {
         stride *= t.shape[a];
     }
     (flat / stride) % t.shape[axis]
+}
+
+/// Builds the flat source index of every destination cell after tiling reps copies per axis.
+pub fn tile_map(shape: &[usize], reps: &[usize]) -> Vec<usize> {
+    let tiled: Vec<usize> = shape.iter().zip(reps).map(|(n, r)| n * r).collect();
+    let size = tiled.iter().product();
+    let mut map = Vec::with_capacity(size);
+    for flat in 0..size {
+        let mut rem = flat;
+        let mut source = 0;
+        for (axis, &n) in shape.iter().enumerate() {
+            let stride: usize = tiled[(axis + 1)..].iter().product();
+            let i = rem / stride;
+            rem %= stride;
+            source = source * n + i % n;
+        }
+        map.push(source);
+    }
+    map
+}
+
+/// Rebuilds a cell's types, colors and tags at the new shape from one destination-to-source index map.
+///
+/// The map holds one source index per destination cell, so it must be as long as the shape's size.
+pub fn remap(cell: &Cell, map: &[usize], shape: &[usize]) -> Cell {
+    Cell {
+        types: gather(&cell.types, map, shape),
+        colors: cell
+            .colors
+            .as_ref()
+            .map(|colors| map.iter().map(|&src| colors[src]).collect()),
+        tags: cell.tags.as_ref().map(|tags| gather(tags, map, shape)),
+    }
+}
+
+fn gather(source: &Tensor, map: &[usize], shape: &[usize]) -> Tensor {
+    let mut out = Tensor::typed(shape.to_vec(), source.dtype());
+    for (flat, &src) in map.iter().enumerate() {
+        out.put(flat, source.at(src));
+    }
+    out
+}
+
+/// Builds the 3-wide Moore mask of the dimension, every site on but the center.
+///
+/// ```
+/// let mask = mrlycore::cell::moore(2);
+/// assert_eq!(mask.shape, vec![3, 3]);
+/// assert_eq!(mask.sum(), 8);
+/// ```
+pub fn moore(dimension: usize) -> Tensor {
+    let mut mask = Tensor::full(vec![3; dimension], 1);
+    let mut center = 0;
+    for _ in 0..dimension {
+        center = center * 3 + 1;
+    }
+    mask.bytes_mut()[center] = 0;
+    mask
 }
 
 /// Builds the flat source index of every destination cell after k quarter turns in the plane of the axes.
@@ -296,6 +360,7 @@ pub fn mosaic(mask: &Tensor, cells: &[Cell]) -> Result<Cell> {
 mod tests {
     use super::*;
     use crate::atoms;
+    use crate::state::{guard, seed};
     #[test]
     fn rot90_map_matches_tensor() {
         let t = Tensor::of((0..24).map(|v| v as u8).collect(), vec![2, 3, 4]);
@@ -307,6 +372,44 @@ mod tests {
                 assert_eq!(mapped, rotated.bytes());
             }
         }
+    }
+    #[test]
+    fn remap_carries_types_colors_and_tags() {
+        let painted = Cell::new(atoms::carpet_2d(3))
+            .layers(Dtype::U8)
+            .paint(&mapping(), Mode::Type);
+        let map = rot90_map(&painted.types.shape, 1, (0, 1));
+        let turned = remap(&painted, &map, &[3, 3]);
+        assert_eq!(turned.types, painted.types.rot90(1, (0, 1)));
+        assert_eq!(
+            turned.tags.as_ref().unwrap(),
+            &painted.tags.as_ref().unwrap().rot90(1, (0, 1))
+        );
+        let colors = turned.colors.as_ref().unwrap();
+        let source = painted.colors.as_ref().unwrap();
+        for (flat, &src) in map.iter().enumerate() {
+            assert_eq!(colors[flat], source[src], "at {flat}");
+        }
+    }
+    #[test]
+    fn remap_keeps_a_wide_tag_layer_wide() {
+        let mut grid = Cell::new(atoms::ones_2d(2));
+        grid.tags = Some(Tensor::filled(vec![2, 2], 300, Dtype::U16));
+        let tiled = grid.tile(&[2, 2]);
+        let tags = tiled.tags.unwrap();
+        assert_eq!(tags.dtype(), Dtype::U16);
+        assert_eq!(tags.at(15), 300);
+    }
+    #[test]
+    fn moore_masks_every_site_but_the_center() {
+        let flat = moore(2);
+        assert_eq!(flat.shape, vec![3, 3]);
+        assert_eq!(flat.get(&[1, 1]), 0);
+        assert_eq!(flat.sum(), 8);
+        let cube = moore(3);
+        assert_eq!(cube.shape, vec![3, 3, 3]);
+        assert_eq!(cube.get(&[1, 1, 1]), 0);
+        assert_eq!(cube.sum(), 26);
     }
     #[test]
     fn merge_two_by_two() {
@@ -344,6 +447,48 @@ mod tests {
             .filter(|(&t, _)| t == 1)
             .count();
         assert_eq!(dark, 8);
+    }
+    #[test]
+    fn tile_carries_colors_and_tags() {
+        let painted = Cell::new(atoms::carpet_2d(3))
+            .layers(Dtype::U8)
+            .paint(&mapping(), Mode::Type);
+        let tiled = painted.clone().tile(&[2, 3]);
+        assert_eq!(tiled.types.shape, vec![6, 9]);
+        let colors = tiled.colors.as_ref().unwrap();
+        let source = painted.colors.as_ref().unwrap();
+        assert_eq!(colors.len(), 54);
+        for y in 0..6 {
+            for x in 0..9 {
+                assert_eq!(colors[y * 9 + x], source[(y % 3) * 3 + x % 3]);
+            }
+        }
+        assert_eq!(tiled.tags.as_ref().unwrap().shape, vec![6, 9]);
+    }
+    #[test]
+    fn paint_random_mode_is_seed_stable() {
+        let _g = guard();
+        seed(5);
+        let types = Tensor::of(vec![0, 1, 1, 0], vec![2, 2]);
+        let forward = HashMap::from([(0, vec![RED, GREEN]), (1, vec![BLUE, WHITE])]);
+        let colors = Cell::new(types.clone())
+            .paint(&forward, Mode::Random)
+            .colors
+            .unwrap();
+        seed(5);
+        let reversed = HashMap::from([(1, vec![BLUE, WHITE]), (0, vec![RED, GREEN])]);
+        let again = Cell::new(types)
+            .paint(&reversed, Mode::Random)
+            .colors
+            .unwrap();
+        assert_eq!(colors, again);
+        let pinned = [
+            [255, 61, 64, 255],
+            [255, 255, 255, 255],
+            [255, 255, 255, 255],
+            [50, 204, 88, 255],
+        ];
+        assert_eq!(colors, pinned);
     }
     #[test]
     fn magic_is_kron_chain() {

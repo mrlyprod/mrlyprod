@@ -1,7 +1,7 @@
 use mrlycore::errors::{value_error, Result};
 use mrlycore::state::choice;
 use mrlycore::tensor::Tensor;
-use mrlycore::tile::{Design, Group, Source, Tile};
+use mrlycore::tile::{Group, Source, Tile};
 
 use super::designs;
 use super::geometry;
@@ -25,26 +25,11 @@ pub fn random_tile(max_size: usize) -> Result<Tile> {
     spec::random_tile::<2>(max_size, rotation)
 }
 
-fn design_cell(design: Design, number: usize, level: usize) -> Result<Cell2d> {
-    match design {
-        Design::Carpet => designs::carpet(number, level),
-        Design::Net => designs::net(number, level),
-        Design::Htree => designs::htree(number, level),
-        Design::Vtree => designs::vtree(number, level),
-        Design::Void => designs::void(number, level),
-        other => value_error(format!("design {} is not 2d.", other.name())),
-    }
-}
-
 fn source_cell(source: Source, number: usize, level: usize, rotation: usize) -> Result<Cell2d> {
-    let mut c = match source {
-        Source::Classic(design) => design_cell(design, number, level)?,
-        Source::Code(code) => designs::create(code, number, level, 0, 2)?,
-    };
-    if rotation != 0 {
-        c = c.rotate(rotation);
+    match source {
+        Source::Classic(design) => designs::named(design, number, level, rotation),
+        Source::Code(code) => designs::create(code, number, level, rotation, 2),
     }
-    Ok(c)
 }
 
 fn cell(tile: &Tile, i: usize, level: usize) -> Result<Cell2d> {
@@ -159,7 +144,7 @@ pub fn sample_types(cell: &Cell2d, k: usize) -> Tensor {
 mod tests {
     use super::*;
     use mrlycore::state::{guard as rng_lock, seed};
-    use mrlycore::tile::{Catalog, Parity};
+    use mrlycore::tile::{Catalog, Design, Parity};
     fn config() -> Config {
         Config {
             min_size: 3,
@@ -274,6 +259,45 @@ mod tests {
             }
         }
         assert!(deep, "expected at least one magic tile nested 3+ deep");
+    }
+    #[test]
+    fn magic_rolls_never_repeat_a_fractal() {
+        let _guard = rng_lock();
+        let config = Config {
+            catalog: Catalog::Codes(vec![7]),
+            min_size: 3,
+            max_size: 64,
+            groups: vec![Group::Magic],
+            anti: Some(false),
+            ..Config::default()
+        };
+        for s in 0..200 {
+            seed(s);
+            let tile = create(&config).unwrap();
+            assert!(tile.sources.len() >= 2, "seed {s} rolled one slot");
+            assert!(!tile.degenerate(), "seed {s} rolled a fractal twin");
+            let cell = build(&tile).unwrap();
+            assert_eq!(cell.width(), tile.width, "seed {s}");
+        }
+    }
+    #[test]
+    fn a_magic_roll_keeps_its_twin_when_nothing_else_fits() {
+        let _guard = rng_lock();
+        let config = Config {
+            catalog: Catalog::Codes(vec![7]),
+            min_size: 9,
+            max_size: 9,
+            groups: vec![Group::Magic],
+            anti: Some(false),
+            ..Config::default()
+        };
+        for s in 0..20 {
+            seed(s);
+            let tile = create(&config).unwrap();
+            assert_eq!(tile.numbers, vec![3, 3], "seed {s}");
+            assert!(tile.degenerate(), "seed {s}");
+            assert_eq!(build(&tile).unwrap().width(), 9, "seed {s}");
+        }
     }
     #[test]
     fn build_errors_on_a_ragged_tile() {

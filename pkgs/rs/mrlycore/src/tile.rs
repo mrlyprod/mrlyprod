@@ -1,4 +1,5 @@
 use super::errors::{value_error, MrlyError, Result};
+use crate::json::{field, string, usize_at};
 use crate::{json, Json};
 
 /// The smallest side, number or factor a tile may take.
@@ -300,6 +301,14 @@ impl Tile {
     pub fn max_size(&self) -> usize {
         self.width.max(self.height)
     }
+    /// Returns whether the recipe is a magic tile of one repeated source at one repeated number,
+    /// the shape a fractal tile of the same factor and level already draws.
+    pub fn degenerate(&self) -> bool {
+        self.group == Group::Magic
+            && self.sources.len() > 1
+            && uniform(&self.sources)
+            && uniform(&self.numbers)
+    }
     /// Recomputes the factor and side length the group and numbers imply, zero when they overflow.
     pub fn resize(&mut self) {
         let lead = self.numbers.first().copied().unwrap_or(0);
@@ -418,6 +427,16 @@ impl Tile {
 
 const MIN_FACTOR: usize = 2;
 
+/// Returns whether every item equals the first, vacuously true for an empty or single list.
+///
+/// ```
+/// assert!(mrlycore::tile::uniform(&[3, 3, 3]));
+/// assert!(!mrlycore::tile::uniform(&[3, 5, 3]));
+/// ```
+pub fn uniform<T: PartialEq>(items: &[T]) -> bool {
+    items.windows(2).all(|pair| pair[0] == pair[1])
+}
+
 fn factors(min_factor: usize, max_factor: usize, parity: Parity) -> Vec<usize> {
     (min_factor.max(MIN_FACTOR)..=max_factor)
         .filter(|&n| parity.keep(n))
@@ -519,26 +538,6 @@ pub fn nestings(min_size: usize, max_size: usize, parity: Parity) -> Vec<Vec<usi
         depth += 1;
     }
     out
-}
-
-fn field<'a>(value: &'a Json, key: &str) -> Result<&'a Json> {
-    value
-        .get(key)
-        .ok_or_else(|| MrlyError::Value(format!("missing field {key:?}.")))
-}
-
-fn string(value: &Json, key: &str) -> Result<String> {
-    field(value, key)?
-        .as_str()
-        .map(|s| s.to_string())
-        .ok_or_else(|| MrlyError::Value(format!("field {key:?} must be a string.")))
-}
-
-fn usize_at(value: &Json, key: &str) -> Result<usize> {
-    field(value, key)?
-        .as_u64()
-        .map(|n| n as usize)
-        .ok_or_else(|| MrlyError::Value(format!("field {key:?} must be an integer.")))
 }
 
 fn bool_at(value: &Json, key: &str) -> Result<bool> {
@@ -657,7 +656,7 @@ mod tests {
         assert_eq!(back, Source::Code(wide));
     }
     #[test]
-    fn source_json_reads_legacy_int_codes() {
+    fn source_json_reads_bare_int_codes() {
         assert_eq!(
             Source::from_json(&json!({ "code": 7 })).unwrap(),
             Source::Code(7)
@@ -734,6 +733,43 @@ mod tests {
         assert_eq!(size(3, 64), None);
         assert_eq!(size(3, 4294967296), None);
         assert_eq!(size(3, 4294967298), None);
+    }
+    #[test]
+    fn degenerate_marks_the_magic_tiles_a_fractal_already_draws() {
+        let mut tile = Tile::new(Group::Magic);
+        tile.sources = vec![Source::Classic(Design::Carpet); 2];
+        tile.numbers = vec![3, 3];
+        tile.levels = vec![1, 1];
+        tile.rotations = vec![0, 0];
+        tile.anti = vec![false, false];
+        tile.resize();
+        assert_eq!(tile.check(), Ok(()));
+        assert!(tile.degenerate());
+        tile.numbers = vec![3, 5];
+        tile.resize();
+        assert!(!tile.degenerate());
+        tile.numbers = vec![3, 3];
+        tile.sources = vec![Source::Classic(Design::Carpet), Source::Code(7)];
+        tile.resize();
+        assert!(!tile.degenerate());
+    }
+    #[test]
+    fn degenerate_is_a_magic_law_only() {
+        let mut tile = Tile::new(Group::Mosaic);
+        tile.sources = vec![Source::Classic(Design::Carpet); 3];
+        tile.numbers = vec![3, 3, 3];
+        assert!(!tile.degenerate());
+        tile.group = Group::General;
+        tile.sources = vec![Source::Classic(Design::Carpet)];
+        tile.numbers = vec![3];
+        assert!(!tile.degenerate());
+    }
+    #[test]
+    fn uniform_holds_for_short_lists() {
+        assert!(uniform::<usize>(&[]));
+        assert!(uniform(&[3]));
+        assert!(uniform(&[3, 3, 3]));
+        assert!(!uniform(&[3, 3, 5]));
     }
     #[test]
     fn evens_factors_work() {

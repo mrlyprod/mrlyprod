@@ -11,6 +11,7 @@ members = [
     "pkgs/rs/mrlysolo",
     "pkgs/rs/mrlytorch",
     "pkgs/rs/mrlydata",
+    "pkgs/rs/mrlygame",
     "pkgs/rs/apps/*",
     "pkgs/rs/mrlyweb",
     "pkgs/py/web",
@@ -28,6 +29,7 @@ default-members = [
     "pkgs/rs/mrlysolo",
     "pkgs/rs/mrlytorch",
     "pkgs/rs/mrlydata",
+    "pkgs/rs/mrlygame",
     "pkgs/rs/apps/*",
     "pkgs/rs/mrlyweb",
     "pkgs/rs/mrlycli",
@@ -57,6 +59,7 @@ mrlyfont = { path = "pkgs/rs/mrlyfont", version = "0.2.0" }
 mrlyskin = { path = "pkgs/rs/mrlyskin", version = "0.2.0" }
 mrlyos = { path = "pkgs/rs/mrlyos", version = "0.2.0" }
 mrlydata = { path = "pkgs/rs/mrlydata", version = "0.2.0" }
+mrlygame = { path = "pkgs/rs/mrlygame", version = "0.2.0" }
 mrlyarc = { path = "pkgs/rs/apps/mrlyarc", version = "0.2.0" }
 mrlybang = { path = "pkgs/rs/apps/mrlybang", version = "0.2.0" }
 mrlycalculator = { path = "pkgs/rs/apps/mrlycalculator", version = "0.2.0" }

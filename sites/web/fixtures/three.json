@@ -19,6 +19,7 @@
       "edges": false,
       "wireframe": false,
       "axes": false,
+      "anti": false,
       "census": {
         "grid": 9,
         "fill": 144,
@@ -27,7 +28,7 @@
       "shade": {
         "program": "mesh",
         "route": "three",
-        "mesh": "ytree:3:2:w0e0a0d0"
+        "mesh": "ytree:3:2:w0e0a0n0d0"
       }
     },
     "actions": [
@@ -48,13 +49,18 @@
             "alpha": "int 32..255",
             "edges": "bool",
             "wireframe": "bool",
-            "axes": "bool"
+            "axes": "bool",
+            "anti": "bool"
           },
           "value": "of key"
         }
       },
       {
         "verb": "three.reset",
+        "args": {}
+      },
+      {
+        "verb": "three.obj",
         "args": {}
       }
     ]

@@ -207,7 +207,7 @@ mod tests {
         assert!((c.total_length - 8.0).abs() < 1e-9);
     }
     #[test]
-    fn carpet_census_matches_python_exactly() {
+    fn carpet_census_holds_its_pinned_counts() {
         let network = core_graph(&atoms::carpet_2d(3).fractal(4)).unwrap();
         let c = census(&network);
         assert_eq!(c.nodes, 4096);
@@ -227,7 +227,7 @@ mod tests {
         assert_eq!(fractal_dimension(&net), 1.0);
     }
     #[test]
-    fn the_carpet_dimension_is_ours_not_pythons() {
+    fn the_carpet_dimension_holds_its_pinned_value() {
         let network = core_graph(&atoms::carpet_2d(3).fractal(4)).unwrap();
         let d = census(&network).fractal_dimension;
         assert!((0.0..=3.0).contains(&d), "dimension {d}");

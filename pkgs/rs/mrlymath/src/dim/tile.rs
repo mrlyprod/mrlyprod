@@ -1,6 +1,8 @@
 use mrlycore::errors::{value_error, Result};
 use mrlycore::state::{boolean, choice, sample, shuffle};
-use mrlycore::tile::{generals, nestings, powers, products, Catalog, Group, Parity, Source, Tile};
+use mrlycore::tile::{
+    generals, nestings, powers, products, uniform, Catalog, Group, Parity, Source, Tile,
+};
 
 /// The constraints a random tile is drawn under.
 #[derive(Clone, Debug)]
@@ -79,14 +81,30 @@ fn fractal<const N: usize>(config: &ConfigNd<N>, rotation: Rotation) -> Option<T
     Some(tile)
 }
 
+fn mixed(numbers: Vec<usize>, sources: &[Source], options: &[Vec<usize>]) -> Vec<usize> {
+    if !uniform(sources) || !uniform(&numbers) {
+        return numbers;
+    }
+    let fresh: Vec<Vec<usize>> = options
+        .iter()
+        .filter(|option| option.len() == numbers.len() && !uniform(option))
+        .cloned()
+        .collect();
+    match fresh.is_empty() {
+        true => numbers,
+        false => choice(&fresh),
+    }
+}
+
 fn magic<const N: usize>(config: &ConfigNd<N>, rotation: Rotation) -> Option<Tile> {
     let options = nestings(config.min_size, config.max_size, config.parity);
     if options.is_empty() {
         return None;
     }
-    let numbers = choice(&options);
+    let drawn = choice(&options);
+    let sources: Vec<Source> = drawn.iter().map(|_| config.source()).collect();
+    let numbers = mixed(drawn, &sources, &options);
     let count = numbers.len();
-    let sources: Vec<Source> = (0..count).map(|_| config.source()).collect();
     let size: usize = numbers.iter().product();
     let mut tile = Tile::new(Group::Magic).size(size, size);
     tile.sources = sources.clone();

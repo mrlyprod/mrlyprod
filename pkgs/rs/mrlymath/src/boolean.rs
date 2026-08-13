@@ -105,6 +105,27 @@ mod tests {
         assert!(!is_balanced(0b0111, 2));
     }
     #[test]
+    fn carpet_corners_expand_on_four_walsh_characters() {
+        let code = crate::name::classic_code(mrlycore::tile::Design::Carpet).unwrap();
+        for x in 0..2u32 {
+            for y in 0..2u32 {
+                let (sx, sy) = (1 - 2 * (x as i64), 1 - 2 * (y as i64));
+                assert_eq!(
+                    ((code >> (2 * x + y)) & 1) as i64,
+                    (3 + sx + sy - sx * sy) / 4
+                );
+            }
+        }
+        let spectrum = walsh_spectrum(code, 2);
+        assert_eq!(spectrum, vec![-2, -2, -2, 2]);
+        let quarters: Vec<i64> = spectrum
+            .iter()
+            .enumerate()
+            .map(|(s, &w)| ((if s == 0 { 4 } else { 0 }) - w) / 2)
+            .collect();
+        assert_eq!(quarters, vec![3, 1, 1, -1]);
+    }
+    #[test]
     fn sac_of_constant_is_zero() {
         assert_eq!(sac(0, 3), 0.0);
         let n = 3;

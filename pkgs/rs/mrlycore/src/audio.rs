@@ -135,6 +135,28 @@ impl Note {
     }
 }
 
+/// A two-axis timbre: the shape each partial is drawn with, and the series that weights them.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Timbre {
+    /// The waveform each partial is drawn with.
+    pub shape: Wave,
+    /// The wave whose recipe picks the partials and their weights.
+    pub series: Wave,
+    /// The number of harmonics summed from the series.
+    pub harmonics: usize,
+}
+
+impl Timbre {
+    /// Builds a timbre from shape, series, and harmonic count.
+    pub fn new(shape: Wave, series: Wave, harmonics: usize) -> Timbre {
+        Timbre {
+            shape,
+            series,
+            harmonics,
+        }
+    }
+}
+
 /// Returns a midi note's frequency in millihertz, clamped to the keyboard.
 ///
 /// ```
@@ -166,24 +188,7 @@ pub fn pick(rng: &mut Rng, root: i64, scale: &[i64], octaves: i64) -> i64 {
 
 /// Renders a note to float samples, peaking at the volume and faded at both ends.
 pub fn render(note: &Note) -> Vec<f32> {
-    let base = freq(note.midi) as f32 / MILLI;
-    let count = (note.seconds * RATE as f32) as usize;
-    let mut out = vec![0.0f32; count];
-    for (mult, weight) in note.wave.recipe(VOICES) {
-        let pitch = base * mult;
-        if pitch * 2.0 >= RATE as f32 {
-            continue;
-        }
-        let step = pitch / RATE as f32;
-        let mut phase = 0.0f32;
-        for s in out.iter_mut() {
-            *s += weight * Wave::Sine.sample(phase);
-            phase += step;
-            if phase >= 1.0 {
-                phase -= 1.0;
-            }
-        }
-    }
+    let mut out = partials(note.midi, Wave::Sine, note.wave, VOICES, note.seconds);
     let peak = out.iter().fold(0.0f32, |m, s| m.max(s.abs()));
     if peak > 0.0 {
         let k = PEAK / peak;
@@ -191,11 +196,24 @@ pub fn render(note: &Note) -> Vec<f32> {
             *s *= k;
         }
     }
+    let count = out.len();
     let ramp = ((FADE * RATE as f32) as usize).min(count / 2);
     for i in 0..ramp {
         let g = i as f32 / ramp as f32;
         out[i] *= g;
         out[count - 1 - i] *= g;
+    }
+    out
+}
+
+/// Renders a midi note through a timbre to unit-peak float samples, with no fades.
+pub fn tone(midi: i64, timbre: &Timbre, seconds: f32) -> Vec<f32> {
+    let mut out = partials(midi, timbre.shape, timbre.series, timbre.harmonics, seconds);
+    let peak = out.iter().fold(0.0f32, |m, s| m.max(s.abs()));
+    if peak > 0.0 {
+        for s in out.iter_mut() {
+            *s /= peak;
+        }
     }
     out
 }
@@ -238,6 +256,28 @@ pub fn cue(name: &str) -> Json {
         _ => (24, 90, 25),
     };
     json!({ "op": "note", "freq": freq(ROOT + offset), "ms": ms, "gain": gain })
+}
+
+fn partials(midi: i64, shape: Wave, series: Wave, harmonics: usize, seconds: f32) -> Vec<f32> {
+    let base = freq(midi) as f32 / MILLI;
+    let count = (seconds * RATE as f32) as usize;
+    let mut out = vec![0.0f32; count];
+    for (mult, weight) in series.recipe(harmonics) {
+        let pitch = base * mult;
+        if pitch * 2.0 >= RATE as f32 {
+            continue;
+        }
+        let step = pitch / RATE as f32;
+        let mut phase = 0.0f32;
+        for s in out.iter_mut() {
+            *s += weight * shape.sample(phase);
+            phase += step;
+            if phase >= 1.0 {
+                phase -= 1.0;
+            }
+        }
+    }
+    out
 }
 
 fn odds(voices: usize) -> impl Iterator<Item = f32> {
@@ -283,7 +323,7 @@ mod tests {
         }
     }
     #[test]
-    fn recipes_carry_the_legacy_weights() {
+    fn recipes_carry_the_classic_weights() {
         assert_eq!(Wave::Sine.recipe(8), vec![(1.0, 1.0)]);
         assert_eq!(
             Wave::Square.recipe(3),
@@ -362,6 +402,42 @@ mod tests {
         assert_eq!(samples[samples.len() - 1], 0.0);
         let ramp = (FADE * RATE as f32) as usize;
         assert!(samples[..ramp].iter().all(|s| s.abs() <= PEAK));
+    }
+    #[test]
+    fn tone_peaks_at_unity() {
+        for wave in [Wave::Sine, Wave::Triangle, Wave::Square, Wave::Sawtooth] {
+            let timbre = Timbre::new(Wave::Sine, wave, VOICES);
+            let samples = tone(69, &timbre, 0.15);
+            assert_eq!(samples.len(), (0.15 * RATE as f32) as usize);
+            let peak = samples.iter().fold(0.0f32, |m, s| m.max(s.abs()));
+            assert!((peak - 1.0).abs() < 1e-4, "{} {peak}", wave.name());
+        }
+    }
+    #[test]
+    fn tone_matches_render_inside_the_fades() {
+        let rendered = render(&Note::new(69, Wave::Square, 0.15));
+        let timbre = Timbre::new(Wave::Sine, Wave::Square, VOICES);
+        let toned = tone(69, &timbre, 0.15);
+        let ramp = (FADE * RATE as f32) as usize;
+        for i in ramp..rendered.len() - ramp {
+            assert!((rendered[i] - toned[i] * PEAK).abs() < 1e-4);
+        }
+    }
+    #[test]
+    fn tone_separates_the_axes() {
+        let pure = tone(69, &Timbre::new(Wave::Sine, Wave::Sine, 1), 0.1);
+        let bent = tone(69, &Timbre::new(Wave::Triangle, Wave::Sine, 1), 0.1);
+        let rich = tone(69, &Timbre::new(Wave::Sine, Wave::Triangle, VOICES), 0.1);
+        assert_ne!(pure, bent);
+        assert_ne!(pure, rich);
+        assert_ne!(bent, rich);
+    }
+    #[test]
+    fn tone_thins_to_sine_near_nyquist() {
+        assert_eq!(
+            tone(127, &Timbre::new(Wave::Sine, Wave::Square, VOICES), 0.05),
+            tone(127, &Timbre::new(Wave::Sine, Wave::Sine, 1), 0.05)
+        );
     }
     #[test]
     fn pcm_clamps_to_i16() {

@@ -49,15 +49,12 @@ pub fn heatmap(grids: &[Cell2d], scale: usize) -> Result<Vec<Vec<u8>>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::life::{animate, Boundary, Config};
-    use mrlycore::atoms;
+    use crate::life::{animate, moore, Boundary, Config};
     fn run() -> crate::life::Life {
-        let mut m = atoms::carpet_2d(3);
-        m.set(&[1, 1], 0);
         let config = Config {
             boundary: Boundary::Constant,
             max_generations: 8,
-            ..Config::new(Cell2d::new(m), vec![3], vec![2, 3])
+            ..Config::new(moore(), vec![3], vec![2, 3])
         };
         let mut t = Tensor::new(vec![5, 5]);
         t.set(&[1, 2], 1);

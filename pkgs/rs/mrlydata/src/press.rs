@@ -1,9 +1,10 @@
 use crate::wells::wells;
 use mrlycore::data::Well;
-use mrlycore::errors::{MrlyError, Result};
+use mrlycore::errors::Result;
+use mrlycore::io::{make, write};
+use mrlycore::json::clip;
 use mrlycore::{json, Json};
-use mrlymath::crypto::hash::{hexdigest, Boundary, Config, Rule};
-use std::fs;
+use mrlymath::crypto::hash::quick_hexdigest;
 use std::path::Path;
 
 /// The default seed a pour runs under.
@@ -13,26 +14,6 @@ pub const ROWS: usize = 128;
 
 const SPLIT: &str = "split";
 const EVAL: &str = "eval";
-
-pub(crate) fn clip(value: u64) -> Json {
-    Json::Int((value & i64::MAX as u64) as i64)
-}
-
-fn config() -> Config {
-    Config {
-        side: 16,
-        rounds: 4,
-        rule: Rule::Replicator,
-        boundary: Boundary::Wrap,
-        digest_bits: 256,
-        seed_tile: true,
-    }
-}
-
-/// Hashes bytes into the press's automaton digest hex, or an error from the sponge.
-pub fn sha(bytes: &[u8]) -> Result<String> {
-    hexdigest(bytes, &config())
-}
 
 /// Pours every well into the directory with the default row budget, returning the manifest.
 pub fn pour(dir: &Path, seed: u64) -> Result<Json> {
@@ -92,7 +73,7 @@ fn pour_well(well: &dyn Well, dir: &Path, seed: u64, rows: usize) -> Result<Json
         "about": well.about(),
         "rows": count,
         "bytes": bytes.len(),
-        "sha": sha(&bytes)?,
+        "sha": quick_hexdigest(&bytes)?,
     }))
 }
 
@@ -151,23 +132,12 @@ fn card(well: &dyn Well, seed: u64, rows: usize, schema: &[(String, &'static str
     out
 }
 
-fn make(dir: &Path) -> Result<()> {
-    fs::create_dir_all(dir).map_err(|error| broke("make", dir, &error))
-}
-
-fn write(path: &Path, bytes: &[u8]) -> Result<()> {
-    fs::write(path, bytes).map_err(|error| broke("write", path, &error))
-}
-
-fn broke(act: &str, path: &Path, error: &std::io::Error) -> MrlyError {
-    MrlyError::Value(format!("could not {act} {}: {error}", path.display()))
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use mrlycore::json::parse;
     use mrlycore::state::guard;
+    use std::fs;
 
     struct Tagged;
 
@@ -227,7 +197,7 @@ mod tests {
             }
             assert_eq!(
                 dataset["sha"].as_str().unwrap(),
-                sha(text.as_bytes()).unwrap(),
+                quick_hexdigest(text.as_bytes()).unwrap(),
                 "{name} drifted from its sha"
             );
             assert_eq!(dataset["bytes"].as_i64().unwrap() as usize, text.len());

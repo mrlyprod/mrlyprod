@@ -113,11 +113,9 @@ fn seed_grid(d: &Digest) -> Vec<u8> {
 fn texture(d: &Digest) -> Vec<u8> {
     let seed = seed_grid(d);
     let seed_cell = Cell2d::new(Tensor::of(seed.clone(), vec![ROWS, COLS]));
-    let mut mask = mrlycore::atoms::carpet_2d(3);
-    mask.set(&[1, 1], 0);
     let config = life::Config {
         max_generations: 6,
-        ..life::Config::new(Cell2d::new(mask), vec![3], vec![2, 3])
+        ..life::Config::new(life::moore(), vec![3], vec![2, 3])
     };
     match animate(&seed_cell, &config) {
         Ok(run) => match run.last() {

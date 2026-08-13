@@ -1,6 +1,7 @@
 use crate::bang::{self, factory};
 use crate::crypto::hash::{digest, fingerprint_cell, Config as HashConfig, Rule};
 use crate::formulas;
+use crate::lattice;
 use crate::life;
 use crate::name::{Bang, Named};
 use crate::two::{self, Cell2d};
@@ -17,11 +18,12 @@ const BASE: usize = 2;
 const TEXT_MAX: i64 = 32;
 const SOUP_SPAN: (i64, i64) = (8, 16);
 const DENSITY_SPAN: (i64, i64) = (20, 60);
+const WINDOW_SPAN: (i64, i64) = (8, 32);
 const PRINT_SIDE: usize = 64;
 const RULES: [Rule; 4] = [Rule::Life, Rule::Maze, Rule::Replicator, Rule::Anneal];
 const ALPHABET: &[u8] = b"abcdefghijklmnopqrstuvwxyz0123456789 ";
 
-/// Returns the wells this crate pours: tiles, designs, formulas, hashes and stories.
+/// Returns the wells this crate pours: tiles, designs, formulas, hashes, stories and lattice nodes.
 pub fn wells() -> Vec<Box<dyn Well>> {
     vec![
         Box::new(Tiles),
@@ -29,6 +31,7 @@ pub fn wells() -> Vec<Box<dyn Well>> {
         Box::new(Formulas),
         Box::new(Hashes),
         Box::new(Stories),
+        Box::new(Lattice),
     ]
 }
 
@@ -235,7 +238,7 @@ impl Well for Stories {
             let rule = *rng.choice(&RULES);
             let (birth, survive) = rule.counts();
             let soup = soup(&mut rng, side, density as f64 / 100.0);
-            let config = life::Config::new(moore(), birth.clone(), survive.clone());
+            let config = life::Config::new(life::moore(), birth.clone(), survive.clone());
             let Ok(run) = life::animate(&soup, &config) else {
                 continue;
             };
@@ -256,12 +259,6 @@ impl Well for Stories {
     }
 }
 
-fn moore() -> Cell2d {
-    let mut mask = Tensor::of(vec![1u8; 9], vec![3, 3]);
-    mask.set(&[1, 1], 0);
-    Cell2d::new(mask)
-}
-
 fn soup(rng: &mut Rng, side: usize, density: f64) -> Cell2d {
     let mut grid = Tensor::new(vec![side, side]);
     for y in 0..side {
@@ -272,6 +269,36 @@ fn soup(rng: &mut Rng, side: usize, density: f64) -> Cell2d {
         }
     }
     Cell2d::new(grid)
+}
+
+// LATTICE
+
+struct Lattice;
+
+impl Well for Lattice {
+    fn name(&self) -> &str {
+        "lattice"
+    }
+    fn about(&self) -> &str {
+        "Seeded visible nodes: reduced fractions drawn from a window with their stack brightness."
+    }
+    fn pour(&self, seed: u64, count: usize) -> Vec<Json> {
+        let mut rows = Vec::new();
+        for i in 0..count {
+            let mut rng = Rng::new(mix(seed, i as u64));
+            let window = rng.range(WINDOW_SPAN.0, WINDOW_SPAN.1) as usize;
+            let nodes = lattice::nodes(window);
+            let node = rng.choice(&nodes);
+            rows.push(json!({
+                "window": window,
+                "num": node.num,
+                "den": node.den,
+                "brightness": node.brightness,
+                "new_nodes": lattice::new_nodes(window),
+            }));
+        }
+        rows
+    }
 }
 
 #[cfg(test)]
@@ -353,6 +380,20 @@ mod tests {
             assert!(hex.bytes().all(|b| b.is_ascii_hexdigit()));
             let print = row["fingerprint"].as_array().unwrap();
             assert_eq!(print.len(), PRINT_SIDE);
+        }
+    }
+
+    #[test]
+    fn lattice_rows_carry_reduced_bright_fractions() {
+        let rows = Lattice.pour(6, 5);
+        for row in rows {
+            let window = row["window"].as_i64().unwrap() as u64;
+            let num = row["num"].as_i64().unwrap() as u64;
+            let den = row["den"].as_i64().unwrap() as u64;
+            assert!((WINDOW_SPAN.0..=WINDOW_SPAN.1).contains(&(window as i64)));
+            assert!(den >= 1 && den <= window);
+            assert!(num <= den);
+            assert_eq!(row["brightness"].as_i64().unwrap() as u64, window / den);
         }
     }
 

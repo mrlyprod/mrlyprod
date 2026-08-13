@@ -1,4 +1,4 @@
-/// The triangle, corner and edge tallies of a hex cell.
+/// The triangle, corner and edge tallies of a hex cell, whose census and euler take the extra include_grid flag.
 pub mod census;
 /// The coded cubes projected to iso, pro and cut hexagons.
 pub mod designs;
@@ -49,13 +49,14 @@ pub enum Projection {
     Cut,
 }
 
+pub use census::{census, euler, fills, fills_only, Census};
 pub use designs::{cut_design, iso_design, pro_design};
 pub use geometry::{
-    blank, cut, is_cube, is_hex, iso, orientation, pad, pro, radial, radial_mask, tessellate, tile,
-    tile_crop,
+    blank, cut, is_cube, is_hex, iso, orientation, pad, pro, radial, radial_crop, radial_mask,
+    tessellate, tile, tile_crop,
 };
 pub use models::Cell6d;
 pub use painter::paint;
-pub use renderer::{png, svg, triangles};
+pub use renderer::{hex_png, png, rect, rect_png, rect_svg, svg, triangles, Rect};
 pub use serializer::{from_json, to_json};
 pub use tile::{build as build_tile, random_tile, HexTile};

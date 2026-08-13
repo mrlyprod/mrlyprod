@@ -25,6 +25,10 @@ uv run python utils/tree.py        # regenerate TREE.md (test runs it too)
 uv run python utils/stats.py       # regenerate STATS.md (test runs it too)
 uv run --group font python utils/brand.py         # regenerate MrlyFont + the brand images, write data/cdn and every font sheet
 uv run --group font python utils/brand.py fetch   # the same, refetching files/vendor from Google Fonts first
+uv run python utils/logos.py       # regenerate files/logos: the mark, the banner, the wordmark, the loop, the palette
+uv run python utils/logos.py stills   # only the svg and png stills
+uv run python utils/logos.py motion   # only the gif and the mp4
+uv run python utils/paints.py      # regenerate data/paints: one painted tile per edition
 uv run python utils/spaghetti.py  # remove target, dist, .venv, node_modules, __pycache__, .DS_Store
 ```
 

@@ -46,6 +46,12 @@ pub fn solid_slice_vertices(number: usize) -> Result<u128> {
     Ok((12 * k * k - 6 * k + 1) as u128)
 }
 
+/// Returns the distinct triangle-edge count of the solid slice, defined for odd number.
+pub fn solid_slice_edges(number: usize) -> Result<u128> {
+    let k = odd_k(number)? as i128;
+    Ok((36 * k * k - 30 * k + 6) as u128)
+}
+
 /// Returns the filled triangle count of the code's pro projection at the given level, without rendering it.
 pub fn pro_fills(code: Code, number: usize, level: u32) -> Result<u128> {
     let filled = code_to_corners(code, 3, 2)?;
@@ -123,7 +129,7 @@ mod tests {
         use crate::six::{cut, pro};
         use crate::three;
         for code in [0u128, 8, 17, 23, 129, 232, 255] {
-            for number in 1..5usize {
+            for number in [1usize, 2, 3, 4, 5, 7] {
                 for level in 1..3u32 {
                     if number.pow(level) > 9 {
                         continue;
@@ -172,5 +178,8 @@ mod tests {
         assert_eq!(solid_slice_core_nodes(3).unwrap(), 54);
         assert_eq!(solid_slice_core_edges(3).unwrap(), 72);
         assert_eq!(solid_slice_vertices(3).unwrap(), 37);
+        assert_eq!(solid_slice_edges(1).unwrap(), 12);
+        assert_eq!(solid_slice_edges(3).unwrap(), 90);
+        assert!(solid_slice_edges(4).is_err());
     }
 }

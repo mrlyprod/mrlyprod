@@ -1,3 +1,4 @@
+use super::counting::gcd;
 use crate::bang::factory;
 use crate::bang::universe::Code;
 use crate::census::exposed;
@@ -10,17 +11,9 @@ struct Frac {
     d: i128,
 }
 
-fn gcd(a: i128, b: i128) -> i128 {
-    if b == 0 {
-        a.abs()
-    } else {
-        gcd(b, a % b)
-    }
-}
-
 impl Frac {
     fn new(n: i128, d: i128) -> Frac {
-        let g = gcd(n, d).max(1);
+        let g = gcd(n.unsigned_abs(), d.unsigned_abs()).max(1) as i128;
         let sign = if d < 0 { -1 } else { 1 };
         Frac {
             n: sign * n / g,

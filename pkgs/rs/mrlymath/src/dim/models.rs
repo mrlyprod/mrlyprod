@@ -10,6 +10,29 @@ pub type Cell2d = CellNd<2>;
 /// The three-dimensional cell.
 pub type Cell3d = CellNd<3>;
 
+/// Returns the narrowest unsigned dtype that holds the peak value.
+///
+/// ```
+/// use mrlycore::tensor::Dtype;
+/// assert_eq!(mrlymath::dim::models::dtype_for(255), Dtype::U8);
+/// assert_eq!(mrlymath::dim::models::dtype_for(256), Dtype::U16);
+/// assert_eq!(mrlymath::dim::models::dtype_for(70000), Dtype::U32);
+/// ```
+pub fn dtype_for(peak: i64) -> Dtype {
+    if peak <= Dtype::U8.max() {
+        Dtype::U8
+    } else if peak <= Dtype::U16.max() {
+        Dtype::U16
+    } else {
+        Dtype::U32
+    }
+}
+
+/// Returns the narrowest count dtype that fits the mask's popcount.
+pub fn counting_dtype(mask: &Tensor) -> Dtype {
+    dtype_for(mask.sum() as i64)
+}
+
 /// A cell whose tensor is pinned to N dimensions.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CellNd<const N: usize> {
@@ -67,8 +90,9 @@ impl<const N: usize> CellNd<N> {
     }
     /// Tags each site with its count of masked neighbors matching the target, wrapping on request.
     pub fn neighbors(self, mask: &Tensor, target: u8, wrap: bool) -> Result<CellNd<N>> {
+        let dtype = counting_dtype(mask);
         Ok(CellNd {
-            cell: self.cell.neighbors(mask, target, wrap, Dtype::U8)?,
+            cell: self.cell.neighbors(mask, target, wrap, dtype)?,
         })
     }
     /// Maps each site to one at or above the threshold, zero below.
@@ -188,5 +212,21 @@ mod tests {
         let mask = Tensor::new(cell.types().shape.clone());
         let perforated = cell.clone().perforate(&mask, 5).unwrap();
         assert_eq!(perforated.types(), cell.types());
+    }
+    #[test]
+    fn counting_dtype_widens_with_the_mask() {
+        assert_eq!(counting_dtype(&Tensor::full(vec![3, 3], 1)), Dtype::U8);
+        assert_eq!(counting_dtype(&Tensor::full(vec![15, 15], 1)), Dtype::U8);
+        assert_eq!(counting_dtype(&Tensor::full(vec![17, 17], 1)), Dtype::U16);
+        assert_eq!(counting_dtype(&Tensor::full(vec![63, 63], 1)), Dtype::U16);
+    }
+    #[test]
+    fn neighbors_wrapper_survives_a_wide_mask() {
+        let mut mask = Tensor::full(vec![17, 17], 1);
+        mask.set(&[8, 8], 0);
+        let grid = Cell2d::new(Tensor::full(vec![21, 21], 1));
+        let counted = grid.neighbors(&mask, 1, true).unwrap();
+        let tags = counted.cell.tags.as_ref().unwrap();
+        assert_eq!(tags.at(0), 17 * 17 - 1);
     }
 }

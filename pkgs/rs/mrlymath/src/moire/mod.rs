@@ -2,6 +2,8 @@
 pub mod field;
 /// The recipe and sampling of one moire layer.
 pub mod layer;
+/// The named recipes: the parity heatmap, its weave, its hive and the carpet stack.
+pub mod presets;
 /// The quantized PNG rendering of a field.
 pub mod render;
 /// The lattice coordinates and code-membership tests behind the layers.
@@ -53,5 +55,6 @@ impl Spec {
 
 pub use field::Field;
 pub use layer::{layer, Layer};
+pub use presets::{all, named, Preset};
 pub use render::render;
 pub use stack::{stack, stack_codes};

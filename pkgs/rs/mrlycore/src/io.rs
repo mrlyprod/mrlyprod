@@ -1,8 +1,10 @@
 use crate::cell::Cell;
 use crate::colors::Color;
-use crate::errors::{value_error, Result};
+use crate::errors::{value_error, MrlyError, Result};
 use crate::ramp::Colorizer;
 use std::collections::HashMap;
+use std::fs;
+use std::path::Path;
 
 pub use crate::codec::{base64, png};
 
@@ -142,6 +144,21 @@ pub fn analyze(grid: &Cell) -> Analysis {
     }
 }
 
+/// Creates the directory and every missing parent, or an error naming the path.
+pub fn make(dir: &Path) -> Result<()> {
+    fs::create_dir_all(dir).map_err(|error| broke("make", dir, &error))
+}
+
+/// Writes the bytes to the path, or an error naming it.
+pub fn write(path: &Path, bytes: &[u8]) -> Result<()> {
+    fs::write(path, bytes).map_err(|error| broke("write", path, &error))
+}
+
+/// Names the act, the path and the io error that stopped it.
+pub fn broke(act: &str, path: &Path, error: &std::io::Error) -> MrlyError {
+    MrlyError::Value(format!("could not {act} {}: {error}", path.display()))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -211,5 +228,15 @@ mod tests {
         assert_eq!(a.min_luminance, 0.0);
         assert!((a.max_luminance - 255.0).abs() < f64::EPSILON);
         assert_eq!(a.dominant, Color::rgba(0, 0, 0, 255));
+    }
+    #[test]
+    fn make_and_write_land_on_disk() {
+        let dir = std::env::temp_dir().join("mrlycore_io_make_write");
+        fs::remove_dir_all(&dir).ok();
+        make(&dir).unwrap();
+        write(&dir.join("note.txt"), b"honk").unwrap();
+        assert_eq!(fs::read(dir.join("note.txt")).unwrap(), b"honk");
+        assert!(write(&dir, b"honk").is_err());
+        fs::remove_dir_all(&dir).ok();
     }
 }

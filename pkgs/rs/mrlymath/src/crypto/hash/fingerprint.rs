@@ -72,7 +72,7 @@ mod tests {
     use crate::crypto::hash::{digest, Config};
     #[test]
     fn fingerprint_grid_is_symmetric() {
-        let d = digest(b"carlo", &Config::default()).unwrap();
+        let d = digest(b"mrly", &Config::default()).unwrap();
         let side = 8;
         let grid = fingerprint_cell(&d, side);
         for r in 0..side {
@@ -110,12 +110,12 @@ mod golden {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
         let cases: Vec<Vec<u8>> = vec![
-            fingerprint(&digest(b"carlo", &Config::default()).unwrap(), 8, 16).unwrap(),
+            fingerprint(&digest(b"mrly", &Config::default()).unwrap(), 8, 16).unwrap(),
             fingerprint(&digest(b"mrly", &Config::default()).unwrap(), 5, 3).unwrap(),
             fingerprint(&digest(b"", &Config::default()).unwrap(), 12, 1).unwrap(),
         ];
         let pins: [(usize, u64); 3] = [
-            (738, 1842095733042571692),
+            (778, 14967762691800328381),
             (107, 3259584788947775132),
             (138, 17354066911032349234),
         ];

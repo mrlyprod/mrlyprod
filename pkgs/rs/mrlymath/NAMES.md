@@ -10,10 +10,13 @@ Implemented by `mrlymath::name` behind the `Named` trait.
 - The body is `_`-separated fields in a fixed per-kind order.
 - A field is one of:
   - a tag run: tag letters each followed by a value (`d2`, `c7n3r1`),
-  - a bare word (`fractal`),
+  - a bare word (`fractal`), or a sequence word carrying its own
+    underscores (`grid_squares`, `random_7`),
   - a bare number (the bang code),
   - a flag letter, present iff true (`i`).
 - Numbers are plain decimal; a leading zero never appears.
+- A word field may carry underscores, so the reader takes the longest known
+  word off the front, not everything up to the next underscore.
 - Slots (repeated layers) print as one field each, tags concatenated.
 - Defaults elide by fixed per-kind rules, so one value has one spelling.
 - `from_str` accepts the canonical spelling only; `to_str` always emits it.
@@ -37,10 +40,22 @@ Implemented by `mrlymath::name` behind the `Named` trait.
 ## KIND RULE
 
 - `mrly_rule_b<counts>_s<counts>[_w]`.
-- Counts are single digits 0-8, concatenated strictly ascending.
+- A side is a digit list or a sequence, never a mix.
+- A digit list holds single digits 0-9, concatenated strictly ascending.
+- Above 9 the digits run out, so a wide side names its sequence instead.
+- A sequence side is `<sequence>[z][o]`: `z` iff zeros stay, `o` iff ones stay.
+- The sequence is spelled as `life::Sequence` spells it: a known name
+  (`fibonacci`, `grid_squares`), `random_<seed>`, or `code_fills_<code>`.
+- Sequence names carry underscores; the longest-word rule reads them.
+- Every sequence is deterministic, so the name alone rebuilds the counts once
+  the mask says how many neighbors there are.
 - `w` is present iff the boundary wraps.
 - Carrier: `name::Rule { birth, survive, boundary }`, bridging `life::Config`.
 - Conway is `mrly_rule_b3_s23`.
+- Examples: `mrly_rule_bfibonaccio_sgrid_squares_w`,
+  `mrly_rule_brandom_4848495z_s3`.
+- A digit list holding a count above 9 has no name, so `Rule::new` and
+  `Rule::of` reject it and `to_str` never meets one.
 
 ## KIND SAGA
 
@@ -51,9 +66,11 @@ Implemented by `mrlymath::name` behind the `Named` trait.
   `cropc<x>r<y>w<w>h<h>`, `padn<count>c<color>`, `tilew<across>h<down>`,
   `scalek<k>`, `map<ten digits>`, `mov[l|r]<dx>[u|d]<dy>f<fill>`,
   `paintc<x>r<y>p<color>`, `floodc<x>r<y>p<color>`,
-  `stepp<pen>b<counts>s<counts>[w]`, `stampw<w>d<digits>` (the constant
-  floor's literal, never searched).
+  `stepp<pen>b<counts>s<counts>[w]` (Moore counts, digits 0-8),
+  `stampw<w>d<digits>` (the constant floor's literal, never searched).
 - Example: `mrly_saga_rot1_padn1c0_stepp1b3s23x5`.
+- `Op` carries no constructor, so a step count above 8 is caught at naming:
+  it is out of contract and panics, never dropped from the token.
 
 ## KIND TILE
 

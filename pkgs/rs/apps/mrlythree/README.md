@@ -8,4 +8,5 @@ An orbit-camera viewer for three-dimensional fractal tilings. A cube grows from 
 - *design*, *number* (3, 5, 7, or 9) and *level* choose the fractal, capped at 32 cells per side.
 - *fill* is any named color; *alpha* fades the faces toward glass.
 - *edges* overlays the lattice lines, *wireframe* keeps only them, *axes* draws the reference frame.
+- *anti* flips the seed before it deepens, growing the design's opposite.
 - A census counts the grid, the filled cells, and the void.

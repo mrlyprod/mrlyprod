@@ -2,9 +2,12 @@ use super::models::Cell2d;
 use crate::bang::factory;
 use crate::bang::universe::Code;
 use mrlycore::atoms;
-use mrlycore::errors::Result;
+use mrlycore::errors::{value_error, Result};
 use mrlycore::state;
 use mrlycore::tensor::Tensor;
+use mrlycore::tile::Design;
+
+pub use crate::bang::factory::levels_code;
 
 fn build(pattern: Tensor, level: usize, rotation: usize) -> Result<Cell2d> {
     let mut cell = crate::dim::grow::<2>(pattern, level)?;
@@ -38,6 +41,38 @@ pub fn from_corners(
         level,
         rotation,
     )
+}
+
+/// Builds the level-set design, filling every residue corner whose digits sum to a named level.
+///
+/// ```
+/// let n = 5;
+/// assert_eq!(
+///     mrlymath::two::level_set(n, &[0, 1], 1, 0, 2).unwrap(),
+///     mrlymath::two::carpet(n, 1).unwrap()
+/// );
+/// ```
+pub fn level_set(
+    number: usize,
+    levels: &[usize],
+    level: usize,
+    rotation: usize,
+    base: usize,
+) -> Result<Cell2d> {
+    create(levels_code(2, base, levels), number, level, rotation, base)
+}
+
+/// Builds the design the name picks, deepened to the level and rotated by quarter-turns.
+pub fn named(design: Design, number: usize, level: usize, rotation: usize) -> Result<Cell2d> {
+    let pattern = match design {
+        Design::Carpet => atoms::carpet_2d(number),
+        Design::Net => atoms::net_2d(number),
+        Design::Htree => atoms::htree_2d(number),
+        Design::Vtree => atoms::vtree_2d(number),
+        Design::Void => atoms::void_2d(number),
+        other => return value_error(format!("design {} is not 2d.", other.name())),
+    };
+    build(pattern, level, rotation)
 }
 
 /// Builds an all-empty cell of the given size and level.
@@ -110,5 +145,45 @@ mod tests {
         mrlycore::state::seed(99);
         let b = random(4, 1, 2).unwrap();
         assert_eq!(a, b);
+    }
+    #[test]
+    fn level_sets_reproduce_the_symmetric_designs() {
+        for n in 1..8 {
+            assert_eq!(
+                level_set(n, &[0, 1], 1, 0, 2).unwrap(),
+                carpet(n, 1).unwrap()
+            );
+            assert_eq!(level_set(n, &[1, 2], 1, 0, 2).unwrap(), net(n, 1).unwrap());
+            assert_eq!(level_set(n, &[0, 2], 1, 0, 2).unwrap(), void(n, 1).unwrap());
+        }
+        assert_eq!(level_set(4, &[], 1, 0, 2).unwrap(), zeros(4, 1).unwrap());
+        assert_eq!(
+            level_set(4, &[0, 1, 2], 1, 0, 2).unwrap(),
+            ones(4, 1).unwrap()
+        );
+    }
+    #[test]
+    fn level_sets_carry_level_and_rotation() {
+        let deep = level_set(3, &[0, 1], 2, 0, 2).unwrap();
+        assert_eq!(deep, carpet(3, 2).unwrap());
+        let turned = level_set(5, &[1, 2], 1, 1, 2).unwrap();
+        assert_eq!(turned, net(5, 1).unwrap().rotate(1));
+    }
+    #[test]
+    fn named_builders_take_a_rotation() {
+        for (design, plain) in [
+            (Design::Carpet, carpet(5, 1).unwrap()),
+            (Design::Net, net(5, 1).unwrap()),
+            (Design::Htree, htree(5, 1).unwrap()),
+            (Design::Vtree, vtree(5, 1).unwrap()),
+            (Design::Void, void(5, 1).unwrap()),
+        ] {
+            assert_eq!(named(design, 5, 1, 0).unwrap(), plain);
+            for k in 1..4 {
+                assert_eq!(named(design, 5, 1, k).unwrap(), plain.clone().rotate(k));
+            }
+        }
+        assert_eq!(named(Design::Vtree, 5, 1, 1).unwrap(), htree(5, 1).unwrap());
+        assert!(named(Design::Ztree, 5, 1, 0).is_err());
     }
 }

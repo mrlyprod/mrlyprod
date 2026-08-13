@@ -7,8 +7,8 @@ use mrlycore::colors::NAMES;
 use mrlycore::tile;
 use mrlycore::{json, Json};
 use mrlymath::space::{axis_edges, Pack, TURN};
-use mrlymath::three::{carpet, census, net, quads, void, wires, xtree, ytree, ztree, Cell3d};
-use mrlyos::kernel::{App, Call, Iden, Manifest, Outcome, Verb};
+use mrlymath::three::{carpet, census, net, obj, quads, void, wires, xtree, ytree, ztree, Cell3d};
+use mrlyos::kernel::{App, Call, Effect, Iden, Manifest, Outcome, Verb};
 use std::f64::consts::TAU;
 
 const DESIGNS: [&str; 6] = ["carpet", "net", "xtree", "ytree", "ztree", "void"];
@@ -27,6 +27,7 @@ struct Set {
     edges: bool,
     wireframe: bool,
     axes: bool,
+    anti: bool,
 }
 
 impl Set {
@@ -40,6 +41,7 @@ impl Set {
             edges: false,
             wireframe: false,
             axes: false,
+            anti: false,
         }
     }
     fn fits(number: i64, level: i64) -> bool {
@@ -102,12 +104,13 @@ impl Set {
                 self.alpha = n;
                 Ok(json!(n))
             }
-            "edges" | "wireframe" | "axes" => {
+            "edges" | "wireframe" | "axes" | "anti" => {
                 let b = value.as_bool().ok_or("value must be a boolean")?;
                 match key {
                     "edges" => self.edges = b,
                     "wireframe" => self.wireframe = b,
-                    _ => self.axes = b,
+                    "axes" => self.axes = b,
+                    _ => self.anti = b,
                 }
                 Ok(json!(b))
             }
@@ -124,6 +127,7 @@ impl Set {
             "edges": self.edges,
             "wireframe": self.wireframe,
             "axes": self.axes,
+            "anti": self.anti,
         })
     }
     fn from_json(value: &Json) -> Set {
@@ -162,6 +166,9 @@ impl Set {
         if let Some(b) = value["axes"].as_bool() {
             set.axes = b;
         }
+        if let Some(b) = value["anti"].as_bool() {
+            set.anti = b;
+        }
         if !Set::fits(set.number, set.level) {
             let defaults = Set::new();
             set.level = defaults.level;
@@ -196,25 +203,31 @@ impl Three {
     fn cell(&self) -> Cell3d {
         let n = self.set.number as usize;
         let l = self.set.level as usize;
-        match self.set.design.as_str() {
-            "carpet" => carpet(n, l),
-            "net" => net(n, l),
-            "xtree" => xtree(n, l),
-            "ytree" => ytree(n, l),
-            "ztree" => ztree(n, l),
-            _ => void(n, l),
+        let seed = if self.set.anti { 1 } else { l };
+        let cell = match self.set.design.as_str() {
+            "carpet" => carpet(n, seed),
+            "net" => net(n, seed),
+            "xtree" => xtree(n, seed),
+            "ytree" => ytree(n, seed),
+            "ztree" => ztree(n, seed),
+            _ => void(n, seed),
         }
-        .unwrap()
+        .unwrap();
+        match self.set.anti {
+            true => cell.anti().fractal(l).unwrap(),
+            false => cell,
+        }
     }
     fn signature(&self) -> String {
         format!(
-            "{}:{}:{}:w{}e{}a{}d{}",
+            "{}:{}:{}:w{}e{}a{}n{}d{}",
             self.set.design,
             self.set.number,
             self.set.level,
             self.set.wireframe as u8,
             self.set.edges as u8,
             self.set.axes as u8,
+            self.set.anti as u8,
             self.dark as u8
         )
     }
@@ -249,6 +262,7 @@ impl App for Three {
             "edges": self.set.edges,
             "wireframe": self.set.wireframe,
             "axes": self.set.axes,
+            "anti": self.set.anti,
             "census": { "grid": side, "fill": filled, "void": total - filled },
             "shade": self.shade(),
         })
@@ -305,11 +319,13 @@ impl App for Three {
                         "edges": "bool",
                         "wireframe": "bool",
                         "axes": "bool",
+                        "anti": "bool",
                     },
                     "value": "of key",
                 }),
             ),
             Verb::new("three.reset", json!({})),
+            Verb::new("three.obj", json!({})),
         ]
     }
     fn call(&mut self, _iden: &Iden, call: &Call) -> Outcome {
@@ -337,6 +353,18 @@ impl App for Three {
             "three.reset" => {
                 self.set = Set::new();
                 Outcome::ok(json!({}))
+            }
+            "three.obj" => {
+                let name = format!(
+                    "{}-{}-{}.obj",
+                    self.set.design, self.set.number, self.set.level
+                );
+                let text = obj(&self.cell());
+                let data = mrlycore::base64(text.as_bytes());
+                Outcome::ok(json!({ "name": name.clone() })).emit(Effect::new(
+                    "file",
+                    json!({ "name": name, "mime": "model/obj", "data": data }),
+                ))
             }
             _ => Outcome::fail("unknown verb"),
         }
@@ -470,7 +498,27 @@ mod tests {
     fn actions_offer_the_natural_verbs() {
         let t = Three::new();
         let names: Vec<String> = t.actions(&iden()).iter().map(|v| v.name.clone()).collect();
-        assert_eq!(names, vec!["three.page", "three.set", "three.reset"]);
+        assert_eq!(
+            names,
+            vec!["three.page", "three.set", "three.reset", "three.obj"]
+        );
+    }
+    #[test]
+    fn obj_emits_the_open_cube_as_a_mesh_file() {
+        let mut t = Three::new();
+        send(
+            &mut t,
+            "three.set",
+            json!({ "key": "design", "value": "net" }),
+        );
+        let out = send(&mut t, "three.obj", json!({}));
+        assert!(out.ok);
+        assert_eq!(out.effects.len(), 1);
+        let effect = &out.effects[0];
+        assert_eq!(effect.kind, "file");
+        assert_eq!(effect.data["name"], json!("net-3-2.obj"));
+        assert_eq!(effect.data["mime"], json!("model/obj"));
+        assert!(!effect.data["data"].as_str().unwrap().is_empty());
     }
     #[test]
     fn looks_validate_and_change_the_pack() {
@@ -497,6 +545,32 @@ mod tests {
         assert!(send(&mut t, "three.set", json!({ "key": "alpha", "value": 96 })).ok);
         assert!(!send(&mut t, "three.set", json!({ "key": "alpha", "value": 300 })).ok);
         assert!(send(&mut t, "three.set", json!({ "key": "axes", "value": true })).ok);
+    }
+    #[test]
+    fn anti_inverts_the_seed_before_the_fractal() {
+        let mut t = Three::new();
+        let plain = t.state(&iden(), None)["census"]["fill"].as_u64().unwrap();
+        assert!(send(&mut t, "three.set", json!({ "key": "anti", "value": true })).ok);
+        assert!(
+            !send(
+                &mut t,
+                "three.set",
+                json!({ "key": "anti", "value": "yes" })
+            )
+            .ok
+        );
+        let state = t.state(&iden(), None);
+        assert_eq!(state["anti"], json!(true));
+        let anti = state["census"]["fill"].as_u64().unwrap();
+        assert_eq!(state["census"]["grid"], json!(9));
+        assert_eq!(plain, 400);
+        assert_eq!(anti, 49);
+        assert!(t.shade()["mesh"].as_str().unwrap().contains("n1"));
+        let mut back = Three::new();
+        back.load(&t.save());
+        assert!(back.set.anti);
+        send(&mut t, "three.reset", json!({}));
+        assert!(!t.set.anti);
     }
     #[test]
     fn the_census_counts_cells() {

@@ -47,6 +47,25 @@ pub fn hexdigest(message: &[u8], config: &Config) -> Result<String> {
     Ok(digest(message, config)?.hex())
 }
 
+/// Returns the hex digest of the message under the quick 16 by 16, four round settings.
+///
+/// The shape a manifest fingerprints file bytes with: same 256-bit width, a fraction of the work.
+///
+/// ```
+/// let h = mrlymath::crypto::hash::quick_hexdigest(b"mrly").unwrap();
+/// assert_eq!(h.len(), 64);
+/// ```
+pub fn quick_hexdigest(message: &[u8]) -> Result<String> {
+    hexdigest(
+        message,
+        &Config {
+            side: 16,
+            rounds: 4,
+            ..Config::default()
+        },
+    )
+}
+
 /// Returns the hex digest of the key prepended to the message.
 pub fn keyed_hexdigest(key: &[u8], message: &[u8], config: &Config) -> Result<String> {
     let mut buf = Vec::with_capacity(key.len() + message.len());

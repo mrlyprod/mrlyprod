@@ -1,8 +1,11 @@
 use super::animate::animate;
 use super::models::{Config, Life};
 use super::Fate;
-use crate::two::Cell2d;
-use mrlycore::errors::{value_error, Result};
+use crate::name::{Named, Rule};
+use crate::two::{self, Cell2d};
+use mrlycore::errors::{value_error, MrlyError, Result};
+use mrlycore::json::string;
+use mrlycore::{json, Json};
 
 /// One config's run inside a story.
 #[derive(Clone, Debug)]
@@ -20,6 +23,54 @@ impl Chapter {
             self.life.count = self.life.grids.len();
         }
     }
+    /// Encodes the chapter's rule, mask, seed, length and fate as a JSON object,
+    /// or an error when the config carries no nameable rule.
+    pub fn to_json(&self) -> Result<Json> {
+        Ok(json!({
+            "v": 1,
+            "rule": Rule::of(&self.config)?.to_str(),
+            "mask": two::to_strings(&self.config.mask),
+            "seed": self.life.grids.first().map(two::to_strings),
+            "length": self.life.grids.len(),
+            "fate": self.life.fate.name(),
+        }))
+    }
+    /// Decodes a chapter from its JSON object and replays it, or an error naming the broken field.
+    pub fn from_json(value: &Json) -> Result<Chapter> {
+        let rule = Rule::from_str(&string(value, "rule")?)?;
+        let mask = two::from_strings(&strings(value, "mask")?)?;
+        let seed = two::from_strings(&strings(value, "seed")?)?;
+        let length = value
+            .get("length")
+            .and_then(Json::as_u64)
+            .ok_or_else(|| MrlyError::Value("field \"length\" must be an integer.".into()))?
+            as usize;
+        if length == 0 {
+            return value_error("field \"length\" must be positive.");
+        }
+        let fate = Fate::parse(&string(value, "fate")?)?;
+        let mut config = rule.config(mask);
+        config.max_generations = length;
+        let mut life = animate(&seed, &config)?;
+        life.grids.truncate(length);
+        life.count = life.grids.len();
+        life.fate = fate;
+        Ok(Chapter { config, life })
+    }
+}
+
+fn strings(value: &Json, key: &str) -> Result<Vec<String>> {
+    let rows = value
+        .get(key)
+        .and_then(Json::as_array)
+        .ok_or_else(|| MrlyError::Value(format!("field {key:?} must be a list.")))?;
+    rows.iter()
+        .map(|row| {
+            row.as_str()
+                .map(|s| s.to_string())
+                .ok_or_else(|| MrlyError::Value(format!("field {key:?} must hold strings.")))
+        })
+        .collect()
 }
 
 /// A chain of life runs, each seeded by the last frame of the one before.
@@ -104,6 +155,31 @@ impl Story {
             .map(|c| c.life.fate)
             .ok_or_else(|| mrlycore::MrlyError::Value("empty story.".into()))
     }
+    /// Encodes the story chapter by chapter as a JSON object,
+    /// or an error when a chapter carries no nameable rule.
+    pub fn to_json(&self) -> Result<Json> {
+        let chapters: Vec<Json> = self
+            .chapters
+            .iter()
+            .map(Chapter::to_json)
+            .collect::<Result<Vec<Json>>>()?;
+        Ok(json!({
+            "v": 1,
+            "chapters": chapters,
+        }))
+    }
+    /// Decodes a story from its JSON object and replays every chapter, or an error naming the broken field.
+    pub fn from_json(value: &Json) -> Result<Story> {
+        let chapters = value
+            .get("chapters")
+            .and_then(Json::as_array)
+            .ok_or_else(|| MrlyError::Value("field \"chapters\" must be a list.".into()))?;
+        let mut story = Story::new();
+        for chapter in chapters {
+            story.chapters.push(Chapter::from_json(chapter)?);
+        }
+        Ok(story)
+    }
 }
 
 impl Default for Story {
@@ -134,14 +210,8 @@ pub fn tell(seed: &Cell2d, configs: &[Config], pivot_at: Option<usize>) -> Resul
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::life::{Boundary, Config};
-    use mrlycore::atoms;
+    use crate::life::{moore, Boundary, Config};
     use mrlycore::tensor::Tensor;
-    fn moore() -> Cell2d {
-        let mut m = atoms::carpet_2d(3);
-        m.set(&[1, 1], 0);
-        Cell2d::new(m)
-    }
     fn conway() -> Config {
         Config {
             boundary: Boundary::Constant,
@@ -163,5 +233,30 @@ mod tests {
         assert_eq!(story.chapters.len(), 2);
         assert_eq!(story.chapter_lengths()[0], 2);
         assert_eq!(story.count(), story.grids().len());
+    }
+    #[test]
+    fn story_json_replays_the_run() {
+        let story = tell(&blinker(), &[conway(), conway()], Some(2)).unwrap();
+        let back = Story::from_json(&story.to_json().unwrap()).unwrap();
+        assert_eq!(back.chapter_lengths(), story.chapter_lengths());
+        assert_eq!(back.fate().unwrap(), story.fate().unwrap());
+        let (a, b) = (story.grids(), back.grids());
+        assert_eq!(a.len(), b.len());
+        for (x, y) in a.iter().zip(&b) {
+            assert_eq!(x.types(), y.types());
+        }
+        for (c, d) in story.chapters.iter().zip(&back.chapters) {
+            assert_eq!(Rule::of(&c.config).unwrap(), Rule::of(&d.config).unwrap());
+            assert_eq!(c.life.fate, d.life.fate);
+        }
+    }
+    #[test]
+    fn chapter_json_rejects_broken_fields() {
+        let story = tell(&blinker(), &[conway()], None).unwrap();
+        let mut value = story.chapters[0].to_json().unwrap();
+        value["fate"] = json!("sparkle");
+        assert!(Chapter::from_json(&value).is_err());
+        assert!(Chapter::from_json(&json!({})).is_err());
+        assert!(Story::from_json(&json!({ "chapters": 3 })).is_err());
     }
 }

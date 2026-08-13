@@ -10,3 +10,8 @@ Around the doors ride the web trimmings: share cards, gpu shader programs, the s
 - **card** paints a route's share card, a hashed life texture behind the title.
 - **goose** is a seeded random player that exercises any installed app.
 - **shaders** dresses a fragment program in the shared vertex stage.
+
+## Previews
+
+- `cargo run -p mrlyweb --example bake` bakes the palette, shaders, skins and rigs.
+- `cargo run -p mrlyweb --example fixtures` rebuilds the envelope fixtures under `sites/web`.

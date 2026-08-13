@@ -503,9 +503,13 @@ fn counts<'a>(token: &str, text: &'a str) -> Result<(Vec<usize>, &'a str)> {
 }
 
 fn fold(counts: &[usize]) -> String {
-    let mut folded: Vec<usize> = counts.iter().copied().filter(|&n| n <= RULE_MAX).collect();
+    let mut folded = counts.to_vec();
     folded.sort_unstable();
     folded.dedup();
+    assert!(
+        folded.iter().all(|&n| n <= RULE_MAX),
+        "a step count leaves 0..=8; the Moore neighborhood holds eight"
+    );
     folded.iter().map(usize::to_string).collect()
 }
 
@@ -835,6 +839,17 @@ mod tests {
             let token = op.name();
             assert_eq!(Op::parse(&token).unwrap(), op, "{token}");
         }
+    }
+    #[test]
+    #[should_panic(expected = "a step count leaves 0..=8")]
+    fn a_step_count_above_eight_is_never_named() {
+        let _ = Op::Step {
+            color: 1,
+            birth: vec![3, 12],
+            survive: vec![2, 3],
+            wrap: false,
+        }
+        .name();
     }
     #[test]
     fn stray_op_tokens_do_not_parse() {

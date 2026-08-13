@@ -58,6 +58,20 @@ pub fn crop(grids: &[Cell2d]) -> Vec<Cell2d> {
         .collect()
 }
 
+/// Tiles every frame n by n to reach at least min_canvas a side, unchanged when already there.
+pub fn tessellate(grids: &[Cell2d], min_canvas: usize) -> Vec<Cell2d> {
+    if grids.is_empty() || min_canvas == 0 {
+        return grids.to_vec();
+    }
+    let shape = &grids[0].types().shape;
+    let side = shape[0].max(shape[1]);
+    if side == 0 || side >= min_canvas {
+        return grids.to_vec();
+    }
+    let n = min_canvas.div_ceil(side);
+    grids.iter().map(|grid| grid.clone().tile(n, n)).collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -82,5 +96,23 @@ mod tests {
         t.set(&[2, 2], 1);
         let cropped = crop(&[Cell2d::new(t)]);
         assert_eq!(cropped[0].types().shape, vec![3, 3]);
+    }
+    #[test]
+    fn tessellate_tiles_small_runs_up_to_the_canvas() {
+        let mut t = Tensor::new(vec![5, 5]);
+        t.set(&[1, 2], 1);
+        let grids = vec![Cell2d::new(t)];
+        let tiled = tessellate(&grids, 12);
+        assert_eq!(tiled[0].types().shape, vec![15, 15]);
+        assert_eq!(tiled[0].types().get(&[1, 2]), 1);
+        assert_eq!(tiled[0].types().get(&[6, 7]), 1);
+        assert_eq!(tiled[0].types().sum(), 9);
+    }
+    #[test]
+    fn tessellate_leaves_big_runs_alone() {
+        let grids = vec![Cell2d::new(Tensor::new(vec![5, 5]))];
+        assert_eq!(tessellate(&grids, 5)[0].types().shape, vec![5, 5]);
+        assert_eq!(tessellate(&grids, 0)[0].types().shape, vec![5, 5]);
+        assert!(tessellate(&[], 12).is_empty());
     }
 }

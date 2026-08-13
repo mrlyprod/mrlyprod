@@ -109,7 +109,7 @@ mod tests {
         )
     }
     #[test]
-    fn solid_slice_matches_python() {
+    fn solid_core_counts_are_pinned() {
         let expected = [(1, 6, 6), (2, 24, 27), (3, 54, 72)];
         for (radius, nodes, branches) in expected {
             let core = slice_core_graph(&solid(radius)).unwrap();

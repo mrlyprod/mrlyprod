@@ -11,7 +11,7 @@ use mrlycore::rng::Rng;
 use mrlycore::tensor::Tensor;
 use mrlycore::tile::{Design, Group, Source, Tile as Model};
 use mrlycore::{json, Json};
-use mrlymath::life::{counts, entropy, next_grid, Boundary, Sequence};
+use mrlymath::life::{counts, entropy, next_grid, Boundary, Fate, Sequence};
 use mrlymath::two::tile as tile2d;
 use mrlymath::two::tile::{probe, sample_types};
 use mrlymath::two::Cell2d;
@@ -20,27 +20,10 @@ use std::collections::VecDeque;
 
 const RING: usize = 512;
 const CEILING: usize = 64;
-const MASK_MAX: usize = 9;
+const MASK_MAX: usize = 33;
 const PATTERNS: [&str; 6] = ["seed", "clear", "soup", "glider", "pulsar", "pentomino"];
 const GLIDER: [(usize, usize); 5] = [(0, 1), (1, 2), (2, 0), (2, 1), (2, 2)];
 const PENTOMINO: [(usize, usize); 5] = [(0, 1), (0, 2), (1, 0), (1, 1), (2, 1)];
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Fate {
-    Dead,
-    Still,
-    Loop,
-}
-
-impl Fate {
-    fn name(self) -> &'static str {
-        match self {
-            Fate::Dead => "dead",
-            Fate::Still => "still",
-            Fate::Loop => "loop",
-        }
-    }
-}
 
 #[derive(Clone)]
 struct Part {
@@ -100,14 +83,21 @@ fn seed_board(part: &Part, size: usize, tiling: usize, padding: usize) -> Cell2d
 
 fn mask_tensor(part: &Part) -> Tensor {
     let cell = built(part);
-    let side = cell.width().max(cell.height()).clamp(1, MASK_MAX);
-    let k = if side.is_multiple_of(2) {
-        side + 1
+    let side = cell.width().max(cell.height());
+    let direct = !side.is_multiple_of(2) && side <= MASK_MAX && cell.width() == cell.height();
+    let mut t = if direct {
+        cell.types().clone()
     } else {
-        side
+        let side = side.clamp(1, MASK_MAX);
+        let k = if side.is_multiple_of(2) {
+            side + 1
+        } else {
+            side
+        };
+        sample_types(&cell, k)
     };
-    let mut t = sample_types(&cell, k);
-    t.set(&[k / 2, k / 2], 0);
+    let mid = t.shape[0] / 2;
+    t.set(&[mid, mid], 0);
     t
 }
 
@@ -465,9 +455,9 @@ impl Life {
                 self.fate = Some(if current.types().sum() == 0 {
                     Fate::Dead
                 } else {
-                    Fate::Still
+                    Fate::Alive
                 });
-                self.period = if self.fate == Some(Fate::Still) { 1 } else { 0 };
+                self.period = if self.fate == Some(Fate::Alive) { 1 } else { 0 };
                 break;
             }
             if let Some(j) = self.timeline.iter().position(|f| f.types() == next.types()) {
@@ -833,7 +823,7 @@ mod tests {
         assert_eq!(life.population(), 0);
     }
     #[test]
-    fn a_still_life_reports_still() {
+    fn a_still_life_reports_alive() {
         let mut life = Life::new();
         send(&mut life, "life.reset", json!({ "pattern": "clear" }));
         send(
@@ -842,7 +832,7 @@ mod tests {
             json!({ "points": [[10, 10], [11, 10], [10, 11], [11, 11]] }),
         );
         send(&mut life, "life.step", json!({ "n": 2 }));
-        assert_eq!(life.state(&iden(), None)["fate"], json!("still"));
+        assert_eq!(life.state(&iden(), None)["fate"], json!("alive"));
         assert_eq!(life.population(), 4);
     }
     #[test]
@@ -903,6 +893,33 @@ mod tests {
         assert!(out.ok);
         let net = mask_tensor(&Part::motif(Design::Net, false));
         assert_eq!(life.max_neighbors, net.sum() as usize);
+    }
+    fn sized_motif(n: usize) -> Part {
+        let mut tile = Model::new(Group::General).size(n, n);
+        tile.sources = vec![Source::Classic(Design::Carpet)];
+        tile.numbers = vec![n];
+        tile.levels = vec![1];
+        tile.rotations = vec![0];
+        tile.anti = vec![false];
+        tile.factor = n;
+        Part { tile, paint: None }
+    }
+    #[test]
+    fn odd_masks_within_the_cap_pass_through() {
+        let t = mask_tensor(&sized_motif(15));
+        assert_eq!(t.shape, vec![15, 15]);
+        let mut expected = mrlycore::atoms::carpet_2d(15);
+        expected.set(&[7, 7], 0);
+        assert_eq!(t, expected);
+    }
+    #[test]
+    fn even_or_oversized_masks_resample() {
+        let even = mask_tensor(&sized_motif(4));
+        assert_eq!(even.shape, vec![5, 5]);
+        assert_eq!(even.get(&[2, 2]), 0);
+        let over = mask_tensor(&sized_motif(35));
+        assert_eq!(over.shape, vec![MASK_MAX, MASK_MAX]);
+        assert_eq!(over.get(&[MASK_MAX / 2, MASK_MAX / 2]), 0);
     }
     #[test]
     fn paint_forks_the_timeline_when_scrubbed() {

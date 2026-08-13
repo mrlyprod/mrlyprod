@@ -11,3 +11,9 @@ The alphabet holds 108 characters: the uppers, their corner-rounded lowers, the 
 - **raster** lays a text out as one 0/1 grid.
 - **animate** writes a text cell by cell, folds it into a stack, and loops the cycle.
 - **serializer** renders glyphs as strings, lists, or JSON.
+
+## Previews
+
+- `cargo run -p mrlyfont --example cycle` prints the wordmark's write-and-hold loop as JSON.
+- `cargo run -p mrlyfont --example strip` prints every glyph's stroke frames as JSON.
+- `uv run python utils/logos.py motion` draws the loop into `files/logos`.

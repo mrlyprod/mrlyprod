@@ -2,7 +2,7 @@
 name = "mrlydata"
 version.workspace = true
 edition.workspace = true
-description = "The dataset press: every well in the workspace poured into ready folders on disk."
+description = "The press: every well poured into dataset folders, every artwork and tile pressed to png."
 license.workspace = true
 repository.workspace = true
 homepage.workspace = true

@@ -21,6 +21,8 @@ pub mod formulas;
 pub mod fractal;
 /// The spatial network: its nodes, branches, extraction and census.
 pub mod graph;
+/// The visible lattice: totients, coprime pairs, the pi estimate and the Farey nodes.
+pub mod lattice;
 /// The life runs: stepping, recording, rendering and their stories.
 pub mod life;
 /// The moire fields layered from sampled designs.
@@ -41,3 +43,5 @@ pub mod space;
 pub mod three;
 /// The flat-cell pipeline: designs, tiles, graphs and renderings in two dimensions.
 pub mod two;
+/// The acoustic wave runs: two-speed corridors, transmission spectra and their band gaps.
+pub mod wave;

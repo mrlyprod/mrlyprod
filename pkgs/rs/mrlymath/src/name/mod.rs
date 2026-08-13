@@ -1,6 +1,6 @@
 use mrlycore::errors::Result;
 
-mod text;
+pub(crate) mod text;
 
 /// The bang name: a design code pinned to its dimension and base.
 pub mod bang;

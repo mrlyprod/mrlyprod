@@ -2,8 +2,35 @@ use super::models::Cell6d;
 use super::{Orientation, Projection, FILL, GRID, LEFT, RIGHT, UP, VOID};
 use crate::three::Cell3d;
 use crate::two::Cell2d;
+use mrlycore::cell::{remap, Cell};
 use mrlycore::errors::{value_error, Result};
 use mrlycore::tensor::Tensor;
+
+fn backed(front: &Cell2d, back: &Cell2d, tag: u8) -> Cell {
+    let (count, spare) = (front.cell.size(), back.cell.size());
+    let mut types = Tensor::typed(vec![count + spare], front.types().dtype());
+    for i in 0..count {
+        types.put(i, front.types().at(i));
+    }
+    for i in 0..spare {
+        types.put(count + i, back.types().at(i));
+    }
+    Cell {
+        types,
+        colors: front.cell.colors.as_ref().map(|colors| {
+            let mut out = colors.clone();
+            out.resize(count + spare, [0u8; 4]);
+            out
+        }),
+        tags: front.cell.tags.as_ref().map(|tags| {
+            let mut out = Tensor::filled(vec![count + spare], tag as i64, tags.dtype());
+            for i in 0..count {
+                out.put(i, tags.at(i));
+            }
+            out
+        }),
+    }
+}
 
 /// Returns whether the cell's three sides are equal.
 pub fn is_cube(cell: &Cell3d) -> bool {
@@ -87,7 +114,7 @@ pub fn blank(radius: usize, orient: Orientation, fill: u8, void: u8) -> Cell2d {
     Cell2d::new(types)
 }
 
-/// Wraps a hexagonal cell in k rings of the given value.
+/// Wraps a hexagonal cell in k rings of the given value, carrying colors and tags along.
 pub fn pad(cell: &Cell6d, k: usize, value: u8) -> Result<Cell6d> {
     if k < 1 {
         return Ok(cell.clone());
@@ -102,20 +129,31 @@ pub fn pad(cell: &Cell6d, k: usize, value: u8) -> Result<Cell6d> {
         Orientation::Vertical => inner.width() / 2,
     };
     let base = blank(n + k, orient, value, GRID);
-    let mut types = base.types().clone();
-    let y_off = (base.height() - inner.height()) / 2;
-    let x_off = (base.width() - inner.width()) / 2;
-    for y in 0..inner.height() {
-        for x in 0..inner.width() {
-            let mut v = inner.types().get(&[y, x]);
-            if v == GRID {
-                v = value;
-            }
-            types.set(&[y + y_off, x + x_off], v);
+    let (base_h, base_w) = (base.height(), base.width());
+    let (tile_h, tile_w) = (inner.height(), inner.width());
+    let y_off = (base_h - tile_h) / 2;
+    let x_off = (base_w - tile_w) / 2;
+    let mut front = inner.clone();
+    for v in front.cell.types.bytes_mut().iter_mut() {
+        if *v == GRID {
+            *v = value;
         }
     }
+    let count = front.cell.size();
+    let map: Vec<usize> = (0..base_h * base_w)
+        .map(|flat| {
+            let (y, x) = (flat / base_w, flat % base_w);
+            let inside = y >= y_off && y < y_off + tile_h && x >= x_off && x < x_off + tile_w;
+            match inside {
+                true => (y - y_off) * tile_w + x - x_off,
+                false => count + flat,
+            }
+        })
+        .collect();
     Ok(Cell6d::new(
-        Cell2d::new(types),
+        Cell2d {
+            cell: remap(&backed(&front, &base, value), &map, &[base_h, base_w]),
+        },
         cell.projection,
         orient,
         cell.start,
@@ -272,7 +310,7 @@ pub fn cut(cell: &Cell3d) -> Result<Cell6d> {
     ))
 }
 
-/// Stamps a hexagonal cell at every set mask entry into one interlocking sheet.
+/// Stamps a hexagonal cell at every set mask entry into one interlocking sheet, colors and tags included.
 pub fn tessellate(cell: &Cell6d, mask: &Tensor) -> Result<Cell2d> {
     let inner = &cell.cell;
     if !is_hex(inner) {
@@ -314,19 +352,22 @@ pub fn tessellate(cell: &Cell6d, mask: &Tensor) -> Result<Cell2d> {
     let max_x = positions.iter().map(|p| p.0 + tile_w).max().unwrap();
     let max_y = positions.iter().map(|p| p.1 + tile_h).max().unwrap();
     let (final_w, final_h) = (max_x - min_x, max_y - min_y);
-    let mut types = Tensor::full(vec![final_h, final_w], GRID);
+    let count = inner.cell.size();
+    let mut map = vec![count; final_h * final_w];
     for &(px, py) in &positions {
         let (dest_x, dest_y) = (px - min_x, py - min_y);
         for y in 0..tile_h {
             for x in 0..tile_w {
-                let v = inner.types().get(&[y, x]);
-                if v != GRID {
-                    types.set(&[dest_y + y, dest_x + x], v);
+                if inner.types().get(&[y, x]) != GRID {
+                    map[(dest_y + y) * final_w + dest_x + x] = y * tile_w + x;
                 }
             }
         }
     }
-    Ok(Cell2d::new(types))
+    let back = Cell2d::new(Tensor::full(vec![1, 1], GRID));
+    Ok(Cell2d {
+        cell: remap(&backed(inner, &back, 0), &map, &[final_h, final_w]),
+    })
 }
 
 /// Tessellates a hexagonal cell over a full width-by-height mask.
@@ -351,13 +392,12 @@ fn crop(cell: &Cell2d, crop_x: usize, crop_y: usize) -> Result<Cell2d> {
         return Ok(Cell2d::new(Tensor::new(vec![1, 1])));
     }
     let (new_h, new_w) = (current_h - 2 * crop_y, current_w - 2 * crop_x);
-    let mut types = Tensor::new(vec![new_h, new_w]);
-    for y in 0..new_h {
-        for x in 0..new_w {
-            types.set(&[y, x], cell.types().get(&[y + crop_y, x + crop_x]));
-        }
-    }
-    Ok(Cell2d::new(types))
+    let map: Vec<usize> = (0..new_h * new_w)
+        .map(|flat| (flat / new_w + crop_y) * current_w + flat % new_w + crop_x)
+        .collect();
+    Ok(Cell2d {
+        cell: remap(&cell.cell, &map, &[new_h, new_w]),
+    })
 }
 
 /// Builds the disc mask of cells within hex distance radius of the center.
@@ -404,12 +444,24 @@ pub fn radial(cell: &Cell6d, radius: usize) -> Result<Cell2d> {
     tessellate(cell, &radial_mask(radius, orient))
 }
 
+/// Crops the interlocking overhang off a disc tiled at the given radius and tile size.
+pub fn radial_crop(cell: &Cell2d, radius: usize, size: (usize, usize)) -> Result<Cell2d> {
+    let (w, h) = size;
+    let orient = orientation(w, h)?;
+    let rings = radius.saturating_sub(1);
+    let (crop_x, crop_y) = match orient {
+        Orientation::Horizontal => (h / 2, rings * (h / 2)),
+        Orientation::Vertical => (rings * (w / 2), w / 2),
+    };
+    crop(cell, crop_x, crop_y)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::three;
     #[test]
-    fn blank_matches_python() {
+    fn blank_frames_both_orientations() {
         let b = blank(2, Orientation::Horizontal, 1, 0);
         assert_eq!(b.types().shape, vec![4, 7]);
         assert_eq!(
@@ -424,9 +476,97 @@ mod tests {
         assert!(is_hex(&v));
     }
     #[test]
-    fn radial_mask_matches_python() {
+    fn radial_mask_is_the_hex_disc() {
         let m = radial_mask(2, Orientation::Horizontal);
         assert_eq!(m.bytes(), vec![0, 1, 0, 1, 1, 1, 1, 1, 1]);
+    }
+    #[test]
+    fn radial_crop_trims_the_overhang() {
+        let hex = Cell6d::new(
+            blank(2, Orientation::Horizontal, FILL, GRID),
+            Projection::Cut,
+            Orientation::Horizontal,
+            0,
+        );
+        let (w, h) = (hex.width(), hex.height());
+        let disc = radial(&hex, 2).unwrap();
+        let cropped = radial_crop(&disc, 2, (w, h)).unwrap();
+        assert_eq!(cropped.height(), disc.height() - h);
+        assert_eq!(cropped.width(), disc.width() - h);
+        let tight = radial_crop(&disc, 9, (w, h)).unwrap();
+        assert_eq!(tight.types().shape, vec![1, 1]);
+    }
+    #[test]
+    fn radial_crop_shrinks_the_two_axes_apart() {
+        let radius = 3;
+        let rings = radius - 1;
+        for orient in [Orientation::Horizontal, Orientation::Vertical] {
+            let hex = Cell6d::new(blank(2, orient, FILL, GRID), Projection::Cut, orient, 0);
+            let (w, h) = (hex.width(), hex.height());
+            let disc = radial(&hex, radius).unwrap();
+            let cropped = radial_crop(&disc, radius, (w, h)).unwrap();
+            let (lost_x, lost_y) = match orient {
+                Orientation::Horizontal => (h, rings * h),
+                Orientation::Vertical => (rings * w, w),
+            };
+            assert_ne!(lost_x, lost_y, "{orient:?}");
+            assert_eq!(cropped.width(), disc.width() - lost_x, "{orient:?}");
+            assert_eq!(cropped.height(), disc.height() - lost_y, "{orient:?}");
+        }
+    }
+    #[test]
+    fn tessellate_and_crop_carry_colors_and_tags() {
+        let painted = crate::six::paint(
+            Cell6d::new(
+                blank(2, Orientation::Horizontal, FILL, GRID),
+                Projection::Cut,
+                Orientation::Horizontal,
+                0,
+            ),
+            None,
+            None,
+        );
+        assert!(painted.cell.cell.colors.is_some());
+        let sheet = tile(&painted, 2, 2).unwrap();
+        let colors = sheet.cell.colors.as_ref().unwrap();
+        assert_eq!(colors.len(), sheet.width() * sheet.height());
+        let opaque = colors.iter().filter(|c| c[3] > 0).count();
+        assert_eq!(
+            opaque,
+            sheet.types().bytes().iter().filter(|&&v| v != GRID).count()
+        );
+        let cropped = tile_crop(&sheet, (painted.width(), painted.height())).unwrap();
+        assert_eq!(
+            cropped.cell.colors.as_ref().unwrap().len(),
+            cropped.width() * cropped.height()
+        );
+    }
+    #[test]
+    fn pad_carries_colors_across_the_ring() {
+        let painted = crate::six::paint(
+            Cell6d::new(
+                blank(2, Orientation::Horizontal, FILL, VOID),
+                Projection::Cut,
+                Orientation::Horizontal,
+                0,
+            ),
+            None,
+            None,
+        );
+        let source = painted.cell.cell.colors.clone().unwrap();
+        let wider = pad(&painted, 1, GRID).unwrap();
+        let grown = wider.cell.cell.colors.as_ref().unwrap();
+        let y_off = (wider.height() - painted.height()) / 2;
+        let x_off = (wider.width() - painted.width()) / 2;
+        for y in 0..painted.height() {
+            for x in 0..painted.width() {
+                assert_eq!(
+                    grown[(y + y_off) * wider.width() + x + x_off],
+                    source[y * painted.width() + x]
+                );
+            }
+        }
+        assert_eq!(grown[0], [0, 0, 0, 0]);
     }
     #[test]
     fn projections_have_expected_frames() {

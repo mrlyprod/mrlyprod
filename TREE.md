@@ -11,49 +11,50 @@ mrlyprod
 │   │   ├── mark.svg
 │   │   ├── mrlyprod.png
 │   │   └── mrlyprod.svg
-│   └── vendor
-│       ├── seti
-│       │   ├── LICENSE-seti.txt
-│       │   ├── seti.woff
-│       │   └── seti.woff2
-│       ├── simple-icons
-│       │   ├── LICENSE.md
-│       │   ├── discord.svg
-│       │   ├── github.svg
-│       │   ├── instagram.svg
-│       │   ├── reddit.svg
-│       │   ├── tiktok.svg
-│       │   ├── x.svg
-│       │   └── youtube.svg
-│       ├── LICENSE-display.txt
-│       ├── LICENSE-emoji.txt
-│       ├── LICENSE-icons.txt
-│       ├── LICENSE-mono.txt
-│       ├── LICENSE-sans.txt
-│       ├── LICENSE-serif.txt
-│       ├── display.woff2
-│       ├── emoji.0.woff2
-│       ├── emoji.1.woff2
-│       ├── emoji.2.woff2
-│       ├── emoji.3.woff2
-│       ├── emoji.4.woff2
-│       ├── emoji.5.woff2
-│       ├── emoji.6.woff2
-│       ├── emoji.7.woff2
-│       ├── emoji.8.woff2
-│       ├── emoji.9.woff2
-│       ├── emoji.css
-│       ├── emoji.ttf
-│       ├── fonts.css
-│       ├── icons.woff2
-│       ├── mono.woff2
-│       ├── sans.woff2
-│       ├── serif.woff2
-│       ├── site.woff2
-│       ├── symbols.codepoints
-│       ├── symbols.ttf
-│       ├── symbols2.ttf
-│       └── ui.woff2
+│   ├── vendor
+│   │   ├── seti
+│   │   │   ├── LICENSE-seti.txt
+│   │   │   ├── seti.woff
+│   │   │   └── seti.woff2
+│   │   ├── simple-icons
+│   │   │   ├── LICENSE.md
+│   │   │   ├── discord.svg
+│   │   │   ├── github.svg
+│   │   │   ├── instagram.svg
+│   │   │   ├── reddit.svg
+│   │   │   ├── tiktok.svg
+│   │   │   ├── x.svg
+│   │   │   └── youtube.svg
+│   │   ├── LICENSE-display.txt
+│   │   ├── LICENSE-emoji.txt
+│   │   ├── LICENSE-icons.txt
+│   │   ├── LICENSE-mono.txt
+│   │   ├── LICENSE-sans.txt
+│   │   ├── LICENSE-serif.txt
+│   │   ├── display.woff2
+│   │   ├── emoji.0.woff2
+│   │   ├── emoji.1.woff2
+│   │   ├── emoji.2.woff2
+│   │   ├── emoji.3.woff2
+│   │   ├── emoji.4.woff2
+│   │   ├── emoji.5.woff2
+│   │   ├── emoji.6.woff2
+│   │   ├── emoji.7.woff2
+│   │   ├── emoji.8.woff2
+│   │   ├── emoji.9.woff2
+│   │   ├── emoji.css
+│   │   ├── emoji.ttf
+│   │   ├── fonts.css
+│   │   ├── icons.woff2
+│   │   ├── mono.woff2
+│   │   ├── sans.woff2
+│   │   ├── serif.woff2
+│   │   ├── site.woff2
+│   │   ├── symbols.codepoints
+│   │   ├── symbols.ttf
+│   │   ├── symbols2.ttf
+│   │   └── ui.woff2
+│   └── MIT.txt
 ├── pkgs
 │   ├── js
 │   │   ├── mrlygpu
@@ -177,6 +178,22 @@ mrlyprod
 │   │       └── pyproject.toml
 │   ├── rs
 │   │   ├── apps
+│   │   │   ├── mrlyarc
+│   │   │   │   ├── corpus
+│   │   │   │   │   ├── LICENSE-ONE
+│   │   │   │   │   ├── LICENSE-TWO
+│   │   │   │   │   ├── SOURCES.md
+│   │   │   │   │   ├── one.bin
+│   │   │   │   │   └── two.bin
+│   │   │   │   ├── examples
+│   │   │   │   │   └── vendor.rs
+│   │   │   │   ├── src
+│   │   │   │   │   ├── corpus.rs
+│   │   │   │   │   ├── lib.rs
+│   │   │   │   │   └── skin.rs
+│   │   │   │   ├── Cargo.toml
+│   │   │   │   ├── LICENSE
+│   │   │   │   └── README.md
 │   │   │   ├── mrlybang
 │   │   │   │   ├── src
 │   │   │   │   │   ├── lib.rs
@@ -501,6 +518,7 @@ mrlyprod
 │   │   │   │   ├── chacha.rs
 │   │   │   │   ├── codec.rs
 │   │   │   │   ├── colors.rs
+│   │   │   │   ├── data.rs
 │   │   │   │   ├── enums.rs
 │   │   │   │   ├── errors.rs
 │   │   │   │   ├── image.rs
@@ -521,6 +539,16 @@ mrlyprod
 │   │   │   ├── Cargo.toml
 │   │   │   ├── LICENSE
 │   │   │   └── README.md
+│   │   ├── mrlydata
+│   │   │   ├── src
+│   │   │   │   ├── lib.rs
+│   │   │   │   ├── main.rs
+│   │   │   │   ├── press.rs
+│   │   │   │   ├── trails.rs
+│   │   │   │   └── wells.rs
+│   │   │   ├── Cargo.toml
+│   │   │   ├── LICENSE
+│   │   │   └── README.md
 │   │   ├── mrlyfont
 │   │   │   ├── assets
 │   │   │   │   ├── MrlyFont.json
@@ -532,6 +560,7 @@ mrlyprod
 │   │   │   ├── src
 │   │   │   │   ├── animate.rs
 │   │   │   │   ├── assets.rs
+│   │   │   │   ├── data.rs
 │   │   │   │   ├── glyphs.rs
 │   │   │   │   ├── letters.rs
 │   │   │   │   ├── lib.rs
@@ -613,8 +642,20 @@ mrlyprod
 │   │   │   │   │   ├── render.rs
 │   │   │   │   │   ├── sample.rs
 │   │   │   │   │   └── stack.rs
+│   │   │   │   ├── name
+│   │   │   │   │   ├── bang.rs
+│   │   │   │   │   ├── mod.rs
+│   │   │   │   │   ├── rule.rs
+│   │   │   │   │   ├── text.rs
+│   │   │   │   │   └── tile.rs
 │   │   │   │   ├── pick
 │   │   │   │   │   └── mod.rs
+│   │   │   │   ├── saga
+│   │   │   │   │   ├── factory.rs
+│   │   │   │   │   ├── metrics.rs
+│   │   │   │   │   ├── mod.rs
+│   │   │   │   │   ├── ops.rs
+│   │   │   │   │   └── solve.rs
 │   │   │   │   ├── six
 │   │   │   │   │   ├── census.rs
 │   │   │   │   │   ├── designs.rs
@@ -659,6 +700,7 @@ mrlyprod
 │   │   │   │   │   └── tile.rs
 │   │   │   │   ├── boolean.rs
 │   │   │   │   ├── census.rs
+│   │   │   │   ├── data.rs
 │   │   │   │   ├── fft.rs
 │   │   │   │   ├── lib.rs
 │   │   │   │   └── rules.rs
@@ -666,6 +708,7 @@ mrlyprod
 │   │   │   │   └── atoms.rs
 │   │   │   ├── Cargo.toml
 │   │   │   ├── LICENSE
+│   │   │   ├── NAMES.md
 │   │   │   └── README.md
 │   │   ├── mrlymoji
 │   │   │   ├── src
@@ -716,8 +759,17 @@ mrlyprod
 │   │   │   └── README.md
 │   │   ├── mrlytorch
 │   │   │   ├── src
-│   │   │   │   └── lib.rs
+│   │   │   │   ├── graph.rs
+│   │   │   │   ├── grid.rs
+│   │   │   │   ├── lib.rs
+│   │   │   │   ├── math.rs
+│   │   │   │   ├── nn.rs
+│   │   │   │   ├── ops.rs
+│   │   │   │   ├── optim.rs
+│   │   │   │   ├── rng.rs
+│   │   │   │   └── tensor.rs
 │   │   │   ├── Cargo.toml
+│   │   │   ├── GPU.md
 │   │   │   ├── LICENSE
 │   │   │   └── README.md
 │   │   └── mrlyweb
@@ -811,6 +863,7 @@ mrlyprod
 │   │   ├── blog
 │   │   │   ├── README.md
 │   │   │   ├── millennium.md
+│   │   │   ├── riemann-zeta-1.md
 │   │   │   └── vicsek.md
 │   │   ├── pages
 │   │   │   ├── ABOUT.md
@@ -921,6 +974,7 @@ mrlyprod
 │   │   │   │   │   ├── tile.tsx
 │   │   │   │   │   └── two.tsx
 │   │   │   │   ├── puzzles
+│   │   │   │   │   ├── arc.tsx
 │   │   │   │   │   ├── captcha.tsx
 │   │   │   │   │   ├── chess.tsx
 │   │   │   │   │   ├── memory.tsx

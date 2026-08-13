@@ -8,6 +8,7 @@ OS = "mrlyos"
 MATH = "mrlymath"
 FONT = "mrlyfont"
 SKIN = "mrlyskin"
+GAME = "mrlygame"
 WEB = "mrlyweb"
 CLI = "mrlycli"
 MOJI = "mrlymoji"
@@ -22,6 +23,7 @@ LAW = {
     MATH: {CORE},
     FONT: {CORE},
     SKIN: {CORE, MATH, FONT},
+    GAME: {CORE, MATH},
     MOJI: set(),
     RUN: set(),
     SOLO: set(),

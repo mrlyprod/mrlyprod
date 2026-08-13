@@ -1,6 +1,8 @@
 use super::codec;
 use super::colors::Color;
 use super::errors::{MrlyError, Result};
+use super::resample::{self, Filter};
+use crate::json::{field, usize_at};
 use crate::{json, Json};
 
 /// A paletted image: rows of palette indices and the palette they point into.
@@ -84,19 +86,47 @@ impl Image {
     pub fn png(&self, scale: usize) -> Result<Vec<u8>> {
         codec::png(&self.colors(), self.width, self.height, scale)
     }
+    /// Resamples the image to a new size, its palette rebuilt from the blended pixels.
+    pub fn resample(&self, width: usize, height: usize, filter: Filter) -> Result<Image> {
+        let pixels = resample::resample(
+            &self.colors(),
+            self.width,
+            self.height,
+            width,
+            height,
+            filter,
+        )?;
+        Ok(Image::from_pixels(width, height, &pixels))
+    }
 }
 
-fn field<'a>(value: &'a Json, key: &str) -> Result<&'a Json> {
-    value
-        .get(key)
-        .ok_or_else(|| MrlyError::Value(format!("missing field {key:?}.")))
-}
-
-fn usize_at(value: &Json, key: &str) -> Result<usize> {
-    field(value, key)?
-        .as_u64()
-        .map(|n| n as usize)
-        .ok_or_else(|| MrlyError::Value(format!("field {key:?} must be an integer.")))
+/// Encodes indexed frames sharing one size and palette as an animated gif.
+pub fn gif(frames: &[Image], scale: usize, delay: usize) -> Result<Vec<u8>> {
+    let first = match frames.first() {
+        Some(first) => first,
+        None => return Err(MrlyError::Value("gif needs at least one frame.".into())),
+    };
+    let palette: Vec<[u8; 4]> = first.palette.iter().map(|c| [c.r, c.g, c.b, c.a]).collect();
+    let mut indices = Vec::with_capacity(frames.len());
+    for frame in frames {
+        if (frame.width, frame.height) != (first.width, first.height) {
+            return Err(MrlyError::Value("every frame must share one size.".into()));
+        }
+        if frame.palette != first.palette {
+            return Err(MrlyError::Value(
+                "every frame must share one palette.".into(),
+            ));
+        }
+        indices.push(
+            frame
+                .rows
+                .iter()
+                .flat_map(|row| row.iter().map(|&id| id as u8))
+                .collect::<Vec<u8>>(),
+        );
+    }
+    let views: Vec<&[u8]> = indices.iter().map(|f| f.as_slice()).collect();
+    codec::gif(&views, &palette, first.width, first.height, scale, delay)
 }
 
 fn palette_list(value: &Json, key: &str) -> Result<Vec<Color>> {
@@ -213,5 +243,34 @@ mod tests {
         let bytes = sample().png(4).unwrap();
         assert_eq!(&bytes[0..8], &[137, 80, 78, 71, 13, 10, 26, 10]);
         assert!(sample().png(0).is_err());
+    }
+
+    #[test]
+    fn resample_keeps_the_palette_on_a_nearest_upscale() {
+        let image = sample().resample(4, 4, Filter::Nearest).unwrap();
+        assert_eq!((image.width, image.height), (4, 4));
+        assert_eq!(image.palette.len(), 3);
+        assert_eq!(image.rows[0], vec![0, 0, 1, 1]);
+        assert_eq!(image.rows[3], vec![1, 1, 2, 2]);
+        assert!(sample().resample(0, 4, Filter::Nearest).is_err());
+    }
+
+    #[test]
+    fn gif_encodes_frames_sharing_one_palette() {
+        let first = sample();
+        let mut second = sample();
+        second.rows = vec![vec![2, 1], vec![1, 0]];
+        let bytes = gif(&[first.clone(), second], 2, 5).unwrap();
+        assert_eq!(&bytes[0..6], b"GIF89a");
+        assert_eq!(&bytes[6..8], &4u16.to_le_bytes());
+        let mut odd = sample();
+        odd.palette.pop();
+        odd.rows = vec![vec![0, 1], vec![1, 0]];
+        assert!(gif(&[first.clone(), odd], 1, 5).is_err());
+        let mut wide = first.clone();
+        wide.width = 4;
+        wide.rows = vec![vec![0, 1, 0, 1], vec![1, 2, 1, 2]];
+        assert!(gif(&[first, wide], 1, 5).is_err());
+        assert!(gif(&[], 1, 5).is_err());
     }
 }

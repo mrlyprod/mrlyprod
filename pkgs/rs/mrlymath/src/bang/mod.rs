@@ -10,5 +10,5 @@ pub mod factory;
 pub mod universe;
 
 pub use catalog::{sources, universe_codes};
-pub use factory::{code_to_corners, corners_to_code};
+pub use factory::{code_to_corners, corners_to_code, levels_code};
 pub use universe::{bang, corners, symmetries, Code, Design, Universe};
