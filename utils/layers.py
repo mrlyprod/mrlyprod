@@ -14,6 +14,7 @@ MOJI = "mrlymoji"
 RUN = "mrlyrun"
 SOLO = "mrlysolo"
 TORCH = "mrlytorch"
+DATA = "mrlydata"
 
 LAW = {
     CORE: set(),
@@ -25,6 +26,7 @@ LAW = {
     RUN: set(),
     SOLO: set(),
     TORCH: set(),
+    DATA: {CORE, OS, MATH, FONT, SKIN, WEB},
 }
 APP_MAY = {CORE, OS, MATH, FONT, SKIN}
 BIND_MAY = {CORE, OS, FONT, WEB}

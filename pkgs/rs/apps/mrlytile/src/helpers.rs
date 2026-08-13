@@ -1,12 +1,44 @@
 use mrlycore::paint::{Edition, Ink, Paint};
-use mrlycore::tile::{Catalog, Source, Tile as Model};
+use mrlycore::tile::{Catalog, Source, Tile as Model, CLASSICS_2D};
 use mrlycore::{json, Json};
+use mrlymath::bang::{bang, universe_codes};
+use mrlymath::name::{classic_code, Bang, Named};
 
-/// Names a source, either its classic design or its base-2 catalog code.
+/// Names a source, either its classic design or its canonical bang name.
 pub fn source_label(source: &Source) -> String {
     match source {
         Source::Classic(design) => design.name().to_string(),
-        Source::Code(code) => format!("mrly_{code:02}"),
+        Source::Code(code) => Bang::new(*code, 2, 2).to_str(),
+    }
+}
+
+/// Carries a source into a catalog by its code, falling back to the orbit lead or itself.
+pub fn remap(source: Source, catalog: &Catalog) -> Source {
+    match catalog {
+        Catalog::Universe => {
+            let code = match source {
+                Source::Classic(design) => match classic_code(design) {
+                    Some(code) => code,
+                    None => return source,
+                },
+                Source::Code(code) => code,
+            };
+            if universe_codes(2).contains(&code) {
+                Source::Code(code)
+            } else if code < 16 {
+                Source::Code(bang(2).design(code).class_rep)
+            } else {
+                source
+            }
+        }
+        _ => match source {
+            Source::Code(code) => CLASSICS_2D
+                .into_iter()
+                .find(|&design| classic_code(design) == Some(code))
+                .map(Source::Classic)
+                .unwrap_or(source),
+            classic => classic,
+        },
     }
 }
 

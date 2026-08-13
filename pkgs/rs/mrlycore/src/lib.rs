@@ -13,6 +13,8 @@ pub mod chacha;
 pub mod codec;
 /// The rgba color and its palettes.
 pub mod colors;
+/// The well: how a crate declares the datasets it can pour.
+pub mod data;
 /// The ways paint picks a color within a type's palette.
 pub mod enums;
 /// The one error type and its Result.
@@ -44,7 +46,7 @@ pub mod trig;
 
 pub use audio::{Note, Wave};
 pub use cell::Cell;
-pub use codec::{base64, png, unpng};
+pub use codec::{base64, deflate, inflate, png, unpng};
 pub use colors::Color;
 pub use enums::Mode;
 pub use errors::{MrlyError, Result};

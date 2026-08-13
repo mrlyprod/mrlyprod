@@ -1,4 +1,5 @@
 use super::universe::Code;
+use crate::name::Named;
 use crate::rules;
 use mrlycore::errors::{value_error, Result};
 use mrlycore::Tensor;
@@ -52,36 +53,6 @@ pub fn corners_to_code(filled: &[Vec<u8>], dimension: usize, base: usize) -> Cod
         .sum()
 }
 
-/// Builds the full mrly name of a code at a dimension and base.
-pub fn name(code: Code, dimension: usize, base: usize) -> String {
-    format!("mrly_d{dimension}_b{base}_{code}")
-}
-
-/// Parses a design spec into a code with optional dimension and base, or an error when nothing matches.
-pub fn parse_name(spec: &str) -> Result<(Code, Option<usize>, Option<usize>)> {
-    let text = spec.trim().to_lowercase();
-    if let Some(rest) = text.strip_prefix("mrly_d") {
-        if let Some((d_part, tail)) = rest.split_once("_b") {
-            if let Some((b_part, code_part)) = tail.split_once('_') {
-                if let (Ok(d), Ok(b), Ok(code)) =
-                    (d_part.parse(), b_part.parse(), code_part.parse())
-                {
-                    return Ok((code, Some(d), Some(b)));
-                }
-            }
-        }
-    }
-    let bare = if let Some(rest) = text.strip_prefix("mrly") {
-        rest.trim_start_matches('_')
-    } else {
-        &text
-    };
-    match bare.parse() {
-        Ok(code) => Ok((code, None, None)),
-        Err(_) => value_error(format!("cannot parse design spec {spec:?}.")),
-    }
-}
-
 fn render(
     filled: &[Vec<u8>],
     number: usize,
@@ -115,15 +86,10 @@ pub fn create(
     render(&filled, number, dimension, base, level)
 }
 
-/// Renders a design from its name, or an error when a bare code arrives without dimension and base.
+/// Renders a design from its canonical mrly name, or an error for any other spelling.
 pub fn create_named(spec: &str, number: usize, level: usize) -> Result<Tensor> {
-    let (code, dimension, base) = parse_name(spec)?;
-    match (dimension, base) {
-        (Some(d), Some(b)) => create(code, number, d, b, level),
-        _ => {
-            value_error("dimension is required for a bare code (use a mrly_d{D}_b{B}_{code} name).")
-        }
-    }
+    let bang = crate::name::Bang::from_str(spec)?;
+    create(bang.code, number, bang.dimension, bang.base, level)
 }
 
 /// Renders a design straight from its filled residue corners.
@@ -151,9 +117,8 @@ mod tests {
     #[test]
     fn menger_carpet_code() {
         assert_eq!(levels_code(3, &[0, 1]), 23);
-        assert_eq!(name(23, 3, 2), "mrly_d3_b2_23");
         let truth = create(23, 3, 3, 2, 1).unwrap();
-        assert_eq!(create_named("mrly_d3_b2_23", 3, 1).unwrap(), truth);
+        assert_eq!(create_named("mrly_bang_d3_23", 3, 1).unwrap(), truth);
         assert_eq!(truth.sum(), 20);
         assert_eq!(truth.shape, vec![3, 3, 3]);
     }
@@ -166,12 +131,11 @@ mod tests {
         assert_eq!(truth.bytes(), python);
     }
     #[test]
-    fn parse_names() {
-        assert_eq!(parse_name("mrly_023").unwrap(), (23, None, None));
-        assert_eq!(parse_name("mrly23").unwrap(), (23, None, None));
-        assert_eq!(parse_name("mrly_d3_b2_23").unwrap(), (23, Some(3), Some(2)));
-        assert_eq!(parse_name("mrly_d2_b3_0").unwrap(), (0, Some(2), Some(3)));
-        assert_eq!(parse_name("23").unwrap(), (23, None, None));
+    fn create_named_takes_the_canonical_name_only() {
+        assert!(create_named("mrly_bang_d2_q3_100", 3, 1).is_ok());
+        for bad in ["mrly_d3_b2_23", "mrly_023", "mrly23", "23"] {
+            assert!(create_named(bad, 3, 1).is_err(), "{bad}");
+        }
     }
     #[test]
     fn code_corner_round_trip() {

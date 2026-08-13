@@ -8,12 +8,13 @@ mod rules;
 pub mod skin;
 mod state;
 
-use helpers::{catalog_name, source_label, work};
+use helpers::{catalog_name, source_label};
 use mrlycore::colors::ink;
 use mrlycore::paint::{self, Paint};
 use mrlycore::state::seed;
 use mrlycore::tile::{Catalog, Design, Group, Parity, Tile as Model};
 use mrlycore::{json, Json};
+use mrlymath::name::Named;
 use mrlymath::two::tile as tile2d;
 use mrlyos::kernel::{App, Call, Iden, Manifest, Outcome, Verb};
 use render::{blank, cells, two_tone};
@@ -21,7 +22,6 @@ use rules::{carpet, starter, validate_saved};
 
 const BUDGETS: [usize; 3] = [16, 32, 64];
 const MIN: usize = 2;
-const CEILING: usize = 64;
 const THUMBS: usize = 6;
 const SHELF: usize = 12;
 const STARTERS: [Design; 4] = [Design::Carpet, Design::Net, Design::Htree, Design::Vtree];
@@ -54,6 +54,7 @@ pub struct Tile {
     parity: Parity,
     budget: usize,
     cells: Json,
+    note: Option<String>,
     dark: bool,
     library: Vec<Entry>,
     next: u64,
@@ -75,6 +76,7 @@ impl Tile {
             parity: Parity::Odds,
             budget: 64,
             cells: Json::Null,
+            note: None,
             dark: false,
             library: seed_library(),
             next: STARTERS.len() as u64 + 1,
@@ -83,19 +85,26 @@ impl Tile {
         app
     }
     fn repaint(&mut self) {
-        self.cells = match tile2d::build(&self.tile) {
-            Ok(mut cell) => {
+        match tile2d::build(&self.tile) {
+            Ok(cell) => {
                 let (w, h) = (cell.width(), cell.height());
-                let colors = match &self.paint {
-                    Some(coating) if paint::coat(&mut cell.cell, coating, None).is_ok() => (0
-                        ..cell.cell.size())
-                        .map(|i| cell.cell.color_at(i))
-                        .collect(),
-                    _ => two_tone(&cell, ink(self.dark)),
-                };
-                cells(w, h, colors)
+                let coated = self.paint.as_ref().and_then(|coating| {
+                    let mut painted = cell.clone();
+                    paint::coat(&mut painted.cell, coating, None).ok()?;
+                    Some(
+                        (0..painted.cell.size())
+                            .map(|i| painted.cell.color_at(i))
+                            .collect(),
+                    )
+                });
+                let colors = coated.unwrap_or_else(|| two_tone(&cell, ink(self.dark)));
+                self.cells = cells(w, h, colors);
+                self.note = None;
             }
-            Err(_) => blank(),
+            Err(trouble) => {
+                self.cells = blank();
+                self.note = Some(trouble.to_string());
+            }
         };
     }
 }
@@ -111,18 +120,39 @@ impl App for Tile {
         self.dark = world["shared"]["settings"]["darkmode"] == true;
         self.repaint();
     }
-    fn state(&self, _iden: &Iden, _shape: Option<&Json>) -> Json {
-        json!({
-            "tile": self.tile.to_json(),
+    fn state(&self, _iden: &Iden, shape: Option<&Json>) -> Json {
+        let want = |key: &str| {
+            shape
+                .and_then(|s| s.as_object())
+                .map(|keys| keys.contains_key(key))
+                .unwrap_or(true)
+        };
+        let mut tile = self.tile.to_json();
+        tile["name"] = match self.tile.check() {
+            Ok(()) => json!(self.tile.to_str()),
+            Err(_) => Json::Null,
+        };
+        let labels: Vec<String> = self.tile.sources.iter().map(source_label).collect();
+        let mut out = json!({
+            "tile": tile,
             "paint": self.paint.as_ref().map(|p| p.to_json()).unwrap_or(Json::Null),
             "catalog": catalog_name(&self.catalog),
             "parity": self.parity.name(),
             "budget": self.budget,
-            "options": self.options(),
-            "thumbs": self.thumbs(),
-            "library": self.shelf(),
+            "labels": labels,
+            "note": self.note.as_ref().map(|n| json!(n)).unwrap_or(Json::Null),
             "cells": &self.cells,
-        })
+        });
+        if want("options") {
+            out["options"] = self.options();
+        }
+        if want("thumbs") {
+            out["thumbs"] = json!(self.thumbs());
+        }
+        if want("library") {
+            out["library"] = json!(self.shelf());
+        }
+        out
     }
     fn actions(&self, _iden: &Iden) -> Vec<Verb> {
         vec![
@@ -205,22 +235,14 @@ impl App for Tile {
                 if self.library.len() >= SHELF {
                     return Outcome::fail("library is full");
                 }
-                let bundle = work(&self.tile, &self.paint);
-                if self
-                    .library
-                    .iter()
-                    .any(|e| work(&e.tile, &e.paint) == bundle)
-                {
+                let canonical = self.tile.to_str();
+                if self.library.iter().any(|e| e.tile.to_str() == canonical) {
                     return Outcome::fail("already saved");
                 }
                 let id = self.next;
                 let provided = call.arg("name").as_str().unwrap_or("").trim().to_string();
                 let name = if provided.is_empty() {
-                    self.tile
-                        .sources
-                        .first()
-                        .map(source_label)
-                        .unwrap_or_else(|| format!("tile {id}"))
+                    canonical
                 } else {
                     provided
                 };
@@ -300,17 +322,17 @@ impl App for Tile {
             self.paint = coating;
         }
         if let Some(entries) = state["library"].as_array() {
-            let mut library = Vec::new();
+            let mut library: Vec<Entry> = Vec::new();
             let mut top: u64 = 0;
             for entry in entries {
                 if let Ok((tile, paint)) = validate_saved(entry) {
                     let id = entry["id"].as_u64().unwrap_or(0);
+                    if library.iter().any(|e| e.id == id) {
+                        continue;
+                    }
                     let trimmed = entry["name"].as_str().unwrap_or("").trim();
                     let name = if trimmed.is_empty() {
-                        tile.sources
-                            .first()
-                            .map(source_label)
-                            .unwrap_or_else(|| format!("tile {id}"))
+                        tile.to_str()
                     } else {
                         trimmed.to_string()
                     };
@@ -323,8 +345,10 @@ impl App for Tile {
                     });
                 }
             }
-            self.library = library;
-            self.next = state["next"].as_u64().unwrap_or(0).max(top + 1);
+            if !library.is_empty() {
+                self.library = library;
+                self.next = state["next"].as_u64().unwrap_or(0).max(top + 1);
+            }
         }
         self.snap();
         self.repaint();
@@ -333,7 +357,7 @@ impl App for Tile {
 
 #[cfg(test)]
 mod tests {
-    use super::rules::{carpet, check_model, resize};
+    use super::rules::{carpet, check_model};
     use super::*;
     use mrlycore::paint::{Edition, Target};
     use mrlycore::state::guard;
@@ -438,15 +462,37 @@ mod tests {
         assert!(!set(&mut t, "budget", json!(100)).ok);
     }
     #[test]
-    fn catalog_remaps_sources_by_index() {
+    fn catalog_remaps_sources_by_code() {
         let mut t = app();
         assert!(set(&mut t, "catalog", json!("Universe")).ok);
-        assert!(matches!(t.tile.sources[0], Source::Code(_)));
+        assert_eq!(t.tile.sources[0], Source::Code(7));
         assert!(check_model(&t.tile).is_ok());
-        let label = source_label(&t.tile.sources[0]);
-        assert!(label.starts_with("mrly_"));
+        assert_eq!(source_label(&t.tile.sources[0]), "mrly_bang_d2_7");
         assert!(set(&mut t, "catalog", json!("Classics")).ok);
-        assert!(matches!(t.tile.sources[0], Source::Classic(_)));
+        assert_eq!(t.tile.sources[0], Source::Classic(Design::Carpet));
+    }
+    #[test]
+    fn catalog_remap_folds_to_orbit_leads_and_back() {
+        let mut t = app();
+        assert!(set(&mut t, "source", json!("Net")).ok);
+        assert!(set(&mut t, "catalog", json!("Universe")).ok);
+        assert_eq!(t.tile.sources[0], Source::Code(7));
+        t.tile.sources[0] = Source::Code(6);
+        assert!(set(&mut t, "catalog", json!("Classics")).ok);
+        assert_eq!(t.tile.sources[0], Source::Code(6));
+        t.tile.sources[0] = Source::Code(9);
+        assert!(set(&mut t, "catalog", json!("Classics")).ok);
+        assert_eq!(t.tile.sources[0], Source::Classic(Design::Void));
+    }
+    #[test]
+    fn universe_offer_drops_the_blank_and_solid_codes() {
+        let mut t = app();
+        assert!(set(&mut t, "catalog", json!("Universe")).ok);
+        let sources = t.sources();
+        assert_eq!(sources.len(), 4);
+        assert!(!sources.contains(&Source::Code(0)));
+        assert!(!sources.contains(&Source::Code(15)));
+        assert!(!set(&mut t, "source", json!("mrly_bang_d2_0")).ok);
     }
     #[test]
     fn roll_is_seeded() {
@@ -497,7 +543,7 @@ mod tests {
         assert_eq!(t.state(&iden(), None), before);
         let mut oversize = carpet();
         oversize.levels = vec![5];
-        resize(&mut oversize);
+        oversize.resize();
         t.load(&json!({ "tile": oversize.to_json(), "paint": Json::Null }));
         assert_eq!(t.state(&iden(), None), before);
         let mut flipped = carpet();
@@ -668,13 +714,33 @@ mod tests {
         );
     }
     #[test]
-    fn save_auto_names_from_the_source() {
+    fn save_auto_names_from_the_canonical_name() {
         let mut t = app();
         assert!(set(&mut t, "group", json!("General")).ok);
         let out = send(&mut t, "tile.save", json!({}));
         assert!(out.ok);
-        let label = source_label(&t.tile.sources[0]);
-        assert_eq!(out.data["name"], json!(label));
+        assert_eq!(out.data["name"], json!(t.tile.to_str()));
+        assert_eq!(out.data["name"], json!("mrly_tile_general_c7_n3"));
+    }
+    #[test]
+    fn save_dedupes_semantically_across_aliases() {
+        let mut t = app();
+        assert!(set(&mut t, "group", json!("General")).ok);
+        assert!(send(&mut t, "tile.save", json!({})).ok);
+        assert!(set(&mut t, "anti", json!(true)).ok);
+        assert!(set(&mut t, "invert", json!(true)).ok);
+        assert_eq!(
+            send(&mut t, "tile.save", json!({})).note.as_deref(),
+            Some("already saved")
+        );
+        t.tile.sources[0] = Source::Code(7);
+        t.repaint();
+        assert!(set(&mut t, "anti", json!(false)).ok);
+        assert!(set(&mut t, "invert", json!(false)).ok);
+        assert_eq!(
+            send(&mut t, "tile.save", json!({})).note.as_deref(),
+            Some("already saved")
+        );
     }
     #[test]
     fn save_caps_the_library() {
@@ -747,11 +813,119 @@ mod tests {
         assert_eq!(t.next, 5);
     }
     #[test]
+    fn load_treats_an_empty_library_like_a_missing_one() {
+        let mut t = app();
+        t.load(&json!({ "tile": carpet().to_json(), "paint": Json::Null, "library": [] }));
+        assert_eq!(t.library.len(), 4);
+        assert_eq!(t.next, 5);
+        let mut u = app();
+        u.load(&json!({
+            "tile": carpet().to_json(),
+            "paint": Json::Null,
+            "library": [ { "id": 9, "name": "junk", "tile": 7, "paint": Json::Null } ],
+        }));
+        assert_eq!(u.library.len(), 4);
+    }
+    #[test]
+    fn load_rejects_duplicate_library_ids() {
+        let mut t = app();
+        let other = starter(Design::Net);
+        t.load(&json!({
+            "tile": carpet().to_json(),
+            "paint": Json::Null,
+            "library": [
+                { "id": 3, "name": "first", "tile": carpet().to_json(), "paint": Json::Null },
+                { "id": 3, "name": "second", "tile": other.to_json(), "paint": Json::Null },
+            ],
+            "next": 1,
+        }));
+        assert_eq!(t.library.len(), 1);
+        assert_eq!(t.library[0].name, "first");
+        assert_eq!(t.next, 4);
+    }
+    #[test]
+    fn anti_is_refused_for_a_special_tile() {
+        let mut t = app();
+        assert!(set(&mut t, "group", json!("Special")).ok);
+        let out = set(&mut t, "anti", json!(true));
+        assert!(!out.ok);
+        assert_eq!(
+            out.note.as_deref(),
+            Some("anti does nothing for a special tile")
+        );
+        let menu = t.menu();
+        assert!(menu.get("anti").is_none());
+        assert!(set(&mut t, "group", json!("General")).ok);
+        assert!(set(&mut t, "anti", json!(true)).ok);
+        assert_eq!(t.menu()["anti"], json!("bool"));
+    }
+    #[test]
+    fn group_switch_keeps_invert_flip_and_rotation() {
+        let mut t = app();
+        assert!(set(&mut t, "invert", json!(true)).ok);
+        assert!(set(&mut t, "rotation", json!(2)).ok);
+        assert!(set(&mut t, "group", json!("General")).ok);
+        assert!(t.tile.invert);
+        assert_eq!(t.tile.rotations[0], 2);
+        assert!(set(&mut t, "group", json!("Special")).ok);
+        assert!(t.tile.invert);
+        assert!(set(&mut t, "flip", json!(true)).ok);
+        assert!(set(&mut t, "group", json!("Magic")).ok);
+        assert!(t.tile.invert);
+        assert!(!t.tile.flip);
+        assert_eq!(t.tile.rotations[0], 2);
+    }
+    #[test]
+    fn rotation_refuses_a_wordy_value() {
+        let mut t = app();
+        let out = set(&mut t, "rotation", json!("soup"));
+        assert!(!out.ok);
+        assert_eq!(out.note.as_deref(), Some("value must be a number"));
+        assert!(!set(&mut t, "rotation", json!(4)).ok);
+        assert!(set(&mut t, "rotation", json!("3")).ok);
+    }
+    #[test]
+    fn state_honors_its_shape() {
+        let t = app();
+        let full = t.state(&iden(), None);
+        assert!(full.get("options").is_some());
+        assert!(full.get("thumbs").is_some());
+        assert!(full.get("library").is_some());
+        let slim = t.state(&iden(), Some(&json!({ "tile": 1, "cells": 1 })));
+        assert!(slim.get("options").is_none());
+        assert!(slim.get("thumbs").is_none());
+        assert!(slim.get("library").is_none());
+        assert_eq!(slim["tile"], full["tile"]);
+        assert_eq!(slim["cells"], full["cells"]);
+        let keyed = t.state(&iden(), Some(&json!({ "library": 1 })));
+        assert_eq!(keyed["library"], full["library"]);
+    }
+    #[test]
+    fn state_names_the_staged_tile() {
+        let t = app();
+        let state = t.state(&iden(), None);
+        assert_eq!(state["tile"]["name"], json!("mrly_tile_fractal_c7_n3_l2"));
+        assert_eq!(state["labels"], json!(["Carpet"]));
+        assert_eq!(state["note"], Json::Null);
+    }
+    #[test]
+    fn build_trouble_surfaces_its_note() {
+        let mut t = app();
+        t.tile.sources[0] = Source::Code(20);
+        t.repaint();
+        let state = t.state(&iden(), None);
+        assert!(state["note"].as_str().unwrap().contains("out of range"));
+        assert_eq!(state["cells"]["ids"].as_array().unwrap().len(), 1);
+        t.tile = carpet();
+        t.repaint();
+        assert_eq!(t.state(&iden(), None)["note"], Json::Null);
+    }
+    #[test]
     fn load_drops_invalid_library_entries() {
         let mut t = app();
         let mut oversize = carpet();
         oversize.levels = vec![5];
-        resize(&mut oversize);
+        oversize.resize();
         t.load(&json!({
             "tile": carpet().to_json(),
             "paint": Json::Null,

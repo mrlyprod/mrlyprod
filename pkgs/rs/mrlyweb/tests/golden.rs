@@ -684,3 +684,23 @@ fn files_frame_is_golden() {
     os.call(Call::new("nav.open", json!({ "app": "files" })));
     assert_eq!(os.envelope(None).to_json(), fixture("files"));
 }
+
+#[test]
+fn arc_frame_is_golden() {
+    let mut os = boot();
+    os.call(Call::new("nav.open", json!({ "app": "arc" })));
+    os.call(Call::new("arc.load", json!({ "task": 0 })));
+    os.call(Call::new("arc.copy", json!({})));
+    os.call(Call::new("arc.fill", json!({ "x": 1, "y": 0, "pen": 4 })));
+    os.call(Call::new("arc.fill", json!({ "x": 1, "y": 1, "pen": 4 })));
+    assert_eq!(os.envelope(None).to_json(), fixture("arc"));
+}
+
+#[test]
+fn arc_survives_a_long_goose_walk() {
+    let mut os = boot();
+    os.open("arc").unwrap();
+    let mut goose = mrlyweb::Goose::new(7);
+    let acted = (0..500).filter_map(|_| goose.step(&mut os)).count();
+    assert!(acted > 0, "the goose never landed a call on arc");
+}

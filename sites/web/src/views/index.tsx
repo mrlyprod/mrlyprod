@@ -6,6 +6,7 @@ import {
   Title,
 } from "mrlyui"
 import { useApp } from "../send"
+import { Arc } from "./puzzles/arc"
 import { Bang } from "./math/bang"
 import { Calculator } from "./tools/calculator"
 import { Calendar } from "./tools/calendar"
@@ -77,6 +78,7 @@ export const views: Record<string, View> = {
   escape: Escape,
   quiz: Quiz,
   captcha: Captcha,
+  arc: Arc,
   paint: Paint,
   settings: Settings,
   chess: Chess,

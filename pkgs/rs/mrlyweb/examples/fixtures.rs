@@ -406,4 +406,12 @@ fn main() {
     os.call(Call::new("colors.export", json!({})).at(1783600496000));
     os.call(Call::new("nav.open", json!({ "app": "files" })));
     write("files", &os);
+
+    let mut os = boot();
+    os.call(Call::new("nav.open", json!({ "app": "arc" })));
+    os.call(Call::new("arc.load", json!({ "task": 0 })));
+    os.call(Call::new("arc.copy", json!({})));
+    os.call(Call::new("arc.fill", json!({ "x": 1, "y": 0, "pen": 4 })));
+    os.call(Call::new("arc.fill", json!({ "x": 1, "y": 1, "pen": 4 })));
+    write("arc", &os);
 }

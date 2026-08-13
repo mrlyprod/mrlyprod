@@ -9,6 +9,7 @@ homepage.workspace = true
 readme = "README.md"
 
 [dependencies]
+mrlyarc.workspace = true
 mrlybang.workspace = true
 mrlycalculator.workspace = true
 mrlycalendar.workspace = true

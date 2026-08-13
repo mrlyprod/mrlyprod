@@ -475,6 +475,10 @@ fn wake(route: &str) -> Os {
         "paint" => {
             os.call(Call::new("paint.stroke", json!({ "points": brush() })));
         }
+        "arc" => {
+            os.call(Call::new("arc.load", json!({ "task": 0 })));
+            os.call(Call::new("arc.copy", json!({})));
+        }
         _ => {}
     }
     os

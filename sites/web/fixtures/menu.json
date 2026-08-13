@@ -309,6 +309,14 @@
           "internet": false
         },
         {
+          "route": "arc",
+          "emoji": "🧩",
+          "title": "arc",
+          "category": "puzzles",
+          "hidden": false,
+          "internet": false
+        },
+        {
           "route": "paint",
           "emoji": "🎨",
           "title": "paint",

@@ -441,7 +441,7 @@ const shelved = list(trimmed).apps.map(app => app.route)
 const coco = ["notes", "calculator", "calendar", "clock", "timer", "photos", "studio", "colors", "emojis", "fonts", "paint", "dice", "hash"]
 check(
   "the arcade boots the system and the games and nothing else",
-  shelved.length === 29 && shelved.length + coco.length === registry.apps.length,
+  shelved.length === 30 && shelved.length + coco.length === registry.apps.length,
   String(shelved.length),
 )
 check(

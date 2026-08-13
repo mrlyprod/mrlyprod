@@ -1,5 +1,6 @@
 import {
   Box,
+  Caption,
   Card,
   Button,
   Choice,
@@ -18,7 +19,7 @@ import { Cells } from "../../eyes/Cells"
 import { useSend } from "../../send"
 import type { Cells as Deck } from "../../types"
 
-type Source = { design?: string; code?: number }
+type Source = { design?: string; code?: number | string }
 
 type Paint = { edition: string; scheme: string; target: string; primary: string }
 
@@ -35,11 +36,14 @@ type State = {
     anti: boolean[]
     invert: boolean
     flip: boolean
+    name: string | null
   }
   paint: Paint | null
   catalog: string
   parity: string
   budget: number
+  labels: string[]
+  note: string | null
   options: {
     groups: string[]
     catalogs: string[]
@@ -63,9 +67,6 @@ type State = {
 
 const strings = (ns: number[]): string[] => ns.map(String)
 
-const naming = (source: Source): string =>
-  source.design ?? `mrly_${String(source.code ?? 0).padStart(2, "0")}`
-
 // SLOT
 
 function Slot({ s, i }: { s: State; i: number }) {
@@ -77,7 +78,7 @@ function Slot({ s, i }: { s: State; i: number }) {
     <Section label={`slot ${i + 1}`}>
       <Choice
         label="source"
-        value={naming(t.sources[i] ?? {})}
+        value={s.labels?.[i] ?? ""}
         options={s.options.sources}
         onChange={v => pick("source", v)}
       />
@@ -117,9 +118,11 @@ function Slot({ s, i }: { s: State; i: number }) {
         options={opts(strings(s.options.rotations))}
         onChange={v => pick("rotation", v)}
       />
-      <Field label="anti">
-        <Toggle value={t.anti[i] ?? false} onChange={v => pick("anti", v)} />
-      </Field>
+      {t.group !== "Special" && (
+        <Field label="anti">
+          <Toggle value={t.anti[i] ?? false} onChange={v => pick("anti", v)} />
+        </Field>
+      )}
     </Section>
   )
 }
@@ -136,6 +139,8 @@ export function Tile({ state }: { state: unknown }) {
     <Stack>
       <Box>
         <Cells app="tile" cells={s.cells} handle="tile" />
+        {t.name != null && <Caption>{t.name}</Caption>}
+        {s.note != null && <Caption>{s.note}</Caption>}
       </Box>
       <Box>
         <Cluster>

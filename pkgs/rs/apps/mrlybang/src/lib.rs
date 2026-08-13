@@ -9,6 +9,7 @@ use mrlycore::colors::named;
 use mrlycore::tensor::Tensor;
 use mrlycore::{json, Json};
 use mrlymath::bang::{bang, factory, universe_codes};
+use mrlymath::name::Named;
 use mrlymath::space::{Pack, TURN};
 use mrlymath::three::{quads, Cell3d};
 use mrlymath::two::Cell2d;
@@ -134,7 +135,7 @@ impl App for Bang {
             "base": BASE,
             "index": self.index,
             "count": self.codes().len(),
-            "name": factory::name(code, self.dimension, BASE),
+            "name": mrlymath::name::Bang::new(code, self.dimension, BASE).to_str(),
             "code": code.to_string(),
             "degree": design.degree(),
             "anf": design.anf(),

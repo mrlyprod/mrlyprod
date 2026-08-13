@@ -1,4 +1,5 @@
 use crate::shaders::Program;
+use mrlyarc::Arc;
 use mrlybang::Bang;
 use mrlycalculator::Calculator;
 use mrlycalendar::Calendar;
@@ -74,6 +75,7 @@ pub fn catalogue() -> Vec<Box<dyn App>> {
         Box::new(Escape::new()),
         Box::new(Quiz::new()),
         Box::new(Captcha::new()),
+        Box::new(Arc::new()),
         Box::new(Paint::new()),
         Box::new(Solids::new()),
         Box::new(Fonts::new()),
@@ -97,7 +99,8 @@ pub fn catalogue() -> Vec<Box<dyn App>> {
 
 const SYSTEM: [&str; 5] = ["menu", "settings", "iden", "log", "files"];
 
-const ARCADE: [&str; 24] = [
+const ARCADE: [&str; 25] = [
+    "arc",
     "snake",
     "crush",
     "tennis",
@@ -236,6 +239,7 @@ pub fn floats(name: &str) -> Option<usize> {
 /// Lists every skinned route with its wardrobe of named skins.
 pub fn wardrobes() -> Vec<(&'static str, Vec<(&'static str, Skin)>)> {
     vec![
+        ("arc", mrlyarc::skin::corpus()),
         ("bang", mrlybang::skin::corpus()),
         ("captcha", mrlycaptcha::skin::corpus()),
         ("chess", mrlychess::skin::corpus()),
@@ -279,7 +283,7 @@ pub fn raster(route: &str, cells: &Json, tile: usize, dark: bool) -> Option<Rast
 
 /// Boots a guest os with the named loadout installed.
 /// ```
-/// assert_eq!(mrlyweb::registry::boot("arcade").catalogue().len(), 29);
+/// assert_eq!(mrlyweb::registry::boot("arcade").catalogue().len(), 30);
 /// ```
 pub fn boot(name: &str) -> Os {
     let mut os = Os::new(Iden::new("guest"));
@@ -320,7 +324,7 @@ mod tests {
             .iter()
             .map(|a| a.route().to_string())
             .collect();
-        assert_eq!(routes.len(), 29);
+        assert_eq!(routes.len(), 30);
         assert_eq!(routes[0], "menu");
         assert!(routes.contains(&"snake".to_string()));
         assert!(routes.contains(&"solids".to_string()));
@@ -397,7 +401,7 @@ mod tests {
                 );
             }
         }
-        assert_eq!(all.as_object().unwrap().len(), 19);
+        assert_eq!(all.as_object().unwrap().len(), 20);
         assert_eq!(all["ttt"]["tiles"][1]["bg"], json!({ "pen": 0 }));
         assert_eq!(all["ttt"]["tiles"][1]["motif"], json!("design"));
         assert_eq!(

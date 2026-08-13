@@ -82,6 +82,16 @@ fn filter(pixels: &[u8], width: usize, height: usize) -> Vec<u8> {
     out
 }
 
+/// Compresses bytes into a zlib stream that inflate reads back whole.
+///
+/// ```
+/// let stream = mrlycore::codec::deflate(b"honk honk honk honk");
+/// assert_eq!(mrlycore::codec::inflate(&stream).unwrap(), b"honk honk honk honk");
+/// ```
+pub fn deflate(data: &[u8]) -> Vec<u8> {
+    zlib(data)
+}
+
 fn zlib(data: &[u8]) -> Vec<u8> {
     let mut writer = BitWriter::new(data.len() / 8 + 64);
     writer.bits(1, 1);
@@ -409,7 +419,12 @@ fn paeth(a: u8, b: u8, c: u8) -> u8 {
     }
 }
 
-fn inflate(stream: &[u8]) -> Result<Vec<u8>> {
+/// Decompresses a zlib stream to its bytes, or an error for a broken or truncated one.
+///
+/// ```
+/// assert!(mrlycore::codec::inflate(b"not a zlib stream").is_err());
+/// ```
+pub fn inflate(stream: &[u8]) -> Result<Vec<u8>> {
     if stream.len() < 6 || stream[0] & 0x0f != 8 || stream[1] & 0x20 != 0 {
         return value_error("bad zlib stream.");
     }

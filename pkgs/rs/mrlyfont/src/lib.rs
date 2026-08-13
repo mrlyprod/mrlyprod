@@ -5,6 +5,8 @@
 pub mod animate;
 /// The built font files the crate ships: json, ttf, woff, woff2.
 pub mod assets;
+/// The glyph well this crate pours.
+pub mod data;
 /// The raw bitmap tables of the font.
 pub mod glyphs;
 /// The glyph builders for uppers, lowers, digits, extras and specials.

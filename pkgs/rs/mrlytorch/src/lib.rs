@@ -1,6 +1,26 @@
 #![doc = include_str!("../README.md")]
 #![deny(missing_docs)]
 
+mod math;
+
+/// The tape autograd: values recorded forward, gradients filled backward.
+pub mod graph;
+/// The grid bridge: small u8 grids as one-hot planes and back.
+pub mod grid;
+/// The layers: linear, embed and the sequential mlp.
+pub mod nn;
+/// The kernel seam every heavy op routes through, held for a gpu backend.
+pub mod ops;
+/// The optimisers: sgd with momentum and adam.
+pub mod optim;
+/// The seeded splitmix stream: uniforms, normals and fills.
+pub mod rng;
+/// The f32 tensor: shapes, elementwise ops, matmul and conv.
+pub mod tensor;
+
+/// The crate's result: a value or a terse lowercase note.
+pub type Result<T> = std::result::Result<T, &'static str>;
+
 /// Mixes a train and a step into one reproducible seed.
 ///
 /// ```

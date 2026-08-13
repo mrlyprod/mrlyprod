@@ -1,6 +1,5 @@
-use super::helpers::{closest_nesting, default_paint, int, nearest, source_label, work};
+use super::helpers::{closest_nesting, default_paint, int, nearest, remap, source_label, work};
 use super::render::{blank, cells, two_tone};
-use super::rules::resize;
 use super::{Tile, BUDGETS, MIN, THUMBS};
 use mrlycore::colors::ink;
 use mrlycore::json::Map;
@@ -11,6 +10,9 @@ use mrlycore::tile::{
 use mrlycore::{json, Json};
 use mrlymath::bang;
 use mrlymath::two::tile as tile2d;
+
+const BLANK_CODE: u128 = 0;
+const SOLID_CODE: u128 = 15;
 
 fn vocabulary(list: &Json) -> Option<String> {
     let items: Vec<String> = list
@@ -23,15 +25,21 @@ fn vocabulary(list: &Json) -> Option<String> {
         .collect();
     match items.as_slice() {
         [] => None,
-        [only] => only.parse::<i64>().ok().map(|n| format!("int {n}..{n}")),
+        [only] => Some(match only.parse::<i64>() {
+            Ok(n) => format!("int {n}..{n}"),
+            Err(_) => format!("{only} | {only}"),
+        }),
         many => Some(many.join(" | ")),
     }
 }
 
 impl Tile {
-    /// Lists the sources the staged catalog offers.
+    /// Lists the sources the staged catalog offers, the blank and solid codes left out.
     pub fn sources(&self) -> Vec<Source> {
         bang::sources(&self.catalog, 2)
+            .into_iter()
+            .filter(|s| !matches!(s, Source::Code(BLANK_CODE) | Source::Code(SOLID_CODE)))
+            .collect()
     }
     /// Lists the sizes a general tile may take under the budget and parity.
     pub fn generals_of(&self) -> Vec<usize> {
@@ -91,7 +99,7 @@ impl Tile {
             .map(|&level| {
                 let mut probe = self.tile.clone();
                 probe.levels = vec![level];
-                resize(&mut probe);
+                probe.resize();
                 json!({ "level": level, "cells": self.preview(&probe) })
             })
             .collect()
@@ -217,7 +225,10 @@ impl Tile {
             ("count", vocabulary(&options["counts"])),
             ("factor", vocabulary(&options["factors"])),
             ("rotation", vocabulary(&options["rotations"])),
-            ("anti", Some("bool".to_string())),
+            (
+                "anti",
+                (self.tile.group != Group::Special).then(|| "bool".to_string()),
+            ),
             ("invert", Some("bool".to_string())),
             (
                 "flip",
@@ -236,7 +247,7 @@ impl Tile {
         }
         Json::Obj(menu)
     }
-    /// Stages the first legal tile of a group, keeping the leading source when the catalog still offers it.
+    /// Stages the first legal tile of a group, carrying the leading source and rotation, invert, and flip while the group stays special.
     pub fn rebuild(&mut self, group: Group) -> Result<(), &'static str> {
         let sources = self.sources();
         let first = sources[0];
@@ -247,6 +258,9 @@ impl Tile {
             .copied()
             .filter(|s| sources.contains(s))
             .unwrap_or(first);
+        let turn = self.tile.rotations.first().copied().unwrap_or(0);
+        let invert = self.tile.invert;
+        let flip = self.tile.flip && group == Group::Special;
         let mut tile = Model::new(group);
         match group {
             Group::General => {
@@ -303,8 +317,11 @@ impl Tile {
             tile.levels = vec![1; slots];
         }
         tile.rotations = vec![0; slots];
+        tile.rotations[0] = turn;
         tile.anti = vec![false; slots];
-        resize(&mut tile);
+        tile.invert = invert;
+        tile.flip = flip;
+        tile.resize();
         self.tile = tile;
         Ok(())
     }
@@ -361,7 +378,7 @@ impl Tile {
                 }
             }
         }
-        resize(&mut self.tile);
+        self.tile.resize();
     }
     /// Restages the tile on a new run of numbers, padding or trimming its slots to match.
     pub fn resize_slots(&mut self, numbers: Vec<usize>) {
@@ -372,7 +389,7 @@ impl Tile {
         self.tile.levels.resize(count, 1);
         self.tile.rotations.resize(count, 0);
         self.tile.anti.resize(count, false);
-        resize(&mut self.tile);
+        self.tile.resize();
     }
     /// Reads a slot index, refusing one the staged tile does not have.
     pub fn slot(&self, call_slot: &Json) -> Result<usize, &'static str> {
@@ -407,18 +424,12 @@ impl Tile {
                     "Universe" => Catalog::Universe,
                     _ => return Err("no such option"),
                 };
-                let old = self.sources();
-                let new = bang::sources(&next, 2);
-                self.tile.sources = self
-                    .tile
-                    .sources
-                    .iter()
-                    .map(|s| {
-                        let idx = old.iter().position(|o| o == s).unwrap_or(0);
-                        new[idx.min(new.len() - 1)]
-                    })
-                    .collect();
+                self.tile.sources = self.tile.sources.iter().map(|&s| remap(s, &next)).collect();
                 self.catalog = next;
+                self.snap();
+                if self.tile.check().is_err() {
+                    let _ = self.rebuild(self.tile.group);
+                }
                 Ok(value.clone())
             }
             "parity" => {
@@ -496,7 +507,7 @@ impl Tile {
                         }
                     }
                 }
-                resize(&mut self.tile);
+                self.tile.resize();
                 Ok(json!(n))
             }
             "level" => {
@@ -508,7 +519,7 @@ impl Tile {
                     return Err("no such option");
                 }
                 self.tile.levels[0] = level;
-                resize(&mut self.tile);
+                self.tile.resize();
                 Ok(json!(level))
             }
             "count" => {
@@ -547,7 +558,7 @@ impl Tile {
                 for number in self.tile.numbers.iter_mut() {
                     *number = n;
                 }
-                resize(&mut self.tile);
+                self.tile.resize();
                 Ok(json!(factor))
             }
             "rotation" => {
@@ -555,7 +566,7 @@ impl Tile {
                 let rotation = value
                     .as_u64()
                     .or_else(|| value.as_str().and_then(|s| s.parse::<u64>().ok()))
-                    .unwrap_or(9) as usize;
+                    .ok_or("value must be a number")? as usize;
                 if rotation > 3 {
                     return Err("rotation is 0 to 3");
                 }
@@ -563,6 +574,9 @@ impl Tile {
                 Ok(json!(rotation))
             }
             "anti" => {
+                if self.tile.group == Group::Special {
+                    return Err("anti does nothing for a special tile");
+                }
                 let slot = self.slot(slot)?;
                 let on = value.as_bool().ok_or("value must be a bool")?;
                 self.tile.anti[slot] = on;
@@ -643,5 +657,25 @@ impl Tile {
             Ok(mut cell) => paint::prime(rolled.clone(), &mut cell.cell, None).unwrap_or(rolled),
             Err(_) => rolled,
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn vocabulary_keeps_a_single_option() {
+        assert_eq!(vocabulary(&json!([])), None);
+        assert_eq!(vocabulary(&json!([5])), Some("int 5..5".to_string()));
+        assert_eq!(
+            vocabulary(&json!(["General"])),
+            Some("General | General".to_string())
+        );
+        assert_eq!(vocabulary(&json!([3, 5])), Some("3 | 5".to_string()));
+        assert_eq!(
+            vocabulary(&json!(["Evens", "Odds"])),
+            Some("Evens | Odds".to_string())
+        );
     }
 }

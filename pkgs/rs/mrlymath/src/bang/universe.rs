@@ -149,12 +149,6 @@ pub fn anf_string(code: Code, dimension: usize) -> String {
     }
 }
 
-/// Returns the decimal width of the largest code in a dimension.
-pub fn index_width(dimension: usize) -> usize {
-    let max: Code = (1 << (1 << dimension)) - 1;
-    max.to_string().len()
-}
-
 /// A single design with its place in the orbit structure.
 #[derive(Clone, Debug)]
 pub struct Design {
@@ -171,13 +165,9 @@ pub struct Design {
 }
 
 impl Design {
-    /// Returns the zero-padded mrly name of the design.
+    /// Returns the design's canonical mrly name.
     pub fn name(&self) -> String {
-        format!(
-            "mrly_{:0width$}",
-            self.i,
-            width = index_width(self.dimension)
-        )
+        crate::name::Named::to_str(&crate::name::Bang::new(self.i, self.dimension, 2))
     }
     /// Returns the design's filled corners in sorted order.
     pub fn rule(&self) -> Vec<Vec<u8>> {
@@ -336,7 +326,8 @@ mod tests {
     #[test]
     fn names_and_anf() {
         let u = bang(2);
-        assert_eq!(u.design(0).name(), "mrly_00");
+        assert_eq!(u.design(0).name(), "mrly_bang_d2_0");
+        assert_eq!(u.design(7).name(), "mrly_bang_d2_7");
         assert_eq!(u.design(0).anf(), "0");
         assert_eq!(u.design(1).anf(), "1+y+x+xy");
     }

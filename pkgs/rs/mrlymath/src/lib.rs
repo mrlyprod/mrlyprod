@@ -9,6 +9,8 @@ pub mod boolean;
 pub mod census;
 /// The automaton cryptography: the sponge hash and the Feistel cipher.
 pub mod crypto;
+/// The wells this crate pours: tiles, designs, hashes and formulas as rows.
+pub mod data;
 /// The dimension-generic cell and the pipeline the fixed dimensions share.
 pub mod dim;
 /// The fast Fourier transform in one and two dimensions.
@@ -23,10 +25,14 @@ pub mod graph;
 pub mod life;
 /// The moire fields layered from sampled designs.
 pub mod moire;
+/// The mrly names: one canonical string for every mathematical thing.
+pub mod name;
 /// The sixteen named designs and their rendered tiles.
 pub mod pick;
 /// The residue rules that mark a hypercube's cells.
 pub mod rules;
+/// The saga: seeded op sequences that carry a grid forward.
+pub mod saga;
 /// The hexagon world: cubes flattened to triangle-meshed hexes.
 pub mod six;
 /// The 3d scene kit: vectors, solids and the packed wire format.

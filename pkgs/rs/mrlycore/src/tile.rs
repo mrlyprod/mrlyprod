@@ -1,6 +1,18 @@
 use super::errors::{value_error, MrlyError, Result};
 use crate::{json, Json};
 
+/// The smallest side, number or factor a tile may take.
+pub const MIN_SIDE: usize = 2;
+
+/// The largest side, number or factor a tile may take.
+pub const MAX_SIDE: usize = 64;
+
+/// The deepest fractal level a tile may take.
+pub const MAX_LEVEL: usize = 6;
+
+/// The most slots a magic tile may take.
+pub const MAX_SLOTS: usize = 6;
+
 /// The five construction families a tile can belong to.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Group {
@@ -39,7 +51,7 @@ pub enum Base {
 pub enum Catalog {
     /// The classic designs only.
     Classics,
-    /// Every code there is.
+    /// The canonical codes, one per symmetry orbit.
     Universe,
     /// An explicit list of codes.
     Codes(Vec<u128>),
@@ -196,20 +208,28 @@ pub enum Source {
 }
 
 impl Source {
-    /// Encodes the source as a one-field JSON object.
+    /// Encodes the source as a one-field JSON object, codes spelled as decimal strings.
     pub fn to_json(self) -> Json {
         match self {
             Source::Classic(design) => json!({ "design": design.name() }),
-            Source::Code(code) => json!({ "code": code as u64 }),
+            Source::Code(code) => json!({ "code": code.to_string() }),
         }
     }
-    /// Decodes a source from its JSON object, or an error when neither field is present.
+    /// Decodes a source from its JSON object, or an error when neither field is readable.
     pub fn from_json(value: &Json) -> Result<Source> {
         if let Some(name) = value.get("design").and_then(|v| v.as_str()) {
             return Ok(Source::Classic(Design::parse(name)?));
         }
-        if let Some(code) = value.get("code").and_then(|v| v.as_u64()) {
-            return Ok(Source::Code(code as u128));
+        if let Some(code) = value.get("code") {
+            if let Some(text) = code.as_str() {
+                return match text.parse::<u128>() {
+                    Ok(code) => Ok(Source::Code(code)),
+                    Err(_) => value_error(format!("code {text:?} does not read as a number.")),
+                };
+            }
+            if let Some(code) = code.as_u64() {
+                return Ok(Source::Code(code as u128));
+            }
         }
         value_error("source must hold a \"design\" name or a \"code\".")
     }
@@ -279,6 +299,84 @@ impl Tile {
     /// Returns the larger of width and height.
     pub fn max_size(&self) -> usize {
         self.width.max(self.height)
+    }
+    /// Recomputes the factor and side length the group and numbers imply, zero when they overflow.
+    pub fn resize(&mut self) {
+        let lead = self.numbers.first().copied().unwrap_or(0);
+        if matches!(self.group, Group::General | Group::Fractal | Group::Magic) {
+            self.factor = lead;
+        }
+        let size = match self.group {
+            Group::General => lead,
+            Group::Fractal => u32::try_from(self.levels.first().copied().unwrap_or(1))
+                .ok()
+                .and_then(|level| lead.checked_pow(level))
+                .unwrap_or(0),
+            Group::Magic => self
+                .numbers
+                .iter()
+                .try_fold(1usize, |acc, &n| acc.checked_mul(n))
+                .unwrap_or(0),
+            Group::Special | Group::Mosaic => self.factor.checked_mul(lead).unwrap_or(0),
+        };
+        self.width = size;
+        self.height = size;
+    }
+    /// Checks that the slots, numbers and sizes agree, or a terse note for the first broken law.
+    pub fn check(&self) -> std::result::Result<(), &'static str> {
+        let slots = self.sources.len();
+        let wanted = match self.group {
+            Group::Mosaic => slots == 3,
+            Group::Magic => (2..=MAX_SLOTS).contains(&slots),
+            _ => slots == 1,
+        };
+        if !wanted {
+            return Err("wrong slot count");
+        }
+        if self.numbers.len() != slots
+            || self.levels.len() != slots
+            || self.rotations.len() != slots
+            || self.anti.len() != slots
+        {
+            return Err("ragged slots");
+        }
+        if self
+            .numbers
+            .iter()
+            .any(|&n| !(MIN_SIDE..=MAX_SIDE).contains(&n))
+        {
+            return Err("numbers are 2 to 64");
+        }
+        if self.rotations.iter().any(|&r| r > 3) {
+            return Err("rotation is 0 to 3");
+        }
+        if self.flip && self.group != Group::Special {
+            return Err("flip is special only");
+        }
+        if self.group == Group::Fractal {
+            if !(1..=MAX_LEVEL).contains(&self.levels[0]) {
+                return Err("level is 1 to 6");
+            }
+        } else if self.levels.iter().any(|&l| l != 1) {
+            return Err("level is fractal only");
+        }
+        if matches!(self.group, Group::Special | Group::Mosaic)
+            && !(MIN_SIDE..=MAX_SIDE).contains(&self.factor)
+        {
+            return Err("factor is 2 to 64");
+        }
+        if self.group == Group::Mosaic && self.numbers.iter().any(|&n| n != self.numbers[0]) {
+            return Err("mosaic shares one number");
+        }
+        let mut probe = self.clone();
+        probe.resize();
+        if probe.width != self.width || probe.height != self.height || probe.factor != self.factor {
+            return Err("sizes disagree");
+        }
+        if !(MIN_SIDE..=MAX_SIDE).contains(&self.max_size()) {
+            return Err("size is 2 to 64");
+        }
+        Ok(())
     }
     /// Encodes the tile as a versioned JSON object.
     pub fn to_json(&self) -> Json {
@@ -547,6 +645,76 @@ mod tests {
             let back = Source::from_json(&source.to_json()).unwrap();
             assert_eq!(source, back);
         }
+    }
+    #[test]
+    fn source_json_spells_codes_as_strings() {
+        let wide = u128::MAX - 1;
+        assert_eq!(
+            Source::Code(wide).to_json(),
+            json!({ "code": wide.to_string() })
+        );
+        let back = Source::from_json(&Source::Code(wide).to_json()).unwrap();
+        assert_eq!(back, Source::Code(wide));
+    }
+    #[test]
+    fn source_json_reads_legacy_int_codes() {
+        assert_eq!(
+            Source::from_json(&json!({ "code": 7 })).unwrap(),
+            Source::Code(7)
+        );
+        assert!(Source::from_json(&json!({ "code": "soup" })).is_err());
+        assert!(Source::from_json(&json!({ "code": true })).is_err());
+    }
+    #[test]
+    fn resize_follows_the_size_law() {
+        let mut tile = Tile::new(Group::Fractal);
+        tile.sources = vec![Source::Code(7)];
+        tile.numbers = vec![3];
+        tile.levels = vec![2];
+        tile.rotations = vec![0];
+        tile.anti = vec![false];
+        tile.resize();
+        assert_eq!((tile.factor, tile.width, tile.height), (3, 9, 9));
+        tile.group = Group::Special;
+        tile.factor = 5;
+        tile.resize();
+        assert_eq!((tile.width, tile.height), (15, 15));
+        tile.group = Group::Magic;
+        tile.numbers = vec![3, 5];
+        tile.resize();
+        assert_eq!((tile.factor, tile.width), (3, 15));
+    }
+    #[test]
+    fn resize_survives_empty_and_huge_tiles() {
+        let mut bare = Tile::new(Group::Magic);
+        bare.resize();
+        assert_eq!(bare.width, 1);
+        let mut huge = Tile::new(Group::Fractal);
+        huge.numbers = vec![3];
+        huge.levels = vec![4_294_967_298];
+        huge.resize();
+        assert_eq!(huge.width, 0);
+    }
+    #[test]
+    fn check_names_the_first_broken_law() {
+        let mut tile = Tile::new(Group::General);
+        assert_eq!(tile.check(), Err("wrong slot count"));
+        tile.sources = vec![Source::Code(7)];
+        assert_eq!(tile.check(), Err("ragged slots"));
+        tile.numbers = vec![3];
+        tile.levels = vec![1];
+        tile.rotations = vec![0];
+        tile.anti = vec![false];
+        tile.resize();
+        assert_eq!(tile.check(), Ok(()));
+        tile.rotations = vec![4];
+        assert_eq!(tile.check(), Err("rotation is 0 to 3"));
+        tile.rotations = vec![0];
+        tile.flip = true;
+        assert_eq!(tile.check(), Err("flip is special only"));
+        tile.flip = false;
+        tile.width = 5;
+        assert_eq!(tile.check(), Err("sizes disagree"));
     }
     #[test]
     fn powers_generalize_beyond_classic_bases() {

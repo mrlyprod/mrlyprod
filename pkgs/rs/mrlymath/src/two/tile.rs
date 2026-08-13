@@ -111,8 +111,23 @@ fn builder(group: Group) -> fn(&Tile) -> Result<Cell2d> {
     }
 }
 
-/// Builds the cell the tile describes.
+fn ragged(tile: &Tile) -> bool {
+    let slots = tile.sources.len();
+    let wanted = match tile.group {
+        Group::Mosaic => 3,
+        _ => 1,
+    };
+    slots < wanted
+        || tile.numbers.len() < slots
+        || tile.levels.len() < slots
+        || tile.rotations.len() < slots
+}
+
+/// Builds the cell the tile describes, or an error when the tile is ragged or will not render.
 pub fn build(tile: &Tile) -> Result<Cell2d> {
+    if ragged(tile) {
+        return value_error("tile slots are ragged.");
+    }
     let mut c = builder(tile.group)(tile)?;
     if tile.invert {
         c = c.invert();
@@ -120,23 +135,9 @@ pub fn build(tile: &Tile) -> Result<Cell2d> {
     Ok(c)
 }
 
-fn shaped(tile: &Tile) -> bool {
-    let slots = tile.sources.len();
-    let wanted = match tile.group {
-        Group::Mosaic => 3,
-        Group::Magic => 2,
-        _ => 1,
-    };
-    slots >= wanted
-        && tile.numbers.len() == slots
-        && tile.levels.len() == slots
-        && tile.rotations.len() == slots
-        && tile.numbers.iter().all(|&n| n >= 1)
-}
-
-/// Returns whether the tile is well-formed and builds to its declared size.
+/// Returns whether the tile passes its check and builds to its declared size.
 pub fn probe(tile: &Tile) -> bool {
-    shaped(tile)
+    tile.check().is_ok()
         && build(tile)
             .map(|c| c.width() == tile.width && c.height() == tile.height)
             .unwrap_or(false)
@@ -273,6 +274,35 @@ mod tests {
             }
         }
         assert!(deep, "expected at least one magic tile nested 3+ deep");
+    }
+    #[test]
+    fn build_errors_on_a_ragged_tile() {
+        use mrlycore::json;
+        let parsed = Tile::from_json(&json!({
+            "v": 1, "group": "General", "factor": 0,
+            "sources": [{ "design": "Carpet" }],
+            "numbers": [], "levels": [], "rotations": [], "anti": [],
+            "invert": false, "flip": false, "base": 2, "width": 0, "height": 0,
+        }))
+        .unwrap();
+        assert!(build(&parsed).is_err());
+        assert!(!probe(&parsed));
+        let mut bare = Tile::new(Group::Mosaic);
+        bare.sources = vec![Source::Classic(Design::Carpet)];
+        assert!(build(&bare).is_err());
+    }
+    #[test]
+    fn probe_delegates_to_the_check_law() {
+        let mut tile = Tile::new(Group::General);
+        tile.sources = vec![Source::Classic(Design::Carpet)];
+        tile.numbers = vec![3];
+        tile.levels = vec![1];
+        tile.rotations = vec![0];
+        tile.anti = vec![false];
+        tile.resize();
+        assert!(probe(&tile));
+        tile.anti = Vec::new();
+        assert!(!probe(&tile));
     }
     #[test]
     fn evens_parity_builds() {

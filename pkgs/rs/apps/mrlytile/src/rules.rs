@@ -1,4 +1,3 @@
-use super::{CEILING, MIN};
 use mrlycore::paint::Paint;
 use mrlycore::tile::{Design, Group, Source, Tile as Model};
 use mrlycore::Json;
@@ -17,75 +16,13 @@ pub fn starter(design: Design) -> Model {
     tile.levels = vec![2];
     tile.rotations = vec![0];
     tile.anti = vec![false];
-    resize(&mut tile);
+    tile.resize();
     tile
 }
 
-/// Recomputes a tile's factor and side length from its group and numbers.
-pub fn resize(tile: &mut Model) {
-    if matches!(tile.group, Group::General | Group::Fractal | Group::Magic) {
-        tile.factor = tile.numbers[0];
-    }
-    let size = match tile.group {
-        Group::General => tile.numbers[0],
-        Group::Fractal => tile.numbers[0].pow(tile.levels[0] as u32),
-        Group::Magic => tile.numbers.iter().product(),
-        Group::Special | Group::Mosaic => tile.factor * tile.numbers[0],
-    };
-    tile.width = size;
-    tile.height = size;
-}
-
-/// Checks that a tile's slots, numbers and sizes agree, and that it really builds.
+/// Checks the model laws and that the tile really builds at its declared size.
 pub fn check_model(model: &Model) -> Result<(), &'static str> {
-    let slots = model.sources.len();
-    let wanted = match model.group {
-        Group::Mosaic => slots == 3,
-        Group::Magic => (2..=6).contains(&slots),
-        _ => slots == 1,
-    };
-    if !wanted {
-        return Err("wrong slot count");
-    }
-    if model.numbers.len() != slots
-        || model.levels.len() != slots
-        || model.rotations.len() != slots
-        || model.anti.len() != slots
-    {
-        return Err("ragged slots");
-    }
-    if model.numbers.iter().any(|&n| !(MIN..=CEILING).contains(&n)) {
-        return Err("numbers are 2 to 64");
-    }
-    if model.rotations.iter().any(|&r| r > 3) {
-        return Err("rotation is 0 to 3");
-    }
-    if model.flip && model.group != Group::Special {
-        return Err("flip is special only");
-    }
-    if model.group == Group::Fractal {
-        if !(1..=6).contains(&model.levels[0]) {
-            return Err("level is 1 to 6");
-        }
-    } else if model.levels.iter().any(|&l| l != 1) {
-        return Err("level is fractal only");
-    }
-    if matches!(model.group, Group::Special | Group::Mosaic)
-        && !(MIN..=CEILING).contains(&model.factor)
-    {
-        return Err("factor is 2 to 64");
-    }
-    if model.group == Group::Mosaic && model.numbers.iter().any(|&n| n != model.numbers[0]) {
-        return Err("mosaic shares one number");
-    }
-    let mut probe = model.clone();
-    resize(&mut probe);
-    if probe.width != model.width || probe.height != model.height || probe.factor != model.factor {
-        return Err("sizes disagree");
-    }
-    if !(MIN..=CEILING).contains(&model.max_size()) {
-        return Err("size is 2 to 64");
-    }
+    model.check()?;
     match tile2d::build(model) {
         Ok(cell) if cell.width() == model.width && cell.height() == model.height => Ok(()),
         _ => Err("tile does not build"),
