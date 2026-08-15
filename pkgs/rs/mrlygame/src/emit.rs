@@ -107,6 +107,7 @@ fn record(found: &Quest, seed: u64) -> Result<Json> {
     Ok(json!({
         "v": 1,
         "key": found.key.clone(),
+        "name": found.name(),
         "seed": seed.to_string(),
         "story": found.story.to_json()?,
         "manifest": {
@@ -209,7 +210,8 @@ mod tests {
         make(&dir).unwrap();
         let record = emit_with(&dir, PINNED, &tiny()).unwrap();
         assert_eq!(record["v"], json!(1));
-        assert!(record["key"].as_str().is_some());
+        let key = record["key"].as_str().unwrap().to_string();
+        assert_eq!(record["name"].as_str(), Some(&*format!("mrly_quest_{key}")));
         assert_eq!(
             record["seed"].as_str().and_then(|s| s.parse::<u64>().ok()),
             Some(PINNED)

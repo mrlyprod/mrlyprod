@@ -51,6 +51,10 @@ export const PLAIN = ["about", "contact", "privacy", "terms"]
 
 export const CATALOG: Doc = { route: "menu", title: "Menu", desc: `Every page on ${ROOT}.` }
 
+// FILMS
+
+export const FILM = "film/"
+
 // MENU
 
 export type Nav = { cls: string; name: string; href: string; current: boolean }

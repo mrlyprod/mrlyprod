@@ -11,6 +11,16 @@ mrlyprod
 │   │   ├── mark.svg
 │   │   ├── mrlyprod.png
 │   │   └── mrlyprod.svg
+│   ├── logos
+│   │   ├── mrlycolors.txt
+│   │   ├── mrlygrid.png
+│   │   ├── mrlygrid.svg
+│   │   ├── mrlylogo.png
+│   │   ├── mrlylogo.svg
+│   │   ├── mrlyprod.gif
+│   │   ├── mrlyprod.mp4
+│   │   ├── mrlyprod.png
+│   │   └── mrlyprod.svg
 │   ├── vendor
 │   │   ├── seti
 │   │   │   ├── LICENSE-seti.txt
@@ -55,6 +65,11 @@ mrlyprod
 │   │   ├── symbols2.ttf
 │   │   └── ui.woff2
 │   └── MIT.txt
+├── lambdas
+│   └── mrlygame
+│       ├── README.md
+│       ├── handler.py
+│       └── video.py
 ├── pkgs
 │   ├── js
 │   │   ├── mrlygpu
@@ -512,11 +527,17 @@ mrlyprod
 │   │   │   └── README.md
 │   │   ├── mrlycore
 │   │   │   ├── src
+│   │   │   │   ├── codec
+│   │   │   │   │   ├── base64.rs
+│   │   │   │   │   ├── deflate.rs
+│   │   │   │   │   ├── gif.rs
+│   │   │   │   │   ├── mod.rs
+│   │   │   │   │   ├── png.rs
+│   │   │   │   │   └── wav.rs
 │   │   │   │   ├── atoms.rs
 │   │   │   │   ├── audio.rs
 │   │   │   │   ├── cell.rs
 │   │   │   │   ├── chacha.rs
-│   │   │   │   ├── codec.rs
 │   │   │   │   ├── colors.rs
 │   │   │   │   ├── data.rs
 │   │   │   │   ├── enums.rs
@@ -526,8 +547,10 @@ mrlyprod
 │   │   │   │   ├── json.rs
 │   │   │   │   ├── lib.rs
 │   │   │   │   ├── logs.rs
+│   │   │   │   ├── music.rs
 │   │   │   │   ├── paint.rs
 │   │   │   │   ├── ramp.rs
+│   │   │   │   ├── resample.rs
 │   │   │   │   ├── rng.rs
 │   │   │   │   ├── state.rs
 │   │   │   │   ├── tensor.rs
@@ -541,6 +564,7 @@ mrlyprod
 │   │   │   └── README.md
 │   │   ├── mrlydata
 │   │   │   ├── src
+│   │   │   │   ├── emit.rs
 │   │   │   │   ├── lib.rs
 │   │   │   │   ├── main.rs
 │   │   │   │   ├── press.rs
@@ -556,6 +580,7 @@ mrlyprod
 │   │   │   │   ├── MrlyFont.woff
 │   │   │   │   └── MrlyFont.woff2
 │   │   │   ├── examples
+│   │   │   │   ├── cycle.rs
 │   │   │   │   └── strip.rs
 │   │   │   ├── src
 │   │   │   │   ├── animate.rs
@@ -573,7 +598,23 @@ mrlyprod
 │   │   │   ├── Cargo.toml
 │   │   │   ├── LICENSE
 │   │   │   └── README.md
+│   │   ├── mrlygame
+│   │   │   ├── src
+│   │   │   │   ├── config.rs
+│   │   │   │   ├── emit.rs
+│   │   │   │   ├── frames.rs
+│   │   │   │   ├── lib.rs
+│   │   │   │   ├── main.rs
+│   │   │   │   ├── music.rs
+│   │   │   │   ├── quest.rs
+│   │   │   │   ├── sequence.rs
+│   │   │   │   └── variations.rs
+│   │   │   ├── Cargo.toml
+│   │   │   ├── LICENSE
+│   │   │   └── README.md
 │   │   ├── mrlymath
+│   │   │   ├── examples
+│   │   │   │   └── paints.rs
 │   │   │   ├── src
 │   │   │   │   ├── bang
 │   │   │   │   │   ├── baseq.rs
@@ -639,6 +680,7 @@ mrlyprod
 │   │   │   │   │   ├── field.rs
 │   │   │   │   │   ├── layer.rs
 │   │   │   │   │   ├── mod.rs
+│   │   │   │   │   ├── presets.rs
 │   │   │   │   │   ├── render.rs
 │   │   │   │   │   ├── sample.rs
 │   │   │   │   │   └── stack.rs
@@ -682,12 +724,14 @@ mrlyprod
 │   │   │   │   │   ├── mod.rs
 │   │   │   │   │   ├── models.rs
 │   │   │   │   │   ├── painter.rs
+│   │   │   │   │   ├── reach.rs
 │   │   │   │   │   ├── renderer.rs
 │   │   │   │   │   ├── serializer.rs
 │   │   │   │   │   ├── sheets.rs
 │   │   │   │   │   └── tile.rs
 │   │   │   │   ├── two
 │   │   │   │   │   ├── artwork.rs
+│   │   │   │   │   ├── carry.rs
 │   │   │   │   │   ├── census.rs
 │   │   │   │   │   ├── designs.rs
 │   │   │   │   │   ├── geometry.rs
@@ -698,10 +742,17 @@ mrlyprod
 │   │   │   │   │   ├── renderer.rs
 │   │   │   │   │   ├── serializer.rs
 │   │   │   │   │   └── tile.rs
+│   │   │   │   ├── wave
+│   │   │   │   │   ├── gaps.rs
+│   │   │   │   │   ├── medium.rs
+│   │   │   │   │   ├── mod.rs
+│   │   │   │   │   ├── spectrum.rs
+│   │   │   │   │   └── stepper.rs
 │   │   │   │   ├── boolean.rs
 │   │   │   │   ├── census.rs
 │   │   │   │   ├── data.rs
 │   │   │   │   ├── fft.rs
+│   │   │   │   ├── lattice.rs
 │   │   │   │   ├── lib.rs
 │   │   │   │   └── rules.rs
 │   │   │   ├── tests
@@ -1033,6 +1084,8 @@ mrlyprod
 │   ├── font.py
 │   ├── layers.py
 │   ├── license.py
+│   ├── logos.py
+│   ├── paints.py
 │   ├── shot.ts
 │   ├── spaghetti.py
 │   ├── stats.py
@@ -1047,7 +1100,7 @@ mrlyprod
 ├── Cargo.lock
 ├── Cargo.toml
 ├── INSTALL.md
-├── LICENSE
+├── LICENSE.md
 ├── README.md
 ├── STATS.md
 ├── TREE.md

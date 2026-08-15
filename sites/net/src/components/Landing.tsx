@@ -1,6 +1,30 @@
 import { Box, Button, Caption, Cluster, Grid, Section, Stack, Text, Title } from "mrlyui"
+import { Films } from "./Films"
 import type { Site } from "../lib/data"
 import { FUNNEL } from "../lib/site"
+
+// PRODUCTS
+
+export function Products({ site }: { site: Site }) {
+  return (
+    <Section label="products">
+      <Grid min={220}>
+        {Object.entries(site.products).map(([route, [title, desc]]) => (
+          <a key={route} href={`/${route}`}>
+            <Box>
+              <Stack tight>
+                <Title>{title}</Title>
+                <Caption>{desc}</Caption>
+              </Stack>
+            </Box>
+          </a>
+        ))}
+      </Grid>
+    </Section>
+  )
+}
+
+// LANDING
 
 export function Landing({ site }: { site: Site }) {
   return (
@@ -15,20 +39,7 @@ export function Landing({ site }: { site: Site }) {
           ))}
         </Cluster>
       </Section>
-      <Section label="products">
-        <Grid min={220}>
-          {Object.entries(site.products).map(([route, [title, desc]]) => (
-            <a key={route} href={`/${route}`}>
-              <Box>
-                <Stack tight>
-                  <Title>{title}</Title>
-                  <Caption>{desc}</Caption>
-                </Stack>
-              </Box>
-            </a>
-          ))}
-        </Grid>
-      </Section>
+      <Films />
     </>
   )
 }

@@ -31,6 +31,7 @@ type Props = {
   title: string
   desc: string
   toc?: Anchor[]
+  wide?: boolean
   children: ReactNode
 }
 
@@ -85,7 +86,7 @@ function Side({ toc }: { toc: Anchor[] }) {
 
 // SHELL
 
-export function Shell({ site, route, title, desc, toc = [], children }: Props) {
+export function Shell({ site, route, title, desc, toc = [], wide = false, children }: Props) {
   useHead({ route, title, desc, root: ROOT, base: BASE })
   const panes = usePanes()
   const home = useCallback(() => {
@@ -108,7 +109,7 @@ export function Shell({ site, route, title, desc, toc = [], children }: Props) {
         leftTitle="menu"
         rightTitle="contents"
       >
-        <Frame>
+        <Frame wide={wide}>
           <Stack>{children}</Stack>
           <Footer />
         </Frame>

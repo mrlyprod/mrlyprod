@@ -1,0 +1,50 @@
+[
+  {
+    "name": "salt-lattice",
+    "seed": "18446744073709551557",
+    "video": "videos/v/salt-lattice.mp4",
+    "poster": "videos/p/salt-lattice.jpg",
+    "duration": 24.5,
+    "frames": 196
+  },
+  {
+    "name": "quiet-ember",
+    "seed": "9223372036854775809",
+    "video": "videos/v/quiet-ember.mp4",
+    "poster": "videos/p/quiet-ember.jpg",
+    "duration": 18.25,
+    "frames": 146
+  },
+  {
+    "name": "north-glass",
+    "seed": "4102938475610293847",
+    "video": "videos/v/north-glass.mp4",
+    "poster": "videos/p/north-glass.jpg",
+    "duration": 31,
+    "frames": 248
+  },
+  {
+    "name": "paper-tide",
+    "seed": "77712345678",
+    "video": "videos/v/paper-tide.mp4",
+    "poster": "videos/p/paper-tide.jpg",
+    "duration": 12.75,
+    "frames": 102
+  },
+  {
+    "name": "slow-anvil",
+    "seed": "31415926535",
+    "video": "videos/v/slow-anvil.mp4",
+    "poster": "videos/p/slow-anvil.jpg",
+    "duration": 27.5,
+    "frames": 220
+  },
+  {
+    "name": "amber-drift",
+    "seed": "271828182845",
+    "video": "videos/v/amber-drift.mp4",
+    "poster": "videos/p/amber-drift.jpg",
+    "duration": 21,
+    "frames": 168
+  }
+]

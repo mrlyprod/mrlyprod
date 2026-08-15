@@ -19,6 +19,14 @@ def timeline_entries(home, folder, timeline):
         for entry in timeline
     ]
 
+def span(manifest):
+    timeline = manifest["frames"] + manifest["heatmap"]
+    return sum(entry["us"] for entry in timeline) / 1_000_000
+
+def read_quest(home):
+    with open(os.path.join(home, "quest.json")) as f:
+        return json.load(f)
+
 def encode(entries, audio, output, size, fps, dry):
     concat_path = os.path.join(os.path.dirname(output), "concat.txt")
     with open(concat_path, "w") as f:
@@ -31,7 +39,7 @@ def encode(entries, audio, output, size, fps, dry):
     if os.path.exists(audio):
         cmd = [
             "ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", concat_path,
-            "-i", audio, "-vf", vf, "-c:v", "libx264",
+            "-i", audio, "-vf", vf, "-c:v", "libx264", "-crf", "23",
             "-c:a", "aac", "-b:a", "128k", "-ar", "44100", "-r", str(fps),
             "-af", "afade=t=in:st=0:d=0.25,areverse,afade=t=in:st=0:d=0.25,areverse",
             "-pix_fmt", "yuv420p", output,
@@ -39,7 +47,7 @@ def encode(entries, audio, output, size, fps, dry):
     else:
         cmd = [
             "ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", concat_path,
-            "-vf", vf, "-c:v", "libx264", "-r", str(fps),
+            "-vf", vf, "-c:v", "libx264", "-crf", "23", "-r", str(fps),
             "-pix_fmt", "yuv420p", output,
         ]
     if dry:
@@ -52,8 +60,7 @@ def encode(entries, audio, output, size, fps, dry):
 # QUEST VIDEO
 
 def assemble(home, dry=False):
-    with open(os.path.join(home, "quest.json")) as f:
-        quest = json.load(f)
+    quest = read_quest(home)
     manifest = quest["manifest"]
     entries = timeline_entries(home, "frames", manifest["frames"])
     entries += timeline_entries(home, "heatmap", manifest["heatmap"])
@@ -66,12 +73,31 @@ def assemble(home, dry=False):
         dry,
     )
 
+# QUEST POSTER
+
+def poster(home, output=None):
+    quest = read_quest(home)
+    manifest = quest["manifest"]
+    frames = {entry["frame"] for entry in manifest["heatmap"]}
+    frame = max(frames, key=lambda n: os.path.getsize(os.path.join(home, "heatmap", f"{n:04d}.png")))
+    source = os.path.join(home, "heatmap", f"{frame:04d}.png")
+    size = manifest["size"]
+    output = output or os.path.join(home, f"{quest['name']}.jpg")
+    run_ffmpeg([
+        "ffmpeg", "-y", "-i", source,
+        "-vf", f"scale={size}:{size}:flags=neighbor",
+        "-q:v", "2", output,
+    ])
+    print(f"Saved: {output}")
+    return output
+
 # TERMINAL
 
 def help():
     commands = [
         ("<dir>", "assemble <key>.mp4 from a mrlygame emit directory"),
         ("<dir> dry", "write concat.txt and print the ffmpeg invocation only"),
+        ("<dir> poster", "press <name>.jpg from the last heatmap frame"),
     ]
     width = max(len(name) for name, _ in commands)
     print("mrlyvideo")
@@ -86,6 +112,8 @@ def terminal():
             assemble(home)
         case [home, "dry"] | ["dry", home]:
             assemble(home, dry=True)
+        case [home, "poster"] | ["poster", home]:
+            poster(home)
         case _:
             help()
             sys.exit(2)

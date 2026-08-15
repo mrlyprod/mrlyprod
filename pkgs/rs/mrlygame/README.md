@@ -13,4 +13,4 @@ The emitter presses one quest to disk: neighbor-coloured frames, a chapter-rampe
 - `frames/NNNN.png` holds one frame per generation, coloured by live-neighbor count.
 - `heatmap/NNNN.png` holds one cumulative heatmap per generation, ramped per chapter.
 - `audio.wav` carries the frames half, then the heatmap half.
-- `quest.json` holds the story and the manifest; the same seed rebuilds identical bytes.
+- `quest.json` holds the name, the story and the manifest; the same seed rebuilds identical bytes.

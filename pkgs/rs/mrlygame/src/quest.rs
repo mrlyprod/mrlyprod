@@ -62,6 +62,13 @@ pub struct Quest {
     pub grids: Vec<Cell2d>,
 }
 
+impl Quest {
+    /// Returns the quest's canonical mrly name.
+    pub fn name(&self) -> String {
+        format!("mrly_quest_{}", self.key)
+    }
+}
+
 fn hex_key(length: usize) -> String {
     const DIGITS: &[u8; 16] = b"0123456789abcdef";
     (0..length)
@@ -203,6 +210,18 @@ mod tests {
         assert_eq!(found.grids.len(), found.story.count());
         assert!(found.canvas <= 15);
         assert!(found.grids[0].width() <= found.canvas);
+    }
+
+    #[test]
+    fn the_name_composes_the_key_canonically() {
+        let _g = guard();
+        mrlycore::state::seed(PINNED);
+        let found = quest(&tiny()).unwrap();
+        let name = found.name();
+        assert_eq!(name, format!("mrly_quest_{}", found.key));
+        assert!(name
+            .chars()
+            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_'));
     }
 
     #[test]

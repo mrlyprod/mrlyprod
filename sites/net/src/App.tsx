@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react"
 import { Crumbs, Title, useLinks, useRoute, useScrolled } from "mrlyui"
-import { Landing } from "./components/Landing"
+import { Landing, Products } from "./components/Landing"
 import { Menu } from "./components/Menu"
 import { Shell } from "./components/Shell"
 import { load, NONE } from "./lib/data"
 import type { Site } from "./lib/data"
-import { CATALOG, ROOT } from "./lib/site"
+import { CATALOG, FILM, ROOT } from "./lib/site"
+import { Focus } from "./views/Focus"
 import { NotFound } from "./views/NotFound"
 import { Page } from "./views/Page"
 
@@ -13,7 +14,7 @@ import { Page } from "./views/Page"
 
 function Home({ site }: { site: Site }) {
   return (
-    <Shell site={site} route="" title={site.home[0]} desc={site.home[1]}>
+    <Shell site={site} route="" title={site.home[0]} desc={site.home[1]} wide>
       <Landing site={site} />
     </Shell>
   )
@@ -25,6 +26,7 @@ function Catalog({ site }: { site: Site }) {
       <Crumbs root={ROOT} route={CATALOG.route} />
       <Title>Menu</Title>
       <Menu site={site} route={CATALOG.route} />
+      <Products site={site} />
     </Shell>
   )
 }
@@ -47,6 +49,9 @@ export function App() {
         {null}
       </Shell>
     )
+  }
+  if (route.startsWith(FILM) && route.length > FILM.length) {
+    return <Focus site={site} name={route.slice(FILM.length)} />
   }
   const product = site.products[route]
   if (product !== undefined) return <Page site={site} doc={{ route, title: product[0], desc: product[1] }} product />
