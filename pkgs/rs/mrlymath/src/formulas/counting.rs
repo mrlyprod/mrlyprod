@@ -93,6 +93,11 @@ pub fn limit(code: Code, dimension: usize, level: u32, base: usize) -> Result<(u
     Ok(reduce(top, bottom))
 }
 
+/// Returns the factorial of the number, the product of one through it, exact up to thirty-four.
+pub fn factorial(number: usize) -> u128 {
+    (1..=number as u128).product()
+}
+
 /// Returns the greatest common divisor of two numbers by the Euclidean algorithm.
 ///
 /// ```

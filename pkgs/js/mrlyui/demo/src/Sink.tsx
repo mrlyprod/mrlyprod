@@ -84,6 +84,7 @@ import {
   useTheme,
   write,
 } from "mrlyui"
+import { tex } from "mrlyui/math"
 import type { ColorName, Fill, Fills, Mode, Steer, Swatch, TreeNode, Variant } from "mrlyui"
 
 const VARIANTS: Variant[] = ["info", "success", "warn", "danger"]
@@ -125,6 +126,12 @@ const NODES: TreeNode[] = [
 ]
 
 const CONTENTS = ["plates", "boxes", "words", "glyphs"]
+
+const FORMULAS = [
+  "\\zeta(s) = 2^{s}\\pi^{s-1}\\sin\\!\\left(\\frac{\\pi s}{2}\\right)\\Gamma(1-s)\\,\\zeta(1-s)",
+  "\\lim_{N \\to \\infty} \\frac{\\#\\{(a, b) \\le N : \\gcd(a, b) = 1\\}}{N^{2}} = \\frac{1}{\\zeta(2)} = \\frac{6}{\\pi^{2}}",
+  "R_{z}(\\theta) = \\begin{bmatrix} \\cos\\theta & -\\sin\\theta & 0 \\\\ \\sin\\theta & \\cos\\theta & 0 \\\\ 0 & 0 & 1 \\end{bmatrix}",
+]
 
 const SIDE = 16
 
@@ -597,6 +604,23 @@ function Words() {
   )
 }
 
+function Maths() {
+  return (
+    <Stack>
+      <div className="doc">
+        <p>
+          Coprime pairs thin out to a density of{" "}
+          <span dangerouslySetInnerHTML={{ __html: tex("6/\\pi^{2}") }} />, and the functional equation reflects{" "}
+          <span dangerouslySetInnerHTML={{ __html: tex("s") }} /> about the critical line.
+        </p>
+        {FORMULAS.map(src => (
+          <div key={src} dangerouslySetInnerHTML={{ __html: tex(src, true) }} />
+        ))}
+      </div>
+    </Stack>
+  )
+}
+
 function Glyphs() {
   const [app, setApp] = useState("snake")
   return (
@@ -1021,6 +1045,9 @@ export function Sink() {
           </Section>
           <Section label="words">
             <Words />
+          </Section>
+          <Section label="math">
+            <Maths />
           </Section>
           <Section label="glyphs">
             <Glyphs />

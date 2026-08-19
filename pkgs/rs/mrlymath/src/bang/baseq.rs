@@ -1,5 +1,6 @@
 use super::factory::residue_corners;
 use super::universe::permutations;
+use crate::formulas::factorial;
 use mrlycore::errors::{value_error, Result};
 use std::collections::HashMap;
 
@@ -17,10 +18,6 @@ pub fn axis_maps(base: usize) -> Vec<Vec<usize>> {
         }
     }
     out
-}
-
-fn factorial(n: usize) -> u128 {
-    (1..=n as u128).product()
 }
 
 /// Returns the symmetry group order counted from the enumerated axis maps.

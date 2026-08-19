@@ -1,34 +1,7 @@
-use crate::formulas::gcd;
+use crate::factor::{divisors, mobius};
+use crate::formulas::{factorial, gcd};
 use mrlycore::errors::{value_error, Result};
 use std::collections::BTreeMap;
-
-fn mobius(n: usize) -> i128 {
-    let mut x = n;
-    let mut mu = 1;
-    let mut p = 2;
-    while p * p <= x {
-        if x.is_multiple_of(p) {
-            x /= p;
-            if x.is_multiple_of(p) {
-                return 0;
-            }
-            mu = -mu;
-        }
-        p += 1;
-    }
-    if x > 1 {
-        mu = -mu;
-    }
-    mu
-}
-
-fn divisors(n: usize) -> Vec<usize> {
-    (1..=n).filter(|d| n.is_multiple_of(*d)).collect()
-}
-
-fn factorial(n: usize) -> u128 {
-    (1..=n as u128).product()
-}
 
 type Cycles = BTreeMap<usize, u128>;
 
@@ -37,7 +10,7 @@ fn pos_block_cycles(length: usize) -> Cycles {
     for period in divisors(length) {
         let strings: i128 = divisors(period)
             .iter()
-            .map(|&d| mobius(period / d) * (1i128 << d))
+            .map(|&d| i128::from(mobius(period / d)) * (1i128 << d))
             .sum();
         *out.entry(period).or_insert(0) += (strings / period as i128) as u128;
     }

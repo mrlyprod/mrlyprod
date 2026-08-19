@@ -5,6 +5,8 @@
 - `import "mrlyui/mrly.css"`, then compose the components.
 - Fonts ride cdn.mrly.net by default; `utils/brand.py bundle` bakes them local.
 - After bundling, `import "mrlyui/styles/local.css"` needs no network at all.
+- `mrlyui/math` hides KaTeX: two plugins for a markdown pipeline, `tex()` for one formula.
+- KaTeX rides its own woff2 through Vite, so `$...$` and `$$...$$` need no CDN.
 - Copy `boot.js` into the site head so theme, font and prefs land before first paint.
 - The sink shows every piece on one page: `bun run dev` here.
 - Boxes compose; skin and shape stay orthogonal.

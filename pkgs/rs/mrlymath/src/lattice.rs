@@ -1,8 +1,4 @@
-use crate::formulas::gcd;
-
-fn coprime(a: u64, b: u64) -> bool {
-    gcd(a as u128, b as u128) == 1
-}
+use crate::factor::coprime;
 
 /// Sieves the Euler totients of zero through n.
 ///
@@ -60,18 +56,43 @@ pub struct Node2d {
 /// Lists the visible nodes of a window in ascending value: every reduced fraction with denominator at most n.
 pub fn nodes(n: usize) -> Vec<Node> {
     let mut out = Vec::new();
-    for den in 1..=n as u64 {
+    for den in 1..=n {
         for num in 0..=den {
             if coprime(num, den) {
                 out.push(Node {
-                    num,
-                    den,
-                    brightness: n as u64 / den,
+                    num: num as u64,
+                    den: den as u64,
+                    brightness: (n / den) as u64,
                 });
             }
         }
     }
     out.sort_by(|a, b| (a.num as u128 * b.den as u128).cmp(&(b.num as u128 * a.den as u128)));
+    out
+}
+
+/// Walks the Farey sequence of the order by the Stern-Brocot mediant recurrence from zero over one to one over one, an independent route to the same nodes.
+pub fn farey(order: usize) -> Vec<Node> {
+    let mut out = Vec::new();
+    if order == 0 {
+        return out;
+    }
+    let n = order as u64;
+    let (mut a, mut b, mut c, mut d) = (0u64, 1u64, 1u64, n);
+    out.push(Node {
+        num: a,
+        den: b,
+        brightness: n / b,
+    });
+    while c <= n {
+        let k = (n + b) / d;
+        (a, b, c, d) = (c, d, k * c - a, k * d - b);
+        out.push(Node {
+            num: a,
+            den: b,
+            brightness: n / b,
+        });
+    }
     out
 }
 
@@ -114,8 +135,8 @@ mod tests {
     fn coprime_pairs_match_a_brute_count() {
         for n in [1usize, 2, 3, 10, 20] {
             let mut brute = 0;
-            for a in 1..=n as u64 {
-                for b in 1..=n as u64 {
+            for a in 1..=n {
+                for b in 1..=n {
                     if coprime(a, b) {
                         brute += 1;
                     }
@@ -144,8 +165,28 @@ mod tests {
             assert!(pair[0].num * pair[1].den < pair[1].num * pair[0].den);
         }
         for node in all {
-            assert!(coprime(node.num, node.den));
+            assert!(coprime(node.num as usize, node.den as usize));
             assert_eq!(node.brightness, 12 / node.den);
+        }
+    }
+
+    #[test]
+    fn the_farey_walk_lands_on_the_window_nodes_exactly() {
+        assert!(farey(0).is_empty());
+        for n in 1..=50 {
+            assert_eq!(farey(n), nodes(n), "order {n}");
+        }
+        let ends = farey(7);
+        assert_eq!((ends[0].num, ends[0].den), (0, 1));
+        assert_eq!((ends.last().unwrap().num, ends.last().unwrap().den), (1, 1));
+    }
+
+    #[test]
+    fn the_farey_length_is_one_past_the_totient_sum() {
+        let phi = totients(50);
+        for n in 1..=50usize {
+            let want = 1 + phi[1..=n].iter().sum::<u64>() as usize;
+            assert_eq!(farey(n).len(), want, "order {n}");
         }
     }
 

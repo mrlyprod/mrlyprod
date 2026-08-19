@@ -13,6 +13,8 @@ pub mod crypto;
 pub mod data;
 /// The dimension-generic cell and the pipeline the fixed dimensions share.
 pub mod dim;
+/// The divisor arithmetic: factorizations, divisors, radicals and the Mobius values.
+pub mod factor;
 /// The fast Fourier transform in one and two dimensions.
 pub mod fft;
 /// The closed-form counts: classic sequences, fills and surfaces without rendering.
@@ -31,10 +33,16 @@ pub mod moire;
 pub mod name;
 /// The sixteen named designs and their rendered tiles.
 pub mod pick;
+/// The playground: spirals, triangles and staircases that hide arithmetic.
+pub mod play;
+/// The prime objects: values, ranks, gaps and the shape readings of a number.
+pub mod prime;
 /// The residue rules that mark a hypercube's cells.
 pub mod rules;
 /// The saga: seeded op sequences that carry a grid forward.
 pub mod saga;
+/// The infinite sums: zeta and its Dirichlet cousins, the visible count and the Bernoulli fractions.
+pub mod series;
 /// The hexagon world: cubes flattened to triangle-meshed hexes.
 pub mod six;
 /// The 3d scene kit: vectors, solids and the packed wire format.
