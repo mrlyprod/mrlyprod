@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { lazy, Suspense, useCallback, useEffect, useState } from "react"
 import "./sink.css"
 import {
   Alert,
@@ -45,6 +45,7 @@ import {
   POOL,
   Pager,
   Panes,
+  Plot,
   Popover,
   Progress,
   Radio,
@@ -84,8 +85,10 @@ import {
   useTheme,
   write,
 } from "mrlyui"
-import { tex } from "mrlyui/math"
-import type { ColorName, Fill, Fills, Mode, Steer, Swatch, TreeNode, Variant } from "mrlyui"
+import { Tex, tex } from "mrlyui/math"
+import type { ColorName, Fill, Fills, Mode, PlotMark, Steer, Swatch, TreeNode, Variant } from "mrlyui"
+
+const Stages = lazy(() => import("./Stages"))
 
 const VARIANTS: Variant[] = ["info", "success", "warn", "danger"]
 
@@ -132,6 +135,38 @@ const FORMULAS = [
   "\\lim_{N \\to \\infty} \\frac{\\#\\{(a, b) \\le N : \\gcd(a, b) = 1\\}}{N^{2}} = \\frac{1}{\\zeta(2)} = \\frac{6}{\\pi^{2}}",
   "R_{z}(\\theta) = \\begin{bmatrix} \\cos\\theta & -\\sin\\theta & 0 \\\\ \\sin\\theta & \\cos\\theta & 0 \\\\ 0 & 0 & 1 \\end{bmatrix}",
 ]
+
+function phi(n: number): number {
+  let rest = n
+  let out = n
+  for (let p = 2; p * p <= rest; p += 1) {
+    if (rest % p !== 0) continue
+    while (rest % p === 0) rest /= p
+    out -= out / p
+  }
+  if (rest > 1) out -= out / rest
+  return out
+}
+
+const PHI_MARKS: PlotMark[] = [
+  { kind: "seq", terms: Array.from({ length: 48 }, (_, i) => phi(i + 1)), from: 1, color: "blue" },
+]
+
+const WAVE_MARKS: PlotMark[] = [
+  { kind: "curve", f: x => x * Math.sin(x), color: "indigo" },
+  {
+    kind: "points",
+    pts: [
+      [3, 3 * Math.sin(3)],
+      [8, 8 * Math.sin(8)],
+      [14, 14 * Math.sin(14)],
+      [19, 19 * Math.sin(19)],
+    ],
+    color: "pink",
+  },
+]
+
+const CUBE_MARKS: PlotMark[] = [{ kind: "curve", f: x => x * x * x, color: "green" }]
 
 const SIDE = 16
 
@@ -621,6 +656,43 @@ function Maths() {
   )
 }
 
+function Plots() {
+  return (
+    <Stack>
+      <Box>
+        <Stack>
+          <Text className="caption">a sequence, stems and dots</Text>
+          <Plot
+            marks={PHI_MARKS}
+            x={{ label: <Tex src="n" />, min: 1, max: 48 }}
+            y={{ label: <Tex src={"\\varphi(n)"} /> }}
+          />
+        </Stack>
+      </Box>
+      <Box>
+        <Stack>
+          <Text className="caption">a curve with sampled points</Text>
+          <Plot
+            marks={WAVE_MARKS}
+            x={{ label: <Tex src="x" />, min: 0, max: 20 }}
+            y={{ label: <Tex src={"x \\sin x"} /> }}
+          />
+        </Stack>
+      </Box>
+      <Box>
+        <Stack>
+          <Text className="caption">log on both axes straightens a power law</Text>
+          <Plot
+            marks={CUBE_MARKS}
+            x={{ label: <Tex src="x" />, scale: "log", min: 1, max: 1000 }}
+            y={{ label: <Tex src={"x^{3}"} />, scale: "log" }}
+          />
+        </Stack>
+      </Box>
+    </Stack>
+  )
+}
+
 function Glyphs() {
   const [app, setApp] = useState("snake")
   return (
@@ -1048,6 +1120,14 @@ export function Sink() {
           </Section>
           <Section label="math">
             <Maths />
+          </Section>
+          <Section label="plot">
+            <Plots />
+          </Section>
+          <Section label="stage">
+            <Suspense fallback={<Spinner />}>
+              <Stages />
+            </Suspense>
           </Section>
           <Section label="glyphs">
             <Glyphs />

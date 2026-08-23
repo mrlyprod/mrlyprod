@@ -42,6 +42,7 @@ export function raw(route: string): Promise<string> {
       return res.text()
     })
     held.set(route, body)
+    body.catch(() => held.delete(route))
   }
   return body
 }

@@ -1,0 +1,66 @@
+/* PLOT */
+
+.plot {
+  align-items: center;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  margin: 0;
+  row-gap: var(--space-1);
+  width: 100%;
+}
+
+.plot svg {
+  display: block;
+  height: auto;
+  width: 100%;
+}
+
+/* BODY */
+
+.plot-body {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  width: 100%;
+}
+
+/* LABEL */
+
+.plot-x,
+.plot-y {
+  color: var(--muted-color);
+  font-size: var(--font-sm);
+  line-height: var(--line-tight);
+  text-align: center;
+}
+
+.plot-x {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.plot-y {
+  grid-column: 1;
+  grid-row: 1;
+  padding-inline-end: var(--space-1);
+  transform: rotate(180deg);
+  writing-mode: vertical-rl;
+}
+
+/* READ */
+
+.plot-read {
+  background-color: var(--body-color);
+  border: var(--border-width) var(--border-style) var(--hairline-color);
+  border-radius: var(--radius-sm);
+  color: var(--muted-color);
+  font-size: var(--font-sm);
+  line-height: var(--line-tight);
+  max-width: 60%;
+  overflow: hidden;
+  padding: var(--space-1) var(--space-2);
+  pointer-events: none;
+  position: absolute;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

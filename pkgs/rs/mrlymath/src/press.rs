@@ -92,7 +92,10 @@ pub fn coordinates(number: u128, dimension: usize, base: usize) -> Vec<u128> {
 ///
 /// Panics when the woven number passes a hundred and twenty-eight bits.
 pub fn interleave(coords: &[u128], base: usize) -> u128 {
-    assert!(!coords.is_empty(), "interleave needs at least one coordinate");
+    assert!(
+        !coords.is_empty(),
+        "interleave needs at least one coordinate"
+    );
     let dimension = coords.len();
     let radix = corner_count(dimension, base) as u128;
     let mut digits = Vec::new();
@@ -145,7 +148,10 @@ pub fn members(code: Code, dimension: usize, base: usize, count: usize) -> Vec<u
             let mut value: u128 = 0;
             let mut fits = true;
             for &slot in &slots {
-                match value.checked_mul(radix).and_then(|v| v.checked_add(allowed[slot])) {
+                match value
+                    .checked_mul(radix)
+                    .and_then(|v| v.checked_add(allowed[slot]))
+                {
                     Some(next) => value = next,
                     None => {
                         fits = false;
@@ -237,7 +243,10 @@ impl Press {
     /// Panics past twenty corners, where the bucket table leaves a million rows.
     pub fn new(dimension: usize, base: usize) -> Press {
         let corners = corner_count(dimension, base);
-        assert!(corners <= CORNERS, "the tally press holds at most twenty corners");
+        assert!(
+            corners <= CORNERS,
+            "the tally press holds at most twenty corners"
+        );
         Press {
             dimension,
             base,
@@ -504,8 +513,8 @@ mod tests {
                 let coords = coordinates(n, 2, 2);
                 let flat = (coords[0] * side + coords[1]) as usize;
                 let filled = tile.bytes()[flat] == 1;
-                let padded = member(code, n, 2, 2)
-                    && (code & 1 == 1 || n >= 4u128.pow(level as u32 - 1));
+                let padded =
+                    member(code, n, 2, 2) && (code & 1 == 1 || n >= 4u128.pow(level as u32 - 1));
                 assert_eq!(padded, filled, "{code} {n}");
             }
         }

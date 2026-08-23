@@ -14,3 +14,7 @@ export const KATEX: Options = { strict: false }
 export function tex(src: string, block = false): string {
   return katex.renderToString(src, { ...KATEX, displayMode: block, throwOnError: false })
 }
+
+export function Tex({ src, block = false, className }: { src: string; block?: boolean; className?: string }) {
+  return <span className={className} dangerouslySetInnerHTML={{ __html: tex(src, block) }} />
+}

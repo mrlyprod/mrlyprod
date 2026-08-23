@@ -225,7 +225,10 @@ fn verify(terms: &[i128], coefficients: &[(i128, i128)]) -> bool {
     for n in order..terms.len() {
         let mut sum = Some(0i128);
         for (i, &w) in weights.iter().enumerate() {
-            sum = sum.and_then(|s| w.checked_mul(terms[n - 1 - i]).and_then(|v| s.checked_add(v)));
+            sum = sum.and_then(|s| {
+                w.checked_mul(terms[n - 1 - i])
+                    .and_then(|v| s.checked_add(v))
+            });
         }
         match (sum, terms[n].checked_mul(clear)) {
             (Some(left), Some(right)) => {
@@ -326,12 +329,7 @@ pub fn growth(coefficients: &[(i128, i128)]) -> f64 {
         .map(|&(num, den)| num as f64 / den as f64)
         .collect();
     let value = |x: f64| poly.iter().fold(0.0, |acc, &c| acc * x + c);
-    let bound = 1.0
-        + poly
-            .iter()
-            .skip(1)
-            .map(|c| c.abs())
-            .fold(0.0f64, f64::max);
+    let bound = 1.0 + poly.iter().skip(1).map(|c| c.abs()).fold(0.0f64, f64::max);
     let steps = 8192;
     let mut best = f64::NAN;
     let mut gap = f64::INFINITY;

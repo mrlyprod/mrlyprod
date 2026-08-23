@@ -144,7 +144,13 @@ pub fn magic(layers: &[MagicLayer]) -> Result<Tensor> {
     }
     let mut out: Option<Tensor> = None;
     for layer in layers {
-        let next = create(layer.design.code, layer.number, dimension, layer.design.base, 1)?;
+        let next = create(
+            layer.design.code,
+            layer.number,
+            dimension,
+            layer.design.base,
+            1,
+        )?;
         out = Some(match out {
             Some(tile) => tile.kron(&next),
             None => next,
