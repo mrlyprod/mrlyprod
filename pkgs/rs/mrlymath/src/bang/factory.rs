@@ -1,9 +1,25 @@
 use super::universe::Code;
-use crate::name::Named;
+use crate::name::{Bang, Named};
 use crate::rules;
 use mrlycore::errors::{value_error, Result};
 use mrlycore::Tensor;
 use std::collections::HashSet;
+
+/// One ordered layer of a magic composition: a coded design at its own side number.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct MagicLayer {
+    /// The layer's coded design.
+    pub design: Bang,
+    /// The layer's side number.
+    pub number: usize,
+}
+
+impl MagicLayer {
+    /// Pins a design to the side number it renders at.
+    pub fn new(design: Bang, number: usize) -> MagicLayer {
+        MagicLayer { design, number }
+    }
+}
 
 /// Returns every base-q residue corner of a dimension in row-major order.
 pub fn residue_corners(dimension: usize, base: usize) -> Vec<Vec<u8>> {
@@ -102,8 +118,48 @@ pub fn create(
 
 /// Renders a design from its canonical mrly name, or an error for any other spelling.
 pub fn create_named(spec: &str, number: usize, level: usize) -> Result<Tensor> {
-    let bang = crate::name::Bang::from_str(spec)?;
+    let bang = Bang::from_str(spec)?;
     create(bang.code, number, bang.dimension, bang.base, level)
+}
+
+/// Composes the layers into one mixed-design cell by the ordered Kronecker product, first layer outermost, or an error below two layers or across dimensions.
+///
+/// A run of one repeated layer is the ordinary self-similar fractal level.
+///
+/// ```
+/// use mrlymath::bang::{magic, MagicLayer};
+/// use mrlymath::name::Bang;
+/// let carpet = MagicLayer::new(Bang::new(7, 2, 2), 3);
+/// let net = MagicLayer::new(Bang::new(14, 2, 2), 7);
+/// let void = MagicLayer::new(Bang::new(9, 2, 2), 5);
+/// assert_eq!(magic(&[carpet, net, void]).unwrap().shape, vec![105, 105]);
+/// ```
+pub fn magic(layers: &[MagicLayer]) -> Result<Tensor> {
+    if layers.len() < 2 {
+        return value_error("magic needs at least two layers.");
+    }
+    let dimension = layers[0].design.dimension;
+    if layers.iter().any(|l| l.design.dimension != dimension) {
+        return value_error("magic layers must share one dimension.");
+    }
+    let mut out: Option<Tensor> = None;
+    for layer in layers {
+        let next = create(layer.design.code, layer.number, dimension, layer.design.base, 1)?;
+        out = Some(match out {
+            Some(tile) => tile.kron(&next),
+            None => next,
+        });
+    }
+    Ok(out.expect("two or more layers leave a tile"))
+}
+
+/// Composes named layers in order, or an error for any non-canonical spelling.
+pub fn magic_named(layers: &[(&str, usize)]) -> Result<Tensor> {
+    let parsed: Result<Vec<MagicLayer>> = layers
+        .iter()
+        .map(|(spec, number)| Ok(MagicLayer::new(Bang::from_str(spec)?, *number)))
+        .collect();
+    magic(&parsed?)
 }
 
 /// Renders a design straight from its filled residue corners.
@@ -181,5 +237,46 @@ mod tests {
     fn base3_has_more_corners() {
         assert_eq!(residue_corners(3, 2).len(), 8);
         assert_eq!(residue_corners(3, 3).len(), 27);
+    }
+    #[test]
+    fn magic_recovers_the_self_similar_level() {
+        let carpet = MagicLayer::new(Bang::new(7, 2, 2), 3);
+        assert_eq!(
+            magic(&[carpet, carpet, carpet]).unwrap(),
+            create(7, 3, 2, 2, 3).unwrap()
+        );
+    }
+    #[test]
+    fn magic_composes_mixed_designs_in_order() {
+        let carpet = MagicLayer::new(Bang::new(7, 2, 2), 3);
+        let net = MagicLayer::new(Bang::new(14, 2, 2), 7);
+        let void = MagicLayer::new(Bang::new(9, 2, 2), 5);
+        let got = magic(&[carpet, net, void]).unwrap();
+        let expected = create(7, 3, 2, 2, 1)
+            .unwrap()
+            .kron(&create(14, 7, 2, 2, 1).unwrap())
+            .kron(&create(9, 5, 2, 2, 1).unwrap());
+        assert_eq!(got, expected);
+        assert_eq!(got.shape, vec![105, 105]);
+        assert_eq!(got.sum(), 8 * 33 * 13);
+    }
+    #[test]
+    fn magic_accepts_mixed_bases_and_canonical_names() {
+        let got = magic_named(&[("mrly_bang_d2_7", 3), ("mrly_bang_d2_q3_98", 3)]).unwrap();
+        let expected = magic(&[
+            MagicLayer::new(Bang::new(7, 2, 2), 3),
+            MagicLayer::new(Bang::new(98, 2, 3), 3),
+        ])
+        .unwrap();
+        assert_eq!(got, expected);
+        assert_eq!(got.shape, vec![9, 9]);
+    }
+    #[test]
+    fn magic_rejects_too_few_or_mismatched_layers() {
+        let plane = MagicLayer::new(Bang::new(7, 2, 2), 3);
+        let cube = MagicLayer::new(Bang::new(23, 3, 2), 3);
+        assert!(magic(&[]).is_err());
+        assert!(magic(&[plane]).is_err());
+        assert!(magic(&[plane, cube]).is_err());
     }
 }

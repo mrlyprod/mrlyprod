@@ -1,4 +1,4 @@
-/// The classic sequences: evens, odds, binary, Fibonacci and primes.
+/// The classic sequences: evens, odds, binary, Fibonacci, Catalan and primes.
 pub mod classics;
 /// The closed-form fill and grid counts of coded fractals.
 pub mod counting;
@@ -7,7 +7,7 @@ pub mod six;
 /// The closed-form exposed-surface counts of 3d fractals.
 pub mod surface;
 
-pub use classics::{binary, evens, fibonacci, odds, primes};
+pub use classics::{binary, catalan, evens, fibonacci, odds, primes};
 pub use counting::{
     dimension, factorial, fill, fill_from_corners, gcd, grid, limit, positions, ratio, rational,
     reduce, void,

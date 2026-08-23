@@ -142,6 +142,7 @@ mrlyprod
 │   │   │   │   ├── colors.ts
 │   │   │   │   ├── index.ts
 │   │   │   │   ├── lib.ts
+│   │   │   │   ├── math.ts
 │   │   │   │   ├── pane.ts
 │   │   │   │   ├── prefs.ts
 │   │   │   │   ├── route.ts
@@ -159,6 +160,7 @@ mrlyprod
 │   │   │   │   ├── feedback.css
 │   │   │   │   ├── glyphs.css
 │   │   │   │   ├── local.css
+│   │   │   │   ├── math.css
 │   │   │   │   ├── motion.css
 │   │   │   │   ├── mrly.css
 │   │   │   │   ├── nav.css
@@ -751,10 +753,14 @@ mrlyprod
 │   │   │   │   ├── boolean.rs
 │   │   │   │   ├── census.rs
 │   │   │   │   ├── data.rs
+│   │   │   │   ├── factor.rs
 │   │   │   │   ├── fft.rs
 │   │   │   │   ├── lattice.rs
 │   │   │   │   ├── lib.rs
-│   │   │   │   └── rules.rs
+│   │   │   │   ├── play.rs
+│   │   │   │   ├── prime.rs
+│   │   │   │   ├── rules.rs
+│   │   │   │   └── series.rs
 │   │   │   ├── tests
 │   │   │   │   └── atoms.rs
 │   │   │   ├── Cargo.toml

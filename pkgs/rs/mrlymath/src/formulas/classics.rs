@@ -34,6 +34,25 @@ pub fn fibonacci(limit: usize) -> Vec<usize> {
     out
 }
 
+/// Returns the distinct Catalan numbers up to the limit.
+///
+/// ```
+/// assert_eq!(mrlymath::formulas::catalan(50), vec![1, 2, 5, 14, 42]);
+/// ```
+pub fn catalan(limit: usize) -> Vec<usize> {
+    let mut out = Vec::new();
+    let mut value: u128 = 1;
+    let mut index: u128 = 0;
+    while value <= limit as u128 {
+        if out.last() != Some(&(value as usize)) {
+            out.push(value as usize);
+        }
+        value = value * 2 * (2 * index + 1) / (index + 2);
+        index += 1;
+    }
+    out
+}
+
 /// Returns the primes up to the limit by sieve.
 ///
 /// ```
@@ -81,5 +100,22 @@ mod tests {
     fn primes_to_twenty() {
         assert_eq!(primes(20), vec![2, 3, 5, 7, 11, 13, 17, 19]);
         assert_eq!(primes(1), Vec::<usize>::new());
+    }
+    #[test]
+    fn catalan_dedups_the_double_one() {
+        assert_eq!(catalan(1500), vec![1, 2, 5, 14, 42, 132, 429, 1430]);
+        assert_eq!(catalan(0), Vec::<usize>::new());
+    }
+    #[test]
+    fn catalan_matches_the_binomial_form() {
+        let list = catalan(40_000_000);
+        for (n, &value) in list.iter().enumerate().skip(1) {
+            let m = n + 1;
+            let mut binom: u128 = 1;
+            for i in 0..m {
+                binom = binom * (2 * m - i) as u128 / (i + 1) as u128;
+            }
+            assert_eq!(value as u128, binom / (m as u128 + 1), "{m}");
+        }
     }
 }

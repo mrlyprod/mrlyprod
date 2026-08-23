@@ -3,6 +3,8 @@
 
 /// The universe of design codes: corners, symmetries and their counts.
 pub mod bang;
+/// The sequence blender: term ops, exact recurrences and growth rates.
+pub mod blend;
 /// The boolean-function measures: Walsh spectra, nonlinearity, balance and avalanche.
 pub mod boolean;
 /// The grid tallies: value counts and exposed faces.
@@ -35,6 +37,8 @@ pub mod name;
 pub mod pick;
 /// The playground: spirals, triangles and staircases that hide arithmetic.
 pub mod play;
+/// The sequence press: the integers a design's digit rule keeps, weighed all at once.
+pub mod press;
 /// The prime objects: values, ranks, gaps and the shape readings of a number.
 pub mod prime;
 /// The residue rules that mark a hypercube's cells.
