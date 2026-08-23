@@ -82,6 +82,7 @@ mrlyprod
 │   │   │   ├── demo
 │   │   │   │   ├── src
 │   │   │   │   │   ├── Sink.tsx
+│   │   │   │   │   ├── Stages.tsx
 │   │   │   │   │   ├── main.tsx
 │   │   │   │   │   └── sink.css
 │   │   │   │   └── index.html
@@ -89,6 +90,10 @@ mrlyprod
 │   │   │   │   ├── gen
 │   │   │   │   │   ├── mark.json
 │   │   │   │   │   └── mrlyfont.json
+│   │   │   │   ├── three
+│   │   │   │   │   ├── Stage.tsx
+│   │   │   │   │   ├── index.ts
+│   │   │   │   │   └── voxel.ts
 │   │   │   │   ├── Alert.tsx
 │   │   │   │   ├── Autocomplete.tsx
 │   │   │   │   ├── Badge.tsx
@@ -120,6 +125,7 @@ mrlyprod
 │   │   │   │   ├── Modal.tsx
 │   │   │   │   ├── Pager.tsx
 │   │   │   │   ├── Panes.tsx
+│   │   │   │   ├── Plot.tsx
 │   │   │   │   ├── Popover.tsx
 │   │   │   │   ├── Progress.tsx
 │   │   │   │   ├── Radio.tsx
@@ -142,7 +148,7 @@ mrlyprod
 │   │   │   │   ├── colors.ts
 │   │   │   │   ├── index.ts
 │   │   │   │   ├── lib.ts
-│   │   │   │   ├── math.ts
+│   │   │   │   ├── math.tsx
 │   │   │   │   ├── pane.ts
 │   │   │   │   ├── prefs.ts
 │   │   │   │   ├── route.ts
@@ -167,8 +173,10 @@ mrlyprod
 │   │   │   │   ├── overlay.css
 │   │   │   │   ├── panes.css
 │   │   │   │   ├── pickers.css
+│   │   │   │   ├── plot.css
 │   │   │   │   ├── reset.css
 │   │   │   │   ├── seti.css
+│   │   │   │   ├── stage.css
 │   │   │   │   ├── text.css
 │   │   │   │   └── tokens.css
 │   │   │   ├── README.md
@@ -963,8 +971,11 @@ mrlyprod
 │   │   │   │   ├── Menu.tsx
 │   │   │   │   ├── Panel.tsx
 │   │   │   │   └── Shell.tsx
+│   │   │   ├── exhibits
+│   │   │   │   └── Proof.tsx
 │   │   │   ├── lib
 │   │   │   │   ├── data.ts
+│   │   │   │   ├── exhibits.ts
 │   │   │   │   ├── films.ts
 │   │   │   │   ├── md.ts
 │   │   │   │   ├── site.ts
