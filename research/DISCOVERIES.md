@@ -17,8 +17,8 @@
 
 ### Diagonal cuts of the parity solid
 
-- [Proved] Every diagonal slice of `mrly_126` holds exactly `3^L` points at every admissible height, by uniqueness of the binary expansion of the height offset; checked at `L = 1..8` by two enumerations sharing no code and to `L = 14` by a height recursion; the constancy separates it from the digit-scheduled slices of Nakajima and Watanabe, whose non-autonomous IFS uses `A_c^(j) = {0}` or `{1,2,3}` by the height digit, so their digit changes the number of maps and this one only the orientation. Witness: lab/parity-solid-cuts.
-- [Verified] The two central cuts of `mrly_126` decompose into six congruent Sierpinski gaskets of `3^(L-1)` points each tiling a hexagon with an order-12 symmetry group, checked at `L = 2..8` by rebuilding the pieces from level `L-1` (union, pairwise disjointness, sizes); the combined totals are `6 * 3^(L-1) = 2 * 3^L`: `18, 54, 162, 486, 1458, 4374, 13122`; the ambient object is the octahedron flake of dimension `log(6)/log(2)`. Witness: lab/parity-solid-cuts.
+- [Proved] Every diagonal slice of `mrly_bang_d3_126` holds exactly `3^L` points at every admissible height, by uniqueness of the binary expansion of the height offset; checked at `L = 1..8` by two enumerations sharing no code and to `L = 14` by a height recursion; the constancy separates it from the digit-scheduled slices of Nakajima and Watanabe, whose non-autonomous IFS uses `A_c^(j) = {0}` or `{1,2,3}` by the height digit, so their digit changes the number of maps and this one only the orientation. Witness: lab/parity-solid-cuts.
+- [Verified] The two central cuts of `mrly_bang_d3_126` decompose into six congruent Sierpinski gaskets of `3^(L-1)` points each tiling a hexagon with an order-12 symmetry group, checked at `L = 2..8` by rebuilding the pieces from level `L-1` (union, pairwise disjointness, sizes); the combined totals are `6 * 3^(L-1) = 2 * 3^L`: `18, 54, 162, 486, 1458, 4374, 13122`; the ambient object is the octahedron flake of dimension `log(6)/log(2)`. Witness: lab/parity-solid-cuts.
 
 ### Coprimality density
 
@@ -37,8 +37,8 @@
 
 ### Boolean complexity
 
-- [Verified] Geometry under-determines Boolean complexity at `D = 4`: `mrly_00027` and `mrly_00281` share genus, `GF(2)` degree, popcount and the fill polynomial `4k^4 - 4k^3 + k^2` and split six of seven complexity measures; across the 424 classes (`22 + 402`) 92 groups hold two or more classes and 279 measure splits occur. Witness: lab/boolean-measures, mrlymath::bang::counting::sequence.
-- [Verified] Sensitivity and block sensitivity separate exactly once in the `D <= 4` catalog: `s = bs` on all 22 classes at `D = 3` and on 401 of 402 at `D = 4`, the exception `mrly_07128` with `s = 2`, `bs = 3`, orbit 24; `C = bs` on all 424 classes; exactly two classes meet `deg = s^2`, `mrly_00855` and `mrly_01911`, the second the AND-of-ORs that Huang 2019 names tight for `s(f) >= sqrt(deg(f))`. Witness: lab/boolean-measures.
+- [Verified] Geometry under-determines Boolean complexity at `D = 4`: `mrly_bang_d4_27` and `mrly_bang_d4_281` share genus, `GF(2)` degree, popcount and the fill polynomial `4k^4 - 4k^3 + k^2` and split six of seven complexity measures; across the 424 classes (`22 + 402`) 92 groups hold two or more classes and 279 measure splits occur. Witness: lab/boolean-measures, mrlymath::bang::counting::sequence.
+- [Verified] Sensitivity and block sensitivity separate exactly once in the `D <= 4` catalog: `s = bs` on all 22 classes at `D = 3` and on 401 of 402 at `D = 4`, the exception `mrly_bang_d4_7128` with `s = 2`, `bs = 3`, orbit 24; `C = bs` on all 424 classes; exactly two classes meet `deg = s^2`, `mrly_bang_d4_855` and `mrly_bang_d4_1911`, the second the AND-of-ORs that Huang 2019 names tight for `s(f) >= sqrt(deg(f))`. Witness: lab/boolean-measures.
 
 ### The hexagonal slice
 
@@ -59,7 +59,7 @@
 
 ### Flake band gap
 
-- [Verified] The base-2 flake's Laplacian has an interior band gap whose upper edge is exactly 4: on the `mrly_023` flake (`4^L` nodes, `4^L - 1` edges, connected), exact rational elimination of `Lap - 4I` has a single zero pivot, `3 * 4^(L-1)` eigenvalues lie below 2 and none in `[2, 4)`, the lower edge climbs `1.000000, 1.827520, 1.975680, 1.996862, 1.999605, 1.999950` at `L = 1..6`, and the top eigenvalue is `3 + sqrt(5) = 5.2360679775` at `L = 2` climbing to `5.7090316570` at `L = 6`. Witness: lab/flake-band-gap.
+- [Verified] The base-2 flake's Laplacian has an interior band gap whose upper edge is exactly 4: on the `mrly_bang_d3_23` flake (`4^L` nodes, `4^L - 1` edges, connected), exact rational elimination of `Lap - 4I` has a single zero pivot, `3 * 4^(L-1)` eigenvalues lie below 2 and none in `[2, 4)`, the lower edge climbs `1.000000, 1.827520, 1.975680, 1.996862, 1.999605, 1.999950` at `L = 1..6`, and the top eigenvalue is `3 + sqrt(5) = 5.2360679775` at `L = 2` climbing to `5.7090316570` at `L = 6`. Witness: lab/flake-band-gap.
 
 ### Menger slice sources
 
@@ -71,7 +71,7 @@
 
 ### Odd-base slice grammar
 
-- [Verified] The odd-base generalisation rests on a choice of solid: Cook's predicate "at most one coordinate in the middle third" and the `mrly_023` rule "at most one odd coordinate" agree at `b = 3` (20 of 27) and nowhere else, at `b = 5` filling `4^3 + 3 * 4^2 = 112` of 125 against `3^3 + 3 * 2 * 3^2 = 81 = 4k^3 - 3k^2` at `k = 3`, and there is no canonical base-5 Menger sponge. Witness: lab/odd-base-slice-grammar.
+- [Verified] The odd-base generalisation rests on a choice of solid: Cook's predicate "at most one coordinate in the middle third" and the `mrly_bang_d3_23` rule "at most one odd coordinate" agree at `b = 3` (20 of 27) and nowhere else, at `b = 5` filling `4^3 + 3 * 4^2 = 112` of 125 against `3^3 + 3 * 2 * 3^2 = 81 = 4k^3 - 3k^2` at `k = 3`, and there is no canonical base-5 Menger sponge. Witness: lab/odd-base-slice-grammar.
 - [Verified] In the comparison of the slice dimension against `d - 1`, `d` is the solid's own `log_b(fill)` and never the ambient 3: with `d = 3` the value `d - 1 = 2` exceeds all four slice dimensions `1.8184, 1.6869, 1.8026, 1.7204` and the mod-4 split collapses. Witness: lab/odd-base-slice-grammar.
 - [Verified] The four printed dimensions are consistent with the four printed rules and this is not evidence for either: the dominant roots `(9 + sqrt(33))/2 = 7.37228`, `(11 + sqrt(369))/2 = 15.1047`, `(42 + sqrt(612))/2 = 33.3693`, `(28 + sqrt(3556))/2 = 43.8161` give `log_b` of `1.8183, 1.6870, 1.8026, 1.7204` at `b = 3, 5, 7, 9`, while `4k^3 - 3k^2` at `k = 2..5` gives `20, 81, 208, 425` and `d - 1 = 1.7268, 1.7304, 1.7430, 1.7544`; a rule and its own dimension cannot cross-check each other. Witness: lab/odd-base-slice-grammar.
 - [Proved] The middle diagonal layer sits at coordinate sum `3(b-1)/2`, odd exactly when `b = 3 mod 4` (`3, 6, 9, 12` at `b = 3, 5, 7, 9`). Witness: lab/odd-base-slice-grammar.

@@ -84,7 +84,7 @@ The literature, read rather than recalled, is not symmetric. Nonlattice self-sim
 
 So the claim that *every* mrly design is not Minkowski measurable ships only with two qualifications, and both bite on real designs.
 
-1. **Nontrivial fill and non-integer dimension.** The theorem's own hypotheses exclude integer dimension, and the exclusion is not exotic: `mrly_03`, the core page's `pin(y)`, fills 2 of 4 at base 2, has `d = log(2)/log(2) = 1` exactly, draws a segment - and a segment *is* Minkowski measurable. The solid, single-point and empty designs have no gaps and no oscillation to have. At base 3 in 1D the only design of non-integer dimension is `{0,2}` itself. (Proved: the counterexample and the census of which designs the statement covers are read off the definition.)
+1. **Nontrivial fill and non-integer dimension.** The theorem's own hypotheses exclude integer dimension, and the exclusion is not exotic: `mrly_bang_d2_3`, the core page's `pin(y)`, fills 2 of 4 at base 2, has `d = log(2)/log(2) = 1` exactly, draws a segment - and a segment *is* Minkowski measurable. The solid, single-point and empty designs have no gaps and no oscillation to have. At base 3 in 1D the only design of non-integer dimension is `{0,2}` itself. (Proved: the counterexample and the census of which designs the statement covers are read off the definition.)
 2. **Dimension one only.** For 1D designs with `2 <= k < n` and non-integer `d`, non-measurability is a theorem, and for the Cantor design it is proved outright above. For the carpet and the sponge, lattice membership holds - but non-measurability is the *conjectured* consequence, a Conjecture here as in the literature, not a citable theorem.
 
 ## The door this shuts, and what would open it

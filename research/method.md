@@ -2,7 +2,7 @@
 
 The design space is finite. In dimension `D` there are `2^(2^D)` designs and nothing else, so a claim about designs is a claim about a finite list, and the honest way to settle it is to walk the list. That one fact sets the method used on every page here: enumerate rather than sample, produce every number twice, pin every formula to something literally drawn, publish the code, and label each claim with what was actually established rather than with how sure it feels.
 
-Every claim below carries a tag, on the convention the other pages use. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a lab study, not proved; **Conjecture** means neither.
+Every claim below carries a tag, on the convention the other pages use. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a lab study, not proved; **Conjecture** means neither. The [universe demo](../demos/universe.html) is the enumeration itself, run in the browser: every orbit per dimension and base, counted by Burnside.
 
 ## Exhaust, do not sample
 
@@ -96,13 +96,13 @@ One theorem, taken through the whole procedure.
 
 **Corollary (Proved).** Popcount is invariant under cube symmetry, so the leading coefficient - and with it the fractal dimension - is a class invariant. The lower coefficients are not. Parity flips are symmetries of the infinite tiling but not of the truncation to `n` cells, so members of one class can fill differently at a fixed side; the polynomial in the table below belongs to the canonical representative, the smallest code in the class.
 
-**Corollary (Proved).** The caveat has an exact witness in the table's own Menger row. `mrly_023` is self-complementary - complementing its corner set is a cube symmetry, which is why carpet and net name one class in [the core](core.md) - but complementing does not commute with truncating. The complement member `mrly_232` fills exactly the cells the canonical member leaves void, so its polynomial is the sponge's own void count,
+**Corollary (Proved).** The caveat has an exact witness in the table's own Menger row. `mrly_bang_d3_23` is self-complementary - complementing its corner set is a cube symmetry, which is why carpet and net name one class in [the core](core.md) - but complementing does not commute with truncating. The complement member `mrly_bang_d3_232` fills exactly the cells the canonical member leaves void, so its polynomial is the sponge's own void count,
 
 ```
 (2*k - 1)^3 - (4*k^3 - 3*k^2) = 4*k^3 - 9*k^2 + 6*k - 1
 ```
 
-as exact polynomials, and vice versa: the canonical polynomial is `mrly_232`'s void count. Same leading coefficient 4, the class popcount; different tail. The orbit's eight members carry four distinct polynomials - `4*k^3 - 3*k^2`, `4*k^3 - 5*k^2 + 2*k`, `4*k^3 - 7*k^2 + 4*k - 1`, `4*k^3 - 9*k^2 + 6*k - 1` - one class filling four ways at a fixed odd side. (Proved by expansion; Verified by cell-by-cell counts at `k = 1..9`, each pair summing to `(2k-1)^3`, and by an orbit walk over the 48 signed permutations, `lab/hexagonal-slice-census`.) The complement's fill sequence `0, 7, 44, 135, 304, ...` is `(k-1)^2 * (4*k - 1)`, OEIS A395241 - one truncation of the sponge's own class, not a new design.
+as exact polynomials, and vice versa: the canonical polynomial is `mrly_bang_d3_232`'s void count. Same leading coefficient 4, the class popcount; different tail. The orbit's eight members carry four distinct polynomials - `4*k^3 - 3*k^2`, `4*k^3 - 5*k^2 + 2*k`, `4*k^3 - 7*k^2 + 4*k - 1`, `4*k^3 - 9*k^2 + 6*k - 1` - one class filling four ways at a fixed odd side. (Proved by expansion; Verified by cell-by-cell counts at `k = 1..9`, each pair summing to `(2k-1)^3`, and by an orbit walk over the 48 signed permutations, `lab/hexagonal-slice-census`.) The complement's fill sequence `0, 7, 44, 135, 304, ...` is `(k-1)^2 * (4*k - 1)`, OEIS A395241 - one truncation of the sponge's own class, not a new design.
 
 **Corollary (Proved).** The coefficient vector fixes the fill at every side and every level - the ledger's sense of two designs drawing the same fractal. The `D + 1` polynomials `k^(D-w) * (k-1)^w` are linearly independent - setting `k = 0` kills every term but `w = D`, then dividing by `k` and repeating kills the rest in turn - so the polynomial determines how many filled corners carry each Hamming weight, which is the popcount profile that fixes the fill at every side and every level. That is the same lemma the fill-class identity rests on in [the ledger](sequences.md), and it makes the number of distinct polynomials in dimension `D` equal to `Prod_{w=0..D} (1 + C(D,w))`, which is the closed form of A129824.
 
@@ -112,30 +112,30 @@ The full 3D table, one row per class, ordered by popcount. (Verified as above.)
 
 | design | popcount | fill at `n = 2k-1` |
 |---|---:|---|
-| `mrly_000` | 0 | `0` |
-| `mrly_001` | 1 | `k^3` |
-| `mrly_003` | 2 | `2*k^3 - k^2` |
-| `mrly_006` | 2 | `2*k^3 - 2*k^2` |
-| `mrly_024` | 2 | `2*k^3 - 3*k^2 + k` |
-| `mrly_007` | 3 | `3*k^3 - 2*k^2` |
-| `mrly_022` | 3 | `3*k^3 - 3*k^2` |
-| `mrly_025` | 3 | `3*k^3 - 3*k^2 + k` |
-| `mrly_015` | 4 | `4*k^3 - 4*k^2 + k` |
-| `mrly_023` | 4 | `4*k^3 - 3*k^2` |
-| `mrly_027` | 4 | `4*k^3 - 4*k^2 + k` |
-| `mrly_030` | 4 | `4*k^3 - 5*k^2 + k` |
-| `mrly_060` | 4 | `4*k^3 - 6*k^2 + 2*k` |
-| `mrly_105` | 4 | `4*k^3 - 6*k^2 + 3*k` |
-| `mrly_031` | 5 | `5*k^3 - 5*k^2 + k` |
-| `mrly_061` | 5 | `5*k^3 - 6*k^2 + 2*k` |
-| `mrly_107` | 5 | `5*k^3 - 7*k^2 + 3*k` |
-| `mrly_063` | 6 | `6*k^3 - 7*k^2 + 2*k` |
-| `mrly_111` | 6 | `6*k^3 - 8*k^2 + 3*k` |
-| `mrly_126` | 6 | `6*k^3 - 9*k^2 + 3*k` |
-| `mrly_127` | 7 | `7*k^3 - 9*k^2 + 3*k` |
-| `mrly_255` | 8 | `8*k^3 - 12*k^2 + 6*k - 1` |
+| `mrly_bang_d3_0` | 0 | `0` |
+| `mrly_bang_d3_1` | 1 | `k^3` |
+| `mrly_bang_d3_3` | 2 | `2*k^3 - k^2` |
+| `mrly_bang_d3_6` | 2 | `2*k^3 - 2*k^2` |
+| `mrly_bang_d3_24` | 2 | `2*k^3 - 3*k^2 + k` |
+| `mrly_bang_d3_7` | 3 | `3*k^3 - 2*k^2` |
+| `mrly_bang_d3_22` | 3 | `3*k^3 - 3*k^2` |
+| `mrly_bang_d3_25` | 3 | `3*k^3 - 3*k^2 + k` |
+| `mrly_bang_d3_15` | 4 | `4*k^3 - 4*k^2 + k` |
+| `mrly_bang_d3_23` | 4 | `4*k^3 - 3*k^2` |
+| `mrly_bang_d3_27` | 4 | `4*k^3 - 4*k^2 + k` |
+| `mrly_bang_d3_30` | 4 | `4*k^3 - 5*k^2 + k` |
+| `mrly_bang_d3_60` | 4 | `4*k^3 - 6*k^2 + 2*k` |
+| `mrly_bang_d3_105` | 4 | `4*k^3 - 6*k^2 + 3*k` |
+| `mrly_bang_d3_31` | 5 | `5*k^3 - 5*k^2 + k` |
+| `mrly_bang_d3_61` | 5 | `5*k^3 - 6*k^2 + 2*k` |
+| `mrly_bang_d3_107` | 5 | `5*k^3 - 7*k^2 + 3*k` |
+| `mrly_bang_d3_63` | 6 | `6*k^3 - 7*k^2 + 2*k` |
+| `mrly_bang_d3_111` | 6 | `6*k^3 - 8*k^2 + 3*k` |
+| `mrly_bang_d3_126` | 6 | `6*k^3 - 9*k^2 + 3*k` |
+| `mrly_bang_d3_127` | 7 | `7*k^3 - 9*k^2 + 3*k` |
+| `mrly_bang_d3_255` | 8 | `8*k^3 - 12*k^2 + 6*k - 1` |
 
-The two ends are classical and forced. `mrly_001` has one filled corner and fills `k^3`, the cubes; `mrly_255` is the solid cube of side `2k-1` and fills `(2k-1)^3`, the odd cubes. (Proved by the theorem, both endpoints; Verified against the live OEIS - A000578, `a(n) = n^3`, and A016755, `a(n) = (2n+1)^3`.) The Menger sponge is one interior row, `mrly_023`, filling `4*k^3 - 3*k^2`; at `n = 3`, which is `k = 2`, that reads 20, and the celebrated dimension `log(20)/log(3)` is one evaluation of an ordinary row. Two rows are identical: `mrly_015` and `mrly_027` are distinct symmetry classes - different shapes, related by no cube symmetry - that carry the same polynomial and so fill identically at every side and level. The two classifications cut across each other rather than refining one another - a polynomial can be shared by two classes, and fill is not constant within one - so the 22 classes carry 21 distinct polynomials while the 256 designs carry 64. (Verified, `lab/design-census`.)
+The two ends are classical and forced. `mrly_bang_d3_1` has one filled corner and fills `k^3`, the cubes; `mrly_bang_d3_255` is the solid cube of side `2k-1` and fills `(2k-1)^3`, the odd cubes. (Proved by the theorem, both endpoints; Verified against the live OEIS - A000578, `a(n) = n^3`, and A016755, `a(n) = (2n+1)^3`.) The Menger sponge is one interior row, `mrly_bang_d3_23`, filling `4*k^3 - 3*k^2`; at `n = 3`, which is `k = 2`, that reads 20, and the celebrated dimension `log(20)/log(3)` is one evaluation of an ordinary row. Two rows are identical: `mrly_bang_d3_15` and `mrly_bang_d3_27` are distinct symmetry classes - different shapes, related by no cube symmetry - that carry the same polynomial and so fill identically at every side and level. The two classifications cut across each other rather than refining one another - a polynomial can be shared by two classes, and fill is not constant within one - so the 22 classes carry 21 distinct polynomials while the 256 designs carry 64. (Verified, `lab/design-census`.)
 
 The proof is valid in every dimension and the sweep covers every design; the `D = 3` statement checked to `k = 6` on the 22 class representatives is the special case.
 

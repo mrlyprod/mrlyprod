@@ -4,7 +4,7 @@ A design is a parity rule on the corners of a cube. Read its fill vector in corn
 
 The question this page answers is how much of that complexity the *geometry* can see. The census already carries genus, degree, popcount and the odd-side fill polynomial. Do they determine how hard the function is? At `D = 3` yes, but only because the catalog is too small for the question to bite. At `D = 4` no - and the failure is exhibited by two named designs that draw indistinguishable fractals and differ in six of seven complexity measures.
 
-A second sense of complexity closes the page: the spectra of the fractals the designs build. The graph Laplacian of the Sierpinski triangle that `mrly_07` draws is degenerate to a degree that is itself a law, and that law now runs to level 8; the base-2 flake of `mrly_023` carries an exact interior band gap; and every fractal tested clusters its eigenvalues where a random matrix would repel them.
+A second sense of complexity closes the page: the spectra of the fractals the designs build. The graph Laplacian of the Sierpinski triangle that `mrly_bang_d2_7` draws is degenerate to a degree that is itself a law, and that law now runs to level 8; the base-2 flake of `mrly_bang_d3_23` carries an exact interior band gap; and every fractal tested clusters its eigenvalues where a random matrix would repel them.
 
 Every claim carries a tag. **Proved** means a proof is given here; **Verified** means recomputed from scratch by a lab study; **Conjecture** means neither. The generators are `lab/boolean-measures`, `lab/base-q-anf`, `lab/laplacian-degeneracy`, `lab/flake-band-gap`, `lab/spectral-spacings` and `lab/hexagonal-slice-census`.
 
@@ -16,7 +16,7 @@ Fix `D`. There are `2^(2^D)` designs and, up to cube symmetry, `A000616(D)` clas
 - `bs`, **block sensitivity**: the largest number of pairwise disjoint blocks of coordinates whose flip changes the value.
 - `C`, **certificate complexity**, `max(C_0, C_1)`: the fewest bits that pin the value down.
 - `dt`, **decision-tree depth**: the exact minimum depth of a deterministic query tree.
-- `deg`, **real degree**: the degree of the unique multilinear real polynomial representing `f`. This is *not* the `GF(2)` algebraic degree of [the core page](core.md), and the two genuinely differ - the carpet `mrly_023` has `GF(2)` degree 2 and real degree 3.
+- `deg`, **real degree**: the degree of the unique multilinear real polynomial representing `f`. This is *not* the `GF(2)` algebraic degree of [the core page](core.md), and the two genuinely differ - the carpet `mrly_bang_d3_23` has `GF(2)` degree 2 and real degree 3.
 - `dnf` and `cnf`: the minimum number of terms in a DNF, and of clauses in a CNF, by exact prime-implicant cover.
 
 All seven are constant on a hyperoctahedral orbit, so they descend to the classes unambiguously. (Proved: cube symmetry is permutation and negation of the input variables, and every measure above is defined by a property of the truth table that survives relabelling and complementing inputs - the output is never touched, which is what would swap `dnf` and `cnf`. Verified orbit-wide over all 256 designs at `D = 3`, `lab/boolean-measures`.) Hand cases pin the code down - the dictator has every measure 1, the 3-bit AND has `s = bs = C = dt = deg = 3` but `dnf = 1`, parity has `s = bs = C = dt = deg = 3` with `GF(2)` degree 1. (Verified.)
@@ -27,32 +27,32 @@ Twenty-two classes, every measure exact. (Verified: `lab/boolean-measures` recom
 
 | name | genus | gf2deg | pop | `s` | `bs` | `C` | `dt` | `deg` | `dnf` | `cnf` |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `mrly_000` | iso | -1 | 0 | 0 | 0 | 0 | 0 | -1 | 0 | 1 |
-| `mrly_001` | iso | 3 | 1 | 3 | 3 | 3 | 3 | 3 | 1 | 3 |
-| `mrly_003` | axis | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 1 | 2 |
-| `mrly_006` | comp | 2 | 2 | 3 | 3 | 3 | 3 | 3 | 2 | 3 |
-| `mrly_007` | comp | 3 | 3 | 2 | 2 | 2 | 3 | 3 | 2 | 2 |
-| `mrly_015` | axis | 1 | 4 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-| `mrly_022` | iso | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 |
-| `mrly_023` | iso | 2 | 4 | 2 | 2 | 2 | 3 | 3 | 3 | 3 |
-| `mrly_024` | iso | 2 | 2 | 3 | 3 | 3 | 3 | 2 | 2 | 3 |
-| `mrly_025` | comp | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 2 | 3 |
-| `mrly_027` | comp | 2 | 4 | 2 | 2 | 2 | 2 | 2 | 2 | 2 |
-| `mrly_030` | comp | 2 | 4 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
-| `mrly_031` | comp | 3 | 5 | 2 | 2 | 2 | 3 | 3 | 2 | 2 |
-| `mrly_060` | comp | 1 | 4 | 2 | 2 | 2 | 2 | 2 | 2 | 2 |
-| `mrly_061` | comp | 3 | 5 | 3 | 3 | 3 | 3 | 3 | 3 | 2 |
-| `mrly_063` | comp | 2 | 6 | 2 | 2 | 2 | 2 | 2 | 2 | 1 |
-| `mrly_105` | iso | 1 | 4 | 3 | 3 | 3 | 3 | 3 | 4 | 4 |
-| `mrly_107` | iso | 3 | 5 | 3 | 3 | 3 | 3 | 3 | 4 | 3 |
-| `mrly_111` | comp | 2 | 6 | 3 | 3 | 3 | 3 | 3 | 3 | 2 |
-| `mrly_126` | iso | 2 | 6 | 3 | 3 | 3 | 3 | 2 | 3 | 2 |
-| `mrly_127` | iso | 3 | 7 | 3 | 3 | 3 | 3 | 3 | 3 | 1 |
-| `mrly_255` | iso | 0 | 8 | 0 | 0 | 0 | 0 | 0 | 1 | 0 |
+| `mrly_bang_d3_0` | iso | -1 | 0 | 0 | 0 | 0 | 0 | -1 | 0 | 1 |
+| `mrly_bang_d3_1` | iso | 3 | 1 | 3 | 3 | 3 | 3 | 3 | 1 | 3 |
+| `mrly_bang_d3_3` | axis | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 1 | 2 |
+| `mrly_bang_d3_6` | comp | 2 | 2 | 3 | 3 | 3 | 3 | 3 | 2 | 3 |
+| `mrly_bang_d3_7` | comp | 3 | 3 | 2 | 2 | 2 | 3 | 3 | 2 | 2 |
+| `mrly_bang_d3_15` | axis | 1 | 4 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
+| `mrly_bang_d3_22` | iso | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 4 |
+| `mrly_bang_d3_23` | iso | 2 | 4 | 2 | 2 | 2 | 3 | 3 | 3 | 3 |
+| `mrly_bang_d3_24` | iso | 2 | 2 | 3 | 3 | 3 | 3 | 2 | 2 | 3 |
+| `mrly_bang_d3_25` | comp | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 2 | 3 |
+| `mrly_bang_d3_27` | comp | 2 | 4 | 2 | 2 | 2 | 2 | 2 | 2 | 2 |
+| `mrly_bang_d3_30` | comp | 2 | 4 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| `mrly_bang_d3_31` | comp | 3 | 5 | 2 | 2 | 2 | 3 | 3 | 2 | 2 |
+| `mrly_bang_d3_60` | comp | 1 | 4 | 2 | 2 | 2 | 2 | 2 | 2 | 2 |
+| `mrly_bang_d3_61` | comp | 3 | 5 | 3 | 3 | 3 | 3 | 3 | 3 | 2 |
+| `mrly_bang_d3_63` | comp | 2 | 6 | 2 | 2 | 2 | 2 | 2 | 2 | 1 |
+| `mrly_bang_d3_105` | iso | 1 | 4 | 3 | 3 | 3 | 3 | 3 | 4 | 4 |
+| `mrly_bang_d3_107` | iso | 3 | 5 | 3 | 3 | 3 | 3 | 3 | 4 | 3 |
+| `mrly_bang_d3_111` | comp | 2 | 6 | 3 | 3 | 3 | 3 | 3 | 3 | 2 |
+| `mrly_bang_d3_126` | iso | 2 | 6 | 3 | 3 | 3 | 3 | 2 | 3 | 2 |
+| `mrly_bang_d3_127` | iso | 3 | 7 | 3 | 3 | 3 | 3 | 3 | 3 | 1 |
+| `mrly_bang_d3_255` | iso | 0 | 8 | 0 | 0 | 0 | 0 | 0 | 1 | 0 |
 
 The genus column reads `iso 10, axis 2, comp 10` and the `GF(2)` degree histogram reads `-1: 1, 0: 1, 1: 3, 2: 9, 3: 8`, both matching the core page exactly. (Verified by `lab/boolean-measures` - a crossref, recomputed rather than copied.)
 
-One structural fact is already visible: `dt > bs` happens. Three classes - `mrly_007`, `mrly_031`, and the carpet `mrly_023` - have `bs = 2` but `dt = 3`. The query tree is deeper than block sensitivity, which is the first place the query chain comes apart. (Verified, `lab/boolean-measures`.)
+One structural fact is already visible: `dt > bs` happens. Three classes - `mrly_bang_d3_7`, `mrly_bang_d3_31`, and the carpet `mrly_bang_d3_23` - have `bs = 2` but `dt = 3`. The query tree is deeper than block sensitivity, which is the first place the query chain comes apart. (Verified, `lab/boolean-measures`.)
 
 ## The pin family: where geometry wins
 
@@ -70,7 +70,7 @@ Make "determine" precise. Group the catalog by a **key**, a tuple of geometric d
 
 The finest key available is `(genus, GF(2) degree, popcount, fill polynomial)`, the fill polynomial being the odd-side polynomial of [the method page](method.md) - which, by that page's corollary, is equivalent to knowing how many filled corners sit at each Hamming weight. That is as much as the fractal geometry knows about a design's fill at every side and every level.
 
-**Verified** (`lab/boolean-measures`). At `D = 3` this key determines all seven measures. It does so vacuously: the fill polynomial alone separates 21 of the 22 classes, and the single collision (`mrly_015` against `mrly_027`, both with polynomial `4k^3 - 4k^2 + k`) is broken by genus and degree. There is nothing to test.
+**Verified** (`lab/boolean-measures`). At `D = 3` this key determines all seven measures. It does so vacuously: the fill polynomial alone separates 21 of the 22 classes, and the single collision (`mrly_bang_d3_15` against `mrly_bang_d3_27`, both with polynomial `4k^3 - 4k^2 + k`) is broken by genus and degree. There is nothing to test.
 
 **Verified** (`lab/boolean-measures`). At `D = 4` the same key determines *none* of the seven. Nor does any coarser key: not genus, not `GF(2)` degree, not popcount, not the fill polynomial alone. The fill polynomial sends 402 classes to 183 distinct values, 94 of them shared by two or more classes; under the full key, 92 groups hold two or more classes, 81 of those split at least one measure, and there are 279 measure-splits in total.
 
@@ -78,8 +78,8 @@ The smallest witness, by code:
 
 | name | genus | gf2deg | pop | fill polynomial | `s` | `bs` | `C` | `dt` | `deg` | `dnf` | `cnf` |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| `mrly_00027` | comp | 3 | 4 | `4k^4 - 4k^3 + k^2` | 3 | 3 | 3 | 3 | 3 | 2 | 3 |
-| `mrly_00281` | comp | 3 | 4 | `4k^4 - 4k^3 + k^2` | 4 | 4 | 4 | 4 | 3 | 3 | 5 |
+| `mrly_bang_d4_27` | comp | 3 | 4 | `4k^4 - 4k^3 + k^2` | 3 | 3 | 3 | 3 | 3 | 2 | 3 |
+| `mrly_bang_d4_281` | comp | 3 | 4 | `4k^4 - 4k^3 + k^2` | 4 | 4 | 4 | 4 | 3 | 3 | 5 |
 
 **Verified** (`lab/boolean-measures`). Two designs with identical genus, identical `GF(2)` degree, identical popcount and identical fill polynomial, separated by six of the seven measures - only the real degree agrees. Their ANFs are `1 + x + z + xz + yw + zw + xyw + xzw` and `1 + w + z + xy + xyw + xyz + xzw + yzw`, and theirs is one of 14 groups of size two at `D = 4` in which block sensitivity splits - the one with the smallest code.
 
@@ -95,11 +95,11 @@ The standard relations, and where the designs sit on them.
 
 **Verified** (`lab/boolean-measures`). `C = bs` for every class at `D = 3` and `D = 4` - 424 classes, no certificate gap anywhere. A seeded spot check of 50000 uniformly random designs at `D = 5` finds no exception either. This is reported as verified for `D <= 4` and open beyond: nothing here rules out a certificate gap in higher dimension, and no general theorem is claimed.
 
-**Verified** (`lab/boolean-measures`). `s = bs` for every class at `D = 3`. At `D = 4` there is exactly one exception, `mrly_07128`, with `s = 2` and `bs = 3` - orbit size 24, ANF `x + y + xy + xz + yw + zw`. It is the family's first separation between sensitivity and block sensitivity, and it is unique. In the `D = 5` spot check, 216 of the 50000 designs have `s != bs`, every one of them at `s = 3, bs = 4`; nothing wider appeared in a random sample.
+**Verified** (`lab/boolean-measures`). `s = bs` for every class at `D = 3`. At `D = 4` there is exactly one exception, `mrly_bang_d4_7128`, with `s = 2` and `bs = 3` - orbit size 24, ANF `x + y + xy + xz + yw + zw`. It is the family's first separation between sensitivity and block sensitivity, and it is unique. In the `D = 5` spot check, 216 of the 50000 designs have `s != bs`, every one of them at `s = 3, bs = 4`; nothing wider appeared in a random sample.
 
-**Verified** (`lab/boolean-measures`). `deg <= s^2` holds across both catalogs, and exactly two classes with `s >= 2` meet it with equality: `mrly_00855` and `mrly_01911`, both with `deg = 4`, `s = 2`, both of orbit size 48.
+**Verified** (`lab/boolean-measures`). `deg <= s^2` holds across both catalogs, and exactly two classes with `s >= 2` meet it with equality: `mrly_bang_d4_855` and `mrly_bang_d4_1911`, both with `deg = 4`, `s = 2`, both of orbit size 48.
 
-**Proved.** `mrly_01911` is the textbook extremal function. Its ANF is `1 + xy + zw + xyzw`, and expanding `(1 + xy)(1 + zw)` over `GF(2)` gives `1 + zw + xy + xyzw` - the same polynomial. So the design is an AND of two 2-bit NANDs, which over the reals is an AND of two ORs: the standard construction attaining `deg = s^2`, found here as a single orbit of the catalog with a geometric address.
+**Proved.** `mrly_bang_d4_1911` is the textbook extremal function. Its ANF is `1 + xy + zw + xyzw`, and expanding `(1 + xy)(1 + zw)` over `GF(2)` gives `1 + zw + xy + xyzw` - the same polynomial. So the design is an AND of two 2-bit NANDs, which over the reals is an AND of two ORs: the standard construction attaining `deg = s^2`, found here as a single orbit of the catalog with a geometric address.
 
 On the literature. Huang's theorem - that a Boolean function's sensitivity and degree are polynomially related, resolving the Sensitivity Conjecture - is read for this page: [Induced subgraphs of hypercubes and a proof of the Sensitivity Conjecture](https://arxiv.org/abs/1907.00847), Hao Huang, 2019. Its Theorem 1.4 is `s(f) >= sqrt(deg(f))`, which is the `deg <= s^2` used above; the paper notes the bound is tight for AND-of-ORs, which is exactly the function found here. Its Theorem 1.5 is `bs(f) <= s(f)^4`, and it reports the Nisan-Szegedy bound as `bs(f) <= 2*deg(f)^2`, adding that this was later improved to `bs(f) <= deg(f)^2` by Tal. Hanging `bs(f) <= deg(f)^2` on Nisan-Szegedy is a wrong attribution (Refuted): by Huang's account that is the later, sharper bound of Tal, so the inequality stands and only the credit moves. The papers of Nisan-Szegedy and of Tal are not opened for this page, so nothing here rests on them beyond what Huang's own text says.
 
@@ -148,7 +148,7 @@ One distinction to keep: the `GF(q)` degree and the integer degree are different
 
 ## The other complexity: the triangle's spectrum
 
-The second sense of complexity is spectral, and it belongs to the fractal rather than the rule. Take `mrly_07` in dimension 2 - the parity rule filling three of the four corners of `{0,1}^2`, tile
+The second sense of complexity is spectral, and it belongs to the fractal rather than the rule. Take `mrly_bang_d2_7` in dimension 2 - the parity rule filling three of the four corners of `{0,1}^2`, tile
 
 ```
 1 1
@@ -190,7 +190,7 @@ Both multiplicity laws stay conjectures. The natural reason to expect a mechanis
 
 ## The flake's band gap
 
-The carpet `mrly_023` again, but at base 2, where its tile fills 4 of 8 cells and draws the star flake of [the core page](core.md). The level-`L` fractal is a `2^L` cube with `4^L` filled cells, a cell `(x, y, z)` surviving exactly when `x AND y = y AND z = x AND z = 0`. Its face-adjacency graph is a tree - `4^L` nodes, `4^L - 1` edges, one component - asserted at every level, never assumed.
+The carpet `mrly_bang_d3_23` again, but at base 2, where its tile fills 4 of 8 cells and draws the star flake of [the core page](core.md). The level-`L` fractal is a `2^L` cube with `4^L` filled cells, a cell `(x, y, z)` surviving exactly when `x AND y = y AND z = x AND z = 0`. Its face-adjacency graph is a tree - `4^L` nodes, `4^L - 1` edges, one component - asserted at every level, never assumed.
 
 The operator here is the **unnormalised** combinatorial Laplacian `D - A`. That is deliberately not the operator of the triangle section above: the two have different spectra, and nothing transfers between the two sections in either direction.
 

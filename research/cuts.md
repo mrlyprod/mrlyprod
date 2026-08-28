@@ -1,12 +1,12 @@
 # Cuts
 
-A parity solid is built out of cubes, so you expect a planar cut through it to look like cubes. For one design it does not. Take `mrly_126` - the 3D rule that keeps every corner of the parity cube except the two on the main diagonal - and cut it with the diagonal plane `x + y + z = s`. Every cut is a Sierpinski gasket, the binary digits of the height say which one, and the cut through the middle falls into six congruent gaskets tiling a hexagon.
+A parity solid is built out of cubes, so you expect a planar cut through it to look like cubes. For one design it does not. Take `mrly_bang_d3_126` - the 3D rule that keeps every corner of the parity cube except the two on the main diagonal - and cut it with the diagonal plane `x + y + z = s`. Every cut is a Sierpinski gasket, the binary digits of the height say which one, and the cut through the middle falls into six congruent gaskets tiling a hexagon.
 
-Every claim below carries a tag. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a lab study; **Conjecture** means neither. The generator is `lab/parity-solid-cuts`, and nothing here rests on a stored image or an earlier run. Every source named in the literature section is read live; a source that cannot be checked that way is dropped rather than repeated.
+Every claim below carries a tag. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a lab study; **Conjecture** means neither. The generator is `lab/parity-solid-cuts`, and nothing here rests on a stored image or an earlier run. Every source named in the literature section is read live; a source that cannot be checked that way is dropped rather than repeated. The [sponge demo](../demos/sponge.html) grows this design level by level and reports filled, empty and exposed counts, its Euler number and its face mesh, in a view you can turn.
 
 ## The design, and what it already is
 
-`mrly_126` keeps the six corners of `{0,1}^3` whose coordinates sum to `1` or `2`, dropping only `(0,0,0)` and `(1,1,1)`. Fill depends on the popcount alone, so it is an isotropic design in the sense of [the core page](core.md), the level-set `S = {1,2}`, and it is the smallest code in its symmetry class. (Verified by orbit walk over the 48 signed permutations of the cube, `lab/parity-solid-cuts`.) Its level-`L` solid has `6^L` cubes in `8^L`, dimension `log(6)/log(2) = 2.584963`.
+`mrly_bang_d3_126` keeps the six corners of `{0,1}^3` whose coordinates sum to `1` or `2`, dropping only `(0,0,0)` and `(1,1,1)`. Fill depends on the popcount alone, so it is an isotropic design in the sense of [the core page](core.md), the level-set `S = {1,2}`, and it is the smallest code in its symmetry class. (Verified by orbit walk over the 48 signed permutations of the cube, `lab/parity-solid-cuts`.) Its level-`L` solid has `6^L` cubes in `8^L`, dimension `log(6)/log(2) = 2.584963`.
 
 That solid has a name already. Centre the six substitution maps at `(1/2,1/2,1/2)` and they become `q -> (q + v)/2` with `v` running over three antipodal pairs; the linear map carrying those three vectors to `e1, e2, e3` carries all six to `+-e1, +-e2, +-e3`. That is the standard six-map, ratio-one-half **octahedron flake**, also called the Sierpinski octahedron. The Wikipedia article on n-flakes defines it exactly that way - six octahedra scaled by one half, one at each corner - and gives it dimension `log(6)/log(2)`, the number computed above. The same change of coordinates pulls the functional `x + y + z` back to the `(1,1,1)` direction in octahedron coordinates, which is a threefold axis of the octahedron. (Proved; Verified in exact rational arithmetic by `lab/parity-solid-cuts` - the determinant of the centred basis is `-1/2`, so the conjugation is invertible and exact.)
 
@@ -14,7 +14,7 @@ So the object is not new and the page does not pretend otherwise. What follows i
 
 ## Every diagonal slice is the same size
 
-Each cube of `mrly_126` contributes `1` or `2` to the coordinate sum at each scale, so a point of the level-`L` solid has
+Each cube of `mrly_bang_d3_126` contributes `1` or `2` to the coordinate sum at each scale, so a point of the level-`L` solid has
 
 ```
 x + y + z = sum over k < L of 2^k * d_k, d_k in {1, 2}
@@ -42,19 +42,19 @@ which is the whole of both slices and nothing else. (Proved as a corollary of th
 
 ![Six Sierpinski gaskets tiling a hexagon](figures/cuts-fig.png)
 
-The two central cuts of `mrly_126` at `L = 7`, projected together along the `(1,1,1)` axis: 4374 lattice points in six gaskets of 729, one colour per piece, three pointing each way. The projection is injective - no two points land on the same spot, checked in exact arithmetic - and the figure is drawn point by point by the `makefig.py` of `lab/parity-solid-cuts`, which asserts the decomposition before it draws anything and reproduces the committed file byte for byte.
+The two central cuts of `mrly_bang_d3_126` at `L = 7`, projected together along the `(1,1,1)` axis: 4374 lattice points in six gaskets of 729, one colour per piece, three pointing each way. The projection is injective - no two points land on the same spot, checked in exact arithmetic - and the figure is drawn point by point by the `makefig.py` of `lab/parity-solid-cuts`, which asserts the decomposition before it draws anything and reproduces the committed file byte for byte.
 
 There is a second, coarser way to split the same set. Sort the union by which of the six orderings of `x, y, z` a point satisfies. The result is six classes of exactly `3^(L-1) - 1` points, plus exactly `6` points with two coordinates equal: the six permutations of `(m, m, m+1)` and `(m, m+1, m+1)` for `m = 2^(L-1) - 1`. The split is perfectly even at every level. (Verified at `L = 2..8`, `lab/parity-solid-cuts`.) An uneven count such as `244, 243, 243, 243, 243, 242` can only arise from how points on a sector boundary are assigned, not from the lattice. (Refuted.)
 
 ## The flat slice is a page of Pascal's pyramid
 
-Set `t = 0`. Every scale then uses a weight-one corner, so each bit of the height goes to exactly one of the three coordinates: `x`, `y`, `z` have pairwise disjoint binary supports and sum to `2^L - 1`. By Kummer's theorem that is precisely the condition for the trinomial coefficient `n! / (x! y! z!)` to be odd. The lowest slice of `mrly_126` is therefore the odd part of layer `n = 2^L - 1` of Pascal's pyramid, which is the classical Sierpinski gasket. (Proved; Verified at `L = 1..6` against the disjoint-support test, and at `L = 1..5` against the parity of the coefficients themselves, computed as integers rather than inferred from Kummer - 3, 9, 27, 81, 243 points, `lab/parity-solid-cuts`.)
+Set `t = 0`. Every scale then uses a weight-one corner, so each bit of the height goes to exactly one of the three coordinates: `x`, `y`, `z` have pairwise disjoint binary supports and sum to `2^L - 1`. By Kummer's theorem that is precisely the condition for the trinomial coefficient `n! / (x! y! z!)` to be odd. The lowest slice of `mrly_bang_d3_126` is therefore the odd part of layer `n = 2^L - 1` of Pascal's pyramid, which is the classical Sierpinski gasket. (Proved; Verified at `L = 1..6` against the disjoint-support test, and at `L = 1..5` against the parity of the coefficients themselves, computed as integers rather than inferred from Kummer - 3, 9, 27, 81, 243 points, `lab/parity-solid-cuts`.)
 
-That gives the right yardstick for the constant count. Run the same argument on `mrly_023`, the design that keeps the corners of weight `0` or `1`: its digit triples have popcount at most one, so its whole level-`L` solid is the odd part of Pascal's pyramid, and its slice at height `s` has `3^wt(s)` points, where `wt` is the binary digit sum. That is the classical layer count. (Proved; Verified at `L = 1..6`, `lab/parity-solid-cuts`.)
+That gives the right yardstick for the constant count. Run the same argument on `mrly_bang_d3_23`, the design that keeps the corners of weight `0` or `1`: its digit triples have popcount at most one, so its whole level-`L` solid is the odd part of Pascal's pyramid, and its slice at height `s` has `3^wt(s)` points, where `wt` is the binary digit sum. That is the classical layer count. (Proved; Verified at `L = 1..6`, `lab/parity-solid-cuts`.)
 
 Both halves of that are on record. `A268240` is Pascal's tetrahedron of trinomial coefficients read mod 2, and its comments say it "might be called Sierpinski's tetrahedron" and that the number of ones in slice `n` is `A048883(n) = 3^wt(n)`; `A048883` in turn carries the comment that it counts the odd values in layer `n` of Pascal's tetrahedron. (Verified: both entries read live from OEIS, and `A048883`'s terms `1, 3, 3, 9, 3, 9, 9, 27, ...` reproduced by `lab/parity-solid-cuts`.) Eppstein's fractal-sponge page in the Geometry Junkyard lists "take *Pascal's Pyramid* of trinomial coefficients modulo two" as one of four equivalent constructions of the Sierpinski tetrahedron, stated as folklore with no proof and no slicing.
 
-So the contrast is exact rather than rhetorical. The classical pyramid's layer count `3^wt(s)` swings between `1` and `3^L` as the height's digits change; `mrly_126`'s is `3^L` at every admissible height. `mrly_023` is the same design that draws the Menger sponge at `n = 3`, listed under carpet and net on the core page - the base decides the shape, and at base 2 it is a tetrahedron flake, four maps at ratio one half on four affinely independent corners. (Proved: 4 of 8 cells at `n = 2` by the corner rule; Verified: 20 of 27 at `n = 3`, `lab/design-census`.)
+So the contrast is exact rather than rhetorical. The classical pyramid's layer count `3^wt(s)` swings between `1` and `3^L` as the height's digits change; `mrly_bang_d3_126`'s is `3^L` at every admissible height. `mrly_bang_d3_23` is the same design that draws the Menger sponge at `n = 3`, listed under carpet and net on the core page - the base decides the shape, and at base 2 it is a tetrahedron flake, four maps at ratio one half on four affinely independent corners. (Proved: 4 of 8 cells at `n = 2` by the corner rule; Verified: 20 of 27 at `n = 3`, `lab/design-census`.)
 
 ## The same page, one dimension down
 
@@ -66,13 +66,13 @@ What trinomials do for the pyramid, binomials do for the plane, and the 2D case 
 
 since a cell survives the substitution exactly when no binary digit position holds a `1` in both coordinates. Adding `i` and `j` in base 2 produces a carry precisely at such positions, and Kummer's theorem counts carries as the 2-adic valuation of `C(i+j, i)`, so `i AND j = 0` exactly when `C(i+j, i)` is odd. The shear `(i, j) -> (i, i+j)` - unimodular, the same `GL_2(Z)` move as the shear theorem in [the coprimality spine](coprime.md) - then carries the cell set bijectively onto the odd entries of Pascal's triangle. The level-`L` set is OEIS `A047999`, "Sierpinski's triangle (or gasket): ... Pascal's triangle mod 2", and its antidiagonal population count is Gould's sequence `A001316(n) = 2^popcount(n)`, on record since Glaisher, 1899. (Proved; Verified by `lab/pascal-shear`: level sets to `L = 9` with `3^L` cells each, exact binomials for `i, j < 128`, Pascal mod 2 rebuilt from the additive recurrence alone to row 1023 with zero mismatched cells, the shear checked as a bijection, and both OEIS b-files checked term for term - 50001 terms of `A001316` against `2^popcount(n)` and all 10585 terms of `A047999`, rows `0..144`, against the recomputed triangle, no differences.)
 
-One naming caution travels with the identification. The core page's 2D table lists *carpet* and *net* as the aliases of code 7, because at base 3 that rule keeps 8 of 9 cells and draws the Sierpinski carpet - the same base-swap that turns `mrly_023` from sponge to tetrahedron above. At base 2 the shape code 7 draws is the Sierpinski triangle, which is what `A047999` calls it, and what the flat slice of `mrly_126` reached through three dimensions two sections ago. The 8-of-9 fill at `n = 3` is the first row of the core page's own table; the `3^L` count at base 2 is the level-set verification above.
+One naming caution travels with the identification. The core page's 2D table lists *carpet* and *net* as the aliases of code 7, because at base 3 that rule keeps 8 of 9 cells and draws the Sierpinski carpet - the same base-swap that turns `mrly_bang_d3_23` from sponge to tetrahedron above. At base 2 the shape code 7 draws is the Sierpinski triangle, which is what `A047999` calls it, and what the flat slice of `mrly_bang_d3_126` reached through three dimensions two sections ago. The 8-of-9 fill at `n = 3` is the first row of the core page's own table; the `3^L` count at base 2 is the level-set verification above.
 
 ## What is new here, and what is not
 
 Four separate things are going on, with four different statuses, and the page claims priority for none of them.
 
-The **object** is known. `mrly_126` is the octahedron flake up to a linear change of coordinates, and the diagonal plane is perpendicular to one of its threefold axes; the flake and its dimension are standard, as the n-flake article records.
+The **object** is known. `mrly_bang_d3_126` is the octahedron flake up to a linear change of coordinates, and the diagonal plane is perpendicular to one of its threefold axes; the flake and its dimension are standard, as the n-flake article records.
 
 The **hexagon** is known as a genre. Cutting a cube-based digit fractal perpendicular to a space diagonal and finding a hexagon with unexpected sixfold structure is a well-travelled move: the Wikipedia article on the Menger sponge states that the cross-section through the centroid perpendicular to a space diagonal "is a regular hexagon punctured with hexagrams arranged in six-fold symmetry", and counts those hexagrams by the recurrence `a_n = 9*a_(n-1) - 12*a_(n-2)` with `a_0 = 1`, `a_1 = 6`, cross-referenced to OEIS `A299916` - whose own comment describes six-pointed-star holes in the hexagonal cross-section of a Menger sponge. The n-flake article adds that the projection of the Cantor cube onto the plane orthogonal to its main diagonal is a hexaflake. (Verified: all three read live; `A299916`'s listed terms `1, 6, 42, 306, 2250, ...` satisfy the stated recurrence.) Nothing on this page is the first hexagonal diagonal cut of a cube fractal.
 
@@ -114,15 +114,15 @@ The other four designs whose diagonal cuts are rendered, at `L = 4`. Support is 
 
 | design | rule | support | non-empty | min | max | constant |
 |---|---|---|---|---|---|---|
-| `mrly_063` | `x and y = 0` | `[0,30]` | 31 of 31 | 1 | 81 | no |
-| `mrly_105` | popcount even | `[0,30]` | 16 of 31 | 1 | 81 | no |
-| `mrly_111` | drops `(1,0,0)` and `(1,1,1)` | `[0,30]` | 31 of 31 | 1 | 111 | no |
-| `mrly_126` | popcount in `{1,2}` | `[15,30]` | 16 of 16 | 81 | 81 | **yes** |
-| `mrly_127` | `x and y and z = 0` | `[0,30]` | 31 of 31 | 1 | 162 | no |
+| `mrly_bang_d3_63` | `x and y = 0` | `[0,30]` | 31 of 31 | 1 | 81 | no |
+| `mrly_bang_d3_105` | popcount even | `[0,30]` | 16 of 31 | 1 | 81 | no |
+| `mrly_bang_d3_111` | drops `(1,0,0)` and `(1,1,1)` | `[0,30]` | 31 of 31 | 1 | 111 | no |
+| `mrly_bang_d3_126` | popcount in `{1,2}` | `[15,30]` | 16 of 16 | 81 | 81 | **yes** |
+| `mrly_bang_d3_127` | `x and y and z = 0` | `[0,30]` | 31 of 31 | 1 | 162 | no |
 
-`mrly_126` is the only one of the five with a flat profile, and the only one whose support is a proper sub-interval reached at full strength. `mrly_105`, one of the six self-complementary 3D classes on the core page, is the opposite extreme: it meets only the even heights, so half its planes miss entirely.
+`mrly_bang_d3_126` is the only one of the five with a flat profile, and the only one whose support is a proper sub-interval reached at full strength. `mrly_bang_d3_105`, one of the six self-complementary 3D classes on the core page, is the opposite extreme: it meets only the even heights, so half its planes miss entirely.
 
-One refutation belongs here. The closed form `4*(L+5)*3^(L-1)` for `mrly_127`'s diagonal cut gives 24, 84, 288, 972, 3240, 10692 at `L = 1..6`, while that design's actual slice maxima are 3, 12, 45, 162, 594, 2187, its minima are `1` at every level, and its totals are `7^L`. The form matches the maximum, the minimum and the total at no level at all, and is not used anywhere on this page. (Refuted; Verified at `L = 1..6`, `lab/parity-solid-cuts`.)
+One refutation belongs here. The closed form `4*(L+5)*3^(L-1)` for `mrly_bang_d3_127`'s diagonal cut gives 24, 84, 288, 972, 3240, 10692 at `L = 1..6`, while that design's actual slice maxima are 3, 12, 45, 162, 594, 2187, its minima are `1` at every level, and its totals are `7^L`. The form matches the maximum, the minimum and the total at no level at all, and is not used anywhere on this page. (Refuted; Verified at `L = 1..6`, `lab/parity-solid-cuts`.)
 
 ## Where the numbers live
 

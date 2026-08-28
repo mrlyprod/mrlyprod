@@ -4,7 +4,7 @@ Every page before this one weighs a design: the fractal dimension `d_f = log(fil
 
 The question this page answers by census: **does the mass fix the music?** Two designs with the same fill draw fractals of the same dimension, the same density at every level, the same fill polynomial degree. Do they walk the same? They do not, and the failure is exhibited three different ways.
 
-Every claim carries a tag. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a lab study; **Conjecture** means neither. The generator is `lab/walk-dimension`, which also draws the figure.
+Every claim carries a tag. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a lab study; **Conjecture** means neither. The generator is `lab/walk-dimension`, which also draws the figure. The [race demo](../demos/race.html) runs the experiment live: two base-3 designs of the same fill, random walkers on both at once.
 
 ## The method, and what gates it
 
@@ -35,15 +35,15 @@ Spectral `d_w` from the `lambda_2` ratio at levels 4 to 5; walker `d_w` from MSD
 
 | design | fill | `d_f` | `d_w` spectral | `d_w` walkers | `d_s` |
 |---|---:|---|---|---|---|
-| `mrly_d2_b3_79` | 5 | 1.4650 | 2.466 | 2.494 | 1.17 |
-| `mrly_d2_b3_95` | 6 | 1.6309 | 2.543 | 2.582 | 1.26 |
-| `mrly_d2_b3_127` | 7 | 1.7712 | two branches - see below | 2.245 | 1.58 |
-| `mrly_d2_b3_239` | 7 | 1.7712 | 2.640 | 2.643 | 1.34 |
-| `mrly_d2_b3_255` | 8 | 1.8928 | 2.190 | 2.167 | 1.75 |
-| `mrly_d2_b3_495` (carpet) | 8 | 1.8928 | 2.097 | 2.124 | 1.78 to 1.81 |
-| `mrly_d2_b3_511` (solid) | 9 | 2.0000 | 2.000 | 1.998 | 2.00 |
-| `mrly_d2_b2_7` | 3 of 4 | 1.5850 | 2.586 | 2.755 (drifting) | 1.15 to 1.23 |
-| `mrly_d3_b3_023` (sponge) | 20 | 2.7268 | 2.164 | 2.169 | 2.51 to 2.52 |
+| `mrly_bang_d2_q3_79` | 5 | 1.4650 | 2.466 | 2.494 | 1.17 |
+| `mrly_bang_d2_q3_95` | 6 | 1.6309 | 2.543 | 2.582 | 1.26 |
+| `mrly_bang_d2_q3_127` | 7 | 1.7712 | two branches - see below | 2.245 | 1.58 |
+| `mrly_bang_d2_q3_239` | 7 | 1.7712 | 2.640 | 2.643 | 1.34 |
+| `mrly_bang_d2_q3_255` | 8 | 1.8928 | 2.190 | 2.167 | 1.75 |
+| `mrly_bang_d2_q3_495` (carpet) | 8 | 1.8928 | 2.097 | 2.124 | 1.78 to 1.81 |
+| `mrly_bang_d2_q3_511` (solid) | 9 | 2.0000 | 2.000 | 1.998 | 2.00 |
+| `mrly_bang_d2_7` | 3 of 4 | 1.5850 | 2.586 | 2.755 (drifting) | 1.15 to 1.23 |
+| `mrly_bang_d3_q3_23` (sponge) | 20 | 2.7268 | 2.164 | 2.169 | 2.51 to 2.52 |
 
 The spectral column is the `lambda_2` reading throughout; the means over modes `k = 1..4` for reps 79 and 95 are 2.4667 and 2.5452. The walker column is reproducible to about 0.01 across random streams; the spectral column to every printed digit.
 

@@ -4,7 +4,7 @@ The design count in dimension `D` matches OEIS A000616, the number of NP-equival
 
 One naming guard: NP on this page is Negation-Permutation - negate inputs, permute inputs, the Boolean-function equivalence A000616 classifies - and has nothing to do with the complexity class. No claim about P versus NP is made or implied anywhere on this page; [complexity.md](complexity.md) carries the same disclaimer for the measures it computes.
 
-Every claim on this page is tagged **Proved** (re-derived here), **Verified** (recomputed by a lab study, not proved), or **Conjecture** (a number with no generator). The generators are `lab/design-census` and `lab/oeis-terms`.
+Every claim on this page is tagged **Proved** (re-derived here), **Verified** (recomputed by a lab study, not proved), or **Conjecture** (a number with no generator). The generators are `lab/design-census` and `lab/oeis-terms`. The [universe demo](../demos/universe.html) draws the orbits the bijection classifies, one dimension and base at a time, against the Burnside counts.
 
 ## The two objects
 

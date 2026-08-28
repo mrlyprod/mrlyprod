@@ -21,7 +21,7 @@ Cited facts only.
 
 ## THE CLAIM
 
-- **Conjecture.** For every odd base `b`, the centroid diagonal slice of the parity solid `mrly_023` is a graph-directed set on exactly two tiles, whose `2x2` integer substitution matrix is a fixed rational function of `b` within each class of `b mod 4`, and whose slice dimension sits above `d - 1` when `b = 3 mod 4` and below it when `b = 1 mod 4`.
+- **Conjecture.** For every odd base `b`, the centroid diagonal slice of the parity solid `mrly_bang_d3_23` is a graph-directed set on exactly two tiles, whose `2x2` integer substitution matrix is a fixed rational function of `b` within each class of `b mod 4`, and whose slice dimension sits above `d - 1` when `b = 3 mod 4` and below it when `b = 1 mod 4`.
 - **The method builds no raster.** The plane `x + y + z = 3*b^L/2` meets three diagonal layers and the coordinate sum splits as `sum_k b^k * sigma_k` over independently chosen digit triples, so the tile census is a memoised digit recursion with nothing allocated.
 - **The four rules. Verified** by `lab/odd-base-slice-grammar`; that they are tile grammars is the claim above. Two-term rules `x9 -12` at `b = 3`, `x11 +62` at 5, `x42 -288` at 7, `x28 +693` at 9, with dimensions `1.8184 / 1.6869 / 1.8026 / 1.7204` against `d - 1 = 1.7268 / 1.7304 / 1.7430 / 1.7544`.
 - Their arithmetic is only self-consistent: each printed dimension is `log_b` of the dominant root of its own printed rule, so a wrong rule and its own wrong dimension agree by construction.
@@ -33,7 +33,7 @@ Cited facts only.
 
 ## OPEN QUESTIONS
 
-- **Which sponge is the base-`b` sponge?** Cook's predicate is "at most one coordinate in the middle third"; this page inherits "at most one odd coordinate" from `mrly_023`. The two agree at `b = 3` and nowhere else, and there is no canonical base-5 Menger sponge, so the whole generalisation rests on an unstated choice.
+- **Which sponge is the base-`b` sponge?** Cook's predicate is "at most one coordinate in the middle third"; this page inherits "at most one odd coordinate" from `mrly_bang_d3_23`. The two agree at `b = 3` and nowhere else, and there is no canonical base-5 Menger sponge, so the whole generalisation rests on an unstated choice.
 - **The choice is not cosmetic, and the two rules land on opposite sides. Verified.** At `b = 5`, `D = 3` the middle-digit rule fills `112` of `125` and its central diagonal slice sits ABOVE `d - 1`, excess `+2.888e-02` with `dim_slice = 1.960651` against `1.931768`; the odd-coordinate rule fills `81` of `125` and sits BELOW, `1.6869` against `1.7304`. No `d - 1` claim at `b = 5` can be quoted without naming the rule.
 - **Does the mod-4 split have a mechanism, or is it numerology? Conjecture.** It holds at every odd `b` up to 401 by exact rational comparison in `lab/odd-base-slice-grammar`, so it is not four data points. The candidate mechanism - the middle diagonal layer sits at coordinate sum `3*(b-1)/2`, odd exactly when `b = 3 mod 4`, forcing a different parity of cell into the middle layer in each class - is unwritten and unchecked.
 - **The split is a property of the rule as well as the base.** The mod-4 statement is about the odd-coordinate solid, and the middle-digit solid contradicts it at `b = 5`. Any statement of it must pin base, dimension and digit rule before it means anything.
@@ -45,5 +45,5 @@ Cited facts only.
 - The dimension axis at fixed base 3: the `ceil(D/2)` order law, the product formula over 3-adic angle towers, and the unconditional pinning `|rho_D - fill/3| <= 2(D-1)/3` are the `carlomitchener/research/slice-recurrence-order` lane.
 - The sign law in every even dimension at bases 3 and 5, the certificate machines, the transient constant `ln(R)/4`, the tent rank law and the layer-2 window law are the `carlomitchener/research/slice-sign-even-half` lane.
 - The carry matrix `M_even` is defined once, in [cuts](cuts.md), and is not redefined here.
-- The hexagram bijection and the mesh census: [cuts](cuts.md). The hexagon mesh itself: [slices](slices.md). The fill polynomial of `mrly_023`: [method](method.md).
+- The hexagram bijection and the mesh census: [cuts](cuts.md). The hexagon mesh itself: [slices](slices.md). The fill polynomial of `mrly_bang_d3_23`: [method](method.md).
 - Every finding on a tagged line: [DISCOVERIES](DISCOVERIES.md). Every source resolved: [REFS](REFS.md).

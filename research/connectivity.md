@@ -13,7 +13,7 @@ Five designs, each built by substituting its level-1 tile into itself and cross-
 | gasket | 2 | 2 | code 7, corners `(0,0)`, `(0,1)`, `(1,0)` |
 | diagonal | 2 | 2 | code 9, corners `(0,0)`, `(1,1)` |
 | seven-of-eight | 2 | 3 | every corner but one |
-| carpet | 3 | 2 | 8 of 9 cells - `mrly_07` read at base 3 |
+| carpet | 3 | 2 | 8 of 9 cells - `mrly_bang_d2_7` read at base 3 |
 | sponge | 3 | 3 | the Menger sponge, 20 of 27 cells |
 
 The control is matched exactly, not approximately: a uniform sample of exactly `N` distinct cells, the occupied count asserted equal to the design's on every draw - not a Bernoulli field with matching probability. Components are face-connected, 4-neighbour in 2D and 6-neighbour in 3D. Boundary per cell is `(2*D*N - 2*E)/N` with `E` the number of face-adjacent occupied pairs and the grid exterior counting as void, so an isolated cell contributes the full `2*D`. Every random figure below is a mean and a sample standard deviation: 400 seeds up to 729 cells, 200 at the 2187-cell `128 x 128` gasket, the 2401-cell `16^3` seven-of-eight and the 128-cell `128 x 128` diagonal, 100 at 6561 cells and at the `27^3` sponge, 20 at the `81^3` sponge (`lab/percolation-race`).

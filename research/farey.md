@@ -2,7 +2,7 @@
 
 Lay the same fractal grid on the unit square at many scales at once - scale `n` puts its cell boundaries at `x = k/n` - drop the opacity and add the layers up. The result is a moire, and a bright point is one that many scales agree on. The question this page answers is what the bright points are, and the answer is not decorative: the lit nodes are the Farey fractions, the amount of new structure each scale contributes is Euler's totient `phi(n)`, and how evenly those nodes spread is - by a pair of theorems from 1924 - literally equivalent to the Riemann hypothesis.
 
-Every claim below carries a tag. **Proved** means derived here from definitions. **Verified** means recomputed from scratch, or checked against the published literature. Nothing on this page is a conjecture.
+Every claim below carries a tag. **Proved** means derived here from definitions. **Verified** means recomputed from scratch, or checked against the published literature. Nothing on this page is a conjecture. The [Farey demo](../demos/farey.html) builds the stack scale by scale, lights the Farey fractions, and shows `phi(n)` novelty peaking at the primes.
 
 ## Where the lines land
 

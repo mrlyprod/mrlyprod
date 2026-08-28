@@ -2,7 +2,7 @@
 
 Pi is not inside a single carpet's area, which is rational at every level. Pi is in the **stack** of carpets, and it comes out as a counted number rather than an assumed one.
 
-Every claim below is tagged. **Proved** means proved or classical; **Verified** means recomputed here and reported as measured; **Conjecture** means supported and open.
+Every claim below is tagged. **Proved** means proved or classical; **Verified** means recomputed here and reported as measured; **Conjecture** means supported and open. The [Farey demo](../demos/farey.html) draws the stack this page counts, with `phi(n)` new nodes at each scale and the primes at maximal novelty.
 
 ## A single carpet cannot hold pi
 

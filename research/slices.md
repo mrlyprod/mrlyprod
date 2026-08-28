@@ -2,9 +2,9 @@
 
 Cut the solid cube of odd side `n = 2k-1` through its centre, perpendicular to the main diagonal, and the section is a regular hexagon tiled by `6*n^2` unit equilateral triangles. This page is the census of that mesh - triangles, edges, vertices, an Euler characteristic that never moves - and of what the parity designs do to it: which fills partition it, which fall into many pieces, and which pierce it with holes. The mesh itself is classical lattice geometry and no novelty is claimed for it; the designs are where the specific content lives. The back half leaves the slice for the surface census of the same designs in 3D.
 
-Every claim carries a tag. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a lab study; **Conjecture** means neither. `lab/hexagonal-slice-census` rebuilds every object on this page in one code base, except the profile identity, which `lab/slice-ladder-controls` checks, and the slice ink, which no study regenerates.
+Every claim carries a tag. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a lab study; **Conjecture** means neither. `lab/hexagonal-slice-census` rebuilds every object on this page in one code base, except the profile identity, which `lab/slice-ladder-controls` checks, and the slice ink, which no study regenerates. The [sponge demo](../demos/sponge.html) grows any of these designs level by level and counts the exposed faces the surface census below predicts.
 
-One boundary first. [The cuts page](cuts.md) also slices a solid along `x + y + z = s` and also finds a hexagon, but everything else differs: there the solid is `mrly_126` at base 2, fractal from the start, and the result - every slice a Sierpinski gasket, scheduled by the binary digits of the height - comes from a digit argument, with no mesh and no census. Here the solid is the plain filled cube at odd side `n`, the cut is the single middle plane, and the result is a triangular mesh counted directly. The two pages share a plane and a hexagon and not one number.
+One boundary first. [The cuts page](cuts.md) also slices a solid along `x + y + z = s` and also finds a hexagon, but everything else differs: there the solid is `mrly_bang_d3_126` at base 2, fractal from the start, and the result - every slice a Sierpinski gasket, scheduled by the binary digits of the height - comes from a digit argument, with no mesh and no census. Here the solid is the plain filled cube at odd side `n`, the cut is the single middle plane, and the result is a triangular mesh counted directly. The two pages share a plane and a hexagon and not one number.
 
 ## The solid slice, counted
 
@@ -64,12 +64,12 @@ The rest of the slice story needs the four historical families, and their naming
 
 | name here | rule | design | class | slice fill at `n = 3` |
 |---|---|---|---|---:|
-| carpet | at most one odd coordinate | `mrly_023` | `mrly_023` | 42 |
-| net | at least two odd coordinates | `mrly_232` | `mrly_023` | 12 |
-| tree | `x` and `y` both even | `mrly_003` | `mrly_003` | 18 |
-| antipodal | all coordinates one parity | `mrly_129` | `mrly_024` | 12 |
+| carpet | at most one odd coordinate | `mrly_bang_d3_23` | `mrly_bang_d3_23` | 42 |
+| net | at least two odd coordinates | `mrly_bang_d3_232` | `mrly_bang_d3_23` | 12 |
+| tree | `x` and `y` both even | `mrly_bang_d3_3` | `mrly_bang_d3_3` | 18 |
+| antipodal | all coordinates one parity | `mrly_bang_d3_129` | `mrly_bang_d3_24` | 12 |
 
-Carpet and net are one self-complementary class - that is why [the core page](core.md) aliases both names to `mrly_023` - and `mrly_232` is its complement member, a different truncation of the same class, not a second design; its fill polynomial `4*k^3 - 9*k^2 + 6*k - 1` is the worked corollary on [the method page](method.md). This page does not call the fourth family *void*, because the core page's alias *void* is the canonical `mrly_024`, which fills `2*k^3 - 3*k^2 + k`, while `mrly_129` fills `2*k^3 - 3*k^2 + 3*k - 1 = k^3 + (k-1)^3`, the centered cube numbers (OEIS A005898) - same class, different truncation, different polynomial. Nor is it the checkerboard: fill where `i + j + l` is even is `mrly_105`, a different design again. This page calls it the antipodal design, after its two corners `(0,0,0)` and `(1,1,1)`. (Verified: orbit walks over the 48 signed permutations and cell-by-cell counts, `lab/hexagonal-slice-census`.)
+Carpet and net are one self-complementary class - that is why [the core page](core.md) aliases both names to `mrly_bang_d3_23` - and `mrly_bang_d3_232` is its complement member, a different truncation of the same class, not a second design; its fill polynomial `4*k^3 - 9*k^2 + 6*k - 1` is the worked corollary on [the method page](method.md). This page does not call the fourth family *void*, because the core page's alias *void* is the canonical `mrly_bang_d3_24`, which fills `2*k^3 - 3*k^2 + k`, while `mrly_bang_d3_129` fills `2*k^3 - 3*k^2 + 3*k - 1 = k^3 + (k-1)^3`, the centered cube numbers (OEIS A005898) - same class, different truncation, different polynomial. Nor is it the checkerboard: fill where `i + j + l` is even is `mrly_bang_d3_105`, a different design again. This page calls it the antipodal design, after its two corners `(0,0,0)` and `(1,1,1)`. (Verified: orbit walks over the 48 signed permutations and cell-by-cell counts, `lab/hexagonal-slice-census`.)
 
 **Carpet and net partition the hexagon.** Their corner rules partition `{0,1}^3` outright - every parity vector has popcount at most 1 or at least 2 - so every cell of any grid is filled by exactly one of the two, and in particular every crossed cell hands its whole section to exactly one. The two slice fills therefore partition the solid hexagon cell for cell:
 
@@ -121,7 +121,7 @@ This matrix shares nothing but a name with the digit-borrow transfer matrices th
 surface(k) = 6 * cells(k), cells(k) = 2*k^3 - 3*k^2 + 3*k - 1 = k^3 + (k-1)^3
 ```
 
-with `surface(L) = 6 * 9^L` across fractal levels at base 3 - no hidden-face correction term, ever. (Proved; Verified by direct face counts at `k = 1..12`, in 2D as `edges = perimeter`, and at levels 1..4, `lab/hexagonal-slice-census`.) Hamming distance is preserved by cube symmetry, so total exposure is a class property. The test is also exhaustive: sweeping all 256 designs at `n = 3, 5, 7`, `surface = 6 * cells` holds for exactly the 35 designs whose filled corners are pairwise at Hamming distance at least 2 - the independent sets of the cube graph - and they form whole classes: `mrly_000`, `mrly_001`, `mrly_006`, `mrly_022`, `mrly_024`, `mrly_105`. (Verified.)
+with `surface(L) = 6 * 9^L` across fractal levels at base 3 - no hidden-face correction term, ever. (Proved; Verified by direct face counts at `k = 1..12`, in 2D as `edges = perimeter`, and at levels 1..4, `lab/hexagonal-slice-census`.) Hamming distance is preserved by cube symmetry, so total exposure is a class property. The test is also exhaustive: sweeping all 256 designs at `n = 3, 5, 7`, `surface = 6 * cells` holds for exactly the 35 designs whose filled corners are pairwise at Hamming distance at least 2 - the independent sets of the cube graph - and they form whole classes: `mrly_bang_d3_0`, `mrly_bang_d3_1`, `mrly_bang_d3_6`, `mrly_bang_d3_22`, `mrly_bang_d3_24`, `mrly_bang_d3_105`. (Verified.)
 
 ## Corners
 
