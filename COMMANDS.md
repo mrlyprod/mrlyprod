@@ -137,3 +137,9 @@ bunx tsc --noEmit --project pkgs/js/mrlyui     # typecheck the design system (pr
 uv run --group font python utils/brand.py icons     # rebake icon subsets after widening SymbolName
 uv run --group font python utils/brand.py bundle    # bake fonts into pkgs/js/mrlyui for the offline local.css
 ```
+
+## AWS (the sites, the lambda, the infra; ids live in the desk's `../.env`)
+
+```sh
+uv run python aws/deploy.py net push     # build the landing site, sync S3, invalidate CloudFront; aws/COMMANDS.md has the rest
+```
