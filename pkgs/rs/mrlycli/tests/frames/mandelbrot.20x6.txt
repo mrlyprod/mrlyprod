@@ -1,6 +1,0 @@
-🌌  mandelbrot       
-[1] mandelbrot.step 
-> mandelbrot.set {"k
-tick 5              
->                   
-mrly · mandelbrot · 

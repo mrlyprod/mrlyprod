@@ -1,7 +1,0 @@
-import { createRoot } from "react-dom/client"
-import "mrlyui/mrly.css"
-import "./films.css"
-import { App } from "./App"
-
-const root = document.getElementById("root")
-if (root !== null) createRoot(root).render(<App />)

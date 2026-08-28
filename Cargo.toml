@@ -1,106 +1,27 @@
 [workspace]
 resolver = "2"
 members = [
-    "pkgs/rs/mrlycore",
-    "pkgs/rs/mrlymath",
-    "pkgs/rs/mrlyfont",
-    "pkgs/rs/mrlyskin",
-    "pkgs/rs/mrlyos",
-    "pkgs/rs/mrlymoji",
-    "pkgs/rs/mrlyrun",
-    "pkgs/rs/mrlysolo",
-    "pkgs/rs/mrlytorch",
-    "pkgs/rs/mrlydata",
-    "pkgs/rs/mrlygame",
-    "pkgs/rs/apps/*",
-    "pkgs/rs/mrlyweb",
-    "pkgs/py/web",
-    "pkgs/js/web",
-    "pkgs/rs/mrlycli",
-]
-default-members = [
-    "pkgs/rs/mrlycore",
-    "pkgs/rs/mrlymath",
-    "pkgs/rs/mrlyfont",
-    "pkgs/rs/mrlyskin",
-    "pkgs/rs/mrlyos",
-    "pkgs/rs/mrlymoji",
-    "pkgs/rs/mrlyrun",
-    "pkgs/rs/mrlysolo",
-    "pkgs/rs/mrlytorch",
-    "pkgs/rs/mrlydata",
-    "pkgs/rs/mrlygame",
-    "pkgs/rs/apps/*",
-    "pkgs/rs/mrlyweb",
-    "pkgs/rs/mrlycli",
+    "crates/mrlycore",
+    "crates/mrlynum",
+    "crates/mrlymath",
+    "crates/mrlylab",
+    "crates/mrlyweb",
 ]
 
 [workspace.package]
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 license = "MIT"
 repository = "https://github.com/mrlyprod/mrlyprod"
-homepage = "https://mrly.net"
 
 [profile.release]
 lto = true
 codegen-units = 1
 strip = true
 
-[profile.gate]
-inherits = "release"
-lto = false
-codegen-units = 16
-
 [workspace.dependencies]
-mrlycore = { path = "pkgs/rs/mrlycore", version = "0.2.0" }
-mrlymath = { path = "pkgs/rs/mrlymath", version = "0.2.0" }
-mrlyfont = { path = "pkgs/rs/mrlyfont", version = "0.2.0" }
-mrlyskin = { path = "pkgs/rs/mrlyskin", version = "0.2.0" }
-mrlyos = { path = "pkgs/rs/mrlyos", version = "0.2.0" }
-mrlydata = { path = "pkgs/rs/mrlydata", version = "0.2.0" }
-mrlygame = { path = "pkgs/rs/mrlygame", version = "0.2.0" }
-mrlyarc = { path = "pkgs/rs/apps/mrlyarc", version = "0.2.0" }
-mrlybang = { path = "pkgs/rs/apps/mrlybang", version = "0.2.0" }
-mrlycalculator = { path = "pkgs/rs/apps/mrlycalculator", version = "0.2.0" }
-mrlycalendar = { path = "pkgs/rs/apps/mrlycalendar", version = "0.2.0" }
-mrlycaptcha = { path = "pkgs/rs/apps/mrlycaptcha", version = "0.2.0" }
-mrlychess = { path = "pkgs/rs/apps/mrlychess", version = "0.2.0" }
-mrlyclock = { path = "pkgs/rs/apps/mrlyclock", version = "0.2.0" }
-mrlycolors = { path = "pkgs/rs/apps/mrlycolors", version = "0.2.0" }
-mrlycrush = { path = "pkgs/rs/apps/mrlycrush", version = "0.2.0" }
-mrlydice = { path = "pkgs/rs/apps/mrlydice", version = "0.2.0" }
-mrlyemojis = { path = "pkgs/rs/apps/mrlyemojis", version = "0.2.0" }
-mrlyescape = { path = "pkgs/rs/apps/mrlyescape", version = "0.2.0" }
-mrlyfiles = { path = "pkgs/rs/apps/mrlyfiles", version = "0.2.0" }
-mrlyfonts = { path = "pkgs/rs/apps/mrlyfonts", version = "0.2.0" }
-mrlygraph = { path = "pkgs/rs/apps/mrlygraph", version = "0.2.0" }
-mrlyhash = { path = "pkgs/rs/apps/mrlyhash", version = "0.2.0" }
-mrlyiden = { path = "pkgs/rs/apps/mrlyiden", version = "0.2.0" }
-mrlyjulia = { path = "pkgs/rs/apps/mrlyjulia", version = "0.2.0" }
-mrlylife = { path = "pkgs/rs/apps/mrlylife", version = "0.2.0" }
-mrlylog = { path = "pkgs/rs/apps/mrlylog", version = "0.2.0" }
-mrlymandelbrot = { path = "pkgs/rs/apps/mrlymandelbrot", version = "0.2.0" }
-mrlymatrix = { path = "pkgs/rs/apps/mrlymatrix", version = "0.2.0" }
-mrlymemory = { path = "pkgs/rs/apps/mrlymemory", version = "0.2.0" }
-mrlymenu = { path = "pkgs/rs/apps/mrlymenu", version = "0.2.0" }
-mrlymines = { path = "pkgs/rs/apps/mrlymines", version = "0.2.0" }
-mrlymoire = { path = "pkgs/rs/apps/mrlymoire", version = "0.2.0" }
-mrlynotes = { path = "pkgs/rs/apps/mrlynotes", version = "0.2.0" }
-mrlypaint = { path = "pkgs/rs/apps/mrlypaint", version = "0.2.0" }
-mrlyphotos = { path = "pkgs/rs/apps/mrlyphotos", version = "0.2.0" }
-mrlyquiz = { path = "pkgs/rs/apps/mrlyquiz", version = "0.2.0" }
-mrlysettings = { path = "pkgs/rs/apps/mrlysettings", version = "0.2.0" }
-mrlysix = { path = "pkgs/rs/apps/mrlysix", version = "0.2.0" }
-mrlysleep = { path = "pkgs/rs/apps/mrlysleep", version = "0.2.0" }
-mrlysnake = { path = "pkgs/rs/apps/mrlysnake", version = "0.2.0" }
-mrlysolids = { path = "pkgs/rs/apps/mrlysolids", version = "0.2.0" }
-mrlystudio = { path = "pkgs/rs/apps/mrlystudio", version = "0.2.0" }
-mrlytennis = { path = "pkgs/rs/apps/mrlytennis", version = "0.2.0" }
-mrlythree = { path = "pkgs/rs/apps/mrlythree", version = "0.2.0" }
-mrlytile = { path = "pkgs/rs/apps/mrlytile", version = "0.2.0" }
-mrlytimer = { path = "pkgs/rs/apps/mrlytimer", version = "0.2.0" }
-mrlyttt = { path = "pkgs/rs/apps/mrlyttt", version = "0.2.0" }
-mrlytwenty48 = { path = "pkgs/rs/apps/mrlytwenty48", version = "0.2.0" }
-mrlytwo = { path = "pkgs/rs/apps/mrlytwo", version = "0.2.0" }
-mrlyweb = { path = "pkgs/rs/mrlyweb", version = "0.2.0" }
+mrlycore = { path = "crates/mrlycore", version = "0.3.0" }
+mrlynum = { path = "crates/mrlynum", version = "0.3.0" }
+mrlymath = { path = "crates/mrlymath", version = "0.3.0" }
+mrlylab = { path = "crates/mrlylab", version = "0.3.0" }
+mrlyweb = { path = "crates/mrlyweb", version = "0.3.0" }

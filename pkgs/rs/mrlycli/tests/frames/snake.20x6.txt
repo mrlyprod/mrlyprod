@@ -1,6 +1,0 @@
-🐍  snake  snake.step
-[1] snake.turn [2] s
-> snake.reset       
-tick 7              
->                   
-mrly · snake · tick 

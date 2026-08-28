@@ -1,0 +1,14 @@
+[package]
+name = "mrlynum"
+version.workspace = true
+edition.workspace = true
+description = "The instruments of Mrly: primes, divisors, series, recurrences, spectra, lattices, networks."
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+
+[dependencies]
+mrlycore.workspace = true
+
+[dev-dependencies]
+mrlycore = { workspace = true, features = ["testkit"] }

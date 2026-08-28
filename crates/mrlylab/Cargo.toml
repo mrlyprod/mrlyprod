@@ -1,0 +1,15 @@
+[package]
+name = "mrlylab"
+version.workspace = true
+edition.workspace = true
+description = "The laboratory of Mrly: the campaign machinery that explores and measures the designs."
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+
+[dependencies]
+mrlycore.workspace = true
+mrlymath.workspace = true
+
+[dev-dependencies]
+mrlycore = { workspace = true, features = ["testkit"] }

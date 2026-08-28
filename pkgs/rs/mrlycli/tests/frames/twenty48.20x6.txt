@@ -1,6 +1,0 @@
-🔢  2048             
-[1] twenty48.slide  
-> twenty48.set {"key
-tick 4              
->                   
-mrly · twenty48 · ti

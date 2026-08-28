@@ -1,0 +1,17 @@
+[package]
+name = "mrlymath"
+version.workspace = true
+edition.workspace = true
+description = "The mathematics of Mrly: design codes, their symmetries, counts, tiles, automata and renderings."
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+
+[dependencies]
+mrlycore.workspace = true
+mrlynum.workspace = true
+serde = { version = "1", features = ["derive"] }
+
+[dev-dependencies]
+mrlycore = { workspace = true, features = ["testkit"] }
+serde_json = "1"

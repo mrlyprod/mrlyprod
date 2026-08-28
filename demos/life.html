@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mrly · life</title>
+<link rel="stylesheet" href="./mrly.css">
+</head>
+<body>
+<header>
+  <nav><a href="./">demos</a> / life</nav>
+  <h1>Life, ruled by sequences</h1>
+  <p class="sub">A cell is born or survives when its neighbor count sits in a list, and the lists can be spelled by hand or drawn from a named sequence: the primes, the Fibonacci numbers, the fills of a carpet. Seed a grid, pick the rule, and run it to its fate.</p>
+</header>
+<main>
+  <div class="row">
+    <label>seed <select id="seed">
+      <option value="noise">noise</option>
+      <option value="7">carpet</option>
+      <option value="14">net</option>
+      <option value="9">void</option>
+      <option value="blank">blank</option>
+    </select></label>
+    <label>density <input type="range" id="density" min="5" max="95" value="35"><span class="num" id="density-out">0.35</span></label>
+    <label>birth <select id="birth-seq"></select><input type="text" id="birth" value="3"></label>
+    <label>survive <select id="survive-seq"></select><input type="text" id="survive" value="23"></label>
+    <label><input type="checkbox" id="wrap" checked> wrap</label>
+  </div>
+  <div class="row">
+    <button class="primary" id="go">Play</button>
+    <button id="step">Step</button>
+    <button id="fate">Run to fate</button>
+    <button id="reseed">Reseed</button>
+    <span class="num" id="gen" style="color: var(--dim)"></span>
+  </div>
+  <canvas class="sheet" id="sheet" style="max-width: 640px"></canvas>
+  <div class="stats"><span>rule <b id="rule"></b></span><span id="verdict"></span></div>
+  <div class="note" id="note"></div>
+  <p class="foot">The Moore neighborhood holds eight cells, so a sequence is cut at eight: primes give 2, 3, 5, 7 and Fibonacci gives 1, 2, 3, 5, 8. Every generation is stepped in Rust, and the run to fate replays the grid until it dies, freezes, loops or hits 512 generations.</p>
+</main>
+<script type="module" src="./life.js"></script>
+</body>
+</html>

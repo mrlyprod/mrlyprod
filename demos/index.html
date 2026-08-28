@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mrly demos</title>
+<link rel="stylesheet" href="./mrly.css">
+</head>
+<body>
+<header>
+  <nav>mrlyprod / demos</nav>
+  <h1>The eyes of MrlyMath</h1>
+  <p class="sub">Every number and pixel on these pages comes out of the Rust crates through wasm. The browser only draws.</p>
+</header>
+<main>
+  <div class="gallery">
+    <a class="tile" href="./race"><canvas id="t-race"></canvas><h2>The race</h2><p>Two designs of the same mass carry random walkers at different speeds.</p></a>
+    <a class="tile" href="./sponge"><div class="thumb" id="t-sponge"></div><h2>The sponge</h2><p>Any cube design, any level, in orbit.</p></a>
+    <a class="tile" href="./universe"><canvas id="t-universe"></canvas><h2>The universe</h2><p>Every distinct design of the plane and the cube, grown on click.</p></a>
+    <a class="tile" href="./life"><canvas id="t-life"></canvas><h2>Life</h2><p>Cellular automata with rules drawn from named sequences.</p></a>
+    <a class="tile" href="./moire"><canvas id="t-moire"></canvas><h2>Moire</h2><p>One design at many scales, stacked into interference.</p></a>
+    <a class="tile" href="./farey"><canvas id="t-farey"></canvas><h2>The Farey stack</h2><p>Scales light the fractions; the primes light the most.</p></a>
+  </div>
+</main>
+<script type="module" src="./index.js"></script>
+</body>
+</html>

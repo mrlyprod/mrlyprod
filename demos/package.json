@@ -1,0 +1,14 @@
+{
+  "name": "mrly-demos",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "wasm": "bash ../scripts/wasm.sh",
+    "dev": "bun *.html",
+    "build": "bun build *.html --outdir dist --splitting --minify",
+    "check": "bun check.ts"
+  },
+  "dependencies": {
+    "three": "^0.185.1"
+  }
+}

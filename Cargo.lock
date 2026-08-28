@@ -3,6 +3,18 @@
 version = 4
 
 [[package]]
+name = "adler2"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa"
+
+[[package]]
+name = "bitflags"
+version = "1.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
+
+[[package]]
 name = "bumpalo"
 version = "3.20.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -15,548 +27,141 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
 
 [[package]]
-name = "heck"
-version = "0.5.0"
+name = "crc32fast"
+version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
+checksum = "8498c871161e1742aaa9d52551b2d6ebdd4c3d45a3be423e3728f33b955be550"
+dependencies = [
+ "cfg-if",
+]
 
 [[package]]
-name = "libc"
-version = "0.2.186"
+name = "equivalent"
+version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "68ab91017fe16c622486840e4c83c9a37afeff978bd239b5293d61ece587de66"
+checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
 
 [[package]]
-name = "mrlyarc"
-version = "0.2.0"
+name = "fdeflate"
+version = "0.3.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e6853b52649d4ac5c0bd02320cddc5ba956bdb407c4b75a2c6b75bf51500f8c"
 dependencies = [
- "mrlycore",
- "mrlymath",
- "mrlyos",
- "mrlyskin",
+ "simd-adler32",
 ]
 
 [[package]]
-name = "mrlybang"
-version = "0.2.0"
+name = "flate2"
+version = "1.1.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6e634e2e0ebac1ee034020da1ca582e17ffe4e0f5e985823721e168928136dcb"
 dependencies = [
- "mrlycore",
- "mrlymath",
- "mrlyos",
- "mrlyskin",
+ "crc32fast",
+ "miniz_oxide 0.9.1",
+ "zlib-rs",
 ]
 
 [[package]]
-name = "mrlycalculator"
-version = "0.2.0"
+name = "gif"
+version = "0.14.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee8cfcc411d9adbbaba82fb72661cc1bcca13e8bba98b364e62b2dba8f960159"
 dependencies = [
- "mrlycore",
- "mrlyos",
+ "weezl",
 ]
 
 [[package]]
-name = "mrlycalendar"
-version = "0.2.0"
+name = "hashbrown"
+version = "0.17.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ed5909b6e89a2db4456e54cd5f673791d7eca6732202bbf2a9cc504fe2f9b84a"
+
+[[package]]
+name = "indexmap"
+version = "2.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d466e9454f08e4a911e14806c24e16fba1b4c121d1ea474396f396069cf949d9"
 dependencies = [
- "mrlycore",
- "mrlyos",
+ "equivalent",
+ "hashbrown",
 ]
 
 [[package]]
-name = "mrlycaptcha"
-version = "0.2.0"
+name = "itoa"
+version = "1.0.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
+
+[[package]]
+name = "memchr"
+version = "2.8.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
+
+[[package]]
+name = "miniz_oxide"
+version = "0.8.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1fa76a2c86f704bdb222d66965fb3d63269ce38518b83cb0575fca855ebb6316"
 dependencies = [
- "mrlycore",
- "mrlymath",
- "mrlyos",
- "mrlyskin",
+ "adler2",
+ "simd-adler32",
 ]
 
 [[package]]
-name = "mrlychess"
-version = "0.2.0"
+name = "miniz_oxide"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b63fbc4a50860e98e7b2aa7804ded1db5cbc3aff9193adaff57a6931bf7c4b4c"
 dependencies = [
- "mrlycore",
- "mrlyos",
- "mrlyskin",
-]
-
-[[package]]
-name = "mrlycli"
-version = "0.2.0"
-dependencies = [
- "libc",
- "mrlycore",
- "mrlyos",
- "mrlyweb",
-]
-
-[[package]]
-name = "mrlyclock"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlyos",
-]
-
-[[package]]
-name = "mrlycolors"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlyos",
+ "adler2",
+ "simd-adler32",
 ]
 
 [[package]]
 name = "mrlycore"
-version = "0.2.0"
-
-[[package]]
-name = "mrlycrush"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
- "mrlycore",
- "mrlyos",
- "mrlyskin",
+ "gif",
+ "png",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
-name = "mrlydata"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlyfont",
- "mrlymath",
- "mrlyos",
- "mrlyweb",
-]
-
-[[package]]
-name = "mrlydice"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlyos",
- "mrlyskin",
-]
-
-[[package]]
-name = "mrlyemojis"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlyos",
-]
-
-[[package]]
-name = "mrlyescape"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlyos",
- "mrlyskin",
-]
-
-[[package]]
-name = "mrlyfiles"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlyos",
-]
-
-[[package]]
-name = "mrlyfont"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
-]
-
-[[package]]
-name = "mrlyfonts"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlyfont",
- "mrlyos",
-]
-
-[[package]]
-name = "mrlygame"
-version = "0.2.0"
+name = "mrlylab"
+version = "0.3.0"
 dependencies = [
  "mrlycore",
  "mrlymath",
-]
-
-[[package]]
-name = "mrlygraph"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlymath",
- "mrlyos",
-]
-
-[[package]]
-name = "mrlyhash"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlymath",
- "mrlyos",
- "mrlyskin",
-]
-
-[[package]]
-name = "mrlyiden"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlyos",
-]
-
-[[package]]
-name = "mrlyjulia"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlymath",
- "mrlyos",
-]
-
-[[package]]
-name = "mrlylife"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlymath",
- "mrlyos",
- "mrlyskin",
-]
-
-[[package]]
-name = "mrlylog"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlyos",
-]
-
-[[package]]
-name = "mrlymandelbrot"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlymath",
- "mrlyos",
 ]
 
 [[package]]
 name = "mrlymath"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "mrlycore",
+ "mrlynum",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
-name = "mrlymatrix"
-version = "0.2.0"
+name = "mrlynum"
+version = "0.3.0"
 dependencies = [
  "mrlycore",
- "mrlyos",
- "mrlyskin",
-]
-
-[[package]]
-name = "mrlymemory"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlyos",
- "mrlyskin",
-]
-
-[[package]]
-name = "mrlymenu"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlyos",
-]
-
-[[package]]
-name = "mrlymines"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlyos",
- "mrlyskin",
-]
-
-[[package]]
-name = "mrlymoire"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlymath",
- "mrlyos",
-]
-
-[[package]]
-name = "mrlymoji"
-version = "0.2.0"
-
-[[package]]
-name = "mrlynotes"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlyos",
-]
-
-[[package]]
-name = "mrlyos"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
-]
-
-[[package]]
-name = "mrlypaint"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlyos",
- "mrlyskin",
-]
-
-[[package]]
-name = "mrlyphotos"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlyos",
-]
-
-[[package]]
-name = "mrlyquiz"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlymath",
- "mrlyos",
- "mrlyskin",
-]
-
-[[package]]
-name = "mrlyrun"
-version = "0.2.0"
-
-[[package]]
-name = "mrlysettings"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlyos",
-]
-
-[[package]]
-name = "mrlysix"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlymath",
- "mrlyos",
-]
-
-[[package]]
-name = "mrlyskin"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlyfont",
- "mrlymath",
-]
-
-[[package]]
-name = "mrlysleep"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlyos",
-]
-
-[[package]]
-name = "mrlysnake"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlyos",
- "mrlyskin",
-]
-
-[[package]]
-name = "mrlysolids"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlymath",
- "mrlyos",
-]
-
-[[package]]
-name = "mrlysolo"
-version = "0.2.0"
-
-[[package]]
-name = "mrlystudio"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlyos",
-]
-
-[[package]]
-name = "mrlytennis"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlyos",
- "mrlyskin",
-]
-
-[[package]]
-name = "mrlythree"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlymath",
- "mrlyos",
-]
-
-[[package]]
-name = "mrlytile"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlymath",
- "mrlyos",
- "mrlyskin",
-]
-
-[[package]]
-name = "mrlytimer"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlyos",
-]
-
-[[package]]
-name = "mrlytorch"
-version = "0.2.0"
-
-[[package]]
-name = "mrlyttt"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlyos",
- "mrlyskin",
-]
-
-[[package]]
-name = "mrlytwenty48"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlyos",
- "mrlyskin",
-]
-
-[[package]]
-name = "mrlytwo"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlymath",
- "mrlyos",
- "mrlyskin",
 ]
 
 [[package]]
 name = "mrlyweb"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
- "mrlyarc",
- "mrlybang",
- "mrlycalculator",
- "mrlycalendar",
- "mrlycaptcha",
- "mrlychess",
- "mrlyclock",
- "mrlycolors",
  "mrlycore",
- "mrlycrush",
- "mrlydice",
- "mrlyemojis",
- "mrlyescape",
- "mrlyfiles",
- "mrlyfont",
- "mrlyfonts",
- "mrlygraph",
- "mrlyhash",
- "mrlyiden",
- "mrlyjulia",
- "mrlylife",
- "mrlylog",
- "mrlymandelbrot",
+ "mrlylab",
  "mrlymath",
- "mrlymatrix",
- "mrlymemory",
- "mrlymenu",
- "mrlymines",
- "mrlymoire",
- "mrlynotes",
- "mrlyos",
- "mrlypaint",
- "mrlyphotos",
- "mrlyquiz",
- "mrlysettings",
- "mrlysix",
- "mrlyskin",
- "mrlysleep",
- "mrlysnake",
- "mrlysolids",
- "mrlystudio",
- "mrlytennis",
- "mrlythree",
- "mrlytile",
- "mrlytimer",
- "mrlyttt",
- "mrlytwenty48",
- "mrlytwo",
-]
-
-[[package]]
-name = "mrlyweb-js"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlyos",
- "mrlyweb",
+ "mrlynum",
  "wasm-bindgen",
-]
-
-[[package]]
-name = "mrlyweb-py"
-version = "0.2.0"
-dependencies = [
- "mrlycore",
- "mrlyos",
- "mrlyweb",
- "pyo3",
 ]
 
 [[package]]
@@ -566,97 +171,97 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 
 [[package]]
-name = "portable-atomic"
-version = "1.13.1"
+name = "png"
+version = "0.17.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c33a9471896f1c69cecef8d20cbe2f7accd12527ce60845ff44c153bb2a21b49"
+checksum = "82151a2fc869e011c153adc57cf2789ccb8d9906ce52c0b39a6b5697749d7526"
+dependencies = [
+ "bitflags",
+ "crc32fast",
+ "fdeflate",
+ "flate2",
+ "miniz_oxide 0.8.9",
+]
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.106"
+version = "1.0.107"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8fd00f0bb2e90d81d1044c2b32617f68fcb9fa3bb7640c23e9c748e53fb30934"
+checksum = "985e7ec9bb745e6ce6535b544d84d6cd6f7ad8bd711c398938ae983b91a766d9"
 dependencies = [
  "unicode-ident",
 ]
 
 [[package]]
-name = "pyo3"
-version = "0.29.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4688ddedf473e32662b9b067670129a8afb8c18e351482c70d62ba4a88171e8b"
-dependencies = [
- "libc",
- "once_cell",
- "portable-atomic",
- "pyo3-build-config",
- "pyo3-ffi",
- "pyo3-macros",
-]
-
-[[package]]
-name = "pyo3-build-config"
-version = "0.29.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f41027e41b4bd03f6e60f9f417fe24a6341a6bb744edd62b6f709f2a52ea30e9"
-dependencies = [
- "target-lexicon",
-]
-
-[[package]]
-name = "pyo3-ffi"
-version = "0.29.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e591a95526fead067432c3b3a33fc74770b87b1e04e73671090d9c2055a2b327"
-dependencies = [
- "libc",
- "pyo3-build-config",
-]
-
-[[package]]
-name = "pyo3-macros"
-version = "0.29.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "73225868fc1cd84eef2c3c230ddb91273bf1de46aeb8a4248da76d32a0924a1c"
-dependencies = [
- "proc-macro2",
- "pyo3-macros-backend",
- "quote",
- "syn",
-]
-
-[[package]]
-name = "pyo3-macros-backend"
-version = "0.29.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "571575aa3749fa6216757dd47d2a3e7ef360f329a40f0666a9fbd14889024952"
-dependencies = [
- "heck",
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "quote"
-version = "1.0.45"
+version = "1.0.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41f2619966050689382d2b44f664f4bc593e129785a36d6ee376ddf37259b924"
+checksum = "1fbf4db142a473a8d80c26bbf18454ed458bf8d26c8219c331daecfdbd079001"
 dependencies = [
  "proc-macro2",
 ]
 
 [[package]]
 name = "rustversion"
-version = "1.0.22"
+version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b39cdef0fa800fc44525c84ccb54a029961a8215f9619753635a9c0d2538d46d"
+checksum = "cf54715a573b99ac80df0bc206da022bcd442c974952c7b9720069370852e21f"
+
+[[package]]
+name = "serde"
+version = "1.0.229"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4148590afebada386688f18773da617792bf2ef03ffc1e4cbd2b1d45b023e0ba"
+dependencies = [
+ "serde_core",
+ "serde_derive",
+]
+
+[[package]]
+name = "serde_core"
+version = "1.0.229"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "67dca2c9c51e58a4791a4b1ed58308b39c64224d349a935ab5039aa360942a48"
+dependencies = [
+ "serde_derive",
+]
+
+[[package]]
+name = "serde_derive"
+version = "1.0.229"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e7a5d71263a5a7d47b41f6b3f06ba276f10cc18b0931f1799f710578e2309348"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 3.0.4",
+]
+
+[[package]]
+name = "serde_json"
+version = "1.0.151"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c841b55ecdae098c80dcae9cf767f6f8a0c2cdb3416bbef72181df4d0fe73f14"
+dependencies = [
+ "indexmap",
+ "itoa",
+ "memchr",
+ "serde",
+ "serde_core",
+ "zmij",
+]
+
+[[package]]
+name = "simd-adler32"
+version = "0.3.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3a219298ac11a56ea9a6d2120044824d6f01aeb034955e7af7bc16858527deea"
 
 [[package]]
 name = "syn"
-version = "2.0.118"
+version = "2.0.119"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b9ae57f904213ebb649ce6895b8a66c66f0203b9319718f69a5612a065b1422"
+checksum = "872831b642d1a07999a962a351ed35b955ea2cfc8f3862091e2a240a84f17297"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -664,10 +269,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "target-lexicon"
-version = "0.13.5"
+name = "syn"
+version = "3.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "adb6935a6f5c20170eeceb1a3835a49e12e19d792f6dd344ccc76a985ca5a6ca"
+checksum = "e6275cddf4610d1775e6d1fe9469b2e77d0f39fd98fb7450901b821e0c53649f"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "unicode-ident",
+]
 
 [[package]]
 name = "unicode-ident"
@@ -707,7 +317,7 @@ dependencies = [
  "bumpalo",
  "proc-macro2",
  "quote",
- "syn",
+ "syn 2.0.119",
  "wasm-bindgen-shared",
 ]
 
@@ -719,3 +329,21 @@ checksum = "23939e44bb9a5d7576fa2b563dc2e136628f1224e88a8deed09e04858b77871f"
 dependencies = [
  "unicode-ident",
 ]
+
+[[package]]
+name = "weezl"
+version = "0.1.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a28ac98ddc8b9274cb41bb4d9d4d5c425b6020c50c46f25559911905610b4a88"
+
+[[package]]
+name = "zlib-rs"
+version = "0.6.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "34b31d188d9d685a4f9c7b46d6e36631b07058d2cfe190267adce54dc230bf12"
+
+[[package]]
+name = "zmij"
+version = "1.0.23"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "29666d0abbfad1e3dc4dcf6144730dd3a3ab225bbbdac83319345b1b44ccfc1b"
