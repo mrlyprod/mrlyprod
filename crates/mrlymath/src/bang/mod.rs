@@ -2,8 +2,6 @@
 pub mod baseq;
 /// The cached canonical codes and tile sources of a dimension.
 pub mod catalog;
-/// The boolean complexity measures of designs.
-pub mod complexity;
 /// The design counts, raw and distinct under symmetry.
 pub mod counting;
 /// The packing of residue corners into codes and back.

@@ -4,10 +4,6 @@ pub mod census;
 pub mod extract;
 /// The node, branch and network types.
 pub mod models;
-/// The Laplacian spectra of a network and the eigensolver under them.
-pub mod spectrum;
-/// The seeded random walks over a network and their exponents.
-pub mod walk;
 
 pub use census::{census, roles, Census, Role};
 pub use extract::{core_graph, edge_graph, tunnel_graph};

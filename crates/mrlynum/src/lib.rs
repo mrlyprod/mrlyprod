@@ -17,8 +17,6 @@ pub mod fft;
 pub mod graph;
 /// The visible lattice: totients, coprime pairs, the pi estimate and the Farey nodes.
 pub mod lattice;
-/// The odd entries of Pascal's triangle and pyramid.
-pub mod pascal;
 /// The prime objects: values, ranks, gaps and the shape readings of a number.
 pub mod prime;
 /// The infinite sums: zeta and its Dirichlet cousins, the visible count and the Bernoulli fractions.

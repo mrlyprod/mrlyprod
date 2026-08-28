@@ -21,3 +21,8 @@ target/
 demos/node_modules/
 demos/pkg/
 demos/dist/
+
+# PYTHON
+.venv/
+__pycache__/
+uv.lock

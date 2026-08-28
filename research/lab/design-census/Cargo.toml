@@ -1,0 +1,10 @@
+[package]
+name = "design-census"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+mrlymath.workspace = true
+mrlynum.workspace = true
+num-bigint.workspace = true
+num-rational.workspace = true

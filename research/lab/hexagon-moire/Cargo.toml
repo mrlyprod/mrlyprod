@@ -1,0 +1,10 @@
+[package]
+name = "hexagon-moire"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+mrlycore.workspace = true
+mrlymath.workspace = true
+mrlynum.workspace = true
+num-rational.workspace = true

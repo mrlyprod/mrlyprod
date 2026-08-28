@@ -1,0 +1,20 @@
+[workspace]
+resolver = "2"
+members = ["design-census", "dimension-one-ladder", "oeis-terms", "hexagon-moire", "farey-discrepancy", "walk-dimension", "spectral-spacings"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[workspace.dependencies]
+mrlycore = { path = "../../crates/mrlycore" }
+mrlynum = { path = "../../crates/mrlynum" }
+mrlymath = { path = "../../crates/mrlymath" }
+mrlylab = { path = "../../crates/mrlylab" }
+num-bigint = "0.4"
+num-rational = "0.4"
+faer = "0.24"
+
+[profile.release]
+opt-level = 3

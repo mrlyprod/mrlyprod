@@ -1,15 +1,94 @@
-# Research
+# MrlyMath
 
-- The mathematics of the mrly tree, one page per idea, every number computed by the crates or proved in a paper.
-- A page states its claims with one tag each: Proved, Verified, Conjecture.
-- A number on a page names the crate function that computes it, the paper that proves it, or the OEIS entry that lists it; nothing else counts.
+The mathematics of the mrly tree: a parity rule on the corners of a cube, substituted into itself by the Kronecker product, and everything that falls out of those two moves. One subject, one tree.
+
+## THE LAW
+
+- Every claim carries exactly one tag: **Proved**, **Verified**, **Conjecture**, **Refuted**.
+- Every printed number names its generator: a crate function in `../crates`, a study in `lab/`, a paper on the [shelf](https://github.com/carlomitchener/carlomitchener/tree/main/research), or an [OEIS](https://oeis.org) entry.
 - A theorem from the literature is cited at its source; a claim of this tree never rests on a citation alone.
-- Designs are named as the crates spell them: mrly_bang_d3_23, never a retired spelling.
-- A figure on a page is drawn by a crate function or a demo, never by hand.
-- A page links the demo that shows it; the demos run the same crates through wasm.
-- Papers live at https://github.com/carlomitchener/carlomitchener/tree/main/research and link back here.
-- Math is written in backticks so it renders everywhere.
+- Present tense, no dates, no names, no story: the mathematics and its witnesses, nothing else.
+- Math is written in backticks so it renders everywhere; lines never wrap.
+- A figure is drawn by a lab study, a crate function or a demo, never by hand.
+- The demos in `../demos` run the same crates through wasm; a page links the demo that shows it.
+- A study in `lab/` is deleted the day a crate function or a demo computes its numbers.
+- A paper on the shelf links the page it grew from; the page links the paper that proves it.
 
-## PAGES
+## THE BAR
 
-- Filled in as pages land.
+- One subject: MrlyMath, pure mathematics only.
+- A study terminates in a proof, an OEIS entry, a crate function, or a demo.
+- Anything that needs a physical lab to matter is out.
+- A study whose headline is "MrlyMath fails here" stays off the shelf; refutation discipline inside a study stays.
+- A new study is a new `lab/` folder, plus a topic page when it earns one.
+
+## THE TREE
+
+- `README.md` - this page: what MrlyMath is, the law, the tree, the index.
+- `DISCOVERIES.md` - the one ledger: every finding on a tagged line with its witness.
+- `REFS.md` - every named reference resolved to a canonical URL.
+- `sequences.md` - the OEIS ledger: every sequence this work produces, with terms, formulas and status.
+- `lab/<study>/` - the code that regenerates the numbers; one `README.md` per study saying what it computes, how to run it, and which page lines it witnesses.
+- Lab studies are Rust crates in `lab/Cargo.toml` depending on the crates by path, or Python run with `uv` from the repo root; no comments, no logs, no data over 100KB.
+- `figures/` - the figures the pages embed, each drawn by the study its page names.
+- Lowercase topic pages, one per idea, indexed under DOCS.
+
+## WHY IT MATTERS
+
+- The universe of shapes is finite and already enumerated. A design is a subset of the `2^D` corners of the parity cube, so there are `2^(2^D)` of them - 4, 16, 256, 65536 at `D = 1..4` - and the Sierpinski carpet and the Menger sponge are two entries in that list rather than two inventions ([core](core.md)).
+- Up to cube symmetry that list is a list mathematics already keeps: it is the NP-classification of Boolean functions, [A000616](https://oeis.org/A000616). Sensitivity, certificate complexity and decision-tree depth are therefore properties of a fractal, with no translation step ([bijection](bijection.md)).
+- The arithmetic the same construction exposes is not decorative. The bright nodes of the stacked grid are the Farey fractions, and how evenly they spread is equivalent to the Riemann hypothesis by [Franel 1924](https://eudml.org/doc/59156) and [Landau 1924](https://eudml.org/doc/59157), stated in modern form on the [Farey sequence page](https://en.wikipedia.org/wiki/Farey_sequence) ([farey](farey.md)).
+- Three sequences out of this work are with the OEIS, [A395241](https://oeis.org/A395241), [A396934](https://oeis.org/A396934) and [A398348](https://oeis.org/A398348), and the fractal families behind them are published on [Bourke's fractal page](https://paulbourke.net/fractals/mrlymath/) with the [source PDF](https://paulbourke.net/fractals/mrlymath/mrlymath.pdf).
+
+## KEY FINDINGS
+
+- **A design is a Boolean function, and the counts follow. Proved.** The indicator map is an equivariant bijection carrying cube symmetry (the signed permutations `B_D`, order `2^D * D!`) onto NP-equivalence, so the class counts are [A000616](https://oeis.org/A000616): `3, 6, 22, 402, 1228158, 400507806843728` at `D = 1..6`. Reproduced three independent ways - orbit walk on designs, orbit walk on truth tables, and a [Burnside](https://en.wikipedia.org/wiki/Burnside%27s_lemma) average - and checked against the live entry through `D = 7`. The NPN sibling, adjoining output complementation, gives `2, 4, 14, 222`, which is [A000370](https://oeis.org/A000370) at `D = 1..4` ([bijection](bijection.md)).
+- **Past base 2 the same census is a known toroidal one. Verified.** Burnside over one dihedral group per residue axis gives `2, 6, 26, 805, 172112, 239123150, 1436120190288, 36028817512382026` at `D = 2`, `q = 1..8`, which is [A255016](https://oeis.org/A255016), the toroidal binary arrays of [Ethier and Lee 2015](https://cs.uwaterloo.ca/journals/JIS/VOL18/Lee/lee6.html). Quotienting the same cells by the rigid hypercube group instead gives `2, 6, 102, 8548, 4211744`, which is [A054247](https://oeis.org/A054247) and row `n = 2` of [A361870](https://oeis.org/A361870).
+- **The `D = 3` line of that census is this tree's own OEIS entry. Verified.** The same Burnside at `D = 3` gives `2, 22, 111618, 6005363762644688, 7089215977519836239803174210135872`, which is [A398348](https://oeis.org/A398348), with a b-file to `n = 14` ([bijection](bijection.md)).
+- **Every diagonal cut of `mrly_126` is a Sierpinski gasket of exactly `3^L` points. Verified.** The binary digits of the height schedule which triple of corners each scale uses, so no height is deficient and the slice dimension is `log(3)/log(2) = 1.584963` at every one. The two central cuts together fall into six congruent gaskets of `3^(L-1)` tiling a hexagon, three per cut, with an order-12 symmetry group, to `L = 8` (`6 * 3^(L-1) = 2 * 3^L` points in all: 18, 54, 162, 486, 1458, 4374, 13122). The object is the standard octahedron flake of dimension `log(6)/log(2)` ([n-flake](https://en.wikipedia.org/wiki/N-flake)) and the digit-scheduled mechanism is published by [Nakajima and Watanabe 2026](https://arxiv.org/abs/2603.06004) ([journal version](https://doi.org/10.1016/j.chaos.2026.118353)); what is specific here is the constancy - their digit changes the number of maps, this one changes only the orientation ([cuts](cuts.md)).
+- **The flat slice is a page of Pascal's pyramid. Proved.** At height offset zero the three coordinates have disjoint binary supports, which by [Kummer's theorem](https://en.wikipedia.org/wiki/Kummer%27s_theorem) is exactly the condition for the trinomial coefficient to be odd, so the lowest slice is the odd part of layer `2^L - 1` of [A268240](https://oeis.org/A268240), counted by [A048883](https://oeis.org/A048883) `= 3^wt(n)`. The 2D analogue is [A047999](https://oeis.org/A047999) with antidiagonal populations [A001316](https://oeis.org/A001316), on record since [Glaisher 1899](https://babel.hathitrust.org/cgi/pt?id=hvd.32044102924578); both b-files check term for term ([b001316](https://oeis.org/A001316/b001316.txt), [b047999](https://oeis.org/A047999/b047999.txt)). The classical layer count swings between `1` and `3^L`; `mrly_126`'s is `3^L` at every admissible height ([cuts](cuts.md)).
+- **Geometry under-determines Boolean complexity at `D = 4`, with a named witness. Verified.** `mrly_00027` and `mrly_00281` share genus, `GF(2)` degree, popcount and the fill polynomial `4k^4 - 4k^3 + k^2` - everything the fractal knows - and split six of seven complexity measures. Across both catalogs `C = bs` on all 424 classes, `s = bs` everywhere at `D = 3` with exactly one exception at `D = 4` (`mrly_07128`, `s = 2`, `bs = 3`, orbit 24), and exactly two classes meet `deg = s^2`, `mrly_00855` and `mrly_01911`; the second is the textbook AND-of-ORs that [Huang 2019](https://arxiv.org/abs/1907.00847) ([journal](https://doi.org/10.4007/annals.2019.190.3.6)) names as tight for `s(f) >= sqrt(deg(f))` ([complexity](complexity.md)).
+- **The base-2 flake carries an exact interior band gap. Verified.** The combinatorial Laplacian of the `mrly_023` flake has no eigenvalue strictly inside its gap at any level to `L = 6`, the lower edge climbing `1.000000, 1.827520, 1.975680, 1.996862, 1.999605, 1.999950`, and the upper edge is exactly 4 in exact rational arithmetic - a simple eigenvalue, with `3*4^(L-1)` eigenvalues below 2 and none in `[2, 4)`. The edge closes at a fitted `c * 8^(-L)` with `c` near 12.9868, carried to `L = 10`; that rate is a fit with no mechanism, and stays **Conjecture** ([complexity](complexity.md)).
+- **The slice mesh is classical lattice geometry, and its sequences are already catalogued. Verified.** The central diagonal section of the odd cube is a hexagon of `6*n^2` unit triangles with `12k^2 - 6k + 1` vertices and `V - E + F = 1` at every size; the vertex count is [A154105](https://oeis.org/A154105) at `n = k-1`, the centered hexagonal number [A003215](https://oeis.org/A003215) at index `2k - 1`, so a prime vertex count is always a cuban prime, [A002407](https://oeis.org/A002407). For `k = 1..20` ten values are prime (`7, 37, 271, 397, 547, 919, 1657, 1951, 2269, 4219`) and ten composite. Carpet and net partition the hexagon cell for cell (`42 + 12` at `n = 3`, up to `3696 + 2070` at `n = 31`), and their components and holes both run the centered hexagonal numbers ([slices](slices.md)).
+- **Two prior-art collisions, attached. Verified.** The carpet face-count law derived in [slices](slices.md), `V(i) = 2*20^i + 4*8^i` with visible faces `72, 1056, 18048, 336384`, is [A332705](https://oeis.org/A332705) verbatim, the surface area of a stage-`n` Menger sponge. The carpet slice census `6, 42, 306, 2250, 16578` printed in [complexity](complexity.md) is [A299916](https://oeis.org/A299916) shifted by one: this work counts filled mesh triangles at level `L`, A299916 counts hexagram *holes* of the `n`-th descending size in the same cross-section, and `census(L) = A299916(L+1)`. A299916's own name is `a(n) = A299914(2n+1)`, an odd bisection of an arithmetic divisibility sequence with no geometry in the definition; the Menger reading is a single comment on the entry. Its recurrence `a(n) = 9*a(n-1) - 12*a(n-2)` hands the slice the closed form it lacked and a dimension of `log((9 + sqrt(33))/2)/log(3) = 1.8184`.
+- **Why the shared row is an identity and not a coincidence. Proved.** Section the level-`L` sponge on `x + y + z = 1.5*3^L`: a surviving cube cuts a hexagon of 6 mesh triangles or a triangle of 1, so the census is `6*H_L + T_L`. Refining triples the plane offset, and of a cube's 27 subcubes the 20 survivors split by coordinate sum as `1, 3, 3, 6, 3, 3, 1`, so a hexagon cell keeps the 6 of sum 3 as hexagons and the `3 + 3` of sums 2 and 4 as triangles, while a triangle cell keeps 1 and 3 on either side. That is Abel's substitution proved by exhaustion, not quoted: `H_(L+1) = 6*H_L + T_L` and `T_(L+1) = 6*H_L + 3*T_L`, hence the census is `H_(L+1)`. The same exhaustion gives the ledger `54 = 6*6 + 6*1 + 12` for a hexagon and `9 = 1*6 + 3*1` for a triangle, so exactly one 12-triangle hexagram is punched per hexagon and none per triangle, and holes of the `n`-th descending size number `H_n = A299916(n)`. Two bijections, one index apart. Recomputed cold from the Menger digit rule for `L = 0..5`, where the empty area resolves into `1, 6, 42` connected components of descending size, each with six radial maxima, sixfold symmetry to `0.001` and `max/min` radius `1.68` against the hexagram's `sqrt(3)`.
+- **The isotropic-class count is proved, not fitted. Proved.** `3, 5, 10, 19, 36, 71, 136, 271` is the number of subsets of `{0..D}` up to reversal, minus one at even `D`. That is [A005418](https://oeis.org/A005418) at index `D + 2` less the even-`D` correction, recomputed to `D = 16`: `..., 528, 1055, 2080, 4159, 8256, 16511, 32896, 65791`. Nameable classes grow like `2^D`, half the `2^(D+1)` subsets of `{0..D}`, while all classes grow at least doubly exponentially, so almost every design is a compound ([core](core.md)).
+- **Structure holds together where matched noise shatters. Verified.** At identical grid and identical cell count, every self-similar design tested is one component at every size while the random control is not: the `256 x 256` gasket reads 1 against `5257.23 +/- 32.94`, the `81^3` sponge 1 against `31576.40 +/- 152.71`, and 0 of 400 random draws ever reach one component at the `32 x 32` gasket. Boundary per cell runs the other way, 2.0003 against `3.6006 +/- 0.0103` at `256 x 256` ([connectivity](connectivity.md)).
+- **Mass does not fix music. Verified.** Codes 127 and 239 share fill 7 and hence `d_f = log(7)/log(3) = 1.7712` exactly, identical density at every level, and separate in walk dimension by about 0.39 (2.26 against 2.64) with both generators agreeing and every drift bar an order of magnitude smaller. The carpet row lands near the accepted numerics, `d_w` 2.097 to 2.123, on the rigorous foundation of [Barlow and Bass 1999](https://doi.org/10.4153/CJM-1999-031-4) ([walks](walks.md)).
+- **Every mrly design is lattice, and measurability fails only where the theorems reach. Proved.** One-base designs have poles on a single vertical line, `s = d + 2*pi*i*m/ln(n)`, and the Cantor design is provably not Minkowski measurable, its limit profile swinging 3.53% and matching the closed form to `4.9e-9`. The literature is asymmetric: nonlattice sets are measurable in every dimension ([Gatzouras 2000](https://doi.org/10.1090/S0002-9947-99-02539-8)), lattice sets are not, but as a theorem only on the line ([Falconer 1995](https://doi.org/10.1090/S0002-9939-1995-1224615-4), completed by [Kombrink and Winter 2020](https://doi.org/10.1017/etds.2018.26); for strings, [Lapidus and van Frankenhuijsen 2006](https://doi.org/10.1007/978-0-387-35208-4)). So the carpet and the sponge stay **Conjecture** ([dimensions](dimensions.md)).
+- **A negative result that closes a thread. Refuted.** The spectra of every mrly fractal tested cluster rather than repel, excluding GOE and GUE by a wide margin up to 4096 nodes, with no bearing on the Riemann hypothesis ([complexity](complexity.md)).
+
+## DOCS
+
+- [core](core.md) - what a design is, the headline counts, and the three genera.
+- [bijection](bijection.md) - designs are Boolean functions up to cube symmetry; the strongest theorem in the tree.
+- [complexity](complexity.md) - Boolean complexity of the catalog, and the Laplacian spectra of the fractals it builds.
+- [cuts](cuts.md) - the six-gasket theorem: a diagonal cut through one parity solid is Sierpinski all the way down.
+- [slices](slices.md) - the diagonal slice of the solid cube: the `6n` census, centered-hexagonal vertices, and the splitting-prime rule.
+- [dimensions](dimensions.md) - complex dimensions: every design in the lattice class, and where Minkowski measurability fails.
+- [connectivity](connectivity.md) - self-similar designs raced against matched random cell sets on components and boundary.
+- [walks](walks.md) - the walk-dimension census: same mass, different music.
+- [method](method.md) - how the results here are produced and checked, worked through on the odd-side fill polynomial.
+- [farey](farey.md) - the stack's moire is a Farey resonance diagram; each scale `n` adds exactly `phi(n)` bright nodes, and the stack is an address rather than a construction: any depth evaluates in closed form, which buys rendering and provably nothing toward RH.
+- [pi](pi.md) - pi recovered from the density of coprime points in the stacked set, two disjoint ways.
+- [coprime](coprime.md) - the coprimality spine: exact base-local factors on every design, the census behind them, and the b-visible and directional extensions.
+- [bases](bases.md) - what base 3 hides: an Eisenstein L-value where base 2 hid pi.
+- [spectra](spectra.md) - the tile grammar of the diagonal slice at every odd base: the two-tile claim, the closed forms, and the mod-4 split.
+- [sequences](sequences.md) - the OEIS ledger: every sequence this work produces, with terms, formulas, and verification status.
+
+## SOURCES
+
+Every reference is resolved, with the unresolved tail stated plainly, in [REFS.md](REFS.md). The load-bearing external anchors:
+
+- [A000616](https://oeis.org/A000616) - NP-equivalence classes of Boolean functions; the design count in every dimension.
+- [A255016](https://oeis.org/A255016) and [Ethier and Lee 2015](https://cs.uwaterloo.ca/journals/JIS/VOL18/Lee/lee6.html) - toroidal binary arrays; the base-`q` census at `D = 2`.
+- [Huang 2019](https://arxiv.org/abs/1907.00847) - the Sensitivity Conjecture; `s(f) >= sqrt(deg(f))` and its AND-of-ORs extremal case.
+- [Nakajima and Watanabe 2026](https://arxiv.org/abs/2603.06004) - digit-scheduled slices of the Sierpinski tetrahedron; the published half of the cuts mechanism.
+- [Franel 1924](https://eudml.org/doc/59156) and [Landau 1924](https://eudml.org/doc/59157) - Farey discrepancy as an RH equivalent.
+- [Gatzouras 2000](https://doi.org/10.1090/S0002-9947-99-02539-8), [Falconer 1995](https://doi.org/10.1090/S0002-9939-1995-1224615-4), [Kombrink and Winter 2020](https://doi.org/10.1017/etds.2018.26) - the lattice/nonlattice measurability split.
+- [A332705](https://oeis.org/A332705) and [A299916](https://oeis.org/A299916) - the Menger sponge's surface, and the hexagram hole count of its diagonal cross-section, which A299916 carries in a comment and not in its arithmetic name.
+- [Bourke's fractal page](https://paulbourke.net/fractals/mrlymath/) and the [source PDF](https://paulbourke.net/fractals/mrlymath/mrlymath.pdf) - the published rendering of these families.
+
+## LICENCE
+
+Text and figures [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); code [MIT](https://opensource.org/license/mit). The sequences themselves belong to the OEIS and its contributors.

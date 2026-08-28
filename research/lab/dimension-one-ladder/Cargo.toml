@@ -1,0 +1,8 @@
+[package]
+name = "dimension-one-ladder"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+mrlynum.workspace = true

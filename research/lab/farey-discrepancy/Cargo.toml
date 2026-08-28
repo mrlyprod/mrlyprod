@@ -1,0 +1,7 @@
+[package]
+name = "farey-discrepancy"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+mrlynum.workspace = true

@@ -19,8 +19,6 @@ pub mod renderer;
 pub mod serializer;
 /// The random tiles and the flat cells they build.
 pub mod tile;
-/// The Kronecker words of flat designs and their observables.
-pub mod word;
 
 pub use carry::{capacity, embed, extract, read, sheet};
 pub use census::{census, euler, fills, Census};

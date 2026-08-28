@@ -1,0 +1,8 @@
+[package]
+name = "oeis-terms"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+mrlynum.workspace = true
+num-bigint.workspace = true
