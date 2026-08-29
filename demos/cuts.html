@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mrly · the cuts</title>
+<link rel="stylesheet" href="./mrly.css">
+</head>
+<body>
+<header>
+  <nav><a href="./">demos</a> / cuts</nav>
+  <h1>Every diagonal cut is the same size</h1>
+  <p class="sub">A plane <code>x + y + z = s</code> slides through the level-L solid of <code>mrly_bang_d3_126</code> and meets exactly 3^L cells at every height it meets at all. The binary digits of the height say which corners each scale may use, so every cut is a Sierpinski gasket, and the two central heights together fall into six of them tiling a hexagon. Drag the bar chart to move the plane.</p>
+</header>
+<main>
+  <div class="row">
+    <label>design <select id="pick"></select></label>
+    <label>code <input type="text" id="code" value="126"></label>
+    <label>level <input type="range" id="level" min="1" max="9" value="5"><span class="num" id="level-out">5</span></label>
+    <label>height <input type="range" id="height" min="0" max="1" value="0"><span class="num" id="height-out"></span></label>
+    <label><input type="checkbox" id="both"> both central heights</label>
+    <label>view <select id="view"><option value="points">points</option><option value="section">section</option></select></label>
+  </div>
+  <canvas class="bars" id="bars"></canvas>
+  <div class="stats">
+    <span>name <b id="name"></b></span>
+    <span>side <b id="side"></b></span>
+    <span>support <b id="support"></b></span>
+    <span>non-empty <b id="live"></b></span>
+    <span>this slice <b id="here"></b></span>
+    <span>min <b id="least"></b></span>
+    <span>max <b id="most"></b></span>
+    <span>constant <b id="flat"></b></span>
+    <span>offset in binary <b id="digits"></b></span>
+    <span>points drawn <b id="drawn"></b></span>
+  </div>
+  <div id="art"></div>
+  <div class="note" id="note"></div>
+  <p class="foot">The profile is the coefficient list of the digit polynomial, so a height is counted without building a single cell; the points are enumerated on the plane itself and projected down the <code>(1,1,1)</code> axis in Rust, one circle per cell, coloured by height and by top-scale corner. The section view is the crate's own triangular mesh through the same solid.</p>
+</main>
+<script type="module" src="./cuts.js"></script>
+</body>
+</html>

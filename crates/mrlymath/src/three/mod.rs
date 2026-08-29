@@ -2,6 +2,8 @@
 pub mod census;
 /// The builders of coded, corner, noise and carpet cubes.
 pub mod designs;
+/// The diagonal slices of a cube: their profile, their cells, their projection and their drawing.
+pub mod diagonal;
 /// The exposed quads and wire edges of a cube.
 pub mod faces;
 /// The orientations, merges, masked mosaics, slices and lifts of cubes.
@@ -22,10 +24,13 @@ pub mod sheets;
 /// The random tiles and the cubes they build.
 pub mod tile;
 
-pub use census::{census, euler, fills, Census};
+pub use census::{census, euler, fills, hidden, Census};
 pub use designs::{
     carpet, create, from_corners, level_set, levels_code, named, net, noise, ones, random,
     random_classic, void, xtree, ytree, zeros, ztree,
+};
+pub use diagonal::{
+    profile, project, shadow, slice as diagonal_slice, support, svg as diagonal_svg,
 };
 pub use faces::{quads, wires, Quad};
 pub use geometry::{extrude, magic, manhattan_layers, merge, mosaic, orientations, slice, special};

@@ -8,5 +8,5 @@ pub mod surface;
 pub use counting::{
     dimension, fill, fill_from_corners, grid, limit, positions, ratio, rational, void,
 };
-pub use six::{cut_fills, cut_voids, pro_fills, pro_voids};
+pub use six::{centered_hexagonal, cut_fills, cut_voids, pro_fills, pro_voids};
 pub use surface::{surface, surface_of_tile};

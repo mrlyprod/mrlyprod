@@ -5,6 +5,6 @@ pub mod extract;
 /// The node, branch and network types.
 pub mod models;
 
-pub use census::{census, roles, Census, Role};
+pub use census::{census, largest_component, roles, Census, Role};
 pub use extract::{core_graph, edge_graph, tunnel_graph};
 pub use models::{Branch, Network, Node};

@@ -72,3 +72,77 @@ pub fn three_census(code: &str, number: usize, level: usize, base: usize) -> Res
 pub fn three_surface(code: &str, number: usize, level: u32, base: usize) -> Result<String, Fault> {
     Ok(formulas::surface(code_of(code)?, number, level, base)?.to_string())
 }
+
+// DIAGONAL
+
+fn depth(level: usize) -> Result<(), Fault> {
+    if !(1..=40).contains(&level) {
+        return Err(Fault::new("level must be between 1 and 40."));
+    }
+    Ok(())
+}
+
+/// Profiles the diagonal cut of the cube: the support, the count on every height inside it, the extremes and whether the cut is constant, as JSON.
+#[wasm_bindgen]
+pub fn diagonal_profile(
+    code: &str,
+    number: usize,
+    level: usize,
+    base: usize,
+) -> Result<String, Fault> {
+    depth(level)?;
+    let counts = three::profile(code_of(code)?, number, level, base)?;
+    let (low, high) = three::support(&counts)
+        .ok_or_else(|| Fault::new(format!("code {code} fills no cell, so it has no cut.")))?;
+    let span = &counts[low..=high];
+    let live: Vec<u128> = span.iter().copied().filter(|&count| count > 0).collect();
+    let least = *live.iter().min().unwrap();
+    let most = *live.iter().max().unwrap();
+    Ok(json!({
+        "side": number.pow(level as u32),
+        "support": [low, high],
+        "counts": span.iter().map(|count| count.to_string()).collect::<Vec<String>>(),
+        "nonempty": live.len(),
+        "heights": span.len(),
+        "min": least.to_string(),
+        "max": most.to_string(),
+        "constant": live.len() == span.len() && least == most,
+    })
+    .to_string())
+}
+
+/// Counts the filled cells on one diagonal plane of the cube, without building it.
+#[wasm_bindgen]
+pub fn diagonal_count(
+    code: &str,
+    number: usize,
+    level: usize,
+    base: usize,
+    height: usize,
+) -> Result<String, Fault> {
+    depth(level)?;
+    let counts = three::profile(code_of(code)?, number, level, base)?;
+    Ok(counts.get(height).copied().unwrap_or(0).to_string())
+}
+
+/// Draws the named diagonal slices of the cube down the `(1,1,1)` axis, one circle per cell, as SVG.
+#[wasm_bindgen]
+pub fn diagonal_svg(
+    code: &str,
+    number: usize,
+    level: usize,
+    base: usize,
+    heights: Vec<u32>,
+    scale: usize,
+) -> Result<String, Fault> {
+    depth(level)?;
+    let heights: Vec<usize> = heights.iter().map(|&height| height as usize).collect();
+    Ok(three::diagonal_svg(
+        code_of(code)?,
+        number,
+        level,
+        base,
+        &heights,
+        scale,
+    )?)
+}

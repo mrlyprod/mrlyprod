@@ -8,6 +8,14 @@ for (const site of [7, 12, 17]) blinker[site] = 1;
 const grid = m.two_grid('7', 3, 3, 0, 2);
 const faces = m.three_faces('23', 3, 3, 2);
 const race = new m.Race('127', 3, 4, 3, 300, 1);
+const cut = JSON.parse(m.diagonal_profile('126', 2, 4, 2));
+const art = m.diagonal_svg('126', 2, 3, 2, [10, 11], 4);
+const slice = JSON.parse(m.slice_census('23', 3, 1, 2));
+const deep = JSON.parse(m.slice_census('23', 3, 2, 2));
+const series = JSON.parse(m.slice_series('23', 6));
+const flat = JSON.parse(m.spectrum('flat', '7', 2, 4, true, 0.1));
+const piece = JSON.parse(m.spectrum('slice', '23', 3, 1, true, 0.1));
+const plain = JSON.parse(m.spectrum('flat', '7', 2, 2, false, 0.1));
 
 const checks: [string, unknown, unknown][] = [
   ['two_grid 7 side', grid.width, 27],
@@ -31,6 +39,28 @@ const checks: [string, unknown, unknown][] = [
   ['life primes', Array.from(m.life_sequence('primes', 8)).join(','), '2,3,5,7'],
   ['moire heatmap bytes', m.moire('heatmap', 9, 32, 'fire', 64, false).rgba.length, 4096],
   ['hex_svg polygons', m.hex_svg('23', 3, 1, 2, 'iso', 10).includes('<polygon'), true],
+  ['slice_census 23 mesh', `${slice.triangles},${slice.fills},${slice.vertices},${slice.euler}`, '54,42,37,1'],
+  ['slice_census 23 pieces', `${slice.components},${slice.holes}`, '1,1'],
+  ['slice_census 23 closed', slice.closed.vertices, '37'],
+  ['slice_census 232 fills', JSON.parse(m.slice_census('232', 3, 1, 2)).fills, 12],
+  ['slice_census 23 level 2', `${deep.fills},${deep.holes}`, '306,7'],
+  ['slice_series 23 components', series.map((row: {components: number}) => row.components).join(','), '1,1,7,1,19,1'],
+  ['slice_series 23 holes', series.map((row: {holes: number}) => row.holes).join(','), '0,1,0,7,0,19'],
+  ['spectrum flat 7 nodes', `${flat.nodes},${flat.distinct}`, '81,43'],
+  ['spectrum flat 7 degeneracy', `${flat.classes},${flat.one}`, '9,27'],
+  ['spectrum flat 7 pair', flat.pair.join(','), '4,4'],
+  ['spectrum slice 23 nodes', piece.nodes, 42],
+  ['spectrum slice 23 exponent', piece.exponent.toFixed(2), '0.91'],
+  ['spectrum slice 23 fit slope', (piece.fit[1] * 2).toFixed(4), piece.exponent.toFixed(4)],
+  ['spectrum slice 23 stair', `${piece.stair.at(-1)[1]},${piece.fitted},${piece.stair.length < piece.nodes}`, '1,4,true'],
+  ['spectrum flat 7 plain nodes', `${plain.nodes},${plain.distinct}`, '9,8'],
+  ['spectrum flat 7 plain degeneracy', `${plain.classes},${plain.one}`, '1,2'],
+  ['diagonal 126 side', cut.side, 16],
+  ['diagonal 126 support', cut.support.join(','), '15,30'],
+  ['diagonal 126 flat', `${cut.min},${cut.max},${cut.constant}`, '81,81,true'],
+  ['diagonal 126 central', m.diagonal_count('126', 2, 7, 2, 190), '2187'],
+  ['diagonal svg circles', art.includes('<circle') ? art.split('<circle').length - 1 : 0, 54],
+  ['diagonal 127 max', JSON.parse(m.diagonal_profile('127', 2, 4, 2)).max, '162'],
   ['race side', race.side(), 81],
   ['farey 5 nodes', JSON.parse(m.farey(5)).length, 11],
   ['totients 6', Array.from(m.totients(6)).join(','), '0,1,1,2,2,4,2'],

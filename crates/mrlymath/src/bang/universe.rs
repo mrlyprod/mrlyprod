@@ -114,6 +114,42 @@ pub fn degree(code: Code, dimension: usize) -> i32 {
         .unwrap_or(-1)
 }
 
+/// Returns whether no two filled corners of a code sit at Hamming distance one.
+///
+/// Such a design buries no face at any side and any level, so its surface is six per cell.
+///
+/// ```
+/// assert!(mrlymath::bang::universe::total_exposure(129, 3));
+/// assert!(!mrlymath::bang::universe::total_exposure(23, 3));
+/// ```
+pub fn total_exposure(code: Code, dimension: usize) -> bool {
+    let cells = corners(dimension);
+    for (i, cell) in cells.iter().enumerate() {
+        if (code >> i) & 1 == 0 {
+            continue;
+        }
+        for axis in 0..dimension {
+            let mut neighbor = cell.clone();
+            neighbor[axis] ^= 1;
+            if (code >> corner_index(&neighbor)) & 1 == 1 {
+                return false;
+            }
+        }
+    }
+    true
+}
+
+/// Returns whether a code fills the all-even corner, the rule that touches every grid corner at odd side.
+///
+/// ```
+/// assert!(mrlymath::bang::universe::touches_every_corner(23, 3));
+/// assert!(!mrlymath::bang::universe::touches_every_corner(232, 3));
+/// ```
+pub fn touches_every_corner(code: Code, dimension: usize) -> bool {
+    let all_even: Vec<u8> = vec![0; dimension];
+    (code >> corner_index(&all_even)) & 1 == 1
+}
+
 /// Formats the algebraic normal form of a code as a sum of monomials.
 pub fn anf_string(code: Code, dimension: usize) -> String {
     const NAMES: [char; 6] = ['x', 'y', 'z', 'w', 'v', 'u'];
@@ -323,6 +359,34 @@ mod tests {
                 .collect();
         assert_eq!(hist, expected);
     }
+    #[test]
+    fn total_exposure_names_the_independent_corner_sets() {
+        let exposed: Vec<Code> = (0..256).filter(|&c| total_exposure(c, 3)).collect();
+        assert_eq!(exposed.len(), 35);
+        let classes: BTreeSet<Code> = exposed
+            .iter()
+            .map(|&c| *orbit(c, 3).iter().next().unwrap())
+            .collect();
+        assert_eq!(
+            classes.into_iter().collect::<Vec<Code>>(),
+            [0, 1, 6, 22, 24, 105]
+        );
+        assert!(total_exposure(129, 3));
+        assert!(!total_exposure(23, 3));
+    }
+
+    #[test]
+    fn half_the_rules_hold_the_all_even_corner() {
+        assert_eq!(
+            (0..256).filter(|&c| touches_every_corner(c, 3)).count(),
+            128
+        );
+        for code in [23u128, 3, 129] {
+            assert!(touches_every_corner(code, 3), "code={code}");
+        }
+        assert!(!touches_every_corner(232, 3));
+    }
+
     #[test]
     fn names_and_anf() {
         let u = bang(2);

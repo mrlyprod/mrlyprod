@@ -15,6 +15,8 @@ pub mod renderer;
 pub mod serializer;
 /// The random 3d tiles flattened through their projections.
 pub mod tile;
+/// The pieces, holes and enclosed voids of a hex slice's fill.
+pub mod topology;
 
 /// The triangle code for an empty site.
 pub const VOID: u8 = 0;
@@ -60,3 +62,4 @@ pub use painter::paint;
 pub use renderer::{hex_png, png, rect, rect_png, rect_svg, svg, triangles, Rect};
 pub use serializer::{from_json, to_json};
 pub use tile::{build as build_tile, random_tile, HexTile};
+pub use topology::{components, giant, giant_network, holes, rim_holes, spectral_exponent};

@@ -21,3 +21,5 @@ pub mod lattice;
 pub mod prime;
 /// The infinite sums: zeta and its Dirichlet cousins, the visible count and the Bernoulli fractions.
 pub mod series;
+/// The symmetric eigensolver and the Laplacian spectra it reads off a network.
+pub mod spectrum;

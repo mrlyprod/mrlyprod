@@ -46,6 +46,18 @@ pub fn solid_slice_vertices(number: usize) -> Result<u128> {
     Ok((12 * k * k - 6 * k + 1) as u128)
 }
 
+/// Returns the interior edge count of the solid slice, defined for odd number.
+pub fn solid_slice_interior(number: usize) -> Result<u128> {
+    let k = odd_k(number)? as i128;
+    Ok((36 * k * k - 42 * k + 12) as u128)
+}
+
+/// Returns the centered hexagonal number at the index, the lattice points of a hexagon of side m-1.
+pub fn centered_hexagonal(m: usize) -> u128 {
+    let m = m as u128;
+    3 * m * m - 3 * m + 1
+}
+
 /// Returns the distinct triangle-edge count of the solid slice, defined for odd number.
 pub fn solid_slice_edges(number: usize) -> Result<u128> {
     let k = odd_k(number)? as i128;
@@ -181,5 +193,61 @@ mod tests {
         assert_eq!(solid_slice_edges(1).unwrap(), 12);
         assert_eq!(solid_slice_edges(3).unwrap(), 90);
         assert!(solid_slice_edges(4).is_err());
+    }
+}
+
+#[cfg(test)]
+mod theorems {
+    use super::*;
+    use mrlynum::prime::is_prime;
+
+    fn slice_vertices(k: usize) -> u128 {
+        solid_slice_vertices(2 * k - 1).unwrap()
+    }
+
+    #[test]
+    fn the_slice_vertex_count_is_centered_hexagonal_at_even_index() {
+        let opening: Vec<u128> = (1..6).map(centered_hexagonal).collect();
+        assert_eq!(opening, [1, 7, 19, 37, 61]);
+        for k in 1..41usize {
+            let m = 2 * k as u128;
+            assert_eq!(slice_vertices(k), centered_hexagonal(2 * k), "k={k}");
+            assert_eq!(slice_vertices(k) % 3, 1, "k={k}");
+            assert_eq!(
+                slice_vertices(k),
+                m * m + m * (m - 1) + (m - 1) * (m - 1),
+                "k={k}"
+            );
+        }
+    }
+
+    #[test]
+    fn the_prime_vertex_counts_are_cuban_with_norm_witnesses() {
+        let mut prime_at = Vec::new();
+        let mut primes = Vec::new();
+        let mut composites = Vec::new();
+        for k in 1..21usize {
+            if is_prime(slice_vertices(k) as usize) {
+                prime_at.push(k);
+                primes.push(slice_vertices(k));
+            } else {
+                composites.push(slice_vertices(k));
+            }
+        }
+        assert_eq!(prime_at, [1, 2, 5, 6, 7, 9, 12, 13, 14, 19]);
+        assert_eq!(primes, [7, 37, 271, 397, 547, 919, 1657, 1951, 2269, 4219]);
+        assert_eq!(
+            composites,
+            [91, 169, 721, 1141, 1387, 2611, 2977, 3367, 3781, 4681]
+        );
+        let far: Vec<u128> = (21..41usize)
+            .map(slice_vertices)
+            .filter(|&v| is_prime(v as usize))
+            .collect();
+        assert_eq!(far, [5167, 6211, 7351, 9241, 12097, 13669]);
+        for value in primes.iter().chain(far.iter()) {
+            assert_eq!(value % 3, 1, "value={value}");
+        }
+        assert_eq!(4219u128, 37 * 37 + 37 * 38 + 38 * 38);
     }
 }

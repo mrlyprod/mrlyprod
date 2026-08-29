@@ -1,4 +1,4 @@
-use super::models::Network;
+use super::models::{Branch, Network, Node};
 use mrlycore::logs;
 use std::collections::HashSet;
 use std::f64::consts::LN_2;
@@ -96,6 +96,75 @@ pub fn components(network: &Network) -> usize {
         }
     }
     count
+}
+
+/// Extracts the largest connected piece as a network of its own, branches re-indexed.
+///
+/// Ties go to the piece whose lowest node index comes first. An empty network comes back empty.
+///
+/// ```
+/// let mut net = mrlynum::graph::Network::new(1);
+/// for i in 0..3 { net.add_node(vec![i as f64]).unwrap(); }
+/// net.add_branch(0, 1, 1.0).unwrap();
+/// assert_eq!(mrlynum::graph::largest_component(&net).nodes.len(), 2);
+/// ```
+pub fn largest_component(network: &Network) -> Network {
+    let n = network.nodes.len();
+    let adjacency = network.adjacency();
+    let mut label = vec![usize::MAX; n];
+    let mut sizes: Vec<usize> = Vec::new();
+    for start in 0..n {
+        if label[start] != usize::MAX {
+            continue;
+        }
+        let piece = sizes.len();
+        let mut size = 0;
+        let mut stack = vec![start];
+        label[start] = piece;
+        while let Some(current) = stack.pop() {
+            size += 1;
+            for &neighbor in &adjacency[&current] {
+                if label[neighbor] == usize::MAX {
+                    label[neighbor] = piece;
+                    stack.push(neighbor);
+                }
+            }
+        }
+        sizes.push(size);
+    }
+    let mut best = 0;
+    for (piece, &size) in sizes.iter().enumerate() {
+        if size > sizes[best] {
+            best = piece;
+        }
+    }
+    let mut giant = Network::new(network.dim);
+    if sizes.is_empty() {
+        return giant;
+    }
+    let mut index_of = vec![usize::MAX; n];
+    for (old, node) in network.nodes.iter().enumerate() {
+        if label[old] != best {
+            continue;
+        }
+        let index = giant.nodes.len();
+        index_of[old] = index;
+        giant.nodes.push(Node {
+            position: node.position.clone(),
+            index,
+        });
+    }
+    for branch in &network.branches {
+        if label[branch.parent] != best {
+            continue;
+        }
+        giant.branches.push(Branch {
+            parent: index_of[branch.parent],
+            child: index_of[branch.child],
+            radius: branch.radius,
+        });
+    }
+    giant
 }
 
 /// Estimates the box-counting dimension of the node cloud over a ladder of halving boxes.

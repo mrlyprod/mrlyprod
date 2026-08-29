@@ -16,6 +16,8 @@ pub mod life;
 pub mod race;
 /// The hexagon projections of a cube as SVG.
 pub mod six;
+/// The Laplacian spectra of the designs: eigenvalues, degeneracy and the spectral exponent.
+pub mod spectrum;
 /// The cubes as packed faces, filled cells and censuses.
 pub mod three;
 /// The flat designs as byte grids, painted pixels and censuses.

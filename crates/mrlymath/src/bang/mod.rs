@@ -11,4 +11,6 @@ pub mod universe;
 
 pub use catalog::{sources, universe_codes};
 pub use factory::{code_to_corners, corners_to_code, levels_code, magic, magic_named, MagicLayer};
-pub use universe::{bang, corners, symmetries, Code, Design, Universe};
+pub use universe::{
+    bang, corners, symmetries, total_exposure, touches_every_corner, Code, Design, Universe,
+};

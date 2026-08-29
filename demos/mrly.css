@@ -40,6 +40,7 @@ button.on { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; min-width: 0; }
 .panel h2 { font-size: 14px; font-weight: 600; margin-bottom: 8px; display: flex; gap: 8px; align-items: center; }
 .panel h2 span { color: var(--dim); font-weight: 400; }
+.panel h2 ~ h2 { margin-top: 16px; }
 .swatch { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
 .sheet { width: 100%; display: block; border-radius: 8px; background: var(--deep); image-rendering: pixelated; }
 .stage { width: 100%; aspect-ratio: 4 / 3; display: block; border-radius: 12px; background: radial-gradient(ellipse at 50% 40%, #151b22, var(--deep) 70%); }

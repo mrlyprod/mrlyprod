@@ -4,7 +4,8 @@ use mrlyweb::lab::*;
 use mrlyweb::lattice::*;
 use mrlyweb::life::*;
 use mrlyweb::race::Race;
-use mrlyweb::six::hex_svg;
+use mrlyweb::six::*;
+use mrlyweb::spectrum::*;
 use mrlyweb::three::*;
 use mrlyweb::two::*;
 
@@ -66,6 +67,90 @@ fn the_fixture_the_page_prints() {
     assert!(hex_svg("23", 3, 1, 2, "iso", 10)
         .unwrap()
         .contains("<polygon"));
+    let slice = parse(&slice_census("23", 3, 1, 2).unwrap()).unwrap();
+    assert_eq!(
+        (slice["triangles"].clone(), slice["fills"].clone()),
+        (54.into(), 42.into())
+    );
+    assert_eq!(
+        (slice["vertices"].clone(), slice["euler"].clone()),
+        (37.into(), 1.into())
+    );
+    assert_eq!(
+        (slice["components"].clone(), slice["holes"].clone()),
+        (1.into(), 1.into())
+    );
+    assert_eq!(slice["closed"]["vertices"], "37");
+    assert_eq!(
+        parse(&slice_census("232", 3, 1, 2).unwrap()).unwrap()["fills"],
+        12
+    );
+    let deep = parse(&slice_census("23", 3, 2, 2).unwrap()).unwrap();
+    assert_eq!(
+        (deep["fills"].clone(), deep["holes"].clone()),
+        (306.into(), 7.into())
+    );
+    let series = parse(&slice_series("23", 6).unwrap()).unwrap();
+    let column = |key: &str| {
+        series
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|row| row[key].to_string())
+            .collect::<Vec<String>>()
+            .join(",")
+    };
+    assert_eq!(column("components"), "1,1,7,1,19,1");
+    assert_eq!(column("holes"), "0,1,0,7,0,19");
+    let flat = parse(&spectrum("flat", "7", 2, 4, true, 0.1).unwrap()).unwrap();
+    assert_eq!(
+        (flat["nodes"].clone(), flat["distinct"].clone()),
+        (81.into(), 43.into())
+    );
+    assert_eq!(
+        (flat["classes"].clone(), flat["one"].clone()),
+        (9.into(), 27.into())
+    );
+    assert_eq!(flat["pair"], parse("[4,4]").unwrap());
+    let piece = parse(&spectrum("slice", "23", 3, 1, true, 0.1).unwrap()).unwrap();
+    assert_eq!(piece["nodes"], 42);
+    let stair = piece["stair"].as_array().unwrap();
+    assert_eq!(stair.last().unwrap()[1], 1.0);
+    assert!(stair.len() >= piece["distinct"].as_u64().unwrap() as usize && stair.len() < 42);
+    assert_eq!(piece["fitted"], 4);
+    assert_eq!(
+        format!("{:.2}", piece["exponent"].as_f64().unwrap()),
+        "0.91"
+    );
+    assert_eq!(
+        format!("{:.4}", piece["fit"][1].as_f64().unwrap() * 2.0),
+        format!("{:.4}", piece["exponent"].as_f64().unwrap())
+    );
+    let plain = parse(&spectrum("flat", "7", 2, 2, false, 0.1).unwrap()).unwrap();
+    assert_eq!(
+        (plain["nodes"].clone(), plain["distinct"].clone()),
+        (9.into(), 8.into())
+    );
+    assert_eq!(
+        (plain["classes"].clone(), plain["one"].clone()),
+        (1.into(), 2.into())
+    );
+    let cut = parse(&diagonal_profile("126", 2, 4, 2).unwrap()).unwrap();
+    assert_eq!(cut["side"], 16);
+    assert_eq!(cut["support"], parse("[15,30]").unwrap());
+    assert_eq!(
+        (cut["min"].clone(), cut["max"].clone()),
+        ("81".into(), "81".into())
+    );
+    assert_eq!(cut["constant"], true);
+    assert_eq!(diagonal_count("126", 2, 7, 2, 190).unwrap(), "2187");
+    let art = diagonal_svg("126", 2, 3, 2, vec![10, 11], 4).unwrap();
+    assert!(art.contains("<circle"));
+    assert_eq!(art.matches("<circle").count(), 54);
+    assert_eq!(
+        parse(&diagonal_profile("127", 2, 4, 2).unwrap()).unwrap()["max"],
+        "162"
+    );
     assert_eq!(Race::new("127", 3, 4, 3, 300, 1).unwrap().side(), 81);
     assert_eq!(parse(&farey(5)).unwrap().as_array().unwrap().len(), 11);
     assert_eq!(totients(6), vec![0, 1, 1, 2, 2, 4, 2]);
@@ -116,5 +201,11 @@ fn the_faults_come_back_as_messages() {
     assert!(life_sequence("soup", 8).is_err());
     assert!(moire("soup", 9, 32, "fire", 64, false).is_err());
     assert!(hex_svg("256", 3, 1, 2, "iso", 10).is_err());
+    assert!(slice_census("23", 4, 1, 2).is_err());
+    assert!(slice_series("23", 17).is_err());
+    assert!(diagonal_profile("0", 2, 2, 2).is_err());
+    assert!(diagonal_count("126", 2, 0, 2, 1).is_err());
     assert!(Race::new("0", 3, 2, 3, 4, 1).is_err());
+    assert!(spectrum("flat", "7", 2, 7, true, 0.1).is_err());
+    assert!(spectrum("wobble", "7", 2, 2, true, 0.1).is_err());
 }
