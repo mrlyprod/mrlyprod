@@ -2,7 +2,7 @@
 
 A design's fractal occupies some number of cells of a grid. A random set can occupy exactly the same number of cells of the same grid. Race the two on measurable geometry - how many connected pieces, how much boundary per cell - and the question of what the parity rule buys gets a number instead of an adjective.
 
-Every claim below carries a tag. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a lab study; **Conjecture** means neither. Everything on this page is measurement at finite sizes; the one Proved line of the race is flagged where it occurs.
+Every claim below carries a tag. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a lab study; **Conjecture** means neither. Everything on this page is measurement at finite sizes; the one Proved line of the race is flagged where it occurs. The [graphs demo](../demos/graphs/) draws the cell network of any design live, flat, in the cube and on the diagonal slice, with its tips, junctions, pieces and length beside it.
 
 ## The race
 

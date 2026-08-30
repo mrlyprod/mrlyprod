@@ -157,6 +157,29 @@ pub fn turns(power: &[f64]) -> usize {
     spin::turns(power)
 }
 
+/// The share of the harmonic power order zero carries, in percent.
+#[wasm_bindgen]
+pub fn radial_share(power: &[f64]) -> f64 {
+    let total: f64 = power.iter().sum();
+    if total > 0.0 {
+        power[0] / total * 100.0
+    } else {
+        0.0
+    }
+}
+
+/// The step in degrees that shares one full turn over the copies.
+#[wasm_bindgen]
+pub fn full_turn(copies: usize) -> f64 {
+    360.0 / copies.max(1) as f64
+}
+
+/// The degrees a turntable at the rpm turns between two frames at the frame rate.
+#[wasm_bindgen]
+pub fn frame_step(rpm: f64, fps: f64) -> f64 {
+    rpm * 6.0 / fps.max(1e-9)
+}
+
 /// The petals a full radial stack of the copies shows on a design of the rotation order: their least common multiple.
 #[wasm_bindgen]
 pub fn petals(copies: usize, order: usize) -> usize {

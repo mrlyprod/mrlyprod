@@ -1,5 +1,6 @@
 use crate::bang::factory;
 use crate::bang::universe::Code;
+use crate::formulas::profile_of_tile;
 use mrlycore::errors::{value_error, Result};
 
 const PALETTE: [&str; 12] = [
@@ -7,12 +8,11 @@ const PALETTE: [&str; 12] = [
     "#ff8ad4", "#ff9f7a", "#c0e86b", "#5ad1a0",
 ];
 
-const WIDEST: usize = 1 << 18;
+use crate::formulas::diagonal::WIDEST;
 
 struct Solid {
     filled: Vec<bool>,
     ranks: Vec<usize>,
-    weights: Vec<usize>,
     count: usize,
     number: usize,
     level: usize,
@@ -32,21 +32,17 @@ impl Solid {
         let pattern = factory::create(code, number, 3, base, 1)?;
         let filled: Vec<bool> = pattern.bytes().iter().map(|&byte| byte != 0).collect();
         let mut ranks = vec![0usize; filled.len()];
-        let mut weights = Vec::new();
         let mut count = 0;
         for (flat, &live) in filled.iter().enumerate() {
             if !live {
                 continue;
             }
             ranks[flat] = count;
-            let (i, rest) = (flat / (number * number), flat % (number * number));
-            weights.push(i + rest / number + rest % number);
             count += 1;
         }
         Ok(Solid {
             filled,
             ranks,
-            weights,
             count,
             number,
             level,
@@ -92,29 +88,8 @@ impl Solid {
 /// assert_eq!(counts[15..=30].iter().copied().collect::<Vec<u128>>(), vec![81u128; 16]);
 /// ```
 pub fn profile(code: Code, number: usize, level: usize, base: usize) -> Result<Vec<u128>> {
-    let solid = Solid::new(code, number, level, base)?;
-    let span = 3 * (solid.side - 1) + 1;
-    let mut poly = vec![0u128; span];
-    poly[0] = 1;
-    let mut step = 1usize;
-    for _ in 0..level {
-        let mut next = vec![0u128; span];
-        for (exponent, &count) in poly.iter().enumerate() {
-            if count == 0 {
-                continue;
-            }
-            for &weight in &solid.weights {
-                let slot = exponent + step * weight;
-                match next[slot].checked_add(count) {
-                    Some(total) => next[slot] = total,
-                    None => return value_error("the slice counts overflow a u128."),
-                }
-            }
-        }
-        poly = next;
-        step *= number;
-    }
-    Ok(poly)
+    let tile = factory::create(code, number, 3, base, 1)?;
+    profile_of_tile(&tile, level as u32)
 }
 
 /// Returns the first and last height a profile fills, or none when the design is empty.

@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "wasm": "bash ../scripts/wasm.sh",
-    "dev": "bun *.html",
-    "build": "bun build *.html --outdir dist --splitting --minify",
+    "dev": "bun index.html */index.html",
+    "build": "rm -rf dist && bun build index.html */index.html --outdir dist --splitting --minify --chunk-naming 'lib-[hash].[ext]' --asset-naming '[name]-[hash].[ext]'",
     "check": "bun check.ts"
   },
   "dependencies": {

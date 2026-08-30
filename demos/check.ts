@@ -22,7 +22,64 @@ const hexcut = m.paint_span(m.plane_field(solid, 9, [1, 1, 1], 0.5, 64), 64, 0, 
 const spun = JSON.parse(m.spin_stats(rings, 27));
 const square = new Float32Array(64).fill(1);
 const star = m.radial(square, 8, 64, 2, 45, 'union', 1);
+const stack = JSON.parse(m.farey_novelty(5));
+const split = JSON.parse(m.slice_partition(3));
+const shape = JSON.parse(m.volume_shape(7, 64));
+const sieve = new m.Sieve(30);
+let sweeps = 0;
+while (!sieve.done()) {
+  sieve.step();
+  sweeps += 1;
+}
+const hundred = new m.Sieve(100);
+hundred.finish();
+const stones = JSON.parse(m.factor('360'));
+const count = JSON.parse(m.prime_chart(10000, 400));
+const trial = JSON.parse(m.carpet_witness(169));
+const clear = JSON.parse(m.carpet_witness(197));
+const euler = JSON.parse(m.spiral_polynomial('square', 201, 4, -2, 41));
+const spoke = JSON.parse(m.spiral_polynomial('hex', 41, 3, 3, 1));
+const sheet = m.spiral_pixels('square', 61, 4, -2, 41, 'prime', false, 180);
+const pixel = (px: number, py: number) => Array.from(sheet.rgba.slice((py * 180 + px) * 4, (py * 180 + px) * 4 + 3)).join(' ');
+const hit = JSON.parse(m.spiral_at('square', 61, 81.5, 92.5, 180));
+const corner = JSON.parse(m.spiral_at('hex', 21, 195, 100, 200));
+const centres = m.spiral_centers('square', 21, 420);
+const gauss = JSON.parse(m.ring_census('gaussian', 2));
+const flake = JSON.parse(m.ring_census('eisenstein', 2));
+const window = m.ring_pixels('gaussian', 2, 'class', true, 100);
+const dot = (px: number, py: number) => Array.from(window.rgba.slice((py * 100 + px) * 4, (py * 100 + px) * 4 + 3)).join(' ');
+const r2 = m.ring_weights('gaussian', 25);
+const struck = JSON.parse(m.ring_at('gaussian', 40, 403, 374, 768));
+const mirror = JSON.parse(m.ring_at('eisenstein', 5, 140, 127, 220));
 
+const carpet = JSON.parse(m.graph_census('flat', '7', 3, 1, 2, 'core'));
+const knots = m.graph_nodes('flat', '7', 3, 1, 2, 'core');
+const sponge = JSON.parse(m.graph_census('cube', '23', 3, 1, 2, 'core'));
+const hexnet = JSON.parse(m.graph_census('hex', '23', 3, 1, 2, 'core'));
+const rim = JSON.parse(m.graph_census('hex', '23', 3, 1, 2, 'edge'));
+const ring = m.graph_nodes('flat', '15', 2, 1, 2, 'core');
+const loop = m.graph_branches('flat', '15', 2, 1, 2, 'core');
+const relax = new m.Layout(ring.subarray(2), loop, 2, 1);
+const rest = relax.step(500);
+const settled = relax.positions();
+const gaps = Array.from({ length: loop.length / 2 }, (_, k) => Math.hypot(settled[2 * loop[2 * k]] - settled[2 * loop[2 * k + 1]], settled[2 * loop[2 * k] + 1] - settled[2 * loop[2 * k + 1] + 1]));
+const roots = m.zeta_zeros(5);
+const gammas = m.zeta_zeros(100);
+const root = m.zeta_at(14.134725);
+const walk = m.zeta_line(0, 50, 600);
+const seam = m.zeta_seam(250, 500);
+const stair = m.psi_stair(100);
+const smooth = m.psi_formula(10, new Float64Array(0), 3);
+const folded = m.psi_formula(100, gammas, 2);
+const ledgerRows = m.ledger_build('closed', 4);
+const octagon = JSON.parse(m.ledger_search('8, 21, 40, 65', '', 2, 2, 0, 25));
+const known = JSON.parse(m.ledger_identify('6, 42, 306, 2250'));
+const grown = JSON.parse(m.ledger_grow('convolved', 4, 100));
+const hollow = JSON.parse(m.ledger_row('9', 2, 2, 'voids', 'side', 3, '500000'));
+const gasket = m.ledger_profile('126', 3, 2, 2, 4);
+const stack7 = JSON.parse(m.farey_novelty(7));
+const cut5 = JSON.parse(m.diagonal_profile('126', 2, 5, 2));
+const first = (terms: string) => { const f = JSON.parse(m.ledger_identify(terms)); return `${f[0].id} ${f[0].shift}`; };
 const checks: [string, unknown, unknown][] = [
   ['two_grid 7 side', grid.width, 27],
   ['two_grid 7 fills', grid.types.reduce((a, b) => a + b, 0), 512],
@@ -30,6 +87,7 @@ const checks: [string, unknown, unknown][] = [
   ['void sponge level 3', m.voids('23', 3, 3, 3, 2), '11683'],
   ['universe counts D=1..4', m.counting_sequence(4).join(','), '3,6,22,402'],
   ['base 3 counts D=1..2', m.baseq_sequence(3, 2).join(','), '4,26'],
+  ['classes_sequence 4', m.classes_sequence(4).join(','), '4,12,64,700'],
   ['sponge level 3 quads', faces[0] / 36, 18048],
   ['sponge level 3 buffer', faces.length, 2 + faces[0]],
   ['three_surface level 3', m.three_surface('23', 3, 3, 2), '18048'],
@@ -71,6 +129,7 @@ const checks: [string, unknown, unknown][] = [
   ['profile heatmap steps', m.profile(m.moire_field('heatmap', 9, 32), 32, 16).length, 16],
   ['volume 23 count at 2', `${solid.length},${m.volume_count(solid, 9, 2)}`, '729,540'],
   ['volume 23 faces at 2', m.volume_faces(solid, 9, 2)[0] / 36, 648],
+  ['volume 23 surface at 2', m.volume_surface(solid, 9, 2), 648],
   ['plane_frame diagonal width', JSON.parse(m.plane_frame([1, 1, 1], 0.5)).width.toFixed(4), '3.2660'],
   ['paint_span hexagon alpha', `${hexcut.rgba[3]},${hexcut.rgba[(32 * 64 + 32) * 4 + 3]}`, '0,255'],
   ['radial star centre', `${star.length},${star[32 * 64 + 32]}`, '4096,1'],
@@ -84,10 +143,110 @@ const checks: [string, unknown, unknown][] = [
   ['diagonal 126 central', m.diagonal_count('126', 2, 7, 2, 190), '2187'],
   ['diagonal svg circles', art.includes('<circle') ? art.split('<circle').length - 1 : 0, 54],
   ['diagonal 127 max', JSON.parse(m.diagonal_profile('127', 2, 4, 2)).max, '162'],
+  ['diagonal 126 central pair', cut.central.join(','), '22,23'],
   ['race side', race.side(), 81],
   ['farey 5 nodes', JSON.parse(m.farey(5)).length, 11],
   ['totients 6', Array.from(m.totients(6)).join(','), '0,1,1,2,2,4,2'],
   ['dimension 127', m.dimension('127', 3, 2, 3).toFixed(4), '1.7712'],
+  ['random_code 3 2 seed 7', m.random_code(3, 2, 7), '160'],
+  ['random_codes 3 2 seed 7', m.random_codes(3, 2, 7, 3).join(','), '160,134,72'],
+  ['random_between seed 7', Array.from(m.random_between(7, [0, 0, 1], [3, 1800, 36])).join(','), '0,1023,17'],
+  ['level_cap side and cells', `${m.level_cap(3, 1, 128)},${m.level_cap(2, 1, 512)},${m.level_cap(3, 3, 60000)}`, '4,9,3'],
+  ['fill_cap triangle', m.fill_cap('7', 2, 2, 2, 1100), 6],
+  ['grid_total 3 2 4', m.grid_total(3, 2, 4), '6561'],
+  ['odd_scales 9', Array.from(m.odd_scales(9)).join(','), '1,3,5,7,9'],
+  ['farey_novelty 5', `${stack.lit},${stack.novel},${stack.match},${stack.primes.join(' ')}`, '11,11,true,2 3 5'],
+  ['slice_partition 3', `${split.carpet},${split.net},${split.exact}`, '42,12,true'],
+  ['volume_shape 7 64', `${shape.layers},${shape.voxels}`, '4,262144'],
+  ['radial_share square', m.radial_share(m.harmonics(square, 8, 64, 8)).toFixed(1), '95.3'],
+  ['full_turn 6', m.full_turn(6), 60],
+  ['frame_step 900 at 60', m.frame_step(900, 60), 90],
+  ['diagonal_digits 126 at 20', m.diagonal_digits('126', 2, 4, 2, 20), '101'],
+  ['diagonal_total 126 both', m.diagonal_total('126', 2, 3, 2, [10, 11]), '54'],
+  ['sieve 30 sweeps and count', `${sweeps},${sieve.count()}`, '3,10'],
+  ['sieve 100 count', hundred.count(), 25],
+  ['sieve 150 grid', `${hundred.grid(15).width},${new m.Sieve(150).grid(15).height}`, '15,10'],
+  ['factor 360', stones.factors.map(([p, e]: number[]) => `${p}^${e}`).join(' '), '2^3 3^2 5^1'],
+  ['factor 6 rectangles', JSON.parse(m.factor('6')).rectangles.map((r: number[]) => r.join('x')).join(' '), '1x6 2x3'],
+  ['prime_chart pi 10000', count.pi.at(-1), 1229],
+  ['prime_chart pi 100000', JSON.parse(m.prime_chart(100000, 100)).pi.at(-1), 9592],
+  ['carpet_witness 169', `${trial.max.toFixed(7)},${trial.at}`, '0.0517383,13'],
+  ['carpet_witness 197', `${clear.max},${clear.prime},${clear.row.length}`, '0,true,97'],
+  ['spiral_xy square 10 25', `${m.spiral_xy('square', 10).join(',')} ${m.spiral_xy('square', 25).join(',')}`, '2,-1,2 2,-2,2'],
+  ['spiral_xy hex 8 19 20', [8, 19, 20].map((n) => m.spiral_xy('hex', n).join(',')).join(' '), '1,1,2 0,2,2 1,2,3'],
+  ['spiral_polynomial euler', `${euler.top},${euler.primes},${euler.count},${euler.hits},${euler.streak}`, '40401,4236,101,80,21'],
+  ['spiral_polynomial euler shares', `${euler.density.toFixed(6)} ${euler.share.toFixed(6)}`, '0.104849 0.792079'],
+  ['spiral_polynomial euler cells', `${euler.values[20]} ${euler.cells[100].join(',')}`, '1601 60,100'],
+  ['spiral_polynomial hex spoke', `${spoke.top} ${spoke.cells[20].join(',')}`, '1261 0,20'],
+  ['spiral_pixels square 61', `${sheet.width}x${sheet.height} ${pixel(90, 90)} ${pixel(92, 90)} ${pixel(81, 92)}`, '180x180 7 9 11 255 209 102 255 138 92'],
+  ['spiral_at square 61', `${hit.n},${hit.prime},${hit.factors.map((f: number[]) => f.join('^')).join(' ')}`, '41,true,41^1'],
+  ['spiral_at hex corner', `${corner.n},${corner.x},${corner.y}`, '281,10,0'],
+  ['spiral_centers square 21', `${centres.length} ${centres[0]},${centres[1]} ${centres[2]},${centres[3]}`, '882 210,210 230,210'],
+  ['prime_from 90', m.prime_from(90), 97],
+  ['ring_census gaussian 2', `${gauss.points},${gauss.primes},${gauss.split},${gauss.inert},${gauss.ramified},${gauss.units},${gauss.symmetry}`, '25,12,8,0,4,4,8'],
+  ['ring_census gaussian 3', `${JSON.parse(m.ring_census('gaussian', 3)).primes}`, '24'],
+  ['ring_census eisenstein 2', `${flake.points},${flake.primes},${flake.split},${flake.inert},${flake.ramified},${flake.units},${flake.symmetry}`, '19,12,0,6,6,6,12'],
+  ['ring_weights gaussian 25', `${r2[3]},${r2[5]},${r2[25]}`, '0,8,12'],
+  ['ring_weights eisenstein 7', Array.from(m.ring_weights('eisenstein', 7)).join(','), '1,6,0,6,6,0,0,12'],
+  ['ring_peak gaussian eisenstein 60', `${Array.from(m.ring_peak('gaussian', 60)).join(',')} ${Array.from(m.ring_peak('eisenstein', 60)).join(',')}`, '25,12 49,18'],
+  ['ring_fates gaussian 7', Array.from(m.ring_fates('gaussian', 7)).join(','), '0,0,3,2,0,1,0,2'],
+  ['ring_fates eisenstein 7', Array.from(m.ring_fates('eisenstein', 7)).join(','), '0,0,2,3,0,2,0,1'],
+  ['ring_pixels gaussian 2', `${window.width}x${window.height} ${dot(70, 30)} ${dot(90, 30)} ${dot(90, 50)} ${dot(50, 50)}`, '100x100 255 122 182 92 200 255 31 38 46 7 9 11'],
+  ['ring_at gaussian 40', `${struck.a},${struck.b},${struck.norm},${struck.class},${struck.associates.length},${struck.conjugate[1]}`, '2,1,5,split,4,-1'],
+  ['ring_at eisenstein 5', `${mirror.a},${mirror.b},${mirror.norm},${mirror.class},${mirror.associates.length},${mirror.conjugate.slice(0, 2).join(',')}`, '1,-1,3,ramified,6,2,1'],
+  ['graph_census carpet 7', `${carpet.nodes},${carpet.branches},${carpet.components}`, '8,8,1'],
+  ['graph_nodes carpet 7', `${knots[0]},${knots[1]},${knots.length}`, '2,8,18'],
+  ['graph_branches carpet 7', m.graph_branches('flat', '7', 3, 1, 2, 'core').length, 16],
+  ['graph_roles carpet 7', Array.from(m.graph_roles('flat', '7', 3, 1, 2, 'core')).join(','), '2,2,2,2,2,2,2,2'],
+  ['graph_nodes sponge 23', `${m.graph_nodes('cube', '23', 3, 1, 2, 'core').slice(0, 2).join(',')}`, '3,20'],
+  ['graph_census sponge 23', `${sponge.nodes},${sponge.branches},${sponge.junctions},${sponge.euler}`, '20,24,8,-4'],
+  ['graph_branches unit cube', m.graph_branches('cube', '255', 1, 1, 2, 'edge').length / 2, 12],
+  ['graph_census hex 23 core', `${hexnet.nodes},${hexnet.branches},${(hexnet.length / hexnet.branches).toFixed(4)}`, '42,48,0.5774'],
+  ['graph_census hex 23 edge', `${rim.nodes},${rim.length}`, '36,78'],
+  ['graph_size carpet 495', m.graph_size('flat', '495', 3, 2, 3, 'core'), '64'],
+  ['graph_size sponge tunnel', m.graph_size('cube', '23', 3, 2, 2, 'tunnel'), '329'],
+  ['graph_cap 7 23 hex', `${m.graph_cap('flat', '7', 3, 2, 'core', 20000)},${m.graph_cap('cube', '23', 3, 2, 'core', 2000)},${m.graph_cap('hex', '23', 3, 2, 'edge', 2000)}`, '4,2,2'],
+  ['layout ring rests', `${rest < 1e-3} ${Math.max(...gaps) - Math.min(...gaps) < 1e-3} ${relax.ticks()}`, 'true true 500'],
+  ['zeta_zeros 5', Array.from(roots, (z) => z.toFixed(6)).join(' '), '14.134725 21.022040 25.010858 30.424876 32.935062'],
+  ['zeta_zeros 100 last', gammas[99].toFixed(6), '236.524230'],
+  ['zeta_count 100 200', `${m.zeta_count(100)} ${m.zeta_count(200)}`, '29 79'],
+  ['zeta_at first zero', `${Math.hypot(root[0], root[1]) < 1e-5} ${Math.abs(root[2]) < 1e-5}`, 'true true'],
+  ['zeta_at 0', `${m.zeta_at(0)[0].toFixed(7)} ${m.zeta_at(0)[3]}`, '-1.4603545 0'],
+  ['zeta_line 0 50 600', `${walk.length} ${walk[0]} ${walk[2400]} ${walk[1].toFixed(7)}`, '2404 0 50 -1.4603545'],
+  ['zeta_seam 250', `${seam[0]} ${seam[1] < 5e-5}`, '20 true'],
+  ['psi_stair 10 100', `${stair[9].toFixed(4)} ${stair[99].toFixed(4)}`, '7.8320 94.0453'],
+  ['psi_formula 10 no zeros', `${smooth.length} ${smooth[5].toFixed(4)}`, '6 8.1671'],
+  ['psi_formula 100 zeros', `${Math.abs(folded[3] - stair[99]) < 1} ${Math.abs(m.psi_gap(100, gammas) - (stair[99] - folded[3])) < 1e-12}`, 'true true'],
+  ['ledger_measures', m.ledger_measures().length, 12],
+  ['ledger_designs 2 2', m.ledger_designs(2, 2).join(','), '0,1,3,6,7,15'],
+  ['ledger_designs 2 3', m.ledger_designs(2, 3).length, 26],
+  ['ledger_terms carpet fills', m.ledger_terms('7', 2, 2, 'fills', 'level', 3, '500000').join(','), '8,64,512'],
+  ['ledger_terms sponge surface', m.ledger_terms('23', 3, 2, 'surface', 'level', 3, '500000').join(','), '72,1056,18048'],
+  ['ledger_terms carpet side', m.ledger_terms('7', 2, 2, 'fills', 'side', 4, '500000').join(','), '8,21,40,65'],
+  ['ledger_terms tree side', m.ledger_terms('3', 2, 2, 'fills', 'side', 3, '500000').join(','), '6,15,28'],
+  ['ledger_terms sponge euler capped', m.ledger_terms('23', 3, 2, 'euler', 'level', 8, '1000').join(','), '-4,-80'],
+  ['ledger_identify slice', `${known[0].id} ${known[0].shift}`, 'A299916 1'],
+  ['ledger_closed carpet side', m.ledger_closed('7', 2, 2, 'fills', 'side'), '3k^2 - 2k'],
+  ['ledger_closed sponge surface', m.ledger_closed('23', 3, 2, 'surface', 'level'), 'a(L) = 28 a(L-1) - 160 a(L-2)'],
+  ['ledger_records', JSON.parse(m.ledger_records()).length, 60],
+  ['ledger_build closed', ledgerRows, 7692],
+  ['ledger_search octagonal', `${octagon.total} ${octagon.rows[0].name} ${octagon.rows[0].oeis} ${octagon.rows[0].shift} ${octagon.rows[0].tag} ${octagon.rows[0].closed}`, '1 mrly_bang_d2_7.fills.side A000567 0 Proved 3k^2 - 2k'],
+  ['ledger_search surfaces', JSON.parse(m.ledger_search('', 'surface', 3, 2, 0, 5)).total, 44],
+  ['ledger_grow convolved 100', `${grown.rows} ${grown.done} ${grown.total}`, '7792 100 5044'],
+  ['ledger_row void side', `${hollow.name} ${hollow.terms.join(',')} ${hollow.closed} ${hollow.number}`, 'mrly_bang_d2_9.voids.side 4,12,24 2k^2 - 2k 3'],
+  ['ledger_profile gasket', `${gasket.length} ${gasket.slice(15, 31).every((c: string) => c === '81')}`, '46 true'],
+  ['ledger_profile strip', m.ledger_profile('1', 1, 2, 3, 2).join(''), '101000101'],
+  ['farey_novelty 7', `${stack7.lit} ${stack7.novel}`, '19 19'],
+  ['diagonal_profile gasket 5', `${cut5.max} ${cut5.constant}`, '243 true'],
+  ['slice_census vertices 9', JSON.parse(m.slice_census('23', 9, 1, 2)).vertices, 271],
+  ['slice_census unit hexagon', JSON.parse(m.slice_census('23', 1, 1, 2)).fills, 6],
+  ['two_census void side 5', JSON.parse(m.two_census('9', 5, 1, 0, 2)).fills, 13],
+  ['baseq_sequence 5 2', m.baseq_sequence(5, 2).join(','), '8,172112'],
+  ['ledger_identify gasket', first('3, 9, 27, 81'), 'A000244 1'],
+  ['ledger_identify farey', first('2, 3, 5, 7, 11, 13'), 'A005728 1'],
+  ['ledger_identify vertices', first('7, 37, 91, 169'), 'A154105 0'],
+  ['ledger_identify classes', first('4, 12, 64, 700'), 'A129824 1'],
+  ['ledger_identify tile', first('20, 81, 208'), 'A103532 1'],
 ];
 
 let failed = 0;

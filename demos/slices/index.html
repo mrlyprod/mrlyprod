@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mrly · the slices</title>
+<link rel="stylesheet" href="../lib/mrly.css">
+</head>
+<body>
+<header>
+  <nav><a href="../">demos</a> / slices</nav>
+  <h1>The middle plane of a cube is a hexagon of triangles</h1>
+  <p class="sub">Cut the cube of odd side <code>n = 2k-1</code> through its centre, square to the main diagonal, and the section is a regular hexagon tiled by <code>6n^2</code> unit triangles. A design's parity rule fills some of them: carpet and net split the hexagon between them with nothing left over, and the carpet's own section alternates as <code>k</code> grows, falling into many separate pieces at odd <code>k</code> and closing into one piece pierced by holes at even <code>k</code>. Drag the chart to move the side.</p>
+</header>
+<main>
+  <div class="row">
+    <span class="set" id="picker"></span>
+    <label>side <input type="range" id="k" min="1" max="16" value="2"><span class="num" id="k-out"></span></label>
+    <label>fractal <select id="fractal">
+      <option value="0">off, odd side</option>
+      <option value="3">base 3 tile</option>
+      <option value="5">base 5 tile</option>
+    </select></label>
+    <label>level <input type="range" id="level" min="1" max="4" value="1"><span class="num" id="level-out">1</span></label>
+  </div>
+  <canvas class="bars" id="bars"></canvas>
+  <div class="stats">
+    <span>name <b id="name"></b></span>
+    <span>side <b id="side"></b></span>
+    <span>triangles <b id="triangles"></b></span>
+    <span>closed form <b id="closed"></b></span>
+    <span>boundary <b id="boundary"></b></span>
+    <span>edges <b id="edges"></b></span>
+    <span>interior <b id="interior"></b></span>
+    <span>vertices <b id="vertices"></b></span>
+    <span>euler <b id="euler"></b></span>
+    <span>filled <b id="fills"></b></span>
+    <span>empty <b id="voids"></b></span>
+    <span>pieces <b id="components"></b></span>
+    <span>holes <b id="holes"></b></span>
+    <span>largest piece <b id="giant"></b></span>
+  </div>
+  <div class="stats" id="split"></div>
+  <div id="art"></div>
+  <div class="note" id="note"></div>
+  <p class="foot">The mesh is the crate's triangular section of the cube it builds from the code, and every count is read off that mesh; the closed form beside the triangle count is the polynomial in <code>k</code>, evaluated in Rust and never fitted here. Pieces come from the adjacency network of filled triangles and holes from the Euler number of the filled sub-mesh, so the alternation in the chart is counted, not drawn.</p>
+</main>
+<script type="module" src="./index.js"></script>
+</body>
+</html>

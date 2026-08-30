@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mrly · the sponge</title>
+<link rel="stylesheet" href="../lib/mrly.css">
+</head>
+<body>
+<header>
+  <nav><a href="../">demos</a> / sponge</nav>
+  <h1>The sponge</h1>
+  <p class="sub">A code picks the filled corners of a cube, the cube grows level by level, and the exposed faces come out of Rust already packed for the screen. Drag to orbit, scroll to zoom.</p>
+</header>
+<main>
+  <div class="row">
+    <span class="set" id="picker"></span>
+    <label>number <input type="number" id="number" value="3" min="2" max="5"></label>
+    <label>level <input type="range" id="level" min="1" max="4" value="3"><span class="num" id="level-out">3</span></label>
+    <label>view <select id="view"><option value="shell">exposed faces</option><option value="cubes">instanced cubes</option></select></label>
+    <label>opacity <input type="range" id="opacity" min="0.05" max="1" step="0.05" value="1"><span class="num" id="opacity-out">1</span></label>
+    <label><input type="checkbox" id="spin" checked> spin</label>
+  </div>
+  <canvas class="stage" id="stage"></canvas>
+  <div class="stats">
+    <span>name <b id="name"></b></span>
+    <span>side <b id="side"></b></span>
+    <span>filled <b id="fills"></b></span>
+    <span>empty <b id="voids"></b></span>
+    <span>exposed faces <b id="surface"></b></span>
+    <span>fill ratio <b id="ratio"></b></span>
+    <span>dimension <b id="dimension"></b></span>
+    <span id="topology"></span>
+  </div>
+  <div class="note" id="note"></div>
+  <p class="foot">Filled, empty and exposed counts come from closed formulas, so they answer before any cube is built; the mesh is the crate's own list of outward quads, six floats per vertex, and the Euler number is read off the edge graph while the cube is small enough to walk.</p>
+</main>
+<script type="module" src="./index.js"></script>
+</body>
+</html>

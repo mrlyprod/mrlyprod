@@ -2,7 +2,7 @@
 
 The design space is finite. In dimension `D` there are `2^(2^D)` designs and nothing else, so a claim about designs is a claim about a finite list, and the honest way to settle it is to walk the list. That one fact sets the method used on every page here: enumerate rather than sample, produce every number twice, pin every formula to something literally drawn, publish the code, and label each claim with what was actually established rather than with how sure it feels.
 
-Every claim below carries a tag, on the convention the other pages use. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a lab study, not proved; **Conjecture** means neither. The [universe demo](../demos/universe.html) is the enumeration itself, run in the browser: every orbit per dimension and base, counted by Burnside.
+Every claim below carries a tag, on the convention the other pages use. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a lab study, not proved; **Conjecture** means neither. The [universe demo](../demos/universe/) is the enumeration itself, run in the browser: every orbit per dimension and base, counted by Burnside.
 
 ## Exhaust, do not sample
 

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mrly · the radial stack</title>
+<link rel="stylesheet" href="../lib/mrly.css">
+</head>
+<body>
+<header>
+  <nav><a href="../">demos</a> / radial</nav>
+  <h1>Stack a design around its centre</h1>
+  <p class="sub">Copy a design, turn it, lay it on the first, and repeat. A full turn shared out over <code>q</code> copies is what a screen shows when a spinning design advances <code>p/q</code> of a turn per frame: it keeps exactly the circular harmonics whose order is a multiple of <code>q</code>, and a design of rotation order <code>g</code> shows <code>lcm(q, g)</code> petals. The spectrum on the right says which harmonics the design has to give.</p>
+</header>
+<main>
+  <div class="row">
+    <span id="sources"></span>
+  </div>
+  <div class="row">
+    <label>copies <input type="range" id="copies" min="1" max="36" value="6"><span class="num" id="copies-out">6</span></label>
+    <label>step <input type="number" id="step" min="0" max="360" step="0.5" value="60"> degrees</label>
+    <label><input type="checkbox" id="full" checked> full turn</label>
+    <label>blend <select id="blend">
+      <option>mean</option><option>sum</option><option>union</option><option>meet</option><option>parity</option><option>difference</option>
+    </select></label>
+    <label>samples <select id="samples"><option>1</option><option selected>2</option><option>3</option></select></label>
+  </div>
+  <div class="row">
+    <span class="set" id="ramp-row"></span>
+  </div>
+  <div class="arena">
+    <div class="panel">
+      <h2>The stack <span id="stack-note"></span></h2>
+      <canvas class="sheet" id="stack"></canvas>
+    </div>
+    <div class="panel">
+      <h2>Spin spectrum <span>circular-harmonic power by order</span></h2>
+      <canvas class="bars" id="bars" style="height: 300px"></canvas>
+      <p class="foot" style="margin-top: 12px; padding-top: 10px">Gold is order zero, the infinite spin. Blue orders survive this stack, dim ones are cancelled by it. The rotation order of the source is the gcd of its live orders.</p>
+    </div>
+  </div>
+  <div class="stats">
+    <span>name <b id="name"></b></span>
+    <span>side <b id="side"></b></span>
+    <span>copies <b id="copies-stat"></b></span>
+    <span>step <b id="step-stat"></b></span>
+    <span>rotation order <b id="order"></b></span>
+    <span>petals <b id="petals"></b></span>
+  </div>
+  <div class="note" id="note"></div>
+  <p class="foot">Each copy is the source turned about its centre; a pixel of the stack averages a few points, each point reading every copy at once and merging them by the blend: their mean, their sum, their union, their meet, their parity, or what the first copy keeps that no other has. The harmonics are exact: every circle about the centre is cut at the grid lines it crosses and the arc integrals of <code>e^(-i m theta)</code> are taken in closed form. Two copies at 45 degrees is the same picture as an afterglow at 900 rpm on a 60 Hz screen with the phase slipping by an eighth of a turn.</p>
+</main>
+<script type="module" src="./index.js"></script>
+</body>
+</html>

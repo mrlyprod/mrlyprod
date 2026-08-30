@@ -6,12 +6,20 @@ use wasm_bindgen::prelude::*;
 
 /// The universes: codes, symmetries, counts, closed-form fills and names.
 pub mod bang;
+/// The primes of the plane: the Gaussian and the Eisenstein windows painted, counted, clicked and weighed by norm.
+pub mod gauss;
+/// The networks of the designs: nodes, branches, roles and censuses, and the force layout that relaxes them.
+pub mod graph;
 /// The laboratory: the sequence press and the moire presets.
 pub mod lab;
 /// The lattice: the Farey nodes and the totients.
 pub mod lattice;
+/// The ledger: every measure of every design as a sequence, searched, identified and read against the curated records.
+pub mod ledger;
 /// The life grids stepped, run and driven by sequences.
 pub mod life;
+/// The primes: the sieve stepped, the stone pile, the count chart and the carpet witness.
+pub mod prime;
 /// The race: seeded walkers loose on a flat design.
 pub mod race;
 /// The hexagon projections of a cube as SVG.
@@ -20,12 +28,26 @@ pub mod six;
 pub mod spectrum;
 /// The turntable: designs, moire fields and slices spun about their centre into ring profiles and wheels.
 pub mod spin;
+/// The spirals: the whole numbers wound on a square or hexagonal sheet, painted, clicked and read along a quadratic.
+pub mod spiral;
 /// The cubes as packed faces, filled cells and censuses.
 pub mod three;
 /// The flat designs as byte grids, painted pixels and censuses.
 pub mod two;
 /// The cube designs stacked into a moire volume: its faces at a level, and the planes that cut it.
 pub mod volume;
+/// The critical line: zeta walked at one half plus i t, its zeros counted and listed, and the prime staircase against the explicit formula.
+pub mod zeta;
+
+pub(crate) mod ink {
+    pub const DEEP: [u8; 4] = [7, 9, 11, 255];
+    pub const FAINT: [u8; 4] = [31, 38, 46, 255];
+    pub const GOLD: [u8; 4] = [255, 209, 102, 255];
+    pub const BLUE: [u8; 4] = [92, 200, 255, 255];
+    pub const ORANGE: [u8; 4] = [255, 138, 92, 255];
+    pub const PINK: [u8; 4] = [255, 122, 182, 255];
+    pub const GREEN: [u8; 4] = [110, 231, 168, 255];
+}
 
 /// A byte grid: its width, its height and its row-major types.
 #[wasm_bindgen(getter_with_clone)]

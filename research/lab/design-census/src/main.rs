@@ -1,7 +1,6 @@
 mod classes;
 mod coprime;
 mod fills;
-mod orbits;
 mod quasi;
 mod tables;
 
@@ -11,7 +10,7 @@ fn main() {
     let here = Path::new(env!("CARGO_MANIFEST_DIR"));
     coprime::report();
     println!();
-    orbits::report();
+    fills::orbits_report();
     println!();
     fills::report(&here.join("sequences.csv"));
     println!();

@@ -2,6 +2,8 @@
 pub mod field;
 /// The recipe and sampling of one moire layer.
 pub mod layer;
+/// The exact correlations of flat carpet layers, and the prime detector they make.
+pub mod pairs;
 /// The named recipes: the parity heatmap, its weave, its hive and the carpet stack.
 pub mod presets;
 /// The quantized PNG rendering of a field.

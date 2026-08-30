@@ -1,15 +1,21 @@
 use mrlycore::json::parse;
 use mrlyweb::bang::*;
+use mrlyweb::gauss::*;
+use mrlyweb::graph::*;
 use mrlyweb::lab::*;
 use mrlyweb::lattice::*;
+use mrlyweb::ledger::*;
 use mrlyweb::life::*;
+use mrlyweb::prime::*;
 use mrlyweb::race::Race;
 use mrlyweb::six::*;
 use mrlyweb::spectrum::*;
 use mrlyweb::spin::*;
+use mrlyweb::spiral::*;
 use mrlyweb::three::*;
 use mrlyweb::two::*;
 use mrlyweb::volume::*;
+use mrlyweb::zeta::*;
 
 fn blinker() -> Vec<u8> {
     let mut types = vec![0u8; 25];
@@ -28,6 +34,7 @@ fn the_fixture_the_page_prints() {
     assert_eq!(voids("23", 3, 3, 3, 2).unwrap(), "11683");
     assert_eq!(counting_sequence(4).unwrap(), ["3", "6", "22", "402"]);
     assert_eq!(baseq_sequence(3, 2).unwrap(), ["4", "26"]);
+    assert_eq!(classes_sequence(4), ["4", "12", "64", "700"]);
     let faces = three_faces("23", 3, 3, 2).unwrap();
     assert_eq!(faces[0] as usize / 36, 18048);
     assert_eq!(faces.len(), 2 + faces[0] as usize);
@@ -140,6 +147,7 @@ fn the_fixture_the_page_prints() {
     let cut = parse(&diagonal_profile("126", 2, 4, 2).unwrap()).unwrap();
     assert_eq!(cut["side"], 16);
     assert_eq!(cut["support"], parse("[15,30]").unwrap());
+    assert_eq!(cut["central"], parse("[22,23]").unwrap());
     assert_eq!(
         (cut["min"].clone(), cut["max"].clone()),
         ("81".into(), "81".into())
@@ -198,6 +206,7 @@ fn the_fixture_the_page_prints() {
     let v = volume("23", 2, 3, "sum", 1, 9).unwrap();
     assert_eq!((v.len(), volume_count(&v, 9, 2.0).unwrap()), (729, 540));
     assert_eq!(volume_faces(&v, 9, 2.0).unwrap()[0] as usize / 36, 648);
+    assert_eq!(volume_surface(&v, 9, 2.0).unwrap(), 648);
     let f = parse(&plane_frame(&[1.0, 1.0, 1.0], 0.5).unwrap()).unwrap();
     assert!((f["width"].as_f64().unwrap() - 3.2660).abs() < 1e-3);
     let cut = plane_field(&v, 9, &[1.0, 1.0, 1.0], 0.5, 64).unwrap();
@@ -212,6 +221,85 @@ fn the_fixture_the_page_prints() {
         (16384, 0, 255)
     );
     assert_eq!(parse(&volume_stats(&v, 9).unwrap()).unwrap()["max"], 2.0);
+    assert_eq!(random_code(3, 2, 7).unwrap(), "160");
+    assert_eq!(random_codes(3, 2, 7, 3).unwrap(), ["160", "134", "72"]);
+    assert_eq!(random_between(7, &[0, 0, 1], &[3, 1800, 36]), [0, 1023, 17]);
+    assert_eq!(
+        (
+            level_cap(3, 1, 128),
+            level_cap(2, 1, 512),
+            level_cap(3, 3, 60000)
+        ),
+        (4, 9, 3)
+    );
+    assert_eq!(fill_cap("7", 2, 2, 2, 1100).unwrap(), 6);
+    assert_eq!(grid_total(3, 2, 4).unwrap(), "6561");
+    assert_eq!(odd_scales(9), [1, 3, 5, 7, 9]);
+    let stack = parse(&farey_novelty(5)).unwrap();
+    assert_eq!(
+        (
+            stack["lit"].clone(),
+            stack["novel"].clone(),
+            stack["match"].clone()
+        ),
+        (11.into(), 11.into(), true.into())
+    );
+    assert_eq!(stack["primes"], parse("[2,3,5]").unwrap());
+    let split = parse(&slice_partition(3).unwrap()).unwrap();
+    assert_eq!(
+        (
+            split["carpet"].clone(),
+            split["net"].clone(),
+            split["exact"].clone()
+        ),
+        (42.into(), 12.into(), true.into())
+    );
+    let shape = parse(&volume_shape(7, 64)).unwrap();
+    assert_eq!(
+        (shape["layers"].clone(), shape["voxels"].clone()),
+        (4.into(), 262144.into())
+    );
+    assert_eq!(
+        format!(
+            "{:.1}",
+            radial_share(&harmonics(&square, 8, 64, 8).unwrap())
+        ),
+        "95.3"
+    );
+    assert_eq!(full_turn(6), 60.0);
+    assert_eq!(frame_step(900.0, 60.0), 90.0);
+    assert_eq!(diagonal_digits("126", 2, 4, 2, 20).unwrap(), "101");
+    assert_eq!(diagonal_total("126", 2, 3, 2, vec![10, 11]).unwrap(), "54");
+    let mut sieve = Sieve::new(30).unwrap();
+    let mut sweeps = 0;
+    while !sieve.done() {
+        sieve.step();
+        sweeps += 1;
+    }
+    assert_eq!((sweeps, sieve.count()), (3, 10));
+    let mut hundred = Sieve::new(100).unwrap();
+    hundred.finish();
+    assert_eq!(hundred.count(), 25);
+    let stones = parse(&factor("360").unwrap()).unwrap();
+    assert_eq!(stones["factors"], parse("[[2,3],[3,2],[5,1]]").unwrap());
+    assert_eq!(stones["prime"], false);
+    assert_eq!(
+        parse(&factor("6").unwrap()).unwrap()["rectangles"],
+        parse("[[1,6],[2,3]]").unwrap()
+    );
+    let chart = parse(&prime_chart(10_000, 400).unwrap()).unwrap();
+    assert_eq!(chart["pi"].as_array().unwrap().last().unwrap(), 1229);
+    let wide = parse(&prime_chart(100_000, 100).unwrap()).unwrap();
+    assert_eq!(wide["pi"].as_array().unwrap().last().unwrap(), 9592);
+    let square = parse(&carpet_witness(169).unwrap()).unwrap();
+    assert!((square["max"].as_f64().unwrap() - 0.0517383).abs() < 1e-7);
+    assert_eq!(square["at"], 13);
+    let clear = parse(&carpet_witness(197).unwrap()).unwrap();
+    assert_eq!(
+        (clear["max"].clone(), clear["prime"].clone()),
+        (0.0.into(), true.into())
+    );
+    assert_eq!(clear["row"].as_array().unwrap().len(), 97);
 }
 
 #[test]
@@ -242,6 +330,14 @@ fn the_rest_of_the_exports_answer() {
         .all(|&p| race.types()[p as usize] != 0));
     assert!(race.trail().iter().map(|&v| v as usize).sum::<usize>() <= 40 * 30);
     assert_eq!(race.home(), Race::new("239", 3, 3, 3, 1, 1).unwrap().home());
+    let mut sieve = Sieve::new(150).unwrap();
+    assert_eq!(sieve.step(), 2);
+    assert_eq!((sieve.struck(), sieve.rank(), sieve.count()), (74, 1, 1));
+    sieve.finish();
+    let sheet = sieve.grid(15).unwrap();
+    assert_eq!((sheet.width, sheet.height), (15, 10));
+    assert_eq!(sheet.types.iter().map(|&b| b as u32).sum::<u32>(), 35);
+    assert_eq!(&sheet.types[..7], &[0, 1, 1, 0, 1, 0, 1]);
 }
 
 #[test]
@@ -276,4 +372,499 @@ fn the_faults_come_back_as_messages() {
     assert!(Race::new("0", 3, 2, 3, 4, 1).is_err());
     assert!(spectrum("flat", "7", 2, 7, true, 0.1).is_err());
     assert!(spectrum("wobble", "7", 2, 2, true, 0.1).is_err());
+    assert!(random_code(3, 6, 1).is_err());
+    assert!(fill_cap("256", 3, 3, 2, 10).is_err());
+    assert!(grid_total(3, 3, 40).is_err());
+    assert!(diagonal_digits("0", 2, 2, 2, 1).is_err());
+    assert!(Sieve::new(401).is_err());
+    assert!(Sieve::new(10).unwrap().grid(0).is_err());
+    assert!(factor("x").is_err());
+    assert!(factor("1000000000001").is_err());
+    assert!(prime_chart(1_000_001, 10).is_err());
+    assert!(carpet_witness(4).is_err());
+    assert!(carpet_witness(1001).is_err());
+}
+
+#[test]
+fn the_spiral_exports_answer() {
+    assert_eq!(spiral_xy("square", 10).unwrap(), vec![2, -1, 2]);
+    assert_eq!(spiral_xy("square", 25).unwrap(), vec![2, -2, 2]);
+    assert_eq!(spiral_xy("hex", 8).unwrap(), vec![1, 1, 2]);
+    assert_eq!(spiral_xy("hex", 19).unwrap(), vec![0, 2, 2]);
+    assert_eq!(spiral_xy("hex", 20).unwrap(), vec![1, 2, 3]);
+    let euler = parse(&spiral_polynomial("square", 201, 4, -2, 41).unwrap()).unwrap();
+    assert_eq!(euler["top"], 40401);
+    assert_eq!(euler["primes"], 4236);
+    assert_eq!(
+        (euler["count"].clone(), euler["hits"].clone()),
+        (101.into(), 80.into())
+    );
+    assert_eq!(euler["streak"], 21);
+    assert!((euler["density"].as_f64().unwrap() - 4236.0 / 40401.0).abs() < 1e-12);
+    assert!((euler["share"].as_f64().unwrap() - 80.0 / 101.0).abs() < 1e-12);
+    assert_eq!(euler["values"].as_array().unwrap()[20], 1601);
+    assert_eq!(
+        euler["cells"].as_array().unwrap()[100],
+        parse("[60,100]").unwrap()
+    );
+    let spoke = parse(&spiral_polynomial("hex", 41, 3, 3, 1).unwrap()).unwrap();
+    assert_eq!(spoke["top"], 1261);
+    assert_eq!(
+        spoke["cells"].as_array().unwrap()[20],
+        parse("[0,20]").unwrap()
+    );
+    let sheet = spiral_pixels("square", 61, 4, -2, 41, "prime", false, 180).unwrap();
+    assert_eq!(
+        (sheet.width, sheet.height, sheet.rgba.len()),
+        (180, 180, 129_600)
+    );
+    let at =
+        |px: usize, py: usize| sheet.rgba[(py * 180 + px) * 4..(py * 180 + px) * 4 + 3].to_vec();
+    assert_eq!(at(90, 90), vec![7, 9, 11]);
+    assert_eq!(at(92, 90), vec![255, 209, 102]);
+    assert_eq!(at(81, 92), vec![255, 138, 92]);
+    let hexes = spiral_pixels("hex", 21, 3, 3, 1, "mobius", true, 200).unwrap();
+    assert_eq!(hexes.rgba[..3], [7, 9, 11]);
+    assert_eq!(
+        hexes.rgba[(100 * 200 + 100) * 4..(100 * 200 + 100) * 4 + 3],
+        [92, 200, 255]
+    );
+    let centre = parse(&spiral_at("square", 201, 384.0, 384.0, 768).unwrap()).unwrap();
+    assert_eq!(
+        (centre["n"].clone(), centre["ring"].clone()),
+        (1.into(), 0.into())
+    );
+    let hit = parse(&spiral_at("square", 61, 81.5, 92.5, 180).unwrap()).unwrap();
+    assert_eq!(
+        (hit["n"].clone(), hit["prime"].clone()),
+        (41.into(), true.into())
+    );
+    assert_eq!(hit["factors"], parse("[[41,1]]").unwrap());
+    assert!((hit["span"].as_f64().unwrap() - 180.0 / 61.0).abs() < 1e-12);
+    let corner = parse(&spiral_at("hex", 21, 195.0, 100.0, 200).unwrap()).unwrap();
+    assert_eq!(
+        (corner["x"].clone(), corner["y"].clone()),
+        (10.into(), 0.into())
+    );
+    assert_eq!(corner["n"], 281);
+    let centres = spiral_centers("square", 21, 420).unwrap();
+    assert_eq!((centres.len(), centres[0], centres[1]), (882, 210.0, 210.0));
+    assert_eq!((centres[2], centres[3]), (230.0, 210.0));
+    assert_eq!(spiral_centers("hex", 21, 420).unwrap().len(), 662);
+    assert_eq!(prime_from(90), 97);
+    assert!(spiral_pixels("cube", 21, 1, 0, 2, "prime", true, 100).is_err());
+    assert!(spiral_pixels("square", 20, 1, 0, 2, "prime", true, 100).is_err());
+    assert!(spiral_pixels("square", 403, 1, 0, 2, "prime", true, 100).is_err());
+    assert!(spiral_pixels("square", 21, 0, 0, 2, "prime", true, 100).is_err());
+    assert!(spiral_pixels("square", 21, 1, 0, 2, "odd", true, 100).is_err());
+    assert!(spiral_pixels("square", 21, 1, 0, 2, "prime", true, 2000).is_err());
+    assert!(spiral_polynomial("square", 21, 1, 2_000_000, 2).is_err());
+    assert!(spiral_at("hex", 21, 1.0, 1.0, 200).is_err());
+    assert!(spiral_centers("square", 101, 400).is_err());
+    assert!(spiral_xy("tri", 5).is_err());
+}
+
+#[test]
+fn the_gauss_exports_answer() {
+    let two = parse(&ring_census("gaussian", 2).unwrap()).unwrap();
+    assert_eq!(
+        (
+            two["points"].clone(),
+            two["primes"].clone(),
+            two["split"].clone()
+        ),
+        (25.into(), 12.into(), 8.into())
+    );
+    assert_eq!(
+        (
+            two["ramified"].clone(),
+            two["inert"].clone(),
+            two["units"].clone()
+        ),
+        (4.into(), 0.into(), 4.into())
+    );
+    assert_eq!(
+        (
+            two["composites"].clone(),
+            two["symmetry"].clone(),
+            two["top"].clone()
+        ),
+        (8.into(), 8.into(), 8.into())
+    );
+    let three = parse(&ring_census("gaussian", 3).unwrap()).unwrap();
+    assert_eq!(
+        (three["primes"].clone(), three["inert"].clone()),
+        (24.into(), 4.into())
+    );
+    let hex = parse(&ring_census("eisenstein", 2).unwrap()).unwrap();
+    assert_eq!(
+        (
+            hex["points"].clone(),
+            hex["primes"].clone(),
+            hex["composites"].clone()
+        ),
+        (19.into(), 12.into(), 0.into())
+    );
+    assert_eq!(
+        (
+            hex["ramified"].clone(),
+            hex["inert"].clone(),
+            hex["symmetry"].clone()
+        ),
+        (6.into(), 6.into(), 12.into())
+    );
+    let r2 = ring_weights("gaussian", 25).unwrap();
+    assert_eq!((r2[3], r2[5], r2[25]), (0, 8, 12));
+    assert_eq!(
+        ring_weights("eisenstein", 7).unwrap(),
+        vec![1, 6, 0, 6, 6, 0, 0, 12]
+    );
+    assert_eq!(ring_peak("gaussian", 60).unwrap(), vec![25, 12]);
+    assert_eq!(ring_peak("eisenstein", 60).unwrap(), vec![49, 18]);
+    assert_eq!(
+        ring_fates("gaussian", 7).unwrap(),
+        vec![0, 0, 3, 2, 0, 1, 0, 2]
+    );
+    assert_eq!(
+        ring_fates("eisenstein", 7).unwrap(),
+        vec![0, 0, 2, 3, 0, 2, 0, 1]
+    );
+    let sheet = ring_pixels("gaussian", 2, "class", true, 100).unwrap();
+    let pixel =
+        |px: usize, py: usize| sheet.rgba[(py * 100 + px) * 4..(py * 100 + px) * 4 + 3].to_vec();
+    assert_eq!((sheet.width, sheet.height), (100, 100));
+    assert_eq!(pixel(70, 30), vec![255, 122, 182]);
+    assert_eq!(pixel(90, 30), vec![92, 200, 255]);
+    assert_eq!(pixel(90, 50), vec![31, 38, 46]);
+    assert_eq!(pixel(50, 50), vec![7, 9, 11]);
+    assert_eq!(pixel(60, 30), vec![7, 9, 11]);
+    let hexes = ring_pixels("eisenstein", 2, "class", false, 100).unwrap();
+    let cell =
+        |px: usize, py: usize| hexes.rgba[(py * 100 + px) * 4..(py * 100 + px) * 4 + 3].to_vec();
+    assert_eq!(cell(80, 67), vec![255, 122, 182]);
+    assert_eq!(cell(90, 50), vec![255, 138, 92]);
+    assert_eq!(cell(70, 50), vec![110, 231, 168]);
+    assert_eq!(cell(50, 50), vec![7, 9, 11]);
+    let plain = ring_pixels("gaussian", 3, "plain", false, 70).unwrap();
+    assert_eq!(
+        plain.rgba[(25 * 70 + 45) * 4..(25 * 70 + 45) * 4 + 3],
+        [255, 209, 102]
+    );
+    let glow = ring_pixels("gaussian", 3, "norm", false, 70).unwrap();
+    assert_ne!(
+        glow.rgba[(25 * 70 + 45) * 4..(25 * 70 + 45) * 4 + 3],
+        [255, 209, 102]
+    );
+    let hit = parse(&ring_at("gaussian", 40, 403.0, 374.0, 768).unwrap()).unwrap();
+    assert_eq!(
+        (
+            hit["a"].clone(),
+            hit["b"].clone(),
+            hit["norm"].clone(),
+            hit["class"].clone()
+        ),
+        (2.into(), 1.into(), 5.into(), "split".into())
+    );
+    assert_eq!(hit["prime"], true);
+    assert_eq!(hit["associates"].as_array().unwrap().len(), 4);
+    assert_eq!(hit["associates"][1][0], -1.0);
+    assert_eq!(hit["associates"][1][1], 2.0);
+    assert_eq!(hit["conjugate"][1], -1.0);
+    assert!((hit["px"].as_f64().unwrap() - 402.963).abs() < 1e-3);
+    assert!((hit["py"].as_f64().unwrap() - 374.519).abs() < 1e-3);
+    let flake = parse(&ring_at("eisenstein", 5, 140.0, 127.0, 220).unwrap()).unwrap();
+    assert_eq!(
+        (
+            flake["a"].clone(),
+            flake["b"].clone(),
+            flake["norm"].clone(),
+            flake["class"].clone()
+        ),
+        (1.into(), (-1).into(), 3.into(), "ramified".into())
+    );
+    assert_eq!(flake["associates"].as_array().unwrap().len(), 6);
+    assert_eq!(flake["conjugate"][0], 2.0);
+    assert_eq!(flake["conjugate"][1], 1.0);
+    assert_eq!(flake["factors"], parse("[[3,1]]").unwrap());
+    assert!(ring_pixels("quaternion", 2, "class", true, 100).is_err());
+    assert!(ring_pixels("gaussian", 0, "class", true, 100).is_err());
+    assert!(ring_pixels("gaussian", 201, "class", true, 100).is_err());
+    assert!(ring_pixels("gaussian", 2, "bad", true, 100).is_err());
+    assert!(ring_pixels("gaussian", 2, "class", true, 2000).is_err());
+    assert!(ring_weights("gaussian", 20_000).is_err());
+    assert!(ring_fates("eisenstein", 20_000).is_err());
+    assert!(ring_at("eisenstein", 5, 1.0, 1.0, 220).is_err());
+    assert!(ring_census("gaussian", 300).is_err());
+}
+
+#[test]
+fn the_zeta_exports_answer() {
+    let zeros = zeta_zeros(5).unwrap();
+    let known = [14.134_725, 21.022_040, 25.010_858, 30.424_876, 32.935_062];
+    for (got, want) in zeros.iter().zip(known) {
+        assert!((got - want).abs() < 1e-6, "{got} {want}");
+    }
+    assert_eq!(zeta_count(100.0).unwrap(), 29);
+    assert_eq!(zeta_count(200.0).unwrap(), 79);
+    let root = zeta_at(14.134_725).unwrap();
+    assert!(root[0].hypot(root[1]) < 1e-5);
+    assert!(root[2].abs() < 1e-5);
+    let half = zeta_at(0.0).unwrap();
+    assert!((half[0] + 1.460_354_5).abs() < 1e-7);
+    assert_eq!(half[3], 0.0);
+    let walk = zeta_line(0.0, 50.0, 600).unwrap();
+    assert_eq!(walk.len(), 2404);
+    assert_eq!(walk[0], 0.0);
+    assert_eq!(walk[2400], 50.0);
+    assert!((walk[1] + 1.460_354_5).abs() < 1e-7);
+    let seam = zeta_seam(250.0, 500).unwrap();
+    assert_eq!(seam[0], 20.0);
+    assert!(seam[1] < 5e-5);
+    let stair = psi_stair(100).unwrap();
+    assert!((stair[9] - 7.832_0).abs() < 1e-4);
+    assert!((stair[99] - 94.045_3).abs() < 1e-4);
+    let smooth = psi_formula(10.0, &[], 3).unwrap();
+    assert_eq!(smooth.len(), 6);
+    assert!((smooth[5] - 8.167_1).abs() < 1e-4);
+    let hundred = zeta_zeros(100).unwrap();
+    let folded = psi_formula(100.0, &hundred, 2).unwrap();
+    assert!((folded[3] - stair[99]).abs() < 1.0);
+    let gap = psi_gap(100, &hundred).unwrap();
+    assert!((gap - (stair[99] - folded[3])).abs() < 1e-12);
+    assert!(zeta_line(0.0, 300.0, 10).is_err());
+    assert!(zeta_line(0.0, 10.0, 0).is_err());
+    assert!(zeta_at(-1.0).is_err());
+    assert!(zeta_zeros(101).is_err());
+    assert!(zeta_count(251.0).is_err());
+    assert!(zeta_seam(100.0, 0).is_err());
+    assert!(psi_stair(1).is_err());
+    assert!(psi_stair(1001).is_err());
+    assert!(psi_formula(10.0, &[], 1).is_err());
+    assert!(psi_formula(10.0, &vec![14.0; 101], 10).is_err());
+    assert!(psi_gap(1, &[]).is_err());
+}
+
+#[test]
+fn the_graph_exports_answer() {
+    let carpet = parse(&graph_census("flat", "7", 3, 1, 2, "core").unwrap()).unwrap();
+    assert_eq!(
+        (carpet["nodes"].clone(), carpet["branches"].clone()),
+        (8.into(), 8.into())
+    );
+    assert_eq!(carpet["components"], 1);
+    let knots = graph_nodes("flat", "7", 3, 1, 2, "core").unwrap();
+    assert_eq!((knots[0], knots[1], knots.len()), (2.0, 8.0, 18));
+    assert_eq!(
+        graph_branches("flat", "7", 3, 1, 2, "core").unwrap().len(),
+        16
+    );
+    assert_eq!(
+        graph_roles("flat", "7", 3, 1, 2, "core").unwrap(),
+        vec![2; 8]
+    );
+    let sponge = graph_nodes("cube", "23", 3, 1, 2, "core").unwrap();
+    assert_eq!((sponge[0], sponge[1], sponge.len()), (3.0, 20.0, 62));
+    assert_eq!(
+        graph_branches("cube", "255", 1, 1, 2, "edge")
+            .unwrap()
+            .len(),
+        24
+    );
+    let tally = parse(&graph_census("cube", "23", 3, 1, 2, "core").unwrap()).unwrap();
+    assert_eq!(tally["nodes"], 20);
+    assert_eq!(tally["branches"], 24);
+    assert_eq!(tally["junctions"], 8);
+    assert_eq!(tally["euler"], -4);
+    let slice = parse(&graph_census("hex", "23", 3, 1, 2, "core").unwrap()).unwrap();
+    assert_eq!(
+        (slice["nodes"].clone(), slice["branches"].clone()),
+        (42.into(), 48.into())
+    );
+    assert!((slice["length"].as_f64().unwrap() - 48.0 / 3f64.sqrt()).abs() < 1e-9);
+    let rim = parse(&graph_census("hex", "23", 3, 1, 2, "edge").unwrap()).unwrap();
+    assert_eq!(
+        (rim["nodes"].clone(), rim["length"].clone()),
+        (36.into(), 78.0.into())
+    );
+    assert_eq!(graph_size("flat", "495", 3, 2, 3, "core").unwrap(), "64");
+    assert_eq!(graph_size("cube", "23", 3, 2, 2, "tunnel").unwrap(), "329");
+    assert_eq!(graph_cap("flat", "7", 3, 2, "core", 20000).unwrap(), 4);
+    assert_eq!(graph_cap("cube", "23", 3, 2, "core", 2000).unwrap(), 2);
+    assert_eq!(graph_cap("hex", "23", 3, 2, "edge", 2000).unwrap(), 2);
+    let ring = graph_nodes("flat", "15", 2, 1, 2, "core").unwrap();
+    let loop_ = graph_branches("flat", "15", 2, 1, 2, "core").unwrap();
+    let mut relax = Layout::new(&ring[2..], &loop_, 2, 1).unwrap();
+    let rest = relax.step(500);
+    assert!(rest < 1e-3, "energy {rest}");
+    let p = relax.positions();
+    let gaps: Vec<f32> = loop_
+        .chunks(2)
+        .map(|b| {
+            let (a, c) = (b[0] as usize, b[1] as usize);
+            ((p[2 * a] - p[2 * c]).powi(2) + (p[2 * a + 1] - p[2 * c + 1]).powi(2)).sqrt()
+        })
+        .collect();
+    let spread = gaps.iter().cloned().fold(0.0, f32::max)
+        - gaps.iter().cloned().fold(f32::INFINITY, f32::min);
+    assert!(spread < 1e-3, "gaps {gaps:?}");
+    assert_eq!(relax.ticks(), 500);
+    assert!(relax.moved() < relax.temperature());
+    assert!(graph_nodes("wobble", "7", 3, 1, 2, "core").is_err());
+    assert!(graph_roles("flat", "7", 3, 1, 2, "dual").is_err());
+    assert!(graph_census("hex", "23", 3, 1, 2, "tunnel").is_err());
+    assert!(graph_nodes("flat", "7", 3, 9, 2, "core").is_err());
+    assert!(graph_cap("flat", "16", 3, 2, "core", 100).is_err());
+    assert!(Layout::new(&[0.0, 0.0, 1.0, 1.0], &[0, 2], 2, 1).is_err());
+}
+
+#[test]
+fn the_ledger_exports_answer() {
+    assert_eq!(ledger_measures().len(), 12);
+    assert_eq!(ledger_measures()[0], "fills");
+    assert_eq!(
+        ledger_designs(2, 2).unwrap(),
+        ["0", "1", "3", "6", "7", "15"]
+    );
+    assert_eq!(ledger_designs(2, 3).unwrap().len(), 26);
+    assert!(ledger_designs(3, 3).is_err());
+    let budget = "500000";
+    assert_eq!(
+        ledger_terms("7", 2, 2, "fills", "level", 3, budget).unwrap(),
+        ["8", "64", "512"]
+    );
+    assert_eq!(
+        ledger_terms("23", 3, 2, "surface", "level", 3, budget).unwrap(),
+        ["72", "1056", "18048"]
+    );
+    assert_eq!(
+        ledger_terms("7", 2, 2, "fills", "side", 4, budget).unwrap(),
+        ["8", "21", "40", "65"]
+    );
+    assert_eq!(
+        ledger_terms("3", 2, 2, "fills", "side", 3, budget).unwrap(),
+        ["6", "15", "28"]
+    );
+    assert_eq!(
+        ledger_terms("23", 3, 2, "euler", "level", 8, "1000").unwrap(),
+        ["-4", "-80"]
+    );
+    assert!(ledger_terms("7", 2, 2, "faces", "level", 1, budget).is_err());
+    let found = parse(&ledger_identify("6, 42, 306, 2250")).unwrap();
+    assert_eq!(
+        (found[0]["id"].clone(), found[0]["shift"].clone()),
+        ("A299916".into(), 1.into())
+    );
+    let octagonal = parse(&ledger_identify("8, 21, 40, 65")).unwrap();
+    assert_eq!(
+        (octagonal[0]["id"].clone(), octagonal[0]["shift"].clone()),
+        ("A000567".into(), 2.into())
+    );
+    assert!(parse(&ledger_identify("x"))
+        .unwrap()
+        .as_array()
+        .unwrap()
+        .is_empty());
+    assert_eq!(
+        ledger_closed("7", 2, 2, "fills", "side").unwrap(),
+        "3k^2 - 2k"
+    );
+    assert_eq!(
+        ledger_closed("23", 3, 2, "surface", "level").unwrap(),
+        "a(L) = 28 a(L-1) - 160 a(L-2)"
+    );
+    assert_eq!(ledger_closed("7", 2, 2, "euler", "level").unwrap(), "");
+    let records = parse(&ledger_records()).unwrap();
+    let records = records.as_array().unwrap();
+    assert_eq!(records.len(), 60);
+    let octagonal = records.iter().find(|r| r["id"] == "A000567").unwrap();
+    assert_eq!(
+        (octagonal["key"].clone(), octagonal["shift"].clone()),
+        ("mrly_bang_d2_7.fills.side".into(), 0.into())
+    );
+    assert_eq!(ledger_build("closed", 4).unwrap(), 7692);
+    assert_eq!(ledger_build("closed", 4).unwrap(), 7692);
+    assert!(ledger_build("deep", 4).is_err());
+    let hits = parse(&ledger_search("8, 21, 40, 65", "", 2, 2, 0, 25)).unwrap();
+    assert_eq!(hits["total"], 1);
+    let row = &hits["rows"][0];
+    assert_eq!(row["name"], "mrly_bang_d2_7.fills.side");
+    assert_eq!(
+        (
+            row["oeis"].clone(),
+            row["shift"].clone(),
+            row["tag"].clone()
+        ),
+        ("A000567".into(), 0.into(), "Proved".into())
+    );
+    assert_eq!(row["closed"], "3k^2 - 2k");
+    let surfaces = parse(&ledger_search("", "surface", 3, 2, 0, 5)).unwrap();
+    assert_eq!(surfaces["total"], 44);
+    assert_eq!(surfaces["rows"].as_array().unwrap().len(), 5);
+    assert_eq!(
+        parse(&ledger_search("mrly_bang_d3_23.", "", 0, 0, 0, 100)).unwrap()["total"],
+        6
+    );
+    assert_eq!(
+        parse(&ledger_search("A381517", "", 0, 0, 0, 100)).unwrap()["rows"][0]["terms"][1],
+        "80"
+    );
+    let grown = parse(&ledger_grow("convolved", 4, 100).unwrap()).unwrap();
+    assert_eq!(
+        (
+            grown["rows"].clone(),
+            grown["done"].clone(),
+            grown["total"].clone()
+        ),
+        (7792.into(), 100.into(), 5044.into())
+    );
+    assert!(ledger_grow("deep", 4, 100).is_err());
+    let void = parse(&ledger_row("9", 2, 2, "voids", "side", 3, "500000").unwrap()).unwrap();
+    assert_eq!(void["name"], "mrly_bang_d2_9.voids.side");
+    assert_eq!(void["terms"], parse(r#"["4", "12", "24"]"#).unwrap());
+    assert_eq!(void["closed"], "2k^2 - 2k");
+    assert_eq!(void["number"], 3);
+    assert!(ledger_row("7", 2, 2, "faces", "level", 3, "500000").is_err());
+    let gasket = ledger_profile("126", 3, 2, 2, 4).unwrap();
+    assert_eq!(gasket.len(), 46);
+    assert!(gasket[15..=30].iter().all(|count| count == "81"));
+    assert_eq!(
+        ledger_profile("1", 1, 2, 3, 2).unwrap().join(""),
+        "101000101"
+    );
+}
+
+#[test]
+fn the_tour_exports_answer() {
+    let farey = parse(&farey_novelty(7)).unwrap();
+    assert_eq!(
+        (farey["lit"].clone(), farey["novel"].clone()),
+        (19.into(), 19.into())
+    );
+    let cut = parse(&diagonal_profile("126", 2, 5, 2).unwrap()).unwrap();
+    assert_eq!(
+        (cut["max"].clone(), cut["constant"].clone()),
+        ("243".into(), true.into())
+    );
+    assert_eq!(
+        parse(&slice_census("23", 9, 1, 2).unwrap()).unwrap()["vertices"],
+        271
+    );
+    assert_eq!(
+        parse(&slice_census("23", 1, 1, 2).unwrap()).unwrap()["fills"],
+        6
+    );
+    assert_eq!(
+        parse(&two_census("9", 5, 1, 0, 2).unwrap()).unwrap()["fills"],
+        13
+    );
+    assert_eq!(baseq_sequence(5, 2).unwrap(), ["8", "172112"]);
+    let first = |terms: &str| {
+        let found = parse(&ledger_identify(terms)).unwrap();
+        (found[0]["id"].clone(), found[0]["shift"].clone())
+    };
+    assert_eq!(first("3, 9, 27, 81"), ("A000244".into(), 1.into()));
+    assert_eq!(first("2, 3, 5, 7, 11, 13"), ("A005728".into(), 1.into()));
+    assert_eq!(first("7, 37, 91, 169"), ("A154105".into(), 0.into()));
+    assert_eq!(first("4, 12, 64, 700"), ("A129824".into(), 1.into()));
+    assert_eq!(first("20, 81, 208"), ("A103532".into(), 1.into()));
 }

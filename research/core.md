@@ -2,7 +2,7 @@
 
 MrlyMath is two moves. Choose a rule that fills some corners of the parity cube `{0,1}^D`; substitute that rule into itself by the Kronecker product. The Sierpinski carpet, the Menger sponge, their siblings and their antis are all one choice in move one carried through the same move two. Fix the dimension and the whole universe of rules is finite and already there - 4 of them in 1D, 16 in 2D, 256 in 3D - so the designs are not designed, they are enumerated.
 
-Every claim below carries a tag. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a lab study; **Conjecture** means neither. The generator is `lab/design-census`. The [universe demo](../demos/universe.html) draws that census live: every orbit in each dimension and base, with the Burnside counts beside it.
+Every claim below carries a tag. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a lab study; **Conjecture** means neither. The generator is `lab/design-census`. The [universe demo](../demos/universe/) draws that census live: every orbit in each dimension and base, with the Burnside counts beside it.
 
 ## Move one: a design is a parity rule
 

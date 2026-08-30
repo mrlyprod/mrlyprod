@@ -309,7 +309,7 @@ mod theorems {
     }
 
     #[test]
-    fn the_antipodal_design_buries_no_face() {
+    fn the_void_buries_no_face() {
         for k in 1..13u128 {
             let number = 2 * k as usize - 1;
             let cell = designs::create(129, number, 1, 2).unwrap();

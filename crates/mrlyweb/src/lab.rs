@@ -57,3 +57,9 @@ pub fn moire(
     let (width, height, colors) = mrlycore::unpng(&png)?;
     Ok(Pixels::of(width, height, colors))
 }
+
+/// Lists the odd scales a moire stack samples up to the limit.
+#[wasm_bindgen]
+pub fn odd_scales(limit: usize) -> Vec<u32> {
+    (1..=limit.max(1)).step_by(2).map(|n| n as u32).collect()
+}

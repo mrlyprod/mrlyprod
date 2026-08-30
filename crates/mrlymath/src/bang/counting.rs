@@ -147,6 +147,28 @@ pub fn sequence(max_dimension: usize) -> Result<Vec<u128>> {
     (1..=max_dimension).map(distinct_designs).collect()
 }
 
+/// Counts the fill classes of a dimension, the popcount profiles a base-2 design can have: one more than the corners of each weight, multiplied over the weights, A129824 at the dimension.
+pub fn classes(dimension: usize) -> u128 {
+    let mut row = vec![1u128];
+    for _ in 0..dimension {
+        let mut next = vec![1u128; row.len() + 1];
+        for k in 1..row.len() {
+            next[k] = row[k - 1] + row[k];
+        }
+        row = next;
+    }
+    row.iter().map(|corners| corners + 1).product()
+}
+
+/// Returns the fill-class counts for dimensions 1 through max_dimension.
+///
+/// ```
+/// assert_eq!(mrlymath::bang::counting::class_sequence(4), vec![4, 12, 64, 700]);
+/// ```
+pub fn class_sequence(max_dimension: usize) -> Vec<u128> {
+    (1..=max_dimension).map(classes).collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -162,6 +184,14 @@ mod tests {
         assert_eq!(
             sequence(6).unwrap(),
             vec![3, 6, 22, 402, 1228158, 400507806843728]
+        );
+    }
+    #[test]
+    fn classes_are_a129824() {
+        assert_eq!(classes(0), 2);
+        assert_eq!(
+            class_sequence(7),
+            vec![4, 12, 64, 700, 17424, 1053696, 160579584]
         );
     }
     #[test]

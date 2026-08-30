@@ -85,3 +85,19 @@ pub fn slice_series(code: &str, max_k: usize) -> Result<String, Fault> {
     }
     Ok(json!(rows).to_string())
 }
+
+/// Splits the level-one hexagon of the side between the carpet and the net: their filled triangles, the two together, the hexagon's triangles and whether the partition is exact, as JSON.
+#[wasm_bindgen]
+pub fn slice_partition(number: usize) -> Result<String, Fault> {
+    let carpet = six::census(&slice("23", number, 1, 2)?, false);
+    let net = six::census(&slice("232", number, 1, 2)?, false);
+    let together = carpet.fills + net.fills;
+    Ok(json!({
+        "carpet": carpet.fills,
+        "net": net.fills,
+        "together": together,
+        "hexagon": carpet.triangles,
+        "exact": together == carpet.triangles,
+    })
+    .to_string())
+}

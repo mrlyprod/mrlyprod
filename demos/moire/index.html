@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mrly · moire</title>
+<link rel="stylesheet" href="../lib/mrly.css">
+</head>
+<body>
+<header>
+  <nav><a href="../">demos</a> / moire</nav>
+  <h1>Moire</h1>
+  <p class="sub">One design sampled at scale 1, 3, 5, and so on, the layers stacked into one field. Stacking is where the interference comes from: each new scale adds a finer grid on top of the coarse ones.</p>
+</header>
+<main>
+  <div class="row">
+    <label>preset <select id="preset"></select></label>
+    <label>scales up to <input type="range" id="limit" min="1" max="41" step="2" value="9"><span class="num" id="limit-out">9</span></label>
+    <label>size <select id="size"><option>128</option><option selected>256</option><option>384</option><option>512</option></select></label>
+    <span class="set" id="ramp-row"></span>
+    <button id="play">Play the scales</button>
+    <button id="random">Randomize</button>
+  </div>
+  <canvas class="sheet" id="sheet" style="max-width: 640px"></canvas>
+  <div class="stats"><span>scales <b id="scales"></b></span><span>pixels <b id="pixels"></b></span></div>
+  <div class="note" id="note"></div>
+  <p class="foot">The heatmap sums the parity of the low corner over the odd scales, the weave folds the same layers to their parity, the hive samples on the hexagonal lattice, and the carpet keeps eight corners of nine in base 3. The field is quantized into levels and painted through a ramp; the pixels arrive already colored.</p>
+</main>
+<script type="module" src="./index.js"></script>
+</body>
+</html>

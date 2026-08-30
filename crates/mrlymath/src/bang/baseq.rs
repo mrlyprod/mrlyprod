@@ -1,8 +1,11 @@
 use super::factory::residue_corners;
-use super::universe::permutations;
+use super::universe::{permutations, Code};
 use mrlycore::errors::{value_error, Result};
 use mrlynum::classics::factorial;
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
+
+/// The most cells a code walk visits, so that the walk stays within `2^20` codes.
+pub const WALK_LIMIT: usize = 20;
 
 /// Returns the distinct rotation and reflection maps of a base-q axis.
 pub fn axis_maps(base: usize) -> Vec<Vec<usize>> {
@@ -104,6 +107,79 @@ pub fn distinct_designs(base: usize, dimension: usize) -> Result<u128> {
     Ok(total / order)
 }
 
+/// Returns the symmetry group as cell maps, each sending the cell at index `i` to `element[i]`.
+pub fn group(base: usize, dimension: usize) -> Vec<Vec<usize>> {
+    let cells = residue_corners(dimension, base);
+    let axis = axis_maps(base);
+    let mut out = Vec::new();
+    for perm in permutations(dimension) {
+        for choice in choices(&axis, dimension) {
+            out.push(
+                cells
+                    .iter()
+                    .map(|cell| {
+                        (0..dimension).fold(0, |acc, i| {
+                            acc * base + axis[choice[i]][cell[perm[i]] as usize]
+                        })
+                    })
+                    .collect(),
+            );
+        }
+    }
+    out
+}
+
+/// Carries a code through one group element.
+pub fn carry(element: &[usize], code: Code) -> Code {
+    element
+        .iter()
+        .enumerate()
+        .filter(|(index, _)| code >> index & 1 == 1)
+        .map(|(_, &image)| 1u128 << image)
+        .sum()
+}
+
+/// Returns every code a design reaches under the group.
+pub fn orbit(group: &[Vec<usize>], code: Code) -> BTreeSet<Code> {
+    group.iter().map(|element| carry(element, code)).collect()
+}
+
+/// Returns the least code of the design's orbit.
+pub fn canonical(group: &[Vec<usize>], code: Code) -> Code {
+    orbit(group, code)
+        .into_iter()
+        .next()
+        .expect("the group is not empty")
+}
+
+/// Walks every code of a base and dimension and returns each orbit's least code with the orbit's size, or an error past the walk limit.
+///
+/// ```
+/// assert_eq!(mrlymath::bang::baseq::representatives(3, 1).unwrap().len(), 4);
+/// ```
+pub fn representatives(base: usize, dimension: usize) -> Result<Vec<(Code, usize)>> {
+    let cells = base.pow(dimension as u32);
+    if cells > WALK_LIMIT {
+        return value_error(format!(
+            "base {base} dimension {dimension} has {cells} cells, past the walk limit of {WALK_LIMIT}."
+        ));
+    }
+    let group = group(base, dimension);
+    let mut seen = vec![false; 1 << cells];
+    let mut out = Vec::new();
+    for code in 0..1u128 << cells {
+        if seen[code as usize] {
+            continue;
+        }
+        let orbit = orbit(&group, code);
+        out.push((code, orbit.len()));
+        for member in orbit {
+            seen[member as usize] = true;
+        }
+    }
+    Ok(out)
+}
+
 /// Returns the raw design count before symmetry, two to the number of cells.
 pub fn total_designs(base: usize, dimension: usize) -> u128 {
     let cells = base.pow(dimension as u32);
@@ -164,6 +240,31 @@ mod tests {
         for d in 1..=3 {
             assert_eq!(distinct_designs(2, d).unwrap(), bang(d).distinct() as u128);
         }
+    }
+    #[test]
+    fn the_walk_agrees_with_burnside_and_the_base_two_universe() {
+        use super::super::catalog::universe_codes;
+        for (base, dimension) in [(3usize, 1usize), (3, 2), (4, 1), (4, 2), (5, 1)] {
+            let walk = representatives(base, dimension).unwrap();
+            assert_eq!(
+                walk.len() as u128,
+                distinct_designs(base, dimension).unwrap(),
+                "q={base} d={dimension}"
+            );
+            let total: usize = walk.iter().map(|&(_, size)| size).sum();
+            assert_eq!(total, 1 << base.pow(dimension as u32));
+        }
+        for dimension in 1..=4 {
+            let codes: Vec<Code> = representatives(2, dimension)
+                .unwrap()
+                .into_iter()
+                .map(|(code, _)| code)
+                .collect();
+            assert_eq!(codes, universe_codes(dimension));
+        }
+        assert_eq!(representatives(3, 2).unwrap().len(), 26);
+        assert_eq!(representatives(4, 2).unwrap().len(), 805);
+        assert!(representatives(3, 3).is_err());
     }
     #[test]
     fn bracelet_sequence_is_a000029() {

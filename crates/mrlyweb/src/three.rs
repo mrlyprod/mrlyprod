@@ -82,7 +82,7 @@ fn depth(level: usize) -> Result<(), Fault> {
     Ok(())
 }
 
-/// Profiles the diagonal cut of the cube: the support, the count on every height inside it, the extremes and whether the cut is constant, as JSON.
+/// Profiles the diagonal cut of the cube: the support, its central pair of heights, the count on every height inside it, the extremes and whether the cut is constant, as JSON.
 #[wasm_bindgen]
 pub fn diagonal_profile(
     code: &str,
@@ -98,9 +98,11 @@ pub fn diagonal_profile(
     let live: Vec<u128> = span.iter().copied().filter(|&count| count > 0).collect();
     let least = *live.iter().min().unwrap();
     let most = *live.iter().max().unwrap();
+    let mid = (low + high) / 2;
     Ok(json!({
         "side": number.pow(level as u32),
         "support": [low, high],
+        "central": [mid, high.min(mid + 1)],
         "counts": span.iter().map(|count| count.to_string()).collect::<Vec<String>>(),
         "nonempty": live.len(),
         "heights": span.len(),
@@ -123,6 +125,40 @@ pub fn diagonal_count(
     depth(level)?;
     let counts = three::profile(code_of(code)?, number, level, base)?;
     Ok(counts.get(height).copied().unwrap_or(0).to_string())
+}
+
+/// Spells the height's offset above the cut's support in binary, the digits that say which corners each scale may use.
+#[wasm_bindgen]
+pub fn diagonal_digits(
+    code: &str,
+    number: usize,
+    level: usize,
+    base: usize,
+    height: usize,
+) -> Result<String, Fault> {
+    depth(level)?;
+    let counts = three::profile(code_of(code)?, number, level, base)?;
+    let (low, _) = three::support(&counts)
+        .ok_or_else(|| Fault::new(format!("code {code} fills no cell, so it has no cut.")))?;
+    Ok(format!("{:b}", height.saturating_sub(low)))
+}
+
+/// Counts the filled cells on the named diagonal planes together, one per circle the drawing holds, as a decimal string.
+#[wasm_bindgen]
+pub fn diagonal_total(
+    code: &str,
+    number: usize,
+    level: usize,
+    base: usize,
+    heights: Vec<u32>,
+) -> Result<String, Fault> {
+    depth(level)?;
+    let counts = three::profile(code_of(code)?, number, level, base)?;
+    let total: u128 = heights
+        .iter()
+        .map(|&height| counts.get(height as usize).copied().unwrap_or(0))
+        .sum();
+    Ok(total.to_string())
 }
 
 /// Draws the named diagonal slices of the cube down the `(1,1,1)` axis, one circle per cell, as SVG.

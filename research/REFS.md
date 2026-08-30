@@ -12,6 +12,15 @@ Every named reference, sequence id, theorem and attribution on this tree's root 
 | ref | title | url |
 |---|---|---|
 | A000070 | Partition sums: a(n) = Sum_{k=0..n} p(k); the qualifying-signature count of the divisor-avatar material, now the `divisor-avatars` lane | https://oeis.org/A000070 |
+| A000290 | The squares, n^2; the odd-side fills of the low-corner design in the plane | https://oeis.org/A000290 |
+| A000384 | Hexagonal numbers, n(2n-1); the odd-side fills of the flat tree | https://oeis.org/A000384 |
+| A000567 | Octagonal numbers, n(3n-2); the odd-side fills of the flat carpet | https://oeis.org/A000567 |
+| A001844 | Centered square numbers, 2n(n+1)+1; the odd-side fills of the flat void | https://oeis.org/A001844 |
+| A016754 | Odd squares, (2n+1)^2; the odd-side fills of the solid square, also the centered octagonal numbers | https://oeis.org/A016754 |
+| A001481 | Numbers that are the sum of 2 squares; the ring radii squared of a spun square-lattice picture | https://oeis.org/A001481 |
+| A003136 | Loeschian numbers, the norms x^2 + xy + y^2; the ring radii squared of a spun hexagonal picture | https://oeis.org/A003136 |
+| A004016 | Theta series of the planar hexagonal lattice; the weight of each hexagonal ring | https://oeis.org/A004016 |
+| A004018 | Theta series of the square lattice, r2(n); the weight of each square ring | https://oeis.org/A004018 |
 | A000351 | Powers of 5: a(n) = 5^n | https://oeis.org/A000351 |
 | A000370 | Number of NPN-equivalence classes of Boolean functions of n or fewer variables | https://oeis.org/A000370 |
 | A000420 | Powers of 7: a(n) = 7^n | https://oeis.org/A000420 |
@@ -65,6 +74,7 @@ Every named reference, sequence id, theorem and attribution on this tree's root 
 |---|---|---|
 | Huang 2019 | Induced subgraphs of hypercubes and a proof of the Sensitivity Conjecture, Annals of Mathematics 190(3) | https://doi.org/10.4007/annals.2019.190.3.6 |
 | Glass 1969 | Moire effect from random dots, Nature 223, 578-580 | https://doi.org/10.1038/223578a0 |
+| Hardy 1915 | On the expression of a number as the sum of two squares, Quarterly Journal of Mathematics 46, 263-283; the Bessel series for the circle-problem error | https://zbmath.org/?q=an:45.1253.01 |
 | Cherny, Anitas, Osipov and Kuklin 2011 | Deterministic fractals: extracting additional information from small-angle scattering data, Phys. Rev. E 84, 036203 | https://doi.org/10.1103/PhysRevE.84.036203 |
 | Mattila 1987 | Spherical averages of Fourier transforms of measures with finite energy; dimension of intersections and distance sets, Mathematika 34, 207-228 | https://doi.org/10.1112/S0025579300013462 |
 | Falconer, Fraser and Jin 2015 | Projections of self-similar and related fractals: a survey of recent developments, Fractal Geometry and Stochastics V | https://doi.org/10.1007/978-3-319-18660-3_4 |

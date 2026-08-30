@@ -14,6 +14,36 @@ pub const CATALAN: f64 = 0.915_965_594_177_219;
 /// The Apery constant, the value zeta takes at three.
 pub const APERY: f64 = 1.202_056_903_159_594;
 
+/// The Euler constant, the limit of the harmonic sum less the logarithm.
+pub const EULER: f64 = 0.577_215_664_901_532_9;
+
+/// Returns the logarithmic integral of a positive x by the Ramanujan series, the smooth count of the primes below x.
+///
+/// ```
+/// assert!((mrlynum::series::li(1_000_000.0) - 78_627.549).abs() < 1e-3);
+/// ```
+pub fn li(x: f64) -> f64 {
+    let log = x.ln();
+    let mut sum = 0.0f64;
+    let mut term = 1.0f64;
+    let mut odds = 0.0f64;
+    for n in 1..200u32 {
+        term *= log / n as f64;
+        if n > 1 {
+            term /= 2.0;
+        }
+        if !n.is_multiple_of(2) {
+            odds += 1.0 / n as f64;
+        }
+        let piece = term * odds;
+        sum += if n.is_multiple_of(2) { -piece } else { piece };
+        if piece.abs() < 1e-17 * sum.abs() {
+            break;
+        }
+    }
+    EULER + log.abs().ln() + x.sqrt() * sum
+}
+
 /// Returns the partial harmonic sum, the reciprocals of one through the term count.
 pub fn harmonic(terms: usize) -> f64 {
     (1..=terms).map(|k| 1.0 / k as f64).sum()
@@ -289,5 +319,14 @@ mod tests {
                 assert_eq!(chi8(a) * chi8(b), chi8(a * b), "{a} {b}");
             }
         }
+    }
+
+    #[test]
+    fn li_pins_the_smooth_prime_counts() {
+        assert!((li(2.0) - 1.045_163_780_1).abs() < 1e-9);
+        assert!((li(1_000.0) - 177.609_657_990_2).abs() < 1e-8);
+        assert!((li(10_000.0) - 1_246.137_215_9).abs() < 1e-6);
+        assert!((li(100_000.0) - 9_629.809_001_1).abs() < 1e-6);
+        assert!((li(1_000_000.0) - 78_627.549_159_5).abs() < 1e-6);
     }
 }

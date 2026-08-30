@@ -10,6 +10,7 @@ readme = "README.md"
 [dependencies]
 mrlycore.workspace = true
 mrlymath.workspace = true
+mrlynum.workspace = true
 
 [dev-dependencies]
 mrlycore = { workspace = true, features = ["testkit"] }

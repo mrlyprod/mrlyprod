@@ -13,6 +13,8 @@ pub mod classics;
 pub mod factor;
 /// The fast Fourier transform in one and two dimensions.
 pub mod fft;
+/// The primes of the plane: the Gaussian and the Eisenstein integers, their classes, windows and ring weights.
+pub mod gauss;
 /// The spatial network: its nodes, branches, extraction and census.
 pub mod graph;
 /// The visible lattice: totients, coprime pairs, the pi estimate and the Farey nodes.
@@ -25,3 +27,7 @@ pub mod series;
 pub mod spectrum;
 /// The turntable: the exact circle means of a raster about its centre, the profile they trace and the wheel it paints.
 pub mod spin;
+/// The spirals: the whole numbers wound on the square and the hexagonal lattice, marked and read along a quadratic.
+pub mod spiral;
+/// The critical line: zeta at one half plus i t, its zeros, and the prime staircase they rebuild.
+pub mod zeta;

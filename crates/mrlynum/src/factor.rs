@@ -22,7 +22,7 @@ pub fn coprime(a: usize, b: usize) -> bool {
     gcd(a, b) == 1
 }
 
-fn peel(prime: usize, rest: &mut usize, out: &mut Vec<(usize, u32)>) {
+fn peel(prime: u64, rest: &mut u64, out: &mut Vec<(u64, u32)>) {
     let mut power = 0;
     while rest.is_multiple_of(prime) {
         *rest /= prime;
@@ -33,12 +33,12 @@ fn peel(prime: usize, rest: &mut usize, out: &mut Vec<(usize, u32)>) {
     }
 }
 
-/// Returns the prime and exponent pairs of the number in ascending primes, by trial division on the six-step wheel.
+/// Returns the prime and exponent pairs of a wide number in ascending primes, by trial division on the six-step wheel.
 ///
 /// ```
-/// assert_eq!(mrlynum::factor::factorize(240), vec![(2, 4), (3, 1), (5, 1)]);
+/// assert_eq!(mrlynum::factor::factorize_wide(999_999_999_989), vec![(999_999_999_989, 1)]);
 /// ```
-pub fn factorize(number: usize) -> Vec<(usize, u32)> {
+pub fn factorize_wide(number: u64) -> Vec<(u64, u32)> {
     let mut out = Vec::new();
     let mut rest = number;
     if rest < 2 {
@@ -56,6 +56,18 @@ pub fn factorize(number: usize) -> Vec<(usize, u32)> {
         out.push((rest, 1));
     }
     out
+}
+
+/// Returns the prime and exponent pairs of the number in ascending primes, by trial division on the six-step wheel.
+///
+/// ```
+/// assert_eq!(mrlynum::factor::factorize(240), vec![(2, 4), (3, 1), (5, 1)]);
+/// ```
+pub fn factorize(number: usize) -> Vec<(usize, u32)> {
+    factorize_wide(number as u64)
+        .into_iter()
+        .map(|(prime, power)| (prime as usize, power))
+        .collect()
 }
 
 /// Builds every divisor of the number from its factorization, ascending, empty for zero.

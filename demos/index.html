@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>mrly demos</title>
-<link rel="stylesheet" href="./mrly.css">
+<link rel="stylesheet" href="./lib/mrly.css">
 </head>
 <body>
 <header>
@@ -14,6 +14,7 @@
 </header>
 <main>
   <div class="gallery">
+    <a class="tile" href="./tour"><canvas id="t-tour"></canvas><h2>The tour</h2><p>A dozen sequences the designs write, each drawn live with its first terms and the OEIS record that holds them.</p></a>
     <a class="tile" href="./race"><canvas id="t-race"></canvas><h2>The race</h2><p>Two designs of the same mass carry random walkers at different speeds.</p></a>
     <a class="tile" href="./sponge"><div class="thumb" id="t-sponge"></div><h2>The sponge</h2><p>Any cube design, any level, in orbit.</p></a>
     <a class="tile" href="./cuts"><div class="thumb" id="t-cuts"></div><h2>The cuts</h2><p>A diagonal plane through one solid, the same size at every height.</p></a>
@@ -26,6 +27,12 @@
     <a class="tile" href="./radial"><canvas id="t-radial"></canvas><h2>The radial stack</h2><p>Turned copies of one design laid on each other, and the harmonics each stack keeps.</p></a>
     <a class="tile" href="./volume"><canvas id="t-volume"></canvas><h2>The volume</h2><p>The moire stack of a cube design as a solid, cut on any plane, seen down the diagonal.</p></a>
     <a class="tile" href="./farey"><canvas id="t-farey"></canvas><h2>The Farey stack</h2><p>Scales light the fractions; the primes light the most.</p></a>
+    <a class="tile" href="./primes"><canvas id="t-primes"></canvas><h2>The primes</h2><p>Stones that make no rectangle: sieved, counted, and found by the carpet stack on its own.</p></a>
+    <a class="tile" href="./ulam"><canvas id="t-ulam"></canvas><h2>The Ulam spiral</h2><p>The whole numbers wound on squares or hexagons; the primes fall into diagonals nobody ordered.</p></a>
+    <a class="tile" href="./gaussian"><canvas id="t-gaussian"></canvas><h2>Primes in the plane</h2><p>The Gaussian and Eisenstein primes as snowflakes, coloured by how an ordinary prime broke up.</p></a>
+    <a class="tile" href="./graphs"><canvas id="t-graphs"></canvas><h2>The graphs</h2><p>Every filled cell joined to its neighbours: tips, junctions and pieces, flat, in the cube, on the hexagon, and relaxed by force.</p></a>
+    <a class="tile" href="./sequences"><canvas id="t-sequences"></canvas><h2>The sequences</h2><p>Every integer sequence the designs write, searched by terms, name, record or code, with the OEIS entry each one matches.</p></a>
+    <a class="tile" href="./zeta"><canvas id="t-zeta"></canvas><h2>The critical line</h2><p>Zeta walked at one half plus it; every pass through the origin is a zero, and the zeros rebuild the prime staircase.</p></a>
   </div>
 </main>
 <script type="module" src="./index.js"></script>

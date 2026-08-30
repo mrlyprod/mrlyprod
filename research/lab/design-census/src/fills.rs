@@ -1,9 +1,10 @@
-use crate::orbits::{
-    burnside, canonical, cell_index, group, named, orbit, representatives, WALK_LIMIT,
-};
 use crate::quasi::{degree, fit, fraction, leading, text};
 use crate::tables::write_csv;
-use mrlymath::bang::factory::residue_corners;
+use mrlymath::bang::baseq::{
+    canonical, distinct_designs, group, group_order, orbit, representatives, WALK_LIMIT,
+};
+use mrlymath::bang::counting;
+use mrlymath::bang::factory::{corners_to_code, levels_code, residue_corners};
 use mrlymath::bang::universe;
 use mrlymath::bang::Code;
 use mrlymath::formulas::{fill, void};
@@ -14,6 +15,50 @@ use std::path::Path;
 const SIDES: usize = 12;
 const CASES: [(usize, usize); 4] = [(2, 2), (2, 3), (3, 2), (3, 3)];
 const SHOWN: usize = 6;
+
+pub fn cell_index(cell: &[u8], base: usize) -> usize {
+    cell.iter().fold(0, |acc, &r| acc * base + r as usize)
+}
+
+fn named(base: usize, dimension: usize) -> Vec<(&'static str, Code)> {
+    let cells = residue_corners(dimension, base);
+    let select = |keep: &dyn Fn(&[u8]) -> bool| {
+        let filled: Vec<Vec<u8>> = cells.iter().filter(|cell| keep(cell)).cloned().collect();
+        corners_to_code(&filled, dimension, base)
+    };
+    let free = if dimension == 2 { 0 } else { dimension - 1 };
+    vec![
+        ("carpet", levels_code(dimension, base, &[0, 1])),
+        (
+            "net",
+            select(&|cell| cell.iter().map(|&r| r as usize).sum::<usize>() + 1 >= dimension),
+        ),
+        ("void", select(&|cell| cell.iter().all(|&r| r == cell[0]))),
+        (
+            "tree",
+            select(&|cell| (0..dimension).filter(|&a| a != free).all(|a| cell[a] == 0)),
+        ),
+    ]
+}
+
+fn burnside(base: usize, dimension: usize) -> u128 {
+    distinct_designs(base, dimension).expect("the Burnside average is an integer")
+}
+
+pub fn orbits_report() {
+    println!("base 2 cube group: order 2^D D!, designs up to symmetry three ways");
+    for dimension in 1..=4 {
+        let walk = representatives(2, dimension)
+            .expect("the walk stays under the code limit")
+            .len();
+        let order = group_order(2, dimension);
+        let burnside = burnside(2, dimension);
+        let classes = counting::distinct_designs(dimension).expect("the class sums close");
+        println!(
+            "D {dimension}: order {order} orbit walk {walk} Burnside {burnside} class sum {classes}"
+        );
+    }
+}
 
 pub struct Row {
     pub base: usize,
@@ -192,6 +237,7 @@ fn case(base: usize, dimension: usize) -> (Vec<Row>, bool) {
             .map(|(name, code)| (canonical(&group, code), name))
             .collect();
         let rows = representatives(base, dimension)
+            .expect("the walk stays under the code limit")
             .into_iter()
             .map(|(code, size)| {
                 let label = labels.get(&code).copied().unwrap_or_default().to_string();

@@ -232,9 +232,18 @@
 - [Verified] The window-module machinery is classical: the carry core is a generalized (mosaic) Sylvester map of a `1 x 3` polynomial row ("striped Sylvester" is not a term of art), its kernel the truncated first syzygy module, rank-2 freeness is Hilbert-Burch, and `delta_1 + delta_2 = 12R + 5` is the mu-basis degree identity `mu_1 + mu_2 = n - deg(gcd)` (Cox, Sederberg and Chen 1998; the Index Sum Theorem), so neither the identity nor the freeness is claimable and the 400-random-symbol generalisation reproves a 1998 theorem; the one-generator window step is two lines from Forney's predictable-degree property, leaving in-house only the evaluation `12R + 5` for this symbol, which needs the grading stated and polyphase coprimality asserted; claimable after nine recorded empty searches: Lemma M (the closest neighbours bound degrees, never a `(1+x)`-adic valuation), the Jacobsthal tent rank law (the Jacobsthal literature never uses the sequence as a rank formula's breakpoint set), the 2-adic Smith-layer/window structure (nearest miss: Smith forms over `F[y]`, algebraically closed, no modular treatment), the Bockstein pairing as a layer-2 reader, and `F_2` Fibonacci/Dickson kernel generators; three leads open - the full Beckermann-Labahn text, `F_2` polyphase filter-bank Bezout twins, and mu-bases in positive characteristic, the last the only plausible threat to Lemma M. Witness: slice-sign-even-half.
 - [Proved] Lemma W, the ceiling mechanism: on family coordinates multiplication by `z` is multiplication by `psi = (1+x^3)^2/x^3 = x^(-3) + 2 + x^3` over `Z`, so the mod-4 obstruction class obeys `ob(zc) = Lambda ob(c) mod im(E mod 2)` with `Lambda = S + S^(-1)` folded at the centre (the raw vector identity fails at `D = 29`; only the class is intertwined); hence if `Y_0` corrects the generator (`E(Y_0) = obraw(g)`) with x-valuation `cmin`, then `psi^i Y_0` corrects `z^i g` while `cmin + 3i <= R`, so `C - deg g >= floor(a_0/3)` with `a_0 = R - cmin` the maximal correction valuation, and equality `L_2 - 1 = C - deg g = floor((R - cmin)/3)` holds at 20 of 20 rows `D = 23..251`, replacing the fitted ceiling by one linear-algebra invariant of the row; escaper independence is equivalent to ceiling exactness, and `rank(phi) <= K - C` follows from membership alone; the mod-2 family element's degree does not set the ceiling (`D = 115`: all `s_j >= 0` yet `C = 3`) and `a_0` has no affine closed form in `C - deg g` (`D = 47` against `115`, `a_0 mod 3` varying, the floor load-bearing), so the ceiling law waits on a closed form for `a_0` satisfying `floor(a_0/3) = K - deg g - 2J(e-1)[k even]` plus the single-element membership proof. Witness: slice-sign-even-half.
 
+### Odd-side fills
+
+- [Proved] At odd side `n = 2k - 1` the residue split of an axis has `k` low positions and `k - 1` high, so a base-2 flat design fills `sum over its corners of k^(zeros) (k - 1)^(ones)`, and the six designs of the plane read as the polygonal numbers in `k`: low corner `k^2` (A000290), tree `k(2k - 1)` hexagonal (A000384), carpet `k(3k - 2)` octagonal (A000567), void `2k^2 - 2k + 1` centered square (A001844), corner and centre `3k^2 - 3k + 1` centered hexagonal (A003215), solid `(2k - 1)^2` odd squares (A016754); `two_census` at sides 3 to 11 returns `8, 21, 40, 65, 96` for the carpet and `6, 15, 28, 45, 66` for the tree. Witness: mrlymath::formulas::counting fill polynomial, mrlyweb two_census, A000567, A000384.
+
+### Exposure
+
+- [Proved] The exposed faces of a design's level power obey `V(L + 1) = occ V(L) - 2 sum over the axes of P S^L`, with `occ` the tile's filled cells, `P` its adjacent filled pairs along the axis and `S` the cross positions whose two end cells are both filled, because two adjacent blocks bury one face per spanning position and the spanning positions multiply by `S` a level; so `V(L)` is a sum of the powers `occ^L` and `S^L` in every dimension, the carpet perimeter closes as `(4*8^L + 16*3^L)/5` (A381517) and the sponge surface as `2*20^L + 4*8^L` (A332705), and all four counts fold from the residue corners without rendering the tile. Witness: mrlymath::formulas::surface `prediction_matches_census_on_every_cube_code` and `the_corners_fold_what_the_tile_shows`, [sequences](sequences.md).
+
 ### Spin
 
 - [Proved] The average of a picture over the `q` rotations by `2 pi / q` keeps exactly the circular harmonics of order divisible by `q`, the average over all rotations keeps order zero only, and a design of rotation order `g` shows `lcm(q, g)` petals under a screen that turns it `p/q` of a turn per frame. Witness: mrlynum::spin `the_harmonics_read_the_rotation_order`, [spin](spin.md).
+- [Proved] The rings of a spun square-lattice picture sit at `sqrt(n)` for `n` a sum of two squares with weight `r2(n) = 4 (d1 - d3)`, silent exactly where a prime `3 (mod 4)` divides `n` to an odd power, and their Dirichlet series is `4 zeta(s) L(s, chi_4)`; the hexagonal rings carry `6 zeta(s) L(s, chi_-3)`; the mass of a spun lattice is the Gauss circle count and Hardy's Bessel series for its error is the ring expansion. Witness: A001481, A004018, A003136, A004016, Hardy 1915, [spin](spin.md).
 - [Proved] The exact ring profile of a raster integrates to its fill, `int 2 pi r F(r) dr = fill`, `512.0` at level 3 of the carpet; the carpet's profile is zero to `side/6`. Witness: mrlynum::spin `the_mass_of_the_profile_is_the_fill`, mrlyweb fixture.
 
 ## OPEN
@@ -427,9 +436,14 @@
 
 ### Spin
 
+- [Conjecture] A Gaussian Farey: the ring radii `sqrt(k)/n` new at scale `n` of a spun square stack are counted by the primitive representations of `k` in `Z[i]` modulo units, the spun analogue of the `phi(n)` nodes of the flat stack. Witness: none yet, [spin](spin.md).
 - [Conjecture] The mass-radius law of the ring profile, `M(r) ~ r^D`, matches `dimension` for every code with a ripple of period `log q` in `log r`, and the spin spectrum `P_m` separates designs outside one symmetry orbit. Witness: none yet, [spin](spin.md).
 
 ## REFUTED
+
+### Spin
+
+- [Refuted] The coprime law survives the spin - flat layers at coprime odd scales are exactly uncorrelated, but their ring profiles over the inscribed disc correlate at `+0.38` for `(3, 5)`, `-0.33` for `(5, 7)` and `+0.38` for `(9, 13)`, no better than `gcd` pairs; the cancellation is separable in `x` and `y` and the spin discards the angle. Witness: mrlylab test `the_coprime_law_dies_under_the_spin`.
 
 ### Base-q design counts
 

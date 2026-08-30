@@ -1,4 +1,6 @@
 use crate::classics::primes;
+use crate::factor::factorize_wide;
+use crate::series::li;
 
 /// Returns whether the number is prime, by trial division on the six-step wheel.
 pub fn is_prime(number: usize) -> bool {
@@ -19,6 +21,19 @@ pub fn is_prime(number: usize) -> bool {
         step += 6;
     }
     true
+}
+
+/// Returns the smallest prime at or above the number.
+///
+/// ```
+/// assert_eq!(mrlynum::prime::prime_from(90), 97);
+/// ```
+pub fn prime_from(number: usize) -> usize {
+    let mut n = number.max(2);
+    while !is_prime(n) {
+        n += 1;
+    }
+    n
 }
 
 /// Returns every rectangle of the number as a pair of sides, the shorter first, ascending.
@@ -99,6 +114,183 @@ pub fn study(limit: usize) -> Vec<Prime> {
         .collect()
 }
 
+/// The sieve of Eratosthenes taken one prime at a time, each number remembering which prime struck it.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Sieve {
+    types: Vec<u8>,
+    at: usize,
+    rank: usize,
+    struck: usize,
+    done: bool,
+}
+
+impl Sieve {
+    /// Starts a sieve over zero through the limit with every number untouched; it is done at once when no prime has its square inside.
+    pub fn new(limit: usize) -> Sieve {
+        let mut sieve = Sieve {
+            types: vec![0; limit + 1],
+            at: 2,
+            rank: 0,
+            struck: 0,
+            done: false,
+        };
+        sieve.settle();
+        sieve
+    }
+    fn settle(&mut self) {
+        while self.at < self.types.len() && self.types[self.at] != 0 {
+            self.at += 1;
+        }
+        if self.at * self.at >= self.types.len() {
+            for number in 2..self.types.len() {
+                if self.types[number] == 0 {
+                    self.types[number] = 1;
+                }
+            }
+            self.done = true;
+        }
+    }
+    /// Uses the next prime: marks it prime, strikes its untouched multiples from its square with its rank plus one, and returns it; zero once done.
+    ///
+    /// The strike mark saturates at 255, so it is exact through the 254th prime.
+    pub fn step(&mut self) -> usize {
+        if self.done {
+            return 0;
+        }
+        let prime = self.at;
+        self.rank += 1;
+        self.types[prime] = 1;
+        self.struck = 0;
+        let mark = (self.rank + 1).min(255) as u8;
+        let mut multiple = prime * prime;
+        while multiple < self.types.len() {
+            if self.types[multiple] == 0 {
+                self.types[multiple] = mark;
+                self.struck += 1;
+            }
+            multiple += prime;
+        }
+        self.settle();
+        prime
+    }
+    /// Runs the sieve to the end.
+    pub fn finish(&mut self) {
+        while !self.done {
+            self.step();
+        }
+    }
+    /// Returns whether every number is settled.
+    pub fn done(&self) -> bool {
+        self.done
+    }
+    /// Returns the type of every number from zero: zero untouched, one prime, and one past the rank of the prime that struck it.
+    pub fn types(&self) -> &[u8] {
+        &self.types
+    }
+    /// Returns the count of numbers marked prime so far.
+    pub fn count(&self) -> usize {
+        self.types.iter().filter(|&&t| t == 1).count()
+    }
+    /// Returns the count of numbers the last step struck.
+    pub fn struck(&self) -> usize {
+        self.struck
+    }
+    /// Returns the count of primes used so far.
+    pub fn rank(&self) -> usize {
+        self.rank
+    }
+}
+
+/// A number as a pile of stones: its prime factors, whether it is prime, and every rectangle the stones make.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Pile {
+    /// The count of stones.
+    pub number: u64,
+    /// The prime and exponent pairs, ascending.
+    pub factors: Vec<(u64, u32)>,
+    /// Whether the stones make a single row and nothing else.
+    pub prime: bool,
+    /// Every rectangle as a pair of sides, the shorter first, ascending.
+    pub rectangles: Vec<(u64, u64)>,
+}
+
+/// Reads a wide number as a pile of stones, its rectangles built from the divisors of its factorization.
+///
+/// ```
+/// let pile = mrlynum::prime::pile(6);
+/// assert_eq!(pile.rectangles, vec![(1, 6), (2, 3)]);
+/// assert!(!pile.prime);
+/// ```
+pub fn pile(number: u64) -> Pile {
+    let factors = factorize_wide(number);
+    let mut sides = vec![1u64];
+    for &(prime, power) in &factors {
+        let mut next = Vec::with_capacity(sides.len() * (power as usize + 1));
+        for &side in &sides {
+            let mut value = side;
+            next.push(value);
+            for _ in 0..power {
+                value *= prime;
+                next.push(value);
+            }
+        }
+        sides = next;
+    }
+    sides.sort_unstable();
+    let rectangles = sides
+        .iter()
+        .filter(|&&a| number > 0 && a <= number / a)
+        .map(|&a| (a, number / a))
+        .collect();
+    Pile {
+        number,
+        prime: factors.len() == 1 && factors[0].1 == 1,
+        factors,
+        rectangles,
+    }
+}
+
+/// One reading of the prime count against its two smooth guesses.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Reading {
+    /// The point on the number line.
+    pub x: usize,
+    /// The count of primes up to it.
+    pub pi: usize,
+    /// The guess x over ln x.
+    pub ratio: f64,
+    /// The logarithmic integral.
+    pub li: f64,
+}
+
+/// Reads the prime count against x over ln x and li at evenly spaced points from two up to the top, at most the given count of them, the top always last.
+///
+/// ```
+/// let readings = mrlynum::prime::chart(100, 10);
+/// assert_eq!((readings.len(), readings[9].pi), (10, 25));
+/// ```
+pub fn chart(top: usize, bins: usize) -> Vec<Reading> {
+    let list = primes(top);
+    let step = (top / bins.max(1)).max(1);
+    let mut out = Vec::new();
+    let mut x = step;
+    while x <= top {
+        if x >= 2 {
+            out.push(Reading {
+                x,
+                pi: list.partition_point(|&p| p <= x),
+                ratio: x as f64 / (x as f64).ln(),
+                li: li(x as f64),
+            });
+        }
+        if x == top {
+            break;
+        }
+        x = (x + step).min(top);
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -112,6 +304,18 @@ mod tests {
                 sieved.binary_search(&number).is_ok(),
                 "{number}"
             );
+        }
+    }
+
+    #[test]
+    fn the_prime_from_a_number_is_the_first_at_or_above_it() {
+        assert_eq!(prime_from(90), 97);
+        assert_eq!(prime_from(0), 2);
+        assert_eq!(prime_from(41), 41);
+        for number in 0..=1_000 {
+            let next = prime_from(number);
+            assert!(is_prime(next) && next >= number, "{number}");
+            assert!((number..next).all(|n| !is_prime(n)), "{number}");
         }
     }
 
@@ -174,5 +378,63 @@ mod tests {
         assert_eq!(found[3].squares, None);
         assert!(study(17).last().unwrap().twin);
         assert!(!study(23).last().unwrap().twin);
+    }
+
+    #[test]
+    fn the_sieve_strikes_one_prime_at_a_time() {
+        let mut sieve = Sieve::new(30);
+        assert!(!sieve.done());
+        assert_eq!((sieve.step(), sieve.struck(), sieve.count()), (2, 14, 1));
+        assert_eq!((sieve.step(), sieve.struck(), sieve.count()), (3, 4, 2));
+        assert_eq!((sieve.step(), sieve.struck()), (5, 1));
+        assert!(sieve.done());
+        assert_eq!((sieve.rank(), sieve.count(), sieve.step()), (3, 10, 0));
+        assert_eq!(
+            &sieve.types()[..13],
+            &[0, 0, 1, 1, 2, 1, 2, 1, 2, 3, 2, 1, 2]
+        );
+        assert_eq!(sieve.types()[25], 4);
+        let mut hundred = Sieve::new(100);
+        hundred.finish();
+        assert_eq!((hundred.rank(), hundred.count()), (4, 25));
+        let listed: Vec<usize> = (0..=100).filter(|&n| hundred.types()[n] == 1).collect();
+        assert_eq!(listed, primes(100));
+        assert_eq!(Sieve::new(3).count(), 2);
+        assert_eq!(Sieve::new(0).count(), 0);
+    }
+
+    #[test]
+    fn the_pile_agrees_with_the_rectangles_and_the_wheel() {
+        let stones = pile(360);
+        assert_eq!(stones.factors, vec![(2, 3), (3, 2), (5, 1)]);
+        assert_eq!(stones.rectangles.len(), 12);
+        assert_eq!(stones.rectangles[11], (18, 20));
+        assert!(pile(13).prime && !pile(1).prime && !pile(0).prime);
+        assert!(pile(0).rectangles.is_empty());
+        assert_eq!(pile(1).rectangles, vec![(1, 1)]);
+        for number in 1..=2_000u64 {
+            let want: Vec<(u64, u64)> = rectangles(number as usize)
+                .iter()
+                .map(|&(a, b)| (a as u64, b as u64))
+                .collect();
+            assert_eq!(pile(number).rectangles, want, "{number}");
+            assert_eq!(pile(number).prime, is_prime(number as usize), "{number}");
+        }
+        assert_eq!(pile(1_000_000_000_000).rectangles.len(), 85);
+        assert!(pile(999_999_999_989).prime);
+    }
+
+    #[test]
+    fn the_chart_reads_the_prime_count_at_the_top() {
+        let readings = chart(10_000, 400);
+        assert_eq!(readings.len(), 400);
+        let last = readings[399];
+        assert_eq!((last.x, last.pi), (10_000, 1229));
+        assert!((last.ratio - 1085.7360).abs() < 1e-3);
+        assert!((last.li - 1246.1372).abs() < 1e-3);
+        assert_eq!(chart(100_000, 100)[99].pi, 9592);
+        assert_eq!(chart(100, 400).len(), 99);
+        assert_eq!(chart(7, 3)[0].x, 2);
+        assert!(chart(1, 5).is_empty());
     }
 }

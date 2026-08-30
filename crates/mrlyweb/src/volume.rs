@@ -17,6 +17,10 @@ fn combine_of(name: &str) -> Result<Combine, Fault> {
     }
 }
 
+fn odds(limit: usize) -> Vec<usize> {
+    (1..=limit.max(1)).step_by(2).collect()
+}
+
 fn volume_of(data: &[f32], size: usize) -> Result<Volume, Fault> {
     Ok(Volume::from_data(data.to_vec(), size)?)
 }
@@ -31,9 +35,8 @@ pub fn volume(
     level: usize,
     size: usize,
 ) -> Result<Vec<f32>, Fault> {
-    let numbers: Vec<usize> = (1..=limit.max(1)).step_by(2).collect();
     let spec = Spec::new(code_of(code)?, base, 3);
-    Ok(moire::volume(spec, &numbers, combine_of(combine)?, level, size)?.data)
+    Ok(moire::volume(spec, &odds(limit), combine_of(combine)?, level, size)?.data)
 }
 
 /// Reads a volume: its smallest, largest and mean sample, as JSON.
@@ -48,6 +51,13 @@ pub fn volume_stats(data: &[f32], size: usize) -> Result<String, Fault> {
 #[wasm_bindgen]
 pub fn volume_count(data: &[f32], size: usize, level: f32) -> Result<usize, Fault> {
     Ok(volume_of(data, size)?.count(level))
+}
+
+/// Counts the exposed faces of the voxels at or above the level.
+#[wasm_bindgen]
+pub fn volume_surface(data: &[f32], size: usize, level: f32) -> Result<usize, Fault> {
+    let cell = Cell3d::new(volume_of(data, size)?.solid(level));
+    Ok(three::quads(&cell).len())
 }
 
 /// Packs the exposed faces of the voxels at or above the level: two section lengths, then six floats per vertex, position and normal, in the unit box.
@@ -137,4 +147,10 @@ pub fn paint_span(
         })
         .collect();
     Ok(Pixels::of(size, size, colors))
+}
+
+/// Shapes a stack: the layers the odd scales up to the limit give and the voxels of a cube of the size, as JSON.
+#[wasm_bindgen]
+pub fn volume_shape(limit: usize, size: usize) -> String {
+    json!({ "layers": odds(limit).len(), "voxels": size * size * size }).to_string()
 }

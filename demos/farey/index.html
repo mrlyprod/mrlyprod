@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mrly · the Farey stack</title>
+<link rel="stylesheet" href="../lib/mrly.css">
+</head>
+<body>
+<header>
+  <nav><a href="../">demos</a> / farey</nav>
+  <h1>The stack lights the Farey fractions</h1>
+  <p class="sub">Scale n draws a line at every k/n. A reduced fraction a/b is drawn by every scale divisible by b, so its brightness is the floor of Q over b. Scale n lights phi(n) nodes never seen before, and phi(n) = n - 1 exactly when n is prime.</p>
+</header>
+<main>
+  <div class="row">
+    <label>Q <input type="range" id="q" min="2" max="80" value="24"><span class="num" id="q-out">24</span></label>
+    <label><input type="checkbox" id="primes" checked> mark the primes</label>
+    <button id="random">Randomize</button>
+  </div>
+  <canvas class="bars" id="bars"></canvas>
+  <pre id="out"></pre>
+  <p class="foot">The nodes come from the Stern-Brocot walk of the Farey sequence and the totients from a sieve, both in Rust; the page only stacks bars. The primes are read off the totients as the scales of maximal novelty.</p>
+</main>
+<script type="module" src="./index.js"></script>
+</body>
+</html>
