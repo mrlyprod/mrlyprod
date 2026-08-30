@@ -18,10 +18,14 @@ pub mod race;
 pub mod six;
 /// The Laplacian spectra of the designs: eigenvalues, degeneracy and the spectral exponent.
 pub mod spectrum;
+/// The turntable: designs, moire fields and slices spun about their centre into ring profiles and wheels.
+pub mod spin;
 /// The cubes as packed faces, filled cells and censuses.
 pub mod three;
 /// The flat designs as byte grids, painted pixels and censuses.
 pub mod two;
+/// The cube designs stacked into a moire volume: its faces at a level, and the planes that cut it.
+pub mod volume;
 
 /// A byte grid: its width, its height and its row-major types.
 #[wasm_bindgen(getter_with_clone)]

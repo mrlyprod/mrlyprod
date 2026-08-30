@@ -6,8 +6,10 @@ use mrlyweb::life::*;
 use mrlyweb::race::Race;
 use mrlyweb::six::*;
 use mrlyweb::spectrum::*;
+use mrlyweb::spin::*;
 use mrlyweb::three::*;
 use mrlyweb::two::*;
+use mrlyweb::volume::*;
 
 fn blinker() -> Vec<u8> {
     let mut types = vec![0u8; 25];
@@ -155,6 +157,61 @@ fn the_fixture_the_page_prints() {
     assert_eq!(parse(&farey(5)).unwrap().as_array().unwrap().len(), 11);
     assert_eq!(totients(6), vec![0, 1, 1, 2, 2, 4, 2]);
     assert!((dimension("127", 3, 2, 3).unwrap() - 1.7712).abs() < 1e-4);
+    let carpet: Vec<f32> = two_grid("495", 3, 3, 0, 3)
+        .unwrap()
+        .types
+        .iter()
+        .map(|&b| b as f32)
+        .collect();
+    let rings = profile(&carpet, 27, 1000).unwrap();
+    assert_eq!(rings.len(), 1000);
+    assert_eq!(rings[0], 0.0);
+    assert_eq!(rings.iter().position(|&v| v > 0.0), Some(236));
+    assert!((rings[600] - 0.8972).abs() < 1e-4);
+    let stats = parse(&spin_stats(&rings, 27)).unwrap();
+    assert!((stats["mass"].as_f64().unwrap() - 512.0).abs() < 0.1);
+    assert!((stats["disc"].as_f64().unwrap() - 4.5).abs() < 0.02);
+    assert_eq!(
+        wheel(&rings, 64, "fire", 16, false).unwrap().rgba.len(),
+        64 * 64 * 4
+    );
+    let hexagon = slice_grid("23", 3, 1, 2, 101).unwrap();
+    assert_eq!((hexagon.width, hexagon.types[50 * 101 + 50]), (101, 0));
+    let cut: Vec<f32> = hexagon.types.iter().map(|&b| b as f32).collect();
+    assert_eq!(profile(&cut, 101, 10).unwrap()[0], 0.0);
+    assert_eq!(
+        profile(&moire_field("heatmap", 9, 32).unwrap(), 32, 16)
+            .unwrap()
+            .len(),
+        16
+    );
+    let square = vec![1.0f32; 64];
+    let star = radial(&square, 8, 64, 2, 45.0, "union", 1).unwrap();
+    assert_eq!((star.len(), star[32 * 64 + 32]), (4096, 1.0));
+    assert_eq!(turns(&harmonics(&square, 8, 64, 8).unwrap()), 4);
+    assert_eq!(petals(6, 4), 12);
+    assert_eq!(
+        sheet(&star, 64, "heat", 8, false).unwrap().rgba.len(),
+        16384
+    );
+    assert_eq!(moire_field("heatmap", 9, 32).unwrap().len(), 1024);
+    let v = volume("23", 2, 3, "sum", 1, 9).unwrap();
+    assert_eq!((v.len(), volume_count(&v, 9, 2.0).unwrap()), (729, 540));
+    assert_eq!(volume_faces(&v, 9, 2.0).unwrap()[0] as usize / 36, 648);
+    let f = parse(&plane_frame(&[1.0, 1.0, 1.0], 0.5).unwrap()).unwrap();
+    assert!((f["width"].as_f64().unwrap() - 3.2660).abs() < 1e-3);
+    let cut = plane_field(&v, 9, &[1.0, 1.0, 1.0], 0.5, 64).unwrap();
+    assert!(cut[0].is_nan() && cut[32 * 64 + 32] == 1.0);
+    let sheet = paint_span(&cut, 64, 0.0, 2.0, "fire", 8, false).unwrap();
+    assert_eq!(
+        (
+            sheet.rgba.len(),
+            sheet.rgba[3],
+            sheet.rgba[(32 * 64 + 32) * 4 + 3]
+        ),
+        (16384, 0, 255)
+    );
+    assert_eq!(parse(&volume_stats(&v, 9).unwrap()).unwrap()["max"], 2.0);
 }
 
 #[test]
@@ -200,6 +257,17 @@ fn the_faults_come_back_as_messages() {
     assert!(life_next(&blinker(), 4, 5, &[3], &[2, 3], false).is_err());
     assert!(life_sequence("soup", 8).is_err());
     assert!(moire("soup", 9, 32, "fire", 64, false).is_err());
+    assert!(profile(&[1.0; 60], 8, 10).is_err());
+    assert!(moire_field("soup", 9, 32).is_err());
+    assert!(wheel(&[1.0, 0.0], 0, "fire", 8, false).is_err());
+    assert!(radial(&[1.0; 64], 8, 64, 2, 45.0, "soup", 1).is_err());
+    assert!(radial(&[1.0; 60], 8, 64, 2, 45.0, "mean", 1).is_err());
+    assert!(harmonics(&[1.0; 60], 8, 16, 4).is_err());
+    assert!(volume("23", 2, 3, "soup", 1, 9).is_err());
+    assert!(volume_faces(&[1.0; 8], 3, 1.0).is_err());
+    assert!(plane_frame(&[0.0, 0.0, 0.0], 0.5).is_err());
+    assert!(plane_frame(&[1.0, 1.0], 0.5).is_err());
+    assert!(paint_span(&[1.0; 8], 3, 0.0, 1.0, "fire", 8, false).is_err());
     assert!(hex_svg("256", 3, 1, 2, "iso", 10).is_err());
     assert!(slice_census("23", 4, 1, 2).is_err());
     assert!(slice_series("23", 17).is_err());

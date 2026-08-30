@@ -10,6 +10,8 @@ pub mod render;
 pub mod sample;
 /// The stacking of layers into one combined field.
 pub mod stack;
+/// The cube designs stacked into a volume, and the planes that cut it.
+pub mod volume;
 
 /// The sampling lattice of a moire field.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -57,4 +59,5 @@ pub use field::Field;
 pub use layer::{layer, Layer};
 pub use presets::{all, named, Preset};
 pub use render::render;
-pub use stack::{stack, stack_codes};
+pub use stack::{merge, stack, stack_codes};
+pub use volume::{frame, volume, Frame, Volume};

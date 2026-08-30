@@ -74,6 +74,7 @@ The mathematics of the mrly tree: a parity rule on the corners of a cube, substi
 - [coprime](coprime.md) - the coprimality spine: exact base-local factors on every design, the census behind them, and the b-visible and directional extensions.
 - [bases](bases.md) - what base 3 hides: an Eisenstein L-value where base 2 hid pi.
 - [spectra](spectra.md) - the tile grammar of the diagonal slice at every odd base: the two-tile claim, the closed forms, and the mod-4 split.
+- [spin](spin.md) - a design turned about its centre: the harmonic filter at every frame rate, the exact ring profile, and the census still to run.
 - [sequences](sequences.md) - the OEIS ledger: every sequence this work produces, with terms, formulas, and verification status.
 
 ## SOURCES

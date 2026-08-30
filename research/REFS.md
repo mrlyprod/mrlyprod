@@ -64,6 +64,10 @@ Every named reference, sequence id, theorem and attribution on this tree's root 
 | ref | title | url |
 |---|---|---|
 | Huang 2019 | Induced subgraphs of hypercubes and a proof of the Sensitivity Conjecture, Annals of Mathematics 190(3) | https://doi.org/10.4007/annals.2019.190.3.6 |
+| Glass 1969 | Moire effect from random dots, Nature 223, 578-580 | https://doi.org/10.1038/223578a0 |
+| Cherny, Anitas, Osipov and Kuklin 2011 | Deterministic fractals: extracting additional information from small-angle scattering data, Phys. Rev. E 84, 036203 | https://doi.org/10.1103/PhysRevE.84.036203 |
+| Mattila 1987 | Spherical averages of Fourier transforms of measures with finite energy; dimension of intersections and distance sets, Mathematika 34, 207-228 | https://doi.org/10.1112/S0025579300013462 |
+| Falconer, Fraser and Jin 2015 | Projections of self-similar and related fractals: a survey of recent developments, Fractal Geometry and Stochastics V | https://doi.org/10.1007/978-3-319-18660-3_4 |
 | Huang 2019 preprint | same paper, arXiv:1907.00847 | https://arxiv.org/abs/1907.00847 |
 | Sahin and Tan 2018 | Conditional (Strong) Divisibility Sequences, Fibonacci Quarterly 56(1), 18-31 - the source A299914 and A299916 are drawn from; it is number theory and says nothing about Menger sponges | https://www.fq.math.ca/56-1.html |
 | Ethier and Lee 2015 | Counting Toroidal Binary Arrays, II, J. Integer Seq. 18, Article 15.8.3 | https://cs.uwaterloo.ca/journals/JIS/VOL18/Lee/lee6.html |

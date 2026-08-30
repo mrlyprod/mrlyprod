@@ -13,6 +13,8 @@ Codes cross the boundary as decimal strings, because a design code is a u128 and
 - **lab** lists and counts the members of the sequence press and renders the moire presets to pixels.
 - **race** looses seeded walkers on a flat design and measures how far they wander.
 - **lattice** walks the Farey sequence and sieves the totients.
+- **volume** stacks a cube design at odd scales into a moire volume, packs the faces of its level sets, and paints any plane through it.
+- **spin** spins a square field about its centre into an exact ring profile, paints it back as a wheel, stacks it radially, reads its circular harmonics, and rasterizes a hex slice or a moire field to feed it.
 
 ## Running
 

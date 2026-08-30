@@ -16,6 +16,12 @@ const series = JSON.parse(m.slice_series('23', 6));
 const flat = JSON.parse(m.spectrum('flat', '7', 2, 4, true, 0.1));
 const piece = JSON.parse(m.spectrum('slice', '23', 3, 1, true, 0.1));
 const plain = JSON.parse(m.spectrum('flat', '7', 2, 2, false, 0.1));
+const rings = m.profile(Float32Array.from(m.two_grid('495', 3, 3, 0, 3).types), 27, 1000);
+const solid = m.volume('23', 2, 3, 'sum', 1, 9);
+const hexcut = m.paint_span(m.plane_field(solid, 9, [1, 1, 1], 0.5, 64), 64, 0, 2, 'fire', 8, false);
+const spun = JSON.parse(m.spin_stats(rings, 27));
+const square = new Float32Array(64).fill(1);
+const star = m.radial(square, 8, 64, 2, 45, 'union', 1);
 
 const checks: [string, unknown, unknown][] = [
   ['two_grid 7 side', grid.width, 27],
@@ -55,6 +61,23 @@ const checks: [string, unknown, unknown][] = [
   ['spectrum slice 23 stair', `${piece.stair.at(-1)[1]},${piece.fitted},${piece.stair.length < piece.nodes}`, '1,4,true'],
   ['spectrum flat 7 plain nodes', `${plain.nodes},${plain.distinct}`, '9,8'],
   ['spectrum flat 7 plain degeneracy', `${plain.classes},${plain.one}`, '1,2'],
+  ['profile 495 disc opens', rings.findIndex((v: number) => v > 0), 236],
+  ['profile 495 ring 600', rings[600].toFixed(4), '0.8972'],
+  ['spin_stats 495 mass', spun.mass.toFixed(1), '512.0'],
+  ['spin_stats 495 disc', spun.disc.toFixed(1), '4.5'],
+  ['wheel bytes', m.wheel(rings, 64, 'fire', 16, false).rgba.length, 16384],
+  ['slice_grid 23 centre', m.slice_grid('23', 3, 1, 2, 101).types[50 * 101 + 50], 0],
+  ['profile slice 23 centre', m.profile(Float32Array.from(m.slice_grid('23', 3, 1, 2, 101).types), 101, 10)[0], 0],
+  ['profile heatmap steps', m.profile(m.moire_field('heatmap', 9, 32), 32, 16).length, 16],
+  ['volume 23 count at 2', `${solid.length},${m.volume_count(solid, 9, 2)}`, '729,540'],
+  ['volume 23 faces at 2', m.volume_faces(solid, 9, 2)[0] / 36, 648],
+  ['plane_frame diagonal width', JSON.parse(m.plane_frame([1, 1, 1], 0.5)).width.toFixed(4), '3.2660'],
+  ['paint_span hexagon alpha', `${hexcut.rgba[3]},${hexcut.rgba[(32 * 64 + 32) * 4 + 3]}`, '0,255'],
+  ['radial star centre', `${star.length},${star[32 * 64 + 32]}`, '4096,1'],
+  ['harmonics square order', m.turns(m.harmonics(square, 8, 64, 8)), 4],
+  ['petals 6 of order 4', m.petals(6, 4), 12],
+  ['sheet bytes', m.sheet(star, 64, 'heat', 8, false).rgba.length, 16384],
+  ['moire_field heatmap', m.moire_field('heatmap', 9, 32).length, 1024],
   ['diagonal 126 side', cut.side, 16],
   ['diagonal 126 support', cut.support.join(','), '15,30'],
   ['diagonal 126 flat', `${cut.min},${cut.max},${cut.constant}`, '81,81,true'],

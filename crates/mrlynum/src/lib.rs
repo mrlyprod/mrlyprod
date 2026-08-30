@@ -23,3 +23,5 @@ pub mod prime;
 pub mod series;
 /// The symmetric eigensolver and the Laplacian spectra it reads off a network.
 pub mod spectrum;
+/// The turntable: the exact circle means of a raster about its centre, the profile they trace and the wheel it paints.
+pub mod spin;

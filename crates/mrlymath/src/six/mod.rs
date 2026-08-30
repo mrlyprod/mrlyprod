@@ -9,6 +9,8 @@ pub mod graph;
 mod models;
 /// The coloring of a hex cell's triangles by type.
 pub mod painter;
+/// The square raster of a hex cell's fills at the true aspect.
+pub mod raster;
 /// The triangle, SVG and PNG renderings of a hex cell.
 pub mod renderer;
 /// The JSON form of a hex cell and its projection.
@@ -59,6 +61,7 @@ pub use geometry::{
 };
 pub use models::Cell6d;
 pub use painter::paint;
+pub use raster::raster;
 pub use renderer::{hex_png, png, rect, rect_png, rect_svg, svg, triangles, Rect};
 pub use serializer::{from_json, to_json};
 pub use tile::{build as build_tile, random_tile, HexTile};

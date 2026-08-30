@@ -3,6 +3,31 @@ use super::layer::{layer, Layer};
 use super::{Combine, Lattice, Spec};
 use mrlycore::errors::Result;
 
+/// Folds one boolean layer into the accumulator under the combine, the first layer seeding a meet.
+pub fn merge(acc: &mut [f32], mask: &[bool], combine: Combine, first: bool) {
+    match combine {
+        Combine::Sum => {
+            for (a, &b) in acc.iter_mut().zip(mask.iter()) {
+                *a += b as u8 as f32;
+            }
+        }
+        Combine::And => {
+            for (a, &b) in acc.iter_mut().zip(mask.iter()) {
+                *a = if first {
+                    b as u8 as f32
+                } else {
+                    *a * b as u8 as f32
+                };
+            }
+        }
+        Combine::Xor => {
+            for (a, &b) in acc.iter_mut().zip(mask.iter()) {
+                *a = ((*a != 0.0) ^ b) as u8 as f32;
+            }
+        }
+    }
+}
+
 /// Layers one design at several side numbers into a field under the chosen combine.
 pub fn stack(
     spec: Spec,
@@ -24,31 +49,7 @@ pub fn stack(
             size,
             slices: slices.to_vec(),
         };
-        let m = layer(&params)?;
-        match combine {
-            Combine::Sum => {
-                for (a, &b) in acc.iter_mut().zip(m.iter()) {
-                    *a += b as u8 as f32;
-                }
-            }
-            Combine::And => {
-                if first {
-                    for (a, &b) in acc.iter_mut().zip(m.iter()) {
-                        *a = b as u8 as f32;
-                    }
-                } else {
-                    for (a, &b) in acc.iter_mut().zip(m.iter()) {
-                        *a *= b as u8 as f32;
-                    }
-                }
-            }
-            Combine::Xor => {
-                for (a, &b) in acc.iter_mut().zip(m.iter()) {
-                    let cur = *a != 0.0;
-                    *a = (cur ^ b) as u8 as f32;
-                }
-            }
-        }
+        merge(&mut acc, &layer(&params)?, combine, first);
         first = false;
     }
     Ok(Field::from_data(acc, size))

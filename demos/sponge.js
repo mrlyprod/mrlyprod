@@ -27,6 +27,7 @@ function build() {
   const level = Math.min(+$('level').value, top);
   $('level').value = level;
   $('level-out').textContent = level;
+  $('opacity-out').textContent = $('opacity').value;
   const side = number ** level;
   say('note');
   try {
@@ -46,7 +47,7 @@ function build() {
     }
     if ($('view').value === 'shell') {
       if (Number(surface) > 400000) throw new Error(`${surface} faces is more than this page draws; lower the level.`);
-      st.show(faces(m.three_faces(code, number, level, base), ink.blue));
+      st.show(faces(m.three_faces(code, number, level, base), ink.blue, +$('opacity').value));
     } else {
       if (Number(fills) > 250000) throw new Error(`${fills} cubes is more than this page draws; lower the level.`);
       st.show(cubes(m.three_cells(code, number, level, base), side, ink.orange));
@@ -57,7 +58,7 @@ function build() {
   }
 }
 
-for (const id of ['code', 'number', 'base', 'level', 'view']) {
+for (const id of ['code', 'number', 'base', 'level', 'view', 'opacity']) {
   $(id).oninput = build;
 }
 $('spin').onchange = () => { st.spin = $('spin').checked ? 0.004 : 0; };
