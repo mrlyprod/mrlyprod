@@ -16,6 +16,7 @@
 - [farey](farey/) - A line drawn at every `k/n` and stacked over the scales lights a reduced fraction `a/b` to a brightness of `Q/b`, and the scales of maximal novelty are the primes.
 - [gaussian](gaussian/) - The Gaussian and Eisenstein primes as four- and six-armed snowflakes, coloured by whether an ordinary prime split, stayed inert, or ramified on entering the plane.
 - [graphs](graphs/) - Joining every filled cell to its neighbours turns a design into a network with tips, junctions, pieces, length and a box dimension, flat, in the cube, on the hexagonal slice, or relaxed by force.
+- [integers](integers/) - The union of every sequence the registry writes, read integer by integer: which of the first thousand the designs write, how many rows write each, and which are missed inside the pinned window.
 - [life](life/) - Cellular automata whose birth and survival rules are read from named sequences, run until the grid dies, freezes or loops.
 - [moire](moire/) - One design sampled at scale 1, 3, 5 and on, the layers stacked into a field where the interference is the finer grids landing on the coarse.
 - [primes](primes/) - A number is prime when its stones make one rectangle, shown by the sieve, the divisor pairs, the `pi(x)` staircase against `x / ln x` and `li(x)`, and a carpet stack whose layers correlate to zero exactly at the primes.

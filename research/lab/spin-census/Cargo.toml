@@ -1,0 +1,9 @@
+[package]
+name = "spin-census"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+mrlycore.workspace = true
+mrlymath.workspace = true
+mrlynum.workspace = true

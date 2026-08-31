@@ -1,0 +1,7 @@
+[package]
+name = "integer-census"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+mrlylab.workspace = true

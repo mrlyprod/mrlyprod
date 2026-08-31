@@ -55,6 +55,12 @@ for (const [num, den, bright] of JSON.parse(m.farey(24))) {
   bars(b, m.ledger_terms('7', 2, 2, 'fills', 'level', 8, '500000').map((t) => Math.log10(Number(t))), { color: ink.gold, inset: 3 });
 }
 
+{
+  m.census_walk(JSON.parse(m.census_window()).tiers[0].keys);
+  const counts = m.census_counts();
+  paint($('t-integers'), { width: 40, height: counts.length / 40, types: Uint8Array.from(counts, (rows) => (rows ? 1 : 0)) }, ink.gold);
+}
+
 const zeta = $('t-zeta');
 {
   const [ctx, w, h] = fit(zeta, zeta.clientWidth / 1.5);

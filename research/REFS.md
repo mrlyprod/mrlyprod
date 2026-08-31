@@ -20,6 +20,7 @@ Every named reference, sequence id, theorem and attribution on this tree's root 
 | A001481 | Numbers that are the sum of 2 squares; the ring radii squared of a spun square-lattice picture | https://oeis.org/A001481 |
 | A003136 | Loeschian numbers, the norms x^2 + xy + y^2; the ring radii squared of a spun hexagonal picture | https://oeis.org/A003136 |
 | A004016 | Theta series of the planar hexagonal lattice; the weight of each hexagonal ring | https://oeis.org/A004016 |
+| A064533 | Decimal expansion of the Landau-Ramanujan constant K = 0.7642236..., the constant in `#{k <= X : k = a^2 + b^2} ~ K X / sqrt(ln X)` | https://oeis.org/A064533 |
 | A004018 | Theta series of the square lattice, r2(n); the weight of each square ring | https://oeis.org/A004018 |
 | A000351 | Powers of 5: a(n) = 5^n | https://oeis.org/A000351 |
 | A000370 | Number of NPN-equivalence classes of Boolean functions of n or fewer variables | https://oeis.org/A000370 |
@@ -30,7 +31,8 @@ Every named reference, sequence id, theorem and attribution on this tree's root 
 | A001316 | Gould's sequence: number of odd entries in row n of Pascal's triangle; a(n) = 2^A000120(n) | https://oeis.org/A001316 |
 | A002407 | Cuban primes: primes which are the difference of two consecutive cubes | https://oeis.org/A002407 |
 | A003180 | Number of equivalence classes of Boolean functions of n variables under action of symmetric group | https://oeis.org/A003180 |
-| A003215 | Hex (or centered hexagonal) numbers: 3*n*(n+1)+1 | https://oeis.org/A003215 |
+| A003215 | Hex (or centered hexagonal) numbers: 3*n*(n+1)+1; also the lattice lines down the space diagonal of a cube of side n+1, hence the sponge's diagonal shadow at n = 3^L - 1 | https://oeis.org/A003215 |
+| A220978 | a(n) = 3^(2n+1) - 3^(n+1) + 1, the left Aurifeuillian factor of 3^(6n+3) + 1; the same diagonal shadow indexed by the level | https://oeis.org/A220978 |
 | A003463 | a(n) = (5^n - 1)/4 | https://oeis.org/A003463 |
 | A004662 | Powers of 3 written in base 8 | https://oeis.org/A004662 |
 | A005418 | Number of (n-1)-bead black-white reversible strings; row sums of Losanitsch's triangle | https://oeis.org/A005418 |
@@ -42,24 +44,32 @@ Every named reference, sequence id, theorem and attribution on this tree's root 
 | A016755 | Odd cubes: a(n) = (2*n + 1)^3 | https://oeis.org/A016755 |
 | A018413 | Divisors of 363 | https://oeis.org/A018413 |
 | A034474 | a(n) = 5^n + 1 | https://oeis.org/A034474 |
+| A043635 | Numbers whose base-9 representation has exactly 6 runs; its 30 listed terms lie wholly inside the integer census's miss set | https://oeis.org/A043635 |
 | A047999 | Sierpinski's triangle (or gasket): Pascal's triangle mod 2 | https://oeis.org/A047999 |
 | A048883 | a(n) = 3^wt(n); number of odd values in the n-th layer of Pascal's tetrahedron | https://oeis.org/A048883 |
+| A049537 | Values of k for which A075059(k) = A003418(k) + 1 is prime; the first record to carry a 4-term window of the integer census's miss set, at offset 417 | https://oeis.org/A049537 |
 | A054247 | Number of n X n binary matrices under action of the dihedral group D_4 | https://oeis.org/A054247 |
 | A065473 | Decimal expansion of the strongly carefree constant, Product_p (1 - (3p-2)/p^3) | https://oeis.org/A065473 |
 | A069403 | a(n) = 2*Fibonacci(2*n+1) - 1 | https://oeis.org/A069403 |
+| A100290 | Numbers divisible by the smallest number with the same binary weight, so A038573(a(n)) divides a(n); shares a 12-term window with the integer census's champion set, then gives 21 where the census gives 20 | https://oeis.org/A100290 |
 | A103532 | Number of divisors of 240^n; the odd bisection of A011934 | https://oeis.org/A103532 |
+| A112820 | Numbers k with lcm(1,2,...,k)/17 equal to the denominator of the k-th harmonic number; carries 20 consecutive integers of the census's miss set | https://oeis.org/A112820 |
+| A118471 | a(0)=1, a(n) = a(n-1)*(n+1) if n is in the sequence and a(n-1)+1 otherwise; carries 20 consecutive integers of the census's miss set | https://oeis.org/A118471 |
 | A125833 | Numbers whose base-5 representation is 333...3 | https://oeis.org/A125833 |
 | A128625 | Expansion of (1+3*x)/(1-5*x) | https://oeis.org/A128625 |
 | A129824 | a(n) = Product_{k=0..n} (1 + binomial(n,k)) | https://oeis.org/A129824 |
 | A141148 | Number of aperiodic ternary necklaces with n beads of each color and no adjacent beads the same | https://oeis.org/A141148 |
 | A154105 | a(n) = 12*n^2 + 18*n + 7 | https://oeis.org/A154105 |
 | A192908 | Constant term in the reduction by (x^2 -> x + 1) of a polynomial family; a(n) = 2*Fibonacci(2n-2) + 1 | https://oeis.org/A192908 |
+| A209631 | Square array of the exponential transform applied n times to the identity function; the only record carrying the census's written-per-decade run `9, 90, 859`, and it continues 6689 where the census gives 5452 | https://oeis.org/A209631 |
 | A229896 | Sizes of logical groups of the same integer in A229895; carries `1, 17, 217, 2465, ...` as an interior window | https://oeis.org/A229896 |
 | A255016 | Number of toroidal n X n binary arrays under rotation and/or reflection of rows and/or columns and transposition | https://oeis.org/A255016 |
 | A268240 | Pascal's tetrahedron of trinomial coefficients (A046816) read mod 2 | https://oeis.org/A268240 |
 | A299916 | Name is `a(n) = A299914(2n+1)` only, offset 0, from Sahin and Tan's divisibility paper; the six-pointed-star hole count is a comment, not the definition. Holes of the `n`-th size, not tiles: this tree's slice census is `A299916(n+1)` | https://oeis.org/A299916 |
 | A332705 | Number of unit square faces (surface area) of a stage-n Menger sponge | https://oeis.org/A332705 |
+| A336231 | Integers whose binary expansion has an even number of 0's between any two consecutive 1's; shares a 12-term window with the census's champion set, then gives 19 where the census gives 20 | https://oeis.org/A336231 |
 | A347825 | Number of ways to cut a 2 X n rectangle into integer-sided rectangles up to symmetry | https://oeis.org/A347825 |
+| A361796 | Primes preceded by two consecutive products of four distinct primes; the longest record lying wholly inside the census's miss set, 41 terms | https://oeis.org/A361796 |
 | A361870 | Array: nonequivalent 2-colorings of the cells of an n-dimensional hypercube with edges k cells long | https://oeis.org/A361870 |
 | A381517 | Perimeter of the Sierpinski carpet at iteration n | https://oeis.org/A381517 |
 | A395134 | Decimal expansion of a half-disk chord probability; equals 1 - 16/(3*Pi^2), from Zerr 1891 | https://oeis.org/A395134 |
@@ -153,6 +163,16 @@ Every named reference, sequence id, theorem and attribution on this tree's root 
 | Yu 2021 | Rational points near self-similar sets - counts rationals near a self-similar set, not on it, the gap that keeps it from the lemma | https://arxiv.org/abs/2101.05910 |
 | Flajolet and Odlyzko 1990 | Random mapping statistics, EUROCRYPT '89, LNCS 434, 329-354, doi:10.1007/3-540-46885-4_34 - cited as a MODEL only, for the `Theta(sqrt N)` rho length and reachable-set size of a random mapping on `N` nodes, which is the shape the band automaton's mean reach follows in `lab/ratio-set-saving`; no theorem is imported, the band automaton being deterministic and arithmetic rather than random | https://doi.org/10.1007/3-540-46885-4_34 |
 | Schleischitz 2021 | On intrinsic and extrinsic rational approximation to Cantor sets, Ergodic Theory and Dynamical Systems 41, 1560-1589 - intrinsic approximation on missing-digit sets, the nearest framing of rationals lying on the set | https://arxiv.org/abs/1812.10689 |
+| Moran 1946 | Additive functions of intervals and Hausdorff measure, Proc. Cambridge Philos. Soc. 42, 15-23 - the original varying-ratio construction; a magic word at similarity maps is a Moran construction, catalogued from search, unread at source | https://doi.org/10.1017/S0305004100022684 |
+| Feng, Wen and Wu 1997 | Some dimensional results for homogeneous Moran sets, Science in China Ser. A 40(5), 475-482 - dimension formulas for level-varying constructions at a common ratio per level; specialised to one base they give the scale dimension of a word, catalogued from search, unread at source | https://doi.org/10.1007/BF02896955 |
+| Mauldin and Williams 1988 | Hausdorff dimension in graph directed constructions, Trans. Amer. Math. Soc. 309(2), 811-829 - a periodic word is a cycle in a graph-directed construction, where the block-reduction collapse is the standard observation, catalogued from search, unread at source | https://doi.org/10.2307/2000940 |
+| Rempe-Gillen and Urbanski 2016 | Non-autonomous conformal iterated function systems and Moran-set constructions, Trans. Amer. Math. Soc. 368(3), 1979-2017 - the general umbrella for level-varying rules, with the lower and upper limits treated separately, catalogued from search, unread at source | https://arxiv.org/abs/1210.7469 |
+| Cristea and Steinsky 2010 | Connected generalised Sierpinski carpets, Topology and its Applications 157(7), 1157-1162 - necessary and sufficient conditions for connectedness of level-varying plane carpets, catalogued from search, unread at source | https://doi.org/10.1016/j.topol.2010.02.005 |
+| Cristea and Steinsky 2017 | Mixed labyrinth fractals, Topology and its Applications 229, 112-125 - the family that owns the word mixed; box-counting dimension and arc structure of level-varying labyrinth patterns, catalogued from search, unread at source | https://doi.org/10.1016/j.topol.2017.06.022 |
+| Barnsley, Hutchinson and Stenflo 2008 | V-variable fractals: fractals with partial self similarity, Advances in Mathematics 218(6), 2051-2088 - a randomised schedule is the `V = 1` case, its dimension theory through products of random matrices, catalogued from search, unread at source | https://arxiv.org/abs/0802.0064 |
+| Smilansky and Solomon 2021 | Multiscale substitution tilings, Proc. London Math. Soc. 123(6), 517-564 - several ratios inside one subdivision level, the operation no mrly move can express, catalogued from search, unread at source | https://doi.org/10.1112/plms.12404 |
+| Berthe and Delecroix 2014 | Beyond substitutive dynamical systems: S-adic expansions, RIMS Kokyuroku Bessatsu B46, 81-123 - a magic word is a directive sequence; which aperiodic words behave well is a mature subject there, catalogued from search, unread at source | https://arxiv.org/abs/1309.3960 |
+| Fraser 2012 | Inhomogeneous self-similar sets and box dimensions, Studia Mathematica 213(2), 133-156 - the false friend: a fixed condensation set unioned in at every step, nothing to do with level-varying rules, catalogued from search, unread at source | https://arxiv.org/abs/1301.1881 |
 
 ## REFERENCE PAGES
 
@@ -164,6 +184,7 @@ Every named reference, sequence id, theorem and attribution on this tree's root 
 | Kummer's theorem | Wikipedia: the 2-adic valuation of C(i+j,i) counts base-2 carries, so C(i+j,i) is odd iff i AND j = 0 | https://en.wikipedia.org/wiki/Kummer%27s_theorem |
 | Burnside's lemma | Wikipedia: the orbit-counting average the bijection and base-q census pages run on | https://en.wikipedia.org/wiki/Burnside%27s_lemma |
 | Franel-Landau theorem | Wikipedia, Farey sequence: the RH-equivalent discrepancy statements | https://en.wikipedia.org/wiki/Farey_sequence |
+| Landau-Ramanujan constant | Wikipedia: the count of sums of two squares below X is asymptotic to K X / sqrt(ln X), Landau 1908 | https://en.wikipedia.org/wiki/Landau%E2%80%93Ramanujan_constant |
 | Redheffer matrix | Wikipedia: the 0-1 divisibility-incidence matrix with det A_n = M(n), named and killed as a steelman on [farey](farey.md) | https://en.wikipedia.org/wiki/Redheffer_matrix |
 | Ostrowski numeration | Wikipedia: the continued-fraction positional system behind the log-time floor-sum counts that keep irrational points computable on [farey](farey.md) | https://en.wikipedia.org/wiki/Ostrowski_numeration |
 | Jacobi two-square theorem | Wikipedia, Sum of squares function: r_2(n) = 4*(d_1(n) - d_3(n)), whose Dirichlet series is 4*zeta(s)*beta(s) | https://en.wikipedia.org/wiki/Sum_of_squares_function |

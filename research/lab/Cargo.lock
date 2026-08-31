@@ -565,6 +565,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "integer-census"
+version = "0.1.0"
+dependencies = [
+ "mrlylab",
+]
+
+[[package]]
 name = "interpol"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -661,6 +668,15 @@ dependencies = [
  "png",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "mrlylab"
+version = "0.3.0"
+dependencies = [
+ "mrlycore",
+ "mrlymath",
+ "mrlynum",
 ]
 
 [[package]]
@@ -1217,6 +1233,15 @@ name = "spectral-spacings"
 version = "0.1.0"
 dependencies = [
  "faer",
+ "mrlycore",
+ "mrlymath",
+ "mrlynum",
+]
+
+[[package]]
+name = "spin-census"
+version = "0.1.0"
+dependencies = [
  "mrlycore",
  "mrlymath",
  "mrlynum",

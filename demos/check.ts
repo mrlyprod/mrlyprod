@@ -80,6 +80,11 @@ const gasket = m.ledger_profile('126', 3, 2, 2, 4);
 const stack7 = JSON.parse(m.farey_novelty(7));
 const cut5 = JSON.parse(m.diagonal_profile('126', 2, 5, 2));
 const first = (terms: string) => { const f = JSON.parse(m.ledger_identify(terms)); return `${f[0].id} ${f[0].shift}`; };
+const pinned = JSON.parse(m.census_window());
+const heads = JSON.parse(m.census_walk(7692));
+const closedTier = JSON.parse(m.census_report());
+const writes16 = JSON.parse(m.census_writers(16, 0, 1));
+const outside = JSON.parse(m.census_writers(1001, 0, 1));
 const checks: [string, unknown, unknown][] = [
   ['two_grid 7 side', grid.width, 27],
   ['two_grid 7 fills', grid.types.reduce((a, b) => a + b, 0), 512],
@@ -247,7 +252,36 @@ const checks: [string, unknown, unknown][] = [
   ['ledger_identify vertices', first('7, 37, 91, 169'), 'A154105 0'],
   ['ledger_identify classes', first('4, 12, 64, 700'), 'A129824 1'],
   ['ledger_identify tile', first('20, 81, 208'), 'A103532 1'],
+  ['census_window registry', `${pinned.registry} ${pinned.cap} ${pinned.cells} ${pinned.ceiling} ${pinned.depths.join('/')}`, '18066 48 100000 1000 8/16/32/48'],
+  ['census_window tiers', pinned.tiers.map((t: { tier: string; keys: number }) => `${t.tier} ${t.keys}`).join(', '), 'closed 7692, convolved 5044, side 2665, level 2665'],
+  ['census_walk closed heads', `${heads.depth} ${heads.done} ${heads.total} ${heads.never} ${heads.once} ${heads.multiple}`, '8 7692 18066 396 102 502'],
+  ['census_report closed heads', `${closedTier.written} ${closedTier.first_miss} ${closedTier.incidences} ${closedTier.low}`, '604 83 30865 452'],
+  ['census_report stops', `${closedTier.ceiling_stopped} ${closedTier.cap_stopped} ${closedTier.blank}`, '5048 2644 54'],
+  ['census_counts window', `${m.census_counts().length} ${m.census_counts()[15]}`, '1000 633'],
+  ['census_writers 16 heads', `${writes16.rows} ${writes16.shown[0].name} ${writes16.shown[0].closed} ${writes16.shown[0].index}`, '633 mrly_bang_d1_1.fills.level 2^L 3'],
+  ['census_writers outside', `${outside.inside} ${outside.rows}`, 'false 0'],
+  ['census_champions heads', JSON.parse(m.census_champions(2)).map((c: { value: number; rows: number }) => `${c.value} at ${c.rows}`).join(', '), '16 at 633, 12 at 579'],
+  ['census_misses heads', JSON.parse(m.census_misses(3)).join(','), '83,86,107'],
 ];
+
+if (Bun.argv.includes('--deep')) {
+  console.log('walking the whole registry to the pinned 48-term window, minutes not seconds');
+  for (;;) {
+    const state = JSON.parse(m.census_walk(500));
+    if (state.complete) break;
+  }
+  const deep = JSON.parse(m.census_report());
+  const champion = JSON.parse(m.census_writers(16, 0, 1));
+  checks.push(
+    ['census pinned window', `${deep.depth} ${deep.rows} ${deep.never} ${deep.once} ${deep.multiple}`, '48 18066 41 31 928'],
+    ['census pinned written', `${deep.written} ${deep.share.toFixed(4)} ${deep.first_miss} ${deep.run}`, '959 0.9590 269 268'],
+    ['census pinned tally', `${deep.incidences} ${deep.low} ${deep.bands[2].missed} ${deep.bands[2].density.toFixed(6)}`, '193419 29144 41 0.045556'],
+    ['census pinned ladder', deep.depths.map((row: { written: number }) => row.written).join(','), '783,929,955,959'],
+    ['census pinned champions', JSON.parse(m.census_champions(5)).map((c: { value: number; rows: number }) => `${c.value} at ${c.rows}`).join(', '), '16 at 2858, 9 at 2811, 4 at 2559, 12 at 2303, 36 at 2270'],
+    ['census pinned misses', JSON.parse(m.census_misses(6)).join(','), '269,362,422,443,446,487'],
+    ['census pinned writers', `${champion.rows} ${champion.tiers.map((t: { rows: number }) => t.rows).join('/')} ${JSON.parse(m.census_writers(269, 0, 1)).rows}`, '2858 666/1529/530/133 0'],
+  );
+}
 
 let failed = 0;
 for (const [label, got, want] of checks) {

@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["design-census", "dimension-one-ladder", "oeis-terms", "hexagon-moire", "farey-discrepancy", "walk-dimension", "spectral-spacings"]
+members = ["design-census", "dimension-one-ladder", "oeis-terms", "hexagon-moire", "farey-discrepancy", "walk-dimension", "spectral-spacings", "spin-census", "integer-census"]
 
 [workspace.package]
 version = "0.1.0"

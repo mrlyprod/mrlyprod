@@ -1,5 +1,6 @@
 use mrlycore::json::parse;
 use mrlyweb::bang::*;
+use mrlyweb::census::*;
 use mrlyweb::gauss::*;
 use mrlyweb::graph::*;
 use mrlyweb::lab::*;
@@ -867,4 +868,107 @@ fn the_tour_exports_answer() {
     assert_eq!(first("7, 37, 91, 169"), ("A154105".into(), 0.into()));
     assert_eq!(first("4, 12, 64, 700"), ("A129824".into(), 1.into()));
     assert_eq!(first("20, 81, 208"), ("A103532".into(), 1.into()));
+}
+
+#[test]
+fn the_census_exports_answer() {
+    let window = parse(&census_window()).unwrap();
+    assert_eq!(window["registry"], 18066);
+    assert_eq!(window["cap"], 48);
+    assert_eq!(window["cells"], "100000");
+    assert_eq!(window["ceiling"], "1000");
+    assert_eq!(window["head"], 8);
+    assert_eq!(window["depths"], parse("[8, 16, 32, 48]").unwrap());
+    let tiers = window["tiers"].as_array().unwrap();
+    let keyed: Vec<(String, u64)> = tiers
+        .iter()
+        .map(|tier| {
+            (
+                tier["tier"].as_str().unwrap().to_string(),
+                tier["keys"].as_u64().unwrap(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        keyed,
+        [
+            ("closed".to_string(), 7692),
+            ("convolved".to_string(), 5044),
+            ("side".to_string(), 2665),
+            ("level".to_string(), 2665),
+        ]
+    );
+    let walk = parse(&census_walk(7692)).unwrap();
+    assert_eq!(
+        (
+            walk["depth"].clone(),
+            walk["done"].clone(),
+            walk["total"].clone()
+        ),
+        (8.into(), 7692.into(), 18066.into())
+    );
+    assert_eq!(
+        (
+            walk["never"].clone(),
+            walk["once"].clone(),
+            walk["multiple"].clone()
+        ),
+        (396.into(), 102.into(), 502.into())
+    );
+    let report = parse(&census_report()).unwrap();
+    assert_eq!(report["rows"], 7692);
+    assert_eq!(report["written"], 604);
+    assert_eq!(report["first_miss"], 83);
+    assert_eq!(report["incidences"], 30865);
+    assert_eq!(report["low"], 452);
+    assert_eq!(report["ceiling_stopped"], 5048);
+    assert_eq!(report["cap_stopped"], 2644);
+    assert_eq!(report["blank"], 54);
+    assert_eq!(report["bands"][1]["missed"], 2);
+    assert_eq!(report["tiers"][0]["written"], 604);
+    let counts = census_counts();
+    assert_eq!(counts.len(), 1000);
+    assert_eq!((counts[0], counts[15]), (102, 633));
+    let writers = parse(&census_writers(16, 0, 2)).unwrap();
+    assert_eq!(
+        (writers["inside"].clone(), writers["rows"].clone()),
+        (true.into(), 633.into())
+    );
+    assert_eq!(writers["tiers"][0]["rows"], 633);
+    let first = &writers["shown"][0];
+    assert_eq!(first["name"], "mrly_bang_d1_1.fills.level");
+    assert_eq!(first["closed"], "2^L");
+    assert_eq!(
+        (first["index"].clone(), first["term"].clone()),
+        (3.into(), 4.into())
+    );
+    assert_eq!(first["head"][3], "16");
+    assert_eq!(writers["shown"][1]["closed"], "a(L) = 3 a(L-1) - 2 a(L-2)");
+    let paged = parse(&census_writers(16, 0, 633)).unwrap();
+    let sided = paged["shown"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|row| row["axis"] == "side")
+        .unwrap();
+    assert_eq!(
+        (
+            sided["name"].clone(),
+            sided["term"].clone(),
+            sided["side"].clone()
+        ),
+        ("mrly_bang_d1_1.surface.side".into(), 8.into(), 15.into())
+    );
+    let outside = parse(&census_writers(1001, 0, 1)).unwrap();
+    assert_eq!(
+        (outside["inside"].clone(), outside["rows"].clone()),
+        (false.into(), 0.into())
+    );
+    let champions = parse(&census_champions(2)).unwrap();
+    assert_eq!(
+        (champions[0]["value"].clone(), champions[0]["rows"].clone()),
+        (16.into(), 633.into())
+    );
+    let misses = parse(&census_misses(3)).unwrap();
+    assert_eq!(misses, parse("[83, 86, 107]").unwrap());
 }

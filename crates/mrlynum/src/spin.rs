@@ -271,6 +271,35 @@ pub fn mass(profile: &[f32], size: usize) -> f64 {
     step * (inner + (weight(0) + weight(last)) / 2.0)
 }
 
+/// The mass a profile carries inside the radius, the trapezoid integral of `2 pi r F(r)` from the centre out, in cells of the raster it came from.
+///
+/// ```
+/// let solid = vec![1.0; 64];
+/// let rings = mrlynum::spin::profile(&solid, 8, 4000);
+/// let inner = mrlynum::spin::mass_within(&rings, 8, 3.0);
+/// assert!((inner / (9.0 * std::f64::consts::PI) - 1.0).abs() < 1e-3);
+/// ```
+pub fn mass_within(profile: &[f32], size: usize, radius: f64) -> f64 {
+    let last = profile.len().saturating_sub(1);
+    if last == 0 || radius <= 0.0 {
+        return 0.0;
+    }
+    let step = reach(size) / last as f64;
+    let weight = |k: usize| 2.0 * PI * (k as f64 * step) * profile[k] as f64;
+    let full = (radius / step).floor().min(last as f64) as usize;
+    let mut total = 0.0;
+    for k in 1..=full {
+        total += (weight(k - 1) + weight(k)) / 2.0 * step;
+    }
+    if full < last {
+        let rest = radius - full as f64 * step;
+        let share = rest / step;
+        let edge = weight(full) + (weight(full + 1) - weight(full)) * share;
+        total += (weight(full) + edge) / 2.0 * rest;
+    }
+    total
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -313,6 +342,31 @@ mod tests {
         assert_eq!(fills, 512.0);
         let rings = profile(&data, 27, 4000);
         assert!((mass(&rings, 27) - fills).abs() / fills < 0.002);
+    }
+
+    #[test]
+    fn the_spin_mass_scales_by_the_fill_about_a_filled_corner() {
+        let tile = atoms::carpet_nd(3, 2);
+        let carpet = tile.kron(&tile).kron(&tile).kron(&tile);
+        let side = 81usize;
+        let wide = 2 * side;
+        let mut data = vec![0.0f32; wide * wide];
+        let bytes = carpet.bytes();
+        for row in 0..side {
+            for col in 0..side {
+                data[(row + side) * wide + col + side] = bytes[row * side + col] as f32;
+            }
+        }
+        let rings = profile(&data, wide, 4000);
+        assert!(mass_within(&rings, wide, 1e-6).abs() < 1e-9);
+        for radius in [12.0f64, 18.0, 27.0] {
+            let near = mass_within(&rings, wide, radius);
+            let far = mass_within(&rings, wide, 3.0 * radius);
+            assert!(near > 0.0);
+            assert!((far / (8.0 * near) - 1.0).abs() < 0.08, "radius {radius}");
+        }
+        let whole = mass_within(&rings, wide, reach(wide));
+        assert!((whole - mass(&rings, wide)).abs() / whole < 1e-9);
     }
 
     #[test]

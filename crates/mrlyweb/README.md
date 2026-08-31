@@ -14,6 +14,7 @@ Codes cross the boundary as decimal strings, because a design code is a u128 and
 - **race** looses seeded walkers on a flat design and measures how far they wander.
 - **lattice** walks the Farey sequence and sieves the totients.
 - **ledger** builds the sequence catalog tier by tier, whole or a span of keys at a time, searches it by terms or name, reads any design sequence or its diagonal profile to a cell budget, identifies typed terms against the curated records, and spells the closed forms.
+- **census** walks the whole ledger registry inside a pinned window, deepening pass by pass, and answers which integers it writes, how many rows write each, which are missed, and which rows write one.
 - **prime** steps the sieve one prime at a time, reads a number as a pile of stones, charts the prime count against its smooth guesses, and puts a scale on trial in the carpet stack.
 - **volume** stacks a cube design at odd scales into a moire volume, packs the faces of its level sets, and paints any plane through it.
 - **gauss** paints the Gaussian or the Eisenstein window with its primes by class or norm, counts the classes, maps a click to its point with its units and conjugate, and weighs the norm shells.
@@ -25,4 +26,5 @@ Codes cross the boundary as decimal strings, because a design code is a u128 and
 ## Running
 
 - `cargo test -p mrlyweb` runs the host tests over every export.
+- `cargo test --release -p mrlyweb --test census -- --ignored` walks the whole registry to the pinned 48-term window, minutes not seconds, and pins the census against the research page.
 - `scripts/wasm.sh` builds the wasm package the demos import.

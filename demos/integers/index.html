@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mrly · the integers</title>
+<link rel="stylesheet" href="../lib/mrly.css">
+</head>
+<body>
+<header>
+  <nav><a href="../">demos</a> / integers</nav>
+  <h1>The integers this machine writes, and the ones it misses</h1>
+  <p class="sub">Every design, every measure, every axis is a row of the ledger, and every row writes a run of integers. Take the union over the whole registry and most small integers are written many times over, a few are written once, and some are written by nothing at all. Type an integer or click the field: you get every row that writes it, the design, the measure and the closed form, or the verdict that it is missed.</p>
+</header>
+<main>
+  <div class="row">
+    <label>integer <input type="number" id="value" min="1" max="1000" value="16"></label>
+    <button id="random">Randomize</button>
+    <button id="miss">A miss</button>
+    <button id="champion">A champion</button>
+    <input type="range" id="draw" min="1" max="1000" hidden>
+  </div>
+  <div class="panel">
+    <h2>The pinned window <span id="window-note"></span></h2>
+    <div class="stats">
+      <span>registry <b id="registry"></b> rows</span>
+      <span>read <b id="read"></b></span>
+      <span>rendered terms <b id="depth"></b></span>
+      <span>ceiling <b id="ceiling"></b></span>
+      <span>cells a term <b id="cells"></b></span>
+      <span><button id="deepen" hidden></button></span>
+    </div>
+    <div class="meter"><div id="bar"></div></div>
+    <div class="note" id="note"></div>
+  </div>
+  <div class="arena">
+    <div class="panel">
+      <h2>The field <span id="field-note"></span></h2>
+      <canvas class="sheet" id="field"></canvas>
+      <div class="stats">
+        <span><span class="swatch" id="key-miss"></span> missed <b id="never"></b></span>
+        <span><span class="swatch" id="key-once"></span> written once <b id="once"></b></span>
+        <span><span class="swatch" id="key-many"></span> written by many <b id="multiple"></b></span>
+        <span>share written <b id="share"></b></span>
+      </div>
+      <canvas class="bars" id="split" style="height: 62px"></canvas>
+    </div>
+    <div class="panel">
+      <h2>The verdict <span id="verdict-note"></span></h2>
+      <p class="banner" id="verdict"></p>
+      <div class="stats">
+        <span>rows writing it <b id="rows"></b></span>
+        <span>closed <b id="tier-closed"></b></span>
+        <span>convolved <b id="tier-convolved"></b></span>
+        <span>side grid <b id="tier-side"></b></span>
+        <span>level grid <b id="tier-level"></b></span>
+        <span>page <b id="page-out"></b></span>
+        <span><button id="prev">prev</button> <button id="next">next</button></span>
+      </div>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>row</th><th>measure</th><th>closed form</th><th>writes it at</th><th>first terms</th></tr></thead>
+          <tbody id="body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="arena">
+    <div class="panel">
+      <h2>The champions <span>the integers the most rows write</span></h2>
+      <canvas class="bars" id="top" style="height: 210px"></canvas>
+      <h2>The first misses</h2>
+      <p class="num dim" id="misses"></p>
+    </div>
+    <div class="panel">
+      <h2>The depth of the window <span id="ladder-note"></span></h2>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>rendered terms</th><th>written</th><th>missed</th><th>once</th><th>first miss</th><th>rows still cut</th></tr></thead>
+          <tbody id="ladder"></tbody>
+        </table>
+      </div>
+      <h2>The miss density by decade</h2>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>decade</th><th>width</th><th>missed</th><th>miss density</th></tr></thead>
+          <tbody id="bands"></tbody>
+        </table>
+      </div>
+      <h2>The tiers</h2>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>tier</th><th>rows</th><th>written</th><th>written by this tier alone</th></tr></thead>
+          <tbody id="tiers"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <p class="foot">The census is only as good as its window, so the window is pinned and printed rather than assumed. A row is one design, one measure and one axis, taken over the four cost tiers of the <a href="../sequences">ledger</a>. A row's rendered window is its first <b>min(48, B)</b> terms, <b>B</b> the leading terms whose footprint fits 100000 cells: one cell for a closed measure, <code>number^dimension + level * span</code> for a convolved one, <code>number^(dimension * level)</code> for a grid. A row whose rendered terms are strictly increasing stops at the first term above the ceiling, which on this page is 1000. A row writes <b>n</b> when <b>n</b> is a term inside that window and <b>n</b> is in range, and multiplicity counts rows and not places, so a row writing the same integer twice counts once. Terms at or below zero - the Euler characteristics, the voids of a solid - are counted apart and never folded in. The page opens at the ledger's own eight-term heads and deepens on request, because more than half of the written set arrives past the head; the last pass is the pinned 48-term window, and the depth table above is the honest measure of how much the window itself decides. That a missed integer is written by no row at any depth is a conjecture and not a result: the rows the cap still cuts have deeper terms nobody has rendered, and the counter says how many rows those are. The same census runs to a ceiling of 100000 in the research tree, where the miss density climbs decade by decade; whatever the ceiling, a fixed registry renders at most 48 terms a row, so the written set is finite and far enough out the census is almost all miss. Every number here is computed in Rust and walked live through wasm; the page only draws.</p>
+</main>
+<script type="module" src="./index.js"></script>
+</body>
+</html>
