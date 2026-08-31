@@ -20,6 +20,7 @@ paint($('t-race'), m.two_grid('127', 3, 4, 0, 3), ink.blue);
 $('t-sponge').innerHTML = m.hex_svg('23', 3, 2, 2, 'iso', 3);
 $('t-cuts').innerHTML = m.diagonal_svg('126', 2, 5, 2, JSON.parse(m.diagonal_profile('126', 2, 5, 2)).central, 6);
 $('t-slices').innerHTML = m.hex_svg('23', 7, 1, 2, 'cut', 8);
+paint($('t-crop'), m.crop_grid('7', 3, 3, 2, 'ball', 55, 120, false, 'touching'), ink.green);
 paint($('t-spectra'), m.two_grid('7', 2, 5, 0, 2), ink.pink);
 paint($('t-universe'), m.two_grid('9', 3, 3, 0, 2), ink.gold);
 blit($('t-words'), m.magic_pixels(['7', '14'], [3, 7], [2, 2]));

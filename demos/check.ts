@@ -103,8 +103,35 @@ const collideBehind = m.magic_grid(['273', '9'], [3, 2], [3, 2]);
 const collideSame = collideAhead.width === collideBehind.width && collideAhead.types.every((byte: number, at: number) => byte === collideBehind.types[at]);
 const mengerWord = JSON.parse(m.magic_census(['23', '23', '23'], [3, 3, 3], 3, [2, 2, 2]));
 
+const shapes2 = JSON.parse(m.crop_shapes(2));
+const cropTouch = m.crop_grid('7', 3, 2, 2, 'ball', 1, 2, false, 'touching');
+const cropIn = m.crop_grid('7', 3, 2, 2, 'ball', 1, 2, false, 'inside');
+const cropFine = m.crop_grid('7', 3, 1, 2, 'ball', 1, 2, false, 'refined1');
+const cropCubes = m.crop_cells('23', 3, 1, 2, 'ball', 1, 2, false, 'touching');
+const cropMesh = m.crop_faces('23', 3, 1, 2, 'ball', 1, 2, false, 'touching');
+const cropTally = JSON.parse(m.crop_census('7', 3, 2, 2, 2, 'ball', 1, 2, false));
+const cropSweep = JSON.parse(m.crop_series('7', 3, 2, 2, 2, 'ball', 1, 2, false, 'level', 2));
+const cropRadii = JSON.parse(m.crop_series('7', 3, 1, 2, 2, 'ball', 1, 2, false, 'radius', 4));
+const cropArt = m.crop_svg('7', 3, 1, 2, 'ball', 1, 2, false, 4);
+const cropHole = m.crop_svg('7', 3, 1, 2, 'diamond', 1, 2, true, 4);
+const cropField = m.field_crop(square, 8, 2, 'ball', 1, 2, false);
+
 const checks: [string, unknown, unknown][] = [
   ['two_grid 7 side', grid.width, 27],
+  ['crop_shapes 2', shapes2.join(','), 'ball,box,diamond,triangle,octagon'],
+  ['crop_grid touching side', cropTouch.width, 9],
+  ['crop_grid orders fills', cropIn.types.reduce((a: number, b: number) => a + b, 0) <= cropTouch.types.reduce((a: number, b: number) => a + b, 0), true],
+  ['crop_grid refined side', cropFine.width, 9],
+  ['crop_cells sponge ball', cropCubes.length / 3, 20],
+  ['crop_faces sponge ball', `${cropMesh[0] / 36},${cropMesh.length}`, `72,${2 + cropMesh[0]}`],
+  ['crop_census carpet cells', cropTally.cells_out + cropTally.cells_cut + cropTally.cells_in, 81],
+  ['crop_census carpet fills', cropTally.filled_out + cropTally.filled_cut + cropTally.filled_in, 64],
+  ['crop_census exposed', `${cropTally.exposed_before},${Number(cropTally.exposed_after) > 0}`, `${JSON.parse(m.two_census('7', 3, 2, 0, 2)).perimeter},true`],
+  ['crop_series level rows', cropSweep.map((row: { x: number }) => row.x).join(','), '0,1,2'],
+  ['crop_series radius rows', `${cropRadii.length},${cropRadii[3].x}`, '4,1'],
+  ['crop_svg clip circle', `${cropArt.includes('<clipPath')},${cropArt.includes('<circle')}`, 'true,true'],
+  ['crop_svg anti mask', `${cropHole.includes('<mask')},${cropHole.includes('<polygon')}`, 'true,true'],
+  ['crop_field kept centres', cropField.reduce((a: number, v: number) => a + (Number.isNaN(v) ? 0 : 1), 0), 52],
   ['two_grid 7 fills', grid.types.reduce((a, b) => a + b, 0), 512],
   ['fill sponge level 3', m.fills('23', 3, 3, 3, 2), '8000'],
   ['void sponge level 3', m.voids('23', 3, 3, 3, 2), '11683'],

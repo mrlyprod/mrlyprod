@@ -3,11 +3,13 @@ import { stage, faces, plane } from '../lib/stage.js';
 import { query } from '../lib/query.js';
 import { picker, roll } from '../lib/select.js';
 import { ramp } from '../lib/ramp.js';
+import { cropper } from '../lib/crop.js';
 
 const m = await ready();
 const st = stage($('stage'));
 const params = query(['camera', 'opacity']);
 const tone = ramp($('ramp-row'), { levels: 16, on: draw });
+const crop = cropper($('crop-row'), { dimension: 3, on: draw });
 const src = picker({
   host: $('picker'), m, dimension: 3, base: [2, 3], code: '23', build: sample,
   extra: ['limit', 'combine', 'level', 'size'], more: (seed) => roll(seed, ['combine'], { combine: ['and'] }),
@@ -22,16 +24,18 @@ function draw() {
   try {
     st.clear();
     const look = tone.read();
+    const c = crop.read();
+    const shown = c.active ? m.field_crop(data, size, 3, c.shape, c.rnum, c.rden, c.anti) : data;
     const threshold = +$('threshold').value, opacity = +$('opacity').value;
     out('threshold', threshold);
     out('opacity', opacity);
-    $('count').textContent = m.volume_count(data, size, threshold);
+    $('count').textContent = m.volume_count(shown, size, threshold);
     $('faces').textContent = '';
     if ($('mesh').checked) {
-      const quads = m.volume_surface(data, size, threshold);
+      const quads = m.volume_surface(shown, size, threshold);
       if (quads > 400000) throw new Error(`${quads} faces is more than this page draws; raise the threshold or lower the size.`);
       $('faces').textContent = quads;
-      st.add(faces(m.volume_faces(data, size, threshold), ink.blue, opacity));
+      st.add(faces(m.volume_faces(shown, size, threshold), ink.blue, opacity));
     }
     $('cut-note').textContent = '';
     for (const key of ['x', 'y', 'z', 'd']) {
@@ -40,7 +44,7 @@ function draw() {
       const offset = +$(`${key}-at`).value;
       const frame = JSON.parse(m.plane_frame(normal, offset));
       const wide = key === 'd' ? 384 : 256;
-      const pixels = m.paint_span(m.plane_field(data, size, normal, offset, wide), wide, stats.min, stats.max, look.ramp, look.levels, look.invert);
+      const pixels = m.paint_span(m.plane_field(shown, size, normal, offset, wide), wide, stats.min, stats.max, look.ramp, look.levels, look.invert);
       st.add(plane(pixels, frame));
       if (key === 'd') {
         blit($('cut'), pixels);

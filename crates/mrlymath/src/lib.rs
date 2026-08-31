@@ -13,6 +13,8 @@ pub mod life;
 pub mod name;
 /// The residue rules that mark a hypercube's cells.
 pub mod rules;
+/// The exact crop machinery: rational shapes classified cell by cell, no floats.
+pub mod shape;
 /// The hexagon world: cubes flattened to triangle-meshed hexes.
 pub mod six;
 /// The 3d scene kit: vectors, solids and the packed wire format.

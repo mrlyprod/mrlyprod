@@ -8,6 +8,8 @@ use wasm_bindgen::prelude::*;
 pub mod bang;
 /// The census: which integers the whole registry writes inside a pinned window, how often, and which rows write one.
 pub mod census;
+/// The exact crops: the designs trimmed to rational shapes, tallied, swept, drawn and masked.
+pub mod crop;
 /// The primes of the plane: the Gaussian and the Eisenstein windows painted, counted, clicked and weighed by norm.
 pub mod gauss;
 /// The networks of the designs: nodes, branches, roles and censuses, and the force layout that relaxes them.

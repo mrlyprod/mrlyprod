@@ -12,6 +12,7 @@
 
 ## PAGES
 
+- [crop](crop/) - A named shape of rational radius keeps only the cells of a design it reaches, with the in, cut and out regions counted exactly before anything is drawn.
 - [cuts](cuts/) - Every plane `x + y + z = s` through a level-L solid meets exactly 3^L cells, and the height's binary digits make each cut a Sierpinski gasket.
 - [farey](farey/) - A line drawn at every `k/n` and stacked over the scales lights a reduced fraction `a/b` to a brightness of `Q/b`, and the scales of maximal novelty are the primes.
 - [gaussian](gaussian/) - The Gaussian and Eisenstein primes as four- and six-armed snowflakes, coloured by whether an ordinary prime split, stayed inert, or ramified on entering the plane.

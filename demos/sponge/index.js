@@ -1,10 +1,12 @@
 import { ready, $, ink, say, bind, out } from '../lib/mrly.js';
 import { stage, faces, cubes } from '../lib/stage.js';
 import { picker, cap } from '../lib/select.js';
+import { cropper } from '../lib/crop.js';
 
 const m = await ready();
 const st = stage($('stage'));
 const src = picker({ host: $('picker'), m, dimension: 3, base: [2, 3], code: '23', build, extra: ['number', 'level'] });
+const crop = cropper($('crop-row'), { dimension: 3, on: build });
 
 function build() {
   const number = +$('number').value;
@@ -13,6 +15,7 @@ function build() {
   say('note');
   try {
     const { code, base, name } = src.read();
+    const c = crop.read();
     const side = m.grid_total(number, 1, level);
     $('name').textContent = name;
     $('side').textContent = side;
@@ -30,10 +33,13 @@ function build() {
     }
     if ($('view').value === 'shell') {
       if (Number(surface) > 400000) throw new Error(`${surface} faces is more than this page draws; lower the level.`);
-      st.show(faces(m.three_faces(code, number, level, base), ink.blue, +$('opacity').value));
+      const mesh = c.active ? m.crop_faces(code, number, level, base, c.shape, c.rnum, c.rden, c.anti, 'touching') : m.three_faces(code, number, level, base);
+      if (c.active && mesh[0] / 36 > 400000) throw new Error(`${mesh[0] / 36} faces is more than this page draws; lower the level.`);
+      st.show(faces(mesh, ink.blue, +$('opacity').value));
     } else {
       if (Number(fills) > 250000) throw new Error(`${fills} cubes is more than this page draws; lower the level.`);
-      st.show(cubes(m.three_cells(code, number, level, base), Number(side), ink.orange));
+      const cells = c.active ? m.crop_cells(code, number, level, base, c.shape, c.rnum, c.rden, c.anti, 'touching') : m.three_cells(code, number, level, base);
+      st.show(cubes(cells, Number(side), ink.orange));
     }
   } catch (error) {
     st.clear();

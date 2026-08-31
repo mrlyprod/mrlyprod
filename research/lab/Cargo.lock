@@ -106,6 +106,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "crop-counts"
+version = "0.1.0"
+dependencies = [
+ "mrlycore",
+ "mrlymath",
+]
+
+[[package]]
 name = "crossbeam"
 version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"

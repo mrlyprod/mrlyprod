@@ -82,6 +82,7 @@ The mathematics of the mrly tree: a parity rule on the corners of a cube, substi
 - [bases](bases.md) - what base 3 hides: an Eisenstein L-value where base 2 hid pi.
 - [spectra](spectra.md) - the tile grammar of the diagonal slice at every odd base: the two-tile claim, the closed forms, and the mod-4 split.
 - [spin](spin.md) - a design turned about its centre: the ripple identity, the complete spin spectrum, the sponge's opaque diagonal, and a Gaussian Farey.
+- [crop](crop.md) - exact shape crops of a design: the In/Cut/Out census, the circle on the carpet and the sphere on the sponge, and the curved-slice lane.
 - [sequences](sequences.md) - the OEIS ledger: every sequence this work produces, with terms, formulas, and verification status.
 - [integers](integers.md) - the census the other way round: which integers the whole registry writes, which it never writes, and which it writes thousands of times.
 

@@ -324,6 +324,15 @@
 - [Verified] Two OEIS collisions, both explained and neither an identification: the ascending champion set opens `2, 3, 4, 6, 7, 8, 9, 12, 14, 15, 16, 18`, a window of A100290 and of A336231 and of no other record in a dump of 398817, all three parting at the thirteenth term with 21, 19 and the census's 20; and the written-per-decade run `9, 90, 859` sits inside A209631 alone, which continues 6689 where the census gives 5452. Both searches index every window of the census sequence and walk every record, so they are exhaustive on both sides rather than sampled at offsets. Witness: lab/integer-census, A100290, A336231, A209631.
 - [Verified] No recognizable family is systematically missed: 173 records of the dump hold at least ten distinct integers of `1..=100000` and lie wholly inside the miss set, the longest being A361796 at 41 terms, which at a miss density of `0.88867` has probability about `10^-2.1` and is ordinary across 398817 records. Witness: lab/integer-census, A361796.
 
+### Crop census
+
+- [Proved] Crop partition and anti-crop complement: `classify` puts every cell in exactly one of Out, Cut, In, so the keep-cut and strict crops bracket the boundary, and `Shape::Anti` flips In with Out fixing Cut, so the crop and the anti-crop under the complementary cut rule partition the filled set exactly; read off the definition and asserted both ways on all 118 printed configurations. Witness: mrlymath::shape, lab/crop-counts.
+- [Verified] The inscribed sphere never enters the level-1 sponge: `census` reads cells `[0, 26, 1]`, the one In cell the empty centre and all 20 filled cells Cut, so the keep-cut crop keeps everything and the strict crop nothing; the inscribed octahedron holds no filled sponge cell fully inside through level 2. Witness: mrlymath::shape, lab/crop-counts.
+- [Proved] Exact dead zones of the inscribed crops: the carpet crop is empty for `r < 1/6` under ball and diamond alike and the sponge diamond crop for `r < 1/3`, the central holes' inradii; the sponge ball's exact contact radius is `sqrt(2)/6 = 0.2357`, witnessed by the filled level-3 cell `[13/27, 14/27] x [8/27, 9/27] x [8/27, 9/27]` whose nearest point to the centre is `(1/2, 1/3, 1/3)`, so the 1/24 sweep reads empty through `r = 5/24` and first cuts at `r = 6/24`. Witness: crop.md, lab/crop-counts.
+- [Verified] Saturation and its one failure: the carpet ball crop holds all 4096 filled cells at level 4 from `r = 17/24`, the first sweep radius past the circumradius `sqrt(2)/2`, the sponge ball all 8000 at level 3 from `r = 7/8`, past `sqrt(3)/2`, and the sponge diamond never saturates in the sweep, reading `in = 5356, cut = 1332` of 8000 at `r = 1` since the cube's corners sit at `L1` distance `3/2`. Witness: lab/crop-counts.
+- [Verified] The strict inscribed diamond crop of the full side-`2m` grid holds exactly `2m(m-1)` cells. Witness: mrlymath::shape.
+- [Proved] A grid-aligned polytope crop is digit counting: walls on multiples of `3^-k` keep exactly the cells with coordinates in integer intervals at level `k`, the count factors along digit positions as in `mrlylab::press`, and the crop adds nothing. Witness: crop.md.
+
 ## OPEN
 
 ### Coprimality density
@@ -559,6 +568,10 @@
 - [Conjecture] Two tiles commute under the Kronecker product exactly when they are powers of one common tile or the members at their two sides of one scale-free family, the one-cell case being settled by `a(n - 1) = b(m - 1)` and the general case tested only at `(2,3)` in two dimensions and at ten side pairs in one; relatedly, whether the diagonal and the antidiagonal are the only permutation tiles factoring in both radix orders at every coprime split. The next coprime test needs all `2^25` side-5 codes, so this has to be settled by proof and not by search. Witness: lab/code-factorisation, magic.md.
 - [Conjecture] The three-family description of cross-shape collisions at a coprime shape - axis-separable rectangles, tiles with a fill-1 outer factor, and the diagonal pair - is exhaustive at side 6 and untested anywhere else. Witness: lab/code-factorisation, magic.md.
 - [Conjecture] An intrinsic description of which tiles are Kronecker products, rather than the block test's algorithm and the published decomposition graph; and what the irreducible letters of composite side do, now that they are known to exist and to be generic, which is the question the plane-code word census could not see. Witness: lab/code-factorisation, magic.md.
+
+### Crop census
+
+- [Conjecture] The curved-slice dimension: the `log_3` cut-ratio exponents of the inscribed circle on the carpet read `1.140, 0.909, 0.899, 0.951` and of the sphere on the sponge `2.166, 1.579, 1.705`, hovering near the straight-slice yardsticks `d - 1 = 0.8928` and `1.7268` - yardsticks by analogy only, since Shmerkin 2019 and Wu 2019 cover intersections of `xp`- and `xq`-invariant line sets with `p, q` multiplicatively independent, not same-base carpet slices, straight or curved; five levels decide nothing. Witness: lab/crop-counts, crop.md.
 
 ## REFUTED
 
