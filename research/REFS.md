@@ -147,6 +147,12 @@ Every named reference, sequence id, theorem and attribution on this tree's root 
 | Apery 1979 | Irrationalite de zeta(2) et zeta(3), Asterisque 61, 11-13 - blocks the mismatch theorem at `D = 3` against Version L, and the C-finite corollary at `D = 3` | https://eudml.org/doc/94858 |
 | Rivoal 2000 | La fonction zeta de Riemann prend une infinite de valeurs irrationnelles aux entiers impairs, C. R. Acad. Sci. Paris 331(4), 267-270 - why the mismatch theorem stays conditional at odd `D >= 5` | https://arxiv.org/abs/math/0008051 |
 | Zudilin 2001 | One of the numbers zeta(5), zeta(7), zeta(9), zeta(11) is irrational, Russian Math. Surveys 56(4), 774-776 - the same conditionality, sharpened | https://doi.org/10.1070/RM2001v056n04ABEH000427 |
+| Kenyon 1997 | Projecting the one-dimensional Sierpinski gasket, Israel Journal of Mathematics 97, 221-238 - the projection dichotomy for the dimension-one gasket, whose dimension-below-one half holds every occupied direction | https://doi.org/10.1007/BF02774038 |
+| Chow, Varju and Yu 2024 | Counting rationals and Diophantine approximation in missing-digit Cantor sets - the only power saving of the right shape, hypotheses covering base `b >= 5` on `b - 1` digits and base 4, excluding base 3 on two digits | https://arxiv.org/abs/2402.18395 |
+| Athreya, Reznick and Tyson 2019 | Cantor set arithmetic, American Mathematical Monthly 126, 4-17 - the quotient set of the middle-thirds set is a union of intervals, so no fractal-geometric input can supply the saving | https://arxiv.org/abs/1711.08791 |
+| Yu 2021 | Rational points near self-similar sets - counts rationals near a self-similar set, not on it, the gap that keeps it from the lemma | https://arxiv.org/abs/2101.05910 |
+| Flajolet and Odlyzko 1990 | Random mapping statistics, EUROCRYPT '89, LNCS 434, 329-354, doi:10.1007/3-540-46885-4_34 - cited as a MODEL only, for the `Theta(sqrt N)` rho length and reachable-set size of a random mapping on `N` nodes, which is the shape the band automaton's mean reach follows in `lab/ratio-set-saving`; no theorem is imported, the band automaton being deterministic and arithmetic rather than random | https://doi.org/10.1007/3-540-46885-4_34 |
+| Schleischitz 2021 | On intrinsic and extrinsic rational approximation to Cantor sets, Ergodic Theory and Dynamical Systems 41, 1560-1589 - intrinsic approximation on missing-digit sets, the nearest framing of rationals lying on the set | https://arxiv.org/abs/1812.10689 |
 
 ## REFERENCE PAGES
 

@@ -92,6 +92,45 @@ print("lambda_6 = 57 + 6 sqrt 46 = %s, matches largest factor root %s" % (mpmath
 print("lambda_8 = 456 + 3 sqrt 11017 = %s, matches largest factor root %s" % (mpmath.nstr(lam8, 12), abs(lam8 - perron[4]) < 1e-15))
 print("lambda_10 largest root of the quartic factor = %s" % mpmath.nstr(lam10, 13))
 
+def reachable(A, start):
+    seen, stack = {start}, [start]
+    while stack:
+        i = stack.pop()
+        for j in range(len(A)):
+            if A[i][j] and j not in seen:
+                seen.add(j)
+                stack.append(j)
+    return seen
+
+def scc_zero(M, zero):
+    T = [[M[j][i] for j in range(len(M))] for i in range(len(M))]
+    S = sorted(reachable(M, zero) & reachable(T, zero))
+    sub = [[M[i][j] for j in S] for i in S]
+    return S, sub, all(len(reachable(sub, i)) == len(S) for i in range(len(S)))
+
+print("energy cap: strongly connected component of the zero state, Perron root, E_2K(G_a) <= lambda_2K^a")
+for K in (2, 3, 4, 5):
+    M, zero = carry_matrix(K)
+    radius = (K - 1) // 2
+    spread = max(max(abs(d1), abs(d2)) for d1, d2 in delta_counts(K))
+    closed = (radius + spread) // 3 <= radius
+    S, sub, irreducible = scc_zero(M, zero)
+    root = max(mpmath.mpf(str(r)) for f, _ in sp.factor_list(sp.Matrix(sub).charpoly(x).as_expr())[1] for r in sp.Poly(f, x).nroots(n=25) if r.is_real)
+    lam = mpmath.mpf(15) if K == 2 else perron[K]
+    print("2K = %2d box radius %d digit spread %d closed %s scc %2d of %2d irreducible %s self loop %s perron equals lambda_2K %s cap holds a = 0..6 %s ratio at a = 6 %s" % (2 * K, radius, spread, closed, len(S), len(M), irreducible, M[zero][zero] > 0, abs(root - lam) < mpmath.mpf(10) ** -18, all(mpmath.mpf(rows[K][a]) <= lam**a for a in range(7)), mpmath.nstr(mpmath.mpf(rows[K][6]) / lam**6, 6)))
+
+QUARTIC = sp.Poly(x**4 - 7833 * x**3 + 7916949 * x**2 - 850684437 * x + 13054946580, x)
+LO, HI = sp.Rational(66641136625, 10**7), sp.Rational(66641136626, 10**7)
+print("lambda_10 certified by Sturm on the exact quartic: roots above %s %d, roots in the bracket %d, width %s" % (HI, QUARTIC.count_roots(HI, sp.oo), QUARTIC.count_roots(LO, HI), sp.nsimplify(HI - LO)))
+KAP10 = 10 - mpmath.log(mpmath.mpf(HI.p) / HI.q) / mpmath.log(3)
+
+def truncate(v, d):
+    q = int(mpmath.floor(v * mpmath.mpf(10) ** d))
+    return "%d.%0*d" % (q // 10**d, d, q % 10**d)
+
+print("certified kappa_10 >= %s, beta_0^(10) >= %s, both truncated down at 12 places" % (truncate(KAP10, 12), truncate(beta(KAP10), 12)))
+print("safe short edge, truncated down at 7 places: %s" % truncate(beta(KAP10), 7))
+
 print("ladder rungs: moments, kappa_2K, beta_0^(2K)")
 kappas = {}
 for K, lam in ((2, 15), (3, lam6), (4, lam8), (5, lam10)):
@@ -146,44 +185,58 @@ def half(p):
         a += 1
     return a
 
-def digits(p, K):
-    a = 0
-    while K * (3 ** (a + 1) - 1) < p:
-        a += 1
-    return a
+KAPS = {K: float(kappas[K]) for K in (3, 4, 5)}
+EDGE10 = KAPS[5] / (2 - KAPPA + 2 * KAPS[5])
+
+def master10(p, n):
+    a = half(p)
+    b = min(a - 1, n - 2 * a)
+    if n < 2 * a or b < 0:
+        return None
+    return p * p * 3.0 ** (-((8 + KAPPA) * a + KAPS[5] * b) / 10)
 
 def master(p, n):
-    a4 = half(p)
-    a6, a8 = digits(p, 3), digits(p, 4)
-    lam6f, lam8f = float(lam6) * (1 + 1e-12), float(lam8) * (1 + 1e-12)
-    bounds = []
+    a = half(p)
+    bounds = [float(p * p)]
     if 3 ** (n // 2) <= p:
         bounds.append(p * p * 3.0 ** (-(n // 2)))
-    c = min(a4, n // 2)
-    b = min(c, n - 2 * c)
-    bounds.append(p * p * 3.0 ** (-c / 2) * (5 / 27) ** ((c + b) / 4))
-    b6 = min(a6, max(0, n - 2 * c))
-    bounds.append(p * p * 3.0 ** (-(4 + KAPPA) * c / 6) * (lam6f / 729) ** (b6 / 6))
-    b8 = min(a8, max(0, n - 2 * c))
-    bounds.append(p * p * 3.0 ** (-(6 + KAPPA) * c / 8) * (lam8f / 6561) ** (b8 / 8))
-    if a6 > 0 and n >= 6 * a6:
-        bounds.append(p * p * (lam6f / 729) ** a6)
-    if a8 > 0 and n >= 8 * a8:
-        bounds.append(p * p * (lam8f / 6561) ** a8)
+    if n >= 4 * a:
+        bounds.append(p * p * 3.0 ** (-KAPPA * a))
+    if n >= 3 * a:
+        bounds.append(p * p * 3.0 ** (-(1 + KAPPA) * a / 2))
+    if n >= 2 * a:
+        b4 = min(a, n - 2 * a)
+        bounds.append(p * p * 3.0 ** (-a / 2 - KAPPA * (a + b4) / 4))
+        b = min(a - 1, n - 2 * a)
+        if b >= 0:
+            for K in (3, 4, 5):
+                bounds.append(p * p * 3.0 ** (-((2 * K - 2 + KAPPA) * a + KAPS[K] * b) / (2 * K)))
+                if n >= 2 * K * b:
+                    bounds.append(p * p * 3.0 ** (-KAPS[K] * b))
     return min(bounds)
 
-print("master bound against exact L_n(p), primes 5..199, n = 2..24")
+print("master bound against exact L_n(p), primes 5..199, n = 2..24, the min over all orders and the order-10 block alone")
+solo, solo_worst, solo_where, solo_cases = 0, 0.0, None, 0
 violations, worst, where = 0, 0.0, None
 for p in primes(5, 199):
     for n, F in enumerate(fourier(p, 24), start=1):
         if n < 2:
             continue
+        only = master10(p, n)
+        if only is not None:
+            solo_cases += 1
+            r10 = F.sum() / only
+            if r10 > 1 + 1e-9:
+                solo += 1
+            if r10 > solo_worst:
+                solo_worst, solo_where = r10, (p, n)
         ratio = F.sum() / master(p, n)
         if ratio > 1 + 1e-9:
             violations += 1
         if ratio > worst:
             worst, where = ratio, (p, n)
-print("violations %d, worst ratio L/bound %.4f at (p, n) = %s" % (violations, worst, where))
+print("min over all orders: violations %d, worst ratio L/bound %.4f at (p, n) = %s" % (violations, worst, where))
+print("order-10 block alone: %d cases, violations %d, worst ratio L/bound %.4f at (p, n) = %s" % (solo_cases, solo, solo_worst, solo_where))
 
 def regime(p, n):
     a = half(p)
@@ -202,8 +255,8 @@ def tail_bound(p, n):
 
 print("dyadic tail: exponents (kappa - 1)/8 = %.4f, (2 + kappa)/4 = %.4f" % ((KAPPA - 1) / 8, (2 + KAPPA) / 4))
 print("tail constants 16/(kappa - 1) = %.2f, 10 (1 + kappa)/(kappa - 1) 2^((1 - kappa)/2) = %.2f, 8/(2 + kappa) = %.2f" % (16 / (KAPPA - 1), 10 * (1 + KAPPA) / (KAPPA - 1) * 2 ** ((1 - KAPPA) / 2), 8 / (2 + KAPPA)))
-uncovered = [(p, n) for n in (8, 10, 12, 14, 16, 20, 24) for p in primes(5, 199) if p <= 3 ** (beta(KAPPA) * n) and regime(p, n) is None]
-print("regime trichotomy total below 3^(beta_0 n) for n in 8..24: uncovered %d" % len(uncovered))
+uncovered = [(p, n) for n in (8, 10, 12, 14, 16, 20, 24) for p in primes(5, 199) if p <= 3 ** (EDGE10 * n) and regime(p, n) is None]
+print("regime cover below the order-10 edge 3^(%.12f n) for n in 8..24: uncovered %d" % (EDGE10, len(uncovered)))
 fails, cases = 0, 0
 for n in (8, 10, 12):
     for p in primes(5, 199):
@@ -214,3 +267,46 @@ for n in (8, 10, 12):
         if R > tail_bound(p, n) * (1 + 1e-9):
             fails += 1
 print("per-prime tail bounds at n = 8, 10, 12: %d cases, %d failures" % (cases, fails))
+
+LAMBDA = {K: 2 - KAPPA + 2 * KAPS[K] for K in (3, 4, 5)}
+print("master-bound constants per order: Lambda_2K = 2 - kappa + 2 kappa_2K, edge kappa_2K/Lambda_2K, decay Lambda_2K/2K, geometric constant 2/(1 - 3^(-Lambda_2K/2K))")
+for K in (3, 4, 5):
+    print("2K = %2d Lambda %.9f edge %.12f decay %.9f constant %.4f" % (2 * K, LAMBDA[K], KAPS[K] / LAMBDA[K], LAMBDA[K] / (2 * K), 2 / (1 - 3.0 ** (-LAMBDA[K] / (2 * K)))))
+
+def gain10(a, n):
+    return (KAPS[5] * n - LAMBDA[5] * a) / 10
+
+def four_term(n, z, eta):
+    return 2 / z + 35 * z ** (1 - KAPPA) + 40 * 3.0 ** (-(KAPPA - 1) * n / 8) + 6 * 3.0 ** (-(LAMBDA[5] / 10) * eta * n)
+
+edge10 = EDGE10
+bad, ratio = 0, 0.0
+for eta in (0.001, 0.01, 0.05, 0.1):
+    for n in range(6, 401):
+        lo, hi = n // 3 + 1, int((edge10 - eta) * n)
+        if hi < lo:
+            continue
+        block = [gain10(a, n) for a in range(lo, hi + 1)]
+        total = sum(2 * 3.0 ** (-g) for g in block)
+        cap = 6 * 3.0 ** (-(LAMBDA[5] / 10) * eta * n)
+        if min(block) <= 0 or total > cap:
+            bad += 1
+        ratio = max(ratio, total / cap)
+print("order-10 main range, primes with 3a > n: gains positive and geometric cap holds at eta in 0.001..0.1, n = 6..400, failures %d, worst sum/cap %.4f" % (bad, ratio))
+
+def energy_sum(p, n):
+    t = np.arange(p)
+    e = np.exp(2j * np.pi * t / p)
+    W = np.abs(1 + e[:, None] + e[None, :]) / 3
+    F = np.ones((p, p))
+    for l in range(n):
+        I = (t * pow(3, l, p)) % p
+        F = F * W[np.ix_(I, I)]
+    return F.sum()
+
+print("four-term dyadic bound against the exact prime sum, eta = 0.02")
+for n in (6, 8, 10, 12):
+    for z in (5, 11):
+        top = 3.0 ** ((edge10 - 0.02) * n)
+        total = sum(energy_sum(p, n) / (p * p) for p in primes(z + 1, int(top)))
+        print("n = %2d z = %2d exact %.6f bound %.6f holds %s" % (n, z, total, four_term(n, z, 0.02), total <= four_term(n, z, 0.02)))
