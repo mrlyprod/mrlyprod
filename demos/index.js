@@ -22,6 +22,7 @@ $('t-cuts').innerHTML = m.diagonal_svg('126', 2, 5, 2, JSON.parse(m.diagonal_pro
 $('t-slices').innerHTML = m.hex_svg('23', 7, 1, 2, 'cut', 8);
 paint($('t-spectra'), m.two_grid('7', 2, 5, 0, 2), ink.pink);
 paint($('t-universe'), m.two_grid('9', 3, 3, 0, 2), ink.gold);
+blit($('t-words'), m.magic_pixels(['7', '14'], [3, 7], [2, 2]));
 paint($('t-life'), { width: 48, height: 48, types: m.life_noise(48, 48, 0.4, 3) }, ink.green);
 blit($('t-moire'), m.moire('weave', 11, 120, 'fire', 2, false));
 const carpet = m.two_grid('495', 3, 3, 0, 3);

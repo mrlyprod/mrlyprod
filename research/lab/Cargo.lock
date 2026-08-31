@@ -88,6 +88,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
 
 [[package]]
+name = "code-factorisation"
+version = "0.1.0"
+dependencies = [
+ "mrlycore",
+ "mrlymath",
+ "num-bigint",
+]
+
+[[package]]
 name = "crc32fast"
 version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -623,6 +632,14 @@ dependencies = [
  "scoped-tls",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "magic-words"
+version = "0.1.0"
+dependencies = [
+ "mrlycore",
+ "mrlymath",
 ]
 
 [[package]]

@@ -31,4 +31,5 @@
 - [ulam](ulam/) - The whole numbers wound on squares or hexagons with the primes lit, where every straight line reads a quadratic and the prime-rich ones stand out as diagonals.
 - [universe](universe/) - Rotations and reflections fold the corner bitmasks of a hypercube into orbits, so the distinct designs of dimensions 1 to 4 are a finite gallery you can grow one by one.
 - [volume](volume/) - The moire stack of a cube design as a solid field, shelled at a level set and cut on any plane, where the central diagonal cut is the hexagon.
+- [words](words/) - one design per level, and what changes when the letters swap places.
 - [zeta](zeta/) - Zeta walked at `s = 1/2 + it` passes through the origin once per zero, and the zeros added one at a time fold a smooth curve into the prime staircase.

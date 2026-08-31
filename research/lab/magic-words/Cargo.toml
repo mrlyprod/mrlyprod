@@ -1,0 +1,8 @@
+[package]
+name = "magic-words"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+mrlycore.workspace = true
+mrlymath.workspace = true

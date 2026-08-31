@@ -85,6 +85,24 @@ const heads = JSON.parse(m.census_walk(7692));
 const closedTier = JSON.parse(m.census_report());
 const writes16 = JSON.parse(m.census_writers(16, 0, 1));
 const outside = JSON.parse(m.census_writers(1001, 0, 1));
+const wordCodes = ['7', '14', '9'];
+const wordSides = [3, 7, 5];
+const wordBases = [2, 2, 2];
+const wordCensus = JSON.parse(m.magic_census(wordCodes, wordSides, 2, wordBases));
+const wordOnce = JSON.parse(m.magic_census(['7', '9'], [3, 5], 2, [2, 2]));
+const wordTwice = JSON.parse(m.magic_census(['7', '9', '7', '9'], [3, 5, 3, 5], 2, [2, 2, 2, 2]));
+const orderAhead = JSON.parse(m.magic_census(['3', '6'], [2, 2], 2, [2, 2]));
+const orderBehind = JSON.parse(m.magic_census(['6', '3'], [2, 2], 2, [2, 2]));
+const carpetLadder = JSON.parse(m.magic_census(['7', '7', '7', '7', '7'], [3, 5, 7, 9, 11], 2, [2, 2, 2, 2, 2]));
+const carpetLaw = carpetLadder.letters.every((letter: { number: number; fill: string }) => Number(letter.fill) === letter.number ** 2 - ((letter.number - 1) / 2) ** 2);
+const ladder = JSON.parse(m.magic_staircase(5));
+const morse = JSON.parse(m.magic_rates(['3', '7'], [2, 2], [2, 2], 'thue-morse', 64));
+const evenly = JSON.parse(m.magic_rates(['3', '7'], [2, 2], [2, 2], 'periodic', 64));
+const collideAhead = m.magic_grid(['9', '273'], [2, 3], [2, 3]);
+const collideBehind = m.magic_grid(['273', '9'], [3, 2], [3, 2]);
+const collideSame = collideAhead.width === collideBehind.width && collideAhead.types.every((byte: number, at: number) => byte === collideBehind.types[at]);
+const mengerWord = JSON.parse(m.magic_census(['23', '23', '23'], [3, 3, 3], 3, [2, 2, 2]));
+
 const checks: [string, unknown, unknown][] = [
   ['two_grid 7 side', grid.width, 27],
   ['two_grid 7 fills', grid.types.reduce((a, b) => a + b, 0), 512],
@@ -262,9 +280,60 @@ const checks: [string, unknown, unknown][] = [
   ['census_writers outside', `${outside.inside} ${outside.rows}`, 'false 0'],
   ['census_champions heads', JSON.parse(m.census_champions(2)).map((c: { value: number; rows: number }) => `${c.value} at ${c.rows}`).join(', '), '16 at 633, 12 at 579'],
   ['census_misses heads', JSON.parse(m.census_misses(3)).join(','), '83,86,107'],
+  ['magic side', wordCensus.side, '105'],
+  ['magic fill', wordCensus.fill, '3432'],
+  ['magic dim', wordCensus.dimension.toFixed(9), '1.749241044'],
+  ['magic pieces', `${wordCensus.components} ${wordCensus.counted}`, '2496 drawn'],
+  ['word count agrees', m.word_count(wordCodes, wordSides, 2, wordBases), wordCensus.fill],
+  ['word profile heights', m.word_profile(wordCodes, wordSides, 2, wordBases).length, 209],
+  ['word member 25', m.word_member(wordCodes, wordSides, 2, wordBases, '25'), true],
+  ['word members head', m.word_members(['3', '6'], [2, 2], 2, [2, 2]).join(','), '1,2,5,6'],
+  ['block reduction side', wordTwice.side, (BigInt(wordOnce.side) ** 2n).toString()],
+  ['block reduction fill', wordTwice.fill, (BigInt(wordOnce.fill) ** 2n).toString()],
+  ['block reduction dim', wordTwice.dimension === wordOnce.dimension, true],
+  ['block reduction flag', `${wordOnce.periodic} ${wordTwice.periodic}`, 'false true'],
+  ['order fill', `${orderAhead.fill} ${orderBehind.fill}`, '4 4'],
+  ['order components', `${orderAhead.components} ${orderBehind.components} ${orderAhead.counted}`, '4 2 closed'],
+  ['carpet fill law', carpetLaw, true],
+  ['staircase dim 1', ladder.rows[0].dimension.toFixed(9), '1.892789261'],
+  ['staircase dim 2', ladder.rows[1].dimension.toFixed(9), '1.892315261'],
+  ['staircase dips', ladder.rows[1].dimension < ladder.rows[0].dimension, true],
+  ['staircase constant', ladder.constant.toFixed(9), ladder.rows[0].dimension.toFixed(9)],
+  ['thue exponent limit', morse.limit.toFixed(15), '1.292481250360578'],
+  ['thue fill rate exact', morse.rows[63][1], morse.limit],
+  ['thue rate climbs', `${morse.rows[63][0] > morse.rows[31][0]} ${morse.rows[63][0] < morse.limit}`, 'true true'],
+  ['thue order blind', `${evenly.limit === morse.limit} ${morse.phi}`, 'true 0'],
+  ['thue alphabet', morse.alphabet, true],
+  ['magic cap 2d', m.magic_cap([3, 7, 5, 3], 2, 243), 3],
+  ['magic cap 3d', m.magic_cap([3, 3, 3, 3, 3], 3, 128), 4],
+  ['menger word cubes', `${mengerWord.fill} ${m.magic_cells(['23', '23', '23'], [3, 3, 3], [2, 2, 2]).length / 3}`, '8000 8000'],
+  ['menger word surface', m.magic_surface(['23', '23', '23'], [3, 3, 3], [2, 2, 2]), '18048'],
+  ['menger word constant', mengerWord.constant, true],
+  ['magic name', m.magic_name(wordCodes, wordSides), 'mrly_word_d2_c7n3_c14n7_c9n5'],
+  ['magic name round trip', JSON.parse(m.magic_parse(m.magic_name(wordCodes, wordSides))).codes.join(','), wordCodes.join(',')],
+  ['code collision same tile', collideSame, true],
+  ['code collision side', `${collideAhead.width} ${collideAhead.types.reduce((a: number, b: number) => a + b, 0)}`, '6 6'],
 ];
 
 if (Bun.argv.includes('--deep')) {
+  const fold = (a: { width: number; types: Uint8Array }, b: { width: number; types: Uint8Array }) => {
+    const width = a.width * b.width;
+    const types = new Uint8Array(width * width);
+    for (let r = 0; r < width; r += 1) {
+      for (let c = 0; c < width; c += 1) {
+        const outer = a.types[Math.floor(r / b.width) * a.width + Math.floor(c / b.width)];
+        types[r * width + c] = outer && b.types[(r % b.width) * b.width + (c % b.width)] ? 1 : 0;
+      }
+    }
+    return { width, types };
+  };
+  const kron = wordCodes
+    .map((code, at) => m.two_grid(code, wordSides[at], 1, 0, wordBases[at]))
+    .reduce((left, right) => fold(left, right));
+  const drawn = m.magic_grid(wordCodes, wordSides, wordBases);
+  checks.push(
+    ['magic kronecker fold', `${drawn.width} ${drawn.types.every((byte: number, at: number) => byte === kron.types[at])}`, `${kron.width} true`],
+  );
   console.log('walking the whole registry to the pinned 48-term window, minutes not seconds');
   for (;;) {
     const state = JSON.parse(m.census_walk(500));

@@ -20,6 +20,8 @@ pub mod lattice;
 pub mod ledger;
 /// The life grids stepped, run and driven by sequences.
 pub mod life;
+/// The magic words: the folded design, its census, its press readings and its prefix rates.
+pub mod magic;
 /// The primes: the sieve stepped, the stone pile, the count chart and the carpet witness.
 pub mod prime;
 /// The race: seeded walkers loose on a flat design.

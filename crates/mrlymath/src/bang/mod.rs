@@ -8,6 +8,8 @@ pub mod counting;
 pub mod factory;
 /// The corners, codes and symmetries that name designs.
 pub mod universe;
+/// The magic words: their products, their component counts and the schedules that spell them.
+pub mod word;
 
 pub use catalog::{sources, universe_codes};
 pub use factory::{code_to_corners, corners_to_code, levels_code, magic, magic_named, MagicLayer};

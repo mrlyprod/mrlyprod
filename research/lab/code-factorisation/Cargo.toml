@@ -1,0 +1,9 @@
+[package]
+name = "code-factorisation"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+mrlycore.workspace = true
+mrlymath.workspace = true
+num-bigint.workspace = true

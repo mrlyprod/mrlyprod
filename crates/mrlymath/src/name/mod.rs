@@ -8,6 +8,8 @@ pub mod bang;
 pub mod rule;
 /// The tile name: a full tile recipe folded to its one canonical spelling.
 pub mod tile;
+/// The word name: an ordered list of plane letters at base two.
+pub mod word;
 
 /// One canonical string per mathematical thing.
 pub trait Named: Sized {
@@ -20,3 +22,4 @@ pub trait Named: Sized {
 pub use bang::Bang;
 pub use rule::Rule;
 pub use tile::classic_code;
+pub use word::Word;

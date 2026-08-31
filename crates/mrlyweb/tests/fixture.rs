@@ -7,6 +7,7 @@ use mrlyweb::lab::*;
 use mrlyweb::lattice::*;
 use mrlyweb::ledger::*;
 use mrlyweb::life::*;
+use mrlyweb::magic::*;
 use mrlyweb::prime::*;
 use mrlyweb::race::Race;
 use mrlyweb::six::*;
@@ -971,4 +972,139 @@ fn the_census_exports_answer() {
     );
     let misses = parse(&census_misses(3)).unwrap();
     assert_eq!(misses, parse("[83, 86, 107]").unwrap());
+}
+
+fn word(codes: &[&str], numbers: &[u32], bases: &[u32]) -> (Vec<String>, Vec<u32>, Vec<u32>) {
+    (
+        codes.iter().map(|c| c.to_string()).collect(),
+        numbers.to_vec(),
+        bases.to_vec(),
+    )
+}
+
+fn census(codes: &[&str], numbers: &[u32], dimension: usize, bases: &[u32]) -> mrlycore::Json {
+    let (codes, numbers, bases) = word(codes, numbers, bases);
+    parse(&magic_census(codes, numbers, dimension, bases).unwrap()).unwrap()
+}
+
+#[test]
+fn the_word_fixture_the_page_prints() {
+    let doctest = census(&["7", "14", "9"], &[3, 7, 5], 2, &[2, 2, 2]);
+    assert_eq!(doctest["side"], "105");
+    assert_eq!(doctest["cells"], "11025");
+    assert_eq!(doctest["fill"], "3432");
+    assert_eq!(
+        format!("{:.9}", doctest["dimension"].as_f64().unwrap()),
+        "1.749241044"
+    );
+    assert_eq!(doctest["components"], "2496");
+    assert_eq!(doctest["counted"], "drawn");
+    let (codes, numbers, bases) = word(&["7", "14", "9"], &[3, 7, 5], &[2, 2, 2]);
+    assert_eq!(
+        word_count(codes.clone(), numbers.clone(), 2, bases.clone()).unwrap(),
+        doctest["fill"].as_str().unwrap()
+    );
+    assert_eq!(
+        word_profile(codes.clone(), numbers.clone(), 2, bases.clone())
+            .unwrap()
+            .len(),
+        209
+    );
+    assert_eq!(
+        magic_name(codes, numbers).unwrap(),
+        "mrly_word_d2_c7n3_c14n7_c9n5"
+    );
+    let back = parse(&magic_parse("mrly_word_d2_c7n3_c14n7_c9n5").unwrap()).unwrap();
+    assert_eq!(back["codes"][1], "14");
+    assert_eq!(back["numbers"][2], 5);
+
+    let one = census(&["7", "9"], &[3, 5], 2, &[2, 2]);
+    let twice = census(&["7", "9", "7", "9"], &[3, 5, 3, 5], 2, &[2, 2, 2, 2]);
+    let square = |text: &str| text.parse::<u128>().unwrap().pow(2).to_string();
+    assert_eq!(twice["side"], square(one["side"].as_str().unwrap()));
+    assert_eq!(twice["fill"], square(one["fill"].as_str().unwrap()));
+    assert_eq!(twice["dimension"], one["dimension"]);
+    assert_eq!(
+        (twice["periodic"].clone(), one["periodic"].clone()),
+        (true.into(), false.into())
+    );
+
+    let ahead = census(&["3", "6"], &[2, 2], 2, &[2, 2]);
+    let behind = census(&["6", "3"], &[2, 2], 2, &[2, 2]);
+    assert_eq!(ahead["fill"], behind["fill"]);
+    assert_eq!(ahead["side"], behind["side"]);
+    assert_eq!(
+        (ahead["components"].clone(), behind["components"].clone()),
+        ("4".into(), "2".into())
+    );
+    assert_eq!(ahead["counted"], "closed");
+
+    let ladder = census(
+        &["7", "7", "7", "7", "7"],
+        &[3, 5, 7, 9, 11],
+        2,
+        &[2, 2, 2, 2, 2],
+    );
+    for letter in ladder["letters"].as_array().unwrap() {
+        let side = letter["number"].as_u64().unwrap();
+        let law = side * side - ((side - 1) / 2).pow(2);
+        assert_eq!(letter["fill"], law.to_string(), "side {side}");
+    }
+    let stair = parse(&magic_staircase(5).unwrap()).unwrap();
+    let read = |row: usize| format!("{:.9}", stair["rows"][row]["dimension"].as_f64().unwrap());
+    assert_eq!(read(0), "1.892789261");
+    assert_eq!(read(1), "1.892315261");
+    assert_eq!(stair["rows"][2]["length"], 6);
+    assert!(stair["rows"][1]["dimension"].as_f64() < stair["rows"][0]["dimension"].as_f64());
+    assert_eq!(
+        format!("{:.9}", stair["constant"].as_f64().unwrap()),
+        read(0)
+    );
+
+    assert_eq!(magic_cap(vec![3, 7, 5, 3], 2, 243).unwrap(), 3);
+    assert_eq!(magic_cap(vec![3, 3, 3, 3, 3], 3, 128).unwrap(), 4);
+    let menger = census(&["23", "23", "23"], &[3, 3, 3], 3, &[2, 2, 2]);
+    assert_eq!(menger["fill"], "8000");
+    assert_eq!(menger["constant"], true);
+    let (codes, numbers, bases) = word(&["23", "23", "23"], &[3, 3, 3], &[2, 2, 2]);
+    assert_eq!(
+        magic_cells(codes.clone(), numbers.clone(), bases.clone())
+            .unwrap()
+            .len()
+            / 3,
+        8000
+    );
+    assert_eq!(magic_surface(codes, numbers, bases).unwrap(), "18048");
+
+    let rates = parse(
+        &magic_rates(
+            vec!["3".into(), "7".into()],
+            vec![2, 2],
+            vec![2, 2],
+            "thue-morse",
+            64,
+        )
+        .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(
+        format!("{:.15}", rates["limit"].as_f64().unwrap()),
+        "1.292481250360578"
+    );
+    assert_eq!(rates["phi"], 0.0);
+    assert_eq!(rates["length"], 64);
+    let last = rates["rows"][63][0].as_f64().unwrap();
+    assert_eq!(
+        rates["rows"][63][1].as_f64().unwrap(),
+        rates["limit"].as_f64().unwrap()
+    );
+    assert!(last < rates["limit"].as_f64().unwrap());
+    assert!(last > rates["rows"][31][0].as_f64().unwrap());
+    assert!(rates["control"][63].as_f64().unwrap() > 0.0);
+
+    let ahead = magic_grid(vec!["9".into(), "273".into()], vec![2, 3], vec![2, 3]).unwrap();
+    let behind = magic_grid(vec!["273".into(), "9".into()], vec![3, 2], vec![3, 2]).unwrap();
+    assert_eq!((ahead.width, behind.width), (6, 6));
+    assert_eq!(ahead.types, behind.types);
+    assert_eq!(ahead.types.iter().map(|&b| b as usize).sum::<usize>(), 6);
 }
