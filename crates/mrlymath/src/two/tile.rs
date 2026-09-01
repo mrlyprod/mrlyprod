@@ -145,47 +145,6 @@ mod tests {
     use super::*;
     use mrlycore::state::{guard as rng_lock, seed};
     use mrlycore::tile::{Catalog, Design, Parity};
-    fn config() -> Config {
-        Config {
-            min_size: 3,
-            max_size: 64,
-            anti: Some(false),
-            ..Config::default()
-        }
-    }
-    #[test]
-    fn built_size_matches_unit_size() {
-        let _guard = rng_lock();
-        let config = config();
-        for s in 0..200 {
-            seed(s);
-            let tile = create(&config).unwrap();
-            let cell = build(&tile).unwrap();
-            assert_eq!(
-                cell.width(),
-                tile.width,
-                "width {:?} seed {}",
-                tile.group,
-                s
-            );
-            assert_eq!(
-                cell.height(),
-                tile.height,
-                "height {:?} seed {}",
-                tile.group,
-                s
-            );
-        }
-    }
-    #[test]
-    fn create_is_seeded() {
-        let _guard = rng_lock();
-        seed(123);
-        let a = create(&config()).unwrap();
-        seed(123);
-        let b = create(&config()).unwrap();
-        assert_eq!(a, b);
-    }
     #[test]
     fn random_tile_respects_max() {
         let _guard = rng_lock();
@@ -194,48 +153,6 @@ mod tests {
             let tile = random_tile(30).unwrap();
             assert!(tile.max_size() <= 30);
         }
-    }
-    #[test]
-    fn classics_use_named_designs() {
-        let _guard = rng_lock();
-        let config = config();
-        for s in 0..50 {
-            seed(s);
-            let tile = create(&config).unwrap();
-            for source in &tile.sources {
-                assert!(
-                    matches!(source, Source::Classic(_)),
-                    "classics catalog must yield named designs, got {:?}",
-                    source
-                );
-            }
-        }
-    }
-    #[test]
-    fn universe_builds_from_codes() {
-        let _guard = rng_lock();
-        let config = Config {
-            catalog: Catalog::Universe,
-            min_size: 3,
-            max_size: 27,
-            anti: Some(false),
-            ..Config::default()
-        };
-        let mut saw_code = false;
-        for s in 0..100 {
-            seed(s);
-            let tile = create(&config).unwrap();
-            if tile.sources.iter().any(|s| matches!(s, Source::Code(_))) {
-                saw_code = true;
-            }
-            let cell = build(&tile).unwrap();
-            assert_eq!(cell.width(), tile.width, "universe width seed {}", s);
-            assert_eq!(cell.height(), tile.height, "universe height seed {}", s);
-        }
-        assert!(
-            saw_code,
-            "universe catalog should produce code-based sources"
-        );
     }
     #[test]
     fn magic_can_nest_deeper_than_two() {

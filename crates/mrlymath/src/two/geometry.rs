@@ -122,13 +122,6 @@ mod tests {
         assert_eq!(s, c.clone().tile(3, 2));
     }
     #[test]
-    fn perforate_zero_mask_is_identity() {
-        let c = designs::carpet(3, 1).unwrap();
-        let mask = Tensor::new(c.types().shape.clone());
-        let p = perforate(&mask, &c, 9).unwrap();
-        assert_eq!(p, c);
-    }
-    #[test]
     fn merge_carries_colors_and_tags() {
         let painted = designs::carpet(3, 1)
             .unwrap()

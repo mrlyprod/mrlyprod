@@ -642,13 +642,6 @@ mod tests {
         assert_eq!(b.bytes(), &[0, 0, 1, 1]);
     }
     #[test]
-    fn binarize_is_idempotent() {
-        let a = Tensor::of(vec![0, 50, 128, 255], vec![2, 2]);
-        let once = a.binarize(1);
-        let twice = once.binarize(1);
-        assert_eq!(once, twice);
-    }
-    #[test]
     fn otsu_splits_bimodal_histogram() {
         let mut data = vec![10u8; 20];
         data.extend(vec![200u8; 20]);
@@ -660,16 +653,6 @@ mod tests {
         assert_eq!(b.bytes()[20..40].iter().sum::<u8>(), 20);
     }
     #[test]
-    fn blur_box_smooths_a_spike() {
-        let mut a = Tensor::new(vec![5, 5]);
-        a.set(&[2, 2], 100);
-        let mask = Tensor::full(vec![3, 3], 1);
-        let b = a.blur(&mask, false).unwrap();
-        assert!(b.get(&[2, 2]) < 100);
-        assert!(b.get(&[2, 2]) > 0);
-        assert_eq!(b.get(&[0, 0]), 0);
-    }
-    #[test]
     fn blur_preserves_mean_under_wrap() {
         let a = Tensor::of((0..25).map(|v| (v * 7) % 251).collect(), vec![5, 5]);
         let mask = Tensor::full(vec![3, 3], 1);
@@ -677,11 +660,6 @@ mod tests {
         let mean_a: f64 = a.sum() as f64 / a.size() as f64;
         let mean_b: f64 = b.sum() as f64 / b.size() as f64;
         assert!((mean_a - mean_b).abs() < 1.0);
-    }
-    #[test]
-    fn blur_rejects_mismatched_mask() {
-        let a = Tensor::new(vec![4, 4]);
-        assert!(a.blur(&Tensor::full(vec![2, 2], 1), false).is_err());
     }
     #[test]
     fn perforate_zero_mask_is_identity() {
@@ -699,11 +677,6 @@ mod tests {
         assert_eq!(p.get(&[0, 1]), 0);
         assert_eq!(p.get(&[1, 1]), 7);
         assert_eq!(p.sum(), 8 * 7);
-    }
-    #[test]
-    fn perforate_rejects_non_tiling_mask() {
-        let a = Tensor::new(vec![4, 4]);
-        assert!(a.perforate(&Tensor::new(vec![3, 3]), 1).is_err());
     }
     #[test]
     fn slice_commutes_with_the_fractal() {

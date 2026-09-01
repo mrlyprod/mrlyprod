@@ -76,3 +76,27 @@ fn the_pinned_window_matches_the_research_page() {
         .collect();
     assert_eq!(by_tier, [666, 1529, 530, 133]);
 }
+
+#[test]
+fn the_pinned_prefix_matches_the_research_page() {
+    loop {
+        let walk = parse(&census_walk(500)).unwrap();
+        if walk["done"] == walk["total"] {
+            assert_eq!(walk["depth"], 8);
+            assert_eq!(walk["total"], 18066);
+            break;
+        }
+    }
+    let report = parse(&census_report()).unwrap();
+    assert_eq!(report["depth"], 8);
+    assert_eq!(report["rows"], 18066);
+    assert_eq!(report["first_miss"], 269);
+    assert_eq!(report["written"], 783);
+    let ladder: Vec<u64> = report["depths"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|depth| depth["written"].as_u64().unwrap())
+        .collect();
+    assert_eq!(ladder, [783]);
+}

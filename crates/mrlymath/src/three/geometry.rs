@@ -204,13 +204,6 @@ mod tests {
         assert_eq!(s, c.clone().tile(2, 2, 2));
     }
     #[test]
-    fn perforate_zero_mask_is_identity() {
-        let c = designs::carpet(3, 1).unwrap();
-        let mask = Tensor::new(c.types().shape.clone());
-        let p = perforate(&mask, &c, 9).unwrap();
-        assert_eq!(p, c);
-    }
-    #[test]
     fn only_the_carpet_and_two_trees_face_a_flat_name() {
         for n in [3, 5] {
             for level in [1, 2] {

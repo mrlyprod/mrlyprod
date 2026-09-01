@@ -5,7 +5,7 @@ Every named reference, sequence id, theorem and attribution on this tree's root 
 - A row is carried here only when it resolves to a URL, a DOI or an OEIS id. Nothing softer is listed.
 - Every OEIS id below is checked on both its name and its first terms. None is misattributed.
 - One id needs its provenance said out loud. A299916 is defined arithmetically and its Menger geometry lives only in a contributor comment by Albert Safstrom; Wikipedia sources the same claim to that comment and to a newspaper piece, so no peer-reviewed source states it. The geometry is nonetheless true - it is reproved cold from the Menger digit rule, see [README](README.md) - but it is cited as a comment, never as the sequence's definition.
-- A handful of rows have no consumer left on any page of this tree, among them A000351, A000420, A003463 and A125833. They are kept as resolved reference.
+- A000351 and A000420 are the level fills of the void and of corner-and-centre; A003463 and A125833 are Verified rows of the ledger. Every row here is consumed on a page of this tree.
 
 ## OEIS SEQUENCES
 

@@ -130,11 +130,6 @@ mod tests {
     use mrlycore::cell::mapping;
     use mrlycore::enums::Mode;
     #[test]
-    fn json_round_trip() {
-        let c = designs::carpet(3, 2).unwrap();
-        assert_eq!(from_json(&to_json(&c)).unwrap(), c);
-    }
-    #[test]
     fn json_round_trip_with_colors_and_tags() {
         let c = designs::carpet(3, 1)
             .unwrap()

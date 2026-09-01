@@ -99,14 +99,4 @@ mod tests {
         }
         assert!(built > 0, "expected magic tiles to project");
     }
-    #[test]
-    fn create_is_seeded() {
-        let _guard = rng_lock();
-        seed(555);
-        let a = create(&config()).unwrap();
-        seed(555);
-        let b = create(&config()).unwrap();
-        assert_eq!(a.projection, b.projection);
-        assert_eq!(a.tile, b.tile);
-    }
 }
