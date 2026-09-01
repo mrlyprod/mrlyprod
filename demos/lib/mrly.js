@@ -16,23 +16,9 @@ export const ink = {
 
 export const role = [ink.dim, ink.gold, ink.blue, ink.pink];
 
-export const $ = (id) => document.getElementById(id);
-
 export function rgb(hex) {
   const n = parseInt(hex.slice(1), 16);
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-}
-
-export function say(id, error) {
-  $(id).textContent = error ? String(error.message ?? error) : '';
-}
-
-export function bind(ids, fn) {
-  for (const id of ids) $(id).oninput = fn;
-}
-
-export function out(id, value) {
-  $(`${id}-out`).textContent = value;
 }
 
 // FLAT
@@ -51,6 +37,23 @@ export function paint(canvas, grid, on = ink.fg, off = ink.deep) {
   for (let i = 0; i < w * h; i++) {
     const c = grid.types[i] ? a : b;
     rgba.set(c, i * 4);
+    rgba[i * 4 + 3] = 255;
+  }
+  canvas.width = w;
+  canvas.height = h;
+  canvas.getContext('2d').putImageData(new ImageData(rgba, w, h), 0, 0);
+}
+
+// SIGNED
+
+export const plusminus = { plus: ink.orange, minus: ink.blue, empty: ink.deep };
+
+export function signs(canvas, grid, hues = plusminus) {
+  const [w, h] = [grid.width, grid.height];
+  const ramp = [rgb(hues.plus ?? plusminus.plus), rgb(hues.minus ?? plusminus.minus), rgb(hues.empty ?? plusminus.empty)];
+  const rgba = new Uint8ClampedArray(w * h * 4);
+  for (let i = 0; i < w * h; i++) {
+    rgba.set(ramp[grid.types[i]] ?? ramp[2], i * 4);
     rgba[i * 4 + 3] = 255;
   }
   canvas.width = w;

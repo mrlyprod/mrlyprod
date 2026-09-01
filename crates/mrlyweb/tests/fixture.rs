@@ -8,6 +8,7 @@ use mrlyweb::lattice::*;
 use mrlyweb::ledger::*;
 use mrlyweb::life::*;
 use mrlyweb::magic::*;
+use mrlyweb::morse::*;
 use mrlyweb::prime::*;
 use mrlyweb::race::Race;
 use mrlyweb::six::*;
@@ -1107,4 +1108,104 @@ fn the_word_fixture_the_page_prints() {
     assert_eq!((ahead.width, behind.width), (6, 6));
     assert_eq!(ahead.types, behind.types);
     assert_eq!(ahead.types.iter().map(|&b| b as usize).sum::<usize>(), 6);
+}
+
+fn lift(kind: &str, level: usize) -> Vec<u8> {
+    morse_lift(kind, level).unwrap().types
+}
+
+#[test]
+fn the_morse_fixture_the_page_prints() {
+    let read = parse(&morse_word(64).unwrap()).unwrap();
+    assert_eq!(read["agree"], true);
+    assert_eq!(read["ones"], 32);
+    assert_eq!(read["longest"], 2);
+    assert_eq!(read["cube_free"], true);
+    assert_eq!(read["singles"], 22);
+    assert_eq!(read["doubles"], 21);
+    assert_eq!(read["doubling_agree"], true);
+    assert_eq!(read["digits"].as_array().unwrap().len(), 64);
+    assert_eq!(read["boundary"].as_array().unwrap().len(), 63);
+    assert_eq!(read["boundary"][0], 1);
+    assert_eq!(morse_stage(3).unwrap(), vec![0, 1, 1, 0, 1, 0, 0, 1]);
+    assert_eq!(morse_stage(6).unwrap().len(), 64);
+
+    let gallery = parse(&morse_gallery(6).unwrap()).unwrap();
+    let row = |at: usize| gallery[at].clone();
+    assert_eq!(row(0)["formula"], "t(i) xor t(j)");
+    assert_eq!(row(0)["folds"], true);
+    assert_eq!(row(0)["tile"], parse("[0,1,1,0]").unwrap());
+    assert_eq!(row(0)["design"], "9");
+    assert_eq!(row(1)["formula"], "t(i and j)");
+    assert_eq!(row(1)["folds"], true);
+    assert_eq!(row(1)["tile"], parse("[0,0,0,1]").unwrap());
+    assert_eq!(row(1)["design"], "7");
+    assert_eq!(row(2)["formula"], "t(i xor j)");
+    assert_eq!(row(2)["folds"], true);
+    assert_eq!(row(2)["twin"], "parity");
+    assert_eq!(row(3)["formula"], "t(i + j)");
+    assert_eq!(row(3)["folds"], false);
+    assert_eq!(row(3)["faults"], 1376);
+    assert_eq!(row(3)["first"], parse("[1,3]").unwrap());
+    assert_eq!(row(3)["design"], mrlycore::Json::Null);
+
+    for level in 1..10 {
+        let rows = parse(&morse_gallery(level).unwrap()).unwrap();
+        assert_eq!(rows[2]["twin"], "parity", "level {level}");
+        assert_eq!(rows[3]["folds"], level == 1, "level {level}");
+    }
+
+    let side = morse_lift("parity", 6).unwrap();
+    assert_eq!((side.width, side.height), (64, 64));
+    assert_eq!(lift("xor", 6), lift("parity", 6));
+    assert_eq!(morse_signs("9", 2, 2, 6).unwrap().types, lift("parity", 6));
+    assert_eq!(morse_signs("7", 2, 2, 6).unwrap().types, lift("and", 6));
+    assert_eq!(
+        lift("parity", 6).iter().map(|&b| b as usize).sum::<usize>(),
+        2048
+    );
+
+    let sign = parse(&morse_filter("9", 2, 2, 3, "sign").unwrap()).unwrap();
+    assert_eq!(sign["morse_tile"], true);
+    assert_eq!(sign["form"], "the base tile repeated");
+    assert_eq!(sign["closed_exact"], true);
+    assert_eq!(sign["morse_exact"], false);
+    assert_eq!(sign["side"], 16);
+    assert_eq!(sign["morse_faults"], 128);
+    assert_eq!(sign["lit"], 128);
+    for code in 0..16u32 {
+        for level in 1..5 {
+            let read =
+                parse(&morse_filter(&code.to_string(), 2, 2, level, "sign").unwrap()).unwrap();
+            let side = read["side"].as_u64().unwrap();
+            assert_eq!(read["closed_exact"], true, "code {code} level {level}");
+            assert_eq!(
+                read["morse_faults"],
+                side * side / 2,
+                "code {code} level {level}"
+            );
+        }
+    }
+
+    let flat = parse(&morse_filter("7", 2, 2, 3, "design").unwrap()).unwrap();
+    assert_eq!(
+        flat["form"],
+        "the level below, punched by the tile's complement"
+    );
+    assert_eq!(flat["closed_exact"], true);
+    assert_eq!(flat["morse_exact"], false);
+    assert_eq!(
+        (flat["side"].clone(), flat["lit"].clone()),
+        (16.into(), 27.into())
+    );
+    assert_eq!(flat["morse_faults"], 127);
+    let wide = parse(&morse_filter("495", 3, 3, 2, "design").unwrap()).unwrap();
+    assert_eq!(wide["closed_exact"], true);
+    assert_eq!(wide["morse_faults"], mrlycore::Json::Null);
+    assert_eq!(wide["side"], 27);
+
+    assert!(morse_word(0).is_err());
+    assert!(morse_lift("cube", 4).is_err());
+    assert!(morse_lift("parity", 10).is_err());
+    assert!(morse_filter("7", 2, 2, 3, "product").is_err());
 }

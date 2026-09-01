@@ -7,60 +7,7 @@
 <link rel="stylesheet" href="../lib/mrly.css">
 </head>
 <body>
-<header>
-  <nav><a href="../">demos</a> / spectra</nav>
-  <h1>A third of the triangle's spectrum sits on a single number</h1>
-  <p class="sub">Build the graph on the filled cells of a design, take its normalised Laplacian <code>I - D^-1/2 A D^-1/2</code>, and diagonalise. On the Sierpinski triangle the spectrum is extraordinarily degenerate: the eigenvalue 1 alone carries a third of it, and a cascade of families sits beneath, the first at <code>1 -/+ sqrt(30)/6</code>. The same operator on the diagonal section of a cube answers a different question - the low end of its integrated density of states has a slope, and twice that slope is the random-walk spectral dimension <code>d_s</code>. One staircase, two readings: the jumps are the degeneracy, the low corner is the dimension.</p>
-</header>
-<main>
-  <div class="row">
-    <label>object <select id="object">
-      <option value="triangle">Sierpinski triangle</option>
-      <option value="code">flat code</option>
-      <option value="carpet">carpet slice</option>
-      <option value="solid">solid slice</option>
-    </select></label>
-    <span class="set" id="picker"></span>
-    <label>tile <select id="number">
-      <option value="2">2</option>
-      <option value="3" selected>3</option>
-    </select></label>
-    <label>side <input type="range" id="side" min="2" max="7" value="5"><span class="num" id="side-out"></span></label>
-    <label>level <input type="range" id="level" min="1" max="6" value="4"><span class="num" id="level-out"></span></label>
-    <label>operator <select id="operator">
-      <option value="1">normalised</option>
-      <option value="0">combinatorial</option>
-    </select></label>
-    <label>window <input type="range" id="window" min="1" max="20" value="10"><span class="num" id="window-out"></span></label>
-  </div>
-  <div class="arena">
-    <div class="panel">
-      <h2>Integrated density of states <span id="axes"></span></h2>
-      <canvas class="bars" id="idos"></canvas>
-      <div class="stats" id="legend"></div>
-    </div>
-    <div class="panel">
-      <h2>The object <span id="what"></span></h2>
-      <canvas class="sheet" id="art"></canvas>
-      <div id="hex"></div>
-      <h2>The eight largest clusters</h2>
-      <pre id="top"></pre>
-    </div>
-  </div>
-  <div class="stats">
-    <span>nodes <b id="nodes"></b></span>
-    <span>edges <b id="edges"></b></span>
-    <span>pieces <b id="components"></b></span>
-    <span>distinct <b id="distinct"></b></span>
-    <span>degenerate classes <b id="classes"></b></span>
-    <span>repeated fraction <b id="repeated"></b></span>
-    <span>mult of 1 <b id="one"></b></span>
-    <span>mult of the pair <b id="pair"></b></span>
-    <span>d_s <b id="exponent"></b></span>
-  </div>
-  <div class="note" id="note"></div>
-  <p class="foot">The graph, the Laplacian, the eigenvalues, the clustering and the fit all come out of the crates: a dense real symmetric eigensolver written from scratch - Householder tridiagonalisation then implicit QL with Wilkinson shifts - returns the spectrum ascending, the clusters split it at consecutive gaps above <code>1e-9</code>, and the low-window least squares in log-log returns an intercept and a slope the page only draws. The slice reading is taken on the giant piece; the whole section's piece count is reported beside it. Anything past the export's node cap is refused rather than served slowly.</p>
-</main>
-<script type="module" src="./index.js"></script>
+<div id="root"></div>
+<script type="module" src="./index.jsx"></script>
 </body>
 </html>

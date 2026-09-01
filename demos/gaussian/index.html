@@ -7,48 +7,7 @@
 <link rel="stylesheet" href="../lib/mrly.css">
 </head>
 <body>
-<header>
-  <nav><a href="../">demos</a> / gaussian</nav>
-  <h1>Primes in the plane</h1>
-  <p class="sub">Give the whole numbers a square root of minus one and the points a + bi have primes of their own; paint them and a four-armed snowflake appears. On the hexagonal numbers a + bω it grows six arms. The colour says what became of an ordinary prime when it entered the plane: split into a point and its mirror image, stayed prime on an axis, or ramified into a square. Click a point for its norm, its class and its unit rotations.</p>
-</header>
-<main>
-  <div class="row">
-    <label>ring <select id="ring"><option value="gaussian">gaussian, a + bi</option><option value="eisenstein">eisenstein, a + bω</option></select></label>
-    <label>radius <input type="range" id="radius" min="5" max="200" value="40"><span class="num" id="radius-out">40</span></label>
-    <label>colour <select id="colour"><option value="class">by class</option><option value="norm">by norm</option><option value="plain">plain</option></select></label>
-    <label><input type="checkbox" id="units" checked> units of a click</label>
-    <label><input type="checkbox" id="composites" checked> faint composites</label>
-    <button id="random">Randomize</button>
-  </div>
-  <div class="arena">
-    <div class="panel">
-      <h2>The window <span id="sheet-note"></span></h2>
-      <canvas class="sheet" id="sheet"></canvas>
-    </div>
-    <div class="panel">
-      <h2>The ring weights <span id="bars-note"></span></h2>
-      <canvas class="bars" id="bars"></canvas>
-      <div class="stats">
-        <span>points <b id="points"></b></span>
-        <span>primes <b id="primes"></b></span>
-        <span>split <b id="split"></b></span>
-        <span>inert <b id="inert"></b></span>
-        <span>ramified <b id="ramified"></b></span>
-        <span>density <b id="density"></b></span>
-        <span>symmetry <b id="symmetry"></b></span>
-      </div>
-      <div class="stats">
-        <span>clicked <b id="point"></b></span>
-        <span>norm <b id="norm"></b></span>
-        <span>class <b id="class"></b></span>
-        <span>verdict <b id="verdict"></b></span>
-      </div>
-    </div>
-  </div>
-  <div class="note" id="note"></div>
-  <p class="foot">The norm of <code>a + bi</code> is <code>a² + b²</code>, the norm of <code>a + bω</code> is <code>a² - ab + b²</code>, and a norm multiplies like a length squared. A point is prime when its norm is an ordinary prime, or when it is a unit times an ordinary prime that stays prime in the plane: <code>3 mod 4</code> on the square lattice, <code>2 mod 3</code> on the hexagonal one. An ordinary prime that is a norm has split into a point and its conjugate, except the one prime that ramifies, 2 or 3, whose point is a unit times a square. The units, 4 or 6 of them, turn every prime into its associates, and with the mirror give the picture its symmetry. The bars count the points of each norm: on the square lattice <code>r(n) = 4 (d₁ - d₃)</code>, silent exactly where an inert prime divides <code>n</code> to an odd power, summing to <code>4 ζ(s) L(s, χ₋₄)</code>; on the hexagonal lattice the weights sum to <code>6 ζ(s) L(s, χ₋₃)</code>. These are the zeta functions of the two rings, whose values at 2 are the coprime densities of the two lattices and whose weights ring the profiles of the <a href="../spin">spin</a> page. Every point is classified and painted in Rust, the norms sieved once per window.</p>
-</main>
-<script type="module" src="./index.js"></script>
+<div id="root"></div>
+<script type="module" src="./index.jsx"></script>
 </body>
 </html>

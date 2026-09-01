@@ -1,11 +1,14 @@
 # demos
 
 - The eyes of MrlyMath: browser pages that draw what the crates compute through `mrlyweb` and wasm.
-- Rust is the only math; the pages only draw. Three.js is the one JavaScript dependency.
-- `bun install` fetches it; `bun run wasm` builds `pkg/` from `crates/mrlyweb` with wasm-pack.
-- One page is one folder: `<name>/index.html` and `<name>/index.js`; the gallery is `index.html` at the root.
-- `lib/` holds the shared code: `mrly.js`, `stage.js`, `chart.js`, `query.js`, `ramp.js`, `select.js`, `mrly.css`.
-- `select.js` is the one picker: design list, code, base and Randomize; `?seed=7` replays the seventh tap, and a typed code drops the seed.
+- Rust is the only math; the pages only draw. React renders the pages, Three.js draws the 3D; no other dependency.
+- `bun install` fetches them; `bun run wasm` builds `pkg/` from `crates/mrlyweb` with wasm-pack.
+- One page is one folder: a thin `<name>/index.html` shell plus `<name>/index.jsx`; the gallery is the root `index.html` + `index.jsx`.
+- `lib/` holds the shared code: `mrly.js`, `app.jsx`, `draw.jsx`, `select.jsx`, `stage.jsx` + `stage.js`, `chart.js`, `query.js`, `mrly.css`.
+- `app.jsx` is the chrome: `mount`, `Page`, `Row` and the controls; `draw.jsx` wraps every canvas: `Grid`, `Signs`, `Pixels`, `Sketch`, `Markup`.
+- `Signs` is the plus-minus primitive: a warm hue for plus one, a cool hue for minus one, and the dark ground for empty.
+- `select.jsx` is the one picker: design list, code, base and Randomize; `?seed=7` replays the seventh tap, and a typed code drops the seed.
+- `useQuery` in `query.js` keeps page state in the URL, so every view is a link.
 - `bun run dev` serves every page at `localhost:3000` as `/<name>`; `bun run build` writes the static site to `dist/`.
 - `bun run check` prints the fixture numbers the crate's host test asserts; both must agree.
 - `pkg/`, `dist/` and `node_modules/` are build output and stay out of git.
@@ -20,6 +23,7 @@
 - [integers](integers/) - The union of every sequence the registry writes, read integer by integer: which of the first thousand the designs write, how many rows write each, and which are missed inside the pinned window.
 - [life](life/) - Cellular automata whose birth and survival rules are read from named sequences, run until the grid dies, freezes or loops.
 - [moire](moire/) - One design sampled at scale 1, 3, 5 and on, the layers stacked into a field where the interference is the finer grids landing on the coarse.
+- [morse](morse/) - The Thue-Morse word built twice from one digit rule, lifted to four plane grids of which three are Kronecker powers of a plus-minus tile and one is not, with its runs, its period-doubling boundary word, and the difference filter judged against it.
 - [primes](primes/) - A number is prime when its stones make one rectangle, shown by the sieve, the divisor pairs, the `pi(x)` staircase against `x / ln x` and `li(x)`, and a carpet stack whose layers correlate to zero exactly at the primes.
 - [race](race/) - Two base-3 designs of the same mass and the same fractal dimension carry random walkers from home at different speeds, so the shape sets the walk, not the density.
 - [radial](radial/) - Turned copies of a design laid on each other keep only the circular harmonics whose order is a multiple of the copy count, and a design of rotation order `g` shows `lcm(q, g)` petals.

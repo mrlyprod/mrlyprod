@@ -103,6 +103,16 @@ const collideBehind = m.magic_grid(['273', '9'], [3, 2], [3, 2]);
 const collideSame = collideAhead.width === collideBehind.width && collideAhead.types.every((byte: number, at: number) => byte === collideBehind.types[at]);
 const mengerWord = JSON.parse(m.magic_census(['23', '23', '23'], [3, 3, 3], 3, [2, 2, 2]));
 
+const morseWord = JSON.parse(m.morse_word(64));
+const morseGallery = JSON.parse(m.morse_gallery(6));
+const morseParity = m.morse_lift('parity', 6);
+const morseAnd = m.morse_lift('and', 6);
+const morseXor = m.morse_lift('xor', 6);
+const morseSame = (a: Uint8Array, b: Uint8Array) => a.length === b.length && a.every((byte: number, at: number) => byte === b[at]);
+const morseSign = JSON.parse(m.morse_filter('9', 2, 2, 3, 'sign'));
+const morseFlat = JSON.parse(m.morse_filter('7', 2, 2, 3, 'design'));
+const morseWide = JSON.parse(m.morse_filter('495', 3, 3, 2, 'design'));
+
 const shapes2 = JSON.parse(m.crop_shapes(2));
 const cropTouch = m.crop_grid('7', 3, 2, 2, 'ball', 1, 2, false, 'touching');
 const cropIn = m.crop_grid('7', 3, 2, 2, 'ball', 1, 2, false, 'inside');
@@ -340,6 +350,20 @@ const checks: [string, unknown, unknown][] = [
   ['magic name round trip', JSON.parse(m.magic_parse(m.magic_name(wordCodes, wordSides))).codes.join(','), wordCodes.join(',')],
   ['code collision same tile', collideSame, true],
   ['code collision side', `${collideAhead.width} ${collideAhead.types.reduce((a: number, b: number) => a + b, 0)}`, '6 6'],
+  ['morse word agrees', `${morseWord.agree} ${morseWord.ones} ${morseWord.longest}`, 'true 32 2'],
+  ['morse runs', `${morseWord.singles} ${morseWord.doubles} ${morseWord.cube_free}`, '22 21 true'],
+  ['morse boundary doubles', morseWord.doubling_agree, true],
+  ['morse stage 3', Array.from(m.morse_stage(3)).join(','), '0,1,1,0,1,0,0,1'],
+  ['morse parity folds', `${morseGallery[0].folds} ${morseGallery[0].tile.join('')} ${morseGallery[0].design}`, 'true 0110 9'],
+  ['morse walsh folds', `${morseGallery[1].folds} ${morseGallery[1].tile.join('')} ${morseGallery[1].design}`, 'true 0001 7'],
+  ['morse xor is parity', `${morseGallery[2].twin} ${morseSame(morseXor.types, morseParity.types)}`, 'parity true'],
+  ['morse sum no fold', `${morseGallery[3].folds} ${morseGallery[3].faults} ${morseGallery[3].first.join(',')}`, 'false 1376 1,3'],
+  ['morse signs are the lifts', `${morseSame(m.morse_signs('9', 2, 2, 6).types, morseParity.types)} ${morseSame(m.morse_signs('7', 2, 2, 6).types, morseAnd.types)}`, 'true true'],
+  ['morse lift ones', morseParity.types.reduce((a: number, b: number) => a + b, 0), 2048],
+  ['morse filter sign closed', `${morseSign.closed_exact} ${morseSign.morse_exact} ${morseSign.morse_faults} ${morseSign.lit}`, 'true false 128 128'],
+  ['morse filter half a coin', morseSign.morse_faults * 2, morseSign.cells],
+  ['morse filter design closed', `${morseFlat.closed_exact} ${morseFlat.side} ${morseFlat.lit} ${morseFlat.morse_faults}`, 'true 16 27 127'],
+  ['morse filter base three', `${morseWide.closed_exact} ${morseWide.side} ${morseWide.morse_faults}`, 'true 27 null'],
 ];
 
 if (Bun.argv.includes('--deep')) {

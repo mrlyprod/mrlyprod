@@ -7,20 +7,7 @@
 <link rel="stylesheet" href="../lib/mrly.css">
 </head>
 <body>
-<header>
-  <nav><a href="../">demos</a> / tour</nav>
-  <h1>A dozen sequences the designs write</h1>
-  <p class="sub">A design is a rule on the corners of a square or a cube. Grown level by level or widened side by side it counts something, and the count is an integer sequence the OEIS already holds or has just learnt. Every card draws the design live, reads its terms from the crates, and names the record; slide, and the picture and the terms grow together.</p>
-</header>
-<main>
-  <div class="row">
-    <button id="random">Randomize</button>
-    <span class="dim">picks a card and a step for it</span>
-    <input type="range" id="draw" hidden>
-  </div>
-  <div id="cards"></div>
-  <p class="foot">A card is one design, one measure and one axis, the same row the <a href="../sequences/">ledger</a> lists, and where a line is such a row the link under its terms opens it with the terms prefilled; the counts of designs, of fractals, of slice vertices, of gasket points and of Farey nodes are not rows of the ledger and carry no link. The level axis grows the fractal at the smallest side the base allows, the side axis holds level one and widens the odd side. The record after the terms is found by the crate from the terms alone, as a window of the entry's own first terms, and the number after it is the entry's index of the first term shown. Every number on this page is computed in Rust; the page only draws.</p>
-</main>
-<script type="module" src="./index.js"></script>
+<div id="root"></div>
+<script type="module" src="./index.jsx"></script>
 </body>
 </html>

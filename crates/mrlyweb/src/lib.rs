@@ -24,6 +24,8 @@ pub mod ledger;
 pub mod life;
 /// The magic words: the folded design, its census, its press readings and its prefix rates.
 pub mod magic;
+/// The Thue-Morse word: its two constructions, its plane lifts, its runs and the difference filter.
+pub mod morse;
 /// The primes: the sieve stepped, the stone pile, the count chart and the carpet witness.
 pub mod prime;
 /// The race: seeded walkers loose on a flat design.

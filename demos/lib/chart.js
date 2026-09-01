@@ -69,31 +69,6 @@ export function tag(b, text, color = ink.dim, align = 'left', x = align === 'rig
   return x + b.ctx.measureText(text).width;
 }
 
-export function keep(fn) {
-  let last = null;
-  addEventListener('resize', () => {
-    if (last) fn(...last);
-  });
-  return (...args) => {
-    last = args;
-    fn(...args);
-  };
-}
-
-export function seek(canvas, onFrac, pad = 14) {
-  const at = (event) => {
-    const box = canvas.getBoundingClientRect();
-    onFrac((event.clientX - box.left - pad) / (box.width - 2 * pad));
-  };
-  canvas.onpointerdown = (event) => {
-    canvas.setPointerCapture(event.pointerId);
-    at(event);
-  };
-  canvas.onpointermove = (event) => {
-    if (event.buttons) at(event);
-  };
-}
-
 export function web(canvas, height, nodes, branches, roles, radius) {
   const [ctx, w, h] = fit(canvas, height);
   ctx.clearRect(0, 0, w, h);

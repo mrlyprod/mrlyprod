@@ -7,57 +7,7 @@
 <link rel="stylesheet" href="../lib/mrly.css">
 </head>
 <body>
-<header>
-  <nav><a href="../">demos</a> / primes</nav>
-  <h1>Numbers that will not split</h1>
-  <p class="sub">Take a handful of stones and try to lay them out as a rectangle. Twelve stones make three: one by twelve, two by six, three by four. Thirteen stones make one long row and nothing else, so thirteen is prime. Below, the sieve crosses out every number that splits, the stones show the rectangles of any number you type, the chart counts the primes up the number line, and the carpet stack finds the primes with no arithmetic at all.</p>
-</header>
-<main>
-  <div class="row">
-    <label>sieve up to <input type="range" id="limit" min="10" max="400" value="100"><span class="num" id="limit-out">100</span></label>
-    <button id="step">Step</button>
-    <button id="play">Play</button>
-    <button id="reset">Reset</button>
-  </div>
-  <div class="row">
-    <label>stones <input type="text" id="n" value="360" min="2" max="1000000" style="width: 14ch"></label>
-    <label>count to <select id="top"><option>100</option><option>1000</option><option selected>10000</option><option>100000</option><option>1000000</option></select></label>
-    <label>scale on trial <input type="range" id="detect" min="3" max="199" step="2" value="169"><span class="num" id="detect-out">169</span></label>
-    <button id="random">Randomize</button>
-  </div>
-  <div class="arena">
-    <div class="panel">
-      <h2>The sieve <span id="sieve-note"></span></h2>
-      <canvas class="sheet" id="sheet"></canvas>
-    </div>
-    <div class="panel">
-      <h2>The stones <span id="stones-note"></span></h2>
-      <canvas class="sheet" id="rects"></canvas>
-    </div>
-    <div class="panel">
-      <h2>Counting primes <span>the staircase and its two guesses</span></h2>
-      <canvas class="bars" id="bars"></canvas>
-    </div>
-    <div class="panel">
-      <h2>The witness <span>one bar per earlier odd scale</span></h2>
-      <canvas class="bars" id="witness"></canvas>
-    </div>
-  </div>
-  <div class="stats">
-    <span>prime in hand <b id="p"></b></span>
-    <span>struck <b id="struck"></b></span>
-    <span>found <b id="found"></b></span>
-    <span>primes up to the top <b id="pi"></b></span>
-    <span>x / ln x <b id="guess"></b></span>
-    <span>li(x) <b id="li"></b></span>
-    <span>factors <b id="factors"></b></span>
-    <span>verdict <b id="verdict"></b></span>
-    <span>largest correlation <b id="max-corr"></b></span>
-    <span>at scale <b id="at"></b></span>
-  </div>
-  <div class="note" id="note"></div>
-  <p class="foot">The sieve is the one Eratosthenes ran: the next untouched number is prime, and its multiples from its square onward are struck. The stones are the divisors of a number paired below and above its square root; a single rectangle means prime. <code>pi(x)</code> counts the primes up to <code>x</code>; <code>x / ln x</code> and <code>li(x)</code> are the two classic guesses, the second summed by the Ramanujan series. The witness is exact: the carpet layer at scale <code>n</code> lights every cell of an <code>n</code> by <code>n</code> grid except those whose row and column are both odd, two layers are correlated on their common grid in whole numbers, and the correlation is exactly zero precisely when the two odd scales share no factor. So the row of an odd <code>n</code> is clear exactly when <code>n</code> is prime, and the smallest composite signal over the odd scales is the square of thirteen. The stack that sums these layers is the carpet preset of <a href="../moire">moire</a>; the same primes peak the novelty of the <a href="../farey">Farey stack</a>.</p>
-</main>
-<script type="module" src="./index.js"></script>
+<div id="root"></div>
+<script type="module" src="./index.jsx"></script>
 </body>
 </html>

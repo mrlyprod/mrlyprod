@@ -7,47 +7,7 @@
 <link rel="stylesheet" href="../lib/mrly.css">
 </head>
 <body>
-<header>
-  <nav><a href="../">demos</a> / spin</nav>
-  <h1>Spin the carpet like a record</h1>
-  <p class="sub">Put a design on a turntable and speed it up. The screen strobes at its own frame rate, so a fast carpet freezes, drifts backwards, or smears; the eye keeps an afterglow and blends the frames. Spun infinitely fast, every pixel becomes the mean of the picture on its own circle, and that picture is not guessed: the wheel on the right is the exact circle mean at every radius, a bullseye whose rings are the design.</p>
-</header>
-<main>
-  <div class="row">
-    <span id="sources"></span>
-  </div>
-  <div class="row">
-    <label>rpm <input type="range" id="rpm" min="0" max="1800" value="33"><span class="num" id="rpm-out">33</span></label>
-    <span class="tabs" id="needles"></span>
-    <label>afterglow <input type="range" id="glow" min="1" max="120" value="1"><span class="num" id="glow-out">1</span></label>
-    <button id="play">Stop</button>
-  </div>
-  <div class="row">
-    <span class="set" id="ramp-row"></span>
-  </div>
-  <div class="arena">
-    <div class="panel">
-      <h2>The turntable <span id="strobe"></span></h2>
-      <canvas class="sheet" id="table"></canvas>
-    </div>
-    <div class="panel">
-      <h2>Infinite speed <span>the exact circle means</span></h2>
-      <canvas class="sheet" id="wheel"></canvas>
-    </div>
-  </div>
-  <canvas class="bars" id="bars"></canvas>
-  <div class="stats">
-    <span>name <b id="name"></b></span>
-    <span>side <b id="side"></b></span>
-    <span>filled <b id="fills"></b></span>
-    <span>mass of the rings <b id="mass"></b></span>
-    <span>dark disc to <b id="disc"></b></span>
-    <span>brightest ring <b id="peak"></b></span>
-    <span>last ring at <b id="reach"></b></span>
-  </div>
-  <div class="note" id="note"></div>
-  <p class="foot">The turntable is an ordinary rotation drawn once per screen frame; afterglow blends each new frame into the old ones. The wheel is computed in Rust: every circle about the centre is cut at the grid lines it crosses and each arc is read from the one cell it lies in, so the mean over the circle is exact, and the rings integrate back to the mass of the source. The theory behind the bullseye is one identity: a plane wave averaged over a turn is the Bessel function <code>J0(|k| r)</code>, so the wheel is the Hankel transform of the radially averaged spectrum. On the square lattice the ring frequencies are the sums of two squares; on the hexagonal lattice they are the Loeschian numbers. A 60 Hz screen freezes a carpet at 900 rpm, a quarter turn per frame.</p>
-</main>
-<script type="module" src="./index.js"></script>
+<div id="root"></div>
+<script type="module" src="./index.jsx"></script>
 </body>
 </html>

@@ -7,35 +7,7 @@
 <link rel="stylesheet" href="../lib/mrly.css">
 </head>
 <body>
-<header>
-  <nav><a href="../">demos</a> / race</nav>
-  <h1>The race: same mass, different music</h1>
-  <p class="sub">Two base-3 rules, each keeping 7 of 9 cells: the same material at every scale and the same fractal dimension <span class="num" id="dim"></span>. Drop random walkers on both and watch the shapes carry them at different speeds. First team to wander an average of <span class="num" id="target-out"></span> cells from home wins.</p>
-</header>
-<main>
-  <div class="arena">
-    <div class="panel">
-      <h2><i class="swatch" style="background: var(--blue)"></i><span class="num" id="name-a"></span><span>the fast one</span></h2>
-      <canvas class="sheet" id="sheet-a"></canvas>
-      <div class="meter"><div id="bar-a" style="background: var(--blue)"></div></div>
-      <div class="stats"><span>distance from home <b id="far-a">0.0</b></span><span>filled <b id="fill-a"></b></span></div>
-    </div>
-    <div class="panel">
-      <h2><i class="swatch" style="background: var(--orange)"></i><span class="num" id="name-b"></span><span>the slow one</span></h2>
-      <canvas class="sheet" id="sheet-b"></canvas>
-      <div class="meter"><div id="bar-b" style="background: var(--orange)"></div></div>
-      <div class="stats"><span>distance from home <b id="far-b">0.0</b></span><span>filled <b id="fill-b"></b></span></div>
-    </div>
-  </div>
-  <div class="row">
-    <button class="primary" id="go">Start the race</button>
-    <button id="random">Randomize</button>
-    <label>finish <input type="number" id="target" min="5" max="60" value="20"> cells</label>
-    <span class="num" id="steps" style="color: var(--dim)"></span>
-  </div>
-  <div class="banner" id="banner"></div>
-  <p class="foot">Both patterns are grown to level 4 from their own 3 by 3 rule and the walkers start at the filled cell nearest the centre; each tick every walker takes one blind step, and a step into a hole is a lost turn. The grids, the walkers, the distances and the seed all live in Rust, so a race replays exactly from its seed. Distance grows like a power of time whose exponent the shape sets; this page shows the race itself, not that exponent.</p>
-</main>
-<script type="module" src="./index.js"></script>
+<div id="root"></div>
+<script type="module" src="./index.jsx"></script>
 </body>
 </html>

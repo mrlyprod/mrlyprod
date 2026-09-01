@@ -7,44 +7,7 @@
 <link rel="stylesheet" href="../lib/mrly.css">
 </head>
 <body>
-<header>
-  <nav><a href="../">demos</a> / ulam</nav>
-  <h1>The Ulam spiral</h1>
-  <p class="sub">Write 1 in the middle, then 2, 3, 4 and so on in a spiral, and paint the primes gold. Nobody ordered them into lines, yet diagonals appear: every straight line through the spiral reads a quadratic a k² + b k + c, and some quadratics are rich in primes. Click a cell for its number and its factors, pick a quadratic to light it up, and wind the same numbers on hexagons to watch the lines bend into six directions.</p>
-</header>
-<main>
-  <div class="row">
-    <label>lattice <select id="lattice"><option value="square">square</option><option value="hex">hex</option></select></label>
-    <label>side <input type="range" id="side" min="21" max="401" step="2" value="201"><span class="num" id="side-out">201</span></label>
-    <label>mark <select id="mark"><option value="prime">primes</option><option value="twin">twin primes</option><option value="squarefree">squarefree</option><option value="mobius">Mobius sign</option></select></label>
-    <label><input type="checkbox" id="faint" checked> faint composites</label>
-  </div>
-  <div class="row">
-    <label>a <input type="number" id="a" min="1" max="4" value="4"></label>
-    <label>b <input type="number" id="b" min="-20" max="20" value="-2"></label>
-    <label>c <input type="number" id="c" min="2" max="97" value="41"></label>
-    <button id="random">Randomize</button>
-  </div>
-  <div class="arena">
-    <div class="panel">
-      <h2>The sheet <span id="sheet-note"></span></h2>
-      <canvas class="sheet" id="sheet"></canvas>
-    </div>
-  </div>
-  <div class="stats">
-    <span>numbers <b id="count"></b></span>
-    <span>primes <b id="primes"></b></span>
-    <span>density <b id="density"></b></span>
-    <span>hits on the quadratic <b id="hits"></b></span>
-    <span>share <b id="share"></b></span>
-    <span>opening streak <b id="streak"></b></span>
-    <span>clicked <b id="n"></b></span>
-    <span>verdict <b id="verdict"></b></span>
-    <span>factors <b id="factors"></b></span>
-  </div>
-  <div class="note" id="note"></div>
-  <p class="foot">On the square lattice ring <code>k</code> holds <code>8k</code> cells and ends at the odd square <code>(2k + 1)²</code> on the diagonal below right, so a straight line through the spiral picks one number per ring and reads a quadratic in <code>k</code>: a diagonal has <code>a = 4</code>, a line through the centre <code>a = 1</code> or <code>2</code>. Euler's <code>m² - m + 41</code> is prime for <code>m</code> from 0 to 40; at <code>m = 2k</code> it is <code>4k² - 2k + 41</code>, the line lit at the start, prime for its first 21 values and then at 1763 = 41 · 43 it breaks. On the hexagonal lattice ring <code>r</code> holds <code>6r</code> cells and ends at the centered hexagonal number <code>3r² + 3r + 1</code>, so its straight lines read quadratics with <code>a = 3</code>. Every cell is sieved and painted in Rust: gold for the mark, orange where the quadratic lands on a prime, blue where it lands on a composite, pink for a Mobius value of minus one. The same primes are sieved, counted and found by the carpet stack on the <a href="../primes">primes</a> page.</p>
-</main>
-<script type="module" src="./index.js"></script>
+<div id="root"></div>
+<script type="module" src="./index.jsx"></script>
 </body>
 </html>

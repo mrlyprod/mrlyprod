@@ -7,52 +7,7 @@
 <link rel="stylesheet" href="../lib/mrly.css">
 </head>
 <body>
-<header>
-  <nav><a href="../">demos</a> / crop</nav>
-  <h1>The crop</h1>
-  <p class="sub">A named shape of rational radius sits on the unit square or cube and keeps only the cells of a design it reaches: strictly inside, touching, or rebuilt on a finer lattice at the rim. The census splits every cell into in, cut and out before anything is drawn, and the sweeps show how the kept mass grows with the radius and the level. Drag the radius chart to move the shape.</p>
-</header>
-<main>
-  <div class="row">
-    <span class="set" id="picker"></span>
-    <label>number <input type="number" id="number" value="3" min="2" max="5"></label>
-    <label>level <input type="range" id="level" min="1" max="4" value="3"><span class="num" id="level-out">3</span></label>
-  </div>
-  <div class="row">
-    <label>dimension <select id="dim"><option value="2">2</option><option value="3">3</option></select></label>
-    <label>shape <select id="shape"></select></label>
-    <label>radius <input type="range" id="radius" min="0" max="108" value="60"><span class="num" id="radius-out">60/120</span></label>
-    <label>mode <select id="mode"><option value="crop">crop</option><option value="anti">anti</option></select></label>
-    <label>policy <select id="policy"></select></label>
-    <label><input type="checkbox" id="crisp"> exact edge</label>
-    <label id="solids" hidden><input type="checkbox" id="spin"> spin</label>
-  </div>
-  <div class="arena" style="grid-template-columns: 3fr 2fr">
-    <div class="panel">
-      <h2>The crop <span id="view-note"></span></h2>
-      <canvas class="sheet" id="flat"></canvas>
-      <div id="art" style="background: var(--fg); border-radius: 8px; padding: 8px; line-height: 0" hidden></div>
-      <canvas class="stage" id="stage" hidden></canvas>
-    </div>
-    <div class="panel">
-      <h2>Along the radius <span>filled cells kept and cut</span></h2>
-      <canvas class="bars" id="rbars"></canvas>
-      <h2>Along the level <span>kept fills, log scale</span></h2>
-      <canvas class="bars" id="lbars"></canvas>
-    </div>
-  </div>
-  <div class="stats">
-    <span>name <b id="name"></b></span>
-    <span>side <b id="side"></b></span>
-    <span>filled in <b id="f-in"></b></span>
-    <span>filled cut <b id="f-cut"></b></span>
-    <span>filled out <b id="f-out"></b></span>
-    <span>exposed before <b id="e-before"></b></span>
-    <span>exposed after <b id="e-after"></b></span>
-  </div>
-  <div class="note" id="note"></div>
-  <p class="foot">The shape is exact rational geometry in Rust: a ball tested on squared fractions or a polytope of half-plane walls, never a float. A cell is in, cut or out by where its corners land, the census tallies the three regions and the perimeter or surface before and after the touching crop, and the sweeps re-run that census at every radius and level. The exact edge in the plane is the same touching crop clipped by the true circle or polygon in SVG; in the cube it clips the uncropped mesh with the shape's own walls as camera-space planes, so the ball and the anti crop stay on the raster mesh, which is always the source of truth for every count.</p>
-</main>
-<script type="module" src="./index.js"></script>
+<div id="root"></div>
+<script type="module" src="./index.jsx"></script>
 </body>
 </html>

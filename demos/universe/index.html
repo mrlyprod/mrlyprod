@@ -7,37 +7,7 @@
 <link rel="stylesheet" href="../lib/mrly.css">
 </head>
 <body>
-<header>
-  <nav><a href="../">demos</a> / universe</nav>
-  <h1>The universe of designs</h1>
-  <p class="sub">A code is a bitmask over the corners of a hypercube. Rotations and reflections fold the codes into orbits, and one design per orbit is all there is: <span class="num" id="counts"></span> distinct designs in dimensions 1 to 4. Click one to grow it.</p>
-</header>
-<main>
-  <div class="row">
-    <div class="tabs"><button id="d2" class="on">plane</button><button id="d3">cube</button></div>
-    <button id="random">Randomize</button>
-    <span class="num" id="summary" style="color: var(--dim)"></span>
-  </div>
-  <div class="cards" id="cards"></div>
-  <div class="panel" id="grow" style="margin-top: 22px; display: none">
-    <h2><span class="num" id="grow-name"></span></h2>
-    <div class="row">
-      <label>level <input type="range" id="level" min="1" max="5" value="3"><span class="num" id="level-out">3</span></label>
-      <a id="open" href="#">open in the sponge</a>
-    </div>
-    <canvas class="sheet" id="grown" style="max-width: 486px"></canvas>
-    <div id="grown-svg"></div>
-    <div class="stats">
-      <span>orbit <b id="orbit"></b></span>
-      <span>degree <b id="degree"></b></span>
-      <span>normal form <b id="anf"></b></span>
-      <span>filled <b id="fills"></b></span>
-      <span>fill ratio <b id="ratio"></b></span>
-      <span>dimension <b id="dimension"></b></span>
-    </div>
-  </div>
-  <p class="foot">The distinct counts are Burnside averages over the hyperoctahedral group; the gallery enumerates the orbits outright and the two agree. In base 3 the same count runs <span class="num" id="base3"></span> for dimensions 1 and 2.</p>
-</main>
-<script type="module" src="./index.js"></script>
+<div id="root"></div>
+<script type="module" src="./index.jsx"></script>
 </body>
 </html>

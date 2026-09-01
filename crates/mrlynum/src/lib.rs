@@ -19,6 +19,8 @@ pub mod gauss;
 pub mod graph;
 /// The visible lattice: totients, coprime pairs, the pi estimate and the Farey nodes.
 pub mod lattice;
+/// The Thue-Morse world: the digit rule, the substitution, the plane lifts, the runs and the period-doubling word.
+pub mod morse;
 /// The prime objects: values, ranks, gaps and the shape readings of a number.
 pub mod prime;
 /// The infinite sums: zeta and its Dirichlet cousins, the visible count and the Bernoulli fractions.
