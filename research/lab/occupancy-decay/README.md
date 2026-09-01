@@ -23,3 +23,12 @@
 - `|R_k| = 1, 3, 9, 23, 63, 168, 457, 1245, 3423, 9447, 26285, 73440, 206149, 580920, 1643545, 4663382, 13272515` at `k = 2..18`, `sigma_18 = 0.034259`, growth `|R_(k+1)|/|R_k|` rising monotonically `2.794 -> 2.8461`, local decay `c_k = 1 - log_3 growth` falling `0.0647562` at `k = 13` to `0.0479313` at `k = 18`, with `k c_k` inside `[0.8418, 0.8628]` over `k = 13..18`: polynomial through the measured range, no exponential floor in sight and none proved.
 - `M_2(k)/4^k = 0.3914, 0.4036, 0.4061, 0.4098, 0.4077, 0.4071, 0.4029` at `k = 10..16`, still falling, so `M_2 = O(4^k)` is a measured hypothesis and not a limit; on that hypothesis the Cauchy-Schwarz floor caps every congruence-only decay at `c <= 0.2618596` and `alpha <= 0.575328`, which excludes neither `0.5533` nor `0.5524022`.
 - The first-moment inequality holds with room at `n = 10, 12, 14` and `beta = 0.45, 0.5, 0.6`, ratio of prime sum to bound between `0.0846` and `0.1517`, worst `0.1517` at `(14, 0.6)`.
+
+## WITNESSES
+
+- coprime.md THE WINDOW AT DIMENSION ONE: the occupied-ray exponents `[0.5416, 0.5798]` at `c = 1/2` and `[0.6109, 0.6345]` at `c = 0.5533`, and the non-fibre totals `3151656, 9491964, 28545340` at `n = 14, 15, 16`.
+- coprime.md THE WINDOW AT DIMENSION ONE: Conjecture O trivial below one half, and the first-moment inequality checked at `n = 10, 12, 14` with `beta = 0.45, 0.5, 0.6`, worst ratio `0.1517`.
+- coprime.md THE WINDOW AT DIMENSION ONE: `F/A` at `alpha = 0.5533` reading `5.41 .. 5.92` over `n = 10..18`, `log_3 F / n` falling `0.7645 -> 0.7201`, and the fixed-height split `A(n, 3^5) = 384 .. 474` against `F(n, 3^5) = 2728 .. 51694`.
+- coprime.md THE WINDOW AT DIMENSION ONE: the digit-congruence bound and its seed, `sigma_k` from `0.046063` at `k = 13` to `0.034259` at `k = 18`, `M_2(k)/4^k` over `k = 13..16`, and the caps `c <= 0.2618596`, `alpha <= 0.575328`.
+- coprime.md THE WINDOW AT DIMENSION ONE: `theta` inside `[1.1041, 1.1467]` at `alpha = 0.5533` and `[1.0833, 1.1596]` at `alpha = 1/2`, against the `1.8073` O asks.
+- DISCOVERIES.md the `R_k` modulus-indexing and offset row, carried identically by `lab/ratio-set-saving`.

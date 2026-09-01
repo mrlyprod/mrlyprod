@@ -13,6 +13,10 @@ const art = m.diagonal_svg('126', 2, 3, 2, [10, 11], 4);
 const slice = JSON.parse(m.slice_census('23', 3, 1, 2));
 const deep = JSON.parse(m.slice_census('23', 3, 2, 2));
 const series = JSON.parse(m.slice_series('23', 6));
+const walsh = JSON.parse(m.walsh_spectrum('23', 6));
+const skew = JSON.parse(m.walsh_spectrum('11', 6));
+const inked = (read: { law: { fills: number }[] }) => read.law.map((row) => row.fills).join(',');
+const counted = (code: string) => Array.from({ length: 6 }, (_, i) => JSON.parse(m.slice_census(code, 2 * i + 1, 1, 2)).fills).join(',');
 const flat = JSON.parse(m.spectrum('flat', '7', 2, 4, true, 0.1));
 const piece = JSON.parse(m.spectrum('slice', '23', 3, 1, true, 0.1));
 const plain = JSON.parse(m.spectrum('flat', '7', 2, 2, false, 0.1));
@@ -170,6 +174,16 @@ const checks: [string, unknown, unknown][] = [
   ['slice_census 23 level 2', `${deep.fills},${deep.holes}`, '306,7'],
   ['slice_series 23 components', series.map((row: {components: number}) => row.components).join(','), '1,1,7,1,19,1'],
   ['slice_series 23 holes', series.map((row: {holes: number}) => row.holes).join(','), '0,1,0,7,0,19'],
+  ['walsh_spectrum 23 spectrum', walsh.spectrum.join(','), '0,-4,-4,0,-4,0,0,4'],
+  ['walsh_spectrum 23 levels', walsh.levels.map((row: {sixteenths: number}) => row.sixteenths).join(','), '8,12,0,-4'],
+  ['walsh_spectrum 23 weights', walsh.weights.join(','), '1,3,0,0'],
+  ['walsh_spectrum 23 ink law', inked(walsh), '6,42,72,204,210,486'],
+  ['walsh_spectrum 23 sign', walsh.law.map((row: {s: number}) => row.s).join(','), '-1,1,-1,1,-1,1'],
+  ['walsh_spectrum 11 spectrum', skew.spectrum.join(','), '2,2,-2,-2,-6,2,-2,-2'],
+  ['walsh_spectrum 11 levels', skew.levels.map((row: {sixteenths: number}) => row.sixteenths).join(','), '6,6,2,2'],
+  ['walsh_spectrum 11 weights', skew.weights.join(','), '1,1,1,0'],
+  ['walsh_spectrum 11 ink law', inked(skew), '6,20,76,100,230,240'],
+  ['walsh_spectrum law counts the mesh', `${inked(walsh)} ${inked(skew)}`, `${counted('23')} ${counted('11')}`],
   ['spectrum flat 7 nodes', `${flat.nodes},${flat.distinct}`, '81,43'],
   ['spectrum flat 7 degeneracy', `${flat.classes},${flat.one}`, '9,27'],
   ['spectrum flat 7 pair', flat.pair.join(','), '4,4'],

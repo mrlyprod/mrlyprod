@@ -1,3 +1,4 @@
+use crate::moire::{layer, Layer, Spec};
 use mrlycore::errors::{value_error, Result};
 use mrlynum::factor::lcm;
 
@@ -92,11 +93,26 @@ pub fn witness(scale: usize) -> Result<Witness> {
     })
 }
 
+/// Returns the Pearson correlation of two rendered carpet layers on their lcm grid, sampled rather than integrated.
+pub fn sampled(m: usize, n: usize) -> f64 {
+    let size = lcm(m, n);
+    let mask = |number| {
+        let params = Layer {
+            size,
+            ..Layer::new(Spec::new(7, 2, 2), number)
+        };
+        layer(&params).unwrap()
+    };
+    let (a, b) = (mask(m), mask(n));
+    let mean = |v: &[bool]| v.iter().filter(|&&x| x).count() as f64 / v.len() as f64;
+    let (ea, eb) = (mean(&a), mean(&b));
+    let eab = a.iter().zip(&b).filter(|(&x, &y)| x && y).count() as f64 / a.len() as f64;
+    (eab - ea * eb) / (ea * (1.0 - ea) * eb * (1.0 - eb)).sqrt()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::moire::{layer, Layer, Spec};
-    use mrlynum::prime::is_prime;
 
     fn brute(m: u64, n: u64) -> (u64, u64) {
         let grid = lcm(m as usize, n as usize) as u64;
@@ -107,22 +123,6 @@ mod tests {
         (both, grid)
     }
 
-    fn sampled(m: usize, n: usize) -> f64 {
-        let size = lcm(m, n);
-        let mask = |number| {
-            let params = Layer {
-                size,
-                ..Layer::new(Spec::new(7, 2, 2), number)
-            };
-            layer(&params).unwrap()
-        };
-        let (a, b) = (mask(m), mask(n));
-        let mean = |v: &[bool]| v.iter().filter(|&&x| x).count() as f64 / v.len() as f64;
-        let (ea, eb) = (mean(&a), mean(&b));
-        let eab = a.iter().zip(&b).filter(|(&x, &y)| x && y).count() as f64 / a.len() as f64;
-        (eab - ea * eb) / (ea * (1.0 - ea) * eb * (1.0 - eb)).sqrt()
-    }
-
     #[test]
     fn the_closed_count_matches_the_lcm_grid() {
         for m in 2..30u64 {
@@ -130,34 +130,5 @@ mod tests {
                 assert_eq!(overlap(m, n), brute(m, n), "{m} {n}");
             }
         }
-    }
-
-    #[test]
-    fn the_exact_correlation_matches_the_sampled_layers() {
-        for (m, n) in [(3, 5), (3, 9), (5, 15), (9, 15), (5, 7), (7, 21), (9, 21)] {
-            assert!((correlation(m, n) - sampled(m, n)).abs() < 1e-12, "{m} {n}");
-            assert_eq!(correlation(m, n), correlation(n, m));
-        }
-        assert_eq!(correlation(1, 9), 0.0);
-    }
-
-    #[test]
-    fn the_stack_detects_the_primes_to_199() {
-        let (mut least, mut where_) = (1.0, 0);
-        for n in (3..=199).step_by(2) {
-            let trial = witness(n).unwrap();
-            assert_eq!(trial.prime, is_prime(n), "{n}");
-            assert_eq!(trial.row.len(), (n - 3) / 2);
-            if !trial.prime && trial.max < least {
-                (least, where_) = (trial.max, n);
-            }
-        }
-        assert_eq!(where_, 169);
-        assert!((least - 0.0517383).abs() < 1e-7);
-        let square = witness(169).unwrap();
-        assert_eq!(square.at, 13);
-        let clear = witness(197).unwrap();
-        assert!(clear.prime && clear.max == 0.0 && clear.at == 0);
-        assert!(witness(4).is_err() && witness(1).is_err());
     }
 }

@@ -54,3 +54,16 @@
 - The criticality fixes the congruence seed at a polynomial law and predicts its constant: mean out-degree 1 gives survival `sigma_k ~ C/k`, hence `c_k = log_3((k+1)/k)` and `k c_k -> 1 / log 3 = 0.9102392`, against the `occupancy-decay` reading `[0.8418, 0.8628]` rising over `k = 13..18`; on this mechanism no congruence route can ever buy an exponent, and the `0.2618596` Cauchy-Schwarz cap is never approached. **Conjecture.**
 - Refuted as an input: no bound `D_n(q) <= C 2^n / q` holds uniformly over `q` coprime to 3. Every binary `m < 3^h` gives a binary `m(1 + 3^h) < 3^(2h)`, so `D_2h(1 + 3^h) >= 2^h`, read as equality for `h = 1..8`, and `D_2h(q) q / 4^h = (3/2)^h (1 + 3^(-h))` reads `2.0, 2.5, 3.5, 5.125, 7.625, 11.406, 17.094, 25.633` at `h = 1..8`; at `n = 20` the worst modulus below 500 is `q = 244 = 1 + 3^5` at ratio `1.8094`. The moduli that break equidistribution are exactly the shift-ray weights, so the divisor route to the power saving is closed (`ratio.py multiples`). **Refuted.**
 - Refuted as a route: the witness is not short. Mean `lev` runs `3.875 -> 27.287` and max `lev` runs `6 -> 204` over `X = 32..16384`, mean `c` rises `1.553 -> 3.305`, and the share of occupied directions whose `lev` is below `1.8073 log_3 x` at the window cap `x` falls `0.875 -> 0.3102`, so bounding `A(X)` by `3^(max lev)` or by any level cap below `2 log_3 X` fails on a majority of the count. **Refuted.**
+
+## WITNESSES
+
+- coprime.md THE WINDOW AT DIMENSION ONE: the uncapped `A(X) = 32 .. 184266` at `X = 32 .. 16384`, `log A / log X` inside `[1.2057, 1.2494]`, and `A(3^n) >= 0.655 * 3^n` at `n = 13`.
+- coprime.md THE WINDOW AT DIMENSION ONE: the band, the weight-layer sandwich and the reduction `Z(w) <= C w^beta` giving O at every `alpha < 1/(1+beta)`.
+- coprime.md THE WINDOW AT DIMENSION ONE: the band cap unviolated to height 3000, largest reach `0.9865` of it, and `log Z_max / log W` inside `[0.5000, 0.7010]`.
+- coprime.md THE WINDOW AT DIMENSION ONE: the top-digit law `max(z_1, z_2) > 2 min(z_1, z_2)` and the empty slope band `[1/3, 2/3]`.
+- coprime.md THE WINDOW AT DIMENSION ONE: the congruence-layer identity `Z(w) <= 2 |R_k|`, sharp at `k = 2, 3, 4` and slack at `w = 797161`.
+- coprime.md THE WINDOW AT DIMENSION ONE: the metric route, `n N_P(3^-n) / 3^n` rising `2.4132 -> 2.4785` over `n = 12..18`.
+- coprime.md THE WINDOW AT DIMENSION ONE: the per-weight corridor, `0.7093` at `w = 121`, `1.5975` at `w = 1093`, the repunit and shift families to `w = 1594324`, and `beta = log 2 / log 3`.
+- coprime.md THE WINDOW AT DIMENSION ONE: the divisor route refuted by `D_2h(1 + 3^h) >= 2^h` and worst modulus `q = 244` at `1.8094`, the short-witness route by mean `lev` running `3.875 -> 27.287`.
+- coprime.md THE WINDOW AT DIMENSION ONE: the criticality reading `k c_k -> 1 / log 3 = 0.9102392` against `[0.8418, 0.8628]`.
+- DISCOVERIES.md the top-digit, congruence-layer, occupancy-relaxation and `R_k`-offset rows.

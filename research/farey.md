@@ -6,7 +6,7 @@ Every claim below carries a tag. **Proved** means derived here from definitions.
 
 ## Where the lines land
 
-Stack the scales `n = 1..N`. A point `a/b` in lowest terms receives a grid line from exactly the scales that are multiples of `b`, so over `1..N` its brightness is `floor(N/b)`. **Proved**, and **Verified** by direct simulation at `N = 30`: building the stack node by node and comparing every node's hit count against `floor(30/b)` gives no mismatch anywhere.
+Stack the scales `n = 1..N`. A point `a/b` in lowest terms receives a grid line from exactly the scales that are multiples of `b`, so over `1..N` its brightness is `floor(N/b)`. **Proved**, and **Verified** by direct simulation at `N = 30`: building the stack node by node and comparing every node's hit count against `floor(30/b)` gives no mismatch anywhere (`lab/farey-discrepancy`).
 
 Brightness therefore falls as one over the denominator, which is the Stern-Brocot ordering of the rationals. The top of the table at `N = 30`:
 
@@ -38,7 +38,7 @@ So primality is readable off the picture. Stack `1..n-1`, then add scale `n`, an
 
 ## Franel and Landau, 1924
 
-Over scales `1..Q` the stack lights exactly the reduced fractions of denominator at most `Q`: the Farey sequence `F_Q`. Its size in `(0,1]` is `m = sum_{k<=Q} phi(k)`. **Proved**, and **Verified** by generating `F_Q` through the next-term recurrence and comparing its length with the totient sum at `Q = 10, 30, 60`.
+Over scales `1..Q` the stack lights exactly the reduced fractions of denominator at most `Q`: the Farey sequence `F_Q`. Its size in `(0,1]` is `m = sum_{k<=Q} phi(k)`. **Proved**, and **Verified** by generating `F_Q` through the next-term recurrence and comparing its length with the totient sum at `Q = 10, 30, 60` (`lab/farey-discrepancy`, which runs the same comparison at `Q = 10, 30, 60, 125`).
 
 Write `rho_1 < ... < rho_m` for those nodes and `delta_j = rho_j - j/m` for how far each one sits from perfect equidistribution. Then:
 

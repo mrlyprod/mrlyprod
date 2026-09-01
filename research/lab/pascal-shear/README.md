@@ -19,7 +19,7 @@
 - cuts.md:181-182: level sets to `L = 9` with `3^L` cells each, `3, 9, 27, ..., 19683`, exact binomials for `i, j < 128`, `16384` of them with `0` faults.
 - cuts.md:182-183: Pascal mod 2 from the additive recurrence to row `1023`, `524800` entries, `0` mismatched cells.
 - cuts.md:183-184: the shear checked as a bijection, `729` cells onto `729` odd entries at `L = 6`.
-- cuts.md:184-185: `50001` terms of `A001316` against `2^popcount(n)`, `0` differences.
+- cuts.md The same page, one dimension down: `50001` terms of `A001316` against `2^popcount(n)`, `0` differences, only when the live b-file read succeeds.
 - cuts.md:185-186: `A047999` is checked against the triangle with `0` differences, but at `10585` terms, rows `0..144`, not the `8256` the line says; `8256` is a `128`-row prefix, and REFS.md:176 carries the same `10585`.
 - REFS.md:175: `b001316`, `50001` terms. REFS.md:176: `b047999`, `10585` terms, rows `0..144`.
 - README.md:49: `A047999` with antidiagonal populations `A001316`, both b-files checked term for term.

@@ -20,6 +20,15 @@ use mrlyweb::two::*;
 use mrlyweb::volume::*;
 use mrlyweb::zeta::*;
 
+fn column(rows: &mrlycore::Json, key: &str) -> String {
+    rows.as_array()
+        .unwrap()
+        .iter()
+        .map(|row| row[key].to_string())
+        .collect::<Vec<String>>()
+        .join(",")
+}
+
 fn blinker() -> Vec<u8> {
     let mut types = vec![0u8; 25];
     for site in [7, 12, 17] {
@@ -114,6 +123,30 @@ fn the_fixture_the_page_prints() {
     };
     assert_eq!(column("components"), "1,1,7,1,19,1");
     assert_eq!(column("holes"), "0,1,0,7,0,19");
+    let carpet = parse(&walsh_spectrum("23", 6).unwrap()).unwrap();
+    assert_eq!(carpet["spectrum"].to_string(), "[0,-4,-4,0,-4,0,0,4]");
+    assert_eq!(carpet["weights"].to_string(), "[1,3,0,0]");
+    assert_eq!(crate::column(&carpet["levels"], "sixteenths"), "8,12,0,-4");
+    assert_eq!(
+        crate::column(&carpet["law"], "fills"),
+        "6,42,72,204,210,486"
+    );
+    assert_eq!(crate::column(&carpet["law"], "s"), "-1,1,-1,1,-1,1");
+    let skew = parse(&walsh_spectrum("11", 6).unwrap()).unwrap();
+    assert_eq!(skew["spectrum"].to_string(), "[2,2,-2,-2,-6,2,-2,-2]");
+    assert_eq!(skew["weights"].to_string(), "[1,1,1,0]");
+    assert_eq!(crate::column(&skew["levels"], "sixteenths"), "6,6,2,2");
+    assert_eq!(crate::column(&skew["law"], "fills"), "6,20,76,100,230,240");
+    for design in [&carpet, &skew] {
+        let code = design["code"].as_str().unwrap();
+        let counted = (1..=6)
+            .map(|k| {
+                parse(&slice_census(code, 2 * k - 1, 1, 2).unwrap()).unwrap()["fills"].to_string()
+            })
+            .collect::<Vec<String>>()
+            .join(",");
+        assert_eq!(crate::column(&design["law"], "fills"), counted);
+    }
     let flat = parse(&spectrum("flat", "7", 2, 4, true, 0.1).unwrap()).unwrap();
     assert_eq!(
         (flat["nodes"].clone(), flat["distinct"].clone()),
@@ -370,6 +403,8 @@ fn the_faults_come_back_as_messages() {
     assert!(hex_svg("256", 3, 1, 2, "iso", 10).is_err());
     assert!(slice_census("23", 4, 1, 2).is_err());
     assert!(slice_series("23", 17).is_err());
+    assert!(walsh_spectrum("256", 6).is_err());
+    assert!(walsh_spectrum("23", 17).is_err());
     assert!(diagonal_profile("0", 2, 2, 2).is_err());
     assert!(diagonal_count("126", 2, 0, 2, 1).is_err());
     assert!(Race::new("0", 3, 2, 3, 4, 1).is_err());

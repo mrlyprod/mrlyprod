@@ -25,4 +25,3 @@ demos/dist/
 # PYTHON
 .venv/
 __pycache__/
-uv.lock

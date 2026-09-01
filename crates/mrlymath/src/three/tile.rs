@@ -208,6 +208,9 @@ mod tests {
             let tile = create(&config).unwrap();
             let cell = build(&tile).unwrap();
             assert_eq!(cell.width(), tile.width, "universe width seed {}", s);
+            for source in &tile.sources {
+                assert!(matches!(source, Source::Code(_)));
+            }
         }
     }
 }

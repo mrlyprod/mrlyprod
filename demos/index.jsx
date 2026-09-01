@@ -1,5 +1,5 @@
 import { ready, ink, fit, paint } from './lib/mrly.js';
-import { web, board, bars } from './lib/chart.js';
+import { web, board, bars, line } from './lib/chart.js';
 import { mount } from './lib/app.jsx';
 import { Grid, Signs, Pixels, Markup, Sketch } from './lib/draw.jsx';
 
@@ -32,6 +32,12 @@ const farey = (canvas) => {
     ctx.lineTo(x, h - 6 - (h - 12) * bright / 24);
     ctx.stroke();
   }
+};
+
+const spectrometer = (canvas) => {
+  const b = board(canvas, canvas.clientWidth / 1.5, { top: 10, bottom: 10 });
+  const rows = JSON.parse(m.walsh_spectrum('105', 13)).law.slice(1);
+  line(b, rows.map((row, i) => [(i + 0.5) / rows.length, row.ink]), ink.blue, { dots: 2.5 });
 };
 
 const sequences = (canvas) => {
@@ -76,6 +82,7 @@ const TILES = [
   ['cuts', 'The cuts', 'A diagonal plane through one solid, the same size at every height.', <Markup className="thumb" svg={m.diagonal_svg('126', 2, 5, 2, JSON.parse(m.diagonal_profile('126', 2, 5, 2)).central, 6)} />],
   ['crop', 'The crop', 'A rational shape keeps only the cells of a design it reaches, counted before it is drawn.', <Grid grid={m.crop_grid('7', 3, 3, 2, 'ball', 55, 120, false, 'touching')} on={ink.green} className="" />],
   ['slices', 'The slices', 'The middle plane of an odd cube, a hexagon of triangles a design fills.', <Markup className="thumb" svg={m.hex_svg('23', 7, 1, 2, 'cut', 8)} />],
+  ['spectrometer', 'The spectrometer', 'The inked share of the diagonal slice is an exact closed form in the Walsh spectrum, so the hexagon blinks the recipe back.', <Sketch draw={spectrometer} className="" />],
   ['spectra', 'The spectra', 'The Laplacian of a design, its degenerate families and the slope that reads a dimension.', <Grid grid={m.two_grid('7', 2, 5, 0, 2)} on={ink.pink} className="" />],
   ['universe', 'The universe', 'Every distinct design of the plane and the cube, grown on click.', <Grid grid={m.two_grid('9', 3, 3, 0, 2)} on={ink.gold} className="" />],
   ['words', 'The words', 'One design per level, folded by the Kronecker product, and what changes when the letters swap places.', <Pixels data={m.magic_pixels(['7', '14'], [3, 7], [2, 2])} className="" />],

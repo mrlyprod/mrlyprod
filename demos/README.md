@@ -30,6 +30,7 @@
 - [sequences](sequences/) - The searchable ledger of every integer sequence the designs write, with closed forms and the OEIS entry each one matches.
 - [slices](slices/) - The central diagonal cut of a cube of odd side `n = 2k-1` is a regular hexagon of `6n^2` unit triangles, and a design's parity rule fills them into many pieces or one pierced piece as `k` alternates.
 - [spectra](spectra/) - The normalised Laplacian of a design's graph puts a third of the Sierpinski triangle's spectrum on the single eigenvalue 1, and the slope of the low end reads the random-walk spectral dimension.
+- [spectrometer](spectrometer/) - The inked share of the diagonal slice is an exact closed form in a design's Walsh spectrum, so the hexagon's two-step blink over the odd sides reads the eight-corner recipe back.
 - [spin](spin/) - A design on a turntable strobed against the frame rate, beside the exact circle mean at every radius, which is the bullseye it becomes at infinite speed.
 - [sponge](sponge/) - A code picks the filled corners of a cube and grows it level by level, with fills, voids and exposed faces answered by closed formulas before a cube is built.
 - [tour](tour/) - A dozen cards, each drawing a design live beside the integer sequence it counts and the OEIS record that holds the terms.
