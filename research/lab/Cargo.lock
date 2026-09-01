@@ -686,6 +686,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "mobius-designs"
+version = "0.1.0"
+
+[[package]]
 name = "mrlycore"
 version = "0.3.0"
 dependencies = [

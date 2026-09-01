@@ -333,6 +333,13 @@
 - [Verified] The strict inscribed diamond crop of the full side-`2m` grid holds exactly `2m(m-1)` cells. Witness: mrlymath::shape.
 - [Proved] A grid-aligned polytope crop is digit counting: walls on multiples of `3^-k` keep exactly the cells with coordinates in integer intervals at level `k`, the count factors along digit positions as in `mrlylab::press`, and the crop adds nothing. Witness: crop.md.
 
+### The digit-restricted Mobius meter
+
+- [Proved] Carry-free scaling ties the digit designs' Mobius meters together: for `F = a F'` inside `{0..q-1}`, `m -> a m` is a digit-length-preserving bijection `S_F' -> S_F` (each scaled digit stays below `q`, so no carry occurs), giving `M_F(q^L) = sum mu(a m)`; a square factor in `a` kills the meter identically (`F = {0,4}` at `q = 5`: zero at all 21 levels), and prime `a = p` gives `M_(pF')(q^L) = -sum_(p not | m) mu(m)`, the `{0,2}` column at `q = 3` reading as the `{0,1}` column twisted by the Thue-Morse sign of the binary index; asserted at every level on all eight scaled census families. Witness: mobius.md, lab/mobius-designs.
+- [Proved] The base-4 anti-symmetry `M_{0,2}(4^L) = -M_{0,1}(4^L)`: `4 | q` forces every element of `S_{0,1}` to `0` or `1 mod 4`, so even elements carry `mu = 0` and `M_{0,2}(x) = -M_{0,1}(x/2)` at every real `x`, running maxima included since `S_{0,1}` is empty strictly between `(4^L - 1)/3` and `4^L`; exact at all 22 levels, `-110/110` at `L = 15`, `34/-34` and shared `Mmax = 1553` at `L = 22`. Witness: mobius.md, lab/mobius-designs.
+- [Proved] No Euler product for a digit design: `S_F` is not multiplicatively closed, witness `4 = 11_3` and `13 = 111_3` in `S_{0,1}` at base 3 with `4 x 13 = 52 = 1221_3` outside, so `M_F` is not the coefficient sum of an inverse Dirichlet series; the series itself is built literature (abscissa Kohler and Spilker 2009, continuation and poles Burnol 2026) and carries no Mobius sum anywhere. Witness: mobius.md, REFS.md.
+- [Verified] The digit-restricted Mobius census: exact `M_F(q^L)` and running maxima `max |M_F(x)|` for all 38 digit sets with `2 <= k <= q - 1` at `q = 3, 4, 5` (depths 24, 22, 14, 21, 13, 11 by class), the ten base-10 one-digit-excluded columns to `10^8`, and full-set controls to `3^17`, `4^13`, `5^11`, `10^8`; factorization and sieve agree on the `q = 3` `{1,2}` family at every level to `L = 16`, the base-10 control reproduces A084237, and an independent second-language recompute matched 99 sampled rows exactly. Witness: lab/mobius-designs, mobius.md, A084237.
+
 ## OPEN
 
 ### Coprimality density
@@ -573,6 +580,10 @@
 
 - [Conjecture] The curved-slice dimension: the `log_3` cut-ratio exponents of the inscribed circle on the carpet read `1.140, 0.909, 0.899, 0.951` and of the sphere on the sponge `2.166, 1.579, 1.705`, hovering near the straight-slice yardsticks `d - 1 = 0.8928` and `1.7268` - yardsticks by analogy only, since Shmerkin 2019 and Wu 2019 cover intersections of `xp`- and `xq`-invariant line sets with `p, q` multiplicatively independent, not same-base carpet slices, straight or curved; five levels decide nothing. Witness: lab/crop-counts, crop.md.
 
+### The digit-restricted Mobius exponent
+
+- [Conjecture] `theta(F) = 1/2` for every digit set with `2 <= |F| <= q - 1` and squarefree digit gcd - square-root cancellation against the set's own counting function: the 47 running-maximum exponents across `q = 3, 4, 5, 10` read `0.4465..0.5358` with last-five-level drifts `0.0157..0.1056`, while the full-set controls, whose limiting exponent is `1/2` under RH and at least `1/2` unconditionally, read `0.4413..0.4517` at the same depths; the finite tables are consistent and decide nothing, single-cut exponents scattering `0.22..0.53` on the same data. Witness: lab/mobius-designs, mobius.md.
+
 ## REFUTED
 
 ### The tile monoid
@@ -682,3 +693,7 @@
 - [Refuted] The written tail is the union of a few dominant families - above `30000` the rows' written sets collapse to 953 distinct families of which 875 own a tail integer no other family writes, so every cover of the tail needs at least 875 of them. Witness: lab/integer-census.
 - [Refuted] No OEIS record contains any contiguous window of the miss set - the search behind that universal sampled 40 offsets spread over 88867 terms, and an exhaustive walk of every window against every record finds hits at every length tested: 852 at `k = 4`, 130 at `k = 10`, 37 at `k = 15` and 15 at `k = 20`, with A112820 and A118471 each carrying 20 consecutive misses and A043635 lying wholly inside the miss set. What survives is the restricted statement, absence at `k >= 4` for offsets `0..416`. Witness: lab/integer-census, A112820, A118471, A043635.
 - [Refuted] Every square below the ceiling is written - 140 of the 316 are missed, the first being `9801 = 99^2`. Witness: lab/integer-census.
+
+### The digit-restricted Mobius meter
+
+- The adversarial pass on the census: an independent linear-sieve recompute in a second language rebuilt 99 rows - nine families, four controls, one excluded-digit column, meters, counts and running maxima - and first DISAGREED on eleven `{0,1}`-family rows, traced to the recompute itself double-counting the boundary `q^l` its length filter had already caught; fixed, it agrees on all 99. Two generator runs differ in zero of 784 shared rows, and a first-draft page table assembled by hand was wrong in multiple cells before every page table was switched to script extraction from the generator's printed rows. Witness: lab/mobius-designs.
