@@ -1,0 +1,174 @@
+[package]
+name = "mrlyfig"
+version.workspace = true
+edition.workspace = true
+description = "The figure press of Mrly: the drawing kit and the figures it prints."
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+
+[dependencies]
+mrlycore.workspace = true
+mrlymath.workspace = true
+mrlynum.workspace = true
+mrlylab.workspace = true
+
+[[example]]
+name = "research-bijection"
+path = "examples/grid/research-bijection.rs"
+
+[[example]]
+name = "research-connectivity"
+path = "examples/grid/research-connectivity.rs"
+
+[[example]]
+name = "research-coprime"
+path = "examples/grid/research-coprime.rs"
+
+[[example]]
+name = "research-core"
+path = "examples/grid/research-core.rs"
+
+[[example]]
+name = "research-crop"
+path = "examples/grid/research-crop.rs"
+
+[[example]]
+name = "research-integers"
+path = "examples/grid/research-integers.rs"
+
+[[example]]
+name = "research-magic"
+path = "examples/grid/research-magic.rs"
+
+[[example]]
+name = "research-sequences"
+path = "examples/grid/research-sequences.rs"
+
+[[example]]
+name = "research-index"
+path = "examples/grid/research-index.rs"
+
+[[example]]
+name = "paper-coprime-density-above-dimension-one"
+path = "examples/board/paper-coprime-density-above-dimension-one.rs"
+
+[[example]]
+name = "paper-menger-pairwise-coprimality"
+path = "examples/board/paper-menger-pairwise-coprimality.rs"
+
+[[example]]
+name = "paper-order-sensitivity-of-kronecker-words"
+path = "examples/board/paper-order-sensitivity-of-kronecker-words.rs"
+
+[[example]]
+name = "paper-component-exponent-of-kronecker-words"
+path = "examples/board/paper-component-exponent-of-kronecker-words.rs"
+
+[[example]]
+name = "paper-sequence-census"
+path = "examples/board/paper-sequence-census.rs"
+
+[[example]]
+name = "blog-launching-mrlyprod-org"
+path = "examples/board/blog-launching-mrlyprod-org.rs"
+
+[[example]]
+name = "site-demos"
+path = "examples/board/site-demos.rs"
+
+[[example]]
+name = "research-bases"
+path = "examples/plot/research-bases.rs"
+
+[[example]]
+name = "research-complexity"
+path = "examples/plot/research-complexity.rs"
+
+[[example]]
+name = "research-dimensions"
+path = "examples/plot/research-dimensions.rs"
+
+[[example]]
+name = "research-mobius"
+path = "examples/plot/research-mobius.rs"
+
+[[example]]
+name = "research-pi"
+path = "examples/plot/research-pi.rs"
+
+[[example]]
+name = "research-walks"
+path = "examples/plot/research-walks.rs"
+
+[[example]]
+name = "paper-lemma-b-pincer"
+path = "examples/plot/paper-lemma-b-pincer.rs"
+
+[[example]]
+name = "paper-slice-recurrence-order"
+path = "examples/plot/paper-slice-recurrence-order.rs"
+
+[[example]]
+name = "paper-slice-sign-even-half"
+path = "examples/plot/paper-slice-sign-even-half.rs"
+
+[[example]]
+name = "paper-gasket-ray-machine"
+path = "examples/plot/paper-gasket-ray-machine.rs"
+
+[[example]]
+name = "research-cuts"
+path = "examples/hex/research-cuts.rs"
+
+[[example]]
+name = "paper-walsh-spectrometer"
+path = "examples/hex/paper-walsh-spectrometer.rs"
+
+[[example]]
+name = "research-slices"
+path = "examples/hex/research-slices.rs"
+
+[[example]]
+name = "research-spectra"
+path = "examples/hex/research-spectra.rs"
+
+[[example]]
+name = "research-farey"
+path = "examples/field/research-farey.rs"
+
+[[example]]
+name = "paper-moire-correlation-laws"
+path = "examples/field/paper-moire-correlation-laws.rs"
+
+[[example]]
+name = "research-spin"
+path = "examples/field/research-spin.rs"
+
+[[example]]
+name = "site-research"
+path = "examples/field/site-research.rs"
+
+[[example]]
+name = "research-method"
+path = "examples/iso/research-method.rs"
+
+[[example]]
+name = "paper-divisor-avatars"
+path = "examples/iso/paper-divisor-avatars.rs"
+
+[[example]]
+name = "site-home"
+path = "examples/iso/site-home.rs"
+
+[[example]]
+name = "site-papers"
+path = "examples/iso/site-papers.rs"
+
+[[example]]
+name = "site-og"
+path = "examples/site/site-og.rs"
+
+[[example]]
+name = "site-icon"
+path = "examples/site/site-icon.rs"

@@ -4,20 +4,22 @@
 - Rust is the only math; the pages only draw. React renders the demo pages, Three.js draws the 3D; no other dependency.
 - `bun install` fetches them; `bun run wasm` builds `pkg/` from `crates/mrlyweb` with wasm-pack.
 - One demo is one folder: a thin `demos/<name>/index.html` shell plus `demos/<name>/index.jsx`; the gallery is `demos/index.html` + `demos/index.jsx`.
-- `lib/` holds the shared code: `mrly.js`, `app.jsx`, `tree.js`, `draw.jsx`, `select.jsx`, `stage.jsx` + `stage.js`, `chart.js`, `series.jsx`, `query.js`, `md.js`, `logo.js`, `thumbs.jsx`, `cover.html` + `cover.jsx` + `cover.css`, `mrly.css`; `series.jsx` is the sequence-view kit, `Pins`, `Staircase`, `Digits`, `Ratios`, `Differences` and the `Terms` ribbon, so no page prints a bare comma list.
-- `thumbs.jsx` is the one place a demo's thumbnail is drawn: the gallery tile and the demo's cover image both call `thumb(m, name)`.
+- `lib/` holds the shared code: `mrly.js`, `app.jsx`, `tree.js`, `draw.jsx`, `select.jsx`, `stage.jsx` + `stage.js`, `chart.js`, `series.jsx`, `query.js`, `md.js`, `logo.js`, `thumbs.jsx`, `mrly.css`; `series.jsx` is the sequence-view kit, `Pins`, `Staircase`, `Digits`, `Ratios`, `Differences` and the `Terms` ribbon, so no page prints a bare comma list.
+- `thumbs.jsx` is the one place a demo's thumbnail is drawn: the gallery tile calls `thumb(m, name)`.
 - The chrome is the kit in `../ui`: `app.jsx` wraps its `Shell` as `Page` beside `mount`, `Row` and the controls, `tree.js` fills the site tree from `pages.json` plus the papers, research and blog lists, and `mrly.css` imports the kit and keeps only demo rules; `draw.jsx` wraps every canvas: `Grid`, `Signs`, `Pixels`, `Sketch`, `Markup`.
 - `Signs` is the plus-minus primitive: a warm hue for plus one, a cool hue for minus one, and the dark ground for empty.
 - `select.jsx` is the one picker: design list, code, base and Randomize; `?seed=7` replays the seventh tap, and a typed code drops the seed.
 - `useQuery` in `query.js` keeps page state in the URL, so every view is a link.
-- Words live as markdown: `blog/<slug>.md` and `pages/about.md` open with a `---` front matter block (title, date, lead, optional figure); `public/` copies straight to the site root.
-- `bun run dev` is the one command: it generates the static routes into `dist/` and serves them with every React page at `localhost:3000`, covers skipped.
-- `bun run build` writes the whole site to `dist/`: `scripts/clean.ts` empties it but keeps the `dist/_shots` cover cache, `bun build` bundles the React pages, `scripts/site.ts` writes every static route and `scripts/covers.ts` draws the covers.
+- Words live as markdown: `blog/<slug>.md` and `pages/about.md` open with a `---` front matter block (title, date, lead, optional figure naming a file in `files/figures/`); `public/` copies straight to the site root.
+- `bun run dev` is the one command: it generates the static routes into `dist/` and serves them with every React page at `localhost:3000`.
+- `bun run build` writes the whole site to `dist/`: `scripts/clean.ts` empties it, `bun build` bundles the React pages, `scripts/site.ts` writes every static route; pure bun, no Chrome, no cargo, no Python.
+- Two inputs are made on the desk and read at build time: `pkg/` from `bun run wasm` and `../../files/figures/` from `bun run figures` (the `mrlyfig` crate); the build fails with the list when a route's figure is missing.
+- Figures are named by route: `research-<page>`, `paper-<slug>`, `blog-<slug>`, `site-home`, `site-demos`, `site-papers`, `site-research`, `site-og` (1200x630) and `site-icon`; a research or blog page opens on its square figure, a paper page opens on its avatar, the cards and the doors use the same files.
+- `scripts/shelf.ts` fetches the paper shelf from GitHub into `data/shelf/` at every build and falls back to the cached copy offline; `MRLY_SHELF=/path/to/research` reads a local checkout instead.
 - Routes: `/`, `/demos/`, `/demos/<name>/`, `/papers/`, `/papers/<slug>/`, `/research/`, `/research/<name>/`, `/blog/`, `/blog/<slug>/`, `/about/` and `/404.html`, beside `sitemap.xml`, `robots.txt`, `favicon.svg`, `apple-touch-icon.png`, `icon-512.png` and `manifest.webmanifest`.
-- Every route carries a canonical link, a description, Open Graph and Twitter cards, a 1200x630 `cover.png` and JSON-LD where it has an author.
-- Covers are one headless Chrome over the built site: `MRLY_COVERS=0` skips the pass, `MRLY_COVERS=fresh` redraws every cover, `MRLY_COVER_LANES` sets how many tabs draw at once.
+- Every route carries a canonical link, a description, Open Graph and Twitter cards pointing at the one `/og.png`, and JSON-LD where it has an author.
 - `bun run check` prints the fixture numbers the crate's host test asserts; both must agree.
-- `pkg/`, `dist/` and `node_modules/` are build output and stay out of git.
+- `pkg/`, `dist/`, `data/` and `node_modules/` are build output and stay out of git.
 ## PAGES
 
 - The shelves, the cards and this list are one file: `pages.json`; a new page is one row there and nothing else.

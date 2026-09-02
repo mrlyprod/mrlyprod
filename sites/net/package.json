@@ -5,9 +5,9 @@
   "scripts": {
     "wasm": "bash ../../scripts/wasm.sh",
     "dev": "bun scripts/dev.ts",
-    "build": "bun scripts/clean.ts && bun build lib/cover.html demos/index.html demos/*/index.html --root . --outdir dist --splitting --minify --define 'process.env.NODE_ENV=\"production\"' --chunk-naming 'lib-[hash].[ext]' --asset-naming '[name]-[hash].[ext]' && bun scripts/site.ts && bun scripts/covers.ts",
+    "build": "bun scripts/clean.ts && bun build demos/index.html demos/*/index.html --root . --outdir dist --splitting --minify --define 'process.env.NODE_ENV=\"production\"' --chunk-naming 'lib-[hash].[ext]' --asset-naming '[name]-[hash].[ext]' && bun scripts/site.ts",
     "check": "bun check.ts",
-    "covers": "bun scripts/covers.ts"
+    "figures": "bash ../../scripts/figures.sh"
   },
   "dependencies": {
     "react": "^19.2.8",

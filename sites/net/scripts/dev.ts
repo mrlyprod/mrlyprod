@@ -4,7 +4,7 @@ import { statics } from "./site.ts";
 
 const org = resolve(import.meta.dir, "..");
 const dist = join(org, "dist");
-const { papers, research, blog } = statics();
+const { papers, research, blog } = await statics();
 
 const routes: Record<string, unknown> = { "/demos": (await import(join(org, "demos", "index.html"))).default };
 for (const name of readdirSync(join(org, "demos"))) {

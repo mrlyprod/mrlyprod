@@ -11,7 +11,7 @@ TARGET = f"s3://{SITE_BUCKET}"
 IMMUTABLE = "public, max-age=31536000, immutable"
 REVALIDATE = "public, max-age=0, must-revalidate"
 HASHED = ["lib-*.js", "lib-*.css", "*.wasm", "*-????????.*"]
-SKIPPED = ["_shots/*", ".DS_Store"]
+SKIPPED = [".DS_Store"]
 TYPES = [
     ("*.wasm", "application/wasm", IMMUTABLE),
     ("*.svg", "image/svg+xml", REVALIDATE),

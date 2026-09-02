@@ -1,11 +1,12 @@
 # MrlyProd
 
 - The MrlyMath crates: the mathematics of designs, and the instruments that measure them.
-- Eight crates, one chain: `mrlycore` <- `mrlynum` <- `mrlymath` <- `mrlylab` <- `mrlyweb`, with `mrlymusic` and `mrlyfont` on the substrate and `mrlygame` on both.
+- Nine crates, one chain: `mrlycore` <- `mrlynum` <- `mrlymath` <- `mrlylab` <- `mrlyweb`, with `mrlyfig` on the laboratory, `mrlymusic` and `mrlyfont` on the substrate and `mrlygame` on both.
 - `crates/mrlycore` the substrate: tensors, atoms, cells, tiles, colors, images, seeded chance, json.
 - `crates/mrlynum` the instruments: primes, divisors, series, recurrences, fft, lattices, networks.
 - `crates/mrlymath` the definitions: design codes, symmetries, counts, names, tiles, automata, renderings.
 - `crates/mrlylab` the laboratory: the sequence press and the moire stacks.
+- `crates/mrlyfig` the figure press: the drawing kit and the square figures the site and the papers open on.
 - `crates/mrlymusic` the sound: waves, notes, timbres, the composer that walks voices through chords, and the wave file.
 - `crates/mrlyfont` the alphabet: the stroked pixel glyphs, the grid a text lays out to, and the stroke-order writing animations.
 - `crates/mrlygame` the content generator: seeded life quests pressed into frames, a heatmap, audio and a manifest.

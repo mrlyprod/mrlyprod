@@ -129,6 +129,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "mrlyfig"
+version = "0.3.0"
+dependencies = [
+ "mrlycore",
+ "mrlylab",
+ "mrlymath",
+ "mrlynum",
+]
+
+[[package]]
 name = "mrlyfont"
 version = "0.3.0"
 dependencies = [

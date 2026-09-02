@@ -8,6 +8,7 @@ members = [
     "crates/mrlyfont",
     "crates/mrlygame",
     "crates/mrlylab",
+    "crates/mrlyfig",
     "crates/mrlyweb",
 ]
 
@@ -22,6 +23,12 @@ lto = true
 codegen-units = 1
 strip = true
 
+[profile.fig]
+inherits = "release"
+lto = false
+codegen-units = 16
+strip = false
+
 [workspace.dependencies]
 mrlycore = { path = "crates/mrlycore", version = "0.3.0" }
 mrlynum = { path = "crates/mrlynum", version = "0.3.0" }
@@ -30,4 +37,5 @@ mrlymusic = { path = "crates/mrlymusic", version = "0.3.0" }
 mrlyfont = { path = "crates/mrlyfont", version = "0.3.0" }
 mrlygame = { path = "crates/mrlygame", version = "0.3.0" }
 mrlylab = { path = "crates/mrlylab", version = "0.3.0" }
+mrlyfig = { path = "crates/mrlyfig", version = "0.3.0" }
 mrlyweb = { path = "crates/mrlyweb", version = "0.3.0" }

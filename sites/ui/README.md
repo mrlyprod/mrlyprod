@@ -2,7 +2,8 @@
 
 - The design kit of mrly.net: plain CSS, a little vanilla JS, a little React. No build step, no Tailwind, no CSS-in-JS, so the CSS lifts into a Shopify theme as is.
 - House style: tokens first, one class per idea, semantic HTML, light on `:root` and dark twice (`prefers-color-scheme` guarded by `:root:not([data-theme="light"])`, then `:root[data-theme="dark"]`), AA contrast in both, 44px targets on coarse pointers, no motion under `prefers-reduced-motion`.
-- Data inks (`--blue --orange --gold --green --pink`) never change with the theme because the demos paint with them; `--mix` dims them into text colour on light ground; `--art` is the dark ground every canvas keeps in both themes.
+- Data inks (`--blue --orange --gold --green --pink`) never change with the theme because the demos and the figures paint with them; `--mix` dims them into text colour on light ground; `--art` is the dark ground every canvas and every figure keeps in both themes.
+- `.tile img` is 3:2 for the demo thumbnails; a page overrides it to square for the figures.
 - Panes dock at and above 74rem and slide as drawers below; state lives as `data-left` / `data-right` = `open` | `shut` on `html`, theme as `data-theme` = `light` | `dark` (absent = auto), both in localStorage; `html.js` marks a wired page.
 
 ## FILES
