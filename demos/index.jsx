@@ -140,7 +140,7 @@ const ART = {
   zeta: <Sketch draw={zeta} className="" />,
 };
 
-const BLANK = <Grid grid={m.two_grid('105', 2, 5, 0, 2)} on={ink.dim} className="" />;
+const BLANK = <Grid grid={m.two_grid('6', 2, 5, 0, 2)} on={ink.dim} className="" />;
 
 const GROUPS = manifest.shelves.reduce((groups, shelf) => {
   const last = groups[groups.length - 1];

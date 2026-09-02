@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "wasm": "bash ../scripts/wasm.sh",
-    "dev": "bun index.html */index.html",
+    "dev": "bun scripts/dev.ts",
     "build": "rm -rf dist && bun build index.html */index.html --outdir dist --splitting --minify --chunk-naming 'lib-[hash].[ext]' --asset-naming '[name]-[hash].[ext]' && bun scripts/site.ts",
     "check": "bun check.ts"
   },

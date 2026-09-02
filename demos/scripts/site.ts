@@ -180,10 +180,16 @@ function sitemap() {
   return routes.length;
 }
 
-if (!existsSync(join(dist, "index.html"))) throw new Error("dist/index.html missing: run bun build first");
-copyFileSync(join(demos, "lib", "paper.css"), join(dist, "paper.css"));
-const nShells = shells();
-const nPapers = papers();
-const nResearch = researchPages();
-const nRoutes = sitemap();
-console.log(`site: ${nShells} shells, ${nPapers} papers, ${nResearch} research pages, ${nRoutes} routes`);
+export function statics() {
+  mkdirSync(dist, { recursive: true });
+  copyFileSync(join(demos, "lib", "paper.css"), join(dist, "paper.css"));
+  return { papers: papers(), research: researchPages() };
+}
+
+if (import.meta.main) {
+  if (!existsSync(join(dist, "index.html"))) throw new Error("dist/index.html missing: run bun build first");
+  const nShells = shells();
+  const { papers: nPapers, research: nResearch } = statics();
+  const nRoutes = sitemap();
+  console.log(`site: ${nShells} shells, ${nPapers} papers, ${nResearch} research pages, ${nRoutes} routes`);
+}

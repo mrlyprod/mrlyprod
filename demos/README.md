@@ -9,7 +9,7 @@
 - `Signs` is the plus-minus primitive: a warm hue for plus one, a cool hue for minus one, and the dark ground for empty.
 - `select.jsx` is the one picker: design list, code, base and Randomize; `?seed=7` replays the seventh tap, and a typed code drops the seed.
 - `useQuery` in `query.js` keeps page state in the URL, so every view is a link.
-- `bun run dev` serves every page at `localhost:3000` as `/<name>`; `bun run build` writes the static site to `dist/`.
+- `bun run dev` is the one command: it generates the papers and research pages into `dist/` and serves them with every React page at `localhost:3000`; `bun run build` writes the whole static site to `dist/`.
 - `bun run build` also generates the papers and research pages into `dist/` from the shelf and the research tree, through `scripts/site.ts` and `lib/md.js`.
 - `bun run check` prints the fixture numbers the crate's host test asserts; both must agree.
 - `pkg/`, `dist/` and `node_modules/` are build output and stay out of git.
