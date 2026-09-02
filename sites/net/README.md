@@ -33,6 +33,8 @@
 - [tile](demos/tile/) - One design repeated: side by side on the square lattice in the plane and in the cube, interlocked as a hexagon on the triangular one, where the fills multiply by the copy count exactly and the exposed faces do not.
 - [crop](demos/crop/) - A named shape of rational radius keeps only the cells of a design it reaches, with the in, cut and out regions counted exactly before anything is drawn.
 - [tour](demos/tour/) - A dozen cards, each drawing a design live beside the integer sequence it counts and the OEIS record that holds the terms.
+- [mrlylife](demos/mrlylife/) - Life with the neighbourhood set free: the mask is a design at any side and level, the birth and survival counts come by hand or from a named sequence, and the board runs in one dimension or two.
+- [wolfram](demos/wolfram/) - Wolfram's 256 elementary rules are the 256 three-dimensional parity designs bit for bit, so every rule arrives with a design's card, and the additive rules draw the plane designs in time.
 
 ### Slices and stacks
 
@@ -85,4 +87,4 @@
 - [sequences](demos/sequences/) - The searchable ledger of every integer sequence the designs write, with closed forms and the OEIS entry each one matches.
 - [plot](demos/plot/) - Any sequence the ledger holds drawn rather than listed, with the smallest linear recurrence its terms satisfy, its characteristic polynomial and its growth read out beside it, and a second sequence mixed in to see the rule a blend inherits.
 - [integers](demos/integers/) - The union of every sequence the registry writes, read integer by integer: which of the first thousand the designs write, how many rows write each, and which are missed inside the pinned window.
-- [life](demos/life/) - Cellular automata whose birth and survival rules are read from named sequences, run until the grid dies, freezes or loops.
+- [life](demos/life/) - Conway's rule on the eight cells around, which are the side-3 carpet tile with its centre popped, seeded by soup, glider or R-pentomino and run to its fate.

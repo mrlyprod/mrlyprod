@@ -1,120 +1,130 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { ready, ink } from '../../lib/mrly.js';
-import { mount, Page, Row, Pick, Slider, Text, Check, Btn, Stats, Stat, Note, Group } from '../../lib/app.jsx';
+import { mount, Page, Group, Pick, Slider, Check, Btn, Stats, Stat, Note } from '../../lib/app.jsx';
 import { Grid } from '../../lib/draw.jsx';
 import { useSeeds } from '../../lib/select.jsx';
+import { useQuery } from '../../lib/query.js';
 
 const m = await ready();
-const W = 96, H = 96, BUDGET = 8;
-const SEEDS = [['noise', 'noise'], ['7', 'carpet'], ['14', 'net'], ['9', 'void'], ['blank', 'blank']];
-const NAMES = [...m.life_sequences()];
 
-const parse = (text) => Uint32Array.from(text.replace(/\D/g, ''), (d) => +d);
+const W = 96;
+const H = 96;
+const LIMIT = 512;
+const BIRTH = Uint32Array.from([3]);
+const SURVIVE = Uint32Array.from([2, 3]);
+
+const FIRST = { seed: 'soup', density: 0.3, wrap: true };
+
+const SEEDS = [['soup', 'soup'], ['glider', 'glider'], ['pentomino', 'R-pentomino'], ['blinker', 'blinker'], ['block', 'block'], ['blank', 'blank']];
+
+const SHAPES = {
+  glider: [[1, 0], [2, 1], [0, 2], [1, 2], [2, 2]],
+  pentomino: [[1, 0], [2, 0], [0, 1], [1, 1], [1, 2]],
+  blinker: [[0, 0], [1, 0], [2, 0]],
+  block: [[0, 0], [1, 0], [0, 1], [1, 1]],
+};
+
+function sow(kind, density, tap) {
+  if (kind === 'soup') return m.life_noise(W, H, density, tap || 1);
+  const types = new Uint8Array(W * H);
+  const cells = SHAPES[kind];
+  if (!cells) return types;
+  const ox = (W >> 1) - 1;
+  const oy = (H >> 1) - 1;
+  for (const [x, y] of cells) types[(oy + y) * W + ox + x] = 1;
+  return types;
+}
+
+const alive = (types) => types.reduce((a, b) => a + b, 0);
 
 function App() {
-  const s = useSeeds();
-  const [pick, setPick] = useState({ seed: 'noise', density: 0.35, birth: '3', survive: '23', wrap: true, birthSeq: '', surviveSeq: '' });
-  const [running, setRunning] = useState(false);
-  const [generation, setGeneration] = useState(0);
+  const taps = useSeeds();
+  const [pick, set] = useQuery(FIRST);
+  const [playing, setPlaying] = useState(false);
+  const [age, setAge] = useState(0);
   const [verdict, setVerdict] = useState(null);
   const [error, setError] = useState(null);
   const [, force] = useReducer((x) => x + 1, 0);
-  const grid = useRef(null);
-  grid.current ??= m.life_noise(W, H, pick.density, s.get() || 1);
-
-  const rule = () => [parse(pick.birth), parse(pick.survive), pick.wrap];
+  const board = useRef(null);
+  board.current ??= sow(pick.seed, pick.density, taps.get());
 
   const reseed = (patch = {}) => {
     const next = { ...pick, ...patch };
-    setPick(next);
-    setGeneration(0);
+    set(patch);
+    setPlaying(false);
+    setAge(0);
     setVerdict(null);
-    if (next.seed === 'noise') {
-      grid.current = m.life_noise(W, H, next.density, s.get() || 1);
-    } else if (next.seed === 'blank') {
-      grid.current = new Uint8Array(W * H);
-    } else {
-      const cell = m.two_grid(next.seed, 3, 3, 0, 2);
-      grid.current = new Uint8Array(W * H);
-      const off = Math.floor((W - cell.width) / 2);
-      for (let y = 0; y < cell.height; y++) {
-        grid.current.set(cell.types.subarray(y * cell.width, (y + 1) * cell.width), (y + off) * W + off);
-      }
-    }
+    setError(null);
+    board.current = sow(next.seed, next.density, taps.get());
+    force();
   };
 
   const step = () => {
     try {
-      grid.current = m.life_next(grid.current, W, H, ...rule());
-      setGeneration((g) => g + 1);
+      board.current = m.life_next(board.current, W, H, BIRTH, SURVIVE, pick.wrap);
+      setAge((g) => g + 1);
       setError(null);
-    } catch (error) {
-      setRunning(false);
-      setError(error);
+    } catch (thrown) {
+      setPlaying(false);
+      setError(thrown);
     }
   };
 
   useEffect(() => {
-    if (!running) return;
+    if (!playing) return;
     const timer = setInterval(step, 40);
     return () => clearInterval(timer);
-  }, [running, pick.birth, pick.survive, pick.wrap]);
+  }, [playing, pick.wrap]);
 
   const fate = () => {
     try {
-      const run = JSON.parse(m.life_run(grid.current, W, H, ...rule(), 512));
-      setVerdict(<span>fate <b>{run.fate}</b> after <b>{run.count}</b> generations{run.loop ? <span> in a loop of <b>{run.loop}</b></span> : null}</span>);
-    } catch (error) {
-      setError(error);
+      const run = JSON.parse(m.life_run(board.current, W, H, BIRTH, SURVIVE, pick.wrap, LIMIT));
+      setVerdict(run);
+      setError(null);
+    } catch (thrown) {
+      setError(thrown);
     }
   };
 
   const toggle = (event) => {
     const box = event.target.getBoundingClientRect();
-    const x = Math.floor((event.clientX - box.left) / box.width * W), y = Math.floor((event.clientY - box.top) / box.height * H);
-    grid.current[y * W + x] ^= 1;
+    const x = Math.floor((event.clientX - box.left) / box.width * W);
+    const y = Math.floor((event.clientY - box.top) / box.height * H);
+    board.current[y * W + x] ^= 1;
+    setVerdict(null);
     force();
-  };
-
-  const sequenced = (side, name) => {
-    const patch = { [`${side}Seq`]: name };
-    if (name) patch[side] = Array.from(m.life_sequence(name, BUDGET)).join('');
-    setPick({ ...pick, ...patch });
   };
 
   const controls = (
     <>
       <Group name="Run">
-        <Btn primary onClick={() => setRunning(!running)}>{running ? 'Pause' : 'Play'}</Btn>
+        <Btn primary onClick={() => setPlaying(!playing)}>{playing ? 'Pause' : 'Play'}</Btn>
         <Btn onClick={step}>Step</Btn>
         <Btn onClick={fate}>Run to fate</Btn>
-      </Group>
-      <Group name="The rule">
-        <Pick label="birth from" value={pick.birthSeq} options={[['', 'by hand'], ...NAMES]} onChange={(v) => sequenced('birth', v)} />
-        <Text label="birth counts" value={pick.birth} onChange={(v) => setPick({ ...pick, birth: v, birthSeq: '' })} />
-        <Pick label="survive from" value={pick.surviveSeq} options={[['', 'by hand'], ...NAMES]} onChange={(v) => sequenced('survive', v)} />
-        <Text label="survive counts" value={pick.survive} onChange={(v) => setPick({ ...pick, survive: v, surviveSeq: '' })} />
-        <Check label="wrap" checked={pick.wrap} onChange={(v) => setPick({ ...pick, wrap: v })} />
+        <Btn onClick={() => reseed()}>Reset</Btn>
+        <Check label="wrap" checked={pick.wrap} onChange={(v) => set({ wrap: v })} />
       </Group>
       <Group name="The seed">
         <Pick label="seed" value={pick.seed} options={SEEDS} onChange={(v) => reseed({ seed: v })} />
-        <Slider label="density" value={pick.density} min={0.05} max={0.95} step={0.01} onChange={(v) => reseed({ density: v })} />
-        <Btn onClick={() => { s.next(); reseed({ seed: 'noise' }); }}>Randomize</Btn>
+        <Slider label="density" value={pick.density} min={0.05} max={0.95} step={0.01} onChange={(v) => reseed({ seed: 'soup', density: v })} />
+        <Btn onClick={() => { taps.next(); reseed({ seed: 'soup' }); }}>Randomize</Btn>
       </Group>
     </>
   );
 
   return (
-    <Page crumb="life" title="Life, ruled by sequences"
-      sub="A cell is born or survives when its neighbor count sits in a list, and the lists can be spelled by hand or drawn from a named sequence: the primes, the Fibonacci numbers, the fills of a carpet. Seed a grid, pick the rule, and run it to its fate."
-      foot="The Moore neighborhood holds eight cells, so a sequence is cut at eight: primes give 2, 3, 5, 7 and Fibonacci gives 1, 2, 3, 5, 8. Every generation is stepped in Rust, and the run to fate replays the grid until it dies, freezes, loops or hits 512 generations."
+    <Page crumb="life" title="Conway's Life"
+      sub="One rule on the eight cells around: a dead cell with exactly three live neighbours is born, a live cell with two or three stays, everything else dies. Drop a soup or a glider, then play it, step it, or run it to its fate."
+      foot={<>The neighbourhood is not a hand-drawn ring: it is the side-3 carpet tile `mrly_bang_d2_7` with its centre popped, the same eight offsets a design writes at level one. Every generation and every fate below is stepped in Rust through wasm and the page only draws. Life is one point of a much larger family - any mask, any birth and survival list, one or two dimensions - and that family is <a href="../mrlylife">mrlylife</a>.</>}
       controls={controls}>
-      <Grid grid={{ width: W, height: H, types: grid.current }} on={ink.green} style={{ maxWidth: 640 }} onClick={toggle} aria-label="The grid, click a cell to turn it on or off" />
+      <Grid grid={{ width: W, height: H, types: board.current }} on={ink.green} style={{ maxWidth: 640 }} onClick={toggle} aria-label="The grid, click a cell to turn it on or off" />
       <Stats>
-        <Stat label="rule">{`B${Array.from(parse(pick.birth)).join('')}/S${Array.from(parse(pick.survive)).join('')}`}</Stat>
-        <Stat label="generation">{generation}</Stat>
-        {verdict}
+        <Stat label="rule">{`mrly_rule_b3_s23${pick.wrap ? '_w' : ''}`}</Stat>
+        <Stat label="generation">{age}</Stat>
+        <Stat label="population">{alive(board.current)}</Stat>
+        {verdict && <Stat label="fate">{verdict.fate} after {verdict.count}{verdict.loop ? `, loop ${verdict.loop}` : ''}</Stat>}
       </Stats>
+      <p className="sub">Click any cell to turn it on or off, then play from there. Run to fate replays the board from here for at most {LIMIT} generations and reports whether it dies, freezes, loops, or is still moving when the count runs out. The board is {W} by {H}; with wrap on it is a torus, with wrap off the outside is dead ground.</p>
       <Note error={error} />
     </Page>
   );

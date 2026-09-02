@@ -85,6 +85,22 @@
       "paper": "sequence-census"
     },
     {
+      "name": "mrlylife",
+      "title": "mrlylife",
+      "blurb": "Life with the neighbourhood set free: the mask is a design at any side and level, the birth and survival counts come by hand or from a named sequence, and the board runs in one dimension or two.",
+      "category": "designs",
+      "research": "automata",
+      "paper": null
+    },
+    {
+      "name": "wolfram",
+      "title": "The rules",
+      "blurb": "Wolfram's 256 elementary rules are the 256 three-dimensional parity designs bit for bit, so every rule arrives with a design's card, and the additive rules draw the plane designs in time.",
+      "category": "designs",
+      "research": "automata",
+      "paper": null
+    },
+    {
       "name": "cuts",
       "title": "The cuts",
       "blurb": "Every plane x + y + z = s through a level-L solid meets exactly 3^L cells, and the height's binary digits make each cut a Sierpinski gasket.",
@@ -262,10 +278,10 @@
     },
     {
       "name": "life",
-      "title": "Life",
-      "blurb": "Cellular automata whose birth and survival rules are read from named sequences, run until the grid dies, freezes or loops.",
+      "title": "Conway's Life",
+      "blurb": "Conway's rule on the eight cells around, which are the side-3 carpet tile with its centre popped, seeded by soup, glider or R-pentomino and run to its fate.",
       "category": "ledger",
-      "research": null,
+      "research": "automata",
       "paper": null
     }
   ]

@@ -17,6 +17,13 @@ const sieve = (m) =>
     s.finish();
     return s;
   });
+const cone = (m) =>
+  once('cone', () => {
+    const full = m.eca_seed(110, 31);
+    const types = new Uint8Array(48 * 32);
+    for (let t = 0; t < 32; t += 1) types.set(full.types.slice(t * full.width + 8, t * full.width + 56), t * 48);
+    return { width: 48, height: 32, types };
+  });
 const census = (m) =>
   once('census', () => {
     m.census_walk(JSON.parse(m.census_window()).tiers[0].keys);
@@ -135,6 +142,8 @@ const DRAW = {
   universe: (m) => <Grid grid={m.two_grid('9', 3, 3, 0, 2)} on={ink.gold} className="" />,
   words: (m) => <Pixels data={m.magic_pixels(['7', '14'], [3, 7], [2, 2])} className="" />,
   life: (m) => <Grid grid={{ width: 48, height: 48, types: m.life_noise(48, 48, 0.4, 3) }} on={ink.green} className="" />,
+  wolfram: (m) => <Grid grid={cone(m)} on={ink.gold} className="" />,
+  mrlylife: (m) => <Grid grid={m.life_mask(2, '7', 3, 2)} on={ink.green} className="" />,
   moire: (m) => <Pixels data={m.moire('weave', 11, 120, 'fire', 2, false)} className="" />,
   morse: (m) => <Signs grid={m.morse_lift('parity', 7)} className="" />,
   spin: (m) => <Pixels data={m.wheel(m.profile(Float32Array.from(m.two_grid('495', 3, 4, 0, 3).types), 81, 256), 180, 'fire', 64, false)} className="" />,

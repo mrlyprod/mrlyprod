@@ -2,8 +2,12 @@
 pub mod animate;
 /// The centred cropping and tiling of a run's frames.
 pub mod crop;
+/// The elementary automata: their stepping, their space-time diagrams and the card of one rule.
+pub mod elementary;
 /// The cumulative-visit heatmap frames of a run.
 pub mod heatmap;
+/// The design masks a rule reads and the lattice they generate.
+pub mod mask;
 /// The entropy, churn and chaos readings of a run.
 pub mod metrics;
 /// The run config and the recorded life.
@@ -78,7 +82,12 @@ impl Fate {
 
 pub use animate::animate;
 pub use crop::{crop, tessellate};
+pub use elementary::{
+    affine, corner_bits, cube_orbit, gasket, genus, history, lambda, npn_class, outer_totalistic,
+    popcount, reversible, rule_degree, rule_name, single_seed, step, surjective, wolfram_class,
+};
 pub use heatmap::{heatmap, heatmap_range};
+pub use mask::{design_mask, lattice_index, mask_offsets};
 pub use metrics::{churn, entropy};
 pub use models::{Config, Life};
 pub use render::{frames, frames_of, frames_with, movie};

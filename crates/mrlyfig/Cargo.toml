@@ -172,3 +172,15 @@ path = "examples/site/site-og.rs"
 [[example]]
 name = "site-icon"
 path = "examples/site/site-icon.rs"
+
+[[example]]
+name = "research-automata"
+path = "examples/grid/research-automata.rs"
+
+[[example]]
+name = "demo-wolfram"
+path = "examples/grid/demo-wolfram.rs"
+
+[[example]]
+name = "demo-mrlylife"
+path = "examples/grid/demo-mrlylife.rs"

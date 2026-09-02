@@ -6,6 +6,15 @@ await init({ module_or_path: bytes });
 const blinker = new Uint8Array(25);
 for (const site of [7, 12, 17]) blinker[site] = 1;
 const grid = m.two_grid('7', 3, 3, 0, 2);
+const sum = (types: Uint8Array) => types.reduce((a: number, b: number) => a + b, 0);
+const line = Uint8Array.from([0, 1, 1, 0, 1, 0, 0]);
+const cone110 = m.eca_history(Uint8Array.from([0, 0, 1, 0, 0]), 110, 3, false);
+const card110 = JSON.parse(m.eca_card(110));
+const card90 = JSON.parse(m.eca_card(90));
+const maskMoore = m.life_mask(2, '7', 3, 1);
+const maskDeep = m.life_mask(2, '7', 3, 2);
+const maskDiag = m.life_mask(2, '9', 3, 1);
+const maskLine = m.life_mask(1, '1', 3, 1);
 const faces = m.three_faces('23', 3, 3, 2);
 const race = new m.Race('127', 3, 4, 3, 300, 1);
 const cut = JSON.parse(m.diagonal_profile('126', 2, 4, 2));
@@ -180,6 +189,18 @@ const checks: [string, unknown, unknown][] = [
   ['press count_below', m.press_count_below('7', 2, 2, '27'), '18'],
   ['life blinker loop', JSON.parse(m.life_run(blinker, 5, 5, [3], [2, 3], false, 16)).loop, 2],
   ['life primes', Array.from(m.life_sequence('primes', 8)).join(','), '2,3,5,7'],
+  ['eca_next 110', Array.from(m.eca_next(Uint8Array.from([0, 0, 1, 0, 0]), 110, false)).join(','), '0,1,1,0,0'],
+  ['eca_history 110 rows', `${cone110.width},${cone110.height}`, '5,4'],
+  ['eca_seed 110 fill', sum(m.eca_seed(110, 31).types), 326],
+  ['eca_seed 90 fill', sum(m.eca_seed(90, 8).types), 29],
+  ['eca_card 110 class', `${card110.b3_rep},${card110.wolfram_rep},${card110.npn_rep},${card110.genus}`, '61,110,25,comp'],
+  ['eca_card 90 totalistic', `${card90.outer_totalistic.birth},${card90.outer_totalistic.survive},${card90.surjective}`, '1,1,true'],
+  ['eca_soup seeded', String(m.eca_soup(64, 0.5, 7).join(',') === m.eca_soup(64, 0.5, 7).join(',')), 'true'],
+  ['life_mask 7 level 2', `${maskDeep.width},${sum(maskDeep.types)}`, '9,64'],
+  ['life_mask_index moore', m.life_mask_index(maskDeep.types, 9, 9), 1],
+  ['life_mask_index diagonal', m.life_mask_index(maskDiag.types, 3, 3), 2],
+  ['life_next_masked line', Array.from(m.life_next_masked(line, 7, 1, [1], [0, 1], maskLine.types, 3, 1, false)).join(','), '1,1,1,0,1,1,0'],
+  ['life_run_masked blinker', JSON.parse(m.life_run_masked(blinker, 5, 5, [3], [2, 3], maskMoore.types, 3, 3, false, 16)).loop, 2],
   ['moire heatmap bytes', m.moire('heatmap', 9, 32, 'fire', 64, false).rgba.length, 4096],
   ['hex_svg polygons', m.hex_svg('23', 3, 1, 2, 'iso', 10).includes('<polygon'), true],
   ['slice_census 23 mesh', `${slice.triangles},${slice.fills},${slice.vertices},${slice.euler}`, '54,42,37,1'],
@@ -534,17 +555,17 @@ const manifest = await Bun.file(`${desk}/pages.json`).json();
 const shelfKeys = new Set(manifest.shelves.map((shelf: { key: string }) => shelf.key));
 const rows: { name: string; blurb: string; category: string; research: string | null; paper: string | null }[] = manifest.pages;
 const ignored = new Set(['dist', 'lib', 'node_modules', 'pkg', 'scripts']);
-const folders = readdirSync(desk, { withFileTypes: true })
-  .filter((entry) => entry.isDirectory() && !ignored.has(entry.name) && existsSync(`${desk}/${entry.name}/index.html`))
+const folders = readdirSync(`${desk}/demos`, { withFileTypes: true })
+  .filter((entry) => entry.isDirectory() && !ignored.has(entry.name) && existsSync(`${desk}/demos/${entry.name}/index.html`))
   .map((entry) => entry.name)
   .sort();
 const named = rows.map((row) => row.name).sort();
 const strays = named.filter((name) => !folders.includes(name)).concat(folders.filter((name) => !named.includes(name)));
 const shelfless = rows.filter((row) => !shelfKeys.has(row.category)).map((row) => row.name);
-const unpaged = rows.filter((row) => row.research && !existsSync(`${desk}/../research/${row.research}.md`)).map((row) => row.name);
+const unpaged = rows.filter((row) => row.research && !existsSync(`${desk}/../../research/${row.research}.md`)).map((row) => row.name);
 const readme = await Bun.file(`${desk}/README.md`).text();
 const listed = readme.slice(readme.indexOf('## PAGES')).split('\n')
-  .map((line) => /^- \[([a-z]+)\]\(\1\/\) - (.+)$/.exec(line))
+  .map((line) => /^- \[([a-z]+)\]\(demos\/\1\/\) - (.+)$/.exec(line))
   .filter((hit) => hit !== null)
   .map((hit) => `${hit![1]} ${hit![2]}`);
 const wanted = rows.map((row) => `${row.name} ${row.blurb}`);

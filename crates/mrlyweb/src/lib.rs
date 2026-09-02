@@ -4,6 +4,8 @@
 use mrlycore::MrlyError;
 use wasm_bindgen::prelude::*;
 
+/// The elementary automata: their rows stepped, their space-time diagrams and the card of one rule.
+pub mod automata;
 /// The universes: codes, symmetries, counts, closed-form fills and names.
 pub mod bang;
 /// The blends: registry sequences drawn as terms, ratios, differences and the recurrence they satisfy, and the term operations that mix two of them.

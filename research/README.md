@@ -69,6 +69,7 @@ The mathematics of the mrly tree: a parity rule on the corners of a cube, substi
 
 - [core](core.md) - what a design is, the headline counts, and the three genera.
 - [bijection](bijection.md) - designs are Boolean functions up to cube symmetry; the strongest theorem in the tree.
+- [automata](automata.md) - an elementary cellular automaton is a three-dimensional design read as a rule and Life a nine-dimensional one: what the identity buys, and what it cannot.
 - [complexity](complexity.md) - Boolean complexity of the catalog, and the Laplacian spectra of the fractals it builds.
 - [cuts](cuts.md) - the six-gasket theorem: a diagonal cut through one parity solid is Sierpinski all the way down.
 - [slices](slices.md) - the diagonal slice of the solid cube: the `6n` census, centered-hexagonal vertices, and the splitting-prime rule.

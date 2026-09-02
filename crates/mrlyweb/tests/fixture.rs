@@ -1,4 +1,5 @@
 use mrlycore::json::parse;
+use mrlyweb::automata::*;
 use mrlyweb::bang::*;
 use mrlyweb::blend::*;
 use mrlyweb::carry::*;
@@ -1631,4 +1632,93 @@ fn the_carry_sign_law_alternates_at_both_bases() {
     assert_eq!(last["dimension"], 50);
     assert!((last["ratio"].as_f64().unwrap() - 13.0 / 12.0).abs() < 1e-9);
     assert!((last["free"].as_f64().unwrap() - 13.0 / 12.0).abs() < 1e-12);
+}
+
+#[test]
+fn the_automata_exports_answer() {
+    assert_eq!(eca_next(&[0, 0, 1, 0, 0], 110, false), vec![0, 1, 1, 0, 0]);
+    assert_eq!(eca_next(&[1, 0, 0, 0, 0], 170, true), vec![0, 0, 0, 0, 1]);
+    let run = eca_history(&[0, 0, 1, 0, 0], 110, 3, false);
+    assert_eq!((run.width, run.height), (5, 4));
+    assert_eq!(&run.types[5..10], &[0, 1, 1, 0, 0]);
+    let cone = eca_seed(110, 31);
+    assert_eq!((cone.width, cone.height), (63, 32));
+    assert_eq!(cone.types.iter().map(|&b| b as u32).sum::<u32>(), 326);
+    assert_eq!(
+        eca_seed(90, 8).types.iter().map(|&b| b as u32).sum::<u32>(),
+        29
+    );
+    let card = parse(&eca_card(110)).unwrap();
+    assert_eq!(card["name"], "mrly_bang_d3_110");
+    assert_eq!(
+        (card["popcount"].clone(), card["degree"].clone()),
+        (5.into(), 3.into())
+    );
+    assert_eq!(card["lambda"], 0.625);
+    assert_eq!(card["genus"], "comp");
+    assert_eq!(
+        (card["b3_rep"].clone(), card["wolfram_rep"].clone()),
+        (61.into(), 110.into())
+    );
+    assert_eq!(card["npn_rep"], 25);
+    assert_eq!(card["b3_orbit"].as_array().unwrap().len(), 24);
+    assert_eq!(card["wolfram_class"].to_string(), "[110,124,137,193]");
+    assert!(!card["surjective"].as_bool().unwrap());
+    assert!(!card["reversible"].as_bool().unwrap());
+    assert!(card["outer_totalistic"].is_null());
+    assert!(card["gasket"].is_null());
+    let gasket = parse(&eca_card(60)).unwrap();
+    assert_eq!(gasket["gasket"], "mrly_bang_d2_13");
+    assert_eq!(gasket["b3_rep"], 60);
+    let conway = parse(&eca_card(90)).unwrap();
+    assert_eq!(conway["outer_totalistic"]["birth"].to_string(), "[1]");
+    assert_eq!(conway["outer_totalistic"]["survive"].to_string(), "[1]");
+    assert!(conway["surjective"].as_bool().unwrap());
+    assert_eq!(eca_soup(64, 0.0, 1).iter().sum::<u8>(), 0);
+    assert_eq!(eca_soup(64, 1.0, 1).iter().sum::<u8>(), 64);
+    assert_eq!(eca_soup(64, 0.5, 7), eca_soup(64, 0.5, 7));
+    let moore = life_mask(2, "7", 3, 1).unwrap();
+    assert_eq!((moore.width, moore.height), (3, 3));
+    assert_eq!(moore.types.iter().map(|&b| b as u32).sum::<u32>(), 8);
+    let deep = life_mask(2, "7", 3, 2).unwrap();
+    assert_eq!((deep.width, deep.height), (9, 9));
+    assert_eq!(deep.types.iter().map(|&b| b as u32).sum::<u32>(), 64);
+    let line = life_mask(1, "1", 3, 1).unwrap();
+    assert_eq!((line.width, line.height), (3, 1));
+    assert_eq!(line.types, vec![1, 0, 1]);
+    let wide = life_mask(1, "1", 5, 1).unwrap();
+    assert_eq!(wide.types, vec![1, 0, 0, 0, 1]);
+    assert_eq!(life_mask_index(&deep.types, 9, 9).unwrap(), 1);
+    assert_eq!(life_mask_index(&line.types, 3, 1).unwrap(), 1);
+    assert_eq!(life_mask_index(&wide.types, 5, 1).unwrap(), 2);
+    let diagonal = life_mask(2, "9", 3, 1).unwrap();
+    assert_eq!(life_mask_index(&diagonal.types, 3, 3).unwrap(), 2);
+    let row = [0, 1, 1, 0, 1, 0, 0];
+    let stepped = life_next_masked(&row, 7, 1, &[1], &[0, 1], &line.types, 3, 1, false).unwrap();
+    assert_eq!(stepped, eca_next(&row, 94, false));
+    let paced = parse(
+        &life_run_masked(
+            &blinker(),
+            5,
+            5,
+            &[3],
+            &[2, 3],
+            &moore.types,
+            3,
+            3,
+            false,
+            16,
+        )
+        .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(
+        (paced["fate"].clone(), paced["loop"].clone()),
+        ("loop".into(), 2.into())
+    );
+    assert!(life_mask(3, "7", 3, 1).is_err());
+    assert!(life_mask(2, "7", 4, 1).is_err());
+    assert!(life_mask_index(&[1, 0, 1], 2, 2).is_err());
+    assert!(life_next_masked(&row, 7, 1, &[1], &[], &line.types, 4, 1, false).is_err());
+    assert!(life_next_masked(&row, 7, 1, &[1], &[], &wide.types, 5, 1, false).is_ok());
 }
