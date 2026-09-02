@@ -315,7 +315,7 @@ pub fn characteristic(coefficients: &[(i128, i128)]) -> Vec<(i128, i128)> {
     out
 }
 
-/// Returns the largest real root of a recurrence's characteristic polynomial, the growth rate, or a not-a-number where no real root lands.
+/// Returns the largest positive real root of a recurrence's characteristic polynomial, the growth rate, or a not-a-number where no real root lands.
 ///
 /// A simple root lands at machine precision; a repeated root lands to a few decimals only.
 ///

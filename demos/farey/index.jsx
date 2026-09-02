@@ -39,7 +39,7 @@ function App() {
   return (
     <Page crumb="farey" title="The stack lights the Farey fractions"
       sub="Scale n draws a line at every k/n. A reduced fraction a/b is drawn by every scale divisible by b, so its brightness is the floor of Q over b. Scale n lights phi(n) nodes never seen before, and phi(n) = n - 1 exactly when n is prime."
-      foot="The nodes come from the Stern-Brocot walk of the Farey sequence and the totients from a sieve, both in Rust; the page only stacks bars. The primes are read off the totients as the scales of maximal novelty.">
+      foot={<>The nodes come from the Stern-Brocot walk of the Farey sequence and the totients from a sieve, both in Rust; the page only stacks bars. The primes are read off the totients as the scales of maximal novelty. What the lit nodes are, and why how evenly they spread is equivalent to the Riemann hypothesis, is in <a href="https://github.com/mrlyprod/mrlyprod/blob/main/research/farey.md">the Farey note</a>.</>}>
       <Row>
         <Slider label="Q" value={q} min={2} max={80} onChange={setQ} />
         <Check label="mark the primes" checked={marks} onChange={setMarks} />

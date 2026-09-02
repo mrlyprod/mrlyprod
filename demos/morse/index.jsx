@@ -193,7 +193,7 @@ function App() {
   return (
     <Page crumb="morse" title="The Thue-Morse word"
       sub="The most famous aperiodic sequence is a mrly object. Its letter is a digit rule, the same move every design makes; its famous plane pattern is the Kronecker power of one plus-minus tile; and it is the schedule along which the tree computed a component exponent exactly."
-      foot={<>Every letter, grid, run and verdict below comes out of the crates through wasm; the page only draws. The plus-minus render is the first on the site: a warm cell is plus one, a cool cell is minus one, and a dark cell is empty. Links: <a href={`../words${wordLink}`}>the words</a> drives a word by this schedule, <a href="../moire">moire</a> stacks one design over its scales, <a href="../sequences">the sequences</a> holds the ledger the designs write.</>}>
+      foot={<>Every letter, grid, run and verdict below comes out of the crates through wasm; the page only draws. The plus-minus render is the first on the site: a warm cell is plus one, a cool cell is minus one, and a dark cell is empty. Links: <a href={`../words${wordLink}`}>the words</a> drives a word by this schedule, <a href="../moire">moire</a> stacks one design over its scales, <a href="../sequences">the sequences</a> holds the ledger the designs write. A rule that changes with the scale is a word, and the grammar of one is in <a href="https://github.com/mrlyprod/mrlyprod/blob/main/research/magic.md">the magic words note</a>.</>}>
 
       <Row>
         <Slider label="substitution rounds" value={round} min={1} max={ROUNDS} show={`${round}, ${1 << round} letters`} onChange={(v) => { setPlaying(false); set({ round: v }); }} />

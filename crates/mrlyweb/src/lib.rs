@@ -6,6 +6,10 @@ use wasm_bindgen::prelude::*;
 
 /// The universes: codes, symmetries, counts, closed-form fills and names.
 pub mod bang;
+/// The blends: registry sequences drawn as terms, ratios, differences and the recurrence they satisfy, and the term operations that mix two of them.
+pub mod blend;
+/// The slice carry automaton: its digit polynomial, its even block, its ladder, its sign law and its spectral ratio.
+pub mod carry;
 /// The census: which integers the whole registry writes inside a pinned window, how often, and which rows write one.
 pub mod census;
 /// The exact crops: the designs trimmed to rational shapes, tallied, swept, drawn and masked.
@@ -40,6 +44,8 @@ pub mod spin;
 pub mod spiral;
 /// The cubes as packed faces, filled cells and censuses.
 pub mod three;
+/// The tessellations: a design repeated across the plane, the cube and the hexagonal mesh, drawn and counted.
+pub mod tile;
 /// The flat designs as byte grids, painted pixels and censuses.
 pub mod two;
 /// The cube designs stacked into a moire volume: its faces at a level, and the planes that cut it.

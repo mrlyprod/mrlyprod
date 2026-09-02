@@ -130,6 +130,21 @@ const cropArt = m.crop_svg('7', 3, 1, 2, 'ball', 1, 2, false, 4);
 const cropHole = m.crop_svg('7', 3, 1, 2, 'diamond', 1, 2, true, 4);
 const cropField = m.field_crop(square, 8, 2, 'ball', 1, 2, false);
 
+const tiled = (dimension: number, code: string, number: number, level: number, base: number, projection: string, reps: number[], crop: boolean) =>
+  JSON.parse(m.tile_census(code, number, level, base, dimension, projection, reps, crop));
+const tileWide = tiled(2, '495', 3, 2, 3, '', [5, 5], false);
+const tileTall = tiled(2, '495', 3, 2, 3, '', [3, 9], false);
+const tileBlock = tiled(3, '23', 3, 1, 2, '', [5, 5, 5], false);
+const tileSlab = tiled(3, '23', 3, 1, 2, '', [3, 9, 3], false);
+const tileMesh = tiled(6, '23', 3, 1, 2, 'cut', [5, 5], false);
+const tileStrip = tiled(6, '23', 3, 1, 2, 'cut', [3, 9], false);
+const tileTrim = tiled(6, '23', 3, 1, 2, 'cut', [5, 5], true);
+const tileNarrow = tiled(6, '23', 3, 1, 2, 'cut', [3, 9], true);
+const tileSheet = m.tile_grid('495', 3, 2, 3, 5, 5);
+const tileArt = m.tile_svg('23', 3, 1, 2, 'cut', 5, 5, true, 6);
+const towerCut = JSON.parse(m.magic_hex_census(['23', '23'], [3, 3], [2, 2], 'cut'));
+const towerIso = JSON.parse(m.magic_hex_census(['23', '23'], [3, 3], [2, 2], 'iso'));
+
 const checks: [string, unknown, unknown][] = [
   ['two_grid 7 side', grid.width, 27],
   ['crop_shapes 2', shapes2.join(','), 'ball,box,diamond,triangle,octagon'],
@@ -378,7 +393,59 @@ const checks: [string, unknown, unknown][] = [
   ['morse filter half a coin', morseSign.morse_faults * 2, morseSign.cells],
   ['morse filter design closed', `${morseFlat.closed_exact} ${morseFlat.side} ${morseFlat.lit} ${morseFlat.morse_faults}`, 'true 16 27 127'],
   ['morse filter base three', `${morseWide.closed_exact} ${morseWide.side} ${morseWide.morse_faults}`, 'true 27 null'],
+  ['tile plane 5x5', `${tileWide.sheet.join('x')} ${tileWide.fills} ${tileWide.exposed} ${tileWide.buried}`, '45x45 1600 1280 720'],
+  ['tile plane 5x5 walk', `${tileWide.vertices} ${tileWide.edges} ${tileWide.euler}`, '2016 3840 -224'],
+  ['tile plane 3x9', `${tileTall.sheet.join('x')} ${tileTall.fills} ${tileTall.exposed} ${tileTall.euler}`, '27x81 1728 1404 -242'],
+  ['tile plane fills multiply', `${tileWide.fills} ${tileTall.fills}`, `${25 * Number(tileWide.tile_fills)} ${27 * Number(tileTall.tile_fills)}`],
+  ['tile cube 5x5x5', `${tileBlock.sheet.join('x')} ${tileBlock.fills} ${tileBlock.exposed} ${tileBlock.buried}`, '15x15x15 2500 4200 4800'],
+  ['tile cube 5x5x5 walk', `${tileBlock.faces} ${tileBlock.euler}`, '9600 -324'],
+  ['tile cube 3x9x3', `${tileSlab.sheet.join('x')} ${tileSlab.fills} ${tileSlab.exposed} ${tileSlab.euler}`, '9x27x9 1620 2952 -224'],
+  ['tile hex 5x5', `${tileMesh.sheet.join('x')} ${tileMesh.triangles} ${tileMesh.fills} ${tileMesh.exposed}`, '47x33 1350 1050 414'],
+  ['tile hex 3x9', `${tileStrip.sheet.join('x')} ${tileStrip.triangles} ${tileStrip.fills} ${tileStrip.exposed}`, '29x57 1458 1134 462'],
+  ['tile hex 5x5 cropped', `${tileTrim.sheet.join('x')} ${tileTrim.triangles} ${tileTrim.fills} ${tileTrim.exposed}`, '43x27 1161 891 357'],
+  ['tile hex 3x9 cropped', `${tileNarrow.sheet.join('x')} ${tileNarrow.triangles} ${tileNarrow.fills}`, '25x51 1275 969'],
+  ['tile hex is a disc', [tileMesh, tileStrip, tileTrim, tileNarrow].map((r) => r.euler).join(','), '1,1,1,1'],
+  ['tile grid draws the census', `${tileSheet.width} ${tileSheet.types.reduce((a: number, b: number) => a + b, 0)}`, `45 ${tileWide.fills}`],
+  ['tile cells draws the census', m.tile_cells('23', 3, 1, 2, 5, 5, 5).length / 3, Number(tileBlock.fills)],
+  ['tile svg draws the census', tileArt.match(/<polygon/g)?.length, tileTrim.triangles],
+  ['magic perimeter word', m.magic_perimeter(['7', '9'], [3, 5], [2, 2]), '368'],
+  ['magic hex cut is the slice', `${towerCut.triangles} ${towerCut.fills} ${towerCut.exposed}`, `${deep.triangles} ${deep.fills} 162`],
+  ['magic hex iso skin', `${towerIso.grid.join('x')} ${towerIso.fills} ${towerIso.voids} ${towerIso.exposed}`, '18x35 486 0 88'],
 ];
+
+// BLEND
+
+const plotTerms = m.ledger_terms('23', 3, 2, 'surface', 'level', 8, '500000');
+const plotRule = JSON.parse(m.blend_recurrence(plotTerms));
+const plotCoefficients = JSON.stringify(plotRule.coefficients);
+const plotSeries = JSON.parse(m.blend_series('23', 3, 2, 'surface', 'level', 8, '500000', 4));
+const plotSide = JSON.parse(m.blend_series('7', 2, 2, 'fills', 'side', 12, '500000', 5));
+const plotFamily = JSON.parse(m.blend_family(2, 2, 'fills', 'level', 3, '500000'));
+const plotFills = m.ledger_terms('7', 2, 2, 'fills', 'level', 8, '500000');
+const plotFaces = m.ledger_terms('7', 2, 2, 'surface', 'level', 8, '500000');
+const plotMix = JSON.parse(m.blend_mix(plotFaces, plotFills, 'hadamard', 0, 3));
+const plotSums = JSON.parse(m.blend_mix(plotFills, [], 'sigma', 0, 2));
+const plotThin = JSON.parse(m.blend_mix(plotFills, [], 'decimate', 2, 2));
+
+checks.push(
+  ['blend_recurrence sponge', `${plotRule.order} ${plotCoefficients} ${plotRule.recurrence}`, '2 [[28,1],[-160,1]] a(n) = 28 a(n-1) - 160 a(n-2)'],
+  ['blend_recurrence primes', m.blend_recurrence(['2', '3', '5', '7', '11', '13', '17', '19']), 'null'],
+  ['blend_characteristic sponge', m.blend_characteristic(plotCoefficients), '[[1,1],[-28,1],[160,1]]'],
+  ['blend_growth sponge', m.blend_growth(plotCoefficients).toFixed(9), '20.000000000'],
+  ['blend_series sponge row', `${plotSeries.name} ${plotSeries.oeis} ${plotSeries.closed}`, 'mrly_bang_d3_23.surface.level A332705 a(L) = 28 a(L-1) - 160 a(L-2)'],
+  ['blend_series sponge rule', `${plotSeries.order} ${plotSeries.polynomial} ${plotSeries.growth_from}`, '2 x^2 - 28 x + 160 the recurrence root'],
+  ['blend_series sponge growth', `${plotSeries.growth.toFixed(9)} ${plotSeries.exponent.toFixed(9)}`, '20.000000000 1.301029996'],
+  ['blend_series sponge views', `${plotSeries.ratios[0]} ${plotSeries.differences[1][0]} ${plotSeries.differences.length} ${plotSeries.log10[0].toFixed(7)}`, '14.6667 984 4 1.8573325'],
+  ['blend_series carpet side', `${plotSide.closed} ${plotSide.order} ${plotSide.polynomial} ${plotSide.differences[3][0]}`, '3k^2 - 2k 3 x^3 - 3 x^2 + 3 x - 1 0'],
+  ['blend_family plane', `${plotFamily.length} ${plotFamily[4].code} ${plotFamily[4].terms.join(',')}`, '6 7 8,64,512'],
+  ['blend_family base three', JSON.parse(m.blend_family(2, 3, 'fills', 'level', 2, '500000')).length, 26],
+  ['blend_mix hadamard terms', `${plotMix.terms[0]} ${plotMix.terms[3]}`, '128 14483456'],
+  ['blend_mix hadamard rule', `${plotMix.order} ${plotMix.polynomial} ${plotMix.growth.toFixed(9)}`, '2 x^2 - 88 x + 1536 64.000000000'],
+  ['blend_mix sigma and thin', `${plotSums.terms[2]} ${plotSums.order} ${plotThin.terms.join(',')}`, '584 2 8,512,32768,2097152'],
+  ['blend_ops', m.blend_ops().join(','), 'add,sub,hadamard,cauchy,shift,decimate,delta,sigma,scale'],
+  ['moire_correlation 3 5', m.moire_correlation(3, 5), 0],
+  ['moire_correlation 3 9', m.moire_correlation(3, 9).toFixed(12), '0.219264504827'],
+);
 
 if (Bun.argv.includes('--deep')) {
   const fold = (a: { width: number; types: Uint8Array }, b: { width: number; types: Uint8Array }) => {
@@ -415,6 +482,87 @@ if (Bun.argv.includes('--deep')) {
     ['census pinned misses', JSON.parse(m.census_misses(6)).join(','), '269,362,422,443,446,487'],
     ['census pinned writers', `${champion.rows} ${champion.tiers.map((t: { rows: number }) => t.rows).join('/')} ${JSON.parse(m.census_writers(269, 0, 1)).rows}`, '2858 666/1529/530/133 0'],
   );
+}
+
+// CARRY
+
+const carryAnchor = JSON.parse(m.carry_block(3, 3, 6));
+const carryFive = JSON.parse(m.carry_block(5, 3, 4));
+const carrySigns = JSON.parse(m.carry_signs(10));
+const carryTail = JSON.parse(m.carry_ratios(3, 50)).at(-1);
+const carryLadder = (base: number, dimension: number, levels: number) => JSON.parse(m.carry_block(base, dimension, levels)).terms.join(',');
+const carryTraces = Array.from({ length: 6 }, (_, i) => JSON.parse(m.carry_block(3, i + 2, 1)).trace).join(',');
+const carryOrders = Array.from({ length: 5 }, (_, i) => {
+  const dimension = i + 2;
+  const order = Math.ceil(dimension / 2);
+  const read = JSON.parse(m.carry_block(3, dimension, 2 * order + 1));
+  return `${read.order}${read.found}${read.fits ? '+' : '-'}`;
+}).join(' ');
+const carryCounts = Array.from({ length: 5 }, (_, i) => m.diagonal_count('23', 3, i + 1, 2, (3 * (3 ** (i + 1) - 1)) / 2)).join(',');
+const carryLane = (key: 'three' | 'five') => carrySigns.map((row: { three: { sign: number }; five: { sign: number } }) => row[key].sign).join(',');
+
+checks.push(
+  ['carry_cap both bases', `${m.carry_cap(3)},${m.carry_cap(5)}`, '15,11'],
+  ['carry_block 3 3 block', JSON.stringify(carryAnchor.block), '[[6,6],[1,3]]'],
+  ['carry_block 3 3 digits', carryAnchor.digits.join(','), '1,3,3,6,3,3,1'],
+  ['carry_block 3 3 reading', `${carryAnchor.polynomial} ${carryAnchor.trace} ${carryAnchor.determinant} ${carryAnchor.fill}`, 'x^2 - 9 x + 12 9 12 20'],
+  ['carry_block 3 3 root', `${carryAnchor.read.root.toFixed(9)} ${((9 + Math.sqrt(33)) / 2).toFixed(9)}`, '7.372281323 7.372281323'],
+  ['carry_block 3 3 exponent', `${carryAnchor.read.log_root.toFixed(6)} ${carryAnchor.read.log_fill.toFixed(6)} ${carryAnchor.read.sign}`, '1.818410 1.726833 1'],
+  ['carry_block 3 3 ladder', carryAnchor.terms.join(','), '1,6,42,306,2250,16578,122202'],
+  ['carry_block 3 3 ratios', carryAnchor.ratios.join(','), '6,7,7.2857,7.3529,7.368,7.3713'],
+  ['carry_block 5 3 block', `${JSON.stringify(carryFive.block)} ${carryFive.polynomial} ${carryFive.fill}`, '[[18,30],[3,7]] x^2 - 25 x + 36 112'],
+  ['carry_block 5 3 ladder', carryFive.terms.join(','), '1,18,414,9702,227646'],
+  ['carry traces D=2..7', carryTraces, '2,9,11,60,47,336'],
+  ['carry ladder D=4', carryLadder(3, 4, 6), '1,6,132,1848,29040,441408,6772128'],
+  ['carry ladder D=5', carryLadder(3, 5, 4), '1,30,1000,35700,1321600'],
+  ['carry ladder D=6', carryLadder(3, 6, 4), '1,20,4030,242300,24642700'],
+  ['carry order is ceil D/2', carryOrders, '11+ 22+ 22+ 33+ 33+'],
+  ['carry ladder is the cut', carryCounts, '6,42,306,2250,16578'],
+  ['carry cut is the hexagon', `${slice.fills},${deep.fills},${series.slice(0, 2).map((row: { fills: number }) => row.fills).join(',')}`, '42,306,6,42'],
+  ['carry sign law base 3', carryLane('three'), '-1,1,-1,1,-1,1,-1,1,-1'],
+  ['carry sign law base 5', carryLane('five'), '-1,1,-1,1,-1,1,-1,1,-1'],
+  ['carry open odd class', carrySigns.map((row: { open: boolean }) => (row.open ? 1 : 0)).join(''), '000001000'],
+  ['carry spectral ratio 50', `${carryTail.dimension} ${carryTail.ratio.toFixed(9)} ${(13 / 12).toFixed(9)}`, '50 1.083333333 1.083333333'],
+);
+
+// MANIFEST
+
+import { existsSync, readdirSync } from 'node:fs';
+
+const desk = import.meta.dir;
+const manifest = await Bun.file(`${desk}/pages.json`).json();
+const shelfKeys = new Set(manifest.shelves.map((shelf: { key: string }) => shelf.key));
+const rows: { name: string; blurb: string; category: string; research: string | null; paper: string | null }[] = manifest.pages;
+const ignored = new Set(['dist', 'lib', 'node_modules', 'pkg', 'scripts']);
+const folders = readdirSync(desk, { withFileTypes: true })
+  .filter((entry) => entry.isDirectory() && !ignored.has(entry.name) && existsSync(`${desk}/${entry.name}/index.html`))
+  .map((entry) => entry.name)
+  .sort();
+const named = rows.map((row) => row.name).sort();
+const strays = named.filter((name) => !folders.includes(name)).concat(folders.filter((name) => !named.includes(name)));
+const shelfless = rows.filter((row) => !shelfKeys.has(row.category)).map((row) => row.name);
+const unpaged = rows.filter((row) => row.research && !existsSync(`${desk}/../research/${row.research}.md`)).map((row) => row.name);
+const readme = await Bun.file(`${desk}/README.md`).text();
+const listed = readme.slice(readme.indexOf('## PAGES')).split('\n')
+  .map((line) => /^- \[([a-z]+)\]\(\1\/\) - (.+)$/.exec(line))
+  .filter((hit) => hit !== null)
+  .map((hit) => `${hit![1]} ${hit![2]}`);
+const wanted = rows.map((row) => `${row.name} ${row.blurb}`);
+const drift = listed.find((line, at) => line !== wanted[at]) ?? (listed.length === wanted.length ? 'none' : `${listed.length} of ${wanted.length} lines`);
+const shelf = `${desk}/../../carlomitchener/research`;
+
+checks.push(
+  ['manifest is the folders', `${named.length} ${strays.join(',') || 'none'}`, `${folders.length} none`],
+  ['manifest shelves exist', shelfless.join(',') || 'none', 'none'],
+  ['manifest research exists', unpaged.join(',') || 'none', 'none'],
+  ['readme is the manifest', drift.slice(0, 40), 'none'],
+);
+
+if (existsSync(shelf)) {
+  const lost = rows.filter((row) => row.paper && !existsSync(`${shelf}/${row.paper}`)).map((row) => row.name);
+  checks.push(['manifest papers exist', lost.join(',') || 'none', 'none']);
+} else {
+  console.log('note  no shelf checkout beside this one, paper lanes unchecked');
 }
 
 let failed = 0;

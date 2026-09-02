@@ -62,7 +62,7 @@ function App() {
   return (
     <Page crumb="sponge" title="The sponge"
       sub="A code picks the filled corners of a cube, the cube grows level by level, and the exposed faces come out of Rust already packed for the screen. Drag to orbit, scroll to zoom."
-      foot="Filled, empty and exposed counts come from closed formulas, so they answer before any cube is built; the mesh is the crate's own list of outward quads, six floats per vertex, and the Euler number is read off the edge graph while the cube is small enough to walk.">
+      foot={<>Filled, empty and exposed counts come from closed formulas, so they answer before any cube is built; the mesh is the crate's own list of outward quads, six floats per vertex, and the Euler number is read off the edge graph while the cube is small enough to walk. Where those formulas come from is <a href="https://github.com/mrlyprod/mrlyprod/blob/main/research/core.md">the core</a>.</>}>
       <Row>
         <Picker dimension={3} bases={[2, 3]} code={q.code} base={q.base} seeds={s} onChange={set} />
         <Num label="number" value={q.number} min={2} max={5} onChange={(v) => set({ number: v })} />

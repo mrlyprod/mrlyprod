@@ -5,6 +5,7 @@ use mrlycore::{json, Json, Mode, Tensor};
 use mrlylab::press;
 use mrlymath::bang::{magic, word, MagicLayer};
 use mrlymath::name::{Bang, Named, Word};
+use mrlymath::six::{self, Cell6d};
 use mrlymath::space::Pack;
 use mrlymath::three::{quads, Cell3d};
 use mrlymath::two::Cell2d;
@@ -12,6 +13,7 @@ use wasm_bindgen::prelude::*;
 
 const PLANE_SIDE: usize = 243;
 const SOLID_SIDE: usize = 128;
+const HEX_SIDE: usize = 81;
 const DRAWN_CELLS: u128 = 1 << 20;
 
 fn letters(
@@ -160,6 +162,78 @@ pub fn magic_surface(
         }
     }
     Ok(faces.to_string())
+}
+
+/// Counts the exposed edges of the plane word, the perimeter of its filled sites, as a decimal string.
+#[wasm_bindgen]
+pub fn magic_perimeter(
+    codes: Vec<String>,
+    numbers: Vec<u32>,
+    bases: Vec<u32>,
+) -> Result<String, Fault> {
+    let tile = drawn(&letters(codes, numbers, 2, bases)?, PLANE_SIDE)?;
+    Ok(mrlymath::two::census::perimeter(&Cell2d::new(tile)).to_string())
+}
+
+// HEXAGON
+
+fn hexed(
+    codes: Vec<String>,
+    numbers: Vec<u32>,
+    bases: Vec<u32>,
+    projection: &str,
+) -> Result<Cell6d, Fault> {
+    let tile = drawn(&letters(codes, numbers, 3, bases)?, HEX_SIDE)?;
+    let cell = Cell3d::new(tile);
+    Ok(match projection {
+        "pro" => six::pro(&cell)?,
+        "cut" => six::cut(&cell)?,
+        _ => six::iso(&cell)?,
+    })
+}
+
+/// Renders the hexagonal projection of the solid word, iso, pro or cut, as SVG at the scale.
+#[wasm_bindgen]
+pub fn magic_hex(
+    codes: Vec<String>,
+    numbers: Vec<u32>,
+    bases: Vec<u32>,
+    projection: &str,
+    scale: usize,
+) -> Result<String, Fault> {
+    Ok(six::svg(
+        &hexed(codes, numbers, bases, projection)?,
+        scale,
+        None,
+        0,
+    )?)
+}
+
+/// Tallies the hexagonal projection of the solid word: its side, its mesh, its fill and the boundary edges of that fill, as JSON.
+#[wasm_bindgen]
+pub fn magic_hex_census(
+    codes: Vec<String>,
+    numbers: Vec<u32>,
+    bases: Vec<u32>,
+    projection: &str,
+) -> Result<String, Fault> {
+    let cell = six::skin(&hexed(codes, numbers, bases, projection)?);
+    let tally = six::census(&cell, false);
+    let rim = six::census::fills_only(&cell);
+    Ok(json!({
+        "projection": projection,
+        "grid": [cell.width(), cell.height()],
+        "triangles": tally.triangles,
+        "fills": tally.fills,
+        "voids": tally.voids,
+        "boundary": tally.boundary_edges,
+        "edges": tally.edges,
+        "vertices": tally.vertices,
+        "euler": tally.euler,
+        "exposed": rim.boundary_edges,
+        "ratio": tally.fills as f64 / tally.triangles.max(1) as f64,
+    })
+    .to_string())
 }
 
 // CENSUS

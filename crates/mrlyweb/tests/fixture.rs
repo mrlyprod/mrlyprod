@@ -1,5 +1,7 @@
 use mrlycore::json::parse;
 use mrlyweb::bang::*;
+use mrlyweb::blend::*;
+use mrlyweb::carry::*;
 use mrlyweb::census::*;
 use mrlyweb::gauss::*;
 use mrlyweb::graph::*;
@@ -16,6 +18,7 @@ use mrlyweb::spectrum::*;
 use mrlyweb::spin::*;
 use mrlyweb::spiral::*;
 use mrlyweb::three::*;
+use mrlyweb::tile::*;
 use mrlyweb::two::*;
 use mrlyweb::volume::*;
 use mrlyweb::zeta::*;
@@ -1243,4 +1246,389 @@ fn the_morse_fixture_the_page_prints() {
     assert!(morse_lift("cube", 4).is_err());
     assert!(morse_lift("parity", 10).is_err());
     assert!(morse_filter("7", 2, 2, 3, "product").is_err());
+}
+
+#[test]
+fn the_tile_fixture_the_page_prints() {
+    let read = |dimension: usize,
+                code: &str,
+                number: usize,
+                level: usize,
+                base: usize,
+                projection: &str,
+                reps: Vec<u32>,
+                crop: bool| {
+        parse(&tile_census(code, number, level, base, dimension, projection, reps, crop).unwrap())
+            .unwrap()
+    };
+    let count = |cell: &mrlycore::Json, key: &str| cell[key].as_str().unwrap().to_string();
+
+    let wide = read(2, "495", 3, 2, 3, "", vec![5, 5], false);
+    assert_eq!(wide["tile"], parse("[9,9]").unwrap());
+    assert_eq!(wide["sheet"], parse("[45,45]").unwrap());
+    assert_eq!(count(&wide, "fills"), "1600");
+    assert_eq!(count(&wide, "voids"), "425");
+    assert_eq!(count(&wide, "exposed"), "1280");
+    assert_eq!(count(&wide, "tile_exposed"), "80");
+    assert_eq!(count(&wide, "buried"), "720");
+    assert_eq!(
+        (wide["vertices"].clone(), wide["euler"].clone()),
+        (2016.into(), (-224).into())
+    );
+
+    let tall = read(2, "495", 3, 2, 3, "", vec![3, 9], false);
+    assert_eq!(tall["sheet"], parse("[27,81]").unwrap());
+    assert_eq!(count(&tall, "fills"), "1728");
+    assert_eq!(count(&tall, "exposed"), "1404");
+    assert_eq!(count(&tall, "buried"), "756");
+    assert_eq!(
+        (tall["vertices"].clone(), tall["euler"].clone()),
+        (2188.into(), (-242).into())
+    );
+
+    let block = read(3, "23", 3, 1, 2, "", vec![5, 5, 5], false);
+    assert_eq!(block["sheet"], parse("[15,15,15]").unwrap());
+    assert_eq!(count(&block, "fills"), "2500");
+    assert_eq!(count(&block, "voids"), "875");
+    assert_eq!(count(&block, "exposed"), "4200");
+    assert_eq!(count(&block, "tile_exposed"), "72");
+    assert_eq!(count(&block, "buried"), "4800");
+    assert_eq!(
+        (block["faces"].clone(), block["euler"].clone()),
+        (9600.into(), (-324).into())
+    );
+
+    let slab = read(3, "23", 3, 1, 2, "", vec![3, 9, 3], false);
+    assert_eq!(slab["sheet"], parse("[9,27,9]").unwrap());
+    assert_eq!(count(&slab, "fills"), "1620");
+    assert_eq!(count(&slab, "exposed"), "2952");
+    assert_eq!(count(&slab, "buried"), "2880");
+    assert_eq!(
+        (slab["faces"].clone(), slab["euler"].clone()),
+        (6336.into(), (-224).into())
+    );
+
+    let mesh = read(6, "23", 3, 1, 2, "cut", vec![5, 5], false);
+    assert_eq!(mesh["tile"], parse("[11,6]").unwrap());
+    assert_eq!(mesh["sheet"], parse("[47,33]").unwrap());
+    assert_eq!(mesh["triangles"], 1350);
+    assert_eq!(count(&mesh, "fills"), "1050");
+    assert_eq!(count(&mesh, "voids"), "300");
+    assert_eq!(count(&mesh, "exposed"), "414");
+    assert_eq!(count(&mesh, "tile_exposed"), "30");
+    assert_eq!(count(&mesh, "buried"), "336");
+    assert_eq!(mesh["euler"], 1);
+
+    let strip = read(6, "23", 3, 1, 2, "cut", vec![3, 9], false);
+    assert_eq!(strip["sheet"], parse("[29,57]").unwrap());
+    assert_eq!(strip["triangles"], 1458);
+    assert_eq!(count(&strip, "fills"), "1134");
+    assert_eq!(count(&strip, "exposed"), "462");
+    assert_eq!(strip["euler"], 1);
+
+    let trimmed = read(6, "23", 3, 1, 2, "cut", vec![5, 5], true);
+    assert_eq!(trimmed["sheet"], parse("[43,27]").unwrap());
+    assert_eq!(trimmed["triangles"], 1161);
+    assert_eq!(count(&trimmed, "fills"), "891");
+    assert_eq!(count(&trimmed, "exposed"), "357");
+    assert_eq!(trimmed["euler"], 1);
+
+    let narrow = read(6, "23", 3, 1, 2, "cut", vec![3, 9], true);
+    assert_eq!(narrow["sheet"], parse("[25,51]").unwrap());
+    assert_eq!(narrow["triangles"], 1275);
+    assert_eq!(count(&narrow, "fills"), "969");
+    assert_eq!(narrow["euler"], 1);
+
+    let grid = tile_grid("495", 3, 2, 3, 5, 5).unwrap();
+    assert_eq!((grid.width, grid.height), (45, 45));
+    assert_eq!(grid.types.iter().map(|&b| b as usize).sum::<usize>(), 1600);
+    assert_eq!(tile_cells("23", 3, 1, 2, 5, 5, 5).unwrap().len() / 3, 2500);
+    let art = tile_svg("23", 3, 1, 2, "cut", 5, 5, true, 6).unwrap();
+    assert_eq!(art.matches("<polygon").count(), 1161);
+
+    assert!(tile_census("495", 3, 2, 3, 4, "", vec![5, 5], false).is_err());
+    assert!(tile_census("495", 3, 2, 3, 2, "", vec![5, 5, 5], false).is_err());
+    assert!(tile_svg("23", 3, 1, 2, "cut", 1, 5, true, 6).is_err());
+    assert!(tile_grid("495", 3, 6, 3, 5, 5).is_err());
+}
+
+#[test]
+fn the_word_reaches_every_dimension_the_tower_draws() {
+    let word = |list: [&str; 2]| list.iter().map(|c| c.to_string()).collect::<Vec<String>>();
+    let sponge = word(["23", "23"]);
+    let sides = vec![3u32, 3];
+    let bases = vec![2u32, 2];
+
+    assert_eq!(
+        magic_perimeter(word(["7", "9"]), vec![3, 5], bases.clone()).unwrap(),
+        "368"
+    );
+    assert_eq!(
+        magic_perimeter(
+            vec!["7".into(), "14".into(), "9".into()],
+            vec![3, 7, 5],
+            vec![2, 2, 2]
+        )
+        .unwrap(),
+        "11856"
+    );
+
+    let cut =
+        parse(&magic_hex_census(sponge.clone(), sides.clone(), bases.clone(), "cut").unwrap())
+            .unwrap();
+    assert_eq!(cut["grid"], parse("[35,18]").unwrap());
+    assert_eq!(cut["triangles"], 486);
+    assert_eq!(cut["fills"], 306);
+    assert_eq!(cut["voids"], 180);
+    assert_eq!(cut["exposed"], 162);
+    assert_eq!(cut["euler"], 1);
+    let solo = parse(&slice_census("23", 3, 2, 2).unwrap()).unwrap();
+    assert_eq!(cut["fills"], solo["fills"]);
+    assert_eq!(cut["triangles"], solo["triangles"]);
+
+    let iso =
+        parse(&magic_hex_census(sponge.clone(), sides.clone(), bases.clone(), "iso").unwrap())
+            .unwrap();
+    assert_eq!(iso["grid"], parse("[18,35]").unwrap());
+    assert_eq!(iso["fills"], 486);
+    assert_eq!(iso["voids"], 0);
+    assert_eq!(iso["exposed"], 88);
+
+    let art = magic_hex(sponge, sides, bases, "cut", 2).unwrap();
+    assert_eq!(art.matches("<polygon").count(), 486);
+}
+
+#[test]
+fn the_blend_exports_answer() {
+    let budget = "500000";
+    let surface = ledger_terms("23", 3, 2, "surface", "level", 8, budget).unwrap();
+    assert_eq!(surface[7], "51267108864");
+    let rule = parse(&blend_recurrence(surface.clone()).unwrap()).unwrap();
+    assert_eq!(rule["order"], 2);
+    assert_eq!(rule["coefficients"], parse("[[28,1],[-160,1]]").unwrap());
+    assert_eq!(rule["recurrence"], "a(n) = 28 a(n-1) - 160 a(n-2)");
+    let poly = blend_characteristic(&rule["coefficients"].to_string()).unwrap();
+    assert_eq!(
+        parse(&poly).unwrap(),
+        parse("[[1,1],[-28,1],[160,1]]").unwrap()
+    );
+    let root = blend_growth(&rule["coefficients"].to_string()).unwrap();
+    assert!((root - 20.0).abs() < 1e-12, "root {root}");
+    assert_eq!(
+        blend_recurrence(vec![
+            "2".into(),
+            "3".into(),
+            "5".into(),
+            "7".into(),
+            "11".into(),
+            "13".into(),
+            "17".into(),
+            "19".into()
+        ])
+        .unwrap(),
+        "null"
+    );
+
+    let series =
+        parse(&blend_series("23", 3, 2, "surface", "level", 8, budget, 4).unwrap()).unwrap();
+    assert_eq!(series["name"], "mrly_bang_d3_23.surface.level");
+    assert_eq!(series["oeis"], "A332705");
+    assert_eq!(series["closed"], "a(L) = 28 a(L-1) - 160 a(L-2)");
+    assert_eq!(series["recurrence"], "a(n) = 28 a(n-1) - 160 a(n-2)");
+    assert_eq!(series["polynomial"], "x^2 - 28 x + 160");
+    assert_eq!(series["growth_from"], "the recurrence root");
+    assert_eq!(series["order"], 2);
+    assert_eq!(series["ratios"][0], "14.6667");
+    assert_eq!(series["differences"][1][0], "984");
+    assert_eq!(series["differences"].as_array().unwrap().len(), 4);
+    let growth = series["growth"].as_f64().unwrap();
+    let exponent = series["exponent"].as_f64().unwrap();
+    assert!((growth - 20.0).abs() < 1e-12, "growth {growth}");
+    assert!(
+        (exponent - 20f64.log10()).abs() < 1e-12,
+        "exponent {exponent}"
+    );
+    let logs = series["log10"].as_array().unwrap();
+    assert!((logs[0].as_f64().unwrap() - 72f64.log10()).abs() < 1e-12);
+
+    let side = parse(&blend_series("7", 2, 2, "fills", "side", 12, budget, 5).unwrap()).unwrap();
+    assert_eq!(side["closed"], "3k^2 - 2k");
+    assert_eq!(side["order"], 3);
+    assert_eq!(side["coefficients"], parse("[[3,1],[-3,1],[1,1]]").unwrap());
+    assert_eq!(side["polynomial"], "x^3 - 3 x^2 + 3 x - 1");
+    assert_eq!(side["differences"][3][0], "0");
+
+    let family = parse(&blend_family(2, 2, "fills", "level", 3, budget).unwrap()).unwrap();
+    let family = family.as_array().unwrap();
+    assert_eq!(family.len(), 6);
+    assert_eq!(family[4]["code"], "7");
+    assert_eq!(family[4]["name"], "mrly_bang_d2_7.fills.level");
+    assert_eq!(family[4]["terms"], parse(r#"["8", "64", "512"]"#).unwrap());
+    assert_eq!(
+        parse(&blend_family(2, 3, "fills", "level", 2, budget).unwrap())
+            .unwrap()
+            .as_array()
+            .unwrap()
+            .len(),
+        26
+    );
+
+    let fills = ledger_terms("7", 2, 2, "fills", "level", 8, budget).unwrap();
+    let faces = ledger_terms("7", 2, 2, "surface", "level", 8, budget).unwrap();
+    let mix = parse(&blend_mix(faces.clone(), fills.clone(), "hadamard", 0, 3).unwrap()).unwrap();
+    assert_eq!(mix["terms"][0], "128");
+    assert_eq!(mix["terms"][3], "14483456");
+    assert_eq!(mix["order"], 2);
+    assert_eq!(mix["coefficients"], parse("[[88,1],[-1536,1]]").unwrap());
+    assert_eq!(mix["polynomial"], "x^2 - 88 x + 1536");
+    assert_eq!(mix["recurrence"], "a(n) = 88 a(n-1) - 1536 a(n-2)");
+    let mixed = mix["growth"].as_f64().unwrap();
+    assert!((mixed - 64.0).abs() < 1e-12, "growth {mixed}");
+    let sums = parse(&blend_mix(fills.clone(), vec![], "sigma", 0, 2).unwrap()).unwrap();
+    assert_eq!(sums["terms"][2], "584");
+    assert_eq!(sums["order"], 2);
+    let cut = parse(&blend_mix(fills.clone(), vec![], "decimate", 2, 2).unwrap()).unwrap();
+    assert_eq!(
+        cut["terms"],
+        parse(r#"["8", "512", "32768", "2097152"]"#).unwrap()
+    );
+
+    assert_eq!(blend_ops().len(), 9);
+    assert_eq!(moire_correlation(3, 5), 0.0);
+    let paired = moire_correlation(3, 9);
+    assert!(
+        (paired - 0.219_264_504_826_757_3).abs() < 1e-12,
+        "r {paired}"
+    );
+    assert_eq!(moire_correlation(1, 9), 0.0);
+
+    assert!(blend_recurrence(vec!["x".into()]).is_err());
+    assert!(blend_characteristic("[[1,0]]").is_err());
+    assert!(blend_growth("nonsense").is_err());
+    assert!(blend_series("7", 2, 2, "faces", "level", 3, budget, 3).is_err());
+    assert!(blend_family(3, 3, "fills", "level", 3, budget).is_err());
+    assert!(blend_mix(fills, faces, "twist", 0, 3).is_err());
+}
+
+#[test]
+fn the_carry_automaton_reads_the_published_block() {
+    assert_eq!(carry_cap(3).unwrap(), 15);
+    assert_eq!(carry_cap(5).unwrap(), 11);
+    let anchor = parse(&carry_block(3, 3, 6).unwrap()).unwrap();
+    assert_eq!(anchor["digits"].to_string(), "[1,3,3,6,3,3,1]");
+    assert_eq!(anchor["block"].to_string(), "[[6,6],[1,3]]");
+    assert_eq!(anchor["characteristic"].to_string(), r#"["1","-9","12"]"#);
+    assert_eq!(anchor["polynomial"], "x^2 - 9 x + 12");
+    assert_eq!(
+        (
+            anchor["trace"].clone(),
+            anchor["determinant"].clone(),
+            anchor["fill"].clone()
+        ),
+        ("9".into(), "12".into(), "20".into())
+    );
+    let root = anchor["read"]["root"].as_f64().unwrap();
+    assert!((root - (9.0 + 33f64.sqrt()) / 2.0).abs() < 1e-9);
+    assert!((anchor["read"]["log_root"].as_f64().unwrap() - 1.818_410).abs() < 1e-6);
+    assert!((anchor["read"]["log_fill"].as_f64().unwrap() - 1.726_833).abs() < 1e-6);
+    assert_eq!(anchor["read"]["sign"], 1);
+    assert_eq!(
+        anchor["terms"].to_string(),
+        r#"["1","6","42","306","2250","16578","122202"]"#
+    );
+    assert_eq!(
+        anchor["ratios"].to_string(),
+        r#"["6","7","7.2857","7.3529","7.368","7.3713"]"#
+    );
+    let traces: Vec<String> = (2..=7)
+        .map(|dimension| {
+            parse(&carry_block(3, dimension, 1).unwrap()).unwrap()["trace"].to_string()
+        })
+        .collect();
+    assert_eq!(traces.join(","), r#""2","9","11","60","47","336""#);
+    let ladder = |base: usize, dimension: usize, levels: usize| {
+        parse(&carry_block(base, dimension, levels).unwrap()).unwrap()["terms"].to_string()
+    };
+    assert_eq!(
+        ladder(3, 4, 6),
+        r#"["1","6","132","1848","29040","441408","6772128"]"#
+    );
+    assert_eq!(ladder(3, 5, 4), r#"["1","30","1000","35700","1321600"]"#);
+    assert_eq!(ladder(3, 6, 4), r#"["1","20","4030","242300","24642700"]"#);
+    assert_eq!(ladder(5, 3, 4), r#"["1","18","414","9702","227646"]"#);
+    let deep = parse(&carry_block(3, 15, 32).unwrap()).unwrap();
+    assert_eq!(
+        (deep["levels"].clone(), deep["capped"].clone()),
+        (7.into(), true.into())
+    );
+    assert!(carry_block(3, 16, 4).is_err());
+    assert!(carry_block(5, 12, 4).is_err());
+    assert!(carry_block(4, 3, 4).is_err());
+    assert!(carry_block(3, 3, 0).is_err());
+    assert!(carry_signs(1).is_err());
+    assert!(carry_ratios(3, 3).is_err());
+}
+
+#[test]
+fn the_carry_ladder_is_the_sponge_diagonal_count() {
+    let anchor = parse(&carry_block(3, 3, 5).unwrap()).unwrap();
+    let counted: Vec<String> = (1..=5)
+        .map(|level| {
+            let height = 3 * (3usize.pow(level as u32) - 1) / 2;
+            diagonal_count("23", 3, level, 2, height).unwrap()
+        })
+        .collect();
+    assert_eq!(counted.join(","), "6,42,306,2250,16578");
+    assert_eq!(
+        anchor["terms"].to_string(),
+        r#"["1","6","42","306","2250","16578"]"#
+    );
+    assert_eq!(
+        parse(&slice_census("23", 3, 1, 2).unwrap()).unwrap()["fills"],
+        42
+    );
+    assert_eq!(
+        parse(&slice_census("23", 3, 2, 2).unwrap()).unwrap()["fills"],
+        306
+    );
+    assert_eq!(
+        column(&parse(&slice_series("23", 2).unwrap()).unwrap(), "fills"),
+        "6,42"
+    );
+    for dimension in 2..=6 {
+        let order = dimension / 2 + dimension % 2;
+        let row = parse(&carry_block(3, dimension, 2 * order + 1).unwrap()).unwrap();
+        assert_eq!(row["order"], order, "dimension {dimension}");
+        assert_eq!(row["found"], order, "dimension {dimension}");
+        assert_eq!(row["fits"], true, "dimension {dimension}");
+    }
+}
+
+#[test]
+fn the_carry_sign_law_alternates_at_both_bases() {
+    let table = parse(&carry_signs(10).unwrap()).unwrap();
+    let rows = table.as_array().unwrap();
+    let read = |key: &str| {
+        rows.iter()
+            .map(|row| row[key]["sign"].to_string())
+            .collect::<Vec<String>>()
+            .join(",")
+    };
+    assert_eq!(column(&table, "law"), "-1,1,-1,1,-1,1,-1,1,-1");
+    assert_eq!(read("three"), "-1,1,-1,1,-1,1,-1,1,-1");
+    assert_eq!(read("five"), "-1,1,-1,1,-1,1,-1,1,-1");
+    assert_eq!(column(&table, "order"), "1,2,2,3,3,4,4,5,5");
+    assert_eq!(
+        column(&table, "open"),
+        "false,false,false,false,false,true,false,false,false"
+    );
+    let wide = parse(&carry_signs(13).unwrap()).unwrap();
+    let past = wide.as_array().unwrap().last().unwrap();
+    assert_eq!(past["three"]["sign"], 1);
+    assert_eq!(past["five"], mrlycore::Json::Null);
+    let ladder = parse(&carry_ratios(3, 50).unwrap()).unwrap();
+    let last = ladder.as_array().unwrap().last().unwrap();
+    assert_eq!(last["dimension"], 50);
+    assert!((last["ratio"].as_f64().unwrap() - 13.0 / 12.0).abs() < 1e-9);
+    assert!((last["free"].as_f64().unwrap() - 13.0 / 12.0).abs() < 1e-12);
 }

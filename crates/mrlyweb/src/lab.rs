@@ -1,6 +1,6 @@
 use crate::{checked, code_of, Fault, Pixels};
 use mrlycore::Colorizer;
-use mrlylab::moire::{presets, render};
+use mrlylab::moire::{pairs, presets, render};
 use mrlylab::press;
 use wasm_bindgen::prelude::*;
 
@@ -56,6 +56,12 @@ pub fn moire(
     let png = render(&field, &colorizer, levels, false, invert, 1)?;
     let (width, height, colors) = mrlycore::unpng(&png)?;
     Ok(Pixels::of(width, height, colors))
+}
+
+/// Returns the exact Pearson correlation of the flat carpet layers at two scales, area-weighted on their lcm grid, which is zero exactly when the two odd scales are coprime.
+#[wasm_bindgen]
+pub fn moire_correlation(m: usize, n: usize) -> f64 {
+    pairs::correlation(m, n)
 }
 
 /// Lists the odd scales a moire stack samples up to the limit.

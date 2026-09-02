@@ -1,3 +1,5 @@
+/// The base-q slice carry automaton: its digit polynomial, its matrix, its ladder and its sign law.
+pub mod carry;
 /// The fill, void and exposure counts of an N-dimensional cell.
 pub mod census;
 /// The growth of a seed pattern into a fractal cell.

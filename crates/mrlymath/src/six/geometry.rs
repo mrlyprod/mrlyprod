@@ -375,15 +375,80 @@ pub fn tile(cell: &Cell6d, width: usize, height: usize) -> Result<Cell2d> {
     tessellate(cell, &Tensor::full(vec![height, width], 1))
 }
 
-/// Crops one interlocking step off each side of a sheet tiled at the given size.
-pub fn tile_crop(cell: &Cell2d, size: (usize, usize)) -> Result<Cell2d> {
+/// Returns the interlocking step, in triangle columns and rows, that a sheet of hexagons of the given width and height loses off each side when cropped.
+///
+/// ```
+/// assert_eq!(mrlymath::six::tile_step((11, 6)).unwrap(), (2, 3));
+/// ```
+pub fn tile_step(size: (usize, usize)) -> Result<(usize, usize)> {
     let (w, h) = size;
-    let orient = orientation(w, h)?;
-    let (crop_x, crop_y) = match orient {
+    Ok(match orientation(w, h)? {
         Orientation::Horizontal => ((w - 1) / 4, h / 2),
         Orientation::Vertical => (w / 2, (h - 1) / 4),
-    };
+    })
+}
+
+/// Crops one interlocking step off each side of a sheet tiled at the given size.
+pub fn tile_crop(cell: &Cell2d, size: (usize, usize)) -> Result<Cell2d> {
+    let (crop_x, crop_y) = tile_step(size)?;
     crop(cell, crop_x, crop_y)
+}
+
+/// Tessellates a hexagon over a full width-by-height mask and returns the sheet as a projected cell, cropped to the interlocking rectangle on request.
+///
+/// The sheet keeps the tile's projection and orientation. A crop slides the triangle grid by the interlocking step on both axes, so the start parity flips whenever that step is odd; without the flip every triangle in the sheet points the wrong way.
+pub fn tile_cell(cell: &Cell6d, width: usize, height: usize, crop: bool) -> Result<Cell6d> {
+    let size = (cell.width(), cell.height());
+    let orient = orientation(size.0, size.1)?;
+    let sheet = tile(cell, width, height)?;
+    let (sheet, start) = match crop {
+        true => {
+            let (step_x, step_y) = tile_step(size)?;
+            (
+                tile_crop(&sheet, size)?,
+                (cell.start as usize + step_x + step_y) % 2,
+            )
+        }
+        false => (sheet, cell.start as usize),
+    };
+    Ok(Cell6d::new(sheet, cell.projection, orient, start as u8))
+}
+
+/// Recodes an isometric projection's top, left and right faces as plain fills, so a census reads its visible skin as one figure.
+///
+/// The other two projections already speak in fills and voids and come back untouched.
+pub fn skin(cell: &Cell6d) -> Cell6d {
+    let mut out = cell.clone();
+    for v in out.cell.cell.types.bytes_mut().iter_mut() {
+        if [UP, LEFT, RIGHT].contains(v) {
+            *v = FILL;
+        }
+    }
+    out
+}
+
+/// Backs a cell onto a backdrop whose longer axis matches its orientation, leaving every triangle where it stood.
+///
+/// A renderer reads a sheet's orientation off its frame, so a tall sheet of wide hexagons would draw every triangle on its side; the spare columns or rows are backdrop and reach neither the census nor the picture.
+pub fn framed(cell: &Cell6d) -> Cell6d {
+    let (h, w) = (cell.height(), cell.width());
+    let (width, height) = match cell.orientation {
+        Orientation::Horizontal if w <= h => (h + 1, h),
+        Orientation::Vertical if h <= w => (w, w + 1),
+        _ => return cell.clone(),
+    };
+    let mut types = Tensor::filled(vec![height, width], GRID as i64, cell.cell.types().dtype());
+    for y in 0..h {
+        for x in 0..w {
+            types.set(&[y, x], cell.cell.types().get(&[y, x]));
+        }
+    }
+    Cell6d::new(
+        Cell2d::new(types),
+        cell.projection,
+        cell.orientation,
+        cell.start,
+    )
 }
 
 fn crop(cell: &Cell2d, crop_x: usize, crop_y: usize) -> Result<Cell2d> {
@@ -567,6 +632,133 @@ mod tests {
             }
         }
         assert_eq!(grown[0], [0, 0, 0, 0]);
+    }
+    #[test]
+    fn the_sheet_keeps_the_tile_pointing_the_same_way() {
+        let hex = crate::six::cut_design(23, 3, 1, 2).unwrap();
+        assert_eq!((hex.width(), hex.height()), (11, 6));
+        for (wide, high) in [(5usize, 5usize), (3, 9)] {
+            for crop in [false, true] {
+                let sheet = tile_cell(&hex, wide, high, crop).unwrap();
+                assert_eq!(sheet.orientation, Orientation::Horizontal);
+                let shown = framed(&sheet);
+                assert!(shown.width() > shown.height(), "{wide}x{high} {crop}");
+                assert_eq!(
+                    orientation(shown.width(), shown.height()).unwrap(),
+                    Orientation::Horizontal
+                );
+                let whole = crate::six::census(&shown, false);
+                assert_eq!(whole.euler, 1, "{wide}x{high} {crop}");
+                let triangles = whole.fills + whole.voids;
+                match crop {
+                    false => assert_eq!(triangles, wide * high * 54, "{wide}x{high}"),
+                    true => assert!(triangles < wide * high * 54, "{wide}x{high}"),
+                }
+            }
+        }
+    }
+    fn filled_corners(cell: &Cell6d) -> std::collections::BTreeSet<[(i64, i64); 3]> {
+        let mut out = std::collections::BTreeSet::new();
+        for y in 0..cell.height() {
+            for x in 0..cell.width() {
+                if cell.cell.types().get(&[y, x]) == FILL {
+                    out.insert(crate::six::census::corners(
+                        x as i64,
+                        y as i64,
+                        cell.start as i64,
+                    ));
+                }
+            }
+        }
+        out
+    }
+    fn shifted(
+        set: &std::collections::BTreeSet<[(i64, i64); 3]>,
+        dx: i64,
+        dy: i64,
+    ) -> std::collections::BTreeSet<[(i64, i64); 3]> {
+        set.iter()
+            .map(|c| c.map(|(x, y)| (x + dx, y + dy)))
+            .collect()
+    }
+    #[test]
+    fn the_sheet_lays_every_copy_on_the_triangle_lattice() {
+        let hex = crate::six::cut_design(23, 3, 1, 2).unwrap();
+        let one = filled_corners(&hex);
+        let (dx, dy, shift) = (9i64, 6i64, 3i64);
+        for (wide, high) in [(5usize, 5usize), (3usize, 9usize)] {
+            let sheet = tile_cell(&hex, wide, high, false).unwrap();
+            let mut want = std::collections::BTreeSet::new();
+            for r in 0..high as i64 {
+                for c in 0..wide as i64 {
+                    let py = dy * r + if c % 2 == 1 { shift } else { 0 };
+                    want.extend(shifted(&one, dx * c, 2 * py));
+                }
+            }
+            assert_eq!(filled_corners(&sheet), want, "{wide}x{high}");
+            assert_eq!(want.len(), wide * high * one.len(), "{wide}x{high}");
+        }
+    }
+    #[test]
+    fn the_crop_flips_the_start_parity_when_its_step_is_odd() {
+        let hex = crate::six::cut_design(23, 3, 1, 2).unwrap();
+        let (step_x, step_y) = tile_step((hex.width(), hex.height())).unwrap();
+        assert_eq!((step_x, step_y), (2, 3));
+        let plain = tile_cell(&hex, 5, 5, false).unwrap();
+        let cropped = tile_cell(&hex, 5, 5, true).unwrap();
+        assert_eq!(plain.start, 0);
+        assert_eq!(cropped.start, 1);
+        assert_eq!(
+            (cropped.width(), cropped.height()),
+            (plain.width() - 2 * step_x, plain.height() - 2 * step_y)
+        );
+        let whole = filled_corners(&plain);
+        let back = shifted(&filled_corners(&cropped), step_x as i64, 2 * step_y as i64);
+        assert!(back.is_subset(&whole));
+        let wrong = Cell6d::new(
+            cropped.cell.clone(),
+            cropped.projection,
+            cropped.orientation,
+            plain.start,
+        );
+        assert!(
+            !shifted(&filled_corners(&wrong), step_x as i64, 2 * step_y as i64).is_subset(&whole)
+        );
+    }
+    #[test]
+    fn skin_turns_the_iso_faces_into_one_figure() {
+        let iso = crate::six::iso_design(23, 3, 1, 2).unwrap();
+        let bare = crate::six::census(&iso, false);
+        assert_eq!((bare.fills, bare.voids), (0, 0));
+        let painted = iso
+            .cell
+            .types()
+            .bytes()
+            .iter()
+            .filter(|&&v| [UP, LEFT, RIGHT].contains(&v))
+            .count();
+        let read = crate::six::census(&skin(&iso), false);
+        assert_eq!(read.voids, 0);
+        assert_eq!(read.fills, painted);
+        assert_eq!(read.triangles, painted);
+        assert_eq!(read.grids, bare.grids);
+        assert!(painted > 0);
+        let sliced = crate::six::cut_design(23, 3, 1, 2).unwrap();
+        assert_eq!(skin(&sliced).cell, sliced.cell);
+    }
+    #[test]
+    fn framed_leaves_a_sheet_that_already_points_right_alone() {
+        let hex = crate::six::cut_design(23, 3, 1, 2).unwrap();
+        let wide = tile_cell(&hex, 5, 5, false).unwrap();
+        assert_eq!(framed(&wide).cell, wide.cell);
+        let tall = tile_cell(&hex, 3, 9, false).unwrap();
+        assert!(tall.width() < tall.height());
+        assert_eq!(framed(&tall).height(), tall.height());
+        assert_eq!(framed(&tall).width(), tall.height() + 1);
+        assert_eq!(
+            crate::six::census(&framed(&tall), false).fills,
+            crate::six::census(&tall, false).fills
+        );
     }
     #[test]
     fn projections_have_expected_frames() {

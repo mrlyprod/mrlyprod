@@ -4,7 +4,7 @@ import { stamp, useQuery } from '../lib/query.js';
 import { mount, Page, Row, Slider, Btn, Note } from '../lib/app.jsx';
 import { Grid, Markup, Sketch } from '../lib/draw.jsx';
 import { useSeeds, roll } from '../lib/select.jsx';
-import { board, bars, axis, tag } from '../lib/chart.js';
+import { Pins, Terms } from '../lib/series.jsx';
 
 const m = await ready();
 const BUDGET = '500000';
@@ -27,13 +27,6 @@ const item = (r, label) => ({ label, terms: r.terms, closed: r.closed, capped: r
 function hex(number, level, view) {
   const side = number ** level;
   return m.hex_svg('23', number, level, 2, view, Math.max(1, Math.round(65 / side)));
-}
-
-function chartOf(canvas, terms) {
-  const b = board(canvas, 200);
-  bars(b, terms.map((t) => Math.log10(Number(t))), { color: ink.gold, inset: 3 });
-  axis(b, terms.map((_, i) => [(i + 0.5) / terms.length, i + 1]));
-  tag(b, 'log scale by dimension', ink.dim);
 }
 
 function stackOf(canvas, order) {
@@ -122,7 +115,7 @@ const CARDS = [
     build: (D) => {
       const terms = m.classes_sequence(least(D));
       return {
-        art: <Sketch className="bars" style={{ width: '100%', height: 200 }} draw={(canvas) => chartOf(canvas, terms)} deps={[terms]} />,
+        art: <Pins terms={terms} start={1} height={200} hue={ink.gold} label="by dimension" style={{ width: '100%' }} />,
         lines: [{ label: 'fill classes, by dimension', terms, closed: '' }],
       };
     },
@@ -202,11 +195,7 @@ function Line({ it }) {
       {it.art ? <div className="strip">{it.art}</div> : null}
       <div className="text">
         {it.label ? <><span className="dim">{it.label}</span><br /></> : null}
-        <b className="num">
-          {it.terms.map((t, i) => <Fragment key={i}>{i ? ', ' : null}{it.marks?.[i] ? <span className="gold">{t}</span> : t}</Fragment>)}
-          {it.capped ? ', to the budget' : ''}
-        </b>
-        <br />
+        <Terms terms={it.terms} marks={it.marks} capped={it.capped} tight />
         {forms.map((form, i) => <Fragment key={form}>{i ? ' · ' : null}<span className="mono">{form}</span></Fragment>)}
         {forms.length ? ' · ' : null}
         {found.html}
@@ -262,7 +251,7 @@ function App() {
   return (
     <Page crumb="tour" title="A dozen sequences the designs write"
       sub="A design is a rule on the corners of a square or a cube. Grown level by level or widened side by side it counts something, and the count is an integer sequence the OEIS already holds or has just learnt. Every card draws the design live, reads its terms from the crates, and names the record; slide, and the picture and the terms grow together."
-      foot={<>A card is one design, one measure and one axis, the same row the <a href="../sequences/">ledger</a> lists, and where a line is such a row the link under its terms opens it with the terms prefilled; the counts of designs, of fractals, of slice vertices, of gasket points and of Farey nodes are not rows of the ledger and carry no link. The level axis grows the fractal at the smallest side the base allows, the side axis holds level one and widens the odd side. The record after the terms is found by the crate from the terms alone, as a window of the entry's own first terms, and the number after it is the entry's index of the first term shown. Every number on this page is computed in Rust; the page only draws.</>}>
+      foot={<>A card is one design, one measure and one axis, the same row the <a href="../sequences/">ledger</a> lists, and where a line is such a row the link under its terms opens it with the terms prefilled; the counts of designs, of fractals, of slice vertices, of gasket points and of Farey nodes are not rows of the ledger and carry no link. The level axis grows the fractal at the smallest side the base allows, the side axis holds level one and widens the odd side. The record after the terms is found by the crate from the terms alone, as a window of the entry's own first terms, and the number after it is the entry's index of the first term shown. Every number on this page is computed in Rust; the page only draws. The ledger these cards read from is the <a href="https://github.com/mrlyprod/mrlyprod/blob/main/research/sequences.md">sequences</a> page.</>}>
       <Row>
         <Btn onClick={() => shuffle(s.next())}>Randomize</Btn>
         <span className="dim">picks a card and a step for it</span>

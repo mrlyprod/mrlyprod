@@ -5,12 +5,15 @@
   "scripts": {
     "wasm": "bash ../scripts/wasm.sh",
     "dev": "bun index.html */index.html",
-    "build": "rm -rf dist && bun build index.html */index.html --outdir dist --splitting --minify --chunk-naming 'lib-[hash].[ext]' --asset-naming '[name]-[hash].[ext]'",
+    "build": "rm -rf dist && bun build index.html */index.html --outdir dist --splitting --minify --chunk-naming 'lib-[hash].[ext]' --asset-naming '[name]-[hash].[ext]' && bun scripts/site.ts",
     "check": "bun check.ts"
   },
   "dependencies": {
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "three": "^0.185.1"
+  },
+  "devDependencies": {
+    "katex": "^0.18.5"
   }
 }

@@ -154,7 +154,7 @@ function App() {
   return (
     <Page crumb="race" title="The race: same mass, different music"
       sub={<>Two base-3 rules, each keeping 7 of 9 cells: the same material at every scale and the same fractal dimension <span className="num">{DIM}</span>. Drop random walkers on both and watch the shapes carry them at different speeds. First team to wander an average of <span className="num">{target}</span> cells from home wins.</>}
-      foot="Both patterns are grown to level 4 from their own 3 by 3 rule and the walkers start at the filled cell nearest the centre; each tick every walker takes one blind step, and a step into a hole is a lost turn. The grids, the walkers, the distances and the seed all live in Rust, so a race replays exactly from its seed. Distance grows like a power of time whose exponent the shape sets; this page shows the race itself, not that exponent.">
+      foot={<>Both patterns are grown to level 4 from their own 3 by 3 rule and the walkers start at the filled cell nearest the centre; each tick every walker takes one blind step, and a step into a hole is a lost turn. The grids, the walkers, the distances and the seed all live in Rust, so a race replays exactly from its seed. Distance grows like a power of time whose exponent the shape sets; this page shows the race itself, not that exponent. The exponent, and the census showing that equal mass does not fix it, are in <a href="https://github.com/mrlyprod/mrlyprod/blob/main/research/walks.md">the walk dimension note</a>.</>}>
       <div className="arena">
         {SIDES.map((side, i) => (
           <div className="panel" key={side.code}>

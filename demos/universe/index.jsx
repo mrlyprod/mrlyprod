@@ -56,7 +56,7 @@ function App() {
   return (
     <Page crumb="universe" title="The universe of designs"
       sub={<>A code is a bitmask over the corners of a hypercube. Rotations and reflections fold the codes into orbits, and one design per orbit is all there is: <span className="num">{COUNTS}</span> distinct designs in dimensions 1 to 4. Click one to grow it.</>}
-      foot={<>The distinct counts are Burnside averages over the hyperoctahedral group; the gallery enumerates the orbits outright and the two agree. In base 3 the same count runs <span className="num">{BASE3}</span> for dimensions 1 and 2.</>}>
+      foot={<>The distinct counts are Burnside averages over the hyperoctahedral group; the gallery enumerates the orbits outright and the two agree. In base 3 the same count runs <span className="num">{BASE3}</span> for dimensions 1 and 2. The two moves this gallery enumerates, a rule on the corners and that rule substituted into itself, are written up in <a href="https://github.com/mrlyprod/mrlyprod/blob/main/research/core.md">the core</a>.</>}>
       <Row>
         <div className="tabs">
           <Btn on={dimension === 2} onClick={() => swap(2)}>plane</Btn>

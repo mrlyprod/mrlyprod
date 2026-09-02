@@ -56,8 +56,8 @@ pub enum Projection {
 pub use census::{census, euler, fills, fills_only, Census};
 pub use designs::{cut_design, iso_design, pro_design};
 pub use geometry::{
-    blank, cut, is_cube, is_hex, iso, orientation, pad, pro, radial, radial_crop, radial_mask,
-    tessellate, tile, tile_crop,
+    blank, cut, framed, is_cube, is_hex, iso, orientation, pad, pro, radial, radial_crop,
+    radial_mask, skin, tessellate, tile, tile_cell, tile_crop, tile_step,
 };
 pub use models::Cell6d;
 pub use painter::paint;

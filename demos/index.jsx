@@ -2,6 +2,7 @@ import { ready, ink, fit, paint } from './lib/mrly.js';
 import { web, board, bars, line } from './lib/chart.js';
 import { mount } from './lib/app.jsx';
 import { Grid, Signs, Pixels, Markup, Sketch } from './lib/draw.jsx';
+import manifest from './pages.json';
 
 const m = await ready();
 
@@ -45,6 +46,39 @@ const sequences = (canvas) => {
   bars(b, m.ledger_terms('7', 2, 2, 'fills', 'level', 8, '500000').map((t) => Math.log10(Number(t))), { color: ink.gold, inset: 3 });
 };
 
+const plot = (canvas) => {
+  const b = board(canvas, canvas.clientWidth / 1.5, { top: 8, bottom: 8 });
+  const logs = JSON.parse(m.blend_series('23', 3, 2, 'surface', 'level', 12, '500000', 1)).log10;
+  const peak = Math.max(...logs);
+  bars(b, logs, { peak, color: ink.gold, inset: 3 });
+  line(b, logs.map((v, i) => [(i + 0.5) / logs.length, v / peak]), ink.blue, { width: 1.4, dots: 2.4 });
+};
+
+const tower = (canvas) => {
+  const [ctx, w, h] = fit(canvas, canvas.clientWidth / 1.5);
+  ctx.imageSmoothingEnabled = false;
+  const slot = (w - 12) / 4, size = Math.min(slot - 6, h - 12);
+  for (let k = 1; k <= 4; k++) {
+    const block = document.createElement('canvas');
+    paint(block, k === 1 ? m.two_grid('7', 2, 1, 0, 2) : m.magic_grid(Array(k).fill('7'), Array(k).fill(2), Array(k).fill(2)), ink.gold);
+    ctx.drawImage(block, 6 + (k - 1) * slot + (slot - size) / 2, (h - size) / 2, size, size);
+  }
+};
+
+const carry = (canvas) => {
+  const rows = JSON.parse(m.carry_signs(m.carry_cap(3)));
+  const b = board(canvas, canvas.clientWidth / 1.5, { top: 8, bottom: 8 });
+  const step = b.wide / rows.length;
+  const mid = (b.roof + b.floor) / 2;
+  const tall = (b.floor - b.roof) / 2 - 4;
+  rows.forEach((row, i) => {
+    const up = row.three.sign > 0;
+    b.ctx.fillStyle = up ? ink.orange : ink.blue;
+    b.ctx.fillRect(b.x(i / rows.length) + 1, up ? mid - tall : mid + 4, Math.max(1, step - 2), tall);
+  });
+  line(b, [[0, 0.5], [1, 0.5]], ink.dim, { width: 1, dash: [3, 3] });
+};
+
 const zeta = (canvas) => {
   const [ctx, w, h] = fit(canvas, canvas.clientWidth / 1.5);
   const path = m.zeta_line(0, 50, 600);
@@ -75,47 +109,87 @@ sieve.finish();
 m.census_walk(JSON.parse(m.census_window()).tiers[0].keys);
 const counts = m.census_counts();
 
-const TILES = [
-  ['tour', 'The tour', 'A dozen sequences the designs write, each drawn live with its first terms and the OEIS record that holds them.', <Sketch draw={tour} className="" />],
-  ['race', 'The race', 'Two designs of the same mass carry random walkers at different speeds.', <Grid grid={m.two_grid('127', 3, 4, 0, 3)} on={ink.blue} className="" />],
-  ['sponge', 'The sponge', 'Any cube design, any level, in orbit.', <Markup className="thumb" svg={m.hex_svg('23', 3, 2, 2, 'iso', 3)} />],
-  ['cuts', 'The cuts', 'A diagonal plane through one solid, the same size at every height.', <Markup className="thumb" svg={m.diagonal_svg('126', 2, 5, 2, JSON.parse(m.diagonal_profile('126', 2, 5, 2)).central, 6)} />],
-  ['crop', 'The crop', 'A rational shape keeps only the cells of a design it reaches, counted before it is drawn.', <Grid grid={m.crop_grid('7', 3, 3, 2, 'ball', 55, 120, false, 'touching')} on={ink.green} className="" />],
-  ['slices', 'The slices', 'The middle plane of an odd cube, a hexagon of triangles a design fills.', <Markup className="thumb" svg={m.hex_svg('23', 7, 1, 2, 'cut', 8)} />],
-  ['spectrometer', 'The spectrometer', 'The inked share of the diagonal slice is an exact closed form in the Walsh spectrum, so the hexagon blinks the recipe back.', <Sketch draw={spectrometer} className="" />],
-  ['spectra', 'The spectra', 'The Laplacian of a design, its degenerate families and the slope that reads a dimension.', <Grid grid={m.two_grid('7', 2, 5, 0, 2)} on={ink.pink} className="" />],
-  ['universe', 'The universe', 'Every distinct design of the plane and the cube, grown on click.', <Grid grid={m.two_grid('9', 3, 3, 0, 2)} on={ink.gold} className="" />],
-  ['words', 'The words', 'One design per level, folded by the Kronecker product, and what changes when the letters swap places.', <Pixels data={m.magic_pixels(['7', '14'], [3, 7], [2, 2])} className="" />],
-  ['life', 'Life', 'Cellular automata with rules drawn from named sequences.', <Grid grid={{ width: 48, height: 48, types: m.life_noise(48, 48, 0.4, 3) }} on={ink.green} className="" />],
-  ['moire', 'Moire', 'One design at many scales, stacked into interference.', <Pixels data={m.moire('weave', 11, 120, 'fire', 2, false)} className="" />],
-  ['morse', 'The Thue-Morse word', 'The famous aperiodic sequence as a digit rule, a plus-minus Kronecker power, and the schedule the tree already uses.', <Signs grid={m.morse_lift('parity', 7)} className="" />],
-  ['spin', 'The spin', 'A design on a turntable, and the exact bullseye it becomes at infinite speed.', <Pixels data={m.wheel(m.profile(Float32Array.from(m.two_grid('495', 3, 4, 0, 3).types), 81, 256), 180, 'fire', 64, false)} className="" />],
-  ['radial', 'The radial stack', 'Turned copies of one design laid on each other, and the harmonics each stack keeps.', <Pixels data={m.sheet(m.radial(Float32Array.from(carpet.types), 27, 180, 5, 72, 'mean', 2), 180, 'fire', 64, false)} className="" />],
-  ['volume', 'The volume', 'The moire stack of a cube design as a solid, cut on any plane, seen down the diagonal.', <Pixels data={m.paint_span(m.plane_field(solid, 48, [1, 1, 1], 0.5, 180), 180, range.min, range.max, 'fire', 16, false)} className="" />],
-  ['farey', 'The Farey stack', 'Scales light the fractions; the primes light the most.', <Sketch draw={farey} className="" />],
-  ['primes', 'The primes', 'Stones that make no rectangle: sieved, counted, and found by the carpet stack on its own.', <Grid grid={sieve.grid(15)} on={ink.gold} className="" />],
-  ['ulam', 'The Ulam spiral', 'The whole numbers wound on squares or hexagons; the primes fall into diagonals nobody ordered.', <Pixels data={m.spiral_pixels('square', 61, 4, -2, 41, 'prime', false, 180)} className="" />],
-  ['gaussian', 'Primes in the plane', 'The Gaussian and Eisenstein primes as snowflakes, coloured by how an ordinary prime broke up.', <Pixels data={m.ring_pixels('gaussian', 24, 'class', false, 180)} className="" />],
-  ['graphs', 'The graphs', 'Every filled cell joined to its neighbours: tips, junctions and pieces, flat, in the cube, on the hexagon, and relaxed by force.', <Sketch draw={graphs} className="" />],
-  ['sequences', 'The sequences', 'Every integer sequence the designs write, searched by terms, name, record or code, with the OEIS entry each one matches.', <Sketch draw={sequences} className="" />],
-  ['integers', 'The integers', 'Type a number and see every row of the ledger that writes it, or the verdict that nothing does.', <Grid grid={{ width: 40, height: counts.length / 40, types: Uint8Array.from(counts, (rows) => (rows ? 1 : 0)) }} on={ink.gold} className="" />],
-  ['zeta', 'The critical line', 'Zeta walked at one half plus it; every pass through the origin is a zero, and the zeros rebuild the prime staircase.', <Sketch draw={zeta} className="" />],
-];
+const ART = {
+  tour: <Sketch draw={tour} className="" />,
+  race: <Grid grid={m.two_grid('127', 3, 4, 0, 3)} on={ink.blue} className="" />,
+  sponge: <Markup className="thumb" svg={m.hex_svg('23', 3, 2, 2, 'iso', 3)} />,
+  tile: <Markup className="thumb" svg={m.tile_svg('23', 3, 1, 2, 'cut', 5, 3, true, 6)} />,
+  cuts: <Markup className="thumb" svg={m.diagonal_svg('126', 2, 5, 2, JSON.parse(m.diagonal_profile('126', 2, 5, 2)).central, 6)} />,
+  crop: <Grid grid={m.crop_grid('7', 3, 3, 2, 'ball', 55, 120, false, 'touching')} on={ink.green} className="" />,
+  slices: <Markup className="thumb" svg={m.hex_svg('23', 7, 1, 2, 'cut', 8)} />,
+  spectrometer: <Sketch draw={spectrometer} className="" />,
+  spectra: <Grid grid={m.two_grid('7', 2, 5, 0, 2)} on={ink.pink} className="" />,
+  universe: <Grid grid={m.two_grid('9', 3, 3, 0, 2)} on={ink.gold} className="" />,
+  words: <Pixels data={m.magic_pixels(['7', '14'], [3, 7], [2, 2])} className="" />,
+  life: <Grid grid={{ width: 48, height: 48, types: m.life_noise(48, 48, 0.4, 3) }} on={ink.green} className="" />,
+  moire: <Pixels data={m.moire('weave', 11, 120, 'fire', 2, false)} className="" />,
+  morse: <Signs grid={m.morse_lift('parity', 7)} className="" />,
+  spin: <Pixels data={m.wheel(m.profile(Float32Array.from(m.two_grid('495', 3, 4, 0, 3).types), 81, 256), 180, 'fire', 64, false)} className="" />,
+  radial: <Pixels data={m.sheet(m.radial(Float32Array.from(carpet.types), 27, 180, 5, 72, 'mean', 2), 180, 'fire', 64, false)} className="" />,
+  volume: <Pixels data={m.paint_span(m.plane_field(solid, 48, [1, 1, 1], 0.5, 180), 180, range.min, range.max, 'fire', 16, false)} className="" />,
+  tower: <Sketch draw={tower} className="" />,
+  carry: <Sketch draw={carry} className="" />,
+  farey: <Sketch draw={farey} className="" />,
+  primes: <Grid grid={sieve.grid(15)} on={ink.gold} className="" />,
+  ulam: <Pixels data={m.spiral_pixels('square', 61, 4, -2, 41, 'prime', false, 180)} className="" />,
+  gaussian: <Pixels data={m.ring_pixels('gaussian', 24, 'class', false, 180)} className="" />,
+  graphs: <Sketch draw={graphs} className="" />,
+  sequences: <Sketch draw={sequences} className="" />,
+  plot: <Sketch draw={plot} className="" />,
+  integers: <Grid grid={{ width: 40, height: counts.length / 40, types: Uint8Array.from(counts, (rows) => (rows ? 1 : 0)) }} on={ink.gold} className="" />,
+  zeta: <Sketch draw={zeta} className="" />,
+};
+
+const BLANK = <Grid grid={m.two_grid('105', 2, 5, 0, 2)} on={ink.dim} className="" />;
+
+const GROUPS = manifest.shelves.reduce((groups, shelf) => {
+  const last = groups[groups.length - 1];
+  if (last && last.name === shelf.group) last.shelves.push(shelf);
+  else groups.push({ name: shelf.group, shelves: [shelf] });
+  return groups;
+}, []);
+
+function Shelf({ shelf }) {
+  const rows = manifest.pages.filter((page) => page.category === shelf.key);
+  if (!rows.length) return null;
+  return (
+    <>
+      <div className="shelf">
+        <h2>{shelf.title}</h2>
+        <p>{shelf.blurb}</p>
+      </div>
+      <div className="gallery">
+        {rows.map((page) => (
+          <a key={page.name} className="tile" href={`./${page.name}`}>
+            {ART[page.name] ?? BLANK}
+            <h2>{page.title}</h2>
+            <p>{page.blurb}</p>
+          </a>
+        ))}
+      </div>
+    </>
+  );
+}
 
 function App() {
   return (
     <>
       <header>
-        <nav>mrlyprod / demos</nav>
+        <nav className="links">
+          <a href="./">Demos</a>
+          <a href="./papers/">Papers</a>
+          <a href="./research/">Research</a>
+        </nav>
         <h1>The eyes of MrlyMath</h1>
         <p className="sub">Every number and pixel on these pages comes out of the Rust crates through wasm. The browser only draws.</p>
       </header>
       <main>
-        <div className="gallery">
-          {TILES.map(([href, title, blurb, art]) => (
-            <a key={href} className="tile" href={`./${href}`}>{art}<h2>{title}</h2><p>{blurb}</p></a>
-          ))}
-        </div>
+        {GROUPS.map((group) => (
+          <section key={group.name}>
+            <h2 className="group">{group.name}</h2>
+            {group.shelves.map((shelf) => <Shelf key={shelf.key} shelf={shelf} />)}
+          </section>
+        ))}
       </main>
     </>
   );
