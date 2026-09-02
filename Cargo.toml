@@ -4,6 +4,9 @@ members = [
     "crates/mrlycore",
     "crates/mrlynum",
     "crates/mrlymath",
+    "crates/mrlymusic",
+    "crates/mrlyfont",
+    "crates/mrlygame",
     "crates/mrlylab",
     "crates/mrlyweb",
 ]
@@ -23,5 +26,8 @@ strip = true
 mrlycore = { path = "crates/mrlycore", version = "0.3.0" }
 mrlynum = { path = "crates/mrlynum", version = "0.3.0" }
 mrlymath = { path = "crates/mrlymath", version = "0.3.0" }
+mrlymusic = { path = "crates/mrlymusic", version = "0.3.0" }
+mrlyfont = { path = "crates/mrlyfont", version = "0.3.0" }
+mrlygame = { path = "crates/mrlygame", version = "0.3.0" }
 mrlylab = { path = "crates/mrlylab", version = "0.3.0" }
 mrlyweb = { path = "crates/mrlyweb", version = "0.3.0" }

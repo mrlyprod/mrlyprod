@@ -1,0 +1,14 @@
+{
+  "title": "MrlyProd",
+  "root": "https://mrly.net",
+  "since": 2013,
+  "tree": [
+    { "name": "Home", "href": "/" },
+    { "name": "Demos", "href": "/demos/", "fill": "demos", "open": true },
+    { "name": "Papers", "href": "/papers/", "fill": "papers" },
+    { "name": "Research", "href": "/research/", "fill": "research" },
+    { "name": "Blog", "href": "/blog/", "fill": "blog" },
+    { "name": "About", "href": "/about/" }
+  ],
+  "socials": [{ "name": "GitHub", "href": "https://github.com/mrlyprod" }]
+}

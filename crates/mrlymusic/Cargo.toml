@@ -1,0 +1,14 @@
+[package]
+name = "mrlymusic"
+version.workspace = true
+edition.workspace = true
+description = "The sound of Mrly: notes, waves, the composer that walks voices through chords, and the wave file."
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+
+[dependencies]
+mrlycore.workspace = true
+
+[dev-dependencies]
+mrlycore = { workspace = true, features = ["testkit"] }

@@ -1,0 +1,17 @@
+[package]
+name = "mrlygame"
+version.workspace = true
+edition.workspace = true
+description = "The content generator: seeded life quests pressed into frames, a heatmap, audio and a manifest."
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+
+[dependencies]
+mrlycore.workspace = true
+mrlymath.workspace = true
+mrlymusic.workspace = true
+serde_json = { version = "1", features = ["preserve_order"] }
+
+[dev-dependencies]
+mrlycore = { workspace = true, features = ["testkit"] }

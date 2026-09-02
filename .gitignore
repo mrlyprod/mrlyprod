@@ -18,9 +18,9 @@ target/
 .DS_Store
 
 # DEMOS
-demos/node_modules/
-demos/pkg/
-demos/dist/
+sites/net/node_modules/
+sites/net/pkg/
+sites/net/dist/
 
 # PYTHON
 .venv/

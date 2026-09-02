@@ -14,6 +14,8 @@ pub mod carry;
 pub mod census;
 /// The exact crops: the designs trimmed to rational shapes, tallied, swept, drawn and masked.
 pub mod crop;
+/// The alphabet: text laid out as a grid, written in stroke order, cycled, and read glyph by glyph.
+pub mod font;
 /// The primes of the plane: the Gaussian and the Eisenstein windows painted, counted, clicked and weighed by norm.
 pub mod gauss;
 /// The networks of the designs: nodes, branches, roles and censuses, and the force layout that relaxes them.

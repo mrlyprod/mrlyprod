@@ -12,6 +12,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 mrlycore.workspace = true
+mrlyfont.workspace = true
 mrlynum.workspace = true
 mrlymath.workspace = true
 mrlylab.workspace = true

@@ -11,6 +11,8 @@ pub mod chacha;
 pub mod codec;
 /// The rgba color and its palettes.
 pub mod colors;
+/// The well: how a crate declares the datasets it can pour.
+pub mod data;
 /// The ways paint picks a color within a type's palette.
 pub mod enums;
 /// The one error type and its Result.
