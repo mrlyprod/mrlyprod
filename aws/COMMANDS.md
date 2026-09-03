@@ -1,7 +1,7 @@
 # COMMANDS
 
 - Run from the `mrlyprod/` root: `uv run python aws/<script>.py <verb>`.
-- Ids come from `Developer/.env`; the live values are the built-in defaults.
+- Ids come from a local `.env`; the live values are the built-in defaults.
 - Credentials come from the shell, never from `.env`.
 - Read-only verbs run bare; a mutating verb prints its plan and needs `--yes`.
 
