@@ -10,5 +10,6 @@
     { "name": "Blog", "href": "/blog/", "fill": "blog" },
     { "name": "About", "href": "/about/" }
   ],
-  "socials": [{ "name": "GitHub", "href": "https://github.com/mrlyprod" }]
+  "socials": [{ "name": "GitHub", "href": "https://github.com/mrlyprod" }],
+  "contact": "help@mrly.net"
 }

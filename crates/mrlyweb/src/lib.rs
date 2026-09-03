@@ -18,13 +18,15 @@ pub mod census;
 pub mod crop;
 /// The alphabet: text laid out as a grid, written in stroke order, cycled, and read glyph by glyph.
 pub mod font;
+/// The elementary formulas: eight partial sums, products and prime counts read at one depth and walked to it.
+pub mod formulas;
 /// The primes of the plane: the Gaussian and the Eisenstein windows painted, counted, clicked and weighed by norm.
 pub mod gauss;
 /// The networks of the designs: nodes, branches, roles and censuses, and the force layout that relaxes them.
 pub mod graph;
 /// The laboratory: the sequence press and the moire presets.
 pub mod lab;
-/// The lattice: the Farey nodes and the totients.
+/// The lattice: the Farey nodes, the totients and the window the stack lights, counted, painted and walked into pi.
 pub mod lattice;
 /// The ledger: every measure of every design as a sequence, searched, identified and read against the curated records.
 pub mod ledger;
@@ -60,6 +62,7 @@ pub mod zeta;
 pub(crate) mod ink {
     pub const DEEP: [u8; 4] = [7, 9, 11, 255];
     pub const FAINT: [u8; 4] = [31, 38, 46, 255];
+    pub const DIM: [u8; 4] = [127, 138, 151, 255];
     pub const GOLD: [u8; 4] = [255, 209, 102, 255];
     pub const BLUE: [u8; 4] = [92, 200, 255, 255];
     pub const ORANGE: [u8; 4] = [255, 138, 92, 255];

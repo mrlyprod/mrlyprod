@@ -13,11 +13,13 @@ pub mod classics;
 pub mod factor;
 /// The fast Fourier transform in one and two dimensions.
 pub mod fft;
+/// The elementary formulas: the partial products and sums that walk to pi, e and gamma, and the prime counts beside them.
+pub mod formulas;
 /// The primes of the plane: the Gaussian and the Eisenstein integers, their classes, windows and ring weights.
 pub mod gauss;
 /// The spatial network: its nodes, branches, extraction and census.
 pub mod graph;
-/// The visible lattice: totients, coprime pairs, the pi estimate and the Farey nodes.
+/// The visible lattice: totients, coprime pairs, the constant a dimension recovers and the Farey nodes.
 pub mod lattice;
 /// The Thue-Morse world: the digit rule, the substitution, the plane lifts, the runs and the period-doubling word.
 pub mod morse;

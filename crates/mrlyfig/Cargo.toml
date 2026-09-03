@@ -184,3 +184,11 @@ path = "examples/grid/demo-wolfram.rs"
 [[example]]
 name = "demo-mrlylife"
 path = "examples/grid/demo-mrlylife.rs"
+
+[[example]]
+name = "demo-pi"
+path = "examples/grid/demo-pi.rs"
+
+[[example]]
+name = "demo-formulas"
+path = "examples/plot/demo-formulas.rs"

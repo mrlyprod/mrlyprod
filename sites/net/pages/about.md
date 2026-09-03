@@ -13,4 +13,4 @@ MrlyMath is the study of designs on the corners of a cube grown by the Kronecker
 
 > This is the way. Why is the secret.
 
-Questions, corrections and ideas belong in the issues and discussions at [github.com/mrlyprod/mrlyprod](https://github.com/mrlyprod/mrlyprod). There is no contact address yet.
+Questions, corrections and ideas belong in the issues and discussions at [github.com/mrlyprod/mrlyprod](https://github.com/mrlyprod/mrlyprod). Anything else: write to [help@mrly.net](mailto:help@mrly.net).

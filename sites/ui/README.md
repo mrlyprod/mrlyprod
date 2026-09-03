@@ -16,7 +16,7 @@
 - `font.json`: the 5x5 glyphs, `{ char: rows[] }`.
 - `mark.json`: the MRLYPROD write-and-hold loop, `{ rows, cols, fps, frames }`, the footer fallback without wasm.
 - `chrome.jsx`: React, renders the whole page for `react-dom/client` and `react-dom/server`.
-- `site.json`: title, root, since, the tree skeleton (`fill` names a list the site fills), socials.
+- `site.json`: title, root, since, the tree skeleton (`fill` names a list the site fills), socials, contact (the address the footer links).
 - `tsconfig.json`: points `react` at `../net/node_modules` so bun resolves it from here.
 
 ## EXPORTS

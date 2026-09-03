@@ -7,7 +7,7 @@ use std::collections::VecDeque;
 
 const LEVEL: usize = 4;
 const STEPS: usize = 20000;
-const SEED: u64 = 20260902;
+const SEED: u64 = 7;
 
 fn sites(cell: &Cell2d) -> (usize, Vec<bool>) {
     let side = cell.width();

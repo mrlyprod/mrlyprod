@@ -1,4 +1,6 @@
 use crate::factor::coprime;
+use crate::series;
+use std::f64::consts::PI;
 
 /// Sieves the Euler totients of zero through n.
 ///
@@ -29,6 +31,48 @@ pub fn coprime_pairs(n: usize) -> u64 {
 pub fn pi_estimate(n: usize) -> f64 {
     let density = coprime_pairs(n) as f64 / (n as f64 * n as f64);
     (6.0 / density).sqrt()
+}
+
+/// The rational factor r with zeta of the dimension equal to r times pi to the dimension, read off the Bernoulli fraction; none at an odd dimension or past twelve.
+///
+/// ```
+/// assert!((mrlynum::lattice::zeta_factor(4).unwrap() - 1.0 / 90.0).abs() < 1e-15);
+/// ```
+pub fn zeta_factor(dimension: u32) -> Option<f64> {
+    if dimension == 0 || !dimension.is_multiple_of(2) || dimension > 12 {
+        return None;
+    }
+    let d = dimension as usize;
+    let (num, den) = series::bernoulli(d + 1)[d];
+    let sign = if (d / 2).is_multiple_of(2) { -1.0 } else { 1.0 };
+    let factorial = (1..=d).fold(1.0f64, |out, k| out * k as f64);
+    Some(sign * (num as f64 / den as f64) * 2f64.powi(d as i32) / (2.0 * factorial))
+}
+
+/// The value zeta takes at a whole argument above one: the exact Bernoulli form at an even one, the Euler-Maclaurin sum at an odd one.
+///
+/// Panics at a whole argument of one or below, where the sum does not converge.
+pub fn zeta_whole(s: u32) -> f64 {
+    assert!(s > 1, "zeta needs a whole argument above one");
+    match zeta_factor(s) {
+        Some(factor) => factor * PI.powi(s as i32),
+        None => series::zeta(f64::from(s), 20_000),
+    }
+}
+
+/// The density the visible count of a window in the dimension walks to: one over zeta of the dimension.
+pub fn visible_density(dimension: u32) -> f64 {
+    1.0 / zeta_whole(dimension)
+}
+
+/// Recovers the constant the dimension hides from the visible count of the window: pi at an even dimension, zeta of the dimension at an odd one.
+pub fn recovered(n: usize, dimension: u32) -> f64 {
+    let density = series::visible(n, dimension) as f64 / (n as f64).powi(dimension as i32);
+    let zeta = 1.0 / density;
+    match zeta_factor(dimension) {
+        Some(factor) => (zeta / factor).powf(1.0 / f64::from(dimension)),
+        None => zeta,
+    }
 }
 
 /// A visible node: a reduced fraction and the brightness a stack of scales one through the window gives it.
@@ -149,6 +193,30 @@ mod tests {
     #[test]
     fn pi_estimate_converges_by_a_hundred_thousand() {
         assert!((pi_estimate(100_000) - PI).abs() < 1e-4);
+    }
+
+    #[test]
+    fn the_zeta_factor_is_the_known_even_fraction() {
+        assert!((zeta_factor(2).unwrap() - 1.0 / 6.0).abs() < 1e-15);
+        assert!((zeta_factor(4).unwrap() - 1.0 / 90.0).abs() < 1e-15);
+        assert!((zeta_factor(6).unwrap() - 1.0 / 945.0).abs() < 1e-15);
+        assert_eq!(zeta_factor(3), None);
+        assert_eq!(zeta_factor(14), None);
+    }
+
+    #[test]
+    fn the_visible_density_is_one_over_the_whole_zeta() {
+        assert!((visible_density(2) - 6.0 / (PI * PI)).abs() < 1e-15);
+        assert!((zeta_whole(2) - PI * PI / 6.0).abs() < 1e-15);
+        assert!((zeta_whole(3) - 1.202_056_903_159_594).abs() < 1e-9);
+    }
+
+    #[test]
+    fn the_window_recovers_pi_in_the_even_dimensions() {
+        assert!((recovered(1_000, 2) - pi_estimate(1_000)).abs() < 1e-12);
+        assert!((recovered(1_000, 2) - PI).abs() < 2e-3);
+        assert!((recovered(1_000, 4) - PI).abs() < 2e-3);
+        assert!((recovered(1_000, 3) - 1.202_056_903).abs() < 2e-3);
     }
 
     #[test]

@@ -36,6 +36,18 @@ const spun = JSON.parse(m.spin_stats(rings, 27));
 const square = new Float32Array(64).fill(1);
 const star = m.radial(square, 8, 64, 2, 45, 'union', 1);
 const stack = JSON.parse(m.farey_novelty(5));
+const terms = Array.from({ length: 8 }, (_, i) => JSON.parse(m.visible_read(i + 1, 2)).lit).join(',');
+const litWindow = JSON.parse(m.visible_read(100, 2));
+const cube = JSON.parse(m.visible_read(1000, 3));
+const quartic = JSON.parse(m.visible_read(1000, 4));
+const lattice = m.visible_pixels(100, 200, true);
+const litDots = lattice.rgba.reduce((count: number, byte: number, at: number) => count + (at % 4 === 0 && byte === 92 && lattice.rgba[at + 1] === 200 && lattice.rgba[at + 2] === 255 ? 1 : 0), 0);
+const approach = m.visible_walk(100, 2, 8);
+const forms = JSON.parse(m.formulas_read(1000));
+const halved = JSON.parse(m.formulas_read(500));
+const basel = m.formulas_walk('basel', 1000, 4);
+const comet = m.formulas_walk('goldbach', 500, 2);
+const sparks = ['wallis', 'leibniz', 'basel', 'gamma', 'e', 'primes', 'goldbach', 'mertens'].map((kind) => m.formulas_walk(kind, 400, 160).length).join(',');
 const split = JSON.parse(m.slice_partition(3));
 const shape = JSON.parse(m.volume_shape(7, 64));
 const sieve = new m.Sieve(30);
@@ -266,6 +278,24 @@ const checks: [string, unknown, unknown][] = [
   ['grid_total 3 2 4', m.grid_total(3, 2, 4), '6561'],
   ['odd_scales 9', Array.from(m.odd_scales(9)).join(','), '1,3,5,7,9'],
   ['farey_novelty 5', `${stack.lit},${stack.novel},${stack.match},${stack.primes.join(' ')}`, '11,11,true,2 3 5'],
+  ['visible A018805 1..8', terms, '1,3,7,11,19,23,35,43'],
+  ['visible window 100', `${litWindow.lit} ${litWindow.total} ${litWindow.density.toFixed(10)}`, '6087 10000 0.6087000000'],
+  ['visible limit 6/pi^2', litWindow.limit.toFixed(9), '0.607927102'],
+  ['visible recovers pi 100', `${litWindow.name} ${litWindow.constant.toFixed(8)}`, 'pi 3.13959750'],
+  ['visible cube is apery', `${cube.name} ${cube.lit} ${cube.constant.toFixed(8)}`, 'zeta(3) 832046137 1.20185643'],
+  ['visible quartic is pi', `${quartic.name} ${quartic.constant.toFixed(8)}`, 'pi 3.14154967'],
+  ['visible pixels are the count', `${lattice.width} ${litDots}`, `200 ${4 * 6087}`],
+  ['visible walk lands on n', `${approach.length} ${approach[14]} ${approach[15].toFixed(8)}`, '16 100 3.13959750'],
+  ['formulas constants', `${forms.constants.pi.toFixed(9)} ${forms.constants.e.toFixed(9)} ${forms.constants.gamma.toFixed(9)}`, '3.141592654 2.718281828 0.577215665'],
+  ['formulas partials 1000', `${forms.cards.wallis.value.toFixed(9)} ${forms.cards.leibniz.value.toFixed(9)} ${forms.cards.basel.value.toFixed(9)}`, '1.570403873 0.785148163 1.643934567'],
+  ['formulas gamma and e 1000', `${forms.cards.gamma.value.toFixed(9)} ${forms.cards.e.value.toFixed(9)}`, '0.577715582 2.716923932'],
+  ['formulas prime count 1000', `${forms.cards.primes.value} ${forms.cards.primes.li.toFixed(6)} ${forms.cards.primes.ratio.toFixed(6)}`, '168 177.609658 144.764827'],
+  ['formulas goldbach 2000', `${forms.cards.goldbach.even} ${forms.cards.goldbach.value} ${forms.cards.goldbach.floor}`, '2000 37 1'],
+  ['formulas goldbach 1000', `${halved.cards.goldbach.even} ${halved.cards.goldbach.value} ${halved.cards.primes.value}`, '1000 28 95'],
+  ['formulas mertens 1000 500', `${forms.cards.mertens.value} ${halved.cards.mertens.value}`, '2 -6'],
+  ['formulas basel walk', `${basel.length} ${basel[0]} ${basel[1].toFixed(6)} ${basel[9]} ${basel[10].toFixed(6)}`, '12 2 1.250000 1000 1.643935'],
+  ['formulas goldbach walk', `${comet[0]} ${comet[3]} ${comet[4]} ${comet[5].toFixed(9)}`, '4 1000 28 0.035714286'],
+  ['formulas walks eight kinds', sparks, '480,480,480,480,480,480,480,480'],
   ['slice_partition 3', `${split.carpet},${split.net},${split.exact}`, '42,12,true'],
   ['volume_shape 7 64', `${shape.layers},${shape.voxels}`, '4,262144'],
   ['radial_share square', m.radial_share(m.harmonics(square, 8, 64, 8)).toFixed(1), '95.3'],

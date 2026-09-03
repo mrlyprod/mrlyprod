@@ -4,6 +4,7 @@ use mrlyweb::bang::*;
 use mrlyweb::blend::*;
 use mrlyweb::carry::*;
 use mrlyweb::census::*;
+use mrlyweb::formulas::*;
 use mrlyweb::gauss::*;
 use mrlyweb::graph::*;
 use mrlyweb::lab::*;
@@ -204,6 +205,48 @@ fn the_fixture_the_page_prints() {
     assert_eq!(Race::new("127", 3, 4, 3, 300, 1).unwrap().side(), 81);
     assert_eq!(parse(&farey(5)).unwrap().as_array().unwrap().len(), 11);
     assert_eq!(totients(6), vec![0, 1, 1, 2, 2, 4, 2]);
+    let terms: Vec<String> = (1..=8)
+        .map(|n| {
+            parse(&visible_read(n, 2).unwrap()).unwrap()["lit"]
+                .as_str()
+                .unwrap()
+                .to_string()
+        })
+        .collect();
+    assert_eq!(terms.join(","), "1,3,7,11,19,23,35,43");
+    let corner = parse(&visible_read(100, 2).unwrap()).unwrap();
+    assert_eq!(corner["lit"], "6087");
+    assert_eq!(corner["total"], "10000");
+    assert_eq!(corner["name"], "pi");
+    assert!((corner["density"].as_f64().unwrap() - 0.6087).abs() < 1e-12);
+    assert!((corner["limit"].as_f64().unwrap() - 0.607_927_101_8).abs() < 1e-9);
+    assert!((corner["constant"].as_f64().unwrap() - 3.139_597_50).abs() < 1e-8);
+    let cube = parse(&visible_read(1000, 3).unwrap()).unwrap();
+    assert_eq!(cube["lit"], "832046137");
+    assert_eq!(cube["name"], "zeta(3)");
+    assert!((cube["constant"].as_f64().unwrap() - 1.201_856_43).abs() < 1e-8);
+    let quartic = parse(&visible_read(1000, 4).unwrap()).unwrap();
+    assert!((quartic["constant"].as_f64().unwrap() - 3.141_549_67).abs() < 1e-8);
+    let lattice = visible_pixels(100, 200, true).unwrap();
+    let blue = lattice
+        .rgba
+        .chunks(4)
+        .filter(|dot| *dot == [92, 200, 255, 255])
+        .count();
+    assert_eq!((lattice.width, lattice.height, blue), (200, 200, 4 * 6087));
+    let flat = visible_pixels(100, 200, false).unwrap();
+    assert_eq!(
+        flat.rgba
+            .chunks(4)
+            .filter(|dot| *dot == [31, 38, 46, 255])
+            .count(),
+        4 * (10000 - 6087)
+    );
+    let walk = visible_walk(100, 2, 8).unwrap();
+    assert_eq!(walk.len(), 16);
+    assert_eq!(walk[14], 100.0);
+    assert!((walk[15] - 3.139_597_50).abs() < 1e-8);
+    assert!(visible_read(0, 2).is_err() && visible_read(10, 9).is_err());
     assert!((dimension("127", 3, 2, 3).unwrap() - 1.7712).abs() < 1e-4);
     let carpet: Vec<f32> = two_grid("495", 3, 3, 0, 3)
         .unwrap()
@@ -1721,4 +1764,55 @@ fn the_automata_exports_answer() {
     assert!(life_mask_index(&[1, 0, 1], 2, 2).is_err());
     assert!(life_next_masked(&row, 7, 1, &[1], &[], &line.types, 4, 1, false).is_err());
     assert!(life_next_masked(&row, 7, 1, &[1], &[], &wide.types, 5, 1, false).is_ok());
+}
+
+#[test]
+fn the_formulas_exports_answer() {
+    let read = parse(&formulas_read(1000).unwrap()).unwrap();
+    let constants = &read["constants"];
+    assert!((constants["pi"].as_f64().unwrap() - std::f64::consts::PI).abs() < 1e-15);
+    assert!((constants["e"].as_f64().unwrap() - std::f64::consts::E).abs() < 1e-15);
+    assert!((constants["gamma"].as_f64().unwrap() - 0.577_215_664_901_532_9).abs() < 1e-15);
+    let cards = &read["cards"];
+    assert!((cards["wallis"]["value"].as_f64().unwrap() - 1.570_403_873_015_201).abs() < 1e-12);
+    assert!((cards["leibniz"]["value"].as_f64().unwrap() - 0.785_148_163_459_948_3).abs() < 1e-12);
+    assert!((cards["basel"]["value"].as_f64().unwrap() - 1.643_934_566_681_559_7).abs() < 1e-12);
+    assert!((cards["gamma"]["value"].as_f64().unwrap() - 0.577_715_581_568_208_2).abs() < 1e-12);
+    assert!((cards["e"]["value"].as_f64().unwrap() - 2.716_923_932_235_593_6).abs() < 1e-12);
+    for key in ["wallis", "leibniz", "basel", "gamma", "e"] {
+        let card = &cards[key];
+        let value = card["value"].as_f64().unwrap();
+        let limit = card["limit"].as_f64().unwrap();
+        assert!((card["error"].as_f64().unwrap() - (value - limit).abs()).abs() < 1e-15);
+        assert!(card["rel"].as_f64().unwrap() < 1e-3);
+    }
+    assert_eq!(cards["primes"]["value"], 168);
+    assert!((cards["primes"]["li"].as_f64().unwrap() - 177.609_657_990_152_2).abs() < 1e-9);
+    assert!((cards["primes"]["ratio"].as_f64().unwrap() - 144.764_827_301_083_95).abs() < 1e-9);
+    assert!((cards["primes"]["gauge"].as_f64().unwrap() - 0.945_894_507_658_558_8).abs() < 1e-12);
+    assert_eq!(cards["goldbach"]["even"], 2000);
+    assert_eq!(cards["goldbach"]["value"], 37);
+    assert_eq!(cards["goldbach"]["floor"], 1);
+    assert_eq!(cards["mertens"]["value"], 2);
+    assert!((cards["mertens"]["root"].as_f64().unwrap() - 31.622_776_601_683_793).abs() < 1e-12);
+
+    let half = parse(&formulas_read(500).unwrap()).unwrap();
+    assert_eq!(half["cards"]["goldbach"]["even"], 1000);
+    assert_eq!(half["cards"]["goldbach"]["value"], 28);
+    assert_eq!(half["cards"]["primes"]["value"], 95);
+    assert_eq!(half["cards"]["mertens"]["value"], -6);
+
+    let walk = formulas_walk("basel", 1000, 4).unwrap();
+    assert_eq!(walk.len(), 12);
+    assert_eq!((walk[0], walk[9]), (2.0, 1000.0));
+    assert!((walk[1] - 1.25).abs() < 1e-15);
+    assert!((walk[10] - 1.643_934_566_681_559_7).abs() < 1e-12);
+    let comet = formulas_walk("goldbach", 500, 2).unwrap();
+    assert_eq!((comet[0], comet[3], comet[4]), (4.0, 1000.0, 28.0));
+    assert!((comet[5] - 1.0 / 28.0).abs() < 1e-15);
+    let meter = formulas_walk("mertens", 100, 2).unwrap();
+    assert_eq!((meter[1], meter[4]), (0.0, 1.0));
+    assert!((meter[5] - 0.1).abs() < 1e-15);
+    assert!(formulas_read(1).is_err() && formulas_read(2001).is_err());
+    assert!(formulas_walk("basel", 100, 1).is_err() && formulas_walk("basil", 100, 4).is_err());
 }

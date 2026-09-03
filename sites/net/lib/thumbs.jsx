@@ -127,6 +127,31 @@ const zeta = (m) => (canvas) => {
   ctx.stroke();
 };
 
+const GAUGES = [
+  ['wallis', ink.blue], ['leibniz', ink.blue], ['basel', ink.blue], ['gamma', ink.blue],
+  ['e', ink.blue], ['primes', ink.gold], ['goldbach', ink.gold], ['mertens', ink.orange],
+];
+
+const formulas = (m) => (canvas) => {
+  const [ctx, w, h] = fit(canvas, canvas.clientWidth / 1.5);
+  const pad = 6;
+  const lo = Math.log10(2), hi = Math.log10(4000), deep = 5;
+  ctx.lineWidth = 1.2;
+  for (const [kind, hue] of GAUGES) {
+    const walk = once(`formulas-${kind}`, () => m.formulas_walk(kind, 2000, 90));
+    ctx.strokeStyle = hue;
+    ctx.beginPath();
+    for (let k = 0; k < walk.length; k += 3) {
+      const x = pad + (w - 2 * pad) * (Math.log10(walk[k]) - lo) / (hi - lo);
+      const drop = Math.min(deep, -Math.log10(Math.max(walk[k + 2], 1e-5)));
+      const y = pad + (h - 2 * pad) * drop / deep;
+      if (k) ctx.lineTo(x, y);
+      else ctx.moveTo(x, y);
+    }
+    ctx.stroke();
+  }
+};
+
 /* DRAWERS */
 
 const DRAW = {
@@ -152,6 +177,7 @@ const DRAW = {
   tower: (m) => <Sketch draw={tower(m)} className="" />,
   carry: (m) => <Sketch draw={carry(m)} className="" />,
   farey: (m) => <Sketch draw={farey(m)} className="" />,
+  pi: (m) => <Pixels data={m.visible_pixels(100, 180, true)} className="" />,
   primes: (m) => <Grid grid={sieve(m).grid(15)} on={ink.gold} className="" />,
   ulam: (m) => <Pixels data={m.spiral_pixels('square', 61, 4, -2, 41, 'prime', false, 180)} className="" />,
   gaussian: (m) => <Pixels data={m.ring_pixels('gaussian', 24, 'class', false, 180)} className="" />,
@@ -160,6 +186,7 @@ const DRAW = {
   plot: (m) => <Sketch draw={plot(m)} className="" />,
   integers: (m) => <Grid grid={{ width: 40, height: census(m).length / 40, types: Uint8Array.from(census(m), (rows) => (rows ? 1 : 0)) }} on={ink.gold} className="" />,
   zeta: (m) => <Sketch draw={zeta(m)} className="" />,
+  formulas: (m) => <Sketch draw={formulas(m)} className="" />,
 };
 
 export const names = Object.keys(DRAW);

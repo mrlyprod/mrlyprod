@@ -106,6 +106,7 @@ export function Footer() {
       <p className="fine">
         Copyright {site.title}, Inc. {site.since}-{new Date().getFullYear()}
         {site.socials.map((social) => <span key={social.name}> · <a href={social.href}>{social.name}</a></span>)}
+        {site.contact && <span> · <a href={`mailto:${site.contact}`}>{site.contact}</a></span>}
       </p>
     </footer>
   );
