@@ -10,6 +10,7 @@ members = [
     "crates/mrlylab",
     "crates/mrlyfig",
     "crates/mrlyweb",
+    "pkgs/rs/mrlyrs",
 ]
 
 [workspace.package]

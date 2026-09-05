@@ -1,0 +1,19 @@
+{
+  "name": "mrlyjs",
+  "version": "0.0.1",
+  "description": "MrlyProd; or, Marley Productions",
+  "license": "MIT",
+  "homepage": "https://mrly.net",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrlyprod/mrlyprod",
+    "directory": "pkgs/js/mrly"
+  },
+  "type": "module",
+  "main": "index.js",
+  "exports": "./index.js",
+  "files": ["index.js", "README.md"],
+  "scripts": {
+    "test": "bun test"
+  }
+}

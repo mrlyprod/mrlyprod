@@ -7,6 +7,7 @@
 
 # OUTPUT
 data/
+dist/
 
 # RUST
 target/
@@ -25,3 +26,4 @@ sites/net/dist/
 # PYTHON
 .venv/
 __pycache__/
+.pytest_cache/

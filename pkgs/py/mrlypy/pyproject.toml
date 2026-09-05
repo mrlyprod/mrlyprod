@@ -1,0 +1,15 @@
+[project]
+name = "mrlypy"
+version = "0.0.1"
+description = "MrlyProd; or, Marley Productions"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+
+[project.urls]
+Homepage = "https://mrly.net"
+Repository = "https://github.com/mrlyprod/mrlyprod"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
