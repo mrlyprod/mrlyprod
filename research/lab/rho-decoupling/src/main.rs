@@ -1,5 +1,7 @@
 use num_bigint::BigInt;
 
+mod carry;
+
 // EXACT DP
 
 fn pow_checked(k: u64, l: usize) -> u128 {
@@ -117,7 +119,10 @@ struct Frac {
 
 impl Frac {
     fn zero() -> Frac {
-        Frac { num: BigInt::from(0), den: BigInt::from(1) }
+        Frac {
+            num: BigInt::from(0),
+            den: BigInt::from(1),
+        }
     }
 
     fn add(&mut self, num: BigInt, den: BigInt) {
@@ -182,7 +187,11 @@ fn census(q: u64, digits: &[u64], label: &str, ls: &[usize], dmax: u64, mu: &[i8
             }
             let n = n_div(q, digits, l, d);
             let signed = BigInt::from(d) * BigInt::from(n) - &kl;
-            let errnum = if signed < BigInt::from(0) { -&signed } else { signed.clone() };
+            let errnum = if signed < BigInt::from(0) {
+                -&signed
+            } else {
+                signed.clone()
+            };
             let norm = ratio_f64(&errnum, &kl);
             if norm > worst.0 {
                 worst = (norm, d);
@@ -200,7 +209,10 @@ fn census(q: u64, digits: &[u64], label: &str, ls: &[usize], dmax: u64, mu: &[i8
             }
             if mu[d as usize] != 0 {
                 s1 += mu[d as usize] as i128 * n as i128;
-                t.add(BigInt::from(mu[d as usize]) * &signed, BigInt::from(d) * &kl);
+                t.add(
+                    BigInt::from(mu[d as usize]) * &signed,
+                    BigInt::from(d) * &kl,
+                );
                 ts.add(errnum, BigInt::from(d) * &kl);
             }
         }
@@ -212,7 +224,10 @@ fn census(q: u64, digits: &[u64], label: &str, ls: &[usize], dmax: u64, mu: &[i8
             worstcop.0, worstcop.1
         );
         if delta > 1 {
-            println!("wallrow q={q} F={label} L={l} D={dmax} delta={delta} worst={:.4e} at d={}", worst.0, worst.1);
+            println!(
+                "wallrow q={q} F={label} L={l} D={dmax} delta={delta} worst={:.4e} at d={}",
+                worst.0, worst.1
+            );
         }
         let tv = t.to_f64();
         let tsv = ts.to_f64();
@@ -233,9 +248,16 @@ fn census(q: u64, digits: &[u64], label: &str, ls: &[usize], dmax: u64, mu: &[i8
         let kl = BigInt::from(pow_checked(k, l));
         let n = n_div(q, digits, l, 7);
         let signed = BigInt::from(7) * BigInt::from(n) - &kl;
-        let errnum = if signed < BigInt::from(0) { -signed } else { signed };
+        let errnum = if signed < BigInt::from(0) {
+            -signed
+        } else {
+            signed
+        };
         let rate = (ratio_f64(&errnum, &kl) / 7.0).powf(1.0 / l as f64);
-        println!("decouple q={q} k={k} F={label} L={l} d=7 rate={rate:.4} gam={:.4}", gamma_emp(digits, 7));
+        println!(
+            "decouple q={q} k={k} F={label} L={l} d=7 rate={rate:.4} gam={:.4}",
+            gamma_emp(digits, 7)
+        );
     }
 }
 
@@ -244,7 +266,11 @@ fn pinned(q: u64, digits: &[u64], label: &str, l: usize, d: u64) {
     let kl = BigInt::from(pow_checked(k, l));
     let n = n_div(q, digits, l, d);
     let signed = BigInt::from(d) * BigInt::from(n) - &kl;
-    let errnum = if signed < BigInt::from(0) { -signed } else { signed };
+    let errnum = if signed < BigInt::from(0) {
+        -signed
+    } else {
+        signed
+    };
     let rate = (ratio_f64(&errnum, &kl) / d as f64).powf(1.0 / l as f64);
     let mean = rate * (d as f64).powf(1.0 / l as f64);
     let ord = mult_order(q, d);
@@ -262,12 +288,20 @@ fn main() {
     census(5, &[0, 2, 4], "024", &[8, 16, 20], 200, &mu);
     census(10, &ex(10, 7), "ex7", &[6, 12, 18, 24], 300, &mu);
     census(100, &ex(100, 37), "ex37", &[4, 8, 12, 16], 500, &mu);
-    census(100, &(0..50).collect::<Vec<u64>>(), "0to49", &[4, 8, 12, 16], 500, &mu);
+    census(
+        100,
+        &(0..50).collect::<Vec<u64>>(),
+        "0to49",
+        &[4, 8, 12, 16],
+        500,
+        &mu,
+    );
     census(100, &[0, 1], "01", &[16, 32, 64, 96], 500, &mu);
     pinned(100, &ex(100, 37), "ex37", 12, 101);
     pinned(100, &ex(100, 37), "ex37", 12, 9999);
     pinned(100, &ex(100, 37), "ex37", 12, 3367);
     pinned(100, &ex(100, 37), "ex37", 12, 999999);
+    carry::run();
 }
 
 // TESTS
@@ -312,7 +346,11 @@ mod tests {
 
     #[test]
     fn residues_sum_to_kl() {
-        for (q, digits, l, d) in [(3u64, vec![0u64, 1], 12usize, 35u64), (10, vec![1, 4, 9], 8, 77), (100, vec![0, 1], 20, 99)] {
+        for (q, digits, l, d) in [
+            (3u64, vec![0u64, 1], 12usize, 35u64),
+            (10, vec![1, 4, 9], 8, 77),
+            (100, vec![0, 1], 20, 99),
+        ] {
             let total: u128 = residue_counts(q, &digits, l, d).iter().sum();
             assert_eq!(total, pow_checked(digits.len() as u64, l));
         }
@@ -344,7 +382,11 @@ mod tests {
             }
             let n = n_div(3, &[0, 1], l, d);
             let signed = BigInt::from(d) * BigInt::from(n) - &kl;
-            let errnum = if signed < BigInt::from(0) { -signed } else { signed };
+            let errnum = if signed < BigInt::from(0) {
+                -signed
+            } else {
+                signed
+            };
             assert_lemma_a(&errnum, &kl, 2, d, l);
         }
     }
