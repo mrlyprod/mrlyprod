@@ -163,8 +163,7 @@ function demoGroup(site: Site): Route {
     name: "Demos",
     data: list,
     inputs,
-    urls: list.map((d) => ({ route: demoRoute(d.name), name: d.title, at: lastmod(join(home, d.name, "index.jsx")) })),
-    at: lastmod(join(home, "index.jsx")),
+    urls: list.map((d) => ({ route: demoRoute(d.name), name: d.title })),
   };
 }
 
@@ -424,26 +423,6 @@ function missing(site: Site, route: Route): Output[] {
   return [{ path: "404.html", bytes: shell(site, { route: route.route, name: "Nothing here", description: "That page does not exist.", body, type: "website", bare: true }) }];
 }
 
-/* SITEMAP */
-
-const seen = new Map<string, string>();
-
-function lastmod(source: string) {
-  if (!source) return "";
-  const hit = seen.get(source);
-  if (hit !== undefined) return hit;
-  let out = "";
-  try {
-    const run = Bun.spawnSync(["git", "log", "-1", "--format=%cI", "--", source], { cwd: dirname(source), stderr: "ignore" });
-    out = run.stdout.toString().trim();
-  } catch {
-    out = "";
-  }
-  const when = out.slice(0, 10);
-  seen.set(source, when);
-  return when;
-}
-
 /* COLLECT */
 
 const counts = { papers: 0, research: 0, blog: 0, demos: 0 };
@@ -472,15 +451,14 @@ async function collect(site: Site) {
     data: { lanes: laneList, posts: postList },
     source: readme,
     inputs: [readme],
-    at: lastmod(readme),
   });
   routes.push(group);
   if (laneList.length) {
     const index = join(SHELF, "README.md");
-    routes.push({ route: "/papers/", kind: "papers", name: "Papers", data: laneList, source: index, inputs: [index], at: lastmod(index) });
+    routes.push({ route: "/papers/", kind: "papers", name: "Papers", data: laneList, source: index, inputs: [index] });
     for (const p of laneList) {
       const lane = join(SHELF, p.slug);
-      routes.push({ route: `/papers/${p.slug}/`, kind: "paper", name: p.name, data: p, source: lane, inputs: [lane], at: lastmod(join(lane, "README.md")) });
+      routes.push({ route: `/papers/${p.slug}/`, kind: "paper", name: p.name, data: p, source: lane, inputs: [lane] });
     }
   }
   const notesHome = site.input("research").path;
@@ -493,19 +471,18 @@ async function collect(site: Site) {
       data: n,
       source,
       inputs: [source],
-      at: lastmod(source),
     });
   }
   if (postList.length) {
     const files = postList.map((p) => postFile(p.slug));
-    routes.push({ route: "/blog/", kind: "blog", name: "Blog", data: postList, source: BLOG, inputs: files, at: lastmod(files[0]) });
+    routes.push({ route: "/blog/", kind: "blog", name: "Blog", data: postList, source: BLOG, inputs: files });
     for (const p of postList) {
       const source = postFile(p.slug);
-      routes.push({ route: `/blog/${p.slug}/`, kind: "post", name: p.name, data: p, source, inputs: [source], at: lastmod(source) });
+      routes.push({ route: `/blog/${p.slug}/`, kind: "post", name: p.name, data: p, source, inputs: [source] });
     }
   }
   const page = join(org, "pages", "about.md");
-  if (existsSync(page)) routes.push({ route: "/about/", kind: "about", name: "About", source: page, inputs: [page], at: lastmod(page) });
+  if (existsSync(page)) routes.push({ route: "/about/", kind: "about", name: "About", source: page, inputs: [page] });
   routes.push({ route: "/404.html", kind: "missing", name: "Nothing here", hidden: true });
   return { routes, nav };
 }
