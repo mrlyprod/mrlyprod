@@ -59,6 +59,12 @@ function assets(items: Output[], old: Manifest): Manifest {
   return out;
 }
 
+function typing(manifest: Manifest): Map<string, string> {
+  const out = new Map<string, string>();
+  for (const record of Object.values(manifest)) for (const [path, type] of Object.entries(record.types ?? {})) out.set(path, type);
+  return out;
+}
+
 function spread(manifest: Manifest): Map<string, string> {
   const out = new Map<string, string>();
   for (const [key, record] of Object.entries(manifest)) for (const path of record.outputs) out.set(path, key);
@@ -79,6 +85,7 @@ export async function push(options: { dry?: boolean } = {}): Promise<{ rendered:
   const next: Manifest = { ...done.manifest, ...assets(await globals(done.site, spec), old) };
   const want = spread(next);
   const had = spread(old);
+  const types = typing(next);
   const upload: string[] = [];
   for (const [path, key] of want) {
     const was = old[key];
@@ -92,8 +99,8 @@ export async function push(options: { dry?: boolean } = {}): Promise<{ rendered:
       await Promise.all(
         upload.slice(i, i + BATCH).map((path) =>
           putBytes(net, path, new Uint8Array(readFileSync(join(done.site.out, path))), {
-            type: kind(path),
-            cacheControl: cache(path),
+            type: types.get(path) ?? kind(path),
+            cacheControl: types.has(path) ? REVALIDATE : cache(path),
           }),
         ),
       );

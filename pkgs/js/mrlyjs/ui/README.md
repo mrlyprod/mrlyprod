@@ -17,12 +17,14 @@
 - `mark.json`: the MRLYPROD write-and-hold loop, `{ rows, cols, fps, frames }`, the footer fallback without wasm.
 - `chrome.jsx`: React, renders the whole page for `react-dom/client` and `react-dom/server`.
 - `config.js`: the kit's config. `configure(site)` takes the consumer's `site.json`, `conf()` reads it back, `tintCss()` writes the accent override. Keys: `title root since prefix font settings tint tree socials contact`.
+- `seti/`: the SETI file-icon font. `seti.css` carries the `@font-face` and one `.si-*` rule per kind, `seti.woff2` sits beside it so the `url()` resolves at the served path, `seti.ts` maps a path to its classes, `LICENSE-seti.txt` is the vendor licence.
 - `tsconfig.json`: points `react` at `sites/net/node_modules` so bun resolves it from here.
 
 ## EXPORTS
 
 - `font.js`: `letters(text)` gives `{ rows, cols, grid }`; `animate(text, pad)` and `cycle(text, pad, hold)` give `{ rows, cols, fps, frames }`; `mark(canvas, anim, color)` plays an anim and returns a stop function; `glyphSvg(text)` gives the SVG markup of the glyphs.
 - `chrome.js`: `wire()`, idempotent, syncs aria state and attaches the contents observer and the footer mark.
+- `seti/seti.ts`: `seti(path)` gives the class string for a path, `si si-rust` for `main.rs`, plain `si` for an unknown kind.
 - `chrome.jsx`: `Shell({ route, title, lead, tree, current, contents, controls, wide, brand, note, children })`, `Header({ brand })`, `Footer({ note })`, `Wordmark({ className })`, `Tree({ nodes, current })`, `Contents({ items, current })`, `Controls({ children })`, `Settings`.
 - `brand` and `note` are the header and footer slots: pass nothing and the kit draws mrly.net's wordmark and footer mark.
 - `font: false` swaps every pixel glyph for plain text; `settings: false` drops the theme pane; `prefix` moves the localStorage keys and is read in the browser from `<html data-prefix>`.

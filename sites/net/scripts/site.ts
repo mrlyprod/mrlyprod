@@ -4,6 +4,7 @@ import { createElement as h } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import katex from "katex";
 import { build, bytes, walk, type Output, type Route, type Site, type Spec } from "../../../pkgs/js/mrlyjs/ssg/build.ts";
+import { isGit, link as gitLink } from "../../../pkgs/js/mrlyjs/git/git.ts";
 import { escape, front, plain, render as md, summary, title } from "../lib/md.js";
 import { tree } from "../lib/tree.js";
 import { logoSvg } from "../lib/logo.js";
@@ -90,11 +91,12 @@ type Leaf = {
   type?: string;
   wide?: boolean;
   bare?: boolean;
+  code?: boolean;
   data?: object;
 };
 
 function shell(site: Site, leaf: Leaf) {
-  const { route, name, description, body, type = "article", wide = false, bare = false, data } = leaf;
+  const { route, name, description, body, type = "article", wide = false, bare = false, code = false, data } = leaf;
   const article = h(bare ? "div" : "article", { className: bare ? undefined : "prose", dangerouslySetInnerHTML: { __html: body } });
   const main = renderToStaticMarkup(h(Shell, { route, tree: site.nav, contents: headings(body), wide }, article));
   const ld = data ? `<script type="application/ld+json">${JSON.stringify(data)}</script>\n` : "";
@@ -109,7 +111,7 @@ ${meta(route, name, description, type)}
 <link rel="stylesheet" href="${site.asset("base.css")}">
 <link rel="stylesheet" href="${site.asset("chrome.css")}">
 <link rel="stylesheet" href="/pages.css">
-${ld}<script type="module" src="${site.asset("chrome.js")}"></script>
+${code ? `<link rel="stylesheet" href="${site.asset("seti/seti.css")}">\n` : ""}${ld}<script type="module" src="${site.asset("chrome.js")}"></script>
 </head>
 <body>
 ${main}
@@ -556,12 +558,17 @@ export const spec: Spec = {
   collect,
   render: draw,
   globals: extras,
+  git: {
+    page: shell,
+    md: (text, dir) => md(text, { math, link: (url: string) => gitLink(dir, url) }),
+  },
 };
 
 if (import.meta.main) {
   const done = await build(spec, { manifest: MANIFEST });
   const site = done.site;
+  const code = site.routes.filter(isGit).length;
   console.log(
-    `site: ${site.routes.length} routes, ${counts.demos} demo shells, ${counts.papers} papers, ${counts.research} research pages, ${counts.blog} posts, ${done.rendered} rendered, ${done.written} files written, ${done.removed} removed`,
+    `site: ${site.routes.length} routes, ${counts.demos} demo shells, ${counts.papers} papers, ${counts.research} research pages, ${counts.blog} posts, ${code} code pages, ${done.rendered} rendered, ${done.written} files written, ${done.removed} removed`,
   );
 }

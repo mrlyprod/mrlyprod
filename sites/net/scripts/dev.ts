@@ -1,6 +1,7 @@
 import { existsSync, statSync, watch } from "node:fs";
 import { extname, join, resolve } from "node:path";
-import { forget, globals, page, render, scan, type Output, type Route, type Site } from "../../../pkgs/js/mrlyjs/ssg/build.ts";
+import { forget, globals, render, scan, type Output, type Route, type Site } from "../../../pkgs/js/mrlyjs/ssg/build.ts";
+import { owner as rawOwner } from "../../../pkgs/js/mrlyjs/git/git.ts";
 import { counted, spec } from "./site.ts";
 
 const org = resolve(import.meta.dir, "..");
@@ -28,7 +29,7 @@ const TYPES: Record<string, string> = {
 const type = (path: string) => TYPES[extname(path)] ?? "application/octet-stream";
 
 const send = (item: Output, status = 200) =>
-  new Response(item.bytes as string | Uint8Array, { status, headers: { "content-type": type(item.path) } });
+  new Response(item.bytes as string | Uint8Array, { status, headers: { "content-type": item.type ?? type(item.path) } });
 
 /* SCAN */
 
@@ -82,7 +83,13 @@ async function serve(path: string): Promise<Response | null> {
   const want = path.endsWith("/") ? `${path.slice(1)}index.html` : path.slice(1);
   const route = pages().find((one) => one.route === path);
   if (route) {
-    const hit = await seek(route, page(route.route));
+    const hit = await seek(route, want);
+    if (hit) return send(hit);
+  }
+  const back = rawOwner(path);
+  const holder = back ? pages().find((one) => one.route === back) : null;
+  if (holder) {
+    const hit = await seek(holder, want);
     if (hit) return send(hit);
   }
   for (const [at, dir] of disk()) {

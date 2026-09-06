@@ -1,0 +1,89 @@
+import { afterAll, expect, test } from "bun:test";
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
+import { block, collect, dirRoute, fileRoute, lang, link, named, owner, rawPath } from "./git.ts";
+import type { Site } from "../ssg/build.ts";
+
+/* TREE */
+
+const home = join(tmpdir(), `mrlygit-${process.pid}`);
+
+mkdirSync(join(home, "src"), { recursive: true });
+writeFileSync(join(home, "README.md"), "# demo\n\nA tree.\n");
+writeFileSync(join(home, "LICENSE"), "MIT\n");
+writeFileSync(join(home, ".gitignore"), "dist\n");
+writeFileSync(join(home, "src", "a.rs"), "fn main() {}\n");
+
+afterAll(() => rmSync(home, { recursive: true, force: true }));
+
+const site = (git: unknown) => ({ root: home, config: git ? { git } : {} }) as unknown as Site;
+
+/* RULES */
+
+test("a file with no extension routes to .txt", () => {
+  expect(named("LICENSE")).toBe("LICENSE.txt");
+  expect(fileRoute("scripts/bootstrap")).toBe("/git/scripts/bootstrap.txt");
+  expect(rawPath("LICENSE")).toBe("raw/LICENSE.txt");
+});
+
+test("a file with an extension keeps its path", () => {
+  expect(fileRoute("crates/a/src/lib.rs")).toBe("/git/crates/a/src/lib.rs");
+  expect(fileRoute(".gitignore")).toBe("/git/.gitignore");
+  expect(rawPath("x/y.png")).toBe("raw/x/y.png");
+});
+
+test("a directory route ends in a slash", () => {
+  expect(dirRoute("")).toBe("/git/");
+  expect(dirRoute("crates/a")).toBe("/git/crates/a/");
+});
+
+test("a raw path names its own file route", () => {
+  expect(owner("/raw/src/a.rs")).toBe("/git/src/a.rs");
+  expect(owner("/git/src/a.rs")).toBe(null);
+});
+
+test("a language comes from the extension", () => {
+  expect(lang("src/a.rs")).toBe("rust");
+  expect(lang("LICENSE")).toBe("text");
+});
+
+test("a repo-relative link lands on its own route", () => {
+  expect(link("crates/a", "src/lib.rs")).toBe("/git/crates/a/src/lib.rs");
+  expect(link("crates/a", "../b/README.md#top")).toBe("/git/crates/b/README.md#top");
+  expect(link("docs", "shot.png")).toBe("/raw/docs/shot.png");
+  expect(link("docs", "https://mrly.net")).toBe("https://mrly.net");
+});
+
+/* COLLECT */
+
+test("no git block in site.json means no routes", () => {
+  expect(collect(site(null))).toEqual({ routes: [], node: null });
+});
+
+test("a git block routes every tracked file and every directory", () => {
+  const { routes, node } = collect(site({ root: ".", slug: "mrlyprod/mrlyprod" }));
+  const names = routes.map((one) => one.route).sort();
+  expect(names).toEqual(["/git/", "/git/.gitignore", "/git/LICENSE.txt", "/git/README.md", "/git/src/", "/git/src/a.rs"]);
+  expect(node).toEqual({ name: "Code", href: "/git/" });
+  const root = routes.find((one) => one.route === "/git/")!;
+  const kids = (root.data as { kids: [string, number, string][] }).kids;
+  expect(kids.map((one) => one[0])).toEqual(["src", ".gitignore", "LICENSE", "README.md"]);
+  expect(kids[0]).toEqual(["src", 1, "dir"]);
+  expect(root.hidden).toBe(false);
+  expect(routes.find((one) => one.route === "/git/src/a.rs")!.hidden).toBe(true);
+});
+
+/* CODE */
+
+test("a code block numbers its lines and a huge one stays plain", () => {
+  const one = block("let a = 1;\nlet b = 2;\n", "typescript");
+  expect(one).toContain('<span class="line" id="L2"><a class="n" href="#L2">2</a>');
+  expect(one).not.toContain("L3");
+  expect(block("x\n".repeat(120000), "text")).toContain('<div class="code plain"');
+});
+
+test("a paint hook fills the line body and nothing else", () => {
+  const out = block("a\nb\n", "text", () => ['<i>a</i>', '<i>b</i>']);
+  expect(out).toContain('<span class="t"><i>a</i></span>');
+});

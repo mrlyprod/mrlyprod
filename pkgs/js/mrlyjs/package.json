@@ -14,13 +14,15 @@
   "exports": {
     ".": "./index.js",
     "./ui/*": "./ui/*",
-    "./ssg/*": "./ssg/*"
+    "./ssg/*": "./ssg/*",
+    "./git/*": "./git/*"
   },
   "files": [
     "index.js",
     "README.md",
     "ui",
-    "ssg"
+    "ssg",
+    "git"
   ],
   "scripts": {
     "test": "bun test"

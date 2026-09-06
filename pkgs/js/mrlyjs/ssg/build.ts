@@ -1,12 +1,13 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { basename, dirname, extname, join, relative, resolve } from "node:path";
+import { collect as gitRoutes, isGit, print as gitPrint, render as gitRender, type Hooks } from "../git/git.ts";
 
 /* TYPES */
 
 export type Bytes = string | Uint8Array;
 
-export type Output = { path: string; bytes: Bytes };
+export type Output = { path: string; bytes: Bytes; type?: string };
 
 export type Link = { route: string; name?: string; at?: string };
 
@@ -63,10 +64,11 @@ export type Spec = {
   collect: (site: Site) => Promise<{ routes: Route[]; nav?: Node[] }> | { routes: Route[]; nav?: Node[] };
   render: (site: Site, route: Route) => Promise<Output[]> | Output[];
   globals?: (site: Site) => Promise<Output[]> | Output[];
+  git?: Hooks;
   asset?: (name: string, body: Uint8Array) => Bytes;
 };
 
-export type Record_ = { hash: string; at: string; outputs: string[] };
+export type Record_ = { hash: string; at: string; outputs: string[]; types?: Record<string, string> };
 
 export type Manifest = Record<string, Record_>;
 
@@ -147,6 +149,9 @@ function bundles(root: string, config: Config): Bundle[] {
   return list;
 }
 
+const shows = (nodes: Node[], href: string): boolean =>
+  nodes.some((node) => node.href === href || shows(node.nodes ?? [], href));
+
 export async function scan(spec: Spec): Promise<Site> {
   const root = resolve(spec.root);
   const config = spec.config ?? (JSON.parse(readFileSync(join(root, "site.json"), "utf8")) as Config);
@@ -196,6 +201,11 @@ export async function scan(spec: Spec): Promise<Site> {
   const picked = await spec.collect(site);
   site.routes = picked.routes;
   site.nav = picked.nav ?? [];
+  const repo = gitRoutes(site);
+  if (repo.routes.length) {
+    site.routes = [...site.routes, ...repo.routes];
+    if (repo.node && !shows(site.nav, repo.node.href!)) site.nav = [...site.nav, repo.node];
+  }
   site.stamp = digest([
     templates(spec),
     JSON.stringify(site.nav),
@@ -222,6 +232,7 @@ function label(site: Site, file: string): string {
 }
 
 export function fingerprint(site: Site, route: Route): string {
+  if (isGit(route)) return gitPrint(site, route);
   const files = route.inputs ?? (route.source ? [route.source] : []);
   const named = files.map((file) => [label(site, file), file] as const).sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
   const parts: Bytes[] = [route.route, route.kind ?? "", JSON.stringify(route.data ?? null), site.stamp];
@@ -240,6 +251,7 @@ export function fingerprint(site: Site, route: Route): string {
 /* RENDER */
 
 export async function render(site: Site, route: Route, spec: Spec): Promise<Output[]> {
+  if (isGit(route)) return gitRender(site, route, spec);
   return await spec.render(site, route);
 }
 
@@ -295,6 +307,12 @@ function put(out: string, item: Output): boolean {
 
 /* BUILD */
 
+function typed(outputs: Output[]): Record<string, string> | undefined {
+  const out: Record<string, string> = {};
+  for (const item of outputs) if (item.type) out[item.path] = item.type;
+  return Object.keys(out).length ? out : undefined;
+}
+
 export async function build(spec: Spec, options: { manifest?: string; force?: boolean; verify?: boolean } = {}) {
   const site = await scan(spec);
   const path = options.manifest ? resolve(spec.root, options.manifest) : "";
@@ -318,7 +336,7 @@ export async function build(spec: Spec, options: { manifest?: string; force?: bo
     for (const item of outputs) if (put(site.out, item)) written++;
     rendered++;
     const at = route.at || (was && same ? was.at : today());
-    next[route.route] = { hash, at, outputs: outputs.map((o) => o.path) };
+    next[route.route] = { hash, at, outputs: outputs.map((o) => o.path), types: typed(outputs) };
     route.at = at;
     for (const item of outputs) kept.add(item.path);
   }

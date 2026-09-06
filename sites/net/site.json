@@ -12,8 +12,10 @@
     { "name": "Papers", "href": "/papers/", "fill": "papers" },
     { "name": "Research", "href": "/research/", "fill": "research" },
     { "name": "Blog", "href": "/blog/", "fill": "blog" },
+    { "name": "Code", "href": "/git/" },
     { "name": "About", "href": "/about/" }
   ],
+  "git": { "root": "../..", "slug": "mrlyprod/mrlyprod", "branch": "main" },
   "socials": [{ "name": "GitHub", "href": "https://github.com/mrlyprod" }],
   "contact": "help@mrly.net",
   "inputs": {
@@ -32,7 +34,17 @@
     "path": "../../pkgs/js/mrlyjs/ui",
     "out": "ui",
     "hash": false,
-    "files": ["tokens.css", "base.css", "chrome.css", "chrome.js", "font.js", "font.json", "mark.json"]
+    "files": [
+      "tokens.css",
+      "base.css",
+      "chrome.css",
+      "chrome.js",
+      "font.js",
+      "font.json",
+      "mark.json",
+      "seti/seti.css",
+      "seti/seti.woff2"
+    ]
   },
   "manifest": {
     "name": "MrlyProd",
