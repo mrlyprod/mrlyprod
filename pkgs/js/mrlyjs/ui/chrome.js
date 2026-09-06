@@ -1,7 +1,6 @@
-import { cycle, mark } from './font.js';
-
 const DOCK = '(min-width: 74rem)';
-const KEY = { left: 'mrly-left', right: 'mrly-right', theme: 'mrly-theme' };
+const PREFIX = (typeof document !== 'undefined' && document.documentElement.dataset.prefix) || 'mrly-';
+const KEY = { left: `${PREFIX}left`, right: `${PREFIX}right`, theme: `${PREFIX}theme` };
 const SIDES = ['left', 'right'];
 
 const read = (key) => {
@@ -95,6 +94,7 @@ function contents(nav) {
 /* MARK */
 
 async function footer(canvas) {
+  const { cycle, mark } = await import('./font.js');
   if (globalThis.mrly?.font_cycle) return mark(canvas, cycle('MRLYPROD', 1, 40));
   const reply = await fetch('/ui/mark.json');
   if (reply.ok) mark(canvas, await reply.json());

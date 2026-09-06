@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
 import { letters } from './font.js';
 import { wire } from './chrome.js';
-import site from './site.json';
+import { conf } from './config.js';
 
 /* GLYPHS */
 
 function Glyph({ text, className, label }) {
+  if (!conf().font) return <span className={className ? `word ${className}` : 'word'} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : true}>{text}</span>;
   const { rows, cols, grid } = letters(text);
   const cells = [];
   grid.forEach((row, y) => row.forEach((on, x) => on && cells.push(<rect key={`${x}.${y}`} x={x} y={y} width={1} height={1} />)));
@@ -17,21 +18,25 @@ function Glyph({ text, className, label }) {
 }
 
 export function Wordmark({ className }) {
-  return <Glyph text={site.title.toUpperCase()} className={className} />;
+  const site = conf();
+  return <Glyph text={site.font ? site.title.toUpperCase() : site.title} className={className} />;
 }
 
 /* HEADER */
 
-export function Header() {
+export function Header({ brand }) {
+  const site = conf();
   return (
     <header className="top">
       <button type="button" className="glyph" data-pane="left" aria-controls="left" aria-expanded="false" aria-label="Site menu">
         <Glyph text="+" className="shut" />
         <Glyph text="×" className="open" />
       </button>
-      <a className="mark" href="/" aria-label={`${site.title} home`}>
-        <Wordmark />
-      </a>
+      {brand ?? (
+        <a className="mark" href="/" aria-label={`${site.title} home`}>
+          <Wordmark />
+        </a>
+      )}
       <button type="button" className="glyph" data-pane="right" aria-controls="right" aria-expanded="false" aria-label="Page tools">
         <Glyph text="O" className="shut" />
         <Glyph text="×" className="open" />
@@ -87,7 +92,7 @@ export function Controls({ children }) {
   );
 }
 
-function Settings() {
+export function Settings() {
   return (
     <section className="settings" aria-label="Settings">
       <h2>Settings</h2>
@@ -98,10 +103,12 @@ function Settings() {
 
 /* FOOTER */
 
-export function Footer() {
+export function Footer({ note }) {
+  const site = conf();
+  if (note) return <footer className="base">{note}</footer>;
   return (
     <footer className="base">
-      <canvas className="mark" width={49} height={7} role="img" aria-label={site.title}></canvas>
+      {site.font && <canvas className="mark" width={49} height={7} role="img" aria-label={site.title}></canvas>}
       <Wordmark className="still" />
       <p className="fine">
         Copyright {site.title}, Inc. {site.since}-{new Date().getFullYear()}
@@ -114,14 +121,15 @@ export function Footer() {
 
 /* SHELL */
 
-export function Shell({ route = '/', title, lead, tree = [], current = route, contents = [], controls, wide = false, children }) {
+export function Shell({ route = '/', title, lead, tree = [], current = route, contents = [], controls, wide = false, brand, note, children }) {
+  const site = conf();
   useEffect(() => {
     wire();
   }, []);
   return (
     <>
       <a className="skip" href="#main">Skip to content</a>
-      <Header />
+      <Header brand={brand} />
       <div className="panes">
         <nav className="pane left" id="left" aria-label="Site">
           <Tree nodes={tree} current={current} />
@@ -138,11 +146,11 @@ export function Shell({ route = '/', title, lead, tree = [], current = route, co
         <aside className="pane right" id="right" aria-label="Page tools">
           {controls && <Controls>{controls}</Controls>}
           {contents.length > 0 && <Contents items={contents} />}
-          <Settings />
+          {site.settings && <Settings />}
         </aside>
         <div className="scrim"></div>
       </div>
-      <Footer />
+      <Footer note={note} />
     </>
   );
 }

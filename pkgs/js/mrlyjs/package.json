@@ -11,8 +11,17 @@
   },
   "type": "module",
   "main": "index.js",
-  "exports": "./index.js",
-  "files": ["index.js", "README.md"],
+  "exports": {
+    ".": "./index.js",
+    "./ui/*": "./ui/*",
+    "./ssg/*": "./ssg/*"
+  },
+  "files": [
+    "index.js",
+    "README.md",
+    "ui",
+    "ssg"
+  ],
   "scripts": {
     "test": "bun test"
   }

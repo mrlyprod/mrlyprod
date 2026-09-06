@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "react": ["../../../../sites/net/node_modules/react"],
+      "react/*": ["../../../../sites/net/node_modules/react/*"],
+      "react-dom/*": ["../../../../sites/net/node_modules/react-dom/*"]
+    }
+  }
+}

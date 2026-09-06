@@ -1,6 +1,6 @@
-@import "../../ui/tokens.css";
-@import "../../ui/base.css";
-@import "../../ui/chrome.css";
+@import "../../../pkgs/js/mrlyjs/ui/tokens.css";
+@import "../../../pkgs/js/mrlyjs/ui/base.css";
+@import "../../../pkgs/js/mrlyjs/ui/chrome.css";
 
 /* TEXT */
 

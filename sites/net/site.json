@@ -1,0 +1,46 @@
+{
+  "title": "MrlyProd",
+  "root": "https://mrly.net",
+  "since": 2013,
+  "prefix": "mrly-",
+  "font": true,
+  "settings": true,
+  "tint": null,
+  "tree": [
+    { "name": "Home", "href": "/" },
+    { "name": "Demos", "href": "/demos/", "fill": "demos", "open": true },
+    { "name": "Papers", "href": "/papers/", "fill": "papers" },
+    { "name": "Research", "href": "/research/", "fill": "research" },
+    { "name": "Blog", "href": "/blog/", "fill": "blog" },
+    { "name": "About", "href": "/about/" }
+  ],
+  "socials": [{ "name": "GitHub", "href": "https://github.com/mrlyprod" }],
+  "contact": "help@mrly.net",
+  "inputs": {
+    "readme": { "path": "README.md" },
+    "pages": { "path": "pages", "ext": ".md" },
+    "blog": { "path": "blog", "ext": ".md" },
+    "research": { "path": "../../research", "ext": ".md" },
+    "figures": { "path": "../../files/figures", "ext": ".png" },
+    "demos": { "path": "demos" },
+    "public": { "path": "public" }
+  },
+  "kit": {
+    "path": "../../pkgs/js/mrlyjs/ui",
+    "out": "ui",
+    "hash": false,
+    "files": ["tokens.css", "base.css", "chrome.css", "chrome.js", "font.js", "font.json", "mark.json"]
+  },
+  "manifest": {
+    "name": "MrlyProd",
+    "short_name": "MrlyProd",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0b0d10",
+    "theme_color": "#0b0d10",
+    "icons": [
+      { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" },
+      { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    ]
+  }
+}

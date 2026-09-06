@@ -1,4 +1,4 @@
-import site from '../../ui/site.json';
+import site from './site.js';
 import manifest from '../pages.json';
 
 const ROUTE = { demos: '/demos/' };

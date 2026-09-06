@@ -1,19 +1,19 @@
-import { copyFileSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { createElement as h } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import katex from "katex";
-import { escape, front, plain, render, summary, title } from "../lib/md.js";
+import { build, bytes, walk, type Output, type Route, type Site, type Spec } from "../../../pkgs/js/mrlyjs/ssg/build.ts";
+import { escape, front, plain, render as md, summary, title } from "../lib/md.js";
 import { tree } from "../lib/tree.js";
 import { logoSvg } from "../lib/logo.js";
-import { glyphSvg } from "../../ui/font.js";
-import { Shell } from "../../ui/chrome.jsx";
-import kit from "../../ui/site.json";
+import { glyphSvg } from "../../../pkgs/js/mrlyjs/ui/font.js";
+import { Shell } from "../../../pkgs/js/mrlyjs/ui/chrome.jsx";
+import kit from "../lib/site.js";
 import { shelf } from "./shelf.ts";
 
 const org = resolve(import.meta.dir, "..");
 const dist = join(org, "dist");
-const ui = resolve(org, "../ui");
 const figures = resolve(org, "../../files/figures");
 const research = resolve(org, "../../research");
 const root = (process.env.MRLY_SITE ?? kit.root).replace(/\/$/, "");
@@ -22,7 +22,6 @@ const GITHUB = "https://github.com/mrlyprod/mrlyprod/tree/main";
 const LIST = /^- \[([^\]]+)\]\([^)]*\) - (.+)$/gm;
 const HEADING = /<h([23]) id="([^"]+)">(.*?)<\/h\1>/g;
 const AVATAR = /^!\[avatar\]\(figures\/avatar\.png\)\n?/m;
-const KIT = ["tokens.css", "base.css", "chrome.css", "chrome.js", "font.js", "font.json", "mark.json", "site.json"];
 const WORD = glyphSvg(kit.title.toUpperCase());
 const ICONS = [
   `<link rel="icon" href="/favicon.svg" type="image/svg+xml">`,
@@ -30,18 +29,7 @@ const ICONS = [
   `<link rel="manifest" href="/manifest.webmanifest">`,
 ].join("\n");
 
-type Entry = { route: string; source: string };
-
-let nodes = tree();
-const entries: Entry[] = [];
-const wanted = new Map<string, string>();
-const served = new Set<string>();
-
 const read = (p: string) => readFileSync(p, "utf8");
-const write = (p: string, s: string) => {
-  mkdirSync(dirname(p), { recursive: true });
-  writeFileSync(p, s);
-};
 const math = (tex: string, display: boolean) =>
   katex.renderToString(tex, { output: "mathml", throwOnError: false, displayMode: display });
 const untag = (html: string) =>
@@ -50,28 +38,23 @@ const brand = (name: string) => (name === kit.title ? name : `${name} · ${kit.t
 
 /* FIGURES */
 
-function figure(name: string, route: string) {
-  if (!wanted.has(name)) wanted.set(name, route);
-  served.add(name);
-  return `/figures/${name}.png`;
+function press(out: Output[]) {
+  return (name: string, route: string) => {
+    const file = join(figures, `${name}.png`);
+    if (!existsSync(file)) throw new Error(`site: ${name}.png missing from ${relative(org, figures)} for ${route}; draw it with bun run figures`);
+    const path = `figures/${name}.png`;
+    if (!out.some((item) => item.path === path)) out.push({ path, bytes: bytes(file) });
+    return `/${path}`;
+  };
 }
 
-const hero = (name: string, route: string, alt: string) =>
-  `<figure class="opener"><img src="${figure(name, route)}" alt="${escape(alt)}" width="1024" height="1024"></figure>`;
+type Fig = ReturnType<typeof press>;
 
-const card = (href: string, name: string, alt: string, text: string, dates: string[] = []) =>
-  `<a class="tile" href="${href}"><img src="${figure(name, href)}" alt="${escape(alt)}" width="1024" height="1024" loading="lazy"><h2>${escape(alt)}</h2><p>${escape(text)}</p>${dates.length ? `<p class="dates">${dates.map((d) => `<span>${escape(d)}</span>`).join("")}</p>` : ""}</a>`;
+const hero = (fig: Fig, name: string, route: string, alt: string) =>
+  `<figure class="opener"><img src="${fig(name, route)}" alt="${escape(alt)}" width="1024" height="1024"></figure>`;
 
-function press() {
-  const missing = [...wanted].filter(([name]) => !existsSync(join(figures, `${name}.png`)));
-  if (missing.length) {
-    const list = missing.map(([name, route]) => `  ${name}.png  for ${route}`).join("\n");
-    throw new Error(`site: ${missing.length} figure(s) missing from ${relative(org, figures)}; draw them with bun run figures\n${list}`);
-  }
-  mkdirSync(join(dist, "figures"), { recursive: true });
-  for (const name of served) copyFileSync(join(figures, `${name}.png`), join(dist, "figures", `${name}.png`));
-  return wanted.size;
-}
+const card = (fig: Fig, href: string, name: string, alt: string, text: string, dates: string[] = []) =>
+  `<a class="tile" href="${href}"><img src="${fig(name, href)}" alt="${escape(alt)}" width="1024" height="1024" loading="lazy"><h2>${escape(alt)}</h2><p>${escape(text)}</p>${dates.length ? `<p class="dates">${dates.map((d) => `<span>${escape(d)}</span>`).join("")}</p>` : ""}</a>`;
 
 /* HEAD */
 
@@ -104,18 +87,16 @@ type Leaf = {
   description: string;
   body: string;
   type?: string;
-  source?: string;
   wide?: boolean;
   bare?: boolean;
   data?: object;
 };
 
-function page(leaf: Leaf) {
-  const { route, name, description, body, type = "article", source, wide = false, bare = false, data } = leaf;
+function shell(site: Site, leaf: Leaf) {
+  const { route, name, description, body, type = "article", wide = false, bare = false, data } = leaf;
   const article = h(bare ? "div" : "article", { className: bare ? undefined : "prose", dangerouslySetInnerHTML: { __html: body } });
-  const main = renderToStaticMarkup(h(Shell, { route, tree: nodes, contents: headings(body), wide }, article));
+  const main = renderToStaticMarkup(h(Shell, { route, tree: site.nav, contents: headings(body), wide }, article));
   const ld = data ? `<script type="application/ld+json">${JSON.stringify(data)}</script>\n` : "";
-  if (source) entries.push({ route, source });
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -123,11 +104,11 @@ function page(leaf: Leaf) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escape(brand(name))}</title>
 ${meta(route, name, description, type)}
-<link rel="stylesheet" href="/ui/tokens.css">
-<link rel="stylesheet" href="/ui/base.css">
-<link rel="stylesheet" href="/ui/chrome.css">
+<link rel="stylesheet" href="${site.asset("tokens.css")}">
+<link rel="stylesheet" href="${site.asset("base.css")}">
+<link rel="stylesheet" href="${site.asset("chrome.css")}">
 <link rel="stylesheet" href="/pages.css">
-${ld}<script type="module" src="/ui/chrome.js"></script>
+${ld}<script type="module" src="${site.asset("chrome.js")}"></script>
 </head>
 <body>
 ${main}
@@ -153,28 +134,25 @@ function blurbs() {
   return map;
 }
 
-function shells() {
-  const blurb = blurbs();
-  const names = readdirSync(join(dist, "demos")).filter((d) => existsSync(join(dist, "demos", d, "index.html"))).sort();
-  for (const name of ["", ...names]) {
-    const at = name ? `demos/${name}` : "demos";
-    const route = name ? `/demos/${name}/` : "/demos/";
-    const file = join(dist, at, "index.html");
-    const html = read(file);
-    if (!html.includes('rel="canonical"')) {
-      const found = html.match(/<title>([^<]*)<\/title>/);
-      const heading = found ? untag(found[1]) : name || kit.title;
-      const tags = meta(route, heading, blurb.get(name) ?? heading, "website");
-      writeFileSync(
-        file,
-        found
-          ? html.replace(found[0], `<title>${escape(brand(heading))}</title>\n${tags}`)
-          : html.replace("<head>", `<head>\n<title>${escape(brand(heading))}</title>\n${tags}`),
-      );
-    }
-    entries.push({ route, source: join(org, at, "index.jsx") });
-  }
-  return names.length + 1;
+function demoNames() {
+  const home = join(dist, "demos");
+  if (!existsSync(join(home, "index.html"))) return [];
+  return ["", ...readdirSync(home).filter((d) => existsSync(join(home, d, "index.html"))).sort()];
+}
+
+function demo(route: Route): Output[] {
+  const { name, blurb } = route.data as { name: string; blurb: string };
+  const at = name ? `demos/${name}` : "demos";
+  const path = `${at}/index.html`;
+  const html = read(join(dist, path));
+  if (html.includes('rel="canonical"')) return [{ path, bytes: html }];
+  const found = html.match(/<title>([^<]*)<\/title>/);
+  const heading = found ? untag(found[1]) : name || kit.title;
+  const tags = meta(route.route, heading, blurb || heading, "website");
+  const head = found
+    ? html.replace(found[0], `<title>${escape(brand(heading))}</title>\n${tags}`)
+    : html.replace("<head>", `<head>\n<title>${escape(brand(heading))}</title>\n${tags}`);
+  return [{ path, bytes: head }];
 }
 
 /* PAPERS */
@@ -191,14 +169,14 @@ function lanes(home: string): Lane[] {
   const list = order.filter((o) => found.includes(o.slug)).concat(found.filter((l) => !known.has(l)).map((slug) => ({ slug, blurb: "" })));
   return list.map(({ slug, blurb }) => {
     const lane = join(home, slug);
-    const md = read(join(lane, "README.md"));
+    const doc = read(join(lane, "README.md"));
     const tex = read(join(lane, "paper.tex"));
     const date = tex.match(/\\date\{First published (\d{4}-\d{2}-\d{2})(?:, revised (\d{4}-\d{2}-\d{2}))?\}/);
     return {
       slug,
       blurb,
-      name: title(md) || slug,
-      md,
+      name: title(doc) || slug,
+      md: doc,
       published: date?.[1] ?? "",
       revised: date?.[2] ?? "",
       pdf: existsSync(join(lane, "paper.pdf")),
@@ -210,41 +188,45 @@ function lanes(home: string): Lane[] {
 const dated = (p: Lane) => p.revised || p.published;
 const stamps = (p: Lane) => [p.published, p.revised && `revised ${p.revised}`].filter(Boolean) as string[];
 
-function papers(list: Lane[]) {
-  if (!list.length) return 0;
-  for (const p of list) {
-    const lane = join(p.home, p.slug);
-    const route = `/papers/${p.slug}/`;
-    const out = join(dist, "papers", p.slug);
-    mkdirSync(out, { recursive: true });
-    if (p.pdf) copyFileSync(join(lane, "paper.pdf"), join(out, "paper.pdf"));
-    copyFileSync(join(lane, "paper.tex"), join(out, "paper.tex"));
-    if (existsSync(join(lane, "figures"))) cpSync(join(lane, "figures"), join(out, "figures"), { recursive: true });
-    const when = [p.published && `First published ${p.published}`, p.revised && `revised ${p.revised}`].filter(Boolean).join(", ");
-    const files = [p.pdf && `<a href="paper.pdf">PDF</a>`, `<a href="paper.tex">TeX</a>`].filter(Boolean).join(" · ");
-    const avatar = `<img class="avatar" src="${figure(`paper-${p.slug}`, route)}" alt="${escape(p.name)}" width="1024" height="1024">`;
-    const plate = `<div class="plate paper">${avatar}<h1 id="${escape(p.slug)}">${escape(p.name)}</h1><p class="by">${escape(AUTHOR)}</p><p class="by">${escape(when)}</p></div>\n<p class="meta">${files}</p>`;
-    const body = `${plate}\n${render(p.md.replace(/^# .+\n/, "").replace(AVATAR, ""), { math })}`;
-    const data = {
-      "@context": "https://schema.org",
-      "@type": "ScholarlyArticle",
-      headline: p.name,
-      description: p.blurb || summary(p.md),
-      url: root + route,
-      image: `${root}/figures/paper-${p.slug}.png`,
-      author: { "@type": "Person", name: AUTHOR },
-      datePublished: p.published || undefined,
-      dateModified: dated(p) || undefined,
-      license: "https://creativecommons.org/licenses/by/4.0/",
-    };
-    write(join(out, "index.html"), page({ route, name: p.name, description: p.blurb || summary(p.md), body, source: join(lane, "README.md"), data }));
-  }
-  const cards = list.map((p) => card(`/papers/${p.slug}/`, `paper-${p.slug}`, p.name, p.blurb, stamps(p)));
-  const readme = read(join(list[0].home, "README.md"));
-  const lead = summary(readme);
-  const index = `<div class="lede"><h1 id="papers">Papers</h1><p class="lead">${escape(lead)}</p></div>\n<div class="gallery wrap">\n${cards.join("\n")}\n</div>`;
-  write(join(dist, "papers", "index.html"), page({ route: "/papers/", name: "Papers", description: lead, body: index, type: "website", source: join(list[0].home, "README.md"), wide: true, bare: true }));
-  return list.length;
+function paper(site: Site, route: Route): Output[] {
+  const p = route.data as Lane;
+  const out: Output[] = [];
+  const fig = press(out);
+  const lane = join(p.home, p.slug);
+  const at = `papers/${p.slug}`;
+  if (p.pdf) out.push({ path: `${at}/paper.pdf`, bytes: bytes(join(lane, "paper.pdf")) });
+  out.push({ path: `${at}/paper.tex`, bytes: bytes(join(lane, "paper.tex")) });
+  for (const file of walk(join(lane, "figures"))) out.push({ path: `${at}/figures/${file.slice(join(lane, "figures").length + 1)}`, bytes: bytes(file) });
+  const when = [p.published && `First published ${p.published}`, p.revised && `revised ${p.revised}`].filter(Boolean).join(", ");
+  const files = [p.pdf && `<a href="paper.pdf">PDF</a>`, `<a href="paper.tex">TeX</a>`].filter(Boolean).join(" · ");
+  const avatar = `<img class="avatar" src="${fig(`paper-${p.slug}`, route.route)}" alt="${escape(p.name)}" width="1024" height="1024">`;
+  const plate = `<div class="plate paper">${avatar}<h1 id="${escape(p.slug)}">${escape(p.name)}</h1><p class="by">${escape(AUTHOR)}</p><p class="by">${escape(when)}</p></div>\n<p class="meta">${files}</p>`;
+  const body = `${plate}\n${md(p.md.replace(/^# .+\n/, "").replace(AVATAR, ""), { math })}`;
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "ScholarlyArticle",
+    headline: p.name,
+    description: p.blurb || summary(p.md),
+    url: root + route.route,
+    image: `${root}/figures/paper-${p.slug}.png`,
+    author: { "@type": "Person", name: AUTHOR },
+    datePublished: p.published || undefined,
+    dateModified: dated(p) || undefined,
+    license: "https://creativecommons.org/licenses/by/4.0/",
+  };
+  out.push({ path: `${at}/index.html`, bytes: shell(site, { route: route.route, name: p.name, description: p.blurb || summary(p.md), body, data }) });
+  return out;
+}
+
+function paperIndex(site: Site, route: Route): Output[] {
+  const list = route.data as Lane[];
+  const out: Output[] = [];
+  const fig = press(out);
+  const cards = list.map((p) => card(fig, `/papers/${p.slug}/`, `paper-${p.slug}`, p.name, p.blurb, stamps(p)));
+  const lead = summary(read(join(list[0].home, "README.md")));
+  const body = `<div class="lede"><h1 id="papers">Papers</h1><p class="lead">${escape(lead)}</p></div>\n<div class="gallery wrap">\n${cards.join("\n")}\n</div>`;
+  out.push({ path: "papers/index.html", bytes: shell(site, { route: route.route, name: "Papers", description: lead, body, type: "website", wide: true, bare: true }) });
+  return out;
 }
 
 /* RESEARCH */
@@ -275,28 +257,27 @@ function notes(): Note[] {
     .map((file) => ({ file, name: file.slice(0, -3), md: read(join(research, file)), home: file === "README.md" }));
 }
 
-function researchPages(list: Note[]) {
-  for (const n of list) {
-    write(join(dist, "research", n.file), n.md);
-    const route = n.home ? "/research/" : `/research/${n.name}/`;
-    const name = title(n.md) || n.name;
-    const lead = summary(n.md);
-    const fig = n.home || SHARED.has(n.name) ? "research-index" : `research-${n.name}`;
-    const body = `${hero(fig, route, name)}\n${render(n.md, { math, link: researchLink })}`;
-    const source = join(research, n.file);
-    const data = {
-      "@context": "https://schema.org",
-      "@type": "Article",
-      headline: name,
-      description: lead,
-      url: root + route,
-      image: `${root}/figures/${fig}.png`,
-      author: { "@type": "Person", name: AUTHOR },
-    };
-    write(join(dist, "research", n.home ? "" : n.name, "index.html"), page({ route, name, description: lead, body, type: n.home ? "website" : "article", source, data }));
-  }
-  if (list.length && existsSync(join(research, "figures"))) cpSync(join(research, "figures"), join(dist, "research", "figures"), { recursive: true });
-  return list.length;
+function note(site: Site, route: Route): Output[] {
+  const n = route.data as Note;
+  const out: Output[] = [];
+  const fig = press(out);
+  out.push({ path: `research/${n.file}`, bytes: n.md });
+  const name = title(n.md) || n.name;
+  const lead = summary(n.md);
+  const which = n.home || SHARED.has(n.name) ? "research-index" : `research-${n.name}`;
+  const body = `${hero(fig, which, route.route, name)}\n${md(n.md, { math, link: researchLink })}`;
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: name,
+    description: lead,
+    url: root + route.route,
+    image: `${root}/figures/${which}.png`,
+    author: { "@type": "Person", name: AUTHOR },
+  };
+  const at = n.home ? "research/index.html" : `research/${n.name}/index.html`;
+  out.push({ path: at, bytes: shell(site, { route: route.route, name, description: lead, body, type: n.home ? "website" : "article", data }) });
+  return out;
 }
 
 /* BLOG */
@@ -317,107 +298,84 @@ function posts(): Post[] {
     .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : a.slug < b.slug ? 1 : -1));
 }
 
-function blog(list: Post[]) {
-  for (const p of list) {
-    const route = `/blog/${p.slug}/`;
-    const head = `${hero(p.figure, route, p.name)}\n<div class="plate"><h1 id="${escape(p.slug)}">${escape(p.name)}</h1><p class="by">${escape(p.date)} · ${escape(AUTHOR)}</p></div>`;
-    const data = {
-      "@context": "https://schema.org",
-      "@type": "BlogPosting",
-      headline: p.name,
-      description: p.lead,
-      url: root + route,
-      image: `${root}/figures/${p.figure}.png`,
-      author: { "@type": "Person", name: AUTHOR },
-      datePublished: p.date || undefined,
-    };
-    write(join(dist, "blog", p.slug, "index.html"), page({ route, name: p.name, description: p.lead, body: `${head}\n${render(p.body, { math })}`, source: p.source, data }));
-  }
-  const cards = list.map((p) => card(`/blog/${p.slug}/`, p.figure, p.name, p.lead, [p.date]));
+function post(site: Site, route: Route): Output[] {
+  const p = route.data as Post;
+  const out: Output[] = [];
+  const fig = press(out);
+  const head = `${hero(fig, p.figure, route.route, p.name)}\n<div class="plate"><h1 id="${escape(p.slug)}">${escape(p.name)}</h1><p class="by">${escape(p.date)} · ${escape(AUTHOR)}</p></div>`;
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: p.name,
+    description: p.lead,
+    url: root + route.route,
+    image: `${root}/figures/${p.figure}.png`,
+    author: { "@type": "Person", name: AUTHOR },
+    datePublished: p.date || undefined,
+  };
+  out.push({ path: `blog/${p.slug}/index.html`, bytes: shell(site, { route: route.route, name: p.name, description: p.lead, body: `${head}\n${md(p.body, { math })}`, data }) });
+  return out;
+}
+
+function blogIndex(site: Site, route: Route): Output[] {
+  const list = route.data as Post[];
+  const out: Output[] = [];
+  const fig = press(out);
+  const cards = list.map((p) => card(fig, `/blog/${p.slug}/`, p.figure, p.name, p.lead, [p.date]));
   const lead = "Notes on what lands on this site and in the crates behind it.";
-  const index = `<div class="lede"><h1 id="blog">Blog</h1><p class="lead">${escape(lead)}</p></div>\n<div class="gallery wrap">\n${cards.join("\n")}\n</div>`;
-  write(join(dist, "blog", "index.html"), page({ route: "/blog/", name: "Blog", description: lead, body: index, type: "website", source: join(org, "blog"), wide: true, bare: true }));
-  return list.length;
+  const body = `<div class="lede"><h1 id="blog">Blog</h1><p class="lead">${escape(lead)}</p></div>\n<div class="gallery wrap">\n${cards.join("\n")}\n</div>`;
+  out.push({ path: "blog/index.html", bytes: shell(site, { route: route.route, name: "Blog", description: lead, body, type: "website", wide: true, bare: true }) });
+  return out;
 }
 
 /* PAGES */
 
-function about() {
-  const source = join(org, "pages", "about.md");
-  if (!existsSync(source)) return 0;
+function about(site: Site, route: Route): Output[] {
+  const source = route.source as string;
   const { data, body } = front(read(source));
   const name = data.title ?? "About";
   const lead = data.lead ?? summary(body);
   const head = `<div class="lede"><h1 id="about">${escape(name)}</h1><p class="lead">${escape(lead)}</p></div>`;
-  write(join(dist, "about", "index.html"), page({ route: "/about/", name, description: lead, body: `${head}\n${render(body, { math })}`, type: "website", source }));
-  return 1;
+  return [{ path: "about/index.html", bytes: shell(site, { route: route.route, name, description: lead, body: `${head}\n${md(body, { math })}`, type: "website" }) }];
 }
 
-function home(list: Lane[], written: Post[]) {
-  const mission = "The mathematics of designs on the corners of a cube, and the instruments that measure them.";
-  const doors = [
-    { name: "Demos", href: "/demos/", figure: "site-demos", text: "Browser pages that draw a design and the numbers around it, live." },
-    { name: "Papers", href: "/papers/", figure: "site-papers", text: "Write-ups with their LaTeX source and the scripts that check them." },
-    { name: "Research", href: "/research/", figure: "site-research", text: "The working notes behind the demos and the papers, one page per idea." },
-  ];
+const MISSION = "The mathematics of designs on the corners of a cube, and the instruments that measure them.";
+
+const DOORS = [
+  { name: "Demos", href: "/demos/", figure: "site-demos", text: "Browser pages that draw a design and the numbers around it, live." },
+  { name: "Papers", href: "/papers/", figure: "site-papers", text: "Write-ups with their LaTeX source and the scripts that check them." },
+  { name: "Research", href: "/research/", figure: "site-research", text: "The working notes behind the demos and the papers, one page per idea." },
+];
+
+function home(site: Site, route: Route): Output[] {
+  const { lanes: list, posts: written } = route.data as { lanes: Lane[]; posts: Post[] };
+  const out: Output[] = [];
+  const fig = press(out);
   const latest = list
     .map((p, i) => ({ p, i }))
     .sort((a, b) => (dated(a.p) < dated(b.p) ? 1 : dated(a.p) > dated(b.p) ? -1 : b.i - a.i))
     .slice(0, 3)
-    .map(({ p }) => card(`/papers/${p.slug}/`, `paper-${p.slug}`, p.name, p.blurb, [p.published]));
-  const post = written[0];
-  const news = post
-    ? `<section><h2 id="latest">From the blog</h2><p class="lead"><a href="/blog/${post.slug}/">${escape(post.name)}</a> · ${escape(post.date)}</p><p class="lead">${escape(post.lead)}</p></section>`
+    .map(({ p }) => card(fig, `/papers/${p.slug}/`, `paper-${p.slug}`, p.name, p.blurb, [p.published]));
+  const first = written[0];
+  const news = first
+    ? `<section><h2 id="latest">From the blog</h2><p class="lead"><a href="/blog/${first.slug}/">${escape(first.name)}</a> · ${escape(first.date)}</p><p class="lead">${escape(first.lead)}</p></section>`
     : "";
   const what = `<section class="what"><h2 id="mrlymath">What is MrlyMath</h2><p>A design is a rule on the corners of a cube: a code says which of the eight corners are filled. The Kronecker product grows that rule into itself, level by level, and the object it converges to is a fractal - the Sierpinski carpet and the Menger sponge are two of them.</p><p>Everything else is measurement. Count the fills, the voids and the exposed faces; cut the solid with a plane; join the filled cells into a graph and read its spectrum; collect the integer sequences the counts write down. The Rust crates do the arithmetic, the browser only paints, and a claim is either proved, checked over a stated finite domain, or labelled a conjecture.</p></section>`;
   const body = `<div class="home">
-${hero("site-home", "/", kit.title)}
-<div class="hero"><h1><span role="img" aria-label="${escape(kit.title)}">${WORD}</span></h1><p>${escape(mission)}</p></div>
-<section><h2 id="doors">Three doors</h2><div class="gallery doors">\n${doors.map((d) => card(d.href, d.figure, d.name, d.text)).join("\n")}\n</div></section>
+${hero(fig, "site-home", "/", kit.title)}
+<div class="hero"><h1><span role="img" aria-label="${escape(kit.title)}">${WORD}</span></h1><p>${escape(MISSION)}</p></div>
+<section><h2 id="doors">Three doors</h2><div class="gallery doors">\n${DOORS.map((d) => card(fig, d.href, d.figure, d.name, d.text)).join("\n")}\n</div></section>
 <section><h2 id="shelf">Latest papers</h2><div class="gallery wrap">\n${latest.join("\n")}\n</div></section>
 ${news}
 ${what}
 </div>`;
-  write(join(dist, "index.html"), page({ route: "/", name: kit.title, description: mission, body, type: "website", source: join(org, "README.md"), wide: true, bare: true }));
-  return 1;
+  out.push({ path: "index.html", bytes: shell(site, { route: "/", name: kit.title, description: MISSION, body, type: "website", wide: true, bare: true }) });
+  return out;
 }
 
-function missing() {
+function missing(site: Site, route: Route): Output[] {
   const body = `<div class="lede"><h1 id="lost">Nothing here</h1><p class="lead">That page does not exist. The four doors are <a href="/demos/">Demos</a>, <a href="/papers/">Papers</a>, <a href="/research/">Research</a> and <a href="/blog/">Blog</a>.</p></div>`;
-  write(join(dist, "404.html"), page({ route: "/404.html", name: "Nothing here", description: "That page does not exist.", body, type: "website", bare: true }));
-}
-
-/* ASSETS */
-
-function assets() {
-  mkdirSync(join(dist, "ui"), { recursive: true });
-  for (const file of KIT) copyFileSync(join(ui, file), join(dist, "ui", file));
-  const pub = join(org, "public");
-  if (existsSync(pub)) cpSync(pub, dist, { recursive: true });
-  write(join(dist, "favicon.svg"), logoSvg(1, "#5a4bd1"));
-  for (const [name, out] of [["site-og", "og.png"], ["site-icon", "icon-512.png"], ["site-icon", "apple-touch-icon.png"]]) {
-    if (!wanted.has(name)) wanted.set(name, `/${out}`);
-    if (existsSync(join(figures, `${name}.png`))) copyFileSync(join(figures, `${name}.png`), join(dist, out));
-  }
-  write(
-    join(dist, "manifest.webmanifest"),
-    JSON.stringify(
-      {
-        name: kit.title,
-        short_name: kit.title,
-        start_url: "/",
-        display: "standalone",
-        background_color: "#0b0d10",
-        theme_color: "#0b0d10",
-        icons: [
-          { src: "/favicon.svg", sizes: "any", type: "image/svg+xml" },
-          { src: "/icon-512.png", sizes: "512x512", type: "image/png" },
-        ],
-      },
-      null,
-      2,
-    ) + "\n",
-  );
+  return [{ path: "404.html", bytes: shell(site, { route: route.route, name: "Nothing here", description: "That page does not exist.", body, type: "website", bare: true }) }];
 }
 
 /* SITEMAP */
@@ -436,47 +394,136 @@ function lastmod(source: string) {
   } catch {
     out = "";
   }
-  const when = out || TODAY;
+  const when = (out || TODAY).slice(0, 10);
   seen.set(source, when);
   return when;
 }
 
-function sitemap() {
-  const routes = new Map<string, string>();
-  for (const e of entries) if (!routes.has(e.route)) routes.set(e.route, e.source);
-  const urls = [...routes.keys()].sort().map((route) => `<url><loc>${root}${route}</loc><lastmod>${lastmod(routes.get(route)!)}</lastmod></url>`);
-  write(
-    join(dist, "sitemap.xml"),
-    `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>\n`,
-  );
-  write(join(dist, "robots.txt"), `User-agent: *\nAllow: /\nSitemap: ${root}/sitemap.xml\n`);
-  return urls.length;
+/* COLLECT */
+
+const counts = { papers: 0, research: 0, blog: 0, demos: 0 };
+
+async function collect(site: Site) {
+  const laneList = lanes(await shelf());
+  const noteList = notes();
+  const postList = posts();
+  const blurb = blurbs();
+  const names = demoNames();
+  counts.papers = laneList.length;
+  counts.research = noteList.length;
+  counts.blog = postList.length;
+  counts.demos = names.length;
+  const nav = tree({
+    papers: laneList.map((p) => ({ name: p.name, href: `/papers/${p.slug}/` })),
+    research: noteList.filter((n) => !n.home).map((n) => ({ name: n.name, href: `/research/${n.name}/` })),
+    blog: postList.map((p) => ({ name: p.name, href: `/blog/${p.slug}/` })),
+  });
+  const routes: Route[] = [];
+  const readme = join(org, "README.md");
+  routes.push({
+    route: "/",
+    kind: "home",
+    name: kit.title,
+    data: { lanes: laneList, posts: postList },
+    source: readme,
+    inputs: [readme],
+    at: lastmod(readme),
+  });
+  for (const name of names) {
+    const source = join(org, name ? `demos/${name}` : "demos", "index.jsx");
+    routes.push({
+      route: name ? `/demos/${name}/` : "/demos/",
+      kind: "demo",
+      name: name || "Demos",
+      data: { name, blurb: blurb.get(name) ?? "" },
+      source,
+      inputs: [join(dist, name ? `demos/${name}` : "demos", "index.html")],
+      at: lastmod(source),
+    });
+  }
+  if (laneList.length) {
+    const index = join(laneList[0].home, "README.md");
+    routes.push({ route: "/papers/", kind: "papers", name: "Papers", data: laneList, source: index, inputs: [index], at: lastmod(index) });
+    for (const p of laneList) {
+      const source = join(p.home, p.slug, "README.md");
+      routes.push({ route: `/papers/${p.slug}/`, kind: "paper", name: p.name, data: p, source, inputs: [source], at: lastmod(source) });
+    }
+  }
+  for (const n of noteList) {
+    const source = join(research, n.file);
+    routes.push({
+      route: n.home ? "/research/" : `/research/${n.name}/`,
+      kind: "note",
+      name: title(n.md) || n.name,
+      data: n,
+      source,
+      inputs: [source],
+      at: lastmod(source),
+    });
+  }
+  if (postList.length) {
+    routes.push({ route: "/blog/", kind: "blog", name: "Blog", data: postList, source: join(org, "blog"), inputs: postList.map((p) => p.source), at: TODAY });
+    for (const p of postList) routes.push({ route: `/blog/${p.slug}/`, kind: "post", name: p.name, data: p, source: p.source, inputs: [p.source], at: lastmod(p.source) });
+  }
+  const page = join(org, "pages", "about.md");
+  if (existsSync(page)) routes.push({ route: "/about/", kind: "about", name: "About", source: page, inputs: [page], at: lastmod(page) });
+  routes.push({ route: "/404.html", kind: "missing", name: "Nothing here", hidden: true });
+  return { routes, nav };
 }
 
-/* BUILD */
+/* RENDER */
+
+const KINDS: Record<string, (site: Site, route: Route) => Output[]> = {
+  home,
+  demo: (_site, route) => demo(route),
+  papers: paperIndex,
+  paper,
+  note,
+  blog: blogIndex,
+  post,
+  about,
+  missing,
+};
+
+function draw(site: Site, route: Route): Output[] {
+  const fn = KINDS[route.kind ?? ""];
+  if (!fn) throw new Error(`site: no template for ${route.route}`);
+  return fn(site, route);
+}
+
+/* EXTRAS */
+
+function extras(site: Site): Output[] {
+  const out: Output[] = [];
+  out.push({ path: "favicon.svg", bytes: logoSvg(1, "#5a4bd1") });
+  for (const [name, target] of [["site-og", "og.png"], ["site-icon", "icon-512.png"], ["site-icon", "apple-touch-icon.png"]]) {
+    const file = join(figures, `${name}.png`);
+    if (existsSync(file)) out.push({ path: target, bytes: bytes(file) });
+  }
+  const shared = join(research, "figures");
+  for (const file of walk(shared)) out.push({ path: `research/figures/${file.slice(shared.length + 1)}`, bytes: bytes(file) });
+  return out;
+}
+
+/* SPEC */
+
+const spec: Spec = {
+  root: org,
+  out: dist,
+  templates: ["lib", "scripts"],
+  collect,
+  render: draw,
+  globals: extras,
+};
 
 export async function statics() {
-  assets();
-  const shelfLanes = lanes(await shelf());
-  const researchNotes = notes();
-  const blogPosts = posts();
-  nodes = tree({
-    papers: shelfLanes.map((p) => ({ name: p.name, href: `/papers/${p.slug}/` })),
-    research: researchNotes.filter((n) => !n.home).map((n) => ({ name: n.name, href: `/research/${n.name}/` })),
-    blog: blogPosts.map((p) => ({ name: p.name, href: `/blog/${p.slug}/` })),
-  });
-  const counts = { papers: papers(shelfLanes), research: researchPages(researchNotes), blog: blog(blogPosts), figures: 0 };
-  about();
-  home(shelfLanes, blogPosts);
-  missing();
-  counts.figures = press();
-  return counts;
+  const done = await build(spec, { manifest: ".cache/manifest.json" });
+  return { ...counts, routes: done.site.routes.length, rendered: done.rendered, written: done.written, removed: done.removed };
 }
+
 
 if (import.meta.main) {
   if (!existsSync(join(dist, "demos", "index.html"))) throw new Error("dist/demos/index.html missing: run bun build first");
-  const { papers: nPapers, research: nResearch, blog: nBlog, figures: nFigures } = await statics();
-  const nShells = shells();
-  const nRoutes = sitemap();
-  console.log(`site: ${nShells} shells, ${nPapers} papers, ${nResearch} research pages, ${nBlog} posts, ${nRoutes} routes, ${nFigures} figures`);
+  const done = await statics();
+  console.log(`site: ${done.routes} routes, ${done.demos} demo shells, ${done.papers} papers, ${done.research} research pages, ${done.blog} posts, ${done.rendered} rendered, ${done.written} files written`);
 }

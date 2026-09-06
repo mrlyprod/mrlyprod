@@ -1,6 +1,6 @@
 import { ready } from '../lib/mrly.js';
 import { mount } from '../lib/app.jsx';
-import { Shell } from '../../ui/chrome.jsx';
+import { Shell } from '../../../pkgs/js/mrlyjs/ui/chrome.jsx';
 import { tree } from '../lib/tree.js';
 import { thumb } from '../lib/thumbs.jsx';
 import manifest from '../pages.json';

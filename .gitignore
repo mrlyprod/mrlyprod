@@ -8,6 +8,7 @@
 # OUTPUT
 data/
 dist/
+.cache/
 
 # RUST
 target/

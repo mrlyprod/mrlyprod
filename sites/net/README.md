@@ -6,7 +6,7 @@
 - One demo is one folder: a thin `demos/<name>/index.html` shell plus `demos/<name>/index.jsx`; the gallery is `demos/index.html` + `demos/index.jsx`.
 - `lib/` holds the shared code: `mrly.js`, `app.jsx`, `tree.js`, `draw.jsx`, `select.jsx`, `stage.jsx` + `stage.js`, `chart.js`, `series.jsx`, `query.js`, `md.js`, `logo.js`, `thumbs.jsx`, `mrly.css`; `series.jsx` is the sequence-view kit, `Pins`, `Staircase`, `Digits`, `Ratios`, `Differences` and the `Terms` ribbon, so no page prints a bare comma list.
 - `thumbs.jsx` is the one place a demo's thumbnail is drawn: the gallery tile calls `thumb(m, name)`.
-- The chrome is the kit in `../ui`: `app.jsx` wraps its `Shell` as `Page` beside `mount`, `Row` and the controls, `tree.js` fills the site tree from `pages.json` plus the papers, research and blog lists, and `mrly.css` imports the kit and keeps only demo rules; `draw.jsx` wraps every canvas: `Grid`, `Signs`, `Pixels`, `Sketch`, `Markup`.
+- The chrome is the kit in `../../pkgs/js/mrlyjs/ui`: `app.jsx` wraps its `Shell` as `Page` beside `mount`, `Row` and the controls, `tree.js` fills the site tree from `pages.json` plus the papers, research and blog lists, and `mrly.css` imports the kit and keeps only demo rules; `draw.jsx` wraps every canvas: `Grid`, `Signs`, `Pixels`, `Sketch`, `Markup`.
 - `Signs` is the plus-minus primitive: a warm hue for plus one, a cool hue for minus one, and the dark ground for empty.
 - `select.jsx` is the one picker: design list, code, base and Randomize; `?seed=7` replays the seventh tap, and a typed code drops the seed.
 - `useQuery` in `query.js` keeps page state in the URL, so every view is a link.
