@@ -71,7 +71,7 @@
     {
       "name": "crop",
       "title": "The crop",
-      "blurb": "A named shape of rational radius keeps only the cells of a design it reaches, with the in, cut and out regions counted exactly before anything is drawn.",
+      "blurb": "A named shape of rational radius keeps only the cells of a design it reaches, counted exactly in in, cut and out regions, and the disc count read radius by radius carries a self-similar main term with a log-periodic multiplier.",
       "category": "designs",
       "research": "crop",
       "paper": null
@@ -129,7 +129,7 @@
       "title": "The volume",
       "blurb": "The moire stack of a cube design as a solid field, shelled at a level set and cut on any plane, where the central diagonal cut is the hexagon.",
       "category": "sections",
-      "research": "cuts",
+      "research": "hexagon",
       "paper": null
     },
     {
@@ -189,6 +189,14 @@
       "paper": null
     },
     {
+      "name": "wallis",
+      "title": "The Wallis sieve",
+      "blurb": "Level k drops the centre of every surviving square cut into (2k + 1)^2, so a schedule of strictly increasing odd letters keeps a positive area and hands back pi over four, while one that reuses a letter, alternating or not, loses the area and buys a dimension instead.",
+      "category": "letters",
+      "research": "pi",
+      "paper": null
+    },
+    {
       "name": "graphs",
       "title": "The graphs",
       "blurb": "Joining every filled cell to its neighbours turns a design into a network with tips, junctions, pieces, length and a box dimension, flat, in the cube, on the hexagonal slice, or relaxed by force.",
@@ -224,6 +232,14 @@
       "name": "ulam",
       "title": "The Ulam spiral",
       "blurb": "The whole numbers wound on squares or hexagons with the primes lit, where every straight line reads a quadratic and the prime-rich ones stand out as diagonals.",
+      "category": "lattice",
+      "research": null,
+      "paper": null
+    },
+    {
+      "name": "snail",
+      "title": "The snail",
+      "blurb": "Every cell of the square winding that grows carries a design tile whose side is a power of the base, so the spiral widens by that factor at each new digit and curls outward like a shell, built of the primes alone or of every number by the same law.",
       "category": "lattice",
       "research": null,
       "paper": null

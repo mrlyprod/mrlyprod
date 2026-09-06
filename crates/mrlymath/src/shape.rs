@@ -459,6 +459,87 @@ pub fn census(shape: &Shape, types: &Tensor) -> ShapeCensus {
     out
 }
 
+// RADIAL
+
+/// The tallies of one design against a single integer radius about a centre.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RadialCounts {
+    /// The filled cells whose own centre lies within the radius.
+    pub seen: u64,
+    /// The filled cells lying wholly within the radius.
+    pub inside: u64,
+    /// The filled cells the sphere of the radius crosses.
+    pub cut: u64,
+}
+
+fn root_up(square: u64) -> u64 {
+    if square == 0 {
+        return 0;
+    }
+    let mut root = (square as f64).sqrt() as u64;
+    while root.saturating_mul(root) < square {
+        root += 1;
+    }
+    while root > 0 && (root - 1) * (root - 1) >= square {
+        root -= 1;
+    }
+    root
+}
+
+fn shell(square: u64) -> u64 {
+    root_up(square).div_ceil(2)
+}
+
+/// Counts a design's filled cells against every integer radius about one centre, in exact integer arithmetic.
+///
+/// Cell centres sit at the index plus one half, so every length is doubled and the centre is given in those doubled units: the lattice corner is zero on each axis and the grid centre is the side. Entry r of the result holds the filled cells whose centre lies within radius r, the filled cells whose whole cell lies within it, and the filled cells the sphere of radius r crosses; squared distances are compared as integers and never as floats.
+///
+/// The tallies are prefix sums over one pass of the grid: each cell lands in the smallest radius that sees it, the smallest that swallows it and the smallest that clears it, and the columns are summed afterwards.
+pub fn radial_census(types: &Tensor, centre: &[i64], r_max: u64) -> Vec<RadialCounts> {
+    let rank = types.shape.len();
+    let width = r_max as usize + 1;
+    let mut seen = vec![0u64; width];
+    let mut inside = vec![0u64; width];
+    let mut touch = vec![0u64; width];
+    let mut index = vec![0i64; rank];
+    for flat in 0..types.size() {
+        if types.at(flat) != 0 {
+            let (mut near, mut mid, mut far) = (0u64, 0u64, 0u64);
+            for (axis, coordinate) in index.iter().enumerate() {
+                let gap = (2 * coordinate + 1 - centre[axis]).unsigned_abs();
+                mid += gap * gap;
+                far += (gap + 1) * (gap + 1);
+                near += gap.saturating_sub(1) * gap.saturating_sub(1);
+            }
+            for (column, square) in [(&mut seen, mid), (&mut inside, far), (&mut touch, near)] {
+                let at = shell(square);
+                if at < width as u64 {
+                    column[at as usize] += 1;
+                }
+            }
+        }
+        for axis in (0..rank).rev() {
+            index[axis] += 1;
+            if (index[axis] as usize) < types.shape[axis] {
+                break;
+            }
+            index[axis] = 0;
+        }
+    }
+    for column in [&mut seen, &mut inside, &mut touch] {
+        for r in 1..width {
+            column[r] += column[r - 1];
+        }
+    }
+    (0..width)
+        .map(|r| RadialCounts {
+            seen: seen[r],
+            inside: inside[r],
+            cut: touch[r] - inside[r],
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -763,5 +844,51 @@ mod tests {
         assert_eq!(Frac::new(1, 2) + Frac::new(1, 3), Frac::new(5, 6));
         assert_eq!(Frac::new(1, 2) - Frac::new(1, 2), Frac::whole(0));
         assert_eq!(Frac::new(2, 3) * Frac::new(3, 4), Frac::new(1, 2));
+    }
+
+    fn corner_seen(code: u128, dimension: usize, level: usize, r_max: u64) -> Vec<u64> {
+        let types = create(code, 3, dimension, 2, level).unwrap();
+        let table = radial_census(&types, &vec![0; dimension], r_max);
+        (1..=r_max as usize).map(|r| table[r].seen).collect()
+    }
+
+    #[test]
+    fn radial_census_counts_the_corner_disc() {
+        assert_eq!(
+            corner_seen(7, 2, 6, 12),
+            [1, 3, 7, 12, 16, 22, 30, 38, 48, 63, 77, 91]
+        );
+        assert_eq!(corner_seen(23, 3, 4, 8), [1, 4, 13, 28, 47, 65, 95, 137]);
+    }
+
+    #[test]
+    fn radial_census_does_not_depend_on_the_level() {
+        let shallow = create(7, 3, 2, 2, 4).unwrap();
+        let deep = create(7, 3, 2, 2, 5).unwrap();
+        let reach = 80;
+        let near = radial_census(&shallow, &[0, 0], reach);
+        let far = radial_census(&deep, &[0, 0], reach);
+        assert_eq!(near, far);
+        assert!(near[reach as usize].seen > 0);
+    }
+
+    #[test]
+    fn radial_census_matches_the_ball_census() {
+        for (code, dimension, level) in [(7u128, 2usize, 4usize), (23, 3, 3)] {
+            let types = create(code, 3, dimension, 2, level).unwrap();
+            let side = types.shape[0];
+            let table = radial_census(&types, &vec![0; dimension], side as u64 - 1);
+            for r in [1usize, 5, 17, side - 1] {
+                let ball = Shape::Ball {
+                    center: vec![Frac::whole(0); dimension],
+                    radius: Frac::new(r as i64, side as i64),
+                };
+                let tally = census(&ball, &types);
+                assert_eq!(tally.filled[2] as u64, table[r].inside, "in r={r}");
+                assert_eq!(tally.filled[1] as u64, table[r].cut, "cut r={r}");
+                assert!(table[r].inside <= table[r].seen);
+                assert!(table[r].seen <= table[r].inside + table[r].cut);
+            }
+        }
     }
 }

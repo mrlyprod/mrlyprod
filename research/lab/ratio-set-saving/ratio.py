@@ -444,6 +444,148 @@ def cmd_box(args):
               round(time.time() - t, 1))
         prev = c
 
+# REPUNIT
+
+def witness(z1, z2):
+    start = z1 // 3
+    par = {start: (None, z1)}
+    frontier = [start]
+    while frontier:
+        nxt = []
+        for j in frontier:
+            for k in succ(j, z1, z2):
+                a = k * 3 - j
+                if k == 0:
+                    path = [a]
+                    cur = j
+                    while cur is not None:
+                        path.append(par[cur][1])
+                        cur = par[cur][0]
+                    e = sum(3 ** i for i, b in enumerate(reversed(path)) if b)
+                    return e // (z1 + z2)
+                if k not in par:
+                    par[k] = (j, a)
+                    nxt.append(k)
+        frontier = nxt
+    return 0
+
+def factor(n):
+    out = []
+    p = 2
+    while p * p <= n:
+        if n % p == 0:
+            out.append(p)
+            while n % p == 0:
+                n //= p
+        p += 1
+    if n > 1:
+        out.append(n)
+    return out
+
+def order3(q):
+    d = 1
+    x = 3 % q
+    while x != 1:
+        x = x * 3 % q
+        d += 1
+    return d
+
+def count_multiples(k, q):
+    v = np.zeros(q, dtype=np.int64)
+    v[0] = 1
+    idx = np.arange(q)
+    for i in range(k):
+        nv = v.copy()
+        np.add.at(nv, (idx + pow(3, i, q)) % q, v)
+        v = nv
+    return int(v[0])
+
+def fourier_multiples(k, q):
+    d = order3(q)
+    t = np.arange(q)
+    P = np.ones(q, dtype=complex)
+    for r in range(d):
+        P *= 1 + np.exp(2j * np.pi * t * pow(3, r, q) / q)
+    return (P ** (k // d)).sum() / q
+
+def floor_formula(k):
+    ps = factor((3 ** k - 1) // 2)
+    exact = 0
+    four = 0
+    for mask in range(2 ** len(ps)):
+        q = 1
+        for i, p in enumerate(ps):
+            if mask >> i & 1:
+                q *= p
+        sign = (-1) ** bin(mask).count("1")
+        exact += sign * count_multiples(k, q)
+        four += sign * (2 ** k if q == 1 else fourier_multiples(k, q))
+    return ps, exact, four
+
+def lift_union(k):
+    w = (3 ** k - 1) // 2
+    pw = np.array([3 ** i for i in range(k)], dtype=np.int64)
+    S = np.arange(2 ** k)
+    bits = ((S[:, None] >> np.arange(k)) & 1).astype(np.int64)
+    occ = set()
+    total = 0
+    heur = 0.0
+    for T in range(0, 2 ** k, 2):
+        tb = np.array([(T >> i) & 1 for i in range(k)], dtype=np.int64)
+        m = 1 + 2 * int(tb.dot(pw))
+        heur += 2 ** k / m
+        A = bits.dot(pw * (1 - tb) + pw * tb * 3 ** k)
+        for a in A[A % m == 0]:
+            z = int(a) // m
+            if 0 < z < w and gcd(z, w) == 1:
+                occ.add(z)
+                total += 1
+    return occ, total, heur
+
+def cmd_repunit(args):
+    print("floor Phi_k = #{submask a of R_k : 0 < a < R_k, gcd(a, R_k) = 1}; Occ_T = directions with a witness K_T, "
+          "T inside [1, k-1]; lift = |union of Occ_T|, liftsum = Sum |Occ_T|, heur = Sum 2^k / m_T; "
+          "deep = Z - lift; delta = Phi / 2^k; X = (Z - Phi) / Phi; maxdigits = longest minimal witness m R_k, maxcol = most uses of one column mod k by a minimal witness")
+    print("k R_k primes Phi_k formula fourier Z(R_k) excess lift liftsum heur deep Z/R_k^beta delta X maxdigits maxcol secs")
+    lists = {}
+    for k in range(2, args.kmax + 1):
+        t = time.time()
+        w = (3 ** k - 1) // 2
+        subs = set(a for a in binaries(k) if 0 < a < w and gcd(a, w) == 1)
+        ps, exact, four = floor_formula(k)
+        occ = []
+        for z1 in range(3, w, 3):
+            if gcd(z1, w) != 1:
+                continue
+            m = witness(z1, w - z1)
+            if m:
+                occ.append((z1, m))
+        Z = 2 * len(occ)
+        if k <= args.liftmax:
+            lu, liftsum, heur = lift_union(k)
+            lift, deep, heur = len(lu), Z - len(lu), round(heur, 1)
+        else:
+            lift = deep = liftsum = heur = "-"
+        digits = maxcol = 0
+        for z1, m in occ:
+            if z1 in subs:
+                continue
+            cols = [0] * k
+            for i, ch in enumerate(reversed(base3(m * w))):
+                cols[i % k] += ch == "1"
+            digits = max(digits, len(base3(m * w)))
+            maxcol = max(maxcol, max(cols))
+        print(k, w, ps, len(subs), exact, round(four.real, 3) if abs(four.imag) < 1e-6 else four,
+              Z, Z - len(subs), lift, liftsum, heur, deep, up(Z / w ** BETA, 4), down(len(subs) / 2 ** k, 4),
+              down((Z - len(subs)) / len(subs), 4), digits, maxcol, round(time.time() - t, 1))
+        if k in (7, 8, 9):
+            lists[k] = [(z1, w - z1, m) for z1, m in occ if z1 not in subs]
+    for k, rows in lists.items():
+        print("non-submask occupied directions of weight R_" + str(k), "=", (3 ** k - 1) // 2,
+              "one of each swap pair, 3 | z1; columns z1 z2 m base3(z1) base3(z2) base3(m) base3(m z1) base3(m z2) base3(m w)")
+        for z1, z2, m in rows:
+            print(z1, z2, m, base3(z1), base3(z2), base3(m), base3(m * z1), base3(m * z2), base3(m * (z1 + z2)))
+
 # CHECKS
 
 def cmd_check(args):
@@ -572,6 +714,10 @@ def main():
     i.add_argument("hi", type=int)
     i.add_argument("--extra", type=int, default=3)
     i.set_defaults(fn=cmd_box)
+    j = s.add_parser("repunit")
+    j.add_argument("--kmax", type=int, default=13)
+    j.add_argument("--liftmax", type=int, default=15)
+    j.set_defaults(fn=cmd_repunit)
     d = s.add_parser("check")
     d.set_defaults(fn=cmd_check)
     args = p.parse_args()

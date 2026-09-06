@@ -15,6 +15,7 @@ use mrlyweb::magic::*;
 use mrlyweb::morse::*;
 use mrlyweb::prime::*;
 use mrlyweb::race::Race;
+use mrlyweb::sieve::*;
 use mrlyweb::six::*;
 use mrlyweb::spectrum::*;
 use mrlyweb::spin::*;
@@ -1815,4 +1816,72 @@ fn the_formulas_exports_answer() {
     assert!((meter[5] - 0.1).abs() < 1e-15);
     assert!(formulas_read(1).is_err() && formulas_read(2001).is_err());
     assert!(formulas_walk("basel", 100, 1).is_err() && formulas_walk("basil", 100, 4).is_err());
+}
+
+#[test]
+fn the_wallis_exports_answer() {
+    assert_eq!(wallis_cap("odd", 3, 2).unwrap(), 4);
+    assert_eq!(wallis_cap("odd", 3, 3).unwrap(), 3);
+    assert_eq!(wallis_cap("flat", 3, 2).unwrap(), 6);
+    assert_eq!(wallis_cap("flat", 3, 3).unwrap(), 4);
+    assert_eq!(wallis_cap("flat", 5, 2).unwrap(), 4);
+
+    let read = parse(&wallis_read("odd", 3, 4, 2).unwrap()).unwrap();
+    assert_eq!(read["word"].to_string(), "[3,5,7,9]");
+    assert_eq!(read["side"], "945");
+    assert_eq!(read["cells"], "737280");
+    assert_eq!(read["holes"], "9417");
+    assert!((read["ratio"].as_f64().unwrap() - 0.825_598_387_503_149_3).abs() < 1e-15);
+    assert!((read["limit"].as_f64().unwrap() - std::f64::consts::FRAC_PI_4).abs() < 1e-15);
+    assert!((read["exponent"].as_f64().unwrap() - 1.972_027_198_301_296_2).abs() < 1e-12);
+    assert_eq!(read["closed"], true);
+    assert_eq!(column(&read["levels"], "side"), r#""3","15","105","945""#);
+    assert_eq!(
+        column(&read["levels"], "cells"),
+        r#""8","192","9216","737280""#
+    );
+    assert_eq!(
+        column(&read["levels"], "ratio"),
+        "0.8888888888888888,0.8533333333333333,0.8359183673469387,0.8255983875031493"
+    );
+
+    let solid = parse(&wallis_read("odd", 3, 3, 3).unwrap()).unwrap();
+    assert_eq!(solid["cells"], "1102608");
+    assert_eq!(solid["holes"], "3251");
+    assert!((solid["ratio"].as_f64().unwrap() - 0.952_474_246_841_593_9).abs() < 1e-15);
+    assert!((solid["limit"].as_f64().unwrap() - 0.948_815_485_719_679_7).abs() < 1e-15);
+    assert!((solid["gap"].as_f64().unwrap() - 0.003_658_761_121_914_21).abs() < 1e-15);
+
+    let carpet = parse(&wallis_read("flat", 3, 5, 2).unwrap()).unwrap();
+    assert_eq!(carpet["side"], "243");
+    assert_eq!(carpet["cells"], "32768");
+    assert_eq!(carpet["limit"], 0.0);
+    assert_eq!(carpet["closed"], false);
+    assert!((carpet["exponent"].as_f64().unwrap() - 1.892_789_260_714_372).abs() < 1e-12);
+
+    let walk = wallis_walk("odd", 3, 2, 200).unwrap();
+    assert_eq!(walk.len(), 200);
+    assert!((walk[0] - 8.0 / 9.0).abs() < 1e-15);
+    assert!((walk[199] - 0.786_375_633_530_097_9).abs() < 1e-12);
+    let fixed = wallis_walk("flat", 3, 2, 6).unwrap();
+    assert!((fixed[5] - (8.0f64 / 9.0).powi(6)).abs() < 1e-15);
+
+    let grid = wallis_grid("odd", 3, 3).unwrap();
+    assert_eq!((grid.width, grid.height), (105, 105));
+    assert_eq!(grid.types.iter().filter(|&&b| b == 1).count(), 9216);
+
+    let boxes = wallis_faces("odd", 3, 3).unwrap();
+    assert_eq!(boxes[0] as usize, 3251 * 216);
+    assert_eq!(boxes.len(), 2 + boxes[0] as usize);
+    assert_eq!(
+        &boxes[2..8],
+        &[-1.0 / 3.0, -1.0 / 3.0, -1.0 / 3.0, -1.0, 0.0, 0.0]
+    );
+
+    assert!(wallis_read("odd", 3, 17, 2).is_err());
+    assert!(wallis_read("wallis", 3, 2, 2).is_err());
+    assert!(wallis_read("odd", 3, 2, 4).is_err());
+    assert!(wallis_read("flat", 4, 2, 2).is_err());
+    assert!(wallis_grid("odd", 3, 5).is_err());
+    assert!(wallis_faces("odd", 3, 4).is_err());
 }

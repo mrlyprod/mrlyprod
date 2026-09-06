@@ -11,18 +11,18 @@
 
 ## RUN
 
-- `CARGO_BUILD_JOBS=4 cargo run --release --manifest-path research/lab/Cargo.toml -p hexagon-moire`
+- `bash scripts/cargo.sh cargo run --release --manifest-path research/lab/Cargo.toml -p hexagon-moire` from `mrlyprod/`
 
 ## WITNESSES
 
-- DISCOVERIES.md:96 and :98 the twisted average falls like 1/N, A=C excess -0.003580 at N=55 and -0.000052 at N=5555; crosshair A=1/3 excess -0.083726 against -0.083333, A=1/7 -0.058065 at N=55 against -0.036036 at N=5555.
-- DISCOVERIES.md:97 and :311 star minus background -0.09385, -0.03102, -0.01756 at 5, 28, 56 layers; excess times L runs -0.7779 to -1.2519 in the ideal frame and -1.0212 to -1.3645 in the lattice frame from L=28 to L=400, ln L slopes -0.18 and -0.125.
-- DISCOVERIES.md:102 the doubling sign law holds on all 18 pairs from (3,5) to (601,1201).
-- DISCOVERIES.md:103, :270 and :309 Richardson r_inf from -0.11715991 to -0.11711630, branches 0.1171270 and 0.1171274, against 253/2160 = 0.11712963 and 19/162 = 0.11728395.
-- DISCOVERIES.md:104 and :268 full-hexagon (5,9) = -0.14179450 and (5,7) = -0.08542646; tree and void doubling (201,401) +0.00050 and +0.00107; tree adjacent -0.07017, void adjacent +0.00787; echo (67,201) carpet +0.21473, tree +0.14985, void +0.07721.
-- DISCOVERIES.md:105 L(2, chi_-3) = 0.7813024129 printed from its series and matched by nothing above.
-- DISCOVERIES.md:106 quarter-line plateau 0.12210, 0.12340, 0.12412, 0.12446 at N = 151, 301, 601, 1201; the X = 1/4 bands +0.066465 and -0.090881 at N = 55.
-- DISCOVERIES.md:107 void arms 0.5137, 0.4865, 0.4918, 0.4915 and the Z arm 0.3994 over a mean 0.2787; void centre cell ink 28/28.
-- DISCOVERIES.md:109 the ink laws match 28/28 layers in exact rationals for all four designs, odd n <= 55.
-- DISCOVERIES.md:110 pi/4 + pi^2/32 = 1.0938233009 with 1.0826656664 at N=55; (pi + pi^2)/16 = 0.8131998159 against pi^2 ln2/(7 zeta3) = 0.8130217042.
-- DISCOVERIES.md:271 G/8 = 0.1144956993 with 0.1144757884 at N=55, and G/8 - 1/8 with -0.0104828892 at N=53.
+- hexagon.md the cut ink of one layer: the ink laws match 28/28 layers in exact rationals for all four designs at every odd n <= 55, and the void centre cell is ink in 28 of 28 against 14 for the other three.
+- hexagon.md layer pairs and the doubling law: the sign law holds on all 18 pairs from (3,5) to (601,1201); the full-hexagon blind pairs read (5,9) = -0.14179450 and (5,7) = -0.08542646.
+- hexagon.md layer pairs and the doubling law, the magnitude: Richardson r_inf from -0.11715991 to -0.11711630, branches 0.1171270 and 0.1171274, against 253/2160 = 0.11712963 and 19/162 = 0.11728395.
+- hexagon.md the other pair families: tree and void doubling at (201,401) +0.00049938 and +0.00107260; tree adjacent -0.07016649, void adjacent +0.00786627; echo (67,201) carpet +0.21473346, tree +0.14984772, void +0.07721358.
+- hexagon.md the quarter line and the crosshairs: plateau 0.12210, 0.12340, 0.12412, 0.12446 at N = 151, 301, 601, 1201; the X = 1/4 bands +0.066465 and -0.090881 at N = 55.
+- hexagon.md the quarter line and the crosshairs, the coarse model: A = 1/3 excess -0.083726 against -0.083333 at N = 5555; A = 1/7 -0.058065 at N = 55 against -0.036036 at N = 5555.
+- hexagon.md the void star: arms 0.513667, 0.486492, 0.491844, 0.491525 and the Z arm 0.399416 over a mean 0.278670.
+- hexagon.md the twist that kills the ray family: the twisted average falls like 1/N at every x, the A = C excess -0.003580 at N = 55 and -0.000052 at N = 5555.
+- hexagon.md the ghost star: star minus background -0.09385, -0.03102, -0.01756 at 5, 28, 56 layers; excess times L runs -0.7779 to -1.2519 in the ideal frame and -1.0212 to -1.3645 in the lattice frame from L = 28 to L = 400, ln L slopes -0.18 and -0.125.
+- hexagon.md the constants: pi/4 + pi^2/32 = 1.0938233009 with 1.0826656664 at N = 55; (pi + pi^2)/16 = 0.8131998159 against pi^2 ln2/(7 zeta3) = 0.8130217042; G/8 = 0.1144956993 with 0.1144757884 at N = 55 and G/8 - 1/8 with -0.0104828892 at N = 53.
+- hexagon.md the constants: L(2, chi_-3) = 0.7813024129 printed from its series and matched by nothing above.

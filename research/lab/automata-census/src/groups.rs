@@ -1,6 +1,6 @@
 use crate::rules::RULES;
-use mrlymath::bang::universe::{apply, corner_index, corners, permutations};
 use mrlymath::bang::symmetries;
+use mrlymath::bang::universe::{apply, corner_index, corners, permutations};
 use std::collections::BTreeSet;
 
 pub type Elem = (Vec<usize>, Vec<u8>, bool);
@@ -46,12 +46,7 @@ pub fn group(name: &str) -> Vec<Elem> {
             .collect(),
         "B3xZ2" => symmetries(3)
             .into_iter()
-            .flat_map(|(p, f)| {
-                [
-                    (p.clone(), f.clone(), false),
-                    (p.clone(), f.clone(), true),
-                ]
-            })
+            .flat_map(|(p, f)| [(p.clone(), f.clone(), false), (p.clone(), f.clone(), true)])
             .collect(),
         _ => unreachable!(),
     }
@@ -63,7 +58,12 @@ pub fn orbit(code: usize, elements: &[Elem]) -> BTreeSet<usize> {
 
 pub fn representatives(elements: &[Elem]) -> Vec<usize> {
     (0..RULES)
-        .map(|code| *orbit(code, elements).iter().next().expect("an orbit is nonempty"))
+        .map(|code| {
+            *orbit(code, elements)
+                .iter()
+                .next()
+                .expect("an orbit is nonempty")
+        })
         .collect()
 }
 
@@ -121,7 +121,11 @@ pub fn report() {
             .filter(|(b, sb)| b != a && sa.is_subset(sb))
             .map(|(b, _)| *b)
             .collect();
-        let inside = if inside.is_empty() { "nothing".to_string() } else { inside.join(" ") };
+        let inside = if inside.is_empty() {
+            "nothing".to_string()
+        } else {
+            inside.join(" ")
+        };
         println!("{a} sits inside {inside}");
     }
     let h = &actions.iter().find(|(n, _)| *n == "H").expect("H").1;

@@ -27,6 +27,8 @@ pub mod morse;
 pub mod prime;
 /// The infinite sums: zeta and its Dirichlet cousins, the visible count and the Bernoulli fractions.
 pub mod series;
+/// The punctured schedules: the Wallis sieve and its kin, their words, rasters, punctures and limits.
+pub mod sieve;
 /// The symmetric eigensolver and the Laplacian spectra it reads off a network.
 pub mod spectrum;
 /// The turntable: the exact circle means of a raster about its centre, the profile they trace and the wheel it paints.

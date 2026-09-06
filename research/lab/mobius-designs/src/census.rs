@@ -58,7 +58,13 @@ pub fn make_family_depth(q: u64, digits: Vec<u64>, lmax: usize) -> Family {
             a += 1;
         }
     }
-    Family { q, digits, label, lmax, children }
+    Family {
+        q,
+        digits,
+        label,
+        lmax,
+        children,
+    }
 }
 
 pub fn families() -> Vec<Family> {
@@ -80,7 +86,14 @@ pub fn families() -> Vec<Family> {
 // SWEEP
 
 pub fn sweep(q: u64, digits: &[u64], lmax: usize, visit: &mut impl FnMut(u64, usize)) {
-    fn rec(v: u64, len: usize, q: u64, digits: &[u64], lmax: usize, visit: &mut impl FnMut(u64, usize)) {
+    fn rec(
+        v: u64,
+        len: usize,
+        q: u64,
+        digits: &[u64],
+        lmax: usize,
+        visit: &mut impl FnMut(u64, usize),
+    ) {
         visit(v, len);
         if len < lmax {
             for &d in digits {
@@ -143,7 +156,11 @@ pub fn run_family(fam: &Family, primes: &[u64]) -> Outcome {
     let mut counts = vec![0u64; l + 1];
     let mut meter = vec![0i64; l + 1];
     let mut mmax = vec![0u64; l + 1];
-    let mut twisted: Vec<(u64, Vec<i64>)> = fam.children.iter().map(|&a| (a, vec![0i64; l + 1])).collect();
+    let mut twisted: Vec<(u64, Vec<i64>)> = fam
+        .children
+        .iter()
+        .map(|&a| (a, vec![0i64; l + 1]))
+        .collect();
     let mut run = 0i64;
     let mut peak = 0u64;
     let mut total = 0u64;
@@ -176,5 +193,10 @@ pub fn run_family(fam: &Family, primes: &[u64]) -> Outcome {
             slot.1[lev] = slot.1[lev - 1] + tl;
         }
     }
-    Outcome { counts, meter, mmax, twisted }
+    Outcome {
+        counts,
+        meter,
+        mmax,
+        twisted,
+    }
 }

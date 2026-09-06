@@ -48,7 +48,8 @@ impl Canvas {
         let seat = y as usize * WIDTH + x as usize;
         for channel in 0..3 {
             let under = self.pixels[seat][channel] as f64;
-            self.pixels[seat][channel] = (under + (colour[channel] as f64 - under) * alpha).round() as u8;
+            self.pixels[seat][channel] =
+                (under + (colour[channel] as f64 - under) * alpha).round() as u8;
         }
     }
 
@@ -92,12 +93,26 @@ impl Canvas {
     fn star(&mut self, cx: f64, cy: f64, radius: f64, colour: [u8; 4]) {
         for spike in 0..5 {
             let angle = -std::f64::consts::FRAC_PI_2 + spike as f64 * std::f64::consts::TAU / 5.0;
-            self.line(cx, cy, cx + radius * angle.cos(), cy + radius * angle.sin(), colour, 2.0);
+            self.line(
+                cx,
+                cy,
+                cx + radius * angle.cos(),
+                cy + radius * angle.sin(),
+                colour,
+                2.0,
+            );
         }
     }
 
     fn axes(&mut self, frame: &Frame, along: &[f64], up: &[f64]) {
-        self.line(frame.left, frame.bottom, frame.right, frame.bottom, INK, 1.5);
+        self.line(
+            frame.left,
+            frame.bottom,
+            frame.right,
+            frame.bottom,
+            INK,
+            1.5,
+        );
         self.line(frame.left, frame.top, frame.left, frame.bottom, INK, 1.5);
         for value in along {
             let (x, y) = frame.place(*value, frame.y.0);
@@ -154,7 +169,11 @@ pub fn render(series: &Series) -> Vec<[u8; 4]> {
         let (x, y) = left.place(index as f64, *value);
         canvas.square(x, y, 5.0, RUST);
     }
-    canvas.axes(&right, &[1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8], &[1.0, 1.4, 1.8, 2.2, 2.6]);
+    canvas.axes(
+        &right,
+        &[1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8],
+        &[1.0, 1.4, 1.8, 2.2, 2.6],
+    );
     let start = right.x.0.max(right.y.0);
     let stop = right.x.1.min(right.y.1);
     let (dx0, dy0) = right.place(start, start);

@@ -266,12 +266,7 @@ fn commutation(anatomy: &CrossAnatomy) {
             .filter(|(a, b)| a.count_ones() == 1 && b.count_ones() == 1)
             .count();
         let g = tile::gcd(m - 1, n - 1);
-        println!(
-            "{m}  {n}  {singles}  {}  {}  {}",
-            g + 1,
-            found.len(),
-            g + 2
-        );
+        println!("{m}  {n}  {singles}  {}  {}  {}", g + 1, found.len(), g + 2);
     }
     let a = from_cells(3, &[(1, 1)]);
     let b = from_cells(5, &[(2, 2)]);
@@ -338,14 +333,19 @@ fn prime_powers() {
         );
     }
     let square = BigUint::from(33554431u64) * BigUint::from(33554431u64);
-    println!("side 25 reads (2^25 - 1)^2 = 33554431^2 = {square}, which is not 65535^2 = 4294836225");
+    println!(
+        "side 25 reads (2^25 - 1)^2 = 33554431^2 = {square}, which is not 65535^2 = 4294836225"
+    );
     assert_eq!(square, reducible_at(5, 2, true));
     println!("one dimension, the same series against exhaustive brute force:");
     for (prime, power) in [(2usize, 2usize), (2, 3), (2, 4), (3, 2)] {
         let side = prime.pow(power as u32);
         let formula = reducible_at(prime, power, false);
         let brute = BigUint::from(line_brute(side));
-        println!("N = {side}: formula {formula}, brute force {brute}, agree {}", formula == brute);
+        println!(
+            "N = {side}: formula {formula}, brute force {brute}, agree {}",
+            formula == brute
+        );
         assert_eq!(formula, brute);
     }
     println!();
@@ -421,7 +421,15 @@ fn witnesses(six: &SideSix) {
     report_chains("W2", &w2);
     println!("W2 is minimal: every side below 12 is a prime power, where factorisation is unique, or a product of two distinct primes, where every factorisation has prime-side factors only");
     let mut family = 0usize;
-    for (m, n) in [(2usize, 3usize), (3, 2), (2, 5), (3, 5), (4, 3), (5, 7), (2, 9)] {
+    for (m, n) in [
+        (2usize, 3usize),
+        (3, 2),
+        (2, 5),
+        (3, 5),
+        (4, 3),
+        (5, 7),
+        (2, 9),
+    ] {
         let (im, in_) = (identity(m), identity(n));
         let (em, en) = (antidiagonal(m), antidiagonal(n));
         assert_eq!(kron(&im, &in_), identity(m * n));
@@ -499,7 +507,12 @@ fn word_census() {
     );
     println!(
         "pairwise {} {} {}, triple {}, union {}, and {} = 15 x 171",
-        census.pairs[0], census.pairs[1], census.pairs[2], census.triple, census.union, census.pairs[0]
+        census.pairs[0],
+        census.pairs[1],
+        census.pairs[2],
+        census.triple,
+        census.union,
+        census.pairs[0]
     );
     assert_eq!(census.pairs[0], 15 * 171);
     println!(

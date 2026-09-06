@@ -26,8 +26,16 @@ fn rings(grid: &Tensor, pad: usize, bins: usize) -> Vec<(f64, f64, f64)> {
     let mut hits = vec![0.0f64; bins];
     for row in 0..pad {
         for col in 0..pad {
-            let u = if (row as i64) <= half { row as i64 } else { row as i64 - pad as i64 };
-            let v = if (col as i64) <= half { col as i64 } else { col as i64 - pad as i64 };
+            let u = if (row as i64) <= half {
+                row as i64
+            } else {
+                row as i64 - pad as i64
+            };
+            let v = if (col as i64) <= half {
+                col as i64
+            } else {
+                col as i64 - pad as i64
+            };
             let norm = ((u * u + v * v) as f64).sqrt();
             if norm < 1.0 {
                 continue;
@@ -86,7 +94,14 @@ fn slide(points: &[(f64, f64)], width: f64, step: f64) -> (f64, f64) {
     (low, high)
 }
 
-pub fn powder(grid: &Tensor, pad: usize, low: f64, high: f64, bins: usize, phases: usize) -> Powder {
+pub fn powder(
+    grid: &Tensor,
+    pad: usize,
+    low: f64,
+    high: f64,
+    bins: usize,
+    phases: usize,
+) -> Powder {
     let all = rings(grid, pad, bins);
     let band: Vec<(f64, f64, f64)> = all
         .iter()
@@ -112,5 +127,10 @@ pub fn powder(grid: &Tensor, pad: usize, low: f64, high: f64, bins: usize, phase
         .map(|(sum, hit)| if *hit == 0.0 { f64::NAN } else { sum / hit })
         .collect();
     let swing = crate::mass::spread(&curve);
-    Powder { slope, low: least, high: most, swing }
+    Powder {
+        slope,
+        low: least,
+        high: most,
+        swing,
+    }
 }

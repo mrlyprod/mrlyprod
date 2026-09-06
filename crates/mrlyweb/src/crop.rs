@@ -256,6 +256,41 @@ pub fn crop_series(
     Ok(json!(rows).to_string())
 }
 
+/// Counts the design's filled cells against every integer radius about the corner or the grid centre.
+///
+/// The corner ball runs to the radius side minus one, the centre ball to half of that; the reply lays the seen, the inside and the cut prefix arrays end to end, each a third of the length and indexed by radius from zero.
+#[wasm_bindgen]
+pub fn crop_circle(
+    code: &str,
+    number: usize,
+    level: usize,
+    base: usize,
+    dimension: usize,
+    centre: &str,
+) -> Result<Vec<u32>, Fault> {
+    let stop = || Fault::new(format!("that count would build over {SERIES_CELLS} cells."));
+    let side = number.checked_pow(level as u32).ok_or_else(stop)?;
+    if side.checked_pow(dimension as u32).ok_or_else(stop)? > SERIES_CELLS {
+        return Err(stop());
+    }
+    let (origin, r_max) = match centre {
+        "corner" => (vec![0i64; dimension], side as u64 - 1),
+        "centre" => (vec![side as i64; dimension], (side as u64 - 1) / 2),
+        _ => {
+            return Err(Fault::new(format!(
+                "centre {centre:?} is not corner or centre."
+            )))
+        }
+    };
+    let types = design(code, number, dimension, base, level)?;
+    let table = shape::radial_census(&types, &origin, r_max);
+    let mut out = Vec::with_capacity(3 * table.len());
+    out.extend(table.iter().map(|row| row.seen as u32));
+    out.extend(table.iter().map(|row| row.inside as u32));
+    out.extend(table.iter().map(|row| row.cut as u32));
+    Ok(out)
+}
+
 fn outline(name: &str, r: Frac) -> Option<Vec<[Frac; 2]>> {
     let h = Frac::new(1, 2);
     let q = r * h;

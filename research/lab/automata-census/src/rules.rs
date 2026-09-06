@@ -47,7 +47,11 @@ pub fn evolve(rule: usize, steps: usize, pad: usize) -> (Diagram, u8) {
         }
     }
     for i in 0..width {
-        let l = if i == 0 { 0 } else { cells[steps * width + i - 1] };
+        let l = if i == 0 {
+            0
+        } else {
+            cells[steps * width + i - 1]
+        };
         let c = cells[steps * width + i];
         let r = if i + 1 == width {
             0

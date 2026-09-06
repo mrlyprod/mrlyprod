@@ -40,8 +40,12 @@ pub mod morse;
 pub mod prime;
 /// The race: seeded walkers loose on a flat design.
 pub mod race;
+/// The punctured schedules: the Wallis sieve rastered, its punctures listed, its ratios walked and its limits read.
+pub mod sieve;
 /// The hexagon projections of a cube as SVG.
 pub mod six;
+/// The snail: the whole numbers wound on the square spiral with every grown cell a design tile whose side is a power of the base.
+pub mod snail;
 /// The Laplacian spectra of the designs: eigenvalues, degeneracy and the spectral exponent.
 pub mod spectrum;
 /// The turntable: designs, moire fields and slices spun about their centre into ring profiles and wheels.

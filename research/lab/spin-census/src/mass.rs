@@ -172,7 +172,12 @@ pub fn ripple(mass: &Mass, low: f64, high: f64, dimension: f64, bins: usize) -> 
     } else {
         let early = fold(&sample(mass, low, half, bins), dimension, bins);
         let late = fold(
-            &sample(mass, low * (BASE as f64).powi(half as i32), periods - half, bins),
+            &sample(
+                mass,
+                low * (BASE as f64).powi(half as i32),
+                periods - half,
+                bins,
+            ),
             dimension,
             bins,
         );
@@ -180,9 +185,18 @@ pub fn ripple(mass: &Mass, low: f64, high: f64, dimension: f64, bins: usize) -> 
             .iter()
             .zip(&late)
             .map(|(a, b)| (a - b).abs())
-            .fold(0.0f64, |best, gap| if gap.is_finite() { best.max(gap) } else { best })
+            .fold(
+                0.0f64,
+                |best, gap| if gap.is_finite() { best.max(gap) } else { best },
+            )
     };
-    Ripple { slope, curve, swing, drift, periods }
+    Ripple {
+        slope,
+        curve,
+        swing,
+        drift,
+        periods,
+    }
 }
 
 pub fn spread(curve: &[f64]) -> f64 {
@@ -196,7 +210,10 @@ pub fn distance(left: &[f64], right: &[f64]) -> f64 {
     left.iter()
         .zip(right)
         .map(|(a, b)| (a - b).abs())
-        .fold(0.0f64, |best, gap| if gap.is_finite() { best.max(gap) } else { best })
+        .fold(
+            0.0f64,
+            |best, gap| if gap.is_finite() { best.max(gap) } else { best },
+        )
 }
 
 pub fn scaling_error(mass: &Mass, low: f64, high: f64, fill: f64) -> f64 {
@@ -221,8 +238,16 @@ mod tests {
     fn the_window_counts_whole_periods_at_every_level() {
         for level in 4..=12u32 {
             let side = 3f64.powi(level as i32);
-            assert_eq!(periods(27.0, side), level as usize - 3, "corner level {level}");
-            assert_eq!(periods(27.0, side / 2.0), level as usize - 4, "centre level {level}");
+            assert_eq!(
+                periods(27.0, side),
+                level as usize - 3,
+                "corner level {level}"
+            );
+            assert_eq!(
+                periods(27.0, side / 2.0),
+                level as usize - 4,
+                "centre level {level}"
+            );
         }
         assert_eq!(periods(27.0, 26.0), 0);
         assert_eq!(periods(27.0, 81.0), 1);

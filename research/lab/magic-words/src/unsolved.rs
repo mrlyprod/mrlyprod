@@ -89,7 +89,8 @@ pub fn open_families() -> Vec<Open> {
         },
         Open {
             name: "gasket and domino",
-            rule: "1 + sum over the gasket places i <= m of fill(w_1..i-1), m the last domino place",
+            rule:
+                "1 + sum over the gasket places i <= m of fill(w_1..i-1), m the last domino place",
             shape: Shape::GasketDomino,
             pairs: cross(&GASKET, &dominoes),
         },
@@ -130,7 +131,10 @@ fn forms(rep: &Rep) {
             family.pairs.len(),
             family.rule
         );
-        assert_eq!(bad, 0, "the closed form is exact against the representation");
+        assert_eq!(
+            bad, 0,
+            "the closed form is exact against the representation"
+        );
         assert_eq!(wrong, 0, "the closed form is exact against the drawn cells");
         pairs += family.pairs.len();
         words += checked;
@@ -157,7 +161,14 @@ fn class_of(code: u8) -> usize {
 }
 
 fn class_name(which: usize) -> &'static str {
-    ["unit", "row domino", "column domino", "diagonal", "gasket", "full"][which]
+    [
+        "unit",
+        "row domino",
+        "column domino",
+        "diagonal",
+        "gasket",
+        "full",
+    ][which]
 }
 
 fn weight(code: u8) -> (i64, i64) {
@@ -355,7 +366,13 @@ impl Track {
     fn log2_comp(&self, length: usize, scale: f64) -> f64 {
         match self.top(length) {
             None => 0.0,
-            Some(top) => self.log2_fill(top - 1, scale) + self.ratio(length, scale).expect("a top place has a ratio").log2(),
+            Some(top) => {
+                self.log2_fill(top - 1, scale)
+                    + self
+                        .ratio(length, scale)
+                        .expect("a top place has a ratio")
+                        .log2()
+            }
         }
     }
 }
@@ -440,7 +457,8 @@ fn morse_value(rep: &Rep) {
                     if track.top(length).is_none() {
                         empty += 1;
                     }
-                    let gap = (track.log2_comp(length, scale) - length as f64 * (1.0 + scale) / 2.0)
+                    let gap = (track.log2_comp(length, scale)
+                        - length as f64 * (1.0 + scale) / 2.0)
                         .abs()
                         * 2f64.ln();
                     worst = worst.max(gap);
@@ -459,12 +477,23 @@ fn morse_value(rep: &Rep) {
     let line = |run: &Track| {
         marks
             .iter()
-            .map(|length| format!("{:.12} ({length})", run.log2_comp(*length, scale) / *length as f64))
+            .map(|length| {
+                format!(
+                    "{:.12} ({length})",
+                    run.log2_comp(*length, scale) / *length as f64
+                )
+            })
             .collect::<Vec<_>>()
             .join(", ")
     };
-    println!("prefix rate log2 comp / L over (3,7), gasket at t = 0: {}", line(&track));
-    println!("prefix rate log2 comp / L over (3,7), gasket at t = 1: {}", line(&flip));
+    println!(
+        "prefix rate log2 comp / L over (3,7), gasket at t = 0: {}",
+        line(&track)
+    );
+    println!(
+        "prefix rate log2 comp / L over (3,7), gasket at t = 1: {}",
+        line(&flip)
+    );
     println!("the limit is (1/2) log 6, which is {target:.15} in log 2 units and 0.895879734614027... in nats, both floats");
     println!(
         "over 4 <= L <= {RANGE}, all 16 pairs and both readings, the largest |log comp - (L/2) log 6| is {worst:.6} nats against the certificate log 108 + (1/2) log(3/2) = {bound:.6} nats, itself below 4.885"
@@ -476,7 +505,8 @@ fn morse_value(rep: &Rep) {
         ("gasket at t = 0", &track, &word),
         ("gasket at t = 1", &flip, &other),
     ] {
-        let sat = |length: usize| (run.log2_comp(length, scale) - run.log2_fill(length, scale)).exp2();
+        let sat =
+            |length: usize| (run.log2_comp(length, scale) - run.log2_fill(length, scale)).exp2();
         let mut floor = (1.0f64, 0usize);
         let mut roof = (0.0f64, 0usize);
         let mut past = (0.0f64, 0usize);
@@ -526,7 +556,10 @@ fn morse_value(rep: &Rep) {
         "the largest fill deficit log2 fill - log2 comp over both readings is {deficit:.4}, a float, and it is attained on a tie set, {ties} lengths in the reading gasket at t = 0 alone, so no single length may be named for it; the proved ceiling is log2 108 = {:.4}",
         108f64.log2()
     );
-    assert!(deficit < 108f64.log2(), "the deficit stays under its ceiling");
+    assert!(
+        deficit < 108f64.log2(),
+        "the deficit stays under its ceiling"
+    );
     let mut rates: Vec<String> = Vec::new();
     for big in [7u8, 15] {
         for swap in 0..2usize {
@@ -710,7 +743,11 @@ fn cone(rep: &Rep) {
     }
     println!("gasket-domino-gasket sends the vertices to {} with largest b + c = {}, strictly inside S, so the pair semigroup is primitive in this chart", images.join(" "), text(&widest));
     let edge = image(image((Frac::int(1), Frac::zero()), false), true);
-    println!("domino-gasket sends (1,0) to ({},{}) with b + c = 1, on the face, so length 3 is minimal", text(&edge.0), text(&edge.1));
+    println!(
+        "domino-gasket sends (1,0) to ({},{}) with b + c = 1, on the face, so length 3 is minimal",
+        text(&edge.0),
+        text(&edge.1)
+    );
     let mut positive = 0usize;
     let mut products = 0usize;
     for length in 1..=12usize {
@@ -819,7 +856,12 @@ fn boundary(rep: &Rep) {
     let marks = [2048usize, 2049, 4096, 4097, 8192, 8193, 16384, 16385, 32768];
     let rates = marks
         .iter()
-        .map(|length| format!("{:.9} ({length})", run.log2_comp(*length, scale) / *length as f64))
+        .map(|length| {
+            format!(
+                "{:.9} ({length})",
+                run.log2_comp(*length, scale) / *length as f64
+            )
+        })
         .collect::<Vec<_>>()
         .join(", ");
     println!("the gasket at the powers of 2, prefix rate in log 2 units, floats: {rates}");
@@ -841,10 +883,17 @@ fn boundary(rep: &Rep) {
     let boxed = Track::new(&boxes, 7);
     let squared = [4096usize, 8192, 16384, 32768]
         .iter()
-        .map(|length| format!("{:.9} ({length})", boxed.log2_comp(*length, scale) / *length as f64))
+        .map(|length| {
+            format!(
+                "{:.9} ({length})",
+                boxed.log2_comp(*length, scale) / *length as f64
+            )
+        })
         .collect::<Vec<_>>()
         .join(", ");
-    println!("the gasket at the squares, prefix rate in log 2 units, floats: {squared}, closing on 1");
+    println!(
+        "the gasket at the squares, prefix rate in log 2 units, floats: {squared}, closing on 1"
+    );
     let flat = Track::new(&flats, 7);
     let steady = (1..=FAR)
         .map(|length| flat.log2_comp(length, scale))

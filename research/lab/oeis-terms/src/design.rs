@@ -25,11 +25,19 @@ pub fn group(n: usize) -> Vec<Element> {
     let mut out = Vec::with_capacity(48 * n * n * n);
     for perm in PERMS {
         for bits in 0..8i64 {
-            let sign = [1 - 2 * (bits >> 2 & 1), 1 - 2 * (bits >> 1 & 1), 1 - 2 * (bits & 1)];
+            let sign = [
+                1 - 2 * (bits >> 2 & 1),
+                1 - 2 * (bits >> 1 & 1),
+                1 - 2 * (bits & 1),
+            ];
             for s0 in 0..n as i64 {
                 for s1 in 0..n as i64 {
                     for s2 in 0..n as i64 {
-                        out.push(Element { perm, sign, shift: [s0, s1, s2] });
+                        out.push(Element {
+                            perm,
+                            sign,
+                            shift: [s0, s1, s2],
+                        });
                     }
                 }
             }

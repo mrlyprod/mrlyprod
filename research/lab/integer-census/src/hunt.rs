@@ -22,7 +22,10 @@ fn seen(counts: &[u32]) -> usize {
 }
 
 fn gap(counts: &[u32]) -> usize {
-    counts[1..].iter().position(|&count| count == 0).map_or(0, |index| index + 1)
+    counts[1..]
+        .iter()
+        .position(|&count| count == 0)
+        .map_or(0, |index| index + 1)
 }
 
 fn longest(counts: &[u32]) -> usize {
@@ -36,7 +39,11 @@ fn longest(counts: &[u32]) -> usize {
 }
 
 fn inside(window: &[i128]) -> Vec<i128> {
-    let mut out: Vec<i128> = window.iter().copied().filter(|term| (1..=CEILING).contains(term)).collect();
+    let mut out: Vec<i128> = window
+        .iter()
+        .copied()
+        .filter(|term| (1..=CEILING).contains(term))
+        .collect();
     out.sort_unstable();
     out.dedup();
     out
@@ -74,10 +81,17 @@ pub fn extend(head: &[i128], length: usize) -> Option<Vec<i128>> {
     let order = degree(head)?;
     let mut table = vec![head.to_vec()];
     for _ in 0..order {
-        let last: Vec<i128> = table.last()?.windows(2).map(|pair| pair[1] - pair[0]).collect();
+        let last: Vec<i128> = table
+            .last()?
+            .windows(2)
+            .map(|pair| pair[1] - pair[0])
+            .collect();
         table.push(last);
     }
-    let mut ends: Vec<i128> = table.iter().map(|layer| *layer.last().expect("a difference layer is nonempty")).collect();
+    let mut ends: Vec<i128> = table
+        .iter()
+        .map(|layer| *layer.last().expect("a difference layer is nonempty"))
+        .collect();
     let mut out = head.to_vec();
     while out.len() < length {
         for index in (0..order).rev() {
@@ -115,7 +129,10 @@ fn factors() -> (Vec<u32>, Vec<u32>, Vec<i128>) {
             }
         }
     }
-    let primes = (2..size).filter(|&value| great[value] == value as u32).map(|value| value as i128).collect();
+    let primes = (2..size)
+        .filter(|&value| great[value] == value as u32)
+        .map(|value| value as i128)
+        .collect();
     (great, divisors, primes)
 }
 
@@ -136,7 +153,11 @@ fn perfect() -> Vec<i128> {
 }
 
 fn mean(counts: &[u32], values: &[i128]) -> f64 {
-    values.iter().map(|&value| counts[value as usize] as f64).sum::<f64>() / values.len() as f64
+    values
+        .iter()
+        .map(|&value| counts[value as usize] as f64)
+        .sum::<f64>()
+        / values.len() as f64
 }
 
 fn family(power: u32) -> Vec<i128> {
@@ -181,10 +202,19 @@ fn depth(sheet: &Sheet, book: &Census) {
             .collect::<Vec<_>>()
             .join(" ")
     );
-    let book = Census { counts: dropped, incidences: 0, repeats: 0, low: 0 };
+    let book = Census {
+        counts: dropped,
+        incidences: 0,
+        repeats: 0,
+        low: 0,
+    };
     println!(
         "depth without each row's first term leaders {}",
-        census::champions(&book, 4).iter().map(|(value, count)| format!("{value} {count}")).collect::<Vec<_>>().join(" ")
+        census::champions(&book, 4)
+            .iter()
+            .map(|(value, count)| format!("{value} {count}"))
+            .collect::<Vec<_>>()
+            .join(" ")
     );
 }
 
@@ -199,7 +229,11 @@ fn model(sheet: &Sheet) {
     println!(
         "model rows with a head degree at most 6 {} by degree {}",
         orders.iter().sum::<usize>(),
-        orders.iter().map(|count| count.to_string()).collect::<Vec<_>>().join(" ")
+        orders
+            .iter()
+            .map(|count| count.to_string())
+            .collect::<Vec<_>>()
+            .join(" ")
     );
     for stop in [Stop::Cap, Stop::Ceiling, Stop::Budget] {
         let batch: Vec<&Row> = sheet
@@ -227,7 +261,11 @@ fn model(sheet: &Sheet) {
             stop.slug(),
             batch.len(),
             tested - pass,
-            failed.iter().map(|order| order.to_string()).collect::<Vec<_>>().join(" ")
+            failed
+                .iter()
+                .map(|order| order.to_string())
+                .collect::<Vec<_>>()
+                .join(" ")
         );
     }
 }
@@ -258,7 +296,11 @@ fn deeper(sheet: &Sheet, book: &Census) {
     }
     println!(
         "deeper cap rows rebuilt {checked} extended {used} of {}",
-        sheet.rows.iter().filter(|row| row.stop == Stop::Cap).count()
+        sheet
+            .rows
+            .iter()
+            .filter(|row| row.stop == Stop::Cap)
+            .count()
     );
     println!(
         "deeper window {DEEP} written at least {} first miss {} longest written run at least {}",
@@ -269,9 +311,16 @@ fn deeper(sheet: &Sheet, book: &Census) {
     let squares = family(2);
     println!(
         "deeper squares at least {} of {} first missed square {}",
-        squares.iter().filter(|&&value| counts[value as usize] > 0).count(),
+        squares
+            .iter()
+            .filter(|&&value| counts[value as usize] > 0)
+            .count(),
         squares.len(),
-        squares.iter().find(|&&value| counts[value as usize] == 0).copied().unwrap_or(0)
+        squares
+            .iter()
+            .find(|&&value| counts[value as usize] == 0)
+            .copied()
+            .unwrap_or(0)
     );
 }
 
@@ -280,17 +329,28 @@ fn arithmetic(sheet: &Sheet, book: &Census) {
     let counts = &book.counts;
     for power in 2u32..=6 {
         let batch = family(power);
-        let written: Vec<i128> = batch.iter().copied().filter(|&value| counts[value as usize] > 0).collect();
+        let written: Vec<i128> = batch
+            .iter()
+            .copied()
+            .filter(|&value| counts[value as usize] > 0)
+            .collect();
         println!(
             "arith power {power} written {} of {} first missed {} largest written {}",
             written.len(),
             batch.len(),
-            batch.iter().find(|&&value| counts[value as usize] == 0).copied().unwrap_or(0),
+            batch
+                .iter()
+                .find(|&&value| counts[value as usize] == 0)
+                .copied()
+                .unwrap_or(0),
             written.last().copied().unwrap_or(0)
         );
     }
     let powers = perfect();
-    let carried: u64 = powers.iter().map(|&value| counts[value as usize] as u64).sum();
+    let carried: u64 = powers
+        .iter()
+        .map(|&value| counts[value as usize] as u64)
+        .sum();
     let share = carried as f64 / book.incidences as f64;
     let density = powers.len() as f64 / CEILING as f64;
     println!(
@@ -299,12 +359,21 @@ fn arithmetic(sheet: &Sheet, book: &Census) {
         share / density
     );
     let squares = family(2);
-    let top = squares.iter().copied().filter(|&value| counts[value as usize] > 0).next_back().unwrap_or(0);
+    let top = squares
+        .iter()
+        .copied()
+        .filter(|&value| counts[value as usize] > 0)
+        .next_back()
+        .unwrap_or(0);
     let writers = census::writers(sheet, top);
     println!(
         "arith largest written square {top} rows {} {}",
         writers.len(),
-        writers.iter().map(|row| row.name.as_str()).collect::<Vec<_>>().join(" ")
+        writers
+            .iter()
+            .map(|row| row.name.as_str())
+            .collect::<Vec<_>>()
+            .join(" ")
     );
     println!(
         "arith square frontier {}",
@@ -314,12 +383,20 @@ fn arithmetic(sheet: &Sheet, book: &Census) {
             .join(" ")
     );
     let (great, divisors, primes) = factors();
-    let written: Vec<i128> = primes.iter().copied().filter(|&value| counts[value as usize] > 0).collect();
+    let written: Vec<i128> = primes
+        .iter()
+        .copied()
+        .filter(|&value| counts[value as usize] > 0)
+        .collect();
     println!(
         "arith primes written {} of {} first missed {} above 10000 {} of {}",
         written.len(),
         primes.len(),
-        primes.iter().find(|&&value| counts[value as usize] == 0).copied().unwrap_or(0),
+        primes
+            .iter()
+            .find(|&&value| counts[value as usize] == 0)
+            .copied()
+            .unwrap_or(0),
         written.iter().filter(|&&value| value > 10_000).count(),
         primes.iter().filter(|&&value| value > 10_000).count()
     );
@@ -329,7 +406,10 @@ fn arithmetic(sheet: &Sheet, book: &Census) {
         for residue in 0..modulus {
             classes += 1;
             let first = 10_000 + (residue - 10_000).rem_euclid(modulus);
-            if !(first..=CEILING).step_by(modulus as usize).any(|value| counts[value as usize] > 0) {
+            if !(first..=CEILING)
+                .step_by(modulus as usize)
+                .any(|value| counts[value as usize] > 0)
+            {
                 empty += 1;
             }
         }
@@ -342,30 +422,60 @@ fn arithmetic(sheet: &Sheet, book: &Census) {
                 tally[(value % modulus) as usize] += 1;
             }
         }
-        let high = tally.iter().max().copied().expect("a residue tally is nonempty");
-        let low = tally.iter().min().copied().expect("a residue tally is nonempty");
+        let high = tally
+            .iter()
+            .max()
+            .copied()
+            .expect("a residue tally is nonempty");
+        let low = tally
+            .iter()
+            .min()
+            .copied()
+            .expect("a residue tally is nonempty");
         println!(
             "arith mod {modulus} written by residue {} high {high} low {low} ratio {:.2}",
-            tally.iter().map(|count| count.to_string()).collect::<Vec<_>>().join(" "),
+            tally
+                .iter()
+                .map(|count| count.to_string())
+                .collect::<Vec<_>>()
+                .join(" "),
             high as f64 / low as f64
         );
     }
     let mut floor = 1i128;
     for &roof in &BANDS {
         let band: Vec<i128> = (10_000..=CEILING)
-            .filter(|&value| i128::from(great[value as usize]) > floor && i128::from(great[value as usize]) <= roof)
+            .filter(|&value| {
+                i128::from(great[value as usize]) > floor
+                    && i128::from(great[value as usize]) <= roof
+            })
             .collect();
         println!(
             "arith greatest prime factor in {floor}..{roof} size {} written share {:.4}",
             band.len(),
-            band.iter().filter(|&&value| counts[value as usize] > 0).count() as f64 / band.len() as f64
+            band.iter()
+                .filter(|&&value| counts[value as usize] > 0)
+                .count() as f64
+                / band.len() as f64
         );
         floor = roof;
     }
     let all: Vec<i128> = (1..=SMALL).collect();
-    let square: Vec<i128> = squares.iter().copied().filter(|&value| value <= SMALL).collect();
-    let rich: Vec<i128> = all.iter().copied().filter(|&value| divisors[value as usize] >= 8).collect();
-    let power: Vec<i128> = powers.iter().copied().filter(|&value| value <= SMALL).collect();
+    let square: Vec<i128> = squares
+        .iter()
+        .copied()
+        .filter(|&value| value <= SMALL)
+        .collect();
+    let rich: Vec<i128> = all
+        .iter()
+        .copied()
+        .filter(|&value| divisors[value as usize] >= 8)
+        .collect();
+    let power: Vec<i128> = powers
+        .iter()
+        .copied()
+        .filter(|&value| value <= SMALL)
+        .collect();
     println!(
         "arith mean rows on 1..{SMALL} all {:.2} squares {:.2} at least eight divisors {:.2} perfect powers {:.2}",
         mean(counts, &all),
@@ -378,7 +488,11 @@ fn arithmetic(sheet: &Sheet, book: &Census) {
 fn spectrum(sheet: &Sheet, book: &Census) {
     println!("SPECTRUM");
     let counts = &book.counts;
-    let mut heights: Vec<u32> = counts[1..].iter().copied().filter(|&count| count > 0).collect();
+    let mut heights: Vec<u32> = counts[1..]
+        .iter()
+        .copied()
+        .filter(|&count| count > 0)
+        .collect();
     heights.sort_unstable();
     heights.dedup();
     println!(
@@ -398,7 +512,10 @@ fn spectrum(sheet: &Sheet, book: &Census) {
     );
     println!(
         "spectrum champion set ascending {}",
-        set.iter().map(|value| value.to_string()).collect::<Vec<_>>().join(" ")
+        set.iter()
+            .map(|value| value.to_string())
+            .collect::<Vec<_>>()
+            .join(" ")
     );
     let above = |level: u32| counts[1..].iter().filter(|&&count| count >= level).count();
     let ratio = above(2) as f64 / above(1) as f64;
@@ -409,24 +526,57 @@ fn spectrum(sheet: &Sheet, book: &Census) {
         above(1) as f64 * ratio.powi(63),
         above(64)
     );
-    let whole: Vec<i128> = (1..=CEILING).filter(|&value| counts[value as usize] > 0).collect();
-    let high: Vec<i128> = whole.iter().copied().filter(|&value| value >= TAIL).collect();
-    println!("spectrum written {} above {TAIL} {}", whole.len(), high.len());
+    let whole: Vec<i128> = (1..=CEILING)
+        .filter(|&value| counts[value as usize] > 0)
+        .collect();
+    let high: Vec<i128> = whole
+        .iter()
+        .copied()
+        .filter(|&value| value >= TAIL)
+        .collect();
+    println!(
+        "spectrum written {} above {TAIL} {}",
+        whole.len(),
+        high.len()
+    );
     for tier in Tier::ALL {
-        let mine = fold(sheet.rows.iter().filter(|row| row.tier == tier).map(|row| &row.written));
-        let rest = fold(sheet.rows.iter().filter(|row| row.tier != tier).map(|row| &row.written));
+        let mine = fold(
+            sheet
+                .rows
+                .iter()
+                .filter(|row| row.tier == tier)
+                .map(|row| &row.written),
+        );
+        let rest = fold(
+            sheet
+                .rows
+                .iter()
+                .filter(|row| row.tier != tier)
+                .map(|row| &row.written),
+        );
         println!(
             "spectrum tier {} covers {} exclusive {} above {TAIL} {}",
             tier.slug(),
             seen(&mine),
-            whole.iter().filter(|&&value| mine[value as usize] > 0 && rest[value as usize] == 0).count(),
-            high.iter().filter(|&&value| mine[value as usize] > 0).count()
+            whole
+                .iter()
+                .filter(|&&value| mine[value as usize] > 0 && rest[value as usize] == 0)
+                .count(),
+            high.iter()
+                .filter(|&&value| mine[value as usize] > 0)
+                .count()
         );
     }
     let mut families: Vec<Vec<i128>> = sheet
         .rows
         .iter()
-        .map(|row| row.written.iter().copied().filter(|&value| value >= TAIL).collect::<Vec<i128>>())
+        .map(|row| {
+            row.written
+                .iter()
+                .copied()
+                .filter(|&value| value >= TAIL)
+                .collect::<Vec<i128>>()
+        })
         .filter(|set| !set.is_empty())
         .collect();
     families.sort();
@@ -440,21 +590,50 @@ fn spectrum(sheet: &Sheet, book: &Census) {
     println!(
         "spectrum written sets above {TAIL} {} owning a tail integer alone {} covering {} of {}",
         families.len(),
-        families.iter().filter(|set| set.iter().any(|&value| owners[value as usize] == 1)).count(),
-        high.iter().filter(|&&value| owners[value as usize] == 1).count(),
+        families
+            .iter()
+            .filter(|set| set.iter().any(|&value| owners[value as usize] == 1))
+            .count(),
+        high.iter()
+            .filter(|&&value| owners[value as usize] == 1)
+            .count(),
         high.len()
     );
-    for (column, value) in [("euler.side", 1i128), ("peak.side", 12), ("heights.side", 9), ("heights.side", 33)] {
-        let batch: Vec<&Row> = sheet.rows.iter().filter(|row| row.name.ends_with(column)).collect();
+    for (column, value) in [
+        ("euler.side", 1i128),
+        ("peak.side", 12),
+        ("heights.side", 9),
+        ("heights.side", 33),
+    ] {
+        let batch: Vec<&Row> = sheet
+            .rows
+            .iter()
+            .filter(|row| row.name.ends_with(column))
+            .collect();
         println!(
             "spectrum column {column} writes {value} in {} of {} rows",
-            batch.iter().filter(|row| row.written.binary_search(&value).is_ok()).count(),
+            batch
+                .iter()
+                .filter(|row| row.written.binary_search(&value).is_ok())
+                .count(),
             batch.len()
         );
     }
-    let batch: Vec<&Row> = sheet.rows.iter().filter(|row| row.name.ends_with("heights.side")).collect();
+    let batch: Vec<&Row> = sheet
+        .rows
+        .iter()
+        .filter(|row| row.name.ends_with("heights.side"))
+        .collect();
     let mut tally: Vec<(i128, usize)> = (1..=100i128)
-        .map(|value| (value, batch.iter().filter(|row| row.written.binary_search(&value).is_ok()).count()))
+        .map(|value| {
+            (
+                value,
+                batch
+                    .iter()
+                    .filter(|row| row.written.binary_search(&value).is_ok())
+                    .count(),
+            )
+        })
         .collect();
     tally.sort_by(|left, right| right.1.cmp(&left.1).then(left.0.cmp(&right.0)));
     tally.truncate(8);
@@ -462,7 +641,11 @@ fn spectrum(sheet: &Sheet, book: &Census) {
     leaders.sort_unstable();
     println!(
         "spectrum heights.side leaders to 100 {} every one a multiple of eight plus one {}",
-        leaders.iter().map(|value| value.to_string()).collect::<Vec<_>>().join(" "),
+        leaders
+            .iter()
+            .map(|value| value.to_string())
+            .collect::<Vec<_>>()
+            .join(" "),
         leaders.iter().all(|value| (value - 1) % 8 == 0)
     );
 }

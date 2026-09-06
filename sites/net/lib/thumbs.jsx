@@ -44,6 +44,40 @@ const tour = (m) => (canvas) => {
   });
 };
 
+const snail = (m) => (canvas) => {
+  const [ctx, w, h] = fit(canvas, canvas.clientWidth / 1.5);
+  const cells = m.snail_cells(2, 300, 'every');
+  const read = JSON.parse(m.snail_read(2, 300, 'every'));
+  const art = [];
+  for (let k = 1; k <= read.peak; k += 1) {
+    const grid = m.two_grid('7', 2, k, 0, 2);
+    art[k] = [document.createElement('canvas'), document.createElement('canvas')];
+    paint(art[k][0], grid, ink.dim);
+    paint(art[k][1], grid, ink.blue);
+  }
+  const pad = 5;
+  const scale = Math.min((w - 2 * pad) / read.width, (h - 2 * pad) / read.height);
+  const ox = (w - read.width * scale) / 2;
+  const oy = (h + read.height * scale) / 2;
+  ctx.strokeStyle = ink.line;
+  ctx.beginPath();
+  for (let i = 0; i < cells.length; i += 5) {
+    const half = cells[i + 2] / 2;
+    ctx.lineTo(ox + (cells[i] + half - read.low[0]) * scale, oy - (cells[i + 1] + half - read.low[1]) * scale);
+  }
+  ctx.stroke();
+  for (let i = 0; i < cells.length; i += 5) {
+    const wide = cells[i + 2] * scale;
+    const px = ox + (cells[i] - read.low[0]) * scale;
+    const py = oy - (cells[i + 1] + cells[i + 2] - read.low[1]) * scale;
+    if (cells[i + 3] && wide >= 3) ctx.drawImage(art[cells[i + 3]][cells[i + 4]], px, py, wide, wide);
+    else {
+      ctx.fillStyle = cells[i + 4] ? ink.blue : ink.dim;
+      ctx.fillRect(px, py, Math.max(wide, 1), Math.max(wide, 1));
+    }
+  }
+};
+
 const graphs = (m) => (canvas) => {
   web(canvas, canvas.clientWidth / 1.5, m.graph_nodes('flat', '495', 3, 2, 3, 'core').subarray(2), m.graph_branches('flat', '495', 3, 2, 3, 'core'), null, 3);
 };
@@ -171,6 +205,7 @@ const DRAW = {
   mrlylife: (m) => <Grid grid={m.life_mask(2, '7', 3, 2)} on={ink.green} className="" />,
   moire: (m) => <Pixels data={m.moire('weave', 11, 120, 'fire', 2, false)} className="" />,
   morse: (m) => <Signs grid={m.morse_lift('parity', 7)} className="" />,
+  wallis: (m) => <Grid grid={m.wallis_grid('odd', 3, 3)} on={ink.gold} className="" />,
   spin: (m) => <Pixels data={m.wheel(m.profile(Float32Array.from(m.two_grid('495', 3, 4, 0, 3).types), 81, 256), 180, 'fire', 64, false)} className="" />,
   radial: (m) => <Pixels data={m.sheet(m.radial(Float32Array.from(carpet(m).types), 27, 180, 5, 72, 'mean', 2), 180, 'fire', 64, false)} className="" />,
   volume: (m) => <Pixels data={m.paint_span(m.plane_field(solid(m), 48, [1, 1, 1], 0.5, 180), 180, range(m).min, range(m).max, 'fire', 16, false)} className="" />,
@@ -180,6 +215,7 @@ const DRAW = {
   pi: (m) => <Pixels data={m.visible_pixels(100, 180, true)} className="" />,
   primes: (m) => <Grid grid={sieve(m).grid(15)} on={ink.gold} className="" />,
   ulam: (m) => <Pixels data={m.spiral_pixels('square', 61, 4, -2, 41, 'prime', false, 180)} className="" />,
+  snail: (m) => <Sketch draw={snail(m)} className="" />,
   gaussian: (m) => <Pixels data={m.ring_pixels('gaussian', 24, 'class', false, 180)} className="" />,
   graphs: (m) => <Sketch draw={graphs(m)} className="" />,
   sequences: (m) => <Sketch draw={sequences(m)} className="" />,

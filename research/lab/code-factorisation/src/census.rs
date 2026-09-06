@@ -1,6 +1,4 @@
-use crate::tile::{
-    kron, mask_tile, separable, split, unpack, Tile,
-};
+use crate::tile::{kron, mask_tile, separable, split, unpack, Tile};
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 
 pub fn codes(base: usize) -> Vec<u32> {
@@ -177,7 +175,8 @@ pub fn cross_anatomy(six: &SideSix) -> CrossAnatomy {
             let high = fill_a2.max(fill_x3);
             *out.outer_fills.entry((low, high)).or_insert(0) += 1;
         }
-        let any = usize::from(fill_a2 == 1 || fill_b3 == 1) + usize::from(fill_x3 == 1 || fill_y2 == 1);
+        let any =
+            usize::from(fill_a2 == 1 || fill_b3 == 1) + usize::from(fill_x3 == 1 || fill_y2 == 1);
         let outer = usize::from(fill_a2 == 1) + usize::from(fill_x3 == 1);
         *out.one_cell_any.entry(any).or_insert(0) += 1;
         *out.one_cell_outer.entry(outer).or_insert(0) += 1;
@@ -247,7 +246,10 @@ pub struct SideEight {
 }
 
 pub fn side_eight() -> SideEight {
-    let small: Vec<Tile> = codes(2).into_iter().map(|c| mask_tile(c as u64, 2)).collect();
+    let small: Vec<Tile> = codes(2)
+        .into_iter()
+        .map(|c| mask_tile(c as u64, 2))
+        .collect();
     let mut image24: HashSet<u64> = HashSet::new();
     let mut image42: HashSet<u64> = HashSet::new();
     for mask in 1u64..1 << 16 {
@@ -284,7 +286,10 @@ pub fn side_nine() -> SideNine {
     let mut seen: HashSet<u128> = HashSet::new();
     let mut products = 0usize;
     let mut collisions = 0usize;
-    let tiles: Vec<Tile> = codes(3).into_iter().map(|c| mask_tile(c as u64, 3)).collect();
+    let tiles: Vec<Tile> = codes(3)
+        .into_iter()
+        .map(|c| mask_tile(c as u64, 3))
+        .collect();
     for outer in &tiles {
         for inner in &tiles {
             let whole = kron(outer, inner);
@@ -317,8 +322,14 @@ pub struct WordTwelve {
 }
 
 pub fn word_twelve(witness: &Tile) -> WordTwelve {
-    let two: Vec<Tile> = codes(2).into_iter().map(|c| mask_tile(c as u64, 2)).collect();
-    let three: Vec<Tile> = codes(3).into_iter().map(|c| mask_tile(c as u64, 3)).collect();
+    let two: Vec<Tile> = codes(2)
+        .into_iter()
+        .map(|c| mask_tile(c as u64, 2))
+        .collect();
+    let three: Vec<Tile> = codes(3)
+        .into_iter()
+        .map(|c| mask_tile(c as u64, 3))
+        .collect();
     let mut sets: Vec<HashSet<[u64; 3]>> = Vec::new();
     let shapes: [[usize; 3]; 3] = [[2, 2, 3], [2, 3, 2], [3, 2, 2]];
     let mut per_shape = 0usize;

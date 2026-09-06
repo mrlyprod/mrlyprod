@@ -31,7 +31,7 @@
 - [universe](demos/universe/) - Rotations and reflections fold the corner masks of a hypercube into orbits, so the distinct designs of dimensions 1 to 4 are a finite gallery you can grow one by one.
 - [sponge](demos/sponge/) - A code picks the filled corners of a cube and grows it level by level, with fills, voids and exposed faces answered by closed formulas before a cube is built.
 - [tile](demos/tile/) - One design repeated: side by side on the square lattice in the plane and in the cube, interlocked as a hexagon on the triangular one, where the fills multiply by the copy count exactly and the exposed faces do not.
-- [crop](demos/crop/) - A named shape of rational radius keeps only the cells of a design it reaches, with the in, cut and out regions counted exactly before anything is drawn.
+- [crop](demos/crop/) - A named shape of rational radius keeps only the cells of a design it reaches, counted exactly in in, cut and out regions, and the disc count read radius by radius carries a self-similar main term with a log-periodic multiplier.
 - [tour](demos/tour/) - A dozen cards, each drawing a design live beside the integer sequence it counts and the OEIS record that holds the terms.
 - [mrlylife](demos/mrlylife/) - Life with the neighbourhood set free: the mask is a design at any side and level, the birth and survival counts come by hand or from a named sequence, and the board runs in one dimension or two.
 - [wolfram](demos/wolfram/) - Wolfram's 256 elementary rules are the 256 three-dimensional parity designs bit for bit, so every rule arrives with a design's card, and the additive rules draw the plane designs in time.
@@ -56,6 +56,7 @@
 
 - [words](demos/words/) - One design per level folded by the Kronecker product, with the census, the component exponent, and what changes when the letters swap places.
 - [morse](demos/morse/) - The Thue-Morse word built twice from one digit rule, lifted to four plane grids of which three are Kronecker powers of a plus-minus tile and one is not, with its runs and its boundary word.
+- [wallis](demos/wallis/) - Level k drops the centre of every surviving square cut into (2k + 1)^2, so a schedule of strictly increasing odd letters keeps a positive area and hands back pi over four, while one that reuses a letter, alternating or not, loses the area and buys a dimension instead.
 
 ### Graphs, walks and spectra
 
@@ -71,6 +72,7 @@
 
 - [primes](demos/primes/) - A number is prime when its stones make one rectangle, shown by the sieve, the divisor pairs, the pi(x) staircase against x / ln x and li(x), and a carpet stack whose layers correlate to zero exactly at the primes.
 - [ulam](demos/ulam/) - The whole numbers wound on squares or hexagons with the primes lit, where every straight line reads a quadratic and the prime-rich ones stand out as diagonals.
+- [snail](demos/snail/) - Every cell of the square winding that grows carries a design tile whose side is a power of the base, so the spiral widens by that factor at each new digit and curls outward like a shell, built of the primes alone or of every number by the same law.
 - [gaussian](demos/gaussian/) - The Gaussian and Eisenstein primes as four- and six-armed snowflakes, coloured by whether an ordinary prime split, stayed inert, or ramified on entering the plane.
 
 ### Fractions and zeros

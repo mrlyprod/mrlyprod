@@ -113,7 +113,11 @@ fn render(key: &Key, tier: Tier) -> Option<Row> {
         }
         if count >= allowed {
             window = read;
-            stop = if allowed == CAP { Stop::Cap } else { Stop::Budget };
+            stop = if allowed == CAP {
+                Stop::Cap
+            } else {
+                Stop::Budget
+            };
             break;
         }
         count = (count * 2).min(allowed);
@@ -145,18 +149,24 @@ pub fn predict(form: &Closed, index: usize) -> Option<i128> {
         }
         Closed::Polynomial(coefficients) => {
             let side = index as i128 + 2;
-            coefficients.iter().enumerate().try_fold(0i128, |sum, (power, &c)| {
-                sum.checked_add(c.checked_mul(side.checked_pow(power as u32)?)?)
-            })
+            coefficients
+                .iter()
+                .enumerate()
+                .try_fold(0i128, |sum, (power, &c)| {
+                    sum.checked_add(c.checked_mul(side.checked_pow(power as u32)?)?)
+                })
         }
         Closed::Recurrence(_) => None,
     }
 }
 
 pub fn replay(coefficients: &[i128], head: &[i128], index: usize) -> Option<i128> {
-    coefficients.iter().enumerate().try_fold(0i128, |sum, (back, &c)| {
-        sum.checked_add(c.checked_mul(*head.get(index.checked_sub(back + 1)?)?)?)
-    })
+    coefficients
+        .iter()
+        .enumerate()
+        .try_fold(0i128, |sum, (back, &c)| {
+            sum.checked_add(c.checked_mul(*head.get(index.checked_sub(back + 1)?)?)?)
+        })
 }
 
 pub struct Sheet {
@@ -177,9 +187,14 @@ pub fn read() -> Sheet {
     let parts: Vec<Vec<Option<Row>>> = thread::scope(|scope| {
         let handles: Vec<_> = listed
             .chunks(chunk)
-            .map(|slice| scope.spawn(move || slice.iter().map(|(key, tier)| render(key, *tier)).collect()))
+            .map(|slice| {
+                scope.spawn(move || slice.iter().map(|(key, tier)| render(key, *tier)).collect())
+            })
             .collect();
-        handles.into_iter().map(|handle| handle.join().expect("the row walk lands")).collect()
+        handles
+            .into_iter()
+            .map(|handle| handle.join().expect("the row walk lands"))
+            .collect()
     });
     let mut rows = Vec::with_capacity(listed.len());
     let mut unread = 0;
@@ -191,5 +206,9 @@ pub fn read() -> Sheet {
             }
         }
     }
-    Sheet { rows, tiers, unread }
+    Sheet {
+        rows,
+        tiers,
+        unread,
+    }
 }

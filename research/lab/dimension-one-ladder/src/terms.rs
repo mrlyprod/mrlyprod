@@ -112,7 +112,11 @@ impl Lattice {
             items: Vec::new(),
             sub: Vec::new(),
             sums: vec![0; size],
-            ranked: if dimension == 3 { vec![0; ranks * size] } else { Vec::new() },
+            ranked: if dimension == 3 {
+                vec![0; ranks * size]
+            } else {
+                Vec::new()
+            },
             choose,
         }
     }
@@ -147,7 +151,12 @@ impl Lattice {
     fn direct2(&self) -> u128 {
         let mut total = 0u128;
         for &(a, ca) in self.items.iter() {
-            let inner: u64 = self.items.iter().filter(|(b, _)| a & b == 0).map(|(_, cb)| *cb as u64).sum();
+            let inner: u64 = self
+                .items
+                .iter()
+                .filter(|(b, _)| a & b == 0)
+                .map(|(_, cb)| *cb as u64)
+                .sum();
             total += ca as u128 * inner as u128;
         }
         total
@@ -167,10 +176,16 @@ impl Lattice {
         let mut total = 0u128;
         for &(a, ca) in self.items.iter() {
             self.sub.clear();
-            self.sub.extend(self.items.iter().filter(|(b, _)| a & b == 0));
+            self.sub
+                .extend(self.items.iter().filter(|(b, _)| a & b == 0));
             let mut inner = 0u128;
             for &(b, cb) in self.sub.iter() {
-                let reach: u64 = self.sub.iter().filter(|(c, _)| b & c == 0).map(|(_, cc)| *cc as u64).sum();
+                let reach: u64 = self
+                    .sub
+                    .iter()
+                    .filter(|(c, _)| b & c == 0)
+                    .map(|(_, cc)| *cc as u64)
+                    .sum();
                 inner += cb as u128 * reach as u128;
             }
             total += ca as u128 * inner;
@@ -279,7 +294,14 @@ impl Lattice {
     }
 }
 
-fn weight(design: &Design, level: u32, threads: usize, table: &[u32], small: &[i8], base: &[usize]) -> i128 {
+fn weight(
+    design: &Design,
+    level: u32,
+    threads: usize,
+    table: &[u32],
+    small: &[i8],
+    base: &[usize],
+) -> i128 {
     let span = 3u64.pow(level);
     let fine = span.min(FINE);
     let origin: i128 = if design.origin_filled() { 1 } else { 0 };
@@ -309,7 +331,11 @@ fn weight(design: &Design, level: u32, threads: usize, table: &[u32], small: &[i
                             mobius_block(lo, hi, base, &mut sign, &mut rest);
                         }
                         for modulus in lo..hi {
-                            let mu = if task < fine { small[modulus as usize] } else { sign[(modulus - lo) as usize] };
+                            let mu = if task < fine {
+                                small[modulus as usize]
+                            } else {
+                                sign[(modulus - lo) as usize]
+                            };
                             if mu == 0 || modulus % 3 == 0 {
                                 continue;
                             }
@@ -340,9 +366,17 @@ pub fn terms(design: &Design, top: u32, threads: usize) -> Vec<Term> {
     for level in 1..=top {
         let clock = Instant::now();
         let current = weight(design, level, threads, &table, &small, &base);
-        let value = if design.origin_filled() { current - previous } else { current };
+        let value = if design.origin_filled() {
+            current - previous
+        } else {
+            current
+        };
         previous = current;
-        out.push(Term { level, value, seconds: clock.elapsed().as_secs_f64() });
+        out.push(Term {
+            level,
+            value,
+            seconds: clock.elapsed().as_secs_f64(),
+        });
     }
     out
 }
@@ -375,7 +409,11 @@ pub fn brute(design: &Design, level: u32) -> u64 {
 }
 
 pub fn stored(design: &Design) -> Vec<(u32, i128)> {
-    let path = format!("{}/terms/{}_bfile.txt", env!("CARGO_MANIFEST_DIR"), design.name);
+    let path = format!(
+        "{}/terms/{}_bfile.txt",
+        env!("CARGO_MANIFEST_DIR"),
+        design.name
+    );
     std::fs::read_to_string(path)
         .unwrap_or_default()
         .lines()

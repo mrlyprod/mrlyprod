@@ -20,7 +20,15 @@ const BASES: [u64; 10] = [
 const SWEEP_LO: u64 = 3_690;
 const SWEEP_HI: u64 = 100_000;
 const CORO: [u64; 3] = [10_000, 100_000, 1_000_000];
-const COST: [u64; 7] = [3_689, 3_690, 5_000, 10_000, 100_000, 1_000_000, 1_000_000_000];
+const COST: [u64; 7] = [
+    3_689,
+    3_690,
+    5_000,
+    10_000,
+    100_000,
+    1_000_000,
+    1_000_000_000,
+];
 const WALL: [u64; 2] = [3_689, 3_690];
 
 // KERNEL CONSTANTS
@@ -484,7 +492,11 @@ fn main() {
     for q in BASES {
         let r = row(q, 1);
         assert!(c_exp(q as f64, 1.0) >= 0.0, "l^1 floor broken at q = {q}");
-        assert_eq!(r.closes, gap(q as f64, 1.0) > 0.0, "tests disagree at q = {q}");
+        assert_eq!(
+            r.closes,
+            gap(q as f64, 1.0) > 0.0,
+            "tests disagree at q = {q}"
+        );
         println!("{}", render(&r));
     }
     println!();
@@ -547,7 +559,10 @@ fn main() {
         let m = max_excluded(q);
         let r = row(q, m);
         assert!(r.closes, "corollary maximum must close at q = {q}");
-        assert!(!closes(q as f64, (m + 1) as f64), "maximum not maximal at q = {q}");
+        assert!(
+            !closes(q as f64, (m + 1) as f64),
+            "maximum not maximal at q = {q}"
+        );
         println!("{}", render_coro(&r));
     }
     println!();
@@ -560,19 +575,45 @@ fn main() {
         let b = ladder_b(a).0.val();
         let floor = mono_floor(b);
         let q0 = ladder_wall(b);
-        assert!(floor < q0, "monotone floor above the wall at a = {}", a.show());
+        assert!(
+            floor < q0,
+            "monotone floor above the wall at a = {}",
+            a.show()
+        );
         for q in 3..SWEEP_LO {
-            assert!(gap_b(q as f64, b, 1.0) < 0.0, "close below 3690 at a = {}", a.show());
+            assert!(
+                gap_b(q as f64, b, 1.0) < 0.0,
+                "close below 3690 at a = {}",
+                a.show()
+            );
         }
         if floor > SWEEP_LO as f64 {
-            assert!(u_bound(SWEEP_LO as f64, b) < 0.0, "floor range unclear at a = {}", a.show());
-            assert!(u_bound(floor, b) < 0.0, "floor range unclear at a = {}", a.show());
+            assert!(
+                u_bound(SWEEP_LO as f64, b) < 0.0,
+                "floor range unclear at a = {}",
+                a.show()
+            );
+            assert!(
+                u_bound(floor, b) < 0.0,
+                "floor range unclear at a = {}",
+                a.show()
+            );
         }
         println!("{}", render_ladder(a));
     }
-    assert!(ladder_b(Rat::new(1, 2)).0.same(Rat::new(3, 4)), "the GRH rung must read b = 3/4");
-    assert_eq!(ladder_wall(0.75), SWEEP_LO as f64, "the GRH rung must be the wall");
-    println!("- `log10 q_0(a)` across the rungs, rounded up: {}", ladder_trend());
+    assert!(
+        ladder_b(Rat::new(1, 2)).0.same(Rat::new(3, 4)),
+        "the GRH rung must read b = 3/4"
+    );
+    assert_eq!(
+        ladder_wall(0.75),
+        SWEEP_LO as f64,
+        "the GRH rung must be the wall"
+    );
+    println!(
+        "- `log10 q_0(a)` across the rungs, rounded up: {}",
+        ladder_trend()
+    );
     println!("- `gap_q(a, 1)` steps up at every `q >= Q(b)`, and `Q(b) < q_0(a)` at every rung, so it steps up from `q_0(a)` on");
     println!(
         "- no `q < {SWEEP_LO}` closes at any printed rung; `<=` marks a rung whose wall is past `2^53` or whose neighbouring gap steps fall under the {EXACT_ULPS}-ulp noise floor"
@@ -588,8 +629,16 @@ fn main() {
             continue;
         }
         let m = max_excluded_b(CORO_Q, b);
-        assert!(m >= 1, "rung past its wall must admit m = 1 at a = {}", a.show());
-        assert!(gap_b(CORO_Q, b, (m + 1) as f64) <= 0.0, "maximum not maximal at a = {}", a.show());
+        assert!(
+            m >= 1,
+            "rung past its wall must admit m = 1 at a = {}",
+            a.show()
+        );
+        assert!(
+            gap_b(CORO_Q, b, (m + 1) as f64) <= 0.0,
+            "maximum not maximal at a = {}",
+            a.show()
+        );
         println!("{}", render_ladder_coro(a));
     }
 }
@@ -638,7 +687,10 @@ mod tests {
         assert!(gap(3689.0, 1.0) < 0.0);
         assert!(gap(3690.0, 1.0) > 0.0);
         for q in 3..3689u64 {
-            assert!(!closes(q as f64, 1.0), "unexpected close below the wall at {q}");
+            assert!(
+                !closes(q as f64, 1.0),
+                "unexpected close below the wall at {q}"
+            );
         }
     }
 
@@ -650,14 +702,21 @@ mod tests {
         assert_eq!(arg, SWEEP_HI - 2);
         assert_eq!(fixed(floor_units(worst, 8), 8), "0.00003172");
         for q in SWEEP_LO..5_000 {
-            assert!(gap((q + 1) as f64, 1.0) > gap(q as f64, 1.0), "step down at {q}");
+            assert!(
+                gap((q + 1) as f64, 1.0) > gap(q as f64, 1.0),
+                "step down at {q}"
+            );
         }
     }
 
     #[test]
     fn closes_matches_gap_sign() {
         for q in 3..20_000u64 {
-            assert_eq!(closes(q as f64, 1.0), gap(q as f64, 1.0) > 0.0, "at q = {q}");
+            assert_eq!(
+                closes(q as f64, 1.0),
+                gap(q as f64, 1.0) > 0.0,
+                "at q = {q}"
+            );
         }
     }
 
@@ -685,10 +744,7 @@ mod tests {
             .flat_map(|&q| {
                 let qf = q as f64;
                 let up = !closes(qf, 1.0);
-                [
-                    sci(delta_stable(qf, 1.0), 9, up),
-                    sci(gap(qf, 1.0), 9, up),
-                ]
+                [sci(delta_stable(qf, 1.0), 9, up), sci(gap(qf, 1.0), 9, up)]
             })
             .collect();
         let want = [
@@ -715,7 +771,10 @@ mod tests {
                 } else {
                     assert!(p <= v, "not a lower bound at q = {q}: {s}");
                 }
-                assert!((p - v).abs() <= 1e-8 * v.abs(), "bound too loose at q = {q}");
+                assert!(
+                    (p - v).abs() <= 1e-8 * v.abs(),
+                    "bound too loose at q = {q}"
+                );
             }
         }
     }
@@ -725,12 +784,18 @@ mod tests {
         for q in BASES.iter().chain(COST.iter()) {
             let qf = *q as f64;
             let (a, b) = (delta(qf, 1.0), delta_stable(qf, 1.0));
-            assert!((a - b).abs() <= 1e-9 * b.abs(), "delta forms disagree at q = {q}");
+            assert!(
+                (a - b).abs() <= 1e-9 * b.abs(),
+                "delta forms disagree at q = {q}"
+            );
         }
         for q in CORO {
             let (qf, mf) = (q as f64, max_excluded(q) as f64);
             let (a, b) = (delta(qf, mf), delta_stable(qf, mf));
-            assert!((a - b).abs() <= 1e-9 * b.abs(), "delta forms disagree at q = {q}");
+            assert!(
+                (a - b).abs() <= 1e-9 * b.abs(),
+                "delta forms disagree at q = {q}"
+            );
         }
     }
 
@@ -760,7 +825,10 @@ mod tests {
         assert_eq!(down, 0);
         for q in [3_690u64, 3_691] {
             let qf = q as f64;
-            assert!(delta_stable(qf, 1.0) < defect(qf, 1.0), "premature crossing at {q}");
+            assert!(
+                delta_stable(qf, 1.0) < defect(qf, 1.0),
+                "premature crossing at {q}"
+            );
         }
         assert!(delta_stable(3_692.0, 1.0) > defect(3_692.0, 1.0));
     }
@@ -817,8 +885,14 @@ mod tests {
                 let t = i as f64 / 4_001.0;
                 worst = worst.max(kernel_sum(q, t));
             }
-            assert!(worst <= bound, "kernel bound fails at q = {q}: {worst} > {bound}");
-            assert!(worst > 0.8 * bound, "kernel bound absurdly loose at q = {q}");
+            assert!(
+                worst <= bound,
+                "kernel bound fails at q = {q}: {worst} > {bound}"
+            );
+            assert!(
+                worst > 0.8 * bound,
+                "kernel bound absurdly loose at q = {q}"
+            );
         }
     }
 
@@ -870,21 +944,37 @@ mod tests {
         assert!(slack < 0.015, "step-A slack above 0.015: {slack}");
         let konst = slack - 1.0 - 4.0 / PI - k * GAMMA + k * (1448.0f64 / 721.0).ln()
             - (1.0 - k) * (721.0 / 723.0);
-        assert!(konst < -2.544, "general-b constant weaker than -2.544: {konst}");
+        assert!(
+            konst < -2.544,
+            "general-b constant weaker than -2.544: {konst}"
+        );
         assert!(4.0 * k - 2.544 > 0.0, "bracket not increasing on (0, 1/4]");
         let bracket = 1.291 - k * (1.291 * 4.0f64).ln() - 2.544 / 4.0;
         assert!(bracket < -0.39014, "bracket above -0.39014: {bracket}");
-        assert!(4.0 * bracket < -1.56, "floor gap bound weaker than -1.56: {bracket}");
-        let over = 3691f64.powf(-0.75) + k * ((3690.0f64 / 3689.0).ln() + 1.0 / 3689.0) + 0.727 / 3691.0;
+        assert!(
+            4.0 * bracket < -1.56,
+            "floor gap bound weaker than -1.56: {bracket}"
+        );
+        let over =
+            3691f64.powf(-0.75) + k * ((3690.0f64 / 3689.0).ln() + 1.0 / 3689.0) + 0.727 / 3691.0;
         assert!(over < 0.004, "majorant overshoot above 0.004: {over}");
         assert!(u_bound(3690.0, 1417.0 / 1850.0) < -0.95);
         let mut b = 0.75;
         while b < 0.98 {
             let floor = mono_floor(b);
-            assert!(gap_b(floor, b, 1.0) < -1.56, "gap at the floor above the bound at b = {b}");
+            assert!(
+                gap_b(floor, b, 1.0) < -1.56,
+                "gap at the floor above the bound at b = {b}"
+            );
             if floor > SWEEP_LO as f64 {
-                assert!(u_bound(SWEEP_LO as f64, b) < 0.0, "majorant positive at b = {b}");
-                assert!(u_bound(floor, b) < 0.0, "majorant positive at the floor, b = {b}");
+                assert!(
+                    u_bound(SWEEP_LO as f64, b) < 0.0,
+                    "majorant positive at b = {b}"
+                );
+                assert!(
+                    u_bound(floor, b) < 0.0,
+                    "majorant positive at the floor, b = {b}"
+                );
             }
             b += 0.005;
         }
@@ -901,8 +991,12 @@ mod tests {
 
     #[test]
     fn zhang_beats_baker_harman_strictly_inside() {
-        assert!(zhang(Rat::new(1, 2)).unwrap().same(baker_harman(Rat::new(1, 2))));
-        assert!(zhang(Rat::new(4, 7)).unwrap().same(baker_harman(Rat::new(4, 7))));
+        assert!(zhang(Rat::new(1, 2))
+            .unwrap()
+            .same(baker_harman(Rat::new(1, 2))));
+        assert!(zhang(Rat::new(4, 7))
+            .unwrap()
+            .same(baker_harman(Rat::new(4, 7))));
         let (lo, hi) = (Rat::new(1, 2), Rat::new(4, 7));
         let mut seen = 0u64;
         for d in 2..=200i64 {
@@ -912,7 +1006,11 @@ mod tests {
                     continue;
                 }
                 let z = zhang(a).unwrap();
-                assert!(z.lt(baker_harman(a)), "Zhang not smaller at a = {}", a.show());
+                assert!(
+                    z.lt(baker_harman(a)),
+                    "Zhang not smaller at a = {}",
+                    a.show()
+                );
                 assert_eq!(ladder_b(a).1, "Zhang");
                 seen += 1;
             }
@@ -927,16 +1025,31 @@ mod tests {
             let a = Rat::new(n, d);
             let b = ladder_b(a).0.val();
             let floor = mono_floor(b);
-            assert!(mono_ok(floor, b), "floor fails its own test at a = {}", a.show());
+            assert!(
+                mono_ok(floor, b),
+                "floor fails its own test at a = {}",
+                a.show()
+            );
             if floor < DYADIC_TOP {
-                assert!(!mono_ok(floor - 1.0, b), "floor not least at a = {}", a.show());
+                assert!(
+                    !mono_ok(floor - 1.0, b),
+                    "floor not least at a = {}",
+                    a.show()
+                );
             }
-            assert!(floor < ladder_wall(b), "floor above the wall at a = {}", a.show());
+            assert!(
+                floor < ladder_wall(b),
+                "floor above the wall at a = {}",
+                a.show()
+            );
             let lo = floor.max(3_690.0);
             if lo < 4.0e6 {
                 let mut q = lo;
                 while q < (lo + 20_000.0).min(4.0e6) {
-                    assert!(gap_b(q + 1.0, b, 1.0) > gap_b(q, b, 1.0), "step down at q = {q}");
+                    assert!(
+                        gap_b(q + 1.0, b, 1.0) > gap_b(q, b, 1.0),
+                        "step down at q = {q}"
+                    );
                     q += 1.0;
                 }
             }
@@ -950,7 +1063,10 @@ mod tests {
             let qf = q as f64;
             worst = worst.max((pb(qf + 1.0, 1.0) - pb(qf, 1.0)) * (qf - 2.0));
         }
-        assert!(worst < MONO_C, "PB step above the monotone constant: {worst}");
+        assert!(
+            worst < MONO_C,
+            "PB step above the monotone constant: {worst}"
+        );
         assert!(worst > 1.27, "PB step bound absurdly loose: {worst}");
     }
 
@@ -959,7 +1075,10 @@ mod tests {
         for q in 3..20_000u64 {
             let qf = q as f64;
             assert!(pb_low(qf) <= pb(qf, 1.0), "pb_low above pb at q = {q}");
-            assert!(gap_b(qf, 0.9, 1.0) <= u_bound(qf, 0.9), "u_bound below gap at q = {q}");
+            assert!(
+                gap_b(qf, 0.9, 1.0) <= u_bound(qf, 0.9),
+                "u_bound below gap at q = {q}"
+            );
         }
     }
 
@@ -969,7 +1088,11 @@ mod tests {
             let a = Rat::new(n, d);
             let b = ladder_b(a).0.val();
             for q in 3..3_690u64 {
-                assert!(gap_b(q as f64, b, 1.0) < 0.0, "close below the wall at a = {}", a.show());
+                assert!(
+                    gap_b(q as f64, b, 1.0) < 0.0,
+                    "close below the wall at a = {}",
+                    a.show()
+                );
             }
             let floor = mono_floor(b);
             if floor > 3_690.0 {
@@ -998,7 +1121,12 @@ mod tests {
                 }
                 q += 1.0;
             }
-            assert_eq!(found, q0, "scan disagrees with bisection at a = {}", a.show());
+            assert_eq!(
+                found,
+                q0,
+                "scan disagrees with bisection at a = {}",
+                a.show()
+            );
         }
     }
 

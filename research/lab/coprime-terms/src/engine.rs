@@ -825,8 +825,20 @@ impl Ctx {
             if sum == 0 {
                 continue;
             }
-            total = total.plus(pair_term(&left[..=degree], &right[..=degree_other], rank, top, &mut table));
-            total = total.plus(pair_term(&right[..=degree_other], &left[..=degree], top - rank, top, &mut table));
+            total = total.plus(pair_term(
+                &left[..=degree],
+                &right[..=degree_other],
+                rank,
+                top,
+                &mut table,
+            ));
+            total = total.plus(pair_term(
+                &right[..=degree_other],
+                &left[..=degree],
+                top - rank,
+                top,
+                &mut table,
+            ));
         }
         total.widen()
     }
@@ -849,7 +861,10 @@ impl Ctx {
             }
         }
         for rank in 0..slices {
-            zeta(&mut self.ranked32[rank * size..(rank + 1) * size], self.level);
+            zeta(
+                &mut self.ranked32[rank * size..(rank + 1) * size],
+                self.level,
+            );
         }
         let reach = self.masks.len() as u128;
         let total = if reach * reach * reach < 1u128 << 64 {
@@ -923,7 +938,13 @@ impl Ctx {
     }
 }
 
-fn pair_term<R: Ring>(poly: &[u64], other: &[u64], rank: usize, top: usize, table: &mut [R; 65]) -> R {
+fn pair_term<R: Ring>(
+    poly: &[u64],
+    other: &[u64],
+    rank: usize,
+    top: usize,
+    table: &mut [R; 65],
+) -> R {
     let degree = poly.len() - 1;
     if 2 * degree < rank {
         return R::zero();
@@ -985,7 +1006,10 @@ impl Profile {
 
     pub fn print(&self, level: u32) {
         let cells = self.cells.lock().unwrap();
-        println!("level {} band(log2 Y) method moduli seconds ns/modulus", level);
+        println!(
+            "level {} band(log2 Y) method moduli seconds ns/modulus",
+            level
+        );
         let mut total = 0u64;
         for band in 0..40usize {
             for (index, name) in METHODS.iter().enumerate() {
@@ -1122,7 +1146,9 @@ pub fn terms_each(
     let mut out = Vec::new();
     for level in 1..=top {
         let clock = Instant::now();
-        let current = weight(design, level, &fine_mu, &primes, &table, threads, mode, None);
+        let current = weight(
+            design, level, &fine_mu, &primes, &table, threads, mode, None,
+        );
         let value = if design.zero_filled() {
             current - previous
         } else {
@@ -1148,7 +1174,16 @@ pub fn profile(design: &Design, level: u32, threads: usize) -> i128 {
     let table = chunk_table(design.invert);
     let profile = Profile::new();
     let clock = Instant::now();
-    let value = weight(design, level, &fine_mu, &primes, &table, threads, Mode::Auto, Some(&profile));
+    let value = weight(
+        design,
+        level,
+        &fine_mu,
+        &primes,
+        &table,
+        threads,
+        Mode::Auto,
+        Some(&profile),
+    );
     let seconds = clock.elapsed().as_secs_f64();
     profile.print(level);
     println!("W({}) {} wall {:.3}", level, value, seconds);

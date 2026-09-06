@@ -27,7 +27,11 @@ impl Graph {
 
     pub fn of(grid: &Tensor) -> Graph {
         let network = core_graph(grid).expect("a grid has a core graph");
-        let pairs: Vec<(usize, usize)> = network.branches.iter().map(|b| (b.parent, b.child)).collect();
+        let pairs: Vec<(usize, usize)> = network
+            .branches
+            .iter()
+            .map(|b| (b.parent, b.child))
+            .collect();
         Graph::from_pairs(network.nodes.len(), &pairs)
     }
 
@@ -41,7 +45,9 @@ impl Graph {
                 }
             }
         }
-        (0..self.nodes()).filter(|node| root(&mut parent, *node) == *node).count()
+        (0..self.nodes())
+            .filter(|node| root(&mut parent, *node) == *node)
+            .count()
     }
 }
 
@@ -54,11 +60,19 @@ fn root(parent: &mut [usize], mut node: usize) -> usize {
 }
 
 pub fn carpet(level: usize) -> Graph {
-    Graph::of(mrlymath::two::create(495, 3, level, 0, 3).expect("the carpet renders").types())
+    Graph::of(
+        mrlymath::two::create(495, 3, level, 0, 3)
+            .expect("the carpet renders")
+            .types(),
+    )
 }
 
 pub fn sierpinski(level: usize) -> Graph {
-    Graph::of(mrlymath::two::create(7, 2, level, 0, 2).expect("the gasket renders").types())
+    Graph::of(
+        mrlymath::two::create(7, 2, level, 0, 2)
+            .expect("the gasket renders")
+            .types(),
+    )
 }
 
 fn sponge_code() -> u128 {
@@ -70,7 +84,11 @@ fn sponge_code() -> u128 {
 }
 
 pub fn sponge(level: usize) -> Graph {
-    Graph::of(mrlymath::three::create(sponge_code(), 3, level, 3).expect("the sponge renders").types())
+    Graph::of(
+        mrlymath::three::create(sponge_code(), 3, level, 3)
+            .expect("the sponge renders")
+            .types(),
+    )
 }
 
 pub fn square(side: usize) -> Graph {
@@ -138,7 +156,11 @@ fn cell_pieces(cell: [usize; 3], d: i32) -> Vec<Triangle> {
     if pts.len() == 3 {
         return vec![sorted([pts[0], pts[1], pts[2]])];
     }
-    let mid = [2 * cell[0] as i32 + 1, 2 * cell[1] as i32 + 1, 2 * cell[2] as i32 + 1];
+    let mid = [
+        2 * cell[0] as i32 + 1,
+        2 * cell[1] as i32 + 1,
+        2 * cell[2] as i32 + 1,
+    ];
     let mut out = Vec::new();
     for i in 0..pts.len() {
         for j in i + 1..pts.len() {
@@ -174,6 +196,10 @@ pub fn slice(level: usize) -> Graph {
             owners.entry((t[a], t[b])).or_default().push(index);
         }
     }
-    let pairs: Vec<(usize, usize)> = owners.values().filter(|o| o.len() == 2).map(|o| (o[0], o[1])).collect();
+    let pairs: Vec<(usize, usize)> = owners
+        .values()
+        .filter(|o| o.len() == 2)
+        .map(|o| (o[0], o[1]))
+        .collect();
     Graph::from_pairs(triangles.len(), &pairs)
 }

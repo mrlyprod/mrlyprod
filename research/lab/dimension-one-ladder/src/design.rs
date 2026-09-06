@@ -8,13 +8,30 @@ pub struct Design {
     pub fill: u64,
 }
 
-pub const CARPET: Design = Design { name: "carpet", dimension: 2, invert: false, fill: 8 };
-pub const MENGER: Design = Design { name: "menger", dimension: 3, invert: false, fill: 20 };
-pub const VICSEK: Design = Design { name: "vicsek", dimension: 2, invert: true, fill: 5 };
+pub const CARPET: Design = Design {
+    name: "carpet",
+    dimension: 2,
+    invert: false,
+    fill: 8,
+};
+pub const MENGER: Design = Design {
+    name: "menger",
+    dimension: 3,
+    invert: false,
+    fill: 20,
+};
+pub const VICSEK: Design = Design {
+    name: "vicsek",
+    dimension: 2,
+    invert: true,
+    fill: 5,
+};
 
 impl Design {
     pub fn named(name: &str) -> Option<&'static Design> {
-        [&CARPET, &MENGER, &VICSEK].into_iter().find(|d| d.name == name)
+        [&CARPET, &MENGER, &VICSEK]
+            .into_iter()
+            .find(|d| d.name == name)
     }
 
     pub fn origin_filled(&self) -> bool {

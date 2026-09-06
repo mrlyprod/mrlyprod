@@ -40,10 +40,13 @@ fn drawn_by(q: usize, pair: (usize, usize)) -> usize {
 }
 
 fn brightness_ok(q: usize) -> bool {
-    nodes(q).into_iter().filter(|node| node.num > 0).all(|node| {
-        let b = node.den as usize;
-        node.brightness == (q / b) as u64 && drawn_by(q, (node.num as usize, b)) == q / b
-    })
+    nodes(q)
+        .into_iter()
+        .filter(|node| node.num > 0)
+        .all(|node| {
+            let b = node.den as usize;
+            node.brightness == (q / b) as u64 && drawn_by(q, (node.num as usize, b)) == q / b
+        })
 }
 
 fn totient_sum(q: usize, phi: &[u64]) -> u64 {

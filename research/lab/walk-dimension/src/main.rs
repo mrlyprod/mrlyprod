@@ -74,7 +74,11 @@ fn pair(subject: &Subject, coarse: usize, fine: usize) -> (Vec<f64>, usize) {
     let high = giant_graph(&(subject.grid)(fine));
     let nodes = high.nodes();
     (
-        spectral::exponents(&spectral::low(&low), &spectral::low(&high), subject.base as f64),
+        spectral::exponents(
+            &spectral::low(&low),
+            &spectral::low(&high),
+            subject.base as f64,
+        ),
         nodes,
     )
 }
@@ -92,8 +96,18 @@ fn anchors() {
     let low = spectral::low(&gasket::build(7).graph);
     let high = spectral::low(&gasket::build(8).graph);
     let tau: Vec<f64> = (1..=4).map(|mode| low[mode] / high[mode]).collect();
-    println!("gasket tau levels 7 to 8, modes 1 to 4: {} (exact 5)", list(&tau, 5));
-    println!("gasket d_w from tau: {} (exact {:.6})", list(&tau.iter().map(|t| t.ln() / 2f64.ln()).collect::<Vec<_>>(), 5), 5f64.ln() / 2f64.ln());
+    println!(
+        "gasket tau levels 7 to 8, modes 1 to 4: {} (exact 5)",
+        list(&tau, 5)
+    );
+    println!(
+        "gasket d_w from tau: {} (exact {:.6})",
+        list(
+            &tau.iter().map(|t| t.ln() / 2f64.ln()).collect::<Vec<_>>(),
+            5
+        ),
+        5f64.ln() / 2f64.ln()
+    );
     for (code, name, levels) in [(511u128, "solid", (4usize, 5usize)), (7, "path", (5, 6))] {
         let mut spectra = Vec::new();
         for level in [levels.0, levels.1] {
@@ -111,7 +125,10 @@ fn anchors() {
             spectra.push(values);
         }
         let est = spectral::exponents(&spectra[0], &spectra[1], BASE as f64);
-        println!("{name} d_w levels {} to {} from lambda_2: {:.5}", levels.0, levels.1, est[0]);
+        println!(
+            "{name} d_w levels {} to {} from lambda_2: {:.5}",
+            levels.0, levels.1, est[0]
+        );
     }
 }
 
@@ -121,7 +138,11 @@ fn census() -> Vec<u128> {
     let group = design::group();
     let classes = design::classes(&group);
     let orbit_sum: usize = classes.iter().map(|class| class.1).sum();
-    println!("group order {} classes {} orbit sum {orbit_sum}", group.len(), classes.len());
+    println!(
+        "group order {} classes {} orbit sum {orbit_sum}",
+        group.len(),
+        classes.len()
+    );
     let canonical = |code: u128| *design::orbit(&group, code).iter().next().expect("an orbit");
     let mut spanning: Vec<u128> = Vec::new();
     let mut spanning_all: Vec<u128> = Vec::new();
@@ -154,7 +175,10 @@ fn census() -> Vec<u128> {
         reps.len(),
         reps
     );
-    println!("of those, spanning at every level 1 to 5: {}", spanning_all.len());
+    println!(
+        "of those, spanning at every level 1 to 5: {}",
+        spanning_all.len()
+    );
     let strict = reps_of(&single);
     println!(
         "codes that are one component touching all four walls at level 5: {} of 511, in {} classes with reps {:?}",
@@ -164,12 +188,23 @@ fn census() -> Vec<u128> {
     );
     println!("spanning codes carrying stray components at level 5, with component count and giant share:");
     for (code, count, share) in &strays {
-        println!("  code {code} class {} components {count} share {share:.4}", canonical(*code));
+        println!(
+            "  code {code} class {} components {count} share {share:.4}",
+            canonical(*code)
+        );
     }
     for rep in &reps {
-        let members: Vec<u128> = spanning.iter().copied().filter(|code| canonical(*code) == *rep).collect();
+        let members: Vec<u128> = spanning
+            .iter()
+            .copied()
+            .filter(|code| canonical(*code) == *rep)
+            .collect();
         let size = design::orbit(&group, *rep).len();
-        println!("  class {rep} fill {} orbit {size} spanning members {:?}", rep.count_ones(), members);
+        println!(
+            "  class {rep} fill {} orbit {size} spanning members {:?}",
+            rep.count_ones(),
+            members
+        );
     }
     println!("representatives: giant share at levels 4 and 5, components at 5, spanning at 5");
     for (rep, size) in &classes {
@@ -192,7 +227,9 @@ fn census() -> Vec<u128> {
 
 fn spectral_census(subjects: &[Subject]) -> Vec<f64> {
     println!();
-    println!("SPECTRAL CENSUS, d_w FROM LAMBDA_2 AT THE UPPER LEVEL PAIR, DRIFT FROM THE PAIR BELOW");
+    println!(
+        "SPECTRAL CENSUS, d_w FROM LAMBDA_2 AT THE UPPER LEVEL PAIR, DRIFT FROM THE PAIR BELOW"
+    );
     let mut out = Vec::new();
     for subject in subjects {
         let (coarse, fine) = subject.levels;
@@ -247,7 +284,11 @@ fn anomaly() {
 
 fn walker_census(subjects: &[Subject]) -> Vec<f64> {
     println!();
-    println!("ANCHORS, WALKERS, {} BLIND ANTS, SEED {}", walkers::WALKERS, walkers::SEED);
+    println!(
+        "ANCHORS, WALKERS, {} BLIND ANTS, SEED {}",
+        walkers::WALKERS,
+        walkers::SEED
+    );
     let mut rng = Rng::new(walkers::SEED);
     let solid = plane(511, BASE, 5);
     let side = BASE.pow(5) as f64;
@@ -307,9 +348,16 @@ fn main() {
             2.0 * subject.df / walker[index]
         );
     }
-    println!("d_w at or above 2 on every subject: {}", spectral.iter().chain(&walker).all(|dw| *dw >= 2.0 - 0.01));
+    println!(
+        "d_w at or above 2 on every subject: {}",
+        spectral.iter().chain(&walker).all(|dw| *dw >= 2.0 - 0.01)
+    );
     let here = Path::new(env!("CARGO_MANIFEST_DIR"));
-    let figure = here.join("..").join("..").join("figures").join("walks-fig.png");
+    let figure = here
+        .join("..")
+        .join("..")
+        .join("figures")
+        .join("walks-fig.png");
     figure::write(
         &figure,
         &figure::Series {

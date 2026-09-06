@@ -17,8 +17,10 @@ Codes cross the boundary as decimal strings, because a design code is a u128 and
 - **census** walks the whole ledger registry inside a pinned window, deepening pass by pass, and answers which integers it writes, how many rows write each, which are missed, and which rows write one.
 - **prime** steps the sieve one prime at a time, reads a number as a pile of stones, charts the prime count against its smooth guesses, and puts a scale on trial in the carpet stack.
 - **volume** stacks a cube design at odd scales into a moire volume, packs the faces of its level sets, and paints any plane through it.
+- **sieve** caps the Wallis sieve's levels, reads its counts, ratios and limits, walks the partial product, rasters the plane sieve and packs the cube's punctures as boxes.
 - **gauss** paints the Gaussian or the Eisenstein window with its primes by class or norm, counts the classes, maps a click to its point with its units and conjugate, and weighs the norm shells.
 - **spiral** winds the whole numbers on a square or hexagonal sheet, paints the marked cells and one quadratic, maps a click back to its number, and reads the prime hits along the quadratic.
+- **snail** lays the whole numbers along the square winding as design tiles that grow with the digit count, the primes alone or every number, and reads the placements, levels and area.
 - **zeta** walks the critical line, reads zeta and Z at any t, lists and counts the zeros, and lays the prime staircase against the explicit formula.
 - **graph** hands out the node positions, branches, roles and census of a design's core, edge, tunnel or slice network, bounds its size in closed form, and relaxes it with a seeded force layout.
 - **spin** spins a square field about its centre into an exact ring profile, paints it back as a wheel, stacks it radially, reads its circular harmonics, and rasterizes a hex slice or a moire field to feed it.

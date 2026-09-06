@@ -7,20 +7,35 @@ use design::Design;
 fn run_terms(design: &Design, top: u32, threads: usize) {
     let stored = terms::stored(design);
     let delta = design.density();
-    println!("{} k {} delta {:.6} live domain n <= {}", design.name, design.fill, delta, top);
+    println!(
+        "{} k {} delta {:.6} live domain n <= {}",
+        design.name, design.fill, delta, top
+    );
     let mut last_gap = 0.0;
     let mut agree = true;
     for term in terms::terms(design, top, threads) {
         let ratio = term.value as f64 / (design.fill as f64).powi(term.level as i32);
         let gap = ratio - delta;
-        let kept = stored.iter().find(|(n, _)| *n == term.level).map(|(_, v)| *v);
+        let kept = stored
+            .iter()
+            .find(|(n, _)| *n == term.level)
+            .map(|(_, v)| *v);
         let tag = match kept {
             Some(v) if v == term.value => "stored",
             Some(_) => "DIFFERS",
             None => "fresh",
         };
         agree &= tag != "DIFFERS";
-        println!("n {:2} A {:>26} A/k^n {:.6} gap {:+.2e} halving {:.2} {:.1}s {}", term.level, term.value, ratio, gap, if last_gap != 0.0 { gap / last_gap } else { 0.0 }, term.seconds, tag);
+        println!(
+            "n {:2} A {:>26} A/k^n {:.6} gap {:+.2e} halving {:.2} {:.1}s {}",
+            term.level,
+            term.value,
+            ratio,
+            gap,
+            if last_gap != 0.0 { gap / last_gap } else { 0.0 },
+            term.seconds,
+            tag
+        );
         last_gap = gap;
     }
     for (n, v) in stored.iter().filter(|(n, _)| *n > top) {
@@ -32,13 +47,22 @@ fn run_terms(design: &Design, top: u32, threads: usize) {
         _ => 8,
     };
     let brute: Vec<u64> = (1..=brute_top).map(|n| terms::brute(design, n)).collect();
-    let matches = brute.iter().enumerate().all(|(i, b)| stored.iter().any(|(n, v)| *n as usize == i + 1 && *v == *b as i128));
-    println!("{} live terms agree with stored {}, brute force to n = {} agrees {}", design.name, agree, brute_top, matches);
+    let matches = brute.iter().enumerate().all(|(i, b)| {
+        stored
+            .iter()
+            .any(|(n, v)| *n as usize == i + 1 && *v == *b as i128)
+    });
+    println!(
+        "{} live terms agree with stored {}, brute force to n = {} agrees {}",
+        design.name, agree, brute_top, matches
+    );
 }
 
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
-    let threads = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(8);
+    let threads = std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(8);
     match args.first().map(String::as_str) {
         Some("terms") => {
             let design = Design::named(&args[1]).expect("carpet, menger or vicsek");

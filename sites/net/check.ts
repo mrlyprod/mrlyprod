@@ -48,6 +48,12 @@ const halved = JSON.parse(m.formulas_read(500));
 const basel = m.formulas_walk('basel', 1000, 4);
 const comet = m.formulas_walk('goldbach', 500, 2);
 const sparks = ['wallis', 'leibniz', 'basel', 'gamma', 'e', 'primes', 'goldbach', 'mertens'].map((kind) => m.formulas_walk(kind, 400, 160).length).join(',');
+const wallisFlat = JSON.parse(m.wallis_read('odd', 3, 4, 2));
+const wallisSolid = JSON.parse(m.wallis_read('odd', 3, 3, 3));
+const wallisCarpet = JSON.parse(m.wallis_read('flat', 3, 5, 2));
+const wallisWalk = m.wallis_walk('odd', 3, 2, 200);
+const wallisGrid = m.wallis_grid('odd', 3, 3);
+const wallisBoxes = m.wallis_faces('odd', 3, 3);
 const split = JSON.parse(m.slice_partition(3));
 const shape = JSON.parse(m.volume_shape(7, 64));
 const sieve = new m.Sieve(30);
@@ -68,6 +74,9 @@ const sheet = m.spiral_pixels('square', 61, 4, -2, 41, 'prime', false, 180);
 const pixel = (px: number, py: number) => Array.from(sheet.rgba.slice((py * 180 + px) * 4, (py * 180 + px) * 4 + 3)).join(' ');
 const hit = JSON.parse(m.spiral_at('square', 61, 81.5, 92.5, 180));
 const corner = JSON.parse(m.spiral_at('hex', 21, 195, 100, 200));
+const snailShell = JSON.parse(m.snail_read(2, 300, 'every'));
+const snailUlam = JSON.parse(m.snail_read(3, 100, 'prime'));
+const snailCells = m.snail_cells(3, 100, 'every');
 const centres = m.spiral_centers('square', 21, 420);
 const gauss = JSON.parse(m.ring_census('gaussian', 2));
 const flake = JSON.parse(m.ring_census('eisenstein', 2));
@@ -147,6 +156,12 @@ const cropMesh = m.crop_faces('23', 3, 1, 2, 'ball', 1, 2, false, 'touching');
 const cropTally = JSON.parse(m.crop_census('7', 3, 2, 2, 2, 'ball', 1, 2, false));
 const cropSweep = JSON.parse(m.crop_series('7', 3, 2, 2, 2, 'ball', 1, 2, false, 'level', 2));
 const cropRadii = JSON.parse(m.crop_series('7', 3, 1, 2, 2, 'ball', 1, 2, false, 'radius', 4));
+const cropCircle = m.crop_circle('7', 3, 6, 2, 2, 'corner');
+const cropCircleWide = cropCircle.length / 3;
+const cropCircleN = (r: number) => cropCircle[r];
+const cropCircleCut = (r: number) => cropCircle[2 * cropCircleWide + r];
+const cropSphere = m.crop_circle('23', 3, 4, 2, 3, 'corner');
+const cropCentre = m.crop_circle('7', 3, 6, 2, 2, 'centre');
 const cropArt = m.crop_svg('7', 3, 1, 2, 'ball', 1, 2, false, 4);
 const cropHole = m.crop_svg('7', 3, 1, 2, 'diamond', 1, 2, true, 4);
 const cropField = m.field_crop(square, 8, 2, 'ball', 1, 2, false);
@@ -182,6 +197,12 @@ const checks: [string, unknown, unknown][] = [
   ['crop_svg clip circle', `${cropArt.includes('<clipPath')},${cropArt.includes('<circle')}`, 'true,true'],
   ['crop_svg anti mask', `${cropHole.includes('<mask')},${cropHole.includes('<polygon')}`, 'true,true'],
   ['crop_field kept centres', cropField.reduce((a: number, v: number) => a + (Number.isNaN(v) ? 0 : 1), 0), 52],
+  ['crop_circle carpet corner', Array.from(cropCircle.subarray(1, 13)).join(','), '1,3,7,12,16,22,30,38,48,63,77,91'],
+  ['crop_circle carpet powers', [1, 2, 3, 4, 5].map((k) => cropCircleN(3 ** k)).join(','), '7,48,385,3080,24610'],
+  ['crop_circle carpet crossings', [1, 2, 3, 4, 5].map((k) => cropCircleCut(3 ** k)).join(','), '7,17,42,114,306'],
+  ['crop_circle carpet defect 27', cropCircleN(81) - 8 * cropCircleN(27), 0],
+  ['crop_circle sponge corner', Array.from(cropSphere.subarray(1, 9)).join(','), '1,4,13,28,47,65,95,137'],
+  ['crop_circle centre hole', `${cropCentre.length / 3},${cropCentre.findIndex((n: number) => n > 0)}`, '365,122'],
   ['two_grid 7 fills', grid.types.reduce((a, b) => a + b, 0), 512],
   ['fill sponge level 3', m.fills('23', 3, 3, 3, 2), '8000'],
   ['void sponge level 3', m.voids('23', 3, 3, 3, 2), '11683'],
@@ -296,6 +317,17 @@ const checks: [string, unknown, unknown][] = [
   ['formulas basel walk', `${basel.length} ${basel[0]} ${basel[1].toFixed(6)} ${basel[9]} ${basel[10].toFixed(6)}`, '12 2 1.250000 1000 1.643935'],
   ['formulas goldbach walk', `${comet[0]} ${comet[3]} ${comet[4]} ${comet[5].toFixed(9)}`, '4 1000 28 0.035714286'],
   ['formulas walks eight kinds', sparks, '480,480,480,480,480,480,480,480'],
+  ['wallis caps', `${m.wallis_cap('odd', 3, 2)} ${m.wallis_cap('odd', 3, 3)} ${m.wallis_cap('flat', 3, 2)} ${m.wallis_cap('flat', 3, 3)}`, '4 3 6 4'],
+  ['wallis plane word', `${wallisFlat.word.join(',')} ${wallisFlat.side} ${wallisFlat.cells} ${wallisFlat.holes}`, '3,5,7,9 945 737280 9417'],
+  ['wallis plane area', `${wallisFlat.ratio.toFixed(9)} ${wallisFlat.limit.toFixed(9)} ${wallisFlat.exponent.toFixed(6)}`, '0.825598388 0.785398163 1.972027'],
+  ['wallis plane levels', wallisFlat.levels.map((row: { cells: string }) => row.cells).join(','), '8,192,9216,737280'],
+  ['wallis plane ratios', wallisFlat.levels.map((row: { ratio: number }) => row.ratio.toFixed(6)).join(','), '0.888889,0.853333,0.835918,0.825598'],
+  ['wallis solid volume', `${wallisSolid.cells} ${wallisSolid.holes} ${wallisSolid.ratio.toFixed(9)}`, '1102608 3251 0.952474247'],
+  ['wallis solid limit', `${wallisSolid.limit.toFixed(9)} ${wallisSolid.gap.toFixed(9)}`, '0.948815486 0.003658761'],
+  ['wallis carpet freezes', `${wallisCarpet.cells} ${wallisCarpet.ratio.toFixed(9)} ${wallisCarpet.exponent.toFixed(6)} ${wallisCarpet.limit}`, '32768 0.554928957 1.892789 0'],
+  ['wallis walk 200', `${wallisWalk.length} ${wallisWalk[0].toFixed(9)} ${wallisWalk[199].toFixed(9)}`, '200 0.888888889 0.786375634'],
+  ['wallis raster is the count', `${wallisGrid.width} ${wallisGrid.types.reduce((a: number, b: number) => a + b, 0)}`, '105 9216'],
+  ['wallis punctures packed', `${wallisBoxes[0] / 216} ${wallisBoxes.length - 2 === wallisBoxes[0]}`, '3251 true'],
   ['slice_partition 3', `${split.carpet},${split.net},${split.exact}`, '42,12,true'],
   ['volume_shape 7 64', `${shape.layers},${shape.voxels}`, '4,262144'],
   ['radial_share square', m.radial_share(m.harmonics(square, 8, 64, 8)).toFixed(1), '95.3'],
@@ -321,6 +353,10 @@ const checks: [string, unknown, unknown][] = [
   ['spiral_pixels square 61', `${sheet.width}x${sheet.height} ${pixel(90, 90)} ${pixel(92, 90)} ${pixel(81, 92)}`, '180x180 7 9 11 255 209 102 255 138 92'],
   ['spiral_at square 61', `${hit.n},${hit.prime},${hit.factors.map((f: number[]) => f.join('^')).join(' ')}`, '41,true,41^1'],
   ['spiral_at hex corner', `${corner.n},${corner.x},${corner.y}`, '281,10,0'],
+  ['snail_read shell 2 300', `${snailShell.tiles},${snailShell.primes},${snailShell.grown},${snailShell.peak},${snailShell.side},${snailShell.area}`, '300,62,299,8,256,5345865'],
+  ['snail_read shell whorls', `${snailShell.levels.join(',')} ${snailShell.width}x${snailShell.height}`, '1,2,4,8,16,32,64,128,45 4608x4352'],
+  ['snail_read ulam 3 100', `${snailUlam.grown},${snailUlam.levels.join(',')},${snailUlam.area},${snailUlam.width}x${snailUlam.height}`, '24,76,3,5,13,3,29668,170x250'],
+  ['snail_cells every 3 100', `${snailCells.length} ${snailCells.slice(0, 10).join(',')} ${snailCells.slice(40, 45).join(',')}`, '500 0,0,1,0,0,1,0,1,0,1 1,-5,9,2,0'],
   ['spiral_centers square 21', `${centres.length} ${centres[0]},${centres[1]} ${centres[2]},${centres[3]}`, '882 210,210 230,210'],
   ['prime_from 90', m.prime_from(90), 97],
   ['ring_census gaussian 2', `${gauss.points},${gauss.primes},${gauss.split},${gauss.inert},${gauss.ramified},${gauss.units},${gauss.symmetry}`, '25,12,8,0,4,4,8'],

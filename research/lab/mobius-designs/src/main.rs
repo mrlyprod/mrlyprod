@@ -59,10 +59,22 @@ struct ControlColumn {
     mmax: Vec<u64>,
 }
 
-fn controls_and_kempner(mu: &[i8]) -> (Vec<ControlColumn>, Vec<Vec<i64>>, Vec<Vec<u64>>, Vec<Vec<u64>>) {
+fn controls_and_kempner(
+    mu: &[i8],
+) -> (
+    Vec<ControlColumn>,
+    Vec<Vec<i64>>,
+    Vec<Vec<u64>>,
+    Vec<Vec<u64>>,
+) {
     let mut ctrl: Vec<ControlColumn> = [(3u64, 17usize), (4, 13), (5, 11), (10, 8)]
         .iter()
-        .map(|&(q, levels)| ControlColumn { q, levels, meter: vec![0i64; levels + 1], mmax: vec![0u64; levels + 1] })
+        .map(|&(q, levels)| ControlColumn {
+            q,
+            levels,
+            meter: vec![0i64; levels + 1],
+            mmax: vec![0u64; levels + 1],
+        })
         .collect();
     let mut marks: Vec<(u64, usize, usize)> = Vec::new();
     for (ci, c) in ctrl.iter().enumerate() {
@@ -156,7 +168,15 @@ fn main() {
     }
     for d in 0..10 {
         for lev in 1..=8usize {
-            row("kempner", 10, &format!("X{d}"), lev, kem_a[d][lev], kem_m[d][lev], kem_x[d][lev]);
+            row(
+                "kempner",
+                10,
+                &format!("X{d}"),
+                lev,
+                kem_a[d][lev],
+                kem_m[d][lev],
+                kem_x[d][lev],
+            );
         }
     }
     crosscheck(&mu, &primes);
@@ -176,10 +196,21 @@ fn main() {
             });
         }
     });
-    let outcomes: Vec<Outcome> = results.into_iter().map(|r| r.into_inner().unwrap().unwrap()).collect();
+    let outcomes: Vec<Outcome> = results
+        .into_iter()
+        .map(|r| r.into_inner().unwrap().unwrap())
+        .collect();
     for (fam, out) in jobs.iter().zip(outcomes.iter()) {
         for lev in 1..=fam.lmax {
-            row("row", fam.q, &fam.label, lev, out.counts[lev], out.meter[lev], out.mmax[lev]);
+            row(
+                "row",
+                fam.q,
+                &fam.label,
+                lev,
+                out.counts[lev],
+                out.meter[lev],
+                out.mmax[lev],
+            );
         }
     }
     verify_scalings(&jobs, &outcomes);
@@ -199,10 +230,17 @@ fn main() {
             .iter()
             .zip(outcomes.iter())
             .filter(|(f, _)| f.q == q)
-            .map(|(f, o)| (f.label.clone(), theta(o.mmax[f.lmax] as i64, o.counts[f.lmax])))
+            .map(|(f, o)| {
+                (
+                    f.label.clone(),
+                    theta(o.mmax[f.lmax] as i64, o.counts[f.lmax]),
+                )
+            })
             .collect();
         entries.sort_by(|a, b| {
-            a.1.unwrap_or(f64::MIN).partial_cmp(&b.1.unwrap_or(f64::MIN)).unwrap()
+            a.1.unwrap_or(f64::MIN)
+                .partial_cmp(&b.1.unwrap_or(f64::MIN))
+                .unwrap()
         });
         let text: Vec<String> = entries
             .iter()
@@ -211,14 +249,20 @@ fn main() {
                 None => format!("F={l} -"),
             })
             .collect();
-        println!("distribution q={q} final-level thetamax ascending: {}", text.join(" | "));
+        println!(
+            "distribution q={q} final-level thetamax ascending: {}",
+            text.join(" | ")
+        );
     }
     let mut kem: Vec<(usize, f64)> = (0..10)
         .filter_map(|d| theta(kem_x[d][8] as i64, kem_a[d][8]).map(|t| (d, t)))
         .collect();
     kem.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
     let text: Vec<String> = kem.iter().map(|(d, t)| format!("X{d} {t:.4}")).collect();
-    println!("distribution q=10 kempner thetamax at l=8 ascending: {}", text.join(" | "));
+    println!(
+        "distribution q=10 kempner thetamax at l=8 ascending: {}",
+        text.join(" | ")
+    );
     let mut tmax_all: Vec<f64> = Vec::new();
     let mut cut_all: Vec<f64> = Vec::new();
     let mut drift_all: Vec<f64> = Vec::new();
@@ -229,7 +273,9 @@ fn main() {
             if let Some(c) = theta(out.meter[l], out.counts[l]) {
                 cut_all.push(c);
             }
-            let vals: Vec<f64> = (l - 4..=l).filter_map(|v| theta(out.mmax[v] as i64, out.counts[v])).collect();
+            let vals: Vec<f64> = (l - 4..=l)
+                .filter_map(|v| theta(out.mmax[v] as i64, out.counts[v]))
+                .collect();
             let lo = vals.iter().cloned().fold(f64::MAX, f64::min);
             let hi = vals.iter().cloned().fold(f64::MIN, f64::max);
             drift_all.push(hi - lo);
@@ -262,7 +308,10 @@ fn main() {
     let (cl, ch) = band(&cut_all);
     let (dl, dh) = band(&drift_all);
     let (gl, gh) = band(&ctl_all);
-    let dev = tmax_all.iter().map(|t| (t - 0.5).abs()).fold(0.0f64, f64::max);
+    let dev = tmax_all
+        .iter()
+        .map(|t| (t - 0.5).abs())
+        .fold(0.0f64, f64::max);
     println!(
         "band families={} thetamax {tl:.4}..{th:.4} maxdev {dev:.4} driftmax5 {dl:.4}..{dh:.4} cut {cl:.4}..{ch:.4} controls {gl:.4}..{gh:.4}",
         tmax_all.len()
@@ -288,9 +337,17 @@ fn verify_scalings(jobs: &[Family], outcomes: &[Outcome]) {
         let (_, expected) = bout.twisted.iter().find(|(a, _)| *a == g).unwrap();
         let has01 = base.digits.contains(&0) && base.digits.contains(&1);
         for lev in 1..=fam.lmax {
-            assert_eq!(out.meter[lev], expected[lev], "scaling meter q={} F={} l={lev}", fam.q, fam.label);
+            assert_eq!(
+                out.meter[lev], expected[lev],
+                "scaling meter q={} F={} l={lev}",
+                fam.q, fam.label
+            );
             let base_a = bout.counts[lev] - if has01 { 1 } else { 0 };
-            assert_eq!(out.counts[lev], base_a, "scaling count q={} F={} l={lev}", fam.q, fam.label);
+            assert_eq!(
+                out.counts[lev], base_a,
+                "scaling count q={} F={} l={lev}",
+                fam.q, fam.label
+            );
         }
         println!(
             "identity q={} F={} equals the a={g} twist of F={} at every level 1..{}",
@@ -317,10 +374,23 @@ mod tests {
 
     #[test]
     fn strong_pseudoprimes_rejected() {
-        for n in [2047u64, 1373653, 25326001, 3215031751, 3474749660383, 341550071728321] {
+        for n in [
+            2047u64,
+            1373653,
+            25326001,
+            3215031751,
+            3474749660383,
+            341550071728321,
+        ] {
             assert!(!is_prime(n), "{n} is composite");
         }
-        for n in [2u64, 61, 1_000_000_007, 999_999_999_989, 2_305_843_009_213_693_951] {
+        for n in [
+            2u64,
+            61,
+            1_000_000_007,
+            999_999_999_989,
+            2_305_843_009_213_693_951,
+        ] {
             assert!(is_prime(n), "{n} is prime");
         }
     }

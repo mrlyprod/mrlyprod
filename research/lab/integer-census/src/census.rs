@@ -91,8 +91,15 @@ pub fn bands(census: &Census) -> Vec<Band> {
     let mut first = 1usize;
     while first <= CEILING as usize {
         let last = (first * 10 - 1).min(CEILING as usize);
-        let missed = census.counts[first..=last].iter().filter(|&&count| count == 0).count();
-        out.push(Band { first, last, missed });
+        let missed = census.counts[first..=last]
+            .iter()
+            .filter(|&&count| count == 0)
+            .count();
+        out.push(Band {
+            first,
+            last,
+            missed,
+        });
         first *= 10;
     }
     out

@@ -72,7 +72,10 @@ pub fn report(census: &Census) {
         hdiagrams.len()
     );
     let sigmas: BTreeSet<[i64; 4]> = big.iter().map(|r| levels(*r)).collect();
-    println!("signed Walsh level sums on the B3 orbit: {} distinct vectors", sigmas.len());
+    println!(
+        "signed Walsh level sums on the B3 orbit: {} distinct vectors",
+        sigmas.len()
+    );
     for rule in 0..256usize {
         let profile = amplitudes(rule);
         for mate in orbit(rule, &b3) {

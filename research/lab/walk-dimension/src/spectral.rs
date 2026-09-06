@@ -72,7 +72,10 @@ fn krylov(graph: &Graph, want: usize) -> Vec<f64> {
     let mut work = vec![0.0; n];
     let mut latest: Vec<f64> = Vec::new();
     for _ in 0..ROUNDS {
-        let mut grown: Vec<Vec<f64>> = block.iter().map(|column| solve(graph, column, &mut work)).collect();
+        let mut grown: Vec<Vec<f64>> = block
+            .iter()
+            .map(|column| solve(graph, column, &mut work))
+            .collect();
         orthonormalise(&mut grown, &basis);
         if grown.is_empty() {
             break;
@@ -107,7 +110,9 @@ fn krylov(graph: &Graph, want: usize) -> Vec<f64> {
 
 fn ritz(gram: &[Vec<f64>], want: usize) -> Vec<f64> {
     let size = gram.len();
-    let small = Mat::<f64>::from_fn(size, size, |row, column| 0.5 * (gram[row][column] + gram[column][row]));
+    let small = Mat::<f64>::from_fn(size, size, |row, column| {
+        0.5 * (gram[row][column] + gram[column][row])
+    });
     let mut values = small
         .as_ref()
         .self_adjoint_eigenvalues(Side::Lower)
@@ -189,5 +194,7 @@ fn orthonormalise(block: &mut Vec<Vec<f64>>, against: &[Vec<f64>]) {
 
 pub fn exponents(coarse: &[f64], fine: &[f64], scale: f64) -> Vec<f64> {
     let modes = MODES.min(coarse.len() - 1).min(fine.len() - 1);
-    (1..=modes).map(|mode| (coarse[mode] / fine[mode]).ln() / scale.ln()).collect()
+    (1..=modes)
+        .map(|mode| (coarse[mode] / fine[mode]).ln() / scale.ln())
+        .collect()
 }

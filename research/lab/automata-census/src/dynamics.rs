@@ -99,7 +99,10 @@ pub fn report() {
     println!("GEOMETRY IS NOT DYNAMICS");
     let surj = surjective_set();
     let inj = injective_set();
-    println!("de Bruijn subset walk: {} surjective rules {surj:?}", surj.len());
+    println!(
+        "de Bruijn subset walk: {} surjective rules {surj:?}",
+        surj.len()
+    );
     let mut previous: Vec<usize> = (0..RULES).collect();
     let mut settles = None;
     for length in 1..=12 {
@@ -113,7 +116,10 @@ pub fn report() {
             surj.iter().all(|r| balanced.contains(r)),
             "a surjective rule is not balanced at length {length}"
         );
-        println!("balanced on words of length {length}: {} rules", balanced.len());
+        println!(
+            "balanced on words of length {length}: {} rules",
+            balanced.len()
+        );
         if balanced == surj && settles.is_none() {
             settles = Some(length);
         }
@@ -124,7 +130,10 @@ pub fn report() {
     if surj.len() == 30 {
         println!("the count is 30, the published figure");
     } else {
-        println!("UNCLEAR the count is {} against the published 30", surj.len());
+        println!(
+            "UNCLEAR the count is {} against the published 30",
+            surj.len()
+        );
     }
     println!("pair-graph core: {} injective rules {inj:?}", inj.len());
     assert_eq!(
@@ -142,7 +151,9 @@ pub fn report() {
         inj, identity_class,
         "the reversible rules are not the B3 orbit of 204"
     );
-    println!("the reversible six are exactly the B3 orbit of 204, the single-axis degree-1 designs");
+    println!(
+        "the reversible six are exactly the B3 orbit of 204, the single-axis degree-1 designs"
+    );
     let surjective_flags: Vec<bool> = (0..RULES).map(|r| surj.contains(&r)).collect();
     let mut mixed = Vec::new();
     let mut constant_yes = 0usize;
@@ -154,7 +165,11 @@ pub fn report() {
     reps.dedup();
     for rep in &reps {
         let cls: Vec<usize> = orbit(*rep, &b3).into_iter().collect();
-        let yes: Vec<usize> = cls.iter().copied().filter(|c| surjective_flags[*c]).collect();
+        let yes: Vec<usize> = cls
+            .iter()
+            .copied()
+            .filter(|c| surjective_flags[*c])
+            .collect();
         let no: Vec<usize> = cls
             .iter()
             .copied()
@@ -180,10 +195,7 @@ pub fn report() {
         "surjectivity is constant on every B3 class"
     );
     let thirty = orbit(30, &b3);
-    assert!(
-        thirty.contains(&54),
-        "30 and 54 do not share a B3 orbit"
-    );
+    assert!(thirty.contains(&54), "30 and 54 do not share a B3 orbit");
     assert!(
         surjective_flags[30] && !surjective_flags[54],
         "30 and 54 do not split on surjectivity"
@@ -220,5 +232,8 @@ pub fn report() {
             mixed_h += 1;
         }
     }
-    println!("H classes with mixed surjectivity: {mixed_h} of {}", hreps.len());
+    println!(
+        "H classes with mixed surjectivity: {mixed_h} of {}",
+        hreps.len()
+    );
 }

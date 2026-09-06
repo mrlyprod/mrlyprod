@@ -269,7 +269,11 @@ pub fn line_split(mask: u128, side: usize, d: usize) -> Option<(u128, u128)> {
         return None;
     }
     let n = side / d;
-    let full = if n >= 128 { u128::MAX } else { (1u128 << n) - 1 };
+    let full = if n >= 128 {
+        u128::MAX
+    } else {
+        (1u128 << n) - 1
+    };
     let mut outer = 0u128;
     let mut inner: Option<u128> = None;
     for i in 0..d {

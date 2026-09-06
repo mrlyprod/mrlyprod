@@ -21,7 +21,12 @@ fn octave(a: u64, b: u64) -> usize {
 pub fn rays(level: u32) -> (u64, Vec<Ray>) {
     let size = 1usize << level;
     let value: Vec<u64> = (0..size)
-        .map(|mask| (0..level).filter(|j| mask >> j & 1 == 1).map(|j| 3u64.pow(j)).sum())
+        .map(|mask| {
+            (0..level)
+                .filter(|j| mask >> j & 1 == 1)
+                .map(|j| 3u64.pow(j))
+                .sum()
+        })
         .collect();
     let mut keys: Vec<u64> = Vec::with_capacity(3usize.pow(level));
     let mut coprime = 0u64;
@@ -52,7 +57,11 @@ pub fn rays(level: u32) -> (u64, Vec<Ray>) {
         while end < keys.len() && keys[end] == key {
             end += 1;
         }
-        out.push(Ray { a: key >> 32, b: key & 0xffff_ffff, weight: (end - index) as u64 });
+        out.push(Ray {
+            a: key >> 32,
+            b: key & 0xffff_ffff,
+            weight: (end - index) as u64,
+        });
         index = end;
     }
     (coprime, out)
@@ -84,26 +93,64 @@ pub fn report(level: u32, detail: bool) {
             light_z += (ray.weight as u128).pow(2);
         }
     }
-    println!("census n {} gasket points {} primitive {}", level, 3u64.pow(level), coprime);
-    println!("occupied rays {} with fibres {} without", rays.len(), rays.len() - 2);
-    println!("Z {} Z/3^n {:.6} sum M {} 3^n-2^(n+1)+1 {} max M {}", z, z as f64 / points, mass, 3u64.pow(level) - 2u64.pow(level + 1) + 1, peak);
-    let octaves: Vec<String> = bins.iter().enumerate().filter(|(_, c)| **c > 0).map(|(j, c)| format!("{}:{}", j, c)).collect();
+    println!(
+        "census n {} gasket points {} primitive {}",
+        level,
+        3u64.pow(level),
+        coprime
+    );
+    println!(
+        "occupied rays {} with fibres {} without",
+        rays.len(),
+        rays.len() - 2
+    );
+    println!(
+        "Z {} Z/3^n {:.6} sum M {} 3^n-2^(n+1)+1 {} max M {}",
+        z,
+        z as f64 / points,
+        mass,
+        3u64.pow(level) - 2u64.pow(level + 1) + 1,
+        peak
+    );
+    let octaves: Vec<String> = bins
+        .iter()
+        .enumerate()
+        .filter(|(_, c)| **c > 0)
+        .map(|(j, c)| format!("{}:{}", j, c))
+        .collect();
     println!("octaves {}", octaves.join(" "));
     println!("occ(8,n)/3^8 {:.3}", bins[8] as f64 / 6561.0);
     let cut = |j: usize| (bins[..=j].iter().sum::<u64>() as f64).ln() / 3f64.ln() / level as f64;
     if level % 2 == 0 {
         println!("band exponent j <= n/2 {:.4}", cut(level as usize / 2));
     } else {
-        println!("band exponent j <= floor(n/2) {:.4} or ceil {:.4}", cut(level as usize / 2), cut(level as usize / 2 + 1));
+        println!(
+            "band exponent j <= floor(n/2) {:.4} or ceil {:.4}",
+            cut(level as usize / 2),
+            cut(level as usize / 2 + 1)
+        );
     }
     if !detail {
         return;
     }
     let share = |part: u128| 100.0 * part as f64 / z as f64;
-    println!("M = 1 rays {} ({:.0}% of Z), M in [2,5] rays {} ({:.0}% of Z)", singles, share(singles as u128), light, share(light_z));
+    println!(
+        "M = 1 rays {} ({:.0}% of Z), M in [2,5] rays {} ({:.0}% of Z)",
+        singles,
+        share(singles as u128),
+        light,
+        share(light_z)
+    );
     let mut heavy: Vec<&Ray> = rays.iter().filter(|r| r.a > 0 && r.b > 0).collect();
     heavy.sort_by(|p, q| q.weight.cmp(&p.weight).then(p.a.cmp(&q.a)));
-    let top: Vec<String> = heavy[..10].iter().map(|r| format!("({},{}):{}", r.a, r.b, r.weight)).collect();
+    let top: Vec<String> = heavy[..10]
+        .iter()
+        .map(|r| format!("({},{}):{}", r.a, r.b, r.weight))
+        .collect();
     let top_z: u128 = heavy[..10].iter().map(|r| (r.weight as u128).pow(2)).sum();
-    println!("ten heaviest {} carry {:.0}% of Z", top.join(" "), share(top_z));
+    println!(
+        "ten heaviest {} carry {:.0}% of Z",
+        top.join(" "),
+        share(top_z)
+    );
 }

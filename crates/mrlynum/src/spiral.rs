@@ -261,6 +261,134 @@ pub fn diagonal(lattice: Lattice, side: usize, a: i64, b: i64, c: i64) -> Diagon
     }
 }
 
+/// Which cells of the square winding grow into a tile.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Growth {
+    /// Only the primes grow; one and every composite stay unit cells.
+    Prime,
+    /// Every number grows.
+    Every,
+}
+
+impl Growth {
+    /// Reads a growth from its name.
+    pub fn named(name: &str) -> Option<Growth> {
+        match name {
+            "prime" => Some(Growth::Prime),
+            "every" => Some(Growth::Every),
+            _ => None,
+        }
+    }
+}
+
+/// One tile of the snail: the number it stands for, its level, the side of its square, whether the number is prime, and the lower-left corner it is laid at.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Tile {
+    /// The number the tile stands for.
+    pub n: u64,
+    /// The level the design is grown to.
+    pub level: u32,
+    /// The side of the tile, the base raised to the level.
+    pub side: u64,
+    /// Whether the number is prime.
+    pub prime: bool,
+    /// The x of the lower-left corner.
+    pub x: i64,
+    /// The y of the lower-left corner.
+    pub y: i64,
+}
+
+/// The snail: every tile of the winding, the tallies, the area drawn and the box filled.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Snail {
+    /// The base every tile side is a power of.
+    pub base: u64,
+    /// Every tile, in the order one, two, three and on.
+    pub tiles: Vec<Tile>,
+    /// The count of primes at or below the top.
+    pub primes: usize,
+    /// The count of tiles at each level, from zero up.
+    pub levels: Vec<usize>,
+    /// The sum of the tile areas, a tile counted once wherever it overlaps another.
+    pub area: u128,
+    /// The lower-left corner of the box the tiles fill.
+    pub low: (i64, i64),
+    /// The upper-right corner of the box the tiles fill.
+    pub high: (i64, i64),
+}
+
+/// Returns the level of a number in a base, the count of its digits less one, so zero below the base and one at the base itself.
+///
+/// ```
+/// use mrlynum::spiral::level_of;
+/// assert_eq!((level_of(1, 3), level_of(2, 3), level_of(3, 3), level_of(8, 3), level_of(9, 3)), (0, 0, 1, 1, 2));
+/// ```
+pub fn level_of(n: u64, base: u64) -> u32 {
+    let base = base.max(2);
+    let (mut level, mut reach) = (0, base);
+    while reach <= n {
+        reach *= base;
+        level += 1;
+    }
+    level
+}
+
+/// Winds one to the top on the square spiral and lays a square tile on every cell, the snail.
+///
+/// The tile of n has side base to the level of n when n grows and side one when it does not, and its lower-left corner is the corner of the tile before it plus one unit step of the winding scaled by the side of that earlier tile. Tiles overlap wherever the growth outruns the winding; a base below two is read as two and a top below one as one.
+///
+/// ```
+/// use mrlynum::spiral::{snail, Growth};
+/// let shell = snail(3, 9, Growth::Every);
+/// assert_eq!(shell.tiles[0].side, 1);
+/// assert_eq!(shell.tiles[8].side, 9);
+/// ```
+pub fn snail(base: u64, top: u64, growth: Growth) -> Snail {
+    let base = base.max(2);
+    let top = top.max(1);
+    let prime = flags(top as usize);
+    let mut tiles = Vec::with_capacity(top as usize);
+    let mut levels = vec![0usize; level_of(top, base) as usize + 1];
+    let (mut x, mut y) = (0i64, 0i64);
+    let (mut low, mut high) = ((0i64, 0i64), (0i64, 0i64));
+    let mut area = 0u128;
+    let mut cell = (0i64, 0i64);
+    for n in 1..=top {
+        let is_prime = prime[n as usize];
+        let level = if growth == Growth::Every || is_prime {
+            level_of(n, base)
+        } else {
+            0
+        };
+        let side = base.pow(level);
+        levels[level as usize] += 1;
+        area += u128::from(side) * u128::from(side);
+        low = (low.0.min(x), low.1.min(y));
+        high = (high.0.max(x + side as i64), high.1.max(y + side as i64));
+        tiles.push(Tile {
+            n,
+            level,
+            side,
+            prime: is_prime,
+            x,
+            y,
+        });
+        let next = Lattice::Square.xy(n + 1);
+        x += (next.0 - cell.0) * side as i64;
+        y += (next.1 - cell.1) * side as i64;
+        cell = next;
+    }
+    Snail {
+        base,
+        tiles,
+        primes: prime.iter().filter(|&&p| p).count(),
+        levels,
+        area,
+        low,
+        high,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -443,5 +571,112 @@ mod tests {
             vec![2, 2, 33, 66, 101, 138, 177, 218, 261, 306, 353, 402]
         );
         assert!(diagonal(Lattice::Square, 21, 1, 0, 500).values.is_empty());
+    }
+    #[test]
+    fn the_snail_lays_its_tiles_along_the_winding() {
+        let placed = |shell: &Snail| -> Vec<(u64, u32, u64, bool, i64, i64)> {
+            shell
+                .tiles
+                .iter()
+                .take(12)
+                .map(|t| (t.n, t.level, t.side, t.prime, t.x, t.y))
+                .collect()
+        };
+        let every = snail(3, 100, Growth::Every);
+        assert_eq!(
+            placed(&every),
+            vec![
+                (1, 0, 1, false, 0, 0),
+                (2, 0, 1, true, 1, 0),
+                (3, 1, 3, true, 1, 1),
+                (4, 1, 3, false, -2, 1),
+                (5, 1, 3, true, -5, 1),
+                (6, 1, 3, false, -5, -2),
+                (7, 1, 3, true, -5, -5),
+                (8, 1, 3, false, -2, -5),
+                (9, 2, 9, false, 1, -5),
+                (10, 2, 9, false, 10, -5),
+                (11, 2, 9, true, 10, 4),
+                (12, 2, 9, false, 10, 13),
+            ]
+        );
+        let prime = snail(3, 100, Growth::Prime);
+        assert_eq!(
+            placed(&prime),
+            vec![
+                (1, 0, 1, false, 0, 0),
+                (2, 0, 1, true, 1, 0),
+                (3, 1, 3, true, 1, 1),
+                (4, 0, 1, false, -2, 1),
+                (5, 1, 3, true, -3, 1),
+                (6, 0, 1, false, -3, -2),
+                (7, 1, 3, true, -3, -3),
+                (8, 0, 1, false, 0, -3),
+                (9, 0, 1, false, 1, -3),
+                (10, 0, 1, false, 2, -3),
+                (11, 2, 9, true, 2, -2),
+                (12, 0, 1, false, 2, 7),
+            ]
+        );
+        assert_eq!((every.area, prime.area), (172_100, 29_668));
+        assert_eq!(every.levels, vec![2, 6, 18, 54, 20]);
+        assert_eq!(prime.levels, vec![76, 3, 5, 13, 3]);
+        assert_eq!((every.primes, prime.primes), (25, 25));
+        assert_eq!((every.low, every.high), ((-602, -86), (208, 724)));
+        assert_eq!((prime.low, prime.high), ((-58, -66), (112, 184)));
+    }
+
+    #[test]
+    fn the_snail_grows_by_the_digit_law_and_never_leaves_its_box() {
+        for base in [2u64, 3, 5, 7] {
+            for growth in [Growth::Every, Growth::Prime] {
+                let shell = snail(base, 400, growth);
+                assert_eq!(shell.base, base);
+                assert_eq!(shell.tiles.len(), 400);
+                assert_eq!(shell.levels.iter().sum::<usize>(), 400);
+                assert_eq!(shell.levels.len(), level_of(400, base) as usize + 1);
+                let mut area = 0u128;
+                for (at, tile) in shell.tiles.iter().enumerate() {
+                    let n = at as u64 + 1;
+                    assert_eq!(tile.n, n);
+                    assert_eq!(tile.prime, is_prime(n as usize), "{base} {n}");
+                    let level = if growth == Growth::Every || tile.prime {
+                        level_of(n, base)
+                    } else {
+                        0
+                    };
+                    assert_eq!(
+                        (tile.level, tile.side),
+                        (level, base.pow(level)),
+                        "{base} {n}"
+                    );
+                    assert!(tile.x >= shell.low.0 && tile.y >= shell.low.1);
+                    assert!(tile.x + tile.side as i64 <= shell.high.0);
+                    assert!(tile.y + tile.side as i64 <= shell.high.1);
+                    area += u128::from(tile.side) * u128::from(tile.side);
+                    if at == 0 {
+                        assert_eq!((tile.x, tile.y), (0, 0));
+                        continue;
+                    }
+                    let last = shell.tiles[at - 1];
+                    let step = (
+                        Lattice::Square.xy(n).0 - Lattice::Square.xy(n - 1).0,
+                        Lattice::Square.xy(n).1 - Lattice::Square.xy(n - 1).1,
+                    );
+                    assert_eq!(step.0.abs() + step.1.abs(), 1, "{base} {n}");
+                    assert_eq!(tile.x, last.x + step.0 * last.side as i64, "{base} {n}");
+                    assert_eq!(tile.y, last.y + step.1 * last.side as i64, "{base} {n}");
+                }
+                assert_eq!(shell.area, area);
+            }
+        }
+        assert_eq!(level_of(1, 10), 0);
+        assert_eq!(level_of(999, 10), 2);
+        assert_eq!(level_of(1000, 10), 3);
+        assert_eq!(level_of(5, 1), level_of(5, 2));
+        assert_eq!(snail(1, 0, Growth::Every).tiles.len(), 1);
+        assert_eq!(Growth::named("prime"), Some(Growth::Prime));
+        assert_eq!(Growth::named("every"), Some(Growth::Every));
+        assert_eq!(Growth::named("some"), None);
     }
 }

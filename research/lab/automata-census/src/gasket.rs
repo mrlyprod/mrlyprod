@@ -134,8 +134,11 @@ pub fn report() {
         }
     }
     println!("both renderers agree on codes {CANDIDATES:?} at levels 1..{DEPTH}");
-    for (rule, reading, want) in [(60usize, "right", 13usize), (102, "left", 14), (90, "shear", 13)]
-    {
+    for (rule, reading, want) in [
+        (60usize, "right", 13usize),
+        (102, "left", 14),
+        (90, "shear", 13),
+    ] {
         let found = hits(rule, reading);
         println!("rule {rule} read {reading}: matching codes {found:?}");
         assert_eq!(
@@ -162,7 +165,8 @@ pub fn report() {
         for j in 0..rows[2 * t].len() {
             let want = if j % 2 == 0 { rows[t][j / 2] } else { 0 };
             assert_eq!(
-                rows[2 * t][j], want,
+                rows[2 * t][j],
+                want,
                 "row {} is not row {t} spread by two",
                 2 * t
             );
@@ -176,7 +180,8 @@ pub fn report() {
                 want ^= rows[2 * t][j - 2];
             }
             assert_eq!(
-                rows[2 * t + 1][j], want,
+                rows[2 * t + 1][j],
+                want,
                 "row {} is not row {} xor its two unit shifts",
                 2 * t + 1,
                 2 * t
@@ -258,11 +263,7 @@ pub fn report() {
         fib.push(fib[n - 1] + fib[n - 2]);
     }
     for (k, total) in totals.iter().enumerate() {
-        assert_eq!(
-            *total,
-            (1u64 << k) * fib[k + 2],
-            "P({k}) is not 2^k F(k+2)"
-        );
+        assert_eq!(*total, (1u64 << k) * fib[k + 2], "P({k}) is not 2^k F(k+2)");
     }
     println!("P(k) = 2 P(k-1) + 4 P(k-2) with P(0) = 1, P(1) = 4, so P(k) = c (1+sqrt5)^k + (1-c) (1-sqrt5)^k with c = (5+3 sqrt5)/10 = {constant:.12}");
     println!("equivalently P(k) = 2^k F(k+2), asserted at k = 0..12");

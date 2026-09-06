@@ -35,7 +35,9 @@ fn expected(tier: Tier) -> usize {
     SPACES
         .iter()
         .map(|&(dimension, base)| {
-            let designs = designs(dimension, base).expect("the ledger spaces are walkable").len();
+            let designs = designs(dimension, base)
+                .expect("the ledger spaces are walkable")
+                .len();
             let measures = Measure::ALL
                 .iter()
                 .filter(|measure| measure.cost() == cost && measure.applies(dimension, base))
@@ -54,7 +56,11 @@ fn verdict(agree: bool) -> &'static str {
 }
 
 fn list(values: &[i128]) -> String {
-    values.iter().map(|value| value.to_string()).collect::<Vec<_>>().join(" ")
+    values
+        .iter()
+        .map(|value| value.to_string())
+        .collect::<Vec<_>>()
+        .join(" ")
 }
 
 fn stops(batch: &[&Row], stop: Stop) -> usize {
@@ -79,7 +85,11 @@ fn registry(sheet: &Sheet) -> Vec<String> {
     }
     let total: usize = sheet.tiers.iter().map(|&(_, count)| count).sum();
     let all: Vec<&Row> = sheet.rows.iter().collect();
-    out.push(format!("registry rows {total} rendered {} unread {}", sheet.rows.len(), sheet.unread));
+    out.push(format!(
+        "registry rows {total} rendered {} unread {}",
+        sheet.rows.len(),
+        sheet.unread
+    ));
     out.push(format!(
         "registry stop ceiling {} cap {} budget {} silent {}",
         stops(&all, Stop::Ceiling),
@@ -123,7 +133,10 @@ fn checks(sheet: &Sheet, book: &Census) {
             }
         }
     }
-    println!("checks closed forms against rendered terms {tried} mismatches {wrong} {}", verdict(wrong == 0));
+    println!(
+        "checks closed forms against rendered terms {tried} mismatches {wrong} {}",
+        verdict(wrong == 0)
+    );
     for window in WINDOWS {
         let (never, once, many) = census::split(book, window);
         println!(
@@ -140,19 +153,35 @@ fn checks(sheet: &Sheet, book: &Census) {
         ("mrly_bang_d3_23.surface.level", &[72, 1056, 18048]),
     ];
     for (name, head) in classics {
-        let row = sheet.rows.iter().find(|row| row.name == name).expect("the classic is a registry row");
+        let row = sheet
+            .rows
+            .iter()
+            .find(|row| row.name == name)
+            .expect("the classic is a registry row");
         let seen = row.head.len() >= head.len() && row.head[..head.len()] == *head;
-        let written = head.iter().all(|&term| term > CEILING || book.counts[term as usize] > 0);
-        println!("checks classic {name} head {} written {} {}", verdict(seen), verdict(written), list(&row.head));
+        let written = head
+            .iter()
+            .all(|&term| term > CEILING || book.counts[term as usize] > 0);
+        println!(
+            "checks classic {name} head {} written {} {}",
+            verdict(seen),
+            verdict(written),
+            list(&row.head)
+        );
     }
     let surface = sheet
         .rows
         .iter()
         .find(|row| row.name == "mrly_bang_d3_23.surface.level")
         .expect("the sponge surface is a registry row");
-    let obeys = (2..surface.head.len())
-        .all(|index| surface.head[index] == 28 * surface.head[index - 1] - 160 * surface.head[index - 2]);
-    println!("checks recurrence a(L) = 28 a(L-1) - 160 a(L-2) on {} terms {}", surface.head.len(), verdict(obeys));
+    let obeys = (2..surface.head.len()).all(|index| {
+        surface.head[index] == 28 * surface.head[index - 1] - 160 * surface.head[index - 2]
+    });
+    println!(
+        "checks recurrence a(L) = 28 a(L-1) - 160 a(L-2) on {} terms {}",
+        surface.head.len(),
+        verdict(obeys)
+    );
     let (top, count) = census::champions(book, 1)[0];
     let walk = census::writers(sheet, top as i128).len();
     println!(
@@ -185,7 +214,14 @@ fn tables(book: &Census) {
     println!();
     println!("MISSES");
     let first = census::misses(book, MISSES);
-    println!("misses first {MISSES} {}", first.iter().map(|value| value.to_string()).collect::<Vec<_>>().join(" "));
+    println!(
+        "misses first {MISSES} {}",
+        first
+            .iter()
+            .map(|value| value.to_string())
+            .collect::<Vec<_>>()
+            .join(" ")
+    );
     println!();
     println!("DECADES");
     for band in census::bands(book) {
@@ -209,7 +245,9 @@ fn emit(out: &Path, sheet: &Sheet, book: &Census, lines: &[String]) {
             vec![
                 row.name.clone(),
                 row.tier.slug().to_string(),
-                row.form.as_ref().map_or_else(|| "none".to_string(), |form| form.text()),
+                row.form
+                    .as_ref()
+                    .map_or_else(|| "none".to_string(), |form| form.text()),
                 list(&row.head),
                 list(&row.written),
                 row.stop.slug().to_string(),
@@ -225,7 +263,12 @@ fn emit(out: &Path, sheet: &Sheet, book: &Census, lines: &[String]) {
         .map(|value| vec![value.to_string(), book.counts[value].to_string()])
         .collect();
     tables::write_csv(&out.join("multiset.csv"), &["integer", "rows"], &multiset);
-    let mut page = vec!["# Integer Census Manifest".to_string(), String::new(), "## DEFINITION".to_string(), String::new()];
+    let mut page = vec![
+        "# Integer Census Manifest".to_string(),
+        String::new(),
+        "## DEFINITION".to_string(),
+        String::new(),
+    ];
     page.extend(definition().iter().map(|line| format!("- {line}")));
     page.push(String::new());
     page.push("## REGISTRY".to_string());
@@ -236,7 +279,9 @@ fn emit(out: &Path, sheet: &Sheet, book: &Census, lines: &[String]) {
     page.push(String::new());
     for window in WINDOWS {
         let (never, once, many) = census::split(book, window);
-        page.push(format!("- window `1..={window}`: never {never}, once {once}, multiple {many}."));
+        page.push(format!(
+            "- window `1..={window}`: never {never}, once {once}, multiple {many}."
+        ));
     }
     page.push(format!(
         "- incidences: {} `(row, integer)` pairs, {} `(row, index, integer)` pairs, {} terms at or below zero.",
@@ -247,7 +292,10 @@ fn emit(out: &Path, sheet: &Sheet, book: &Census, lines: &[String]) {
     page.push(String::new());
     page.push("## FILES".to_string());
     page.push(String::new());
-    page.push(format!("- `rows.csv`: one line a registry row, {} lines and a header.", sheet.rows.len()));
+    page.push(format!(
+        "- `rows.csv`: one line a registry row, {} lines and a header.",
+        sheet.rows.len()
+    ));
     page.push(format!("- `rows.csv` fields: `key`, `tier`, `closed` (the closed form or `none`), `head` (the first {TERMS} rendered terms, space separated), `written` (the distinct terms of the rendered window inside `1..={CEILING}`, ascending, space separated, empty when the row writes none), `stop` (`ceiling`, `cap` or `budget`)."));
     page.push(format!("- `multiset.csv`: `integer,rows` for every `n` in `1..={CEILING}`, {} lines and a header, `rows` the row multiplicity.", CEILING));
     page.push("- `multiset.csv` is the fold of the `written` column of `rows.csv`, so `rows.csv` rebuilds it; the fold is not invertible the other way.".to_string());
@@ -283,6 +331,9 @@ fn main() {
     println!();
     emit(&out, &sheet, &book, &lines);
     println!("FILES");
-    println!("files rows.csv multiset.csv MANIFEST.md in {}", out.display());
+    println!(
+        "files rows.csv multiset.csv MANIFEST.md in {}",
+        out.display()
+    );
     println!("files run {:.1}s", clock.elapsed().as_secs_f64());
 }

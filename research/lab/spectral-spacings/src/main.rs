@@ -19,7 +19,10 @@ struct Row {
 fn subjects() -> Vec<Row> {
     let mut out = Vec::new();
     let mut push = |name: String, graph: Graph| out.push(Row { name, graph });
-    push("random graph n=400 p=0.1".into(), graphs::random(400, 0.1, 7));
+    push(
+        "random graph n=400 p=0.1".into(),
+        graphs::random(400, 0.1, 7),
+    );
     push("square lattice 20x20".into(), graphs::square(20));
     push("carpet L=3".into(), graphs::carpet(3));
     push("carpet L=4".into(), graphs::carpet(4));

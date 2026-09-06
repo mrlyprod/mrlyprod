@@ -8,7 +8,6 @@ mod shadow;
 use design::{bit_cells, canonical, carry, plane, square_group, BASE};
 use mass::{distance, horizon, ripple, scaling_error, shells, Ripple};
 
-
 const SUBJECTS: [u128; 7] = [79, 95, 127, 239, 255, 495, 511];
 const BINS: usize = 24;
 const LOW: f64 = 27.0;
@@ -26,14 +25,25 @@ fn list(values: &[f64], places: usize) -> String {
 }
 
 fn corner_bit(table: &[(usize, usize)]) -> usize {
-    table.iter().position(|cell| *cell == (0, 0)).expect("a corner digit")
+    table
+        .iter()
+        .position(|cell| *cell == (0, 0))
+        .expect("a corner digit")
 }
 
 fn centre_bit(table: &[(usize, usize)]) -> usize {
-    table.iter().position(|cell| *cell == (1, 1)).expect("a centre digit")
+    table
+        .iter()
+        .position(|cell| *cell == (1, 1))
+        .expect("a centre digit")
 }
 
-fn read(code: u128, level: usize, digit: (usize, usize), table: &[(usize, usize)]) -> (Ripple, f64, u64) {
+fn read(
+    code: u128,
+    level: usize,
+    digit: (usize, usize),
+    table: &[(usize, usize)],
+) -> (Ripple, f64, u64) {
     let grid = plane(code, BASE, level);
     let side = grid.shape[0] as f64;
     let bulk = shells(&grid, digit);
@@ -58,7 +68,10 @@ fn anchors(table: &[(usize, usize)]) {
             seen[member as usize] = true;
         }
     }
-    println!("square group order {} classes over 512 codes {classes}", group.len());
+    println!(
+        "square group order {} classes over 512 codes {classes}",
+        group.len()
+    );
     let grid = plane(127, BASE, 4);
     let bulk = shells(&grid, (1, 1));
     let side = grid.shape[0];
@@ -76,7 +89,8 @@ fn anchors(table: &[(usize, usize)]) {
         let partial: f64 = (1..=cut)
             .map(|k| {
                 let (a, b) = (k as f64 * step, (k - 1) as f64 * step);
-                std::f64::consts::PI * (a + b) * (rings[k] as f64 + rings[k - 1] as f64) / 2.0 * step
+                std::f64::consts::PI * (a + b) * (rings[k] as f64 + rings[k - 1] as f64) / 2.0
+                    * step
             })
             .sum();
         println!(
@@ -110,11 +124,16 @@ fn holes(table: &[(usize, usize)]) {
 
 fn spin_dimension(table: &[(usize, usize)], level: usize) {
     println!();
-    println!("SPIN DIMENSION AT LEVEL {level}, FIXED POINT OF THE CORNER DIGIT AND OF THE CENTRE DIGIT");
+    println!(
+        "SPIN DIMENSION AT LEVEL {level}, FIXED POINT OF THE CORNER DIGIT AND OF THE CENTRE DIGIT"
+    );
     let corner = corner_bit(table);
     let centre = centre_bit(table);
     for code in SUBJECTS {
-        for (name, bit, digit) in [("corner", corner, (0usize, 0usize)), ("centre", centre, (1, 1))] {
+        for (name, bit, digit) in [
+            ("corner", corner, (0usize, 0usize)),
+            ("centre", centre, (1, 1)),
+        ] {
             if code >> bit & 1 == 0 {
                 println!("  code {code:>3} {name}: digit empty, no fixed point");
                 continue;
@@ -178,7 +197,9 @@ fn ripple_census(table: &[(usize, usize)], level: usize) {
         .find(|map| map[1] == BASE && map[BASE] == 1)
         .expect("the transpose")
         .clone();
-    let flip: Vec<u128> = (0..512u128).map(|code| carry(&transpose, code, table)).collect();
+    let flip: Vec<u128> = (0..512u128)
+        .map(|code| carry(&transpose, code, table))
+        .collect();
     let mut curves: Vec<(u128, Ripple)> = Vec::new();
     for code in 1..512u128 {
         if code >> corner & 1 == 0 {
@@ -194,7 +215,11 @@ fn ripple_census(table: &[(usize, usize)], level: usize) {
             mirror = mirror.max(distance(&curve.curve, &curves[at].1.curve));
         }
     }
-    println!("  codes read {} transpose control, worst ripple gap {:.2e}", curves.len(), mirror);
+    println!(
+        "  codes read {} transpose control, worst ripple gap {:.2e}",
+        curves.len(),
+        mirror
+    );
     let stamp = |code: u128| code.min(flip[code as usize]);
     let mut collisions: Vec<(f64, f64, u128, u128)> = Vec::new();
     let mut closest = (f64::INFINITY, 0u128, 0u128);
@@ -218,7 +243,10 @@ fn ripple_census(table: &[(usize, usize)], level: usize) {
         }
     }
     collisions.sort_by(|x, y| x.0.partial_cmp(&y.0).expect("finite"));
-    println!("  transpose class pairs of equal fill whose ripples sit inside their own drift bar: {}", collisions.len());
+    println!(
+        "  transpose class pairs of equal fill whose ripples sit inside their own drift bar: {}",
+        collisions.len()
+    );
     for (gap, bar, left, right) in &collisions {
         println!(
             "    classes {left:>3} and {right:>3} fill {} gap {gap:.5} bar {bar:.5} ratio {:.2}",
@@ -240,7 +268,9 @@ fn ripple_census(table: &[(usize, usize)], level: usize) {
 
 fn powder_rings(level: usize, pad: usize, only: &[u128]) {
     println!();
-    println!("POWDER RINGS AT LEVEL {level}, PAD {pad}, RING AVERAGED POWER AGAINST THE FREQUENCY INDEX");
+    println!(
+        "POWDER RINGS AT LEVEL {level}, PAD {pad}, RING AVERAGED POWER AGAINST THE FREQUENCY INDEX"
+    );
     let side = (BASE as f64).powi(level as i32);
     let low = 3.0 * pad as f64 / side;
     let high = pad as f64 / 8.0;
@@ -272,7 +302,9 @@ fn spin_spectrum(table: &[(usize, usize)]) {
     println!();
     println!("SPIN SPECTRUM, P_m OVER ALL 512 BASE THREE CODES");
     let group = square_group();
-    let stamp: Vec<u128> = (0..512u128).map(|code| canonical(&group, code, table)).collect();
+    let stamp: Vec<u128> = (0..512u128)
+        .map(|code| canonical(&group, code, table))
+        .collect();
     let first = orbit::census(1, 1024, 12);
     let second = orbit::census(2, 768, 12);
     let mut pairs: Vec<(u128, u128, f64, f64)> = Vec::new();
@@ -291,7 +323,10 @@ fn spin_spectrum(table: &[(usize, usize)]) {
             }
         }
     }
-    println!("  pairs outside one square class agreeing at levels 1 and 2 to 1e-9: {}", pairs.len());
+    println!(
+        "  pairs outside one square class agreeing at levels 1 and 2 to 1e-9: {}",
+        pairs.len()
+    );
     let mut classes: Vec<(u128, u128)> = pairs
         .iter()
         .map(|(a, b, _, _)| (stamp[*a as usize], stamp[*b as usize]))
@@ -300,12 +335,19 @@ fn spin_spectrum(table: &[(usize, usize)]) {
     classes.dedup();
     println!("  distinct class pairs among them: {}", classes.len());
     for (left, right) in classes.iter().take(8) {
-        let third = orbit::gap(&orbit::spectrum(*left, 3, 1024, 24), &orbit::spectrum(*right, 3, 1024, 24));
+        let third = orbit::gap(
+            &orbit::spectrum(*left, 3, 1024, 24),
+            &orbit::spectrum(*right, 3, 1024, 24),
+        );
         println!(
             "    classes {left} and {right} fill {} level 3 gap {:.2e} verdict {}",
             left.count_ones(),
             third,
-            if third < 1e-9 { "isospectral" } else { "separated at level 3" }
+            if third < 1e-9 {
+                "isospectral"
+            } else {
+                "separated at level 3"
+            }
         );
     }
     let mut buckets: Vec<Vec<u128>> = Vec::new();
@@ -326,7 +368,10 @@ fn spin_spectrum(table: &[(usize, usize)]) {
             buckets.push(vec![code]);
         }
     }
-    println!("  distinct spin spectra over the 511 nonempty codes at levels 1 and 2 together: {}", buckets.len());
+    println!(
+        "  distinct spin spectra over the 511 nonempty codes at levels 1 and 2 together: {}",
+        buckets.len()
+    );
     let big = buckets.iter().map(|bucket| bucket.len()).max().unwrap_or(0);
     println!("  largest spectral bucket holds {big} codes");
 }
@@ -336,11 +381,19 @@ fn sponge_shadow(top: usize) {
     println!("THE SPONGE SHADOW: LATTICE LINES IN DIRECTION (a,b,c) MEETING THE LEVEL L SPONGE, AND THE SAME FOR THE SOLID CUBE");
     let digits = shadow::digits();
     let cube = shadow::cube_digits();
-    println!("  sponge digits {} cube digits {}", digits.len(), cube.len());
+    println!(
+        "  sponge digits {} cube digits {}",
+        digits.len(),
+        cube.len()
+    );
     let mut full = Vec::new();
     for view in shadow::views(3) {
-        let counts: Vec<usize> = (1..=top).map(|level| shadow::shadow(level, view, &digits)).collect();
-        let solid: Vec<usize> = (1..=top - 1).map(|level| shadow::shadow(level, view, &cube)).collect();
+        let counts: Vec<usize> = (1..=top)
+            .map(|level| shadow::shadow(level, view, &digits))
+            .collect();
+        let solid: Vec<usize> = (1..=top - 1)
+            .map(|level| shadow::shadow(level, view, &cube))
+            .collect();
         let share: Vec<f64> = solid
             .iter()
             .zip(&counts)
@@ -356,7 +409,10 @@ fn sponge_shadow(top: usize) {
             if opaque { "opaque" } else { "see through" }
         );
     }
-    println!("  views whose lattice lines the sponge blocks completely to level {}: {full:?}", top - 1);
+    println!(
+        "  views whose lattice lines the sponge blocks completely to level {}: {full:?}",
+        top - 1
+    );
     let deep = shadow::shadow(top, [1, 1, 1], &cube);
     println!(
         "  the space diagonal at level {top}: sponge {} cube {deep} equal {}",
@@ -372,7 +428,9 @@ fn gaussian_farey(top: usize) {
     let least = gaussian::least_factors(cap);
     let direct = gaussian::union_counts(top, false);
     let boxed = gaussian::union_counts(top, true);
-    let rule: Vec<usize> = (1..=top).map(|scale| gaussian::new_disc(scale, &least)).collect();
+    let rule: Vec<usize> = (1..=top)
+        .map(|scale| gaussian::new_disc(scale, &least))
+        .collect();
     let mismatch = direct
         .iter()
         .zip(&rule)
@@ -380,14 +438,31 @@ fn gaussian_farey(top: usize) {
         .filter(|(_, (a, b))| a != b)
         .map(|(index, _)| index + 1)
         .collect::<Vec<_>>();
-    println!("  disc reading, new radii at n = 1..20: {:?}", &direct[..20.min(direct.len())]);
-    println!("  the square free rule reproduces the disc reading at every n up to {top}: {}", mismatch.is_empty());
+    println!(
+        "  disc reading, new radii at n = 1..20: {:?}",
+        &direct[..20.min(direct.len())]
+    );
+    println!(
+        "  the square free rule reproduces the disc reading at every n up to {top}: {}",
+        mismatch.is_empty()
+    );
     if !mismatch.is_empty() {
-        println!("  first mismatches at n = {:?}", &mismatch[..8.min(mismatch.len())]);
+        println!(
+            "  first mismatches at n = {:?}",
+            &mismatch[..8.min(mismatch.len())]
+        );
     }
-    println!("  box reading, new radii at n = 1..20: {:?}", &boxed[..20.min(boxed.len())]);
-    let split: Vec<usize> = (1..=top).filter(|n| direct[n - 1] != boxed[n - 1]).collect();
-    println!("  first scale where the box and the disc disagree: {:?}", split.first());
+    println!(
+        "  box reading, new radii at n = 1..20: {:?}",
+        &boxed[..20.min(boxed.len())]
+    );
+    let split: Vec<usize> = (1..=top)
+        .filter(|n| direct[n - 1] != boxed[n - 1])
+        .collect();
+    println!(
+        "  first scale where the box and the disc disagree: {:?}",
+        split.first()
+    );
     let primitives: Vec<usize> = (1..=20)
         .map(|scale| {
             (1..=2 * scale * scale)
@@ -397,20 +472,33 @@ fn gaussian_farey(top: usize) {
         .collect();
     println!("  norms below 2n^2 with a primitive representation, n = 1..20: {primitives:?}");
     let prefix = gaussian::two_square_prefix(cap, &least);
-    let sieve: Vec<usize> = (1..=top).map(|scale| gaussian::mobius_count(scale, &prefix, &least)).collect();
-    let broken: Vec<usize> = (1..=top).filter(|n| sieve[n - 1] != direct[n - 1]).collect();
+    let sieve: Vec<usize> = (1..=top)
+        .map(|scale| gaussian::mobius_count(scale, &prefix, &least))
+        .collect();
+    let broken: Vec<usize> = (1..=top)
+        .filter(|n| sieve[n - 1] != direct[n - 1])
+        .collect();
     println!("  the Mobius identity new(n) = sum_d mu(d) B(2n^2/d^2) over d | rad(n) holds to n = {top}: {}", broken.is_empty());
     if !broken.is_empty() {
-        println!("  it first fails at n = {:?}", &broken[..4.min(broken.len())]);
+        println!(
+            "  it first fails at n = {:?}",
+            &broken[..4.min(broken.len())]
+        );
     }
     let reach = 192usize;
     let wide = gaussian::least_factors(2 * reach * reach);
     let long = gaussian::two_square_prefix(2 * reach * reach, &wide);
-    println!("  the radical six family, new(n)/B(2n^2) climbing to the Jordan factor {:.5}:", gaussian::jordan(6, &wide));
+    println!(
+        "  the radical six family, new(n)/B(2n^2) climbing to the Jordan factor {:.5}:",
+        gaussian::jordan(6, &wide)
+    );
     for scale in [6usize, 12, 24, 48, 96, 192] {
         let count = gaussian::mobius_count(scale, &long, &wide);
         let all = long[2 * scale * scale];
-        println!("    n {scale:>3} new {count:>6} all {all:>6} ratio {:.5}", count as f64 / all as f64);
+        println!(
+            "    n {scale:>3} new {count:>6} all {all:>6} ratio {:.5}",
+            count as f64 / all as f64
+        );
     }
 }
 

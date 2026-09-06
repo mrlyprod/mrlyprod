@@ -103,7 +103,9 @@ pub fn run(args: &[String]) {
         }
     }
     let wide = 3u64.pow(sample_level.saturating_sub(11)) + 1;
-    for extra in [1u64, 2, 5, 7, 11, 13, 17, 41, 61, 101, 157, 437, 439, 440, 443, 446, wide] {
+    for extra in [
+        1u64, 2, 5, 7, 11, 13, 17, 41, 61, 101, 157, 437, 439, 440, 443, 446, wide,
+    ] {
         if !probes.contains(&extra) {
             probes.push(extra);
         }
@@ -188,11 +190,17 @@ pub fn run(args: &[String]) {
             (440, 61610728675376604u128, false),
         ] {
             let mut seen: Vec<(String, u128)> = vec![
-                ("cube".to_string(), count_one(&design, deep, modulus, Mode::Cube)),
+                (
+                    "cube".to_string(),
+                    count_one(&design, deep, modulus, Mode::Cube),
+                ),
                 ("pinned".to_string(), pinned),
             ];
             if with_rows {
-                seen.push(("rows".to_string(), count_one(&design, deep, modulus, Mode::Rows)));
+                seen.push((
+                    "rows".to_string(),
+                    count_one(&design, deep, modulus, Mode::Rows),
+                ));
             }
             if !seen.iter().all(|(_, v)| *v == seen[0].1) {
                 ring_bad += 1;

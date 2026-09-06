@@ -44,6 +44,20 @@ export function line(b, points, color, { width = 1.5, dots = 0, dash = [], fill 
   }
 }
 
+export function rules(b, marks, { color = ink.line, dash = [], width = 1 } = {}) {
+  const { ctx } = b;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.setLineDash(dash);
+  ctx.beginPath();
+  for (const f of marks) {
+    ctx.moveTo(b.x(f), b.roof);
+    ctx.lineTo(b.x(f), b.floor);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
 export function axis(b, labels = [], { wall = false } = {}) {
   const { ctx } = b;
   ctx.strokeStyle = ink.line;

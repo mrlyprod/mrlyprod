@@ -1,6 +1,8 @@
 use num_bigint::BigInt;
 
 mod carry;
+mod menergy;
+mod riesz;
 
 // EXACT DP
 
@@ -302,6 +304,8 @@ fn main() {
     pinned(100, &ex(100, 37), "ex37", 12, 3367);
     pinned(100, &ex(100, 37), "ex37", 12, 999999);
     carry::run();
+    riesz::run();
+    menergy::run();
 }
 
 // TESTS

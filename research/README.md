@@ -64,6 +64,8 @@ The mathematics of the mrly tree: a parity rule on the corners of a cube, substi
 - **The exposed-face law closes at every dimension. Proved.** For any nonempty parity tile, the exposed-face count is C-finite of order at most `D + 1` with characteristic polynomial `(x - c) prod_a (x - l_a)` over the face fills with adjacent pairs, the order-two law of the carpet and the sponge being the one-face-fill case; the same paper proves the plane's six odd-side rules are the classical polygonal and centered families by one mechanism and identifies the level-one slice row as the swinging factorial [A056040](https://oeis.org/A056040) ([sequence-census](https://github.com/carlomitchener/carlomitchener/tree/main/research/sequence-census), [sequences](sequences.md)).
 - **The Mobius meter transfers exactly across scaled digit sets, and its cancellation is censused at the RH shape. Proved.** For digit sets `F = aF'` inside `{0..q-1}` the map `m -> am` is a carry-free, digit-length-preserving bijection: a square factor in `a` kills the meter identically, a prime `a` twists it by sign - the base-3 `{0,2}` column is the Thue-Morse-twisted `{0,1}` column - and at base 4 the pair is locked in exact anti-symmetry `M_{0,2}(x) = -M_{0,1}(x/2)` at every real `x`. The exact census over all 38 digit sets at `q = 3, 4, 5` plus the ten Kempner sets at `10^8` reads all 47 running-maximum exponents within `0.054` of `1/2`, and square-root cancellation against the set's own mass - open at every `2 <= |F| <= q - 1` with squarefree digit gcd, the full-set case being the classical Mertens-RH equivalence - stays **Conjecture** ([mobius](mobius.md), `lab/mobius-designs`).
 - **A negative result that closes a thread. Refuted.** The spectra of every mrly fractal tested cluster rather than repel, excluding GOE and GUE by a wide margin up to 4096 nodes, with no bearing on the Riemann hypothesis ([complexity](complexity.md)).
+- **The component cocycle's joint spectral radius is the largest fill, and the finiteness property is free. Proved.** In the frame of the four observables `comp`, horizontal runs, vertical runs and `fill` every class matrix is nonnegative, integer and lower triangular, so the cross-polytope on that frame is an extremal norm for all `2^15 - 1` subfamilies at once: `JSR = max fill`, `LSR = min fill`, and a single letter is a spectrum maximizing product; the joint spectral radius therefore carries nothing the order-blind fill law did not already give ([connectivity](connectivity.md), `lab/jsr-schedules`).
+- **A design's disc count has a self-similar main term and an error one power below. Proved.** Counting the filled cells of the carpet or the sponge whose centre lies within radius `r` of the lattice corner gives `r^d G(log_3 r) + O(r^(D-1))` with `G` positive and 1-periodic, level-free, the error bounded by the crossing count inside the shell `| |y| - r | <= sqrt D`; the resonance at `r = 3^n` a non-Rajchman transform suggests is absent, and the Gauss circle yardstick is Huxley's `131/208` ([crop](crop.md), `lab/circle-crop`).
 
 ## DOCS
 
@@ -73,7 +75,9 @@ The mathematics of the mrly tree: a parity rule on the corners of a cube, substi
 - [complexity](complexity.md) - Boolean complexity of the catalog, and the Laplacian spectra of the fractals it builds.
 - [cuts](cuts.md) - the six-gasket theorem: a diagonal cut through one parity solid is Sierpinski all the way down.
 - [slices](slices.md) - the diagonal slice of the solid cube: the `6n` census, centered-hexagonal vertices, and the splitting-prime rule.
-- [dimensions](dimensions.md) - complex dimensions: every design in the lattice class, and where Minkowski measurability fails.
+- [hexagon](hexagon.md) - the moire of the stacked diagonal slices: the exact cut-ink laws, the doubling sign law, the quarter-line bands, and the void star against the carpet's fading one.
+- [dimensions](dimensions.md) - complex dimensions: every design in the lattice class, where Minkowski measurability fails, and the arithmetic pole at `s_0 + 2 pi i/log 3` certified genuine.
+- [weights](weights.md) - weighted designs: what weights move on the mass side, what they never move on the length side, and the pressure that closes both.
 - [connectivity](connectivity.md) - self-similar designs raced against matched random cell sets on components and boundary.
 - [magic](magic.md) - a different design at every scale: the word grammar, what collapses by block reduction, and what only the letter order can see.
 - [walks](walks.md) - the walk-dimension census: same mass, different music.
@@ -88,6 +92,7 @@ The mathematics of the mrly tree: a parity rule on the corners of a cube, substi
 - [crop](crop.md) - exact shape crops of a design: the In/Cut/Out census, the circle on the carpet and the sphere on the sponge, and the curved-slice lane.
 - [sequences](sequences.md) - the OEIS ledger: every sequence this work produces, with terms, formulas, and verification status.
 - [integers](integers.md) - the census the other way round: which integers the whole registry writes, which it never writes, and which it writes thousands of times.
+- [information](information.md) - a render as data: the rearranged SVD reads a design's code out of noise and peels a magic word, while the fractal codebook loses to deflate.
 
 ## SOURCES
 

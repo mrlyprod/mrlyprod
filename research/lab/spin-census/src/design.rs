@@ -60,7 +60,10 @@ pub fn carry(map: &[usize], code: u128, table: &[(usize, usize)]) -> u128 {
     for bit in 0..9 {
         if code >> bit & 1 == 1 {
             let image = map[index[bit]];
-            let target = index.iter().position(|flat| *flat == image).expect("a cell");
+            let target = index
+                .iter()
+                .position(|flat| *flat == image)
+                .expect("a cell");
             out |= 1u128 << target;
         }
     }

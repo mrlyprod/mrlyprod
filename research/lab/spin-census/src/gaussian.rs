@@ -115,7 +115,10 @@ pub fn disc_norms(scale: usize) -> Vec<u64> {
             }
         }
     }
-    (1..=cap).filter(|norm| seen[*norm]).map(|norm| norm as u64).collect()
+    (1..=cap)
+        .filter(|norm| seen[*norm])
+        .map(|norm| norm as u64)
+        .collect()
 }
 
 pub fn box_norms(scale: usize) -> Vec<u64> {
@@ -129,14 +132,21 @@ pub fn box_norms(scale: usize) -> Vec<u64> {
             }
         }
     }
-    (1..=cap).filter(|norm| seen[*norm]).map(|norm| norm as u64).collect()
+    (1..=cap)
+        .filter(|norm| seen[*norm])
+        .map(|norm| norm as u64)
+        .collect()
 }
 
 pub fn union_counts(top: usize, boxed: bool) -> Vec<usize> {
     let mut seen: HashSet<(u64, u64)> = HashSet::new();
     let mut out = Vec::new();
     for scale in 1..=top {
-        let norms = if boxed { box_norms(scale) } else { disc_norms(scale) };
+        let norms = if boxed {
+            box_norms(scale)
+        } else {
+            disc_norms(scale)
+        };
         let square = (scale * scale) as u64;
         let mut fresh = 0;
         for norm in norms {

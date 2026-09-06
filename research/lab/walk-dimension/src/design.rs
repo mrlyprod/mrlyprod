@@ -96,7 +96,9 @@ impl Graph {
                 }
             }
         }
-        (0..self.nodes()).map(|node| root(&mut parent, node)).collect()
+        (0..self.nodes())
+            .map(|node| root(&mut parent, node))
+            .collect()
     }
 }
 
@@ -138,12 +140,17 @@ pub fn components(grid: &Tensor) -> Components {
             }
         }
     }
-    let walls = (0..grid.shape.len()).all(|axis| low[axis] == 0 && high[axis] + 1 == grid.shape[axis]);
+    let walls =
+        (0..grid.shape.len()).all(|axis| low[axis] == 0 && high[axis] + 1 == grid.shape[axis]);
     let held = if graph.nodes() == 0 { 0 } else { sizes[best] };
     Components {
         count,
         giant: Tensor::of(bytes, grid.shape.clone()),
-        share: if graph.nodes() == 0 { 0.0 } else { held as f64 / graph.nodes() as f64 },
+        share: if graph.nodes() == 0 {
+            0.0
+        } else {
+            held as f64 / graph.nodes() as f64
+        },
         spanning: walls,
     }
 }

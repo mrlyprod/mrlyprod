@@ -124,7 +124,8 @@ pub fn report() {
     }
     for row in &rows {
         assert_eq!(
-            row.levels[0], 8 - 2 * row.pop as i64,
+            row.levels[0],
+            8 - 2 * row.pop as i64,
             "the weight-zero Walsh sum of {} is not 8 - 2 pop",
             row.code
         );
@@ -139,7 +140,10 @@ pub fn report() {
     let ci = classes.iter().filter(|r| r.genus == "iso").count();
     let ca = classes.iter().filter(|r| r.genus == "axis").count();
     let cc = classes.iter().filter(|r| r.genus == "comp").count();
-    println!("B3 classes {} with genus iso {ci} axis {ca} comp {cc}", classes.len());
+    println!(
+        "B3 classes {} with genus iso {ci} axis {ca} comp {cc}",
+        classes.len()
+    );
     let sizes: BTreeSet<usize> = classes.iter().map(|r| r.size_b3).collect();
     println!("B3 orbit sizes {sizes:?}");
 }

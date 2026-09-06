@@ -192,3 +192,27 @@ path = "examples/grid/demo-pi.rs"
 [[example]]
 name = "demo-formulas"
 path = "examples/plot/demo-formulas.rs"
+
+[[example]]
+name = "demo-wallis"
+path = "examples/grid/demo-wallis.rs"
+
+[[example]]
+name = "research-hexagon"
+path = "examples/hex/research-hexagon.rs"
+
+[[example]]
+name = "paper-sparse-mertens-under-grh"
+path = "examples/plot/paper-sparse-mertens-under-grh.rs"
+
+[[example]]
+name = "demo-snail"
+path = "examples/grid/demo-snail.rs"
+
+[[example]]
+name = "research-information"
+path = "examples/grid/research-information.rs"
+
+[[example]]
+name = "research-weights"
+path = "examples/plot/research-weights.rs"
