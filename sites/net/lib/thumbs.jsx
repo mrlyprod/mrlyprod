@@ -17,6 +17,19 @@ const sieve = (m) =>
     s.finish();
     return s;
   });
+const modes = (m) =>
+  once('modes', () => {
+    const side = 3, level = 4, span = side ** level;
+    const field = Float32Array.from(m.modes_field('495', side, level, 3), (v) => v ** (1 / level));
+    return m.paint_span(field, span, 0, 1, 'heat', 32, false);
+  });
+const tube = (m) =>
+  once('tube', () => {
+    const side = 243, eps = 7;
+    const dist = m.tube_distance('495', 3, 5, 3);
+    return { width: side, height: side, types: Uint8Array.from(dist, (v) => (v === 0 ? 0 : v <= eps ? 1 : 2)) };
+  });
+const weights = (m) => once('weights', () => m.weights_pixels('69', 3, 4, 3, Float64Array.from([3, 2, 3]), 0.35));
 const cone = (m) =>
   once('cone', () => {
     const full = m.eca_seed(110, 31);
@@ -195,9 +208,12 @@ const DRAW = {
   tile: (m) => <Markup className="thumb" svg={m.tile_svg('23', 3, 1, 2, 'cut', 5, 3, true, 6)} />,
   cuts: (m) => <Markup className="thumb" svg={m.diagonal_svg('126', 2, 5, 2, JSON.parse(m.diagonal_profile('126', 2, 5, 2)).central, 6)} />,
   crop: (m) => <Grid grid={m.crop_grid('7', 3, 3, 2, 'ball', 55, 120, false, 'touching')} on={ink.green} className="" />,
+  tube: (m) => <Signs grid={tube(m)} hues={{ plus: ink.fg, minus: ink.blue, empty: ink.deep }} className="" />,
+  weights: (m) => <Pixels data={weights(m)} className="" />,
   slices: (m) => <Markup className="thumb" svg={m.hex_svg('23', 7, 1, 2, 'cut', 8)} />,
   spectrometer: (m) => <Sketch draw={spectrometer(m)} className="" />,
   spectra: (m) => <Grid grid={m.two_grid('7', 2, 5, 0, 2)} on={ink.pink} className="" />,
+  modes: (m) => <Pixels data={modes(m)} className="" />,
   universe: (m) => <Grid grid={m.two_grid('9', 3, 3, 0, 2)} on={ink.gold} className="" />,
   words: (m) => <Pixels data={m.magic_pixels(['7', '14'], [3, 7], [2, 2])} className="" />,
   life: (m) => <Grid grid={{ width: 48, height: 48, types: m.life_noise(48, 48, 0.4, 3) }} on={ink.green} className="" />,

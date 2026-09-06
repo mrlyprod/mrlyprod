@@ -34,6 +34,8 @@ pub mod ledger;
 pub mod life;
 /// The magic words: the folded design, its census, its press readings and its prefix rates.
 pub mod magic;
+/// The standing patterns of a design mask: its eigenvalue field on the frequency torus, one eigenvalue, the large-values count and a real mode.
+pub mod modes;
 /// The Thue-Morse word: its two constructions, its plane lifts, its runs and the difference filter.
 pub mod morse;
 /// The primes: the sieve stepped, the stone pile, the count chart and the carpet witness.
@@ -56,10 +58,14 @@ pub mod spiral;
 pub mod three;
 /// The tessellations: a design repeated across the plane, the cube and the hexagonal mesh, drawn and counted.
 pub mod tile;
+/// The inner tube of a design: its distance field, the tube area at a radius, the Minkowski profile and the closed limit of the interior-hole class.
+pub mod tube;
 /// The flat designs as byte grids, painted pixels and censuses.
 pub mod two;
 /// The cube designs stacked into a moire volume: its faces at a level, and the planes that cut it.
 pub mod volume;
+/// The mass side of a weighted design: its level-L mass field, the pressure, the multifractal spectrum and the local dimensions.
+pub mod weights;
 /// The critical line: zeta walked at one half plus i t, its zeros counted and listed, and the prime staircase against the explicit formula.
 pub mod zeta;
 

@@ -216,3 +216,15 @@ path = "examples/grid/research-information.rs"
 [[example]]
 name = "research-weights"
 path = "examples/plot/research-weights.rs"
+
+[[example]]
+name = "demo-modes"
+path = "examples/field/demo-modes.rs"
+
+[[example]]
+name = "demo-tube"
+path = "examples/plot/demo-tube.rs"
+
+[[example]]
+name = "demo-weights"
+path = "examples/field/demo-weights.rs"

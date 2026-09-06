@@ -77,6 +77,22 @@
       "paper": null
     },
     {
+      "name": "tube",
+      "title": "The tube",
+      "blurb": "Fattening a design by a radius and measuring what it swallows gives an inner tube whose Minkowski reading never settles but circles one log-periodic profile, exact in closed form wherever the holes are isolated squares.",
+      "category": "designs",
+      "research": "dimensions",
+      "paper": null
+    },
+    {
+      "name": "weights",
+      "title": "The weights",
+      "blurb": "Give every filled corner of a design a weight and the support never moves while the mass does, so the pressure and its Legendre transform are closed forms in the weights alone and the multifractal spectrum becomes a curve you steer with sliders.",
+      "category": "designs",
+      "research": "weights",
+      "paper": null
+    },
+    {
       "name": "tour",
       "title": "The tour",
       "blurb": "A dozen cards, each drawing a design live beside the integer sequence it counts and the OEIS record that holds the terms.",
@@ -218,6 +234,14 @@
       "blurb": "Two base-3 designs of the same mass and the same fractal dimension carry random walkers from home at different speeds, so the shape sets the walk, not the density.",
       "category": "networks",
       "research": "walks",
+      "paper": null
+    },
+    {
+      "name": "modes",
+      "title": "The modes",
+      "blurb": "Laying a design's level-L mask over the torus picks out its modes, so every eigenvalue is a product of L rescaled copies of the tile's own transform and the field of eigenvalues is self-similar, a picture of the tile.",
+      "category": "networks",
+      "research": null,
       "paper": null
     },
     {

@@ -166,6 +166,37 @@ const cropArt = m.crop_svg('7', 3, 1, 2, 'ball', 1, 2, false, 4);
 const cropHole = m.crop_svg('7', 3, 1, 2, 'diamond', 1, 2, true, 4);
 const cropField = m.field_crop(square, 8, 2, 'ball', 1, 2, false);
 
+const modeGasket = m.modes_field('7', 2, 3, 2);
+const modeCarpet = m.modes_field('495', 3, 2, 3);
+const modeRunner = m.modes_field('127', 3, 2, 3);
+const modeAt = (field: Float32Array, span: number, t1: number, t2: number) => field[t1 * span + t2].toFixed(6);
+const modeTop = (field: Float32Array) => Math.max(...Array.from(field).slice(1)).toFixed(6);
+const modeOne = Array.from(m.modes_value('495', 3, 2, 3, 1, 1)).map((v: number) => v.toFixed(6)).join(',');
+const modeTwo = Array.from(m.modes_value('127', 3, 2, 3, 1, 2)).map((v: number) => v.toFixed(6)).join(',');
+const modeWave = m.modes_pattern('495', 3, 2, 3, 1, 2);
+
+const tubeField = m.tube_distance('495', 3, 6, 3);
+const tubeCarpet = m.tube_volume('495', 3, 6, 3, 21);
+const tubePairs = m.tube_profile('495', 3, 6, 3, 9);
+const tubeBand = (q: number, k: number) => {
+  let low = Infinity, high = -Infinity;
+  for (let i = 0; i < 2001; i += 1) {
+    const g = m.tube_closed(q, k, 1 / q + ((1 - 1 / q) * i) / 2000);
+    low = Math.min(low, g);
+    high = Math.max(high, g);
+  }
+  return `${high.toFixed(8)},${low.toFixed(8)},${(100 * (high - low) / low).toFixed(6)}`;
+};
+
+const wMasses = Float64Array.from([3, 2, 3]);
+const wPoint = (s: number) => Array.from(m.weights_point('69', 3, 3, wMasses, s)).map((v: number) => v.toFixed(9)).join(' ');
+const wDims = Array.from(m.weights_dims('69', 3, 3, wMasses)).map((v: number) => v.toFixed(9)).join(' ');
+const wTable = Array.from(m.weights_pressure('69', 3, 3, wMasses, -2, 3, 6)).filter((_: number, i: number) => i % 2 === 1).map((v: number) => v.toFixed(6)).join(' ');
+const wField = m.weights_mass('69', 3, 2, 3, wMasses);
+const wDeep = m.weights_mass('69', 3, 6, 3, wMasses);
+const wCurve = m.weights_spectrum('69', 3, 3, wMasses, 241);
+const wFlat = Array.from(m.weights_point('495', 3, 3, new Float64Array(8).fill(1), 2.5)).map((v: number) => v.toFixed(9)).join(' ');
+
 const tiled = (dimension: number, code: string, number: number, level: number, base: number, projection: string, reps: number[], crop: boolean) =>
   JSON.parse(m.tile_census(code, number, level, base, dimension, projection, reps, crop));
 const tileWide = tiled(2, '495', 3, 2, 3, '', [5, 5], false);
@@ -609,7 +640,40 @@ checks.push(
   ['carry sign law base 3', carryLane('three'), '-1,1,-1,1,-1,1,-1,1,-1'],
   ['carry sign law base 5', carryLane('five'), '-1,1,-1,1,-1,1,-1,1,-1'],
   ['carry open odd class', carrySigns.map((row: { open: boolean }) => (row.open ? 1 : 0)).join(''), '000001000'],
+  ['modes field is the torus', `${modeGasket.length},${modeCarpet.length}`, '64,81'],
+  ['modes t zero reads one', `${modeGasket[0]},${modeCarpet[0]}`, '1,1'],
+  ['modes gasket at 0 1', modeAt(modeGasket, 8, 0, 1), '0.231717'],
+  ['modes gasket top away', modeTop(modeGasket), '0.333333'],
+  ['modes carpet at 0 1', modeAt(modeCarpet, 9, 0, 1), '0.103067'],
+  ['modes carpet top away', modeTop(modeCarpet), '0.125000'],
+  ['modes runner at 1 0', modeAt(modeRunner, 9, 1, 0), '0.253018'],
+  ['modes runner top away', modeTop(modeRunner), '0.285714'],
+  ['modes diagonal is a line', m.modes_large('9', 2, 3, 2, 0.5), 8],
+  ['modes gasket large 1/4', m.modes_large('7', 2, 3, 2, 0.25), 4],
+  ['modes carpet large 1/10', m.modes_large('495', 3, 2, 3, 0.1), 13],
+  ['modes runner large 1/10', m.modes_large('127', 3, 2, 3, 0.1), 17],
+  ['modes carpet level 5', m.modes_large('495', 3, 5, 3, 0.1), 25],
+  ['modes carpet eigenvalue', modeOne, '-4.145430,3.478429,0.084554'],
+  ['modes runner eigenvalue', modeTwo, '3.145430,-1.508813,0.071196'],
+  ['modes pattern is real', `${modeWave.length},${modeWave[0]}`, '81,1'],
+  ['modes digit counts', `${m.modes_digits('495', 3, 3)},${m.modes_digits('127', 3, 3)},${m.modes_digits('7', 2, 2)}`, '8,7,3'],
   ['carry spectral ratio 50', `${carryTail.dimension} ${carryTail.ratio.toFixed(9)} ${(13 / 12).toFixed(9)}`, '50 1.083333333 1.083333333'],
+  ['tube field is the grid', `${tubeField.length},${tubeField.filter((v: number) => v === 0).length}`, '531441,262144'],
+  ['tube carpet hole sum', tubeCarpet, 478872],
+  ['tube carpet unit square', (tubeCarpet / 531441).toFixed(12), (5912 / 6561).toFixed(12)],
+  ['tube closed at the ends', `${m.tube_closed(3, 8, 1 / 3).toFixed(9)},${m.tube_closed(3, 8, 1).toFixed(9)}`, '1.353571429,1.353571429'],
+  ['tube closed swing', tubeBand(3, 8), '1.35561708,1.35067021,0.366253'],
+  ['tube profile head', `${tubePairs.length},${tubePairs[1]}`, '18,1.125'],
+  ['tube class carpet and runner', `${m.tube_class('495', 3, 3)},${m.tube_class('127', 3, 3)}`, 'true,false'],
+  ['weights corner order', Array.from(m.weights_corners('69', 3, 3)).join(','), '0,0,0,2,2,0'],
+  ['weights pressure table', wTable, '3.102621 2.033103 1.000000 0.000000 -0.971990 -1.921688'],
+  ['weights point at s -2', wPoint(-2), '-2.000000000 3.102620937 1.088179391 0.926262155'],
+  ['weights point at s 1', wPoint(1), '1.000000000 0.000000000 0.985056822 0.985056822'],
+  ['weights local dimensions', wDims, '0.892789261 1.261859507 0.985056822 1.000000000'],
+  ['weights level 2 masses', `${wField[0] * 64},${wField[2] * 64},${wField[8] * 64}`, '9,6,4'],
+  ['weights level 6 support', `${wDeep.length},${wDeep.filter((v: number) => v > 0).length}`, '531441,729'],
+  ['weights spectrum ends', `${wCurve.length},${wCurve[0].toFixed(6)},${wCurve[480].toFixed(6)}`, '482,1.261856,0.892790'],
+  ['weights equal is the design', wFlat, '2.500000000 -2.839183891 1.892789261 1.892789261'],
 );
 
 // MANIFEST

@@ -19,7 +19,7 @@ impl Rng {
         ((self.step() as u128) << 64) | self.step() as u128
     }
 
-    fn sign(&mut self) -> f64 {
+    pub fn sign(&mut self) -> f64 {
         if self.step() & 1 == 0 {
             1.0
         } else {
@@ -183,7 +183,7 @@ impl Bits {
         self.w[n >> 6] |= 1u64 << (n & 63);
     }
 
-    fn get(&self, n: usize) -> bool {
+    pub fn get(&self, n: usize) -> bool {
         self.w[n >> 6] >> (n & 63) & 1 == 1
     }
 }
@@ -516,7 +516,7 @@ fn cells() -> Vec<Cell> {
     ]
 }
 
-fn qpow(q: u64, l: usize) -> u128 {
+pub fn qpow(q: u64, l: usize) -> u128 {
     let mut p = 1u128;
     for _ in 0..l {
         p *= q as u128;
@@ -524,7 +524,7 @@ fn qpow(q: u64, l: usize) -> u128 {
     p
 }
 
-fn exps(v: f64, x: u128) -> f64 {
+pub fn exps(v: f64, x: u128) -> f64 {
     if v <= 0.0 {
         0.0
     } else {
@@ -538,7 +538,7 @@ const PAIRCAP: usize = 8_000_000;
 pub fn run() {
     let cs = cells();
     println!("menergy census");
-    println!("| q | F | L | K | E_x | theta_x | 2 alpha | E_x/(2K^2 - K) | max r | shift T | shift share | E_rand | E_rand/(2K^2 - K) |");
+    println!("| q | F | L | K | E_x | theta_x | 2 alpha | E_x/(2K^2 - K) | max r | shift T | shift share | excess share | E_rand | E_rand/(2K^2 - K) | E_x/E_rand |");
     for c in cs.iter() {
         let alpha = (c.digits.len() as f64).ln() / (c.q as f64).ln();
         for l in 1..=c.lmax {
@@ -554,22 +554,32 @@ pub fn run() {
                 "divisor ceiling fails"
             );
             let diag = (2 * k * k - k) as f64;
-            let shift = if c.digits[0] == 0 {
+            let shift = if c.digits.contains(&0) {
                 shift_excess(c.digits.len() as u128, l)
             } else {
                 0
             };
             assert!(e >= 2 * k * k - k + shift, "shift floor fails");
-            let (rand, randratio) = if l >= c.lrand {
+            let (rand, randratio, overrand) = if l >= c.lrand {
                 let mut rng = Rng::new(0x5eed + l as u64 + c.q * 977);
                 let rv = random_column(x, k as usize, &mut rng);
                 let (re, _) = energy_of(&rv, CAP);
-                (format!("{re}"), format!("{:.4}", re as f64 / diag))
+                (
+                    format!("{re}"),
+                    format!("{:.4}", re as f64 / diag),
+                    format!("{:.4}", e as f64 / re as f64),
+                )
             } else {
-                ("-".to_string(), "-".to_string())
+                ("-".to_string(), "-".to_string(), "-".to_string())
+            };
+            let excess = e as f64 - diag;
+            let exshare = if excess > 0.0 {
+                format!("{:.4}", shift as f64 / excess)
+            } else {
+                "-".to_string()
             };
             println!(
-                "| {} | {} | {} | {} | {} | {:.6} | {:.6} | {:.4} | {} | {} | {:.4} | {} | {} |",
+                "| {} | {} | {} | {} | {} | {:.6} | {:.6} | {:.4} | {} | {} | {:.4} | {} | {} | {} | {} |",
                 c.q,
                 c.label,
                 l,
@@ -581,8 +591,10 @@ pub fn run() {
                 top,
                 shift,
                 (diag + shift as f64) / e as f64,
+                exshare,
                 rand,
-                randratio
+                randratio,
+                overrand
             );
         }
     }

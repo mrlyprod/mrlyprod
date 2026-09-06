@@ -32,6 +32,8 @@
 - [sponge](demos/sponge/) - A code picks the filled corners of a cube and grows it level by level, with fills, voids and exposed faces answered by closed formulas before a cube is built.
 - [tile](demos/tile/) - One design repeated: side by side on the square lattice in the plane and in the cube, interlocked as a hexagon on the triangular one, where the fills multiply by the copy count exactly and the exposed faces do not.
 - [crop](demos/crop/) - A named shape of rational radius keeps only the cells of a design it reaches, counted exactly in in, cut and out regions, and the disc count read radius by radius carries a self-similar main term with a log-periodic multiplier.
+- [tube](demos/tube/) - Fattening a design by a radius and measuring what it swallows gives an inner tube whose Minkowski reading never settles but circles one log-periodic profile, exact in closed form wherever the holes are isolated squares.
+- [weights](demos/weights/) - Give every filled corner of a design a weight and the support never moves while the mass does, so the pressure and its Legendre transform are closed forms in the weights alone and the multifractal spectrum becomes a curve you steer with sliders.
 - [tour](demos/tour/) - A dozen cards, each drawing a design live beside the integer sequence it counts and the OEIS record that holds the terms.
 - [mrlylife](demos/mrlylife/) - Life with the neighbourhood set free: the mask is a design at any side and level, the birth and survival counts come by hand or from a named sequence, and the board runs in one dimension or two.
 - [wolfram](demos/wolfram/) - Wolfram's 256 elementary rules are the 256 three-dimensional parity designs bit for bit, so every rule arrives with a design's card, and the additive rules draw the plane designs in time.
@@ -65,6 +67,7 @@
 - [graphs](demos/graphs/) - Joining every filled cell to its neighbours turns a design into a network with tips, junctions, pieces, length and a box dimension, flat, in the cube, on the hexagonal slice, or relaxed by force.
 - [spectra](demos/spectra/) - The normalised Laplacian of a design's graph puts a third of the Sierpinski triangle's spectrum on the single eigenvalue 1, and the slope of the low end reads the random-walk spectral dimension.
 - [race](demos/race/) - Two base-3 designs of the same mass and the same fractal dimension carry random walkers from home at different speeds, so the shape sets the walk, not the density.
+- [modes](demos/modes/) - Laying a design's level-L mask over the torus picks out its modes, so every eigenvalue is a product of L rescaled copies of the tile's own transform and the field of eigenvalues is self-similar, a picture of the tile.
 
 ### Primes in the lattice
 

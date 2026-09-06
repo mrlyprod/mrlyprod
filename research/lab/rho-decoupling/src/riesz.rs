@@ -370,7 +370,7 @@ fn frac_band(lo: &Frac, hi: &Frac, digits: usize) -> String {
     }
 }
 
-fn band(lo: f64, hi: f64, digits: usize) -> String {
+pub(crate) fn band(lo: f64, hi: f64, digits: usize) -> String {
     let scale = 10f64.powi(digits as i32);
     let l = (lo * scale).floor() / scale;
     let h = (hi * scale).ceil() / scale;
@@ -925,11 +925,11 @@ fn assert_bounds(fam: &Family, m: &Moment) {
     }
 }
 
-fn alpha(fam: &Family) -> f64 {
+pub(crate) fn alpha(fam: &Family) -> f64 {
     (fam.digits.len() as f64).ln() / (fam.q as f64).ln()
 }
 
-fn theta_band(fam: &Family, m: &Moment) -> (f64, f64) {
+pub(crate) fn theta_band(fam: &Family, m: &Moment) -> (f64, f64) {
     let lq = (fam.q as f64).ln();
     let lo = 1.0 + m.lo.to_f64().ln() / lq - 1e-12;
     let hi = 1.0 + m.hi.to_f64().ln() / lq + 1e-12;
@@ -1091,7 +1091,7 @@ pub fn ratio_row(fam: &Family, m: &Moment) -> String {
 
 // ARCS
 
-fn transform_table(q: u64, digits: &[u64], l: usize) -> Vec<(f64, f64)> {
+pub(crate) fn transform_table(q: u64, digits: &[u64], l: usize) -> Vec<(f64, f64)> {
     let n = (q as usize).pow(l as u32);
     let mut g = vec![(0.0f64, 0.0f64); n];
     for b in 0..n {
