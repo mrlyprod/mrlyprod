@@ -14,6 +14,8 @@ import { shelf } from "./shelf.ts";
 
 const org = resolve(import.meta.dir, "..");
 const dist = join(org, "dist");
+const BLOG = join(org, "blog");
+const postFile = (slug: string) => join(BLOG, `${slug}.md`);
 const root = (process.env.MRLY_SITE ?? kit.root).replace(/\/$/, "");
 const AUTHOR = "Carlo Mitchener";
 const GITHUB = "https://github.com/mrlyprod/mrlyprod/tree/main";
@@ -197,18 +199,20 @@ async function demos(site: Site, route: Route): Promise<Output[]> {
 
 /* PAPERS */
 
-type Lane = { slug: string; blurb: string; name: string; md: string; published: string; revised: string; pdf: boolean; home: string };
+type Lane = { slug: string; blurb: string; name: string; md: string; published: string; revised: string; pdf: boolean };
 
-function lanes(home: string): Lane[] {
-  const readme = read(join(home, "README.md"));
+let SHELF = "";
+
+function lanes(): Lane[] {
+  const readme = read(join(SHELF, "README.md"));
   const order = [...readme.matchAll(LIST)].map((m) => ({ slug: m[1], blurb: plain(m[2]) }));
-  const found = readdirSync(home).filter(
-    (d) => d !== "template" && existsSync(join(home, d, "README.md")) && existsSync(join(home, d, "paper.tex")),
+  const found = readdirSync(SHELF).filter(
+    (d) => d !== "template" && existsSync(join(SHELF, d, "README.md")) && existsSync(join(SHELF, d, "paper.tex")),
   );
   const known = new Set(order.map((o) => o.slug));
   const list = order.filter((o) => found.includes(o.slug)).concat(found.filter((l) => !known.has(l)).map((slug) => ({ slug, blurb: "" })));
   return list.map(({ slug, blurb }) => {
-    const lane = join(home, slug);
+    const lane = join(SHELF, slug);
     const doc = read(join(lane, "README.md"));
     const tex = read(join(lane, "paper.tex"));
     const date = tex.match(/\\date\{First published (\d{4}-\d{2}-\d{2})(?:, revised (\d{4}-\d{2}-\d{2}))?\}/);
@@ -220,7 +224,6 @@ function lanes(home: string): Lane[] {
       published: date?.[1] ?? "",
       revised: date?.[2] ?? "",
       pdf: existsSync(join(lane, "paper.pdf")),
-      home,
     };
   });
 }
@@ -232,7 +235,7 @@ function paper(site: Site, route: Route): Output[] {
   const p = route.data as Lane;
   const out: Output[] = [];
   const fig = press(site, out);
-  const lane = join(p.home, p.slug);
+  const lane = join(SHELF, p.slug);
   const at = `papers/${p.slug}`;
   if (p.pdf) out.push({ path: `${at}/paper.pdf`, bytes: bytes(join(lane, "paper.pdf")) });
   out.push({ path: `${at}/paper.tex`, bytes: bytes(join(lane, "paper.tex")) });
@@ -263,7 +266,7 @@ function paperIndex(site: Site, route: Route): Output[] {
   const out: Output[] = [];
   const fig = press(site, out);
   const cards = list.map((p) => card(fig, `/papers/${p.slug}/`, `paper-${p.slug}`, p.name, p.blurb, stamps(p)));
-  const lead = summary(read(join(list[0].home, "README.md")));
+  const lead = summary(read(join(SHELF, "README.md")));
   const body = `<div class="lede"><h1 id="papers">Papers</h1><p class="lead">${escape(lead)}</p></div>\n<div class="gallery wrap">\n${cards.join("\n")}\n</div>`;
   out.push({ path: "papers/index.html", bytes: shell(site, { route: route.route, name: "Papers", description: lead, body, type: "website", wide: true, bare: true }) });
   return out;
@@ -282,20 +285,20 @@ function researchLink(url: string) {
   return url;
 }
 
-type Note = { file: string; source: string; name: string; md: string; home: boolean };
+type Note = { file: string; name: string; md: string; home: boolean };
 
 const SHARED = new Set(["DISCOVERIES", "REFS"]);
 
 function notes(site: Site): Note[] {
-  const home = site.input("research");
-  if (home.missing) {
-    console.warn(`site: no research tree at ${relative(org, home.path)}, research skipped`);
+  const dir = site.input("research");
+  if (dir.missing) {
+    console.warn(`site: no research tree at ${relative(org, dir.path)}, research skipped`);
     return [];
   }
-  return home.files
+  return dir.files
     .map((source) => {
-      const file = source.slice(home.path.length + 1);
-      return { file, source, name: file.slice(0, -3), md: read(source), home: file === "README.md" };
+      const file = source.slice(dir.path.length + 1);
+      return { file, name: file.slice(0, -3), md: read(source), home: file === "README.md" };
     })
     .sort((a, b) => (a.home ? -1 : b.home ? 1 : a.name.localeCompare(b.name)));
 }
@@ -325,18 +328,16 @@ function note(site: Site, route: Route): Output[] {
 
 /* BLOG */
 
-type Post = { slug: string; name: string; date: string; lead: string; figure: string; body: string; source: string };
+type Post = { slug: string; name: string; date: string; lead: string; figure: string; body: string };
 
 function posts(): Post[] {
-  const dir = join(org, "blog");
-  if (!existsSync(dir)) return [];
-  return readdirSync(dir)
+  if (!existsSync(BLOG)) return [];
+  return readdirSync(BLOG)
     .filter((f) => f.endsWith(".md"))
     .map((file) => {
-      const source = join(dir, file);
-      const { data, body } = front(read(source));
+      const { data, body } = front(read(join(BLOG, file)));
       const slug = file.slice(0, -3);
-      return { slug, name: data.title ?? slug, date: data.date ?? "", lead: data.lead ?? summary(body), figure: data.figure || `blog-${slug}`, body, source };
+      return { slug, name: data.title ?? slug, date: data.date ?? "", lead: data.lead ?? summary(body), figure: data.figure || `blog-${slug}`, body };
     })
     .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : a.slug < b.slug ? 1 : -1));
 }
@@ -423,13 +424,12 @@ function missing(site: Site, route: Route): Output[] {
 
 /* SITEMAP */
 
-const TODAY = new Date().toISOString().slice(0, 10);
 const seen = new Map<string, string>();
 
 function lastmod(source: string) {
-  if (!source) return TODAY;
+  if (!source) return "";
   const hit = seen.get(source);
-  if (hit) return hit;
+  if (hit !== undefined) return hit;
   let out = "";
   try {
     const run = Bun.spawnSync(["git", "log", "-1", "--format=%cI", "--", source], { cwd: dirname(source), stderr: "ignore" });
@@ -437,7 +437,7 @@ function lastmod(source: string) {
   } catch {
     out = "";
   }
-  const when = (out || TODAY).slice(0, 10);
+  const when = out.slice(0, 10);
   seen.set(source, when);
   return when;
 }
@@ -447,7 +447,8 @@ function lastmod(source: string) {
 const counts = { papers: 0, research: 0, blog: 0, demos: 0 };
 
 async function collect(site: Site) {
-  const laneList = lanes(await shelf());
+  SHELF = await shelf();
+  const laneList = lanes();
   const noteList = notes(site);
   const postList = posts();
   const group = demoGroup(site);
@@ -473,27 +474,33 @@ async function collect(site: Site) {
   });
   routes.push(group);
   if (laneList.length) {
-    const index = join(laneList[0].home, "README.md");
+    const index = join(SHELF, "README.md");
     routes.push({ route: "/papers/", kind: "papers", name: "Papers", data: laneList, source: index, inputs: [index], at: lastmod(index) });
     for (const p of laneList) {
-      const source = join(p.home, p.slug, "README.md");
-      routes.push({ route: `/papers/${p.slug}/`, kind: "paper", name: p.name, data: p, source, inputs: [source], at: lastmod(source) });
+      const lane = join(SHELF, p.slug);
+      routes.push({ route: `/papers/${p.slug}/`, kind: "paper", name: p.name, data: p, source: lane, inputs: [lane], at: lastmod(join(lane, "README.md")) });
     }
   }
+  const notesHome = site.input("research").path;
   for (const n of noteList) {
+    const source = join(notesHome, n.file);
     routes.push({
       route: n.home ? "/research/" : `/research/${n.name}/`,
       kind: "note",
       name: title(n.md) || n.name,
       data: n,
-      source: n.source,
-      inputs: [n.source],
-      at: lastmod(n.source),
+      source,
+      inputs: [source],
+      at: lastmod(source),
     });
   }
   if (postList.length) {
-    routes.push({ route: "/blog/", kind: "blog", name: "Blog", data: postList, source: join(org, "blog"), inputs: postList.map((p) => p.source), at: TODAY });
-    for (const p of postList) routes.push({ route: `/blog/${p.slug}/`, kind: "post", name: p.name, data: p, source: p.source, inputs: [p.source], at: lastmod(p.source) });
+    const files = postList.map((p) => postFile(p.slug));
+    routes.push({ route: "/blog/", kind: "blog", name: "Blog", data: postList, source: BLOG, inputs: files, at: lastmod(files[0]) });
+    for (const p of postList) {
+      const source = postFile(p.slug);
+      routes.push({ route: `/blog/${p.slug}/`, kind: "post", name: p.name, data: p, source, inputs: [source], at: lastmod(source) });
+    }
   }
   const page = join(org, "pages", "about.md");
   if (existsSync(page)) routes.push({ route: "/about/", kind: "about", name: "About", source: page, inputs: [page], at: lastmod(page) });

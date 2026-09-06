@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, unlinkSync, writeFileSync } from "node:fs";
-import { dirname, extname, join, resolve } from "node:path";
+import { basename, dirname, extname, join, relative, resolve } from "node:path";
 
 /* TYPES */
 
@@ -128,8 +128,9 @@ function inputs(root: string, config: Config): Record<string, Input> {
 function templates(spec: Spec): string {
   const here = resolve(import.meta.dir, "..");
   const dirs = [here, ...(spec.templates ?? []).map((d) => resolve(spec.root, d))];
-  const files = dirs.flatMap((d) => walk(d));
-  return digest(files.flatMap((f) => [f, bytes(f)]));
+  const parts: Bytes[] = [];
+  for (const dir of dirs) for (const file of walk(dir)) parts.push(relative(dir, file), bytes(file));
+  return digest(parts);
 }
 
 function bundle(root: string, decl: NonNullable<Config["kit"]>): Bundle {
@@ -207,16 +208,30 @@ export async function scan(spec: Spec): Promise<Site> {
 
 /* FINGERPRINT */
 
+function label(site: Site, file: string): string {
+  let base = "";
+  let name = "";
+  for (const one of Object.values(site.inputs)) {
+    if (one.path.length <= base.length) continue;
+    if (file !== one.path && !file.startsWith(`${one.path}/`)) continue;
+    base = one.path;
+    name = one.name;
+  }
+  if (!base) return basename(file);
+  return file === base ? name : `${name}/${file.slice(base.length + 1)}`;
+}
+
 export function fingerprint(site: Site, route: Route): string {
   const files = route.inputs ?? (route.source ? [route.source] : []);
+  const named = files.map((file) => [label(site, file), file] as const).sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
   const parts: Bytes[] = [route.route, route.kind ?? "", JSON.stringify(route.data ?? null), site.stamp];
-  for (const file of files.slice().sort()) {
-    parts.push(file);
+  for (const [name, file] of named) {
+    parts.push(name);
     if (!existsSync(file)) {
       parts.push("gone");
       continue;
     }
-    if (statSync(file).isDirectory()) for (const inner of walk(file)) parts.push(inner, bytes(inner));
+    if (statSync(file).isDirectory()) for (const inner of walk(file)) parts.push(relative(file, inner), bytes(inner));
     else parts.push(bytes(file));
   }
   return digest(parts).slice(0, 16);
@@ -237,7 +252,7 @@ function links(site: Site): Link[] {
   for (const route of site.routes) {
     if (route.hidden) continue;
     const list = route.urls ?? (route.route.endsWith("/") ? [{ route: route.route, name: route.name }] : []);
-    for (const one of list) out.push({ route: one.route, name: one.name ?? one.route, at: one.at ?? route.at });
+    for (const one of list) out.push({ route: one.route, name: one.name ?? one.route, at: one.at || route.at });
   }
   return out.sort((a, b) => a.route.localeCompare(b.route));
 }
@@ -246,7 +261,7 @@ export async function globals(site: Site, spec: Spec): Promise<Output[]> {
   const out: Output[] = [...((site as { copies?: Output[] }).copies ?? [])];
   const root = clean(site.config.root as string);
   const shown = links(site);
-  const urls = shown.map((l) => `<url><loc>${escape(root + l.route)}</loc><lastmod>${l.at ?? today()}</lastmod></url>`);
+  const urls = shown.map((l) => `<url><loc>${escape(root + l.route)}</loc><lastmod>${l.at || today()}</lastmod></url>`);
   out.push({
     path: "sitemap.xml",
     bytes: `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>\n`,
@@ -280,28 +295,29 @@ function put(out: string, item: Output): boolean {
 
 /* BUILD */
 
-export async function build(spec: Spec, options: { manifest?: string; force?: boolean } = {}) {
+export async function build(spec: Spec, options: { manifest?: string; force?: boolean; verify?: boolean } = {}) {
   const site = await scan(spec);
   const path = options.manifest ? resolve(spec.root, options.manifest) : "";
   const old: Manifest = path && existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : {};
   const next: Manifest = {};
   const kept = new Set<string>();
+  const verify = options.verify ?? true;
   let rendered = 0;
   let written = 0;
   for (const route of site.routes) {
     const hash = fingerprint(site, route);
     const was = old[route.route];
-    const fresh = !options.force && was && was.hash === hash && was.outputs.every((p) => existsSync(join(site.out, p)));
-    if (fresh) {
+    const same = !options.force && !!was && was.hash === hash;
+    if (was && same && (!verify || was.outputs.every((p) => existsSync(join(site.out, p))))) {
       next[route.route] = was;
-      route.at = route.at ?? was.at;
+      route.at = route.at || was.at;
       for (const p of was.outputs) kept.add(p);
       continue;
     }
     const outputs = await render(site, route, spec);
     for (const item of outputs) if (put(site.out, item)) written++;
     rendered++;
-    const at = route.at ?? today();
+    const at = route.at || (was && same ? was.at : today());
     next[route.route] = { hash, at, outputs: outputs.map((o) => o.path) };
     route.at = at;
     for (const item of outputs) kept.add(item.path);

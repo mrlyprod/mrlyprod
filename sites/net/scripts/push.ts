@@ -74,7 +74,7 @@ export async function push(options: { dry?: boolean } = {}): Promise<{ rendered:
   const old: Manifest = found ? JSON.parse(found) : {};
   const carry = join(tmpdir(), `mrlynet-remote-${process.pid}.json`);
   writeFileSync(carry, JSON.stringify(old, null, 2) + "\n");
-  const done = await build(spec, { manifest: carry });
+  const done = await build(spec, { manifest: carry, verify: false });
   rmSync(carry, { force: true });
   const next: Manifest = { ...done.manifest, ...assets(await globals(done.site, spec), old) };
   const want = spread(next);
