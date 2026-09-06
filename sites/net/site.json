@@ -16,6 +16,15 @@
     { "name": "About", "href": "/about/" }
   ],
   "git": { "root": "../..", "slug": "mrlyprod/mrlyprod", "branch": "main" },
+  "llms": {
+    "about": "MrlyMath is the mathematics of designs on the corners of a cube: a code says which of the eight corners are filled, the Kronecker product grows that rule into itself level by level, and the object it converges to is a fractal, the Sierpinski carpet and the Menger sponge among them. Everything else on this site is measurement: fills, voids and exposed faces, plane cuts, graph spectra, and the integer sequences the counts write down, with Rust crates doing the arithmetic and the browser only painting. Every claim is proved, checked over a stated finite domain, or labelled a conjecture, and all of it is free and open source.",
+    "links": [
+      { "href": "/raw/README.md", "name": "README", "note": "the repository readme, in markdown" },
+      { "href": "/research/", "name": "Research", "note": "working notes, one page per idea" },
+      { "href": "/git/", "name": "Code", "note": "the whole tree, browsable, with raw bytes under /raw/" },
+      { "href": "/papers/", "name": "Papers", "note": "write-ups with their LaTeX source and PDFs" }
+    ]
+  },
   "socials": [{ "name": "GitHub", "href": "https://github.com/mrlyprod" }],
   "contact": "help@mrly.net",
   "inputs": {

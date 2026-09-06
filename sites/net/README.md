@@ -19,9 +19,11 @@
 - Two inputs are made on the desk and read at build time: `pkg/` from `bun run wasm` and `../../files/figures/` from `bun run figures` (the `mrlyfig` crate); a missing figure throws while its own route renders and names the route.
 - Figures are named by route: `research-<page>`, `paper-<slug>`, `blog-<slug>`, `site-home`, `site-demos`, `site-papers`, `site-research`, `site-og` (1200x630) and `site-icon`; a research or blog page opens on its square figure, a paper page opens on its avatar, the cards and the doors use the same files.
 - `scripts/shelf.ts` fetches the paper shelf from GitHub into `data/shelf/` at every build and falls back to the cached copy offline; `MRLY_SHELF=/path/to/research` reads a local checkout instead, which `bun run dev` sets to the cached copy so a rescan never waits on the network.
-- Routes: `/`, `/demos/`, `/demos/<name>/`, `/papers/`, `/papers/<slug>/`, `/research/`, `/research/<name>/`, `/blog/`, `/blog/<slug>/`, `/about/`, `/git/...`, `/raw/...` and `/404.html`, beside `sitemap.xml`, `robots.txt`, `favicon.svg`, `apple-touch-icon.png`, `icon-512.png` and `manifest.webmanifest`.
+- Routes: `/`, `/demos/`, `/demos/<name>/`, `/papers/`, `/papers/<slug>/`, `/research/`, `/research/<name>/`, `/blog/`, `/blog/<slug>/`, `/about/`, `/git/...`, `/raw/...` and `/404.html`, beside `sitemap.xml`, `robots.txt`, `llms.txt`, `favicon.svg`, `apple-touch-icon.png`, `icon-512.png` and `manifest.webmanifest`.
 - `/git/` is the code viewer from `../../pkgs/js/mrlyjs/git`: it browses this repo's own tracked tree, `/raw/` serves the bytes, and the `git` block in `site.json` names the root, the GitHub slug and the branch.
-- Only `/git/` enters the sitemap; the 961 pages under it are hidden, linked from one collapsed `Code` node in the tree.
+- The tree carries one collapsed `Code` node; the pages under it stay out of the navigator, and every one of them plus every `/raw/` object enters the sitemap.
+- `site.json` carries the `llms` block: the paragraph `llms.txt` opens on and the links it points at, `/raw/README.md`, `/research/`, `/git/` and `/papers/`.
+- `robots.txt` allows everything and names GPTBot, ClaudeBot, Claude-Web, CCBot, Google-Extended, anthropic-ai and PerplexityBot one block each.
 - The highlighter is the kit's, server-side Shiki over 16 grammars; `ui/code.css` rides with `seti.css` on every code page.
 - Every route carries a canonical link, a description, Open Graph and Twitter cards pointing at the one `/og.png`, and JSON-LD where it has an author.
 - `bun run check` prints the fixture numbers the crate's host test asserts; both must agree.

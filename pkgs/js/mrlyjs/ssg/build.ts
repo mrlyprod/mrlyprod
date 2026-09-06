@@ -21,6 +21,7 @@ export type Route = {
   urls?: Link[];
   at?: string;
   hidden?: boolean;
+  sitemap?: boolean;
 };
 
 export type Node = { name: string; href?: string; nodes?: Node[]; open?: boolean };
@@ -52,6 +53,7 @@ export type Config = {
   assets?: { path: string; out?: string; hash?: boolean; files?: string[]; ext?: string }[];
   manifest?: Record<string, unknown>;
   robots?: { disallow?: string[] };
+  llms?: { about?: string; links?: { href: string; name?: string; note?: string }[] };
   [key: string]: unknown;
 };
 
@@ -259,14 +261,40 @@ export async function render(site: Site, route: Route, spec: Spec): Promise<Outp
 
 const clean = (root: string) => (root ?? "").replace(/\/$/, "");
 
+const AGENTS = ["GPTBot", "ClaudeBot", "Claude-Web", "CCBot", "Google-Extended", "anthropic-ai", "PerplexityBot"];
+
 function links(site: Site): Link[] {
   const out: Link[] = [];
   for (const route of site.routes) {
-    if (route.hidden) continue;
+    if (route.hidden && !route.sitemap) continue;
     const list = route.urls ?? (route.route.endsWith("/") ? [{ route: route.route, name: route.name }] : []);
     for (const one of list) out.push({ route: one.route, name: one.name ?? one.route, at: one.at || route.at });
   }
   return out.sort((a, b) => a.route.localeCompare(b.route));
+}
+
+function robots(site: Site, root: string): string {
+  const deny = (site.config.robots?.disallow ?? []).map((path) => `Disallow: ${path}`);
+  const lines: string[] = [];
+  for (const agent of AGENTS) lines.push(`User-agent: ${agent}`, "Allow: /", "");
+  lines.push("User-agent: *", "Allow: /", ...deny, "");
+  lines.push(`Sitemap: ${root}/sitemap.xml`, "");
+  return lines.join("\n");
+}
+
+function llms(site: Site, root: string): string {
+  const decl = site.config.llms ?? {};
+  const known = new Set<string>();
+  for (const route of site.routes) {
+    known.add(route.route);
+    for (const one of route.urls ?? []) known.add(one.route);
+  }
+  const rows = (decl.links ?? [])
+    .filter((one) => known.has(one.href))
+    .map((one) => `- [${one.name ?? one.href}](${root}${one.href})${one.note ? `: ${one.note}` : ""}`);
+  const head = [`# ${site.config.title ?? ""}`, "", `> ${root}`, ""];
+  if (decl.about) head.push(decl.about, "");
+  return [...head, ...rows, ""].join("\n");
 }
 
 export async function globals(site: Site, spec: Spec): Promise<Output[]> {
@@ -278,10 +306,8 @@ export async function globals(site: Site, spec: Spec): Promise<Output[]> {
     path: "sitemap.xml",
     bytes: `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>\n`,
   });
-  const deny = (site.config.robots?.disallow ?? []).map((path) => `Disallow: ${path}`);
-  out.push({ path: "robots.txt", bytes: [`User-agent: *`, `Allow: /`, ...deny, `Sitemap: ${root}/sitemap.xml`, ""].join("\n") });
-  const lines = shown.map((l) => `- [${l.name ?? l.route}](${root}${l.route})`);
-  out.push({ path: "llms.txt", bytes: [`# ${site.config.title ?? ""}`, "", `> ${root}`, "", ...lines, ""].join("\n") });
+  out.push({ path: "robots.txt", bytes: robots(site, root) });
+  out.push({ path: "llms.txt", bytes: llms(site, root) });
   if (site.config.manifest) out.push({ path: "manifest.webmanifest", bytes: JSON.stringify(site.config.manifest, null, 2) + "\n" });
   const pub = site.config.inputs?.public ? site.input("public") : null;
   if (pub) for (const file of walk(pub.path)) out.push({ path: file.slice(pub.path.length + 1), bytes: bytes(file) });

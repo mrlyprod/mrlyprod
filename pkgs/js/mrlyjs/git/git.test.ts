@@ -2,7 +2,7 @@ import { afterAll, expect, test } from "bun:test";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { block, collect, dirRoute, fileRoute, lang, link, named, owner, rawPath } from "./git.ts";
+import { block, collect, dirRoute, fileRoute, gist, lang, link, named, owner, rawPath } from "./git.ts";
 import { paint } from "./code.ts";
 import type { Site } from "../ssg/build.ts";
 
@@ -72,7 +72,24 @@ test("a git block routes every tracked file and every directory", () => {
   expect(kids.map((one) => one[0])).toEqual(["src", ".gitignore", "LICENSE", "README.md"]);
   expect(kids[0]).toEqual(["src", 1, "dir"]);
   expect(root.hidden).toBe(false);
-  expect(routes.find((one) => one.route === "/git/src/a.rs")!.hidden).toBe(true);
+  const one = routes.find((one) => one.route === "/git/src/a.rs")!;
+  expect(one.hidden).toBe(true);
+  expect(one.sitemap).toBe(true);
+  expect(one.urls).toEqual([
+    { route: "/git/src/a.rs", name: "a.rs" },
+    { route: "/raw/src/a.rs", name: "a.rs" },
+  ]);
+});
+
+/* BLURB */
+
+test("a description is the first lines collapsed, stripped and clipped", () => {
+  expect(gist("# git\n\nThe code viewer.\n")).toBe("git The code viewer.");
+  expect(gist("\n\n   use   crate::a;\nuse crate::b;\n")).toBe("use crate::a; use crate::b;");
+  expect(gist("")).toBe("");
+  const long = gist(`${"word ".repeat(80)}\n`);
+  expect(long.length).toBeLessThanOrEqual(160);
+  expect(long.endsWith("...")).toBe(true);
 });
 
 /* CODE */

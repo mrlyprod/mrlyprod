@@ -134,6 +134,7 @@ export function collect(site: Site): { routes: Route[]; node: Node | null } {
       data: { dir, kids: list, readme } satisfies Dir,
       inputs: readme ? [join(git.root, readme)] : [],
       hidden: dir !== "",
+      sitemap: true,
     });
   }
   for (const path of paths) {
@@ -145,7 +146,12 @@ export function collect(site: Site): { routes: Route[]; node: Node | null } {
       data: { path, size: sizes.get(path)! } satisfies File,
       source,
       inputs: [source],
+      urls: [
+        { route: fileRoute(path), name: stem(path) },
+        { route: `/${rawPath(path)}`, name: stem(path) },
+      ],
       hidden: true,
+      sitemap: true,
     });
   }
   return { routes, node: { name: "Code", href: "/git/" } };
@@ -296,6 +302,23 @@ function bar(git: Git, path: string, dir: boolean, tools: string[]): string {
   return `<nav class="bar" aria-label="Path"><span class="crumbs">${crumbs.join('<span class="sep">/</span>')}</span><span class="tools">${side}</span></nav>`;
 }
 
+/* BLURB */
+
+const CAP = 160;
+
+export const clip = (text: string) => (text.length > CAP ? `${text.slice(0, CAP - 3).trimEnd()}...` : text);
+
+export function gist(text: string): string {
+  let out = "";
+  for (const line of text.split("\n")) {
+    const one = line.trim();
+    if (!one) continue;
+    out = out ? `${out} ${one}` : one;
+    if (out.length >= CAP) break;
+  }
+  return clip(out.replace(/\s+/g, " ").replace(/^[#/*\-;%!<>=\s]+/, "").trim());
+}
+
 /* LISTING */
 
 function rows(dir: string, kids: Child[]): string {
@@ -323,8 +346,10 @@ function listing(site: Site, git: Git, route: Route, hooks: Hooks): Output[] {
   const name = dir || git.name;
   const lead = `${folders} director${folders === 1 ? "y" : "ies"} and ${files} file${files === 1 ? "" : "s"} in ${name}.`;
   const body = `${head}\n<div class="lede"><h1 id="${anchor(name)}">${escape(name)}</h1><p class="lead">${escape(lead)}</p></div>\n${intro}\n${rows(dir, kids)}`;
+  const first = text ? gist(text) : "";
+  const description = clip(first ? `${lead} ${first}` : lead);
   const at = dir ? `git/${dir}/index.html` : "git/index.html";
-  return [{ path: at, bytes: hooks.page(site, { route: route.route, name, description: lead, body, type: "website", code: true }), type: HTML }];
+  return [{ path: at, bytes: hooks.page(site, { route: route.route, name, description, body, type: "website", code: true }), type: HTML }];
 }
 
 /* CODE */
@@ -349,12 +374,6 @@ export async function block(text: string, kind: string, hook?: Hooks["code"]): P
 }
 
 /* FILE */
-
-const lead = (text: string) => {
-  const found = text.split("\n").map((one) => one.trim()).filter(Boolean).slice(0, 2).join(" ");
-  const clean = found.replace(/\s+/g, " ").replace(/^[#/*\-;%!<>=\s]+/, "").trim();
-  return clean.length > 180 ? `${clean.slice(0, 177)}...` : clean;
-};
 
 async function file(site: Site, git: Git, route: Route, hooks: Hooks): Promise<Output[]> {
   const { path, size: weight } = route.data as File;
@@ -387,7 +406,8 @@ async function file(site: Site, git: Git, route: Route, hooks: Hooks): Promise<O
     main = `<p class="lead"><a href="${raw}">Download ${escape(stem(path))}</a> · ${size(weight)}</p>`;
     note = `${size(weight)} · ${kind || "binary"}`;
   }
-  const description = text !== null ? lead(text) || `${stem(path)} in ${git.name}, ${note}` : `${stem(path)} in ${git.name}, ${note}`;
+  const plain = `${stem(path)} in ${git.name}, ${note}`;
+  const description = (text !== null ? gist(text) : "") || plain;
   const shown = `${head}\n<div class="lede"><h1 id="${anchor(stem(path))}">${escape(stem(path))}</h1><p class="lead">${escape(note)}</p></div>\n${main}`;
   return [
     { path: rawPath(path), bytes: body, type: mime(path, text !== null) },

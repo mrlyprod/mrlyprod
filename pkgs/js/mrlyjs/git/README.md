@@ -27,6 +27,14 @@
 
 - `/git` is one collapsed node in the site tree, never the whole repo; a listing carries its own children and a path bar carries its ancestors.
 - The node is added only when the site's own nav has no `/git/` href, so a site may place `{ "name": "Code", "href": "/git/" }` in `site.json` itself.
+- Every route below the root is `hidden` and `sitemap`: out of the navigator, on the map, so a crawler reads what a reader has to click to.
+- A file route carries two `urls`, its page and its `/raw/` object, and both take the file's own `lastmod`.
+
+## HEAD
+
+- The chrome writes the head, so a page gets its canonical link, its title and its description from `page()` and the module only fills the leaf.
+- A file's description is its first non-empty lines, whitespace collapsed, the leading comment marks stripped, clipped to 160 characters.
+- A listing's is its child count and then its README read the same way, so a directory says what it holds and what it is.
 
 ## HIGHLIGHT
 
