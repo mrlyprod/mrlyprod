@@ -1,5 +1,5 @@
 import type { S3Client } from "bun";
-import { existsSync, mkdirSync, rmSync } from "node:fs";
+import { existsSync, readdirSync, renameSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { client, DEV_BUCKET, getText, putBytes } from "./s3.ts";
 
@@ -53,17 +53,16 @@ async function commit(etag: string): Promise<Head | null> {
 }
 
 async function unpack(slug: string, ref: string, into: string): Promise<void> {
+  const stage = `${into}.stage`;
+  rmSync(stage, { recursive: true, force: true });
   rmSync(into, { recursive: true, force: true });
-  mkdirSync(into, { recursive: true });
   const res = await fetch(`https://codeload.github.com/${slug}/tar.gz/${ref}`, { headers: { "user-agent": AGENT } });
   if (!res.ok) throw new Error(`codeload ${slug} ${ref}: ${res.status}`);
-  const tarball = `${into}.tar.gz`;
-  await Bun.write(tarball, res);
-  const child = Bun.spawn(["tar", "-xzf", tarball, "-C", into, "--strip-components", "1"], { stdout: "pipe", stderr: "pipe" });
-  const reason = await new Response(child.stderr).text();
-  const code = await child.exited;
-  rmSync(tarball, { force: true });
-  if (code !== 0) throw new Error(`tar ${slug} ${ref}: ${reason.trim().slice(-500)}`);
+  const files = await new Bun.Archive(new Uint8Array(await res.arrayBuffer())).extract(stage);
+  const [top] = readdirSync(stage);
+  if (!files || !top) throw new Error(`codeload ${slug} ${ref}: the tarball is empty`);
+  renameSync(join(stage, top), into);
+  rmSync(stage, { recursive: true, force: true });
 }
 
 /* CHILD */
