@@ -5,7 +5,9 @@
   "scripts": {
     "wasm": "bash ../../scripts/wasm.sh",
     "dev": "bun scripts/dev.ts",
-    "build": "bun scripts/clean.ts && bun build demos/index.html demos/*/index.html --root . --outdir dist --splitting --minify --define 'process.env.NODE_ENV=\"production\"' --chunk-naming 'lib-[hash].[ext]' --asset-naming '[name]-[hash].[ext]' && bun scripts/site.ts",
+    "build": "bun scripts/site.ts",
+    "push": "bun scripts/push.ts",
+    "clean": "bun scripts/clean.ts",
     "check": "bun check.ts",
     "figures": "bash ../../scripts/figures.sh"
   },

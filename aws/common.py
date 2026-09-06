@@ -82,6 +82,10 @@ LAMBDA_NAME = env("MRLYGAME_FUNCTION", "mrlygame")
 LAMBDA_LAYERS = ["mrlygame", "ffmpeg"]
 STACK_NAME = "serverlessrepo-ffmpeg-lambda-layer"
 ROLE_NAME = env("ROLE_NAME", "mrlyrole")
+NET_FUNCTION = env("MRLYNET_FUNCTION", "mrlynet")
+BUN_LAYER = env("BUN_LAYER_ARN", "arn:aws:lambda:us-east-2:116981788437:layer:bun:1")
+DEV_BUCKET = env("MRLYDEV_BUCKET", "mrlydev")
+PROD_BUCKET = env("MRLYPROD_BUCKET", "mrlyprod")
 BOT_USER = "mrlybot"
 KEEP_USER = "carlo"
 
@@ -205,6 +209,7 @@ def ids():
     say(f"origin        {SITE_ORIGIN}")
     say(f"cert          {CERT_ARN}")
     say(f"net zone      {NET_ZONE} (read only)")
+    say(f"bun layer     {BUN_LAYER}")
     say(f"distribution  {site_id() or 'none yet'}")
     say(f"oac           {oac_id(OAC_NAME) or 'none yet'}")
     say(f"router        {function_arn(ROUTER_NAME) or 'none yet'}")

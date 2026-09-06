@@ -22,7 +22,10 @@
     "blog": { "path": "blog", "ext": ".md" },
     "research": { "path": "../../research", "ext": ".md" },
     "figures": { "path": "../../files/figures", "ext": ".png" },
-    "demos": { "path": "demos" },
+    "demos": { "path": "demos", "deep": true },
+    "lib": { "path": "lib", "deep": true },
+    "pkg": { "path": "pkg", "deep": true },
+    "ui": { "path": "../../pkgs/js/mrlyjs/ui", "deep": true },
     "public": { "path": "public" }
   },
   "kit": {

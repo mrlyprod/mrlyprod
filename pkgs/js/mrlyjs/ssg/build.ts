@@ -8,6 +8,8 @@ export type Bytes = string | Uint8Array;
 
 export type Output = { path: string; bytes: Bytes };
 
+export type Link = { route: string; name?: string; at?: string };
+
 export type Route = {
   route: string;
   kind?: string;
@@ -15,6 +17,7 @@ export type Route = {
   data?: unknown;
   source?: string;
   inputs?: string[];
+  urls?: Link[];
   at?: string;
   hidden?: boolean;
 };
@@ -85,6 +88,10 @@ export function walk(dir: string, deep = true): string[] {
 }
 
 const cache = new Map<string, Uint8Array>();
+
+export function forget() {
+  cache.clear();
+}
 
 export function bytes(file: string): Uint8Array {
   const hit = cache.get(file);
@@ -209,7 +216,7 @@ export function fingerprint(site: Site, route: Route): string {
       parts.push("gone");
       continue;
     }
-    if (statSync(file).isDirectory()) for (const inner of walk(file)) parts.push(bytes(inner));
+    if (statSync(file).isDirectory()) for (const inner of walk(file)) parts.push(inner, bytes(inner));
     else parts.push(bytes(file));
   }
   return digest(parts).slice(0, 16);
@@ -225,24 +232,28 @@ export async function render(site: Site, route: Route, spec: Spec): Promise<Outp
 
 const clean = (root: string) => (root ?? "").replace(/\/$/, "");
 
+function links(site: Site): Link[] {
+  const out: Link[] = [];
+  for (const route of site.routes) {
+    if (route.hidden) continue;
+    const list = route.urls ?? (route.route.endsWith("/") ? [{ route: route.route, name: route.name }] : []);
+    for (const one of list) out.push({ route: one.route, name: one.name ?? one.route, at: one.at ?? route.at });
+  }
+  return out.sort((a, b) => a.route.localeCompare(b.route));
+}
+
 export async function globals(site: Site, spec: Spec): Promise<Output[]> {
   const out: Output[] = [...((site as { copies?: Output[] }).copies ?? [])];
   const root = clean(site.config.root as string);
-  const shown = site.routes.filter((r) => !r.hidden && r.route.endsWith("/"));
-  const urls = shown
-    .slice()
-    .sort((a, b) => a.route.localeCompare(b.route))
-    .map((r) => `<url><loc>${escape(root + r.route)}</loc><lastmod>${r.at ?? today()}</lastmod></url>`);
+  const shown = links(site);
+  const urls = shown.map((l) => `<url><loc>${escape(root + l.route)}</loc><lastmod>${l.at ?? today()}</lastmod></url>`);
   out.push({
     path: "sitemap.xml",
     bytes: `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>\n`,
   });
   const deny = (site.config.robots?.disallow ?? []).map((path) => `Disallow: ${path}`);
   out.push({ path: "robots.txt", bytes: [`User-agent: *`, `Allow: /`, ...deny, `Sitemap: ${root}/sitemap.xml`, ""].join("\n") });
-  const lines = shown
-    .slice()
-    .sort((a, b) => a.route.localeCompare(b.route))
-    .map((r) => `- [${r.name ?? r.route}](${root}${r.route})`);
+  const lines = shown.map((l) => `- [${l.name ?? l.route}](${root}${l.route})`);
   out.push({ path: "llms.txt", bytes: [`# ${site.config.title ?? ""}`, "", `> ${root}`, "", ...lines, ""].join("\n") });
   if (site.config.manifest) out.push({ path: "manifest.webmanifest", bytes: JSON.stringify(site.config.manifest, null, 2) + "\n" });
   const pub = site.config.inputs?.public ? site.input("public") : null;

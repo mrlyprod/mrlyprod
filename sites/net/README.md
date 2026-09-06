@@ -11,15 +11,19 @@
 - `select.jsx` is the one picker: design list, code, base and Randomize; `?seed=7` replays the seventh tap, and a typed code drops the seed.
 - `useQuery` in `query.js` keeps page state in the URL, so every view is a link.
 - Words live as markdown: `blog/<slug>.md` and `pages/about.md` open with a `---` front matter block (title, date, lead, optional figure naming a file in `files/figures/`); `public/` copies straight to the site root.
-- `bun run dev` is the one command: it generates the static routes into `dist/` and serves them with every React page at `localhost:3000`.
-- `bun run build` writes the whole site to `dist/`: `scripts/clean.ts` empties it, `bun build` bundles the React pages, `scripts/site.ts` writes every static route; pure bun, no Chrome, no cargo, no Python.
-- Two inputs are made on the desk and read at build time: `pkg/` from `bun run wasm` and `../../files/figures/` from `bun run figures` (the `mrlyfig` crate); the build fails with the list when a route's figure is missing.
+- `bun run dev` renders on request: it scans once, watches every declared input and template, and renders the route you ask for; nothing is prebuilt and `dist/` is never read.
+- In dev the kit and the figures are served straight from disk and the demos keep Bun's HTML routes, so a CSS or markdown edit shows on the next refresh with no build.
+- `bun run build` writes the whole site to `dist/` with `scripts/site.ts` alone: pure bun, no Chrome, no cargo, no Python; `bun run clean` empties `dist/` by hand when you want a cold start.
+- The demos are one route: one in-process `Bun.build()` over `demos/index.html` and `demos/*/index.html`, its SEO head injected before the shells are written, fingerprinted over `demos/`, `lib/`, `pkg/` and the kit.
+- A second `bun run build` renders nothing: every route is fingerprinted into `.cache/manifest.json` with the files it wrote, and dead outputs are deleted by that record.
+- Two inputs are made on the desk and read at build time: `pkg/` from `bun run wasm` and `../../files/figures/` from `bun run figures` (the `mrlyfig` crate); a missing figure throws while its own route renders and names the route.
 - Figures are named by route: `research-<page>`, `paper-<slug>`, `blog-<slug>`, `site-home`, `site-demos`, `site-papers`, `site-research`, `site-og` (1200x630) and `site-icon`; a research or blog page opens on its square figure, a paper page opens on its avatar, the cards and the doors use the same files.
-- `scripts/shelf.ts` fetches the paper shelf from GitHub into `data/shelf/` at every build and falls back to the cached copy offline; `MRLY_SHELF=/path/to/research` reads a local checkout instead.
+- `scripts/shelf.ts` fetches the paper shelf from GitHub into `data/shelf/` at every build and falls back to the cached copy offline; `MRLY_SHELF=/path/to/research` reads a local checkout instead, which `bun run dev` sets to the cached copy so a rescan never waits on the network.
 - Routes: `/`, `/demos/`, `/demos/<name>/`, `/papers/`, `/papers/<slug>/`, `/research/`, `/research/<name>/`, `/blog/`, `/blog/<slug>/`, `/about/` and `/404.html`, beside `sitemap.xml`, `robots.txt`, `favicon.svg`, `apple-touch-icon.png`, `icon-512.png` and `manifest.webmanifest`.
 - Every route carries a canonical link, a description, Open Graph and Twitter cards pointing at the one `/og.png`, and JSON-LD where it has an author.
 - `bun run check` prints the fixture numbers the crate's host test asserts; both must agree.
-- `pkg/`, `dist/`, `data/` and `node_modules/` are build output and stay out of git.
+- `site.json` declares every input the build reads: `readme pages blog research figures demos lib pkg ui public`; nothing is resolved by hand, so a path moves in one place.
+- `pkg/`, `dist/`, `data/`, `.cache/` and `node_modules/` are build output and stay out of git.
 ## PAGES
 
 - The shelves, the cards and this list are one file: `pages.json`; a new page is one row there and nothing else.
