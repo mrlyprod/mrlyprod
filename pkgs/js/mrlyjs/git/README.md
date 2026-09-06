@@ -28,9 +28,18 @@
 - `/git` is one collapsed node in the site tree, never the whole repo; a listing carries its own children and a path bar carries its ancestors.
 - The node is added only when the site's own nav has no `/git/` href, so a site may place `{ "name": "Code", "href": "/git/" }` in `site.json` itself.
 
+## HIGHLIGHT
+
+- `code.ts` is the built-in highlighter: Shiki core, the JavaScript regex engine (`forgiving`), no oniguruma and no wasm.
+- One highlighter per process, no grammar loaded until a file wants it; a grammar that fails to load is remembered as a miss.
+- The theme is `createCssVariablesTheme` with prefix `--code-`, and nothing ships that variable: every token becomes a `tk-*` class, so no output carries a `style` attribute.
+- 16 grammars: c css csv html javascript json jsx markdown python rust shellscript toml tsx typescript wgsl yaml. Anything else paints nothing and the escaped text stands.
+- `ui/code.css` colours the classes from the kit's tokens and sizes the gutter from the `d2`-`d6` class `block()` writes.
+
 ## FINGERPRINT
 
 - A file route hashes its bytes and the templates; a listing hashes the sorted `[name, size, kind]` of its children, its README and the templates.
+- A file route also hashes the installed Shiki version, so a bump repaints every file and no listing.
 - An unchanged file renders nothing on the second build; a directory changes when a child is added, renamed or resized.
 
 ## HOOKS
@@ -39,3 +48,4 @@
 - `page(site, leaf)` wraps a body in the site's page template; `leaf.code` asks it for the seti stylesheet.
 - `md(text, dir)` renders markdown the site's way, with the site's math; `link(dir, url)` turns a repo-relative link into a `/git/` route.
 - `code(text, lang)` is the highlighter seam: it hands back one HTML string per line, or null to fall back to escaped text.
+- A site that passes no `code` gets `code.ts`, so the highlighter is the default and not a chore.

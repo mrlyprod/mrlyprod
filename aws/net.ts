@@ -94,6 +94,7 @@ async function build(s3: S3Client, head: Head): Promise<string> {
   log("shelf main");
   const site = join(SRC_DIR, "sites", "net");
   await run([process.execPath, "install", "--frozen-lockfile"], site);
+  await run([process.execPath, "install", "--frozen-lockfile"], join(SRC_DIR, "pkgs", "js", "mrlyjs"));
   log("install");
   const pkg = await run([process.execPath, "scripts/pkg.ts"], site);
   log(`pkg ${(pkg.trim().split(/\s+/)[0] ?? "").slice(0, 12)}`);

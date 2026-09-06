@@ -111,7 +111,7 @@ ${meta(route, name, description, type)}
 <link rel="stylesheet" href="${site.asset("base.css")}">
 <link rel="stylesheet" href="${site.asset("chrome.css")}">
 <link rel="stylesheet" href="/pages.css">
-${code ? `<link rel="stylesheet" href="${site.asset("seti/seti.css")}">\n` : ""}${ld}<script type="module" src="${site.asset("chrome.js")}"></script>
+${code ? `<link rel="stylesheet" href="${site.asset("code.css")}">\n<link rel="stylesheet" href="${site.asset("seti/seti.css")}">\n` : ""}${ld}<script type="module" src="${site.asset("chrome.js")}"></script>
 </head>
 <body>
 ${main}

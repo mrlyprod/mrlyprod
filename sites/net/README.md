@@ -22,6 +22,7 @@
 - Routes: `/`, `/demos/`, `/demos/<name>/`, `/papers/`, `/papers/<slug>/`, `/research/`, `/research/<name>/`, `/blog/`, `/blog/<slug>/`, `/about/`, `/git/...`, `/raw/...` and `/404.html`, beside `sitemap.xml`, `robots.txt`, `favicon.svg`, `apple-touch-icon.png`, `icon-512.png` and `manifest.webmanifest`.
 - `/git/` is the code viewer from `../../pkgs/js/mrlyjs/git`: it browses this repo's own tracked tree, `/raw/` serves the bytes, and the `git` block in `site.json` names the root, the GitHub slug and the branch.
 - Only `/git/` enters the sitemap; the 961 pages under it are hidden, linked from one collapsed `Code` node in the tree.
+- The highlighter is the kit's, server-side Shiki over 16 grammars; `ui/code.css` rides with `seti.css` on every code page.
 - Every route carries a canonical link, a description, Open Graph and Twitter cards pointing at the one `/og.png`, and JSON-LD where it has an author.
 - `bun run check` prints the fixture numbers the crate's host test asserts; both must agree.
 - `site.json` declares every input the build reads: `readme pages blog research figures demos lib pkg ui public`; nothing is resolved by hand, so a path moves in one place.

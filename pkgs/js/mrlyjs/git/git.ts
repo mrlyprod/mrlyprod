@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { seti } from "../ui/seti/seti.ts";
+import { paint, version } from "./code.ts";
 import { bytes, digest, escape, type Bytes, type Node, type Output, type Route, type Site, type Spec } from "../ssg/build.ts";
 
 /* TYPES */
@@ -29,7 +30,7 @@ export type Leaf = {
 export type Hooks = {
   page: (site: Site, leaf: Leaf) => Bytes;
   md?: (text: string, dir: string) => string;
-  code?: (text: string, lang: string) => string[] | null;
+  code?: (text: string, lang: string) => Promise<string[] | null> | string[] | null;
 };
 
 /* CONFIG */
@@ -154,6 +155,7 @@ export function collect(site: Site): { routes: Route[]; node: Node | null } {
 
 export function print(site: Site, route: Route): string {
   const parts: Bytes[] = ["git", route.route, route.kind ?? "", JSON.stringify(route.data ?? null), site.stamp];
+  if (route.kind === "gitfile") parts.push(version);
   for (const file of route.inputs ?? []) {
     parts.push(stem(file));
     parts.push(existsSync(file) ? bytes(file) : "gone");
@@ -327,17 +329,23 @@ function listing(site: Site, git: Git, route: Route, hooks: Hooks): Output[] {
 
 /* CODE */
 
-export function block(text: string, kind: string, paint?: (text: string, kind: string) => string[] | null): string {
+const NARROW = 2;
+
+const WIDEST = 6;
+
+const gutter = (count: number) => Math.min(WIDEST, Math.max(NARROW, String(count).length));
+
+export async function block(text: string, kind: string, hook?: Hooks["code"]): Promise<string> {
   const lines = text.replace(/\r\n?/g, "\n").split("\n");
   if (lines.length > 1 && lines[lines.length - 1] === "") lines.pop();
   if (text.length > WIDE) return `<div class="code plain" data-lang="${escape(kind)}"><pre><code>${escape(text)}</code></pre></div>`;
-  const painted = paint ? paint(text, kind) : null;
+  const painted = await (hook ?? paint)(text, kind);
   const out = lines.map((line, i) => {
     const n = i + 1;
     const inner = painted?.[i] ?? escape(line);
     return `<span class="line" id="L${n}"><a class="n" href="#L${n}">${n}</a><span class="t">${inner}</span></span>`;
   });
-  return `<div class="code" data-lang="${escape(kind)}"><pre><code>${out.join("\n")}</code></pre></div>`;
+  return `<div class="code d${gutter(lines.length)}" data-lang="${escape(kind)}"><pre><code>${out.join("\n")}</code></pre></div>`;
 }
 
 /* FILE */
@@ -348,7 +356,7 @@ const lead = (text: string) => {
   return clean.length > 180 ? `${clean.slice(0, 177)}...` : clean;
 };
 
-function file(site: Site, git: Git, route: Route, hooks: Hooks): Output[] {
+async function file(site: Site, git: Git, route: Route, hooks: Hooks): Promise<Output[]> {
   const { path, size: weight } = route.data as File;
   const source = join(git.root, path);
   const body = bytes(source);
@@ -367,7 +375,7 @@ function file(site: Site, git: Git, route: Route, hooks: Hooks): Output[] {
     note = `${size(weight)} · ${tongue}`;
   } else if (text !== null) {
     const count = text ? text.replace(/\n$/, "").split("\n").length : 0;
-    main = block(text, tongue, hooks.code);
+    main = await block(text, tongue, hooks.code);
     note = `${size(weight)} · ${tongue} · ${count} line${count === 1 ? "" : "s"}`;
   } else if (!huge && IMAGE.has(kind)) {
     main = `<figure class="shot"><img src="${raw}" alt="${escape(stem(path))}"></figure>`;
@@ -393,7 +401,7 @@ function file(site: Site, git: Git, route: Route, hooks: Hooks): Output[] {
 
 /* RENDER */
 
-export function render(site: Site, route: Route, spec: Spec): Output[] {
+export async function render(site: Site, route: Route, spec: Spec): Promise<Output[]> {
   const git = config(site);
   if (!git) throw new Error(`git: ${route.route} has no git block in site.json`);
   const hooks = spec.git;

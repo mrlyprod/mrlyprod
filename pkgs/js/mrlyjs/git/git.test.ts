@@ -3,6 +3,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { block, collect, dirRoute, fileRoute, lang, link, named, owner, rawPath } from "./git.ts";
+import { paint } from "./code.ts";
 import type { Site } from "../ssg/build.ts";
 
 /* TREE */
@@ -76,14 +77,40 @@ test("a git block routes every tracked file and every directory", () => {
 
 /* CODE */
 
-test("a code block numbers its lines and a huge one stays plain", () => {
-  const one = block("let a = 1;\nlet b = 2;\n", "typescript");
+test("a code block numbers its lines and a huge one stays plain", async () => {
+  const one = await block("let a = 1;\nlet b = 2;\n", "typescript");
   expect(one).toContain('<span class="line" id="L2"><a class="n" href="#L2">2</a>');
   expect(one).not.toContain("L3");
-  expect(block("x\n".repeat(120000), "text")).toContain('<div class="code plain"');
+  expect(one).toContain('<div class="code d2"');
+  expect(await block("x\n".repeat(120000), "text")).toContain('<div class="code plain"');
 });
 
-test("a paint hook fills the line body and nothing else", () => {
-  const out = block("a\nb\n", "text", () => ['<i>a</i>', '<i>b</i>']);
+test("a paint hook fills the line body and nothing else", async () => {
+  const out = await block("a\nb\n", "text", () => ["<i>a</i>", "<i>b</i>"]);
   expect(out).toContain('<span class="t"><i>a</i></span>');
+});
+
+test("the gutter class counts the digits of the last line", async () => {
+  expect(await block("x\n".repeat(9), "text")).toContain('<div class="code d2"');
+  expect(await block("x\n".repeat(400), "text")).toContain('<div class="code d3"');
+});
+
+/* PAINT */
+
+test("a rust snippet paints one string per line", async () => {
+  const out = await paint("fn main() {\n    let a = 1;\n}\n", "rust");
+  expect(out).not.toBeNull();
+  expect(out!.length).toBe(3);
+  expect(out![1]).toContain('<span class="tk-keyword">let</span>');
+  expect(out!.join("")).not.toContain("style=");
+});
+
+test("an unknown extension paints nothing", async () => {
+  expect(await paint("hello\n", lang("notes.bin"))).toBeNull();
+  expect(await paint("hello\n", "text")).toBeNull();
+});
+
+test("a painted block carries tk classes into the line body", async () => {
+  const out = await block("fn a() {}\n", "rust");
+  expect(out).toContain('<span class="t"><span class="tk-keyword">fn</span>');
 });

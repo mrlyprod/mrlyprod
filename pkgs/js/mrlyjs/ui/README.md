@@ -17,6 +17,7 @@
 - `mark.json`: the MRLYPROD write-and-hold loop, `{ rows, cols, fps, frames }`, the footer fallback without wasm.
 - `chrome.jsx`: React, renders the whole page for `react-dom/client` and `react-dom/server`.
 - `config.js`: the kit's config. `configure(site)` takes the consumer's `site.json`, `conf()` reads it back, `tintCss()` writes the accent override. Keys: `title root since prefix font settings tint tree socials contact`.
+- `code.css`: the `tk-*` token colours the `git` highlighter emits and the `d2`-`d6` gutter widths, both drawn from the tokens above. Loaded on code pages only.
 - `seti/`: the SETI file-icon font. `seti.css` carries the `@font-face` and one `.si-*` rule per kind, `seti.woff2` sits beside it so the `url()` resolves at the served path, `seti.ts` maps a path to its classes, `LICENSE-seti.txt` is the vendor licence.
 - `tsconfig.json`: points `react` at `sites/net/node_modules` so bun resolves it from here.
 

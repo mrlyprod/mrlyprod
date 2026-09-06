@@ -1,0 +1,32 @@
+/* INK */
+
+.tk-comment { color: var(--dim); }
+.tk-punctuation { color: var(--dim); }
+.tk-keyword { color: var(--accent); }
+.tk-string { color: color-mix(in srgb, var(--green) var(--mix), var(--fg)); }
+.tk-string-expression { color: color-mix(in srgb, var(--green) var(--mix), var(--fg)); }
+.tk-constant { color: color-mix(in srgb, var(--orange) var(--mix), var(--fg)); }
+.tk-function { color: color-mix(in srgb, var(--blue) var(--mix), var(--fg)); }
+.tk-parameter { color: color-mix(in srgb, var(--gold) var(--mix), var(--fg)); }
+.tk-link { color: var(--accent); }
+.tk-inserted { color: color-mix(in srgb, var(--green) var(--mix), var(--fg)); }
+.tk-deleted { color: color-mix(in srgb, var(--pink) var(--mix), var(--fg)); }
+.tk-changed { color: color-mix(in srgb, var(--gold) var(--mix), var(--fg)); }
+
+/* FACE */
+
+.tk-bold { font-weight: 650; }
+.tk-italic { font-style: italic; }
+.tk-underline { text-decoration: underline; }
+
+/* GUTTER */
+
+.code.d2 .line .n { width: 2ch; }
+.code.d3 .line .n { width: 3ch; }
+.code.d4 .line .n { width: 4ch; }
+.code.d5 .line .n { width: 5ch; }
+.code.d6 .line .n { width: 6ch; }
+
+@media print {
+  .line .n { display: none; }
+}

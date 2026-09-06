@@ -42,6 +42,7 @@
       "font.js",
       "font.json",
       "mark.json",
+      "code.css",
       "seti/seti.css",
       "seti/seti.woff2"
     ]
