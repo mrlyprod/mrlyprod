@@ -752,6 +752,37 @@ checks.push(
   ['star band widens', starTypes(starFat), '257,2489,1350'],
 );
 
+// ECHO
+
+const echoCaps = JSON.parse(m.echo_caps(3, 0b011));
+const echoNine = m.echo_read(10, 0b111111111, 5, false);
+const echoNineRead = JSON.parse(echoNine.read);
+const echoRest = JSON.parse(m.echo_read(10, 0b111111111, 5, true).read);
+const echoFull = m.echo_read(10, 0b1111111111, 5, false);
+const echoFullRead = JSON.parse(echoFull.read);
+const echoTwo = JSON.parse(m.echo_read(2, 0b11, 18, false).read);
+const echoThree = JSON.parse(m.echo_read(3, 0b011, 14, false).read);
+const echoDeep = JSON.parse(m.echo_read(3, 0b011, 17, false).read);
+const echoTops = (read: { peaks: { gamma: number }[] }, n: number) => read.peaks.slice(0, n).map((row) => row.gamma.toFixed(4)).join(' ');
+
+checks.push(
+  ['echo caps and sieve', `${echoCaps.deepest} ${echoCaps.sieved} ${echoCaps.least} ${echoCaps.samples}`, '17 15 3 4096'],
+  ['echo meter is the census', `${echoThree.count} ${echoThree.last} ${echoThree.peak}`, '16383 11 105'],
+  ['echo control is Mertens', `${echoFullRead.count} ${echoFullRead.last} ${echoFullRead.peak}`, '99999 -48 132'],
+  ['echo control at the zeros', `${echoFullRead.found} ${echoFullRead.hits} ${echoFullRead.lines}`, '13 10 6'],
+  ['echo control peaks', echoTops(echoFullRead, 5), '30.5546 32.7371 25.0984 21.2791 14.1861'],
+  ['echo full set is its own', `${echoFullRead.share.toFixed(6)} ${echoFullRead.residual.toFixed(6)} ${Math.max(...echoFull.rest.map(Math.abs))}`, '1.000000 0.000000 0'],
+  ['echo base two control', `${echoTwo.found} ${echoTwo.hits} ${echoTwo.lines} ${echoTwo.last}`, '13 10 0 24'],
+  ['echo design at the zeros', `${echoNineRead.found} ${echoNineRead.hits} ${echoNineRead.lines}`, '5 5 2'],
+  ['echo design meter', `${echoNineRead.count} ${echoNineRead.last} ${echoNineRead.peak} ${echoNineRead.alpha.toFixed(6)}`, '59048 201 268 0.954243'],
+  ['echo design bin and chance', `${echoNineRead.bin.toFixed(6)} ${echoNineRead.chance.toFixed(6)} ${echoNineRead.chanceLines.toFixed(6)}`, '0.551257 0.255941 0.393755'],
+  ['echo design share', `${echoNineRead.share.toFixed(6)} ${echoNineRead.residual.toFixed(6)} ${echoNineRead.rate.toFixed(6)}`, '0.354137 0.967810 -0.022879'],
+  ['echo residual carries none', `${echoRest.found} ${echoRest.hits}`, '0 0'],
+  ['echo band lists', `${echoNineRead.zeros.length} ${echoNineRead.lattice.length} ${echoTwo.lattice.length}`, '13 20 6'],
+  ['echo series lengths', `${echoNine.logx.length} ${echoNine.gamma.length} ${echoNine.echo.length}`, '4096 2049 4096'],
+  ['echo past the sieve cap', `${echoDeep.sieve} ${echoDeep.share} ${echoDeep.last}`, 'false null 157'],
+);
+
 // MANIFEST
 
 import { existsSync, readdirSync } from 'node:fs';

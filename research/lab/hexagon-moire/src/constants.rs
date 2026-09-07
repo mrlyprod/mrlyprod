@@ -106,7 +106,7 @@ fn shapes_match() {
             layers += 1;
         }
         println!(
-            "  {}: A = {} B = {} c = {} d = {} e = {} f = {}, reads the ink law {matched}/{layers}",
+            "  {}: A = {} B = {} c = {} d = {} e = {} f = {}, rebuild the closed form {matched}/{layers}",
             family.name(),
             text(form.a),
             text(form.b),
@@ -248,11 +248,16 @@ pub fn run() {
         PI / 48.0 + PI * PI / 48.0 + catalan / 6.0
     );
     println!("partial character sums over odd n <= N, M layers, from the exact ink laws");
+    println!("  the carpet split is an identity at even M only, so it prints at even M only");
     for limit in [53usize, 55] {
         let [s0, s1, s2, s3] = sums(limit);
+        let carpet = if (limit + 1) / 2 % 2 == 0 {
+            format!("M(I1 - I3 + 1/4) = {:.10}  ", s1 + s3 / 4.0)
+        } else {
+            String::new()
+        };
         println!(
-            "  N = {limit}: M(I1 - I3 + 1/4) = {:.10}  M(mean ink - 1/2 - eps/2) = {:.10}  void M(mean - 1/4) = {:.10}",
-            s1 + s3 / 4.0,
+            "  N = {limit}: {carpet}M(mean ink - 1/2 - eps/2) = {:.10}  void M(mean - 1/4) = {:.10}",
             -s0 / 8.0 + s2 / 8.0,
             s1 / 4.0 + s3 / 2.0
         );

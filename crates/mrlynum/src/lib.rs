@@ -9,6 +9,8 @@ pub mod boolean;
 pub mod census;
 /// The classic sequences and the exact arithmetic under them.
 pub mod classics;
+/// The digit designs on the integer line: their elements, their Mobius meter, its density echo and the ordinates its spectrum carries.
+pub mod design;
 /// The divisor arithmetic: factorizations, divisors, radicals and the Mobius values.
 pub mod factor;
 /// The fast Fourier transform in one and two dimensions.

@@ -314,12 +314,13 @@ def corrector_index(cols, target):
 # THE SWEEP
 
 def sweep(lo, hi):
-    n = bw = bg = bc = bm = br = bt = 0
+    n = bw = bg = bc = bm = br = bt = bf = ne = 0
     cap, flo, tie = [], [], []
     r4 = [0] * 4
     r8 = [0] * 8
     for D in range(lo, hi + 1, 2):
         R = (D - 1) // 2
+        b, gs, e, k = slot(R)
         K, V2, raw, cols, X, piv = layer2(D)
         assert V2, "empty layer-2 window at D=%d" % D
         assert X[K].bit_length() - 1 <= 2 * R, "family top leaves the box at D=%d" % D
@@ -352,6 +353,14 @@ def sweep(lo, hi):
             br += 1
             print("reach law fails at D=%d: %d against %d" % (D, rl, R - J))
         a, bq = K - dg, rl // 3
+        if e == 1 and k % 2 and R > (1 << (b - 2)):
+            ne += 1
+            if (bq, C - dg, a) != (1, 0, 0):
+                bf += 1
+                print("escaping row misread at D=%d" % D)
+        elif bq != C - dg + (1 if (k % 2 and e % 2 == 0) else 0):
+            bf += 1
+            print("floor identity fails at D=%d" % D)
         if C - dg != min(a, bq):
             bm += 1
             print("corrector law fails at D=%d" % D)
@@ -369,8 +378,9 @@ def sweep(lo, hi):
     print("the family shift law H^(j+1) = psi H^(j) - 2 Z_j and ob(X_(j+1)) = Lambda ob(X_j) + A(Z_j): %d/%d" % (n, n))
     print("the slot tent w = min(p, N - 1 - p) = C - deg g: %d/%d" % (n - bt, n))
     print("the reach law reach = 3w + 2[e even] + [k odd](1 + p mod 2), D = 4^m + 3 apart: %d/%d" % (n - br, n))
+    print("floor(reach/3) = C - deg g + [k odd and e even] off the %d rows D = 4^m + 3, where it reads 1 against C - deg g = K - deg g = 0: %d/%d" % (ne, n - bf, n))
     print("corrector law C - deg g = min(K - deg g, floor(reach/3)) from the closed form: %d/%d" % (n - bm, n))
-    print("branches: K cap strict %d, tie %d, floor strict %d" % (len(cap), len(tie), len(flo)))
+    print("branches: floor strict %d, K cap strict %d, tie %d" % (len(flo), len(cap), len(tie)))
     print("floor-strict rows are exactly the C < K rows: %s" % (sorted(flo) == sorted(d for d in range(lo, hi + 1, 2) if law_e(d)[1] < law_e(d)[0])))
 
 def unboxed(lo, hi):

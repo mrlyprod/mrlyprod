@@ -102,6 +102,10 @@ name = "research-walks"
 path = "examples/plot/research-walks.rs"
 
 [[example]]
+name = "research-zeta"
+path = "examples/plot/research-zeta.rs"
+
+[[example]]
 name = "paper-lemma-b-pincer"
 path = "examples/plot/paper-lemma-b-pincer.rs"
 
@@ -240,3 +244,11 @@ path = "examples/grid/paper-first-base-below-a-quarter.rs"
 [[example]]
 name = "demo-star"
 path = "examples/field/demo-star.rs"
+
+[[example]]
+name = "demo-echo"
+path = "examples/plot/demo-echo.rs"
+
+[[example]]
+name = "paper-design-dirichlet-inverse"
+path = "examples/plot/paper-design-dirichlet-inverse.rs"

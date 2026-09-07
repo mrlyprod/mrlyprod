@@ -4,6 +4,8 @@ Fix a base `q >= 3` and a digit set `F` inside `{0..q-1}` with `k = |F| >= 2`. T
 
 Tags as everywhere in this tree: **Proved** means derived here from definitions, **Verified** means recomputed exactly and checked against an independent path, **Conjecture** is labelled belief.
 
+The zeros are the other face and they are a different page. The design's own Dirichlet series `zeta_F(s) = sum_(n in S_F) n^(-s)` has zeros inside its own half-plane of absolute convergence, a comb of them along the pole lattice, three products where the integers have one Euler product, and a Mertens function of its own that runs the wrong way; none of it reaches the meter measured here, and the decoupling is why this page's question is about `mu` restricted to `S_F` and nothing else: [zeta](zeta.md).
+
 ## The meter and its yardstick
 
 - `A_F(x)` counts `S_F` up to `x`. The count is exact at every checkpoint: `A_F(q^L) = k^L - 1` when `0 in F` (plus 1 when `1 in F` too, for the boundary element `q^L` itself), and `A_F(q^L) = (k^(L+1) - k)/(k - 1)` when `0` is not in `F`, by counting digit strings of each length. **Proved**; the lane's tests pin it against direct enumeration. Between checkpoints `A_F(x)/x^(log_q k)` carries the log-periodic ripple every design in this tree carries - the classical fluctuation of digital sums ([Flajolet, Grabner, Kirschenhofer, Prodinger and Tichy 1994](https://doi.org/10.1016/0304-3975(92)00065-Y)) - so a checkpoint value is a grid value, never a constant.

@@ -1,5 +1,5 @@
 import { ink, fit, paint } from './mrly.js';
-import { web, board, bars, line } from './chart.js';
+import { web, board, bars, line, rules } from './chart.js';
 import { Grid, Signs, Pixels, Markup, Sketch } from './draw.jsx';
 
 const store = new Map();
@@ -160,6 +160,26 @@ const carry = (m) => (canvas) => {
   line(b, [[0, 0.5], [1, 0.5]], ink.dim, { width: 1, dash: [3, 3] });
 };
 
+const meter = (m) =>
+  once('meter', () => {
+    const got = m.echo_read(10, 0b111111111, 5, false);
+    return { gamma: got.gamma, score: got.score, read: JSON.parse(got.read) };
+  });
+
+const echo = (m) => (canvas) => {
+  const { gamma, score, read } = meter(m);
+  const b = board(canvas, canvas.clientWidth / 1.5, { top: 8, bottom: 8, left: 8, right: 8 });
+  const top = 64, at = (g) => g / top;
+  let peak = 10;
+  for (let i = 0; i < gamma.length; i += 1) if (gamma[i] > 4 && gamma[i] < 60 && score[i] > peak) peak = score[i];
+  const lift = (v) => Math.log10(Math.max(v, 1)) / Math.log10(peak);
+  rules(b, read.lattice.filter((g) => g < top).map(at), { color: ink.pink, dash: [3, 4] });
+  rules(b, read.zeros.filter((g) => g < top).map(at), { color: ink.gold });
+  const points = [];
+  for (let i = 0; i < gamma.length && gamma[i] <= top; i += 1) points.push([at(gamma[i]), lift(score[i])]);
+  line(b, points, ink.blue, { width: 1.2 });
+};
+
 const zeta = (m) => (canvas) => {
   const [ctx, w, h] = fit(canvas, canvas.clientWidth / 1.5);
   const path = m.zeta_line(0, 50, 600);
@@ -247,6 +267,7 @@ const DRAW = {
   sequences: (m) => <Sketch draw={sequences(m)} className="" />,
   plot: (m) => <Sketch draw={plot(m)} className="" />,
   integers: (m) => <Grid grid={{ width: 40, height: census(m).length / 40, types: Uint8Array.from(census(m), (rows) => (rows ? 1 : 0)) }} on={ink.gold} className="" />,
+  echo: (m) => <Sketch draw={echo(m)} className="" />,
   zeta: (m) => <Sketch draw={zeta(m)} className="" />,
   formulas: (m) => <Sketch draw={formulas(m)} className="" />,
 };

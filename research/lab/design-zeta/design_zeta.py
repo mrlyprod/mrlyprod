@@ -86,7 +86,8 @@ class Design:
                 return v, e
             W += 6
             L += 6
-        return v, e
+        raise RuntimeError("FAIL tolerance " + mp.nstr(self.tol, 3) + " not reached at s = "
+                           + mp.nstr(s, 14) + ", best bound " + mp.nstr(e, 4))
 
     def zeta(self, s):
         s = mp.mpmathify(s)
@@ -95,6 +96,16 @@ class Design:
         s = mp.mpmathify(s)
         g, e = self.tune(s)
         v = self.poly_lo(s) + g
+        mp.mp.dps = old
+        return +v, +e
+
+    def cofactor(self, s):
+        s = mp.mpmathify(s)
+        old = mp.mp.dps
+        mp.mp.dps = self.dps + 30 + int(abs(mp.im(s)) / 4)
+        s = mp.mpmathify(s)
+        a, e = self.tune(s, top=False)
+        v = (1 - self.k * mp.power(self.q, -s)) * self.poly_lo(s) + a
         mp.mp.dps = old
         return +v, +e
 
@@ -110,15 +121,19 @@ class Design:
 # CONTOURS
 
 class Cache:
-    def __init__(self, d):
+    def __init__(self, d, cof=False):
         self.d = d
+        self.cof = cof
         self.m = {}
         self.n = 0
+        self.emax = mp.mpf(0)
 
     def __call__(self, z):
         key = (mp.nstr(mp.re(z), 22), mp.nstr(mp.im(z), 22))
         if key not in self.m:
-            self.m[key] = self.d.zeta(z)[0]
+            v, e = self.d.cofactor(z) if self.cof else self.d.zeta(z)
+            self.m[key] = v
+            self.emax = max(self.emax, e)
             self.n += 1
         return self.m[key]
 
@@ -185,13 +200,14 @@ def locate(f, box, steps=9):
             break
     return mp.mpc((x0 + x1) / 2, (y0 + y1) / 2), max(x1 - x0, y1 - y0)
 
-def zero(d, box):
-    f = Cache(d)
+def zero(d, box, cof=False):
+    f = Cache(d, cof=cof)
     z0, w = locate(f, box)
     r = mp.findroot(f, [z0 - w, z0, z0 + w * 1j], solver="muller", tol=mp.mpf(10) ** -30, maxsteps=60)
     if abs(r - z0) > 4 * w:
         r = z0
-    return r, abs(f(r)), d.zeta(r)[1]
+    v = abs(f(r))
+    return r, v, f.emax
 
 # STUDY
 
@@ -229,33 +245,35 @@ def scaling():
         b = mp.power(2, -s) * d1.zeta(s)[0]
         line("  s", mp.nstr(s, 8), "gap", mp.nstr(abs(a - b), 4))
 
-def census(q, F, off, wid, ymax, nsub, n=24):
+def census(q, F, lo, hi, ymax, nsub, n=20, cof=True):
     d = Design(q, F, tol=mp.mpf(10) ** -10, dps=25)
-    f = Cache(d)
-    x0, x1 = d.alpha + mp.mpf(off), d.alpha + mp.mpf(off) + mp.mpf(wid)
+    f = Cache(d, cof=cof)
+    x0, x1 = d.alpha + mp.mpf(lo), d.alpha + mp.mpf(hi)
+    t0 = time.time()
     res = strip(f, x0, x1, mp.mpf("0.02"), mp.mpf(ymax), nsub, n)
-    tot = mp.mpf(0)
-    hits = []
-    for a, b, w, mx in res:
-        tot += w
-        if abs(w) > mp.mpf("0.2"):
-            hits.append((a, b, w, mx))
-    line("  q", q, "F", F, "alpha", mp.nstr(d.alpha, 12), "strip Re in",
-         mp.nstr(x0, 10), mp.nstr(x1, 10), "Im to", ymax)
+    tot = mp.fsum([w for a, b, w, mx in res])
+    mxall = max([mx for a, b, w, mx in res])
+    hits = [(a, b, w, mx) for a, b, w, mx in res if abs(w) > mp.mpf("0.2")]
+    line("  q", q, "F", F, "alpha", mp.nstr(d.alpha, 12), "object",
+         "Z = zeta_F (1 - k q^(-s))" if cof else "zeta_F",
+         "strip Re in", mp.nstr(x0, 12), mp.nstr(x1, 12), "Im in 0.02", ymax)
     for a, b, w, mx in hits:
         line("    Im [", mp.nstr(a, 6), ",", mp.nstr(b, 6), "] winding", mp.nstr(w, 8),
              "max phase step", mp.nstr(mx, 4))
-    line("    total", mp.nstr(tot, 10), "evaluations", f.n)
-    return hits
+    line("    count", mp.nstr(tot, 10), "boxes", len(hits), "largest phase step",
+         mp.nstr(mxall, 4), "largest bound on the contour", mp.nstr(f.emax, 4),
+         "evaluations", f.n, "seconds", round(time.time() - t0, 1))
+    return tot, hits
 
-def zeros(q, F, off, wid, boxes):
+def zeros(q, F, lo, hi, boxes, cof=False):
     d = Design(q, F, tol=mp.mpf(10) ** -22, dps=45)
     per = 2 * mp.pi / mp.log(q)
     out = []
     for (a, b) in boxes:
-        r, v, e = zero(d, (d.alpha + mp.mpf(off), d.alpha + mp.mpf(off) + mp.mpf(wid), a, b))
+        r, v, e = zero(d, (d.alpha + mp.mpf(lo), d.alpha + mp.mpf(hi), a, b), cof=cof)
         out.append(r)
-        line("    zero", mp.nstr(r, 16), "abs zeta_F", mp.nstr(v, 3), "bound", mp.nstr(e, 3),
+        line("    zero", mp.nstr(r, 16), "abs", "Z" if cof else "zeta_F", mp.nstr(v, 3),
+             "largest bound", mp.nstr(e, 3),
              "Im/period", mp.nstr(mp.im(r) / per, 12))
     line("    period 2 pi/log q", mp.nstr(per, 14), "alpha", mp.nstr(d.alpha, 12),
          "alpha/2", mp.nstr(d.alpha / 2, 12))
@@ -264,26 +282,47 @@ def zeros(q, F, off, wid, boxes):
         line("    gap", mp.nstr(g, 14), "gap minus period", mp.nstr(g - per, 8))
     return out
 
+def control_census(ymax):
+    line("CONTROL base 2 full digit set, the census run on BOTH sides of the abscissa alpha = 1")
+    a, _ = census(2, (0, 1), 0.02, 3.02, ymax, int(ymax / 2), cof=False)
+    line("    object counted zeros of zeta_F = zeta right of the abscissa, count", mp.nstr(a, 6))
+    b, _ = census(2, (0, 1), -0.98, -0.02, ymax, int(ymax / 2), cof=False)
+    line("    object counted zeros of zeta_F = zeta left of the abscissa, count", mp.nstr(b, 6))
+    c, _ = census(2, (0, 1), -0.92, 3.02, ymax, int(ymax / 2), cof=True)
+    teeth = int(mp.floor(mp.mpf(ymax) * mp.log(2) / (2 * mp.pi)))
+    line("    object counted zeros of the cofactor Z on one strip, count", mp.nstr(c, 6),
+         "= zeros of zeta", mp.nstr(b, 6), "plus teeth of 1 - 2 q^(-s) on Re s = alpha",
+         teeth, "predicted floor(T log q/2 pi)", teeth)
+    line("    the Euler product forbids zeros of zeta in Re s >= 1, and the strip Re in",
+         "[alpha + 0.02, alpha + 3.02] confirms it; the sliver alpha < Re s < alpha + 0.02",
+         "carries the teeth of the cofactor and no zero of zeta")
+
 def main():
     full = "--full" in sys.argv
     ymax = 60 if full else 30
+    y10 = ymax
+    for a in sys.argv:
+        if a.startswith("--y10="):
+            y10 = float(a.split("=")[1])
     t0 = time.time()
     control()
     residues()
     scaling()
-    line("CENSUS zeros by the argument principle, pole free strips")
-    for q, F, off, wid in [(2, (0, 1), -0.98, 0.96), (3, (0, 1), 0.02, 3.0),
-                           (3, (0, 1), -0.98, 0.96), (3, (0, 2), 0.02, 3.0)]:
-        census(q, F, off, wid, ymax, int(ymax / 2))
+    control_census(ymax)
+    line("CENSUS zeros of the cofactor Z = zeta_F (1 - k q^(-s)), analytic on Re s > alpha - 1")
+    line("  the split is at Re s = alpha exactly, so no sliver is left unscanned")
+    census(3, (0, 1), 0.0, 3.02, ymax, int(ymax / 2))
+    census(3, (0, 1), -0.92, 0.0, ymax, int(ymax / 2))
+    census(3, (0, 2), 0.0, 3.02, ymax, int(ymax / 2))
     if full:
-        census(10, tuple(range(9)), 0.02, 3.0, ymax, int(ymax / 2))
-        census(10, tuple(range(9)), -0.98, 0.96, ymax, int(ymax / 2))
+        census(10, tuple(range(9)), 0.0, 3.02, y10, int(y10 / 2))
+        census(10, tuple(range(9)), -0.92, 0.0, y10, int(y10 / 2))
     line("ZEROS polished, right of the abscissa")
-    zeros(3, (0, 1), 0.02, 3.0, [(22, 24), (28, 30)])
+    zeros(3, (0, 1), 0.02, 3.02, [(22, 24), (28, 30)])
     if full:
-        zeros(10, tuple(range(9)), 0.02, 3.0, [(2, 4), (4, 6)])
-        line("ZEROS polished, base 3 digits 0 1, left of the abscissa")
-        zeros(3, (0, 1), -0.98, 0.96, [(6, 8), (14, 16), (20, 22), (24, 26)])
+        zeros(10, tuple(range(9)), 0.02, 3.02, [(2, 4), (4, 6)])
+    line("ZEROS polished on the cofactor, base 3 digits 0 1, left of the abscissa")
+    zeros(3, (0, 1), -0.92, 0.0, [(6, 8), (10, 12)], cof=True)
     line("seconds", round(time.time() - t0, 1))
 
 if __name__ == "__main__":

@@ -51,7 +51,7 @@ pub fn chi8(number: usize) -> i64 {
 /// assert_eq!(arm_law(7).unwrap().reduced(), (4, 7));
 /// ```
 pub fn arm_law(number: usize) -> Result<Share> {
-    if number == 0 || number % 2 == 0 {
+    if number == 0 || number.is_multiple_of(2) {
         return value_error("the layer number must be odd.");
     }
     Ok(Share {
@@ -85,7 +85,7 @@ pub fn constant() -> f64 {
 /// ```
 pub fn width_law(half: usize) -> f64 {
     let reach = (half / 2) as f64;
-    let parity = f64::from(u8::from(half / 4 % 2 == 0));
+    let parity = f64::from(u8::from((half / 4).is_multiple_of(2)));
     -(reach + parity) / (4.0 * (2.0 * reach + 1.0))
 }
 
@@ -205,7 +205,7 @@ impl Star {
     /// assert_eq!(Star::new(23).unwrap().hexagon(3).unwrap().reduced(), (7, 9));
     /// ```
     pub fn hexagon(&self, number: usize) -> Result<Share> {
-        if number == 0 || number % 2 == 0 {
+        if number == 0 || number.is_multiple_of(2) {
             return value_error("the layer number must be odd.");
         }
         let n = number as i64;
@@ -243,7 +243,7 @@ impl Star {
     /// assert_eq!(Star::new(23).unwrap().arm(9, 0).unwrap(), arm_law(9).unwrap());
     /// ```
     pub fn arm(&self, number: usize, half: usize) -> Result<Share> {
-        if number == 0 || number % 2 == 0 {
+        if number == 0 || number.is_multiple_of(2) {
             return value_error("the layer number must be odd.");
         }
         let (n, half) = (number as i64, half as i64);
@@ -304,7 +304,9 @@ pub fn decay(excesses: &[f64], layers: usize) -> Result<Decay> {
         miss,
         linear: miss * layers as f64,
         residual: miss * layers as f64 * layers as f64,
-        slope: (layers % 4 == 0).then(|| (scaled - near) / 2f64.ln()),
+        slope: layers
+            .is_multiple_of(4)
+            .then(|| (scaled - near) / 2f64.ln()),
     })
 }
 

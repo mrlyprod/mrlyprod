@@ -325,6 +325,14 @@
       "paper": null
     },
     {
+      "name": "echo",
+      "title": "The Mobius echo",
+      "blurb": "The Mobius meter of a digit design oscillates at the ordinates of the Riemann zeta zeros and never at the design's own pole lattice, because it is the classical Mertens function heard through the design's density: split that echo off and the zeros leave with it.",
+      "category": "zeros",
+      "research": "mobius",
+      "paper": "sparse-mertens-under-grh"
+    },
+    {
       "name": "sequences",
       "title": "The sequences",
       "blurb": "The searchable ledger of every integer sequence the designs write, with closed forms and the OEIS entry each one matches.",

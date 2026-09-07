@@ -16,6 +16,8 @@ pub mod carry;
 pub mod census;
 /// The exact crops: the designs trimmed to rational shapes, tallied, swept, drawn and masked.
 pub mod crop;
+/// The design Mobius meter: its elements, the meter drawn against log x, its density echo and residual, and the ordinates its spectrum carries.
+pub mod echo;
 /// The alphabet: text laid out as a grid, written in stroke order, cycled, and read glyph by glyph.
 pub mod font;
 /// The elementary formulas: eight partial sums, products and prime counts read at one depth and walked to it.
