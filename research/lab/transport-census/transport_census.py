@@ -232,7 +232,7 @@ def law(which=None, ymax=YMAX):
          "| their alpha", " ".join(mp.nstr(r[2], 10) for r in ab))
     line("  COROLLARY: 1 in F and a certified zero rho with Re rho > alpha give")
     line("  sigma_c(N_F) >= Re rho > alpha >= alpha/2, so sum_(n <= x) nu_F(n) is not")
-    line("  O(x^(alpha/2 + eps)) and not O(x^(alpha - eps)): no MrlyRH shaped bound")
+    line("  O(x^(alpha/2 + eps)) and not O(x^(alpha - eps)): no square-root-shaped bound")
     for r in sorted(rows, key=lambda t: t[2]):
         q, F, a, kq, n, re, gain, one = r
         if re is None:
@@ -246,7 +246,7 @@ def law(which=None, ymax=YMAX):
             b = got[(q, F)][1]
             line("  BOUND", zl.tag(q, F), "theta(nu_F) >=", down(b["x0"]), ">",
                  "alpha", mp.nstr(a, 10), ">= alpha/2", mp.nstr(a / 2, 10),
-                 "MrlyRH shape refuted for nu_F", True)
+                 "square-root shape refuted for nu_F", True)
     line("  CONTROLS: the cofactor only teeth of the full sets at Re s = alpha = 1")
     for q, F in FULL:
         s0, out = nullbox(q, F, 1)
