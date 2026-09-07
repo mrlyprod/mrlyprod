@@ -40,6 +40,12 @@ def chk(value, want, tol):
     FAILS.append((value, want))
     return "MISMATCH"
 
+def chk_le(value, cap, name):
+    if value <= cap:
+        return "ok"
+    FAILS.append((name, value, cap))
+    return "MISMATCH"
+
 def close(t0):
     print(f"runtime {time.time() - t0:.1f}s")
     if FAILS:
@@ -450,6 +456,348 @@ def lemma_a(name, q, D, F, dmax, want):
         tag = "" if w is None else " " + chk(rate, w, 5e-7)
         print(f"  d={d:4d} ord={r:3d} m_d={md:2d} rate {rate:.6f}{tag} Lemma A' rate c^(1/m_d) {c ** (1 / md):.6f} Lemma A rate c^(1/ord) {c ** (1 / r):.6f}")
 
+# COROLLARIES
+
+def counts_mod(q, D, F, d, n):
+    c = np.zeros((d,) * D, dtype=np.int64)
+    c[(0,) * D] = 1
+    ax = tuple(range(D))
+    for j in range(n):
+        w = pow(q, j, d)
+        nx = np.zeros((d,) * D, dtype=np.int64)
+        for v in F:
+            nx += np.roll(c, [(w * a) % d for a in v], axis=ax)
+        c = nx
+    return c
+
+def corollary(name, q, D, F, dmax, nmax, cells):
+    k = len(F)
+    assert k ** nmax < 2 ** 62
+    c = 1 - (2 / k) * (1 - math.cos(math.pi / (2 * q)))
+    worst, rows = (0.0, None), []
+    for d in range(3, dmax + 1):
+        if math.gcd(d, q) != 1:
+            continue
+        r, md = order(q, d), m_of(q, d)
+        for n in range(2, nmax + 1):
+            C = counts_mod(q, D, F, d, n)
+            dev = max(abs(Fraction(int(x), k ** n) - Fraction(1, d ** D)) for x in C.ravel())
+            bp, ba = c ** (n // md), c ** (n // r)
+            assert float(dev) <= bp
+            ratio = float(dev) / bp
+            if ratio > worst[0]:
+                worst = (ratio, (d, n, r, md, float(dev), bp, ba))
+            if (d, n) in cells:
+                rows.append((d, n, r, md, float(dev), bp, ba, cells[(d, n)]))
+    d, n, r, md, dev, bp, ba = worst[1]
+    print(f"{name} equidistribution band: moduli 3..{dmax} coprime to q, levels 2..{nmax}, every exact deviation at most c^floor(n/m_d), zero violations")
+    print(f"  worst ratio to the window bound {worst[0]:.6f} at d={d} n={n} (ord {r}, m_d {md}): deviation {math.ceil(dev * 1e7) / 1e7:.7f} against A' {math.ceil(bp * 1e6) / 1e6:.6f} and A {math.ceil(ba * 1e6) / 1e6:.6f}")
+    for d, n, r, md, dev, bp, ba, want in rows:
+        tag = "" if want is None else " " + chk(math.ceil(dev * 1e7) / 1e7, want, 5e-9)
+        print(f"  d={d:3d} n={n:3d} ord={r:3d} m_d={md:2d} deviation {math.ceil(dev * 1e7) / 1e7:.7f}{tag} A' bound {math.ceil(bp * 1e6) / 1e6:.6f} A bound {math.ceil(ba * 1e6) / 1e6:.6f}")
+
+def base_peel(name, q, D, F, ms, nmax):
+    k = len(F)
+    c = 1 - (2 / k) * (1 - math.cos(math.pi / (2 * q)))
+    e = 1
+    for p in range(2, q + 1):
+        if q % p == 0 and all(p % r for r in range(2, p)):
+            e *= p
+    ke = sum(1 for v in F if all(a % e == 0 for a in v))
+    worst = (0.0, None)
+    for m in ms:
+        assert math.gcd(m, q) == 1
+        mm = m_of(q, m)
+        for n in range(2, nmax + 1):
+            T = int(counts_mod(q, D, F, e * m, n)[(0,) * D])
+            assert T == int(counts_mod(q, D, F, m, n - 1)[(0,) * D])
+            err = abs(Fraction(T, k ** n) - Fraction(ke, k) * Fraction(1, m ** D))
+            bp = c ** ((n - 1) // mm)
+            assert float(err) <= bp
+            ratio = float(err) / bp
+            if ratio > worst[0]:
+                worst = (ratio, (m, n, mm, float(err), bp, c ** ((n - 1) // order(q, m))))
+    m, n, mm, err, bp, ba = worst[1]
+    print(f"{name} base peel band: rad(q) = {e}, k_e = {ke}, coprime parts {list(ms)}, levels 2..{nmax}, T_(e m)(n) = T_m(n-1) exact and every error at most c^floor((n-1)/m_m), zero violations")
+    print(f"  worst ratio {worst[0]:.6f} at m={m} n={n} (m_m {mm}): error {math.ceil(err * 1e7) / 1e7:.7f} against A' {math.ceil(bp * 1e6) / 1e6:.6f} and A {math.ceil(ba * 1e6) / 1e6:.6f}")
+
+# THE ORDER BAND
+
+def hat_missing(b, a0, th):
+    th = th - np.floor(th)
+    s = np.sin(np.pi * th)
+    safe = np.where(s == 0.0, 1.0, s)
+    K = np.where(s == 0.0, float(b), np.sin(b * np.pi * th) / safe)
+    ph = np.cos(2 * np.pi * th * (a0 - (b - 1) / 2))
+    return np.sqrt(np.maximum(K * K - 2 * K * ph + 1.0, 0.0)) / (b - 1)
+
+def hat_missing_check(b, a0, pts=2000):
+    f, k = mask(base_missing(b, a0)[2], 1)
+    rng = np.random.default_rng(20250906)
+    th = rng.random(pts)
+    w = float(np.abs(hat_missing(b, a0, th) - f([th])).max())
+    print(f"base {b} missing {a0} closed form |sin(b pi th)/sin(pi th) - e((a0 - (b-1)/2) th)|/(b-1) against the character sum on {pts} arguments: worst gap {w:.3e} {chk(w, 0.0, 1e-11)}")
+
+def order_band(b, a0, N, m, ss, chunk=500):
+    lip = (2 * math.pi / (b - 1)) * sum(a for a in range(b) if a != a0)
+    n = b ** N
+    i = np.arange(n)
+    h = 1.0 / (n * m)
+    best = {s: np.inf for s in ss}
+    for s0 in range(0, m, chunk):
+        xg = (np.arange(s0, min(s0 + chunk, m)) + 0.5) * h
+        P = np.ones((len(xg), n))
+        for j in range(N):
+            P *= np.maximum(hat_missing(b, a0, (b ** j) * (xg[:, None] + i[None, :] / n)) - (b ** j) * lip * h / 2, 0.0)
+        lg = np.log(np.maximum(P, 1e-300))
+        for s in ss:
+            best[s] = min(best[s], float(np.exp(s * lg).sum(axis=1).min()))
+    return best
+
+def criterion_band(name, b, a0, N, m, want):
+    t0 = time.time()
+    ss = sorted(set([round(1.0 + 0.01 * i, 4) for i in range(30)] + [round(1.3 + 0.002 * i, 4) for i in range(151)] + [round(1.6 + 0.01 * i, 4) for i in range(21)] + [1.85, 1.9, 2.0]))
+    best = order_band(b, a0, N, m, ss)
+    par = (b / (b - 1)) ** N
+    print(f"{name} shift sandwich at N={N}, m={m}: Parseval gives Sigma_N^(2)(x) = (b/(b-1))^N = {par:.6f} for every x, scan {best[2.0]:.6f}, slack {par - best[2.0]:.6f}, scan <= anchor {chk_le(best[2.0], par, 'parseval anchor')} ({time.time() - t0:.1f}s)")
+    best[2.0] = par
+    lo = {s: math.floor(math.log(best[s]) / (N * math.log(b)) * 1e6) / 1e6 for s in ss}
+    rhs = {s: math.ceil(crit(b) * (2 - s) * 1e6) / 1e6 for s in ss}
+    for s in ss:
+        if s in want:
+            print(f"  s={s:.4f} min Sigma {best[s]:.6f} -> m_s > {lo[s]:.6f} {chk(lo[s], want[s], 5e-7)} criterion {rhs[s]:.6f} margin {lo[s] - rhs[s]:+.6f}")
+    for left in (1.5, 1.0):
+        cur, cover = left, []
+        while cur < 2.0:
+            nxt = max((s for s in ss if s > cur and lo[s] > rhs[cur]), default=None)
+            if nxt is None:
+                break
+            cover.append((cur, nxt))
+            cur = nxt
+        ok = bool(cover) and cover[-1][1] >= 2.0
+        a, z = min(cover, key=lambda p: lo[p[1]] - rhs[p[0]])
+        print(f"  monotone cover of [{left}, 2) in {len(cover)} intervals, Sigma_N^(s) falling in s and the criterion falling in s: {'COMPLETE' if ok else 'INCOMPLETE'} {chk(1.0 if ok else 0.0, 1.0, 0.0)}")
+        print(f"    tightest cell s={a:.4f} to {z:.4f}: m_s > {lo[z]:.6f} against the criterion {rhs[a]:.6f} at the left end, margin {lo[z] - rhs[a]:+.6f}")
+    print(f"  the criterion asks m_s < {crit(b):.6f} (2 - s) for some s in [3/2, 2) and no order in [1, 2) delivers it")
+
+def order_rows(name, b, a0, N, m, ss, want, chunk):
+    t0 = time.time()
+    best = order_band(b, a0, N, m, ss, chunk)
+    for s in ss:
+        lo = math.floor(math.log(best[s]) / (N * math.log(b)) * 1e6) / 1e6
+        rhs = math.ceil(crit(b) * (2 - s) * 1e6) / 1e6
+        tag = "" if s not in want else " " + chk(lo, want[s], 5e-7)
+        print(f"{name} shift sandwich at N={N}, m={m}, s={s:.6f}: min Sigma {best[s]:.6f} -> m_s > {lo:.6f}{tag} criterion {rhs:.6f} margin {lo - rhs:+.6f}  ({time.time() - t0:.1f}s)")
+
+def two_dim_moments(rows, ss):
+    for name, (q, D, F), nd, m, want in rows:
+        G, S, W = window_G(q, D, F, nd, m)
+        for s in ss:
+            lam, w, succ, Gt = perron(G, S, nd, s)
+            e = math.log(lam) / (D * math.log(q))
+            tag = "" if s not in want else " " + chk(math.ceil(e * 1e6) / 1e6, want[s], 5e-8)
+            print(f"{name} {nd} digit-vectors s={s:.6f}: lambda {lam:.6f} exponent in X = q^(D M) units {math.ceil(e * 1e6) / 1e6:.6f}{tag} criterion {math.ceil(crit(q ** D) * (2 - s) * 1e6) / 1e6:.6f}")
+
+# THE LEAST BASE
+
+TWIDDLE = {}
+
+def imul(al, ah, bl, bh):
+    p1, p2, p3, p4 = al * bl, al * bh, ah * bl, ah * bh
+    return dn(np.minimum(np.minimum(p1, p2), np.minimum(p3, p4))), up(np.maximum(np.maximum(p1, p2), np.maximum(p3, p4)))
+
+def isq(lo, hi):
+    a, c = lo * lo, hi * hi
+    return dn(np.where(lo >= 0.0, a, np.where(hi <= 0.0, c, 0.0))), up(np.maximum(a, c))
+
+def twiddle(Q):
+    if Q in TWIDDLE:
+        return TWIDDLE[Q]
+    B = math.isqrt(Q) + 1
+    iv.prec = 96
+    def tab(n, step):
+        cl, ch, sl, sh = (np.empty(n) for _ in range(4))
+        two = 2 * iv.pi
+        for j in range(n):
+            a = two * ((j * step) % Q) / Q
+            c, s = iv.cos(a), iv.sin(a)
+            cl[j], ch[j] = dn(float(c.a)), up(float(c.b))
+            sl[j], sh[j] = dn(float(s.a)), up(float(s.b))
+        return cl, ch, sl, sh
+    TWIDDLE[Q] = (B, tab(B, 1), tab(Q // B + 2, B))
+    return TWIDDLE[Q]
+
+def cos_iv(TW, idx):
+    B, small, big = TW
+    i1 = idx // B
+    i0 = idx - i1 * B
+    pl, ph = imul(big[0][i1], big[1][i1], small[0][i0], small[1][i0])
+    ql, qh = imul(big[2][i1], big[3][i1], small[2][i0], small[3][i0])
+    return dn(pl - qh), up(ph - ql)
+
+def hat_missing_iv(b, a0, j, P, Q, TW):
+    jm = j % P
+    s1l, s1h = cos_iv(TW, (2 * jm - P) % Q)
+    sbl, sbh = cos_iv(TW, (2 * b * jm - P) % Q)
+    phl, phh = cos_iv(TW, ((4 * a0 - 2 * b + 2) * jm) % Q)
+    if s1l.min() <= 0.0:
+        raise SystemExit("denominator enclosure touches zero")
+    kl, kh = imul(sbl, sbh, dn(1.0 / s1h), up(1.0 / s1l))
+    k2l, k2h = isq(kl, kh)
+    ml, mh = imul(kl, kh, phl, phh)
+    el = dn(dn(k2l - up(2.0 * mh)) + 1.0)
+    eh = up(up(k2h - dn(2.0 * ml)) + 1.0)
+    return dn(dn(np.sqrt(np.maximum(el, 0.0))) / (b - 1)), up(up(np.sqrt(np.maximum(eh, 0.0))) / (b - 1))
+
+def base_windows(b, a0, nd, m, wide=1):
+    W = b ** nd
+    P = 2 * m * W
+    Q = 4 * P
+    TW = twiddle(Q)
+    lip = up(up(2 * PI_UP * sum(a for a in range(b) if a != a0)) / (b - 1))
+    slack = up(up(lip * wide) / (2 * W * m))
+    off = (wide * (2 * np.arange(m) + 1)).astype(np.int64)
+    Ghi, Glo = np.empty(W), np.empty(W)
+    CH = max(1, 400_000 // m)
+    for s0 in range(0, W, CH):
+        w = np.arange(s0, min(s0 + CH, W), dtype=np.int64)
+        j = 2 * m * w[:, None] + off[None, :]
+        vl, vh = hat_missing_iv(b, a0, j, P, Q, TW)
+        Ghi[s0:s0 + CH] = np.minimum(up(vh.max(axis=1) + slack), 1.0)
+        Glo[s0:s0 + CH] = np.maximum(dn(vl.min(axis=1) - slack), 0.0)
+    return Ghi, Glo, slack
+
+def perron_red(G, b, nd, iters=6000, floor_it=300, streak_need=50, tol=1e-13):
+    S = b ** (nd - 1)
+    tgt = np.tile(np.arange(S), b)
+    y = np.ones(S)
+    lam = 0.0
+    streak = 0
+    for it in range(iters):
+        z = (G * y[tgt]).reshape(S, b).sum(axis=1)
+        nl = float(z.max())
+        if nl <= 0.0:
+            return 0.0, np.ones(S)
+        y = z / nl
+        streak = streak + 1 if abs(nl - lam) <= tol * nl else 0
+        lam = nl
+        if streak >= streak_need and it >= floor_it:
+            break
+    return lam, np.maximum(y, 1e-30)
+
+def cw_red(G, y, b, nd, side):
+    S = b ** (nd - 1)
+    tgt = np.tile(np.arange(S), b)
+    r = (up(G * y[tgt]) if side else np.maximum(dn(G * y[tgt]), 0.0)).reshape(S, b)
+    acc = np.zeros(S)
+    for c in range(b):
+        acc = up(acc + r[:, c]) if side else np.maximum(dn(acc + r[:, c]), 0.0)
+    return float(up(acc / y).max()) if side else float(dn(acc / y).min())
+
+def alpha_band(b, a0, nd, m, wide=1):
+    Ghi, Glo, slack = base_windows(b, a0, nd, m, wide)
+    lh, yh = perron_red(Ghi, b, nd)
+    ll, yl = perron_red(Glo, b, nd)
+    mu_hi = cw_red(Ghi, yh, b, nd, True)
+    mu_lo = cw_red(Glo, yl, b, nd, False)
+    eh = math.ceil(math.log(mu_hi) / math.log(b) * 1e7) / 1e7
+    el = None if mu_lo <= 0.0 else math.floor(math.log(mu_lo) / math.log(b) * 1e7) / 1e7
+    if not (mu_hi < b ** eh and (el is None or mu_lo > b ** el)):
+        raise SystemExit(f"rounding unsafe at base {b} missing {a0}")
+    return el, eh, mu_lo, mu_hi, slack
+
+def shift_check(b, a0, N, m):
+    t0 = time.time()
+    lip = (2 * math.pi / (b - 1)) * sum(a for a in range(b) if a != a0)
+    n = b ** N
+    i = np.arange(n)
+    h = 1.0 / (n * m)
+    lo, hi = np.inf, 0.0
+    for s0 in range(0, m, 200):
+        xg = (np.arange(s0, min(s0 + 200, m)) + 0.5) * h
+        Pl = np.ones((len(xg), n))
+        Ph = np.ones((len(xg), n))
+        for j in range(N):
+            v = hat_missing(b, a0, (b ** j) * (xg[:, None] + i[None, :] / n))
+            Pl *= np.maximum(v - (b ** j) * lip * h / 2, 0.0)
+            Ph *= np.minimum(v + (b ** j) * lip * h / 2, 1.0)
+        lo = min(lo, float(Pl.sum(axis=1).min()))
+        hi = max(hi, float(Ph.sum(axis=1).max()))
+    el = math.floor(math.log(lo) / (N * math.log(b)) * 1e6) / 1e6
+    eh = math.ceil(math.log(hi) / (N * math.log(b)) * 1e6) / 1e6
+    print(f"base {b} missing {a0} shift sandwich N={N} m={m}, the grid machine not the window machine: min Sigma {lo:.6f} max Sigma {hi:.6f} -> alpha_1 in [{el:.6f}, {eh:.6f}]  ({time.time() - t0:.1f}s)")
+    return el, eh
+
+def base_cert(b, a0, nd, m, wide=1, tag=""):
+    t0 = time.time()
+    el, eh, mu_lo, mu_hi, slack = alpha_band(b, a0, nd, m, wide)
+    lo = "no positive certificate at this window length" if el is None else f"{el:.7f}"
+    verdict = "CLEARS 1/4" if eh < 0.25 else ("FAILS 1/4" if el is not None and el >= 0.25 else "undecided at 1/4")
+    print(f"base {b} missing {a0}{tag} windows {nd} digits sub-scan {m} box {wide}/{b}^{nd} certified: lambda in [{mu_lo:.6f}, {mu_hi:.6f}] slack {slack:.3e} -> alpha_1 > {lo} and < {eh:.7f}  [{verdict}]  ({time.time() - t0:.1f}s)")
+    return el, eh
+
+def base_family(b, nd, m, side, want=None):
+    t0 = time.time()
+    rows = []
+    for a0 in range((b + 1) // 2):
+        el, eh, mu_lo, mu_hi, slack = alpha_band(b, a0, nd, m)
+        rows.append((a0, el, eh))
+    worst = max(rows, key=lambda r: r[2])
+    best = min(rows, key=lambda r: r[2])
+    band = " ".join(f"{a0}:[{-1.0 if el is None else el:.7f},{eh:.7f}]" for a0, el, eh in rows)
+    if side:
+        ok = all(eh < 0.25 for _, _, eh in rows)
+        head = f"every one-missing-digit set in base {b} clears alpha_1 < 1/4" if ok else f"base {b} does not clear at every digit"
+    else:
+        ok = all(el is not None and el >= 0.25 for _, el, _ in rows)
+        head = f"no one-missing-digit set in base {b} clears alpha_1 < 1/4" if ok else f"base {b} clears at some digit"
+    print(f"{head}: {nd} digits sub-scan {m}, {len(rows)} digits up to the symmetry a0 <-> {b - 1} - a0, worst a0 = {worst[0]} at [{-1.0 if worst[1] is None else worst[1]:.7f}, {worst[2]:.7f}], best a0 = {best[0]} at [{-1.0 if best[1] is None else best[1]:.7f}, {best[2]:.7f}] {chk(1.0 if ok else 0.0, 1.0, 0.0)}  ({time.time() - t0:.1f}s)")
+    print(f"  base {b} certified alpha_1 band by missing digit: {band}")
+    return rows
+
+def family_window(b, a0, nd, m):
+    Ghi, Glo, slack = base_windows(b, a0, nd, m)
+    lh, yh = perron_red(Ghi, b, nd)
+    mu_hi = cw_red(Ghi, yh, b, nd, True)
+    eh = math.ceil(math.log(mu_hi) / math.log(b) * 1e7) / 1e7
+    if not mu_hi < b ** eh:
+        raise SystemExit(f"rounding unsafe at base {b} missing {a0}")
+    return eh, mu_hi
+
+def family_close(lo, hi, m, nds):
+    t0 = time.time()
+    rows, bad = [], []
+    for b in range(lo, hi + 1):
+        for nd in nds:
+            worst, arg = -1.0, -1
+            for a0 in range((b + 1) // 2):
+                eh, mu = family_window(b, a0, nd, m)
+                if eh > worst:
+                    worst, arg = eh, a0
+            if worst < 0.25:
+                break
+        rows.append((b, nd, arg, worst))
+        if worst >= 0.25:
+            bad.append((b, arg, worst))
+    ok = not bad
+    head = f"every one-missing-digit set of every base {lo} <= q <= {hi} clears alpha_1 < 1/4" if ok else f"{len(bad)} base(s) in {lo} <= q <= {hi} do not clear at every digit"
+    ceiling = max(rows, key=lambda r: r[3])
+    print(f"{head}: {hi - lo + 1} bases, {sum((b + 1) // 2 for b in range(lo, hi + 1))} distinct sets, sub-scan {m}, shortest window in {nds} that clears; the band ceiling is q = {ceiling[0]} missing {ceiling[2]} at alpha_1 < {ceiling[3]:.7f} on {ceiling[1]} window digits {chk(1.0 if ok else 0.0, 1.0, 0.0)}  ({time.time() - t0:.1f}s)")
+    for b, nd, arg, worst in rows:
+        flag = "" if worst < 0.25 else "  FAILS 1/4"
+        print(f"  q={b:3d} {(b + 1) // 2:2d} distinct sets {nd} window digits: worst a0 = {arg:2d} at alpha_1 < {worst:.7f}{flag}")
+    return rows, bad
+
+def base_ladder(bases, nd, m, a0s):
+    t0 = time.time()
+    out = []
+    for b in bases:
+        a0 = a0s(b)
+        el, eh, mu_lo, mu_hi, slack = alpha_band(b, a0, nd, m)
+        out.append((b, a0, el, eh))
+    print(f"certified alpha_1 ladder at {nd} digits sub-scan {m}, one missing digit per base: " + " ".join(f"q={b} a0={a0} [{-1.0 if el is None else el:.7f},{eh:.7f}]" for b, a0, el, eh in out) + f"  ({time.time() - t0:.1f}s)")
+    return out
+
 # VERBS
 
 def main():
@@ -465,6 +813,7 @@ def main():
         kernel_check()
         sandwich_iv("gasket 2D", *GASKET, 2, 256)
         certify_windows([("carpet 2D", CARPET, 4, 24)])
+        corollary("gasket 2D", *GASKET, 9, 10, {(5, 10): 0.0014741})
     elif verb == "grid":
         grids(GRID)
     elif verb == "sandwich":
@@ -488,8 +837,40 @@ def main():
         moments(MOMENTS)
     elif verb == "lemma":
         lemma_a("gasket 2D", *GASKET, 301, {257: 0.830915, 255: 0.830253, 129: 0.809637, 127: 0.808166})
+    elif verb == "corollary":
+        corollary("gasket 2D", *GASKET, 15, 12, {(3, 2): 0.2222223, (5, 10): 0.0014741})
+        corollary("carpet 2D", *CARPET, 11, 8, {(4, 2): 0.0625, (5, 8): 0.0002842})
+        base_peel("gasket 2D", *GASKET, [3, 5, 7], 11)
+        base_peel("carpet 2D", *CARPET, [2, 5, 7], 7)
+    elif verb == "criterion":
+        hat_missing_check(9, 4)
+        hat_missing_check(10, 5)
+        criterion_band("carpet base 9", 9, 4, 4, 4000, {1.0: 0.334604, 1.46: 0.159988, 1.5: 0.148588, 1.6: 0.122780, 1.8: 0.081955, 2.0: 0.053605})
+        order_rows("carpet base 9", 9, 4, 5, 3000, [1.5, 235 / 154], {1.5: 0.149397, 235 / 154: 0.142274}, 60)
+        two_dim_moments([("carpet 2D", CARPET, 5, 24, {1.0: 0.406200, 1.5: 0.195631}), ("carpet base 9", CARPET9, 5, 64, {1.0: 0.343674, 1.5: 0.153069})], [1.0, 1.5, 235 / 154, 1.6, 1.7, 1.8])
+    elif verb == "least":
+        hat_missing_check(21, 0)
+        hat_missing_check(34, 16)
+        base_cert(10, 5, 4, 16, 2, " calibration against the study float row lambda 2.245878 and Maynard lambda_(1,4) < 2.24190")
+        base_cert(10, 5, 5, 16, 2, " calibration against the study float row lambda 2.242123 and 27/77 = 0.3506494")
+        base_cert(10, 5, 6, 16, 2, " calibration: 27/77 = 0.3506494 is a finite-window upper bound, not the exponent")
+        base_cert(9, 0, 4, 16, 2, " calibration against the study float row lambda 2.033782 and Karwatowski 0.3219")
+        base_cert(21, 0, 5, 8, 1, " THE LEAST BASE CARRYING ONE SUCH SET")
+        base_family(20, 4, 8, False)
+        base_family(34, 4, 8, True)
+        base_cert(33, 15, 4, 8, 1, " THE WITNESS THAT 34 IS LEAST FOR THE WHOLE FAMILY")
+        base_ladder([10, 14, 18, 20, 21, 22, 26, 30, 33, 34], 4, 8, lambda b: 0)
+        base_ladder([10, 14, 18, 20, 21, 22, 26, 30, 33, 34], 4, 8, lambda b: b // 2)
+        shift_check(21, 0, 4, 400)
+        shift_check(34, 16, 3, 600)
+        grids([("base 21 missing 0", base_missing(21, 0), [None] * 4)])
+    elif verb == "six":
+        base_cert(21, 0, 6, 8, 1, " THE LEAST BASE CARRYING ONE SUCH SET, THE HEADLINE WINDOW")
+        base_cert(10, 5, 7, 16, 2, " calibration: the exponent is strictly under 27/77 = 0.3506494")
+    elif verb == "family":
+        family_close(35, 125, 8, [2, 3, 4])
     else:
-        raise SystemExit("verbs: check grid sandwich certify windows moments lemma")
+        raise SystemExit("verbs: check grid sandwich certify windows moments lemma corollary criterion least six family")
     close(t0)
 
 main()

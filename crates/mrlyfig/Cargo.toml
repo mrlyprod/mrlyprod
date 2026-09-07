@@ -190,6 +190,10 @@ name = "demo-pi"
 path = "examples/grid/demo-pi.rs"
 
 [[example]]
+name = "demo-shell"
+path = "examples/grid/demo-shell.rs"
+
+[[example]]
 name = "demo-formulas"
 path = "examples/plot/demo-formulas.rs"
 

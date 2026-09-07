@@ -4,6 +4,7 @@ use crate::{code_of, Fault, Grid};
 use mrlycore::json;
 use mrlycore::tensor::Tensor;
 use mrlymath::bang::factory;
+use mrlymath::formulas;
 use mrlymath::shape::{self, Frac, Shape};
 use mrlymath::space::Pack;
 use mrlymath::three::{self, Cell3d};
@@ -256,18 +257,14 @@ pub fn crop_series(
     Ok(json!(rows).to_string())
 }
 
-/// Counts the design's filled cells against every integer radius about the corner or the grid centre.
-///
-/// The corner ball runs to the radius side minus one, the centre ball to half of that; the reply lays the seen, the inside and the cut prefix arrays end to end, each a third of the length and indexed by radius from zero.
-#[wasm_bindgen]
-pub fn crop_circle(
+fn circle_table(
     code: &str,
     number: usize,
     level: usize,
     base: usize,
     dimension: usize,
     centre: &str,
-) -> Result<Vec<u32>, Fault> {
+) -> Result<Vec<shape::RadialCounts>, Fault> {
     let stop = || Fault::new(format!("that count would build over {SERIES_CELLS} cells."));
     let side = number.checked_pow(level as u32).ok_or_else(stop)?;
     if side.checked_pow(dimension as u32).ok_or_else(stop)? > SERIES_CELLS {
@@ -283,12 +280,104 @@ pub fn crop_circle(
         }
     };
     let types = design(code, number, dimension, base, level)?;
-    let table = shape::radial_census(&types, &origin, r_max);
+    Ok(shape::radial_census(&types, &origin, r_max))
+}
+
+/// Counts the design's filled cells against every integer radius about the corner or the grid centre.
+///
+/// The corner ball runs to the radius side minus one, the centre ball to half of that; the reply lays the seen, the inside and the cut prefix arrays end to end, each a third of the length and indexed by radius from zero.
+#[wasm_bindgen]
+pub fn crop_circle(
+    code: &str,
+    number: usize,
+    level: usize,
+    base: usize,
+    dimension: usize,
+    centre: &str,
+) -> Result<Vec<u32>, Fault> {
+    let table = circle_table(code, number, level, base, dimension, centre)?;
     let mut out = Vec::with_capacity(3 * table.len());
     out.extend(table.iter().map(|row| row.seen as u32));
     out.extend(table.iter().map(|row| row.inside as u32));
     out.extend(table.iter().map(|row| row.cut as u32));
     Ok(out)
+}
+
+/// Folds the radial count into one profile per scale, so two radius regimes lie on each other.
+///
+/// Scale `k` is the window of radii from `number^k` to `number^(k + 1) - 1`, kept only when the whole window is counted; its profile reads the count over `t^d` at `samples` points of `t = number^(k + j / samples)` with the radius `floor(t)`, so every scale is read at the same offsets of `log_number r` and the profiles are comparable point by point.
+///
+/// Each scale carries its mean level, and each pair of scales the largest and the mean gap between their profiles, with that largest gap over the greater of the two levels.
+#[wasm_bindgen]
+pub fn crop_collapse(
+    code: &str,
+    number: usize,
+    level: usize,
+    base: usize,
+    dimension: usize,
+    centre: &str,
+    samples: usize,
+) -> Result<String, Fault> {
+    if !(2..=256).contains(&samples) {
+        return Err(Fault::new("samples must be between 2 and 256."));
+    }
+    if number < 2 {
+        return Err(Fault::new("the side number must be at least 2 to fold."));
+    }
+    let table = circle_table(code, number, level, base, dimension, centre)?;
+    let seen: Vec<f64> = table.iter().map(|row| row.seen as f64).collect();
+    let top = seen.len() - 1;
+    let mass = formulas::fill(code_of(code)?, number, dimension, 1, base)?;
+    let d = formulas::dimension(code_of(code)?, number, dimension, base)?;
+    let step = number as f64;
+    let (mut scales, mut mains, mut levels) = (Vec::new(), Vec::new(), Vec::new());
+    let mut start = 1usize;
+    while start * number <= top + 1 {
+        let mut main = Vec::new();
+        for j in 0..samples {
+            let t = start as f64 * step.powf(j as f64 / samples as f64);
+            let r = (t.floor() as usize).clamp(start, start * number - 1);
+            main.push(seen[r] / t.powf(d));
+        }
+        let mean = main.iter().sum::<f64>() / samples as f64;
+        scales.push(json!({
+            "start": start,
+            "stop": start * number - 1,
+            "level": mean,
+            "main": main.clone(),
+        }));
+        levels.push(mean);
+        mains.push(main);
+        start *= number;
+    }
+    let mut pairs = Vec::new();
+    for low in 0..mains.len() {
+        for high in low + 1..mains.len() {
+            let (mut sup, mut total) = (0.0f64, 0.0f64);
+            for (near, far) in mains[low].iter().zip(mains[high].iter()) {
+                let gap = (near - far).abs();
+                sup = sup.max(gap);
+                total += gap;
+            }
+            let floor = levels[low].max(levels[high]);
+            pairs.push(json!({
+                "low": low,
+                "high": high,
+                "sup": sup,
+                "mean": total / samples as f64,
+                "share": if floor > 0.0 { sup / floor } else { 0.0 },
+            }));
+        }
+    }
+    Ok(json!({
+        "d": d,
+        "mass": mass.to_string(),
+        "top": top,
+        "samples": samples,
+        "scales": scales,
+        "pairs": pairs,
+    })
+    .to_string())
 }
 
 fn outline(name: &str, r: Frac) -> Option<Vec<[Frac; 2]>> {

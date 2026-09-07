@@ -33,6 +33,8 @@ fn main() {
     star::ghost();
     frame::fading(&carpet);
     star::fading_lattice(&carpet);
+    star::cell_frame(&carpet);
+    star::cell_widths(&carpet);
     header("constants");
     constants::run();
 }

@@ -1,6 +1,7 @@
 use crate::lattice::{Family, Rule, FAMILIES};
 use crate::sums::{mean, odds};
 use mrlymath::six::{geometry::cut, FILL, GRID};
+use mrlynum::series::{beta, dirichlet, CATALAN, EULER};
 use num_rational::Ratio;
 
 pub struct Slice {
@@ -215,5 +216,231 @@ pub fn fading_lattice(rule: &Rule) {
         "  slope of excess * L against ln L: {:+.4} (100 to 200)  {:+.4} (200 to 400)",
         (scaled[4] - scaled[3]) / 2f64.ln(),
         (scaled[5] - scaled[4]) / 2f64.ln()
+    );
+}
+
+fn law_value(number: usize) -> f64 {
+    let value = law(Family::Carpet, number);
+    *value.numer() as f64 / *value.denom() as f64
+}
+
+fn arm_ink(rule: &Rule, n: i64, half: i64) -> f64 {
+    let size = 4 * n;
+    let (mut total, mut inked) = (0i64, 0i64);
+    for index in 0..2 * n {
+        let z = 2 * index;
+        let target = 6 * n - 2 - z;
+        let base = target / 2;
+        for x in base - half - 1..=base + half + 1 {
+            let y = target - x;
+            if !(0..size).contains(&x) || !(0..size).contains(&y) || (x - y).abs() > half {
+                continue;
+            }
+            total += 1;
+            inked += i64::from(rule.filled(x, y, z));
+        }
+    }
+    inked as f64 / total as f64
+}
+
+fn arm_count(rule: &Rule, n: i64, axis: usize) -> Ratio<i64> {
+    let size = 4 * n;
+    let (mut total, mut inked) = (0i64, 0i64);
+    for step in 0..size {
+        let (x, y, z) = match axis {
+            0 => (step, step, 6 * n - 2 - 2 * step),
+            1 => (6 * n - 2 - 2 * step, step, step),
+            _ => (step, 6 * n - 2 - 2 * step, step),
+        };
+        if !(0..size).contains(&x)
+            || !(0..size).contains(&y)
+            || !(0..size).contains(&z)
+            || z % 2 != 0
+        {
+            continue;
+        }
+        total += 1;
+        inked += i64::from(rule.filled(x, y, z));
+    }
+    Ratio::new(inked, total)
+}
+
+fn arm_law(n: i64) -> Ratio<i64> {
+    let rhythm = [0, 1, 0, -1, 0, -1, 0, 1][(n % 8) as usize];
+    Ratio::new(1, 2) + Ratio::new(rhythm, 2 * n)
+}
+
+fn nearest(value: f64) -> (i64, i64) {
+    let mut best = (0i64, 1i64, f64::INFINITY);
+    for denominator in 1..=400i64 {
+        let numerator = (value * denominator as f64).round() as i64;
+        let gap = (value - numerator as f64 / denominator as f64).abs();
+        if gap < best.2 - 1e-12 {
+            best = (numerator, denominator, gap);
+        }
+    }
+    (best.0, best.1)
+}
+
+
+const ARM_LIMIT: usize = 6400;
+const LAW_LIMIT: usize = 2001;
+const ARMS_LIMIT: usize = 221;
+const WIDTH_LIMIT: usize = 800;
+const HELD_LIMIT: usize = 1600;
+const CHECK_LIMIT: usize = 3200;
+
+pub fn cell_frame(rule: &Rule) {
+    println!("carpet cell frame: star the exact arm x = y of the cut, background the exact ink law");
+    let (mut matched, mut layers) = (0, 0);
+    for number in odds(LAW_LIMIT) {
+        matched += usize::from(arm_count(rule, number as i64, 0) == arm_law(number as i64));
+        layers += 1;
+    }
+    let (mut agreed, mut triples) = (0, 0);
+    for number in odds(ARMS_LIMIT) {
+        let n = number as i64;
+        let inks = [
+            arm_count(rule, n, 0),
+            arm_count(rule, n, 1),
+            arm_count(rule, n, 2),
+        ];
+        agreed += usize::from(inks[0] == inks[1] && inks[1] == inks[2]);
+        triples += 1;
+    }
+    println!(
+        "  arm ink 1/2 + chi_8(n)/(2n), chi_8 the mod-8 character of Q(sqrt 2), exact rationals: {matched}/{layers} layers match at odd n <= {LAW_LIMIT}, three arms agree in {agreed}/{triples} at odd n <= {ARMS_LIMIT}"
+    );
+    let excesses: Vec<f64> = odds(2 * ARM_LIMIT - 1)
+        .map(|number| arm_ink(rule, number as i64, 0) - law_value(number))
+        .collect();
+    let constant = (1.0 + 2f64.sqrt()).ln() / (2.0 * 2f64.sqrt())
+        - CATALAN / 8.0
+        - EULER / 4.0
+        - 2f64.ln() / 2.0;
+    let mut scaled = Vec::new();
+    let mut residuals = Vec::new();
+    println!(
+        "  L = 0 mod 4: the -chi/8 term sums to 0, residual is excess * L + (ln L)/4 - C, against -23/192 = {:+.8}",
+        -23.0 / 192.0
+    );
+    for count in [28usize, 56, 100, 200, 400, 800, 1600, 3200, 6400] {
+        let excess = mean(&excesses[..count]);
+        let scale = excess * count as f64;
+        let logged = scale + (count as f64).ln() / 4.0;
+        println!(
+            "  L = {count:4}: excess {excess:+.8}  excess * L {scale:+.6}  excess * L + (ln L)/4 {logged:+.10}  residual * L^2 {:+.8}",
+            (logged - constant) * (count as f64) * (count as f64)
+        );
+        scaled.push(scale);
+        residuals.push(logged - constant);
+    }
+    print!("  residual ratio per doubling from L = 100:");
+    for step in 2..residuals.len() - 1 {
+        print!(" {:.2}", residuals[step] / residuals[step + 1]);
+    }
+    println!();
+    println!(
+        "  L = 2 mod 4: the -chi/8 term still sums to 0 and the character tail changes sign, against +25/192 = {:+.8}",
+        25.0 / 192.0
+    );
+    for count in [102usize, 202, 402, 802, 1602, 3202] {
+        let excess = mean(&excesses[..count]);
+        let logged = excess * count as f64 + (count as f64).ln() / 4.0;
+        println!(
+            "  L = {count:4}: excess * L + (ln L)/4 {logged:+.10}  residual * L^2 {:+.8}",
+            (logged - constant) * (count as f64) * (count as f64)
+        );
+    }
+    println!("  L odd: the -chi/8 term sums to +1/8, so the constant is C + 1/8 and the error is O(1/L)");
+    for count in [27usize, 99, 401, 1601, 6399] {
+        let excess = mean(&excesses[..count]);
+        let logged = excess * count as f64 + (count as f64).ln() / 4.0;
+        println!(
+            "  L = {count:4}: excess * L + (ln L)/4 - C {:+.6}  less 1/8 {:+.8}  times L {:+.6}",
+            logged - constant,
+            logged - constant - 0.125,
+            (logged - constant - 0.125) * count as f64
+        );
+    }
+    println!(
+        "  slope of excess * L against ln L: {:+.6} (1600 to 3200)  {:+.6} (3200 to 6400)",
+        (scaled[7] - scaled[6]) / 2f64.ln(),
+        (scaled[8] - scaled[7]) / 2f64.ln()
+    );
+    println!(
+        "  constant ln(1+sqrt2)/(2 sqrt2) - G/8 - gamma/4 - (ln2)/2 = {constant:.10}  G from its own series {:.10}  L(1, chi_8) series {:.8} against ln(1+sqrt2)/sqrt2 {:.8}",
+        beta(2.0, 2_000_000),
+        dirichlet(1.0, &[0, 1, 0, -1, 0, -1, 0, 1], 20_000_000),
+        (1.0 + 2f64.sqrt()).ln() / 2f64.sqrt()
+    );
+}
+
+fn width_excesses(rule: &Rule, half: i64, limit: usize) -> Vec<f64> {
+    odds(2 * limit - 1)
+        .map(|number| arm_ink(rule, number as i64, half) - law_value(number))
+        .collect()
+}
+
+fn width_slope(excesses: &[f64], limit: usize) -> f64 {
+    let near = mean(&excesses[..limit / 2]) * (limit / 2) as f64;
+    let far = mean(&excesses[..limit]) * limit as f64;
+    (far - near) / 2f64.ln()
+}
+
+fn edge_law(half: i64) -> f64 {
+    let parity = f64::from(u8::from(half.div_euclid(4) % 2 == 0));
+    -(half as f64 + 2.0 * parity) / (8.0 * (half as f64 + 1.0))
+}
+
+pub fn cell_widths(rule: &Rule) {
+    println!("carpet cell frame, band half-width W cells about the arm, slope of excess * L against ln L, b the block parity of the band edge");
+    println!("  the twelve swept widths, fit and test at once: the rational is a best-rational search over denominators to 400 and the search residual is not an error bound");
+    for half in [0i64, 2, 4, 6, 8, 10, 12, 16, 20, 24, 32, 64] {
+        let slope = width_slope(&width_excesses(rule, half, WIDTH_LIMIT), WIDTH_LIMIT);
+        let (numerator, denominator) = nearest(slope);
+        println!(
+            "  W = {half:2} cells at L = {WIDTH_LIMIT}: slope {slope:+.6}  best rational {numerator}/{denominator} = {:+.6}  search residual {:.1e}  against -(W + 2b)/(8(W+1)) = {:+.6}",
+            numerator as f64 / denominator as f64,
+            (slope - numerator as f64 / denominator as f64).abs(),
+            edge_law(half)
+        );
+    }
+    println!("  odd W is not a new band: x - y is even on the arm, so W and W - 1 read one point set and the width law is false there");
+    for half in [0i64, 1, 2, 3] {
+        let slope = width_slope(&width_excesses(rule, half, WIDTH_LIMIT), WIDTH_LIMIT);
+        println!(
+            "  W = {half:2} cells at L = {WIDTH_LIMIT}: slope {slope:+.6}  against -(W + 2b)/(8(W+1)) = {:+.6}",
+            edge_law(half)
+        );
+    }
+    println!("  the seven smallest widths recomputed to L = {CHECK_LIMIT}, four times the sweep, against the exact rational");
+    for half in [0i64, 2, 4, 6, 8, 10, 12] {
+        let excesses = width_excesses(rule, half, CHECK_LIMIT);
+        let target = edge_law(half);
+        let gaps: Vec<f64> = [WIDTH_LIMIT, HELD_LIMIT, CHECK_LIMIT]
+            .iter()
+            .map(|limit| (width_slope(&excesses, *limit) - target).abs())
+            .collect();
+        println!(
+            "  W = {half:2} cells: slope {:+.8} at L = {CHECK_LIMIT} against {target:+.8}  gap {:.1e} (L = {WIDTH_LIMIT})  {:.1e} (L = {HELD_LIMIT})  {:.1e} (L = {CHECK_LIMIT})",
+            width_slope(&excesses, CHECK_LIMIT),
+            gaps[0],
+            gaps[1],
+            gaps[2]
+        );
+    }
+    println!("  four widths held out of the sweep, predicted before measuring, at L = {HELD_LIMIT}");
+    for half in [14i64, 18, 28, 36] {
+        let slope = width_slope(&width_excesses(rule, half, HELD_LIMIT), HELD_LIMIT);
+        let target = edge_law(half);
+        println!(
+            "  W = {half:2} cells: predicted {target:+.8}  measured {slope:+.8}  gap {:.1e}",
+            (slope - target).abs()
+        );
+    }
+    println!(
+        "  the width law's own limit as W grows is -1/8 = {:+.6}, the value the fixed-fraction lattice band measures",
+        -0.125
     );
 }

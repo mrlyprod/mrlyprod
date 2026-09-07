@@ -1,3 +1,6 @@
+mod derive;
+mod transfer;
+
 use mrlycore::Tensor;
 use mrlymath::bang::factory::create;
 use mrlymath::shape::{census, named, Frac, Shape};
@@ -1100,5 +1103,7 @@ fn main() {
     rows += centre("carpet", 2, 7);
     rows += centre("sponge", 3, 4);
     rows += centre("sponge", 3, 5);
+    transfer::transfer();
+    derive::derive();
     println!("circle-crop totals rows={rows} banded={banded}");
 }

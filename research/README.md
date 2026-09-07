@@ -75,7 +75,7 @@ The mathematics of the mrly tree: a parity rule on the corners of a cube, substi
 - [complexity](complexity.md) - Boolean complexity of the catalog, and the Laplacian spectra of the fractals it builds.
 - [cuts](cuts.md) - the six-gasket theorem: a diagonal cut through one parity solid is Sierpinski all the way down.
 - [slices](slices.md) - the diagonal slice of the solid cube: the `6n` census, centered-hexagonal vertices, and the splitting-prime rule.
-- [hexagon](hexagon.md) - the moire of the stacked diagonal slices: the exact cut-ink laws, the doubling sign law, the quarter-line bands, and the void star against the carpet's fading one.
+- [hexagon](hexagon.md) - the moire of the stacked diagonal slices: the exact cut-ink laws, the doubling sign law, the quarter-line bands, and the ghost star, whose decay is exactly -1/4 in the cell frame with no frame-free coefficient anywhere else.
 - [dimensions](dimensions.md) - complex dimensions: every design in the lattice class, the carpet proved not Minkowski measurable with its explicit profile, and the arithmetic pole at `s_0 + 2 pi i/log 3` certified genuine.
 - [weights](weights.md) - weighted designs: what weights move on the mass side, what they never move on the length side, and the pressure that closes both.
 - [connectivity](connectivity.md) - self-similar designs raced against matched random cell sets on components and boundary.
@@ -85,11 +85,11 @@ The mathematics of the mrly tree: a parity rule on the corners of a cube, substi
 - [farey](farey.md) - the stack's moire is a Farey resonance diagram; each scale `n` adds exactly `phi(n)` bright nodes, and the stack is an address rather than a construction: any depth evaluates in closed form, which buys rendering and provably nothing toward RH.
 - [mobius](mobius.md) - the Mobius meter across digit designs: exact transfer between scaled columns, the 47-column cancellation census, square-root cancellation as the open exponent, and every bilinear route that discards the coefficients' arithmetic costed out and dead.
 - [pi](pi.md) - pi recovered from the density of coprime points in the stacked set, two disjoint ways.
-- [coprime](coprime.md) - the coprimality spine: exact base-local factors on every design, the census behind them, the window at dimension one, the b-visible and directional extensions, and primes on a design, where a certified `l^1` exponent splits the gasket from the carpet.
+- [coprime](coprime.md) - the coprimality spine: exact base-local factors on every design, the census behind them, the window at dimension one with the band automaton's critical out-degree and its algebraic block rate, and primes on a design, where the least base below the quarter threshold is 21 and the one-missing-digit family closes at 34.
 - [bases](bases.md) - what base 3 hides: an Eisenstein L-value where base 2 hid pi.
 - [spectra](spectra.md) - the tile grammar of the diagonal slice at every odd base: the two-tile claim, the closed forms, and the mod-4 split.
 - [spin](spin.md) - a design turned about its centre: the ripple identity, the complete spin spectrum, the sponge's opaque diagonal, and a Gaussian Farey.
-- [crop](crop.md) - exact shape crops of a design: the In/Cut/Out census, the circle on the carpet and the sphere on the sponge with the averaged crossing theorem and the pointwise reduction to shell digits, and the curved-slice lane.
+- [crop](crop.md) - the circle on a design: the corner disc count, its log-periodic main term, and the crossing shell read as a rooted tree whose transfer operator is derived from the geometry.
 - [sequences](sequences.md) - the OEIS ledger: every sequence this work produces, with terms, formulas, and verification status.
 - [integers](integers.md) - the census the other way round: which integers the whole registry writes, which it never writes, and which it writes thousands of times.
 - [information](information.md) - a render as data: the rearranged SVD reads a design's code out of noise and peels a magic word, while the fractal codebook loses to deflate.

@@ -162,6 +162,15 @@ const cropCircleN = (r: number) => cropCircle[r];
 const cropCircleCut = (r: number) => cropCircle[2 * cropCircleWide + r];
 const cropSphere = m.crop_circle('23', 3, 4, 2, 3, 'corner');
 const cropCentre = m.crop_circle('7', 3, 6, 2, 2, 'centre');
+const cropFold = JSON.parse(m.crop_collapse('7', 3, 6, 2, 2, 'corner', 16));
+const cropFoldHole = JSON.parse(m.crop_collapse('7', 3, 6, 2, 2, 'centre', 16));
+const cropStep = (read: { pairs: { low: number; high: number; sup: number; share: number }[] }, key: 'sup' | 'share') =>
+  read.pairs.filter((pair) => pair.high === pair.low + 1).map((pair) => pair[key].toFixed(6)).join(',');
+const shellRead = JSON.parse(m.shell_read('7', 3, 2, 100));
+const shellColumn = (key: string) => shellRead.levels.map((row: Record<string, number | boolean>) => row[key]).join(',');
+const shellNodes = m.shell_nodes('7', 3, 2, 100);
+const shellArt = m.shell_pixels('7', 3, 2, 100, 3);
+const shellSmall = JSON.parse(m.shell_read('7', 3, 2, 7));
 const cropArt = m.crop_svg('7', 3, 1, 2, 'ball', 1, 2, false, 4);
 const cropHole = m.crop_svg('7', 3, 1, 2, 'diamond', 1, 2, true, 4);
 const cropField = m.field_crop(square, 8, 2, 'ball', 1, 2, false);
@@ -234,6 +243,21 @@ const checks: [string, unknown, unknown][] = [
   ['crop_circle carpet defect 27', cropCircleN(81) - 8 * cropCircleN(27), 0],
   ['crop_circle sponge corner', Array.from(cropSphere.subarray(1, 9)).join(','), '1,4,13,28,47,65,95,137'],
   ['crop_circle centre hole', `${cropCentre.length / 3},${cropCentre.findIndex((n: number) => n > 0)}`, '365,122'],
+  ['crop_collapse scales', cropFold.scales.map((scale: { start: number }) => scale.start).join(','), '1,3,9,27,81,243'],
+  ['crop_collapse deep profile', cropFold.scales[5].main.slice(0, 4).map((v: number) => v.toFixed(6)).join(','), '0.751038,0.779830,0.803768,0.810867'],
+  ['crop_collapse step gaps', cropStep(cropFold, 'sup'), '0.353553,0.222183,0.110138,0.042663,0.015114'],
+  ['crop_collapse step share', cropStep(cropFold, 'share'), '0.534078,0.305035,0.145250,0.055448,0.019546'],
+  ['crop_collapse centre share', cropStep(cropFoldHole, 'share'), '0.000000,0.000000,0.000000,3.081886'],
+  ['shell_read depth and side', `${shellRead.depth},${shellRead.side}`, '5,243'],
+  ['shell_read leaves are 2r+1', shellRead.leaves, 201],
+  ['shell_read boxes per level', shellColumn('boxes'), '201,67,23,7,3,1'],
+  ['shell_read meets the identity', `${shellColumn('want')} ${shellRead.exact} ${shellRead.orphans}`, '201,67,23,7,3,1 true 0'],
+  ['shell_read kept per level', shellColumn('live'), '134,48,18,7,3,1'],
+  ['shell_read branching is three', shellColumn('three'), 'false,true,false,false,false,true'],
+  ['shell_read kept is the crop cut', `${shellRead.live} ${cropCircleCut(100)}`, '134 134'],
+  ['shell_read small radius', `${shellSmall.depth},${shellSmall.leaves},${shellSmall.live}`, '2,15,10'],
+  ['shell_nodes are the whole tree', `${shellNodes.length / 5},${shellNodes.slice(0, 5).join(',')}`, '302,0,0,100,0,1'],
+  ['shell_pixels is one sheet', `${shellArt.width},${shellArt.height}`, '486,486'],
   ['two_grid 7 fills', grid.types.reduce((a, b) => a + b, 0), 512],
   ['fill sponge level 3', m.fills('23', 3, 3, 3, 2), '8000'],
   ['void sponge level 3', m.voids('23', 3, 3, 3, 2), '11683'],

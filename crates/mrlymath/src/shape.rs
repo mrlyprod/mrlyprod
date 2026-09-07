@@ -540,6 +540,125 @@ pub fn radial_census(types: &Tensor, centre: &[i64], r_max: u64) -> Vec<RadialCo
         .collect()
 }
 
+// CROSSING SHELL
+
+/// One box of a crossing shell: where it sits, the seat it takes in its parent and whether the design keeps its path.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ShellBox {
+    /// The box's first coordinate in its own level's grid.
+    pub x: u64,
+    /// The box's second coordinate in its own level's grid.
+    pub y: u64,
+    /// The seat the box takes in its parent, row-major over the side, and the side squared at the root.
+    pub seat: usize,
+    /// The parent's place in the level above, and `usize::MAX` at the root or when the level above holds no such box.
+    pub parent: usize,
+    /// Whether every seat from the root down to this box is one the design keeps.
+    pub live: bool,
+}
+
+/// The rooted tree of the boxes one circle crosses, level by level.
+#[derive(Clone, Debug)]
+pub struct Shell {
+    /// The radius in cells.
+    pub radius: u64,
+    /// The side of a box measured in the boxes one level below it.
+    pub number: u64,
+    /// The boxes of level `j`, the crossed cells at `0` and the single root last, each level in the arc's own order.
+    pub levels: Vec<Vec<ShellBox>>,
+    /// The boxes whose parent is missing from the level above, which the crossing identity forbids.
+    pub orphans: usize,
+}
+
+/// Lists the level-`level` boxes the circle of radius `radius` crosses, in the arc's own order.
+///
+/// A box `X` of side `number^level` is crossed when its near corner lies in the closed disc and its far corner outside it, `|X| <= radius / number^level < |X + 1|`, so the level is the whole grid's crossing shell read at that real radius. The columns telescope, the low row of one column being the high row of the next, so the walk is one pass over `floor(radius / number^level) + 1` columns and every comparison is on integers. The order runs along the arc, the first coordinate rising while the second falls, which is why a parent's children are contiguous among its own.
+pub fn crossing_shell(radius: u64, number: u64, level: u32) -> Vec<(u64, u64)> {
+    let scale = match number.checked_pow(level) {
+        Some(scale) if scale <= radius => scale,
+        _ => return vec![(0, 0)],
+    };
+    let square = radius * radius;
+    let top = radius / scale;
+    let high: Vec<u64> = (0..=top + 1)
+        .map(|i| {
+            let reach = scale * i;
+            if reach > radius {
+                0
+            } else {
+                (square - reach * reach).isqrt() / scale
+            }
+        })
+        .collect();
+    let mut out = Vec::with_capacity(2 * top as usize + 1);
+    for i in 0..=top as usize {
+        for y in (high[i + 1]..=high[i]).rev() {
+            out.push((i as u64, y));
+        }
+    }
+    out
+}
+
+/// Builds the whole crossing tree of one radius, pruned by the seats the design keeps.
+///
+/// The depth is the least level whose grid holds the circle inside one box, so the tree is rooted there and its leaves are the `2 * radius + 1` crossed cells. `keep` reads the design's level-one tile row-major, one flag per seat, and a box is live when every seat from the root down to it is kept, so the live leaves are exactly the crossed cells the design fills.
+pub fn crossing_tree(radius: u64, number: u64, keep: &[bool]) -> Shell {
+    let mut depth = 0u32;
+    while number
+        .checked_pow(depth)
+        .is_some_and(|scale| scale <= radius)
+    {
+        depth += 1;
+    }
+    let seats = (number * number) as usize;
+    let mut levels: Vec<Vec<ShellBox>> = (0..=depth)
+        .map(|level| {
+            crossing_shell(radius, number, level)
+                .into_iter()
+                .map(|(x, y)| ShellBox {
+                    x,
+                    y,
+                    seat: seats,
+                    parent: usize::MAX,
+                    live: true,
+                })
+                .collect()
+        })
+        .collect();
+    let mut orphans = 0;
+    for level in (0..depth as usize).rev() {
+        let mut start = 0usize;
+        for k in 0..levels[level].len() {
+            let here = levels[level][k];
+            let (px, py) = (here.x / number, here.y / number);
+            let mut at = start;
+            while at < levels[level + 1].len()
+                && (levels[level + 1][at].x, levels[level + 1][at].y) != (px, py)
+            {
+                at += 1;
+            }
+            if at == levels[level + 1].len() {
+                orphans += 1;
+                levels[level][k].live = false;
+                continue;
+            }
+            start = at;
+            let seat = ((here.x % number) * number + here.y % number) as usize;
+            let live = levels[level + 1][at].live && keep.get(seat).copied().unwrap_or(false);
+            let cell = &mut levels[level][k];
+            cell.seat = seat;
+            cell.parent = at;
+            cell.live = live;
+        }
+    }
+    Shell {
+        radius,
+        number,
+        levels,
+        orphans,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -888,6 +1007,87 @@ mod tests {
                 assert_eq!(tally.filled[1] as u64, table[r].cut, "cut r={r}");
                 assert!(table[r].inside <= table[r].seen);
                 assert!(table[r].seen <= table[r].inside + table[r].cut);
+            }
+        }
+    }
+
+    fn brute_shell(radius: u64, scale: u64) -> Vec<(u64, u64)> {
+        let mut out = Vec::new();
+        let reach = radius / scale + 1;
+        for x in 0..=reach {
+            for y in 0..=reach {
+                let near = (scale * x).pow(2) + (scale * y).pow(2);
+                let far = (scale * (x + 1)).pow(2) + (scale * (y + 1)).pow(2);
+                if near <= radius * radius && radius * radius < far {
+                    out.push((x, y));
+                }
+            }
+        }
+        out.sort_by_key(|&(x, y)| (x, std::cmp::Reverse(y)));
+        out
+    }
+
+    #[test]
+    fn crossing_shell_matches_the_brute_sweep() {
+        for radius in 1..=90u64 {
+            for level in 0..5u32 {
+                let scale = 3u64.pow(level);
+                assert_eq!(
+                    crossing_shell(radius, 3, level),
+                    brute_shell(radius, scale),
+                    "r={radius} j={level}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn crossing_shell_is_two_floor_plus_one() {
+        for radius in 1..=400u64 {
+            for level in 0..8u32 {
+                let want = 2 * (radius / 3u64.pow(level)) + 1;
+                assert_eq!(crossing_shell(radius, 3, level).len() as u64, want);
+                let five = 2 * (radius / 5u64.pow(level.min(5))) + 1;
+                assert_eq!(crossing_shell(radius, 5, level.min(5)).len() as u64, five);
+            }
+        }
+    }
+
+    #[test]
+    fn crossing_tree_hangs_every_box_on_a_crossed_parent() {
+        let tile = create(7, 3, 2, 2, 1).unwrap();
+        let keep: Vec<bool> = tile.bytes().iter().map(|&b| b != 0).collect();
+        for radius in 1..=120u64 {
+            let tree = crossing_tree(radius, 3, &keep);
+            assert_eq!(tree.orphans, 0, "r={radius}");
+            assert_eq!(tree.levels.last().unwrap().len(), 1);
+            assert_eq!(tree.levels[0].len() as u64, 2 * radius + 1);
+            for level in 0..tree.levels.len() - 1 {
+                for cell in &tree.levels[level] {
+                    let parent = tree.levels[level + 1][cell.parent];
+                    assert_eq!((parent.x, parent.y), (cell.x / 3, cell.y / 3));
+                    assert_eq!(cell.seat, ((cell.x % 3) * 3 + cell.y % 3) as usize);
+                    assert!(!cell.live || parent.live);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn the_live_leaves_are_the_designs_crossed_cells() {
+        for code in [7u128, 5, 11, 15] {
+            let tile = create(code, 3, 2, 2, 1).unwrap();
+            let keep: Vec<bool> = tile.bytes().iter().map(|&b| b != 0).collect();
+            for depth in 1..=4usize {
+                let grid = create(code, 3, 2, 2, depth).unwrap();
+                let side = 3u64.pow(depth as u32);
+                let table = radial_census(&grid, &[0, 0], side - 1);
+                for radius in side / 3..side {
+                    let tree = crossing_tree(radius.max(1), 3, &keep);
+                    assert_eq!(tree.levels.len(), depth + 1, "code={code} r={radius}");
+                    let live = tree.levels[0].iter().filter(|cell| cell.live).count() as u64;
+                    assert_eq!(live, table[radius as usize].cut, "code={code} r={radius}");
+                }
             }
         }
     }

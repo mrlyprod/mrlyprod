@@ -77,6 +77,14 @@
       "paper": null
     },
     {
+      "name": "shell",
+      "title": "The shell",
+      "blurb": "The cells a circle crosses on a design collapse by threes into a rooted tree whose every level holds exactly 2 floor(r / 3^j) + 1 boxes, and the cells the design fills are the leaves whose path never takes a centre seat.",
+      "category": "designs",
+      "research": "crop",
+      "paper": null
+    },
+    {
       "name": "tube",
       "title": "The tube",
       "blurb": "Fattening a design by a radius and measuring what it swallows gives an inner tube whose Minkowski reading never settles but circles one log-periodic profile, exact in closed form wherever the holes are isolated squares.",

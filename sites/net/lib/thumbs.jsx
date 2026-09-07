@@ -208,6 +208,7 @@ const DRAW = {
   tile: (m) => <Markup className="thumb" svg={m.tile_svg('23', 3, 1, 2, 'cut', 5, 3, true, 6)} />,
   cuts: (m) => <Markup className="thumb" svg={m.diagonal_svg('126', 2, 5, 2, JSON.parse(m.diagonal_profile('126', 2, 5, 2)).central, 6)} />,
   crop: (m) => <Grid grid={m.crop_grid('7', 3, 3, 2, 'ball', 55, 120, false, 'touching')} on={ink.green} className="" />,
+  shell: (m) => <Pixels data={m.shell_pixels('7', 3, 2, 100, 3)} className="" />,
   tube: (m) => <Signs grid={tube(m)} hues={{ plus: ink.fg, minus: ink.blue, empty: ink.deep }} className="" />,
   weights: (m) => <Pixels data={weights(m)} className="" />,
   slices: (m) => <Markup className="thumb" svg={m.hex_svg('23', 7, 1, 2, 'cut', 8)} />,

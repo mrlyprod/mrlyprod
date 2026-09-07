@@ -42,6 +42,8 @@ pub mod morse;
 pub mod prime;
 /// The race: seeded walkers loose on a flat design.
 pub mod race;
+/// The crossing shell of a circle on a design, read as a rooted tree and painted.
+pub mod shell;
 /// The punctured schedules: the Wallis sieve rastered, its punctures listed, its ratios walked and its limits read.
 pub mod sieve;
 /// The hexagon projections of a cube as SVG.
