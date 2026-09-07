@@ -798,6 +798,205 @@ def base_ladder(bases, nd, m, a0s):
     print(f"certified alpha_1 ladder at {nd} digits sub-scan {m}, one missing digit per base: " + " ".join(f"q={b} a0={a0} [{-1.0 if el is None else el:.7f},{eh:.7f}]" for b, a0, el, eh in out) + f"  ({time.time() - t0:.1f}s)")
     return out
 
+# THE PAIR FAMILY
+
+def pair_missing(b, a, c):
+    return (b, 1, [(d,) for d in range(b) if d != a and d != c])
+
+def hat_pair(b, a, c, th):
+    th = th - np.floor(th)
+    s = np.sin(np.pi * th)
+    safe = np.where(s == 0.0, 1.0, s)
+    K = np.where(s == 0.0, float(b), np.sin(b * np.pi * th) / safe)
+    p = a - (b - 1) / 2
+    r = c - (b - 1) / 2
+    v = K * K + 2.0 + 2.0 * np.cos(2 * np.pi * (a - c) * th) - 2.0 * K * (np.cos(2 * np.pi * p * th) + np.cos(2 * np.pi * r * th))
+    return np.sqrt(np.maximum(v, 0.0)) / (b - 2)
+
+def hat_pair_check(b, a, c, pts=2000):
+    f, k = mask(pair_missing(b, a, c)[2], 1)
+    rng = np.random.default_rng(20250907)
+    th = rng.random(pts)
+    w = float(np.abs(hat_pair(b, a, c, th) - f([th])).max())
+    print(f"base {b} missing {{{a},{c}}} closed form |K - e((a - (b-1)/2) th) - e((c - (b-1)/2) th)|/(b-2) against the character sum on {pts} arguments: worst gap {w:.3e} {chk(w, 0.0, 1e-11)}")
+
+def pair_count(b):
+    return ((b - 2) * (b - 3) // 2 + (b - 2) // 2) // 2 + b // 2
+
+def pair_sets(b):
+    out = [(0, c) for c in range(1, b // 2 + 1)]
+    seen = set()
+    for a in range(1, b - 1):
+        for c in range(a + 1, b - 1):
+            if (b - 1 - c, b - 1 - a) in seen:
+                continue
+            seen.add((a, c))
+            out.append((a, c))
+    return out
+
+def hat_pair_iv(b, a, c, j, P, Q, TW):
+    jm = j % P
+    s1l, s1h = cos_iv(TW, (2 * jm - P) % Q)
+    sbl, sbh = cos_iv(TW, (2 * b * jm - P) % Q)
+    pal, pah = cos_iv(TW, ((4 * a - 2 * b + 2) * jm) % Q)
+    pcl, pch = cos_iv(TW, ((4 * c - 2 * b + 2) * jm) % Q)
+    dfl, dfh = cos_iv(TW, (4 * (a - c) * jm) % Q)
+    if s1l.min() <= 0.0:
+        raise SystemExit("denominator enclosure touches zero")
+    kl, kh = imul(sbl, sbh, dn(1.0 / s1h), up(1.0 / s1l))
+    k2l, k2h = isq(kl, kh)
+    ml, mh = imul(kl, kh, dn(pal + pcl), up(pah + pch))
+    el = dn(dn(dn(k2l + 2.0) + dn(2.0 * dfl)) - up(2.0 * mh))
+    eh = up(up(up(k2h + 2.0) + up(2.0 * dfh)) - dn(2.0 * ml))
+    return dn(dn(np.sqrt(np.maximum(el, 0.0))) / (b - 2)), up(up(np.sqrt(np.maximum(eh, 0.0))) / (b - 2))
+
+def pair_windows(b, a, c, nd, m, wide=1):
+    W = b ** nd
+    P = 2 * m * W
+    Q = 4 * P
+    TW = twiddle(Q)
+    lip = up(up(2 * PI_UP * (b * (b - 1) // 2 - a - c)) / (b - 2))
+    slack = up(up(lip * wide) / (2 * W * m))
+    off = (wide * (2 * np.arange(m) + 1)).astype(np.int64)
+    Ghi, Glo = np.empty(W), np.empty(W)
+    CH = max(1, 400_000 // m)
+    for s0 in range(0, W, CH):
+        w = np.arange(s0, min(s0 + CH, W), dtype=np.int64)
+        j = 2 * m * w[:, None] + off[None, :]
+        vl, vh = hat_pair_iv(b, a, c, j, P, Q, TW)
+        Ghi[s0:s0 + CH] = np.minimum(up(vh.max(axis=1) + slack), 1.0)
+        Glo[s0:s0 + CH] = np.maximum(dn(vl.min(axis=1) - slack), 0.0)
+    return Ghi, Glo, slack
+
+def pair_band(b, a, c, nd, m, wide=1, side=None):
+    Ghi, Glo, slack = pair_windows(b, a, c, nd, m, wide)
+    eh = el = None
+    mu_hi = mu_lo = 0.0
+    if side is None or side:
+        lh, yh = perron_red(Ghi, b, nd)
+        mu_hi = cw_red(Ghi, yh, b, nd, True)
+        eh = math.ceil(math.log(mu_hi) / math.log(b) * 1e7) / 1e7
+        if not mu_hi < b ** eh:
+            raise SystemExit(f"rounding unsafe at base {b} missing {a},{c}")
+    if side is None or not side:
+        ll, yl = perron_red(Glo, b, nd)
+        mu_lo = cw_red(Glo, yl, b, nd, False)
+        el = None if mu_lo <= 0.0 else math.floor(math.log(mu_lo) / math.log(b) * 1e7) / 1e7
+        if el is not None and not mu_lo > b ** el:
+            raise SystemExit(f"rounding unsafe at base {b} missing {a},{c}")
+    return el, eh, mu_lo, mu_hi, slack
+
+def pair_cert(b, a, c, nd, m, wide=1, tag="", thr=0.25, name="1/4"):
+    t0 = time.time()
+    el, eh, mu_lo, mu_hi, slack = pair_band(b, a, c, nd, m, wide)
+    lo = "no positive certificate at this window length" if el is None else f"{el:.7f}"
+    verdict = f"CLEARS {name}" if eh < thr else (f"FAILS {name}" if el is not None and el >= thr else f"undecided at {name}")
+    print(f"base {b} missing {{{a},{c}}}{tag} windows {nd} digits sub-scan {m} box {wide}/{b}^{nd} certified: lambda in [{mu_lo:.6f}, {mu_hi:.6f}] slack {slack:.3e} -> alpha_1 > {lo} and < {eh:.7f}  [{verdict}]  ({time.time() - t0:.1f}s)")
+    return el, eh
+
+def pair_census(bs):
+    th = (np.arange(1001) + 0.5) / 1001
+    for b in bs:
+        fp = {}
+        for a in range(b):
+            for c in range(a + 1, b):
+                fp.setdefault(tuple(np.round(hat_pair(b, a, c, th), 11)), []).append((a, c))
+        sets = pair_sets(b)
+        reps = {tuple(np.round(hat_pair(b, a, c, th), 11)) for (a, c) in sets}
+        print(f"base {b}: {b * (b - 1) // 2} excluded pairs fall into {len(fp)} distinct transforms against (C(q-2,2) + floor((q-2)/2))/2 + floor(q/2) = {pair_count(b)} {chk(float(len(fp)), float(pair_count(b)), 0.0)}, the scan list holds {len(sets)} {chk(float(len(sets)), float(pair_count(b)), 0.0)} and meets every class {chk(float(len(reps)), float(len(fp)), 0.0)}; the edge class {{0,c}} is the one-missing-digit set of the {b - 1}-digit interval and collapses {{0,c}} with {{0,{b}-c}}")
+
+def pair_family(b, nd, m, side, tag=""):
+    t0 = time.time()
+    rows = []
+    for (a, c) in pair_sets(b):
+        el, eh, mu_lo, mu_hi, slack = pair_band(b, a, c, nd, m, side=side)
+        rows.append((a, c, el, eh))
+    if side:
+        ok = all(eh < 0.25 for _, _, _, eh in rows)
+        key = max(rows, key=lambda r: r[3])
+        head = f"every two-missing-digit set in base {b} clears alpha_1 < 1/4" if ok else f"base {b} does not clear at every pair"
+        edge = f"worst pair {{{key[0]},{key[1]}}} at alpha_1 < {key[3]:.7f}"
+    else:
+        ok = all(el is not None and el >= 0.25 for _, _, el, _ in rows)
+        key = min(rows, key=lambda r: 9.9 if r[2] is None else r[2])
+        head = f"no two-missing-digit set in base {b} clears alpha_1 < 1/4" if ok else f"base {b} clears at some pair"
+        edge = f"closest pair {{{key[0]},{key[1]}}} at alpha_1 > {-1.0 if key[2] is None else key[2]:.7f}"
+    print(f"{head}{tag}: {nd} digits sub-scan {m}, {len(rows)} distinct sets, {edge} {chk(1.0 if ok else 0.0, 1.0, 0.0)}  ({time.time() - t0:.1f}s)")
+    return rows
+
+def pair_shortest(b, nds, m, side, thr=0.25, name="1/4"):
+    t0 = time.time()
+    todo = pair_sets(b)
+    n0 = len(todo)
+    done, wnd = [], {}
+    for nd in nds:
+        nxt = []
+        for (a, c) in todo:
+            el, eh, mu_lo, mu_hi, slack = pair_band(b, a, c, nd, m, side=side)
+            v = eh if side else (-1.0 if el is None else el)
+            if (v < thr) if side else (v >= thr):
+                done.append((a, c, v))
+                wnd[nd] = wnd.get(nd, 0) + 1
+            else:
+                nxt.append((a, c))
+        todo = nxt
+        if not todo:
+            break
+    ok = not todo
+    key = (max(done, key=lambda r: r[2]) if side else min(done, key=lambda r: r[2])) if done else (-1, -1, -1.0)
+    spread = " ".join(f"{nd}:{wnd[nd]}" for nd in sorted(wnd))
+    verb = f"clears alpha_1 < {name} at every pair" if side else f"fails {name} at every pair"
+    tail = ""
+    if not ok:
+        ups = []
+        for (a, c) in todo:
+            el, eh, mu_lo, mu_hi, slack = pair_band(b, a, c, nds[-1], m, side=not side)
+            ups.append(f"{{{a},{c}}} S={a + c - b + 1} D={c - a} alpha_1 {'>' if side else '<'} {(-1.0 if el is None else el) if side else eh:.7f}")
+        note = "not shown to clear" if side else "no positive lower certificate"
+        tail = f"; {len(todo)} UNCLEAR at {nds[-1]} digits, {note}: " + ", ".join(ups)
+    print(f"  q={b:3d} {n0:5d} distinct sets {verb}: window digits used {spread}, {'worst' if side else 'closest'} {{{key[0]},{key[1]}}} at alpha_1 {'<' if side else '>'} {key[2]:.7f}{tail} {chk(1.0 if ok else 0.0, 1.0, 0.0)}  ({time.time() - t0:.1f}s)", flush=True)
+    return b, ok, key, wnd
+
+def pair_first(b, nds, m, thr=0.25, name="1/4", want=None):
+    t0 = time.time()
+    best, arg, wnd = None, None, None
+    for (a, c) in pair_sets(b):
+        for nd in nds:
+            el, eh, mu_lo, mu_hi, slack = pair_band(b, a, c, nd, m, side=True)
+            if eh < thr:
+                break
+        if best is None or eh < best:
+            best, arg, wnd = eh, (a, c), nd
+    ok = best < thr
+    pin = "" if want is None else " " + chk(1.0 if ok == want[0] else 0.0, 1.0, 0.0) + chk(best, want[1], 5e-7)
+    print(f"  q={b:3d} {len(pair_sets(b)):5d} distinct sets, best pair {{{arg[0]},{arg[1]}}} at {wnd} window digits: alpha_1 < {best:.7f} [{'CLEARS' if ok else 'does not clear'} {name}]{pin}  ({time.time() - t0:.1f}s)", flush=True)
+    return b, ok, arg, best
+
+def pair_some(b, nds, m, thr=0.25, name="1/4"):
+    t0 = time.time()
+    best, arg, wnd = -1.0, None, None
+    for nd in nds:
+        for (a, c) in pair_sets(b):
+            el, eh, mu_lo, mu_hi, slack = pair_band(b, a, c, nd, m, side=False)
+            v = -1.0 if el is None else el
+            if v > best:
+                best, arg, wnd = v, (a, c), nd
+            if v >= thr:
+                break
+        if best >= thr:
+            break
+    print(f"  q={b:3d} {len(pair_sets(b)):5d} distinct sets, witness pair {{{arg[0]},{arg[1]}}} at {wnd} window digits: alpha_1 > {best:.7f} [{'FAILS' if best >= thr else 'no witness at these windows'} {name}] {chk(1.0 if best >= thr else 0.0, 1.0, 0.0)}  ({time.time() - t0:.1f}s)", flush=True)
+    return b, best >= thr, arg, best
+
+def pair_ladder(bases, a, c, nd, m):
+    t0 = time.time()
+    out = []
+    for b in bases:
+        el, eh, mu_lo, mu_hi, slack = pair_band(b, a, c, nd, m)
+        out.append((b, el, eh))
+    print(f"certified alpha_1 ladder at {nd} digits sub-scan {m}, the interval class {{{a},{c}}} in each base: " + " ".join(f"q={b} [{-1.0 if el is None else el:.7f},{eh:.7f}]" for b, el, eh in out) + f"  ({time.time() - t0:.1f}s)")
+    return out
+
 # VERBS
 
 def main():
@@ -867,10 +1066,43 @@ def main():
     elif verb == "six":
         base_cert(21, 0, 6, 8, 1, " THE LEAST BASE CARRYING ONE SUCH SET, THE HEADLINE WINDOW")
         base_cert(10, 5, 7, 16, 2, " calibration: the exponent is strictly under 27/77 = 0.3506494")
+    elif verb == "pairs":
+        hat_pair_check(21, 0, 1)
+        hat_pair_check(32, 7, 19)
+        pair_census([6, 9, 10, 12])
+        pair_cert(32, 0, 1, 4, 8, 1, " THE LEAST BASE CARRYING ONE CERTIFIED SUCH SET")
+        pair_cert(31, 0, 1, 4, 8, 1, " THE WITNESS THAT 32 IS LEAST FOR THE INTERVAL CLASS")
+        pair_cert(20, 3, 11, 5, 8, 1, " THE WITNESS THAT 21 IS LEAST FOR THE WHOLE FAMILY AGAINST 1/3", 1 / 3, "1/3")
+        pair_first(13, [3], 8, 1 / 3, "1/3", (True, 0.3318819))
+        pair_first(12, [5], 8, 1 / 3, "1/3", (False, 0.3371162))
+        pair_ladder([20, 24, 28, 30, 31, 32, 33, 36, 40], 0, 1, 4, 8)
+    elif verb == "pairone":
+        v = [int(x) for x in sys.argv[2:]]
+        pair_cert(v[0], v[1], v[2], v[3], v[4], v[5] if len(v) > 5 else 1)
+    elif verb == "pairfail":
+        v = sys.argv[2:]
+        thr, name = (1 / 3, "1/3") if len(v) > 2 and v[2] == "third" else (0.25, "1/4")
+        for b in range(int(v[0]), int(v[1]) + 1):
+            pair_shortest(b, [2, 3, 4, 5], 8, False, thr, name)
+    elif verb == "pairclear":
+        v = sys.argv[2:]
+        thr, name = (1 / 3, "1/3") if len(v) > 2 and v[2] == "third" else (0.25, "1/4")
+        for b in range(int(v[0]), int(v[1]) + 1):
+            pair_shortest(b, [2, 3, 4], 8, True, thr, name)
+    elif verb == "pairsome":
+        v = sys.argv[2:]
+        thr, name = (1 / 3, "1/3") if len(v) > 2 and v[2] == "third" else (0.25, "1/4")
+        for b in range(int(v[0]), int(v[1]) + 1):
+            pair_some(b, [3, 4, 5], 8, thr, name)
+    elif verb == "pairfirst":
+        v = sys.argv[2:]
+        thr, name = (1 / 3, "1/3") if len(v) > 2 and v[2] == "third" else (0.25, "1/4")
+        for b in range(int(v[0]), int(v[1]) + 1):
+            pair_first(b, [2, 3, 4, 5], 8, thr, name)
     elif verb == "family":
         family_close(35, 125, 8, [2, 3, 4])
     else:
-        raise SystemExit("verbs: check grid sandwich certify windows moments lemma corollary criterion least six family")
+        raise SystemExit("verbs: check grid sandwich certify windows moments lemma corollary criterion least six family pairs pairfail pairclear")
     close(t0)
 
 main()

@@ -166,6 +166,16 @@ const cropFold = JSON.parse(m.crop_collapse('7', 3, 6, 2, 2, 'corner', 16));
 const cropFoldHole = JSON.parse(m.crop_collapse('7', 3, 6, 2, 2, 'centre', 16));
 const cropStep = (read: { pairs: { low: number; high: number; sup: number; share: number }[] }, key: 'sup' | 'share') =>
   read.pairs.filter((pair) => pair.high === pair.low + 1).map((pair) => pair[key].toFixed(6)).join(',');
+const cropRidge = (read: { scales: { ridge: number | null }[] }) =>
+  read.scales.map((scale) => (scale.ridge === null ? 'none' : scale.ridge.toFixed(6))).join(',');
+const cropRidgeStep = (read: { pairs: { low: number; high: number; rsup: number | null }[] }) =>
+  read.pairs.filter((pair) => pair.high === pair.low + 1).map((pair) => (pair.rsup === null ? 'none' : pair.rsup.toFixed(6))).join(',');
+const shellWidths = (nodes: Uint32Array) => {
+  const out: number[] = [];
+  for (let i = 0; i < nodes.length; i += 5) { const j = nodes[i]; while (out.length <= j) out.push(0); out[j] += 1; }
+  return out;
+};
+const shellBranch = m.shell_nodes('7', 3, 2, 242, 4, 3);
 const shellRead = JSON.parse(m.shell_read('7', 3, 2, 100));
 const shellColumn = (key: string) => shellRead.levels.map((row: Record<string, number | boolean>) => row[key]).join(',');
 const shellNodes = m.shell_nodes('7', 3, 2, 100);
@@ -248,6 +258,10 @@ const checks: [string, unknown, unknown][] = [
   ['crop_collapse step gaps', cropStep(cropFold, 'sup'), '0.353553,0.222183,0.110138,0.042663,0.015114'],
   ['crop_collapse step share', cropStep(cropFold, 'share'), '0.534078,0.305035,0.145250,0.055448,0.019546'],
   ['crop_collapse centre share', cropStep(cropFoldHole, 'share'), '0.000000,0.000000,0.000000,3.081886'],
+  ['crop_collapse ridges', cropRidge(cropFold), '0.798324,1.688227,0.600112,0.389870,0.445603,none'],
+  ['crop_collapse ridge gaps', cropRidgeStep(cropFold), '2.000000,2.859375,0.789696,0.714173,none'],
+  ['shell_nodes whole tree r=242', shellWidths(m.shell_nodes('7', 3, 2, 242)).join(','), '485,161,53,17,5,1'],
+  ['shell_nodes one branch r=242', shellWidths(shellBranch).join(','), '130,44,15,5,1'],
   ['shell_read depth and side', `${shellRead.depth},${shellRead.side}`, '5,243'],
   ['shell_read leaves are 2r+1', shellRead.leaves, 201],
   ['shell_read boxes per level', shellColumn('boxes'), '201,67,23,7,3,1'],
@@ -698,6 +712,44 @@ checks.push(
   ['weights level 6 support', `${wDeep.length},${wDeep.filter((v: number) => v > 0).length}`, '531441,729'],
   ['weights spectrum ends', `${wCurve.length},${wCurve[0].toFixed(6)},${wCurve[480].toFixed(6)}`, '482,1.261856,0.892790'],
   ['weights equal is the design', wFlat, '2.500000000 -2.839183891 1.892789261 1.892789261'],
+);
+
+// STAR
+
+const starArms = JSON.parse(m.star_layers('23', 8, 0));
+const starBand = JSON.parse(m.star_layers('23', 4, 2));
+const starOdd = JSON.parse(m.star_layers('23', 8, 1));
+const starDeep = JSON.parse(m.star_decay('23', 100, 0));
+const starTwo = JSON.parse(m.star_decay('23', 102, 0));
+const starWide = JSON.parse(m.star_decay('23', 200, 2));
+const starLadder = JSON.parse(m.star_decay('23', 128, 0));
+const starField = m.star_field('23', 28, 64);
+const starInside = Array.from(starField).filter((v: number) => !Number.isNaN(v));
+const starMask = m.star_band('23', 28, 64, 0);
+const starFat = m.star_band('23', 28, 64, 4);
+const starTypes = (grid: { types: Uint8Array }) => [0, 1, 2].map((kind) => grid.types.filter((t: number) => t === kind).length).join(',');
+const starRatios = (read: { rows: { numer: number; denom: number }[] }) => read.rows.map((row) => `${row.numer}/${row.denom}`).join(' ');
+
+checks.push(
+  ['star arm is the closed form', `${starArms.exact} ${starRatios(starArms)}`, '8 1/1 1/3 2/5 4/7 5/9 5/11 6/13 8/15'],
+  ['star arm character', starArms.rows.map((row: { chi: number }) => row.chi).join(','), '1,-1,-1,1,1,-1,-1,1'],
+  ['star band leaves the law', `${starBand.exact} ${starRatios(starBand)}`, '0 1/1 5/9 4/15 16/21'],
+  ['star odd width is no band', `${starOdd.exact} ${starRatios(starOdd) === starRatios(starArms)}`, '8 true'],
+  ['star hexagon background', starArms.rows.slice(0, 3).map((row: { hex: number }) => row.hex.toFixed(6)).join(' '), '1.000000 0.777778 0.480000'],
+  ['star decay at 100 layers', `${starDeep.scaled.toFixed(6)} ${starDeep.logged.toFixed(10)}`, '-1.445065 -0.2937725615'],
+  ['star decay constant', starDeep.constant.toFixed(10), '-0.2937605857'],
+  ['star decay slope', `${starDeep.slope.toFixed(6)} ${starDeep.target.toFixed(8)}`, '-0.250092 -0.25000000'],
+  ['star residual reads L mod 4', `${starDeep.branch} ${starDeep.residual.toFixed(8)} ${starDeep.predicted.toFixed(8)}`, '0 mod 4 -0.11975831 -0.11979167'],
+  ['star residual other branch', `${starTwo.branch} ${starTwo.residual.toFixed(8)} ${starTwo.predicted.toFixed(8)}`, '2 mod 4 0.13017437 0.13020833'],
+  ['star slope refuses the trap', `${starTwo.slope} ${starDeep.rows[0].layers} ${starDeep.rows[0].slope}`, 'null 50 null'],
+  ['star wider band walks off', `${starWide.slope.toFixed(6)} ${starWide.target.toFixed(8)}`, '-0.166654 -0.16666667'],
+  ['star width law at odd W', [0, 1, 2, 3, 4].map((w) => JSON.parse(m.star_decay('23', 8, w)).target.toFixed(6)).join(','), '-0.250000,-0.250000,-0.166667,-0.166667,-0.100000'],
+  ['star ladder rungs', starLadder.rows.map((row: { layers: number }) => row.layers).join(','), '4,8,16,32,64,128'],
+  ['star walk to 128', `${starLadder.walk.length},${starLadder.walk[62][1].toFixed(6)}`, '63,-1.506775'],
+  ['star field is the hexagon', `${starField.length},${starInside.length}`, '4096,2746'],
+  ['star field mean ink', (starInside.reduce((a: number, b: number) => a + b, 0) / starInside.length).toFixed(6), '0.527208'],
+  ['star band is the arm', starTypes(starMask), '34,2712,1350'],
+  ['star band widens', starTypes(starFat), '257,2489,1350'],
 );
 
 // MANIFEST

@@ -1,3 +1,4 @@
+import itertools
 import math
 import sys
 import time
@@ -40,18 +41,28 @@ def dirichlet(q, t):
     s = np.sin(np.pi * th)
     return np.where(np.abs(s) < 1e-14, float(q), np.abs(np.sin(q * np.pi * th) / np.where(np.abs(s) < 1e-14, 1.0, s)))
 
-def domination(bases, pts=4001):
+def hat_excl(q, E, t):
+    th = np.asarray(t) % 1.0
+    acc = np.zeros(th.shape, dtype=complex)
+    for d in range(q):
+        if d not in E:
+            acc = acc + np.exp(2j * np.pi * d * th)
+    return np.abs(acc) / (q - len(E))
+
+def domination(bases, m=1, pts=4001):
     t0 = time.time()
     t = (np.arange(pts) + 0.5) / pts
     for q in bases:
-        u = (dirichlet(q, t) + 1.0) / (q - 1)
+        u = np.minimum(1.0, (dirichlet(q, t) + float(m)) / (q - m))
         worst = 0.0
         gap = 1.0
-        for a0 in range((q + 1) // 2):
-            h = hat_missing(q, a0, t)
+        n = 0
+        for E in itertools.combinations(range(q), m):
+            h = hat_excl(q, E, t)
             worst = max(worst, float((h - u).max()))
             gap = min(gap, float((u - h).max()))
-        print(f"base {q}: {(q + 1) // 2} distinct sets, max(|hat F| - u_q) = {worst:.3e} {chk_le(worst, 1e-12, f'dom {q}')}, every digit slack at least {gap:.6f}")
+            n += 1
+        print(f"base {q} at {m} excluded digits: all {n} sets, max(|hat F| - u_q) = {worst:.3e} {chk_le(worst, 1e-12, f'dom {q}')}, every set slack at least {gap:.6f}")
     close(t0)
 
 # THE SUBSET IDENTITY
@@ -68,15 +79,15 @@ def runs(E, N):
             s = None
     return out
 
-def sigma_u(q, N, x):
+def sigma_u(q, N, x, m=1):
     i = np.arange(q ** N)
     t = x + i / q ** N
     p = np.ones(len(i))
     for j in range(N):
-        p *= (dirichlet(q, (q ** j) * t) + 1.0) / (q - 1)
+        p *= (dirichlet(q, (q ** j) * t) + float(m)) / (q - m)
     return float(p.sum())
 
-def subset_sum(q, N, x):
+def subset_sum(q, N, x, m=1):
     i = np.arange(q ** N)
     t = x + i / q ** N
     tot = 0.0
@@ -85,17 +96,17 @@ def subset_sum(q, N, x):
         p = np.ones(len(i))
         for s, l in runs(E, N):
             p *= dirichlet(q ** l, (q ** s) * t)
-        tot += float(p.sum())
-    return tot / (q - 1) ** N
+        tot += float(m) ** (N - len(E)) * float(p.sum())
+    return tot / (q - m) ** N
 
-def identity(rows):
+def identity(rows, m=1):
     t0 = time.time()
     for q, N in rows:
         for x in (0.0, 0.1234567, 0.5, 1.0 / (3 * q ** N), 0.4999):
-            a, b = sigma_u(q, N, x), subset_sum(q, N, x)
+            a, b = sigma_u(q, N, x, m), subset_sum(q, N, x, m)
             if abs(a - b) > 1e-9 * max(1.0, a):
                 FAILS.append((q, N, x, a, b))
-        print(f"base {q} levels {N}: Sigma_N^u against the subset sum over {2 ** N} runs decompositions {chk(0.0, 0.0, 0.0)}, Sigma_N^u(0) = {sigma_u(q, N, 0.0):.6f}")
+        print(f"base {q} levels {N} at {m} excluded digits: Sigma_N^u against the subset sum over {2 ** N} runs decompositions weighted {m}^(N - |E|) {chk(0.0, 0.0, 0.0)}, Sigma_N^u(0) = {sigma_u(q, N, 0.0, m):.6f}")
     close(t0)
 
 # THE LEBESGUE CONSTANT
@@ -118,15 +129,21 @@ def lebesgue(Ms):
     for M in Ms:
         v, arg = lam_scan(M)
         half = lam_at(M, 0.5)
-        print(f"M = {M}: L_M = {v:.6f} at offset {arg:.6f}, half-offset value {half:.6f}, L_M/M - (2/pi) log M = {v / M - c1 * math.log(M):.6f} {chk_le(v - half, 1e-9 * M, f'half {M}')}")
+        cap = c1 * math.log(M) + G0 + c1 / M
+        print(f"M = {M}: L_M = {v:.6f} at offset {arg:.6f}, half-offset value {half:.6f}, L_M/M - (2/pi) log M = {v / M - c1 * math.log(M):.6f} under gamma' + (2/pi)/M = {G0 + c1 / M:.7f} {chk_le(v / M - cap, 0.0, f'lam {M}')} {chk_le(v - half, 1e-9 * M, f'half {M}')}")
     close(t0)
 
-def least_uniform(lo, hi, nd):
+def least_uniform(lo, hi, nd, m=1):
     t0 = time.time()
-    rows = [(q, uniform_alpha(q, nd)[0]) for q in range(lo, hi)]
-    first = next(q for q, e in rows if e < 0.25)
+    rows = [(q, uniform_alpha(q, nd, m)[0]) for q in range(lo, hi)]
+    first = next((q for q, e in rows if e < 0.25), None)
+    if first is None:
+        best = min(rows, key=lambda r: r[1])
+        print(f"the digit-uniform window bound at {nd} digits and {m} excluded digits clears 1/4 nowhere in [{lo}, {hi}): the best row is q = {best[0]} at alpha_1 < {best[1]:.6f}, so the {m}-digit uniform window ceiling sits above {hi - 1}")
+        close(t0)
+        return
     bad = [q for q, e in rows if q > first and e >= 0.25]
-    print(f"the digit-uniform window bound at {nd} digits clears 1/4 first at q = {first}, and at every base above it in [{lo}, {hi}) {chk(float(len(bad)), 0.0, 0.0)}")
+    print(f"the digit-uniform window bound at {nd} digits and {m} excluded digits clears 1/4 first at q = {first}, and at every base above it in [{lo}, {hi}) {chk(float(len(bad)), 0.0, 0.0)}")
     print("  " + " ".join(f"q={q}:{e:.6f}" for q, e in rows if first - 4 <= q <= first + 3))
     close(t0)
 
@@ -135,13 +152,13 @@ def least_uniform(lo, hi, nd):
 def lam_max(M, grid=20000):
     return lam_scan(M, grid)[0]
 
-def a_seq(q, N, lams):
+def a_seq(q, N, lams, m=1):
     a = {-1: 1.0, 0: 1.0}
     for n in range(1, N + 1):
-        a[n] = a[n - 1] + sum(lams[l] * a[n - 1 - l] for l in range(1, n)) + lams[n]
+        a[n] = m * a[n - 1] + m * sum(lams[l] * a[n - 1 - l] for l in range(1, n)) + lams[n]
     return a
 
-def peel(rows, grid=400):
+def peel(rows, m=1, grid=400):
     t0 = time.time()
     for q, N in rows:
         lams = {l: lam_max(q ** l) / q ** l for l in range(1, N + 1)}
@@ -160,24 +177,26 @@ def peel(rows, grid=400):
             cap = q ** N * math.prod(lams[l] for _, l in rs)
             if best > cap * (1 + 1e-9):
                 FAILS.append((q, N, sorted(E), best, cap))
-        a = a_seq(q, N, lams)
-        sig = max(sigma_u(q, N, float(x)) for x in xs)
-        cap = a[N] * (q / (q - 1)) ** N
+        a = a_seq(q, N, lams, m)
+        sig = max(sigma_u(q, N, float(x), m) for x in xs)
+        cap = a[N] * (q / (q - m)) ** N
         if sig > cap * (1 + 1e-9):
             FAILS.append(("chain", q, N, sig, cap))
-        print(f"base {q} levels {N}: every one of {2 ** N - 1} run terms under q^N prod lambda {chk(0.0, 0.0, 0.0)}, and max Sigma_N^u = {sig:.6f} under a_N (q/(q-1))^N = {cap:.6f}")
+        print(f"base {q} levels {N} at {m} excluded digits: every one of {2 ** N - 1} run terms under q^N prod lambda {chk(0.0, 0.0, 0.0)}, and max Sigma_N^u = {sig:.6f} under a_N (q/(q-m))^N = {cap:.6f}")
     close(t0)
 
 # THE THRESHOLD
 
 C1 = 2.0 / math.pi
-C0 = 0.97
+G0 = 0.9625229
 
-def root_z(q, c0=C0):
+def root_z(q, m=1, g0=G0):
     L = math.log(q)
-    f = lambda z: (z - 1) ** 3 - C1 * L * z - c0 * (z - 1)
-    lo, hi = 1.0 + 1e-12, 2.0 + math.sqrt(2 * C1 * L + c0)
-    for _ in range(200):
+    f = lambda z: (z - m) * (z - 1) ** 2 - m * (C1 * L * z + g0 * (z - 1) + C1 * (z - 1) ** 2 / (q * z - 1))
+    lo, hi = float(m), float(m) + 10.0
+    while f(hi) < 0.0:
+        hi *= 2.0
+    for _ in range(300):
         mid = 0.5 * (lo + hi)
         if f(mid) < 0.0:
             lo = mid
@@ -185,42 +204,43 @@ def root_z(q, c0=C0):
             hi = mid
     return hi
 
-def clears(q, c0=C0):
-    return root_z(q, c0) * q / (q - 1) < q ** 0.25
+def clears(q, m=1, thr=0.25, g0=G0):
+    return root_z(q, m, g0) * q / (q - m) < q ** thr
 
-def threshold(c0=C0, hi=4000):
+def threshold(m=1, thr=0.25, name="1/4", g0=G0, hi=100000):
     t0 = time.time()
-    qu = next(q for q in range(35, hi) if all(clears(r, c0) for r in range(q, min(q + 400, hi))))
-    bad = [q for q in range(qu, hi) if not clears(q, c0)]
-    z = root_z(qu, c0)
-    print(f"c0 = {c0}: threshold q_u = {qu}, growth root z = {z:.6f} against q^(1/4)(1 - 1/q) = {qu ** 0.25 * (1 - 1.0 / qu):.6f}, alpha_1 < {math.ceil(math.log(z * qu / (qu - 1)) / math.log(qu) * 1e6) / 1e6:.6f}")
-    print(f"  no base in [{qu}, {hi}) fails {chk(float(len(bad)), 0.0, 0.0)}; the crude root cap 1 + sqrt(2 c1 log q + c0) clears from q = {next(q for q in range(35, hi) if 1 + math.sqrt(2 * C1 * math.log(q) + c0) < q ** 0.25 * (1 - 1.0 / q))} on, and is increasing in q")
-    print(f"  bases left to the per-digit ladder: 35 to {qu - 1}, {qu - 35} of them")
-    for q in (qu, 200, 1000, 10 ** 6):
-        z = root_z(q, c0)
-        print(f"  q = {q}: alpha_1 < {math.ceil(math.log(z * q / (q - 1)) / math.log(q) * 1e6) / 1e6:.6f}")
+    qu = next(q for q in range(m + 2, hi) if all(clears(r, m, thr, g0) for r in range(q, min(q + 2000, hi))))
+    bad = [q for q in range(qu, hi) if not clears(q, m, thr, g0)]
+    z = root_z(qu, m, g0)
+    print(f"{m} excluded digits against {name}, gamma' = {g0}: threshold q_u = {qu}, growth root z = {z:.6f} against q^({name})(1 - {m}/q) = {qu ** thr * (1 - float(m) / qu):.6f}, alpha_1 < {math.ceil(math.log(z * qu / (qu - m)) / math.log(qu) * 1e6) / 1e6:.6f}")
+    print(f"  the chain fails at q = {qu - 1} and at no base in [{qu}, {hi}) {chk(float(len(bad)), 0.0, 0.0)}")
+    for q in (qu, 2 * qu, 10 * qu, 10 ** 6):
+        z = root_z(q, m, g0)
+        print(f"  q = {q}: alpha_1 < {math.ceil(math.log(z * q / (q - m)) / math.log(q) * 1e6) / 1e6:.6f}")
     close(t0)
 
 # THE THRESHOLD, CERTIFIED
 
-def certify_threshold(qu, hi, c0=C0):
+def certify_threshold(qu, hi, m=1, thr=(1, 4), name="1/4", g0=G0):
     t0 = time.time()
     iv.prec = 120
     c1 = 2 / iv.pi
+    e = iv.mpf(thr[0]) / thr[1]
     worst = None
+    gam = c1 * (iv.euler + iv.log(8 / iv.pi))
+    if not float(gam.b) <= g0:
+        raise SystemExit("gamma' constant is below the true Lebesgue constant")
+    def margin(q):
+        w = iv.mpf(q) ** e * (1 - iv.mpf(m) / q)
+        return (w - m) * (w - 1) ** 2 - iv.mpf(m) * (c1 * iv.log(q) * w + iv.mpf(g0) * (w - 1) + c1 * (w - 1) ** 2 / (q * w - 1))
     for q in range(qu, hi):
-        w = iv.mpf(q) ** iv.mpf(0.25) * (1 - iv.mpf(1) / q)
-        lhs = (w - 1) ** 3
-        rhs = c1 * iv.log(q) * w + iv.mpf(c0) * (w - 1)
-        m = float((lhs - rhs).a)
-        if m <= 0.0:
-            FAILS.append((q, m))
-        if worst is None or m < worst[1]:
-            worst = (q, m)
-    print(f"certified at 120 bits: (w - 1)^3 > (2/pi) log q w + {c0} (w - 1) at w = q^(1/4)(1 - 1/q) for every q in [{qu}, {hi}), tightest margin {worst[1]:.6e} at q = {worst[0]} {chk(float(len(FAILS)), 0.0, 0.0)}")
-    q = qu - 1
-    w = iv.mpf(q) ** iv.mpf(0.25) * (1 - iv.mpf(1) / q)
-    print(f"  and it fails at q = {q}, margin {float(((w - 1) ** 3 - (c1 * iv.log(q) * w + iv.mpf(c0) * (w - 1))).b):.6e}, so {qu} is the least threshold this chain gives")
+        g = float(margin(q).a)
+        if g <= 0.0:
+            FAILS.append((q, g))
+        if worst is None or g < worst[1]:
+            worst = (q, g)
+    print(f"certified at 120 bits at {m} excluded digits, gamma' = {g0} above the true {float(gam.b):.10f}: (w - {m})(w - 1)^2 > {m}((2/pi) log q w + gamma'(w - 1) + (2/pi)(w-1)^2/(q w - 1)) at w = q^({name})(1 - {m}/q) for every q in [{qu}, {hi}), tightest margin {worst[1]:.6e} at q = {worst[0]} {chk(float(len(FAILS)), 0.0, 0.0)}")
+    print(f"  and the chain fails at q = {qu - 1}, margin {float(margin(qu - 1).b):.6e}, so {qu} is the least threshold this chain gives at {m} excluded digits")
     close(t0)
 
 # THE UNIFORM WINDOW BOUND
@@ -236,7 +256,7 @@ def sup_sin(A, B):
     ends = np.maximum(np.abs(np.sin(np.pi * A)), np.abs(np.sin(np.pi * B)))
     return np.where(hit, 1.0, up(up(ends) * (1.0 + 2.0 ** -45)))
 
-def uniform_G(q, nd):
+def uniform_G(q, nd, m=1):
     W = q ** nd
     w = np.arange(W, dtype=np.float64)
     delta = np.minimum(w, W - 1 - w) / W
@@ -245,7 +265,7 @@ def uniform_G(q, nd):
         S2 = np.where(delta <= 0.0, np.inf, up(1.0 / np.maximum(sn, 0.0)))
     S1 = sup_sin(w / q ** (nd - 1), (w + 1) / q ** (nd - 1))
     D = np.minimum(float(q), up(S1 * S2))
-    return np.minimum(1.0, up(up(D + 1.0) / (q - 1)))
+    return np.minimum(1.0, up(up(D + float(m)) / (q - m)))
 
 def perron_up(G, q, nd, iters=20000):
     S = q ** (nd - 1)
@@ -268,19 +288,19 @@ def perron_up(G, q, nd, iters=20000):
         acc = up(acc + r[:, c])
     return float(up(acc / y).max())
 
-def uniform_alpha(q, nd):
-    mu = perron_up(uniform_G(q, nd), q, nd)
+def uniform_alpha(q, nd, m=1):
+    mu = perron_up(uniform_G(q, nd, m), q, nd)
     e = math.ceil(math.log(mu) / math.log(q) * 1e6) / 1e6
     if not mu < q ** e:
         raise SystemExit("rounding unsafe")
     return e, mu
 
-def window(rows):
+def window(rows, m=1):
     t0 = time.time()
     for q, nd in rows:
-        e, mu = uniform_alpha(q, nd)
+        e, mu = uniform_alpha(q, nd, m)
         v = "CLEARS 1/4" if e < 0.25 else "does not clear 1/4"
-        print(f"base {q} uniform windows {nd} digits: lambda < {mu:.6f} -> alpha_1 < {e:.6f} at every excluded digit  [{v}]")
+        print(f"base {q} uniform windows {nd} digits at {m} excluded digits: lambda < {mu:.6f} -> alpha_1 < {e:.6f} at every excluded set  [{v}]")
     close(t0)
 
 def compare(rows):
@@ -303,8 +323,13 @@ def main():
         lebesgue([4, 21, 34, 76, 99, 200, 1000, 100000])
         peel([(3, 4), (5, 3), (10, 3)])
         threshold()
-        certify_threshold(126, 3000)
+        certify_threshold(125, 3000)
         compare([(21, 4, 0, 0.250088), (34, 4, 16, 0.249371)])
+        domination([4, 10, 21, 34], 2)
+        identity([(4, 3), (10, 2), (21, 2)], 2)
+        peel([(4, 3), (5, 3)], 2)
+        threshold(2)
+        certify_threshold(649, 3000, 2)
     if verb == "domination":
         domination([3, 4, 10, 20, 21, 34, 76, 99, 200])
     if verb == "peel":
@@ -317,8 +342,18 @@ def main():
         compare([(9, 5, 0, 0.323432), (10, 5, 5, 0.350684), (20, 4, 6, 0.283414), (21, 4, 0, 0.250088), (33, 4, 15, 0.253000), (34, 4, 16, 0.249371)])
     if verb == "threshold":
         threshold()
-        threshold(0.9626)
-        certify_threshold(126, 3000)
+        certify_threshold(125, 3000)
+    if verb == "pairs":
+        domination([4, 6, 10, 21, 34], 2)
+        identity([(4, 3), (5, 3), (10, 2), (21, 2), (34, 2)], 2)
+        peel([(4, 3), (5, 3), (7, 3)], 2)
+        threshold(2)
+        certify_threshold(649, 3000, 2)
+        threshold(2, 1 / 3, "1/3")
+        certify_threshold(105, 3000, 2, (1, 3), "1/3")
+        threshold(1, 1 / 3, "1/3")
+        certify_threshold(32, 3000, 1, (1, 3), "1/3")
+        least_uniform(100, 300, 2, 2)
     if verb == "lebesgue":
         lebesgue([4, 9, 21, 34, 76, 99, 200, 1000, 5776, 100000])
     if verb == "identity":

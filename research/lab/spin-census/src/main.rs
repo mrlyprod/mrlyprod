@@ -2,6 +2,7 @@ mod design;
 mod gaussian;
 mod mass;
 mod orbit;
+mod shape;
 mod powder;
 mod shadow;
 
@@ -504,6 +505,12 @@ fn gaussian_farey(top: usize) {
 
 fn main() {
     let table = bit_cells();
+    if std::env::args().any(|a| a == "shape") {
+        shape::control();
+        shape::base_five();
+        shape::cube_three();
+        return;
+    }
     anchors(&table);
     holes(&table);
     spin_dimension(&table, 6);

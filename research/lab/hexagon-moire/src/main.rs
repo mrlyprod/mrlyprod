@@ -3,6 +3,7 @@ mod frame;
 mod lattice;
 mod pairs;
 mod rays;
+mod smear;
 mod star;
 mod sums;
 
@@ -22,6 +23,7 @@ fn main() {
     pairs::small_pairs(&carpet);
     pairs::doubling(&carpet);
     pairs::persistence();
+    smear::run();
     header("quarter line and crosshairs, carpet");
     frame::quarter(&carpet);
     header("void star");
@@ -35,6 +37,8 @@ fn main() {
     star::fading_lattice(&carpet);
     star::cell_frame(&carpet);
     star::cell_widths(&carpet);
+    star::cell_width_law(&carpet);
+    star::cell_width_ladders(&carpet);
     header("constants");
     constants::run();
 }

@@ -63,6 +63,8 @@
 - [radial](demos/radial/) - Turned copies of a design laid on each other keep only the circular harmonics whose order is a multiple of the copy count, and a design of rotation order g shows lcm(q, g) petals.
 - [spin](demos/spin/) - A design on a turntable strobed against the frame rate, beside the exact circle mean at every radius, which is the bullseye it becomes at infinite speed.
 
+- [star](demos/star/) - Stacking the hexagonal cuts of a carpet, one per odd side, stands a six-armed star at the centre that is not there in the limit: its arm's ink is exactly 1/2 + chi_8(n)/(2n) and its decay is exactly -1/4 read on the cube's own cells, but a different number in every frame that resamples it or widens it.
+
 ### Words and order
 
 - Let the rule change with the scale, and read what the order of the letters costs.

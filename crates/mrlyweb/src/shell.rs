@@ -8,6 +8,7 @@ use wasm_bindgen::prelude::*;
 const RADIUS_CAP: u32 = 242;
 const SHEET: usize = 486;
 const EDGE: usize = 2;
+const MARK: usize = 5;
 
 fn guarded(code: &str, number: usize, base: usize, radius: u32) -> Result<(Shell, usize), Fault> {
     if number < 2 {
@@ -27,6 +28,45 @@ fn guarded(code: &str, number: usize, base: usize, radius: u32) -> Result<(Shell
 
 fn body(code: &str, number: usize, base: usize, depth: usize) -> Result<Tensor, Fault> {
     Ok(factory::create(code_of(code)?, number, 2, base, depth)?)
+}
+
+fn seated(
+    tree: &Shell,
+    depth: usize,
+    level: Option<u32>,
+    index: Option<u32>,
+) -> Result<(usize, usize), Fault> {
+    let root = level.map_or(depth, |j| j as usize);
+    if root > depth {
+        return Err(Fault::new(format!(
+            "level {root} lies above the tree's depth {depth}."
+        )));
+    }
+    let seat = index.unwrap_or(0) as usize;
+    if seat >= tree.levels[root].len() {
+        return Err(Fault::new(format!(
+            "level {root} holds {} boxes, so there is no box {seat}.",
+            tree.levels[root].len()
+        )));
+    }
+    Ok((root, seat))
+}
+
+fn spans(tree: &Shell, root: usize, seat: usize) -> Vec<(usize, usize)> {
+    let mut out = vec![(0usize, 0usize); root + 1];
+    out[root] = (seat, seat + 1);
+    for level in (0..root).rev() {
+        let (lo, hi) = out[level + 1];
+        let row = &tree.levels[level];
+        let held = |k: usize| row[k].parent >= lo && row[k].parent < hi;
+        let start = (0..row.len()).find(|&k| held(k)).unwrap_or(row.len());
+        let mut stop = start;
+        while stop < row.len() && held(stop) {
+            stop += 1;
+        }
+        out[level] = (start, stop);
+    }
+    out
 }
 
 /// Reads the crossing shell of one radius as a rooted tree: its depth, its leaves and one row per level.
@@ -73,17 +113,35 @@ pub fn shell_read(code: &str, number: usize, base: usize, radius: u32) -> Result
 
 /// Lays the crossing tree out flat for drawing: the level, both coordinates, the parent's place in the level above and the live flag, five numbers a box, the crossed cells first and the root last.
 ///
+/// `level` and `index` name the box the walk is rooted at, and without them the walk is the whole tree rooted at its own single top box. A box's children are contiguous among its level, so a subtree is one range a level and the parent's place is counted from the start of that range, which lets a page draw one branch of a wide tree with every count in it still exact.
+///
 /// A box that lost its parent carries the largest number the type holds in that place, which the shell identity forbids and `shell_read` counts.
 #[wasm_bindgen]
-pub fn shell_nodes(code: &str, number: usize, base: usize, radius: u32) -> Result<Vec<u32>, Fault> {
+pub fn shell_nodes(
+    code: &str,
+    number: usize,
+    base: usize,
+    radius: u32,
+    level: Option<u32>,
+    index: Option<u32>,
+) -> Result<Vec<u32>, Fault> {
     let (tree, depth) = guarded(code, number, base, radius)?;
-    let mut out = Vec::with_capacity(5 * tree.levels.iter().map(Vec::len).sum::<usize>());
-    for level in 0..=depth {
-        for cell in &tree.levels[level] {
+    let (root, seat) = seated(&tree, depth, level, index)?;
+    let spans = spans(&tree, root, seat);
+    let mut out = Vec::new();
+    for level in 0..=root {
+        let (lo, hi) = spans[level];
+        for k in lo..hi {
+            let cell = tree.levels[level][k];
+            let parent = if level == root {
+                usize::MAX
+            } else {
+                cell.parent.wrapping_sub(spans[level + 1].0)
+            };
             out.push(level as u32);
             out.push(cell.x as u32);
             out.push(cell.y as u32);
-            out.push(cell.parent.min(u32::MAX as usize) as u32);
+            out.push(parent.min(u32::MAX as usize) as u32);
             out.push(u32::from(cell.live));
         }
     }
@@ -93,6 +151,8 @@ pub fn shell_nodes(code: &str, number: usize, base: usize, radius: u32) -> Resul
 /// Paints the design at the tree's own depth with the crossed cells lit, the pruned ones in their own ink and one level's boxes outlined.
 ///
 /// The grid is the design at the least level that holds the circle, so one cell is one leaf of the tree and the circle's own corner sits at the bottom left: the design's other cells are the faint ground, a crossed cell the design keeps is gold, a crossed cell it drops is blue, and the boxes of level `at` are outlined under the crossed cells so the `2 * floor(radius / number^at) + 1` of them can be counted on the picture. The sheet is the same width at every depth, a whole number of pixels to the cell, so the outline stays a hairline however deep the tree runs.
+///
+/// `root` and `pick` name one box to ring in its own ink over everything else, so a page drawing one branch of the tree can show which box of the circle that branch is.
 #[wasm_bindgen]
 pub fn shell_pixels(
     code: &str,
@@ -100,6 +160,8 @@ pub fn shell_pixels(
     base: usize,
     radius: u32,
     at: u32,
+    root: Option<u32>,
+    pick: Option<u32>,
 ) -> Result<Pixels, Fault> {
     let (tree, depth) = guarded(code, number, base, radius)?;
     if at as usize > depth {
@@ -107,6 +169,10 @@ pub fn shell_pixels(
             "level {at} lies above the tree's depth {depth}."
         )));
     }
+    let ringed = match (root, pick) {
+        (Some(level), Some(index)) => Some(seated(&tree, depth, Some(level), Some(index))?),
+        _ => None,
+    };
     let grid = body(code, number, base, depth)?;
     let side = grid.shape[0];
     let scale = (SHEET / side).max(1);
@@ -145,6 +211,16 @@ pub fn shell_pixels(
         let (x0, y0) = (cell.x as usize * scale, cell.y as usize * scale);
         let color = if cell.live { ink::GOLD } else { ink::BLUE };
         block(x0, y0, x0 + scale, y0 + scale, color);
+    }
+    if let Some((level, seat)) = ringed {
+        let cell = tree.levels[level][seat];
+        let span = number.pow(level as u32) * scale;
+        let (x0, y0) = (cell.x as usize * span, cell.y as usize * span);
+        let (x1, y1) = (x0 + span, y0 + span);
+        block(x0, y0, x1, y0 + MARK, ink::GREEN);
+        block(x0, y1.saturating_sub(MARK), x1, y1, ink::GREEN);
+        block(x0, y0, x0 + MARK, y1, ink::GREEN);
+        block(x1.saturating_sub(MARK), y0, x1, y1, ink::GREEN);
     }
     Ok(Pixels::of(wide, wide, colors))
 }

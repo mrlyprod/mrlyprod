@@ -251,6 +251,32 @@ function App() {
     if (gap) tag(b, `gap ${gap.sup.toFixed(4)}`, ink.dim, 'right');
   };
 
+  const ridge = (canvas) => {
+    if (scales.length < 1) return;
+    const b = board(canvas, 230, { pad: PAD, top: 20, bottom: 22 });
+    const [a, z] = [scales[low], scales[high]];
+    const seen = a.drift.concat(high === low ? [] : z.drift);
+    if (!seen.length) {
+      tag(b, 'the fold runs past the counted radii', ink.dim);
+      axis(b, [[0, '0'], [0.5, `log_${q.number} r mod 1`], [1, '1']], { wall: true });
+      return;
+    }
+    const floor = Math.min(...seen), roof = Math.max(...seen);
+    const room = (roof - floor) * 0.1 || 0.05;
+    const fx = (j) => j / FOLDS;
+    const fy = (v) => (v - floor + room) / (roof - floor + 2 * room);
+    const trail = (scale, color) => scale.drift.length && line(b, scale.drift.map((v, j) => [fx(j), fy(v)]), color, { width: 1.6 });
+    const turn = Math.log(at) / Math.log(q.number);
+    rules(b, [turn - Math.floor(turn)], { color: ink.pink });
+    trail(a, ink.orange);
+    if (high !== low) trail(z, ink.green);
+    axis(b, [[0, '0'], [0.5, `log_${q.number} r mod 1`], [1, '1']], { wall: true });
+    let edge = tag(b, `R ${a.start} to ${a.stop}`, a.drift.length ? ink.orange : ink.dim);
+    if (high !== low) edge = tag(b, `R ${z.start} to ${z.stop}`, z.drift.length ? ink.green : ink.dim, 'left', edge + 12);
+    tag(b, 'delta / r^(d - 1)', ink.dim, 'left', edge + 12);
+    if (gap?.rsup != null) tag(b, `gap ${gap.rsup.toFixed(4)}`, ink.dim, 'right');
+  };
+
   const folds = scales.map((scale, k) => [k, `R ${scale.start}`]);
 
   const controls = (
@@ -283,8 +309,8 @@ function App() {
 
   return (
     <Page crumb="crop" title="A shape keeps only the cells of a design it reaches" controls={controls}
-      sub="A named shape of rational radius sits on the unit square or cube and keeps only the cells of a design it reaches: strictly inside, touching, or rebuilt on a finer lattice at the rim. The census splits every cell into in, cut and out before anything is drawn, and the sweeps show how the kept mass grows with the radius and the level. Drag the radius chart to move the shape. Below it the radius stops being a fraction of the box and runs in whole cells: the count of filled cells the ball holds, the count its sphere crosses, and what the count leaves over when the radius is multiplied by the design's own side. The last panel takes two of the windows between consecutive powers of that side, divides the count by the radius to the dimension and reads both at the same offsets of the log radius, so a stranger can pick any two scales and watch them land on one curve."
-      foot={<>The shape is exact rational geometry in Rust: a ball tested on squared fractions or a polytope of half-plane walls, never a float. A cell is in, cut or out by where its corners land, the census tallies the three regions and the perimeter or surface before and after the touching crop, and the sweeps re-run that census at every radius and level. The exact edge in the plane is the same touching crop clipped by the true circle or polygon in SVG; in the cube it clips the uncropped mesh with the shape's own walls as camera-space planes, so the ball and the anti crop stay on the raster mesh, which is always the source of truth for every count. The circle count is the same geometry in whole cells and one pass over the grid: a cell is seen when its own centre lands in the ball, inside when its far corner does and cut when the sphere separates its near corner from its far one, all on doubled integer coordinates with squared distances compared as integers, and the three columns are prefix sums by radius. Its main term is not a constant times r to the d: it is r to the d times a periodic multiplier of log r, which is why two windows between consecutive powers of the side, read at the same offsets of the log radius, land on one curve; the gap beside them is the largest distance between the two profiles and the share is that gap over the higher of their two mean levels, and both fall as the scales deepen, which is what makes the collapse a law rather than one lucky window. The defect is an exact integer, it rides one power below the count, and at the grid centre the middle block is empty so the count stays at zero out to the block's inradius. The exact classification, the census of the three regions, the circle theorem and the one open lane the cut column points at are in <a href="/research/crop/">the crop note</a>.</>}>
+      sub="A named shape of rational radius sits on the unit square or cube and keeps only the cells of a design it reaches: strictly inside, touching, or rebuilt on a finer lattice at the rim. The census splits every cell into in, cut and out before anything is drawn, and the sweeps show how the kept mass grows with the radius and the level. Drag the radius chart to move the shape. Below it the radius stops being a fraction of the box and runs in whole cells: the count of filled cells the ball holds, the count its sphere crosses, and what the count leaves over when the radius is multiplied by the design's own side. The last panel takes two of the windows between consecutive powers of that side, divides the count by the radius to the dimension and reads both at the same offsets of the log radius, so a stranger can pick any two scales and watch them land on one curve. The panel beside it folds the left-over of that multiplication the same way, one power of the radius lower, so the defect has a ridge of its own to read."
+      foot={<>The shape is exact rational geometry in Rust: a ball tested on squared fractions or a polytope of half-plane walls, never a float. A cell is in, cut or out by where its corners land, the census tallies the three regions and the perimeter or surface before and after the touching crop, and the sweeps re-run that census at every radius and level. The exact edge in the plane is the same touching crop clipped by the true circle or polygon in SVG; in the cube it clips the uncropped mesh with the shape's own walls as camera-space planes, so the ball and the anti crop stay on the raster mesh, which is always the source of truth for every count. The circle count is the same geometry in whole cells and one pass over the grid: a cell is seen when its own centre lands in the ball, inside when its far corner does and cut when the sphere separates its near corner from its far one, all on doubled integer coordinates with squared distances compared as integers, and the three columns are prefix sums by radius. Its main term is not a constant times r to the d: it is r to the d times a periodic multiplier of log r, which is why two windows between consecutive powers of the side, read at the same offsets of the log radius, land on one curve; the gap beside them is the largest distance between the two profiles and the share is that gap over the higher of their two mean levels, and both fall as the scales deepen, which is what makes the collapse a law rather than one lucky window. The defect is an exact integer, it rides one power below the count, and the last panel folds it at the same offsets over the radius to that lower power, so the two windows carry two ridges with a gap of their own; that ridge gap need not fall with the scale the way the count's does, and the panel shows it rather than hides it. A window whose multiplied radii run past the counted grid has no ridge and says so. At the grid centre the middle block is empty, so the count stays at zero out to the block's inradius. The exact classification, the census of the three regions, the circle theorem and the one open lane the cut column points at are in <a href="/research/crop/">the crop note</a>.</>}>
       <div className="arena" style={{ gridTemplateColumns: '3fr 2fr' }}>
         <div className="panel">
           <h2>The crop <span>{data.note}</span></h2>
@@ -329,6 +355,10 @@ function App() {
           <h2>The collapse <span>two scales laid on each other</span></h2>
           <Sketch className="bars" role="img" aria-label="The collapse" draw={collapse} deps={[fold, low, high, at]} />
         </div>
+        <div className="panel">
+          <h2>The defect ridge <span>the same two scales, one power down</span></h2>
+          <Sketch className="bars" role="img" aria-label="The defect ridge" draw={ridge} deps={[fold, low, high, at]} />
+        </div>
       </div>
       <Stats>
         <Stat label="count side">{circle.side}</Stat>
@@ -341,6 +371,8 @@ function App() {
         <Stat label="fill of one tile">{circle.mass}</Stat>
         <Stat label="gap">{gap ? gap.sup.toFixed(5) : 'one scale'}</Stat>
         <Stat label="gap / level">{gap ? gap.share.toFixed(5) : 'one scale'}</Stat>
+        <Stat label="ridge gap">{gap?.rsup != null ? gap.rsup.toFixed(5) : 'past the grid'}</Stat>
+        <Stat label="ridge gap / ridge">{gap?.rshare != null ? gap.rshare.toFixed(5) : 'past the grid'}</Stat>
       </Stats>
       <Note error={data.error ?? circle.error ?? fold.error} />
     </Page>

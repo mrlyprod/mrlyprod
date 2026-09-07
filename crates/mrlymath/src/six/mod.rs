@@ -15,6 +15,8 @@ pub mod raster;
 pub mod renderer;
 /// The JSON form of a hex cell and its projection.
 pub mod serializer;
+/// The ghost star of the hexagonal cut stack: the arm ink law, the background and the cell-frame decay.
+pub mod star;
 /// The random 3d tiles flattened through their projections.
 pub mod tile;
 /// The pieces, holes and enclosed voids of a hex slice's fill.

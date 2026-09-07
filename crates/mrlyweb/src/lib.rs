@@ -56,6 +56,8 @@ pub mod spectrum;
 pub mod spin;
 /// The spirals: the whole numbers wound on a square or hexagonal sheet, painted, clicked and read along a quadratic.
 pub mod spiral;
+/// The ghost star of the hexagon moire: the stacked cut, the band it is measured on, the arm ink law and the cell-frame decay.
+pub mod star;
 /// The cubes as packed faces, filled cells and censuses.
 pub mod three;
 /// The tessellations: a design repeated across the plane, the cube and the hexagonal mesh, drawn and counted.

@@ -20,7 +20,7 @@ pub fn slice(family: Family, number: usize) -> Slice {
 }
 
 impl Slice {
-    fn ink(&self) -> Ratio<i64> {
+    pub fn ink(&self) -> Ratio<i64> {
         let filled = self.types.iter().filter(|cell| **cell == FILL).count();
         let inside = self.types.iter().filter(|cell| **cell != GRID).count();
         Ratio::new(filled as i64, inside as i64)
@@ -282,7 +282,6 @@ fn nearest(value: f64) -> (i64, i64) {
     (best.0, best.1)
 }
 
-
 const ARM_LIMIT: usize = 6400;
 const LAW_LIMIT: usize = 2001;
 const ARMS_LIMIT: usize = 221;
@@ -376,6 +375,174 @@ pub fn cell_frame(rule: &Rule) {
     );
 }
 
+// WIDTH FAMILY
+
+struct Width {
+    k: i64,
+    b: i64,
+    kappa: Ratio<i64>,
+    m: Ratio<i64>,
+    q: Ratio<i64>,
+}
+
+fn edge_run(k: i64) -> i64 {
+    let hits = (-k..=k)
+        .filter(|j| matches!(j.rem_euclid(8), 3 | 4 | 5))
+        .count() as i64;
+    hits + (k + 2).div_euclid(4) - k
+}
+
+fn width_terms(half: i64) -> Width {
+    let k = half.div_euclid(2);
+    let b = i64::from(k.div_euclid(2) % 2 == 0);
+    let run = edge_run(k);
+    Width {
+        k,
+        b,
+        kappa: Ratio::new(if k % 2 == 0 { -1 } else { 1 }, 8 * (2 * k + 1)),
+        m: Ratio::new(-(k + b), 2 * (2 * k + 1)),
+        q: Ratio::new(1 - 2 * run, 2 * (2 * k + 1)),
+    }
+}
+
+fn band_count(rule: &Rule, n: i64, half: i64) -> Ratio<i64> {
+    let size = 4 * n;
+    let (mut total, mut inked) = (0i64, 0i64);
+    for index in 0..2 * n {
+        let z = 2 * index;
+        let target = 6 * n - 2 - z;
+        let base = target / 2;
+        for x in base - half - 1..=base + half + 1 {
+            let y = target - x;
+            if !(0..size).contains(&x) || !(0..size).contains(&y) || (x - y).abs() > half {
+                continue;
+            }
+            total += 1;
+            inked += i64::from(rule.filled(x, y, z));
+        }
+    }
+    Ratio::new(inked, total)
+}
+
+fn width_excess_law(half: i64, n: i64) -> Ratio<i64> {
+    let w = width_terms(half);
+    let chi = if (3 * n - 1) / 2 % 2 == 0 { 1 } else { -1 };
+    let eight = [0i64, 1, 0, -1, 0, -1, 0, 1][(n % 8) as usize];
+    w.kappa * chi + (w.m + w.q * eight) / n + Ratio::new(chi, 8 * n * n)
+}
+
+fn flat(value: Ratio<i64>) -> f64 {
+    *value.numer() as f64 / *value.denom() as f64
+}
+
+const IDENTITY_LIMIT: usize = 201;
+const LADDER_LIMIT: usize = 1602;
+
+pub fn cell_width_law(rule: &Rule) {
+    println!("carpet cell frame, one closed form for every band half-width: excess_W(n) = kappa chi + (m + q chi_8(n))/n + chi/(8 n^2), exact rationals against the counted band");
+    println!("  K = W/2 since x - y is even on the cut, b = 1 when floor(K/2) is even, and E(K) = #(|j| <= K, j = 3,4,5 mod 8) + floor((K+2)/4) - K is the tail's chi_8 weight, derived and not fitted");
+    let periodic = (0..=200i64)
+        .filter(|k| edge_run(*k) == [0i64, -1, -1, 0, 1, 2, 2, 1][(k % 8) as usize])
+        .count();
+    println!("  E(K) against the 8-periodic run 0 -1 -1 0 1 2 2 1, which a block of eight leaves alone since 6 + 2 - 8 = 0: {periodic}/201 at K = 0..200");
+    println!("  the match is broken out by n mod 8 so no residue class hides; odd W repeats its even neighbour, so only the first W at each K is counted in the total");
+    let (mut seen, mut kept, mut total) = (Vec::new(), 0usize, 0usize);
+    for half in [
+        0i64, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 24, 32, 36, 64,
+    ] {
+        let w = width_terms(half);
+        let fresh = !seen.contains(&w.k);
+        if fresh {
+            seen.push(w.k);
+        }
+        let (mut hit, mut all) = ([0usize; 4], [0usize; 4]);
+        for number in odds(IDENTITY_LIMIT) {
+            let n = number as i64;
+            if n < w.k {
+                continue;
+            }
+            let slot = ((n % 8) / 2) as usize;
+            all[slot] += 1;
+            hit[slot] += usize::from(
+                band_count(rule, n, half) - law(Family::Carpet, number) == width_excess_law(half, n),
+            );
+        }
+        if fresh {
+            kept += hit.iter().sum::<usize>();
+            total += all.iter().sum::<usize>();
+        }
+        println!(
+            "  W = {half:2}: K {:2} b {} kappa {} m {} q {} slope m/2 {} = {:+.8}  n = 1,3,5,7 mod 8 match {}/{} {}/{} {}/{} {}/{}",
+            w.k,
+            w.b,
+            w.kappa,
+            w.m,
+            w.q,
+            w.m / 2,
+            flat(w.m) / 2.0,
+            hit[0], all[0], hit[1], all[1], hit[2], all[2], hit[3], all[3]
+        );
+    }
+    println!("  {} distinct half-widths, {kept}/{total} distinct checks; the nine odd rows above repeat their even neighbours and are not counted twice", seen.len());
+}
+
+pub fn cell_width_ladders(rule: &Rule) {
+    println!("carpet cell frame, the width family summed: L * excess_L = (m/2) ln L + C_W + O(1/L^2) at even L, C_W = m (ln 2 + gamma/2) + q L(1, chi_8) - G/8 + Delta_W");
+    println!("  Delta_W is the exact contribution of the clipped layers n < K, the 1/L^2 coefficient is -q/4 + 1/64 + m/48 at L = 0 mod 4 and +q/4 + 1/64 + m/48 at L = 2 mod 4, and the odd-L constant is C_W - kappa");
+    let lvalue = (1.0 + 2f64.sqrt()).ln() / 2f64.sqrt();
+    for half in [0i64, 2, 4, 6, 8, 12, 16] {
+        let w = width_terms(half);
+        let excesses = width_excesses(rule, half, LADDER_LIMIT);
+        let mut drift = 0.0f64;
+        for number in odds(w.k as usize) {
+            if (number as i64) < w.k {
+                drift += excesses[(number - 1) / 2] - flat(width_excess_law(half, number as i64));
+            }
+        }
+        let (m, q, kappa) = (flat(w.m), flat(w.q), flat(w.kappa));
+        let slope = m / 2.0;
+        let constant = m * (2f64.ln() + EULER / 2.0) + q * lvalue - CATALAN / 8.0 + drift;
+        let miss = |count: usize| {
+            mean(&excesses[..count]) * count as f64 - slope * (count as f64).ln() - constant
+        };
+        let window = |count: usize| {
+            (mean(&excesses[..count]) * count as f64
+                - mean(&excesses[..count / 2]) * (count / 2) as f64)
+                / 2f64.ln()
+        };
+        println!(
+            "  W = {half:2}: slope {} = {slope:+.8}  C_W {constant:+.10}  Delta_W {drift:+.8}",
+            w.m / 2
+        );
+        println!(
+            "    L = 0 mod 4: residual * L^2 {:+.7} {:+.7} {:+.7} at L = 400, 800, 1600 against -q/4 + 1/64 + m/48 = {:+.7}",
+            miss(400) * 160000.0,
+            miss(800) * 640000.0,
+            miss(1600) * 2560000.0,
+            -q / 4.0 + 1.0 / 64.0 + m / 48.0
+        );
+        println!(
+            "    L = 2 mod 4: residual * L^2 {:+.7} {:+.7} {:+.7} at L = 402, 802, 1602 against +q/4 + 1/64 + m/48 = {:+.7}",
+            miss(402) * 402.0 * 402.0,
+            miss(802) * 802.0 * 802.0,
+            miss(1602) * 1602.0 * 1602.0,
+            q / 4.0 + 1.0 / 64.0 + m / 48.0
+        );
+        println!(
+            "    L odd: (residual + kappa) * L {:+.6} {:+.6} at L = 401, 1601, so the odd-L constant is C_W - kappa with an O(1/L) error",
+            (miss(401) + kappa) * 401.0,
+            (miss(1601) + kappa) * 1601.0
+        );
+        println!(
+            "    sliding window L/2 to L: {:+.8} at L = 1600 against m/2 {:+.8}, {:+.8} at L = 1602 against m/2 + kappa/ln 2 {:+.8}",
+            window(1600),
+            slope,
+            window(1602),
+            slope + kappa / 2f64.ln()
+        );
+    }
+}
+
 fn width_excesses(rule: &Rule, half: i64, limit: usize) -> Vec<f64> {
     odds(2 * limit - 1)
         .map(|number| arm_ink(rule, number as i64, half) - law_value(number))
@@ -389,28 +556,28 @@ fn width_slope(excesses: &[f64], limit: usize) -> f64 {
 }
 
 fn edge_law(half: i64) -> f64 {
-    let parity = f64::from(u8::from(half.div_euclid(4) % 2 == 0));
-    -(half as f64 + 2.0 * parity) / (8.0 * (half as f64 + 1.0))
+    let w = width_terms(half);
+    -(w.k as f64 + w.b as f64) / (4.0 * (2 * w.k + 1) as f64)
 }
 
 pub fn cell_widths(rule: &Rule) {
-    println!("carpet cell frame, band half-width W cells about the arm, slope of excess * L against ln L, b the block parity of the band edge");
-    println!("  the twelve swept widths, fit and test at once: the rational is a best-rational search over denominators to 400 and the search residual is not an error bound");
+    println!("carpet cell frame, band half-width W cells about the arm, slope of excess * L against ln L, K = W/2 and b = 1 when floor(K/2) is even");
+    println!("  the twelve swept widths against the derived rational, with a best-rational search over denominators to 400 beside them as a blind reading");
     for half in [0i64, 2, 4, 6, 8, 10, 12, 16, 20, 24, 32, 64] {
         let slope = width_slope(&width_excesses(rule, half, WIDTH_LIMIT), WIDTH_LIMIT);
         let (numerator, denominator) = nearest(slope);
         println!(
-            "  W = {half:2} cells at L = {WIDTH_LIMIT}: slope {slope:+.6}  best rational {numerator}/{denominator} = {:+.6}  search residual {:.1e}  against -(W + 2b)/(8(W+1)) = {:+.6}",
+            "  W = {half:2} cells at L = {WIDTH_LIMIT}: slope {slope:+.6}  best rational {numerator}/{denominator} = {:+.6}  search residual {:.1e}  against -(K + b)/(4(2K + 1)) = {:+.6}",
             numerator as f64 / denominator as f64,
             (slope - numerator as f64 / denominator as f64).abs(),
             edge_law(half)
         );
     }
-    println!("  odd W is not a new band: x - y is even on the arm, so W and W - 1 read one point set and the width law is false there");
+    println!("  odd W is not a new band: x - y is even on the arm, so W and W - 1 read one point set and one rational");
     for half in [0i64, 1, 2, 3] {
         let slope = width_slope(&width_excesses(rule, half, WIDTH_LIMIT), WIDTH_LIMIT);
         println!(
-            "  W = {half:2} cells at L = {WIDTH_LIMIT}: slope {slope:+.6}  against -(W + 2b)/(8(W+1)) = {:+.6}",
+            "  W = {half:2} cells at L = {WIDTH_LIMIT}: slope {slope:+.6}  against -(K + b)/(4(2K + 1)) = {:+.6}",
             edge_law(half)
         );
     }

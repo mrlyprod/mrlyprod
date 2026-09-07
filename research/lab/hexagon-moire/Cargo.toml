@@ -7,4 +7,5 @@ edition.workspace = true
 mrlycore.workspace = true
 mrlymath.workspace = true
 mrlynum.workspace = true
+num-bigint.workspace = true
 num-rational.workspace = true

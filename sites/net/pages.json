@@ -197,6 +197,14 @@
       "paper": null
     },
     {
+      "name": "star",
+      "title": "The ghost star",
+      "blurb": "Stacking the hexagonal cuts of a carpet, one per odd side, stands a six-armed star at the centre that is not there in the limit: its arm's ink is exactly 1/2 + chi_8(n)/(2n) and its decay is exactly -1/4 read on the cube's own cells, but a different number in every frame that resamples it or widens it.",
+      "category": "sections",
+      "research": "hexagon",
+      "paper": null
+    },
+    {
       "name": "words",
       "title": "The words",
       "blurb": "One design per level folded by the Kronecker product, with the census, the component exponent, and what changes when the letters swap places.",

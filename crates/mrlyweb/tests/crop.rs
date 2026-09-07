@@ -95,7 +95,10 @@ fn ladder(read: &mrlycore::Json, key: &str) -> String {
     let step: Vec<String> = rows
         .iter()
         .filter(|pair| pair["high"].as_i64().unwrap() == pair["low"].as_i64().unwrap() + 1)
-        .map(|pair| format!("{:.6}", pair[key].as_f64().unwrap()))
+        .map(|pair| match pair[key].as_f64() {
+            Some(v) => format!("{v:.6}"),
+            None => "none".to_string(),
+        })
         .collect();
     step.join(",")
 }
@@ -181,4 +184,68 @@ fn the_two_scales_the_collapse_panel_lays_on_each_other() {
     );
     assert!(crop_collapse("7", 3, 6, 2, 2, "corner", 1).is_err());
     assert!(crop_collapse("7", 1, 6, 2, 2, "corner", 16).is_err());
+}
+
+fn ridges(read: &mrlycore::Json) -> String {
+    let rows: Vec<String> = read["scales"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|scale| match scale["ridge"].as_f64() {
+            Some(v) => format!("{v:.6}"),
+            None => "none".to_string(),
+        })
+        .collect();
+    rows.join(",")
+}
+
+fn drift(read: &mrlycore::Json, scale: usize) -> Vec<f64> {
+    read["scales"][scale]["drift"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v.as_f64().unwrap())
+        .collect()
+}
+
+#[test]
+fn the_defect_ridge_the_collapse_panel_folds_beside_it() {
+    let carpet = parse(&crop_collapse("7", 3, 6, 2, 2, "corner", 16).unwrap()).unwrap();
+    println!("crop_collapse carpet ridges {}", ridges(&carpet));
+    assert_eq!(
+        ridges(&carpet),
+        "0.798324,1.688227,0.600112,0.389870,0.445603,none"
+    );
+    println!(
+        "crop_collapse carpet drift 4 len {}",
+        drift(&carpet, 4).len()
+    );
+    let deep: Vec<String> = drift(&carpet, 4)[..4]
+        .iter()
+        .map(|v| format!("{v:.6}"))
+        .collect();
+    println!("crop_collapse carpet drift 4 {}", deep.join(","));
+    assert_eq!(deep.join(","), "0.593262,0.167396,0.489821,0.131627");
+    println!(
+        "crop_collapse carpet drift 3 head {:.6}",
+        drift(&carpet, 3)[0]
+    );
+    assert_eq!(format!("{:.6}", drift(&carpet, 3)[0]), "0.000000");
+    println!("crop_collapse carpet ridge sup {}", ladder(&carpet, "rsup"));
+    assert_eq!(
+        ladder(&carpet, "rsup"),
+        "2.000000,2.859375,0.789696,0.714173,none"
+    );
+    println!(
+        "crop_collapse carpet ridge share {}",
+        ladder(&carpet, "rshare")
+    );
+    assert_eq!(
+        ladder(&carpet, "rshare"),
+        "1.184675,1.693714,1.315914,1.602712,none"
+    );
+    let sponge = parse(&crop_collapse("23", 3, 4, 2, 3, "corner", 16).unwrap()).unwrap();
+    println!("crop_collapse sponge ridges {}", ridges(&sponge));
+    assert_eq!(ridges(&sponge), "3.868696,3.649261,1.456937,none");
+    assert!(sponge["scales"][3]["drift"].as_array().unwrap().is_empty());
 }

@@ -307,7 +307,9 @@ pub fn crop_circle(
 ///
 /// Scale `k` is the window of radii from `number^k` to `number^(k + 1) - 1`, kept only when the whole window is counted; its profile reads the count over `t^d` at `samples` points of `t = number^(k + j / samples)` with the radius `floor(t)`, so every scale is read at the same offsets of `log_number r` and the profiles are comparable point by point.
 ///
-/// Each scale carries its mean level, and each pair of scales the largest and the mean gap between their profiles, with that largest gap over the greater of the two levels.
+/// Every scale also folds the defect `N(number * r) - fill * N(r)` over `t^(d - 1)` into `drift`, read at the same offsets, and that ridge is null on the scales whose window runs past the counted radii.
+///
+/// Each scale carries its mean level and its mean ridge, and each pair of scales the largest and the mean gap between their profiles, with that largest gap over the greater of the two levels and the same pair of numbers for the ridges.
 #[wasm_bindgen]
 pub fn crop_collapse(
     code: &str,
@@ -330,42 +332,65 @@ pub fn crop_collapse(
     let mass = formulas::fill(code_of(code)?, number, dimension, 1, base)?;
     let d = formulas::dimension(code_of(code)?, number, dimension, base)?;
     let step = number as f64;
-    let (mut scales, mut mains, mut levels) = (Vec::new(), Vec::new(), Vec::new());
+    let mut scales = Vec::new();
+    let (mut mains, mut levels) = (Vec::new(), Vec::new());
+    let (mut drifts, mut ridges) = (Vec::new(), Vec::new());
     let mut start = 1usize;
     while start * number <= top + 1 {
+        let stop = start * number - 1;
+        let folded = number * stop <= top;
         let mut main = Vec::new();
+        let mut drift = Vec::new();
         for j in 0..samples {
             let t = start as f64 * step.powf(j as f64 / samples as f64);
-            let r = (t.floor() as usize).clamp(start, start * number - 1);
+            let r = (t.floor() as usize).clamp(start, stop);
             main.push(seen[r] / t.powf(d));
+            if folded {
+                let slip = seen[number * r] - mass as f64 * seen[r];
+                drift.push(slip.abs() / t.powf(d - 1.0));
+            }
         }
         let mean = main.iter().sum::<f64>() / samples as f64;
+        let ridge = drift.iter().sum::<f64>() / samples as f64;
         scales.push(json!({
             "start": start,
-            "stop": start * number - 1,
+            "stop": stop,
             "level": mean,
+            "ridge": if folded { json!(ridge) } else { json!(null) },
             "main": main.clone(),
+            "drift": drift.clone(),
         }));
         levels.push(mean);
+        ridges.push(if folded { ridge } else { 0.0 });
         mains.push(main);
+        drifts.push(drift);
         start *= number;
     }
+    let spread = |near: &[f64], far: &[f64]| {
+        let (mut sup, mut total) = (0.0f64, 0.0f64);
+        for (a, z) in near.iter().zip(far.iter()) {
+            let gap = (a - z).abs();
+            sup = sup.max(gap);
+            total += gap;
+        }
+        (sup, total / samples as f64)
+    };
     let mut pairs = Vec::new();
     for low in 0..mains.len() {
         for high in low + 1..mains.len() {
-            let (mut sup, mut total) = (0.0f64, 0.0f64);
-            for (near, far) in mains[low].iter().zip(mains[high].iter()) {
-                let gap = (near - far).abs();
-                sup = sup.max(gap);
-                total += gap;
-            }
+            let (sup, mean) = spread(&mains[low], &mains[high]);
             let floor = levels[low].max(levels[high]);
+            let ridged = !drifts[low].is_empty() && !drifts[high].is_empty();
+            let (rsup, _) = spread(&drifts[low], &drifts[high]);
+            let bar = ridges[low].max(ridges[high]);
             pairs.push(json!({
                 "low": low,
                 "high": high,
                 "sup": sup,
-                "mean": total / samples as f64,
+                "mean": mean,
                 "share": if floor > 0.0 { sup / floor } else { 0.0 },
+                "rsup": if ridged { json!(rsup) } else { json!(null) },
+                "rshare": if ridged && bar > 0.0 { json!(rsup / bar) } else { json!(null) },
             }));
         }
     }

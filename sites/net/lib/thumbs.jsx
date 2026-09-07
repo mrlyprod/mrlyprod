@@ -30,6 +30,14 @@ const tube = (m) =>
     return { width: side, height: side, types: Uint8Array.from(dist, (v) => (v === 0 ? 0 : v <= eps ? 1 : 2)) };
   });
 const weights = (m) => once('weights', () => m.weights_pixels('69', 3, 4, 3, Float64Array.from([3, 2, 3]), 0.35));
+const ghost = (m) =>
+  once('ghost', () => {
+    const size = 180;
+    const field = m.star_field('23', 28, size);
+    let low = Infinity, high = -Infinity;
+    for (const value of field) if (!Number.isNaN(value)) { low = Math.min(low, value); high = Math.max(high, value); }
+    return m.paint_span(field, size, low, high, 'fire', 24, false);
+  });
 const cone = (m) =>
   once('cone', () => {
     const full = m.eca_seed(110, 31);
@@ -226,6 +234,7 @@ const DRAW = {
   spin: (m) => <Pixels data={m.wheel(m.profile(Float32Array.from(m.two_grid('495', 3, 4, 0, 3).types), 81, 256), 180, 'fire', 64, false)} className="" />,
   radial: (m) => <Pixels data={m.sheet(m.radial(Float32Array.from(carpet(m).types), 27, 180, 5, 72, 'mean', 2), 180, 'fire', 64, false)} className="" />,
   volume: (m) => <Pixels data={m.paint_span(m.plane_field(solid(m), 48, [1, 1, 1], 0.5, 180), 180, range(m).min, range(m).max, 'fire', 16, false)} className="" />,
+  star: (m) => <Pixels data={ghost(m)} className="" />,
   tower: (m) => <Sketch draw={tower(m)} className="" />,
   carry: (m) => <Sketch draw={carry(m)} className="" />,
   farey: (m) => <Sketch draw={farey(m)} className="" />,

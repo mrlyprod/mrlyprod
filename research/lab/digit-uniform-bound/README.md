@@ -26,14 +26,23 @@
 - For `m >= 1`, `sin delta/sin mu <= delta/mu = r/(2m+1) <= r/3` with `r = 2 M delta/pi` in `[0,1]`, and `cos(pi r/2) <= 1 - r^2` because `2 sin^2(pi r/4) >= r^2`, so `X <= (1 - r^2)/(1 - r^2/9) <= 1` and the pair is largest at `theta = 1/2`.
 - For `m = 0` the pair is at most `(M/pi)(1 + pi^2/(24 M^2)) max_theta sin(pi theta)(1/theta + 1/(1 - theta)) = (4M/pi)(1 + o(1))`, which is the `theta = 1/2` value again.
 - At `theta = 1/2` the sum is `2 Sum_(j < M/2) csc(x_j)`, `x_j = (2j+1) pi/(2M)`; splitting `csc = 1/x + g` with `g` convex increasing, the midpoint rule gives `Sum g(x_j) <= (M/pi) Int_0^(pi/2) g = (M/pi) log(4/pi)`, and `H_(2n) - H_n/2` bounds the reciprocal-odd sum.
-- Hence `L_M <= M((2/pi) log M + gamma' ) + 2/pi` with `gamma' = (2/pi)(gamma + log(8/pi)) = 0.9625153`, so `lambda_l <= (2/pi) l log q + c_0` with `c_0 = 0.97` for every `M = q^l >= 100`. The scan confirms the shape: `L_M/M - (2/pi) log M` falls from `0.965217` at `M = 4` to `0.962523`, and the maximising offset is `1/2` at every `M` tested.
+- Hence `L_M <= M((2/pi) log M + gamma' ) + 2/pi` with `gamma' = (2/pi)(gamma + log(8/pi)) = 0.96252282676`, printed and used rounded up at `0.9625229`, so `lambda_l <= (2/pi) l log q + gamma' + (2/pi) q^(-l)` at every `l`, and the coarser `lambda_l <= (2/pi) l log q + c_0` with `c_0 = 0.97` needs `q^l >= 86`, since `0.97 - gamma' = 0.0074771` has to cover `(2/pi)/q^l`. The scan confirms the shape: `L_M/M - (2/pi) log M` falls from `0.965217` at `M = 4` to `0.962523`, and the maximising offset is `1/2` at every `M` tested.
 
 ## THE THRESHOLD
 
-- With `lambda_l <= c_1 l log q + c_0`, `c_1 = 2/pi`, the root equation becomes `(z-1)^3 = c_1 (log q) z + c_0 (z - 1)`, and `alpha_1 < 1/4` follows from `z < q^(1/4)(1 - 1/q)`.
-- Certified at 120 bits, `(w-1)^3 > c_1 (log q) w + c_0 (w - 1)` at `w = q^(1/4)(1 - 1/q)` for every `q` in `[126, 3000)`, tightest margin `6.07e-02` at `q = 126`, and it fails at `q = 125`.
+- With the exact hypothesis `lambda_l <= c_1 l log q + gamma' + c_1 q^(-l)`, `c_1 = 2/pi`, the root equation is `(z-1)^3 = c_1 (log q) z + gamma'(z - 1) + c_1 (z-1)^2/(q z - 1)`, and `alpha_1 < 1/4` follows from `z < q^(1/4)(1 - 1/q)`. The coarser `c_0 = 0.97` form drops the last term and is the same statement wherever `q^l >= 86`.
+- Certified at 120 bits at `w = q^(1/4)(1 - 1/q)` for every `q` in `[125, 3000)`, and the chain fails at `q = 124`; the certificate first checks that the constant it uses sits above the true `gamma'`, which the earlier printed `0.9625153` did not.
 - Above `q = 211` the closed-form cap `z <= 1 + sqrt(2 c_1 log q + c_0)`, which follows from `z >= 2` and `z <= 2(z-1)`, is below `q^(1/4)(1 - 1/q)` and both sides are monotone, so the tail needs no evaluation at all.
-- The threshold is `q_u = 126`: `alpha_1 < 0.249688` at `q = 126`, `< 0.231802` at `q = 200`, `< 0.187607` at `q = 1000`, `< 0.108928` at `q = 10^6`, at every excluded digit, with no per-base spectral computation anywhere in the chain.
+- The threshold is `q_u = 125`: `alpha_1 < 0.249980` at `q = 125`, and it falls from there at every excluded digit, with no per-base spectral computation anywhere in the chain. The `c_0 = 0.97` form of the same chain gives `126`, one base worse, so the sharper constant strengthens that statement and does not contradict it.
+
+## ANY NUMBER OF EXCLUDED DIGITS
+
+- Nothing in the chain used `m = 1`. With `E` any set of `m` excluded digits, `|Sum_(e in E) e(e t)| <= m` gives `|hat F(t)| <= min(1, (|D_q(t)| + m)/(q - m)) =: u_(q,m)(t)`, again naming no digit, and the free cap `|hat F| <= 1` still applies.
+- The run decomposition gains one weight. Expanding `Prod_j (|D_q(q^j t)| + m)` over subsets `E` of `{0..N-1}` carries `m^(N - |E|)` on the positions outside `E`, and each maximal run of `E` telescopes to the same Dirichlet kernel, so `(q-m)^N Sigma_N^u(x) = Sum_E m^(N - |E|) Sum_(i<q^N) Prod_(runs (s,l) of E) |D_(q^l)(q^s(x + i/q^N))|`, the identity checked term for term against the direct product.
+- The peel is unchanged, since it bounds one run term at a time; summing over `E` by first letter gives `a_N = m a_(N-1) + m Sum_(l<N) lambda_l a_(N-1-l) + lambda_N` and `max_x Sigma_N^u <= a_N (q/(q-m))^N`.
+- The growth root solves `z = m + m Sum_(l>=1) lambda_l z^(-l)`, so with `lambda_l <= c_1 l log q + gamma' + c_1 q^(-l)` the certificate is `(z - m)(z - 1)^2 <= m(c_1 (log q) z + gamma'(z - 1) + c_1 (z-1)^2/(q z - 1))` and `alpha_1 < e` follows from `z < q^e (1 - m/q)`. At `m = 1` this is the cubic of the section above, so the general form is a check on the special one and not a rewrite of it.
+- The thresholds, certified at 120 bits on `[q_u, 3000)` with the chain failing at `q_u - 1`: against `1/4` it gives `q_u(1) = 125`, `q_u(2) = 649`, `q_u(3) = 1873`; against the weaker bar `1/3` it gives `32`, `105`, `230`. So every base `q >= 649` clears `alpha_1 < 1/4` at every excluded pair, with no per-pair spectral computation anywhere. The `1/3` rung at `m = 1` lands at `q = 32`, where `q^l = 32` is below `86`, so it is exactly the rung the coarser `c_0` form may not be used on.
+- The cost of uniformity grows with `m` because the phase thrown away is `m` characters rather than one: the majorant loses `m/(q-m)` where the truth loses the interference between them, and the two-digit numeric floor is far below `650` (`lab/digit-transform-norms`, verb `pairfail`).
 
 ## THE WINDOW CEILING
 
@@ -65,5 +74,5 @@
 - The domination `|hat F| <= (|D_q| + 1)/(q-1)` for every excluded digit, with the digit-slack column `1.000000` at `q = 3` falling to `0.010045` at `q = 200`.
 - The exact run decomposition of `Sigma_N^u` into `2^N` Lebesgue sums of Dirichlet kernels at moduli `q^l`, and the peel bounding each of them.
 - `L_M <= M((2/pi) log M + 0.9625153) + 2/pi`, with the maximum at the half-offset and the scanned constant falling from `0.965217` to `0.962523`.
-- The threshold `q_u = 126`, certified at 120 bits on `[126, 3000)` and by a monotone closed form above `211`, failing at `125`.
+- The threshold `q_u = 125`, certified at 120 bits on `[125, 3000)`, the chain failing at `124`; the `c_0 = 0.97` form of the same chain gives `126`.
 - The window ceiling `q = 75` at three digits, and the consistency rows against the per-digit ladder.

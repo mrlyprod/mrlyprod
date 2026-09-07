@@ -7,6 +7,11 @@
 - Level 6 and level 7 for the census over all 256 codes with a filled corner digit, de-duplicated to transpose classes because the corner ripple is a class function; the transpose control asks the same code and its mirror for the same ripple and gets it to the last bit. The window's whole periods are counted by repeated multiplication, never by a logarithm, which floors to the wrong period at level 8.
 - The powder is the arithmetic ring average of `|F(k)|^2` over 240 logarithmic bins, band `3 pad/side` to `pad/8` in frequency index, at level 7 with pad 4096 and again with pad 8192 on three codes; the instrument spread is a three-period fit window slid a quarter period at a time across the band, not a split of the band in two, which understates it by an order.
 - The spin spectrum is `mrlynum::spin::harmonics` at levels 1 and 2 over all 511 nonempty codes, orders `m = 0..12`, compared against the 101 orbits of the square group.
+- The shape reading reduces the spin spectrum to exact integers. At level `L` every `P_m` is a quadratic form in the indicators of the render's cells whose Gram matrix commutes with the raster's symmetry group, so `P_m` is a linear functional of the pair census `Phi_L`: the number of filled cell pairs in each orbit of that group on pairs. Equal pair censuses force equal `P_m` at every order, every ring count and every truncation, in exact arithmetic and with no transform run.
+- The pair census is the whole instrument at level 1: base 3 plane has 11 classes, base 5 plane 55, base 3 `D = 3` 24 under the order-48 cube group; at level 2 the render is the Kronecker square and the counts are 461 and 24805.
+- The control is the full 511. Codes de-duplicate to orbits by canonical form and the census reports the number of distinct `Phi_1` and `Phi_2` values against the Burnside orbit count, which the same pass computes from the cycle index and never from the sweep.
+- The reduction is checked against the instrument rather than assumed: the level-1 coefficient matrix is solved from independent censuses by elimination, then predicts `mrlynum::spin::harmonics` at 1024 rings and `m = 0..12` on all 511 codes, printing the worst residual and the rank of the 13 orders against the 11 classes. It holds for a constant-valued `0/1` render on a raster of side `q^L`; the spectrum count it is compared against is a greedy first-match bucketing at tolerance `1e-9`.
+- Base 5 and `D = 3` run `Phi_1` in full over all `2^25` and `2^27` codes, storing canonical representatives only, and run `Phi_2` over the colliding groups inside a budget-capped weight window the generator prints; the cap did not bind and the window covered every group.
 - The sponge shadow counts lattice lines in direction `(a,b,c)` meeting the level-`L` sponge, as classes of filled cells under `x -> x cross v`, with the solid cube in the same direction as the exact ceiling.
 - The Gaussian Farey counts radii new at scale `n` three ways: the direct union over reduced squared radii, the square-free rule, and the Mobius identity over the radical.
 
@@ -14,6 +19,8 @@
 
 - `CARGO_BUILD_JOBS=4 cargo run --release --manifest-path research/lab/Cargo.toml -p spin-census`
 - About thirty seconds; prints only, writes nothing. Peak memory is the pad-8192 transform, about 1.1 GB.
+- `CARGO_BUILD_JOBS=4 cargo run --release --manifest-path research/lab/Cargo.toml -p spin-census -- shape` runs the shape reading, the one verb group the default pass leaves out.
+- About two minutes and 0.4 GB, the peak being the base-5 sweep holding 4.2 million packed censuses; the `D = 3` sweep visits all `2^27` codes and keeps 2.85 million.
 
 ## WITNESSES
 
@@ -26,4 +33,7 @@
 - spin.md the spectrum: 0 isospectral pairs, 101 distinct spectra against 101 nonempty square classes.
 - spin.md the shadow: `(0,0,1)` sponge `8, 64, 512, 4096, 32768` against cube `9, 81, 729, 6561`; `(1,1,1)` sponge and cube both `19, 217, 2107, 19441, 176419`.
 - spin.md the Gaussian Farey: `2, 3, 9, 11, 22, 18, 40, 38, 55, 52, 91, 64, 123, 97, 128, 126, 199, 136, 243, 180`, the Mobius identity to `n = 64`, the radical-six ratios `0.56250` to `0.63801`.
+- spin.md the shape reading at base 3: 11 pair classes at level 1 and 461 at level 2, 97 level-1 censuses against 101 orbits, the homometric pairs `45-105`, `61-121`, `78-102`, `94-118` at level-1 spectrum gaps `1.30e-16`, `1.03e-17`, `6.51e-17`, `1.64e-16` and level-2 gaps `0.151`, `0.0689`, `0.253`, `0.105`; `P_m` read at level 1 alone, bucketed greedily at `1e-9`, gives 97 spectra, the count the census predicts.
+- spin.md the reduction: the level-1 coefficients solved from 11 independent censuses reproduce `mrlynum::spin::harmonics` on all 511 codes at worst relative residual `1.14e-14`, coefficient rank 9 of 11, the six odd orders at the cap 3 that half-turning one member of a pair forces and the seven even orders at 6 of a possible 8.
+- spin.md the completeness away from base 3: `3993511` level-1 censuses on `4211743` base-5 orbits with `204856` ties over `423088` orbits, and `1461693` on `2852287` cube orbits with `757066` ties over `2147660`; every tie broken at level 2, the window covering every group out to weights 21 and 24, with no pair surviving, and the canonical counts matching the Burnside averages `4211744` and `2852288`.
 - `mrlynum::spin::mass_within` and the crate test `the_spin_mass_scales_by_the_fill_about_a_filled_corner`; the window regression test `the_window_counts_whole_periods_at_every_level`.

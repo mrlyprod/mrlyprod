@@ -589,6 +589,7 @@ dependencies = [
  "mrlycore",
  "mrlymath",
  "mrlynum",
+ "num-bigint",
  "num-rational",
 ]
 

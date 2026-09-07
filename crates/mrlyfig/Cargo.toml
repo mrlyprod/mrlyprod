@@ -232,3 +232,11 @@ path = "examples/plot/demo-tube.rs"
 [[example]]
 name = "demo-weights"
 path = "examples/field/demo-weights.rs"
+
+[[example]]
+name = "paper-first-base-below-a-quarter"
+path = "examples/grid/paper-first-base-below-a-quarter.rs"
+
+[[example]]
+name = "demo-star"
+path = "examples/field/demo-star.rs"

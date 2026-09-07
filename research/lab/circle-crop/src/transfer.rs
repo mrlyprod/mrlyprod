@@ -994,6 +994,193 @@ fn signs(label: &str, radii: &[u64]) {
     );
 }
 
+// INDEX BOUND
+
+fn floor_shift(square: i64, back: i64, step: i64) -> i64 {
+    let root = if square <= 0 {
+        0
+    } else {
+        root_floor(square as u64) as i64
+    };
+    (root - back).div_euclid(step)
+}
+
+fn index_cap(reach: f64) -> f64 {
+    13.60 * reach.powf(-1.0 / 3.0) + 305.08 / reach.sqrt() + 9.84 / reach
+}
+
+struct Index {
+    rate: Vec<f64>,
+    cap: Vec<f64>,
+    slack: f64,
+    drift: f64,
+    logind: f64,
+    live: usize,
+}
+
+fn index(radius: u64) -> Index {
+    let square = radius * radius;
+    let mut high = Vec::with_capacity(radius as usize + 2);
+    for x in 0..=radius + 1 {
+        high.push(if x * x > square {
+            0
+        } else {
+            root_floor(square - x * x)
+        });
+    }
+    let depth = levels(radius);
+    let shell = 2 * radius + 1;
+    let mut rate = Vec::new();
+    let mut cap = Vec::new();
+    let mut slack = 0.0f64;
+    let mut drift = 0.0f64;
+    let mut logind = 0.0f64;
+    let mut live = 0usize;
+    for level in 0..depth {
+        let scale = 3u64.pow(level);
+        let step = 3 * scale;
+        let last = radius / scale;
+        let mut cells = 0u64;
+        let mut wide = 0u64;
+        let mut tall = 0u64;
+        let mut seats = 0u64;
+        let mut seat_cells = 0u64;
+        let mut seat_wide = 0u64;
+        let mut seat_tall = 0u64;
+        for c in 0..=last {
+            let head = high[(scale * c) as usize];
+            let foot = if scale * (c + 1) > radius {
+                0
+            } else {
+                high[(scale * (c + 1)) as usize]
+            };
+            let low = foot / scale;
+            let top = head / scale;
+            let span = (top - low + 1) as usize;
+            let mut runs = vec![0u64; span];
+            let mut load = vec![0u64; span];
+            for x in scale * c..=(scale * (c + 1) - 1).min(radius) {
+                let up = high[x as usize] / scale;
+                let down = high[(x + 1) as usize] / scale;
+                for t in down..=up {
+                    let seat = (t - low) as usize;
+                    runs[seat] += 1;
+                    let roof = high[x as usize].min(scale * (t + 1) - 1);
+                    let base = high[(x + 1) as usize].max(scale * t);
+                    load[seat] += roof - base + 1;
+                }
+            }
+            for t in low..=top {
+                let seat = (t - low) as usize;
+                let rows = head.min(scale * (t + 1) - 1) - foot.max(scale * t) + 1;
+                assert_eq!(load[seat], runs[seat] + rows - 1);
+                cells += load[seat];
+                wide += runs[seat];
+                tall += rows;
+                if c % 3 == 1 && t % 3 == 1 {
+                    seats += 1;
+                    seat_cells += load[seat];
+                    seat_wide += runs[seat];
+                    seat_tall += rows;
+                }
+            }
+        }
+        assert_eq!(cells, shell);
+        assert_eq!(wide, last + radius + 1);
+        assert_eq!(tall, last + radius + 1);
+        assert_eq!(seat_wide, seat_tall);
+        assert_eq!(seat_cells, 2 * seat_wide - seats);
+        let mut form_wide = 0i64;
+        for x in 0..=radius {
+            if (x / scale) % 3 != 1 {
+                continue;
+            }
+            let near = square as i64 - (x * x) as i64;
+            let far = square as i64 - ((x + 1) * (x + 1)) as i64;
+            form_wide += floor_shift(near, scale as i64, step as i64)
+                - floor_shift(far, 2 * scale as i64, step as i64);
+        }
+        assert_eq!(form_wide, seat_wide as i64);
+        let mut form_seats = 0i64;
+        for c in 0..=last {
+            if c % 3 != 1 {
+                continue;
+            }
+            let near = square as i64 - (scale * c).pow(2) as i64;
+            let far = square as i64 - (scale * (c + 1)).pow(2) as i64;
+            form_seats += floor_shift(near, scale as i64, step as i64)
+                - floor_shift(far, 2 * scale as i64, step as i64);
+        }
+        assert_eq!(form_seats, seats as i64);
+        assert!(shell - seat_cells >= scale);
+        let share = seat_cells as f64 / shell as f64;
+        let reach = radius as f64 / scale as f64;
+        let roof = index_cap(reach);
+        let gap = (share - 1.0 / 9.0).abs();
+        assert!(gap <= roof);
+        if roof < 8.0 / 9.0 {
+            live += 1;
+        }
+        slack = slack.max(gap / roof);
+        drift += gap;
+        logind += (1.0 - share).ln() - (8.0f64 / 9.0).ln();
+        rate.push(share);
+        cap.push(roof);
+    }
+    assert!(drift <= 781.0);
+    assert!(logind.abs() <= 1191.0);
+    Index {
+        rate,
+        cap,
+        slack,
+        drift,
+        logind,
+        live,
+    }
+}
+
+fn live(label: &str, radius: u64) {
+    let square = radius * radius;
+    let mut seats = 0i64;
+    let mut x = 1u64;
+    while x <= radius {
+        let near = square as i64 - (x * x) as i64;
+        let far = square as i64 - ((x + 1) * (x + 1)) as i64;
+        seats += floor_shift(near, 1, 3) - floor_shift(far, 2, 3);
+        x += 3;
+    }
+    assert!(seats >= 0);
+    let shell = 2 * radius + 1;
+    let share = seats as f64 / shell as f64;
+    let roof = index_cap(radius as f64);
+    let gap = (share - 1.0 / 9.0).abs();
+    assert!(roof < 8.0 / 9.0);
+    assert!(gap <= roof);
+    println!(
+        "circle-crop index {label} live r={radius} j=0 seats={seats} p0={share:.9} gap={} cap={:.9} ratio={} headroom={:.9}",
+        trim(gap, true),
+        (roof * 1e9).ceil() / 1e9,
+        trim(gap / roof, true),
+        ((8.0 / 9.0 - roof) * 1e9).floor() / 1e9
+    );
+}
+
+fn indexed(label: &str, radius: u64) -> usize {
+    let read = index(radius);
+    println!(
+        "circle-crop index {label} r={radius} L={} live_levels={} of={} drift={} cap=781.000000 logind={} cap=1191.000000 slack={} rate={} bound={}",
+        read.rate.len(),
+        read.live,
+        read.rate.len(),
+        trim(read.drift, true),
+        trim(read.logind.abs(), true),
+        trim(read.slack, true),
+        list(&read.rate),
+        list(&read.cap)
+    );
+    read.live
+}
+
 // ENTRY
 
 pub fn transfer() {
@@ -1049,4 +1236,14 @@ pub fn transfer() {
     }
     scan("carpet", 3000, 19682, 3, &base);
     scan("carpet", 3000, 19682, 1, &base);
+    let mut live_levels = 0usize;
+    for &radius in &[80u64, 242, 1000, 2186, 6560, 12345, 19682] {
+        live_levels += indexed("carpet", radius) as usize;
+    }
+    println!(
+        "circle-crop index carpet totals radii=7 live_levels={live_levels} note=every level of these seven radii has cap >= 8/9, so the assert cannot fail there and the numbers are a check on the identities and not on the bound; the bound bites only at R >= 212957 and beats 1/9 only at R >= 23157375"
+    );
+    for &radius in &[212957u64, 531441, 2000000] {
+        live("carpet", radius);
+    }
 }

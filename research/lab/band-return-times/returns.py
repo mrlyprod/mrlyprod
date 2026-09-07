@@ -404,6 +404,121 @@ def lam_block(b, terms=0, maxord=0, kbig=160):
     lam2 = max(abs(z) for z in rs if z is not lam) if len(rs) > 1 else 0.0
     return P, Q, poly_isolate(Q or P, poly_newton(Q or P, lam.real), 12), ratio, lam2 / lam.real
 
+# THE LIFT COUNT
+
+def lift_support(word):
+    k = len(word) + 1
+    T = [i + 1 for i, c in enumerate(word) if c]
+    m = 1 + 2 * sum(3 ** i for i in T)
+    supp = [p for p in range(k) if p not in T] + [k + p for p in T]
+    return k, m, sorted(supp)
+
+def submask_count(word):
+    k, m, supp = lift_support(word)
+    h = len(supp) // 2
+    lo, hi = supp[:h], supp[h:]
+    d = {}
+    for s in range(1 << len(lo)):
+        v = sum(pow(3, lo[i], m) for i in range(len(lo)) if s >> i & 1) % m
+        d[v] = d.get(v, 0) + 1
+    out = 0
+    for s in range(1 << len(hi)):
+        v = sum(pow(3, hi[i], m) for i in range(len(hi)) if s >> i & 1) % m
+        out += d.get((-v) % m, 0)
+    return out
+
+def submask_set(word):
+    k, m, supp = lift_support(word)
+    n = len(supp)
+    return [s for s in range(1 << n) if sum(3 ** supp[i] for i in range(n) if s >> i & 1) % m == 0], n
+
+def closure_faults(D, n):
+    S = set(D)
+    full = (1 << n) - 1
+    bad = 0
+    for a in D:
+        if (full ^ a) not in S:
+            bad += 1
+        for b in D:
+            if not a & b and (a | b) not in S:
+                bad += 1
+            if a & b == b and (a ^ b) not in S:
+                bad += 1
+    return bad
+
+def irreducibles(D):
+    S = set(D)
+    out = []
+    for a in D:
+        if not a:
+            continue
+        if not any(b and b != a and b & a == b and (a ^ b) in S for b in D):
+            out.append(a)
+    return out
+
+def lift_census(k):
+    tot = triv = pw = dis = 0
+    ito = imax = 0
+    cls = {}
+    for w in range(1 << (k - 1)):
+        word = tuple((w >> i) & 1 for i in range(k - 1))
+        D, n = submask_set(word)
+        I = irreducibles(D)
+        tot += len(D)
+        ito += len(I)
+        imax = max(imax, len(I))
+        triv += len(D) == 2
+        pw += not len(D) & (len(D) - 1)
+        dis += all(not I[a] & I[b] for a in range(len(I)) for b in range(a))
+        r = lift_support(word)[1] % 9
+        c = cls.setdefault(r, [0, 0, 0])
+        c[0] += 1
+        c[1] += len(D)
+        c[2] += len(I)
+    return tot, ito, imax, triv, pw, dis, cls
+
+def rank_exact(rows):
+    rows = [[Fraction(x) for x in r] for r in rows]
+    n = len(rows[0])
+    r = 0
+    for c in range(n):
+        p = next((i for i in range(r, len(rows)) if rows[i][c]), None)
+        if p is None:
+            continue
+        rows[r], rows[p] = rows[p], rows[r]
+        pv = rows[r][c]
+        for i in range(len(rows)):
+            if i != r and rows[i][c]:
+                f = rows[i][c] / pv
+                for j in range(c, n):
+                    rows[i][j] -= f * rows[r][j]
+        r += 1
+        if r == len(rows):
+            break
+    return r
+
+def all_words(n):
+    return [tuple((s >> i) & 1 for i in range(L)) for L in range(n + 1) for s in range(1 << L)]
+
+def hankel_rank(p, q, fn=None):
+    fn = fn or submask_count
+    U, V = all_words(p), all_words(q)
+    memo = {}
+    H = []
+    for u in U:
+        row = []
+        for v in V:
+            w = u + v
+            if w not in memo:
+                memo[w] = fn(w)
+            row.append(memo[w])
+        H.append(row)
+    return rank_exact(H), len(U)
+
+def irreducible_count(word):
+    D, _ = submask_set(word)
+    return len(irreducibles(D))
+
 # THE FLOOR AND THE MODEL
 
 def floor_count(k):
@@ -896,6 +1011,60 @@ def cmd_ladder(args):
     print("every one of them is positive, so lam_b sits above the free rate 2^b / 3 at every depth printed and "
           "the live edge of the parity bracket is the upper one, while the two-sided rate stays 2^(1 - b)")
 
+def cmd_lift(args):
+    t0 = time.time()
+    print("the depth-2 lift census: K = m R_k with one position per column, N_K(m) the submasks of K "
+          "divisible by m, M_k = Sum_T N_K(m), the sweep exhaustive over all 2^(k-1) sets T inside [1, k-1]")
+    seq = []
+    band = []
+    for k in range(1, args.kbig + 1):
+        M = sum(submask_count(tuple((w >> i) & 1 for i in range(k - 1))) for w in range(1 << (k - 1)))
+        seq.append(M)
+        band.append(M / 2.0 ** k)
+        print("k", k, "M_k", M, "M_k / 2^k", repr(M / 2.0 ** k))
+    print("M_k / 2^k lies inside [" + str(down(min(band), 5)) + ", " + str(up(max(band), 5)) + "], the endpoints "
+          "rounded outward so the band holds the exact values")
+    n = (len(seq) + 1) // 2
+    H = [[seq[i + j] for j in range(n)] for i in range(n)]
+    print("the Hankel matrix of M_k is", n, "by", n, "of rank", rank_exact(H), "reading every one of the",
+          len(seq), "terms k = 1.." + str(len(seq)) + ", so no linear recurrence of order at most", n - 1,
+          "holds on them")
+    print("")
+    print("k  M_k/2^k  Sum_T iota_T / 2^k  max_T iota_T  trivial T  power-of-two N  disjoint irreducibles  m_T mod 9")
+    ib = []
+    for k in range(2, args.kmax + 1):
+        tot, ito, imax, triv, pw, dis, cls = lift_census(k)
+        pk = 2.0 ** k
+        ib.append(ito / pk)
+        print("k", k, repr(tot / pk), repr(ito / pk), imax, str(triv) + "/" + str(1 << (k - 1)),
+              str(pw) + "/" + str(1 << (k - 1)), str(dis) + "/" + str(1 << (k - 1)),
+              " ".join(str(r) + ":" + str(c[0]) + ":" + str(round(c[1] / pk, 4)) + ":" + str(round(c[2] / pk, 4))
+                       for r, c in sorted(cls.items())))
+    print("Sum_T iota_T / 2^k lies inside [" + str(down(min(ib), 6)) + ", " + str(up(max(ib), 6)) + "], the "
+          "endpoints rounded outward; the even readings fall at every step from k = 6 and the odd ones do not")
+    print("the disjoint column counts the T whose irreducibles are pairwise disjoint, where N_K(m) = 2^iota; "
+          "the power-of-two column is larger, so a power-of-two count does not force disjointness")
+    print("the residue classes of the ladder are m_T mod 9, printed as class:sets:M share:iota share; T inside "
+          "[1, k-1] gives a_T = Sum 3^i with i >= 1, so a_T is 3 mod 9 when 1 is in T and 0 mod 9 otherwise, and "
+          "m_T = 1 + 2 a_T is 7 or 1 mod 9 and never 4, class 4 needing a_T = 6 mod 9")
+    print("")
+    top = 0
+    for n in range(1, args.nmax + 1):
+        a, rows = hankel_rank(n, n)
+        top = max(top, a)
+        print("Hankel of N over the column word, p = q =", n, "rows", rows, "rank", a, "full rank", rows)
+    print("the reversed reading is the transpose of this matrix at p = q and carries no further information")
+    for n in range(1, min(args.nmax, 5) + 1):
+        a, rows = hankel_rank(n, n, irreducible_count)
+        print("Hankel of the irreducible count iota over the column word, p = q =", n, "rows", rows,
+              "rank", a, "full rank", rows)
+    print("a column transfer with a state set free of k is a linear representation of N as a series over the "
+          "column word, so its dimension is at most its state count and at least the Hankel rank; the rank "
+          "reaches", top, "on the words of length at most", 2 * args.nmax, "that is on k at most",
+          2 * args.nmax + 1, "so no such transfer with fewer than that many states exists there, and whether "
+          "the rank is unbounded is observed in the deficiency column and not proved here")
+    print("elapsed", round(time.time() - t0, 1), "s")
+
 def cmd_check(args):
     for k in range(2, 6):
         for n in range(k, min(4 * k, 21) + 1):
@@ -963,6 +1132,37 @@ def cmd_check(args):
     print("lam_b has the pinned minimal polynomial at every b = 1..10, lam_4 = 6 with characteristic polynomial "
           "(x - 1)(x - 3)(x - 5)(x - 6) and lam_5 = 3 (5 + sqrt 5) / 2 with (x - 1)(x^2 - 15x + 45), and "
           "3 lam_b - 2^b sits inside [-1, 2] at even b and inside [-2, 1] at odd b at every one")
+    for k in range(2, 10):
+        for w in range(1 << (k - 1)):
+            word = tuple((w >> i) & 1 for i in range(k - 1))
+            D, n = submask_set(word)
+            if len(D) != submask_count(word):
+                raise ValueError("the meet in the middle misses the brute submask count at " + str((k, w)))
+            if closure_faults(D, n):
+                raise ValueError("the solution set is not closed at " + str((k, w)))
+            if len(D) % 2:
+                raise ValueError("an odd submask count at " + str((k, w)))
+    print("the meet-in-the-middle submask count matches the brute enumeration, and the solution set is closed "
+          "under complement in K, under disjoint union and under nested difference, over every one of the "
+          "2^(k-1) sets T at every k = 2..9, so every count is even")
+    for k, ref in ((11, 5224), (12, 11852), (13, 20888), (14, 43364)):
+        M = sum(submask_count(tuple((w >> i) & 1 for i in range(k - 1))) for w in range(1 << (k - 1)))
+        if M != ref:
+            raise ValueError("M_" + str(k) + " reads " + str(M))
+    print("M_k reads 5224, 11852, 20888, 43364 at k = 11..14, the cut-free aggregate of the lift half")
+    D, n = submask_set((1, 0, 0, 0))
+    I = irreducibles(D)
+    if len(D) != 6 or sorted(I) != [5, 11, 20, 26]:
+        raise ValueError("the k = 5, T = {1} irreducibles moved: " + str((len(D), I)))
+    print("at k = 5, T = {1}, m = 7 the support {0, 2, 3, 4, 6} has four irreducibles and two decompositions "
+          "of the whole, 6 solutions against 7 packings, so the decomposition is not unique and the count is "
+          "the number of distinct unions and not the number of packings")
+    D, n = submask_set((0, 1, 0, 0, 0, 0))
+    I = irreducibles(D)
+    if len(D) != 8 or len(I) != 6 or all(not I[a] & I[b] for a in range(len(I)) for b in range(a)):
+        raise ValueError("the k = 7, T = {2} witness moved: " + str((len(D), len(I))))
+    print("at k = 7, T = {2}, m = 19 the count is 8, a power of two, with 6 irreducibles that overlap, so a "
+          "power-of-two count does not force pairwise disjointness")
     r, raw, rdf, pool, pdf = geom_fit(survival(sweep(13)[0], 13))
     if abs(r - 0.8868) > 5e-4 or abs(raw - 143.5) > 0.2 or rdf != 30 or abs(pool - 47.9) > 0.2 or pdf != 12:
         raise ValueError("the geometric fit at k = 13 moved: " + str((r, raw, rdf, pool, pdf)))
@@ -1002,6 +1202,11 @@ def main():
     g.add_argument("--bmax", type=int, default=14)
     g.add_argument("--kcheck", type=int, default=7)
     g.set_defaults(fn=cmd_ladder)
+    h = s.add_parser("lift")
+    h.add_argument("--kmax", type=int, default=12)
+    h.add_argument("--kbig", type=int, default=17)
+    h.add_argument("--nmax", type=int, default=7)
+    h.set_defaults(fn=cmd_lift)
     d = s.add_parser("check")
     d.set_defaults(fn=cmd_check)
     args = p.parse_args()
