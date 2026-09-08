@@ -191,7 +191,7 @@ function seo(html: string, card: Card) {
   const found = html.match(/<title>([^<]*)<\/title>/);
   const name = found ? untag(found[1]) : card.title;
   const tags = meta(route, name, card.blurb || name, "website");
-  const block = `<title>${escape(brand(name))}</title>\n${tags}`;
+  const block = `<title>${escape(brand(name))}</title>\n${tags}\n<link rel="stylesheet" href="/ui/fonts/fonts.css">`;
   return found ? html.replace(found[0], block) : html.replace("<head>", `<head>\n${block}`);
 }
 
@@ -209,6 +209,8 @@ async function demos(site: Site, route: Route): Promise<Output[]> {
   if (!built.success) throw new Error(`site: the demos failed to bundle\n${built.logs.join("\n")}`);
   const shells = new Map(list.map((d) => [`${demoRoute(d.name).slice(1)}index.html`, d]));
   const out: Output[] = [];
+  const fig = press(site, out);
+  for (const d of list) if (d.name) fig(`demo-${d.name}`, "/demos/");
   for (const item of built.outputs) {
     const path = item.path.replace(/^\.\//, "");
     const card = shells.get(path);
@@ -410,11 +412,55 @@ function page(site: Site, route: Route): Output[] {
   return out;
 }
 
+type Dress = { lanes: Lane[]; notes: Note[]; posts: Post[]; demos: Card[] };
+
+type Mark = { figure: string; text: string };
+
+const FIXED: Record<string, string> = {
+  "/": "site-home",
+  "/git/": "site-code",
+  "/about/": "site-icon",
+  "/contact/": "site-contact",
+  "/donate/": "site-donate",
+};
+
+function marks(data: Dress): Map<string, Mark> {
+  const map = new Map<string, Mark>();
+  for (const d of data.demos) if (d.name) map.set(demoRoute(d.name), { figure: `demo-${d.name}`, text: d.blurb });
+  for (const p of data.lanes) map.set(`/papers/${p.slug}/`, { figure: `paper-${p.slug}`, text: p.blurb });
+  for (const n of data.notes) {
+    if (n.home) continue;
+    map.set(`/research/${n.name}/`, { figure: SHARED.has(n.name) ? "research-index" : `research-${n.name}`, text: summary(n.md) });
+  }
+  for (const p of data.posts) map.set(`/blog/${p.slug}/`, { figure: p.figure, text: p.lead });
+  for (const [href, figure] of Object.entries(FIXED)) map.set(href, { figure, text: "" });
+  return map;
+}
+
+function dress(nodes: Node[], map: Map<string, Mark>, fig: Fig): Node[] {
+  return nodes.map((node) => {
+    if (node.nodes?.length) return { ...node, nodes: dress(node.nodes, map, fig) };
+    const mark = node.href ? map.get(node.href) : undefined;
+    if (!mark) return node;
+    return { ...node, figure: fig(mark.figure, "/menu/"), text: mark.text || undefined };
+  });
+}
+
+function elsewhere() {
+  const links = kit.socials.map((s) => `<li><a href="${escape(s.href)}">${escape(s.name)}</a></li>`).join("");
+  const mail = `<li><a href="mailto:${escape(kit.contact)}">${escape(kit.contact)}</a></li>`;
+  return `<section class="elsewhere"><h2>Elsewhere</h2><ul>${links}${mail}</ul></section>`;
+}
+
 function menu(site: Site, route: Route): Output[] {
   const lead = "Every page on mrly.net.";
-  const list = renderToStaticMarkup(h(Menu, { tree: site.nav }));
-  const body = `<div class="hero"><h1><span role="img" aria-label="${escape(kit.title)}">${WORD}</span></h1><p>${escape(lead)}</p></div>\n${list}`;
-  return [{ path: "menu/index.html", bytes: shell(site, { route: route.route, name: "Menu", description: lead, body, type: "website", wide: true, bare: true }) }];
+  const out: Output[] = [];
+  const fig = press(site, out);
+  const nav = dress(site.nav, marks(route.data as Dress), fig);
+  const list = renderToStaticMarkup(h(Menu, { tree: nav }));
+  const body = `<div class="hero"><h1><span role="img" aria-label="${escape(kit.title)}">${WORD}</span></h1><p>${escape(lead)}</p></div>\n${list}\n${elsewhere()}`;
+  out.push({ path: "menu/index.html", bytes: shell(site, { route: route.route, name: "Menu", description: lead, body, type: "website", wide: true, bare: true }) });
+  return out;
 }
 
 function cart(site: Site, route: Route): Output[] {
@@ -526,7 +572,12 @@ async function collect(site: Site) {
     const { data } = front(read(source));
     routes.push({ route: `/${slug}/`, kind: "page", name: data.title ?? slug, source, inputs: [source] });
   }
-  routes.push({ route: "/menu/", kind: "menu", name: "Menu" });
+  routes.push({
+    route: "/menu/",
+    kind: "menu",
+    name: "Menu",
+    data: { lanes: laneList, notes: noteList, posts: postList, demos: group.data as Card[] },
+  });
   routes.push({ route: "/cart/", kind: "cart", name: "Cart", hidden: true });
   routes.push({ route: "/404.html", kind: "missing", name: "Nothing here", hidden: true });
   return { routes, nav };

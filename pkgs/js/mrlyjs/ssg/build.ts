@@ -26,7 +26,7 @@ export type Route = {
   sitemap?: boolean;
 };
 
-export type Node = { name: string; href?: string; nodes?: Node[]; open?: boolean; lazy?: string };
+export type Node = { name: string; href?: string; nodes?: Node[]; open?: boolean; lazy?: string; icon?: string; figure?: { dark: string; light: string }; text?: string };
 
 export type Input = { name: string; path: string; files: string[]; missing: boolean };
 
@@ -156,9 +156,6 @@ function bundles(root: string, config: Config): Bundle[] {
 const shows = (nodes: Node[], href: string): boolean =>
   nodes.some((node) => node.href === href || shows(node.nodes ?? [], href));
 
-const lazily = (nodes: Node[], href: string): Node[] =>
-  nodes.map((node) => (node.href === href ? { ...node, lazy: node.lazy ?? "" } : node));
-
 export async function scan(spec: Spec): Promise<Site> {
   const root = resolve(spec.root);
   const config = spec.config ?? (JSON.parse(readFileSync(join(root, "site.json"), "utf8")) as Config);
@@ -212,7 +209,6 @@ export async function scan(spec: Spec): Promise<Site> {
   if (repo.routes.length) {
     site.routes = [...site.routes, ...repo.routes];
     if (repo.node && !shows(site.nav, repo.node.href!)) site.nav = [...site.nav, repo.node];
-    site.nav = lazily(site.nav, repo.node!.href!);
   }
   site.stamp = digest([
     templates(spec),

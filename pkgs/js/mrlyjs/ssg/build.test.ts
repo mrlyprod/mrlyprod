@@ -1,5 +1,7 @@
 import { expect, test } from "bun:test";
-import { globals, type Output, type Site, type Spec } from "./build.ts";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { globals, walk, type Output, type Site, type Spec } from "./build.ts";
 
 /* SITE */
 
@@ -71,4 +73,36 @@ test("llms.txt says what the site is and links only what the site publishes", as
   expect(llms).toContain("- [README](https://demo.test/raw/README.md): the readme");
   expect(llms).toContain("- [Code](https://demo.test/git/): the tree");
   expect(llms).not.toContain("Nowhere");
+});
+
+/* CSS */
+
+const selectors = (css: string) => {
+  const out: string[] = [];
+  let depth = 0;
+  let buf = "";
+  for (const c of css.replace(/\/\*[\s\S]*?\*\//g, "")) {
+    if (c === "{") {
+      if (depth === 0) out.push(buf.trim().replace(/\s+/g, " "));
+      depth++;
+      buf = "";
+    } else if (c === "}") {
+      depth--;
+      buf = "";
+    } else if (depth === 0) buf += c;
+  }
+  return out;
+};
+
+test("the kit css never repeats a top-level selector with another rule between", () => {
+  const home = join(import.meta.dir, "..", "ui");
+  for (const file of walk(home, false).filter((f) => f.endsWith(".css"))) {
+    const list = selectors(readFileSync(file, "utf8"));
+    const last = new Map<string, number>();
+    list.forEach((sel, n) => {
+      const was = last.get(sel);
+      if (was !== undefined && list.slice(was + 1, n).some((other) => other !== sel)) throw new Error(`${file}: '${sel}' at ${was} and ${n}`);
+      last.set(sel, n);
+    });
+  }
 });

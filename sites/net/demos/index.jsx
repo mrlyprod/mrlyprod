@@ -1,11 +1,7 @@
-import { ready } from '../lib/mrly.js';
 import { mount } from '../lib/app.jsx';
 import { Shell } from '../../../pkgs/js/mrlyjs/ui/chrome.jsx';
 import { tree } from '../lib/tree.js';
-import { thumb } from '../lib/thumbs.jsx';
 import manifest from '../pages.json';
-
-const m = await ready();
 
 const GROUPS = manifest.shelves.reduce((groups, shelf) => {
   const last = groups[groups.length - 1];
@@ -26,7 +22,8 @@ function Shelf({ shelf }) {
       <div className="gallery">
         {rows.map((page) => (
           <a key={page.name} className="tile" href={`/demos/${page.name}/`}>
-            <div aria-hidden="true">{thumb(m, page.name)}</div>
+            <img className="dark" src={`/figures/demo-${page.name}-dark.png`} alt="" width="1024" height="1024" loading="lazy" decoding="async" />
+            <img className="light" src={`/figures/demo-${page.name}-light.png`} alt="" width="1024" height="1024" loading="lazy" decoding="async" />
             <h2>{page.title}</h2>
             <p>{page.blurb}</p>
           </a>

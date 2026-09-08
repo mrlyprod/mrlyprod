@@ -5,8 +5,7 @@ import { conf } from './config.js';
 
 /* GLYPHS */
 
-function Glyph({ text, className, label }) {
-  const { rows, cols, grid } = letters(text);
+function Cells({ rows, cols, grid, className, label }) {
   const cells = [];
   grid.forEach((row, y) => row.forEach((on, x) => on && cells.push(<rect key={`${x}.${y}`} x={x} y={y} width={1} height={1} />)));
   return (
@@ -16,11 +15,25 @@ function Glyph({ text, className, label }) {
   );
 }
 
+function Glyph({ text, className, label }) {
+  return <Cells {...letters(text)} className={className} label={label} />;
+}
+
+const PANEL = {
+  left: ['11111', '11001', '11001', '11001', '11111'],
+  right: ['11111', '10011', '10011', '10011', '11111'],
+};
+
+function Panel({ side, className }) {
+  const grid = PANEL[side].map((row) => [...row].map((c) => (c === '1' ? 1 : 0)));
+  return <Cells rows={5} cols={5} grid={grid} className={className} />;
+}
+
 function Ring() {
   const dots = [];
   for (let y = 1; y <= 3; y++) for (let x = 1; x <= 3; x++) dots.push(<rect key={`${x}.${y}`} className="dot" x={x} y={y} width={1} height={1} />);
   return (
-    <svg className="glyphs shut" viewBox="0 0 5 5" aria-hidden="true">
+    <svg className="glyphs" viewBox="0 0 5 5" aria-hidden="true">
       <path fillRule="evenodd" d="M0 0h5v5H0zM1 1v3h3V1z" />
       {dots}
     </svg>
@@ -39,20 +52,37 @@ export function Header({ brand }) {
   const site = conf();
   return (
     <header className="top">
-      <a className="glyph" href={site.menu} data-pane="left" aria-controls="left" aria-expanded="false" aria-label="Menu">
-        <Glyph text="+" className="shut" />
-        <Glyph text="×" className="open" />
+      <a className="glyph" href={site.menu} aria-label="Menu">
+        <Glyph text="+" />
       </a>
       {brand ?? (
         <a className="mark" href="/" aria-label={`${site.title} home`}>
           <Wordmark />
         </a>
       )}
-      <a className="glyph" href={site.cart} data-pane="right" data-cart aria-controls="right" aria-expanded="false" aria-label="Cart">
+      <a className="glyph" href={site.cart} data-cart aria-label="Cart">
         <Ring />
-        <Glyph text="×" className="open" />
       </a>
     </header>
+  );
+}
+
+export function Dock({ route = '/' }) {
+  const word = decodeURIComponent(route).split('/').filter(Boolean).pop() ?? 'home';
+  return (
+    <div className="dock">
+      <button type="button" className="glyph" data-pane="left" aria-controls="left" aria-expanded="false" aria-label="Site tree">
+        <Panel side="left" className="shut" />
+        <Glyph text="×" className="open" />
+      </button>
+      <span className="route">
+        <Glyph text={word.toUpperCase()} label={word} />
+      </span>
+      <button type="button" className="glyph" data-pane="right" aria-controls="right" aria-expanded="false" aria-label="Page tools">
+        <Panel side="right" className="shut" />
+        <Glyph text="×" className="open" />
+      </button>
+    </div>
   );
 }
 
@@ -60,14 +90,23 @@ export function Header({ brand }) {
 
 const holds = (node, current) => node.href === current || (node.nodes ?? []).some((sub) => holds(sub, current));
 
+function Leaf({ node, here }) {
+  return (
+    <a href={node.href} aria-current={here}>
+      {node.icon && <span className={node.icon} aria-hidden="true"></span>}
+      {node.icon ? <span className="name">{node.name}</span> : node.name}
+    </a>
+  );
+}
+
 function Node({ node, current }) {
   const here = node.href === current ? 'page' : undefined;
   const lazy = node.lazy !== undefined;
-  if (!node.nodes && !lazy) return <li><a href={node.href} aria-current={here}>{node.name}</a></li>;
+  if (!node.nodes && !lazy) return <li><Leaf node={node} here={here} /></li>;
   return (
     <li>
       <details open={node.open || holds(node, current) || undefined} data-lazy={lazy ? node.lazy : undefined}>
-        <summary>{node.href ? <a href={node.href} aria-current={here}>{node.name}</a> : node.name}</summary>
+        <summary>{node.href ? <Leaf node={node} here={here} /> : node.name}</summary>
         <ul>{(node.nodes ?? []).map((sub) => <Node key={sub.name} node={sub} current={current} />)}</ul>
       </details>
     </li>
@@ -83,34 +122,48 @@ export function Tree({ nodes = [], current = '' }) {
 
 /* MENU */
 
-function Branch({ nodes }) {
+function Card({ node }) {
+  if (!node.figure) return <a className="tile plain" href={node.href}><h2>{node.name}</h2>{node.text && <p>{node.text}</p>}</a>;
   return (
-    <ul>
-      {nodes.map((node) => (
-        <li key={node.name}>
-          {node.href ? <a href={node.href} className={node.nodes ? 'group' : undefined}>{node.name}</a> : <span className="group">{node.name}</span>}
-          {node.nodes && node.nodes.length > 0 && <Branch nodes={node.nodes} />}
-        </li>
-      ))}
-    </ul>
+    <a className="tile" href={node.href}>
+      <img className="dark" src={node.figure.dark} alt="" width="1024" height="1024" loading="lazy" decoding="async" />
+      <img className="light" src={node.figure.light} alt="" width="1024" height="1024" loading="lazy" decoding="async" />
+      <h2>{node.name}</h2>
+      {node.text && <p>{node.text}</p>}
+    </a>
   );
 }
 
+const leaves = (nodes) => nodes.filter((node) => node.href && !(node.nodes && node.nodes.length));
+
+const groups = (nodes) => nodes.filter((node) => node.nodes && node.nodes.length);
+
+function Grid({ nodes }) {
+  const list = leaves(nodes);
+  if (!list.length) return null;
+  return <div className="gallery grid">{list.map((node) => <Card key={node.href} node={node} />)}</div>;
+}
+
 export function Menu({ tree = [] }) {
-  const groups = tree.filter((node) => node.nodes && node.nodes.length);
-  const pages = tree.filter((node) => !(node.nodes && node.nodes.length) && node.href);
+  const pages = leaves(tree);
   return (
     <div className="menu">
-      {groups.map((group) => (
+      {groups(tree).map((group) => (
         <section key={group.name} aria-label={group.name}>
           <h2>{group.href ? <a href={group.href}>{group.name}</a> : group.name}</h2>
-          <Branch nodes={group.nodes} />
+          <Grid nodes={group.nodes} />
+          {groups(group.nodes).map((shelf) => (
+            <div key={shelf.name} className="shelf">
+              <h3>{shelf.href ? <a href={shelf.href}>{shelf.name}</a> : shelf.name}</h3>
+              <Grid nodes={shelf.nodes} />
+            </div>
+          ))}
         </section>
       ))}
       {pages.length > 0 && (
         <section aria-label="Pages">
           <h2>Pages</h2>
-          <Branch nodes={pages} />
+          <Grid nodes={pages} />
         </section>
       )}
     </div>
@@ -184,28 +237,8 @@ export function Footer() {
   const span = site.since < year ? `${site.since}-${year}` : String(year);
   return (
     <footer className="base">
-      <div className="foot">
-        <div className="who">
-          <a href="/" aria-label={`${site.title} home`}><Mark /></a>
-          {site.tagline && <p className="tag fine">{site.tagline}</p>}
-        </div>
-        {site.footer.map((section) => (
-          <nav key={section.name} aria-label={section.name}>
-            <h2>{section.name}</h2>
-            <ul>{section.links.map((link) => <li key={link.href}><a href={link.href}>{link.name}</a></li>)}</ul>
-          </nav>
-        ))}
-        {site.socials.length > 0 && (
-          <nav className="social" aria-label="Social">
-            <h2>Social</h2>
-            <ul>{site.socials.map((social) => <li key={social.href}><a href={social.href} rel="me noopener">{social.name}</a></li>)}</ul>
-          </nav>
-        )}
-      </div>
-      <p className="legal fine">
-        <span>Copyright {site.company || site.title} {span}. All rights reserved.</span>
-        {site.contact && <a href={`mailto:${site.contact}`}>{site.contact}</a>}
-      </p>
+      <a href="/" aria-label={`${site.title} home`}><Mark /></a>
+      <p className="legal fine">Copyright © {site.company || site.title} {span}. All rights reserved.</p>
     </footer>
   );
 }
@@ -221,6 +254,7 @@ export function Shell({ route = '/', title, lead, tree = [], current = route, co
     <>
       <a className="skip" href="#main">Skip to content</a>
       <Header brand={brand} />
+      <Dock route={route} />
       <div className="panes">
         <nav className="pane left" id="left" aria-label="Site">
           <Tree nodes={tree} current={current} />
@@ -235,7 +269,6 @@ export function Shell({ route = '/', title, lead, tree = [], current = route, co
           {children}
         </main>
         <aside className="pane right" id="right" aria-label="Page tools">
-          <a className="cartrow" href={site.cart}>Cart <b data-cart-count>0</b></a>
           {controls && <Controls>{controls}</Controls>}
           {contents.length > 0 && <Contents items={contents} />}
           {site.settings && <Settings />}

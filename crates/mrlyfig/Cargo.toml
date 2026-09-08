@@ -186,6 +186,18 @@ name = "site-donate"
 path = "examples/site/site-donate.rs"
 
 [[example]]
+name = "site-code"
+path = "examples/site/site-code.rs"
+
+[[example]]
+name = "site-cart"
+path = "examples/site/site-cart.rs"
+
+[[example]]
+name = "site-page"
+path = "examples/site/site-page.rs"
+
+[[example]]
 name = "research-automata"
 path = "examples/grid/research-automata.rs"
 

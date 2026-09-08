@@ -30,7 +30,7 @@ export type Leaf = {
 
 export type Wood = { base: string; c: Twig[] };
 
-export type Twig = { n: string; k: "d" | "f"; c?: Twig[] };
+export type Twig = { n: string; k: "d" | "f"; i?: string; c?: Twig[] };
 
 export type Hooks = {
   page: (site: Site, leaf: Leaf) => Bytes;
@@ -162,34 +162,37 @@ export function collect(site: Site): { routes: Route[]; node: Node | null } {
       sitemap: true,
     });
   }
-  return { routes, node: { name: "Code", href: "/git/", lazy: "" } };
+  return { routes, node: { name: "Code", href: "/git/" } };
 }
 
 /* EXPLORER */
 
 const under = (open: string, path: string) => open === path || open.startsWith(`${path}/`);
 
+const kindOf = (name: string) => seti(name).replace(/^si( si-)?/, "");
+
 function branches(kids: Map<string, Child[]>, dir: string, open: string): Node[] {
   return (kids.get(dir) ?? []).map(([name, , kind]) => {
     const path = dir ? `${dir}/${name}` : name;
-    if (kind === "file") return { name, href: fileRoute(path) };
+    if (kind === "file") return { name, href: fileRoute(path), icon: seti(name) };
     const along = under(open, path);
     return { name, href: dirRoute(path), lazy: path, open: along || undefined, nodes: along ? branches(kids, path, open) : [] };
   });
 }
 
 export function explorer(site: Site, dir: string): Node[] {
+  const git = config(site);
   const kids = KIDS.get(site);
-  if (!kids) return site.nav;
-  const root = { name: "Code", href: "/git/", lazy: "", open: true, nodes: branches(kids, "", dir) };
-  const shown = site.nav.map((node) => (node.href === "/git/" ? { ...node, ...root, name: node.name } : node));
-  return shown.some((node) => node.href === "/git/") ? shown : [...shown, root];
+  if (!git || !kids) return site.nav;
+  return [{ name: git.name, href: "/git/", lazy: "", open: true, nodes: branches(kids, "", dir) }];
 }
 
 function twigs(kids: Map<string, Child[]>, dir: string): Twig[] {
   return (kids.get(dir) ?? []).map(([name, , kind]) => {
     const path = dir ? `${dir}/${name}` : name;
-    return kind === "dir" ? { n: name, k: "d", c: twigs(kids, path) } : { n: name, k: "f" };
+    if (kind === "dir") return { n: name, k: "d", c: twigs(kids, path) };
+    const i = kindOf(name);
+    return i ? { n: name, k: "f", i } : { n: name, k: "f" };
   });
 }
 

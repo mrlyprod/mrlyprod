@@ -18,11 +18,22 @@ const write = (key, value) => {
   } catch {}
 };
 
-/* DRAWERS */
+/* SUB */
 
 const root = () => document.documentElement;
 const docked = () => matchMedia(DOCK).matches;
 const isOpen = (side) => root().dataset[side] === 'open';
+
+function pin() {
+  const sub = document.querySelector('.dock');
+  if (sub && scrollY < sub.offsetTop) scrollTo({ top: sub.offsetTop, behavior: 'instant' });
+}
+
+function land() {
+  if (!location.hash && scrollY === 0) pin();
+}
+
+/* DRAWERS */
 
 function set(side, open) {
   root().dataset[side] = open ? 'open' : 'shut';
@@ -39,6 +50,7 @@ function sync() {
 
 function toggle(side) {
   const open = !isOpen(side);
+  if (open) pin();
   set(side, open);
   if (!open) return;
   set(side === 'left' ? 'right' : 'left', false);
@@ -147,12 +159,19 @@ function find(node, path) {
 function branch(base, kid, path) {
   const li = document.createElement('li');
   const a = document.createElement('a');
-  a.textContent = kid.n;
   if (kid.k !== 'd') {
+    const icon = document.createElement('span');
+    icon.className = kid.i ? `si si-${kid.i}` : 'si';
+    icon.setAttribute('aria-hidden', 'true');
+    const name = document.createElement('span');
+    name.className = 'name';
+    name.textContent = kid.n;
+    a.append(icon, name);
     a.href = `${base}${named(path)}`;
     li.append(a);
     return li;
   }
+  a.textContent = kid.n;
   a.href = `${base}${path}/`;
   const details = document.createElement('details');
   details.dataset.lazy = path;
@@ -199,6 +218,7 @@ export function wire() {
   cart();
   once('.contents', contents);
   once('canvas.mark', footer);
+  once('.dock', land);
 }
 
 function boot() {
@@ -211,11 +231,7 @@ function boot() {
     const target = e.target instanceof Element ? e.target : null;
     if (!target) return;
     const button = target.closest('[data-pane]');
-    if (button) {
-      if (docked()) return;
-      e.preventDefault();
-      return toggle(button.dataset.pane);
-    }
+    if (button) return toggle(button.dataset.pane);
     if (target.closest('[data-theme-toggle]')) return turn();
     if (target.closest('.scrim') || target.closest('.pane a[href]')) shut();
   });

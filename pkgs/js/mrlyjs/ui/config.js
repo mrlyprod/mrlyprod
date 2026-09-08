@@ -12,7 +12,6 @@ const DEFAULTS = {
   explorer: '/git/tree.json',
   company: '',
   tagline: '',
-  footer: [],
   socials: [],
   contact: '',
 };

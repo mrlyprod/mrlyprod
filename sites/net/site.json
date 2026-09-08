@@ -21,35 +21,6 @@
     { "name": "Contact", "href": "/contact/" },
     { "name": "Donate", "href": "/donate/" }
   ],
-  "footer": [
-    {
-      "name": "Explore",
-      "links": [
-        { "name": "Demos", "href": "/demos/" },
-        { "name": "Papers", "href": "/papers/" },
-        { "name": "Research", "href": "/research/" },
-        { "name": "Blog", "href": "/blog/" },
-        { "name": "Code", "href": "/git/" }
-      ]
-    },
-    {
-      "name": "Company",
-      "links": [
-        { "name": "About", "href": "/about/" },
-        { "name": "Contact", "href": "/contact/" },
-        { "name": "Donate", "href": "/donate/" },
-        { "name": "Menu", "href": "/menu/" }
-      ]
-    },
-    {
-      "name": "Source",
-      "links": [
-        { "name": "GitHub", "href": "https://github.com/mrlyprod/mrlyprod" },
-        { "name": "README", "href": "/raw/README.md" },
-        { "name": "llms.txt", "href": "/llms.txt" }
-      ]
-    }
-  ],
   "socials": [
     { "name": "GitHub", "href": "https://github.com/mrlyprod" },
     { "name": "YouTube", "href": "https://youtube.com/@mrlyprod" },

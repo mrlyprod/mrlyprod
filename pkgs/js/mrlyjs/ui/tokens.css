@@ -16,13 +16,6 @@
   --read-text: 17px;
 }
 
-/* FACE */
-
-:root[data-font="sans"] { --face: "Noto Sans", var(--sans); }
-:root[data-font="serif"] { --face: "Noto Serif", var(--serif); }
-:root[data-font="mono"] { --face: "Noto Sans Mono", var(--mono); }
-:root[data-font="mrly"] { --face: "MrlyFont", var(--mono); }
-
 /* SPACE */
 
 :root {
@@ -51,7 +44,7 @@
 
 :root {
   --head: 3rem;
-  --pane: 17.5rem;
+  --pane: clamp(13rem, 18vw, 17.5rem);
   --read: 72ch;
   --page: 72rem;
   --frame: calc(var(--page) + 2 * var(--pane));
@@ -64,6 +57,13 @@
   --pace: 150ms;
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* FACE */
+
+:root[data-font="sans"] { --face: "Noto Sans", var(--sans); }
+:root[data-font="serif"] { --face: "Noto Serif", var(--serif); }
+:root[data-font="mono"] { --face: "Noto Sans Mono", var(--mono); }
+:root[data-font="mrly"] { --face: "MrlyFont", var(--mono); }
 
 /* DARK */
 

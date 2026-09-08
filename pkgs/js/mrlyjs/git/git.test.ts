@@ -62,12 +62,14 @@ test("the explorer opens the path to the page and leaves the rest lazy", () => {
   const one = site({ root: ".", slug: "mrlyprod/mrlyprod" });
   one.nav = [{ name: "Home", href: "/" }, { name: "Code", href: "/git/" }];
   collect(one);
-  const [, code] = explorer(one, "src");
+  const [code, ...rest] = explorer(one, "src");
+  expect(rest).toEqual([]);
+  expect(code.name).toBe("mrlyprod");
   expect(code.open).toBe(true);
   expect(code.nodes!.map((kid) => kid.name)).toEqual(["src", ".gitignore", "LICENSE", "README.md"]);
-  expect(code.nodes![0]).toEqual({ name: "src", href: "/git/src/", lazy: "src", open: true, nodes: [{ name: "a.rs", href: "/git/src/a.rs" }] });
-  expect(explorer(one, "").at(1)!.nodes![0].nodes).toEqual([]);
-  expect(forest(one)).toEqual({ base: "/git/", c: [{ n: "src", k: "d", c: [{ n: "a.rs", k: "f" }] }, { n: ".gitignore", k: "f" }, { n: "LICENSE", k: "f" }, { n: "README.md", k: "f" }] });
+  expect(code.nodes![0]).toEqual({ name: "src", href: "/git/src/", lazy: "src", open: true, nodes: [{ name: "a.rs", href: "/git/src/a.rs", icon: "si si-rust" }] });
+  expect(explorer(one, "")[0].nodes![0].nodes).toEqual([]);
+  expect(forest(one)).toEqual({ base: "/git/", c: [{ n: "src", k: "d", c: [{ n: "a.rs", k: "f", i: "rust" }] }, { n: ".gitignore", k: "f", i: "git" }, { n: "LICENSE", k: "f", i: "license" }, { n: "README.md", k: "f", i: "markdown" }] });
 });
 
 /* COLLECT */
@@ -80,7 +82,7 @@ test("a git block routes every tracked file and every directory", () => {
   const { routes, node } = collect(site({ root: ".", slug: "mrlyprod/mrlyprod" }));
   const names = routes.map((one) => one.route).sort();
   expect(names).toEqual(["/git/", "/git/.gitignore", "/git/LICENSE.txt", "/git/README.md", "/git/src/", "/git/src/a.rs"]);
-  expect(node).toEqual({ name: "Code", href: "/git/", lazy: "" });
+  expect(node).toEqual({ name: "Code", href: "/git/" });
   const root = routes.find((one) => one.route === "/git/")!;
   const kids = (root.data as { kids: [string, number, string][] }).kids;
   expect(kids.map((one) => one[0])).toEqual(["src", ".gitignore", "LICENSE", "README.md"]);
