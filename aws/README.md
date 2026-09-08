@@ -1,6 +1,6 @@
 # AWS
 
-- The console for mrlyprod.org: one bucket, one distribution, two zones.
-- Python 3.13 and the `aws` CLI; `common.py` holds every id, `COMMANDS.md` every verb.
-- Read-only verbs run bare; anything that mutates prints its plan and waits for `--yes`.
-- One Lambda, `mrlynet`: `net.ts` fetches main from GitHub every 10 minutes and pushes what changed.
+- `net.ts` is the `mrlynet` Lambda: every 10 minutes it asks GitHub for main, and on a new commit builds the site and pushes what changed.
+- `s3.ts` is the S3 client it shares with `sites/net/scripts/pkg.ts` and `push.ts`: credentials from the environment, no SDK.
+- The Lambda never runs cargo: `scripts/wasm.sh` uploads `pkg/` once per change and `sites/net/pkg.lock` names the prefix.
+- Bundled with `bun build aws/net.ts --target=bun` into one `handler.js`; the infrastructure console lives outside this repo.

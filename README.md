@@ -14,6 +14,6 @@
 - `crates/mrlyweb` the eyes: the wasm bridge that hands the designs to a browser.
 - `sites/net/` the website at mrly.net that draws them; `sites/net/README.md` says how to run it under bun.
 - `sites/ui/` the design kit every page wears: tokens, base, chrome, the pixel font from `mrlyfont`.
-- `aws/` ships the site: `aws/COMMANDS.md` lists the verbs, run from this root with `uv run`.
+- `aws/` is the Lambda that ships the site: `net.ts` builds on push, `s3.ts` talks to the bucket.
 - `cargo test --workspace` runs every test; `cargo doc --workspace --no-deps --open` reads the crates.
 - MIT. This is the way. Why is the secret.
