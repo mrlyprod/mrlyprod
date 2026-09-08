@@ -3,12 +3,11 @@ import FONT from './font.json' with { type: 'json' };
 export const FPS = 25;
 export const HOLD = 25;
 const BLANK = ['000', '000', '000', '000', '000'];
-const STEPS = [[-1, 0], [0, 1], [1, 0], [0, -1]];
 
 /* GLYPHS */
 
 function glyph(char) {
-  const rows = FONT[char];
+  const rows = FONT[char]?.rows;
   if (!rows) return BLANK;
   let from = Infinity;
   let to = 0;
@@ -67,101 +66,7 @@ export function glyphSvg(text) {
 
 /* STROKES */
 
-const PATHS = {
-  M: [
-    [[4, 0], [3, 0], [2, 0], [1, 0], [0, 0]],
-    [[0, 1], [0, 2], [0, 3], [0, 4]],
-    [[1, 4], [2, 4], [3, 4], [4, 4]],
-    [[1, 2], [2, 2], [3, 2], [4, 2]],
-  ],
-  R: [
-    [[4, 0], [3, 0], [2, 0], [1, 0], [0, 0]],
-    [[0, 1], [0, 2], [0, 3], [0, 4]],
-  ],
-  L: [
-    [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0]],
-    [[4, 1], [4, 2], [4, 3], [4, 4]],
-  ],
-  Y: [
-    [[0, 0], [1, 0], [2, 0]],
-    [[2, 1], [2, 2], [2, 3]],
-    [[0, 4], [1, 4], [2, 4]],
-    [[3, 4], [4, 4], [4, 3], [4, 2], [4, 1], [4, 0]],
-  ],
-  P: [
-    [[4, 0], [3, 0], [2, 0], [1, 0], [0, 0]],
-    [[0, 1], [0, 2], [0, 3], [0, 4]],
-    [[1, 4]],
-    [[2, 4], [2, 3], [2, 2], [2, 1]],
-  ],
-  O: [
-    [[4, 0], [3, 0], [2, 0], [1, 0], [0, 0]],
-    [[0, 1], [0, 2], [0, 3], [0, 4]],
-    [[1, 4], [2, 4], [3, 4], [4, 4]],
-    [[4, 3], [4, 2], [4, 1]],
-  ],
-  D: [
-    [[2, 3], [2, 2], [2, 1], [2, 0]],
-    [[3, 0], [4, 0]],
-    [[4, 1], [4, 2], [4, 3], [4, 4]],
-    [[3, 4], [2, 4], [1, 4], [0, 4]],
-  ],
-};
-
-const key = (r, c) => r * 64 + c;
-
-const unkey = (k) => [Math.floor(k / 64), k % 64];
-
-function litOf(rows) {
-  const left = new Set();
-  rows.forEach((row, r) => {
-    for (let c = 0; c < row.length; c++) if (row[c] === '1') left.add(key(r, c));
-  });
-  return left;
-}
-
-const step = (r, c, [dr, dc]) => (r + dr >= 0 && c + dc >= 0 ? key(r + dr, c + dc) : -1);
-
-const degree = (r, c, left) => STEPS.filter((d) => left.has(step(r, c, d))).length;
-
-function opening(left) {
-  let best = null;
-  let rank = null;
-  for (const k of left) {
-    const [r, c] = unkey(k);
-    const now = [degree(r, c, left) !== 1 ? 1 : 0, -r, c];
-    if (!rank || now[0] < rank[0] || (now[0] === rank[0] && (now[1] < rank[1] || (now[1] === rank[1] && now[2] < rank[2])))) {
-      best = k;
-      rank = now;
-    }
-  }
-  return best;
-}
-
-function derive(rows) {
-  const left = litOf(rows);
-  const out = [];
-  while (left.size) {
-    const start = opening(left);
-    left.delete(start);
-    const stroke = [unkey(start)];
-    let heading = null;
-    for (;;) {
-      const [r, c] = stroke[stroke.length - 1];
-      let next = heading ? step(r, c, heading) : -1;
-      if (!left.has(next)) next = STEPS.map((d) => step(r, c, d)).find((k) => left.has(k)) ?? -1;
-      if (next < 0) break;
-      const [nr, nc] = unkey(next);
-      heading = [nr - r, nc - c];
-      left.delete(next);
-      stroke.push([nr, nc]);
-    }
-    out.push(stroke);
-  }
-  return out;
-}
-
-const sequence = (char, rows) => PATHS[char] ?? derive(rows);
+const sequence = (char) => FONT[char]?.path ?? [];
 
 /* ANIMATION */
 
@@ -175,7 +80,7 @@ export function animate(text, pad = 1) {
   const frames = [[]];
   const current = [];
   for (const block of laid.blocks) {
-    for (const [r, c] of sequence(block.char, block.rows).flat()) {
+    for (const [r, c] of sequence(block.char)) {
       current.push((pad + block.offset + r) * cols + (pad + block.col + c));
       frames.push([...current].sort((a, b) => a - b));
     }

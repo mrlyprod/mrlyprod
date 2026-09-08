@@ -1,11 +1,12 @@
 use mrlycore::json;
 
 fn main() {
-    let book: Vec<(String, Vec<String>)> = mrlyfont::map()
+    let map: serde_json::Map<String, serde_json::Value> = mrlyfont::map()
         .into_iter()
-        .map(|(c, rows)| (c.to_string(), rows))
+        .map(|(c, rows)| {
+            let path: Vec<[usize; 2]> = mrlyfont::path(c).into_iter().map(|(r, col)| [r, col]).collect();
+            (c.to_string(), json!({ "rows": rows, "path": path }))
+        })
         .collect();
-    let map: serde_json::Map<String, serde_json::Value> =
-        book.into_iter().map(|(c, rows)| (c, json!(rows))).collect();
     println!("{}", serde_json::Value::Object(map));
 }

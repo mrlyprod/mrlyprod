@@ -21,7 +21,7 @@ test('the eight letters fold into an X in twenty-two frames', () => {
   expect(folded.length).toBe(22);
   expect(folded[0]).toEqual(animate(WORDMARK, 1).frames[103]);
   const x = [];
-  FONT.X.forEach((row, r) => [...row].forEach((ch, c) => ch === '1' && x.push((1 + r) * 49 + 22 + c)));
+  FONT.X.rows.forEach((row, r) => [...row].forEach((ch, c) => ch === '1' && x.push((1 + r) * 49 + 22 + c)));
   expect(folded[21]).toEqual(x);
 });
 
