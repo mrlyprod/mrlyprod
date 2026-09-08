@@ -38,7 +38,11 @@ fn main() -> Result<()> {
             steps.push(at(dim, value));
             steps.push(at((dim + 2.0).min(40.0), value));
         }
-        board.polyline(&steps, 3.0, ink::fade(ink::dim(), 0.95 - 0.1 * order as f64));
+        board.polyline(
+            &steps,
+            3.0,
+            ink::fade(ink::dim(), 0.95 - 0.1 * order as f64),
+        );
     }
 
     let curve: Vec<(f64, f64)> = THREE

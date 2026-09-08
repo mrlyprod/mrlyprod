@@ -49,7 +49,13 @@ fn band(board: &mut Board, rect: Frame, abscissa: f64, span: (f64, f64)) {
     let (_, low) = at(rect, abscissa, abscissa, span.0);
     let (_, high) = at(rect, abscissa, abscissa, span.1);
     let run = rect.w + OVER;
-    board.rect(rect.x, high, run, low - high, ink::fade(ink::yellow(), 0.16));
+    board.rect(
+        rect.x,
+        high,
+        run,
+        low - high,
+        ink::fade(ink::yellow(), 0.16),
+    );
     board.segment(
         (rect.x, high),
         (rect.x + run, high),

@@ -41,8 +41,9 @@ fn main() -> Result<()> {
                 pitch,
             )
             .inset(pitch * 0.10);
-            Grid::new(tile, *number, *number, 0.10)
-                .paint(&mut board, &cells, |kind| (kind != 0).then_some(ink::yellow()));
+            Grid::new(tile, *number, *number, 0.10).paint(&mut board, &cells, |kind| {
+                (kind != 0).then_some(ink::yellow())
+            });
         }
     }
     save("research-sequences", &board)?;

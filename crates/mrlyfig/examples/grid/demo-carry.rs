@@ -16,7 +16,11 @@ fn main() -> Result<()> {
     for (turn, base) in BASES.iter().enumerate() {
         let ramp = Ramp::tone(
             ink::line(),
-            if *base == 3 { ink::yellow() } else { ink::blue() },
+            if *base == 3 {
+                ink::yellow()
+            } else {
+                ink::blue()
+            },
         );
         for (step, dimension) in DIMS.iter().enumerate() {
             let block = carry::even_block(*base, *dimension)?;

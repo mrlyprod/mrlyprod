@@ -25,10 +25,18 @@ fn main() -> Result<()> {
     let unit = frame.w / SIDE;
     let at = |index: usize| {
         let node = &network.nodes[index];
-        (frame.x + node.position[0] * unit, frame.y + node.position[1] * unit)
+        (
+            frame.x + node.position[0] * unit,
+            frame.y + node.position[1] * unit,
+        )
     };
     for branch in &network.branches {
-        board.segment(at(branch.parent), at(branch.child), unit * 0.20, ink::fade(ink::blue(), 0.55));
+        board.segment(
+            at(branch.parent),
+            at(branch.child),
+            unit * 0.20,
+            ink::fade(ink::blue(), 0.55),
+        );
     }
     for (index, role) in tags.iter().enumerate() {
         let (x, y) = at(index);

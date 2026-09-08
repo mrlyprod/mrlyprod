@@ -127,7 +127,13 @@ fn main() -> Result<()> {
     let place = |e: f64| frame.y + frame.h * (head - e) / (head - foot);
 
     let line = place(QUARTER);
-    board.rect(frame.x, line - 1.0, frame.w, 2.0, ink::fade(ink::blue(), 0.9));
+    board.rect(
+        frame.x,
+        line - 1.0,
+        frame.w,
+        2.0,
+        ink::fade(ink::blue(), 0.9),
+    );
 
     for (q, e) in &rungs {
         let x = frame.x + ((q - LOW) as f64 + 0.5) * slot - dash / 2.0;

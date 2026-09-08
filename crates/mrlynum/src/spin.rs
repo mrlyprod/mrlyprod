@@ -157,7 +157,8 @@ impl Blend {
         }
     }
 
-    fn fold(self, values: &[f32]) -> f32 {
+    /// Merges one site's copies into the blended value.
+    pub fn fold(self, values: &[f32]) -> f32 {
         let sum: f32 = values.iter().sum();
         let max = values.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
         match self {

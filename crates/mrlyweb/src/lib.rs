@@ -68,6 +68,8 @@ pub mod star;
 pub mod three;
 /// The tessellations: a design repeated across the plane, the cube and the hexagonal mesh, drawn and counted.
 pub mod tile;
+/// The tourbillon: the odd parity carpets spun about the centre, one angle per layer, stacked inside the inscribed disc.
+pub mod tourbillon;
 /// The inner tube of a design: its distance field, the tube area at a radius, the Minkowski profile and the closed limit of the interior-hole class.
 pub mod tube;
 /// The flat designs as byte grids, painted pixels and censuses.

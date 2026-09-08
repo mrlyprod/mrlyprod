@@ -10,13 +10,7 @@ const SIZE: usize = 64;
 const SCALES: [usize; 6] = [1, 3, 5, 7, 9, 11];
 
 fn main() -> Result<()> {
-    let field = volume(
-        Spec::new(CODE, 2, 3),
-        &SCALES,
-        Combine::Sum,
-        1,
-        SIZE,
-    )?;
+    let field = volume(Spec::new(CODE, 2, 3), &SCALES, Combine::Sum, 1, SIZE)?;
     let mark = SCALES.len() as f32;
     assert_eq!(field.data.len(), SIZE * SIZE * SIZE);
     assert_eq!(field.max(), mark);

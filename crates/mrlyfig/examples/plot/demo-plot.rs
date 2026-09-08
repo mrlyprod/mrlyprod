@@ -34,7 +34,11 @@ fn main() -> Result<()> {
                 continue;
             }
             let weight = (1.0 + value.unsigned_abs() as f64).ln() / scale;
-            let color = if depth == 3 { ink::yellow() } else { ink::blue() };
+            let color = if depth == 3 {
+                ink::yellow()
+            } else {
+                ink::blue()
+            };
             board.disc(x, y, step * (0.07 + 0.33 * weight), color);
         }
     }

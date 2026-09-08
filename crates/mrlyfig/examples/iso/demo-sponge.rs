@@ -37,13 +37,7 @@ fn main() -> Result<()> {
         shade(),
         Some(ink::ground()),
     );
-    iso::draw(
-        &mut board,
-        corner(frame, 0.64, true),
-        &solid,
-        shade(),
-        None,
-    );
+    iso::draw(&mut board, corner(frame, 0.64, true), &solid, shade(), None);
     save("demo-sponge", &board)?;
     Ok(())
 }

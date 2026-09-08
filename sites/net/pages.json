@@ -195,6 +195,14 @@
       "paper": "moire-correlation-laws"
     },
     {
+      "name": "tourbillon",
+      "title": "The tourbillon",
+      "blurb": "Turn every layer of the carpet stack by its own angle and the shared grid breaks, yet the centre is the one point every rotation fixes, so its value is the same fourteen layers of twenty-eight at every schedule.",
+      "category": "sections",
+      "research": "stack",
+      "paper": null
+    },
+    {
       "name": "radial",
       "title": "The radial stack",
       "blurb": "Turned copies of a design laid on each other keep only the circular harmonics whose order is a multiple of the copy count, and a design of rotation order g shows lcm(q, g) petals.",

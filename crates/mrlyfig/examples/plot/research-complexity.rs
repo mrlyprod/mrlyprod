@@ -36,7 +36,12 @@ fn main() -> Result<()> {
     board.polyline(&steps, 3.0, ink::blue());
 
     let below = values.iter().filter(|v| **v < 1.0 - 1e-9).count() as f64;
-    board.segment(at(1.0, below), at(1.0, below + ones as f64), 7.0, ink::yellow());
+    board.segment(
+        at(1.0, below),
+        at(1.0, below + ones as f64),
+        7.0,
+        ink::yellow(),
+    );
     save("research-complexity", &board)?;
     Ok(())
 }

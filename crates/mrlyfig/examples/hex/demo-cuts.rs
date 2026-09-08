@@ -39,7 +39,13 @@ fn main() -> Result<()> {
         assert_eq!(*count, cells as u128);
         let points = three::diagonal_slice(CODE, 2, LEVEL, 2, height)?;
         assert_eq!(points.len(), cells);
-        cuts.push(points.iter().copied().map(three::project).collect::<Vec<_>>());
+        cuts.push(
+            points
+                .iter()
+                .copied()
+                .map(three::project)
+                .collect::<Vec<_>>(),
+        );
     }
     let flat: Vec<(f64, f64)> = cuts.iter().flatten().copied().collect();
     assert_eq!(flat.len(), WIDE * WIDE * cells);

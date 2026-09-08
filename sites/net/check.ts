@@ -43,6 +43,14 @@ const spun = JSON.parse(m.spin_stats(rings, 27));
 const square = new Float32Array(64).fill(1);
 const star = m.radial(square, 8, 64, 2, 45, 'union', 1);
 const stack = JSON.parse(m.farey_novelty(5));
+const whirlField = m.tourbillon(55, 512, 'unspun', 0, 'odd', 'plain', 'cells', 'sum');
+const whirl = JSON.parse(m.tourbillon_stats(whirlField, 512, 55, 'unspun', 0, 'odd', 'plain', 'sum', 1));
+const whirlMean = JSON.parse(m.tourbillon_stats(m.tourbillon(55, 512, 'unspun', 0, 'odd', 'plain', 'cells', 'mean'), 512, 55, 'unspun', 0, 'odd', 'plain', 'mean', 1));
+const whirlSpun = JSON.parse(m.tourbillon_stats(m.tourbillon(55, 128, 'primes', 0, 'odd', 'plain', 'cells', 'mean'), 128, 55, 'primes', 0, 'odd', 'plain', 'mean', 1));
+const whirlParity = JSON.parse(m.tourbillon_stats(m.tourbillon(55, 128, 'unspun', 0, 'odd', 'plain', 'cells', 'parity'), 128, 55, 'unspun', 0, 'odd', 'plain', 'parity', 1));
+const whirlPrimes = JSON.parse(m.tourbillon_stats(m.tourbillon(199, 128, 'unspun', 0, 'primes', 'plain', 'cells', 'mean'), 128, 199, 'unspun', 0, 'primes', 'plain', 'mean', 1));
+const whirlEyes = JSON.parse(m.tourbillon_eyes(12));
+const whirlDead = JSON.parse(m.tourbillon_stats(m.tourbillon(55, 128, 'degrees', 18, 'odd', 'plain', 'cells', 'mean'), 128, 55, 'degrees', 18, 'odd', 'plain', 'mean', 1));
 const terms = Array.from({ length: 8 }, (_, i) => JSON.parse(m.visible_read(i + 1, 2)).lit).join(',');
 const litWindow = JSON.parse(m.visible_read(100, 2));
 const cube = JSON.parse(m.visible_read(1000, 3));
@@ -380,6 +388,13 @@ const checks: [string, unknown, unknown][] = [
   ['fill_cap triangle', m.fill_cap('7', 2, 2, 2, 1100), 6],
   ['grid_total 3 2 4', m.grid_total(3, 2, 4), '6561'],
   ['odd_scales 9', Array.from(m.odd_scales(9)).join(','), '1,3,5,7,9'],
+  ['tourbillon layers and centre', `${whirl.layers} ${whirl.centre} ${whirlMean.centre}`, '28 14 0.5'],
+  ['tourbillon unspun span', `${whirl.low} ${whirl.high}`, '0 18'],
+  ['tourbillon spun keeps the centre', `${whirlSpun.centre} ${whirlSpun.angles.join(' ')}`, '0.5 0 2 3 5 7 11 13 17'],
+  ['tourbillon parity centre', `${whirlParity.centre} ${whirlParity.weighted}`, '0 false'],
+  ['tourbillon primes only 199', whirlPrimes.layers, 45],
+  ['tourbillon quarter turn eyes', `${whirlEyes.length} ${whirlEyes.slice(0, 4).map(([a]: [number]) => Number(a.toFixed(6))).join(' ')}`, '185 0 7.5 8.181818 9'],
+  ['tourbillon dead spin at 18', `${whirlDead.period} ${whirlDead.classes} ${whirlDead.pairs}`, '5 5 65'],
   ['farey_novelty 5', `${stack.lit},${stack.novel},${stack.match},${stack.primes.join(' ')}`, '11,11,true,2 3 5'],
   ['visible A018805 1..8', terms, '1,3,7,11,19,23,35,43'],
   ['visible window 100', `${litWindow.lit} ${litWindow.total} ${litWindow.density.toFixed(10)}`, '6087 10000 0.6087000000'],

@@ -14,7 +14,10 @@ fn main() -> Result<()> {
     let values = laplacian_spectrum(&network, true)?;
     let points = spectral_points(&values);
     let (intercept, slope, fitted) = spectral_fit(&values, WINDOW).expect("the low window fits");
-    assert_eq!((network.nodes.len(), network.branches.len(), pieces), (306, 378, 1));
+    assert_eq!(
+        (network.nodes.len(), network.branches.len(), pieces),
+        (306, 378, 1)
+    );
     assert_eq!((points.len(), fitted), (286, 30));
     assert!((2.0 * slope - 1.253284).abs() < 1e-5);
 

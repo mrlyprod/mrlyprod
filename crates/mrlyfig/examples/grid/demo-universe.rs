@@ -52,11 +52,7 @@ fn stamp(board: &mut Board, cell: &Cell3d, cx: f64, cy: f64, s: f64, shade: [Col
             .verts
             .iter()
             .map(|v| {
-                let p = iso::project(
-                    v.x as f64 - HALF,
-                    v.y as f64 - HALF,
-                    v.z as f64 - HALF,
-                );
+                let p = iso::project(v.x as f64 - HALF, v.y as f64 - HALF, v.z as f64 - HALF);
                 (cx + p.0 * s, cy + p.1 * s)
             })
             .collect();
@@ -77,7 +73,10 @@ fn stamp(board: &mut Board, cell: &Cell3d, cx: f64, cy: f64, s: f64, shade: [Col
 }
 
 fn weight(corner: &[u8]) -> u64 {
-    corner.iter().map(|bit| if *bit == 0 { 2 } else { 1 }).product()
+    corner
+        .iter()
+        .map(|bit| if *bit == 0 { 2 } else { 1 })
+        .product()
 }
 
 fn main() -> Result<()> {
@@ -100,7 +99,11 @@ fn main() -> Result<()> {
             assert_eq!((solid.width(), solid.height(), solid.depth()), (3, 3, 3));
             assert_eq!(
                 solid.types().sum(),
-                design.rule().iter().map(|c| weight(c.as_slice())).sum::<u64>()
+                design
+                    .rule()
+                    .iter()
+                    .map(|c| weight(c.as_slice()))
+                    .sum::<u64>()
             );
             cage(&mut board, cx, cy, s);
             stamp(&mut board, &solid, cx, cy, s, shade);

@@ -86,19 +86,55 @@ pub const GRAY_LIGHT: Color = Color::rgb(186, 186, 191);
 pub const GRAY_DARK: Color = Color::rgb(86, 86, 90);
 
 /// The names of the fifteen palette colors, in palette order.
-pub const NAMES: [&str; 15] = ["black", "white", "red", "orange", "yellow", "green", "mint", "teal", "cyan", "blue", "indigo", "purple", "pink", "brown", "gray"];
+pub const NAMES: [&str; 15] = [
+    "black", "white", "red", "orange", "yellow", "green", "mint", "teal", "cyan", "blue", "indigo",
+    "purple", "pink", "brown", "gray",
+];
 
 /// The fifteen named colors, in name order.
-pub const PALETTE: [Color; 15] = [BLACK, WHITE, RED, ORANGE, YELLOW, GREEN, MINT, TEAL, CYAN, BLUE, INDIGO, PURPLE, PINK, BROWN, GRAY];
+pub const PALETTE: [Color; 15] = [
+    BLACK, WHITE, RED, ORANGE, YELLOW, GREEN, MINT, TEAL, CYAN, BLUE, INDIGO, PURPLE, PINK, BROWN,
+    GRAY,
+];
 
 /// The thirteen hues, in name order.
-pub const HUES: [Color; 13] = [RED, ORANGE, YELLOW, GREEN, MINT, TEAL, CYAN, BLUE, INDIGO, PURPLE, PINK, BROWN, GRAY];
+pub const HUES: [Color; 13] = [
+    RED, ORANGE, YELLOW, GREEN, MINT, TEAL, CYAN, BLUE, INDIGO, PURPLE, PINK, BROWN, GRAY,
+];
 
 /// The hues one shade lighter, in name order.
-pub const HUES_LIGHT: [Color; 13] = [RED_LIGHT, ORANGE_LIGHT, YELLOW_LIGHT, GREEN_LIGHT, MINT_LIGHT, TEAL_LIGHT, CYAN_LIGHT, BLUE_LIGHT, INDIGO_LIGHT, PURPLE_LIGHT, PINK_LIGHT, BROWN_LIGHT, GRAY_LIGHT];
+pub const HUES_LIGHT: [Color; 13] = [
+    RED_LIGHT,
+    ORANGE_LIGHT,
+    YELLOW_LIGHT,
+    GREEN_LIGHT,
+    MINT_LIGHT,
+    TEAL_LIGHT,
+    CYAN_LIGHT,
+    BLUE_LIGHT,
+    INDIGO_LIGHT,
+    PURPLE_LIGHT,
+    PINK_LIGHT,
+    BROWN_LIGHT,
+    GRAY_LIGHT,
+];
 
 /// The hues one shade darker, in name order.
-pub const HUES_DARK: [Color; 13] = [RED_DARK, ORANGE_DARK, YELLOW_DARK, GREEN_DARK, MINT_DARK, TEAL_DARK, CYAN_DARK, BLUE_DARK, INDIGO_DARK, PURPLE_DARK, PINK_DARK, BROWN_DARK, GRAY_DARK];
+pub const HUES_DARK: [Color; 13] = [
+    RED_DARK,
+    ORANGE_DARK,
+    YELLOW_DARK,
+    GREEN_DARK,
+    MINT_DARK,
+    TEAL_DARK,
+    CYAN_DARK,
+    BLUE_DARK,
+    INDIGO_DARK,
+    PURPLE_DARK,
+    PINK_DARK,
+    BROWN_DARK,
+    GRAY_DARK,
+];
 
 // THEME
 
@@ -154,11 +190,32 @@ pub struct Theme {
 impl Theme {
     /// The thirteen inks in name order.
     pub fn hues(&self) -> [Color; 13] {
-        [self.red, self.orange, self.yellow, self.green, self.mint, self.teal, self.cyan, self.blue, self.indigo, self.purple, self.pink, self.brown, self.gray]
+        [
+            self.red,
+            self.orange,
+            self.yellow,
+            self.green,
+            self.mint,
+            self.teal,
+            self.cyan,
+            self.blue,
+            self.indigo,
+            self.purple,
+            self.pink,
+            self.brown,
+            self.gray,
+        ]
     }
     /// The six inks a figure cycles through: blue, orange, yellow, green, pink, indigo.
     pub fn inks(&self) -> [Color; 6] {
-        [self.blue, self.orange, self.yellow, self.green, self.pink, self.indigo]
+        [
+            self.blue,
+            self.orange,
+            self.yellow,
+            self.green,
+            self.pink,
+            self.indigo,
+        ]
     }
 }
 
