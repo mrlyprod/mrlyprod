@@ -136,7 +136,7 @@ function contents(nav) {
 
 async function footer(canvas) {
   const { cycle, mark } = await import('./font.js');
-  mark(canvas, cycle(canvas.dataset.text || 'MRLYPROD', 1, 40));
+  mark(canvas, cycle(canvas.dataset.text || 'MRLYPROD', 1));
 }
 
 /* EXPLORER */

@@ -106,23 +106,27 @@ main:not(.wide) > .lede { max-width: var(--read); margin-inline: auto; }
 .menu h2 a, .menu h3 a { color: inherit; }
 .menu .shelf { margin-top: var(--s5); }
 .menu .shelf h3 { color: var(--dim); margin-bottom: var(--s3); }
-.menu .grid { grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: var(--s3); }
-.menu .tile { padding: var(--s3); }
-.menu .tile img { aspect-ratio: 1; image-rendering: auto; }
-.menu .tile h2 { font-size: 0.95rem; margin: var(--s2) 0 0; }
-.menu .tile p { font-size: 12px; margin-top: var(--s1); }
-.menu .tile.plain { display: grid; align-content: center; min-height: 6rem; text-align: center; }
+
+/* GRID */
+
+.gallery.grid { grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: var(--s3); }
+.grid .tile { padding: var(--s3); }
+.grid .tile img { aspect-ratio: 1; image-rendering: auto; }
+.grid .tile h2 { font-size: 0.95rem; margin: var(--s2) 0 0; }
+.grid .tile p { font-size: 12px; margin-top: var(--s1); }
+.grid .tile .dates { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s3); color: var(--dim); font: 11px var(--mono); margin-top: var(--s2); }
+.grid .tile.plain { display: grid; align-content: center; min-height: 6rem; text-align: center; }
 
 /* FOOTER */
 
-.base { min-height: 100dvh; display: grid; align-content: center; justify-items: center; gap: var(--s7); padding: var(--s7) var(--s4); border-top: var(--hair); text-align: center; color: var(--fg); }
+.base { position: relative; min-height: 100dvh; display: grid; align-content: center; justify-items: center; padding: var(--s7) var(--s4) var(--s8); border-top: var(--hair); text-align: center; color: var(--fg); }
 .base > a { display: block; width: 100%; color: var(--fg); }
 .base .mark { width: 100%; height: auto; image-rendering: pixelated; display: block; }
 .base .still { width: 100%; height: auto; display: block; }
 .base .word.still { font: 650 clamp(2rem, 10vw, 8rem)/1 var(--sans); }
 html.js .base .still { display: none; }
 html:not(.js) .base .mark { display: none; }
-.legal { margin: 0; }
+.legal { position: absolute; left: 0; right: 0; bottom: 2px; margin: 0; font-size: 11px; line-height: 1.4; }
 
 /* CONTROLS */
 

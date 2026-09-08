@@ -122,14 +122,20 @@ export function Tree({ nodes = [], current = '' }) {
 
 /* MENU */
 
+function Dates({ dates }) {
+  if (!dates?.length) return null;
+  return <p className="dates">{dates.map((date) => <span key={date}>{date}</span>)}</p>;
+}
+
 function Card({ node }) {
-  if (!node.figure) return <a className="tile plain" href={node.href}><h2>{node.name}</h2>{node.text && <p>{node.text}</p>}</a>;
+  if (!node.figure) return <a className="tile plain" href={node.href}><h2>{node.name}</h2>{node.text && <p>{node.text}</p>}<Dates dates={node.dates} /></a>;
   return (
     <a className="tile" href={node.href}>
       <img className="dark" src={node.figure.dark} alt="" width="1024" height="1024" loading="lazy" decoding="async" />
       <img className="light" src={node.figure.light} alt="" width="1024" height="1024" loading="lazy" decoding="async" />
       <h2>{node.name}</h2>
       {node.text && <p>{node.text}</p>}
+      <Dates dates={node.dates} />
     </a>
   );
 }
@@ -138,7 +144,7 @@ const leaves = (nodes) => nodes.filter((node) => node.href && !(node.nodes && no
 
 const groups = (nodes) => nodes.filter((node) => node.nodes && node.nodes.length);
 
-function Grid({ nodes }) {
+export function Grid({ nodes = [] }) {
   const list = leaves(nodes);
   if (!list.length) return null;
   return <div className="gallery grid">{list.map((node) => <Card key={node.href} node={node} />)}</div>;

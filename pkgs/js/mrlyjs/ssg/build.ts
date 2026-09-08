@@ -26,7 +26,7 @@ export type Route = {
   sitemap?: boolean;
 };
 
-export type Node = { name: string; href?: string; nodes?: Node[]; open?: boolean; lazy?: string; icon?: string; figure?: { dark: string; light: string }; text?: string };
+export type Node = { name: string; href?: string; nodes?: Node[]; open?: boolean; lazy?: string; icon?: string; figure?: { dark: string; light: string }; text?: string; dates?: string[] };
 
 export type Input = { name: string; path: string; files: string[]; missing: boolean };
 

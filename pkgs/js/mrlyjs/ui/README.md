@@ -18,7 +18,9 @@
 - Settings, in the right pane when `settings` is true: a Theme button that cycles auto, light, dark, and a Font select. `tokens.css` maps `data-font` to `--face`; `base.css` sets body and `.prose` in `var(--face, ...)`, so the chrome keeps the system face and the reading text changes.
 - The tree takes nodes `{ name, href?, nodes?, open?, lazy?, icon? }`. `icon` is a seti class drawn before the name. A node with `lazy` renders a `<details data-lazy="path">` whose children arrive on first open from the JSON at `explorer` (default `/git/tree.json`, `{ base, c: [{ n, k: d|f, i?, c? }] }`, `i` the seti kind); the arrow expands, the name navigates. On a code page the tree is the repository alone, root first, the path to the page open, so the viewer reads like an editor.
 - The footer is one screen: the site's wordmark written and held by the pixel-font animation across the whole width, and `Copyright © {company} {since}-{year}. All rights reserved.` under it. No links: the menu page holds them.
-- `Menu({ tree })` lays a whole tree out as sections, one per group with a shelf per subgroup, leaves under Pages; a leaf with `figure: { dark, light }` is a picture tile, `text` its caption, a leaf without one a plain tile. A site's `/menu/` route is that over its navigator dressed with figures.
+- `Grid({ nodes })` is the one gallery: a leaf with `figure: { dark, light }` is a picture tile, `text` its caption, `dates` its stamps, a leaf without a figure a plain tile. Every index page, the demo gallery, the home doors and the menu draw it, so they all look the same.
+- `Menu({ tree })` lays a whole tree out as sections, one per group with a shelf per subgroup, leaves under Pages, each a `Grid`. A site's `/menu/` route is that over its navigator dressed with figures.
+- The footer's legal line sits two pixels off the bottom of the page, below the full-screen animation.
 
 ## FILES
 
@@ -28,7 +30,7 @@
 - `base.css`: reset, text, links, focus, `.prose`, `img.dark` / `img.light`, reduced motion, print.
 - `chrome.css`: skip link, `.top` header and `.dock` bar, `.panes` with `.pane.left` / `.pane.right` and `.scrim`, `.tree`, `.contents`, `.settings`, `.menu`, `.base` footer, controls (`.row`, `.pager`, label, select, range, checkbox, `button` and `.button`, `.tabs`), `.stats`, `.chip`, tables, `.cards`, `.gallery` / `.tile`.
 - `chrome.js`: vanilla ESM, runs on load; the dock pin, drawers, theme, font, cart, contents highlight, footer mark, lazy tree; exports `wire()` for pages that render later.
-- `font.js`: vanilla ESM, the pixel font; uses the wasm bridge `globalThis.mrly.font_*` when present, else `font.json`.
+- `font.js`: vanilla ESM, the pixel font and its choreography, a port of `crates/mrlyfont`: the layout, the hand-penned stroke orders of the seven wordmark letters and the derived strokes of every other glyph, the write, the phased merge that folds the letters into one centred stack, and the loop. It uses the wasm bridge `globalThis.mrly.font_*` when present and computes the same frames itself otherwise; `font.test.js` pins the crate's numbers.
 - `font.json`: the 5x5 glyphs, `{ char: rows[] }`.
 - `logo.js`: the MrlyLogo mask, `grid(level)` and `logoSvg(level, fill, ground)`; the builder draws every site's favicon and icons from it.
 - `chrome.jsx`: React, renders the whole page for `react-dom/client` and `react-dom/server`.
@@ -40,8 +42,8 @@
 
 ## EXPORTS
 
-- `font.js`: `letters(text)` gives `{ rows, cols, grid }`; `animate(text, pad)` and `cycle(text, pad, hold)` give `{ rows, cols, fps, frames }`; `mark(canvas, anim, color)` plays an anim and returns a stop function; `glyphSvg(text)` gives the SVG markup of the glyphs.
+- `font.js`: `letters(text)` gives `{ rows, cols, grid }`; `animate(text, pad)` writes, `merge(text, pad)` folds, `cycle(text, pad, hold)` chains write, hold, merge, hold, unfold, hold, unwrite, hold into `{ rows, cols, fps, frames }`; `mark(canvas, anim, color)` plays an anim and returns a stop function; `glyphSvg(text)` gives the SVG markup of the glyphs.
 - `chrome.js`: `wire()`, idempotent, syncs aria state, applies theme and font, paints the cart and attaches the contents observer and the footer mark.
 - `seti/seti.ts`: `seti(path)` gives the class string for a path.
-- `chrome.jsx`: `Shell({ route, title, lead, tree, current, contents, controls, wide, brand, children })`, `Header({ brand })`, `Dock({ route })`, `Footer()`, `Wordmark({ className })`, `Tree({ nodes, current })`, `Menu({ tree })`, `Contents({ items, current })`, `Controls({ children })`, `Settings`.
+- `chrome.jsx`: `Shell({ route, title, lead, tree, current, contents, controls, wide, brand, children })`, `Header({ brand })`, `Dock({ route })`, `Footer()`, `Wordmark({ className })`, `Tree({ nodes, current })`, `Grid({ nodes })`, `Menu({ tree })`, `Contents({ items, current })`, `Controls({ children })`, `Settings`.
 - `brand` is the one slot: pass nothing and the header draws the site's wordmark. `font: false` swaps the wordmark for plain text; `settings: false` drops the settings pane; `prefix` moves the localStorage keys and is read in the browser from `<html data-prefix>`.

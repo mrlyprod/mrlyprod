@@ -8,7 +8,7 @@ import { isGit, link as gitLink } from "../../../pkgs/js/mrlyjs/git/git.ts";
 import { escape, front, plain, render as md, summary, title } from "../lib/md.js";
 import { tree } from "../lib/tree.js";
 import { glyphSvg } from "../../../pkgs/js/mrlyjs/ui/font.js";
-import { Menu, Shell } from "../../../pkgs/js/mrlyjs/ui/chrome.jsx";
+import { Grid, Menu, Shell } from "../../../pkgs/js/mrlyjs/ui/chrome.jsx";
 import kit from "../lib/site.js";
 import { shelf } from "./shelf.ts";
 
@@ -71,8 +71,7 @@ const pic = (fig: Fig, name: string, route: string, alt: string, extra = "", cls
 const hero = (fig: Fig, name: string, route: string, alt: string) =>
   `<figure class="opener">${pic(fig, name, route, alt)}</figure>`;
 
-const card = (fig: Fig, href: string, name: string, alt: string, text: string, dates: string[] = []) =>
-  `<a class="tile" href="${href}">${pic(fig, name, href, alt, ' loading="lazy"')}<h2>${escape(alt)}</h2><p>${escape(text)}</p>${dates.length ? `<p class="dates">${dates.map((d) => `<span>${escape(d)}</span>`).join("")}</p>` : ""}</a>`;
+const grid = (nodes: Node[]) => renderToStaticMarkup(h(Grid, { nodes }));
 
 /* HEAD */
 
@@ -284,12 +283,10 @@ function paper(site: Site, route: Route): Output[] {
 }
 
 function paperIndex(site: Site, route: Route): Output[] {
-  const list = route.data as Lane[];
   const out: Output[] = [];
   const fig = press(site, out);
-  const cards = list.map((p) => card(fig, `/papers/${p.slug}/`, `paper-${p.slug}`, p.name, p.blurb, stamps(p)));
   const lead = summary(read(join(SHELF, "README.md")));
-  const body = `<div class="lede"><h1 id="papers">Papers</h1><p class="lead">${escape(lead)}</p></div>\n<div class="gallery wrap">\n${cards.join("\n")}\n</div>`;
+  const body = `<div class="lede"><h1 id="papers">Papers</h1><p class="lead">${escape(lead)}</p></div>\n${grid(wear(site, "/papers/", fig, route.route))}`;
   out.push({ path: "papers/index.html", bytes: shell(site, { route: route.route, name: "Papers", description: lead, body, type: "website", wide: true, bare: true }) });
   return out;
 }
@@ -323,6 +320,18 @@ function notes(site: Site): Note[] {
       return { file, name: file.slice(0, -3), md: read(source), home: file === "README.md" };
     })
     .sort((a, b) => (a.home ? -1 : b.home ? 1 : a.name.localeCompare(b.name)));
+}
+
+function researchIndex(site: Site, route: Route): Output[] {
+  const { note: n } = route.data as { note: Note; texts: string[] };
+  const out: Output[] = [];
+  const fig = press(site, out);
+  out.push({ path: `research/${n.file}`, bytes: n.md });
+  const lead = summary(n.md);
+  const prose = md(n.md.replace(/^# .+\n/, ""), { math, link: researchLink });
+  const body = `<div class="lede"><h1 id="research">Research</h1><p class="lead">${escape(lead)}</p></div>\n${grid(wear(site, "/research/", fig, route.route))}\n<article class="prose readme">${prose}</article>`;
+  out.push({ path: "research/index.html", bytes: shell(site, { route: route.route, name: "Research", description: lead, body, type: "website", wide: true, bare: true }) });
+  return out;
 }
 
 function note(site: Site, route: Route): Output[] {
@@ -384,12 +393,10 @@ function post(site: Site, route: Route): Output[] {
 }
 
 function blogIndex(site: Site, route: Route): Output[] {
-  const list = route.data as Post[];
   const out: Output[] = [];
   const fig = press(site, out);
-  const cards = list.map((p) => card(fig, `/blog/${p.slug}/`, p.figure, p.name, p.lead, [p.date]));
   const lead = "Notes on what lands on this site and in the crates behind it.";
-  const body = `<div class="lede"><h1 id="blog">Blog</h1><p class="lead">${escape(lead)}</p></div>\n<div class="gallery wrap">\n${cards.join("\n")}\n</div>`;
+  const body = `<div class="lede"><h1 id="blog">Blog</h1><p class="lead">${escape(lead)}</p></div>\n${grid(wear(site, "/blog/", fig, route.route))}`;
   out.push({ path: "blog/index.html", bytes: shell(site, { route: route.route, name: "Blog", description: lead, body, type: "website", wide: true, bare: true }) });
   return out;
 }
@@ -414,7 +421,9 @@ function page(site: Site, route: Route): Output[] {
 
 type Dress = { lanes: Lane[]; notes: Note[]; posts: Post[]; demos: Card[] };
 
-type Mark = { figure: string; text: string };
+type Mark = { figure: string; text: string; dates?: string[] };
+
+let DRESS: Dress = { lanes: [], notes: [], posts: [], demos: [] };
 
 const FIXED: Record<string, string> = {
   "/": "site-home",
@@ -427,24 +436,26 @@ const FIXED: Record<string, string> = {
 function marks(data: Dress): Map<string, Mark> {
   const map = new Map<string, Mark>();
   for (const d of data.demos) if (d.name) map.set(demoRoute(d.name), { figure: `demo-${d.name}`, text: d.blurb });
-  for (const p of data.lanes) map.set(`/papers/${p.slug}/`, { figure: `paper-${p.slug}`, text: p.blurb });
+  for (const p of data.lanes) map.set(`/papers/${p.slug}/`, { figure: `paper-${p.slug}`, text: p.blurb, dates: stamps(p) });
   for (const n of data.notes) {
     if (n.home) continue;
     map.set(`/research/${n.name}/`, { figure: SHARED.has(n.name) ? "research-index" : `research-${n.name}`, text: summary(n.md) });
   }
-  for (const p of data.posts) map.set(`/blog/${p.slug}/`, { figure: p.figure, text: p.lead });
+  for (const p of data.posts) map.set(`/blog/${p.slug}/`, { figure: p.figure, text: p.lead, dates: [p.date] });
   for (const [href, figure] of Object.entries(FIXED)) map.set(href, { figure, text: "" });
   return map;
 }
 
-function dress(nodes: Node[], map: Map<string, Mark>, fig: Fig): Node[] {
+function dress(nodes: Node[], map: Map<string, Mark>, fig: Fig, route: string): Node[] {
   return nodes.map((node) => {
-    if (node.nodes?.length) return { ...node, nodes: dress(node.nodes, map, fig) };
+    if (node.nodes?.length) return { ...node, nodes: dress(node.nodes, map, fig, route) };
     const mark = node.href ? map.get(node.href) : undefined;
     if (!mark) return node;
-    return { ...node, figure: fig(mark.figure, "/menu/"), text: mark.text || undefined };
+    return { ...node, figure: fig(mark.figure, route), text: mark.text || undefined, dates: mark.dates };
   });
 }
+
+const wear = (site: Site, href: string, fig: Fig, route: string) => dress(site.nav.find((node) => node.href === href)?.nodes ?? [], marks(DRESS), fig, route);
 
 function elsewhere() {
   const links = kit.socials.map((s) => `<li><a href="${escape(s.href)}">${escape(s.name)}</a></li>`).join("");
@@ -456,7 +467,7 @@ function menu(site: Site, route: Route): Output[] {
   const lead = "Every page on mrly.net.";
   const out: Output[] = [];
   const fig = press(site, out);
-  const nav = dress(site.nav, marks(route.data as Dress), fig);
+  const nav = dress(site.nav, marks(route.data as Dress), fig, route.route);
   const list = renderToStaticMarkup(h(Menu, { tree: nav }));
   const body = `<div class="hero"><h1><span role="img" aria-label="${escape(kit.title)}">${WORD}</span></h1><p>${escape(lead)}</p></div>\n${list}\n${elsewhere()}`;
   out.push({ path: "menu/index.html", bytes: shell(site, { route: route.route, name: "Menu", description: lead, body, type: "website", wide: true, bare: true }) });
@@ -485,7 +496,8 @@ function home(site: Site, route: Route): Output[] {
     .map((p, i) => ({ p, i }))
     .sort((a, b) => (dated(a.p) < dated(b.p) ? 1 : dated(a.p) > dated(b.p) ? -1 : b.i - a.i))
     .slice(0, 3)
-    .map(({ p }) => card(fig, `/papers/${p.slug}/`, `paper-${p.slug}`, p.name, p.blurb, [p.published]));
+    .map(({ p }) => ({ name: p.name, href: `/papers/${p.slug}/` }));
+  const doors = DOORS.map((d) => ({ name: d.name, href: d.href, figure: fig(d.figure, "/"), text: d.text }));
   const first = written[0];
   const news = first
     ? `<section><h2 id="latest">From the blog</h2><p class="lead"><a href="/blog/${first.slug}/">${escape(first.name)}</a> · ${escape(first.date)}</p><p class="lead">${escape(first.lead)}</p></section>`
@@ -494,8 +506,8 @@ function home(site: Site, route: Route): Output[] {
   const body = `<div class="home">
 ${hero(fig, "site-home", "/", kit.title)}
 <div class="hero"><h1><span role="img" aria-label="${escape(kit.title)}">${WORD}</span></h1><p>${escape(MISSION)}</p></div>
-<section><h2 id="doors">Three doors</h2><div class="gallery doors">\n${DOORS.map((d) => card(fig, d.href, d.figure, d.name, d.text)).join("\n")}\n</div></section>
-<section><h2 id="shelf">Latest papers</h2><div class="gallery wrap">\n${latest.join("\n")}\n</div></section>
+<section><h2 id="doors">Three doors</h2>${grid(doors)}</section>
+<section><h2 id="shelf">Latest papers</h2>${grid(dress(latest, marks(DRESS), fig, "/"))}</section>
 ${news}
 ${what}
 </div>`;
@@ -551,9 +563,9 @@ async function collect(site: Site) {
     const source = join(notesHome, n.file);
     routes.push({
       route: n.home ? "/research/" : `/research/${n.name}/`,
-      kind: "note",
-      name: title(n.md) || n.name,
-      data: n,
+      kind: n.home ? "research" : "note",
+      name: n.home ? "Research" : title(n.md) || n.name,
+      data: n.home ? { note: n, texts: noteList.map((one) => summary(one.md)) } : n,
       source,
       inputs: [source],
     });
@@ -572,11 +584,12 @@ async function collect(site: Site) {
     const { data } = front(read(source));
     routes.push({ route: `/${slug}/`, kind: "page", name: data.title ?? slug, source, inputs: [source] });
   }
+  DRESS = { lanes: laneList, notes: noteList, posts: postList, demos: group.data as Card[] };
   routes.push({
     route: "/menu/",
     kind: "menu",
     name: "Menu",
-    data: { lanes: laneList, notes: noteList, posts: postList, demos: group.data as Card[] },
+    data: DRESS,
   });
   routes.push({ route: "/cart/", kind: "cart", name: "Cart", hidden: true });
   routes.push({ route: "/404.html", kind: "missing", name: "Nothing here", hidden: true });
@@ -591,6 +604,7 @@ const KINDS: Record<string, (site: Site, route: Route) => Output[] | Promise<Out
   papers: paperIndex,
   paper,
   note,
+  research: researchIndex,
   blog: blogIndex,
   post,
   page,

@@ -1,5 +1,5 @@
 import { mount } from '../lib/app.jsx';
-import { Shell } from '../../../pkgs/js/mrlyjs/ui/chrome.jsx';
+import { Grid, Shell } from '../../../pkgs/js/mrlyjs/ui/chrome.jsx';
 import { tree } from '../lib/tree.js';
 import manifest from '../pages.json';
 
@@ -19,16 +19,7 @@ function Shelf({ shelf }) {
         <h2>{shelf.title}</h2>
         <p>{shelf.blurb}</p>
       </div>
-      <div className="gallery">
-        {rows.map((page) => (
-          <a key={page.name} className="tile" href={`/demos/${page.name}/`}>
-            <img className="dark" src={`/figures/demo-${page.name}-dark.png`} alt="" width="1024" height="1024" loading="lazy" decoding="async" />
-            <img className="light" src={`/figures/demo-${page.name}-light.png`} alt="" width="1024" height="1024" loading="lazy" decoding="async" />
-            <h2>{page.title}</h2>
-            <p>{page.blurb}</p>
-          </a>
-        ))}
-      </div>
+      <Grid nodes={rows.map((page) => ({ name: page.title, href: `/demos/${page.name}/`, figure: { dark: `/figures/demo-${page.name}-dark.png`, light: `/figures/demo-${page.name}-light.png` }, text: page.blurb }))} />
     </>
   );
 }

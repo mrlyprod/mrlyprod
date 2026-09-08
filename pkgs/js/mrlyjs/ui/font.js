@@ -1,7 +1,9 @@
 import FONT from './font.json' with { type: 'json' };
 
-const FPS = 25;
+export const FPS = 25;
+export const HOLD = 25;
 const BLANK = ['000', '000', '000', '000', '000'];
+const STEPS = [[-1, 0], [0, 1], [1, 0], [0, -1]];
 
 /* GLYPHS */
 
@@ -27,7 +29,7 @@ function layout(text) {
   for (const char of text) {
     const rows = glyph(char);
     height = Math.max(height, rows.length);
-    blocks.push({ rows, col, offset: 0 });
+    blocks.push({ char, rows, col, offset: 0 });
     col += rows[0].length + 1;
   }
   for (const block of blocks) block.offset = (height - block.rows.length) >> 1;
@@ -63,35 +65,198 @@ export function glyphSvg(text) {
   return `<svg class="glyphs" viewBox="0 0 ${cols} ${rows}" aria-hidden="true">${cells.join('')}</svg>`;
 }
 
+/* STROKES */
+
+const PATHS = {
+  M: [
+    [[4, 0], [3, 0], [2, 0], [1, 0], [0, 0]],
+    [[0, 1], [0, 2], [0, 3], [0, 4]],
+    [[1, 4], [2, 4], [3, 4], [4, 4]],
+    [[1, 2], [2, 2], [3, 2], [4, 2]],
+  ],
+  R: [
+    [[4, 0], [3, 0], [2, 0], [1, 0], [0, 0]],
+    [[0, 1], [0, 2], [0, 3], [0, 4]],
+  ],
+  L: [
+    [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0]],
+    [[4, 1], [4, 2], [4, 3], [4, 4]],
+  ],
+  Y: [
+    [[0, 0], [1, 0], [2, 0]],
+    [[2, 1], [2, 2], [2, 3]],
+    [[0, 4], [1, 4], [2, 4]],
+    [[3, 4], [4, 4], [4, 3], [4, 2], [4, 1], [4, 0]],
+  ],
+  P: [
+    [[4, 0], [3, 0], [2, 0], [1, 0], [0, 0]],
+    [[0, 1], [0, 2], [0, 3], [0, 4]],
+    [[1, 4]],
+    [[2, 4], [2, 3], [2, 2], [2, 1]],
+  ],
+  O: [
+    [[4, 0], [3, 0], [2, 0], [1, 0], [0, 0]],
+    [[0, 1], [0, 2], [0, 3], [0, 4]],
+    [[1, 4], [2, 4], [3, 4], [4, 4]],
+    [[4, 3], [4, 2], [4, 1]],
+  ],
+  D: [
+    [[2, 3], [2, 2], [2, 1], [2, 0]],
+    [[3, 0], [4, 0]],
+    [[4, 1], [4, 2], [4, 3], [4, 4]],
+    [[3, 4], [2, 4], [1, 4], [0, 4]],
+  ],
+};
+
+const key = (r, c) => r * 64 + c;
+
+const unkey = (k) => [Math.floor(k / 64), k % 64];
+
+function litOf(rows) {
+  const left = new Set();
+  rows.forEach((row, r) => {
+    for (let c = 0; c < row.length; c++) if (row[c] === '1') left.add(key(r, c));
+  });
+  return left;
+}
+
+const step = (r, c, [dr, dc]) => (r + dr >= 0 && c + dc >= 0 ? key(r + dr, c + dc) : -1);
+
+const degree = (r, c, left) => STEPS.filter((d) => left.has(step(r, c, d))).length;
+
+function opening(left) {
+  let best = null;
+  let rank = null;
+  for (const k of left) {
+    const [r, c] = unkey(k);
+    const now = [degree(r, c, left) !== 1 ? 1 : 0, -r, c];
+    if (!rank || now[0] < rank[0] || (now[0] === rank[0] && (now[1] < rank[1] || (now[1] === rank[1] && now[2] < rank[2])))) {
+      best = k;
+      rank = now;
+    }
+  }
+  return best;
+}
+
+function derive(rows) {
+  const left = litOf(rows);
+  const out = [];
+  while (left.size) {
+    const start = opening(left);
+    left.delete(start);
+    const stroke = [unkey(start)];
+    let heading = null;
+    for (;;) {
+      const [r, c] = stroke[stroke.length - 1];
+      let next = heading ? step(r, c, heading) : -1;
+      if (!left.has(next)) next = STEPS.map((d) => step(r, c, d)).find((k) => left.has(k)) ?? -1;
+      if (next < 0) break;
+      const [nr, nc] = unkey(next);
+      heading = [nr - r, nc - c];
+      left.delete(next);
+      stroke.push([nr, nc]);
+    }
+    out.push(stroke);
+  }
+  return out;
+}
+
+const sequence = (char, rows) => PATHS[char] ?? derive(rows);
+
 /* ANIMATION */
+
+const board = (laid, pad) => (laid.blocks.length ? [laid.height + 2 * pad, laid.width + 2 * pad] : [0, 0]);
 
 export function animate(text, pad = 1) {
   const fast = bridge('font_animate');
   if (fast) return JSON.parse(fast(text, pad));
-  const { width, height, blocks } = layout(text);
-  if (!width) return { rows: 0, cols: 0, fps: FPS, frames: [[]] };
-  const cols = width + 2 * pad;
+  const laid = layout(text);
+  const [rows, cols] = board(laid, pad);
   const frames = [[]];
-  const lit = [];
-  for (const block of blocks) {
-    for (let c = 0; c < block.rows[0].length; c++) {
-      for (let r = block.rows.length - 1; r >= 0; r--) {
-        if (block.rows[r][c] !== '1') continue;
-        lit.push((pad + block.offset + r) * cols + pad + block.col + c);
-        frames.push([...lit].sort((a, b) => a - b));
-      }
+  const current = [];
+  for (const block of laid.blocks) {
+    for (const [r, c] of sequence(block.char, block.rows).flat()) {
+      current.push((pad + block.offset + r) * cols + (pad + block.col + c));
+      frames.push([...current].sort((a, b) => a - b));
     }
   }
-  return { rows: height + 2 * pad, cols, fps: FPS, frames };
+  return { rows, cols, fps: FPS, frames };
 }
 
-export function cycle(text, pad = 1, hold = 40) {
+function stamp(blocks, spots, rows, cols) {
+  const active = new Set();
+  blocks.forEach((block, i) => {
+    const [cx, cy] = spots[i];
+    block.rows.forEach((row, r) => {
+      for (let c = 0; c < row.length; c++) {
+        if (row[c] !== '1') continue;
+        const y = cy + r;
+        const x = cx + c;
+        if (y >= 0 && y < rows && x >= 0 && x < cols) active.add(y * cols + x);
+      }
+    });
+  });
+  return [...active].sort((a, b) => a - b);
+}
+
+function beat(frame, total, phases) {
+  const len = Math.floor(total / phases);
+  for (let p = 1; p < phases; p++) if (frame < len * p) return [p, (frame - len * (p - 1)) / len];
+  const done = len * (phases - 1);
+  return [phases, (frame - done) / (total - done)];
+}
+
+const lerp = (start, end, p) => start + Math.trunc((end - start) * p);
+
+function place(idx, n, phases, phase, progress, starts, targets) {
+  const slide = (a, b) => [lerp(a[0], b[0], progress), lerp(a[1], b[1], progress)];
+  if (phase < phases) {
+    if (idx < phase) return slide(starts[phase - 1], starts[phase]);
+    if (idx >= n - phase) return slide(starts[n - phase], starts[n - phase - 1]);
+    return starts[idx];
+  }
+  const anchor = idx < phases ? starts[phases - 1] : idx >= n - phases ? starts[n - phases] : starts[idx];
+  return slide(anchor, targets[idx]);
+}
+
+const same = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
+
+export function merge(text, pad = 1) {
+  const laid = layout(text);
+  const [rows, cols] = board(laid, pad);
+  const n = laid.blocks.length;
+  const phases = n >> 1;
+  const starts = laid.blocks.map((b) => [pad + b.col, pad + b.offset]);
+  const targets = laid.blocks.map((b) => [Math.floor((cols - b.rows[0].length) / 2), pad + b.offset]);
+  if (!phases) return [stamp(laid.blocks, starts, rows, cols)];
+  const total = cols >> 1;
+  const frames = [];
+  for (let i = 0; i <= total; i++) {
+    const [phase, progress] = beat(i, total, phases);
+    const spots = laid.blocks.map((_, idx) => place(idx, n, phases, phase, progress, starts, targets));
+    const frame = stamp(laid.blocks, spots, rows, cols);
+    if (!frames.length || !same(frames[frames.length - 1], frame)) frames.push(frame);
+  }
+  return frames;
+}
+
+export function cycle(text, pad = 1, hold = HOLD) {
   const fast = bridge('font_cycle');
   if (fast) return JSON.parse(fast(text, pad, hold));
   const write = animate(text, pad);
+  const folded = merge(text, pad);
   const rest = (frame) => Array.from({ length: hold }, () => frame);
-  const full = write.frames[write.frames.length - 1];
-  return { ...write, frames: [...write.frames, ...rest(full), ...[...write.frames].reverse(), ...rest([])] };
+  const frames = [
+    ...write.frames,
+    ...rest(write.frames[write.frames.length - 1]),
+    ...folded,
+    ...rest(folded[folded.length - 1]),
+    ...[...folded].reverse(),
+    ...rest(folded[0]),
+    ...[...write.frames].reverse(),
+    ...rest(write.frames[0]),
+  ];
+  return { rows: write.rows, cols: write.cols, fps: write.fps, frames };
 }
 
 /* PLAYBACK */
