@@ -7,6 +7,12 @@ const DEFAULTS = {
   settings: true,
   tint: null,
   tree: [],
+  menu: '/menu/',
+  cart: '/cart/',
+  explorer: '/git/tree.json',
+  company: '',
+  tagline: '',
+  footer: [],
   socials: [],
   contact: '',
 };

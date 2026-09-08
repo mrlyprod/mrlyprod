@@ -1,6 +1,6 @@
 const DOCK = '(min-width: 74rem)';
 const PREFIX = (typeof document !== 'undefined' && document.documentElement.dataset.prefix) || 'mrly-';
-const KEY = { left: `${PREFIX}left`, right: `${PREFIX}right`, theme: `${PREFIX}theme` };
+const KEY = { theme: `${PREFIX}theme`, font: `${PREFIX}font`, cart: `${PREFIX}cart` };
 const SIDES = ['left', 'right'];
 
 const read = (key) => {
@@ -18,20 +18,19 @@ const write = (key, value) => {
   } catch {}
 };
 
-/* PANES */
+/* DRAWERS */
 
 const root = () => document.documentElement;
 const docked = () => matchMedia(DOCK).matches;
 const isOpen = (side) => root().dataset[side] === 'open';
 
-function set(side, open, remember = true) {
+function set(side, open) {
   root().dataset[side] = open ? 'open' : 'shut';
-  if (remember && docked()) write(KEY[side], open ? 'open' : 'shut');
   sync();
 }
 
 function place() {
-  for (const side of SIDES) set(side, docked() && read(KEY[side]) !== 'shut', false);
+  for (const side of SIDES) set(side, false);
 }
 
 function sync() {
@@ -41,10 +40,9 @@ function sync() {
 function toggle(side) {
   const open = !isOpen(side);
   set(side, open);
-  if (open && !docked()) {
-    set(side === 'left' ? 'right' : 'left', false);
-    document.getElementById(side)?.querySelector('a, button')?.focus();
-  }
+  if (!open) return;
+  set(side === 'left' ? 'right' : 'left', false);
+  document.getElementById(side)?.querySelector('a, button')?.focus();
 }
 
 function shut() {
@@ -68,6 +66,36 @@ function theme(next) {
 function turn() {
   const now = root().dataset.theme ?? '';
   theme(now === '' ? 'light' : now === 'light' ? 'dark' : '');
+}
+
+/* FONT */
+
+function face(next) {
+  if (next) root().dataset.font = next;
+  else delete root().dataset.font;
+  write(KEY.font, next);
+  for (const pick of document.querySelectorAll('[data-font-pick]')) pick.value = next || '';
+}
+
+/* CART */
+
+function count() {
+  try {
+    const items = JSON.parse(read(KEY.cart) || '[]');
+    return Array.isArray(items) ? items.reduce((sum, item) => sum + (Number(item.qty) || 1), 0) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function cart() {
+  const n = count();
+  for (const link of document.querySelectorAll('[data-cart]')) {
+    link.dataset.count = String(n);
+    link.setAttribute('aria-label', n ? `Cart, ${n} item${n === 1 ? '' : 's'}` : 'Cart');
+    link.querySelectorAll('.dot').forEach((dot, i) => dot.classList.toggle('on', i < n));
+  }
+  for (const badge of document.querySelectorAll('[data-cart-count]')) badge.textContent = String(n);
 }
 
 /* CONTENTS */
@@ -96,9 +124,60 @@ function contents(nav) {
 
 async function footer(canvas) {
   const { cycle, mark } = await import('./font.js');
-  if (globalThis.mrly?.font_cycle) return mark(canvas, cycle('MRLYPROD', 1, 40));
-  const reply = await fetch('/ui/mark.json');
-  if (reply.ok) mark(canvas, await reply.json());
+  mark(canvas, cycle(canvas.dataset.text || 'MRLYPROD', 1, 40));
+}
+
+/* EXPLORER */
+
+let forest = null;
+
+const fetchTree = (url) => (forest ??= fetch(url).then((reply) => (reply.ok ? reply.json() : null)).catch(() => null));
+
+const named = (path) => (path.slice(path.lastIndexOf('/') + 1).includes('.') ? path : `${path}.txt`);
+
+function find(node, path) {
+  let at = node;
+  for (const part of path ? path.split('/') : []) {
+    at = (at.c ?? []).find((kid) => kid.n === part);
+    if (!at) return null;
+  }
+  return at;
+}
+
+function branch(base, kid, path) {
+  const li = document.createElement('li');
+  const a = document.createElement('a');
+  a.textContent = kid.n;
+  if (kid.k !== 'd') {
+    a.href = `${base}${named(path)}`;
+    li.append(a);
+    return li;
+  }
+  a.href = `${base}${path}/`;
+  const details = document.createElement('details');
+  details.dataset.lazy = path;
+  const summary = document.createElement('summary');
+  summary.append(a);
+  details.append(summary, document.createElement('ul'));
+  li.append(details);
+  return li;
+}
+
+function fill(details, data) {
+  const list = details.querySelector(':scope > ul');
+  if (!list || list.children.length) return;
+  const path = details.dataset.lazy;
+  const node = find(data, path);
+  if (!node) return;
+  for (const kid of node.c ?? []) list.append(branch(data.base ?? '/git/', kid, path ? `${path}/${kid.n}` : kid.n));
+}
+
+function expand(event) {
+  const details = event.target;
+  if (!(details instanceof HTMLDetailsElement) || !details.open || details.dataset.lazy === undefined) return;
+  const url = details.closest('.tree')?.dataset.source;
+  if (!url) return;
+  fetchTree(url).then((data) => data && fill(details, data));
 }
 
 /* WIRE */
@@ -116,6 +195,8 @@ const once = (selector, fn) => {
 export function wire() {
   sync();
   theme(root().dataset.theme ?? '');
+  face(root().dataset.font ?? '');
+  cart();
   once('.contents', contents);
   once('canvas.mark', footer);
 }
@@ -123,19 +204,31 @@ export function wire() {
 function boot() {
   root().classList.add('js');
   theme(read(KEY.theme));
+  face(read(KEY.font));
   place();
   matchMedia(DOCK).addEventListener('change', place);
   document.addEventListener('click', (e) => {
     const target = e.target instanceof Element ? e.target : null;
     if (!target) return;
     const button = target.closest('[data-pane]');
-    if (button) return toggle(button.dataset.pane);
+    if (button) {
+      if (docked()) return;
+      e.preventDefault();
+      return toggle(button.dataset.pane);
+    }
     if (target.closest('[data-theme-toggle]')) return turn();
     if (target.closest('.scrim') || target.closest('.pane a[href]')) shut();
   });
+  document.addEventListener('change', (e) => {
+    const pick = e.target instanceof Element ? e.target.closest('[data-font-pick]') : null;
+    if (pick) face(pick.value);
+  });
+  document.addEventListener('toggle', expand, true);
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && shut()) e.preventDefault();
   });
+  window.addEventListener('cart', cart);
+  window.addEventListener('storage', cart);
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire);
   else wire();
 }

@@ -1,7 +1,9 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { basename, dirname, extname, join, relative, resolve } from "node:path";
-import { collect as gitRoutes, isGit, print as gitPrint, render as gitRender, type Hooks } from "../git/git.ts";
+import { deflateSync } from "node:zlib";
+import { collect as gitRoutes, forest, isGit, print as gitPrint, render as gitRender, type Hooks } from "../git/git.ts";
+import { grid, logoSvg } from "../ui/logo.js";
 
 /* TYPES */
 
@@ -24,7 +26,7 @@ export type Route = {
   sitemap?: boolean;
 };
 
-export type Node = { name: string; href?: string; nodes?: Node[]; open?: boolean };
+export type Node = { name: string; href?: string; nodes?: Node[]; open?: boolean; lazy?: string };
 
 export type Input = { name: string; path: string; files: string[]; missing: boolean };
 
@@ -154,6 +156,9 @@ function bundles(root: string, config: Config): Bundle[] {
 const shows = (nodes: Node[], href: string): boolean =>
   nodes.some((node) => node.href === href || shows(node.nodes ?? [], href));
 
+const lazily = (nodes: Node[], href: string): Node[] =>
+  nodes.map((node) => (node.href === href ? { ...node, lazy: node.lazy ?? "" } : node));
+
 export async function scan(spec: Spec): Promise<Site> {
   const root = resolve(spec.root);
   const config = spec.config ?? (JSON.parse(readFileSync(join(root, "site.json"), "utf8")) as Config);
@@ -207,6 +212,7 @@ export async function scan(spec: Spec): Promise<Site> {
   if (repo.routes.length) {
     site.routes = [...site.routes, ...repo.routes];
     if (repo.node && !shows(site.nav, repo.node.href!)) site.nav = [...site.nav, repo.node];
+    site.nav = lazily(site.nav, repo.node!.href!);
   }
   site.stamp = digest([
     templates(spec),
@@ -255,6 +261,62 @@ export function fingerprint(site: Site, route: Route): string {
 export async function render(site: Site, route: Route, spec: Spec): Promise<Output[]> {
   if (isGit(route)) return gitRender(site, route, spec);
   return await spec.render(site, route);
+}
+
+/* ICONS */
+
+const SIGNATURE = Uint8Array.from([137, 80, 78, 71, 13, 10, 26, 10]);
+
+const TABLE = new Uint32Array(256).map((_, n) => {
+  let c = n;
+  for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+  return c >>> 0;
+});
+
+function crc32(data: Uint8Array): number {
+  let c = 0xffffffff;
+  for (const b of data) c = TABLE[(c ^ b) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
+
+function chunk(type: string, body: Uint8Array): Uint8Array {
+  const out = new Uint8Array(12 + body.length);
+  const view = new DataView(out.buffer);
+  view.setUint32(0, body.length);
+  out.set(new TextEncoder().encode(type), 4);
+  out.set(body, 8);
+  view.setUint32(8 + body.length, crc32(out.subarray(4, 8 + body.length)));
+  return out;
+}
+
+export function png(size: number, dark: (x: number, y: number) => boolean): Uint8Array {
+  const raw = new Uint8Array(size * (size + 1));
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) raw[y * (size + 1) + 1 + x] = dark(x, y) ? 0 : 255;
+  const head = new Uint8Array(13);
+  const view = new DataView(head.buffer);
+  view.setUint32(0, size);
+  view.setUint32(4, size);
+  head[8] = 8;
+  const parts = [SIGNATURE, chunk("IHDR", head), chunk("IDAT", new Uint8Array(deflateSync(raw))), chunk("IEND", new Uint8Array(0))];
+  const out = new Uint8Array(parts.reduce((n, part) => n + part.length, 0));
+  let at = 0;
+  for (const part of parts) {
+    out.set(part, at);
+    at += part.length;
+  }
+  return out;
+}
+
+export function icons(): Output[] {
+  const rows = grid(1);
+  const mark = (size: number) => png(size, (x, y) => rows[Math.floor((y * 5) / size)][Math.floor((x * 5) / size)] === "1");
+  return [
+    { path: "favicon.svg", bytes: logoSvg(1, "#000000", "#ffffff") },
+    { path: "favicon.png", bytes: mark(40) },
+    { path: "apple-touch-icon.png", bytes: mark(180) },
+    { path: "icon-192.png", bytes: mark(192) },
+    { path: "icon-512.png", bytes: mark(512) },
+  ];
 }
 
 /* GLOBALS */
@@ -309,6 +371,9 @@ export async function globals(site: Site, spec: Spec): Promise<Output[]> {
   out.push({ path: "robots.txt", bytes: robots(site, root) });
   out.push({ path: "llms.txt", bytes: llms(site, root) });
   if (site.config.manifest) out.push({ path: "manifest.webmanifest", bytes: JSON.stringify(site.config.manifest, null, 2) + "\n" });
+  if (site.config.icons !== false) out.push(...icons());
+  const wood = forest(site);
+  if (wood) out.push({ path: "git/tree.json", bytes: JSON.stringify(wood), type: "application/json" });
   const pub = site.config.inputs?.public ? site.input("public") : null;
   if (pub) for (const file of walk(pub.path)) out.push({ path: file.slice(pub.path.length + 1), bytes: bytes(file) });
   if (spec.globals) out.push(...(await spec.globals(site)));

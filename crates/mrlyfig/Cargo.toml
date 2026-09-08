@@ -178,6 +178,14 @@ name = "site-icon"
 path = "examples/site/site-icon.rs"
 
 [[example]]
+name = "site-contact"
+path = "examples/site/site-contact.rs"
+
+[[example]]
+name = "site-donate"
+path = "examples/site/site-donate.rs"
+
+[[example]]
 name = "research-automata"
 path = "examples/grid/research-automata.rs"
 

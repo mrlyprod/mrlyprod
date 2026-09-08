@@ -25,7 +25,12 @@ export type Leaf = {
   wide?: boolean;
   bare?: boolean;
   code?: boolean;
+  tree?: Node[];
 };
+
+export type Wood = { base: string; c: Twig[] };
+
+export type Twig = { n: string; k: "d" | "f"; c?: Twig[] };
 
 export type Hooks = {
   page: (site: Site, leaf: Leaf) => Bytes;
@@ -63,7 +68,7 @@ function crawl(root: string, at: string, out: string[]) {
 export function tree(git: Git): string[] {
   if (existsSync(join(git.root, ".git"))) {
     const run = Bun.spawnSync(["git", "ls-files", "-z"], { cwd: git.root, stderr: "ignore" });
-    const list = run.success ? run.stdout.toString().split("\0").filter(Boolean) : [];
+    const list = run.success ? run.stdout.toString().split("\0").filter((path) => path && existsSync(join(git.root, path))) : [];
     if (list.length) return list.sort();
   }
   const out: string[] = [];
@@ -98,12 +103,15 @@ export function owner(path: string): string | null {
 
 /* COLLECT */
 
+const KIDS = new WeakMap<Site, Map<string, Child[]>>();
+
 export function collect(site: Site): { routes: Route[]; node: Node | null } {
   const git = config(site);
   if (!git) return { routes: [], node: null };
   const paths = tree(git);
   if (!paths.length) return { routes: [], node: null };
   const kids = new Map<string, Child[]>([["", []]]);
+  KIDS.set(site, kids);
   for (const path of paths) {
     let at = "";
     for (const part of path.split("/").slice(0, -1)) {
@@ -154,7 +162,40 @@ export function collect(site: Site): { routes: Route[]; node: Node | null } {
       sitemap: true,
     });
   }
-  return { routes, node: { name: "Code", href: "/git/" } };
+  return { routes, node: { name: "Code", href: "/git/", lazy: "" } };
+}
+
+/* EXPLORER */
+
+const under = (open: string, path: string) => open === path || open.startsWith(`${path}/`);
+
+function branches(kids: Map<string, Child[]>, dir: string, open: string): Node[] {
+  return (kids.get(dir) ?? []).map(([name, , kind]) => {
+    const path = dir ? `${dir}/${name}` : name;
+    if (kind === "file") return { name, href: fileRoute(path) };
+    const along = under(open, path);
+    return { name, href: dirRoute(path), lazy: path, open: along || undefined, nodes: along ? branches(kids, path, open) : [] };
+  });
+}
+
+export function explorer(site: Site, dir: string): Node[] {
+  const kids = KIDS.get(site);
+  if (!kids) return site.nav;
+  const root = { name: "Code", href: "/git/", lazy: "", open: true, nodes: branches(kids, "", dir) };
+  const shown = site.nav.map((node) => (node.href === "/git/" ? { ...node, ...root, name: node.name } : node));
+  return shown.some((node) => node.href === "/git/") ? shown : [...shown, root];
+}
+
+function twigs(kids: Map<string, Child[]>, dir: string): Twig[] {
+  return (kids.get(dir) ?? []).map(([name, , kind]) => {
+    const path = dir ? `${dir}/${name}` : name;
+    return kind === "dir" ? { n: name, k: "d", c: twigs(kids, path) } : { n: name, k: "f" };
+  });
+}
+
+export function forest(site: Site): Wood | null {
+  const kids = KIDS.get(site);
+  return kids ? { base: "/git/", c: twigs(kids, "") } : null;
 }
 
 /* FINGERPRINT */
@@ -349,7 +390,7 @@ function listing(site: Site, git: Git, route: Route, hooks: Hooks): Output[] {
   const first = text ? gist(text) : "";
   const description = clip(first ? `${lead} ${first}` : lead);
   const at = dir ? `git/${dir}/index.html` : "git/index.html";
-  return [{ path: at, bytes: hooks.page(site, { route: route.route, name, description, body, type: "website", code: true }), type: HTML }];
+  return [{ path: at, bytes: hooks.page(site, { route: route.route, name, description, body, type: "website", code: true, tree: explorer(site, dir) }), type: HTML }];
 }
 
 /* CODE */
@@ -413,7 +454,7 @@ async function file(site: Site, git: Git, route: Route, hooks: Hooks): Promise<O
     { path: rawPath(path), bytes: body, type: mime(path, text !== null) },
     {
       path: `git/${named(path)}`,
-      bytes: hooks.page(site, { route: route.route, name: stem(path), description, body: shown, code: true }),
+      bytes: hooks.page(site, { route: route.route, name: stem(path), description, body: shown, code: true, tree: explorer(site, home(path)) }),
       type: HTML,
     },
   ];

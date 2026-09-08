@@ -3,14 +3,12 @@ import { dirname, join, relative, resolve } from "node:path";
 import { createElement as h } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import katex from "katex";
-import { build, bytes, walk, type Output, type Route, type Site, type Spec } from "../../../pkgs/js/mrlyjs/ssg/build.ts";
+import { build, bytes, walk, type Node, type Output, type Route, type Site, type Spec } from "../../../pkgs/js/mrlyjs/ssg/build.ts";
 import { isGit, link as gitLink } from "../../../pkgs/js/mrlyjs/git/git.ts";
 import { escape, front, plain, render as md, summary, title } from "../lib/md.js";
 import { tree } from "../lib/tree.js";
-import { logoSvg } from "../lib/logo.js";
 import { glyphSvg } from "../../../pkgs/js/mrlyjs/ui/font.js";
-import { Shell } from "../../../pkgs/js/mrlyjs/ui/chrome.jsx";
-import { light } from "../../../pkgs/js/mrlyjs/ui/palette.js";
+import { Menu, Shell } from "../../../pkgs/js/mrlyjs/ui/chrome.jsx";
 import kit from "../lib/site.js";
 import { shelf } from "./shelf.ts";
 
@@ -27,6 +25,7 @@ const AVATAR = /^(!\[avatar\]\(figures\/avatar\.png\)|<picture>.*?figures\/avata
 const WORD = glyphSvg(kit.title.toUpperCase());
 const ICONS = [
   `<link rel="icon" href="/favicon.svg" type="image/svg+xml">`,
+  `<link rel="icon" href="/favicon.png" type="image/png" sizes="40x40">`,
   `<link rel="apple-touch-icon" href="/apple-touch-icon.png">`,
   `<link rel="manifest" href="/manifest.webmanifest">`,
 ].join("\n");
@@ -110,12 +109,13 @@ type Leaf = {
   bare?: boolean;
   code?: boolean;
   data?: object;
+  tree?: Node[];
 };
 
 function shell(site: Site, leaf: Leaf) {
   const { route, name, description, body, type = "article", wide = false, bare = false, code = false, data } = leaf;
   const article = h(bare ? "div" : "article", { className: bare ? undefined : "prose", dangerouslySetInnerHTML: { __html: body } });
-  const main = renderToStaticMarkup(h(Shell, { route, tree: site.nav, contents: headings(body), wide }, article));
+  const main = renderToStaticMarkup(h(Shell, { route, tree: leaf.tree ?? site.nav, contents: headings(body), wide }, article));
   const ld = data ? `<script type="application/ld+json">${JSON.stringify(data)}</script>\n` : "";
   return `<!doctype html>
 <html lang="en">
@@ -128,6 +128,7 @@ ${meta(route, name, description, type)}
 <link rel="stylesheet" href="${site.asset("tokens.css")}">
 <link rel="stylesheet" href="${site.asset("base.css")}">
 <link rel="stylesheet" href="${site.asset("chrome.css")}">
+<link rel="stylesheet" href="${site.asset("fonts/fonts.css")}">
 <link rel="stylesheet" href="/pages.css">
 ${code ? `<link rel="stylesheet" href="${site.asset("code.css")}">\n<link rel="stylesheet" href="${site.asset("seti/seti.css")}">\n` : ""}${ld}<script type="module" src="${site.asset("chrome.js")}"></script>
 </head>
@@ -393,16 +394,36 @@ function blogIndex(site: Site, route: Route): Output[] {
 
 /* PAGES */
 
-function about(site: Site, route: Route): Output[] {
+function page(site: Site, route: Route): Output[] {
   const source = route.source as string;
+  const slug = route.route.slice(1, -1);
   const { data, body } = front(read(source));
-  const name = data.title ?? "About";
+  const name = data.title ?? slug;
   const lead = data.lead ?? summary(body);
-  const head = `<div class="lede"><h1 id="about">${escape(name)}</h1><p class="lead">${escape(lead)}</p></div>`;
-  return [{ path: "about/index.html", bytes: shell(site, { route: route.route, name, description: lead, body: `${head}\n${md(body, { math })}`, type: "website" }) }];
+  const out: Output[] = [];
+  const fig = press(site, out);
+  const open = data.figure ? `${hero(fig, data.figure, route.route, name)}\n` : "";
+  const head = `<div class="lede"><h1 id="${escape(slug)}">${escape(name)}</h1><p class="lead">${escape(lead)}</p></div>`;
+  const act = data.button && data.link ? `\n<p><a class="button primary" href="${escape(data.link)}">${escape(data.button)}</a></p>` : "";
+  const html = shell(site, { route: route.route, name, description: lead, body: `${open}${head}\n${md(body, { math })}${act}`, type: "website" });
+  out.push({ path: `${slug}/index.html`, bytes: html });
+  return out;
 }
 
-const MISSION = "The mathematics of designs on the corners of a cube, and the instruments that measure them.";
+function menu(site: Site, route: Route): Output[] {
+  const lead = "Every page on mrly.net.";
+  const list = renderToStaticMarkup(h(Menu, { tree: site.nav }));
+  const body = `<div class="hero"><h1><span role="img" aria-label="${escape(kit.title)}">${WORD}</span></h1><p>${escape(lead)}</p></div>\n${list}`;
+  return [{ path: "menu/index.html", bytes: shell(site, { route: route.route, name: "Menu", description: lead, body, type: "website", wide: true, bare: true }) }];
+}
+
+function cart(site: Site, route: Route): Output[] {
+  const lead = "Coming soon.";
+  const body = `<div class="lede"><h1 id="cart">Cart</h1><p class="lead">${escape(lead)}</p></div>\n<p>mrly.net has no shop yet.</p>\n<p><a href="/">Back to the home page</a>.</p>`;
+  return [{ path: "cart/index.html", bytes: shell(site, { route: route.route, name: "Cart", description: lead, body, type: "website" }) }];
+}
+
+const MISSION = kit.tagline;
 
 const DOORS = [
   { name: "Demos", href: "/demos/", figure: "site-demos", text: "Browser pages that draw a design and the numbers around it, live." },
@@ -437,7 +458,7 @@ ${what}
 }
 
 function missing(site: Site, route: Route): Output[] {
-  const body = `<div class="lede"><h1 id="lost">Nothing here</h1><p class="lead">That page does not exist. The four doors are <a href="/demos/">Demos</a>, <a href="/papers/">Papers</a>, <a href="/research/">Research</a> and <a href="/blog/">Blog</a>.</p></div>`;
+  const body = `<div class="lede"><h1 id="lost">Nothing here</h1><p class="lead">That page does not exist. The <a href="/menu/">Menu</a> lists every page on this site, and the four doors are <a href="/demos/">Demos</a>, <a href="/papers/">Papers</a>, <a href="/research/">Research</a> and <a href="/blog/">Blog</a>.</p></div>`;
   return [{ path: "404.html", bytes: shell(site, { route: route.route, name: "Nothing here", description: "That page does not exist.", body, type: "website", bare: true }) }];
 }
 
@@ -499,8 +520,14 @@ async function collect(site: Site) {
       routes.push({ route: `/blog/${p.slug}/`, kind: "post", name: p.name, data: p, source, inputs: [source] });
     }
   }
-  const page = join(org, "pages", "about.md");
-  if (existsSync(page)) routes.push({ route: "/about/", kind: "about", name: "About", source: page, inputs: [page] });
+  const written = site.input("pages");
+  for (const source of written.files) {
+    const slug = source.slice(written.path.length + 1, -3);
+    const { data } = front(read(source));
+    routes.push({ route: `/${slug}/`, kind: "page", name: data.title ?? slug, source, inputs: [source] });
+  }
+  routes.push({ route: "/menu/", kind: "menu", name: "Menu" });
+  routes.push({ route: "/cart/", kind: "cart", name: "Cart", hidden: true });
   routes.push({ route: "/404.html", kind: "missing", name: "Nothing here", hidden: true });
   return { routes, nav };
 }
@@ -515,7 +542,9 @@ const KINDS: Record<string, (site: Site, route: Route) => Output[] | Promise<Out
   note,
   blog: blogIndex,
   post,
-  about,
+  page,
+  menu,
+  cart,
   missing,
 };
 
@@ -529,11 +558,8 @@ function draw(site: Site, route: Route) {
 
 function extras(site: Site): Output[] {
   const out: Output[] = [];
-  out.push({ path: "favicon.svg", bytes: logoSvg(1, light.accent) });
   const home = site.input("figures").path;
-  for (const [name, target] of [["site-og-dark", "og.png"], ["site-icon-dark", "icon-512.png"], ["site-icon-dark", "apple-touch-icon.png"]]) {
-    out.push({ path: target, bytes: bytes(figure(home, name, `/${target}`)) });
-  }
+  out.push({ path: "og.png", bytes: bytes(figure(home, "site-og-dark", "/og.png")) });
   const shared = join(site.input("research").path, "figures");
   for (const file of walk(shared)) out.push({ path: `research/figures/${file.slice(shared.length + 1)}`, bytes: bytes(file) });
   return out;

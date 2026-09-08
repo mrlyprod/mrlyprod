@@ -2,7 +2,7 @@ import { afterAll, expect, test } from "bun:test";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { block, collect, dirRoute, fileRoute, gist, lang, link, named, owner, rawPath } from "./git.ts";
+import { block, collect, dirRoute, explorer, fileRoute, forest, gist, lang, link, named, owner, rawPath } from "./git.ts";
 import { paint } from "./code.ts";
 import type { Site } from "../ssg/build.ts";
 
@@ -56,6 +56,20 @@ test("a repo-relative link lands on its own route", () => {
   expect(link("docs", "https://mrly.net")).toBe("https://mrly.net");
 });
 
+/* EXPLORER */
+
+test("the explorer opens the path to the page and leaves the rest lazy", () => {
+  const one = site({ root: ".", slug: "mrlyprod/mrlyprod" });
+  one.nav = [{ name: "Home", href: "/" }, { name: "Code", href: "/git/" }];
+  collect(one);
+  const [, code] = explorer(one, "src");
+  expect(code.open).toBe(true);
+  expect(code.nodes!.map((kid) => kid.name)).toEqual(["src", ".gitignore", "LICENSE", "README.md"]);
+  expect(code.nodes![0]).toEqual({ name: "src", href: "/git/src/", lazy: "src", open: true, nodes: [{ name: "a.rs", href: "/git/src/a.rs" }] });
+  expect(explorer(one, "").at(1)!.nodes![0].nodes).toEqual([]);
+  expect(forest(one)).toEqual({ base: "/git/", c: [{ n: "src", k: "d", c: [{ n: "a.rs", k: "f" }] }, { n: ".gitignore", k: "f" }, { n: "LICENSE", k: "f" }, { n: "README.md", k: "f" }] });
+});
+
 /* COLLECT */
 
 test("no git block in site.json means no routes", () => {
@@ -66,7 +80,7 @@ test("a git block routes every tracked file and every directory", () => {
   const { routes, node } = collect(site({ root: ".", slug: "mrlyprod/mrlyprod" }));
   const names = routes.map((one) => one.route).sort();
   expect(names).toEqual(["/git/", "/git/.gitignore", "/git/LICENSE.txt", "/git/README.md", "/git/src/", "/git/src/a.rs"]);
-  expect(node).toEqual({ name: "Code", href: "/git/" });
+  expect(node).toEqual({ name: "Code", href: "/git/", lazy: "" });
   const root = routes.find((one) => one.route === "/git/")!;
   const kids = (root.data as { kids: [string, number, string][] }).kids;
   expect(kids.map((one) => one[0])).toEqual(["src", ".gitignore", "LICENSE", "README.md"]);

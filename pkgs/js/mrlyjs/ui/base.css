@@ -2,7 +2,7 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; }
 html { -webkit-text-size-adjust: 100%; }
-body { background: var(--bg); color: var(--fg); font: var(--text)/1.55 var(--sans); min-height: 100dvh; -webkit-font-smoothing: antialiased; }
+body { background: var(--bg); color: var(--fg); font: var(--text)/1.55 var(--face, var(--sans)); min-height: 100dvh; -webkit-font-smoothing: antialiased; }
 [hidden] { display: none !important; }
 img, canvas, svg, video { max-width: 100%; }
 svg { height: auto; }
@@ -30,8 +30,8 @@ a:hover { text-decoration: underline; }
 
 /* PROSE */
 
-.prose { font: var(--read-text)/1.6 var(--serif); font-variant-numeric: tabular-nums; max-width: var(--read); margin-inline: auto; }
-.prose h1, .prose h2, .prose h3, .prose h4 { font-family: var(--serif); margin: 1.6em 0 0.6em; }
+.prose { font: var(--read-text)/1.6 var(--face, var(--serif)); font-variant-numeric: tabular-nums; max-width: var(--read); margin-inline: auto; }
+.prose h1, .prose h2, .prose h3, .prose h4 { font-family: var(--face, var(--serif)); margin: 1.6em 0 0.6em; }
 .prose h1 { font-size: 1.85em; margin-top: 0.2em; }
 .prose h2 { font-size: 1.35em; }
 .prose h3 { font-size: 1.1em; }

@@ -6,6 +6,10 @@
   "font": true,
   "settings": true,
   "tint": null,
+  "menu": "/menu/",
+  "cart": "/cart/",
+  "company": "MrlyProd, Inc.",
+  "tagline": "The mathematics of designs on the corners of a cube, and the instruments that measure them.",
   "tree": [
     { "name": "Home", "href": "/" },
     { "name": "Demos", "href": "/demos/", "fill": "demos", "open": true },
@@ -13,8 +17,49 @@
     { "name": "Research", "href": "/research/", "fill": "research" },
     { "name": "Blog", "href": "/blog/", "fill": "blog" },
     { "name": "Code", "href": "/git/" },
-    { "name": "About", "href": "/about/" }
+    { "name": "About", "href": "/about/" },
+    { "name": "Contact", "href": "/contact/" },
+    { "name": "Donate", "href": "/donate/" }
   ],
+  "footer": [
+    {
+      "name": "Explore",
+      "links": [
+        { "name": "Demos", "href": "/demos/" },
+        { "name": "Papers", "href": "/papers/" },
+        { "name": "Research", "href": "/research/" },
+        { "name": "Blog", "href": "/blog/" },
+        { "name": "Code", "href": "/git/" }
+      ]
+    },
+    {
+      "name": "Company",
+      "links": [
+        { "name": "About", "href": "/about/" },
+        { "name": "Contact", "href": "/contact/" },
+        { "name": "Donate", "href": "/donate/" },
+        { "name": "Menu", "href": "/menu/" }
+      ]
+    },
+    {
+      "name": "Source",
+      "links": [
+        { "name": "GitHub", "href": "https://github.com/mrlyprod/mrlyprod" },
+        { "name": "README", "href": "/raw/README.md" },
+        { "name": "llms.txt", "href": "/llms.txt" }
+      ]
+    }
+  ],
+  "socials": [
+    { "name": "GitHub", "href": "https://github.com/mrlyprod" },
+    { "name": "YouTube", "href": "https://youtube.com/@mrlyprod" },
+    { "name": "X", "href": "https://twitter.com/mrlyprod" },
+    { "name": "Instagram", "href": "https://instagram.com/mrlyprod" },
+    { "name": "TikTok", "href": "https://tiktok.com/@mrlyprod" },
+    { "name": "Reddit", "href": "https://reddit.com/r/mrlyprod" },
+    { "name": "Discord", "href": "https://discord.gg/YEKjjvwhcK" }
+  ],
+  "contact": "help@mrly.net",
   "git": { "root": "../..", "slug": "mrlyprod/mrlyprod", "branch": "main" },
   "llms": {
     "about": "MrlyMath is the mathematics of designs on the corners of a cube: a code says which of the eight corners are filled, the Kronecker product grows that rule into itself level by level, and the object it converges to is a fractal, the Sierpinski carpet and the Menger sponge among them. Everything else on this site is measurement: fills, voids and exposed faces, plane cuts, graph spectra, and the integer sequences the counts write down, with Rust crates doing the arithmetic and the browser only painting. Every claim is proved, checked over a stated finite domain, or labelled a conjecture, and all of it is free and open source.",
@@ -22,11 +67,10 @@
       { "href": "/raw/README.md", "name": "README", "note": "the repository readme, in markdown" },
       { "href": "/research/", "name": "Research", "note": "working notes, one page per idea" },
       { "href": "/git/", "name": "Code", "note": "the whole tree, browsable, with raw bytes under /raw/" },
-      { "href": "/papers/", "name": "Papers", "note": "write-ups with their LaTeX source and PDFs" }
+      { "href": "/papers/", "name": "Papers", "note": "write-ups with their LaTeX source and PDFs" },
+      { "href": "/contact/", "name": "Contact", "note": "where to write, and every social account" }
     ]
   },
-  "socials": [{ "name": "GitHub", "href": "https://github.com/mrlyprod" }],
-  "contact": "help@mrly.net",
   "inputs": {
     "readme": { "path": "README.md" },
     "pages": { "path": "pages", "ext": ".md" },
@@ -51,10 +95,30 @@
       "chrome.js",
       "font.js",
       "font.json",
-      "mark.json",
       "code.css",
       "seti/seti.css",
-      "seti/seti.woff2"
+      "seti/seti.woff2",
+      "fonts/fonts.css",
+      "fonts/sans.woff2",
+      "fonts/serif.woff2",
+      "fonts/mono.woff2",
+      "fonts/mrly.woff2",
+      "fonts/symbols.ttf",
+      "fonts/emoji.0.woff2",
+      "fonts/emoji.1.woff2",
+      "fonts/emoji.2.woff2",
+      "fonts/emoji.3.woff2",
+      "fonts/emoji.4.woff2",
+      "fonts/emoji.5.woff2",
+      "fonts/emoji.6.woff2",
+      "fonts/emoji.7.woff2",
+      "fonts/emoji.8.woff2",
+      "fonts/emoji.9.woff2",
+      "fonts/LICENSE-sans.txt",
+      "fonts/LICENSE-serif.txt",
+      "fonts/LICENSE-mono.txt",
+      "fonts/LICENSE-emoji.txt",
+      "fonts/LICENSE-symbols.txt"
     ]
   },
   "manifest": {
@@ -66,6 +130,7 @@
     "theme_color": "#070707",
     "icons": [
       { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" },
+      { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
       { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
     ]
   }

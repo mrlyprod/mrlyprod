@@ -1,7 +1,6 @@
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { createCssVariablesTheme, createHighlighterCore, type HighlighterCore } from "@shikijs/core";
-import { createJavaScriptRegexEngine } from "@shikijs/engine-javascript";
+import type { HighlighterCore } from "@shikijs/core";
 import { escape } from "../ssg/build.ts";
 
 /* GRAMMARS */
@@ -31,26 +30,35 @@ export const grammars = () => Object.keys(GRAMMARS).sort();
 
 const here = createRequire(import.meta.url);
 
-export const version: string = JSON.parse(readFileSync(here.resolve("@shikijs/core/package.json"), "utf8")).version;
+function installed(): string {
+  try {
+    return JSON.parse(readFileSync(here.resolve("@shikijs/core/package.json"), "utf8")).version;
+  } catch {
+    return "";
+  }
+}
 
-/* THEME */
-
-const NAME = "mrly";
-
-const THEME = createCssVariablesTheme({ name: NAME, variablePrefix: "--code-" });
+export const version: string = installed();
 
 /* CORE */
+
+const NAME = "mrly";
 
 let held: Promise<HighlighterCore> | undefined;
 
 const loaded = new Map<string, Promise<boolean>>();
 
-function core(): Promise<HighlighterCore> {
-  held ??= createHighlighterCore({
+async function boot(): Promise<HighlighterCore> {
+  const [{ createCssVariablesTheme, createHighlighterCore }, { createJavaScriptRegexEngine }] = await Promise.all([import("@shikijs/core"), import("@shikijs/engine-javascript")]);
+  return createHighlighterCore({
     langs: [],
-    themes: [THEME],
+    themes: [createCssVariablesTheme({ name: NAME, variablePrefix: "--code-" })],
     engine: createJavaScriptRegexEngine({ forgiving: true }),
   });
+}
+
+function core(): Promise<HighlighterCore> {
+  held ??= boot();
   return held;
 }
 

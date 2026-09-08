@@ -1,6 +1,6 @@
-const MASK = ['11111', '10101', '11111', '10101', '11111'];
+export const MASK = ['11111', '10101', '11111', '10101', '11111'];
 
-export function grid(level) {
+export function grid(level = 1) {
   let rows = MASK;
   for (let k = 1; k < level; k++) {
     rows = rows.flatMap((row) => MASK.map((inner) => [...row].map((cell) => (cell === '1' ? inner : '00000')).join('')));
@@ -26,7 +26,8 @@ function path(rows) {
   return parts.join('');
 }
 
-export function logoSvg(level = 1, fill = 'currentColor') {
+export function logoSvg(level = 1, fill = 'currentColor', ground = '') {
   const rows = grid(level);
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${rows.length} ${rows.length}" role="img" aria-label="MrlyProd"><path fill="${fill}" d="${path(rows)}"/></svg>`;
+  const back = ground ? `<rect width="${rows.length}" height="${rows.length}" fill="${ground}"/>` : '';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${rows.length} ${rows.length}" role="img" aria-label="MrlyProd">${back}<path fill="${fill}" d="${path(rows)}"/></svg>`;
 }
