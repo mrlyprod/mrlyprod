@@ -112,3 +112,9 @@
 - [plot](demos/plot/) - Any sequence the ledger holds drawn rather than listed, with the smallest linear recurrence its terms satisfy, its characteristic polynomial and its growth read out beside it, and a second sequence mixed in to see the rule a blend inherits.
 - [integers](demos/integers/) - The union of every sequence the registry writes, read integer by integer: which of the first thousand the designs write, how many rows write each, and which are missed inside the pinned window.
 - [life](demos/life/) - Conway's rule on the eight cells around, which are the side-3 carpet tile with its centre popped, seeded by soup, glider or R-pentomino and run to its fate.
+
+### The alphabet
+
+- The pixel font that writes the wordmark: every glyph and the order its pen draws it.
+
+- [font](demos/font/) - Every glyph of MrlyFont writing itself in its hand-penned stroke order, with its stroke count against the parity floor and a chip on any glyph that could be drawn in fewer.

@@ -1,4 +1,4 @@
-use super::paths::sequence;
+use super::paths::strokes;
 use super::raster::{layout, Block, Layout};
 use std::collections::BTreeSet;
 
@@ -34,7 +34,7 @@ pub fn animate(text: &str, pad: usize) -> Anim {
     let mut frames = vec![Vec::new()];
     let mut current: Vec<usize> = Vec::new();
     for block in &laid.blocks {
-        for (r, c) in sequence(block.char, &block.rows).into_iter().flatten() {
+        for (r, c) in strokes(block.char).into_iter().flatten() {
             current.push((pad + block.offset + r) * cols + (pad + block.col + c));
             let mut frame = current.clone();
             frame.sort_unstable();

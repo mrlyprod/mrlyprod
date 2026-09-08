@@ -12,6 +12,7 @@ mrlycore.workspace = true
 mrlymath.workspace = true
 mrlynum.workspace = true
 mrlylab.workspace = true
+mrlyfont.workspace = true
 
 [[example]]
 name = "research-bijection"
@@ -388,3 +389,7 @@ path = "examples/plot/demo-spectra.rs"
 [[example]]
 name = "demo-zeta"
 path = "examples/plot/demo-zeta.rs"
+
+[[example]]
+name = "demo-font"
+path = "examples/grid/demo-font.rs"

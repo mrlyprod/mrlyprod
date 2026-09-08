@@ -47,6 +47,15 @@ pub fn font_glyph(c: &str) -> String {
     .to_string()
 }
 
+/// Returns the least strokes that can write the character, the minimum cover of its cells by 4-adjacent paths, or 0 outside the font.
+#[wasm_bindgen]
+pub fn font_floor(c: &str) -> usize {
+    c.chars()
+        .next()
+        .and_then(mrlyfont::glyph)
+        .map_or(0, |glyph| mrlyfont::floor(&mrlyfont::trim(&glyph.rows)))
+}
+
 /// Returns every character the font supports, in font order, as one string.
 #[wasm_bindgen]
 pub fn font_chars() -> String {

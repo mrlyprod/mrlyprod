@@ -133,6 +133,7 @@ name = "mrlyfig"
 version = "0.3.0"
 dependencies = [
  "mrlycore",
+ "mrlyfont",
  "mrlylab",
  "mrlymath",
  "mrlynum",

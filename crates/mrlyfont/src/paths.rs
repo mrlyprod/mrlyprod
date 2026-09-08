@@ -1,67 +1,19 @@
-use super::{glyph, trim};
+use super::pens::{self, Pen};
 use std::collections::BTreeSet;
-
-type Pen = (char, &'static [&'static [(usize, usize)]]);
-
-/// The hand-penned stroke orders of the seven wordmark letters.
-#[rustfmt::skip]
-pub const PATHS: &[Pen] = &[
-    ('M', &[
-        &[(4, 0), (3, 0), (2, 0), (1, 0), (0, 0)],
-        &[(0, 1), (0, 2), (0, 3), (0, 4)],
-        &[(1, 4), (2, 4), (3, 4), (4, 4)],
-        &[(1, 2), (2, 2), (3, 2), (4, 2)],
-    ]),
-    ('R', &[
-        &[(4, 0), (3, 0), (2, 0), (1, 0), (0, 0)],
-        &[(0, 1), (0, 2), (0, 3), (0, 4)],
-    ]),
-    ('L', &[
-        &[(0, 0), (1, 0), (2, 0), (3, 0), (4, 0)],
-        &[(4, 1), (4, 2), (4, 3), (4, 4)],
-    ]),
-    ('Y', &[
-        &[(0, 0), (1, 0), (2, 0)],
-        &[(2, 1), (2, 2), (2, 3)],
-        &[(0, 4), (1, 4), (2, 4)],
-        &[(3, 4), (4, 4), (4, 3), (4, 2), (4, 1), (4, 0)],
-    ]),
-    ('P', &[
-        &[(4, 0), (3, 0), (2, 0), (1, 0), (0, 0)],
-        &[(0, 1), (0, 2), (0, 3), (0, 4)],
-        &[(1, 4)],
-        &[(2, 4), (2, 3), (2, 2), (2, 1)],
-    ]),
-    ('O', &[
-        &[(4, 0), (3, 0), (2, 0), (1, 0), (0, 0)],
-        &[(0, 1), (0, 2), (0, 3), (0, 4)],
-        &[(1, 4), (2, 4), (3, 4), (4, 4)],
-        &[(4, 3), (4, 2), (4, 1)],
-    ]),
-    ('D', &[
-        &[(2, 3), (2, 2), (2, 1), (2, 0)],
-        &[(3, 0), (4, 0)],
-        &[(4, 1), (4, 2), (4, 3), (4, 4)],
-        &[(3, 4), (2, 4), (1, 4), (0, 4)],
-    ]),
-];
 
 const STEPS: [(i64, i64); 4] = [(-1, 0), (0, 1), (1, 0), (0, -1)];
 
-/// Returns the hand-penned strokes of a wordmark letter, or None for a character drawn by derivation.
+/// Returns the character's hand-penned strokes from the pen tables, or None outside the font.
 pub fn penned(c: char) -> Option<Vec<Vec<(usize, usize)>>> {
-    PATHS
-        .iter()
-        .find(|&&(key, _)| key == c)
-        .map(|&(_, strokes)| strokes.iter().map(|s| s.to_vec()).collect())
+    pens::all()
+        .into_iter()
+        .find(|&(key, _)| key == c)
+        .map(|pen| parse(&pen))
 }
 
 /// Returns the character's ordered strokes over its trimmed bitmap, or none for a character outside the font.
 pub fn strokes(c: char) -> Vec<Vec<(usize, usize)>> {
-    match glyph(c) {
-        Some(g) => sequence(c, &trim(&g.rows)),
-        None => Vec::new(),
-    }
+    penned(c).unwrap_or_default()
 }
 
 /// Flattens the character's strokes into one cell-by-cell drawing order.
@@ -69,8 +21,19 @@ pub fn path(c: char) -> Vec<(usize, usize)> {
     strokes(c).into_iter().flatten().collect()
 }
 
-pub(crate) fn sequence(c: char, rows: &[String]) -> Vec<Vec<(usize, usize)>> {
-    penned(c).unwrap_or_else(|| derive(rows))
+fn parse((_, strokes): &Pen) -> Vec<Vec<(usize, usize)>> {
+    strokes
+        .iter()
+        .map(|stroke| stroke.split_whitespace().map(cell).collect())
+        .collect()
+}
+
+fn cell(token: &str) -> (usize, usize) {
+    let digits: Vec<usize> = token
+        .chars()
+        .map(|d| d.to_digit(10).unwrap() as usize)
+        .collect();
+    (digits[0], digits[1])
 }
 
 fn lit_of(rows: &[String]) -> BTreeSet<(usize, usize)> {
@@ -104,7 +67,8 @@ fn opening(left: &BTreeSet<(usize, usize)>) -> (usize, usize) {
         .expect("opening is only asked of a non-empty set")
 }
 
-fn derive(rows: &[String]) -> Vec<Vec<(usize, usize)>> {
+/// Drafts a stroke order for a trimmed bitmap by walking its lit cells: start at a lowest-left free end, keep heading, lift when stuck.
+pub fn draft(rows: &[String]) -> Vec<Vec<(usize, usize)>> {
     let mut left = lit_of(rows);
     let mut out = Vec::new();
     while !left.is_empty() {
@@ -132,36 +96,116 @@ fn derive(rows: &[String]) -> Vec<Vec<(usize, usize)>> {
     out
 }
 
+/// Returns the least strokes that can write a trimmed bitmap: the minimum cover of its lit cells by 4-adjacent paths, zero for a blank.
+pub fn floor(rows: &[String]) -> usize {
+    let cells: Vec<(usize, usize)> = lit_of(rows).into_iter().collect();
+    let n = cells.len();
+    if n == 0 {
+        return 0;
+    }
+    let index = |cell: (usize, usize)| cells.binary_search(&cell).ok();
+    let mut edges = Vec::new();
+    for (i, &(r, c)) in cells.iter().enumerate() {
+        if let Some(j) = index((r, c + 1)) {
+            edges.push((i, j));
+        }
+        if let Some(j) = index((r + 1, c)) {
+            edges.push((i, j));
+        }
+    }
+    let mut deg = vec![0u8; n];
+    let mut parent: Vec<usize> = (0..n).collect();
+    let mut best = n - draft(rows).len();
+    forest(&edges, 0, 0, &mut deg, &mut parent, &mut best);
+    n - best
+}
+
+fn root(parent: &[usize], mut v: usize) -> usize {
+    while parent[v] != v {
+        v = parent[v];
+    }
+    v
+}
+
+fn forest(
+    edges: &[(usize, usize)],
+    at: usize,
+    taken: usize,
+    deg: &mut [u8],
+    parent: &mut [usize],
+    best: &mut usize,
+) {
+    *best = (*best).max(taken);
+    if at == edges.len() || taken + edges.len() - at <= *best {
+        return;
+    }
+    let (a, b) = edges[at];
+    if deg[a] < 2 && deg[b] < 2 {
+        let (ra, rb) = (root(parent, a), root(parent, b));
+        if ra != rb {
+            deg[a] += 1;
+            deg[b] += 1;
+            parent[ra] = rb;
+            forest(edges, at + 1, taken + 1, deg, parent, best);
+            parent[ra] = ra;
+            deg[a] -= 1;
+            deg[b] -= 1;
+        }
+    }
+    forest(edges, at + 1, taken, deg, parent, best);
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::supported;
+    use crate::{glyph, supported, trim};
+
+    fn permutes(c: char, walk: &[(usize, usize)]) {
+        let rows = trim(&glyph(c).unwrap().rows);
+        let seen: BTreeSet<(usize, usize)> = walk.iter().copied().collect();
+        assert_eq!(seen.len(), walk.len(), "{c} repeats a cell");
+        assert_eq!(seen, lit_of(&rows), "{c} misses or invents a cell");
+    }
 
     #[test]
     fn every_path_is_a_permutation_of_the_glyph() {
         for c in supported() {
+            permutes(c, &path(c));
+        }
+    }
+
+    #[test]
+    fn every_draft_is_a_permutation_of_the_glyph() {
+        for c in supported() {
             let rows = trim(&glyph(c).unwrap().rows);
-            let walk = path(c);
-            let seen: BTreeSet<(usize, usize)> = walk.iter().copied().collect();
-            assert_eq!(seen.len(), walk.len(), "{c} repeats a cell");
-            assert_eq!(seen, lit_of(&rows), "{c} misses or invents a cell");
+            let walk: Vec<(usize, usize)> = draft(&rows).into_iter().flatten().collect();
+            permutes(c, &walk);
         }
     }
 
     #[test]
-    fn the_wordmark_letters_are_penned_never_derived() {
-        for c in "MRLYPROD".chars() {
-            assert!(penned(c).is_some(), "{c} lost its pen order");
-        }
-        assert_eq!(penned('M').unwrap()[0][0], (4, 0));
-        assert_eq!(penned('D').unwrap().len(), 4);
+    fn the_pens_cover_the_font_once_in_order() {
+        let keys: Vec<char> = pens::all().into_iter().map(|(c, _)| c).collect();
+        assert_eq!(keys, supported(), "the pen tables drifted from the font");
+        let distinct: BTreeSet<char> = keys.iter().copied().collect();
+        assert_eq!(distinct.len(), keys.len(), "a glyph is penned twice");
+        assert_eq!(strokes('M')[0][0], (4, 0));
+        assert_eq!(strokes('D').len(), 4);
+        assert_eq!(strokes('X').len(), 3);
+        assert_eq!(strokes('8').len(), 1);
     }
 
     #[test]
-    fn every_penned_char_is_supported() {
-        for &(c, _) in PATHS {
-            assert!(glyph(c).is_some(), "{c} penned but unsupported");
+    fn no_pen_writes_below_its_floor() {
+        for c in supported() {
+            let rows = trim(&glyph(c).unwrap().rows);
+            let least = floor(&rows);
+            assert!(strokes(c).len() >= least, "{c} is penned under its floor");
         }
+        let least = |c: char| floor(&trim(&glyph(c).unwrap().rows));
+        assert_eq!((least('X'), least('8')), (3, 1));
+        assert_eq!((least('#'), least('x'), least('*')), (8, 7, 13));
+        assert_eq!((least(' '), least('.'), least('O')), (0, 1, 1));
     }
 
     #[test]

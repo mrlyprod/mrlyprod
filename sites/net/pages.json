@@ -41,6 +41,12 @@
       "group": "Numbers",
       "title": "The ledger",
       "blurb": "Every sequence the designs write, every integer they reach, and rules read out of the registry."
+    },
+    {
+      "key": "font",
+      "group": "MrlyFont",
+      "title": "The alphabet",
+      "blurb": "The pixel font that writes the wordmark: every glyph and the order its pen draws it."
     }
   ],
   "pages": [
@@ -370,6 +376,14 @@
       "blurb": "Conway's rule on the eight cells around, which are the side-3 carpet tile with its centre popped, seeded by soup, glider or R-pentomino and run to its fate.",
       "category": "ledger",
       "research": "automata",
+      "paper": null
+    },
+    {
+      "name": "font",
+      "title": "The 108 pens",
+      "blurb": "Every glyph of MrlyFont writing itself in its hand-penned stroke order, with its stroke count against the parity floor and a chip on any glyph that could be drawn in fewer.",
+      "category": "font",
+      "research": null,
       "paper": null
     }
   ]

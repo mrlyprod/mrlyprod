@@ -16,6 +16,8 @@ mod models;
 pub mod names;
 /// The stroke orders that write each character.
 pub mod paths;
+/// The hand-penned stroke tables, one per glyph.
+pub mod pens;
 /// The 0/1 grid a text renders to.
 pub mod raster;
 /// The string, list and JSON forms of glyphs.
@@ -30,7 +32,7 @@ pub use animate::{animate, cycle, merge, Anim, FPS, HOLD};
 pub use letters::{all, digits, extras, lowers, specials, uppers};
 pub use models::Glyph;
 pub use names::name_of;
-pub use paths::{path, strokes, PATHS};
+pub use paths::{draft, floor, path, strokes};
 pub use raster::raster;
 pub use serializer::{to_json, to_lists, to_strings};
 pub use shape::{descends, trim, DESCENDERS};
