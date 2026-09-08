@@ -113,7 +113,7 @@ fn panel(board: &mut Board, area: Frame, code: u128, color: Color) -> Result<usi
                 area.y + row as f64 * step + (step - dot) / 2.0,
                 dot,
                 dot,
-                ink::fade(ink::DIM, 0.55),
+                ink::fade(ink::dim(), 0.55),
             );
         }
     }
@@ -144,10 +144,10 @@ fn main() -> Result<()> {
     let first = Frame::new(frame.x, frame.y, half, half).inset(8.0);
     let second = Frame::new(frame.x + half, frame.y + half, half, half).inset(8.0);
     for area in [first, second] {
-        plot::axis(&mut board, area, ink::LINE);
+        plot::axis(&mut board, area, ink::line());
     }
-    let a = panel(&mut board, first.inset(10.0), 127, ink::BLUE)?;
-    let b = panel(&mut board, second.inset(10.0), 239, ink::ORANGE)?;
+    let a = panel(&mut board, first.inset(10.0), 127, ink::blue())?;
+    let b = panel(&mut board, second.inset(10.0), 239, ink::orange())?;
     assert_eq!(a, 7usize.pow(LEVEL as u32));
     assert_eq!(b, a);
     save("research-walks", &board)?;

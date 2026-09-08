@@ -173,11 +173,11 @@ function App() {
     if (!data.rows) return;
     const b = board(canvas, 170, { pad: PAD, top: 16, bottom: 20 });
     const peak = Math.max(...data.rows.map((r) => Math.max(r.filled_in, r.filled_cut)), 1);
-    line(b, data.rows.map((r) => [r.x, r.filled_in / peak]), ink.gold);
+    line(b, data.rows.map((r) => [r.x, r.filled_in / peak]), ink.yellow);
     line(b, data.rows.map((r) => [r.x, r.filled_cut / peak]), ink.blue);
     axis(b, [[0, '0'], [1, 'radius 1']]);
     rules(b, [data.frac], { color: ink.pink });
-    const edge = tag(b, 'in', ink.gold);
+    const edge = tag(b, 'in', ink.yellow);
     tag(b, 'cut', ink.blue, 'left', edge + 12);
   };
 
@@ -185,7 +185,7 @@ function App() {
     if (!data.levels) return;
     const b = board(canvas, 170, { pad: PAD, top: 16, bottom: 20 });
     const logs = data.levels.map((r) => Math.log10(1 + r.filled_in));
-    bars(b, logs, { color: (i) => (i === data.level ? ink.pink : ink.gold), inset: 2 });
+    bars(b, logs, { color: (i) => (i === data.level ? ink.pink : ink.yellow), inset: 2 });
     axis(b, [[0, 'level 0'], [1, String(data.levels.length - 1)]]);
   };
 
@@ -219,12 +219,12 @@ function App() {
     rules(b, [lx(at)], { color: ink.pink });
     ramp(d, seen[top]);
     ramp(d - 1, cut[top]);
-    line(b, trail((r) => seen[r]), ink.gold);
+    line(b, trail((r) => seen[r]), ink.yellow);
     line(b, trail((r) => cut[r]), ink.blue);
     line(b, trail((r) => (q.number * r <= top ? Math.abs(seen[q.number * r] - mass * seen[r]) : 0)), ink.orange, { width: 1 });
-    for (const r of marks) if (seen[r] >= 1) line(b, [[lx(r), ly(seen[r])]], ink.gold, { dots: 3 });
+    for (const r of marks) if (seen[r] >= 1) line(b, [[lx(r), ly(seen[r])]], ink.yellow, { dots: 3 });
     axis(b, [[0, 'r 1'], [1, `${top}`]], { wall: true });
-    let edge = tag(b, `N slope ${d.toFixed(4)}`, ink.gold);
+    let edge = tag(b, `N slope ${d.toFixed(4)}`, ink.yellow);
     edge = tag(b, `C slope ${(d - 1).toFixed(4)}`, ink.blue, 'left', edge + 12);
     tag(b, 'defect', ink.orange, 'left', edge + 12);
   };
@@ -242,10 +242,10 @@ function App() {
     const step = Math.log(q.number);
     const turn = Math.log(at) / step;
     rules(b, [turn - Math.floor(turn)], { color: ink.pink });
-    trail(a, ink.gold);
+    trail(a, ink.yellow);
     if (high !== low) trail(z, ink.green);
     axis(b, [[0, '0'], [0.5, `log_${q.number} r mod 1`], [1, '1']], { wall: true });
-    let edge = tag(b, `R ${a.start} to ${a.stop}`, ink.gold);
+    let edge = tag(b, `R ${a.start} to ${a.stop}`, ink.yellow);
     if (high !== low) edge = tag(b, `R ${z.start} to ${z.stop}`, ink.green, 'left', edge + 12);
     tag(b, 'N / r^d', ink.dim, 'left', edge + 12);
     if (gap) tag(b, `gap ${gap.sup.toFixed(4)}`, ink.dim, 'right');
@@ -314,7 +314,7 @@ function App() {
       <div className="arena" style={{ gridTemplateColumns: '3fr 2fr' }}>
         <div className="panel">
           <h2>The crop <span>{data.note}</span></h2>
-          {data.grid && <Grid grid={data.grid} on={ink.gold} role="img" aria-label="The crop" />}
+          {data.grid && <Grid grid={data.grid} on={ink.yellow} role="img" aria-label="The crop" />}
           <Markup style={ART} hidden={!data.art} svg={data.art ?? ''} role="img" aria-label="The crop" />
           <Stage hidden={!data.solid} role="img" aria-label="The crop" deps={[data]} onStage={(st) => {
             live.current = st;

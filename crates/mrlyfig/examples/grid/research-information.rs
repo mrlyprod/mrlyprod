@@ -73,13 +73,13 @@ fn main() -> Result<()> {
         &mut board,
         Frame::new(left, top, side, side),
         &whole,
-        ink::BLUE,
+        ink::blue(),
     );
     panel(
         &mut board,
         Frame::new(left + side + gutter, top, side, side),
         &rearranged,
-        ink::ORANGE,
+        ink::orange(),
     );
     save("research-information", &board)?;
     Ok(())

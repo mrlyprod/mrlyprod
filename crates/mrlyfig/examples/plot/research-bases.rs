@@ -22,12 +22,12 @@ fn main() -> Result<()> {
             let (u, v) = ring.place(a, b);
             let (x, y) = (cx + u * unit, cy - v * unit);
             if a == 0 && b == 0 {
-                board.disc(x, y, unit * 0.20, ink::fade(ink::DIM, 0.9));
+                board.disc(x, y, unit * 0.20, ink::fade(ink::dim(), 0.9));
             } else if gcd(a.unsigned_abs() as usize, b.unsigned_abs() as usize) == 1 {
                 visible += 1;
-                board.disc(x, y, unit * 0.30, ink::BLUE);
+                board.disc(x, y, unit * 0.30, ink::blue());
             } else {
-                board.disc(x, y, unit * 0.13, ink::fade(ink::DIM, 0.8));
+                board.disc(x, y, unit * 0.13, ink::fade(ink::dim(), 0.8));
             }
         }
     }

@@ -63,7 +63,7 @@ fn stamp(board: &mut Board, cell: &Cell3d, cx: f64, cy: f64, s: f64, shade: [Col
         board.polygon(pts, shade[*tone]);
         let mut ring = pts.clone();
         ring.push(pts[0]);
-        board.polyline(&ring, s / 14.0, ink::GROUND);
+        board.polyline(&ring, s / 14.0, ink::ground());
     }
 }
 
@@ -80,9 +80,9 @@ fn main() -> Result<()> {
     );
     assert_eq!(rows.iter().map(|r| r.len()).sum::<usize>(), 22);
     let shade = [
-        ink::BLUE,
-        ink::mix(ink::BLUE, ink::GROUND, 0.4),
-        ink::mix(ink::BLUE, ink::GROUND, 0.65),
+        ink::blue(),
+        ink::mix(ink::blue(), ink::ground(), 0.4),
+        ink::mix(ink::blue(), ink::ground(), 0.65),
     ];
     let (mx, my) = frame.center();
     let pitch = frame.h / ROWS as f64;
@@ -97,7 +97,7 @@ fn main() -> Result<()> {
                     edge[0],
                     edge[1],
                     s / 20.0,
-                    ink::mix(ink::LINE, ink::DIM, 0.3),
+                    ink::mix(ink::line(), ink::dim(), 0.3),
                 );
             }
             let cube = designs::create(*code, 2, 1, 2)?;

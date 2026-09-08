@@ -242,12 +242,12 @@ function App() {
         low: low - pad,
         high: high + pad,
         marks: [[read.constant, ink.blue, `the constant word ${read.constant.toFixed(9)}`]],
-        lines: [[rows.map((value, i) => [at(i), value]), ink.gold, 1.8]],
+        lines: [[rows.map((value, i) => [at(i), value]), ink.yellow, 1.8]],
         labels: [[0, 'one block'], [1, `${pick.blocks} blocks`]],
       };
       const stats = (
         <>
-          <span><span className="swatch" style={{ background: ink.gold }}></span> staircase dimension</span>
+          <span><span className="swatch" style={{ background: ink.yellow }}></span> staircase dimension</span>
           {read.rows.map((row) => <span key={row.blocks}>{row.blocks} blocks, {row.length} letters <b>{row.dimension.toFixed(9)}</b></span>)}
           <span>dips at the second block <b>{String(read.rows[1].dimension < read.rows[0].dimension)}</b></span>
         </>
@@ -269,13 +269,13 @@ function App() {
         [read.limit, ink.green, `interior exponent ${read.limit.toFixed(9)}`],
         [read.phi, ink.pink, `Phi(f) ${read.phi.toFixed(4)}`],
       ],
-      lines: [[fill, ink.blue, 1], [control, ink.orange, 1.2], [component, ink.gold, 1.8]],
+      lines: [[fill, ink.blue, 1], [control, ink.orange, 1.2], [component, ink.yellow, 1.8]],
       labels: [[0, 'L = 1'], [1, `L = ${total}`]],
     };
     const last = read.rows[total - 1];
     const stats = (
       <>
-        <span><span className="swatch" style={{ background: ink.gold }}></span> {read.schedule} component rate <b>{last[0].toFixed(9)}</b></span>
+        <span><span className="swatch" style={{ background: ink.yellow }}></span> {read.schedule} component rate <b>{last[0].toFixed(9)}</b></span>
         <span><span className="swatch" style={{ background: ink.orange }}></span> periodic control <b>{read.control[total - 1].toFixed(9)}</b></span>
         <span><span className="swatch" style={{ background: ink.blue }}></span> fill rate <b>{last[1].toFixed(9)}</b></span>
         <span><span className="swatch" style={{ background: ink.green }}></span> interior exponent <b>{read.limit.toFixed(15)}</b></span>
@@ -336,7 +336,7 @@ function App() {
   const sheet = () => {
     if (word.error || pick.view === 'solid') return null;
     if (pick.view === 'nest') return <Pixels data={nesting(codes, numbers, bases, word.taken)} canvasRef={sheetRef} role="img" aria-label="the word" />;
-    return <Grid grid={m.magic_grid(cut(codes), cut(numbers), cut(bases))} on={ink.gold} canvasRef={sheetRef} role="img" aria-label="the word" />;
+    return <Grid grid={m.magic_grid(cut(codes), cut(numbers), cut(bases))} on={ink.yellow} canvasRef={sheetRef} role="img" aria-label="the word" />;
   };
 
   const onStage = (live) => {
@@ -408,7 +408,7 @@ function App() {
 
   const pane = (one) => (
     <div>
-      <Grid grid={one.grid} on={ink.gold} role="img" aria-label={spell(dimension, one.word.codes, one.word.numbers, one.word.bases)} />
+      <Grid grid={one.grid} on={ink.yellow} role="img" aria-label={spell(dimension, one.word.codes, one.word.numbers, one.word.bases)} />
       <div className="stats">
         <span>{spell(dimension, one.word.codes, one.word.numbers, one.word.bases)}</span>
         <Stat label="side">{one.census.side}</Stat>

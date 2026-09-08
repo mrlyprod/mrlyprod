@@ -56,7 +56,7 @@ fn main() -> Result<()> {
             cy - (v - (lo.1 + hi.1) / 2.0) * scale,
         )
     };
-    for (cut, color) in cuts.iter().zip([ink::BLUE, ink::ORANGE]) {
+    for (cut, color) in cuts.iter().zip([ink::blue(), ink::orange()]) {
         let dots: Vec<(f64, f64)> = cut.iter().copied().map(place).map(screen).collect();
         plot::dots(&mut board, &dots, 2.2, color);
     }

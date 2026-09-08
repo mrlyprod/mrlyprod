@@ -8,7 +8,7 @@ fn outline(board: &mut Board, cell: (f64, f64, f64, f64), thick: f64) {
     board.polyline(
         &[(x, y), (x + w, y), (x + w, y + h), (x, y + h), (x, y)],
         thick,
-        ink::LINE,
+        ink::line(),
     );
 }
 
@@ -40,9 +40,9 @@ fn main() -> Result<()> {
                 let zeros = [a, b, c].iter().filter(|value| **value == 0).count();
                 if zeros <= 1 {
                     near += 1;
-                    board.rect(x, y, w, h, ink::GREEN);
+                    board.rect(x, y, w, h, ink::green());
                 } else {
-                    board.rect(x, y, w, h, ink::DIM);
+                    board.rect(x, y, w, h, ink::dim());
                 }
             }
         }

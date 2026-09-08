@@ -24,7 +24,7 @@ fn main() -> Result<()> {
     for (place, code) in DESIGNS.iter().enumerate() {
         let design = designs::create(*code, 3, 3, 0, 3)?;
         let types = design.types();
-        let tone = ink::INKS[place % 3];
+        let tone = ink::inks()[place % 3];
         let x = left + (place % COLS) as f64 * (side + GUTTER);
         let y = top + (place / COLS) as f64 * (side + GUTTER);
         let mut filled = 0usize;

@@ -1,4 +1,4 @@
-use crate::{ink, Fault, Pixels};
+use crate::{rgba, theme, Fault, Pixels};
 use mrlycore::{json, Json};
 use mrlynum::factor::gcd;
 use mrlynum::{lattice, series};
@@ -59,20 +59,22 @@ fn depth(dimension: u32) -> Result<u32, Fault> {
 }
 
 fn shade(layer: usize, layers: bool) -> [u8; 4] {
+    let ink = theme();
     if layer == 1 {
-        return ink::BLUE;
+        return rgba(ink.blue);
     }
     if !layers {
-        return ink::FAINT;
+        return rgba(ink.line);
     }
     let t = 1.0 / layer as f64;
     let step = |ground: u8, tone: u8| {
         (f64::from(ground) + (f64::from(tone) - f64::from(ground)) * t).round() as u8
     };
+    let (ground, dim) = (ink.ground, ink.dim);
     [
-        step(ink::DEEP[0], ink::DIM[0]),
-        step(ink::DEEP[1], ink::DIM[1]),
-        step(ink::DEEP[2], ink::DIM[2]),
+        step(ground.r, dim.r),
+        step(ground.g, dim.g),
+        step(ground.b, dim.b),
         255,
     ]
 }

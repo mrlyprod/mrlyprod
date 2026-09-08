@@ -10,6 +10,7 @@ import { tree } from "../lib/tree.js";
 import { logoSvg } from "../lib/logo.js";
 import { glyphSvg } from "../../../pkgs/js/mrlyjs/ui/font.js";
 import { Shell } from "../../../pkgs/js/mrlyjs/ui/chrome.jsx";
+import { light } from "../../../pkgs/js/mrlyjs/ui/palette.js";
 import kit from "../lib/site.js";
 import { shelf } from "./shelf.ts";
 
@@ -22,7 +23,7 @@ const AUTHOR = "Carlo Mitchener";
 const GITHUB = "https://github.com/mrlyprod/mrlyprod/tree/main";
 const LIST = /^- \[([^\]]+)\]\([^)]*\) - (.+)$/gm;
 const HEADING = /<h([23]) id="([^"]+)">(.*?)<\/h\1>/g;
-const AVATAR = /^!\[avatar\]\(figures\/avatar\.png\)\n?/m;
+const AVATAR = /^(!\[avatar\]\(figures\/avatar\.png\)|<picture>.*?figures\/avatar-light\.png.*?<\/picture>)\n?/m;
 const WORD = glyphSvg(kit.title.toUpperCase());
 const ICONS = [
   `<link rel="icon" href="/favicon.svg" type="image/svg+xml">`,
@@ -39,24 +40,40 @@ const brand = (name: string) => (name === kit.title ? name : `${name} · ${kit.t
 
 /* FIGURES */
 
+const SIDES = ["dark", "light"] as const;
+
+function figure(home: string, name: string, route: string) {
+  const file = join(home, `${name}.png`);
+  if (!existsSync(file)) throw new Error(`site: ${name}.png missing from ${relative(org, home)} for ${route}; draw it with bun run figures`);
+  return file;
+}
+
 function press(site: Site, out: Output[]) {
   const home = site.input("figures").path;
   return (name: string, route: string) => {
-    const file = join(home, `${name}.png`);
-    if (!existsSync(file)) throw new Error(`site: ${name}.png missing from ${relative(org, home)} for ${route}; draw it with bun run figures`);
-    const path = `figures/${name}.png`;
-    if (!out.some((item) => item.path === path)) out.push({ path, bytes: bytes(file) });
-    return `/${path}`;
+    const pair = { dark: "", light: "" };
+    for (const side of SIDES) {
+      const file = figure(home, `${name}-${side}`, route);
+      const path = `figures/${name}-${side}.png`;
+      if (!out.some((item) => item.path === path)) out.push({ path, bytes: bytes(file) });
+      pair[side] = `/${path}`;
+    }
+    return pair;
   };
 }
 
 type Fig = ReturnType<typeof press>;
 
+const pic = (fig: Fig, name: string, route: string, alt: string, extra = "", cls = "") => {
+  const pair = fig(name, route);
+  return SIDES.map((side) => `<img class="${cls}${cls ? " " : ""}${side}" src="${pair[side]}" alt="${escape(alt)}" width="1024" height="1024"${extra}>`).join("");
+};
+
 const hero = (fig: Fig, name: string, route: string, alt: string) =>
-  `<figure class="opener"><img src="${fig(name, route)}" alt="${escape(alt)}" width="1024" height="1024"></figure>`;
+  `<figure class="opener">${pic(fig, name, route, alt)}</figure>`;
 
 const card = (fig: Fig, href: string, name: string, alt: string, text: string, dates: string[] = []) =>
-  `<a class="tile" href="${href}"><img src="${fig(name, href)}" alt="${escape(alt)}" width="1024" height="1024" loading="lazy"><h2>${escape(alt)}</h2><p>${escape(text)}</p>${dates.length ? `<p class="dates">${dates.map((d) => `<span>${escape(d)}</span>`).join("")}</p>` : ""}</a>`;
+  `<a class="tile" href="${href}">${pic(fig, name, href, alt, ' loading="lazy"')}<h2>${escape(alt)}</h2><p>${escape(text)}</p>${dates.length ? `<p class="dates">${dates.map((d) => `<span>${escape(d)}</span>`).join("")}</p>` : ""}</a>`;
 
 /* HEAD */
 
@@ -107,6 +124,7 @@ function shell(site: Site, leaf: Leaf) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escape(brand(name))}</title>
 ${meta(route, name, description, type)}
+<link rel="stylesheet" href="${site.asset("palette.css")}">
 <link rel="stylesheet" href="${site.asset("tokens.css")}">
 <link rel="stylesheet" href="${site.asset("base.css")}">
 <link rel="stylesheet" href="${site.asset("chrome.css")}">
@@ -243,7 +261,7 @@ function paper(site: Site, route: Route): Output[] {
   for (const file of walk(join(lane, "figures"))) out.push({ path: `${at}/figures/${file.slice(join(lane, "figures").length + 1)}`, bytes: bytes(file) });
   const when = [p.published && `First published ${p.published}`, p.revised && `revised ${p.revised}`].filter(Boolean).join(", ");
   const files = [p.pdf && `<a href="paper.pdf">PDF</a>`, `<a href="paper.tex">TeX</a>`].filter(Boolean).join(" · ");
-  const avatar = `<img class="avatar" src="${fig(`paper-${p.slug}`, route.route)}" alt="${escape(p.name)}" width="1024" height="1024">`;
+  const avatar = pic(fig, `paper-${p.slug}`, route.route, p.name, "", "avatar");
   const plate = `<div class="plate paper">${avatar}<h1 id="${escape(p.slug)}">${escape(p.name)}</h1><p class="by">${escape(AUTHOR)}</p><p class="by">${escape(when)}</p></div>\n<p class="meta">${files}</p>`;
   const body = `${plate}\n${md(p.md.replace(/^# .+\n/, "").replace(AVATAR, ""), { math })}`;
   const data = {
@@ -252,7 +270,7 @@ function paper(site: Site, route: Route): Output[] {
     headline: p.name,
     description: p.blurb || summary(p.md),
     url: root + route.route,
-    image: `${root}/figures/paper-${p.slug}.png`,
+    image: `${root}/figures/paper-${p.slug}-dark.png`,
     author: { "@type": "Person", name: AUTHOR },
     datePublished: p.published || undefined,
     dateModified: dated(p) || undefined,
@@ -319,7 +337,7 @@ function note(site: Site, route: Route): Output[] {
     headline: name,
     description: lead,
     url: root + route.route,
-    image: `${root}/figures/${which}.png`,
+    image: `${root}/figures/${which}-dark.png`,
     author: { "@type": "Person", name: AUTHOR },
   };
   const at = n.home ? "research/index.html" : `research/${n.name}/index.html`;
@@ -354,7 +372,7 @@ function post(site: Site, route: Route): Output[] {
     headline: p.name,
     description: p.lead,
     url: root + route.route,
-    image: `${root}/figures/${p.figure}.png`,
+    image: `${root}/figures/${p.figure}-dark.png`,
     author: { "@type": "Person", name: AUTHOR },
     datePublished: p.date || undefined,
   };
@@ -511,11 +529,10 @@ function draw(site: Site, route: Route) {
 
 function extras(site: Site): Output[] {
   const out: Output[] = [];
-  out.push({ path: "favicon.svg", bytes: logoSvg(1, "#5a4bd1") });
+  out.push({ path: "favicon.svg", bytes: logoSvg(1, light.accent) });
   const home = site.input("figures").path;
-  for (const [name, target] of [["site-og", "og.png"], ["site-icon", "icon-512.png"], ["site-icon", "apple-touch-icon.png"]]) {
-    const file = join(home, `${name}.png`);
-    if (existsSync(file)) out.push({ path: target, bytes: bytes(file) });
+  for (const [name, target] of [["site-og-dark", "og.png"], ["site-icon-dark", "icon-512.png"], ["site-icon-dark", "apple-touch-icon.png"]]) {
+    out.push({ path: target, bytes: bytes(figure(home, name, `/${target}`)) });
   }
   const shared = join(site.input("research").path, "figures");
   for (const file of walk(shared)) out.push({ path: `research/figures/${file.slice(shared.length + 1)}`, bytes: bytes(file) });

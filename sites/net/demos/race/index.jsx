@@ -5,12 +5,12 @@ import { useSeeds } from '../../lib/select.jsx';
 
 const m = await ready();
 const NUMBER = 3, LEVEL = 4, BASE = 3, WALKERS = 300, TICKS = 12, SCALE = 6;
-const SITE = [46, 54, 64], HOLE = rgb(ink.deep);
+const swatches = () => [rgb(ink.line), rgb(ink.deep)];
 const DIM = m.dimension('127', NUMBER, 2, BASE).toFixed(3);
 
 const SIDES = [
-  { code: '127', color: ink.blue, swatch: 'var(--blue)', tone: 'the fast one' },
-  { code: '239', color: ink.orange, swatch: 'var(--orange)', tone: 'the slow one' },
+  { code: '127', color: ink.blue, swatch: 'var(--ink-blue)', tone: 'the fast one' },
+  { code: '239', color: ink.orange, swatch: 'var(--ink-orange)', tone: 'the slow one' },
 ].map((side) => ({
   ...side,
   name: m.name_of(side.code, 2, BASE),
@@ -39,9 +39,9 @@ function runner(code, color) {
       return race.steps();
     },
     draw(canvas) {
-      const n = side, px = image.data, trail = race.trail(), [r, g, b] = tint;
+      const n = side, px = image.data, trail = race.trail(), [r, g, b] = tint, [site, hole] = swatches();
       for (let i = 0; i < n * n; i++) {
-        const base = types[i] ? SITE : HOLE;
+        const base = types[i] ? site : hole;
         const heat = Math.min(1, trail[i] / 12) * 0.55;
         px[i * 4] = base[0] + (r - base[0]) * heat;
         px[i * 4 + 1] = base[1] + (g - base[1]) * heat;

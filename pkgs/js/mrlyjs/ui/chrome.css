@@ -126,10 +126,10 @@ button.primary { font-weight: 600; }
 .stats { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s5); color: var(--dim); font-size: 13px; margin-top: var(--s3); }
 .stats b { color: var(--fg); font-weight: 500; font-family: var(--mono); }
 .chip { display: inline-block; border-radius: var(--round); padding: 0 var(--s2); font: 11px/18px var(--mono); border: var(--hair); color: var(--dim); }
-.chip.proved { color: color-mix(in srgb, var(--green) var(--mix), var(--fg)); border-color: color-mix(in srgb, var(--green) var(--mix), var(--fg)); }
-.chip.verified { color: color-mix(in srgb, var(--blue) var(--mix), var(--fg)); border-color: color-mix(in srgb, var(--blue) var(--mix), var(--fg)); }
-.chip.conjecture { color: color-mix(in srgb, var(--gold) var(--mix), var(--fg)); border-color: color-mix(in srgb, var(--gold) var(--mix), var(--fg)); }
-.chip.refuted { color: color-mix(in srgb, var(--orange) var(--mix), var(--fg)); border-color: color-mix(in srgb, var(--orange) var(--mix), var(--fg)); }
+.chip.proved { color: color-mix(in srgb, var(--ink-green) var(--mix), var(--fg)); border-color: color-mix(in srgb, var(--ink-green) var(--mix), var(--fg)); }
+.chip.verified { color: color-mix(in srgb, var(--ink-blue) var(--mix), var(--fg)); border-color: color-mix(in srgb, var(--ink-blue) var(--mix), var(--fg)); }
+.chip.conjecture { color: color-mix(in srgb, var(--ink-yellow) var(--mix), var(--fg)); border-color: color-mix(in srgb, var(--ink-yellow) var(--mix), var(--fg)); }
+.chip.refuted { color: color-mix(in srgb, var(--ink-orange) var(--mix), var(--fg)); border-color: color-mix(in srgb, var(--ink-orange) var(--mix), var(--fg)); }
 .badge { font: 12px var(--mono); }
 
 /* TABLES */

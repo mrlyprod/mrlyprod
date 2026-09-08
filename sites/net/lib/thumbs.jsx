@@ -60,7 +60,7 @@ const tour = (m) => (canvas) => {
   const slot = (w - 12) / codes.length, size = Math.min(slot - 6, h - 12);
   codes.forEach((code, i) => {
     const tile = document.createElement('canvas');
-    paint(tile, m.two_grid(code, 5, 1, 0, 2), ink.gold);
+    paint(tile, m.two_grid(code, 5, 1, 0, 2), ink.yellow);
     ctx.drawImage(tile, 6 + i * slot + (slot - size) / 2, (h - size) / 2, size, size);
   });
 };
@@ -124,14 +124,14 @@ const spectrometer = (m) => (canvas) => {
 
 const sequences = (m) => (canvas) => {
   const b = board(canvas, canvas.clientWidth / 1.5, { top: 8, bottom: 8 });
-  bars(b, m.ledger_terms('7', 2, 2, 'fills', 'level', 8, '500000').map((t) => Math.log10(Number(t))), { color: ink.gold, inset: 3 });
+  bars(b, m.ledger_terms('7', 2, 2, 'fills', 'level', 8, '500000').map((t) => Math.log10(Number(t))), { color: ink.yellow, inset: 3 });
 };
 
 const plot = (m) => (canvas) => {
   const b = board(canvas, canvas.clientWidth / 1.5, { top: 8, bottom: 8 });
   const logs = JSON.parse(m.blend_series('23', 3, 2, 'surface', 'level', 12, '500000', 1)).log10;
   const peak = Math.max(...logs);
-  bars(b, logs, { peak, color: ink.gold, inset: 3 });
+  bars(b, logs, { peak, color: ink.yellow, inset: 3 });
   line(b, logs.map((v, i) => [(i + 0.5) / logs.length, v / peak]), ink.blue, { width: 1.4, dots: 2.4 });
 };
 
@@ -141,7 +141,7 @@ const tower = (m) => (canvas) => {
   const slot = (w - 12) / 4, size = Math.min(slot - 6, h - 12);
   for (let k = 1; k <= 4; k++) {
     const block = document.createElement('canvas');
-    paint(block, k === 1 ? m.two_grid('7', 2, 1, 0, 2) : m.magic_grid(Array(k).fill('7'), Array(k).fill(2), Array(k).fill(2)), ink.gold);
+    paint(block, k === 1 ? m.two_grid('7', 2, 1, 0, 2) : m.magic_grid(Array(k).fill('7'), Array(k).fill(2), Array(k).fill(2)), ink.yellow);
     ctx.drawImage(block, 6 + (k - 1) * slot + (slot - size) / 2, (h - size) / 2, size, size);
   }
 };
@@ -174,7 +174,7 @@ const echo = (m) => (canvas) => {
   for (let i = 0; i < gamma.length; i += 1) if (gamma[i] > 4 && gamma[i] < 60 && score[i] > peak) peak = score[i];
   const lift = (v) => Math.log10(Math.max(v, 1)) / Math.log10(peak);
   rules(b, read.lattice.filter((g) => g < top).map(at), { color: ink.pink, dash: [3, 4] });
-  rules(b, read.zeros.filter((g) => g < top).map(at), { color: ink.gold });
+  rules(b, read.zeros.filter((g) => g < top).map(at), { color: ink.yellow });
   const points = [];
   for (let i = 0; i < gamma.length && gamma[i] <= top; i += 1) points.push([at(gamma[i]), lift(score[i])]);
   line(b, points, ink.blue, { width: 1.2 });
@@ -195,7 +195,7 @@ const zeta = (m) => (canvas) => {
     else ctx.moveTo(x, y);
   }
   ctx.stroke();
-  ctx.strokeStyle = ink.gold;
+  ctx.strokeStyle = ink.yellow;
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.arc(w / 2, h / 2, 4, 0, Math.PI * 2);
@@ -204,7 +204,7 @@ const zeta = (m) => (canvas) => {
 
 const GAUGES = [
   ['wallis', ink.blue], ['leibniz', ink.blue], ['basel', ink.blue], ['gamma', ink.blue],
-  ['e', ink.blue], ['primes', ink.gold], ['goldbach', ink.gold], ['mertens', ink.orange],
+  ['e', ink.blue], ['primes', ink.yellow], ['goldbach', ink.yellow], ['mertens', ink.orange],
 ];
 
 const formulas = (m) => (canvas) => {
@@ -243,14 +243,15 @@ const DRAW = {
   spectrometer: (m) => <Sketch draw={spectrometer(m)} className="" />,
   spectra: (m) => <Grid grid={m.two_grid('7', 2, 5, 0, 2)} on={ink.pink} className="" />,
   modes: (m) => <Pixels data={modes(m)} className="" />,
-  universe: (m) => <Grid grid={m.two_grid('9', 3, 3, 0, 2)} on={ink.gold} className="" />,
+  universe: (m) => <Grid grid={m.two_grid('9', 3, 3, 0, 2)} on={ink.yellow} className="" />,
   words: (m) => <Pixels data={m.magic_pixels(['7', '14'], [3, 7], [2, 2])} className="" />,
   life: (m) => <Grid grid={{ width: 48, height: 48, types: m.life_noise(48, 48, 0.4, 3) }} on={ink.green} className="" />,
-  wolfram: (m) => <Grid grid={cone(m)} on={ink.gold} className="" />,
+  wolfram: (m) => <Grid grid={cone(m)} on={ink.yellow} className="" />,
   mrlylife: (m) => <Grid grid={m.life_mask(2, '7', 3, 2)} on={ink.green} className="" />,
+  chladni: (m) => <Grid grid={m.chladni_kernel('7', 3, 3, 32)} on={ink.yellow} className="" />,
   moire: (m) => <Pixels data={m.moire('weave', 11, 120, 'fire', 2, false)} className="" />,
   morse: (m) => <Signs grid={m.morse_lift('parity', 7)} className="" />,
-  wallis: (m) => <Grid grid={m.wallis_grid('odd', 3, 3)} on={ink.gold} className="" />,
+  wallis: (m) => <Grid grid={m.wallis_grid('odd', 3, 3)} on={ink.yellow} className="" />,
   spin: (m) => <Pixels data={m.wheel(m.profile(Float32Array.from(m.two_grid('495', 3, 4, 0, 3).types), 81, 256), 180, 'fire', 64, false)} className="" />,
   radial: (m) => <Pixels data={m.sheet(m.radial(Float32Array.from(carpet(m).types), 27, 180, 5, 72, 'mean', 2), 180, 'fire', 64, false)} className="" />,
   volume: (m) => <Pixels data={m.paint_span(m.plane_field(solid(m), 48, [1, 1, 1], 0.5, 180), 180, range(m).min, range(m).max, 'fire', 16, false)} className="" />,
@@ -259,14 +260,14 @@ const DRAW = {
   carry: (m) => <Sketch draw={carry(m)} className="" />,
   farey: (m) => <Sketch draw={farey(m)} className="" />,
   pi: (m) => <Pixels data={m.visible_pixels(100, 180, true)} className="" />,
-  primes: (m) => <Grid grid={sieve(m).grid(15)} on={ink.gold} className="" />,
+  primes: (m) => <Grid grid={sieve(m).grid(15)} on={ink.yellow} className="" />,
   ulam: (m) => <Pixels data={m.spiral_pixels('square', 61, 4, -2, 41, 'prime', false, 180)} className="" />,
   snail: (m) => <Sketch draw={snail(m)} className="" />,
   gaussian: (m) => <Pixels data={m.ring_pixels('gaussian', 24, 'class', false, 180)} className="" />,
   graphs: (m) => <Sketch draw={graphs(m)} className="" />,
   sequences: (m) => <Sketch draw={sequences(m)} className="" />,
   plot: (m) => <Sketch draw={plot(m)} className="" />,
-  integers: (m) => <Grid grid={{ width: 40, height: census(m).length / 40, types: Uint8Array.from(census(m), (rows) => (rows ? 1 : 0)) }} on={ink.gold} className="" />,
+  integers: (m) => <Grid grid={{ width: 40, height: census(m).length / 40, types: Uint8Array.from(census(m), (rows) => (rows ? 1 : 0)) }} on={ink.yellow} className="" />,
   echo: (m) => <Sketch draw={echo(m)} className="" />,
   zeta: (m) => <Sketch draw={zeta(m)} className="" />,
   formulas: (m) => <Sketch draw={formulas(m)} className="" />,

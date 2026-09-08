@@ -9,10 +9,12 @@ HEIGHT = 760
 SCALE = 36.0
 N = 30
 
-SURF = (0xFC, 0xFC, 0xFB)
-BLUE = (0x2A, 0x78, 0xD6)
-GRAY = (0xC3, 0xC2, 0xB7)
-INK = (0x0B, 0x0B, 0x0B)
+# PALETTE
+SURF = (255, 255, 255)
+BLUE = (0, 140, 255)
+GRAY = (186, 186, 191)
+INK = (0, 0, 0)
+# PALETTE END
 
 OUT = Path("research/figures/bases-fig.png")
 

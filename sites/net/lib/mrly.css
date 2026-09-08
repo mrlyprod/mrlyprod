@@ -1,3 +1,4 @@
+@import "../../../pkgs/js/mrlyjs/ui/palette.css";
 @import "../../../pkgs/js/mrlyjs/ui/tokens.css";
 @import "../../../pkgs/js/mrlyjs/ui/base.css";
 @import "../../../pkgs/js/mrlyjs/ui/chrome.css";
@@ -6,9 +7,9 @@
 
 .sub { color: var(--dim); margin-top: var(--s2); max-width: 72ch; }
 .foot { margin-top: 30px; padding-top: 14px; border-top: var(--hair); color: var(--dim); font-size: 13px; max-width: 80ch; }
-.note { color: var(--orange); font: 13px var(--mono); min-height: 20px; margin-top: 8px; }
+.note { color: var(--ink-orange); font: 13px var(--mono); min-height: 20px; margin-top: 8px; }
 .banner { min-height: 24px; font-weight: 600; margin-top: 12px; }
-.gold { color: var(--gold); }
+.yellow { color: var(--ink-yellow); }
 .shift { color: var(--dim); font: 12px var(--mono); }
 pre { font: 12px/1.6 var(--mono); color: var(--dim); white-space: pre-wrap; margin-top: 10px; }
 
@@ -21,7 +22,7 @@ pre { font: 12px/1.6 var(--mono); color: var(--dim); white-space: pre-wrap; marg
 .panel h2 ~ h2 { margin-top: 16px; }
 .swatch { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
 .sheet { width: 100%; display: block; border-radius: var(--r2); background: var(--art); image-rendering: pixelated; }
-.stage { width: 100%; aspect-ratio: 4 / 3; display: block; border-radius: var(--r3); background: radial-gradient(ellipse at 50% 40%, #151b22, var(--art) 70%); }
+.stage { width: 100%; aspect-ratio: 4 / 3; display: block; border-radius: var(--r3); background: radial-gradient(ellipse at 50% 40%, var(--panel), var(--art) 70%); }
 .bars { width: 100%; height: 220px; display: block; border-radius: var(--r2); background: var(--art); }
 .meter { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; margin-top: 10px; }
 .meter div { height: 100%; width: 0; border-radius: 4px; }

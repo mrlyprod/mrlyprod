@@ -45,7 +45,7 @@ fn main() -> Result<()> {
     let hi = profile.iter().copied().fold(f64::MIN, f64::max);
     assert!(hi - lo > 0.5);
 
-    let ramp = Ramp::new(vec![ink::GROUND, ink::BLUE, ink::GOLD]);
+    let ramp = Ramp::new(vec![ink::ground(), ink::blue(), ink::yellow()]);
     let mut board = Board::square();
     let frame = board.frame(0.08);
     let (cx, cy) = frame.center();

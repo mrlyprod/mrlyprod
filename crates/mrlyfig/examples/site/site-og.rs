@@ -24,7 +24,7 @@ fn main() -> Result<()> {
         w,
         h,
     );
-    Grid::new(frame, cols, rows, 0.0).carpet(&mut board, &mask, ink::FG);
+    Grid::new(frame, cols, rows, 0.0).carpet(&mut board, &mask, ink::fg());
     save("site-og", &board)?;
     Ok(())
 }

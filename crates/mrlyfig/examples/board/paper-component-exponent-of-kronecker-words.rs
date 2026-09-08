@@ -40,9 +40,9 @@ fn main() -> Result<()> {
             let (x, y, w, h) = grid.cell(col, row);
             if meets {
                 ceiling += 1;
-                board.rect(x, y, w, h, ink::GREEN);
+                board.rect(x, y, w, h, ink::green());
             } else {
-                board.rect(x, y, w, h, ink::ORANGE);
+                board.rect(x, y, w, h, ink::orange());
             }
             if constant {
                 exact += 1;
@@ -52,7 +52,7 @@ fn main() -> Result<()> {
                     y + (h - pip) / 2.0,
                     pip,
                     pip,
-                    ink::GOLD,
+                    ink::yellow(),
                 );
             }
         }

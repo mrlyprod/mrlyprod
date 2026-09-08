@@ -1,6 +1,6 @@
 #![allow(clippy::too_many_arguments)]
 
-use crate::{code_of, Fault, Grid};
+use crate::{code_of, theme, Fault, Grid};
 use mrlycore::json;
 use mrlycore::tensor::Tensor;
 use mrlymath::bang::factory;
@@ -479,6 +479,7 @@ pub fn crop_svg(
         out.push(format!("<clipPath id=\"crop\">{element}/></clipPath>"));
         out.push("<g clip-path=\"url(#crop)\">".to_string());
     }
+    let ground = theme().ground.to_hex();
     for a0 in 0..side {
         for a1 in 0..side {
             if kept.get(&[a0, a1]) == 0 {
@@ -486,7 +487,7 @@ pub fn crop_svg(
             }
             let (x, y) = (a1 * scale, a0 * scale);
             out.push(format!(
-                "<rect x=\"{x}\" y=\"{y}\" width=\"{scale}\" height=\"{scale}\" fill=\"#000\"/>"
+                "<rect x=\"{x}\" y=\"{y}\" width=\"{scale}\" height=\"{scale}\" fill=\"{ground}\"/>"
             ));
         }
     }

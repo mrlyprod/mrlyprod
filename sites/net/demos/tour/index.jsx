@@ -69,7 +69,7 @@ const CARDS = [
   {
     key: 'perimeter', title: 'The perimeter of the carpet', slider: ['level', 1, FLATCAP, 3],
     say: 'Two adjacent blocks bury one edge per spanning position, so the perimeter closes as a sum of the powers 8^L and 3^L, the entry the OEIS lists for the carpet at iteration n.',
-    build: (L) => ({ art: <Grid grid={m.two_grid('7', 3, L, 0, 2)} on={ink.gold} className="" />, lines: [item(row('7', 2, 'surface', 'level', least(L)), 'exposed edges')] }),
+    build: (L) => ({ art: <Grid grid={m.two_grid('7', 3, L, 0, 2)} on={ink.yellow} className="" />, lines: [item(row('7', 2, 'surface', 'level', least(L)), 'exposed edges')] }),
   },
   {
     key: 'sponge', title: 'The sponge', slider: ['level', 1, CUBECAP, 2],
@@ -105,7 +105,7 @@ const CARDS = [
         }
         lines.push({ label: `${name}, by base from 2`, terms, closed: '', capped: terms.length < least(Q - 1) });
       });
-      const art = <div className="strip">{JSON.parse(m.universe(2)).designs.map((d) => <Grid key={d.code} grid={m.two_grid(d.code, 3, 2, 0, 2)} on={ink.gold} className="" />)}</div>;
+      const art = <div className="strip">{JSON.parse(m.universe(2)).designs.map((d) => <Grid key={d.code} grid={m.two_grid(d.code, 3, 2, 0, 2)} on={ink.yellow} className="" />)}</div>;
       return { art, lines };
     },
   },
@@ -115,7 +115,7 @@ const CARDS = [
     build: (D) => {
       const terms = m.classes_sequence(least(D));
       return {
-        art: <Pins terms={terms} start={1} height={200} hue={ink.gold} label="by dimension" style={{ width: '100%' }} />,
+        art: <Pins terms={terms} start={1} height={200} hue={ink.yellow} label="by dimension" style={{ width: '100%' }} />,
         lines: [{ label: 'fill classes, by dimension', terms, closed: '' }],
       };
     },
@@ -130,7 +130,7 @@ const CARDS = [
   },
   {
     key: 'vertices', title: 'The vertices of the slice', slider: ['side', 2, 8, 4], show: (k) => 2 * k - 1,
-    say: 'The middle slice of the odd cube is a hexagon whose vertex count at side n is the centered hexagonal number 3n(n + 1) + 1, the sequence the corner-and-centre design fills at odd sides; a prime among them is a difference of consecutive cubes, a cuban prime, and the gold terms are the primes.',
+    say: 'The middle slice of the odd cube is a hexagon whose vertex count at side n is the centered hexagonal number 3n(n + 1) + 1, the sequence the corner-and-centre design fills at odd sides; a prime among them is a difference of consecutive cubes, a cuban prime, and the yellow terms are the primes.',
     build: (k) => {
       const terms = odds(least(k)).map((n) => String(slice(n).vertices));
       return {

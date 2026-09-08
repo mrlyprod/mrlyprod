@@ -17,14 +17,14 @@ fn main() -> Result<()> {
     for code in 0..16u128 {
         let design = universe.design(code);
         let color = if design.canonical {
-            ink::GOLD
+            ink::yellow()
         } else {
-            ink::BLUE
+            ink::blue()
         };
         let x = area.x + (code % 4) as f64 * (side + gutter);
         let y = area.y + (code / 4) as f64 * (side + gutter);
         let frame = Frame::new(x, y, side, side);
-        board.rect(frame.x, frame.y, frame.w, frame.h, ink::PANEL);
+        board.rect(frame.x, frame.y, frame.w, frame.h, ink::panel());
         let cells = designs::create(code, 2, 4, 0, 2)?;
         assert_eq!(cells.width(), 16);
         Grid::new(frame, 16, 16, 0.0)

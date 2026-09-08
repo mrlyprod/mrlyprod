@@ -187,9 +187,9 @@ function App() {
           <Sketch draw={sheet} deps={[built, pick.dots, pick.space, pulse]} hidden={pick.space === 'cube'} role="img" aria-label="The network" />
           <Stage onStage={onStage} deps={[built, pick.dots, pick.space, pick.camera, pulse]} hidden={pick.space !== 'cube'} role="img" aria-label="The network in the cube" />
           <Stats>
-            <span><i className="swatch" style={{ background: 'var(--gold)' }}></i> tip</span>
-            <span><i className="swatch" style={{ background: 'var(--blue)' }}></i> path</span>
-            <span><i className="swatch" style={{ background: 'var(--pink)' }}></i> junction</span>
+            <span><i className="swatch" style={{ background: 'var(--ink-yellow)' }}></i> tip</span>
+            <span><i className="swatch" style={{ background: 'var(--ink-blue)' }}></i> path</span>
+            <span><i className="swatch" style={{ background: 'var(--ink-pink)' }}></i> junction</span>
             <span><i className="swatch" style={{ background: 'var(--dim)' }}></i> alone</span>
           </Stats>
         </div>

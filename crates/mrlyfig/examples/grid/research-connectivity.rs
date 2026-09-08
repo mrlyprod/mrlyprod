@@ -23,10 +23,10 @@ fn scatter(seed: u64, count: usize) -> Vec<bool> {
 
 fn plate(board: &mut Board, frame: Frame, mask: &[bool], color: Color, rule: f64) {
     let edge = frame.inset(-rule * 2.0);
-    board.rect(edge.x, edge.y, edge.w, rule, ink::LINE);
-    board.rect(edge.x, edge.y + edge.h - rule, edge.w, rule, ink::LINE);
-    board.rect(edge.x, edge.y, rule, edge.h, ink::LINE);
-    board.rect(edge.x + edge.w - rule, edge.y, rule, edge.h, ink::LINE);
+    board.rect(edge.x, edge.y, edge.w, rule, ink::line());
+    board.rect(edge.x, edge.y + edge.h - rule, edge.w, rule, ink::line());
+    board.rect(edge.x, edge.y, rule, edge.h, ink::line());
+    board.rect(edge.x + edge.w - rule, edge.y, rule, edge.h, ink::line());
     let grid = Grid::new(frame, SIDE, SIDE, 0.0);
     for row in 0..SIDE {
         for col in 0..SIDE {
@@ -54,14 +54,14 @@ fn main() -> Result<()> {
         &mut board,
         Frame::new(lay.x, lay.y, side, side),
         &gasket,
-        ink::GREEN,
+        ink::green(),
         rule,
     );
     plate(
         &mut board,
         Frame::new(lay.x + side + gap, lay.y + side + gap, side, side),
         &scatter(20260902, CELLS),
-        ink::PINK,
+        ink::pink(),
         rule,
     );
     save("research-connectivity", &board)?;

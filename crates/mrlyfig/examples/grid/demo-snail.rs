@@ -36,7 +36,7 @@ fn main() -> Result<()> {
             at(tile.x as f64 + half, tile.y as f64 + half)
         })
         .collect();
-    board.polyline(&path, 1.6, ink::LINE);
+    board.polyline(&path, 1.6, ink::line());
     let mut art = Vec::new();
     for level in 0..shell.levels.len() {
         art.push(match level {
@@ -49,7 +49,7 @@ fn main() -> Result<()> {
         let cell = art[tile.level as usize].as_ref().expect("a grown level");
         let types = cell.types();
         let side = cell.width();
-        let tone = if tile.prime { ink::BLUE } else { ink::DIM };
+        let tone = if tile.prime { ink::blue() } else { ink::dim() };
         for row in 0..side {
             for col in 0..side {
                 if types.get(&[row, col]) == 0 {

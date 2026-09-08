@@ -80,9 +80,9 @@ fn main() -> Result<()> {
     let frame = board.frame(0.08);
     hexagon(&mut board, frame, SIDE, 1.6, |row, col| {
         if at(&carpet, row, col) == six::FILL {
-            Some(ink::BLUE)
+            Some(ink::blue())
         } else if at(&net, row, col) == six::FILL {
-            Some(ink::ORANGE)
+            Some(ink::orange())
         } else {
             None
         }

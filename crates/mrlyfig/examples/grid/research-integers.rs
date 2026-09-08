@@ -96,7 +96,7 @@ fn main() -> Result<()> {
     let counts = census();
     let peak = *counts.iter().max().unwrap() as f64;
     assert_eq!(peak as u32, counts[16]);
-    let ramp = Ramp::tone(ink::DIM, ink::GOLD);
+    let ramp = Ramp::tone(ink::dim(), ink::yellow());
     let grid = Grid::new(area, SIDE, SIDE, 0.12);
     let scale = (1.0 + peak).ln();
     for row in 0..SIDE {

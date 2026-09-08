@@ -5,7 +5,10 @@ use mrlyfig::{ink, save, Board, Grid};
 const SIDE: usize = 8;
 const GUTTER: f64 = 3.0;
 const EDGES: [usize; 4] = [28, 40, 60, 64];
-const TONES: [Color; 4] = [ink::BLUE, ink::GOLD, ink::GREEN, ink::GROUND];
+
+fn tones() -> [Color; 4] {
+    [ink::blue(), ink::yellow(), ink::green(), ink::ground()]
+}
 
 fn band(index: usize) -> usize {
     EDGES.iter().position(|edge| index < *edge).unwrap_or(3)
@@ -14,8 +17,9 @@ fn band(index: usize) -> usize {
 fn main() -> Result<()> {
     let mut board = Board::square();
     let frame = board.frame(0.08);
-    board.rect(frame.x, frame.y, frame.w, frame.h, ink::LINE);
+    board.rect(frame.x, frame.y, frame.w, frame.h, ink::line());
     let grid = Grid::new(frame, SIDE, SIDE, 0.0);
+    let tones = tones();
     let mut counts = [0usize; 4];
     for row in 0..SIDE {
         for col in 0..SIDE {
@@ -27,7 +31,7 @@ fn main() -> Result<()> {
                 y + GUTTER / 2.0,
                 w - GUTTER,
                 h - GUTTER,
-                TONES[slot],
+                tones[slot],
             );
             counts[slot] += 1;
         }

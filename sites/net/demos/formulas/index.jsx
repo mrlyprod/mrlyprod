@@ -65,7 +65,7 @@ const CARDS = [
     name: 'Prime counting function',
     page: 'Prime-counting_function',
     form: 'pi(n) / li(n) → 1',
-    hue: ink.gold,
+    hue: ink.yellow,
     note: <>The staircase against both guesses is <a href="../primes/">the primes demo</a>.</>,
   },
   {
@@ -73,7 +73,7 @@ const CARDS = [
     name: "Goldbach's conjecture",
     page: 'Goldbach%27s_conjecture',
     form: 'g(2n) = #{p + q = 2n, p ≤ q prime}',
-    hue: ink.gold,
+    hue: ink.yellow,
     note: <>Open since 1742: nobody has proved g(2n) is never zero, so the least count below is evidence and not a proof.</>,
   },
   {

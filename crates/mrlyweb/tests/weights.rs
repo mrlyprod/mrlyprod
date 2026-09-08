@@ -1,3 +1,4 @@
+use mrlycore::colors::DARK;
 use mrlyweb::bang::random_between;
 use mrlyweb::weights::*;
 
@@ -168,9 +169,10 @@ fn the_painted_field_is_the_support_on_the_ground() {
     let ground = sheet
         .rgba
         .chunks(4)
-        .filter(|c| c[0] == 7 && c[1] == 9 && c[2] == 11)
+        .filter(|c| c[..3] == [DARK.ground.r, DARK.ground.g, DARK.ground.b])
         .count();
     assert_eq!(ground, 81 * 81 - 81);
-    assert_eq!(&sheet.rgba[0..4], &[255, 209, 102, 255]);
+    let yellow = DARK.yellow;
+    assert_eq!(&sheet.rgba[0..4], &[yellow.r, yellow.g, yellow.b, 255]);
     assert!(weights_pixels(OBJECT, 3, 4, 3, &MASSES, 0.0).is_err());
 }

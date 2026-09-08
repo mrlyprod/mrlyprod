@@ -134,13 +134,13 @@ fn trace(board: &mut Board, area: Frame, ys: &[f64], span: f64, thick: f64, colo
 }
 
 fn panel(board: &mut Board, area: Frame, first: &[f64], second: &[f64]) {
-    plot::axis(board, area, ink::LINE);
+    plot::axis(board, area, ink::line());
     let inner = area.inset(18.0);
     let mid = inner.y + inner.h / 2.0;
-    board.segment((inner.x, mid), (inner.x + inner.w, mid), 1.0, ink::LINE);
+    board.segment((inner.x, mid), (inner.x + inner.w, mid), 1.0, ink::line());
     let span = reach(first, second);
-    trace(board, inner, second, span, 3.4, ink::ORANGE);
-    trace(board, inner, first, span, 2.1, ink::BLUE);
+    trace(board, inner, second, span, 3.4, ink::orange());
+    trace(board, inner, first, span, 2.1, ink::blue());
 }
 
 fn main() -> Result<()> {

@@ -252,3 +252,119 @@ path = "examples/plot/demo-echo.rs"
 [[example]]
 name = "paper-design-dirichlet-inverse"
 path = "examples/plot/paper-design-dirichlet-inverse.rs"
+
+[[example]]
+name = "demo-chladni"
+path = "examples/grid/demo-chladni.rs"
+
+[[example]]
+name = "demo-carry"
+path = "examples/grid/demo-carry.rs"
+
+[[example]]
+name = "demo-crop"
+path = "examples/grid/demo-crop.rs"
+
+[[example]]
+name = "demo-gaussian"
+path = "examples/grid/demo-gaussian.rs"
+
+[[example]]
+name = "demo-integers"
+path = "examples/grid/demo-integers.rs"
+
+[[example]]
+name = "demo-life"
+path = "examples/grid/demo-life.rs"
+
+[[example]]
+name = "demo-morse"
+path = "examples/grid/demo-morse.rs"
+
+[[example]]
+name = "demo-primes"
+path = "examples/grid/demo-primes.rs"
+
+[[example]]
+name = "demo-race"
+path = "examples/grid/demo-race.rs"
+
+[[example]]
+name = "demo-tile"
+path = "examples/grid/demo-tile.rs"
+
+[[example]]
+name = "demo-tour"
+path = "examples/grid/demo-tour.rs"
+
+[[example]]
+name = "demo-ulam"
+path = "examples/grid/demo-ulam.rs"
+
+[[example]]
+name = "demo-universe"
+path = "examples/grid/demo-universe.rs"
+
+[[example]]
+name = "demo-words"
+path = "examples/grid/demo-words.rs"
+
+[[example]]
+name = "demo-cuts"
+path = "examples/hex/demo-cuts.rs"
+
+[[example]]
+name = "demo-slices"
+path = "examples/hex/demo-slices.rs"
+
+[[example]]
+name = "demo-spectrometer"
+path = "examples/hex/demo-spectrometer.rs"
+
+[[example]]
+name = "demo-sponge"
+path = "examples/iso/demo-sponge.rs"
+
+[[example]]
+name = "demo-tower"
+path = "examples/iso/demo-tower.rs"
+
+[[example]]
+name = "demo-volume"
+path = "examples/iso/demo-volume.rs"
+
+[[example]]
+name = "demo-moire"
+path = "examples/field/demo-moire.rs"
+
+[[example]]
+name = "demo-radial"
+path = "examples/field/demo-radial.rs"
+
+[[example]]
+name = "demo-spin"
+path = "examples/field/demo-spin.rs"
+
+[[example]]
+name = "demo-farey"
+path = "examples/plot/demo-farey.rs"
+
+[[example]]
+name = "demo-graphs"
+path = "examples/plot/demo-graphs.rs"
+
+[[example]]
+name = "demo-plot"
+path = "examples/plot/demo-plot.rs"
+
+[[example]]
+name = "demo-sequences"
+path = "examples/plot/demo-sequences.rs"
+
+[[example]]
+name = "demo-spectra"
+path = "examples/plot/demo-spectra.rs"
+
+[[example]]
+name = "demo-zeta"
+path = "examples/plot/demo-zeta.rs"

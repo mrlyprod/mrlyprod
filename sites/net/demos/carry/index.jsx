@@ -45,7 +45,7 @@ function App() {
     grid.forEach((cells, r) => cells.forEach((value, c) => {
       const x = left + c * size;
       const y = b.roof + r * size;
-      b.ctx.fillStyle = mix(ink.line, ink.gold, value / peak);
+      b.ctx.fillStyle = mix(ink.line, ink.yellow, value / peak);
       b.ctx.fillRect(x, y, size - 2, size - 2);
       const text = String(value);
       if (size >= text.length * CHAR + 8) tag(b, text, ink.deep, 'center', x + size / 2 - 1, y + size / 2 + 3);
@@ -73,7 +73,7 @@ function App() {
           b.ctx.lineWidth = 1.5;
           b.ctx.strokeRect(x - 0.5, y - 0.5, wide + 1, tall + 1);
         } else if (each.open) {
-          b.ctx.strokeStyle = ink.gold;
+          b.ctx.strokeStyle = ink.yellow;
           b.ctx.lineWidth = 1;
           b.ctx.strokeRect(x + 0.5, y + 0.5, wide - 1, tall - 1);
         }
@@ -83,7 +83,7 @@ function App() {
     axis(b, SIGNS.map((each, i) => [(i + 0.5) / n, each.dimension]));
     const next = tag(b, 'odd D above, the slice exponent over the codimension', ink.orange);
     tag(b, 'even D below, under it', ink.blue, 'left', next + 16);
-    tag(b, 'gold: the open class D = 1 mod 3', ink.gold, 'right');
+    tag(b, 'yellow: the open class D = 1 mod 3', ink.yellow, 'right');
   };
 
   const controls = (

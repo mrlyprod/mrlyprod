@@ -30,18 +30,18 @@ fn stroke_box(board: &mut Board, rect: Frame, thick: f64, color: Color) {
 }
 
 fn half_plane(board: &mut Board, rect: Frame) {
-    board.rect(rect.x, rect.y, rect.w, rect.h, ink::PANEL);
+    board.rect(rect.x, rect.y, rect.w, rect.h, ink::panel());
     board.segment(
         (rect.x - OVER, rect.y + rect.h),
         (rect.x + rect.w, rect.y + rect.h),
         1.6,
-        ink::LINE,
+        ink::line(),
     );
     board.segment(
         (rect.x, rect.y - OVER),
         (rect.x, rect.y + rect.h + OVER),
         2.8,
-        ink::fade(ink::VIOLET, 0.5),
+        ink::fade(ink::indigo(), 0.5),
     );
 }
 
@@ -49,18 +49,18 @@ fn band(board: &mut Board, rect: Frame, abscissa: f64, span: (f64, f64)) {
     let (_, low) = at(rect, abscissa, abscissa, span.0);
     let (_, high) = at(rect, abscissa, abscissa, span.1);
     let run = rect.w + OVER;
-    board.rect(rect.x, high, run, low - high, ink::fade(ink::GOLD, 0.16));
+    board.rect(rect.x, high, run, low - high, ink::fade(ink::yellow(), 0.16));
     board.segment(
         (rect.x, high),
         (rect.x + run, high),
         1.8,
-        ink::fade(ink::GOLD, 0.5),
+        ink::fade(ink::yellow(), 0.5),
     );
     board.segment(
         (rect.x, low),
         (rect.x + run, low),
         1.8,
-        ink::fade(ink::GOLD, 0.5),
+        ink::fade(ink::yellow(), 0.5),
     );
 }
 
@@ -103,14 +103,14 @@ fn main() -> Result<()> {
 
     half_plane(&mut board, control);
     let (ix, iy) = at(control, integers, integers, 0.0);
-    plot::dots(&mut board, &[(ix, iy)], 6.0, ink::fade(ink::VIOLET, 0.92));
+    plot::dots(&mut board, &[(ix, iy)], 6.0, ink::fade(ink::indigo(), 0.92));
 
     half_plane(&mut board, design);
     for span in &BANDS {
         band(&mut board, design, alpha, *span);
     }
     let marks: Vec<(f64, f64)> = poles.iter().map(|p| at(design, alpha, p.0, p.1)).collect();
-    plot::dots(&mut board, &marks, 6.0, ink::fade(ink::VIOLET, 0.92));
+    plot::dots(&mut board, &marks, 6.0, ink::fade(ink::indigo(), 0.92));
 
     let emblem = at(design, alpha, RHO.0, RHO.1);
     let half = design.w * 0.057;
@@ -118,9 +118,9 @@ fn main() -> Result<()> {
         &mut board,
         Frame::new(emblem.0 - half, emblem.1 - half, 2.0 * half, 2.0 * half),
         2.0,
-        ink::fade(ink::GOLD, 0.85),
+        ink::fade(ink::yellow(), 0.85),
     );
-    plot::dots(&mut board, &[emblem], 12.0, ink::GOLD);
+    plot::dots(&mut board, &[emblem], 12.0, ink::yellow());
 
     save("paper-design-dirichlet-inverse", &board)?;
     Ok(())

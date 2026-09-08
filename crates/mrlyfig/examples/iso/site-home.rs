@@ -11,7 +11,7 @@ fn main() -> Result<()> {
         &mut board,
         frame,
         &sponge,
-        [ink::FG, ink::BLUE, ink::DIM],
+        [ink::fg(), ink::blue(), ink::dim()],
         None,
     );
     save("site-home", &board)?;

@@ -10,7 +10,6 @@ import { useSeeds, roll, Ramp, Cropper, cropOf } from '../../lib/select.jsx';
 const m = await ready();
 const NAMES = [...m.moire_names()];
 const SIZES = [128, 256, 384, 512];
-const PALE = '#eef2f6';
 
 const drawn = (seed) => {
   const [preset, limit] = roll(seed, [[0, NAMES.length - 1], [1, 41]]);
@@ -19,7 +18,7 @@ const drawn = (seed) => {
 
 const heat = (r) => {
   const t = Math.min(1, Math.sqrt(Math.max(0, r)));
-  return t < 0.5 ? mix(PALE, ink.blue, t * 2) : mix(ink.blue, ink.deep, t * 2 - 1);
+  return t < 0.5 ? mix(ink.fg, ink.blue, t * 2) : mix(ink.blue, ink.deep, t * 2 - 1);
 };
 
 const shown = (r) => (r === 0 ? '0' : r.toFixed(9));
@@ -43,7 +42,7 @@ function Heat({ scales, grid, clear, row, mate }) {
         b.ctx.fillRect(gutter + j * size, y, Math.max(1, size - 1), Math.max(1, size - 1));
       });
       if (i % every) return;
-      const hue = a === row ? ink.gold : clear[i] ? ink.green : ink.dim;
+      const hue = a === row ? ink.yellow : clear[i] ? ink.green : ink.dim;
       tag(b, String(a), hue, 'right', gutter - 6, y + size / 2 + 4);
       tag(b, String(a), hue, 'center', gutter + i * size + size / 2, b.roof - 10);
     });
@@ -56,7 +55,7 @@ function Heat({ scales, grid, clear, row, mate }) {
     b.ctx.lineTo(gutter + n * size, b.roof + n * size);
     b.ctx.stroke();
     if (k >= 0) {
-      b.ctx.strokeStyle = ink.gold;
+      b.ctx.strokeStyle = ink.yellow;
       b.ctx.strokeRect(gutter - 1.5, b.roof + k * size - 1.5, n * size + 2, size + 2);
     }
     if (j >= 0) {
@@ -79,17 +78,17 @@ function Strip({ witness, mate, onPick }) {
     }
     bars(b, witness.row, {
       peak: Math.max(witness.max, 1e-12),
-      color: (i, v) => (witness.scales[i] === mate ? ink.gold : v === 0 ? ink.line : ink.blue),
+      color: (i, v) => (witness.scales[i] === mate ? ink.yellow : v === 0 ? ink.line : ink.blue),
     });
     const step = Math.max(1, Math.ceil(n / 14));
     axis(b, witness.scales.map((s, i) => [(i + 0.5) / n, String(s)]).filter((_, i) => i % step === 0));
     witness.row.forEach((v, i) => {
       if (v !== 0 && witness.scales[i] !== mate) return;
-      b.ctx.fillStyle = witness.scales[i] === mate ? ink.gold : ink.line;
+      b.ctx.fillStyle = witness.scales[i] === mate ? ink.yellow : ink.line;
       b.ctx.fillRect(b.x(i / n) + 1, b.floor - 3, Math.max(1, b.wide / n - 2), 3);
     });
     tag(b, `scale ${witness.n} against every earlier odd scale, click to pick one`, ink.dim);
-    tag(b, witness.prime ? 'every bar exactly zero' : `largest ${witness.max.toFixed(6)} at scale ${witness.at}`, witness.prime ? ink.green : ink.gold, 'right');
+    tag(b, witness.prime ? 'every bar exactly zero' : `largest ${witness.max.toFixed(6)} at scale ${witness.at}`, witness.prime ? ink.green : ink.yellow, 'right');
   };
   const seek = (f) => onPick(witness.scales[Math.max(0, Math.min(n - 1, Math.floor(f * n)))]);
   return <Sketch className="bars" draw={draw} deps={[witness, mate]} onSeek={n ? seek : undefined} role="img" aria-label="The row of the chosen carpet against every earlier odd scale" />;

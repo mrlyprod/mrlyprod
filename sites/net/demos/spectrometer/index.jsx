@@ -46,18 +46,18 @@ function App() {
     const at = (i) => (i + 0.5) / count;
     for (const step of RULER) line(b, [[0, step], [1, step]], ink.line, { width: 1 });
     if (!sealed) line(b, [[0, read.background], [1, read.background]], ink.dim, { width: 1, dash: [5, 5] });
-    line(b, built.series.map((each, i) => [at(i), each.fills / rows[i].triangles]), ink.gold, { width: 1, dash: [1, 5], dots: 3.5 });
+    line(b, built.series.map((each, i) => [at(i), each.fills / rows[i].triangles]), ink.yellow, { width: 1, dash: [1, 5], dots: 3.5 });
     line(b, rows.map((each, i) => [at(i), each.ink]), ink.blue, { width: 1.6, dots: 2 });
     axis(b, rows.map((each, i) => [at(i), each.n]));
     const next = tag(b, 'closed form read off the spectrum', ink.blue);
-    tag(b, 'ink counted on the mesh', ink.gold, 'left', next + 16);
+    tag(b, 'ink counted on the mesh', ink.yellow, 'left', next + 16);
   };
 
   const spectrum = (canvas) => {
     if (!read) return;
     const b = board(canvas, 200, { bottom: 96 });
     const values = read.levels.map((level) => level.sigma);
-    bars(b, values, { peak: Math.max(...values.map(Math.abs), 1e-12), color: (i) => role[i], inset: 14 });
+    bars(b, values, { peak: Math.max(...values.map(Math.abs), 1e-12), color: (i) => role()[i], inset: 14 });
     axis(b, values.map((value, i) => [(i + 0.5) / values.length, LEVELS[i]]), { wall: true });
   };
 
@@ -84,7 +84,7 @@ function App() {
   return (
     <Page crumb="spectrometer" title="Point the slice at a sponge and it reads the recipe back" controls={controls}
       sub={<>A cube design is eight yes-or-no answers about corner parities. Cut its cube down the main diagonal and the hexagon comes back part inked, part blank, and that one fraction is an exact closed form in the design's Walsh spectrum, level by level: a steady background, a two-step blink, and two corrections that die as <code>1/n</code> and <code>1/n^2</code>. No fit, no error term. Turn the mystery on and the code is hidden - read the recipe off the curve, then reveal it.</>}
-      foot={<>The spectrum is the crate's Walsh-Hadamard transform of the design's eight corners, the four bars are its level sums <code>Sigma_0</code> to <code>Sigma_3</code>, and the blue curve is the ink law evaluated over the integers in Rust and handed here as an exact numerator over <code>96n^2</code>. The gold dots are the fills the crate counts triangle by triangle on the real mesh, over the <code>6n^2</code> triangles of the hexagon. The two never part: the law predicts the count itself, not an approximation to it. The same hexagon, its mesh census, its pieces and its holes are <a href="../slices">the slices</a> page; the research note this grew from is <a href="/research/slices/">slices</a>, and the theorem, its proof and its checks are the shelf paper <a href="/papers/walsh-spectrometer/">the Walsh spectrometer</a>.</>}>
+      foot={<>The spectrum is the crate's Walsh-Hadamard transform of the design's eight corners, the four bars are its level sums <code>Sigma_0</code> to <code>Sigma_3</code>, and the blue curve is the ink law evaluated over the integers in Rust and handed here as an exact numerator over <code>96n^2</code>. The yellow dots are the fills the crate counts triangle by triangle on the real mesh, over the <code>6n^2</code> triangles of the hexagon. The two never part: the law predicts the count itself, not an approximation to it. The same hexagon, its mesh census, its pieces and its holes are <a href="../slices">the slices</a> page; the research note this grew from is <a href="/research/slices/">slices</a>, and the theorem, its proof and its checks are the shelf paper <a href="/papers/walsh-spectrometer/">the Walsh spectrometer</a>.</>}>
       <div className="arena">
         <div className="panel">
           <h2>The slice <span>{`side ${row?.n ?? ''}, ${row?.triangles ?? ''} triangles`}</span></h2>

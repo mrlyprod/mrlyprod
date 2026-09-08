@@ -44,6 +44,7 @@
     "out": "ui",
     "hash": false,
     "files": [
+      "palette.css",
       "tokens.css",
       "base.css",
       "chrome.css",
@@ -61,8 +62,8 @@
     "short_name": "MrlyProd",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#0b0d10",
-    "theme_color": "#0b0d10",
+    "background_color": "#070707",
+    "theme_color": "#070707",
     "icons": [
       { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" },
       { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }

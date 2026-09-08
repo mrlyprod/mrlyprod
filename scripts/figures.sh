@@ -22,6 +22,10 @@ else
 fi
 
 for name in "${names[@]}"; do
-  cargo run -q --profile fig -p mrlyfig --example "$name"
+  for theme in dark light; do
+    MRLYFIG_THEME="$theme" cargo run -q --profile fig -p mrlyfig --example "$name"
+  done
 done
-echo "$(ls files/figures/*.png 2>/dev/null | wc -l | tr -d ' ') figures in files/figures"
+dark=$(ls files/figures/*-dark.png 2>/dev/null | wc -l | tr -d ' ')
+light=$(ls files/figures/*-light.png 2>/dev/null | wc -l | tr -d ' ')
+echo "$dark dark and $light light figures in files/figures"

@@ -4,14 +4,14 @@ use mrlynum::sieve;
 
 const LEVELS: usize = 3;
 const SPAN: f64 = 840.0;
-const TONES: [Color; LEVELS] = [ink::GOLD, ink::ORANGE, ink::BLUE];
 
 fn tones(word: &[u64], side: u64) -> Vec<(u64, Color)> {
+    let inks = [ink::yellow(), ink::orange(), ink::blue()];
     let mut run = side;
     let mut out = Vec::new();
     for (place, &letter) in word.iter().enumerate() {
         run /= letter;
-        out.push((run, TONES[place]));
+        out.push((run, inks[place]));
     }
     out
 }
@@ -27,7 +27,7 @@ fn main() -> Result<()> {
     let tones = tones(&word, side as u64);
     let unit = SPAN / side as f64;
     let edge = (board.width as f64 - SPAN) / 2.0;
-    board.rect(edge, edge, SPAN, SPAN, ink::LINE);
+    board.rect(edge, edge, SPAN, SPAN, ink::line());
     for hole in holes.chunks(3) {
         let wide = hole[2];
         let tone = tones.iter().find(|(size, _)| *size == wide).unwrap().1;

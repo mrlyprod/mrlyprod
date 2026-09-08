@@ -21,7 +21,7 @@ fn main() -> Result<()> {
             if coprime {
                 visible += 1;
             }
-            let tone = if coprime { ink::GOLD } else { ink::DIM };
+            let tone = if coprime { ink::yellow() } else { ink::dim() };
             grid.fill(&mut board, x, side - 1 - y, tone);
         }
     }

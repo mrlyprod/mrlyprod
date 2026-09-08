@@ -127,15 +127,15 @@ fn main() -> Result<()> {
     let place = |e: f64| frame.y + frame.h * (head - e) / (head - foot);
 
     let line = place(QUARTER);
-    board.rect(frame.x, line - 1.0, frame.w, 2.0, ink::fade(ink::BLUE, 0.9));
+    board.rect(frame.x, line - 1.0, frame.w, 2.0, ink::fade(ink::blue(), 0.9));
 
     for (q, e) in &rungs {
         let x = frame.x + ((q - LOW) as f64 + 0.5) * slot - dash / 2.0;
         let y = place(*e);
         let (color, thick) = if *e < QUARTER {
-            (ink::GOLD, 3.8)
+            (ink::yellow(), 3.8)
         } else {
-            (ink::fade(ink::DIM, 0.7), 2.6)
+            (ink::fade(ink::dim(), 0.7), 2.6)
         };
         board.rect(x, y - thick / 2.0, dash, thick, color);
     }

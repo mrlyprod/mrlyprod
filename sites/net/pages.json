@@ -117,6 +117,14 @@
       "paper": null
     },
     {
+      "name": "chladni",
+      "title": "The stills",
+      "blurb": "A Larger-than-Life rule on a big design mask runs a soup to a still, and the ring where the still's spectrum peaks, read beside the mask's own spectrum, is the wavelength the rule prefers.",
+      "category": "designs",
+      "research": "automata",
+      "paper": null
+    },
+    {
       "name": "wolfram",
       "title": "The rules",
       "blurb": "Wolfram's 256 elementary rules are the 256 three-dimensional parity designs bit for bit, so every rule arrives with a design's card, and the additive rules draw the plane designs in time.",

@@ -87,28 +87,28 @@ fn main() -> Result<()> {
 
     let mut board = Board::square();
     let frame = board.frame(0.08);
-    plot::axis(&mut board, frame, ink::LINE);
+    plot::axis(&mut board, frame, ink::line());
     let at = |re: f64, im: f64| {
         (
             frame.x + frame.w * (re - RE_LO) / (RE_HI - RE_LO),
             frame.y + frame.h * (1.0 - (im + IM_REACH) / (2.0 * IM_REACH)),
         )
     };
-    board.segment(at(0.0, -IM_REACH), at(0.0, IM_REACH), 1.6, ink::LINE);
-    board.segment(at(RE_LO, 0.0), at(RE_HI, 0.0), 1.6, ink::LINE);
+    board.segment(at(0.0, -IM_REACH), at(0.0, IM_REACH), 1.6, ink::line());
+    board.segment(at(RE_LO, 0.0), at(RE_HI, 0.0), 1.6, ink::line());
     board.segment(
         at(real, -IM_REACH),
         at(real, IM_REACH),
         1.8,
-        ink::fade(ink::BLUE, 0.35),
+        ink::fade(ink::blue(), 0.35),
     );
     for pole in &control {
         let (x, y) = at(pole.0, pole.1);
-        board.disc(x, y, 7.0, ink::ORANGE);
+        board.disc(x, y, 7.0, ink::orange());
     }
     for pole in &lattice {
         let (x, y) = at(pole.0, pole.1);
-        board.disc(x, y, 9.0, ink::BLUE);
+        board.disc(x, y, 9.0, ink::blue());
     }
     save("research-dimensions", &board)?;
     Ok(())

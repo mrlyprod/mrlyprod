@@ -127,9 +127,9 @@ function App() {
     const lengths = spread(read.runs).slice(0, read.length);
     return (
       <>
-        <Sketch draw={ribbon([read.digits.map(hue), lengths.map((run) => (run === 1 ? ink.gold : ink.pink))], read.length)} deps={[read]} role="img" aria-label="The runs" />
+        <Sketch draw={ribbon([read.digits.map(hue), lengths.map((run) => (run === 1 ? ink.yellow : ink.pink))], read.length)} deps={[read]} role="img" aria-label="The runs" />
         <div className="stats">
-          <span><span className="swatch" style={{ background: ink.gold }}></span> a run of one</span>
+          <span><span className="swatch" style={{ background: ink.yellow }}></span> a run of one</span>
           <span><span className="swatch" style={{ background: ink.pink }}></span> a run of two</span>
           <Stat label="longest run">{read.longest}</Stat>
           <Stat label="runs of one">{read.singles}</Stat>
@@ -173,8 +173,8 @@ function App() {
     return (
       <>
         <div className="arena">
-          {pane('the level', filter.coarse, ink.gold, ', drawn at the width of the next, which is the blow-up')}
-          {pane('the next level', filter.fine, ink.gold, '')}
+          {pane('the level', filter.coarse, ink.yellow, ', drawn at the width of the next, which is the blow-up')}
+          {pane('the next level', filter.fine, ink.yellow, '')}
           {pane('the difference', filter.difference, ink.pink, '')}
         </div>
         <div className="stats">

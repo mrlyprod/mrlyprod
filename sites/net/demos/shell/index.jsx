@@ -108,12 +108,12 @@ function App() {
     b.ctx.lineWidth = 1;
     b.ctx.strokeStyle = ink.blue;
     b.ctx.stroke(paths[0]);
-    b.ctx.strokeStyle = ink.gold;
+    b.ctx.strokeStyle = ink.yellow;
     b.ctx.stroke(paths[1]);
     const dot = Math.max(1, Math.min(3, b.wide / boxes[0]));
     for (let j = 0; j <= depth; j += 1) {
       for (let k = 0; k < boxes[j]; k += 1) {
-        b.ctx.fillStyle = nodes[5 * (starts[j] + k) + 4] ? ink.gold : ink.blue;
+        b.ctx.fillStyle = nodes[5 * (starts[j] + k) + 4] ? ink.yellow : ink.blue;
         b.ctx.fillRect(b.x(px[starts[j] + k]) - dot / 2, row(j) - dot / 2, dot, dot);
       }
     }
@@ -161,7 +161,7 @@ function App() {
     <Page crumb="shell" title="A circle on a carpet is a tree"
       sub={<>Draw the circle of radius <code>r</code> cells about the corner and keep the cells it crosses. Zoom out by threes: the crossed cells fall into crossed boxes, those into fewer boxes, and at last into one. That is a rooted tree, its leaves the crossed cells, and the carpet keeps only the leaves whose path never sat in a centre seat. Drag <code>r</code> and both panels move together. A wide radius gives more leaves than a panel has pixels, so the zoom picks one box of one level and draws only the branch hanging under it, ringed in the picture and at the top of the tree, with every count in that branch still exact.</>}
       controls={controls}
-      foot={<>The picture is the design at the least level that holds the circle: its cells are the faint ground, a crossed cell the design fills is gold, a crossed cell it drops is blue, and the boxes of the chosen level are outlined in pink so you can count them against the row of the table. The tree draws the same boxes, one row per level, an edge from every box to its parent, and the same two inks; the dashed rule marks the chosen level. Every box, every count and every colour comes from <code>mrlymath::shape::crossing_tree</code> through wasm, walked once along the arc in exact integers with no square root taken twice. The zoom is the same walk rooted lower down: a box's children are contiguous among its own level, so one branch is one range a level and nothing is dropped or thinned to make it fit, which a leaf cap could not promise. The <code>root</code> slider rests on <code>fit</code>, the deepest branch that still fits the panel, until you move it, and its top step is the tree's own root, which is the whole tree again. The table stays the whole circle, so the row beside the drawn level says how many of its boxes the branch carries. The same circle counted radius by radius instead of level by level is <a href="../crop">crop</a>, and the whole count with its proofs is on <a href="/research/crop/">the crop page</a>.</>}>
+      foot={<>The picture is the design at the least level that holds the circle: its cells are the faint ground, a crossed cell the design fills is yellow, a crossed cell it drops is blue, and the boxes of the chosen level are outlined in pink so you can count them against the row of the table. The tree draws the same boxes, one row per level, an edge from every box to its parent, and the same two inks; the dashed rule marks the chosen level. Every box, every count and every colour comes from <code>mrlymath::shape::crossing_tree</code> through wasm, walked once along the arc in exact integers with no square root taken twice. The zoom is the same walk rooted lower down: a box's children are contiguous among its own level, so one branch is one range a level and nothing is dropped or thinned to make it fit, which a leaf cap could not promise. The <code>root</code> slider rests on <code>fit</code>, the deepest branch that still fits the panel, until you move it, and its top step is the tree's own root, which is the whole tree again. The table stays the whole circle, so the row beside the drawn level says how many of its boxes the branch carries. The same circle counted radius by radius instead of level by level is <a href="../crop">crop</a>, and the whole count with its proofs is on <a href="/research/crop/">the crop page</a>.</>}>
       <p><span className="chip proved">Proved</span> The circle crosses exactly <code>2r + 1</code> cells of the whole grid at every integer <code>r &gt;= 1</code>, and the level-<code>j</code> boxes carrying a crossed cell are the whole grid's crossing shell at the real radius <code>r / 3^j</code>, so there are <code>2 floor(r / 3^j) + 1</code> of them. Summing the children over one level gives the branching identity, so a box of level <code>j + 1</code> has <code>3 + (2k - 2) / (2Q + 1)</code> children on average with <code>Q = floor(r / 3^(j+1))</code> and <code>floor(r / 3^j) = 3Q + k</code>: exactly three at every level where <code>floor(r / 3^j)</code> is <code>1 mod 3</code>.</p>
       <div className="arena">
         <div className="panel">
@@ -170,7 +170,7 @@ function App() {
         </div>
         <div className="panel">
           <h2>The crossing shell as a tree <span>{read && (view.whole ? `depth ${read.depth}, ${read.leaves} leaves` : `box ${view.pick + 1} of level ${view.root}, ${view.boxes[0]} of ${read.leaves} leaves`)}</span></h2>
-          <Sketch draw={draw} deps={[view]} className="bars" role="img" aria-label="The crossing shell drawn as a rooted tree, surviving leaves gold and pruned ones blue" />
+          <Sketch draw={draw} deps={[view]} className="bars" role="img" aria-label="The crossing shell drawn as a rooted tree, surviving leaves yellow and pruned ones blue" />
         </div>
       </div>
       <Stats>

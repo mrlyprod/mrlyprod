@@ -51,7 +51,7 @@ function App() {
     const rows = view.rows, n = rows.length;
     const peak = rows.reduce((a, r) => Math.max(a, r.fills), 1);
     const crest = rows.reduce((a, r) => Math.max(a, r.components, r.holes), 1);
-    bars(b, rows.map((r) => r.fills), { peak, color: (i) => (rows[i].k === view.here ? ink.gold : ink.blue) });
+    bars(b, rows.map((r) => r.fills), { peak, color: (i) => (rows[i].k === view.here ? ink.yellow : ink.blue) });
     for (const [key, color] of [['components', ink.green], ['holes', ink.pink]]) {
       line(b, rows.map((r, i) => [(i + 0.5) / n, r[key] / crest]), color, { dots: 2.5 });
     }

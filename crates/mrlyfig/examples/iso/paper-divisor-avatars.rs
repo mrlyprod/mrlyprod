@@ -119,9 +119,9 @@ fn main() -> Result<()> {
     marks.sort_by(|a, b| a.0.total_cmp(&b.0));
     let put = place(&marks, frame);
     let gold = [
-        ink::GOLD,
-        ink::mix(ink::GOLD, ink::GROUND, 0.4),
-        ink::mix(ink::GOLD, ink::GROUND, 0.66),
+        ink::yellow(),
+        ink::mix(ink::yellow(), ink::ground(), 0.4),
+        ink::mix(ink::yellow(), ink::ground(), 0.66),
     ];
     let unit = frame.h / (SIDE as f64 * 2.0);
     for (_, mark) in &marks {
@@ -131,11 +131,11 @@ fn main() -> Result<()> {
                 board.polygon(&screen, gold[*tone]);
                 let mut ring = screen.clone();
                 ring.push(screen[0]);
-                board.polyline(&ring, unit / 70.0, ink::LINE);
+                board.polyline(&ring, unit / 70.0, ink::line());
             }
             Mark::Cage(edges) => {
                 for edge in edges {
-                    board.segment(put(edge[0]), put(edge[1]), unit / 34.0, ink::DIM);
+                    board.segment(put(edge[0]), put(edge[1]), unit / 34.0, ink::dim());
                 }
             }
         }

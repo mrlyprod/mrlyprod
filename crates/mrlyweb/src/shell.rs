@@ -1,4 +1,4 @@
-use crate::{code_of, ink, Fault, Pixels};
+use crate::{code_of, rgba, theme, Fault, Pixels};
 use mrlycore::json;
 use mrlycore::tensor::Tensor;
 use mrlymath::bang::factory;
@@ -177,7 +177,8 @@ pub fn shell_pixels(
     let side = grid.shape[0];
     let scale = (SHEET / side).max(1);
     let wide = side * scale;
-    let mut colors = vec![ink::DEEP; wide * wide];
+    let ink = theme();
+    let mut colors = vec![rgba(ink.ground); wide * wide];
     let mut block = |x0: usize, y0: usize, x1: usize, y1: usize, color: [u8; 4]| {
         for row in (wide - x1.min(wide))..(wide - x0.min(wide)) {
             for column in y0.min(wide)..y1.min(wide) {
@@ -193,7 +194,7 @@ pub fn shell_pixels(
                     y * scale,
                     (x + 1) * scale,
                     (y + 1) * scale,
-                    ink::FAINT,
+                    rgba(ink.line),
                 );
             }
         }
@@ -202,14 +203,15 @@ pub fn shell_pixels(
     for cell in &tree.levels[at as usize] {
         let (x0, y0) = (cell.x as usize * step, cell.y as usize * step);
         let (x1, y1) = (x0 + step, y0 + step);
-        block(x0, y0, x1, y0 + EDGE, ink::PINK);
-        block(x0, y1 - EDGE, x1, y1, ink::PINK);
-        block(x0, y0, x0 + EDGE, y1, ink::PINK);
-        block(x1 - EDGE, y0, x1, y1, ink::PINK);
+        let pink = rgba(ink.pink);
+        block(x0, y0, x1, y0 + EDGE, pink);
+        block(x0, y1 - EDGE, x1, y1, pink);
+        block(x0, y0, x0 + EDGE, y1, pink);
+        block(x1 - EDGE, y0, x1, y1, pink);
     }
     for cell in &tree.levels[0] {
         let (x0, y0) = (cell.x as usize * scale, cell.y as usize * scale);
-        let color = if cell.live { ink::GOLD } else { ink::BLUE };
+        let color = rgba(if cell.live { ink.yellow } else { ink.blue });
         block(x0, y0, x0 + scale, y0 + scale, color);
     }
     if let Some((level, seat)) = ringed {
@@ -217,10 +219,11 @@ pub fn shell_pixels(
         let span = number.pow(level as u32) * scale;
         let (x0, y0) = (cell.x as usize * span, cell.y as usize * span);
         let (x1, y1) = (x0 + span, y0 + span);
-        block(x0, y0, x1, y0 + MARK, ink::GREEN);
-        block(x0, y1.saturating_sub(MARK), x1, y1, ink::GREEN);
-        block(x0, y0, x0 + MARK, y1, ink::GREEN);
-        block(x1.saturating_sub(MARK), y0, x1, y1, ink::GREEN);
+        let green = rgba(ink.green);
+        block(x0, y0, x1, y0 + MARK, green);
+        block(x0, y1.saturating_sub(MARK), x1, y1, green);
+        block(x0, y0, x0 + MARK, y1, green);
+        block(x1.saturating_sub(MARK), y0, x1, y1, green);
     }
     Ok(Pixels::of(wide, wide, colors))
 }

@@ -18,7 +18,7 @@ fn main() -> Result<()> {
 
     let mut board = Board::square();
     let frame = board.frame(0.08);
-    plot::axis(&mut board, frame, ink::LINE);
+    plot::axis(&mut board, frame, ink::line());
     let total = count as f64;
     let at = |lambda: f64, rank: f64| {
         (
@@ -33,10 +33,10 @@ fn main() -> Result<()> {
         steps.push(at(*value, index as f64 + 1.0));
     }
     steps.push(at(2.0, total));
-    board.polyline(&steps, 3.0, ink::BLUE);
+    board.polyline(&steps, 3.0, ink::blue());
 
     let below = values.iter().filter(|v| **v < 1.0 - 1e-9).count() as f64;
-    board.segment(at(1.0, below), at(1.0, below + ones as f64), 7.0, ink::GOLD);
+    board.segment(at(1.0, below), at(1.0, below + ones as f64), 7.0, ink::yellow());
     save("research-complexity", &board)?;
     Ok(())
 }

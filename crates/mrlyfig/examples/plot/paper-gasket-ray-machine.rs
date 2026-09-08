@@ -61,15 +61,15 @@ fn main() -> Result<()> {
         let mass = on.len() as f64;
         let gold = *ray == (1, 3) || *ray == (3, 1);
         let color = if gold {
-            ink::GOLD
+            ink::yellow()
         } else {
-            ink::fade(ink::BLUE, (0.16 + 0.13 * (mass - 1.0)).min(1.0))
+            ink::fade(ink::blue(), (0.16 + 0.13 * (mass - 1.0)).min(1.0))
         };
         board.segment(origin, at(far), if gold { 3.0 } else { 1.6 }, color);
     }
     for point in &points {
         let (x, y) = at(point);
-        board.disc(x, y, 2.8, ink::FG);
+        board.disc(x, y, 2.8, ink::fg());
     }
     save("paper-gasket-ray-machine", &board)?;
     Ok(())

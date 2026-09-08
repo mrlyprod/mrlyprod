@@ -21,7 +21,7 @@ fn main() -> Result<()> {
     }
     assert_eq!(values.iter().filter(|&&v| v == 0.0).count(), 762);
 
-    let ramp = Ramp::new(vec![ink::GROUND, ink::BLUE, ink::GOLD]);
+    let ramp = Ramp::new(vec![ink::ground(), ink::blue(), ink::yellow()]);
     let mut board = Board::square();
     let side = CELL * SCALES as f64;
     let edge = (board.width as f64 - side) / 2.0;

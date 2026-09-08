@@ -146,13 +146,13 @@ impl Board {
             pixels: vec![[ground.r, ground.g, ground.b, ground.a]; width * height],
         }
     }
-    /// The house figure: 1024 by 1024 on the dark ground.
+    /// The house figure: 1024 by 1024 on the ground of the theme in press.
     pub fn square() -> Board {
-        Board::new(1024, 1024, ink::GROUND)
+        Board::new(1024, 1024, ink::ground())
     }
-    /// The social card: 1200 by 630 on the dark ground.
+    /// The social card: 1200 by 630 on the ground of the theme in press.
     pub fn og() -> Board {
-        Board::new(1200, 630, ink::GROUND)
+        Board::new(1200, 630, ink::ground())
     }
     /// Returns the largest centred square left after a margin of the given fraction of the short side.
     pub fn frame(&self, margin: f64) -> Frame {
@@ -325,12 +325,13 @@ mod tests {
     }
     #[test]
     fn a_disc_covers_its_own_area() {
-        let mut board = Board::new(256, 256, ink::GROUND);
-        board.disc(128.0, 128.0, 90.0, ink::FG);
+        let mut board = Board::new(256, 256, ink::ground());
+        board.disc(128.0, 128.0, 90.0, ink::fg());
+        let (ground, fg) = (ink::ground().r as f64, ink::fg().r as f64);
         let lit: f64 = board
             .pixels
             .iter()
-            .map(|p| (p[0] as f64 - 7.0) / (232.0 - 7.0))
+            .map(|p| (p[0] as f64 - ground) / (fg - ground))
             .sum();
         let want = std::f64::consts::PI * 90.0 * 90.0;
         assert!(

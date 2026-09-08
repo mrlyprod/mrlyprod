@@ -63,7 +63,7 @@ function App() {
     const fx = (x) => (x1 === x0 ? 0.5 : (x - x0) / (x1 - x0));
     const fy = (y) => (y0 === 0 ? 0.5 : (y - y0) / -y0);
     if (data.fitted) {
-      b.ctx.fillStyle = '#151b22';
+      b.ctx.fillStyle = ink.panel;
       b.ctx.fillRect(b.x(0), b.roof, b.x(fx(xs[data.fitted - 1])) - b.x(0), b.tall);
     }
     axis(b, [[0, steps[0][0].toExponential(2)], [1, steps.at(-1)[0].toFixed(4)]], { wall: true });
@@ -73,8 +73,8 @@ function App() {
     if (data.fit) {
       const [intercept, slope] = data.fit;
       const seg = (a, c) => [[fx(a), fy(intercept + slope * a)], [fx(c), fy(intercept + slope * c)]];
-      line(b, seg(x0, x1), ink.gold, { width: 1.2, dash: [3, 4] });
-      line(b, seg(x0, xs[data.fitted - 1]), ink.gold, { width: 2.2 });
+      line(b, seg(x0, x1), ink.yellow, { width: 1.2, dash: [3, 4] });
+      line(b, seg(x0, xs[data.fitted - 1]), ink.yellow, { width: 2.2 });
     }
     tag(b, '1', ink.dim, 'right', b.x(0) - 6, b.y(fy(0)) + 4);
     tag(b, steps[0][1].toFixed(4), ink.dim, 'right', b.x(0) - 6, b.y(fy(y0)) + 4);
@@ -128,7 +128,7 @@ function App() {
               <>
                 <span>staircase <b style={{ color: ink.blue }}>{data.distinct} distinct</b></span>
                 <span>shaded low window <b>{look.window}%</b></span>
-                <span>fitted slope <b style={{ color: ink.gold }}>{data.fit ? data.fit[1].toFixed(4) : 'none'}</b></span>
+                <span>fitted slope <b style={{ color: ink.yellow }}>{data.fit ? data.fit[1].toFixed(4) : 'none'}</b></span>
                 <span>d_s = 2 x slope <b>{data.exponent === null ? 'none' : data.exponent.toFixed(3)}</b></span>
               </>
             )}

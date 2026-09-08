@@ -6,14 +6,14 @@ import { useSeeds } from '../../lib/select.jsx';
 import { useQuery, share } from '../../lib/query.js';
 
 const m = await ready();
-const COLORS = [ink.blue, ink.orange, ink.gold, ink.green, ink.pink];
+const colors = () => [ink.blue, ink.orange, ink.yellow, ink.green, ink.pink];
 const COUNTS = m.counting_sequence(4).join(', ');
 const BASE3 = m.baseq_sequence(3, 2).join(', ');
 const WORLD = { 2: JSON.parse(m.universe(2)), 3: JSON.parse(m.universe(3)) };
 const FIRST = { 2: '7', 3: '23' };
 const BUDGET = 60000;
 
-const tint = (design) => COLORS[design.degree % COLORS.length];
+const tint = (design) => colors()[design.degree % 5];
 
 const drawn = (seed, designs) => designs[m.random_between(seed, [0], [designs.length - 1])[0]].code;
 

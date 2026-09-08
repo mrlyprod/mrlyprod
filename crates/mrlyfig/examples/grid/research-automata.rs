@@ -11,11 +11,11 @@ const FAINT: f64 = 0.5;
 
 fn tone(rule: u8) -> Color {
     if elementary::rule_degree(rule) == 1 {
-        ink::GOLD
+        ink::yellow()
     } else if elementary::surjective(rule) {
-        ink::BLUE
+        ink::blue()
     } else {
-        ink::fade(ink::DIM, FAINT)
+        ink::fade(ink::dim(), FAINT)
     }
 }
 

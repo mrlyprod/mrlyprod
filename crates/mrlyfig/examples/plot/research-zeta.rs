@@ -260,19 +260,19 @@ fn panel(
             frame.y + frame.h * (1.0 - s.im / HEIGHT),
         )
     };
-    board.rect(frame.x, frame.y, frame.w, frame.h, ink::PANEL);
-    plot::axis(board, frame, ink::LINE);
+    board.rect(frame.x, frame.y, frame.w, frame.h, ink::panel());
+    plot::axis(board, frame, ink::line());
     board.segment(
         at(Complex::new(l.alpha, 0.0)),
         at(Complex::new(l.alpha, HEIGHT)),
         1.6,
-        ink::fade(ink::DIM, 0.5),
+        ink::fade(ink::dim(), 0.5),
     );
     board.segment(
         at(Complex::new(l.alpha - 1.0, 0.0)),
         at(Complex::new(l.alpha - 1.0, HEIGHT)),
         1.6,
-        ink::fade(ink::DIM, 0.3),
+        ink::fade(ink::dim(), 0.3),
     );
     for t in l.ordinates(HEIGHT) {
         if t < 0.4 {
@@ -280,20 +280,20 @@ fn panel(
         }
         for line in [l.alpha, l.alpha - 1.0] {
             let (x, y) = at(Complex::new(line, t));
-            board.ring(x, y, 11.0, 1.6, ink::fade(ink::DIM, 0.9));
+            board.ring(x, y, 11.0, 1.6, ink::fade(ink::dim(), 0.9));
         }
     }
     for z in family {
         let (x, y) = at(*z);
-        board.disc(x, y, 7.0, ink::BLUE);
+        board.disc(x, y, 7.0, ink::blue());
     }
     for z in teeth {
         let (x, y) = at(*z);
-        board.disc(x, y, 7.0, ink::GOLD);
+        board.disc(x, y, 7.0, ink::yellow());
     }
     for z in hollow {
         let (x, y) = at(*z);
-        board.disc(x, y, 7.0, ink::fade(ink::FG, 0.9));
+        board.disc(x, y, 7.0, ink::fade(ink::fg(), 0.9));
     }
 }
 

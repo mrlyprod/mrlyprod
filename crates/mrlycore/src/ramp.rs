@@ -1,4 +1,6 @@
-use super::colors::{gradient, Color, ALPHA, BLACK, WHITE};
+use super::colors::{
+    gradient, Color, ALPHA, BLACK, BLUE, ORANGE, RED, RED_DARK, WHITE, YELLOW_LIGHT,
+};
 use super::errors::{value_error, Result};
 use std::collections::HashMap;
 
@@ -44,27 +46,18 @@ impl Colorizer {
             ramp,
         }
     }
-    /// Builds the black-through-ember fire ramp.
+    /// Builds the black-through-ember fire ramp: black, dark red, orange, light yellow.
     pub fn fire() -> Colorizer {
-        let stops = [
-            Color::rgb(0, 0, 0),
-            Color::rgb(180, 30, 0),
-            Color::rgb(255, 140, 0),
-            Color::rgb(255, 255, 220),
-        ];
+        let stops = [BLACK, RED_DARK, ORANGE, YELLOW_LIGHT];
         let ramp = dedup(gradient(&stops, 128).unwrap_or_else(|_| vec![BLACK]));
         Colorizer::Bins {
             background: ramp[0],
             ramp,
         }
     }
-    /// Builds the blue-to-red diverging ramp around a neutral middle.
+    /// Builds the blue-to-red diverging ramp around a white middle.
     pub fn diverge() -> Colorizer {
-        let stops = [
-            Color::rgb(0, 90, 220),
-            Color::rgb(245, 245, 245),
-            Color::rgb(220, 40, 40),
-        ];
+        let stops = [BLUE, WHITE, RED];
         let ramp = dedup(gradient(&stops, 128).unwrap_or_else(|_| vec![WHITE]));
         Colorizer::Bins {
             background: ramp[0],
@@ -181,7 +174,6 @@ fn dedup(colors: Vec<Color>) -> Vec<Color> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::colors::{BLUE, RED, WHITE};
     #[test]
     fn two_tone_ignores_magnitude() {
         let r = Colorizer::two_tone(WHITE, BLACK);

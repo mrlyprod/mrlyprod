@@ -28,7 +28,7 @@ fn main() -> Result<()> {
             frame.y + frame.h * (1.0 - depth / peak),
         )
     };
-    board.rect(frame.x, frame.y + frame.h, frame.w, 2.0, ink::LINE);
+    board.rect(frame.x, frame.y + frame.h, frame.w, 2.0, ink::line());
 
     for (order, row) in OTHERS.iter().enumerate() {
         let mut steps = Vec::new();
@@ -38,7 +38,7 @@ fn main() -> Result<()> {
             steps.push(at(dim, value));
             steps.push(at((dim + 2.0).min(40.0), value));
         }
-        board.polyline(&steps, 3.0, ink::fade(ink::DIM, 0.95 - 0.1 * order as f64));
+        board.polyline(&steps, 3.0, ink::fade(ink::dim(), 0.95 - 0.1 * order as f64));
     }
 
     let curve: Vec<(f64, f64)> = THREE
@@ -46,9 +46,9 @@ fn main() -> Result<()> {
         .enumerate()
         .map(|(index, k)| at(2.0 + 2.0 * index as f64, *k as f64))
         .collect();
-    board.polyline(&curve, 3.0, ink::ORANGE);
+    board.polyline(&curve, 3.0, ink::orange());
     for point in &curve {
-        board.disc(point.0, point.1, 8.0, ink::ORANGE);
+        board.disc(point.0, point.1, 8.0, ink::orange());
     }
     save("paper-slice-sign-even-half", &board)?;
     Ok(())

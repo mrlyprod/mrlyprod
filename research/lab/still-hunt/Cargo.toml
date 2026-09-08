@@ -1,0 +1,11 @@
+[package]
+license.workspace = true
+name = "still-hunt"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+mrlycore.workspace = true
+mrlynum.workspace = true
+mrlymath.workspace = true
+mrlygame.workspace = true

@@ -1,4 +1,5 @@
 use crate::board::Board;
+use crate::ink;
 use mrlycore::errors::{value_error, Result};
 use std::path::PathBuf;
 
@@ -13,8 +14,9 @@ pub fn root() -> PathBuf {
         .unwrap_or_else(|| PathBuf::from("."))
 }
 
-/// Writes the board to files/figures/<name>.png and announces the one line it printed.
+/// Writes the board to files/figures/<name>-<theme>.png, dark or light, and announces the one line it printed.
 pub fn save(name: &str, board: &Board) -> Result<PathBuf> {
+    let name = format!("{name}-{}", ink::name());
     let folder = root().join("files").join("figures");
     std::fs::create_dir_all(&folder)
         .map_err(|e| mrlycore::MrlyError::Value(format!("cannot make {folder:?}: {e}")))?;

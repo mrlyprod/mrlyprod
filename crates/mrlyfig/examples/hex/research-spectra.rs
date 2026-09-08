@@ -118,14 +118,14 @@ fn main() -> Result<()> {
             return None;
         }
         if is_hexagon(row, col) {
-            Some(ink::GOLD)
+            Some(ink::yellow())
         } else {
             None
         }
     });
     hexagon(&mut board, frame, SIDE, 1.2, |row, col| {
         if at(&slice, row, col) == six::FILL && !is_hexagon(row, col) {
-            Some(ink::BLUE)
+            Some(ink::blue())
         } else {
             None
         }

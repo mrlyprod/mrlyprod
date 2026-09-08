@@ -57,7 +57,7 @@ fn main() -> Result<()> {
 
     let mut board = Board::square();
     let frame = board.frame(0.07);
-    let ramp = Ramp::tone(ink::BLUE, ink::GOLD);
+    let ramp = Ramp::tone(ink::blue(), ink::yellow());
     let slot = frame.w / mass.len() as f64;
     let pad = slot * 0.18;
     let axis = frame.y + frame.h / 2.0;

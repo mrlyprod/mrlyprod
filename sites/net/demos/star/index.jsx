@@ -9,7 +9,7 @@ import { Ramp } from '../../lib/select.jsx';
 const m = await ready();
 const CARPET = '23';
 const SIZES = [128, 192, 256, 320, 384];
-const HUES = { plus: ink.gold, minus: ink.blue, empty: ink.deep };
+const hues = () => ({ plus: ink.yellow, minus: ink.blue, empty: ink.deep });
 
 const fixed = (value, places) => (Number.isFinite(value) ? value.toFixed(places) : 'none');
 
@@ -28,8 +28,8 @@ function Arm({ read }) {
     b.ctx.lineTo(b.x(1), b.y(0.5));
     b.ctx.stroke();
     line(b, rows.map((row, i) => [at(i), row.law]), ink.blue, { width: 1.5 });
-    line(b, rows.map((row, i) => [at(i), row.ink]), ink.gold, { width: 0, dots: 2.6 });
-    tag(b, 'the counted ink of the band, one dot a layer', ink.gold);
+    line(b, rows.map((row, i) => [at(i), row.ink]), ink.yellow, { width: 0, dots: 2.6 });
+    tag(b, 'the counted ink of the band, one dot a layer', ink.yellow);
     tag(b, '1/2 + chi_8(n)/(2n)', ink.blue, 'right');
   };
   return <Sketch className="bars" draw={draw} deps={[read]} role="img" aria-label="The band ink at every odd layer against the closed form" />;
@@ -51,14 +51,14 @@ function Fall({ read }) {
     const reach = Math.max(last - first, 1e-9);
     const place = ([count, value]) => [(Math.log(count) - first) / reach, (value - low) / span];
     line(b, model.map(place), ink.blue, { width: 1.5, dash: [4, 4] });
-    line(b, walk.map(place), ink.gold, { width: 1.8 });
+    line(b, walk.map(place), ink.yellow, { width: 1.8 });
     axis(b, [[0, String(walk[0][0])], [0.5, 'L'], [1, String(walk[walk.length - 1][0])]], { wall: true });
     b.ctx.fillStyle = ink.dim;
     b.ctx.textAlign = 'right';
     b.ctx.fillText(fixed(high, 3), b.left - 6, b.y(1) + 4);
     b.ctx.fillText(fixed(low, 3), b.left - 6, b.y(0) + 4);
     b.ctx.textAlign = 'left';
-    tag(b, 'L times the excess, read against ln L', ink.gold);
+    tag(b, 'L times the excess, read against ln L', ink.yellow);
     tag(b, read.slope === null ? 'the L/2 window mixes the parities here' : `slope ${read.slope.toFixed(6)} against ${read.target.toFixed(6)}`, ink.blue, 'right');
   };
   return <Sketch className="bars" draw={draw} deps={[read]} role="img" aria-label="The scaled excess against the log of the layer count" />;
@@ -131,8 +131,8 @@ function App() {
           </Stats>
         </div>
         <div className="panel">
-          <h2>The band <span>gold where the star is read, blue the background it is read against</span></h2>
-          {view && <Signs grid={view.band} hues={HUES} />}
+          <h2>The band <span>yellow where the star is read, blue the background it is read against</span></h2>
+          {view && <Signs grid={view.band} hues={hues()} />}
           <Stats>
             <Stat label="half-width">{`${pick.half} cells`}</Stat>
             <Stat label="arm">{fall?.arm ? 'the exact diameter x = y' : 'a band about it'}</Stat>
@@ -146,7 +146,7 @@ function App() {
           {ribbon.map((row) => (
             <span key={row.n}>
               <i>n {row.n}</i>
-              <b className={row.exact ? 'gold' : undefined}>{`${row.numer}/${row.denom}`}</b>
+              <b className={row.exact ? 'yellow' : undefined}>{`${row.numer}/${row.denom}`}</b>
               <i>{`law ${row.lawNumer}/${row.lawDenom}`}</i>
             </span>
           ))}

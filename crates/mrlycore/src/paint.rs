@@ -58,7 +58,7 @@ pub enum Ink {
     Indigo,
     /// Purple (211, 50, 233).
     Purple,
-    /// Pink (255, 50, 90).
+    /// The palette pink.
     Pink,
     /// Brown (177, 132, 98).
     Brown,

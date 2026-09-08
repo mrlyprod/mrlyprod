@@ -28,7 +28,7 @@ fn main() -> Result<()> {
                 &mut board,
                 col,
                 row,
-                if coprime { ink::GOLD } else { ink::DIM },
+                if coprime { ink::yellow() } else { ink::dim() },
             );
         }
     }

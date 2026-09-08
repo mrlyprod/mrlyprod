@@ -88,18 +88,16 @@ mod tests {
     use crate::ink;
     #[test]
     fn a_flat_field_paints_the_ramps_low_end_everywhere() {
-        let mut board = Board::new(64, 64, ink::GROUND);
+        let mut board = Board::new(64, 64, ink::ground());
         let frame = Frame::new(0.0, 0.0, 64.0, 64.0);
         sample(
             &mut board,
             frame,
             8,
             |_, _| 1.0,
-            &Ramp::tone(ink::BLUE, ink::GOLD),
+            &Ramp::tone(ink::blue(), ink::yellow()),
         );
-        assert_eq!(
-            board.pixels[0],
-            [ink::BLUE.r, ink::BLUE.g, ink::BLUE.b, 255]
-        );
+        let blue = ink::blue();
+        assert_eq!(board.pixels[0], [blue.r, blue.g, blue.b, 255]);
     }
 }

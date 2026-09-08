@@ -15,6 +15,13 @@ const maskMoore = m.life_mask(2, '7', 3, 1);
 const maskDeep = m.life_mask(2, '7', 3, 2);
 const maskDiag = m.life_mask(2, '9', 3, 1);
 const maskLine = m.life_mask(1, '1', 3, 1);
+const soup32 = m.life_noise(32, 32, 0.5, 11);
+const stripe = Uint8Array.from({ length: 1024 }, (_, i) => ((i % 32) % 4 < 2 ? 1 : 0));
+const chladniDead = m.chladni_run('7', 3, 3, 0.28, 0.375, 0.28, 0.48, 128, 32, 0.5, 7);
+const chladniLive = m.chladni_run('7', 3, 3, 0.28, 0.375, 0.28, 0.48, 128, 32, 0.45, 7);
+const chladniRead = JSON.parse(m.chladni_profile(chladniLive.types, 128));
+const chladniKernel = m.chladni_kernel('7', 3, 3, 64);
+const chladniStripe = JSON.parse(m.chladni_profile(stripe, 32));
 const faces = m.three_faces('23', 3, 3, 2);
 const race = new m.Race('127', 3, 4, 3, 300, 1);
 const cut = JSON.parse(m.diagonal_profile('126', 2, 4, 2));
@@ -303,6 +310,12 @@ const checks: [string, unknown, unknown][] = [
   ['life_mask_index diagonal', m.life_mask_index(maskDiag.types, 3, 3), 2],
   ['life_next_masked line', Array.from(m.life_next_masked(line, 7, 1, [1], [0, 1], maskLine.types, 3, 1, false)).join(','), '1,1,1,0,1,1,0'],
   ['life_run_masked blinker', JSON.parse(m.life_run_masked(blinker, 5, 5, [3], [2, 3], maskMoore.types, 3, 3, false, 16)).loop, 2],
+  ['chladni_next is life_next_masked', String(m.chladni_next(soup32, 32, '7', 3, 1, 0.375, 0.375, 0.25, 0.375).join(',') === m.life_next_masked(soup32, 32, 32, [3], [2, 3], maskMoore.types, 3, 3, true).join(',')), 'true'],
+  ['chladni_run 7 3 3 dead soup', `${sum(chladniDead.types)},${JSON.parse(m.chladni_profile(chladniDead.types, 128)).peak_ring}`, '0,1'],
+  ['chladni_run 7 3 3 living soup', `${sum(chladniLive.types)},${chladniRead.peak_ring},${chladniRead.wavelength}`, '5259,3,42.666666666666664'],
+  ['chladni_kernel 7 3 3 at 64', `${chladniKernel.width},${sum(chladniKernel.types)},${chladniKernel.types[32 * 64 + 32]}`, '64,512,0'],
+  ['chladni_spectrum stripe centre', m.chladni_spectrum(stripe, 32)[16 * 32 + 16], 1],
+  ['chladni_profile stripe', `${chladniStripe.peak_ring},${chladniStripe.wavelength},${chladniStripe.profile.length}`, '8,4,17'],
   ['moire heatmap bytes', m.moire('heatmap', 9, 32, 'fire', 64, false).rgba.length, 4096],
   ['hex_svg polygons', m.hex_svg('23', 3, 1, 2, 'iso', 10).includes('<polygon'), true],
   ['slice_census 23 mesh', `${slice.triangles},${slice.fills},${slice.vertices},${slice.euler}`, '54,42,37,1'],

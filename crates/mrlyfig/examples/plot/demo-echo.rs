@@ -72,7 +72,7 @@ fn main() -> Result<()> {
             frame,
             x(*line),
             3.0,
-            ink::fade(ink::PINK, 0.34),
+            ink::fade(ink::pink(), 0.34),
             13.0,
         );
     }
@@ -82,11 +82,11 @@ fn main() -> Result<()> {
             frame,
             x(*zero),
             7.0,
-            ink::fade(ink::GOLD, 0.46),
+            ink::fade(ink::yellow(), 0.46),
             0.0,
         );
     }
-    plot::baseline(&mut board, frame, ink::LINE);
+    plot::baseline(&mut board, frame, ink::line());
     for at in 0..gamma.len() {
         if gamma[at] <= BAND.0 || gamma[at] >= BAND.1 {
             continue;
@@ -95,14 +95,14 @@ fn main() -> Result<()> {
             (x(gamma[at]), frame.y + frame.h),
             (x(gamma[at]), y(score[at])),
             4.0,
-            ink::BLUE,
+            ink::blue(),
         );
     }
     let crowns: Vec<(f64, f64)> = found
         .iter()
         .map(|&at| (x(gamma[at]), y(score[at])))
         .collect();
-    plot::dots(&mut board, &crowns, 11.0, ink::GOLD);
+    plot::dots(&mut board, &crowns, 11.0, ink::yellow());
     save("demo-echo", &board)?;
     Ok(())
 }

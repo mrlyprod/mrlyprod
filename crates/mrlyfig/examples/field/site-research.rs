@@ -45,10 +45,10 @@ fn main() -> Result<()> {
     let mut stops: Vec<Color> = (0..levels - 1)
         .map(|i| {
             let t = i as f64 / (levels - 2) as f64;
-            ink::mix(ink::GROUND, ink::BLUE, 0.20 + 0.80 * t.powf(2.1))
+            ink::mix(ink::ground(), ink::blue(), 0.20 + 0.80 * t.powf(2.1))
         })
         .collect();
-    stops.push(ink::GOLD);
+    stops.push(ink::yellow());
     let ramp = Ramp::new(stops);
 
     let mut board = Board::square();

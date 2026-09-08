@@ -1,6 +1,5 @@
-use crate::ink::{BLUE, DEEP, FAINT, GOLD, GREEN, ORANGE, PINK};
 use crate::spin::ramp_of;
-use crate::{Fault, Pixels};
+use crate::{rgba, theme, Fault, Pixels};
 use mrlycore::json;
 use mrlynum::factor::factorize_wide;
 use mrlynum::gauss::{peak, shells, Class, Ring, Window};
@@ -86,7 +85,9 @@ pub fn ring_pixels(
     let top = sheet.ring().top(u64::from(radius)) as usize;
     let side = (2 * radius + 1) as usize;
     let r = radius as i64;
-    let mut look = vec![DEEP; side * side];
+    let ink = theme();
+    let ground = rgba(ink.ground);
+    let mut look = vec![ground; side * side];
     for b in -r..=r {
         for a in -r..=r {
             if !sheet.window.holds(a, b) {
@@ -94,18 +95,18 @@ pub fn ring_pixels(
             }
             let class = sheet.window.class(a, b);
             look[(b + r) as usize * side + (a + r) as usize] = match (colour, class) {
-                (_, Class::Zero) => DEEP,
-                (_, Class::Unit) => GREEN,
-                (_, Class::Composite) if faint => FAINT,
-                (_, Class::Composite) => DEEP,
-                ("class", Class::Split) => BLUE,
-                ("class", Class::Inert) => ORANGE,
-                ("class", Class::Ramified) => PINK,
+                (_, Class::Zero) => ground,
+                (_, Class::Unit) => rgba(ink.green),
+                (_, Class::Composite) if faint => rgba(ink.line),
+                (_, Class::Composite) => ground,
+                ("class", Class::Split) => rgba(ink.blue),
+                ("class", Class::Inert) => rgba(ink.orange),
+                ("class", Class::Ramified) => rgba(ink.pink),
                 ("norm", _) => {
                     let c = fire.color(sheet.ring().norm(a, b) as usize, top);
                     [c.r, c.g, c.b, 255]
                 }
-                _ => GOLD,
+                _ => rgba(ink.yellow),
             };
         }
     }
@@ -117,7 +118,7 @@ pub fn ring_pixels(
                 Some(cell) if !sheet.gap(fx, fy, cell) => {
                     look[(cell.1 + r) as usize * side + (cell.0 + r) as usize]
                 }
-                _ => DEEP,
+                _ => ground,
             });
         }
     }

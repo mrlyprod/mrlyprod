@@ -146,7 +146,7 @@ function App() {
       draw(0, ink.blue, 1.2);
       draw(Math.max(0, path.current.length - 4 * 2 * DENSITY), ink.fg, 2);
     }
-    ctx.strokeStyle = ink.gold;
+    ctx.strokeStyle = ink.yellow;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.arc(px(0), py(0), 5, 0, Math.PI * 2);
@@ -174,7 +174,7 @@ function App() {
     b.ctx.moveTo(b.x(0), b.y(0.5));
     b.ctx.lineTo(b.x(1), b.y(0.5));
     b.ctx.stroke();
-    b.ctx.strokeStyle = ink.gold;
+    b.ctx.strokeStyle = ink.yellow;
     for (const zero of ZEROS) {
       if (zero > head) break;
       b.ctx.beginPath();
@@ -187,7 +187,7 @@ function App() {
     if (points.length > 1) line(b, points, ink.blue);
     axis(b, [[0, '0'], [1, `t = ${head.toFixed(2)}`]]);
     tag(b, 'Z(t), real on the line', ink.blue);
-    tag(b, `${look.count} ${look.count === 1 ? 'zero' : 'zeros'}`, ink.gold, 'right');
+    tag(b, `${look.count} ${look.count === 1 ? 'zero' : 'zeros'}`, ink.yellow, 'right');
   };
 
   const stairs = (canvas) => {
@@ -214,10 +214,10 @@ function App() {
     b.ctx.clip();
     line(b, curve(fold.none), ink.pink, { dash: [4, 4], width: 1 });
     line(b, curve(fold.some), ink.blue);
-    line(b, steps, ink.gold, { width: 2 });
+    line(b, steps, ink.yellow, { width: 2 });
     b.ctx.restore();
     axis(b, [[0, '1'], [1, `x = ${x}`]]);
-    let spot = tag(b, 'psi(x)', ink.gold);
+    let spot = tag(b, 'psi(x)', ink.yellow);
     spot = tag(b, `formula with ${k} ${k === 1 ? 'zero' : 'zeros'}`, ink.blue, 'left', spot + 14);
     tag(b, 'no zeros', ink.pink, 'left', spot + 14);
   };
@@ -267,8 +267,8 @@ function App() {
           </Row>
         </div>
         <div className="panel">
-          <h2>Z(t) <span>the signed distance from the origin, zeros in gold</span></h2>
-          <Sketch className="bars" draw={chart} deps={[head]} role="img" aria-label="Z of t, the signed distance from the origin, zeros in gold" />
+          <h2>Z(t) <span>the signed distance from the origin, zeros in yellow</span></h2>
+          <Sketch className="bars" draw={chart} deps={[head]} role="img" aria-label="Z of t, the signed distance from the origin, zeros in yellow" />
           <pre>{list}</pre>
         </div>
       </div>

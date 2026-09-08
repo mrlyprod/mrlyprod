@@ -48,7 +48,7 @@ function App() {
     if (!v) return;
     const b = board(canvas, 180, { pad: PAD, top: 12, bottom: 20 });
     const counts = v.cut.counts.map(Number);
-    bars(b, counts, { color: (i) => (v.heights.includes(v.low + i) ? ink.gold : ink.blue) });
+    bars(b, counts, { color: (i) => (v.heights.includes(v.low + i) ? ink.yellow : ink.blue) });
     axis(b, [[0, v.low], [1, v.low + counts.length - 1]]);
   };
 

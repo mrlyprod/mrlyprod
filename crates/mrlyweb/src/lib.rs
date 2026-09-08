@@ -1,7 +1,9 @@
 #![doc = include_str!("../README.md")]
 #![deny(missing_docs)]
 
+use mrlycore::colors::{Color, Theme, DARK, LIGHT};
 use mrlycore::MrlyError;
+use std::cell::Cell;
 use wasm_bindgen::prelude::*;
 
 /// The elementary automata: their rows stepped, their space-time diagrams and the card of one rule.
@@ -14,6 +16,8 @@ pub mod blend;
 pub mod carry;
 /// The census: which integers the whole registry writes inside a pinned window, how often, and which rows write one.
 pub mod census;
+/// The Chladni stills: soups stepped on big design masks by FFT convolution, the kernel drawn, the spectrum and its ring profile read.
+pub mod chladni;
 /// The exact crops: the designs trimmed to rational shapes, tallied, swept, drawn and masked.
 pub mod crop;
 /// The design Mobius meter: its elements, the meter drawn against log x, its density echo and residual, and the ordinates its spectrum carries.
@@ -75,16 +79,31 @@ pub mod weights;
 /// The critical line: zeta walked at one half plus i t, its zeros counted and listed, and the prime staircase against the explicit formula.
 pub mod zeta;
 
-pub(crate) mod ink {
-    pub const DEEP: [u8; 4] = [7, 9, 11, 255];
-    pub const FAINT: [u8; 4] = [31, 38, 46, 255];
-    pub const DIM: [u8; 4] = [127, 138, 151, 255];
-    pub const GOLD: [u8; 4] = [255, 209, 102, 255];
-    pub const BLUE: [u8; 4] = [92, 200, 255, 255];
-    pub const ORANGE: [u8; 4] = [255, 138, 92, 255];
-    pub const PINK: [u8; 4] = [255, 122, 182, 255];
-    pub const GREEN: [u8; 4] = [110, 231, 168, 255];
+// THEME
+
+thread_local! {
+    static DARK_MODE: Cell<bool> = const { Cell::new(true) };
 }
+
+/// Switches every sheet painted from now on to the dark theme, or to the light one.
+#[wasm_bindgen]
+pub fn set_theme(dark: bool) {
+    DARK_MODE.with(|mode| mode.set(dark));
+}
+
+pub(crate) fn theme() -> &'static Theme {
+    if DARK_MODE.with(Cell::get) {
+        &DARK
+    } else {
+        &LIGHT
+    }
+}
+
+pub(crate) fn rgba(c: Color) -> [u8; 4] {
+    [c.r, c.g, c.b, c.a]
+}
+
+// SHEETS
 
 /// A byte grid: its width, its height and its row-major types.
 #[wasm_bindgen(getter_with_clone)]

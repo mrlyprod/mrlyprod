@@ -1,21 +1,43 @@
 import init, * as wasm from '../pkg/mrlyweb.js';
 import wasmUrl from '../pkg/mrlyweb_bg.wasm';
+import { palette, dark, light } from '../../../pkgs/js/mrlyjs/ui/palette.js';
 
 export const mrly = wasm;
+export { palette, dark, light };
+
+// THEME
+
+const scheme = typeof matchMedia === 'function' ? matchMedia('(prefers-color-scheme: dark)') : null;
+
+export function isDark() {
+  if (typeof document === 'undefined') return true;
+  const set = document.documentElement.dataset.theme;
+  return set ? set === 'dark' : Boolean(scheme?.matches);
+}
+
+export function theme() {
+  return isDark() ? dark : light;
+}
+
+export const ink = new Proxy({}, { get: (_, key) => theme()[key] });
+
+export const role = () => [ink.dim, ink.yellow, ink.blue, ink.pink];
+
+export const plusminus = () => ({ plus: ink.orange, minus: ink.blue, empty: ink.deep });
+
+function tint() {
+  if (typeof wasm.set_theme === 'function') wasm.set_theme(isDark());
+}
 
 export async function ready() {
   const at = wasmUrl.startsWith('.') ? new URL(wasmUrl, import.meta.url) : wasmUrl;
   await init({ module_or_path: at });
   globalThis.mrly = wasm;
+  tint();
+  window.addEventListener('theme', tint);
+  scheme?.addEventListener('change', tint);
   return wasm;
 }
-
-export const ink = {
-  bg: '#0b0d10', deep: '#07090b', panel: '#12161b', line: '#1f262e', fg: '#e8ecf1', dim: '#7f8a97',
-  blue: '#5cc8ff', orange: '#ff8a5c', gold: '#ffd166', green: '#6ee7a8', pink: '#ff7ab6',
-};
-
-export const role = [ink.dim, ink.gold, ink.blue, ink.pink];
 
 export function rgb(hex) {
   const n = parseInt(hex.slice(1), 16);
@@ -47,11 +69,10 @@ export function paint(canvas, grid, on = ink.fg, off = ink.deep) {
 
 // SIGNED
 
-export const plusminus = { plus: ink.orange, minus: ink.blue, empty: ink.deep };
-
-export function signs(canvas, grid, hues = plusminus) {
+export function signs(canvas, grid, hues = {}) {
   const [w, h] = [grid.width, grid.height];
-  const ramp = [rgb(hues.plus ?? plusminus.plus), rgb(hues.minus ?? plusminus.minus), rgb(hues.empty ?? plusminus.empty)];
+  const base = plusminus();
+  const ramp = [rgb(hues.plus ?? base.plus), rgb(hues.minus ?? base.minus), rgb(hues.empty ?? base.empty)];
   const rgba = new Uint8ClampedArray(w * h * 4);
   for (let i = 0; i < w * h; i++) {
     rgba.set(ramp[grid.types[i]] ?? ramp[2], i * 4);

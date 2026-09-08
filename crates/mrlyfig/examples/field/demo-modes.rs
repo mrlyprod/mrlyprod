@@ -65,7 +65,7 @@ fn main() -> Result<()> {
         .map(|v| ((v.powf(1.0 / LEVEL as f64) - FLOOR) / (REACH - FLOOR)).clamp(0.0, 1.0))
         .collect();
 
-    let ramp = Ramp::new(vec![ink::GROUND, ink::BLUE, ink::GOLD]);
+    let ramp = Ramp::new(vec![ink::ground(), ink::blue(), ink::yellow()]);
     let mut board = Board::square();
     let plate = CELL * SPAN as f64;
     let edge = ((board.width as f64 - plate) / 2.0).floor();

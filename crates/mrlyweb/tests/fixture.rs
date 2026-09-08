@@ -1,3 +1,4 @@
+use mrlycore::colors::{Color, DARK};
 use mrlycore::json::parse;
 use mrlyweb::automata::*;
 use mrlyweb::bang::*;
@@ -33,6 +34,10 @@ fn column(rows: &mrlycore::Json, key: &str) -> String {
         .map(|row| row[key].to_string())
         .collect::<Vec<String>>()
         .join(",")
+}
+
+fn ink(c: Color) -> [u8; 3] {
+    [c.r, c.g, c.b]
 }
 
 fn blinker() -> Vec<u8> {
@@ -232,14 +237,14 @@ fn the_fixture_the_page_prints() {
     let blue = lattice
         .rgba
         .chunks(4)
-        .filter(|dot| *dot == [92, 200, 255, 255])
+        .filter(|dot| dot[..3] == ink(DARK.blue))
         .count();
     assert_eq!((lattice.width, lattice.height, blue), (200, 200, 4 * 6087));
     let flat = visible_pixels(100, 200, false).unwrap();
     assert_eq!(
         flat.rgba
             .chunks(4)
-            .filter(|dot| *dot == [31, 38, 46, 255])
+            .filter(|dot| dot[..3] == ink(DARK.line))
             .count(),
         4 * (10000 - 6087)
     );
@@ -506,14 +511,14 @@ fn the_spiral_exports_answer() {
     );
     let at =
         |px: usize, py: usize| sheet.rgba[(py * 180 + px) * 4..(py * 180 + px) * 4 + 3].to_vec();
-    assert_eq!(at(90, 90), vec![7, 9, 11]);
-    assert_eq!(at(92, 90), vec![255, 209, 102]);
-    assert_eq!(at(81, 92), vec![255, 138, 92]);
+    assert_eq!(at(90, 90), ink(DARK.ground));
+    assert_eq!(at(92, 90), ink(DARK.yellow));
+    assert_eq!(at(81, 92), ink(DARK.orange));
     let hexes = spiral_pixels("hex", 21, 3, 3, 1, "mobius", true, 200).unwrap();
-    assert_eq!(hexes.rgba[..3], [7, 9, 11]);
+    assert_eq!(hexes.rgba[..3], ink(DARK.ground));
     assert_eq!(
         hexes.rgba[(100 * 200 + 100) * 4..(100 * 200 + 100) * 4 + 3],
-        [92, 200, 255]
+        ink(DARK.blue)
     );
     let centre = parse(&spiral_at("square", 201, 384.0, 384.0, 768).unwrap()).unwrap();
     assert_eq!(
@@ -619,27 +624,27 @@ fn the_gauss_exports_answer() {
     let pixel =
         |px: usize, py: usize| sheet.rgba[(py * 100 + px) * 4..(py * 100 + px) * 4 + 3].to_vec();
     assert_eq!((sheet.width, sheet.height), (100, 100));
-    assert_eq!(pixel(70, 30), vec![255, 122, 182]);
-    assert_eq!(pixel(90, 30), vec![92, 200, 255]);
-    assert_eq!(pixel(90, 50), vec![31, 38, 46]);
-    assert_eq!(pixel(50, 50), vec![7, 9, 11]);
-    assert_eq!(pixel(60, 30), vec![7, 9, 11]);
+    assert_eq!(pixel(70, 30), ink(DARK.pink));
+    assert_eq!(pixel(90, 30), ink(DARK.blue));
+    assert_eq!(pixel(90, 50), ink(DARK.line));
+    assert_eq!(pixel(50, 50), ink(DARK.ground));
+    assert_eq!(pixel(60, 30), ink(DARK.ground));
     let hexes = ring_pixels("eisenstein", 2, "class", false, 100).unwrap();
     let cell =
         |px: usize, py: usize| hexes.rgba[(py * 100 + px) * 4..(py * 100 + px) * 4 + 3].to_vec();
-    assert_eq!(cell(80, 67), vec![255, 122, 182]);
-    assert_eq!(cell(90, 50), vec![255, 138, 92]);
-    assert_eq!(cell(70, 50), vec![110, 231, 168]);
-    assert_eq!(cell(50, 50), vec![7, 9, 11]);
+    assert_eq!(cell(80, 67), ink(DARK.pink));
+    assert_eq!(cell(90, 50), ink(DARK.orange));
+    assert_eq!(cell(70, 50), ink(DARK.green));
+    assert_eq!(cell(50, 50), ink(DARK.ground));
     let plain = ring_pixels("gaussian", 3, "plain", false, 70).unwrap();
     assert_eq!(
         plain.rgba[(25 * 70 + 45) * 4..(25 * 70 + 45) * 4 + 3],
-        [255, 209, 102]
+        ink(DARK.yellow)
     );
     let glow = ring_pixels("gaussian", 3, "norm", false, 70).unwrap();
     assert_ne!(
         glow.rgba[(25 * 70 + 45) * 4..(25 * 70 + 45) * 4 + 3],
-        [255, 209, 102]
+        ink(DARK.yellow)
     );
     let hit = parse(&ring_at("gaussian", 40, 403.0, 374.0, 768).unwrap()).unwrap();
     assert_eq!(

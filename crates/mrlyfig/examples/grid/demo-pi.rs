@@ -15,7 +15,7 @@ fn main() -> Result<()> {
             let layer = gcd(col + 1, N - row);
             if layer == 1 {
                 lit += 1;
-                grid.fill(&mut board, col, row, ink::BLUE);
+                grid.fill(&mut board, col, row, ink::blue());
                 continue;
             }
             deepest = deepest.max(layer);
@@ -26,7 +26,7 @@ fn main() -> Result<()> {
                 y + (h - side) / 2.0,
                 side,
                 side,
-                ink::DIM,
+                ink::dim(),
             );
         }
     }

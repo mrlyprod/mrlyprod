@@ -47,8 +47,8 @@ fn main() -> Result<()> {
             frame.y + frame.h * (0.5 - meter / (2.0 * reach)),
         )
     };
-    board.segment(at(0.0, 0.0), at(STEPS as f64, 0.0), 1.6, ink::LINE);
-    plot::axis(&mut board, frame, ink::LINE);
+    board.segment(at(0.0, 0.0), at(STEPS as f64, 0.0), 1.6, ink::line());
+    plot::axis(&mut board, frame, ink::line());
     for sign in [1.0f64, -1.0] {
         let envelope: Vec<(f64, f64)> = (0..=DRAWN)
             .map(|k| {
@@ -56,10 +56,10 @@ fn main() -> Result<()> {
                 at(index, sign * index.sqrt())
             })
             .collect();
-        board.polyline(&envelope, 2.0, ink::fade(ink::DIM, 0.75));
+        board.polyline(&envelope, 2.0, ink::fade(ink::dim(), 0.75));
     }
     let stride = STEPS / DRAWN;
-    for (walk, color) in [(&low, ink::BLUE), (&high, ink::ORANGE)] {
+    for (walk, color) in [(&low, ink::blue()), (&high, ink::orange())] {
         let trace: Vec<(f64, f64)> = (0..=DRAWN)
             .map(|k| at((k * stride) as f64, walk[k * stride]))
             .collect();

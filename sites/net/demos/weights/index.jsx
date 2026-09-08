@@ -95,11 +95,11 @@ function App() {
       rules(b, [fx(0), fx(1)], { dash: [2, 4] });
       line(b, [[0, fy(0)], [1, fy(0)]], ink.line, { width: 1 });
       line(b, xs.map((v, i) => [fx(v), fy(ys[i])]), ink.blue, { width: 1.6 });
-      line(b, [[fx(0), fy(roof)]], ink.gold, { dots: 3.6 });
-      line(b, [[fx(1), fy(0)]], ink.gold, { dots: 3.6 });
+      line(b, [[fx(0), fy(roof)]], ink.yellow, { dots: 3.6 });
+      line(b, [[fx(1), fy(0)]], ink.yellow, { dots: 3.6 });
       axis(b, [[0, `s ${-REACH}`], [0.5, '0'], [1, `${REACH}`]], { wall: true });
       const edge = tag(b, 'tau(s) = log_q sum w^s', ink.blue);
-      tag(b, `tau(0) ${roof.toFixed(9)}, tau(1) 0`, ink.gold, 'left', edge + 12);
+      tag(b, `tau(0) ${roof.toFixed(9)}, tau(1) 0`, ink.yellow, 'left', edge + 12);
       return;
     }
     const xs = [], ys = [];
@@ -113,10 +113,10 @@ function App() {
     rules(b, [fx(one)], { dash: [2, 4] });
     line(b, [[0, fy(0)], [1, fy(0)]], ink.line, { width: 1 });
     line(b, xs.map((v, i) => [fx(v), fy(ys[i])]), ink.blue, { width: 1.6 });
-    line(b, [[fx(read.point[2]), fy(read.point[3])]], ink.gold, { dots: 4 });
+    line(b, [[fx(read.point[2]), fy(read.point[3])]], ink.yellow, { dots: 4 });
     axis(b, [[0, `alpha ${low.toFixed(6)}`], [1, high.toFixed(6)]], { wall: true });
     const edge = tag(b, 'f(alpha)', ink.blue);
-    tag(b, `alpha(1) ${one.toFixed(9)}`, ink.gold, 'left', edge + 12);
+    tag(b, `alpha(1) ${one.toFixed(9)}`, ink.yellow, 'left', edge + 12);
   };
 
   const spread = (make) => set({ w: make().join(',') });
@@ -152,7 +152,7 @@ function App() {
     <Page crumb="weights" title="The mass side of a weighted design"
       sub={<>Give every filled corner of a design a weight and the level-<code>L</code> cell reached by the digit word <code>f_1 ... f_L</code> carries the mass <code>w_(f_1) ... w_(f_L)</code>. The support never moves, the mass does: drag one weight and the picture darkens on one corner and lights on another while the design stays where it is. The curve beside it is the whole multifractal spectrum, and it is a closed form in the weights alone.</>}
       controls={controls}
-      foot={<>The design is the picker's plane code at side <code>q</code> and its residue base; the filled cells of its level-one tile are the corners the sliders weight, listed row by row, and the vector is normalised to sum to one inside the crate. The picture is the level-<code>L</code> mass field, one cell a pixel, read at <code>(mass / peak)^gamma</code> through the ground-blue-gold ramp, so the gamma is display alone and never a printed number. The pressure is summed with the largest exponent factored out, which is why the curve stays exact out to <code>s = 30</code> where the spectrum's two tails are sampled. Equal weights are the 0/1 design itself: the spectrum collapses to the single point <code>(log_q k, log_q k)</code>, which is the box dimension the support has at every weighting. The geometry these weights leave alone is the same design fattened on <a href="../tube">the tube</a>, cropped on <a href="../crop">the crop</a> and laid over the torus on <a href="../modes">the modes</a>. Every mass, every exponent and every point of the curve comes out of the crates through wasm; the page only draws.</>}>
+      foot={<>The design is the picker's plane code at side <code>q</code> and its residue base; the filled cells of its level-one tile are the corners the sliders weight, listed row by row, and the vector is normalised to sum to one inside the crate. The picture is the level-<code>L</code> mass field, one cell a pixel, read at <code>(mass / peak)^gamma</code> through the ground-blue-yellow ramp, so the gamma is display alone and never a printed number. The pressure is summed with the largest exponent factored out, which is why the curve stays exact out to <code>s = 30</code> where the spectrum's two tails are sampled. Equal weights are the 0/1 design itself: the spectrum collapses to the single point <code>(log_q k, log_q k)</code>, which is the box dimension the support has at every weighting. The geometry these weights leave alone is the same design fattened on <a href="../tube">the tube</a>, cropped on <a href="../crop">the crop</a> and laid over the torus on <a href="../modes">the modes</a>. Every mass, every exponent and every point of the curve comes out of the crates through wasm; the page only draws.</>}>
       <p><span className="chip verified">Verified</span> At contraction <code>1/q</code> under the open set condition, which every design satisfies with the unit cell, the pressure equation closes in one line: <code>tau(s) = log_q sum_f w_f^s</code>, with <code>f(alpha) = inf_s (alpha s + tau(s))</code> attained at <code>alpha(s) = -tau'(s)</code>, so the spectrum is explicit in the weights and nothing is fitted. The proof it is read from and the exact tables are on <a href="../../research/weights/">the weights page</a>.</p>
       <div className="arena">
         <div className="panel">

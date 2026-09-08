@@ -100,7 +100,8 @@ export function web(canvas, height, nodes, branches, roles, radius) {
   const scale = Math.min((w - 2 * pad) / (x1 - x0 || 1), (h - 2 * pad) / (y1 - y0 || 1));
   const ox = (w - (x1 - x0) * scale) / 2 - x0 * scale, oy = (h - (y1 - y0) * scale) / 2 - y0 * scale;
   const px = (i) => ox + nodes[2 * i] * scale, py = (i) => oy + nodes[2 * i + 1] * scale;
-  const lines = role.map(() => new Path2D());
+  const hues = role();
+  const lines = hues.map(() => new Path2D());
   for (let k = 0; k < branches.length; k += 2) {
     const [a, b] = [branches[k], branches[k + 1]];
     const path = lines[roles ? Math.min(roles[a], roles[b]) : 0];
@@ -109,17 +110,17 @@ export function web(canvas, height, nodes, branches, roles, radius) {
   }
   ctx.lineWidth = 1;
   lines.forEach((path, r) => {
-    ctx.strokeStyle = roles ? role[r] : ink.line;
+    ctx.strokeStyle = roles ? hues[r] : ink.line;
     ctx.stroke(path);
   });
-  const dots = role.map(() => new Path2D());
+  const dots = hues.map(() => new Path2D());
   for (let i = 0; i < n; i++) {
     const path = dots[roles ? roles[i] : 2];
     path.moveTo(px(i) + radius, py(i));
     path.arc(px(i), py(i), radius, 0, Math.PI * 2);
   }
   dots.forEach((path, r) => {
-    ctx.fillStyle = role[r];
+    ctx.fillStyle = hues[r];
     ctx.fill(path);
   });
 }

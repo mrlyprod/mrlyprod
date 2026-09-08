@@ -97,7 +97,7 @@ function App() {
     for (let n = 1; n <= limit; n++) {
       const t = types[n], x = ((n - 1) % cols) * cell, y = Math.floor((n - 1) / cols) * cell;
       const lit = n === current || t === mark;
-      ctx.fillStyle = n === current ? ink.blue : t === mark ? ink.orange : t === 1 ? ink.gold : t ? ink.line : ink.panel;
+      ctx.fillStyle = n === current ? ink.blue : t === mark ? ink.orange : t === 1 ? ink.yellow : t ? ink.line : ink.panel;
       ctx.fillRect(x + 1, y + 1, cell - 2, cell - 2);
       if (cell >= 15) {
         ctx.fillStyle = lit || t === 1 ? ink.bg : ink.dim;
@@ -121,7 +121,7 @@ function App() {
     if (few) {
       let y = 4;
       for (const [a, b] of rects) {
-        ctx.fillStyle = rects.length === 1 ? ink.gold : ink.blue;
+        ctx.fillStyle = rects.length === 1 ? ink.yellow : ink.blue;
         for (let i = 0; i < a; i++) {
           for (let j = 0; j < b; j++) {
             ctx.beginPath();
@@ -141,7 +141,7 @@ function App() {
     const py = (v) => h - 20 - (h - 36) * Math.log(v) / span;
     rects.forEach(([a, b], k) => {
       const x = px(b), y = Math.min(py(a), h - 24);
-      ctx.fillStyle = rects.length === 1 ? ink.gold : ink.blue;
+      ctx.fillStyle = rects.length === 1 ? ink.yellow : ink.blue;
       ctx.globalAlpha = 0.18;
       ctx.fillRect(8, y, x - 8, h - 20 - y);
       ctx.globalAlpha = 1;
@@ -169,9 +169,9 @@ function App() {
     const trace = (column) => column.map((v, k) => [data.x[k] / top, Math.max(0, v) / peak]);
     line(b, trace(data.ratio), ink.pink, { dash: [4, 4] });
     line(b, trace(data.li), ink.blue);
-    line(b, trace(data.pi), ink.gold, { width: 2 });
+    line(b, trace(data.pi), ink.yellow, { width: 2 });
     axis(b, [[0, '0'], [1, String(top)]]);
-    let x = tag(b, `pi(x) ${data.pi[last]}`, ink.gold);
+    let x = tag(b, `pi(x) ${data.pi[last]}`, ink.yellow);
     x = tag(b, `x / ln x ${data.ratio[last].toFixed(1)}`, ink.pink, 'left', x + 14);
     tag(b, `li(x) ${data.li[last].toFixed(1)}`, ink.blue, 'left', x + 14);
   };
@@ -181,11 +181,11 @@ function App() {
     if (!trial) return;
     const b = board(canvas, 220);
     const count = trial.scales.length;
-    bars(b, trial.row, { color: ink.gold });
+    bars(b, trial.row, { color: ink.yellow });
     const every = Math.max(1, Math.round(count / 8));
     axis(b, trial.scales.map((scale, k) => [(k + 0.5) / count, scale]).filter((_, k) => k % every === 0));
     if (trial.prime) tag(b, `${trial.n}: every bar is exactly zero, prime`, ink.green);
-    else tag(b, `${trial.n}: largest ${trial.max.toFixed(4)} at scale ${trial.at}`, ink.gold);
+    else tag(b, `${trial.n}: largest ${trial.max.toFixed(4)} at scale ${trial.at}`, ink.yellow);
   };
 
   const done = sieve.current ? sieve.current.done() : false;
@@ -217,7 +217,7 @@ function App() {
       controls={controls}>
       <div className="arena">
         <div className="panel">
-          <h2>The sieve <span>{done ? `done, ${sieve.current.count()} primes in gold` : current ? `${current} strikes its multiples in orange` : 'blue is the prime in hand'}</span></h2>
+          <h2>The sieve <span>{done ? `done, ${sieve.current.count()} primes in yellow` : current ? `${current} strikes its multiples in orange` : 'blue is the prime in hand'}</span></h2>
           <Sketch draw={sheet} deps={[tick, current]} role="img" aria-label="The sieve, every number up to the limit in a grid" />
         </div>
         <div className="panel">

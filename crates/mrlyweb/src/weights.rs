@@ -1,4 +1,4 @@
-use crate::{checked, ink, Fault, Pixels};
+use crate::{checked, rgba, theme, Fault, Pixels};
 use mrlymath::two;
 use wasm_bindgen::prelude::*;
 
@@ -32,7 +32,8 @@ fn corners_of(code: &str, number: usize, base: usize) -> Result<Vec<(usize, usiz
 }
 
 fn ramp(t: f64) -> [u8; 4] {
-    let stops = [ink::DEEP, ink::BLUE, ink::GOLD];
+    let ink = theme();
+    let stops = [rgba(ink.ground), rgba(ink.blue), rgba(ink.yellow)];
     let reach = t.clamp(0.0, 1.0) * (stops.len() - 1) as f64;
     let low = (reach.floor() as usize).min(stops.len() - 2);
     let fade = reach - low as f64;
@@ -215,11 +216,12 @@ pub fn weights_pixels(
         .copied()
         .fold(f64::MIN, f64::max)
         .max(f64::MIN_POSITIVE);
+    let ground = rgba(theme().ground);
     let colors = field
         .iter()
         .map(|mass| {
             if *mass <= 0.0 {
-                ink::DEEP
+                ground
             } else {
                 ramp((mass / peak).powf(gamma))
             }

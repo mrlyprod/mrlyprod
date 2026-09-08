@@ -41,7 +41,7 @@ fn main() -> Result<()> {
             if diagram.at(t * window + c) != 0 {
                 let x = ox + (c - lo) as f64 * scale;
                 let y = oy + t as f64 * scale;
-                board.rect(x, y, scale, scale, ink::FG);
+                board.rect(x, y, scale, scale, ink::fg());
             }
         }
     }

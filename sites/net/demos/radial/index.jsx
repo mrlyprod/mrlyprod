@@ -51,9 +51,9 @@ function App() {
     if (!view) return;
     const b = board(canvas, 300);
     const lives = (k) => (view.full ? k % view.copies === 0 : k === 0);
-    bars(b, view.power, { color: (k) => (k === 0 ? ink.gold : lives(k) ? ink.blue : ink.line) });
+    bars(b, view.power, { color: (k) => (k === 0 ? ink.yellow : lives(k) ? ink.blue : ink.line) });
     axis(b, view.power.map((_, k) => [(k + 0.5) / view.power.length, k]).filter(([, k]) => k % 4 === 0));
-    tag(b, `order 0 carries ${view.share.toFixed(1)}% of the power`, ink.gold);
+    tag(b, `order 0 carries ${view.share.toFixed(1)}% of the power`, ink.yellow);
     tag(b, view.order ? `live orders are multiples of ${view.order}` : 'no live order', ink.pink, 'right');
   };
 

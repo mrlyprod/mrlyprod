@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ready, ink } from '../../lib/mrly.js';
+import { ready, ink, rgb } from '../../lib/mrly.js';
 import { mount, Page, Row, Slider, Check, Btn } from '../../lib/app.jsx';
 import { Sketch } from '../../lib/draw.jsx';
 import { useSeeds, roll } from '../../lib/select.jsx';
@@ -18,10 +18,11 @@ function App() {
   const draw = (canvas) => {
     const b = board(canvas, 220, { pad: 24, top: 12, bottom: 30 });
     const { ctx } = b;
+    const pale = rgb(ink.fg).join(', ');
     axis(b, [[0, '0'], [1, '1']]);
     for (const [num, den, bright] of view.nodes) {
       const x = b.x(num / den);
-      ctx.strokeStyle = `rgba(232, 236, 241, ${0.14 + 0.7 * bright / q})`;
+      ctx.strokeStyle = `rgba(${pale}, ${0.14 + 0.7 * bright / q})`;
       ctx.lineWidth = bright > q / 3 ? 1.5 : 0.7;
       ctx.beginPath();
       ctx.moveTo(x, b.floor);

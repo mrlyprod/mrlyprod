@@ -232,13 +232,13 @@ function App() {
     if (!rows.length) return;
     axis(b, [[0, 'block 1'], [1, `block ${rows.length}`]], { wall: true });
     bars(b, rows.map((row) => row.ratio), { color: ink.dim, inset: 4 });
-    line(b, running(rows.map((row) => row.ratio)), ink.gold, { width: 1.8, dots: 3 });
+    line(b, running(rows.map((row) => row.ratio)), ink.yellow, { width: 1.8, dots: 3 });
     line(b, running(rows.map((row) => density(dim, row))), ink.blue, { width: 1.8, dots: 3 });
     tag(b, 'each running total against its own last value', ink.dim, 'right');
   };
 
   const art = (block) => {
-    if (dim === 2) return <Grid grid={block.grid} on={ink.gold} role="img" aria-label={`block ${block.k}, ${block.word}`} />;
+    if (dim === 2) return <Grid grid={block.grid} on={ink.yellow} role="img" aria-label={`block ${block.k}, ${block.word}`} />;
     if (dim === 6) return <Markup svg={block.svg} role="img" aria-label={`block ${block.k}, ${block.word}`} />;
     return null;
   };
@@ -325,7 +325,7 @@ function App() {
       <Sketch draw={drawChart} deps={[tower, dim]} className="bars" role="img" aria-label="Volume and surface running totals by block" />
       <Stats>
         <span><span className="swatch" style={{ background: ink.dim }}></span> volume per block, the fill fraction the census gives</span>
-        <span><span className="swatch" style={{ background: ink.gold }}></span> the volume running total, flattening</span>
+        <span><span className="swatch" style={{ background: ink.yellow }}></span> the volume running total, flattening</span>
         <span><span className="swatch" style={{ background: ink.blue }}></span> the surface running total, climbing</span>
       </Stats>
       <p className="sub">The bars are exported numbers, one fill fraction per block. The two curves are the running totals of those bars and of the exposed count over the side, each drawn against its own last value so the shapes can be read side by side: the volume bends over as its steps shrink by a constant factor, the surface bends up as its steps grow. Neither total is printed anywhere on the page, because a total is a sum and the sum would have to happen here rather than in Rust.</p>

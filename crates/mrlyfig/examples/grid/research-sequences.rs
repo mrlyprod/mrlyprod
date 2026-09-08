@@ -20,11 +20,11 @@ fn main() -> Result<()> {
     let rule = 1.5;
     for col in 0..=SIDES.len() {
         let x = block.x + col as f64 * pitch;
-        board.rect(x - rule / 2.0, block.y, rule, block.h, ink::LINE);
+        board.rect(x - rule / 2.0, block.y, rule, block.h, ink::line());
     }
     for row in 0..=CODES.len() {
         let y = block.y + row as f64 * pitch;
-        board.rect(block.x, y - rule / 2.0, block.w, rule, ink::LINE);
+        board.rect(block.x, y - rule / 2.0, block.w, rule, ink::line());
     }
     for (row, code) in CODES.iter().enumerate() {
         for (col, number) in SIDES.iter().enumerate() {
@@ -42,7 +42,7 @@ fn main() -> Result<()> {
             )
             .inset(pitch * 0.10);
             Grid::new(tile, *number, *number, 0.10)
-                .paint(&mut board, &cells, |kind| (kind != 0).then_some(ink::GOLD));
+                .paint(&mut board, &cells, |kind| (kind != 0).then_some(ink::yellow()));
         }
     }
     save("research-sequences", &board)?;

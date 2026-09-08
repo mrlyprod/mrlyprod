@@ -18,14 +18,14 @@ fn main() -> Result<()> {
             let y = frame.y + frame.h - (b as f64 - 0.5) * step;
             if gcd(a, b) == 1 {
                 visible += 1;
-                board.rect(x - lit / 2.0, y - lit / 2.0, lit, lit, ink::GOLD);
+                board.rect(x - lit / 2.0, y - lit / 2.0, lit, lit, ink::yellow());
             } else {
                 board.rect(
                     x - hid / 2.0,
                     y - hid / 2.0,
                     hid,
                     hid,
-                    ink::fade(ink::DIM, 0.9),
+                    ink::fade(ink::dim(), 0.9),
                 );
             }
         }

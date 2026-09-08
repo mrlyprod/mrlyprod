@@ -17,7 +17,7 @@ fn outline(board: &mut Board, frame: Frame, thick: f64) {
             (frame.x, frame.y),
         ],
         thick,
-        ink::LINE,
+        ink::line(),
     );
 }
 
@@ -48,12 +48,12 @@ fn panel(board: &mut Board, frame: Frame, code: u128, tone: Color) -> Result<usi
 fn main() -> Result<()> {
     let codes = [1u128, 3, 7, 9, 11, 15];
     let tones = [
-        ink::BLUE,
-        ink::BLUE,
-        ink::BLUE,
-        ink::VIOLET,
-        ink::VIOLET,
-        ink::VIOLET,
+        ink::blue(),
+        ink::blue(),
+        ink::blue(),
+        ink::indigo(),
+        ink::indigo(),
+        ink::indigo(),
     ];
     let mut board = Board::square();
     let frame = board.frame(0.08);

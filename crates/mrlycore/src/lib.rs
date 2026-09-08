@@ -27,6 +27,8 @@ pub mod json;
 pub mod logs;
 /// The editions that distribute a palette over a cell.
 pub mod paint;
+/// The generated palette: the hues, their shades and the dark and light themes.
+pub mod palette;
 /// The colorizers that turn counter values into colors.
 pub mod ramp;
 /// The pixel resamplers and the hex squash.

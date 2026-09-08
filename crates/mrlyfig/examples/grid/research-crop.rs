@@ -23,8 +23,8 @@ fn main() -> Result<()> {
                 continue;
             }
             let tone = match map.get(&[row, col]) {
-                2 => ink::GOLD,
-                1 => ink::ORANGE,
+                2 => ink::yellow(),
+                1 => ink::orange(),
                 _ => continue,
             };
             grid.fill(&mut board, col, row, tone);

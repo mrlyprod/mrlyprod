@@ -7,7 +7,7 @@ fn panel(board: &mut Board, frame: Frame, level: usize, gap: f64) -> Result<()> 
     let cells = designs::create(495, 3, level, 0, 3)?;
     let side = cells.width();
     assert_eq!(side, 3usize.pow(level as u32));
-    Grid::new(frame, side, side, gap).paint(board, &cells, |kind| (kind != 0).then_some(ink::GOLD));
+    Grid::new(frame, side, side, gap).paint(board, &cells, |kind| (kind != 0).then_some(ink::yellow()));
     Ok(())
 }
 

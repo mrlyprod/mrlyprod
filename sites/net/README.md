@@ -16,7 +16,7 @@
 - `bun run build` writes the whole site to `dist/` with `scripts/site.ts` alone: pure bun, no Chrome, no cargo, no Python; `bun run clean` empties `dist/` by hand when you want a cold start.
 - The demos are one route: one in-process `Bun.build()` over `demos/index.html` and `demos/*/index.html`, its SEO head injected before the shells are written, fingerprinted over `demos/`, `lib/`, `pkg/` and the kit.
 - A second `bun run build` renders nothing: every route is fingerprinted into `.cache/manifest.json` with the files it wrote, and dead outputs are deleted by that record.
-- Two inputs are made on the desk and read at build time: `pkg/` from `bun run wasm` and `../../files/figures/` from `bun run figures` (the `mrlyfig` crate); a missing figure throws while its own route renders and names the route.
+- Two inputs are made on the desk and read at build time: `pkg/` from `bun run wasm` and `../../files/figures/` from `bun run figures` (the `mrlyfig` crate); every figure is a pair, `<name>-dark.png` and `<name>-light.png`, the page carries both as `img.dark` and `img.light` and the theme shows one; a missing half throws while its own route renders and names the route.
 - Figures are named by route: `research-<page>`, `paper-<slug>`, `blog-<slug>`, `site-home`, `site-demos`, `site-papers`, `site-research`, `site-og` (1200x630) and `site-icon`; a research or blog page opens on its square figure, a paper page opens on its avatar, the cards and the doors use the same files.
 - `scripts/shelf.ts` fetches the paper shelf from GitHub into `data/shelf/` at every build and falls back to the cached copy offline; `MRLY_SHELF=/path/to/research` reads a local checkout instead, which `bun run dev` sets to the cached copy so a rescan never waits on the network.
 - Routes: `/`, `/demos/`, `/demos/<name>/`, `/papers/`, `/papers/<slug>/`, `/research/`, `/research/<name>/`, `/blog/`, `/blog/<slug>/`, `/about/`, `/git/...`, `/raw/...` and `/404.html`, beside `sitemap.xml`, `robots.txt`, `llms.txt`, `favicon.svg`, `apple-touch-icon.png`, `icon-512.png` and `manifest.webmanifest`.
@@ -47,6 +47,7 @@
 - [weights](demos/weights/) - Give every filled corner of a design a weight and the support never moves while the mass does, so the pressure and its Legendre transform are closed forms in the weights alone and the multifractal spectrum becomes a curve you steer with sliders.
 - [tour](demos/tour/) - A dozen cards, each drawing a design live beside the integer sequence it counts and the OEIS record that holds the terms.
 - [mrlylife](demos/mrlylife/) - Life with the neighbourhood set free: the mask is a design at any side and level, the birth and survival counts come by hand or from a named sequence, and the board runs in one dimension or two.
+- [chladni](demos/chladni/) - A Larger-than-Life rule on a big design mask runs a soup to a still, and the ring where the still's spectrum peaks, read beside the mask's own spectrum, is the wavelength the rule prefers.
 - [wolfram](demos/wolfram/) - Wolfram's 256 elementary rules are the 256 three-dimensional parity designs bit for bit, so every rule arrives with a design's card, and the additive rules draw the plane designs in time.
 
 ### Slices and stacks

@@ -6,10 +6,13 @@ export function useCanvas(draw, deps, live = false, outer) {
   const ref = outer ?? inner;
   useEffect(() => {
     draw(ref.current);
-    if (!live) return;
     const on = () => draw(ref.current);
-    addEventListener('resize', on);
-    return () => removeEventListener('resize', on);
+    addEventListener('theme', on);
+    if (live) addEventListener('resize', on);
+    return () => {
+      removeEventListener('theme', on);
+      removeEventListener('resize', on);
+    };
   }, deps);
   return ref;
 }

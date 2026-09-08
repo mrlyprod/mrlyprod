@@ -23,7 +23,7 @@ fn main() -> Result<()> {
             foot - tall,
             wide,
             tall,
-            ink::fade(ink::DIM, 0.45),
+            ink::fade(ink::dim(), 0.45),
         );
     }
     for (index, order) in proved.iter().enumerate() {
@@ -34,10 +34,10 @@ fn main() -> Result<()> {
             foot - tall,
             wide,
             tall,
-            ink::BLUE,
+            ink::blue(),
         );
     }
-    board.rect(frame.x, foot, frame.w, 2.0, ink::LINE);
+    board.rect(frame.x, foot, frame.w, 2.0, ink::line());
     save("paper-slice-recurrence-order", &board)?;
     Ok(())
 }

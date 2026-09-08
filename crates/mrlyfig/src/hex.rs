@@ -207,7 +207,7 @@ mod tests {
     }
     #[test]
     fn every_triangle_of_a_hexagon_is_offered_to_the_ink() {
-        let mut board = Board::new(128, 128, ink::GROUND);
+        let mut board = Board::new(128, 128, ink::ground());
         let frame = board.frame(0.1);
         let seen = std::cell::Cell::new(0usize);
         hexagon(&mut board, frame, 3, 0.0, |_, _, _| {

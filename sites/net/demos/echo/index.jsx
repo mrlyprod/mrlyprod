@@ -50,13 +50,13 @@ function Meter({ view }) {
       line(b, place(echo), ink.blue, { width: 1.2 });
       line(b, place(rest), ink.pink, { width: 1.2 });
     }
-    line(b, place(meter), ink.gold, { width: 1.4 });
+    line(b, place(meter), ink.yellow, { width: 1.4 });
     b.ctx.fillStyle = ink.dim;
     b.ctx.textAlign = 'right';
     b.ctx.fillText(fixed(high, 3), b.left - 6, b.y(1) + 4);
     b.ctx.fillText(fixed(low, 3), b.left - 6, b.y(0) + 4);
     b.ctx.textAlign = 'left';
-    tag(b, 'the meter', ink.gold);
+    tag(b, 'the meter', ink.yellow);
     if (drawn.length > 1) {
       tag(b, 'the echo', ink.blue, 'left', b.x(0) + 76);
       tag(b, 'the residual', ink.pink, 'left', b.x(0) + 152);
@@ -76,7 +76,7 @@ function Spectrum({ view }) {
     const roof = Math.log10(peak);
     const lift = (value) => Math.log10(Math.max(value, 1)) / roof;
     rules(b, read.lattice.filter((g) => g < TOP).map(at), { color: ink.pink, dash: [3, 4] });
-    rules(b, read.zeros.filter((g) => g < TOP).map(at), { color: ink.gold });
+    rules(b, read.zeros.filter((g) => g < TOP).map(at), { color: ink.yellow });
     const points = [];
     for (let i = 0; i < gamma.length && gamma[i] <= TOP; i += 1) points.push([at(gamma[i]), lift(score[i])]);
     axis(b, [0, 10, 20, 30, 40, 50, 60].map((g) => [at(g), String(g)]), { wall: true });
@@ -87,7 +87,7 @@ function Spectrum({ view }) {
     b.ctx.fillText(fixed(peak, 1), b.left - 6, b.y(1) + 4);
     b.ctx.fillText('1', b.left - 6, b.y(0) + 4);
     b.ctx.textAlign = 'left';
-    tag(b, 'the zeta ordinates', ink.gold);
+    tag(b, 'the zeta ordinates', ink.yellow);
     tag(b, `the pole lattice 2 pi j / log ${read.base}`, ink.pink, 'right');
   };
   return <Sketch className="bars" draw={draw} deps={[view]} role="img" aria-label="The power spectrum of the meter against the zeta ordinates and the pole lattice" />;
@@ -182,7 +182,7 @@ function App() {
         </Stats>
       </div>
       <div className="panel" style={{ marginTop: 22 }}>
-        <h2>The spectrum <span>{pick.sub ? 'the residual, echo taken out' : 'the meter'} over its local median floor, gold the zeta ordinates, pink the pole lattice</span></h2>
+        <h2>The spectrum <span>{pick.sub ? 'the residual, echo taken out' : 'the meter'} over its local median floor, yellow the zeta ordinates, pink the pole lattice</span></h2>
         {view && <Spectrum view={view} />}
         <Stats>
           <Stat label="log range">{read && fixed(read.span, 4)}</Stat>
@@ -197,7 +197,7 @@ function App() {
           {read?.peaks.map((row) => (
             <span key={row.gamma}>
               <i>{fixed(row.gamma, 3)}</i>
-              <b className={row.zeta <= read.bin ? 'gold' : undefined}>{fixed(row.score, 1)}</b>
+              <b className={row.zeta <= read.bin ? 'yellow' : undefined}>{fixed(row.score, 1)}</b>
               <i>{`zeta ${fixed(row.zeta, 3)}`}</i>
               <i>{`lattice ${fixed(row.lattice, 3)}`}</i>
             </span>

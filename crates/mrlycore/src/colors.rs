@@ -17,58 +17,8 @@ pub struct Color {
 
 /// The fully transparent color.
 pub const ALPHA: Color = Color::rgba(0, 0, 0, 0);
-/// The pure black.
-pub const BLACK: Color = Color::rgb(0, 0, 0);
-/// The pure white.
-pub const WHITE: Color = Color::rgb(255, 255, 255);
-/// The palette red, #ff3d40.
-pub const RED: Color = Color::rgb(255, 61, 64);
-/// The palette orange, #ff8f2c.
-pub const ORANGE: Color = Color::rgb(255, 143, 44);
-/// The palette yellow, #ffd100.
-pub const YELLOW: Color = Color::rgb(255, 209, 0);
-/// The palette green, #32cc58.
-pub const GREEN: Color = Color::rgb(50, 204, 88);
-/// The palette mint, #00d1bb.
-pub const MINT: Color = Color::rgb(0, 209, 187);
-/// The palette teal, #00cad8.
-pub const TEAL: Color = Color::rgb(0, 202, 216);
-/// The palette cyan, #1ec9f3.
-pub const CYAN: Color = Color::rgb(30, 201, 243);
-/// The palette blue, #008cff.
-pub const BLUE: Color = Color::rgb(0, 140, 255);
-/// The palette indigo, #6768fa.
-pub const INDIGO: Color = Color::rgb(103, 104, 250);
-/// The palette purple, #d332e9.
-pub const PURPLE: Color = Color::rgb(211, 50, 233);
-/// The palette pink, #ff325a.
-pub const PINK: Color = Color::rgb(255, 50, 90);
-/// The palette brown, #b18462.
-pub const BROWN: Color = Color::rgb(177, 132, 98);
-/// The palette gray, #8e8e93.
-pub const GRAY: Color = Color::rgb(142, 142, 147);
 
-/// The names of the fifteen palette colors, in palette order.
-pub const NAMES: [&str; 15] = [
-    "black", "white", "red", "orange", "yellow", "green", "mint", "teal", "cyan", "blue", "indigo",
-    "purple", "pink", "brown", "gray",
-];
-
-/// The fifteen named colors, in name order.
-pub const PALETTE: [Color; 15] = [
-    BLACK, WHITE, RED, ORANGE, YELLOW, GREEN, MINT, TEAL, CYAN, BLUE, INDIGO, PURPLE, PINK, BROWN,
-    GRAY,
-];
-
-/// The palette without black and white, for random draws.
-pub const ROLLABLE: [Color; 13] = [
-    RED, ORANGE, YELLOW, GREEN, MINT, TEAL, CYAN, BLUE, INDIGO, PURPLE, PINK, BROWN, GRAY,
-];
-
-/// The board background in the dark theme.
-pub const BOARD_DARK: Color = Color::rgb(0, 0, 0);
-/// The board background in the light theme.
-pub const BOARD_LIGHT: Color = Color::rgb(255, 255, 255);
+pub use crate::palette::*;
 
 /// Returns the palette color a name spells, or an error for a stranger.
 pub fn named(name: &str) -> Result<Color> {
@@ -78,15 +28,15 @@ pub fn named(name: &str) -> Result<Color> {
     }
 }
 
-/// Returns the board background rgba, black in dark and white in light.
+/// Returns the ground rgba of the dark or the light theme.
 pub fn board(dark: bool) -> [u8; 4] {
-    let c = if dark { BOARD_DARK } else { BOARD_LIGHT };
+    let c = if dark { DARK.ground } else { LIGHT.ground };
     [c.r, c.g, c.b, c.a]
 }
 
-/// Returns the foreground rgba, white in dark and black in light.
+/// Returns the foreground rgba of the dark or the light theme.
 pub fn ink(dark: bool) -> [u8; 4] {
-    let c = if dark { WHITE } else { BLACK };
+    let c = if dark { DARK.fg } else { LIGHT.fg };
     [c.r, c.g, c.b, c.a]
 }
 

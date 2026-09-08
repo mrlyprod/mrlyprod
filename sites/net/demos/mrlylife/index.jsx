@@ -258,7 +258,7 @@ function App() {
         <div className="panel">
           <h2>the mask <span>a design, centre popped</span></h2>
           <Note error={mask.error} />
-          {mask.read && <Grid grid={mask.read} on={ink.gold} style={{ maxWidth: 200 }} aria-label="The neighbourhood mask" />}
+          {mask.read && <Grid grid={mask.read} on={ink.yellow} style={{ maxWidth: 200 }} aria-label="The neighbourhood mask" />}
           <Stats>
             <Stat label="mask">{`${dim === 1 ? 'd1' : 'd2'} code ${pick.code.trim()} side ${pick.side} level ${level}`}</Stat>
             <Stat label="cells">{budget}</Stat>

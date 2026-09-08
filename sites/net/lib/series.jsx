@@ -89,7 +89,7 @@ export function Pins({ terms, start = 0, log = 'auto', height = 240, label = '',
     terms.forEach((t, i) => {
       const f = (i + 0.5) / n;
       const y = Math.max(0.015, at(t));
-      const color = marks?.[i] ? ink.gold : negative(t) ? ink.orange : hue;
+      const color = marks?.[i] ? ink.yellow : negative(t) ? ink.orange : hue;
       line(b, [[f, 0], [f, y]], color, { width: Math.max(1, Math.min(3, step * 0.16)) });
       line(b, [[f, y]], color, { dots: Math.max(2, Math.min(4, step * 0.14)) });
       if (room) tag(b, text(t), ink.fg, 'center', b.x(f), Math.max(b.roof - 8, b.y(y) - 8));
@@ -138,7 +138,7 @@ export function Digits({ terms, base = 2, start = 0, cell = 13, label = '', clas
       const y = b.roof + i * size;
       if (size >= 8) tag(b, String(start + i), ink.dim, 'right', gutter - 8, y + size - 3);
       digits.forEach((d, j) => {
-        b.ctx.fillStyle = d === 0 ? ink.line : mix(ink.blue, ink.gold, q > 2 ? d / (q - 1) : 1);
+        b.ctx.fillStyle = d === 0 ? ink.line : mix(ink.blue, ink.yellow, q > 2 ? d / (q - 1) : 1);
         b.ctx.fillRect(gutter + (cols - digits.length + j) * size, y, Math.max(1, size - 1), Math.max(1, size - 1));
       });
     });
@@ -205,7 +205,7 @@ export function Terms({ terms, start = 0, marks, capped, tight, empty = '', onPi
     <div className={tight ? 'ribbon tight' : 'ribbon'}>
       {label ? <span className="tag">{label}</span> : null}
       {terms.map((t, i) => (
-        <span key={i} className={marks?.[i] ? 'gold' : undefined} role={onPick ? 'button' : undefined} onClick={onPick ? () => onPick(t, start + i) : undefined}>
+        <span key={i} className={marks?.[i] ? 'yellow' : undefined} role={onPick ? 'button' : undefined} onClick={onPick ? () => onPick(t, start + i) : undefined}>
           {tight ? null : <i>{start + i}</i>}
           <b>{text(t)}</b>
         </span>

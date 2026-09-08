@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { ink, blit, role } from './mrly.js';
+import { ink, palette, blit, role } from './mrly.js';
 
 export function stage(canvas) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
@@ -13,11 +13,11 @@ export function stage(canvas) {
   let camera = eye;
   const controls = new OrbitControls(camera, canvas);
   controls.enableDamping = true;
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x1a2230, 1.2));
-  const key = new THREE.DirectionalLight(0xffffff, 1.8);
+  scene.add(new THREE.HemisphereLight(palette.white, ink.line, 1.2));
+  const key = new THREE.DirectionalLight(palette.white, 1.8);
   key.position.set(3, 4, 2);
   scene.add(key);
-  const rim = new THREE.DirectionalLight(0x5cc8ff, 0.6);
+  const rim = new THREE.DirectionalLight(ink.blue, 0.6);
   rim.position.set(-3, -1, -2);
   scene.add(rim);
   const group = new THREE.Group();
@@ -130,11 +130,12 @@ export function cubes(cells, side, color = ink.orange) {
 export function web(nodes, branches, roles, radius) {
   const n = nodes.length / 3;
   const tint = new THREE.Color();
+  const hues = role();
   const balls = new THREE.InstancedMesh(new THREE.SphereGeometry(radius, 10, 7), new THREE.MeshStandardMaterial({ roughness: 0.5 }), n);
-  for (let i = 0; i < n; i++) balls.setColorAt(i, tint.set(role[roles ? roles[i] : 2]));
+  for (let i = 0; i < n; i++) balls.setColorAt(i, tint.set(hues[roles ? roles[i] : 2]));
   const colors = new Float32Array(branches.length * 3);
   for (let k = 0; k < branches.length; k += 2) {
-    tint.set(roles ? role[Math.min(roles[branches[k]], roles[branches[k + 1]])] : ink.line);
+    tint.set(roles ? hues[Math.min(roles[branches[k]], roles[branches[k + 1]])] : ink.line);
     colors.set([tint.r, tint.g, tint.b, tint.r, tint.g, tint.b], k * 3);
   }
   const geometry = new THREE.BufferGeometry();

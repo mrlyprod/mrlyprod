@@ -105,8 +105,8 @@ fn main() -> Result<()> {
     let (low, high) = window(&values);
     assert!(high - low > 0.01 && low < 0.5 && high > 0.5);
 
-    let bright = Ramp::new(vec![ink::GROUND, ink::BLUE, ink::GOLD]);
-    let quiet = Ramp::tone(ink::GROUND, ink::LINE);
+    let bright = Ramp::new(vec![ink::ground(), ink::blue(), ink::yellow()]);
+    let quiet = Ramp::tone(ink::ground(), ink::mix(ink::line(), ink::dim(), 0.5));
     let mut board = Board::square();
     let frame = board.frame(0.05);
     let x0 = frame.x.ceil() as usize;

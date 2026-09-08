@@ -78,7 +78,7 @@ fn main() -> Result<()> {
         .map(|&m| if m > 0.0 { (m / peak).powf(GAMMA) } else { 0.0 })
         .collect();
 
-    let ramp = Ramp::new(vec![ink::GROUND, ink::BLUE, ink::GOLD]);
+    let ramp = Ramp::new(vec![ink::ground(), ink::blue(), ink::yellow()]);
     let mut board = Board::square();
     let edge = (board.width as f64 * MARGIN).round();
     let plate = board.width as f64 - 2.0 * edge;

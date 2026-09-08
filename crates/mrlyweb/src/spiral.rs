@@ -1,5 +1,4 @@
-use crate::ink::{BLUE, DEEP, FAINT, GOLD, ORANGE, PINK};
-use crate::{Fault, Pixels};
+use crate::{rgba, theme, Fault, Pixels};
 use mrlycore::json;
 use mrlynum::factor::factorize;
 use mrlynum::spiral::{self, Diagonal, Lattice, Mark};
@@ -135,17 +134,19 @@ pub fn spiral_pixels(
     let mark = Mark::named(mark)
         .ok_or_else(|| Fault::new("the mark is prime, twin, squarefree or mobius."))?;
     let quadratic = read(sheet.lattice, side, a, b, c)?;
+    let ink = theme();
+    let ground = rgba(ink.ground);
     let mut look: Vec<[u8; 4]> = spiral::marks(mark, quadratic.top)
         .iter()
         .map(|&m| match m {
-            1 => GOLD,
-            -1 => PINK,
-            _ if faint => FAINT,
-            _ => DEEP,
+            1 => rgba(ink.yellow),
+            -1 => rgba(ink.pink),
+            _ if faint => rgba(ink.line),
+            _ => ground,
         })
         .collect();
     for (&value, &hit) in quadratic.values.iter().zip(&quadratic.hit) {
-        look[value as usize] = if hit { ORANGE } else { BLUE };
+        look[value as usize] = rgba(if hit { ink.orange } else { ink.blue });
     }
     let mut colors = Vec::with_capacity(size * size);
     for py in 0..size {
@@ -155,7 +156,7 @@ pub fn spiral_pixels(
                 Some(cell) if !sheet.gap(fx, fy, cell) => {
                     look[sheet.lattice.n(cell.0, cell.1) as usize]
                 }
-                _ => DEEP,
+                _ => ground,
             });
         }
     }

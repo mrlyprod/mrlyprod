@@ -86,7 +86,7 @@ function App() {
       <div className="arena">
         <div className="panel">
           <h2>The mask <span>{`level ${level}, ${mass} cells of ${span * span}`}</span></h2>
-          {built.grid && <Grid grid={built.grid} on={ink.gold} role="img" aria-label="The design mask" />}
+          {built.grid && <Grid grid={built.grid} on={ink.yellow} role="img" aria-label="The design mask" />}
         </div>
         <div className="panel">
           <h2>The eigenvalue field <span>{`|lambda|^(1/${level}) / k, click to pick t`}</span></h2>

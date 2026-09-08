@@ -19,7 +19,7 @@ const START = JSON.parse(m.census_walk(WIN.tiers[0].keys));
 function shade(count, peak) {
   if (count === 0) return ink.orange;
   if (count === 1) return ink.dim;
-  return mix(ink.blue, ink.gold, Math.log(count) / peak);
+  return mix(ink.blue, ink.yellow, Math.log(count) / peak);
 }
 
 function census() {
@@ -122,7 +122,7 @@ function App() {
 
   const champions = (canvas) => {
     const b = board(canvas, 210);
-    bars(b, champs.map((row) => row.rows), { color: (i) => (champs[i].value === value ? ink.gold : ink.blue) });
+    bars(b, champs.map((row) => row.rows), { color: (i) => (champs[i].value === value ? ink.yellow : ink.blue) });
     axis(b, champs.map((row, i) => [(i + 0.5) / champs.length, row.value]));
     tag(b, 'rows writing the integer, the twenty heaviest', ink.dim);
     tag(b, `leader ${champs[0].value} at ${champs[0].rows} rows`, ink.fg, 'right');
@@ -203,7 +203,7 @@ function App() {
         </div>
         <div className="panel">
           <h2>The verdict <span>{`${state.rows} rows read at ${state.depth} rendered terms`}</span></h2>
-          <p className="banner" style={{ color: found.rows === 0 ? ink.orange : found.rows === 1 ? ink.gold : ink.fg }}>
+          <p className="banner" style={{ color: found.rows === 0 ? ink.orange : found.rows === 1 ? ink.yellow : ink.fg }}>
             {found.rows ? `${value} is written by ${found.rows === 1 ? 'exactly one row' : `${found.rows} rows`}` : `${value} is missed: no row of the ${WIN.registry} writes it inside the window`}
           </p>
           <Stats>

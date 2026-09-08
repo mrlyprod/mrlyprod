@@ -1,4 +1,5 @@
 use super::vec::Vec3;
+use mrlycore::colors::{BLUE, GREEN, RED};
 
 /// The WGSL shader that consumes the packed wire format.
 pub const MESH_WGSL: &str = include_str!("mesh.wgsl");
@@ -58,15 +59,15 @@ pub fn axis_edges(ink: [u8; 4]) -> Vec<Edge> {
     let mut out = vec![
         Edge {
             ends: [o, Vec3::new(1.4, -1.0, 0.0)],
-            color: [220, 70, 70, 255],
+            color: [RED.r, RED.g, RED.b, 255],
         },
         Edge {
             ends: [o, Vec3::new(0.0, 0.4, 0.0)],
-            color: [80, 190, 90, 255],
+            color: [GREEN.r, GREEN.g, GREEN.b, 255],
         },
         Edge {
             ends: [o, Vec3::new(0.0, -1.0, 1.4)],
-            color: [80, 120, 230, 255],
+            color: [BLUE.r, BLUE.g, BLUE.b, 255],
         },
     ];
     let faint = [ink[0], ink[1], ink[2], 64];

@@ -50,7 +50,7 @@ fn main() -> Result<()> {
             if types.at(row * SIDE + col) != 0 {
                 let x = ox + col as f64 * CELL;
                 let y = oy + row as f64 * CELL;
-                board.rect(x, y, CELL, CELL, ink::BLUE);
+                board.rect(x, y, CELL, CELL, ink::blue());
             }
         }
     }
@@ -63,7 +63,7 @@ fn main() -> Result<()> {
             if mask.get(&[row, col]) == 1 {
                 let x = sx + col as f64 * STAMP;
                 let y = sy + row as f64 * STAMP;
-                board.rect(x, y, STAMP, STAMP, ink::GOLD);
+                board.rect(x, y, STAMP, STAMP, ink::yellow());
                 stamped += 1;
             }
         }

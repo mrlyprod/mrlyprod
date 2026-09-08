@@ -6,9 +6,9 @@ const UPPER: f64 = 0.640_212_193_8;
 const WALLS: [f64; 3] = [0.447_931, 0.5, 0.605_303];
 
 fn arm(board: &mut Board, x: f64, y: f64, w: f64, h: f64) {
-    board.rect(x, y, w, h, ink::PANEL);
+    board.rect(x, y, w, h, ink::panel());
     let edge = [(x, y), (x + w, y), (x + w, y + h), (x, y + h), (x, y)];
-    board.polyline(&edge, 2.0, ink::LINE);
+    board.polyline(&edge, 2.0, ink::line());
 }
 
 fn main() -> Result<()> {
@@ -21,12 +21,12 @@ fn main() -> Result<()> {
 
     arm(&mut board, at(0.0), top, at(LOWER) - at(0.0), thick);
     arm(&mut board, at(UPPER), top, at(1.0) - at(UPPER), thick);
-    board.rect(at(LOWER), top, at(UPPER) - at(LOWER), thick, ink::ORANGE);
+    board.rect(at(LOWER), top, at(UPPER) - at(LOWER), thick, ink::orange());
 
     for wall in WALLS {
         let x = at(wall);
-        board.rect(x - 1.0, frame.y, 2.0, frame.h, ink::fade(ink::DIM, 0.85));
-        board.rect(x - 1.0, top, 2.0, thick, ink::LINE);
+        board.rect(x - 1.0, frame.y, 2.0, frame.h, ink::fade(ink::dim(), 0.85));
+        board.rect(x - 1.0, top, 2.0, thick, ink::line());
     }
     save("paper-lemma-b-pincer", &board)?;
     Ok(())

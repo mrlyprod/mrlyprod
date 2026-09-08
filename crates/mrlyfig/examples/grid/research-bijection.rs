@@ -25,9 +25,9 @@ fn main() -> Result<()> {
         let design = universe.design(code);
         let color = if design.canonical {
             gold += 1;
-            ink::GOLD
+            ink::yellow()
         } else {
-            ink::BLUE
+            ink::blue()
         };
         let ox = area.x + (code as usize % CENSUS) as f64 * pitch + (pitch - bit * 4.0) / 2.0;
         let oy = top + (code as usize / CENSUS) as f64 * band + bit / 2.0;

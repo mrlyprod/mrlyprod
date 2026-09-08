@@ -48,7 +48,7 @@ fn main() -> Result<()> {
         &mut board,
         frame,
         &shelf,
-        [ink::FG, ink::BLUE, ink::BLUE],
+        [ink::fg(), ink::blue(), ink::blue()],
         None,
     );
     save("site-papers", &board)?;

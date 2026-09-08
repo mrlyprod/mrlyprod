@@ -1,11 +1,14 @@
 use crate::bang::factory;
 use crate::bang::universe::Code;
 use crate::formulas::profile_of_tile;
+use mrlycore::colors::{
+    BLUE, BROWN, CYAN, GREEN, INDIGO, MINT, ORANGE, PINK, PURPLE, RED, TEAL, YELLOW,
+};
 use mrlycore::errors::{value_error, Result};
+use mrlycore::Color;
 
-const PALETTE: [&str; 12] = [
-    "#ff5f5f", "#ffb347", "#ffe066", "#8ce99a", "#4dd4c0", "#63c7ff", "#7c9dff", "#b28dff",
-    "#ff8ad4", "#ff9f7a", "#c0e86b", "#5ad1a0",
+const PALETTE: [Color; 12] = [
+    RED, ORANGE, YELLOW, GREEN, MINT, TEAL, CYAN, BLUE, INDIGO, PURPLE, PINK, BROWN,
 ];
 
 use crate::formulas::diagonal::WIDEST;
@@ -160,7 +163,7 @@ pub fn svg(
     scale: usize,
 ) -> Result<String> {
     let solid = Solid::new(code, number, level, base)?;
-    let mut circles: Vec<(f64, f64, &str)> = Vec::new();
+    let mut circles: Vec<(f64, f64, Color)> = Vec::new();
     for (slot, &height) in heights.iter().enumerate() {
         for point in slice(code, number, level, base, height)? {
             let (u, v) = project(point);
@@ -185,7 +188,8 @@ pub fn svg(
         let cx = (u - low_u) * scale as f64 + radius;
         let cy = (high_v - v) * scale as f64 + radius;
         out.push(format!(
-            "<circle cx=\"{cx:.2}\" cy=\"{cy:.2}\" r=\"{radius:.2}\" fill=\"{fill}\"/>"
+            "<circle cx=\"{cx:.2}\" cy=\"{cy:.2}\" r=\"{radius:.2}\" fill=\"{}\"/>",
+            fill.to_hex()
         ));
     }
     out.push("</svg>".to_string());
@@ -698,6 +702,7 @@ mod tests {
             .map(|piece| &piece[..7])
             .collect();
         assert_eq!(fills.len(), 6);
+        assert!(fills.contains(RED.to_hex().as_str()));
         assert!(svg(0, 2, 2, 2, &[3], 4).is_err());
         assert!(profile(126, 2, 0, 2).is_err());
     }

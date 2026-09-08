@@ -60,6 +60,11 @@ a:hover { text-decoration: underline; }
 .prose math { font-size: 1.05em; }
 .prose .katex-display { overflow-x: auto; margin: 1em 0; }
 
+/* FIGURES */
+
+img.dark { display: var(--show-dark) !important; }
+img.light { display: var(--show-light) !important; }
+
 /* MOTION */
 
 @media (prefers-reduced-motion: reduce) {

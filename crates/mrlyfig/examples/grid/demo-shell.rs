@@ -41,15 +41,15 @@ fn main() -> Result<()> {
     for x in 0..SIDE {
         for y in 0..SIDE {
             if design.bytes()[x * SIDE + y] != 0 {
-                grid.fill(&mut board, y, SIDE - 1 - x, ink::LINE);
+                grid.fill(&mut board, y, SIDE - 1 - x, ink::line());
             }
         }
     }
     let unit = grid.cell(0, 0).2;
     for (level, thick, color) in [
-        (2usize, 0.5 * unit, ink::DIM),
-        (3, unit, ink::DIM),
-        (4, 2.0 * unit, ink::DIM),
+        (2usize, 0.5 * unit, ink::dim()),
+        (3, unit, ink::dim()),
+        (4, 2.0 * unit, ink::dim()),
     ] {
         let step = 3usize.pow(level as u32);
         for cell in &tree.levels[level] {
@@ -60,9 +60,9 @@ fn main() -> Result<()> {
     for cell in &tree.levels[0] {
         let color = if cell.live {
             kept += 1;
-            ink::GOLD
+            ink::yellow()
         } else {
-            ink::BLUE
+            ink::blue()
         };
         grid.fill(
             &mut board,

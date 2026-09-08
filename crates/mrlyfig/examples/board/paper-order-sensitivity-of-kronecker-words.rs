@@ -17,13 +17,13 @@ fn lattice(board: &mut Board, frame: Frame, side: usize, thick: f64) {
             (frame.x + offset, frame.y),
             (frame.x + offset, frame.y + frame.h),
             thick,
-            ink::LINE,
+            ink::line(),
         );
         board.segment(
             (frame.x, frame.y + offset),
             (frame.x + frame.w, frame.y + offset),
             thick,
-            ink::LINE,
+            ink::line(),
         );
     }
 }
@@ -52,8 +52,8 @@ fn main() -> Result<()> {
     let half = frame.w / 2.0;
     let top = Frame::new(frame.x, frame.y, half, half);
     let low = Frame::new(frame.x + half, frame.y + half, half, half);
-    let first = panel(&mut board, top, (3, 6), ink::BLUE)?;
-    let second = panel(&mut board, low, (6, 3), ink::ORANGE)?;
+    let first = panel(&mut board, top, (3, 6), ink::blue())?;
+    let second = panel(&mut board, low, (6, 3), ink::orange())?;
     assert_eq!((first, second), (4, 4));
     assert_eq!(
         (

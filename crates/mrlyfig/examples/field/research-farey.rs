@@ -27,7 +27,7 @@ fn main() -> Result<()> {
     assert_eq!(stack.len(), 63261);
     stack.sort_by_key(|node| node.2);
 
-    let ramp = Ramp::new(vec![ink::GROUND, ink::BLUE, ink::GOLD]);
+    let ramp = Ramp::new(vec![ink::ground(), ink::blue(), ink::yellow()]);
     let mut board = Board::square();
     let frame = board.frame(0.08);
     for (x, y, weight) in stack {

@@ -106,7 +106,7 @@ function App() {
   );
 
   const stamp = (corners) => (
-    <Grid grid={{ width: 4, height: 2, types: Uint8Array.from(corners) }} on={ink.gold} className=""
+    <Grid grid={{ width: 4, height: 2, types: Uint8Array.from(corners) }} on={ink.yellow} className=""
       style={{ width: 128, height: 64, borderRadius: 4, imageRendering: 'pixelated', background: 'var(--art)' }}
       role="img" aria-label="the eight corner bits of the rule" />
   );
@@ -142,7 +142,7 @@ function App() {
       <div className="panel">
         <h2>the space-time diagram <span>time runs down, one row a generation</span></h2>
         <Note error={run.error} />
-        {run.error ? null : <Grid grid={run.grid} on={ink.gold} role="img" aria-label={`Rule ${rule} from ${run.how}`} />}
+        {run.error ? null : <Grid grid={run.grid} on={ink.yellow} role="img" aria-label={`Rule ${rule} from ${run.how}`} />}
         {run.error ? null : (
           <Stats>
             <Stat label="rule">{rule}</Stat>
@@ -209,7 +209,7 @@ function App() {
           <h2>the gasket <span>{FRAMES[rule]}, against the design the card names</span></h2>
           <div className="arena">
             <div>
-              <Grid grid={gasket.window} on={ink.gold} role="img" aria-label="the diagram cropped to 64 rows" />
+              <Grid grid={gasket.window} on={ink.yellow} role="img" aria-label="the diagram cropped to 64 rows" />
               <div className="stats"><span>the diagram, {SIDE} rows</span></div>
             </div>
             <div>

@@ -149,7 +149,7 @@ fn main() -> Result<()> {
     spread.sort_by(|a, b| a.total_cmp(b));
     let reach = spread[spread.len() * 9 / 10];
 
-    let ramp = Ramp::new(vec![ink::BLUE, ink::PANEL, ink::GOLD]);
+    let ramp = Ramp::new(vec![ink::blue(), ink::panel(), ink::yellow()]);
     let mut board = Board::square();
     let frame = board.frame(0.08);
     hex::hexagon(&mut board, frame, MESH, 0.0, |row, col, _| {

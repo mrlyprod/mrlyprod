@@ -62,6 +62,7 @@ function theme(next) {
   else delete root().dataset.theme;
   write(KEY.theme, next);
   for (const label of document.querySelectorAll('[data-theme-toggle] b')) label.textContent = next || 'auto';
+  window.dispatchEvent(new Event('theme'));
 }
 
 function turn() {

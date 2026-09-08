@@ -50,7 +50,7 @@ fn stroke(board: &mut Board, pts: &[(f64, f64)], thick: f64, color: Color) {
 }
 
 fn rules(board: &mut Board, frame: Frame) {
-    let faint = ink::fade(ink::DIM, 0.22);
+    let faint = ink::fade(ink::dim(), 0.22);
     for step in 1..=DECADES as usize {
         let y = frame.y + frame.h * step as f64 / DECADES;
         board.segment((frame.x, y), (frame.x + frame.w, y), 1.2, faint);
@@ -73,7 +73,7 @@ fn main() -> Result<()> {
     let mut board = Board::square();
     let frame = board.frame(0.08);
     rules(&mut board, frame);
-    plot::axis(&mut board, frame, ink::LINE);
+    plot::axis(&mut board, frame, ink::line());
 
     let chasers: [Chaser; 5] = [
         (formulas::wallis, PI / 2.0),
@@ -86,7 +86,7 @@ fn main() -> Result<()> {
     for (partial, limit) in chasers {
         let path = trace(frame, &rungs, |m| (partial(m) - limit).abs() / limit);
         assert_eq!(path.len(), rungs.len());
-        stroke(&mut board, &path, 2.2, ink::BLUE);
+        stroke(&mut board, &path, 2.2, ink::blue());
         curves += 1;
     }
 
@@ -95,19 +95,19 @@ fn main() -> Result<()> {
         (formulas::prime_count(m) as f64 - li).abs() / li
     });
     assert_eq!(counted.len(), rungs.len());
-    stroke(&mut board, &counted, 3.0, ink::GOLD);
+    stroke(&mut board, &counted, 3.0, ink::yellow());
     curves += 1;
 
     let comet = trace(frame, &rungs, |m| 1.0 / formulas::goldbach(2 * m) as f64);
     assert_eq!(comet.len(), rungs.len());
-    plot::dots(&mut board, &comet, 2.0, ink::GOLD);
+    plot::dots(&mut board, &comet, 2.0, ink::yellow());
     curves += 1;
 
     let meter = trace(frame, &rungs, |m| {
         formulas::mertens(m).unsigned_abs() as f64 / (m as f64).sqrt()
     });
     assert!(meter.len() < rungs.len());
-    plot::dots(&mut board, &meter, 1.9, ink::ORANGE);
+    plot::dots(&mut board, &meter, 1.9, ink::orange());
     curves += 1;
 
     assert_eq!(curves, 8);

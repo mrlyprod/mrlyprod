@@ -43,13 +43,13 @@ fn main() -> Result<()> {
         &mut board,
         Frame::new(area.x, top, side, side),
         &left,
-        ink::BLUE,
+        ink::blue(),
     );
     panel(
         &mut board,
         Frame::new(area.x + side + gutter, top, side, side),
         &right,
-        ink::ORANGE,
+        ink::orange(),
     );
     save("research-magic", &board)?;
     Ok(())

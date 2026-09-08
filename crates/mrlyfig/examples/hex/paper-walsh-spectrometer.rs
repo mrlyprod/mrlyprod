@@ -75,17 +75,17 @@ fn main() -> Result<()> {
 
     let mut board = Board::square();
     let frame = board.frame(0.08);
-    hexagon(&mut board, frame, SIDE, 0.0, |_, _| Some(ink::LINE));
+    hexagon(&mut board, frame, SIDE, 0.0, |_, _| Some(ink::line()));
     hexagon(&mut board, frame, SIDE, 2.6, |row, col| {
         if at(&slice, row, col) == six::FILL {
             None
         } else {
-            Some(ink::GROUND)
+            Some(ink::ground())
         }
     });
     hexagon(&mut board, frame, SIDE, 2.6, |row, col| {
         if at(&slice, row, col) == six::FILL {
-            Some(ink::BLUE)
+            Some(ink::blue())
         } else {
             None
         }

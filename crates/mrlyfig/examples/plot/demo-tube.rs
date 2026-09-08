@@ -108,9 +108,9 @@ fn main() -> Result<()> {
         for col in 0..SPAN {
             let at = row * SPAN + col;
             if types[at] != 0 {
-                lattice.fill(&mut board, col, row, ink::FG);
+                lattice.fill(&mut board, col, row, ink::fg());
             } else if dist[at] <= EPS {
-                lattice.fill(&mut board, col, row, ink::BLUE);
+                lattice.fill(&mut board, col, row, ink::blue());
             }
         }
     }
@@ -121,14 +121,14 @@ fn main() -> Result<()> {
         plate,
         tall,
     );
-    plot::axis(&mut board, panel, ink::LINE);
+    plot::axis(&mut board, panel, ink::line());
     plot::curve(
         &mut board,
         panel.inset(24.0),
         &phases,
         &profile,
         4.0,
-        ink::GOLD,
+        ink::yellow(),
     );
     save("demo-tube", &board)?;
     Ok(())

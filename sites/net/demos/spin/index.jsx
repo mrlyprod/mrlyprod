@@ -118,7 +118,7 @@ function App() {
       tag(b, label, color, 'left', at + dx);
     };
     if (stats.disc > 0) mark(stats.disc, ink.pink, `dark disc ${stats.disc.toFixed(2)}`, 4);
-    mark(stats.inner, ink.gold, `edge ${stats.inner.toFixed(1)}`, -60);
+    mark(stats.inner, ink.yellow, `edge ${stats.inner.toFixed(1)}`, -60);
     axis(b, [[0, '0'], [1, `radius in cells, corner ${stats.reach.toFixed(1)}`]]);
     tag(b, `circle mean, peak ${stats.peak.toFixed(3)}`, ink.blue);
   };
