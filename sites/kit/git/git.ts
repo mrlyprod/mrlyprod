@@ -414,7 +414,7 @@ export async function block(text: string, kind: string, hook?: Hooks["code"]): P
     const inner = painted?.[i] ?? escape(line);
     return `<span class="line" id="L${n}"><a class="n" href="#L${n}">${n}</a><span class="t">${inner}</span></span>`;
   });
-  return `<div class="code d${gutter(lines.length)}" data-lang="${escape(kind)}"><pre><code>${out.join("\n")}</code></pre></div>`;
+  return `<div class="code d${gutter(lines.length)}" data-lang="${escape(kind)}"><pre><code>${out.join("")}</code></pre></div>`;
 }
 
 /* FILE */
