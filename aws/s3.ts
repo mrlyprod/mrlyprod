@@ -96,9 +96,15 @@ export async function retry<T>(work: () => Promise<T>, tries = 4): Promise<T> {
 
 export async function del(s3: S3Client, keys: string[], batch = 16): Promise<number> {
   for (let i = 0; i < keys.length; i += batch) {
-    await Promise.all(keys.slice(i, i + batch).map((key) => retry(() => s3.delete(key))));
+    await Promise.all(keys.slice(i, i + batch).map((key) => retry(() => drop(s3, key))));
   }
   return keys.length;
+}
+
+async function drop(s3: S3Client, key: string): Promise<void> {
+  const url = s3.presign(key, { method: "DELETE", expiresIn: 900 });
+  const res = await fetch(url, { method: "DELETE" });
+  if (!res.ok && res.status !== 404) throw new Error(`s3: delete ${key} failed ${res.status} ${(await res.text()).slice(0, 200)}`);
 }
 
 /* LIST */
