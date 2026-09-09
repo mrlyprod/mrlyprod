@@ -10,5 +10,5 @@
 - The build installs `sites/kit` then `sites/net` with `--frozen-lockfile`, runs `scripts/pkg.ts` and then `bun run push` in `sites/net`.
 - `net.test.ts` covers the payload parser: `bun test aws/net.test.ts`.
 - `s3.ts` is the S3 client it shares with `sites/net/scripts/pkg.ts` and `push.ts`: credentials from the environment, no SDK.
-- The Lambda never runs cargo: `scripts/wasm.sh` uploads `pkg/` once per change and `sites/net/pkg.lock` names the prefix.
+- The Lambda never runs cargo: `scripts/wasm.sh` only builds `pkg/`; the console outside this repo uploads it once per change and `sites/net/pkg.lock` names the prefix.
 - Bundled with `bun build aws/net.ts --target=bun` into one `handler.js`; the infrastructure console lives outside this repo.
