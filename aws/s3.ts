@@ -71,15 +71,32 @@ export async function putBytes(
   const url = s3.presign(key, { method: "PUT", expiresIn: 900, type: opts.type });
   const headers: Record<string, string> = { "Content-Type": opts.type };
   if (opts.cacheControl) headers["Cache-Control"] = opts.cacheControl;
-  const res = await fetch(url, { method: "PUT", body, headers });
-  if (!res.ok) throw new Error(`s3: put ${key} failed ${res.status} ${(await res.text()).slice(0, 200)}`);
+  await retry(async () => {
+    const res = await fetch(url, { method: "PUT", body, headers });
+    if (!res.ok) throw new Error(`s3: put ${key} failed ${res.status} ${(await res.text()).slice(0, 200)}`);
+  });
+}
+
+/* RETRY */
+
+export async function retry<T>(work: () => Promise<T>, tries = 4): Promise<T> {
+  let wait = 500;
+  for (let n = 1; ; n++) {
+    try {
+      return await work();
+    } catch (error) {
+      if (n >= tries) throw error;
+      await Bun.sleep(wait);
+      wait *= 3;
+    }
+  }
 }
 
 /* DELETE */
 
-export async function del(s3: S3Client, keys: string[], batch = 32): Promise<number> {
+export async function del(s3: S3Client, keys: string[], batch = 16): Promise<number> {
   for (let i = 0; i < keys.length; i += batch) {
-    await Promise.all(keys.slice(i, i + batch).map((key) => s3.delete(key)));
+    await Promise.all(keys.slice(i, i + batch).map((key) => retry(() => s3.delete(key))));
   }
   return keys.length;
 }
