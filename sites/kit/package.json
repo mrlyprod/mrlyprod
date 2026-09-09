@@ -1,0 +1,19 @@
+{
+  "name": "mrlykit",
+  "private": true,
+  "description": "The site kit every MrlyProd site wears",
+  "type": "module",
+  "exports": {
+    "./ui/*": "./ui/*",
+    "./ssg/*": "./ssg/*",
+    "./git/*": "./git/*"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@shikijs/core": "^4.4.3",
+    "@shikijs/engine-javascript": "^4.4.3",
+    "@shikijs/langs": "^4.4.3"
+  }
+}

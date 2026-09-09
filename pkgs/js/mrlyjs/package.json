@@ -12,24 +12,13 @@
   "type": "module",
   "main": "index.js",
   "exports": {
-    ".": "./index.js",
-    "./ui/*": "./ui/*",
-    "./ssg/*": "./ssg/*",
-    "./git/*": "./git/*"
+    ".": "./index.js"
   },
   "files": [
     "index.js",
-    "README.md",
-    "ui",
-    "ssg",
-    "git"
+    "README.md"
   ],
   "scripts": {
     "test": "bun test"
-  },
-  "dependencies": {
-    "@shikijs/core": "^4.4.3",
-    "@shikijs/engine-javascript": "^4.4.3",
-    "@shikijs/langs": "^4.4.3"
   }
 }

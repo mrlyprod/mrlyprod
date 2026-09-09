@@ -9,7 +9,7 @@ members = [
     "crates/mrlygame",
     "crates/mrlylab",
     "crates/mrlyfig",
-    "crates/mrlyweb",
+    "crates/mrlydemo",
     "pkgs/rs/mrlyrs",
 ]
 
@@ -39,4 +39,5 @@ mrlyfont = { path = "crates/mrlyfont", version = "0.3.0" }
 mrlygame = { path = "crates/mrlygame", version = "0.3.0" }
 mrlylab = { path = "crates/mrlylab", version = "0.3.0" }
 mrlyfig = { path = "crates/mrlyfig", version = "0.3.0" }
-mrlyweb = { path = "crates/mrlyweb", version = "0.3.0" }
+mrlydemo = { path = "crates/mrlydemo", version = "0.3.0" }
+mrlyrs = { path = "pkgs/rs/mrlyrs", version = "0.3.0" }

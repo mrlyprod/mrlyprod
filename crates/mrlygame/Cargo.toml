@@ -6,6 +6,7 @@ description = "The content generator: seeded life quests pressed into frames, a 
 license.workspace = true
 repository.workspace = true
 readme = "README.md"
+publish = false
 
 [dependencies]
 mrlycore.workspace = true

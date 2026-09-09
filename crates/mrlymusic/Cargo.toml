@@ -6,6 +6,7 @@ description = "The sound of Mrly: notes, waves, the composer that walks voices t
 license.workspace = true
 repository.workspace = true
 readme = "README.md"
+publish = false
 
 [dependencies]
 mrlycore.workspace = true

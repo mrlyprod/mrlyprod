@@ -3,26 +3,28 @@ import { dirname, join, relative, resolve } from "node:path";
 import { createElement as h } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import katex from "katex";
-import { build, bytes, walk, type Node, type Output, type Route, type Site, type Spec } from "../../../pkgs/js/mrlyjs/ssg/build.ts";
-import { isGit, link as gitLink } from "../../../pkgs/js/mrlyjs/git/git.ts";
+import { build, bytes, walk, type Node, type Output, type Route, type Site, type Spec } from "../../kit/ssg/build.ts";
+import { isGit } from "../../kit/git/git.ts";
+import { resolve as resolveLink } from "../../kit/ssg/links.ts";
 import { escape, front, plain, render as md, summary, title } from "../lib/md.js";
 import { tree } from "../lib/tree.js";
-import { glyphSvg } from "../../../pkgs/js/mrlyjs/ui/font.js";
-import { Grid, Menu, Shell } from "../../../pkgs/js/mrlyjs/ui/chrome.jsx";
-import kit from "../lib/site.js";
+import { Glyph, Grid, Menu, Shell } from "../../kit/ui/chrome.jsx";
+import { headScript, tintCss } from "../../kit/ui/config.js";
+import SITE from "../lib/site.js";
 import { shelf } from "./shelf.ts";
 
 const org = resolve(import.meta.dir, "..");
 const dist = join(org, "dist");
 const BLOG = join(org, "blog");
 const postFile = (slug: string) => join(BLOG, `${slug}.md`);
-const root = (process.env.MRLY_SITE ?? kit.root).replace(/\/$/, "");
+const root = (process.env.MRLY_SITE ?? SITE.root).replace(/\/$/, "");
 const AUTHOR = "Carlo Mitchener";
-const GITHUB = "https://github.com/mrlyprod/mrlyprod/tree/main";
 const LIST = /^- \[([^\]]+)\]\([^)]*\) - (.+)$/gm;
 const HEADING = /<h([23]) id="([^"]+)">(.*?)<\/h\1>/g;
 const AVATAR = /^(!\[avatar\]\(figures\/avatar\.png\)|<picture>.*?figures\/avatar-light\.png.*?<\/picture>)\n?/m;
-const WORD = glyphSvg(kit.title.toUpperCase());
+const WORD = renderToStaticMarkup(h(Glyph, { text: SITE.title.toUpperCase() }));
+const BOOT = headScript(SITE.prefix);
+const TINT = `<style>${tintCss(SITE.tint)}</style>`;
 const ICONS = [
   `<link rel="icon" href="/favicon.svg" type="image/svg+xml">`,
   `<link rel="icon" href="/favicon.png" type="image/png" sizes="40x40">`,
@@ -35,7 +37,11 @@ const math = (tex: string, display: boolean) =>
   katex.renderToString(tex, { output: "mathml", throwOnError: false, displayMode: display });
 const untag = (html: string) =>
   html.replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"');
-const brand = (name: string) => (name === kit.title ? name : `${name} · ${kit.title}`);
+const brand = (name: string) => (name === SITE.title ? name : `${name} · ${SITE.title}`);
+
+/* LINKS */
+
+const links = (site: Site, from: string) => (url: string) => resolveLink(site, from, url);
 
 /* FIGURES */
 
@@ -84,7 +90,7 @@ function meta(route: string, name: string, description: string, type: string) {
     `<meta property="og:description" content="${escape(description)}">`,
     `<meta property="og:url" content="${url}">`,
     `<meta property="og:type" content="${type}">`,
-    `<meta property="og:site_name" content="${escape(kit.title)}">`,
+    `<meta property="og:site_name" content="${escape(SITE.title)}">`,
     `<meta property="og:image" content="${root}/og.png">`,
     `<meta property="og:image:width" content="1200">`,
     `<meta property="og:image:height" content="630">`,
@@ -117,10 +123,11 @@ function shell(site: Site, leaf: Leaf) {
   const main = renderToStaticMarkup(h(Shell, { route, tree: leaf.tree ?? site.nav, contents: headings(body), wide }, article));
   const ld = data ? `<script type="application/ld+json">${JSON.stringify(data)}</script>\n` : "";
   return `<!doctype html>
-<html lang="en">
+<html lang="en" data-prefix="${SITE.prefix}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+${BOOT}
 <title>${escape(brand(name))}</title>
 ${meta(route, name, description, type)}
 <link rel="stylesheet" href="${site.asset("palette.css")}">
@@ -129,6 +136,7 @@ ${meta(route, name, description, type)}
 <link rel="stylesheet" href="${site.asset("chrome.css")}">
 <link rel="stylesheet" href="${site.asset("fonts/fonts.css")}">
 <link rel="stylesheet" href="/pages.css">
+${TINT}
 ${code ? `<link rel="stylesheet" href="${site.asset("code.css")}">\n<link rel="stylesheet" href="${site.asset("seti/seti.css")}">\n` : ""}${ld}<script type="module" src="${site.asset("chrome.js")}"></script>
 </head>
 <body>
@@ -154,7 +162,7 @@ function shelves(site: Site) {
   const readme = read(join(org, "README.md"));
   for (const m of readme.matchAll(LIST)) if (!blurbs.has(m[1])) blurbs.set(m[1], plain(m[2]));
   const lead = readme.match(/^- (.+)$/m);
-  blurbs.set("", plain(lead ? lead[1] : kit.title));
+  blurbs.set("", plain(lead ? lead[1] : SITE.title));
   titles.set("", "Demos");
   return { titles, blurbs };
 }
@@ -180,18 +188,22 @@ function demoGroup(site: Site): Route {
     kind: "demos",
     name: "Demos",
     data: list,
+    source: home,
     inputs,
-    urls: list.map((d) => ({ route: demoRoute(d.name), name: d.title })),
+    urls: list.map((d) => ({ route: demoRoute(d.name), name: d.title, source: join(home, d.name) })),
   };
 }
 
-function seo(html: string, card: Card) {
+function seo(source: string, card: Card) {
+  const html = source.replace(/<html([^>]*)>/, (_, attrs: string) => `<html${attrs.replace(/ data-prefix="[^"]*"/, "")} data-prefix="${SITE.prefix}">`);
   const route = demoRoute(card.name);
   const found = html.match(/<title>([^<]*)<\/title>/);
   const name = found ? untag(found[1]) : card.title;
   const tags = meta(route, name, card.blurb || name, "website");
-  const block = `<title>${escape(brand(name))}</title>\n${tags}\n<link rel="stylesheet" href="/ui/fonts/fonts.css">`;
-  return found ? html.replace(found[0], block) : html.replace("<head>", `<head>\n${block}`);
+  const boot = html.includes("data-boot") ? "" : `${BOOT}\n`;
+  const block = `${boot}<title>${escape(brand(name))}</title>\n${tags}\n<link rel="stylesheet" href="/ui/fonts/fonts.css">`;
+  const page = found ? html.replace(found[0], block) : html.replace("<head>", `<head>\n${block}`);
+  return page.replace("</head>", `${TINT}\n</head>`);
 }
 
 async function demos(site: Site, route: Route): Promise<Output[]> {
@@ -265,7 +277,7 @@ function paper(site: Site, route: Route): Output[] {
   const files = [p.pdf && `<a href="paper.pdf">PDF</a>`, `<a href="paper.tex">TeX</a>`].filter(Boolean).join(" · ");
   const avatar = pic(fig, `paper-${p.slug}`, route.route, p.name, "", "avatar");
   const plate = `<div class="plate paper">${avatar}<h1 id="${escape(p.slug)}">${escape(p.name)}</h1><p class="by">${escape(AUTHOR)}</p><p class="by">${escape(when)}</p></div>\n<p class="meta">${files}</p>`;
-  const body = `${plate}\n${md(p.md.replace(/^# .+\n/, "").replace(AVATAR, ""), { math })}`;
+  const body = `${plate}\n${md(p.md.replace(/^# .+\n/, "").replace(AVATAR, ""), { math, link: links(site, join(lane, "README.md")) })}`;
   const data = {
     "@context": "https://schema.org",
     "@type": "ScholarlyArticle",
@@ -293,17 +305,6 @@ function paperIndex(site: Site, route: Route): Output[] {
 
 /* RESEARCH */
 
-function researchLink(url: string) {
-  if (/^(https?:|mailto:|#)/.test(url)) return url;
-  let m: RegExpMatchArray | null;
-  if ((m = url.match(/^([A-Za-z0-9_-]+)\.md(#.*)?$/))) return (m[1] === "README" ? "/research/" : `/research/${m[1]}/`) + (m[2] ?? "");
-  if ((m = url.match(/^\.\.\/demos\/([^/#?]+)/))) return `/demos/${m[1]}/`;
-  if ((m = url.match(/^lab\/(.*)$/))) return `${GITHUB}/research/lab/${m[1]}`;
-  if ((m = url.match(/^\.\.\/crates\/(.*)$/))) return `${GITHUB}/crates/${m[1]}`;
-  if ((m = url.match(/^figures\/(.*)$/))) return `/research/figures/${m[1]}`;
-  return url;
-}
-
 type Note = { file: string; name: string; md: string; home: boolean };
 
 const SHARED = new Set(["DISCOVERIES", "REFS"]);
@@ -328,7 +329,7 @@ function researchIndex(site: Site, route: Route): Output[] {
   const fig = press(site, out);
   out.push({ path: `research/${n.file}`, bytes: n.md });
   const lead = summary(n.md);
-  const prose = md(n.md.replace(/^# .+\n/, ""), { math, link: researchLink });
+  const prose = md(n.md.replace(/^# .+\n/, ""), { math, link: links(site, join(site.input("research").path, n.file)) });
   const body = `<div class="lede"><h1 id="research">Research</h1><p class="lead">${escape(lead)}</p></div>\n${grid(wear(site, "/research/", fig, route.route))}\n<article class="prose readme">${prose}</article>`;
   out.push({ path: "research/index.html", bytes: shell(site, { route: route.route, name: "Research", description: lead, body, type: "website", wide: true, bare: true }) });
   return out;
@@ -342,7 +343,7 @@ function note(site: Site, route: Route): Output[] {
   const name = title(n.md) || n.name;
   const lead = summary(n.md);
   const which = n.home || SHARED.has(n.name) ? "research-index" : `research-${n.name}`;
-  const body = `${hero(fig, which, route.route, name)}\n${md(n.md, { math, link: researchLink })}`;
+  const body = `${hero(fig, which, route.route, name)}\n${md(n.md, { math, link: links(site, join(site.input("research").path, n.file)) })}`;
   const data = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -355,6 +356,10 @@ function note(site: Site, route: Route): Output[] {
   const at = n.home ? "research/index.html" : `research/${n.name}/index.html`;
   out.push({ path: at, bytes: shell(site, { route: route.route, name, description: lead, body, type: n.home ? "website" : "article", data }) });
   return out;
+}
+
+function figures(site: Site, route: Route): Output[] {
+  return (route.urls ?? []).map((one) => ({ path: one.route.slice(1), bytes: bytes(one.source!) }));
 }
 
 /* BLOG */
@@ -388,7 +393,7 @@ function post(site: Site, route: Route): Output[] {
     author: { "@type": "Person", name: AUTHOR },
     datePublished: p.date || undefined,
   };
-  out.push({ path: `blog/${p.slug}/index.html`, bytes: shell(site, { route: route.route, name: p.name, description: p.lead, body: `${head}\n${md(p.body, { math })}`, data }) });
+  out.push({ path: `blog/${p.slug}/index.html`, bytes: shell(site, { route: route.route, name: p.name, description: p.lead, body: `${head}\n${md(p.body, { math, link: links(site, postFile(p.slug)) })}`, data }) });
   return out;
 }
 
@@ -414,7 +419,7 @@ function page(site: Site, route: Route): Output[] {
   const open = data.figure ? `${hero(fig, data.figure, route.route, name)}\n` : "";
   const head = `<div class="lede"><h1 id="${escape(slug)}">${escape(name)}</h1><p class="lead">${escape(lead)}</p></div>`;
   const act = data.button && data.link ? `\n<p><a class="button primary" href="${escape(data.link)}">${escape(data.button)}</a></p>` : "";
-  const html = shell(site, { route: route.route, name, description: lead, body: `${open}${head}\n${md(body, { math })}${act}`, type: "website" });
+  const html = shell(site, { route: route.route, name, description: lead, body: `${open}${head}\n${md(body, { math, link: links(site, source) })}${act}`, type: "website" });
   out.push({ path: `${slug}/index.html`, bytes: html });
   return out;
 }
@@ -458,8 +463,8 @@ function dress(nodes: Node[], map: Map<string, Mark>, fig: Fig, route: string): 
 const wear = (site: Site, href: string, fig: Fig, route: string) => dress(site.nav.find((node) => node.href === href)?.nodes ?? [], marks(DRESS), fig, route);
 
 function elsewhere() {
-  const links = kit.socials.map((s) => `<li><a href="${escape(s.href)}">${escape(s.name)}</a></li>`).join("");
-  const mail = `<li><a href="mailto:${escape(kit.contact)}">${escape(kit.contact)}</a></li>`;
+  const links = SITE.socials.map((s) => `<li><a href="${escape(s.href)}">${escape(s.name)}</a></li>`).join("");
+  const mail = `<li><a href="mailto:${escape(SITE.contact)}">${escape(SITE.contact)}</a></li>`;
   return `<section class="elsewhere"><h2>Elsewhere</h2><ul>${links}${mail}</ul></section>`;
 }
 
@@ -469,7 +474,7 @@ function menu(site: Site, route: Route): Output[] {
   const fig = press(site, out);
   const nav = dress(site.nav, marks(route.data as Dress), fig, route.route);
   const list = renderToStaticMarkup(h(Menu, { tree: nav }));
-  const body = `<div class="hero"><h1><span role="img" aria-label="${escape(kit.title)}">${WORD}</span></h1><p>${escape(lead)}</p></div>\n${list}\n${elsewhere()}`;
+  const body = `<div class="hero"><h1><span role="img" aria-label="${escape(SITE.title)}">${WORD}</span></h1><p>${escape(lead)}</p></div>\n${list}\n${elsewhere()}`;
   out.push({ path: "menu/index.html", bytes: shell(site, { route: route.route, name: "Menu", description: lead, body, type: "website", wide: true, bare: true }) });
   return out;
 }
@@ -480,7 +485,7 @@ function cart(site: Site, route: Route): Output[] {
   return [{ path: "cart/index.html", bytes: shell(site, { route: route.route, name: "Cart", description: lead, body, type: "website" }) }];
 }
 
-const MISSION = kit.tagline;
+const MISSION = SITE.tagline;
 
 const DOORS = [
   { name: "Demos", href: "/demos/", figure: "site-demos", text: "Browser pages that draw a design and the numbers around it, live." },
@@ -504,14 +509,14 @@ function home(site: Site, route: Route): Output[] {
     : "";
   const what = `<section class="what"><h2 id="mrlymath">What is MrlyMath</h2><p>A design is a rule on the corners of a cube: a code says which of the eight corners are filled. The Kronecker product grows that rule into itself, level by level, and the object it converges to is a fractal - the Sierpinski carpet and the Menger sponge are two of them.</p><p>Everything else is measurement. Count the fills, the voids and the exposed faces; cut the solid with a plane; join the filled cells into a graph and read its spectrum; collect the integer sequences the counts write down. The Rust crates do the arithmetic, the browser only paints, and a claim is either proved, checked over a stated finite domain, or labelled a conjecture.</p></section>`;
   const body = `<div class="home">
-${hero(fig, "site-home", "/", kit.title)}
-<div class="hero"><h1><span role="img" aria-label="${escape(kit.title)}">${WORD}</span></h1><p>${escape(MISSION)}</p></div>
+${hero(fig, "site-home", "/", SITE.title)}
+<div class="hero"><h1><span role="img" aria-label="${escape(SITE.title)}">${WORD}</span></h1><p>${escape(MISSION)}</p></div>
 <section><h2 id="doors">Three doors</h2>${grid(doors)}</section>
 <section><h2 id="shelf">Latest papers</h2>${grid(dress(latest, marks(DRESS), fig, "/"))}</section>
 ${news}
 ${what}
 </div>`;
-  out.push({ path: "index.html", bytes: shell(site, { route: "/", name: kit.title, description: MISSION, body, type: "website", wide: true, bare: true }) });
+  out.push({ path: "index.html", bytes: shell(site, { route: "/", name: SITE.title, description: MISSION, body, type: "website", wide: true, bare: true }) });
   return out;
 }
 
@@ -544,7 +549,7 @@ async function collect(site: Site) {
   routes.push({
     route: "/",
     kind: "home",
-    name: kit.title,
+    name: SITE.title,
     data: { lanes: laneList, posts: postList },
     source: readme,
     inputs: [readme],
@@ -568,6 +573,19 @@ async function collect(site: Site) {
       data: n.home ? { note: n, texts: noteList.map((one) => summary(one.md)) } : n,
       source,
       inputs: [source],
+    });
+  }
+  const shared = join(notesHome, "figures");
+  const plates = walk(shared);
+  if (plates.length) {
+    routes.push({
+      route: "/research/figures/",
+      kind: "figures",
+      name: "Figures",
+      hidden: true,
+      source: shared,
+      inputs: [shared],
+      urls: plates.map((file) => ({ route: `/research/figures/${file.slice(shared.length + 1)}`, source: file })),
     });
   }
   if (postList.length) {
@@ -604,6 +622,7 @@ const KINDS: Record<string, (site: Site, route: Route) => Output[] | Promise<Out
   papers: paperIndex,
   paper,
   note,
+  figures,
   research: researchIndex,
   blog: blogIndex,
   post,
@@ -625,8 +644,6 @@ function extras(site: Site): Output[] {
   const out: Output[] = [];
   const home = site.input("figures").path;
   out.push({ path: "og.png", bytes: bytes(figure(home, "site-og-dark", "/og.png")) });
-  const shared = join(site.input("research").path, "figures");
-  for (const file of walk(shared)) out.push({ path: `research/figures/${file.slice(shared.length + 1)}`, bytes: bytes(file) });
   return out;
 }
 
@@ -645,7 +662,7 @@ export const spec: Spec = {
   globals: extras,
   git: {
     page: shell,
-    md: (text, dir) => md(text, { math, link: (url: string) => gitLink(dir, url) }),
+    md: (site, text, from) => md(text, { math, link: links(site, from) }),
   },
 };
 

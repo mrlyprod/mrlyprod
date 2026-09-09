@@ -1,5 +1,5 @@
 import { mount } from '../lib/app.jsx';
-import { Grid, Shell } from '../../../pkgs/js/mrlyjs/ui/chrome.jsx';
+import { Grid, Shell } from '../../kit/ui/chrome.jsx';
 import { tree } from '../lib/tree.js';
 import manifest from '../pages.json';
 

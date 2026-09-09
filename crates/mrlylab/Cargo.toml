@@ -6,6 +6,7 @@ description = "The laboratory of Mrly: the campaign machinery that explores and 
 license.workspace = true
 repository.workspace = true
 readme = "README.md"
+publish = false
 
 [dependencies]
 mrlycore.workspace = true

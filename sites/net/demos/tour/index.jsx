@@ -191,7 +191,7 @@ function Line({ it }) {
   const found = hits(it.terms);
   const forms = [it.closed, found.formula].filter((form, i, all) => form && all.indexOf(form) === i);
   return (
-    <div className="line">
+    <div className="entry">
       {it.art ? <div className="strip">{it.art}</div> : null}
       <div className="text">
         {it.label ? <><span className="dim">{it.label}</span><br /></> : null}

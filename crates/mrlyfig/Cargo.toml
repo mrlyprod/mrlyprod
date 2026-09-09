@@ -6,6 +6,7 @@ description = "The figure press of Mrly: the drawing kit and the figures it prin
 license.workspace = true
 repository.workspace = true
 readme = "README.md"
+publish = false
 
 [dependencies]
 mrlycore.workspace = true

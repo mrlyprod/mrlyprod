@@ -9,11 +9,6 @@
 .what { max-width: var(--read); }
 .what p { margin-top: var(--s3); }
 
-/* OPENER */
-
-.opener { margin: 0 auto var(--s6); max-width: 32rem; }
-.opener img { width: 100%; height: auto; display: block; border: var(--hair); border-radius: var(--r3); background: var(--art); }
-
 /* PLATE */
 
 .plate h1 { margin: var(--s5) 0 0; }
@@ -22,10 +17,3 @@
 .plate .by:last-child { margin-bottom: var(--s6); }
 .plate.paper { text-align: center; }
 .plate.paper .avatar { width: min(100%, 32rem); height: auto; display: block; margin: 0 auto; border: var(--hair); border-radius: var(--r3); background: var(--art); }
-
-/* ELSEWHERE */
-
-.elsewhere { margin-top: var(--s7); }
-.elsewhere ul { list-style: none; margin: var(--s3) 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--s2) var(--s4); }
-.elsewhere a { color: var(--dim); }
-.elsewhere a:hover { color: var(--fg); }

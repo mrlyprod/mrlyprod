@@ -6,6 +6,7 @@ description = "MrlyFont, the stroked pixel alphabet: paths, rasters, animation."
 license.workspace = true
 repository.workspace = true
 readme = "README.md"
+publish = false
 
 [dependencies]
 mrlycore.workspace = true

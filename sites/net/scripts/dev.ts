@@ -1,7 +1,7 @@
 import { existsSync, statSync, watch } from "node:fs";
 import { extname, join, resolve } from "node:path";
-import { forget, globals, render, scan, type Output, type Route, type Site } from "../../../pkgs/js/mrlyjs/ssg/build.ts";
-import { owner as rawOwner } from "../../../pkgs/js/mrlyjs/git/git.ts";
+import { forget, globals, render, scan, type Output, type Route, type Site } from "../../kit/ssg/build.ts";
+import { owner as rawOwner } from "../../kit/git/git.ts";
 import { counted, spec } from "./site.ts";
 
 const org = resolve(import.meta.dir, "..");

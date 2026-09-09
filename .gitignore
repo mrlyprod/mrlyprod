@@ -20,7 +20,7 @@ target/
 .DS_Store
 
 # DEMOS
-pkgs/js/mrlyjs/node_modules/
+sites/kit/node_modules/
 sites/net/node_modules/
 sites/net/pkg/
 sites/net/dist/

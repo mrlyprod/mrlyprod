@@ -4,7 +4,8 @@ import { dirname, join, resolve } from "node:path";
 const org = resolve(import.meta.dir, "..");
 const data = join(org, "data");
 const home = join(data, "shelf");
-const TARBALL = "https://codeload.github.com/carlomitchener/carlomitchener/tar.gz/main";
+const REPO = process.env.SHELF_REPO ?? "";
+const TARBALL = REPO ? `https://codeload.github.com/${REPO}/tar.gz/main` : "";
 const KEEP = "research/";
 
 /* TAR */
@@ -64,6 +65,12 @@ export async function shelf(): Promise<string> {
   const local = process.env.MRLY_SHELF;
   if (local) return resolve(local);
   const cached = join(home, "research");
+  const fallback = (why: string) => {
+    if (!existsSync(join(cached, "README.md"))) throw new Error(`shelf: ${why} and no cache at ${cached}; set MRLY_SHELF to a local checkout or SHELF_REPO to an owner/repo`);
+    console.warn(`shelf: ${why}, building from the cached copy`);
+    return cached;
+  };
+  if (!TARBALL) return fallback("no SHELF_REPO in the environment");
   try {
     const res = await fetch(TARBALL);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -76,8 +83,7 @@ export async function shelf(): Promise<string> {
     renameSync(fresh, home);
     console.log(`shelf: fetched ${files} files from GitHub`);
   } catch (reason) {
-    if (!existsSync(join(cached, "README.md"))) throw new Error(`shelf: fetch failed (${reason}) and no cache at ${cached}; set MRLY_SHELF to a local checkout`);
-    console.warn(`shelf: fetch failed (${reason}), building from the cached copy`);
+    return fallback(`fetch failed (${reason})`);
   }
   return cached;
 }

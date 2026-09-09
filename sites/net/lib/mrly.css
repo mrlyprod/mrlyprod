@@ -1,7 +1,7 @@
-@import "../../../pkgs/js/mrlyjs/ui/palette.css";
-@import "../../../pkgs/js/mrlyjs/ui/tokens.css";
-@import "../../../pkgs/js/mrlyjs/ui/base.css";
-@import "../../../pkgs/js/mrlyjs/ui/chrome.css";
+@import "../../kit/ui/palette.css";
+@import "../../kit/ui/tokens.css";
+@import "../../kit/ui/base.css";
+@import "../../kit/ui/chrome.css";
 
 /* TEXT */
 
@@ -50,8 +50,8 @@ h2.group { font: 12px/1 var(--mono); letter-spacing: 0.1em; text-transform: uppe
 .tour .pic:empty { display: none; }
 .tour .pic canvas, .tour .pic svg { max-width: 100%; max-height: 280px; width: auto; height: 280px; image-rendering: pixelated; border-radius: var(--r2); background: var(--art); }
 .tour .story { color: var(--dim); font-size: 14px; margin-top: 4px; max-width: 76ch; }
-.line { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; padding: 8px 0; border-top: var(--hair); font-size: 13px; line-height: 1.7; }
-.line .text { flex: 1 1 320px; min-width: 0; overflow-wrap: anywhere; }
+.entry { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; padding: 8px 0; border-top: var(--hair); font-size: 13px; line-height: 1.7; }
+.entry .text { flex: 1 1 320px; min-width: 0; overflow-wrap: anywhere; }
 .strip { display: flex; gap: 6px; align-items: flex-end; }
 .strip canvas { height: 48px; width: auto; image-rendering: pixelated; border-radius: 4px; background: var(--art); }
 .tour .pic .strip { flex-wrap: wrap; justify-content: center; }

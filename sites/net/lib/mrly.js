@@ -1,6 +1,6 @@
-import init, * as wasm from '../pkg/mrlyweb.js';
-import wasmUrl from '../pkg/mrlyweb_bg.wasm';
-import { palette, dark, light } from '../../../pkgs/js/mrlyjs/ui/palette.js';
+import init, * as wasm from '../pkg/mrlydemo.js';
+import wasmUrl from '../pkg/mrlydemo_bg.wasm';
+import { palette, dark, light } from '../../kit/ui/palette.js';
 
 export const mrly = wasm;
 export { palette, dark, light };

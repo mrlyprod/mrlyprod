@@ -2,12 +2,11 @@
 
 set -euo pipefail
 
-cd "$(dirname "$0")/.."
-export CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-4}"
-mkdir -p data files/figures
-lock=data/cargo.lock
-until mkdir "$lock" 2>/dev/null; do sleep 2; done
-trap 'rmdir "$lock"' EXIT
+HERE="$(cd "$(dirname "$0")" && pwd)"
+[ -n "${CARGO_LOCK:-}" ] || exec "$HERE/cargo.sh" "$HERE/figures.sh" "$@"
+cd "$HERE/.."
+
+mkdir -p files/figures
 
 case "${1:-}" in
   check) cargo check -q -p mrlyfig --examples --tests; exit 0 ;;

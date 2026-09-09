@@ -6,6 +6,7 @@ description = "The mathematics of Mrly: design codes, their symmetries, counts, 
 license.workspace = true
 repository.workspace = true
 readme = "README.md"
+publish = false
 
 [dependencies]
 mrlycore.workspace = true

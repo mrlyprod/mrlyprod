@@ -6,6 +6,7 @@ description = "The instruments of Mrly: primes, divisors, series, recurrences, s
 license.workspace = true
 repository.workspace = true
 readme = "README.md"
+publish = false
 
 [dependencies]
 mrlycore.workspace = true

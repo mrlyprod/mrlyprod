@@ -1,13 +1,14 @@
 import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { build, digest, globals, today, type Manifest, type Output } from "../../../pkgs/js/mrlyjs/ssg/build.ts";
+import { build, digest, globals, today, type Manifest, type Output } from "../../kit/ssg/build.ts";
 import { client, del, getText, list, putBytes, DEV_BUCKET, NET_BUCKET } from "../../../aws/s3.ts";
 import { spec } from "./site.ts";
 
 /* WHERE */
 
 const REMOTE = "build/net/manifest.json";
+const CDN = "cdn/";
 const ASSET = "@";
 const BATCH = 32;
 
@@ -45,6 +46,10 @@ const TYPES: Record<string, string> = {
 const kind = (path: string) => TYPES[(path.match(/\.([^./]+)$/)?.[1] ?? "").toLowerCase()] ?? "application/octet-stream";
 
 const cache = (path: string) => (HASHED.some((re) => re.test(path)) ? IMMUTABLE : REVALIDATE);
+
+/* CDN */
+
+const mine = (path: string) => !path.startsWith(CDN);
 
 /* MANIFEST */
 
@@ -90,10 +95,10 @@ export async function push(options: { dry?: boolean } = {}): Promise<{ rendered:
   for (const [path, key] of want) {
     const was = old[key];
     if (was && was.hash === next[key]!.hash && had.has(path)) continue;
-    upload.push(path);
+    if (mine(path)) upload.push(path);
   }
   const seen = found ? [...had.keys()] : await list(net);
-  const remove = seen.filter((path) => !want.has(path));
+  const remove = seen.filter((path) => mine(path) && !want.has(path));
   if (!options.dry) {
     for (let i = 0; i < upload.length; i += BATCH) {
       await Promise.all(
@@ -116,5 +121,5 @@ export async function push(options: { dry?: boolean } = {}): Promise<{ rendered:
 if (import.meta.main) {
   const dry = process.argv.includes("--dry");
   const done = await push({ dry });
-  console.log(`push${dry ? " --dry" : ""}: ${done.rendered} rendered, ${done.uploaded} uploaded, ${done.deleted} deleted`);
+  console.log(`push${dry ? " --dry" : ""}: ${done.rendered} rendered, ${done.uploaded} uploaded, ${done.deleted} deleted, cdn/ guarded`);
 }

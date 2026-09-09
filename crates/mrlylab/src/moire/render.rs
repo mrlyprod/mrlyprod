@@ -63,9 +63,9 @@ mod tests {
             (
                 render(&f, &Colorizer::fire(), 64, false, false, 2).unwrap(),
                 64,
-                3_537_984,
-                [255, 255, 220, 255],
-                [218, 86, 0, 255],
+                3_252_192,
+                [255, 229, 145, 255],
+                [212, 73, 33, 255],
             ),
             (
                 render(&f, &Colorizer::heat(), 32, true, true, 3).unwrap(),
@@ -77,9 +77,9 @@ mod tests {
             (
                 render(&f, &Colorizer::diverge(), 8, true, false, 1).unwrap(),
                 32,
-                606_408,
-                [220, 40, 40, 255],
-                [227, 101, 101, 255],
+                684_184,
+                [255, 61, 64, 255],
+                [255, 119, 121, 255],
             ),
         ];
         for (bytes, side, sum, corner, centre) in &cases {

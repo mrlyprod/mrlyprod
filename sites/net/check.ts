@@ -1,6 +1,6 @@
-import init, * as m from './pkg/mrlyweb.js';
+import init, * as m from './pkg/mrlydemo.js';
 
-const bytes = await Bun.file(new URL('./pkg/mrlyweb_bg.wasm', import.meta.url)).arrayBuffer();
+const bytes = await Bun.file(new URL('./pkg/mrlydemo_bg.wasm', import.meta.url)).arrayBuffer();
 await init({ module_or_path: bytes });
 
 const blinker = new Uint8Array(25);
@@ -56,7 +56,7 @@ const litWindow = JSON.parse(m.visible_read(100, 2));
 const cube = JSON.parse(m.visible_read(1000, 3));
 const quartic = JSON.parse(m.visible_read(1000, 4));
 const lattice = m.visible_pixels(100, 200, true);
-const litDots = lattice.rgba.reduce((count: number, byte: number, at: number) => count + (at % 4 === 0 && byte === 92 && lattice.rgba[at + 1] === 200 && lattice.rgba[at + 2] === 255 ? 1 : 0), 0);
+const litDots = lattice.rgba.reduce((count: number, byte: number, at: number) => count + (at % 4 === 0 && byte === 0 && lattice.rgba[at + 1] === 140 && lattice.rgba[at + 2] === 255 ? 1 : 0), 0);
 const approach = m.visible_walk(100, 2, 8);
 const forms = JSON.parse(m.formulas_read(1000));
 const halved = JSON.parse(m.formulas_read(500));
@@ -447,7 +447,7 @@ const checks: [string, unknown, unknown][] = [
   ['spiral_polynomial euler shares', `${euler.density.toFixed(6)} ${euler.share.toFixed(6)}`, '0.104849 0.792079'],
   ['spiral_polynomial euler cells', `${euler.values[20]} ${euler.cells[100].join(',')}`, '1601 60,100'],
   ['spiral_polynomial hex spoke', `${spoke.top} ${spoke.cells[20].join(',')}`, '1261 0,20'],
-  ['spiral_pixels square 61', `${sheet.width}x${sheet.height} ${pixel(90, 90)} ${pixel(92, 90)} ${pixel(81, 92)}`, '180x180 7 9 11 255 209 102 255 138 92'],
+  ['spiral_pixels square 61', `${sheet.width}x${sheet.height} ${pixel(90, 90)} ${pixel(92, 90)} ${pixel(81, 92)}`, '180x180 0 0 0 255 209 0 255 143 44'],
   ['spiral_at square 61', `${hit.n},${hit.prime},${hit.factors.map((f: number[]) => f.join('^')).join(' ')}`, '41,true,41^1'],
   ['spiral_at hex corner', `${corner.n},${corner.x},${corner.y}`, '281,10,0'],
   ['snail_read shell 2 300', `${snailShell.tiles},${snailShell.primes},${snailShell.grown},${snailShell.peak},${snailShell.side},${snailShell.area}`, '300,62,299,8,256,5345865'],
@@ -464,7 +464,7 @@ const checks: [string, unknown, unknown][] = [
   ['ring_peak gaussian eisenstein 60', `${Array.from(m.ring_peak('gaussian', 60)).join(',')} ${Array.from(m.ring_peak('eisenstein', 60)).join(',')}`, '25,12 49,18'],
   ['ring_fates gaussian 7', Array.from(m.ring_fates('gaussian', 7)).join(','), '0,0,3,2,0,1,0,2'],
   ['ring_fates eisenstein 7', Array.from(m.ring_fates('eisenstein', 7)).join(','), '0,0,2,3,0,2,0,1'],
-  ['ring_pixels gaussian 2', `${window.width}x${window.height} ${dot(70, 30)} ${dot(90, 30)} ${dot(90, 50)} ${dot(50, 50)}`, '100x100 255 122 182 92 200 255 31 38 46 7 9 11'],
+  ['ring_pixels gaussian 2', `${window.width}x${window.height} ${dot(70, 30)} ${dot(90, 30)} ${dot(90, 50)} ${dot(50, 50)}`, '100x100 255 50 90 0 140 255 31 31 32 0 0 0'],
   ['ring_at gaussian 40', `${struck.a},${struck.b},${struck.norm},${struck.class},${struck.associates.length},${struck.conjugate[1]}`, '2,1,5,split,4,-1'],
   ['ring_at eisenstein 5', `${mirror.a},${mirror.b},${mirror.norm},${mirror.class},${mirror.associates.length},${mirror.conjugate.slice(0, 2).join(',')}`, '1,-1,3,ramified,6,2,1'],
   ['graph_census carpet 7', `${carpet.nodes},${carpet.branches},${carpet.components}`, '8,8,1'],
@@ -814,6 +814,7 @@ checks.push(
 // MANIFEST
 
 import { existsSync, readdirSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 
 const desk = import.meta.dir;
 const manifest = await Bun.file(`${desk}/pages.json`).json();
@@ -835,7 +836,7 @@ const listed = readme.slice(readme.indexOf('## PAGES')).split('\n')
   .map((hit) => `${hit![1]} ${hit![2]}`);
 const wanted = rows.map((row) => `${row.name} ${row.blurb}`);
 const drift = listed.find((line, at) => line !== wanted[at]) ?? (listed.length === wanted.length ? 'none' : `${listed.length} of ${wanted.length} lines`);
-const shelf = `${desk}/../../carlomitchener/research`;
+const shelf = process.env.MRLY_SHELF ? resolve(process.env.MRLY_SHELF) : join(desk, 'data/shelf/research');
 
 checks.push(
   ['manifest is the folders', `${named.length} ${strays.join(',') || 'none'}`, `${folders.length} none`],
@@ -848,7 +849,7 @@ if (existsSync(shelf)) {
   const lost = rows.filter((row) => row.paper && !existsSync(`${shelf}/${row.paper}`)).map((row) => row.name);
   checks.push(['manifest papers exist', lost.join(',') || 'none', 'none']);
 } else {
-  console.log('note  no shelf checkout beside this one, paper lanes unchecked');
+  console.log('note  no MRLY_SHELF checkout, paper lanes unchecked');
 }
 
 let failed = 0;

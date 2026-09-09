@@ -6,6 +6,7 @@ description = "The substrate of Mrly: tensors, atoms, cells, tiles, colors, imag
 license.workspace = true
 repository.workspace = true
 readme = "README.md"
+publish = false
 
 [features]
 testkit = []

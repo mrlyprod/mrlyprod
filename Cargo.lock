@@ -129,6 +129,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "mrlydemo"
+version = "0.3.0"
+dependencies = [
+ "mrlycore",
+ "mrlyfont",
+ "mrlylab",
+ "mrlymath",
+ "mrlynum",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "mrlyfig"
 version = "0.3.0"
 dependencies = [
@@ -192,19 +204,7 @@ dependencies = [
 
 [[package]]
 name = "mrlyrs"
-version = "0.0.1"
-
-[[package]]
-name = "mrlyweb"
 version = "0.3.0"
-dependencies = [
- "mrlycore",
- "mrlyfont",
- "mrlylab",
- "mrlymath",
- "mrlynum",
- "wasm-bindgen",
-]
 
 [[package]]
 name = "once_cell"

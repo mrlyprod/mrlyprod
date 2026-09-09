@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client';
-import { Shell } from '../../../pkgs/js/mrlyjs/ui/chrome.jsx';
+import { Shell } from '../../kit/ui/chrome.jsx';
 import { tree } from './tree.js';
 
 const NODES = tree();
