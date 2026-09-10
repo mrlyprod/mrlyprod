@@ -9,3 +9,5 @@ pub mod ledger;
 pub mod moire;
 /// The sequence press: the integers a design's digit rule keeps, weighed all at once.
 pub mod press;
+/// The nodes of a roulette: where the curves a wheel's pencils draw cross themselves and one another.
+pub mod roulette;

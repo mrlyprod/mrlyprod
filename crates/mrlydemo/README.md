@@ -33,6 +33,7 @@ Codes cross the boundary as decimal strings, because a design code is a u128 and
 - **snail** wraps mrlynum: the whole numbers wound on the square spiral, each cell a design tile sized by its digit count.
 - **spectrum** wraps mrlymath and mrlynum: the Laplacian spectra of the designs, their degeneracy and spectral exponent.
 - **spin** wraps mrlylab, mrlymath and mrlynum: designs, moire fields and slices spun about their centre into ring profiles and wheels.
+- **spirograph** wraps mrlynum: a flat design as the wheel, a pencil in every cell, rolled on a line, a circle or a polygon, traced, read and posed.
 - **spiral** wraps mrlynum: the whole numbers wound on a square or hexagonal sheet, painted, clicked and read along a quadratic.
 - **star** wraps mrlymath: the ghost star of the hexagon moire, its stacked cut, band, arm ink law and cell-frame decay.
 - **three** wraps mrlymath: the cubes as packed faces, filled cells and censuses.

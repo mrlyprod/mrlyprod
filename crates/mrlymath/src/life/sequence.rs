@@ -51,6 +51,22 @@ pub enum Sequence {
     VoidFills,
     /// The void design void counts.
     VoidVoids,
+    /// The point fill counts.
+    PointFills,
+    /// The point void counts.
+    PointVoids,
+    /// The dust fill counts.
+    DustFills,
+    /// The dust void counts.
+    DustVoids,
+    /// The H-line fill counts.
+    LineFills,
+    /// The H-line void counts.
+    LineVoids,
+    /// The star fill counts.
+    StarFills,
+    /// The star void counts.
+    StarVoids,
     /// The fill counts of a coded design.
     CodeFills(u128),
     /// The void counts of a coded design.
@@ -76,6 +92,14 @@ impl Sequence {
             Sequence::TreeVoids => "tree_voids",
             Sequence::VoidFills => "void_fills",
             Sequence::VoidVoids => "void_voids",
+            Sequence::PointFills => "point_fills",
+            Sequence::PointVoids => "point_voids",
+            Sequence::DustFills => "dust_fills",
+            Sequence::DustVoids => "dust_voids",
+            Sequence::LineFills => "line_fills",
+            Sequence::LineVoids => "line_voids",
+            Sequence::StarFills => "star_fills",
+            Sequence::StarVoids => "star_voids",
             Sequence::CodeFills(code) => return format!("code_fills_{code}"),
             Sequence::CodeVoids(code) => return format!("code_voids_{code}"),
         };
@@ -105,6 +129,14 @@ impl Sequence {
             "tree_voids" => Sequence::TreeVoids,
             "void_fills" => Sequence::VoidFills,
             "void_voids" => Sequence::VoidVoids,
+            "point_fills" => Sequence::PointFills,
+            "point_voids" => Sequence::PointVoids,
+            "dust_fills" => Sequence::DustFills,
+            "dust_voids" => Sequence::DustVoids,
+            "line_fills" => Sequence::LineFills,
+            "line_voids" => Sequence::LineVoids,
+            "star_fills" => Sequence::StarFills,
+            "star_voids" => Sequence::StarVoids,
             other => {
                 let alias = Sequence::all()
                     .into_iter()
@@ -140,7 +172,7 @@ impl Sequence {
         Some((fixed[i], rest))
     }
     /// Returns every fixed sequence, the seeded and coded families excluded.
-    pub fn all() -> [Sequence; 15] {
+    pub fn all() -> [Sequence; 23] {
         [
             Sequence::Evens,
             Sequence::Odds,
@@ -157,6 +189,14 @@ impl Sequence {
             Sequence::TreeVoids,
             Sequence::VoidFills,
             Sequence::VoidVoids,
+            Sequence::PointFills,
+            Sequence::PointVoids,
+            Sequence::DustFills,
+            Sequence::DustVoids,
+            Sequence::LineFills,
+            Sequence::LineVoids,
+            Sequence::StarFills,
+            Sequence::StarVoids,
         ]
     }
     /// Returns the six number sequences, the random one listed under seed zero.
@@ -170,8 +210,8 @@ impl Sequence {
             Sequence::Fibonacci,
         ]
     }
-    /// Returns the nine mrly design families.
-    pub fn designs() -> [Sequence; 9] {
+    /// Returns the seventeen mrly design families: the grid, the four classics and their antis.
+    pub fn designs() -> [Sequence; 17] {
         [
             Sequence::GridSquares,
             Sequence::CarpetFills,
@@ -182,6 +222,14 @@ impl Sequence {
             Sequence::TreeVoids,
             Sequence::VoidFills,
             Sequence::VoidVoids,
+            Sequence::PointFills,
+            Sequence::PointVoids,
+            Sequence::DustFills,
+            Sequence::DustVoids,
+            Sequence::LineFills,
+            Sequence::LineVoids,
+            Sequence::StarFills,
+            Sequence::StarVoids,
         ]
     }
     /// Returns the sequence's OEIS id, or None off the encyclopedia.
@@ -279,6 +327,14 @@ pub fn sequence(seq: Sequence, limit: usize) -> Result<Vec<usize>> {
         Sequence::TreeVoids => mrly_sequence(limit, |n| Ok(census::voids(&two::htree(n, 1)?))),
         Sequence::VoidFills => mrly_sequence(limit, |n| Ok(census::fills(&two::void(n, 1)?))),
         Sequence::VoidVoids => mrly_sequence(limit, |n| Ok(census::voids(&two::void(n, 1)?))),
+        Sequence::PointFills => mrly_sequence(limit, |n| Ok(census::fills(&two::point(n, 1)?))),
+        Sequence::PointVoids => mrly_sequence(limit, |n| Ok(census::voids(&two::point(n, 1)?))),
+        Sequence::DustFills => mrly_sequence(limit, |n| Ok(census::fills(&two::dust(n, 1)?))),
+        Sequence::DustVoids => mrly_sequence(limit, |n| Ok(census::voids(&two::dust(n, 1)?))),
+        Sequence::LineFills => mrly_sequence(limit, |n| Ok(census::fills(&two::hline(n, 1)?))),
+        Sequence::LineVoids => mrly_sequence(limit, |n| Ok(census::voids(&two::hline(n, 1)?))),
+        Sequence::StarFills => mrly_sequence(limit, |n| Ok(census::fills(&two::star(n, 1)?))),
+        Sequence::StarVoids => mrly_sequence(limit, |n| Ok(census::voids(&two::star(n, 1)?))),
         Sequence::CodeFills(code) => mrly_sequence(limit, |n| {
             Ok(formulas::fill(code, n, DIM, 1, BASE)? as usize)
         }),

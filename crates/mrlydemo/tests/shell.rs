@@ -1,9 +1,9 @@
 use mrlycore::json::parse;
 use mrlycore::tensor::Tensor;
-use mrlymath::bang::factory;
-use mrlymath::shape::{crossing_shell, crossing_tree, radial_census};
 use mrlydemo::crop::crop_circle;
 use mrlydemo::shell::*;
+use mrlymath::bang::factory;
+use mrlymath::shape::{crossing_shell, crossing_tree, radial_census};
 
 fn keep(code: u128) -> Vec<bool> {
     factory::create(code, 3, 2, 2, 1)

@@ -1219,6 +1219,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "roulette-cover"
+version = "0.1.0"
+dependencies = [
+ "mrlynum",
+]
+
+[[package]]
+name = "roulette-loops"
+version = "0.1.0"
+dependencies = [
+ "mrlycore",
+ "mrlynum",
+]
+
+[[package]]
+name = "roulette-nodes"
+version = "0.1.0"
+dependencies = [
+ "mrlylab",
+ "mrlynum",
+]
+
+[[package]]
+name = "roulette-reaches"
+version = "0.1.0"
+dependencies = [
+ "mrlycore",
+ "mrlynum",
+]
+
+[[package]]
 name = "rustversion"
 version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"

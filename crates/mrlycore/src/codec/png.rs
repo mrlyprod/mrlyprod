@@ -116,7 +116,7 @@ fn indices(
     lookup.sort_unstable();
     let bits = depth as usize;
     let per_byte = 8 / bits;
-    let stride = (width + per_byte - 1) / per_byte;
+    let stride = width.div_ceil(per_byte);
     let mut data = vec![0u8; stride * height];
     if width == 0 {
         return data;

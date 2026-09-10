@@ -33,6 +33,12 @@ fn design_cell(design: Design, number: usize, level: usize) -> Result<Cell3d> {
         Design::Ytree => designs::ytree(number, level),
         Design::Ztree => designs::ztree(number, level),
         Design::Void => designs::void(number, level),
+        Design::Point => designs::point(number, level),
+        Design::Dust => designs::dust(number, level),
+        Design::Xline => designs::xline(number, level),
+        Design::Yline => designs::yline(number, level),
+        Design::Zline => designs::zline(number, level),
+        Design::Star => designs::star(number, level),
         other => value_error(format!("design {} is not 3d.", other.name())),
     }
 }

@@ -89,17 +89,17 @@ This sequence is A398348, whose data is that run verbatim, with a b-file to `n =
 
 ### The odd-side fills
 
-At odd side `n = 2k - 1` an axis splits into `k` low positions and `k - 1` high, so a base-2 design fills `sum over its corners of k^(zeros) (k - 1)^(ones)`, a polynomial in `k` of degree `D`; **Proved** in [DISCOVERIES.md](DISCOVERIES.md), generator `mrlymath::formulas::counting`. The six designs of the plane read as the polygonal numbers, and the corner, the sponge and the solid of the cube as the cubes, the divisor counts of `240^n` and the odd cubes. Every row below is read by `mrlylab::ledger::terms` from `k = 2`, the first odd side past the unit cell, and checked term by term against its record; `shift` is the record's index less the ledger's `k`.
+At odd side `n = 2k - 1` an axis splits into `k` low positions and `k - 1` high, so a base-2 design fills `sum over its corners of k^(zeros) (k - 1)^(ones)`, a polynomial in `k` of degree `D`; **Proved** in [DISCOVERIES.md](DISCOVERIES.md), generator `mrlymath::formulas::counting`. The six designs of the plane read as the polygonal numbers, and the dust, the sponge and the solid of the cube as the cubes, the divisor counts of `240^n` and the odd cubes. Every row below is read by `mrlylab::ledger::terms` from `k = 2`, the first odd side past the unit cell, and checked term by term against its record; `shift` is the record's index less the ledger's `k`.
 
 | design | key | closed form | terms from `k = 2` | record | shift | status |
 |---|---|---|---|---|---|---|
-| corner | `mrly_bang_d2_1.fills.side` | `k^2` | `4, 9, 16, 25, 36, 49, 64, 81` | [A000290](https://oeis.org/A000290) | 0 | **Proved** |
+| dust | `mrly_bang_d2_1.fills.side` | `k^2` | `4, 9, 16, 25, 36, 49, 64, 81` | [A000290](https://oeis.org/A000290) | 0 | **Proved** |
 | tree | `mrly_bang_d2_3.fills.side` | `2k^2 - k` | `6, 15, 28, 45, 66, 91, 120, 153` | [A000384](https://oeis.org/A000384) | 0 | **Proved** |
 | carpet | `mrly_bang_d2_7.fills.side` | `3k^2 - 2k` | `8, 21, 40, 65, 96, 133, 176, 225` | [A000567](https://oeis.org/A000567) | 0 | **Proved** |
 | void | `mrly_bang_d2_9.fills.side` | `2k^2 - 2k + 1` | `5, 13, 25, 41, 61, 85, 113, 145` | [A001844](https://oeis.org/A001844) | -1 | **Proved** |
 | corner and centre | `mrly_bang_d2_11.fills.side` | `3k^2 - 3k + 1` | `7, 19, 37, 61, 91, 127, 169, 217` | [A003215](https://oeis.org/A003215) | -1 | **Proved** |
 | solid | `mrly_bang_d2_15.fills.side` | `4k^2 - 4k + 1` | `9, 25, 49, 81, 121, 169, 225, 289` | [A016754](https://oeis.org/A016754) | -1 | **Proved** |
-| corner | `mrly_bang_d3_1.fills.side` | `k^3` | `8, 27, 64, 125, 216, 343, 512, 729` | [A000578](https://oeis.org/A000578) | 0 | **Proved** |
+| dust | `mrly_bang_d3_1.fills.side` | `k^3` | `8, 27, 64, 125, 216, 343, 512, 729` | [A000578](https://oeis.org/A000578) | 0 | **Proved** |
 | sponge | `mrly_bang_d3_23.fills.side` | `4k^3 - 3k^2` | `20, 81, 208, 425, 756, 1225, 1856, 2673` | [A103532](https://oeis.org/A103532) | -1 | **Proved** |
 | sponge | `mrly_bang_d3_23.voids.side` | `4k^3 - 9k^2 + 6k - 1` | `7, 44, 135, 304, 575, 972, 1519, 2240` | [A395241](https://oeis.org/A395241) | -1 | **Verified** |
 | void | `mrly_bang_d3_129.fills.side` | `2k^3 - 3k^2 + 3k - 1` | `9, 35, 91, 189, 341, 559, 855, 1241` | [A005898](https://oeis.org/A005898) | -1 | **Proved** |

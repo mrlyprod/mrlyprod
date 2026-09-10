@@ -203,6 +203,14 @@
       "paper": null
     },
     {
+      "name": "spirograph",
+      "title": "The spirograph",
+      "blurb": "A design is the wheel and its cells are the holes, a pencil in every one, rolled without slipping on a line, a circle or a polygon: every pencil draws a trochoid, and on a circle two pencils draw one curve exactly when a rotation of a full turn over the wheel's reduced radius carries one seat onto the other.",
+      "category": "sections",
+      "research": "spirograph",
+      "paper": null
+    },
+    {
       "name": "radial",
       "title": "The radial stack",
       "blurb": "Turned copies of a design laid on each other keep only the circular harmonics whose order is a multiple of the copy count, and a design of rotation order g shows lcm(q, g) petals.",

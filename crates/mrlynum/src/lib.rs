@@ -37,6 +37,8 @@ pub mod spectrum;
 pub mod spin;
 /// The spirals: the whole numbers wound on the square and the hexagonal lattice, marked and read along a quadratic.
 pub mod spiral;
+/// The spirograph: a byte grid as a wheel with a pencil in every cell, rolled on a line, a circle or a polygon, and the curves it draws.
+pub mod spirograph;
 /// The tourbillon: the odd parity carpets turned one angle a layer and stacked inside the inscribed disc.
 pub mod tourbillon;
 /// The critical line: zeta at one half plus i t, its zeros, and the prime staircase they rebuild.

@@ -26,8 +26,8 @@ pub mod tile;
 
 pub use census::{census, euler, fills, hidden, Census};
 pub use designs::{
-    carpet, create, from_corners, level_set, levels_code, named, net, noise, ones, random,
-    random_classic, void, xtree, ytree, zeros, ztree,
+    carpet, create, dust, from_corners, level_set, levels_code, named, net, noise, ones, point,
+    random, random_classic, star, void, xline, xtree, yline, ytree, zeros, zline, ztree,
 };
 pub use diagonal::{
     profile, project, shadow, slice as diagonal_slice, support, svg as diagonal_svg,

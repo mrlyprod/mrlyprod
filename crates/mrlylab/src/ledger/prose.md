@@ -89,7 +89,7 @@ This sequence is A398348, whose data is that run verbatim, with a b-file to `n =
 
 ### The odd-side fills
 
-At odd side `n = 2k - 1` an axis splits into `k` low positions and `k - 1` high, so a base-2 design fills `sum over its corners of k^(zeros) (k - 1)^(ones)`, a polynomial in `k` of degree `D`; **Proved** in [DISCOVERIES.md](DISCOVERIES.md), generator `mrlymath::formulas::counting`. The six designs of the plane read as the polygonal numbers, and the corner, the sponge and the solid of the cube as the cubes, the divisor counts of `240^n` and the odd cubes. Every row below is read by `mrlylab::ledger::terms` from `k = 2`, the first odd side past the unit cell, and checked term by term against its record; `shift` is the record's index less the ledger's `k`.
+At odd side `n = 2k - 1` an axis splits into `k` low positions and `k - 1` high, so a base-2 design fills `sum over its corners of k^(zeros) (k - 1)^(ones)`, a polynomial in `k` of degree `D`; **Proved** in [DISCOVERIES.md](DISCOVERIES.md), generator `mrlymath::formulas::counting`. The six designs of the plane read as the polygonal numbers, and the dust, the sponge and the solid of the cube as the cubes, the divisor counts of `240^n` and the odd cubes. Every row below is read by `mrlylab::ledger::terms` from `k = 2`, the first odd side past the unit cell, and checked term by term against its record; `shift` is the record's index less the ledger's `k`.
 
 {{sides}}
 

@@ -88,6 +88,36 @@ pub fn void(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::void_3d(number), level)
 }
 
+/// Builds the point cube, filled where every coordinate is odd, at the given level.
+pub fn point(number: usize, level: usize) -> Result<Cell3d> {
+    build(atoms::point_3d(number), level)
+}
+
+/// Builds the dust cube, filled where every coordinate is even, at the given level.
+pub fn dust(number: usize, level: usize) -> Result<Cell3d> {
+    build(atoms::dust_3d(number), level)
+}
+
+/// Builds the cube of rods along the x axis at the given size and level.
+pub fn xline(number: usize, level: usize) -> Result<Cell3d> {
+    build(atoms::xline_3d(number), level)
+}
+
+/// Builds the cube of rods along the y axis at the given size and level.
+pub fn yline(number: usize, level: usize) -> Result<Cell3d> {
+    build(atoms::yline_3d(number), level)
+}
+
+/// Builds the cube of rods along the z axis at the given size and level.
+pub fn zline(number: usize, level: usize) -> Result<Cell3d> {
+    build(atoms::zline_3d(number), level)
+}
+
+/// Builds the star cube, filled where exactly one coordinate is odd, at the given level.
+pub fn star(number: usize, level: usize) -> Result<Cell3d> {
+    build(atoms::star_3d(number), level)
+}
+
 // LEVEL SET
 
 /// Builds the cube filled wherever the residue sum lands in the levels, at the given level.
@@ -114,6 +144,12 @@ pub fn named(design: Design, number: usize, level: usize) -> Result<Cell3d> {
         Design::Ytree => atoms::ytree_3d(number),
         Design::Ztree => atoms::ztree_3d(number),
         Design::Void => atoms::void_3d(number),
+        Design::Point => atoms::point_3d(number),
+        Design::Dust => atoms::dust_3d(number),
+        Design::Xline => atoms::xline_3d(number),
+        Design::Yline => atoms::yline_3d(number),
+        Design::Zline => atoms::zline_3d(number),
+        Design::Star => atoms::star_3d(number),
         other => return value_error(format!("design {} is not 3d.", other.name())),
     };
     build(pattern, level)
@@ -170,10 +206,17 @@ mod tests {
             (Design::Ytree, ytree(3, 1).unwrap()),
             (Design::Ztree, ztree(3, 1).unwrap()),
             (Design::Void, void(3, 1).unwrap()),
+            (Design::Point, point(3, 1).unwrap()),
+            (Design::Dust, dust(3, 1).unwrap()),
+            (Design::Xline, xline(3, 1).unwrap()),
+            (Design::Yline, yline(3, 1).unwrap()),
+            (Design::Zline, zline(3, 1).unwrap()),
+            (Design::Star, star(3, 1).unwrap()),
         ] {
             assert_eq!(named(design, 3, 1).unwrap(), plain);
         }
         assert!(named(Design::Htree, 3, 1).is_err());
+        assert!(named(Design::Hline, 3, 1).is_err());
     }
     #[test]
     fn random_classic_draws_one_of_the_named_six() {

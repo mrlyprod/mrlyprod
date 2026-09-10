@@ -62,6 +62,8 @@ pub mod spectrum;
 pub mod spin;
 /// The spirals: the whole numbers wound on a square or hexagonal sheet, painted, clicked and read along a quadratic.
 pub mod spiral;
+/// The spirograph: a flat design as the wheel, a pencil in every cell, rolled on a line, a circle or a polygon.
+pub mod spirograph;
 /// The ghost star of the hexagon moire: the stacked cut, the band it is measured on, the arm ink law and the cell-frame decay.
 pub mod star;
 /// The cubes as packed faces, filled cells and censuses.

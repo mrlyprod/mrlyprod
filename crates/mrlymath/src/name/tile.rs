@@ -3,12 +3,17 @@ use super::Named;
 use mrlycore::errors::{value_error, MrlyError, Result};
 use mrlycore::tile::{Design, Group, Source, Tile};
 
-const CODES_2D: [(Design, u128); 5] = [
+const CODES_2D: [(Design, u128); 10] = [
     (Design::Carpet, 7),
     (Design::Net, 14),
     (Design::Htree, 3),
     (Design::Vtree, 5),
     (Design::Void, 9),
+    (Design::Point, 8),
+    (Design::Dust, 1),
+    (Design::Hline, 12),
+    (Design::Vline, 10),
+    (Design::Star, 6),
 ];
 
 const TOTAL_2D: u128 = 16;
@@ -364,6 +369,11 @@ mod tests {
                 Design::Htree => designs::htree(3, 1).unwrap(),
                 Design::Vtree => designs::vtree(3, 1).unwrap(),
                 Design::Void => designs::void(3, 1).unwrap(),
+                Design::Point => designs::point(3, 1).unwrap(),
+                Design::Dust => designs::dust(3, 1).unwrap(),
+                Design::Hline => designs::hline(3, 1).unwrap(),
+                Design::Vline => designs::vline(3, 1).unwrap(),
+                Design::Star => designs::star(3, 1).unwrap(),
                 _ => unreachable!(),
             };
             assert_eq!(by_name, by_classic, "{}", design.name());

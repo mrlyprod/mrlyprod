@@ -51,6 +51,23 @@ const whirlParity = JSON.parse(m.tourbillon_stats(m.tourbillon(55, 128, 'unspun'
 const whirlPrimes = JSON.parse(m.tourbillon_stats(m.tourbillon(199, 128, 'unspun', 0, 'primes', 'plain', 'cells', 'mean'), 128, 199, 'unspun', 0, 'primes', 'plain', 'mean', 1));
 const whirlEyes = JSON.parse(m.tourbillon_eyes(12));
 const whirlDead = JSON.parse(m.tourbillon_stats(m.tourbillon(55, 128, 'degrees', 18, 'odd', 'plain', 'cells', 'mean'), 128, 55, 'degrees', 18, 'odd', 'plain', 'mean', 1));
+const wheelGrid = m.two_grid('495', 3, 1, 0, 3);
+const wheelRead = (pens: string, track: string, ring: number, wheel: number, laps: number) => JSON.parse(m.spirograph_read(wheelGrid.types, 3, 3, pens, track, ring, wheel, 4, laps, 0.9, 0, 1));
+const wheelFour = wheelRead('fill', 'in', 7, 4, 1);
+const wheelSeven = wheelRead('fill', 'in', 7, 3, 1);
+const wheelOut = wheelRead('fill', 'out', 5, 8, 1);
+const wheelFar = JSON.parse(m.spirograph_read(wheelGrid.types, 3, 3, 'corners', 'in', 7, 3, 4, 1, 1.2, 0, 1));
+const wheelWide = JSON.parse(m.spirograph_read(wheelGrid.types, 3, 3, 'fill', 'in', 7, 4, 4, 1, 1.35, 0, 1));
+const wheelVoid = wheelRead('void', 'in', 7, 3, 1);
+const wheelTight = wheelRead('fill', 'in', 7, 6, 1);
+const wheelTrace = m.spirograph(wheelGrid.types, 3, 3, 'fill', 'in', 7, 3, 4, 1, 0.9, 0, 1, 720);
+const wheelPose = m.spirograph_pose('in', 7, 3, 4, 1, 1);
+const wheelCover = m.spirograph_cover(wheelGrid.types, 3, 3, 'fill', 'in', 7, 3, 4, 1, 0.9, 0, 1, 256);
+const wheelHalf = m.spirograph_cover(wheelGrid.types, 3, 3, 'fill', 'in', 5, 2, 4, 1, 0.9, 0, 1, 256);
+const wheelOne = m.spirograph_cover(Uint8Array.from([1, 0, 0]), 3, 1, 'fill', 'in', 3, 1, 4, 1, 0.9, 0, 1, 256);
+const wheelPast = m.spirograph_cover(Uint8Array.from([1, 0, 0]), 3, 1, 'fill', 'out', 3, 1, 4, 1, 0.9, 0, 1, 256);
+const wheelSeat = 0.9 / Math.hypot(1.5, 0.5);
+const wheelForm = (rho: number, sign: number) => rho * (rho + sign * wheelSeat ** 2) / (rho + wheelSeat) ** 2;
 const terms = Array.from({ length: 8 }, (_, i) => JSON.parse(m.visible_read(i + 1, 2)).lit).join(',');
 const litWindow = JSON.parse(m.visible_read(100, 2));
 const cube = JSON.parse(m.visible_read(1000, 3));
@@ -395,6 +412,17 @@ const checks: [string, unknown, unknown][] = [
   ['tourbillon primes only 199', whirlPrimes.layers, 45],
   ['tourbillon quarter turn eyes', `${whirlEyes.length} ${whirlEyes.slice(0, 4).map(([a]: [number]) => Number(a.toFixed(6))).join(' ')}`, '185 0 7.5 8.181818 9'],
   ['tourbillon dead spin at 18', `${whirlDead.period} ${whirlDead.classes} ${whirlDead.pairs}`, '5 5 65'],
+  ['spirograph carpet pencils and curves', `${wheelFour.pencils} ${wheelFour.distinct} ${wheelRead('fill', 'in', 7, 2, 1).distinct} ${wheelSeven.distinct} ${wheelRead('fill', 'line', 7, 3, 2).distinct}`, '8 2 4 8 2'],
+  ['spirograph 7/3 closes', `${wheelSeven.a} ${wheelSeven.b} ${wheelSeven.orbits} ${wheelSeven.fold} ${wheelSeven.turns.toFixed(6)}`, '7 3 3 7 4.000000'],
+  ['spirograph trace returns', `${wheelTrace.length} ${Math.hypot(wheelTrace[0] - wheelTrace[1438], wheelTrace[1] - wheelTrace[1439]) < 1e-4}`, '11520 true'],
+  ['spirograph nodes inside the seat window', `${wheelSeven.nodes} ${wheelFour.nodes} ${wheelOut.nodes} ${wheelWide.nodes} ${wheelTight.nodes} ${wheelVoid.nodes} ${wheelFar.nodes}`, '1288 98 150 null null null null'],
+  ['spirograph pose at the end', `${wheelPose[0].toFixed(6)} ${(wheelPose[2] / Math.PI).toFixed(6)}`, '4.000000 -8.000000'],
+  ['spirograph cover carpet 7/3', `${wheelCover.covered.toFixed(6)} ${wheelCover.hole.toFixed(6)} ${wheelCover.wall.toFixed(6)} ${wheelCover.winding.toFixed(6)}`, '0.814487 0.140825 0.269255 9.104609'],
+  ['spirograph cover winding is the areas', `${wheelCover.areas.toFixed(6)} ${(wheelCover.winding - wheelCover.areas).toFixed(4)}`, '9.103448 0.0012'],
+  ['spirograph cover areas follow the curves', `${wheelHalf.areas.toFixed(6)} ${wheelHalf.winding.toFixed(6)}`, '3.346939 3.347400'],
+  ['spirograph cover disc and raster', `${wheelCover.side} ${wheelCover.mask.length} ${wheelCover.disc[2].toFixed(6)} ${wheelCover.disc[3].toFixed(6)}`, '256 65536 5.800000 2.200000'],
+  ['spirograph cover one pencil 3/1', `${wheelOne.covered.toFixed(6)} ${wheelOne.hole.toFixed(6)} ${wheelOne.winding.toFixed(6)}`, '0.014922 0.500622 0.508005'],
+  ['spirograph cover b = 1 both sides', `${wheelOne.areas.toFixed(6)} ${wheelForm(2, -1).toFixed(6)} ${wheelPast.areas.toFixed(6)} ${wheelForm(4, 1).toFixed(6)}`, '0.507814 0.507814 0.828445 0.828445'],
   ['farey_novelty 5', `${stack.lit},${stack.novel},${stack.match},${stack.primes.join(' ')}`, '11,11,true,2 3 5'],
   ['visible A018805 1..8', terms, '1,3,7,11,19,23,35,43'],
   ['visible window 100', `${litWindow.lit} ${litWindow.total} ${litWindow.density.toFixed(10)}`, '6087 10000 0.6087000000'],

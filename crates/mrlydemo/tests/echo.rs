@@ -1,6 +1,6 @@
 use mrlycore::json::parse;
-use mrlynum::design;
 use mrlydemo::echo::*;
+use mrlynum::design;
 
 fn read(base: u32, mask: u32, depth: usize, subtract: bool) -> (Echo, mrlycore::Json) {
     let echo = echo_read(base, mask, depth, subtract).unwrap();

@@ -1,0 +1,8 @@
+[package]
+name = "roulette-reaches"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+mrlycore.workspace = true
+mrlynum.workspace = true

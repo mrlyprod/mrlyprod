@@ -88,9 +88,9 @@ Six classes, sixteen designs. (Verified by `lab/design-census`: codes, degrees, 
 | name | deg | genus | rule | orbit | alias |
 |---|---|---|---|---|---|
 | `mrly_bang_d2_0` | -1 | iso | `S = {}` | 1 | |
-| `mrly_bang_d2_1` | 2 | iso | `S = {0}` | 4 | |
-| `mrly_bang_d2_3` | 1 | axis | `pin(y)` | 4 | tree |
-| `mrly_bang_d2_6` | 1 | iso | `S = {1}` | 2 | void |
+| `mrly_bang_d2_1` | 2 | iso | `S = {0}` | 4 | dust / point |
+| `mrly_bang_d2_3` | 1 | axis | `pin(y)` | 4 | tree / line |
+| `mrly_bang_d2_6` | 1 | iso | `S = {1}` | 2 | star / void |
 | `mrly_bang_d2_7` | 2 | iso | `S = {0,1}` | 4 | carpet / net |
 | `mrly_bang_d2_15` | 0 | iso | `S = {0,1,2}` | 1 | |
 

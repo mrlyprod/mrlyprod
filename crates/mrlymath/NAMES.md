@@ -50,7 +50,7 @@ One canonical string per mathematical thing. Implemented by `mrlymath::name` beh
 
 - `mrly_tile_<group>_<fields>`, implemented for `mrlycore::tile::Tile`.
 - The name speaks the plane: dimension 2 and base two are implied.
-- Sources are always codes; classics normalize to theirs: Carpet 7, Net 14, Htree 3, Vtree 5, Void 9.
+- Sources are always codes; classics normalize to theirs: Carpet 7, Net 14, Htree 3, Vtree 5, Void 9; antis to theirs: Point 8, Dust 1, Hline 12, Vline 10, Star 6.
 - Width, height, factor-when-derived and base never print; the size law (`Tile::resize`) rebuilds them on parse, and `Tile::check` must pass.
 - Rotations print mod 4; `r0` elides; `l1` elides; absent flags elide.
 - Codes must sit in the plane: `c` values 0-15.

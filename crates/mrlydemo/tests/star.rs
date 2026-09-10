@@ -1,6 +1,6 @@
 use mrlycore::json::parse;
-use mrlymath::six::star::{arm_law, width_law, Star};
 use mrlydemo::star::*;
+use mrlymath::six::star::{arm_law, width_law, Star};
 
 fn read(layers: usize, half: usize) -> mrlycore::Json {
     parse(&star_decay("23", layers, half).unwrap()).unwrap()

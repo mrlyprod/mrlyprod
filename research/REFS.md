@@ -303,6 +303,9 @@ Every named reference, sequence id, theorem and attribution on this tree's root 
 | Lewko and Radziwill 2014 | Refinements of Gal's theorem and applications, arXiv:1408.2334; the spectral-norm form of Gal's bound on gcd matrices | https://arxiv.org/abs/1408.2334 |
 | Pleasants, Baake and Roth 1996 | Planar coincidences for N-fold symmetry, J. Math. Phys. 37, 1029-1058; read in the arXiv source; section 4, the triangular lattice example after the theorem closing section 3, gives the triangular lattice's coincidence Dirichlet series `(1 + 3^-s)^-1 zeta_K(s)/zeta(2s)` and the average number of coincidence lattices `sqrt 3/(2 pi)` | https://arxiv.org/abs/math/0511147 |
 | Hu, Kaneko, Martin and Schildkraut 2023 | On a Mertens-type conjecture for number fields, Math. Proc. Cambridge Philos. Soc.; read at source in arXiv:2109.06665; the Mellin identity 1.1 for `M_K`, Lemma 5.4 bounding `log zeta_K` right of the critical line under the hypothesis, and Lemma 2.4 the good horizontal lines | https://arxiv.org/abs/2109.06665 |
+| Wieleitner 1908 | Spezielle ebene Kurven, section 25 Die trochoidalen Kurven, numbers 164 to 190, the trochoidal material proper being 164 to 175 | https://archive.org/details/spezielleebeneku00wielrich |
+| Sakhnovich 2023 | Periodic functions: self-intersections, local singular points, and folds | https://arxiv.org/abs/2304.09940 |
+| Dresden 2025 | Epitrochoids and Hypotrochoids Together Again, The College Mathematics Journal 56(3) 203-213 | https://doi.org/10.1080/07468342.2024.2388009 |
 
 ## REFERENCE PAGES
 
@@ -327,6 +330,11 @@ Every named reference, sequence id, theorem and attribution on this tree's root 
 | DLMF 25.13 | Periodic Zeta Function - 25.13.1 defines `F(x,s) = sum_(n>=1) e^(2 pi i n x)/n^s`, convergent for `Re s > 0` off the integers, and 25.13.3 is Hurwitz's formula `zeta(1-s,x) = (Gamma(s)/(2 pi)^s)(e^(-pi i s/2) F(x,s) + e^(pi i s/2) F(-x,s))` for `Re s > 0`, `0 < x < 1`; read at source, both quoted verbatim. The same page carries 25.13.2, which is the formula the reflection step recovers with the range `Re s > 0`. This is the kernel of the position-product identity | https://dlmf.nist.gov/25.13 |
 | DLMF 25.12 | Polylogarithms - 25.12.12 gives `Li_s(z) = Gamma(1-s)(log(1/z))^(s-1) + sum_(n>=0) zeta(s-n)(log z)^n/n!` for `s` not a positive integer and `abs(log z) < 2 pi`; read at source. Folding `t > 1/2` to `1-t` holds the argument at `abs(mu) <= pi`, so the series is geometric at ratio `1/2` and gives the fast evaluator used for the periodic zeta | https://dlmf.nist.gov/25.12 |
 | Niven's theorem | the only rational cosines at rational multiples of `pi` are `0, +-1/2, +-1`; Niven, Irrational Numbers, Carus 11, Cor. 3.12; the statement also read in the abstract of arXiv:2508.06415 | https://mathworld.wolfram.com/NivensTheorem.html |
+| Erb rhodonea | Rhodonea curves | https://www.math.unipd.it/~erb/rhodonea.html |
+| MathWorld hypotrochoid | Hypotrochoid | https://mathworld.wolfram.com/Hypotrochoid.html |
+| MathWorld epitrochoid | Epitrochoid | https://mathworld.wolfram.com/Epitrochoid.html |
+| MathWorld rose | Rose Curve | https://mathworld.wolfram.com/RoseCurve.html |
+| Jaekel hypotrochoids | Complete investigation of the shape diversity of Hypotrochoids / Hypocycloids | https://www.v-jaekel.de/hypo-h/formenvielfalt-einer-hypotrochoide-en.html |
 
 ## PRIOR ART ON THE BASE-3 SLICE
 

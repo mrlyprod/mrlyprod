@@ -1,0 +1,8 @@
+[package]
+name = "roulette-nodes"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+mrlylab.workspace = true
+mrlynum.workspace = true

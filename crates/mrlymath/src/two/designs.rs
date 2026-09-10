@@ -70,6 +70,11 @@ pub fn named(design: Design, number: usize, level: usize, rotation: usize) -> Re
         Design::Htree => atoms::htree_2d(number),
         Design::Vtree => atoms::vtree_2d(number),
         Design::Void => atoms::void_2d(number),
+        Design::Point => atoms::point_2d(number),
+        Design::Dust => atoms::dust_2d(number),
+        Design::Hline => atoms::hline_2d(number),
+        Design::Vline => atoms::vline_2d(number),
+        Design::Star => atoms::star_2d(number),
         other => return value_error(format!("design {} is not 2d.", other.name())),
     };
     build(pattern, level, rotation)
@@ -120,6 +125,31 @@ pub fn vtree(number: usize, level: usize) -> Result<Cell2d> {
 /// Builds the void fractal, its seed a checkerboard on even parity, deepened to the level.
 pub fn void(number: usize, level: usize) -> Result<Cell2d> {
     build(atoms::void_2d(number), level, 0)
+}
+
+/// Builds the point fractal, its seed on at every odd-odd site, deepened to the level.
+pub fn point(number: usize, level: usize) -> Result<Cell2d> {
+    build(atoms::point_2d(number), level, 0)
+}
+
+/// Builds the dust fractal, its seed on at every even-even site, deepened to the level.
+pub fn dust(number: usize, level: usize) -> Result<Cell2d> {
+    build(atoms::dust_2d(number), level, 0)
+}
+
+/// Builds the hline fractal, its seed striped along odd rows, deepened to the level.
+pub fn hline(number: usize, level: usize) -> Result<Cell2d> {
+    build(atoms::hline_2d(number), level, 0)
+}
+
+/// Builds the vline fractal, its seed striped along odd columns, deepened to the level.
+pub fn vline(number: usize, level: usize) -> Result<Cell2d> {
+    build(atoms::vline_2d(number), level, 0)
+}
+
+/// Builds the star fractal, its seed on where exactly one coordinate is odd, deepened to the level.
+pub fn star(number: usize, level: usize) -> Result<Cell2d> {
+    build(atoms::star_2d(number), level, 0)
 }
 
 #[cfg(test)]

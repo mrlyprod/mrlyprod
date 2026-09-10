@@ -402,3 +402,11 @@ path = "examples/field/research-stack.rs"
 [[example]]
 name = "demo-tourbillon"
 path = "examples/field/demo-tourbillon.rs"
+
+[[example]]
+name = "demo-spirograph"
+path = "examples/plot/demo-spirograph.rs"
+
+[[example]]
+name = "research-spirograph"
+path = "examples/plot/research-spirograph.rs"

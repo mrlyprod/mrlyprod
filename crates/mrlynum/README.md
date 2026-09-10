@@ -19,6 +19,7 @@ One arm reads number: primes with their ranks, gaps and square shapes, factoriza
 - **fft** transforms in one and two dimensions and centres a field's magnitude spectrum.
 - **boolean** takes a truth table's Walsh spectrum, nonlinearity, balance and avalanche.
 - **gauss** classifies the Gaussian and the Eisenstein integers as units, split, inert or ramified primes, counts a symmetric window, and weighs the norm shells.
+- **spirograph** takes a byte grid as a wheel with a pencil in every chosen cell, rolls it without slipping on a line, a circle or a polygon, traces every pencil, and counts the distinct curves by the coincidence law.
 - **spiral** winds the whole numbers on the square or the hexagonal lattice, both ways, marks the primes, twins, squarefree numbers or Mobius signs, and reads a quadratic along its diagonal.
 - **zeta** walks zeta along the critical line by Euler-Maclaurin and Riemann-Siegel, finds its zeros between Gram points, and rebuilds the prime staircase from them by the explicit formula.
 - **spin** spins a raster about its centre: the exact circle means and harmonics, the radial profile, the wheel it paints, and the radial stacks of turned copies.

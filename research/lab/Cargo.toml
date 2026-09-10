@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["automata-census", "design-census", "dimension-one-ladder", "oeis-terms", "hexagon-moire", "farey-discrepancy", "walk-dimension", "spectral-spacings", "spin-census", "integer-census", "magic-words", "code-factorisation", "crop-counts", "circle-crop", "mobius-designs", "rho-decoupling", "mertens-numerology", "coprime-terms", "still-hunt", "life-atlas"]
+members = ["automata-census", "design-census", "dimension-one-ladder", "oeis-terms", "hexagon-moire", "farey-discrepancy", "walk-dimension", "spectral-spacings", "spin-census", "integer-census", "magic-words", "code-factorisation", "crop-counts", "circle-crop", "mobius-designs", "rho-decoupling", "mertens-numerology", "coprime-terms", "still-hunt", "life-atlas", "roulette-nodes", "roulette-reaches", "roulette-loops", "roulette-cover"]
 
 [workspace.package]
 version = "0.1.0"

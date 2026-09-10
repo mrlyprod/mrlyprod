@@ -129,7 +129,7 @@ impl Base {
     }
 }
 
-/// The classic named designs a source can point at.
+/// The named designs a source can point at: the four classics and their four antis.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Design {
     /// The carpet with a lattice of holes.
@@ -148,6 +148,22 @@ pub enum Design {
     Ytree,
     /// The beams along the z axis.
     Ztree,
+    /// The points at the odd-odd sites.
+    Point,
+    /// The dust at the even-even sites.
+    Dust,
+    /// The lines along the odd rows.
+    Hline,
+    /// The lines along the odd columns.
+    Vline,
+    /// The star of sites with exactly one odd coordinate.
+    Star,
+    /// The rods along the x axis.
+    Xline,
+    /// The rods along the y axis.
+    Yline,
+    /// The rods along the z axis.
+    Zline,
 }
 
 impl Design {
@@ -162,6 +178,14 @@ impl Design {
             Design::Xtree => "Xtree",
             Design::Ytree => "Ytree",
             Design::Ztree => "Ztree",
+            Design::Point => "Point",
+            Design::Dust => "Dust",
+            Design::Hline => "Hline",
+            Design::Vline => "Vline",
+            Design::Star => "Star",
+            Design::Xline => "Xline",
+            Design::Yline => "Yline",
+            Design::Zline => "Zline",
         }
     }
     /// Parses a display name back into its design, or an error for an unknown name.
@@ -175,6 +199,14 @@ impl Design {
             "Xtree" => Ok(Design::Xtree),
             "Ytree" => Ok(Design::Ytree),
             "Ztree" => Ok(Design::Ztree),
+            "Point" => Ok(Design::Point),
+            "Dust" => Ok(Design::Dust),
+            "Hline" => Ok(Design::Hline),
+            "Vline" => Ok(Design::Vline),
+            "Star" => Ok(Design::Star),
+            "Xline" => Ok(Design::Xline),
+            "Yline" => Ok(Design::Yline),
+            "Zline" => Ok(Design::Zline),
             other => value_error(format!("unknown design {other:?}.")),
         }
     }
@@ -197,6 +229,25 @@ pub const CLASSICS_3D: [Design; 6] = [
     Design::Ytree,
     Design::Ztree,
     Design::Void,
+];
+
+/// The five antis of the plane, the complements of the five classics in order.
+pub const ANTIS_2D: [Design; 5] = [
+    Design::Point,
+    Design::Dust,
+    Design::Hline,
+    Design::Vline,
+    Design::Star,
+];
+
+/// The six antis of the cube: point, dust, the three lines and the star.
+pub const ANTIS_3D: [Design; 6] = [
+    Design::Point,
+    Design::Dust,
+    Design::Xline,
+    Design::Yline,
+    Design::Zline,
+    Design::Star,
 ];
 
 /// The origin of one tile layer, a one-field json object.
@@ -236,6 +287,14 @@ pub fn classics(dimension: usize) -> Vec<Design> {
     match dimension {
         3 => CLASSICS_3D.to_vec(),
         _ => CLASSICS_2D.to_vec(),
+    }
+}
+
+/// Returns the anti designs for a dimension.
+pub fn antis(dimension: usize) -> Vec<Design> {
+    match dimension {
+        3 => ANTIS_3D.to_vec(),
+        _ => ANTIS_2D.to_vec(),
     }
 }
 

@@ -67,6 +67,7 @@
 - [carry](demos/carry/) - The diagonal cut of a base-q sponge remembers only a carry, so ceil(D/2) past terms decide every count and the growth exponent misses the generic value, above it at odd dimensions and below it at even ones.
 - [moire](demos/moire/) - One design sampled at scale 1, 3, 5 and on, the layers stacked into a field where the interference is the finer grids landing on the coarse.
 - [tourbillon](demos/tourbillon/) - Turn every layer of the carpet stack by its own angle and the shared grid breaks, yet the centre is the one point every rotation fixes, so its value is the same fourteen layers of twenty-eight at every schedule.
+- [spirograph](demos/spirograph/) - A design is the wheel and its cells are the holes, a pencil in every one, rolled without slipping on a line, a circle or a polygon: every pencil draws a trochoid, and on a circle two pencils draw one curve exactly when a rotation of a full turn over the wheel's reduced radius carries one seat onto the other.
 - [radial](demos/radial/) - Turned copies of a design laid on each other keep only the circular harmonics whose order is a multiple of the copy count, and a design of rotation order g shows lcm(q, g) petals.
 - [spin](demos/spin/) - A design on a turntable strobed against the frame rate, beside the exact circle mean at every radius, which is the bullseye it becomes at infinite speed.
 

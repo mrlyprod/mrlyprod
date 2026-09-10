@@ -5,10 +5,14 @@ const PROSE: &str = include_str!("prose.md");
 
 fn label(key: &Key) -> &'static str {
     match (key.dimension, key.code) {
-        (2, 1) | (3, 1) => "corner",
+        (2, 1) | (3, 1) => "dust",
         (2, 3) => "tree",
+        (2, 6) | (3, 22) => "star",
         (2, 7) => "carpet",
+        (2, 8) | (3, 128) => "point",
         (2, 9) | (3, 129) => "void",
+        (2, 10) | (2, 12) | (3, 136) | (3, 160) | (3, 192) => "line",
+        (2, 14) | (3, 232) => "net",
         (2, 11) => "corner and centre",
         (2, 15) | (3, 255) => "solid",
         (3, 23) => "sponge",

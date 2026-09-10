@@ -23,8 +23,8 @@ pub mod tile;
 pub use carry::{capacity, embed, extract, read, sheet};
 pub use census::{census, euler, fills, Census};
 pub use designs::{
-    carpet, create, from_corners, htree, level_set, levels_code, named, net, noise, ones, random,
-    void, vtree, zeros,
+    carpet, create, dust, from_corners, hline, htree, level_set, levels_code, named, net, noise,
+    ones, point, random, star, vline, void, vtree, zeros,
 };
 pub use geometry::{magic, merge, mosaic, special, to_3d};
 pub use models::Cell2d;
