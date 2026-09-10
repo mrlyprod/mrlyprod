@@ -1,3 +1,4 @@
+import math
 import os
 import sys
 
@@ -172,7 +173,7 @@ def lemma():
     els, _ = monoid(WIDE + 1)
     line("THE CARRY BOUND for F = {0,1}, the monoid M* of products of 0/1 polynomials")
     line("")
-    line("  max coefficient over degree < L, against the proved cap 2^(L-1)")
+    line("  max coefficient over degree < L, against the exact cap binomial(L-1, floor((L-1)/2)) and the crude cap 2^(L-1)")
     cmax = [0] * (WIDE + 2)
     for p in els:
         for a in coeffs(p):
@@ -181,7 +182,8 @@ def lemma():
     run = 0
     for L in range(2, WIDE + 2):
         run = max(run, cmax[L - 1])
-        line("   L %2d  max coef %6d  cap %8d" % (L, run, 2 ** (L - 1)))
+        line("   L %2d  max coef %6d  exact cap %6d  crude cap %8d"
+             % (L, run, math.comb(L - 1, (L - 1) // 2), 2 ** (L - 1)))
     line("")
     line("  q_set(L): least q with every P of degree < L below q^L, and the last P over the cut")
     line("  q_ord(L): least q with evaluation increasing on all of M* to degree L")
@@ -206,7 +208,7 @@ def lemma():
              % (q, q ** L, bad, coll, dis))
     line("")
     line("  the prediction against nu_F, sibling generator lab/mrly-pairing verb inverse")
-    line("  base-free ladder: sums %s" % sums)
+    line("  base-free ladder: M(q^L) %s" % sums)
     line("  base-free ladder: maxima %s" % mx)
     for q, L in BASES:
         nu = pairing.dirichlet_inverse(q, 0b11, L)
@@ -215,7 +217,7 @@ def lemma():
         dm = next((l + 1 for l in range(len(run)) if run[l] != mx[l]), None)
         line("   q %2d  to level %2d  carry-free window %2d  order window %2d  sum departs %s  maxima depart %s"
              % (q, L, window(q), ordwindow(tord, q), ds, dm))
-        line("          sums   %s" % sig)
+        line("          M(q^L) %s" % sig)
         line("          maxima %s" % run)
         del nu
 
@@ -258,16 +260,16 @@ def sequence():
     mx, sums, cens, top = ladder(DEEP)
     line("THE BASE-FREE LADDER of nu*, levels 1..%d" % DEEP)
     line("")
-    line("   level  running max  level sum  monoid census by degree")
+    line("   level  running max  M(q^L)  monoid census by degree")
     for l in range(1, DEEP + 1):
         line("   %2d  %8d  %6d  %8d" % (l, mx[l - 1], sums[l - 1], cens[l - 1]))
     line("")
     line("  running maxima  %s" % mx)
-    line("  level sums      %s" % sums)
+    line("  M(q^L)          %s" % sums)
     line("  monoid census   %s" % cens)
     line("  partial census  %s" % [sum(cens[:l]) for l in range(1, DEEP + 1)])
     line("")
-    line("  max coefficient at degree %d is %d, under the packing width 2^%d and the proved cap 2^%d"
+    line("  max coefficient at degree %d is %d, under the packing width 2^%d and the crude cap 2^%d"
          % (DEEP - 1, top, B, DEEP - 1))
     line("")
     line("  OEIS running maxima  %s" % grep(mx[:12]))

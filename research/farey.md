@@ -2,7 +2,7 @@
 
 Lay the same fractal grid on the unit square at many scales at once - scale `n` puts its cell boundaries at `x = k/n` - drop the opacity and add the layers up. The result is a moire, and a bright point is one that many scales agree on. The question this page answers is what the bright points are, and the answer is not decorative: the lit nodes are the Farey fractions, the amount of new structure each scale contributes is Euler's totient `phi(n)`, and how evenly those nodes spread is - by a pair of theorems from 1924 - literally equivalent to the Riemann hypothesis.
 
-Every claim below carries a tag. **Proved** means derived here from definitions. **Verified** means recomputed from scratch, or checked against the published literature. Nothing on this page is a conjecture. The [Farey demo](../demos/farey/) builds the stack scale by scale, lights the Farey fractions, and shows `phi(n)` novelty peaking at the primes.
+Every claim below carries a tag. **Proved** means derived here from definitions. **Verified** means recomputed from scratch, or checked against the published literature. **Conjecture** marks a reading the tables support and no proof reaches, **Refuted** a claim this page kills. The [Farey demo](../demos/farey/) builds the stack scale by scale, lights the Farey fractions, and shows `phi(n)` novelty peaking at the primes.
 
 ## Where the lines land
 
@@ -64,6 +64,48 @@ Both sums are computable. Generating `F_Q` exactly and measuring, with `S2 = sum
 | 8000 | 19455782 | 0.6564 | 0.1123 | -0.994 |
 
 **Verified** by `lab/farey-discrepancy`. `S2*Q` flattens near `0.656` and the local exponent walks to `-1`, which is the Franel condition; `S1` stays under its `Q^(1/2)` envelope and its own local exponent runs between `0.27` and `0.43`, under the Landau threshold of `0.5`. The node count matches `sum phi(k)` exactly at every rung, which is the control that says the object being measured really is the stack's node set.
+
+## The meter on a digit design
+
+A digit design `S_F` is the set of whole numbers whose every base-`q` digit lies in a digit set `F`, of dimension `alpha = log |F| / log q`. Restricting the meter to one needs a convention, and the strict one is taken here: `F_Q(S_F)` is the set of reduced fractions `a/b` with `0 < a <= b <= Q` and both `a` and `b` in `S_F`. The weaker denominator convention - `b` in `S_F`, `a` free - is measured beside it, and the unrestricted `F_Q` is the control. Neither is a set the stack produces: [Farey order is the stack](#farey-order-is-the-stack-not-the-design) still holds and every design gives the same stack at fixed `Q`, so `F_Q(S_F)` is a filter laid over the stack's nodes by hand, and all that is at stake is what the Franel-Landau functional reads on it. No Mobius sum appears anywhere in this section, so nothing in it bears on the square-root conjecture of [mobius](mobius.md), whose `theta(F)` is a Mertens exponent and belongs to that page alone; the exponents here are called `e_2` and `e_1` and are this section's own.
+
+Each convention carries a count that never enumerates a fraction. The denominator convention has `card = sum_{b in S_F, b <= Q} phi(b)`. The strict one has `card = sum_{b in S_F, b <= Q} phi_F(b)` with `phi_F(b) = #{a in S_F : a <= b, gcd(a,b) = 1} = sum_{d | b} mu(d) * #{multiples of d in S_F up to b}`, inclusion-exclusion over the divisors of `b`. **Proved.** Both are sieved independently of the enumeration and match it at every rung of every table below, which is the control that says the object measured is the object defined; the largest check is 9538759028 nodes on the base 3 control at `Q = 3^11`. **Verified** by `lab/farey-discrepancy design`.
+
+Rungs are powers of the base, so the design's set is self-similar at every rung. Every exponent below is one ratio between consecutive rungs, `e_2 = ln(S2(Q')/S2(Q)) / ln(Q'/Q)` and `e_1` the same for `S1`, and nothing is fitted.
+
+Write `D_Q = #{b in S_F : b <= Q} ~ Q^alpha` for the denominators the design supplies and `card F_Q(S_F) ~ Q^e` for the nodes. Square-root cancellation in the denominators is a node-count error of order `sqrt(D_Q)`, which puts `e_2` at `alpha - e`, and Cauchy-Schwarz on `S1 <= sqrt(card * S2)` then caps `e_1` at `alpha/2`. Franel and Landau are this pair at `alpha = 1`, `e = 2`: `e_2 <= -1` and `e_1 <= 1/2`, both under RH, both caps on a limsup and never values. The control misses them freely at a single rung - its `e_2` wanders from `-0.463` to `-1.017` and its `e_1` from `+0.236` to `+0.673` across the base 3 ladder - so a lane sitting off a cap at one rung shows nothing by itself. The ladders run to `Q = 3^11 = 177147` and `Q = 10^5`, each with its own control, and the top rung reads:
+
+| set | convention | `alpha` | `e` | `exp card` | `alpha - e` | `e_2` | `alpha/2` | `e_1` |
+|---|---|---|---|---|---|---|---|---|
+| base 3 `{0,1}` | strict | 0.631 | 1.262 | +1.263 | -0.631 | +1.259 | 0.315 | +1.262 |
+| base 3 `{0,1}` | denominator | 0.631 | 1.631 | +1.631 | -1.000 | -0.959 | 0.315 | +0.336 |
+| full set to `3^11` | control | 1.000 | 2.000 | +2.000 | -1.000 | -1.017 | 0.500 | +0.236 |
+| base 10 without 9 | strict | 0.954 | 1.908 | +1.908 | -0.954 | +1.904 | 0.477 | +1.906 |
+| base 10 without 9 | denominator | 0.954 | 1.954 | +1.954 | -1.000 | -0.899 | 0.477 | +0.585 |
+| full set to `10^5` | control | 1.000 | 2.000 | +2.000 | -1.000 | -1.000 | 0.500 | +0.347 |
+
+The denominator lanes sit in the control's own band and the strict lanes sit on the mass. **Verified.** Both denominator rows put `e_2` at `-0.959` and `-0.899` against `alpha - e = -1.000` and `e_1` at `+0.336` and `+0.585` against caps of `0.315` and `0.477`, every one of the four inside the range the control walks. Both strict rows instead put `e_2` and `e_1` on `exp card` itself, agreeing with it to two decimals: `+1.259` and `+1.262` against `+1.263`, `+1.904` and `+1.906` against `+1.908`. Sums that ride the mass are sums with no cancellation at all, and the normalised readings settle:
+
+| set | `Q` | `card` | `S1/card` | `S2/card` | widest gap |
+|---|---|---|---|---|---|
+| base 3 `{0,1}` | 2187 | 4286 | 9.4258e-2 | 1.3307e-2 | 0.16720 |
+| base 3 `{0,1}` | 6561 | 17069 | 9.3888e-2 | 1.3100e-2 | 0.16684 |
+| base 3 `{0,1}` | 19683 | 67561 | 9.4171e-2 | 1.3170e-2 | 0.16673 |
+| base 3 `{0,1}` | 59049 | 269750 | 9.4171e-2 | 1.3147e-2 | 0.16669 |
+| base 3 `{0,1}` | 177147 | 1080458 | 9.4057e-2 | 1.3086e-2 | 0.16667 |
+| base 10 without 9 | 1000 | 147096 | 5.6111e-3 | 4.1767e-5 | 0.00113 |
+| base 10 without 9 | 10000 | 11890654 | 5.2424e-3 | 3.6501e-5 | 0.00011 |
+| base 10 without 9 | 100000 | 963170938 | 5.2125e-3 | 3.6159e-5 | 0.00001 |
+
+The strict lane holds those constants from `Q = 2187` at base 3 `{0,1}`, `card` running 4286 to 1080458, and from `Q = 10000` at base 10 without 9, `card` running 11890654 to 963170938: two figures of `S1/card` and of `S2/card` fixed across each span, and no more of either claimed, the base 10 rung below moving the first figure of `S2/card` from `4.1e-5`. **Verified.**
+
+At base 3 `{0,1}` the last column names an exact interval, a sixth of the line. **Proved.** If `b` has its leading base 3 digit at position `L` then `3^L <= b <= (3^(L+1) - 1)/2`. A numerator whose own leading digit sits at `L` gives `a/b >= 2 * 3^L/(3^(L+1) - 1) > 2/3`; one whose leading digit sits at `L - 1` or below gives `a <= (3^L - 1)/2 < b/2`, so `a/b < 1/2`. The closed interval `[1/2, 2/3]` is therefore empty in `F_Q(S_F)` at every `Q`, and a set that misses a fixed interval of positive length does not equidistribute. The widest gap the meter finds contains that interval at every finite `Q` and shrinks onto it from outside, reading `0.16827, 0.16720, 0.16684, 0.16673, 0.16669, 0.16667` at `Q = 3^6 .. 3^11` and starting at `0.49931, 0.49977, 0.49992, 0.49997, 0.49999, 0.50000`.
+
+Base 10 without 9 has no gap to argue from. **Conjecture.** Its widest gap falls like `1/Q`, reading `0.01136, 0.00113, 0.00011, 0.00001` at `Q = 10^2 .. 10^5` against the control's `0.01000, 0.00100, 0.00010, 0.00001` on the same rungs, so the strict set there is as fine-grained as the full Farey sequence and the base 3 argument does not transfer. That it fails to equidistribute rests on the settled constants alone, which is a reading and not a proof.
+
+The denominator convention keeps the transplanted shape. **Conjecture.** Restricting the denominator moves the mass from `Q^2` to `Q^(1+alpha)` and the count error from `sqrt(Q)` to `sqrt(D_Q) = Q^(alpha/2)`, and the two moves cancel in `S2`: `S2*Q` reads `0.8926` at base 3 `{0,1}` and `0.8536` at base 10 without 9 against the control's `0.6782` and `0.6684` at the same top rungs, a constant factor and not a rate. The transplanted Landau reading `S1/Q^(alpha/2)` is flat where the control's `S1/sqrt(Q)` is falling, at `0.243, 0.281, 0.267, 0.268, 0.274` for `Q = 3^7 .. 3^11` and `0.213, 0.222, 0.207, 0.265` for `Q = 10^2 .. 10^5`. So the conjecture is `S2 = O(Q^(-1+eps))` and `S1 = O(Q^(alpha/2+eps))` on the thinner set. Normalising against the node count instead would demand `e_2 = -(1+alpha)/2`, which is the wrong yardstick: it agrees with `alpha - e` on the control only through the accident `sqrt(Q) = card^(1/4)` at `e = 2`, and the denominator lane is not beating a shape by missing it.
+
+The honest cap below covers this section too. Nothing here reaches further than the meter above it. What it adds is negative and clean: digit restriction of the denominator is invisible to the shape, and digit restriction of both coordinates destroys equidistribution outright at base 3 `{0,1}` and appears to at base 10 without 9.
 
 ## Weighting the stack by Mobius
 

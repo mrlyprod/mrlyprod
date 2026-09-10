@@ -1,3 +1,5 @@
+mod design;
+
 use std::collections::BTreeSet;
 
 use mrlynum::factor::gcd;
@@ -93,10 +95,8 @@ fn verdict(ok: bool) -> &'static str {
     }
 }
 
-fn main() {
-    let top = *QS.last().unwrap();
-    let phi = totients(top);
-
+fn stack() {
+    let phi = totients(*QS.last().unwrap());
     println!("LIT NODES ARE THE FAREY NODES");
     println!("      Q   lit set   window   mediant walk   sum phi(k)   floor(Q/b)   agree");
     for q in SMALL {
@@ -123,8 +123,10 @@ fn main() {
         "  new nodes at scale n equals phi(n), n = 2..60 : {}",
         verdict(fresh)
     );
+}
 
-    println!();
+fn meter() {
+    let phi = totients(*QS.last().unwrap());
     println!("THE DISCREPANCY METER");
     println!("      Q       nodes   sum phi(k)     S2*Q   S1/sqrt(Q)   exp S2   exp S1");
     let mut prev: Option<(usize, f64, f64)> = None;
@@ -166,5 +168,24 @@ fn main() {
             w1 / (q as f64).sqrt(),
             verdict(ok)
         );
+    }
+}
+
+fn main() {
+    let want = std::env::args().nth(1);
+    let pick = |name: &str| match want.as_deref() {
+        Some(verb) => verb == name,
+        None => true,
+    };
+    if pick("stack") {
+        stack();
+        println!();
+    }
+    if pick("meter") {
+        meter();
+        println!();
+    }
+    if pick("design") {
+        design::run();
     }
 }

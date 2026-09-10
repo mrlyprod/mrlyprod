@@ -2,70 +2,22 @@ use mrlycore::errors::Result;
 use mrlyfig::board::Board;
 use mrlyfig::ink::Ramp;
 use mrlyfig::{ink, save};
-use mrlynum::gauss::Ring;
+use mrlynum::gauss::{classes, Ring};
 use std::collections::HashSet;
 
 const RING: Ring = Ring::Gaussian;
-const BOUND: i64 = 60;
+const BOUND: u64 = 60;
 
-fn norm(z: (i64, i64)) -> i64 {
-    RING.norm(z.0, z.1) as i64
-}
-
-fn round_quotient(z: (i64, i64), w: (i64, i64)) -> (i64, i64) {
-    let p = RING.mul(z, RING.conjugate(w.0, w.1));
-    let n = norm(w);
-    (
-        (2 * p.0 + n).div_euclid(2 * n),
-        (2 * p.1 + n).div_euclid(2 * n),
-    )
-}
-
-fn gcd(mut z: (i64, i64), mut w: (i64, i64)) -> (i64, i64) {
-    while w != (0, 0) {
-        let step = RING.mul(round_quotient(z, w), w);
-        let rest = (z.0 - step.0, z.1 - step.1);
-        z = w;
-        w = rest;
-    }
-    z
-}
-
-fn layers(bound: i64) -> Vec<(i64, i64)> {
-    let mut out = Vec::new();
-    for a in 1.. {
-        if a * a > bound {
-            break;
-        }
-        for b in 0.. {
-            if a * a + b * b > bound {
-                break;
-            }
-            out.push((a, b));
-        }
-    }
-    out
-}
-
-fn classes(bound: i64) -> i64 {
-    let mut sum = 0;
-    let mut j = 0;
-    while 4 * j < bound {
-        sum += bound / (4 * j + 1) - bound / (4 * j + 3);
-        j += 1;
-    }
-    sum
-}
-
-fn nodes(bound: i64) -> Vec<(f64, f64, i64)> {
+fn nodes(bound: u64) -> Vec<(f64, f64, usize)> {
     let mut seen = HashSet::new();
     let mut out = Vec::new();
-    for den in layers(bound) {
-        let n = norm(den);
-        let lit = classes(bound / n);
+    for den in classes(RING, bound) {
+        let n = RING.norm(den.0, den.1) as i64;
+        let lit = classes(RING, bound / n as u64).len();
         for p in 0..n {
             for q in 0..n {
-                if norm(gcd((p, q), den)) != 1 {
+                let g = RING.gcd((p, q), den);
+                if RING.norm(g.0, g.1) != 1 {
                     continue;
                 }
                 let x = (p * den.0 + q * den.1).rem_euclid(n);
@@ -80,7 +32,7 @@ fn nodes(bound: i64) -> Vec<(f64, f64, i64)> {
     out
 }
 
-fn wrapped(stack: Vec<(f64, f64, i64)>) -> Vec<(f64, f64, i64)> {
+fn wrapped(stack: Vec<(f64, f64, usize)>) -> Vec<(f64, f64, usize)> {
     let mut out = Vec::new();
     for (x, y, lit) in stack {
         out.push((x, y, lit));
@@ -101,8 +53,7 @@ fn main() -> Result<()> {
     assert_eq!(nodes(50).len(), 672);
     let mut stack = nodes(BOUND);
     assert_eq!(stack.len(), 880);
-    assert_eq!(layers(BOUND).len(), 46);
-    let top = classes(BOUND);
+    let top = classes(RING, BOUND).len();
     assert_eq!(top, 46);
     stack = wrapped(stack);
     assert_eq!(stack.len(), 917);

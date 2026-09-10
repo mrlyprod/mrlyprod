@@ -78,7 +78,7 @@ mod tests {
     #[test]
     fn the_full_tier_drops_random() {
         let pool = options(false);
-        assert_eq!(pool.len(), 14);
+        assert_eq!(pool.len(), 22);
         assert!(!pool.iter().any(|s| s.is_random()));
         assert!(pool.contains(&Sequence::GridSquares));
     }

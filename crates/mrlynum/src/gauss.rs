@@ -70,6 +70,43 @@ impl Ring {
             Ring::Eisenstein => (a - b, -b),
         }
     }
+    /// Returns the quotient and the remainder of a point by a nonzero point: `z = q w + r` with the norm of `r` below the norm of `w`.
+    pub fn div_rem(self, z: (i64, i64), w: (i64, i64)) -> ((i64, i64), (i64, i64)) {
+        let n = self.norm(w.0, w.1) as i64;
+        let p = self.mul(z, self.conjugate(w.0, w.1));
+        let q = (
+            (2 * p.0 + n).div_euclid(2 * n),
+            (2 * p.1 + n).div_euclid(2 * n),
+        );
+        let s = self.mul(q, w);
+        (q, (z.0 - s.0, z.1 - s.1))
+    }
+    /// Returns the canonical associate of a point: the one with `a > 0` and `b >= 0` on the square lattice, the one with `a > 0` and `0 <= b < a` on the hexagonal, the origin for the origin.
+    pub fn canon(self, a: i64, b: i64) -> (i64, i64) {
+        self.associates(a, b)
+            .into_iter()
+            .find(|&(x, y)| match self {
+                Ring::Gaussian => x > 0 && y >= 0,
+                Ring::Eisenstein => x > 0 && y >= 0 && y < x,
+            })
+            .unwrap_or((0, 0))
+    }
+    /// Returns the greatest common divisor of two points as its canonical associate, by the nearest-point Euclidean algorithm, the origin for two origins.
+    ///
+    /// ```
+    /// use mrlynum::gauss::Ring;
+    /// assert_eq!(Ring::Gaussian.gcd((5, 0), (2, 1)), (2, 1));
+    /// assert_eq!(Ring::Gaussian.gcd((3, 0), (0, 7)), (1, 0));
+    /// ```
+    pub fn gcd(self, z: (i64, i64), w: (i64, i64)) -> (i64, i64) {
+        let (mut z, mut w) = (z, w);
+        while w != (0, 0) {
+            let (_, r) = self.div_rem(z, w);
+            z = w;
+            w = r;
+        }
+        self.canon(z.0, z.1)
+    }
     /// Returns the whole number an associate of the point lies on, when one lies on the positive real axis.
     pub fn whole(self, a: i64, b: i64) -> Option<u64> {
         self.associates(a, b)
@@ -349,6 +386,30 @@ pub fn peak(ring: Ring, limit: usize) -> (usize, u32) {
         )
 }
 
+/// Lists one point per associate class of the nonzero points of norm at most the bound: canonical associates, in order of norm and then of coordinates.
+///
+/// ```
+/// use mrlynum::gauss::{classes, Ring};
+/// assert_eq!(classes(Ring::Gaussian, 5), vec![(1, 0), (1, 1), (2, 0), (1, 2), (2, 1)]);
+/// ```
+pub fn classes(ring: Ring, bound: u64) -> Vec<(i64, i64)> {
+    let reach = (4 * bound / 3).isqrt() as i64 + 1;
+    let mut out = Vec::new();
+    for a in 1..=reach {
+        let wide = match ring {
+            Ring::Gaussian => reach,
+            Ring::Eisenstein => a - 1,
+        };
+        for b in 0..=wide {
+            if ring.norm(a, b) <= bound {
+                out.push((a, b));
+            }
+        }
+    }
+    out.sort_by_key(|&(a, b)| (ring.norm(a, b), a, b));
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -526,5 +587,106 @@ mod tests {
         assert_eq!(peak(Ring::Gaussian, 60), (25, 12));
         assert_eq!(peak(Ring::Eisenstein, 60), (49, 18));
         assert_eq!(peak(Ring::Gaussian, 4), (1, 4));
+    }
+
+    #[test]
+    fn the_division_leaves_a_remainder_under_the_divisor() {
+        for ring in [Ring::Gaussian, Ring::Eisenstein] {
+            for a in -6..=6 {
+                for b in -6..=6 {
+                    for c in -4..=4 {
+                        for d in -4..=4 {
+                            if (c, d) == (0, 0) {
+                                continue;
+                            }
+                            let (q, r) = ring.div_rem((a, b), (c, d));
+                            let s = ring.mul(q, (c, d));
+                            assert_eq!((s.0 + r.0, s.1 + r.1), (a, b), "{ring:?} {a} {b} {c} {d}");
+                            assert!(
+                                ring.norm(r.0, r.1) < ring.norm(c, d),
+                                "{ring:?} {a} {b} {c} {d}"
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn the_gcd_swallows_every_common_divisor() {
+        for ring in [Ring::Gaussian, Ring::Eisenstein] {
+            for a in -4..=4 {
+                for b in -4..=4 {
+                    for c in -4..=4 {
+                        for d in -4..=4 {
+                            if (a, b) == (0, 0) || (c, d) == (0, 0) {
+                                continue;
+                            }
+                            let g = ring.gcd((a, b), (c, d));
+                            assert_eq!(ring.canon(g.0, g.1), g, "{ring:?} {a} {b} {c} {d}");
+                            assert!(divides(ring, (a, b), g), "{ring:?} {a} {b} {c} {d}");
+                            assert!(divides(ring, (c, d), g), "{ring:?} {a} {b} {c} {d}");
+                            for x in -8..=8 {
+                                for y in -8..=8 {
+                                    if (x, y) == (0, 0) {
+                                        continue;
+                                    }
+                                    if divides(ring, (a, b), (x, y))
+                                        && divides(ring, (c, d), (x, y))
+                                    {
+                                        assert!(
+                                            divides(ring, g, (x, y)),
+                                            "{ring:?} {a} {b} {c} {d} {x} {y}"
+                                        );
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn the_canonical_associate_is_the_only_one_of_its_class() {
+        for ring in [Ring::Gaussian, Ring::Eisenstein] {
+            assert_eq!(ring.canon(0, 0), (0, 0));
+            for a in -6..=6 {
+                for b in -6..=6 {
+                    if (a, b) == (0, 0) {
+                        continue;
+                    }
+                    let c = ring.canon(a, b);
+                    assert_eq!(ring.canon(c.0, c.1), c, "{ring:?} {a} {b}");
+                    assert_eq!(ring.norm(c.0, c.1), ring.norm(a, b), "{ring:?} {a} {b}");
+                    let fixed = ring
+                        .associates(a, b)
+                        .into_iter()
+                        .filter(|&(x, y)| ring.canon(x, y) == (x, y))
+                        .count();
+                    assert_eq!(fixed, 1, "{ring:?} {a} {b}");
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn the_classes_cover_every_shell_once_per_unit() {
+        for ring in [Ring::Gaussian, Ring::Eisenstein] {
+            let list = classes(ring, 200);
+            let total: u32 = shells(ring, 200).into_iter().skip(1).sum();
+            assert_eq!(list.len() * ring.units(), total as usize, "{ring:?}");
+            for &(a, b) in &list {
+                assert_eq!(ring.canon(a, b), (a, b), "{ring:?} {a} {b}");
+                assert!(ring.norm(a, b) <= 200, "{ring:?} {a} {b}");
+            }
+            for pair in list.windows(2) {
+                assert!(ring.norm(pair[0].0, pair[0].1) <= ring.norm(pair[1].0, pair[1].1));
+            }
+        }
+        assert_eq!(classes(Ring::Gaussian, 50).len(), 40);
+        assert_eq!(classes(Ring::Eisenstein, 50).len(), 31);
     }
 }

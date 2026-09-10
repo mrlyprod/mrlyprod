@@ -306,6 +306,9 @@ Every named reference, sequence id, theorem and attribution on this tree's root 
 | Wieleitner 1908 | Spezielle ebene Kurven, section 25 Die trochoidalen Kurven, numbers 164 to 190, the trochoidal material proper being 164 to 175 | https://archive.org/details/spezielleebeneku00wielrich |
 | Sakhnovich 2023 | Periodic functions: self-intersections, local singular points, and folds | https://arxiv.org/abs/2304.09940 |
 | Dresden 2025 | Epitrochoids and Hypotrochoids Together Again, The College Mathematics Journal 56(3) 203-213 | https://doi.org/10.1080/07468342.2024.2388009 |
+| Hunter 1957 | The minimum discriminants of quintic fields | https://doi.org/10.1017/S2040618500033463 |
+| Pohst 1982 | On the computation of number fields of small discriminants including the minimum discriminants of sixth degree fields | https://doi.org/10.1016/0022-314X(82)90061-0 |
+| Jones and Roberts 2014 | A database of number fields | https://arxiv.org/abs/1404.0266 |
 
 ## REFERENCE PAGES
 
@@ -362,6 +365,15 @@ The upstream that [spectra](spectra.md) reads its base-3 rung against. It is gre
 | b047999 | OEIS b-file for A047999, 10585 terms (rows 0..144) | https://oeis.org/A047999/b047999.txt |
 | OEIS dump | `stripped.gz`, the full-sequence dump the novelty searches on [sequences](sequences.md) run against; 398556 lines | https://oeis.org/stripped.gz |
 | OEIS submission rules | Submit.html, the Style Sheet and the AI-submission policy every draft in [sequences](sequences.md) is written against | https://oeis.org/wiki/Style_Sheet |
+| LMFDB 2.0.3.1 | LMFDB number field 2.0.3.1 | https://www.lmfdb.org/NumberField/2.0.3.1 |
+| LMFDB 2.2.5.1 | LMFDB number field 2.2.5.1 | https://www.lmfdb.org/NumberField/2.2.5.1 |
+| LMFDB 3.1.23.1 | LMFDB number field 3.1.23.1 | https://www.lmfdb.org/NumberField/3.1.23.1 |
+| LMFDB 3.3.49.1 | LMFDB number field 3.3.49.1 | https://www.lmfdb.org/NumberField/3.3.49.1 |
+| LMFDB 4.0.117.1 | LMFDB number field 4.0.117.1 | https://www.lmfdb.org/NumberField/4.0.117.1 |
+| LMFDB 4.0.1225.1 | LMFDB number field 4.0.1225.1 | https://www.lmfdb.org/NumberField/4.0.1225.1 |
+| LMFDB 4.4.725.1 | LMFDB number field 4.4.725.1 | https://www.lmfdb.org/NumberField/4.4.725.1 |
+| LMFDB 5.1.4429.1 | LMFDB number field 5.1.4429.1 | https://www.lmfdb.org/NumberField/5.1.4429.1 |
+| LMFDB 5.3.4511.1 | LMFDB number field 5.3.4511.1 | https://www.lmfdb.org/NumberField/5.3.4511.1 |
 
 ## UNRESOLVED
 

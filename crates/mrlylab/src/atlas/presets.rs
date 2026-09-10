@@ -323,8 +323,8 @@ mod tests {
         assert_eq!(classes(3).len(), 21);
         let preset = mini();
         assert_eq!(preset.masks[0].name(), "moore");
-        assert_eq!(preset.rules.len(), 16);
-        assert_eq!(preset.runs(), 5 * 2 * 7 * 16);
+        assert_eq!(preset.rules.len(), 24);
+        assert_eq!(preset.runs(), 5 * 2 * 7 * 24);
         assert_eq!(maxi().rules[0].family(), "every");
     }
 }

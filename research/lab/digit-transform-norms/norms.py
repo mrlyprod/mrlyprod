@@ -669,16 +669,20 @@ def base_windows(b, a0, nd, m, wide=1):
 
 def perron_red(G, b, nd, iters=6000, floor_it=300, streak_need=50, tol=1e-13):
     S = b ** (nd - 1)
-    tgt = np.tile(np.arange(S), b)
+    U = b ** (nd - 2)
+    G3 = G.reshape(b, U, b)
     y = np.ones(S)
+    z = np.empty((b, U))
     lam = 0.0
     streak = 0
     for it in range(iters):
-        z = (G * y[tgt]).reshape(S, b).sum(axis=1)
+        Y = y.reshape(U, b)
+        for c in range(b):
+            z[c] = (G3[c] * Y).sum(axis=1)
         nl = float(z.max())
         if nl <= 0.0:
             return 0.0, np.ones(S)
-        y = z / nl
+        y = (z / nl).reshape(S)
         streak = streak + 1 if abs(nl - lam) <= tol * nl else 0
         lam = nl
         if streak >= streak_need and it >= floor_it:
@@ -686,13 +690,18 @@ def perron_red(G, b, nd, iters=6000, floor_it=300, streak_need=50, tol=1e-13):
     return lam, np.maximum(y, 1e-30)
 
 def cw_red(G, y, b, nd, side):
-    S = b ** (nd - 1)
-    tgt = np.tile(np.arange(S), b)
-    r = (up(G * y[tgt]) if side else np.maximum(dn(G * y[tgt]), 0.0)).reshape(S, b)
-    acc = np.zeros(S)
-    for c in range(b):
-        acc = up(acc + r[:, c]) if side else np.maximum(dn(acc + r[:, c]), 0.0)
-    return float(up(acc / y).max()) if side else float(dn(acc / y).min())
+    U = b ** (nd - 2)
+    G3 = G.reshape(b, U, b)
+    Y = y.reshape(U, b)
+    acc = np.empty((b, U))
+    for c1 in range(b):
+        r = up(G3[c1] * Y) if side else np.maximum(dn(G3[c1] * Y), 0.0)
+        a = np.zeros(U)
+        for c0 in range(b):
+            a = up(a + r[:, c0]) if side else np.maximum(dn(a + r[:, c0]), 0.0)
+        acc[c1] = a
+    ratio = acc.reshape(b * U) / y
+    return float(up(ratio).max()) if side else float(dn(ratio).min())
 
 def alpha_band(b, a0, nd, m, wide=1):
     Ghi, Glo, slack = base_windows(b, a0, nd, m, wide)
@@ -968,8 +977,10 @@ def pair_first(b, nds, m, thr=0.25, name="1/4", want=None):
         if best is None or eh < best:
             best, arg, wnd = eh, (a, c), nd
     ok = best < thr
+    fl = pair_band(b, arg[0], arg[1], wnd, m, side=False)[0]
+    floor = "no positive lower certificate" if fl is None else f"{fl:.7f}"
     pin = "" if want is None else " " + chk(1.0 if ok == want[0] else 0.0, 1.0, 0.0) + chk(best, want[1], 5e-7)
-    print(f"  q={b:3d} {len(pair_sets(b)):5d} distinct sets, best pair {{{arg[0]},{arg[1]}}} at {wnd} window digits: alpha_1 < {best:.7f} [{'CLEARS' if ok else 'does not clear'} {name}]{pin}  ({time.time() - t0:.1f}s)", flush=True)
+    print(f"  q={b:3d} {len(pair_sets(b)):5d} distinct sets, best pair {{{arg[0]},{arg[1]}}} at {wnd} window digits: alpha_1 < {best:.7f} [{'CLEARS' if ok else 'does not clear'} {name}], the infimum matrix of that set brackets it from below at alpha_1 > {floor} {chk(1.0 if fl is None or fl <= best else 0.0, 1.0, 0.0)}{pin}  ({time.time() - t0:.1f}s)", flush=True)
     return b, ok, arg, best
 
 def pair_some(b, nds, m, thr=0.25, name="1/4"):
@@ -1077,8 +1088,10 @@ def main():
         pair_first(12, [5], 8, 1 / 3, "1/3", (False, 0.3371162))
         pair_ladder([20, 24, 28, 30, 31, 32, 33, 36, 40], 0, 1, 4, 8)
     elif verb == "pairone":
-        v = [int(x) for x in sys.argv[2:]]
-        pair_cert(v[0], v[1], v[2], v[3], v[4], v[5] if len(v) > 5 else 1)
+        v = sys.argv[2:]
+        thr, name = (1 / 3, "1/3") if v and v[-1] == "third" else (0.25, "1/4")
+        n = [int(x) for x in v if x != "third"]
+        pair_cert(n[0], n[1], n[2], n[3], n[4], n[5] if len(n) > 5 else 1, "", thr, name)
     elif verb == "pairfail":
         v = sys.argv[2:]
         thr, name = (1 / 3, "1/3") if len(v) > 2 and v[2] == "third" else (0.25, "1/4")

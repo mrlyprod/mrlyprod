@@ -271,7 +271,7 @@ mod tests {
     fn a_wide_mask_quest_replays_from_its_names() {
         let _g = guard();
         let mut wide = false;
-        for s in 1..=8u64 {
+        for s in 1..=16u64 {
             mrlycore::state::seed(s);
             let found = quest(&tiny()).unwrap();
             let back = Story::from_json(&found.story.to_json().unwrap()).unwrap();

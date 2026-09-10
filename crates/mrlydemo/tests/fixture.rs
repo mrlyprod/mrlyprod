@@ -405,7 +405,7 @@ fn the_rest_of_the_exports_answer() {
     assert_eq!(life_noise(8, 8, 0.0, 1).iter().sum::<u8>(), 0);
     assert_eq!(life_noise(8, 8, 1.0, 1).iter().sum::<u8>(), 64);
     assert_eq!(life_noise(64, 64, 0.5, 7), life_noise(64, 64, 0.5, 7));
-    assert_eq!(life_sequences().len(), 15);
+    assert_eq!(life_sequences().len(), 23);
     assert_eq!(moire_names(), ["heatmap", "weave", "hive", "carpet"]);
     let mut race = Race::new("239", 3, 3, 3, 40, 9).unwrap();
     let mut twin = Race::new("239", 3, 3, 3, 40, 9).unwrap();
