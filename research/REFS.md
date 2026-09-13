@@ -309,6 +309,9 @@ Every named reference, sequence id, theorem and attribution on this tree's root 
 | Hunter 1957 | The minimum discriminants of quintic fields | https://doi.org/10.1017/S2040618500033463 |
 | Pohst 1982 | On the computation of number fields of small discriminants including the minimum discriminants of sixth degree fields | https://doi.org/10.1016/0022-314X(82)90061-0 |
 | Jones and Roberts 2014 | A database of number fields | https://arxiv.org/abs/1404.0266 |
+| Hutchinson 1981 | Fractals and Self Similarity, Indiana Univ. Math. J. 30(5), 713-747 - read at source in the author's retypeset copy: 5.1(2) the unique D with sum r_i^D = 1, 5.1(3) names it the similarity dimension, 5.1(4)(i) dim K <= D for arbitrary contractions, 5.2(1) the open set condition, 5.3(1) 0 < H^D(K) < infinity and dim K = D under it; 3.3(2) the Koch curve as the attractor of four similitudes, the ratio and the angles in Figure 3.2 only, not in the text | https://doi.org/10.1512/iumj.1981.30.30055 |
+| Lind and Marcus 1995 | An Introduction to Symbolic Dynamics and Coding, Cambridge University Press - chapters 1 to 3 read at source, chapter 4 not opened: Theorem 2.3.2, an M-step shift of finite type X has a graph G with X^[M+1] = X_G; Proposition 2.3.9(3), X^[M] is a 1-step shift of finite type; the entropy of an irreducible shift of finite type as the logarithm of the Perron eigenvalue of its adjacency matrix is carried here with no theorem number | https://doi.org/10.1017/CBO9780511626302 |
+| Lagarias and Wang 1997 | Integral self-affine tiles in R^n II. Lattice tilings, J. Fourier Anal. Appl. 3, 83-102 - review only, the statement read in the verbatim restatement of Steiner and Thuswaldner, Rational self-affine tiles, arXiv:1203.0758, citing LW97 Corollary 6.2 and Lemma 2.1: for an expanding integer matrix A with irreducible characteristic polynomial and D a complete set of coset representatives of Z^n / A Z^n, the tile T(A, D) induces a lattice tiling of R^n with respect to the smallest A-invariant sublattice containing D - D; the irreducibility hypothesis excludes a rational integer base | https://doi.org/10.1007/BF02649100 |
 
 ## REFERENCE PAGES
 
@@ -338,6 +341,10 @@ Every named reference, sequence id, theorem and attribution on this tree's root 
 | MathWorld epitrochoid | Epitrochoid | https://mathworld.wolfram.com/Epitrochoid.html |
 | MathWorld rose | Rose Curve | https://mathworld.wolfram.com/RoseCurve.html |
 | Jaekel hypotrochoids | Complete investigation of the shape diversity of Hypotrochoids / Hypocycloids | https://www.v-jaekel.de/hypo-h/formenvielfalt-einer-hypotrochoide-en.html |
+| OEIS A000616 | a(-1)=1 by convention; for n >= 0, a(n) = number of irreducible Boolean functions of n variables. | https://oeis.org/A000616 |
+| OEIS A191363 | Numbers m whose deficiency is 2: sigma(m) - 2*m = -2. | https://oeis.org/A191363 |
+| OEIS A000045 | Fibonacci numbers | https://oeis.org/A000045 |
+| OEIS A000930 | Narayana's cows sequence | https://oeis.org/A000930 |
 
 ## PRIOR ART ON THE BASE-3 SLICE
 

@@ -55,6 +55,8 @@
 - [mrlylife](demos/mrlylife/) - Life with the neighbourhood set free: the mask is a design at any side and level, the birth and survival counts come by hand or from a named sequence, and the board runs in one dimension or two.
 - [chladni](demos/chladni/) - A Larger-than-Life rule on a big design mask runs a soup to a still, and the ring where the still's spectrum peaks, read beside the mask's own spectrum, is the wavelength the rule prefers.
 - [wolfram](demos/wolfram/) - Wolfram's 256 elementary rules are the 256 three-dimensional parity designs bit for bit, so every rule arrives with a design's card, and the additive rules draw the plane designs in time.
+- [memory](demos/memory/) - A rule on the last k digits thins a design's words: the accepted cells, the count a level, the Perron root that replaces plain doubling, and the bits a digit spends on remembering.
+- [radix](demos/radix/) - A design's digits become residues in a ring of the plane, its base an element of that ring and its copies turned by a unit each, so the word count never moves while the picture becomes a curve, a gasket or a tile, and two words can land on one point.
 
 ### Slices and stacks
 

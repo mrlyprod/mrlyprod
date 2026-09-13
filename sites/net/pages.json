@@ -139,6 +139,22 @@
       "paper": null
     },
     {
+      "name": "memory",
+      "title": "The memory dial",
+      "blurb": "A rule on the last k digits thins a design's words: the accepted cells, the count a level, the Perron root that replaces plain doubling, and the bits a digit spends on remembering.",
+      "category": "designs",
+      "research": null,
+      "paper": null
+    },
+    {
+      "name": "radix",
+      "title": "The place dial",
+      "blurb": "A design's digits become residues in a ring of the plane, its base an element of that ring and its copies turned by a unit each, so the word count never moves while the picture becomes a curve, a gasket or a tile, and two words can land on one point.",
+      "category": "designs",
+      "research": null,
+      "paper": null
+    },
+    {
       "name": "cuts",
       "title": "The cuts",
       "blurb": "Every plane x + y + z = s through a level-L solid meets exactly 3^L cells, and the height's binary digits make each cut a Sierpinski gasket.",

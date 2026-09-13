@@ -77,6 +77,7 @@ The mathematics of the mrly tree: a parity rule on the corners of a cube, substi
 ## DOCS
 
 - [core](core.md) - what a design is, the headline counts, and the three genera.
+- [beneath](beneath.md) - the object beneath a design as three slots, accept, place and glue: the memory dial priced by a transfer matrix with `kappa` zero on exactly the non-empty product rules over `19563` live classes, and the radix dial that keeps every count, carries the gasket, the dragons and the Koch curve as codes with a twist vector, and loses the fill law the moment a digit turns.
 - [bijection](bijection.md) - designs are Boolean functions up to cube symmetry; the strongest theorem in the tree.
 - [automata](automata.md) - an elementary cellular automaton is a three-dimensional design read as a rule and Life a nine-dimensional one: what the identity buys, and what it cannot.
 - [complexity](complexity.md) - Boolean complexity of the catalog, and the Laplacian spectra of the fractals it builds.

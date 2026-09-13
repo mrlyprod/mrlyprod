@@ -40,6 +40,8 @@ pub mod ledger;
 pub mod life;
 /// The magic words: the folded design, its census, its press readings and its prefix rates.
 pub mod magic;
+/// The memory designs: a rule on `k` consecutive digits read, the words it accepts drawn, and the Perron root that measures them.
+pub mod memory;
 /// The standing patterns of a design mask: its eigenvalue field on the frequency torus, one eigenvalue, the large-values count and a real mode.
 pub mod modes;
 /// The Thue-Morse word: its two constructions, its plane lifts, its runs and the difference filter.
@@ -48,6 +50,8 @@ pub mod morse;
 pub mod prime;
 /// The race: seeded walkers loose on a flat design.
 pub mod race;
+/// The radix designs: a base in a ring of the plane, a digit per residue class with a unit twist, the points they place and the glue they collide into.
+pub mod radix;
 /// The crossing shell of a circle on a design, read as a rooted tree and painted.
 pub mod shell;
 /// The punctured schedules: the Wallis sieve rastered, its punctures listed, its ratios walked and its limits read.

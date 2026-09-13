@@ -1,0 +1,8 @@
+[package]
+name = "radix-designs"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+mrlymath.workspace = true
+mrlynum.workspace = true

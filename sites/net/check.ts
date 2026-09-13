@@ -263,7 +263,40 @@ const tileArt = m.tile_svg('23', 3, 1, 2, 'cut', 5, 5, true, 6);
 const towerCut = JSON.parse(m.magic_hex_census(['23', '23'], [3, 3], [2, 2], 'cut'));
 const towerIso = JSON.parse(m.magic_hex_census(['23', '23'], [3, 3], [2, 2], 'iso'));
 
+const memoryGolden = JSON.parse(m.memory_read(1, 2, '7', 8));
+const memoryCow = JSON.parse(m.memory_read(1, 3, '23', 8));
+const memoryPlain = JSON.parse(m.memory_read(2, 2, '31710', 4));
+const memoryPlastic = JSON.parse(m.memory_read(1, 3, '54', 8));
+const memoryTribonacci = JSON.parse(m.memory_read(1, 3, '127', 8));
+const memoryCantor = m.memory_sheet(1, 2, '7', 6);
+const memoryBand = (row: number) => memoryCantor.types.slice(row * 64, (row + 1) * 64).reduce((a: number, b: number) => a + b, 0);
+const memorySame = ['1', '7', '9', '11', '13', '14'].every((code) =>
+  [1, 2, 3, 4, 5, 6].every((level) => m.memory_sheet(2, 1, code, level).types.join(',') === m.two_grid(code, 2, level, 0, 2).types.join(',')));
+const radixMenu = JSON.parse(m.radix_menu());
+const radixPreset = (name: string) => radixMenu.presets.find((row: { name: string }) => row.name === name);
+const radixRead = (card: { ring: string, a: number, c: number, digits: string, twists: string }, level: number) =>
+  JSON.parse(m.radix_read(card.ring, card.a, card.c, card.digits, card.twists, level));
+const radixKoch = radixRead(radixPreset('koch'), 4);
+const radixCarpet = radixRead(radixPreset('carpet'), 2);
+const radixDragon = radixRead(radixPreset('twindragon'), 10);
+const radixGlue = JSON.parse(m.radix_read('gaussian', 2, 0, '0:0_1:0', '0_2', 2));
+const radixPoints = m.radix_points('eisenstein', 3, 0, radixPreset('koch').digits, radixPreset('koch').twists, 4);
 const checks: [string, unknown, unknown][] = [
+  ['radix koch design', `${radixKoch.q} ${radixKoch.size} ${radixKoch.fill} ${radixKoch.distinct} ${radixKoch.canonical}`, '9 4 256 256 false'],
+  ['radix koch dimension', `${radixKoch.dimension.toFixed(6)} ${radixKoch.cap} ${radixPoints.length}`, '1.261860 8 512'],
+  ['radix carpet fill', `${radixCarpet.size} ${radixCarpet.fill} ${radixCarpet.code} ${radixCarpet.dimension.toFixed(6)}`, '8 64 479 1.892789'],
+  ['radix twindragon tiles', `${radixDragon.fill} ${radixDragon.distinct} ${radixDragon.dimension.toFixed(6)}`, '1024 1024 2.000000'],
+  ['radix twisted glue', `${radixGlue.fill} ${radixGlue.distinct} ${radixGlue.glued}`, '4 3 true'],
+  ['memory golden counts', memoryGolden.counts.join(','), '2,3,5,8,13,21,34,55'],
+  ['memory golden growth', `${memoryGolden.perron.toFixed(6)},${memoryGolden.exponent.toFixed(6)},${memoryGolden.kappa.toFixed(6)}`, '1.618034,0.694242,0.098239'],
+  ['memory cow counts', memoryCow.counts.join(','), '2,4,4,6,9,13,19,28'],
+  ['memory cow root', memoryCow.perron.toFixed(6), '1.465571'],
+  ['memory plastic root', `${memoryPlastic.counts.join(',')} ${memoryPlastic.perron.toFixed(6)} ${memoryPlastic.kappa.toFixed(6)}`, '2,4,4,5,7,9,12,16 1.324718 0.260981'],
+  ['memory tribonacci root', `${memoryTribonacci.counts.join(',')} ${memoryTribonacci.perron.toFixed(6)} ${memoryTribonacci.kappa.toFixed(6)}`, '2,4,7,13,24,44,81,149 1.839287 0.056639'],
+  ['memory no repeat', `${memoryPlain.counts.join(',')} ${memoryPlain.perron.toFixed(6)} ${memoryPlain.kappa.toFixed(6)}`, '4,12,36,108 3.000000 0.207519'],
+  ['memory width one is the design', String(memorySame), 'true'],
+  ['memory cantor sheet', `${memoryCantor.width},${memoryCantor.height},${[0, 1, 2, 3, 4, 5].map(memoryBand).join(',')}`, '64,6,64,48,40,32,26,21'],
+  ['memory span and caps', `${m.memory_span()} ${m.memory_cap(1)} ${m.memory_cap(2)}`, '6 12 8'],
   ['two_grid 7 side', grid.width, 27],
   ['crop_shapes 2', shapes2.join(','), 'ball,box,diamond,triangle,octagon'],
   ['crop_grid touching side', cropTouch.width, 9],

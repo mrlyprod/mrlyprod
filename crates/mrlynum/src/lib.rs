@@ -23,10 +23,14 @@ pub mod gauss;
 pub mod graph;
 /// The visible lattice: totients, coprime pairs, the constant a dimension recovers and the Farey nodes.
 pub mod lattice;
+/// The memory designs: a rule on `k` consecutive digits, its transfer matrix, the words it accepts and the Perron root that is their dimension.
+pub mod memory;
 /// The Thue-Morse world: the digit rule, the substitution, the plane lifts, the runs and the period-doubling word.
 pub mod morse;
 /// The prime objects: values, ranks, gaps and the shape readings of a number.
 pub mod prime;
+/// The radix designs: a digit set inside the residues of a base in a ring, a unit twist per digit, and the points their words land on.
+pub mod radix;
 /// The infinite sums: zeta and its Dirichlet cousins, the visible count and the Bernoulli fractions.
 pub mod series;
 /// The punctured schedules: the Wallis sieve and its kin, their words, rasters, punctures and limits.
