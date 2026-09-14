@@ -36,6 +36,10 @@ name = "research-crop"
 path = "examples/grid/research-crop.rs"
 
 [[example]]
+name = "research-cobham"
+path = "examples/grid/research-cobham.rs"
+
+[[example]]
 name = "research-integers"
 path = "examples/grid/research-integers.rs"
 

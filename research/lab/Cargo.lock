@@ -89,6 +89,13 @@ name = "carry-free-mobius"
 version = "0.1.0"
 
 [[package]]
+name = "carry-skeleton"
+version = "0.1.0"
+dependencies = [
+ "mrlynum",
+]
+
+[[package]]
 name = "cc"
 version = "1.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1486,6 +1493,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1ad99c4c6d32803332c548b1af0540b357b3f5fc0be8f6c6bfe8b2e6ae784070"
 dependencies = [
  "cfg-if",
+]
+
+[[package]]
+name = "three-base-thin"
+version = "0.1.0"
+dependencies = [
+ "num-bigint",
 ]
 
 [[package]]

@@ -1,0 +1,7 @@
+[package]
+name = "three-base-thin"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+num-bigint.workspace = true
