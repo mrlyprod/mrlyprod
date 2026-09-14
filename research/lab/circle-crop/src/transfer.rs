@@ -526,8 +526,13 @@ fn profile(label: &str, window: u32, samples: u64) -> (f64, f64, f64) {
     let depth = read.depth;
     let rows = read.rows;
     let mean: f64 = read.logs.iter().sum::<f64>() / rows as f64;
-    let spread =
-        (read.logs.iter().map(|value| (value - mean).powi(2)).sum::<f64>() / rows as f64).sqrt();
+    let spread = (read
+        .logs
+        .iter()
+        .map(|value| (value - mean).powi(2))
+        .sum::<f64>()
+        / rows as f64)
+        .sqrt();
     let worst = read.logs.iter().cloned().fold(f64::MIN, f64::max);
     let best = read.logs.iter().cloned().fold(f64::MAX, f64::min);
     let signed: Vec<f64> = (0..depth)
@@ -567,7 +572,9 @@ fn profile(label: &str, window: u32, samples: u64) -> (f64, f64, f64) {
         depth.saturating_sub(6)
     );
     let total = bulk(&read);
-    let steps: Vec<f64> = (2..depth).map(|rank| sized[rank] / sized[rank - 1]).collect();
+    let steps: Vec<f64> = (2..depth)
+        .map(|rank| sized[rank] / sized[rank - 1])
+        .collect();
     println!(
         "circle-crop profile {label} window={low}..{high} decay={} tail_decay={:.6} rank1_flat={} of {rows}",
         list(&steps),
@@ -698,7 +705,10 @@ fn report(label: &str, radius: u64, deep: u32, shallow: u32) -> Vec<u16> {
     let trimmed = block(&built.keep, &alive);
     let kept_rows: Vec<u64> = alive.iter().map(|&index| built.rows[index]).collect();
     let pruned = spectrum(label, "pruned", &trimmed, &kept_rows, 8.0 / 3.0);
-    let share = (trim(pruned.0 / whole.1, false), trim(pruned.1 / whole.0, true));
+    let share = (
+        trim(pruned.0 / whole.1, false),
+        trim(pruned.1 / whole.0, true),
+    );
     let drift = (
         trim((share.0 * 9.0 / 8.0).ln() / 3.0f64.ln(), false),
         trim((share.1 * 9.0 / 8.0).ln() / 3.0f64.ln(), true),
@@ -737,7 +747,12 @@ fn report(label: &str, radius: u64, deep: u32, shallow: u32) -> Vec<u16> {
     println!(
         "circle-crop operator {label} r={radius} dobrushin={:.6} doeblin={} rate={:.6}",
         trim(ratio(mixing), true),
-        list(&floors.iter().map(|mass| trim(*mass, false)).collect::<Vec<f64>>()),
+        list(
+            &floors
+                .iter()
+                .map(|mass| trim(*mass, false))
+                .collect::<Vec<f64>>()
+        ),
         trim(least, true)
     );
     built.order

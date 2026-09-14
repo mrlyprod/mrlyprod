@@ -422,3 +422,15 @@ path = "examples/plot/research-beneath.rs"
 [[example]]
 name = "demo-radix"
 path = "examples/plot/demo-radix.rs"
+
+[[example]]
+name = "paper-spin-harmonics"
+path = "examples/grid/paper-spin-harmonics.rs"
+
+[[example]]
+name = "research-apollonian"
+path = "examples/plot/research-apollonian.rs"
+
+[[example]]
+name = "demo-apollonian"
+path = "examples/plot/demo-apollonian.rs"

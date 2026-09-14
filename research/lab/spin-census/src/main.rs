@@ -2,9 +2,9 @@ mod design;
 mod gaussian;
 mod mass;
 mod orbit;
-mod shape;
 mod powder;
 mod shadow;
+mod shape;
 
 use design::{bit_cells, canonical, carry, plane, square_group, BASE};
 use mass::{distance, horizon, ripple, scaling_error, shells, Ripple};

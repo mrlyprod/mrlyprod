@@ -193,10 +193,20 @@ pub fn run() {
                 let delta = g as f64 / x as f64;
                 let floor = (1.0 - delta) * (row.m as f64 * v.r as f64).sqrt();
                 let fd: Vec<f64> = (0..coefs.len())
-                    .map(|j| if v.diag[j] > 0.0 { v.form[j] / v.diag[j] } else { 0.0 })
+                    .map(|j| {
+                        if v.diag[j] > 0.0 {
+                            v.form[j] / v.diag[j]
+                        } else {
+                            0.0
+                        }
+                    })
                     .collect();
                 let raw = (row.m as f64 * v.form[1]).sqrt() / floor;
-                let bf = if v.bmax[1] > 0.0 { raw / v.bmax[1] } else { 0.0 };
+                let bf = if v.bmax[1] > 0.0 {
+                    raw / v.bmax[1]
+                } else {
+                    0.0
+                };
                 let w = v.diag[1]
                     / (v.bmax[1] * v.bmax[1] * (1.0 - delta) * (1.0 - delta) * v.r as f64);
                 assert!(
@@ -315,7 +325,10 @@ mod tests {
                     }
                 }
                 assert!((b[l] - s).abs() < 1e-9, "b at l={l} U={u}");
-                assert!((bl[l] - sl).abs() < 1e-9 * (1.0 + sl.abs()), "blog at l={l} U={u}");
+                assert!(
+                    (bl[l] - sl).abs() < 1e-9 * (1.0 + sl.abs()),
+                    "blog at l={l} U={u}"
+                );
             }
         }
     }

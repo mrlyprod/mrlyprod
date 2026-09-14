@@ -107,6 +107,7 @@
 - Rational scales and the critical line, both counting the primes the long way.
 
 - [farey](demos/farey/) - A line drawn at every k/n and stacked over the scales lights a reduced fraction a/b to a brightness of Q/b, and the scales of maximal novelty are the primes.
+- [apollonian](demos/apollonian/) - An integer root quadruple grows a whole packing by one square-root-free reflection, and the circles resting on the strip's line are the Ford circles, one to every reduced fraction, standing on the Farey stack's own nodes.
 - [pi](demos/pi/) - The points of the grid a corner can see take a share of six over pi squared, so counting the lit ones in a window hands pi back, and the dimension counted in picks which zeta value falls out.
 - [zeta](demos/zeta/) - Zeta walked at s = 1/2 + it passes through the origin once per zero, and the zeros added one at a time fold a smooth curve into the prime staircase.
 - [formulas](demos/formulas/) - Eight elementary systems on one dial: the Wallis product, the Leibniz series and the Basel sum closing on pi, the harmonic sum on gamma and (1 + 1/n)^n on e, the prime count against li, Goldbach's partition count of 2n and the Mertens sum against the square root of n.

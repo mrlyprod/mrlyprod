@@ -51,6 +51,14 @@ const whirlParity = JSON.parse(m.tourbillon_stats(m.tourbillon(55, 128, 'unspun'
 const whirlPrimes = JSON.parse(m.tourbillon_stats(m.tourbillon(199, 128, 'unspun', 0, 'primes', 'plain', 'cells', 'mean'), 128, 199, 'unspun', 0, 'primes', 'plain', 'mean', 1));
 const whirlEyes = JSON.parse(m.tourbillon_eyes(12));
 const whirlDead = JSON.parse(m.tourbillon_stats(m.tourbillon(55, 128, 'degrees', 18, 'odd', 'plain', 'cells', 'mean'), 128, 55, 'degrees', 18, 'odd', 'plain', 'mean', 1));
+const gasketRead = (root: string, cap: number, order: number) => JSON.parse(m.apollonian_read(root, cap, order));
+const gasketStrip = gasketRead('strip', 2048, 32);
+const gasketShallow = gasketRead('strip', 2048, 16);
+const gasketBound = gasketRead('-1,2,2,3', 1000, 32);
+const gasketCircles = m.apollonian('strip', 2048);
+const gasketRoot = m.apollonian_root('strip');
+const gasketMarks = m.apollonian_touches('strip', 2048);
+const gasketCaps = JSON.parse(m.apollonian_caps());
 const wheelGrid = m.two_grid('495', 3, 1, 0, 3);
 const wheelRead = (pens: string, track: string, ring: number, wheel: number, laps: number) => JSON.parse(m.spirograph_read(wheelGrid.types, 3, 3, pens, track, ring, wheel, 4, laps, 0.9, 0, 1));
 const wheelFour = wheelRead('fill', 'in', 7, 4, 1);
@@ -456,6 +464,14 @@ const checks: [string, unknown, unknown][] = [
   ['spirograph cover disc and raster', `${wheelCover.side} ${wheelCover.mask.length} ${wheelCover.disc[2].toFixed(6)} ${wheelCover.disc[3].toFixed(6)}`, '256 65536 5.800000 2.200000'],
   ['spirograph cover one pencil 3/1', `${wheelOne.covered.toFixed(6)} ${wheelOne.hole.toFixed(6)} ${wheelOne.winding.toFixed(6)}`, '0.014922 0.500622 0.508005'],
   ['spirograph cover b = 1 both sides', `${wheelOne.areas.toFixed(6)} ${wheelForm(2, -1).toFixed(6)} ${wheelPast.areas.toFixed(6)} ${wheelForm(4, 1).toFixed(6)}`, '0.507814 0.507814 0.828445 0.828445'],
+  ['apollonian census by root', `${gasketStrip.circles} ${gasketRead('strip', 1000, 32).circles} ${gasketBound.circles} ${gasketRead('-2,3,6,7', 1000, 32).circles} ${gasketRead('-3,4,12,13', 1000, 32).circles}`, '2448 950 3325 1297 741'],
+  ['apollonian quadruples hold the six', `${gasketStrip.quads} ${gasketStrip.broken} ${gasketStrip.strayed} ${gasketStrip.drawn}`, '2449 0 0 2450'],
+  ['apollonian circles carry centre and radius', `${gasketCircles.length} ${gasketCircles.slice(0, 5).join(' ')} ${gasketRoot.length}`, '12240 0.5 0.125 0.125 8 2 10'],
+  ['apollonian ford circles on the line', `${gasketStrip.line} ${gasketStrip.ford} ${gasketBound.line} ${gasketMarks.length}`, '323 323 0 1292'],
+  ['apollonian tangency points are the fractions', `${gasketMarks.slice(0, 4).join(' ')} ${gasketMarks.slice(-4).join(' ')}`, '0.03125 1 32 2048 0.96875 31 32 2048'],
+  ['apollonian stack is the shadow', `${gasketStrip.shadow.nodes} ${gasketStrip.shadow.touched} ${gasketStrip.shadow.missed} ${gasketStrip.shadow.offford} ${gasketStrip.shadow.bright} ${gasketStrip.shadow.want}`, '323 323 0 0 528 528'],
+  ['apollonian stack at depth 16', `${gasketShallow.shadow.nodes} ${gasketShallow.shadow.missed} ${gasketShallow.shadow.bright}`, '79 0 136'],
+  ['apollonian exponent on one octave pair', `${gasketStrip.exponent.toFixed(4)} ${gasketStrip.from} ${gasketCaps.curvature} ${gasketCaps.order}`, '1.2925 512 8192 64'],
   ['farey_novelty 5', `${stack.lit},${stack.novel},${stack.match},${stack.primes.join(' ')}`, '11,11,true,2 3 5'],
   ['visible A018805 1..8', terms, '1,3,7,11,19,23,35,43'],
   ['visible window 100', `${litWindow.lit} ${litWindow.total} ${litWindow.density.toFixed(10)}`, '6087 10000 0.6087000000'],

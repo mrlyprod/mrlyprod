@@ -6,6 +6,8 @@ use mrlycore::MrlyError;
 use std::cell::Cell;
 use wasm_bindgen::prelude::*;
 
+/// The Apollonian gasket: a packing grown from its root quadruple in exact integers, the Ford circles it rests on the line, and the Farey stack they shadow.
+pub mod apollonian;
 /// The elementary automata: their rows stepped, their space-time diagrams and the card of one rule.
 pub mod automata;
 /// The universes: codes, symmetries, counts, closed-form fills and names.

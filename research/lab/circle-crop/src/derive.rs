@@ -584,7 +584,8 @@ fn finest(radius: i128, left: i128, right: i128) -> Option<(i128, i128)> {
             if !coprime(a, b) {
                 continue;
             }
-            if steeper(left, radius, a * b - 1, b * b) && shallower(right, radius, a * b + 1, b * b) {
+            if steeper(left, radius, a * b - 1, b * b) && shallower(right, radius, a * b + 1, b * b)
+            {
                 if best.is_none_or(|seen| b > seen.1) {
                     best = Some((a, b));
                 }

@@ -86,7 +86,11 @@ fn sci(v: f64, upward: bool) -> String {
     let e = v.log10().floor() as i32;
     let m = v / 10f64.powi(e);
     let scaled = m * 1e5 * if upward { 1.0 + 1e-12 } else { 1.0 - 1e-12 };
-    let r = if upward { scaled.ceil() } else { scaled.floor() };
+    let r = if upward {
+        scaled.ceil()
+    } else {
+        scaled.floor()
+    };
     if r >= 1e6 {
         format!("1.00000e{}", e + 1)
     } else {
@@ -251,7 +255,10 @@ pub fn cell(fam: &Family, g: &Grid, s4: f64, eta: f64, cap: usize) -> Cell {
     let r9 = s4 / kl.powi(4) * x.powf(4.0 * eta);
     let parseval = x / kl * x.powf(2.0 * eta);
     assert!(count as f64 <= r9 * (1.0 + 1e-6), "R.9 count fails");
-    assert!(count as f64 <= parseval * (1.0 + 1e-6), "Parseval count fails");
+    assert!(
+        count as f64 <= parseval * (1.0 + 1e-6),
+        "Parseval count fails"
+    );
     let floor = set.iter().map(|&a| g.sq[a]).sum::<f64>() / kl;
     let gram = if count <= cap {
         Some(gram_top(g, &set, 300))
@@ -286,7 +293,12 @@ pub fn cell(fam: &Family, g: &Grid, s4: f64, eta: f64, cap: usize) -> Cell {
 
 pub fn set_row(fam: &Family, g: &Grid, c: &Cell) -> String {
     let gram = match &c.gram {
-        Some(gr) => format!("{}..{} ({})", sci(gr.lo, false), sci(gr.hi, true), gr.iterations),
+        Some(gr) => format!(
+            "{}..{} ({})",
+            sci(gr.lo, false),
+            sci(gr.hi, true),
+            gr.iterations
+        ),
         None => "skipped".to_string(),
     };
     format!(
@@ -491,7 +503,9 @@ pub fn run() {
         println!("{r}");
     }
     println!("riesz large values chain");
-    println!("| q | F | L | eta | alpha | c_1 | small | large sup | large l2 | large R.9 | c sup | c |");
+    println!(
+        "| q | F | L | eta | alpha | c_1 | small | large sup | large l2 | large R.9 | c sup | c |"
+    );
     for r in chains {
         println!("{r}");
     }

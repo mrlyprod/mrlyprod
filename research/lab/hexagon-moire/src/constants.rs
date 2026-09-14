@@ -119,7 +119,9 @@ fn shapes_match() {
 }
 
 fn summed_identity() {
-    println!("  the summed identity in exact rationals, counted hexagons against the character sums");
+    println!(
+        "  the summed identity in exact rationals, counted hexagons against the character sums"
+    );
     for family in FAMILIES {
         let form = shape(family);
         let zero = BigRational::from_integer(BigInt::from(0));

@@ -290,7 +290,9 @@ const HELD_LIMIT: usize = 1600;
 const CHECK_LIMIT: usize = 3200;
 
 pub fn cell_frame(rule: &Rule) {
-    println!("carpet cell frame: star the exact arm x = y of the cut, background the exact ink law");
+    println!(
+        "carpet cell frame: star the exact arm x = y of the cut, background the exact ink law"
+    );
     let (mut matched, mut layers) = (0, 0);
     for number in odds(LAW_LIMIT) {
         matched += usize::from(arm_count(rule, number as i64, 0) == arm_law(number as i64));
@@ -351,7 +353,9 @@ pub fn cell_frame(rule: &Rule) {
             (logged - constant) * (count as f64) * (count as f64)
         );
     }
-    println!("  L odd: the -chi/8 term sums to +1/8, so the constant is C + 1/8 and the error is O(1/L)");
+    println!(
+        "  L odd: the -chi/8 term sums to +1/8, so the constant is C + 1/8 and the error is O(1/L)"
+    );
     for count in [27usize, 99, 401, 1601, 6399] {
         let excess = mean(&excesses[..count]);
         let logged = excess * count as f64 + (count as f64).ln() / 4.0;
@@ -464,7 +468,8 @@ pub fn cell_width_law(rule: &Rule) {
             let slot = ((n % 8) / 2) as usize;
             all[slot] += 1;
             hit[slot] += usize::from(
-                band_count(rule, n, half) - law(Family::Carpet, number) == width_excess_law(half, n),
+                band_count(rule, n, half) - law(Family::Carpet, number)
+                    == width_excess_law(half, n),
             );
         }
         if fresh {
@@ -597,7 +602,9 @@ pub fn cell_widths(rule: &Rule) {
             gaps[2]
         );
     }
-    println!("  four widths held out of the sweep, predicted before measuring, at L = {HELD_LIMIT}");
+    println!(
+        "  four widths held out of the sweep, predicted before measuring, at L = {HELD_LIMIT}"
+    );
     for half in [14i64, 18, 28, 36] {
         let slope = width_slope(&width_excesses(rule, half, HELD_LIMIT), HELD_LIMIT);
         let target = edge_law(half);

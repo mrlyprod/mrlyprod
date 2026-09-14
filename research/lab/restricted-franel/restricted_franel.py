@@ -427,8 +427,283 @@ def verb_strict():
             )
 
 
+# THE DILATE AUTOMATON
+
+
+def dilate_matrix(base, digits, d):
+    t = [[0] * d for _ in range(d)]
+    for r in range(d):
+        for e in range(base):
+            v = d * e + r
+            if v % base in digits:
+                t[r][v // base] += 1
+    return t
+
+
+def dilate_accept(base, digits, d):
+    return [1 if (r == 0 or holds(base, digits, r)) else 0 for r in range(d)]
+
+
+def qfree(d, base):
+    while True:
+        g = gcd(d, base)
+        if g == 1:
+            return d
+        d //= g
+
+
+def automaton_count(base, digits, d, power):
+    t = dilate_matrix(base, digits, d)
+    v = [0] * d
+    v[0] = 1
+    for _ in range(power):
+        w = [0] * d
+        for i, x in enumerate(v):
+            if x:
+                for j, y in enumerate(t[i]):
+                    if y:
+                        w[j] += x * y
+        v = w
+    return sum(x * y for x, y in zip(v, dilate_accept(base, digits, d)))
+
+
+def dilate_mask(base, digits, d, x):
+    lut = np.zeros(base, dtype=bool)
+    for f in digits:
+        lut[f] = True
+    t = d * np.arange(1, x + 1, dtype=np.int64)
+    ok = np.ones(x, dtype=bool)
+    while t.any():
+        ok &= lut[t % base] | (t == 0)
+        t //= base
+    return ok
+
+
+def divisor_counts(base, digits, cut):
+    m = np.nonzero(flags(base, digits, cut))[0]
+    m = m[m > 0]
+    n = np.zeros(cut + 1, dtype=np.int64)
+    for d in range(1, cut + 1):
+        n[d] = int((m % d == 0).sum())
+    return n
+
+
+def smith_bilinear(n, cut, block=400):
+    u = np.sqrt(n[1 : cut + 1].astype(np.float64))
+    idx = np.arange(1, cut + 1, dtype=np.int64)
+    total = 0.0
+    for lo in range(0, cut, block):
+        hi = min(lo + block, cut)
+        g = np.gcd.outer(idx[lo:hi], idx).astype(np.float64)
+        w = g * g / (idx[lo:hi, None] * idx[None, :])
+        total += float((w * u[lo:hi, None] * u[None, :]).sum())
+    return total
+
+
+DILATE_D3 = [1, 2, 3, 4, 5, 7, 8, 11, 13, 16, 22, 31]
+DILATE_D10 = [1, 2, 3, 4, 5, 7, 11, 13, 121, 243, 729]
+
+
+def verb_dilate():
+    base, digits, name = BASE3
+    print(f"\nTHE DILATE AUTOMATON, {name}, d = 2, states are the carries")
+    t = dilate_matrix(base, digits, 2)
+    acc = dilate_accept(base, digits, 2)
+    for r, row in enumerate(t):
+        print(f"   carry {r} -> {row}   accept {acc[r]}")
+    print(f"   row sums {[sum(r) for r in t]}, column sums {[sum(c) for c in zip(*t)]}, |F| = {len(digits)}")
+    print("\n    L |    3^L | transfer matrix | brute force |    2^L - 1")
+    for lvl in range(1, 13):
+        x = base**lvl
+        auto = automaton_count(base, digits, 2, lvl) - 1
+        brute = int(dilate_mask(base, digits, 2, x - 1).sum())
+        print(f"   {lvl:2d} | {x:6d} | {auto:15d} | {brute:11d} | {2**lvl - 1:10d}  {'ok' if auto == brute else 'MISMATCH'}")
+
+    print("\nTHE COLUMN-SUM LAW, every dilate d <= 64, both designs")
+    for bb, dd, nm in (BASE3, BASE10):
+        bad, off = 0, []
+        for d in range(1, 65):
+            m = dilate_matrix(bb, dd, d)
+            if any(sum(c) != len(dd) for c in zip(*m)):
+                bad += 1
+            if any(sum(r) != len(dd) for r in m):
+                off.append(d)
+        print(f"   {nm:26s} columns off |F| at {bad} of 64; rows off |F| at {len(off)} of 64, every one with gcd(d,q) > 1: {all(gcd(d, bb) > 1 for d in off)}")
+
+    for bb, dd, nm, ds in ((BASE3[0], BASE3[1], BASE3[2], DILATE_D3), (BASE10[0], BASE10[1], BASE10[2], DILATE_D10)):
+        al = np.log(len(dd)) / np.log(bb)
+        print(f"\nTHE ACCEPT MASS, {nm}, K_d = A_d(q^24)/|F|^24 against |Acc_d|/d")
+        print("      d | gcd(d,q) |     K_d | |Acc_d|/d | d^(alpha-1)")
+        for d in ds + ([8, 16, 32] if bb == 10 else []):
+            k = automaton_count(bb, dd, d, 24) / len(dd) ** 24
+            a = sum(dilate_accept(bb, dd, d))
+            print(f"   {d:6d} | {gcd(d, bb):8d} | {k:7.4f} | {a / d:9.6f} | {d ** (al - 1):11.6f}")
+
+    for bb, dd, nm, top, ds in ((3, BASE3[1], BASE3[2], 12, DILATE_D3), (10, BASE10[1], BASE10[2], 7, DILATE_D10[:7])):
+        x = bb**top
+        mu = mobius_sieve(x)
+        al = np.log(len(dd)) / np.log(bb)
+        root = x ** (al / 2)
+        print(f"\nTHE DILATED METER, {nm}, x = {bb}^{top} = {x}")
+        print("      d |  A_d(x) |  M_F(x;d) | max |M| | log max/log x | same at x/q | (U) ratio | (U\u0027) ratio |  local exponents")
+        for d in ds:
+            ok = dilate_mask(bb, dd, d, x)
+            run = np.cumsum(np.where(ok, mu[1 : x + 1], 0))
+            peaks = [int(np.abs(run[: bb**lvl]).max()) for lvl in range(top - 4, top + 1)]
+            loc = [round(float(np.log(peaks[i + 1] / peaks[i]) / np.log(bb)), 3) for i in range(len(peaks) - 1)]
+            mass, peak = int(ok.sum()), peaks[-1]
+            ru = peak / (d ** ((al - 1) / 2) * root)
+            rv = peak / (qfree(d, bb) ** ((al - 1) / 2) * root)
+            under = np.log(peaks[-2]) / np.log(x / bb)
+            print(
+                f"   {d:6d} | {mass:7d} | {int(run[-1]):9d} | {peak:7d} | {np.log(peak) / np.log(x):13.6f} | "
+                f"{under:11.6f} | {ru:9.4f} | {rv:10.4f} | {loc}"
+            )
+
+    print(f"\nTHE LADDER, {BASE3[2]}, the meter against its dilate at d = 2")
+    x = 3**12
+    mu = mobius_sieve(x)
+    r1 = np.cumsum(np.where(dilate_mask(3, BASE3[1], 1, x), mu[1 : x + 1], 0))
+    r2 = np.cumsum(np.where(dilate_mask(3, BASE3[1], 2, x), mu[1 : x + 1], 0))
+    print("    L |  M_F(3^L) |  M_F(3^L;2) | max |M_F| | max |M_F(;2)|")
+    for lvl in range(1, 13):
+        n = 3**lvl
+        print(
+            f"   {lvl:2d} | {int(r1[n - 1]):9d} | {int(r2[n - 1]):11d} | {int(np.abs(r1[:n]).max()):9d} | "
+            f"{int(np.abs(r2[:n]).max()):13d}"
+        )
+
+    al = np.log(2) / np.log(3)
+    print(f"\nTHE SMITH REDUCTION, B(Q) = sum gcd(d,e)^2/(d e) sqrt(N_F(Q;d) N_F(Q;e)), {BASE3[2]}")
+    print("        Q |  A_F(Q) |        B(Q) | B/Q^alpha | B/(Q^alpha ln Q) | B/(Q^alpha ln^2 Q) | local exponent")
+    prev = None
+    for lvl in range(4, 9):
+        cut = 3**lvl
+        b = smith_bilinear(divisor_counts(3, BASE3[1], cut), cut)
+        qa = cut**al
+        loc = "" if prev is None else f"{np.log(b / prev) / np.log(3):14.3f}"
+        print(
+            f"   {cut:8d} | {2**lvl:7d} | {b:11.3f} | {b / qa:9.4f} | {b / (qa * np.log(cut)):16.4f} | "
+            f"{b / (qa * np.log(cut) ** 2):18.4f} | {loc}"
+        )
+        prev = b
+
+
+# THE CONVERSE
+
+
+def digit_gap(digits):
+    f = sorted(digits)
+    g = 0
+    for x in f[1:]:
+        g = gcd(g, x - f[0])
+    return g
+
+
+def brute_dilate(base, digits, d, power):
+    return sum(1 for c in range(1, base**power) if holds(base, digits, d * c))
+
+
+def positive_count(base, digits, d, power):
+    return automaton_count(base, digits, d, power) - (1 if 0 in digits else 0)
+
+
+def subsets(base):
+    for m in range(1, 1 << base):
+        yield {e for e in range(base) if m >> e & 1}
+
+
+SCOPE_BASES = (3, 4, 5)
+GAP_BASES = range(2, 8)
+GAP_POWER = 400
+
+
+def verb_converse():
+    print("\nTHE SCOPE OF D1, D2, D5, automaton against brute force, q = 3, 4, 5, every F, d <= 6, L <= 5")
+    tally = {True: [0, 0], False: [0, 0]}
+    for base in SCOPE_BASES:
+        for digits in subsets(base):
+            for d in range(1, 7):
+                for lvl in range(1, 6):
+                    row = tally[0 in digits]
+                    row[0] += 1
+                    row[1] += positive_count(base, digits, d, lvl) != brute_dilate(base, digits, d, lvl)
+    for key, label in ((True, "0 in F"), (False, "0 not in F")):
+        n, bad = tally[key]
+        print(f"   {label:12s} {bad:4d} mismatches of {n:4d}")
+    base, digits, d, lvl = 3, {1, 2}, 1, 3
+    print(f"   witness q = 3, F = {{1,2}}, d = 1, L = 3: automaton {positive_count(base, digits, d, lvl)}, "
+          f"true {brute_dilate(base, digits, d, lvl)}, |F|^L {len(digits) ** lvl}")
+
+    print(f"\nTHE MASS CONSTANT, K_d against |Acc_d|/d at L = {GAP_POWER}, every F with 0 in F, gcd(d,q) = 1, 2 <= d <= 24")
+    split = {True: [0, 0], False: [0, 0]}
+    odd = []
+    for base in GAP_BASES:
+        for digits in subsets(base):
+            if 0 not in digits or len(digits) < 2:
+                continue
+            gap = digit_gap(digits)
+            for d in range(2, 25):
+                if gcd(d, base) != 1:
+                    continue
+                k = automaton_count(base, digits, d, GAP_POWER) / len(digits) ** GAP_POWER
+                row = split[gcd(d, gap) == 1]
+                row[0] += 1
+                good = abs(k - sum(dilate_accept(base, digits, d)) / d) < 1e-9
+                row[1] += good
+                if good == (gcd(d, gap) > 1):
+                    odd.append((base, sorted(digits), d, round(k, 6), sum(dilate_accept(base, digits, d)) / d))
+    for key, label in ((True, "gcd(d, gap) = 1"), (False, "gcd(d, gap) > 1")):
+        n, ok = split[key]
+        print(f"   {label:16s} {ok:5d} agree, {n - ok:5d} fail, of {n:5d}")
+    print(f"   off the split: {odd}")
+    base, digits, d = 3, {0, 2}, 2
+    print(f"   witness q = 3, F = {{0,2}}, gap 2, d = 2: counts "
+          f"{[brute_dilate(base, digits, d, lvl) + 1 for lvl in range(1, 9)]}, |F|^L, so K_2 = 1 against "
+          f"|Acc_2|/2 = {sum(dilate_accept(base, digits, d)) / d}")
+
+    base, digits, name = BASE3
+    al = np.log(len(digits)) / np.log(base)
+    top = 12
+    x = base**top
+    mu = mobius_sieve(x)
+    run = np.cumsum(np.where(dilate_mask(base, digits, 1, x), mu[1 : x + 1], 0))
+    peak, tail = int(np.abs(run).max()), int(run[-1])
+    print(f"\n(U) IS UNSATISFIABLE, {name}, x = {base}^{top}, M_F(x; {base}^j) = M_F(x) = {tail} at every j by D4")
+    print("      j |        d = q^j | d^((alpha-1)/2) x^(alpha/2) | |M_F| / bound | max |M| / bound")
+    for j in range(top + 1):
+        d = base**j
+        bound = d ** ((al - 1) / 2) * x ** (al / 2)
+        print(f"   {j:4d} | {d:14d} | {bound:27.4f} | {abs(tail) / bound:13.3f} | {peak / bound:15.3f}")
+
+    base, digits, name = BASE10
+    print(f"\nTHE BASE-SMOOTH MASS, {name}, K_d at L = 24 over the base-smooth d <= 1000")
+    smooth = sorted(d for d in range(1, 1001) if qfree(d, base) == 1)
+    masses = {d: automaton_count(base, digits, d, 24) / len(digits) ** 24 for d in smooth}
+    lo = min(masses, key=masses.get)
+    hi = max(masses, key=masses.get)
+    print(f"   {len(smooth)} such d; K_d in [{masses[lo]:.4f} at d = {lo}, {masses[hi]:.4f} at d = {hi}]")
+    print(f"   sample {[(d, round(masses[d], 4)) for d in (2, 4, 5, 8, 16, 32, 64, 128, 256, 512, 625)]}")
+    ratio = {}
+    for d in range(1, 201):
+        f = qfree(d, base)
+        k = automaton_count(base, digits, d, 24) / len(digits) ** 24
+        kf = masses.get(f) or automaton_count(base, digits, f, 24) / len(digits) ** 24
+        masses[f] = kf
+        ratio[d] = k / kf
+    lo = min(ratio, key=ratio.get)
+    hi = max(ratio, key=ratio.get)
+    print(f"   K_d / K_(q-free part) over d <= 200 in [{ratio[lo]:.4f} at d = {lo}, {ratio[hi]:.4f} at d = {hi}]")
+
+
 def main():
-    verbs = {"denominator": verb_denominator, "identity": verb_identity, "strict": verb_strict}
+    verbs = {
+        "denominator": verb_denominator,
+        "identity": verb_identity,
+        "strict": verb_strict,
+        "dilate": verb_dilate,
+        "converse": verb_converse,
+    }
     want = sys.argv[1:] or list(verbs)
     t0 = time.time()
     for v in want:

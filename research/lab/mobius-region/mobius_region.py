@@ -414,6 +414,22 @@ def verb_boundary(_argv):
         print(f"{fdown(float(alpha), 6):<12} [{fdown(float(fl), 6)}, {fdown(float(top), 6)})       "
               f"[{fdown(float(fl), 6)}, {fdown(float(c), 6)}]      {'yes' if ok else 'no'}")
     print()
+    print("The single-window branch, read with the step beta <= m_1 <= alpha_1 that t = 1 in the infimum and one shift of the supremum give:")
+    bmax = Fraction(1) / (1 + Fraction(13, 4))
+    amin = 1 - bmax
+    print(f"  alpha_1 <= 1 - (13/4) beta against beta <= alpha_1 asks beta <= {bmax} = {fup(float(bmax))}, under the {Fraction(1, 4)} it replaces")
+    print(f"  with the Parseval floor beta >= 1 - alpha that asks alpha >= {amin} = {fdown(float(amin), 6)}, over the {Fraction(3, 4)} the window cap asks: the branch narrows the route")
+    want(bmax < Fraction(1, 4), "branch cap under a quarter")
+    want(amin > Fraction(3, 4), "branch gate over three quarters")
+    alpha, a1, beta = Fraction(9, 10), Fraction(77, 500), Fraction(13, 50)
+    rows = [("floor alpha_1", a1 >= 1 - alpha), ("floor beta", beta >= 1 - alpha), ("L1", 2 * a1 < alpha),
+            ("branch", a1 <= 1 - Fraction(13, 4) * beta)]
+    for name in ("C2", "L2", "L3", "L4", "L5"):
+        c = cap(name, alpha, a1)
+        rows.append((name, True if c is None else (beta <= c if name == "C2" else beta < c)))
+    print(f"  the step is load-bearing: without it alpha = {fdown(float(alpha), 6)}, alpha_1 = {fdown(float(a1), 6)}, beta = {fdown(float(beta), 6)} > 1/4 passes " + ", ".join(n for n, ok in rows if ok))
+    want(all(ok for _, ok in rows) and beta > Fraction(1, 4), "the load-bearing witness")
+    print()
     print("FAILS: " + (", ".join(FAILS) if FAILS else "none"))
     if FAILS:
         raise SystemExit(1)

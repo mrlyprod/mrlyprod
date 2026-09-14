@@ -30,6 +30,8 @@ const COST: [u64; 7] = [
     1_000_000_000,
 ];
 const WALL: [u64; 2] = [3_689, 3_690];
+const SHARP_HI: u64 = 4_000_000;
+const SHARP_COST_HI: u64 = 100_000;
 
 // KERNEL CONSTANTS
 
@@ -65,6 +67,94 @@ fn delta_stable(q: f64, m: f64) -> f64 {
 
 fn defect(q: f64, m: f64) -> f64 {
     m / (2.0 * (q - m) * q.ln())
+}
+
+fn psi(q: f64) -> f64 {
+    let n = ((q - 2.0) / 2.0).ceil();
+    (2.0 * q / PI) * harmonic_bound(n) + (1.0 - 2.0 / PI) * q
+}
+
+fn psi_chord(q: f64) -> f64 {
+    let p = (q / 2.0).floor();
+    let h = harmonic_bound(p - 1.0);
+    if (q as u64) % 2 == 0 {
+        (q / PI) * (2.0 * h - 1.0 + 1.0 / p) + (1.0 - 2.0 / PI) * q / 2.0
+    } else {
+        (q / PI) * (2.0 * h - 1.0 + 2.0 / p) + (1.0 - 2.0 / PI) * (q / 2.0 + 1.0 / (2.0 * q))
+    }
+}
+
+fn sec_off(q: f64, extreme: bool) -> f64 {
+    let c = if extreme {
+        (q - 1.0) / 2.0
+    } else if (q as u64) % 2 == 1 {
+        0.0
+    } else {
+        0.5
+    };
+    1.0 / (PI * c / q).cos()
+}
+
+#[derive(Clone, Copy)]
+enum Cst {
+    Step3,
+    Sharp(bool),
+    Chord(bool),
+}
+
+fn onestep(q: f64, c: Cst) -> f64 {
+    match c {
+        Cst::Step3 => 1.0 + phi(q) / q,
+        Cst::Sharp(e) => 4.0 / PI + psi(q) / q + 0.5 - sec_off(q, e) / (2.0 * q),
+        Cst::Chord(e) => 4.0 / PI + psi_chord(q) / q + 0.5 - sec_off(q, e) / (2.0 * q),
+    }
+}
+
+fn onestep_floor(c: Cst) -> u64 {
+    match c {
+        Cst::Step3 => 3,
+        Cst::Sharp(_) => 17,
+        Cst::Chord(_) => 36,
+    }
+}
+
+fn onestep_delta(q: f64, c: Cst) -> f64 {
+    let a = alpha(q, 1.0);
+    (a - 0.75 - onestep(q, c).ln() / q.ln()) / a
+}
+
+fn onestep_wall(c: Cst, hi: u64) -> (u64, bool) {
+    let (mut first, mut held) = (0u64, 0u64);
+    for q in onestep_floor(c)..=hi {
+        let qf = q as f64;
+        if (qf - 1.0) * qf.powf(-0.75) > onestep(qf, c) {
+            held += 1;
+            if first == 0 {
+                first = q;
+            }
+        }
+    }
+    (first, first > 0 && held == hi - first + 1)
+}
+
+fn onestep_cross(c: Cst, hi: u64) -> (u64, bool, f64, f64) {
+    let (mut first, mut held) = (0u64, 0u64);
+    for q in onestep_floor(c)..=hi {
+        let qf = q as f64;
+        if onestep_delta(qf, c) > defect(qf, 1.0) {
+            held += 1;
+            if first == 0 {
+                first = q;
+            }
+        }
+    }
+    let qf = first as f64;
+    (
+        first,
+        first > 0 && held == hi - first + 1,
+        onestep_delta(qf, c),
+        defect(qf, 1.0),
+    )
 }
 
 fn closes(q: f64, m: f64) -> bool {
@@ -194,6 +284,21 @@ fn render_cost(q: u64, m: u64) -> String {
         sci(d, 5, false),
         sci(f, 5, true),
         if d > f { "yes" } else { "no" }
+    )
+}
+
+fn render_sharp(name: &str, digits: &str, c: Cst) -> String {
+    let (w, w_up) = onestep_wall(c, SHARP_HI);
+    let (x, x_up, d, f) = onestep_cross(c, SHARP_COST_HI);
+    format!(
+        "| {} | {} | {} | {} | {} | {} | {} |",
+        name,
+        digits,
+        label(w),
+        label(x),
+        sci(d, 5, false),
+        sci(f, 5, true),
+        if w_up && x_up { "yes" } else { "no" }
     )
 }
 
@@ -552,6 +657,34 @@ fn main() {
         SWEEP_HI - SWEEP_LO
     );
     println!();
+    println!(
+        "SHARPENED COST-OUT, the GRH rung re-costed at every one-step constant this desk proves"
+    );
+    println!(
+        "`1 + Phi_q/q` is step 3; `Psi_q` is the sharpening with the phase identity, `q >= 17`;"
+    );
+    println!("`Psi'_q` is the same with the chord kernel bound in place of `Phi_q`, `q >= 36`");
+    println!("`H` is the harmonic upper bound `ln n + gamma + 1/(2n)` in both, and the `36` is that convention:");
+    println!("with the harmonic number itself the monotone step's floor `Psi'_q >= (1 + pi) q/2` first holds at `q = 37`");
+    println!("the wall is the least `q` with `(q-1) q^(-3/4)` above the constant, the crossing the least `q` where");
+    println!("`delta_q` exceeds the defect `1/(2(q-1) ln q)`; no wall is inherited and no crossing is inherited");
+    println!("| constant | excluded digit | wall `q_0(1/2)` | crossing `q` | `delta_q` there (down) | defect (up) | both up-sets |");
+    println!("|---|---|---|---|---|---|---|");
+    for (name, digits, c) in [
+        ("`1 + Phi_q/q`", "any", Cst::Step3),
+        ("`Psi_q`", "any", Cst::Sharp(false)),
+        ("`Psi_q`", "`0` or `q-1`", Cst::Sharp(true)),
+        ("`Psi'_q`", "any", Cst::Chord(false)),
+        ("`Psi'_q`", "`0` or `q-1`", Cst::Chord(true)),
+    ] {
+        println!("{}", render_sharp(name, digits, c));
+    }
+    println!(
+        "- each row is scanned exhaustively from its own floor, `q >= 3`, `17` and `36`, to `{SHARP_HI}` for the wall and `{SHARP_COST_HI}` for the crossing"
+    );
+    println!("- every crossing sits within five steps of its own wall, so a lower wall costs out at once and is never inherited");
+    println!("- the rungs above `a = 1/2` are not costed here and stay owed");
+    println!();
     println!("M-COROLLARY, largest `m` with `PB_q(m) < (q-m) q^(-3/4)`");
     println!("| `q` | max `m` | `alpha_q` | `c_q` (proved, up) | `delta_q` (down) |");
     println!("|---|---|---|---|---|");
@@ -819,6 +952,95 @@ mod tests {
     }
 
     #[test]
+    fn sharpened_cost_out_is_pinned() {
+        let got: Vec<String> = [
+            ("`1 + Phi_q/q`", "any", Cst::Step3),
+            ("`Psi_q`", "any", Cst::Sharp(false)),
+            ("`Psi_q`", "`0` or `q-1`", Cst::Sharp(true)),
+            ("`Psi'_q`", "any", Cst::Chord(false)),
+            ("`Psi'_q`", "`0` or `q-1`", Cst::Chord(true)),
+        ]
+        .iter()
+        .map(|(n, d, c)| render_sharp(n, d, *c))
+        .collect();
+        let want = [
+            "| `1 + Phi_q/q` | any | 3690 | 3692 | 1.69819e-5 | 1.64921e-5 | yes |",
+            "| `Psi_q` | any | 2446 | 2450 | 3.90025e-5 | 2.61622e-5 | yes |",
+            "| `Psi_q` | `0` or `q-1` | 1812 | 1815 | 3.85795e-5 | 3.67324e-5 | yes |",
+            "| `Psi'_q` | any | 1499 | 1502 | 4.80703e-5 | 4.55409e-5 | yes |",
+            "| `Psi'_q` | `0` or `q-1` | 1032 | 1036 | 8.24697e-5 | 6.95785e-5 | yes |",
+        ];
+        assert_eq!(got, want);
+    }
+
+    #[test]
+    fn step3_row_reproduces_the_ladder() {
+        let (w, up) = onestep_wall(Cst::Step3, SHARP_HI);
+        assert_eq!((w, up), (3_690, true));
+        assert_eq!(onestep_cross(Cst::Step3, SHARP_COST_HI).0, 3_692);
+        for q in [3_690u64, 10_000, 100_000] {
+            let qf = q as f64;
+            assert!((onestep(qf, Cst::Step3) - pb(qf, 1.0)).abs() < 1e-12 * pb(qf, 1.0));
+        }
+    }
+
+    #[test]
+    fn the_chord_constant_saves_half_a_base() {
+        for q in (36u64..4_000).step_by(1) {
+            let qf = q as f64;
+            let want = if q % 2 == 0 {
+                psi(qf) - qf / 2.0 + 2.0 / PI
+            } else {
+                psi_chord(qf)
+            };
+            assert!(
+                (psi_chord(qf) - want).abs() <= 1e-9 * psi(qf),
+                "chord identity fails at q = {q}"
+            );
+            assert!(psi_chord(qf) < psi(qf), "chord not sharper at q = {q}");
+            assert!(
+                psi_chord(qf) >= (1.0 + PI) * qf / 2.0,
+                "monotone floor fails at q = {q}"
+            );
+        }
+        assert!(psi_chord(35.0) < (1.0 + PI) * 35.0 / 2.0);
+    }
+
+    #[test]
+    fn every_sharpened_wall_lies_under_its_predecessor() {
+        let walls: Vec<u64> = [
+            Cst::Step3,
+            Cst::Sharp(false),
+            Cst::Sharp(true),
+            Cst::Chord(false),
+            Cst::Chord(true),
+        ]
+        .iter()
+        .map(|&c| onestep_wall(c, SHARP_HI).0)
+        .collect();
+        for w in walls.windows(2) {
+            assert!(w[1] < w[0], "walls not decreasing: {walls:?}");
+        }
+        for (i, &c) in [
+            Cst::Step3,
+            Cst::Sharp(false),
+            Cst::Sharp(true),
+            Cst::Chord(false),
+            Cst::Chord(true),
+        ]
+        .iter()
+        .enumerate()
+        {
+            let (x, up, _, _) = onestep_cross(c, SHARP_COST_HI);
+            assert!(up, "crossing not an up-set at row {i}");
+            assert!(
+                x >= walls[i] && x - walls[i] <= 5,
+                "crossing far from wall at row {i}"
+            );
+        }
+    }
+
+    #[test]
     fn crossover_is_pinned() {
         let (first, down) = crossover(SWEEP_LO, SWEEP_HI);
         assert_eq!(first, 3_692);
@@ -864,6 +1086,30 @@ mod tests {
         for q in 3..5_000u64 {
             assert!(c_exp(q as f64, 1.0) >= 0.0, "negative c_q at {q}");
             assert!(pb(q as f64, 1.0) >= 1.0, "PB below the l^1 floor at {q}");
+        }
+    }
+
+    #[test]
+    fn the_chord_floor_carries_its_harmonic_convention() {
+        let exact = |n: f64| (1..=(n as u64)).map(|j| 1.0 / j as f64).sum::<f64>();
+        let psi_exact = |q: f64| {
+            let p = (q / 2.0).floor();
+            let h = exact(p - 1.0);
+            if (q as u64) % 2 == 0 {
+                (q / PI) * (2.0 * h - 1.0 + 1.0 / p) + (1.0 - 2.0 / PI) * q / 2.0
+            } else {
+                (q / PI) * (2.0 * h - 1.0 + 2.0 / p)
+                    + (1.0 - 2.0 / PI) * (q / 2.0 + 1.0 / (2.0 * q))
+            }
+        };
+        assert!(psi_chord(36.0) >= (1.0 + PI) * 18.0);
+        assert!(psi_exact(36.0) < (1.0 + PI) * 18.0);
+        for q in 37u64..4_000 {
+            let qf = q as f64;
+            assert!(
+                psi_exact(qf) >= (1.0 + PI) * qf / 2.0,
+                "harmonic-number floor fails at q = {q}"
+            );
         }
     }
 

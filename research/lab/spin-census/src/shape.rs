@@ -35,7 +35,14 @@ pub fn d4(n: usize) -> Vec<Vec<usize>> {
 }
 
 pub fn oct(n: usize) -> Vec<Vec<usize>> {
-    let axes = [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]];
+    let axes = [
+        [0, 1, 2],
+        [0, 2, 1],
+        [1, 0, 2],
+        [1, 2, 0],
+        [2, 0, 1],
+        [2, 1, 0],
+    ];
     let mut out: Vec<Vec<usize>> = Vec::new();
     for axis in axes {
         for signs in 0..8u32 {
@@ -150,7 +157,13 @@ fn picture(bits: u128) -> String {
     (0..3)
         .map(|r| {
             (0..3)
-                .map(|c| if bits >> (r * 3 + c) & 1 == 1 { '#' } else { '.' })
+                .map(|c| {
+                    if bits >> (r * 3 + c) & 1 == 1 {
+                        '#'
+                    } else {
+                        '.'
+                    }
+                })
                 .collect::<String>()
         })
         .collect::<Vec<_>>()

@@ -88,14 +88,7 @@ pub struct SignedRow {
     pub csloss: Vec<f64>,
 }
 
-pub fn signed_row(
-    bits: &Bits,
-    mm: u64,
-    nn: u64,
-    g: u128,
-    x: u128,
-    coefs: &[Vec<i8>],
-) -> SignedRow {
+pub fn signed_row(bits: &Bits, mm: u64, nn: u64, g: u128, x: u128, coefs: &[Vec<i8>]) -> SignedRow {
     let nb = coefs.len();
     let mut cprime = vec![0i64; nn as usize];
     let mut qq = vec![0i128; nb];
@@ -162,7 +155,9 @@ pub fn signed_row(
             xi * xi * (qq[j] - pp) - 2 * gi * xi * (bs * cc[j] - pp)
                 + mi * gi * gi * (bs * bs - s2),
         );
-        diag.push(pp as f64 * (1.0 - delta) * (1.0 - delta) + (mi * s2 - pp) as f64 * delta * delta);
+        diag.push(
+            pp as f64 * (1.0 - delta) * (1.0 - delta) + (mi * s2 - pp) as f64 * delta * delta,
+        );
     }
     SignedRow {
         m: mm,
@@ -207,7 +202,8 @@ pub fn pair_rms(bits: &Bits, mm: u64, nn: u64, g: u128, x: u128) -> Option<f64> 
     let mut all = 0.0f64;
     for a in 0..ms {
         for b in 0..ms {
-            let gg = tt[a * ms + b] as f64 - delta * (cm[a] as f64 + cm[b] as f64) + nf * delta * delta;
+            let gg =
+                tt[a * ms + b] as f64 - delta * (cm[a] as f64 + cm[b] as f64) + nf * delta * delta;
             all += gg * gg;
         }
     }
@@ -219,7 +215,14 @@ pub fn pair_rms(bits: &Bits, mm: u64, nn: u64, g: u128, x: u128) -> Option<f64> 
     Some((2.0 * (all - dg)).max(0.0).sqrt())
 }
 
-pub fn engineered(bits: &Bits, mm: u64, nn: u64, g: u128, x: u128, rounds: usize) -> (f64, f64, usize) {
+pub fn engineered(
+    bits: &Bits,
+    mm: u64,
+    nn: u64,
+    g: u128,
+    x: u128,
+    rounds: usize,
+) -> (f64, f64, usize) {
     let delta = g as f64 / x as f64;
     let ms = mm as usize;
     let ns = nn as usize;
@@ -667,10 +670,7 @@ mod tests {
         let spf = spf_table(20);
         let mu = mobius(20, &spf);
         let lam = liouville(20, &spf);
-        assert_eq!(
-            &mu[1..=12],
-            &[1, -1, -1, 0, -1, 1, -1, 0, 0, 1, -1, 0][..]
-        );
+        assert_eq!(&mu[1..=12], &[1, -1, -1, 0, -1, 1, -1, 0, 0, 1, -1, 0][..]);
         assert_eq!(
             &lam[1..=12],
             &[1, -1, -1, 1, -1, 1, -1, -1, 1, 1, -1, -1][..]

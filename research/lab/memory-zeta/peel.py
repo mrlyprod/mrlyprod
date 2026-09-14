@@ -1,3 +1,6 @@
+import json
+import os
+import sys
 from time import perf_counter
 
 from mpmath import mp, mpc, log, sqrt
@@ -60,6 +63,40 @@ def zeta(s):
     return sum(mpc(n) ** (-s) for n in low) + g[0] + g[1]
 
 
+def cofactor(s):
+    _, num = ladder(s)
+    x = mpc(2) ** (-s)
+    det = 1 - x - x * x
+    adj = [[mpc(1), x], [x, 1 - x]]
+    return det * sum(mpc(n) ** (-s) for n in low) + sum(mv(adj, num))
+
+
+CONTROL = os.path.join(os.path.dirname(os.path.abspath(__file__)), "control.json")
+
+
+def control():
+    start = perf_counter()
+    phi = (1 + sqrt(5)) / 2
+    alpha = log(phi) / LN2
+    period = 2 * mp.pi / LN2
+    half = mp.pi / LN2
+    rows = []
+    for kind, s in [("zeta", mpc(3)), ("zeta", mpc("0.8")), ("Z", mpc(3)), ("Z", mpc(2)),
+                    ("Z", mpc("0.8")), ("Z", mpc("-0.95", 20)), ("Z", mpc(0, 30)),
+                    ("Z", mpc("-0.693919320380", "9.492981163426")),
+                    ("Z", mpc("-0.737611737911", "14.343440171295")),
+                    ("Z", mpc("-0.708500086380", "27.443172842651")),
+                    ("Z", mpc("0.665353220372", "18.164471712166")),
+                    ("Z", mpc("-0.315485550754", "23.209873760385")),
+                    ("residue", mpc(alpha, period)), ("residue", mpc(-alpha, half * 5))]:
+        v = zeta(s) if kind == "zeta" else cofactor(s) if kind == "Z" else residue(s)
+        rows.append({"kind": kind, "re": mp.nstr(s.real, 25), "im": mp.nstr(s.imag, 25),
+                     "value": [mp.nstr(v.real, 25), mp.nstr(v.imag, 25)]})
+    json.dump({"source": "lab/memory-zeta peel.py control", "dps": mp.dps, "peel": P,
+               "shift": SHIFT, "cut": CUT, "rows": rows}, open(CONTROL, "w"), indent=1)
+    print("control.json", len(rows), "rows,", round(perf_counter() - start, 2), "s")
+
+
 def residue(w0):
     _, num = ladder(w0)
     x = mpc(2) ** (-w0)
@@ -86,4 +123,7 @@ def main():
     print("runtime", round(perf_counter() - start, 2), "s")
 
 
-main()
+if len(sys.argv) > 1 and sys.argv[1] == "control":
+    control()
+else:
+    main()

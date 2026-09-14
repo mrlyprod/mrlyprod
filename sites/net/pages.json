@@ -347,6 +347,14 @@
       "paper": null
     },
     {
+      "name": "apollonian",
+      "title": "The Apollonian gasket",
+      "blurb": "An integer root quadruple grows a whole packing by one square-root-free reflection, and the circles resting on the strip's line are the Ford circles, one to every reduced fraction, standing on the Farey stack's own nodes.",
+      "category": "zeros",
+      "research": "apollonian",
+      "paper": null
+    },
+    {
       "name": "pi",
       "title": "Pi out of the grid",
       "blurb": "The points of the grid a corner can see take a share of six over pi squared, so counting the lit ones in a window hands pi back, and the dimension counted in picks which zeta value falls out.",
