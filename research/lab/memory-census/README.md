@@ -51,6 +51,7 @@
 - At `D = 1` and no reversal the count is `2^(2^k - 1) + 2^(2^(k-1) - 1)`. **Proved** (Burnside on the group of order 2: the flip acts on the `2^k` windows as `w -> 2^k - 1 - w`, all `2^(k-1)` two-cycles, so `(2^(2^k) + 2^(2^(k-1)))/2`).
 - Against A000616 at `kD`, the ratio of classes under `G_(D,k)` is `1, 3/2, 4, 42.19...` at `D = 1` and `k = 1..4` and `1, 11.59...` at `D = 2`: the groups agree at `k = 1` and the smaller group splits cube classes from `k = 2` on. **Verified** (memory-census, `census.csv` column `a000616`).
 - Burnside extends the class counts past the orbit walk at no cost: under `G_(1,k)` for `k = 1..8` they are `3, 9, 88, 16960, 1074036736, 4611686053860868096, 85070591730234617055658644612208132096, 28948022309329048855892746252171977006958709724020498949042189405102555529216`. **Verified** (memory-census, Burnside extension).
+- The `G_(1,k)` count has the closed form `a(2m) = 2^(2^(2m)-2) + 2^(2^(2m-1)-2) + 2^(2^(2m-1)+2^(m-1)-1)` for `m >= 1` and `a(2m+1) = 2^(2^(2m+1)-2) + 2^(2^(2m)-1) + 2^(2^(2m)+2^m-2)` for `m >= 0`. **Proved** (Burnside over the order-4 group: the digit flip fixes no window, reversal fixes the `2^ceil(k/2)` palindromes, and flip-reversal fixes the `2^(k/2)` antipalindromes at even `k` and none at odd `k`; memory-census, verb `burnside`, where the cycle index and the closed form agree at `k = 1..11`).
 - Under `G_(2,k)` for `k = 1..4`: `6, 4660, 1152921592116822016, 7237005577332262213973186563042994284449319951280334537682043176672785596416`. **Verified** (memory-census, Burnside extension).
 - Dead classes, those with `rho = 0`: `1, 2, 13, 2093` at `D = 1` and `1, 53` at `D = 2`. **Verified** (memory-census, `census.csv` column `dead_classes`).
 
@@ -58,6 +59,8 @@
 
 - Every distinct transfer matrix is batched into one `gp -q` script: characteristic polynomial from an exact integer Faddeev-LeVerrier in Python, then `factor` over `Q` and `polrootsreal` on each factor in PARI; the factor carrying the largest real root is the minimal polynomial of `rho`.
 - Distinct characteristic polynomials: `3, 6, 23, 431` at `D = 1` and `k = 1..4`; `5, 333` at `D = 2`. Distinct minimal polynomials of `rho`: `3, 4, 10, 177` at `D = 1`; `5, 185` at `D = 2`. **Verified** (memory-census, `census.csv`).
+- At `D = 1` and `k >= 2` every transfer matrix has determinant in `{-1, 0, 1}`, so the constant term of every characteristic polynomial is `0`, `1` or `-1`. **Proved** (rows `s` and `s + 2^(k-2)` are both supported on the columns `2s` and `2s+1` taken modulo `2^(k-1)`, and those column pairs partition the columns as `s` runs over `0..2^(k-2)-1`, so the matrix is a row permutation of a block diagonal matrix with `2^(k-2)` blocks of size `2 x 2` over `{0,1}`; memory-census, verb `lemmas`, where the determinant and the signed block product agree and land in `{-1, 0, 1}` over all `16, 256, 65536` rules at `k = 2, 3, 4`).
+- Distinct minimal polynomials of `rho` are distinct `rho`, so the minimal polynomial count is a count of growth rates. **Proved** (every conjugate of `rho(W)` is a root of the characteristic polynomial of `A_W` and so an eigenvalue of `A_W`, hence at most `rho(W)` in modulus, so two conjugate Perron roots are equal in modulus and, both being nonnegative, equal; memory-census, verb `lemmas`, where no conjugate exceeds `rho` on any of the `463` characteristic polynomials at `D = 1` and `k = 1..4` and the `3, 4, 10, 177` minimal polynomials carry `3, 4, 10, 177` distinct `rho`).
 - The golden ratio `x^2 - x - 1`, `rho = 1.618033988749`, is the Perron root of code `7` at `(1,2)`, the rule forbidding the window `11`. **Verified** (memory-census, `classes.csv`).
 - At `(1,3)` the four named roots land on the four expected codes, each the least code of its class: `x^3 - x^2 - x - 1` tribonacci `1.839286755214` on code `127`, `x^2 - x - 1` golden on code `55`, `x^3 - x^2 - 1` supergolden `1.465571231876` on code `23`, `x^3 - x - 1` plastic `1.324717957244` on code `54`. **Verified** (memory-census, `classes.csv`).
 - Their class counts at `(1,3)` are `1, 7, 5, 4` and their rule counts `2, 16, 14, 12`; at `(1,4)` the same four polynomials carry `7, 193, 526, 696` classes. **Verified** (memory-census, `classes.csv`).
@@ -79,6 +82,8 @@
 - `python3 research/lab/memory-census/memory.py` from the repository root; the standard library and `gp` only, no third-party package.
 - Writes `census.csv` and `classes.csv` beside this file.
 - Runtimes on a laptop: orbit walk `0.04s` at `(1,4)` and `0.14s` at `(2,2)`, characteristic polynomials `3.61s` at `(1,4)`, PARI `0.17s` at `(1,4)` and `0.06s` at `(2,2)`, Burnside extension `0.01s`, whole study `4.3s`.
+- `python3 research/lab/memory-census/memory.py burnside` prints the class count under `G_(1,k)` at `k = 1..11` from the cycle index of the order-4 group on the `2^k` windows, checks the closed form against every term, and prints the orbit count of the same group on the windows themselves, A005418 at `k`; `0.07s`.
+- `python3 research/lab/memory-census/memory.py lemmas` checks the determinant lemma over every rule at `k = 2, 3, 4` against a Bareiss determinant and against the signed block product, and the Perron lemma over every characteristic polynomial at `k = 1..4`; `13.4s`.
 
 ## WITNESSES
 
@@ -87,6 +92,7 @@
 - [beneath](../../beneath.md), The coupling - the maxima `log_2(3)/2`, `log_2(6)/3`, `log_2(13)/4` and `log_2(10)/2` on the least codes `11`, `175`, `49071` and `36079`, with ties of `1, 3, 4, 3`: `census.csv` columns `kappa_max`, `kappa_max_code`, `kappa_max_ties`.
 - [beneath](../../beneath.md), The famous constants are one notch in - the four named roots on the least codes `7`, `23`, `54`, `127` at `D = 1` and `19`, `323`, `326`, `327` at `(2,2)`: `classes.csv`.
 - [beneath](../../beneath.md), What the dial buys - the distinct minimal polynomials of `rho`, `3, 4, 10, 177` at `D = 1` and `5, 185` at `D = 2`, against `3, 6, 23, 431` and `5, 333` characteristic polynomials: `census.csv`.
+- [beneath](../../beneath.md), The memory dial - the closed form for the classes under `G_(1,k)` at `k = 1..11`, the determinant lemma at `D = 1` and `k = 2, 3, 4`, and the Perron lemma at `k = 1..4`: the verbs `burnside` and `lemmas`.
 
 ## COLUMNS
 

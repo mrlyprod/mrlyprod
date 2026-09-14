@@ -17,7 +17,7 @@ class Design:
         self.tol = tol
         if P is None:
             P = 2
-            while self.k1 * self.k ** P <= 100:
+            while self.k > 1 and self.k1 * self.k ** P <= 100:
                 P += 1
         self.P = P
         self.alpha = mp.log(self.k) / mp.log(q)
@@ -47,7 +47,7 @@ class Design:
 
     def cut(self, w, L):
         aw, sig = abs(w), mp.re(w)
-        rho = (aw + L + 1) / (L + 2) * self.amax / mp.power(self.q, self.P)
+        rho = max((aw + L + 1) / (L + 2), 1) * self.amax / mp.power(self.q, self.P)
         if rho >= mp.mpf("0.9"):
             return mp.inf
         maj = mp.binomial(aw + L, L + 1) * mp.power(self.q, -sig - (L + 1)) \

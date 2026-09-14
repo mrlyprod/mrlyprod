@@ -351,6 +351,206 @@ def main():
     print(f"burnside extension {time.time() - t0:.2f}s")
     print(f"total {time.time() - t_all:.2f}s")
 
+# CLOSED FORM
+
+def classes_closed(k):
+    if k % 2 == 0:
+        m = k // 2
+        return (
+            (1 << (2 ** (2 * m) - 2))
+            + (1 << (2 ** (2 * m - 1) - 2))
+            + (1 << (2 ** (2 * m - 1) + 2 ** (m - 1) - 1))
+        )
+    m = (k - 1) // 2
+    return (
+        (1 << (2 ** (2 * m + 1) - 2))
+        + (1 << (2 ** (2 * m) - 1))
+        + (1 << (2 ** (2 * m) + 2 ** m - 2))
+    )
+
+
+def word_orbits(d, k):
+    tables = window_tables(d, k, True)
+    seen = [False] * (1 << (d * k))
+    n = 0
+    for w in range(len(seen)):
+        if seen[w]:
+            continue
+        n += 1
+        for t in tables:
+            seen[t[w]] = True
+    return n
+
+
+def verb_burnside(top=11):
+    t0 = time.time()
+    cycle = [burnside(1, k, True) for k in range(1, top + 1)]
+    closed = [classes_closed(k) for k in range(1, top + 1)]
+    words = [word_orbits(1, k) for k in range(1, top + 1)]
+    print("classes G_(1,k) k=1..8  " + ", ".join(str(v) for v in cycle[:8]))
+    for k in range(9, top + 1):
+        print(f"classes G_(1,{k})  {cycle[k - 1]}")
+    agree = sum(1 for a, b in zip(cycle, closed) if a == b)
+    print(f"closed form against the cycle index k=1..{top}: {agree} of {top} agree")
+    for k in range(1, top + 1):
+        if cycle[k - 1] != closed[k - 1]:
+            print(f"  MISMATCH k={k}")
+    print("digits k=9,10,11  " + ", ".join(str(len(str(cycle[k - 1]))) for k in (9, 10, 11)))
+    print("words under the same group k=1..8  " + ", ".join(str(v) for v in words[:8]))
+    print(f"burnside {time.time() - t0:.2f}s")
+
+# DETERMINANT
+
+def det_bareiss(m):
+    n = len(m)
+    a = [row[:] for row in m]
+    sign = 1
+    prev = 1
+    for i in range(n - 1):
+        if a[i][i] == 0:
+            p = -1
+            for r in range(i + 1, n):
+                if a[r][i]:
+                    p = r
+                    break
+            if p < 0:
+                return 0
+            a[i], a[p] = a[p], a[i]
+            sign = -sign
+        for r in range(i + 1, n):
+            for c in range(i + 1, n):
+                a[r][c] = (a[r][c] * a[i][i] - a[r][i] * a[i][c]) // prev
+            a[r][i] = 0
+        prev = a[i][i]
+    return sign * a[n - 1][n - 1]
+
+
+def perm_sign(p):
+    seen = [False] * len(p)
+    s = 1
+    for i in range(len(p)):
+        if seen[i]:
+            continue
+        j, c = i, 0
+        while not seen[j]:
+            seen[j] = True
+            j = p[j]
+            c += 1
+        if c % 2 == 0:
+            s = -s
+    return s
+
+
+def block_frame(k):
+    s_n = 1 << (k - 1)
+    h = 1 << (k - 2)
+    rows, cols = [], []
+    for s in range(h):
+        rows += [s, s + h]
+        cols += [(2 * s) % s_n, (2 * s + 1) % s_n]
+    return rows, cols, perm_sign(rows) * perm_sign(cols)
+
+
+def block_det(m, rows, cols, sign):
+    d = 1
+    for i in range(0, len(rows), 2):
+        d *= m[rows[i]][cols[i]] * m[rows[i + 1]][cols[i + 1]] - m[rows[i]][cols[i + 1]] * m[rows[i + 1]][cols[i]]
+        if d == 0:
+            return 0
+    return sign * d
+
+
+def block_support(k):
+    s_n = 1 << (k - 1)
+    h = 1 << (k - 2)
+    m = transfer((1 << (1 << k)) - 1, 1, k)
+    cover = []
+    for s in range(h):
+        pair = {(2 * s) % s_n, (2 * s + 1) % s_n}
+        for r in (s, s + h):
+            if {c for c in range(s_n) if m[r][c]} - pair:
+                return False
+        cover += sorted(pair)
+    return sorted(cover) == list(range(s_n))
+
+# PERRON
+
+def pari_minpolys(polys, scratch):
+    body = (
+        "for(i = 1, #V, p = V[i]; rho = vecmax(abs(polroots(p))); "
+        "f = factor(p); g = 0; n = 0; w = 0; "
+        "for(j = 1, #f~, h = f[j, 1]; if(poldegree(h) > 0, s = polrootsreal(h); "
+        "if(#s > 0 && abs(vecmax(s) - rho) < 1e-20, g = h; n = n + 1; "
+        "w = vecmax(abs(polroots(h)))))); "
+        'print(i, "|", Vec(g), "|", n, "|", rho, "|", w))'
+    )
+    lines = [f"V = [{', '.join(poly_str(p) for p in polys)}];", body, "quit()"]
+    src = scratch / "lemmas.gp"
+    src.write_text("\n".join(lines) + "\n")
+    out = subprocess.run(
+        ["gp", "-q", str(src)],
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,
+    )
+    if out.returncode != 0:
+        sys.exit(out.stderr)
+    got = {}
+    for line in out.stdout.strip().splitlines():
+        idx, vec, hits, rho, wide = line.split("|")
+        cs = tuple(int(t) for t in vec.strip().strip("[]").split(","))
+        got[int(idx) - 1] = (cs, int(hits), rho.strip(), float(wide) - float(rho))
+    return [got[i] for i in range(len(polys))]
+
+
+def verb_lemmas(scratch):
+    t0 = time.time()
+    keys, dets = {}, {}
+    for k in range(1, 5):
+        ncodes = 1 << (1 << k)
+        seen = set()
+        if k < 2:
+            for code in range(ncodes):
+                seen.add(charpoly(transfer(code, 1, k)))
+        else:
+            rows, cols, sign = block_frame(k)
+            small, agree = 0, 0
+            for code in range(ncodes):
+                m = transfer(code, 1, k)
+                seen.add(charpoly(m))
+                d = det_bareiss(m)
+                small += d in (-1, 0, 1)
+                agree += block_det(m, rows, cols, sign) == d
+            dets[k] = (ncodes, small, agree, 1 << (k - 2), block_support(k))
+        keys[k] = sorted(seen)
+    for k in sorted(dets):
+        ncodes, small, agree, blocks, support = dets[k]
+        print(
+            f"det k={k} rules={ncodes} blocks={blocks} det in [-1,0,1] {small} of {ncodes} "
+            f"block product agrees {agree} of {ncodes} support={int(support)}"
+        )
+    minpolys, radii = [], []
+    for k in range(1, 5):
+        got = pari_minpolys(keys[k], scratch)
+        ones = sum(1 for _, n, _, _ in got if n == 1)
+        tight = sum(1 for _, _, _, gap in got if abs(gap) < 1e-20)
+        mp = {cs for cs, _, _, _ in got}
+        rr = {rho for _, _, rho, _ in got}
+        minpolys.append(len(mp))
+        radii.append(len(rr))
+        print(
+            f"perron k={k} charpolys={len(keys[k])} minpolys={len(mp)} distinct_rho={len(rr)} "
+            f"unique factor {ones} of {len(got)} no conjugate above rho {tight} of {len(got)}"
+        )
+    print("minpolys " + ", ".join(str(v) for v in minpolys) + " and distinct rho " + ", ".join(str(v) for v in radii))
+    print(f"lemmas {time.time() - t0:.2f}s")
+
 
 if __name__ == "__main__":
-    main()
+    verb = sys.argv[1] if len(sys.argv) > 1 else ""
+    if verb == "burnside":
+        verb_burnside()
+    elif verb == "lemmas":
+        verb_lemmas(Path(sys.argv[2]) if len(sys.argv) > 2 else Path(tempfile.gettempdir()))
+    else:
+        main()

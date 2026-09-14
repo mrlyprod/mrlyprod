@@ -91,3 +91,14 @@ fn a_level_over_the_cap_and_a_broken_dial_are_refused() {
     assert!(radix_read("gaussian", 2, 0, "", "", 1).is_err());
     assert!(radix_points("eisenstein", 2, 0, "0:0_1:0", "0_9", 1).is_err());
 }
+
+#[test]
+fn a_congruent_digit_pair_is_refused_without_a_panic() {
+    let fault = radix_read("eisenstein", 3, 0, "0:0_2:0_-1:0", "0_0_0", 1).unwrap_err();
+    assert!(
+        format!("{fault:?}").contains("congruent modulo the base"),
+        "{fault:?}"
+    );
+    assert!(radix_points("eisenstein", 3, 0, "0:0_2:0_-1:0", "0_0_0", 1).is_err());
+    assert!(radix_read("eisenstein", 3, 0, "0:0_2:0_2:1", "0_0_0", 1).is_ok());
+}

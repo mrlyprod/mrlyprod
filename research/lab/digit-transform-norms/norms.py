@@ -914,25 +914,6 @@ def pair_census(bs):
         reps = {tuple(np.round(hat_pair(b, a, c, th), 11)) for (a, c) in sets}
         print(f"base {b}: {b * (b - 1) // 2} excluded pairs fall into {len(fp)} distinct transforms against (C(q-2,2) + floor((q-2)/2))/2 + floor(q/2) = {pair_count(b)} {chk(float(len(fp)), float(pair_count(b)), 0.0)}, the scan list holds {len(sets)} {chk(float(len(sets)), float(pair_count(b)), 0.0)} and meets every class {chk(float(len(reps)), float(len(fp)), 0.0)}; the edge class {{0,c}} is the one-missing-digit set of the {b - 1}-digit interval and collapses {{0,c}} with {{0,{b}-c}}")
 
-def pair_family(b, nd, m, side, tag=""):
-    t0 = time.time()
-    rows = []
-    for (a, c) in pair_sets(b):
-        el, eh, mu_lo, mu_hi, slack = pair_band(b, a, c, nd, m, side=side)
-        rows.append((a, c, el, eh))
-    if side:
-        ok = all(eh < 0.25 for _, _, _, eh in rows)
-        key = max(rows, key=lambda r: r[3])
-        head = f"every two-missing-digit set in base {b} clears alpha_1 < 1/4" if ok else f"base {b} does not clear at every pair"
-        edge = f"worst pair {{{key[0]},{key[1]}}} at alpha_1 < {key[3]:.7f}"
-    else:
-        ok = all(el is not None and el >= 0.25 for _, _, el, _ in rows)
-        key = min(rows, key=lambda r: 9.9 if r[2] is None else r[2])
-        head = f"no two-missing-digit set in base {b} clears alpha_1 < 1/4" if ok else f"base {b} clears at some pair"
-        edge = f"closest pair {{{key[0]},{key[1]}}} at alpha_1 > {-1.0 if key[2] is None else key[2]:.7f}"
-    print(f"{head}{tag}: {nd} digits sub-scan {m}, {len(rows)} distinct sets, {edge} {chk(1.0 if ok else 0.0, 1.0, 0.0)}  ({time.time() - t0:.1f}s)")
-    return rows
-
 def pair_shortest(b, nds, m, side, thr=0.25, name="1/4"):
     t0 = time.time()
     todo = pair_sets(b)

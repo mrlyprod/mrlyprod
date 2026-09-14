@@ -574,10 +574,11 @@ fn run_census() {
 // AFFINE
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-struct Qw {
+struct Alg {
     p: i128,
     q: i128,
     r: i128,
+    m: i128,
 }
 
 fn gcd(a: i128, b: i128) -> i128 {
@@ -588,104 +589,129 @@ fn gcd(a: i128, b: i128) -> i128 {
     }
 }
 
-impl Qw {
-    fn new(p: i128, q: i128, r: i128) -> Qw {
+fn twist_of(ring: Ring) -> i128 {
+    match ring {
+        Ring::Gaussian => 0,
+        Ring::Eisenstein => 1,
+    }
+}
+
+impl Alg {
+    fn new(m: i128, p: i128, q: i128, r: i128) -> Alg {
         assert!(r != 0, "a rational needs a nonzero denominator");
         let (p, q, r) = if r < 0 { (-p, -q, -r) } else { (p, q, r) };
         if p == 0 && q == 0 {
-            return Qw { p: 0, q: 0, r: 1 };
+            return Alg {
+                p: 0,
+                q: 0,
+                r: 1,
+                m,
+            };
         }
         let g = gcd(gcd(p, q), r);
-        Qw {
+        Alg {
             p: p / g,
             q: q / g,
             r: r / g,
+            m,
         }
     }
-    fn whole(p: i64, q: i64) -> Qw {
-        Qw::new(p as i128, q as i128, 1)
+    fn whole(m: i128, p: i64, q: i64) -> Alg {
+        Alg::new(m, p as i128, q as i128, 1)
     }
-    fn sub(self, other: Qw) -> Qw {
-        Qw::new(
+    fn sub(self, other: Alg) -> Alg {
+        Alg::new(
+            self.m,
             self.p * other.r - other.p * self.r,
             self.q * other.r - other.q * self.r,
             self.r * other.r,
         )
     }
-    fn add(self, other: Qw) -> Qw {
-        Qw::new(
+    fn add(self, other: Alg) -> Alg {
+        Alg::new(
+            self.m,
             self.p * other.r + other.p * self.r,
             self.q * other.r + other.q * self.r,
             self.r * other.r,
         )
     }
-    fn mul(self, other: Qw) -> Qw {
-        Qw::new(
+    fn mul(self, other: Alg) -> Alg {
+        Alg::new(
+            self.m,
             self.p * other.p - self.q * other.q,
-            self.p * other.q + self.q * other.p - self.q * other.q,
+            self.p * other.q + self.q * other.p - self.m * self.q * other.q,
             self.r * other.r,
         )
     }
-    fn conjugate(self) -> Qw {
-        Qw::new(self.p - self.q, -self.q, self.r)
+    fn conjugate(self) -> Alg {
+        Alg::new(self.m, self.p - self.m * self.q, -self.q, self.r)
     }
-    fn div(self, other: Qw) -> Qw {
-        let n = other.p * other.p - other.p * other.q + other.q * other.q;
+    fn div(self, other: Alg) -> Alg {
+        let n = other.p * other.p - self.m * other.p * other.q + other.q * other.q;
         assert!(n != 0, "no division by zero");
-        self.mul(Qw::new(
-            other.r * (other.p - other.q),
+        self.mul(Alg::new(
+            self.m,
+            other.r * (other.p - self.m * other.q),
             -other.r * other.q,
             n,
         ))
     }
 }
 
-fn permutations(n: usize) -> Vec<Vec<usize>> {
-    let mut out = vec![vec![]];
-    for _ in 0..n {
-        let mut next = Vec::new();
-        for partial in &out {
-            for value in 0..n {
-                if !partial.contains(&value) {
-                    let mut grown = partial.clone();
-                    grown.push(value);
-                    next.push(grown);
-                }
+fn direct(left: &[Alg], right: &[Alg]) -> bool {
+    if left.len() != right.len() {
+        return false;
+    }
+    if left.len() < 2 {
+        return true;
+    }
+    let span = left[1].sub(left[0]);
+    for first in 0..right.len() {
+        for second in 0..right.len() {
+            if first == second {
+                continue;
+            }
+            let v = right[second].sub(right[first]).div(span);
+            let t = right[first].sub(v.mul(left[0]));
+            if left.iter().all(|&d| right.contains(&v.mul(d).add(t))) {
+                return true;
             }
         }
-        out = next;
     }
-    out
+    false
 }
 
-fn direct(left: &[Qw], right: &[Qw], perms: &[Vec<usize>]) -> bool {
-    let span = left[1].sub(left[0]);
-    perms.iter().any(|perm| {
-        let v = right[perm[1]].sub(right[perm[0]]).div(span);
-        let t = right[perm[0]].sub(v.mul(left[0]));
-        left.iter()
-            .zip(perm.iter())
-            .all(|(&d, &j)| v.mul(d).add(t) == right[j])
-    })
+fn conjugate_sets(left: &[Alg], right: &[Alg], mirror: bool) -> bool {
+    if direct(left, right) {
+        return true;
+    }
+    if !mirror {
+        return false;
+    }
+    let flipped: Vec<Alg> = left.iter().map(|d| d.conjugate()).collect();
+    direct(&flipped, right)
 }
 
-fn conjugate_sets(left: &[Qw], right: &[Qw], perms: &[Vec<usize>]) -> bool {
-    let mirror: Vec<Qw> = left.iter().map(|d| d.conjugate()).collect();
-    direct(left, right, perms) || direct(&mirror, right, perms)
-}
-
-fn digits_of(residues: &[(i64, i64)], code: usize) -> Vec<Qw> {
+fn digits_of(ring: Ring, residues: &[(i64, i64)], code: usize) -> Vec<Alg> {
+    let m = twist_of(ring);
     residues
         .iter()
         .enumerate()
         .filter(|(i, _)| (code >> i) & 1 == 1)
-        .map(|(_, &z)| Qw::whole(z.0, z.1))
+        .map(|(_, &z)| Alg::whole(m, z.0, z.1))
         .collect()
 }
 
-fn affine_classes(residues: &[(i64, i64)], codes: &[usize]) -> Vec<usize> {
-    let sets: Vec<Vec<Qw>> = codes.iter().map(|&c| digits_of(residues, c)).collect();
-    let perms = permutations(sets[0].len());
+fn similar_classes(
+    ring: Ring,
+    residues: &[(i64, i64)],
+    codes: &[usize],
+    mirror: bool,
+) -> Vec<usize> {
+    let sets: Vec<Vec<Alg>> = codes
+        .iter()
+        .map(|&c| digits_of(ring, residues, c))
+        .collect();
     let mut label = vec![usize::MAX; codes.len()];
     let mut classes = 0;
     for i in 0..codes.len() {
@@ -694,7 +720,7 @@ fn affine_classes(residues: &[(i64, i64)], codes: &[usize]) -> Vec<usize> {
         }
         label[i] = classes;
         for j in i + 1..codes.len() {
-            if label[j] == usize::MAX && conjugate_sets(&sets[i], &sets[j], &perms) {
+            if label[j] == usize::MAX && conjugate_sets(&sets[i], &sets[j], mirror) {
                 label[j] = classes;
             }
         }
@@ -703,96 +729,425 @@ fn affine_classes(residues: &[(i64, i64)], codes: &[usize]) -> Vec<usize> {
     label
 }
 
+fn orbit_labels(group: &[Vec<usize>], codes: &[usize]) -> (Vec<usize>, usize) {
+    let mut seat: HashMap<usize, usize> = HashMap::new();
+    let mut orbits = 0usize;
+    for &code in codes {
+        if seat.contains_key(&code) {
+            continue;
+        }
+        for member in orbit(group, code) {
+            seat.insert(member, orbits);
+        }
+        orbits += 1;
+    }
+    (codes.iter().map(|c| seat[c]).collect(), orbits)
+}
+
+fn crossing(
+    orbits: &[usize],
+    classes: &[usize],
+    codes: &[usize],
+) -> (Option<(usize, usize)>, Option<(usize, usize)>) {
+    let mut split = None;
+    let mut merge = None;
+    for i in 0..codes.len() {
+        for j in i + 1..codes.len() {
+            let same_orbit = orbits[i] == orbits[j];
+            let same_class = classes[i] == classes[j];
+            if same_orbit && !same_class && split.is_none() {
+                split = Some((codes[i], codes[j]));
+            }
+            if !same_orbit && same_class && merge.is_none() {
+                merge = Some((codes[i], codes[j]));
+            }
+        }
+    }
+    (split, merge)
+}
+
+fn pair_word(pair: Option<(usize, usize)>) -> String {
+    match pair {
+        Some((a, b)) => format!("{a}/{b}"),
+        None => "-".to_string(),
+    }
+}
+
+fn spell_code(ring: Ring, residues: &[(i64, i64)], code: usize) -> String {
+    format!(
+        "{code} ({})",
+        residues
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| (code >> i) & 1 == 1)
+            .map(|(_, &z)| spell(ring, z))
+            .collect::<Vec<_>>()
+            .join(", ")
+    )
+}
+
+fn grid(z: (f64, f64)) -> (i64, i64) {
+    ((z.0 * 1e9).round() as i64, (z.1 * 1e9).round() as i64)
+}
+
+fn shape(points: &[(f64, f64)]) -> Vec<(i64, i64)> {
+    if points.len() < 2 {
+        return Vec::new();
+    }
+    let mut best: Option<Vec<(i64, i64)>> = None;
+    for first in 0..points.len() {
+        for second in 0..points.len() {
+            if first == second {
+                continue;
+            }
+            let span = (
+                points[second].0 - points[first].0,
+                points[second].1 - points[first].1,
+            );
+            let mut key: Vec<(i64, i64)> = points
+                .iter()
+                .map(|p| {
+                    grid(complex_div(
+                        (p.0 - points[first].0, p.1 - points[first].1),
+                        span,
+                    ))
+                })
+                .collect();
+            key.sort_unstable();
+            if best.as_ref().is_none_or(|held| key < *held) {
+                best = Some(key);
+            }
+        }
+    }
+    best.expect("two digits fix a shape")
+}
+
+fn float_similar(ring: Ring, residues: &[(i64, i64)], codes: &[usize], mirror: bool) -> usize {
+    let mut seen = HashSet::new();
+    for &code in codes {
+        let points: Vec<(f64, f64)> = residues
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| (code >> i) & 1 == 1)
+            .map(|(_, &z)| ring.place(z.0, z.1))
+            .collect();
+        let mut key = shape(&points);
+        if mirror {
+            let flipped: Vec<(f64, f64)> = points.iter().map(|&(x, y)| (x, -y)).collect();
+            key = key.min(shape(&flipped));
+        }
+        seen.insert(key);
+    }
+    seen.len()
+}
+
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+struct Frac {
+    n: i128,
+    d: i128,
+}
+
+impl Frac {
+    fn new(n: i128, d: i128) -> Frac {
+        assert!(d != 0, "a fraction needs a nonzero denominator");
+        let (n, d) = if d < 0 { (-n, -d) } else { (n, d) };
+        if n == 0 {
+            return Frac { n: 0, d: 1 };
+        }
+        let g = gcd(n, d);
+        Frac { n: n / g, d: d / g }
+    }
+}
+
+fn det(u: (i64, i64), v: (i64, i64)) -> i128 {
+    u.0 as i128 * v.1 as i128 - u.1 as i128 * v.0 as i128
+}
+
+fn lattice_of(residues: &[(i64, i64)], code: usize) -> Vec<(i64, i64)> {
+    residues
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| (code >> i) & 1 == 1)
+        .map(|(_, &z)| z)
+        .collect()
+}
+
+fn affine_key(points: &[(i64, i64)]) -> Vec<(Frac, Frac)> {
+    let n = points.len();
+    if n < 2 {
+        return Vec::new();
+    }
+    let sub = |a: (i64, i64), b: (i64, i64)| (a.0 - b.0, a.1 - b.1);
+    let mut best: Option<Vec<(Frac, Frac)>> = None;
+    for i in 0..n {
+        for j in 0..n {
+            for k in 0..n {
+                if i == j || i == k || j == k {
+                    continue;
+                }
+                let e1 = sub(points[j], points[i]);
+                let e2 = sub(points[k], points[i]);
+                let base = det(e1, e2);
+                if base == 0 {
+                    continue;
+                }
+                let mut key: Vec<(Frac, Frac)> = points
+                    .iter()
+                    .map(|&p| {
+                        let u = sub(p, points[i]);
+                        (Frac::new(det(u, e2), base), Frac::new(det(e1, u), base))
+                    })
+                    .collect();
+                key.sort_unstable();
+                if best.as_ref().is_none_or(|held| key < *held) {
+                    best = Some(key);
+                }
+            }
+        }
+    }
+    if let Some(key) = best {
+        return key;
+    }
+    for i in 0..n {
+        for j in 0..n {
+            if i == j {
+                continue;
+            }
+            let v = sub(points[j], points[i]);
+            let mut key: Vec<(Frac, Frac)> = points
+                .iter()
+                .map(|&p| {
+                    let u = sub(p, points[i]);
+                    let along = if v.0 != 0 {
+                        Frac::new(u.0 as i128, v.0 as i128)
+                    } else {
+                        Frac::new(u.1 as i128, v.1 as i128)
+                    };
+                    (along, Frac::new(0, 1))
+                })
+                .collect();
+            key.sort_unstable();
+            if best.as_ref().is_none_or(|held| key < *held) {
+                best = Some(key);
+            }
+        }
+    }
+    best.expect("two distinct digits fix a line")
+}
+
+fn plane_classes(residues: &[(i64, i64)], codes: &[usize]) -> Vec<usize> {
+    let mut seat: HashMap<Vec<(Frac, Frac)>, usize> = HashMap::new();
+    let mut out = Vec::with_capacity(codes.len());
+    for &code in codes {
+        let key = affine_key(&lattice_of(residues, code));
+        let next = seat.len();
+        out.push(*seat.entry(key).or_insert(next));
+    }
+    out
+}
+
+fn carry(matrix: [[i64; 2]; 2], points: &[(i64, i64)]) -> Vec<(i64, i64)> {
+    points
+        .iter()
+        .map(|&(a, b)| {
+            (
+                matrix[0][0] * a + matrix[0][1] * b,
+                matrix[1][0] * a + matrix[1][1] * b,
+            )
+        })
+        .collect()
+}
+
+fn same_set(left: &[(i64, i64)], right: &[(i64, i64)]) -> bool {
+    left.len() == right.len() && left.iter().all(|z| right.contains(z))
+}
+
 fn run_affine() {
+    let mut below = 0usize;
+    let mut equal = 0usize;
+    let mut above = 0usize;
+    let mut identical = 0usize;
+    let mut crossed = 0usize;
+    let mut affine_below = 0usize;
+    let mut affine_equal = 0usize;
+    let mut affine_above = 0usize;
+    let mut affine_crossed = 0usize;
+    let bases = [
+        (Ring::Gaussian, (2i64, 0i64)),
+        (Ring::Gaussian, (1, 1)),
+        (Ring::Gaussian, (2, 1)),
+        (Ring::Eisenstein, (2, 0)),
+        (Ring::Eisenstein, (2, 1)),
+        (Ring::Eisenstein, (3, 0)),
+        (Ring::Eisenstein, (3, 1)),
+    ];
+    println!("AFFINE  the untwisted canonical digit sets of every base up to SIMILARITY and up to AFFINE conjugacy, beside the code census, in exact arithmetic");
+    println!("  conjugating the place maps by an invertible real affine h(x) = H x + s gives (y + H d + s (b - 1))/b, again an untwisted base-b place map exactly when H commutes with multiplication by 1/b, and s (b - 1) sweeps the plane since N(b) >= 2 forces b != 1");
+    println!("  at a non-real base the centraliser of 1/b in the two by two real matrices is C, so the conjugacy group is the similarity group x -> v x + t; at a real base 1/b is the scalar (1/b) I, it commutes with every H, and the conjugacy group is the whole real affine group GL_2 semidirect R^2");
+    println!("  the mirror x -> v conj(x) + t preserves the untwisted base-b family exactly when conj(b) = b, since a direct conjugacy keeps the derivative 1/b and a mirror one sends it to 1/conj(b); at a real base it is one element of the full affine group and not the only new one");
+    println!("  simil is the class count under the similarity group, affine the class count under the conjugacy group, equal to simil at the four non-real bases by the centraliser lemma and computed over GL_2(Q) semidirect Q^2 at the three real bases");
+    println!("  orbits counts digit CODES under the unit group joined by conjugation where conj(b) is an associate of b; ssplit and smerge witness the crossing of orbits with simil, asplit and amerge the crossing of orbits with affine");
+    println!(
+        "  ring  base  q  |F|  codes  orbits  simil  affine   ssplit   smerge   asplit   amerge"
+    );
+    for (ring, value) in bases {
+        let base = Base::new(ring, value);
+        let residues = base.residues();
+        let q = residues.len();
+        let group = base.group();
+        let real = value.1 == 0;
+        let mut codes_seen = 0u128;
+        let mut orbits_seen = 0usize;
+        let mut simil_seen = 0usize;
+        let mut affine_seen = 0usize;
+        for size in 0..=q {
+            let codes: Vec<usize> = (0..1usize << q)
+                .filter(|c| c.count_ones() as usize == size)
+                .collect();
+            let (orbits, orbit_count) = orbit_labels(&group, &codes);
+            let simil = similar_classes(ring, &residues, &codes, real);
+            let simil_count = simil.iter().copied().max().unwrap() + 1;
+            assert_eq!(
+                float_similar(ring, &residues, &codes, real),
+                simil_count,
+                "the float rerun of the normal form disagrees with the exact similarity classes"
+            );
+            let affine = if real {
+                plane_classes(&residues, &codes)
+            } else {
+                simil.clone()
+            };
+            let affine_count = affine.iter().copied().max().unwrap() + 1;
+            for i in 0..codes.len() {
+                for j in i + 1..codes.len() {
+                    assert!(
+                        simil[i] != simil[j] || affine[i] == affine[j],
+                        "the similarity classes do not refine the affine classes"
+                    );
+                }
+            }
+            let (split, merge) = crossing(&orbits, &simil, &codes);
+            let (asplit, amerge) = crossing(&orbits, &affine, &codes);
+            println!(
+                "  {:>9}  {:>4}  {q}  {size:>3}  {:>5}  {orbit_count:>6}  {simil_count:>5}  {affine_count:>6}  {:>7}  {:>7}  {:>7}  {:>7}",
+                ring_word(ring),
+                spell(ring, value),
+                codes.len(),
+                pair_word(split),
+                pair_word(merge),
+                pair_word(asplit),
+                pair_word(amerge)
+            );
+            match simil_count.cmp(&orbit_count) {
+                std::cmp::Ordering::Less => below += 1,
+                std::cmp::Ordering::Equal => equal += 1,
+                std::cmp::Ordering::Greater => above += 1,
+            }
+            match affine_count.cmp(&orbit_count) {
+                std::cmp::Ordering::Less => affine_below += 1,
+                std::cmp::Ordering::Equal => affine_equal += 1,
+                std::cmp::Ordering::Greater => affine_above += 1,
+            }
+            if split.is_none() && merge.is_none() {
+                identical += 1;
+            }
+            if split.is_some() && merge.is_some() {
+                crossed += 1;
+            }
+            if asplit.is_some() && amerge.is_some() {
+                affine_crossed += 1;
+            }
+            codes_seen += codes.len() as u128;
+            orbits_seen += orbit_count;
+            simil_seen += simil_count;
+            affine_seen += affine_count;
+        }
+        println!(
+            "    totals: codes {codes_seen} = 2^{q}, code classes {orbits_seen}, similarity classes {simil_seen}, affine classes {affine_seen}, real base {real}, mirror in the code group {}",
+            base.mirrored()
+        );
+        assert_eq!(codes_seen, 1u128 << q, "the sizes do not exhaust the codes");
+        assert_eq!(
+            orbits_seen as u128,
+            burnside(&group),
+            "the per-size orbit counts do not sum to the census, which controls the code column alone"
+        );
+    }
+    println!(
+        "  over the {} cells the similarity count is below the code count in {below}, equal in {equal} and above it in {above}, the two partitions identical in {identical} and crossing in {crossed}",
+        below + equal + above
+    );
+    println!(
+        "  over the same cells the affine count is below the code count in {affine_below}, equal in {affine_equal} and above it in {affine_above}, and the two partitions cross in {affine_crossed}"
+    );
     let base = Base::new(Ring::Eisenstein, (3, 0));
     let residues = base.residues();
     let group = base.group();
-    println!("AFFINE  base 3 on Z[omega], untwisted canonical designs, exact arithmetic over Q(w)");
-    println!("  the base is real, so a conjugacy h(x) = v x + s or h(x) = v conj(x) + s carries a design to a design and sends the digit set F to v F + s (b - 1) or to v conj(F) + s (b - 1); the classes below are the classes of F under x -> v x + t and x -> v conj(x) + t with v in Q(w)^* and t in Q(w)");
-    for size in [2usize, 3] {
-        let codes: Vec<usize> = (0..1usize << residues.len())
-            .filter(|c| c.count_ones() as usize == size)
-            .collect();
-        let mut census: HashMap<usize, usize> = HashMap::new();
-        let mut orbits = 0usize;
-        for &code in &codes {
-            if census.contains_key(&code) {
-                continue;
-            }
-            for member in orbit(&group, code) {
-                census.insert(member, orbits);
-            }
-            orbits += 1;
-        }
-        let classes = affine_classes(&residues, &codes);
-        let total = classes.iter().copied().max().unwrap() + 1;
+    println!(
+        "  the fixed witnesses at base 3 on Z[omega], |F| = 3, untwisted canonical digit sets"
+    );
+    for (a, b, note) in [
+        (
+            131usize,
+            137usize,
+            "share a census orbit and are not similar",
+        ),
+        (7, 42, "are similar and sit in different census orbits"),
+    ] {
+        let codes = vec![a, b];
+        let (orbits, _) = orbit_labels(&group, &codes);
+        let simil = similar_classes(Ring::Eisenstein, &residues, &codes, true);
         println!(
-            "  |F| {size}: codes {}, census orbits {orbits}, affine classes {total}",
-            codes.len()
+            "    codes {} and {} {note}: same orbit {}, same similarity class {}",
+            spell_code(Ring::Eisenstein, &residues, a),
+            spell_code(Ring::Eisenstein, &residues, b),
+            orbits[0] == orbits[1],
+            simil[0] == simil[1]
         );
-        let mut split = None;
-        let mut merge = None;
-        for (i, &a) in codes.iter().enumerate() {
-            for (j, &b) in codes.iter().enumerate().skip(i + 1) {
-                let same_orbit = census[&a] == census[&b];
-                let same_class = classes[i] == classes[j];
-                if same_orbit && !same_class && split.is_none() {
-                    split = Some((a, b));
-                }
-                if !same_orbit && same_class && merge.is_none() {
-                    merge = Some((a, b));
-                }
-            }
-        }
-        let spell_code = |code: usize| {
-            format!(
-                "{code} ({})",
-                residues
-                    .iter()
-                    .enumerate()
-                    .filter(|(i, _)| (code >> i) & 1 == 1)
-                    .map(|(_, &z)| spell(Ring::Eisenstein, z))
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            )
-        };
-        match split {
-            Some((a, b)) => println!(
-                "    split: codes {} and {} share a census orbit and are not affinely conjugate",
-                spell_code(a),
-                spell_code(b)
-            ),
-            None => println!("    split: none"),
-        }
-        match merge {
-            Some((a, b)) => println!(
-                "    merge: codes {} and {} are affinely conjugate and sit in different census orbits",
-                spell_code(a),
-                spell_code(b)
-            ),
-            None => println!("    merge: none"),
-        }
-        if size == 3 {
-            assert_eq!(codes.len(), 84);
-            assert_eq!(orbits, 13);
-            assert_eq!(total, 9);
-            let at = |code: usize| codes.iter().position(|&c| c == code).unwrap();
-            println!(
-                "    code 131 and code 137: same orbit {}, same affine class {}",
-                census[&131] == census[&137],
-                classes[at(131)] == classes[at(137)]
-            );
-            println!(
-                "    code 7 and code 42: same orbit {}, same affine class {}",
-                census[&7] == census[&42],
-                classes[at(7)] == classes[at(42)]
-            );
-        } else {
-            assert_eq!(codes.len(), 36);
-            assert_eq!(orbits, 7);
-            assert_eq!(total, 1);
-        }
+        assert_eq!(orbits[0] == orbits[1], note.starts_with("share"));
+        assert_eq!(simil[0] == simil[1], !note.starts_with("share"));
     }
+    for (a, b, matrix) in [
+        (131usize, 137usize, [[0i64, 2], [1, -1]]),
+        (7, 131, [[1, 1], [0, 1]]),
+    ] {
+        let left = lattice_of(&residues, a);
+        let right = lattice_of(&residues, b);
+        let moved = carry(matrix, &left);
+        let turn = det((matrix[0][0], matrix[1][0]), (matrix[0][1], matrix[1][1]));
+        println!(
+            "    codes {} and {} are affinely conjugate by H = [[{}, {}], [{}, {}]] of determinant {turn}, same affine key {}",
+            spell_code(Ring::Eisenstein, &residues, a),
+            spell_code(Ring::Eisenstein, &residues, b),
+            matrix[0][0],
+            matrix[0][1],
+            matrix[1][0],
+            matrix[1][1],
+            affine_key(&left) == affine_key(&right)
+        );
+        assert!(turn != 0, "a conjugacy needs an invertible H");
+        assert!(same_set(&moved, &right), "H does not carry the digit set");
+        assert_eq!(
+            affine_key(&left),
+            affine_key(&right),
+            "the affine normal form misses a witnessed conjugacy"
+        );
+    }
+    let three: Vec<usize> = (0..512usize).filter(|c| c.count_ones() == 3).collect();
+    let (_, orbit_count) = orbit_labels(&group, &three);
+    let simil = similar_classes(Ring::Eisenstein, &residues, &three, true);
+    let affine = plane_classes(&residues, &three);
+    assert_eq!(three.len(), 84);
+    assert_eq!(orbit_count, 13);
+    assert_eq!(simil.iter().copied().max().unwrap() + 1, 9);
+    assert_eq!(affine.iter().copied().max().unwrap() + 1, 2);
+    let bare = similar_classes(Ring::Eisenstein, &residues, &three, false);
+    println!(
+        "    the mirror is load-bearing for similarity: the 84 three-digit codes fall in {} direct classes and {} once the mirror joins, and in {} affine classes, the collinear triples against the rest",
+        bare.iter().copied().max().unwrap() + 1,
+        simil.iter().copied().max().unwrap() + 1,
+        affine.iter().copied().max().unwrap() + 1
+    );
 }
 
 fn main() {

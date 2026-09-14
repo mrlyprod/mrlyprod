@@ -345,6 +345,15 @@ Every named reference, sequence id, theorem and attribution on this tree's root 
 | OEIS A191363 | Numbers m whose deficiency is 2: sigma(m) - 2*m = -2. | https://oeis.org/A191363 |
 | OEIS A000045 | Fibonacci numbers | https://oeis.org/A000045 |
 | OEIS A000930 | Narayana's cows sequence | https://oeis.org/A000930 |
+| Ramanujan's sum | Ramanujan's sum, Wikipedia: the divisor form c_q(n) = sum over d dividing gcd(q,n) of mu(q/d) d, published by Kluyver in 1906, the sums named after Ramanujan's 1918 paper; the article cites Hardy and Wright Theorems 65 and 66 for the root-of-unity facts and NOT Theorem 272, so the Theorem 272 number often quoted for Ramanujan's sum is unconfirmed and must not be printed; read at source | https://en.wikipedia.org/wiki/Ramanujan%27s_sum |
+| A001146 | a(n) = 2^(2^n). | https://oeis.org/A001146 |
+| A001622 | Decimal expansion of golden ratio phi (or tau) = (1 + sqrt(5))/2. | https://oeis.org/A001622 |
+| A007582 | a(n) = 2^(n-1)*(1+2^n). | https://oeis.org/A007582 |
+| A058265 | Decimal expansion of the tribonacci constant t, the real root of x^3 - x^2 - x - 1. | https://oeis.org/A058265 |
+| A060006 | Decimal expansion of real root of x^3 - x - 1 (the plastic constant). | https://oeis.org/A060006 |
+| A092526 | Decimal expansion of (2/3)*cos( (1/3)*arccos(29/2) ) + 1/3, the real root of x^3 - x^2 - 1. | https://oeis.org/A092526 |
+| A003714 | Fibbinary numbers: if n = F(i1) + F(i2) + ... + F(ik) is the Zeckendorf representation of n (i.e., write n in Fibonacci number system) then a(n) = 2^(i1 - 2) + 2^(i2 - 2) + ... + 2^(ik - 2). Also numbers whose binary representation contains no two adjacent 1's. | https://oeis.org/A003714 |
+| A000225 | a(n) = 2^n - 1. (Sometimes called Mersenne numbers, although that name is usually reserved for A001348.) | https://oeis.org/A000225 |
 
 ## PRIOR ART ON THE BASE-3 SLICE
 

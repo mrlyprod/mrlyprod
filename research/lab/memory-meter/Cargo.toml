@@ -1,0 +1,7 @@
+[package]
+name = "memory-meter"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+mrlynum.workspace = true

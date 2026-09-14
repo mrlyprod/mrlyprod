@@ -88,7 +88,18 @@ fn design(ring: &str, a: i32, c: i32, digits: &str, twists: &str) -> Result<Radi
         )));
     }
     let turns = picked.into_iter().map(|i| units[i]).collect();
-    Ok(Radix::new(Base::new(ring, (a, c)), digits, turns))
+    let base = Base::new(ring, (a, c));
+    for (i, &z) in digits.iter().enumerate() {
+        for &w in &digits[..i] {
+            if base.congruent(z, w) {
+                return Err(Fault::new(format!(
+                    "the digits {}:{} and {}:{} are congruent modulo the base.",
+                    w.0, w.1, z.0, z.1
+                )));
+            }
+        }
+    }
+    Ok(Radix::new(base, digits, turns))
 }
 
 fn levelled(radix: &Radix, level: usize) -> Result<usize, Fault> {

@@ -156,11 +156,21 @@ pub struct Radix {
 }
 
 impl Radix {
-    /// Builds a design from a base, a digit list and a unit twist per digit, panicking on a length mismatch or a twist of norm above one.
+    /// Builds a design from a base, a digit list and a unit twist per digit, panicking on a length mismatch, a twist whose norm is not one, or two digits congruent modulo the base.
+    ///
+    /// Pairwise incongruent digits are the hypothesis of the untwisted fill law: they are what recovers the last digit from the word read modulo the base, so a repeated class is refused here rather than silently gluing words.
     pub fn new(base: Base, digits: Vec<(i64, i64)>, twists: Vec<(i64, i64)>) -> Radix {
         assert_eq!(digits.len(), twists.len(), "one twist per digit");
         for &(a, b) in &twists {
             assert_eq!(base.ring().norm(a, b), 1, "a twist is a unit");
+        }
+        for (i, &z) in digits.iter().enumerate() {
+            for &w in &digits[..i] {
+                assert!(
+                    !base.congruent(z, w),
+                    "the digits {w:?} and {z:?} are congruent modulo the base"
+                );
+            }
         }
         Radix {
             base,
@@ -390,6 +400,33 @@ mod tests {
         let image: HashSet<&Vec<usize>> = multiset.iter().collect();
         assert_eq!(multiset.len(), 8);
         assert_eq!(image.len(), 1);
+    }
+
+    #[test]
+    #[should_panic(expected = "congruent modulo the base")]
+    fn a_congruent_digit_pair_is_refused() {
+        let base = Base::new(Ring::Eisenstein, (3, 0));
+        assert!(base.congruent((2, 0), (-1, 0)));
+        Radix::new(base, vec![(0, 0), (2, 0), (-1, 0)], vec![(1, 0); 3]);
+    }
+
+    #[test]
+    fn the_canonical_residues_build_a_design() {
+        let bases = [
+            Base::new(Ring::Gaussian, (1, 1)),
+            Base::new(Ring::Gaussian, (2, 1)),
+            Base::new(Ring::Eisenstein, (2, 0)),
+            Base::new(Ring::Eisenstein, (3, 0)),
+            Base::new(Ring::Eisenstein, (3, 1)),
+        ];
+        for base in bases {
+            let digits = base.residues();
+            let twists = vec![(1, 0); digits.len()];
+            let design = Radix::new(base, digits, twists);
+            assert_eq!(design.size(), base.norm() as usize);
+            assert!(design.canonical());
+        }
+        assert_eq!(koch().size(), 4);
     }
 
     #[test]

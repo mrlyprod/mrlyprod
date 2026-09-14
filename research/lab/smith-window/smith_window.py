@@ -314,7 +314,7 @@ def corrector_index(cols, target):
 # THE SWEEP
 
 def sweep(lo, hi):
-    n = bw = bg = bc = bm = br = bt = bf = ne = 0
+    n = bw = bg = bc = bm = br = bt = bf = ne = fr = 0
     cap, flo, tie = [], [], []
     r4 = [0] * 4
     r8 = [0] * 8
@@ -345,6 +345,11 @@ def sweep(lo, hi):
         for j in bits(gen):
             om ^= raw[j]
         J = corrector_index(cols, om)
+        if k % 2 or e == 1:
+            assert C == K, "upper half not free at D=%d" % D
+            fr += 1
+        else:
+            assert K - C == 2 * jac(e - 1), "ceiling deficit is not 2J(e-1) at D=%d" % D
         if tent(R)[1] != C - dg:
             bt += 1
             print("tent identity fails at D=%d" % D)
@@ -380,6 +385,7 @@ def sweep(lo, hi):
     print("the reach law reach = 3w + 2[e even] + [k odd](1 + p mod 2), D = 4^m + 3 apart: %d/%d" % (n - br, n))
     print("floor(reach/3) = C - deg g + [k odd and e even] off the %d rows D = 4^m + 3, where it reads 1 against C - deg g = K - deg g = 0: %d/%d" % (ne, n - bf, n))
     print("corrector law C - deg g = min(K - deg g, floor(reach/3)) from the closed form: %d/%d" % (n - bm, n))
+    print("upper half free where C = K, that is k odd or e = 1, else deficit K - C = 2J(e-1): free %d, open %d" % (fr, n - fr))
     print("branches: floor strict %d, K cap strict %d, tie %d" % (len(flo), len(cap), len(tie)))
     print("floor-strict rows are exactly the C < K rows: %s" % (sorted(flo) == sorted(d for d in range(lo, hi + 1, 2) if law_e(d)[1] < law_e(d)[0])))
 

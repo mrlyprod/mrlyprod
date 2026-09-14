@@ -41,12 +41,55 @@ Cited facts only.
 - **Is the two-tile grammar geometric, or only arithmetic?** Reproducing cell counts is weaker than a substitution acting on tiles, and no source supplies the latter past `b = 3`.
 - **Does the base axis factor at all?** [cuts](cuts.md) walks the dimension axis at fixed base 3 and has a theorem there: the order law, from a factorisation of the digit polynomial. The same three-step argument - digit polynomial, carry contraction, palindromic symmetry - is what the two-tile claim has never been given, and it is exactly the kind of statement that would decide the mod-4 split.
 
+## THE TENT IDENTITY
+
+Law E's window length is a distance measured inside a slot, and that is an identity among Law E's own closed forms rather than a fact about the module. Every symbol below is `lab/smith-window`'s and every number is regenerated there.
+
+### The objects
+
+- `D = 2R + 1` is odd with `D >= 5`, so `R >= 2`.
+- `J` is Jacobsthal: `J(n) = 0` for `n < 0` and `J(n) = (2^n - (-1)^n)/3` otherwise, so `J(0) = 0`, `J(1) = J(2) = 1`, `J(3) = 3`, `J(4) = 5`, with `J(n) = J(n-1) + 2 J(n-2)` for `n >= 2`.
+- `b` is the least integer with `2^b >= 3R - 1`, so `b >= 3` and `2^(b-1) < 3R - 1 <= 2^b`.
+- `g = |2R - 2^(b-1) - 1|` is odd and at least `1`, and `s = (g + 1)/2 >= 1` is its half.
+- `e = min{e >= 1 : J(e) >= s}` is the slot index and `k = b - 1 - e` its complement.
+- The window box is `i0 = max(2, 4R - 2^b)` and `hi = hi0 - (hi0 mod 2)` with `hi0 = floor((6R + 2 - 2^b)/3)`, and `K = (hi - i0)/2` is the top index of the family `X_0, ..., X_K`, never its length.
+- `t = (J(k) - 1)/2`, and `c_t` are the `F_2` Fibonacci polynomials `c_0 = 1`, `c_1 = 1 + y`, `c_t = y c_(t-1) + c_(t-2)`.
+- `N = J(e) - J(e-1)` is the slot length, `u = s - J(e-1) - 1` the offset inside it, and `p = u` above the octave centre `R = 2^(b-2)` while `p = N - 1 - u` at or below it.
+- `C_D = K - 2 J(e-1)` when `k` is even and `C_D = K` when `k` is odd is Law E's ceiling, `W = C_D - t 2^e` its offset, `chi = 2 J(e-2) - 1` for `e >= 3` and `chi = 1` otherwise, `m = max(0, 2W - chi)`, and `g_D = z^m c_t(z^(2^e))` its generator.
+
+### The statement
+
+- **Proved.** For every odd `D = 2R + 1 >= 5`, `min(p, N - 1 - p) = C_D - deg g_D`.
+- The proof is exact arithmetic in `b, e, k, R` and uses no property of `V_2`, only the formulas above. `C_D` and `g_D` are taken here as those closed forms and not as the measured ceiling and generator, so the theorem is an identity among Law E's formulas and says something about `V_2` only where Law E itself holds.
+- Law E is a swept law, **Verified** at 1199/1199 rows of odd `D = 5..2401` by `lab/smith-window`, and the identity inherits that standing hypothesis. Against the formulas themselves it is a theorem, re-checked as a transcription at 999999/999999 rows of odd `D = 5..2000001` (`lab/smith-window`).
+
+### The proof
+
+Throughout `3 J(n) = 2^n - (-1)^n`, `J(n)` is odd for `n >= 1`, and `J` is nondecreasing on `n >= 0`.
+
+- **Lemma 1, no `e = 2`.** `e = 2` would need `J(1) < s <= J(2)`, that is `1 < s <= 1`, which is empty, so `e = 1` or `e >= 3`.
+- **Lemma 2, the bracket.** `J(e-1) < s <= J(e)`: the right inequality defines `e`, the left is its minimality for `e >= 2` and reads `0 < s` at `e = 1`.
+- **Lemma 3, the box length.** `K = J(b-2) - s` in both octave halves: above centre `s = R - 2^(b-2)` gives `i0 = 4s` and `hi = 2s + J(b-1) + 1 - 2[b even]`, below or at centre `s = 2^(b-2) + 1 - R` gives `i0 = 2` and `hi = J(b-1) + 3 - 2s - 2[b even]`, both landing on `K = (J(b-1) - (-1)^b)/2 - s`, and `J(b-1) - (-1)^b = 2 J(b-2)`.
+- **Lemma 4, `k >= 1`.** The defining bound `3R - 1 <= 2^b` gives `3s <= 2^(b-2) + 1` above centre and the minimality `2^(b-1) < 3R - 1` gives `3s < 2^(b-2) + 2` below, so `s <= J(b-2)` either way, hence `K >= 0`, `e <= b - 2`, `k >= 1`, `J(k)` odd and `t >= 0` an integer; Law E's standing hypothesis `k >= 1` is therefore a theorem.
+- **Lemma 5, the collapse.** `W = J(e) - s` whether `k` is even or odd: with `b - 2 = k + e - 1` and `t 2^e = (J(k) - 1) 2^(e-1)`, `3(J(b-2) - t 2^e) = (-1)^(k+e) + ((-1)^k + 3) 2^(e-1)`, which is `3 J(e)` for `k` odd, where `C_D = K`, and `3 J(e+1)` for `k` even, where the ceiling's `-2 J(e-1)` turns `J(e+1) - 2 J(e-1)` back into `J(e)`; the ceiling deficit and the parity of `k` cancel exactly.
+- **Lemma 6, the slot.** For `e >= 2`, `3(J(e) - J(e-1)) = 2^(e-1) - 2(-1)^e = 6 J(e-2)`, so `N = 2 J(e-2)` and `chi = N - 1` on the live range `e >= 3`; at `e = 1` the slot is `N = 1` while `chi = 1`, and that bridge fails.
+- **Lemma 7, the reflection.** `u + W = (s - J(e-1) - 1) + (J(e) - s) = N - 1` with both terms nonnegative by Lemma 2, so `{u, W} = {p, N - 1 - p}` in both halves and `min(p, N - 1 - p) = min(W, N - 1 - W)`.
+- **Lemma 8, parity.** `p == R mod 2` whenever `e >= 3`, since then `b >= 5` makes `2^(b-2)` even and `J(e-1)`, `J(e)` are odd; it is sharp, failing exactly on the `e = 1` rows above centre, `R = 2^(b-2) + 1`, that is exactly on `D = 2^j + 3` for `j >= 2`.
+- **The theorem.** `deg c_t = t`, because `y c_(t-1)` has degree `t` against `t - 2` for `c_(t-2)`, so `deg g_D = m + t 2^e` and `C_D - deg g_D = W - max(0, 2W - chi) = min(W, chi - W)`; by Lemma 1 three cases exhaust, at `e >= 3` Lemma 6 reads `chi` as `N - 1` and Lemma 7 closes it, at `e = 2` there is nothing to prove, and at `e = 1` Lemma 2 forces `s = 1`, so `W = u = p = 0` and `N = 1` make both sides `0`.
+
+### What it buys
+
+- **Proved.** The upper half of the layer-2 window law, that `z^(C_D - deg g_D + 1) g_D` does not lift, is free wherever `C_D = K`: every element of `V_2` has coefficient degree at most `K`, while that candidate has degree `C_D + 1` whatever `deg g_D` is, so at `C_D = K` it leaves the family outright. The tent identity is not used; the cut costs the ceiling law alone.
+- **Proved.** By the ceiling law `C_D = K` exactly when `k` is odd or `e = 1`, and `C_D < K` exactly when `k` is even and `e >= 3`, where the deficit is `K - C_D = 2 J(e-1) > 0`. So the upper half is unconditional at every row with `k` odd or `e = 1`, and what stays open is the rows with `k` even and `e >= 3`: `448` of the `1199` rows of odd `D = 5..2401`, and `29116` of `99999` over odd `D = 5..200001` (`lab/smith-window`).
+- **Conjecture.** At those open rows the family element of coefficient degree `C_D + 1` has mod-4 obstruction outside the image of the mod-2 symbol on the same coefficient box, for a deficit of exactly `2 J(e-1)` steps. That is a rank statement about the corrector image, not arithmetic in `b, e, k, R`, and it is all that remains of the upper half.
+- **Proved.** Lemma 8's parity fails exactly on `D = 2^j + 3` for `j >= 2`, rows carrying `k = j - 1`, so the reach law's escaping family `D = 4^m + 3` is the `k` odd half of that set and nothing more: `D = 11` fails the parity and is not of that form. Why the reach law excepts that half and not the `k` even rows `D = 11, 35, 131, ...` is open.
+
 ## WHERE THE REST LIVES
 
 - The dimension axis at fixed base 3: the `ceil(D/2)` order law, the product formula over 3-adic angle towers, and the unconditional pinning `|rho_D - fill/3| <= 2(D-1)/3` are the `carlomitchener/research/slice-recurrence-order` lane.
 - The sign law in every even dimension at bases 3 and 5, the certificate machines, the transient constant `ln(R)/4`, the tent rank law and the layer-2 window law are the `carlomitchener/research/slice-sign-even-half` lane.
 - The layer-2 window itself - its generator `g_D`, its ceiling `C_D`, the family shift law and the corrector law behind them - is regenerated by `lab/smith-window`.
-- So are the two statements that close the corrector law. Law E's slot has length `N = J(e) - J(e-1)` and a position `p` measured from the octave centre; the tent identity is `min(p, N - 1 - p) = C_D - deg g_D`, and the reach law is `reach = R - jmax = 3 min(p, N - 1 - p) + 2 [e even] + [k odd](1 + p mod 2)`, with one row per odd octave escaping it at `D = 4^m + 3`.
+- So are the two statements that close the corrector law. The tent identity is proved above as arithmetic in `b, e, k, R` among Law E's own closed forms, so only the reach law `reach = R - jmax = 3 min(p, N - 1 - p) + 2 [e even] + [k odd](1 + p mod 2)` is still read off a sweep, with one row per odd octave escaping it at `D = 4^m + 3`.
 - Off those escaping rows `floor(reach/3) = C_D - deg g_D + [k odd and e even]`; on them it reads `1` against `C_D - deg g_D = K - deg g_D = 0`, so `min(K - deg g_D, floor(reach/3)) = C_D - deg g_D` at every row and the corrector law's statement reads off `(b, e, k, R)` with no span test in it. The deduction behind it still carries one.
 - The carry matrix `M_even` is defined once, in [cuts](cuts.md), and is not redefined here.
 - The hexagram bijection and the mesh census: [cuts](cuts.md). The hexagon mesh itself: [slices](slices.md). The fill polynomial of `mrly_bang_d3_23`: [method](method.md).

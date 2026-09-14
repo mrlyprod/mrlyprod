@@ -273,7 +273,7 @@ fn walk(
 
 // THE GROWTH
 
-/// The relative move of the growth ratio that stops the power iteration.
+/// The absolute `l^1` move of the normalised iterate that stops the power iteration, counted only when it holds over three consecutive sweeps.
 pub const TOLERANCE: f64 = 1e-14;
 
 /// The sweep cap of the power iteration.
@@ -281,8 +281,10 @@ pub const SWEEPS: usize = 100_000;
 
 /// Returns the Perron root of the transfer matrix, the count's growth per level.
 ///
-/// The iteration runs on `A + I`, whose diagonal is positive, so no period stalls the ratio; it stops when the ratio moves by less than `TOLERANCE` relatively or after `SWEEPS` sweeps, and the answer is that ratio less one.
-/// A nilpotent matrix, the rule whose words all die past its window, is read off its own digraph first and returns exactly `0`.
+/// The digraph is split into its strongly connected components first; a component carrying no cycle contributes nothing, and a rule whose components all die past the window returns exactly `0`.
+/// Each cyclic component is irreducible, so `I + B` is primitive and the power iteration on it converges geometrically; the iteration stops on a sustained Cauchy move of the normalised vector, never on a plateau of one scalar, and the Collatz-Wielandt ratios bracket the root.
+/// The estimate is then made exact against the component's characteristic polynomial, taken by integer Faddeev-LeVerrier: an integer root is returned exactly, and otherwise the simple Perron root is bisected to the resolution of an `f64`.
+/// The answer is the largest component root.
 ///
 /// ```
 /// let golden = mrlynum::memory::Rule::new(1, 2, 7).unwrap();
@@ -291,36 +293,33 @@ pub const SWEEPS: usize = 100_000;
 /// ```
 pub fn perron(rule: &Rule) -> f64 {
     let matrix = transfer(rule);
-    if nilpotent(&matrix) {
-        return 0.0;
-    }
+    let reach = reachability(&matrix);
     let states = matrix.len();
-    let mut vector = vec![1.0f64 / states as f64; states];
-    let mut ratio = 0.0f64;
-    for _ in 0..SWEEPS {
-        let mut next = vec![0.0f64; states];
-        for (s, row) in matrix.iter().enumerate() {
-            let mut sum = vector[s];
-            for (t, &entry) in row.iter().enumerate() {
-                sum += entry as f64 * vector[t];
-            }
-            next[s] = sum;
+    let mut seen = vec![false; states];
+    let mut best = 0.0f64;
+    for s in 0..states {
+        if seen[s] || (reach[s] >> s) & 1 == 0 {
+            continue;
         }
-        let mass: f64 = next.iter().sum();
-        for seat in next.iter_mut() {
-            *seat /= mass;
+        let part: Vec<usize> = (0..states)
+            .filter(|&t| t == s || ((reach[s] >> t) & 1 == 1 && (reach[t] >> s) & 1 == 1))
+            .collect();
+        for &t in &part {
+            seen[t] = true;
         }
-        vector = next;
-        if (mass - ratio).abs() <= TOLERANCE * mass {
-            ratio = mass;
-            break;
+        let block: Vec<Vec<i128>> = part
+            .iter()
+            .map(|&i| part.iter().map(|&j| matrix[i][j] as i128).collect())
+            .collect();
+        let root = component_root(&block);
+        if root > best {
+            best = root;
         }
-        ratio = mass;
     }
-    (ratio - 1.0).max(0.0)
+    best
 }
 
-fn nilpotent(matrix: &[Vec<u64>]) -> bool {
+fn reachability(matrix: &[Vec<u64>]) -> Vec<u64> {
     let states = matrix.len();
     let mut reach: Vec<u64> = matrix
         .iter()
@@ -345,7 +344,135 @@ fn nilpotent(matrix: &[Vec<u64>]) -> bool {
             break;
         }
     }
-    (0..states).all(|s| (reach[s] >> s) & 1 == 0)
+    reach
+}
+
+fn multiply(left: &[Vec<i128>], right: &[Vec<i128>]) -> Vec<Vec<i128>> {
+    let n = left.len();
+    let mut out = vec![vec![0i128; n]; n];
+    for i in 0..n {
+        for t in 0..n {
+            if left[i][t] == 0 {
+                continue;
+            }
+            for j in 0..n {
+                out[i][j] += left[i][t] * right[t][j];
+            }
+        }
+    }
+    out
+}
+
+fn characteristic(block: &[Vec<i128>]) -> Vec<i128> {
+    let n = block.len();
+    let mut poly = vec![0i128; n + 1];
+    poly[n] = 1;
+    let mut carry = vec![vec![0i128; n]; n];
+    for step in 1..=n {
+        let mut product = multiply(block, &carry);
+        for (i, row) in product.iter_mut().enumerate() {
+            row[i] += poly[n - step + 1];
+        }
+        carry = product;
+        let next = multiply(block, &carry);
+        let trace: i128 = (0..n).map(|i| next[i][i]).sum();
+        poly[n - step] = -trace / step as i128;
+    }
+    poly
+}
+
+fn value(poly: &[i128], x: f64) -> f64 {
+    poly.iter().rev().fold(0.0f64, |run, &c| run * x + c as f64)
+}
+
+fn vanishes(poly: &[i128], x: i128) -> bool {
+    let mut run = 0i128;
+    for &c in poly.iter().rev() {
+        run = match run.checked_mul(x).and_then(|v| v.checked_add(c)) {
+            Some(v) => v,
+            None => return false,
+        };
+    }
+    run == 0
+}
+
+/// Returns the seed itself, unpolished, when no sign change of the characteristic polynomial is found within `0.25` of it, so a component whose bracket search fails reads the Collatz-Wielandt midpoint and never a wrong root.
+fn component_root(block: &[Vec<i128>]) -> f64 {
+    let n = block.len();
+    let mut vector = vec![1.0f64 / n as f64; n];
+    let mut settled = 0usize;
+    for _ in 0..SWEEPS {
+        let mut next = vec![0.0f64; n];
+        for (s, row) in block.iter().enumerate() {
+            let mut sum = vector[s];
+            for (t, &entry) in row.iter().enumerate() {
+                sum += entry as f64 * vector[t];
+            }
+            next[s] = sum;
+        }
+        let mass: f64 = next.iter().sum();
+        for seat in next.iter_mut() {
+            *seat /= mass;
+        }
+        let move_size: f64 = next
+            .iter()
+            .zip(vector.iter())
+            .map(|(a, b)| (a - b).abs())
+            .sum();
+        vector = next;
+        if move_size <= TOLERANCE {
+            settled += 1;
+            if settled >= 3 {
+                break;
+            }
+        } else {
+            settled = 0;
+        }
+    }
+    let mut low = f64::INFINITY;
+    let mut high = 0.0f64;
+    for (s, row) in block.iter().enumerate() {
+        let image: f64 = row
+            .iter()
+            .enumerate()
+            .map(|(t, &entry)| entry as f64 * vector[t])
+            .sum();
+        let ratio = image / vector[s];
+        low = low.min(ratio);
+        high = high.max(ratio);
+    }
+    let seed = 0.5 * (low + high);
+    let poly = characteristic(block);
+    let rounded = seed.round();
+    if (0.0..1e18).contains(&rounded) && vanishes(&poly, rounded as i128) {
+        return rounded;
+    }
+    let mut under;
+    let mut over;
+    let mut delta = 1e-13f64;
+    loop {
+        under = seed - delta;
+        over = seed + delta;
+        if value(&poly, under) < 0.0 && value(&poly, over) > 0.0 {
+            break;
+        }
+        delta *= 4.0;
+        if delta > 0.25 {
+            return seed;
+        }
+    }
+    for _ in 0..200 {
+        let middle = 0.5 * (under + over);
+        if middle <= under || middle >= over {
+            break;
+        }
+        if value(&poly, middle) < 0.0 {
+            under = middle;
+        } else {
+            over = middle;
+        }
+    }
+    0.5 * (under + over)
 }
 
 /// Returns the growth exponent `log_2 rho`, the growth per digit of the accepted word count.
@@ -425,6 +552,28 @@ mod tests {
         assert_eq!(counts(&golden, 8), vec![2, 3, 5, 8, 13, 21, 34, 55]);
         assert!((perron(&golden) - 1.618_033_988_749_895).abs() < 1e-12);
         assert_eq!(format!("{:.6}", kappa(&golden)), "0.098239");
+    }
+
+    #[test]
+    fn the_perron_root_is_the_spectral_radius_on_every_reducible_rule() {
+        let plastic = 1.324_717_957_244_746;
+        let golden = 1.618_033_988_749_895;
+        let quartic = 1.380_277_569_097_614;
+        for (code, want) in [
+            (5u64, 1.0),
+            (62, plastic),
+            (91, quartic),
+            (95, golden),
+            (125, plastic),
+            (190, plastic),
+        ] {
+            let rule = Rule::new(1, 3, code).unwrap();
+            let root = perron(&rule);
+            assert!(
+                (root - want).abs() < 1e-12,
+                "code {code} reads {root} against {want}"
+            );
+        }
     }
 
     #[test]

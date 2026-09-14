@@ -1,6 +1,8 @@
 #![doc = include_str!("../README.md")]
 #![deny(missing_docs)]
 
+/// The matrix ladder: the Dirichlet series of a memory design continued through its transfer matrix, its determinant cofactor and the residues on its pole combs.
+pub mod automaton;
 /// The sequence blender: term ops, exact recurrences and growth rates.
 pub mod blend;
 /// The boolean-function measures: Walsh spectra, nonlinearity, balance and avalanche.
@@ -21,6 +23,8 @@ pub mod formulas;
 pub mod gauss;
 /// The spatial network: its nodes, branches, extraction and census.
 pub mod graph;
+/// The peeled ladder: the Dirichlet series of a digit design continued to the whole plane, its Lyndon cofactor and the residues at its poles, each value carrying its bound.
+pub mod ladder;
 /// The visible lattice: totients, coprime pairs, the constant a dimension recovers and the Farey nodes.
 pub mod lattice;
 /// The memory designs: a rule on `k` consecutive digits, its transfer matrix, the words it accepts and the Perron root that is their dimension.
