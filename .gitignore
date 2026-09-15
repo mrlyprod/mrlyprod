@@ -20,10 +20,8 @@ target/
 .DS_Store
 
 # DEMOS
-sites/kit/node_modules/
-sites/net/node_modules/
-sites/net/pkg/
-sites/net/dist/
+site/node_modules/
+site/pkg/
 
 # PYTHON
 .venv/

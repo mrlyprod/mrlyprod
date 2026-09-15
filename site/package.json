@@ -1,0 +1,26 @@
+{
+  "name": "mrlynet",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "wasm": "bash ../scripts/wasm.sh",
+    "dev": "bun scripts/dev.ts",
+    "build": "bun scripts/site.ts",
+    "push": "bun scripts/push.ts",
+    "clean": "rm -rf dist",
+    "check": "bun check.ts",
+    "test": "bun test kit",
+    "figures": "bash ../scripts/figures.sh"
+  },
+  "dependencies": {
+    "@shikijs/core": "^4.4.3",
+    "@shikijs/engine-javascript": "^4.4.3",
+    "@shikijs/langs": "^4.4.3",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "three": "^0.185.1"
+  },
+  "devDependencies": {
+    "katex": "^0.18.5"
+  }
+}

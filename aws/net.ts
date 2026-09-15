@@ -190,8 +190,7 @@ async function build(s3: S3Client, next: Head): Promise<string> {
     if (!existsSync(join(SHELF_DIR, "research", "README.md"))) throw new Error("shelf: no research/README.md in the tarball");
     log(`shelf ${short(next.shelf)}`);
   }
-  const site = join(SRC_DIR, "sites", "net");
-  await run([process.execPath, "install", "--frozen-lockfile"], join(SRC_DIR, "sites", "kit"));
+  const site = join(SRC_DIR, "site");
   await run([process.execPath, "install", "--frozen-lockfile"], site);
   log("install");
   const pkg = await run([process.execPath, "scripts/pkg.ts"], site);
