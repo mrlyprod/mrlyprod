@@ -3,9 +3,8 @@ import { HUES, headScript, tintCss } from './config.js';
 
 test('a tint name sets the site accent and still leaves every hue overridable', () => {
   const css = tintCss('purple');
-  expect(css).toContain(':root { --accent: var(--purple-dark); --on-accent: var(--white); }');
-  expect(css).toContain(':root[data-theme="dark"] { --accent: var(--purple-light); --on-accent: var(--black); }');
-  for (const hue of HUES) expect(css).toContain(`:root[data-tint="${hue}"] { --accent: var(--${hue}-dark);`);
+  expect(css).toContain(':root { --accent: var(--purple); }');
+  for (const hue of HUES) expect(css).toContain(`:root[data-tint="${hue}"] { --accent: var(--${hue}); }`);
   expect(css.indexOf(':root[data-tint="purple"]')).toBeGreaterThan(css.indexOf(':root { --accent'));
   expect(tintCss(null)).not.toContain(':root { --accent');
 });

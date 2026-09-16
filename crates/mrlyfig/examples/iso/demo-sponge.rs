@@ -1,4 +1,4 @@
-use mrlycore::colors::{GREEN, GREEN_DARK, GREEN_LIGHT};
+use mrlycore::colors::{shades, GREEN};
 use mrlycore::errors::Result;
 use mrlyfig::{ink, iso, save, Board, Color, Frame};
 use mrlymath::three::designs;
@@ -8,7 +8,7 @@ const NUMBER: usize = 2;
 const LEVEL: usize = 4;
 
 fn shade() -> [Color; 3] {
-    [GREEN_LIGHT, GREEN, GREEN_DARK]
+    shades(GREEN)
 }
 
 fn corner(frame: Frame, size: f64, right: bool) -> Frame {

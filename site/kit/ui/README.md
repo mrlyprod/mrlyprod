@@ -1,7 +1,7 @@
 # ui
 
 - mrly.net's own design kit, not a package: plain CSS, a little vanilla JS, a little React. No build step, no Tailwind, no CSS-in-JS.
-- House style: palette first, tokens second, one class per idea, semantic HTML, light on `:root` and dark twice (`prefers-color-scheme` guarded by `:root:not([data-theme="light"])`, then `:root[data-theme="dark"]`), AA contrast in both, 44px targets on coarse pointers, no motion under `prefers-reduced-motion`.
+- House style: palette first (the fifteen colors, generated), theme and tokens second (`tokens.css`, by hand), one class per idea, semantic HTML, light on `:root` and dark twice (`prefers-color-scheme` guarded by `:root:not([data-theme="light"])`, then `:root[data-theme="dark"]`), AA contrast in both, 44px targets on coarse pointers, no motion under `prefers-reduced-motion`.
 - The palette is generated, never hand-edited: `palette.css` for CSS and `palette.js` for scripts, the same numbers in both.
 - `palette.css` names black, white and thirteen hues (`--red --orange --yellow --green --mint --teal --cyan --blue --indigo --purple --pink --brown --gray`), each with a `-light` and a `-dark` shade.
 - Each theme resolves the roles `--ground --bg --panel --deep --line --fg --dim --accent --on-accent` and the thirteen theme inks `--ink-<hue>`.
@@ -9,7 +9,7 @@
 - `chrome.js` fires `window` event `theme` whenever `data-theme` or `data-tint` changes; scripts that paint with `palette.js` listen and repaint.
 - `config.js` `headScript(prefix)` is a tiny inline script for the `<head>`, before any stylesheet: it adds class `js` and replays `data-theme`, `data-font`, `data-tint` and `data-saver` from localStorage, so a page never flashes the wrong theme or the wrong footer.
 - Tint is a runtime setting: `data-tint` on `html` is a palette hue name, absent means the site default, and `tintCss(hue)` writes the site default plus a `:root[data-tint=<hue>]` block for every hue but grey.
-- A tint resolves to `--<hue>-dark` on light and `--<hue>-light` on dark, both AA; `--on-accent` follows (white on light, black on dark) and `--ring` follows `--accent`.
+- A tint is the plain hue on both grounds; `--on-accent` is white and `--ring` follows `--accent`.
 
 ## CHROME
 

@@ -20,6 +20,142 @@ pub const ALPHA: Color = Color::rgba(0, 0, 0, 0);
 
 pub use crate::palette::*;
 
+// SHADES
+
+/// Returns a hue one shade lighter, itself, and one shade darker.
+pub fn shades(hue: Color) -> [Color; 3] {
+    let lerp = |to: Color, t: f64| {
+        let step = |a: u8, b: u8| (a as f64 + (b as f64 - a as f64) * t).round() as u8;
+        Color::rgb(step(hue.r, to.r), step(hue.g, to.g), step(hue.b, to.b))
+    };
+    [lerp(WHITE, 0.5), hue, lerp(BLACK, 0.4)]
+}
+
+// THEME
+
+/// One theme: the surfaces of a dark or a light ground and the thirteen inks, the same on both.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Theme {
+    /// The ground every figure is painted on.
+    pub ground: Color,
+    /// The page background, one step off the ground.
+    pub bg: Color,
+    /// The raised panel.
+    pub panel: Color,
+    /// The sunken well.
+    pub deep: Color,
+    /// The hairline between things.
+    pub line: Color,
+    /// The foreground, the strongest tone.
+    pub fg: Color,
+    /// The dimmed foreground, for anything secondary.
+    pub dim: Color,
+    /// The interactive accent.
+    pub accent: Color,
+    /// The tone written on the accent.
+    pub on_accent: Color,
+    /// The red ink.
+    pub red: Color,
+    /// The orange ink.
+    pub orange: Color,
+    /// The yellow ink.
+    pub yellow: Color,
+    /// The green ink.
+    pub green: Color,
+    /// The mint ink.
+    pub mint: Color,
+    /// The teal ink.
+    pub teal: Color,
+    /// The cyan ink.
+    pub cyan: Color,
+    /// The blue ink.
+    pub blue: Color,
+    /// The indigo ink.
+    pub indigo: Color,
+    /// The purple ink.
+    pub purple: Color,
+    /// The pink ink.
+    pub pink: Color,
+    /// The brown ink.
+    pub brown: Color,
+    /// The gray ink.
+    pub gray: Color,
+}
+
+impl Theme {
+    /// The thirteen inks in name order.
+    pub fn hues(&self) -> [Color; 13] {
+        [
+            self.red,
+            self.orange,
+            self.yellow,
+            self.green,
+            self.mint,
+            self.teal,
+            self.cyan,
+            self.blue,
+            self.indigo,
+            self.purple,
+            self.pink,
+            self.brown,
+            self.gray,
+        ]
+    }
+    /// The six inks a figure cycles through: blue, orange, yellow, green, pink, indigo.
+    pub fn inks(&self) -> [Color; 6] {
+        [self.blue, self.orange, self.yellow, self.green, self.pink, self.indigo]
+    }
+}
+
+const INKS: Theme = Theme {
+    ground: BLACK,
+    bg: BLACK,
+    panel: BLACK,
+    deep: BLACK,
+    line: BLACK,
+    fg: WHITE,
+    dim: GRAY,
+    accent: BLUE,
+    on_accent: WHITE,
+    red: RED,
+    orange: ORANGE,
+    yellow: YELLOW,
+    green: GREEN,
+    mint: MINT,
+    teal: TEAL,
+    cyan: CYAN,
+    blue: BLUE,
+    indigo: INDIGO,
+    purple: PURPLE,
+    pink: PINK,
+    brown: BROWN,
+    gray: GRAY,
+};
+
+/// The dark theme.
+pub const DARK: Theme = Theme {
+    ground: BLACK,
+    bg: Color::rgb(7, 7, 7),
+    panel: Color::rgb(17, 17, 18),
+    deep: BLACK,
+    line: Color::rgb(31, 31, 32),
+    fg: WHITE,
+    dim: GRAY,
+    ..INKS
+};
+
+/// The light theme.
+pub const LIGHT: Theme = Theme {
+    ground: WHITE,
+    bg: Color::rgb(248, 248, 249),
+    panel: Color::rgb(241, 241, 242),
+    deep: Color::rgb(232, 232, 233),
+    line: Color::rgb(221, 221, 223),
+    fg: BLACK,
+    dim: Color::rgb(85, 85, 88),
+    ..INKS
+};
+
 /// Returns the palette color a name spells, or an error for a stranger.
 pub fn named(name: &str) -> Result<Color> {
     match NAMES.iter().position(|&n| n == name) {

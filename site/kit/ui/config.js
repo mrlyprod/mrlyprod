@@ -29,18 +29,10 @@ export function headScript(prefix = current.prefix || 'mrly-') {
 
 export const HUES = ['red', 'orange', 'yellow', 'green', 'mint', 'teal', 'cyan', 'blue', 'indigo', 'purple', 'pink', 'brown'];
 
-const day = (hue) => `--accent: var(--${hue}-dark); --on-accent: var(--white);`;
-
-const night = (hue) => `--accent: var(--${hue}-light); --on-accent: var(--black);`;
-
-const rules = (hue, at) => [
-  `:root${at} { ${day(hue)} }`,
-  `@media (prefers-color-scheme: dark) { :root${at}:not([data-theme="light"]) { ${night(hue)} } }`,
-  `:root[data-theme="dark"]${at} { ${night(hue)} }`,
-];
+const rule = (hue, at) => `:root${at} { --accent: var(--${hue}); }`;
 
 export function tintCss(tint = current.tint) {
-  const lines = HUES.includes(tint) ? rules(tint, '') : [];
-  for (const hue of HUES) lines.push(...rules(hue, `[data-tint="${hue}"]`));
+  const lines = HUES.includes(tint) ? [rule(tint, '')] : [];
+  for (const hue of HUES) lines.push(rule(hue, `[data-tint="${hue}"]`));
   return `${lines.join('\n')}\n`;
 }

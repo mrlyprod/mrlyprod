@@ -5,7 +5,7 @@ import { bounce } from './sleep.js';
 import { wayfind } from './fractal.js';
 import { SAVERS } from './index.js';
 import { DESIGNS, kron, seed, tile } from './tiles.js';
-import { light } from '../palette.js';
+import { light } from '../theme.js';
 
 const take = (rand, n) => Array.from({ length: n }, () => rand());
 

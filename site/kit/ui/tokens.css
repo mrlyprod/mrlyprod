@@ -1,3 +1,20 @@
+/* THEME */
+
+:root {
+  color-scheme: light;
+  --ground: var(--white);
+  --bg: #f8f8f9;
+  --panel: #f1f1f2;
+  --deep: #e8e8e9;
+  --line: #dddddf;
+  --fg: var(--black);
+  --dim: #555558;
+  --accent: var(--blue);
+  --on-accent: var(--white);
+  --show-dark: none;
+  --show-light: block;
+}
+
 /* SURFACE */
 
 :root {
@@ -69,12 +86,32 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ground: var(--black);
+    --bg: #070707;
+    --panel: #111112;
+    --deep: var(--black);
+    --line: #1f1f20;
+    --fg: var(--white);
+    --dim: var(--gray);
+    --show-dark: block;
+    --show-light: none;
     --scrim: color-mix(in srgb, var(--black) 55%, transparent);
     --mix: 100%;
   }
 }
 
 :root[data-theme="dark"] {
+  color-scheme: dark;
+  --ground: var(--black);
+  --bg: #070707;
+  --panel: #111112;
+  --deep: var(--black);
+  --line: #1f1f20;
+  --fg: var(--white);
+  --dim: var(--gray);
+  --show-dark: block;
+  --show-light: none;
   --scrim: color-mix(in srgb, var(--black) 55%, transparent);
   --mix: 100%;
 }

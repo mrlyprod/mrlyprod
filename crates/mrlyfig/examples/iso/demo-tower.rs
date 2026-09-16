@@ -1,4 +1,4 @@
-use mrlycore::colors::{ORANGE, ORANGE_DARK, ORANGE_LIGHT};
+use mrlycore::colors::{shades, ORANGE};
 use mrlycore::errors::Result;
 use mrlyfig::board::Frame;
 use mrlyfig::{iso, save, Board, Color};
@@ -28,7 +28,7 @@ fn block(k: usize) -> Result<Cell3d> {
 }
 
 fn shade() -> [Color; 3] {
-    [ORANGE_LIGHT, ORANGE, ORANGE_DARK]
+    shades(ORANGE)
 }
 
 fn stack(frame: Frame) -> Vec<Frame> {

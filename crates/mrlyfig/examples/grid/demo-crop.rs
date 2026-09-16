@@ -1,5 +1,5 @@
 use mrlycore::errors::Result;
-use mrlycore::palette::{ORANGE, ORANGE_DARK, ORANGE_LIGHT};
+use mrlycore::colors::{shades, ORANGE};
 use mrlyfig::{iso, save, Board};
 use mrlymath::shape::{self, Frac, Region};
 use mrlymath::three::{designs, Cell3d};
@@ -22,7 +22,7 @@ fn main() -> Result<()> {
         &mut board,
         frame,
         &kept,
-        [ORANGE_LIGHT, ORANGE, ORANGE_DARK],
+        shades(ORANGE),
         None,
     );
     save("demo-crop", &board)?;

@@ -20,11 +20,12 @@ else
   while IFS= read -r name; do names+=("$name"); done < <(grep -A1 '^\[\[example\]\]' crates/mrlyfig/Cargo.toml | sed -n 's/^name = "\(.*\)"/\1/p')
 fi
 
+cargo build -q --profile fig -p mrlyfig --examples
 for name in "${names[@]}"; do
   for theme in dark light; do
-    MRLYFIG_THEME="$theme" cargo run -q --profile fig -p mrlyfig --example "$name"
+    echo "$theme $name"
   done
-done
+done | xargs -P "$(sysctl -n hw.ncpu)" -n 2 sh -c 'MRLYFIG_THEME="$0" "target/fig/examples/$1"'
 dark=$(ls files/figures/*-dark.png 2>/dev/null | wc -l | tr -d ' ')
 light=$(ls files/figures/*-light.png 2>/dev/null | wc -l | tr -d ' ')
 echo "$dark dark and $light light figures in files/figures"

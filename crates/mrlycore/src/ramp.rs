@@ -1,5 +1,5 @@
 use super::colors::{
-    gradient, Color, ALPHA, BLACK, BLUE, ORANGE, RED, RED_DARK, WHITE, YELLOW_LIGHT,
+    gradient, shades, Color, ALPHA, BLACK, BLUE, ORANGE, RED, WHITE, YELLOW,
 };
 use super::errors::{value_error, Result};
 use std::collections::HashMap;
@@ -48,7 +48,7 @@ impl Colorizer {
     }
     /// Builds the black-through-ember fire ramp: black, dark red, orange, light yellow.
     pub fn fire() -> Colorizer {
-        let stops = [BLACK, RED_DARK, ORANGE, YELLOW_LIGHT];
+        let stops = [BLACK, shades(RED)[2], ORANGE, shades(YELLOW)[0]];
         let ramp = dedup(gradient(&stops, 128).unwrap_or_else(|_| vec![BLACK]));
         Colorizer::Bins {
             background: ramp[0],

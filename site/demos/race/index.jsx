@@ -9,8 +9,8 @@ const swatches = () => [rgb(ink.line), rgb(ink.deep)];
 const DIM = m.dimension('127', NUMBER, 2, BASE).toFixed(3);
 
 const SIDES = [
-  { code: '127', color: ink.blue, swatch: 'var(--ink-blue)', tone: 'the fast one' },
-  { code: '239', color: ink.orange, swatch: 'var(--ink-orange)', tone: 'the slow one' },
+  { code: '127', color: ink.blue, swatch: 'var(--blue)', tone: 'the fast one' },
+  { code: '239', color: ink.orange, swatch: 'var(--orange)', tone: 'the slow one' },
 ].map((side) => ({
   ...side,
   name: m.name_of(side.code, 2, BASE),

@@ -1,4 +1,4 @@
-use mrlycore::colors::{INDIGO, INDIGO_DARK, INDIGO_LIGHT};
+use mrlycore::colors::{shades, INDIGO};
 use mrlycore::errors::Result;
 use mrlyfig::{iso, save, Board};
 use mrlylab::moire::volume::volume;
@@ -24,7 +24,7 @@ fn main() -> Result<()> {
         &mut board,
         frame,
         &shell,
-        [INDIGO_LIGHT, INDIGO, INDIGO_DARK],
+        shades(INDIGO),
         None,
     );
     save("demo-volume", &board)?;

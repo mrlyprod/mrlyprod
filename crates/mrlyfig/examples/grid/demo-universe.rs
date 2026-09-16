@@ -1,4 +1,4 @@
-use mrlycore::colors::{INDIGO, INDIGO_DARK, INDIGO_LIGHT};
+use mrlycore::colors::{shades, INDIGO};
 use mrlycore::errors::Result;
 use mrlyfig::{ink, iso, save, Board, Color};
 use mrlymath::bang::bang;
@@ -85,7 +85,7 @@ fn main() -> Result<()> {
     let gallery = bang(3).canonical();
     assert_eq!(gallery.len(), 22);
     assert_eq!(ROWS.iter().sum::<usize>(), gallery.len());
-    let shade = [INDIGO_LIGHT, INDIGO, INDIGO_DARK];
+    let shade = shades(INDIGO);
     let (mx, _) = frame.center();
     let pitch = (frame.w / 5.0, frame.h / 5.0);
     let s = (pitch.0 * 0.46 / (3.0 * 0.866_025_403_784_438_6)).min(pitch.1 * 0.46 / 3.0);
