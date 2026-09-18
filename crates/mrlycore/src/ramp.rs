@@ -1,6 +1,4 @@
-use super::colors::{
-    gradient, shades, Color, ALPHA, BLACK, BLUE, ORANGE, RED, WHITE, YELLOW,
-};
+use super::colors::{gradient, shades, Color, ALPHA, BLACK, BLUE, ORANGE, RED, WHITE, YELLOW};
 use super::errors::{value_error, Result};
 use std::collections::HashMap;
 

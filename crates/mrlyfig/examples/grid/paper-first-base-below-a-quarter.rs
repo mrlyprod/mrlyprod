@@ -1,11 +1,18 @@
 use mrlycore::errors::Result;
+use mrlycore::MrlyError;
+use mrlyfig::out::root;
 use mrlyfig::{ink, save, Board};
+use std::path::PathBuf;
 
+const NAME: &str = "paper-first-base-below-a-quarter";
 const LOW: usize = 10;
 const HIGH: usize = 40;
 const SUB: usize = 4;
 const CAP: f64 = 6.0e6;
 const QUARTER: f64 = 0.25;
+const RUNGS: usize = 395;
+
+// LADDER
 
 fn weights(q: usize, a0: usize, nd: u32, m: usize) -> Vec<f64> {
     let w = q.pow(nd);
@@ -91,16 +98,77 @@ fn exponent(q: usize, a0: usize) -> f64 {
     e
 }
 
-fn main() -> Result<()> {
+fn ladder() -> Vec<(usize, f64)> {
     let mut rungs: Vec<(usize, f64)> = Vec::new();
     for q in LOW..=HIGH {
         for a0 in 0..q.div_ceil(2) {
             rungs.push((q, exponent(q, a0)));
         }
     }
+    rungs
+}
+
+// DATA
+
+fn path() -> PathBuf {
+    root()
+        .join("files")
+        .join("figures")
+        .join("data")
+        .join(format!("{NAME}.json"))
+}
+
+fn write_data(rungs: &[(usize, f64)]) -> Result<PathBuf> {
+    let file = path();
+    let folder = file.parent().unwrap().to_path_buf();
+    std::fs::create_dir_all(&folder)
+        .map_err(|e| MrlyError::Value(format!("cannot make {folder:?}: {e}")))?;
+    let bases: Vec<String> = rungs.iter().map(|rung| rung.0.to_string()).collect();
+    let exponents: Vec<String> = rungs.iter().map(|rung| format!("{}", rung.1)).collect();
+    let text = format!(
+        "{{\"base\":[{}],\"exponent\":[{}]}}",
+        bases.join(","),
+        exponents.join(",")
+    );
+    std::fs::write(&file, text)
+        .map_err(|e| MrlyError::Value(format!("cannot write {file:?}: {e}")))?;
+    Ok(file)
+}
+
+fn field(text: &str, name: &str) -> Vec<f64> {
+    let head = format!("\"{name}\":[");
+    let Some(start) = text.find(&head) else {
+        return Vec::new();
+    };
+    let body = &text[start + head.len()..];
+    let end = body.find(']').unwrap_or(0);
+    body[..end]
+        .split(',')
+        .filter_map(|token| token.parse().ok())
+        .collect()
+}
+
+fn read_data() -> Result<Vec<(usize, f64)>> {
+    let file = path();
+    let raw = std::fs::read_to_string(&file)
+        .map_err(|e| MrlyError::Value(format!("cannot read {file:?}: {e}; run -- compute")))?;
+    let text: String = raw.chars().filter(|c| !c.is_whitespace()).collect();
+    let bases = field(&text, "base");
+    let exponents = field(&text, "exponent");
+    Ok(bases
+        .iter()
+        .zip(exponents.iter())
+        .map(|(base, exponent)| (*base as usize, *exponent))
+        .collect())
+}
+
+// PRESS
+
+fn compute() -> Result<()> {
+    let rungs = ladder();
     let below = |q: usize| rungs.iter().filter(|r| r.0 == q && r.1 < QUARTER).count();
     let sets = |q: usize| q.div_ceil(2);
-    assert_eq!(rungs.len(), 395, "the ladder has 395 rungs");
+    assert_eq!(rungs.len(), RUNGS, "the ladder has 395 rungs");
     assert!((LOW..21).all(|q| below(q) == 0), "no base under 21 clears");
     assert_eq!(below(21), 1, "base 21 clears at exactly one digit");
     assert!(
@@ -109,7 +177,17 @@ fn main() -> Result<()> {
     );
     let gold = rungs.iter().filter(|r| r.1 < QUARTER).count();
     assert_eq!(gold, 163, "163 rungs sit under the quarter");
+    let file = write_data(&rungs)?;
+    println!(
+        "{NAME} {} rungs {gold} under the quarter -> {file:?}",
+        RUNGS
+    );
+    Ok(())
+}
 
+fn draw() -> Result<()> {
+    let rungs = read_data()?;
+    assert_eq!(rungs.len(), RUNGS);
     let lo = rungs.iter().map(|r| r.1).fold(f64::MAX, f64::min);
     let hi = rungs.iter().map(|r| r.1).fold(f64::MIN, f64::max);
     let pad = (hi - lo) * 0.06;
@@ -145,6 +223,13 @@ fn main() -> Result<()> {
         };
         board.rect(x, y - thick / 2.0, dash, thick, color);
     }
-    save("paper-first-base-below-a-quarter", &board)?;
+    save(NAME, &board)?;
     Ok(())
+}
+
+fn main() -> Result<()> {
+    if std::env::args().nth(1).as_deref() == Some("compute") {
+        return compute();
+    }
+    draw()
 }

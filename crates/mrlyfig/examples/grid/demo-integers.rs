@@ -1,7 +1,11 @@
 use mrlycore::errors::Result;
+use mrlycore::MrlyError;
+use mrlyfig::out::root;
 use mrlyfig::{ink, save, Board, Frame, Grid};
 use mrlylab::ledger::{keys, terms, Cost, Key, Tier};
+use std::path::PathBuf;
 
+const NAME: &str = "demo-integers";
 const CAP: usize = 48;
 const CELLS: u128 = 100_000;
 const WINDOW: i128 = 1_000;
@@ -9,6 +13,8 @@ const BLOCK: usize = 8;
 const DEPTHS: [usize; 4] = [8, 16, 32, 48];
 const COLS: usize = 40;
 const LINES: usize = 25;
+
+// CENSUS
 
 fn footprint(key: &Key, index: usize) -> Option<u128> {
     let (number, level) = key.axis.place(index, key.number());
@@ -90,9 +96,61 @@ fn census() -> Vec<Vec<u32>> {
     counts
 }
 
-fn main() -> Result<()> {
-    let mut board = Board::square();
-    let area = board.frame(0.08);
+// DATA
+
+fn path() -> PathBuf {
+    root()
+        .join("files")
+        .join("figures")
+        .join("data")
+        .join(format!("{NAME}.json"))
+}
+
+fn write_data(counts: &[Vec<u32>]) -> Result<PathBuf> {
+    let file = path();
+    let folder = file.parent().unwrap().to_path_buf();
+    std::fs::create_dir_all(&folder)
+        .map_err(|e| MrlyError::Value(format!("cannot make {folder:?}: {e}")))?;
+    let fields: Vec<String> = DEPTHS
+        .iter()
+        .zip(counts.iter())
+        .map(|(depth, tally)| {
+            let body: Vec<String> = tally.iter().map(|count| count.to_string()).collect();
+            format!("\"d{depth}\":[{}]", body.join(","))
+        })
+        .collect();
+    std::fs::write(&file, format!("{{{}}}", fields.join(",")))
+        .map_err(|e| MrlyError::Value(format!("cannot write {file:?}: {e}")))?;
+    Ok(file)
+}
+
+fn field(text: &str, name: &str) -> Vec<u32> {
+    let head = format!("\"{name}\":[");
+    let Some(start) = text.find(&head) else {
+        return Vec::new();
+    };
+    let body = &text[start + head.len()..];
+    let end = body.find(']').unwrap_or(0);
+    body[..end]
+        .split(',')
+        .filter_map(|token| token.parse().ok())
+        .collect()
+}
+
+fn read_data() -> Result<Vec<Vec<u32>>> {
+    let file = path();
+    let raw = std::fs::read_to_string(&file)
+        .map_err(|e| MrlyError::Value(format!("cannot read {file:?}: {e}; run -- compute")))?;
+    let text: String = raw.chars().filter(|c| !c.is_whitespace()).collect();
+    Ok(DEPTHS
+        .iter()
+        .map(|depth| field(&text, &format!("d{depth}")))
+        .collect())
+}
+
+// PRESS
+
+fn compute() -> Result<()> {
     let counts = census();
     let missed: Vec<usize> = counts
         .iter()
@@ -100,6 +158,19 @@ fn main() -> Result<()> {
         .collect();
     assert!(missed.windows(2).all(|pair| pair[1] < pair[0]));
     assert!(missed[DEPTHS.len() - 1] > 0);
+    let file = write_data(&counts)?;
+    println!("{NAME} census {:?} missed {missed:?} -> {file:?}", DEPTHS);
+    Ok(())
+}
+
+fn draw() -> Result<()> {
+    let counts = read_data()?;
+    assert_eq!(counts.len(), DEPTHS.len());
+    assert!(counts
+        .iter()
+        .all(|tally| tally.len() == WINDOW as usize + 1));
+    let mut board = Board::square();
+    let area = board.frame(0.08);
     let panels = Grid::new(area, 2, 2, 0.06);
     let mut drawn = 0usize;
     for (slot, tally) in counts.iter().enumerate() {
@@ -118,6 +189,13 @@ fn main() -> Result<()> {
         }
     }
     assert_eq!(drawn, 4 * WINDOW as usize);
-    save("demo-integers", &board)?;
+    save(NAME, &board)?;
     Ok(())
+}
+
+fn main() -> Result<()> {
+    if std::env::args().nth(1).as_deref() == Some("compute") {
+        return compute();
+    }
+    draw()
 }

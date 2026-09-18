@@ -251,18 +251,45 @@ impl Board {
             return;
         }
         let half = thick / 2.0;
+        let pad = half + 1.0;
         let (bx0, by0, bx1, by1) = bounds(pts);
-        self.shade(
-            (bx0 - half, by0 - half, bx1 + half, by1 + half),
-            c,
-            |px, py| {
-                let mut d = f64::MAX;
-                for pair in pts.windows(2) {
-                    d = d.min(segment_sdf(px, py, pair[0], pair[1]));
+        let x0 = (bx0 - pad).floor().max(0.0) as usize;
+        let y0 = (by0 - pad).floor().max(0.0) as usize;
+        let x1 = ((bx1 + pad).ceil().max(0.0) as usize).min(self.width);
+        let y1 = ((by1 + pad).ceil().max(0.0) as usize).min(self.height);
+        if x1 <= x0 || y1 <= y0 {
+            return;
+        }
+        let span = x1 - x0;
+        let mut mask = vec![0.0f64; span * (y1 - y0)];
+        for pair in pts.windows(2) {
+            let (a, b) = (pair[0], pair[1]);
+            let (sx0, sy0, sx1, sy1) = bounds(&[a, b]);
+            let sx0 = (sx0 - pad).floor().max(x0 as f64) as usize;
+            let sy0 = (sy0 - pad).floor().max(y0 as f64) as usize;
+            let sx1 = ((sx1 + pad).ceil().max(0.0) as usize).min(x1);
+            let sy1 = ((sy1 + pad).ceil().max(0.0) as usize).min(y1);
+            for py in sy0..sy1 {
+                let row = (py - y0) * span;
+                for px in sx0..sx1 {
+                    let d = segment_sdf(px as f64 + 0.5, py as f64 + 0.5, a, b) - half;
+                    let cover = (0.5 - d).clamp(0.0, 1.0);
+                    let slot = &mut mask[row + (px - x0)];
+                    if cover > *slot {
+                        *slot = cover;
+                    }
                 }
-                d - half
-            },
-        );
+            }
+        }
+        for py in y0..y1 {
+            let row = (py - y0) * span;
+            for px in x0..x1 {
+                let cover = mask[row + (px - x0)];
+                if cover > 0.0 {
+                    self.blend(px, py, c, cover);
+                }
+            }
+        }
     }
     /// Fills a triangle.
     pub fn triangle(&mut self, a: (f64, f64), b: (f64, f64), c: (f64, f64), color: Color) {
@@ -338,6 +365,42 @@ mod tests {
             (lit - want).abs() / want < 0.02,
             "covered {lit}, want {want}"
         );
+    }
+    #[test]
+    fn a_polyline_covers_its_stroke_area() {
+        let mut board = Board::new(512, 512, ink::ground());
+        let thick = 6.0;
+        let pts: Vec<(f64, f64)> = (0..1000)
+            .map(|i| {
+                let x = 6.0 + 500.0 * i as f64 / 999.0;
+                (x, 256.0 + 100.0 * (std::f64::consts::TAU * x / 250.0).sin())
+            })
+            .collect();
+        board.polyline(&pts, thick, ink::fg());
+        let length: f64 = pts
+            .windows(2)
+            .map(|p| ((p[1].0 - p[0].0).powi(2) + (p[1].1 - p[0].1).powi(2)).sqrt())
+            .sum();
+        let (ground, fg) = (ink::ground().r as f64, ink::fg().r as f64);
+        let lit: f64 = board
+            .pixels
+            .iter()
+            .map(|p| (p[0] as f64 - ground) / (fg - ground))
+            .sum();
+        let want = length * thick + std::f64::consts::PI * (thick / 2.0).powi(2);
+        assert!(
+            (lit - want).abs() / want < 0.03,
+            "covered {lit}, want {want}"
+        );
+    }
+    #[test]
+    fn a_two_point_polyline_is_a_segment() {
+        let (a, b) = ((17.3, 40.9), (190.7, 123.4));
+        let mut one = Board::new(256, 192, ink::ground());
+        one.segment(a, b, 7.0, ink::fg());
+        let mut two = Board::new(256, 192, ink::ground());
+        two.polyline(&[a, b], 7.0, ink::fg());
+        assert_eq!(one.pixels, two.pixels);
     }
     #[test]
     fn the_og_board_is_the_social_card_size() {

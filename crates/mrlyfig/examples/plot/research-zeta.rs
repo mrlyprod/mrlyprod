@@ -13,6 +13,7 @@ const WIDE: f64 = 1.20;
 const REACH: f64 = 0.70;
 const DISC: f64 = 0.45;
 const ONE: Complex = Complex::new(1.0, 0.0);
+const DATA: &str = "files/figures/data/research-zeta.json";
 
 struct Ladder {
     q: f64,
@@ -125,17 +126,9 @@ impl Ladder {
         (ONE - power(self.lq, s) * self.k) * d + numerator
     }
 
-    fn ordinates(&self, reach: f64) -> Vec<f64> {
-        let step = std::f64::consts::TAU / self.lq;
-        (0..)
-            .map(|j| j as f64 * step)
-            .take_while(|t| *t < reach)
-            .collect()
-    }
-
     fn centres(&self) -> Vec<(Complex, bool)> {
         let mut out = Vec::new();
-        for t in self.ordinates(HEIGHT + 1.0) {
+        for t in ordinates(self.lq, HEIGHT + 1.0) {
             let zero = Complex::new(self.alpha, t);
             let r0 = self.cofactor(zero) * (1.0 / self.lq);
             out.push((zero, r0.abs() > 1e-12));
@@ -145,6 +138,14 @@ impl Ladder {
         }
         out
     }
+}
+
+fn ordinates(lq: f64, reach: f64) -> Vec<f64> {
+    let step = std::f64::consts::TAU / lq;
+    (0..)
+        .map(|j| j as f64 * step)
+        .take_while(|t| *t < reach)
+        .collect()
 }
 
 fn refine(l: &Ladder, seed: Complex) -> Option<Complex> {
@@ -244,16 +245,17 @@ fn split(l: &Ladder, zeros: &[Complex]) -> (Vec<Complex>, Vec<Complex>, Vec<Comp
     (teeth, hollow, family)
 }
 
-fn panel(
-    board: &mut Board,
-    frame: Frame,
-    l: &Ladder,
-    teeth: &[Complex],
-    hollow: &[Complex],
-    family: &[Complex],
-) {
-    let lo = l.alpha - WIDE;
-    let hi = l.alpha + REACH;
+struct Panel {
+    alpha: f64,
+    lq: f64,
+    teeth: Vec<Complex>,
+    hollow: Vec<Complex>,
+    family: Vec<Complex>,
+}
+
+fn panel(board: &mut Board, frame: Frame, p: &Panel) {
+    let lo = p.alpha - WIDE;
+    let hi = p.alpha + REACH;
     let at = |s: Complex| {
         (
             frame.x + frame.w * (s.re - lo) / (hi - lo),
@@ -263,41 +265,83 @@ fn panel(
     board.rect(frame.x, frame.y, frame.w, frame.h, ink::panel());
     plot::axis(board, frame, ink::line());
     board.segment(
-        at(Complex::new(l.alpha, 0.0)),
-        at(Complex::new(l.alpha, HEIGHT)),
+        at(Complex::new(p.alpha, 0.0)),
+        at(Complex::new(p.alpha, HEIGHT)),
         1.6,
         ink::fade(ink::dim(), 0.5),
     );
     board.segment(
-        at(Complex::new(l.alpha - 1.0, 0.0)),
-        at(Complex::new(l.alpha - 1.0, HEIGHT)),
+        at(Complex::new(p.alpha - 1.0, 0.0)),
+        at(Complex::new(p.alpha - 1.0, HEIGHT)),
         1.6,
         ink::fade(ink::dim(), 0.3),
     );
-    for t in l.ordinates(HEIGHT) {
+    for t in ordinates(p.lq, HEIGHT) {
         if t < 0.4 {
             continue;
         }
-        for line in [l.alpha, l.alpha - 1.0] {
+        for line in [p.alpha, p.alpha - 1.0] {
             let (x, y) = at(Complex::new(line, t));
             board.ring(x, y, 11.0, 1.6, ink::fade(ink::dim(), 0.9));
         }
     }
-    for z in family {
+    for z in &p.family {
         let (x, y) = at(*z);
         board.disc(x, y, 7.0, ink::blue());
     }
-    for z in teeth {
+    for z in &p.teeth {
         let (x, y) = at(*z);
         board.disc(x, y, 7.0, ink::yellow());
     }
-    for z in hollow {
+    for z in &p.hollow {
         let (x, y) = at(*z);
         board.disc(x, y, 7.0, ink::fade(ink::fg(), 0.9));
     }
 }
 
-fn main() -> Result<()> {
+fn flat(zs: &[Complex]) -> String {
+    zs.iter()
+        .flat_map(|z| [z.re, z.im])
+        .map(|v| format!("{v:?}"))
+        .collect::<Vec<String>>()
+        .join(",")
+}
+
+fn field(text: &str, key: &str) -> Vec<f64> {
+    let head = format!("\"{key}\": [");
+    let from = text.find(&head).expect("the data file lost a key") + head.len();
+    let upto = from
+        + text[from..]
+            .find(']')
+            .expect("the data file lost a bracket");
+    text[from..upto]
+        .split(',')
+        .map(str::trim)
+        .filter(|t| !t.is_empty())
+        .map(|t| t.parse::<f64>().expect("the data file lost a number"))
+        .collect()
+}
+
+fn points(v: &[f64]) -> Vec<Complex> {
+    v.chunks(2).map(|c| Complex::new(c[0], c[1])).collect()
+}
+
+fn read(text: &str, name: &str) -> Panel {
+    let axis = field(text, &format!("{name}_axis"));
+    let teeth = points(&field(text, &format!("{name}_teeth")));
+    let hollow = points(&field(text, &format!("{name}_hollow")));
+    let family = points(&field(text, &format!("{name}_family")));
+    assert!(axis.len() == 2 && axis[1] > 0.0 && !family.is_empty());
+    Panel {
+        alpha: axis[0],
+        lq: axis[1],
+        teeth,
+        hollow,
+        family,
+    }
+}
+
+fn compute() -> Result<()> {
     let design = Ladder::new(3, &[0, 1]);
     let full = Ladder::new(2, &[0, 1]);
     let known = Line::new().zeros(6);
@@ -340,14 +384,54 @@ fn main() -> Result<()> {
         .iter()
         .all(|z| z.re > full.alpha - WIDE && z.re < full.alpha + REACH));
 
+    let daxis = format!("{:?},{:?}", design.alpha, design.lq);
+    let faxis = format!("{:?},{:?}", full.alpha, full.lq);
+    let text = format!(
+        "{{\n  \"design_axis\": [{}],\n  \"design_teeth\": [{}],\n  \"design_hollow\": [{}],\n  \"design_family\": [{}],\n  \"full_axis\": [{}],\n  \"full_teeth\": [{}],\n  \"full_hollow\": [{}],\n  \"full_family\": [{}]\n}}\n",
+        daxis,
+        flat(&dteeth),
+        flat(&dhollow),
+        flat(&dfamily),
+        faxis,
+        flat(&fteeth),
+        flat(&fhollow),
+        flat(&ffamily)
+    );
+    let path = mrlyfig::out::root().join(DATA);
+    let folder = path.parent().expect("the data path lost its folder");
+    std::fs::create_dir_all(folder)
+        .map_err(|e| mrlycore::MrlyError::Value(format!("cannot make {folder:?}: {e}")))?;
+    std::fs::write(&path, text)
+        .map_err(|e| mrlycore::MrlyError::Value(format!("cannot write {path:?}: {e}")))?;
+    println!("data research-zeta {} zeros", dz.len() + fz.len());
+    Ok(())
+}
+
+fn render() -> Result<()> {
+    let path = mrlyfig::out::root().join(DATA);
+    let text = std::fs::read_to_string(&path).map_err(|e| {
+        mrlycore::MrlyError::Value(format!(
+            "cannot read {path:?}: {e}; run the example with compute"
+        ))
+    })?;
+    let design = read(&text, "design");
+    let full = read(&text, "full");
     let mut board = Board::square();
     let area = board.area(0.08);
     let wide = area.w * 0.45;
     let tall = area.h * 0.80;
     let top = Frame::new(area.x, area.y, wide, tall);
     let bottom = Frame::new(area.x + area.w - wide, area.y + area.h - tall, wide, tall);
-    panel(&mut board, top, &design, &dteeth, &dhollow, &dfamily);
-    panel(&mut board, bottom, &full, &fteeth, &fhollow, &ffamily);
+    panel(&mut board, top, &design);
+    panel(&mut board, bottom, &full);
     save("research-zeta", &board)?;
     Ok(())
+}
+
+fn main() -> Result<()> {
+    if std::env::args().nth(1).as_deref() == Some("compute") {
+        compute()
+    } else {
+        render()
+    }
 }

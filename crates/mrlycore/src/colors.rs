@@ -103,7 +103,14 @@ impl Theme {
     }
     /// The six inks a figure cycles through: blue, orange, yellow, green, pink, indigo.
     pub fn inks(&self) -> [Color; 6] {
-        [self.blue, self.orange, self.yellow, self.green, self.pink, self.indigo]
+        [
+            self.blue,
+            self.orange,
+            self.yellow,
+            self.green,
+            self.pink,
+            self.indigo,
+        ]
     }
 }
 

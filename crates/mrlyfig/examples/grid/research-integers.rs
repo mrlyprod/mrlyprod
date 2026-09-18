@@ -1,14 +1,20 @@
 use mrlycore::errors::Result;
+use mrlycore::MrlyError;
 use mrlyfig::ink::Ramp;
+use mrlyfig::out::root;
 use mrlyfig::{ink, save, Board, Grid};
 use mrlylab::ledger::{keys, terms, Cost, Key, Tier};
+use std::path::PathBuf;
 
+const NAME: &str = "research-integers";
 const CAP: usize = 48;
 const CELLS: u128 = 100_000;
 const CEILING: i128 = 100_000;
 const WINDOW: usize = 10_000;
 const SIDE: usize = 100;
 const BLOCK: usize = 8;
+
+// CENSUS
 
 fn footprint(key: &Key, index: usize) -> Option<u128> {
     let (number, level) = key.axis.place(index, key.number());
@@ -90,12 +96,61 @@ fn census() -> Vec<u32> {
     counts
 }
 
-fn main() -> Result<()> {
+// DATA
+
+fn path() -> PathBuf {
+    root()
+        .join("files")
+        .join("figures")
+        .join("data")
+        .join(format!("{NAME}.json"))
+}
+
+fn write_data(counts: &[u32]) -> Result<PathBuf> {
+    let file = path();
+    let folder = file.parent().unwrap().to_path_buf();
+    std::fs::create_dir_all(&folder)
+        .map_err(|e| MrlyError::Value(format!("cannot make {folder:?}: {e}")))?;
+    let body: Vec<String> = counts.iter().map(|count| count.to_string()).collect();
+    std::fs::write(&file, format!("[{}]", body.join(",")))
+        .map_err(|e| MrlyError::Value(format!("cannot write {file:?}: {e}")))?;
+    Ok(file)
+}
+
+fn read_data() -> Result<Vec<u32>> {
+    let file = path();
+    let text = std::fs::read_to_string(&file)
+        .map_err(|e| MrlyError::Value(format!("cannot read {file:?}: {e}; run -- compute")))?;
+    Ok(text
+        .trim()
+        .trim_start_matches('[')
+        .trim_end_matches(']')
+        .split(',')
+        .filter_map(|token| token.trim().parse().ok())
+        .collect())
+}
+
+// PRESS
+
+fn compute() -> Result<()> {
+    let counts = census();
+    let peak = *counts.iter().max().unwrap();
+    assert_eq!(peak, counts[16]);
+    let file = write_data(&counts)?;
+    println!(
+        "{NAME} census {} cells peak {peak} -> {file:?}",
+        counts.len()
+    );
+    Ok(())
+}
+
+fn draw() -> Result<()> {
+    let counts = read_data()?;
+    assert_eq!(counts.len(), WINDOW + 1);
+    let peak = *counts.iter().max().unwrap() as f64;
+    assert!(peak > 0.0);
     let mut board = Board::square();
     let area = board.frame(0.08);
-    let counts = census();
-    let peak = *counts.iter().max().unwrap() as f64;
-    assert_eq!(peak as u32, counts[16]);
     let ramp = Ramp::tone(ink::dim(), ink::yellow());
     let grid = Grid::new(area, SIDE, SIDE, 0.12);
     let scale = (1.0 + peak).ln();
@@ -109,6 +164,13 @@ fn main() -> Result<()> {
             grid.fill(&mut board, col, row, tone);
         }
     }
-    save("research-integers", &board)?;
+    save(NAME, &board)?;
     Ok(())
+}
+
+fn main() -> Result<()> {
+    if std::env::args().nth(1).as_deref() == Some("compute") {
+        return compute();
+    }
+    draw()
 }

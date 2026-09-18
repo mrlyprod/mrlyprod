@@ -22,7 +22,8 @@
 - Every figure lands in `files/figures/` as `<name>-dark.png` and `<name>-light.png`, square, 1024 by 1024, on the ground of its theme, with no text and no wordmark. The art speaks.
 - The pngs are CC BY 4.0, the licence beside them in `files/figures/LICENSE.md`.
 - The examples carry private helpers the kit could absorb (a stroked rectangle, a hairline lattice, a hexagon cell reader, an isometric stamp, a frame-mapped scatter); fold one in when a third figure needs it.
-- `research-integers` sweeps the whole ledger and takes about five minutes; every other figure prints in seconds.
+- A figure never computes at render: it reads `files/figures/data/<name>.json`, written once by `cargo run --release -p mrlyfig --example <name> -- compute`, and the data file is committed beside the code.
+- `research-integers` sweeps the whole ledger in that compute pass and takes about five minutes; every figure then prints in well under a second.
 
 ## FIGURES
 

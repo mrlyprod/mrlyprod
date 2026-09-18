@@ -1,4 +1,4 @@
-use mrlycore::colors::{BLUE, GRAY_DARK, GRAY_LIGHT, LIGHT, ORANGE, WHITE};
+use mrlycore::colors::{BLUE, LIGHT, ORANGE, WHITE};
 use mrlycore::{io, png};
 use std::path::Path;
 
@@ -7,9 +7,9 @@ pub const HEIGHT: usize = 736;
 const SURF: [u8; 4] = [WHITE.r, WHITE.g, WHITE.b, 255];
 const NAVY: [u8; 4] = [BLUE.r, BLUE.g, BLUE.b, 255];
 const RUST: [u8; 4] = [ORANGE.r, ORANGE.g, ORANGE.b, 255];
-const GREY: [u8; 4] = [GRAY_LIGHT.r, GRAY_LIGHT.g, GRAY_LIGHT.b, 255];
+const GREY: [u8; 4] = [LIGHT.dim.r, LIGHT.dim.g, LIGHT.dim.b, 255];
 const FAINT: [u8; 4] = [LIGHT.line.r, LIGHT.line.g, LIGHT.line.b, 255];
-const INK: [u8; 4] = [GRAY_DARK.r, GRAY_DARK.g, GRAY_DARK.b, 255];
+const INK: [u8; 4] = [LIGHT.fg.r, LIGHT.fg.g, LIGHT.fg.b, 255];
 
 pub struct Series {
     pub spectral: Vec<f64>,

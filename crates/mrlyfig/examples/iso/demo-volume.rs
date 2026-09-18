@@ -20,13 +20,7 @@ fn main() -> Result<()> {
 
     let mut board = Board::square();
     let frame = board.frame(0.08);
-    iso::draw(
-        &mut board,
-        frame,
-        &shell,
-        shades(INDIGO),
-        None,
-    );
+    iso::draw(&mut board, frame, &shell, shades(INDIGO), None);
     save("demo-volume", &board)?;
     Ok(())
 }

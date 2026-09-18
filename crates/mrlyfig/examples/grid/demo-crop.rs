@@ -1,5 +1,5 @@
-use mrlycore::errors::Result;
 use mrlycore::colors::{shades, ORANGE};
+use mrlycore::errors::Result;
 use mrlyfig::{iso, save, Board};
 use mrlymath::shape::{self, Frac, Region};
 use mrlymath::three::{designs, Cell3d};
@@ -18,13 +18,7 @@ fn main() -> Result<()> {
         tally.filled[Region::In as usize] + tally.filled[Region::Cut as usize]
     );
     assert!(kept.types().sum() < 8000);
-    iso::draw(
-        &mut board,
-        frame,
-        &kept,
-        shades(ORANGE),
-        None,
-    );
+    iso::draw(&mut board, frame, &kept, shades(ORANGE), None);
     save("demo-crop", &board)?;
     Ok(())
 }

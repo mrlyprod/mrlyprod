@@ -6,7 +6,7 @@
 .claude/
 
 # OUTPUT
-data/
+/data/
 dist/
 .cache/
 
