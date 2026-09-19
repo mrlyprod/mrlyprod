@@ -1,8 +1,13 @@
-# The core
+---
+title: The core
+lead: What a design is, the headline counts, and the three genera.
+figure: research-core
+slug: core
+---
 
 MrlyMath is two moves. Choose a rule that fills some corners of the parity cube `{0,1}^dim`; substitute that rule into itself by the Kronecker product. The Sierpinski carpet, the Menger sponge, their siblings and their antis are all one choice in move one carried through the same move two. Fix the dimension and the whole universe of rules is finite and already there - 4 of them in 1D, 16 in 2D, 256 in 3D - so the designs are not designed, they are enumerated.
 
-Every claim below carries a tag. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a lab study; **Conjecture** means neither. The generator is `lab/rs/design-census`. The [universe demo](../demos/universe/) draws that census live: every orbit in each dimension and base, with the Burnside counts beside it.
+Every claim below carries a tag. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a lab study; **Conjecture** means neither. The generator is `lab/rs/design-census`. The [universe demo](../../site/demos/universe/) draws that census live: every orbit in each dimension and base, with the Burnside counts beside it.
 
 ## Move one: a design is a parity rule
 
@@ -42,7 +47,7 @@ The core name of a design is not a word, it is the rule written as a number. Ind
 i(F) = sum of 2^k over all k with c_k in F, 0 <= i(F) < 2^(2^dim)
 ```
 
-and its canonical name is the JSON object `{"kind":"bang","dim":<dim>,"code":<code>}` at base 2, gaining a `"base":<base>` key past base 2, the code in plain decimal with no leading zero; pages write the prose view of that object, `bang dim <dim>, code <code>` and `bang dim <dim>, base <base>, code <code>`, per [NAMES](../crates/mrlymath/NAMES.md). The historical names carpet, net, tree and void survive only as aliases pointing at particular codes. In 3D, *carpet* and *net* are the single class `bang dim 3, code 23`, *tree* is `bang dim 3, code 3`, *void* is `bang dim 3, code 24`. (Verified by `lab/rs/design-census`: each name's defining corner set is built from its definition and reduced to the smallest code in its symmetry class.)
+and its canonical name is the JSON object `{"kind":"bang","dim":<dim>,"code":<code>}` at base 2, gaining a `"base":<base>` key past base 2, the code in plain decimal with no leading zero; pages write the prose view of that object, `bang dim <dim>, code <code>` and `bang dim <dim>, base <base>, code <code>`, per [NAMES](../../crates/mrlymath/NAMES.md). The historical names carpet, net, tree and void survive only as aliases pointing at particular codes. In 3D, *carpet* and *net* are the single class `bang dim 3, code 23`, *tree* is `bang dim 3, code 3`, *void* is `bang dim 3, code 24`. (Verified by `lab/rs/design-census`: each name's defining corner set is built from its definition and reduced to the smallest code in its symmetry class.)
 
 That carpet and net collapse into one class at base 2 is not a slip. It is the same fact `lab/rs/design-census` records, where the rep code is 7 in dimension 2 and 23 in dimension 3 and only the net label survives.
 
@@ -94,7 +99,7 @@ Six classes, sixteen designs. (Verified by `lab/rs/design-census`: codes, degree
 | `bang dim 2, code 7` | 2 | iso | `S = {0,1}` | 4 | carpet / net |
 | `bang dim 2, code 15` | 0 | iso | `S = {0,1,2}` | 1 | |
 
-One caution on reading any such table: the rule shown belongs to the canonical representative, the smallest code in the class. Parity flips are symmetries of the infinite tiling but not of a truncation to `side` cells, so the level-1 fill at a fixed `side` is *not* constant on a class - `bang dim 2, code 6` and its orbit-mate `bang dim 2, code 9` (the diagonal `S = {0,2}`) are the same design and fill differently at side 3. What is invariant is the tail: the degree and leading coefficient of the fill, hence the fractal dimension. The same caveat is recorded against the census in [the sequence ledger](sequences.md).
+One caution on reading any such table: the rule shown belongs to the canonical representative, the smallest code in the class. Parity flips are symmetries of the infinite tiling but not of a truncation to `side` cells, so the level-1 fill at a fixed `side` is *not* constant on a class - `bang dim 2, code 6` and its orbit-mate `bang dim 2, code 9` (the diagonal `S = {0,2}`) are the same design and fill differently at side 3. What is invariant is the tail: the degree and leading coefficient of the fill, hence the fractal dimension. The same caveat is recorded against the census in [the sequence ledger](../sequences.md).
 
 ## Structure, and what survives into high dimensions
 
@@ -113,4 +118,4 @@ This is the precise content of the intuition that most designs look like noise. 
 
 ## Where the numbers live
 
-The classification census - canonical representatives, orbit sizes, fill polynomials, three notions of algebraic degree, each design validated cell by cell against an independently rendered array - is `lab/rs/design-census`, which writes `sequences.csv` and the per-dimension counts in `counts.csv`. Sequences that fall out of this construction, and the standard every one of them has to meet, are in [the sequence ledger](sequences.md).
+The classification census - canonical representatives, orbit sizes, fill polynomials, three notions of algebraic degree, each design validated cell by cell against an independently rendered array - is `lab/rs/design-census`, which writes `sequences.csv` and the per-dimension counts in `counts.csv`. Sequences that fall out of this construction, and the standard every one of them has to meet, are in [the sequence ledger](../sequences.md).

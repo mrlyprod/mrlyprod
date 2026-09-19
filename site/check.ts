@@ -908,7 +908,7 @@ const folders = readdirSync(`${desk}/demos`, { withFileTypes: true })
 const named = rows.map((row) => row.name).sort();
 const strays = named.filter((name) => !folders.includes(name)).concat(folders.filter((name) => !named.includes(name)));
 const shelfless = rows.filter((row) => !shelfKeys.has(row.category)).map((row) => row.name);
-const unpaged = rows.filter((row) => row.research && !existsSync(`${desk}/../research/${row.research}.md`)).map((row) => row.name);
+const unpaged = rows.filter((row) => row.research && !existsSync(`${desk}/../research/notes/${row.research}.md`)).map((row) => row.name);
 const readme = await Bun.file(`${desk}/README.md`).text();
 const listed = readme.slice(readme.indexOf('## PAGES')).split('\n')
   .map((line) => /^- \[([a-z]+)\]\(demos\/\1\/\) - (.+)$/.exec(line))

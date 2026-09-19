@@ -1,4 +1,9 @@
-# Information
+---
+title: Information
+lead: A render as data: the rearranged SVD reads a design's code out of noise and peels a magic word, while the fractal codebook loses to deflate.
+figure: research-information
+slug: information
+---
 
 A render is a matrix of bits, so a design can be asked the two questions any bit image is asked: what can be read back out of it, and what can be written down more cheaply because it is a design at all. The two halves answer in opposite directions, and that asymmetry is the page. Identification works exactly and holds far into noise: one rearranged singular value decomposition reads a design's code out of a render and peels a five-letter magic word letter by letter. Compression does not: a catalog of 667 fractal atoms scored by minimum description length loses to raw deflate on the tree's own render, on text and on a halftone at catalog level 2, edges it by a few bits only on random bytes where deflate itself expands the stream, and crosses it on the render only from catalog level 3. The negative is printed here in full, because it is the more useful of the two.
 
@@ -6,7 +11,7 @@ Every claim carries a tag. **Proved** means a proof is given or restated here; *
 
 ## The object
 
-A render is an `N x N` matrix `A` over `{0, 1}` with `N = base^level`, one entry per cell of the grid at that level, `1` where the design is filled. Cut it into `p x p` blocks of side `N/p`. The **rearrangement** `R` of [Van Loan and Pitsianis 1993](REFS.md) lays each block out flat as one row: `R(A)` is `p^2` by `(N/p)^2`, its row indexed by the block position and its column by the position inside a block. The identity that makes the operator useful is `R(B (x) C) = vec(B) vec(C)^T`, so the nearest Kronecker product `min ||A - B (x) C||_F` is the rank-one truncated SVD of `R(A)`, and the singular values of `R(A)` are the data's **Kronecker spectrum**. The same operator is the real-valued shadow of the 0/1 block reading [magic](magic.md) factors tiles with, cited there to the same place.
+A render is an `N x N` matrix `A` over `{0, 1}` with `N = base^level`, one entry per cell of the grid at that level, `1` where the design is filled. Cut it into `p x p` blocks of side `N/p`. The **rearrangement** `R` of [Van Loan and Pitsianis 1993](../REFS.md) lays each block out flat as one row: `R(A)` is `p^2` by `(N/p)^2`, its row indexed by the block position and its column by the position inside a block. The identity that makes the operator useful is `R(B (x) C) = vec(B) vec(C)^T`, so the nearest Kronecker product `min ||A - B (x) C||_F` is the rank-one truncated SVD of `R(A)`, and the singular values of `R(A)` are the data's **Kronecker spectrum**. The same operator is the real-valued shadow of the 0/1 block reading [magic](magic.md) factors tiles with, cited there to the same place.
 
 **A design's render is exactly rank one under `R`, and its own tile is the factor. Proved.** By associativity of the Kronecker product a render at level `level` is `A = B (x) C` with `B` the render at level `k` and `C` the render at level `level - k`, for every `k` in `1..level-1`; at the split `p = base^k` the rearrangement is therefore `vec(B) vec(C)^T`, of rank exactly one since neither factor is the zero tile. Two consequences are free: `sigma_2 = 0`, and `sigma_1 = ||A||_F = sqrt(fill)`, since the outer product of two vectors has one singular value equal to the product of their norms. The figure draws that identity at base 3, level 4, `k = 2`: the level-4 carpet on the left and its rearrangement at the `9 x 9` split on the right, both `81 x 81` and both carrying 4096 filled cells, the right-hand panel being the outer product of the level-2 carpet's own vectorisation with itself, asserted entry by entry in exact integers.
 
@@ -64,7 +69,7 @@ The last row is one placement of one atom, because at depth 5 the corpus is itse
 
 ## What it is not
 
-The ancestor of the second half is fractal image compression, which stores an image as the contractive maps whose attractor approximates it, and its warning is the one the tables above print: a fractal dictionary buys nothing on an image that is not already a fractal, and everything on one that is already in the book. Nothing here claims novelty for the first half either: no literature search on reading a design's code out of a render was run, so the page states what the rearrangement does on this family and stops, the operator itself being cited to [Van Loan and Pitsianis 1993](REFS.md) rather than claimed, exactly as [magic](magic.md) cites the 0/1 block reading to its own source.
+The ancestor of the second half is fractal image compression, which stores an image as the contractive maps whose attractor approximates it, and its warning is the one the tables above print: a fractal dictionary buys nothing on an image that is not already a fractal, and everything on one that is already in the book. Nothing here claims novelty for the first half either: no literature search on reading a design's code out of a render was run, so the page states what the rearrangement does on this family and stops, the operator itself being cited to [Van Loan and Pitsianis 1993](../REFS.md) rather than claimed, exactly as [magic](magic.md) cites the 0/1 block reading to its own source.
 
 ## Where the numbers live
 

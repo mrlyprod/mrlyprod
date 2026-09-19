@@ -317,7 +317,7 @@ function paperIndex(site: Site, route: Route): Output[] {
 
 /* RESEARCH */
 
-type Note = { file: string; name: string; md: string; home: boolean };
+type Note = { file: string; name: string; md: string; home: boolean; topic: boolean; title: string; lead: string; figure: string };
 
 const SHARED = new Set(["DISCOVERIES", "REFS"]);
 
@@ -327,16 +327,24 @@ function notes(site: Site): Note[] {
     console.warn(`site: no research tree at ${relative(org, dir.path)}, research skipped`);
     return [];
   }
-  return dir.files
-    .map((source) => {
-      const file = source.slice(dir.path.length + 1);
-      return { file, name: file.slice(0, -3), md: read(source), home: file === "README.md" };
-    })
-    .sort((a, b) => (a.home ? -1 : b.home ? 1 : a.name.localeCompare(b.name)));
+  const shared = dir.files.map((source) => {
+    const file = source.slice(dir.path.length + 1);
+    const name = file.slice(0, -3);
+    const md = read(source);
+    const figure = SHARED.has(name) ? "research-index" : `research-${name}`;
+    return { file, name, md, home: file === "README.md", topic: false, title: title(md) || name, lead: summary(md), figure };
+  });
+  const home = site.input("notes");
+  const topics = home.files.map((source) => {
+    const name = source.slice(home.path.length + 1, -3);
+    const { data, body } = front(read(source));
+    return { file: `notes/${name}.md`, name, md: body, home: false, topic: true, title: data.title ?? name, lead: data.lead ?? summary(body), figure: data.figure || `research-${name}` };
+  });
+  return [...shared, ...topics].sort((a, b) => (a.home ? -1 : b.home ? 1 : a.name.localeCompare(b.name)));
 }
 
 function researchIndex(site: Site, route: Route): Output[] {
-  const { note: n } = route.data as { note: Note; texts: string[] };
+  const { note: n } = route.data as { note: Note; cards: string[][] };
   const out: Output[] = [];
   const fig = press(site, out);
   out.push({ path: `research/${n.file}`, bytes: n.md });
@@ -352,17 +360,17 @@ function note(site: Site, route: Route): Output[] {
   const out: Output[] = [];
   const fig = press(site, out);
   out.push({ path: `research/${n.file}`, bytes: n.md });
-  const name = title(n.md) || n.name;
-  const lead = summary(n.md);
-  const which = n.home || SHARED.has(n.name) ? "research-index" : `research-${n.name}`;
-  const body = `${hero(fig, which, route.route, name)}\n${md(n.md, { math, link: links(site, join(site.input("research").path, n.file), out) })}`;
+  const name = n.title;
+  const lead = n.lead;
+  const head = n.topic ? `<h1 id="${escape(n.name)}">${escape(name)}</h1>\n` : "";
+  const body = `${hero(fig, n.figure, route.route, name)}\n${head}${md(n.md, { math, link: links(site, join(site.input("research").path, n.file), out) })}`;
   const data = {
     "@context": "https://schema.org",
     "@type": "Article",
     headline: name,
     description: lead,
     url: root + route.route,
-    image: `${root}/figures/${which}-dark.png`,
+    image: `${root}/figures/${n.figure}-dark.png`,
     author: { "@type": "Person", name: AUTHOR },
   };
   const at = n.home ? "research/index.html" : `research/${n.name}/index.html`;
@@ -452,7 +460,7 @@ function marks(data: Dress): Map<string, Mark> {
   for (const p of data.lanes) map.set(`/papers/${p.slug}/`, { figure: `paper-${p.slug}`, text: p.blurb, dates: stamps(p) });
   for (const n of data.notes) {
     if (n.home) continue;
-    map.set(`/research/${n.name}/`, { figure: SHARED.has(n.name) ? "research-index" : `research-${n.name}`, text: summary(n.md) });
+    map.set(`/research/${n.name}/`, { figure: n.figure, text: n.lead });
   }
   for (const p of data.posts) map.set(`/blog/${p.slug}/`, { figure: p.figure, text: p.lead, dates: [p.date] });
   for (const [href, figure] of Object.entries(FIXED)) map.set(href, { figure, text: "" });
@@ -549,7 +557,7 @@ async function collect(site: Site) {
   counts.demos = (group.data as Card[]).length;
   const nav = tree({
     papers: laneList.map((p) => ({ name: p.name, href: `/papers/${p.slug}/` })),
-    research: noteList.filter((n) => !n.home).map((n) => ({ name: title(n.md) || n.name, href: `/research/${n.name}/` })),
+    research: noteList.filter((n) => !n.home).map((n) => ({ name: n.title, href: `/research/${n.name}/` })),
     blog: postList.map((p) => ({ name: p.name, href: `/blog/${p.slug}/` })),
   });
   const routes: Route[] = [];
@@ -577,8 +585,8 @@ async function collect(site: Site) {
     routes.push({
       route: n.home ? "/research/" : `/research/${n.name}/`,
       kind: n.home ? "research" : "note",
-      name: n.home ? "Research" : title(n.md) || n.name,
-      data: n.home ? { note: n, texts: noteList.map((one) => summary(one.md)) } : n,
+      name: n.home ? "Research" : n.title,
+      data: n.home ? { note: n, cards: noteList.map((one) => [one.name, one.title, one.lead, one.figure]) } : n,
       source,
       inputs: [source],
     });

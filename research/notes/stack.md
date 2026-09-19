@@ -1,4 +1,9 @@
-# The algebra of the stack
+---
+title: The algebra of the stack
+lead: The algebra of the stack: stacking is Dirichlet convolution and the group knows nothing new, the exact spun stack is a Gaussian Farey whose Fourier `L^2` discrepancy obeys Franel's identity one field up and is equivalent to the Riemann hypothesis for `zeta(s) L(s, chi_-4)`, its hexagonal twin puts `L(2, chi_-3)` in a proved node constant, the layers are a dilation system whose symbol is `zeta(1 + s)` so no reweighting moves the line, and the lean is the operation outside the Dirichlet group that still lands a closed form.
+figure: research-stack
+slug: stack
+---
 
 Lay a periodic pattern on the unit square at every scale `n = 1..N` at once, drop the opacity, and add the layers: that is the stack, and everything about it is a weight on the scales. [The Farey page](farey.md) says what the plain stack lights - the Farey fractions, `phi(n)` new nodes per scale, a genuinely RH-equivalent object rendered exactly and with no route to a proof. This page is the algebra of the stack itself: what happens when stacks are stacked inside one another, spun, restricted to a chosen set of scales, or built from a different design or a deeper level of the same one, and which of those operations leave the arithmetic of `zeta`. Three of them stay inside one abelian group whose series is a ratio of zetas, and the ones that leave it are the only place a new theorem can live.
 

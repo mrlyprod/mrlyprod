@@ -1,4 +1,9 @@
-# Weighted designs
+---
+title: Weighted designs
+lead: Weighted designs: what weights move on the mass side, what they never move on the length side, and the pressure that closes both.
+figure: research-weights
+slug: weights
+---
 
 A design is a set of cells; a weighted design is the same cells carrying a probability vector, and that is a refinement equation on the base grid. Weights move the mass side of the object and only the mass side: the contraction ratios stay `1/base`, so every length-indexed observable keeps its `log base` ripple at every weight, while the mass-stopping count - the first mass-indexed observable this tree has - is log-periodic or smooth according to the arithmetic of the `log w_f` alone. The multifractal pressure of the same object closes in one line, `tau(s) = log_base sum_f w_f^s`.
 

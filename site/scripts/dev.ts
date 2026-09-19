@@ -70,6 +70,7 @@ const disk = (): [string, string][] => [
   ["/ui/", site.kit?.path ?? ""],
   ["/lib/", join(org, "lib")],
   ["/figures/", site.input("figures").path],
+  ["/research/notes/", site.input("notes").path],
   ["/research/", site.input("research").path],
   ["/", site.input("public").path],
 ];

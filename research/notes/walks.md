@@ -1,10 +1,15 @@
-# The walk dimension
+---
+title: The walk dimension
+lead: The walk-dimension census: same mass, different music.
+figure: research-walks
+slug: walks
+---
 
 Every page before this one weighs a design: the fractal dimension `log(fill) / log(base)` says how fast mass accumulates with scale, and the fill law makes it exact. This page listens to a design instead. Drop a random walker on the graph of a pattern - one node per filled cell, one edge per face-adjacent pair - and watch it spread: `MSD(t) ~ t^(2/d_w)`. On any solid grid the walk dimension `d_w` is 2. On a fractal the walker keeps hitting holes at every scale and `d_w > 2`: distance costs more time than it should. The fractal dimension and `d_w` together fix the spectral dimension `d_s = 2 log(fill) / (log(base) * d_w)`, which is how the low Laplacian spectrum - the density of the shape's slow modes, its music - scales.
 
 The question this page answers by census: **does the mass fix the music?** Two designs with the same fill draw fractals of the same dimension, the same density at every level, the same fill polynomial degree. Do they walk the same? They do not, and the failure is exhibited three different ways.
 
-Every claim carries a tag. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a lab study; **Conjecture** means neither. The generator is `lab/rs/walk-dimension`, which also draws the figure. The [race demo](../demos/race/) runs the experiment live: two base-3 designs of the same fill, random walkers on both at once.
+Every claim carries a tag. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a lab study; **Conjecture** means neither. The generator is `lab/rs/walk-dimension`, which also draws the figure. The [race demo](../../site/demos/race/) runs the experiment live: two base-3 designs of the same fill, random walkers on both at once.
 
 ## The method, and what gates it
 

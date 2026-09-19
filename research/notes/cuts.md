@@ -1,8 +1,13 @@
-# Cuts
+---
+title: Cuts
+lead: The six-gasket theorem: a diagonal cut through one parity solid is Sierpinski all the way down.
+figure: research-cuts
+slug: cuts
+---
 
 A parity solid is built out of cubes, so you expect a planar cut through it to look like cubes. For one design it does not. Take `bang dim 3, code 126` - the 3D rule that keeps every corner of the parity cube except the two on the main diagonal - and cut it with the diagonal plane `x + y + z = s`. Every cut is a Sierpinski gasket, the binary digits of the height say which one, and the cut through the middle falls into six congruent gaskets tiling a hexagon.
 
-Every claim below carries a tag. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a crate test or a lab study; **Conjecture** means neither. The generator is `three::diagonal` in `../crates/mrlymath`, and nothing here rests on a stored image or an earlier run. Every source named in the literature section is read live; a source that cannot be checked that way is dropped rather than repeated. The [cuts demo](../demos/cuts/) slides the plane through the solid at any level, draws the slice down the `(1,1,1)` axis one circle per cell, and reports the support, the count on the height under the cursor, the extremes and whether the profile is constant.
+Every claim below carries a tag. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a crate test or a lab study; **Conjecture** means neither. The generator is `three::diagonal` in `../crates/mrlymath`, and nothing here rests on a stored image or an earlier run. Every source named in the literature section is read live; a source that cannot be checked that way is dropped rather than repeated. The [cuts demo](../../site/demos/cuts/) slides the plane through the solid at any level, draws the slice down the `(1,1,1)` axis one circle per cell, and reports the support, the count on the height under the cursor, the extremes and whether the profile is constant.
 
 ## The design, and what it already is
 
@@ -42,7 +47,7 @@ which is the whole of both slices and nothing else. (Proved as a corollary of th
 
 ![Six Sierpinski gaskets tiling a hexagon](cuts-fig)
 
-The two central cuts of `bang dim 3, code 126` at level 7, projected together along the `(1,1,1)` axis: 4374 lattice points in six gaskets of 729, one colour per piece, three pointing each way. The picture is the one the [cuts demo](../demos/cuts/) draws at level 7 with both central heights on, one circle per cell out of `mrlymath::three::diagonal::svg`; the 4374 points, the six pieces of 729 and the injectivity of the projection - no two points share the integer shadow `(x - y, x + y - 2z)` - are pinned by the crate test `the_central_union_is_six_pieces_of_seven_two_nine_at_level_seven`.
+The two central cuts of `bang dim 3, code 126` at level 7, projected together along the `(1,1,1)` axis: 4374 lattice points in six gaskets of 729, one colour per piece, three pointing each way. The picture is the one the [cuts demo](../../site/demos/cuts/) draws at level 7 with both central heights on, one circle per cell out of `mrlymath::three::diagonal::svg`; the 4374 points, the six pieces of 729 and the injectivity of the projection - no two points share the integer shadow `(x - y, x + y - 2z)` - are pinned by the crate test `the_central_union_is_six_pieces_of_seven_two_nine_at_level_seven`.
 
 There is a second, coarser way to split the same set. Sort the union by which of the six orderings of `x, y, z` a point satisfies. The result is six classes of exactly `3^(level-1) - 1` points, plus exactly `6` points with two coordinates equal: the six permutations of `(m, m, m+1)` and `(m, m+1, m+1)` for `m = 2^(level-1) - 1`. The split is perfectly even at every level. (Verified at level 2..8 by `mrlymath::three::diagonal` test `the_central_union_splits_evenly_by_coordinate_order`, six classes of `3^(level-1) - 1` plus exactly 6 tied points.) An uneven count such as `244, 243, 243, 243, 243, 242` can only arise from how points on a sector boundary are assigned, not from the lattice. (Refuted.)
 
@@ -106,7 +111,7 @@ The two rungs this page already knows are the controls, and they pass. Dim 2 giv
 
 The same `M_even` carries a second question, on its dominant root rather than its degree: how `log_3(rho_dim) - (dim-1)` behaves as `dim` grows. That is the base ladder's neighbour and it lives in [spectra](spectra.md); the matrix is defined here and should not be redefined there. That question is Conjecture S, `sgn(log_3(rho_dim) - (dim-1)) = (-1)^(dim+1)`, Verified to dim 100 on [spectra](spectra.md) and unproved. This page carries the order law and nothing about the sign; no count or recurrence below is evidence either way.
 
-What is and is not new here, stated as flatly as the section above states it for dim 3. The dim 4 object is not new - Hocking, *Bridges* 2023, cuts four-dimensional Menger sponges on the diagonal, and this tree already records that his paper carries no count and no sequence ([DISCOVERIES](DISCOVERIES.md), the grey-literature line, where his full text is searched for `306`, `2250` and `A299916` with no hit; the paper itself is in [REFS](REFS.md)). The counts, the recurrences and the order law are this tree's. The order law is the part worth taking outside: it says the dimension of the maximally arithmetic exceptional plane is an algebraic number of degree at most `ceil(dim/2)`, in every dimension at once.
+What is and is not new here, stated as flatly as the section above states it for dim 3. The dim 4 object is not new - Hocking, *Bridges* 2023, cuts four-dimensional Menger sponges on the diagonal, and this tree already records that his paper carries no count and no sequence ([DISCOVERIES](../DISCOVERIES.md), the grey-literature line, where his full text is searched for `306`, `2250` and `A299916` with no hit; the paper itself is in [REFS](../REFS.md)). The counts, the recurrences and the order law are this tree's. The order law is the part worth taking outside: it says the dimension of the maximally arithmetic exceptional plane is an algebraic number of degree at most `ceil(dim/2)`, in every dimension at once.
 
 ## The neighbours
 
@@ -128,4 +133,4 @@ One refutation belongs here. The closed form `4*(level+5)*3^(level-1)` for `bang
 
 `mrlymath::three::diagonal` carries the cut itself. `profile` is the digit polynomial, so a height is counted without a cell being built; `slice` enumerates the lattice points of one plane; `project` and `shadow` send a point down the `(1,1,1)` axis in floating point and in integers; `svg` draws a set of heights, one circle per cell. `mrlyweb`'s `diagonal_profile`, `diagonal_count` and `diagonal_svg` put all four in the browser behind the cuts demo. The module's tests pin the support and the constant count to level 14, the scheduled gasket for all 126 slices, the central totals and the coordinate-order split to level 8, the six pieces of 729 and the injective projection at level 7, the odd-trinomial layer, the `A048883` calibration, the neighbour table, the refutation and the exact octahedron conjugation.
 
-`three::diagonal` in `../crates/mrlymath` computes every number above, its tests named for the claims they pin, and the cuts demo draws the slices and the figure; `lab/py/pascal-shear` owns the 2D section and `lab/py/slice-ladder-controls` the ladder. Sequences that come out of this construction are held to the standard set in [the sequence ledger](sequences.md).
+`three::diagonal` in `../crates/mrlymath` computes every number above, its tests named for the claims they pin, and the cuts demo draws the slices and the figure; `lab/py/pascal-shear` owns the 2D section and `lab/py/slice-ladder-controls` the ladder. Sequences that come out of this construction are held to the standard set in [the sequence ledger](../sequences.md).

@@ -45,6 +45,7 @@
     "pages": { "path": "pages", "ext": ".md" },
     "blog": { "path": "blog", "ext": ".md" },
     "research": { "path": "../research", "ext": ".md" },
+    "notes": { "path": "../research/notes", "ext": ".md" },
     "figures": { "path": "../files/figures", "ext": ".png" },
     "demos": { "path": "demos", "deep": true },
     "lib": { "path": "lib", "deep": true },

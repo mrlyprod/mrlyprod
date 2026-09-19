@@ -1,4 +1,9 @@
-# Complex dimensions
+---
+title: Complex dimensions
+lead: Complex dimensions: every design in the lattice class, the carpet proved not Minkowski measurable with its explicit profile, and the arithmetic pole at `s_0 + 2 pi i/log 3` certified genuine.
+figure: research-dimensions
+slug: dimensions
+---
 
 [The core page](core.md) gives every design one real number, the dimension `log(fill)/log(base)`. Fractal-string theory promotes that number to the real part of an infinite family - the *complex dimensions*, the poles of a zeta function attached to the set's gaps. This page computes them for the 1D designs, watches the imaginary parts surface as an oscillation in the box count, and follows the theory to its structural consequence, which needs careful qualifying.
 

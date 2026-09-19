@@ -1,10 +1,15 @@
-# A design is a Boolean function
+---
+title: A design is a Boolean function
+lead: Designs are Boolean functions up to cube symmetry; the strongest theorem in the tree.
+figure: research-bijection
+slug: bijection
+---
 
 The design count in dimension `dim` matches OEIS A000616, the number of NP-equivalence classes of Boolean functions on `dim` variables. That used to be an observation about shared terms. It is a theorem: there is an explicit bijection between designs and Boolean functions that carries cube symmetry onto NP-equivalence, so the two classifications are the same classification and the counts agree in every dimension. The term-matching survives below as a backstop, not as the argument.
 
 One naming guard: NP on this page is Negation-Permutation - negate inputs, permute inputs, the Boolean-function equivalence A000616 classifies - and has nothing to do with the complexity class. No claim about P versus NP is made or implied anywhere on this page; [complexity.md](complexity.md) carries the same disclaimer for the measures it computes.
 
-Every claim on this page is tagged **Proved** (re-derived here), **Verified** (recomputed by a lab study, not proved), or **Conjecture** (a number with no generator). The generators are `lab/rs/design-census` and `lab/rs/oeis-terms`. The [universe demo](../demos/universe/) draws the orbits the bijection classifies, one dimension and base at a time, against the Burnside counts.
+Every claim on this page is tagged **Proved** (re-derived here), **Verified** (recomputed by a lab study, not proved), or **Conjecture** (a number with no generator). The generators are `lab/rs/design-census` and `lab/rs/oeis-terms`. The [universe demo](../../site/demos/universe/) draws the orbits the bijection classifies, one dimension and base at a time, against the Burnside counts.
 
 ## The two objects
 
@@ -60,7 +65,7 @@ Burnside is not what proves the identity - the bijection does that, and it is un
 
 The theorem is proved relative to one imported definition: that the symmetry of a design is the signed-permutation group of the cube, order `2^dim * dim!`, acting on corners as above. Everything downstream of that definition is derived here. A different group would be a different theorem.
 
-The identification with A000616 is **Verified**, not proved, and cannot be otherwise: that a particular OEIS entry counts NP classes is a fact about the entry. It is checked two ways - against the entry's own stated definition, and against its terms through `dim = 7` by recomputation. The [sequence ledger](sequences.md) records A000616 in its established-entries table; this page is where it is recomputed.
+The identification with A000616 is **Verified**, not proved, and cannot be otherwise: that a particular OEIS entry counts NP classes is a fact about the entry. It is checked two ways - against the entry's own stated definition, and against its terms through `dim = 7` by recomputation. The [sequence ledger](../sequences.md) records A000616 in its established-entries table; this page is where it is recomputed.
 
 ## Past base 2
 

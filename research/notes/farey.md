@@ -1,8 +1,13 @@
-# The stack is an RH-observable
+---
+title: The stack is an RH-observable
+lead: The stack's moire is a Farey resonance diagram; each scale `n` adds exactly `phi(n)` bright nodes, the stack is an address rather than a construction (any depth evaluates in closed form, which buys rendering and provably nothing toward RH), and restricting the Farey sequence to a digit design empties a fixed sixth of the line at base 3 `{0,1}` when both coordinates are restricted, while restricting the denominator alone leaves the Franel-Landau shape reading the same.
+figure: research-farey
+slug: farey
+---
 
 Lay the same fractal grid on the unit square at many scales at once - scale `n` puts its cell boundaries at `x = k/n` - drop the opacity and add the layers up. The result is a moire, and a bright point is one that many scales agree on. The question this page answers is what the bright points are, and the answer is not decorative: the lit nodes are the Farey fractions, the amount of new structure each scale contributes is Euler's totient `phi(n)`, and how evenly those nodes spread is - by a pair of theorems from 1924 - literally equivalent to the Riemann hypothesis.
 
-Every claim below carries a tag. **Proved** means derived here from definitions. **Verified** means recomputed from scratch, or checked against the published literature. **Conjecture** marks a reading the tables support and no proof reaches, **Refuted** a claim this page kills. The [Farey demo](../demos/farey/) builds the stack scale by scale, lights the Farey fractions, and shows `phi(n)` novelty peaking at the primes.
+Every claim below carries a tag. **Proved** means derived here from definitions. **Verified** means recomputed from scratch, or checked against the published literature. **Conjecture** marks a reading the tables support and no proof reaches, **Refuted** a claim this page kills. The [Farey demo](../../site/demos/farey/) builds the stack scale by scale, lights the Farey fractions, and shows `phi(n)` novelty peaking at the primes.
 
 ## Where the lines land
 

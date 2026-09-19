@@ -1,10 +1,15 @@
-# The coprimality spine
+---
+title: The coprimality spine
+lead: The coprimality spine: exact base-local factors on every design, the census behind them, the window at dimension one with the band automaton's critical out-degree and its algebraic block rate, and primes on a design, where the least base below the quarter threshold is 21 at one missing digit and 32 at two, the one-digit family closes at 34 and the two-digit family closes at 21 against the third.
+figure: research-coprime
+slug: coprime
+---
 
 - Every fractal in this family counts the same thing on a different grid: the points of a digital design whose coordinates share no common factor.
 - Each design has its own density constant, and the constants are one theorem with one input per design; this page is that theorem and the open front behind it.
 - The base of the design contributes an exact factor, the bracket, known in closed form at every finite level; every prime away from the base contributes the classical factor `1 - p^(-dim)`.
 - Above dimension one the join is a theorem on the shelf; at dimension one it is open exactly for primes in one window of exponents, and that window is the standing problem here.
-- The Sierpinski gasket is the worked case throughout, because its sequence is [A396934](https://oeis.org/A396934) and its density `16/(3*Pi^2)` is stated in [the ledger](sequences.md).
+- The Sierpinski gasket is the worked case throughout, because its sequence is [A396934](https://oeis.org/A396934) and its density `16/(3*Pi^2)` is stated in [the ledger](../sequences.md).
 - Every claim carries one tag: **Proved** means a proof is given or restated here or on the shelf, **Verified** means recomputed by the named study or lane, **Conjecture** means supported and open, **Refuted** means shown false.
 
 ## THE OBJECT

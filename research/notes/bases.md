@@ -1,4 +1,9 @@
-# What base 3 hides
+---
+title: What base 3 hides
+lead: What base 3 hides: an Eisenstein L-value where base 2 hid pi, and the collapse theorem that turns any multiplicatively dependent family of bases into one design in base `r^lcm(e_i)`.
+figure: research-bases
+slug: bases
+---
 
 Base 2 lives on the square lattice, and the constant buried in its arithmetic is pi: two random integers are coprime with density `6/pi^2 = 1/zeta(2)`. Ask the same question in base 3 and the answer is not pi. Base 3 brings 3-fold symmetry, and a lattice with 3-fold symmetry is forced to be hexagonal; its arithmetic is the ring of Eisenstein integers, and the constant that falls out is built from an L-value in the same family as Catalan's constant - a number with no known closed form in terms of pi. Base 2 hid something elementary; base 3 hides something genuinely deeper.
 

@@ -1,4 +1,9 @@
-# Two bases
+---
+title: Two bases
+lead: What a second multiplicatively independent base does to a design: Cobham and Cobham-Semenov at their sources, every proper dim 1 design proved base-locked by density alone, the semilinear designs of dim at least 2 pinned between a proved count condition and the block designs with the diagonal as the standing counterexample, the global planar budget Refuted twice and replaced by one budget per axis for product designs, the base-2 gasket against the base-3 gasket counted exactly to `3^24`, and a three-base object on the line whose budget is negative, with five members and no sixth below a height of `38170` decimal digits.
+figure: research-cobham
+slug: cobham
+---
 
 Every page of this tree reads one base at a time, and that is a law rather than a habit. Two bases in one dependence class are one base and belong to [bases](bases.md); this page is about the other case. Cobham's theorem says a set recognized by a finite automaton in two multiplicatively independent bases is already periodic, so at dim 1 a proper design has exactly one base and the joint object of two bases is not a design, not an automaton and not a transfer matrix. This page states the law at its source, makes the dim 1 consequence exact, prices `dim >= 2` where the law is weaker than folklore says, lists which of this tree's instruments survive contact with a second base and which do not, turns to the smallest honest two-base object, a base-2 gasket meeting a base-3 gasket, whose census refutes the naive planar budget, then to a three-base object on the line whose budget is negative and whose census finds five members and no sixth below a height of `38170` decimal digits, and closes on the transcendence wall that stands between every instrument of this tree and any two-base exponent.
 
