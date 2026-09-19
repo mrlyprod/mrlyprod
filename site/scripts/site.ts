@@ -14,7 +14,7 @@ import SITE from "../lib/site.js";
 import { shelf } from "./shelf.ts";
 
 const org = resolve(import.meta.dir, "..");
-const dist = join(org, "dist");
+const dist = process.env.MRLY_DIST ? resolve(process.env.MRLY_DIST) : join(org, "dist");
 const BLOG = join(org, "blog");
 const postFile = (slug: string) => join(BLOG, `${slug}.md`);
 const root = (process.env.MRLY_SITE ?? SITE.root).replace(/\/$/, "");
@@ -1026,7 +1026,7 @@ function extras(site: Site): Output[] {
 
 /* SPEC */
 
-export const MANIFEST = ".cache/manifest.json";
+export const MANIFEST = process.env.MRLY_DIST ? join(dist, ".manifest.json") : ".cache/manifest.json";
 
 export const counted = () => ({ ...counts });
 
