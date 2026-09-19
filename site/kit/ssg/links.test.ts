@@ -28,7 +28,7 @@ const code: Route[] = [
   { route: "/git/crates/mrly/", kind: "gitdir" },
   { route: "/git/crates/mrly/README.md", kind: "gitfile" },
   { route: "/git/research/lab/walk.rs", kind: "gitfile" },
-  { route: "/git/research/figures/carpet.png", kind: "gitfile" },
+  { route: "/git/files/figures/carpet.png", kind: "gitfile" },
 ];
 
 function site(git: boolean): Site {
@@ -94,7 +94,7 @@ test("a repo file with no route lands on its /git/ page", () => {
 });
 
 test("an image with no route lands on its raw bytes", () => {
-  expect(resolve(mrly, "research/core.md", "figures/carpet.png")).toBe("/raw/research/figures/carpet.png");
+  expect(resolve(mrly, "research/core.md", "../files/figures/carpet.png")).toBe("/raw/files/figures/carpet.png");
 });
 
 test("an extensionless directory lands on its listing", () => {

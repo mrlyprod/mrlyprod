@@ -1,8 +1,8 @@
 # mrlyfig
 
 - The figure press of Mrly: it does one thing, draw.
-- The library is the kit every figure shares; each figure is one binary of the `research/figures` crate, and the press turns it into two square pngs, one on the dark ground of the site and one on the light.
-- Every figure is hand-authored from a one-line brief tied to its page's mathematics: subject, artist, parameters, palette; the briefs are the FIGURES list in `research/figures/README.md`.
+- The library is the kit every figure shares; each figure is one binary of the `figures` crate, and the press turns it into two square pngs, one on the dark ground of the site and one on the light.
+- Every figure is hand-authored from a one-line brief tied to its page's mathematics: subject, artist, parameters, palette; the briefs are the FIGURES list in `figures/README.md`.
 
 ## KIT
 
@@ -18,7 +18,7 @@
 
 ## PRESS
 
-- One figure is one binary: `research/figures/src/bin/<name>.rs`, autodiscovered by cargo, no list anywhere; the crate is a workspace member and a bare `cargo check` never touches it.
+- One figure is one binary: `figures/src/bin/<name>.rs`, autodiscovered by cargo, no list anywhere; the crate is a workspace member and a bare `cargo check` never touches it.
 - Run one with `bash scripts/figures.sh <name>`, several by naming them, or every figure by passing nothing; the script reads the bin list from `cargo metadata` and every figure prints twice, once a theme.
 - Every figure lands in `files/figures/` as `<name>-dark.png` and `<name>-light.png`, square, 1024 by 1024, on the ground of its theme, with no text and no wordmark. The art speaks.
 - The pngs are CC BY 4.0, the licence beside them in `files/figures/LICENSE.md`; a single png a lab study draws lives there too under its own name.
