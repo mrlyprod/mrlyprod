@@ -24,6 +24,8 @@ Words, not letters. One word per thing, the same word everywhere. Letters live o
 | `fill`, `void`, `cells` | counts of a render |
 | `faces`, `nodes`, `edges`, `parts`, `holes`, `euler`, `contacts` | the other counts, as the crates name them |
 | `area`, `volume`, `tube` | measures |
+| `measure` | the reading taken off a design: `fills`, `voids`, `surface`, ... |
+| `axis` | the index a reading runs along: `level` or `side` |
 | `dimension` | `log(fill) / log(base)`, per axis; a formula, never a parameter |
 | `birth`, `survive`, `wrap`, `mask` | life rules |
 
@@ -60,7 +62,7 @@ Words, not letters. One word per thing, the same word everywhere. Letters live o
 - `to_file()`: the kind, then `key=value` joined by `_`, lists in brackets. The alphabet `[a-z0-9_=,\[\]]` is safe on every OS. `from_file()` cuts at an underscore followed by `key=`, so a word value may carry underscores.
 - `to_mrly()`: the kind, then `key value` pairs joined by commas, lists in brackets with spaces, a true flag as its bare key, a lattice as its bare word. Pages use this form.
 - `to_id()`: one-way; it identifies but never decodes. A registry line holds the object.
-- A ledger sequence is the design's `to_file()` dotted with its measure and axis: `bang_dim=3_code=23.surface.level`.
+- A ledger sequence is its own kind, never a dotted design name: `sequence_dim=3_code=23_measure=surface_axis=level`.
 
 ## KIND BANG
 
@@ -79,6 +81,14 @@ Words, not letters. One word per thing, the same word everywhere. Letters live o
 - `wrap` elides at false.
 - Carrier: `name::Rule { birth, survive, wrap }`; `Rule::of` reads one out of a `life::Config` and `Rule::config` builds one over a mask.
 - Conway is `{"kind":"rule","birth":[3],"survive":[2,3]}`.
+
+## KIND SEQUENCE
+
+- Keys: `dim`, `base`, `code`, `measure`, `axis`.
+- `base` elides at 2, and the design half obeys the bang code law.
+- `measure` is one of `fills`, `voids`, `surface`, `peak`, `heights`, `vertices`, `edges`, `faces`, `euler`, `triangles`, `holes`, `pieces`; `axis` is `level` or `side`.
+- Carrier: `name::Sequence { dim, base, code, measure, axis }`; `mrlylab::ledger::Key::named` builds one and `Key::id` hashes it to the row's anchor.
+- The carpet's odd-side fills are `{"kind":"sequence","dim":2,"code":7,"measure":"fills","axis":"side"}`, file `sequence_dim=2_code=7_measure=fills_axis=side`, id `8a9e4ce8`.
 
 ## KIND TILE
 

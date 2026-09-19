@@ -89,21 +89,21 @@ This sequence is A398348, whose data is that run verbatim, with a b-file to `n =
 
 ### The odd-side fills
 
-At odd side `2k - 1` an axis splits into `k` low positions and `k - 1` high, so a base-2 design fills `sum over its corners of k^(zeros) (k - 1)^(ones)`, a polynomial in `k` of degree `dim`; **Proved** in [DISCOVERIES.md](DISCOVERIES.md), generator `mrlymath::formulas::counting`. The six designs of the plane read as the polygonal numbers, and the dust, the sponge and the solid of the cube as the cubes, the divisor counts of `240^n` and the odd cubes. Every row below is read by `mrlylab::ledger::terms` from `k = 2`, the first odd side past the unit cell, and checked term by term against its record; `shift` is the record's index less the ledger's `k`.
+At odd side `2k - 1` an axis splits into `k` low positions and `k - 1` high, so a base-2 design fills `sum over its corners of k^(zeros) (k - 1)^(ones)`, a polynomial in `k` of degree `dim`; **Proved** in [DISCOVERIES.md](DISCOVERIES.md), generator `mrlymath::formulas::counting`. The six designs of the plane read as the polygonal numbers, and the dust, the sponge and the solid of the cube as the cubes, the divisor counts of `240^n` and the odd cubes. Every row below is read by `mrlylab::ledger::terms` from `k = 2`, the first odd side past the unit cell, and checked term by term against its record; `id` is the sequence name's eight-hex digest, the anchor of the row, and `shift` is the record's index less the ledger's `k`.
 
-| design | key | closed form | terms from `k = 2` | record | shift | status |
-|---|---|---|---|---|---|---|
-| dust | `bang_dim=2_code=1.fills.side` | `k^2` | `4, 9, 16, 25, 36, 49, 64, 81` | [A000290](https://oeis.org/A000290) | 0 | **Proved** |
-| tree | `bang_dim=2_code=3.fills.side` | `2k^2 - k` | `6, 15, 28, 45, 66, 91, 120, 153` | [A000384](https://oeis.org/A000384) | 0 | **Proved** |
-| carpet | `bang_dim=2_code=7.fills.side` | `3k^2 - 2k` | `8, 21, 40, 65, 96, 133, 176, 225` | [A000567](https://oeis.org/A000567) | 0 | **Proved** |
-| void | `bang_dim=2_code=9.fills.side` | `2k^2 - 2k + 1` | `5, 13, 25, 41, 61, 85, 113, 145` | [A001844](https://oeis.org/A001844) | -1 | **Proved** |
-| corner and centre | `bang_dim=2_code=11.fills.side` | `3k^2 - 3k + 1` | `7, 19, 37, 61, 91, 127, 169, 217` | [A003215](https://oeis.org/A003215) | -1 | **Proved** |
-| solid | `bang_dim=2_code=15.fills.side` | `4k^2 - 4k + 1` | `9, 25, 49, 81, 121, 169, 225, 289` | [A016754](https://oeis.org/A016754) | -1 | **Proved** |
-| dust | `bang_dim=3_code=1.fills.side` | `k^3` | `8, 27, 64, 125, 216, 343, 512, 729` | [A000578](https://oeis.org/A000578) | 0 | **Proved** |
-| sponge | `bang_dim=3_code=23.fills.side` | `4k^3 - 3k^2` | `20, 81, 208, 425, 756, 1225, 1856, 2673` | [A103532](https://oeis.org/A103532) | -1 | **Proved** |
-| sponge | `bang_dim=3_code=23.voids.side` | `4k^3 - 9k^2 + 6k - 1` | `7, 44, 135, 304, 575, 972, 1519, 2240` | [A395241](https://oeis.org/A395241) | -1 | **Verified** |
-| void | `bang_dim=3_code=129.fills.side` | `2k^3 - 3k^2 + 3k - 1` | `9, 35, 91, 189, 341, 559, 855, 1241` | [A005898](https://oeis.org/A005898) | -1 | **Proved** |
-| solid | `bang_dim=3_code=255.fills.side` | `8k^3 - 12k^2 + 6k - 1` | `27, 125, 343, 729, 1331, 2197, 3375, 4913` | [A016755](https://oeis.org/A016755) | -1 | **Proved** |
+| id | design | key | closed form | terms from `k = 2` | record | shift | status |
+|---|---|---|---|---|---|---|---|
+| 6630d885 | dust | `sequence_dim=2_code=1_measure=fills_axis=side` | `k^2` | `4, 9, 16, 25, 36, 49, 64, 81` | [A000290](https://oeis.org/A000290) | 0 | **Proved** |
+| 09d8d98c | tree | `sequence_dim=2_code=3_measure=fills_axis=side` | `2k^2 - k` | `6, 15, 28, 45, 66, 91, 120, 153` | [A000384](https://oeis.org/A000384) | 0 | **Proved** |
+| 8a9e4ce8 | carpet | `sequence_dim=2_code=7_measure=fills_axis=side` | `3k^2 - 2k` | `8, 21, 40, 65, 96, 133, 176, 225` | [A000567](https://oeis.org/A000567) | 0 | **Proved** |
+| a3ef3d4d | void | `sequence_dim=2_code=9_measure=fills_axis=side` | `2k^2 - 2k + 1` | `5, 13, 25, 41, 61, 85, 113, 145` | [A001844](https://oeis.org/A001844) | -1 | **Proved** |
+| 20aeeec9 | corner and centre | `sequence_dim=2_code=11_measure=fills_axis=side` | `3k^2 - 3k + 1` | `7, 19, 37, 61, 91, 127, 169, 217` | [A003215](https://oeis.org/A003215) | -1 | **Proved** |
+| c11482b0 | solid | `sequence_dim=2_code=15_measure=fills_axis=side` | `4k^2 - 4k + 1` | `9, 25, 49, 81, 121, 169, 225, 289` | [A016754](https://oeis.org/A016754) | -1 | **Proved** |
+| b91a9c68 | dust | `sequence_dim=3_code=1_measure=fills_axis=side` | `k^3` | `8, 27, 64, 125, 216, 343, 512, 729` | [A000578](https://oeis.org/A000578) | 0 | **Proved** |
+| 52fb27f4 | sponge | `sequence_dim=3_code=23_measure=fills_axis=side` | `4k^3 - 3k^2` | `20, 81, 208, 425, 756, 1225, 1856, 2673` | [A103532](https://oeis.org/A103532) | -1 | **Proved** |
+| 1d05226c | sponge | `sequence_dim=3_code=23_measure=voids_axis=side` | `4k^3 - 9k^2 + 6k - 1` | `7, 44, 135, 304, 575, 972, 1519, 2240` | [A395241](https://oeis.org/A395241) | -1 | **Verified** |
+| cea32177 | void | `sequence_dim=3_code=129_measure=fills_axis=side` | `2k^3 - 3k^2 + 3k - 1` | `9, 35, 91, 189, 341, 559, 855, 1241` | [A005898](https://oeis.org/A005898) | -1 | **Proved** |
+| 553a9967 | solid | `sequence_dim=3_code=255_measure=fills_axis=side` | `8k^3 - 12k^2 + 6k - 1` | `27, 125, 343, 729, 1331, 2197, 3375, 4913` | [A016755](https://oeis.org/A016755) | -1 | **Proved** |
 
 The side axis is code specific, not orbit invariant: a flip of one axis swaps `k` and `k - 1`, so code 9, the void, reads `2k^2 - 2k + 1` where its orbit mate code 6 reads `2k^2 - 2k`, and code 11 reads `3k^2 - 3k + 1` where code 7, the carpet of the same orbit, reads `3k^2 - 2k`. The catalog lists the least code of every orbit, and the table names the code each record needs.
 
@@ -113,17 +113,17 @@ The odd-side fill of a design is a product of norm forms, one per irreducible fa
 
 At side 3 the fill of a level is the tile's fill to the power `level` and the voids are the grid less the fill, while the exposed faces obey `V(level + 1) = occ V(level) - 2 sum P S^level` over the axes, `occ` the tile's filled cells, `P` its adjacent filled pairs along the axis and `S` the cross positions whose two end cells are both filled; `mrlymath::formulas::exposure` closes it in every dimension and `mrlymath::formulas::exposure_recurrence` spells the recurrence. **Proved**, and checked against the rendered census on every code of the cube to level 3. The sponge's slice count is A299916 from its second term, the recurrence being the record's; **Verified** to level 4 by `mrlymath::formulas::cut_fills`.
 
-| design | key | closed form | terms from level 1 | record | shift | status |
-|---|---|---|---|---|---|---|
-| carpet | `bang_dim=2_code=7.fills.level` | `8^level` | `8, 64, 512, 4096, 32768, 262144, 2097152, 16777216` | [A001018](https://oeis.org/A001018) | 0 | **Proved** |
-| carpet | `bang_dim=2_code=7.voids.level` | `9^level - 8^level` | `1, 17, 217, 2465, 26281, 269297, 2685817, 26269505` | [A016185](https://oeis.org/A016185) | 0 | **Proved** |
-| carpet | `bang_dim=2_code=7.surface.level` | `a(level) = 11 a(level-1) - 24 a(level-2)` | `16, 80, 496, 3536, 26992, 212048, 1684720, 13442768` | [A381517](https://oeis.org/A381517) | 0 | **Proved** |
-| void | `bang_dim=2_code=9.fills.level` | `5^level` | `5, 25, 125, 625, 3125, 15625, 78125, 390625` | [A000351](https://oeis.org/A000351) | 0 | **Proved** |
-| corner and centre | `bang_dim=2_code=11.fills.level` | `7^level` | `7, 49, 343, 2401, 16807, 117649, 823543, 5764801` | [A000420](https://oeis.org/A000420) | 0 | **Proved** |
-| sponge | `bang_dim=3_code=23.fills.level` | `20^level` | `20, 400, 8000, 160000, 3200000, 64000000, 1280000000, 25600000000` | [A009964](https://oeis.org/A009964) | 0 | **Proved** |
-| sponge | `bang_dim=3_code=23.surface.level` | `a(level) = 28 a(level-1) - 160 a(level-2)` | `72, 1056, 18048, 336384, 6531072, 129048576, 2568388608, 51267108864` | [A332705](https://oeis.org/A332705) | 0 | **Proved** |
-| sponge | `bang_dim=3_code=23.triangles.level` | none | `42, 306, 2250, 16578` to the cell budget | [A299916](https://oeis.org/A299916) | 1 | **Verified** |
-| solid | `bang_dim=3_code=255.fills.level` | `27^level` | `27, 729, 19683, 531441, 14348907, 387420489, 10460353203, 282429536481` | [A009971](https://oeis.org/A009971) | 0 | **Proved** |
+| id | design | key | closed form | terms from level 1 | record | shift | status |
+|---|---|---|---|---|---|---|---|
+| 8391ccb9 | carpet | `sequence_dim=2_code=7_measure=fills_axis=level` | `8^level` | `8, 64, 512, 4096, 32768, 262144, 2097152, 16777216` | [A001018](https://oeis.org/A001018) | 0 | **Proved** |
+| f1ee0d51 | carpet | `sequence_dim=2_code=7_measure=voids_axis=level` | `9^level - 8^level` | `1, 17, 217, 2465, 26281, 269297, 2685817, 26269505` | [A016185](https://oeis.org/A016185) | 0 | **Proved** |
+| be671ff7 | carpet | `sequence_dim=2_code=7_measure=surface_axis=level` | `a(level) = 11 a(level-1) - 24 a(level-2)` | `16, 80, 496, 3536, 26992, 212048, 1684720, 13442768` | [A381517](https://oeis.org/A381517) | 0 | **Proved** |
+| b3d813f5 | void | `sequence_dim=2_code=9_measure=fills_axis=level` | `5^level` | `5, 25, 125, 625, 3125, 15625, 78125, 390625` | [A000351](https://oeis.org/A000351) | 0 | **Proved** |
+| 0e5099d4 | corner and centre | `sequence_dim=2_code=11_measure=fills_axis=level` | `7^level` | `7, 49, 343, 2401, 16807, 117649, 823543, 5764801` | [A000420](https://oeis.org/A000420) | 0 | **Proved** |
+| 91fac30a | sponge | `sequence_dim=3_code=23_measure=fills_axis=level` | `20^level` | `20, 400, 8000, 160000, 3200000, 64000000, 1280000000, 25600000000` | [A009964](https://oeis.org/A009964) | 0 | **Proved** |
+| 753b6b49 | sponge | `sequence_dim=3_code=23_measure=surface_axis=level` | `a(level) = 28 a(level-1) - 160 a(level-2)` | `72, 1056, 18048, 336384, 6531072, 129048576, 2568388608, 51267108864` | [A332705](https://oeis.org/A332705) | 0 | **Proved** |
+| 7ab4b31a | sponge | `sequence_dim=3_code=23_measure=triangles_axis=level` | none | `42, 306, 2250, 16578` to the cell budget | [A299916](https://oeis.org/A299916) | 1 | **Verified** |
+| 0e1b6a21 | solid | `sequence_dim=3_code=255_measure=fills_axis=level` | `27^level` | `27, 729, 19683, 531441, 14348907, 387420489, 10460353203, 282429536481` | [A009971](https://oeis.org/A009971) | 0 | **Proved** |
 
 ## CANDIDATES, NOT ENTRIES
 
@@ -149,70 +149,70 @@ Both censuses live in `lab/rs/design-census`: the fill-class census behind A1298
 
 ## THE RECORDS
 
-Every OEIS id cited on this tree, read against the live entry on its name, its offset and its first terms. `key` names the design sequence an entry is, in the registry's `design.measure.axis` spelling, and `shift` that record's index less the ledger's. The registry walks 1282 designs across 9 dimension and base pairs and holds 7692 closed rows and 5044 convolved rows of 8 terms each; the grid tiers render on demand within a budget of 500000 cells a term.
+Every OEIS id cited on this tree, read against the live entry on its name, its offset and its first terms. `key` names the design sequence an entry is, in the registry's `sequence_dim=..._code=..._measure=..._axis=...` spelling, `id` the first eight hex digits of the sha256 of that name's canonical JSON, and `shift` that record's index less the ledger's. The registry walks 1282 designs across 9 dimension and base pairs and holds 7692 closed rows and 5044 convolved rows of 8 terms each; the grid tiers render on demand within a budget of 500000 cells a term.
 
-| record | name | offset | first terms | key | shift | status |
-|---|---|---|---|---|---|---|
-| [A000029](https://oeis.org/A000029) | Number of necklaces with n beads of 2 colors, allowing turning over (bracelets) | 0 | `1, 2, 3, 4, 6, 8, 13, 18, 30, 46, 78, 126` |  |  | **Verified** |
-| [A000070](https://oeis.org/A000070) | a(n) = Sum_{k=0..n} p(k) where p(k) = number of partitions of k | 0 | `1, 2, 4, 7, 12, 19, 30, 45, 67, 97, 139, 195` |  |  | **Verified** |
-| [A000244](https://oeis.org/A000244) | Powers of 3: a(n) = 3^n | 0 | `1, 3, 9, 27, 81, 243, 729, 2187, 6561, 19683, 59049, 177147` |  |  | **Proved** |
-| [A000290](https://oeis.org/A000290) | The squares: a(n) = n^2 | 0 | `0, 1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121` | `bang_dim=2_code=1.fills.side` | 0 | **Proved** |
-| [A000351](https://oeis.org/A000351) | Powers of 5: a(n) = 5^n | 0 | `1, 5, 25, 125, 625, 3125, 15625, 78125, 390625, 1953125, 9765625, 48828125` | `bang_dim=2_code=9.fills.level` | 0 | **Proved** |
-| [A000370](https://oeis.org/A000370) | Number of NPN-equivalence classes of Boolean functions of n or fewer variables | 0 | `1, 2, 4, 14, 222, 616126, 200253952527184` |  |  | **Verified** |
-| [A000384](https://oeis.org/A000384) | Hexagonal numbers: a(n) = n*(2*n-1) | 0 | `0, 1, 6, 15, 28, 45, 66, 91, 120, 153, 190, 231` | `bang_dim=2_code=3.fills.side` | 0 | **Proved** |
-| [A000420](https://oeis.org/A000420) | Powers of 7: a(n) = 7^n | 0 | `1, 7, 49, 343, 2401, 16807, 117649, 823543, 5764801, 40353607, 282475249, 1977326743` | `bang_dim=2_code=11.fills.level` | 0 | **Proved** |
-| [A000567](https://oeis.org/A000567) | Octagonal numbers: n*(3*n-2) | 0 | `0, 1, 8, 21, 40, 65, 96, 133, 176, 225, 280, 341` | `bang_dim=2_code=7.fills.side` | 0 | **Proved** |
-| [A000578](https://oeis.org/A000578) | The cubes: a(n) = n^3 | 0 | `0, 1, 8, 27, 64, 125, 216, 343, 512, 729, 1000, 1331` | `bang_dim=3_code=1.fills.side` | 0 | **Proved** |
-| [A000616](https://oeis.org/A000616) | a(-1)=1 by convention; for n >= 0, a(n) = number of irreducible Boolean functions of n variables | -1 | `1, 2, 3, 6, 22, 402, 1228158, 400507806843728` |  |  | **Proved** |
-| [A001018](https://oeis.org/A001018) | Powers of 8: a(n) = 8^n | 0 | `1, 8, 64, 512, 4096, 32768, 262144, 2097152, 16777216, 134217728, 1073741824, 8589934592` | `bang_dim=2_code=7.fills.level` | 0 | **Proved** |
-| [A001024](https://oeis.org/A001024) | Powers of 15: a(n) = 15^n | 0 | `1, 15, 225, 3375, 50625, 759375, 11390625, 170859375, 2562890625, 38443359375` |  |  | **Verified** |
-| [A001316](https://oeis.org/A001316) | Gould's sequence: number of odd entries in row n of Pascal's triangle | 0 | `1, 2, 2, 4, 2, 4, 4, 8, 2, 4, 4, 8` |  |  | **Verified** |
-| [A001481](https://oeis.org/A001481) | Numbers that are the sum of 2 squares | 1 | `0, 1, 2, 4, 5, 8, 9, 10, 13, 16, 17, 18` |  |  | **Verified** |
-| [A001844](https://oeis.org/A001844) | Centered square numbers: a(n) = 2*n*(n+1)+1 | 0 | `1, 5, 13, 25, 41, 61, 85, 113, 145, 181, 221, 265` | `bang_dim=2_code=9.fills.side` | -1 | **Proved** |
-| [A002407](https://oeis.org/A002407) | Cuban primes: primes which are the difference of two consecutive cubes | 1 | `7, 19, 37, 61, 127, 271, 331, 397, 547, 631, 919, 1657` |  |  | **Verified** |
-| [A003136](https://oeis.org/A003136) | Loeschian numbers: numbers of the form x^2 + xy + y^2 | 1 | `0, 1, 3, 4, 7, 9, 12, 13, 16, 19, 21, 25` |  |  | **Verified** |
-| [A003180](https://oeis.org/A003180) | Number of equivalence classes of Boolean functions of n variables under action of symmetric group | 0 | `2, 4, 12, 80, 3984, 37333248, 25626412338274304` |  |  | **Verified** |
-| [A003215](https://oeis.org/A003215) | Hex (or centered hexagonal) numbers: 3*n*(n+1)+1 | 0 | `1, 7, 19, 37, 61, 91, 127, 169, 217, 271, 331, 397` | `bang_dim=2_code=11.fills.side` | -1 | **Proved** |
-| [A003463](https://oeis.org/A003463) | a(n) = (5^n - 1)/4 | 0 | `0, 1, 6, 31, 156, 781, 3906, 19531, 97656, 488281, 2441406, 12207031` |  |  | **Verified** |
-| [A004016](https://oeis.org/A004016) | Theta series of planar hexagonal lattice A_2 | 0 | `1, 6, 0, 6, 6, 0, 0, 12, 0, 6, 0, 0` |  |  | **Verified** |
-| [A004018](https://oeis.org/A004018) | Theta series of square lattice: number of ways of writing n as a sum of 2 squares | 0 | `1, 4, 4, 0, 4, 8, 0, 0, 4, 4, 8, 0` |  |  | **Verified** |
-| [A004662](https://oeis.org/A004662) | Powers of 3 written in base 8 | 0 | `1, 3, 11, 33, 121, 363, 1331, 4213, 14641, 46343, 163251, 531773` |  |  | **Verified** |
-| [A005418](https://oeis.org/A005418) | Number of (n-1)-bead black-white reversible strings | 1 | `1, 2, 3, 6, 10, 20, 36, 72, 136, 272, 528, 1056` |  |  | **Verified** |
-| [A005728](https://oeis.org/A005728) | Number of fractions in Farey series of order n | 0 | `1, 2, 3, 5, 7, 11, 13, 19, 23, 29, 33, 43` |  |  | **Verified** |
-| [A005898](https://oeis.org/A005898) | Centered cube numbers: n^3 + (n+1)^3 | 0 | `1, 9, 35, 91, 189, 341, 559, 855, 1241, 1729, 2331, 3059` | `bang_dim=3_code=129.fills.side` | -1 | **Proved** |
-| [A009964](https://oeis.org/A009964) | Powers of 20 | 0 | `1, 20, 400, 8000, 160000, 3200000, 64000000, 1280000000, 25600000000, 512000000000` | `bang_dim=3_code=23.fills.level` | 0 | **Proved** |
-| [A009971](https://oeis.org/A009971) | Powers of 27 | 0 | `1, 27, 729, 19683, 531441, 14348907, 387420489, 10460353203, 282429536481, 7625597484987` | `bang_dim=3_code=255.fills.level` | 0 | **Proved** |
-| [A011934](https://oeis.org/A011934) | a(n) = abs(1^3 - 2^3 + 3^3 - 4^3 + ... + (-1)^(n+1)*n^3) | 0 | `0, 1, 7, 20, 44, 81, 135, 208, 304, 425, 575, 756` |  |  | **Verified** |
-| [A016185](https://oeis.org/A016185) | a(n) = 9^n - 8^n | 0 | `0, 1, 17, 217, 2465, 26281, 269297, 2685817, 26269505, 253202761, 2413042577, 22791125017` | `bang_dim=2_code=7.voids.level` | 0 | **Proved** |
-| [A016754](https://oeis.org/A016754) | Odd squares: a(n) = (2n+1)^2, also centered octagonal numbers | 0 | `1, 9, 25, 49, 81, 121, 169, 225, 289, 361, 441, 529` | `bang_dim=2_code=15.fills.side` | -1 | **Proved** |
-| [A016755](https://oeis.org/A016755) | Odd cubes: a(n) = (2*n + 1)^3 | 0 | `1, 27, 125, 343, 729, 1331, 2197, 3375, 4913, 6859, 9261, 12167` | `bang_dim=3_code=255.fills.side` | -1 | **Proved** |
-| [A018413](https://oeis.org/A018413) | Divisors of 363 | 1 | `1, 3, 11, 33, 121, 363` |  |  | **Verified** |
-| [A034474](https://oeis.org/A034474) | a(n) = 5^n + 1 | 0 | `2, 6, 26, 126, 626, 3126, 15626, 78126, 390626, 1953126, 9765626, 48828126` |  |  | **Verified** |
-| [A047999](https://oeis.org/A047999) | Sierpinski's triangle (or gasket): Pascal's triangle read by rows mod 2 | 0 | `1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0` |  |  | **Verified** |
-| [A048883](https://oeis.org/A048883) | a(n) = 3^wt(n), where wt(n) = A000120(n) | 0 | `1, 3, 3, 9, 3, 9, 9, 27, 3, 9, 9, 27` |  |  | **Verified** |
-| [A054247](https://oeis.org/A054247) | Number of n X n binary matrices under action of dihedral group of the square D_4 | 0 | `1, 2, 6, 102, 8548, 4211744, 8590557312, 70368882591744, 2305843028004192256` |  |  | **Verified** |
-| [A065473](https://oeis.org/A065473) | Decimal expansion of the strongly carefree constant: Product_{p prime} (1 - (3*p-2)/(p^3)) | 0 | `2, 8, 6, 7, 4, 7, 4, 2, 8, 4, 3, 4` |  |  | **Verified** |
-| [A069403](https://oeis.org/A069403) | a(n) = 2*Fibonacci(2*n+1) - 1 | 0 | `1, 3, 9, 25, 67, 177, 465, 1219, 3193, 8361, 21891, 57313` |  |  | **Verified** |
-| [A103532](https://oeis.org/A103532) | Number of divisors of 240^n | 0 | `1, 20, 81, 208, 425, 756, 1225, 1856, 2673, 3700, 4961, 6480` | `bang_dim=3_code=23.fills.side` | -1 | **Proved** |
-| [A125833](https://oeis.org/A125833) | Numbers whose base-5 representation is 333333.......3 | 0 | `0, 3, 18, 93, 468, 2343, 11718, 58593, 292968, 1464843, 7324218, 36621093` |  |  | **Verified** |
-| [A128625](https://oeis.org/A128625) | Expansion of (1+3*x)/(1-5*x) | 0 | `1, 8, 40, 200, 1000, 5000, 25000, 125000, 625000, 3125000, 15625000, 78125000` |  |  | **Verified** |
-| [A129824](https://oeis.org/A129824) | a(n) = Product_{k=0..n} (1 + binomial(n,k)) | 0 | `2, 4, 12, 64, 700, 17424, 1053696, 160579584, 62856336636, 63812936890000, 168895157342195152, 1169048914836855865344` |  |  | **Proved** |
-| [A141148](https://oeis.org/A141148) | Number of aperiodic ternary necklaces with n beads of each color and no adjacent beads of the same color | 1 | `2, 3, 14, 65, 346, 1929, 11442, 70310, 445928, 2896239, 19186738, 129184583` |  |  | **Verified** |
-| [A154105](https://oeis.org/A154105) | a(n) = 12*n^2 + 18*n + 7 | 0 | `7, 37, 91, 169, 271, 397, 547, 721, 919, 1141, 1387, 1657` |  |  | **Verified** |
-| [A192908](https://oeis.org/A192908) | Constant term in the reduction by (x^2 -> x + 1) of a polynomial family; a(n) = 2*Fibonacci(2n-2) + 1 | 0 | `1, 1, 3, 7, 17, 43, 111, 289, 755, 1975, 5169, 13531` |  |  | **Verified** |
-| [A229896](https://oeis.org/A229896) | Sizes of logical groups of the same integer in A229895 | 1 | `1, 1, 4, 1, 5, 27, 1, 7, 37, 256, 1, 9, 61, 369, 3125, 1, 11, 91, 671, 4651, 46656, 1, 13, 127, 1105, 9031, 70993, 823543, 1, 15, 169, 1695, 15961, 144495, 1273609, 16777216, 1, 17, 217, 2465, 26281, 269297, 2685817, 26269505, 387420489` |  |  | **Verified** |
-| [A255016](https://oeis.org/A255016) | Number of toroidal n X n binary arrays, allowing rotation and/or reflection of rows and/or columns as well as matrix transposition | 0 | `1, 2, 6, 26, 805, 172112, 239123150, 1436120190288, 36028817512382026` |  |  | **Verified** |
-| [A268240](https://oeis.org/A268240) | Pascal's tetrahedron of trinomial coefficients read mod 2 | 0 | `1, 1, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1` |  |  | **Verified** |
-| [A299916](https://oeis.org/A299916) | a(n) = A299914(2n+1); the six-pointed-star holes of the Menger slice, by a comment | 0 | `1, 6, 42, 306, 2250, 16578, 122202, 900882, 6641514, 48963042, 360969210, 2661166386` | `bang_dim=3_code=23.triangles.level` | 1 | **Verified** |
-| [A332705](https://oeis.org/A332705) | Number of unit square faces (or surface area) of a stage-n Menger sponge | 0 | `6, 72, 1056, 18048, 336384, 6531072, 129048576, 2568388608, 51267108864, 1024536870912` | `bang_dim=3_code=23.surface.level` | 0 | **Proved** |
-| [A347825](https://oeis.org/A347825) | Number of ways to cut a 2 X n rectangle into rectangles with integer sides up to symmetries of the rectangle | 0 | `1, 2, 6, 17, 61, 220, 883, 3597, 15232, 65130, 282294, 1229729` |  |  | **Verified** |
-| [A361870](https://oeis.org/A361870) | Array read by downward antidiagonals: nonequivalent 2-colorings of the cells of an n-dimensional hypercube with edges k cells long | 0 | `2, 2, 1, 2, 2, 1, 2, 3, 2, 1, 2, 6` |  |  | **Verified** |
-| [A381517](https://oeis.org/A381517) | Perimeter of the Sierpinski carpet at iteration n | 0 | `4, 16, 80, 496, 3536, 26992, 212048, 1684720, 13442768, 107437168, 859182416, 6872514544` | `bang_dim=2_code=7.surface.level` | 0 | **Proved** |
-| [A395134](https://oeis.org/A395134) | Decimal expansion of the probability that the line that passes through two points selected independently and uniformly at random in a half-disk intersects the arc at two points. | 0 | `4, 5, 9, 6, 2, 0, 3, 5, 3, 9, 0, 7` |  |  | **Verified** |
-| [A395241](https://oeis.org/A395241) | a(n) = n^2*(4*n + 3) | 0 | `0, 7, 44, 135, 304, 575, 972, 1519, 2240, 3159, 4300, 5687` | `bang_dim=3_code=23.voids.side` | -1 | **Verified** |
-| [A396922](https://oeis.org/A396922) | E.g.f. A(x) satisfies A( x / A(log(A(log(A(log(A(x))))))) ) = exp(x) | 0 | `1, 1, 3, 40, 1421, 87896, 7921207, 951512332, 144407735033, 26715045346048` |  |  | **Verified** |
-| [A396934](https://oeis.org/A396934) | Number of pairs (i,j) with 0 <= i,j < 2^n, i AND j = 0, and gcd(i,j) = 1 | 0 | `0, 2, 4, 12, 34, 122, 362, 1130, 3406, 10506, 31550, 95260` |  |  | **Verified** |
-| [A398348](https://oeis.org/A398348) | Number of toroidal n X n X n binary arrays, allowing rotation and/or reflection of the layers along each axis as well as all permutations of the axes | 1 | `2, 22, 111618, 6005363762644688, 7089215977519836239803174210135872, 10157435539019790383692007859901914095646506996125324171134976` |  |  | **Verified** |
+| id | record | name | offset | first terms | key | shift | status |
+|---|---|---|---|---|---|---|---|
+|  | [A000029](https://oeis.org/A000029) | Number of necklaces with n beads of 2 colors, allowing turning over (bracelets) | 0 | `1, 2, 3, 4, 6, 8, 13, 18, 30, 46, 78, 126` |  |  | **Verified** |
+|  | [A000070](https://oeis.org/A000070) | a(n) = Sum_{k=0..n} p(k) where p(k) = number of partitions of k | 0 | `1, 2, 4, 7, 12, 19, 30, 45, 67, 97, 139, 195` |  |  | **Verified** |
+|  | [A000244](https://oeis.org/A000244) | Powers of 3: a(n) = 3^n | 0 | `1, 3, 9, 27, 81, 243, 729, 2187, 6561, 19683, 59049, 177147` |  |  | **Proved** |
+| 6630d885 | [A000290](https://oeis.org/A000290) | The squares: a(n) = n^2 | 0 | `0, 1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121` | `sequence_dim=2_code=1_measure=fills_axis=side` | 0 | **Proved** |
+| b3d813f5 | [A000351](https://oeis.org/A000351) | Powers of 5: a(n) = 5^n | 0 | `1, 5, 25, 125, 625, 3125, 15625, 78125, 390625, 1953125, 9765625, 48828125` | `sequence_dim=2_code=9_measure=fills_axis=level` | 0 | **Proved** |
+|  | [A000370](https://oeis.org/A000370) | Number of NPN-equivalence classes of Boolean functions of n or fewer variables | 0 | `1, 2, 4, 14, 222, 616126, 200253952527184` |  |  | **Verified** |
+| 09d8d98c | [A000384](https://oeis.org/A000384) | Hexagonal numbers: a(n) = n*(2*n-1) | 0 | `0, 1, 6, 15, 28, 45, 66, 91, 120, 153, 190, 231` | `sequence_dim=2_code=3_measure=fills_axis=side` | 0 | **Proved** |
+| 0e5099d4 | [A000420](https://oeis.org/A000420) | Powers of 7: a(n) = 7^n | 0 | `1, 7, 49, 343, 2401, 16807, 117649, 823543, 5764801, 40353607, 282475249, 1977326743` | `sequence_dim=2_code=11_measure=fills_axis=level` | 0 | **Proved** |
+| 8a9e4ce8 | [A000567](https://oeis.org/A000567) | Octagonal numbers: n*(3*n-2) | 0 | `0, 1, 8, 21, 40, 65, 96, 133, 176, 225, 280, 341` | `sequence_dim=2_code=7_measure=fills_axis=side` | 0 | **Proved** |
+| b91a9c68 | [A000578](https://oeis.org/A000578) | The cubes: a(n) = n^3 | 0 | `0, 1, 8, 27, 64, 125, 216, 343, 512, 729, 1000, 1331` | `sequence_dim=3_code=1_measure=fills_axis=side` | 0 | **Proved** |
+|  | [A000616](https://oeis.org/A000616) | a(-1)=1 by convention; for n >= 0, a(n) = number of irreducible Boolean functions of n variables | -1 | `1, 2, 3, 6, 22, 402, 1228158, 400507806843728` |  |  | **Proved** |
+| 8391ccb9 | [A001018](https://oeis.org/A001018) | Powers of 8: a(n) = 8^n | 0 | `1, 8, 64, 512, 4096, 32768, 262144, 2097152, 16777216, 134217728, 1073741824, 8589934592` | `sequence_dim=2_code=7_measure=fills_axis=level` | 0 | **Proved** |
+|  | [A001024](https://oeis.org/A001024) | Powers of 15: a(n) = 15^n | 0 | `1, 15, 225, 3375, 50625, 759375, 11390625, 170859375, 2562890625, 38443359375` |  |  | **Verified** |
+|  | [A001316](https://oeis.org/A001316) | Gould's sequence: number of odd entries in row n of Pascal's triangle | 0 | `1, 2, 2, 4, 2, 4, 4, 8, 2, 4, 4, 8` |  |  | **Verified** |
+|  | [A001481](https://oeis.org/A001481) | Numbers that are the sum of 2 squares | 1 | `0, 1, 2, 4, 5, 8, 9, 10, 13, 16, 17, 18` |  |  | **Verified** |
+| a3ef3d4d | [A001844](https://oeis.org/A001844) | Centered square numbers: a(n) = 2*n*(n+1)+1 | 0 | `1, 5, 13, 25, 41, 61, 85, 113, 145, 181, 221, 265` | `sequence_dim=2_code=9_measure=fills_axis=side` | -1 | **Proved** |
+|  | [A002407](https://oeis.org/A002407) | Cuban primes: primes which are the difference of two consecutive cubes | 1 | `7, 19, 37, 61, 127, 271, 331, 397, 547, 631, 919, 1657` |  |  | **Verified** |
+|  | [A003136](https://oeis.org/A003136) | Loeschian numbers: numbers of the form x^2 + xy + y^2 | 1 | `0, 1, 3, 4, 7, 9, 12, 13, 16, 19, 21, 25` |  |  | **Verified** |
+|  | [A003180](https://oeis.org/A003180) | Number of equivalence classes of Boolean functions of n variables under action of symmetric group | 0 | `2, 4, 12, 80, 3984, 37333248, 25626412338274304` |  |  | **Verified** |
+| 20aeeec9 | [A003215](https://oeis.org/A003215) | Hex (or centered hexagonal) numbers: 3*n*(n+1)+1 | 0 | `1, 7, 19, 37, 61, 91, 127, 169, 217, 271, 331, 397` | `sequence_dim=2_code=11_measure=fills_axis=side` | -1 | **Proved** |
+|  | [A003463](https://oeis.org/A003463) | a(n) = (5^n - 1)/4 | 0 | `0, 1, 6, 31, 156, 781, 3906, 19531, 97656, 488281, 2441406, 12207031` |  |  | **Verified** |
+|  | [A004016](https://oeis.org/A004016) | Theta series of planar hexagonal lattice A_2 | 0 | `1, 6, 0, 6, 6, 0, 0, 12, 0, 6, 0, 0` |  |  | **Verified** |
+|  | [A004018](https://oeis.org/A004018) | Theta series of square lattice: number of ways of writing n as a sum of 2 squares | 0 | `1, 4, 4, 0, 4, 8, 0, 0, 4, 4, 8, 0` |  |  | **Verified** |
+|  | [A004662](https://oeis.org/A004662) | Powers of 3 written in base 8 | 0 | `1, 3, 11, 33, 121, 363, 1331, 4213, 14641, 46343, 163251, 531773` |  |  | **Verified** |
+|  | [A005418](https://oeis.org/A005418) | Number of (n-1)-bead black-white reversible strings | 1 | `1, 2, 3, 6, 10, 20, 36, 72, 136, 272, 528, 1056` |  |  | **Verified** |
+|  | [A005728](https://oeis.org/A005728) | Number of fractions in Farey series of order n | 0 | `1, 2, 3, 5, 7, 11, 13, 19, 23, 29, 33, 43` |  |  | **Verified** |
+| cea32177 | [A005898](https://oeis.org/A005898) | Centered cube numbers: n^3 + (n+1)^3 | 0 | `1, 9, 35, 91, 189, 341, 559, 855, 1241, 1729, 2331, 3059` | `sequence_dim=3_code=129_measure=fills_axis=side` | -1 | **Proved** |
+| 91fac30a | [A009964](https://oeis.org/A009964) | Powers of 20 | 0 | `1, 20, 400, 8000, 160000, 3200000, 64000000, 1280000000, 25600000000, 512000000000` | `sequence_dim=3_code=23_measure=fills_axis=level` | 0 | **Proved** |
+| 0e1b6a21 | [A009971](https://oeis.org/A009971) | Powers of 27 | 0 | `1, 27, 729, 19683, 531441, 14348907, 387420489, 10460353203, 282429536481, 7625597484987` | `sequence_dim=3_code=255_measure=fills_axis=level` | 0 | **Proved** |
+|  | [A011934](https://oeis.org/A011934) | a(n) = abs(1^3 - 2^3 + 3^3 - 4^3 + ... + (-1)^(n+1)*n^3) | 0 | `0, 1, 7, 20, 44, 81, 135, 208, 304, 425, 575, 756` |  |  | **Verified** |
+| f1ee0d51 | [A016185](https://oeis.org/A016185) | a(n) = 9^n - 8^n | 0 | `0, 1, 17, 217, 2465, 26281, 269297, 2685817, 26269505, 253202761, 2413042577, 22791125017` | `sequence_dim=2_code=7_measure=voids_axis=level` | 0 | **Proved** |
+| c11482b0 | [A016754](https://oeis.org/A016754) | Odd squares: a(n) = (2n+1)^2, also centered octagonal numbers | 0 | `1, 9, 25, 49, 81, 121, 169, 225, 289, 361, 441, 529` | `sequence_dim=2_code=15_measure=fills_axis=side` | -1 | **Proved** |
+| 553a9967 | [A016755](https://oeis.org/A016755) | Odd cubes: a(n) = (2*n + 1)^3 | 0 | `1, 27, 125, 343, 729, 1331, 2197, 3375, 4913, 6859, 9261, 12167` | `sequence_dim=3_code=255_measure=fills_axis=side` | -1 | **Proved** |
+|  | [A018413](https://oeis.org/A018413) | Divisors of 363 | 1 | `1, 3, 11, 33, 121, 363` |  |  | **Verified** |
+|  | [A034474](https://oeis.org/A034474) | a(n) = 5^n + 1 | 0 | `2, 6, 26, 126, 626, 3126, 15626, 78126, 390626, 1953126, 9765626, 48828126` |  |  | **Verified** |
+|  | [A047999](https://oeis.org/A047999) | Sierpinski's triangle (or gasket): Pascal's triangle read by rows mod 2 | 0 | `1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0` |  |  | **Verified** |
+|  | [A048883](https://oeis.org/A048883) | a(n) = 3^wt(n), where wt(n) = A000120(n) | 0 | `1, 3, 3, 9, 3, 9, 9, 27, 3, 9, 9, 27` |  |  | **Verified** |
+|  | [A054247](https://oeis.org/A054247) | Number of n X n binary matrices under action of dihedral group of the square D_4 | 0 | `1, 2, 6, 102, 8548, 4211744, 8590557312, 70368882591744, 2305843028004192256` |  |  | **Verified** |
+|  | [A065473](https://oeis.org/A065473) | Decimal expansion of the strongly carefree constant: Product_{p prime} (1 - (3*p-2)/(p^3)) | 0 | `2, 8, 6, 7, 4, 7, 4, 2, 8, 4, 3, 4` |  |  | **Verified** |
+|  | [A069403](https://oeis.org/A069403) | a(n) = 2*Fibonacci(2*n+1) - 1 | 0 | `1, 3, 9, 25, 67, 177, 465, 1219, 3193, 8361, 21891, 57313` |  |  | **Verified** |
+| 52fb27f4 | [A103532](https://oeis.org/A103532) | Number of divisors of 240^n | 0 | `1, 20, 81, 208, 425, 756, 1225, 1856, 2673, 3700, 4961, 6480` | `sequence_dim=3_code=23_measure=fills_axis=side` | -1 | **Proved** |
+|  | [A125833](https://oeis.org/A125833) | Numbers whose base-5 representation is 333333.......3 | 0 | `0, 3, 18, 93, 468, 2343, 11718, 58593, 292968, 1464843, 7324218, 36621093` |  |  | **Verified** |
+|  | [A128625](https://oeis.org/A128625) | Expansion of (1+3*x)/(1-5*x) | 0 | `1, 8, 40, 200, 1000, 5000, 25000, 125000, 625000, 3125000, 15625000, 78125000` |  |  | **Verified** |
+|  | [A129824](https://oeis.org/A129824) | a(n) = Product_{k=0..n} (1 + binomial(n,k)) | 0 | `2, 4, 12, 64, 700, 17424, 1053696, 160579584, 62856336636, 63812936890000, 168895157342195152, 1169048914836855865344` |  |  | **Proved** |
+|  | [A141148](https://oeis.org/A141148) | Number of aperiodic ternary necklaces with n beads of each color and no adjacent beads of the same color | 1 | `2, 3, 14, 65, 346, 1929, 11442, 70310, 445928, 2896239, 19186738, 129184583` |  |  | **Verified** |
+|  | [A154105](https://oeis.org/A154105) | a(n) = 12*n^2 + 18*n + 7 | 0 | `7, 37, 91, 169, 271, 397, 547, 721, 919, 1141, 1387, 1657` |  |  | **Verified** |
+|  | [A192908](https://oeis.org/A192908) | Constant term in the reduction by (x^2 -> x + 1) of a polynomial family; a(n) = 2*Fibonacci(2n-2) + 1 | 0 | `1, 1, 3, 7, 17, 43, 111, 289, 755, 1975, 5169, 13531` |  |  | **Verified** |
+|  | [A229896](https://oeis.org/A229896) | Sizes of logical groups of the same integer in A229895 | 1 | `1, 1, 4, 1, 5, 27, 1, 7, 37, 256, 1, 9, 61, 369, 3125, 1, 11, 91, 671, 4651, 46656, 1, 13, 127, 1105, 9031, 70993, 823543, 1, 15, 169, 1695, 15961, 144495, 1273609, 16777216, 1, 17, 217, 2465, 26281, 269297, 2685817, 26269505, 387420489` |  |  | **Verified** |
+|  | [A255016](https://oeis.org/A255016) | Number of toroidal n X n binary arrays, allowing rotation and/or reflection of rows and/or columns as well as matrix transposition | 0 | `1, 2, 6, 26, 805, 172112, 239123150, 1436120190288, 36028817512382026` |  |  | **Verified** |
+|  | [A268240](https://oeis.org/A268240) | Pascal's tetrahedron of trinomial coefficients read mod 2 | 0 | `1, 1, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1` |  |  | **Verified** |
+| 7ab4b31a | [A299916](https://oeis.org/A299916) | a(n) = A299914(2n+1); the six-pointed-star holes of the Menger slice, by a comment | 0 | `1, 6, 42, 306, 2250, 16578, 122202, 900882, 6641514, 48963042, 360969210, 2661166386` | `sequence_dim=3_code=23_measure=triangles_axis=level` | 1 | **Verified** |
+| 753b6b49 | [A332705](https://oeis.org/A332705) | Number of unit square faces (or surface area) of a stage-n Menger sponge | 0 | `6, 72, 1056, 18048, 336384, 6531072, 129048576, 2568388608, 51267108864, 1024536870912` | `sequence_dim=3_code=23_measure=surface_axis=level` | 0 | **Proved** |
+|  | [A347825](https://oeis.org/A347825) | Number of ways to cut a 2 X n rectangle into rectangles with integer sides up to symmetries of the rectangle | 0 | `1, 2, 6, 17, 61, 220, 883, 3597, 15232, 65130, 282294, 1229729` |  |  | **Verified** |
+|  | [A361870](https://oeis.org/A361870) | Array read by downward antidiagonals: nonequivalent 2-colorings of the cells of an n-dimensional hypercube with edges k cells long | 0 | `2, 2, 1, 2, 2, 1, 2, 3, 2, 1, 2, 6` |  |  | **Verified** |
+| be671ff7 | [A381517](https://oeis.org/A381517) | Perimeter of the Sierpinski carpet at iteration n | 0 | `4, 16, 80, 496, 3536, 26992, 212048, 1684720, 13442768, 107437168, 859182416, 6872514544` | `sequence_dim=2_code=7_measure=surface_axis=level` | 0 | **Proved** |
+|  | [A395134](https://oeis.org/A395134) | Decimal expansion of the probability that the line that passes through two points selected independently and uniformly at random in a half-disk intersects the arc at two points. | 0 | `4, 5, 9, 6, 2, 0, 3, 5, 3, 9, 0, 7` |  |  | **Verified** |
+| 1d05226c | [A395241](https://oeis.org/A395241) | a(n) = n^2*(4*n + 3) | 0 | `0, 7, 44, 135, 304, 575, 972, 1519, 2240, 3159, 4300, 5687` | `sequence_dim=3_code=23_measure=voids_axis=side` | -1 | **Verified** |
+|  | [A396922](https://oeis.org/A396922) | E.g.f. A(x) satisfies A( x / A(log(A(log(A(log(A(x))))))) ) = exp(x) | 0 | `1, 1, 3, 40, 1421, 87896, 7921207, 951512332, 144407735033, 26715045346048` |  |  | **Verified** |
+|  | [A396934](https://oeis.org/A396934) | Number of pairs (i,j) with 0 <= i,j < 2^n, i AND j = 0, and gcd(i,j) = 1 | 0 | `0, 2, 4, 12, 34, 122, 362, 1130, 3406, 10506, 31550, 95260` |  |  | **Verified** |
+|  | [A398348](https://oeis.org/A398348) | Number of toroidal n X n X n binary arrays, allowing rotation and/or reflection of the layers along each axis as well as all permutations of the axes | 1 | `2, 22, 111618, 6005363762644688, 7089215977519836239803174210135872, 10157435539019790383692007859901914095646506996125324171134976` |  |  | **Verified** |
 
 ## OPEN QUESTIONS
 

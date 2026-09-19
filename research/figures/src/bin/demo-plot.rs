@@ -8,7 +8,7 @@ const ROWS: usize = 8;
 fn main() -> Result<()> {
     let key = Key::new(23, 3, 2, Measure::Fills, Axis::Side);
     let (first, capped) = terms(&key, ROWS, BUDGET)?;
-    assert_eq!(key.name(), "bang_dim=3_code=23.fills.side");
+    assert_eq!(key.name(), "sequence_dim=3_code=23_measure=fills_axis=side");
     assert!(!capped);
     assert_eq!(first, vec![20, 81, 208, 425, 756, 1225, 1856, 2673]);
     let mut rows = vec![first];

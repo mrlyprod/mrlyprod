@@ -38,7 +38,7 @@ fn table(axis: Axis) -> String {
         Axis::Level => "level 1",
         Axis::Side => "`k = 2`",
     };
-    let mut out = format!("| design | key | closed form | terms from {index} | record | shift | status |\n|---|---|---|---|---|---|---|\n");
+    let mut out = format!("| id | design | key | closed form | terms from {index} | record | shift | status |\n|---|---|---|---|---|---|---|---|\n");
     let mut keyed: Vec<(Key, &Record)> = RECORDS
         .iter()
         .filter_map(|record| {
@@ -58,7 +58,8 @@ fn table(axis: Axis) -> String {
             .as_ref()
             .map_or_else(|| "none".to_string(), |form| format!("`{}`", form.text()));
         out.push_str(&format!(
-            "| {} | `{}` | {} | {} | {} | {} | **{}** |\n",
+            "| {} | {} | `{}` | {} | {} | {} | {} | **{}** |\n",
+            key.id(),
             label(&key),
             key.name(),
             closed,
@@ -73,15 +74,20 @@ fn table(axis: Axis) -> String {
 
 fn records() -> String {
     let mut out = String::from(
-        "| record | name | offset | first terms | key | shift | status |\n|---|---|---|---|---|---|---|\n",
+        "| id | record | name | offset | first terms | key | shift | status |\n|---|---|---|---|---|---|---|---|\n",
     );
     for record in RECORDS {
-        let (key, shift) = match record.key {
-            Some(key) => (format!("`{}`", key.name()), record.shift.to_string()),
-            None => (String::new(), String::new()),
+        let (id, key, shift) = match record.key {
+            Some(key) => (
+                key.id(),
+                format!("`{}`", key.name()),
+                record.shift.to_string(),
+            ),
+            None => (String::new(), String::new(), String::new()),
         };
         out.push_str(&format!(
-            "| {} | {} | {} | `{}` | {} | {} | **{}** |\n",
+            "| {} | {} | {} | {} | `{}` | {} | {} | **{}** |\n",
+            id,
             link(record.id),
             record.name,
             record.offset,
@@ -153,7 +159,7 @@ mod tests {
         let page = markdown();
         assert!(!page.contains("{{"));
         assert!(page.contains(
-            "`bang_dim=2_code=7.fills.side` | `3k^2 - 2k` | `8, 21, 40, 65, 96, 133, 176, 225`"
+            "| 8a9e4ce8 | carpet | `sequence_dim=2_code=7_measure=fills_axis=side` | `3k^2 - 2k` | `8, 21, 40, 65, 96, 133, 176, 225`"
         ));
         assert_eq!(page, disk, "run `cargo run -p mrlylab --bin ledger`");
     }

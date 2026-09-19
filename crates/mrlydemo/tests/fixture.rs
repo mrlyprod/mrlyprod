@@ -439,7 +439,7 @@ fn the_faults_come_back_as_messages() {
     assert!(three_cells("256", 3, 1, 2).is_err());
     assert!(universe(4).is_err());
     assert!(name_of("16", 2, 2).is_err());
-    assert!(name_parse("bang_dim=3_code=23.fills.side").is_err());
+    assert!(name_parse("sequence_dim=3_code=23_measure=fills_axis=side").is_err());
     assert!(press_members("16", 2, 2, 5).is_err());
     assert!(press_count_below("7", 2, 2, "x").is_err());
     assert!(life_next(&blinker(), 4, 5, &[3], &[2, 3], false).is_err());
@@ -873,7 +873,10 @@ fn the_ledger_exports_answer() {
     let octagonal = records.iter().find(|r| r["id"] == "A000567").unwrap();
     assert_eq!(
         (octagonal["key"].clone(), octagonal["shift"].clone()),
-        ("bang_dim=2_code=7.fills.side".into(), 0.into())
+        (
+            "sequence_dim=2_code=7_measure=fills_axis=side".into(),
+            0.into()
+        )
     );
     assert_eq!(ledger_build("closed", 4).unwrap(), 7692);
     assert_eq!(ledger_build("closed", 4).unwrap(), 7692);
@@ -881,7 +884,7 @@ fn the_ledger_exports_answer() {
     let hits = parse(&ledger_search("8, 21, 40, 65", "", 2, 2, 0, 25)).unwrap();
     assert_eq!(hits["total"], 1);
     let row = &hits["rows"][0];
-    assert_eq!(row["name"], "bang_dim=2_code=7.fills.side");
+    assert_eq!(row["name"], "sequence_dim=2_code=7_measure=fills_axis=side");
     assert_eq!(
         (
             row["oeis"].clone(),
@@ -895,7 +898,7 @@ fn the_ledger_exports_answer() {
     assert_eq!(surfaces["total"], 44);
     assert_eq!(surfaces["rows"].as_array().unwrap().len(), 5);
     assert_eq!(
-        parse(&ledger_search("bang_dim=3_code=23.", "", 0, 0, 0, 100)).unwrap()["total"],
+        parse(&ledger_search("sequence_dim=3_code=23_", "", 0, 0, 0, 100)).unwrap()["total"],
         6
     );
     assert_eq!(
@@ -913,7 +916,10 @@ fn the_ledger_exports_answer() {
     );
     assert!(ledger_grow("deep", 4, 100).is_err());
     let void = parse(&ledger_row("9", 2, 2, "voids", "side", 3, "500000").unwrap()).unwrap();
-    assert_eq!(void["name"], "bang_dim=2_code=9.voids.side");
+    assert_eq!(
+        void["name"],
+        "sequence_dim=2_code=9_measure=voids_axis=side"
+    );
     assert_eq!(void["terms"], parse(r#"["4", "12", "24"]"#).unwrap());
     assert_eq!(void["closed"], "2k^2 - 2k");
     assert_eq!(void["number"], 3);
@@ -1029,7 +1035,10 @@ fn the_census_exports_answer() {
     );
     assert_eq!(writers["tiers"][0]["rows"], 633);
     let first = &writers["shown"][0];
-    assert_eq!(first["name"], "bang_dim=1_code=1.fills.level");
+    assert_eq!(
+        first["name"],
+        "sequence_dim=1_code=1_measure=fills_axis=level"
+    );
     assert_eq!(first["closed"], "2^level");
     assert_eq!(
         (first["index"].clone(), first["term"].clone()),
@@ -1053,7 +1062,11 @@ fn the_census_exports_answer() {
             sided["term"].clone(),
             sided["side"].clone()
         ),
-        ("bang_dim=1_code=1.surface.side".into(), 8.into(), 15.into())
+        (
+            "sequence_dim=1_code=1_measure=surface_axis=side".into(),
+            8.into(),
+            15.into()
+        )
     );
     let outside = parse(&census_writers(1001, 0, 1)).unwrap();
     assert_eq!(
@@ -1491,7 +1504,10 @@ fn the_blend_exports_answer() {
 
     let series =
         parse(&blend_series("23", 3, 2, "surface", "level", 8, budget, 4).unwrap()).unwrap();
-    assert_eq!(series["name"], "bang_dim=3_code=23.surface.level");
+    assert_eq!(
+        series["name"],
+        "sequence_dim=3_code=23_measure=surface_axis=level"
+    );
     assert_eq!(series["oeis"], "A332705");
     assert_eq!(
         series["closed"],
@@ -1525,7 +1541,10 @@ fn the_blend_exports_answer() {
     let family = family.as_array().unwrap();
     assert_eq!(family.len(), 6);
     assert_eq!(family[4]["code"], "7");
-    assert_eq!(family[4]["name"], "bang_dim=2_code=7.fills.level");
+    assert_eq!(
+        family[4]["name"],
+        "sequence_dim=2_code=7_measure=fills_axis=level"
+    );
     assert_eq!(family[4]["terms"], parse(r#"["8", "64", "512"]"#).unwrap());
     assert_eq!(
         parse(&blend_family(2, 3, "fills", "level", 2, budget).unwrap())

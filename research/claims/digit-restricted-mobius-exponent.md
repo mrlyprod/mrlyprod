@@ -1,0 +1,3 @@
+# The digit-restricted Mobius exponent
+
+- 2026-09-01 [Conjecture] `theta(F) = 1/2` for every digit set with `2 <= |F| <= base - 1` and squarefree digit gcd - square-root cancellation against the set's own counting function: the 47 running-maximum exponents across `base = 3, 4, 5, 10` read `0.4465..0.5358` with last-five-level drifts `0.0157..0.1056`, while the full-set controls, whose limiting exponent is `1/2` under RH and at least `1/2` unconditionally, read `0.4413..0.4517` at the same depths; the finite tables are consistent and decide nothing, single-cut exponents scattering `0.22..0.53` on the same data. Witness: lab/rs/mobius-designs, mobius.md.

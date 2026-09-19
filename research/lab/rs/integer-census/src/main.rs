@@ -146,11 +146,11 @@ fn checks(sheet: &Sheet, book: &Census) {
         );
     }
     let classics: [(&str, &[i128]); 5] = [
-        ("bang_dim=2_code=7.fills.side", &[8, 21, 40, 65]),
-        ("bang_dim=2_code=7.fills.level", &[8, 64, 512]),
-        ("bang_dim=2_code=7.voids.level", &[1, 17, 217]),
-        ("bang_dim=3_code=23.fills.side", &[20, 81, 208, 425]),
-        ("bang_dim=3_code=23.surface.level", &[72, 1056, 18048]),
+        ("sequence_dim=2_code=7_measure=fills_axis=side", &[8, 21, 40, 65]),
+        ("sequence_dim=2_code=7_measure=fills_axis=level", &[8, 64, 512]),
+        ("sequence_dim=2_code=7_measure=voids_axis=level", &[1, 17, 217]),
+        ("sequence_dim=3_code=23_measure=fills_axis=side", &[20, 81, 208, 425]),
+        ("sequence_dim=3_code=23_measure=surface_axis=level", &[72, 1056, 18048]),
     ];
     for (name, head) in classics {
         let row = sheet
@@ -172,7 +172,7 @@ fn checks(sheet: &Sheet, book: &Census) {
     let surface = sheet
         .rows
         .iter()
-        .find(|row| row.name == "bang_dim=3_code=23.surface.level")
+        .find(|row| row.name == "sequence_dim=3_code=23_measure=surface_axis=level")
         .expect("the sponge surface is a registry row");
     let obeys = (2..surface.head.len()).all(|index| {
         surface.head[index] == 28 * surface.head[index - 1] - 160 * surface.head[index - 2]

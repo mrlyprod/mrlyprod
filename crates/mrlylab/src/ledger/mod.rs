@@ -14,7 +14,7 @@ pub use terms::{closed, fill_polynomial, terms};
 
 use mrlycore::errors::{value_error, Result};
 use mrlymath::bang::{baseq, Code};
-use mrlymath::name::{Bang, Named};
+use mrlymath::name::{Bang, Named, Sequence as SequenceName};
 use std::collections::BTreeMap;
 use std::sync::{Mutex, OnceLock};
 
@@ -139,20 +139,30 @@ impl Key {
             axis,
         }
     }
-    /// Returns the sequence's name, the design's file name dotted with the measure and the axis.
+    /// Returns the sequence name this key addresses.
+    pub fn named(&self) -> SequenceName {
+        SequenceName::new(
+            self.code,
+            self.dimension,
+            self.base,
+            self.measure.slug(),
+            self.axis.slug(),
+        )
+    }
+    /// Returns the sequence's file name.
     ///
     /// ```
     /// use mrlylab::ledger::{Axis, Key, Measure};
     /// let key = Key::new(23, 3, 2, Measure::Surface, Axis::Level);
-    /// assert_eq!(key.name(), "bang_dim=3_code=23.surface.level");
+    /// assert_eq!(key.name(), "sequence_dim=3_code=23_measure=surface_axis=level");
+    /// assert_eq!(key.id(), "753b6b49");
     /// ```
     pub fn name(&self) -> String {
-        format!(
-            "{}.{}.{}",
-            self.design().to_file(),
-            self.measure.slug(),
-            self.axis.slug()
-        )
+        self.named().to_file()
+    }
+    /// Returns the first eight hex digits of the sha256 of the sequence's canonical JSON.
+    pub fn id(&self) -> String {
+        self.named().to_id()
     }
     /// Returns the design pinned to its dimension and base.
     pub fn design(&self) -> Bang {

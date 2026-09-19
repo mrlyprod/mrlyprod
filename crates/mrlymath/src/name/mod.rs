@@ -9,6 +9,8 @@ pub(crate) mod text;
 pub mod bang;
 /// The rule name: a life rule's birth and survival counts and whether the edge wraps.
 pub mod rule;
+/// The sequence name: a design's reading pinned to its measure and axis.
+pub mod sequence;
 /// The tile name: a full tile recipe folded to its one canonical object.
 pub mod tile;
 /// The word name: an ordered list of design letters, each at its own side.
@@ -102,6 +104,7 @@ pub(crate) use kind;
 
 pub use bang::{Bang, Lattice};
 pub use rule::Rule;
+pub use sequence::Sequence;
 pub use tile::{classic_code, Tile};
 pub use word::Word;
 
@@ -116,13 +119,21 @@ mod tests {
         let rule = Rule::new(vec![3], vec![2, 3], false);
         let word = Word::new(2, &[(7, 3), (14, 7)]).unwrap();
         let tile = Tile::from_json(r#"{"kind":"tile","code":7,"side":3,"level":2}"#).unwrap();
+        let sequence = Sequence::new(7, 2, 2, "fills", "side");
         let strings = [
             bang.to_json(),
             rule.to_json(),
             word.to_json(),
             tile.to_json(),
+            sequence.to_json(),
         ];
-        let ids = [bang.to_id(), rule.to_id(), word.to_id(), tile.to_id()];
+        let ids = [
+            bang.to_id(),
+            rule.to_id(),
+            word.to_id(),
+            tile.to_id(),
+            sequence.to_id(),
+        ];
         for (text, id) in strings.iter().zip(&ids) {
             assert!(text.starts_with("{\"kind\":\""));
             assert!(!text.contains(' '));
@@ -133,6 +144,7 @@ mod tests {
         assert_eq!(Rule::from_json(&strings[1]).unwrap(), rule);
         assert_eq!(Word::from_json(&strings[2]).unwrap(), word);
         assert_eq!(Tile::from_json(&strings[3]).unwrap(), tile);
+        assert_eq!(Sequence::from_json(&strings[4]).unwrap(), sequence);
         assert!(Rule::from_json(&strings[0]).is_err());
         assert_eq!(rule.birth, Counts::List(vec![3]));
     }
