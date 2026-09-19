@@ -59,7 +59,8 @@ a:hover { text-decoration: underline; }
 .prose .meta a { color: var(--dim); }
 .prose .date { color: var(--dim); font: 12px/1 var(--mono); white-space: nowrap; }
 .prose math { font-size: 1.05em; }
-.prose .katex-display { overflow-x: auto; margin: 1em 0; }
+.prose math[display="block"] { display: block; max-width: 100%; overflow-x: auto; margin: 1em 0; }
+.prose code, .prose li, .prose p { overflow-wrap: anywhere; }
 
 /* FIGURES */
 

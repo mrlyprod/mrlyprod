@@ -8,10 +8,9 @@
     "build": "bun scripts/site.ts",
     "push": "bun scripts/push.ts",
     "shots": "bun scripts/shots.ts",
-    "shots": "bun scripts/shots.ts",
     "clean": "rm -rf dist",
     "check": "bun check.ts",
-    "test": "bun test kit",
+    "test": "bun test ./kit",
     "figures": "bash ../scripts/figures.sh"
   },
   "dependencies": {

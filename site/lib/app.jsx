@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Shell } from '../kit/ui/chrome.jsx';
-import { demos, load, tree } from './tree.js';
+import { demos, load, sidebar } from './tree.js';
 
 export function mount(node) {
   createRoot(document.getElementById('root')).render(node);
@@ -19,7 +19,7 @@ export function useShelves() {
 
 export function Page({ crumb, title, sub, foot, bare, controls, contents, children }) {
   const shelves = useShelves();
-  const nodes = tree({ demos: shelves });
+  const nodes = sidebar({ demos: shelves });
   return (
     <Shell route={`/demos/${crumb}/`} title={bare ? undefined : title} lead={sub} tree={nodes} controls={controls} contents={contents} wide>
       {children}

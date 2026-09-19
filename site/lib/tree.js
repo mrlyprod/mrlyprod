@@ -34,3 +34,14 @@ export function tree(lists = {}) {
     return nodes?.length ? { ...node, href, nodes } : { ...node, href };
   });
 }
+
+const word = (href) => {
+  const slug = href.split('/').filter(Boolean).pop() ?? '';
+  return slug ? slug[0].toUpperCase() + slug.slice(1) : '';
+};
+
+const flat = (nodes) => nodes.flatMap((node) => (node.nodes?.length ? flat(node.nodes) : node.href ? [{ name: word(node.href), href: node.href }] : []));
+
+export function sidebar(lists = {}) {
+  return tree(lists).map(({ nodes, ...node }) => (nodes?.length ? { ...node, nodes: flat(nodes).sort((a, b) => a.name.localeCompare(b.name)) } : node));
+}

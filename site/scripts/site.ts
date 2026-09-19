@@ -7,7 +7,7 @@ import { build, bytes, walk, type Node, type Output, type Route, type Site, type
 import { isGit } from "../kit/git/git.ts";
 import { resolve as resolveLink } from "../kit/ssg/links.ts";
 import { escape, front, plain, render as md, summary, title } from "../lib/md.js";
-import { tree } from "../lib/tree.js";
+import { sidebar, tree } from "../lib/tree.js";
 import { Glyph, Grid, Menu, Shell } from "../kit/ui/chrome.jsx";
 import { headScript, tintCss } from "../kit/ui/config.js";
 import SITE from "../lib/site.js";
@@ -612,7 +612,9 @@ function dress(nodes: Node[], map: Map<string, Mark>, fig: Fig, route: string): 
   });
 }
 
-const wear = (site: Site, href: string, fig: Fig, route: string) => dress(site.nav.find((node) => node.href === href)?.nodes ?? [], marks(DRESS), fig, route);
+let NAV: Node[] = [];
+
+const wear = (site: Site, href: string, fig: Fig, route: string) => dress(NAV.find((node) => node.href === href)?.nodes ?? [], marks(DRESS), fig, route);
 
 function elsewhere() {
   const links = SITE.socials.map((s) => `<li><a href="${escape(s.href)}">${escape(s.name)}</a></li>`).join("");
@@ -624,7 +626,7 @@ function menu(site: Site, route: Route): Output[] {
   const lead = "Every page on mrly.net.";
   const out: Output[] = [];
   const fig = press(site, out);
-  const nav = dress(site.nav, marks(route.data as Dress), fig, route.route);
+  const nav = dress(NAV, marks(route.data as Dress), fig, route.route);
   const list = renderToStaticMarkup(h(Menu, { tree: nav }));
   const body = `<div class="hero"><h1><span role="img" aria-label="${escape(SITE.title)}">${WORD}</span></h1><p>${escape(lead)}</p></div>\n${list}\n${elsewhere()}`;
   out.push({ path: "menu/index.html", bytes: shell(site, { route: route.route, name: "Menu", description: lead, body, type: "website", wide: true, bare: true }) });
@@ -695,12 +697,14 @@ async function collect(site: Site) {
   counts.research = noteList.length;
   counts.blog = postList.length;
   counts.demos = demoList.length;
-  const nav = tree({
+  const lists = {
     demos: shelved(demoList),
     papers: [...paperList, ...laneList].map((p) => ({ name: p.name, href: `/papers/${p.slug}/` })),
     research: [...(claimList.length ? [{ name: "Discoveries", href: "/research/discoveries/" }] : []), ...noteList.filter((n) => !n.home).map((n) => ({ name: n.title, href: `/research/${n.name}/` }))],
     blog: postList.map((p) => ({ name: p.name, href: `/blog/${p.slug}/` })),
-  });
+  };
+  NAV = tree(lists);
+  const nav = sidebar(lists);
   const routes: Route[] = [];
   const readme = join(org, "README.md");
   routes.push({

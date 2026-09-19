@@ -65,9 +65,8 @@ test("the explorer opens the path to the page and leaves the rest lazy", () => {
   const [code, ...rest] = explorer(one, "src");
   expect(rest).toEqual([]);
   expect(code.name).toBe("mrlyprod");
-  expect(code.open).toBe(true);
   expect(code.nodes!.map((kid) => kid.name)).toEqual(["src", ".gitignore", "LICENSE", "README.md"]);
-  expect(code.nodes![0]).toEqual({ name: "src", href: "/git/src/", lazy: "src", open: true, nodes: [{ name: "a.rs", href: "/git/src/a.rs", icon: "si si-rust" }] });
+  expect(code.nodes![0]).toEqual({ name: "src", href: "/git/src/", lazy: "src", nodes: [{ name: "a.rs", href: "/git/src/a.rs", icon: "si si-rust" }] });
   expect(explorer(one, "")[0].nodes![0].nodes).toEqual([]);
   expect(forest(one)).toEqual({ base: "/git/", c: [{ n: "src", k: "d", c: [{ n: "a.rs", k: "f", i: "rust" }] }, { n: ".gitignore", k: "f", i: "git" }, { n: "LICENSE", k: "f", i: "license" }, { n: "README.md", k: "f", i: "markdown" }] });
 });

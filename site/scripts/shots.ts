@@ -15,33 +15,10 @@ const SERVE = 3335;
 
 /* WHAT */
 
-const ROUTES = [
-  "/",
-  "/demos/",
-  "/demos/sponge/",
-  "/papers/",
-  "/papers/spin-harmonics/",
-  "/papers/coprime-density-above-dimension-one/",
-  "/research/",
-  "/research/core/",
-  "/research/sequences/",
-  "/research/discoveries/",
-  "/blog/",
-  "/blog/launching-mrlyprod-org/",
-  "/about/",
-  "/contact/",
-  "/donate/",
-  "/method/",
-  "/menu/",
-  "/cart/",
-  "/git/",
-  "/git/site/kit/ssg/build.ts",
-  "/404.html",
-];
+const ROUTES = ["/", "/demos/sponge/", "/papers/spin-harmonics/", "/research/discoveries/", "/git/site/kit/ssg/build.ts"];
 
 const SIZES: [string, number, number, boolean][] = [
   ["phone", 390, 844, true],
-  ["tablet", 834, 1194, true],
   ["desktop", 1440, 900, false],
 ];
 

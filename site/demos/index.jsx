@@ -1,6 +1,6 @@
 import { mount, useShelves } from '../lib/app.jsx';
 import { Grid, Shell } from '../kit/ui/chrome.jsx';
-import { tree } from '../lib/tree.js';
+import { sidebar } from '../lib/tree.js';
 import site from '../lib/site.js';
 
 const GROUPS = site.shelves.reduce((groups, shelf) => {
@@ -39,7 +39,7 @@ function App() {
   const shelves = useShelves();
   const held = (key) => shelves.find((one) => one.key === key)?.nodes ?? [];
   return (
-    <Shell route="/demos/" title="The eyes of MrlyMath" lead="Every number and pixel on these pages comes out of the Rust crates through wasm. The browser only draws." tree={tree({ demos: shelves })} contents={CONTENTS} wide>
+    <Shell route="/demos/" title="The eyes of MrlyMath" lead="Every number and pixel on these pages comes out of the Rust crates through wasm. The browser only draws." tree={sidebar({ demos: shelves })} contents={CONTENTS} wide>
       {GROUPS.map((group) => (
         <section key={group.name} id={group.name.toLowerCase()}>
           <h2 className="group">{group.name}</h2>

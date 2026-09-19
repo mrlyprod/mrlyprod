@@ -227,6 +227,16 @@ function replay(name) {
   for (const canvas of [...marks.keys()]) footer(canvas);
 }
 
+/* TREE */
+
+function reveal() {
+  const here = document.querySelector('.tree a[aria-current="page"]');
+  const pane = here?.closest('.pane');
+  if (!here || !pane) return;
+  const top = here.getBoundingClientRect().top - pane.getBoundingClientRect().top + pane.scrollTop;
+  pane.scrollTop = Math.max(0, top - pane.clientHeight / 2);
+}
+
 /* EXPLORER */
 
 let forest = null;
@@ -308,6 +318,7 @@ export function wire() {
   screen(root().dataset.saver ?? '');
   cart();
   once('.contents', contents);
+  once('.tree', reveal);
   marked();
 }
 

@@ -176,7 +176,7 @@ function branches(kids: Map<string, Child[]>, dir: string, open: string): Node[]
     const path = dir ? `${dir}/${name}` : name;
     if (kind === "file") return { name, href: fileRoute(path), icon: seti(name) };
     const along = under(open, path);
-    return { name, href: dirRoute(path), lazy: path, open: along || undefined, nodes: along ? branches(kids, path, open) : [] };
+    return { name, href: dirRoute(path), lazy: path, nodes: along ? branches(kids, path, open) : [] };
   });
 }
 
@@ -184,7 +184,7 @@ export function explorer(site: Site, dir: string): Node[] {
   const git = config(site);
   const kids = KIDS.get(site);
   if (!git || !kids) return site.nav;
-  return [{ name: git.name, href: "/git/", lazy: "", open: true, nodes: branches(kids, "", dir) }];
+  return [{ name: git.name, href: "/git/", lazy: "", nodes: branches(kids, "", dir) }];
 }
 
 function twigs(kids: Map<string, Child[]>, dir: string): Twig[] {

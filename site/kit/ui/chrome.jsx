@@ -102,7 +102,7 @@ function Node({ node, current }) {
   if (!node.nodes && !lazy) return <li><Leaf node={node} here={here} /></li>;
   return (
     <li>
-      <details open={node.open || holds(node, current) || undefined} data-lazy={lazy ? node.lazy : undefined}>
+      <details open={holds(node, current) || undefined} data-lazy={lazy ? node.lazy : undefined}>
         <summary>{node.href ? <Leaf node={node} here={here} /> : node.name}</summary>
         <ul>{(node.nodes ?? []).map((sub) => <Node key={sub.name} node={sub} current={current} />)}</ul>
       </details>

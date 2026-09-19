@@ -10,7 +10,7 @@
   "tagline": "The mathematics of designs on the corners of a cube, and the instruments that measure them.",
   "tree": [
     { "name": "Home", "href": "/" },
-    { "name": "Demos", "href": "/demos/", "fill": "demos", "open": true },
+    { "name": "Demos", "href": "/demos/", "fill": "demos" },
     { "name": "Papers", "href": "/papers/", "fill": "papers" },
     { "name": "Research", "href": "/research/", "fill": "research" },
     { "name": "Blog", "href": "/blog/", "fill": "blog" },
