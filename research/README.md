@@ -30,7 +30,7 @@ The mathematics of the mrly tree: a parity rule on the corners of a cube, substi
 - `sequences.md` - the OEIS ledger: every sequence this work produces, with terms, formulas and status.
 - `lab/rs/<study>/` and `lab/py/<study>/` - the code that regenerates the numbers; one `README.md` per study saying what it computes, how to run it, and which page lines it witnesses.
 - Rust studies are members of the root workspace and run with `cargo run --release -p <study>`; Python studies run with `uv run python research/lab/py/<study>/<file>.py` from the repo root; no comments, no logs, no data over 100KB.
-- `figures/` - the figures the pages embed, each drawn by the study its page names.
+- `figures/` - the figure crate: one binary per figure the site opens on, pressed into `../files/figures/`.
 - Lowercase topic pages, one per idea, indexed under DOCS.
 
 ## WHY IT MATTERS

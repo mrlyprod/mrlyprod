@@ -6,7 +6,7 @@ Base 2 lives on the square lattice, and the constant buried in its arithmetic is
 
 There is a wrong way to look for the base-3 constant, and it is worth naming. A lattice point `(a, b)` is visible from the origin exactly when `gcd(a, b) = 1` - a condition on the coordinates alone, indifferent to whether those coordinates draw a square grid or a hexagonal one. The density of visible points is `1/zeta(2) = 6/pi^2 = 0.607927...` on *any* rank-2 lattice. Counting on a `3000 x 3000` grid gives `0.608042` (**Verified**, `lab/py/eisenstein-visibility`). So simply re-running a base-2 construction with base-3 tiles returns pi again: the grid lines have not moved. The base-3 difference has to come from the number theory that is native to base 3, not from repeating the base-2 experiment.
 
-![Visible points of the hexagonal lattice](figures/bases-fig.png)
+![Visible points of the hexagonal lattice](bases-fig)
 
 The hexagonal lattice with its visible points marked; the faint points are hidden behind a nearer one. The density of marked points tends to `6/pi^2` here just as on the square grid - the shape of the lattice does not enter. The figure is drawn by `lab/py/eisenstein-visibility`.
 

@@ -14,7 +14,7 @@ BLUE = (0, 140, 255)
 GRAY = (198, 198, 201)
 INK = (0, 0, 0)
 
-OUT = Path("research/figures/bases-fig.png")
+OUT = Path("files/figures/bases-fig.png")
 
 
 def points():

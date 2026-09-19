@@ -11,7 +11,7 @@
 ## RUN
 
 - `CARGO_BUILD_JOBS=4 cargo run --release -p walk-dimension`
-- About six minutes; rewrites `research/figures/walks-fig.png`.
+- About six minutes; rewrites `files/figures/walks-fig.png`.
 
 ## WITNESSES
 
@@ -23,4 +23,4 @@
 - walks.md:159-162 code 127 modes 1 and 2 near 2.53, modes 3 and 4 at 2.20 to 2.29 at both level pairs, walkers 2.245 with the spectral drift 0.004.
 - walks.md:199 the `lambda_2` readings 2.4662 and 2.5433 for reps 79 and 95.
 - README.md:57 `dimension = 1.7712` shared by 127 and 239, walk dimensions 2.25 and 2.64, the carpet 2.097 to 2.124.
-- figures/walks-fig.png.
+- files/figures/walks-fig.png.

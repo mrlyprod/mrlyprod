@@ -9,8 +9,8 @@ cd "$HERE/.."
 mkdir -p files/figures
 
 case "${1:-}" in
-  check) cargo check -q -p mrlyfig --examples --tests -p figures --bins; exit 0 ;;
-  test) cargo test -q -p mrlyfig -p figures; exit 0 ;;
+  check) cargo check -q -p figures --bins -p mrlyfig --tests; exit 0 ;;
+  test) cargo test -q -p mrlyfig; exit 0 ;;
 esac
 
 bench=0
@@ -21,7 +21,6 @@ if [[ $# -gt 0 ]]; then
   full=0
 else
   names=()
-  while IFS= read -r name; do names+=("$name"); done < <(grep -A1 '^\[\[example\]\]' crates/mrlyfig/Cargo.toml | sed -n 's/^name = "\(.*\)"/\1/p')
   while IFS= read -r name; do names+=("$name"); done < <(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "figures") | .targets[] | select(.kind[] == "bin") | .name')
   full=1
 fi
@@ -30,7 +29,7 @@ BENCH_TMP="$(mktemp "${TMPDIR:-/tmp}/mrlyfig-bench.XXXXXX")"
 export BENCH_TMP
 trap 'rm -f "$BENCH_TMP"' EXIT
 
-cargo build -q --profile fig -p mrlyfig --examples -p figures --bins
+cargo build -q --profile fig -p figures --bins
 for name in "${names[@]}"; do
   for theme in dark light; do
     echo "$theme $name"
@@ -38,8 +37,7 @@ for name in "${names[@]}"; do
 done | xargs -P "$(sysctl -n hw.ncpu)" -n 2 sh -c '
 s=$(perl -MTime::HiRes=time -e "print time")
 c=0
-bin="target/fig/$1"; [ -x "$bin" ] || bin="target/fig/examples/$1"
-MRLYFIG_THEME="$0" perl -e "alarm 5; exec @ARGV; exit 127" "$bin" || c=$?
+MRLYFIG_THEME="$0" perl -e "alarm 5; exec @ARGV; exit 127" "target/fig/$1" || c=$?
 e=$(perl -MTime::HiRes=time -e "print time")
 perl -e "printf qq{%.2f\t%s\t%s\t%s\n}, \$ARGV[1] - \$ARGV[0], \$ARGV[2], \$ARGV[3], \$ARGV[4]" "$s" "$e" "$1" "$0" "$c" >> "$BENCH_TMP"
 ' || true

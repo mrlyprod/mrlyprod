@@ -69,7 +69,7 @@ Code 127 refuses to be one number. Its low eigenvalue ratios split into two stab
 
 Every subject measures `d_w >= 2`, equivalently `d_s <= log(fill) / log(base)`, with the solid attaining equality. A design can only slow a walker down, never speed it up past free diffusion - holes at every scale are obstacles, whatever else they are. (**Verified** across the census; stated as measurement, not theorem - the general inequality for this family is not proved here.)
 
-![The census](figures/walks-fig.png)
+![The census](walks-fig)
 
 ## Where the honest line falls
 

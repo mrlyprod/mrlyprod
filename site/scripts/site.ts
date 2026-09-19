@@ -41,7 +41,19 @@ const brand = (name: string) => (name === SITE.title ? name : `${name} · ${SITE
 
 /* LINKS */
 
-const links = (site: Site, from: string) => (url: string) => resolveLink(site, from, url);
+const NAME = /^[a-z0-9-]+$/;
+
+function links(site: Site, from: string, out?: Output[]) {
+  const home = site.input("figures").path;
+  return (url: string) => {
+    if (out && NAME.test(url) && existsSync(join(home, `${url}.png`))) {
+      const path = `figures/${url}.png`;
+      if (!out.some((item) => item.path === path)) out.push({ path, bytes: bytes(join(home, `${url}.png`)) });
+      return `/${path}`;
+    }
+    return resolveLink(site, from, url);
+  };
+}
 
 /* FIGURES */
 
@@ -277,7 +289,7 @@ function paper(site: Site, route: Route): Output[] {
   const files = [p.pdf && `<a href="paper.pdf">PDF</a>`, `<a href="paper.tex">TeX</a>`].filter(Boolean).join(" · ");
   const avatar = pic(fig, `paper-${p.slug}`, route.route, p.name, "", "avatar");
   const plate = `<div class="plate paper">${avatar}<h1 id="${escape(p.slug)}">${escape(p.name)}</h1><p class="by">${escape(AUTHOR)}</p><p class="by">${escape(when)}</p></div>\n<p class="meta">${files}</p>`;
-  const body = `${plate}\n${md(p.md.replace(/^# .+\n/, "").replace(AVATAR, ""), { math, link: links(site, join(lane, "README.md")) })}`;
+  const body = `${plate}\n${md(p.md.replace(/^# .+\n/, "").replace(AVATAR, ""), { math, link: links(site, join(lane, "README.md"), out) })}`;
   const data = {
     "@context": "https://schema.org",
     "@type": "ScholarlyArticle",
@@ -329,7 +341,7 @@ function researchIndex(site: Site, route: Route): Output[] {
   const fig = press(site, out);
   out.push({ path: `research/${n.file}`, bytes: n.md });
   const lead = summary(n.md);
-  const prose = md(n.md.replace(/^# .+\n/, ""), { math, link: links(site, join(site.input("research").path, n.file)) });
+  const prose = md(n.md.replace(/^# .+\n/, ""), { math, link: links(site, join(site.input("research").path, n.file), out) });
   const body = `<div class="lede"><h1 id="research">Research</h1><p class="lead">${escape(lead)}</p></div>\n${grid(wear(site, "/research/", fig, route.route))}\n<article class="prose readme">${prose}</article>`;
   out.push({ path: "research/index.html", bytes: shell(site, { route: route.route, name: "Research", description: lead, body, type: "website", wide: true, bare: true }) });
   return out;
@@ -343,7 +355,7 @@ function note(site: Site, route: Route): Output[] {
   const name = title(n.md) || n.name;
   const lead = summary(n.md);
   const which = n.home || SHARED.has(n.name) ? "research-index" : `research-${n.name}`;
-  const body = `${hero(fig, which, route.route, name)}\n${md(n.md, { math, link: links(site, join(site.input("research").path, n.file)) })}`;
+  const body = `${hero(fig, which, route.route, name)}\n${md(n.md, { math, link: links(site, join(site.input("research").path, n.file), out) })}`;
   const data = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -356,10 +368,6 @@ function note(site: Site, route: Route): Output[] {
   const at = n.home ? "research/index.html" : `research/${n.name}/index.html`;
   out.push({ path: at, bytes: shell(site, { route: route.route, name, description: lead, body, type: n.home ? "website" : "article", data }) });
   return out;
-}
-
-function figures(site: Site, route: Route): Output[] {
-  return (route.urls ?? []).map((one) => ({ path: one.route.slice(1), bytes: bytes(one.source!) }));
 }
 
 /* BLOG */
@@ -393,7 +401,7 @@ function post(site: Site, route: Route): Output[] {
     author: { "@type": "Person", name: AUTHOR },
     datePublished: p.date || undefined,
   };
-  out.push({ path: `blog/${p.slug}/index.html`, bytes: shell(site, { route: route.route, name: p.name, description: p.lead, body: `${head}\n${md(p.body, { math, link: links(site, postFile(p.slug)) })}`, data }) });
+  out.push({ path: `blog/${p.slug}/index.html`, bytes: shell(site, { route: route.route, name: p.name, description: p.lead, body: `${head}\n${md(p.body, { math, link: links(site, postFile(p.slug), out) })}`, data }) });
   return out;
 }
 
@@ -419,7 +427,7 @@ function page(site: Site, route: Route): Output[] {
   const open = data.figure ? `${hero(fig, data.figure, route.route, name)}\n` : "";
   const head = `<div class="lede"><h1 id="${escape(slug)}">${escape(name)}</h1><p class="lead">${escape(lead)}</p></div>`;
   const act = data.button && data.link ? `\n<p><a class="button primary" href="${escape(data.link)}">${escape(data.button)}</a></p>` : "";
-  const html = shell(site, { route: route.route, name, description: lead, body: `${open}${head}\n${md(body, { math, link: links(site, source) })}${act}`, type: "website" });
+  const html = shell(site, { route: route.route, name, description: lead, body: `${open}${head}\n${md(body, { math, link: links(site, source, out) })}${act}`, type: "website" });
   out.push({ path: `${slug}/index.html`, bytes: html });
   return out;
 }
@@ -575,19 +583,6 @@ async function collect(site: Site) {
       inputs: [source],
     });
   }
-  const shared = join(notesHome, "figures");
-  const plates = walk(shared);
-  if (plates.length) {
-    routes.push({
-      route: "/research/figures/",
-      kind: "figures",
-      name: "Figures",
-      hidden: true,
-      source: shared,
-      inputs: [shared],
-      urls: plates.map((file) => ({ route: `/research/figures/${file.slice(shared.length + 1)}`, source: file })),
-    });
-  }
   if (postList.length) {
     const files = postList.map((p) => postFile(p.slug));
     routes.push({ route: "/blog/", kind: "blog", name: "Blog", data: postList, source: BLOG, inputs: files });
@@ -622,7 +617,6 @@ const KINDS: Record<string, (site: Site, route: Route) => Output[] | Promise<Out
   papers: paperIndex,
   paper,
   note,
-  figures,
   research: researchIndex,
   blog: blogIndex,
   post,

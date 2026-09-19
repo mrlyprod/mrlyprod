@@ -20,7 +20,7 @@ About 3 s and 0.1 s. Domain is the source domain: prec 60, 200000 Dirichlet pair
 - bases.md:75-76 CF of `L sqrt(3)/pi^2` is `[0, 7, 3, 2, 2, 3, 2, 23, 2, 7, 1, 12, 1, 17, 1, 29, 1, 1, 2, 1, 6, 12]`, ordinary quotients, last convergent denominator `1805284405980`
 - bases.md:77 control `zeta(2)/pi^2` has CF `[0, 5, 1, 10^59]`, convergent `1/6`
 - bases.md:85 `Cl2(pi/3) = 1.0149416064...`
-- bases.md:21 the figure `research/figures/bases-fig.png`; the run also reports `364/612` in-frame points visible `= 0.5948`
+- bases.md:21 the figure `files/figures/bases-fig.png`; the run also reports `364/612` in-frame points visible `= 0.5948`
 
 ## NOTE
 
