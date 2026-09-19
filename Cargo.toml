@@ -1,17 +1,7 @@
 [workspace]
 resolver = "2"
-members = [
-    "crates/mrlycore",
-    "crates/mrlynum",
-    "crates/mrlymath",
-    "crates/mrlymusic",
-    "crates/mrlyfont",
-    "crates/mrlygame",
-    "crates/mrlylab",
-    "crates/mrlyfig",
-    "crates/mrlydemo",
-    "pkgs/rs/mrlyrs",
-]
+members = ["crates/*", "research/figures", "research/lab/rs/*", "pkgs/rs/*"]
+default-members = ["crates/*"]
 
 [workspace.package]
 version = "0.3.0"

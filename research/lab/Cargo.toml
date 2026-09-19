@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
-members = ["apollonian", "automata-census", "design-census", "dimension-one-ladder", "oeis-terms", "hexagon-moire", "farey-discrepancy", "walk-dimension", "spectral-spacings", "spin-census", "integer-census", "magic-words", "code-factorisation", "crop-counts", "circle-crop", "mobius-designs", "rho-decoupling", "mertens-numerology", "coprime-terms", "still-hunt", "life-atlas", "roulette-nodes", "roulette-reaches", "roulette-loops", "roulette-cover", "carry-free-mobius", "radix-designs", "memory-meter", "carry-skeleton", "three-base-thin"]
+exclude = ["rs", "py"]
+members = ["apollonian", "automata-census", "design-census", "dimension-one-ladder", "oeis-terms", "hexagon-moire", "walk-dimension", "spectral-spacings", "spin-census", "integer-census", "magic-words", "code-factorisation", "crop-counts", "circle-crop", "mobius-designs", "rho-decoupling", "mertens-numerology", "coprime-terms", "still-hunt", "life-atlas", "roulette-nodes", "roulette-reaches", "roulette-loops", "roulette-cover", "carry-free-mobius", "radix-designs", "memory-meter", "carry-skeleton", "three-base-thin"]
 
 [workspace.package]
 version = "0.1.0"

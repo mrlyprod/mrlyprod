@@ -7,7 +7,7 @@
 
 ## RUN
 
-- `uv run python research/lab/boolean-measures/measures.py`
+- `uv run python research/lab/py/boolean-measures/measures.py`
 - Domain: every design at `dim 1..4`; at `dim 5` a seeded sample of 50000 uniform designs, plus 20000 uniform and 20000 thinned designs; about three seconds.
 
 ## WITNESSES

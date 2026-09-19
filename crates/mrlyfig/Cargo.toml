@@ -28,10 +28,6 @@ name = "research-coprime"
 path = "examples/grid/research-coprime.rs"
 
 [[example]]
-name = "research-core"
-path = "examples/grid/research-core.rs"
-
-[[example]]
 name = "research-crop"
 path = "examples/grid/research-crop.rs"
 

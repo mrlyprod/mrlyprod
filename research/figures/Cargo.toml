@@ -1,0 +1,13 @@
+[package]
+name = "figures"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+mrlycore.workspace = true
+mrlynum.workspace = true
+mrlymath.workspace = true
+mrlylab.workspace = true
+mrlyfig.workspace = true
