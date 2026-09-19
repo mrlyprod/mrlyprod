@@ -16,6 +16,8 @@ Counting is the easy part. A filled cell of A meeting a filled cell of B gives o
 
 The name comes from matrices. Write a picture as a table of ones and zeros, one for filled and zero for empty. The Kronecker product of two tables multiplies every entry of the first by the whole second table and lays those blocks out in the pattern of the first. A one times the table is the table, a zero times the table is a block of zeros, and that is exactly the stamping rule above, so the picture and the matrix say the same thing.
 
+There is a looser version of the same move. Instead of one picture stamped into every filled cell, keep a small palette of pictures and a grid whose entries say which one goes where: entry by entry, lay down the picture the entry names, and the result is again as wide as the grid times the width of one picture. The Kronecker product is the case where the palette holds two pictures, a blank one and the picture itself, and the grid is a pattern of filled and empty cells choosing between them. A bigger palette is not harder to draw; it is only harder to count, because the filled cells no longer multiply and have to be added up picture by picture.
+
 ## In the tree
 
 Every design here is one small picture, a rule on the corners of a cube, grown by the Kronecker product. The [core note](/research/core/) states it as move two, [the sponge demo](/demos/sponge/) grows a cube rule level by level, and [the words demo](/demos/words/) multiplies two different pictures so the order shows.

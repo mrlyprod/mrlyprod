@@ -25,6 +25,8 @@ Brightness therefore falls as one over the denominator, which is the Stern-Broco
 
 The lit nodes are also exactly [the lattice points visible from the origin](/wiki/visible-lattice-points/), since `a/b` is in lowest terms precisely when `gcd(a,b) = 1`. That is the "lighthouse" reading of the picture. **Proved.** The density of visible points is `6/pi^2` - the same constant, and the same base-blindness, discussed in [what base 3 hides](bases.md), where it is measured as `0.608042` on a `3000 x 3000` grid. **Verified**, by recounting that grid.
 
+Those same points draw two further pictures of the one node set. The sunburst is the visible lattice points themselves, the `(a, b)` with `gcd(a, b) = 1` and `abs a, abs b <= n`, joined in angular order into a closed polygon, which reads the lit set as directions rather than as points of the line. The resonance diagram is the spike profile, a spike at the node `a/b` of height `1/b`. **The stack is that diagram up to the floor. Proved**, from the brightness law: normalising gives the node `a/b` the height `floor(Q/b)/Q`, which lies in `(1/b - 1/Q, 1/b]` at every depth and equals `1/b` exactly when `b` divides `Q` (`lab/rs/farey-discrepancy`).
+
 ## Primes are the maximally novel scales
 
 The nodes scale `n` introduces *for the first time* are the fractions `a/n` with `gcd(a,n) = 1`, since any `a/n` that reduces was already lit by the smaller scale it reduces to. There are exactly `phi(n)` of them. **Proved**, and **Verified** by set difference over the stack for `n = 2..30`:

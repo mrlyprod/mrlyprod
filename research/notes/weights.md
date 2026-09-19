@@ -16,6 +16,7 @@ Every claim carries a tag. **Proved** means a proof is given or restated here; *
 - Equal weights `w_f = 1/|F|` is the 0/1 design: the support is the design itself, the geometry is untouched, and it stays lattice ([dimensions](dimensions.md)).
 - [Daubechies 1988](https://doi.org/10.1002/cpa.3160410705) is the same equation at base 2, dim 1, digits `{0,...,N}`: her scaling functions are weighted digit sets that **overlap**, `N >= base`, which no design has, and her remark after (4.29) is the reason regularity is bought only by widening the mask past one residue box.
 - Values are exact rationals over a common denominator, `w_f = n_f/d` with `sum_f n_f = d`, so every mass at level `level` is an integer over `d^level` and floats appear only at display. The generator's object is base 3, dim 2, cells `(0,0) (2,0) (0,2)`, weights `3/8, 3/8, 1/4`, integer masses `[3, 3, 2]` over `8`, level 10.
+- A symmetry of the cells acts on a weighted design by permuting the `(f, w_f)` pairs, so two weighted designs are one object exactly when one symmetry matches cell and weight together: the unweighted equivalence of [core](core.md) with the weight vector carried along.
 
 ## What weights never move
 
@@ -23,7 +24,7 @@ The contraction ratios are `1/base` at every weight, so the geometry is the unwe
 
 **The corner identity (Proved).** At a filled corner digit of weight `w_0`, a ball of radius `r < min_(f != 0) |f|/base` about that digit's fixed point meets its own sub-block and no other, so `mu(B(r)) = w_0 mu(B(base r))`, and `ln mu(B(r)) - alpha ln r` with `alpha = -log_base w_0` is exactly `log base`-periodic at every weight. The range is not decoration: at base 3, dim 1, `F = {0,1,2}` and `w = (1/2, 1/4, 1/4)` the radius `r = 1/2` is past `min_(f != 0) |f|/base = 1/3`, and `X = mu(B(1/2))` satisfies `X = 1/2 + X/4`, so `X = 2/3` against `w_0 mu(B(3/2)) = 1/2` and the identity fails. On the generator's object `min_(f != 0) |f|/base = 2/3`.
 
-**The ripple survives every weight (Verified).** `M(r)`, the mass within radius `r` of the corner fixed point, is read as an exact integer shell histogram, detrended by `alpha` and folded into 24 bins of `log_3 r` over whole periods of `R` in `3^4..3^8`. Every set keeps the ripple, and the cross-level identity `M_level(r) = n_0 M_(level-1)(r)` for `r < 2 base^(level-1)` - the identity above, checked - is exact integer equality for all four.
+**The ripple survives every weight (Verified).** `M(r)`, the mass within radius `r` of the corner fixed point, is read as an exact integer shell histogram, detrended by `alpha` and folded into 24 bins of `log_3 r` over whole periods of `R` in `3^4..3^8`. Every set keeps the ripple, and the cross-level identity `M_level(r) = n_0 M_(level-1)(r)` for `r < 2 base^(level-1)` - the identity above, checked - is exact integer equality for all four. `M(r)` is the spin mass of [spin](spin.md) read at weight, and being a length observable it is the wrong detector for the arithmetic class of the `log w_f`: it cannot smooth.
 
 | weights | `alpha` | swing | drift bar | whole-period bar | gap against equal weights |
 |---|---|---|---|---|---|

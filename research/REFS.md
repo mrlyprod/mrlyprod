@@ -342,6 +342,7 @@ Every named reference, sequence id, theorem and attribution on this tree's root 
 | Bugeaud, Cipu and Mignotte | On the representation of Fibonacci and Lucas numbers in an integer base; the survey that carries the Senge and Straus statement and Stewart's effective inequality verbatim | https://irma.math.unistra.fr/~bugeaud/travaux/Ribfinal1.pdf |
 | Collatz 1942 | Einschliessungssatz fuer die charakteristischen Zahlen von Matrizen, Mathematische Zeitschrift 48(1), 221-226; the first half of the Collatz-Wielandt name, the min-max characterization of the Perron root and not the 3n + 1 map. The original is paywalled at Springer; the statement is read through the Wikipedia Perron-Frobenius article and the metadata verified in the Crossref record of the DOI, author Collatz, volume 48, pages 221-226, year 1942 | https://doi.org/10.1007/BF01180013 |
 | Wielandt 1950 | Unzerlegbare, nicht negative Matrizen, Mathematische Zeitschrift 52(1), 642-648; the second half of the Collatz-Wielandt name, the irreducible case behind the brackets this tree certifies with. The original is paywalled at Springer; the statement is read through the Wikipedia Perron-Frobenius article and the metadata verified in the Crossref record of the DOI, author Wielandt, volume 52, pages 642-648, year 1950 | https://doi.org/10.1007/BF02230720 |
+| divisor avatars | Divisor Avatars: Which Parity Designs Count the Divisors of a Power | https://github.com/carlomitchener/carlomitchener/tree/main/research/divisor-avatars |
 
 ## REFERENCE PAGES
 
@@ -385,6 +386,8 @@ Every named reference, sequence id, theorem and attribution on this tree's root 
 | A003714 | Fibbinary numbers: if n = F(i1) + F(i2) + ... + F(ik) is the Zeckendorf representation of n (i.e., write n in Fibonacci number system) then a(n) = 2^(i1 - 2) + 2^(i2 - 2) + ... + 2^(ik - 2). Also numbers whose binary representation contains no two adjacent 1's. | https://oeis.org/A003714 |
 | A000225 | a(n) = 2^n - 1. (Sometimes called Mersenne numbers, although that name is usually reserved for A001348.) | https://oeis.org/A000225 |
 | A030979 | Numbers k such that binomial(2k,k) is not divisible by 3, 5 or 7; the Kummer neighbour of the three-base thin set, one base-7 digit wider, carrying a prize and a heuristic of Pomerance whose exponent is the transversality budget 0.025951, and a table its entry calls complete to 10^70 with 1374 terms | https://oeis.org/A030979 |
+| A001792 | a(n) = (n+2)*2^(n-1); the level-1 cell count of the Menger sponge in every dimension | https://oeis.org/A001792 |
+| A005408 | The odd numbers; the odd-side fills of the dimension-one solid | https://oeis.org/A005408 |
 
 ## PRIOR ART ON THE BASE-3 SLICE
 

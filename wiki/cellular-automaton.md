@@ -24,6 +24,10 @@ The eight patterns are worth a second look. Three cells each on or off is exactl
 
 Conway's Life is the two-dimensional cousin. The cells sit on a grid instead of a line, the neighbourhood is the eight cells around each one instead of two, and the rule reads only how many of those eight are alive: a dead cell with exactly three live neighbours is born, a live cell with two or three stays alive, everything else dies. Those two clauses are enough to produce blocks that sit still, blinkers that flash, and gliders that walk across the grid for ever.
 
+Life's rule only counts. It asks how many of the eight neighbours are alive, never which ones, so a live neighbour on the left and a live neighbour on the right are the same news. Rules that only count are called outer-totalistic, and most of the 256 line rules are not: rule 110 can tell its left neighbour from its right one, and that is part of why it does so much.
+
+Nothing forces the neighbourhood to be the cells next door, either. Pick any fixed set of positions around a cell, count how many of them are alive, and the same two clauses of Life run on that set instead. The set is just a picture drawn around the centre, so any design can be handed to the rule as its neighbourhood and asked what it does.
+
 ## In the tree
 
 [The automata](/research/automata/) proves the identity above, that an elementary rule and a three-dimensional design are one object, and follows what the identity does and does not buy. [The wolfram demo](/demos/wolfram/) runs any of the 256 rules beside the design card the same byte fills in, [the life demo](/demos/life/) runs Conway's rule from a soup or a glider, and [mrlylife](/demos/mrlylife/) swaps the neighbourhood for any design the tree draws and runs the rule on that instead.
