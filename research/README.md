@@ -32,6 +32,7 @@ The mathematics of the mrly tree: a parity rule on the corners of a cube, substi
 - Rust studies are members of the root workspace and run with `cargo run --release -p <study>`; Python studies run with `uv run python research/lab/py/<study>/<file>.py` from the repo root; no comments, no logs, no data over 100KB.
 - `figures/` - the figure crate: one binary per figure the site opens on, pressed into `../files/figures/`.
 - `notes/<slug>.md` - the topic notes, one per idea; the index under `/research/` is built from their front matter.
+- `papers/<slug>.md` - the papers, markdown with a cover in front matter (title, lead, date, figure) that prints as a paged document; the LaTeX shelf is deprecated and never edited.
 
 ## WHY IT MATTERS
 

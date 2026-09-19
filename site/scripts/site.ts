@@ -18,7 +18,7 @@ const dist = join(org, "dist");
 const BLOG = join(org, "blog");
 const postFile = (slug: string) => join(BLOG, `${slug}.md`);
 const root = (process.env.MRLY_SITE ?? SITE.root).replace(/\/$/, "");
-const AUTHOR = "Carlo Mitchener";
+const AUTHOR = "MrlyProd";
 const LIST = /^- \[([^\]]+)\]\([^)]*\) - (.+)$/gm;
 const HEADING = /<h([23]) id="([^"]+)">(.*?)<\/h\1>/g;
 const AVATAR = /^(!\[avatar\]\(figures\/avatar\.png\)|<picture>.*?figures\/avatar-light\.png.*?<\/picture>)\n?/m;
@@ -273,6 +273,46 @@ async function demos(site: Site, route: Route): Promise<Output[]> {
 
 /* PAPERS */
 
+type Paper = { slug: string; name: string; lead: string; date: string; revised: string; figure: string; shelf: string; body: string; file: string };
+
+function papers(site: Site): Paper[] {
+  const home = site.input("papers");
+  return home.files
+    .map((file) => {
+      const slug = file.slice(home.path.length + 1, -3);
+      const { data, body } = front(read(file));
+      return { slug, name: data.title ?? slug, lead: data.lead ?? summary(body), date: data.date ?? "", revised: data.revised ?? "", figure: data.figure || `paper-${slug}`, shelf: data.shelf ?? "", body, file };
+    })
+    .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : a.slug.localeCompare(b.slug)));
+}
+
+const marked = (p: Paper) => [p.date, p.revised && `revised ${p.revised}`].filter(Boolean) as string[];
+
+function written(site: Site, route: Route): Output[] {
+  const p = route.data as Paper;
+  const out: Output[] = [];
+  const fig = press(site, out);
+  const when = [p.date && `First published ${p.date}`, p.revised && `revised ${p.revised}`].filter(Boolean).join(", ");
+  const avatar = pic(fig, p.figure, route.route, p.name, "", "avatar");
+  const shelf = p.shelf ? `\n<p class="meta"><a href="https://github.com/carlomitchener/carlomitchener/tree/main/research/${escape(p.shelf)}">The LaTeX and PDF of the first edition, on the shelf</a></p>` : "";
+  const plate = `<div class="plate paper">${avatar}<h1 id="${escape(p.slug)}">${escape(p.name)}</h1><p class="by">${escape(AUTHOR)}</p><p class="by">${escape(when)}</p></div>${shelf}`;
+  const body = `${plate}\n${md(p.body, { math, link: links(site, p.file, out) })}`;
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "ScholarlyArticle",
+    headline: p.name,
+    description: p.lead,
+    url: root + route.route,
+    image: `${root}/figures/${p.figure}-dark.png`,
+    author: { "@type": "Organization", name: AUTHOR },
+    datePublished: p.date || undefined,
+    dateModified: p.revised || p.date || undefined,
+    license: "https://creativecommons.org/licenses/by/4.0/",
+  };
+  out.push({ path: `papers/${p.slug}/index.html`, bytes: shell(site, { route: route.route, name: p.name, description: p.lead, body, data }) });
+  return out;
+}
+
 type Lane = { slug: string; blurb: string; name: string; md: string; published: string; revised: string; pdf: boolean };
 
 let SHELF = "";
@@ -326,7 +366,7 @@ function paper(site: Site, route: Route): Output[] {
     description: p.blurb || summary(p.md),
     url: root + route.route,
     image: `${root}/figures/paper-${p.slug}-dark.png`,
-    author: { "@type": "Person", name: AUTHOR },
+    author: { "@type": "Organization", name: AUTHOR },
     datePublished: p.published || undefined,
     dateModified: dated(p) || undefined,
     license: "https://creativecommons.org/licenses/by/4.0/",
@@ -338,8 +378,11 @@ function paper(site: Site, route: Route): Output[] {
 function paperIndex(site: Site, route: Route): Output[] {
   const out: Output[] = [];
   const fig = press(site, out);
-  const lead = summary(read(join(SHELF, "README.md")));
-  const body = `<div class="lede"><h1 id="papers">Papers</h1><p class="lead">${escape(lead)}</p></div>\n${grid(wear(site, "/papers/", fig, route.route))}`;
+  const lead = "Write-ups of MrlyMath, each claim a theorem with a proof, a computational fact with its exact finite domain, or a conjecture labelled as one; markdown that prints as a paper.";
+  const fresh = new Set(DRESS.papers.map((p) => `/papers/${p.slug}/`));
+  const nodes = wear(site, "/papers/", fig, route.route);
+  const shelfNote = `<section><h2 id="shelf">The shelf</h2><p class="lead">The first editions, in LaTeX with a PDF each, deprecated: every paper is rewritten here in turn and the shelf is never edited.</p>${grid(nodes.filter((n) => !fresh.has(n.href ?? "")))}</section>`;
+  const body = `<div class="lede"><h1 id="papers">Papers</h1><p class="lead">${escape(lead)}</p></div>\n${grid(nodes.filter((n) => fresh.has(n.href ?? "")))}\n${nodes.some((n) => !fresh.has(n.href ?? "")) ? shelfNote : ""}`;
   out.push({ path: "papers/index.html", bytes: shell(site, { route: route.route, name: "Papers", description: lead, body, type: "website", wide: true, bare: true }) });
   return out;
 }
@@ -412,7 +455,7 @@ function note(site: Site, route: Route): Output[] {
     description: lead,
     url: root + route.route,
     image: `${root}/figures/${n.figure}-dark.png`,
-    author: { "@type": "Person", name: AUTHOR },
+    author: { "@type": "Organization", name: AUTHOR },
   };
   const at = n.home ? "research/index.html" : `research/${n.name}/index.html`;
   out.push({ path: at, bytes: shell(site, { route: route.route, name, description: lead, body, type: n.home ? "website" : "article", data }) });
@@ -464,7 +507,7 @@ function discoveries(site: Site, route: Route): Output[] {
     description: lead,
     url: root + route.route,
     image: `${root}/figures/research-index-dark.png`,
-    author: { "@type": "Person", name: AUTHOR },
+    author: { "@type": "Organization", name: AUTHOR },
   };
   out.push({ path: "research/discoveries/index.html", bytes: shell(site, { route: route.route, name: "Discoveries", description: lead, body, data }) });
   return out;
@@ -498,7 +541,7 @@ function post(site: Site, route: Route): Output[] {
     description: p.lead,
     url: root + route.route,
     image: `${root}/figures/${p.figure}-dark.png`,
-    author: { "@type": "Person", name: AUTHOR },
+    author: { "@type": "Organization", name: AUTHOR },
     datePublished: p.date || undefined,
   };
   out.push({ path: `blog/${p.slug}/index.html`, bytes: shell(site, { route: route.route, name: p.name, description: p.lead, body: `${head}\n${md(p.body, { math, link: links(site, postFile(p.slug), out) })}`, data }) });
@@ -532,11 +575,11 @@ function page(site: Site, route: Route): Output[] {
   return out;
 }
 
-type Dress = { lanes: Lane[]; notes: Note[]; posts: Post[]; demos: Card[] };
+type Dress = { lanes: Lane[]; papers: Paper[]; notes: Note[]; posts: Post[]; demos: Card[] };
 
 type Mark = { figure: string; text: string; dates?: string[] };
 
-let DRESS: Dress = { lanes: [], notes: [], posts: [], demos: [] };
+let DRESS: Dress = { lanes: [], papers: [], notes: [], posts: [], demos: [] };
 
 const FIXED: Record<string, string> = {
   "/": "site-home",
@@ -549,6 +592,7 @@ const FIXED: Record<string, string> = {
 function marks(data: Dress): Map<string, Mark> {
   const map = new Map<string, Mark>();
   for (const d of data.demos) if (d.name) map.set(demoRoute(d.name), { figure: `demo-${d.name}`, text: d.blurb });
+  for (const p of data.papers) map.set(`/papers/${p.slug}/`, { figure: p.figure, text: p.lead, dates: marked(p) });
   for (const p of data.lanes) map.set(`/papers/${p.slug}/`, { figure: `paper-${p.slug}`, text: p.blurb, dates: stamps(p) });
   for (const n of data.notes) {
     if (n.home) continue;
@@ -597,21 +641,21 @@ const MISSION = SITE.tagline;
 
 const DOORS = [
   { name: "Demos", href: "/demos/", figure: "site-demos", text: "Browser pages that draw a design and the numbers around it, live." },
-  { name: "Papers", href: "/papers/", figure: "site-papers", text: "Write-ups with their LaTeX source and the scripts that check them." },
+  { name: "Papers", href: "/papers/", figure: "site-papers", text: "Write-ups that print as papers, every claim tagged and every number generated." },
   { name: "Research", href: "/research/", figure: "site-research", text: "The working notes behind the demos and the papers, one page per idea." },
 ];
 
 function home(site: Site, route: Route): Output[] {
-  const { lanes: list, posts: written } = route.data as { lanes: Lane[]; posts: Post[] };
+  const { lanes: list, papers: fresh, posts: posted } = route.data as { lanes: Lane[]; papers: Paper[]; posts: Post[] };
   const out: Output[] = [];
   const fig = press(site, out);
-  const latest = list
+  const latest = [...fresh.map((p) => ({ name: p.name, slug: p.slug, at: p.revised || p.date })), ...list.map((p) => ({ name: p.name, slug: p.slug, at: dated(p) }))]
     .map((p, i) => ({ p, i }))
-    .sort((a, b) => (dated(a.p) < dated(b.p) ? 1 : dated(a.p) > dated(b.p) ? -1 : b.i - a.i))
+    .sort((a, b) => (a.p.at < b.p.at ? 1 : a.p.at > b.p.at ? -1 : a.i - b.i))
     .slice(0, 3)
     .map(({ p }) => ({ name: p.name, href: `/papers/${p.slug}/` }));
   const doors = DOORS.map((d) => ({ name: d.name, href: d.href, figure: fig(d.figure, "/"), text: d.text }));
-  const first = written[0];
+  const first = posted[0];
   const news = first
     ? `<section><h2 id="latest">From the blog</h2><p class="lead"><a href="/blog/${first.slug}/">${escape(first.name)}</a> · ${escape(first.date)}</p><p class="lead">${escape(first.lead)}</p></section>`
     : "";
@@ -639,19 +683,21 @@ const counts = { papers: 0, research: 0, blog: 0, demos: 0 };
 
 async function collect(site: Site) {
   SHELF = await shelf();
-  const laneList = lanes();
+  const paperList = papers(site);
+  const fresh = new Set(paperList.map((p) => p.slug));
+  const laneList = lanes().filter((p) => !fresh.has(p.slug));
   const noteList = notes(site);
   const postList = posts();
   const group = demoGroup(site);
   const demoList = group.data as Card[];
   const claimList = claims(site);
-  counts.papers = laneList.length;
+  counts.papers = laneList.length + paperList.length;
   counts.research = noteList.length;
   counts.blog = postList.length;
   counts.demos = demoList.length;
   const nav = tree({
     demos: shelved(demoList),
-    papers: laneList.map((p) => ({ name: p.name, href: `/papers/${p.slug}/` })),
+    papers: [...paperList, ...laneList].map((p) => ({ name: p.name, href: `/papers/${p.slug}/` })),
     research: [...(claimList.length ? [{ name: "Discoveries", href: "/research/discoveries/" }] : []), ...noteList.filter((n) => !n.home).map((n) => ({ name: n.title, href: `/research/${n.name}/` }))],
     blog: postList.map((p) => ({ name: p.name, href: `/blog/${p.slug}/` })),
   });
@@ -661,14 +707,17 @@ async function collect(site: Site) {
     route: "/",
     kind: "home",
     name: SITE.title,
-    data: { lanes: laneList, posts: postList },
+    data: { lanes: laneList, papers: paperList, posts: postList },
     source: readme,
     inputs: [readme],
   });
   routes.push(group);
-  if (laneList.length) {
+  if (laneList.length || paperList.length) {
     const index = join(SHELF, "README.md");
-    routes.push({ route: "/papers/", kind: "papers", name: "Papers", data: laneList, source: index, inputs: [index] });
+    routes.push({ route: "/papers/", kind: "papers", name: "Papers", data: { lanes: laneList, papers: paperList.map((p) => [p.slug, p.name, p.lead, p.date, p.revised, p.figure]) }, source: index, inputs: [index, ...paperList.map((p) => p.file)] });
+    for (const p of paperList) {
+      routes.push({ route: `/papers/${p.slug}/`, kind: "written", name: p.name, data: p, source: p.file, inputs: [p.file] });
+    }
     for (const p of laneList) {
       const lane = join(SHELF, p.slug);
       routes.push({ route: `/papers/${p.slug}/`, kind: "paper", name: p.name, data: p, source: lane, inputs: [lane] });
@@ -710,7 +759,7 @@ async function collect(site: Site) {
     const { data } = front(read(source));
     routes.push({ route: `/${slug}/`, kind: "page", name: data.title ?? slug, source, inputs: [source] });
   }
-  DRESS = { lanes: laneList, notes: noteList, posts: postList, demos: demoList };
+  DRESS = { lanes: laneList, papers: paperList, notes: noteList, posts: postList, demos: demoList };
   routes.push({
     route: "/menu/",
     kind: "menu",
@@ -729,6 +778,7 @@ const KINDS: Record<string, (site: Site, route: Route) => Output[] | Promise<Out
   demos,
   papers: paperIndex,
   paper,
+  written,
   note,
   research: researchIndex,
   discoveries,

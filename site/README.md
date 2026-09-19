@@ -12,7 +12,7 @@
 - `Signs` is the plus-minus primitive: a warm hue for plus one, a cool hue for minus one, and the dark ground for empty.
 - `select.jsx` is the one picker: design list, code, base and Randomize; `?seed=7` replays the seventh tap, and a typed code drops the seed.
 - `useQuery` in `query.js` keeps page state in the URL, so every view is a link.
-- Words live as markdown: `blog/<slug>.md` and every `pages/<slug>.md` open with a `---` front matter block (title, date, lead, optional figure naming a file in `files/figures/`); one page file is one route, `/<slug>/`; `public/` copies straight to the site root.
+- Words live as markdown: `blog/<slug>.md`, `../research/papers/<slug>.md` and every `pages/<slug>.md` open with a `---` front matter block (title, date, lead, optional figure naming a file in `files/figures/`); one page file is one route, `/<slug>/`; `public/` copies straight to the site root.
 - `bun run dev` renders on request: it scans once, watches every declared input and template, and renders the route you ask for; nothing is prebuilt and `dist/` is never read.
 - In dev the kit and the figures are served straight from disk and the demos keep Bun's HTML routes, so a CSS or markdown edit shows on the next refresh with no build.
 - `bun run build` writes the whole site to `dist/` with `scripts/site.ts` alone: pure bun, no Chrome, no cargo, no Python; `bun run clean` empties `dist/` by hand when you want a cold start.

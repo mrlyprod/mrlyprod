@@ -86,7 +86,7 @@
       { "href": "/raw/README.md", "name": "README", "note": "the repository readme, in markdown" },
       { "href": "/research/", "name": "Research", "note": "working notes, one page per idea" },
       { "href": "/git/", "name": "Code", "note": "the whole tree, browsable, with raw bytes under /raw/" },
-      { "href": "/papers/", "name": "Papers", "note": "write-ups with their LaTeX source and PDFs" },
+      { "href": "/papers/", "name": "Papers", "note": "write-ups in markdown that print as papers" },
       { "href": "/contact/", "name": "Contact", "note": "where to write, and every social account" }
     ]
   },
@@ -97,6 +97,7 @@
     "research": { "path": "../research", "ext": ".md" },
     "notes": { "path": "../research/notes", "ext": ".md" },
     "claims": { "path": "../research/claims", "ext": ".md" },
+    "papers": { "path": "../research/papers", "ext": ".md" },
     "figures": { "path": "../files/figures", "ext": ".png" },
     "demos": { "path": "demos", "deep": true },
     "lib": { "path": "lib", "deep": true },
