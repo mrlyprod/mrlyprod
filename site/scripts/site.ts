@@ -782,7 +782,8 @@ function ordered(list: Entry[]): Entry[] {
     done.add(next!.slug);
     out.push(byslug.get(next!.slug)!);
   }
-  return out;
+  const deep = depths(out);
+  return out.sort((a, b) => deep.get(a.slug)! - deep.get(b.slug)! || a.slug.localeCompare(b.slug));
 }
 
 function wiki(site: Site): Entry[] {

@@ -16,8 +16,8 @@ Between two neighbours a/b and c/d the first fraction to appear, at some later o
 
 ![The Farey stack: a line at every k/n for every scale n up to Q, laid over each other, so a reduced fraction lights up once for each scale that draws it.](demos/farey/stack)
 
-The stack above draws the same fractions another way. Lay a ruler with n equal divisions on the unit line for every n up to Q, and count how many rulers put a mark at each point: a fraction a/b is marked by every n that b divides, so the tallest bars are the simplest fractions and the primes stand out as the scales that mark the most new points.
+The stack above draws the same fractions another way. Lay a ruler with n equal divisions on the unit line for every n up to Q, and count how many rulers put a mark at each point: a fraction a/b is marked by every n that b divides, so the tallest bars are the simplest fractions and [the primes](/wiki/prime-numbers/) stand out as the scales that mark the most new points.
 
 ## In the tree
 
-The grid of every design at every scale, laid over itself, lights up at the Farey fractions, and the [Farey stack note](/research/farey/) reads that moire as a diagram of the fractions and of how evenly they spread. The circles standing on the same fractions are in [the Apollonian demo](/demos/apollonian/), and counting the lit points of the grid is how [pi comes out of the grid](/research/pi/).
+The grid of every design at every scale, laid over itself, lights up at the Farey fractions, and the [Farey stack note](/research/farey/) reads that [moire](/wiki/moire/) as a diagram of the fractions and of how evenly they spread. The circles standing on the same fractions are in [the Apollonian demo](/demos/apollonian/), and counting the lit points of the grid is how [pi comes out of the grid](/research/pi/).

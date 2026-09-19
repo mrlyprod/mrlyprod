@@ -5,11 +5,11 @@ figure: research-complexity
 slug: complexity
 ---
 
-A design is a parity rule on the corners of a cube. Read its fill vector in corner order and it is the truth table of a Boolean function - that is the theorem of [the bijection page](bijection.md), and it means the whole apparatus of Boolean complexity applies to the catalog without translation. Sensitivity, certificate complexity, decision-tree depth: these are properties of a design, computable from its filled corners with nothing but parity-cube combinatorics.
+A design is a [parity](/wiki/parity/) rule on the corners of a cube. Read its fill vector in corner order and it is the truth table of a Boolean function - that is the theorem of [the bijection page](bijection.md), and it means the whole apparatus of Boolean complexity applies to the catalog without translation. Sensitivity, certificate complexity, decision-tree depth: these are properties of a design, computable from its filled corners with nothing but parity-cube combinatorics.
 
 The question this page answers is how much of that complexity the *geometry* can see. The census already carries genus, degree, popcount and the odd-side fill polynomial. Do they determine how hard the function is? At dim 3 yes, but only because the catalog is too small for the question to bite. At dim 4 no - and the failure is exhibited by two named designs that draw indistinguishable fractals and differ in six of seven complexity measures.
 
-A second sense of complexity closes the page: the spectra of the fractals the designs build. The graph Laplacian of the Sierpinski triangle that `bang dim 2, code 7` draws is degenerate to a degree that is itself a law, and that law now runs to level 8; the base-2 flake of `bang dim 3, code 23` carries an exact interior band gap; and every fractal tested clusters its eigenvalues where a random matrix would repel them.
+A second sense of complexity closes the page: the spectra of the fractals the designs build. [The graph Laplacian](/wiki/graph-laplacian/) of the Sierpinski triangle that `bang dim 2, code 7` draws is degenerate to a degree that is itself a law, and that law now runs to level 8; the base-2 flake of `bang dim 3, code 23` carries an exact interior band gap; and every fractal tested clusters its eigenvalues where a random matrix would repel them.
 
 Every claim carries a tag. **Proved** means a proof is given here; **Verified** means recomputed from scratch by a crate test or a lab study; **Conjecture** means neither. The generators are `six::census` and `six::topology` in `../crates/mrlymath`, with `mrlynum::spectrum` for the eigensolver and the exponent, together with `lab/py/boolean-measures`, `lab/py/base-q-anf`, `lab/py/laplacian-degeneracy`, `lab/py/flake-band-gap` and `lab/rs/spectral-spacings`.
 
@@ -90,7 +90,7 @@ The smallest witness, by code:
 
 Two honest qualifications. First, the fill polynomial is not a symmetry invariant: its leading coefficient is the popcount and *is* invariant, but the lower coefficients are not, because parity flips fix the infinite tiling and move a truncation to a finite side. The column belongs to the canonical representative of the class. That only strengthens the result - the key used here is finer than any genuine invariant, and it still determines nothing. Second, this is a statement about dim 4, verified exhaustively there, and not a theorem about all `dim`.
 
-The reading: the fill polynomial is a real geometric coordinate on the catalog, and it *bounds* complexity - it fixes the leading term, hence the popcount, hence the fractal dimension. It does not *compute* complexity. Past its resolution there is no geometry-to-complexity map, and two designs are the proof.
+The reading: the fill polynomial is a real geometric coordinate on the catalog, and it *bounds* complexity - it fixes the leading term, hence the popcount, hence [the fractal dimension](/wiki/fractal-dimension/). It does not *compute* complexity. Past its resolution there is no geometry-to-complexity map, and two designs are the proof.
 
 ## The catalog on the inequality web
 
@@ -110,7 +110,7 @@ On the literature. Huang's theorem - that a Boolean function's sensitivity and d
 
 ## Average sensitivity is exact
 
-The uniform distribution on designs - each of the `2^(2^dim)` codes equally likely - is on classes the orbit-size-weighted distribution, which is precisely the measure Burnside's count integrates. So an average-over-designs statement is a statement about the class catalog, reweighted by orbit size.
+The uniform distribution on designs - each of the `2^(2^dim)` codes equally likely - is on classes the orbit-size-weighted distribution, which is precisely the measure [Burnside](/wiki/burnsides-lemma/)'s count integrates. So an average-over-designs statement is a statement about the class catalog, reweighted by orbit size.
 
 Under that measure the value at each corner is an independent fair bit.
 
@@ -147,7 +147,7 @@ A base-3 degree table for the four historical names, generalized as rules - void
 | carpet | 3 | 6 |
 | net | 4 | 6 |
 
-Fractal labels on that table need care, and the distinction matters. The degree-3 "carpet" row is the rule keeping 3 of 9 cells; the Sierpinski carpet keeps 8 of 9 - every cell but the centre - and its `GF(3)` degree is 4, not 3. The dim 3 row keeps 4 of 27 cells, not the Menger sponge's 20 of 27; the sponge's own `GF(3)` degree happens to be 6 as well, so that label survives only by coincidence - 6 is the ceiling `dim*(base-1)`. (Verified on the actual shapes, `lab/py/base-q-anf`.)
+Fractal labels on that table need care, and the distinction matters. The degree-3 "carpet" row is the rule keeping 3 of 9 cells; [the Sierpinski carpet](/wiki/sierpinski-carpet/) keeps 8 of 9 - every cell but the centre - and its `GF(3)` degree is 4, not 3. The dim 3 row keeps 4 of 27 cells, not [the Menger sponge](/wiki/menger-sponge/)'s 20 of 27; the sponge's own `GF(3)` degree happens to be 6 as well, so that label survives only by coincidence - 6 is the ceiling `dim*(base-1)`. (Verified on the actual shapes, `lab/py/base-q-anf`.)
 
 One distinction to keep: the `GF(q)` degree and the integer degree are different invariants and do not order designs the same way - at base 3, dim 2, the tree has `GF(3)` degree 2 and integer degree 1, while the void has `GF(3)` degree 2 and integer degree 4. Any use has to say which it means. (Verified, `lab/py/base-q-anf`.)
 
@@ -160,9 +160,9 @@ The second sense of complexity is spectral, and it belongs to the fractal rather
 1 0
 ```
 
- - and substitute it into itself `level` times. The array at level `level` is `2^level` on a side with `3^level` filled cells, and a cell `(i, j)` survives exactly when `i AND j = 0`: the Sierpinski triangle. (Verified at level 1..8 by `lab/py/laplacian-degeneracy`: the Kronecker construction is executed literally and the `i AND j = 0` characterisation is then checked against it, never assumed.)
+ - and substitute it into itself `level` times. The array at level `level` is `2^level` on a side with `3^level` filled cells, and a cell `(i, j)` survives exactly when `i AND j = 0`: the Sierpinski triangle. (Verified at level 1..8 by `lab/py/laplacian-degeneracy`: the [Kronecker](/wiki/kronecker-product/) construction is executed literally and the `i AND j = 0` characterisation is then checked against it, never assumed.)
 
-Let `G` be the graph on the filled cells at that level, with an edge between axis-nearest neighbours and no diagonals. The operator is the **normalised** Laplacian `I - D^-1/2 A D^-1/2`, at `A` the adjacency matrix of `G` and `D` its diagonal of degrees, whose spectrum lies in `[0, 2]`. (The combinatorial Laplacian `D - A` is a different operator with a different spectrum; the laws below are about the normalised one.)
+Let `G` be the [graph](/wiki/graphs/) on the filled cells at that level, with an edge between axis-nearest neighbours and no diagonals. The operator is the **normalised** Laplacian `I - D^-1/2 A D^-1/2`, at `A` the adjacency matrix of `G` and `D` its diagonal of degrees, whose spectrum lies in `[0, 2]`. (The combinatorial Laplacian `D - A` is a different operator with a different spectrum; the laws below are about the normalised one.)
 
 The [spectra demo](../../site/demos/spectra/) diagonalises that operator live. It draws the integrated density of states of the triangle at any level to level 6, shades the low window it fits, and prints the distinct count, the degenerate classes, the repeated fraction, the multiplicity of 1 and of the `1 -/+ sqrt(30)/6` pair beside the eight largest clusters, with the combinatorial Laplacian and any other flat code one control away.
 
@@ -247,7 +247,7 @@ The mechanism is the degeneracy this page already documented for the triangle. T
 
 ## The slice's spectral dimension
 
-The same slice graph carries one more spectral question: the random-walk spectral dimension `d_s`, read as twice the low-window slope of the integrated density of states of the normalised Laplacian on the giant component. The reading is `mrlynum::spectrum::spectral_exponent` on the spectrum `mrlynum::spectrum::laplacian_spectrum` returns, wrapped for the section by `mrlymath::six::topology::spectral_exponent`; the eigensolver beneath it is the crate's own dense symmetric pair, Householder tridiagonalisation then implicit QL with Wilkinson shifts.
+The same slice graph carries one more spectral question: the [random-walk](/wiki/random-walk/) spectral dimension `d_s`, read as twice the low-window slope of the integrated density of states of the normalised Laplacian on the giant component. The reading is `mrlynum::spectrum::spectral_exponent` on the spectrum `mrlynum::spectrum::laplacian_spectrum` returns, wrapped for the section by `mrlymath::six::topology::spectral_exponent`; the eigensolver beneath it is the crate's own dense symmetric pair, Householder tridiagonalisation then implicit QL with Wilkinson shifts.
 
 **Verified**, the structure (`mrlymath::six::topology` test `the_carpet_slice_percolates_at_base_three`). At side 3 the carpet slice percolates: one connected piece at every level, with 42, 306, 2250, 16578 triangles at levels 1 to 4.
 

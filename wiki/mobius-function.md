@@ -4,7 +4,7 @@ lead: Mu of n is 0 when a square divides n, and otherwise plus or minus one depe
 prerequisites: prime-numbers
 ---
 
-The Mobius function takes only three values and the rule for choosing between them is short. Factor `n` into primes. If any prime appears twice, `mu(n) = 0`. Otherwise count the distinct primes: an even count gives `+1` and an odd count gives `-1`.
+The Mobius function takes only three values and the rule for choosing between them is short. Factor `n` into [primes](/wiki/prime-numbers/). If any prime appears twice, `mu(n) = 0`. Otherwise count the distinct primes: an even count gives `+1` and an odd count gives `-1`.
 
 Work a few. `mu(1) = 1`, since 1 has no prime factors at all and zero is an even count. `mu(2) = -1` and `mu(3) = -1`, one prime each. `mu(6) = 1`, two primes. `mu(30) = -1`, three primes. `mu(4) = 0` and `mu(12) = 0`, because 4 divides both.
 
@@ -32,4 +32,4 @@ How far it is allowed to wander is one of the famous open questions in mathemati
 
 ## In the tree
 
-The running sum of `mu` over a restricted set of numbers is the object [the Mobius meter note](/research/mobius/) measures, where the question is how big the swings get when you only allow numbers whose digits come from a fixed list. [The design zeta note](/research/zeta/) reads the same meter from the other side, and [the Mobius echo demo](/demos/echo/) listens to it: the swings turn out to carry frequencies borrowed from the zeta zeros. Weighting by `mu` instead of by 1 also changes what [the Farey stack](/research/farey/) draws, and it is `mu` that inverts the divisor count in [pi out of the stack](/research/pi/).
+[The running sum](/wiki/mertens-function/) of `mu` over a restricted set of numbers is the object [the Mobius meter note](/research/mobius/) measures, where the question is how big the swings get when you only allow numbers whose digits come from a fixed list. [The design zeta note](/research/zeta/) reads the same meter from the other side, and [the Mobius echo demo](/demos/echo/) listens to it: the swings turn out to carry frequencies borrowed from [the zeta zeros](/wiki/riemann-zeta-function/). Weighting by `mu` instead of by 1 also changes what [the Farey stack](/research/farey/) draws, and it is `mu` that inverts the divisor count in [pi out of the stack](/research/pi/).

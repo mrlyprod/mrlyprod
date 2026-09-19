@@ -5,13 +5,13 @@ figure: research-pi
 slug: pi
 ---
 
-Pi is not inside a single carpet's area, which is rational at every level. Pi is in the **stack** of carpets, and it comes out as a counted number rather than an assumed one.
+Pi is not inside a single [carpet](/wiki/sierpinski-carpet/)'s area, which is rational at every level. Pi is in the **stack** of carpets, and it comes out as a counted number rather than an assumed one.
 
-Every claim below is tagged. **Proved** means proved or classical; **Verified** means recomputed here and reported as measured; **Conjecture** means supported and open. The [Farey sequence page](/wiki/farey-sequence/) draws the stack this page counts, with `phi(n)` new nodes at each scale and the primes at maximal novelty.
+Every claim below is tagged. **Proved** means proved or classical; **Verified** means recomputed here and reported as measured; **Conjecture** means supported and open. The [Farey sequence page](/wiki/farey-sequence/) draws the stack this page counts, with `phi(n)` new nodes at each scale and [the primes](/wiki/prime-numbers/) at maximal novelty.
 
 ## A single carpet cannot hold pi
 
-Take any self-similar fractal that keeps `fill` of the `base^dim` subcells at every level. Its filled fraction at level `level` is exactly `(fill/base^dim)^level` - rational at every level, and its limit is `0` or `1`. The carpet keeps 8 of 9, the sponge 20 of 27, so the fractions at level `level` are `(8/9)^level` and `(20/27)^level`. No irrational constant can be read off a sequence of that shape. (**Proved**, elementary.)
+Take any self-similar fractal that keeps `fill` of the `base^dim` subcells at every level. Its filled fraction at level `level` is exactly `(fill/base^dim)^level` - rational at every level, and its limit is `0` or `1`. The carpet keeps 8 of 9, [the sponge](/wiki/menger-sponge/) 20 of 27, so the fractions at level `level` are `(8/9)^level` and `(20/27)^level`. No irrational constant can be read off a sequence of that shape. (**Proved**, elementary.)
 
 The classical fractal that *does* give pi works differently: the Wallis sieve changes its ratio at every level, so its area is a genuine infinite product,
 
@@ -41,7 +41,7 @@ The constant is classical; what the stack adds is a picture, so pi is counted ou
 
 ## The numbers
 
-Lit points counted by a totient sieve as `2 * sum_{k=1..N} phi(k) - 1`, which is [A018805](https://oeis.org/A018805), cross-checked against a brute `gcd` scan at `N = 10, 50, 100, 200` with exact agreement.
+Lit points counted by a [totient](/wiki/eulers-totient/) sieve as `2 * sum_{k=1..N} phi(k) - 1`, which is [A018805](https://oeis.org/A018805), cross-checked against a brute `gcd` scan at `N = 10, 50, 100, 200` with exact agreement.
 
 | N | lit points | density | pi estimate | abs error |
 |---|---|---|---|---|
@@ -53,13 +53,13 @@ Lit points counted by a totient sieve as `2 * sum_{k=1..N} phi(k) - 1`, which is
 | 100000 | 6079301507 | 0.6079301507 | 3.14158478 | 7.9e-06 |
 | 200000 | 24317197835 | 0.6079299459 | 3.14158531 | 7.3e-06 |
 
-At `N = 100000` the stack gives `3.14158...`, six correct figures against `pi = 3.14159265...`. The rows to `N = 10000` are terms of A018805, **Verified**; the three larger rows have no generator in `lab/` and stand as **Conjecture**. The [visible lattice points page](/wiki/visible-lattice-points/) counts the lit points of a window live and hands pi back, and the dimension counted in picks which zeta value falls out.
+At `N = 100000` the stack gives `3.14158...`, six correct figures against `pi = 3.14159265...`. The rows to `N = 10000` are terms of A018805, **Verified**; the three larger rows have no generator in `lab/` and stand as **Conjecture**. The [visible lattice points page](/wiki/visible-lattice-points/) counts the lit points of a window live and hands pi back, and the dimension counted in picks which [zeta](/wiki/riemann-zeta-function/) value falls out.
 
-It is a slow estimator and an honestly noisy one. The error term in the coprime count is `O(N log N)`, so accuracy improves only like `1/N`, and because that term fluctuates arithmetically the approach is not monotone: `N = 20000` is *worse* than `N = 10000` in the table above, and `N = 200000` barely improves on `N = 100000` (**Conjecture** as a table, on the rows above). That puts it in the same family as the Wallis product and the Leibniz series - correct, convergent, not fast. The point was never speed. The [the famous formulas pages](/wiki/famous-formulas/) walk eight of that family, one page each: the Wallis product, the Leibniz series and the Basel sum closing on pi, the harmonic sum on gamma and `(1 + 1/n)^n` on e, the prime count against `li`, Goldbach's partition count of `2n` and the Mertens sum against the square root of `n`.
+It is a slow estimator and an honestly noisy one. The error term in the coprime count is `O(N log N)`, so accuracy improves only like `1/N`, and because that term fluctuates arithmetically the approach is not monotone: `N = 20000` is *worse* than `N = 10000` in the table above, and `N = 200000` barely improves on `N = 100000` (**Conjecture** as a table, on the rows above). That puts it in the same family as [the Wallis product](/wiki/wallis-product/) and [the Leibniz series](/wiki/leibniz-series/) - correct, convergent, not fast. The point was never speed. The [the famous formulas pages](/wiki/famous-formulas/) walk eight of that family, one page each: the Wallis product, the Leibniz series and [the Basel sum](/wiki/basel-problem/) closing on pi, the harmonic sum on [gamma](/wiki/euler-mascheroni-constant/) and `(1 + 1/n)^n` on e, [the prime count](/wiki/prime-counting-function/) against `li`, [Goldbach's partition count](/wiki/goldbach-conjecture/) of `2n` and [the Mertens sum](/wiki/mertens-function/) against the square root of `n`.
 
 ## The dimension picks the zeta
 
-The same count in `dim` dimensions has density `1/zeta(dim)` (**Proved**, classical, by Mobius inversion). So the stack is a geometric generator for the whole zeta family, and the dimension you stack in decides which constant falls out. Counted by `sum_{k=1..N} mu(k) * floor(N/k)^dim`, cross-checked against brute `gcd` at `N = 10, 40` for dim 2 and 3:
+The same count in `dim` dimensions has density `1/zeta(dim)` (**Proved**, classical, by [Mobius](/wiki/mobius-function/) inversion). So the stack is a geometric generator for the whole zeta family, and the dimension you stack in decides which constant falls out. Counted by `sum_{k=1..N} mu(k) * floor(N/k)^dim`, cross-checked against brute `gcd` at `N = 10, 40` for dim 2 and 3:
 
 | dim | density at N = 100000 | limit | constant recovered | true value |
 |---|---|---|---|---|
@@ -71,7 +71,7 @@ The same count in `dim` dimensions has density `1/zeta(dim)` (**Proved**, classi
 
 ## Pi to the fourth, out of one design
 
-Every route above runs through `gcd`. One more pi lives in the stack and never mentions coprimality at all. Take the design with filled corners `(0,0)` and `(1,1)` - code 9, the diagonal - and truncate its parity pattern to a `side x side` grid: cell `(i, j)` is filled when `i` and `j` have the same parity. The filled fraction `rho(side) = fill/side^2` tends to `1/2`, and the fluctuation around that limit is exact at every side: zero at every even side, and exactly `1/(2*side^2)` at every odd side - at `side = 2m` the fill is `2*m^2` on the nose, while at `side = 2m - 1` it is `m^2 + (m-1)^2` and the numerator of `rho - 1/2` collapses to `1`. (**Proved**, elementary.) Weight the fluctuations into a Dirichlet series and only the odd terms survive, each equal to `1/(2*side^(s+2))` - the fluctuation times the weight, two different things:
+Every route above runs through `gcd`. One more pi lives in the stack and never mentions coprimality at all. Take the design with filled corners `(0,0)` and `(1,1)` - code 9, the diagonal - and truncate its [parity](/wiki/parity/) pattern to a `side x side` grid: cell `(i, j)` is filled when `i` and `j` have the same parity. The filled fraction `rho(side) = fill/side^2` tends to `1/2`, and the fluctuation around that limit is exact at every side: zero at every even side, and exactly `1/(2*side^2)` at every odd side - at `side = 2m` the fill is `2*m^2` on the nose, while at `side = 2m - 1` it is `m^2 + (m-1)^2` and the numerator of `rho - 1/2` collapses to `1`. (**Proved**, elementary.) Weight the fluctuations into a Dirichlet series and only the odd terms survive, each equal to `1/(2*side^(s+2))` - the fluctuation times the weight, two different things:
 
 ```
 Z(s) = Sum_{side >= 1} (rho(side) - 1/2) / side^s = (1/2) * lambda(s+2),  Re(s) > -1

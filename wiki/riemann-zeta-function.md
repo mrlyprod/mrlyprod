@@ -16,7 +16,7 @@ The top line is the famous one. `zeta(2) = 1 + 1/4 + 1/9 + 1/16 + ...` comes out
 
 The odd powers do not behave. `zeta(3)` is 1.2020569 and a bit, and nobody has ever written it in terms of pi or anything else familiar. It is known not to be a fraction, and that is about as much as is known.
 
-Now the part that ties zeta to the primes. Take one prime `p` and form the sum `1 + 1/p^s + 1/p^(2s) + ...`, which is a geometric series and adds to `1/(1 - p^(-s))`. Do that for every prime and multiply all of those sums together.
+Now the part that ties zeta to [the primes](/wiki/prime-numbers/). Take one prime `p` and form the sum `1 + 1/p^s + 1/p^(2s) + ...`, which is a geometric series and adds to `1/(1 - p^(-s))`. Do that for every prime and multiply all of those sums together.
 
 $$\zeta(s) = \prod_{p \text{ prime}} \frac{1}{1 - p^{-s}}$$
 
@@ -30,4 +30,4 @@ Some of the zeros are dull and sit at the negative even numbers. The rest all li
 
 ## In the tree
 
-The zeta walk in [the critical line demo](/demos/zeta/) traces `zeta` along that line and shows the curve passing through the origin once for each zero. [The design zeta note](/research/zeta/) builds the same kind of sum over a design's own numbers instead of all of them, and asks where that function vanishes when the Euler product is no longer available. [The Mobius echo demo](/demos/echo/) hears the zeta zeros as frequencies in a counting function that never mentions them, and [the Mobius meter note](/research/mobius/) is where that measurement is kept honest. The value `zeta(2)` is what turns a count of coprime points into pi in [pi out of the stack](/research/pi/), and [the Farey stack note](/research/farey/) states the old equivalence between how evenly fractions spread and where those zeros lie.
+The zeta walk in [the critical line demo](/demos/zeta/) traces `zeta` along that line and shows the curve passing through the origin once for each zero. [The design zeta note](/research/zeta/) builds the same kind of sum over a design's own numbers instead of all of them, and asks where that function vanishes when the Euler product is no longer available. [The Mobius echo demo](/demos/echo/) hears the zeta zeros as frequencies in a counting function that never mentions them, and [the Mobius meter note](/research/mobius/) is where that measurement is kept honest. The value `zeta(2)` is what turns a count of coprime points into pi in [pi out of the stack](/research/pi/), and [the Farey stack note](/research/farey/) states the old equivalence between how evenly fractions spread and where those zeros lie. The sum at `s = 2` is [the Basel problem](/wiki/basel-problem/).

@@ -9,11 +9,11 @@ The design count in dimension `dim` matches OEIS A000616, the number of NP-equiv
 
 One naming guard: NP on this page is Negation-Permutation - negate inputs, permute inputs, the Boolean-function equivalence A000616 classifies - and has nothing to do with the complexity class. No claim about P versus NP is made or implied anywhere on this page; [complexity.md](complexity.md) carries the same disclaimer for the measures it computes.
 
-Every claim on this page is tagged **Proved** (re-derived here), **Verified** (recomputed by a lab study, not proved), or **Conjecture** (a number with no generator). The generators are `lab/rs/design-census` and `lab/rs/oeis-terms`. The [universe demo](../../site/demos/universe/) draws the orbits the bijection classifies, one dimension and base at a time, against the Burnside counts.
+Every claim on this page is tagged **Proved** (re-derived here), **Verified** (recomputed by a lab study, not proved), or **Conjecture** (a number with no generator). The generators are `lab/rs/design-census` and `lab/rs/oeis-terms`. The [universe demo](../../site/demos/universe/) draws the orbits the bijection classifies, one dimension and base at a time, against the [Burnside](/wiki/burnsides-lemma/) counts.
 
 ## The two objects
 
-Fix a dimension `dim`. The parity cube is `{0,1}^dim`; its `2^dim` points are corners, indexed `c_0 .. c_(2^dim - 1)` in binary order. A design is a subset `F` of the corners - the filled ones - with code `i(F) = sum of 2^k over k with c_k in F`, so there are exactly `2^(2^dim)` designs. A Boolean function on `dim` variables is a map `f : {0,1}^dim -> {0,1}`, and there are `2^(2^dim)` of those too.
+Fix a dimension `dim`. The [parity](/wiki/parity/) cube is `{0,1}^dim`; its `2^dim` points are corners, indexed `c_0 .. c_(2^dim - 1)` in binary order. A design is a subset `F` of the corners - the filled ones - with code `i(F) = sum of 2^k over k with c_k in F`, so there are exactly `2^(2^dim)` designs. A Boolean function on `dim` variables is a map `f : {0,1}^dim -> {0,1}`, and there are `2^(2^dim)` of those too.
 
 **Proved.** The indicator map `Phi(F) = 1_F` is a bijection from designs to Boolean functions. A subset of a finite set and its `{0,1}`-indicator are the same datum: `Phi^-1(f) = f^-1(1)` inverts it. Read in corner order, the fill vector of a design is the truth table of its function, and the code `i(F)` is the integer whose binary digits are that truth table. The design and the function are one object under two names.
 

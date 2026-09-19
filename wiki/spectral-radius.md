@@ -20,7 +20,7 @@ Here is the useful case. Suppose the matrix has no negative entries anywhere, wh
 
 The last part matters as much as the first. A positive arrow settling on a positive direction is what lets you say where the counting ends up as well as how fast it grows. The matrix `[[2, 1], [1, 3]]` in the figure has all four entries positive, its top stretch is 3.618, and the direction it settles on points up and to the right into the positive quarter, exactly as the theorem says.
 
-Put that together with the previous page. A transfer matrix is a table of non-negative counts, so it has one clean top eigenvalue, and the counts of walks it produces grow like that eigenvalue to the power of the length. The whole growth rate of a counting problem is one number sitting inside one table, and it can be computed without ever listing a single walk.
+Put that together with the previous page. A [transfer matrix](/wiki/transfer-matrix/) is a table of non-negative counts, so it has one clean top eigenvalue, and the counts of walks it produces grow like that eigenvalue to the power of the length. The whole growth rate of a counting problem is one number sitting inside one table, and it can be computed without ever listing a single walk.
 
 Nothing here derives the number. Finding an eigenvalue exactly means solving a polynomial whose degree is the size of the matrix, which is hopeless by hand past a few states and easy for a machine. The name and the guarantee are what a reader needs; a computer supplies the digits.
 

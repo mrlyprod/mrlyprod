@@ -12,7 +12,7 @@ Eight answers, each a 0 or a 1, is a byte, and a byte is a number from 0 to 255.
 
 Apply the rule to every cell at once and write the result as a new row under the old one. Do it again and again, and the rows stack into a picture with space running across and time running down. That picture is all there is to see, and it is very different from one rule to the next.
 
-Rule 90 says: switch on exactly when one of your two neighbours is on, but not both. The cell's own state is ignored entirely. The figure runs it from a single live cell for 64 generations and the result is a triangle of triangles, holes inside holes, growing without ever repeating. It is Pascal's triangle read even and odd, the odd entries lit and the even ones left dark, sheared so the rows line up square.
+Rule 90 says: switch on exactly when one of your two neighbours is on, but not both. The cell's own state is ignored entirely. The figure runs it from a single live cell for 64 generations and the result is a triangle of triangles, holes inside holes, growing without ever repeating. It is [Pascal's triangle](/wiki/pascals-triangle/) read even and odd, the odd entries lit and the even ones left dark, sheared so the rows line up square.
 
 Rule 110 is the famous one. Started from a soup it makes patches of stripes with small structures drifting between them, colliding, and coming out as other structures. Nothing settles and nothing repeats, and it has been shown that with the right starting row it can carry out any computation a computer can. Three cells and eight answers are enough.
 

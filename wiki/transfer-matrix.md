@@ -14,7 +14,7 @@ Now count. How many walks of length `n` are there, counting every starting state
 
 Multiplying the table by itself is what produces them. Take the entry in row `i` and column `j` of the table times itself: it is the sum over every middle state `m` of (steps from `i` to `m`) times (steps from `m` to `j`), which is exactly the count of two-step walks from `i` to `j`. Multiply `n` times and every entry of the result is the count of walks of length `n` between that pair of states. Add up all nine entries and you get the bar.
 
-So one table, multiplied, answers a question about walks of every length at once. That is the whole trick, and it is why the table is worth a name. Nothing in it is special to three states: the same multiplication counts the walks on any graph from its adjacency table.
+So one table, multiplied, answers a question about walks of every length at once. That is the whole trick, and it is why the table is worth a name. Nothing in it is special to three states: the same multiplication counts the walks on any [graph](/wiki/graphs/) from its adjacency table.
 
 The counts have a pattern. Each one is the one before it plus the one three before it: `13 = 9 + 4`, `19 = 13 + 6`, `60 = 41 + 19`. That is the three-step loop showing up in the arithmetic, and it means the counts can be continued for ever without ever touching a matrix again.
 

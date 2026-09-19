@@ -16,7 +16,7 @@ Look at the trace and you can see where the time went. The path is not a tour of
 
 That `sqrt(n)` is the honest shape of any walk on any full grid, in any number of dimensions. It is usually written as `n^(1/2)`, or turned upside down: the time to travel a distance `r` is about `r^2`. Doubling the distance costs four times the wait. This is diffusion, the same law that spreads ink through still water.
 
-Fractals break it. Give the walker a shape with holes at every scale, the carpet or the gasket, and it now has to work around a hole of every size on the way out. It still wanders, but the detours are built into the shape and never end, so getting a distance `r` from home costs more than `r^2` steps.
+Fractals break it. Give the walker a shape with holes at every scale, the [carpet](/wiki/sierpinski-carpet/) or the gasket, and it now has to work around a hole of every size on the way out. It still wanders, but the detours are built into the shape and never end, so getting a distance `r` from home costs more than `r^2` steps.
 
 The exponent is the measurement. Write the time to reach distance `r` as `r` to some power `d_w`, so that distance after `n` steps is about `n^(1/d_w)`. That number `d_w` is the walk dimension. On any full grid it is exactly 2. On a fractal it is bigger than 2, and the bigger it is the slower the shape is to cross.
 

@@ -14,7 +14,7 @@ Four points have norm 1: `1`, `-1`, `i` and `-i`. These are the units, the Gauss
 
 A point is prime here when it cannot be written as a product of two points of norm bigger than 1. The norm rule makes this checkable: to split a point of norm `N`, you need two points whose norms multiply to `N`, so a point whose norm is an ordinary prime cannot split at all.
 
-Now the interesting part. An ordinary prime, sitting on the horizontal axis, may or may not survive the move into this larger world. Three small cases tell the whole story.
+Now the interesting part. An ordinary [prime](/wiki/prime-numbers/), sitting on the horizontal axis, may or may not survive the move into this larger world. Three small cases tell the whole story.
 
 Five splits. `5 = (2 + i)(2 - i)`, two points of norm 5 each, and neither of them can be broken further. So 5 is no longer prime once you allow `i`.
 

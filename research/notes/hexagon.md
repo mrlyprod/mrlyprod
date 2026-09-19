@@ -24,7 +24,7 @@ void    1/4 - chi/(4n) + 1/(2n^2)
 
 and the generator checks each against the counted hexagon in exact rational arithmetic: 28 of 28 layers match for all four families at every odd `n <= 55`. The character `chi` is the same `chi_4` the [Walsh spectrometer](https://github.com/carlomitchener/carlomitchener/tree/main/research/walsh-spectrometer) proves the quasipolynomial by, and the `1/n` and `1/n^2` orders of that law are proved on [slices](slices.md) under the slice ink. The wider range `n <= 101` has no generator, so nothing is claimed there.
 
-The centre cell is the first place the families separate. Over the same 28 layers the carpet's centre cell is ink in 14, the net's in 14, the tree's in 14, and the void's in 28 of 28 - the void's centre is ink at every odd `n`, by a two-line parity argument on the three coordinates. That single cell is the seed of the two star sections below: the carpet's centre agrees with the background and fades, the void's never does. **Verified.**
+The centre cell is the first place the families separate. Over the same 28 layers the carpet's centre cell is ink in 14, the net's in 14, the tree's in 14, and the void's in 28 of 28 - the void's centre is ink at every odd `n`, by a two-line [parity](/wiki/parity/) argument on the three coordinates. That single cell is the seed of the two star sections below: the carpet's centre agrees with the background and fades, the void's never does. **Verified.**
 
 ## Layer pairs and the doubling law
 
@@ -42,7 +42,7 @@ Correlate two layers on the full hexagon, exactly, cell by cell. The seven pairs
 
 (Verified.) The coprime pairs are not zero, and that is the whole point: on the square stack they are exactly zero, and the reason the hexagon loses it is a theorem of its own, stated under WHERE THE EXACTNESS STOPS.
 
-**The corrected law on the hexagon is dyadic. Proved.** What breaks coprime independence is a hidden half-cell-shifted overtone at doubled frequency, `chi_4(n) s(2nX + 1/2)/8`, that the plane constraint forces into every carpet slice, plus the hexagon's non-product tent marginal; together they couple layer `m` to layers `2m +- 1` and `m +- 2` regardless of gcd. The sign is forced: `sign r(m, 2m +- 1) = -chi_4(m) chi_4(2m +- 1)`, and the generator holds it on 18 of 18 pairs from `(3, 5)` to `(601, 1201)` across all four residue branches. Two of those rows, the largest computed, read `(501, 1001)` at `r = -0.11732362` and `(601, 1201)` at `r = -0.11729091`.
+**The corrected law on the hexagon is dyadic. Proved.** What breaks coprime independence is a hidden half-cell-shifted overtone at doubled frequency, `chi_4(n) s(2nX + 1/2)/8`, that the plane constraint forces into every carpet slice, plus the hexagon's non-product tent marginal; together they couple layer `m` to layers `2m +- 1` and `m +- 2` regardless of [gcd](/wiki/greatest-common-divisor/). The sign is forced: `sign r(m, 2m +- 1) = -chi_4(m) chi_4(2m +- 1)`, and the generator holds it on 18 of 18 pairs from `(3, 5)` to `(601, 1201)` across all four residue branches. Two of those rows, the largest computed, read `(501, 1001)` at `r = -0.11732362` and `(601, 1201)` at `r = -0.11729091`.
 
 **The doubling magnitude reads between `0.11711630` and `0.11715991`. Verified.** Richardson extrapolation `r = r_inf + a/m + b/m^2` on sliding triples of `m = [157, 201, 301, 401, 501, 601]` returns `r_inf = -0.11715991, -0.11711630, -0.11714296, -0.11711630`, and the two branch extrapolations in `1/m` land on `0.1171270` at `(501, 601)` and `0.1171274` at `(103, 403)`. That kills the rival `19/162 = 0.11728395`, which sits above every reading in that spread and above both branch extrapolations; the closed form below kills it outright.
 
@@ -270,7 +270,7 @@ the `1/M^2` limb of each cancelling on the way from `a` to `M`, so the gap to th
 
 The carpet's `1/M` term is absent because `d = e = 0`, which is why its ladder is the sharpest of the five; the tree's second limb is the only place `sigma f/(8 M^2)` is separately visible, and it carries the last three digits of both tree readings. The generator prints all four classes of `M mod 4`, so all four of `N mod 8`, at `M = 400`, `1600` and `3200`, and the two parities are the only split in them.
 
-**Eisenstein is absent from the base-2 slice stack. Verified.** `L(2, chi_-3) = 0.7813024129`, the L-value [the bases page](bases.md) finds under base 3, appears nowhere in the list above; the two characters this slice generates are `chi_4`, from the ink law, and the mod-8 character of `Q(sqrt 2)`, from the star arm above, and the hexagonal geometry contributes rational tent integrals rather than an Eisenstein L-function. The hexagon in this page is a shape, not an Eisenstein lattice.
+**Eisenstein is absent from the base-2 slice stack. Verified.** `L(2, chi_-3) = 0.7813024129`, the L-value [the bases page](bases.md) finds under base 3, appears nowhere in the list above; the two characters this slice generates are `chi_4`, from the ink law, and the mod-8 character of `Q(sqrt 2)`, from the star arm above, and the hexagonal geometry contributes rational tent integrals rather than an Eisenstein L-function. The hexagon in this page is a shape, not [an Eisenstein lattice](/wiki/eisenstein-integers/).
 
 ## Where the exactness stops
 

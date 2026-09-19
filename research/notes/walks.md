@@ -5,7 +5,7 @@ figure: research-walks
 slug: walks
 ---
 
-Every page before this one weighs a design: the fractal dimension `log(fill) / log(base)` says how fast mass accumulates with scale, and the fill law makes it exact. This page listens to a design instead. Drop a random walker on the graph of a pattern - one node per filled cell, one edge per face-adjacent pair - and watch it spread: `MSD(t) ~ t^(2/d_w)`. On any solid grid the walk dimension `d_w` is 2. On a fractal the walker keeps hitting holes at every scale and `d_w > 2`: distance costs more time than it should. The fractal dimension and `d_w` together fix the spectral dimension `d_s = 2 log(fill) / (log(base) * d_w)`, which is how the low Laplacian spectrum - the density of the shape's slow modes, its music - scales.
+Every page before this one weighs a design: [the fractal dimension](/wiki/fractal-dimension/) `log(fill) / log(base)` says how fast mass accumulates with scale, and the fill law makes it exact. This page listens to a design instead. Drop a [random walker](/wiki/random-walk/) on [the graph](/wiki/graphs/) of a pattern - one node per filled cell, one edge per face-adjacent pair - and watch it spread: `MSD(t) ~ t^(2/d_w)`. On any solid grid the walk dimension `d_w` is 2. On a fractal the walker keeps hitting holes at every scale and `d_w > 2`: distance costs more time than it should. The fractal dimension and `d_w` together fix the spectral dimension `d_s = 2 log(fill) / (log(base) * d_w)`, which is how the low [Laplacian](/wiki/graph-laplacian/) spectrum - the density of the shape's slow modes, its music - scales.
 
 The question this page answers by census: **does the mass fix the music?** Two designs with the same fill draw fractals of the same dimension, the same density at every level, the same fill polynomial degree. Do they walk the same? They do not, and the failure is exhibited three different ways.
 
@@ -15,7 +15,7 @@ Every claim carries a tag. **Proved** means a proof is given or restated here; *
 
 Two readings, no shared method, both anchor-gated - the census aborts if the gates fail.
 
-- The spectral reading builds patterns by Kronecker power and reads `d_w` off eigenvalue level ratios: on a self-similar graph the low Laplacian eigenvalues scale by a fixed time factor per level, so `lambda_k(level)/lambda_k(level+1) -> base^(d_w)`. Level pairs 4 to 5 in 2D, 3 to 4 in 3D (160000 nodes), modes `k = 1..4`, with the previous level pair kept as the drift bar. Eigenvalues are dense through faer up to 2000 nodes and above that a block Krylov Rayleigh-Ritz projection through a projected conjugate gradient.
+- The spectral reading builds patterns by [Kronecker power](/wiki/kronecker-product/) and reads `d_w` off eigenvalue level ratios: on a self-similar graph the low Laplacian eigenvalues scale by a fixed time factor per level, so `lambda_k(level)/lambda_k(level+1) -> base^(d_w)`. Level pairs 4 to 5 in 2D, 3 to 4 in 3D (160000 nodes), modes `k = 1..4`, with the previous level pair kept as the drift bar. Eigenvalues are dense through faer up to 2000 nodes and above that a block Krylov Rayleigh-Ritz projection through a projected conjugate gradient.
 - The walker reading builds patterns from the digit rule, finds components by its own BFS, and runs 20000 seeded blind-ant walkers, fitting `MSD(t)` in a window kept clear of the lattice scale and the truncation walls. The walker digits depend on the random stream; the values printed here are the lab stream's, and every gate passes on it.
 
 Three anchors, all passing in both readings. (**Verified**, `lab/rs/walk-dimension`.)
@@ -52,7 +52,7 @@ Spectral `d_w` from the `lambda_2` ratio at levels 4 to 5; walker `d_w` from MSD
 
 The spectral column is the `lambda_2` reading throughout; the means over modes `k = 1..4` for reps 79 and 95 are 2.4667 and 2.5452. The walker column is reproducible to about 0.01 across random streams; the spectral column to every printed digit.
 
-The carpet row lands where the literature points: rigorous carpet analysis is Barlow-Bass, and the accepted numerics sit near `d_w ~ 2.10`, `d_s ~ 1.80` - measured here as 2.097 to 2.124 and 1.78 to 1.81 without tuning anything. (**Verified** against stated literature values, not re-derived.)
+The [carpet](/wiki/sierpinski-carpet/) row lands where the literature points: rigorous carpet analysis is Barlow-Bass, and the accepted numerics sit near `d_w ~ 2.10`, `d_s ~ 1.80` - measured here as 2.097 to 2.124 and 1.78 to 1.81 without tuning anything. (**Verified** against stated literature values, not re-derived.)
 
 ## Finding one: same mass, different music
 

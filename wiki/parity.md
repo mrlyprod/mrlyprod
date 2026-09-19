@@ -16,9 +16,9 @@ In three dimensions the same reading gives three parities and eight combinations
 
 That is the move the tree is built on. A design is a choice of which corners to keep. Keep a corner and every cell of that class is filled; drop it and every cell of that class is void. In two dimensions there are four corners, so `2^4 = 16` designs. In three there are eight corners, so `2^8 = 256`. The list is finite and it is short enough to write down.
 
-The Sierpinski carpet is one such choice. Lay a three by three block down, number the rows and columns 0, 1, 2, and throw away the one cell whose row and column are both the middle number. Eight cells survive of nine, and that rule, repeated, is the carpet.
+[The Sierpinski carpet](/wiki/sierpinski-carpet/) is one such choice. Lay a three by three block down, number the rows and columns 0, 1, 2, and throw away the one cell whose row and column are both the middle number. Eight cells survive of nine, and that rule, repeated, is the carpet.
 
-The eight answers are also a number. Read the corners in binary order and write 1 for kept and 0 for dropped, and the byte you get is what the tree calls the design's `code`. The carpet is code 7 in the plane, the Menger sponge is code 23 in the cube, and the code is the whole of the design's name.
+The eight answers are also a number. Read the corners in binary order and write 1 for kept and 0 for dropped, and the byte you get is what the tree calls the design's `code`. The carpet is code 7 in the plane, the [Menger sponge](/wiki/menger-sponge/) is code 23 in the cube, and the code is the whole of the design's name.
 
 Past base 2 the reading widens. Parity is a coordinate's last binary digit, and the general rule reads a whole digit instead of a bit, one digit per axis, with `base` digits to choose from. At `base` 3 each coordinate has three residues rather than two, so a plane design chooses among nine cells rather than four. The idea does not change: the rule looks at one digit of each coordinate and nothing else.
 

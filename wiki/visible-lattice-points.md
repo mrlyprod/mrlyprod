@@ -18,7 +18,7 @@ Read that backwards and the whole grid is the visible set stamped down over and 
 
 Now count. A window n by n holds `n^2` points, and the share of them that are visible settles down as the window grows. It does not settle on a round number. It closes on `6/pi^2`, which is 0.6079 and a little more, so about three points in every five are visible however far you push the window out.
 
-The pi in that constant comes from the primes. For a prime p, one pair of steps in `p^2` has both steps divisible by p, so the share of pairs p does not spoil is `1 - 1/p^2`. A pair is visible when no prime at all spoils it, which multiplies those shares over every prime, and that product is 1 divided by `1 + 1/4 + 1/9 + 1/16 + ...`, the sum of one over every square. That sum is the famous one worth `pi^2/6`, so the share of visible points is its reciprocal, `6/pi^2`.
+The pi in that constant comes from [the primes](/wiki/prime-numbers/). For a prime p, one pair of steps in `p^2` has both steps divisible by p, so the share of pairs p does not spoil is `1 - 1/p^2`. A pair is visible when no prime at all spoils it, which multiplies those shares over every prime, and that product is 1 divided by `1 + 1/4 + 1/9 + 1/16 + ...`, the sum of one over every square. That sum is the famous one worth `pi^2/6`, so the share of visible points is its reciprocal, `6/pi^2`.
 
 Turn the constant round and the counting becomes a measurement. If the visible share of a window is d, then
 

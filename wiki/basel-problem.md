@@ -22,4 +22,4 @@ The number has a second life as a probability. Turn `pi^2/6` upside down and you
 
 ## In the tree
 
-That reading is how [the pi note](/research/pi/) gets pi out of a grid: lay the whole numbers out as points, count the ones visible from the corner, and the share of them is `6/pi^2`, so counting points hands pi back. The fractions those visible points stand on are [the Farey sequence](/wiki/farey-sequence/), and [the famous formulas](/wiki/famous-formulas/) measure how slowly this sum pays beside seven other rules.
+That reading is how [the pi note](/research/pi/) gets pi out of a grid: lay the whole numbers out as points, count the ones visible from the corner, and the share of them is `6/pi^2`, so counting points hands pi back. The fractions those [visible points](/wiki/visible-lattice-points/) stand on are [the Farey sequence](/wiki/farey-sequence/), and [the famous formulas](/wiki/famous-formulas/) measure how slowly this sum pays beside seven other rules.

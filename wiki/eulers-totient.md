@@ -4,13 +4,13 @@ lead: Phi of n counts how many of the numbers 1 to n share nothing with n; it si
 prerequisites: greatest-common-divisor
 ---
 
-Write out the numbers from 1 to `n` and keep only the ones coprime to `n`, the ones whose greatest common divisor with `n` is 1. The count of survivors is Euler's totient, written `phi(n)`.
+Write out the numbers from 1 to `n` and keep only the ones coprime to `n`, the ones whose [greatest common divisor](/wiki/greatest-common-divisor/) with `n` is 1. The count of survivors is Euler's totient, written `phi(n)`.
 
 Try `n = 12`. Strike the even numbers and the multiples of 3, and 1, 5, 7 and 11 are left. So `phi(12) = 4`. Try `n = 10` and 1, 3, 7 and 9 survive, so `phi(10) = 4` as well.
 
 The value at 1 is 1, since the only number in the list is 1 itself and 1 shares nothing with anything. It is a convention that pays for itself everywhere else.
 
-A prime is the easy case. If `p` is prime, nothing below it shares a factor with it, so every one of `1` to `p - 1` survives and `phi(p) = p - 1`. That is the ceiling: no `n` above 1 can do better, because `n` itself always fails the test.
+A [prime](/wiki/prime-numbers/) is the easy case. If `p` is prime, nothing below it shares a factor with it, so every one of `1` to `p - 1` survives and `phi(p) = p - 1`. That is the ceiling: no `n` above 1 can do better, because `n` itself always fails the test.
 
 A prime power is nearly as easy. To count what survives `9`, strike only the multiples of 3, which are 3, 6 and 9, leaving 6. In general `phi(p^k) = p^k - p^(k-1)`, one in every `p` struck out and the rest kept. So `phi(8) = 8 - 4 = 4` and `phi(27) = 27 - 9 = 18`.
 

@@ -4,7 +4,7 @@ lead: Degree minus adjacency, one table per network; its eigenvalues are the ton
 prerequisites: graphs
 ---
 
-Take a graph and build two tables. The first is the adjacency table: a 1 where two dots are joined and a 0 where they are not. The second is the degree table: the count of lines at each dot down the diagonal and zeros everywhere else. Subtract the first from the second and you have the graph Laplacian.
+Take a [graph](/wiki/graphs/) and build two tables. The first is the adjacency table: a 1 where two dots are joined and a 0 where they are not. The second is the degree table: the count of lines at each dot down the diagonal and zeros everywhere else. Subtract the first from the second and you have the graph Laplacian.
 
 Written out, the rule is short. The diagonal entry for a dot is its degree. The entry for a pair of joined dots is `-1`. Everything else is 0. Every row therefore adds up to zero, because the degree on the diagonal is exactly the number of minus ones in that row.
 

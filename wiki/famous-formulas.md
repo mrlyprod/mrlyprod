@@ -21,7 +21,7 @@ Not every panel has a target in the same sense. Five of them chase a number and 
 - [The Euler-Mascheroni constant](/wiki/euler-mascheroni-constant/): the harmonic sum less the logarithm, closing on gamma.
 - [The prime counting function](/wiki/prime-counting-function/): the staircase of primes, chased by two smooth curves that are only eventually right.
 - [Goldbach's conjecture](/wiki/goldbach-conjecture/): every even number as a sum of two primes, with a count that has never reached zero.
-- [The Mertens function](/wiki/mertens-function/): the Mobius marks added up, wandering against the square root of n.
+- [The Mertens function](/wiki/mertens-function/): the [Mobius](/wiki/mobius-function/) marks added up, wandering against the square root of n.
 
 Six of the eight are classical and settled. Two are not. Goldbach's is a conjecture, so its panel is a record of what has been checked and nothing else. The Mertens panel carries no claim either: the bound that its flatness suggests is the Riemann hypothesis, and nobody has it. Those two sit on the same board as the other six on purpose, because from close up an open question and a theorem look identical.
 

@@ -5,9 +5,9 @@ figure: research-core
 slug: core
 ---
 
-MrlyMath is two moves. Choose a rule that fills some corners of the parity cube `{0,1}^dim`; substitute that rule into itself by the Kronecker product. The Sierpinski carpet, the Menger sponge, their siblings and their antis are all one choice in move one carried through the same move two. Fix the dimension and the whole universe of rules is finite and already there - 4 of them in 1D, 16 in 2D, 256 in 3D - so the designs are not designed, they are enumerated.
+MrlyMath is two moves. Choose a rule that fills some corners of the [parity](/wiki/parity/) cube `{0,1}^dim`; substitute that rule into itself by [the Kronecker product](/wiki/kronecker-product/). [The Sierpinski carpet](/wiki/sierpinski-carpet/), [the Menger sponge](/wiki/menger-sponge/), their siblings and their antis are all one choice in move one carried through the same move two. Fix the dimension and the whole universe of rules is finite and already there - 4 of them in 1D, 16 in 2D, 256 in 3D - so the designs are not designed, they are enumerated.
 
-Every claim below carries a tag. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a lab study; **Conjecture** means neither. The generator is `lab/rs/design-census`. The [universe demo](../../site/demos/universe/) draws that census live: every orbit in each dimension and base, with the Burnside counts beside it.
+Every claim below carries a tag. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a lab study; **Conjecture** means neither. The generator is `lab/rs/design-census`. The [universe demo](../../site/demos/universe/) draws that census live: every orbit in each dimension and base, with the [Burnside](/wiki/burnsides-lemma/) counts beside it.
 
 ## Move one: a design is a parity rule
 
@@ -23,7 +23,7 @@ The *fractal* of a design at a level is its tile substituted into itself that ma
 fractal(g, level) = g (x) g (x) ... (x) g [level copies]
 ```
 
-Because the construction is a pure Kronecker power, the fill count is multiplicative in the level: `fill(level) = fill^level`. The proof is one line - the sum of the entries of a Kronecker product is the product of the sums - so a single tile fixes a closed form for every level at once, and with it the fractal dimension `log(fill) / log(base)`. (Proved; Verified for all 16 designs at dim 2 and all 256 at dim 3, at level 2 and level 3.)
+Because the construction is a pure Kronecker power, the fill count is multiplicative in the level: `fill(level) = fill^level`. The proof is one line - the sum of the entries of a Kronecker product is the product of the sums - so a single tile fixes a closed form for every level at once, and with it [the fractal dimension](/wiki/fractal-dimension/) `log(fill) / log(base)`. (Proved; Verified for all 16 designs at dim 2 and all 256 at dim 3, at level 2 and level 3.)
 
 Three designs make the point concretely at side 3. (Verified by `lab/rs/design-census`: each tile built cell by cell from its parity rule, then Kronecker-substituted, `20^2 = 400` at level 2.)
 

@@ -1,7 +1,7 @@
 ---
 title: Fractal dimension
 lead: Cover a shape with boxes, shrink the boxes, and watch how fast the count grows; the growth rate is the dimension, and for a carpet it is not a whole number.
-prerequisites: sierpinski-carpet
+prerequisites: sierpinski-carpet, menger-sponge
 ---
 
 Dimension is usually a word, one for a line, two for a square, three for a cube. It can also be a measurement, and the measurement is counting.
@@ -10,7 +10,7 @@ Take a line segment and cut it in half. It takes 2 half-length copies of itself 
 
 Nothing depends on halving. Cut everything into thirds instead and the counts are 3, 9 and 27, which are `3^1`, `3^2` and `3^3`. The exponent is the same each time, so the rule is general: if shrinking by a factor `s` takes `N` copies, the dimension is `log N / log s`.
 
-The figure counts boxes three times over. Each panel lays the same three by three lattice over a shape and lights the boxes the shape actually touches. The filled square lights all 9. The carpet lights 8, because the middle box is empty at every level. The diagonal line lights 3, the boxes it runs through corner to corner.
+The figure counts boxes three times over. Each panel lays the same three by three lattice over a shape and lights the boxes the shape actually touches. The filled square lights all 9. The [carpet](/wiki/sierpinski-carpet/) lights 8, because the middle box is empty at every level. The diagonal line lights 3, the boxes it runs through corner to corner.
 
 Read the three counts back through the rule. Nine boxes at scale one third gives `log 9 / log 3 = 2`, which is the square. Three boxes gives `log 3 / log 3 = 1`, which is the line. Eight boxes gives `log 8 / log 3`, and that is 1.892789, which is no whole number at all.
 
@@ -18,7 +18,7 @@ The carpet's count is not an accident of the scale chosen. Shrink the boxes by 3
 
 That the answer lies between 1 and 2 matches what the shape looks like. The carpet has no area, so it cannot be two-dimensional, and it is far too tangled to be drawn as a curve, so it is not one-dimensional either. A number between the two is the honest report.
 
-The Menger sponge is the same sum with different counts. Shrink by 3 and 20 of the 27 small cubes are needed, so its dimension is `log 20 / log 3`, about 2.73. It has no volume, so it is not solid, and it has far too much surface to be a sheet, so a number between 2 and 3 is again the answer.
+[The Menger sponge](/wiki/menger-sponge/) is the same sum with different counts. Shrink by 3 and 20 of the 27 small cubes are needed, so its dimension is `log 20 / log 3`, about 2.73. It has no volume, so it is not solid, and it has far too much surface to be a sheet, so a number between 2 and 3 is again the answer.
 
 Write it once for everything the tree builds. If a rule keeps `fill` cells out of a block `base` cells wide on each axis, then at level `n` there are `fill^n` cells of side `base^-n`, so the count of boxes at scale `base^-n` is `fill^n` and the dimension is
 

@@ -16,7 +16,7 @@ The reason is the number three. Suppose the even number is a multiple of six. Ev
 
 The counts grow because there are more primes to work with, but they grow with a lot of noise, and the noise is the same noise that makes the prime count jumpy. The smallest count in the figure is one, and it is reached at the small even numbers, four and six and eight and twelve. Past that the floor lifts away from zero and never comes back to it, in this range.
 
-Here is the thing that a table cannot do. A table shows that the count is positive at every even number in it. The conjecture says the count is positive at every even number there is. No finite table can reach that, because a pattern can hold for a long stretch and then break: Euler's rule `4k^2 - 2k + 41` hands you a prime for its first twenty one values and then stops, and the Ulam spiral page draws exactly that line breaking. A checked range is evidence about the checked range and nothing more.
+Here is the thing that a table cannot do. A table shows that the count is positive at every even number in it. The conjecture says the count is positive at every even number there is. No finite table can reach that, because a pattern can hold for a long stretch and then break: Euler's rule `4k^2 - 2k + 41` hands you a prime for its first twenty one values and then stops, and the [Ulam spiral](/wiki/ulam-spiral/) page draws exactly that line breaking. A checked range is evidence about the checked range and nothing more.
 
 The machine check has been pushed past a billion billion even numbers, which is far enough to make almost anyone believe it and not far enough to be a proof. Statements like this one do get proved, but only when someone finds a reason rather than a table, and no reason has been found.
 

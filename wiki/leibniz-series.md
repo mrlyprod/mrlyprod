@@ -22,4 +22,4 @@ The series comes from the rule that turns a tangent back into an angle, read at 
 
 ## In the tree
 
-[The pi note](/research/pi/) counts pi a different way, out of the density of the visible points of a grid, and puts that count in the same family as this series and the product: correct, convergent, not fast. The neighbouring pages here are [the Wallis product](/wiki/wallis-product/) and [the Basel problem](/wiki/basel-problem/), and [the famous formulas](/wiki/famous-formulas/) put all of them on one board of speeds.
+[The pi note](/research/pi/) counts pi a different way, out of the density of [the visible points](/wiki/visible-lattice-points/) of a grid, and puts that count in the same family as this series and the product: correct, convergent, not fast. The neighbouring pages here are [the Wallis product](/wiki/wallis-product/) and [the Basel problem](/wiki/basel-problem/), and [the famous formulas](/wiki/famous-formulas/) put all of them on one board of speeds.
