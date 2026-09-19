@@ -7,7 +7,7 @@
 ## FIGURES
 
 - One bullet per figure, `subject; artist; parameters; palette`; the artist is the kit module the figure leans on: grid, hex, iso, field or plot.
-- Names are the routes: `site-*` the doors and the card, `research-<page>`, `paper-<slug>`, `blog-<slug>`, `demo-<name>`; `research-index` also opens REFS.
+- Names are the routes: `site-*` the doors and the card, `research-<page>`, `paper-<slug>`, `blog-<slug>`, `demo-<name>`, `wiki-<slug>`; `research-index` also opens REFS.
 
 - `site-home`: the sponge, code 23 at base 2 grown to level 3, in isometric projection with three-tone faces, standing clear on the ground inside an 8 percent margin; iso; number 3, level 3, side 27; top faces fg, left faces blue, right faces dim
 - `site-demos`: twenty-eight tiles in a 7 by 4 board, each a different base-3 plane design at level 3, one tile per live page, ground gutters between; grid; base 3, level 3, side 27 a tile; inks cycling blue, orange, yellow
@@ -112,3 +112,4 @@
 - `research-apollonian`: the strip packing on one period, the two lines and every circle to curvature 2048, the 323 Ford circles resting on the lower line ramped by denominator b, the root pair the period's own arcs; plot; strip root (0,0,2,2), T 2048, x in [0,1]; blue at b=1 to fg at b=32, the rest and the two lines dim on ground
 - `demo-apollonian`: the strip packing on one period to curvature 2048, its 323 Ford circles resting on the lower line, and the Farey stack at depth 32 hung under that line, one bar standing on one tangency point; plot; grow strip, T 2048, touches, farey 32, x in [0,1]; circles inked by curvature octave over the six, the bars blue, each ticking through the line at its own tangency point, the two lines dim on ground
 - `research-cobham`: Object Y in the base-2 box [0, 128)^2, which holds every point of both gaskets below 3^5: the base-2 gasket x AND y = 0 as faded dim cells, the 243 points of the base-3 gasket blue, the 111 points in both gaskets yellow, 63 of them on the two axes; grid; base 2 meets base 3, m = 5, side 128, origin at the lower left; yellow + blue + dim on ground
+- `wiki-kronecker-product`: the carpet rule stamped into itself, code 7 at levels 1, 2 and 3 as three equal squares in a row, 8, 64 and 512 cells; grid; code 7, base 2, levels 1 to 3, sides 3, 9, 27; the rule yellow, the products blue on ground

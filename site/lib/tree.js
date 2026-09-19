@@ -37,7 +37,7 @@ export function tree(lists = {}) {
 
 const word = (href) => {
   const slug = href.split('/').filter(Boolean).pop() ?? '';
-  return slug ? slug[0].toUpperCase() + slug.slice(1) : '';
+  return slug ? (slug[0].toUpperCase() + slug.slice(1)).replace(/-/g, ' ') : '';
 };
 
 const flat = (nodes) => nodes.flatMap((node) => (node.nodes?.length ? flat(node.nodes) : node.href ? [{ name: word(node.href), href: node.href }] : []));

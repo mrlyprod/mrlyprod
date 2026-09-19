@@ -592,11 +592,11 @@ function page(site: Site, route: Route): Output[] {
   return out;
 }
 
-type Dress = { lanes: Lane[]; papers: Paper[]; notes: Note[]; posts: Post[]; demos: Card[] };
+type Dress = { lanes: Lane[]; papers: Paper[]; notes: Note[]; posts: Post[]; demos: Card[]; wiki: Entry[] };
 
 type Mark = { figure: string; text: string; dates?: string[] };
 
-let DRESS: Dress = { lanes: [], papers: [], notes: [], posts: [], demos: [] };
+let DRESS: Dress = { lanes: [], papers: [], notes: [], posts: [], demos: [], wiki: [] };
 
 const FIXED: Record<string, string> = {
   "/": "site-home",
@@ -619,6 +619,7 @@ function marks(data: Dress): Map<string, Mark> {
     map.set(`/research/${n.name}/`, { figure: n.figure, text: n.lead });
   }
   for (const p of data.posts) map.set(`/blog/${p.slug}/`, { figure: p.figure, text: p.lead, dates: [p.date] });
+  for (const e of data.wiki) map.set(wikiRoute(e.slug), { figure: e.figure, text: e.lead });
   for (const [href, figure] of Object.entries(FIXED)) map.set(href, { figure, text: "" });
   return map;
 }
@@ -722,12 +723,6 @@ function missing(site: Site, route: Route): Output[] {
 /* THIN */
 
 const THIN: Record<string, { name: string; figure: string; lead: string; note: string }> = {
-  "/wiki/": {
-    name: "Wiki",
-    figure: "site-wiki",
-    lead: "One concept per page, in the order you need them, for a reader with school mathematics.",
-    note: `The wiki is being written. Until its first page lands, the <a href="/research/">research notes</a> are the reading and the <a href="/demos/">demos</a> are the pictures.`,
-  },
   "/tools/": {
     name: "Tools",
     figure: "site-tools",
@@ -746,6 +741,82 @@ function thin(site: Site, route: Route): Output[] {
   return out;
 }
 
+/* WIKI */
+
+type Entry = { slug: string; name: string; lead: string; figure: string; needs: string[]; body: string; file: string };
+
+type Concept = Omit<Entry, "body" | "file"> & { before: { slug: string; name: string }[]; after: { slug: string; name: string }[] };
+
+const WIKI = "One concept per page, in the order you need them, for a reader with school mathematics.";
+
+function ordered(list: Entry[]): Entry[] {
+  const byslug = new Map(list.map((e) => [e.slug, e]));
+  const done = new Set<string>();
+  const out: Entry[] = [];
+  const pending = [...list].sort((a, b) => a.slug.localeCompare(b.slug));
+  while (pending.length) {
+    const at = pending.findIndex((e) => e.needs.every((need) => done.has(need)));
+    if (at < 0) throw new Error(`site: the wiki prerequisites run in a circle through ${pending.map((e) => e.slug).join(", ")}`);
+    const [next] = pending.splice(at, 1);
+    done.add(next!.slug);
+    out.push(byslug.get(next!.slug)!);
+  }
+  return out;
+}
+
+function wiki(site: Site): Entry[] {
+  const home = site.input("wiki");
+  if (home.missing) return [];
+  const list = home.files.map((file) => {
+    const slug = file.slice(home.path.length + 1, -3);
+    const { data, body } = front(read(file));
+    const needs = (data.prerequisites ?? "").split(",").map((s: string) => s.trim()).filter(Boolean);
+    return { slug, name: data.title ?? slug, lead: data.lead ?? summary(body), figure: data.figure || `wiki-${slug}`, needs, body, file };
+  });
+  const known = new Set(list.map((e) => e.slug));
+  for (const e of list) for (const need of e.needs) if (!known.has(need)) throw new Error(`site: wiki/${e.slug}.md needs ${need}, and wiki/${need}.md does not exist`);
+  return ordered(list);
+}
+
+const wikiRoute = (slug: string) => `/wiki/${slug}/`;
+
+function concepts(list: Entry[]): [Concept, string][] {
+  const name = (slug: string) => ({ slug, name: list.find((e) => e.slug === slug)?.name ?? slug });
+  return list.map(({ body: _, file, ...e }) => [{ ...e, before: e.needs.map(name), after: list.filter((o) => o.needs.includes(e.slug)).map((o) => name(o.slug)) }, file]);
+}
+
+const cite = (rows: { slug: string; name: string }[]) => rows.map((r) => `<a href="${wikiRoute(r.slug)}">${escape(r.name)}</a>`).join(", ");
+
+function concept(site: Site, route: Route): Output[] {
+  const c = route.data as Concept;
+  const file = route.source as string;
+  const out: Output[] = [];
+  const fig = press(site, out);
+  const before = c.before.length ? `\n<p class="meta">Before this: ${cite(c.before)}.</p>` : "";
+  const after = c.after.length ? `\n<section><h2 id="next">Read next</h2><p>${cite(c.after)}.</p></section>` : "";
+  const head = `<div class="lede"><h1 id="${escape(c.slug)}">${escape(c.name)}</h1><p class="lead">${escape(c.lead)}</p></div>`;
+  const body = `${hero(fig, c.figure, route.route, c.name)}\n${head}${before}\n${md(front(read(file)).body, { math, link: links(site, file, out) })}${after}`;
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: c.name,
+    description: c.lead,
+    url: root + route.route,
+    image: `${root}/figures/${c.figure}-dark.png`,
+    author: { "@type": "Organization", name: AUTHOR },
+  };
+  out.push({ path: `wiki/${c.slug}/index.html`, bytes: shell(site, { route: route.route, name: c.name, description: c.lead, body, data, image: picture(site, c.figure, route.route, fig) }) });
+  return out;
+}
+
+function wikiIndex(site: Site, route: Route): Output[] {
+  const out: Output[] = [];
+  const fig = press(site, out);
+  const body = `${hero(fig, "site-wiki", route.route, "Wiki")}\n<div class="lede"><h1 id="wiki">Wiki</h1><p class="lead">${escape(WIKI)}</p></div>\n${grid(wear(site, "/wiki/", fig, route.route))}`;
+  out.push({ path: "wiki/index.html", bytes: shell(site, { route: route.route, name: "Wiki", description: WIKI, body, type: "website", wide: true, bare: true, image: picture(site, "site-wiki", route.route, fig) }) });
+  return out;
+}
+
 /* MATH */
 
 const STANDARD = "A design is one string: one JSON object per named thing, and every other name a view cut from it.";
@@ -761,7 +832,7 @@ function standard(site: Site, route: Route): Output[] {
 
 /* COLLECT */
 
-const counts = { papers: 0, research: 0, blog: 0, demos: 0 };
+const counts = { papers: 0, research: 0, blog: 0, demos: 0, wiki: 0 };
 
 async function collect(site: Site) {
   SHELF = await shelf();
@@ -773,11 +844,14 @@ async function collect(site: Site) {
   const group = demoGroup(site);
   const demoList = group.data as Card[];
   const claimList = claims(site);
+  const wikiList = wiki(site);
   counts.papers = laneList.length + paperList.length;
   counts.research = noteList.length;
   counts.blog = postList.length;
   counts.demos = demoList.length;
+  counts.wiki = wikiList.length;
   const lists = {
+    wiki: wikiList.map((e) => ({ name: e.name, href: wikiRoute(e.slug) })),
     demos: shelved(demoList),
     papers: [...paperList, ...laneList].map((p) => ({ name: p.name, href: `/papers/${p.slug}/` })),
     research: [...(claimList.length ? [{ name: "Discoveries", href: "/research/discoveries/" }] : []), ...noteList.filter((n) => !n.home).map((n) => ({ name: n.title, href: `/research/${n.name}/` }))],
@@ -796,6 +870,11 @@ async function collect(site: Site) {
     inputs: [readme],
   });
   for (const route of Object.keys(THIN)) routes.push({ route, kind: "thin", name: THIN[route]!.name });
+  const shelfOfWiki = site.input("wiki");
+  routes.push({ route: "/wiki/", kind: "wiki", name: "Wiki", data: wikiList.map((e) => [e.slug, e.name, e.lead, e.figure, e.needs]), source: shelfOfWiki.path, inputs: shelfOfWiki.missing ? [] : wikiList.map((e) => e.file) });
+  for (const [c, file] of concepts(wikiList)) {
+    routes.push({ route: wikiRoute(c.slug), kind: "concept", name: c.name, data: c, source: file, inputs: [file] });
+  }
   const names = site.input("names");
   if (!names.missing) routes.push({ route: "/math/", kind: "math", name: "Math", source: names.files[0]!, inputs: names.files });
   routes.push(group);
@@ -846,7 +925,7 @@ async function collect(site: Site) {
     const { data } = front(read(source));
     routes.push({ route: `/${slug}/`, kind: "page", name: data.title ?? slug, source, inputs: [source] });
   }
-  DRESS = { lanes: laneList, papers: paperList, notes: noteList, posts: postList, demos: demoList };
+  DRESS = { lanes: laneList, papers: paperList, notes: noteList, posts: postList, demos: demoList, wiki: wikiList };
   routes.push({
     route: "/menu/",
     kind: "menu",
@@ -877,6 +956,8 @@ const KINDS: Record<string, (site: Site, route: Route) => Output[] | Promise<Out
   missing,
   thin,
   math: standard,
+  wiki: wikiIndex,
+  concept,
 };
 
 function draw(site: Site, route: Route) {

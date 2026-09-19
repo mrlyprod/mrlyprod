@@ -68,10 +68,11 @@ const claims = sheets('research/claims').map(read);
 const papers = sheets('research/papers').map(read);
 const pages = sheets('site/pages').map(read);
 const posts = sheets('site/blog').map(read);
+const concepts = sheets('wiki').map(read);
 const stems = ['research/README.md', 'research/REFS.md', 'research/sequences.md'].filter((name) => there(name)).map(read);
-const fronted = [...notes, ...papers, ...pages, ...posts];
-const prose = [...notes, ...claims, ...papers, ...stems, ...pages, ...posts];
-const housed = [...under('research', '.md'), ...sheets('site/pages'), ...sheets('site/blog')].map(read);
+const fronted = [...notes, ...papers, ...pages, ...posts, ...concepts];
+const prose = [...notes, ...claims, ...papers, ...stems, ...pages, ...posts, ...concepts];
+const housed = [...under('research', '.md'), ...sheets('site/pages'), ...sheets('site/blog'), ...sheets('wiki')].map(read);
 const demos = new Set(
   there('site/demos')
     ? readdirSync(at('site/demos'), { withFileTypes: true })
@@ -194,6 +195,7 @@ for (const base of pairs) {
     if (slug !== 'index' && !noted.has(slug) && !there(`research/${slug}.md`)) drawn.push(`${base} shades no note`);
   }
   if (base.startsWith('demo-') && !demos.has(base.slice(5))) drawn.push(`${base} shades no demo`);
+  if (base.startsWith('wiki-') && !there(`wiki/${base.slice(5)}.md`)) drawn.push(`${base} shades no wiki page`);
 }
 report('figures', `${pairs.length} pairs`, drawn);
 
@@ -211,7 +213,7 @@ const site = (target: string) => {
   if (head === 'demos') return !next || demos.has(next);
   if (head === 'papers') return !next || there(`research/papers/${next}.md`);
   if (head === 'blog') return !next || there(`site/blog/${next}.md`);
-  if (head === 'wiki') return !there('site/wiki') || there(`site/wiki/${next}.md`);
+  if (head === 'wiki') return !next || there(`wiki/${next}.md`);
   if (head === 'tools' || head === 'math') return !next;
   if (head === 'method') return there('research/notes/method.md') || there('site/pages/method.md');
   return there(`site/pages/${head}.md`);
@@ -238,7 +240,7 @@ report('links', `${aimedAt} links`, dead);
 // DEMOS
 
 const shown = new Set<string>();
-for (const doc of [...notes, ...papers, ...pages, ...posts, ...(there('README.md') ? [read('README.md')] : [])])
+for (const doc of [...notes, ...papers, ...pages, ...posts, ...concepts, ...(there('README.md') ? [read('README.md')] : [])])
   for (const hit of doc.lines.join('\n').matchAll(/demos\/([a-z0-9-]+)\//g)) shown.add(hit[1]);
 const orphans = [...demos].filter((name) => !shown.has(name)).sort();
 report('demos', `${demos.size} demos`, orphans.map((name) => `${name} is linked nowhere`));
@@ -258,6 +260,24 @@ for (const doc of notes) {
 }
 for (const doc of [...notes, ...claims]) if (!/^[a-z0-9-]+$/.test(stem(doc.name))) written.push(`${doc.name} is not a slug`);
 report('notes', `${notes.length} notes`, written);
+
+// WIKI
+
+const taught: string[] = [];
+const slugs = new Set(concepts.map((doc) => stem(doc.name)));
+for (const doc of concepts) {
+  for (const key of ['title', 'lead']) if (!doc.front.has(key)) taught.push(`${doc.name} has no ${key}`);
+  for (const need of (doc.front.get('prerequisites') ?? '').split(',').map((s) => s.trim()).filter(Boolean))
+    if (!slugs.has(need)) taught.push(`${doc.name} needs ${need}, which has no page`);
+  if (!doc.lines.slice(doc.body).some((line) => line.startsWith('## In the tree'))) taught.push(`${doc.name} never says where it appears in the tree`);
+  doc.lines.slice(doc.body).forEach((line, i) => {
+    const where = `${doc.name}:${doc.body + i + 1}`;
+    if (line.startsWith('# ')) taught.push(`${where} carries an H1`);
+    if (/\b20\d\d-\d\d-\d\d\b/.test(line)) taught.push(`${where} carries a date`);
+    for (const hit of line.matchAll(/\]\(\/wiki\/([a-z0-9-]+)\/?\)/g)) if (!slugs.has(hit[1])) taught.push(`${where} links /wiki/${hit[1]}/, which has no page`);
+  });
+}
+report('wiki', `${concepts.length} pages`, taught);
 
 // REFS
 

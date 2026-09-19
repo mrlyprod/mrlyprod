@@ -10,7 +10,7 @@
   "tagline": "The mathematics of designs on the corners of a cube, and the instruments that measure them.",
   "tree": [
     { "name": "Home", "href": "/" },
-    { "name": "Wiki", "href": "/wiki/" },
+    { "name": "Wiki", "href": "/wiki/", "fill": "wiki" },
     { "name": "Demos", "href": "/demos/", "fill": "demos" },
     { "name": "Papers", "href": "/papers/", "fill": "papers" },
     { "name": "Research", "href": "/research/", "fill": "research" },
@@ -87,6 +87,7 @@
     "about": "MrlyMath is the mathematics of designs on the corners of a cube: a code says which of the eight corners are filled, the Kronecker product grows that rule into itself level by level, and the object it converges to is a fractal, the Sierpinski carpet and the Menger sponge among them. Everything else on this site is measurement: fills, voids and exposed faces, plane cuts, graph spectra, and the integer sequences the counts write down, with Rust crates doing the arithmetic and the browser only painting. Every claim is proved, checked over a stated finite domain, or labelled a conjecture, and all of it is free and open source.",
     "links": [
       { "href": "/raw/README.md", "name": "README", "note": "the repository readme, in markdown" },
+      { "href": "/wiki/", "name": "Wiki", "note": "one concept per page, in prerequisite order, for a reader with school mathematics" },
       { "href": "/research/", "name": "Research", "note": "working notes, one page per idea" },
       { "href": "/git/", "name": "Code", "note": "the whole tree, browsable, with raw bytes under /raw/" },
       { "href": "/papers/", "name": "Papers", "note": "write-ups in markdown that print as papers" },
@@ -97,6 +98,7 @@
     "readme": { "path": "README.md" },
     "pages": { "path": "pages", "ext": ".md" },
     "blog": { "path": "blog", "ext": ".md" },
+    "wiki": { "path": "../wiki", "ext": ".md" },
     "research": { "path": "../research", "ext": ".md" },
     "notes": { "path": "../research/notes", "ext": ".md" },
     "claims": { "path": "../research/claims", "ext": ".md" },
