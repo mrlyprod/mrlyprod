@@ -1,11 +1,8 @@
 import { useMemo, useState } from 'react';
-import { ready, ink, rgb } from '../../lib/mrly.js';
 import { mount, Page, Row, Slider, Check, Btn } from '../../lib/app.jsx';
 import { Sketch } from '../../lib/draw.jsx';
 import { useSeeds, roll } from '../../lib/select.jsx';
-import { board, axis } from '../../lib/chart.js';
-
-const m = await ready();
+import { bars, view } from './widget.jsx';
 
 const shuffle = (seed) => roll(seed, [[2, 80]])[0];
 
@@ -13,29 +10,7 @@ function App() {
   const s = useSeeds();
   const [q, setQ] = useState(() => (s.get() ? shuffle(s.get()) : 24));
   const [marks, setMarks] = useState(true);
-  const view = useMemo(() => ({ nodes: JSON.parse(m.farey(q)), stack: JSON.parse(m.farey_novelty(q)) }), [q]);
-
-  const draw = (canvas) => {
-    const b = board(canvas, 220, { pad: 24, top: 12, bottom: 30 });
-    const { ctx } = b;
-    const pale = rgb(ink.fg).join(', ');
-    axis(b, [[0, '0'], [1, '1']]);
-    for (const [num, den, bright] of view.nodes) {
-      const x = b.x(num / den);
-      ctx.strokeStyle = `rgba(${pale}, ${0.14 + 0.7 * bright / q})`;
-      ctx.lineWidth = bright > q / 3 ? 1.5 : 0.7;
-      ctx.beginPath();
-      ctx.moveTo(x, b.floor);
-      ctx.lineTo(x, b.y(bright / q));
-      ctx.stroke();
-    }
-    if (marks) {
-      ctx.fillStyle = ink.orange;
-      for (const [num, den] of view.nodes) {
-        if (view.stack.primes.includes(den)) ctx.fillRect(b.x(num / den) - 1, b.floor, 2, 7);
-      }
-    }
-  };
+  const seen = useMemo(() => view(q), [q]);
 
   const controls = (
     <Row>
@@ -49,9 +24,9 @@ function App() {
     <Page crumb="farey" title="The stack lights the Farey fractions"
       sub="Scale n draws a line at every k/n. A reduced fraction a/b is drawn by every scale divisible by b, so its brightness is the floor of Q over b. Scale n lights phi(n) nodes never seen before, and phi(n) = n - 1 exactly when n is prime."
       controls={controls}
-      foot={<>The nodes come from the Stern-Brocot walk of the Farey sequence and the totients from a sieve, both in Rust; the page only stacks bars. The primes are read off the totients as the scales of maximal novelty. What the lit nodes are, and why how evenly they spread is equivalent to the Riemann hypothesis, is in <a href="/research/farey/">the Farey note</a>.</>}>
-      <Sketch draw={draw} deps={[q, marks]} className="bars" role="img" aria-label="The Farey stack, one bar per fraction, taller where more scales draw it" />
-      <pre>{`scales 1..${q}   lit nodes ${view.stack.lit}   1 + sum phi(n) = ${view.stack.novel}   match ${view.stack.match ? 'yes' : 'no'}\nprimes found as maximal-novelty scales: ${view.stack.primes.join(' ')}`}</pre>
+      foot={<>The nodes come from the Stern-Brocot walk of the Farey sequence and the totients from a sieve, both in Rust; the page only stacks bars. The primes are read off the totients as the scales of maximal novelty. What the lit nodes are, and why how evenly they spread is equivalent to the Riemann hypothesis, is in <a href="/research/farey/">the Farey note</a>; what a Farey sequence is to begin with is <a href="/wiki/farey-sequence/">the wiki page</a>.</>}>
+      <Sketch draw={bars(seen, q, marks)} deps={[q, marks]} className="bars" role="img" aria-label="The Farey stack, one bar per fraction, taller where more scales draw it" />
+      <pre>{`scales 1..${q}   lit nodes ${seen.stack.lit}   1 + sum phi(n) = ${seen.stack.novel}   match ${seen.stack.match ? 'yes' : 'no'}\nprimes found as maximal-novelty scales: ${seen.stack.primes.join(' ')}`}</pre>
     </Page>
   );
 }

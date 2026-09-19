@@ -227,6 +227,13 @@ for (const doc of prose) {
     for (const hit of line.matchAll(/\[[^\]\n]*\]\(([^)\s]+)\)/g)) {
       const target = hit[1].split('#')[0];
       if (target === '' || /^(https?:|mailto:)/.test(target)) continue;
+      const widget = target.match(/^demos\/([a-z0-9-]+)\/([a-z0-9-]+)$/);
+      if (widget) {
+        const file = `site/demos/${widget[1]}/widget.jsx`;
+        if (!there(file)) dead.push(`${doc.name}:${n} ${target} has no widget.jsx`);
+        else if (!new RegExp(`^export (?:function|const) ${widget[2]}\\b`, 'm').test(readFileSync(at(file), 'utf8'))) dead.push(`${doc.name}:${n} ${target} is not a view`);
+        continue;
+      }
       aimedAt += 1;
       if (target.startsWith('/')) {
         if (!site(target)) dead.push(`${doc.name}:${n} ${target}`);

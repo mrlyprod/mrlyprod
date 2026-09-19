@@ -24,3 +24,12 @@
 .plate .by:last-child { margin-bottom: var(--s6); }
 .plate.paper { text-align: center; }
 .plate.paper .avatar { width: min(100%, 32rem); height: auto; display: block; margin: 0 auto; border: var(--hair); border-radius: var(--r3); background: var(--art); }
+
+/* WIDGET */
+
+.widget { margin: var(--s6) 0; }
+.widget .mount:empty { min-height: 220px; border-radius: var(--r2); background: var(--art); }
+.widget .bars { width: 100%; height: 220px; display: block; border-radius: var(--r2); background: var(--art); }
+.widget .sheet { width: 100%; display: block; border-radius: var(--r2); background: var(--art); image-rendering: pixelated; }
+.widget .sub { color: var(--dim); font-size: 13px; margin-top: var(--s2); }
+.widget figcaption { color: var(--dim); font-size: 13px; margin-top: var(--s3); }

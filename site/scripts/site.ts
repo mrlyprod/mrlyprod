@@ -140,6 +140,7 @@ type Leaf = {
   data?: object;
   tree?: Node[];
   image?: Picture;
+  scripts?: string[];
 };
 
 function shell(site: Site, leaf: Leaf) {
@@ -147,6 +148,7 @@ function shell(site: Site, leaf: Leaf) {
   const article = h(bare ? "div" : "article", { className: bare ? undefined : "prose", dangerouslySetInnerHTML: { __html: body } });
   const main = renderToStaticMarkup(h(Shell, { route, tree: leaf.tree ?? site.nav, contents: headings(body), wide }, article));
   const ld = data ? `<script type="application/ld+json">${JSON.stringify(data)}</script>\n` : "";
+  const more = (leaf.scripts ?? []).map((src) => `\n<script type="module" src="${src}"></script>`).join("");
   const image = leaf.image ?? (code ? picture(site, "site-code", route) : OG);
   return `<!doctype html>
 <html lang="en" data-prefix="${SITE.prefix}">
@@ -163,7 +165,7 @@ ${meta(route, name, description, type, image)}
 <link rel="stylesheet" href="${site.asset("fonts/fonts.css")}">
 <link rel="stylesheet" href="/pages.css">
 ${TINT}
-${code ? `<link rel="stylesheet" href="${site.asset("code.css")}">\n<link rel="stylesheet" href="${site.asset("seti/seti.css")}">\n` : ""}${ld}<script type="module" src="${site.asset("chrome.js")}"></script>
+${code ? `<link rel="stylesheet" href="${site.asset("code.css")}">\n<link rel="stylesheet" href="${site.asset("seti/seti.css")}">\n` : ""}${ld}<script type="module" src="${site.asset("chrome.js")}"></script>${more}
 </head>
 <body>
 ${main}
@@ -259,11 +261,13 @@ function seo(source: string, card: Card, nav: string, image: Picture) {
   return page.replace("</head>", `${TINT}\n</head>`);
 }
 
+const widgetFiles = (site: Site) => site.input("demos").files.filter((f) => f.endsWith("/widget.jsx"));
+
 async function demos(site: Site, route: Route): Promise<Output[]> {
   const list = route.data as Card[];
   const home = site.input("demos").path;
   const built = await Bun.build({
-    entrypoints: list.map((d) => join(home, d.name, "index.html")),
+    entrypoints: [...list.map((d) => join(home, d.name, "index.html")), ...widgetFiles(site)],
     root: org,
     splitting: true,
     minify: true,
@@ -787,15 +791,37 @@ function concepts(list: Entry[]): [Concept, string][] {
 
 const cite = (rows: { slug: string; name: string }[]) => rows.map((r) => `<a href="${wikiRoute(r.slug)}">${escape(r.name)}</a>`).join(", ");
 
+/* WIDGETS */
+
+const EMBEDS = /^!\[[^\]]*\]\(demos\/([a-z0-9-]+)\/[a-z0-9-]+\)$/gm;
+
+const VIEW = (view: string) => new RegExp(`^export (?:function|const) ${view}\\b`, "m");
+
+const widgetFile = (site: Site, name: string) => join(site.input("demos").path, name, "widget.jsx");
+
+const embeds = (site: Site, body: string) => [...body.matchAll(EMBEDS)].map((m) => widgetFile(site, m[1]!));
+
+function widgets(site: Site, used: Set<string>) {
+  return (name: string, view: string, caption: string) => {
+    const file = widgetFile(site, name);
+    if (!existsSync(file)) throw new Error(`site: demos/${name}/ has no widget.jsx to embed`);
+    if (!VIEW(view).test(read(file))) throw new Error(`site: demos/${name}/widget.jsx exports no view named ${view}`);
+    used.add(name);
+    return `<figure class="widget" data-demo="${name}" data-view="${view}"><div class="mount"></div><figcaption>${caption}</figcaption></figure>`;
+  };
+}
+
 function concept(site: Site, route: Route): Output[] {
   const c = route.data as Concept;
   const file = route.source as string;
   const out: Output[] = [];
   const fig = press(site, out);
+  const used = new Set<string>();
   const before = c.before.length ? `\n<p class="meta">Before this: ${cite(c.before)}.</p>` : "";
   const after = c.after.length ? `\n<section><h2 id="next">Read next</h2><p>${cite(c.after)}.</p></section>` : "";
   const head = `<div class="lede"><h1 id="${escape(c.slug)}">${escape(c.name)}</h1><p class="lead">${escape(c.lead)}</p></div>`;
-  const body = `${hero(fig, c.figure, route.route, c.name)}\n${head}${before}\n${md(front(read(file)).body, { math, link: links(site, file, out) })}${after}`;
+  const prose = md(front(read(file)).body, { math, link: links(site, file, out), widget: widgets(site, used) });
+  const body = `${hero(fig, c.figure, route.route, c.name)}\n${head}${before}\n${prose}${after}`;
   const data = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -805,7 +831,8 @@ function concept(site: Site, route: Route): Output[] {
     image: `${root}/figures/${c.figure}-dark.png`,
     author: { "@type": "Organization", name: AUTHOR },
   };
-  out.push({ path: `wiki/${c.slug}/index.html`, bytes: shell(site, { route: route.route, name: c.name, description: c.lead, body, data, image: picture(site, c.figure, route.route, fig) }) });
+  const scripts = [...used].sort().map((name) => `/demos/${name}/widget.js`);
+  out.push({ path: `wiki/${c.slug}/index.html`, bytes: shell(site, { route: route.route, name: c.name, description: c.lead, body, data, image: picture(site, c.figure, route.route, fig), scripts }) });
   return out;
 }
 
@@ -873,7 +900,7 @@ async function collect(site: Site) {
   const shelfOfWiki = site.input("wiki");
   routes.push({ route: "/wiki/", kind: "wiki", name: "Wiki", data: wikiList.map((e) => [e.slug, e.name, e.lead, e.figure, e.needs]), source: shelfOfWiki.path, inputs: shelfOfWiki.missing ? [] : wikiList.map((e) => e.file) });
   for (const [c, file] of concepts(wikiList)) {
-    routes.push({ route: wikiRoute(c.slug), kind: "concept", name: c.name, data: c, source: file, inputs: [file] });
+    routes.push({ route: wikiRoute(c.slug), kind: "concept", name: c.name, data: c, source: file, inputs: [file, ...embeds(site, read(file))] });
   }
   const names = site.input("names");
   if (!names.missing) routes.push({ route: "/math/", kind: "math", name: "Math", source: names.files[0]!, inputs: names.files });

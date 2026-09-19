@@ -152,7 +152,11 @@ function heading(line, ctx) {
   return `<h${level} id="${id}">${inline(text, ctx)}</h${level}>`;
 }
 
+const WIDGET = /^!\[([^\]]*)\]\(demos\/([a-z0-9-]+)\/([a-z0-9-]+)\)$/;
+
 function paragraph(text, ctx) {
+  const widget = ctx.widget && text.match(WIDGET);
+  if (widget) return ctx.widget(widget[2], widget[3], inline(widget[1], ctx));
   const image = text.match(/^!\[([^\]]*)\]\(([^)]*)\)$/);
   if (image) {
     const src = escape(ctx.link(image[2].trim()));
@@ -165,6 +169,7 @@ export function render(md, opts = {}) {
   const ctx = {
     link: opts.link ?? ((u) => u),
     math: opts.math ?? ((t) => `<code>${escape(t)}</code>`),
+    widget: opts.widget,
     ids: new Map(),
   };
   const lines = md.replace(/\r\n?/g, "\n").split("\n");

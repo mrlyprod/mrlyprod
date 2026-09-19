@@ -75,6 +75,22 @@ const disk = (): [string, string][] => [
   ["/", site.input("public").path],
 ];
 
+const WIDGET = /^\/demos\/([a-z0-9-]+)\/widget\.js$/;
+
+const built = new Map<string, Output>();
+
+async function widget(name: string): Promise<Output | null> {
+  const file = join(site.input("demos").path, name, "widget.jsx");
+  if (!existsSync(file)) return null;
+  const done = await Bun.build({ entrypoints: [file], root: org, define: { "process.env.NODE_ENV": '"development"' }, naming: { asset: "[name]-[hash].[ext]" } });
+  if (!done.success) throw new Error(`dev: demos/${name}/widget.jsx failed to bundle\n${done.logs.join("\n")}`);
+  for (const item of done.outputs) {
+    const path = item.path.replace(/^\.\//, "");
+    built.set(`/${path}`, { path, bytes: new Uint8Array(await item.arrayBuffer()) });
+  }
+  return built.get(`/demos/${name}/widget.js`) ?? null;
+}
+
 async function seek(route: Route, want: string) {
   const outputs = await render(site, route, spec);
   return outputs.find((item) => item.path === want) ?? null;
@@ -85,6 +101,13 @@ const TREE = "/demos/tree.json";
 async function serve(path: string): Promise<Response | null> {
   if (path === TREE) return send({ path: TREE.slice(1), bytes: JSON.stringify(demoTree(site)) });
   const want = path.endsWith("/") ? `${path.slice(1)}index.html` : path.slice(1);
+  const embedded = path.match(WIDGET);
+  if (embedded) {
+    const hit = await widget(embedded[1]!);
+    if (hit) return send(hit);
+  }
+  const held = built.get(path);
+  if (held) return send(held);
   const route = pages().find((one) => one.route === path);
   if (route) {
     const hit = await seek(route, want);
