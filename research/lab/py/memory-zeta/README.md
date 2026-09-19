@@ -62,7 +62,7 @@
 
 ## WITNESSES
 
-- The page lines of [beneath](../../beneath.md), `### The memory zeta`.
+- The page lines of [beneath](../../../notes/beneath.md), `### The memory zeta`.
 - `zeta_W(3) = 1.154012963277642016659466`, `zeta_W(2) = 1.415825532884777929125692`, `zeta_W(0.8) = 9.536379694275011510923898` and `zeta_W(1.2 + 9i) = 1.906409024243906069557735 - 0.453243424778265833646527i`, each met by `mrlynum::automaton` inside its own bound, the largest gap `3.0e-15` against a bound of `9.54e-13`.
 - The six residues at `m = 0`, `j = 0, 1, 2` on both combs. On the comb at `Re s = log_2 phi` the gaps against the crate are `6.0e-16`, `2.6e-15` and `9.3e-16` against bounds near `1.3e-13`; on the comb at `Re s = -log_2 phi`, where the crate reads through its left-of-abscissa branch and bounds near `4.1e-9`, the gaps are `1.1e-12`, `3.7e-12` and `4.3e-12`.
 - That second comb is the reason this study exists: every crate number on it is produced by one branch and is met here from outside it.

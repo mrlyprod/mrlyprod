@@ -1,6 +1,6 @@
 # mobius-designs
 
-- Regenerates every number on [mobius](../../mobius.md): the Mobius meter `M_F(base^level) = sum of mu(n)` over the digit-restricted set `S_F` up to `base^level`, measured against the set's own counting function `A_F(base^level)`.
+- Regenerates every number on [mobius](../../../notes/mobius.md): the Mobius meter `M_F(base^level) = sum of mu(n)` over the digit-restricted set `S_F` up to `base^level`, measured against the set's own counting function `A_F(base^level)`.
 - The census covers every digit set `F` with `2 <= |F| <= base - 1` at `base 3, 4, 5`, the full-set control column at `base 3, 4, 5, 10` (the Mertens function), and the ten base-10 Kempner columns that exclude one digit.
 - Restricted families are enumerated in ascending numeric order, length by length, and `mu` is computed by exact factorization: trial division below 1024, deterministic Miller-Rabin on the twelve witnesses `2..37`, Pollard-Brent rho on the survivors; every integer is exact, no floats touch a count.
 - Control and Kempner columns come from a linear Euler sieve for `mu` to `3^17 = 129140163`; one family (`base 3`, `F = {1,2}`, `level 16`) is computed by both methods and asserted equal at every level.

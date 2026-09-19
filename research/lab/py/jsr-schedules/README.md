@@ -1,6 +1,6 @@
 # JSR Schedules
 
-- Regenerates the joint spectral radius section of [connectivity](../../connectivity.md): the observable frame, the six frame images, the triangularity of the component cocycle, the cross-polytope certificate, the joint and lower spectral radius of every subfamily, and the bracket on two named pairs.
+- Regenerates the joint spectral radius section of [connectivity](../../../notes/connectivity.md): the observable frame, the six frame images, the triangularity of the component cocycle, the cross-polytope certificate, the joint and lower spectral radius of every subfamily, and the bracket on two named pairs.
 - The question is the standard one for a noncommuting matrix family: `JSR(F) = lim_L max_(|w| = L) ||M_w||^(1/L)`, and whether the maximum is attained by a periodic word.
 - A word is an ordered list of base-2, dim 2 codes folded by the Kronecker product, first letter outermost; bit `i` of a code is residue corner `i` in row-major order, so code 3 is the top row and code 5 the left column. The empty word is the one filled cell.
 - The component representation is rebuilt from scratch rather than imported: Hankel-basis elimination in exact rational arithmetic over the 241 suffixes of length at most 2, prefixes in breadth-first order, with the basis words, the matrices, `lambda` and `gamma` all outputs of the elimination.

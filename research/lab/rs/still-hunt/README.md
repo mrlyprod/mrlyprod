@@ -19,7 +19,7 @@
 
 ## WITNESSES
 
-- These are the numbers this study prints for the atlas section of [automata.md](../../automata.md); that section carries none of them yet, so nothing below quotes a page row.
+- These are the numbers this study prints for the atlas section of [automata.md](../../../notes/automata.md); that section carries none of them yet, so nothing below quotes a page row.
 - automata.md The atlas: 64 quests, 4626 frames, 609 Chladni-like, 47 of them at generation 0 and 3 among the 64 settled stills, all three on side-3 masks; by path 426 of 1043 basic, 76 of 92 copy, 107 of 3491 simple.
 - automata.md The atlas: the copy path is one quest, seed 46, whose three copy chapters draw a mask the size of its own 45-cell canvas on a 64 field, so every copy-path count in this study is that one quest's frames.
 - automata.md The atlas: the envelope of the cut is 149 of the 562 hits past generation 0 peaking at ring 1 or 2 of their field, 34 reading a wavelength longer than the crop, and 262 resolved; 66 of the 149 are seed 46's 73 copy-path hits, 34 at ring 1 and 32 at ring 2.

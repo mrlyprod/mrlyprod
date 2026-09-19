@@ -33,4 +33,4 @@
 - The deeper window: extending the 1325 rebuilt cap rows to 96 terms writes at least 11898 integers, moves the first miss from 269 to 362 and the first missed square from `9801` to `38809`.
 - The arithmetic: squares `176/316`, cubes `46/46`, fourth powers `17/17`, fifth `10/10`, sixth `6/6`; primes `750/9592` with 158 of the 8363 above 10000; all 2079 residue classes mod `2..64` hold a written integer on `10000..100000`; the 366 perfect powers carry 58906 incidences against a density of `0.003660`.
 - The spectrum: 410 distinct multiplicities to 2858; the top twenty carry 39007 of the 347308 incidences; the closed tier covers 7628 written integers with 3983 exclusive; above 30000 the written sets collapse to 953 families of which 875 own a tail integer alone.
-- The page these witness is [integers.md](../../integers.md).
+- The page these witness is [integers.md](../../../notes/integers.md).

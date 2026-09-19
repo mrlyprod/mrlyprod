@@ -46,7 +46,7 @@
 
 ## WITNESSES
 
-- [beneath](../../beneath.md), The memory meter - the meter table, the control band, the `kappa` bands and the zero-closed criterion.
+- [beneath](../../../notes/beneath.md), The memory meter - the meter table, the control band, the `kappa` bands and the zero-closed criterion.
 - research/claims/ the memory-meter rows.
 
 ## COLUMNS

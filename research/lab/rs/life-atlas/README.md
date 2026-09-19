@@ -19,7 +19,7 @@
 
 ## WITNESSES
 
-- The study is the generator behind the "The atlas" section of [automata.md](../../automata.md); every number below is one the run prints, and no row of that section is quoted here.
+- The study is the generator behind the "The atlas" section of [automata.md](../../../notes/automata.md); every number below is one the run prints, and no row of that section is quoted here.
 - The cut: 1120 nominal runs, 272 dropped as duplicate masks, 848 run, none sampled.
 - The fate table: number rules `106 dead, 24 still, 56 loop, 132 timeout`, design rules `448, 2, 0, 27`, `B3/S23` `31, 17, 4, 1`, all `585, 43, 60, 160`; 160 timeouts, no mover among them.
 - The budgets: 53 mask cells, 45 of budget 8 or less and 8 above it at budgets 26 to 80, every one of the 8 a tessellation-3 copy mask; a reading of the rules at budget 8 covers the 45 and never the 8.

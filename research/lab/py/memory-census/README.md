@@ -87,12 +87,12 @@
 
 ## WITNESSES
 
-- [beneath](../../beneath.md), The census - the six-row table of rules, classes under both groups, dead classes and minimal polynomials, and the `19563` live classes: `census.csv` and the `live classes` line of the run.
-- [beneath](../../beneath.md), The coupling - `kappa = 0` on exactly the non-empty product classes, `2` at every `(1,k)` and `5` at every `(2,k)`, with `0` counterexamples: `census.csv` columns `classes_kappa0` and `kappa0_nonproduct`.
-- [beneath](../../beneath.md), The coupling - the maxima `log_2(3)/2`, `log_2(6)/3`, `log_2(13)/4` and `log_2(10)/2` on the least codes `11`, `175`, `49071` and `36079`, with ties of `1, 3, 4, 3`: `census.csv` columns `kappa_max`, `kappa_max_code`, `kappa_max_ties`.
-- [beneath](../../beneath.md), The famous constants are one notch in - the four named roots on the least codes `7`, `23`, `54`, `127` at `dim 1` and `19`, `323`, `326`, `327` at `(2,2)`: `classes.csv`.
-- [beneath](../../beneath.md), What the dial buys - the distinct minimal polynomials of `rho`, `3, 4, 10, 177` at `dim 1` and `5, 185` at `dim 2`, against `3, 6, 23, 431` and `5, 333` characteristic polynomials: `census.csv`.
-- [beneath](../../beneath.md), The memory dial - the closed form for the classes under `G_(1,k)` at `k = 1..11`, the determinant lemma at `dim 1` and `k = 2, 3, 4`, and the Perron lemma at `k = 1..4`: the verbs `burnside` and `lemmas`.
+- [beneath](../../../notes/beneath.md), The census - the six-row table of rules, classes under both groups, dead classes and minimal polynomials, and the `19563` live classes: `census.csv` and the `live classes` line of the run.
+- [beneath](../../../notes/beneath.md), The coupling - `kappa = 0` on exactly the non-empty product classes, `2` at every `(1,k)` and `5` at every `(2,k)`, with `0` counterexamples: `census.csv` columns `classes_kappa0` and `kappa0_nonproduct`.
+- [beneath](../../../notes/beneath.md), The coupling - the maxima `log_2(3)/2`, `log_2(6)/3`, `log_2(13)/4` and `log_2(10)/2` on the least codes `11`, `175`, `49071` and `36079`, with ties of `1, 3, 4, 3`: `census.csv` columns `kappa_max`, `kappa_max_code`, `kappa_max_ties`.
+- [beneath](../../../notes/beneath.md), The famous constants are one notch in - the four named roots on the least codes `7`, `23`, `54`, `127` at `dim 1` and `19`, `323`, `326`, `327` at `(2,2)`: `classes.csv`.
+- [beneath](../../../notes/beneath.md), What the dial buys - the distinct minimal polynomials of `rho`, `3, 4, 10, 177` at `dim 1` and `5, 185` at `dim 2`, against `3, 6, 23, 431` and `5, 333` characteristic polynomials: `census.csv`.
+- [beneath](../../../notes/beneath.md), The memory dial - the closed form for the classes under `G_(1,k)` at `k = 1..11`, the determinant lemma at `dim 1` and `k = 2, 3, 4`, and the Perron lemma at `k = 1..4`: the verbs `burnside` and `lemmas`.
 
 ## COLUMNS
 

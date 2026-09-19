@@ -197,7 +197,7 @@ Both multiplicity laws stay conjectures. The natural reason to expect a mechanis
 
 ## The flake's band gap
 
-The carpet `bang dim 3, code 23` again, but at base 2, where its tile fills 4 of 8 cells and draws the star flake of [the core page](core.md). The fractal at level `level` is a `2^level` cube with `4^level` filled cells, a cell `(x, y, z)` surviving exactly when `x AND y = y AND z = x AND z = 0`. Its face-adjacency graph is a tree - `4^level` nodes, `4^level - 1` edges, one component - asserted at every level, never assumed.
+The carpet `bang dim 3, code 23` again, but at base 2, where its tile fills 4 of 8 cells - the class [the core page](core.md) lists under carpet and net, and the tetrahedron flake of [cuts](cuts.md). The fractal at level `level` is a `2^level` cube with `4^level` filled cells, a cell `(x, y, z)` surviving exactly when `x AND y = y AND z = x AND z = 0`. Its face-adjacency graph is a tree - `4^level` nodes, `4^level - 1` edges, one component - asserted at every level, never assumed.
 
 The operator here is the **unnormalised** combinatorial Laplacian `D - A`. That is deliberately not the operator of the triangle section above: the two have different spectra, and nothing transfers between the two sections in either direction.
 

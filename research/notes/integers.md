@@ -127,6 +127,8 @@ A design is a corner set `C` of the parity cube `{0,1}^dim`, its signature is `s
 | 6 | 526848 | 30 | 1173 | 7305 | 45292 | 222437 | 250611 |
 
 - **The ladder is a census by the top degree of the irreducible factors of `W`. Verified.** The table counts signatures, exhaustively at dim 2..6, the dim 6 row over `526848` signatures carrying `2^63` oriented designs. Counted by oriented design rather than by signature the dim 4 row reads `504` rational, `6884` quadratic, `13241` cubic and `12139` quartic of `32768` (`ladder`).
+- **The quadratic class of the ladder splits by field sign, and the real side is the thin one by design. Verified.** At `dim 4` the `6884` quadratic oriented designs of the box are `6518` imaginary, `105` real and `261` mixed, carried by `55`, `4` and `3` of the `62` quadratic signatures; a mixed signature is one whose weight enumerator carries quadratic factors of both signs, so the three classes partition the quadratic column and the real side is the rarest, the same thinness the pure layer shows (`ladder`).
+- **Counted by oriented design the `dim 5` row is led by the quartic class by design and by the quintic class by signature. Verified.** Over the `8712` signatures of the box at `dim 5` the `2^31 = 2147483648` oriented designs read `1209703` rational, `102969641` quadratic (`92090824` imaginary, `85372` real, `10793445` mixed), `213022933` cubic, `956166567` quartic and `874114804` quintic, so the top two degrees carry a share of `0.85` of the designs while the rational floor carries less than one in a thousand (`ladder`).
 
 | degree, signature | dim 3 | dim 4 | dim 5 | dim 6 |
 |---|---|---|---|---|

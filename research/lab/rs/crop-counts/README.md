@@ -1,6 +1,6 @@
 # Crop Counts
 
-- Regenerates the level tables and the radius sweep on [crop](../../crop.md): exact shape crops over the carpet and the sponge.
+- Regenerates the level tables and the radius sweep on [crop](../../../notes/crop.md): exact shape crops over the carpet and the sponge.
 - The remaining crop.md numbers are pinned by `mrlymath::shape` tests or derived from the printed lines.
 - The designs are code 7 at dim 2 (the carpet, `mrlymath::bang::factory::create(7, 3, 2, 2, level)`) and code 23 at dim 3 (the sponge, `create(23, 3, 3, 2, level)`), with level 0 the single filled cell.
 - The shapes are `mrlymath::shape::named` ball and diamond, centered at one half on every axis, classified by `mrlymath::shape::census` in exact integer arithmetic, no floats anywhere.

@@ -1,7 +1,7 @@
 # Code Factorisation
 
-- Regenerates the composite and monoid material of [magic](../../magic.md): which tiles are Kronecker products, how a tile can factor in two shape-distinct ways, what the irreducibles are, and when two letters render one tile at one side.
-- A tile is a 0/1 square array. A plane code at base `base` is the tile at side `base` whose bit `i` is the cell `(i / base, i mod base)`, so base 2 gives the 15 non-empty codes of [core](../../core.md) and base 3 the 511 non-empty codes.
+- Regenerates the composite and monoid material of [magic](../../../notes/magic.md): which tiles are Kronecker products, how a tile can factor in two shape-distinct ways, what the irreducibles are, and when two letters render one tile at one side.
+- A tile is a 0/1 square array. A plane code at base `base` is the tile at side `base` whose bit `i` is the cell `(i / base, i mod base)`, so base 2 gives the 15 non-empty codes of [core](../../../notes/core.md) and base 3 the 511 non-empty codes.
 - The monoid is all non-empty tiles under the Kronecker product, graded by side, with the one filled cell as its unit. A word is a factorisation; a composite is a product.
 - The whole study is exact integer comparison. Nothing here is a rearrangement singular value, a fit or a sample: the nearest-Kronecker-product literature solves an approximation problem, which is the wrong problem and the wrong arithmetic for a decision.
 - The block test is the engine: `C` of side `N` cuts at `d | N` when every non-zero `d`-block of `C` is one tile `B`, and then `C = A (x) B` with `A` the 0/1 indicator of the non-zero blocks. It decides factorability at a named shape in `O(N^2)` and names both factors.

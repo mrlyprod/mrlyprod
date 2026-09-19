@@ -1,6 +1,6 @@
 # Spin Census
 
-- Runs the four unrun questions of [spin](../../spin.md) plus the Gaussian Farey, and prints only.
+- Runs the four unrun questions of [spin](../../../notes/spin.md) plus the Gaussian Farey, and prints only.
 - The spin mass `M(r)` is read twice: exactly, as the integer shell histogram of filled cells about a fixed point, and through `mrlynum::spin::profile` with `mass_within`, the two agreeing to `1.7e-6` on the total and to `0.5%` on partial radii. The hole about the raster centre is measured on cell rectangles in exact integer arithmetic, never on cell centres, which would return `hole + 1/2` whatever the hole.
 - Every fixed point is the attractor of one filled digit `d`, the point `d/2` of the unit square, about which the design is exactly self-similar; the corner digit gives the widest window, `r <= side`, the centre digit only `r <= side/2`.
 - The ripple is the residual `ln M(r) - (log(fill)/log 3) ln r` taken exactly, never fitted, folded into 24 bins of `log_3 r` over a whole number of periods so every bin carries the same sample count. Its drift bar is the same fold on the first half of the window against the second, computed from the code itself.

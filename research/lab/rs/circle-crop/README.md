@@ -1,6 +1,6 @@
 # Circle Crop
 
-- Counts a design's filled cells inside a ball and measures the error against the density and against the design's own self-similar main term: the circle-count section of [crop](../../crop.md).
+- Counts a design's filled cells inside a ball and measures the error against the density and against the design's own self-similar main term: the circle-count section of [crop](../../../notes/crop.md).
 - The designs are code 7 at `dim 2` (the carpet, `mrlymath::bang::factory::create(7, 3, 2, 2, level)`) and code 23 at `dim 3` (the sponge, `create(23, 3, 3, 2, level)`).
 - One convention throughout: cells are indexed `x` in `[0, 3^level)^dim`, a cell counts when its centre `x + 1/2` lies in the closed Euclidean ball `|y| <= r`, corner balls sit at the lattice corner `0` and centre balls at the grid centre `3^level/2`.
 - The corner sweep runs every integer radius `r = 1 .. 3^level - 1`, the centre sweep every `r = 1 .. (3^level - 1)/2`, the inscribed radius about the grid centre.

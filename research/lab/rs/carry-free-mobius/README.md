@@ -19,7 +19,7 @@
 - `bash scripts/cargo.sh cargo run --release -p carry-free-mobius -- pin` from `mrlyprod/`
 - `bash scripts/cargo.sh cargo run --release -p carry-free-mobius -- ladder 22 2.5` from `mrlyprod/`, where the first argument is the top degree and the second the working-set budget in GB
 - `bash scripts/cargo.sh cargo test -p carry-free-mobius` pins the Rust ladder to the Python numbers at every level to `18`
-- the [mobius](../../mobius.md) page prints the same `ladder` command in its own house form, `CARGO_BUILD_JOBS=4 cargo run --release -p carry-free-mobius -- ladder 22 2.5`, which is one recipe under two wrappers, the build lock being the only difference
+- the [mobius](../../../notes/mobius.md) page prints the same `ladder` command in its own house form, `CARGO_BUILD_JOBS=4 cargo run --release -p carry-free-mobius -- ladder 22 2.5`, which is one recipe under two wrappers, the build lock being the only difference
 - The Python `lemma` runs in ten seconds, `sequence` and `exponent` in seventeen each; peak resident memory is `0.60` GB in `lemma` and `0.58` GB in the other two.
 - The Rust `pin` runs in one second and `ladder 22 2.5` in `99` seconds; the `heldMB` column of the table is the working set the generator accounts for itself, `26` MB at level `18` and `2069` MB at level `23`, and the peak resident memory of the process, measured outside it, is `2.41` GB in `ladder 22 2.5`; the ladder asserts the Python numbers at every level to `18` before it prints a deeper one, and stops at the first level whose working set passes the budget, printing that cut.
 - A `0/1` polynomial is a bitmask, so every element of `M*` is a packed integer and multiplication of polynomials is multiplication of integers; the Python packs one coefficient to thirty-two bits, which is safe because the coefficient at degree below `18` never passes `2^17`, and the Rust packs the coefficient of `x^i` at degree `d` into as many bits as `binomial(d, i)` has, which is the proved cap for that coefficient and no lane can carry: `312` bits hold a degree-`22` element against `736` for a thirty-two bit packing, and the generator prints the coefficient it actually reaches at every degree beside `binomial(d, floor(d/2))`.
@@ -46,7 +46,7 @@
 
 ## PAGES
 
-- [mobius](../../mobius.md) THE EXPONENT, TAGGED HONESTLY - the base-free reading of the two-digit column, its `M(base^level)`, its running maxima and the rate of that maximum against the mass rate `2`.
+- [mobius](../../../notes/mobius.md) THE EXPONENT, TAGGED HONESTLY - the base-free reading of the two-digit column, its `M(base^level)`, its running maxima and the rate of that maximum against the mass rate `2`.
 
 ## SOURCES
 

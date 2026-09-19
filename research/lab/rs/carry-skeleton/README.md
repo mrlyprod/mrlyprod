@@ -1,6 +1,6 @@
 # carry-skeleton
 
-- One step of `m n + 1` in base 2 split into its `GF(2)` skeleton and its carry, and the carry read as an object of the memory dial of [beneath](../../beneath.md).
+- One step of `m n + 1` in base 2 split into its `GF(2)` skeleton and its carry, and the carry read as an object of the memory dial of [beneath](../../../notes/beneath.md).
 - Digits run least significant first, so `2n` is a shift towards the higher digits and the ripple carry runs in the same direction as the skeleton's dependency.
 - The skeleton of `3n + 1` is `n xor 2n xor 1`; the carry word is `defect(n) = (3n + 1) xor (n xor 2n xor 1)` and the local carry count is `d_loc(n) = popcount(defect(n))`.
 - Every rule reading here is `mrlynum::memory::Rule`: `Rule::new(1, k, code)` at window width `k`, with the window `(c_1, ..., c_k)` read as `w = sum_j c_j 2^(k - j)`, first digit most significant, and `Rule::allowed(w)` true when bit `w` of the code is set.
@@ -19,7 +19,7 @@
 
 - `carries` against `defect`, the `M` substitution and the rule-60 rebuild: `0` mismatches each over every `n < 2^18`.
 - The zero-carry set against the rule: `0` mismatches over every `n < 2^16` at `m = 3, 5, 7, 9, 11, 15`.
-- `kappa` on codes `7` and `23` asserted against `0.098239` and `0.115204`, the two values [beneath](../../beneath.md) already prints, reached here from the multiplier and not from the rule.
+- `kappa` on codes `7` and `23` asserted against `0.098239` and `0.115204`, the two values [beneath](../../../notes/beneath.md) already prints, reached here from the multiplier and not from the rule.
 - The carry-free map asserted non-growing and asserted to reach `1` from every `n < 2^20`.
 - The six refutation witnesses pinned as explicit integer pairs, and the worst-case depth `level + 1` pinned at `level 1, 2, 4, 8, 16, 32, 40`.
 
@@ -72,4 +72,4 @@
 
 ## WITNESSES
 
-- [beneath](../../beneath.md), The carry of a Collatz step - the identity, the unbounded radius, the zero-carry table, the two couplings, the density, the carry-free cycle theorem, the refutation line and the depth conjecture.
+- [beneath](../../../notes/beneath.md), The carry of a Collatz step - the identity, the unbounded radius, the zero-carry table, the two couplings, the density, the carry-free cycle theorem, the refutation line and the depth conjecture.

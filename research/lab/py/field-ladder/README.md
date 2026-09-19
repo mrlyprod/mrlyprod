@@ -24,9 +24,10 @@ uv run python research/lab/py/field-ladder/ladder.py norm ladder fields swap hun
 
 ## WITNESSES
 
-- [integers](../../integers.md), THE FIELD LADDER - the norm-form law, the lift on the half of designs with `s_dim = 0`, and the linear-factor law: `norm`.
-- [integers](../../integers.md), THE FIELD LADDER - the ladder by degree at `dim 2..6`: `ladder`.
-- [integers](../../integers.md), THE FIELD LADDER - the quadratic layer, the imaginary run and its first gaps `7, 15, 31, 43, 67`, the real run and the two extras `29, 33` at `dim 6`: `fields`.
-- [integers](../../integers.md), THE FIELD LADDER - the field-discriminant runs by degree and signature, the Hunter bounds `B` and the field-level merge behind `B(2,3) = 7`: `fields` and `hunter`.
-- [integers](../../integers.md), THE FIELD LADDER - the fill and void table `17, 4, 67, 40` at `dim 3` and `413, 91, 4994, 27270` at `dim 4`: `swap`.
-- [sequences](../../sequences.md), THE ODD-SIDE FILLS - the divisor tribe is the all-rational floor of the ladder: `norm` and `ladder`.
+- [integers](../../../notes/integers.md), THE FIELD LADDER - the norm-form law, the lift on the half of designs with `s_dim = 0`, and the linear-factor law: `norm`.
+- [integers](../../../notes/integers.md), THE FIELD LADDER - the ladder by degree at `dim 2..6`: `ladder`.
+- [integers](../../../notes/integers.md), THE FIELD LADDER - the oriented-design counts of the ladder, the quadratic split by field sign at `dim 4` (`6518` imaginary, `105` real, `261` mixed of `6884`) and the `dim 5` row (`1209703`, `102969641`, `213022933`, `956166567`, `874114804` of `2^31`): `ladder`.
+- [integers](../../../notes/integers.md), THE FIELD LADDER - the quadratic layer, the imaginary run and its first gaps `7, 15, 31, 43, 67`, the real run and the two extras `29, 33` at `dim 6`: `fields`.
+- [integers](../../../notes/integers.md), THE FIELD LADDER - the field-discriminant runs by degree and signature, the Hunter bounds `B` and the field-level merge behind `B(2,3) = 7`: `fields` and `hunter`.
+- [integers](../../../notes/integers.md), THE FIELD LADDER - the fill and void table `17, 4, 67, 40` at `dim 3` and `413, 91, 4994, 27270` at `dim 4`: `swap`.
+- [sequences](../../../sequences.md), THE ODD-SIDE FILLS - the divisor tribe is the all-rational floor of the ladder: `norm` and `ladder`.
