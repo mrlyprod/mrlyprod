@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Shell } from '../kit/ui/chrome.jsx';
 import { demos, load, sidebar } from './tree.js';
+import site from './site.js';
 
 export function mount(node) {
   createRoot(document.getElementById('root')).render(node);
@@ -17,13 +18,22 @@ export function useShelves() {
   return shelves;
 }
 
+const READS = `${site.prefix}reads`;
+
+function reads() {
+  const el = typeof document === 'undefined' ? null : document.getElementById(READS);
+  return el ? JSON.parse(el.textContent) : [];
+}
+
 export function Page({ crumb, title, sub, foot, bare, controls, contents, children }) {
   const shelves = useShelves();
   const nodes = sidebar({ demos: shelves });
+  const pages = reads();
   return (
     <Shell route={`/demos/${crumb}/`} title={bare ? undefined : title} lead={sub} tree={nodes} controls={controls} contents={contents} wide>
       {children}
       {foot && <p className="foot" hidden={bare}>{foot}</p>}
+      {pages.length > 0 && <p className="reads" hidden={bare}>Read: {pages.map((page, i) => <span key={page.href}>{i > 0 && ', '}<a href={page.href}>{page.name}</a></span>)}.</p>}
     </Shell>
   );
 }

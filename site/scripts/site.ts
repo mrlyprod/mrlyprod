@@ -176,7 +176,9 @@ ${main}
 
 /* DEMOS */
 
-type Card = { name: string; title: string; blurb: string; shelf: string; order: number };
+type Card = { name: string; title: string; blurb: string; shelf: string; order: number; reads: Read[] };
+
+type Read = { name: string; href: string };
 
 type Shelf = { key: string; group: string; title: string; blurb: string };
 
@@ -215,8 +217,19 @@ function cards(site: Site): Card[] {
       blurb: tag(html, "description"),
       shelf: tag(html, "shelf"),
       order: Number(tag(html, "order")) || 0,
+      reads: [],
     };
   });
+}
+
+const MENTION = (name: string) => new RegExp(`demos/${name}/`);
+
+function readers(list: Card[], pages: { name: string; href: string; md: string }[]) {
+  for (const card of list) {
+    if (!card.name) continue;
+    const seen = MENTION(card.name);
+    card.reads = pages.filter((p) => seen.test(p.md)).map((p) => ({ name: p.name, href: p.href }));
+  }
 }
 
 export function shelved(list: Card[]): Bay[] {
@@ -256,7 +269,8 @@ function seo(source: string, card: Card, nav: string, image: Picture) {
   const found = html.match(TITLE);
   const name = found ? untag(found[1]) : card.title;
   const tags = meta(route, name, card.blurb || name, "website", image);
-  const block = `${BOOT}\n<title>${escape(brand(name))}</title>\n${tags}\n${nav}\n<link rel="stylesheet" href="/ui/fonts/fonts.css">`;
+  const reads = `<script type="application/json" id="${SITE.prefix}reads">${JSON.stringify(card.reads).replace(/</g, "\\u003c")}</script>`;
+  const block = `${BOOT}\n<title>${escape(brand(name))}</title>\n${tags}\n${nav}\n${reads}\n<link rel="stylesheet" href="/ui/fonts/fonts.css">`;
   const page = found ? html.replace(found[0], block) : html.replace("<head>", `<head>\n${block}`);
   return page.replace("</head>", `${TINT}\n</head>`);
 }
@@ -465,7 +479,8 @@ function note(site: Site, route: Route): Output[] {
   const name = n.title;
   const lead = n.lead;
   const head = n.topic ? `<h1 id="${escape(n.name)}">${escape(name)}</h1>\n` : "";
-  const prose = md(n.md, { math, link: links(site, join(site.input("research").path, n.file), out) });
+  const used = new Set<string>();
+  const prose = md(n.md, { math, link: links(site, join(site.input("research").path, n.file), out), widget: widgets(site, used) });
   const body = `${hero(fig, n.figure, route.route, name)}\n${head}${n.name === "sequences" ? anchored(prose) : prose}`;
   const data = {
     "@context": "https://schema.org",
@@ -477,7 +492,8 @@ function note(site: Site, route: Route): Output[] {
     author: { "@type": "Organization", name: AUTHOR },
   };
   const at = n.home ? "research/index.html" : `research/${n.name}/index.html`;
-  out.push({ path: at, bytes: shell(site, { route: route.route, name, description: lead, body, type: n.home ? "website" : "article", data, image: picture(site, n.figure, route.route, fig) }) });
+  const scripts = [...used].sort().map((name) => `/demos/${name}/widget.js`);
+  out.push({ path: at, bytes: shell(site, { route: route.route, name, description: lead, body, type: n.home ? "website" : "article", data, image: picture(site, n.figure, route.route, fig), scripts }) });
   return out;
 }
 
@@ -872,6 +888,11 @@ async function collect(site: Site) {
   const demoList = group.data as Card[];
   const claimList = claims(site);
   const wikiList = wiki(site);
+  readers(demoList, [
+    ...noteList.filter((n) => !n.home).map((n) => ({ name: n.title, href: `/research/${n.name}/`, md: n.md })),
+    ...paperList.map((p) => ({ name: p.name, href: `/papers/${p.slug}/`, md: p.body })),
+    ...wikiList.map((e) => ({ name: e.name, href: wikiRoute(e.slug), md: e.body })),
+  ]);
   counts.papers = laneList.length + paperList.length;
   counts.research = noteList.length;
   counts.blog = postList.length;
@@ -935,7 +956,7 @@ async function collect(site: Site) {
       name: n.home ? "Research" : n.title,
       data: n.home ? { note: n, cards: noteList.map((one) => [one.name, one.title, one.lead, one.figure]) } : n,
       source,
-      inputs: [source],
+      inputs: [source, ...embeds(site, n.md)],
     });
   }
   if (postList.length) {

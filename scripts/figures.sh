@@ -29,7 +29,11 @@ BENCH_TMP="$(mktemp "${TMPDIR:-/tmp}/mrlyfig-bench.XXXXXX")"
 export BENCH_TMP
 trap 'rm -f "$BENCH_TMP"' EXIT
 
-cargo build -q --profile fig -p figures --bins
+if [[ $full -eq 1 ]]; then
+  cargo build -q --profile fig -p figures --bins
+else
+  cargo build -q --profile fig -p figures "${names[@]/#/--bin=}"
+fi
 for name in "${names[@]}"; do
   for theme in dark light; do
     echo "$theme $name"
