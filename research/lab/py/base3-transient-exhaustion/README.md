@@ -64,4 +64,4 @@ uv run python research/lab/py/base3-transient-exhaustion/transient.py --selftest
 
 ## WITNESSES
 
-- `DISCOVERIES.md:215` - `level* = level_0` on 58 of 58 rows at even `D = 6..120`, the towers at `D = 38, 42, 44`, `level* = 811` at `D = 120`, and the `K_min` split 36/22.
+- the claims line (was `DISCOVERIES.md:215`) - `level* = level_0` on 58 of 58 rows at even `D = 6..120`, the towers at `D = 38, 42, 44`, `level* = 811` at `D = 120`, and the `K_min` split 36/22.

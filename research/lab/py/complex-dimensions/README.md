@@ -25,7 +25,7 @@
 - dimensions.md:158-164 `dimension = 0.518370`, 21 roots and winding number 21, real parts `-0.699926` to `0.518370`, offsets 0.43, 0.17, 0.38.
 - dimensions.md:181-184 minimum `2.494975716` at `t = 0.584963`, maximum `2.583040469`, swing 3.53%, measured tube within `4.9e-9` at the minimum.
 - dimensions.md:186-191 swings flat from `u = 15` to `u = 60` (`eps = 8.8e-27`), periodicity at the own base to `1e-9` or better, the two-ratio swing decaying `3.79%` to `0.42%`.
-- DISCOVERIES.md:360 the poles of `1/(1 - fill base^(-s))` on one vertical line of period `2 pi/ln(base)`.
+- research/claims/:360 the poles of `1/(1 - fill base^(-s))` on one vertical line of period `2 pi/ln(base)`.
 - dimensions.md:122 the sponge's hole boundary is not in the sponge: `(1/2, 1/2, 1)` at distance `1/6`, `(2/3, 1/2, 5/6)` at distance `1/18`; read off the digit rule, no generator.
 - dimensions.md:126 `dimension = 1.892789`; every hole ringed by filled cells and the holes exhausting the complement at levels 3, 4, 5 (`carpet_tube.py`, HOLES).
 - dimensions.md:129-130 the two branches of `G(t)`, the level sum equal to the closed form at 96 exact rationals (`carpet_tube.py`, TUBE and PROFILE).

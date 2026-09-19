@@ -319,7 +319,18 @@ function paperIndex(site: Site, route: Route): Output[] {
 
 type Note = { file: string; name: string; md: string; home: boolean; topic: boolean; title: string; lead: string; figure: string };
 
-const SHARED = new Set(["DISCOVERIES", "REFS"]);
+const SHARED = new Set(["REFS"]);
+
+const ROW = /<tr><td>(?:<code>)?([0-9a-f]{8})(?:<\/code>)?<\/td>/g;
+
+function anchored(html: string) {
+  const seen = new Set<string>();
+  return html.replace(ROW, (whole, id: string) => {
+    if (seen.has(id)) return whole;
+    seen.add(id);
+    return `<tr id="${id}"><td><code>${id}</code></td>`;
+  });
+}
 
 function notes(site: Site): Note[] {
   const dir = site.input("research");
@@ -363,7 +374,8 @@ function note(site: Site, route: Route): Output[] {
   const name = n.title;
   const lead = n.lead;
   const head = n.topic ? `<h1 id="${escape(n.name)}">${escape(name)}</h1>\n` : "";
-  const body = `${hero(fig, n.figure, route.route, name)}\n${head}${md(n.md, { math, link: links(site, join(site.input("research").path, n.file), out) })}`;
+  const prose = md(n.md, { math, link: links(site, join(site.input("research").path, n.file), out) });
+  const body = `${hero(fig, n.figure, route.route, name)}\n${head}${n.name === "sequences" ? anchored(prose) : prose}`;
   const data = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -375,6 +387,57 @@ function note(site: Site, route: Route): Output[] {
   };
   const at = n.home ? "research/index.html" : `research/${n.name}/index.html`;
   out.push({ path: at, bytes: shell(site, { route: route.route, name, description: lead, body, type: n.home ? "website" : "article", data }) });
+  return out;
+}
+
+/* CLAIMS */
+
+type Claim = { slug: string; title: string; md: string; file: string };
+
+const TAGS = ["Proved", "Verified", "Conjecture", "Refuted"];
+const LINE = /<li>(\d{4}-\d{2}-\d{2}) \[(Proved|Verified|Conjecture|Refuted)\] /g;
+
+function claims(site: Site): Claim[] {
+  const home = site.input("claims");
+  return home.files
+    .map((file) => {
+      const slug = file.slice(home.path.length + 1, -3);
+      const md = read(file);
+      return { slug, title: title(md) || slug, md, file };
+    })
+    .sort((a, b) => a.title.localeCompare(b.title));
+}
+
+function discoveries(site: Site, route: Route): Output[] {
+  const list = route.data as Claim[];
+  const out: Output[] = [];
+  const fig = press(site, out);
+  const lead = "Every claim of the tree on one dated, tagged line with its witness, one section per topic, filtered by tag, topic and date.";
+  const counts = new Map<string, number>(TAGS.map((tag) => [tag, 0]));
+  const sections = list.map((c) => {
+    const html = md(c.md.replace(/^# .+\n/, ""), { math, link: links(site, c.file, out) }).replace(LINE, (_, date: string, tag: string) => {
+      counts.set(tag, (counts.get(tag) ?? 0) + 1);
+      return `<li data-date="${date}" data-tag="${tag.toLowerCase()}"><time>${date}</time> <b class="tag ${tag.toLowerCase()}">${tag}</b> `;
+    });
+    return `<section class="claims" id="${escape(c.slug)}" data-slug="${escape(c.slug)}"><h2 id="${escape(c.slug)}-claims">${escape(c.title)}</h2>${html}</section>`;
+  });
+  const total = [...counts.values()].reduce((a, b) => a + b, 0);
+  const chips = ["", ...TAGS].map((tag) => `<button type="button" data-tag="${tag.toLowerCase()}"${tag ? "" : ' class="on"'}>${tag || "All"} <span>${tag ? counts.get(tag) : total}</span></button>`).join("");
+  const topics = `<select aria-label="Topic"><option value="">Every topic</option>${list.map((c) => `<option value="${escape(c.slug)}">${escape(c.title)}</option>`).join("")}</select>`;
+  const since = `<label>Since <input type="date" aria-label="Since"></label>`;
+  const bar = `<form class="filter" onsubmit="return false">${chips}${topics}${since}<output>${total} claims</output></form>`;
+  const script = `<script>(()=>{const f=document.querySelector("form.filter"),b=[...f.querySelectorAll("button")],s=f.querySelector("select"),d=f.querySelector("input"),o=f.querySelector("output"),secs=[...document.querySelectorAll("section.claims")];let tag="";const run=()=>{let n=0;for(const sec of secs){let k=0;for(const li of sec.querySelectorAll("li[data-tag]")){const on=(!tag||li.dataset.tag===tag)&&(!s.value||sec.dataset.slug===s.value)&&(!d.value||li.dataset.date>=d.value);li.hidden=!on;if(on)k++}sec.hidden=!k;n+=k}o.textContent=n+" claims"};for(const x of b)x.addEventListener("click",()=>{tag=x.dataset.tag;for(const y of b)y.classList.toggle("on",y===x);run()});s.addEventListener("change",run);d.addEventListener("input",run)})()</script>`;
+  const body = `${hero(fig, "research-index", route.route, "Discoveries")}\n<h1 id="discoveries">Discoveries</h1><p class="lead">${escape(lead)}</p>\n${bar}\n${sections.join("\n")}\n${script}`;
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: "Discoveries",
+    description: lead,
+    url: root + route.route,
+    image: `${root}/figures/research-index-dark.png`,
+    author: { "@type": "Person", name: AUTHOR },
+  };
+  out.push({ path: "research/discoveries/index.html", bytes: shell(site, { route: route.route, name: "Discoveries", description: lead, body, data }) });
   return out;
 }
 
@@ -551,13 +614,14 @@ async function collect(site: Site) {
   const noteList = notes(site);
   const postList = posts();
   const group = demoGroup(site);
+  const claimList = claims(site);
   counts.papers = laneList.length;
   counts.research = noteList.length;
   counts.blog = postList.length;
   counts.demos = (group.data as Card[]).length;
   const nav = tree({
     papers: laneList.map((p) => ({ name: p.name, href: `/papers/${p.slug}/` })),
-    research: noteList.filter((n) => !n.home).map((n) => ({ name: n.title, href: `/research/${n.name}/` })),
+    research: [...(claimList.length ? [{ name: "Discoveries", href: "/research/discoveries/" }] : []), ...noteList.filter((n) => !n.home).map((n) => ({ name: n.title, href: `/research/${n.name}/` }))],
     blog: postList.map((p) => ({ name: p.name, href: `/blog/${p.slug}/` })),
   });
   const routes: Route[] = [];
@@ -580,6 +644,16 @@ async function collect(site: Site) {
     }
   }
   const notesHome = site.input("research").path;
+  if (claimList.length) {
+    routes.push({
+      route: "/research/discoveries/",
+      kind: "discoveries",
+      name: "Discoveries",
+      data: claimList.map((c) => c.slug),
+      source: site.input("claims").path,
+      inputs: claimList.map((c) => c.file),
+    });
+  }
   for (const n of noteList) {
     const source = join(notesHome, n.file);
     routes.push({
@@ -626,6 +700,7 @@ const KINDS: Record<string, (site: Site, route: Route) => Output[] | Promise<Out
   paper,
   note,
   research: researchIndex,
+  discoveries,
   blog: blogIndex,
   post,
   page,
@@ -637,6 +712,7 @@ const KINDS: Record<string, (site: Site, route: Route) => Output[] | Promise<Out
 function draw(site: Site, route: Route) {
   const fn = KINDS[route.kind ?? ""];
   if (!fn) throw new Error(`site: no template for ${route.route}`);
+  if (route.kind === "discoveries") return fn(site, { ...route, data: claims(site) });
   return fn(site, route);
 }
 

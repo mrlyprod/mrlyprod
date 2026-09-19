@@ -21,4 +21,4 @@
 - `farey.md:222` - 48 of 48 points equal, closed form against literal stacking, at `N = 55` and `N = 5555`.
 - `farey.md:223` - 384 comparisons, 0 mismatches, over the 8 sweep values, both sides of the `2q = 19946` period boundary.
 - `farey.md:224-225` - `N = 10^18`, a stack of `5*10^17` layers, both routes agreeing on all 48 values in well under a tenth of a second; first four `375564022861726680`, `374862127744911263`, `374862127744911259`, `375012533841371703`.
-- `DISCOVERIES.md:52` - the same numbers on the ledger line for this section.
+- the claims line (was `DISCOVERIES.md:52`) - the same numbers on the ledger line for this section.

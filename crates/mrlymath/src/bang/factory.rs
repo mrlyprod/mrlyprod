@@ -289,7 +289,7 @@ mod tests {
         let plane = MagicLayer::new(Bang::new(7, 2, 2), 3);
         let cube = MagicLayer::new(Bang::new(23, 3, 2), 3);
         assert!(magic(&[]).is_err());
-        assert!(magic(&[plane.clone()]).is_err());
+        assert!(magic(std::slice::from_ref(&plane)).is_err());
         assert!(magic(&[plane, cube]).is_err());
     }
 }

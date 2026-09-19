@@ -23,5 +23,5 @@
 ## WITNESSES
 
 - coprime.md:330: the sponge ladder `A(10) .. A(18)`, ending `215134797774716879278017`, with the 104 s and 463 s timings of the previous engine.
-- DISCOVERIES.md:161: the same ladder and the gate battery.
+- research/claims/:161: the same ladder and the gate battery.
 - A399364: DATA `level = 0..17` and the b-file `terms/menger_bfile.txt` to `level = 18`.

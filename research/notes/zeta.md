@@ -77,7 +77,7 @@ Tags as everywhere in this tree: **Proved** means derived here from definitions,
 - The per-design tables behind the census and the shadow, which this page reads only in aggregate, are [lab/py/transport-census](../lab/py/transport-census/) for `sigma_1`, the strip, the winding and the certified box of every design, and [lab/py/zeta-shadow](../lab/py/zeta-shadow/) for the remainder, the coupling and both predictions at every zeta zero of every rung.
 - The per-design cells of the family sweep live in [lab/py/zeta-family](../lab/py/zeta-family/): the counts, real parts and rightmost Mertens reading of every design at both assignment radii, the level-one residue table with its null flags, and the residue of each zero's ordinate against `2 pi/log base`.
 - The verb of [lab/py/mrly-pairing](../lab/py/mrly-pairing/) this page does not print: the one-step constant of the digit transform against its triangle-split bound, strict at every family measured beyond `level = 1`.
-- Every finding on a tagged line: [DISCOVERIES](../DISCOVERIES.md). Every source resolved: [REFS](../REFS.md).
+- Every finding on a tagged line: [DISCOVERIES](/research/discoveries/). Every source resolved: [REFS](../REFS.md).
 
 ## GENERATORS
 

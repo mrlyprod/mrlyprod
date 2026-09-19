@@ -19,4 +19,4 @@
 - mobius.md the base-3 series table (`M_{0,1}(3^24) = -1886`, running max `3296`), the final-checkpoint table of all 38 families, the Kempner table at `10^8`, and every `thetamax` and drift; the page tables are extracted by script from this generator's printed rows.
 - mobius.md the identity checks: the eight scaled families equal their primitive twists at every level, `M` vanishes identically on `F = {0,4}` at `base 5`, and the base-4 pair reads `34/-34` with shared `Mmax = 1553` at `level 22`.
 - mobius.md the controls: `M(3^17) = -1423`, `M(4^13) = 329`, `M(5^11) = 617`, and `-1, 1, 2, -23, -48, 212, 1037, 1928` at `10^1..10^8`, which is A084237.
-- DISCOVERIES.md the digit-restricted Mobius meter and exponent rows.
+- research/claims/ the digit-restricted Mobius meter and exponent rows.

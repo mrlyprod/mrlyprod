@@ -25,5 +25,5 @@
 - `coprime.md:272` - tree dichotomy, zero visible on even heights and zero even gcds on odd, 1.49 million points each side.
 - `coprime.md:274,275` - `0.89216, 0.89776` against `0.57143, 0.61067, 0.65218`; `R_7 = 1093`; `base 5` reading `0.345, 0.492, 0.560`; independence product `0.64780, 0.89764, 0.55741` against measured `0.65218, 0.89776, 0.56006`.
 - `coprime.md:276,277` - `6, 42, 306, 2250, 16578, 122202, 900882`, the peel `3, 27, 207, 1539, 11367, 83835, 618111`, both on the `(9, -12)` recurrence to `level 14`, ratio `0.093070331` against `(sqrt(33) - 5)/8 = 0.0930703308`.
-- `DISCOVERIES.md:35,36` - the same numbers, plus `2^1092 = 1 mod 1093^2` and the tree dichotomy carried to `level 7`.
+- the claims line (was `DISCOVERIES.md:35,36`) - the same numbers, plus `2^1092 = 1 mod 1093^2` and the tree dichotomy carried to `level 7`.
 - `slices.md:415` - the pointer: `1/p^2` on the slice against `1/p^3` in the solid.

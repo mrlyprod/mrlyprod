@@ -18,9 +18,9 @@
 ## WITNESSES
 
 - pi.md:165 and pi.md:167 `16/(3*Pi^2) = 0.5403796460924681` and `1 - 16/(3*Pi^2) = 0.4596203539075319`.
-- pi.md:169 and DISCOVERIES.md:185 the inner integral is `2` for every `a`, `I_diam = 4`, `Area(H)^2 = Pi^2/4`, `P = 16/(3*Pi^2)`, three symbolic residuals exactly zero, 50 digits at 50 values of `a`.
-- pi.md:171 and DISCOVERIES.md:350 the parity law and the uniqueness at dim 2 and `d = 2`: 11 base-2 and 502 base-3 designs, base-2 numerators `4, 16/3, 6, 8`, exactly one match, `16/3` at `d = 2`, carried by 3 designs.
+- pi.md:169 and research/claims/:185 the inner integral is `2` for every `a`, `I_diam = 4`, `Area(H)^2 = Pi^2/4`, `P = 16/(3*Pi^2)`, three symbolic residuals exactly zero, 50 digits at 50 values of `a`.
+- pi.md:171 and research/claims/:350 the parity law and the uniqueness at dim 2 and `d = 2`: 11 base-2 and 502 base-3 designs, base-2 numerators `4, 16/3, 6, 8`, exactly one match, `16/3` at `d = 2`, carried by 3 designs.
 - pi.md:173-180 Version L `16/(3*Pi^2) = 0.5403796`, `3/8`, `128/(45*Pi^2) = 0.2882025`, `15/64`, `1024/(525*Pi^2) = 0.1976246`, `175/1024`.
 - pi.md:182-187 Version H `1 - 16/(3*Pi^2)`, `4 - 19845*Pi/16384 = 0.1947689081`, `4 - 549978112/(14189175*Pi^2) = 0.0727502984`, `16 - 178919214166875*Pi/35184372088832 = 0.0244047160`.
-- pi.md:189 and DISCOVERIES.md:351 exact rationals to `d = 11`, and the 60- against 80-digit agreements `2.3e-62`, `7.2e-64`, `1.5e-63` at `d = 3, 4, 5`.
-- Not regenerated: the three `10^8`-sample deviations `2.1e-05`, `9.7e-06`, `4.7e-06` at pi.md:189 and DISCOVERIES.md:351 belong to one sample. This study draws its own and reports the deviation against its own one sigma.
+- pi.md:189 and research/claims/:351 exact rationals to `d = 11`, and the 60- against 80-digit agreements `2.3e-62`, `7.2e-64`, `1.5e-63` at `d = 3, 4, 5`.
+- Not regenerated: the three `10^8`-sample deviations `2.1e-05`, `9.7e-06`, `4.7e-06` at pi.md:189 and research/claims/:351 belong to one sample. This study draws its own and reports the deviation against its own one sigma.

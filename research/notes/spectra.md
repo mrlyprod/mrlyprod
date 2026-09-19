@@ -98,4 +98,4 @@ Throughout `3 J(n) = 2^n - (-1)^n`, `J(n)` is odd for `n >= 1`, and `J` is nonde
 - Off those escaping rows `floor(reach/3) = C_D - deg g_D + [k odd and e even]`; on them it reads `1` against `C_D - deg g_D = K - deg g_D = 0`, so `min(K - deg g_D, floor(reach/3)) = C_D - deg g_D` at every row and the corrector law's statement reads off `(b, e, k, R)` with no span test in it. The deduction behind it still carries one.
 - The carry matrix `M_even` is defined once, in [cuts](cuts.md), and is not redefined here.
 - The hexagram bijection and the mesh census: [cuts](cuts.md). The hexagon mesh itself: [slices](slices.md). The fill polynomial of `bang dim 3, code 23`: [method](method.md).
-- Every finding on a tagged line: [DISCOVERIES](../DISCOVERIES.md). Every source resolved: [REFS](../REFS.md).
+- Every finding on a tagged line: [DISCOVERIES](/research/discoveries/). Every source resolved: [REFS](../REFS.md).

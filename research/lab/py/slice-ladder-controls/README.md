@@ -16,12 +16,12 @@ uv run python research/lab/py/slice-ladder-controls/controls.py
 ## WITNESSES
 
 - `slices.md:118` - the profile identity, zero mismatches over all words of length 2 and 3.
-- `DISCOVERIES.md:146` - the same identity, zero mismatches.
-- `DISCOVERIES.md:147` - level-1 slice counts `2, 6, 6, 30, 20, 140, 70` at `dim 2..8`.
+- the claims line (was `DISCOVERIES.md:146`) - the same identity, zero mismatches.
+- the claims line (was `DISCOVERIES.md:147`) - level-1 slice counts `2, 6, 6, 30, 20, 140, 70` at `dim 2..8`.
 - `cuts.md:324` - the same counts, and the level-1 slice identified with the vertex set.
 - `cuts.md:330` - the identity at `dim 2..8` and the `dim 2..14` ladder.
 - `sequences.md:96` - `6, 132, 1848, 29040, 441408, 6772128`, `a(n) = 11a(n-1) + 66a(n-2)`, root `(11 + sqrt(385))/2`, dimension `2.483635500`.
-- `DISCOVERIES.md:136` - the `dim 4` characteristic polynomial `x^2 - 11x - 66` and `rho_4 = 15.310708`.
+- the claims line (was `DISCOVERIES.md:136`) - the `dim 4` characteristic polynomial `x^2 - 11x - 66` and `rho_4 = 15.310708`.
 - `sequences.md:97` - `2, 6, 6, 30, 20, 140, 70, 630, 252, 2772, 924, 12012, 3432`.
 - `dimensions.md:296-297` - `1.892789261`, `1.892315261`, `1.893034267`, `1.894190425`, `1.895495742`.
 - The run states its carpet fill assumption before any staircase number.

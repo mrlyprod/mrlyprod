@@ -14,9 +14,9 @@ About three minutes. Domain is the page domain, odd `D = 5..511`, 254 rows.
 
 ## WITNESSES
 
-- DISCOVERIES.md:225 254 rows; octave maxima `L_2 = J(k-2)`, `L_3 = J(k-4)`, `a_max = floor(log_2 D) + 4`; `L_4 <= 1`; cones at layers 1, 2, 3; `X` octave maxima `6, 6, 7, 8, 10, 17, 28`; `v_2 <= ceil(n/3) + 9` with slack `5, 5, 5, 7, 7, 9, 9`, extremal `255, 257`; `v_2 <= n` at odd `D >= 9`, equality `9, 15`, violations `5, 7`; class `D = 1 mod 6` 84 rows `13..511`, `v_2 <= n - 3`, ratio `7/18` at `D = 19`; `95 < 99` at `D = 511`
-- DISCOVERIES.md:281 tent law 255/255 at odd `D = 3..511`; `max a_i <= 9` first fails at `D = 127`, 12 by 511; `#{a_i >= 3} = 1` first fails at `D = 175`, reaches 5; `#{a_i >= 2} <= 5` first fails at `D = 183`, reaches 21; `D = 7` profile `{0,0,0,7}`, `D = 5` profile `{0,0,4}`
-- DISCOVERIES.md:210 `D = 7` has `v_2(det) = 7 >= 6` and `det(fill I - 3M) != 0`
+- research/claims/:225 254 rows; octave maxima `L_2 = J(k-2)`, `L_3 = J(k-4)`, `a_max = floor(log_2 D) + 4`; `L_4 <= 1`; cones at layers 1, 2, 3; `X` octave maxima `6, 6, 7, 8, 10, 17, 28`; `v_2 <= ceil(n/3) + 9` with slack `5, 5, 5, 7, 7, 9, 9`, extremal `255, 257`; `v_2 <= n` at odd `D >= 9`, equality `9, 15`, violations `5, 7`; class `D = 1 mod 6` 84 rows `13..511`, `v_2 <= n - 3`, ratio `7/18` at `D = 19`; `95 < 99` at `D = 511`
+- research/claims/:281 tent law 255/255 at odd `D = 3..511`; `max a_i <= 9` first fails at `D = 127`, 12 by 511; `#{a_i >= 3} = 1` first fails at `D = 175`, reaches 5; `#{a_i >= 2} <= 5` first fails at `D = 183`, reaches 21; `D = 7` profile `{0,0,0,7}`, `D = 5` profile `{0,0,4}`
+- research/claims/:210 `D = 7` has `v_2(det) = 7 >= 6` and `det(fill I - 3M) != 0`
 
 ## NOTE
 

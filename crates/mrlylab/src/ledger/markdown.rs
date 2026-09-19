@@ -1,5 +1,11 @@
 use super::records::record_by_id;
-use super::{keys, sequence, Axis, Key, Record, Sequence, Tier, BUDGET, RECORDS, SPACES, TERMS};
+use super::{
+    keys, sequence, Axis, Key, Measure, Record, Sequence, Tier, BUDGET, RECORDS, SPACES, TERMS,
+};
+use mrlymath::name::{Named, Sequence as SequenceName};
+use std::collections::{BTreeMap, BTreeSet, HashSet};
+use std::fs;
+use std::path::Path;
 
 const PROSE: &str = include_str!("prose.md");
 
@@ -72,6 +78,85 @@ fn table(axis: Axis) -> String {
     out.trim_end().to_string()
 }
 
+fn tokens(text: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut rest = text;
+    while let Some(at) = rest.find("sequence_") {
+        let tail = &rest[at..];
+        let end = tail
+            .find(|c: char| !(c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_' || c == '='))
+            .unwrap_or(tail.len());
+        out.push(tail[..end].to_string());
+        rest = &tail[end..];
+    }
+    out
+}
+
+fn citations() -> BTreeMap<String, BTreeSet<String>> {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../research");
+    let mut names: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+    for folder in ["claims", "notes"] {
+        let Ok(entries) = fs::read_dir(root.join(folder)) else {
+            continue;
+        };
+        let mut paths: Vec<_> = entries.flatten().map(|entry| entry.path()).collect();
+        paths.sort();
+        for path in paths {
+            let Ok(text) = fs::read_to_string(&path) else {
+                continue;
+            };
+            let stem = path
+                .file_stem()
+                .and_then(|s| s.to_str())
+                .unwrap_or_default();
+            for token in tokens(&text) {
+                names
+                    .entry(token)
+                    .or_default()
+                    .insert(format!("{folder}/{stem}"));
+            }
+        }
+    }
+    names
+}
+
+fn cited() -> String {
+    let keyed: HashSet<String> = RECORDS
+        .iter()
+        .filter_map(|record| record.key.map(|key| key.name()))
+        .collect();
+    let mut out =
+        String::from("| id | key | closed form | terms | cited by |\n|---|---|---|---|---|\n");
+    for (name, by) in citations() {
+        if keyed.contains(&name) {
+            continue;
+        }
+        let named = SequenceName::from_file(&name).expect("every cited sequence name reads");
+        let key = Key::new(
+            named.code,
+            named.dim,
+            named.base,
+            Measure::parse(&named.measure).expect("a cited measure is a measure"),
+            Axis::parse(&named.axis).expect("a cited axis is an axis"),
+        );
+        let row = sequence(&key, TERMS, BUDGET).expect("every cited sequence reads");
+        let closed = row
+            .closed
+            .as_ref()
+            .map_or_else(|| "none".to_string(), |form| format!("`{}`", form.text()));
+        let files: Vec<String> = by.into_iter().map(|file| format!("`{file}`")).collect();
+        out.push_str(&format!(
+            "| `{}` | `{}` | {} | {} | {} |\n",
+            key.id(),
+            key.name(),
+            closed,
+            spelled(&row),
+            files.join(", ")
+        ));
+    }
+    out.trim_end().to_string()
+}
+
 fn records() -> String {
     let mut out = String::from(
         "| id | record | name | offset | first terms | key | shift | status |\n|---|---|---|---|---|---|---|---|\n",
@@ -125,6 +210,7 @@ fn fill(tag: &str) -> String {
         _ => match tag {
             "sides" => table(Axis::Side),
             "levels" => table(Axis::Level),
+            "cited" => cited(),
             "records" => records(),
             "tally" => tally(),
             other => panic!("unknown placeholder {other}"),

@@ -19,8 +19,8 @@ uv run python research/lab/py/sponge-visible-census/census.py 9
 
 ## WITNESSES
 
-- `DISCOVERIES.md:160` - `A(7) = 1038074187`, `A(8) = 20860210527`, `A(9) = 418429711224`, and `G = 100` and `G = 150` agreeing on `A(9)`.
-- `DISCOVERIES.md:320` - the gaps `0.347, 0.349, 0.344` in units of `12^level`.
+- the claims line (was `DISCOVERIES.md:160`) - `A(7) = 1038074187`, `A(8) = 20860210527`, `A(9) = 418429711224`, and `G = 100` and `G = 150` agreeing on `A(9)`.
+- the claims line (was `DISCOVERIES.md:320`) - the gaps `0.347, 0.349, 0.344` in units of `12^level`.
 - `coprime.md:251` - the base 3 carpet bracket `513/520`.
 - `coprime.md:282` - the same three counts under "Counting without enumerating".
 - `coprime.md:283` - the same three gaps.

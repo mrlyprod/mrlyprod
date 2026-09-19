@@ -23,5 +23,5 @@
 - coprime.md:216 residues `1024, 1024, 1024, 1024, 0, 0`, halves `1/2` and `1/4`, log advantage `0.223144`
 - coprime.md:217 prime 5 at `-0.014253`, equal factors at 2, 7, 11, 13
 - coprime.md:218 `0.520112` and `0.640940`, `+0.000012`, underprediction `0.043340`
-- DISCOVERIES.md:318 the `F_3[t]` line, every number above
-- DISCOVERIES.md:467 `1.261860` and `0.630930`
+- research/claims/:318 the `F_3[t]` line, every number above
+- research/claims/:467 `1.261860` and `0.630930`

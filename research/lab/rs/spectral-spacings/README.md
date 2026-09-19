@@ -18,5 +18,5 @@
 - complexity.md:528-530 the KS distance is nearer Poisson than GOE in every row; the square lattice ties to four decimals under the window unfolder, 0.4987 against 0.4987, both rejected.
 - complexity.md:534-537 the random control has no repeated eigenvalue; the slice on the combinatorial Laplacian is 62.09% and 63.16% distinct at `1e-9` with largest multiplicity 12 at level 2 and 48 at level 3; complexity.md:538-539 the level-4 slice has 16578 nodes and 21546 edges.
 - complexity.md:623 clustering established up to 4096 nodes.
-- DISCOVERIES.md:294 the sponge at 400 nodes, normalised Laplacian, degree-12 unfolder: `P(s < 0.5) = 0.6892`, Sierpinski level 6 0.8297, the square lattice 0.5940, the sponge's zero spacings 245 of 400 (61.25%) forcing `P(s < 0.5) >= 0.61`; GOE's constant prints as 0.17828, the page's 0.17826 is a rounding slip.
+- research/claims/:294 the sponge at 400 nodes, normalised Laplacian, degree-12 unfolder: `P(s < 0.5) = 0.6892`, Sierpinski level 6 0.8297, the square lattice 0.5940, the sponge's zero spacings 245 of 400 (61.25%) forcing `P(s < 0.5) >= 0.61`; GOE's constant prints as 0.17828, the page's 0.17826 is a rounding slip.
 - README.md:59 the negative result, GOE and GUE excluded up to 4096 nodes.

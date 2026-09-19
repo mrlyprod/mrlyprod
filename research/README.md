@@ -25,7 +25,7 @@ The mathematics of the mrly tree: a parity rule on the corners of a cube, substi
 ## THE TREE
 
 - `README.md` - this page: what MrlyMath is, the law, the tree, the index.
-- `DISCOVERIES.md` - the one ledger: every finding on a tagged line with its witness.
+- `claims/` - the one ledger: every finding on a tagged line with its witness.
 - `REFS.md` - every named reference resolved to a canonical URL.
 - `sequences.md` - the OEIS ledger: every sequence this work produces, with terms, formulas and status.
 - `lab/rs/<study>/` and `lab/py/<study>/` - the code that regenerates the numbers; one `README.md` per study saying what it computes, how to run it, and which page lines it witnesses.

@@ -78,4 +78,4 @@
 - coprime.md THE WINDOW AT DIMENSION ONE: the lift union to `k = 19`, `L_k < 3/2` with its band, `agg_k` inside `[1.01748, 1.11457]` and `U_k / Phi_k` across `[1.19611, 1.36517]`.
 - coprime.md THE WINDOW AT DIMENSION ONE: the Fourier form of the lift count, the antipodal family `(3^(pt) + 1)/(3^t + 1)` with `N_T = 2^(((p-1)/2)(t-s) + s)`, the cut-free aggregate `agg'_k` inside `[1.03919, 1.3403]`, and the absolute sum growing by `1.26` or more per step (`ratio.py agg`).
 - coprime.md THE WINDOW AT DIMENSION ONE: the block ladder, the `2 * 3^k + 1` binary multiples of `R_k` below `3^(3k)`, the depth census `V_k` and the share of the deep tail it captures falling `0.4444 -> 0.1025` over `k = 11..15` (`ratio.py tail`).
-- DISCOVERIES.md the top-digit, congruence-layer, occupancy-relaxation and `R_k`-offset rows.
+- research/claims/ the top-digit, congruence-layer, occupancy-relaxation and `R_k`-offset rows.

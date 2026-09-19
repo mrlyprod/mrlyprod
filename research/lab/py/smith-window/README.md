@@ -19,7 +19,7 @@ About seventy seconds: 799 rows of the default domain `D = 5..1601` plus the unb
 
 ## WITNESSES
 
-- DISCOVERIES, the 2-adic Smith cascade: the layer-2 window structure `V_2 = g_D F_2[z]_(<= C_D - deg g_D)`, the generator `z^m c_t(z^(2^e))` and the ceiling `C_D`, at 1199/1199 rows of odd `D = 5..2401`.
+- `claims/2-adic-smith-cascade.md`: the layer-2 window structure `V_2 = g_D F_2[z]_(<= C_D - deg g_D)`, the generator `z^m c_t(z^(2^e))` and the ceiling `C_D`, at 1199/1199 rows of odd `D = 5..2401`.
 - The family shift law and the exact intertwiner `ob(X_(j+1)) = Lambda ob(X_j) + A(Z_j)`, at the same 1199 rows.
 - The slot tent identity and the reach law, at the same 1199 rows and at the far rows `D = 4099` and `D = 16387` of the escaping family; the floor identity `floor(reach/3) = C_D - deg g_D + [k odd and e even]` off the escaping rows, with those rows read as `1` against `C_D - deg g_D = K - deg g_D = 0`; and the corrector law read from the closed form, with the branch census in floor, cap, tie order: 448, 424, 327 over all 1199, 216, 258, 325 over the default 799, and 340, 284, 176 over the 800 out-of-sample rows; over odd `D = 5..401` it is 48, 61, 90 and over `403..601` it is 60, 38, 2.
 - The tent identity and the closed-form corrector law are pure slot arithmetic once Law E is granted, and hold at 999999/999999 rows of odd `D = 5..2000001`.

@@ -19,9 +19,9 @@ uv run python research/lab/py/fill-polynomials/fills.py
 
 - `method.md:283` - distinct polynomials `4, 12, 64, 700` at `dim 1..4`, equal to A129824.
 - `method.md:285-286` - lower coefficients split `4 of 6` classes at `dim 2`, `20 of 22` at `dim 3`, `400 of 402` at `dim 4`; the leading coefficient splits `0` everywhere.
-- `DISCOVERIES.md:431` - the seven `dim 4` signatures whose quartic remainder splits into two centered-polygonal quadratics: `(1,0,1,0,1)`, `(1,0,2,0,1)`, `(1,1,2,1,1)`, `(1,2,3,2,1)`, `(1,3,2,3,1)`, `(1,4,2,4,1)`, `(1,4,5,4,1)`.
-- `DISCOVERIES.md:341` - the negative discriminants form a gapless run `-3..-4` at `dim 2`, `-3..-12` at `dim 3`, `-3..-24` at `dim 4`, of lengths `2, 6, 12`; the run reaches length `20` at `dim 5`, matching the page's prediction.
-- `DISCOVERIES.md:341` - the depth `-63` is reached: at `dim 6` the peeled-remainder reading is gapless from `-3` to `-63`, length `31`, so the page's `dim(dim-1) = 30` at `dim 6` is one short; under the wider reading of every quadratic factor the `dim 6` run is length `80`, to `-160`.
-- `DISCOVERIES.md:445` - `14` locked designs, `9` on the path clause `62, 94, 110, 118, 122, 124, 188, 218, 230` and `5` on the edgeless clause `128, 134, 146, 148, 150`.
+- the claims line (was `DISCOVERIES.md:431`) - the seven `dim 4` signatures whose quartic remainder splits into two centered-polygonal quadratics: `(1,0,1,0,1)`, `(1,0,2,0,1)`, `(1,1,2,1,1)`, `(1,2,3,2,1)`, `(1,3,2,3,1)`, `(1,4,2,4,1)`, `(1,4,5,4,1)`.
+- the claims line (was `DISCOVERIES.md:341`) - the negative discriminants form a gapless run `-3..-4` at `dim 2`, `-3..-12` at `dim 3`, `-3..-24` at `dim 4`, of lengths `2, 6, 12`; the run reaches length `20` at `dim 5`, matching the page's prediction.
+- the claims line (was `DISCOVERIES.md:341`) - the depth `-63` is reached: at `dim 6` the peeled-remainder reading is gapless from `-3` to `-63`, length `31`, so the page's `dim(dim-1) = 30` at `dim 6` is one short; under the wider reading of every quadratic factor the `dim 6` run is length `80`, to `-160`.
+- the claims line (was `DISCOVERIES.md:445`) - `14` locked designs, `9` on the path clause `62, 94, 110, 118, 122, 124, 188, 218, 230` and `5` on the edgeless clause `128, 134, 146, 148, 150`.
 - The path-or-edgeless predicate and the census lock rule agree on `256` of `256` designs, checked here and carried nowhere else.
 - `method.md:275-279` - the two generators agree: the grid count matches the closed form on `256` of `256` designs at `dim 3`, over the six odd sides the census renders.

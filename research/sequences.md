@@ -85,11 +85,11 @@ Number of `n x n x n` binary arrays up to symmetry, the group being independent 
 
 Eight terms were produced here, so all eight were compared rather than a prefix, and brute-force orbit enumeration independently confirms `n = 1` and `n = 2`. A third generator, written from the definition for the submission and sharing no code with the other two, reproduces all eight; it is what promoted `a(7)` and `a(8)` out of single-method status and into the b-file. A fourth route, a Burnside-free flood fill over the orbits of all `2^27` colourings, reports `a(3) = 111618` without using Burnside's lemma at all; that route has no generator in `lab/`, so as independent confirmation it is **Conjecture**. The independent generator carries a group element as an affine map `x -> M*x + t` with `M` a signed permutation matrix and gets the cycle count from `c(g) = (1/m) * Sum_{k=1..m} |Fix(g^k)|`, so it never builds a cell-image array and never walks a cycle. The two-dimensional analogue under the identical convention is A255016, which fixes the group convention as the true three-dimensional promotion of that parent; `lab/rs/oeis-terms` is three-dimensional only, so that convention check is **Verified** on [bijection.md](notes/bijection.md) where the dim 2 Burnside lives and not here. Note that `a(3) = 111618` is the same number the census reports as the full base-3, dimension-3 design space.
 
-This sequence is A398348, whose data is that run verbatim, with a b-file to `n = 14` and a crossref naming A255016 as the two-dimensional case. A null search against a dump older than the submission reports the line absent; that is a report on a stale dump, never evidence of novelty. Tagged in [DISCOVERIES.md](DISCOVERIES.md) and carried in [README.md](README.md) and [bijection.md](notes/bijection.md).
+This sequence is A398348, whose data is that run verbatim, with a b-file to `n = 14` and a crossref naming A255016 as the two-dimensional case. A null search against a dump older than the submission reports the line absent; that is a report on a stale dump, never evidence of novelty. Tagged in [Discoveries](/research/discoveries/) and carried in [README.md](README.md) and [bijection.md](notes/bijection.md).
 
 ### The odd-side fills
 
-At odd side `2k - 1` an axis splits into `k` low positions and `k - 1` high, so a base-2 design fills `sum over its corners of k^(zeros) (k - 1)^(ones)`, a polynomial in `k` of degree `dim`; **Proved** in [DISCOVERIES.md](DISCOVERIES.md), generator `mrlymath::formulas::counting`. The six designs of the plane read as the polygonal numbers, and the dust, the sponge and the solid of the cube as the cubes, the divisor counts of `240^n` and the odd cubes. Every row below is read by `mrlylab::ledger::terms` from `k = 2`, the first odd side past the unit cell, and checked term by term against its record; `id` is the sequence name's eight-hex digest, the anchor of the row, and `shift` is the record's index less the ledger's `k`.
+At odd side `2k - 1` an axis splits into `k` low positions and `k - 1` high, so a base-2 design fills `sum over its corners of k^(zeros) (k - 1)^(ones)`, a polynomial in `k` of degree `dim`; **Proved** in [Discoveries](/research/discoveries/), generator `mrlymath::formulas::counting`. The six designs of the plane read as the polygonal numbers, and the dust, the sponge and the solid of the cube as the cubes, the divisor counts of `240^n` and the odd cubes. Every row below is read by `mrlylab::ledger::terms` from `k = 2`, the first odd side past the unit cell, and checked term by term against its record; `id` is the sequence name's eight-hex digest, the anchor of the row, and `shift` is the record's index less the ledger's `k`.
 
 | id | design | key | closed form | terms from `k = 2` | record | shift | status |
 |---|---|---|---|---|---|---|---|
@@ -124,6 +124,15 @@ At side 3 the fill of a level is the tile's fill to the power `level` and the vo
 | 753b6b49 | sponge | `sequence_dim=3_code=23_measure=surface_axis=level` | `a(level) = 28 a(level-1) - 160 a(level-2)` | `72, 1056, 18048, 336384, 6531072, 129048576, 2568388608, 51267108864` | [A332705](https://oeis.org/A332705) | 0 | **Proved** |
 | 7ab4b31a | sponge | `sequence_dim=3_code=23_measure=triangles_axis=level` | none | `42, 306, 2250, 16578` to the cell budget | [A299916](https://oeis.org/A299916) | 1 | **Verified** |
 | 0e1b6a21 | solid | `sequence_dim=3_code=255_measure=fills_axis=level` | `27^level` | `27, 729, 19683, 531441, 14348907, 387420489, 10460353203, 282429536481` | [A009971](https://oeis.org/A009971) | 0 | **Proved** |
+
+### Cited by a claim
+
+A sequence that a claim or a note names by its `sequence_...` name, and that no OEIS record holds, is still a row: the terms come from the same registry, and its witness is the file that cites it. A name no claim cites and no record holds is not on this page.
+
+| id | key | closed form | terms | cited by |
+|---|---|---|---|---|
+| `2a763bb2` | `sequence_dim=2_code=6_measure=heights_axis=side` | none | `2, 4, 6, 8, 10, 12, 14, 16` | `claims/registry-integers` |
+| `e4c7cd4a` | `sequence_dim=4_code=28662_measure=voids_axis=side` | `4k^4 - 8k^3 + 8k^2 - 4k + 1` | `25, 169, 625, 1681, 3721, 7225, 12769, 21025` | `claims/registry-integers` |
 
 ## CANDIDATES, NOT ENTRIES
 
@@ -226,7 +235,7 @@ Every OEIS id cited on this tree, read against the live entry on its name, its o
 - `lab/rs/oeis-terms` - the b-files behind the submitted entries: A396934 to `n = 20`, A398348 to `n = 14`.
 - `lab/rs/design-census` - the fill-class and coprimality censuses behind the established entries.
 - `lab/py/slice-ladder-controls` - the generator behind both candidate rows.
-- [DISCOVERIES.md](DISCOVERIES.md) - where the sequence findings are adjudicated and tagged; this page carries no findings file of its own.
+- [Discoveries](/research/discoveries/) - where the sequence findings are adjudicated and tagged; this page carries no findings file of its own.
 - [REFS.md](REFS.md) - every sequence id and named reference on these pages, resolved to a canonical URL with a confidence tag.
 
 ## THE REST OF THE TREE

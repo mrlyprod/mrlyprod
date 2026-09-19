@@ -19,7 +19,7 @@ uv run python research/lab/py/flake-band-gap/flake.py 11 6 4
 ## WITNESSES
 
 - `README.md:51` lower edge `1.000000, 1.827520, 1.975680, 1.996862, 1.999605, 1.999950`, upper edge exactly 4 and simple, `3*4^(level-1)` below 2, `c` near `12.9868`.
-- `DISCOVERIES.md:62` the same edge list, and the top of the spectrum `3 + sqrt(5) = 5.2360679775` at `level 2` climbing to `5.7090316570` at `level 6`.
+- the claims line (was `DISCOVERIES.md:62`) the same edge list, and the top of the spectrum `3 + sqrt(5) = 5.2360679775` at `level 2` climbing to `5.7090316570` at `level 6`.
 - `complexity.md:451-456` the edge table `1.000000, 1.827520, 1.975680, 1.996862, 1.999605, 1.999950`, upper edge 4, zero strictly inside.
 - `complexity.md:465-468` 4 is not the top: the spectrum climbs to about `5.7090`, split `3*4^(level-1)` below 2 and `4^(level-1)` at or above 4.
 - `complexity.md:480-489` the defect table to `level 10`, ratios `5.7978, 7.0920, 7.7494, 7.9384, 7.9850, 7.9963, 7.9991, 7.9998, 7.9999`, scaled defect `12.986750`.

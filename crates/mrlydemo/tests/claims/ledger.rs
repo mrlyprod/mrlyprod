@@ -46,11 +46,9 @@ pub fn parse(text: &str) -> Result<Book, String> {
     let mut section = String::new();
     let mut drafts = Vec::new();
     for (index, line) in text.lines().enumerate() {
-        if let Some(heading) = line.strip_prefix("### ") {
-            section = slug(heading);
-        } else if line.starts_with("## ") {
+        if let Some(heading) = line.strip_prefix("# ") {
             parts += 1;
-            section.clear();
+            section = slug(heading);
         } else if let Some(body) = line.strip_prefix("- ") {
             if section.is_empty() {
                 continue;
@@ -69,8 +67,15 @@ pub fn parse(text: &str) -> Result<Book, String> {
 }
 
 fn tagged(body: &str) -> Option<(Tag, &str)> {
+    let body = dated(body)?;
     TAGS.iter()
         .find_map(|(mark, tag)| body.strip_prefix(mark).map(|rest| (*tag, rest)))
+}
+
+fn dated(body: &str) -> Option<&str> {
+    let (date, rest) = body.split_once(' ')?;
+    let digits = date.bytes().filter(u8::is_ascii_digit).count();
+    (date.len() == 10 && digits == 8 && date.matches('-').count() == 2).then_some(rest)
 }
 
 fn draft(section: &str, tag: Tag, rest: &str, line: usize, text: &str) -> Draft {

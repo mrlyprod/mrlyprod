@@ -53,6 +53,6 @@
 - connectivity.md the cone: the chart `(1/3,1/3) (2/3,0) (5/9,1/3) (14/27,4/9) (41/54,0) (95/108,0) (203/324,1/3)`, the gasket-domino-gasket vertex images with `b + c` at most `17/18`, 0 of 8190 entrywise-positive products, and `max |entry(M_3^L)| = 2^(L+2) - 2`.
 - connectivity.md the boundary over `(3, 7)`: `0.502367981` at `L = 2048` through `0.500219405` at `L = 32768`, and the block `4097 <= L <= 8192` sweeping `1.00123` down to `0.50073`.
 - connectivity.md the by-products: `(6^k + 4)/5` reading 2, 8, 44, 260, 1556, 9332, the largest count `1094` at `L = 8`, and the tripling word's range `[0.4792, 1.4379]`.
-- DISCOVERIES.md the transfer-state row: `kappa = 2^(L-1)` on `(15^(L-1), 3)` at `L = 1..10` with maxima 1, 2, 4, 8 over all words of length 1 to 4.
-- DISCOVERIES.md the block-reduction row: six periodic cases at periods 2 and 3 and lengths to 6, matching cell for cell.
+- research/claims/ the transfer-state row: `kappa = 2^(L-1)` on `(15^(L-1), 3)` at `L = 1..10` with maxima 1, 2, 4, 8 over all words of length 1 to 4.
+- research/claims/ the block-reduction row: six periodic cases at periods 2 and 3 and lengths to 6, matching cell for cell.
 - `mrlymath::bang::magic`, `mrlymath::bang::MagicLayer` and `mrlycore::Tensor::fractal`, the crate paths both renderers are checked against.

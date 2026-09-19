@@ -13,8 +13,18 @@ fn the_ledger_claims_hold() {
         .map(|name| name == "all")
         .unwrap_or(false);
     let lane = if all { Cost::Dear } else { Cost::Cheap };
-    let page = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../research/DISCOVERIES.md");
-    let text = std::fs::read_to_string(&page).expect("the ledger is readable");
+    let folder = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../research/claims");
+    let mut files: Vec<_> = std::fs::read_dir(&folder)
+        .expect("the claims folder is readable")
+        .map(|entry| entry.expect("an entry reads").path())
+        .filter(|path| path.extension().is_some_and(|ext| ext == "md"))
+        .collect();
+    files.sort();
+    let text: String = files
+        .iter()
+        .map(|path| std::fs::read_to_string(path).expect("a claims file is readable"))
+        .collect::<Vec<_>>()
+        .join("\n");
     let book = match ledger::parse(&text) {
         Ok(book) => book,
         Err(why) => panic!("{why}"),
