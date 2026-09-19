@@ -1,10 +1,10 @@
 # percolation-race
 
-- Races five self-similar designs against random cell sets of exactly the same size on the same grid, on three metrics: face-connected components, largest-component fraction, and boundary per cell `(2*D*N - 2*E)/N`.
+- Races five self-similar designs against random cell sets of exactly the same size on the same grid, on three metrics: face-connected components, largest-component fraction, and boundary per cell `(2*dim*N - 2*E)/N`.
 - Pass A builds each design as a Kronecker power of its level-1 tile, finds components by union-find, and draws the control with `numpy.random.default_rng` on PCG64.
 - Pass B builds each design by substitution over coordinate sets, finds components by breadth-first search on a padded grid, and draws the control with `random.Random` on the Mersenne Twister.
 - The dispersing tile is the antidiagonal in pass A and the diagonal in pass B, so the two passes race reflected copies of it.
-- Pass B also checks the substitution route against the digit rule for L = 1, 2, 3 on all five designs, and counts the per-draw ties the means hide.
+- Pass B also checks the substitution route against the digit rule for level 1, 2, 3 on all five designs, and counts the per-draw ties the means hide.
 - The passes share no build, no search and no generator; the last block prints every overlapping comparison as a multiple of the sample standard deviation and exits nonzero if any check fails.
 
 ## DOMAIN

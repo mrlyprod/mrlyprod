@@ -58,27 +58,27 @@ const CARDS = [
   },
   {
     key: 'carpet', title: 'The carpet', slider: ['level', 1, FLATCAP, 3],
-    say: 'Eight of nine cells survive every level, so the carpet fills 8^L, and its dimension log 8 / log 3 is this count read against the side 3^L.',
+    say: 'Eight of nine cells survive every level, so the carpet fills 8^level, and its dimension log 8 / log 3 is this count read against the side 3^level.',
     build: (L) => ({ art: <Grid grid={m.two_grid('7', 3, L, 0, 2)} on={ink.blue} className="" />, lines: [item(row('7', 2, 'fills', 'level', least(L)), 'filled cells')] }),
   },
   {
     key: 'voids', title: 'What the carpet drops', slider: ['level', 1, FLATCAP, 3],
-    say: 'The cells the carpet leaves empty are the grid less the fill, 9^L - 8^L, the powers of nine racing the powers of eight.',
+    say: 'The cells the carpet leaves empty are the grid less the fill, 9^level - 8^level, the powers of nine racing the powers of eight.',
     build: (L) => ({ art: <Grid grid={m.two_grid('7', 3, L, 0, 2)} on={ink.deep} off={ink.orange} className="" />, lines: [item(row('7', 2, 'voids', 'level', least(L)), 'empty cells')] }),
   },
   {
     key: 'perimeter', title: 'The perimeter of the carpet', slider: ['level', 1, FLATCAP, 3],
-    say: 'Two adjacent blocks bury one edge per spanning position, so the perimeter closes as a sum of the powers 8^L and 3^L, the entry the OEIS lists for the carpet at iteration n.',
+    say: 'Two adjacent blocks bury one edge per spanning position, so the perimeter closes as a sum of the powers 8^level and 3^level, the entry the OEIS lists for the carpet at iteration n.',
     build: (L) => ({ art: <Grid grid={m.two_grid('7', 3, L, 0, 2)} on={ink.yellow} className="" />, lines: [item(row('7', 2, 'surface', 'level', least(L)), 'exposed edges')] }),
   },
   {
     key: 'sponge', title: 'The sponge', slider: ['level', 1, CUBECAP, 2],
-    say: 'Twenty of twenty-seven subcubes survive every level, so the sponge fills 20^L.',
+    say: 'Twenty of twenty-seven subcubes survive every level, so the sponge fills 20^level.',
     build: (L) => ({ art: <Markup svg={hex(3, L, 'iso')} />, lines: [item(row('23', 3, 'fills', 'level', least(L)), 'filled cells')] }),
   },
   {
     key: 'surface', title: 'The surface of the sponge', slider: ['level', 1, CUBECAP, 2],
-    say: 'The same burial count in three dimensions: the exposed faces are a sum of the powers 20^L and 8^L, the surface area of the stage-n Menger sponge.',
+    say: 'The same burial count in three dimensions: the exposed faces are a sum of the powers 20^level and 8^level, the surface area of the stage-n Menger sponge.',
     build: (L) => ({ art: <Markup svg={hex(3, L, 'pro')} />, lines: [item(row('23', 3, 'surface', 'level', least(L)), 'exposed faces')] }),
   },
   {
@@ -144,7 +144,7 @@ const CARDS = [
   },
   {
     key: 'gasket', title: 'The gasket cut', slider: ['level', 1, CUTCAP, 4],
-    say: 'Every diagonal plane through the octahedral design at side 2 holds exactly 3^L points at every admissible height, by the uniqueness of the binary expansion of the height, so the cut is a Sierpinski gasket at every depth.',
+    say: 'Every diagonal plane through the octahedral design at side 2 holds exactly 3^level points at every admissible height, by the uniqueness of the binary expansion of the height, so the cut is a Sierpinski gasket at every depth.',
     build: (L) => {
       const profiles = upto(least(L)).map((j) => JSON.parse(m.diagonal_profile('126', 2, j, 2)));
       const last = profiles[L - 1];

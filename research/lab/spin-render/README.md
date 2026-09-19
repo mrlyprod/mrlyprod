@@ -12,7 +12,7 @@
 
 - `uv run python research/lab/spin-render/spin_render.py`
 - From the repo root. One core, about 10 seconds.
-- Domain is `R = 256, 512, 1024, 2048` for all six schedules, the fade table at `R = 1024` and `L = 4, 8, 14, 28`, and a `0.02`-wide zoom at effective `R = 51200` on each schedule's top peak.
+- Domain is `R = 256, 512, 1024, 2048` for all six schedules, the fade table at `R = 1024` and layer count `L = 4, 8, 14, 28`, and a `0.02`-wide zoom at effective `R = 51200` on each schedule's top peak.
 - Writes the five PNGs beside this file and nothing else.
 
 ## WHAT IT PRINTS

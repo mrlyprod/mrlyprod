@@ -1,7 +1,7 @@
 # Magic Words
 
 - Regenerates the order-sensitivity section of [connectivity](../../connectivity.md): the two sensitivity tables, the minimal witness, the order-blind laws, the rational-series representation, the component growth families, and the component exponent along a word with its closed forms on all 105 letter pairs, its frequency comparison, its named-word value with a certificate, and its boundary witnesses.
-- A word is an ordered list of base-2, `D = 2` codes folded by the Kronecker product, first letter outermost; bit `i` of a code is residue corner `i` in row-major order, so code 3 is the top row and code 5 the left column. The empty word is the one filled cell.
+- A word is an ordered list of base-2, dim 2 codes folded by the Kronecker product, first letter outermost, of length `L`; bit `i` of a code is residue corner `i` in row-major order, so code 3 is the top row and code 5 the left column. The empty word is the one filled cell.
 - Observables are fixed once and printed once: `fill`; the main-diagonal count; `boundary`, the number of filled cells with a void or exterior 4-neighbour; `components`, 4-connected; `holes`, the bounded 4-connected components of the complement; the Euler characteristic `N - A + Q` over cells, face-adjacent pairs and full `2 x 2` blocks; the anti-diagonal profile, filled cells by `i + j`; and the row and column contact counts.
 - The exposed-face reading `4N - 2E` of [the race](../../connectivity.md) is a second observable under the same word "boundary" and is printed beside the first, because it is order-sensitive at length 2 where the cell count is not.
 - Length 3 runs over a ten-code library. The library is every code of fill 2 or 3, the 15 non-empty codes less the four one-cell codes and the full tile; the study also scans all 3003 ten-code subsets and prints how many reproduce the page's length-3 row, which is one.
@@ -35,8 +35,8 @@
 - connectivity.md the denominators: 225 words and 105 multisets with two or more orderings at length 2; 1000 words and 210 at length 3.
 - connectivity.md the scope guard: the whole anti-diagonal profile sensitive on 99 of 105 at length 2, its peak on 23 and its support on 27.
 - connectivity.md the minimal witness: `comp(A_3 (x) A_6) = 4` against `comp(A_6 (x) A_3) = 2`.
-- connectivity.md the `k = 2` split: all 7 same-class pairs commute, diagonal against diagonal at 4, all 8 adjacent-against-diagonal pairs 4 against 2.
-- connectivity.md the `k >= 3` line: all 10 pairs among codes 7, 11, 13, 14, 15 give one component in either order.
+- connectivity.md the fill 2 split: all 7 same-class pairs commute, diagonal against diagonal at 4, all 8 adjacent-against-diagonal pairs 4 against 2.
+- connectivity.md the fill 3 and above line: all 10 pairs among codes 7, 11, 13, 14, 15 give one component in either order.
 - connectivity.md the order-blind sweeps: the main-diagonal count factors and the contacts multiply on all 3375 words of length 3, and boundary and interior survive the factor swap on all 256 code pairs, all with zero mismatches.
 - connectivity.md the series table: Hankel ranks 4, 4, 8, 11 with 6, 6, 9, 10 distinct matrices and basis words `e, 3, 5, 15`, `e, 3, 5, 15`, `e, 3, 5, 7, 11, 13, 14, (7,14)`, `e, 3, 5, 7, 11, 13, 14, 15, (7,6), (7,7), (11,11)`.
 - connectivity.md the component representation: `lambda = (1,0,0,0)`, `gamma = (1,1,1,1)^T`, six classes `{1,2,4,8}`, `{3,12}`, `{5,10}`, `{6,9}`, `{7,11,13,14}`, `{15}`, 14 of 15 class pairs failing to commute, and `M(6,9) = 2 M(1,2,4,8)`.

@@ -145,7 +145,7 @@ pub fn terms(key: &Key, count: usize, cells: u128) -> Result<(Vec<i128>, bool)> 
     Ok((out, false))
 }
 
-/// Expands the odd-side fill `sum over the corners of k^(zeros) (k - 1)^(ones)` into coefficients by rising power of `k`.
+/// Expands the odd-side fill at side `2k - 1`, `sum over the corners of k^(zeros) (k - 1)^(ones)`, into coefficients by rising power of `k`.
 ///
 /// ```
 /// let carpet = mrlymath::bang::code_to_corners(7, 2, 2).unwrap();
@@ -179,7 +179,7 @@ fn odd_power(dimension: usize) -> Vec<i128> {
 /// Returns the closed form of a design sequence when the ledger knows one.
 ///
 /// Level fills are a power and level voids a difference of powers; base-2 side fills and voids
-/// are polynomials in `k`; the level surface obeys the exposure recurrence.
+/// are polynomials in `k` at side `2k - 1`; the level surface obeys the exposure recurrence.
 pub fn closed(key: &Key) -> Result<Option<Closed>> {
     let Key {
         code,

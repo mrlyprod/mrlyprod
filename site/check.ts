@@ -159,6 +159,7 @@ const heads = JSON.parse(m.census_walk(7692));
 const closedTier = JSON.parse(m.census_report());
 const writes16 = JSON.parse(m.census_writers(16, 0, 1));
 const outside = JSON.parse(m.census_writers(1001, 0, 1));
+const spongeRead = JSON.parse(m.name_parse('bang_dim=3_code=23'));
 const wordCodes = ['7', '14', '9'];
 const wordSides = [3, 7, 5];
 const wordBases = [2, 2, 2];
@@ -358,8 +359,8 @@ const checks: [string, unknown, unknown][] = [
   ['three_census euler', JSON.parse(m.three_census('23', 3, 1, 2)).euler, -4],
   ['universe 3 distinct', JSON.parse(m.universe(3)).distinct, 22],
   ['universe 2 orbit of 1', JSON.parse(m.universe(2)).designs[1].orbit, 4],
-  ['name_of 127', m.name_of('127', 2, 3), 'mrly_bang_d2_q3_127'],
-  ['name_parse sponge', JSON.parse(m.name_parse('mrly_bang_d3_23')).code, '23'],
+  ['name_of 127', m.name_of('127', 2, 3), 'bang dim 2, base 3, code 127'],
+  ['name_parse sponge', `${spongeRead.code} ${spongeRead.dim} ${spongeRead.base}`, '23 3 2'],
   ['press members', m.press_members('2', 1, 2, 5).join(','), '1,3,7,15,31'],
   ['press count_below', m.press_count_below('7', 2, 2, '27'), '18'],
   ['life blinker loop', JSON.parse(m.life_run(blinker, 5, 5, [3], [2, 3], false, 16)).loop, 2],
@@ -369,6 +370,7 @@ const checks: [string, unknown, unknown][] = [
   ['eca_seed 110 fill', sum(m.eca_seed(110, 31).types), 326],
   ['eca_seed 90 fill', sum(m.eca_seed(90, 8).types), 29],
   ['eca_card 110 class', `${card110.b3_rep},${card110.wolfram_rep},${card110.npn_rep},${card110.genus}`, '61,110,25,comp'],
+  ['eca_card names', `${card110.name} · ${card90.gasket}`, 'bang dim 3, code 110 · bang dim 2, code 13'],
   ['eca_card 90 totalistic', `${card90.outer_totalistic.birth},${card90.outer_totalistic.survive},${card90.surjective}`, '1,1,true'],
   ['eca_soup seeded', String(m.eca_soup(64, 0.5, 7).join(',') === m.eca_soup(64, 0.5, 7).join(',')), 'true'],
   ['life_mask 7 level 2', `${maskDeep.width},${sum(maskDeep.types)}`, '9,64'],
@@ -577,13 +579,13 @@ const checks: [string, unknown, unknown][] = [
   ['ledger_terms sponge euler capped', m.ledger_terms('23', 3, 2, 'euler', 'level', 8, '1000').join(','), '-4,-80'],
   ['ledger_identify slice', `${known[0].id} ${known[0].shift}`, 'A299916 1'],
   ['ledger_closed carpet side', m.ledger_closed('7', 2, 2, 'fills', 'side'), '3k^2 - 2k'],
-  ['ledger_closed sponge surface', m.ledger_closed('23', 3, 2, 'surface', 'level'), 'a(L) = 28 a(L-1) - 160 a(L-2)'],
+  ['ledger_closed sponge surface', m.ledger_closed('23', 3, 2, 'surface', 'level'), 'a(level) = 28 a(level-1) - 160 a(level-2)'],
   ['ledger_records', JSON.parse(m.ledger_records()).length, 60],
   ['ledger_build closed', ledgerRows, 7692],
-  ['ledger_search octagonal', `${octagon.total} ${octagon.rows[0].name} ${octagon.rows[0].oeis} ${octagon.rows[0].shift} ${octagon.rows[0].tag} ${octagon.rows[0].closed}`, '1 mrly_bang_d2_7.fills.side A000567 0 Proved 3k^2 - 2k'],
+  ['ledger_search octagonal', `${octagon.total} ${octagon.rows[0].name} ${octagon.rows[0].oeis} ${octagon.rows[0].shift} ${octagon.rows[0].tag} ${octagon.rows[0].closed}`, '1 bang_dim=2_code=7.fills.side A000567 0 Proved 3k^2 - 2k'],
   ['ledger_search surfaces', JSON.parse(m.ledger_search('', 'surface', 3, 2, 0, 5)).total, 44],
   ['ledger_grow convolved 100', `${grown.rows} ${grown.done} ${grown.total}`, '7792 100 5044'],
-  ['ledger_row void side', `${hollow.name} ${hollow.terms.join(',')} ${hollow.closed} ${hollow.number}`, 'mrly_bang_d2_9.voids.side 4,12,24 2k^2 - 2k 3'],
+  ['ledger_row void side', `${hollow.name} ${hollow.terms.join(',')} ${hollow.closed} ${hollow.number}`, 'bang_dim=2_code=9.voids.side 4,12,24 2k^2 - 2k 3'],
   ['ledger_profile gasket', `${gasket.length} ${gasket.slice(15, 31).every((c: string) => c === '81')}`, '46 true'],
   ['ledger_profile strip', m.ledger_profile('1', 1, 2, 3, 2).join(''), '101000101'],
   ['farey_novelty 7', `${stack7.lit} ${stack7.novel}`, '19 19'],
@@ -603,7 +605,7 @@ const checks: [string, unknown, unknown][] = [
   ['census_report closed heads', `${closedTier.written} ${closedTier.first_miss} ${closedTier.incidences} ${closedTier.low}`, '604 83 30865 452'],
   ['census_report stops', `${closedTier.ceiling_stopped} ${closedTier.cap_stopped} ${closedTier.blank}`, '5048 2644 54'],
   ['census_counts window', `${m.census_counts().length} ${m.census_counts()[15]}`, '1000 633'],
-  ['census_writers 16 heads', `${writes16.rows} ${writes16.shown[0].name} ${writes16.shown[0].closed} ${writes16.shown[0].index}`, '633 mrly_bang_d1_1.fills.level 2^L 3'],
+  ['census_writers 16 heads', `${writes16.rows} ${writes16.shown[0].name} ${writes16.shown[0].closed} ${writes16.shown[0].index}`, '633 bang_dim=1_code=1.fills.level 2^level 3'],
   ['census_writers outside', `${outside.inside} ${outside.rows}`, 'false 0'],
   ['census_champions heads', JSON.parse(m.census_champions(2)).map((c: { value: number; rows: number }) => `${c.value} at ${c.rows}`).join(', '), '16 at 633, 12 at 579'],
   ['census_misses heads', JSON.parse(m.census_misses(3)).join(','), '83,86,107'],
@@ -636,8 +638,9 @@ const checks: [string, unknown, unknown][] = [
   ['menger word cubes', `${mengerWord.fill} ${m.magic_cells(['23', '23', '23'], [3, 3, 3], [2, 2, 2]).length / 3}`, '8000 8000'],
   ['menger word surface', m.magic_surface(['23', '23', '23'], [3, 3, 3], [2, 2, 2]), '18048'],
   ['menger word constant', mengerWord.constant, true],
-  ['magic name', m.magic_name(wordCodes, wordSides), 'mrly_word_d2_c7n3_c14n7_c9n5'],
-  ['magic name round trip', JSON.parse(m.magic_parse(m.magic_name(wordCodes, wordSides))).codes.join(','), wordCodes.join(',')],
+  ['magic name', m.magic_name(wordCodes, wordSides, wordBases, 2), 'word dim 2, magic [7 14 9], side [3 7 5]'],
+  ['magic key', m.magic_key(wordCodes, wordSides, wordBases, 2), 'word_dim=2_magic=[7,14,9]_side=[3,7,5]'],
+  ['magic key round trip', JSON.parse(m.magic_parse(m.magic_key(wordCodes, wordSides, wordBases, 2))).codes.join(','), wordCodes.join(',')],
   ['code collision same tile', collideSame, true],
   ['code collision side', `${collideAhead.width} ${collideAhead.types.reduce((a: number, b: number) => a + b, 0)}`, '6 6'],
   ['morse word agrees', `${morseWord.agree} ${morseWord.ones} ${morseWord.longest}`, 'true 32 2'],
@@ -693,7 +696,7 @@ checks.push(
   ['blend_recurrence primes', m.blend_recurrence(['2', '3', '5', '7', '11', '13', '17', '19']), 'null'],
   ['blend_characteristic sponge', m.blend_characteristic(plotCoefficients), '[[1,1],[-28,1],[160,1]]'],
   ['blend_growth sponge', m.blend_growth(plotCoefficients).toFixed(9), '20.000000000'],
-  ['blend_series sponge row', `${plotSeries.name} ${plotSeries.oeis} ${plotSeries.closed}`, 'mrly_bang_d3_23.surface.level A332705 a(L) = 28 a(L-1) - 160 a(L-2)'],
+  ['blend_series sponge row', `${plotSeries.name} ${plotSeries.oeis} ${plotSeries.closed}`, 'bang_dim=3_code=23.surface.level A332705 a(level) = 28 a(level-1) - 160 a(level-2)'],
   ['blend_series sponge rule', `${plotSeries.order} ${plotSeries.polynomial} ${plotSeries.growth_from}`, '2 x^2 - 28 x + 160 the recurrence root'],
   ['blend_series sponge growth', `${plotSeries.growth.toFixed(9)} ${plotSeries.exponent.toFixed(9)}`, '20.000000000 1.301029996'],
   ['blend_series sponge views', `${plotSeries.ratios[0]} ${plotSeries.differences[1][0]} ${plotSeries.differences.length} ${plotSeries.log10[0].toFixed(7)}`, '14.6667 984 4 1.8573325'],

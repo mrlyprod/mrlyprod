@@ -2,8 +2,8 @@
 
 - Recomputes the base-3 page constants at 60-digit working precision, printed to 43 digits: pi by Machin, trigamma `psi1(x) = sum 1/(n+x)^2` by Euler-Maclaurin in exact rationals (100 explicit terms, Bernoulli tail through `B_20`), then `L(2, chi_-3) = (psi1(1/3) - psi1(2/3))/9`, Catalan `G = (psi1(1/4) - psi1(3/4))/16`, `zeta(2) = pi^2/6`, `zeta_K(2) = zeta(2) L`, `zeta_Qi(2) = zeta(2) G` and both reciprocals.
 - Cross-checks by the reflection identity `psi1(1/3) + psi1(2/3) = 4 pi^2/3`, prints the implied `Cl2(pi/3)`, and runs the two-term relation search as continued fractions of `L sqrt(3)/pi^2` and `L/pi^2` with `G/pi^2` and `zeta(2)/pi^2` as controls, reporting each last convergent denominator.
-- Repeats the same constants by independent float routes: the paired Dirichlet series for `L`, the Eisenstein lattice sum `(1/6) sum 1/N(z)^2` and the Gaussian `(1/4) sum 1/(a^2+b^2)^2` truncated at norm `4e6` with their analytic tails, and the `gcd(a,b) = 1` census of `[1,3000]^2`.
-- Builds `Z[omega]` from `omega^2 = -1 - omega` (norm `a^2 - a b + b^2`, nearest-integer division by the conjugate, Euclidean gcd), sieves 400000 seeded random pairs for the coprime fraction, checks `b^L - b^(L-1)` against `phi(b^L)` for `b = 2, 3, 5` and the `b = 6` counterexample, and draws the hexagonal visibility figure by per-pixel coverage blending.
+- Repeats the same constants by independent float routes: the paired Dirichlet series for the `L`-function, the Eisenstein lattice sum `(1/6) sum 1/N(z)^2` and the Gaussian `(1/4) sum 1/(a^2+b^2)^2` truncated at norm `4e6` with their analytic tails, and the `gcd(a,b) = 1` census of `[1,3000]^2`.
+- Builds `Z[omega]` from `omega^2 = -1 - omega` (norm `a^2 - a b + b^2`, nearest-integer division by the conjugate, Euclidean gcd), sieves 400000 seeded random pairs for the coprime fraction, checks `base^level - base^(level-1)` against `phi(base^level)` for base 2, 3, 5 and the base 6 counterexample, and draws the hexagonal visibility figure by per-pixel coverage blending.
 
 ## RUN
 

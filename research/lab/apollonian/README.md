@@ -12,7 +12,7 @@
 - The strip packing is periodic in `x`, so the census is taken on one period: the two swaps at the root that replace a line are kept and the two that translate are dropped, which leaves exactly the circles whose centre has `0 < x < 1`. The two root circles at `x = 0` and `x = 1` are the only ones of the whole packing on the boundary and are never counted, so `strayed` tests the strict inequality, `k x <= 0 || k x >= k`.
 - A circle of the packing is tangent to the line `y = 0` exactly when `k y = 1`, and to `y = 1` exactly when `k y = k - 1`, so the line-tangent census is read off the integers with no geometry.
 - Both line tests are for circles of positive curvature: the line `y = 1` is `(0, 0, 1)` and would pass `k y = 1`, the line `y = 0` is `(0, 0, -1)` and would pass `k y = k - 1`. The tree never hands a line to either test, since a line is only ever replaced.
-- `ford` walks the Stern-Brocot tree of Farey pairs in exact integers and checks at every mediant that the reflection returns `(k, k x, k y) = (2 r^2, 2 p r, 1)` for the mediant `p/r`, that the quadruple `(0, 2 b^2, 2 d^2, 2 r^2)` satisfies Descartes, that the other root of that quadratic is `2 (b - d)^2`, and that the two parents are tangent, `(a d - b c)^2 = 1`.
+- `ford` walks the Stern-Brocot tree of Farey pairs in exact integers and checks at every mediant that the reflection returns `(k, k x, k y) = (2 r^2, 2 p r, 1)` for the mediant `p/r` of the parents `a/b` and `c/d`, that the quadruple `(0, 2 b^2, 2 d^2, 2 r^2)` satisfies Descartes, that the other root of that quadratic is `2 (b - d)^2`, and that the two parents are tangent, `(a d - b c)^2 = 1`.
 - The same walk sums `floor(Q/b)` over the nodes of `(0, 1)`, adds the node `0/1` at brightness `Q`, and compares the total with `Q(Q + 1)/2`, the Farey stack's brightness on `[0, 1)`.
 
 ## RUN
@@ -32,5 +32,5 @@
 - `census`: the bounded packing `(-1, 2, 2, 3)` to `T = 10^7` gives 555198593 circles, depth 3162, 0 broken quadruples and 67163 distinct circles against 67163 counted on the `T <= 10^4` control. `N(T)` is `5, 165, 3325, 67163, 1359167, 27463391, 555198593` at `T = 10^1 .. 10^7`.
 - The same census's exponent by ratio is `1.5185, 1.3043, 1.3053, 1.3061, 1.3055, 1.3057`, and the flat reading `log N(T)/log T` is `1.2492` at `T = 10^7`, still climbing.
 - The bounded packing's curvatures fall in the eight residues `2, 3, 6, 11, 14, 15, 18, 23` mod 24.
-- `design`: `q^delta` at the literature `delta` misses every integer for `2 <= q <= 100`, the nearest being `52^delta = 174.005426001`, then `68`, `89`, `49`, `23`, `20`; the worst gap is `0.488109816` at `q = 47`.
+- `design`: `base^delta` at the literature `delta` misses every integer for `2 <= base <= 100`, the nearest being `52^delta = 174.005426001`, then `68`, `89`, `49`, `23`, `20`; the worst gap is `0.488109816` at base 47.
 - The same verb reads the miss as a dimension: the nearest design dimension in the window is `log 351/log 89 = 1.305694144`, off `delta` by `0.000007416`, then `log 247/log 68 = 1.305694579` at `0.000007851`.

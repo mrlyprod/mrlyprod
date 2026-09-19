@@ -1,7 +1,7 @@
 # Code Factorisation
 
 - Regenerates the composite and monoid material of [magic](../../magic.md): which tiles are Kronecker products, how a tile can factor in two shape-distinct ways, what the irreducibles are, and when two letters render one tile at one side.
-- A tile is a 0/1 square array. A base-`q` plane code is the tile at side `q` whose bit `i` is the cell `(i / q, i mod q)`, so base 2 gives the 15 non-empty codes of [core](../../core.md) and base 3 the 511 non-empty codes.
+- A tile is a 0/1 square array. A plane code at base `base` is the tile at side `base` whose bit `i` is the cell `(i / base, i mod base)`, so base 2 gives the 15 non-empty codes of [core](../../core.md) and base 3 the 511 non-empty codes.
 - The monoid is all non-empty tiles under the Kronecker product, graded by side, with the one filled cell as its unit. A word is a factorisation; a composite is a product.
 - The whole study is exact integer comparison. Nothing here is a rearrangement singular value, a fit or a sample: the nearest-Kronecker-product literature solves an approximation problem, which is the wrong problem and the wrong arithmetic for a decision.
 - The block test is the engine: `C` of side `N` cuts at `d | N` when every non-zero `d`-block of `C` is one tile `B`, and then `C = A (x) B` with `A` the 0/1 indicator of the non-zero blocks. It decides factorability at a named shape in `O(N^2)` and names both factors.
@@ -33,6 +33,6 @@
 - magic.md the prime-power counts: 225, 1962675, 261121, 553402322215537199175 and `(2^25 - 1)^2 = 1125899839733761`, with the one-dimensional cross-check 9, 63, 1431, 49.
 - magic.md the two witnesses: `[6]{(0,0),(2,2)}` factoring as `c1 (x) c257.q3` and `c17.q3 (x) c1`, and `[12]{(0,0),(3,3)}` factoring at profiles `(2 x 2 x 3)` and `(3 x 4)` with the side-4 letter irreducible and cut set `{1,2,3,4,12}`.
 - magic.md the word census at side 12: 114975 words and 114975 composites per shape, pairwise 2565, 2565, 483, triple 483, union 339795, with `2565 = 15 x 171` and the side-12 witness in one image only.
-- magic.md the cut-set sweeps: zero gcd-closure failures over every line to `N = 20` and over the 339795 side-12 composites, 132 and 2376 lcm-closure failures, first at `N = 12` with `L = {1,2,3,4,12}`, and zero mismatches of the incomparable-divisor criterion.
+- magic.md the cut-set sweeps: zero gcd-closure failures over every line to `N = 20` and over the 339795 side-12 composites, 132 and 2376 lcm-closure failures, first at `N = 12` with cut set `{1,2,3,4,12}`, and zero mismatches of the incomparable-divisor criterion.
 - magic.md the render collisions: `2:480 3:15 4:1 5:1 6:1 7:1 8:1 9:1 12:1 18:1`, the carpet's unique side-3 partner `c495` of fill 8, and the side-9 fills 65, 72, 64 on three pairwise distinct tiles.
 - `mrlymath::bang::factory::create` and `mrlycore::Tensor::kron`, the crate paths both renderers are checked against.

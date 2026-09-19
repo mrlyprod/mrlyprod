@@ -146,11 +146,11 @@ fn checks(sheet: &Sheet, book: &Census) {
         );
     }
     let classics: [(&str, &[i128]); 5] = [
-        ("mrly_bang_d2_7.fills.side", &[8, 21, 40, 65]),
-        ("mrly_bang_d2_7.fills.level", &[8, 64, 512]),
-        ("mrly_bang_d2_7.voids.level", &[1, 17, 217]),
-        ("mrly_bang_d3_23.fills.side", &[20, 81, 208, 425]),
-        ("mrly_bang_d3_23.surface.level", &[72, 1056, 18048]),
+        ("bang_dim=2_code=7.fills.side", &[8, 21, 40, 65]),
+        ("bang_dim=2_code=7.fills.level", &[8, 64, 512]),
+        ("bang_dim=2_code=7.voids.level", &[1, 17, 217]),
+        ("bang_dim=3_code=23.fills.side", &[20, 81, 208, 425]),
+        ("bang_dim=3_code=23.surface.level", &[72, 1056, 18048]),
     ];
     for (name, head) in classics {
         let row = sheet
@@ -172,7 +172,7 @@ fn checks(sheet: &Sheet, book: &Census) {
     let surface = sheet
         .rows
         .iter()
-        .find(|row| row.name == "mrly_bang_d3_23.surface.level")
+        .find(|row| row.name == "bang_dim=3_code=23.surface.level")
         .expect("the sponge surface is a registry row");
     let obeys = (2..surface.head.len()).all(|index| {
         surface.head[index] == 28 * surface.head[index - 1] - 160 * surface.head[index - 2]

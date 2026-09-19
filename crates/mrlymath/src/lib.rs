@@ -9,7 +9,7 @@ pub mod dim;
 pub mod formulas;
 /// The life runs: stepping, recording, rendering and their stories.
 pub mod life;
-/// The mrly names: one canonical string for every mathematical thing.
+/// The mrly names: one canonical JSON object for every mathematical thing.
 pub mod name;
 /// The residue rules that mark a hypercube's cells.
 pub mod rules;

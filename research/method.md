@@ -1,22 +1,22 @@
 # Method
 
-The design space is finite. In dimension `D` there are `2^(2^D)` designs and nothing else, so a claim about designs is a claim about a finite list, and the honest way to settle it is to walk the list. That one fact sets the method used on every page here: enumerate rather than sample, produce every number twice, pin every formula to something literally drawn, publish the code, and label each claim with what was actually established rather than with how sure it feels.
+The design space is finite. In dimension `dim` there are `2^(2^dim)` designs and nothing else, so a claim about designs is a claim about a finite list, and the honest way to settle it is to walk the list. That one fact sets the method used on every page here: enumerate rather than sample, produce every number twice, pin every formula to something literally drawn, publish the code, and label each claim with what was actually established rather than with how sure it feels.
 
 Every claim below carries a tag, on the convention the other pages use. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a lab study, not proved; **Conjecture** means neither. The [universe demo](../demos/universe/) is the enumeration itself, run in the browser: every orbit per dimension and base, counted by Burnside.
 
 ## Exhaust, do not sample
 
-A design is a subset of the `2^D` corners of the parity cube, so dimension `D` holds `2^(2^D)` of them: 4, 16, 256, 65536 at `D = 1..4`. Designs related by a symmetry of the cube draw the same shape, and quotienting by the hyperoctahedral group `B_D` of signed permutations leaves 3, 6, 22, 402 classes. (Verified three independent ways in [the core](core.md) by `lab/design-census`, and again by the hyperoctahedral walk of `lab/fill-polynomials`, which reproduces all four.)
+A design is a subset of the `2^dim` corners of the parity cube, so dimension `dim` holds `2^(2^dim)` of them: 4, 16, 256, 65536 at dim 1..4. Designs related by a symmetry of the cube draw the same shape, and quotienting by the hyperoctahedral group `B_dim` of signed permutations leaves 3, 6, 22, 402 classes. (Verified three independent ways in [the core](core.md) by `lab/design-census`, and again by the hyperoctahedral walk of `lab/fill-polynomials`, which reproduces all four.)
 
 That is small enough to be brutal with. Where another project would test a formula on the named examples, the sweep here runs every design in the dimension: all 256 in 3D, all 65536 in 4D. A statement quantified over designs is then a finite check rather than an induction, and a counterexample cannot hide in the part of the space nobody drew - a real risk in this family, where the fraction of classes that are nameable as a level-set or an axis pin tends to zero, so almost every design is a compound nobody has drawn. (Proved in [the core](core.md).)
 
-Enumeration does run out. Past `D = 4` the design count outgrows any list, and the counting moves to the Burnside average, which needs only the cycle counts of the group and never builds an orbit. That is the one place the method changes shape: from *checking every object* to *proving a formula and evaluating it*. See [the bijection page](bijection.md), where the class count is proved equal to the number of NP-equivalence classes of Boolean functions, uniformly in `D`. That this count is the OEIS entry A000616 is Verified there, not proved, and cannot be otherwise.
+Enumeration does run out. Past dim 4 the design count outgrows any list, and the counting moves to the Burnside average, which needs only the cycle counts of the group and never builds an orbit. That is the one place the method changes shape: from *checking every object* to *proving a formula and evaluating it*. See [the bijection page](bijection.md), where the class count is proved equal to the number of NP-equivalence classes of Boolean functions, uniformly in `dim`. That this count is the OEIS entry A000616 is Verified there, not proved, and cannot be otherwise.
 
 ## Every closed form is pinned to a render
 
 The standing rule for a counting formula is that it is never checked only against another formula. It is checked against an array built cell by cell from the parity rule and summed, with no arithmetic in common.
 
-This is not a slogan; it is the shape of the test suites. The fill-class census compares its closed form against an independently rendered array for every design it censuses, at every side `n = 1..12`, and raises on any disagreement. The second generator behind the worked example below builds the `n^D` grid and counts. In the shipped code the same pattern holds: `crates/mrlymath/src/formulas` carries the fill engine and its hexagonal projection formulas, and their tests compare each closed form against a rendered cell - `fill_matches_rendered_sum` against a built array, `pro_and_cut_match_census` against an actually projected one. (Verified: `cargo test -p mrlymath` passes, those two among its 270 unit tests.)
+This is not a slogan; it is the shape of the test suites. The fill-class census compares its closed form against an independently rendered array for every design it censuses, at every side 1..12, and raises on any disagreement. The second generator behind the worked example below builds the `side^dim` grid and counts. In the shipped code the same pattern holds: `crates/mrlymath/src/formulas` carries the fill engine and its hexagonal projection formulas, and their tests compare each closed form against a rendered cell - `fill_matches_rendered_sum` against a built array, `pro_and_cut_match_census` against an actually projected one. (Verified: `cargo test -p mrlymath` passes, those two among its 270 unit tests.)
 
 A formula proposes; the render disposes. Everything downstream - dimensions, polynomials, densities - inherits its credibility from that comparison.
 
@@ -30,13 +30,13 @@ The standard earns its cost by catching things. Re-verification of one entry cat
 
 The organizing move is to write one script that reads a design's invariants off its definition, then sweep it over the whole space, rather than to derive a formula per named family. The named designs stop being special cases and become rows.
 
-The fill law is what makes this possible. With `E = ceil(n/2)` and `O = floor(n/2)` the number of even and odd residues available to one coordinate, a design `F` fills
+The fill law is what makes this possible. With `E = ceil(side/2)` and `O = floor(side/2)` the number of even and odd residues available to one coordinate, a design `F` fills
 
 ```
-fill(F, n) = sum over c in F of E^(D - w(c)) * O^(w(c))
+fill(F, side) = sum over c in F of E^(dim - w(c)) * O^(w(c))
 ```
 
-cells of the `n^D` grid, `w(c)` being the number of odd coordinates of the corner `c`. (Proved: a cell is filled exactly when its parity vector is a filled corner, and for a fixed corner each coordinate independently has `E` or `O` admissible values, so the corner contributes that product; distinct corners contribute disjointly. The level-`L` fill is this raised to the `L`, proved in [the core](core.md) from the Kronecker product.) The law takes a design as data, so one implementation covers the entire space - it is the engine in `crates/mrlymath/src/formulas/counting.rs` and the engine behind every census in `lab/`.
+cells of the `side^dim` grid, `w(c)` being the number of odd coordinates of the corner `c`. (Proved: a cell is filled exactly when its parity vector is a filled corner, and for a fixed corner each coordinate independently has `E` or `O` admissible values, so the corner contributes that product; distinct corners contribute disjointly. The fill at a level is this raised to that level, proved in [the core](core.md) from the Kronecker product.) The law takes a design as data, so one implementation covers the entire space - it is the engine in `crates/mrlymath/src/formulas/counting.rs` and the engine behind every census in `lab/`.
 
 Three censuses run on that principle, and their honesty is uneven in a way worth stating plainly. `lab/design-census` sweeps 58 designs across bases 2 and 3 and dimensions 2 and 3, validating each cell by cell and checking its orbit counts against a Burnside average, and writes a 59-line csv. (Verified.) The same study measures 763 designs against a predicted coprime density and flags none. (Verified: 763 design lines, of which 522 are spanning and so inside the density claim and 241 are degenerate and excluded by construction; every per-case summary reports zero flagged.) But that `OK` verdict is numerical agreement inside a flat tolerance at a shallow level, not a proof - the deepest level is capped, and the solid half of that census is the exact finite-level identity, not the limit. `lab/fill-polynomials` is the sweep behind the worked example below.
 
@@ -87,58 +87,58 @@ A changed fill, a changed dimension or a familiar constant is not an anomaly. It
 
 ## What a negative result has to name
 
-A negative result is final only when every candidate is counted or a proof covers the space. Testing exactly one candidate state for the connected-component count of a mixed Kronecker word - the four-corner partition of the running product - finds it exact at length 2 and wrong on 20 of 216 words at length 3, and "the component count is not a finite-state function of the code sequence" does not follow: a rank-4 linear representation exists ([connectivity](connectivity.md)), so that claim is **Refuted**. What the failed candidate actually bounds is the naive geometric state, which does grow like `2^(L-1)` - a true theorem, wearing a false hat. The rule this leaves: name the class of descriptions a negative result rules out, or it rules out nothing.
+A negative result is final only when every candidate is counted or a proof covers the space. Testing exactly one candidate state for the connected-component count of a mixed Kronecker word - the four-corner partition of the running product - finds it exact at length 2 and wrong on 20 of 216 words at length 3, and "the component count is not a finite-state function of the code sequence" does not follow: a rank-4 linear representation exists ([connectivity](connectivity.md)), so that claim is **Refuted**. What the failed candidate actually bounds is the naive geometric state, which does grow like `2^(level-1)` - a true theorem, wearing a false hat. The rule this leaves: name the class of descriptions a negative result rules out, or it rules out nothing.
 
 ## Worked example: the odd-side fill polynomial
 
 One theorem, taken through the whole procedure.
 
-**Theorem (Proved).** Fix a dimension `D` and a design `F` with popcount `p = |F|`. At odd side `n = 2k-1`, the fill is an integer polynomial in `k` of degree at most `D` whose coefficient of `k^D` is `p` - so the degree is exactly `D` for every non-empty design, and only the empty one falls short. *Proof.* At `n = 2k-1` there are `E = k` even residues and `O = k-1` odd ones, so the fill law reads `fill(F, 2k-1) = sum over c in F of k^(D-w(c)) * (k-1)^w(c)`. Each summand is a product of `D` linear integer factors, hence a monic integer polynomial of degree `D` in `k`; a sum of `p` of them is an integer polynomial whose `k^D` coefficient is `p`, and it is identically zero exactly when `p = 0`.
+**Theorem (Proved).** Fix a dimension `dim` and a design `F` with popcount `p = |F|`. At odd side `2k - 1`, the fill is an integer polynomial in `k` of degree at most `dim` whose coefficient of `k^dim` is `p` - so the degree is exactly `dim` for every non-empty design, and only the empty one falls short. *Proof.* At side `2k - 1` there are `E = k` even residues and `O = k-1` odd ones, so the fill law reads `fill(F, 2k-1) = sum over c in F of k^(dim-w(c)) * (k-1)^w(c)`. Each summand is a product of `dim` linear integer factors, hence a monic integer polynomial of degree `dim` in `k`; a sum of `p` of them is an integer polynomial whose `k^dim` coefficient is `p`, and it is identically zero exactly when `p = 0`.
 
-**Corollary (Proved).** Popcount is invariant under cube symmetry, so the leading coefficient - and with it the fractal dimension - is a class invariant. The lower coefficients are not. Parity flips are symmetries of the infinite tiling but not of the truncation to `n` cells, so members of one class can fill differently at a fixed side; the polynomial in the table below belongs to the canonical representative, the smallest code in the class.
+**Corollary (Proved).** Popcount is invariant under cube symmetry, so the leading coefficient - and with it the fractal dimension - is a class invariant. The lower coefficients are not. Parity flips are symmetries of the infinite tiling but not of the truncation to `side` cells, so members of one class can fill differently at a fixed side; the polynomial in the table below belongs to the canonical representative, the smallest code in the class.
 
-**Corollary (Proved).** The caveat has an exact witness in the table's own Menger row. `mrly_bang_d3_23` is self-complementary - complementing its corner set is a cube symmetry, which is why carpet and net name one class in [the core](core.md) - but complementing does not commute with truncating. The complement member `mrly_bang_d3_232` fills exactly the cells the canonical member leaves void, so its polynomial is the sponge's own void count,
+**Corollary (Proved).** The caveat has an exact witness in the table's own Menger row. `bang dim 3, code 23` is self-complementary - complementing its corner set is a cube symmetry, which is why carpet and net name one class in [the core](core.md) - but complementing does not commute with truncating. The complement member `bang dim 3, code 232` fills exactly the cells the canonical member leaves void, so its polynomial is the sponge's own void count,
 
 ```
 (2*k - 1)^3 - (4*k^3 - 3*k^2) = 4*k^3 - 9*k^2 + 6*k - 1
 ```
 
-as exact polynomials, and vice versa: the canonical polynomial is `mrly_bang_d3_232`'s void count. Same leading coefficient 4, the class popcount; different tail. The orbit's eight members carry four distinct polynomials - `4*k^3 - 3*k^2`, `4*k^3 - 5*k^2 + 2*k`, `4*k^3 - 7*k^2 + 4*k - 1`, `4*k^3 - 9*k^2 + 6*k - 1` - one class filling four ways at a fixed odd side. (Proved by expansion; Verified by cell-by-cell counts at `k = 1..9`, each pair summing to `(2k-1)^3`, and by an orbit walk over the 48 signed permutations, `mrlymath::six::topology` test `the_four_families_fill_the_slice_and_name_their_classes`.) The complement's fill sequence `0, 7, 44, 135, 304, ...` is `(k-1)^2 * (4*k - 1)`, OEIS A395241 - one truncation of the sponge's own class, not a new design.
+as exact polynomials, and vice versa: the canonical polynomial is `bang dim 3, code 232`'s void count. Same leading coefficient 4, the class popcount; different tail. The orbit's eight members carry four distinct polynomials - `4*k^3 - 3*k^2`, `4*k^3 - 5*k^2 + 2*k`, `4*k^3 - 7*k^2 + 4*k - 1`, `4*k^3 - 9*k^2 + 6*k - 1` - one class filling four ways at a fixed odd side. (Proved by expansion; Verified by cell-by-cell counts at `k = 1..9`, each pair summing to `(2k-1)^3`, and by an orbit walk over the 48 signed permutations, `mrlymath::six::topology` test `the_four_families_fill_the_slice_and_name_their_classes`.) The complement's fill sequence `0, 7, 44, 135, 304, ...` is `(k-1)^2 * (4*k - 1)`, OEIS A395241 - one truncation of the sponge's own class, not a new design.
 
-**Corollary (Proved).** The coefficient vector fixes the fill at every side and every level - the ledger's sense of two designs drawing the same fractal. The `D + 1` polynomials `k^(D-w) * (k-1)^w` are linearly independent - setting `k = 0` kills every term but `w = D`, then dividing by `k` and repeating kills the rest in turn - so the polynomial determines how many filled corners carry each Hamming weight, which is the popcount profile that fixes the fill at every side and every level. That is the same lemma the fill-class identity rests on in [the ledger](sequences.md), and it makes the number of distinct polynomials in dimension `D` equal to `Prod_{w=0..D} (1 + C(D,w))`, which is the closed form of A129824.
+**Corollary (Proved).** The coefficient vector fixes the fill at every side and every level - the ledger's sense of two designs drawing the same fractal. The `dim + 1` polynomials `k^(dim-w) * (k-1)^w` are linearly independent - setting `k = 0` kills every term but `w = dim`, then dividing by `k` and repeating kills the rest in turn - so the polynomial determines how many filled corners carry each Hamming weight, which is the popcount profile that fixes the fill at every side and every level. That is the same lemma the fill-class identity rests on in [the ledger](sequences.md), and it makes the number of distinct polynomials in dimension `dim` equal to `Prod_{w=0..dim} (1 + C(dim,w))`, which is the closed form of A129824.
 
-**Verified** (`lab/fill-polynomials`). Two generators sharing no code and no method: one sums the closed form over filled corners and interpolates with exact rational arithmetic, the other builds the `n^D` grid cell by cell, tests each cell's parity vector, and fits by finite differences. Both run over every design - all 4, 16 and 256 at `D = 1, 2, 3` - and agree term for term at `k = 1..8`, the grid count matching the closed form on 256 of 256 designs at `D = 3` over the six odd sides the census renders. The closed-form sweep extends to all 65536 designs at `D = 4`; in every dimension the polynomial fitted on `k = 1..D+1` predicts the true fill out to `k = 10`, the coefficients come out integral, and the leading coefficient equals the popcount with no exceptions. Distinct polynomials number 4, 12, 64, 700 at `D = 1..4`, which is A129824 at index `D` (read live: offset 0, terms `2, 4, 12, 64, 700, ...`). The lower coefficients split 4 of 6 classes at `D = 2`, 20 of 22 at `D = 3` and 400 of 402 at `D = 4`, independently reproducing a caveat the fill-class census records; the leading coefficient splits no class anywhere. A third route agrees: `lab/design-census`, written separately, carries the level-1 fill at `n = 1..12` for each 3D class representative, and its six odd columns match both generators on all 22 rows.
+**Verified** (`lab/fill-polynomials`). Two generators sharing no code and no method: one sums the closed form over filled corners and interpolates with exact rational arithmetic, the other builds the `side^dim` grid cell by cell, tests each cell's parity vector, and fits by finite differences. Both run over every design - all 4, 16 and 256 at dim 1, 2, 3 - and agree term for term at `k = 1..8`, the grid count matching the closed form on 256 of 256 designs at dim 3 over the six odd sides the census renders. The closed-form sweep extends to all 65536 designs at dim 4; in every dimension the polynomial fitted on `k = 1..dim+1` predicts the true fill out to `k = 10`, the coefficients come out integral, and the leading coefficient equals the popcount with no exceptions. Distinct polynomials number 4, 12, 64, 700 at dim 1..4, which is A129824 at index `dim` (read live: offset 0, terms `2, 4, 12, 64, 700, ...`). The lower coefficients split 4 of 6 classes at dim 2, 20 of 22 at dim 3 and 400 of 402 at dim 4, independently reproducing a caveat the fill-class census records; the leading coefficient splits no class anywhere. A third route agrees: `lab/design-census`, written separately, carries the level-1 fill at side 1..12 for each 3D class representative, and its six odd columns match both generators on all 22 rows.
 
 The full 3D table, one row per class, ordered by popcount. (Verified as above.)
 
-| design | popcount | fill at `n = 2k-1` |
+| design | popcount | fill at side `2k - 1` |
 |---|---:|---|
-| `mrly_bang_d3_0` | 0 | `0` |
-| `mrly_bang_d3_1` | 1 | `k^3` |
-| `mrly_bang_d3_3` | 2 | `2*k^3 - k^2` |
-| `mrly_bang_d3_6` | 2 | `2*k^3 - 2*k^2` |
-| `mrly_bang_d3_24` | 2 | `2*k^3 - 3*k^2 + k` |
-| `mrly_bang_d3_7` | 3 | `3*k^3 - 2*k^2` |
-| `mrly_bang_d3_22` | 3 | `3*k^3 - 3*k^2` |
-| `mrly_bang_d3_25` | 3 | `3*k^3 - 3*k^2 + k` |
-| `mrly_bang_d3_15` | 4 | `4*k^3 - 4*k^2 + k` |
-| `mrly_bang_d3_23` | 4 | `4*k^3 - 3*k^2` |
-| `mrly_bang_d3_27` | 4 | `4*k^3 - 4*k^2 + k` |
-| `mrly_bang_d3_30` | 4 | `4*k^3 - 5*k^2 + k` |
-| `mrly_bang_d3_60` | 4 | `4*k^3 - 6*k^2 + 2*k` |
-| `mrly_bang_d3_105` | 4 | `4*k^3 - 6*k^2 + 3*k` |
-| `mrly_bang_d3_31` | 5 | `5*k^3 - 5*k^2 + k` |
-| `mrly_bang_d3_61` | 5 | `5*k^3 - 6*k^2 + 2*k` |
-| `mrly_bang_d3_107` | 5 | `5*k^3 - 7*k^2 + 3*k` |
-| `mrly_bang_d3_63` | 6 | `6*k^3 - 7*k^2 + 2*k` |
-| `mrly_bang_d3_111` | 6 | `6*k^3 - 8*k^2 + 3*k` |
-| `mrly_bang_d3_126` | 6 | `6*k^3 - 9*k^2 + 3*k` |
-| `mrly_bang_d3_127` | 7 | `7*k^3 - 9*k^2 + 3*k` |
-| `mrly_bang_d3_255` | 8 | `8*k^3 - 12*k^2 + 6*k - 1` |
+| `bang dim 3, code 0` | 0 | `0` |
+| `bang dim 3, code 1` | 1 | `k^3` |
+| `bang dim 3, code 3` | 2 | `2*k^3 - k^2` |
+| `bang dim 3, code 6` | 2 | `2*k^3 - 2*k^2` |
+| `bang dim 3, code 24` | 2 | `2*k^3 - 3*k^2 + k` |
+| `bang dim 3, code 7` | 3 | `3*k^3 - 2*k^2` |
+| `bang dim 3, code 22` | 3 | `3*k^3 - 3*k^2` |
+| `bang dim 3, code 25` | 3 | `3*k^3 - 3*k^2 + k` |
+| `bang dim 3, code 15` | 4 | `4*k^3 - 4*k^2 + k` |
+| `bang dim 3, code 23` | 4 | `4*k^3 - 3*k^2` |
+| `bang dim 3, code 27` | 4 | `4*k^3 - 4*k^2 + k` |
+| `bang dim 3, code 30` | 4 | `4*k^3 - 5*k^2 + k` |
+| `bang dim 3, code 60` | 4 | `4*k^3 - 6*k^2 + 2*k` |
+| `bang dim 3, code 105` | 4 | `4*k^3 - 6*k^2 + 3*k` |
+| `bang dim 3, code 31` | 5 | `5*k^3 - 5*k^2 + k` |
+| `bang dim 3, code 61` | 5 | `5*k^3 - 6*k^2 + 2*k` |
+| `bang dim 3, code 107` | 5 | `5*k^3 - 7*k^2 + 3*k` |
+| `bang dim 3, code 63` | 6 | `6*k^3 - 7*k^2 + 2*k` |
+| `bang dim 3, code 111` | 6 | `6*k^3 - 8*k^2 + 3*k` |
+| `bang dim 3, code 126` | 6 | `6*k^3 - 9*k^2 + 3*k` |
+| `bang dim 3, code 127` | 7 | `7*k^3 - 9*k^2 + 3*k` |
+| `bang dim 3, code 255` | 8 | `8*k^3 - 12*k^2 + 6*k - 1` |
 
-The two ends are classical and forced. `mrly_bang_d3_1` has one filled corner and fills `k^3`, the cubes; `mrly_bang_d3_255` is the solid cube of side `2k-1` and fills `(2k-1)^3`, the odd cubes. (Proved by the theorem, both endpoints; Verified against the live OEIS - A000578, `a(n) = n^3`, and A016755, `a(n) = (2n+1)^3`.) The Menger sponge is one interior row, `mrly_bang_d3_23`, filling `4*k^3 - 3*k^2`; at `n = 3`, which is `k = 2`, that reads 20, and the celebrated dimension `log(20)/log(3)` is one evaluation of an ordinary row. Two rows are identical: `mrly_bang_d3_15` and `mrly_bang_d3_27` are distinct symmetry classes - different shapes, related by no cube symmetry - that carry the same polynomial and so fill identically at every side and level. The two classifications cut across each other rather than refining one another - a polynomial can be shared by two classes, and fill is not constant within one - so the 22 classes carry 21 distinct polynomials while the 256 designs carry 64. (Verified, `lab/design-census`.)
+The two ends are classical and forced. `bang dim 3, code 1` has one filled corner and fills `k^3`, the cubes; `bang dim 3, code 255` is the solid cube of side `2k - 1` and fills `(2k-1)^3`, the odd cubes. (Proved by the theorem, both endpoints; Verified against the live OEIS - A000578, `a(n) = n^3`, and A016755, `a(n) = (2n+1)^3`.) The Menger sponge is one interior row, `bang dim 3, code 23`, filling `4*k^3 - 3*k^2`; at side 3, which is `k = 2`, that reads 20, and the celebrated dimension `log(20)/log(3)` is one evaluation of an ordinary row. Two rows are identical: `bang dim 3, code 15` and `bang dim 3, code 27` are distinct symmetry classes - different shapes, related by no cube symmetry - that carry the same polynomial and so fill identically at every side and level. The two classifications cut across each other rather than refining one another - a polynomial can be shared by two classes, and fill is not constant within one - so the 22 classes carry 21 distinct polynomials while the 256 designs carry 64. (Verified, `lab/design-census`.)
 
-The proof is valid in every dimension and the sweep covers every design; the `D = 3` statement checked to `k = 6` on the 22 class representatives is the special case.
+The proof is valid in every dimension and the sweep covers every design; the dim 3 statement checked to `k = 6` on the 22 class representatives is the special case.
 
 **Not claimed.** The other twenty polynomials have not been through the novelty procedure - no dump grep, no shifted windows, no live search - so nothing is asserted about whether they already sit in the OEIS under other names. They are the output of a sweep, not a claim of new sequences, and they are printed here in that spirit.
 

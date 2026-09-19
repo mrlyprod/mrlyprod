@@ -1,6 +1,6 @@
 # smith-cascade
 
-- Builds the even-convention carry matrix `M_even` at base 3, odd `D = 2R + 1`, size `n = R + 1`, from the digit polynomial `P = (sum_k C(D-1,k) x^(2k))(1 + Dx + x^2)`, entry `P[c + D - 3c'] + P[-c + D - 3c']`.
+- Builds the even-convention carry matrix `M_even` at base 3, the odd carry parameter `D = 2R + 1`, size `n = R + 1`, from the digit polynomial `P = (sum_k C(D-1,k) x^(2k))(1 + D x + x^2)`, entry `P[c + D - 3c'] + P[-c + D - 3c']`.
 - Computes its 2-adic Smith divisor valuations `a_i` by min-valuation pivoting modulo `2^256`, at every odd `D = 3..511`.
 - Reads off `v_2 = sum a_i`, the layers `L_j = #{a_i >= j}`, the nullity `L_1` against the Jacobsthal tent `min_t |D - t|/2 + 1`, `t in {2J(k)+1, 2J(k)+3}`, the excess `X = v_2 - L_1`, and `a_max`.
 - Tabulates per octave `[2^k, 2^(k+1))` the maxima of `L_2, L_3, L_4, L_5, a_max, X` and the slack `v_2 - ceil(n/3)`, and the min-of-cones shape of layers 1, 2, 3.

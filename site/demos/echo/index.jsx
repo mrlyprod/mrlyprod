@@ -136,7 +136,7 @@ function App() {
       <section>
         <h3>The design</h3>
         <Row>
-          <Pick label="base q" value={pick.base} options={BASES.map((q) => [q, q])} onChange={(v) => rebase(+v)} />
+          <Pick label="base" value={pick.base} options={BASES.map((q) => [q, q])} onChange={(v) => rebase(+v)} />
           <Btn on={pick.mask === full(pick.base)} onClick={() => set({ mask: full(pick.base) })}>full set</Btn>
         </Row>
         <Row>
@@ -148,7 +148,7 @@ function App() {
       <section>
         <h3>The depth</h3>
         <Row>
-          <Slider label="digits L" value={depth} min={caps?.least ?? 3} max={caps?.deepest ?? 3} onChange={(v) => set({ depth: v })} />
+          <Slider label="digits" value={depth} min={caps?.least ?? 3} max={caps?.deepest ?? 3} onChange={(v) => set({ depth: v })} />
         </Row>
       </section>
       <section>
@@ -165,7 +165,7 @@ function App() {
     <Page crumb="echo" title="The meter that echoes the zeros"
       sub="The Mobius meter of a digit design, read uniformly in log x, oscillates at the ordinates of the Riemann zeta zeros and never at the design's own pole lattice. It is the classical Mertens function heard through the design's density: split the meter into that echo and a residual, and the zeros leave with the echo. The echo dies against the meter's own yardstick at x to the minus half of the smaller of alpha and one less alpha, so the deeper the read the quieter it gets."
       controls={controls}
-      foot={<>Every number here is computed in Rust and the page only draws. The elements of <code>S_F</code> are the whole numbers whose base-<code>q</code> digits all lie in the set, the meter is <code>M_F(x)</code>, the sum of <code>mu(n)</code> over those elements up to <code>x</code>, and the yardstick is <code>x^(alpha/2)</code> at <code>alpha = log_q k</code>. The spectrum is that series resampled on 4096 points uniform in <code>log x</code>, mean-removed, Hann-windowed and read as <code>gamma = 2 pi j</code> over the log range against a 101-bin running median floor, so a peak is a power over its own neighbourhood and the threshold is 8. Resolution comes from the log range and not from the element count, so the bin is <code>2 pi / (L log q)</code> and a browser that stops at <code>q^L &lt; 2^27</code> stops at a bin near a third. Read the hit counts against the chance rates beside them: with 13 ordinates and 20 lattice lines in the band a peak lands on one by luck often enough that a single peak proves nothing, which is why the full set is here as the control and the residual as the null. The echo needs the Mobius values of every whole number up to <code>q^L</code>, so it is refused past <code>2^24</code> and the page says so. The lab reads the same designs four digits deeper, where base 3 <code>{'{0, 1}'}</code> carries ten peaks and its pole lattice scores below its own null; at the depth a browser affords, that design is still under the floor and the base-10 designs are not. The critical line itself is <a href="../zeta">zeta</a>, the Mertens sum against the square root is one dial of <a href="../formulas">formulas</a>, and the mathematics is on <a href="/research/mobius/">the Mobius page</a>.</>}>
+      foot={<>Every number here is computed in Rust and the page only draws. The elements of <code>S_F</code> are the whole numbers whose digits in the base all lie in the set, the meter is <code>M_F(x)</code>, the sum of <code>mu(n)</code> over those elements up to <code>x</code>, and the yardstick is <code>x^(alpha/2)</code> at <code>alpha = log_base fill</code>. The spectrum is that series resampled on 4096 points uniform in <code>log x</code>, mean-removed, Hann-windowed and read as <code>gamma = 2 pi j</code> over the log range against a 101-bin running median floor, so a peak is a power over its own neighbourhood and the threshold is 8. Resolution comes from the log range and not from the element count, so the bin is <code>2 pi / (level log base)</code> and a browser that stops at <code>base^level &lt; 2^27</code> stops at a bin near a third. Read the hit counts against the chance rates beside them: with 13 ordinates and 20 lattice lines in the band a peak lands on one by luck often enough that a single peak proves nothing, which is why the full set is here as the control and the residual as the null. The echo needs the Mobius values of every whole number up to <code>base^level</code>, so it is refused past <code>2^24</code> and the page says so. The lab reads the same designs four digits deeper, where base 3 <code>{'{0, 1}'}</code> carries ten peaks and its pole lattice scores below its own null; at the depth a browser affords, that design is still under the floor and the base-10 designs are not. The critical line itself is <a href="../zeta">zeta</a>, the Mertens sum against the square root is one dial of <a href="../formulas">formulas</a>, and the mathematics is on <a href="/research/mobius/">the Mobius page</a>.</>}>
       <div className="panel">
         <h2>The meter <span>M_F(x) over x^(alpha/2), drawn against log x</span></h2>
         {view && <Meter view={view} />}
@@ -205,7 +205,7 @@ function App() {
           {read?.peaks.length === 0 && <span><i>no peak clears the floor at this depth</i></span>}
         </div>
       </div>
-      <Note error={error}>{caps && `depth ${caps.least} to ${caps.deepest} here; the echo is sieved through depth ${caps.sieved}, past which q^L leaves 2^24.`}</Note>
+      <Note error={error}>{caps && `depth ${caps.least} to ${caps.deepest} here; the echo is sieved through depth ${caps.sieved}, past which base^level leaves 2^24.`}</Note>
     </Page>
   );
 }

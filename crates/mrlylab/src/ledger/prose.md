@@ -8,7 +8,7 @@ The registry behind this page is `mrlylab::ledger`, which reads every measure of
 
 - Three sequences out of this work are with the OEIS - [A395241](https://oeis.org/A395241), [A396934](https://oeis.org/A396934) and [A398348](https://oeis.org/A398348) - so the enumeration half of the fractal work is checkable by strangers, against a catalogue nobody here controls.
 - A collision with an existing entry is the useful outcome, not the failure. Two of this page's identifications hand a page something it lacked: [A332705](https://oeis.org/A332705) is the carpet face-count law derived independently in [slices.md](slices.md), and [A299916](https://oeis.org/A299916)'s recurrence gives the slice census a closed form and a dimension the lane could not derive.
-- The census entries are the other direction, an existing sequence read as a new object: [A129824](https://oeis.org/A129824) counts fill classes, and the identity that two base-2 designs are the same fractal exactly when they share a popcount profile is what makes it the count of distinct base-2 fractals in dimension `D`, proved below rather than fitted.
+- The census entries are the other direction, an existing sequence read as a new object: [A129824](https://oeis.org/A129824) counts fill classes, and the identity that two base-2 designs are the same fractal exactly when they share a popcount profile is what makes it the count of distinct base-2 fractals in dimension `dim`, proved below rather than fitted.
 - The bar is the point of the lane. Two independent generators sharing no code and no method, every stored b-file term diffed against a generator, and a second cold reading of every entry; nothing is listed that does not meet it, and the entries that fall short say so in their own `status` field.
 
 ## THE BAR
@@ -23,8 +23,8 @@ Novelty is tested by fixed-string search against a local copy of [the OEIS strip
 
 This page is the ledger of the entries that reached the OEIS, and nothing below rests on anything outside this tree. Two results that would otherwise be carried nowhere are recorded here:
 
-- Four term sets are **already in the OEIS and are not to be submitted**, each **Verified** against its own record: the Menger sponge surface faces `6, 72, 1056, 18048 = 2*20^L + 4*8^L` are [A332705](https://oeis.org/A332705); the Sierpinski carpet perimeter `4, 16, 80, 496` is [A381517](https://oeis.org/A381517); the carpet void cells `0, 1, 17, 217` are [A016185](https://oeis.org/A016185), which is `9^n - 8^n` outright, and the same run sits as an interior window of the table [A229896](https://oeis.org/A229896); and the axis-permutation fractal-orbit count `4, 12, 80, 3984` is [A003180](https://oeis.org/A003180), Boolean functions up to the symmetric group, at a one-term shift, that entry beginning `2, 4, 12, 80, 3984`. The first two are carried elsewhere in this tree; the last two are recorded nowhere else.
-- One idea is carried nowhere else and is recorded here: the visibility of magic stacks, with exact mixed-scale 2-adic factors. It has no terms and no generator behind it and is an idea, not a result. **Conjecture.** Two neighbouring ideas do survive on their own pages, the Laplacian degeneracy family `3^(L-3) + 1` in [complexity.md](complexity.md) (`lab/laplacian-degeneracy`) and the Eisenstein zeta with `L(2, chi_-3)` in [bases.md](bases.md) (`lab/eisenstein-visibility`). A third does not: [cuts.md](cuts.md) carries `4*(L+5)*3^(L-1)` only as a retraction, since against `mrly_bang_d3_127` it matches the slice maximum, the minimum and the total at no level at all, checked at `L = 1..6`. That formula is **Refuted** and is not submittable (`mrlymath::three::diagonal` test `the_one_two_seven_cut_matches_no_closed_form`).
+- Four term sets are **already in the OEIS and are not to be submitted**, each **Verified** against its own record: the Menger sponge surface faces `6, 72, 1056, 18048 = 2*20^level + 4*8^level` are [A332705](https://oeis.org/A332705); the Sierpinski carpet perimeter `4, 16, 80, 496` is [A381517](https://oeis.org/A381517); the carpet void cells `0, 1, 17, 217` are [A016185](https://oeis.org/A016185), which is `9^n - 8^n` outright, and the same run sits as an interior window of the table [A229896](https://oeis.org/A229896); and the axis-permutation fractal-orbit count `4, 12, 80, 3984` is [A003180](https://oeis.org/A003180), Boolean functions up to the symmetric group, at a one-term shift, that entry beginning `2, 4, 12, 80, 3984`. The first two are carried elsewhere in this tree; the last two are recorded nowhere else.
+- One idea is carried nowhere else and is recorded here: the visibility of magic stacks, with exact mixed-scale 2-adic factors. It has no terms and no generator behind it and is an idea, not a result. **Conjecture.** Two neighbouring ideas do survive on their own pages, the Laplacian degeneracy family `3^(level-3) + 1` in [complexity.md](complexity.md) (`lab/laplacian-degeneracy`) and the Eisenstein zeta with `L(2, chi_-3)` in [bases.md](bases.md) (`lab/eisenstein-visibility`). A third does not: [cuts.md](cuts.md) carries `4*(level+5)*3^(level-1)` only as a retraction, since against `bang dim 3, code 127` it matches the slice maximum, the minimum and the total at no level at all, checked at level 1..6. That formula is **Refuted** and is not submittable (`mrlymath::three::diagonal` test `the_one_two_seven_cut_matches_no_closed_form`).
 
 ## PUBLISHED RECORDS
 
@@ -35,7 +35,7 @@ Four OEIS records carry this work, live at the OEIS. The crossrefs inside those 
 | [A103532](https://oeis.org/A103532) | Number of divisors of 240^n. | Not this page's sequence; it carries a signed contribution from this tree reading `a(n)` as the filled-cell count of the generalized Menger sponge with subdivision `2n+1`, and the two Bourke links. |
 | [A395241](https://oeis.org/A395241) | a(n) = n^2*(4*n + 3). | The complement of A103532 in the odd cube, ledger entry below. |
 | [A396934](https://oeis.org/A396934) | Number of pairs (i,j) with 0 <= i,j < 2^n, i AND j = 0, and gcd(i,j) = 1. | Ledger entry below; its b-file and later terms carry other contributors' extensions. |
-| [A398348](https://oeis.org/A398348) | Number of toroidal n X n X n binary arrays, allowing rotation and/or reflection of the layers along each axis as well as all permutations of the axes. | The `design_D3` ledger entry below, with a b-file to `n = 14`. |
+| [A398348](https://oeis.org/A398348) | Number of toroidal n X n X n binary arrays, allowing rotation and/or reflection of the layers along each axis as well as all permutations of the axes. | The `design_dim3` ledger entry below, with a b-file to `n = 14`. |
 
 ## THE LEDGER
 
@@ -70,7 +70,7 @@ Pairs `(i,j)` with `0 <= i,j < 2^n`, `i AND j = 0`, and `gcd(i,j) = 1`. The cond
 
 The b-file reaches `n = 20`. The independent generator indexes by the row `m = i + j = i OR j` and uses `gcd(i,j) = gcd(i,m)`, enumerating only odd submasks of odd rows and doubling by a fixed-point-free involution; it never forms a complement and never evaluates `gcd(i,j)`. Two near misses were checked and both diverge, **Verified** against their records: A347825 agrees with `a(n)/2` for five terms, and A004662 and A018413 agree with `a(n)-1` for five terms.
 
-### design_D3 - three-dimensional design classes
+### design_dim3 - three-dimensional design classes
 
 Number of `n x n x n` binary arrays up to symmetry, the group being independent cyclic rotation and reflection of the layers along each axis together with all permutations of the three axes: `D_n^3` semidirect `S_3`, of order `48*n^3`. Burnside gives `a(n) = (1/|G|) * Sum_{g in G} 2^c(g)`.
 
@@ -83,13 +83,13 @@ Number of `n x n x n` binary arrays up to symmetry, the group being independent 
 | witness | `lab/oeis-terms`, the b-file to `n = 14` |
 | record | [A398348](https://oeis.org/A398348) |
 
-Eight terms were produced here, so all eight were compared rather than a prefix, and brute-force orbit enumeration independently confirms `n = 1` and `n = 2`. A third generator, written from the definition for the submission and sharing no code with the other two, reproduces all eight; it is what promoted `a(7)` and `a(8)` out of single-method status and into the b-file. A fourth route, a Burnside-free flood fill over the orbits of all `2^27` colourings, reports `a(3) = 111618` without using Burnside's lemma at all; that route has no generator in `lab/`, so as independent confirmation it is **Conjecture**. The independent generator carries a group element as an affine map `x -> M*x + t` with `M` a signed permutation matrix and gets the cycle count from `c(g) = (1/m) * Sum_{k=1..m} |Fix(g^k)|`, so it never builds a cell-image array and never walks a cycle. The two-dimensional analogue under the identical convention is A255016, which fixes the group convention as the true three-dimensional promotion of that parent; `lab/oeis-terms` is three-dimensional only, so that convention check is **Verified** on [bijection.md](bijection.md) where the `D = 2` Burnside lives and not here. Note that `a(3) = 111618` is the same number the census reports as the full base-3, dimension-3 design space.
+Eight terms were produced here, so all eight were compared rather than a prefix, and brute-force orbit enumeration independently confirms `n = 1` and `n = 2`. A third generator, written from the definition for the submission and sharing no code with the other two, reproduces all eight; it is what promoted `a(7)` and `a(8)` out of single-method status and into the b-file. A fourth route, a Burnside-free flood fill over the orbits of all `2^27` colourings, reports `a(3) = 111618` without using Burnside's lemma at all; that route has no generator in `lab/`, so as independent confirmation it is **Conjecture**. The independent generator carries a group element as an affine map `x -> M*x + t` with `M` a signed permutation matrix and gets the cycle count from `c(g) = (1/m) * Sum_{k=1..m} |Fix(g^k)|`, so it never builds a cell-image array and never walks a cycle. The two-dimensional analogue under the identical convention is A255016, which fixes the group convention as the true three-dimensional promotion of that parent; `lab/oeis-terms` is three-dimensional only, so that convention check is **Verified** on [bijection.md](bijection.md) where the dim 2 Burnside lives and not here. Note that `a(3) = 111618` is the same number the census reports as the full base-3, dimension-3 design space.
 
 This sequence is A398348, whose data is that run verbatim, with a b-file to `n = 14` and a crossref naming A255016 as the two-dimensional case. A null search against a dump older than the submission reports the line absent; that is a report on a stale dump, never evidence of novelty. Tagged in [DISCOVERIES.md](DISCOVERIES.md) and carried in [README.md](README.md) and [bijection.md](bijection.md).
 
 ### The odd-side fills
 
-At odd side `n = 2k - 1` an axis splits into `k` low positions and `k - 1` high, so a base-2 design fills `sum over its corners of k^(zeros) (k - 1)^(ones)`, a polynomial in `k` of degree `D`; **Proved** in [DISCOVERIES.md](DISCOVERIES.md), generator `mrlymath::formulas::counting`. The six designs of the plane read as the polygonal numbers, and the dust, the sponge and the solid of the cube as the cubes, the divisor counts of `240^n` and the odd cubes. Every row below is read by `mrlylab::ledger::terms` from `k = 2`, the first odd side past the unit cell, and checked term by term against its record; `shift` is the record's index less the ledger's `k`.
+At odd side `2k - 1` an axis splits into `k` low positions and `k - 1` high, so a base-2 design fills `sum over its corners of k^(zeros) (k - 1)^(ones)`, a polynomial in `k` of degree `dim`; **Proved** in [DISCOVERIES.md](DISCOVERIES.md), generator `mrlymath::formulas::counting`. The six designs of the plane read as the polygonal numbers, and the dust, the sponge and the solid of the cube as the cubes, the divisor counts of `240^n` and the odd cubes. Every row below is read by `mrlylab::ledger::terms` from `k = 2`, the first odd side past the unit cell, and checked term by term against its record; `shift` is the record's index less the ledger's `k`.
 
 {{sides}}
 
@@ -99,18 +99,18 @@ The odd-side fill of a design is a product of norm forms, one per irreducible fa
 
 ### The level axis
 
-At side `n = 3` the fill of a level is the tile's fill to the power `L` and the voids are the grid less the fill, while the exposed faces obey `V(L + 1) = occ V(L) - 2 sum P S^L` over the axes, `occ` the tile's filled cells, `P` its adjacent filled pairs along the axis and `S` the cross positions whose two end cells are both filled; `mrlymath::formulas::exposure` closes it in every dimension and `mrlymath::formulas::exposure_recurrence` spells the recurrence. **Proved**, and checked against the rendered census on every code of the cube to level 3. The sponge's slice count is A299916 from its second term, the recurrence being the record's; **Verified** to level 4 by `mrlymath::formulas::cut_fills`.
+At side 3 the fill of a level is the tile's fill to the power `level` and the voids are the grid less the fill, while the exposed faces obey `V(level + 1) = occ V(level) - 2 sum P S^level` over the axes, `occ` the tile's filled cells, `P` its adjacent filled pairs along the axis and `S` the cross positions whose two end cells are both filled; `mrlymath::formulas::exposure` closes it in every dimension and `mrlymath::formulas::exposure_recurrence` spells the recurrence. **Proved**, and checked against the rendered census on every code of the cube to level 3. The sponge's slice count is A299916 from its second term, the recurrence being the record's; **Verified** to level 4 by `mrlymath::formulas::cut_fills`.
 
 {{levels}}
 
 ## CANDIDATES, NOT ENTRIES
 
-The first row below does not meet this page's bar: one method generates it, a second generator agrees only to `D = 6`, it is not checked against the live OEIS, and it has no b-file. It is **Conjecture**, listed so the work is not repeated, and it is not a record. The second row is no longer a candidate at all. Its two cases collapse to `D!/floor(D/2)!^2` by one line of factorials - at odd `D`, `C(D, j)*(j+1) = D!/(j!*j!)` with `j = (D-1)/2` - so the row is the swinging factorial [A056040](https://oeis.org/A056040), present in the dump the novelty search ran against, with far more terms than the row has. It stays listed as the worked example of what a term search misses when only a sequence's bisections look familiar: an existing entry met from a new direction, **Verified** against its record, and nothing to submit.
+The first row below does not meet this page's bar: one method generates it, a second generator agrees only to dim 6, it is not checked against the live OEIS, and it has no b-file. It is **Conjecture**, listed so the work is not repeated, and it is not a record. The second row is no longer a candidate at all. Its two cases collapse to `dim!/floor(dim/2)!^2` by one line of factorials - at odd `dim`, `C(dim, j)*(j+1) = dim!/(j!*j!)` with `j = (dim-1)/2` - so the row is the swinging factorial [A056040](https://oeis.org/A056040), present in the dump the novelty search ran against, with far more terms than the row has. It stays listed as the worked example of what a term search misses when only a sequence's bisections look familiar: an existing entry met from a new direction, **Verified** against its record, and nothing to submit.
 
 | candidate | terms | what is claimed | status |
 |---|---|---|---|
-| `D = 4` octahedral central-diagonal slice census | `6, 132, 1848, 29040, 441408, 6772128` | recurrence `a(n) = 11a(n-1) + 66a(n-2)`, dominant root `(11 + sqrt(385))/2`, slice dimension `2.483635500`; the ladder in [cuts.md](cuts.md), generator in `lab/slice-ladder-controls` | novelty must be checked against the A299916 family first; siblings at `D = 5` and `D = 6` queue behind it. **Conjecture** |
-| ambient hypersimplex vertex counts | `2, 6, 6, 30, 20, 140, 70, 630, 252, 2772, 924, 12012, 3432` | `C(D, D/2)` at even `D` and `C(D, (D-1)/2)(D+1)/2` at odd `D`, both equal to `D!/floor(D/2)!^2`; the level-1 slice of the base-3 Menger analog IS that set, and at even `D` it is the hypersimplex vertex count | the row is [A056040](https://oeis.org/A056040) from `D = 2`, a collision explained and not an entry to submit; one generator agrees at `D = 2..14`, and it is `lab/slice-ladder-controls`. **Verified** |
+| dim 4 octahedral central-diagonal slice census | `6, 132, 1848, 29040, 441408, 6772128` | recurrence `a(n) = 11a(n-1) + 66a(n-2)`, dominant root `(11 + sqrt(385))/2`, slice dimension `2.483635500`; the ladder in [cuts.md](cuts.md), generator in `lab/slice-ladder-controls` | novelty must be checked against the A299916 family first; siblings at dim 5 and dim 6 queue behind it. **Conjecture** |
+| ambient hypersimplex vertex counts | `2, 6, 6, 30, 20, 140, 70, 630, 252, 2772, 924, 12012, 3432` | `C(dim, dim/2)` at even `dim` and `C(dim, (dim-1)/2)(dim+1)/2` at odd `dim`, both equal to `dim!/floor(dim/2)!^2`; the level-1 slice of the base-3 Menger analog IS that set, and at even `dim` it is the hypersimplex vertex count | the row is [A056040](https://oeis.org/A056040) from dim 2, a collision explained and not an entry to submit; one generator agrees at dim 2..14, and it is `lab/slice-ladder-controls`. **Verified** |
 
 ## ESTABLISHED ENTRIES THIS BUILDS ON
 
@@ -118,10 +118,10 @@ Two existing OEIS sequences anchor the census work rather than the sequence work
 
 | entry | counts | where it lands | witness |
 |---|---|---|---|
-| A000616 | designs up to symmetry, as the dimension grows at base 2: `3, 6, 22, 402, 1228158, 400507806843728` | the shape-class column of the fill-class census; `A000616(3) = 22` is also `design_D3(2)` | `mrlymath::bang::counting::sequence` |
-| A129824 | fill classes, `Prod_{k=0}^{D} (1 + C(D,k))`: `2, 4, 12, 64, 700, 17424, ...` at offset 0 | the count of distinct base-2 fractals in dimension D | `lab/design-census`, the column to `D = 8` |
+| A000616 | designs up to symmetry, as the dimension grows at base 2: `3, 6, 22, 402, 1228158, 400507806843728` | the shape-class column of the fill-class census; `A000616(3) = 22` is also `design_dim3(2)` | `mrlymath::bang::counting::sequence` |
+| A129824 | fill classes, `Prod_{k=0}^{dim} (1 + C(dim,k))`: `2, 4, 12, 64, 700, 17424, ...` at offset 0 | the count of distinct base-2 fractals in dimension `dim` | `lab/design-census`, the column to dim 8 |
 
-A129824 is an identity, not a numerical coincidence. **Proved.** Two base-2 designs are the same fractal - equal fill at every side `n` and level `L`, hence equal fractal dimension - exactly when they share a popcount profile, the number of filled corners of each Hamming weight; A129824 counts the possible shapes `(k_0..k_n)` of a collection of subsets of an n-set, which is precisely such a profile. The proof is the linear independence of the `D+1` functions `E^(D-w) * O^w` in `n`. The closed form reproduces all 16 published terms with no shift; two independent fill generators agree on every design at `D = 2` and `D = 3`, and the class count matches A129824 for `D = 1..4` with zero profile collisions (`lab/design-census`). A000616 is recomputed by `mrlymath::bang::counting::sequence`; its offset is `-1`, so `A000616(3) = 22`.
+A129824 is an identity, not a numerical coincidence. **Proved.** Two base-2 designs are the same fractal - equal fill at every side and level, hence equal fractal dimension - exactly when they share a popcount profile, the number of filled corners of each Hamming weight; A129824 counts the possible shapes `(k_0..k_n)` of a collection of subsets of an n-set, which is precisely such a profile. The proof is the linear independence of the `dim+1` functions `E^(dim-w) * O^w` in the side. The closed form reproduces all 16 published terms with no shift; two independent fill generators agree on every design at dim 2 and dim 3, and the class count matches A129824 for dim 1..4 with zero profile collisions (`lab/design-census`). A000616 is recomputed by `mrlymath::bang::counting::sequence`; its offset is `-1`, so `A000616(3) = 22`.
 
 Both censuses live in `lab/design-census`: the fill-class census behind A129824, and the coprimality census read in [coprime.md](coprime.md).
 
@@ -133,9 +133,9 @@ Every OEIS id cited on this tree, read against the live entry on its name, its o
 
 ## OPEN QUESTIONS
 
-- **The A396934 density is closed.** `16/(3*Pi^2)` was conjectured while the per-prime mechanism was proved and the interchange-of-limits step was not, and the audit of an outside proof note for A396934 is what kept it a conjecture. The box-bound theorem in [coprime.md](coprime.md) now gives `A(n)/k^n -> delta` for every design with `k > q`, A396934 included (`k = 3 > q = 2`), so the constant is a theorem, **Proved**. Lemma B survives only at `k <= q`, where it stays **Conjecture**.
-- **`design_D3` has no formula and none has been found.** Its entry records `none claimed, none found`, and only eight terms were produced here, so all eight were compared rather than a prefix.
-- **Novelty here rests on a dump.** A dump is a snapshot, and `design_D3` on this page is the worked example of what a stale one costs; every absence on this page stays **Conjecture** until a live re-read.
+- **The A396934 density is closed.** `16/(3*Pi^2)` was conjectured while the per-prime mechanism was proved and the interchange-of-limits step was not, and the audit of an outside proof note for A396934 is what kept it a conjecture. The box-bound theorem in [coprime.md](coprime.md) now gives `A(n)/fill^n -> delta` for every design with `fill > base`, A396934 included (`fill = 3 > base = 2`), so the constant is a theorem, **Proved**. Lemma B survives only at `fill <= base`, where it stays **Conjecture**.
+- **`design_dim3` has no formula and none has been found.** Its entry records `none claimed, none found`, and only eight terms were produced here, so all eight were compared rather than a prefix.
+- **Novelty here rests on a dump.** A dump is a snapshot, and `design_dim3` on this page is the worked example of what a stale one costs; every absence on this page stays **Conjecture** until a live re-read.
 
 ## DOCS
 
@@ -152,7 +152,7 @@ Every OEIS id cited on this tree, read against the live entry on its name, its o
 - These are the pages that cite this ledger, and the results it is drawn from:
 
 - [core.md](core.md) - what a design is, the headline counts, and the three genera.
-- [bijection.md](bijection.md) - designs are Boolean functions up to cube symmetry; the strongest theorem in this tree, and the source of `design_D3`.
+- [bijection.md](bijection.md) - designs are Boolean functions up to cube symmetry; the strongest theorem in this tree, and the source of `design_dim3`.
 - [coprime.md](coprime.md) - the coprimality spine: exact base-local factors on every design, the census behind them, and the theorem that closes the A396934 density.
 - [slices.md](slices.md) - the diagonal slice of the solid cube: the `6n` census, centered-hexagonal vertices, and the splitting-prime rule.
 - [method.md](method.md) - how the results here are produced and checked, worked through on the odd-side fill polynomial.
@@ -161,12 +161,12 @@ Every OEIS id cited on this tree, read against the live entry on its name, its o
 
 Every sequence id and named reference on these pages is resolved, with a confidence tag, in [REFS.md](REFS.md). The load-bearing external anchors:
 
-- [A000616](https://oeis.org/A000616) - NP-equivalence classes of Boolean functions; the design count in every dimension, and the parent of `design_D3` at `n = 2`.
-- [A255016](https://oeis.org/A255016) - toroidal binary arrays; the two-dimensional parent `design_D3` promotes.
-- [A129824](https://oeis.org/A129824) - fill classes; the count of distinct base-2 fractals in dimension D.
+- [A000616](https://oeis.org/A000616) - NP-equivalence classes of Boolean functions; the design count in every dimension, and the parent of `design_dim3` at `n = 2`.
+- [A255016](https://oeis.org/A255016) - toroidal binary arrays; the two-dimensional parent `design_dim3` promotes.
+- [A129824](https://oeis.org/A129824) - fill classes; the count of distinct base-2 fractals in dimension `dim`.
 - [A011934](https://oeis.org/A011934) and [A103532](https://oeis.org/A103532) - the alternating sums of cubes whose two bisections are A103532 and A395241.
 - [Kummer's theorem](https://en.wikipedia.org/wiki/Kummer%27s_theorem) - `binomial(i+j,i)` is odd iff `i AND j = 0`, which is what makes A396934 a statement about the Sierpinski triangle.
-- [Burnside's lemma](https://en.wikipedia.org/wiki/Burnside%27s_lemma) - the orbit-counting average `design_D3` runs on.
+- [Burnside's lemma](https://en.wikipedia.org/wiki/Burnside%27s_lemma) - the orbit-counting average `design_dim3` runs on.
 - [The OEIS stripped dump](https://oeis.org/stripped.gz) - the local copy every novelty search on this page was run against.
 - [Bourke's fractal page](https://paulbourke.net/fractals/mrlymath/) and the [source PDF](https://paulbourke.net/fractals/mrlymath/mrlymath.pdf) - the published rendering of these families, linked from three of the four records.
 

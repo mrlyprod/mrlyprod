@@ -6,7 +6,7 @@ use mrlycore::Tensor;
 use std::collections::HashSet;
 
 /// One ordered layer of a magic composition: a coded design at its own side number.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct MagicLayer {
     /// The layer's coded design.
     pub design: Bang,
@@ -116,10 +116,10 @@ pub fn create(
     render(&filled, number, dimension, base, level)
 }
 
-/// Renders a design from its canonical mrly name, or an error for any other spelling.
+/// Renders a design from its canonical JSON name, or an error for any other object.
 pub fn create_named(spec: &str, number: usize, level: usize) -> Result<Tensor> {
-    let bang = Bang::from_str(spec)?;
-    create(bang.code, number, bang.dimension, bang.base, level)
+    let bang = Bang::from_json(spec)?;
+    create(bang.code, number, bang.dim, bang.base, level)
 }
 
 /// Composes the layers into one mixed-design cell by the ordered Kronecker product, first layer outermost, or an error below two layers or across dimensions.
@@ -138,8 +138,8 @@ pub fn magic(layers: &[MagicLayer]) -> Result<Tensor> {
     if layers.len() < 2 {
         return value_error("magic needs at least two layers.");
     }
-    let dimension = layers[0].design.dimension;
-    if layers.iter().any(|l| l.design.dimension != dimension) {
+    let dimension = layers[0].design.dim;
+    if layers.iter().any(|l| l.design.dim != dimension) {
         return value_error("magic layers must share one dimension.");
     }
     let mut out: Option<Tensor> = None;
@@ -159,11 +159,11 @@ pub fn magic(layers: &[MagicLayer]) -> Result<Tensor> {
     Ok(out.expect("two or more layers leave a tile"))
 }
 
-/// Composes named layers in order, or an error for any non-canonical spelling.
+/// Composes JSON-named layers in order, or an error for any object that is not a bang.
 pub fn magic_named(layers: &[(&str, usize)]) -> Result<Tensor> {
     let parsed: Result<Vec<MagicLayer>> = layers
         .iter()
-        .map(|(spec, number)| Ok(MagicLayer::new(Bang::from_str(spec)?, *number)))
+        .map(|(spec, number)| Ok(MagicLayer::new(Bang::from_json(spec)?, *number)))
         .collect();
     magic(&parsed?)
 }
@@ -186,7 +186,10 @@ mod tests {
     fn menger_carpet_code() {
         assert_eq!(levels_code(3, 2, &[0, 1]), 23);
         let truth = create(23, 3, 3, 2, 1).unwrap();
-        assert_eq!(create_named("mrly_bang_d3_23", 3, 1).unwrap(), truth);
+        assert_eq!(
+            create_named(r#"{"kind":"bang","dim":3,"code":23}"#, 3, 1).unwrap(),
+            truth
+        );
         assert_eq!(truth.sum(), 20);
         assert_eq!(truth.shape, vec![3, 3, 3]);
     }
@@ -200,8 +203,8 @@ mod tests {
     }
     #[test]
     fn create_named_takes_the_canonical_name_only() {
-        assert!(create_named("mrly_bang_d2_q3_100", 3, 1).is_ok());
-        for bad in ["mrly_d3_b2_23", "mrly_023", "mrly23", "23"] {
+        assert!(create_named(r#"{"kind":"bang","dim":2,"base":3,"code":100}"#, 3, 1).is_ok());
+        for bad in ["bang dim 3, code 23", "bang_dim=3_code=23", "{}", "23"] {
             assert!(create_named(bad, 3, 1).is_err(), "{bad}");
         }
     }
@@ -248,7 +251,7 @@ mod tests {
     fn magic_recovers_the_self_similar_level() {
         let carpet = MagicLayer::new(Bang::new(7, 2, 2), 3);
         assert_eq!(
-            magic(&[carpet, carpet, carpet]).unwrap(),
+            magic(&[carpet.clone(), carpet.clone(), carpet]).unwrap(),
             create(7, 3, 2, 2, 3).unwrap()
         );
     }
@@ -268,7 +271,11 @@ mod tests {
     }
     #[test]
     fn magic_accepts_mixed_bases_and_canonical_names() {
-        let got = magic_named(&[("mrly_bang_d2_7", 3), ("mrly_bang_d2_q3_98", 3)]).unwrap();
+        let got = magic_named(&[
+            (r#"{"kind":"bang","dim":2,"code":7}"#, 3),
+            (r#"{"kind":"bang","dim":2,"base":3,"code":98}"#, 3),
+        ])
+        .unwrap();
         let expected = magic(&[
             MagicLayer::new(Bang::new(7, 2, 2), 3),
             MagicLayer::new(Bang::new(98, 2, 3), 3),
@@ -282,7 +289,7 @@ mod tests {
         let plane = MagicLayer::new(Bang::new(7, 2, 2), 3);
         let cube = MagicLayer::new(Bang::new(23, 3, 2), 3);
         assert!(magic(&[]).is_err());
-        assert!(magic(&[plane]).is_err());
+        assert!(magic(&[plane.clone()]).is_err());
         assert!(magic(&[plane, cube]).is_err());
     }
 }

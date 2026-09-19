@@ -24,11 +24,11 @@ impl Chapter {
         }
     }
     /// Encodes the chapter's rule, mask, seed, length and fate as a JSON object,
-    /// or an error when the config carries no nameable rule.
+    /// as its canonical JSON.
     pub fn to_json(&self) -> Result<Json> {
         Ok(json!({
             "v": 1,
-            "rule": Rule::of(&self.config)?.to_str(),
+            "rule": Rule::of(&self.config).to_json(),
             "mask": two::to_strings(&self.config.mask),
             "seed": self.life.grids.first().map(two::to_strings),
             "length": self.life.grids.len(),
@@ -38,7 +38,7 @@ impl Chapter {
     /// Decodes a chapter from its JSON object and replays it, or an error naming the broken field.
     pub fn from_json(value: &Json) -> Result<Chapter> {
         let parts = Parts::deserialize(value)?;
-        let rule = Rule::from_str(&parts.rule)?;
+        let rule = Rule::from_json(&parts.rule)?;
         let mask = two::from_strings(&parts.mask)?;
         let seed = two::from_strings(&parts.seed)?;
         if parts.length == 0 {
@@ -237,7 +237,7 @@ mod tests {
             assert_eq!(x.types(), y.types());
         }
         for (c, d) in story.chapters.iter().zip(&back.chapters) {
-            assert_eq!(Rule::of(&c.config).unwrap(), Rule::of(&d.config).unwrap());
+            assert_eq!(Rule::of(&c.config), Rule::of(&d.config));
             assert_eq!(c.life.fate, d.life.fate);
         }
     }

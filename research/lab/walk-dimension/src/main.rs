@@ -21,7 +21,7 @@ struct Subject {
 }
 
 fn base3(code: u128) -> Subject {
-    let name = format!("mrly_d2_b3_{code}");
+    let name = format!("bang dim 2, base 3, code {code}");
     let fill = code.count_ones() as usize;
     Subject {
         name,
@@ -45,7 +45,7 @@ fn base3(code: u128) -> Subject {
 fn subjects() -> Vec<Subject> {
     let mut out: Vec<Subject> = SUBJECTS.iter().map(|code| base3(*code)).collect();
     out.push(Subject {
-        name: "mrly_d2_b2_7".to_string(),
+        name: "bang dim 2, code 7".to_string(),
         fill: 3,
         base: 2,
         df: 3f64.ln() / 2f64.ln(),
@@ -54,7 +54,7 @@ fn subjects() -> Vec<Subject> {
         walk_level: 8,
     });
     out.push(Subject {
-        name: "mrly_d3_b3_023".to_string(),
+        name: "bang dim 3, base 3, code 23".to_string(),
         fill: 20,
         base: BASE,
         df: 20f64.ln() / 3f64.ln(),

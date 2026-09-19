@@ -201,9 +201,9 @@ pub struct Design {
 }
 
 impl Design {
-    /// Returns the design's canonical mrly name.
+    /// Returns the design's name as a line of prose, `bang dim 2, code 7`.
     pub fn name(&self) -> String {
-        crate::name::Named::to_str(&crate::name::Bang::new(self.i, self.dimension, 2))
+        crate::name::Named::to_mrly(&crate::name::Bang::new(self.i, self.dimension, 2))
     }
     /// Returns the design's filled corners in sorted order.
     pub fn rule(&self) -> Vec<Vec<u8>> {
@@ -390,8 +390,8 @@ mod tests {
     #[test]
     fn names_and_anf() {
         let u = bang(2);
-        assert_eq!(u.design(0).name(), "mrly_bang_d2_0");
-        assert_eq!(u.design(7).name(), "mrly_bang_d2_7");
+        assert_eq!(u.design(0).name(), "bang dim 2, code 0");
+        assert_eq!(u.design(7).name(), "bang dim 2, code 7");
         assert_eq!(u.design(0).anf(), "0");
         assert_eq!(u.design(1).anf(), "1+y+x+xy");
     }

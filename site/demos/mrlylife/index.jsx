@@ -43,19 +43,14 @@ function parse(text) {
   return Uint32Array.from([...seen].sort((a, b) => a - b));
 }
 
-function spell(counts, sequence) {
-  if (sequence) return sequence;
-  if (counts.some((c) => c > 9)) return null;
-  return counts.join('');
+function counts(list, sequence) {
+  return sequence || `[${[...list].join(' ')}]`;
 }
 
 const alive = (types) => types.reduce((a, b) => a + b, 0);
 
 function ruleName(birth, survive, bseq, sseq, wrap) {
-  const b = spell(birth, bseq);
-  const s = spell(survive, sseq);
-  if (b === null || s === null) return null;
-  return `mrly_rule_b${b}_s${s}${wrap ? '_w' : ''}`;
+  return `rule birth ${counts(birth, bseq)}, survive ${counts(survive, sseq)}${wrap ? ', wrap' : ''}`;
 }
 
 // THE WORLD
@@ -135,6 +130,7 @@ function App() {
   const birth = parse(pick.birth);
   const survive = parse(pick.survive);
   const name = ruleName(birth, survive, pick.bseq, pick.sseq, pick.wrap);
+  const maskName = attempt(() => m.name_of(pick.code.trim(), dim, 2)).read;
 
   const reseed = (patch = {}) => {
     const next = { ...pick, ...patch };
@@ -251,7 +247,7 @@ function App() {
   return (
     <Page crumb="mrlylife" title="mrlylife"
       sub="Life is one point of a family: pick the neighbourhood as a design rather than a ring, pick the birth and survival counts by hand or from a named sequence, and run it in one dimension or two. The mask is the object; the rule reads only how many of its cells are alive."
-      foot={<>The kind is LIFE, outer-totalistic: a dead cell is born when its live neighbour count is in the birth list, a live cell stays when its count is in the survival list, and the mask says which cells are neighbours. Conway is the level-1 carpet `mrly_bang_d2_7` with its centre popped, drawn plain on <a href="../life">the Life page</a>; the one-dimensional two-state radius-one masks are the elementary rules on <a href="../wolfram">the Wolfram page</a>. Menger-Life proper lives at `D = 3` on the 20 offsets of `mrly_bang_d3_23` and is not drawn here, so the Menger chip reads that tile one dimension down. The masks, the indices and every generation come out of the crates through wasm. The research page is <a href="/research/automata/">automata</a>.</>}
+      foot={<>The kind is LIFE, outer-totalistic: a dead cell is born when its live neighbour count is in the birth list, a live cell stays when its count is in the survival list, and the mask says which cells are neighbours. Conway is the level-1 carpet `bang dim 2, code 7` with its centre popped, drawn plain on <a href="../life">the Life page</a>; the one-dimensional two-state radius-one masks are the elementary rules on <a href="../wolfram">the Wolfram page</a>. Menger-Life proper lives at dim 3 on the 20 offsets of `bang dim 3, code 23` and is not drawn here, so the Menger chip reads that tile one dimension down. The masks, the indices and every generation come out of the crates through wasm. The research page is <a href="/research/automata/">automata</a>.</>}
       controls={controls}>
 
       <div className="arena">
@@ -260,7 +256,7 @@ function App() {
           <Note error={mask.error} />
           {mask.read && <Grid grid={mask.read} on={ink.yellow} style={{ maxWidth: 200 }} aria-label="The neighbourhood mask" />}
           <Stats>
-            <Stat label="mask">{`${dim === 1 ? 'd1' : 'd2'} code ${pick.code.trim()} side ${pick.side} level ${level}`}</Stat>
+            <Stat label="mask">{`${maskName ?? `code ${pick.code.trim()}`}, side ${pick.side}, level ${level}`}</Stat>
             <Stat label="cells">{budget}</Stat>
             <Stat label="lattice">{reading}</Stat>
           </Stats>
@@ -269,12 +265,11 @@ function App() {
         <div className="panel">
           <h2>the rule <span>kind LIFE on this mask</span></h2>
           <Stats>
-            <Stat label="name">{name ?? `B${[...birth].join(',')}/S${[...survive].join(',')}`}</Stat>
+            <Stat label="name">{name}</Stat>
             <Stat label="birth">{[...birth].join(', ') || 'none'}</Stat>
             <Stat label="survive">{[...survive].join(', ') || 'none'}</Stat>
-            {name === null && <span className="chip conjecture">above 9 the digits run out, so this rule has no name</span>}
           </Stats>
-          <p className="sub">Counts run from 0 to {budget}, the cell count of the mask. Type them as digits, as `1 3 5 7`, or draw them from a named sequence cut at the budget; a sequence side spells itself in the name, so `mrly_rule_bprimes_s23` is a rule and not a description of one.</p>
+          <p className="sub">Counts run from 0 to {budget}, the cell count of the mask. Type them as digits, as `1 3 5 7`, or draw them from a named sequence cut at the budget; a sequence side spells itself in the name, so `rule birth primes, survive [2 3]` is a rule and not a description of one.</p>
         </div>
       </div>
 

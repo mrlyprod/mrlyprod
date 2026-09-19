@@ -283,7 +283,7 @@ impl Press {
 }
 
 fn layer_radix(layer: &MagicLayer) -> u128 {
-    (layer.number as u128).pow(layer.design.dimension as u32)
+    (layer.number as u128).pow(layer.design.dim as u32)
 }
 
 /// Returns the allowed digit table of one magic layer, one flag per cell of its tile.
@@ -291,8 +291,8 @@ fn layer_radix(layer: &MagicLayer) -> u128 {
 /// A cell is allowed when its coordinate residues form a filled corner, which is the
 /// tile the layer renders read as a digit alphabet.
 pub fn layer_table(layer: &MagicLayer) -> Result<Vec<bool>> {
-    let corners = code_to_corners(layer.design.code, layer.design.dimension, layer.design.base)?;
-    let dimension = layer.design.dimension;
+    let corners = code_to_corners(layer.design.code, layer.design.dim, layer.design.base)?;
+    let dimension = layer.design.dim;
     let base = layer.design.base;
     let side = layer.number;
     let mut out = Vec::with_capacity(side.pow(dimension as u32));
@@ -312,8 +312,8 @@ fn word_tables(layers: &[MagicLayer]) -> Result<Vec<Vec<bool>>> {
     if layers.is_empty() {
         return value_error("a word needs at least one layer.");
     }
-    let dimension = layers[0].design.dimension;
-    if layers.iter().any(|l| l.design.dimension != dimension) {
+    let dimension = layers[0].design.dim;
+    if layers.iter().any(|l| l.design.dim != dimension) {
         return value_error("all word layers must have the same dimension.");
     }
     layers.iter().map(layer_table).collect()
@@ -398,7 +398,7 @@ pub fn word_members(layers: &[MagicLayer]) -> Result<Vec<u128>> {
 /// of the composed design is ever enumerated.
 pub fn word_profile(layers: &[MagicLayer]) -> Result<Vec<u128>> {
     let tables = word_tables(layers)?;
-    let dimension = layers[0].design.dimension;
+    let dimension = layers[0].design.dim;
     let mut out = vec![1u128];
     let mut stride: usize = 1;
     for (layer, table) in layers.iter().zip(&tables).rev() {
@@ -641,7 +641,7 @@ mod tests {
     fn a_word_refuses_mismatched_dimensions_and_numbers_past_its_domain() {
         let plane = MagicLayer::new(Bang::new(7, 2, 2), 3);
         let cube = MagicLayer::new(Bang::new(23, 3, 2), 3);
-        assert!(word_member(&[plane, cube], 0).is_err());
+        assert!(word_member(&[plane.clone(), cube], 0).is_err());
         assert!(word_member(&[plane], 9).is_err());
         assert!(word_member(&[], 0).is_err());
     }

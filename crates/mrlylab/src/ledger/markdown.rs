@@ -35,7 +35,7 @@ fn spelled(row: &Sequence) -> String {
 
 fn table(axis: Axis) -> String {
     let index = match axis {
-        Axis::Level => "`L = 1`",
+        Axis::Level => "level 1",
         Axis::Side => "`k = 2`",
     };
     let mut out = format!("| design | key | closed form | terms from {index} | record | shift | status |\n|---|---|---|---|---|---|---|\n");
@@ -153,7 +153,7 @@ mod tests {
         let page = markdown();
         assert!(!page.contains("{{"));
         assert!(page.contains(
-            "`mrly_bang_d2_7.fills.side` | `3k^2 - 2k` | `8, 21, 40, 65, 96, 133, 176, 225`"
+            "`bang_dim=2_code=7.fills.side` | `3k^2 - 2k` | `8, 21, 40, 65, 96, 133, 176, 225`"
         ));
         assert_eq!(page, disk, "run `cargo run -p mrlylab --bin ledger`");
     }

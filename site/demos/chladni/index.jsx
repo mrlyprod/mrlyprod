@@ -77,7 +77,7 @@ const rings = (still, mask) => (canvas) => {
   ctx.fillText(`ring ${span}`, right, h - 5);
   ctx.textAlign = 'left';
   ctx.fillStyle = ink.pink;
-  if (still.peak_ring > 0) ctx.fillText(`k = ${still.peak_ring}`, Math.min(x(still.peak_ring) + 4, right - 40), top - 6);
+  if (still.peak_ring > 0) ctx.fillText(`ring ${still.peak_ring}`, Math.min(x(still.peak_ring) + 4, right - 40), top - 6);
 };
 
 function App() {
@@ -156,7 +156,7 @@ function App() {
   return (
     <Page crumb="chladni" title="chladni"
       sub="A soup run under a Larger-than-Life rule on a big design mask settles into a still with a grain of its own. The mask's spectrum and the still's are drawn side by side, and the ring where the still's spectrum peaks reads the wavelength the rule prefers."
-      foot={<>The mask is a design at side n and level L with its centre popped, m cells in all; the rule is two closed windows on the fraction count / m: a dead cell is born inside the birth window, a live cell is kept inside the survive window, and the count is the mask laid on the torus, read by FFT convolution. Bugs is Evans' rule on the radius-5 box, birth 34 to 45 and survive 34 to 58 of 120, kept here as fractions so it moves to any mask; Conway is 3/8 3/8 2/8 3/8 on the Moore mask, the level-1 carpet. The spectrum is the log magnitude of the field's transform with the zero frequency at the centre, the profile its mean over rings of radius k, and ring k on a torus of side N is the wavelength N / k. The same masks and counts run without the fractions on <a href="../mrlylife">the mrlylife page</a>, and the mask's own modes are drawn on <a href="../modes">the modes page</a>. The research page is <a href="/research/automata/">automata</a>.</>}
+      foot={<>The mask is a design at its side and level with its centre popped, m cells in all; the rule is two closed windows on the fraction count / m: a dead cell is born inside the birth window, a live cell is kept inside the survive window, and the count is the mask laid on the torus, read by FFT convolution. Bugs is Evans' rule on the radius-5 box, birth 34 to 45 and survive 34 to 58 of 120, kept here as fractions so it moves to any mask; Conway is 3/8 3/8 2/8 3/8 on the Moore mask, the level-1 carpet. The spectrum is the log magnitude of the field's transform with the zero frequency at the centre, the profile its mean over rings of radius k, and ring k on a torus of side N is the wavelength N / k. The same masks and counts run without the fractions on <a href="../mrlylife">the mrlylife page</a>, and the mask's own modes are drawn on <a href="../modes">the modes page</a>. The research page is <a href="/research/automata/">automata</a>.</>}
       controls={controls}>
 
       <div className="arena">

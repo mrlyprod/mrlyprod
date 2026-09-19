@@ -23,13 +23,13 @@ const PRESETS = [
 ];
 
 const DIAL =
-  'A design word is a string of digits, one digit a level, and the digit is a corner of the cube: at `D = 1` the two ends of an interval, at `D = 2` the four corners of a square, read as the corner integer `c = sum_i d_i 2^i` with `x` bit `0` and `y` bit `1`. Today every word is allowed and the digits are independent, so the design is the same tile folded into itself. The memory dial breaks that independence: a rule names which windows of `k` consecutive digits may stand side by side, and a word survives only when every one of its windows is allowed. At `k = 1` the window is one digit, the rule is a plain digit set, and the accepted words are the cells of `mrly_bang_d<D>_<code>` at that level, cell for cell. Turn `k` past one and the design remembers what it just wrote.';
+  'A design word is a string of digits, one digit a level, and the digit is a corner of the cube: at dim 1 the two ends of an interval, at dim 2 the four corners of a square, read as the corner integer `c = sum_i d_i 2^i` with `x` bit `0` and `y` bit `1`. Today every word is allowed and the digits are independent, so the design is the same tile folded into itself. The memory dial breaks that independence: a rule names which windows of `k` consecutive digits may stand side by side, and a word survives only when every one of its windows is allowed. At `k = 1` the window is one digit, the rule is a plain digit set, and the accepted words are the cells of `bang dim <dim>, code <code>` at that level, cell for cell. Turn `k` past one and the design remembers what it just wrote.';
 
 const CODE =
-  'The alphabet is the `2^D` corner digits. A window is `k` of them, `(c_1, ..., c_k)`, read as the integer `w = sum_j c_j 2^(D (k - j))` with the first digit most significant, and bit `w` of the code says whether that window may stand. So a rule of width `k` at dimension `D` is one number below `2^(2^(k D))`, and the span `k D <= ' + SPAN + '` keeps it inside a 64-bit code. Click a window below to forbid it or let it back in.';
+  'The alphabet is the `2^dim` corner digits. A window is `k` of them, `(c_1, ..., c_k)`, read as the integer `w = sum_j c_j 2^(dim (k - j))` with the first digit most significant, and bit `w` of the code says whether that window may stand. So a rule of width `k` at dim `dim` is one number below `2^(2^(k dim))`, and the span `k dim <= ' + SPAN + '` keeps it inside a 64-bit code. Click a window below to forbid it or let it back in.';
 
 const GROWTH =
-  'Accepted words of length `L` are the walks of length `L - k + 1` on the transfer matrix `A`, whose states are the `2^((k - 1) D)` windows one digit short, so `N_W(L) = 1^T A^(L - k + 1) 1` and for `L < k` every word counts, `2^(D L)` of them. The count grows like the Perron root `rho` of `A`, and the growth exponent is `log_2 rho`. The memory number `kappa = log_2(card W) / k - log_2 rho`, for `card W` the allowed windows, is the bits per digit a rule spends on memory, zero on every memoryless design. A word of length `m k` cuts into `m` windows that never meet, so `rho^k <= card W` and `kappa >= 0`; a rule whose windows are a digit set repeated `k` times reaches that bound and spends nothing, and the golden rule spends about a tenth of a bit a digit.';
+  'Accepted words of length `level` are the walks of length `level - k + 1` on the transfer matrix `A`, whose states are the `2^((k - 1) dim)` windows one digit short, so `N_W(level) = 1^T A^(level - k + 1) 1` and for `level < k` every word counts, `2^(dim level)` of them. The count grows like the Perron root `rho` of `A`, and the growth exponent is `log_2 rho`. The memory number `kappa = log_2(card W) / k - log_2 rho`, for `card W` the allowed windows, is the bits per digit a rule spends on memory, zero on every memoryless design. A word of length `m k` cuts into `m` windows that never meet, so `rho^k <= card W` and `kappa >= 0`; a rule whose windows are a digit set repeated `k` times reaches that bound and spends nothing, and the golden rule spends about a tenth of a bit a digit.';
 
 const attempt = (fn) => {
   try {
@@ -87,7 +87,7 @@ function App() {
         <Btn onClick={() => set({ code: '0' })}>Forbid all</Btn>
       </Group>
       <Group name="The depth">
-        <Slider label={`level L to ${cap}`} value={level} min={1} max={cap} onChange={(value) => set({ level: value })} />
+        <Slider label={`level 1 to ${cap}`} value={level} min={1} max={cap} onChange={(value) => set({ level: value })} />
       </Group>
     </>
   );
@@ -110,11 +110,11 @@ function App() {
         ) : null}
         {card ? (
           <Stats>
-            <Stat label="rule">{`D ${card.dimension}, k ${card.width}, code ${card.code}`}</Stat>
+            <Stat label="rule">{`dim ${card.dimension}, k ${card.width}, code ${card.code}`}</Stat>
             <Stat label="level">{level}</Stat>
             <Stat label="accepted words">{card.counts[level - 1]}</Stat>
             <Stat label="every word">{card.letters ** level}</Stat>
-            {k === 1 ? <span className="chip verified">width one, so this sheet is the design mrly_bang_d{card.dimension}_{card.code} at level {level}, cell for cell</span> : null}
+            {k === 1 ? <span className="chip verified">width one, so this sheet is the design bang dim {card.dimension}, code {card.code} at level {level}, cell for cell</span> : null}
           </Stats>
         ) : null}
         <p className="sub">{DIAL}</p>
@@ -122,7 +122,7 @@ function App() {
 
       <div className="arena">
         <div className="panel">
-          <h2>the count a level <span>N_W(L) for L one to {level}</span></h2>
+          <h2>the count a level <span>N_W(level) for level one to {level}</span></h2>
           {card ? <Terms terms={card.counts} start={1} /> : null}
           {card ? (
             <Stats>

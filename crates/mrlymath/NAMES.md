@@ -1,73 +1,100 @@
 # NAMES
 
-One canonical string per mathematical thing. Implemented by `mrlymath::name` behind the `Named` trait.
+Words, not letters. One word per thing, the same word everywhere. Letters live only inside a formula, declared by the sentence that uses them. Implemented by `mrlymath::name` behind the `Named` trait.
 
-## GRAMMAR
+## THE WORDS
 
-- Every name reads `mrly_<kind>_<body>`.
-- Lowercase only; chars `[a-z0-9_]`; filename, URL and dataset safe.
-- The body is `_`-separated fields in a fixed per-kind order.
-- A field is a tag run (`d2`, `c7n3r1`), a bare word (`fractal`), a sequence word carrying its own underscores (`grid_squares`, `random_7`), a bare number (the bang code), or a flag letter present iff true (`i`).
-- Numbers are plain decimal; a leading zero never appears.
-- A word field may carry underscores, so the reader takes the longest known word off the front, not everything up to the next underscore.
-- Slots (repeated layers) print as one field each, tags concatenated.
-- Defaults elide by fixed per-kind rules, so one value has one spelling.
-- `from_str` accepts the canonical spelling only; `to_str` always emits it.
+| word | meaning |
+|---|---|
+| `dim` | number of axes: 1, 2, 3 |
+| `base` | digits per axis; 2 unless said |
+| `code` | the design as a number |
+| `level` | substitution depth |
+| `side` | cells per axis of a render, `base^level` |
+| `lattice` | `square` or `hex`; square unless said |
+| `twist` | one unit index per filled digit; absent when nothing turns |
+| `magic` | the list of codes of a mixed word |
+| `mosaic` | mask code plus palette codes |
+| `special` | the mask code of a special tile |
+| `factor` | the side of a special or mosaic mask |
+| `turn` | quarter turns of a slot |
+| `anti` | whether a slot swaps fill and void |
+| `flip` | whether a special tile flips its mask |
+| `invert` | whether the finished tile inverts |
+| `fill`, `void`, `cells` | counts of a render |
+| `faces`, `nodes`, `edges`, `parts`, `holes`, `euler`, `contacts` | the other counts, as the crates name them |
+| `area`, `volume`, `tube` | measures |
+| `dimension` | `log(fill) / log(base)`, per axis; a formula, never a parameter |
+| `birth`, `survive`, `wrap`, `mask` | life rules |
+
+- Fractal dimension is derived, so it never needs a symbol: write `log(fill) / log(base)` or the number.
+- The design's digit set gets no global letter. In a proof: "let `F` be the digits of the code", once, then `F` for that proof.
+- Indices `i, j, k` and a running integer `n` stay local, as in every paper.
+
+## THE NAME IS A JSON OBJECT
+
+- The canonical form of every named thing is one JSON object: `kind` first, then the words above as keys, in a fixed order per kind, defaults elided, no whitespace. Equality of things is equality of strings.
+- Every other form is a view with a function. `to_json()` is canonical; `to_url()`, `to_file()` and `to_mrly()` are cut from it; `to_id()` hashes it. The decodable views have a `from_`.
+- Adding a key never breaks an old name: absent means default.
+- Registries, catalogs, censuses and the ledger are JSONL: one object per line.
+- Rust: one struct per kind under serde, `default` and `skip_serializing_if` for elision, field order as canonical order.
 
 ## LAWS
 
-- `from_str(to_str(x)) == canonical(x)` for every value x.
-- `to_str(from_str(s)) == s` for every canonical string s.
-- Aliases that draw one picture share one name (see tile).
+- `from_json(to_json(x)) == checked(x)` for every value `x`.
+- `to_json(from_json(s)) == s` for every canonical string `s`.
+- `from_json` reads any key order, whitespace and spelt default and folds it to the canonical value.
+- Aliases that draw one picture share one name.
+
+## THE VIEWS
+
+| view | Koch |
+|---|---|
+| `to_json()` | `{"kind":"bang","dim":2,"lattice":"hex","base":3,"code":39,"twist":[0,1,5,0]}` |
+| `to_url()` | `/bang?dim=2&lattice=hex&base=3&code=39&twist=0,1,5,0` |
+| `to_file()` | `bang_dim=2_lattice=hex_base=3_code=39_twist=[0,1,5,0]` |
+| `to_mrly()` | `bang dim 2, hex, base 3, code 39, twist [0 1 5 0]` |
+| `to_id()` | the first 8 hex digits of the sha256 of the canonical JSON |
+
+- `to_url()`: the kind is the path, the keys the query string, lists comma-joined, flags `true`. `from_url()` reads it back; a key the kind lists reads a lone value as a one-item list.
+- `to_file()`: the kind, then `key=value` joined by `_`, lists in brackets. The alphabet `[a-z0-9_=,\[\]]` is safe on every OS. `from_file()` cuts at an underscore followed by `key=`, so a word value may carry underscores.
+- `to_mrly()`: the kind, then `key value` pairs joined by commas, lists in brackets with spaces, a true flag as its bare key, a lattice as its bare word. Pages use this form.
+- `to_id()`: one-way; it identifies but never decodes. A registry line holds the object.
+- A ledger sequence is the design's `to_file()` dotted with its measure and axis: `bang_dim=3_code=23.surface.level`.
 
 ## KIND BANG
 
-- `mrly_bang_d<dim>[_q<base>]_<code>`.
-- Field order: d, q, code.
-- `q` elides when the base is 2; `q2` never appears.
-- The code must fit the corner space: `code < 2^(base^dim)`, and `base^dim` stays below 128 so the code fits a u128.
-- Carrier: `name::Bang { code, dimension, base }`.
-- Examples: `mrly_bang_d2_7`, `mrly_bang_d3_23`, `mrly_bang_d2_q3_511`.
-- `bang::Design::name` prints this name for its code at base 2.
+- Keys: `dim`, `lattice`, `base`, `code`, `twist`.
+- `lattice` elides at `square`, `base` at 2, `twist` when absent or all zero.
+- The code fits the digit space: `code < 2^(base^dim)`, and `base^dim` stays below 128.
+- A twist holds one unit per filled digit, each below 4 on the square lattice and 6 on the hex.
+- Carrier: `name::Bang { dim, lattice, base, code, twist }`.
+- Examples: `{"kind":"bang","dim":2,"code":7}` the carpet, `{"kind":"bang","dim":3,"code":23}` the sponge, `{"kind":"bang","dim":2,"base":3,"code":511}`.
 
 ## KIND RULE
 
-- `mrly_rule_b<counts>_s<counts>[_w]`.
-- A side is a digit list or a sequence, never a mix.
-- A digit list holds single digits 0-9, concatenated strictly ascending; an empty side is the bare tag (`mrly_rule_b_s`).
-- Above 9 the digits run out, so a wide side names its sequence instead.
-- A sequence side is `<sequence>[z][o]`: `z` iff zeros stay, `o` iff ones stay.
-- The sequence is spelled as `life::Sequence` spells it: a known name (`fibonacci`, `grid_squares`), `random_<seed>`, `code_fills_<code>` or `code_voids_<code>`.
-- Sequence names carry underscores; the longest-word rule reads them.
-- Every sequence is deterministic, so the name alone rebuilds the counts once the mask says how many neighbors there are.
-- `w` is present iff the boundary wraps.
-- Carrier: `name::Rule { birth, survive, boundary }`; `Rule::of` reads one out of a `life::Config` and `Rule::config` builds one over a mask.
-- Conway is `mrly_rule_b3_s23`.
-- Examples: `mrly_rule_bfibonaccio_sgrid_squares_w`, `mrly_rule_brandom_4848495z_s3`.
-- A digit list holding a count above 9 has no name, so `Rule::new` and `Rule::of` reject it and `to_str` never meets one.
+- Keys: `birth`, `survive`, `wrap`.
+- A side is a list of counts, sorted and unique, or a sequence word: the sequence as `life::Sequence` spells it, then `_zeros` if zeros stay, then `_ones` if ones stay.
+- A listed count may be any size: `{"kind":"rule","birth":[12,13],"survive":"fibonacci","wrap":true}`.
+- `wrap` elides at false.
+- Carrier: `name::Rule { birth, survive, wrap }`; `Rule::of` reads one out of a `life::Config` and `Rule::config` builds one over a mask.
+- Conway is `{"kind":"rule","birth":[3],"survive":[2,3]}`.
 
 ## KIND TILE
 
-- `mrly_tile_<group>_<fields>`, implemented for `mrlycore::tile::Tile`.
-- The name speaks the plane: dimension 2 and base two are implied.
-- Sources are always codes; classics normalize to theirs: Carpet 7, Net 14, Htree 3, Vtree 5, Void 9; antis to theirs: Point 8, Dust 1, Hline 12, Vline 10, Star 6.
-- Width, height, factor-when-derived and base never print; the size law (`Tile::resize`) rebuilds them on parse, and `Tile::check` must pass.
-- Rotations print mod 4; `r0` elides; `l1` elides; absent flags elide.
-- Codes must sit in the plane: `c` values 0-15.
-- Naming a tile that fails `Tile::check`, or one holding a 3d-only classic, is out of contract and may panic.
+- The key that carries the codes says the group: `code` flat or, with `level`, fractal; `magic` a list of letters; `special` one mask code; `mosaic` three codes.
+- Keys in order: `code` | `special` | `magic` | `mosaic`, `factor`, `side`, `level`, `turn`, `anti`, `flip`, `invert`.
+- `side` and `turn` are one number for one slot and one number per slot for a magic tile; a mosaic shares one side.
+- `level` elides at 1, `turn` when nothing turns, `anti` when no slot swaps, `flip` and `invert` at false.
+- Classics fold to their codes: Carpet 7, Net 14, Htree 3, Vtree 5, Void 9, Point 8, Dust 1, Hline 12, Vline 10, Star 6. Codes sit in the plane, 0 to 15.
+- A lone anti folds into `invert`; anti is dead on a special tile; width, height and base never print and the size law rebuilds them.
+- Carrier: `name::Tile`; `Tile::of` folds a `mrlycore::tile::Tile` and `Tile::recipe` builds one back, resized and checked.
+- Examples: `{"kind":"tile","code":7,"side":3,"level":2}` the starter carpet, `{"kind":"tile","code":3,"side":5,"turn":1,"invert":true}`, `{"kind":"tile","magic":[7,14],"side":[3,5],"turn":[0,2],"anti":[false,true],"invert":true}`, `{"kind":"tile","special":5,"factor":3,"side":5,"flip":true}`, `{"kind":"tile","mosaic":[7,14,5],"factor":3,"side":3,"turn":[0,1,0],"anti":[false,false,true],"invert":true}`.
 
-Per group, after the group word:
+## KIND WORD
 
-- general: `c<code>_n<number>[_r<rot>][_i]`, where `i` = anti[0] XOR invert (the pair collapses to one bit).
-- fractal: `c<code>_n<number>[_l<level>][_r<rot>][_i]`, same `i` fold.
-- magic: one slot field per layer `c<code>n<number>[r<rot>][a]`, then `[_i]`; `a` = anti of that slot, `i` = invert.
-- special: `c<code>_f<factor>_n<number>[_r<rot>][_x][_i]`, `x` = flip, `i` = invert; anti is dead here and folds to false.
-- mosaic: `f<factor>_n<number>`, then three slot fields `c<code>[r<rot>][a]`, then `[_i]`.
-
-Examples:
-
-- `mrly_tile_fractal_c7_n3_l2` - the starter carpet.
-- `mrly_tile_general_c3_n5_r1_i`
-- `mrly_tile_magic_c7n3_c14n5r2a_i`
-- `mrly_tile_special_c5_f3_n5_x`
-- `mrly_tile_mosaic_f3_n3_c7_c14r1_c5a_i`
+- Keys: `dim`, `magic`, `side`, `base`.
+- `magic` lists the letter codes first letter outermost, `side` the side each renders at, `base` the base of each letter; `base` elides when every letter is base 2.
+- Two letters at least; every letter fits its own digit space and no letter is code 0.
+- Carrier: `name::Word { dim, magic, side, base }`.
+- Example: `{"kind":"word","dim":2,"magic":[7,14,9],"side":[3,7,5]}`.

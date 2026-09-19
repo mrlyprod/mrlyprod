@@ -89,9 +89,9 @@ pub fn affine(rule: u8) -> bool {
     rule_degree(rule) <= 1
 }
 
-/// Returns the design name a rule carries, `mrly_bang_d3_<rule>`.
+/// Returns the design name a rule carries, `bang dim 3, code <rule>`.
 pub fn rule_name(rule: u8) -> String {
-    Named::to_str(&Bang::new(rule as Code, 3, 2))
+    Bang::new(rule as Code, 3, 2).to_mrly()
 }
 
 fn act(rule: u8, element: &(Vec<usize>, Vec<u8>), complement: bool) -> u8 {
@@ -277,8 +277,8 @@ pub fn outer_totalistic(rule: u8) -> Option<(Vec<usize>, Vec<usize>)> {
 /// Returns the base-2 plane design a rule's single seed draws, or None when it draws none.
 pub fn gasket(rule: u8) -> Option<&'static str> {
     match rule {
-        60 | 90 => Some("mrly_bang_d2_13"),
-        102 => Some("mrly_bang_d2_14"),
+        60 | 90 => Some("bang dim 2, code 13"),
+        102 => Some("bang dim 2, code 14"),
         _ => None,
     }
 }
@@ -330,7 +330,7 @@ mod tests {
                 );
             }
         }
-        assert_eq!(gasket(60), Some("mrly_bang_d2_13"));
+        assert_eq!(gasket(60), Some("bang dim 2, code 13"));
     }
     #[test]
     fn rule_150_row_populations_are_a071053() {
@@ -375,7 +375,7 @@ mod tests {
     }
     #[test]
     fn the_card_pieces_read_rule_110() {
-        assert_eq!(rule_name(110), "mrly_bang_d3_110");
+        assert_eq!(rule_name(110), "bang dim 3, code 110");
         assert_eq!(corner_bits(110), vec![0, 1, 1, 1, 0, 1, 1, 0]);
         assert_eq!(
             (popcount(110), rule_degree(110), genus(110)),

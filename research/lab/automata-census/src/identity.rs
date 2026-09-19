@@ -18,13 +18,13 @@ pub fn report() {
                     assert_eq!(
                         from_design[index],
                         output(rule, l, c, r) == 1,
-                        "rule {rule} disagrees with mrly_bang_d3_{rule} at ({l},{c},{r})"
+                        "rule {rule} disagrees with bang dim 3, code {rule} at ({l},{c},{r})"
                     );
                     checked += 1;
                 }
             }
         }
     }
-    println!("rule N and mrly_bang_d3_N agree on all {checked} rule cells over {RULES} codes");
+    println!("rule N and bang dim 3, code N agree on all {checked} rule cells over {RULES} codes");
     println!("the dictionary is (x0,x1,x2) = (l,c,r) and corner index i = 4 x0 + 2 x1 + x2");
 }

@@ -1,12 +1,12 @@
 # Life Census
 
 - Reads the `2^18` outer-totalistic life-like rules on the Moore neighborhood as designs on the parity cube `{0,1}^9`, and computes fill, Langton `lambda`, `GF(2)` degree and genus for all of them; the Walsh level sums are computed for `B3/S23` alone.
-- A rule is a birth set `B` and a survive set `S` inside `{0..8}`, and as a design it is the `D = 9` Boolean function `f(c, n) = [c = 0][|n| in B] + [c = 1][|n| in S]` on the centre `c` and the eight outer bits `n`.
+- A rule is a birth set `B` and a survive set `S` inside `{0..8}`, and as a design it is the dim 9 Boolean function `f(c, n) = [c = 0][|n| in B] + [c = 1][|n| in S]` on the centre `c` and the eight outer bits `n`.
 - The code is the 512-bit corner bitmask in the crate's row-major corner order, corner `i` carrying coordinate `j` equal to `(i / 2^(8-j)) mod 2`, with the centre as the first coordinate; the code under the 3x3 block order, centre in the middle, is printed beside it, the two being a permutation of variables apart and so equal in fill, degree and genus.
-- Dimension is the core page's `log(fill) / log(side)` at level 1, so at base 2 it is `log2(fill) = D + log2(lambda)` with `fill` the number of filled corners of `{0,1}^D`.
-- The Moore mask is rebuilt from the crate's definition, ones on a `3^D` grid with the centre index cleared, and compared with the level-1 side-3 tile of the design "void iff every coordinate is odd" at `D = 1, 2, 3`.
-- That comparison is a theorem in every dimension: at side 3 the coordinates are `0, 1, 2`, the only odd value is `1`, so the only cell with every coordinate odd is the centre `(1, ..., 1)`; hence the level-1 side-3 tile of "void iff every coordinate is odd" is the full `3^D` block minus its centre, which is `moore(D)`.
-- Genus follows the core page: a design is isotropic when some member of its `B_D` orbit is a level set of the popcount, which by the orbit law means `f(x)` depends only on `|x xor t|` for one of the 512 flips `t`, and axial when its support is a subcube. Both tests are orbit-wide, so a per-rule verdict is well defined.
+- Dimension is the core page's `log(fill) / log(side)` at level 1, so at base 2 it is `log2(fill) = dim + log2(lambda)` with `fill` the number of filled corners of `{0,1}^dim`.
+- The Moore mask is rebuilt from the crate's definition, ones on a `3^dim` grid with the centre index cleared, and compared with the level-1 side-3 tile of the design "void iff every coordinate is odd" at dim 1, 2, 3.
+- That comparison is a theorem in every dimension: at side 3 the coordinates are `0, 1, 2`, the only odd value is `1`, so the only cell with every coordinate odd is the centre `(1, ..., 1)`; hence the level-1 side-3 tile of "void iff every coordinate is odd" is the full `3^dim` block minus its centre, which is `moore(dim)`.
+- Genus follows the core page: a design is isotropic when some member of its `B_dim` orbit is a level set of the popcount, which by the orbit law means `f(x)` depends only on `|x xor t|` for one of the 512 flips `t`, and axial when its support is a subcube. Both tests are orbit-wide, so a per-rule verdict is well defined.
 - The fill histogram is computed twice: as the self-convolution of the subset-sum distribution of the binomials `{1, 8, 28, 56, 70, 56, 28, 8, 1}`, and by brute force over all `2^18` pairs.
 - The axial test is computed twice as well: a closed form in `B` and `S` from the fill and the edge counts, and a brute subcube test on the support of every one of the `2^18` truth tables.
 - The degree sweep runs a Mobius transform over every one of the `2^18` truth tables, and is cross-checked against the composition law `deg(B, S) = deg(B)` when `B = S` and `max(deg(B), 1 + deg(B xor S))` otherwise, which follows from `f = g_B + c (g_B xor g_S)` and `g_B xor g_S = [|n| in B xor S]`; the exception is real, since the empty rule `B/S` has degree `-1` where the unconditional form gives `0`.
@@ -22,10 +22,10 @@
 
 ## WITNESSES
 
-- In every dimension the level-1 side-3 tile of the design "void iff every coordinate is odd" is the `3^D` block minus its centre, which is the Moore mask, because `1` is the only odd coordinate value at side 3. (Proved.)
-- The tile equals the crate's `moore(D)` array cell for cell at `D = 1, 2, 3`, fills 2 of 3, 8 of 9 and 26 of 27; in the plane that design is `mrly_bang_d2_7`, dimension `log(8)/log(3) = 1.892789`. (Verified.)
+- In every dimension the level-1 side-3 tile of the design "void iff every coordinate is odd" is the `3^dim` block minus its centre, which is the Moore mask, because `1` is the only odd coordinate value at side 3. (Proved.)
+- The tile equals the crate's `moore(dim)` array cell for cell at dim 1, 2, 3, fills 2 of 3, 8 of 9 and 26 of 27; in the plane that design is `bang dim 2, code 7`, dimension `log(8)/log(3) = 1.892789`. (Verified.)
 - `B3/S23` has fill `C(8,3) + C(8,2) + C(8,3) = 140` of 512, so `lambda = 140/512`. (Proved; Verified.)
-- At base 2 a design's dimension is `log2(fill) = D + log2(lambda)`, so at fixed `D` it is a strictly increasing function of `lambda`, and it is not a function of `lambda` across dimensions; for `B3/S23`, `D = 9` and `log2(140) = 7.129283`. (Proved; Verified.)
+- At base 2 a design's dimension is `log2(fill) = dim + log2(lambda)`, so at fixed dim it is a strictly increasing function of `lambda`, and it is not a function of `lambda` across dimensions; for `B3/S23`, dim 9 and `log2(140) = 7.129283`. (Proved; Verified.)
 - `B3/S23` has `GF(2)` degree 8 with 184 monomials, and Walsh level sums `140, 308, -224, -896, -168, 840, 448, -224, -196, -28`, whose squares over the 512 subsets sum to `71680 = 512 * 140`. (Verified.)
 - `B3/S23` is not a level set of the popcount under any of the 512 flips and its fill 140 is not a power of two, so it is neither isotropic nor axial, hence compound. (Verified.)
 - Outer-totalistic means a level set on the eight outer axes for each value of the centre, so the family has `2^18` members and the totalistic rules, level sets of all nine, number `2^10`; all 1024 of them are isotropic. (Proved; Verified.)

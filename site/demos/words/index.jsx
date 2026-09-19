@@ -66,23 +66,26 @@ const attempt = (fn) => {
 
 const side = (value) => Math.min(16, Math.max(2, +value || 2));
 
-const spell = (dimension, codes, numbers, bases) =>
-  (dimension === 3 ? 'd3: ' : '') +
-  codes.map((code, i) => `c${code}${bases[i] === 2 ? '' : `.q${bases[i]}`}(${numbers[i]})`).join(', ');
-
 function token(dimension, codes, numbers, bases) {
-  if (dimension !== 2 || bases.some((base) => base !== 2)) return '';
   try {
-    return m.magic_name(codes, numbers);
+    return m.magic_name(codes, numbers, bases, dimension);
   } catch {
     return '';
   }
 }
 
-function repeats(codes, numbers, bases) {
+function keyed(dimension, codes, numbers, bases) {
+  try {
+    return m.magic_key(codes, numbers, bases, dimension);
+  } catch {
+    return '';
+  }
+}
+
+function repeats(dimension, codes, numbers, bases) {
   const seen = new Map();
   for (let i = 0; i < codes.length; i++) {
-    const key = `${codes[i]}.${bases[i]}(${numbers[i]})`;
+    const key = `${m.name_of(codes[i], dimension, bases[i])} at side ${numbers[i]}`;
     seen.set(key, (seen.get(key) ?? 0) + 1);
   }
   const doubled = [...seen].filter(([, count]) => count > 1);
@@ -124,7 +127,7 @@ function tile(word, budget) {
   if (taken < 2) throw new Error('the first two letters already pass the page budget; lower a side.');
   const grid = m.magic_grid(word.codes.slice(0, taken), word.numbers.slice(0, taken), word.bases.slice(0, taken));
   const census = JSON.parse(m.magic_census(word.codes, word.numbers, word.dimension, word.bases));
-  return { word, taken, grid, census };
+  return { word, taken, grid, census, name: token(word.dimension, word.codes, word.numbers, word.bases) };
 }
 
 function firstSlots(params, dimension) {
@@ -132,7 +135,7 @@ function firstSlots(params, dimension) {
   if (params.has('w')) {
     try {
       const read = JSON.parse(m.magic_parse(params.get('w')));
-      for (const [i, code] of read.codes.entries()) list.push({ code, base: 2, number: read.numbers[i] });
+      for (const [i, code] of read.codes.entries()) list.push({ code, base: read.bases[i], number: read.numbers[i] });
       for (let i = 0; i < MAX_SLOTS; i++) stamp({ [`l${i}code`]: null, [`l${i}base`]: null, [`l${i}n`]: null });
     } catch {
       list.length = 0;
@@ -164,10 +167,11 @@ function App() {
   const numbers = slots.map((slot) => side(slot.number));
   const bases = slots.map((slot) => (dimension === 2 ? slot.base : 2));
   const name = token(dimension, codes, numbers, bases);
+  const key = keyed(dimension, codes, numbers, bases);
   const sig = `${pick.view}|${JSON.stringify(slots)}`;
 
   useEffect(() => {
-    const values = { w: name || null };
+    const values = { w: key || null };
     for (let i = 0; i < MAX_SLOTS; i++) {
       values[`l${i}code`] = i < slots.length ? codes[i] : null;
       values[`l${i}base`] = i < slots.length && dimension === 2 ? bases[i] : null;
@@ -270,7 +274,7 @@ function App() {
         [read.phi, ink.pink, `Phi(f) ${read.phi.toFixed(4)}`],
       ],
       lines: [[fill, ink.blue, 1], [control, ink.orange, 1.2], [component, ink.yellow, 1.8]],
-      labels: [[0, 'L = 1'], [1, `L = ${total}`]],
+      labels: [[0, 'length 1'], [1, `length ${total}`]],
     };
     const last = read.rows[total - 1];
     const stats = (
@@ -318,7 +322,7 @@ function App() {
     const canvas = sheetRef.current;
     if (!canvas) return;
     const link = document.createElement('a');
-    link.download = `${name || 'mrly_word'}.png`;
+    link.download = `${key || 'word'}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
   };
@@ -403,17 +407,17 @@ function App() {
     const drawing = word.taken < codes.length
       ? <>Drawing <b>{word.taken} of {codes.length} letters</b>, the box cover of the whole word at side {census.letters.slice(0, word.taken).reduce((a, l) => a * l.number, 1)}. </>
       : null;
-    return <>{drawing}The readout is a product over the letters, so it outruns the raster on purpose: every number above is exact at the full length. {repeats(codes, numbers, bases)} <a href="../moire">Moire</a> stacks one design over its scales instead.</>;
+    return <>{drawing}The readout is a product over the letters, so it outruns the raster on purpose: every number above is exact at the full length. {repeats(dimension, codes, numbers, bases)} <a href="../moire">Moire</a> stacks one design over its scales instead.</>;
   };
 
   const pane = (one) => (
     <div>
-      <Grid grid={one.grid} on={ink.yellow} role="img" aria-label={spell(dimension, one.word.codes, one.word.numbers, one.word.bases)} />
+      <Grid grid={one.grid} on={ink.yellow} role="img" aria-label={one.name || 'the word'} />
       <div className="stats">
-        <span>{spell(dimension, one.word.codes, one.word.numbers, one.word.bases)}</span>
+        <span>{one.name}</span>
         <Stat label="side">{one.census.side}</Stat>
         <Stat label="filled">{one.census.fill}</Stat>
-        <Stat label="dim">{one.census.dimension.toFixed(4)}</Stat>
+        <Stat label="dimension">{one.census.dimension.toFixed(4)}</Stat>
         {one.census.components ? <Stat label="pieces">{one.census.components}</Stat> : null}
         {one.taken < one.word.codes.length ? <span className="dim">drawn {one.taken} of {one.word.codes.length} letters</span> : null}
       </div>
@@ -458,7 +462,7 @@ function App() {
         <Row>
           <button disabled={slots.length >= MAX_SLOTS} onClick={() => setSlots([...slots, { ...slots[slots.length - 1] }])}>add a letter</button>
           <label>is <input type="text" value={probe} onChange={(e) => setProbe(e.target.value)} /> a member <b className="num">{member()}</b></label>
-          <span className="badge dim">{spell(dimension, codes, numbers, bases)}</span>
+          <span className="badge dim">{name}</span>
         </Row>
       </section>
       <section>
@@ -485,15 +489,15 @@ function App() {
     <Page bare={art} crumb="words" title="One design per level, and the order of the letters counts"
       sub="One design per level. Same letters in a different order, a different set. Build a word letter by letter, first letter outermost, and every number below comes back out of the crates as a product over the letters."
       controls={controls}
-      foot={<>Side, fill, density and dimension are products over the letters, so the readout is exact at any length even where the raster is not: the plane draws to side 243 and the cube to side 128, and a shorter render is labelled <b>k of L letters</b> because it is the box cover of the whole word at that scale and never a shallower word. Words with two or more letters only; a word of one repeated letter is the ordinary fractal under another name. Links: <a href="../sponge">the sponge</a> grows one cube design level by level, <a href="../moire">moire</a> stacks one design over its scales. The grammar of a word, the families that collapse back into one fractal and the ones that do not are in <a href="/research/magic/">the magic words note</a>, and what a swap costs is the paper <a href="/papers/order-sensitivity-of-kronecker-words/">order sensitivity of Kronecker words</a>.</>}>
+      foot={<>Side, fill, density and dimension are products over the letters, so the readout is exact at any length even where the raster is not: the plane draws to side 243 and the cube to side 128, and a shorter render is labelled with the count of letters it drew because it is the box cover of the whole word at that scale and never a shallower word. Words with two or more letters only; a word of one repeated letter is the ordinary fractal under another name. Links: <a href="../sponge">the sponge</a> grows one cube design level by level, <a href="../moire">moire</a> stacks one design over its scales. The grammar of a word, the families that collapse back into one fractal and the ones that do not are in <a href="/research/magic/">the magic words note</a>, and what a swap costs is the paper <a href="/papers/order-sensitivity-of-kronecker-words/">order sensitivity of Kronecker words</a>.</>}>
       <div className="arena">
         <div className="panel">
-          <h2>the word <span>{spell(dimension, codes, numbers, bases)}</span></h2>
+          <h2>the word <span>{name}</span></h2>
           {sheet()}
           <Stage onStage={onStage} deps={[pick.view, shape.buffer, iso, spin]} hidden={pick.view !== 'solid'} role="img" aria-label="the word in the cube" />
           <div className="stats" hidden={art}>{word.error ? null : readout()}</div>
           <div className="stats" hidden={art}>{word.error ? null : word.census.letters.map((letter, i) => (
-            <span key={i} className="badge">{i + 1} <b>{letter.name}</b> side {letter.number} fill {letter.fill} dim {letter.dimension.toFixed(4)}{letter.native ? ' native' : ''}</span>
+            <span key={i} className="badge">{i + 1} <b>{letter.name}</b> side {letter.number} fill {letter.fill} dimension {letter.dimension.toFixed(4)}{letter.native ? ' native' : ''}</span>
           ))}</div>
           <Note error={shout ?? word.error ?? shape.error} />
           <p className="sub" hidden={art}>{word.error ? null : scale()}</p>

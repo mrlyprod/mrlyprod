@@ -32,7 +32,7 @@
 
 ## THE CONVOLUTION STEP
 
-- The method is Dirichlet convolution followed by Abel summation, not a hyperbola split: the whole `b` range is summed and the inner sum is estimated uniformly.
+- The method is Dirichlet convolution followed by Abel summation, not a hyperbola split: the whole range of the ideal `b` is summed and the inner sum is estimated uniformly.
 - Proved: `Phi = N * mu_K` as a Dirichlet convolution on ideals, since both sides are multiplicative and on a prime power `(N * mu_K)(p^k) = N(p)^k - N(p)^(k-1) = Phi(p^k)`; equivalently `sum_a Phi(a) N(a)^-s = zeta_K(s - 1)/zeta_K(s)`.
 - Hence `S(N) = sum_{N(a) <= N} Phi(a) = sum_{N(b) <= N} mu_K(b) T(N/N(b))` with `T(X) = sum_{N(c) <= X} N(c)`.
 - Abel summation on the lemma gives `T(X) = X A(X) - int_0^X A(u) du = (rho_K/2) X^2 + X E(X) - int_0^X E(u) du`, so `|T(X) - (rho_K/2) X^2| <= (5/3) C X^(3/2)` with `C` the constant of the lemma.

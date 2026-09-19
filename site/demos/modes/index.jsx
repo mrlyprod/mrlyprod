@@ -69,7 +69,7 @@ function App() {
         <Slider label="t2" value={t2} min={0} max={span - 1} onChange={(v) => set({ t2: v })} />
       </Group>
       <Group name="Large values">
-        <Slider label="threshold" value={pick.bar} min={0} max={100} show={`${pick.bar}% of k^L, ${large} frequencies`} onChange={(v) => set({ bar: v })} />
+        <Slider label="threshold" value={pick.bar} min={0} max={100} show={`${pick.bar}% of fill^level, ${large} frequencies`} onChange={(v) => set({ bar: v })} />
       </Group>
       <Group name="Colour">
         <Ramp value={pick} onChange={set} />
@@ -79,17 +79,17 @@ function App() {
 
   return (
     <Page crumb="modes" title="The modes of a design mask"
-      sub={<>Lay a design's level-<code>L</code> stencil over every point of a <code>q^L</code> by <code>q^L</code> torus and add up what it covers. That operator has one family of modes, the waves <code>e(&lt;t, x&gt; / q^L)</code>, and each one is stretched by a single number. Pick a frequency and watch its wave; the middle panel is the whole field of those numbers at once.</>}
+      sub={<>Lay a design's stencil at the level over every point of a <code>side^level</code> by <code>side^level</code> torus and add up what it covers. That operator has one family of modes, the waves <code>e(&lt;t, x&gt; / side^level)</code>, and each one is stretched by a single number. Pick a frequency and watch its wave; the middle panel is the whole field of those numbers at once.</>}
       controls={controls}
-      foot={<>The design is the picker's plane code at side <code>q</code> and its residue base; the filled cells of its level-one tile are the digit set <code>F</code>, and the level-<code>L</code> stencil is every sum of <code>L</code> of them scaled by the powers of <code>q</code>. The eigenvalue is a product over the digits, so the field <code>|lambda|</code> is <code>L</code> rescaled copies of one small transform multiplied together, which is why it repeats at every scale like the design itself. The middle panel reads the field at its per-level root, <code>|lambda|^(1/L) / k</code>, the average size of one factor; the printed numbers are the raw ones. The same design stacked over its own scales is <a href="../moire">moire</a>, turned on itself <a href="../radial">radial</a>, and joined into a network whose Laplacian has its own spectrum on <a href="../spectra">spectra</a>; the same stencil run as a neighbourhood is <a href="../mrlylife">mrlylife</a>. Every eigenvalue, every count and every wave comes out of the crates through wasm; the page only draws.</>}>
-      <p><span className="chip proved">Proved</span> On the torus <code>(Z/q^L)^2</code> the mask operator <code>(A x)(u) = sum over s in S_L of x(u + s)</code> holds every character <code>e(&lt;t, x&gt; / q^L)</code> fixed in direction, with eigenvalue <code>lambda(t) = prod over j &lt; L of hat F(q^j t / q^L)</code> where <code>hat F(y) = sum over v in F of e(&lt;v, y&gt;)</code>, so <code>lambda(0) = k^L</code>.</p>
+      foot={<>The design is the picker's plane code at its side and its residue base; the filled cells of its level-one tile are the digit set <code>F</code>, and the stencil at the level is every sum of <code>level</code> of them scaled by the powers of the side. The eigenvalue is a product over the digits, so the field <code>|lambda|</code> is <code>level</code> rescaled copies of one small transform multiplied together, which is why it repeats at every scale like the design itself. The middle panel reads the field at its per-level root, <code>|lambda|^(1/level) / fill</code>, the average size of one factor; the printed numbers are the raw ones. The same design stacked over its own scales is <a href="../moire">moire</a>, turned on itself <a href="../radial">radial</a>, and joined into a network whose Laplacian has its own spectrum on <a href="../spectra">spectra</a>; the same stencil run as a neighbourhood is <a href="../mrlylife">mrlylife</a>. Every eigenvalue, every count and every wave comes out of the crates through wasm; the page only draws.</>}>
+      <p><span className="chip proved">Proved</span> On the torus <code>(Z/side^level)^2</code> the mask operator <code>(A x)(u) = sum over s in S_level of x(u + s)</code> holds every character <code>e(&lt;t, x&gt; / side^level)</code> fixed in direction, with eigenvalue <code>lambda(t) = prod over j &lt; level of hat F(side^j t / side^level)</code> where <code>hat F(y) = sum over v in F of e(&lt;v, y&gt;)</code>, so <code>lambda(0) = fill^level</code>.</p>
       <div className="arena">
         <div className="panel">
           <h2>The mask <span>{`level ${level}, ${mass} cells of ${span * span}`}</span></h2>
           {built.grid && <Grid grid={built.grid} on={ink.yellow} role="img" aria-label="The design mask" />}
         </div>
         <div className="panel">
-          <h2>The eigenvalue field <span>{`|lambda|^(1/${level}) / k, click to pick t`}</span></h2>
+          <h2>The eigenvalue field <span>{`|lambda|^(1/${level}) / fill, click to pick t`}</span></h2>
           {heat && <Pixels data={heat} onPointerDown={seek} role="img" aria-label="The eigenvalue field on the frequency torus" />}
         </div>
         <div className="panel">
@@ -99,17 +99,17 @@ function App() {
       </div>
       <Stats>
         <Stat label="design">{built.name}</Stat>
-        <Stat label="side q">{pick.side}</Stat>
+        <Stat label="side">{pick.side}</Stat>
         <Stat label="base">{pick.base}</Stat>
-        <Stat label="digits k">{built.digits}</Stat>
-        <Stat label="mass k^L">{mass}</Stat>
+        <Stat label="digits">{built.digits}</Stat>
+        <Stat label="mass fill^level">{mass}</Stat>
         <Stat label="torus">{`${span} by ${span}`}</Stat>
       </Stats>
       <Stats>
         <Stat label="lambda re">{value ? value[0].toFixed(6) : ''}</Stat>
         <Stat label="lambda im">{value ? value[1].toFixed(6) : ''}</Stat>
-        <Stat label="|lambda| / k^L">{value ? value[2].toFixed(6) : ''}</Stat>
-        <Stat label="large values">{`${large} at ${pick.bar}% of k^L`}</Stat>
+        <Stat label="|lambda| / fill^level">{value ? value[2].toFixed(6) : ''}</Stat>
+        <Stat label="large values">{`${large} at ${pick.bar}% of fill^level`}</Stat>
         <Stat label="share">{`${((large / (span * span)) * 100).toFixed(3)}%`}</Stat>
       </Stats>
       <Note error={built.error} />

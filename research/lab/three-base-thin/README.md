@@ -10,8 +10,8 @@
 - `budget` prints the four dimensions, the three pair budgets, the triple budget for the thin set and for the wider one, and the five values of the infinitude criterion. Runtime under `0.01` s.
 - `control` rebuilds the members below `10^8` twice, once by the pruned walk and once by scanning every integer against all three digit rules, at both base-7 bounds, and rebuilds the `23` terms [A030979](https://oeis.org/A030979) publishes. Runtime `1.9` s.
 - `seven M` prints the members of `E` below `7^M` with the node count. Runtime under `0.01` s at `M = 17`.
-- `reach L` prints the members of `E` below `3^L` with the node count. Runtime `3.02` s at `L = 20000`, `13.60` s at `L = 40000` and `61.48` s at `L = 80000`, the last on about `3` GB, which is the wall: the stored powers cost `Theta(L^2)` bits and the node count grows near `21 L`.
-- `wide L` and `ten X` do the same at base-7 bound `3`, below `3^L` and below `10^X`, printing the count, the largest member and the effective exponent `log(count)/log(height)`. Runtime `0.09` s at `X = 70` and `39.32` s at `X = 140`.
+- `reach level` prints the members of `E` below `3^level` with the node count. Runtime `3.02` s at level 20000, `13.60` s at level 40000 and `61.48` s at level 80000, the last on about `3` GB, which is the wall: the stored powers cost `Theta(level^2)` bits and the node count grows near `21 level`.
+- `wide level` and `ten X` do the same at base-7 bound `3`, below `3^level` and below `10^X`, printing the count, the largest member and the effective exponent `log(count)/log(height)`. Runtime `0.09` s at `X = 70` and `39.32` s at `X = 140`.
 
 ## RUN
 

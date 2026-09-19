@@ -1,7 +1,7 @@
 # Shell Energies
 
 - The three exact shell relations behind the base-2 design energy `Z_c(s)`, as integer identities on the Dirichlet coefficients of `r2`.
-- Every parity class of `Z^2` counted by direct lattice enumeration to `n = 200000`, `r2` checked against `4 (d1 - d3)`.
+- Every parity class of `Z^2` counted by direct lattice enumeration to norm `n = 200000`, `r2` checked against `4 (d1 - d3)`.
 - Doubling gives `r2_ee(n) = r2(n/4)`; the 45 degree rotation gives `r2_oo(n) = r2_mix(n/2)`; the coordinate swap gives `r2_eo = r2_oe`.
 - The rotation also run as a map: every odd-odd point of every even norm to `n = 6000` sent to `((i+j)/2, (i-j)/2)`, the image required to be mixed parity of half the norm and the map required bijective onto that class.
 - The four linear relations solved symbolically to recover `Q_c(t) = a_ee t^2 + a_oo t (1-t) + (a_eo + a_oe)(1-t)/2`.

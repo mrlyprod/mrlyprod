@@ -41,7 +41,7 @@ fn tile_of(layer: &MagicLayer) -> Result<Tensor> {
     factory::create(
         layer.design.code,
         layer.number,
-        layer.design.dimension,
+        layer.design.dim,
         layer.design.base,
         1,
     )
@@ -96,7 +96,7 @@ fn pieces(tile: &Tensor) -> u128 {
 /// assert_eq!((gasket.touch_h, gasket.touch_v), (1, 1));
 /// ```
 pub fn letter(layer: &MagicLayer) -> Result<Letter> {
-    if layer.design.dimension != 2 {
+    if layer.design.dim != 2 {
         return value_error("a letter's run and contact counts are a plane reading.");
     }
     let tile = tile_of(layer)?;
@@ -210,7 +210,7 @@ pub fn prefixes(layers: &[MagicLayer]) -> Result<Vec<Counts>> {
 /// use mrlymath::name::Bang;
 /// let domino = MagicLayer::new(Bang::new(3, 2, 2), 2);
 /// let diagonal = MagicLayer::new(Bang::new(6, 2, 2), 2);
-/// assert_eq!(word::components(&[domino, diagonal]).unwrap(), 4);
+/// assert_eq!(word::components(&[domino.clone(), diagonal.clone()]).unwrap(), 4);
 /// assert_eq!(word::components(&[diagonal, domino]).unwrap(), 2);
 /// ```
 pub fn components(layers: &[MagicLayer]) -> Result<u128> {
@@ -264,7 +264,7 @@ pub fn fill(layers: &[MagicLayer]) -> Result<u128> {
 /// use mrlymath::bang::{word, MagicLayer};
 /// use mrlymath::name::Bang;
 /// let carpet = MagicLayer::new(Bang::new(7, 2, 2), 3);
-/// let two = word::dimension(&[carpet, carpet]).unwrap();
+/// let two = word::dimension(&[carpet.clone(), carpet]).unwrap();
 /// assert!((two - 8f64.ln() / 3f64.ln()).abs() < 1e-12);
 /// ```
 pub fn dimension(layers: &[MagicLayer]) -> Result<f64> {
@@ -291,8 +291,8 @@ pub fn dimension(layers: &[MagicLayer]) -> Result<f64> {
 /// use mrlymath::name::Bang;
 /// let a = MagicLayer::new(Bang::new(7, 2, 2), 3);
 /// let b = MagicLayer::new(Bang::new(9, 2, 2), 5);
-/// assert_eq!(word::period(&[a, b, a, b]), 2);
-/// assert_eq!(word::period(&[a, b, a]), 3);
+/// assert_eq!(word::period(&[a.clone(), b.clone(), a.clone(), b.clone()]), 2);
+/// assert_eq!(word::period(&[a.clone(), b, a]), 3);
 /// ```
 pub fn period(layers: &[MagicLayer]) -> usize {
     let length = layers.len();
@@ -385,9 +385,9 @@ pub fn spell(schedule: Schedule, pair: (MagicLayer, MagicLayer), length: usize) 
     (0..length)
         .map(|index| {
             if schedule.place(index) == 0 {
-                pair.0
+                pair.0.clone()
             } else {
-                pair.1
+                pair.1.clone()
             }
         })
         .collect()
@@ -436,7 +436,7 @@ pub fn staircase(depth: usize) -> Result<Vec<MagicLayer>> {
     let mut out = Vec::new();
     for step in 1..=depth {
         for place in 1..=step {
-            out.push(MagicLayer::new(carpet, 2 * place + 1));
+            out.push(MagicLayer::new(carpet.clone(), 2 * place + 1));
         }
     }
     Ok(out)
@@ -544,8 +544,8 @@ mod tests {
     #[test]
     fn the_period_reads_the_block_and_the_native_letters() {
         let carpet = plain(7, 3);
-        let native_pair = [MagicLayer::new(Bang::new(7, 2, 2), 2), carpet];
-        assert_eq!(period(&[carpet, carpet, carpet]), 1);
+        let native_pair = [MagicLayer::new(Bang::new(7, 2, 2), 2), carpet.clone()];
+        assert_eq!(period(&[carpet.clone(), carpet.clone(), carpet]), 1);
         assert!(native(&[MagicLayer::new(Bang::new(7, 2, 2), 2)]));
         assert!(!native(&native_pair));
     }

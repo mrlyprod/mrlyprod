@@ -9,7 +9,7 @@ pub const SPAN: usize = 6;
 /// A window is `k` digits `(c_1, ..., c_k)` read as `w = sum_j c_j 2^(D (k - j))`, the first digit most significant, and the code has bit `w` set exactly when that window is allowed.
 /// The code therefore lives in `[0, 2^(2^(k D)))`, which forces `k D <= SPAN`.
 /// A word `d_1 d_2 ... d_L` is read coarsest digit first and is accepted when every window of `k` consecutive digits is allowed; for `L < k` there is no window, so every word is accepted.
-/// Width `k = 1` is the memoryless design of the same code: the level-`L` cells of `mrly_bang_d<D>_<code>`.
+/// Width 1 is the memoryless design of the same code: the cells of `bang dim <dim>, code <code>` at that level.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Rule {
     /// The dimension `D`, one to three.

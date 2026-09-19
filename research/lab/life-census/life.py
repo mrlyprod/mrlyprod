@@ -210,7 +210,7 @@ def t1_moore():
         assert np.array_equal(tile, moore(d)), d
         print(f"  D={d} code {code} level-1 side-3 tile = moore({d}), fill {int(tile.sum())} of {3 ** d}")
     assert (1 << 4) - 1 - (1 << 3) == 7
-    print("  the plane case is mrly_bang_d2_7, fill 8 of 9, dimension log(8)/log(3) = 1.892789")
+    print("  the plane case is bang dim 2, code 7, fill 8 of 9, dimension log(8)/log(3) = 1.892789")
 
 def t2_life():
     print("T2 life as a design")

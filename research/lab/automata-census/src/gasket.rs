@@ -144,10 +144,10 @@ pub fn report() {
         assert_eq!(
             found,
             vec![want],
-            "rule {rule} does not match exactly mrly_bang_d2_{want}"
+            "rule {rule} does not match exactly bang dim 2, code {want}"
         );
     }
-    println!("rule 60 is mrly_bang_d2_13, rule 102 is mrly_bang_d2_14, rule 90 sheared by j = (t+i)/2 is mrly_bang_d2_13, cell for cell to level {DEPTH}");
+    println!("rule 60 is bang dim 2, code 13; rule 102 is bang dim 2, code 14; rule 90 sheared by j = (t+i)/2 is bang dim 2, code 13, cell for cell to level {DEPTH}");
     println!("RULE 150");
     let rows = polynomials(129);
     let diagram = single_seed(150, 128);

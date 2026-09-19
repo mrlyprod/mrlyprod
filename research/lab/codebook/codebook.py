@@ -91,7 +91,7 @@ def life_step(grid, birth, survive):
     return (born | kept).astype(np.uint8)
 
 def rule_name(birth, survive):
-    return "mrly_rule_b%s_s%s_w" % ("".join(str(d) for d in birth), "".join(str(d) for d in survive))
+    return "rule birth [%s], survive [%s], wrap" % (" ".join(str(d) for d in birth), " ".join(str(d) for d in survive))
 
 def life_seeds():
     rng = np.random.default_rng(SEED_LIFE)
@@ -107,12 +107,12 @@ def build_catalog(depth):
     reps = base3_reps()
     raw = []
     for code in range(16):
-        raw.append(("kronecker", "mrly_bang_d2_%d level 1" % code, tile(code, 2, 2)))
+        raw.append(("kronecker", "bang dim 2, code %d, level 1" % code, tile(code, 2, 2)))
     for code in range(16):
-        raw.append(("kronecker", "mrly_bang_d2_%d level 2" % code, power(tile(code, 2, 2), 2)))
+        raw.append(("kronecker", "bang dim 2, code %d, level 2" % code, power(tile(code, 2, 2), 2)))
     for level in range(1, depth + 1):
         for code in reps:
-            raw.append(("kronecker", "mrly_bang_d2_q3_%d level %d" % (code, level),
+            raw.append(("kronecker", "bang dim 2, base 3, code %d, level %d" % (code, level),
                         power(tile(code, 3, 3), level)))
     for sides in MAGIC_SIDES:
         for ca, na in LETTERS:
@@ -418,7 +418,7 @@ def main():
     print()
 
     corpora = [
-        ("tree render", "mrly_bang_d2_7 at level %d, side %d" % (LEVEL, SIDE), corpus_tree()),
+        ("tree render", "bang dim 2, code 7 at level %d, side %d" % (LEVEL, SIDE), corpus_tree()),
         ("text", "the first %d bytes of research/README.md, unpacked MSB first" % ((SIDE * SIDE + 7) // 8), corpus_text()),
         ("random", "uniform bits from numpy default_rng(%d)" % SEED_RANDOM, corpus_random()),
         ("halftone", "the radial gradient 1 - r ordered-dithered by the 4 x 4 Bayer matrix", corpus_halftone()),

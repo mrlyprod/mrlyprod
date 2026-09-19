@@ -176,7 +176,7 @@ function App() {
       <Stats>
         <Stat label="design">{view.name}</Stat>
         <Stat label="radius">{q.r}</Stat>
-        <Stat label="depth L">{read?.depth}</Stat>
+        <Stat label="depth">{read?.depth}</Stat>
         <Stat label="leaves 2r + 1">{read?.leaves}</Stat>
         <Stat label="kept leaves C(r)">{read?.live}</Stat>
         <Stat label="pruned">{read && read.leaves - read.live}</Stat>

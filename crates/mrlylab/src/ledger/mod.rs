@@ -42,9 +42,9 @@ pub const TERMS: usize = 8;
 /// The index a sequence runs along.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Axis {
-    /// The fractal level `L` from 1, at side `n = max(q, 3)`.
+    /// The fractal level from 1, at side `max(base, 3)`.
     Level,
-    /// The odd side `n = 2k - 1` from `k = 2`, at level 1.
+    /// The odd side `2k - 1` from `k = 2`, at level 1.
     Side,
 }
 
@@ -139,17 +139,17 @@ impl Key {
             axis,
         }
     }
-    /// Returns the sequence's name, the design's name dotted with the measure and the axis.
+    /// Returns the sequence's name, the design's file name dotted with the measure and the axis.
     ///
     /// ```
     /// use mrlylab::ledger::{Axis, Key, Measure};
     /// let key = Key::new(23, 3, 2, Measure::Surface, Axis::Level);
-    /// assert_eq!(key.name(), "mrly_bang_d3_23.surface.level");
+    /// assert_eq!(key.name(), "bang_dim=3_code=23.surface.level");
     /// ```
     pub fn name(&self) -> String {
         format!(
             "{}.{}.{}",
-            self.design().to_str(),
+            self.design().to_file(),
             self.measure.slug(),
             self.axis.slug()
         )
@@ -167,13 +167,13 @@ impl Key {
 /// A closed form of a sequence.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Closed {
-    /// `f^L`.
+    /// `fill^level`.
     Power(u128),
-    /// `g^L - f^L`.
+    /// `cells^level - fill^level`.
     Difference(u128, u128),
-    /// A polynomial in `k` by rising power, at side `n = 2k - 1`.
+    /// A polynomial in `k` by rising power, at side `2k - 1`.
     Polynomial(Vec<i128>),
-    /// `a(L) = c[0] a(L-1) + c[1] a(L-2) + ...`.
+    /// `a(level) = c[0] a(level-1) + c[1] a(level-2) + ...`.
     Recurrence(Vec<i128>),
 }
 
@@ -191,8 +191,8 @@ impl Closed {
     /// Spells the closed form.
     pub fn text(&self) -> String {
         match self {
-            Closed::Power(f) => format!("{f}^L"),
-            Closed::Difference(g, f) => format!("{g}^L - {f}^L"),
+            Closed::Power(f) => format!("{f}^level"),
+            Closed::Difference(g, f) => format!("{g}^level - {f}^level"),
             Closed::Polynomial(coefficients) => {
                 let mut text = String::new();
                 for (power, &c) in coefficients.iter().enumerate().rev() {
@@ -227,12 +227,12 @@ impl Closed {
                         text.push_str(&c.abs().to_string());
                         text.push(' ');
                     }
-                    text.push_str(&format!("a(L-{})", back + 1));
+                    text.push_str(&format!("a(level-{})", back + 1));
                 }
                 if text.is_empty() {
                     text.push('0');
                 }
-                format!("a(L) = {text}")
+                format!("a(level) = {text}")
             }
         }
     }
@@ -463,7 +463,7 @@ mod tests {
         assert_eq!(sponge.terms, [72, 1056, 18048]);
         assert_eq!(
             sponge.closed.unwrap().text(),
-            "a(L) = 28 a(L-1) - 160 a(L-2)"
+            "a(level) = 28 a(level-1) - 160 a(level-2)"
         );
         let slice = sequence(
             &Key::new(23, 3, 2, Measure::Triangles, Axis::Level),
@@ -500,7 +500,7 @@ mod tests {
         .collect();
         assert_eq!(search(&rows, "64, 512"), [0]);
         assert_eq!(search(&rows, "80 496"), [1]);
-        assert_eq!(search(&rows, "d3_23"), [2]);
+        assert_eq!(search(&rows, "dim=3_code=23"), [2]);
         assert_eq!(search(&rows, "A381517"), [1]);
         assert_eq!(search(&rows, "surface"), [1]);
         assert_eq!(search(&rows, ""), [0, 1, 2]);
@@ -511,18 +511,18 @@ mod tests {
 
     #[test]
     fn the_closed_forms_spell_themselves() {
-        assert_eq!(Closed::Power(8).text(), "8^L");
-        assert_eq!(Closed::Difference(9, 8).text(), "9^L - 8^L");
+        assert_eq!(Closed::Power(8).text(), "8^level");
+        assert_eq!(Closed::Difference(9, 8).text(), "9^level - 8^level");
         assert_eq!(Closed::Polynomial(vec![1, -2, 2]).text(), "2k^2 - 2k + 1");
         assert_eq!(Closed::Polynomial(vec![0, 0, 1]).text(), "k^2");
         assert_eq!(Closed::Polynomial(vec![-1, 0, -1]).text(), "-k^2 - 1");
         assert_eq!(Closed::Polynomial(vec![0]).text(), "0");
         assert_eq!(
             Closed::Recurrence(vec![11, -24]).text(),
-            "a(L) = 11 a(L-1) - 24 a(L-2)"
+            "a(level) = 11 a(level-1) - 24 a(level-2)"
         );
-        assert_eq!(Closed::Recurrence(vec![1]).text(), "a(L) = a(L-1)");
-        assert_eq!(Closed::Recurrence(vec![0]).text(), "a(L) = 0");
+        assert_eq!(Closed::Recurrence(vec![1]).text(), "a(level) = a(level-1)");
+        assert_eq!(Closed::Recurrence(vec![0]).text(), "a(level) = 0");
         assert_eq!(Axis::Side.place(0, 3), (3, 1));
         assert_eq!(Axis::Level.place(2, 3), (3, 3));
         assert_eq!(Tier::parse("side").unwrap(), Tier::SideGrid);

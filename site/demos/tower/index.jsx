@@ -51,15 +51,17 @@ const attempt = (fn) => {
 
 const side = (value) => Math.min(16, Math.max(2, +value || 2));
 
-const spell = (codes, numbers, bases) =>
-  codes.map((code, i) => `c${code}${bases[i] === 2 ? '' : `.q${bases[i]}`}(${numbers[i]})`).join(' ');
+function label(axes, codes, numbers, bases) {
+  if (codes.length === 1) return `${m.name_of(codes[0], axes, bases[0])} at side ${numbers[0]}`;
+  return m.magic_name(codes, numbers, bases, axes);
+}
 
 function firstSlots(params, dim) {
   const list = [];
   if (params.has('w')) {
     try {
       const read = JSON.parse(m.magic_parse(params.get('w')));
-      for (const [i, code] of read.codes.entries()) list.push({ code, base: 2, number: read.numbers[i] });
+      for (const [i, code] of read.codes.entries()) list.push({ code, base: read.bases[i], number: read.numbers[i] });
       for (let i = 0; i < MAX_SLOTS; i++) stamp({ [`l${i}code`]: null, [`l${i}base`]: null, [`l${i}n`]: null });
     } catch {
       list.length = 0;
@@ -144,14 +146,16 @@ function App() {
   const codes = slots.map((slot) => slot.code.trim());
   const numbers = slots.map((slot) => side(slot.number));
   const bases = slots.map((slot) => (solid ? 2 : slot.base));
-  const name = solid || bases.some((base) => base !== 2) ? '' : attempt(() => ({ text: m.magic_name(codes, numbers) })).text ?? '';
+  const axes = solid ? 3 : 2;
+  const name = attempt(() => ({ text: m.magic_name(codes, numbers, bases, axes) })).text ?? '';
+  const key = attempt(() => ({ text: m.magic_key(codes, numbers, bases, axes) })).text ?? '';
   const sig = `${dim}|${JSON.stringify(slots)}`;
 
-  const cap = attempt(() => ({ top: m.magic_cap(numbers, solid ? 3 : 2, SIDE[dim]) })).top ?? 1;
+  const cap = attempt(() => ({ top: m.magic_cap(numbers, axes, SIDE[dim]) })).top ?? 1;
   const depth = Math.max(1, Math.min(q.blocks || 1, cap));
 
   useEffect(() => {
-    const values = { w: name || null };
+    const values = { w: key || null };
     for (let i = 0; i < MAX_SLOTS; i++) {
       values[`l${i}code`] = i < slots.length ? codes[i] : null;
       values[`l${i}base`] = i < slots.length && !solid ? bases[i] : null;
@@ -160,7 +164,7 @@ function App() {
     stamp(values);
   }, [sig]);
 
-  const word = useMemo(() => attempt(() => ({ census: JSON.parse(m.magic_census(codes, numbers, solid ? 3 : 2, bases)) })), [sig]);
+  const word = useMemo(() => attempt(() => ({ census: JSON.parse(m.magic_census(codes, numbers, axes, bases)) })), [sig]);
 
   const tower = useMemo(() => {
     const blocks = [];
@@ -172,7 +176,7 @@ function App() {
         if (dim === 3 && Number(read.fills) > CUBES) throw new Error(`block ${k} holds ${read.fills} cubes, more than this page draws; drop a letter or lower a side.`);
         if (dim === 6 && Number(read.cells) > TRIANGLES) throw new Error(`block ${k} holds ${read.cells} triangles, more than this page draws; drop a letter or lower a side.`);
         const scale = Math.max(1, Math.round(WIDE / read.wide));
-        blocks.push({ k, word: spell(...cut), ...read, ...picture(dim, ...cut, q.proj, scale) });
+        blocks.push({ k, word: label(axes, ...cut), ...read, ...picture(dim, ...cut, q.proj, scale) });
       } catch (fault) {
         error = fault;
         break;
@@ -281,9 +285,9 @@ function App() {
 
   return (
     <Page crumb="tower" title="Finite volume, infinite surface" controls={controls}
-      sub="Gabriel's tower. The tile lays one design side by side on every axis; hold every axis but one to a single copy and let the word rise a letter per block, and the blocks stand at the same physical side while the design inside them deepens. A block's volume is its fill fraction, which falls by one letter's share at every step, so the tower's volume converges. Its surface is the exposed count over the side, and once a letter is under one and the design's dimension passes d - 1 that density climbs without bound. Finite volume, infinite surface, the fractal cousin of Gabriel's horn."
+      sub="Gabriel's tower. The tile lays one design side by side on every axis; hold every axis but one to a single copy and let the word rise a letter per block, and the blocks stand at the same physical side while the design inside them deepens. A block's volume is its fill fraction, which falls by one letter's share at every step, so the tower's volume converges. Its surface is the exposed count over the side, and once a letter is under one and the design's dimension passes dim - 1 that density climbs without bound. Finite volume, infinite surface, the fractal cousin of Gabriel's horn."
       foot={<>Every block is a prefix of the word, built in Rust before a pixel is drawn: the plane block is the word's grid, the cube block its exposed faces, the hexagon block the projected skin of the same cube word. Every printed number is a Rust number or a ratio of two Rust integers with both operands in view. The word, its letters and the products they multiply are on <a href="../words">the words</a>; the same design laid side by side on every axis instead of one is <a href="../tile">the tile</a>. The construction of a word and the fill law behind the geometric decay are written up in <a href="/research/magic/">the research note on magic words</a>.</>}>
-      <p className="badge dim">{name ? `${name} · ` : ''}{spell(codes, numbers, bases)}</p>
+      <p className="badge dim">{name}</p>
       <Stage hidden={dim !== 3} role="img" aria-label="The tower" deps={[tower]} onStage={onStage} />
       <div className="tower">
         {tower.blocks.map((block) => (
@@ -309,16 +313,16 @@ function App() {
         <Stat label="word fill">{census.fill}</Stat>
         <Stat label="density">{census.ratio?.toFixed(6)}</Stat>
         <Stat label="dimension">{census.dimension?.toFixed(6)}</Stat>
-        {dim !== 6 && <Stat label="d - 1">{DROP[dim]}</Stat>}
+        {dim !== 6 && <Stat label="dim - 1">{DROP[dim]}</Stat>}
       </Stats>
       <Stats>
         {letters.map((letter, i) => (
-          <span key={i} className="badge">{i + 1} <b>{letter.name}</b> side {letter.number} fill {letter.fill} / {letter.cells} dim {letter.dimension.toFixed(4)}</span>
+          <span key={i} className="badge">{i + 1} <b>{letter.name}</b> side {letter.number} fill {letter.fill} / {letter.cells} dimension {letter.dimension.toFixed(4)}</span>
         ))}
       </Stats>
       <Stats>
         {word.error ? null : <span className={`chip ${shrinks ? 'proved' : 'refuted'}`}>{shrinks ? 'a letter buys a fraction under one, so the volume converges' : 'every letter fills its cell, so the volume grows without bound'}</span>}
-        {word.error || dim === 6 ? null : <span className={`chip ${climbs ? 'proved' : 'conjecture'}`}>{climbs ? 'a letter under one and dimension over d - 1, so the surface density diverges' : shrinks ? 'dimension at or under d - 1, so the surface density stays bounded' : 'every letter full, so the surface density stays constant'}</span>}
+        {word.error || dim === 6 ? null : <span className={`chip ${climbs ? 'proved' : 'conjecture'}`}>{climbs ? 'a letter under one and dimension over dim - 1, so the surface density diverges' : shrinks ? 'dimension at or under dim - 1, so the surface density stays bounded' : 'every letter full, so the surface density stays constant'}</span>}
         {dim === 6 && <span>the hexagon is the shadow of the cube tower: its volume is the inked share of the mesh and its surface the boundary edges of that ink over the mesh width</span>}
         {dim === 6 && q.proj === 'iso' && <span className="chip conjecture">the isometric skin is the visible surface, so it inks every triangle it draws and the volume sits at one; take the middle slice or the facing sides to watch it fall</span>}
       </Stats>

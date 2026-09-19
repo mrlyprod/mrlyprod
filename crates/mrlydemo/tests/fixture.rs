@@ -73,9 +73,12 @@ fn the_fixture_the_page_prints() {
         parse(&universe(2).unwrap()).unwrap()["designs"][1]["orbit"],
         4
     );
-    assert_eq!(name_of("127", 2, 3).unwrap(), "mrly_bang_d2_q3_127");
     assert_eq!(
-        parse(&name_parse("mrly_bang_d3_23").unwrap()).unwrap()["code"],
+        name_of("127", 2, 3).unwrap(),
+        "bang dim 2, base 3, code 127"
+    );
+    assert_eq!(
+        parse(&name_parse("bang_dim=3_code=23").unwrap()).unwrap()["code"],
         "23"
     );
     assert_eq!(
@@ -436,7 +439,7 @@ fn the_faults_come_back_as_messages() {
     assert!(three_cells("256", 3, 1, 2).is_err());
     assert!(universe(4).is_err());
     assert!(name_of("16", 2, 2).is_err());
-    assert!(name_parse("mrly_07").is_err());
+    assert!(name_parse("bang_dim=3_code=23.fills.side").is_err());
     assert!(press_members("16", 2, 2, 5).is_err());
     assert!(press_count_below("7", 2, 2, "x").is_err());
     assert!(life_next(&blinker(), 4, 5, &[3], &[2, 3], false).is_err());
@@ -861,7 +864,7 @@ fn the_ledger_exports_answer() {
     );
     assert_eq!(
         ledger_closed("23", 3, 2, "surface", "level").unwrap(),
-        "a(L) = 28 a(L-1) - 160 a(L-2)"
+        "a(level) = 28 a(level-1) - 160 a(level-2)"
     );
     assert_eq!(ledger_closed("7", 2, 2, "euler", "level").unwrap(), "");
     let records = parse(&ledger_records()).unwrap();
@@ -870,7 +873,7 @@ fn the_ledger_exports_answer() {
     let octagonal = records.iter().find(|r| r["id"] == "A000567").unwrap();
     assert_eq!(
         (octagonal["key"].clone(), octagonal["shift"].clone()),
-        ("mrly_bang_d2_7.fills.side".into(), 0.into())
+        ("bang_dim=2_code=7.fills.side".into(), 0.into())
     );
     assert_eq!(ledger_build("closed", 4).unwrap(), 7692);
     assert_eq!(ledger_build("closed", 4).unwrap(), 7692);
@@ -878,7 +881,7 @@ fn the_ledger_exports_answer() {
     let hits = parse(&ledger_search("8, 21, 40, 65", "", 2, 2, 0, 25)).unwrap();
     assert_eq!(hits["total"], 1);
     let row = &hits["rows"][0];
-    assert_eq!(row["name"], "mrly_bang_d2_7.fills.side");
+    assert_eq!(row["name"], "bang_dim=2_code=7.fills.side");
     assert_eq!(
         (
             row["oeis"].clone(),
@@ -892,7 +895,7 @@ fn the_ledger_exports_answer() {
     assert_eq!(surfaces["total"], 44);
     assert_eq!(surfaces["rows"].as_array().unwrap().len(), 5);
     assert_eq!(
-        parse(&ledger_search("mrly_bang_d3_23.", "", 0, 0, 0, 100)).unwrap()["total"],
+        parse(&ledger_search("bang_dim=3_code=23.", "", 0, 0, 0, 100)).unwrap()["total"],
         6
     );
     assert_eq!(
@@ -910,7 +913,7 @@ fn the_ledger_exports_answer() {
     );
     assert!(ledger_grow("deep", 4, 100).is_err());
     let void = parse(&ledger_row("9", 2, 2, "voids", "side", 3, "500000").unwrap()).unwrap();
-    assert_eq!(void["name"], "mrly_bang_d2_9.voids.side");
+    assert_eq!(void["name"], "bang_dim=2_code=9.voids.side");
     assert_eq!(void["terms"], parse(r#"["4", "12", "24"]"#).unwrap());
     assert_eq!(void["closed"], "2k^2 - 2k");
     assert_eq!(void["number"], 3);
@@ -1026,14 +1029,17 @@ fn the_census_exports_answer() {
     );
     assert_eq!(writers["tiers"][0]["rows"], 633);
     let first = &writers["shown"][0];
-    assert_eq!(first["name"], "mrly_bang_d1_1.fills.level");
-    assert_eq!(first["closed"], "2^L");
+    assert_eq!(first["name"], "bang_dim=1_code=1.fills.level");
+    assert_eq!(first["closed"], "2^level");
     assert_eq!(
         (first["index"].clone(), first["term"].clone()),
         (3.into(), 4.into())
     );
     assert_eq!(first["head"][3], "16");
-    assert_eq!(writers["shown"][1]["closed"], "a(L) = 3 a(L-1) - 2 a(L-2)");
+    assert_eq!(
+        writers["shown"][1]["closed"],
+        "a(level) = 3 a(level-1) - 2 a(level-2)"
+    );
     let paged = parse(&census_writers(16, 0, 633)).unwrap();
     let sided = paged["shown"]
         .as_array()
@@ -1047,7 +1053,7 @@ fn the_census_exports_answer() {
             sided["term"].clone(),
             sided["side"].clone()
         ),
-        ("mrly_bang_d1_1.surface.side".into(), 8.into(), 15.into())
+        ("bang_dim=1_code=1.surface.side".into(), 8.into(), 15.into())
     );
     let outside = parse(&census_writers(1001, 0, 1)).unwrap();
     assert_eq!(
@@ -1100,10 +1106,14 @@ fn the_word_fixture_the_page_prints() {
         209
     );
     assert_eq!(
-        magic_name(codes, numbers).unwrap(),
-        "mrly_word_d2_c7n3_c14n7_c9n5"
+        magic_name(codes.clone(), numbers.clone(), bases.clone(), 2).unwrap(),
+        "word dim 2, magic [7 14 9], side [3 7 5]"
     );
-    let back = parse(&magic_parse("mrly_word_d2_c7n3_c14n7_c9n5").unwrap()).unwrap();
+    assert_eq!(
+        magic_key(codes, numbers, bases, 2).unwrap(),
+        "word_dim=2_magic=[7,14,9]_side=[3,7,5]"
+    );
+    let back = parse(&magic_parse("word_dim=2_magic=[7,14,9]_side=[3,7,5]").unwrap()).unwrap();
     assert_eq!(back["codes"][1], "14");
     assert_eq!(back["numbers"][2], 5);
 
@@ -1481,9 +1491,12 @@ fn the_blend_exports_answer() {
 
     let series =
         parse(&blend_series("23", 3, 2, "surface", "level", 8, budget, 4).unwrap()).unwrap();
-    assert_eq!(series["name"], "mrly_bang_d3_23.surface.level");
+    assert_eq!(series["name"], "bang_dim=3_code=23.surface.level");
     assert_eq!(series["oeis"], "A332705");
-    assert_eq!(series["closed"], "a(L) = 28 a(L-1) - 160 a(L-2)");
+    assert_eq!(
+        series["closed"],
+        "a(level) = 28 a(level-1) - 160 a(level-2)"
+    );
     assert_eq!(series["recurrence"], "a(n) = 28 a(n-1) - 160 a(n-2)");
     assert_eq!(series["polynomial"], "x^2 - 28 x + 160");
     assert_eq!(series["growth_from"], "the recurrence root");
@@ -1512,7 +1525,7 @@ fn the_blend_exports_answer() {
     let family = family.as_array().unwrap();
     assert_eq!(family.len(), 6);
     assert_eq!(family[4]["code"], "7");
-    assert_eq!(family[4]["name"], "mrly_bang_d2_7.fills.level");
+    assert_eq!(family[4]["name"], "bang_dim=2_code=7.fills.level");
     assert_eq!(family[4]["terms"], parse(r#"["8", "64", "512"]"#).unwrap());
     assert_eq!(
         parse(&blend_family(2, 3, "fills", "level", 2, budget).unwrap())
@@ -1698,7 +1711,7 @@ fn the_automata_exports_answer() {
         29
     );
     let card = parse(&eca_card(110)).unwrap();
-    assert_eq!(card["name"], "mrly_bang_d3_110");
+    assert_eq!(card["name"], "bang dim 3, code 110");
     assert_eq!(
         (card["popcount"].clone(), card["degree"].clone()),
         (5.into(), 3.into())
@@ -1717,7 +1730,7 @@ fn the_automata_exports_answer() {
     assert!(card["outer_totalistic"].is_null());
     assert!(card["gasket"].is_null());
     let gasket = parse(&eca_card(60)).unwrap();
-    assert_eq!(gasket["gasket"], "mrly_bang_d2_13");
+    assert_eq!(gasket["gasket"], "bang dim 2, code 13");
     assert_eq!(gasket["b3_rep"], 60);
     let conway = parse(&eca_card(90)).unwrap();
     assert_eq!(conway["outer_totalistic"]["birth"].to_string(), "[1]");

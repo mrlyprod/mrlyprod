@@ -25,7 +25,13 @@ SEED = 20260725
 TRIALS = 50000
 SAMPLE = 20000
 LEVELS = (1, 2, 3, 4, 6, 8, 12, 16)
-NAMED = ("mrly_00027", "mrly_00281", "mrly_00855", "mrly_01911", "mrly_07128")
+NAMED = (
+    "bang dim 4, code 27",
+    "bang dim 4, code 281",
+    "bang dim 4, code 855",
+    "bang dim 4, code 1911",
+    "bang dim 4, code 7128",
+)
 POP16 = np.array([i.bit_count() for i in range(1 << 16)], dtype=np.uint8)
 
 def corner_maps(d):
@@ -277,11 +283,10 @@ def genus(orbit, d):
 
 def rows_of(d):
     cube = cubes(d)
-    pad = 3 if d == 3 else 5
     out = []
     for code, orbit in catalog(d):
         row = {
-            "name": f"mrly_{code:0{pad}d}",
+            "name": f"bang dim {d}, code {code}",
             "code": code,
             "orbit": len(orbit),
             "genus": genus(orbit, d),

@@ -782,6 +782,7 @@ dependencies = [
  "mrlycore",
  "mrlynum",
  "serde",
+ "serde_json",
 ]
 
 [[package]]

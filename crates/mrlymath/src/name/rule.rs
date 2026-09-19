@@ -1,155 +1,175 @@
-use super::text;
-use super::Named;
-use crate::life::{Boundary, Config, Counts, Sequence};
+use super::{kind, Named};
+use crate::life::{Boundary, Config, Counts};
 use crate::two::Cell2d;
-use mrlycore::errors::{value_error, Result};
+use mrlycore::errors::Result;
+use serde::{Deserialize, Serialize};
 
-const MAX_COUNT: usize = 9;
+kind!("rule");
 
-/// A life rule: the birth and survival counts and the edge policy.
-#[derive(Clone, Debug, PartialEq, Eq)]
+fn is_false(flag: &bool) -> bool {
+    !flag
+}
+
+fn fold(counts: Counts) -> Counts {
+    match counts {
+        Counts::List(mut list) => {
+            list.sort_unstable();
+            list.dedup();
+            Counts::List(list)
+        }
+        drawn => drawn,
+    }
+}
+
+mod counts {
+    use crate::life::{Counts, Sequence};
+    use serde::de::{Error, SeqAccess, Visitor};
+    use serde::ser::SerializeSeq;
+    use serde::{Deserializer, Serializer};
+    use std::fmt;
+
+    pub fn spell(counts: &Counts) -> Option<String> {
+        let Counts::Drawn { seq, zeros, ones } = counts else {
+            return None;
+        };
+        let mut out = seq.name();
+        if *zeros {
+            out.push_str("_zeros");
+        }
+        if *ones {
+            out.push_str("_ones");
+        }
+        Some(out)
+    }
+
+    pub fn read(text: &str) -> Option<Counts> {
+        let (seq, tail) = Sequence::read(text)?;
+        let (zeros, tail) = match tail.strip_prefix("_zeros") {
+            Some(rest) => (true, rest),
+            None => (false, tail),
+        };
+        let (ones, tail) = match tail.strip_prefix("_ones") {
+            Some(rest) => (true, rest),
+            None => (false, tail),
+        };
+        tail.is_empty().then(|| Counts::drawn(seq, zeros, ones))
+    }
+
+    pub fn serialize<S: Serializer>(counts: &Counts, serializer: S) -> Result<S::Ok, S::Error> {
+        match counts {
+            Counts::List(list) => {
+                let folded = super::fold(Counts::List(list.clone()));
+                let Counts::List(folded) = folded else {
+                    unreachable!()
+                };
+                let mut seq = serializer.serialize_seq(Some(folded.len()))?;
+                for n in folded {
+                    seq.serialize_element(&n)?;
+                }
+                seq.end()
+            }
+            drawn => serializer.serialize_str(&spell(drawn).expect("a drawn side spells")),
+        }
+    }
+
+    struct Side;
+
+    impl<'de> Visitor<'de> for Side {
+        type Value = Counts;
+        fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            f.write_str("a list of counts or a sequence word")
+        }
+        fn visit_seq<A: SeqAccess<'de>>(self, mut seq: A) -> Result<Counts, A::Error> {
+            let mut list = Vec::new();
+            while let Some(n) = seq.next_element::<usize>()? {
+                list.push(n);
+            }
+            Ok(Counts::List(list))
+        }
+        fn visit_str<E: Error>(self, text: &str) -> Result<Counts, E> {
+            read(text).ok_or_else(|| E::custom(format!("sequence {text:?} is not known.")))
+        }
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Counts, D::Error> {
+        deserializer.deserialize_any(Side)
+    }
+}
+
+/// A life rule: the birth and survival counts and whether the edge wraps.
+///
+/// ```
+/// use mrlymath::name::{Named, Rule};
+/// let conway = Rule::new(vec![3], vec![2, 3], false);
+/// assert_eq!(conway.to_json(), r#"{"kind":"rule","birth":[3],"survive":[2,3]}"#);
+/// assert_eq!(Rule::from_json(&conway.to_json()).unwrap(), conway);
+/// ```
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Rule {
-    /// The neighbor counts that create a cell.
+    /// The kind word.
+    pub kind: Kind,
+    /// The neighbor counts that create a cell, listed or drawn from a sequence.
+    #[serde(with = "counts")]
     pub birth: Counts,
-    /// The neighbor counts that keep a cell.
+    /// The neighbor counts that keep a cell, listed or drawn from a sequence.
+    #[serde(with = "counts")]
     pub survive: Counts,
-    /// The edge policy.
-    pub boundary: Boundary,
+    /// Whether the edge wraps, false unless said.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub wrap: bool,
 }
 
 impl Rule {
-    /// Builds a rule from its counts and edge policy, or an error for a listed count above 9.
-    pub fn new(
-        birth: impl Into<Counts>,
-        survive: impl Into<Counts>,
-        boundary: Boundary,
-    ) -> Result<Rule> {
-        let birth = birth.into();
-        let survive = survive.into();
-        nameable(&birth)?;
-        nameable(&survive)?;
-        Ok(Rule {
-            birth,
-            survive,
-            boundary,
-        })
+    /// Builds a rule from its counts and edge policy, listed counts folded to a sorted set.
+    pub fn new(birth: impl Into<Counts>, survive: impl Into<Counts>, wrap: bool) -> Rule {
+        Rule {
+            kind: Kind,
+            birth: fold(birth.into()),
+            survive: fold(survive.into()),
+            wrap,
+        }
     }
-    /// Reads the rule out of a life config, or an error for a listed count above 9.
-    pub fn of(config: &Config) -> Result<Rule> {
+    /// Reads the rule out of a life config.
+    pub fn of(config: &Config) -> Rule {
         Rule::new(
             config.birth.clone(),
             config.survive.clone(),
-            config.boundary,
+            config.boundary.wrap(),
         )
+    }
+    /// Returns the edge policy the rule runs under.
+    pub fn boundary(&self) -> Boundary {
+        if self.wrap {
+            Boundary::Wrap
+        } else {
+            Boundary::Constant
+        }
     }
     /// Builds a life config running this rule over a neighborhood mask.
     pub fn config(&self, mask: Cell2d) -> Config {
         let mut config = Config::new(mask, self.birth.clone(), self.survive.clone());
-        config.boundary = self.boundary;
+        config.boundary = self.boundary();
         config
-    }
-    fn fold(counts: &[usize]) -> Vec<usize> {
-        let mut out = counts.to_vec();
-        out.sort_unstable();
-        out.dedup();
-        out
-    }
-    fn spell(counts: &Counts) -> String {
-        match counts {
-            Counts::List(list) => {
-                let folded = Rule::fold(list);
-                assert!(
-                    folded.iter().all(|&n| n <= MAX_COUNT),
-                    "a listed rule count leaves 0..=9; name it by its sequence"
-                );
-                folded.iter().map(usize::to_string).collect()
-            }
-            Counts::Drawn { seq, zeros, ones } => {
-                let mut out = seq.name();
-                if *zeros {
-                    out.push('z');
-                }
-                if *ones {
-                    out.push('o');
-                }
-                out
-            }
-        }
-    }
-    fn read(text: &str, tag: char) -> Result<(Counts, &str)> {
-        let Some(body) = text.strip_prefix(tag) else {
-            return value_error(format!("rule field {text:?} does not open with {tag:?}."));
-        };
-        if let Some((seq, tail)) = Sequence::read(body) {
-            let (zeros, tail) = flag(tail, 'z');
-            let (ones, tail) = flag(tail, 'o');
-            return Ok((Counts::drawn(seq, zeros, ones), tail));
-        }
-        let end = body.bytes().take_while(u8::is_ascii_digit).count();
-        let mut list: Vec<usize> = Vec::new();
-        for b in body[..end].bytes() {
-            let n = (b - b'0') as usize;
-            if list.last().is_some_and(|&last| last >= n) {
-                return value_error(format!("rule field {text:?} is not strictly ascending."));
-            }
-            list.push(n);
-        }
-        Ok((Counts::List(list), &body[end..]))
-    }
-}
-
-fn flag(text: &str, letter: char) -> (bool, &str) {
-    match text.strip_prefix(letter) {
-        Some(rest) => (true, rest),
-        None => (false, text),
-    }
-}
-
-fn nameable(counts: &Counts) -> Result<()> {
-    let Counts::List(list) = counts else {
-        return Ok(());
-    };
-    match list.iter().find(|&&n| n > MAX_COUNT) {
-        Some(n) => value_error(format!(
-            "a listed rule count leaves 0..=9; {n} wants its sequence named instead."
-        )),
-        None => Ok(()),
     }
 }
 
 impl Named for Rule {
-    fn to_str(&self) -> String {
-        let mut fields = vec![
-            format!("b{}", Rule::spell(&self.birth)),
-            format!("s{}", Rule::spell(&self.survive)),
-        ];
-        if self.boundary == Boundary::Wrap {
-            fields.push("w".to_string());
-        }
-        text::compose("rule", &fields)
-    }
-    fn from_str(text: &str) -> Result<Rule> {
-        let body = text::body(text, "rule")?;
-        let (birth, rest) = Rule::read(body, 'b')?;
-        let Some(rest) = rest.strip_prefix('_') else {
-            return value_error(format!("rule name {text:?} wants an s field."));
-        };
-        let (survive, rest) = Rule::read(rest, 's')?;
-        let boundary = match rest {
-            "" => Boundary::Constant,
-            "_w" => Boundary::Wrap,
-            _ => return value_error(format!("rule name {text:?} holds a stray tail.")),
-        };
-        Rule::new(birth, survive, boundary)
+    const KIND: &'static str = "rule";
+    const LISTS: &'static [&'static str] = &["birth", "survive"];
+    fn checked(self) -> Result<Rule> {
+        Ok(Rule::new(self.birth, self.survive, self.wrap))
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::life::{moore, Story};
+    use crate::life::{moore, Sequence, Story};
     use mrlycore::rng::Rng;
     use mrlycore::tensor::Tensor;
+
+    const CONWAY: &str = r#"{"kind":"rule","birth":[3],"survive":[2,3]}"#;
 
     fn wide_mask(side: usize) -> Cell2d {
         let mut mask = Tensor::full(vec![side, side], 1);
@@ -158,75 +178,145 @@ mod tests {
     }
 
     #[test]
-    fn conway_is_b3_s23() {
-        let conway = Rule::new(vec![3], vec![2, 3], Boundary::Constant).unwrap();
-        assert_eq!(conway.to_str(), "mrly_rule_b3_s23");
-        assert_eq!(Rule::from_str("mrly_rule_b3_s23").unwrap(), conway);
-        let wrapped = Rule::new(vec![3], vec![2, 3], Boundary::Wrap).unwrap();
-        assert_eq!(wrapped.to_str(), "mrly_rule_b3_s23_w");
+    fn conway_holds_through_every_view() {
+        let conway = Rule::new(vec![3], vec![2, 3], false);
+        assert_eq!(conway.to_json(), CONWAY);
+        assert_eq!(Rule::from_json(CONWAY).unwrap(), conway);
+        assert_eq!(conway.to_url(), "/rule?birth=3&survive=2,3");
+        assert_eq!(conway.to_file(), "rule_birth=[3]_survive=[2,3]");
+        assert_eq!(conway.to_mrly(), "rule birth [3], survive [2 3]");
+        assert_eq!(Rule::from_url(&conway.to_url()).unwrap(), conway);
+        assert_eq!(Rule::from_file(&conway.to_file()).unwrap(), conway);
+        assert_eq!(conway.to_id().len(), 8);
+        let wrapped = Rule::new(vec![3], vec![2, 3], true);
+        assert_eq!(
+            wrapped.to_json(),
+            r#"{"kind":"rule","birth":[3],"survive":[2,3],"wrap":true}"#
+        );
+        assert_eq!(wrapped.to_mrly(), "rule birth [3], survive [2 3], wrap");
+        assert_ne!(wrapped.to_id(), conway.to_id());
     }
     #[test]
-    fn to_str_folds_to_the_canonical_counts() {
-        let messy = Rule::new(vec![3, 3, 1], vec![9, 2], Boundary::Constant).unwrap();
-        assert_eq!(messy.to_str(), "mrly_rule_b13_s29");
-        let empty = Rule::new(Vec::new(), Vec::new(), Boundary::Constant).unwrap();
-        assert_eq!(empty.to_str(), "mrly_rule_b_s");
-        assert_eq!(Rule::from_str("mrly_rule_b_s").unwrap(), empty);
+    fn the_wide_row_holds() {
+        let wide = Rule::new(
+            vec![12, 13],
+            Counts::drawn(Sequence::Fibonacci, false, false),
+            true,
+        );
+        let text = r#"{"kind":"rule","birth":[12,13],"survive":"fibonacci","wrap":true}"#;
+        assert_eq!(wide.to_json(), text);
+        assert_eq!(Rule::from_json(text).unwrap(), wide);
+        assert_eq!(
+            wide.to_url(),
+            "/rule?birth=12,13&survive=fibonacci&wrap=true"
+        );
+        assert_eq!(
+            wide.to_file(),
+            "rule_birth=[12,13]_survive=fibonacci_wrap=true"
+        );
+        assert_eq!(
+            wide.to_mrly(),
+            "rule birth [12 13], survive fibonacci, wrap"
+        );
+        assert_eq!(Rule::from_url(&wide.to_url()).unwrap(), wide);
+        assert_eq!(Rule::from_file(&wide.to_file()).unwrap(), wide);
     }
     #[test]
-    fn only_the_canonical_form_parses() {
+    fn to_json_folds_to_the_canonical_counts() {
+        let messy = Rule::new(vec![3, 3, 1], vec![9, 2], false);
+        assert_eq!(
+            messy.to_json(),
+            r#"{"kind":"rule","birth":[1,3],"survive":[2,9]}"#
+        );
+        let empty = Rule::new(Vec::new(), Vec::new(), false);
+        assert_eq!(
+            empty.to_json(),
+            r#"{"kind":"rule","birth":[],"survive":[]}"#
+        );
+        assert_eq!(Rule::from_json(&empty.to_json()).unwrap(), empty);
+        assert_eq!(Rule::from_url("/rule?birth=&survive=").unwrap(), empty);
+        assert_eq!(Rule::from_file("rule_birth=[]_survive=[]").unwrap(), empty);
+        let spelt =
+            Rule::from_json(r#"{"kind":"rule","survive":[3,2,3],"birth":[3],"wrap":false}"#)
+                .unwrap();
+        assert_eq!(spelt, Rule::new(vec![3], vec![2, 3], false));
+        assert_eq!(spelt.to_json(), CONWAY);
+    }
+    #[test]
+    fn only_a_rule_parses() {
         for bad in [
-            "mrly_rule_b33_s2",
-            "mrly_rule_b31_s2",
-            "mrly_rule_s23_b3",
-            "mrly_rule_b3",
-            "mrly_rule_b3_s23_x",
-            "mrly_rule_b3_s23_w_w",
-            "mrly_rule_bfib_s3",
-            "mrly_rule_brandom_s3",
-            "mrly_rule_brandom_007_s3",
-            "mrly_rule_bfibonacciozz_s3",
-            "mrly_rule_bfibonacciq_s3",
-            "b3_s23",
+            r#"{"kind":"bang","birth":[3],"survive":[2,3]}"#,
+            r#"{"birth":[3],"survive":[2,3]}"#,
+            r#"{"kind":"rule","birth":[3]}"#,
+            r#"{"kind":"rule","birth":[3],"survive":[2,3],"wrap":1}"#,
+            r#"{"kind":"rule","birth":[3],"survive":[2,3],"mask":7}"#,
+            r#"{"kind":"rule","birth":"fib","survive":[3]}"#,
+            r#"{"kind":"rule","birth":"random","survive":[3]}"#,
+            r#"{"kind":"rule","birth":"random_007","survive":[3]}"#,
+            r#"{"kind":"rule","birth":"fibonacci_zeros_zeros","survive":[3]}"#,
+            r#"{"kind":"rule","birth":"fibonacci_ones_zeros","survive":[3]}"#,
+            r#"{"kind":"rule","birth":"fibonacciq","survive":[3]}"#,
+            r#"{"kind":"rule","birth":[-1],"survive":[3]}"#,
+            r#"{"kind":"rule","birth":3,"survive":[3]}"#,
+            "rule birth [3], survive [2 3]",
+            "rule_birth=[3]_survive=[2,3]",
         ] {
-            assert!(Rule::from_str(bad).is_err(), "{bad}");
+            assert!(Rule::from_json(bad).is_err(), "{bad}");
         }
     }
     #[test]
-    fn a_listed_count_above_nine_never_builds_a_rule() {
-        assert!(Rule::new(vec![3, 12], vec![2, 3], Boundary::Constant).is_err());
-        assert!(Rule::new(vec![3], vec![10], Boundary::Wrap).is_err());
-        assert!(Rule::new(vec![3], vec![2, 3, 9], Boundary::Constant).is_ok());
+    fn a_listed_count_above_nine_has_a_name() {
+        let rule = Rule::new(vec![3, 12], vec![2, 3, 48], true);
+        assert_eq!(
+            rule.to_json(),
+            r#"{"kind":"rule","birth":[3,12],"survive":[2,3,48],"wrap":true}"#
+        );
+        assert_eq!(Rule::from_json(&rule.to_json()).unwrap(), rule);
         let mut config = Config::new(moore(), vec![3], vec![2, 3]);
         config.survive = Counts::List(vec![48]);
-        assert!(Rule::of(&config).is_err());
+        assert_eq!(Rule::of(&config).survive, Counts::List(vec![48]));
     }
     #[test]
     fn config_round_trips_through_the_rule() {
         let mask = crate::two::designs::ones(3, 1).unwrap();
-        let rule = Rule::new(vec![3, 6], vec![2, 3], Boundary::Wrap).unwrap();
+        let rule = Rule::new(vec![3, 6], vec![2, 3], true);
         let config = rule.config(mask);
-        assert_eq!(Rule::of(&config).unwrap(), rule);
-        assert_eq!(Rule::of(&config).unwrap().to_str(), "mrly_rule_b36_s23_w");
+        assert_eq!(config.boundary, Boundary::Wrap);
+        assert_eq!(Rule::of(&config), rule);
+        assert_eq!(
+            Rule::of(&config).to_json(),
+            r#"{"kind":"rule","birth":[3,6],"survive":[2,3],"wrap":true}"#
+        );
     }
     #[test]
     fn a_drawn_rule_names_its_sequence() {
         let rule = Rule::new(
             Counts::drawn(Sequence::Fibonacci, false, true),
             Counts::drawn(Sequence::GridSquares, false, false),
-            Boundary::Wrap,
-        )
-        .unwrap();
-        assert_eq!(rule.to_str(), "mrly_rule_bfibonaccio_sgrid_squares_w");
-        assert_eq!(Rule::from_str(&rule.to_str()).unwrap(), rule);
+            true,
+        );
+        assert_eq!(
+            rule.to_json(),
+            r#"{"kind":"rule","birth":"fibonacci_ones","survive":"grid_squares","wrap":true}"#
+        );
+        assert_eq!(Rule::from_json(&rule.to_json()).unwrap(), rule);
+        assert_eq!(Rule::from_url(&rule.to_url()).unwrap(), rule);
+        assert_eq!(Rule::from_file(&rule.to_file()).unwrap(), rule);
         let seeded = Rule::new(
             Counts::drawn(Sequence::Random(4848495), true, false),
             vec![3],
-            Boundary::Constant,
-        )
-        .unwrap();
-        assert_eq!(seeded.to_str(), "mrly_rule_brandom_4848495z_s3");
-        assert_eq!(Rule::from_str(&seeded.to_str()).unwrap(), seeded);
+            false,
+        );
+        assert_eq!(
+            seeded.to_json(),
+            r#"{"kind":"rule","birth":"random_4848495_zeros","survive":[3]}"#
+        );
+        assert_eq!(Rule::from_json(&seeded.to_json()).unwrap(), seeded);
+        assert_eq!(Rule::from_file(&seeded.to_file()).unwrap(), seeded);
+        assert_eq!(
+            seeded.to_file(),
+            "rule_birth=random_4848495_zeros_survive=[3]"
+        );
     }
     #[test]
     fn a_wide_mask_run_replays_from_its_name() {
@@ -234,15 +324,14 @@ mod tests {
         let rule = Rule::new(
             Counts::drawn(Sequence::Fibonacci, false, false),
             Counts::drawn(Sequence::Primes, false, false),
-            Boundary::Wrap,
-        )
-        .unwrap();
+            true,
+        );
         let mut config = rule.config(mask.clone());
         config.max_generations = 12;
         assert_eq!(config.budget(), 48);
         let (birth, survive) = config.counts().unwrap();
-        assert!(birth.iter().any(|&n| n > MAX_COUNT), "{birth:?}");
-        assert!(survive.iter().any(|&n| n > MAX_COUNT), "{survive:?}");
+        assert!(birth.iter().any(|&n| n > 9), "{birth:?}");
+        assert!(survive.iter().any(|&n| n > 9), "{survive:?}");
         let mut seed = Tensor::new(vec![15, 15]);
         for (y, x) in [(6, 7), (7, 6), (7, 7), (7, 8), (8, 7)] {
             seed.set(&[y, x], 1);
@@ -251,7 +340,7 @@ mod tests {
         let mut story = Story::new();
         story.add(&seed, &config).unwrap();
         let back = Story::from_json(&story.to_json().unwrap()).unwrap();
-        assert_eq!(Rule::of(&back.chapters[0].config).unwrap(), rule);
+        assert_eq!(Rule::of(&back.chapters[0].config), rule);
         assert_eq!(back.chapters[0].config.counts().unwrap(), (birth, survive));
         for (a, b) in story.grids().iter().zip(back.grids()) {
             assert_eq!(a.types(), b.types());
@@ -260,9 +349,7 @@ mod tests {
     }
     #[test]
     fn the_moore_budget_stays_in_the_digits() {
-        let config = Rule::new(vec![3], vec![2, 3], Boundary::Constant)
-            .unwrap()
-            .config(moore());
+        let config = Rule::new(vec![3], vec![2, 3], false).config(moore());
         assert_eq!(config.budget(), 8);
     }
     #[test]
@@ -271,23 +358,23 @@ mod tests {
         for _ in 0..500 {
             let draw = |rng: &mut Rng| {
                 let count = rng.below(5);
-                (0..count).map(|_| rng.below(10)).collect::<Vec<usize>>()
+                (0..count).map(|_| rng.below(50)).collect::<Vec<usize>>()
             };
-            let boundary = if rng.boolean() {
-                Boundary::Wrap
-            } else {
-                Boundary::Constant
-            };
-            let rule = Rule::new(draw(&mut rng), draw(&mut rng), boundary).unwrap();
-            let name = rule.to_str();
-            let back = Rule::from_str(&name).unwrap();
-            assert_eq!(back.birth.values(9).unwrap(), rule.birth.values(9).unwrap());
+            let rule = Rule::new(draw(&mut rng), draw(&mut rng), rng.boolean());
+            let text = rule.to_json();
+            let back = Rule::from_json(&text).unwrap();
             assert_eq!(
-                back.survive.values(9).unwrap(),
-                rule.survive.values(9).unwrap()
+                back.birth.values(49).unwrap(),
+                rule.birth.values(49).unwrap()
             );
-            assert_eq!(back.boundary, rule.boundary);
-            assert_eq!(back.to_str(), name);
+            assert_eq!(
+                back.survive.values(49).unwrap(),
+                rule.survive.values(49).unwrap()
+            );
+            assert_eq!(back.wrap, rule.wrap);
+            assert_eq!(back.to_json(), text);
+            assert_eq!(Rule::from_url(&rule.to_url()).unwrap(), rule);
+            assert_eq!(Rule::from_file(&rule.to_file()).unwrap(), rule);
         }
     }
     #[test]
@@ -301,9 +388,11 @@ mod tests {
                 _ => *rng.choice(&pool),
             };
             let side = |rng: &mut Rng| Counts::drawn(pick(rng), rng.boolean(), rng.boolean());
-            let rule = Rule::new(side(&mut rng), side(&mut rng), Boundary::Constant).unwrap();
-            let name = rule.to_str();
-            assert_eq!(Rule::from_str(&name).unwrap(), rule, "{name}");
+            let rule = Rule::new(side(&mut rng), side(&mut rng), false);
+            let text = rule.to_json();
+            assert_eq!(Rule::from_json(&text).unwrap(), rule, "{text}");
+            assert_eq!(Rule::from_url(&rule.to_url()).unwrap(), rule, "{text}");
+            assert_eq!(Rule::from_file(&rule.to_file()).unwrap(), rule, "{text}");
         }
     }
 }

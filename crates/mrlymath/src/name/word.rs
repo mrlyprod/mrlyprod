@@ -1,84 +1,99 @@
-use super::text;
-use super::Named;
+use super::{kind, Bang, Named};
 use mrlycore::errors::{value_error, Result};
+use serde::{Deserialize, Serialize};
 
-/// A magic word name: an ordered list of plane letters at base two, first letter outermost.
+kind!("word");
+
+/// A magic word: an ordered list of design letters, first letter outermost, each at its own side.
 ///
-/// The spelling is `mrly_word_d2_c<code>n<side>_c<code>n<side>` and it covers the plane at base
-/// two alone, since the tile grammar caps codes at the corner range; a solid or base-q word still
-/// has no canonical name.
-#[derive(Clone, Debug, PartialEq, Eq)]
+/// ```
+/// use mrlymath::name::{Named, Word};
+/// let word = Word::new(2, &[(7, 3), (14, 7), (9, 5)]).unwrap();
+/// assert_eq!(word.to_json(), r#"{"kind":"word","dim":2,"magic":[7,14,9],"side":[3,7,5]}"#);
+/// assert_eq!(Word::from_json(&word.to_json()).unwrap(), word);
+/// ```
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Word {
-    /// The letters in order, each a code and the side it renders at.
-    pub letters: Vec<(u128, usize)>,
+    /// The kind word.
+    pub kind: Kind,
+    /// The number of axes every letter shares.
+    pub dim: usize,
+    /// The codes of the letters in order.
+    pub magic: Vec<u128>,
+    /// The side each letter renders at.
+    pub side: Vec<usize>,
+    /// The base of each letter, absent when every letter is base 2.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub base: Option<Vec<usize>>,
 }
 
 impl Word {
-    /// Pins an ordered letter list, or an error below two letters or outside the plane corner range.
-    ///
-    /// ```
-    /// use mrlymath::name::{Named, Word};
-    /// let word = Word::new(&[(7, 3), (14, 7), (9, 5)]).unwrap();
-    /// assert_eq!(word.to_str(), "mrly_word_d2_c7n3_c14n7_c9n5");
-    /// assert_eq!(Word::from_str("mrly_word_d2_c7n3_c14n7_c9n5").unwrap(), word);
-    /// ```
-    pub fn new(letters: &[(u128, usize)]) -> Result<Word> {
-        if letters.len() < 2 {
-            return value_error("a word name needs at least two letters.");
+    /// Pins an ordered letter list at base 2, or an error below two letters or outside the code range.
+    pub fn new(dim: usize, letters: &[(u128, usize)]) -> Result<Word> {
+        Word {
+            kind: Kind,
+            dim,
+            magic: letters.iter().map(|&(code, _)| code).collect(),
+            side: letters.iter().map(|&(_, side)| side).collect(),
+            base: None,
         }
-        for (code, side) in letters {
-            if *code == 0 || *code > 15 {
-                return value_error(format!(
-                    "letter code {code} lies outside the plane corner range 1..15."
-                ));
-            }
-            if *side < 2 {
-                return value_error(format!("letter side {side} is below two."));
-            }
-        }
-        Ok(Word {
-            letters: letters.to_vec(),
-        })
+        .checked()
+    }
+    /// Returns the base of every letter, 2 where the name says nothing.
+    pub fn bases(&self) -> Vec<usize> {
+        self.base
+            .clone()
+            .unwrap_or_else(|| vec![2; self.magic.len()])
+    }
+    /// Returns every letter as a design pinned to the word's dimension and its own base.
+    pub fn letters(&self) -> Vec<Bang> {
+        self.magic
+            .iter()
+            .zip(self.bases())
+            .map(|(&code, base)| Bang::new(code, self.dim, base))
+            .collect()
     }
 }
 
 impl Named for Word {
-    fn to_str(&self) -> String {
-        let mut fields = vec![text::run(&[('d', Some(2))])];
-        for (code, side) in &self.letters {
-            fields.push(text::run(&[('c', Some(*code)), ('n', Some(*side as u128))]));
+    const KIND: &'static str = "word";
+    const LISTS: &'static [&'static str] = &["magic", "side", "base"];
+    fn checked(mut self) -> Result<Word> {
+        if self.magic.len() < 2 {
+            return value_error("a word needs at least two letters.");
         }
-        text::compose("word", &fields)
-    }
-    fn from_str(text: &str) -> Result<Word> {
-        let fields = super::text::split(text, "word")?;
-        if fields.len() < 3 {
+        if self.side.len() != self.magic.len() {
             return value_error(format!(
-                "word name {text:?} wants a d field and two or more letters."
+                "a word of {} letters wants {} sides, not {}.",
+                self.magic.len(),
+                self.magic.len(),
+                self.side.len()
             ));
         }
-        match super::text::tags(fields[0])?.as_slice() {
-            [('d', Some(2))] => {}
-            _ => {
+        if let Some(base) = &self.base {
+            if base.len() != self.magic.len() {
                 return value_error(format!(
-                    "word name {text:?} opens outside the plane, which has no name kind yet."
-                ))
+                    "a word of {} letters wants {} bases, not {}.",
+                    self.magic.len(),
+                    self.magic.len(),
+                    base.len()
+                ));
+            }
+            if base.iter().all(|&b| b == 2) {
+                self.base = None;
             }
         }
-        let mut letters = Vec::new();
-        for field in &fields[1..] {
-            match super::text::tags(field)?.as_slice() {
-                [('c', Some(code)), ('n', Some(side))] => {
-                    letters.push((*code, super::text::small(*side)?))
-                }
-                _ => {
-                    return value_error(format!(
-                        "letter {field:?} wants a c field then an n field."
-                    ))
-                }
+        for letter in self.letters() {
+            if letter.code == 0 {
+                return value_error("a letter code of 0 draws nothing.");
             }
+            letter.checked()?;
         }
-        Word::new(&letters)
+        if let Some(side) = self.side.iter().find(|&&side| side < 2) {
+            return value_error(format!("letter side {side} is below two."));
+        }
+        Ok(self)
     }
 }
 
@@ -87,26 +102,78 @@ mod tests {
     use super::*;
 
     #[test]
+    fn the_word_holds_through_every_view() {
+        let word = Word::new(2, &[(7, 3), (14, 7), (9, 5)]).unwrap();
+        assert_eq!(
+            word.to_json(),
+            r#"{"kind":"word","dim":2,"magic":[7,14,9],"side":[3,7,5]}"#
+        );
+        assert_eq!(word.to_url(), "/word?dim=2&magic=7,14,9&side=3,7,5");
+        assert_eq!(word.to_file(), "word_dim=2_magic=[7,14,9]_side=[3,7,5]");
+        assert_eq!(word.to_mrly(), "word dim 2, magic [7 14 9], side [3 7 5]");
+        assert_eq!(Word::from_json(&word.to_json()).unwrap(), word);
+        assert_eq!(Word::from_url(&word.to_url()).unwrap(), word);
+        assert_eq!(Word::from_file(&word.to_file()).unwrap(), word);
+        assert_eq!(word.to_id().len(), 8);
+    }
+    #[test]
     fn the_word_name_round_trips() {
         for letters in [vec![(3u128, 2usize), (6, 2)], vec![(7, 3), (14, 7), (9, 5)]] {
-            let word = Word::new(&letters).unwrap();
-            assert_eq!(Word::from_str(&word.to_str()).unwrap(), word);
+            let word = Word::new(2, &letters).unwrap();
+            assert_eq!(Word::from_json(&word.to_json()).unwrap(), word);
         }
     }
-
     #[test]
     fn order_shows_in_the_name() {
-        let one = Word::new(&[(3, 2), (6, 2)]).unwrap().to_str();
-        let other = Word::new(&[(6, 2), (3, 2)]).unwrap().to_str();
+        let one = Word::new(2, &[(3, 2), (6, 2)]).unwrap().to_json();
+        let other = Word::new(2, &[(6, 2), (3, 2)]).unwrap().to_json();
         assert_ne!(one, other);
     }
-
     #[test]
-    fn the_grammar_refuses_what_it_cannot_spell() {
-        assert!(Word::new(&[(7, 3)]).is_err());
-        assert!(Word::new(&[(273, 3), (9, 2)]).is_err());
-        assert!(Word::from_str("mrly_word_d3_c7n3_c9n5").is_err());
-        assert!(Word::from_str("mrly_word_d2_c7n3").is_err());
-        assert!(Word::from_str("mrly_bang_d2_7").is_err());
+    fn a_solid_or_mixed_base_word_has_a_name() {
+        let solid = Word::new(3, &[(23, 3), (3, 3)]).unwrap();
+        assert_eq!(
+            solid.to_json(),
+            r#"{"kind":"word","dim":3,"magic":[23,3],"side":[3,3]}"#
+        );
+        let mixed = Word {
+            base: Some(vec![2, 3]),
+            ..Word::new(2, &[(7, 3), (14, 3)]).unwrap()
+        };
+        let mixed = Word {
+            magic: vec![7, 98],
+            ..mixed
+        }
+        .checked()
+        .unwrap();
+        assert_eq!(
+            mixed.to_json(),
+            r#"{"kind":"word","dim":2,"magic":[7,98],"side":[3,3],"base":[2,3]}"#
+        );
+        assert_eq!(Word::from_json(&mixed.to_json()).unwrap(), mixed);
+        assert_eq!(mixed.letters()[1], Bang::new(98, 2, 3));
+        let mut plain = Word::new(2, &[(7, 3), (14, 3)]).unwrap();
+        plain.base = Some(vec![2, 2]);
+        assert_eq!(plain.checked().unwrap().base, None);
+    }
+    #[test]
+    fn the_grammar_refuses_what_it_cannot_draw() {
+        assert!(Word::new(2, &[(7, 3)]).is_err());
+        assert!(Word::new(2, &[(273, 3), (9, 2)]).is_err());
+        assert!(Word::new(2, &[(0, 3), (9, 2)]).is_err());
+        assert!(Word::new(2, &[(7, 1), (9, 2)]).is_err());
+        assert!(Word::new(0, &[(1, 2), (1, 2)]).is_err());
+        for bad in [
+            r#"{"kind":"word","dim":2,"magic":[7,14],"side":[3]}"#,
+            r#"{"kind":"word","dim":2,"magic":[7,14],"side":[3,3],"base":[3]}"#,
+            r#"{"kind":"word","dim":2,"magic":[7,98],"side":[3,3]}"#,
+            r#"{"kind":"word","magic":[7,14],"side":[3,3]}"#,
+            r#"{"kind":"word","dim":2,"magic":[7,14],"side":[3,3],"level":2}"#,
+            r#"{"kind":"bang","dim":2,"code":7}"#,
+            "word dim 2, magic [7 9], side [3 5]",
+            "word_dim=2_magic=[7,9]_side=[3,5]",
+        ] {
+            assert!(Word::from_json(bad).is_err(), "{bad}");
+        }
     }
 }

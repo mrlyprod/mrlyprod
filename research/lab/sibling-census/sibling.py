@@ -72,10 +72,10 @@ def dictionary():
     say(f"dictionary: rule 110 on 001 -> {t[1]} and on 100 -> {t[4]}, so it is not outer-totalistic")
     say("dictionary: the 64 are " + " ".join(str(n) for n in ot))
     m1 = mask_offsets(1, 1, 3, 1)
-    check(sorted(m1) == [(-1,), (1,)], "mrly_bang_d1_1 at side 3 is the elementary mask")
+    check(sorted(m1) == [(-1,), (1,)], "bang dim 1, code 1 at side 3 is the elementary mask")
     m7 = mask_offsets(7, 2, 3, 1)
-    check(len(m7) == 8 and (0, 0) not in m7, "mrly_bang_d2_7 at side 3 popped is Moore")
-    say("dictionary: mrly_bang_d1_1 side 3 is [101], mrly_bang_d2_7 side 3 popped is the 8-cell Moore mask")
+    check(len(m7) == 8 and (0, 0) not in m7, "bang dim 2, code 7 at side 3 popped is Moore")
+    say("dictionary: bang dim 1, code 1 at side 3 is [101]; bang dim 2, code 7 at side 3 popped is the 8-cell Moore mask")
 
 # TOWER
 

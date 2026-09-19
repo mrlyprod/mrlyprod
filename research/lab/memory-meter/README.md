@@ -1,7 +1,7 @@
 # memory-meter
 
 - The Mobius meter of a memory rule: `M_W(x) = sum of mu(n)` over the integers `n <= x` whose binary digit word the rule accepts, against that set's own mass `A_W(x)`.
-- Every width-`1`, width-`2` and width-`3` rule at dimension `1`, base `2` is read: `4`, `16` and `256` codes, `276` rules in all, the width-`1` codes being the memoryless row.
+- Every width-`1`, width-`2` and width-`3` rule at dim `1`, base `2` is read: `4`, `16` and `256` codes, `276` rules in all, the width-`1` codes being the memoryless row.
 - An integer `n >= 1` is its minimal base-`2` word, coarsest digit first, no leading zero; `0` is excluded from every sum. The rule reading is `mrlynum::memory::Rule`: a window of `k` digits is `w = sum_j c_j 2^(k - j)`, bit `w` of the code is set when that window is allowed, a word is accepted when every one of its `k`-windows is allowed, and a word shorter than `k` is accepted.
 - No exponent is fitted. Printed per rule and phase are `A_W(x)`, `M_W(x)`, `max abs M_W(t)` over `t <= x`, the ratios `M_W/sqrt(A_W)` and `max abs M_W/sqrt(A_W)`, with `kappa`, `rho` and `card W` from the crate.
 
@@ -10,14 +10,14 @@
 - One ascending pass over `n <= 2^30` carrying the **window profile** of `n`, the bitmask of the `2^3` windows its word contains, by `profile(n) = profile(n >> 1) | bit(n mod 8)` for `n >= 4`; `n` is accepted by `W` exactly when `profile(n)` is a subset of `W`.
 - The width-`2` and width-`1` profiles are induced from the width-`3` one: for a word of three digits or more every `2`-window is a prefix or a suffix of some `3`-window and every digit lies in one, so one `u8` per `n` carries all three widths. The words of one and two digits are entered by hand.
 - The mass per profile is a `256`-bucket count and `A_W` is its subset-sum transform at each phase; the meter is carried per rule so the running maximum is exact, and the subset-sum transform of the per-profile `mu` sums is asserted equal to it at every phase.
-- Phases are `x = floor(2^(L + j/4))` for `L = 8..30` and `j = 0..3`, `89` of them, `2^30` last.
+- Phases are `x = floor(2^(level + j/4))` for `level 8..30` and `j = 0..3`, `89` of them, `2^30` last.
 - `mu` is `mrlynum::factor::mobius_sieve`, the crate's linear Mobius sieve; `mrlynum::sieve` carries the Sierpinski word and no Mobius, so nothing there is reused.
 - `rho` and `kappa` come from `mrlynum::memory::perron` and `kappa`, which split the digraph into strongly connected components and make each component's Perron root exact against its integer characteristic polynomial, so every printed root is an algebraic integer of the right minimal polynomial.
 
 ## THE CONTROLS
 
 - The full line, `k = 1` code `3`, is the Mertens function: its meter reads `-1, 1, 2, -23, -48, 212, 1037, 1928` at `10^1..10^8`, asserted, which is [A084237](https://oeis.org/A084237).
-- The memoryless base-`3` designs are enumerated directly from the same sieve and asserted against [mobius-designs](../mobius-designs/): digits `{0,1}` read `(M, max abs M) = (11, 105)` at `L = 14`, `(149, 173)` at `L = 16` and `(-30, 312)` at `L = 18`, digits `{1,2}` read `(-1461, 1582)` at `L = 18`. Digits `{0,2}` at `L = 20` wants `3^20`, past `2^30`, so it is printed at `L = 14, 16, 18` and not pinned. The four pinned pairs are read at source in [design-meter](../design-meter/), which computes them and cites [mobius-designs](../mobius-designs/) as their census.
+- The memoryless base-`3` designs are enumerated directly from the same sieve and asserted against [mobius-designs](../mobius-designs/): digits `{0,1}` read `(M, max abs M) = (11, 105)` at `level 14`, `(149, 173)` at `level 16` and `(-30, 312)` at `level 18`, digits `{1,2}` read `(-1461, 1582)` at `level 18`. Digits `{0,2}` at `level 20` wants `3^20`, past `2^30`, so it is printed at `level 14, 16, 18` and not pinned. The four pinned pairs are read at source in [design-meter](../design-meter/), which computes them and cites [mobius-designs](../mobius-designs/) as their census.
 - The profile recurrence is asserted against a direct digit recount on all `276` rules below `2^20`, and profile containment against `Rule::accepts` on all `276` rules below `2^12`.
 - Code `7` at `k = 2`, the golden rule forbidding `11`, opens `1, 2, 4, 5, 8, 9, 10, 16, 17, 18, 20, 21`, which is [A003714](https://oeis.org/A003714) without its zero, and its mass is the Fibonacci number. Code `11`, forbidding `10`, opens exactly the Mersenne numbers [A000225](https://oeis.org/A000225) without its zero, one per level.
 - Leading zeros: a rule is **zero-closed** when prepending one zero to the word changes no membership below `2^20`. Both masses are printed per rule and the criterion is asserted code for code.
@@ -51,4 +51,4 @@
 
 ## COLUMNS
 
-- `control` the pinned lines; `classes` and `reps` the `88` orbit representatives at `(1,3)` under `G_(1,3)`; `rule` one line per code with `card W`, `rho`, `kappa`, the zero-closed flag and both masses, the last-phase reading and a track of the normalised peak at `L = 8, 12, 16, 20, 24, 28, 30`; `row` one line per code and phase; `top`, `bottom`, `span`, `factor`, `latepeak`, `kappaband`, `band` and `rho` the printed bands at two mass floors, `gridstart` the full line below the grid, `pair` the two equal-mass rules, `reading` the word language against the integer set; `climbing` the monotone scan; `run` the depth and the runtimes.
+- `control` the pinned lines; `classes` and `reps` the `88` orbit representatives at `(1,3)` under `G_(1,3)`; `rule` one line per code with `card W`, `rho`, `kappa`, the zero-closed flag and both masses, the last-phase reading and a track of the normalised peak at `level 8, 12, 16, 20, 24, 28, 30`; `row` one line per code and phase; `top`, `bottom`, `span`, `factor`, `latepeak`, `kappaband`, `band` and `rho` the printed bands at two mass floors, `gridstart` the full line below the grid, `pair` the two equal-mass rules, `reading` the word language against the integer set; `climbing` the monotone scan; `run` the depth and the runtimes.

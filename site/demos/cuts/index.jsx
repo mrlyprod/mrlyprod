@@ -85,7 +85,7 @@ function App() {
 
   return (
     <Page crumb="cuts" title="Every diagonal cut is the same size" controls={controls}
-      sub={<>A plane <code>x + y + z = s</code> slides through the level-L solid of <code>mrly_bang_d3_126</code> and meets exactly 3^L cells at every height it meets at all. The binary digits of the height say which corners each scale may use, so every cut is a Sierpinski gasket, and the two central heights together fall into six of them tiling a hexagon. Drag the bar chart to move the plane.</>}
+      sub={<>A plane <code>x + y + z = s</code> slides through the solid of <code>bang dim 3, code 126</code> at the level and meets exactly 3^level cells at every height it meets at all. The binary digits of the height say which corners each scale may use, so every cut is a Sierpinski gasket, and the two central heights together fall into six of them tiling a hexagon. Drag the bar chart to move the plane.</>}
       foot={<>The profile is the coefficient list of the digit polynomial, so a height is counted without building a single cell; the points are enumerated on the plane itself and projected down the <code>(1,1,1)</code> axis in Rust, one circle per cell, coloured by height and by top-scale corner. The section view is the crate's own triangular mesh through the same solid. Why every one of these cuts is a gasket, and which one the height's binary digits pick, is in <a href="/research/cuts/">the cuts note</a>.</>}>
       <Sketch draw={chart} deps={[v]} onSeek={onSeek} pad={PAD} className="bars" role="img" aria-label="Cells per height, drag to move the plane" />
       <Stats>

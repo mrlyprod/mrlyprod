@@ -343,7 +343,7 @@ pub fn magic_census(
                 "code": layer.design.code.to_string(),
                 "number": layer.number,
                 "base": layer.design.base,
-                "name": Bang::new(layer.design.code, dimension, layer.design.base).to_str(),
+                "name": Bang::new(layer.design.code, dimension, layer.design.base).to_mrly(),
                 "fill": count.to_string(),
                 "cells": (layer.number as u128).pow(dimension as u32).to_string(),
                 "dimension": (*count as f64).ln() / (layer.number as f64).ln(),
@@ -473,24 +473,54 @@ pub fn word_profile(
 
 // NAMES
 
-/// Prints the canonical name of a plane word at base two.
-#[wasm_bindgen]
-pub fn magic_name(codes: Vec<String>, numbers: Vec<u32>) -> Result<String, Fault> {
-    let layers = letters(codes, numbers.clone(), 2, vec![2; numbers.len()])?;
-    let spelt: Vec<(u128, usize)> = layers
-        .iter()
-        .map(|layer| (layer.design.code, layer.number))
-        .collect();
-    Ok(Word::new(&spelt)?.to_str())
+fn spelt(
+    codes: Vec<String>,
+    numbers: Vec<u32>,
+    bases: Vec<u32>,
+    dimension: usize,
+) -> Result<Word, Fault> {
+    let layers = letters(codes, numbers, dimension, bases)?;
+    Ok(Word {
+        kind: mrlymath::name::word::Kind,
+        dim: dimension,
+        magic: layers.iter().map(|layer| layer.design.code).collect(),
+        side: layers.iter().map(|layer| layer.number).collect(),
+        base: Some(layers.iter().map(|layer| layer.design.base).collect()),
+    }
+    .checked()?)
 }
 
-/// Parses a plane word name back into its codes and sides, as JSON.
+/// Prints the name of a word as a line of prose.
+#[wasm_bindgen]
+pub fn magic_name(
+    codes: Vec<String>,
+    numbers: Vec<u32>,
+    bases: Vec<u32>,
+    dimension: usize,
+) -> Result<String, Fault> {
+    Ok(spelt(codes, numbers, bases, dimension)?.to_mrly())
+}
+
+/// Prints the file name of a word, the form a query string carries.
+#[wasm_bindgen]
+pub fn magic_key(
+    codes: Vec<String>,
+    numbers: Vec<u32>,
+    bases: Vec<u32>,
+    dimension: usize,
+) -> Result<String, Fault> {
+    Ok(spelt(codes, numbers, bases, dimension)?.to_file())
+}
+
+/// Reads a word's file name back into its dim, codes, sides and bases, as JSON.
 #[wasm_bindgen]
 pub fn magic_parse(text: &str) -> Result<String, Fault> {
-    let word = Word::from_str(text)?;
+    let word = Word::from_file(text)?;
     Ok(json!({
-        "codes": word.letters.iter().map(|(code, _)| code.to_string()).collect::<Vec<String>>(),
-        "numbers": word.letters.iter().map(|(_, side)| *side).collect::<Vec<usize>>(),
+        "dim": word.dim,
+        "codes": word.magic.iter().map(u128::to_string).collect::<Vec<String>>(),
+        "numbers": word.side,
+        "bases": word.bases(),
     })
     .to_string())
 }
@@ -512,26 +542,26 @@ pub fn magic_rates(
 ) -> Result<String, Fault> {
     let layers = letters(codes, numbers, 2, bases)?;
     let kind = word::Schedule::parse(schedule)?;
-    let pair = (layers[0], layers[1]);
-    let spelt = word::spell(kind, pair, length.clamp(2, 120));
-    let control = word::spell(word::Schedule::Periodic, pair, length.clamp(2, 120));
+    let pair = (layers[0].clone(), layers[1].clone());
+    let spelt = word::spell(kind, pair.clone(), length.clamp(2, 120));
+    let control = word::spell(word::Schedule::Periodic, pair.clone(), length.clamp(2, 120));
     let mut rows = word::rates(&spelt)?;
     let mut mirror = word::rates(&control)?;
     let take = rows.len().min(mirror.len());
     rows.truncate(take);
     mirror.truncate(take);
-    let fills = word::fills(&[pair.0, pair.1])?;
+    let fills = word::fills(&[pair.0.clone(), pair.1.clone()])?;
     let (first, second) = kind.frequencies();
     let limit = first * (fills[0] as f64).log2() + second * (fills[1] as f64).log2();
-    let alphabet = [pair.0, pair.1].iter().all(|letter| {
+    let alphabet = [&pair.0, &pair.1].iter().all(|letter| {
         letter.number == 2 && letter.design.base == 2 && (1..=15).contains(&letter.design.code)
     });
     Ok(json!({
         "schedule": schedule,
         "length": rows.len(),
         "letters": [
-            Bang::new(pair.0.design.code, 2, pair.0.design.base).to_str(),
-            Bang::new(pair.1.design.code, 2, pair.1.design.base).to_str(),
+            Bang::new(pair.0.design.code, 2, pair.0.design.base).to_mrly(),
+            Bang::new(pair.1.design.code, 2, pair.1.design.base).to_mrly(),
         ],
         "rows": rows.iter().map(|(a, b)| vec![*a, *b]).collect::<Vec<Vec<f64>>>(),
         "control": mirror.iter().map(|(a, _)| *a).collect::<Vec<f64>>(),
@@ -562,7 +592,7 @@ pub fn magic_staircase(depth: usize) -> Result<String, Fault> {
     let one = word::staircase(1)?;
     Ok(json!({
         "rows": rows,
-        "constant": word::dimension(&[one[0], one[0]])?,
+        "constant": word::dimension(&[one[0].clone(), one[0].clone()])?,
     })
     .to_string())
 }

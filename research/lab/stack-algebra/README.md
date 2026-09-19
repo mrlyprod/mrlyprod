@@ -1,7 +1,7 @@
 # stack-algebra
 
 - Stacking a stack is Dirichlet convolution on the layer weights, and this study checks that by literal stacking, then reads off the closed form of every selected stack.
-- The `w`-weighted line stack over scales `1..N` gives node `a/b` the brightness `sum_{k <= N/b} w(kb)`; the `u`-stack of the `v`-stack draws, at scale `kn`, the weight `u(k) v(n)`.
+- The `w`-weighted line stack over scales `1..N` gives node `a/b`, denominator `b`, the brightness `sum_{k <= N/b} w(kb)`; the `u`-stack of the `v`-stack draws, at scale `kn`, the weight `u(k) v(n)`.
 - Under the hyperbolic cut `kn <= N` the composite scale weight is exactly `(u * v)(m)` for every `m <= N`, so the two pictures agree node for node.
 - Checked at `N = 60` on `u = v = 1`, `u = 1, v = mu`, `u = mu, v = mu` and `u = 1, v = n^-1`: 1102, 1102, 974 and 1102 nodes, zero mismatches by three routes that share no inner loop.
 - The three routes are explicit copy placement, the line at `j/m` inside copy `i` of `k` landing at `((i-1)m + j)/(km)`; the composite scale weight built from the hyperbolic cut; and the node formula `sum_{k <= N/b} (u * v)(kb)`.
@@ -16,7 +16,7 @@
 - The primes-only line stack lights 96 denominators at `N = 501`: `b = 1` and the 95 primes, every prime node at brightness exactly 1.
 - The `s`-harmonic stack, weights `n^-s`: node `a/b` reads `b^-s H_s(floor(N/b))`, tending to `zeta(s)/b^s`; total node mass `sum_b phi(b) zeta(s) b^-s = zeta(s-1)` for `s > 2`, read at `N = 16000` as `1.644872`, `1.202057` and `1.082323` for `s = 3, 4, 5` against `zeta(2), zeta(3), zeta(4)`.
 - The carpet layer covariance is rebuilt from scratch by exact rational integration on the lcm grid and matched to the gcd closed form at `(3,5), (5,7), (3,9), (15,21), (5,15)`.
-- The primes-only carpet stack has zero covariance at every layer pair, so `L * Var` of the `L`-layer mean is the mean of the per-layer variances exactly, ratio to the independent value exactly `1` at every `L`; the values run `0.1429334753, 0.1595579958, 0.1833424270, 0.1869968711` at `L = 5, 10, 100, 1000`, rising to `3/16`.
+- The primes-only carpet stack has zero covariance at every layer pair, so `L * Var` of the `L`-layer mean, with `L` the layer count, is the mean of the per-layer variances exactly, ratio to the independent value exactly `1` at every `L`; the values run `0.1429334753, 0.1595579958, 0.1833424270, 0.1869968711` at `L = 5, 10, 100, 1000`, rising to `3/16`.
 - Per-layer exactness: `16 p^4 Var_p = 3p^4 - 4p^3 - 2p^2 + 4p - 1`, no breach over the first 1000 odd primes, so the limit constant is exactly `3/16` and `c = sqrt(3)/4 = 0.4330127`.
 - The tree's full odd stack over the same estimator reads `L * Var = 0.2708541` at `L = 4000`, ratio `1.446579` and `c` factor `1.202738`, still climbing.
 - The squarefree-odd stack is not uncorrelated: `Cov(15, 21) = 284/99225 = 0.0028621819`, Pearson `0.0165610084`, and 64087 of its first 1000 layer pairs share a factor, giving ratio `1.308596`.

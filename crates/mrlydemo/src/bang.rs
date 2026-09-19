@@ -134,19 +134,19 @@ pub fn dimension(
     )?)
 }
 
-/// Prints the canonical name of a design code at its dimension and base.
+/// Prints the name of a design code at its dimension and base as a line of prose.
 #[wasm_bindgen]
 pub fn name_of(code: &str, dimension: usize, base: usize) -> Result<String, Fault> {
-    Ok(Bang::new(checked(code, dimension, base)?, dimension, base).to_str())
+    Ok(Bang::new(checked(code, dimension, base)?, dimension, base).to_mrly())
 }
 
-/// Parses a canonical design name into its code, dimension and base, as JSON.
+/// Reads a design's file name back into its code, dim and base, as JSON.
 #[wasm_bindgen]
 pub fn name_parse(text: &str) -> Result<String, Fault> {
-    let bang = Bang::from_str(text)?;
+    let bang = Bang::from_file(text)?;
     Ok(json!({
         "code": bang.code.to_string(),
-        "dimension": bang.dimension,
+        "dim": bang.dim,
         "base": bang.base,
     })
     .to_string())

@@ -13,13 +13,13 @@ const SEEDS = [['cell', 'a single live cell'], ['soup', 'a random soup']];
 const SIDE = 64;
 
 const IDENTITY =
-  'Wolfram 1983 numbers a rule by the byte it writes on the eight neighbourhoods, bit `4l + 2c + r` of `N` being the output on `(l, c, r)`. The tree numbers a three-dimensional design by the byte it writes on the eight corners of the cube, bit `i` set when corner `i` is filled, `i = 4 x0 + 2 x1 + x2`. Put `(x0, x1, x2) = (l, c, r)` and the two bytes are the same byte: rule `N` is the design `mrly_bang_d3_N`, bit for bit, with no translation step. So every invariant of a design is already an invariant of a rule: popcount, the `GF(2)` degree, the genus, the fill fraction that Langton 1990 calls `lambda`. Proved, research/automata.md.';
+  'Wolfram 1983 numbers a rule by the byte it writes on the eight neighbourhoods, bit `4l + 2c + r` of `N` being the output on `(l, c, r)`. The tree numbers a three-dimensional design by the byte it writes on the eight corners of the cube, bit `i` set when corner `i` is filled, `i = 4 x0 + 2 x1 + x2`. Put `(x0, x1, x2) = (l, c, r)` and the two bytes are the same byte: rule `N` is the design `bang dim 3, code N`, bit for bit, with no translation step. So every invariant of a design is already an invariant of a rule: popcount, the `GF(2)` degree, the genus, the fill fraction that Langton 1990 calls `lambda`. Proved, research/automata.md.';
 
 const CLASSES =
   'Two groups act on the same byte and they are not the same group. Wolfram equivalence is reflection with conjugation, order 4, and it is a symmetry of the line, so it preserves the dynamics. The cube group is the 48 signed axis permutations of the design, and it is not: a permutation that is not the reflection moves the centre cell off the centre. The two meet exactly in the reflection, so the reductions to 88 classes and to 22 classes are two branches and not a chain. Reversibility survives the cube group anyway, constant on all 22 classes; surjectivity does not, mixed on exactly one class, the 24 rules of the orbit of 30. Proved by witness, research/automata.md.';
 
 const ADDITIVE =
-  'Where the rule is affine over `GF(2)` the diagram from one seed is a plane design of the same tree, one dimension down. Rule 60 is `x_i + x_(i-1)`, the binomial recurrence mod 2, so read rightward from the seed its rows are Pascal mod 2, which is `mrly_bang_d2_13`; rule 102 is the same rule mirrored and reads leftward as `mrly_bang_d2_14`; rule 90 is `x + x^-1`, and in the sheared frame `j = (t + i)/2` it is `mrly_bang_d2_13` again. Each is the unique match among the fill-3 codes 7, 11, 13, 14. The comparison below is recomputed live, cell for cell, against the crate design renderer rather than against a picture.';
+  'Where the rule is affine over `GF(2)` the diagram from one seed is a plane design of the same tree, one dimension down. Rule 60 is `x_i + x_(i-1)`, the binomial recurrence mod 2, so read rightward from the seed its rows are Pascal mod 2, which is `bang dim 2, code 13`; rule 102 is the same rule mirrored and reads leftward as `bang dim 2, code 14`; rule 90 is `x + x^-1`, and in the sheared frame `j = (t + i)/2` it is `bang dim 2, code 13` again. Each is the unique match among the fill-3 codes 7, 11, 13, 14. The comparison below is recomputed live, cell for cell, against the crate design renderer rather than against a picture.';
 
 const attempt = (fn) => {
   try {
@@ -89,7 +89,7 @@ function App() {
   const gasket = useMemo(() => attempt(() => {
     const name = JSON.parse(m.eca_card(rule)).gasket;
     if (!name) return { name: null };
-    const code = name.split('_').pop();
+    const code = name.match(/code (\d+)/)[1];
     const design = plain(m.two_grid(code, 2, 6, 0, 2));
     const window = frame(rule, plain(m.eca_seed(rule, DEPTH)));
     let faults = 0;

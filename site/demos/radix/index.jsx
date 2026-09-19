@@ -12,10 +12,10 @@ const PAD = 16;
 const TALL = 520;
 
 const PLACE =
-  'A design places its copies by hand today: the base is a whole number `q`, the digits are cells of a `q` by `q` box, and every cell sits where its row and column put it. The place dial hands that job to a ring of the plane. Pick a ring, `Z[i]` on the square lattice or `Z[w]` on the hexagonal, pick a base `b` of norm `q = N(b)` inside it, and pick a digit `d` for some of the `q` residue classes modulo `b`. Each digit is a place map `phi_d(x) = (u_d x + d) / b`, a similarity of ratio `1 / sqrt(q)` turned by a unit `u_d`, and the design is the set those maps hold fixed. A word `d_1 ... d_L` lands on `sum_(j=1..L) (prod_(i<j) u_(d_i)) d_j b^(-j)`, which is what the dots below are.';
+  'A design places its copies by hand today: the base is a whole number, the digits are cells of a base by base box, and every cell sits where its row and column put it. The place dial hands that job to a ring of the plane. Pick a ring, `Z[i]` on the square lattice or `Z[w]` on the hexagonal, pick a base `b` of norm `q = N(b)` inside it, and pick a digit `d` for some of the `q` residue classes modulo `b`. Each digit is a place map `phi_d(x) = (u_d x + d) / b`, a similarity of ratio `1 / sqrt(q)` turned by a unit `u_d`, and the design is the set those maps hold fixed. A word `d_1 ... d_level` lands on `sum_(j=1..level) (prod_(i<j) u_(d_i)) d_j b^(-j)`, which is what the dots below are.';
 
 const GLUE =
-  'Accept and place do not interfere: the words are counted before any of them is drawn, so a design of `card F` digits writes `(card F)^L` words at level `L` whatever the base and whatever the twists. What the twists can do is send two words to one point. That is the third slot, the glue, and it is never chosen: it is what the place maps do to the accepted words. Watch the distinct count fall below the fill and the design fold onto itself.';
+  'Accept and place do not interfere: the words are counted before any of them is drawn, so a design of `fill` digits writes `fill^level` words at that level whatever the base and whatever the twists. What the twists can do is send two words to one point. That is the third slot, the glue, and it is never chosen: it is what the place maps do to the accepted words. Watch the distinct count fall below the fill and the design fold onto itself.';
 
 const CODE =
   'A digit set is one representative per chosen class, read against the canonical system: the `q` representatives of least norm, ties broken by argument. The code below is one bit a class in that order, so it names which classes are in and never which representatives stand for them. Move a digit by a multiple of `b` and the code does not move while the design does, `phi_(d + b m)(x) = phi_d(x) + m`, so a code alone names a design only when every digit is canonical. The Koch preset and the carpet preset are both off the canonical system, which is why the chips print the digit and not only the class.';
@@ -126,7 +126,7 @@ function App() {
           onChange={(value) => { const [a, c] = value.split(':').map(Number); rebase(q.ring, a, c); }} />
       </Group>
       <Group name="The depth">
-        <Slider label={`level L to ${cap.cap ?? 1}`} value={level} min={1} max={cap.cap ?? 1} onChange={(value) => set({ level: value })} />
+        <Slider label={`level 1 to ${cap.cap ?? 1}`} value={level} min={1} max={cap.cap ?? 1} onChange={(value) => set({ level: value })} />
         <Pick label="drawn as" value={q.line ? 'line' : 'dots'} options={[['dots', 'dots, one a word'], ['line', 'a polyline through the words']]}
           onChange={(value) => set({ line: value === 'line' })} />
       </Group>
