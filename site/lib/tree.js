@@ -1,16 +1,32 @@
 import site from './site.js';
-import manifest from '../pages.json';
 
 const ROUTE = { demos: '/demos/' };
+const ID = `${site.prefix}tree`;
+const FILE = '/demos/tree.json';
+
+let shelves = null;
+
+function block() {
+  const el = typeof document === 'undefined' ? null : document.getElementById(ID);
+  return el ? JSON.parse(el.textContent) : null;
+}
+
+export function ready() {
+  if (!shelves) shelves = block();
+  return !!shelves;
+}
+
+export function demos() {
+  return ready() ? shelves : [];
+}
+
+export async function load() {
+  if (!ready()) shelves = await fetch(FILE).then((r) => r.json());
+  return shelves;
+}
 
 export function tree(lists = {}) {
-  const demos = manifest.shelves
-    .map((shelf) => ({
-      name: shelf.title,
-      nodes: manifest.pages.filter((page) => page.category === shelf.key).map((page) => ({ name: page.title, href: `/demos/${page.name}/` })),
-    }))
-    .filter((shelf) => shelf.nodes.length);
-  const filled = { demos, ...lists };
+  const filled = { demos: demos(), ...lists };
   return site.tree.map(({ fill, ...node }) => {
     const key = fill ?? node.name.toLowerCase();
     const href = node.href ?? ROUTE[key];

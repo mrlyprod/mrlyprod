@@ -23,7 +23,7 @@ recomputed to `0.785398262` at two million factors against `pi/4 = 0.785398163`;
 
 ## What the stack lights up
 
-Stack the grid at scales `k = 1, 2, 3, ...`. Every lattice point `(a, b)` factors uniquely as `g * (a/g, b/g)` with `g = gcd(a, b)`, so it belongs to exactly one layer of the stack, and the points that appear in the first layer are exactly those with `gcd(a, b) = 1` - equivalently, the points visible from the corner, with no nearer lattice point on the same ray. The stack is therefore a partition of the grid into scaled copies of the lit set. (**Proved**, elementary.) Checked numerically as `sum_{k >= 1} lit(floor(N/k)) = N^2`, exact at `N = 10, 100, 1000, 3000`; the check has no generator in `lab/`, so it stands as **Conjecture** while the partition itself is proved.
+Stack the grid at scales `k = 1, 2, 3, ...`. Every lattice point `(a, b)` factors uniquely as `g * (a/g, b/g)` with `g = gcd(a, b)`, so it belongs to exactly one layer of the stack, and the points that appear in the first layer are exactly those with `gcd(a, b) = 1` - equivalently, the points visible from the corner, with no nearer lattice point on the same ray. The stack is therefore a partition of the grid into scaled copies of the lit set. (**Proved**, elementary.) Checked numerically as `sum_{k >= 1} lit(floor(N/k)) = N^2`, exact at `N = 10, 100, 1000, 3000`; the check has no generator in `lab/`, so it stands as **Conjecture** while the partition itself is proved. The [moire demo](../../site/demos/moire/) draws those layers, one design sampled at scale 1, 3, 5 and on, stacked into a field where the interference is the finer grids landing on the coarse.
 
 The density of those lit points is the classical coprimality density,
 
@@ -37,7 +37,7 @@ lit / N^2 -> 1/zeta(2) = 6/pi^2 = 0.6079271018...
 pi = sqrt( 6 / density ) = sqrt( 6 * N^2 / lit )
 ```
 
-The constant is classical; what the stack adds is a picture, so pi is counted out of the grid rather than imposed on it. The same visibility fact anchors the base-3 story in [what base 3 hides](bases.md).
+The constant is classical; what the stack adds is a picture, so pi is counted out of the grid rather than imposed on it. The same visibility fact anchors the base-3 story in [what base 3 hides](bases.md). The [primes demo](../../site/demos/primes/) reads the same grid the other way, a number being prime when its stones make one rectangle, with the sieve, the divisor pairs, the `pi(x)` staircase against `x / ln x` and `li(x)`, and a carpet stack whose layers correlate to zero exactly at the primes. The [Ulam spiral demo](../../site/demos/ulam/) winds the whole numbers on squares or hexagons with the primes lit, where every straight line reads a quadratic and the prime-rich ones stand out as diagonals. The [snail demo](../../site/demos/snail/) gives every cell of that winding a design tile whose side is a power of the base, so the spiral widens by that factor at each new digit, built of the primes alone or of every number by the same law.
 
 ## The numbers
 
@@ -53,9 +53,9 @@ Lit points counted by a totient sieve as `2 * sum_{k=1..N} phi(k) - 1`, which is
 | 100000 | 6079301507 | 0.6079301507 | 3.14158478 | 7.9e-06 |
 | 200000 | 24317197835 | 0.6079299459 | 3.14158531 | 7.3e-06 |
 
-At `N = 100000` the stack gives `3.14158...`, six correct figures against `pi = 3.14159265...`. The rows to `N = 10000` are terms of A018805, **Verified**; the three larger rows have no generator in `lab/` and stand as **Conjecture**.
+At `N = 100000` the stack gives `3.14158...`, six correct figures against `pi = 3.14159265...`. The rows to `N = 10000` are terms of A018805, **Verified**; the three larger rows have no generator in `lab/` and stand as **Conjecture**. The [pi demo](../../site/demos/pi/) counts the lit points of a window live and hands pi back, and the dimension it counts in picks which zeta value falls out.
 
-It is a slow estimator and an honestly noisy one. The error term in the coprime count is `O(N log N)`, so accuracy improves only like `1/N`, and because that term fluctuates arithmetically the approach is not monotone: `N = 20000` is *worse* than `N = 10000` in the table above, and `N = 200000` barely improves on `N = 100000` (**Conjecture** as a table, on the rows above). That puts it in the same family as the Wallis product and the Leibniz series - correct, convergent, not fast. The point was never speed.
+It is a slow estimator and an honestly noisy one. The error term in the coprime count is `O(N log N)`, so accuracy improves only like `1/N`, and because that term fluctuates arithmetically the approach is not monotone: `N = 20000` is *worse* than `N = 10000` in the table above, and `N = 200000` barely improves on `N = 100000` (**Conjecture** as a table, on the rows above). That puts it in the same family as the Wallis product and the Leibniz series - correct, convergent, not fast. The point was never speed. The [formulas demo](../../site/demos/formulas/) puts eight of that family on one dial: the Wallis product, the Leibniz series and the Basel sum closing on pi, the harmonic sum on gamma and `(1 + 1/n)^n` on e, the prime count against `li`, Goldbach's partition count of `2n` and the Mertens sum against the square root of `n`.
 
 ## The dimension picks the zeta
 

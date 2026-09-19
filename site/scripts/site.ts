@@ -160,24 +160,22 @@ ${main}
 
 /* DEMOS */
 
-type Card = { name: string; title: string; blurb: string };
+type Card = { name: string; title: string; blurb: string; shelf: string; order: number };
 
-function shelves(site: Site) {
-  const data = (site.pages ?? {}) as { pages?: { name?: string; title?: string; blurb?: string }[] };
-  const titles = new Map<string, string>();
-  const blurbs = new Map<string, string>();
-  for (const row of data.pages ?? []) {
-    if (!row?.name) continue;
-    if (row.title) titles.set(row.name, row.title);
-    if (row.blurb) blurbs.set(row.name, plain(row.blurb));
-  }
-  const readme = read(join(org, "README.md"));
-  for (const m of readme.matchAll(LIST)) if (!blurbs.has(m[1])) blurbs.set(m[1], plain(m[2]));
-  const lead = readme.match(/^- (.+)$/m);
-  blurbs.set("", plain(lead ? lead[1] : SITE.title));
-  titles.set("", "Demos");
-  return { titles, blurbs };
-}
+type Shelf = { key: string; group: string; title: string; blurb: string };
+
+type Bay = Node & { key: string };
+
+const SHELVES = (SITE.shelves ?? []) as Shelf[];
+
+const TITLE = /<title>([^<]*)<\/title>/;
+
+const OWN = /[ \t]*<meta name="?(?:description|shelf|order)"?[^>]*>\n?/g;
+
+const tag = (html: string, name: string) => {
+  const found = html.match(new RegExp(`<meta name="${name}" content="([^"]*)">`));
+  return found ? untag(found[1]) : "";
+};
 
 function demoNames(site: Site) {
   const home = site.input("demos").path;
@@ -190,10 +188,37 @@ function demoNames(site: Site) {
 
 const demoRoute = (name: string) => (name ? `/demos/${name}/` : "/demos/");
 
-function demoGroup(site: Site): Route {
-  const { titles, blurbs } = shelves(site);
+function cards(site: Site): Card[] {
   const home = site.input("demos").path;
-  const list: Card[] = demoNames(site).map((name) => ({ name, title: titles.get(name) ?? name, blurb: blurbs.get(name) ?? "" }));
+  return demoNames(site).map((name) => {
+    const html = read(join(home, name, "index.html"));
+    const found = html.match(TITLE);
+    return {
+      name,
+      title: found ? untag(found[1]) : name,
+      blurb: tag(html, "description"),
+      shelf: tag(html, "shelf"),
+      order: Number(tag(html, "order")) || 0,
+    };
+  });
+}
+
+export function shelved(list: Card[]): Bay[] {
+  return SHELVES.map((one) => ({
+    key: one.key,
+    name: one.title,
+    nodes: list
+      .filter((d) => d.shelf === one.key)
+      .sort((a, b) => a.order - b.order || a.title.localeCompare(b.title))
+      .map((d) => ({ name: d.title, href: demoRoute(d.name), text: d.blurb })),
+  })).filter((one) => one.nodes.length);
+}
+
+export const demoTree = (site: Site) => shelved(cards(site));
+
+function demoGroup(site: Site): Route {
+  const home = site.input("demos").path;
+  const list = cards(site);
   const inputs = ["demos", "lib", "pkg", "ui"].flatMap((one) => site.input(one).files);
   return {
     route: "/demos/",
@@ -206,14 +231,16 @@ function demoGroup(site: Site): Route {
   };
 }
 
-function seo(source: string, card: Card) {
-  const html = source.replace(/<html([^>]*)>/, (_, attrs: string) => `<html${attrs.replace(/ data-prefix="[^"]*"/, "")} data-prefix="${SITE.prefix}">`);
+function seo(source: string, card: Card, nav: string) {
+  const html = source
+    .replace(/<html([^>]*)>/, (_, attrs: string) => `<html${attrs.replace(/ data-prefix="[^"]*"/, "")} data-prefix="${SITE.prefix}">`)
+    .replace(OWN, "");
   const route = demoRoute(card.name);
-  const found = html.match(/<title>([^<]*)<\/title>/);
+  const found = html.match(TITLE);
   const name = found ? untag(found[1]) : card.title;
   const tags = meta(route, name, card.blurb || name, "website");
   const boot = html.includes("data-boot") ? "" : `${BOOT}\n`;
-  const block = `${boot}<title>${escape(brand(name))}</title>\n${tags}\n<link rel="stylesheet" href="/ui/fonts/fonts.css">`;
+  const block = `${boot}<title>${escape(brand(name))}</title>\n${tags}\n${nav}\n<link rel="stylesheet" href="/ui/fonts/fonts.css">`;
   const page = found ? html.replace(found[0], block) : html.replace("<head>", `<head>\n${block}`);
   return page.replace("</head>", `${TINT}\n</head>`);
 }
@@ -231,13 +258,15 @@ async function demos(site: Site, route: Route): Promise<Output[]> {
   });
   if (!built.success) throw new Error(`site: the demos failed to bundle\n${built.logs.join("\n")}`);
   const shells = new Map(list.map((d) => [`${demoRoute(d.name).slice(1)}index.html`, d]));
-  const out: Output[] = [];
+  const json = JSON.stringify(shelved(list)).replace(/</g, "\\u003c");
+  const nav = `<script type="application/json" id="${SITE.prefix}tree">${json}</script>`;
+  const out: Output[] = [{ path: "demos/tree.json", bytes: json, type: "application/json" }];
   const fig = press(site, out);
   for (const d of list) if (d.name) fig(`demo-${d.name}`, "/demos/");
   for (const item of built.outputs) {
     const path = item.path.replace(/^\.\//, "");
     const card = shells.get(path);
-    out.push({ path, bytes: card ? seo(await item.text(), card) : new Uint8Array(await item.arrayBuffer()) });
+    out.push({ path, bytes: card ? seo(await item.text(), card, nav) : new Uint8Array(await item.arrayBuffer()) });
   }
   return out;
 }
@@ -614,12 +643,14 @@ async function collect(site: Site) {
   const noteList = notes(site);
   const postList = posts();
   const group = demoGroup(site);
+  const demoList = group.data as Card[];
   const claimList = claims(site);
   counts.papers = laneList.length;
   counts.research = noteList.length;
   counts.blog = postList.length;
-  counts.demos = (group.data as Card[]).length;
+  counts.demos = demoList.length;
   const nav = tree({
+    demos: shelved(demoList),
     papers: laneList.map((p) => ({ name: p.name, href: `/papers/${p.slug}/` })),
     research: [...(claimList.length ? [{ name: "Discoveries", href: "/research/discoveries/" }] : []), ...noteList.filter((n) => !n.home).map((n) => ({ name: n.title, href: `/research/${n.name}/` }))],
     blog: postList.map((p) => ({ name: p.name, href: `/blog/${p.slug}/` })),
@@ -679,7 +710,7 @@ async function collect(site: Site) {
     const { data } = front(read(source));
     routes.push({ route: `/${slug}/`, kind: "page", name: data.title ?? slug, source, inputs: [source] });
   }
-  DRESS = { lanes: laneList, notes: noteList, posts: postList, demos: group.data as Card[] };
+  DRESS = { lanes: laneList, notes: noteList, posts: postList, demos: demoList };
   routes.push({
     route: "/menu/",
     kind: "menu",

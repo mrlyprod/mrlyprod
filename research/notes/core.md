@@ -33,7 +33,7 @@ Three designs make the point concretely at side 3. (Verified by `lab/rs/design-c
 | `bang dim 3, code 23` | 3 | 20 of 27 | `20^level` of `27^level` | `log(20)/log(3) = 2.726833` |
 | `bang dim 3, code 3` | 3 | 12 of 27 | `12^level` of `27^level` | `log(12)/log(3) = 2.261860` |
 
-The first row is the Sierpinski carpet, the second the Menger sponge. Neither was put in by hand; both fall out of a parity rule and one product.
+The first row is the Sierpinski carpet, the second the Menger sponge. Neither was put in by hand; both fall out of a parity rule and one product. The [sponge demo](../../site/demos/sponge/) grows any code level by level and answers the fills, the voids and the exposed faces from closed forms before a cube is built. The [tile demo](../../site/demos/tile/) repeats one design instead, side by side on the square lattice and in the cube and interlocked as a hexagon on the triangular one, where the fills multiply by the copy count exactly and the exposed faces do not.
 
 ## Move two with a different tile each level
 

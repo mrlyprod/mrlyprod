@@ -16,7 +16,7 @@
 
 ## EXPORTS
 
-- `scan(spec)`: reads `site.json`, `pages.json` and the declared inputs, calls `collect()`, returns `Site`.
+- `scan(spec)`: reads `site.json` and the declared inputs, calls `collect()`, returns `Site`.
 - `render(site, route, spec)`: pure, returns `[{ path, bytes, type? }]` for that route alone. A missing input throws here.
 - `type` overrides the content type a path would earn by its extension; it rides in the manifest so `push.ts` sets the S3 header without re-rendering.
 - `globals(site, spec)`: sitemap.xml, robots.txt, llms.txt, the webmanifest, the kit copy, the public copy, then the site's own extras.

@@ -2,7 +2,7 @@ import { existsSync, statSync, watch } from "node:fs";
 import { extname, join, resolve } from "node:path";
 import { forget, globals, render, scan, type Output, type Route, type Site } from "../kit/ssg/build.ts";
 import { owner as rawOwner } from "../kit/git/git.ts";
-import { counted, spec } from "./site.ts";
+import { counted, demoTree, spec } from "./site.ts";
 
 const org = resolve(import.meta.dir, "..");
 const cached = join(org, "data", "shelf", "research");
@@ -80,7 +80,10 @@ async function seek(route: Route, want: string) {
   return outputs.find((item) => item.path === want) ?? null;
 }
 
+const TREE = "/demos/tree.json";
+
 async function serve(path: string): Promise<Response | null> {
+  if (path === TREE) return send({ path: TREE.slice(1), bytes: JSON.stringify(demoTree(site)) });
   const want = path.endsWith("/") ? `${path.slice(1)}index.html` : path.slice(1);
   const route = pages().find((one) => one.route === path);
   if (route) {

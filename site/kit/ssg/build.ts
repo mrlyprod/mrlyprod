@@ -37,7 +37,6 @@ export type Site = {
   root: string;
   out: string;
   config: Config;
-  pages: Record<string, unknown> | null;
   inputs: Record<string, Input>;
   kit: Bundle | null;
   routes: Route[];
@@ -65,7 +64,6 @@ export type Spec = {
   root: string;
   out: string;
   config?: Config;
-  pages?: Record<string, unknown> | null;
   templates?: string[];
   collect: (site: Site) => Promise<{ routes: Route[]; nav?: Node[] }> | { routes: Route[]; nav?: Node[] };
   render: (site: Site, route: Route) => Promise<Output[]> | Output[];
@@ -161,8 +159,6 @@ const shows = (nodes: Node[], href: string): boolean =>
 export async function scan(spec: Spec): Promise<Site> {
   const root = resolve(spec.root);
   const config = spec.config ?? (JSON.parse(readFileSync(join(root, "site.json"), "utf8")) as Config);
-  const pagesPath = join(root, "pages.json");
-  const pages = spec.pages ?? (existsSync(pagesPath) ? JSON.parse(readFileSync(pagesPath, "utf8")) : null);
   const found = inputs(root, config);
   const list = bundles(root, config);
   const kit = list[0] ?? null;
@@ -186,7 +182,6 @@ export async function scan(spec: Spec): Promise<Site> {
     root,
     out: resolve(spec.out),
     config,
-    pages,
     inputs: found,
     kit,
     routes: [],

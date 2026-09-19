@@ -1,16 +1,27 @@
+import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Shell } from '../kit/ui/chrome.jsx';
-import { tree } from './tree.js';
-
-const NODES = tree();
+import { demos, load, tree } from './tree.js';
 
 export function mount(node) {
   createRoot(document.getElementById('root')).render(node);
 }
 
+export function useShelves() {
+  const [shelves, set] = useState(demos);
+  useEffect(() => {
+    let live = true;
+    if (!shelves.length) load().then((list) => live && set(list));
+    return () => { live = false; };
+  }, [shelves.length]);
+  return shelves;
+}
+
 export function Page({ crumb, title, sub, foot, bare, controls, contents, children }) {
+  const shelves = useShelves();
+  const nodes = tree({ demos: shelves });
   return (
-    <Shell route={`/demos/${crumb}/`} title={bare ? undefined : title} lead={sub} tree={NODES} controls={controls} contents={contents} wide>
+    <Shell route={`/demos/${crumb}/`} title={bare ? undefined : title} lead={sub} tree={nodes} controls={controls} contents={contents} wide>
       {children}
       {foot && <p className="foot" hidden={bare}>{foot}</p>}
     </Shell>

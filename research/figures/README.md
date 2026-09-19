@@ -6,7 +6,6 @@
 
 ## FIGURES
 
-
 - One bullet per figure, `subject; artist; parameters; palette`; the artist is the kit module the figure leans on: grid, hex, iso, field or plot.
 - Names are the routes: `site-*` the doors and the card, `research-<page>`, `paper-<slug>`, `blog-<slug>`, `demo-<name>`; `research-index` also opens REFS.
 

@@ -19,6 +19,56 @@
     { "name": "Contact", "href": "/contact/" },
     { "name": "Donate", "href": "/donate/" }
   ],
+  "shelves": [
+    {
+      "key": "designs",
+      "group": "MrlyMath",
+      "title": "Designs",
+      "blurb": "A rule on the corners of a cube, folded into itself, then grown, cropped and counted."
+    },
+    {
+      "key": "sections",
+      "group": "MrlyMath",
+      "title": "Slices and stacks",
+      "blurb": "Meet a design with a plane, or lay it over turned and scaled copies of itself."
+    },
+    {
+      "key": "letters",
+      "group": "MrlyMath",
+      "title": "Words and order",
+      "blurb": "Let the rule change with the scale, and read what the order of the letters costs."
+    },
+    {
+      "key": "networks",
+      "group": "MrlyMath",
+      "title": "Graphs, walks and spectra",
+      "blurb": "Join the filled cells and listen: the network, its spectrum, and the walk it carries."
+    },
+    {
+      "key": "lattice",
+      "group": "Numbers",
+      "title": "Primes in the lattice",
+      "blurb": "Where the primes fall once the whole numbers are laid out on a grid."
+    },
+    {
+      "key": "zeros",
+      "group": "Numbers",
+      "title": "Fractions and zeros",
+      "blurb": "Rational scales and the critical line, both counting the primes the long way."
+    },
+    {
+      "key": "ledger",
+      "group": "Numbers",
+      "title": "The ledger",
+      "blurb": "Every sequence the designs write, every integer they reach, and rules read out of the registry."
+    },
+    {
+      "key": "font",
+      "group": "MrlyFont",
+      "title": "The alphabet",
+      "blurb": "The pixel font that writes the wordmark: every glyph and the order its pen draws it."
+    }
+  ],
   "socials": [
     { "name": "GitHub", "href": "https://github.com/mrlyprod" },
     { "name": "YouTube", "href": "https://youtube.com/@mrlyprod" },
