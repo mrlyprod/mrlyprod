@@ -32,7 +32,7 @@ n   17 18 19 20 21 22 23 24 25 26 27 28 29 30
 new  16 6 18 8 12 10 22 8 20 12 18 12 28 8
 ```
 
-Every count equals `phi(n)`, and the running maxima `1, 2, 4, 6, 10, 12, 16, 18, 22, 28` occur at `n = 2, 3, 5, 7, 11, 13, 17, 19, 23, 29`. The reason is one line: `phi(n) = n - 1` if and only if `n` is prime, because every one of `1..n-1` is coprime to `n` exactly when `n` has no smaller factor. **Proved**, and **Verified** by testing the equivalence against trial division for all `n` up to 200.
+Every count equals `phi(n)`, and the running maxima `1, 2, 4, 6, 10, 12, 16, 18, 22, 28` occur at `n = 2, 3, 5, 7, 11, 13, 17, 19, 23, 29`. The reason is one line: `phi(n) = n - 1` if and only if `n` is prime, because every one of `1..n-1` is coprime to `n` exactly when `n` has no smaller factor. **Proved**.
 
 So primality is readable off the picture. Stack `1..n-1`, then add scale `n`, and count what appeared: `n - 1` new nodes means `n` is prime, fewer means composite. **Proved** (it is the previous claim restated). A composite scale mostly re-lights nodes its own divisors already drew - scale 30 adds only 8 new lines, the rest of its grid falling on lines from 1, 2, 3, 5, 6, 10 and 15.
 

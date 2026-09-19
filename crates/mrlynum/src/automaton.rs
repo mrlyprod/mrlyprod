@@ -16,7 +16,7 @@ const CUT_START: usize = 8;
 const CUT_STEP: usize = 6;
 const CUT_CAP: usize = 120;
 const RATIO_CAP: f64 = 0.9;
-const COLLATZ: usize = 60;
+const COLLATZ_WIELANDT: usize = 60;
 const PIVOT_FLOOR: f64 = 1e-12;
 
 // THE STATE SPACE
@@ -181,7 +181,7 @@ impl Automaton {
 
     fn tighten(&mut self) {
         let mut guide = vec![1.0f64; self.states];
-        for _ in 0..COLLATZ {
+        for _ in 0..COLLATZ_WIELANDT {
             let next = self.step_real(0, &guide);
             let peak = next.iter().cloned().fold(0.0f64, f64::max);
             if peak > 1e120 {
