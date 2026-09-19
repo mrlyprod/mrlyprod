@@ -33,3 +33,13 @@
 .widget .sheet { width: 100%; display: block; border-radius: var(--r2); background: var(--art); image-rendering: pixelated; }
 .widget .sub { color: var(--dim); font-size: 13px; margin-top: var(--s2); }
 .widget figcaption { color: var(--dim); font-size: 13px; margin-top: var(--s3); }
+
+/* WIKI */
+
+.graph .tile { padding: 0; display: grid; }
+.graph .tile > a { color: inherit; padding: var(--s3); display: block; }
+.graph .tile > a:hover { text-decoration: none; }
+.graph .tile > a img { width: 100%; height: auto; aspect-ratio: 1; display: block; border-radius: var(--r2); background: var(--art); }
+.graph .tile .needs { color: var(--dim); font: 11px var(--mono); padding: 0 var(--s3) var(--s3); margin: 0; }
+.chapter { margin-top: var(--s8); padding-top: var(--s6); border-top: var(--hair); }
+.chapter .opener { margin-bottom: var(--s5); }

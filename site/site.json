@@ -11,6 +11,7 @@
   "tree": [
     { "name": "Home", "href": "/" },
     { "name": "Wiki", "href": "/wiki/", "fill": "wiki" },
+    { "name": "Book", "href": "/book/" },
     { "name": "Demos", "href": "/demos/", "fill": "demos" },
     { "name": "Papers", "href": "/papers/", "fill": "papers" },
     { "name": "Research", "href": "/research/", "fill": "research" },

@@ -621,6 +621,7 @@ let DRESS: Dress = { lanes: [], papers: [], notes: [], posts: [], demos: [], wik
 const FIXED: Record<string, string> = {
   "/": "site-home",
   "/wiki/": "site-wiki",
+  "/book/": "site-wiki",
   "/tools/": "site-tools",
   "/math/": "site-math",
   "/git/": "site-code",
@@ -852,11 +853,69 @@ function concept(site: Site, route: Route): Output[] {
   return out;
 }
 
+type Leaf_ = { slug: string; name: string; lead: string; figure: string; needs: string[] };
+
+const STEPS = ["Start here", "One step in", "Two steps in", "Three steps in", "Four steps in", "Five steps in", "Six steps in"];
+
+const step = (n: number) => STEPS[n] ?? `${n} steps in`;
+
+function depths(list: Leaf_[]): Map<string, number> {
+  const deep = new Map<string, number>();
+  for (const e of list) deep.set(e.slug, e.needs.length ? 1 + Math.max(...e.needs.map((need) => deep.get(need) ?? 0)) : 0);
+  return deep;
+}
+
+function tile(fig: Fig, route: string, e: Leaf_, names: Map<string, string>) {
+  const pair = fig(e.figure, route);
+  const needs = e.needs.length ? `<p class="needs">After ${e.needs.map((need) => `<a href="${wikiRoute(need)}">${escape(names.get(need) ?? need)}</a>`).join(", ")}</p>` : "";
+  const img = SIDES.map((side) => `<img class="${side}" src="${pair[side]}" alt="" width="1024" height="1024" loading="lazy" decoding="async">`).join("");
+  return `<div class="tile"><a href="${wikiRoute(e.slug)}">${img}<h2>${escape(e.name)}</h2><p>${escape(e.lead)}</p></a>${needs}</div>`;
+}
+
 function wikiIndex(site: Site, route: Route): Output[] {
+  const list = (route.data as [string, string, string, string, string[]][]).map(([slug, name, lead, figure, needs]) => ({ slug, name, lead, figure, needs }));
   const out: Output[] = [];
   const fig = press(site, out);
-  const body = `${hero(fig, "site-wiki", route.route, "Wiki")}\n<div class="lede"><h1 id="wiki">Wiki</h1><p class="lead">${escape(WIKI)}</p></div>\n${grid(wear(site, "/wiki/", fig, route.route))}`;
+  const names = new Map(list.map((e) => [e.slug, e.name]));
+  const deep = depths(list);
+  const rows = new Map<number, Leaf_[]>();
+  for (const e of list) rows.set(deep.get(e.slug)!, [...(rows.get(deep.get(e.slug)!) ?? []), e]);
+  const sections = [...rows.keys()].sort((a, b) => a - b).map((n) => `<section><h2 id="step-${n}">${step(n)}</h2><div class="gallery grid graph">${rows.get(n)!.map((e) => tile(fig, route.route, e, names)).join("")}</div></section>`);
+  const book = list.length ? `<p class="lead">Every page needs only the pages above it, and <a href="/book/">the book</a> reads them all in that order on one page.</p>` : "";
+  const body = `${hero(fig, "site-wiki", route.route, "Wiki")}\n<div class="lede"><h1 id="wiki">Wiki</h1><p class="lead">${escape(WIKI)}</p>${book}</div>\n${sections.join("\n")}`;
   out.push({ path: "wiki/index.html", bytes: shell(site, { route: route.route, name: "Wiki", description: WIKI, body, type: "website", wide: true, bare: true, image: picture(site, "site-wiki", route.route, fig) }) });
+  return out;
+}
+
+/* BOOK */
+
+const BOOK = "The wiki read in prerequisite order as one page: every concept once, each after the ones it needs.";
+
+function book(site: Site, route: Route): Output[] {
+  const list = (route.data as [string, string, string, string, string[]][]).map(([slug, name, lead, figure, needs]) => ({ slug, name, lead, figure, needs }));
+  const home = site.input("wiki").path;
+  const out: Output[] = [];
+  const fig = press(site, out);
+  const used = new Set<string>();
+  const names = new Map(list.map((e) => [e.slug, e.name]));
+  const chapters = list.map((e) => {
+    const file = join(home, `${e.slug}.md`);
+    const prose = md(front(read(file)).body, { math, link: links(site, file, out), widget: widgets(site, used) }).replace(/<h([23]) id="([^"]+)"/g, (_, n: string, id: string) => `<h${Number(n) + 1} id="${escape(e.slug)}-${id}"`);
+    const needs = e.needs.length ? `<p class="meta">After ${e.needs.map((need) => `<a href="#${need}">${escape(names.get(need) ?? need)}</a>`).join(", ")}.</p>` : "";
+    return `<section class="chapter">${hero(fig, e.figure, route.route, e.name)}\n<h2 id="${escape(e.slug)}">${escape(e.name)}</h2><p class="lead">${escape(e.lead)}</p>${needs}\n${prose}\n<p class="meta"><a href="${wikiRoute(e.slug)}">This page on its own</a></p></section>`;
+  });
+  const body = `<div class="lede"><h1 id="book">The book</h1><p class="lead">${escape(BOOK)}</p></div>\n${chapters.join("\n")}`;
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "Book",
+    name: "The book",
+    description: BOOK,
+    url: root + route.route,
+    image: `${root}/figures/site-wiki-dark.png`,
+    author: { "@type": "Organization", name: AUTHOR },
+  };
+  const scripts = [...used].sort().map((name) => `/demos/${name}/widget.js`);
+  out.push({ path: "book/index.html", bytes: shell(site, { route: route.route, name: "The book", description: BOOK, body, data, image: picture(site, "site-wiki", route.route, fig), scripts }) });
   return out;
 }
 
@@ -922,6 +981,10 @@ async function collect(site: Site) {
   routes.push({ route: "/wiki/", kind: "wiki", name: "Wiki", data: wikiList.map((e) => [e.slug, e.name, e.lead, e.figure, e.needs]), source: shelfOfWiki.path, inputs: shelfOfWiki.missing ? [] : wikiList.map((e) => e.file) });
   for (const [c, file] of concepts(wikiList)) {
     routes.push({ route: wikiRoute(c.slug), kind: "concept", name: c.name, data: c, source: file, inputs: [file, ...embeds(site, read(file))] });
+  }
+  if (wikiList.length) {
+    const pages = wikiList.map((e) => [e.slug, e.name, e.lead, e.figure, e.needs]);
+    routes.push({ route: "/book/", kind: "book", name: "The book", data: pages, inputs: wikiList.flatMap((e) => [e.file, ...embeds(site, e.body)]) });
   }
   const names = site.input("names");
   if (!names.missing) routes.push({ route: "/math/", kind: "math", name: "Math", source: names.files[0]!, inputs: names.files });
@@ -1006,6 +1069,7 @@ const KINDS: Record<string, (site: Site, route: Route) => Output[] | Promise<Out
   math: standard,
   wiki: wikiIndex,
   concept,
+  book,
 };
 
 function draw(site: Site, route: Route) {
