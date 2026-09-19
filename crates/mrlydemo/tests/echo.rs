@@ -33,7 +33,7 @@ fn the_meter_reproduces_the_design_census() {
         assert_eq!(
             census(base, &digits, depth),
             want,
-            "lab/mobius-designs and lab/design-meter read base {base} {digits:?} at depth {depth} as (M_F, max abs M_F) {want:?}"
+            "lab/rs/mobius-designs and lab/py/design-meter read base {base} {digits:?} at depth {depth} as (M_F, max abs M_F) {want:?}"
         );
     }
     assert_eq!(design::size(&[0, 1], 14), 16383);

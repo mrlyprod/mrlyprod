@@ -2,7 +2,7 @@
 
 MrlyMath is two moves. Choose a rule that fills some corners of the parity cube `{0,1}^dim`; substitute that rule into itself by the Kronecker product. The Sierpinski carpet, the Menger sponge, their siblings and their antis are all one choice in move one carried through the same move two. Fix the dimension and the whole universe of rules is finite and already there - 4 of them in 1D, 16 in 2D, 256 in 3D - so the designs are not designed, they are enumerated.
 
-Every claim below carries a tag. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a lab study; **Conjecture** means neither. The generator is `lab/design-census`. The [universe demo](../demos/universe/) draws that census live: every orbit in each dimension and base, with the Burnside counts beside it.
+Every claim below carries a tag. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a lab study; **Conjecture** means neither. The generator is `lab/rs/design-census`. The [universe demo](../demos/universe/) draws that census live: every orbit in each dimension and base, with the Burnside counts beside it.
 
 ## Move one: a design is a parity rule
 
@@ -20,7 +20,7 @@ fractal(g, level) = g (x) g (x) ... (x) g [level copies]
 
 Because the construction is a pure Kronecker power, the fill count is multiplicative in the level: `fill(level) = fill^level`. The proof is one line - the sum of the entries of a Kronecker product is the product of the sums - so a single tile fixes a closed form for every level at once, and with it the fractal dimension `log(fill) / log(base)`. (Proved; Verified for all 16 designs at dim 2 and all 256 at dim 3, at level 2 and level 3.)
 
-Three designs make the point concretely at side 3. (Verified by `lab/design-census`: each tile built cell by cell from its parity rule, then Kronecker-substituted, `20^2 = 400` at level 2.)
+Three designs make the point concretely at side 3. (Verified by `lab/rs/design-census`: each tile built cell by cell from its parity rule, then Kronecker-substituted, `20^2 = 400` at level 2.)
 
 | design | `dim` | fill at side 3 | fill at level | dimension |
 |---|---|---|---|---|
@@ -42,9 +42,9 @@ The core name of a design is not a word, it is the rule written as a number. Ind
 i(F) = sum of 2^k over all k with c_k in F, 0 <= i(F) < 2^(2^dim)
 ```
 
-and its canonical name is the JSON object `{"kind":"bang","dim":<dim>,"code":<code>}` at base 2, gaining a `"base":<base>` key past base 2, the code in plain decimal with no leading zero; pages write the prose view of that object, `bang dim <dim>, code <code>` and `bang dim <dim>, base <base>, code <code>`, per [NAMES](../crates/mrlymath/NAMES.md). The historical names carpet, net, tree and void survive only as aliases pointing at particular codes. In 3D, *carpet* and *net* are the single class `bang dim 3, code 23`, *tree* is `bang dim 3, code 3`, *void* is `bang dim 3, code 24`. (Verified by `lab/design-census`: each name's defining corner set is built from its definition and reduced to the smallest code in its symmetry class.)
+and its canonical name is the JSON object `{"kind":"bang","dim":<dim>,"code":<code>}` at base 2, gaining a `"base":<base>` key past base 2, the code in plain decimal with no leading zero; pages write the prose view of that object, `bang dim <dim>, code <code>` and `bang dim <dim>, base <base>, code <code>`, per [NAMES](../crates/mrlymath/NAMES.md). The historical names carpet, net, tree and void survive only as aliases pointing at particular codes. In 3D, *carpet* and *net* are the single class `bang dim 3, code 23`, *tree* is `bang dim 3, code 3`, *void* is `bang dim 3, code 24`. (Verified by `lab/rs/design-census`: each name's defining corner set is built from its definition and reduced to the smallest code in its symmetry class.)
 
-That carpet and net collapse into one class at base 2 is not a slip. It is the same fact `lab/design-census` records, where the rep code is 7 in dimension 2 and 23 in dimension 3 and only the net label survives.
+That carpet and net collapse into one class at base 2 is not a slip. It is the same fact `lab/rs/design-census` records, where the rep code is 7 in dimension 2 and 23 in dimension 3 and only the net label survives.
 
 ## The universe is finite, and small up to symmetry
 
@@ -57,7 +57,7 @@ Designs that differ by a symmetry of the cube draw the same shape. The symmetry 
 | 3 | 256 | 22 |
 | 4 | 65536 | 402 |
 
-(Verified three independent ways by `lab/design-census`: a direct orbit walk over every code, a Burnside average `(1/|B_dim|) * sum over g of 2^c(g)` that never builds an orbit, and the class sums of the fill census, whose base-2 cube group is the same `B_dim`. All three agree at dim 1, 2, 3, 4.)
+(Verified three independent ways by `lab/rs/design-census`: a direct orbit walk over every code, a Burnside average `(1/|B_dim|) * sum over g of 2^c(g)` that never builds an orbit, and the class sums of the fill census, whose base-2 cube group is the same `B_dim`. All three agree at dim 1, 2, 3, 4.)
 
 These counts are OEIS `A000616`, the number of NP-equivalence classes of Boolean functions, at offset `-1`, so that `A000616(dim)` runs `3, 6, 22, 402, 1228158, 400507806843728` over dim 1..6. The match is an identity, not a coincidence - a design up to cube symmetry *is* a Boolean function up to permuting variables and flipping their parities - and the bijection is given in [the bijection page](bijection.md). (Proved there; the terms are Verified here, the Burnside sum reproducing all of `A000616(0..6)` against the live OEIS entry.)
 
@@ -83,7 +83,7 @@ The algebraic degree over `GF(2)` is a class invariant, and in 3D its histogram 
 
 ## The 2D universe in full
 
-Six classes, sixteen designs. (Verified by `lab/design-census`: codes, degrees, rules and orbit sizes all recomputed; the orbit sizes `1, 4, 4, 2, 4, 1` sum to 16.)
+Six classes, sixteen designs. (Verified by `lab/rs/design-census`: codes, degrees, rules and orbit sizes all recomputed; the orbit sizes `1, 4, 4, 2, 4, 1` sum to 16.)
 
 | name | deg | genus | rule | orbit | alias |
 |---|---|---|---|---|---|
@@ -113,4 +113,4 @@ This is the precise content of the intuition that most designs look like noise. 
 
 ## Where the numbers live
 
-The classification census - canonical representatives, orbit sizes, fill polynomials, three notions of algebraic degree, each design validated cell by cell against an independently rendered array - is `lab/design-census`, which writes `sequences.csv` and the per-dimension counts in `counts.csv`. Sequences that fall out of this construction, and the standard every one of them has to meet, are in [the sequence ledger](sequences.md).
+The classification census - canonical representatives, orbit sizes, fill polynomials, three notions of algebraic degree, each design validated cell by cell against an independently rendered array - is `lab/rs/design-census`, which writes `sequences.csv` and the per-dimension counts in `counts.csv`. Sequences that fall out of this construction, and the standard every one of them has to meet, are in [the sequence ledger](sequences.md).

@@ -51,7 +51,7 @@ const CHARTS = {
   outside:
     'These two letters lie outside the alphabet the closed forms cover, the 15 plane codes at side two, so the curves below are exact counts of the drawn word and no rate is claimed for them. Switch to a pair of side-2 letters, or to the Thue-Morse preset, for the proved reading. Research/connectivity.md.',
   stair:
-    'The staircase stacks prefixes, so the letter in place j occurs n - j + 1 times in the first n blocks and the dimension is the occurrence-weighted average of the per-letter dimensions. It is not monotone: it dips at the second block because the base-5 carpet is less dense than the base-3 carpet, then climbs, and its limit is the ambient dimension. Proved, research/magic.md; the five printed values are Verified, lab/slice-ladder-controls.',
+    'The staircase stacks prefixes, so the letter in place j occurs n - j + 1 times in the first n blocks and the dimension is the occurrence-weighted average of the per-letter dimensions. It is not monotone: it dips at the second block because the base-5 carpet is less dense than the base-3 carpet, then climbs, and its limit is the ambient dimension. Proved, research/magic.md; the five printed values are Verified, lab/py/slice-ladder-controls.',
 };
 
 const FIRST = { view: 'plane', compare: 'swap', chart: 'exponent', schedule: 'thue-morse', length: 64, blocks: 5 };
