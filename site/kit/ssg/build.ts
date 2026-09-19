@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, unlinkSync, writeFileSync } from "node:fs";
-import { basename, dirname, extname, join, relative, resolve } from "node:path";
+import { basename, dirname, extname, join, normalize, relative, resolve } from "node:path";
 import { deflateSync } from "node:zlib";
 import { collect as gitRoutes, forest, isGit, print as gitPrint, render as gitRender, type Hooks } from "../git/git.ts";
 import { index, stamp, type Index } from "./links.ts";
@@ -153,6 +153,42 @@ function bundles(root: string, config: Config): Bundle[] {
   return list;
 }
 
+/* ASSETS */
+
+const IMPORT = /((?:\bfrom|\bimport)\s*\(?\s*)(["'])(\.\.?\/[^"']+)\2/g;
+
+function place(one: Bundle, spec: Spec, assets: Map<string, string>, copies: Output[]) {
+  const known = new Set(one.files);
+  const busy = new Set<string>();
+  const visit = (name: string): string => {
+    const hit = assets.get(name);
+    if (hit) return hit;
+    if (busy.has(name)) throw new Error(`ssg: ${name} imports itself around a cycle`);
+    busy.add(name);
+    const file = join(one.path, name);
+    if (!existsSync(file)) throw new Error(`ssg: asset missing: ${file}`);
+    const raw = bytes(file);
+    let body = spec.asset ? spec.asset(name, raw) : raw;
+    if (one.hash && /\.m?js$/.test(name)) {
+      const text = typeof body === "string" ? body : new TextDecoder().decode(body);
+      body = text.replace(IMPORT, (whole, head: string, quote: string, target: string) => {
+        const dep = normalize(join(dirname(name), target));
+        if (known.has(dep)) return `${head}${quote}${visit(dep)}${quote}`;
+        if (existsSync(join(one.path, dep))) throw new Error(`ssg: ${name} imports ${dep}, which the kit's files do not list`);
+        return whole;
+      });
+    }
+    const data = typeof body === "string" ? new TextEncoder().encode(body) : body;
+    const stem = name.replace(/(\.[^.]+)$/, "");
+    const path = one.hash ? `${one.out}/${stem}-${short(digest([data]))}${extname(name)}` : `${one.out}/${name}`;
+    assets.set(name, `/${path}`);
+    copies.push({ path, bytes: data });
+    busy.delete(name);
+    return `/${path}`;
+  };
+  for (const name of one.files) visit(name);
+}
+
 const shows = (nodes: Node[], href: string): boolean =>
   nodes.some((node) => node.href === href || shows(node.nodes ?? [], href));
 
@@ -164,20 +200,7 @@ export async function scan(spec: Spec): Promise<Site> {
   const kit = list[0] ?? null;
   const assets = new Map<string, string>();
   const copies: Output[] = [];
-  for (const one of list) {
-    for (const name of one.files) {
-      const file = join(one.path, name);
-      if (!existsSync(file)) throw new Error(`ssg: asset missing: ${file}`);
-      const raw = bytes(file);
-      const body = spec.asset ? spec.asset(name, raw) : raw;
-      const data = typeof body === "string" ? new TextEncoder().encode(body) : body;
-      const stem = name.replace(/(\.[^.]+)$/, "");
-      const ext = extname(name);
-      const path = one.hash ? `${one.out}/${stem}-${short(digest([data]))}${ext}` : `${one.out}/${name}`;
-      assets.set(name, `/${path}`);
-      copies.push({ path, bytes: data });
-    }
-  }
+  for (const one of list) place(one, spec, assets, copies);
   const site: Site = {
     root,
     out: resolve(spec.out),

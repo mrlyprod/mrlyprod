@@ -6,7 +6,7 @@ import katex from "katex";
 import { build, bytes, walk, type Node, type Output, type Route, type Site, type Spec } from "../kit/ssg/build.ts";
 import { isGit } from "../kit/git/git.ts";
 import { resolve as resolveLink } from "../kit/ssg/links.ts";
-import { escape, front, plain, render as md, summary, title } from "../lib/md.js";
+import { escape, front, inline, plain, render as md, summary, title } from "../lib/md.js";
 import { sidebar, tree } from "../lib/tree.js";
 import { Glyph, Grid, Menu, Shell } from "../kit/ui/chrome.jsx";
 import { headScript, tintCss } from "../kit/ui/config.js";
@@ -93,7 +93,19 @@ const grid = (nodes: Node[]) => renderToStaticMarkup(h(Grid, { nodes }));
 
 /* HEAD */
 
-function meta(route: string, name: string, description: string, type: string) {
+type Picture = { url: string; width: number; height: number };
+
+const OG: Picture = { url: `${root}/og.png`, width: 1200, height: 630 };
+
+function picture(site: Site, name: string, route: string, fig?: Fig): Picture {
+  const file = figure(site.input("figures").path, `${name}-dark`, route);
+  if (fig) fig(name, route);
+  const png = bytes(file);
+  const view = new DataView(png.buffer, png.byteOffset, png.byteLength);
+  return { url: `${root}/figures/${name}-dark.png`, width: view.getUint32(16), height: view.getUint32(20) };
+}
+
+function meta(route: string, name: string, description: string, type: string, image = OG) {
   const url = root + route;
   return [
     `<link rel="canonical" href="${url}">`,
@@ -103,11 +115,11 @@ function meta(route: string, name: string, description: string, type: string) {
     `<meta property="og:url" content="${url}">`,
     `<meta property="og:type" content="${type}">`,
     `<meta property="og:site_name" content="${escape(SITE.title)}">`,
-    `<meta property="og:image" content="${root}/og.png">`,
-    `<meta property="og:image:width" content="1200">`,
-    `<meta property="og:image:height" content="630">`,
+    `<meta property="og:image" content="${image.url}">`,
+    `<meta property="og:image:width" content="${image.width}">`,
+    `<meta property="og:image:height" content="${image.height}">`,
     `<meta name="twitter:card" content="summary_large_image">`,
-    `<meta name="twitter:image" content="${root}/og.png">`,
+    `<meta name="twitter:image" content="${image.url}">`,
     ICONS,
   ].join("\n");
 }
@@ -127,6 +139,7 @@ type Leaf = {
   code?: boolean;
   data?: object;
   tree?: Node[];
+  image?: Picture;
 };
 
 function shell(site: Site, leaf: Leaf) {
@@ -134,6 +147,7 @@ function shell(site: Site, leaf: Leaf) {
   const article = h(bare ? "div" : "article", { className: bare ? undefined : "prose", dangerouslySetInnerHTML: { __html: body } });
   const main = renderToStaticMarkup(h(Shell, { route, tree: leaf.tree ?? site.nav, contents: headings(body), wide }, article));
   const ld = data ? `<script type="application/ld+json">${JSON.stringify(data)}</script>\n` : "";
+  const image = leaf.image ?? (code ? picture(site, "site-code", route) : OG);
   return `<!doctype html>
 <html lang="en" data-prefix="${SITE.prefix}">
 <head>
@@ -141,7 +155,7 @@ function shell(site: Site, leaf: Leaf) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 ${BOOT}
 <title>${escape(brand(name))}</title>
-${meta(route, name, description, type)}
+${meta(route, name, description, type, image)}
 <link rel="stylesheet" href="${site.asset("palette.css")}">
 <link rel="stylesheet" href="${site.asset("tokens.css")}">
 <link rel="stylesheet" href="${site.asset("base.css")}">
@@ -231,16 +245,16 @@ function demoGroup(site: Site): Route {
   };
 }
 
-function seo(source: string, card: Card, nav: string) {
+function seo(source: string, card: Card, nav: string, image: Picture) {
   const html = source
     .replace(/<html([^>]*)>/, (_, attrs: string) => `<html${attrs.replace(/ data-prefix="[^"]*"/, "")} data-prefix="${SITE.prefix}">`)
+    .replace(/<script data-boot>[\s\S]*?<\/script>\n?/, "")
     .replace(OWN, "");
   const route = demoRoute(card.name);
   const found = html.match(TITLE);
   const name = found ? untag(found[1]) : card.title;
-  const tags = meta(route, name, card.blurb || name, "website");
-  const boot = html.includes("data-boot") ? "" : `${BOOT}\n`;
-  const block = `${boot}<title>${escape(brand(name))}</title>\n${tags}\n${nav}\n<link rel="stylesheet" href="/ui/fonts/fonts.css">`;
+  const tags = meta(route, name, card.blurb || name, "website", image);
+  const block = `${BOOT}\n<title>${escape(brand(name))}</title>\n${tags}\n${nav}\n<link rel="stylesheet" href="/ui/fonts/fonts.css">`;
   const page = found ? html.replace(found[0], block) : html.replace("<head>", `<head>\n${block}`);
   return page.replace("</head>", `${TINT}\n</head>`);
 }
@@ -266,7 +280,8 @@ async function demos(site: Site, route: Route): Promise<Output[]> {
   for (const item of built.outputs) {
     const path = item.path.replace(/^\.\//, "");
     const card = shells.get(path);
-    out.push({ path, bytes: card ? seo(await item.text(), card, nav) : new Uint8Array(await item.arrayBuffer()) });
+    const image = card ? picture(site, card.name ? `demo-${card.name}` : "site-demos", demoRoute(card.name), fig) : OG;
+    out.push({ path, bytes: card ? seo(await item.text(), card, nav, image) : new Uint8Array(await item.arrayBuffer()) });
   }
   return out;
 }
@@ -309,7 +324,7 @@ function written(site: Site, route: Route): Output[] {
     dateModified: p.revised || p.date || undefined,
     license: "https://creativecommons.org/licenses/by/4.0/",
   };
-  out.push({ path: `papers/${p.slug}/index.html`, bytes: shell(site, { route: route.route, name: p.name, description: p.lead, body, data }) });
+  out.push({ path: `papers/${p.slug}/index.html`, bytes: shell(site, { route: route.route, name: p.name, description: p.lead, body, data, image: picture(site, p.figure, route.route, fig) }) });
   return out;
 }
 
@@ -371,7 +386,7 @@ function paper(site: Site, route: Route): Output[] {
     dateModified: dated(p) || undefined,
     license: "https://creativecommons.org/licenses/by/4.0/",
   };
-  out.push({ path: `${at}/index.html`, bytes: shell(site, { route: route.route, name: p.name, description: p.blurb || summary(p.md), body, data }) });
+  out.push({ path: `${at}/index.html`, bytes: shell(site, { route: route.route, name: p.name, description: p.blurb || summary(p.md), body, data, image: picture(site, `paper-${p.slug}`, route.route, fig) }) });
   return out;
 }
 
@@ -383,7 +398,7 @@ function paperIndex(site: Site, route: Route): Output[] {
   const nodes = wear(site, "/papers/", fig, route.route);
   const shelfNote = `<section><h2 id="shelf">The shelf</h2><p class="lead">The first editions, in LaTeX with a PDF each, deprecated: every paper is rewritten here in turn and the shelf is never edited.</p>${grid(nodes.filter((n) => !fresh.has(n.href ?? "")))}</section>`;
   const body = `<div class="lede"><h1 id="papers">Papers</h1><p class="lead">${escape(lead)}</p></div>\n${grid(nodes.filter((n) => fresh.has(n.href ?? "")))}\n${nodes.some((n) => !fresh.has(n.href ?? "")) ? shelfNote : ""}`;
-  out.push({ path: "papers/index.html", bytes: shell(site, { route: route.route, name: "Papers", description: lead, body, type: "website", wide: true, bare: true }) });
+  out.push({ path: "papers/index.html", bytes: shell(site, { route: route.route, name: "Papers", description: lead, body, type: "website", wide: true, bare: true, image: picture(site, "site-papers", route.route, fig) }) });
   return out;
 }
 
@@ -434,7 +449,7 @@ function researchIndex(site: Site, route: Route): Output[] {
   const lead = summary(n.md);
   const prose = md(n.md.replace(/^# .+\n/, ""), { math, link: links(site, join(site.input("research").path, n.file), out) });
   const body = `<div class="lede"><h1 id="research">Research</h1><p class="lead">${escape(lead)}</p></div>\n${grid(wear(site, "/research/", fig, route.route))}\n<article class="prose readme">${prose}</article>`;
-  out.push({ path: "research/index.html", bytes: shell(site, { route: route.route, name: "Research", description: lead, body, type: "website", wide: true, bare: true }) });
+  out.push({ path: "research/index.html", bytes: shell(site, { route: route.route, name: "Research", description: lead, body, type: "website", wide: true, bare: true, image: picture(site, "site-research", route.route, fig) }) });
   return out;
 }
 
@@ -458,7 +473,7 @@ function note(site: Site, route: Route): Output[] {
     author: { "@type": "Organization", name: AUTHOR },
   };
   const at = n.home ? "research/index.html" : `research/${n.name}/index.html`;
-  out.push({ path: at, bytes: shell(site, { route: route.route, name, description: lead, body, type: n.home ? "website" : "article", data }) });
+  out.push({ path: at, bytes: shell(site, { route: route.route, name, description: lead, body, type: n.home ? "website" : "article", data, image: picture(site, n.figure, route.route, fig) }) });
   return out;
 }
 
@@ -509,7 +524,7 @@ function discoveries(site: Site, route: Route): Output[] {
     image: `${root}/figures/research-index-dark.png`,
     author: { "@type": "Organization", name: AUTHOR },
   };
-  out.push({ path: "research/discoveries/index.html", bytes: shell(site, { route: route.route, name: "Discoveries", description: lead, body, data }) });
+  out.push({ path: "research/discoveries/index.html", bytes: shell(site, { route: route.route, name: "Discoveries", description: lead, body, data, image: picture(site, "research-index", route.route, fig) }) });
   return out;
 }
 
@@ -544,7 +559,7 @@ function post(site: Site, route: Route): Output[] {
     author: { "@type": "Organization", name: AUTHOR },
     datePublished: p.date || undefined,
   };
-  out.push({ path: `blog/${p.slug}/index.html`, bytes: shell(site, { route: route.route, name: p.name, description: p.lead, body: `${head}\n${md(p.body, { math, link: links(site, postFile(p.slug), out) })}`, data }) });
+  out.push({ path: `blog/${p.slug}/index.html`, bytes: shell(site, { route: route.route, name: p.name, description: p.lead, body: `${head}\n${md(p.body, { math, link: links(site, postFile(p.slug), out) })}`, data, image: picture(site, p.figure, route.route, fig) }) });
   return out;
 }
 
@@ -570,7 +585,9 @@ function page(site: Site, route: Route): Output[] {
   const open = data.figure ? `${hero(fig, data.figure, route.route, name)}\n` : "";
   const head = `<div class="lede"><h1 id="${escape(slug)}">${escape(name)}</h1><p class="lead">${escape(lead)}</p></div>`;
   const act = data.button && data.link ? `\n<p><a class="button primary" href="${escape(data.link)}">${escape(data.button)}</a></p>` : "";
-  const html = shell(site, { route: route.route, name, description: lead, body: `${open}${head}\n${md(body, { math, link: links(site, source, out) })}${act}`, type: "website" });
+  const own = data.figure || FIXED[route.route];
+  const image = own ? picture(site, own, route.route, fig) : OG;
+  const html = shell(site, { route: route.route, name, description: lead, body: `${open}${head}\n${md(body, { math, link: links(site, source, out) })}${act}`, type: "website", image });
   out.push({ path: `${slug}/index.html`, bytes: html });
   return out;
 }
@@ -583,6 +600,9 @@ let DRESS: Dress = { lanes: [], papers: [], notes: [], posts: [], demos: [] };
 
 const FIXED: Record<string, string> = {
   "/": "site-home",
+  "/wiki/": "site-wiki",
+  "/tools/": "site-tools",
+  "/math/": "site-math",
   "/git/": "site-code",
   "/about/": "site-icon",
   "/contact/": "site-contact",
@@ -642,15 +662,33 @@ function cart(site: Site, route: Route): Output[] {
 const MISSION = SITE.tagline;
 
 const DOORS = [
+  { name: "Wiki", href: "/wiki/", figure: "site-wiki", text: "One concept per page, in the order you need them, for a reader with school mathematics." },
   { name: "Demos", href: "/demos/", figure: "site-demos", text: "Browser pages that draw a design and the numbers around it, live." },
+  { name: "Discoveries", href: "/research/discoveries/", figure: "research-index", text: "Every claim of the tree on one dated, tagged line with its witness." },
   { name: "Papers", href: "/papers/", figure: "site-papers", text: "Write-ups that print as papers, every claim tagged and every number generated." },
   { name: "Research", href: "/research/", figure: "site-research", text: "The working notes behind the demos and the papers, one page per idea." },
 ];
 
+type Newest = { date: string; tag: string; text: string; slug: string; file: string };
+
+function newest(list: Claim[]): Newest | null {
+  let best: Newest | null = null;
+  for (const c of list) {
+    for (const line of c.md.split("\n")) {
+      const hit = line.match(/^- (\d{4}-\d{2}-\d{2}) \[(Proved|Verified|Conjecture|Refuted)\] (.+)$/);
+      if (hit && (!best || hit[1]! > best.date)) best = { date: hit[1]!, tag: hit[2]!, text: hit[3]!, slug: c.slug, file: c.file };
+    }
+  }
+  return best;
+}
+
 function home(site: Site, route: Route): Output[] {
-  const { lanes: list, papers: fresh, posts: posted } = route.data as { lanes: Lane[]; papers: Paper[]; posts: Post[] };
+  const { lanes: list, papers: fresh, posts: posted, claim } = route.data as { lanes: Lane[]; papers: Paper[]; posts: Post[]; claim: Newest | null };
   const out: Output[] = [];
   const fig = press(site, out);
+  const latestClaim = claim
+    ? `<section><h2 id="newest">Newest claim</h2><p class="lead"><time>${claim.date}</time> <b class="chip ${claim.tag.toLowerCase()}">${claim.tag}</b> ${inline(claim.text, { math, link: links(site, claim.file, out) })}</p><p class="lead"><a href="/research/discoveries/#${escape(claim.slug)}">Every claim, dated and tagged</a></p></section>`
+    : "";
   const latest = [...fresh.map((p) => ({ name: p.name, slug: p.slug, at: p.revised || p.date })), ...list.map((p) => ({ name: p.name, slug: p.slug, at: dated(p) }))]
     .map((p, i) => ({ p, i }))
     .sort((a, b) => (a.p.at < b.p.at ? 1 : a.p.at > b.p.at ? -1 : a.i - b.i))
@@ -665,18 +703,60 @@ function home(site: Site, route: Route): Output[] {
   const body = `<div class="home">
 ${hero(fig, "site-home", "/", SITE.title)}
 <div class="hero"><h1><span role="img" aria-label="${escape(SITE.title)}">${WORD}</span></h1><p>${escape(MISSION)}</p></div>
-<section><h2 id="doors">Three doors</h2>${grid(doors)}</section>
+<section><h2 id="doors">Five doors</h2>${grid(doors)}</section>
+${latestClaim}
 <section><h2 id="shelf">Latest papers</h2>${grid(dress(latest, marks(DRESS), fig, "/"))}</section>
 ${news}
 ${what}
 </div>`;
-  out.push({ path: "index.html", bytes: shell(site, { route: "/", name: SITE.title, description: MISSION, body, type: "website", wide: true, bare: true }) });
+  out.push({ path: "index.html", bytes: shell(site, { route: "/", name: SITE.title, description: MISSION, body, type: "website", wide: true, bare: true, image: picture(site, "site-home", "/", fig) }) });
   return out;
 }
 
 function missing(site: Site, route: Route): Output[] {
-  const body = `<div class="lede"><h1 id="lost">Nothing here</h1><p class="lead">That page does not exist. The <a href="/menu/">Menu</a> lists every page on this site, and the four doors are <a href="/demos/">Demos</a>, <a href="/papers/">Papers</a>, <a href="/research/">Research</a> and <a href="/blog/">Blog</a>.</p></div>`;
+  const doors = DOORS.map((d) => `<a href="${d.href}">${d.name}</a>`);
+  const body = `<div class="lede"><h1 id="lost">Nothing here</h1><p class="lead">That page does not exist. The <a href="/menu/">Menu</a> lists every page on this site, and the doors are ${doors.slice(0, -1).join(", ")} and ${doors[doors.length - 1]}.</p></div>`;
   return [{ path: "404.html", bytes: shell(site, { route: route.route, name: "Nothing here", description: "That page does not exist.", body, type: "website", bare: true }) }];
+}
+
+/* THIN */
+
+const THIN: Record<string, { name: string; figure: string; lead: string; note: string }> = {
+  "/wiki/": {
+    name: "Wiki",
+    figure: "site-wiki",
+    lead: "One concept per page, in the order you need them, for a reader with school mathematics.",
+    note: `The wiki is being written. Until its first page lands, the <a href="/research/">research notes</a> are the reading and the <a href="/demos/">demos</a> are the pictures.`,
+  },
+  "/tools/": {
+    name: "Tools",
+    figure: "site-tools",
+    lead: "A canvas for mrly objects: tiles, slices, rings and roulettes on one sheet, the perforator first.",
+    note: `The first tool is on its way. The <a href="/demos/">demos</a> already draw every object it will place, and <a href="/math/">the standard</a> names them.`,
+  },
+};
+
+function thin(site: Site, route: Route): Output[] {
+  const t = THIN[route.route]!;
+  const out: Output[] = [];
+  const fig = press(site, out);
+  const slug = route.route.slice(1, -1);
+  const body = `${hero(fig, t.figure, route.route, t.name)}\n<div class="lede"><h1 id="${slug}">${t.name}</h1><p class="lead">${escape(t.lead)}</p></div>\n<p>${t.note}</p>`;
+  out.push({ path: `${slug}/index.html`, bytes: shell(site, { route: route.route, name: t.name, description: t.lead, body, type: "website", image: picture(site, t.figure, route.route, fig) }) });
+  return out;
+}
+
+/* MATH */
+
+const STANDARD = "A design is one string: one JSON object per named thing, and every other name a view cut from it.";
+
+function standard(site: Site, route: Route): Output[] {
+  const out: Output[] = [];
+  const fig = press(site, out);
+  const file = route.source as string;
+  const body = `${hero(fig, "site-math", route.route, "MrlyMath")}\n<h1 id="math">MrlyMath</h1><p class="lead">${escape(STANDARD)}</p>\n${md(read(file).replace(/^# .+\n/, ""), { math, link: links(site, file, out) })}`;
+  out.push({ path: "math/index.html", bytes: shell(site, { route: route.route, name: "Math", description: STANDARD, body, type: "website", image: picture(site, "site-math", route.route, fig) }) });
+  return out;
 }
 
 /* COLLECT */
@@ -711,10 +791,13 @@ async function collect(site: Site) {
     route: "/",
     kind: "home",
     name: SITE.title,
-    data: { lanes: laneList, papers: paperList, posts: postList },
+    data: { lanes: laneList, papers: paperList, posts: postList, claim: newest(claimList) },
     source: readme,
     inputs: [readme],
   });
+  for (const route of Object.keys(THIN)) routes.push({ route, kind: "thin", name: THIN[route]!.name });
+  const names = site.input("names");
+  if (!names.missing) routes.push({ route: "/math/", kind: "math", name: "Math", source: names.files[0]!, inputs: names.files });
   routes.push(group);
   if (laneList.length || paperList.length) {
     const index = join(SHELF, "README.md");
@@ -792,6 +875,8 @@ const KINDS: Record<string, (site: Site, route: Route) => Output[] | Promise<Out
   menu,
   cart,
   missing,
+  thin,
+  math: standard,
 };
 
 function draw(site: Site, route: Route) {

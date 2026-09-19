@@ -148,4 +148,28 @@ mod tests {
         assert!(Rule::from_json(&strings[0]).is_err());
         assert_eq!(rule.birth, Counts::List(vec![3]));
     }
+
+    #[test]
+    fn every_example_on_names_md_round_trips() {
+        let doc = include_str!("../../NAMES.md");
+        let mut seen = 0;
+        for piece in doc.split('`') {
+            let Some(rest) = piece.strip_prefix("{\"kind\":\"") else {
+                continue;
+            };
+            let kind = rest.split('"').next().unwrap();
+            let printed = match kind {
+                "bang" => Bang::from_json(piece).map(|v| v.to_json()),
+                "rule" => Rule::from_json(piece).map(|v| v.to_json()),
+                "sequence" => Sequence::from_json(piece).map(|v| v.to_json()),
+                "tile" => Tile::from_json(piece).map(|v| v.to_json()),
+                "word" => Word::from_json(piece).map(|v| v.to_json()),
+                other => panic!("NAMES.md names no kind {other:?}"),
+            };
+            let printed = printed.unwrap_or_else(|e| panic!("{piece} does not read: {e}"));
+            assert_eq!(printed, piece, "{piece} is not canonical");
+            seen += 1;
+        }
+        assert!(seen >= 13, "NAMES.md kept only {seen} examples");
+    }
 }

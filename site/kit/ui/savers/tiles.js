@@ -6,7 +6,7 @@ export const LEVELS = [1, 2];
 
 /* RULES */
 
-export const RULES = {
+const RULES = {
   carpet: (r, c) => (r & 1) + (c & 1) <= 1,
   net: (r, c) => (r & 1) + (c & 1) >= 1,
   htree: (r) => (r & 1) === 0,

@@ -48,7 +48,7 @@ void main() {
 }
 `;
 
-export const UNIFORMS = ['resolution', 'viewport', 'c', 'julia', 'maxIter', 'primary', 'accent', 'rotation', 'time'];
+const UNIFORMS = ['resolution', 'viewport', 'c', 'julia', 'maxIter', 'primary', 'accent', 'rotation', 'time'];
 
 export function build(gl) {
   const make = (kind, source) => {

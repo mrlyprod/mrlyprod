@@ -10,13 +10,13 @@ const START_SCALE = 1 / 2;
 const SAMPLES = 200;
 const PROBE = 150;
 
-export const MANDELBROT = { xMin: -2, xMax: 1, yMin: -1.5, yMax: 1.5 };
-export const JULIA = { xMin: -1.5, xMax: 1.5, yMin: -1.5, yMax: 1.5 };
-export const PRESETS = [[-0.4, 0.6], [-0.8, 0.156], [0.285, 0.01], [-0.7269, 0.1889], [-0.1, 0.651], [0.355, 0.355]];
+const MANDELBROT = { xMin: -2, xMax: 1, yMin: -1.5, yMax: 1.5 };
+const JULIA = { xMin: -1.5, xMax: 1.5, yMin: -1.5, yMax: 1.5 };
+const PRESETS = [[-0.4, 0.6], [-0.8, 0.156], [0.285, 0.01], [-0.7269, 0.1889], [-0.1, 0.651], [0.355, 0.355]];
 
 /* MATH */
 
-export function fit(v, w, h) {
+function fit(v, w, h) {
   const vw = v.xMax - v.xMin;
   const vh = v.yMax - v.yMin;
   const ca = w / h;
@@ -30,11 +30,11 @@ export function fit(v, w, h) {
   return { xMin: v.xMin, xMax: v.xMax, yMin: cy - nh / 2, yMax: cy + nh / 2 };
 }
 
-export function autoMaxIter(zoom) {
+function autoMaxIter(zoom) {
   return 100 + Math.floor(50 * Math.log2(Math.max(zoom, 1)));
 }
 
-export function escaper(seed) {
+function escaper(seed) {
   return (px, py, max) => {
     let zr = seed ? px : 0;
     let zi = seed ? py : 0;

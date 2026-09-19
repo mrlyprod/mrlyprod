@@ -129,8 +129,6 @@ html:not(.js) .base .mark { display: none; }
 
 .controls { padding: 0 var(--s2); }
 .controls .row { flex-direction: column; align-items: stretch; gap: var(--s3); }
-.controls .pager { flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: nowrap; gap: var(--s2); }
-.controls .pager .num { flex: 1; text-align: center; color: var(--dim); font-size: 13px; }
 .controls label { display: flex; flex-wrap: wrap; align-items: center; min-width: 0; max-width: 100%; }
 .controls input[type=range], .controls input.wide { width: 100%; min-width: 0; }
 .controls select, .controls input[type=text], .controls input[type=number] { flex: 1 1 8ch; min-width: 0; max-width: 100%; }
@@ -195,7 +193,7 @@ th { color: var(--dim); font-weight: 500; font-size: 12px; }
 .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--s4); }
 .tile { color: inherit; background: var(--panel); border: var(--hair); border-radius: var(--r3); padding: var(--s4); display: block; transition: border-color var(--pace) var(--ease); }
 .tile:hover { border-color: var(--accent); text-decoration: none; }
-.tile canvas, .tile svg, .tile img, .tile .thumb { width: 100%; height: auto; aspect-ratio: 1.5; display: block; border-radius: var(--r2); background: var(--art); image-rendering: pixelated; object-fit: contain; }
+.tile canvas, .tile svg, .tile img { width: 100%; height: auto; aspect-ratio: 1.5; display: block; border-radius: var(--r2); background: var(--art); image-rendering: pixelated; object-fit: contain; }
 .tile h2 { font-size: 1.05rem; margin: var(--s3) 0 var(--s1); }
 .tile p { color: var(--dim); font-size: 13px; }
 
@@ -215,5 +213,9 @@ th { color: var(--dim); font-weight: 500; font-size: 12px; }
 
 @media print {
   .skip, .top, .dock, .pane, .scrim, .base { display: none !important; }
+  .panes { display: block; }
   main { max-width: none; padding: 0; }
+  .opener { max-width: 20rem; margin-bottom: 1.5rem; }
+  .opener img, .tile img { border: 0; }
+  .tile { break-inside: avoid; }
 }

@@ -63,6 +63,10 @@
 .shot img { max-width: 100%; height: auto; display: block; border: var(--hair); border-radius: var(--r2); background: var(--art); }
 .doc { display: block; width: 100%; height: 80vh; margin-top: var(--s5); border: var(--hair); border-radius: var(--r2); }
 
+/* PRINT */
+
 @media print {
+  .code { border: 0; background: none; }
+  .code pre { white-space: pre-wrap; }
   .code .line .n { display: none; }
 }

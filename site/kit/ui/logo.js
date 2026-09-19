@@ -1,6 +1,6 @@
 import FONT from './font.json' with { type: 'json' };
 
-export const MASK = FONT.X.rows;
+const MASK = FONT.X.rows;
 
 export function grid(level = 1) {
   let rows = MASK;

@@ -99,13 +99,18 @@ export async function push(options: { dry?: boolean } = {}): Promise<{ rendered:
   }
   const seen = found ? [...had.keys()] : await list(net);
   const remove = seen.filter((path) => mine(path) && !want.has(path));
-  if (!options.dry) {
+  const header = (path: string) => (types.has(path) ? REVALIDATE : cache(path));
+  if (options.dry) {
+    const fixed = upload.filter((path) => header(path) === IMMUTABLE);
+    for (const path of fixed) console.log(`immutable ${path}`);
+    console.log(`${upload.length - fixed.length} more at max-age 0, ${remove.length} to delete`);
+  } else {
     for (let i = 0; i < upload.length; i += BATCH) {
       await Promise.all(
         upload.slice(i, i + BATCH).map((path) =>
           putBytes(net, path, new Uint8Array(readFileSync(join(done.site.out, path))), {
             type: types.get(path) ?? kind(path),
-            cacheControl: types.has(path) ? REVALIDATE : cache(path),
+            cacheControl: header(path),
           }),
         ),
       );

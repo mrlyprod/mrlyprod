@@ -1,6 +1,6 @@
 import FONT from './font.json' with { type: 'json' };
 
-export const FPS = 25;
+const FPS = 25;
 export const HOLD = 25;
 const BLANK = ['000', '000', '000', '000', '000'];
 
@@ -159,11 +159,11 @@ export function cycle(text, pad = 1, hold = HOLD) {
 
 /* PLAYBACK */
 
-export function mark(canvas, anim, color) {
+export function mark(canvas, anim) {
   canvas.width = anim.cols;
   canvas.height = anim.rows;
   const ctx = canvas.getContext('2d');
-  let ink = color ?? getComputedStyle(canvas).color;
+  let ink = getComputedStyle(canvas).color;
   let last = [];
   const draw = (frame) => {
     last = frame;
@@ -173,7 +173,7 @@ export function mark(canvas, anim, color) {
   };
   const shade = matchMedia('(prefers-color-scheme: dark)');
   const repaint = () => {
-    if (!color) ink = getComputedStyle(canvas).color;
+    ink = getComputedStyle(canvas).color;
     draw(last);
   };
   shade.addEventListener('change', repaint);

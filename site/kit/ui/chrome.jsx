@@ -43,13 +43,13 @@ function Ring() {
   return <Cells {...letters('O')}>{dots}</Cells>;
 }
 
-export function Wordmark({ className }) {
+function Wordmark({ className }) {
   return <Glyph text={conf().title.toUpperCase()} className={className} />;
 }
 
 /* HEADER */
 
-export function Header() {
+function Header() {
   const site = conf();
   return (
     <header className="top">
@@ -66,7 +66,7 @@ export function Header() {
   );
 }
 
-export function Dock({ route = '/' }) {
+function Dock({ route = '/' }) {
   const word = decodeURIComponent(route).split('/').filter(Boolean).pop() ?? 'home';
   return (
     <div className="dock">
@@ -114,7 +114,7 @@ const EXPLORER = '/git/tree.json';
 
 const hasLazy = (nodes) => nodes.some((node) => node.lazy !== undefined || hasLazy(node.nodes ?? []));
 
-export function Tree({ nodes = [], current = '' }) {
+function Tree({ nodes = [], current = '' }) {
   const source = hasLazy(nodes) ? EXPLORER : undefined;
   return <ul className="tree" data-source={source}>{nodes.map((node) => <Node key={node.name} node={node} current={current} />)}</ul>;
 }
@@ -177,14 +177,14 @@ export function Menu({ tree = [] }) {
 
 /* CONTENTS */
 
-export function Contents({ items = [], current = '' }) {
+function Contents({ items = [] }) {
   return (
     <nav className="contents" aria-label="Contents">
       <h2>Contents</h2>
       <ol>
         {items.map((item) => (
           <li key={item.id} className={`h${item.level ?? 2}`}>
-            <a href={`#${item.id}`} aria-current={item.id === current ? 'location' : undefined}>{item.text}</a>
+            <a href={`#${item.id}`}>{item.text}</a>
           </li>
         ))}
       </ol>
@@ -192,7 +192,7 @@ export function Contents({ items = [], current = '' }) {
   );
 }
 
-export function Controls({ children }) {
+function Controls({ children }) {
   return <section className="controls" aria-label="Controls">{children}</section>;
 }
 
@@ -225,7 +225,7 @@ function Pick({ label, name, options }) {
   );
 }
 
-export function Settings() {
+function Settings() {
   return (
     <section className="settings" aria-label="Settings">
       <h2>Settings</h2>
@@ -253,7 +253,7 @@ function Mark() {
   );
 }
 
-export function Footer() {
+function Footer() {
   const site = conf();
   const year = new Date().getFullYear();
   const span = site.since < year ? `${site.since}-${year}` : String(year);

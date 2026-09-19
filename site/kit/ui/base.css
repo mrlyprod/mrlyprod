@@ -57,7 +57,6 @@ a:hover { text-decoration: underline; }
 .prose .center { text-align: center; }
 .prose .meta { color: var(--dim); font: 13px/1.6 var(--mono); margin: 0 0 1.4em; }
 .prose .meta a { color: var(--dim); }
-.prose .date { color: var(--dim); font: 12px/1 var(--mono); white-space: nowrap; }
 .prose math { font-size: 1.05em; }
 .prose math[display="block"] { display: block; max-width: 100%; overflow-x: auto; margin: 1em 0; }
 .prose code, .prose li, .prose p { overflow-wrap: anywhere; }
@@ -76,6 +75,16 @@ img.light { display: var(--show-light) !important; }
 /* PRINT */
 
 @media print {
-  body { background: #fff; color: #000; }
-  a { color: inherit; }
+  @page { margin: 20mm; }
+  body { background: #fff; color: #000; font-size: 11pt; }
+  a { color: inherit; text-decoration: underline; }
+  a[href^="http"]::after, a[href^="/"]::after { content: " (" attr(href) ")"; font-size: 0.8em; color: #555; }
+  img.dark { display: none !important; }
+  img.light { display: block !important; }
+  .prose { max-width: none; }
+  .prose pre { white-space: pre-wrap; overflow: visible; background: none; padding: 0; }
+  .prose code { background: none; }
+  .prose math[display="block"] { overflow: visible; }
+  h1, h2, h3, h4 { break-after: avoid; }
+  figure, table, pre, li, math[display="block"] { break-inside: avoid; }
 }

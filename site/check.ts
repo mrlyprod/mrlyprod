@@ -212,6 +212,7 @@ const site = (target: string) => {
   if (head === 'papers') return !next || there(`research/papers/${next}.md`);
   if (head === 'blog') return !next || there(`site/blog/${next}.md`);
   if (head === 'wiki') return !there('site/wiki') || there(`site/wiki/${next}.md`);
+  if (head === 'tools' || head === 'math') return !next;
   if (head === 'method') return there('research/notes/method.md') || there('site/pages/method.md');
   return there(`site/pages/${head}.md`);
 };

@@ -12,14 +12,8 @@
 /* PRINT */
 
 @media print {
-  @page { margin: 20mm; }
-  img.dark { display: none !important; }
-  img.light { display: block !important; }
-  .opener { display: none; }
   .plate.paper { break-after: avoid; }
-  .prose h2, .prose h3 { break-after: avoid; }
-  .prose figure, .prose table, .prose pre, .prose li { break-inside: avoid; }
-  .prose a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 0.8em; color: var(--dim); }
+  .plate.paper .avatar { max-width: 20rem; border: 0; }
 }
 
 /* PLATE */

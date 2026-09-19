@@ -141,11 +141,9 @@ function count() {
 function cart() {
   const n = count();
   for (const link of document.querySelectorAll('[data-cart]')) {
-    link.dataset.count = String(n);
     link.setAttribute('aria-label', n ? `Cart, ${n} item${n === 1 ? '' : 's'}` : 'Cart');
     link.querySelectorAll('.dot').forEach((dot, i) => dot.classList.toggle('on', i < n));
   }
-  for (const badge of document.querySelectorAll('[data-cart-count]')) badge.textContent = String(n);
 }
 
 /* CONTENTS */
