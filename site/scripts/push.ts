@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { build, digest, globals, today, type Manifest, type Output } from "../kit/ssg/build.ts";
 import { client, del, getText, list, putBytes, DEV_BUCKET, NET_BUCKET } from "../../aws/s3.ts";
 import { spec } from "./site.ts";
+import SITE from "../lib/site.js";
 
 /* WHERE */
 
@@ -116,10 +117,25 @@ export async function push(options: { dry?: boolean } = {}): Promise<{ rendered:
   return { rendered: done.rendered, uploaded: upload.length, deleted: remove.length };
 }
 
+/* WITNESS */
+
+const WITNESS = "/research/discoveries/";
+
+export async function witness(root: string): Promise<string> {
+  const page = root.replace(/\/$/, "") + WITNESS;
+  try {
+    const res = await fetch(`https://web.archive.org/save/${page}`, { method: "GET", redirect: "follow", signal: AbortSignal.timeout(60000) });
+    return `witness: ${res.ok ? "saved" : `HTTP ${res.status}`} ${page}`;
+  } catch (reason) {
+    return `witness: not saved (${reason}) ${page}`;
+  }
+}
+
 /* MAIN */
 
 if (import.meta.main) {
   const dry = process.argv.includes("--dry");
   const done = await push({ dry });
   console.log(`push${dry ? " --dry" : ""}: ${done.rendered} rendered, ${done.uploaded} uploaded, ${done.deleted} deleted, cdn/ guarded`);
+  if (!dry) console.log(await witness(SITE.root));
 }
