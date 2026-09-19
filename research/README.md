@@ -17,7 +17,7 @@ The mathematics of the mrly tree: a parity rule on the corners of a cube, substi
 - The demos in `../site/demos` run the same crates through wasm; a note links the demo that shows it, and every demo is linked from some page.
 - Math is written in backticks so it renders everywhere; lines never wrap; no comment in code beyond a section delimiter, no em-dash anywhere.
 - Author line MrlyProd on every route: Carlo directs, Claude writes and computes, and `/method/` says so.
-- One check: `bun run check` in `../site` passes on this tree or fails on a bad line, and nothing else gates it; the push saves `/research/discoveries/` to the Wayback Machine as the witness of priority.
+- One check: `bun run check` in `../site` passes on this tree or fails on a bad line, and nothing else gates it.
 
 ## LICENCE
 
