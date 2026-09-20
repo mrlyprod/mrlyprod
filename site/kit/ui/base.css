@@ -61,11 +61,6 @@ a:hover { text-decoration: underline; }
 .prose math[display="block"] { display: block; max-width: 100%; overflow-x: auto; margin: 1em 0; }
 .prose code, .prose li, .prose p { overflow-wrap: anywhere; }
 
-/* FIGURES */
-
-img.dark { display: var(--show-dark) !important; }
-img.light { display: var(--show-light) !important; }
-
 /* MOTION */
 
 @media (prefers-reduced-motion: reduce) {
@@ -79,8 +74,6 @@ img.light { display: var(--show-light) !important; }
   body { background: #fff; color: #000; font-size: 11pt; }
   a { color: inherit; text-decoration: underline; }
   a[href^="http"]::after, a[href^="/"]::after { content: " (" attr(href) ")"; font-size: 0.8em; color: #555; }
-  img.dark { display: none !important; }
-  img.light { display: block !important; }
   .prose { max-width: none; }
   .prose pre { white-space: pre-wrap; overflow: visible; background: none; padding: 0; }
   .prose code { background: none; }

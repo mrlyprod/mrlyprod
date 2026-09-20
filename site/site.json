@@ -140,7 +140,7 @@
     {
       "path": "kit/ui",
       "out": "ui",
-      "hash": false,
+      "hash": true,
       "files": [
         "seti/seti.css",
         "seti/seti.woff2",
@@ -149,7 +149,7 @@
         "fonts/serif.woff2",
         "fonts/mono.woff2",
         "fonts/mrly.woff2",
-        "fonts/symbols.ttf",
+        "fonts/symbols.woff2",
         "fonts/emoji.0.woff2",
         "fonts/emoji.1.woff2",
         "fonts/emoji.2.woff2",
@@ -159,12 +159,20 @@
         "fonts/emoji.6.woff2",
         "fonts/emoji.7.woff2",
         "fonts/emoji.8.woff2",
-        "fonts/emoji.9.woff2",
+        "fonts/emoji.9.woff2"
+      ]
+    },
+    {
+      "path": "kit/ui",
+      "out": "ui",
+      "hash": false,
+      "files": [
         "fonts/LICENSE-sans.txt",
         "fonts/LICENSE-serif.txt",
         "fonts/LICENSE-mono.txt",
         "fonts/LICENSE-emoji.txt",
-        "fonts/LICENSE-symbols.txt"
+        "fonts/LICENSE-symbols.txt",
+        "seti/LICENSE-seti.txt"
       ]
     }
   ],

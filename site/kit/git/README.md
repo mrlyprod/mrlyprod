@@ -21,6 +21,8 @@
 - A file over 1 MB is a raw link only; text over 200 KB drops the line numbers and stays a plain `<pre>`.
 - A name with no dot gets `.txt` on both its page and its raw path, because the CloudFront router 301s any extensionless path to a slash.
 - `/raw/<path>` is the bytes: text is `text/plain; charset=utf-8`, binary keeps its type by extension, and the type rides on the output so `push.ts` sets the S3 header.
+- A binary the site already serves elsewhere gets no `/raw/` object at all: the Raw link, the `<img>`, the `<embed>` and the Download link point at the served copy, and the sitemap drops the raw URL.
+- `spec.git.served(site, path)` answers that question, so the kit never names an extension or a folder; text, PDFs and unserved binaries keep their `/raw/` copy.
 - Every page links to the same path on github.com and to its own raw object.
 
 ## NAVIGATOR
@@ -52,9 +54,10 @@
 
 ## HOOKS
 
-- The module never imports the chrome, so `spec.git` carries it: `{ page, md, code }`.
+- The module never imports the chrome, so `spec.git` carries it: `{ page, md, code, served }`; no `spec.git` at all means the routes are collected and nothing is rendered.
 - `page(site, leaf)` wraps a body in the site's page template; `leaf.code` asks it for the seti stylesheet.
 - `md(site, text, from)` renders markdown the site's way, with the site's math, where `from` is the repo-relative path of the file being read.
 - A link in that markdown goes through `ssg/links.ts`, so a `/git/` page and a site page resolve the same link the same way; `link(dir, url)` is the `/git/` fallback that resolver ends on.
+- `served(site, path)` is the mirror seam: it hands back the URL the site already serves that repo file at, or null; `site.serves` maps a bundled source file to its published URL and `site.made` holds every path the build has written.
 - `code(text, lang)` is the highlighter seam: it hands back one HTML string per line, or null to fall back to escaped text.
 - A site that passes no `code` gets `code.ts`, so the highlighter is the default and not a chore.

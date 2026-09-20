@@ -33,10 +33,13 @@ export type Wood = { base: string; c: Twig[] };
 export type Twig = { n: string; k: "d" | "f"; i?: string; c?: Twig[] };
 
 export type Hooks = {
-  page: (site: Site, leaf: Leaf) => Bytes;
+  page?: (site: Site, leaf: Leaf) => Bytes;
   md?: (site: Site, text: string, from: string) => string;
   code?: (text: string, lang: string) => Promise<string[] | null> | string[] | null;
+  served?: (site: Site, path: string) => string | null;
 };
+
+export type Drawn = Hooks & { page: NonNullable<Hooks["page"]> };
 
 /* CONFIG */
 
@@ -205,9 +208,9 @@ export function forest(site: Site): Wood | null {
 
 /* FINGERPRINT */
 
-export function print(site: Site, route: Route): string {
+export function print(site: Site, route: Route, hooks?: Hooks): string {
   const parts: Bytes[] = ["git", route.route, route.kind ?? "", JSON.stringify(route.data ?? null), site.stamp];
-  if (route.kind === "gitfile") parts.push(version);
+  if (route.kind === "gitfile") parts.push(version, mirror(site, route, hooks) ?? "");
   for (const file of route.inputs ?? []) {
     parts.push(stem(file));
     parts.push(existsSync(file) ? bytes(file) : "gone");
@@ -314,6 +317,24 @@ function reads(body: Uint8Array): string | null {
   }
 }
 
+/* SERVED */
+
+function shelved(site: Site, git: Git, path: string, weight: number, hooks: Hooks): string | null {
+  const url = hooks.served?.(site, path);
+  if (!url) return null;
+  const kind = ext(path);
+  if (weight > HUGE || IMAGE.has(kind) || kind === "pdf") return url;
+  return reads(bytes(join(git.root, path))) === null ? url : null;
+}
+
+export function mirror(site: Site, route: Route, hooks?: Hooks): string | null {
+  if (route.kind !== "gitfile" || !hooks?.served) return null;
+  const git = config(site);
+  if (!git) return null;
+  const { path, size } = route.data as File;
+  return shelved(site, git, path, size, hooks);
+}
+
 /* LINKS */
 
 export function link(dir: string, url: string): string {
@@ -381,7 +402,7 @@ function rows(dir: string, kids: Child[]): string {
   return `<ul class="files">\n${items.join("\n")}\n</ul>`;
 }
 
-function listing(site: Site, git: Git, route: Route, hooks: Hooks): Output[] {
+function listing(site: Site, git: Git, route: Route, hooks: Drawn): Output[] {
   const { dir, kids, readme } = route.data as Dir;
   const tools = [
     github(git, dir, true) ? `<a href="${href(github(git, dir, true))}">GitHub</a>` : "",
@@ -424,11 +445,12 @@ export async function block(text: string, kind: string, hook?: Hooks["code"]): P
 
 /* FILE */
 
-async function file(site: Site, git: Git, route: Route, hooks: Hooks): Promise<Output[]> {
+async function file(site: Site, git: Git, route: Route, hooks: Drawn): Promise<Output[]> {
   const { path, size: weight } = route.data as File;
   const source = join(git.root, path);
   const body = bytes(source);
-  const raw = href(`/${rawPath(path)}`);
+  const away = shelved(site, git, path, weight, hooks);
+  const raw = href(away ?? `/${rawPath(path)}`);
   const kind = ext(path);
   const huge = weight > HUGE;
   const text = huge || IMAGE.has(kind) || kind === "pdf" ? null : reads(body);
@@ -458,14 +480,15 @@ async function file(site: Site, git: Git, route: Route, hooks: Hooks): Promise<O
   const plain = `${stem(path)} in ${git.name}, ${note}`;
   const description = (text !== null ? gist(text) : "") || plain;
   const shown = `${head}\n<div class="lede"><h1 id="${anchor(stem(path))}">${escape(stem(path))}</h1><p class="lead">${escape(note)}</p></div>\n${main}`;
-  return [
-    { path: rawPath(path), bytes: body, type: mime(path, text !== null) },
+  const out: Output[] = [
     {
       path: `git/${named(path)}`,
       bytes: hooks.page(site, { route: route.route, name: stem(path), description, body: shown, code: true, tree: explorer(site, home(path)) }),
       type: HTML,
     },
   ];
+  if (!away) out.unshift({ path: rawPath(path), bytes: body, type: mime(path, text !== null) });
+  return out;
 }
 
 /* RENDER */
@@ -473,7 +496,7 @@ async function file(site: Site, git: Git, route: Route, hooks: Hooks): Promise<O
 export async function render(site: Site, route: Route, spec: Spec): Promise<Output[]> {
   const git = config(site);
   if (!git) throw new Error(`git: ${route.route} has no git block in site.json`);
-  const hooks = spec.git;
+  const hooks = spec.git as Drawn | undefined;
   if (!hooks?.page) throw new Error("git: site.json declares git but the spec carries no git.page");
   return route.kind === "gitdir" ? listing(site, git, route, hooks) : file(site, git, route, hooks);
 }

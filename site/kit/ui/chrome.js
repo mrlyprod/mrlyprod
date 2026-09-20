@@ -4,6 +4,7 @@ const KEY = { theme: `${PREFIX}theme`, font: `${PREFIX}font`, tint: `${PREFIX}ti
 const WORDMARK = 'wordmark';
 const SCREENS = ['matrix', 'sleep', 'mandelbrot', 'julia'];
 const SIDES = ['left', 'right'];
+const SHADE = 'screen and (prefers-color-scheme: dark)';
 
 const read = (key) => {
   try {
@@ -91,6 +92,14 @@ function shut() {
   for (const side of open) set(side, false);
   if (open.length) document.querySelector(`[data-pane="${open[0]}"]`)?.focus();
   return open.length > 0;
+}
+
+/* HALVES */
+
+function halves() {
+  const set = root().dataset.theme;
+  const media = set === 'dark' ? 'screen' : set === 'light' ? 'not all' : SHADE;
+  for (const source of document.querySelectorAll('picture source[data-dark]')) source.media = media;
 }
 
 /* THEME */
@@ -324,6 +333,7 @@ function boot() {
   root().classList.add('js');
   if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   ready(land);
+  window.addEventListener('theme', halves);
   theme(read(KEY.theme));
   face(read(KEY.font));
   tint(read(KEY.tint));

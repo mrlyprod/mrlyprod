@@ -40,7 +40,8 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url(symbols.ttf) format("truetype");
+  src: url(symbols.woff2) format("woff2");
+  unicode-range: U+00a0, U+00a9, U+00b7, U+00d7, U+00e4, U+00f6, U+0144, U+2026, U+2212, U+2218, U+22c5, U+25a1;
 }
 
 @font-face {

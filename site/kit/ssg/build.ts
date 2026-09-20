@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { basename, dirname, extname, join, normalize, relative, resolve } from "node:path";
 import { deflateSync } from "node:zlib";
-import { collect as gitRoutes, forest, isGit, print as gitPrint, render as gitRender, type Hooks } from "../git/git.ts";
+import { collect as gitRoutes, forest, isGit, mirror, owner, print as gitPrint, render as gitRender, type Hooks } from "../git/git.ts";
 import { index, stamp, type Index } from "./links.ts";
 import { grid, logoSvg } from "../ui/logo.js";
 
@@ -43,6 +43,8 @@ export type Site = {
   nav: Node[];
   stamp: string;
   index: Index | null;
+  serves: Map<string, string>;
+  made: Set<string>;
   asset: (name: string) => string;
   input: (name: string) => Input;
   bytes: (file: string) => Uint8Array;
@@ -158,9 +160,22 @@ function bundles(root: string, config: Config): Bundle[] {
 
 const IMPORT = /((?:\bfrom|\bimport)\s*\(?\s*)(["'])(\.\.?\/[^"']+)\2/g;
 
-function place(one: Bundle, spec: Spec, assets: Map<string, string>, copies: Output[]) {
+const URLS = /(\burl\(\s*)(["']?)([^"')]+)\2(\s*\))/g;
+
+const LOADS = /(@import\s+)(["'])([^"']+)\2/g;
+
+const OUTSIDE = /^(?:[a-z][a-z0-9+.-]*:|[/#])/i;
+
+function place(one: Bundle, spec: Spec, assets: Map<string, string>, copies: Output[], serves: Map<string, string>) {
   const known = new Set(one.files);
   const busy = new Set<string>();
+  const point = (name: string, target: string): string | null => {
+    if (OUTSIDE.test(target)) return null;
+    const dep = normalize(join(dirname(name), target));
+    if (known.has(dep)) return visit(dep);
+    if (existsSync(join(one.path, dep))) throw new Error(`ssg: ${name} names ${dep}, which the kit's files do not list`);
+    return null;
+  };
   const visit = (name: string): string => {
     const hit = assets.get(name);
     if (hit) return hit;
@@ -173,16 +188,27 @@ function place(one: Bundle, spec: Spec, assets: Map<string, string>, copies: Out
     if (one.hash && /\.m?js$/.test(name)) {
       const text = typeof body === "string" ? body : new TextDecoder().decode(body);
       body = text.replace(IMPORT, (whole, head: string, quote: string, target: string) => {
-        const dep = normalize(join(dirname(name), target));
-        if (known.has(dep)) return `${head}${quote}${visit(dep)}${quote}`;
-        if (existsSync(join(one.path, dep))) throw new Error(`ssg: ${name} imports ${dep}, which the kit's files do not list`);
-        return whole;
+        const to = point(name, target);
+        return to ? `${head}${quote}${to}${quote}` : whole;
       });
+    }
+    if (one.hash && /\.css$/.test(name)) {
+      const text = typeof body === "string" ? body : new TextDecoder().decode(body);
+      body = text
+        .replace(URLS, (whole, head: string, quote: string, target: string, tail: string) => {
+          const to = point(name, target);
+          return to ? `${head}${quote}${to}${quote}${tail}` : whole;
+        })
+        .replace(LOADS, (whole, head: string, quote: string, target: string) => {
+          const to = point(name, target);
+          return to ? `${head}${quote}${to}${quote}` : whole;
+        });
     }
     const data = typeof body === "string" ? new TextEncoder().encode(body) : body;
     const stem = name.replace(/(\.[^.]+)$/, "");
     const path = one.hash ? `${one.out}/${stem}-${short(digest([data]))}${extname(name)}` : `${one.out}/${name}`;
     assets.set(name, `/${path}`);
+    serves.set(join(one.path, name), `/${path}`);
     copies.push({ path, bytes: data });
     busy.delete(name);
     return `/${path}`;
@@ -201,7 +227,8 @@ export async function scan(spec: Spec): Promise<Site> {
   const kit = list[0] ?? null;
   const assets = new Map<string, string>();
   const copies: Output[] = [];
-  for (const one of list) place(one, spec, assets, copies);
+  const serves = new Map<string, string>();
+  for (const one of list) place(one, spec, assets, copies, serves);
   const site: Site = {
     root,
     out: resolve(spec.out),
@@ -212,6 +239,8 @@ export async function scan(spec: Spec): Promise<Site> {
     nav: [],
     stamp: "",
     index: null,
+    serves,
+    made: new Set(copies.map((one) => one.path)),
     asset: (name) => {
       const hit = assets.get(name);
       if (!hit) throw new Error(`ssg: no asset named ${name}`);
@@ -259,8 +288,8 @@ export function label(site: Site, file: string): string {
   return file === base ? name : `${name}/${file.slice(base.length + 1)}`;
 }
 
-export function fingerprint(site: Site, route: Route): string {
-  if (isGit(route)) return gitPrint(site, route);
+export function fingerprint(site: Site, route: Route, spec?: Spec): string {
+  if (isGit(route)) return gitPrint(site, route, spec?.git);
   const files = route.inputs ?? (route.source ? [route.source] : []);
   const named = files.map((file) => [label(site, file), file] as const).sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
   const parts: Bytes[] = [route.route, route.kind ?? "", JSON.stringify(route.data ?? null), site.stamp];
@@ -279,7 +308,7 @@ export function fingerprint(site: Site, route: Route): string {
 /* RENDER */
 
 export async function render(site: Site, route: Route, spec: Spec): Promise<Output[]> {
-  if (isGit(route)) return gitRender(site, route, spec);
+  if (isGit(route)) return spec.git?.page ? gitRender(site, route, spec) : [];
   return await spec.render(site, route);
 }
 
@@ -345,12 +374,16 @@ const clean = (root: string) => (root ?? "").replace(/\/$/, "");
 
 const AGENTS = ["GPTBot", "ClaudeBot", "Claude-Web", "CCBot", "Google-Extended", "anthropic-ai", "PerplexityBot"];
 
-function links(site: Site): Link[] {
+function links(site: Site, spec: Spec): Link[] {
   const out: Link[] = [];
   for (const route of site.routes) {
     if (route.hidden && !route.sitemap) continue;
+    const away = mirror(site, route, spec.git);
     const list = route.urls ?? (route.route.endsWith("/") ? [{ route: route.route, name: route.name }] : []);
-    for (const one of list) out.push({ route: one.route, name: one.name ?? one.route, at: one.at || route.at });
+    for (const one of list) {
+      if (away && owner(one.route)) continue;
+      out.push({ route: one.route, name: one.name ?? one.route, at: one.at || route.at });
+    }
   }
   return out.sort((a, b) => a.route.localeCompare(b.route));
 }
@@ -382,7 +415,7 @@ function llms(site: Site, root: string): string {
 export async function globals(site: Site, spec: Spec): Promise<Output[]> {
   const out: Output[] = [...((site as { copies?: Output[] }).copies ?? [])];
   const root = clean(site.config.root as string);
-  const shown = links(site);
+  const shown = links(site, spec);
   const urls = shown.map((l) => `<url><loc>${escape(root + l.route)}</loc><lastmod>${l.at || today()}</lastmod></url>`);
   out.push({
     path: "sitemap.xml",
@@ -453,13 +486,17 @@ export async function build(spec: Spec, options: { manifest?: string; force?: bo
   let rendered = 0;
   let written = 0;
   for (const route of site.routes) {
-    const hash = fingerprint(site, route);
+    if (isGit(route) && !spec.git?.page) continue;
+    const hash = fingerprint(site, route, spec);
     const was = old[route.route];
     const same = !options.force && !!was && was.hash === hash;
     if (was && same && (!verify || was.outputs.every((p) => existsSync(join(site.out, p))))) {
       next[route.route] = was;
       route.at = route.at || was.at;
-      for (const p of was.outputs) kept.add(p);
+      for (const p of was.outputs) {
+        kept.add(p);
+        site.made.add(p);
+      }
       continue;
     }
     const outputs = await render(site, route, spec);
@@ -471,7 +508,10 @@ export async function build(spec: Spec, options: { manifest?: string; force?: bo
     const at = route.at || (was && same ? was.at : today());
     next[route.route] = { hash, at, outputs: outputs.map((o) => o.path), types: typed(outputs) };
     route.at = at;
-    for (const item of outputs) kept.add(item.path);
+    for (const item of outputs) {
+      kept.add(item.path);
+      site.made.add(item.path);
+    }
   }
   for (const item of await globals(site, spec)) {
     if (put(site.out, item)) written++;

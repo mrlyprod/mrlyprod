@@ -2,6 +2,7 @@
 
 - The figure crate: every figure the site opens on is one binary in `src/bin/<name>.rs`, drawn with the `mrlyfig` kit and pressed by `scripts/figures.sh` into `files/figures/<name>-dark.png` and `<name>-light.png`.
 - Cargo autodiscovers the binaries; a new figure is one file here and nothing else.
+- `scripts/webp.py`, run by `figures.sh` after every press, writes a `<name>.webp` twin beside every PNG at 1024 wide, quality 90; the site ships the WebP halves and keeps the dark PNG for the og:image and the raw link.
 - `bash scripts/figures.sh <name>` prints one, no name prints all, `check` and `test` are the verbs the desk runs.
 
 ## FIGURES

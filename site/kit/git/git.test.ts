@@ -2,9 +2,9 @@ import { afterAll, expect, test } from "bun:test";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { block, collect, dirRoute, explorer, fileRoute, forest, gist, href, lang, link, mime, named, owner, rawPath } from "./git.ts";
+import { block, collect, dirRoute, explorer, fileRoute, forest, gist, href, lang, link, mime, named, owner, rawPath, render } from "./git.ts";
 import { paint } from "./code.ts";
-import type { Site } from "../ssg/build.ts";
+import type { Site, Spec } from "../ssg/build.ts";
 
 /* TREE */
 
@@ -104,6 +104,24 @@ test("a git block routes every tracked file and every directory", () => {
     { route: "/git/src/a.rs", name: "a.rs" },
     { route: "/raw/src/a.rs", name: "a.rs" },
   ]);
+});
+
+/* SERVED */
+
+test("a binary the site already serves loses its raw copy and points at the served url", async () => {
+  const shelf = join(tmpdir(), `mrlyraw-${process.pid}`);
+  mkdirSync(shelf, { recursive: true });
+  writeFileSync(join(shelf, "logo.png"), Uint8Array.from([137, 80, 78, 71, 13, 10, 26, 10, 0, 1]));
+  writeFileSync(join(shelf, "seal.bin"), Uint8Array.from([0, 1, 2, 3]));
+  const one = { root: shelf, config: { git: { root: "." } }, nav: [] } as unknown as Site;
+  const { routes } = collect(one);
+  const spec = { git: { page: (_s: Site, leaf: { body: string }) => leaf.body, served: (_s: Site, path: string) => (path === "logo.png" ? "/figures/logo.png" : null) } } as unknown as Spec;
+  const shown = await render(one, routes.find((r) => r.route === "/git/logo.png")!, spec);
+  expect(shown.map((item) => item.path)).toEqual(["git/logo.png"]);
+  expect(shown[0].bytes).toContain('<img src="/figures/logo.png"');
+  const kept = await render(one, routes.find((r) => r.route === "/git/seal.bin")!, spec);
+  expect(kept.map((item) => item.path)).toEqual(["raw/seal.bin", "git/seal.bin"]);
+  rmSync(shelf, { recursive: true, force: true });
 });
 
 /* BLURB */

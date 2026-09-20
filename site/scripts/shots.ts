@@ -34,7 +34,8 @@ const args = process.argv.slice(2);
 const print = args.includes("--print");
 const baseline = args.includes("--baseline");
 const probe = args.includes("--js") ? args[args.indexOf("--js") + 1] ?? "" : "";
-const routes = args.filter((a, i) => !a.startsWith("--") && args[i - 1] !== "--js");
+const scheme = args.includes("--theme") ? args[args.indexOf("--theme") + 1] ?? "" : "";
+const routes = args.filter((a, i) => !a.startsWith("--") && args[i - 1] !== "--js" && args[i - 1] !== "--theme");
 const pages = routes.length ? routes : ROUTES;
 const out = join(SHOTS, baseline ? "baseline" : "latest");
 const base = join(SHOTS, "baseline");
@@ -157,7 +158,7 @@ const READY = `${MOUNTED}.then(() => Promise.all([...document.images].map((i) =>
 
 const WIDE = `JSON.stringify([...document.querySelectorAll("body *")].filter((el) => !el.closest(".pane, .scrim") && getComputedStyle(el).visibility !== "hidden").map((el) => [el, el.getBoundingClientRect()]).filter(([, r]) => r.right > innerWidth + 1 && r.width > 0).sort((a, b) => b[1].right - a[1].right).slice(0, 4).map(([el, r]) => el.tagName.toLowerCase() + (typeof el.className === "string" && el.className ? "." + el.className.trim().split(/\\s+/).join(".") : "") + " right=" + Math.round(r.right)))`;
 
-const name = (route: string, size: string) => `${route.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "home"}-${size}${print ? "-print" : ""}.png`;
+const name = (route: string, size: string) => `${route.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "home"}-${size}${print ? "-print" : ""}${scheme ? `-${scheme}` : ""}.png`;
 
 const sha = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex").slice(0, 8);
 
@@ -175,7 +176,7 @@ try {
   await send("Page.enable");
   await send("Runtime.enable");
   await send("Log.enable");
-  await send("Emulation.setEmulatedMedia", { media: print ? "print" : "", features: [{ name: "prefers-reduced-motion", value: "reduce" }] });
+  await send("Emulation.setEmulatedMedia", { media: print ? "print" : "", features: [{ name: "prefers-reduced-motion", value: "reduce" }, ...(scheme ? [{ name: "prefers-color-scheme", value: scheme }] : [])] });
   for (const route of pages) {
     for (const [size, width, height, mobile] of SIZES) {
       await send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile });

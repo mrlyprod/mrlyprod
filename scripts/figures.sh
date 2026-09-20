@@ -55,6 +55,8 @@ if [[ $full -eq 1 ]]; then
   echo "$table" > "$out/bench.txt"
 fi
 
+uv run --project "$HERE/.." python "$HERE/webp.py"
+
 dark=$(ls files/figures/*-dark.png 2>/dev/null | wc -l | tr -d ' ')
 light=$(ls files/figures/*-light.png 2>/dev/null | wc -l | tr -d ' ')
 echo "$dark dark and $light light figures in files/figures"

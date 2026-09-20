@@ -4,8 +4,9 @@ import { createElement as h } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import katex from "katex";
 import { build, bytes, jsonScript, jsonText, walk, type Node, type Output, type Route, type Site, type Spec } from "../kit/ssg/build.ts";
-import { isGit } from "../kit/git/git.ts";
+import { config as gitConfig, isGit } from "../kit/git/git.ts";
 import { resolve as resolveLink } from "../kit/ssg/links.ts";
+import { themed } from "../kit/ssg/pic.ts";
 import { escape, front, inline, plain, render as md, summary, title } from "../kit/ssg/md.ts";
 import { sidebar, tree } from "../lib/tree.js";
 import { Glyph, Grid, Menu, Shell } from "../kit/ui/chrome.jsx";
@@ -47,8 +48,9 @@ function links(site: Site, from: string, out?: Output[]) {
   const home = site.input("figures").path;
   return (url: string) => {
     if (out && NAME.test(url) && existsSync(join(home, `${url}.png`))) {
-      const path = `figures/${url}.png`;
-      if (!out.some((item) => item.path === path)) out.push({ path, bytes: bytes(join(home, `${url}.png`)) });
+      const ext = existsSync(join(home, `${url}.webp`)) ? "webp" : "png";
+      const path = `figures/${url}.${ext}`;
+      if (!out.some((item) => item.path === path)) out.push({ path, bytes: bytes(join(home, `${url}.${ext}`)) });
       return `/${path}`;
     }
     return resolveLink(site, from, url);
@@ -59,32 +61,32 @@ function links(site: Site, from: string, out?: Output[]) {
 
 const SIDES = ["dark", "light"] as const;
 
-function figure(home: string, name: string, route: string) {
-  const file = join(home, `${name}.png`);
-  if (!existsSync(file)) throw new Error(`site: ${name}.png missing from ${relative(org, home)} for ${route}; draw it with bun run figures`);
+function figure(home: string, name: string, route: string, ext = "png") {
+  const file = join(home, `${name}.${ext}`);
+  if (!existsSync(file)) throw new Error(`site: ${name}.${ext} missing from ${relative(org, home)} for ${route}; draw it with bun run figures`);
   return file;
 }
 
 function press(site: Site, out: Output[]) {
   const home = site.input("figures").path;
+  const keep = (path: string, file: string) => {
+    if (!out.some((item) => item.path === path)) out.push({ path, bytes: bytes(file) });
+  };
   return (name: string, route: string) => {
     const pair = { dark: "", light: "" };
     for (const side of SIDES) {
-      const file = figure(home, `${name}-${side}`, route);
-      const path = `figures/${name}-${side}.png`;
-      if (!out.some((item) => item.path === path)) out.push({ path, bytes: bytes(file) });
+      const path = `figures/${name}-${side}.webp`;
+      keep(path, figure(home, `${name}-${side}`, route, "webp"));
       pair[side] = `/${path}`;
     }
+    keep(`figures/${name}-dark.png`, figure(home, `${name}-dark`, route));
     return pair;
   };
 }
 
 type Fig = ReturnType<typeof press>;
 
-const pic = (fig: Fig, name: string, route: string, alt: string, extra = "", cls = "") => {
-  const pair = fig(name, route);
-  return SIDES.map((side) => `<img class="${cls}${cls ? " " : ""}${side}" src="${pair[side]}" alt="${escape(alt)}" width="1024" height="1024"${extra}>`).join("");
-};
+const pic = (fig: Fig, name: string, route: string, alt: string, extra = "", cls = "") => themed(fig(name, route), alt, cls, extra);
 
 const hero = (fig: Fig, name: string, route: string, alt: string) =>
   `<figure class="opener">${pic(fig, name, route, alt)}</figure>`;
@@ -260,7 +262,49 @@ function demoGroup(site: Site): Route {
   };
 }
 
-function seo(source: string, card: Card, nav: string, image: Picture) {
+const IMPORTS = /\bimport\s*["']([^"']+)["']|\bfrom\s*["']([^"']+)["']/g;
+
+const MODULE = /<script[^>]*type="module"[^>]*>/;
+
+const SRC = /src="([^"]+)"/;
+
+async function imports(outputs: { path: string; text: () => Promise<string> }[]): Promise<Map<string, string[]>> {
+  const trim = (path: string) => path.replace(/^\.\//, "");
+  const known = new Set(outputs.map((item) => trim(item.path)));
+  const edges = new Map<string, string[]>();
+  for (const item of outputs) {
+    const path = trim(item.path);
+    if (!path.endsWith(".js")) continue;
+    const deps: string[] = [];
+    for (const [, bare, named] of (await item.text()).matchAll(IMPORTS)) {
+      const dep = join(dirname(path), bare ?? named);
+      if (known.has(dep) && !deps.includes(dep)) deps.push(dep);
+    }
+    edges.set(path, deps);
+  }
+  return edges;
+}
+
+function closure(edges: Map<string, string[]>, entry: string): string[] {
+  const seen = new Set<string>();
+  const queue = [...(edges.get(entry) ?? [])];
+  while (queue.length) {
+    const next = queue.shift()!;
+    if (seen.has(next)) continue;
+    seen.add(next);
+    queue.push(...(edges.get(next) ?? []));
+  }
+  return [...seen];
+}
+
+function chunks(html: string, path: string, edges: Map<string, string[]>): string[] {
+  const tag = html.match(MODULE);
+  const src = tag?.[0].match(SRC)?.[1];
+  if (!src) return [];
+  return closure(edges, join(dirname(path), src)).map((dep) => `/${dep}`);
+}
+
+function seo(source: string, card: Card, nav: string, image: Picture, fonts: string, preload: string[]) {
   const html = source
     .replace(/<html([^>]*)>/, (_, attrs: string) => `<html${attrs.replace(/ data-prefix="[^"]*"/, "")} data-prefix="${SITE.prefix}">`)
     .replace(/<script data-boot>[\s\S]*?<\/script>\n?/, "")
@@ -270,9 +314,11 @@ function seo(source: string, card: Card, nav: string, image: Picture) {
   const name = found ? untag(found[1]) : card.title;
   const tags = meta(route, name, card.blurb || name, "website", image);
   const reads = `<script type="application/json" id="${SITE.prefix}reads">${jsonText(card.reads)}</script>`;
-  const block = `${BOOT}\n<title>${escape(brand(name))}</title>\n${tags}\n${nav}\n${reads}\n<link rel="stylesheet" href="/ui/fonts/fonts.css">`;
+  const block = `${BOOT}\n<title>${escape(brand(name))}</title>\n${tags}\n${nav}\n${reads}\n<link rel="stylesheet" href="${fonts}">`;
   const page = found ? html.replace(found[0], block) : html.replace("<head>", `<head>\n${block}`);
-  return page.replace("</head>", `${TINT}\n</head>`);
+  const ahead = preload.map((href) => `<link rel="modulepreload" href="${href}">`).join("\n");
+  const ready = ahead ? page.replace(MODULE, (whole) => `${ahead}\n${whole}`) : page;
+  return ready.replace("</head>", `${TINT}\n</head>`);
 }
 
 const widgetFiles = (site: Site) => site.input("demos").files.filter((f) => f.endsWith("/widget.jsx"));
@@ -295,11 +341,18 @@ async function demos(site: Site, route: Route): Promise<Output[]> {
   const out: Output[] = [{ path: "demos/tree.json", bytes: json, type: "application/json" }];
   const fig = press(site, out);
   for (const d of list) if (d.name) fig(`demo-${d.name}`, "/demos/");
+  const edges = await imports(built.outputs);
+  const fonts = site.asset("fonts/fonts.css");
   for (const item of built.outputs) {
     const path = item.path.replace(/^\.\//, "");
     const card = shells.get(path);
-    const image = card ? picture(site, card.name ? `demo-${card.name}` : "site-demos", demoRoute(card.name), fig) : OG;
-    out.push({ path, bytes: card ? seo(await item.text(), card, nav, image) : new Uint8Array(await item.arrayBuffer()) });
+    if (!card) {
+      out.push({ path, bytes: new Uint8Array(await item.arrayBuffer()) });
+      continue;
+    }
+    const image = picture(site, card.name ? `demo-${card.name}` : "site-demos", demoRoute(card.name), fig);
+    const html = await item.text();
+    out.push({ path, bytes: seo(html, card, nav, image, fonts, chunks(html, path, edges)) });
   }
   return out;
 }
@@ -866,9 +919,8 @@ function depths(list: Leaf_[]): Map<string, number> {
 }
 
 function tile(fig: Fig, route: string, e: Leaf_, names: Map<string, string>) {
-  const pair = fig(e.figure, route);
   const needs = e.needs.length ? `<p class="needs">After ${e.needs.map((need) => `<a href="${wikiRoute(need)}">${escape(names.get(need) ?? need)}</a>`).join(", ")}</p>` : "";
-  const img = SIDES.map((side) => `<img class="${side}" src="${pair[side]}" alt="" width="1024" height="1024" loading="lazy" decoding="async">`).join("");
+  const img = pic(fig, e.figure, route, "", ` loading="lazy" decoding="async"`);
   return `<div class="tile"><a href="${wikiRoute(e.slug)}">${img}<h2>${escape(e.name)}</h2><p>${escape(e.lead)}</p></a>${needs}</div>`;
 }
 
@@ -1051,9 +1103,27 @@ function extras(site: Site): Output[] {
   return out;
 }
 
+/* SERVED */
+
+function served(site: Site, path: string): string | null {
+  const git = gitConfig(site);
+  if (!git) return null;
+  const file = join(git.root, path);
+  const hit = site.serves.get(file);
+  if (hit) return hit;
+  const home = site.input("figures").path;
+  if (!file.startsWith(`${home}/`)) return null;
+  const at = `figures/${file.slice(home.length + 1)}`;
+  return site.made.has(at) ? `/${at}` : null;
+}
+
 /* SPEC */
 
-export const MANIFEST = process.env.MRLY_DIST ? join(dist, ".manifest.json") : ".cache/manifest.json";
+const GIT = process.env.MRLY_GIT !== "0";
+
+const KEEP = GIT ? ".manifest.json" : ".manifest-nogit.json";
+
+export const MANIFEST = process.env.MRLY_DIST ? join(dist, KEEP) : `.cache/${KEEP.slice(1)}`;
 
 export const counted = () => ({ ...counts });
 
@@ -1066,8 +1136,9 @@ export const spec: Spec = {
   render: draw,
   globals: extras,
   git: {
-    page: shell,
+    page: GIT ? shell : undefined,
     md: (site, text, from) => md(front(text).body, { math, link: links(site, from) }),
+    served,
   },
 };
 

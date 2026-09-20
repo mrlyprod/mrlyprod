@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { halves } from '../ssg/pic.ts';
 import { letters } from './font.js';
 import { wire } from './chrome.js';
 import { conf, HUES } from './config.js';
@@ -130,8 +131,7 @@ function Card({ node }) {
   if (!node.figure) return <a className="tile plain" href={node.href}><h2>{node.name}</h2>{node.text && <p>{node.text}</p>}<Dates dates={node.dates} /></a>;
   return (
     <a className="tile" href={node.href}>
-      <img className="dark" src={node.figure.dark} alt="" width="1024" height="1024" loading="lazy" decoding="async" />
-      <img className="light" src={node.figure.light} alt="" width="1024" height="1024" loading="lazy" decoding="async" />
+      <picture dangerouslySetInnerHTML={{ __html: halves(node.figure, '', '', ' loading="lazy" decoding="async"') }} />
       <h2>{node.name}</h2>
       {node.text && <p>{node.text}</p>}
       <Dates dates={node.dates} />

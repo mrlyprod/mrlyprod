@@ -11,7 +11,7 @@
 - `title root` and whatever the kit reads: `prefix tint tree socials contact`.
 - `inputs`: `{ name: { path, ext?, deep? } }`. Declared, never assumed. `site.input(name).files` reads them back.
 - The site resolves nothing by hand: an undeclared name throws, so every path a build reads is in one block.
-- `kit`: `{ path, out, hash, files }`. Copied into `out/`; `site.asset(name)` gives the href, hashed when `hash` is true. A hashed `.js` file has every relative `import` and `import()` of another listed file rewritten to that file's hashed href, dependencies first, so the kit needs no bundler; a cycle throws.
+- `kit`: `{ path, out, hash, files }`. Copied into `out/`; `site.asset(name)` gives the href, hashed when `hash` is true. A hashed `.js` file has every relative `import` and `import()` of another listed file rewritten to that file's hashed href, and a hashed `.css` file the same for every `url()` and `@import`, dependencies first, so the kit needs no bundler; a cycle throws, and naming a file the bundle does not list throws.
 - `assets`: more blocks of the same shape, for files that must keep their names, such as `fonts/` and `seti/`, whose CSS names its faces by relative url.
 - `manifest`: the webmanifest, written as is. `robots`: `{ disallow }`, appended to the wildcard block alone.
 - `llms`: `{ about, links }`. `about` is the paragraph llms.txt opens on; a link is `{ href, name, note }` and is dropped unless the site publishes that route.

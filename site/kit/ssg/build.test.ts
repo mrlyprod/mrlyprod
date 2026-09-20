@@ -1,7 +1,8 @@
 import { expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { globals, guard, jsonScript, walk, type Output, type Site, type Spec } from "./build.ts";
+import { tmpdir } from "node:os";
+import { build, globals, guard, jsonScript, walk, type Output, type Site, type Spec } from "./build.ts";
 
 /* SITE */
 
@@ -122,4 +123,20 @@ test("the guard passes a listed inline script and a raw mirror, and throws on an
   expect(() => guard("index.html", '<script type="application/ld+json">{"a":1}</script>', known)).not.toThrow();
   expect(() => guard("raw/site/demos/index.html", "<script>const b=2</script>", known)).not.toThrow();
   expect(() => guard("about/index.html", "<script>const b=2</script>", known)).toThrow(/boot list/);
+});
+
+/* GIT OFF */
+
+test("a spec with no git hooks still collects the repo and renders none of it", async () => {
+  const home = join(tmpdir(), `mrlyoff-${process.pid}`);
+  const out = join(tmpdir(), `mrlyoff-${process.pid}-dist`);
+  mkdirSync(home, { recursive: true });
+  writeFileSync(join(home, "README.md"), "# off\n");
+  const done = await build({ root: home, out, config: { git: { root: "." } }, collect: () => ({ routes: [] }), render: () => [] });
+  expect(done.site.routes.map((one) => one.route).sort()).toEqual(["/git/", "/git/README.md"]);
+  expect(Object.keys(done.manifest)).toEqual([]);
+  expect(existsSync(join(out, "git/README.md"))).toBe(false);
+  expect(existsSync(join(out, "raw/README.md"))).toBe(false);
+  rmSync(home, { recursive: true, force: true });
+  rmSync(out, { recursive: true, force: true });
 });

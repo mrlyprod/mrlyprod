@@ -11,8 +11,6 @@
   --dim: #555558;
   --accent: var(--blue);
   --on-accent: var(--white);
-  --show-dark: none;
-  --show-light: block;
 }
 
 /* SURFACE */
@@ -94,8 +92,6 @@
     --line: #1f1f20;
     --fg: var(--white);
     --dim: var(--gray);
-    --show-dark: block;
-    --show-light: none;
     --scrim: color-mix(in srgb, var(--black) 55%, transparent);
     --mix: 100%;
   }
@@ -110,8 +106,6 @@
   --line: #1f1f20;
   --fg: var(--white);
   --dim: var(--gray);
-  --show-dark: block;
-  --show-light: none;
   --scrim: color-mix(in srgb, var(--black) 55%, transparent);
   --mix: 100%;
 }
