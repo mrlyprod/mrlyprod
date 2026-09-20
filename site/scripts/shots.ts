@@ -12,6 +12,8 @@ const PROFILE = join(DATA_DIR, "profile");
 const CHROME = process.env.CHROME ?? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const PORT = 9335;
 const SERVE = 3335;
+const LIVE = (process.env.SITE_URL ?? "").replace(/\/$/, "");
+const CSP = process.env.CSP ?? "";
 
 /* WHAT */
 
@@ -57,10 +59,12 @@ function file(path: string): Response | null {
   if (!want.startsWith(dist) || !existsSync(want) || !statSync(want).isFile()) return null;
   const bytes = new Uint8Array(readFileSync(want));
   const type = html(bytes) ? TYPES[".html"]! : (TYPES[extname(want)] ?? "application/octet-stream");
-  return new Response(bytes, { headers: { "content-type": type } });
+  const headers: Record<string, string> = { "content-type": type };
+  if (CSP) headers["content-security-policy"] = CSP;
+  return new Response(bytes, { headers });
 }
 
-const server = Bun.serve({
+const server = LIVE ? null : Bun.serve({
   port: SERVE,
   fetch(req) {
     const path = decodeURIComponent(new URL(req.url).pathname);
@@ -87,7 +91,7 @@ async function targets(): Promise<Target[] | null> {
 
 async function launch() {
   if (await targets()) throw new Error(`shots: something already answers on port ${PORT}; kill it first`);
-  rmSync(PROFILE, { recursive: true, force: true });
+  if (!LIVE) rmSync(PROFILE, { recursive: true, force: true });
   mkdirSync(PROFILE, { recursive: true });
   const proc = Bun.spawn(
     [CHROME, "--headless=new", "--disable-gpu", "--enable-unsafe-swiftshader", "--use-angle=swiftshader", "--no-first-run", "--hide-scrollbars", `--user-data-dir=${PROFILE}`, `--remote-debugging-port=${PORT}`, "about:blank"],
@@ -105,15 +109,28 @@ async function launch() {
 
 type Reply = { result?: Record<string, unknown>; exceptionDetails?: { text: string } };
 
+const flat = (one: any) => (one?.value !== undefined ? String(one.value) : (one?.description ?? one?.type ?? ""));
+
 function driver(ws: WebSocket) {
   let id = 0;
   const pending = new Map<number, (v: Reply) => void>();
   const events = new Map<string, () => void>();
+  const noise: string[] = [];
+  const said = (text: string) => {
+    const line = text.trim().replace(/\s+/g, " ").slice(0, 300);
+    if (line) noise.push(line);
+  };
   ws.onmessage = (event) => {
     const m = JSON.parse(String(event.data));
     if (m.id && pending.has(m.id)) {
       pending.get(m.id)!(m.result ?? m.error);
       pending.delete(m.id);
+    } else if (m.method === "Runtime.consoleAPICalled" && /error|warning|assert/.test(m.params.type)) {
+      said(`${m.params.type}: ${(m.params.args ?? []).map(flat).join(" ")}`);
+    } else if (m.method === "Runtime.exceptionThrown") {
+      said(`exception: ${m.params.exceptionDetails.exception?.description ?? m.params.exceptionDetails.text}`);
+    } else if (m.method === "Log.entryAdded" && /error|warning/.test(m.params.entry.level)) {
+      said(`${m.params.entry.level}: ${m.params.entry.text}`);
     } else if (m.method && events.has(m.method)) {
       events.get(m.method)!();
       events.delete(m.method);
@@ -129,7 +146,7 @@ function driver(ws: WebSocket) {
       events.set(method, r);
       setTimeout(() => fail(new Error(`shots: ${method} never came within ${PATIENCE / 1000} s`)), PATIENCE);
     });
-  return { send, once };
+  return { send, once, noise };
 }
 
 const MOUNTED = `new Promise((r) => { const root = document.getElementById("root"); if (!root) return r(); const t0 = Date.now(); const poll = () => (root.children.length || Date.now() - t0 > 8000 ? r() : setTimeout(poll, 50)); poll(); })`;
@@ -154,14 +171,17 @@ let fresh = 0;
 try {
   const ws = new WebSocket(page.webSocketDebuggerUrl);
   await new Promise((r) => (ws.onopen = r));
-  const { send, once } = driver(ws);
+  const { send, once, noise } = driver(ws);
   await send("Page.enable");
+  await send("Runtime.enable");
+  await send("Log.enable");
   await send("Emulation.setEmulatedMedia", { media: print ? "print" : "", features: [{ name: "prefers-reduced-motion", value: "reduce" }] });
   for (const route of pages) {
     for (const [size, width, height, mobile] of SIZES) {
       await send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile });
       const loaded = once("Page.loadEventFired");
-      await send("Page.navigate", { url: `http://127.0.0.1:${SERVE}${route}` });
+      noise.length = 0;
+      await send("Page.navigate", { url: `${LIVE || `http://127.0.0.1:${SERVE}`}${route}` });
       try {
         await loaded;
       } catch (error) {
@@ -188,7 +208,8 @@ try {
         verdict = " new";
         fresh++;
       }
-      console.log(`shots: ${file} ${width}x${full} ${sha(bytes)}${wide ? " OVERFLOW" : ""}${verdict}`);
+      console.log(`shots: ${file} ${width}x${full} ${sha(bytes)}${wide ? " OVERFLOW" : ""}${verdict}${noise.length ? ` ${noise.length} NOISE` : ""}`);
+      for (const line of [...new Set(noise)]) console.log(`  ${line}`);
       if (probe) {
         const { result, exceptionDetails } = await send("Runtime.evaluate", { expression: probe, returnByValue: true, awaitPromise: true });
         console.log(`  ${exceptionDetails ? `probe failed: ${exceptionDetails.text}` : JSON.stringify(result.value)}`);
@@ -203,8 +224,8 @@ try {
 } finally {
   proc.kill();
   await proc.exited;
-  rmSync(PROFILE, { recursive: true, force: true });
-  server.stop(true);
+  if (!LIVE) rmSync(PROFILE, { recursive: true, force: true });
+  server?.stop(true);
 }
 const tail = baseline ? "baseline written" : `${changed} differ from baseline, ${fresh} new`;
 console.log(`shots: ${shot} shots in ${out}, ${tail}, chrome killed`);

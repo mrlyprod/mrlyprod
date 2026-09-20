@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { globals, jsonScript, walk, type Output, type Site, type Spec } from "./build.ts";
+import { globals, guard, jsonScript, walk, type Output, type Site, type Spec } from "./build.ts";
 
 /* SITE */
 
@@ -112,4 +112,14 @@ test("the kit css never repeats a top-level selector with another rule between",
       last.set(sel, n);
     });
   }
+});
+
+/* GUARD */
+
+test("the guard passes a listed inline script and a raw mirror, and throws on an unlisted one", () => {
+  const known = new Set(["const a=1"]);
+  expect(() => guard("index.html", "<script data-boot>const a=1</script>", known)).not.toThrow();
+  expect(() => guard("index.html", '<script type="application/ld+json">{"a":1}</script>', known)).not.toThrow();
+  expect(() => guard("raw/site/demos/index.html", "<script>const b=2</script>", known)).not.toThrow();
+  expect(() => guard("about/index.html", "<script>const b=2</script>", known)).toThrow(/boot list/);
 });

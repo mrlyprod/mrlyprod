@@ -9,7 +9,7 @@ import { resolve as resolveLink } from "../kit/ssg/links.ts";
 import { escape, front, inline, plain, render as md, summary, title } from "../kit/ssg/md.ts";
 import { sidebar, tree } from "../lib/tree.js";
 import { Glyph, Grid, Menu, Shell } from "../kit/ui/chrome.jsx";
-import { headScript, tintCss } from "../kit/ui/config.js";
+import { claimsScript, headScript, inlineScripts, tintCss } from "../kit/ui/config.js";
 import SITE from "../lib/site.js";
 import { shelf } from "./shelf.ts";
 
@@ -533,7 +533,7 @@ function discoveries(site: Site, route: Route): Output[] {
   const topics = `<select aria-label="Topic"><option value="">Every topic</option>${list.map((c) => `<option value="${escape(c.slug)}">${escape(c.title)}</option>`).join("")}</select>`;
   const since = `<label>Since <input type="date" aria-label="Since"></label>`;
   const bar = `<form class="filter" onsubmit="return false">${chips}${topics}${since}<output>${total} claims</output></form>`;
-  const script = `<script>(()=>{const f=document.querySelector("form.filter"),b=[...f.querySelectorAll("button")],s=f.querySelector("select"),d=f.querySelector("input"),o=f.querySelector("output"),secs=[...document.querySelectorAll("section.claims")];let tag="";const run=()=>{let n=0;for(const sec of secs){let k=0;for(const li of sec.querySelectorAll("li[data-tag]")){const on=(!tag||li.dataset.tag===tag)&&(!s.value||sec.dataset.slug===s.value)&&(!d.value||li.dataset.date>=d.value);li.hidden=!on;if(on)k++}sec.hidden=!k;n+=k}o.textContent=n+" claims"};for(const x of b)x.addEventListener("click",()=>{tag=x.dataset.tag;for(const y of b)y.classList.toggle("on",y===x);run()});s.addEventListener("change",run);d.addEventListener("input",run)})()</script>`;
+  const script = claimsScript();
   const body = `${hero(fig, "research-index", route.route, "Discoveries")}\n<h1 id="discoveries">Discoveries</h1><p class="lead">${escape(lead)}</p>\n${bar}\n${sections.join("\n")}\n${script}`;
   const data = {
     "@context": "https://schema.org",
@@ -1061,6 +1061,7 @@ export const spec: Spec = {
   root: org,
   out: dist,
   templates: ["lib", "scripts"],
+  inline: inlineScripts(SITE.prefix),
   collect,
   render: draw,
   globals: extras,
