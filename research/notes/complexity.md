@@ -160,7 +160,7 @@ The second sense of complexity is spectral, and it belongs to the fractal rather
 1 0
 ```
 
- - and substitute it into itself `level` times. The array at level `level` is `2^level` on a side with `3^level` filled cells, and a cell `(i, j)` survives exactly when `i AND j = 0`: the Sierpinski triangle. (Verified at level 1..8 by `lab/py/laplacian-degeneracy`: the [Kronecker](/wiki/kronecker-product/) construction is executed literally and the `i AND j = 0` characterisation is then checked against it, never assumed.)
+- and substitute it into itself `level` times. The array at level `level` is `2^level` on a side with `3^level` filled cells, and a cell `(i, j)` survives exactly when `i AND j = 0`: the Sierpinski triangle. (Verified at level 1..8 by `lab/py/laplacian-degeneracy`: the [Kronecker](/wiki/kronecker-product/) construction is executed literally and the `i AND j = 0` characterisation is then checked against it, never assumed.)
 
 Let `G` be the [graph](/wiki/graphs/) on the filled cells at that level, with an edge between axis-nearest neighbours and no diagonals. The operator is the **normalised** Laplacian `I - D^-1/2 A D^-1/2`, at `A` the adjacency matrix of `G` and `D` its diagonal of degrees, whose spectrum lies in `[0, 2]`. (The combinatorial Laplacian `D - A` is a different operator with a different spectrum; the laws below are about the normalised one.)
 

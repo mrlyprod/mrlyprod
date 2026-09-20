@@ -157,6 +157,15 @@ fn cited() -> String {
     out.trim_end().to_string()
 }
 
+fn prose(text: &str) -> String {
+    text.chars()
+        .map(|c| match c {
+            '*' | '_' | '`' | '[' | ']' | '|' | '\\' => format!("\\{c}"),
+            _ => c.to_string(),
+        })
+        .collect()
+}
+
 fn records() -> String {
     let mut out = String::from(
         "| id | record | name | offset | first terms | key | shift | status |\n|---|---|---|---|---|---|---|---|\n",
@@ -174,7 +183,7 @@ fn records() -> String {
             "| {} | {} | {} | {} | `{}` | {} | {} | **{}** |\n",
             id,
             link(record.id),
-            record.name,
+            prose(record.name),
             record.offset,
             record.terms,
             key,

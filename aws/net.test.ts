@@ -1,5 +1,8 @@
 import { expect, test } from "bun:test";
-import { readEvent, SOURCE } from "./net.ts";
+import { mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { modules, readEvent, SOURCE } from "./net.ts";
 
 const SHA = "0123456789abcdef0123456789abcdef01234567";
 
@@ -25,4 +28,15 @@ test("the payload parser survives junk, an unknown source, a foreign repo and a 
 test("a sha with no repo never guesses which repo moved", () => {
   expect(readEvent(JSON.stringify({ body: JSON.stringify({ source: "manual", sha: SHA }) })))
     .toEqual({ source: "manual", on: "", sha: SHA });
+});
+
+test("the modules step takes the layer only when it holds this lockfile", () => {
+  const site = mkdtempSync(join(tmpdir(), "site-"));
+  const layer = mkdtempSync(join(tmpdir(), "layer-"));
+  writeFileSync(join(site, "bun.lock"), "lock");
+  expect(modules(site, layer)).toBe("absent");
+  writeFileSync(join(layer, "bun.lock.sha256"), "nope\n");
+  expect(modules(site, layer)).toBe("stale");
+  writeFileSync(join(layer, "bun.lock.sha256"), `${new Bun.CryptoHasher("sha256").update("lock").digest("hex")}\n`);
+  expect(modules(site, layer)).toBe("layer");
 });

@@ -3,6 +3,7 @@
 - mrly.net's own site builder, not a package. One function renders one route; the rest is bookkeeping.
 - Generic: it knows routes, inputs, fingerprints and manifests, never markdown, papers or products.
 - The site brings its `site.json`, a `collect()` that lists routes and a `render()` per route.
+- `md.ts` is the markdown pipeline, the same bytes as `carlomitchener/site/ssg/md.ts`: `render(md, { link, math, widget })`, `inline`, `sheet`, `front`, `title`, `summary`, `plain`, `slug`, `escape`; `Developer/scripts/twins.sh` keeps the two copies equal.
 - The one exception is `../git`: a `git` block in `site.json` makes `scan` append the repo's own `/git/` and `/raw/` routes, and `render` and `fingerprint` dispatch to that module.
 
 ## SITE.JSON

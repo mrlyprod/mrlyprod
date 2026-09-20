@@ -1,5 +1,6 @@
 import type { S3Client } from "bun";
-import { existsSync, readdirSync, renameSync, rmSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, readdirSync, readFileSync, renameSync, rmSync, symlinkSync } from "node:fs";
 import { join } from "node:path";
 import { client, DEV_BUCKET, getText, putBytes } from "./s3.ts";
 
@@ -11,6 +12,7 @@ const AGENT = "mrlynet-site-builder";
 const SRC_DIR = "/tmp/src";
 const SHELF_DIR = "/tmp/shelf";
 const CACHE_DIR = process.env.BUN_INSTALL_CACHE_DIR || "/tmp/bun/cache";
+const LAYER_DIR = process.env.NODE_LAYER_DIR || "/opt/node";
 const BACKOFF = [1000, 3000, 9000];
 
 const shelfRepo = () => (process.env.SHELF_REPO ?? "").trim();
@@ -179,6 +181,29 @@ async function run(cmd: string[], cwd: string): Promise<string> {
   return out;
 }
 
+/* MODULES */
+
+export type Modules = "layer" | "stale" | "absent";
+
+export function modules(site: string, layer = LAYER_DIR): Modules {
+  const lock = createHash("sha256").update(readFileSync(join(site, "bun.lock"))).digest("hex");
+  const held = join(layer, "bun.lock.sha256");
+  if (!existsSync(held)) return "absent";
+  return readFileSync(held, "utf8").trim() === lock ? "layer" : "stale";
+}
+
+async function install(site: string): Promise<string> {
+  const state = modules(site);
+  if (state === "layer") {
+    const target = join(site, "node_modules");
+    rmSync(target, { recursive: true, force: true });
+    symlinkSync(join(LAYER_DIR, "node_modules"), target);
+    return "modules layer";
+  }
+  await run([process.execPath, "install", "--frozen-lockfile"], site);
+  return state === "stale" ? "modules layer stale, installed" : "modules installed";
+}
+
 /* BUILD */
 
 async function build(s3: S3Client, next: Head): Promise<string> {
@@ -191,8 +216,7 @@ async function build(s3: S3Client, next: Head): Promise<string> {
     log(`shelf ${short(next.shelf)}`);
   }
   const site = join(SRC_DIR, "site");
-  await run([process.execPath, "install", "--frozen-lockfile"], site);
-  log("install");
+  log(await install(site));
   const pkg = await run([process.execPath, "scripts/pkg.ts"], site);
   log(`pkg ${(pkg.trim().split(/\s+/)[0] ?? "").slice(0, 12)}`);
   const out = await run([process.execPath, "run", "push"], site);
