@@ -78,7 +78,7 @@ function spread(manifest: Manifest): Map<string, string> {
 
 /* PUSH */
 
-export async function push(options: { dry?: boolean } = {}): Promise<{ rendered: number; uploaded: number; deleted: number }> {
+async function push(options: { dry?: boolean } = {}): Promise<{ rendered: number; uploaded: number; deleted: number }> {
   const dev = client(DEV_BUCKET);
   const net = client(NET_BUCKET);
   const found = await getText(dev, REMOTE);

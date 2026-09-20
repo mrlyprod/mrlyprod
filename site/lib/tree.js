@@ -11,7 +11,7 @@ function block() {
   return el ? JSON.parse(el.textContent) : null;
 }
 
-export function ready() {
+function ready() {
   if (!shelves) shelves = block();
   return !!shelves;
 }

@@ -288,7 +288,7 @@ export function label(site: Site, file: string): string {
   return file === base ? name : `${name}/${file.slice(base.length + 1)}`;
 }
 
-export function fingerprint(site: Site, route: Route, spec?: Spec): string {
+function fingerprint(site: Site, route: Route, spec?: Spec): string {
   if (isGit(route)) return gitPrint(site, route, spec?.git);
   const files = route.inputs ?? (route.source ? [route.source] : []);
   const named = files.map((file) => [label(site, file), file] as const).sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
@@ -338,7 +338,7 @@ function chunk(type: string, body: Uint8Array): Uint8Array {
   return out;
 }
 
-export function png(size: number, dark: (x: number, y: number) => boolean): Uint8Array {
+function png(size: number, dark: (x: number, y: number) => boolean): Uint8Array {
   const raw = new Uint8Array(size * (size + 1));
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) raw[y * (size + 1) + 1 + x] = dark(x, y) ? 0 : 255;
   const head = new Uint8Array(13);
@@ -356,7 +356,7 @@ export function png(size: number, dark: (x: number, y: number) => boolean): Uint
   return out;
 }
 
-export function icons(): Output[] {
+function icons(): Output[] {
   const rows = grid(1);
   const mark = (size: number) => png(size, (x, y) => rows[Math.floor((y * 5) / size)][Math.floor((x * 5) / size)] === "1");
   return [
@@ -536,10 +536,8 @@ export async function build(spec: Spec, options: { manifest?: string; force?: bo
 
 /* HELPERS */
 
-export const page = (route: string) => (route === "/" ? "index.html" : `${route.replace(/^\/|\/$/g, "")}/index.html`);
-
 export const jsonText = (data: unknown) => JSON.stringify(data).replace(/</g, "\\u003c");
 
 export const jsonScript = (data: unknown) => `<script type="application/ld+json">${jsonText(data)}</script>`;
 
-export { escape, digest, short, rmSync, today };
+export { escape, digest, today };

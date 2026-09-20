@@ -10,7 +10,7 @@ export { palette, dark, light };
 
 const scheme = typeof matchMedia === 'function' ? matchMedia('(prefers-color-scheme: dark)') : null;
 
-export function isDark() {
+function isDark() {
   if (typeof document === 'undefined') return true;
   const set = document.documentElement.dataset.theme;
   return set ? set === 'dark' : Boolean(scheme?.matches);
@@ -24,7 +24,7 @@ export const ink = new Proxy({}, { get: (_, key) => theme()[key] });
 
 export const role = () => [ink.dim, ink.yellow, ink.blue, ink.pink];
 
-export const plusminus = () => ({ plus: ink.orange, minus: ink.blue, empty: ink.deep });
+const plusminus = () => ({ plus: ink.orange, minus: ink.blue, empty: ink.deep });
 
 function tint() {
   if (typeof wasm.set_theme === 'function') wasm.set_theme(isDark());

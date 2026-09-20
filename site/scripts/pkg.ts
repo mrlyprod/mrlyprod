@@ -12,13 +12,13 @@ function crawl(dir: string, at: string, out: string[]) {
   }
 }
 
-export function pkgFiles(dir: string): string[] {
+function pkgFiles(dir: string): string[] {
   const out: string[] = [];
   crawl(dir, "", out);
   return out.sort((a, b) => Buffer.compare(Buffer.from(a, "utf8"), Buffer.from(b, "utf8")));
 }
 
-export function pkgHash(dir: string): string {
+function pkgHash(dir: string): string {
   const manifest = new Bun.CryptoHasher("sha256");
   for (const rel of pkgFiles(dir)) {
     const one = new Bun.CryptoHasher("sha256");

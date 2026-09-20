@@ -24,8 +24,6 @@ const GRAMMARS: Record<string, () => Promise<unknown>> = {
   yaml: () => import("@shikijs/langs/yaml"),
 };
 
-export const grammars = () => Object.keys(GRAMMARS).sort();
-
 /* VERSION */
 
 const here = createRequire(import.meta.url);

@@ -234,7 +234,7 @@ function readers(list: Card[], pages: { name: string; href: string; md: string }
   }
 }
 
-export function shelved(list: Card[]): Bay[] {
+function shelved(list: Card[]): Bay[] {
   return SHELVES.map((one) => ({
     key: one.key,
     name: one.title,
@@ -1123,7 +1123,7 @@ const GIT = process.env.MRLY_GIT !== "0";
 
 const KEEP = GIT ? ".manifest.json" : ".manifest-nogit.json";
 
-export const MANIFEST = process.env.MRLY_DIST ? join(dist, KEEP) : `.cache/${KEEP.slice(1)}`;
+const MANIFEST = process.env.MRLY_DIST ? join(dist, KEEP) : `.cache/${KEEP.slice(1)}`;
 
 export const counted = () => ({ ...counts });
 

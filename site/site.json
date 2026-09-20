@@ -95,9 +95,7 @@
     ]
   },
   "inputs": {
-    "readme": { "path": "README.md" },
     "pages": { "path": "pages", "ext": ".md" },
-    "blog": { "path": "blog", "ext": ".md" },
     "wiki": { "path": "../wiki", "ext": ".md" },
     "research": { "path": "../research", "ext": ".md" },
     "notes": { "path": "../research/notes", "ext": ".md" },

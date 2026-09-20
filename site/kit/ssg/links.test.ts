@@ -103,6 +103,7 @@ test("an extensionless directory lands on its listing", () => {
 
 test("a path the repo does not carry stays as written", () => {
   expect(resolve(mrly, "research/core.md", "lab/gone.rs")).toBe("lab/gone.rs");
+  expect(resolve(mrly, "../shelf/carpet/README.md", "paper.pdf")).toBe("paper.pdf");
 });
 
 test("a site with no git routes falls to the github blob", () => {
@@ -119,8 +120,4 @@ test("an outside link and a rooted link pass through", () => {
   for (const url of ["https://mrly.net", "http://mrly.net", "mailto:help@mrly.net", "tel:+1", "#top", "/demos/"]) {
     expect(resolve(mrly, "research/core.md", url)).toBe(url);
   }
-});
-
-test("a target outside the repo stays as written", () => {
-  expect(resolve(mrly, "../shelf/carpet/README.md", "paper.pdf")).toBe("paper.pdf");
 });

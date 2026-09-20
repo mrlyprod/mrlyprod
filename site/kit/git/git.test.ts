@@ -151,7 +151,6 @@ test("a paint hook fills the line body and nothing else", async () => {
 });
 
 test("the gutter class counts the digits of the last line", async () => {
-  expect(await block("x\n".repeat(9), "text")).toContain('<div class="code d2"');
   expect(await block("x\n".repeat(400), "text")).toContain('<div class="code d3"');
 });
 

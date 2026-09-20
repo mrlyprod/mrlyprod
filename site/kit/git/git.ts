@@ -68,7 +68,7 @@ function crawl(root: string, at: string, out: string[]) {
   }
 }
 
-export function tree(git: Git): string[] {
+function tree(git: Git): string[] {
   if (existsSync(join(git.root, ".git"))) {
     const run = Bun.spawnSync(["git", "ls-files", "-z"], { cwd: git.root, stderr: "ignore" });
     const list = run.success ? run.stdout.toString().split("\0").filter((path) => path && existsSync(join(git.root, path))) : [];
@@ -376,7 +376,7 @@ function bar(git: Git, path: string, dir: boolean, tools: string[]): string {
 
 const CAP = 160;
 
-export const clip = (text: string) => (text.length > CAP ? `${text.slice(0, CAP - 3).trimEnd()}...` : text);
+const clip = (text: string) => (text.length > CAP ? `${text.slice(0, CAP - 3).trimEnd()}...` : text);
 
 export function gist(text: string): string {
   let out = "";

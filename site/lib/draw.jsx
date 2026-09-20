@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { paint, blit, signs } from './mrly.js';
 
-export function useCanvas(draw, deps, live = false, outer) {
+function useCanvas(draw, deps, live = false, outer) {
   const inner = useRef(null);
   const ref = outer ?? inner;
   useEffect(() => {
