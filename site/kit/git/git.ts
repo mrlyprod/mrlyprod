@@ -96,6 +96,8 @@ export const rawPath = (path: string) => `raw/${named(path)}`;
 
 export const isGit = (route: Route) => route.kind === "gitdir" || route.kind === "gitfile";
 
+export const href = (url: string) => escape(encodeURI(url).replace(/#/g, "%23").replace(/\?/g, "%3F"));
+
 export function owner(path: string): string | null {
   if (!path.startsWith("/raw/")) return null;
   return `/git/${path.slice(5)}`;
@@ -286,7 +288,10 @@ const ext = (path: string) => {
   return cut > 0 ? name.slice(cut + 1) : "";
 };
 
-export const mime = (path: string, text: boolean) => (text ? TEXT : (MIME[ext(path)] ?? "application/octet-stream"));
+const INERT = new Set(["svg"]);
+
+export const mime = (path: string, text: boolean) =>
+  text || INERT.has(ext(path)) ? TEXT : (MIME[ext(path)] ?? "application/octet-stream");
 
 /* SHAPE */
 
@@ -339,8 +344,8 @@ function bar(git: Git, path: string, dir: boolean, tools: string[]): string {
   parts.forEach((part, i) => {
     at = at ? `${at}/${part}` : part;
     const last = i === parts.length - 1;
-    const href = last && !dir ? fileRoute(at) : dirRoute(at);
-    crumbs.push(last ? `<b>${escape(part)}</b>` : `<a href="${href}">${escape(part)}</a>`);
+    const to = last && !dir ? fileRoute(at) : dirRoute(at);
+    crumbs.push(last ? `<b>${escape(part)}</b>` : `<a href="${href(to)}">${escape(part)}</a>`);
   });
   const side = tools.filter(Boolean).join(" · ");
   return `<nav class="bar" aria-label="Path"><span class="crumbs">${crumbs.join('<span class="sep">/</span>')}</span><span class="tools">${side}</span></nav>`;
@@ -369,9 +374,9 @@ function rows(dir: string, kids: Child[]): string {
   const items = kids.map(([name, count, kind]) => {
     const path = dir ? `${dir}/${name}` : name;
     if (kind === "dir") {
-      return `<li class="dir"><span class="ico" aria-hidden="true"></span><a href="${dirRoute(path)}">${escape(name)}/</a><span class="n">${count} item${count === 1 ? "" : "s"}</span></li>`;
+      return `<li class="dir"><span class="ico" aria-hidden="true"></span><a href="${href(dirRoute(path))}">${escape(name)}/</a><span class="n">${count} item${count === 1 ? "" : "s"}</span></li>`;
     }
-    return `<li><span class="${seti(name)}" aria-hidden="true"></span><a href="${fileRoute(path)}">${escape(name)}</a><span class="n">${size(count)}</span></li>`;
+    return `<li><span class="${seti(name)}" aria-hidden="true"></span><a href="${href(fileRoute(path))}">${escape(name)}</a><span class="n">${size(count)}</span></li>`;
   });
   return `<ul class="files">\n${items.join("\n")}\n</ul>`;
 }
@@ -379,7 +384,7 @@ function rows(dir: string, kids: Child[]): string {
 function listing(site: Site, git: Git, route: Route, hooks: Hooks): Output[] {
   const { dir, kids, readme } = route.data as Dir;
   const tools = [
-    github(git, dir, true) ? `<a href="${github(git, dir, true)}">GitHub</a>` : "",
+    github(git, dir, true) ? `<a href="${href(github(git, dir, true))}">GitHub</a>` : "",
   ];
   const head = bar(git, dir, true, tools);
   const file = readme ? join(git.root, readme) : "";
@@ -423,13 +428,13 @@ async function file(site: Site, git: Git, route: Route, hooks: Hooks): Promise<O
   const { path, size: weight } = route.data as File;
   const source = join(git.root, path);
   const body = bytes(source);
-  const raw = `/${rawPath(path)}`;
+  const raw = href(`/${rawPath(path)}`);
   const kind = ext(path);
   const huge = weight > HUGE;
   const text = huge || IMAGE.has(kind) || kind === "pdf" ? null : reads(body);
   const tongue = lang(path);
   const where = github(git, path, false);
-  const tools = [`<a href="${raw}">Raw</a>`, where ? `<a href="${where}">GitHub</a>` : ""];
+  const tools = [`<a href="${raw}">Raw</a>`, where ? `<a href="${href(where)}">GitHub</a>` : ""];
   const head = bar(git, path, false, tools);
   let main: string;
   let note = "";

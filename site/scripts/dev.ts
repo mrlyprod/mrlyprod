@@ -1,5 +1,5 @@
 import { existsSync, statSync, watch } from "node:fs";
-import { extname, join, resolve } from "node:path";
+import { extname, join, resolve, sep } from "node:path";
 import { forget, globals, render, scan, type Output, type Route, type Site } from "../kit/ssg/build.ts";
 import { owner as rawOwner } from "../kit/git/git.ts";
 import { counted, demoTree, spec } from "./site.ts";
@@ -98,6 +98,12 @@ async function seek(route: Route, want: string) {
 
 const TREE = "/demos/tree.json";
 
+function within(dir: string, rest: string): string | null {
+  const base = resolve(dir);
+  const full = resolve(base, `./${rest}`);
+  return full === base || full.startsWith(base + sep) ? full : null;
+}
+
 async function serve(path: string): Promise<Response | null> {
   if (path === TREE) return send({ path: TREE.slice(1), bytes: JSON.stringify(demoTree(site)) });
   const want = path.endsWith("/") ? `${path.slice(1)}index.html` : path.slice(1);
@@ -121,7 +127,9 @@ async function serve(path: string): Promise<Response | null> {
   }
   for (const [at, dir] of disk()) {
     if (!dir || !path.startsWith(at)) continue;
-    const file = Bun.file(join(dir, path.slice(at.length)));
+    const found = within(dir, path.slice(at.length));
+    if (!found) continue;
+    const file = Bun.file(found);
     if (await file.exists()) return new Response(file);
   }
   const owner = pages()
@@ -158,10 +166,12 @@ for (const file of site.input("demos").files) {
 
 const server = Bun.serve({
   port: Number(process.env.PORT ?? 3000),
+  hostname: "127.0.0.1",
   development: true,
   routes,
   async fetch(req) {
     const path = decodeURIComponent(new URL(req.url).pathname);
+    if (path.includes("\0")) return new Response("not found", { status: 404 });
     if (!path.endsWith("/") && pages().some((one) => one.route === `${path}/`)) return Response.redirect(`${path}/`, 302);
     return (await serve(path)) ?? (await lost());
   },

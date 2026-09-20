@@ -116,7 +116,30 @@ async function commit(slug: string, etag: string): Promise<Mark | null> {
   });
 }
 
+type Get = (url: string, init: { headers: Record<string, string> }) => Promise<{ ok: boolean; status: number; json: () => Promise<unknown> }>;
+
+export async function onMain(slug: string, sha: string, get: Get = fetch): Promise<boolean> {
+  try {
+    const res = await get(`https://api.github.com/repos/${slug}/compare/${sha}...main`, {
+      headers: { "user-agent": AGENT, accept: "application/vnd.github+json" },
+    });
+    if (!res.ok) {
+      log(`refused ${short(sha)} on ${slug}: compare ${res.status}`);
+      return false;
+    }
+    const body = (await res.json()) as { status?: string };
+    const state = typeof body?.status === "string" ? body.status : "";
+    if (state === "ahead" || state === "identical") return true;
+    log(`refused ${short(sha)} on ${slug}: ${state || "no status"}, not an ancestor of main`);
+    return false;
+  } catch (error) {
+    log(`refused ${short(sha)} on ${slug}: compare failed, ${String((error as Error)?.message ?? error).slice(0, 160)}`);
+    return false;
+  }
+}
+
 async function unpack(slug: string, ref: string, into: string): Promise<void> {
+  if (ref !== "main" && !SHA.test(ref)) throw new Error(`codeload ${slug}: ${ref} is not a sha`);
   await retry(`codeload ${slug} ${short(ref)}`, async () => {
     const stage = `${into}.stage`;
     rmSync(stage, { recursive: true, force: true });
@@ -147,15 +170,17 @@ function seen(wake: Wake, stored: Head): string {
 async function shelfMark(wake: Wake, stored: Head): Promise<Mark> {
   const slug = shelfRepo();
   if (!slug) return { sha: "", etag: "" };
-  if (wake.on === "shelf" && wake.sha) return { sha: wake.sha, etag: "" };
+  if (wake.on === "shelf" && wake.sha && (await onMain(slug, wake.sha))) return { sha: wake.sha, etag: "" };
   return (await commit(slug, stored.shelf ? stored.shelfEtag : "")) ?? { sha: stored.shelf, etag: stored.shelfEtag };
 }
 
+async function sourceMark(wake: Wake, stored: Head): Promise<Mark> {
+  if (wake.on === "source" && wake.sha && (await onMain(SOURCE, wake.sha))) return { sha: wake.sha, etag: "" };
+  return (await commit(SOURCE, stored.sha ? stored.etag : "")) ?? { sha: stored.sha, etag: stored.etag };
+}
+
 async function freshen(wake: Wake, stored: Head): Promise<Head> {
-  const source =
-    wake.on === "source" && wake.sha
-      ? { sha: wake.sha, etag: "" }
-      : ((await commit(SOURCE, stored.sha ? stored.etag : "")) ?? { sha: stored.sha, etag: stored.etag });
+  const source = await sourceMark(wake, stored);
   const shelf = await shelfMark(wake, stored);
   return { sha: source.sha, etag: source.etag, shelf: shelf.sha, shelfEtag: shelf.etag };
 }

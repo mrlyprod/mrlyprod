@@ -2,7 +2,7 @@ import { afterAll, expect, test } from "bun:test";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { block, collect, dirRoute, explorer, fileRoute, forest, gist, lang, link, named, owner, rawPath } from "./git.ts";
+import { block, collect, dirRoute, explorer, fileRoute, forest, gist, href, lang, link, mime, named, owner, rawPath } from "./git.ts";
 import { paint } from "./code.ts";
 import type { Site } from "../ssg/build.ts";
 
@@ -42,6 +42,16 @@ test("a directory route ends in a slash", () => {
 test("a raw path names its own file route", () => {
   expect(owner("/raw/src/a.rs")).toBe("/git/src/a.rs");
   expect(owner("/git/src/a.rs")).toBe(null);
+});
+
+test("an href percent-encodes a path and html-escapes the rest", () => {
+  expect(href(fileRoute("notes/a b#c&d.md"))).toBe("/git/notes/a%20b%23c&amp;d.md");
+  expect(href(dirRoute("notes/a b"))).toBe("/git/notes/a%20b/");
+});
+
+test("a raw svg is served as text, a raw png keeps its image type", () => {
+  expect(mime("files/figures/logo.svg", false)).toBe("text/plain; charset=utf-8");
+  expect(mime("files/figures/logo.png", false)).toBe("image/png");
 });
 
 test("a language comes from the extension", () => {

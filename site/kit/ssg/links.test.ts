@@ -109,6 +109,12 @@ test("a site with no git routes falls to the github blob", () => {
   expect(resolve(site(false), "pages/about.md", "../lib/tree.js")).toBe("https://github.com/acme/site/blob/main/lib/tree.js");
 });
 
+test("a script-bearing scheme never survives as a link", () => {
+  for (const url of ["javascript:alert(1)", "JavaScript:alert(1)", " java\tscript:alert(1)", "data:text/html,<script>alert(1)</script>"]) {
+    expect(resolve(mrly, "research/core.md", url)).toBe("#");
+  }
+});
+
 test("an outside link and a rooted link pass through", () => {
   for (const url of ["https://mrly.net", "http://mrly.net", "mailto:help@mrly.net", "tel:+1", "#top", "/demos/"]) {
     expect(resolve(mrly, "research/core.md", url)).toBe(url);

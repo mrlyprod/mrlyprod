@@ -8,6 +8,7 @@
         "@shikijs/core": "^4.4.3",
         "@shikijs/engine-javascript": "^4.4.3",
         "@shikijs/langs": "^4.4.3",
+        "katex": "^0.18.5",
         "react": "^19.2.8",
         "react-dom": "^19.2.8",
         "rehype-stringify": "^10.0.1",
@@ -18,9 +19,6 @@
         "three": "^0.185.1",
         "unified": "^11.0.5",
         "unist-util-visit": "^5.1.0",
-      },
-      "devDependencies": {
-        "katex": "^0.18.5",
       },
     },
   },

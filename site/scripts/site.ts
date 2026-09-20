@@ -3,7 +3,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { createElement as h } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import katex from "katex";
-import { build, bytes, walk, type Node, type Output, type Route, type Site, type Spec } from "../kit/ssg/build.ts";
+import { build, bytes, jsonScript, jsonText, walk, type Node, type Output, type Route, type Site, type Spec } from "../kit/ssg/build.ts";
 import { isGit } from "../kit/git/git.ts";
 import { resolve as resolveLink } from "../kit/ssg/links.ts";
 import { escape, front, inline, plain, render as md, summary, title } from "../kit/ssg/md.ts";
@@ -147,7 +147,7 @@ function shell(site: Site, leaf: Leaf) {
   const { route, name, description, body, type = "article", wide = false, bare = false, code = false, data } = leaf;
   const article = h(bare ? "div" : "article", { className: bare ? undefined : "prose", dangerouslySetInnerHTML: { __html: body } });
   const main = renderToStaticMarkup(h(Shell, { route, tree: leaf.tree ?? site.nav, contents: headings(body), wide }, article));
-  const ld = data ? `<script type="application/ld+json">${JSON.stringify(data)}</script>\n` : "";
+  const ld = data ? `${jsonScript(data)}\n` : "";
   const more = (leaf.scripts ?? []).map((src) => `\n<script type="module" src="${src}"></script>`).join("");
   const image = leaf.image ?? (code ? picture(site, "site-code", route) : OG);
   return `<!doctype html>
@@ -269,7 +269,7 @@ function seo(source: string, card: Card, nav: string, image: Picture) {
   const found = html.match(TITLE);
   const name = found ? untag(found[1]) : card.title;
   const tags = meta(route, name, card.blurb || name, "website", image);
-  const reads = `<script type="application/json" id="${SITE.prefix}reads">${JSON.stringify(card.reads).replace(/</g, "\\u003c")}</script>`;
+  const reads = `<script type="application/json" id="${SITE.prefix}reads">${jsonText(card.reads)}</script>`;
   const block = `${BOOT}\n<title>${escape(brand(name))}</title>\n${tags}\n${nav}\n${reads}\n<link rel="stylesheet" href="/ui/fonts/fonts.css">`;
   const page = found ? html.replace(found[0], block) : html.replace("<head>", `<head>\n${block}`);
   return page.replace("</head>", `${TINT}\n</head>`);
@@ -290,7 +290,7 @@ async function demos(site: Site, route: Route): Promise<Output[]> {
   });
   if (!built.success) throw new Error(`site: the demos failed to bundle\n${built.logs.join("\n")}`);
   const shells = new Map(list.map((d) => [`${demoRoute(d.name).slice(1)}index.html`, d]));
-  const json = JSON.stringify(shelved(list)).replace(/</g, "\\u003c");
+  const json = jsonText(shelved(list));
   const nav = `<script type="application/json" id="${SITE.prefix}tree">${json}</script>`;
   const out: Output[] = [{ path: "demos/tree.json", bytes: json, type: "application/json" }];
   const fig = press(site, out);

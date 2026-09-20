@@ -1,12 +1,12 @@
 # SECRETS
-.env
+.env*
 *.env
 
 # CLAUDE
 .claude/
 
 # OUTPUT
-/data/
+data/
 dist/
 .cache/
 

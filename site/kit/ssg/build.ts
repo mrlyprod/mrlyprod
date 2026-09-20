@@ -475,4 +475,8 @@ export async function build(spec: Spec, options: { manifest?: string; force?: bo
 
 export const page = (route: string) => (route === "/" ? "index.html" : `${route.replace(/^\/|\/$/g, "")}/index.html`);
 
+export const jsonText = (data: unknown) => JSON.stringify(data).replace(/</g, "\\u003c");
+
+export const jsonScript = (data: unknown) => `<script type="application/ld+json">${jsonText(data)}</script>`;
+
 export { escape, digest, short, rmSync, today };

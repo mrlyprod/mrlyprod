@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { globals, walk, type Output, type Site, type Spec } from "./build.ts";
+import { globals, jsonScript, walk, type Output, type Site, type Spec } from "./build.ts";
 
 /* SITE */
 
@@ -73,6 +73,13 @@ test("llms.txt says what the site is and links only what the site publishes", as
   expect(llms).toContain("- [README](https://demo.test/raw/README.md): the readme");
   expect(llms).toContain("- [Code](https://demo.test/git/): the tree");
   expect(llms).not.toContain("Nowhere");
+});
+
+/* JSON-LD */
+
+test("a headline that closes a script tag cannot close the ld+json block", () => {
+  const out = jsonScript({ headline: "</script><img src=x onerror=alert(1)>" });
+  expect(out).toBe('<script type="application/ld+json">{"headline":"\\u003c/script>\\u003cimg src=x onerror=alert(1)>"}</script>');
 });
 
 /* CSS */
