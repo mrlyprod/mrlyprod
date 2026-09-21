@@ -7,7 +7,7 @@ slug: information
 
 A render is a matrix of bits, so a design can be asked the two questions any bit image is asked: what can be read back out of it, and what can be written down more cheaply because it is a design at all. The two halves answer in opposite directions, and that asymmetry is the page. Identification works exactly and holds far into noise: one rearranged singular value decomposition reads a design's code out of a render and peels a five-letter magic word letter by letter. Compression does not: a catalog of 667 fractal atoms scored by minimum description length loses to raw deflate on the tree's own render, on text and on a halftone at catalog level 2, edges it by a few bits only on random bytes where deflate itself expands the stream, and crosses it on the render only from catalog level 3. The negative is printed here in full, because it is the more useful of the two.
 
-Every claim carries a tag. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by the study named; **Conjecture** means neither. One generator prints every number below, `lab/py/codebook`, which runs in about thirty seconds and writes nothing; a number it does not print is not on this page.
+One generator prints every number below, `lab/py/codebook`, which runs in about thirty seconds and writes nothing; a number it does not print is not on this page.
 
 ## The object
 

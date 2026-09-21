@@ -11,7 +11,7 @@ The question this page answers is how much of that complexity the *geometry* can
 
 A second sense of complexity closes the page: the spectra of the fractals the designs build. [The graph Laplacian](/wiki/graph-laplacian/) of the Sierpinski triangle that `bang dim 2, code 7` draws is degenerate to a degree that is itself a law, and that law now runs to level 8; the base-2 flake of `bang dim 3, code 23` carries an exact interior band gap; and every fractal tested clusters its eigenvalues where a random matrix would repel them.
 
-Every claim carries a tag. **Proved** means a proof is given here; **Verified** means recomputed from scratch by a crate test or a lab study; **Conjecture** means neither. The generators are `six::census` and `six::topology` in `../crates/mrlymath`, with `mrlynum::spectrum` for the eigensolver and the exponent, together with `lab/py/boolean-measures`, `lab/py/base-q-anf`, `lab/py/laplacian-degeneracy`, `lab/py/flake-band-gap` and `lab/rs/spectral-spacings`.
+The generators are `six::census` and `six::topology` in `../crates/mrlymath`, with `mrlynum::spectrum` for the eigensolver and the exponent, together with `lab/py/boolean-measures`, `lab/py/base-q-anf`, `lab/py/laplacian-degeneracy`, `lab/py/flake-band-gap` and `lab/rs/spectral-spacings`.
 
 ## Seven measures on a finite catalog
 

@@ -7,7 +7,7 @@ slug: weights
 
 A design is a set of cells; a weighted design is the same cells carrying a probability vector, and that is a refinement equation on the base grid. Weights move the mass side of the object and only the mass side: the contraction ratios stay `1/base`, so every length-indexed observable keeps its `log base` ripple at every weight, while the mass-stopping count - the first mass-indexed observable this tree has - is log-periodic or smooth according to the arithmetic of the `log w_f` alone. The multifractal pressure of the same object closes in one line, `tau(s) = log_base sum_f w_f^s`.
 
-Every claim carries a tag. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a lab study; **Refuted** means shown false. `lab/py/weighted-designs` is the one generator behind every number below: exact rationals in, safe-rounded floats out, every number asserted before it prints. The lattice and nonlattice vocabulary is [the dimensions page](dimensions.md)'s and is used here rather than restated.
+`lab/py/weighted-designs` is the one generator behind every number below: exact rationals in, safe-rounded floats out, every number asserted before it prints. The lattice and nonlattice vocabulary is [the dimensions page](dimensions.md)'s and is used here rather than restated.
 
 ## The object
 

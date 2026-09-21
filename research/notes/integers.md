@@ -9,8 +9,6 @@ Which integers this work writes, which it never writes, and which it writes many
 
 The generator is `lab/rs/integer-census`, one pass over `mrlylab::ledger::keys`, which prints its definition before any table and writes `rows.csv`, `multiset.csv` and a manifest into a directory given on the command line. Every number below is a line of that run. The registry it walks is the one [sequences](../sequences.md) is rendered from and the [sequences demo](../../site/demos/sequences/) searches live; the closed forms it replays are the fill law and the exposure recurrence of the [sequence-census paper](https://github.com/carlomitchener/carlomitchener/tree/main/research/sequence-census). The [integers demo](../../site/demos/integers/) reads that union integer by integer: which of the first thousand the designs write, how many rows write each, and which the pinned window misses. The [plot demo](../../site/demos/plot/) draws a row of the same ledger rather than listing it, with the smallest linear recurrence its terms satisfy, its characteristic polynomial and its growth beside it.
 
-**Proved** means a proof is given here; **Verified** means recomputed by the study; **Conjecture** means neither; **Refuted** means the study kills it.
-
 ## The definition
 
 The census is only as good as its window, so the window is pinned and printed, never assumed.

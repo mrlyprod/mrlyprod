@@ -7,7 +7,7 @@ slug: pi
 
 Pi is not inside a single [carpet](/wiki/sierpinski-carpet/)'s area, which is rational at every level. Pi is in the **stack** of carpets, and it comes out as a counted number rather than an assumed one.
 
-Every claim below is tagged. **Proved** means proved or classical; **Verified** means recomputed here and reported as measured; **Conjecture** means supported and open. The [Farey sequence page](/wiki/farey-sequence/) draws the stack this page counts, with `phi(n)` new nodes at each scale and [the primes](/wiki/prime-numbers/) at maximal novelty.
+The [Farey sequence page](/wiki/farey-sequence/) draws the stack this page counts, with `phi(n)` new nodes at each scale and [the primes](/wiki/prime-numbers/) at maximal novelty.
 
 ## A single carpet cannot hold pi
 

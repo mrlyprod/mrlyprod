@@ -7,7 +7,7 @@ slug: dimensions
 
 [The core page](core.md) gives every design one real number, [the dimension](/wiki/fractal-dimension/) `log(fill)/log(base)`. Fractal-string theory promotes that number to the real part of an infinite family - the *complex dimensions*, the poles of a zeta function attached to the set's gaps. This page computes them for the 1D designs, watches the imaginary parts surface as an oscillation in the box count, and follows the theory to its structural consequence, which needs careful qualifying.
 
-Every claim carries a tag. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a lab study; **Conjecture** means neither. `lab/py/complex-dimensions` regenerates every number below except those of the arithmetic-pole section, which `lab/py/burnol-residue` prints; both print only and keep no log.
+`lab/py/complex-dimensions` regenerates every number below except those of the arithmetic-pole section, which `lab/py/burnol-residue` prints; both print only and keep no log.
 
 ## The string of a design
 

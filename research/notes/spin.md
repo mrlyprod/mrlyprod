@@ -7,7 +7,7 @@ slug: spin
 
 Turn a design about its centre and look at the average. The instrument is exact, the identities are proved, and the census is run.
 
-**Proved** means a proof is given here; **Verified** means recomputed by a crate test or a lab study; **Conjecture** means neither. The generators are `mrlynum::spin`, the host fixture of `mrlydemo`, and `lab/rs/spin-census`, the one pass behind every number of the census below. The [spin demo](../../site/demos/spin/) shows the infinite spin, the [radial demo](../../site/demos/radial/) the finite ones and the harmonics each keeps.
+The generators are `mrlynum::spin`, the host fixture of `mrlydemo`, and `lab/rs/spin-census`, the one pass behind every number of the census below. The [spin demo](../../site/demos/spin/) shows the infinite spin, the [radial demo](../../site/demos/radial/) the finite ones and the harmonics each keeps.
 
 ## The identities
 

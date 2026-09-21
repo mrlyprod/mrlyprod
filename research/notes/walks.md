@@ -9,7 +9,7 @@ Every page before this one weighs a design: [the fractal dimension](/wiki/fracta
 
 The question this page answers by census: **does the mass fix the music?** Two designs with the same fill draw fractals of the same dimension, the same density at every level, the same fill polynomial degree. Do they walk the same? They do not, and the failure is exhibited three different ways.
 
-Every claim carries a tag. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a lab study; **Conjecture** means neither. The generator is `lab/rs/walk-dimension`, which also draws the figure. The [race demo](../../site/demos/race/) runs the experiment live: two base-3 designs of the same fill, random walkers on both at once.
+The generator is `lab/rs/walk-dimension`, which also draws the figure. The [race demo](../../site/demos/race/) runs the experiment live: two base-3 designs of the same fill, random walkers on both at once.
 
 ## The method, and what gates it
 

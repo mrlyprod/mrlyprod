@@ -7,7 +7,7 @@ slug: automata
 
 An elementary [cellular automaton](/wiki/cellular-automaton/) is a three-dimensional [parity](/wiki/parity/) design read as a rule, and Life is a nine-dimensional one. A rule table on `k` binary inputs is a subset of `{0,1}^k`, and a design is a subset of the corners of `{0,1}^dim`; put `k = dim` and they are one object. This page states what that identity buys - a class lattice, a Walsh profile, a genus and a dimension for every rule, the Moore neighbourhood as the level-1 carpet tile in every dimension, and a decoupling lemma that says which masks carry a rule space of their own - and what it cannot: geometry does not decide surjectivity, Life is not a product of two elementary rules, and no census here can reach universality.
 
-Every claim carries a tag. **Proved** means the proof is written here or on the page it points to; **Verified** means recomputed from scratch by a lab study; **Conjecture** means neither; **Refuted** means shown false. The generators are `lab/rs/automata-census`, `lab/py/life-census` and `lab/py/sibling-census`. Two demos run the same objects through wasm: the [wolfram demo](../../site/demos/wolfram/) draws the 256 rules from one seed beside their cube classes, and the [mrlylife demo](../../site/demos/mrlylife/) runs Life and its siblings on any mask of the tree.
+The generators are `lab/rs/automata-census`, `lab/py/life-census` and `lab/py/sibling-census`. Two demos run the same objects through wasm: the [wolfram demo](../../site/demos/wolfram/) draws the 256 rules from one seed beside their cube classes, and the [mrlylife demo](../../site/demos/mrlylife/) runs Life and its siblings on any mask of the tree.
 
 ## 1 The identity
 

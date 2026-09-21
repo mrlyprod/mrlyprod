@@ -10,7 +10,6 @@ slug: coprime
 - The base of the design contributes an exact factor, the bracket, known in closed form at every finite level; every prime away from the base contributes the classical factor `1 - p^(-dim)`.
 - Above dimension one the join is a theorem on the shelf; at dimension one it is open exactly for primes in one window of exponents, and that window is the standing problem here.
 - The Sierpinski gasket is the worked case throughout, because its sequence is [A396934](https://oeis.org/A396934) and its density `16/(3*Pi^2)` is stated in [the ledger](../sequences.md).
-- Every claim carries one tag: **Proved** means a proof is given or restated here or on the shelf, **Verified** means recomputed by the named study or lane, **Conjecture** means supported and open, **Refuted** means shown false.
 
 ## THE OBJECT
 

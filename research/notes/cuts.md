@@ -7,7 +7,7 @@ slug: cuts
 
 A [parity](/wiki/parity/) solid is built out of cubes, so you expect a planar cut through it to look like cubes. For one design it does not. Take `bang dim 3, code 126` - the 3D rule that keeps every corner of the parity cube except the two on the main diagonal - and cut it with the diagonal plane `x + y + z = s`. Every cut is a Sierpinski gasket, the binary digits of the height say which one, and the cut through the middle falls into six congruent gaskets tiling a hexagon.
 
-Every claim below carries a tag. **Proved** means a proof is given or restated here; **Verified** means recomputed from scratch by a crate test or a lab study; **Conjecture** means neither. The generator is `three::diagonal` in `../crates/mrlymath`, and nothing here rests on a stored image or an earlier run. Every source named in the literature section is read live; a source that cannot be checked that way is dropped rather than repeated. The [cuts demo](../../site/demos/cuts/) slides the plane through the solid at any level, draws the slice down the `(1,1,1)` axis one circle per cell, and reports the support, the count on the height under the cursor, the extremes and whether the profile is constant.
+The generator is `three::diagonal` in `../crates/mrlymath`, and nothing here rests on a stored image or an earlier run. Every source named in the literature section is read live; a source that cannot be checked that way is dropped rather than repeated. The [cuts demo](../../site/demos/cuts/) slides the plane through the solid at any level, draws the slice down the `(1,1,1)` axis one circle per cell, and reports the support, the count on the height under the cursor, the extremes and whether the profile is constant.
 
 ## The design, and what it already is
 
