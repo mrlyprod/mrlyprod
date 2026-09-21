@@ -115,7 +115,7 @@
     "papers": { "path": "../research/papers", "ext": ".md" },
     "figures": { "path": "../files/figures", "ext": ".png" },
     "names": { "path": "../pkgs/mrlyrs/NAMES.md" },
-    "demos": { "path": "demos", "deep": true },
+    "demos": { "path": "demos/views", "deep": true },
     "lib": { "path": "lib", "deep": true },
     "pkg": { "path": "pkg", "deep": true },
     "ui": { "path": "ui", "deep": true },

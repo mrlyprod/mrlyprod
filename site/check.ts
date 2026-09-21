@@ -74,9 +74,9 @@ const fronted = [...notes, ...papers, ...pages, ...posts, ...concepts];
 const prose = [...notes, ...claims, ...papers, ...stems, ...pages, ...posts, ...concepts];
 const housed = [...under('research', '.md'), ...sheets('site/pages'), ...sheets('site/blog'), ...sheets('wiki')].map(read);
 const demos = new Set(
-  there('site/demos')
-    ? readdirSync(at('site/demos'), { withFileTypes: true })
-        .filter((entry) => entry.isDirectory() && there(`site/demos/${entry.name}/index.html`))
+  there('site/demos/views')
+    ? readdirSync(at('site/demos/views'), { withFileTypes: true })
+        .filter((entry) => entry.isDirectory() && there(`site/demos/views/${entry.name}/index.html`))
         .map((entry) => entry.name)
     : [],
 );
@@ -117,17 +117,23 @@ report('claims', `${claims.length} files, ${rows.length} claims`, ledger);
 
 const NAME = /\b(?:fn|const|static|struct|enum|trait|type|mod|union)\s+([A-Za-z_]\w*)/g;
 const declared = new Map<string, Set<string>>();
-for (const home of ['crates', 'pkgs']) {
-  for (const crate of there(home)
-    ? readdirSync(at(home), { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name)
-    : []) {
-    const names = new Set<string>();
-    for (const file of under(`${home}/${crate}/src`, '.rs')) {
-      names.add(stem(file));
-      for (const hit of readFileSync(at(file), 'utf8').matchAll(NAME)) names.add(hit[1]);
-    }
-    declared.set(crate, names);
+const lab = there('research/lab/rs')
+  ? readdirSync(at('research/lab/rs'), { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => [entry.name, `research/lab/rs/${entry.name}/src`] as [string, string])
+  : [];
+for (const [crate, src] of [
+  ['mrlyrs', 'pkgs/mrlyrs/src'],
+  ['figures', 'figures/src'],
+  ['demos', 'site/demos/logic/src'],
+  ...lab,
+] as [string, string][]) {
+  const names = new Set<string>();
+  for (const file of under(src, '.rs')) {
+    names.add(stem(file));
+    for (const hit of readFileSync(at(file), 'utf8').matchAll(NAME)) names.add(hit[1]);
   }
+  declared.set(crate, names);
 }
 
 const studies = new Set(
@@ -231,7 +237,7 @@ for (const doc of prose) {
       if (target === '' || /^(https?:|mailto:)/.test(target)) continue;
       const widget = target.match(/^demos\/([a-z0-9-]+)\/([a-z0-9-]+)$/);
       if (widget) {
-        const file = `site/demos/${widget[1]}/widget.jsx`;
+        const file = `site/demos/views/${widget[1]}/widget.jsx`;
         if (!there(file)) dead.push(`${doc.name}:${n} ${target} has no widget.jsx`);
         else if (!new RegExp(`^export (?:function|const) ${widget[2]}\\b`, 'm').test(readFileSync(at(file), 'utf8'))) dead.push(`${doc.name}:${n} ${target} is not a view`);
         continue;
@@ -342,8 +348,8 @@ report('house', `${housed.length} files, ${ruled} lines`, house);
 
 const registries: string[] = [];
 if (there('site/pages.json')) registries.push('site/pages.json still exists');
-if (there('crates/mrlyfig/Cargo.toml') && readFileSync(at('crates/mrlyfig/Cargo.toml'), 'utf8').includes('[[example]]'))
-  registries.push('mrlyfig Cargo.toml carries an [[example]]');
+if (there('figures/Cargo.toml') && readFileSync(at('figures/Cargo.toml'), 'utf8').includes('[[example]]'))
+  registries.push('figures Cargo.toml carries an [[example]]');
 report('registries', 'none', registries);
 
 // WASM

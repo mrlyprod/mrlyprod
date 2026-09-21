@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
-members = ["pkgs/mrlyrs", "crates/*", "figures", "research/lab/rs/*"]
-default-members = ["pkgs/mrlyrs", "crates/*"]
+members = ["pkgs/mrlyrs", "figures", "site/demos/logic", "research/lab/rs/*"]
+default-members = ["pkgs/mrlyrs", "site/demos/logic"]
 
 [workspace.package]
 version = "0.3.0"
@@ -21,8 +21,7 @@ codegen-units = 16
 strip = false
 
 [workspace.dependencies]
-mrlyfig = { path = "crates/mrlyfig", version = "0.3.0" }
-mrlydemo = { path = "crates/mrlydemo", version = "0.3.0" }
+demos = { path = "site/demos/logic", version = "0.3.0" }
 mrlyrs = { path = "pkgs/mrlyrs", version = "0.2.0" }
 ledger = { path = "research/lab/rs/ledger", version = "0.3.0" }
 atlas = { path = "research/lab/rs/atlas", version = "0.3.0" }

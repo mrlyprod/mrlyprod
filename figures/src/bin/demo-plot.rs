@@ -1,5 +1,5 @@
+use figures::{ink, save, Board};
 use ledger::{terms, Axis, Key, Measure, BUDGET};
-use mrlyfig::{ink, save, Board};
 use mrlyrs::core::error::Result;
 use mrlyrs::num::blend::delta;
 

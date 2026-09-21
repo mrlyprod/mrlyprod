@@ -1,5 +1,5 @@
-use mrlyfig::board::{Board, Frame};
-use mrlyfig::{hex, ink, save};
+use figures::board::{Board, Frame};
+use figures::{hex, ink, save};
 use mrlyrs::core::error::Result;
 use mrlyrs::math::six;
 use mrlyrs::math::six::Cell6d;

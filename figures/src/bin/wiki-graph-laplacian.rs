@@ -1,4 +1,4 @@
-use mrlyfig::{ink, plot, save, Board, Color, Frame};
+use figures::{ink, plot, save, Board, Color, Frame};
 use mrlyrs::core::error::Result;
 use std::f64::consts::PI;
 

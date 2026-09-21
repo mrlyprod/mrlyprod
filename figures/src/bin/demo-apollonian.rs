@@ -1,4 +1,4 @@
-use mrlyfig::{ink, save, Board, Color, Frame};
+use figures::{ink, save, Board, Color, Frame};
 use mrlyrs::core::error::Result;
 use mrlyrs::num::apollonian::{grow, is_ford, on_line, shadow, touches, Circle};
 use mrlyrs::num::lattice::farey;

@@ -1,6 +1,6 @@
-use mrlyfig::board::{Board, Frame};
-use mrlyfig::ink::Ramp;
-use mrlyfig::{field, ink, save};
+use figures::board::{Board, Frame};
+use figures::ink::Ramp;
+use figures::{field, ink, save};
 use mrlyrs::core::error::Result;
 use mrlyrs::math::spin;
 use mrlyrs::math::two;

@@ -1,4 +1,4 @@
-use mrlyfig::{ink, save, Board};
+use figures::{ink, save, Board};
 use mrlyrs::core::error::Result;
 use mrlyrs::num::lattice::zeta_whole;
 

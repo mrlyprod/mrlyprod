@@ -1,5 +1,5 @@
-use mrlyfig::out::root;
-use mrlyfig::{ink, save, Board};
+use figures::out::root;
+use figures::{ink, save, Board};
 use mrlyrs::core::error::Result;
 use mrlyrs::core::tensor::Tensor;
 use mrlyrs::core::MrlyError;

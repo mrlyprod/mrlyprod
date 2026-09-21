@@ -1,4 +1,4 @@
-use mrlyfig::{ink, save, Board};
+use figures::{ink, save, Board};
 use mrlyrs::core::error::Result;
 
 const LOWER: f64 = 0.447_597_813_453;

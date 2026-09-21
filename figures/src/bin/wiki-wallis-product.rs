@@ -1,4 +1,4 @@
-use mrlyfig::{ink, plot, save, Board, Frame};
+use figures::{ink, plot, save, Board, Frame};
 use mrlyrs::core::error::Result;
 
 const TERMS: usize = 40;

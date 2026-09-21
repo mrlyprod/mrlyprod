@@ -1,4 +1,4 @@
-use mrlyfig::{ink, plot, save, Board, Frame, Grid};
+use figures::{ink, plot, save, Board, Frame, Grid};
 use mrlyrs::core::error::Result;
 use mrlyrs::math::three::{carpet, slice};
 use std::f64::consts::PI;

@@ -1,5 +1,5 @@
-use mrlyfig::board::{Board, Frame};
-use mrlyfig::{ink, save, Grid};
+use figures::board::{Board, Frame};
+use figures::{ink, save, Grid};
 use mrlyrs::core::error::Result;
 use mrlyrs::math::two::designs;
 

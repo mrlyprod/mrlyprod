@@ -1,4 +1,4 @@
-use mrlyfig::{ink, save, Board, Color};
+use figures::{ink, save, Board, Color};
 use mrlyrs::core::error::Result;
 use mrlyrs::num::sieve;
 

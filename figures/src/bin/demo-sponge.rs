@@ -1,4 +1,4 @@
-use mrlyfig::{ink, iso, save, Board, Color, Frame};
+use figures::{ink, iso, save, Board, Color, Frame};
 use mrlyrs::core::colors::{shades, GREEN};
 use mrlyrs::core::error::Result;
 use mrlyrs::math::three::designs;

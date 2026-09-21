@@ -1,4 +1,4 @@
-use mrlyfig::{ink, plot, save, Board, Grid};
+use figures::{ink, plot, save, Board, Grid};
 use mrlyrs::core::error::Result;
 use std::f64::consts::TAU;
 

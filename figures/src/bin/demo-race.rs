@@ -1,4 +1,4 @@
-use mrlyfig::{ink, save, Board, Color, Frame, Grid};
+use figures::{ink, save, Board, Color, Frame, Grid};
 use mrlyrs::core::error::Result;
 use mrlyrs::core::Rng;
 use mrlyrs::math::two;

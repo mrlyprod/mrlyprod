@@ -1,4 +1,4 @@
-use mrlyfig::{ink, save, Board, Frame, Grid, Ramp};
+use figures::{ink, save, Board, Frame, Grid, Ramp};
 use mrlyrs::core::error::Result;
 use mrlyrs::math::counts::ladder;
 

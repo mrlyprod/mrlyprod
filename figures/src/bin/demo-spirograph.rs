@@ -1,4 +1,4 @@
-use mrlyfig::{ink, save, Board};
+use figures::{ink, save, Board};
 use mrlyrs::core::error::Result;
 use mrlyrs::math::spirograph::{distinct, frame, pencils, trace, track, Kind};
 use mrlyrs::math::two;

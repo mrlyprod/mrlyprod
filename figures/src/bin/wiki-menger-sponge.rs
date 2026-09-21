@@ -1,4 +1,4 @@
-use mrlyfig::{ink, iso, save, Board};
+use figures::{ink, iso, save, Board};
 use mrlyrs::core::error::Result;
 use mrlyrs::math::three::designs;
 

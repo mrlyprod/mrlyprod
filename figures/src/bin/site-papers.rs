@@ -1,4 +1,4 @@
-use mrlyfig::{ink, iso, save, Board};
+use figures::{ink, iso, save, Board};
 use mrlyrs::core::error::Result;
 use mrlyrs::core::tensor::Tensor;
 use mrlyrs::math::three::Cell3d;

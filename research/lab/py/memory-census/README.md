@@ -11,7 +11,7 @@
 - A word `d_1 d_2 ... d_level` is read coarsest digit first and is accepted iff every window of `k` consecutive digits is allowed; every word of length `level < k` is accepted.
 - `N_W(level)` is the number of accepted words of length `level`, and `#W` the number of allowed windows.
 - At `k = 1` the code is a bang code and the accepted words of length `level` are the cells of the design of that code at that level, so the memory dial at `k = 1` is the plain design. **Verified** (memory-census, the `(dim,1)` rows of `census.csv`).
-- `mrlyrs::math::bang::universe::corners(dim)` emits the corner vector row first and `corner_index` folds it most significant first, so a crate design's corner integer at `dim 2` is `c = x + 2y`, bit `0` the column: the same map this census uses, and no code label moves. **Verified** (the `mrlydemo` test `width_one_is_the_plane_design_cell_for_cell` pins codes `11` and `13`, which the axis swap exchanges and whose designs differ).
+- `mrlyrs::math::bang::universe::corners(dim)` emits the corner vector row first and `corner_index` folds it most significant first, so a crate design's corner integer at `dim 2` is `c = x + 2y`, bit `0` the column: the same map this census uses, and no code label moves. **Verified** (the `demos` test `width_one_is_the_plane_design_cell_for_cell` pins codes `11` and `13`, which the axis swap exchanges and whose designs differ).
 
 ## THE TRANSFER MATRIX
 

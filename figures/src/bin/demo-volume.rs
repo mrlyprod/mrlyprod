@@ -1,4 +1,4 @@
-use mrlyfig::{iso, save, Board};
+use figures::{iso, save, Board};
 use mrlyrs::core::colors::{shades, INDIGO};
 use mrlyrs::core::error::Result;
 use mrlyrs::math::moire::volume::volume;

@@ -1,4 +1,4 @@
-use mrlyfig::{ink, plot, save, Board};
+use figures::{ink, plot, save, Board};
 use mrlyrs::core::error::Result;
 use mrlyrs::num::factor::mobius_sieve;
 

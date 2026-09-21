@@ -1,4 +1,4 @@
-use mrlyfig::{ink, save, Board, Frame};
+use figures::{ink, save, Board, Frame};
 use mrlyrs::core::error::Result;
 use mrlyrs::num::radix::koch;
 

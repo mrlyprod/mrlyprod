@@ -1,4 +1,4 @@
-use mrlyfig::{ink, save, Board, Grid};
+use figures::{ink, save, Board, Grid};
 use mrlyrs::core::error::Result;
 use mrlyrs::math::two::designs;
 use mrlyrs::num::classics::gcd;

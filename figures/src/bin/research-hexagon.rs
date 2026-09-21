@@ -1,6 +1,6 @@
-use mrlyfig::board::Board;
-use mrlyfig::ink::Ramp;
-use mrlyfig::{hex, ink, save};
+use figures::board::Board;
+use figures::ink::Ramp;
+use figures::{hex, ink, save};
 use mrlyrs::core::error::Result;
 use mrlyrs::gen::recipe::Design;
 

@@ -1,6 +1,6 @@
+use figures::out::root;
+use figures::{ink, save, Board, Frame, Grid};
 use ledger::{keys, terms, Cost, Key, Tier};
-use mrlyfig::out::root;
-use mrlyfig::{ink, save, Board, Frame, Grid};
 use mrlyrs::core::error::Result;
 use mrlyrs::core::MrlyError;
 use std::path::PathBuf;

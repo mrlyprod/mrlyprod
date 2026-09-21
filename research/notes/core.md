@@ -7,7 +7,7 @@ slug: core
 
 MrlyMath is two moves. Choose a rule that fills some corners of the [parity](/wiki/parity/) cube `{0,1}^dim`; substitute that rule into itself by [the Kronecker product](/wiki/kronecker-product/). [The Sierpinski carpet](/wiki/sierpinski-carpet/), [the Menger sponge](/wiki/menger-sponge/), their siblings and their antis are all one choice in move one carried through the same move two. Fix the dimension and the whole universe of rules is finite and already there - 4 of them in 1D, 16 in 2D, 256 in 3D - so the designs are not designed, they are enumerated.
 
-The generator is `lab/rs/design-census`. The [universe demo](../../site/demos/universe/) draws that census live: every orbit in each dimension and base, with the [Burnside](/wiki/burnsides-lemma/) counts beside it.
+The generator is `lab/rs/design-census`. The [universe demo](/demos/universe/) draws that census live: every orbit in each dimension and base, with the [Burnside](/wiki/burnsides-lemma/) counts beside it.
 
 ## Move one: a design is a parity rule
 
@@ -33,7 +33,7 @@ Three designs make the point concretely at side 3. (Verified by `lab/rs/design-c
 | `bang dim 3, code 23` | 3 | 20 of 27 | `20^level` of `27^level` | `log(20)/log(3) = 2.726833` |
 | `bang dim 3, code 3` | 3 | 12 of 27 | `12^level` of `27^level` | `log(12)/log(3) = 2.261860` |
 
-The first row is the Sierpinski carpet, the second the Menger sponge. Neither was put in by hand; both fall out of a parity rule and one product. The [sponge demo](../../site/demos/sponge/) grows any code level by level and answers the fills, the voids and the exposed faces from closed forms before a cube is built. The [tile demo](../../site/demos/tile/) repeats one design instead, side by side on the square lattice and in the cube and interlocked as a hexagon on the triangular one, where the fills multiply by the copy count exactly and the exposed faces do not.
+The first row is the Sierpinski carpet, the second the Menger sponge. Neither was put in by hand; both fall out of a parity rule and one product. The [sponge demo](/demos/sponge/) grows any code level by level and answers the fills, the voids and the exposed faces from closed forms before a cube is built. The [tile demo](/demos/tile/) repeats one design instead, side by side on the square lattice and in the cube and interlocked as a hexagon on the triangular one, where the fills multiply by the copy count exactly and the exposed faces do not.
 
 ## Move two with a different tile each level
 

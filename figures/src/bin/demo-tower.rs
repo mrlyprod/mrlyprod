@@ -1,5 +1,5 @@
-use mrlyfig::board::Frame;
-use mrlyfig::{iso, save, Board, Color};
+use figures::board::Frame;
+use figures::{iso, save, Board, Color};
 use mrlyrs::core::colors::{shades, ORANGE};
 use mrlyrs::core::error::Result;
 use mrlyrs::math::bang::{magic, MagicLayer};

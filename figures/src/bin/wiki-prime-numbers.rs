@@ -1,4 +1,4 @@
-use mrlyfig::{ink, save, Board, Grid, Ramp};
+use figures::{ink, save, Board, Grid, Ramp};
 use mrlyrs::core::error::Result;
 use mrlyrs::num::prime::Sieve;
 

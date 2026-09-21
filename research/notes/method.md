@@ -7,7 +7,7 @@ slug: method
 
 The design space is finite. In dimension `dim` there are `2^(2^dim)` designs and nothing else, so a claim about designs is a claim about a finite list, and the honest way to settle it is to walk the list. That one fact sets the method used on every page here: enumerate rather than sample, produce every number twice, pin every formula to something literally drawn, publish the code, and label each claim with what was actually established rather than with how sure it feels.
 
-The [universe demo](../../site/demos/universe/) is the enumeration itself, run in the browser: every orbit per dimension and base, counted by [Burnside](/wiki/burnsides-lemma/).
+The [universe demo](/demos/universe/) is the enumeration itself, run in the browser: every orbit per dimension and base, counted by [Burnside](/wiki/burnsides-lemma/).
 
 ## Exhaust, do not sample
 

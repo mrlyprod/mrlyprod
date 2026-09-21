@@ -1,6 +1,6 @@
-use mrlyfig::board::Board;
-use mrlyfig::ink::Ramp;
-use mrlyfig::{field, ink, save};
+use figures::board::Board;
+use figures::ink::Ramp;
+use figures::{field, ink, save};
 use mrlyrs::core::error::Result;
 use mrlyrs::math::tourbillon;
 

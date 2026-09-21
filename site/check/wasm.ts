@@ -1,6 +1,6 @@
-import init, * as m from '../pkg/mrlydemo.js';
+import init, * as m from '../pkg/demos.js';
 
-const bytes = await Bun.file(new URL('../pkg/mrlydemo_bg.wasm', import.meta.url)).arrayBuffer();
+const bytes = await Bun.file(new URL('../pkg/demos_bg.wasm', import.meta.url)).arrayBuffer();
 await init({ module_or_path: bytes });
 
 const blinker = new Uint8Array(25);

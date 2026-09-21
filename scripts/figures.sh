@@ -9,8 +9,8 @@ cd "$HERE/.."
 mkdir -p files/figures
 
 case "${1:-}" in
-  check) cargo check -q -p figures --bins -p mrlyfig --tests; exit 0 ;;
-  test) cargo test -q -p mrlyfig; exit 0 ;;
+  check) cargo check -q -p figures --all-targets; exit 0 ;;
+  test) cargo test -q -p figures --lib; exit 0 ;;
 esac
 
 bench=0
@@ -25,7 +25,7 @@ else
   full=1
 fi
 
-BENCH_TMP="$(mktemp "${TMPDIR:-/tmp}/mrlyfig-bench.XXXXXX")"
+BENCH_TMP="$(mktemp "${TMPDIR:-/tmp}/figures-bench.XXXXXX")"
 export BENCH_TMP
 trap 'rm -f "$BENCH_TMP"' EXIT
 
@@ -41,7 +41,7 @@ for name in "${names[@]}"; do
 done | xargs -P "$(sysctl -n hw.ncpu)" -n 2 sh -c '
 s=$(perl -MTime::HiRes=time -e "print time")
 c=0
-MRLYFIG_THEME="$0" perl -e "alarm 5; exec @ARGV; exit 127" "target/fig/$1" || c=$?
+FIGURES_THEME="$0" perl -e "alarm 5; exec @ARGV; exit 127" "target/fig/$1" || c=$?
 e=$(perl -MTime::HiRes=time -e "print time")
 perl -e "printf qq{%.2f\t%s\t%s\t%s\n}, \$ARGV[1] - \$ARGV[0], \$ARGV[2], \$ARGV[3], \$ARGV[4]" "$s" "$e" "$1" "$0" "$c" >> "$BENCH_TMP"
 ' || true

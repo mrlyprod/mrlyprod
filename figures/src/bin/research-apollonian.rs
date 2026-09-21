@@ -1,4 +1,4 @@
-use mrlyfig::{ink, save, Board, Color, Ramp};
+use figures::{ink, save, Board, Color, Ramp};
 use mrlyrs::core::error::Result;
 use mrlyrs::num::factor::gcd;
 use mrlyrs::num::lattice::totients;

@@ -1,4 +1,4 @@
-use mrlyfig::{ink, save, Board, Ramp};
+use figures::{ink, save, Board, Ramp};
 use mrlyrs::core::error::Result;
 
 const BASE: i64 = 7;

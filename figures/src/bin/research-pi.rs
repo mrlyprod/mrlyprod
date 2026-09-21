@@ -1,4 +1,4 @@
-use mrlyfig::{ink, save, Board};
+use figures::{ink, save, Board};
 use mrlyrs::core::error::Result;
 use mrlyrs::num::factor::gcd;
 use mrlyrs::num::lattice::coprime_pairs;

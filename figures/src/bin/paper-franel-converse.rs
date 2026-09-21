@@ -1,4 +1,4 @@
-use mrlyfig::{ink, plot, save, Board, Frame};
+use figures::{ink, plot, save, Board, Frame};
 use mrlyrs::core::error::Result;
 use mrlyrs::core::Color;
 use mrlyrs::num::design::elements;

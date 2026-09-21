@@ -1,5 +1,5 @@
-import init, * as wasm from '../pkg/mrlydemo.js';
-import wasmUrl from '../pkg/mrlydemo_bg.wasm';
+import init, * as wasm from '../pkg/demos.js';
+import wasmUrl from '../pkg/demos_bg.wasm';
 import { palette } from '../kit/theme/palette.js';
 import { dark, light } from '../kit/theme/theme.js';
 

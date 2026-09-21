@@ -197,21 +197,28 @@ const tag = (html: string, name: string) => {
   return found ? untag(found[1]) : "";
 };
 
+const demoHome = (site: Site, name: string) =>
+  name ? join(site.input("demos").path, name) : dirname(site.input("demos").path);
+
+export const demoShell = (site: Site, name: string) => join(demoHome(site, name), "index.html");
+
 function demoNames(site: Site) {
   const home = site.input("demos").path;
-  return site
-    .input("demos")
-    .files.filter((f) => f.endsWith("/index.html"))
-    .map((f) => dirname(f).slice(home.length + 1))
-    .sort((a, b) => (a === "" ? -1 : b === "" ? 1 : a.localeCompare(b)));
+  return [
+    "",
+    ...site
+      .input("demos")
+      .files.filter((f) => f.endsWith("/index.html"))
+      .map((f) => dirname(f).slice(home.length + 1))
+      .sort((a, b) => a.localeCompare(b)),
+  ];
 }
 
 const demoRoute = (name: string) => (name ? `/demos/${name}/` : "/demos/");
 
 function cards(site: Site): Card[] {
-  const home = site.input("demos").path;
   return demoNames(site).map((name) => {
-    const html = read(join(home, name, "index.html"));
+    const html = read(demoShell(site, name));
     const found = html.match(TITLE);
     return {
       name,
@@ -248,17 +255,17 @@ function shelved(list: Card[]): Bay[] {
 export const demoTree = (site: Site) => shelved(cards(site));
 
 function demoGroup(site: Site): Route {
-  const home = site.input("demos").path;
   const list = cards(site);
-  const inputs = ["demos", "lib", "pkg", "ui"].flatMap((one) => site.input(one).files);
+  const gallery = [demoShell(site, ""), join(demoHome(site, ""), "index.jsx")];
+  const inputs = [...gallery, ...["demos", "lib", "pkg", "ui"].flatMap((one) => site.input(one).files)];
   return {
     route: "/demos/",
     kind: "demos",
     name: "Demos",
     data: list,
-    source: home,
+    source: site.input("demos").path,
     inputs,
-    urls: list.map((d) => ({ route: demoRoute(d.name), name: d.title, source: join(home, d.name) })),
+    urls: list.map((d) => ({ route: demoRoute(d.name), name: d.title, source: demoHome(site, d.name) })),
   };
 }
 
@@ -323,19 +330,23 @@ function seo(source: string, card: Card, nav: string, image: Picture, fonts: str
 
 const widgetFiles = (site: Site) => site.input("demos").files.filter((f) => f.endsWith("/widget.jsx"));
 
+const BESIDE = /"\.\/lib-/g;
+
 async function demos(site: Site, route: Route): Promise<Output[]> {
   const list = route.data as Card[];
-  const home = site.input("demos").path;
+  const home = demoHome(site, "");
+  const views = relative(home, site.input("demos").path);
+  const served = (path: string) => (path.startsWith(`${views}/`) ? `demos/${path.slice(views.length + 1)}` : path);
   const built = await Bun.build({
-    entrypoints: [...list.map((d) => join(home, d.name, "index.html")), ...widgetFiles(site)],
-    root: org,
+    entrypoints: [...list.map((d) => demoShell(site, d.name)), ...widgetFiles(site)],
+    root: home,
     splitting: true,
     minify: true,
     define: { "process.env.NODE_ENV": '"production"' },
     naming: { chunk: "lib-[hash].[ext]", asset: "[name]-[hash].[ext]" },
   });
   if (!built.success) throw new Error(`site: the demos failed to bundle\n${built.logs.join("\n")}`);
-  const shells = new Map(list.map((d) => [`${demoRoute(d.name).slice(1)}index.html`, d]));
+  const shells = new Map(list.map((d) => [relative(home, demoShell(site, d.name)), d]));
   const json = jsonText(shelved(list));
   const nav = `<script type="application/json" id="${SITE.prefix}tree">${json}</script>`;
   const out: Output[] = [{ path: "demos/tree.json", bytes: json, type: "application/json" }];
@@ -344,15 +355,17 @@ async function demos(site: Site, route: Route): Promise<Output[]> {
   const edges = await imports(built.outputs);
   const fonts = site.asset("fonts/fonts.css");
   for (const item of built.outputs) {
-    const path = item.path.replace(/^\.\//, "");
-    const card = shells.get(path);
+    const from = item.path.replace(/^\.\//, "");
+    const card = shells.get(from);
     if (!card) {
-      out.push({ path, bytes: new Uint8Array(await item.arrayBuffer()) });
+      out.push({ path: served(from), bytes: new Uint8Array(await item.arrayBuffer()) });
       continue;
     }
     const image = picture(site, card.name ? `demo-${card.name}` : "site-demos", demoRoute(card.name), fig);
-    const html = await item.text();
-    out.push({ path, bytes: seo(html, card, nav, image, fonts, chunks(html, path, edges)) });
+    const raw = await item.text();
+    const ahead = chunks(raw, from, edges);
+    const html = card.name ? raw : raw.replace(BESIDE, '"../lib-');
+    out.push({ path: `${demoRoute(card.name).slice(1)}index.html`, bytes: seo(html, card, nav, image, fonts, ahead) });
   }
   return out;
 }

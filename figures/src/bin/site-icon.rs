@@ -1,4 +1,4 @@
-use mrlyfig::{grid, ink, save, Board, Grid};
+use figures::{grid, ink, save, Board, Grid};
 use mrlyrs::core::error::Result;
 
 fn main() -> Result<()> {

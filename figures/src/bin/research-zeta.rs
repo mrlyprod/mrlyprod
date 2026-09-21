@@ -1,4 +1,4 @@
-use mrlyfig::{ink, plot, save, Board, Frame};
+use figures::{ink, plot, save, Board, Frame};
 use mrlyrs::core::error::Result;
 use mrlyrs::num::design::elements;
 use mrlyrs::num::zeta::{Complex, Line};
@@ -397,7 +397,7 @@ fn compute() -> Result<()> {
         flat(&fhollow),
         flat(&ffamily)
     );
-    let path = mrlyfig::out::root().join(DATA);
+    let path = figures::out::root().join(DATA);
     let folder = path.parent().expect("the data path lost its folder");
     std::fs::create_dir_all(folder)
         .map_err(|e| mrlyrs::core::MrlyError::Value(format!("cannot make {folder:?}: {e}")))?;
@@ -408,7 +408,7 @@ fn compute() -> Result<()> {
 }
 
 fn render() -> Result<()> {
-    let path = mrlyfig::out::root().join(DATA);
+    let path = figures::out::root().join(DATA);
     let text = std::fs::read_to_string(&path).map_err(|e| {
         mrlyrs::core::MrlyError::Value(format!(
             "cannot read {path:?}: {e}; run the example with compute"

@@ -1,4 +1,4 @@
-use mrlyfig::{ink, plot, save, Board};
+use figures::{ink, plot, save, Board};
 use mrlyrs::core::error::Result;
 use mrlyrs::math::roulette;
 use mrlyrs::math::spirograph::{

@@ -1,4 +1,4 @@
-use mrlyfig::{grid, ink, save, Board, Frame, Grid};
+use figures::{grid, ink, save, Board, Frame, Grid};
 use mrlyrs::core::error::Result;
 
 const CELL: f64 = 55.0;

@@ -1,4 +1,4 @@
-use mrlyfig::{iso, save, Board};
+use figures::{iso, save, Board};
 use mrlyrs::core::colors::{shades, ORANGE};
 use mrlyrs::core::error::Result;
 use mrlyrs::math::shape::{self, Frac, Region};

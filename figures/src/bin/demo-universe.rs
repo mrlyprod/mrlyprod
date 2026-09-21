@@ -1,4 +1,4 @@
-use mrlyfig::{ink, iso, save, Board, Color};
+use figures::{ink, iso, save, Board, Color};
 use mrlyrs::core::colors::{shades, INDIGO};
 use mrlyrs::core::error::Result;
 use mrlyrs::math::bang::bang;

@@ -1,4 +1,4 @@
-use mrlyfig::{ink, plot, save, Board, Frame};
+use figures::{ink, plot, save, Board, Frame};
 use mrlyrs::core::error::Result;
 use mrlyrs::num::lattice::totients;
 use mrlyrs::num::zeta::{novelty_main, novelty_wave, smoothed_novelty, Line};

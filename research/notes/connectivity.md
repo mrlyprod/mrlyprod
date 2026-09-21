@@ -7,7 +7,7 @@ slug: connectivity
 
 A design's fractal occupies some number of cells of a grid. A random set can occupy exactly the same number of cells of the same grid. Race the two on measurable geometry - how many connected pieces, how much boundary per cell - and the question of what the [parity](/wiki/parity/) rule buys gets a number instead of an adjective.
 
-Everything on this page is measurement at finite sizes; the one Proved line of the race is flagged where it occurs. The [graphs demo](../../site/demos/graphs/) draws the cell network of any design live, flat, in the cube and on the diagonal slice, with its tips, junctions, pieces and length beside it.
+Everything on this page is measurement at finite sizes; the one Proved line of the race is flagged where it occurs. The [graphs demo](/demos/graphs/) draws the cell network of any design live, flat, in the cube and on the diagonal slice, with its tips, junctions, pieces and length beside it.
 
 ## The race
 

@@ -1,4 +1,4 @@
-use mrlyfig::{ink, plot, save, Board, Frame};
+use figures::{ink, plot, save, Board, Frame};
 use mrlyrs::core::error::Result;
 use mrlyrs::num::classics::primes;
 use mrlyrs::num::formulas;
@@ -68,7 +68,7 @@ fn counts(top: usize, keep: impl Fn(usize) -> bool) -> Vec<usize> {
     out
 }
 
-fn trace(board: &mut Board, frame: Frame, count: &[usize], peak: f64, color: mrlyfig::Color) {
+fn trace(board: &mut Board, frame: Frame, count: &[usize], peak: f64, color: figures::Color) {
     let top = count.len() - 1;
     let pts: Vec<(f64, f64)> = (0..=SAMPLES)
         .map(|k| {

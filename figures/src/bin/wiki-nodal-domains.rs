@@ -1,4 +1,4 @@
-use mrlyfig::{field, ink, save, Board, Frame, Ramp};
+use figures::{field, ink, save, Board, Frame, Ramp};
 use mrlyrs::core::error::Result;
 use std::f64::consts::PI;
 
