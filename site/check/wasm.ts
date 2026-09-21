@@ -891,4 +891,28 @@ checks.push(
   ['echo past the sieve cap', `${echoDeep.sieve} ${echoDeep.share} ${echoDeep.last}`, 'false null 157'],
 );
 
+// NOVELTY
+
+const meter = new m.Novelty(16, 16, 10);
+const meterHeights = meter.heights();
+const meterGammas = meter.gammas();
+const meterAmps = meter.amplitudes();
+const meterSmooth = meter.dots(false);
+const meterRough = meter.dots(true);
+const meterOne = meter.wave(1, false, [8, 12]);
+const meterOneSharp = meter.wave(1, true, [8, 12]);
+const meterFull = new m.Novelty(20, 16, 138);
+
+checks.push(
+  ['novelty grid', `${meterHeights.length} ${meterHeights[0]} ${meterHeights[128]} ${meter.sieve()}`, '129 8 16 131072'],
+  ['novelty zeros', `${meterGammas.length} ${meterGammas[0].toFixed(6)} ${meterGammas[9].toFixed(6)}`, '10 14.134725 49.773832'],
+  ['novelty amplitudes', `${meterAmps[0].toExponential(3)} ${meterAmps[9].toExponential(3)}`, '1.879e-1 4.286e-3'],
+  ['novelty smooth dots', `${meterSmooth.length} ${meterSmooth[0].toFixed(5)} ${meterSmooth[64].toFixed(5)} ${meterSmooth[128].toFixed(5)}`, '129 0.14122 0.22194 -0.24368'],
+  ['novelty sharp dots', `${meterRough.length} ${meterRough[0].toFixed(5)} ${meterRough[64].toFixed(5)} ${meterRough[128].toFixed(5)}`, '129 1.05599 1.13563 1.26701'],
+  ['novelty one wave', `${meterOne[0].toFixed(5)} ${meterOne[1].toFixed(5)} ${(meterOneSharp[0] * 16).toFixed(5)} ${(meterOneSharp[1] * 64).toFixed(5)}`, '0.30112 0.24817 0.30112 0.24817'],
+  ['novelty fit', `${meter.miss(0)} ${meter.miss(1).toFixed(3)} ${meter.miss(10).toExponential(2)}`, '1 0.446 4.47e-2'],
+  ['novelty full meter', `${meterFull.heights().length} ${meterFull.sieve()} ${meterFull.gammas()[137].toFixed(6)} ${meterFull.amplitudes()[137].toExponential(3)}`, '193 2097152 299.840326 1.475e-7'],
+  ['novelty full fit', `${meterFull.miss(30) < 5e-3} ${meterFull.miss(138) < 1e-4} ${Math.max(...meterFull.dots(false).map(Math.abs)).toFixed(4)}`, 'true true 0.5580'],
+);
+
 export default checks;

@@ -18,12 +18,7 @@ fn main() -> Result<()> {
     let mut board = Board::square();
     let frame = board.frame(0.08);
     let top = Frame::new(frame.x, frame.y, frame.w, frame.h * 0.38);
-    let chart = Frame::new(
-        frame.x,
-        frame.y + frame.h * 0.46,
-        frame.w,
-        frame.h * 0.54,
-    );
+    let chart = Frame::new(frame.x, frame.y + frame.h * 0.46, frame.w, frame.h * 0.54);
     let reach: f64 = (1..=SQUARES).map(|k| 1.0 / k as f64).sum();
     let unit = top.w / reach;
     let base = top.y + top.h;
@@ -35,7 +30,11 @@ fn main() -> Result<()> {
         x += side;
         laid += 1;
     }
-    plot::baseline(&mut board, Frame::new(top.x, top.y, top.w, base - top.y), ink::line());
+    plot::baseline(
+        &mut board,
+        Frame::new(top.x, top.y, top.w, base - top.y),
+        ink::line(),
+    );
     let limit = std::f64::consts::PI * std::f64::consts::PI / 6.0;
     let mut walk = Vec::with_capacity(TERMS);
     let mut run = 0.0;

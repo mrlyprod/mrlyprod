@@ -17,9 +17,16 @@ fn main() -> Result<()> {
         let side = design.width();
         assert_eq!(side, 3usize.pow(*level as u32));
         let x = area.x + index as f64 * (tile + GUTTER);
-        let tone = if index == 0 { ink::yellow() } else { ink::blue() };
-        Grid::new(Frame::new(x, top, tile, tile), side, side, 0.0)
-            .paint(&mut board, &design, |kind| (kind != 0).then_some(tone));
+        let tone = if index == 0 {
+            ink::yellow()
+        } else {
+            ink::blue()
+        };
+        Grid::new(Frame::new(x, top, tile, tile), side, side, 0.0).paint(
+            &mut board,
+            &design,
+            |kind| (kind != 0).then_some(tone),
+        );
         fills.push(design.types().sum());
     }
     assert_eq!(fills, [8u64, 64, 512]);

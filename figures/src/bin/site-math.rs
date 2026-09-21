@@ -35,8 +35,11 @@ fn main() -> Result<()> {
     let carpet = designs::create(CODE, 3, 3, 0, 2)?;
     assert_eq!(carpet.types().sum(), 512);
     let under = board.height as f64 - TOP - WIDE;
-    Grid::new(Frame::new(left, under, WIDE, WIDE), SIDE, SIDE, 0.0)
-        .paint(&mut board, &carpet, |kind| (kind != 0).then_some(ink::blue()));
+    Grid::new(Frame::new(left, under, WIDE, WIDE), SIDE, SIDE, 0.0).paint(
+        &mut board,
+        &carpet,
+        |kind| (kind != 0).then_some(ink::blue()),
+    );
     save("site-math", &board)?;
     Ok(())
 }

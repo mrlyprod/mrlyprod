@@ -48,6 +48,8 @@ pub mod memory;
 pub mod modes;
 /// The Thue-Morse word: its two constructions, its plane lifts, its runs and the difference filter.
 pub mod morse;
+/// The novelty meter: the totients read through a smooth and a sharp window on a log grid of y, and the waves of the first zeros that the smooth reading is.
+pub mod novelty;
 /// The primes: the sieve stepped, the stone pile, the count chart and the carpet witness.
 pub mod prime;
 /// The race: seeded walkers loose on a flat design.

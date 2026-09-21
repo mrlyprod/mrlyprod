@@ -1,3 +1,4 @@
+import subprocess
 import sys
 import time
 from fractions import Fraction
@@ -31,15 +32,19 @@ def flags(base, digits, q):
 
 
 def mobius_sieve(n):
-    mu = np.ones(n + 1, dtype=np.int64)
-    primes = np.ones(n + 1, dtype=bool)
-    primes[:2] = False
-    for p in range(2, n + 1):
-        if not primes[p]:
+    mu = np.ones(n + 1, dtype=np.int8)
+    rest = np.arange(n + 1, dtype=np.int64 if n >= 2**31 else np.int32)
+    root = int(n**0.5) + 1
+    small = np.ones(root + 1, dtype=bool)
+    small[:2] = False
+    for p in range(2, root + 1):
+        if not small[p]:
             continue
-        primes[p * p :: p] = False
+        small[p * p :: p] = False
         mu[p::p] *= -1
         mu[p * p :: p * p] = 0
+        rest[p::p] //= p
+    mu[rest > 1] *= -1
     mu[0] = 0
     return mu
 
@@ -696,6 +701,545 @@ def verb_converse():
     print(f"   K_d / K_(q-free part) over d <= 200 in [{ratio[lo]:.4f} at d = {lo}, {ratio[hi]:.4f} at d = {hi}]")
 
 
+# THE SANDWICH
+
+
+def jordan_two(n):
+    j = np.arange(n + 1, dtype=np.int64) ** 2
+    for p in range(2, n + 1):
+        if j[p] == p * p:
+            j[p::p] -= j[p::p] // (p * p)
+    return j
+
+
+def sigma_ratio_max(n):
+    s = np.zeros(n + 1)
+    for k in range(1, n + 1):
+        s[k::k] += 1.0 / k
+    return float(s[1:].max()), int(s[1:].argmax()) + 1
+
+
+def dilate_vector(keep, mu, q):
+    x = np.zeros(q + 1, dtype=np.int64)
+    for d in range(1, q + 1):
+        x[d] = mertens_dilated(keep, mu, q, d)
+    return x
+
+
+def harmonic_exact(x, q):
+    y = [Fraction(0)] * (q + 1)
+    for f in range(1, q + 1):
+        y[f] = sum(Fraction(int(x[f * m]), m) for m in range(1, q // f + 1))
+    return y
+
+
+def jordan_form(x, q):
+    j2 = jordan_two(q)
+    y = harmonic_exact(x, q)
+    return sum(Fraction(int(j2[f]), f * f) * y[f] * y[f] for f in range(1, q + 1)), y
+
+
+def kernel_double(x, q, block=1024):
+    idx = np.arange(1, q + 1, dtype=np.int64)
+    v = x[1 : q + 1].astype(np.float64)
+    total = 0.0
+    for lo in range(0, q, block):
+        hi = min(lo + block, q)
+        g = np.gcd.outer(idx[lo:hi], idx).astype(np.float64)
+        w = g * g / (idx[lo:hi, None] * idx[None, :])
+        total += float(v[lo:hi] @ w @ v)
+    return total
+
+
+def divisor_maps(q, mu):
+    from scipy.sparse import csr_matrix
+
+    rows, cols, harm, mob = [], [], [], []
+    for f in range(1, q + 1):
+        m = np.arange(1, q // f + 1, dtype=np.int64)
+        rows.append(np.full(m.size, f - 1, dtype=np.int64))
+        cols.append(f * m - 1)
+        harm.append(1.0 / m)
+        mob.append(mu[m] / m)
+    r, c = np.concatenate(rows), np.concatenate(cols)
+    a = csr_matrix((np.concatenate(harm), (r, c)), shape=(q, q))
+    b = csr_matrix((np.concatenate(mob), (r, c)), shape=(q, q))
+    return a, b
+
+
+def top_singular(a, steps=3000, seed=1):
+    rng = np.random.default_rng(seed)
+    v = rng.standard_normal(a.shape[1])
+    v /= np.linalg.norm(v)
+    at = a.T.tocsr()
+    for _ in range(steps):
+        w = at @ (a @ v)
+        n = np.linalg.norm(w)
+        if n == 0:
+            return 0.0
+        v = w / n
+    return float(np.linalg.norm(a @ v))
+
+
+SANDWICH = [(BASE3, [81, 243, 729, 2187, 6561]), ((0, None, "full set, control"), [40, 81, 243])]
+
+SANDWICH_EXACT = 729
+
+RANK_CASES = [(3, {0, 1}, 40), (10, set(range(9)), 40), (3, {0, 2}, 40), (4, {0, 2, 3}, 40), (5, {0, 2, 4}, 40), (10, {0, 2, 5, 7}, 40)]
+
+
+def verb_sandwich():
+    print("\nTHE SANDWICH, G_F(Q) = sum_f (J_2(f)/f^2) y_f^2 with y_f = sum_m x_(fm)/m, x_d = M_F(Q/d; d)")
+    print("   6/pi^2 = %.6f; exact means the Jordan form and the gcd double sum agree as rationals" % (6 / pi**2))
+    print(
+        "   set                        |     Q |      G_F(Q) | sum x^2 | sum y^2 | G/sum y^2 | G/sum x^2 |"
+        " x_1^2/sum x^2 |   exact | double gap"
+    )
+    rows = []
+    for design, ladder in SANDWICH:
+        for q in ladder:
+            t0 = time.time()
+            keep = keep_of(design, q)
+            mu = mobius_sieve(q)
+            x = dilate_vector(keep, mu, q)
+            g, y = jordan_form(x, q)
+            sx = int((x[1:] ** 2).sum())
+            sy = float(sum(v * v for v in y[1:]))
+            exact = "-"
+            if q <= SANDWICH_EXACT:
+                gd, _ = kernel_sum(keep, mu, q)
+                exact = str(gd == g)
+            gap = abs(float(g) - kernel_double(x, q))
+            rows.append((design, q, mu, x, float(g), sx, sy))
+            print(
+                f"   {design[2]:26s} | {q:5d} | {float(g):11.6f} | {sx:7d} | {sy:7.3f} | {float(g) / sy:9.6f} | "
+                f"{float(g) / sx:9.6f} | {int(x[1]) ** 2 / sx:13.6f} | {exact:>7s} | {gap:.1e}   {time.time() - t0:4.1f} s"
+            )
+
+    print("\n   THE TWO MAPS, l^2 operator norms on vectors indexed by d <= Q, against the Schur bound N_Q^(1/2)")
+    print("   N_Q = H_Q max_(d<=Q) sigma(d)/d; the power readings are Rayleigh quotients, lower bounds on the norms")
+    print(
+        "   set                        |     Q |    H_Q | max sigma/d | at d |    N_Q | (6/pi^2)/N_Q |  N_Q^(1/2) | 1 + ln Q |"
+        " norm x->y | norm y->x | sqrt(sum y^2/sum x^2)"
+    )
+    for design, q, mu, x, g, sx, sy in rows:
+        a, b = divisor_maps(q, mu)
+        na, nb = top_singular(a), top_singular(b)
+        hq = float((1.0 / np.arange(1, q + 1)).sum())
+        sm, at = sigma_ratio_max(q)
+        nq = hq * sm
+        print(
+            f"   {design[2]:26s} | {q:5d} | {hq:6.4f} | {sm:11.6f} | {at:4d} | {nq:6.2f} | {6 / pi**2 / nq:12.4f} | "
+            f"{np.sqrt(nq):10.6f} | {1 + np.log(q):8.4f} | {na:9.6f} | {nb:9.6f} | {np.sqrt(sy / sx):9.6f}"
+        )
+
+    print("\n   THE RANK FORM'S CONSTANT, G_F(Q) - 12 m sum delta^2 as an exact rational at every Q in S_F up to the bound")
+    print("   base | digits          | 1 in F |  Qmax | jumps | constants | G_F(26) | 12 m S2 at 26")
+    for base, digits, qmax in RANK_CASES:
+        keep = flags(base, frozenset(digits), qmax)
+        mu = mobius_sieve(qmax)
+        consts = set()
+        at26 = ""
+        for q in range(1, qmax + 1):
+            if not keep[q]:
+                continue
+            g, _ = kernel_sum(keep, mu, q)
+            m, s2 = farey_delta_square(keep, q)
+            consts.add(g - 12 * m * s2)
+            if q == 26:
+                at26 = f"{float(g):.6f} | {float(12 * m * s2):.6f}"
+        print(f"   {base:4d} | {str(sorted(digits)):15s} | {str(1 in digits):6s} | {qmax:5d} | {len(consts):5d} | {sorted(consts)} | {at26}")
+
+
+# THE ACCEPTING LAW
+
+
+def padded_strings(base, digits, level):
+    s = np.zeros(1, dtype=np.int64)
+    for j in range(level):
+        s = np.concatenate([s + f * base**j for f in sorted(digits)])
+    return np.sort(s)
+
+
+def design_below(base, digits, level):
+    s = padded_strings(base, digits, level)
+    s = s[s > 0]
+    if 1 in digits:
+        s = np.append(s, base**level)
+    return s
+
+
+def divisor_table(members, cut):
+    n = np.zeros(cut + 1, dtype=np.int64)
+    for m in members.tolist():
+        r = int(m**0.5)
+        while r * r > m:
+            r -= 1
+        while (r + 1) * (r + 1) <= m:
+            r += 1
+        for d in range(1, r + 1):
+            if m % d == 0:
+                n[d] += 1
+                if m // d != d:
+                    n[m // d] += 1
+    return n
+
+
+def count_multiples(members, cut):
+    n = np.zeros(cut + 1, dtype=np.int64)
+    for lo in range(1, cut + 1, 64):
+        ds = np.arange(lo, min(lo + 64, cut + 1), dtype=np.int64)
+        n[lo : lo + len(ds)] = (members[None, :] % ds[:, None] == 0).sum(axis=1)
+    return n
+
+
+def smith_jordan(n, cut):
+    x = np.sqrt(n[: cut + 1].astype(np.float64))
+    j2 = jordan_two(cut).astype(np.float64)
+    total = 0.0
+    for f in np.nonzero(n[1 : cut + 1])[0] + 1:
+        f = int(f)
+        y = float((x[f::f] / np.arange(1, cut // f + 1, dtype=np.float64)).sum())
+        total += j2[f] / (f * f) * y * y
+    return total
+
+
+def sigma_over_d(cut):
+    s = np.zeros(cut + 1)
+    for k in range(1, cut + 1):
+        s[k::k] += 1.0 / k
+    return s
+
+
+def roots_l1(base, digits, level, d):
+    a = np.arange(1, d, dtype=np.int64)
+    total = np.ones(d - 1)
+    for j in range(level):
+        t = (a * pow(base, j, d) % d) / d
+        g = np.zeros(d - 1, dtype=np.complex128)
+        for f in digits:
+            g += np.exp(TWO_PI_I * f * t)
+        total *= np.abs(g)
+    return float(total.sum())
+
+
+def mult_order(base, d):
+    if gcd(base, d) != 1:
+        return 0
+    k, v = 1, base % d
+    while v != 1:
+        v = v * base % d
+        k += 1
+    return k
+
+
+def pair_carry_matrix(base, digits, r):
+    ds = [sum(1 for f in digits if f == v) for v in range(base)]
+    dist = {0: 1}
+    for _ in range(r):
+        nxt = {}
+        for v, c in dist.items():
+            for f in digits:
+                nxt[v + f] = nxt.get(v + f, 0) + c
+        dist = nxt
+    top = max(dist)
+    bound = top // (base - 1) + 1
+    states = list(range(-bound, bound + 1))
+    m = {c: {} for c in states}
+    for c in states:
+        for u, cu in dist.items():
+            for v, cv in dist.items():
+                w = u - v + c
+                if w % base == 0 and w // base in m:
+                    m[c][w // base] = m[c].get(w // base, 0) + cu * cv
+    reach = {0}
+    frontier = [0]
+    while frontier:
+        c = frontier.pop()
+        for c2 in m[c]:
+            if c2 not in reach:
+                reach.add(c2)
+                frontier.append(c2)
+    back = {0}
+    frontier = [0]
+    while frontier:
+        c = frontier.pop()
+        for c0 in states:
+            if c in m[c0] and c0 not in back:
+                back.add(c0)
+                frontier.append(c0)
+    cls = sorted(reach & back)
+    mat = np.array([[m[c].get(c2, 0) for c2 in cls] for c in cls], dtype=np.float64)
+    return cls, mat
+
+
+def pair_count(base, digits, r, t):
+    cls, mat = pair_carry_matrix(base, digits, r)
+    i = cls.index(0)
+    v = np.zeros(len(cls))
+    v[i] = 1
+    exact = [[Fraction(int(x)) for x in row] for row in mat]
+    vec = [Fraction(0)] * len(cls)
+    vec[i] = Fraction(1)
+    for _ in range(t):
+        vec = [sum(vec[a] * exact[a][b] for a in range(len(cls))) for b in range(len(cls))]
+    return int(vec[i])
+
+
+def perron_certificate(mat, floor, steps=2000):
+    v = np.ones(len(mat))
+    for _ in range(steps):
+        v = mat @ v
+        v /= v.max()
+    rho = float((mat @ v).max() / v.max())
+    vq = [Fraction(int(round(x * 10**9)), 10**9) for x in v]
+    exact = [[Fraction(int(x)) for x in row] for row in mat]
+    quot = [sum(exact[a][b] * vq[b] for b in range(len(mat))) / vq[a] for a in range(len(mat))]
+    return rho, min(quot), min(quot) > floor
+
+
+def verb_accepting():
+    base, digits, name = BASE3
+    fill = len(digits)
+    al = np.log(fill) / np.log(base)
+    print(f"\nTHE SURROGATE, {name}: sum tau(m) <= B(Q) <= (1 + ln Q) sum_d (sigma(d)/d) N_F(Q;d) <= (1 + ln Q)^2 sum tau(m)")
+    print("    L |      Q | A_F(Q) | sum tau |        B(Q) | B/sum tau | amgm bound | bound/B | (1+lnQ)^2 sum tau | B/(Q^a ln^2 Q) | double gap")
+    for lvl in range(4, 13):
+        t0 = time.time()
+        cut = base**lvl
+        members = design_below(base, digits, lvl)
+        n = divisor_table(members, cut)
+        tau = int(n.sum())
+        b = smith_jordan(n, cut)
+        s = sigma_over_d(cut)
+        amgm = (1 + np.log(cut)) * float((s[1:] * n[1:]).sum())
+        top = (1 + np.log(cut)) ** 2 * tau
+        gap = ""
+        if lvl <= 8:
+            gap = f"{abs(b - smith_bilinear(n, cut)):.1e}"
+        print(
+            f"   {lvl:2d} | {cut:6d} | {len(members):6d} | {tau:7d} | {b:11.3f} | {b / tau:9.4f} | {amgm:10.1f} | "
+            f"{amgm / b:7.3f} | {top:17.1f} | {b / (cut**al * np.log(cut) ** 2):14.4f} | {gap:>10s}   {time.time() - t0:.1f} s"
+        )
+
+    print(f"\nTHE LAW METER, {name}: R(Q, d) = N_F(Q; d) d_co / A_F(Q) over d <= Q^(1/2), Q = 3^L")
+    print("    L |  d <= | max R | argmax | max R at coprime d | argmax | cells within 0.02 of the max | R(Q,4) | 1 + 2^(1-L/2) - 2^(2-L)")
+    for lvl in range(8, 17):
+        cut = base**lvl
+        members = design_below(base, digits, lvl)
+        top = int(np.sqrt(cut))
+        while top * top > cut:
+            top -= 1
+        n = count_multiples(members, top)
+        a_f = len(members)
+        ds = np.arange(1, top + 1)
+        co = np.array([qfree(int(d), base) for d in ds])
+        r = n[1:] * co / a_f
+        best = float(r.max())
+        arg = int(ds[r.argmax()])
+        near = ds[r >= best - 0.02].tolist()
+        copr = np.gcd(ds, base) == 1
+        bestc = float(r[copr].max())
+        argc = int(ds[copr][r[copr].argmax()])
+        r4 = float(r[3])
+        pred = 1 + 2 ** (1 - lvl / 2) - 2 ** (2 - lvl) if lvl % 2 == 0 else float("nan")
+        near_s = " ".join(str(v) for v in near[:12]) + (" ..." if len(near) > 12 else "")
+        print(f"   {lvl:2d} | {top:5d} | {best:.4f} | {arg:6d} | {bestc:18.4f} | {argc:6d} | {near_s:28s} | {r4:.4f} | {pred:.4f}")
+
+    print(f"\nTHE RIPPLE, {name}: A_4(3^L/4) / A_F(3^L/4) against #Acc_4/4 = 3/4, and N_F(3^L; 4) against 2^(L-2) + 2^(L/2-1) - 1")
+    print("    L | N_F(3^L;4) = A_4(3^L/4) | A_F(floor(3^L/4)) |  ratio | 2^(L-2)+2^(L/2-1)-1 | A_4(3^L)/2^L")
+    for lvl in (8, 10, 12, 14):
+        cut = base**lvl
+        members = design_below(base, digits, lvl)
+        n4 = int((members % 4 == 0).sum())
+        af4 = int((members <= cut // 4).sum())
+        wide = design_below(base, digits, lvl + 2)
+        a4 = int(((wide <= 4 * cut) & (wide % 4 == 0)).sum()) + 1 - int(holds(base, digits, 4 * cut))
+        print(f"   {lvl:2d} | {n4:23d} | {af4:17d} | {n4 / af4:.4f} | {2 ** (lvl - 2) + 2 ** (lvl // 2 - 1) - 1:19d} | {a4 / 2**lvl:.4f}")
+
+    print(f"\nTHE REPUNITS, {name}: N_F(3^(kt); R_t) at R_t = (3^t - 1)/2 against 2^t + 1, 2 3^t + 1 and 6^t + 5^t + 3^t + 1")
+    print("    t |  R_t | k = 2 | 2^t+1 | k = 3 | 2 3^t+1 | k = 4 | 6^t+5^t+3^t+1 | R at k = 2 | x = 2 3^t + 2 | (U') yard | peak | ratio | peak/N^(1/2)")
+    for t in range(2, 9):
+        rep = (base**t - 1) // 2
+        cells = []
+        for k in (2, 3, 4):
+            if k * t <= 16:
+                cells.append(int((design_below(base, digits, k * t) % rep == 0).sum()))
+            else:
+                cells.append(None)
+        q = base ** (2 * t)
+        x = q // rep
+        mu = mobius_sieve(x)
+        m = design_below(base, digits, 2 * t)
+        cs = m[m % rep == 0] // rep
+        cs = cs[cs <= x]
+        run = np.cumsum(np.where(np.isin(np.arange(x + 1), cs), mu[: x + 1], 0))
+        peak = int(np.abs(run).max())
+        yard = rep ** ((al - 1) / 2) * x ** (al / 2)
+        f = lambda v: f"{v:5d}" if v is not None else "    -"
+        print(
+            f"   {t:2d} | {rep:4d} | {f(cells[0])} | {2**t + 1:5d} | {f(cells[1])} | {2 * 3**t + 1:7d} | {f(cells[2])} | "
+            f"{6**t + 5**t + 3**t + 1:13d} | {cells[0] * rep / 2 ** (2 * t):10.4f} | {x:13d} | {yard:9.3f} | {peak:4d} | {peak / yard:5.3f} | {peak / len(cs) ** 0.5:12.3f}"
+        )
+
+    print(f"\nTHE ENERGIES, {name}: K_r(t) = #(u_1..u_r, v_1..v_r) in D_t^(2r) with u_1+..+u_r = v_1+..+v_r, carry class of 0, Perron root rho_r, Lambda(2r) = 3 rho_r")
+    print("    r | carries | K_r(1) K_r(2) K_r(3) | brute K_r(2) |      rho_r |  Lambda(2r) | Lambda/4^r | certificate min (Mv)_c/v_c > 4^r/3 | char poly")
+    for r in range(1, 6):
+        cls, mat = pair_carry_matrix(base, digits, r)
+        counts = [pair_count(base, digits, r, t) for t in (1, 2, 3)]
+        strings = design_below(base, digits, 2)
+        strings = np.append(strings[strings < base**2], 0)
+        sums = {}
+        for tup in np.array(np.meshgrid(*([strings] * r))).reshape(r, -1).T:
+            v = int(tup.sum())
+            sums[v] = sums.get(v, 0) + 1
+        brute = sum(c * c for c in sums.values())
+        rho, low, ok = perron_certificate(mat, Fraction(4**r, 3))
+        poly = np.rint(np.poly(mat)).astype(np.int64)
+        print(
+            f"   {r:2d} | {str(cls):>16s} | {counts[0]:6d} {counts[1]:6d} {counts[2]:6d} | {brute:12d} | {rho:10.6f} | {3 * rho:11.6f} | "
+            f"{3 * rho / 4**r:10.6f} | {float(low):12.6f} {str(ok):>5s} | {' '.join(str(c) for c in poly)}"
+        )
+
+    print(f"\nTHE ROOTS OF UNITY, {name}: E_d = sum over a != 0 mod d of abs(hat F_L(a/d)) / 2^L over d <= 3^(L/2)")
+    print("    L |  d <= | max E_d | argmax | ord_d(3) | E at d = 3^(L/2) - 1 | (3^t - 1)/2^t - 1 | N_F(3^L; 3^(L/2)-1) | R there")
+    for lvl in range(8, 17, 2):
+        t0 = time.time()
+        cut = base**lvl
+        top = base ** (lvl // 2)
+        members = design_below(base, digits, lvl)
+        e = np.array([roots_l1(base, digits, lvl, d) / fill**lvl if d > 1 else 0.0 for d in range(1, top + 1)])
+        arg = int(e.argmax()) + 1
+        pinned = top - 1
+        t = lvl // 2
+        exact = (base**t - 1) / fill**t - 1
+        npin = int((members % pinned == 0).sum())
+        print(
+            f"   {lvl:2d} | {top:5d} | {e.max():7.4f} | {arg:6d} | {mult_order(base, arg):8d} | {e[pinned - 1]:20.4f} | "
+            f"{exact:17.4f} | {npin:19d} | {npin * pinned / len(members):.4f}   {time.time() - t0:.1f} s"
+        )
+
+
+# THE REPUNIT DILATE
+
+REPUNIT_DESIGNS = (
+    (3, frozenset({0, 1}), "base 3, digits {0,1}", 17, 24, 10),
+    (4, frozenset({0, 1}), "base 4, digits {0,1}", 13, 18, 10),
+)
+
+
+def repunit(base, t):
+    return (base**t - 1) // (base - 1)
+
+
+def marked_block(base, digits, t):
+    parts = [np.array([base**t], dtype=np.int64)]
+    for k in range(t):
+        parts.append(base**k * (base * (base - 1) * padded_strings(base, digits, t - 1 - k) + 1))
+    return np.sort(np.concatenate(parts))
+
+
+def shifted_sum(base, digits, mu, s):
+    return int(mu[base * (base - 1) * padded_strings(base, digits, s) + 1].sum())
+
+
+def repunit_walk(mu, affine, last):
+    run = np.cumsum(mu[affine])
+    end = int(run[-1])
+    peak = int(np.abs(run).max())
+    at = int(affine[int(np.abs(run).argmax())])
+    total = end + int(mu[last])
+    if abs(total) > peak:
+        peak, at = abs(total), last
+    return end, total, peak, at
+
+
+def repunit_pari(base, ts):
+    lines = []
+    for t in ts:
+        lines.append(
+            f"tt=getabstime(); n=2^{t}; s=0; mx=0; "
+            f"for(i=0,n-1, c={base - 1}*fromdigits(binary(i),{base})+1; s+=moebius(c); mx=max(mx,abs(s))); "
+            f'e=s; s+=moebius({base}^{t}+1); mx=max(mx,abs(s)); print({t}," ",e," ",s," ",mx," ",getabstime()-tt);'
+        )
+    out = subprocess.run(["gp", "-q"], input="\n".join(lines) + "\n", capture_output=True, text=True, check=True).stdout
+    rows = {}
+    for line in out.split("\n"):
+        if line.strip():
+            t, e, s, mx, ms = line.split()
+            rows[int(t)] = (int(e), int(s), int(mx), int(ms) / 1000)
+    return rows
+
+
+def verb_repunit():
+    for base, digits, name, top_sieve, top_pari, top_brute in REPUNIT_DESIGNS:
+        t0 = time.time()
+        mu = mobius_sieve(base**top_sieve + 1)
+        sieve_time = time.time() - t0
+        pari = repunit_pari(base, range(2, top_pari + 1))
+        print(
+            f"\nTHE REPUNIT DILATE, {name}: R_t = (b^t - 1)/(b - 1), x_t = floor(b^(2t)/R_t) = (b - 1)(b^t + 1), "
+            f"R_t^(-1) S_F below x_t = {{(b - 1) m + 1 : m in B_t}} union {{b^t + 1}}, N = 2^t + 1, T_s = sum over B_s of mu(b(b - 1) w + 1)"
+        )
+        print(
+            "    t |        R_t |          x_t |        N | T_(t-1) | T_(t-2) | mu(b^t+1) | M_F(x_t;R_t) | max abs M_F |         at y | N^(1/2) |  N^(0.6) | peak/N^(1/2) | peak/N^(0.6) | checks | pari s"
+        )
+        for t in range(2, top_pari + 1):
+            rep = repunit(base, t)
+            n = 2**t + 1
+            x = (base - 1) * (base**t + 1)
+            assert x == base ** (2 * t) // rep
+            ends, totals, peaks = pari[t][:3]
+            if t <= top_sieve:
+                b = padded_strings(base, digits, t)
+                aff = (base - 1) * b + 1
+                assert (np.sort(base**t - (base - 1) * b) == aff).all()
+                assert (marked_block(base, digits, t) == aff).all()
+                ts = [shifted_sum(base, digits, mu, s) for s in (t - 1, t - 2)]
+                end, total, peak, at = repunit_walk(mu, aff, base**t + 1)
+                assert end == ts[0] + int(mu[base]) * ts[1]
+                assert (end, total, peak) == (ends, totals, peaks)
+                checks = "set marked shifted pari"
+                if t <= top_brute:
+                    m = design_below(base, digits, 2 * t)
+                    cs = np.sort(m[m % rep == 0] // rep)
+                    assert cs.size == n and (cs == np.append(aff, base**t + 1)).all()
+                    checks += " brute"
+                tcol = f"{ts[0]:7d} | {ts[1]:7d}"
+                ycol = f"{at:12d}"
+            else:
+                end, total, peak = ends, totals, peaks
+                checks = "pari"
+                tcol = "      - |       -"
+                ycol = "           -"
+            print(
+                f"   {t:2d} | {rep:10d} | {x:12d} | {n:8d} | {tcol} | {total - end:9d} | {total:12d} | {peak:11d} | {ycol} | "
+                f"{n**0.5:7.1f} | {n**0.6:8.1f} | {peak / n**0.5:12.4f} | {peak / n**0.6:12.4f} | {checks:23s} | {pari[t][3]:.1f}"
+            )
+        print(f"   sieve to {base}^{top_sieve} + 1 in {sieve_time:.1f} s, design total {time.time() - t0:.1f} s")
+
+    base, digits, name = 3, frozenset({0, 2}), "base 3, digits {0,2}"
+    print(f"\nTHE SCALED DESIGN, {name}: S_F = 2 S_(0,1), so d^(-1) S_F = (d/2)^(-1) S_(0,1) at even d and 2 (d^(-1) S_(0,1)) at odd d")
+    print("    t | 3^t-1 | dilate at 3^t - 1 is the {0,1} repunit dilate | M_F(x_t; 3^t - 1) | {0,1} reading | R_t | R_t dilate obeys the law")
+    mu = mobius_sieve(3**8 + 2)
+    ones = frozenset({0, 1})
+    for t in range(2, 7):
+        rep = repunit(3, t)
+        m = design_below(base, digits, 2 * t)
+        m1 = design_below(3, ones, 2 * t)
+        aff = np.append(2 * padded_strings(3, ones, t) + 1, 3**t + 1)
+        full = np.sort(m[m % (2 * rep) == 0] // (2 * rep))
+        half = np.sort(m[m % rep == 0] // rep)
+        same = bool(full.size == aff.size and (full == aff).all())
+        if rep % 2:
+            law = 2 * aff
+        else:
+            law = np.sort(m1[m1 % (rep // 2) == 0] // (rep // 2))
+            law = law[law <= 2 * (3**t + 1)]
+        obeys = bool(half.size == law.size and (half == law).all())
+        print(f"   {t:2d} | {3**t - 1:5d} | {str(same):>43s} | {int(mu[full].sum()):17d} | {int(mu[aff].sum()):13d} | {rep:3d} | {str(obeys):>24s}")
+
+
 def main():
     verbs = {
         "denominator": verb_denominator,
@@ -703,6 +1247,9 @@ def main():
         "strict": verb_strict,
         "dilate": verb_dilate,
         "converse": verb_converse,
+        "sandwich": verb_sandwich,
+        "accepting": verb_accepting,
+        "repunit": verb_repunit,
     }
     want = sys.argv[1:] or list(verbs)
     t0 = time.time()

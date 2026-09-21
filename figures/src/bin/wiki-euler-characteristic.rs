@@ -71,9 +71,7 @@ fn holes(board: &mut Board, frame: Frame) -> Result<usize> {
     let carpet = designs::carpet(3, 2)?;
     assert_eq!(carpet.width(), SIDE);
     let grid = Grid::new(frame, SIDE, SIDE, 0.0);
-    grid.paint(board, &carpet, |kind| {
-        (kind != 0).then_some(ink::blue())
-    });
+    grid.paint(board, &carpet, |kind| (kind != 0).then_some(ink::blue()));
 
     let mut seen = [[false; SIDE]; SIDE];
     let mut found = 0usize;
@@ -87,7 +85,10 @@ fn holes(board: &mut Board, frame: Frame) -> Result<usize> {
             seen[row][col] = true;
             while let Some((r, c)) = stack.pop() {
                 cells.push((r, c));
-                let step = |r: usize, c: usize, stack: &mut Vec<(usize, usize)>, seen: &mut [[bool; SIDE]; SIDE]| {
+                let step = |r: usize,
+                            c: usize,
+                            stack: &mut Vec<(usize, usize)>,
+                            seen: &mut [[bool; SIDE]; SIDE]| {
                     if !seen[r][c] && carpet.types().get(&[r, c]) == 0 {
                         seen[r][c] = true;
                         stack.push((r, c));

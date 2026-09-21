@@ -23,9 +23,12 @@
 
 - Writing the `M` points as distances `d_j` to the nearest integer and `|sin(M pi x)| = |sin(M pi d_j)|`, the sum is `s(theta) Sum_j 1/sin(pi d_j)` at offset `theta` in `[0, 1/2]`, with pairs at `(m + theta)/M` and `(m + 1 - theta)/M`.
 - With `mu = pi(m + 1/2)/M` and `delta = pi(1/2 - theta)/M`, the pair identity `s = cos(M delta)` and `csc(mu - delta) + csc(mu + delta) = 2 sin mu cos delta/(sin^2 mu - sin^2 delta)` turn the pair into `2 csc mu` times `X = cos(M delta) cos delta sin^2 mu/(sin^2 mu - sin^2 delta)`.
-- For `m >= 1`, `sin delta/sin mu <= delta/mu = r/(2m+1) <= r/3` with `r = 2 M delta/pi` in `[0,1]`, and `cos(pi r/2) <= 1 - r^2` because `2 sin^2(pi r/4) >= r^2`, so `X <= (1 - r^2)/(1 - r^2/9) <= 1` and the pair is largest at `theta = 1/2`.
-- For `m = 0` the pair is at most `(M/pi)(1 + pi^2/(24 M^2)) max_theta sin(pi theta)(1/theta + 1/(1 - theta)) = (4M/pi)(1 + o(1))`, which is the `theta = 1/2` value again.
-- At `theta = 1/2` the sum is `2 Sum_(j < M/2) csc(x_j)`, `x_j = (2j+1) pi/(2M)`; splitting `csc = 1/x + g` with `g` convex increasing, the midpoint rule gives `Sum g(x_j) <= (M/pi) Int_0^(pi/2) g = (M/pi) log(4/pi)`, and `H_(2n) - H_n/2` bounds the reciprocal-odd sum.
+- `X <= 1` is `sin^2 mu (1 - cos(M delta) cos delta) >= sin^2 delta`, whose left side grows with `mu`, so it is enough at `m = 0`, `u = mu_0 = pi/(2M) <= pi/4`, `delta = ru` with `0 < r < 1`, `M delta = pi r/2`; the half-angle identities `1 - cos(pi r/2) cos(ru) = 2 sin^2(ru/2) + 2 cos(ru) sin^2(pi r/4)` and `sin^2(ru) = 4 sin^2(ru/2) cos^2(ru/2)` turn it into `sin^2 u cos(ru) sin^2(pi r/4) >= sin^2(ru/2) (cos^2 u + cos(ru))`.
+- `x cot x` decreases on `(0, pi)`, so `sin(pi r/4)/sin(ru/2)` decreases in `r` and is at least its value `1/(sqrt 2 sin(u/2))` at `r = 1`; hence the left side is at least `sin^2(ru/2) sin^2 u cos(ru)/(2 sin^2(u/2)) = sin^2(ru/2)(1 + cos u) cos(ru)`, which exceeds the right side by `sin^2(ru/2) cos u (cos(ru) - cos u) >= 0`. So every pair is largest at `theta = 1/2`, every `m` at once.
+- The odd leftover at `pi/2 - delta` contributes `cos(M delta)/cos delta <= 1`, again largest at `theta = 1/2`.
+- At `theta = 1/2` the sum is `2 Sum_(j < floor(M/2)) csc(x_j) + (M mod 2)`, `x_j = (2j+1) pi/(2M)`; split `csc = 1/x + g` with `g` nonnegative, increasing and convex on `(0, pi)`, `Int_0^(pi/2) g = log(4/pi)`, and use the harmonic bounds `H_N <= log N + gamma + 1/(2N)` and `H_N >= log(N + 1/2) + gamma`, both from the convexity of `1/x`.
+- Even `M = 2n`: the `x_j`, `j < n`, are the midpoints of the `n` intervals of length `pi/M` partitioning `(0, pi/2]`, so `Sum g(x_j) <= (M/pi) log(4/pi)`, while `Sum 1/x_j = (2M/pi)(H_(2n) - H_n/2) <= (2M/pi)((1/2)(log M + log 2 + gamma) + 1/(2M))`; doubling, `L_M <= (2M/pi)(log M + gamma + log(8/pi)) + 2/pi`.
+- Odd `M = 2n + 1`, `n >= 1`: `L_M = 2 Sum_(j < n) csc(x_j) + 1`, the `x_j` now the midpoints of `n` intervals of length `pi/M` inside `(0, pi/2)`, so `Sum g(x_j) <= (M/pi) log(4/pi)` as before. With `2n = M - 1` and `n + 1/2 = M/2` the harmonic bounds give `H_(2n) - H_n/2 <= log(M-1) + gamma + 1/(2(M-1)) - (1/2)(log(M/2) + gamma) <= (1/2)(log M + log 2 + gamma) - 1/M + 1/(2(M-1))`, using `log(M-1) <= log M - 1/M`. Multiplying by `4M/pi`, the two small terms give `-4/pi + 2M/(pi(M-1)) = -2/pi + 2/(pi(M-1))`, so with the `g` part and the leftover `1`, `L_M <= (2M/pi)(log M + gamma + log(8/pi)) + 1 - 2/pi + 2/(pi(M-1))`. For `M >= 5` the constant is at most `1 - 3/(2 pi) < 0.53 < 2/pi`; at `M = 3`, `L_3 = 2 csc(pi/6) + 1 = 5` against `3((2/pi) log 3 + gamma') + 2/pi > 5.62`.
 - Hence `L_M <= M((2/pi) log M + gamma' ) + 2/pi` with `gamma' = (2/pi)(gamma + log(8/pi)) = 0.96252282676`, printed and used rounded up at `0.9625229`, so `lambda_l <= (2/pi) l log base + gamma' + (2/pi) base^(-l)` at every `l`, and the coarser `lambda_l <= (2/pi) l log base + c_0` with `c_0 = 0.97` needs `base^l >= 86`, since `0.97 - gamma' = 0.0074771` has to cover `(2/pi)/base^l`. The scan confirms the shape: `L_M/M - (2/pi) log M` falls from `0.965217` at `M = 4` to `0.962523`, and the maximising offset is `1/2` at every `M` tested.
 
 ## THE THRESHOLD
@@ -65,7 +68,7 @@
 
 ## RUN
 
-- `uv run python research/lab/py/digit-uniform-bound/ubound.py check` in 5 seconds: the domination on nine bases and every distinct digit, the run identity against the direct product at five base-level pairs, the Lebesgue scan, the threshold and its certificate, and the consistency rows.
+- `uv run python research/lab/py/digit-uniform-bound/ubound.py check` in about 25 seconds: the domination on nine bases and every distinct digit, the run identity against the direct product at five base-level pairs, the Lebesgue scan, the threshold and its certificate, and the consistency rows.
 - `domination`, `identity`, `peel`, `lebesgue`, `threshold`, `window`, `least`, `compare` run the pieces; `least` is 6 seconds and `window` is 5.
 - Prints only, writes nothing; every row that has a target asserts it, and the run ends by raising if any row is off.
 
@@ -73,6 +76,6 @@
 
 - The domination `|hat F| <= (|D_base| + 1)/(base-1)` for every excluded digit, with the digit-slack column `1.000000` at `base 3` falling to `0.010045` at `base 200`.
 - The exact run decomposition of `Sigma_N^u` into `2^N` Lebesgue sums of Dirichlet kernels at moduli `base^l`, and the peel bounding each of them.
-- `L_M <= M((2/pi) log M + 0.9625153) + 2/pi`, with the maximum at the half-offset and the scanned constant falling from `0.965217` to `0.962523`.
+- `L_M <= M((2/pi) log M + 0.9625229) + 2/pi`, with the maximum at the half-offset and the scanned constant falling from `0.965217` to `0.962523`.
 - The threshold `base_u = 125`, certified at 120 bits on `[125, 3000)`, the chain failing at `124`; the `c_0 = 0.97` form of the same chain gives `126`.
 - The window ceiling `base 75` at three digits, and the consistency rows against the per-digit ladder.

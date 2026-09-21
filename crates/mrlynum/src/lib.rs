@@ -51,5 +51,5 @@ pub mod spiral;
 pub mod spirograph;
 /// The tourbillon: the odd parity carpets turned one angle a layer and stacked inside the inscribed disc.
 pub mod tourbillon;
-/// The critical line: zeta at one half plus i t, its zeros, and the prime staircase they rebuild.
+/// The critical line: zeta at one half plus i t and off it, its zeros, the prime staircase they rebuild and the novelty meter their waves predict.
 pub mod zeta;

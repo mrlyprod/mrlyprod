@@ -40,10 +40,17 @@ fn main() -> Result<()> {
     for (index, code) in CODES.iter().enumerate() {
         let design = designs::create(*code, 3, 2, 0, 2)?;
         assert_eq!(design.width(), SIDE);
-        let tone = if index == 0 { ink::yellow() } else { ink::blue() };
+        let tone = if index == 0 {
+            ink::yellow()
+        } else {
+            ink::blue()
+        };
         let (x, y) = corner(index);
-        Grid::new(Frame::new(x, y, tile, tile), SIDE, SIDE, 0.0)
-            .paint(&mut board, &design, |kind| (kind != 0).then_some(tone));
+        Grid::new(Frame::new(x, y, tile, tile), SIDE, SIDE, 0.0).paint(
+            &mut board,
+            &design,
+            |kind| (kind != 0).then_some(tone),
+        );
         cells += design.types().sum();
     }
     assert_eq!(cells, 283);

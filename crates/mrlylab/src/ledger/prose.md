@@ -99,7 +99,7 @@ The odd-side fill of a design is a product of norm forms, one per irreducible fa
 
 ### The level axis
 
-At side 3 the fill of a level is the tile's fill to the power `level` and the voids are the grid less the fill, while the exposed faces obey `V(level + 1) = occ V(level) - 2 sum P S^level` over the axes, `occ` the tile's filled cells, `P` its adjacent filled pairs along the axis and `S` the cross positions whose two end cells are both filled; `mrlymath::formulas::exposure` closes it in every dimension and `mrlymath::formulas::exposure_recurrence` spells the recurrence. **Proved**, and checked against the rendered census on every code of the cube to level 3. The sponge's slice count is A299916 from its second term, the recurrence being the record's; **Verified** to level 4 by `mrlymath::formulas::cut_fills`.
+At side 3 the fill of a level is the tile's fill to the power `level` and the voids are the grid less the fill, while the exposed faces obey `V(level + 1) = occ V(level) - 2 sum P S^level` over the axes, `occ` the tile's filled cells, `P` its adjacent filled pairs along the axis and `S` the cross positions whose two end cells are both filled; `mrlymath::formulas::exposure` closes it in every dimension and `mrlymath::formulas::exposure_recurrence` spells the recurrence. **Proved**, and checked against the rendered census on every code of the cube to level 3. The sponge's slice count is A299916 from its second term, its recurrence **Proved** by the carry automaton on the cuts note, the census checked to level 4 by `mrlymath::formulas::cut_fills`.
 
 {{levels}}
 
@@ -133,7 +133,7 @@ Both censuses live in `lab/rs/design-census`: the fill-class census behind A1298
 
 ## THE RECORDS
 
-Every OEIS id cited on this tree, read against the live entry on its name, its offset and its first terms. `key` names the design sequence an entry is, in the registry's `sequence_dim=..._code=..._measure=..._axis=...` spelling, `id` the first eight hex digits of the sha256 of that name's canonical JSON, and `shift` that record's index less the ledger's. {{tally}}
+Every OEIS entry this ledger holds, read against the live entry on its name, its offset and its first terms; an id cited elsewhere on this tree with no row here is resolved in [REFS.md](REFS.md) and is not read by this page. `key` names the design sequence an entry is, in the registry's `sequence_dim=..._code=..._measure=..._axis=...` spelling, `id` the first eight hex digits of the sha256 of that name's canonical JSON, and `shift` that record's index less the ledger's. {{tally}}
 
 {{records}}
 

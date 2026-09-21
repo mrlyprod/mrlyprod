@@ -6,7 +6,7 @@ The mathematics of the mrly tree: a parity rule on the corners of a cube, substi
 
 - Type folders, not topic folders: a topic is one slug that repeats across `notes/`, `claims/`, `papers/`, `lab/` and `../figures/`, never a box of its own.
 - `notes/<slug>.md` is a note: timeless, present tense, no dates and no story, opening on a front matter block of `title`, `lead`, `figure` and `slug`; the index of the notes is built from that block and nothing is registered anywhere.
-- `claims/<slug>.md` is a claims file: one dated line per claim, `- YYYY-MM-DD [Tag] the claim. Witness: its generator`, append only; the built page at `/research/discoveries/` reads every file and filters by tag, topic and date.
+- `claims/<slug>.md` is a claims file: one dated line per claim, `- YYYY-MM-DD [Tag] the claim. Witness: its generator`, or for a Proved row the note section that carries the proof, append only; the built page at `/research/discoveries/` reads every file and filters by tag, topic and date.
 - Every claim carries exactly one tag: **Proved**, **Verified**, **Conjecture**, **Refuted**; a claim is never deleted because someone else published it first, a dated cross-reference line is added, and only a counterexample moves a claim.
 - Every printed number names its generator: a crate function in `../crates`, a study in `lab/rs/` or `lab/py/`, a sequence row in `sequences.md`, or an [OEIS](https://oeis.org) entry; a number with no generator keeps its claim at Conjecture.
 - A theorem from the literature is cited at its source, resolved to one URL in `REFS.md`; a claim of this tree never rests on a citation alone.

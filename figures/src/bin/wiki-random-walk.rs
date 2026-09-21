@@ -67,7 +67,13 @@ fn main() -> Result<()> {
         board.segment((frame.x, down), (frame.x + frame.w, down), 1.0, faint);
     }
     let (hx, hy) = spot(HOME, HOME);
-    board.ring(hx, hy, typical * unit, unit * 0.22, ink::fade(ink::dim(), 0.9));
+    board.ring(
+        hx,
+        hy,
+        typical * unit,
+        unit * 0.22,
+        ink::fade(ink::dim(), 0.9),
+    );
     let pts: Vec<(f64, f64)> = trace.iter().map(|&(x, y)| spot(x, y)).collect();
     board.polyline(&pts, unit * 0.34, ink::fade(ink::blue(), 0.85));
     board.disc(hx, hy, unit * 0.9, ink::yellow());

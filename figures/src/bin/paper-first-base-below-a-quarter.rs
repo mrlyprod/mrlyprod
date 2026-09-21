@@ -1,8 +1,6 @@
 use mrlycore::errors::Result;
-use mrlycore::MrlyError;
-use mrlyfig::out::root;
 use mrlyfig::{ink, save, Board};
-use std::path::PathBuf;
+use std::f64::consts::PI;
 
 const NAME: &str = "paper-first-base-below-a-quarter";
 const LOW: usize = 10;
@@ -11,6 +9,7 @@ const SUB: usize = 4;
 const CAP: f64 = 6.0e6;
 const QUARTER: f64 = 0.25;
 const RUNGS: usize = 395;
+const GOLD: usize = 163;
 
 // LADDER
 
@@ -19,7 +18,7 @@ fn weights(q: usize, a0: usize, nd: u32, m: usize) -> Vec<f64> {
     let inv = 1.0 / (q as f64 - 1.0);
     let c = 2.0 * a0 as f64 - q as f64 + 1.0;
     let mass: usize = (0..q).filter(|a| *a != a0).sum();
-    let lip = 2.0 * std::f64::consts::PI * mass as f64 * inv;
+    let lip = 2.0 * PI * mass as f64 * inv;
     let slack = lip / (2.0 * w as f64 * m as f64) + 1e-12;
     let step = 1.0 / (w as f64 * m as f64);
     let mut g = vec![0.0; w];
@@ -27,8 +26,8 @@ fn weights(q: usize, a0: usize, nd: u32, m: usize) -> Vec<f64> {
         let mut top = 0.0f64;
         for r in 0..m {
             let t = ((cell * m + r) as f64 + 0.5) * step;
-            let d = (std::f64::consts::PI * q as f64 * t).sin() / (std::f64::consts::PI * t).sin();
-            let e = d * d - 2.0 * d * (std::f64::consts::PI * c * t).cos() + 1.0;
+            let d = (PI * q as f64 * t).sin() / (PI * t).sin();
+            let e = d * d - 2.0 * d * (PI * c * t).cos() + 1.0;
             let v = if e > 0.0 { e.sqrt() * inv } else { 0.0 };
             top = top.max(v);
         }
@@ -99,72 +98,41 @@ fn exponent(q: usize, a0: usize) -> f64 {
 }
 
 fn ladder() -> Vec<(usize, f64)> {
-    let mut rungs: Vec<(usize, f64)> = Vec::new();
-    for q in LOW..=HIGH {
-        for a0 in 0..q.div_ceil(2) {
-            rungs.push((q, exponent(q, a0)));
+    let rungs: Vec<(usize, usize)> = (LOW..=HIGH)
+        .flat_map(|q| (0..q.div_ceil(2)).map(move |a0| (q, a0)))
+        .collect();
+    let lanes = std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(1)
+        .max(1);
+    let mut out = vec![0.0f64; rungs.len()];
+    std::thread::scope(|scope| {
+        let handles: Vec<_> = (0..lanes)
+            .map(|lane| {
+                let rungs = &rungs;
+                scope.spawn(move || {
+                    rungs
+                        .iter()
+                        .enumerate()
+                        .skip(lane)
+                        .step_by(lanes)
+                        .map(|(i, (q, a0))| (i, exponent(*q, *a0)))
+                        .collect::<Vec<_>>()
+                })
+            })
+            .collect();
+        for handle in handles {
+            for (i, e) in handle.join().expect("a lane of the ladder") {
+                out[i] = e;
+            }
         }
-    }
-    rungs
-}
-
-// DATA
-
-fn path() -> PathBuf {
-    root()
-        .join("files")
-        .join("figures")
-        .join("data")
-        .join(format!("{NAME}.json"))
-}
-
-fn write_data(rungs: &[(usize, f64)]) -> Result<PathBuf> {
-    let file = path();
-    let folder = file.parent().unwrap().to_path_buf();
-    std::fs::create_dir_all(&folder)
-        .map_err(|e| MrlyError::Value(format!("cannot make {folder:?}: {e}")))?;
-    let bases: Vec<String> = rungs.iter().map(|rung| rung.0.to_string()).collect();
-    let exponents: Vec<String> = rungs.iter().map(|rung| format!("{}", rung.1)).collect();
-    let text = format!(
-        "{{\"base\":[{}],\"exponent\":[{}]}}",
-        bases.join(","),
-        exponents.join(",")
-    );
-    std::fs::write(&file, text)
-        .map_err(|e| MrlyError::Value(format!("cannot write {file:?}: {e}")))?;
-    Ok(file)
-}
-
-fn field(text: &str, name: &str) -> Vec<f64> {
-    let head = format!("\"{name}\":[");
-    let Some(start) = text.find(&head) else {
-        return Vec::new();
-    };
-    let body = &text[start + head.len()..];
-    let end = body.find(']').unwrap_or(0);
-    body[..end]
-        .split(',')
-        .filter_map(|token| token.parse().ok())
-        .collect()
-}
-
-fn read_data() -> Result<Vec<(usize, f64)>> {
-    let file = path();
-    let raw = std::fs::read_to_string(&file)
-        .map_err(|e| MrlyError::Value(format!("cannot read {file:?}: {e}; run -- compute")))?;
-    let text: String = raw.chars().filter(|c| !c.is_whitespace()).collect();
-    let bases = field(&text, "base");
-    let exponents = field(&text, "exponent");
-    Ok(bases
-        .iter()
-        .zip(exponents.iter())
-        .map(|(base, exponent)| (*base as usize, *exponent))
-        .collect())
+    });
+    rungs.iter().zip(out).map(|((q, _), e)| (*q, e)).collect()
 }
 
 // PRESS
 
-fn compute() -> Result<()> {
+fn main() -> Result<()> {
     let rungs = ladder();
     let below = |q: usize| rungs.iter().filter(|r| r.0 == q && r.1 < QUARTER).count();
     let sets = |q: usize| q.div_ceil(2);
@@ -172,22 +140,16 @@ fn compute() -> Result<()> {
     assert!((LOW..21).all(|q| below(q) == 0), "no base under 21 clears");
     assert_eq!(below(21), 1, "base 21 clears at exactly one digit");
     assert!(
+        (21..34).all(|q| below(q) < sets(q)),
+        "every base from 21 to 33 still misses somewhere"
+    );
+    assert!(
         (34..=HIGH).all(|q| below(q) == sets(q)),
         "every base from 34 clears at every digit"
     );
     let gold = rungs.iter().filter(|r| r.1 < QUARTER).count();
-    assert_eq!(gold, 163, "163 rungs sit under the quarter");
-    let file = write_data(&rungs)?;
-    println!(
-        "{NAME} {} rungs {gold} under the quarter -> {file:?}",
-        RUNGS
-    );
-    Ok(())
-}
+    assert_eq!(gold, GOLD, "163 rungs sit under the quarter");
 
-fn draw() -> Result<()> {
-    let rungs = read_data()?;
-    assert_eq!(rungs.len(), RUNGS);
     let lo = rungs.iter().map(|r| r.1).fold(f64::MAX, f64::min);
     let hi = rungs.iter().map(|r| r.1).fold(f64::MIN, f64::max);
     let pad = (hi - lo) * 0.06;
@@ -225,11 +187,4 @@ fn draw() -> Result<()> {
     }
     save(NAME, &board)?;
     Ok(())
-}
-
-fn main() -> Result<()> {
-    if std::env::args().nth(1).as_deref() == Some("compute") {
-        return compute();
-    }
-    draw()
 }

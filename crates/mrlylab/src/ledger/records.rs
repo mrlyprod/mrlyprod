@@ -69,7 +69,7 @@ const EXPOSURE: &str = "mrlymath::formulas::exposure";
 
 /// Every OEIS entry the tree cites, by id.
 pub static RECORDS: &[Record] = &[
-    record("A000029", "Number of necklaces with n beads of 2 colors, allowing turning over (bracelets)", 0, "1, 2, 3, 4, 6, 8, 13, 18, 30, 46, 78, 126", Tag::Verified, "none", "mrlymath::bang::baseq::bracelets, the base line at dim 1"),
+    record("A000029", "Number of necklaces with n beads of 2 colors, allowing turning over (these are also called bracelets)", 0, "1, 2, 3, 4, 6, 8, 13, 18, 30, 46, 78, 126", Tag::Verified, "none", "mrlymath::bang::baseq::bracelets, the base line at dim 1"),
     record("A000070", "a(n) = Sum_{k=0..n} p(k) where p(k) = number of partitions of k", 0, "1, 2, 4, 7, 12, 19, 30, 45, 67, 97, 139, 195", Tag::Verified, "none", "REFS.md"),
     record("A000244", "Powers of 3: a(n) = 3^n", 0, "1, 3, 9, 27, 81, 243, 729, 2187, 6561, 19683, 59049, 177147", Tag::Proved, "3^level", "mrlymath::three::diagonal, every admissible cut of bang dim 3, code 126 at side 2"),
     record("A000290", "The squares: a(n) = n^2", 0, "0, 1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121", Tag::Proved, "k^2", SIDES).keyed(1, 2, Measure::Fills, Axis::Side, 0),

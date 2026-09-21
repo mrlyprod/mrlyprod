@@ -193,18 +193,23 @@ def label_of(top, signs):
         return "quadratic " + ("mixed" if len(signs) > 1 else ("imaginary" if -1 in signs else "real"))
     return "degree {}".format(top)
 
+def quad_field(g):
+    return fundamental_part(g[1] * g[1] - 4 * g[2] * g[0])
+
 def sweep_chunk(job):
-    dim, cap, lo, hi, want = job
+    dim, cap, lo, hi = job
     bounds = sig_bounds(dim, cap)
     sigs = Counter()
     codes = Counter()
     degrees = Counter()
     keep = defaultdict(set)
+    carried = Counter()
     for index in range(lo, hi):
         sig = unrank(index, bounds)
         parts = factors(sig)[1]
         top = 1
         signs = set()
+        fields = set()
         for g, mult in parts:
             d = len(g) - 1
             if d < 2:
@@ -213,31 +218,49 @@ def sweep_chunk(job):
             degrees[d] += mult
             if d == 2:
                 signs.add(-1 if g[1] * g[1] - 4 * g[2] * g[0] < 0 else 1)
-            if want and 2 <= d <= 5:
+                fields.add(quad_field(g))
+            if 2 <= d <= 5:
                 keep[d].add(g)
         tag = label_of(top, signs)
         sigs[tag] += 1
-        codes[tag] += multiplicity(dim, sig)
-    return sigs, codes, degrees, {d: s for d, s in keep.items()}
+        weight_ = multiplicity(dim, sig)
+        codes[tag] += weight_
+        pure = len(trim(list(sig))) == 3
+        for field in fields:
+            carried[(field, "sigs")] += 1
+            carried[(field, "designs")] += weight_
+            if pure:
+                carried[(field, "pure sigs")] += 1
+                carried[(field, "pure designs")] += weight_
+            if top == 2:
+                carried[(field, "class sigs")] += 1
+                carried[(field, "class designs")] += weight_
+    return sigs, codes, degrees, {d: s for d, s in keep.items()}, carried
 
-def sweep(dim, cap=None, want=False):
+SWEEPS = {}
+
+def sweep(dim, cap=None):
+    if (dim, cap) in SWEEPS:
+        return SWEEPS[(dim, cap)]
     total = box_size(sig_bounds(dim, cap))
     edges = [total * i // CHUNKS for i in range(CHUNKS + 1)]
-    jobs = [(dim, cap, edges[i], edges[i + 1], want) for i in range(CHUNKS) if edges[i] < edges[i + 1]]
-    sigs, codes, degrees = Counter(), Counter(), Counter()
+    jobs = [(dim, cap, edges[i], edges[i + 1]) for i in range(CHUNKS) if edges[i] < edges[i + 1]]
+    sigs, codes, degrees, carried = Counter(), Counter(), Counter(), Counter()
     keep = defaultdict(set)
     if len(jobs) == 1:
         results = [sweep_chunk(jobs[0])]
     else:
         with ProcessPoolExecutor(max_workers=WORKERS) as pool:
             results = list(pool.map(sweep_chunk, jobs))
-    for a, b, c, d in results:
+    for a, b, c, d, e in results:
         sigs += a
         codes += b
         degrees += c
+        carried += e
         for key, value in d.items():
             keep[key] |= value
-    return total, sigs, codes, degrees, keep
+    SWEEPS[(dim, cap)] = (total, sigs, codes, degrees, keep, carried)
+    return SWEEPS[(dim, cap)]
 
 def order(tag):
     return ("Q", "quadratic imaginary", "quadratic real", "quadratic mixed").index(tag) if tag.startswith(("Q", "quad")) else 4 + int(tag.split()[-1])
@@ -246,7 +269,7 @@ def verb_ladder():
     print("THE LADDER BY DEGREE")
     print("  box: s_0 = 1, 0 <= s_j <= C(D, j); a signature carries C(D, j) choose s_j oriented designs")
     for dim in DIMS:
-        total, sigs, codes, degrees, _ = sweep(dim)
+        total, sigs, codes, degrees, _, _ = sweep(dim)
         print("  D = {}: {} signatures, {} oriented designs".format(dim, total, sum(codes.values())))
         for tag in sorted(sigs, key=order):
             print("    {:20s} signatures {:8d}  designs {}".format(tag, sigs[tag], codes[tag]))
@@ -372,7 +395,7 @@ def collect():
         return CACHE["data"], CACHE["reach"]
     per = {}
     for dim in DIMS:
-        per[dim] = sweep(dim, want=True)[4]
+        per[dim] = sweep(dim)[4]
     keys = set()
     for dim in DIMS:
         for d in per[dim]:
@@ -595,12 +618,314 @@ def verb_hunter():
 
 VERBS["hunter"] = verb_hunter
 
+# SIGN
+
+def field_table(carried):
+    out = defaultdict(dict)
+    for (field, what), value in carried.items():
+        out[field][what] = value
+    return out
+
+def pure_window(dim):
+    return 4 * comb(dim, 2), dim * dim - 4
+
+def quaddisc_check(discs):
+    if not shutil.which("gp"):
+        return None
+    discs = sorted(discs)
+    rows = gp_run(["print(quaddisc({}))".format(d) for d in discs], 1)
+    return sum(1 for d, row in zip(discs, rows) if row[0] != fundamental_part(d))
+
+def verb_sign():
+    print("THE QUADRATIC FIELDS BY SIGN")
+    print("  a signature carries the quadratic field K when some irreducible quadratic factor 1 + b t + c t^2 of W has field discriminant d_K")
+    print("  d_K is the fundamental part of b^2 - 4c by exact integer arithmetic, checked against PARI quaddisc on every distinct b^2 - 4c")
+    print("  pure means deg W = 2, the layer (1, b, c); class means the top degree of W is 2, the quadratic column of the ladder")
+    print("  the pure window is abs(d_K) <= 4 C(D, 2) on the imaginary side and d_K <= D^2 - 4 on the real side; outside the pure layer means no pure signature carries the field")
+    tables = {}
+    discs = set()
+    for dim in DIMS:
+        total, sigs, codes, degrees, keep, carried = sweep(dim)
+        tables[dim] = field_table(carried)
+        discs |= {g[1] * g[1] - 4 * g[2] * g[0] for g in keep.get(2, ())}
+    mismatch = quaddisc_check(discs)
+    print("  {} distinct order discriminants b^2 - 4c over D = 2..6, quaddisc mismatches {}".format(
+        len(discs), "not run, gp missing" if mismatch is None else mismatch))
+    first = {}
+    for dim in DIMS:
+        for field in tables[dim]:
+            first.setdefault(field, dim)
+    for dim in DIMS:
+        table = tables[dim]
+        imaginary = sorted((f for f in table if f < 0), reverse=True)
+        real = sorted(f for f in table if f > 0)
+        neg, pos = pure_window(dim)
+        by_class = Counter()
+        for tag in ("quadratic imaginary", "quadratic real", "quadratic mixed"):
+            by_class[tag] = sweep(dim)[2].get(tag, 0)
+        print("  D = {}: {} imaginary fields, {} real fields; quadratic class designs {} + {} + {} = {}".format(
+            dim, len(imaginary), len(real), by_class["quadratic imaginary"], by_class["quadratic real"],
+            by_class["quadratic mixed"], sum(by_class.values())))
+        for kind, fields, window in (("imaginary", imaginary, neg), ("real", real, pos)):
+            new = [f for f in fields if first[f] == dim]
+            beyond = [f for f in fields if not table[f].get("pure sigs", 0)]
+            print("    {}: window {}, new at this D {}, outside the pure layer {}".format(
+                kind, window, " ".join(str(f) for f in new) if new else "none",
+                " ".join(str(f) for f in beyond) if beyond else "none"))
+            print("      {:>6s} {:>8s} {:>22s} {:>8s} {:>22s} {:>8s} {:>22s}".format(
+                "d_K", "sigs", "designs", "pure", "pure designs", "class", "class designs"))
+            for f in fields:
+                row = table[f]
+                print("      {:>6d} {:>8d} {:>22d} {:>8d} {:>22d} {:>8d} {:>22d}".format(
+                    f, row.get("sigs", 0), row.get("designs", 0), row.get("pure sigs", 0),
+                    row.get("pure designs", 0), row.get("class sigs", 0), row.get("class designs", 0)))
+    print("  least D per field, imaginary: {}".format(
+        " ".join("{}:{}".format(f, first[f]) for f in sorted((f for f in first if f < 0), reverse=True))))
+    print("  least D per field, real: {}".format(
+        " ".join("{}:{}".format(f, first[f]) for f in sorted(f for f in first if f > 0))))
+    for dim in DIMS:
+        table = tables[dim]
+        for kind, fields in (("imaginary", sorted((f for f in table if f < 0), reverse=True)), ("real", sorted(f for f in table if f > 0))):
+            designs = [table[f]["designs"] for f in fields]
+            sigs = [table[f]["sigs"] for f in fields]
+            print("  D = {} {}: designs per field fall with abs(d_K) {}, signatures per field fall with abs(d_K) {}".format(
+                dim, kind, "strictly" if all(a > b for a, b in zip(designs, designs[1:])) else ("weakly" if all(a >= b for a, b in zip(designs, designs[1:])) else "no"),
+                "strictly" if all(a > b for a, b in zip(sigs, sigs[1:])) else ("weakly" if all(a >= b for a, b in zip(sigs, sigs[1:])) else "no")))
+    for dim in DIMS:
+        neg, pos = pure_window(dim)
+        pure_imag = {f for f in tables[dim] if f < 0 and tables[dim][f].get("pure sigs", 0)}
+        window = {d for d in range(-neg, 0) if fundamental(d)}
+        print("  D = {}: the pure imaginary fields equal the window: {}; fields with one signature each: {}".format(
+            dim, pure_imag == window, " ".join(str(f) for f in sorted(tables[dim]) if tables[dim][f]["sigs"] == 1) or "none"))
+
+VERBS["sign"] = verb_sign
+
+# BEYOND
+
+def root_bound(dim):
+    r = 2 ** (1 / dim) - 1
+    return int(1 / (r * r)), int(2 / r)
+
+NODES = [0]
+
+def root_tails(dim, b, c):
+    disc = b * b - 4 * c
+    if disc < 0:
+        roots = [complex(-b, (-disc) ** 0.5) / (2 * c)]
+    else:
+        roots = [complex((-b + disc ** 0.5) / (2 * c)), complex((-b - disc ** 0.5) / (2 * c))]
+    powers = [[theta ** j for j in range(dim + 1)] for theta in roots]
+    tails = [[sum(comb(dim, i) * abs(theta) ** i for i in range(j + 1, dim + 1)) * (1 + 1e-9) + 1e-9 for j in range(dim + 1)] for theta in roots]
+    return powers, tails
+
+def cofactors(dim, b, c, top, prune=True):
+    bounds = [comb(dim, j) for j in range(dim + 1)]
+    powers, tails = root_tails(dim, b, c)
+    found = []
+    def rec(h, sums):
+        NODES[0] += 1
+        k = len(h) - 1
+        if k + 2 <= dim and h[k] >= 1:
+            s3 = b * h[k] + (c * h[k - 1] if k >= 1 else 0)
+            s4 = c * h[k]
+            if 0 <= s3 <= bounds[k + 1] and 1 <= s4 <= bounds[k + 2]:
+                w = [0] * (k + 3)
+                for j in range(k + 3):
+                    w[j] = (h[j] if j <= k else 0) + (b * h[j - 1] if 1 <= j <= k + 1 else 0) + (c * h[j - 2] if j >= 2 else 0)
+                found.append(tuple(w) + (0,) * (dim - k - 2))
+        if k + 1 > top or k + 3 > dim:
+            return
+        j = k + 1
+        base = b * h[k] + (c * h[k - 1] if k >= 1 else 0)
+        for wj in range(0, bounds[j] + 1):
+            nxt = [sums[r] + wj * powers[r][j] for r in range(len(sums))]
+            if prune and any(abs(nxt[r]) > tails[r][j] for r in range(len(sums))):
+                continue
+            rec(h + [wj - base], nxt)
+    rec([1], [complex(1)] * len(powers))
+    return found
+
+def divide(w, b, c):
+    h = []
+    for j in range(len(w) - 2):
+        h.append(w[j] - (b * h[j - 1] if j >= 1 else 0) - (c * h[j - 2] if j >= 2 else 0))
+    return h
+
+def beyond_scan(dim, top, prune=True):
+    cmax, bmax = root_bound(dim)
+    out = defaultdict(list)
+    pairs = 0
+    NODES[0] = 0
+    for c in range(1, cmax + 1):
+        for b in range(-bmax, bmax + 1):
+            disc = b * b - 4 * c
+            if disc == 0 or (disc > 0 and (b < 1 or square(disc))):
+                continue
+            pairs += 1
+            field = fundamental_part(disc)
+            for w in cofactors(dim, b, c, top, prune):
+                out[field].append((w, b, c))
+    return out, pairs
+
+def pure_dim(field):
+    dim = 2
+    while field not in pure_layer(dim)["imaginary" if field < 0 else "real"]:
+        dim += 1
+    return dim
+
+def verb_beyond():
+    print("BEYOND THE PURE LAYER")
+    print("  root bound: a root theta of a box W at D has abs(theta) >= 2^(1/D) - 1 = R, since 1 = abs(sum_(j>=1) s_j theta^j) <= (1 + abs(theta))^D - 1")
+    print("  a quadratic factor 1 + b t + c t^2 has root product 1/c, so c <= 1/R^2; a real one has small root 2/(b + sqrt(d)), so b + sqrt(d) <= 2/R")
+    print("  walk: every W = (1 + b t + c t^2) h with h in Z[t] of degree at most H and W in the box, over all (b, c) inside the root bound; exhaustive when H = D - 2, a lower bound on the census otherwise")
+    print("  the pure layer is the set of fields carried by (1, b, c) alone, computed from the definition; pure window means its bounding box")
+    print("  pruning: with S_j = sum_(i <= j) W_i theta^i at each root theta of the factor, W(theta) = 0 gives abs(S_j) <= sum_(i > j) C(D, i) abs(theta)^i, so a prefix breaking it is dropped")
+    print("  the pruning is validated by an unpruned control at D = 6, H = 4 and D = 7, H = 3, which must return the same W")
+    print("  at D <= 6 the cut is checked against the full census of the sign verb")
+    for dim, top in ((6, 4), (7, 3)):
+        started = time.time()
+        pruned, _ = beyond_scan(dim, top, True)
+        nodes = NODES[0]
+        plain, _ = beyond_scan(dim, top, False)
+        same = {k: sorted(v) for k, v in pruned.items()} == {k: sorted(v) for k, v in plain.items()}
+        print("  control D = {} H = {}: pruned {} W over {} nodes, unpruned {} W over {} nodes, same W {}; {:.1f} s".format(
+            dim, top, sum(len(v) for v in pruned.values()), nodes, sum(len(v) for v in plain.values()), NODES[0], same, time.time() - started))
+    full = {}
+    for dim in DIMS:
+        full[dim] = set(field_table(sweep(dim)[5]))
+    print("  family (1 - t + c t^2)(1 + t) = 1 + (c - 1) t^2 + c t^3 with c = C(D, 2) + 1, in the box iff C(D, 2) + 1 <= C(D, 3), which is D >= 6: order discriminant -(2 D (D - 1) + 3)")
+    print("    " + " ".join("D={}:{}{}".format(d, -(2 * d * (d - 1) + 3), "" if fundamental(-(2 * d * (d - 1) + 3)) else "(order)") for d in range(6, 21)))
+    outside = Counter()
+    counts = []
+    for dim, top in ((3, 1), (4, 2), (5, 3), (6, 4), (7, 5), (8, 4), (9, 2), (10, 2)):
+        started = time.time()
+        cmax, bmax = root_bound(dim)
+        neg, pos = pure_window(dim)
+        found, pairs = beyond_scan(dim, top)
+        fields = set(found)
+        imaginary = sorted((f for f in fields if f < 0), reverse=True)
+        real = sorted(f for f in fields if f > 0)
+        counts.append((dim, len(imaginary), len(real)))
+        print("  D = {}: root bound c <= {}, b + sqrt(d) <= {}; {} pairs (b, c); H = {} ({}); {} W over {} nodes; pure window {} and {}; {:.1f} s".format(
+            dim, cmax, bmax, pairs, top, "exhaustive" if top >= dim - 2 else "cut", sum(len(v) for v in found.values()), NODES[0], neg, pos, time.time() - started))
+        if dim in full:
+            missed = sorted(full[dim] - fields)
+            print("    cut against the census: {} of {} fields reached, extra {}, missed {}".format(
+                len(fields & full[dim]), len(full[dim]), sorted(fields - full[dim]) or "none", missed or "none"))
+        pure = pure_layer(dim)
+        for kind, listed, window in (("imaginary", imaginary, neg), ("real", real, pos)):
+            beyond = [f for f in listed if f not in pure[kind]]
+            print("    {}: {} fields, pure layer {} fields, outside the pure layer {}".format(
+                kind, len(listed), len(pure[kind]), " ".join(str(f) for f in beyond) if beyond else "none"))
+            for f in beyond:
+                w, b, c = min(found[f])
+                print("      {} carried by signature {} = ({})({})".format(f, w, text([1, b, c], "t"), text(divide(w, b, c), "t")))
+            if beyond:
+                print("      pure D of each field outside the pure layer: {}".format(
+                    " ".join("{}:{}".format(f, pure_dim(f)) for f in beyond)))
+                for f in beyond:
+                    outside[pure_dim(f) - dim] += 1
+            run = []
+            for d in range(2, 400):
+                if fundamental(-d if kind == "imaginary" else d):
+                    if (-d if kind == "imaginary" else d) in fields:
+                        run.append(d)
+                    else:
+                        break
+            print("      gapless run to {}, first gap {}".format(run[-1] if run else "none", d))
+
+    print("  fields found outside the pure layer over D = 3..10, by pure D minus D: {}".format(dict(sorted(outside.items()))))
+    print("  fields per D over D = 3..10, imaginary then real: {}".format(" ".join("{}:{}+{}".format(d, a, b) for d, a, b in counts)))
+
+VERBS["beyond"] = verb_beyond
+
+# POLYA
+
+MISSED = {
+    "2.2.37.1": (37, [-9, -1, 1]),
+    "3.3.316.1": (316, [2, -4, -1, 1]),
+    "4.4.1125.1": (1125, [1, 4, -4, -1, 1]),
+    "5.5.14641.1": (14641, [-1, 3, 3, -4, -1, 1]),
+    "2.0.87.1": (-87, [22, 1, 1]),
+}
+
+def shifted(m, shift):
+    d = len(m) - 1
+    out = [0] * (d + 1)
+    for j, a in enumerate(m):
+        term = [a * ((-1) ** j)]
+        term = polymul(term, polypow([shift, 1], j))
+        for i, v in enumerate(term):
+            out[i] += v
+    if out[d] < 0:
+        out = [-v for v in out]
+    return out
+
+def real_ceiling(m):
+    d = len(m) - 1
+    rows = gp_run(["P={};print(polsturm(P));print(if(polsturm(P),floor(vecmax(polrootsreal(P)))+1,0))".format(gp_text(m))], 2)
+    return rows[0][0], rows[0][1]
+
+def polya_exponent(g):
+    w = list(g)
+    m = 0
+    while min(w) < 0:
+        w = polymul(w, [1, 1])
+        m += 1
+    return m, w
+
+def room(g):
+    d = len(g) - 1
+    e = 0
+    while any(g[k] > comb(d + e, k) for k in range(d + 1)):
+        e += 1
+    return e
+
+def least_dim(w):
+    dim = len(w) - 1
+    while any(w[j] > comb(dim, j) for j in range(len(w))):
+        dim += 1
+    return dim
+
+def powers_reznick(g):
+    d = len(g) - 1
+    big = max(abs(g[j]) / comb(d, j) for j in range(d + 1))
+    script = "P={};r=polrootsreal(deriv(P)*(1+x)-{}*P);m=min(1,pollead(P));for(i=1,#r,if(r[i]>=0,m=min(m,subst(P,x,r[i])/(1+r[i])^{})));print(floor(m*10^9))".format(gp_text(g), d, d)
+    lam = gp_run([script], 1)[0][0] / 10 ** 9
+    return big, lam, (d * d - d) * big / (2 * lam) - d
+
+def verb_polya():
+    print("POLYA FOR THE FIELDS THE BOX MISSES AT D = 6")
+    print("  a field K with generator gamma gives theta = -1/(gamma + N), N above every real conjugate, whose primitive minimal polynomial g has g(0) = 1, positive leading coefficient and no root in [0, oo)")
+    print("  Polya: (1 + t)^m g(t) has positive coefficients for m large, with m > (d^2 - d) L(g)/(2 lambda(g)) - d, L = max_j abs(g_j)/C(d, j), lambda = inf_(t >= 0) g(t)/(1+t)^d")
+    print("  W = (1 + t)^m g then sits in the box at every D with W_j <= C(D, j); the least such D over m is printed, an upper bound on the D where K first appears")
+    print("  the generator is the LMFDB polynomial of the field, its discriminant recomputed by nfdisc; lambda is the minimum over t = 0, the critical points of g(t)/(1+t)^d on [0, oo) and the limit lc(g), rounded down at nine decimals; N runs over eight translates and the least D is kept")
+    if not shutil.which("gp"):
+        raise SystemExit("verb polya needs PARI, and gp is not on PATH")
+    for label, (disc, m) in MISSED.items():
+        check = gp_run(["print(nfdisc({}))".format(gp_text(m))], 1)[0][0]
+        r1, least = real_ceiling(m)
+        rows = []
+        for shift in range(least, least + 8):
+            g = list(reversed(shifted(m, shift)))
+            assert g[0] == 1 and g[-1] > 0
+            exponent, w = polya_exponent(g)
+            big, lam, bound = powers_reznick(g)
+            best = min(least_dim(polymul(g, polypow([1, 1], exponent + extra))) for extra in range(0, 40))
+            rows.append((best, shift, g, exponent, bound, big, lam, room(g)))
+        best, shift, g, exponent, bound, big, lam, e = min(rows)
+        print("  {} disc {} (nfdisc {}): r1 = {}, N from {}; best translate N = {}, g = {}".format(label, disc, check, r1, least, shift, text(g, "t")))
+        print("    Polya exponent m = {} (least m with (1 + t)^m g nonnegative), Powers-Reznick m > {:.2f} (L = {:.3f}, lambda = {:.6f}); room e = {}; least D over m is {}".format(
+            exponent, bound, big, lam, e, best))
+
+VERBS["polya"] = verb_polya
+
 # MAIN
 
 def main():
     asked = sys.argv[1:] or ["all"]
     if asked == ["all"]:
-        asked = ["norm", "ladder", "fields", "swap", "hunter"]
+        asked = ["norm", "ladder", "sign", "fields", "swap", "hunter", "beyond", "polya"]
     started = time.time()
     for name in asked:
         VERBS[name]()

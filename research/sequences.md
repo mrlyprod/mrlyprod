@@ -111,7 +111,7 @@ The odd-side fill of a design is a product of norm forms, one per irreducible fa
 
 ### The level axis
 
-At side 3 the fill of a level is the tile's fill to the power `level` and the voids are the grid less the fill, while the exposed faces obey `V(level + 1) = occ V(level) - 2 sum P S^level` over the axes, `occ` the tile's filled cells, `P` its adjacent filled pairs along the axis and `S` the cross positions whose two end cells are both filled; `mrlymath::formulas::exposure` closes it in every dimension and `mrlymath::formulas::exposure_recurrence` spells the recurrence. **Proved**, and checked against the rendered census on every code of the cube to level 3. The sponge's slice count is A299916 from its second term, the recurrence being the record's; **Verified** to level 4 by `mrlymath::formulas::cut_fills`.
+At side 3 the fill of a level is the tile's fill to the power `level` and the voids are the grid less the fill, while the exposed faces obey `V(level + 1) = occ V(level) - 2 sum P S^level` over the axes, `occ` the tile's filled cells, `P` its adjacent filled pairs along the axis and `S` the cross positions whose two end cells are both filled; `mrlymath::formulas::exposure` closes it in every dimension and `mrlymath::formulas::exposure_recurrence` spells the recurrence. **Proved**, and checked against the rendered census on every code of the cube to level 3. The sponge's slice count is A299916 from its second term, its recurrence **Proved** by the carry automaton on the cuts note, the census checked to level 4 by `mrlymath::formulas::cut_fills`.
 
 | id | design | key | closed form | terms from level 1 | record | shift | status |
 |---|---|---|---|---|---|---|---|
@@ -158,11 +158,11 @@ Both censuses live in `lab/rs/design-census`: the fill-class census behind A1298
 
 ## THE RECORDS
 
-Every OEIS id cited on this tree, read against the live entry on its name, its offset and its first terms. `key` names the design sequence an entry is, in the registry's `sequence_dim=..._code=..._measure=..._axis=...` spelling, `id` the first eight hex digits of the sha256 of that name's canonical JSON, and `shift` that record's index less the ledger's. The registry walks 1282 designs across 9 dimension and base pairs and holds 7692 closed rows and 5044 convolved rows of 8 terms each; the grid tiers render on demand within a budget of 500000 cells a term.
+Every OEIS entry this ledger holds, read against the live entry on its name, its offset and its first terms; an id cited elsewhere on this tree with no row here is resolved in [REFS.md](REFS.md) and is not read by this page. `key` names the design sequence an entry is, in the registry's `sequence_dim=..._code=..._measure=..._axis=...` spelling, `id` the first eight hex digits of the sha256 of that name's canonical JSON, and `shift` that record's index less the ledger's. The registry walks 1282 designs across 9 dimension and base pairs and holds 7692 closed rows and 5044 convolved rows of 8 terms each; the grid tiers render on demand within a budget of 500000 cells a term.
 
 | id | record | name | offset | first terms | key | shift | status |
 |---|---|---|---|---|---|---|---|
-|  | [A000029](https://oeis.org/A000029) | Number of necklaces with n beads of 2 colors, allowing turning over (bracelets) | 0 | `1, 2, 3, 4, 6, 8, 13, 18, 30, 46, 78, 126` |  |  | **Verified** |
+|  | [A000029](https://oeis.org/A000029) | Number of necklaces with n beads of 2 colors, allowing turning over (these are also called bracelets) | 0 | `1, 2, 3, 4, 6, 8, 13, 18, 30, 46, 78, 126` |  |  | **Verified** |
 |  | [A000070](https://oeis.org/A000070) | a(n) = Sum\_{k=0..n} p(k) where p(k) = number of partitions of k | 0 | `1, 2, 4, 7, 12, 19, 30, 45, 67, 97, 139, 195` |  |  | **Verified** |
 |  | [A000244](https://oeis.org/A000244) | Powers of 3: a(n) = 3^n | 0 | `1, 3, 9, 27, 81, 243, 729, 2187, 6561, 19683, 59049, 177147` |  |  | **Proved** |
 | 6630d885 | [A000290](https://oeis.org/A000290) | The squares: a(n) = n^2 | 0 | `0, 1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121` | `sequence_dim=2_code=1_measure=fills_axis=side` | 0 | **Proved** |

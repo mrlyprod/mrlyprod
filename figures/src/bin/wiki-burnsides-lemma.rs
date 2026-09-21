@@ -26,14 +26,20 @@ fn moves() -> [[usize; CELLS]; 8] {
 }
 
 fn act(mask: usize, plan: &[usize; CELLS]) -> usize {
-    (0..CELLS).filter(|&i| mask >> i & 1 == 1).fold(0, |acc, i| acc | 1 << plan[i])
+    (0..CELLS)
+        .filter(|&i| mask >> i & 1 == 1)
+        .fold(0, |acc, i| acc | 1 << plan[i])
 }
 
 fn main() -> Result<()> {
     let plans = moves();
     let fixed: usize = plans
         .iter()
-        .map(|plan| (0..PATTERNS).filter(|&mask| act(mask, plan) == mask).count())
+        .map(|plan| {
+            (0..PATTERNS)
+                .filter(|&mask| act(mask, plan) == mask)
+                .count()
+        })
         .sum();
     assert_eq!(fixed, FIXED);
     assert_eq!(fixed / plans.len(), CLASSES);

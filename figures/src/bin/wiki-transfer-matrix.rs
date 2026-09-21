@@ -70,7 +70,13 @@ fn main() -> Result<()> {
         dart(&mut board, tip, way, head);
     }
     let loop_at = (seats[0].0, seats[0].1 - knob * 1.35);
-    board.ring(loop_at.0, loop_at.1, knob * 0.92, knob * 0.22, ink::yellow());
+    board.ring(
+        loop_at.0,
+        loop_at.1,
+        knob * 0.92,
+        knob * 0.22,
+        ink::yellow(),
+    );
     for seat in &seats {
         board.disc(seat.0, seat.1, knob, ink::blue());
     }

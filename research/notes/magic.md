@@ -104,7 +104,7 @@ What is genuinely this tree's is narrower and firmer. The alphabet is finite, en
 
 ## What order does
 
-Order sensitivity is where the content actually is, and this page owns no number of it. [Connectivity](connectivity.md) records which observables separate two orderings of the same letters, with the minimal witness, and `lab/rs/magic-words` is the generator that prints every count of that section; they are cited there and not restated here.
+Order sensitivity is where the content actually is, and this page owns no number of it. [Connectivity](connectivity.md) records which observables separate two orderings of the same letters, with the minimal witness, and `lab/rs/magic-words` is the generator that prints every count of that section; they are cited there and not restated here. The minimal witness and the two-cell classification are proved, and the rank-4 component representation is checked on every word of length at most four, in the [order-sensitivity-of-kronecker-words](https://github.com/carlomitchener/carlomitchener/tree/main/research/order-sensitivity-of-kronecker-words) lane.
 
 The mechanism is now printed alongside the counts. Components, Euler characteristic, boundary and holes are linear-representation functions of the word, a fixed vector times a product of integer matrices, one matrix per letter (**Verified**, `lab/rs/magic-words`, as [connectivity](connectivity.md) records it). Most matrix pairs fail to commute, so the word acts as a genuine matrix cocycle, and that is the only structure on this tree an aperiodic schedule can still reach once the dimension collapses to a frequency average.
 

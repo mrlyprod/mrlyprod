@@ -70,7 +70,13 @@ fn main() -> Result<()> {
 
     chaser(&mut board, panels[0], &rungs, formulas::wallis, PI / 2.0);
     chaser(&mut board, panels[1], &rungs, formulas::leibniz, PI / 4.0);
-    chaser(&mut board, panels[2], &rungs, formulas::basel, PI * PI / 6.0);
+    chaser(
+        &mut board,
+        panels[2],
+        &rungs,
+        formulas::basel,
+        PI * PI / 6.0,
+    );
     chaser(&mut board, panels[3], &rungs, formulas::e_partial, E);
     chaser(
         &mut board,
@@ -89,7 +95,9 @@ fn main() -> Result<()> {
     });
     stage(&mut board, panels[5], &counted, ink::yellow());
 
-    let comet = trace(panels[6], &rungs, |m| 1.0 / formulas::goldbach(2 * m) as f64);
+    let comet = trace(panels[6], &rungs, |m| {
+        1.0 / formulas::goldbach(2 * m) as f64
+    });
     stage(&mut board, panels[6], &comet, ink::yellow());
 
     let meter = trace(panels[7], &rungs, |m| {

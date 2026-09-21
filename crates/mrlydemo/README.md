@@ -25,6 +25,7 @@ Codes cross the boundary as decimal strings, because a design code is a u128 and
 - **magic** wraps mrlylab and mrlymath: the folded design, its census, its press readings and its prefix rates.
 - **modes** wraps mrlymath: a mask's eigenvalue field on the frequency torus, one eigenvalue, the large-values count and a real mode.
 - **morse** wraps mrlymath and mrlynum: the Thue-Morse word's two constructions, plane lifts, runs and difference filter.
+- **novelty** wraps mrlynum: the totients sieved once and read through the smooth and the sharp window on a log grid of y, the first zeros with their wave coefficients, and the wave the first so many zeros sum to.
 - **prime** wraps mrlylab and mrlynum: the sieve stepped, the stone pile, the count chart and the carpet witness.
 - **race** wraps mrlymath: seeded walkers loose on a flat design and how far they wander.
 - **shell** wraps mrlymath: the crossing shell of a circle on a design, read as a rooted tree and painted.

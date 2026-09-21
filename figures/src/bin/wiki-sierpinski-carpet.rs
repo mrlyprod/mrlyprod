@@ -12,8 +12,9 @@ fn main() -> Result<()> {
     let side = design.width();
     assert_eq!(side, 81);
     assert_eq!(design.types().sum(), 4096);
-    Grid::new(area, side, side, 0.0)
-        .paint(&mut board, &design, |kind| (kind != 0).then_some(ink::blue()));
+    Grid::new(area, side, side, 0.0).paint(&mut board, &design, |kind| {
+        (kind != 0).then_some(ink::blue())
+    });
     save("wiki-sierpinski-carpet", &board)?;
     Ok(())
 }

@@ -12,7 +12,10 @@ fn main() -> Result<()> {
     assert_eq!(word.iter().filter(|&&bit| bit == 1).count(), STRIP / 2);
     let signs = lift(Lift::Parity, SIDE);
     assert_eq!(lift(Lift::Xor, SIDE), signs);
-    assert_eq!(signs.iter().filter(|&&bit| bit == 1).count(), SIDE * SIDE / 2);
+    assert_eq!(
+        signs.iter().filter(|&&bit| bit == 1).count(),
+        SIDE * SIDE / 2
+    );
     let tone = |bit: u8| if bit == 0 { ink::orange() } else { ink::blue() };
     let cell = (frame.h / (2.0 * SIDE as f64 + 5.0)).floor();
     let block = 2.0 * cell;

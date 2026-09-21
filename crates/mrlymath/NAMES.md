@@ -32,6 +32,7 @@ Words, not letters. One word per thing, the same word everywhere. Letters live o
 - Fractal dimension is derived, so it never needs a symbol: write `log(fill) / log(base)` or the number.
 - The design's digit set gets no global letter. In a proof: "let `F` be the digits of the code", once, then `F` for that proof.
 - Indices `i, j, k` and a running integer `n` stay local, as in every paper.
+- The digit transform is `hat F(t) = sum_(d in F) e(d t)`, its level form `hat F_level(t) = prod_(l < level) hat F(base^l t)`; a page that writes it under another letter says so at the first use.
 
 ## THE NAME IS A JSON OBJECT
 

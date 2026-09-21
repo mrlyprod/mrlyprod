@@ -10,6 +10,7 @@ const TAIL: usize = 7;
 const STEPS: usize = 10;
 const STENCIL: f64 = 0.02;
 const TOLERANCE: f64 = 1e-9;
+const NODES: usize = 4096;
 
 /// A complex number: a real and an imaginary part.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -225,6 +226,51 @@ impl Line {
         }
         out
     }
+    /// Returns zeta and its derivative together at any complex s but one, by the same Euler-Maclaurin sum: the modulus of t plus ten terms and seven Bernoulli corrections, each term differentiated in s.
+    pub fn pair(&self, s: Complex) -> (Complex, Complex) {
+        let one = Complex::new(1.0, 0.0);
+        let count = s.im.abs() as usize + SHIFT;
+        let mut value = Complex::default();
+        let mut slope = Complex::default();
+        for k in 1..=count {
+            let kf = k as f64;
+            let term = raise(kf, -s);
+            value = value + term;
+            slope = slope - term * kf.ln();
+        }
+        let base = count as f64;
+        let log = base.ln();
+        let head = raise(base, -s + 1.0) / (s - 1.0);
+        let half = raise(base, -s) * 0.5;
+        value = value + head - half;
+        slope = slope - head * log - head / (s - 1.0) + half * log;
+        let mut rising = s;
+        let mut ratio = one / s;
+        let mut power = raise(base, -s - 1.0);
+        let square = 1.0 / (base * base);
+        for (k, &weight) in self.tail.iter().enumerate().skip(1) {
+            let term = rising * power * weight;
+            value = value + term;
+            slope = slope + term * (ratio - log);
+            let (a, b) = (s + (2 * k - 1) as f64, s + (2 * k) as f64);
+            rising = rising * a * b;
+            ratio = ratio + one / a + one / b;
+            power = power * square;
+        }
+        (value, slope)
+    }
+    /// Returns the wave coefficient of every zero at the given ordinates: F(rho) zeta(rho - 1) over zeta'(rho) at rho one half plus i gamma, F the Mellin transform of the bump.
+    pub fn novelty_coefficients(&self, gammas: &[f64]) -> Vec<Complex> {
+        gammas
+            .iter()
+            .map(|&g| {
+                let rho = Complex::new(0.5, g);
+                let (left, _) = self.pair(rho - 1.0);
+                let (_, prime) = self.pair(rho);
+                mellin(rho) * left / prime
+            })
+            .collect()
+    }
     /// Returns Z(t) from the Euler-Maclaurin value turned onto the real axis.
     pub fn exact(&self, t: f64) -> f64 {
         (Complex::turn(self.theta(t)) * self.maclaurin(t)).re
@@ -376,9 +422,65 @@ pub fn psi_formula(x: f64, gammas: &[f64]) -> f64 {
     x - 2.0 * x.sqrt() * waves - (2.0 * PI).ln() - 0.5 * (1.0 - 1.0 / (x * x)).ln()
 }
 
+// NOVELTY
+
+/// The smooth window on [1, 2]: exp(4 - 1/((u - 1)(2 - u))) inside, zero outside, every derivative vanishing at the ends and a peak of one at u = 3/2.
+pub fn bump(u: f64) -> f64 {
+    if u <= 1.0 || u >= 2.0 {
+        return 0.0;
+    }
+    (4.0 - 1.0 / ((u - 1.0) * (2.0 - u))).exp()
+}
+
+/// Returns the Mellin transform of the bump at a complex s, the integral of bump(u) u^(s - 1) over [1, 2], by a 4096-node midpoint rule.
+pub fn mellin(s: Complex) -> Complex {
+    let step = 1.0 / NODES as f64;
+    let mut sum = Complex::default();
+    for k in 1..NODES {
+        let u = 1.0 + k as f64 * step;
+        sum = sum + raise(u, s - 1.0) * (bump(u) * step);
+    }
+    sum
+}
+
+/// Returns the main term of the smoothed novelty: six over pi squared times the bump's transform at two.
+pub fn novelty_main() -> f64 {
+    6.0 / (PI * PI) * mellin(Complex::new(2.0, 0.0)).re
+}
+
+/// Returns the smoothed novelty error at y: y squared times the totients weighed by the bump at n y, less the main term given; the totients must reach 2 over y.
+pub fn smoothed_novelty(phi: &[u64], y: f64, main: f64) -> f64 {
+    let lo = (1.0 / y).ceil() as usize;
+    let hi = (2.0 / y).floor() as usize;
+    let sum: f64 = phi[lo..=hi]
+        .iter()
+        .zip(lo..)
+        .map(|(&p, n)| p as f64 * bump(n as f64 * y))
+        .sum();
+    y * y * sum - main
+}
+
+/// Returns the sharp novelty error at y: y squared times the totient sum over the scales from 1 over y to 2 over y, both ends in, less nine over pi squared, from the prefix sums of the totients, which must reach 2 over y.
+pub fn sharp_novelty(prefix: &[u64], y: f64) -> f64 {
+    let lo = (1.0 / y).ceil() as usize;
+    let hi = (2.0 / y).floor() as usize;
+    y * y * (prefix[hi] - prefix[lo - 1]) as f64 - 9.0 / (PI * PI)
+}
+
+/// Sums the waves of the zeros at log y: twice the real part of the coefficients times y to the minus i gamma, the smoothed error over y to the three halves that the zeros predict.
+pub fn novelty_wave(gammas: &[f64], coef: &[Complex], log_y: f64) -> f64 {
+    let sum: f64 = gammas
+        .iter()
+        .zip(coef)
+        .map(|(g, c)| (*c * Complex::turn(-g * log_y)).re)
+        .sum();
+    2.0 * sum
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::lattice::totients;
 
     fn classic(t: f64) -> f64 {
         0.5 * t * (t / (2.0 * PI)).ln() - 0.5 * t - PI / 8.0
@@ -466,6 +568,49 @@ mod tests {
         assert_eq!(hundred.len(), 100);
         assert!((hundred[99] - 236.524_230).abs() < 1e-5);
         assert!(hundred.windows(2).all(|w| w[1] > w[0]));
+    }
+
+    #[test]
+    fn the_pair_pins_zeta_off_the_line_and_its_slope() {
+        let line = Line::new();
+        let (below, _) = line.pair(Complex::new(-0.5, 0.0));
+        assert!((below.re + 0.207_886_224_977_354_6).abs() < 1e-10);
+        let (_, slope) = line.pair(Complex::new(0.5, 0.0));
+        assert!((slope.re + 3.922_646_139_209_15).abs() < 1e-9);
+        let (on, _) = line.pair(Complex::new(0.5, 30.0));
+        assert!((on - line.maclaurin(30.0)).abs() < 1e-9);
+        let (root, prime) = line.pair(Complex::new(0.5, 14.134_725_141_734_7));
+        assert!(root.abs() < 1e-8);
+        assert!((prime.abs() - 0.793_16).abs() < 1e-4);
+    }
+
+    #[test]
+    fn the_novelty_error_is_the_wave_of_the_first_zeros() {
+        assert!((novelty_main() - 6.0 / (PI * PI) * 0.575_725_895_994).abs() < 1e-9);
+        assert_eq!(bump(1.5), 1.0);
+        assert_eq!(bump(1.0), 0.0);
+        let line = Line::new();
+        let gammas = line.zeros(10);
+        let coef = line.novelty_coefficients(&gammas);
+        assert!((coef[0].abs() - 0.1879).abs() < 5e-4);
+        assert!((coef[9].abs() - 4.286e-3).abs() < 5e-6);
+        let phi = totients(1 << 15);
+        let mut prefix = vec![0u64; phi.len()];
+        for n in 1..phi.len() {
+            prefix[n] = prefix[n - 1] + phi[n];
+        }
+        let main = novelty_main();
+        let (mut peak, mut miss) = (0.0f64, 0.0f64);
+        for k in 0..=96 {
+            let j = 8.0 + k as f64 / 16.0;
+            let y = 2.0f64.powf(-j);
+            let dot = smoothed_novelty(&phi, y, main) / y.powf(1.5);
+            peak = peak.max(dot.abs());
+            miss = miss.max((dot - novelty_wave(&gammas, &coef, y.ln())).abs());
+        }
+        assert!(miss / peak < 5e-2, "{miss} {peak}");
+        let rough = sharp_novelty(&prefix, 2.0f64.powf(-10.0)) / 2.0f64.powf(-10.0);
+        assert!(rough.abs() < 2.0 && rough != 0.0);
     }
 
     #[test]

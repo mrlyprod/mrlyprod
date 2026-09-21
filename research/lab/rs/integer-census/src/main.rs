@@ -146,11 +146,26 @@ fn checks(sheet: &Sheet, book: &Census) {
         );
     }
     let classics: [(&str, &[i128]); 5] = [
-        ("sequence_dim=2_code=7_measure=fills_axis=side", &[8, 21, 40, 65]),
-        ("sequence_dim=2_code=7_measure=fills_axis=level", &[8, 64, 512]),
-        ("sequence_dim=2_code=7_measure=voids_axis=level", &[1, 17, 217]),
-        ("sequence_dim=3_code=23_measure=fills_axis=side", &[20, 81, 208, 425]),
-        ("sequence_dim=3_code=23_measure=surface_axis=level", &[72, 1056, 18048]),
+        (
+            "sequence_dim=2_code=7_measure=fills_axis=side",
+            &[8, 21, 40, 65],
+        ),
+        (
+            "sequence_dim=2_code=7_measure=fills_axis=level",
+            &[8, 64, 512],
+        ),
+        (
+            "sequence_dim=2_code=7_measure=voids_axis=level",
+            &[1, 17, 217],
+        ),
+        (
+            "sequence_dim=3_code=23_measure=fills_axis=side",
+            &[20, 81, 208, 425],
+        ),
+        (
+            "sequence_dim=3_code=23_measure=surface_axis=level",
+            &[72, 1056, 18048],
+        ),
     ];
     for (name, head) in classics {
         let row = sheet
