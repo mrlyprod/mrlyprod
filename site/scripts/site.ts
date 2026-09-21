@@ -8,6 +8,7 @@ import { config as gitConfig, isGit } from "../kit/git/git.ts";
 import { resolve as resolveLink } from "../kit/ssg/links.ts";
 import { themed } from "../kit/ssg/pic.ts";
 import { escape, front, inline, plain, render as md, summary, title } from "../kit/ssg/md.ts";
+import { posts as parsed, type Leaf as Posted } from "../kit/ssg/blog.ts";
 import { sidebar, tree } from "../lib/tree.js";
 import { Glyph, Grid, Menu, Shell } from "../ui/chrome.jsx";
 import { claimsScript, headScript, inlineScripts, tintCss } from "../ui/config.js";
@@ -17,8 +18,6 @@ import { shelf } from "./shelf.ts";
 
 const org = resolve(import.meta.dir, "..");
 const dist = process.env.MRLY_DIST ? resolve(process.env.MRLY_DIST) : join(org, "dist");
-const BLOG = join(org, "blog");
-const postFile = (slug: string) => join(BLOG, `${slug}.md`);
 const root = (process.env.MRLY_SITE ?? SITE.root).replace(/\/$/, "");
 const AUTHOR = "MrlyProd";
 const LIST = /^- \[([^\]]+)\]\([^)]*\) - (.+)$/gm;
@@ -606,44 +605,30 @@ function discoveries(site: Site, route: Route): Output[] {
 
 type Post = { slug: string; name: string; date: string; lead: string; figure: string; body: string };
 
-function posts(): Post[] {
-  if (!existsSync(BLOG)) return [];
-  return readdirSync(BLOG)
-    .filter((f) => f.endsWith(".md"))
-    .map((file) => {
-      const { data, body } = front(read(join(BLOG, file)));
-      const slug = file.slice(0, -3);
-      return { slug, name: data.title ?? slug, date: data.date ?? "", lead: data.lead ?? summary(body), figure: data.figure || `blog-${slug}`, body };
-    })
-    .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : a.slug < b.slug ? 1 : -1));
-}
+const BLOG_LEAD = "Notes on what lands on this site and in the crates behind it.";
 
-function post(site: Site, route: Route): Output[] {
-  const p = route.data as Post;
-  const out: Output[] = [];
-  const fig = press(site, out);
-  const head = `${hero(fig, p.figure, route.route, p.name)}\n<div class="plate"><h1 id="${escape(p.slug)}">${escape(p.name)}</h1><p class="by">${escape(p.date)} · ${escape(AUTHOR)}</p></div>`;
+const posts = (site: Site): Post[] =>
+  parsed(site).map((one) => ({ slug: one.slug, name: one.title, date: one.date, lead: one.lead, figure: one.front.figure || `blog-${one.slug}`, body: one.body }));
+
+function blogPage(site: Site, leaf: Posted) {
+  const fig = press(site, leaf.out);
+  if (leaf.kind === "blog") {
+    const body = `<div class="lede"><h1 id="blog">Blog</h1><p class="lead">${escape(BLOG_LEAD)}</p></div>\n${grid(wear(site, "/blog/", fig, leaf.route))}`;
+    return shell(site, { route: leaf.route, name: "Blog", description: BLOG_LEAD, body, type: "website", wide: true, bare: true });
+  }
+  const figure = leaf.front.figure || `blog-${leaf.slug}`;
+  const head = `${hero(fig, figure, leaf.route, leaf.name)}\n<div class="plate"><h1 id="${escape(leaf.slug)}">${escape(leaf.name)}</h1><p class="by">${escape(leaf.date)} · ${escape(AUTHOR)}</p></div>`;
   const data = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
-    headline: p.name,
-    description: p.lead,
-    url: root + route.route,
-    image: `${root}/figures/${p.figure}-dark.png`,
+    headline: leaf.name,
+    description: leaf.lead,
+    url: root + leaf.route,
+    image: `${root}/figures/${figure}-dark.png`,
     author: { "@type": "Organization", name: AUTHOR },
-    datePublished: p.date || undefined,
+    datePublished: leaf.date || undefined,
   };
-  out.push({ path: `blog/${p.slug}/index.html`, bytes: shell(site, { route: route.route, name: p.name, description: p.lead, body: `${head}\n${md(p.body, { math, link: links(site, postFile(p.slug), out) })}`, data, image: picture(site, p.figure, route.route, fig) }) });
-  return out;
-}
-
-function blogIndex(site: Site, route: Route): Output[] {
-  const out: Output[] = [];
-  const fig = press(site, out);
-  const lead = "Notes on what lands on this site and in the crates behind it.";
-  const body = `<div class="lede"><h1 id="blog">Blog</h1><p class="lead">${escape(lead)}</p></div>\n${grid(wear(site, "/blog/", fig, route.route))}`;
-  out.push({ path: "blog/index.html", bytes: shell(site, { route: route.route, name: "Blog", description: lead, body, type: "website", wide: true, bare: true }) });
-  return out;
+  return shell(site, { route: leaf.route, name: leaf.name, description: leaf.lead, body: `${head}\n${leaf.body}`, data, image: picture(site, figure, leaf.route, fig) });
 }
 
 /* PAGES */
@@ -974,7 +959,7 @@ async function collect(site: Site) {
   const fresh = new Set(paperList.map((p) => p.slug));
   const laneList = lanes().filter((p) => !fresh.has(p.slug));
   const noteList = notes(site);
-  const postList = posts();
+  const postList = posts(site);
   const group = demoGroup(site);
   const demoList = group.data as Card[];
   const claimList = claims(site);
@@ -1050,14 +1035,6 @@ async function collect(site: Site) {
       inputs: [source, ...embeds(site, n.md)],
     });
   }
-  if (postList.length) {
-    const files = postList.map((p) => postFile(p.slug));
-    routes.push({ route: "/blog/", kind: "blog", name: "Blog", data: postList, source: BLOG, inputs: files });
-    for (const p of postList) {
-      const source = postFile(p.slug);
-      routes.push({ route: `/blog/${p.slug}/`, kind: "post", name: p.name, data: p, source, inputs: [source] });
-    }
-  }
   const written = site.input("pages");
   for (const source of written.files) {
     const slug = source.slice(written.path.length + 1, -3);
@@ -1088,8 +1065,6 @@ const KINDS: Record<string, (site: Site, route: Route) => Output[] | Promise<Out
   note,
   research: researchIndex,
   discoveries,
-  blog: blogIndex,
-  post,
   page,
   menu,
   cart,
@@ -1154,6 +1129,10 @@ export const spec: Spec = {
     page: GIT ? shell : undefined,
     md: (site, text, from) => md(front(text).body, { math, link: links(site, from) }),
     served,
+  },
+  blog: {
+    page: blogPage,
+    md: (site, text, from, out) => md(text, { math, link: links(site, from, out) }),
   },
 };
 

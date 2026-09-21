@@ -107,6 +107,7 @@
   },
   "inputs": {
     "pages": { "path": "pages", "ext": ".md" },
+    "blog": { "path": "blog", "deep": true },
     "wiki": { "path": "../wiki", "ext": ".md" },
     "research": { "path": "../research", "ext": ".md" },
     "notes": { "path": "../research/notes", "ext": ".md" },
