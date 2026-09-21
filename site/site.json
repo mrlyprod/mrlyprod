@@ -82,6 +82,13 @@
     { "name": "Discord", "href": "https://discord.gg/YEKjjvwhcK" }
   ],
   "contact": "help@mrly.net",
+  "push": {
+    "prefix": "",
+    "guard": ["cdn/"],
+    "bucket": "MRLYNET_BUCKET",
+    "store": { "bucket": "MRLYDEV_BUCKET", "prefix": "build/net" },
+    "hashed": ["(^|/)lib-[^/]+\\.js$", "(^|/)lib-[^/]+\\.css$", "\\.wasm$", "-[0-9a-f]{8}\\.[^./]+$"]
+  },
   "git": { "root": "..", "slug": "mrlyprod/mrlyprod", "branch": "main" },
   "llms": {
     "about": "MrlyMath is the mathematics of designs on the corners of a cube: a code says which of the eight corners are filled, the Kronecker product grows that rule into itself level by level, and the object it converges to is a fractal, the Sierpinski carpet and the Menger sponge among them. Everything else on this site is measurement: fills, voids and exposed faces, plane cuts, graph spectra, and the integer sequences the counts write down, with Rust crates doing the arithmetic and the browser only painting. Every claim is proved, checked over a stated finite domain, or labelled a conjecture, and all of it is free and open source.",
