@@ -251,7 +251,7 @@ pub struct Touch {
 }
 
 fn reduce(c: Circle) -> (i64, i64) {
-    let g = gcd(c.x.unsigned_abs() as usize, c.k.unsigned_abs() as usize) as i64;
+    let g = gcd(c.x.unsigned_abs().into(), c.k.unsigned_abs().into()) as i64;
     (c.x / g, c.k / g)
 }
 
@@ -402,7 +402,7 @@ mod tests {
             .all(|&c| is_ford(c)));
         for mark in &marks {
             assert_eq!(mark.k, 2 * mark.den * mark.den);
-            assert_eq!(gcd(mark.num as usize, mark.den as usize), 1);
+            assert_eq!(gcd(mark.num as u128, mark.den as u128), 1);
         }
         assert!(marks
             .windows(2)

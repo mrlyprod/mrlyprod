@@ -1,6 +1,6 @@
 use demos::echo::*;
 use mrlyrs::core::error::parse;
-use mrlyrs::num::design;
+use mrlyrs::num::{design, factor};
 
 fn read(base: u32, mask: u32, depth: usize, subtract: bool) -> (Echo, mrlyrs::core::Json) {
     let echo = echo_read(base, mask, depth, subtract).unwrap();
@@ -14,7 +14,8 @@ fn shown(value: &mrlyrs::core::Json, places: usize) -> String {
 
 fn census(base: u64, digits: &[u64], depth: usize) -> (i64, i64) {
     let values = design::elements(base, digits, depth);
-    let running = design::meter(&design::mobius_of(&values));
+    let mu: Vec<i8> = values.iter().map(|&v| factor::mobius(v as usize)).collect();
+    let running = design::meter(&mu);
     (
         running.last().copied().unwrap(),
         running.iter().map(|value| value.abs()).max().unwrap(),
@@ -43,7 +44,9 @@ fn the_meter_reproduces_the_design_census() {
 #[test]
 fn the_full_set_is_the_classical_mertens_control() {
     let full: Vec<u64> = (0..10).collect();
-    let running = design::meter(&design::mobius_of(&design::elements(10, &full, 6)));
+    let values = design::elements(10, &full, 6);
+    let mu: Vec<i8> = values.iter().map(|&v| factor::mobius(v as usize)).collect();
+    let running = design::meter(&mu);
     assert_eq!(
         running.last().copied().unwrap(),
         212,

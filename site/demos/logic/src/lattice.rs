@@ -1,6 +1,6 @@
 use crate::{rgba, theme, Fault, Pixels};
 use mrlyrs::core::{json, Json};
-use mrlyrs::num::factor::gcd;
+use mrlyrs::num::factor::{gcd, totients as sieve_totients};
 use mrlyrs::num::{lattice, series};
 use wasm_bindgen::prelude::*;
 
@@ -17,13 +17,13 @@ pub fn farey(order: usize) -> String {
 /// Sieves the totients of zero through the limit.
 #[wasm_bindgen]
 pub fn totients(limit: usize) -> Vec<u32> {
-    lattice::totients(limit).iter().map(|&v| v as u32).collect()
+    sieve_totients(limit).iter().map(|&v| v as u32).collect()
 }
 
 /// Reads the Farey stack of the order: the nodes the walk lit, one plus the totients summed, whether the two agree, and the primes as the scales of maximal novelty, as JSON.
 #[wasm_bindgen]
 pub fn farey_novelty(order: usize) -> String {
-    let phi = lattice::totients(order);
+    let phi = sieve_totients(order);
     let novel = 1 + phi.iter().skip(1).sum::<u64>();
     let lit = lattice::farey(order).len() as u64;
     let primes: Vec<usize> = (2..=order).filter(|&n| phi[n] == n as u64 - 1).collect();
@@ -121,7 +121,7 @@ pub fn visible_pixels(n: usize, side: usize, layers: bool) -> Result<Pixels, Fau
         let b = n - py * n / side;
         for px in 0..side {
             let a = px * n / side + 1;
-            colors.push(shade(gcd(a, b), layers));
+            colors.push(shade(gcd(a as u128, b as u128) as usize, layers));
         }
     }
     Ok(Pixels::of(side, side, colors))

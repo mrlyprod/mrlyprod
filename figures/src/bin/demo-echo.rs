@@ -1,6 +1,6 @@
 use figures::{ink, plot, save, Board, Frame};
 use mrlyrs::core::error::Result;
-use mrlyrs::num::design;
+use mrlyrs::num::{design, factor};
 
 const BASE: u64 = 10;
 const DIGITS: [u64; 9] = [0, 1, 2, 3, 4, 5, 6, 7, 8];
@@ -32,7 +32,7 @@ fn column(
 
 fn main() -> Result<()> {
     let values = design::elements(BASE, &DIGITS, DEPTH);
-    let mu = design::mobius_of(&values);
+    let mu: Vec<i8> = values.iter().map(|&v| factor::mobius(v as usize)).collect();
     let running = design::meter(&mu);
     assert_eq!(values.len(), 59048);
     assert_eq!(running[values.len() - 1], 201);

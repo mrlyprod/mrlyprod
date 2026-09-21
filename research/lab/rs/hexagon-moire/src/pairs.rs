@@ -20,7 +20,7 @@ fn marks(first: i64, second: i64, span: i64) -> Vec<i64> {
 }
 
 pub fn pearson(m: usize, n: usize, rule: &Rule) -> (f64, f64) {
-    let g = gcd(m, n) as i64;
+    let g = gcd(m as u128, n as u128) as i64;
     let (unit_m, unit_n) = (n as i64 / g, m as i64 / g);
     let (m, n) = (m as i64, n as i64);
     let (wide, tall) = (4 * m * n / g, 2 * m * n / g);

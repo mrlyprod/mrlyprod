@@ -1,7 +1,7 @@
 use super::factory::residue_corners;
 use super::universe::{permutations, Code};
 use crate::core::error::{value_error, Result};
-use crate::num::classics::factorial;
+use crate::num::factor::factorial;
 use std::collections::{BTreeSet, HashMap};
 
 /// The most cells a code walk visits, so that the walk stays within `2^20` codes.
@@ -199,6 +199,28 @@ pub fn bracelets(max_base: usize) -> Result<Vec<u128>> {
     (1..=max_base).map(|q| distinct_designs(q, 1)).collect()
 }
 
+/// Counts the fill classes of a dimension, the popcount profiles a base-2 design can have: one more than the corners of each weight, multiplied over the weights, A129824 at the dimension.
+pub fn classes(dimension: usize) -> u128 {
+    let mut row = vec![1u128];
+    for _ in 0..dimension {
+        let mut next = vec![1u128; row.len() + 1];
+        for k in 1..row.len() {
+            next[k] = row[k - 1] + row[k];
+        }
+        row = next;
+    }
+    row.iter().map(|corners| corners + 1).product()
+}
+
+/// Returns the fill-class counts for dimensions 1 through max_dimension.
+///
+/// ```
+/// assert_eq!(mrlyrs::math::bang::baseq::class_sequence(4), vec![4, 12, 64, 700]);
+/// ```
+pub fn class_sequence(max_dimension: usize) -> Vec<u128> {
+    (1..=max_dimension).map(classes).collect()
+}
+
 /// Returns the filled-cell count of a binary design at a side number, folded from its filled corners.
 pub fn fill_from_corners(filled: &[Vec<u8>], number: usize, dimension: usize) -> u128 {
     let even = number.div_ceil(2) as u128;
@@ -269,5 +291,25 @@ mod tests {
     #[test]
     fn bracelet_sequence_is_a000029() {
         assert_eq!(bracelets(8).unwrap(), vec![2, 3, 4, 6, 8, 13, 18, 30]);
+    }
+    #[test]
+    fn sequence_is_a000616() {
+        assert_eq!(
+            sequence(2, 6).unwrap(),
+            vec![3, 6, 22, 402, 1228158, 400507806843728]
+        );
+    }
+    #[test]
+    fn classes_are_a129824() {
+        assert_eq!(classes(0), 2);
+        assert_eq!(
+            class_sequence(7),
+            vec![4, 12, 64, 700, 17424, 1053696, 160579584]
+        );
+    }
+    #[test]
+    fn totals_doubly_exponential() {
+        let totals: Vec<u128> = (1..=4).map(|d| total_designs(2, d)).collect();
+        assert_eq!(totals, vec![4, 16, 256, 65536]);
     }
 }

@@ -1,6 +1,8 @@
 use crate::{checked, code_of, Fault};
 use mrlyrs::core::{json, Json};
-use mrlyrs::math::counts::six as formulas;
+use mrlyrs::math::counts::six::{
+    solid_slice_boundary, solid_slice_edges, solid_slice_triangles, solid_slice_vertices,
+};
 use mrlyrs::math::six::{self, Cell6d};
 use mrlyrs::math::three;
 use mrlyrs::num::boolean;
@@ -56,10 +58,10 @@ pub fn slice_census(code: &str, number: usize, level: usize, base: usize) -> Res
         "holes": six::holes(&cell)?,
         "giant": six::giant(&cell)?,
         "closed": {
-            "triangles": formulas::solid_slice_triangles(side)?.to_string(),
-            "boundary": formulas::solid_slice_boundary(side)?.to_string(),
-            "edges": formulas::solid_slice_edges(side)?.to_string(),
-            "vertices": formulas::solid_slice_vertices(side)?.to_string(),
+            "triangles": solid_slice_triangles(side)?.to_string(),
+            "boundary": solid_slice_boundary(side)?.to_string(),
+            "edges": solid_slice_edges(side)?.to_string(),
+            "vertices": solid_slice_vertices(side)?.to_string(),
         },
     })
     .to_string())

@@ -1,4 +1,4 @@
-use crate::num::classics::primes;
+use crate::num::prime::primes;
 use crate::num::series::bernoulli;
 use std::f64::consts::PI;
 use std::ops::{Add, Div, Mul, Neg, Sub};
@@ -480,7 +480,7 @@ pub fn novelty_wave(gammas: &[f64], coef: &[Complex], log_y: f64) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::num::lattice::totients;
+    use crate::num::factor::totients;
 
     fn classic(t: f64) -> f64 {
         0.5 * t * (t / (2.0 * PI)).ln() - 0.5 * t - PI / 8.0

@@ -503,7 +503,7 @@ fn holds(shape: &Shape, side: usize, index: &[usize]) -> bool {
                 return false;
             }
             let l = center.iter().fold(radius.den, |acc, c| {
-                acc / mrlyrs::num::classics::gcd(acc as u128, c.den as u128) as i64 * c.den
+                acc / mrlyrs::num::factor::gcd(acc as u128, c.den as u128) as i64 * c.den
             });
             let scale = 2 * side as i128 * l as i128;
             let rr = radius.num as i128 * (scale / radius.den as i128);

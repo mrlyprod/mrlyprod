@@ -153,7 +153,7 @@ fn ratios(kind: &str, top: usize, deep: usize) -> Vec<(usize, usize)> {
     let mut out = Vec::new();
     for b in 1..=deep {
         for a in 1..=top {
-            if gcd(a, b) == 1 && (kind == "out" || a > b) {
+            if gcd(a as u128, b as u128) == 1 && (kind == "out" || a > b) {
                 out.push((a, b));
             }
         }

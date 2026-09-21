@@ -1,6 +1,6 @@
 use figures::{ink, plot, save, Board};
 use mrlyrs::core::error::Result;
-use mrlyrs::num::lattice::totients;
+use mrlyrs::num::factor::totients;
 use mrlyrs::num::prime::is_prime;
 
 const TOP: usize = 60;

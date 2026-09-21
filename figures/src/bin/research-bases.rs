@@ -23,7 +23,7 @@ fn main() -> Result<()> {
             let (x, y) = (cx + u * unit, cy - v * unit);
             if a == 0 && b == 0 {
                 board.disc(x, y, unit * 0.20, ink::fade(ink::dim(), 0.9));
-            } else if gcd(a.unsigned_abs() as usize, b.unsigned_abs() as usize) == 1 {
+            } else if gcd(a.unsigned_abs() as u128, b.unsigned_abs() as u128) == 1 {
                 visible += 1;
                 board.disc(x, y, unit * 0.30, ink::blue());
             } else {

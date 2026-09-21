@@ -1,5 +1,6 @@
 use super::factory::{self, MagicLayer};
 use crate::core::error::{value_error, Result};
+use crate::core::named_enum;
 use crate::core::Tensor;
 use crate::math::name::Bang;
 
@@ -332,27 +333,20 @@ pub fn constant_functional(layers: &[MagicLayer]) -> Result<f64> {
 
 // SCHEDULES
 
-/// The named infinite schedules over an ordered pair of letters.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Schedule {
-    /// The Thue-Morse word, the parity of the binary digit sum of the place.
-    ThueMorse,
-    /// The two letters alternating, the periodic control at the same frequencies.
-    Periodic,
-    /// The first letter repeated, the constant control.
-    Constant,
+named_enum! {
+    /// The named infinite schedules over an ordered pair of letters.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum Schedule {
+        /// The Thue-Morse word, the parity of the binary digit sum of the place.
+        ThueMorse => "thue-morse",
+        /// The two letters alternating, the periodic control at the same frequencies.
+        Periodic => "periodic",
+        /// The first letter repeated, the constant control.
+        Constant => "constant",
+    }
 }
 
 impl Schedule {
-    /// Parses a schedule's display name, or an error for an unknown name.
-    pub fn parse(name: &str) -> Result<Schedule> {
-        match name {
-            "thue-morse" => Ok(Schedule::ThueMorse),
-            "periodic" => Ok(Schedule::Periodic),
-            "constant" => Ok(Schedule::Constant),
-            other => value_error(format!("unknown schedule {other:?}.")),
-        }
-    }
     /// Returns the letter frequencies the schedule tends to.
     pub fn frequencies(self) -> (f64, f64) {
         match self {
@@ -451,6 +445,13 @@ mod tests {
 
     fn plain(code: u128, number: usize) -> MagicLayer {
         MagicLayer::new(Bang::new(code, 2, 2), number)
+    }
+
+    #[test]
+    fn names_parse_back() {
+        for schedule in Schedule::all() {
+            assert_eq!(schedule, schedule.name().parse().unwrap());
+        }
     }
 
     #[test]

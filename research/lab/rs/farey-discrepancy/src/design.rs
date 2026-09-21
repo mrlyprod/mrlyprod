@@ -1,5 +1,5 @@
 use mrlyrs::num::factor::mobius_sieve;
-use mrlyrs::num::lattice::totients;
+use mrlyrs::num::factor::totients;
 
 pub struct Design {
     pub name: &'static str,
@@ -354,7 +354,7 @@ mod tests {
                 continue;
             }
             for a in 1..=b {
-                if design.holds(a) && gcd(a as usize, b as usize) == 1 {
+                if design.holds(a) && gcd(a as u128, b as u128) == 1 {
                     count += 1;
                 }
             }
@@ -369,7 +369,7 @@ mod tests {
                 continue;
             }
             for a in 1..=b {
-                if gcd(a as usize, b as usize) == 1 {
+                if gcd(a as u128, b as u128) == 1 {
                     count += 1;
                 }
             }

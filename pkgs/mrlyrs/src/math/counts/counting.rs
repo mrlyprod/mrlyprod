@@ -1,7 +1,7 @@
 use crate::core::error::{value_error, Result};
 use crate::math::bang::factory;
 use crate::math::bang::universe::Code;
-use crate::num::classics::reduce;
+use crate::num::factor::reduce;
 
 /// Counts the indices below number that equal residue modulo base.
 pub fn positions(residue: usize, number: usize, base: usize) -> u128 {

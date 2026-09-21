@@ -4,20 +4,18 @@ pub mod animate;
 pub mod crop;
 /// The elementary automata: their stepping, their space-time diagrams and the card of one rule.
 pub mod elementary;
-/// The cumulative-visit heatmap frames of a run.
-pub mod heatmap;
 /// The design masks a rule reads and the lattice they generate.
 pub mod mask;
 /// The entropy, churn and chaos readings of a run.
 pub mod metrics;
 /// The run config and the recorded life.
 pub mod models;
-/// The PNG frames and the gif movie of grids and runs.
+/// The PNG frames, the cumulative-visit heatmap and the gif movie of grids.
 pub mod render;
 /// The rule name: a life rule's birth and survival counts and whether the edge wraps.
 pub mod rule;
 /// The named sources of neighbor-count values, and the counts they lay down.
-pub mod sequence;
+pub mod source;
 /// The one-generation advance of a grid.
 pub mod step;
 
@@ -75,11 +73,19 @@ pub use elementary::{
     affine, corner_bits, cube_orbit, gasket, genus, history, lambda, npn_class, outer_totalistic,
     popcount, reversible, rule_degree, rule_name, single_seed, step, surjective, wolfram_class,
 };
-pub use heatmap::heatmap;
 pub use mask::{design_mask, lattice_index, mask_offsets};
 pub use metrics::{churn, entropy};
 pub use models::{Config, Life};
-pub use render::{frames, frames_of, movie};
+pub use render::{frames, heatmap, movie};
 pub use rule::Rule;
-pub use sequence::{counts, Counts, Sequence};
+pub use source::{counts, Counts, Source};
 pub use step::next_grid;
+
+#[cfg(test)]
+pub(crate) fn blinker() -> Cell2d {
+    let mut t = crate::core::tensor::Tensor::new(vec![5, 5]);
+    t.set(&[1, 2], 1);
+    t.set(&[2, 2], 1);
+    t.set(&[3, 2], 1);
+    Cell2d::new(t)
+}

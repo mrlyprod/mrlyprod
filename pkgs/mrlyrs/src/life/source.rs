@@ -2,14 +2,15 @@ use crate::core::error::{value_error, Result};
 use crate::core::rng::Rng;
 use crate::math::counts;
 use crate::math::two::{self, census};
-use crate::num::classics;
+use crate::num::prime;
+use crate::num::series;
 
 const DIM: usize = 2;
 const BASE: usize = 2;
 
 /// A named source of neighbor-count values.
 ///
-/// | Sequence | OEIS |
+/// | Source | OEIS |
 /// |---|---|
 /// | Evens | A005843 |
 /// | Odds | A005408 |
@@ -20,7 +21,7 @@ const BASE: usize = 2;
 ///
 /// Random, the other mrly families and the code families carry no OEIS id.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Sequence {
+pub enum Source {
     /// The even numbers.
     Evens,
     /// The odd numbers.
@@ -73,72 +74,72 @@ pub enum Sequence {
     CodeVoids(u128),
 }
 
-impl Sequence {
+impl Source {
     /// Returns the sequence's parseable name, the one string that regenerates it.
     pub fn name(self) -> String {
         let fixed = match self {
-            Sequence::Evens => "evens",
-            Sequence::Odds => "odds",
-            Sequence::Random(seed) => return format!("random_{seed}"),
-            Sequence::Primes => "primes",
-            Sequence::Binary => "binary",
-            Sequence::Fibonacci => "fibonacci",
-            Sequence::GridSquares => "grid_squares",
-            Sequence::CarpetFills => "carpet_fills",
-            Sequence::CarpetVoids => "carpet_voids",
-            Sequence::NetFills => "net_fills",
-            Sequence::NetVoids => "net_voids",
-            Sequence::TreeFills => "tree_fills",
-            Sequence::TreeVoids => "tree_voids",
-            Sequence::VoidFills => "void_fills",
-            Sequence::VoidVoids => "void_voids",
-            Sequence::PointFills => "point_fills",
-            Sequence::PointVoids => "point_voids",
-            Sequence::DustFills => "dust_fills",
-            Sequence::DustVoids => "dust_voids",
-            Sequence::LineFills => "line_fills",
-            Sequence::LineVoids => "line_voids",
-            Sequence::StarFills => "star_fills",
-            Sequence::StarVoids => "star_voids",
-            Sequence::CodeFills(code) => return format!("code_fills_{code}"),
-            Sequence::CodeVoids(code) => return format!("code_voids_{code}"),
+            Source::Evens => "evens",
+            Source::Odds => "odds",
+            Source::Random(seed) => return format!("random_{seed}"),
+            Source::Primes => "primes",
+            Source::Binary => "binary",
+            Source::Fibonacci => "fibonacci",
+            Source::GridSquares => "grid_squares",
+            Source::CarpetFills => "carpet_fills",
+            Source::CarpetVoids => "carpet_voids",
+            Source::NetFills => "net_fills",
+            Source::NetVoids => "net_voids",
+            Source::TreeFills => "tree_fills",
+            Source::TreeVoids => "tree_voids",
+            Source::VoidFills => "void_fills",
+            Source::VoidVoids => "void_voids",
+            Source::PointFills => "point_fills",
+            Source::PointVoids => "point_voids",
+            Source::DustFills => "dust_fills",
+            Source::DustVoids => "dust_voids",
+            Source::LineFills => "line_fills",
+            Source::LineVoids => "line_voids",
+            Source::StarFills => "star_fills",
+            Source::StarVoids => "star_voids",
+            Source::CodeFills(code) => return format!("code_fills_{code}"),
+            Source::CodeVoids(code) => return format!("code_voids_{code}"),
         };
         fixed.to_string()
     }
     /// Parses a sequence name, or an error for an unknown one.
-    pub fn parse(name: &str) -> Result<Sequence> {
+    pub fn parse(name: &str) -> Result<Source> {
         let lower = name.to_lowercase();
         if HEADS.iter().any(|head| lower.starts_with(head)) {
-            return match Sequence::read(&lower) {
+            return match Source::read(&lower) {
                 Some((seq, "")) => Ok(seq),
                 _ => value_error(format!("sequence {lower:?} wants a plain number.")),
             };
         }
         let seq = match lower.as_str() {
-            "evens" => Sequence::Evens,
-            "odds" => Sequence::Odds,
-            "primes" | "prime" => Sequence::Primes,
-            "binary" => Sequence::Binary,
-            "fibonacci" | "fib" => Sequence::Fibonacci,
-            "grid_squares" | "grid" => Sequence::GridSquares,
-            "carpet_fills" => Sequence::CarpetFills,
-            "carpet_voids" => Sequence::CarpetVoids,
-            "net_fills" => Sequence::NetFills,
-            "net_voids" => Sequence::NetVoids,
-            "tree_fills" => Sequence::TreeFills,
-            "tree_voids" => Sequence::TreeVoids,
-            "void_fills" => Sequence::VoidFills,
-            "void_voids" => Sequence::VoidVoids,
-            "point_fills" => Sequence::PointFills,
-            "point_voids" => Sequence::PointVoids,
-            "dust_fills" => Sequence::DustFills,
-            "dust_voids" => Sequence::DustVoids,
-            "line_fills" => Sequence::LineFills,
-            "line_voids" => Sequence::LineVoids,
-            "star_fills" => Sequence::StarFills,
-            "star_voids" => Sequence::StarVoids,
+            "evens" => Source::Evens,
+            "odds" => Source::Odds,
+            "primes" | "prime" => Source::Primes,
+            "binary" => Source::Binary,
+            "fibonacci" | "fib" => Source::Fibonacci,
+            "grid_squares" | "grid" => Source::GridSquares,
+            "carpet_fills" => Source::CarpetFills,
+            "carpet_voids" => Source::CarpetVoids,
+            "net_fills" => Source::NetFills,
+            "net_voids" => Source::NetVoids,
+            "tree_fills" => Source::TreeFills,
+            "tree_voids" => Source::TreeVoids,
+            "void_fills" => Source::VoidFills,
+            "void_voids" => Source::VoidVoids,
+            "point_fills" => Source::PointFills,
+            "point_voids" => Source::PointVoids,
+            "dust_fills" => Source::DustFills,
+            "dust_voids" => Source::DustVoids,
+            "line_fills" => Source::LineFills,
+            "line_voids" => Source::LineVoids,
+            "star_fills" => Source::StarFills,
+            "star_voids" => Source::StarVoids,
             other => {
-                let alias = Sequence::all()
+                let alias = Source::all()
                     .into_iter()
                     .find(|s| s.oeis().is_some_and(|id| id.eq_ignore_ascii_case(other)));
                 match alias {
@@ -150,20 +151,20 @@ impl Sequence {
         Ok(seq)
     }
     /// Reads a canonical name off the front of the text, returning the tail left over.
-    pub fn read(text: &str) -> Option<(Sequence, &str)> {
+    pub fn read(text: &str) -> Option<(Source, &str)> {
         if let Some(rest) = text.strip_prefix("random_") {
             let (seed, tail) = seed_of(rest)?;
-            return Some((Sequence::Random(u64::try_from(seed).ok()?), tail));
+            return Some((Source::Random(u64::try_from(seed).ok()?), tail));
         }
         if let Some(rest) = text.strip_prefix("code_fills_") {
             let (code, tail) = seed_of(rest)?;
-            return Some((Sequence::CodeFills(code), tail));
+            return Some((Source::CodeFills(code), tail));
         }
         if let Some(rest) = text.strip_prefix("code_voids_") {
             let (code, tail) = seed_of(rest)?;
-            return Some((Sequence::CodeVoids(code), tail));
+            return Some((Source::CodeVoids(code), tail));
         }
-        let fixed: Vec<Sequence> = Sequence::all()
+        let fixed: Vec<Source> = Source::all()
             .into_iter()
             .filter(|seq| !seq.is_random())
             .collect();
@@ -172,91 +173,91 @@ impl Sequence {
         Some((fixed[i], rest))
     }
     /// Returns every fixed sequence, the seeded and coded families excluded.
-    pub fn all() -> [Sequence; 23] {
+    pub fn all() -> [Source; 23] {
         [
-            Sequence::Evens,
-            Sequence::Odds,
-            Sequence::Random(0),
-            Sequence::Primes,
-            Sequence::Binary,
-            Sequence::Fibonacci,
-            Sequence::GridSquares,
-            Sequence::CarpetFills,
-            Sequence::CarpetVoids,
-            Sequence::NetFills,
-            Sequence::NetVoids,
-            Sequence::TreeFills,
-            Sequence::TreeVoids,
-            Sequence::VoidFills,
-            Sequence::VoidVoids,
-            Sequence::PointFills,
-            Sequence::PointVoids,
-            Sequence::DustFills,
-            Sequence::DustVoids,
-            Sequence::LineFills,
-            Sequence::LineVoids,
-            Sequence::StarFills,
-            Sequence::StarVoids,
+            Source::Evens,
+            Source::Odds,
+            Source::Random(0),
+            Source::Primes,
+            Source::Binary,
+            Source::Fibonacci,
+            Source::GridSquares,
+            Source::CarpetFills,
+            Source::CarpetVoids,
+            Source::NetFills,
+            Source::NetVoids,
+            Source::TreeFills,
+            Source::TreeVoids,
+            Source::VoidFills,
+            Source::VoidVoids,
+            Source::PointFills,
+            Source::PointVoids,
+            Source::DustFills,
+            Source::DustVoids,
+            Source::LineFills,
+            Source::LineVoids,
+            Source::StarFills,
+            Source::StarVoids,
         ]
     }
     /// Returns the six number sequences, the random one listed under seed zero.
-    pub fn numbers() -> [Sequence; 6] {
+    pub fn numbers() -> [Source; 6] {
         [
-            Sequence::Evens,
-            Sequence::Odds,
-            Sequence::Random(0),
-            Sequence::Primes,
-            Sequence::Binary,
-            Sequence::Fibonacci,
+            Source::Evens,
+            Source::Odds,
+            Source::Random(0),
+            Source::Primes,
+            Source::Binary,
+            Source::Fibonacci,
         ]
     }
     /// Returns the seventeen mrly design families: the grid, the four classics and their antis.
-    pub fn designs() -> [Sequence; 17] {
+    pub fn designs() -> [Source; 17] {
         [
-            Sequence::GridSquares,
-            Sequence::CarpetFills,
-            Sequence::CarpetVoids,
-            Sequence::NetFills,
-            Sequence::NetVoids,
-            Sequence::TreeFills,
-            Sequence::TreeVoids,
-            Sequence::VoidFills,
-            Sequence::VoidVoids,
-            Sequence::PointFills,
-            Sequence::PointVoids,
-            Sequence::DustFills,
-            Sequence::DustVoids,
-            Sequence::LineFills,
-            Sequence::LineVoids,
-            Sequence::StarFills,
-            Sequence::StarVoids,
+            Source::GridSquares,
+            Source::CarpetFills,
+            Source::CarpetVoids,
+            Source::NetFills,
+            Source::NetVoids,
+            Source::TreeFills,
+            Source::TreeVoids,
+            Source::VoidFills,
+            Source::VoidVoids,
+            Source::PointFills,
+            Source::PointVoids,
+            Source::DustFills,
+            Source::DustVoids,
+            Source::LineFills,
+            Source::LineVoids,
+            Source::StarFills,
+            Source::StarVoids,
         ]
     }
     /// Returns the sequence's OEIS id, or None off the encyclopedia.
     pub fn oeis(self) -> Option<&'static str> {
         match self {
-            Sequence::Evens => Some("A005843"),
-            Sequence::Odds => Some("A005408"),
-            Sequence::Primes => Some("A000040"),
-            Sequence::Binary => Some("A000079"),
-            Sequence::Fibonacci => Some("A000045"),
-            Sequence::GridSquares => Some("A016754"),
+            Source::Evens => Some("A005843"),
+            Source::Odds => Some("A005408"),
+            Source::Primes => Some("A000040"),
+            Source::Binary => Some("A000079"),
+            Source::Fibonacci => Some("A000045"),
+            Source::GridSquares => Some("A016754"),
             _ => None,
         }
     }
     /// Returns whether the sequence is a seeded random draw.
     pub fn is_random(self) -> bool {
-        matches!(self, Sequence::Random(_))
+        matches!(self, Source::Random(_))
     }
     fn is_number(self) -> bool {
         matches!(
             self,
-            Sequence::Evens
-                | Sequence::Odds
-                | Sequence::Random(_)
-                | Sequence::Primes
-                | Sequence::Binary
-                | Sequence::Fibonacci
+            Source::Evens
+                | Source::Odds
+                | Source::Random(_)
+                | Source::Primes
+                | Source::Binary
+                | Source::Fibonacci
         )
     }
 }
@@ -305,40 +306,40 @@ fn mrly_sequence(limit: usize, count_of: impl Fn(usize) -> Result<usize>) -> Res
 }
 
 /// Generates the sequence's values up to the limit.
-pub fn sequence(seq: Sequence, limit: usize) -> Result<Vec<usize>> {
+pub fn sequence(seq: Source, limit: usize) -> Result<Vec<usize>> {
     if seq.is_number() {
         return Ok(match seq {
-            Sequence::Evens => classics::evens(limit),
-            Sequence::Odds => classics::odds(limit),
-            Sequence::Random(seed) => random_subset(seed, limit),
-            Sequence::Primes => classics::primes(limit),
-            Sequence::Binary => classics::binary(limit),
-            Sequence::Fibonacci => classics::fibonacci(limit),
+            Source::Evens => series::evens(limit),
+            Source::Odds => series::odds(limit),
+            Source::Random(seed) => random_subset(seed, limit),
+            Source::Primes => prime::primes(limit),
+            Source::Binary => series::binary(limit),
+            Source::Fibonacci => series::fibonacci(limit),
             _ => unreachable!(),
         });
     }
     match seq {
-        Sequence::GridSquares => mrly_sequence(limit, |n| Ok(n * n)),
-        Sequence::CarpetFills => mrly_sequence(limit, |n| Ok(census::fills(&two::carpet(n, 1)?))),
-        Sequence::CarpetVoids => mrly_sequence(limit, |n| Ok(census::voids(&two::carpet(n, 1)?))),
-        Sequence::NetFills => mrly_sequence(limit, |n| Ok(census::fills(&two::net(n, 1)?))),
-        Sequence::NetVoids => mrly_sequence(limit, |n| Ok(census::voids(&two::net(n, 1)?))),
-        Sequence::TreeFills => mrly_sequence(limit, |n| Ok(census::fills(&two::htree(n, 1)?))),
-        Sequence::TreeVoids => mrly_sequence(limit, |n| Ok(census::voids(&two::htree(n, 1)?))),
-        Sequence::VoidFills => mrly_sequence(limit, |n| Ok(census::fills(&two::void(n, 1)?))),
-        Sequence::VoidVoids => mrly_sequence(limit, |n| Ok(census::voids(&two::void(n, 1)?))),
-        Sequence::PointFills => mrly_sequence(limit, |n| Ok(census::fills(&two::point(n, 1)?))),
-        Sequence::PointVoids => mrly_sequence(limit, |n| Ok(census::voids(&two::point(n, 1)?))),
-        Sequence::DustFills => mrly_sequence(limit, |n| Ok(census::fills(&two::dust(n, 1)?))),
-        Sequence::DustVoids => mrly_sequence(limit, |n| Ok(census::voids(&two::dust(n, 1)?))),
-        Sequence::LineFills => mrly_sequence(limit, |n| Ok(census::fills(&two::hline(n, 1)?))),
-        Sequence::LineVoids => mrly_sequence(limit, |n| Ok(census::voids(&two::hline(n, 1)?))),
-        Sequence::StarFills => mrly_sequence(limit, |n| Ok(census::fills(&two::star(n, 1)?))),
-        Sequence::StarVoids => mrly_sequence(limit, |n| Ok(census::voids(&two::star(n, 1)?))),
-        Sequence::CodeFills(code) => {
+        Source::GridSquares => mrly_sequence(limit, |n| Ok(n * n)),
+        Source::CarpetFills => mrly_sequence(limit, |n| Ok(census::fills(&two::carpet(n, 1)?))),
+        Source::CarpetVoids => mrly_sequence(limit, |n| Ok(census::voids(&two::carpet(n, 1)?))),
+        Source::NetFills => mrly_sequence(limit, |n| Ok(census::fills(&two::net(n, 1)?))),
+        Source::NetVoids => mrly_sequence(limit, |n| Ok(census::voids(&two::net(n, 1)?))),
+        Source::TreeFills => mrly_sequence(limit, |n| Ok(census::fills(&two::htree(n, 1)?))),
+        Source::TreeVoids => mrly_sequence(limit, |n| Ok(census::voids(&two::htree(n, 1)?))),
+        Source::VoidFills => mrly_sequence(limit, |n| Ok(census::fills(&two::void(n, 1)?))),
+        Source::VoidVoids => mrly_sequence(limit, |n| Ok(census::voids(&two::void(n, 1)?))),
+        Source::PointFills => mrly_sequence(limit, |n| Ok(census::fills(&two::point(n, 1)?))),
+        Source::PointVoids => mrly_sequence(limit, |n| Ok(census::voids(&two::point(n, 1)?))),
+        Source::DustFills => mrly_sequence(limit, |n| Ok(census::fills(&two::dust(n, 1)?))),
+        Source::DustVoids => mrly_sequence(limit, |n| Ok(census::voids(&two::dust(n, 1)?))),
+        Source::LineFills => mrly_sequence(limit, |n| Ok(census::fills(&two::hline(n, 1)?))),
+        Source::LineVoids => mrly_sequence(limit, |n| Ok(census::voids(&two::hline(n, 1)?))),
+        Source::StarFills => mrly_sequence(limit, |n| Ok(census::fills(&two::star(n, 1)?))),
+        Source::StarVoids => mrly_sequence(limit, |n| Ok(census::voids(&two::star(n, 1)?))),
+        Source::CodeFills(code) => {
             mrly_sequence(limit, |n| Ok(counts::fill(code, n, DIM, 1, BASE)? as usize))
         }
-        Sequence::CodeVoids(code) => {
+        Source::CodeVoids(code) => {
             mrly_sequence(limit, |n| Ok(counts::void(code, n, DIM, 1, BASE)? as usize))
         }
         _ => unreachable!(),
@@ -347,7 +348,7 @@ pub fn sequence(seq: Sequence, limit: usize) -> Result<Vec<usize>> {
 
 /// Returns the sequence up to max_neighbors, keeping zeros and ones only on request.
 pub fn counts(
-    seq: Sequence,
+    seq: Source,
     max_neighbors: usize,
     include_zeros: bool,
     include_ones: bool,
@@ -370,7 +371,7 @@ pub enum Counts {
     /// The counts a named sequence lays down inside the budget.
     Drawn {
         /// The sequence behind the counts.
-        seq: Sequence,
+        seq: Source,
         /// Whether zero stays in the counts.
         zeros: bool,
         /// Whether one stays in the counts.
@@ -380,7 +381,7 @@ pub enum Counts {
 
 impl Counts {
     /// Builds the counts a sequence lays down, keeping zeros and ones on request.
-    pub fn drawn(seq: Sequence, zeros: bool, ones: bool) -> Counts {
+    pub fn drawn(seq: Source, zeros: bool, ones: bool) -> Counts {
         Counts::Drawn { seq, zeros, ones }
     }
     /// Returns the counts, a drawn side resolved against the mask's neighbor budget.
@@ -408,69 +409,69 @@ mod tests {
     use super::*;
     #[test]
     fn number_sequences_clip_to_limit() {
-        assert_eq!(sequence(Sequence::Primes, 8).unwrap(), vec![2, 3, 5, 7]);
-        assert_eq!(sequence(Sequence::Binary, 8).unwrap(), vec![1, 2, 4, 8]);
+        assert_eq!(sequence(Source::Primes, 8).unwrap(), vec![2, 3, 5, 7]);
+        assert_eq!(sequence(Source::Binary, 8).unwrap(), vec![1, 2, 4, 8]);
     }
     #[test]
     fn grid_squares_walk() {
-        assert_eq!(sequence(Sequence::GridSquares, 8).unwrap(), vec![1]);
-        assert_eq!(sequence(Sequence::GridSquares, 30).unwrap(), vec![1, 9, 25]);
+        assert_eq!(sequence(Source::GridSquares, 8).unwrap(), vec![1]);
+        assert_eq!(sequence(Source::GridSquares, 30).unwrap(), vec![1, 9, 25]);
     }
     #[test]
     fn counts_can_drop_zero_and_one() {
-        let c = counts(Sequence::Evens, 8, false, true).unwrap();
+        let c = counts(Source::Evens, 8, false, true).unwrap();
         assert_eq!(c, vec![2, 4, 6, 8]);
-        let c = counts(Sequence::Evens, 8, true, true).unwrap();
+        let c = counts(Source::Evens, 8, true, true).unwrap();
         assert_eq!(c, vec![0, 2, 4, 6, 8]);
     }
     #[test]
     fn parse_roundtrips() {
-        for s in Sequence::all() {
-            assert_eq!(Sequence::parse(&s.name()).unwrap(), s);
+        for s in Source::all() {
+            assert_eq!(Source::parse(&s.name()).unwrap(), s);
         }
     }
     #[test]
     fn random_draws_a_seeded_sorted_subset() {
-        let a = sequence(Sequence::Random(42), 8).unwrap();
-        let b = sequence(Sequence::Random(42), 8).unwrap();
+        let a = sequence(Source::Random(42), 8).unwrap();
+        let b = sequence(Source::Random(42), 8).unwrap();
         assert_eq!(a, b);
         assert!(!a.is_empty() && a.len() <= 9);
         assert!(a.windows(2).all(|w| w[0] < w[1]));
         assert!(a.iter().all(|&x| x <= 8));
-        assert_ne!(sequence(Sequence::Random(43), 64).unwrap(), a);
+        assert_ne!(sequence(Source::Random(43), 64).unwrap(), a);
     }
     #[test]
     fn a_random_name_regenerates_its_counts() {
-        let seq = Sequence::Random(4848495);
+        let seq = Source::Random(4848495);
         assert_eq!(seq.name(), "random_4848495");
-        let back = Sequence::parse(&seq.name()).unwrap();
+        let back = Source::parse(&seq.name()).unwrap();
         assert_eq!(back, seq);
         assert_eq!(sequence(back, 48).unwrap(), sequence(seq, 48).unwrap());
-        assert!(Sequence::parse("random").is_err());
-        assert!(Sequence::parse("random_").is_err());
-        assert!(Sequence::parse("random_007").is_err());
+        assert!(Source::parse("random").is_err());
+        assert!(Source::parse("random_").is_err());
+        assert!(Source::parse("random_007").is_err());
     }
     #[test]
     fn read_leaves_the_tail_behind() {
         assert_eq!(
-            Sequence::read("fibonacciz_s3"),
-            Some((Sequence::Fibonacci, "z_s3"))
+            Source::read("fibonacciz_s3"),
+            Some((Source::Fibonacci, "z_s3"))
         );
         assert_eq!(
-            Sequence::read("grid_squares_sgrid_squares"),
-            Some((Sequence::GridSquares, "_sgrid_squares"))
+            Source::read("grid_squares_sgrid_squares"),
+            Some((Source::GridSquares, "_sgrid_squares"))
         );
         assert_eq!(
-            Sequence::read("random_12_s3"),
-            Some((Sequence::Random(12), "_s3"))
+            Source::read("random_12_s3"),
+            Some((Source::Random(12), "_s3"))
         );
-        assert_eq!(Sequence::read("fib"), None);
-        assert_eq!(Sequence::read("3"), None);
+        assert_eq!(Source::read("fib"), None);
+        assert_eq!(Source::read("3"), None);
     }
     #[test]
     fn read_takes_the_longest_name_not_the_first() {
-        for short in Sequence::all() {
-            for long in Sequence::all() {
+        for short in Source::all() {
+            for long in Source::all() {
                 if short == long || short.is_random() || long.is_random() {
                     continue;
                 }
@@ -478,56 +479,56 @@ mod tests {
                     continue;
                 }
                 let name = long.name();
-                assert_eq!(Sequence::read(&name), Some((long, "")), "{name}");
+                assert_eq!(Source::read(&name), Some((long, "")), "{name}");
             }
         }
         assert_eq!(
-            Sequence::read("code_fills_12"),
-            Some((Sequence::CodeFills(12), ""))
+            Source::read("code_fills_12"),
+            Some((Source::CodeFills(12), ""))
         );
         assert_eq!(
-            Sequence::read("random_4848495z_s3"),
-            Some((Sequence::Random(4848495), "z_s3"))
+            Source::read("random_4848495z_s3"),
+            Some((Source::Random(4848495), "z_s3"))
         );
     }
     #[test]
     fn every_fixed_name_reads_back_whole() {
-        for seq in Sequence::all() {
+        for seq in Source::all() {
             if seq.is_random() {
                 continue;
             }
             let name = seq.name();
-            assert_eq!(Sequence::read(&name), Some((seq, "")), "{name}");
+            assert_eq!(Source::read(&name), Some((seq, "")), "{name}");
         }
     }
     #[test]
     fn tiers_split_the_fixed_sequences() {
-        assert!(Sequence::numbers().iter().any(|s| s.is_random()));
-        assert!(Sequence::designs().contains(&Sequence::GridSquares));
-        let mut both = Sequence::numbers().to_vec();
-        both.extend(Sequence::designs());
-        assert_eq!(both, Sequence::all().to_vec());
+        assert!(Source::numbers().iter().any(|s| s.is_random()));
+        assert!(Source::designs().contains(&Source::GridSquares));
+        let mut both = Source::numbers().to_vec();
+        both.extend(Source::designs());
+        assert_eq!(both, Source::all().to_vec());
     }
     #[test]
     fn oeis_aliases_parse_either_case() {
-        assert_eq!(Sequence::parse("A005843").unwrap(), Sequence::Evens);
-        assert_eq!(Sequence::parse("a000045").unwrap(), Sequence::Fibonacci);
-        assert_eq!(Sequence::parse("A016754").unwrap(), Sequence::GridSquares);
-        assert!(Sequence::parse("A999999").is_err());
+        assert_eq!(Source::parse("A005843").unwrap(), Source::Evens);
+        assert_eq!(Source::parse("a000045").unwrap(), Source::Fibonacci);
+        assert_eq!(Source::parse("A016754").unwrap(), Source::GridSquares);
+        assert!(Source::parse("A999999").is_err());
     }
     #[test]
     fn oeis_ids_roundtrip_through_parse() {
         let mut listed = 0;
-        for s in Sequence::all() {
+        for s in Source::all() {
             if let Some(id) = s.oeis() {
-                assert_eq!(Sequence::parse(id).unwrap(), s);
+                assert_eq!(Source::parse(id).unwrap(), s);
                 listed += 1;
             }
         }
         assert_eq!(listed, 6);
-        assert_eq!(Sequence::Random(0).oeis(), None);
-        assert_eq!(Sequence::CarpetFills.oeis(), None);
-        assert_eq!(Sequence::CodeFills(7).oeis(), None);
+        assert_eq!(Source::Random(0).oeis(), None);
+        assert_eq!(Source::CarpetFills.oeis(), None);
+        assert_eq!(Source::CodeFills(7).oeis(), None);
     }
     #[test]
     fn names_stay_canonical() {
@@ -548,7 +549,7 @@ mod tests {
             "void_fills",
             "void_voids",
         ];
-        for (s, want) in Sequence::all().into_iter().zip(expected) {
+        for (s, want) in Source::all().into_iter().zip(expected) {
             assert_eq!(s.name(), want);
         }
     }
@@ -556,7 +557,7 @@ mod tests {
     fn code_sequences_match_formulas() {
         use crate::math::counts;
         for code in [1u128, 7, 14, 15] {
-            let seq = sequence(Sequence::CodeFills(code), 50).unwrap();
+            let seq = sequence(Source::CodeFills(code), 50).unwrap();
             let expected: Vec<usize> = {
                 let mut v = Vec::new();
                 let mut n = 1;
@@ -575,22 +576,19 @@ mod tests {
     }
     #[test]
     fn code_name_roundtrips() {
-        let s = Sequence::CodeVoids(9);
+        let s = Source::CodeVoids(9);
         assert_eq!(s.name(), "code_voids_9");
-        assert_eq!(Sequence::parse(&s.name()).unwrap(), s);
-        assert_eq!(
-            Sequence::parse("code_fills_7").unwrap(),
-            Sequence::CodeFills(7)
-        );
-        assert!(Sequence::parse("code_fills_x").is_err());
+        assert_eq!(Source::parse(&s.name()).unwrap(), s);
+        assert_eq!(Source::parse("code_fills_7").unwrap(), Source::CodeFills(7));
+        assert!(Source::parse("code_fills_x").is_err());
     }
     #[test]
     fn counts_carry_a_list_or_a_sequence() {
         let listed = Counts::from(vec![3, 3, 1]);
         assert_eq!(listed.values(8).unwrap(), vec![1, 3]);
-        let drawn = Counts::drawn(Sequence::Fibonacci, false, false);
+        let drawn = Counts::drawn(Source::Fibonacci, false, false);
         assert_eq!(drawn.values(8).unwrap(), vec![2, 3, 5, 8]);
-        let wide = Counts::drawn(Sequence::Fibonacci, true, true);
+        let wide = Counts::drawn(Source::Fibonacci, true, true);
         assert_eq!(wide.values(24).unwrap(), vec![0, 1, 2, 3, 5, 8, 13, 21]);
     }
 }

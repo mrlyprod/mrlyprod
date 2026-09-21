@@ -1,8 +1,8 @@
 use figures::{ink, plot, save, Board, Frame};
 use mrlyrs::core::error::Result;
 use mrlyrs::core::Color;
-use mrlyrs::num::formulas;
 use mrlyrs::num::series::EULER;
+use mrlyrs::num::{prime, series};
 use std::f64::consts::{E, PI};
 
 const TOP: usize = 2000;
@@ -68,21 +68,21 @@ fn main() -> Result<()> {
     }
     assert_eq!(panels.len(), 8);
 
-    chaser(&mut board, panels[0], &rungs, formulas::wallis, PI / 2.0);
-    chaser(&mut board, panels[1], &rungs, formulas::leibniz, PI / 4.0);
     chaser(
         &mut board,
-        panels[2],
+        panels[0],
         &rungs,
-        formulas::basel,
-        PI * PI / 6.0,
+        series::wallis_half_pi,
+        PI / 2.0,
     );
-    chaser(&mut board, panels[3], &rungs, formulas::e_partial, E);
+    chaser(&mut board, panels[1], &rungs, series::leibniz, PI / 4.0);
+    chaser(&mut board, panels[2], &rungs, series::basel, PI * PI / 6.0);
+    chaser(&mut board, panels[3], &rungs, series::e_partial, E);
     chaser(
         &mut board,
         panels[4],
         &rungs,
-        formulas::euler_gamma_partial,
+        series::euler_gamma_partial,
         EULER,
     );
     for panel in &panels[..5] {
@@ -90,18 +90,16 @@ fn main() -> Result<()> {
     }
 
     let counted = trace(panels[5], &rungs, |m| {
-        let li = formulas::li(m as f64);
-        (formulas::prime_count(m) as f64 - li).abs() / li
+        let li = series::li(m as f64);
+        (prime::prime_count(m) as f64 - li).abs() / li
     });
     stage(&mut board, panels[5], &counted, ink::yellow());
 
-    let comet = trace(panels[6], &rungs, |m| {
-        1.0 / formulas::goldbach(2 * m) as f64
-    });
+    let comet = trace(panels[6], &rungs, |m| 1.0 / prime::goldbach(2 * m) as f64);
     stage(&mut board, panels[6], &comet, ink::yellow());
 
     let meter = trace(panels[7], &rungs, |m| {
-        formulas::mertens(m).unsigned_abs() as f64 / (m as f64).sqrt()
+        series::mertens(m).unsigned_abs() as f64 / (m as f64).sqrt()
     });
     plot::dots(&mut board, &meter, 2.4, ink::orange());
     plot::axis(&mut board, panels[7], ink::line());

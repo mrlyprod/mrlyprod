@@ -1,5 +1,5 @@
+use crate::num::prime::flags;
 use crate::num::prime::is_prime;
-use crate::num::spiral::flags;
 
 const ROOT3: f64 = 1.732_050_807_568_877_2;
 
@@ -95,10 +95,10 @@ impl Ring {
     ///
     /// ```
     /// use mrlyrs::num::gauss::Ring;
-    /// assert_eq!(Ring::Gaussian.gcd((5, 0), (2, 1)), (2, 1));
-    /// assert_eq!(Ring::Gaussian.gcd((3, 0), (0, 7)), (1, 0));
+    /// assert_eq!(Ring::Gaussian.gaussian_gcd((5, 0), (2, 1)), (2, 1));
+    /// assert_eq!(Ring::Gaussian.gaussian_gcd((3, 0), (0, 7)), (1, 0));
     /// ```
-    pub fn gcd(self, z: (i64, i64), w: (i64, i64)) -> (i64, i64) {
+    pub fn gaussian_gcd(self, z: (i64, i64), w: (i64, i64)) -> (i64, i64) {
         let (mut z, mut w) = (z, w);
         while w != (0, 0) {
             let (_, r) = self.div_rem(z, w);
@@ -562,7 +562,7 @@ mod tests {
             (1, 4, 4, 0, 8, 12)
         );
         for (n, &count) in shells(Ring::Gaussian, 2000).iter().enumerate().skip(1) {
-            let (d1, d3) = divisors(n).iter().fold((0, 0), |(d1, d3), &d| {
+            let (d1, d3) = divisors(n as u64).iter().fold((0, 0), |(d1, d3), &d| {
                 (d1 + (d % 4 == 1) as u32, d3 + (d % 4 == 3) as u32)
             });
             assert_eq!(count, 4 * (d1 - d3), "{n}");
@@ -570,7 +570,7 @@ mod tests {
         let hex = shells(Ring::Eisenstein, 7);
         assert_eq!(hex, vec![1, 6, 0, 6, 6, 0, 0, 12]);
         for (n, &count) in shells(Ring::Eisenstein, 300).iter().enumerate().skip(1) {
-            let chi: i32 = divisors(n)
+            let chi: i32 = divisors(n as u64)
                 .iter()
                 .map(|&d| match d % 3 {
                     1 => 1,
@@ -623,7 +623,7 @@ mod tests {
                             if (a, b) == (0, 0) || (c, d) == (0, 0) {
                                 continue;
                             }
-                            let g = ring.gcd((a, b), (c, d));
+                            let g = ring.gaussian_gcd((a, b), (c, d));
                             assert_eq!(ring.canon(g.0, g.1), g, "{ring:?} {a} {b} {c} {d}");
                             assert!(divides(ring, (a, b), g), "{ring:?} {a} {b} {c} {d}");
                             assert!(divides(ring, (c, d), g), "{ring:?} {a} {b} {c} {d}");

@@ -6,14 +6,13 @@ One arm reads number: primes with their ranks, gaps and square shapes, factoriza
 
 ## Instruments
 
-- **prime** tests, lists and studies primes: rank, gap, twin, and the rectangles, splits and squares a number makes.
-- **factor** splits a number into primes, divisors, totient, radical and Mobius value.
+- **prime** sieves, tests, lists and studies primes: rank, gap, twin, the prime and Goldbach counts, and the rectangles, splits and squares a number makes.
+- **factor** splits a number into primes, divisors, totients, radical and Mobius value, over the exact gcd, factorial and fraction reduction.
 - **design** enumerates the digit designs on the integer line, meters their Mobius values, splits the meter into its density echo and residual, and reads the ordinates its log-uniform spectrum carries against the zeta zeros and the design's own pole lattice.
-- **classics** lists the evens, odds, powers of two, Fibonacci, Catalan and prime sequences, with exact gcd and fraction reduction.
 - **blend** adds, convolves, shifts and differences sequences, then recovers the exact recurrence and its growth rate.
-- **series** sums harmonic, zeta, beta and Dirichlet series, counts visible lattice points, and pins the Bernoulli fractions.
+- **series** lists the evens, odds, powers of two, Fibonacci and Catalan sequences, sums harmonic, zeta, beta and Dirichlet series, walks the partials to pi, e and gamma, counts visible lattice points, and pins the Bernoulli fractions.
 - **sieve** builds the Wallis sieve and its solid and constant-schedule cousins as schedule words, counts their cells and punctures, and prints the area, the box exponent and the limits in closed form.
-- **lattice** lists the reduced fractions of a window as nodes, counts coprime pairs, and estimates pi from them.
+- **lattice** walks the reduced fractions of a window as Farey nodes, counts coprime pairs, and estimates pi from them.
 - **fft** transforms in one and two dimensions and centres a field's magnitude spectrum.
 - **boolean** takes a truth table's Walsh spectrum, nonlinearity, balance and avalanche.
 - **gauss** classifies the Gaussian and the Eisenstein integers as units, split, inert or ramified primes, counts a symmetric window, and weighs the norm shells.

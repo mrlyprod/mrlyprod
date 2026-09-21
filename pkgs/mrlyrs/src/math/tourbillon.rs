@@ -1,9 +1,8 @@
 use crate::core::error::{value_error, Result};
 use crate::core::Rng;
 use crate::math::spin::Blend;
-use crate::num::classics::primes;
 use crate::num::factor::{factorize, gcd, mobius, squarefree};
-use crate::num::prime::{is_prime, squares};
+use crate::num::prime::{is_prime, primes, squares};
 
 const SCALE_CAP: usize = 199;
 const SIZE_FLOOR: usize = 16;
@@ -93,7 +92,7 @@ pub fn eyes(qmax: usize) -> Vec<Eye> {
     let mut out = Vec::new();
     for denom in 1..=qmax {
         for step in 0..=4 * denom {
-            if gcd(step, denom) != 1 {
+            if gcd(step as u128, denom as u128) != 1 {
                 continue;
             }
             out.push(Eye {

@@ -1,7 +1,8 @@
 use figures::{ink, save, Board};
 use mrlyrs::core::error::Result;
 use mrlyrs::math::two::designs;
-use mrlyrs::num::classics::{fibonacci, gcd};
+use mrlyrs::num::factor::gcd;
+use mrlyrs::num::series::fibonacci;
 use std::collections::HashMap;
 
 const LEVEL: usize = 5;

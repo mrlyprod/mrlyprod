@@ -16,7 +16,7 @@ fn nodes(bound: u64) -> Vec<(f64, f64, usize)> {
         let lit = classes(RING, bound / n as u64).len();
         for p in 0..n {
             for q in 0..n {
-                let g = RING.gcd((p, q), den);
+                let g = RING.gaussian_gcd((p, q), den);
                 if RING.norm(g.0, g.1) != 1 {
                     continue;
                 }

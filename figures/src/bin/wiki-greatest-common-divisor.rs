@@ -15,7 +15,7 @@ fn main() -> Result<()> {
         for col in 0..SIDE {
             let a = col + 1;
             let b = SIDE - row;
-            let share = gcd(a, b);
+            let share = gcd(a as u128, b as u128) as usize;
             let tone = if share == 1 {
                 lit += 1;
                 ink::yellow()

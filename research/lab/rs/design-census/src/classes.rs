@@ -1,7 +1,6 @@
 use crate::fills::cell_index;
 use crate::tables::write_csv;
-use mrlyrs::math::bang::baseq::fill_from_corners;
-use mrlyrs::math::bang::counting;
+use mrlyrs::math::bang::baseq::{distinct_designs, fill_from_corners};
 use mrlyrs::math::bang::factory::code_to_corners;
 use mrlyrs::math::bang::Code;
 use mrlyrs::math::rules::render;
@@ -14,7 +13,7 @@ const SIDES: [usize; 3] = [3, 5, 7];
 const LEVELS: [usize; 3] = [1, 2, 3];
 const SEQUENCE: usize = 9;
 const TABLE: usize = 8;
-const CLASS_SUM_LIMIT: usize = 6;
+const BURNSIDE_LIMIT: usize = 6;
 const PUBLISHED: [&str; 16] = [
     "2",
     "4",
@@ -179,8 +178,8 @@ pub fn report(path: &Path) {
     let mut records = Vec::new();
     for dimension in 1..=TABLE {
         let designs = BigUint::from(2u32).pow(1 << dimension);
-        let shapes = (dimension <= CLASS_SUM_LIMIT)
-            .then(|| counting::distinct_designs(dimension).expect("the class sums close"))
+        let shapes = (dimension <= BURNSIDE_LIMIT)
+            .then(|| distinct_designs(2, dimension).expect("the Burnside average is an integer"))
             .map(|value| value.to_string())
             .unwrap_or_default();
         let classes = a129824(dimension);
@@ -199,6 +198,6 @@ pub fn report(path: &Path) {
             ratios.to_string(),
         ]);
     }
-    println!("written counts.csv, A000616 by class sums to D = {CLASS_SUM_LIMIT}");
+    println!("written counts.csv, A000616 by Burnside to D = {BURNSIDE_LIMIT}");
     write_csv(path, &header, &records);
 }

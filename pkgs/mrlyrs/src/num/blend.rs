@@ -1,3 +1,5 @@
+use crate::num::factor::gcd;
+
 const PRIMES: [u64; 3] = [2_147_483_647, 2_147_483_629, 2_147_483_587];
 
 /// Adds two sequences term by term over their shared length.
@@ -215,7 +217,7 @@ fn verify(terms: &[i128], coefficients: &[(i128, i128)]) -> bool {
     let order = coefficients.len();
     let mut clear = 1i128;
     for &(_, den) in coefficients {
-        clear = clear / gcd(clear, den) * den;
+        clear = clear / gcd(clear.unsigned_abs(), den.unsigned_abs()) as i128 * den;
     }
     let weights: Vec<i128> = coefficients
         .iter()
@@ -261,14 +263,6 @@ fn verify(terms: &[i128], coefficients: &[(i128, i128)]) -> bool {
             sum == c * seq[n] as u128 % p
         })
     })
-}
-
-fn gcd(a: i128, b: i128) -> i128 {
-    let (mut a, mut b) = (a.abs(), b.abs());
-    while b != 0 {
-        (a, b) = (b, a % b);
-    }
-    a.max(1)
 }
 
 /// Finds the smallest linear constant-coefficient recurrence that fits every supplied term.
@@ -375,7 +369,8 @@ pub fn growth(coefficients: &[(i128, i128)]) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::num::classics::{catalan, primes};
+    use crate::num::prime::primes;
+    use crate::num::series::catalan;
 
     fn fibonacci(count: usize) -> Vec<i128> {
         let mut out = vec![0i128, 1];

@@ -4,98 +4,95 @@ use super::colors::{
     BLACK, BLUE, BROWN, CYAN, GRAY, GREEN, INDIGO, MINT, ORANGE, PINK, PURPLE, RED, TEAL, WHITE,
     YELLOW,
 };
-use super::error::{value_error, MrlyError, Result};
+use super::error::{value_error, Result};
+use super::named_enum;
 use super::rng::Rng;
 use super::state::{choice, randint, sample, shuffle};
 use super::tensor::{Dtype, Tensor};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// The seven ways a paint distributes its colors over a cell.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum Edition {
-    /// One color per cell type.
-    Simple,
-    /// Color by cell index.
-    Index,
-    /// Color by concentric layer.
-    Layers,
-    /// Color by neighbor count.
-    Neighbors,
-    /// Color by row.
-    Rows,
-    /// Color by column.
-    Columns,
-    /// A random color per cell.
-    Random,
+named_enum! {
+    /// The seven ways a paint distributes its colors over a cell.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+    pub enum Edition {
+        /// One color per cell type.
+        Simple => "Simple",
+        /// Color by cell index.
+        Index => "Index",
+        /// Color by concentric layer.
+        Layers => "Layers",
+        /// Color by neighbor count.
+        Neighbors => "Neighbors",
+        /// Color by row.
+        Rows => "Rows",
+        /// Color by column.
+        Columns => "Columns",
+        /// A random color per cell.
+        Random => "Random",
+    }
 }
 
-/// The fifteen named inks a paint draws from.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum Ink {
-    /// Black (0, 0, 0).
-    Black,
-    /// White (255, 255, 255).
-    White,
-    /// Red (255, 61, 64).
-    Red,
-    /// Orange (255, 143, 44).
-    Orange,
-    /// Yellow (255, 209, 0).
-    Yellow,
-    /// Green (50, 204, 88).
-    Green,
-    /// Mint (0, 209, 187).
-    Mint,
-    /// Teal (0, 202, 216).
-    Teal,
-    /// Cyan (30, 201, 243).
-    Cyan,
-    /// Blue (0, 140, 255).
-    Blue,
-    /// Indigo (103, 104, 250).
-    Indigo,
-    /// Purple (211, 50, 233).
-    Purple,
-    /// The palette pink.
-    Pink,
-    /// Brown (177, 132, 98).
-    Brown,
-    /// Gray (142, 142, 147).
-    Gray,
+named_enum! {
+    /// The fifteen named inks a paint draws from.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+    pub enum Ink {
+        /// Black (0, 0, 0).
+        Black => "Black",
+        /// White (255, 255, 255).
+        White => "White",
+        /// Red (255, 61, 64).
+        Red => "Red",
+        /// Orange (255, 143, 44).
+        Orange => "Orange",
+        /// Yellow (255, 209, 0).
+        Yellow => "Yellow",
+        /// Green (50, 204, 88).
+        Green => "Green",
+        /// Mint (0, 209, 187).
+        Mint => "Mint",
+        /// Teal (0, 202, 216).
+        Teal => "Teal",
+        /// Cyan (30, 201, 243).
+        Cyan => "Cyan",
+        /// Blue (0, 140, 255).
+        Blue => "Blue",
+        /// Indigo (103, 104, 250).
+        Indigo => "Indigo",
+        /// Purple (211, 50, 233).
+        Purple => "Purple",
+        /// The palette pink.
+        Pink => "Pink",
+        /// Brown (177, 132, 98).
+        Brown => "Brown",
+        /// Gray (142, 142, 147).
+        Gray => "Gray",
+    }
 }
 
-/// The two ways secondary colors are drawn.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum Scheme {
-    /// Distinct secondary inks.
-    Multicolor,
-    /// One secondary ink stepped through shades.
-    Multitone,
+named_enum! {
+    /// The two ways secondary colors are drawn.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+    pub enum Scheme {
+        /// Distinct secondary inks.
+        Multicolor => "Multicolor",
+        /// One secondary ink stepped through shades.
+        Multitone => "Multitone",
+    }
 }
 
-/// The side of the figure the primary ink lands on.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum Target {
-    /// The primary on the filled cells, secondaries on the empty.
-    Fill,
-    /// The primary on the empty cells, secondaries on the filled.
-    Void,
+named_enum! {
+    /// The side of the figure the primary ink lands on.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+    pub enum Target {
+        /// The primary on the filled cells, secondaries on the empty.
+        Fill => "Fill",
+        /// The primary on the empty cells, secondaries on the filled.
+        Void => "Void",
+    }
 }
 
 impl Edition {
-    /// Returns every edition in canonical order.
-    pub fn all() -> [Edition; 7] {
-        [
-            Edition::Simple,
-            Edition::Index,
-            Edition::Layers,
-            Edition::Neighbors,
-            Edition::Rows,
-            Edition::Columns,
-            Edition::Random,
-        ]
-    }
     /// Returns the cell-painting mode this edition renders with.
     pub fn mode(self) -> Mode {
         match self {
@@ -106,31 +103,6 @@ impl Edition {
             Edition::Rows => Mode::Row,
             Edition::Columns => Mode::Column,
             Edition::Random => Mode::Random,
-        }
-    }
-    /// Returns the edition's display name.
-    pub fn name(self) -> &'static str {
-        match self {
-            Edition::Simple => "Simple",
-            Edition::Index => "Index",
-            Edition::Layers => "Layers",
-            Edition::Neighbors => "Neighbors",
-            Edition::Rows => "Rows",
-            Edition::Columns => "Columns",
-            Edition::Random => "Random",
-        }
-    }
-    /// Parses a display name back into its edition, or an error for an unknown name.
-    pub fn parse(name: &str) -> Result<Edition> {
-        match name {
-            "Simple" => Ok(Edition::Simple),
-            "Index" => Ok(Edition::Index),
-            "Layers" => Ok(Edition::Layers),
-            "Neighbors" => Ok(Edition::Neighbors),
-            "Rows" => Ok(Edition::Rows),
-            "Columns" => Ok(Edition::Columns),
-            "Random" => Ok(Edition::Random),
-            other => value_error(format!("unknown edition {other:?}.")),
         }
     }
 }
@@ -154,97 +126,6 @@ impl Ink {
             Ink::Pink => PINK,
             Ink::Brown => BROWN,
             Ink::Gray => GRAY,
-        }
-    }
-    /// Returns every ink in canonical order.
-    pub fn all() -> [Ink; 15] {
-        [
-            Ink::Black,
-            Ink::White,
-            Ink::Red,
-            Ink::Orange,
-            Ink::Yellow,
-            Ink::Green,
-            Ink::Mint,
-            Ink::Teal,
-            Ink::Cyan,
-            Ink::Blue,
-            Ink::Indigo,
-            Ink::Purple,
-            Ink::Pink,
-            Ink::Brown,
-            Ink::Gray,
-        ]
-    }
-    /// Returns the ink's display name.
-    pub fn name(self) -> &'static str {
-        match self {
-            Ink::Black => "Black",
-            Ink::White => "White",
-            Ink::Red => "Red",
-            Ink::Orange => "Orange",
-            Ink::Yellow => "Yellow",
-            Ink::Green => "Green",
-            Ink::Mint => "Mint",
-            Ink::Teal => "Teal",
-            Ink::Cyan => "Cyan",
-            Ink::Blue => "Blue",
-            Ink::Indigo => "Indigo",
-            Ink::Purple => "Purple",
-            Ink::Pink => "Pink",
-            Ink::Brown => "Brown",
-            Ink::Gray => "Gray",
-        }
-    }
-    /// Parses a display name back into its ink, or an error for an unknown name.
-    pub fn parse(name: &str) -> Result<Ink> {
-        Ink::all()
-            .into_iter()
-            .find(|ink| ink.name() == name)
-            .ok_or_else(|| MrlyError::Value(format!("unknown ink {name:?}.")))
-    }
-}
-
-impl Scheme {
-    /// Returns both schemes.
-    pub fn all() -> [Scheme; 2] {
-        [Scheme::Multicolor, Scheme::Multitone]
-    }
-    /// Returns the scheme's display name.
-    pub fn name(self) -> &'static str {
-        match self {
-            Scheme::Multicolor => "Multicolor",
-            Scheme::Multitone => "Multitone",
-        }
-    }
-    /// Parses a display name back into its scheme, or an error for an unknown name.
-    pub fn parse(name: &str) -> Result<Scheme> {
-        match name {
-            "Multicolor" => Ok(Scheme::Multicolor),
-            "Multitone" => Ok(Scheme::Multitone),
-            other => value_error(format!("unknown scheme {other:?}.")),
-        }
-    }
-}
-
-impl Target {
-    /// Returns both targets.
-    pub fn all() -> [Target; 2] {
-        [Target::Fill, Target::Void]
-    }
-    /// Returns the target's display name.
-    pub fn name(self) -> &'static str {
-        match self {
-            Target::Fill => "Fill",
-            Target::Void => "Void",
-        }
-    }
-    /// Parses a display name back into its target, or an error for an unknown name.
-    pub fn parse(name: &str) -> Result<Target> {
-        match name {
-            "Fill" => Ok(Target::Fill),
-            "Void" => Ok(Target::Void),
-            other => value_error(format!("unknown target {other:?}.")),
         }
     }
 }
@@ -673,16 +554,16 @@ mod tests {
     #[test]
     fn names_parse_back() {
         for edition in Edition::all() {
-            assert_eq!(edition, Edition::parse(edition.name()).unwrap());
+            assert_eq!(edition, edition.name().parse().unwrap());
         }
         for ink in Ink::all() {
-            assert_eq!(ink, Ink::parse(ink.name()).unwrap());
+            assert_eq!(ink, ink.name().parse().unwrap());
         }
         for scheme in Scheme::all() {
-            assert_eq!(scheme, Scheme::parse(scheme.name()).unwrap());
+            assert_eq!(scheme, scheme.name().parse().unwrap());
         }
         for target in Target::all() {
-            assert_eq!(target, Target::parse(target.name()).unwrap());
+            assert_eq!(target, target.name().parse().unwrap());
         }
     }
     #[test]

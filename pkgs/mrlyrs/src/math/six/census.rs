@@ -215,7 +215,10 @@ mod tests {
 #[cfg(test)]
 mod theorems {
     use super::*;
-    use crate::math::counts::six as formulas;
+    use crate::math::counts::six::{
+        solid_slice_boundary, solid_slice_edges, solid_slice_interior, solid_slice_triangles,
+        solid_slice_vertices,
+    };
     use crate::math::six::geometry::cut;
     use crate::math::six::graph::slice_core_graph;
     use crate::math::three;
@@ -275,11 +278,11 @@ mod theorems {
             assert_eq!(readings(&rec)[4], 12 * k * k - 6 * k + 1, "k={k}");
             assert_eq!(rec.euler, 1, "k={k}");
             let closed = [
-                formulas::solid_slice_triangles(number).unwrap(),
-                formulas::solid_slice_boundary(number).unwrap(),
-                formulas::solid_slice_edges(number).unwrap(),
-                formulas::solid_slice_interior(number).unwrap(),
-                formulas::solid_slice_vertices(number).unwrap(),
+                solid_slice_triangles(number).unwrap(),
+                solid_slice_boundary(number).unwrap(),
+                solid_slice_edges(number).unwrap(),
+                solid_slice_interior(number).unwrap(),
+                solid_slice_vertices(number).unwrap(),
             ];
             for (got, want) in readings(&rec).iter().zip(closed) {
                 assert_eq!(*got as u128, want, "k={k}");
@@ -313,11 +316,11 @@ mod theorems {
             assert_eq!(
                 readings(&rec).map(|v| v as u128),
                 [
-                    formulas::solid_slice_triangles(number).unwrap(),
-                    formulas::solid_slice_boundary(number).unwrap(),
-                    formulas::solid_slice_edges(number).unwrap(),
-                    formulas::solid_slice_interior(number).unwrap(),
-                    formulas::solid_slice_vertices(number).unwrap(),
+                    solid_slice_triangles(number).unwrap(),
+                    solid_slice_boundary(number).unwrap(),
+                    solid_slice_edges(number).unwrap(),
+                    solid_slice_interior(number).unwrap(),
+                    solid_slice_vertices(number).unwrap(),
                 ],
                 "k={k}"
             );

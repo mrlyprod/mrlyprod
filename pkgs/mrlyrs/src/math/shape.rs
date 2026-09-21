@@ -1,6 +1,6 @@
 use crate::core::error::{value_error, Result};
 use crate::core::tensor::Tensor;
-use crate::num::classics::gcd;
+use crate::num::factor::gcd;
 
 // FRACTIONS
 

@@ -1,4 +1,4 @@
-use crate::core::error::{value_error, Result};
+use crate::core::named_enum;
 use serde::{Deserialize, Serialize};
 
 pub use crate::math::bang::catalog::{
@@ -17,63 +17,33 @@ pub const MAX_LEVEL: usize = 6;
 /// The most slots a magic tile may take.
 pub const MAX_SLOTS: usize = 6;
 
-/// The five construction families a tile can belong to.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum Group {
-    /// One source at one flat size.
-    General,
-    /// One source raised to a power.
-    Fractal,
-    /// A magic-recipe construction.
-    Magic,
-    /// A one-off special construction.
-    Special,
-    /// Sources nested as a product of factors.
-    Mosaic,
+named_enum! {
+    /// The five construction families a tile can belong to.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+    pub enum Group {
+        /// One source at one flat size.
+        General => "General",
+        /// One source raised to a power.
+        Fractal => "Fractal",
+        /// A magic-recipe construction.
+        Magic => "Magic",
+        /// A one-off special construction.
+        Special => "Special",
+        /// Sources nested as a product of factors.
+        Mosaic => "Mosaic",
+    }
 }
 
-/// The parity filter over candidate sizes.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum Parity {
-    /// Even sizes only.
-    Evens,
-    /// Odd sizes only.
-    Odds,
-    /// Every size.
-    Both,
-}
-
-impl Group {
-    /// Returns the group's display name.
-    pub fn name(self) -> &'static str {
-        match self {
-            Group::General => "General",
-            Group::Fractal => "Fractal",
-            Group::Magic => "Magic",
-            Group::Special => "Special",
-            Group::Mosaic => "Mosaic",
-        }
-    }
-    /// Parses a display name back into its group, or an error for an unknown name.
-    pub fn parse(name: &str) -> Result<Group> {
-        match name {
-            "General" => Ok(Group::General),
-            "Fractal" => Ok(Group::Fractal),
-            "Magic" => Ok(Group::Magic),
-            "Special" => Ok(Group::Special),
-            "Mosaic" => Ok(Group::Mosaic),
-            other => value_error(format!("unknown group {other:?}.")),
-        }
-    }
-    /// Returns every group in canonical order.
-    pub fn all() -> [Group; 5] {
-        [
-            Group::General,
-            Group::Fractal,
-            Group::Magic,
-            Group::Special,
-            Group::Mosaic,
-        ]
+named_enum! {
+    /// The parity filter over candidate sizes.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+    pub enum Parity {
+        /// Even sizes only.
+        Evens => "Evens",
+        /// Odd sizes only.
+        Odds => "Odds",
+        /// Every size.
+        Both => "Both",
     }
 }
 
@@ -84,23 +54,6 @@ impl Parity {
             Parity::Evens => n.is_multiple_of(2),
             Parity::Odds => !n.is_multiple_of(2),
             Parity::Both => true,
-        }
-    }
-    /// Returns the parity's display name.
-    pub fn name(self) -> &'static str {
-        match self {
-            Parity::Evens => "Evens",
-            Parity::Odds => "Odds",
-            Parity::Both => "Both",
-        }
-    }
-    /// Parses a display name back into its parity, or an error for an unknown name.
-    pub fn parse(name: &str) -> Result<Parity> {
-        match name {
-            "Evens" => Ok(Parity::Evens),
-            "Odds" => Ok(Parity::Odds),
-            "Both" => Ok(Parity::Both),
-            other => value_error(format!("unknown parity {other:?}.")),
         }
     }
 }
@@ -366,6 +319,15 @@ pub fn nestings(min_size: usize, max_size: usize, parity: Parity) -> Vec<Vec<usi
 mod tests {
     use super::*;
     use crate::core::json;
+    #[test]
+    fn names_parse_back() {
+        for group in Group::all() {
+            assert_eq!(group, group.name().parse().unwrap());
+        }
+        for parity in Parity::all() {
+            assert_eq!(parity, parity.name().parse().unwrap());
+        }
+    }
     #[test]
     fn parity_filters() {
         assert!(Parity::Odds.keep(3));

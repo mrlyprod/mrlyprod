@@ -1,4 +1,4 @@
-use super::sequence::Counts;
+use super::source::Counts;
 use super::{Boundary, Fate};
 use crate::core::error::Result;
 use crate::math::two::Cell2d;

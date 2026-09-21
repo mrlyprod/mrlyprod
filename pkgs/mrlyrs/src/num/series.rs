@@ -1,5 +1,5 @@
-use crate::num::classics::primes;
-use crate::num::factor::mobius_sieve;
+use crate::num::factor::{gcd, mobius_sieve};
+use crate::num::prime::primes;
 use std::f64::consts::PI;
 
 /// The Basel constant, pi squared over six, the value zeta takes at two.
@@ -16,6 +16,65 @@ pub const APERY: f64 = 1.202_056_903_159_594;
 
 /// The Euler constant, the limit of the harmonic sum less the logarithm.
 pub const EULER: f64 = 0.577_215_664_901_532_9;
+
+// THE CLASSIC SEQUENCES
+
+/// Returns the even numbers up to the limit.
+pub fn evens(limit: usize) -> Vec<usize> {
+    (0..=limit).step_by(2).collect()
+}
+
+/// Returns the odd numbers up to the limit.
+pub fn odds(limit: usize) -> Vec<usize> {
+    (1..=limit).step_by(2).collect()
+}
+
+/// Returns the powers of two up to the limit.
+pub fn binary(limit: usize) -> Vec<usize> {
+    let mut out = Vec::new();
+    let mut value = 1;
+    while value <= limit {
+        out.push(value);
+        value *= 2;
+    }
+    out
+}
+
+/// Returns the distinct Fibonacci numbers up to the limit.
+pub fn fibonacci(limit: usize) -> Vec<usize> {
+    let mut out = Vec::new();
+    let (mut a, mut b) = (0usize, 1usize);
+    while a <= limit {
+        if !out.contains(&a) {
+            out.push(a);
+        }
+        let next = a + b;
+        a = b;
+        b = next;
+    }
+    out
+}
+
+/// Returns the distinct Catalan numbers up to the limit.
+///
+/// ```
+/// assert_eq!(mrlyrs::num::series::catalan(50), vec![1, 2, 5, 14, 42]);
+/// ```
+pub fn catalan(limit: usize) -> Vec<usize> {
+    let mut out = Vec::new();
+    let mut value: u128 = 1;
+    let mut index: u128 = 0;
+    while value <= limit as u128 {
+        if out.last() != Some(&(value as usize)) {
+            out.push(value as usize);
+        }
+        value = value * 2 * (2 * index + 1) / (index + 2);
+        index += 1;
+    }
+    out
+}
+
+// THE INFINITE SUMS
 
 /// Returns the logarithmic integral of a positive x by the Ramanujan series, the smooth count of the primes below x.
 ///
@@ -143,8 +202,10 @@ pub fn visible(limit: usize, dimension: u32) -> u128 {
     total as u128
 }
 
-/// Returns the Wallis product of one minus one over the odd squares, walking to pi over four.
-pub fn wallis(factors: usize) -> f64 {
+// THE PARTIALS THAT WALK TO A CONSTANT
+
+/// Returns the Wallis product of one minus one over the odd squares taken to n factors, walking to pi over four.
+pub fn wallis_quarter_pi(factors: usize) -> f64 {
     let mut out = 1.0;
     for n in 1..=factors {
         let odd = (2 * n + 1) as f64;
@@ -153,11 +214,80 @@ pub fn wallis(factors: usize) -> f64 {
     out
 }
 
-fn reduce(num: i128, den: i128) -> (i128, i128) {
-    let (mut a, mut b) = (num.abs(), den.abs());
-    while b != 0 {
-        (a, b) = (b, a % b);
+/// Returns the Wallis product taken to n paired factors, four k squared over four k squared less one, walking to pi over two.
+///
+/// ```
+/// assert!((mrlyrs::num::series::wallis_half_pi(1) - 4.0 / 3.0).abs() < 1e-15);
+/// ```
+pub fn wallis_half_pi(n: usize) -> f64 {
+    let mut out = 1.0;
+    for k in 1..=n {
+        let square = ((2 * k) * (2 * k)) as f64;
+        out *= square / (square - 1.0);
     }
+    out
+}
+
+/// Returns the Leibniz alternating sum of the odd reciprocals over n terms, walking to pi over four.
+///
+/// ```
+/// assert!((mrlyrs::num::series::leibniz(2) - 2.0 / 3.0).abs() < 1e-15);
+/// ```
+pub fn leibniz(n: usize) -> f64 {
+    let mut out = 0.0;
+    for k in 0..n {
+        let term = 1.0 / (2 * k + 1) as f64;
+        out += if k.is_multiple_of(2) { term } else { -term };
+    }
+    out
+}
+
+/// Returns the Basel sum of the reciprocal squares over n terms, walking to pi squared over six.
+///
+/// ```
+/// assert!((mrlyrs::num::series::basel(3) - 49.0 / 36.0).abs() < 1e-15);
+/// ```
+pub fn basel(n: usize) -> f64 {
+    (1..=n).map(|k| 1.0 / (k * k) as f64).sum()
+}
+
+/// Returns the harmonic sum of n terms less the logarithm of n, walking to the Euler-Mascheroni constant.
+///
+/// ```
+/// assert!((mrlyrs::num::series::euler_gamma_partial(1) - 1.0).abs() < 1e-15);
+/// ```
+pub fn euler_gamma_partial(n: usize) -> f64 {
+    if n == 0 {
+        return 0.0;
+    }
+    harmonic(n) - (n as f64).ln()
+}
+
+/// Returns one plus one over n raised to the n, walking to the natural base.
+///
+/// ```
+/// assert!((mrlyrs::num::series::e_partial(1) - 2.0).abs() < 1e-15);
+/// ```
+pub fn e_partial(n: usize) -> f64 {
+    if n == 0 {
+        return 1.0;
+    }
+    (1.0 + 1.0 / n as f64).powf(n as f64)
+}
+
+/// Returns the Mertens function at n, the Mobius values of one through n summed.
+///
+/// ```
+/// assert_eq!(mrlyrs::num::series::mertens(100), 1);
+/// ```
+pub fn mertens(n: usize) -> i64 {
+    mobius_sieve(n).iter().skip(1).map(|&v| i64::from(v)).sum()
+}
+
+// THE BERNOULLI FRACTIONS
+
+fn reduce(num: i128, den: i128) -> (i128, i128) {
+    let a = gcd(num.unsigned_abs(), den.unsigned_abs()) as i128;
     let sign = if den < 0 { -1 } else { 1 };
     if a == 0 {
         return (0, 1);
@@ -198,6 +328,43 @@ pub fn bernoulli(count: usize) -> Vec<(i128, i128)> {
 mod tests {
     use super::*;
     use crate::num::lattice::coprime_pairs;
+    use std::f64::consts::E;
+
+    #[test]
+    fn evens_and_odds() {
+        assert_eq!(evens(8), vec![0, 2, 4, 6, 8]);
+        assert_eq!(odds(8), vec![1, 3, 5, 7]);
+    }
+
+    #[test]
+    fn binary_powers() {
+        assert_eq!(binary(20), vec![1, 2, 4, 8, 16]);
+        assert_eq!(binary(0), Vec::<usize>::new());
+    }
+
+    #[test]
+    fn fibonacci_dedups_zero_one() {
+        assert_eq!(fibonacci(13), vec![0, 1, 2, 3, 5, 8, 13]);
+    }
+
+    #[test]
+    fn catalan_dedups_the_double_one() {
+        assert_eq!(catalan(1500), vec![1, 2, 5, 14, 42, 132, 429, 1430]);
+        assert_eq!(catalan(0), Vec::<usize>::new());
+    }
+
+    #[test]
+    fn catalan_matches_the_binomial_form() {
+        let list = catalan(40_000_000);
+        for (n, &value) in list.iter().enumerate().skip(1) {
+            let m = n + 1;
+            let mut binom: u128 = 1;
+            for i in 0..m {
+                binom = binom * (2 * m - i) as u128 / (i + 1) as u128;
+            }
+            assert_eq!(value as u128, binom / (m as u128 + 1), "{m}");
+        }
+    }
 
     #[test]
     fn zeta_meets_the_basel_the_apery_and_the_quartic_sum() {
@@ -295,8 +462,34 @@ mod tests {
     }
 
     #[test]
-    fn wallis_walks_to_a_quarter_turn() {
-        assert!((wallis(1_000_000) - PI / 4.0).abs() < 1e-6);
+    fn the_small_partials_are_their_exact_fractions() {
+        assert!((wallis_half_pi(1) - 4.0 / 3.0).abs() < 1e-15);
+        assert!((wallis_half_pi(2) - 64.0 / 45.0).abs() < 1e-15);
+        assert!((wallis_quarter_pi(1) - 8.0 / 9.0).abs() < 1e-15);
+        assert!((leibniz(1) - 1.0).abs() < 1e-15);
+        assert!((leibniz(2) - 2.0 / 3.0).abs() < 1e-15);
+        assert!((basel(3) - 49.0 / 36.0).abs() < 1e-15);
+        assert!((euler_gamma_partial(1) - 1.0).abs() < 1e-15);
+        assert!((e_partial(2) - 2.25).abs() < 1e-15);
+    }
+
+    #[test]
+    fn the_six_partials_walk_to_their_constants() {
+        assert!((wallis_quarter_pi(1_000_000) - PI / 4.0).abs() < 1e-6);
+        assert!((wallis_half_pi(200_000) - PI / 2.0).abs() < 1e-5);
+        assert!((leibniz(200_000) - PI / 4.0).abs() < 1e-5);
+        assert!((basel(200_000) - PI * PI / 6.0).abs() < 1e-4);
+        assert!((euler_gamma_partial(200_000) - EULER).abs() < 1e-5);
+        assert!((e_partial(200_000) - E).abs() < 1e-4);
+    }
+
+    #[test]
+    fn mertens_sums_the_mobius_values() {
+        assert_eq!(mertens(0), 0);
+        assert_eq!(mertens(1), 1);
+        assert_eq!(mertens(100), 1);
+        assert_eq!(mertens(1000), 2);
+        assert_eq!(mertens(10_000), -23);
     }
 
     #[test]

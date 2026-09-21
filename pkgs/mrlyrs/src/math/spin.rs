@@ -1,3 +1,4 @@
+use crate::num::factor::gcd;
 use std::f64::consts::{PI, SQRT_2};
 
 fn centre(size: usize) -> f64 {
@@ -99,14 +100,6 @@ pub fn harmonics(data: &[f32], size: usize, rings: usize, orders: usize) -> Vec<
     power
 }
 
-fn gcd(a: usize, b: usize) -> usize {
-    if b == 0 {
-        a
-    } else {
-        gcd(b, a % b)
-    }
-}
-
 /// The rotation order a harmonic power spectrum reveals: the gcd of the orders carrying more than a ten-thousandth of the power, the share pixel aliasing stays under, or zero when none does.
 pub fn turns(power: &[f64]) -> usize {
     let total: f64 = power.iter().sum();
@@ -115,7 +108,7 @@ pub fn turns(power: &[f64]) -> usize {
         .enumerate()
         .skip(1)
         .filter(|&(_, &p)| p > 1e-4 * total)
-        .fold(0, |g, (m, _)| gcd(g, m))
+        .fold(0, |g, (m, _)| gcd(g as u128, m as u128) as usize)
 }
 
 /// The petals a full radial stack of the copies shows on a design of the rotation order: their least common multiple.
@@ -123,7 +116,7 @@ pub fn petals(copies: usize, order: usize) -> usize {
     if copies == 0 || order == 0 {
         return 0;
     }
-    copies / gcd(copies, order) * order
+    copies / gcd(copies as u128, order as u128) as usize * order
 }
 
 /// The way radial copies merge: their mean, their sum, their union, their meet, their parity or what the first keeps that no other has.

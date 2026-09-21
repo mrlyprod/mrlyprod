@@ -13,7 +13,7 @@ fn main() -> Result<()> {
     let mut circles = 0usize;
     for b in 1..=ORDER {
         for a in 0..=b {
-            if gcd(a, b) != 1 {
+            if gcd(a as u128, b as u128) != 1 {
                 continue;
             }
             let r = frame.w / (2 * b * b) as f64;

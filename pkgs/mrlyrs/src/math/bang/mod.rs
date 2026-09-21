@@ -1,9 +1,7 @@
-/// The base-q symmetry maps and distinct-design counts.
+/// The base-q symmetry maps, the design counts raw and distinct, and the fill classes.
 pub mod baseq;
 /// The cached canonical codes and tile sources of a dimension.
 pub mod catalog;
-/// The design counts, raw and distinct under symmetry.
-pub mod counting;
 /// The packing of residue corners into codes and back.
 pub mod factory;
 /// The corners, codes and symmetries that name designs.

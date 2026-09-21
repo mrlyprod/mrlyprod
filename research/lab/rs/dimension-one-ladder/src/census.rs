@@ -35,7 +35,7 @@ pub fn rays(level: u32) -> (u64, Vec<Ray>) {
         let mut y = free;
         loop {
             let (a, b) = (value[x], value[y]);
-            let g = gcd(a as usize, b as usize) as u64;
+            let g = gcd(a as u128, b as u128) as u64;
             if g == 1 {
                 coprime += 1;
             }

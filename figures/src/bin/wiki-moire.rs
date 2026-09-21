@@ -10,7 +10,7 @@ fn marks(n: usize) -> Vec<f64> {
 
 fn main() -> Result<()> {
     let (small, large) = SCALES;
-    let common = gcd(small, large);
+    let common = gcd(small as u128, large as u128) as usize;
     let shared = marks(common);
     let thin = marks(small);
     let thick = marks(large);

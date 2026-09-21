@@ -12,7 +12,7 @@ fn main() -> Result<()> {
     let universe = bang::bang(3);
     assert_eq!(universe.total, 256);
     assert_eq!(universe.distinct(), 22);
-    assert_eq!(bang::counting::distinct_designs(3)?, 22);
+    assert_eq!(bang::baseq::distinct_designs(2, 3)?, 22);
     assert_eq!(bang::corners(3).len(), 8);
 
     let pitch = area.w / CENSUS as f64;

@@ -3,6 +3,7 @@ use crate::core::tensor::Tensor;
 use crate::math::bang::factory;
 use crate::math::bang::universe::Code;
 use crate::math::two;
+use crate::num::factor::gcd;
 
 /// Builds the base-2 design mask a code names at an odd side grown to the given Kronecker level, its centre popped.
 pub fn design_mask(dimension: usize, code: Code, number: usize, level: usize) -> Result<Tensor> {
@@ -23,16 +24,6 @@ pub fn design_mask(dimension: usize, code: Code, number: usize, level: usize) ->
     let centre = (number.pow(level as u32) - 1) / 2;
     mask.set(&vec![centre; dimension], 0);
     Ok(mask)
-}
-
-fn gcd(a: i64, b: i64) -> i64 {
-    let (mut a, mut b) = (a.abs(), b.abs());
-    while b != 0 {
-        let rest = a % b;
-        a = b;
-        b = rest;
-    }
-    a
 }
 
 fn egcd(a: i64, b: i64) -> (i64, i64, i64) {
@@ -70,7 +61,9 @@ pub fn mask_offsets(mask: &Tensor) -> Vec<Vec<i64>> {
 pub fn lattice_index(mask: &Tensor) -> usize {
     let offsets = mask_offsets(mask);
     if mask.shape.len() == 1 {
-        return offsets.iter().fold(0i64, |g, v| gcd(g, v[0])) as usize;
+        return offsets
+            .iter()
+            .fold(0u128, |g, v| gcd(g, v[0].unsigned_abs().into())) as usize;
     }
     let (mut pivot, mut shear) = (0i64, 0i64);
     for offset in &offsets {
@@ -81,14 +74,15 @@ pub fn lattice_index(mask: &Tensor) -> usize {
     if pivot == 0 {
         return 0;
     }
-    let mut rise = 0i64;
+    let mut rise = 0u128;
     for offset in &offsets {
-        rise = gcd(rise, offset[1] - (offset[0] / pivot) * shear);
+        let step = offset[1] - (offset[0] / pivot) * shear;
+        rise = gcd(rise, step.unsigned_abs().into());
     }
     if rise == 0 {
         return 0;
     }
-    (pivot * rise) as usize
+    (u128::from(pivot.unsigned_abs()) * rise) as usize
 }
 
 #[cfg(test)]

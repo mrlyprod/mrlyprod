@@ -1,5 +1,5 @@
 use super::universe::bang;
-use crate::core::error::{value_error, Result};
+use crate::core::named_enum;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::sync::{Mutex, OnceLock};
@@ -48,86 +48,42 @@ pub enum Catalog {
     Codes(Vec<u128>),
 }
 
-/// The named designs a source can point at: the four classics and their four antis.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum Design {
-    /// The carpet with a lattice of holes.
-    Carpet,
-    /// The net of crossing lines.
-    Net,
-    /// The stripes along the even rows.
-    Htree,
-    /// The stripes along the even columns.
-    Vtree,
-    /// The checkerboard lattice.
-    Void,
-    /// The beams along the x axis.
-    Xtree,
-    /// The beams along the y axis.
-    Ytree,
-    /// The beams along the z axis.
-    Ztree,
-    /// The points at the odd-odd sites.
-    Point,
-    /// The dust at the even-even sites.
-    Dust,
-    /// The lines along the odd rows.
-    Hline,
-    /// The lines along the odd columns.
-    Vline,
-    /// The star of sites with exactly one odd coordinate.
-    Star,
-    /// The rods along the x axis.
-    Xline,
-    /// The rods along the y axis.
-    Yline,
-    /// The rods along the z axis.
-    Zline,
-}
-
-impl Design {
-    /// Returns the design's display name.
-    pub fn name(self) -> &'static str {
-        match self {
-            Design::Carpet => "Carpet",
-            Design::Net => "Net",
-            Design::Htree => "Htree",
-            Design::Vtree => "Vtree",
-            Design::Void => "Void",
-            Design::Xtree => "Xtree",
-            Design::Ytree => "Ytree",
-            Design::Ztree => "Ztree",
-            Design::Point => "Point",
-            Design::Dust => "Dust",
-            Design::Hline => "Hline",
-            Design::Vline => "Vline",
-            Design::Star => "Star",
-            Design::Xline => "Xline",
-            Design::Yline => "Yline",
-            Design::Zline => "Zline",
-        }
-    }
-    /// Parses a display name back into its design, or an error for an unknown name.
-    pub fn parse(name: &str) -> Result<Design> {
-        match name {
-            "Carpet" => Ok(Design::Carpet),
-            "Net" => Ok(Design::Net),
-            "Htree" => Ok(Design::Htree),
-            "Vtree" => Ok(Design::Vtree),
-            "Void" => Ok(Design::Void),
-            "Xtree" => Ok(Design::Xtree),
-            "Ytree" => Ok(Design::Ytree),
-            "Ztree" => Ok(Design::Ztree),
-            "Point" => Ok(Design::Point),
-            "Dust" => Ok(Design::Dust),
-            "Hline" => Ok(Design::Hline),
-            "Vline" => Ok(Design::Vline),
-            "Star" => Ok(Design::Star),
-            "Xline" => Ok(Design::Xline),
-            "Yline" => Ok(Design::Yline),
-            "Zline" => Ok(Design::Zline),
-            other => value_error(format!("unknown design {other:?}.")),
-        }
+named_enum! {
+    /// The named designs a source can point at: the four classics and their four antis.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+    pub enum Design {
+        /// The carpet with a lattice of holes.
+        Carpet => "Carpet",
+        /// The net of crossing lines.
+        Net => "Net",
+        /// The stripes along the even rows.
+        Htree => "Htree",
+        /// The stripes along the even columns.
+        Vtree => "Vtree",
+        /// The checkerboard lattice.
+        Void => "Void",
+        /// The beams along the x axis.
+        Xtree => "Xtree",
+        /// The beams along the y axis.
+        Ytree => "Ytree",
+        /// The beams along the z axis.
+        Ztree => "Ztree",
+        /// The points at the odd-odd sites.
+        Point => "Point",
+        /// The dust at the even-even sites.
+        Dust => "Dust",
+        /// The lines along the odd rows.
+        Hline => "Hline",
+        /// The lines along the odd columns.
+        Vline => "Vline",
+        /// The star of sites with exactly one odd coordinate.
+        Star => "Star",
+        /// The rods along the x axis.
+        Xline => "Xline",
+        /// The rods along the y axis.
+        Yline => "Yline",
+        /// The rods along the z axis.
+        Zline => "Zline",
     }
 }
 
@@ -221,6 +177,12 @@ pub fn antis(dimension: usize) -> Vec<Design> {
 mod tests {
     use super::*;
     use crate::core::json;
+    #[test]
+    fn names_parse_back() {
+        for design in Design::all() {
+            assert_eq!(design, design.name().parse().unwrap());
+        }
+    }
     #[test]
     fn catalog_classics_are_named_designs() {
         assert_eq!(

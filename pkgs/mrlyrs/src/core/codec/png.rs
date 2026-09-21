@@ -5,6 +5,9 @@ use png::{
     Transformations,
 };
 
+/// The eight bytes every png file starts with.
+pub const PNG_MAGIC: [u8; 8] = [137, 80, 78, 71, 13, 10, 26, 10];
+
 impl From<png::EncodingError> for MrlyError {
     fn from(error: png::EncodingError) -> MrlyError {
         MrlyError::Value(error.to_string())
@@ -197,7 +200,7 @@ mod tests {
             [255, 255, 0, 255],
         ];
         let bytes = png(&colors, 2, 2, 4).unwrap();
-        assert_eq!(&bytes[0..8], &[137, 80, 78, 71, 13, 10, 26, 10]);
+        assert_eq!(&bytes[0..8], &PNG_MAGIC);
         assert_eq!(&bytes[16..20], &8u32.to_be_bytes());
         assert_eq!(&bytes[20..24], &8u32.to_be_bytes());
     }

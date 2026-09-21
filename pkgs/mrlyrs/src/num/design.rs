@@ -74,43 +74,6 @@ pub fn size(digits: &[u64], depth: usize) -> u128 {
     total
 }
 
-/// Returns the Mobius value of every number by trial division over the primes below the square root of the largest.
-///
-/// ```
-/// assert_eq!(mrlyrs::num::design::mobius_of(&[1, 2, 3, 4, 5, 6]), vec![1, -1, -1, 0, -1, 1]);
-/// ```
-pub fn mobius_of(values: &[u64]) -> Vec<i8> {
-    let top = values.iter().copied().max().unwrap_or(0);
-    let root = (top as f64).sqrt() as usize + 2;
-    let primes: Vec<u64> = crate::num::classics::primes(root)
-        .into_iter()
-        .map(|p| p as u64)
-        .collect();
-    values
-        .iter()
-        .map(|&value| {
-            let mut rest = value;
-            let mut sign = 1i8;
-            for &p in &primes {
-                if p * p > rest {
-                    break;
-                }
-                if rest % p == 0 {
-                    rest /= p;
-                    if rest % p == 0 {
-                        return 0;
-                    }
-                    sign = -sign;
-                }
-            }
-            if rest > 1 {
-                sign = -sign;
-            }
-            sign
-        })
-        .collect()
-}
-
 /// Returns the running design Mobius meter, the partial sums of the Mobius values along the elements.
 ///
 /// ```
@@ -315,17 +278,10 @@ mod tests {
     }
 
     #[test]
-    fn the_two_mobius_paths_agree() {
-        let values = elements(3, &[0, 1], 12);
-        let quick = mobius_of(&values);
-        let slow: Vec<i8> = values.iter().map(|&v| mobius(v as usize)).collect();
-        assert_eq!(quick, slow);
-    }
-
-    #[test]
     fn the_frequency_axis_is_two_pi_over_the_log_range() {
         let values = elements(3, &[0, 1], 10);
-        let running = meter(&mobius_of(&values));
+        let mu: Vec<i8> = values.iter().map(|&v| mobius(v as usize)).collect();
+        let running = meter(&mu);
         let log_x = log_grid(&values, 1024);
         let series = resample(&values, &running, 0.5 * 2f64.ln() / 3f64.ln(), &log_x);
         let (gamma, power) = spectrum(&log_x, &series);

@@ -1,6 +1,7 @@
 use figures::{ink, save, Board};
 use mrlyrs::core::error::Result;
-use mrlyrs::num::spiral::{flags, Lattice};
+use mrlyrs::num::prime::flags;
+use mrlyrs::num::spiral::Lattice;
 
 const SIDE: usize = 101;
 const REACH: i64 = 50;

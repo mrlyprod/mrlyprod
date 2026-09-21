@@ -1,5 +1,4 @@
-use crate::num::classics::primes;
-use crate::num::factor::factorize_wide;
+use crate::num::factor::{divisors, factorize_wide};
 use crate::num::series::li;
 
 /// Returns whether the number is prime, by trial division on the six-step wheel.
@@ -36,24 +35,18 @@ pub fn prime_from(number: usize) -> usize {
     n
 }
 
-/// Returns every rectangle of the number as a pair of sides, the shorter first, ascending.
+/// Returns every rectangle of the number as a pair of sides, the shorter first, ascending: the divisors at or below the root.
 ///
 /// ```
 /// assert_eq!(mrlyrs::num::prime::rectangles(6), vec![(1, 6), (2, 3)]);
 /// ```
 pub fn rectangles(number: usize) -> Vec<(usize, usize)> {
-    let mut out = Vec::new();
-    if number == 0 {
-        return out;
-    }
-    let mut a = 1;
-    while a <= number / a {
-        if number.is_multiple_of(a) {
-            out.push((a, number / a));
-        }
-        a += 1;
-    }
-    out
+    divisors(number as u64)
+        .into_iter()
+        .map(|side| side as usize)
+        .filter(|&a| a <= number / a)
+        .map(|a| (a, number / a))
+        .collect()
 }
 
 /// Returns every pair of primes summing to the number, odd numbers included, the smaller first, ascending.
@@ -201,6 +194,65 @@ impl Sieve {
     }
 }
 
+/// Returns whether every number from zero through the limit is prime, the finished sieve read flag by flag.
+///
+/// The flag is the prime mark, never the strike rank, so it is exact at any limit.
+pub fn flags(limit: usize) -> Vec<bool> {
+    let mut sieve = Sieve::new(limit);
+    sieve.finish();
+    sieve.types().iter().map(|&t| t == 1).collect()
+}
+
+/// Returns the primes up to the limit, the finished sieve read as a list.
+pub fn primes(limit: usize) -> Vec<usize> {
+    flags(limit)
+        .iter()
+        .enumerate()
+        .filter(|&(_, &prime)| prime)
+        .map(|(number, _)| number)
+        .collect()
+}
+
+/// Returns the count of primes at or below n.
+///
+/// ```
+/// assert_eq!(mrlyrs::num::prime::prime_count(100), 25);
+/// ```
+pub fn prime_count(n: usize) -> usize {
+    primes(n).len()
+}
+
+fn pairs(flag: &[bool], number: usize) -> usize {
+    (2..=number / 2)
+        .filter(|&p| flag[p] && flag[number - p])
+        .count()
+}
+
+/// Returns the count of unordered pairs of primes summing to the number, zero below four.
+///
+/// ```
+/// assert_eq!(mrlyrs::num::prime::goldbach(100), 6);
+/// ```
+pub fn goldbach(number: usize) -> usize {
+    if number < 4 {
+        return 0;
+    }
+    pairs(&flags(number), number)
+}
+
+/// Returns the count of prime pairs at every even number from four up to the top, one entry per even number.
+///
+/// ```
+/// assert_eq!(mrlyrs::num::prime::goldbach_record(10), vec![1, 1, 1, 2]);
+/// ```
+pub fn goldbach_record(top: usize) -> Vec<usize> {
+    if top < 4 {
+        return Vec::new();
+    }
+    let flag = flags(top);
+    (2..=top / 2).map(|k| pairs(&flag, 2 * k)).collect()
+}
+
 /// A number as a pile of stones: its prime factors, whether it is prime, and every rectangle the stones make.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Pile {
@@ -223,24 +275,10 @@ pub struct Pile {
 /// ```
 pub fn pile(number: u64) -> Pile {
     let factors = factorize_wide(number);
-    let mut sides = vec![1u64];
-    for &(prime, power) in &factors {
-        let mut next = Vec::with_capacity(sides.len() * (power as usize + 1));
-        for &side in &sides {
-            let mut value = side;
-            next.push(value);
-            for _ in 0..power {
-                value *= prime;
-                next.push(value);
-            }
-        }
-        sides = next;
-    }
-    sides.sort_unstable();
-    let rectangles = sides
-        .iter()
-        .filter(|&&a| number > 0 && a <= number / a)
-        .map(|&a| (a, number / a))
+    let rectangles = divisors(number)
+        .into_iter()
+        .filter(|&a| a <= number / a)
+        .map(|a| (a, number / a))
         .collect();
     Pile {
         number,
@@ -294,6 +332,14 @@ pub fn chart(top: usize, bins: usize) -> Vec<Reading> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_sieve_reads_as_a_prime_list_and_as_flags() {
+        assert_eq!(primes(20), vec![2, 3, 5, 7, 11, 13, 17, 19]);
+        assert!(primes(1).is_empty());
+        assert!(primes(0).is_empty());
+        assert_eq!(flags(6), vec![false, false, true, true, false, true, false]);
+    }
 
     #[test]
     fn is_prime_agrees_with_the_sieve() {
@@ -397,10 +443,35 @@ mod tests {
         let mut hundred = Sieve::new(100);
         hundred.finish();
         assert_eq!((hundred.rank(), hundred.count()), (4, 25));
-        let listed: Vec<usize> = (0..=100).filter(|&n| hundred.types()[n] == 1).collect();
-        assert_eq!(listed, primes(100));
         assert_eq!(Sieve::new(3).count(), 2);
         assert_eq!(Sieve::new(0).count(), 0);
+    }
+
+    #[test]
+    fn the_prime_count_is_the_sieve() {
+        assert_eq!(prime_count(1), 0);
+        assert_eq!(prime_count(100), 25);
+        assert_eq!(prime_count(1000), 168);
+        assert_eq!(prime_count(10_000), 1229);
+    }
+
+    #[test]
+    fn goldbach_counts_the_prime_pairs_the_long_way() {
+        assert_eq!(goldbach(4), 1);
+        assert_eq!(goldbach(100), 6);
+        assert_eq!(goldbach(1000), 28);
+        for even in (4..=600).step_by(2) {
+            assert_eq!(goldbach(even), splits(even).len());
+        }
+    }
+
+    #[test]
+    fn the_goldbach_record_never_reaches_zero_below_ten_thousand() {
+        let record = goldbach_record(10_000);
+        assert_eq!(record.len(), 4999);
+        assert_eq!(record[0], 1);
+        assert_eq!(record[498], 28);
+        assert_eq!(record.iter().copied().min(), Some(1));
     }
 
     #[test]

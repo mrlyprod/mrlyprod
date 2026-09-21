@@ -79,7 +79,7 @@ pub static RECORDS: &[Record] = &[
     record("A000420", "Powers of 7: a(n) = 7^n", 0, "1, 7, 49, 343, 2401, 16807, 117649, 823543, 5764801, 40353607, 282475249, 1977326743", Tag::Proved, "7^level", FILLS).keyed(11, 2, Measure::Fills, Axis::Level, 0),
     record("A000567", "Octagonal numbers: n*(3*n-2)", 0, "0, 1, 8, 21, 40, 65, 96, 133, 176, 225, 280, 341", Tag::Proved, "k(3k - 2)", SIDES).keyed(7, 2, Measure::Fills, Axis::Side, 0),
     record("A000578", "The cubes: a(n) = n^3", 0, "0, 1, 8, 27, 64, 125, 216, 343, 512, 729, 1000, 1331", Tag::Proved, "k^3", SIDES).keyed(1, 3, Measure::Fills, Axis::Side, 0),
-    record("A000616", "a(-1)=1 by convention; for n >= 0, a(n) = number of irreducible Boolean functions of n variables", -1, "1, 2, 3, 6, 22, 402, 1228158, 400507806843728", Tag::Proved, "none", "mrlyrs::math::bang::counting::sequence, bijection.md"),
+    record("A000616", "a(-1)=1 by convention; for n >= 0, a(n) = number of irreducible Boolean functions of n variables", -1, "1, 2, 3, 6, 22, 402, 1228158, 400507806843728", Tag::Proved, "none", "mrlyrs::math::bang::baseq::sequence, bijection.md"),
     record("A001018", "Powers of 8: a(n) = 8^n", 0, "1, 8, 64, 512, 4096, 32768, 262144, 2097152, 16777216, 134217728, 1073741824, 8589934592", Tag::Proved, "8^level", FILLS).keyed(7, 2, Measure::Fills, Axis::Level, 0),
     record("A001024", "Powers of 15: a(n) = 15^n", 0, "1, 15, 225, 3375, 50625, 759375, 11390625, 170859375, 2562890625, 38443359375", Tag::Verified, "15^n", "REFS.md"),
     record("A001316", "Gould's sequence: number of odd entries in row n of Pascal's triangle", 0, "1, 2, 2, 4, 2, 4, 4, 8, 2, 4, 4, 8", Tag::Verified, "2^wt(n)", "REFS.md"),

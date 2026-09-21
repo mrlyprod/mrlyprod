@@ -14,7 +14,7 @@ pub fn the_moire_correlation_law_for_odd() -> Result<(), String> {
             if exact != correlation(n, m) {
                 return Err(format!("the law is not symmetric at {m} and {n}"));
             }
-            if (exact == 0.0) != (gcd(m, n) == 1) {
+            if (exact == 0.0) != (gcd(m as u128, n as u128) == 1) {
                 return Err(format!(
                     "the zero set is not the coprime set at {m} and {n}"
                 ));
@@ -43,7 +43,7 @@ pub fn the_moire_correlation_law_for_odd() -> Result<(), String> {
 }
 
 fn closed(m: usize, n: usize) -> f64 {
-    let factor = gcd(m, n) as i128;
+    let factor = gcd(m as u128, n as u128) as i128;
     let (m, n) = (m as i128, n as i128);
     let apart = (m - 1) * (n - 1);
     let echo = factor * factor - 1;

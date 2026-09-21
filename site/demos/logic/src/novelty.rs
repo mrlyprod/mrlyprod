@@ -1,5 +1,5 @@
 use crate::Fault;
-use mrlyrs::num::lattice::totients;
+use mrlyrs::num::factor::totients;
 use mrlyrs::num::zeta::{
     novelty_main, novelty_wave, sharp_novelty, smoothed_novelty, Complex, Line,
 };

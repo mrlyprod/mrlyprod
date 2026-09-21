@@ -115,6 +115,7 @@ impl TryFrom<Parts> for Image {
 mod tests {
     use super::*;
     use crate::core::json;
+    use crate::core::PNG_MAGIC;
 
     fn sample() -> Image {
         Image::new(
@@ -171,7 +172,7 @@ mod tests {
     #[test]
     fn png_delegates_to_the_codec() {
         let bytes = sample().png(4).unwrap();
-        assert_eq!(&bytes[0..8], &[137, 80, 78, 71, 13, 10, 26, 10]);
+        assert_eq!(&bytes[0..8], &PNG_MAGIC);
         assert!(sample().png(0).is_err());
     }
 

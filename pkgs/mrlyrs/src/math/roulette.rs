@@ -163,7 +163,7 @@ pub fn spread(track: &Track, pencils: &[Pencil], exact: bool) -> Vec<Pencil> {
     let mut out = Vec::new();
     for pencil in pencils {
         let key = match track.kind.as_str() {
-            "in" | "out" => least(pencil.seat, gcd(track.ratio.1, 4)),
+            "in" | "out" => least(pencil.seat, gcd(track.ratio.1 as u128, 4) as usize),
             _ => (out.len() as i64, 1),
         };
         if seen.insert(key, out.len()).is_none() {

@@ -1,5 +1,5 @@
 use crate::num::factor::mobius_sieve;
-use crate::num::prime::{is_prime, Sieve};
+use crate::num::prime::{flags, is_prime};
 
 const HEX: [(i64, i64); 6] = [(1, 0), (1, -1), (0, -1), (-1, 0), (-1, 1), (0, 1)];
 
@@ -162,13 +162,6 @@ impl Mark {
             _ => None,
         }
     }
-}
-
-/// Returns whether every number from zero through the limit is prime, by one sieve.
-pub fn flags(limit: usize) -> Vec<bool> {
-    let mut sieve = Sieve::new(limit);
-    sieve.finish();
-    sieve.types().iter().map(|&t| t == 1).collect()
 }
 
 /// Marks every number from zero through the limit: one when marked, minus one for a Mobius value of minus one, else zero.
@@ -392,8 +385,8 @@ pub fn snail(base: u64, top: u64, growth: Growth) -> Snail {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::num::classics::primes;
     use crate::num::factor::{mobius, squarefree};
+    use crate::num::prime::primes;
 
     #[test]
     fn the_square_spiral_pins_the_first_rings() {

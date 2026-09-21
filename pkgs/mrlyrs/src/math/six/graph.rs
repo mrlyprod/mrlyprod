@@ -97,7 +97,7 @@ pub fn slice_edge_graph(cell: &Cell6d, value: Option<u8>) -> Result<Network> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::counts::six as formulas;
+    use crate::math::counts::six::solid_slice_core_edges;
     use crate::math::six::geometry::blank;
     use crate::math::six::{Orientation, Projection};
     fn solid(radius: usize) -> Cell6d {
@@ -123,7 +123,7 @@ mod tests {
         }
         assert_eq!(
             slice_core_graph(&solid(3)).unwrap().branches.len() as u128,
-            formulas::solid_slice_core_edges(3).unwrap()
+            solid_slice_core_edges(3).unwrap()
         );
     }
     #[test]

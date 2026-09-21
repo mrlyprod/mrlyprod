@@ -15,7 +15,7 @@ fn nodes_of(dens: &[usize]) -> Vec<(usize, usize)> {
     let mut out = Vec::new();
     for &b in dens {
         for a in 1..=b {
-            if gcd(a, b) == 1 {
+            if gcd(a as u128, b as u128) == 1 {
                 out.push((a, b));
             }
         }
@@ -43,7 +43,7 @@ fn kernel(dilates: &[i64]) -> f64 {
             if dilates[e] == 0 {
                 continue;
             }
-            let g = gcd(d, e) as f64;
+            let g = gcd(d as u128, e as u128) as f64;
             total += g * g / (d as f64 * e as f64) * (dilates[d] * dilates[e]) as f64;
         }
     }

@@ -11,4 +11,4 @@ Chance is seeded, so a grid grown from one seed grows again from the same seed. 
 - **ramp** turns counter values into colors; **resample** rescales pixels and squashes them for hex.
 - **image** and **codec** turn colors into pngs and gifs, and back into pixels.
 - **chacha**, **rng**, and **state** deal seeded chance, as one stream or one global.
-- **error** and **logs** carry the plumbing: the one error, its Result, the json parser and the logarithm.
+- **error**, **logs** and **named** carry the plumbing: the one error, its Result, the json parser, the logarithm and the macro that names an enum.

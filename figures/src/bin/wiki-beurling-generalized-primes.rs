@@ -1,7 +1,6 @@
 use figures::{ink, plot, save, Board, Frame};
 use mrlyrs::core::error::Result;
-use mrlyrs::num::classics::primes;
-use mrlyrs::num::formulas;
+use mrlyrs::num::prime::{prime_count, primes};
 
 const TOP: usize = 100_000;
 const SAMPLES: usize = 1000;
@@ -28,7 +27,7 @@ fn main() -> Result<()> {
 
     assert_eq!(all_integers[TOP], TOP);
     assert_eq!(toy_integers[TOP], 9623);
-    assert_eq!(all_primes[TOP], formulas::prime_count(TOP));
+    assert_eq!(all_primes[TOP], prime_count(TOP));
     assert_eq!(all_primes[TOP], 9592);
     assert_eq!(toy_primes[TOP], 4783);
     assert_eq!(primes(TOP).len(), 9592);

@@ -1,6 +1,6 @@
 use figures::{ink, plot, save, Board, Frame};
 use mrlyrs::core::error::Result;
-use mrlyrs::num::lattice::totients;
+use mrlyrs::num::factor::totients;
 use mrlyrs::num::zeta::{novelty_main, novelty_wave, smoothed_novelty, Line};
 
 const LOW: f64 = 8.0;

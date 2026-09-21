@@ -1,6 +1,6 @@
 use crate::{checked, code_of, Fault};
 use mrlyrs::core::{json, Json, Rng};
-use mrlyrs::math::bang::{self, baseq, code_to_corners, counting};
+use mrlyrs::math::bang::{self, baseq, code_to_corners};
 use mrlyrs::math::counts;
 use mrlyrs::math::name::{Bang, Named};
 use wasm_bindgen::prelude::*;
@@ -61,7 +61,7 @@ pub fn universe(dimension: usize) -> Result<String, Fault> {
 /// Counts the designs distinct under symmetry for dimensions one through the limit, each as a decimal string.
 #[wasm_bindgen]
 pub fn counting_sequence(max_dimension: usize) -> Result<Vec<String>, Fault> {
-    Ok(strings(counting::sequence(max_dimension)?))
+    Ok(strings(baseq::sequence(2, max_dimension)?))
 }
 
 /// Counts the base-q designs distinct under symmetry for dimensions one through the limit, each as a decimal string.
@@ -73,7 +73,7 @@ pub fn baseq_sequence(base: usize, max_dimension: usize) -> Result<Vec<String>, 
 /// Counts the fill classes, the popcount profiles of the base-2 designs, for dimensions one through the limit, each as a decimal string.
 #[wasm_bindgen]
 pub fn classes_sequence(max_dimension: usize) -> Vec<String> {
-    strings(counting::class_sequence(max_dimension))
+    strings(baseq::class_sequence(max_dimension))
 }
 
 /// Counts the filled sites of the code's fractal at the level in closed form, as a decimal string.

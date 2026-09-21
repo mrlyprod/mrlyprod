@@ -1,7 +1,7 @@
 use figures::{ink, save, Board, Grid};
 use mrlyrs::core::error::Result;
 use mrlyrs::math::two::designs;
-use mrlyrs::num::classics::gcd;
+use mrlyrs::num::factor::gcd;
 
 fn main() -> Result<()> {
     let mut board = Board::square();

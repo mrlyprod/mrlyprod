@@ -15,7 +15,7 @@ Codes cross the boundary as decimal strings, because a design code is a u128 and
 - **crop** wraps `mrlyrs::math` and `mrlyrs::num`: designs trimmed to rational shapes, tallied, swept, drawn and masked.
 - **echo** wraps `mrlyrs::num`: the design Mobius meter against log x, its density echo, residual and spectral ordinates.
 - **font** wraps `mrlyrs::font`: text laid out as a grid, written in stroke order, cycled and read glyph by glyph.
-- **formulas** wraps `mrlyrs::num`: eight partial sums, products and prime counts read at one depth or walked to it.
+- **partials** wraps `mrlyrs::num`: eight partial sums, products and prime counts read at one depth or walked to it.
 - **gauss** wraps `mrlyrs::num`: the Gaussian and Eisenstein windows painted, counted, clicked and weighed by norm.
 - **graph** wraps `mrlyrs::math` and `mrlyrs::num`: design networks as nodes, branches, roles and censuses, relaxed by a seeded force layout.
 - **lab** wraps `mrlyrs::math`: the sequence press listed and counted, the moire presets rendered to pixels.

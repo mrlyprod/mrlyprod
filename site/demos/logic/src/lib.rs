@@ -26,8 +26,6 @@ pub mod crop;
 pub mod echo;
 /// The alphabet: text laid out as a grid, written in stroke order, cycled, and read glyph by glyph.
 pub mod font;
-/// The elementary formulas: eight partial sums, products and prime counts read at one depth and walked to it.
-pub mod formulas;
 /// The primes of the plane: the Gaussian and the Eisenstein windows painted, counted, clicked and weighed by norm.
 pub mod gauss;
 /// The networks of the designs: nodes, branches, roles and censuses, and the force layout that relaxes them.
@@ -50,6 +48,8 @@ pub mod modes;
 pub mod morse;
 /// The novelty meter: the totients read through a smooth and a sharp window on a log grid of y, and the waves of the first zeros that the smooth reading is.
 pub mod novelty;
+/// The elementary partials: eight partial sums, products and prime counts read at one depth and walked to it.
+pub mod partials;
 /// The primes: the sieve stepped, the stone pile, the count chart and the carpet witness.
 pub mod prime;
 /// The race: seeded walkers loose on a flat design.

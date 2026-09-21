@@ -1,13 +1,13 @@
 use figures::{ink, plot, save, Board};
 use mrlyrs::core::error::Result;
-use mrlyrs::num::formulas;
+use mrlyrs::num::prime;
 
 const TOP: usize = 400;
 
 fn main() -> Result<()> {
     let mut board = Board::square();
     let frame = board.frame(0.08);
-    let record = formulas::goldbach_record(TOP);
+    let record = prime::goldbach_record(TOP);
     let peak = record.iter().copied().max().unwrap_or(1) as f64;
     let slot = frame.w / record.len() as f64;
     let pad = slot * 0.16;

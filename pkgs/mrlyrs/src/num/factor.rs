@@ -1,5 +1,10 @@
 /// Returns the greatest common divisor of two numbers by the Euclidean algorithm, zero for two zeroes.
-pub fn gcd(a: usize, b: usize) -> usize {
+///
+/// ```
+/// assert_eq!(mrlyrs::num::factor::gcd(12, 18), 6);
+/// assert_eq!(mrlyrs::num::factor::gcd(7, 0), 7);
+/// ```
+pub fn gcd(a: u128, b: u128) -> u128 {
     let (mut a, mut b) = (a, b);
     while b != 0 {
         (a, b) = (b, a % b);
@@ -14,12 +19,29 @@ pub fn lcm(a: usize, b: usize) -> usize {
     if a == 0 || b == 0 {
         return 0;
     }
-    a / gcd(a, b) * b
+    a / gcd(a as u128, b as u128) as usize * b
 }
 
 /// Returns whether two numbers share no divisor above one.
 pub fn coprime(a: usize, b: usize) -> bool {
-    gcd(a, b) == 1
+    gcd(a as u128, b as u128) == 1
+}
+
+/// Reduces a fraction to its lowest terms, a zero numerator and denominator reading as zero over one.
+///
+/// ```
+/// assert_eq!(mrlyrs::num::factor::reduce(64, 128), (1, 2));
+/// ```
+pub fn reduce(numerator: u128, denominator: u128) -> (u128, u128) {
+    match gcd(numerator, denominator) {
+        0 => (0, 1),
+        divisor => (numerator / divisor, denominator / divisor),
+    }
+}
+
+/// Returns the factorial of the number, the product of one through it, exact up to thirty-four.
+pub fn factorial(number: usize) -> u128 {
+    (1..=number as u128).product()
 }
 
 fn peel(prime: u64, rest: &mut u64, out: &mut Vec<(u64, u32)>) {
@@ -70,13 +92,15 @@ pub fn factorize(number: usize) -> Vec<(usize, u32)> {
         .collect()
 }
 
-/// Builds every divisor of the number from its factorization, ascending, empty for zero.
-pub fn divisors(number: usize) -> Vec<usize> {
+/// Builds every divisor of a wide number from its factorization, ascending, empty for zero.
+///
+/// The width is the one the factorization needs, so a caller on the pointer width casts at its own call.
+pub fn divisors(number: u64) -> Vec<u64> {
     if number == 0 {
         return Vec::new();
     }
     let mut out = vec![1];
-    for (prime, power) in factorize(number) {
+    for (prime, power) in factorize_wide(number) {
         let mut next = Vec::with_capacity(out.len() * (power as usize + 1));
         for &divisor in &out {
             let mut value = divisor;
@@ -96,9 +120,9 @@ pub fn divisors(number: usize) -> Vec<usize> {
 ///
 /// Stays exact for a power of two or below, above which the sum can wrap past a hundred and twenty-eight bits.
 pub fn sigma(number: usize, power: u32) -> u128 {
-    divisors(number)
+    divisors(number as u64)
         .iter()
-        .map(|&divisor| (divisor as u128).pow(power))
+        .map(|&divisor| u128::from(divisor).pow(power))
         .sum()
 }
 
@@ -116,13 +140,15 @@ pub fn twisted(number: usize, rhythm: &[i8]) -> i64 {
     if rhythm.is_empty() {
         return 0;
     }
-    divisors(number)
+    divisors(number as u64)
         .iter()
-        .map(|&divisor| i64::from(rhythm[divisor % rhythm.len()]))
+        .map(|&divisor| i64::from(rhythm[divisor as usize % rhythm.len()]))
         .sum()
 }
 
 /// Returns the Mobius value of the number: zero for zero or a squared factor, else minus one to the count of primes.
+///
+/// The argument is the pointer width, so a wide value narrows on wasm32 above two to the thirty-two.
 pub fn mobius(number: usize) -> i8 {
     if number == 0 {
         return 0;
@@ -171,6 +197,23 @@ pub fn totient(number: usize) -> usize {
     out
 }
 
+/// Sieves the Euler totients of zero through n in one pass, the run beside the single value.
+///
+/// ```
+/// assert_eq!(mrlyrs::num::factor::totients(6), vec![0, 1, 1, 2, 2, 4, 2]);
+/// ```
+pub fn totients(n: usize) -> Vec<u64> {
+    let mut phi: Vec<u64> = (0..=n as u64).collect();
+    for p in 2..=n {
+        if phi[p] == p as u64 {
+            for m in (p..=n).step_by(p) {
+                phi[m] -= phi[m] / p as u64;
+            }
+        }
+    }
+    phi
+}
+
 /// Returns the radical of the number, the product of its distinct primes, zero for zero and one for one.
 pub fn radical(number: usize) -> usize {
     if number == 0 {
@@ -187,7 +230,6 @@ pub fn squarefree(number: usize) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::num::lattice::totients;
     use crate::num::prime::rectangles;
     use crate::num::series::{chi4, chi8};
 
@@ -231,7 +273,7 @@ mod tests {
         assert_eq!(divisors(1), vec![1]);
         assert_eq!(divisors(28), vec![1, 2, 4, 7, 14, 28]);
         for number in 1..=2_000usize {
-            let count = divisors(number).len() as u128;
+            let count = divisors(number as u64).len() as u128;
             assert_eq!(count, sigma(number, 0), "{number}");
             let root = number.isqrt();
             let square = u128::from(root * root == number);
@@ -310,7 +352,12 @@ mod tests {
     }
 
     #[test]
-    fn totient_agrees_with_the_lattice_sieve() {
+    fn totients_match_hand_checked_values() {
+        assert_eq!(totients(12), vec![0, 1, 1, 2, 2, 4, 2, 6, 4, 6, 4, 10, 4]);
+    }
+
+    #[test]
+    fn the_totient_sieve_agrees_with_the_single_value() {
         let sieved = totients(5_000);
         for (number, &value) in sieved.iter().enumerate() {
             assert_eq!(totient(number) as u64, value, "{number}");
@@ -337,8 +384,9 @@ mod tests {
         assert_eq!(lcm(0, 7), 0);
         for a in 1..=60usize {
             for b in 1..=60usize {
-                assert_eq!(gcd(a, b) * lcm(a, b), a * b, "{a} {b}");
-                assert_eq!(coprime(a, b), gcd(a, b) == 1, "{a} {b}");
+                let divisor = gcd(a as u128, b as u128) as usize;
+                assert_eq!(divisor * lcm(a, b), a * b, "{a} {b}");
+                assert_eq!(coprime(a, b), divisor == 1, "{a} {b}");
             }
         }
     }

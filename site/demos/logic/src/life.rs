@@ -2,7 +2,7 @@
 
 use crate::{code_of, Fault, Grid};
 use mrlyrs::core::{json, Rng, Tensor};
-use mrlyrs::life::{self, Boundary, Config, Sequence};
+use mrlyrs::life::{self, Boundary, Config, Source};
 use mrlyrs::math::two::Cell2d;
 use wasm_bindgen::prelude::*;
 
@@ -76,7 +76,7 @@ pub fn life_run(
 /// Lays down the values a named sequence gives up to the limit.
 #[wasm_bindgen]
 pub fn life_sequence(name: &str, limit: usize) -> Result<Vec<u32>, Fault> {
-    let values = life::sequence::sequence(Sequence::parse(name)?, limit)?;
+    let values = life::source::sequence(Source::parse(name)?, limit)?;
     Ok(values.iter().map(|&v| v as u32).collect())
 }
 
@@ -92,7 +92,7 @@ pub fn life_noise(width: usize, height: usize, density: f64, seed: u32) -> Vec<u
 /// Names every fixed sequence.
 #[wasm_bindgen]
 pub fn life_sequences() -> Vec<String> {
-    Sequence::all().iter().map(|s| s.name()).collect()
+    Source::all().iter().map(|s| s.name()).collect()
 }
 
 fn mask_grid(mask: &[u8], width: usize, height: usize) -> Result<Tensor, Fault> {

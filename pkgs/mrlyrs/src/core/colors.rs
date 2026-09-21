@@ -224,19 +224,6 @@ pub fn ink(dark: bool) -> [u8; 4] {
     [c.r, c.g, c.b, c.a]
 }
 
-/// Formats a raw rgba as a hex string.
-pub fn hex(c: [u8; 4]) -> String {
-    Color::rgba(c[0], c[1], c[2], c[3]).to_hex()
-}
-
-/// Parses a hex string to raw rgba, falling back to opaque black.
-pub fn hex_of(hex: &str) -> [u8; 4] {
-    match Color::from_hex(hex) {
-        Ok(c) => [c.r, c.g, c.b, c.a],
-        Err(_) => [0, 0, 0, 255],
-    }
-}
-
 impl Serialize for Color {
     fn serialize<S: Serializer>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> {
         serializer.serialize_str(&self.to_hex())
@@ -426,14 +413,11 @@ mod tests {
         assert_eq!(g[2], Color::rgb(127, 127, 127));
     }
     #[test]
-    fn raw_hex_helpers_never_fail() {
-        assert_eq!(hex([255, 61, 64, 255]), "#ff3d40");
-        assert_eq!(hex([0, 0, 0, 0]), "#00000000");
-        assert_eq!(hex_of("#ff3d40"), [255, 61, 64, 255]);
-        assert_eq!(hex_of("#00000000"), [0, 0, 0, 0]);
-        assert_eq!(hex_of("junk"), [0, 0, 0, 255]);
+    fn theme_rgba_reads_the_two_themes() {
         assert_eq!(ink(true), [255, 255, 255, 255]);
         assert_eq!(board(false), [255, 255, 255, 255]);
+        assert_eq!(ink(false), [0, 0, 0, 255]);
+        assert_eq!(board(true), [0, 0, 0, 255]);
     }
     #[test]
     fn mix_and_lightness() {

@@ -34,15 +34,11 @@ pub fn next_grid(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::life::moore;
+    use crate::life::{blinker, moore};
     use crate::math::two::designs;
     #[test]
     fn conway_blinker_oscillates() {
-        let mut t = Tensor::new(vec![5, 5]);
-        t.set(&[1, 2], 1);
-        t.set(&[2, 2], 1);
-        t.set(&[3, 2], 1);
-        let cell = Cell2d::new(t);
+        let cell = blinker();
         let mask = moore().types().clone();
         let next = next_grid(&cell, &[3], &[2, 3], &mask, Boundary::Constant).unwrap();
         assert_eq!(next.types().get(&[2, 1]), 1);

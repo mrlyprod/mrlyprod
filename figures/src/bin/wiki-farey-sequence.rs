@@ -16,7 +16,7 @@ fn main() -> Result<()> {
         board.segment((frame.x, y), (frame.x + frame.w, y), 1.5, ink::line());
         for b in 1..=q {
             for a in 0..=b {
-                if gcd(a, b) != 1 {
+                if gcd(a as u128, b as u128) != 1 {
                     continue;
                 }
                 let x = frame.x + frame.w * a as f64 / b as f64;

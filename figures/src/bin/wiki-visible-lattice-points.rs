@@ -12,7 +12,7 @@ fn main() -> Result<()> {
     let mut deepest = 1usize;
     for row in 0..N {
         for col in 0..N {
-            let layer = gcd(col + 1, N - row);
+            let layer = gcd((col + 1) as u128, (N - row) as u128) as usize;
             if layer == 1 {
                 lit += 1;
                 grid.fill(&mut board, col, row, ink::blue());

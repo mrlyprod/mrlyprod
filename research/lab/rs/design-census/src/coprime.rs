@@ -59,7 +59,10 @@ impl Family {
 }
 
 fn squarefree_divisors(base: usize) -> Vec<usize> {
-    divisors(radical(base))
+    divisors(radical(base) as u64)
+        .into_iter()
+        .map(|d| d as usize)
+        .collect()
 }
 
 fn hits(corners: &[Vec<u8>], divisor: usize) -> usize {
@@ -136,7 +139,7 @@ fn index(corners: &[Vec<u8>], dimension: usize) -> usize {
     let mut out = 0usize;
     for rows in choose(0, diffs.len(), dimension) {
         let minor: Vec<Vec<i64>> = rows.iter().map(|&r| diffs[r].clone()).collect();
-        out = gcd(out, determinant(&minor).unsigned_abs() as usize);
+        out = gcd(out as u128, determinant(&minor).unsigned_abs() as u128) as usize;
         if out == 1 {
             return out;
         }
@@ -156,7 +159,11 @@ fn expand(columns: &mut [Vec<usize>], corners: &[Vec<u8>], base: usize) {
 
 fn common(columns: &[Vec<usize>]) -> Vec<usize> {
     (0..columns[0].len())
-        .map(|i| columns.iter().fold(0, |g, column| gcd(g, column[i])))
+        .map(|i| {
+            columns
+                .iter()
+                .fold(0, |g, column| gcd(g as u128, column[i] as u128) as usize)
+        })
         .collect()
 }
 

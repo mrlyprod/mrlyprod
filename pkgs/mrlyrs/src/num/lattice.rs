@@ -1,23 +1,6 @@
-use crate::num::factor::coprime;
+use crate::num::factor::totients;
 use crate::num::series;
 use std::f64::consts::PI;
-
-/// Sieves the Euler totients of zero through n.
-///
-/// ```
-/// assert_eq!(mrlyrs::num::lattice::totients(6), vec![0, 1, 1, 2, 2, 4, 2]);
-/// ```
-pub fn totients(n: usize) -> Vec<u64> {
-    let mut phi: Vec<u64> = (0..=n as u64).collect();
-    for p in 2..=n {
-        if phi[p] == p as u64 {
-            for m in (p..=n).step_by(p) {
-                phi[m] -= phi[m] / p as u64;
-            }
-        }
-    }
-    phi
-}
 
 /// Counts the ordered pairs of coprime coordinates between one and n: twice the totient sum less one.
 pub fn coprime_pairs(n: usize) -> u64 {
@@ -97,25 +80,7 @@ pub struct Node2d {
     pub brightness: u64,
 }
 
-/// Lists the visible nodes of a window in ascending value: every reduced fraction with denominator at most n.
-pub fn nodes(n: usize) -> Vec<Node> {
-    let mut out = Vec::new();
-    for den in 1..=n {
-        for num in 0..=den {
-            if coprime(num, den) {
-                out.push(Node {
-                    num: num as u64,
-                    den: den as u64,
-                    brightness: (n / den) as u64,
-                });
-            }
-        }
-    }
-    out.sort_by(|a, b| (a.num as u128 * b.den as u128).cmp(&(b.num as u128 * a.den as u128)));
-    out
-}
-
-/// Walks the Farey sequence of the order by the Stern-Brocot mediant recurrence from zero over one to one over one, an independent route to the same nodes.
+/// Walks the Farey sequence of the order by the Stern-Brocot mediant recurrence from zero over one to one over one: every reduced fraction with denominator at most the order, ascending.
 pub fn farey(order: usize) -> Vec<Node> {
     let mut out = Vec::new();
     if order == 0 {
@@ -142,7 +107,7 @@ pub fn farey(order: usize) -> Vec<Node> {
 
 /// Lists the grid crossings of a window's nodes, row-major over the ascending axis nodes.
 pub fn grid(n: usize) -> Vec<Node2d> {
-    let axis = nodes(n);
+    let axis = farey(n);
     let mut out = Vec::with_capacity(axis.len() * axis.len());
     for &y in &axis {
         for &x in &axis {
@@ -161,19 +126,14 @@ pub fn new_nodes(n: usize) -> u64 {
     if n == 0 {
         return 0;
     }
-    (nodes(n).len() - nodes(n - 1).len()) as u64
+    (farey(n).len() - farey(n - 1).len()) as u64
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::num::factor::coprime;
     use std::f64::consts::PI;
-
-    #[test]
-    fn totients_match_hand_checked_values() {
-        let phi = totients(12);
-        assert_eq!(phi, vec![0, 1, 1, 2, 2, 4, 2, 6, 4, 6, 4, 10, 4]);
-    }
 
     #[test]
     fn coprime_pairs_match_a_brute_count() {
@@ -220,15 +180,8 @@ mod tests {
     }
 
     #[test]
-    fn node_counts_follow_the_farey_sequence() {
-        for (n, count) in [(1, 2), (2, 3), (3, 5), (4, 7), (5, 11), (6, 13)] {
-            assert_eq!(nodes(n).len(), count, "window {n}");
-        }
-    }
-
-    #[test]
-    fn nodes_are_reduced_bright_and_ascending() {
-        let all = nodes(12);
+    fn the_farey_nodes_are_reduced_bright_and_ascending() {
+        let all = farey(12);
         for pair in all.windows(2) {
             assert!(pair[0].num * pair[1].den < pair[1].num * pair[0].den);
         }
@@ -239,11 +192,8 @@ mod tests {
     }
 
     #[test]
-    fn the_farey_walk_lands_on_the_window_nodes_exactly() {
+    fn the_farey_walk_runs_from_zero_over_one_to_one_over_one() {
         assert!(farey(0).is_empty());
-        for n in 1..=50 {
-            assert_eq!(farey(n), nodes(n), "order {n}");
-        }
         let ends = farey(7);
         assert_eq!((ends[0].num, ends[0].den), (0, 1));
         assert_eq!((ends.last().unwrap().num, ends.last().unwrap().den), (1, 1));

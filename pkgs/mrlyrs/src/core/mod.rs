@@ -14,6 +14,7 @@ pub mod error;
 pub mod image;
 /// The natural logarithm, written from a series.
 pub mod logs;
+mod named;
 /// The editions that distribute a palette over a cell.
 pub mod paint;
 /// The colorizers that turn counter values into colors.
@@ -28,10 +29,11 @@ pub mod state;
 pub mod tensor;
 
 pub use cell::{Cell, Mode};
-pub use codec::{gif, png, unpng};
+pub use codec::{gif, png, unpng, PNG_MAGIC};
 pub use colors::Color;
 pub use error::{MrlyError, Result};
 pub use image::Image;
+pub(crate) use named::named_enum;
 pub use ramp::Colorizer;
 pub use resample::{hex_fit, hex_size, resample, Filter};
 pub use rng::Rng;

@@ -523,7 +523,7 @@ pub fn magic_rates(
     length: usize,
 ) -> Result<String, Fault> {
     let layers = letters(codes, numbers, 2, bases)?;
-    let kind = word::Schedule::parse(schedule)?;
+    let kind = schedule.parse::<word::Schedule>()?;
     let pair = (layers[0].clone(), layers[1].clone());
     let spelt = word::spell(kind, pair.clone(), length.clamp(2, 120));
     let control = word::spell(word::Schedule::Periodic, pair.clone(), length.clamp(2, 120));

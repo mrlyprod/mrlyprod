@@ -3,7 +3,6 @@ use crate::tables::write_csv;
 use mrlyrs::math::bang::baseq::{
     canonical, distinct_designs, group, group_order, orbit, representatives, WALK_LIMIT,
 };
-use mrlyrs::math::bang::counting;
 use mrlyrs::math::bang::factory::{corners_to_code, levels_code, residue_corners};
 use mrlyrs::math::bang::universe;
 use mrlyrs::math::bang::Code;
@@ -46,17 +45,14 @@ fn burnside(base: usize, dimension: usize) -> u128 {
 }
 
 pub fn orbits_report() {
-    println!("base 2 cube group: order 2^D D!, designs up to symmetry three ways");
+    println!("base 2 cube group: order 2^D D!, designs up to symmetry two ways");
     for dimension in 1..=4 {
         let walk = representatives(2, dimension)
             .expect("the walk stays under the code limit")
             .len();
         let order = group_order(2, dimension);
         let burnside = burnside(2, dimension);
-        let classes = counting::distinct_designs(dimension).expect("the class sums close");
-        println!(
-            "D {dimension}: order {order} orbit walk {walk} Burnside {burnside} class sum {classes}"
-        );
+        println!("D {dimension}: order {order} orbit walk {walk} Burnside {burnside}");
     }
 }
 

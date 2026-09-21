@@ -1,6 +1,6 @@
 use crate::design::Design;
-use mrlyrs::num::classics::primes;
 use mrlyrs::num::factor::{gcd, mobius_sieve};
+use mrlyrs::num::prime::primes;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Instant;
 
@@ -383,7 +383,7 @@ pub fn terms(design: &Design, top: u32, threads: usize) -> Vec<Term> {
 
 fn walk(depth: u32, coords: &mut [u64], corners: &[Vec<u64>], found: &mut u64) {
     if depth == 0 {
-        let common = coords.iter().fold(0usize, |g, &c| gcd(g, c as usize));
+        let common = coords.iter().fold(0u128, |g, &c| gcd(g, u128::from(c)));
         if common == 1 {
             *found += 1;
         }

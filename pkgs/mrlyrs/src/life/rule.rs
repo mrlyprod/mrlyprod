@@ -22,7 +22,7 @@ fn fold(counts: Counts) -> Counts {
 }
 
 mod counts {
-    use crate::life::{Counts, Sequence};
+    use crate::life::{Counts, Source};
     use serde::de::{Error, SeqAccess, Visitor};
     use serde::ser::SerializeSeq;
     use serde::{Deserializer, Serializer};
@@ -43,7 +43,7 @@ mod counts {
     }
 
     pub fn read(text: &str) -> Option<Counts> {
-        let (seq, tail) = Sequence::read(text)?;
+        let (seq, tail) = Source::read(text)?;
         let (zeros, tail) = match tail.strip_prefix("_zeros") {
             Some(rest) => (true, rest),
             None => (false, tail),
@@ -168,7 +168,7 @@ mod tests {
     use super::*;
     use crate::core::rng::Rng;
     use crate::core::tensor::Tensor;
-    use crate::life::{animate, moore, Sequence};
+    use crate::life::{animate, moore, Source};
 
     const CONWAY: &str = r#"{"kind":"rule","birth":[3],"survive":[2,3]}"#;
 
@@ -201,7 +201,7 @@ mod tests {
     fn the_wide_row_holds() {
         let wide = Rule::new(
             vec![12, 13],
-            Counts::drawn(Sequence::Fibonacci, false, false),
+            Counts::drawn(Source::Fibonacci, false, false),
             true,
         );
         let text = r#"{"kind":"rule","birth":[12,13],"survive":"fibonacci","wrap":true}"#;
@@ -292,8 +292,8 @@ mod tests {
     #[test]
     fn a_drawn_rule_names_its_sequence() {
         let rule = Rule::new(
-            Counts::drawn(Sequence::Fibonacci, false, true),
-            Counts::drawn(Sequence::GridSquares, false, false),
+            Counts::drawn(Source::Fibonacci, false, true),
+            Counts::drawn(Source::GridSquares, false, false),
             true,
         );
         assert_eq!(
@@ -304,7 +304,7 @@ mod tests {
         assert_eq!(Rule::from_url(&rule.to_url()).unwrap(), rule);
         assert_eq!(Rule::from_file(&rule.to_file()).unwrap(), rule);
         let seeded = Rule::new(
-            Counts::drawn(Sequence::Random(4848495), true, false),
+            Counts::drawn(Source::Random(4848495), true, false),
             vec![3],
             false,
         );
@@ -323,8 +323,8 @@ mod tests {
     fn a_wide_mask_run_replays_from_its_name() {
         let mask = wide_mask(7);
         let rule = Rule::new(
-            Counts::drawn(Sequence::Fibonacci, false, false),
-            Counts::drawn(Sequence::Primes, false, false),
+            Counts::drawn(Source::Fibonacci, false, false),
+            Counts::drawn(Source::Primes, false, false),
             true,
         );
         let mut config = rule.config(mask.clone());
@@ -383,11 +383,11 @@ mod tests {
     #[test]
     fn seeded_sequences_round_trip() {
         let mut rng = Rng::new(11);
-        let pool = Sequence::all();
+        let pool = Source::all();
         for _ in 0..200 {
             let pick = |rng: &mut Rng| match rng.below(3) {
-                0 => Sequence::Random(rng.range(0, i64::MAX) as u64),
-                1 => Sequence::CodeFills(rng.below(16) as u128),
+                0 => Source::Random(rng.range(0, i64::MAX) as u64),
+                1 => Source::CodeFills(rng.below(16) as u128),
                 _ => *rng.choice(&pool),
             };
             let side = |rng: &mut Rng| Counts::drawn(pick(rng), rng.boolean(), rng.boolean());

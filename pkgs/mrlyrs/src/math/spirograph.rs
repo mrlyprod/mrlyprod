@@ -292,7 +292,7 @@ pub fn track(kind: &str, ring: usize, wheel: usize, sides: usize, laps: usize) -
             if inside && ring <= wheel {
                 return value_error("the wheel must be smaller than the ring it rolls inside.");
             }
-            let g = gcd(ring, wheel);
+            let g = gcd(ring as u128, wheel as u128) as usize;
             let (a, b) = (ring / g, wheel / g);
             let rho = if inside { big - r } else { big + r };
             out.side = if inside { -1.0 } else { 1.0 };
@@ -463,7 +463,7 @@ pub fn representatives(track: &Track, pencils: &[Pencil], exact: bool) -> Vec<us
             }
         }
         "in" | "out" => {
-            let order = gcd(track.ratio.1, 4);
+            let order = gcd(track.ratio.1 as u128, 4) as usize;
             let quarter = |(u, v): (i64, i64)| (-v, u);
             let mut seen = HashSet::new();
             for (k, p) in pencils.iter().enumerate() {

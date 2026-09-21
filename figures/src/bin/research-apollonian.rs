@@ -1,7 +1,7 @@
 use figures::{ink, save, Board, Color, Ramp};
 use mrlyrs::core::error::Result;
 use mrlyrs::num::factor::gcd;
-use mrlyrs::num::lattice::totients;
+use mrlyrs::num::factor::totients;
 
 const TOP: i64 = 2048;
 const DEEP: usize = 32;
@@ -125,7 +125,7 @@ fn main() -> Result<()> {
     for c in &resting {
         let (a, b) = fraction(*c);
         assert_eq!((c.k, c.x, c.y), (2 * b * b, 2 * a * b, 1));
-        assert_eq!(gcd(a as usize, b as usize), 1);
+        assert_eq!(gcd(a as u128, b as u128), 1);
         assert!(0 < a && a < b && b <= DEEP as i64);
         deepest = deepest.max(b);
     }

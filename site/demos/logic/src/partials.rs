@@ -1,7 +1,7 @@
 use crate::Fault;
 use mrlyrs::core::json;
-use mrlyrs::num::formulas;
 use mrlyrs::num::series::EULER;
+use mrlyrs::num::{prime, series};
 use std::f64::consts::{E, PI};
 use wasm_bindgen::prelude::*;
 
@@ -26,35 +26,35 @@ fn reading(kind: &str, m: usize) -> Result<(f64, f64, f64), Fault> {
     let x = m as f64;
     Ok(match kind {
         "wallis" => {
-            let v = formulas::wallis(m);
+            let v = series::wallis_half_pi(m);
             (x, v, drift(v, PI / 2.0))
         }
         "leibniz" => {
-            let v = formulas::leibniz(m);
+            let v = series::leibniz(m);
             (x, v, drift(v, PI / 4.0))
         }
         "basel" => {
-            let v = formulas::basel(m);
+            let v = series::basel(m);
             (x, v, drift(v, PI * PI / 6.0))
         }
         "gamma" => {
-            let v = formulas::euler_gamma_partial(m);
+            let v = series::euler_gamma_partial(m);
             (x, v, drift(v, EULER))
         }
         "e" => {
-            let v = formulas::e_partial(m);
+            let v = series::e_partial(m);
             (x, v, drift(v, E))
         }
         "primes" => {
-            let v = formulas::prime_count(m) as f64;
-            (x, v, drift(v, formulas::li(x)))
+            let v = prime::prime_count(m) as f64;
+            (x, v, drift(v, series::li(x)))
         }
         "goldbach" => {
-            let v = formulas::goldbach(2 * m) as f64;
+            let v = prime::goldbach(2 * m) as f64;
             (2.0 * x, v, 1.0 / v)
         }
         "mertens" => {
-            let v = formulas::mertens(m) as f64;
+            let v = series::mertens(m) as f64;
             (x, v, v.abs() / x.sqrt())
         }
         _ => return Err(Fault::new(format!("no formula is named {kind:?}."))),
@@ -73,22 +73,22 @@ pub fn formulas_read(n: usize) -> Result<String, Fault> {
             "rel": drift(value, limit),
         })
     };
-    let count = formulas::prime_count(n);
-    let li = formulas::li(n as f64);
-    let record = formulas::goldbach_record(2 * n);
+    let count = prime::prime_count(n);
+    let li = series::li(n as f64);
+    let record = prime::goldbach_record(2 * n);
     let pairs = record.last().copied().unwrap_or(0);
     let least = record.iter().copied().min().unwrap_or(0);
-    let sum = formulas::mertens(n);
+    let sum = series::mertens(n);
     let root = (n as f64).sqrt();
     Ok(json!({
         "n": n,
         "constants": { "pi": PI, "e": E, "gamma": EULER },
         "cards": {
-            "wallis": card(formulas::wallis(n), PI / 2.0),
-            "leibniz": card(formulas::leibniz(n), PI / 4.0),
-            "basel": card(formulas::basel(n), PI * PI / 6.0),
-            "gamma": card(formulas::euler_gamma_partial(n), EULER),
-            "e": card(formulas::e_partial(n), E),
+            "wallis": card(series::wallis_half_pi(n), PI / 2.0),
+            "leibniz": card(series::leibniz(n), PI / 4.0),
+            "basel": card(series::basel(n), PI * PI / 6.0),
+            "gamma": card(series::euler_gamma_partial(n), EULER),
+            "e": card(series::e_partial(n), E),
             "primes": {
                 "value": count,
                 "li": li,

@@ -1,7 +1,6 @@
 use figures::{ink, plot, save, Board};
 use mrlyrs::core::error::Result;
-use mrlyrs::num::classics::primes;
-use mrlyrs::num::formulas;
+use mrlyrs::num::prime::{prime_count, primes};
 
 const TOP: usize = 200;
 const SAMPLES: usize = 1200;
@@ -11,7 +10,7 @@ fn main() -> Result<()> {
     let frame = board.frame(0.08);
     let left = 2.0;
     let right = (TOP + 1) as f64;
-    let count = formulas::prime_count(TOP);
+    let count = prime_count(TOP);
     let peak = count as f64;
     let across = |x: f64| frame.x + frame.w * (x - left) / (right - left);
     let up = |v: f64| frame.y + frame.h * (1.0 - v / peak);

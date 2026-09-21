@@ -1,4 +1,4 @@
-use mrlyrs::life::{Boundary, Counts, Sequence};
+use mrlyrs::life::{Boundary, Counts, Source};
 use mrlyrs::math::bang::universe::{orbit, Code};
 
 /// The Moore neighbourhood's code at side 3 in the plane.
@@ -58,7 +58,7 @@ pub enum Rule {
     /// Birth and survive both drawn from one sequence.
     Drawn {
         /// The sequence behind both sides.
-        seq: Sequence,
+        seq: Source,
         /// Whether zero stays in the counts.
         zeros: bool,
         /// Whether one stays in the counts.
@@ -91,7 +91,7 @@ impl Rule {
     /// Returns the rule's family: number, design, life or every.
     pub fn family(&self) -> &'static str {
         match self {
-            Rule::Drawn { seq, .. } if Sequence::numbers().contains(seq) => "number",
+            Rule::Drawn { seq, .. } if Source::numbers().contains(seq) => "number",
             Rule::Drawn { .. } => "design",
             Rule::Life => "life",
             Rule::Every => "every",
@@ -188,7 +188,7 @@ pub fn classes(dimension: usize) -> Vec<Code> {
 }
 
 fn drawn(zeros: bool, ones: bool) -> Vec<Rule> {
-    Sequence::all()
+    Source::all()
         .into_iter()
         .map(|seq| Rule::Drawn { seq, zeros, ones })
         .collect()

@@ -77,7 +77,7 @@ Words, not letters. One word per thing, the same word everywhere. Letters live o
 ## KIND RULE
 
 - Keys: `birth`, `survive`, `wrap`.
-- A side is a list of counts, sorted and unique, or a sequence word: the sequence as `life::Sequence` spells it, then `_zeros` if zeros stay, then `_ones` if ones stay.
+- A side is a list of counts, sorted and unique, or a sequence word: the sequence as `life::Source` spells it, then `_zeros` if zeros stay, then `_ones` if ones stay.
 - A listed count may be any size: `{"kind":"rule","birth":[12,13],"survive":"fibonacci","wrap":true}`.
 - `wrap` elides at false.
 - Carrier: `name::Rule { birth, survive, wrap }`; `Rule::of` reads one out of a `life::Config` and `Rule::config` builds one over a mask.

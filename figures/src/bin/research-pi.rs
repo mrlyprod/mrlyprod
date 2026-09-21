@@ -16,7 +16,7 @@ fn main() -> Result<()> {
         for b in 1..=N {
             let x = frame.x + (a as f64 - 0.5) * step;
             let y = frame.y + frame.h - (b as f64 - 0.5) * step;
-            if gcd(a, b) == 1 {
+            if gcd(a as u128, b as u128) == 1 {
                 visible += 1;
                 board.rect(x - lit / 2.0, y - lit / 2.0, lit, lit, ink::yellow());
             } else {

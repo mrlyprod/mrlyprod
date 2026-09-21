@@ -1,6 +1,6 @@
 use crate::Fault;
 use mrlyrs::core::json;
-use mrlyrs::num::design;
+use mrlyrs::num::{design, factor};
 use wasm_bindgen::prelude::*;
 
 const SAMPLES: usize = 4096;
@@ -126,7 +126,7 @@ pub fn echo_read(base: u32, mask: u32, depth: usize, subtract: bool) -> Result<E
         )));
     }
     let values = design::elements(base, &digits, depth);
-    let mu = design::mobius_of(&values);
+    let mu: Vec<i8> = values.iter().map(|&v| factor::mobius(v as usize)).collect();
     let running = design::meter(&mu);
     let k = digits.len() as f64;
     let alpha = k.ln() / (base as f64).ln();

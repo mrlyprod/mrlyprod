@@ -59,7 +59,7 @@ pub fn animate(seed: &Cell2d, config: &Config) -> Result<Life> {
 mod tests {
     use super::*;
     use crate::core::tensor::Tensor;
-    use crate::life::{moore, Boundary};
+    use crate::life::{blinker, moore, Boundary};
     fn conway(mask: Cell2d) -> Config {
         Config {
             boundary: Boundary::Constant,
@@ -69,11 +69,7 @@ mod tests {
     }
     #[test]
     fn blinker_is_a_loop_of_two() {
-        let mut t = Tensor::new(vec![5, 5]);
-        t.set(&[1, 2], 1);
-        t.set(&[2, 2], 1);
-        t.set(&[3, 2], 1);
-        let life = animate(&Cell2d::new(t), &conway(moore())).unwrap();
+        let life = animate(&blinker(), &conway(moore())).unwrap();
         assert_eq!(life.fate, Fate::Loop);
         assert_eq!(life.loop_length, 2);
     }
@@ -89,11 +85,7 @@ mod tests {
     }
     #[test]
     fn binarize_on_life_grids_stays_pointwise() {
-        let mut t = Tensor::new(vec![5, 5]);
-        t.set(&[1, 2], 1);
-        t.set(&[2, 2], 1);
-        t.set(&[3, 2], 1);
-        let life = animate(&Cell2d::new(t), &conway(moore())).unwrap();
+        let life = animate(&blinker(), &conway(moore())).unwrap();
         for grid in &life.grids {
             let binarized = grid.clone().binarize(1);
             assert_eq!(binarized.types(), grid.types());

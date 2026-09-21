@@ -263,7 +263,7 @@ pub fn limit(word: &[u64], dimension: u32) -> Option<f64> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::num::series::wallis;
+    use crate::num::series::wallis_quarter_pi;
     use std::f64::consts::PI;
 
     fn truncated(start: u64, step: u64, stop: u64, scale: f64) -> f64 {
@@ -342,7 +342,7 @@ mod tests {
     fn the_plane_ratio_is_the_wallis_product_the_series_walks() {
         for n in 1..=40 {
             assert!(
-                (ratio(&odd_word(n), 2) - wallis(n)).abs() < 1e-15,
+                (ratio(&odd_word(n), 2) - wallis_quarter_pi(n)).abs() < 1e-15,
                 "level {n}"
             );
         }
