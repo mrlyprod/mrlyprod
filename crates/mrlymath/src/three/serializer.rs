@@ -1,12 +1,12 @@
 use super::models::Cell3d;
 use crate::dim::serializer::{byte_cube, count_cube, parse, tag_layer, types_field};
-use mrlycore::errors::{value_error, MrlyError, Result};
+use mrlycore::errors::{value_error, Result};
 use mrlycore::tensor::Tensor;
 use mrlycore::{json, Json};
 use serde::Deserialize;
 
 /// Unrolls the cell into nested lists, plane by row by site.
-pub fn to_lists(cell: &Cell3d) -> Vec<Vec<Vec<u8>>> {
+fn to_lists(cell: &Cell3d) -> Vec<Vec<Vec<u8>>> {
     let shape = &cell.types().shape;
     (0..shape[0])
         .map(|i| {
@@ -22,7 +22,7 @@ pub fn to_lists(cell: &Cell3d) -> Vec<Vec<Vec<u8>>> {
 }
 
 /// Builds a cell from nested lists, or an error when they are empty or ragged.
-pub fn from_lists(lists: &[Vec<Vec<u8>>]) -> Result<Cell3d> {
+fn from_lists(lists: &[Vec<Vec<u8>>]) -> Result<Cell3d> {
     if lists.is_empty() || lists[0].is_empty() || lists[0][0].is_empty() {
         return value_error("cannot build a cell from an empty list.");
     }
@@ -34,47 +34,6 @@ pub fn from_lists(lists: &[Vec<Vec<u8>>]) -> Result<Cell3d> {
     }
     let data: Vec<u8> = lists.iter().flatten().flatten().copied().collect();
     Ok(Cell3d::new(Tensor::of(data, vec![a, b, c])))
-}
-
-/// Returns the cell's types as planes of digit-string rows.
-pub fn to_strings(cell: &Cell3d) -> Vec<Vec<String>> {
-    to_lists(cell)
-        .iter()
-        .map(|plane| {
-            plane
-                .iter()
-                .map(|row| row.iter().map(|v| v.to_string()).collect())
-                .collect()
-        })
-        .collect()
-}
-
-/// Builds a cell from planes of digit-string rows, or an error at any non-digit.
-///
-/// ```
-/// let planes = vec![vec!["11".to_string(), "10".to_string()]];
-/// let cell = mrlymath::three::from_strings(&planes).unwrap();
-/// assert_eq!(cell.types().sum(), 3);
-/// ```
-pub fn from_strings(planes: &[Vec<String>]) -> Result<Cell3d> {
-    let lists: Result<Vec<Vec<Vec<u8>>>> = planes
-        .iter()
-        .map(|plane| {
-            plane
-                .iter()
-                .map(|row| {
-                    row.chars()
-                        .map(|ch| {
-                            ch.to_digit(10)
-                                .map(|d| d as u8)
-                                .ok_or_else(|| MrlyError::Value(format!("invalid digit {ch:?}.")))
-                        })
-                        .collect()
-                })
-                .collect()
-        })
-        .collect();
-    from_lists(&lists?)
 }
 
 fn color_cube(value: &Json) -> Result<Vec<Vec<Vec<[u8; 4]>>>> {
@@ -156,12 +115,5 @@ mod tests {
     fn lists_round_trip() {
         let c = designs::void(4, 1).unwrap();
         assert_eq!(from_lists(&to_lists(&c)).unwrap(), c);
-    }
-    #[test]
-    fn strings_round_trip() {
-        let c = designs::net(3, 2).unwrap();
-        assert_eq!(from_strings(&to_strings(&c)).unwrap(), c);
-        assert_eq!(to_strings(&designs::ones(2, 1).unwrap())[0], ["11", "11"]);
-        assert!(from_strings(&[vec!["1x1".to_string()]]).is_err());
     }
 }

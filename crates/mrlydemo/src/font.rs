@@ -31,22 +31,6 @@ pub fn font_cycle(text: &str, pad: usize, hold: usize) -> String {
     anim_json(&mrlyfont::cycle(&write, &merged, hold))
 }
 
-/// Reads one character's glyph: the character, its Unicode name, its width, its height and its bitmap rows, as JSON, or null outside the font.
-#[wasm_bindgen]
-pub fn font_glyph(c: &str) -> String {
-    let Some(glyph) = c.chars().next().and_then(mrlyfont::glyph) else {
-        return json!(null).to_string();
-    };
-    json!({
-        "char": glyph.char.to_string(),
-        "name": mrlyfont::name_of(glyph.char),
-        "w": glyph.width(),
-        "h": glyph.height(),
-        "rows": glyph.rows,
-    })
-    .to_string()
-}
-
 /// Returns the least strokes that can write the character, the minimum cover of its cells by 4-adjacent paths, or 0 outside the font.
 #[wasm_bindgen]
 pub fn font_floor(c: &str) -> usize {

@@ -25,7 +25,7 @@ pub fn render(
         let c = colorizer.color(bucket + 1, levels);
         rgba[i] = [c.r, c.g, c.b, 255];
     }
-    mrlycore::io::png(&rgba, size, size, scale)
+    mrlycore::png(&rgba, size, size, scale)
 }
 
 #[cfg(test)]

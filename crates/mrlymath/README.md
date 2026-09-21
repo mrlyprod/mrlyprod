@@ -9,10 +9,10 @@ Half the crate generates: bang enumerates the codes and their symmetry classes, 
 - **bang** enumerates the design codes, their symmetries and their counts; **rules** marks the cells of a hypercube whose coordinate residues satisfy a rule.
 - **dim** holds the N-dimensional cell and the pipeline the fixed dimensions share.
 - **two**, **three** and **six** run that pipeline for flat cells, cubes and hexagons: designs, tiles, censuses, graphs and renderings.
-- **life** steps, records and renders cellular automata and their stories.
+- **life** steps, records and renders cellular automata.
 - **formulas** counts fills, grids and surfaces in closed form, without rendering.
 - **name** prints and parses the one canonical JSON object of every bang, rule, tile and word, and cuts its url, file and prose views.
-- **space** holds the vectors, solids and the packed wire format of 3d scenes.
+- **space** holds the vector and the packed wire format of 3d scenes.
 
 ## Running
 

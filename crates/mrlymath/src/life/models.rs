@@ -64,12 +64,4 @@ impl Life {
     pub fn last(&self) -> Option<&Cell2d> {
         self.grids.last()
     }
-    /// Returns the index of the first frame.
-    pub fn first_frame_idx(&self) -> usize {
-        0
-    }
-    /// Returns the index of the last frame.
-    pub fn last_frame_idx(&self) -> usize {
-        self.grids.len().saturating_sub(1)
-    }
 }

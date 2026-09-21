@@ -3,7 +3,6 @@ use crate::bang::factory;
 use crate::bang::universe::Code;
 use mrlycore::atoms;
 use mrlycore::errors::{value_error, Result};
-use mrlycore::state;
 use mrlycore::tensor::Tensor;
 use mrlycore::tile::Design;
 
@@ -90,18 +89,6 @@ pub fn ones(number: usize, level: usize) -> Result<Cell2d> {
     build(atoms::ones_2d(number), level, 0)
 }
 
-/// Draws a noise cell whose sites fill with the given probability, deepened to the level.
-pub fn noise(number: usize, level: usize, density: f64) -> Result<Cell2d> {
-    build(atoms::noise_2d(number, density), level, 0)
-}
-
-/// Draws a random universe code and builds its design at the given size and level.
-pub fn random(number: usize, level: usize, base: usize) -> Result<Cell2d> {
-    let total = factory::total_codes(2, base);
-    let code = state::randint(0, (total - 1) as i64) as Code;
-    create(code, number, level, 0, base)
-}
-
 /// Builds the carpet fractal, its seed pierced at every odd-odd site, deepened to the level.
 pub fn carpet(number: usize, level: usize) -> Result<Cell2d> {
     build(atoms::carpet_2d(number), level, 0)
@@ -166,15 +153,6 @@ mod tests {
         let by_name = carpet(5, 2).unwrap();
         let by_code = create(7, 5, 2, 0, 2).unwrap();
         assert_eq!(by_name, by_code);
-    }
-    #[test]
-    fn random_is_seeded() {
-        let _g = mrlycore::state::guard();
-        mrlycore::state::seed(99);
-        let a = random(4, 1, 2).unwrap();
-        mrlycore::state::seed(99);
-        let b = random(4, 1, 2).unwrap();
-        assert_eq!(a, b);
     }
     #[test]
     fn level_sets_reproduce_the_symmetric_designs() {

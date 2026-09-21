@@ -64,7 +64,7 @@ pub use geometry::{
 pub use models::Cell6d;
 pub use painter::paint;
 pub use raster::raster;
-pub use renderer::{hex_png, png, rect, rect_png, rect_svg, svg, triangles, Rect};
+pub use renderer::{svg, triangles};
 pub use serializer::{from_json, to_json};
 pub use tile::{build as build_tile, random_tile, HexTile};
 pub use topology::{components, giant, giant_network, holes, rim_holes, spectral_exponent};

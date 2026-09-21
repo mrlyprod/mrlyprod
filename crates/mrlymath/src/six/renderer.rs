@@ -1,24 +1,19 @@
-use super::geometry::{is_hex, orientation, tile};
+use super::geometry::orientation;
 use super::models::Cell6d;
 use super::painter::paint;
 use super::Orientation;
 use mrlycore::colors::Color;
 use mrlycore::enums::Mode;
 use mrlycore::errors::{value_error, Result};
-use mrlycore::resample::{hex_fit, Filter};
 
 /// A screen triangle: three grid points and an RGBA color.
 pub type Triangle = ([(i64, i64); 3], [u8; 4]);
 
-/// A rectangular window onto a triangle sheet, the frame every rendering draws through.
 #[derive(Clone, Debug)]
-pub struct Rect {
-    /// The triangles of the sheet the window looks onto.
-    pub triangles: Vec<Triangle>,
-    /// The window's top-left corner, in grid points.
-    pub origin: (i64, i64),
-    /// The window's width and height, in grid points.
-    pub size: (usize, usize),
+struct Rect {
+    triangles: Vec<Triangle>,
+    origin: (i64, i64),
+    size: (usize, usize),
 }
 
 fn north(x: i64, y: i64) -> [(i64, i64); 3] {
@@ -165,124 +160,6 @@ pub fn svg(cell: &Cell6d, scale: usize, outline: Option<Color>, width: usize) ->
     ))
 }
 
-fn fill_triangles(
-    tris: &[Triangle],
-    origin: (i64, i64),
-    size: (usize, usize),
-    scale: usize,
-) -> Vec<[u8; 4]> {
-    let (img_w, img_h) = size;
-    let mut pixels = vec![[0u8; 4]; img_w * img_h];
-    for (points, rgba) in tris {
-        let scaled: Vec<(f64, f64)> = points
-            .iter()
-            .map(|(x, y)| {
-                (
-                    ((x - origin.0) * scale as i64) as f64,
-                    ((y - origin.1) * scale as i64) as f64,
-                )
-            })
-            .collect();
-        let span = |pick: fn(&(f64, f64)) -> f64, limit: usize| -> (usize, usize) {
-            let lo = scaled.iter().map(pick).fold(f64::MAX, f64::min);
-            let hi = scaled.iter().map(pick).fold(f64::MIN, f64::max);
-            (
-                lo.floor().clamp(0.0, limit as f64) as usize,
-                hi.ceil().clamp(0.0, limit as f64) as usize,
-            )
-        };
-        let (x0, x1) = span(|p| p.0, img_w);
-        let (y0, y1) = span(|p| p.1, img_h);
-        let edge = |a: (f64, f64), b: (f64, f64), p: (f64, f64)| -> f64 {
-            (b.0 - a.0) * (p.1 - a.1) - (b.1 - a.1) * (p.0 - a.0)
-        };
-        for py in y0..y1 {
-            for px in x0..x1 {
-                let p = (px as f64 + 0.5, py as f64 + 0.5);
-                let e0 = edge(scaled[0], scaled[1], p);
-                let e1 = edge(scaled[1], scaled[2], p);
-                let e2 = edge(scaled[2], scaled[0], p);
-                let inside =
-                    (e0 >= 0.0 && e1 >= 0.0 && e2 >= 0.0) || (e0 <= 0.0 && e1 <= 0.0 && e2 <= 0.0);
-                if inside {
-                    pixels[py * img_w + px] = *rgba;
-                }
-            }
-        }
-    }
-    pixels
-}
-
-fn canvas(view: &Rect, scale: usize) -> ((usize, usize), Vec<[u8; 4]>) {
-    let size = (view.size.0 * scale, view.size.1 * scale);
-    (
-        size,
-        fill_triangles(&view.triangles, view.origin, size, scale),
-    )
-}
-
-fn frame(view: &Rect, scale: usize) -> Result<Vec<u8>> {
-    let ((img_w, img_h), pixels) = canvas(view, scale);
-    mrlycore::io::png(&pixels, img_w, img_h, 1)
-}
-
-/// Rasterizes a cell's triangles to PNG bytes at the given scale, or an error when nothing renders.
-pub fn png(cell: &Cell6d, scale: usize) -> Result<Vec<u8>> {
-    frame(&window(cell, 0)?, scale)
-}
-
-/// Rasterizes a cell's triangles to PNG bytes squashed to the true hex aspect, the stretched axis resampled by the filter.
-pub fn hex_png(cell: &Cell6d, scale: usize, filter: Filter) -> Result<Vec<u8>> {
-    let vertical = orientation(cell.width(), cell.height())? == Orientation::Vertical;
-    let ((width, height), pixels) = canvas(&window(cell, 0)?, scale);
-    let (img_w, img_h, fitted) = hex_fit(&pixels, width, height, vertical, filter)?;
-    mrlycore::io::png(&fitted, img_w, img_h, 1)
-}
-
-/// Tessellates a hexagon and frames the rectangular fundamental domain of that tiling.
-pub fn rect(cell: &Cell6d) -> Result<Rect> {
-    let inner = &cell.cell;
-    if !is_hex(inner) {
-        return value_error("Cell must be a hexagon.");
-    }
-    let (tile_h, tile_w) = (inner.height(), inner.width());
-    let (step_x, step_y, origin) = match orientation(tile_w, tile_h)? {
-        Orientation::Horizontal => (
-            (3 * (tile_w + 1)) / 4,
-            tile_h,
-            (tile_w.div_ceil(2) as i64, tile_h as i64),
-        ),
-        Orientation::Vertical => (
-            tile_w,
-            (3 * (tile_h + 1)) / 4,
-            (tile_w as i64, tile_h.div_ceil(2) as i64),
-        ),
-    };
-    let sheet = tile(cell, 3, 3)?;
-    let orient = orientation(sheet.width(), sheet.height())?;
-    let tiled = Cell6d::new(sheet, cell.projection, orient, cell.start);
-    Ok(Rect {
-        triangles: triangles(&tiled)?,
-        origin,
-        size: (2 * step_x, 2 * step_y),
-    })
-}
-
-/// Renders the hexagon's rectangular fundamental domain to an SVG string at the given scale, stroked when an outline is given.
-pub fn rect_svg(
-    cell: &Cell6d,
-    scale: usize,
-    outline: Option<Color>,
-    width: usize,
-) -> Result<String> {
-    Ok(sheet(&rect(cell)?, scale, &stroke_of(outline, width)))
-}
-
-/// Rasterizes the hexagon's rectangular fundamental domain to PNG bytes at the given scale.
-pub fn rect_png(cell: &Cell6d, scale: usize) -> Result<Vec<u8>> {
-    frame(&rect(cell)?, scale)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -304,8 +181,6 @@ mod tests {
         let s = svg(&i, 10, None, 1).unwrap();
         assert!(s.contains("<polygon"));
         assert!(s.contains("stroke=\"none\""));
-        let bytes = png(&i, 10).unwrap();
-        assert_eq!(&bytes[0..8], &[137, 80, 78, 71, 13, 10, 26, 10]);
     }
     #[test]
     fn outline_strokes_and_pads_the_svg() {
@@ -337,50 +212,6 @@ mod tests {
         let tris = triangles(&hex).unwrap();
         assert!(!tris.is_empty());
     }
-    fn tiling_hex(radius: usize, orient: Orientation) -> Cell6d {
-        Cell6d::new(
-            blank(radius, orient, crate::six::FILL, crate::six::GRID),
-            Projection::Cut,
-            orient,
-            0,
-        )
-    }
-    #[test]
-    fn rect_frames_the_fundamental_domain() {
-        let hex = tiling_hex(2, Orientation::Horizontal);
-        let domain = rect(&hex).unwrap();
-        assert_eq!(domain.size, (12, 8));
-        assert_eq!(domain.origin, (4, 4));
-        let s = rect_svg(&hex, 3, None, 1).unwrap();
-        assert!(s.contains("viewBox=\"0 0 36 24\""));
-        assert!(s.contains("stroke=\"none\""));
-        let lined = rect_svg(&hex, 3, Some(Color::rgba(0, 0, 255, 255)), 2).unwrap();
-        assert!(lined.contains("viewBox=\"0 0 36 24\""));
-        assert!(lined.contains("stroke-width=\"2\""));
-        assert!(lined.contains(&Color::rgba(0, 0, 255, 255).to_hex()));
-        let bytes = rect_png(&hex, 3).unwrap();
-        assert_eq!(&bytes[0..8], &[137, 80, 78, 71, 13, 10, 26, 10]);
-        let vertical = tiling_hex(2, Orientation::Vertical);
-        let tall = rect(&vertical).unwrap();
-        assert!(tall.size.1 > tall.size.0);
-        assert!(rect(&Cell6d::new(
-            crate::two::Cell2d::new(mrlycore::Tensor::full(vec![4, 4], 1)),
-            Projection::Cut,
-            Orientation::Horizontal,
-            0,
-        ))
-        .is_err());
-    }
-    #[test]
-    fn rect_window_has_no_gaps() {
-        for orient in [Orientation::Horizontal, Orientation::Vertical] {
-            let hex = tiling_hex(3, orient);
-            let domain = rect(&hex).unwrap();
-            let pixels = fill_triangles(&domain.triangles, domain.origin, domain.size, 1);
-            let clear = pixels.iter().filter(|p| p[3] == 0).count();
-            assert_eq!(clear, 0, "{orient:?} of {} pixels", pixels.len());
-        }
-    }
     #[test]
     fn nothing_to_render_errors_in_both_doors() {
         let bare = Cell6d::new(
@@ -391,65 +222,5 @@ mod tests {
         );
         assert!(triangles(&bare).unwrap().is_empty());
         assert!(svg(&bare, 4, None, 1).is_err());
-        assert!(png(&bare, 4).is_err());
-        assert!(hex_png(&bare, 4, Filter::Box).is_err());
-    }
-    #[test]
-    fn hex_png_squashes_the_stretched_axis() {
-        let sides = |bytes: &[u8]| -> (usize, usize) {
-            let (w, h, _) = mrlycore::unpng(bytes).unwrap();
-            (w, h)
-        };
-        let tall = iso_design(23, 3, 1, 2).unwrap();
-        let (w, h) = sides(&png(&tall, 4).unwrap());
-        assert_eq!(
-            sides(&hex_png(&tall, 4, Filter::Box).unwrap()),
-            mrlycore::resample::hex_size(w, h, true)
-        );
-        let wide = tiling_hex(3, Orientation::Horizontal);
-        let (w, h) = sides(&png(&wide, 4).unwrap());
-        assert_eq!(
-            sides(&hex_png(&wide, 4, Filter::Nearest).unwrap()),
-            mrlycore::resample::hex_size(w, h, false)
-        );
-    }
-}
-
-#[cfg(test)]
-mod golden {
-    use super::*;
-    use crate::six::designs::iso_design;
-    #[test]
-    fn png_pixels_stay_pinned() {
-        let inks = [
-            [0, 0, 0, 0],
-            [0, 140, 255, 255],
-            [50, 204, 88, 255],
-            [255, 61, 64, 255],
-        ];
-        let cases = [
-            (
-                png(&iso_design(23, 3, 1, 2).unwrap(), 10).unwrap(),
-                (120, 120),
-                [3600, 3600, 3600, 3600],
-                inks[1],
-            ),
-            (
-                png(&iso_design(5, 4, 1, 2).unwrap(), 3).unwrap(),
-                (42, 39),
-                [522, 486, 144, 486],
-                inks[3],
-            ),
-        ];
-        for (bytes, size, counts, centre) in &cases {
-            let (w, h, pixels) = mrlycore::unpng(bytes).unwrap();
-            assert_eq!((w, h), *size);
-            assert_eq!(pixels.len(), counts.iter().sum::<usize>());
-            for (ink, count) in inks.iter().zip(counts) {
-                assert_eq!(pixels.iter().filter(|p| *p == ink).count(), *count);
-            }
-            assert_eq!(pixels[0], inks[0]);
-            assert_eq!(pixels[(h / 2) * w + w / 2], *centre);
-        }
     }
 }

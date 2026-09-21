@@ -83,33 +83,6 @@ impl Image {
     }
 }
 
-/// Encodes indexed frames sharing one size and palette as an animated gif.
-pub fn gif(frames: &[Image], scale: usize, delay: usize) -> Result<Vec<u8>> {
-    let first = match frames.first() {
-        Some(first) => first,
-        None => return Err(MrlyError::Value("gif needs at least one frame.".into())),
-    };
-    let palette: Vec<[u8; 4]> = first.palette.iter().map(|c| [c.r, c.g, c.b, c.a]).collect();
-    let mut indices = Vec::with_capacity(frames.len());
-    for frame in frames {
-        if (frame.width, frame.height) != (first.width, first.height) {
-            return Err(MrlyError::Value("every frame must share one size.".into()));
-        }
-        if frame.palette != first.palette {
-            return Err(MrlyError::Value(
-                "every frame must share one palette.".into(),
-            ));
-        }
-        let ids = frame.rows.iter().flat_map(|row| row.iter());
-        indices.push(
-            ids.map(|&id| u8::try_from(id).or_else(|_| value_error("palette index above 255.")))
-                .collect::<Result<Vec<u8>>>()?,
-        );
-    }
-    let views: Vec<&[u8]> = indices.iter().map(|f| f.as_slice()).collect();
-    codec::gif(&views, &palette, first.width, first.height, scale, delay)
-}
-
 #[derive(Deserialize)]
 struct Parts {
     width: usize,
@@ -210,24 +183,5 @@ mod tests {
         assert_eq!(image.rows[0], vec![0, 0, 1, 1]);
         assert_eq!(image.rows[3], vec![1, 1, 2, 2]);
         assert!(sample().resample(0, 4, Filter::Nearest).is_err());
-    }
-
-    #[test]
-    fn gif_encodes_frames_sharing_one_palette() {
-        let first = sample();
-        let mut second = sample();
-        second.rows = vec![vec![2, 1], vec![1, 0]];
-        let bytes = gif(&[first.clone(), second], 2, 5).unwrap();
-        assert_eq!(&bytes[0..6], b"GIF89a");
-        assert_eq!(&bytes[6..8], &4u16.to_le_bytes());
-        let mut odd = sample();
-        odd.palette.pop();
-        odd.rows = vec![vec![0, 1], vec![1, 0]];
-        assert!(gif(&[first.clone(), odd], 1, 5).is_err());
-        let mut wide = first.clone();
-        wide.width = 4;
-        wide.rows = vec![vec![0, 1, 0, 1], vec![1, 2, 1, 2]];
-        assert!(gif(&[first, wide], 1, 5).is_err());
-        assert!(gif(&[], 1, 5).is_err());
     }
 }

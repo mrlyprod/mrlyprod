@@ -7,7 +7,7 @@ pub mod bang;
 pub mod dim;
 /// The closed-form counts: classic sequences, fills and surfaces without rendering.
 pub mod formulas;
-/// The life runs: stepping, recording, rendering and their stories.
+/// The life runs: stepping, recording and rendering.
 pub mod life;
 /// The mrly names: one canonical JSON object for every mathematical thing.
 pub mod name;
@@ -17,7 +17,7 @@ pub mod rules;
 pub mod shape;
 /// The hexagon world: cubes flattened to triangle-meshed hexes.
 pub mod six;
-/// The 3d scene kit: vectors, solids and the packed wire format.
+/// The 3d scene kit: the vector and the packed wire format.
 pub mod space;
 /// The cube pipeline: designs, tiles, graphs and renderings in three dimensions.
 pub mod three;

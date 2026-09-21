@@ -10,10 +10,8 @@ The alphabet holds 108 characters: the uppers, their corner-rounded lowers, the 
 - **pens** holds every glyph's hand-penned strokes; **paths** reads them and drafts new ones.
 - **raster** lays a text out as one 0/1 grid.
 - **animate** writes a text cell by cell, folds it into a stack, and loops the cycle.
-- **serializer** renders glyphs as strings, lists, or JSON.
 
 ## Previews
 
 - `cargo run -p mrlyfont --example pen` prints the pen tables; `-- X` drafts one glyph and its stroke floor.
-- `cargo run -p mrlyfont --example strip` prints every glyph's stroke frames as JSON.
 - `uv run python utils/logos.py motion` draws the loop into `files/logos`.

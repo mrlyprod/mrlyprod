@@ -18,11 +18,8 @@ pub mod render;
 pub mod sequence;
 /// The one-generation advance of a grid.
 pub mod step;
-/// The chaptered chain of runs, each seeding the next.
-pub mod story;
 
 use crate::two::Cell2d;
-use mrlycore::errors::{value_error, Result};
 
 /// Builds the 3 by 3 Moore mask, every site on but the center.
 pub fn moore() -> Cell2d {
@@ -68,16 +65,6 @@ impl Fate {
             Fate::Timeout => "timeout",
         }
     }
-    /// Parses a fate name, or an error for an unknown one.
-    pub fn parse(name: &str) -> Result<Fate> {
-        match name {
-            "dead" => Ok(Fate::Dead),
-            "alive" => Ok(Fate::Alive),
-            "loop" => Ok(Fate::Loop),
-            "timeout" => Ok(Fate::Timeout),
-            other => value_error(format!("unknown fate {other:?}.")),
-        }
-    }
 }
 
 pub use animate::animate;
@@ -86,13 +73,10 @@ pub use elementary::{
     affine, corner_bits, cube_orbit, gasket, genus, history, lambda, npn_class, outer_totalistic,
     popcount, reversible, rule_degree, rule_name, single_seed, step, surjective, wolfram_class,
 };
-pub use heatmap::{heatmap, heatmap_range};
+pub use heatmap::heatmap;
 pub use mask::{design_mask, lattice_index, mask_offsets};
 pub use metrics::{churn, entropy};
 pub use models::{Config, Life};
-pub use render::{frames, frames_of, frames_with, movie};
+pub use render::{frames, frames_of, movie};
 pub use sequence::{counts, Counts, Sequence};
 pub use step::next_grid;
-pub use story::{tell, Chapter, Story};
-
-pub use mrlycore::ramp::Colorizer;

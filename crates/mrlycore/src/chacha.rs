@@ -65,21 +65,6 @@ impl ChaCha8 {
         }
     }
 
-    /// Returns the absolute word position in the keystream.
-    pub fn word_pos(&self) -> u128 {
-        let buf_start_block = self.block_pos.wrapping_sub(4);
-        let blocks_part = (self.index / BLOCK_WORDS) as u64;
-        let words_part = (self.index % BLOCK_WORDS) as u64;
-        let pos_block = buf_start_block.wrapping_add(blocks_part);
-        u128::from(pos_block) * BLOCK_WORDS as u128 + u128::from(words_part)
-    }
-
-    /// Seeks the keystream to an absolute word position.
-    pub fn set_word_pos(&mut self, word_offset: u128) {
-        self.block_pos = (word_offset / BLOCK_WORDS as u128) as u64;
-        self.generate_and_set((word_offset % BLOCK_WORDS as u128) as usize);
-    }
-
     /// Returns a uniform double in the half-open unit interval.
     pub fn unit(&mut self) -> f64 {
         let scale = 1.0 / ((1u64 << 53) as f64);
@@ -413,21 +398,5 @@ mod tests {
             &rejection[..10],
             [14000, 15779, 18205, 16798, 27008, 70427, 3610, 72674, 7116, 60125]
         );
-    }
-
-    #[test]
-    fn word_pos_seeks_the_stream() {
-        let mut c = ChaCha8::from_u64(7);
-        assert_eq!(c.word_pos(), 0);
-        for _ in 0..70 {
-            c.next_u32();
-        }
-        assert_eq!(c.word_pos(), 70);
-        c.next_u64();
-        assert_eq!(c.word_pos(), 72);
-        c.set_word_pos(5);
-        let a = c.next_u64();
-        c.set_word_pos(5);
-        assert_eq!(c.next_u64(), a);
     }
 }

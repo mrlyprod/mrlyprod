@@ -3,7 +3,6 @@ use crate::bang::factory;
 use crate::bang::universe::Code;
 use mrlycore::atoms;
 use mrlycore::errors::{value_error, Result};
-use mrlycore::state;
 use mrlycore::tensor::Tensor;
 use mrlycore::tile::Design;
 
@@ -39,18 +38,6 @@ pub fn zeros(number: usize, level: usize) -> Result<Cell3d> {
 /// Builds the solid cube at the given size and level.
 pub fn ones(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::ones_3d(number), level)
-}
-
-/// Builds a random cube of the given density at the given size and level.
-pub fn noise(number: usize, level: usize, density: f64) -> Result<Cell3d> {
-    build(atoms::noise_3d(number, density), level)
-}
-
-/// Draws a random universe code and builds its cube.
-pub fn random(number: usize, level: usize, base: usize) -> Result<Cell3d> {
-    let total = factory::total_codes(3, base);
-    let code = state::randint(0, (total - 1) as i64) as Code;
-    create(code, number, level, base)
 }
 
 /// Builds the Menger sponge, filled where at most one coordinate is odd, at the given level.
@@ -155,13 +142,6 @@ pub fn named(design: Design, number: usize, level: usize) -> Result<Cell3d> {
     build(pattern, level)
 }
 
-/// Draws one of the six named cube designs and builds it at the given size and level.
-pub fn random_classic(number: usize, level: usize) -> Result<Cell3d> {
-    let classics = mrlycore::tile::classics(3);
-    let pick = state::randint(0, classics.len() as i64 - 1) as usize;
-    named(classics[pick], number, level)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -217,19 +197,6 @@ mod tests {
         }
         assert!(named(Design::Htree, 3, 1).is_err());
         assert!(named(Design::Hline, 3, 1).is_err());
-    }
-    #[test]
-    fn random_classic_draws_one_of_the_named_six() {
-        let _g = state::guard();
-        state::seed(7);
-        let a = random_classic(3, 1).unwrap();
-        state::seed(7);
-        assert_eq!(random_classic(3, 1).unwrap(), a);
-        let classics: Vec<Cell3d> = mrlycore::tile::classics(3)
-            .into_iter()
-            .map(|design| named(design, 3, 1).unwrap())
-            .collect();
-        assert!(classics.contains(&a));
     }
     #[test]
     fn trees_are_orientations_of_each_other() {

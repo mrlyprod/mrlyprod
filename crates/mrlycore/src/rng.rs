@@ -45,29 +45,4 @@ impl Rng {
     pub fn choice<'a, T>(&mut self, items: &'a [T]) -> &'a T {
         &items[self.below(items.len())]
     }
-    /// Returns the stream's current word position.
-    pub fn pos(&self) -> u128 {
-        self.inner.word_pos()
-    }
-    /// Moves the stream to a word position so later draws replay from there.
-    pub fn seek(&mut self, pos: u128) {
-        self.inner.set_word_pos(pos);
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn seek_resumes_the_stream() {
-        let mut a = Rng::new(7);
-        a.below(100);
-        a.unit();
-        let pos = a.pos();
-        let next: Vec<usize> = (0..5).map(|_| a.below(1000)).collect();
-        let mut b = Rng::new(7);
-        b.seek(pos);
-        let again: Vec<usize> = (0..5).map(|_| b.below(1000)).collect();
-        assert_eq!(next, again);
-    }
 }

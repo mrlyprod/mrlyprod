@@ -120,26 +120,6 @@ pub fn build(tile: &Tile) -> Result<Cell2d> {
     Ok(c)
 }
 
-/// Returns whether the tile passes its check and builds to its declared size.
-pub fn probe(tile: &Tile) -> bool {
-    tile.check().is_ok()
-        && build(tile)
-            .map(|c| c.width() == tile.width && c.height() == tile.height)
-            .unwrap_or(false)
-}
-
-/// Returns a k by k tensor of types sampled evenly across the cell.
-pub fn sample_types(cell: &Cell2d, k: usize) -> Tensor {
-    let (w, h) = (cell.width(), cell.height());
-    let mut out = Tensor::new(vec![k, k]);
-    for y in 0..k {
-        for x in 0..k {
-            out.set(&[y, x], cell.types().get(&[y * h / k, x * w / k]));
-        }
-    }
-    out
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -223,27 +203,13 @@ mod tests {
             "group": "General", "factor": 0,
             "sources": [{ "design": "Carpet" }],
             "numbers": [], "levels": [], "rotations": [], "anti": [],
-            "invert": false, "flip": false, "base": "Two", "width": 0, "height": 0,
+            "invert": false, "flip": false, "width": 0, "height": 0,
         }))
         .unwrap();
         assert!(build(&parsed).is_err());
-        assert!(!probe(&parsed));
         let mut bare = Tile::new(Group::Mosaic);
         bare.sources = vec![Source::Classic(Design::Carpet)];
         assert!(build(&bare).is_err());
-    }
-    #[test]
-    fn probe_delegates_to_the_check_law() {
-        let mut tile = Tile::new(Group::General);
-        tile.sources = vec![Source::Classic(Design::Carpet)];
-        tile.numbers = vec![3];
-        tile.levels = vec![1];
-        tile.rotations = vec![0];
-        tile.anti = vec![false];
-        tile.resize();
-        assert!(probe(&tile));
-        tile.anti = Vec::new();
-        assert!(!probe(&tile));
     }
     #[test]
     fn evens_parity_builds() {

@@ -1,10 +1,10 @@
 /// The characters that dip below the five-row baseline.
-pub const DESCENDERS: &[char] = &[
+pub(crate) const DESCENDERS: &[char] = &[
     '@', '$', '\u{00a9}', '\u{00ae}', '(', ')', '[', ']', '{', '}',
 ];
 
 /// Returns whether the character dips below the baseline.
-pub fn descends(c: char) -> bool {
+pub(crate) fn descends(c: char) -> bool {
     DESCENDERS.contains(&c)
 }
 

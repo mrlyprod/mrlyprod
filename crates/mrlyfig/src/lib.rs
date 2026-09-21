@@ -5,8 +5,6 @@
 pub mod board;
 /// The scalar fields painted through a ramp.
 pub mod field;
-/// The animated gif: frames over one palette, written from scratch.
-pub mod gif;
 /// The square lattice, the design painter and the Kronecker masks.
 pub mod grid;
 /// The triangle meshes of the hexagon world.
@@ -21,7 +19,6 @@ pub mod out;
 pub mod plot;
 
 pub use board::{Board, Frame};
-pub use gif::Reel;
 pub use grid::Grid;
 pub use ink::Ramp;
 pub use mrlycore::Color;

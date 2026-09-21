@@ -13,9 +13,9 @@ pub mod graph;
 mod models;
 /// The coloring of a flat cell by its types.
 pub mod painter;
-/// The text, PNG and SVG renderings of a flat cell.
+/// The text and PNG renderings of a flat cell.
 pub mod renderer;
-/// The list, string and JSON forms of a flat cell.
+/// The JSON form of a flat cell.
 pub mod serializer;
 /// The random tiles and the flat cells they build.
 pub mod tile;
@@ -23,12 +23,12 @@ pub mod tile;
 pub use carry::{capacity, embed, extract, read, sheet};
 pub use census::{census, euler, fills, Census};
 pub use designs::{
-    carpet, create, dust, from_corners, hline, htree, level_set, levels_code, named, net, noise,
-    ones, point, random, star, vline, void, vtree, zeros,
+    carpet, create, dust, from_corners, hline, htree, level_set, levels_code, named, net, ones,
+    point, star, vline, void, vtree, zeros,
 };
 pub use geometry::{magic, merge, mosaic, special, to_3d};
 pub use models::Cell2d;
 pub use painter::paint;
-pub use renderer::{from_png, montage, png, raster, svg, text, Shape};
-pub use serializer::{from_json, from_lists, from_strings, to_json, to_lists, to_strings};
+pub use renderer::{png, text};
+pub use serializer::{from_json, to_json};
 pub use tile::{build, create as create_tile, random_tile};

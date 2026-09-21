@@ -396,8 +396,6 @@ fn the_fixture_the_page_prints() {
 
 #[test]
 fn the_rest_of_the_exports_answer() {
-    let sheet = two_pixels("7", 3, 1, 0, 2).unwrap();
-    assert_eq!(sheet.rgba.chunks(4).filter(|p| p[0] == 0).count(), 8);
     assert_eq!(
         parse(&two_census("7", 3, 1, 0, 2).unwrap()).unwrap()["voids"],
         1

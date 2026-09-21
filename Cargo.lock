@@ -791,10 +791,7 @@ name = "mrlyfig"
 version = "0.3.0"
 dependencies = [
  "mrlycore",
- "mrlyfont",
- "mrlylab",
  "mrlymath",
- "mrlynum",
 ]
 
 [[package]]
@@ -802,16 +799,6 @@ name = "mrlyfont"
 version = "0.3.0"
 dependencies = [
  "mrlycore",
- "serde_json",
-]
-
-[[package]]
-name = "mrlygame"
-version = "0.3.0"
-dependencies = [
- "mrlycore",
- "mrlymath",
- "mrlymusic",
  "serde_json",
 ]
 
@@ -832,13 +819,6 @@ dependencies = [
  "mrlynum",
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "mrlymusic"
-version = "0.3.0"
-dependencies = [
- "mrlycore",
 ]
 
 [[package]]
@@ -1461,16 +1441,6 @@ dependencies = [
  "equator 0.4.2",
  "loom",
  "rayon",
-]
-
-[[package]]
-name = "still-hunt"
-version = "0.3.0"
-dependencies = [
- "mrlycore",
- "mrlygame",
- "mrlymath",
- "mrlynum",
 ]
 
 [[package]]

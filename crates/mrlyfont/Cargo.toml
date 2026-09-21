@@ -10,4 +10,6 @@ publish = false
 
 [dependencies]
 mrlycore.workspace = true
+
+[dev-dependencies]
 serde_json = { version = "1", features = ["preserve_order"] }

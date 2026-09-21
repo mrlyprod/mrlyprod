@@ -4,7 +4,7 @@ use mrlycore::ramp::Colorizer;
 use mrlycore::tensor::Tensor;
 
 /// Renders cumulative-visit heatmap frames over a slice of a run, or an error at a bad range.
-pub fn heatmap_range(
+fn heatmap_range(
     grids: &[Cell2d],
     start: usize,
     end: usize,

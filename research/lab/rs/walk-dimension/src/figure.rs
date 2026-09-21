@@ -1,5 +1,5 @@
 use mrlycore::colors::{BLUE, LIGHT, ORANGE, WHITE};
-use mrlycore::{io, png};
+use mrlycore::png;
 use std::path::Path;
 
 pub const WIDTH: usize = 1760;
@@ -191,5 +191,5 @@ pub fn render(series: &Series) -> Vec<[u8; 4]> {
 
 pub fn write(path: &Path, series: &Series) {
     let bytes = png(&render(series), WIDTH, HEIGHT, 1).expect("the figure encodes");
-    io::write(path, &bytes).expect("the figure writes");
+    std::fs::write(path, &bytes).expect("the figure writes");
 }

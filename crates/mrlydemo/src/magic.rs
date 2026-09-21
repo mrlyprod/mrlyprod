@@ -1,7 +1,6 @@
-use crate::{checked, Fault, Grid, Pixels};
-use mrlycore::cell::mapping;
+use crate::{checked, Fault, Grid};
 use mrlycore::tile::{Group, Source, Tile};
-use mrlycore::{json, Json, Mode, Tensor};
+use mrlycore::{json, Json, Tensor};
 use mrlylab::press;
 use mrlymath::bang::{magic, word, MagicLayer};
 use mrlymath::name::{Bang, Named, Word};
@@ -72,23 +71,6 @@ pub fn magic_grid(codes: Vec<String>, numbers: Vec<u32>, bases: Vec<u32>) -> Res
         height: tile.shape[0] as u32,
         types: tile.bytes().to_vec(),
     })
-}
-
-/// Paints the plane word: filled sites black, empty sites white.
-#[wasm_bindgen]
-pub fn magic_pixels(
-    codes: Vec<String>,
-    numbers: Vec<u32>,
-    bases: Vec<u32>,
-) -> Result<Pixels, Fault> {
-    let tile = drawn(&letters(codes, numbers, 2, bases)?, PLANE_SIDE)?;
-    let cell = Cell2d::new(tile).paint(&mapping(), Mode::Type);
-    let (width, height) = (cell.width(), cell.height());
-    Ok(Pixels::of(
-        width,
-        height,
-        cell.cell.colors.unwrap_or_default(),
-    ))
 }
 
 // SOLID

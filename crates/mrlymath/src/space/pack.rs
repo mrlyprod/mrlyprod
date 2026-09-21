@@ -1,16 +1,4 @@
 use super::vec::Vec3;
-use mrlycore::colors::{BLUE, GREEN, RED};
-
-/// The WGSL shader that consumes the packed wire format.
-pub const MESH_WGSL: &str = include_str!("mesh.wgsl");
-
-/// A colored line segment.
-pub struct Edge {
-    /// The two endpoints.
-    pub ends: [Vec3; 2],
-    /// The RGBA color.
-    pub color: [u8; 4],
-}
 
 /// A builder packing triangles and lines into one flat float buffer.
 #[derive(Default)]
@@ -51,38 +39,6 @@ impl Pack {
         out.extend(self.lines);
         out
     }
-}
-
-/// Builds the three colored axes and a faint floor grid in the given ink.
-pub fn axis_edges(ink: [u8; 4]) -> Vec<Edge> {
-    let o = Vec3::new(0.0, -1.0, 0.0);
-    let mut out = vec![
-        Edge {
-            ends: [o, Vec3::new(1.4, -1.0, 0.0)],
-            color: [RED.r, RED.g, RED.b, 255],
-        },
-        Edge {
-            ends: [o, Vec3::new(0.0, 0.4, 0.0)],
-            color: [GREEN.r, GREEN.g, GREEN.b, 255],
-        },
-        Edge {
-            ends: [o, Vec3::new(0.0, -1.0, 1.4)],
-            color: [BLUE.r, BLUE.g, BLUE.b, 255],
-        },
-    ];
-    let faint = [ink[0], ink[1], ink[2], 64];
-    for k in 0..=6 {
-        let c = -1.2 + 0.4 * k as f32;
-        out.push(Edge {
-            ends: [Vec3::new(c, -1.0, -1.2), Vec3::new(c, -1.0, 1.2)],
-            color: faint,
-        });
-        out.push(Edge {
-            ends: [Vec3::new(-1.2, -1.0, c), Vec3::new(1.2, -1.0, c)],
-            color: faint,
-        });
-    }
-    out
 }
 
 #[cfg(test)]
@@ -138,18 +94,5 @@ mod tests {
         assert_eq!(buf[0], 36.0);
         assert_eq!(buf[2 + 36 + 3], 0.0);
         assert_eq!(buf[2 + 36 + 8 + 3], 0.0);
-    }
-    #[test]
-    fn the_axes_stand_on_the_floor() {
-        let edges = axis_edges([255, 255, 255, 255]);
-        assert_eq!(edges.len(), 17);
-        assert_eq!(edges[0].ends[0], Vec3::new(0.0, -1.0, 0.0));
-        assert_eq!(edges[16].color[3], 64);
-    }
-    #[test]
-    fn the_shader_ships_with_the_wire_format() {
-        assert!(MESH_WGSL.contains("fn vs_main"));
-        assert!(MESH_WGSL.contains("fn vs_line"));
-        assert!(MESH_WGSL.contains("var<uniform>"));
     }
 }

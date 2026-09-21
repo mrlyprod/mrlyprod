@@ -3,10 +3,6 @@
 
 /// The stroke-order writing animations of text.
 pub mod animate;
-/// The built font files the crate ships: json, ttf, woff, woff2.
-pub mod assets;
-/// The glyph well this crate pours.
-pub mod data;
 /// The raw bitmap tables of the font.
 pub mod glyphs;
 /// The glyph builders for uppers, lowers, digits, extras and specials.
@@ -20,8 +16,6 @@ pub mod paths;
 pub mod pens;
 /// The 0/1 grid a text renders to.
 pub mod raster;
-/// The string, list and JSON forms of glyphs.
-pub mod serializer;
 /// The descenders and the trimming of bitmaps.
 pub mod shape;
 
@@ -29,13 +23,12 @@ use std::collections::BTreeMap;
 use std::sync::OnceLock;
 
 pub use animate::{animate, cycle, merge, Anim, FPS, HOLD};
-pub use letters::{all, digits, extras, lowers, specials, uppers};
+pub use letters::all;
 pub use models::Glyph;
 pub use names::name_of;
 pub use paths::{draft, floor, path, strokes};
 pub use raster::raster;
-pub use serializer::{to_json, to_lists, to_strings};
-pub use shape::{descends, trim, DESCENDERS};
+pub use shape::trim;
 
 fn book() -> &'static BTreeMap<char, Glyph> {
     static BOOK: OnceLock<BTreeMap<char, Glyph>> = OnceLock::new();
@@ -56,11 +49,6 @@ fn order() -> &'static Vec<char> {
 /// ```
 pub fn glyph(c: char) -> Option<Glyph> {
     book().get(&c).cloned()
-}
-
-/// Returns a borrowed glyph from the static book, or None outside the font.
-pub fn look(c: char) -> Option<&'static Glyph> {
-    book().get(&c)
 }
 
 /// Returns every character in the font, in font order.
@@ -139,22 +127,16 @@ mod tests {
     #[test]
     fn count_matches_layout() {
         assert_eq!(supported().len(), 108);
-        assert_eq!(uppers().len(), 26);
-        assert_eq!(lowers().len(), 26);
-        assert_eq!(digits().len(), 10);
-        assert_eq!(extras().len(), 42);
-        assert_eq!(specials().len(), 4);
+        assert_eq!(letters::uppers().len(), 26);
+        assert_eq!(letters::lowers().len(), 26);
+        assert_eq!(letters::digits().len(), 10);
+        assert_eq!(letters::extras().len(), 42);
+        assert_eq!(letters::specials().len(), 4);
     }
     #[test]
     fn descenders_flagged() {
-        assert!(descends('$'));
-        assert!(descends('('));
-        assert!(!descends('A'));
-    }
-    #[test]
-    fn json_is_multiline_and_named() {
-        let json = to_json(&all());
-        assert!(json.contains("\"name\": \"LATIN CAPITAL LETTER A\""));
-        assert!(json.contains("\"rows\": [\n"));
+        assert!(shape::descends('$'));
+        assert!(shape::descends('('));
+        assert!(!shape::descends('A'));
     }
 }

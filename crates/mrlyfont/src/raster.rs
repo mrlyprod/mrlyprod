@@ -1,4 +1,5 @@
-use super::{descends, glyph, trim};
+use super::shape::descends;
+use super::{glyph, trim};
 
 pub(crate) struct Block {
     /// The character the block draws.

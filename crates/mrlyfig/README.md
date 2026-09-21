@@ -14,7 +14,6 @@
 - `iso` the exposed faces of a cube in isometric, back to front, three tones for the top, the left and the right.
 - `plot` the plain marks: bars, dots, rings, staircases, curves and a bare hairline axis, never a tick and never a label.
 - `field` a scalar field or a sampled function painted through a ramp.
-- `gif` the reel: boards added one by one, indexed exactly against a palette of at most 256 inks with no quantizer, written as a looping GIF89a by an LZW encoder of this file, `files/figures/<name>-{dark,light}.gif`.
 
 ## PRESS
 

@@ -39,14 +39,6 @@ pub enum Parity {
     Both,
 }
 
-/// The numeral base tile codes are read in.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum Base {
-    /// Base two.
-    #[default]
-    Two,
-}
-
 /// The pool of sources a tile may draw from.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Catalog {
@@ -116,15 +108,6 @@ impl Parity {
             "Odds" => Ok(Parity::Odds),
             "Both" => Ok(Parity::Both),
             other => value_error(format!("unknown parity {other:?}.")),
-        }
-    }
-}
-
-impl Base {
-    /// Returns the base as a number.
-    pub fn value(self) -> usize {
-        match self {
-            Base::Two => 2,
         }
     }
 }
@@ -319,9 +302,6 @@ pub struct Tile {
     pub invert: bool,
     /// Whether the finished tile flips.
     pub flip: bool,
-    /// The numeral base of the codes.
-    #[serde(default)]
-    pub base: Base,
     /// The tile's width in cells.
     pub width: usize,
     /// The tile's height in cells.
@@ -341,7 +321,6 @@ impl Tile {
             anti: Vec::new(),
             invert: false,
             flip: false,
-            base: Base::Two,
             width: 0,
             height: 0,
         }

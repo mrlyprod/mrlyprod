@@ -1,11 +1,11 @@
 use super::models::Cell2d;
 use crate::dim::serializer::{byte_grid, color_grid, count_grid, parse, tag_layer, types_field};
-use mrlycore::errors::{value_error, MrlyError, Result};
+use mrlycore::errors::{value_error, Result};
 use mrlycore::json;
 use mrlycore::tensor::Tensor;
 
 /// Returns the cell's types as rows of bytes.
-pub fn to_lists(cell: &Cell2d) -> Vec<Vec<u8>> {
+fn to_lists(cell: &Cell2d) -> Vec<Vec<u8>> {
     let (h, w) = (cell.height(), cell.width());
     (0..h)
         .map(|y| (0..w).map(|x| cell.types().get(&[y, x])).collect())
@@ -13,7 +13,7 @@ pub fn to_lists(cell: &Cell2d) -> Vec<Vec<u8>> {
 }
 
 /// Builds a cell from rows of bytes, or an error when the rows are empty or ragged.
-pub fn from_lists(lists: &[Vec<u8>]) -> Result<Cell2d> {
+fn from_lists(lists: &[Vec<u8>]) -> Result<Cell2d> {
     if lists.is_empty() {
         return value_error("cannot build a cell from an empty list.");
     }
@@ -23,37 +23,6 @@ pub fn from_lists(lists: &[Vec<u8>]) -> Result<Cell2d> {
     }
     let data: Vec<u8> = lists.iter().flatten().copied().collect();
     Ok(Cell2d::new(Tensor::of(data, vec![h, w])))
-}
-
-/// Returns the cell's types as rows of digit strings.
-pub fn to_strings(cell: &Cell2d) -> Vec<String> {
-    to_lists(cell)
-        .iter()
-        .map(|row| row.iter().map(|v| v.to_string()).collect())
-        .collect()
-}
-
-/// Builds a cell from rows of digit strings, or an error at any non-digit.
-///
-/// ```
-/// let rows = vec!["111".to_string(), "101".to_string(), "111".to_string()];
-/// let cell = mrlymath::two::from_strings(&rows).unwrap();
-/// assert_eq!(mrlymath::two::to_lists(&cell)[1], vec![1, 0, 1]);
-/// ```
-pub fn from_strings(rows: &[String]) -> Result<Cell2d> {
-    let lists: Result<Vec<Vec<u8>>> = rows
-        .iter()
-        .map(|row| {
-            row.chars()
-                .map(|ch| {
-                    ch.to_digit(10)
-                        .map(|d| d as u8)
-                        .ok_or_else(|| MrlyError::Value(format!("invalid digit {ch:?}.")))
-                })
-                .collect()
-        })
-        .collect();
-    from_lists(&lists?)
 }
 
 /// Serializes the cell to a JSON string of its types, with colors and tags when present.

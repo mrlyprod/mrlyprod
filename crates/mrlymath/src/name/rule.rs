@@ -165,7 +165,7 @@ impl Named for Rule {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::life::{moore, Sequence, Story};
+    use crate::life::{animate, moore, Sequence};
     use mrlycore::rng::Rng;
     use mrlycore::tensor::Tensor;
 
@@ -337,15 +337,17 @@ mod tests {
             seed.set(&[y, x], 1);
         }
         let seed = Cell2d::new(seed);
-        let mut story = Story::new();
-        story.add(&seed, &config).unwrap();
-        let back = Story::from_json(&story.to_json().unwrap()).unwrap();
-        assert_eq!(Rule::of(&back.chapters[0].config), rule);
-        assert_eq!(back.chapters[0].config.counts().unwrap(), (birth, survive));
-        for (a, b) in story.grids().iter().zip(back.grids()) {
+        let back = Rule::from_json(&Rule::of(&config).to_json()).unwrap();
+        assert_eq!(back, rule);
+        let mut replay = back.config(mask);
+        replay.max_generations = 12;
+        assert_eq!(replay.counts().unwrap(), (birth, survive));
+        let run = animate(&seed, &config).unwrap();
+        let again = animate(&seed, &replay).unwrap();
+        for (a, b) in run.grids.iter().zip(&again.grids) {
             assert_eq!(a.types(), b.types());
         }
-        assert!(story.grids().len() > 1);
+        assert!(run.grids.len() > 1);
     }
     #[test]
     fn the_moore_budget_stays_in_the_digits() {

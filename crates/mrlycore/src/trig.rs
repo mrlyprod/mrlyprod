@@ -275,67 +275,13 @@ pub fn cos_idx(i: usize) -> f32 {
     SINE[(i + N / 4) % N]
 }
 
-/// Returns the unit vector of cosine and sine at a sample index.
-#[inline]
-pub fn unit(i: usize) -> (f32, f32) {
-    (cos_idx(i), sin_idx(i))
-}
-
-/// A fractional sample index that wraps around the turn.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct FracIndex {
-    /// The fractional index within one turn.
-    pub value: f32,
-}
-
-impl FracIndex {
-    /// Builds a fractional index wrapped into the turn.
-    #[inline]
-    pub fn new(value: f32) -> FracIndex {
-        FracIndex { value }.wrapped()
-    }
-
-    /// Advances the index by a delta and wraps it back into the turn.
-    #[inline]
-    pub fn advance(&mut self, delta: f32) {
-        self.value += delta;
-        *self = self.wrapped();
-    }
-
-    /// Rounds to the nearest whole sample index.
-    #[inline]
-    pub fn index(&self) -> usize {
-        let r = (self.value + 0.5).floor();
-        (r as usize) % N
-    }
-
-    /// Returns the unit vector at the rounded index.
-    #[inline]
-    pub fn unit(&self) -> (f32, f32) {
-        unit(self.index())
-    }
-
-    #[inline]
-    fn wrapped(self) -> FracIndex {
-        let n = N as f32;
-        let v = self.value - (self.value / n).floor() * n;
-        FracIndex { value: v }
-    }
-}
-
-/// Scales a count of turns into a fractional sample index.
-#[inline]
-pub fn index_from_turns(turns: f32) -> f32 {
-    turns * N as f32
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn quarter_turns_are_exact() {
-        assert_eq!(unit(0), (1.0, 0.0));
+        assert_eq!((cos_idx(0), sin_idx(0)), (1.0, 0.0));
         assert_eq!(sin_idx(N / 4), 1.0);
         assert!(cos_idx(N / 4).abs() < 1e-6);
         assert!(sin_idx(N / 2).abs() < 1e-6);
@@ -343,33 +289,9 @@ mod tests {
     }
 
     #[test]
-    fn unit_vectors_are_unit_length() {
-        for i in 0..N {
-            let (c, s) = unit(i);
-            let mag = c * c + s * s;
-            assert!((mag - 1.0).abs() < 1e-5, "index {i} mag {mag}");
-        }
-    }
-
-    #[test]
     fn stride_divides_every_count() {
         for &count in &[1usize, 2, 4, 8, 16, 32, 64, 128] {
             assert_eq!(N % count, 0, "N must divide count {count}");
         }
-    }
-
-    #[test]
-    fn frac_index_wraps_with_floor_only() {
-        let mut f = FracIndex::new(0.0);
-        f.advance(N as f32 + 3.0);
-        assert!(f.value >= 0.0 && f.value < N as f32);
-        assert_eq!(f.index(), 3);
-    }
-
-    #[test]
-    fn frac_index_negative_wraps() {
-        let f = FracIndex::new(-1.0);
-        assert!(f.value >= 0.0 && f.value < N as f32);
-        assert_eq!(f.index(), N - 1);
     }
 }
