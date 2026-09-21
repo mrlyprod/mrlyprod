@@ -13,7 +13,8 @@
     "check": "bun check.ts",
     "test": "bun test ./kit ./ui",
     "figures": "bash ../scripts/figures.sh",
-    "symbols": "uv run --project .. --group font python ../scripts/symbols.py"
+    "symbols": "uv run --project .. --group font python ../scripts/symbols.py",
+    "vendor": "bun scripts/vendor.ts"
   },
   "dependencies": {
     "@shikijs/core": "^4.4.3",

@@ -82,6 +82,10 @@
     { "name": "Discord", "href": "https://discord.gg/YEKjjvwhcK" }
   ],
   "contact": "help@mrly.net",
+  "shots": {
+    "routes": ["/", "/demos/sponge/", "/papers/spin-harmonics/", "/research/discoveries/", "/git/site/kit/ssg/build.ts"],
+    "sizes": { "phone": [390, 844, true], "desktop": [1440, 900, false] }
+  },
   "push": {
     "prefix": "",
     "guard": ["cdn/"],
@@ -115,6 +119,16 @@
     "pkg": { "path": "pkg", "deep": true },
     "ui": { "path": "ui", "deep": true },
     "public": { "path": "public" }
+  },
+  "fonts": {
+    "out": "ui/fonts",
+    "keep": "ui/fonts/keep.css",
+    "faces": [
+      { "family": "Noto Sans", "file": "sans", "axes": "wght@400..700", "weight": "400 700", "licence": "notosans" },
+      { "family": "Noto Serif", "file": "serif", "axes": "wght@400..700", "weight": "400 700", "licence": "notoserif" },
+      { "family": "Noto Sans Mono", "file": "mono", "axes": "wght@400..700", "weight": "400 700", "licence": "notosansmono" },
+      { "family": "Noto Color Emoji", "file": "emoji", "weight": "400", "shards": true, "licence": "notocoloremoji" }
+    ]
   },
   "kit": {
     "path": "kit",
@@ -168,7 +182,8 @@
         "fonts/emoji.6.woff2",
         "fonts/emoji.7.woff2",
         "fonts/emoji.8.woff2",
-        "fonts/emoji.9.woff2"
+        "fonts/emoji.9.woff2",
+        "fonts/emoji.10.woff2"
       ]
     },
     {

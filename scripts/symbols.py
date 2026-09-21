@@ -15,6 +15,7 @@ FONTS = SITE / "ui" / "fonts"
 MASTER = ROOT / "files" / "fonts" / "symbols.ttf"
 SHIPPED = FONTS / "symbols.woff2"
 CSS = FONTS / "fonts.css"
+KEEP = FONTS / "keep.css"
 CONFIG = SITE / "site.json"
 DIST = Path(os.environ.get("MRLY_DIST") or SITE / "dist")
 SKIP = {"git", "raw"}
@@ -101,7 +102,8 @@ def main():
     font.close()
     spans = ranges(keep)
     ranged = spell(spans)
-    CSS.write_text(face(CSS.read_text(encoding="utf8"), ranged), encoding="utf8")
+    for sheet in (CSS, KEEP):
+        sheet.write_text(face(sheet.read_text(encoding="utf8"), ranged), encoding="utf8")
     CONFIG.write_text(listed(CONFIG.read_text(encoding="utf8")), encoding="utf8")
     was = file.stat().st_size
     now = SHIPPED.stat().st_size
