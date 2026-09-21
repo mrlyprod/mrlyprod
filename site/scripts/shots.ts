@@ -17,7 +17,7 @@ const CSP = process.env.CSP ?? "";
 
 /* WHAT */
 
-const ROUTES = ["/", "/demos/sponge/", "/papers/spin-harmonics/", "/research/discoveries/", "/git/site/kit/ssg/build.ts"];
+const ROUTES = ["/", "/demos/sponge/", "/papers/spin-harmonics/", "/research/discoveries/", "/git/site/ssg/build.ts"];
 
 const SIZES: [string, number, number, boolean][] = [
   ["phone", 390, 844, true],

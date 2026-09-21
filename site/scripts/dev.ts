@@ -1,7 +1,7 @@
 import { existsSync, statSync, watch } from "node:fs";
 import { extname, join, resolve, sep } from "node:path";
-import { forget, globals, render, scan, type Output, type Route, type Site } from "../kit/ssg/build.ts";
-import { owner as rawOwner } from "../kit/git/git.ts";
+import { forget, globals, render, scan, type Output, type Route, type Site } from "../ssg/build.ts";
+import { owner as rawOwner } from "../git/git.ts";
 import { counted, demoTree, spec } from "./site.ts";
 
 const org = resolve(import.meta.dir, "..");
@@ -67,7 +67,8 @@ for (const path of watched()) watch(path, { recursive: statSync(path).isDirector
 const pages = () => site.routes.filter((route) => route.kind !== "demos");
 
 const disk = (): [string, string][] => [
-  ["/ui/", site.kit?.path ?? ""],
+  ["/ui/", join(org, "ui")],
+  ["/kit/", join(org, "kit")],
   ["/lib/", join(org, "lib")],
   ["/figures/", site.input("figures").path],
   ["/research/notes/", site.input("notes").path],

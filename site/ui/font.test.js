@@ -48,7 +48,7 @@ test('any string writes itself and a lone glyph has nothing to merge', () => {
 });
 
 test('the kit matches the crate frame for frame', async () => {
-  const pkg = join(import.meta.dir, '..', '..', 'pkg');
+  const pkg = join(import.meta.dir, '..', 'pkg');
   if (!existsSync(join(pkg, 'mrlydemo.js'))) return;
   const wasm = await import(join(pkg, 'mrlydemo.js'));
   await wasm.default({ module_or_path: await Bun.file(join(pkg, 'mrlydemo_bg.wasm')).arrayBuffer() });

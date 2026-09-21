@@ -1,7 +1,7 @@
-@import "../kit/ui/palette.css";
-@import "../kit/ui/tokens.css";
-@import "../kit/ui/base.css";
-@import "../kit/ui/chrome.css";
+@import "../kit/palette.css";
+@import "../ui/tokens.css";
+@import "../ui/base.css";
+@import "../ui/chrome.css";
 
 /* TEXT */
 

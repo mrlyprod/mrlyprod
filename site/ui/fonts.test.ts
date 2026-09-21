@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 
-const site = resolve(import.meta.dir, "../..");
+const site = resolve(import.meta.dir, "..");
 const dist = process.env.MRLY_DIST ? resolve(process.env.MRLY_DIST) : join(site, "dist");
 const master = resolve(site, "..", "files", "fonts", "symbols.ttf");
 const READS = ["wiki", "papers"];

@@ -11,7 +11,7 @@
     "shots": "bun scripts/shots.ts",
     "clean": "rm -rf dist",
     "check": "bun check.ts",
-    "test": "bun test ./kit",
+    "test": "bun test ./kit ./ssg ./git ./ui",
     "figures": "bash ../scripts/figures.sh",
     "symbols": "uv run --project .. --group font python ../scripts/symbols.py"
   },

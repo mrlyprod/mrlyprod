@@ -1,7 +1,7 @@
 import init, * as wasm from '../pkg/mrlydemo.js';
 import wasmUrl from '../pkg/mrlydemo_bg.wasm';
-import { palette } from '../kit/ui/palette.js';
-import { dark, light } from '../kit/ui/theme.js';
+import { palette } from '../kit/palette.js';
+import { dark, light } from '../kit/theme.js';
 
 export const mrly = wasm;
 export { palette, dark, light };

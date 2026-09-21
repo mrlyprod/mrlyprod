@@ -1,7 +1,7 @@
 import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { build, digest, globals, today, type Manifest, type Output } from "../kit/ssg/build.ts";
+import { build, digest, globals, today, type Manifest, type Output } from "../ssg/build.ts";
 import { client, del, getText, list, putBytes, DEV_BUCKET, NET_BUCKET } from "../../aws/s3.ts";
 import { spec } from "./site.ts";
 

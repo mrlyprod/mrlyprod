@@ -106,37 +106,44 @@
     "demos": { "path": "demos", "deep": true },
     "lib": { "path": "lib", "deep": true },
     "pkg": { "path": "pkg", "deep": true },
-    "ui": { "path": "kit/ui", "deep": true },
+    "ui": { "path": "ui", "deep": true },
     "public": { "path": "public" }
   },
   "kit": {
-    "path": "kit/ui",
+    "path": "kit",
     "out": "ui",
     "hash": true,
     "files": [
       "palette.css",
-      "tokens.css",
-      "base.css",
-      "chrome.css",
-      "chrome.js",
-      "font.js",
-      "font.json",
-      "logo.js",
       "palette.js",
-      "theme.js",
-      "savers/index.js",
-      "savers/frame.js",
-      "savers/matrix.js",
-      "savers/sleep.js",
-      "savers/tiles.js",
-      "savers/fractal.js",
-      "savers/gl.js",
-      "code.css"
+      "theme.js"
     ]
   },
   "assets": [
     {
-      "path": "kit/ui",
+      "path": "ui",
+      "out": "ui",
+      "hash": true,
+      "files": [
+        "tokens.css",
+        "base.css",
+        "chrome.css",
+        "chrome.js",
+        "font.js",
+        "font.json",
+        "logo.js",
+        "savers/index.js",
+        "savers/frame.js",
+        "savers/matrix.js",
+        "savers/sleep.js",
+        "savers/tiles.js",
+        "savers/fractal.js",
+        "savers/gl.js",
+        "code.css"
+      ]
+    },
+    {
+      "path": "ui",
       "out": "ui",
       "hash": true,
       "files": [
@@ -161,7 +168,7 @@
       ]
     },
     {
-      "path": "kit/ui",
+      "path": "ui",
       "out": "ui",
       "hash": false,
       "files": [

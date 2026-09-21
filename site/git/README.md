@@ -2,7 +2,7 @@
 
 - mrly.net's own code viewer, not a package: `/git/` browses the repo the site lives in, `/raw/` serves its exact bytes.
 - The input is always this repo's own tree, never another; no `git` block in `site.json` means no routes at all.
-- `ssg/build.ts` owns the bookkeeping and calls in: `scan()` appends the routes, `render()` and `fingerprint()` dispatch on the kind.
+- `../ssg/build.ts` owns the bookkeeping and calls in: `scan()` appends the routes, `render()` and `fingerprint()` dispatch on the kind.
 
 ## SITE.JSON
 

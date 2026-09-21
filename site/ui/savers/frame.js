@@ -1,5 +1,5 @@
-import { palette } from '../palette.js';
-import { dark as NIGHT, light as DAY } from '../theme.js';
+import { palette } from '../../kit/palette.js';
+import { dark as NIGHT, light as DAY } from '../../kit/theme.js';
 
 /* RANDOM */
 

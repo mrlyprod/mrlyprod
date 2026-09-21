@@ -11,7 +11,7 @@ from fontTools.ttLib import TTFont
 
 ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / "site"
-FONTS = SITE / "kit" / "ui" / "fonts"
+FONTS = SITE / "ui" / "fonts"
 MASTER = ROOT / "files" / "fonts" / "symbols.ttf"
 SHIPPED = FONTS / "symbols.woff2"
 CSS = FONTS / "fonts.css"

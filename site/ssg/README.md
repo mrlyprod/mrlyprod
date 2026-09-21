@@ -3,7 +3,7 @@
 - mrly.net's own site builder, not a package. One function renders one route; the rest is bookkeeping.
 - Generic: it knows routes, inputs, fingerprints and manifests, never markdown, papers or products.
 - The site brings its `site.json`, a `collect()` that lists routes and a `render()` per route.
-- `md.ts` is the markdown pipeline: `render(md, { link, math, widget })`, `inline`, `sheet`, `front`, `title`, `summary`, `plain`, `slug`, `escape`; a gate outside this repo keeps it byte-equal to a sibling copy.
+- `../kit/ssg/md.ts` is the markdown pipeline: `render(md, { link, math, widget })`, `inline`, `sheet`, `front`, `title`, `summary`, `plain`, `slug`, `escape`; it is a stamped copy of the shared kit, byte-equal to its sibling.
 - The one exception is `../git`: a `git` block in `site.json` makes `scan` append the repo's own `/git/` and `/raw/` routes, and `render` and `fingerprint` dispatch to that module.
 
 ## SITE.JSON
@@ -11,7 +11,7 @@
 - `title root` and whatever the kit reads: `prefix tint tree socials contact`.
 - `inputs`: `{ name: { path, ext?, deep? } }`. Declared, never assumed. `site.input(name).files` reads them back.
 - The site resolves nothing by hand: an undeclared name throws, so every path a build reads is in one block.
-- `kit`: `{ path, out, hash, files }`. Copied into `out/`; `site.asset(name)` gives the href, hashed when `hash` is true. A hashed `.js` file has every relative `import` and `import()` of another listed file rewritten to that file's hashed href, and a hashed `.css` file the same for every `url()` and `@import`, dependencies first, so the kit needs no bundler; a cycle throws, and naming a file the bundle does not list throws.
+- `kit`: `{ path, out, hash, files }`. Copied into `out/`; `site.asset(name)` gives the href, hashed when `hash` is true. A hashed `.js` file has every relative `import` and `import()` of another listed file rewritten to that file's hashed href, and a hashed `.css` file the same for every `url()` and `@import`, dependencies first, so the kit needs no bundler; a cycle throws, and naming a file the bundle does not list throws unless an earlier bundle already placed it, which answers with that file's hashed href.
 - `assets`: more blocks of the same shape, for files that must keep their names, such as `fonts/` and `seti/`, whose CSS names its faces by relative url.
 - `manifest`: the webmanifest, written as is. `robots`: `{ disallow }`, appended to the wildcard block alone.
 - `llms`: `{ about, links }`. `about` is the paragraph llms.txt opens on; a link is `{ href, name, note }` and is dropped unless the site publishes that route.
@@ -36,7 +36,7 @@
 
 - `root out templates collect render globals git`. `templates` are the dirs whose bytes rebuild every route.
 - `git` is the code viewer's hooks, `{ page, md, code }`: the chrome, the markdown pipeline and the highlighter the module cannot know by itself.
-- The kit itself is always a template: edit it, every route re-renders.
+- This folder is always a template, and the site adds `ui`, `git` and `kit`: edit any of them, every route re-renders.
 - `Route`: `{ route, kind, name, data, source, inputs, urls, at, hidden, sitemap }`.
 - `hidden` keeps a route out of the navigator and out of every list a reader browses; `sitemap` puts it back on the map anyway.
 - The code viewer sets both, so a thousand pages the tree never shows are still crawlable; `/404.html` sets only `hidden` and stays off.

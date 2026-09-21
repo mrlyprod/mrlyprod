@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Shell } from '../kit/ui/chrome.jsx';
+import { Shell } from '../ui/chrome.jsx';
 import { demos, load, sidebar } from './tree.js';
 import site from './site.js';
 

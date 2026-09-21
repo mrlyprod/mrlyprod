@@ -135,7 +135,7 @@ function inputs(root: string, config: Config): Record<string, Input> {
 }
 
 function templates(spec: Spec): string {
-  const here = resolve(import.meta.dir, "..");
+  const here = resolve(import.meta.dir);
   const dirs = [here, ...(spec.templates ?? []).map((d) => resolve(spec.root, d))];
   const parts: Bytes[] = [];
   for (const dir of dirs) for (const file of walk(dir)) parts.push(relative(dir, file), bytes(file));
@@ -173,6 +173,8 @@ function place(one: Bundle, spec: Spec, assets: Map<string, string>, copies: Out
     if (OUTSIDE.test(target)) return null;
     const dep = normalize(join(dirname(name), target));
     if (known.has(dep)) return visit(dep);
+    const placed = serves.get(join(one.path, dep));
+    if (placed) return placed;
     if (existsSync(join(one.path, dep))) throw new Error(`ssg: ${name} names ${dep}, which the kit's files do not list`);
     return null;
   };

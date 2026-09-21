@@ -1,5 +1,5 @@
 import { mount, useShelves } from '../lib/app.jsx';
-import { Grid, Shell } from '../kit/ui/chrome.jsx';
+import { Grid, Shell } from '../ui/chrome.jsx';
 import { sidebar } from '../lib/tree.js';
 import site from '../lib/site.js';
 

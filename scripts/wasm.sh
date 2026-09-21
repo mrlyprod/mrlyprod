@@ -12,4 +12,4 @@ trap 'rm -f "$font"' EXIT
 rm -rf "$PWD/site/pkg"
 wasm-pack build crates/mrlydemo --target web --release --out-dir "$PWD/site/pkg"
 cargo run -q -p mrlyfont --example book > "$font"
-install -m 644 "$font" site/kit/ui/font.json
+install -m 644 "$font" site/ui/font.json
