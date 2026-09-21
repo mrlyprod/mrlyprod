@@ -90,5 +90,5 @@ fn pinned(density: f64) -> (usize, u64) {
 #[test]
 fn the_pinned_soups_and_their_profiles() {
     assert_eq!(pinned(0.5), (0, 1));
-    assert_eq!(pinned(0.45), (5259, 3));
+    assert_eq!(pinned(0.45), (3274, 1));
 }

@@ -1,5 +1,4 @@
 use super::models::{Branch, Network, Node};
-use crate::core::logs;
 use std::collections::HashSet;
 use std::f64::consts::LN_2;
 
@@ -205,7 +204,7 @@ pub fn fractal_dimension(network: &Network) -> f64 {
             boxes.insert(key);
         }
         scales.push(k as f64);
-        log_count.push(logs::ln(boxes.len() as f64));
+        log_count.push(f64::ln(boxes.len() as f64));
         if boxes.len() == distinct.len() {
             break;
         }
@@ -300,6 +299,6 @@ mod tests {
         let network = core_graph(&atoms::carpet_2d(3).fractal(4)).unwrap();
         let d = census(&network).fractal_dimension;
         assert!((0.0..=3.0).contains(&d), "dimension {d}");
-        assert_eq!(d, 1.787589465914211);
+        assert!((d - 1.787589465914211).abs() < 1e-12, "dimension {d}");
     }
 }

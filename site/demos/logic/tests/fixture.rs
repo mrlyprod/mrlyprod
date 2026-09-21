@@ -313,9 +313,9 @@ fn the_fixture_the_page_prints() {
         (16384, 0, 255)
     );
     assert_eq!(parse(&volume_stats(&v, 9).unwrap()).unwrap()["max"], 2.0);
-    assert_eq!(random_code(3, 2, 7).unwrap(), "160");
-    assert_eq!(random_codes(3, 2, 7, 3).unwrap(), ["160", "134", "72"]);
-    assert_eq!(random_between(7, &[0, 0, 1], &[3, 1800, 36]), [0, 1023, 17]);
+    assert_eq!(random_code(3, 2, 7).unwrap(), "84");
+    assert_eq!(random_codes(3, 2, 7, 3).unwrap(), ["84", "17", "216"]);
+    assert_eq!(random_between(7, &[0, 0, 1], &[3, 1800, 36]), [2, 936, 23]);
     assert_eq!(
         (
             level_cap(3, 1, 128),

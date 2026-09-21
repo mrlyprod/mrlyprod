@@ -7,7 +7,6 @@ use super::colors::{
 use super::error::{value_error, Result};
 use super::named_enum;
 use super::rng::Rng;
-use super::state::{choice, randint, sample, shuffle};
 use super::tensor::{Dtype, Tensor};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -93,16 +92,16 @@ named_enum! {
 }
 
 impl Edition {
-    /// Returns the cell-painting mode this edition renders with.
-    pub fn mode(self) -> Mode {
+    /// Returns the cell-painting mode this edition renders with, or None for Random, which scatters.
+    pub fn mode(self) -> Option<Mode> {
         match self {
-            Edition::Simple => Mode::Type,
-            Edition::Index => Mode::Index,
-            Edition::Layers => Mode::Tag,
-            Edition::Neighbors => Mode::Tag,
-            Edition::Rows => Mode::Row,
-            Edition::Columns => Mode::Column,
-            Edition::Random => Mode::Random,
+            Edition::Simple => Some(Mode::Type),
+            Edition::Index => Some(Mode::Index),
+            Edition::Layers => Some(Mode::Tag),
+            Edition::Neighbors => Some(Mode::Tag),
+            Edition::Rows => Some(Mode::Row),
+            Edition::Columns => Some(Mode::Column),
+            Edition::Random => None,
         }
     }
 }
@@ -183,14 +182,14 @@ impl Paint {
 }
 
 /// Draws a random edition from the allowed list, or from all seven.
-pub fn random_edition(editions: Option<&[Edition]>) -> Edition {
+pub fn random_edition(editions: Option<&[Edition]>, rng: &mut Rng) -> Edition {
     match editions {
-        Some(list) if !list.is_empty() => choice(list),
-        _ => choice(&Edition::all()),
+        Some(list) if !list.is_empty() => *rng.choice(list),
+        _ => *rng.choice(&Edition::all()),
     }
 }
 
-fn random_primary(primaries: Option<&[Ink]>) -> Ink {
+fn random_primary(primaries: Option<&[Ink]>, rng: &mut Rng) -> Ink {
     if let Some(list) = primaries {
         if list.len() == 1 {
             return list[0];
@@ -203,21 +202,23 @@ fn random_primary(primaries: Option<&[Ink]>) -> Ink {
     if choices.is_empty() {
         choices = vec![Ink::Black, Ink::White];
     }
-    choice(&choices)
+    *rng.choice(&choices)
 }
 
-fn random_secondary(count: Option<usize>, primary: Option<Ink>) -> Vec<Ink> {
+fn random_secondary(count: Option<usize>, primary: Option<Ink>, rng: &mut Rng) -> Vec<Ink> {
     let mut inks = Ink::all().to_vec();
     match primary {
         Some(p) => inks.retain(|&ink| ink != p),
         None => inks.retain(|&ink| ink != Ink::Black && ink != Ink::White),
     }
-    let count = count.unwrap_or_else(|| randint(2, 9) as usize);
-    let count = count.min(inks.len());
-    sample(&inks, count)
+    let count = count.unwrap_or_else(|| rng.range(2, 9) as usize);
+    rng.sample_indices(inks.len(), count)
+        .into_iter()
+        .map(|i| inks[i])
+        .collect()
 }
 
-fn random_shades(count: Option<usize>, primary: Option<Ink>) -> Vec<usize> {
+fn random_shades(count: Option<usize>, primary: Option<Ink>, rng: &mut Rng) -> Vec<usize> {
     if count == Some(1) {
         return if primary == Some(Ink::Black) {
             vec![0]
@@ -225,14 +226,14 @@ fn random_shades(count: Option<usize>, primary: Option<Ink>) -> Vec<usize> {
             vec![1]
         };
     }
-    let count = count.unwrap_or_else(|| randint(2, 9) as usize);
+    let count = count.unwrap_or_else(|| rng.range(2, 9) as usize);
     let mut shades: Vec<usize> = (0..count).collect();
-    shuffle(&mut shades);
+    rng.shuffle(&mut shades);
     shades
 }
 
 /// Redraws the paint's secondary inks and shades under its scheme.
-pub fn reroll(mut paint: Paint) -> Paint {
+pub fn reroll(mut paint: Paint, rng: &mut Rng) -> Paint {
     let (colors, shades) = if paint.is_simple() {
         (Some(1), Some(1))
     } else if paint.edition == Edition::Index {
@@ -243,25 +244,25 @@ pub fn reroll(mut paint: Paint) -> Paint {
     match paint.scheme {
         Scheme::Multicolor => {
             paint.wipe();
-            paint.secondary = random_secondary(colors, Some(paint.primary));
+            paint.secondary = random_secondary(colors, Some(paint.primary), rng);
         }
         Scheme::Multitone => {
             paint.wipe();
-            paint.secondary = random_secondary(Some(1), None);
-            paint.shades = random_shades(shades, Some(paint.primary));
+            paint.secondary = random_secondary(Some(1), None, rng);
+            paint.shades = random_shades(shades, Some(paint.primary), rng);
         }
     }
     paint
 }
 
 /// Draws the paint's scheme, target and primary under the config, then rerolls the rest.
-pub fn setup(mut paint: Paint, config: &Config) -> Paint {
-    paint.scheme = choice(&[Scheme::Multicolor, Scheme::Multitone]);
+pub fn setup(mut paint: Paint, config: &Config, rng: &mut Rng) -> Paint {
+    paint.scheme = *rng.choice(&[Scheme::Multicolor, Scheme::Multitone]);
     paint.target = config
         .target
-        .unwrap_or_else(|| choice(&[Target::Fill, Target::Void]));
-    paint.primary = random_primary(config.primaries.as_deref());
-    reroll(paint)
+        .unwrap_or_else(|| *rng.choice(&[Target::Fill, Target::Void]));
+    paint.primary = random_primary(config.primaries.as_deref(), rng);
+    reroll(paint, rng)
 }
 
 fn remap_tags(target: Target, cell: &mut Cell) -> usize {
@@ -301,16 +302,16 @@ fn remap_tags(target: Target, cell: &mut Cell) -> usize {
     unique.len()
 }
 
-fn apply_colors(mut paint: Paint, max_val: usize) -> Paint {
+fn apply_colors(mut paint: Paint, max_val: usize, rng: &mut Rng) -> Paint {
     match paint.scheme {
         Scheme::Multicolor => {
             paint.wipe();
-            paint.secondary = random_secondary(Some(max_val), Some(paint.primary));
+            paint.secondary = random_secondary(Some(max_val), Some(paint.primary), rng);
         }
         Scheme::Multitone => {
             paint.wipe();
-            paint.secondary = random_secondary(Some(1), None);
-            paint.shades = random_shades(Some(max_val), Some(paint.primary));
+            paint.secondary = random_secondary(Some(1), None, rng);
+            paint.shades = random_shades(Some(max_val), Some(paint.primary), rng);
         }
     }
     paint
@@ -345,10 +346,15 @@ pub fn tag(
 }
 
 /// Tags the cell for Layers and Neighbors paints and sizes the palette to the tag count.
-pub fn prime(mut paint: Paint, cell: &mut Cell, mask: Option<&Tensor>) -> Result<Paint> {
+pub fn prime(
+    mut paint: Paint,
+    cell: &mut Cell,
+    mask: Option<&Tensor>,
+    rng: &mut Rng,
+) -> Result<Paint> {
     if matches!(paint.edition, Edition::Layers | Edition::Neighbors) {
         let max_val = tag(cell, paint.edition, paint.target, mask)?;
-        paint = apply_colors(paint, max_val.max(1));
+        paint = apply_colors(paint, max_val.max(1), rng);
     }
     Ok(paint)
 }
@@ -379,29 +385,25 @@ fn secondary_colors(paint: &Paint) -> Result<Vec<Color>> {
     Ok(colors)
 }
 
-/// Colors the cell from the paint's inks under its edition mode.
-pub fn apply(paint: &Paint, cell: &mut Cell) -> Result<()> {
+/// Colors the cell from the paint's inks under its edition mode, scattering the Random edition from the stream.
+pub fn apply(paint: &Paint, cell: &mut Cell, rng: &mut Rng) -> Result<()> {
     let primary = primary_colors(paint);
     let secondary = secondary_colors(paint)?;
-    let mapping: HashMap<u8, Vec<Color>> = match paint.target {
-        Target::Fill => HashMap::from([(0, secondary), (1, primary)]),
-        Target::Void => HashMap::from([(0, primary), (1, secondary)]),
-    };
-    *cell = cell.clone().paint(&mapping, paint.edition.mode());
-    Ok(())
-}
-
-fn scatter(paint: &Paint, cell: &mut Cell) -> Result<()> {
-    let rgba = |colors: Vec<Color>| -> Vec<[u8; 4]> {
-        colors.iter().map(|c| [c.r, c.g, c.b, c.a]).collect()
-    };
-    let primary = rgba(primary_colors(paint));
-    let secondary = rgba(secondary_colors(paint)?);
     let (void_inks, fill_inks) = match paint.target {
         Target::Fill => (secondary, primary),
         Target::Void => (primary, secondary),
     };
-    let mut rng = Rng::new(0);
+    match paint.edition.mode() {
+        Some(mode) => {
+            let mapping = HashMap::from([(0, void_inks), (1, fill_inks)]);
+            *cell = cell.clone().paint(&mapping, mode);
+        }
+        None => scatter(cell, &void_inks, &fill_inks, rng),
+    }
+    Ok(())
+}
+
+fn scatter(cell: &mut Cell, void_inks: &[Color], fill_inks: &[Color], rng: &mut Rng) {
     let size = cell.size();
     let mut colors = cell
         .colors
@@ -409,54 +411,54 @@ fn scatter(paint: &Paint, cell: &mut Cell) -> Result<()> {
         .unwrap_or_else(|| vec![[0, 0, 0, 0]; size]);
     for (flat, &t) in cell.types.bytes().iter().enumerate() {
         let palette = match t {
-            0 => &void_inks,
-            1 => &fill_inks,
+            0 => void_inks,
+            1 => fill_inks,
             _ => continue,
         };
         if !palette.is_empty() {
-            colors[flat] = palette[rng.below(palette.len())];
+            let c = rng.choice(palette);
+            colors[flat] = [c.r, c.g, c.b, c.a];
         }
     }
     cell.colors = Some(colors);
-    Ok(())
 }
 
-/// Replays a stored paint onto a cell, tagging first and rendering deterministically.
-pub fn coat(cell: &mut Cell, paint: &Paint, mask: Option<&Tensor>) -> Result<()> {
+/// Replays a stored paint onto a cell, tagging first and applying it from the stream.
+pub fn coat(cell: &mut Cell, paint: &Paint, mask: Option<&Tensor>, rng: &mut Rng) -> Result<()> {
     tag(cell, paint.edition, paint.target, mask)?;
-    if paint.edition.mode() == Mode::Random {
-        scatter(paint, cell)
-    } else {
-        apply(paint, cell)
-    }
+    apply(paint, cell, rng)
 }
 
 /// Draws a random paint under the config, applies it to the cell, and returns the recipe.
-pub fn paint(cell: &mut Cell, config: &Config, mask: Option<&Tensor>) -> Result<Paint> {
-    let edition = random_edition(config.editions.as_deref());
+pub fn paint(
+    cell: &mut Cell,
+    config: &Config,
+    mask: Option<&Tensor>,
+    rng: &mut Rng,
+) -> Result<Paint> {
+    let edition = random_edition(config.editions.as_deref(), rng);
     let mut p = Paint::new(edition);
-    p = setup(p, config);
-    p = prime(p, cell, mask)?;
-    apply(&p, cell)?;
+    p = setup(p, config, rng);
+    p = prime(p, cell, mask, rng)?;
+    apply(&p, cell, rng)?;
     Ok(p)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::colors::{BLUE, GREEN, RED, WHITE};
     use crate::core::json;
-    use crate::core::state::{guard, seed};
     use crate::math::atoms;
     fn round_trip(paint: &Paint) -> Paint {
         serde_json::from_value(serde_json::to_value(paint).unwrap()).unwrap()
     }
     #[test]
     fn simple_paint_colors_every_cell() {
-        let _g = guard();
-        seed(1);
+        let mut rng = Rng::new(1);
         let mut cell = Cell::new(atoms::carpet_2d(9));
         let config = Config::default();
-        let _ = paint(&mut cell, &config, None).unwrap();
+        let _ = paint(&mut cell, &config, None, &mut rng).unwrap();
         assert!(cell.colors.is_some());
         let colors = cell.colors.as_ref().unwrap();
         assert_eq!(colors.len(), cell.size());
@@ -465,48 +467,61 @@ mod tests {
     }
     #[test]
     fn every_edition_paints_2d() {
-        let _g = guard();
         for (i, edition) in Edition::all().into_iter().enumerate() {
-            seed(i as u64);
+            let mut rng = Rng::new(i as u64);
             let mut cell = Cell::new(atoms::carpet_2d(9));
             let mut p = Paint::new(edition);
-            p = setup(p, &Config::default());
-            p = prime(p, &mut cell, None).unwrap();
-            apply(&p, &mut cell).unwrap();
+            p = setup(p, &Config::default(), &mut rng);
+            p = prime(p, &mut cell, None, &mut rng).unwrap();
+            apply(&p, &mut cell, &mut rng).unwrap();
             let colors = cell.colors.as_ref().unwrap();
             assert_eq!(colors.len(), cell.size(), "edition {:?}", edition);
         }
     }
     #[test]
     fn every_edition_paints_3d() {
-        let _g = guard();
         for (i, edition) in Edition::all().into_iter().enumerate() {
-            seed(100 + i as u64);
+            let mut rng = Rng::new(100 + i as u64);
             let mut cell = Cell::new(atoms::carpet_3d(3));
             let mut p = Paint::new(edition);
-            p = setup(p, &Config::default());
-            p = prime(p, &mut cell, None).unwrap();
-            apply(&p, &mut cell).unwrap();
+            p = setup(p, &Config::default(), &mut rng);
+            p = prime(p, &mut cell, None, &mut rng).unwrap();
+            apply(&p, &mut cell, &mut rng).unwrap();
             let colors = cell.colors.as_ref().unwrap();
             assert_eq!(colors.len(), cell.size(), "edition {:?} 3d", edition);
         }
     }
     #[test]
-    fn paint_is_seeded() {
-        let _g = guard();
-        seed(7);
+    fn paint_replays_its_seed() {
         let mut a = Cell::new(atoms::carpet_2d(5));
-        let pa = paint(&mut a, &Config::default(), None).unwrap();
-        seed(7);
+        let pa = paint(&mut a, &Config::default(), None, &mut Rng::new(7)).unwrap();
         let mut b = Cell::new(atoms::carpet_2d(5));
-        let pb = paint(&mut b, &Config::default(), None).unwrap();
+        let pb = paint(&mut b, &Config::default(), None, &mut Rng::new(7)).unwrap();
         assert_eq!(pa, pb);
         assert_eq!(a, b);
     }
     #[test]
+    fn random_edition_scatters_from_the_stream() {
+        let types = Tensor::of(vec![0, 1, 1, 0], vec![2, 2]);
+        let scattered = |seed: u64| {
+            let mut cell = Cell::new(types.clone());
+            scatter(
+                &mut cell,
+                &[RED, GREEN],
+                &[BLUE, WHITE],
+                &mut Rng::new(seed),
+            );
+            cell.colors.unwrap()
+        };
+        let colors = scattered(5);
+        assert_eq!(colors, scattered(5));
+        assert!(colors.iter().all(|c| c[3] == 255));
+        assert!(colors[0] == [255, 61, 64, 255] || colors[0] == [50, 204, 88, 255]);
+        assert!(colors[1] == [0, 140, 255, 255] || colors[1] == [255, 255, 255, 255]);
+        assert!((0..40).any(|seed| scattered(seed) != colors));
+    }
+    #[test]
     fn multitone_builds_shade_ramp() {
-        let _g = guard();
-        seed(3);
         let mut p = Paint::new(Edition::Layers);
         p.scheme = Scheme::Multitone;
         p.primary = Ink::Black;
@@ -567,35 +582,31 @@ mod tests {
         }
     }
     #[test]
-    fn coat_renders_a_stored_paint_exactly() {
-        let _g = guard();
+    fn coat_replays_a_stored_paint_under_one_seed() {
         for edition in Edition::all() {
-            seed(11);
+            let mut rng = Rng::new(11);
             let mut primed = Cell::new(atoms::carpet_2d(9));
             let mut p = Paint::new(edition);
-            p = setup(p, &Config::default());
-            p = prime(p, &mut primed, None).unwrap();
+            p = setup(p, &Config::default(), &mut rng);
+            p = prime(p, &mut primed, None, &mut rng).unwrap();
             let stored = round_trip(&p);
-            seed(1);
             let mut a = Cell::new(atoms::carpet_2d(9));
-            coat(&mut a, &stored, None).unwrap();
-            seed(2);
+            coat(&mut a, &stored, None, &mut Rng::new(1)).unwrap();
             let mut b = Cell::new(atoms::carpet_2d(9));
-            coat(&mut b, &stored, None).unwrap();
+            coat(&mut b, &stored, None, &mut Rng::new(1)).unwrap();
             assert_eq!(a, b, "edition {:?}", edition);
             assert_eq!(a.colors.as_ref().unwrap().len(), a.size());
         }
     }
     #[test]
     fn coat_matches_the_generative_render() {
-        let _g = guard();
         for edition in [
             Edition::Simple,
             Edition::Index,
             Edition::Layers,
             Edition::Rows,
         ] {
-            seed(21);
+            let mut rng = Rng::new(21);
             let mut lived = Cell::new(atoms::carpet_2d(9));
             let p = paint(
                 &mut lived,
@@ -604,10 +615,11 @@ mod tests {
                     ..Config::default()
                 },
                 None,
+                &mut rng,
             )
             .unwrap();
             let mut coated = Cell::new(atoms::carpet_2d(9));
-            coat(&mut coated, &p, None).unwrap();
+            coat(&mut coated, &p, None, &mut rng).unwrap();
             assert_eq!(lived.colors, coated.colors, "edition {:?}", edition);
         }
     }

@@ -1,6 +1,5 @@
 use mrlyrs::core::paint::{self, Config as PaintConfig, Edition, Paint};
-use mrlyrs::core::state::seed;
-use mrlyrs::core::{json, Image, Json};
+use mrlyrs::core::{json, Image, Json, Rng};
 use mrlyrs::gen::build::{build_2d, create_2d, Config2d};
 use mrlyrs::gen::recipe::Tile;
 
@@ -33,14 +32,15 @@ fn main() {
     let config = tiles();
     let mut rows = Vec::new();
     for (i, edition) in Edition::all().into_iter().enumerate() {
-        seed(SEED + i as u64);
-        let tile = create_2d(&config).expect("no tile fits the size constraints");
+        let mut rng = Rng::new(SEED + i as u64);
+        let tile = create_2d(&config, &mut rng).expect("no tile fits the size constraints");
         let mut cell = build_2d(&tile).expect("the tile would not build");
         let recipe = PaintConfig {
             editions: Some(vec![edition]),
             ..PaintConfig::default()
         };
-        let paint = paint::paint(&mut cell.cell, &recipe, None).expect("the paint would not apply");
+        let paint = paint::paint(&mut cell.cell, &recipe, None, &mut rng)
+            .expect("the paint would not apply");
         let colors = cell.cell.colors.clone().expect("the paint left no colors");
         let image = Image::from_pixels(cell.width(), cell.height(), &colors);
         rows.push(row(edition, &tile, &paint, &image));

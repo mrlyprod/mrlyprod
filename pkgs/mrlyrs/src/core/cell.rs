@@ -1,6 +1,5 @@
 use super::colors::{Color, ALPHA, BLACK, BLUE, GREEN, RED, WHITE};
 use super::error::{value_error, Result};
-use super::state;
 use super::tensor::{Dtype, Tensor};
 use std::collections::HashMap;
 
@@ -15,8 +14,6 @@ pub enum Mode {
     Index,
     /// The colors cycled in encounter order.
     Enumerate,
-    /// A random palette color per cell.
-    Random,
     /// The color the row index picks.
     Row,
     /// The color the column index picks.
@@ -184,7 +181,6 @@ impl Cell {
                 }
                 let pick = match mode {
                     Mode::Type => 0,
-                    Mode::Random => state::randint(0, rgba.len() as i64 - 1) as usize,
                     Mode::Enumerate => {
                         let i = enumerated;
                         enumerated += 1;
@@ -379,7 +375,6 @@ pub fn mosaic(mask: &Tensor, cells: &[Cell]) -> Result<Cell> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::state::{guard, seed};
     use crate::math::atoms;
     #[test]
     fn rot90_map_matches_tensor() {
@@ -484,31 +479,6 @@ mod tests {
             }
         }
         assert_eq!(tiled.tags.as_ref().unwrap().shape, vec![6, 9]);
-    }
-    #[test]
-    fn paint_random_mode_is_seed_stable() {
-        let _g = guard();
-        seed(5);
-        let types = Tensor::of(vec![0, 1, 1, 0], vec![2, 2]);
-        let forward = HashMap::from([(0, vec![RED, GREEN]), (1, vec![BLUE, WHITE])]);
-        let colors = Cell::new(types.clone())
-            .paint(&forward, Mode::Random)
-            .colors
-            .unwrap();
-        seed(5);
-        let reversed = HashMap::from([(1, vec![BLUE, WHITE]), (0, vec![RED, GREEN])]);
-        let again = Cell::new(types)
-            .paint(&reversed, Mode::Random)
-            .colors
-            .unwrap();
-        assert_eq!(colors, again);
-        let pinned = [
-            [255, 61, 64, 255],
-            [255, 255, 255, 255],
-            [255, 255, 255, 255],
-            [50, 204, 88, 255],
-        ];
-        assert_eq!(colors, pinned);
     }
     #[test]
     fn magic_is_kron_chain() {

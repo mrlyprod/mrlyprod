@@ -2,8 +2,6 @@
 
 /// The cell grid: type bytes with optional per-cell colors and tags.
 pub mod cell;
-/// The ChaCha8 keystream, a source of random words.
-pub mod chacha;
 /// The png and gif codecs, rented from the png and gif crates.
 pub mod codec;
 /// The rgba color, its themes and the fifteen-color palette utils/colors.py stamps.
@@ -12,8 +10,6 @@ pub mod colors;
 pub mod error;
 /// The paletted image and its rows.
 pub mod image;
-/// The natural logarithm, written from a series.
-pub mod logs;
 mod named;
 /// The editions that distribute a palette over a cell.
 pub mod paint;
@@ -23,8 +19,6 @@ pub mod ramp;
 pub mod resample;
 /// The seeded random stream.
 pub mod rng;
-/// The global random state: seed once, every draw replays.
-pub mod state;
 /// The tensor and its dtypes.
 pub mod tensor;
 

@@ -1,5 +1,5 @@
 use crate::core::error::{value_error, Result};
-use crate::core::state::{boolean, choice, sample, shuffle};
+use crate::core::rng::Rng;
 use crate::gen::recipe::{
     generals, nestings, powers, products, uniform, Catalog, Group, Parity, Source, Tile,
 };
@@ -41,47 +41,60 @@ impl<const N: usize> ConfigNd<N> {
     fn sources(&self) -> Vec<Source> {
         crate::math::bang::sources(&self.catalog, N)
     }
-    fn source(&self) -> Source {
-        choice(&self.sources())
+    fn source(&self, rng: &mut Rng) -> Source {
+        *rng.choice(&self.sources())
     }
 }
 
-type Rotation = fn(Source) -> usize;
+type Rotation = fn(&mut Rng) -> usize;
 
-fn general<const N: usize>(config: &ConfigNd<N>, rotation: Rotation) -> Option<Tile> {
+fn general<const N: usize>(
+    config: &ConfigNd<N>,
+    rotation: Rotation,
+    rng: &mut Rng,
+) -> Option<Tile> {
     let numbers = generals(config.min_size, config.max_size, config.parity);
     if numbers.is_empty() {
         return None;
     }
-    let n = choice(&numbers);
-    let source = config.source();
+    let n = *rng.choice(&numbers);
+    let source = config.source(rng);
     let mut tile = Tile::new(Group::General).size(n, n);
     tile.sources = vec![source];
     tile.numbers = vec![n];
     tile.levels = vec![1];
-    tile.rotations = vec![rotation(source)];
+    tile.rotations = vec![rotation(rng)];
     tile.factor = n;
     Some(tile)
 }
 
-fn fractal<const N: usize>(config: &ConfigNd<N>, rotation: Rotation) -> Option<Tile> {
+fn fractal<const N: usize>(
+    config: &ConfigNd<N>,
+    rotation: Rotation,
+    rng: &mut Rng,
+) -> Option<Tile> {
     let options = powers(config.min_size, config.max_size, config.parity);
     if options.is_empty() {
         return None;
     }
-    let (n, level) = choice(&options);
-    let source = config.source();
+    let (n, level) = *rng.choice(&options);
+    let source = config.source(rng);
     let size = n.pow(level as u32);
     let mut tile = Tile::new(Group::Fractal).size(size, size);
     tile.sources = vec![source];
     tile.numbers = vec![n];
     tile.levels = vec![level];
-    tile.rotations = vec![rotation(source)];
+    tile.rotations = vec![rotation(rng)];
     tile.factor = n;
     Some(tile)
 }
 
-fn mixed(numbers: Vec<usize>, sources: &[Source], options: &[Vec<usize>]) -> Vec<usize> {
+fn mixed(
+    numbers: Vec<usize>,
+    sources: &[Source],
+    options: &[Vec<usize>],
+    rng: &mut Rng,
+) -> Vec<usize> {
     if !uniform(sources) || !uniform(&numbers) {
         return numbers;
     }
@@ -92,49 +105,53 @@ fn mixed(numbers: Vec<usize>, sources: &[Source], options: &[Vec<usize>]) -> Vec
         .collect();
     match fresh.is_empty() {
         true => numbers,
-        false => choice(&fresh),
+        false => rng.choice(&fresh).clone(),
     }
 }
 
-fn magic<const N: usize>(config: &ConfigNd<N>, rotation: Rotation) -> Option<Tile> {
+fn magic<const N: usize>(config: &ConfigNd<N>, rotation: Rotation, rng: &mut Rng) -> Option<Tile> {
     let options = nestings(config.min_size, config.max_size, config.parity);
     if options.is_empty() {
         return None;
     }
-    let drawn = choice(&options);
-    let sources: Vec<Source> = drawn.iter().map(|_| config.source()).collect();
-    let numbers = mixed(drawn, &sources, &options);
+    let drawn = rng.choice(&options).clone();
+    let sources: Vec<Source> = drawn.iter().map(|_| config.source(rng)).collect();
+    let numbers = mixed(drawn, &sources, &options, rng);
     let count = numbers.len();
     let size: usize = numbers.iter().product();
     let mut tile = Tile::new(Group::Magic).size(size, size);
     tile.sources = sources.clone();
     tile.numbers = numbers.clone();
     tile.levels = vec![1; count];
-    tile.rotations = sources.iter().map(|&s| rotation(s)).collect();
+    tile.rotations = sources.iter().map(|_| rotation(rng)).collect();
     tile.factor = numbers[0];
     Some(tile)
 }
 
-fn special<const N: usize>(config: &ConfigNd<N>, rotation: Rotation) -> Option<Tile> {
+fn special<const N: usize>(
+    config: &ConfigNd<N>,
+    rotation: Rotation,
+    rng: &mut Rng,
+) -> Option<Tile> {
     let options = products(config.min_size, config.max_size, 2, config.parity);
     if options.is_empty() {
         return None;
     }
-    let pair = choice(&options);
+    let pair = rng.choice(&options);
     let (factor, n) = (pair[0], pair[1]);
-    let source = config.source();
+    let source = config.source(rng);
     let size = factor * n;
     let mut tile = Tile::new(Group::Special).size(size, size);
     tile.sources = vec![source];
     tile.numbers = vec![n];
     tile.levels = vec![1];
-    tile.rotations = vec![rotation(source)];
+    tile.rotations = vec![rotation(rng)];
     tile.factor = factor;
-    tile.flip = boolean();
+    tile.flip = rng.boolean();
     Some(tile)
 }
 
-fn mosaic<const N: usize>(config: &ConfigNd<N>, rotation: Rotation) -> Option<Tile> {
+fn mosaic<const N: usize>(config: &ConfigNd<N>, rotation: Rotation, rng: &mut Rng) -> Option<Tile> {
     let palette = config.sources();
     if palette.len() < 3 {
         return None;
@@ -143,20 +160,26 @@ fn mosaic<const N: usize>(config: &ConfigNd<N>, rotation: Rotation) -> Option<Ti
     if options.is_empty() {
         return None;
     }
-    let pair = choice(&options);
+    let pair = rng.choice(&options);
     let (factor, n) = (pair[0], pair[1]);
-    let sources = sample(&palette, 3);
+    let sources: Vec<Source> = rng
+        .sample_indices(palette.len(), 3)
+        .into_iter()
+        .map(|i| palette[i])
+        .collect();
     let size = factor * n;
     let mut tile = Tile::new(Group::Mosaic).size(size, size);
     tile.sources = sources.clone();
     tile.numbers = vec![n, n, n];
     tile.levels = vec![1, 1, 1];
-    tile.rotations = sources.iter().map(|&s| rotation(s)).collect();
+    tile.rotations = sources.iter().map(|_| rotation(rng)).collect();
     tile.factor = factor;
     Some(tile)
 }
 
-fn creator<const N: usize>(group: Group) -> fn(&ConfigNd<N>, Rotation) -> Option<Tile> {
+type Creator<const N: usize> = fn(&ConfigNd<N>, Rotation, &mut Rng) -> Option<Tile>;
+
+fn creator<const N: usize>(group: Group) -> Creator<N> {
     match group {
         Group::General => general,
         Group::Fractal => fractal,
@@ -166,13 +189,17 @@ fn creator<const N: usize>(group: Group) -> fn(&ConfigNd<N>, Rotation) -> Option
     }
 }
 
-/// Draws a random tile satisfying the config, or an error when no group fits the size constraints.
-pub fn create<const N: usize>(config: &ConfigNd<N>, rotation: Rotation) -> Result<Tile> {
+/// Draws a random tile satisfying the config from the stream, or an error when no group fits the size constraints.
+pub fn create<const N: usize>(
+    config: &ConfigNd<N>,
+    rotation: Rotation,
+    rng: &mut Rng,
+) -> Result<Tile> {
     let mut groups = config.groups.clone();
-    shuffle(&mut groups);
+    rng.shuffle(&mut groups);
     let mut tile = None;
     for group in groups {
-        if let Some(candidate) = creator::<N>(group)(config, rotation) {
+        if let Some(candidate) = creator::<N>(group)(config, rotation, rng) {
             tile = Some(candidate);
             break;
         }
@@ -184,17 +211,21 @@ pub fn create<const N: usize>(config: &ConfigNd<N>, rotation: Rotation) -> Resul
     let count = tile.sources.len();
     tile.anti = match config.anti {
         Some(flag) => vec![flag; count],
-        None => (0..count).map(|_| boolean()).collect(),
+        None => (0..count).map(|_| rng.boolean()).collect(),
     };
-    tile.invert = config.invert.unwrap_or_else(boolean);
+    tile.invert = config.invert.unwrap_or_else(|| rng.boolean());
     Ok(tile)
 }
 
 /// Draws a random tile up to the given size under the default config.
-pub fn random_tile<const N: usize>(max_size: usize, rotation: Rotation) -> Result<Tile> {
+pub fn random_tile<const N: usize>(
+    max_size: usize,
+    rotation: Rotation,
+    rng: &mut Rng,
+) -> Result<Tile> {
     let config: ConfigNd<N> = ConfigNd {
         max_size,
         ..Default::default()
     };
-    create(&config, rotation)
+    create(&config, rotation, rng)
 }

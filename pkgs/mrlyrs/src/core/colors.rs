@@ -1,5 +1,5 @@
 use super::error::{value_error, MrlyError, Result};
-use super::state;
+use super::rng::Rng;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// An rgba color with byte channels.
@@ -313,17 +313,13 @@ impl Color {
             self.a,
         ))
     }
-    /// Draws a color from the shared rng, opaque unless alpha is asked for.
-    pub fn random(alpha: bool) -> Color {
+    /// Draws a color from the stream, opaque unless alpha is asked for.
+    pub fn random(alpha: bool, rng: &mut Rng) -> Color {
         Color::rgba(
-            state::randint(0, 255) as u8,
-            state::randint(0, 255) as u8,
-            state::randint(0, 255) as u8,
-            if alpha {
-                state::randint(0, 255) as u8
-            } else {
-                255
-            },
+            rng.below(256) as u8,
+            rng.below(256) as u8,
+            rng.below(256) as u8,
+            if alpha { rng.below(256) as u8 } else { 255 },
         )
     }
 }

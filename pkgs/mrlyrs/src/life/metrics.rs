@@ -1,4 +1,3 @@
-use crate::core::logs;
 use crate::core::tensor::Tensor;
 use crate::math::two::Cell2d;
 use std::f64::consts::LN_2;
@@ -27,7 +26,7 @@ pub fn entropy(grid: &Cell2d) -> i64 {
     if p == 0.0 || p == 1.0 {
         return 0;
     }
-    let bits = -(p * (logs::ln(p) / LN_2) + (1.0 - p) * (logs::ln(1.0 - p) / LN_2));
+    let bits = -(p * (f64::ln(p) / LN_2) + (1.0 - p) * (f64::ln(1.0 - p) / LN_2));
     (bits * 1000.0).round() as i64
 }
 

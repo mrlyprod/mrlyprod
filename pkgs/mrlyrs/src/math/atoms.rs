@@ -1,6 +1,7 @@
+use crate::core::rng::Rng;
 use crate::core::tensor::Tensor;
 
-fn build(n: usize, rank: usize, rule: impl Fn(&[usize]) -> bool) -> Tensor {
+fn build(n: usize, rank: usize, mut rule: impl FnMut(&[usize]) -> bool) -> Tensor {
     let mut out = Tensor::new(vec![n; rank]);
     let mut at = vec![0usize; rank];
     for flat in 0..out.size() {
@@ -82,14 +83,14 @@ pub fn ones_3d(n: usize) -> Tensor {
     Tensor::full(vec![n, n, n], 1)
 }
 
-/// Builds an n by n tensor where each cell turns on with probability density.
-pub fn noise_2d(n: usize, density: f64) -> Tensor {
-    build(n, 2, |_| crate::core::state::random() < density)
+/// Builds an n by n tensor where each cell turns on with probability density, drawn from the stream.
+pub fn noise_2d(n: usize, density: f64, rng: &mut Rng) -> Tensor {
+    build(n, 2, |_| rng.chance(density))
 }
 
-/// Builds an n by n by n tensor where each cell turns on with probability density.
-pub fn noise_3d(n: usize, density: f64) -> Tensor {
-    build(n, 3, |_| crate::core::state::random() < density)
+/// Builds an n by n by n tensor where each cell turns on with probability density, drawn from the stream.
+pub fn noise_3d(n: usize, density: f64, rng: &mut Rng) -> Tensor {
+    build(n, 3, |_| rng.chance(density))
 }
 
 /// Builds an n by n carpet, on where at most one coordinate is odd.
@@ -205,18 +206,19 @@ pub fn star_3d(n: usize) -> Tensor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::state;
     #[test]
     fn noise_draws_in_flat_order() {
-        let _g = state::guard();
-        state::seed(11);
-        let drawn = noise_3d(3, 0.5);
-        state::seed(11);
+        let drawn = noise_3d(3, 0.5, &mut Rng::new(11));
+        let mut rng = Rng::new(11);
         let mut want = Tensor::new(vec![3, 3, 3]);
         for flat in 0..27 {
-            want.bytes_mut()[flat] = (state::random() < 0.5) as u8;
+            want.bytes_mut()[flat] = u8::from(rng.chance(0.5));
         }
         assert_eq!(drawn, want);
+        assert_ne!(
+            noise_2d(4, 0.5, &mut Rng::new(1)),
+            noise_2d(4, 0.5, &mut Rng::new(2))
+        );
     }
     #[test]
     fn the_antis_complement_the_classics() {

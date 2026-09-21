@@ -63,9 +63,9 @@ mod tests {
             (
                 render(&f, &Colorizer::fire(), 64, false, false, 2).unwrap(),
                 64,
-                3_252_192,
-                [255, 229, 145, 255],
-                [212, 73, 33, 255],
+                3_230_592,
+                [255, 232, 128, 255],
+                [205, 91, 41, 255],
             ),
             (
                 render(&f, &Colorizer::heat(), 32, true, true, 3).unwrap(),

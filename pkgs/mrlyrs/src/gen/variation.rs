@@ -1,6 +1,6 @@
 use crate::core::error::{value_error, MrlyError, Result};
 use crate::core::paint::{self as engine, Config as PaintConfig, Edition, Ink, Paint};
-use crate::core::state::{randint, seed};
+use crate::core::rng::Rng;
 use crate::gen::build::{build_2d, create_2d, Config2d};
 use crate::gen::recipe::Tile;
 use crate::math::two;
@@ -88,11 +88,9 @@ impl Variation {
     }
 }
 
-fn hex_key(length: usize) -> String {
+fn hex_key(length: usize, rng: &mut Rng) -> String {
     const DIGITS: &[u8; 16] = b"0123456789abcdef";
-    (0..length)
-        .map(|_| DIGITS[randint(0, 15) as usize] as char)
-        .collect()
+    (0..length).map(|_| DIGITS[rng.below(16)] as char).collect()
 }
 
 fn pop_center(tile: &Tile, cell: &mut two::Cell2d) {
@@ -103,24 +101,24 @@ fn pop_center(tile: &Tile, cell: &mut two::Cell2d) {
     cell.cell.types = types;
 }
 
-/// Draws a fresh seeded variation under the config, with a mask when the edition is Neighbors.
-pub fn create(config: &Config) -> Result<Variation> {
-    let s = randint(0, i64::MAX) as u64;
-    seed(s);
-    let edition = engine::random_edition(config.paint.editions.as_deref());
-    let tile = create_2d(&config.tile)?;
+/// Draws a variation's seed from the stream, then the variation itself on that seed, with a mask when the edition is Neighbors.
+pub fn create(config: &Config, rng: &mut Rng) -> Result<Variation> {
+    let s = rng.range(0, i64::MAX) as u64;
+    let mut rng = Rng::new(s);
+    let edition = engine::random_edition(config.paint.editions.as_deref(), &mut rng);
+    let tile = create_2d(&config.tile, &mut rng)?;
     let mask = if edition == Edition::Neighbors {
         let mask_config = Config2d {
             min_size: 3,
             max_size: 3,
             ..Config2d::default()
         };
-        Some(create_2d(&mask_config)?)
+        Some(create_2d(&mask_config, &mut rng)?)
     } else {
         None
     };
     Ok(Variation {
-        key: hex_key(8),
+        key: hex_key(8, &mut rng),
         seed: s,
         edition,
         primaries: config.paint.primaries.clone(),
@@ -132,8 +130,8 @@ pub fn create(config: &Config) -> Result<Variation> {
     })
 }
 
-/// Builds the variation's base cell and paint, painting the base under a prime edition.
-pub fn generate(mut variation: Variation, config: &Config) -> Result<Variation> {
+/// Builds the variation's base cell and draws its paint from the stream, painting the base under a prime edition.
+pub fn generate(mut variation: Variation, config: &Config, rng: &mut Rng) -> Result<Variation> {
     let _ = config;
     let mut base = build_2d(&variation.tile)?;
     let paint_config = PaintConfig {
@@ -142,7 +140,7 @@ pub fn generate(mut variation: Variation, config: &Config) -> Result<Variation> 
         target: None,
     };
     if variation.is_cover() {
-        let p = engine::setup(Paint::new(variation.edition), &paint_config);
+        let p = engine::setup(Paint::new(variation.edition), &paint_config, rng);
         variation.paint = Some(p);
     } else {
         let mask_tensor = match &variation.mask {
@@ -154,7 +152,7 @@ pub fn generate(mut variation: Variation, config: &Config) -> Result<Variation> 
             None => None,
         };
         let mut cell = base.cell.clone();
-        let p = engine::paint(&mut cell, &paint_config, mask_tensor.as_ref())?;
+        let p = engine::paint(&mut cell, &paint_config, mask_tensor.as_ref(), rng)?;
         base.cell = cell;
         variation.paint = Some(p);
     }
@@ -162,8 +160,8 @@ pub fn generate(mut variation: Variation, config: &Config) -> Result<Variation> 
     Ok(variation)
 }
 
-/// Renders every file of the variation to PNG at the given scale, or an error before generate.
-pub fn render(mut variation: Variation, scale: usize) -> Result<Variation> {
+/// Renders every file of the variation to PNG at the given scale, scattering a Random edition from the stream, or an error before generate.
+pub fn render(mut variation: Variation, scale: usize, rng: &mut Rng) -> Result<Variation> {
     let base = match &variation.base {
         Some(base) => base.clone(),
         None => return value_error("call generate before render."),
@@ -178,7 +176,7 @@ pub fn render(mut variation: Variation, scale: usize) -> Result<Variation> {
         let mut canvas = base.clone().tile(file.width, file.height);
         if cover {
             let mut cell = canvas.cell.clone();
-            engine::apply(&paint, &mut cell)?;
+            engine::apply(&paint, &mut cell, rng)?;
             canvas.cell = cell;
         }
         file.png = two::png(&canvas, scale)?;
@@ -191,7 +189,6 @@ pub fn render(mut variation: Variation, scale: usize) -> Result<Variation> {
 mod tests {
     use super::*;
     use crate::core::json;
-    use crate::core::state::guard;
     use crate::gen::recipe::Parity;
     fn round_trip(variation: &Variation) -> Variation {
         serde_json::from_value(serde_json::to_value(variation).unwrap()).unwrap()
@@ -227,14 +224,16 @@ mod tests {
         let bare = two::Cell2d::new(base.types().clone()).tile(file.width, file.height);
         two::png(&bare, scale).unwrap()
     }
+    fn run(config: &Config, seed: u64, scale: usize) -> Variation {
+        let mut rng = Rng::new(seed);
+        let v = create(config, &mut rng).unwrap();
+        let v = generate(v, config, &mut rng).unwrap();
+        render(v, scale, &mut rng).unwrap()
+    }
     #[test]
     fn full_pipeline_produces_png_bytes() {
-        let _g = guard();
         for s in 0..20 {
-            seed(s);
-            let v = create(&config()).unwrap();
-            let v = generate(v, &config()).unwrap();
-            let v = render(v, 4).unwrap();
+            let v = run(&config(), s, 4);
             assert_eq!(v.files.len(), 2);
             for file in &v.files {
                 assert!(
@@ -253,28 +252,22 @@ mod tests {
         }
     }
     #[test]
-    fn variation_is_seeded() {
-        let _g = guard();
-        seed(42);
-        let a = create(&config()).unwrap();
-        seed(42);
-        let b = create(&config()).unwrap();
+    fn variation_replays_its_seed() {
+        let a = create(&config(), &mut Rng::new(42)).unwrap();
+        let b = create(&config(), &mut Rng::new(42)).unwrap();
         assert_eq!(a.seed, b.seed);
         assert_eq!(a.key, b.key);
         assert_eq!(a.tile, b.tile);
         assert_eq!(a.edition, b.edition);
+        assert_ne!(a.seed, create(&config(), &mut Rng::new(43)).unwrap().seed);
     }
     #[test]
     fn editions_keep_their_palette() {
-        let _g = guard();
         for (i, edition) in Edition::all().into_iter().enumerate() {
             let config = edition_config(edition);
             let mut differed = false;
             for s in 0..8 {
-                seed(1000 * (i as u64 + 1) + s);
-                let v = create(&config).unwrap();
-                let v = generate(v, &config).unwrap();
-                let v = render(v, 2).unwrap();
+                let v = run(&config, 1000 * (i as u64 + 1) + s, 2);
                 if v.files.iter().all(|f| f.png != bare_png(&v, f, 2)) {
                     differed = true;
                     break;
@@ -285,36 +278,33 @@ mod tests {
     }
     #[test]
     fn layers_edition_keeps_its_palette() {
-        let _g = guard();
         let config = edition_config(Edition::Layers);
-        seed(7);
-        let v = create(&config).unwrap();
+        let mut rng = Rng::new(7);
+        let v = create(&config, &mut rng).unwrap();
         assert_eq!(v.edition, Edition::Layers);
-        let v = generate(v, &config).unwrap();
+        let v = generate(v, &config, &mut rng).unwrap();
         assert!(v.base.as_ref().unwrap().cell.colors.is_some());
-        let v = render(v, 2).unwrap();
+        let v = render(v, 2, &mut rng).unwrap();
         for file in &v.files {
             assert_ne!(file.png, bare_png(&v, file, 2), "default mapping leaked");
         }
     }
     #[test]
     fn neighbors_edition_gets_a_mask() {
-        let _g = guard();
         let config = edition_config(Edition::Neighbors);
-        seed(3);
-        let v = create(&config).unwrap();
+        let mut rng = Rng::new(3);
+        let v = create(&config, &mut rng).unwrap();
         assert_eq!(v.edition, Edition::Neighbors);
         assert!(v.mask.is_some());
-        let v = generate(v, &config).unwrap();
+        let v = generate(v, &config, &mut rng).unwrap();
         assert!(v.base.as_ref().unwrap().cell.colors.is_some());
-        let v = render(v, 2).unwrap();
+        let v = render(v, 2, &mut rng).unwrap();
         for file in &v.files {
             assert_ne!(file.png, bare_png(&v, file, 2), "default mapping leaked");
         }
     }
     #[test]
     fn neighbors_mask_builds_under_evens_parity() {
-        let _g = guard();
         let config = Config {
             tile: Config2d {
                 min_size: 4,
@@ -330,22 +320,20 @@ mod tests {
             files: vec![(1, 1)],
         };
         for s in 0..10 {
-            seed(s);
-            let v = create(&config).unwrap();
+            let mut rng = Rng::new(s);
+            let v = create(&config, &mut rng).unwrap();
             let mask = v.mask.as_ref().unwrap();
             assert_eq!((mask.width, mask.height), (3, 3));
-            let v = generate(v, &config).unwrap();
-            let v = render(v, 2).unwrap();
+            let v = generate(v, &config, &mut rng).unwrap();
+            let v = render(v, 2, &mut rng).unwrap();
             assert!(!v.files[0].png.is_empty());
         }
     }
     #[test]
     fn json_round_trips_the_record() {
-        let _g = guard();
         for (i, edition) in Edition::all().into_iter().enumerate() {
             let config = edition_config(edition);
-            seed(500 + i as u64);
-            let a = create(&config).unwrap();
+            let a = create(&config, &mut Rng::new(500 + i as u64)).unwrap();
             let b = round_trip(&a);
             assert_eq!(b.key, a.key);
             assert_eq!(b.seed, a.seed);
@@ -354,12 +342,12 @@ mod tests {
             assert_eq!(b.tile, a.tile);
             assert_eq!(b.mask, a.mask);
             assert_eq!(b.paint, a.paint);
-            seed(a.seed);
-            let a = generate(a, &config).unwrap();
-            let a = render(a, 2).unwrap();
-            seed(b.seed);
-            let b = generate(b, &config).unwrap();
-            let b = render(b, 2).unwrap();
+            let mut ra = Rng::new(a.seed);
+            let a = generate(a, &config, &mut ra).unwrap();
+            let a = render(a, 2, &mut ra).unwrap();
+            let mut rb = Rng::new(b.seed);
+            let b = generate(b, &config, &mut rb).unwrap();
+            let b = render(b, 2, &mut rb).unwrap();
             assert_eq!(a.paint, b.paint);
             for (fa, fb) in a.files.iter().zip(&b.files) {
                 assert_eq!((fa.width, fa.height), (fb.width, fb.height));
@@ -379,9 +367,7 @@ mod tests {
     }
     #[test]
     fn json_round_trips_tile() {
-        let _g = guard();
-        seed(5);
-        let v = create(&config()).unwrap();
+        let v = create(&config(), &mut Rng::new(5)).unwrap();
         let json = serde_json::to_value(&v).unwrap();
         assert!(json.get("base").is_none());
         let back: Tile = serde_json::from_value(json["tile"].clone()).unwrap();

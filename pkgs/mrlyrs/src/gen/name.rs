@@ -336,7 +336,7 @@ impl Named for Tile {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::state::{guard, seed};
+    use crate::core::rng::Rng;
     use crate::gen::build::{build_2d, create_2d, Config2d};
     use crate::gen::recipe::{Catalog, Parity};
     use crate::math::two::designs;
@@ -560,7 +560,6 @@ mod tests {
     }
     #[test]
     fn seeded_tiles_round_trip() {
-        let _guard = guard();
         let config = Config2d {
             catalog: Catalog::Universe,
             min_size: 2,
@@ -569,8 +568,8 @@ mod tests {
             ..Config2d::default()
         };
         for s in 0..300 {
-            seed(s);
-            let recipe = create_2d(&config).unwrap();
+            let mut rng = Rng::new(s);
+            let recipe = create_2d(&config, &mut rng).unwrap();
             let name = Tile::of(&recipe);
             let text = name.to_json();
             let parsed = Tile::from_json(&text).unwrap();
@@ -584,7 +583,6 @@ mod tests {
     }
     #[test]
     fn seeded_classic_tiles_round_trip() {
-        let _guard = guard();
         let config = Config2d {
             min_size: 2,
             max_size: 64,
@@ -592,8 +590,8 @@ mod tests {
             ..Config2d::default()
         };
         for s in 0..300 {
-            seed(s);
-            let recipe = create_2d(&config).unwrap();
+            let mut rng = Rng::new(s);
+            let recipe = create_2d(&config, &mut rng).unwrap();
             let text = Tile::of(&recipe).to_json();
             let parsed = Tile::from_json(&text).unwrap();
             assert_eq!(parsed.to_json(), text, "seed {s}");

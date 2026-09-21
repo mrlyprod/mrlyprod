@@ -15,24 +15,24 @@ pub use two::{build as build_2d, create as create_2d, random_tile as random_tile
 mod two {
     use super::Config2d as Config;
     use crate::core::error::{value_error, Result};
-    use crate::core::state::choice;
+    use crate::core::rng::Rng;
     use crate::core::tensor::Tensor;
     use crate::gen::draw as spec;
     use crate::gen::recipe::{Group, Source, Tile};
     use crate::math::two::{designs, geometry, Cell2d};
 
-    fn rotation(_source: Source) -> usize {
-        choice(&[0, 1, 2, 3])
+    fn rotation(rng: &mut Rng) -> usize {
+        rng.below(4)
     }
 
-    /// Draws a random flat tile satisfying the config, rotations drawn from the four quarter-turns.
-    pub fn create(config: &Config) -> Result<Tile> {
-        spec::create(config, rotation)
+    /// Draws a random flat tile satisfying the config from the stream, rotations from the four quarter-turns.
+    pub fn create(config: &Config, rng: &mut Rng) -> Result<Tile> {
+        spec::create(config, rotation, rng)
     }
 
     /// Draws a random flat tile up to the given size under the default config.
-    pub fn random_tile(max_size: usize) -> Result<Tile> {
-        spec::random_tile::<2>(max_size, rotation)
+    pub fn random_tile(max_size: usize, rng: &mut Rng) -> Result<Tile> {
+        spec::random_tile::<2>(max_size, rotation, rng)
     }
 
     fn source_cell(source: Source, number: usize, level: usize, rotation: usize) -> Result<Cell2d> {
@@ -134,20 +134,17 @@ mod two {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::core::state::{guard as rng_lock, seed};
         use crate::gen::recipe::{Catalog, Design, Parity};
         #[test]
         fn random_tile_respects_max() {
-            let _guard = rng_lock();
             for s in 0..50 {
-                seed(s);
-                let tile = random_tile(30).unwrap();
+                let mut rng = Rng::new(s);
+                let tile = random_tile(30, &mut rng).unwrap();
                 assert!(tile.max_size() <= 30);
             }
         }
         #[test]
         fn magic_can_nest_deeper_than_two() {
-            let _guard = rng_lock();
             let config = Config {
                 min_size: 3,
                 max_size: 300,
@@ -157,8 +154,8 @@ mod two {
             };
             let mut deep = false;
             for s in 0..200 {
-                seed(s);
-                if let Ok(tile) = create(&config) {
+                let mut rng = Rng::new(s);
+                if let Ok(tile) = create(&config, &mut rng) {
                     if tile.sources.len() >= 3 {
                         deep = true;
                         let cell = build(&tile).unwrap();
@@ -170,7 +167,6 @@ mod two {
         }
         #[test]
         fn magic_rolls_never_repeat_a_fractal() {
-            let _guard = rng_lock();
             let config = Config {
                 catalog: Catalog::Codes(vec![7]),
                 min_size: 3,
@@ -180,8 +176,8 @@ mod two {
                 ..Config::default()
             };
             for s in 0..200 {
-                seed(s);
-                let tile = create(&config).unwrap();
+                let mut rng = Rng::new(s);
+                let tile = create(&config, &mut rng).unwrap();
                 assert!(tile.sources.len() >= 2, "seed {s} rolled one slot");
                 assert!(!tile.degenerate(), "seed {s} rolled a fractal twin");
                 let cell = build(&tile).unwrap();
@@ -190,7 +186,6 @@ mod two {
         }
         #[test]
         fn a_magic_roll_keeps_its_twin_when_nothing_else_fits() {
-            let _guard = rng_lock();
             let config = Config {
                 catalog: Catalog::Codes(vec![7]),
                 min_size: 9,
@@ -200,8 +195,8 @@ mod two {
                 ..Config::default()
             };
             for s in 0..20 {
-                seed(s);
-                let tile = create(&config).unwrap();
+                let mut rng = Rng::new(s);
+                let tile = create(&config, &mut rng).unwrap();
                 assert_eq!(tile.numbers, vec![3, 3], "seed {s}");
                 assert!(tile.degenerate(), "seed {s}");
                 assert_eq!(build(&tile).unwrap().width(), 9, "seed {s}");
@@ -224,7 +219,6 @@ mod two {
         }
         #[test]
         fn evens_parity_builds() {
-            let _guard = rng_lock();
             let config = Config {
                 min_size: 4,
                 max_size: 64,
@@ -234,8 +228,8 @@ mod two {
                 ..Config::default()
             };
             for s in 0..50 {
-                seed(s);
-                let tile = create(&config).unwrap();
+                let mut rng = Rng::new(s);
+                let tile = create(&config, &mut rng).unwrap();
                 assert_eq!(tile.numbers[0] % 2, 0);
                 let cell = build(&tile).unwrap();
                 assert_eq!(cell.width(), tile.width);
@@ -249,24 +243,24 @@ mod two {
 mod three {
     use super::Config3d as Config;
     use crate::core::error::{value_error, Result};
-    use crate::core::state::randint;
+    use crate::core::rng::Rng;
     use crate::core::tensor::Tensor;
     use crate::gen::draw as spec;
     use crate::gen::recipe::{Design, Group, Source, Tile};
     use crate::math::three::{designs, geometry, Cell3d};
 
-    fn rotation(_source: Source) -> usize {
-        randint(0, 23) as usize
+    fn rotation(rng: &mut Rng) -> usize {
+        rng.below(24)
     }
 
-    /// Draws a cube tile from the config with random cube orientations.
-    pub fn create(config: &Config) -> Result<Tile> {
-        spec::create(config, rotation)
+    /// Draws a cube tile from the config with cube orientations drawn from the stream.
+    pub fn create(config: &Config, rng: &mut Rng) -> Result<Tile> {
+        spec::create(config, rotation, rng)
     }
 
     /// Draws a random cube tile up to the given size.
-    pub fn random_tile(max_size: usize) -> Result<Tile> {
-        spec::random_tile::<3>(max_size, rotation)
+    pub fn random_tile(max_size: usize, rng: &mut Rng) -> Result<Tile> {
+        spec::random_tile::<3>(max_size, rotation, rng)
     }
 
     fn design_cell(design: Design, number: usize, level: usize) -> Result<Cell3d> {
@@ -388,7 +382,6 @@ mod three {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::core::state::{guard as rng_lock, seed};
         use crate::gen::recipe::Catalog;
         fn config() -> Config {
             Config {
@@ -400,11 +393,10 @@ mod three {
         }
         #[test]
         fn built_size_matches_unit_size() {
-            let _guard = rng_lock();
             let config = config();
             for s in 0..200 {
-                seed(s);
-                let tile = create(&config).unwrap();
+                let mut rng = Rng::new(s);
+                let tile = create(&config, &mut rng).unwrap();
                 let cell = build(&tile).unwrap();
                 assert_eq!(
                     cell.width(),
@@ -424,21 +416,18 @@ mod three {
             }
         }
         #[test]
-        fn create_is_seeded() {
-            let _guard = rng_lock();
-            seed(321);
-            let a = create(&config()).unwrap();
-            seed(321);
-            let b = create(&config()).unwrap();
+        fn create_replays_its_seed() {
+            let a = create(&config(), &mut Rng::new(321)).unwrap();
+            let b = create(&config(), &mut Rng::new(321)).unwrap();
             assert_eq!(a, b);
+            assert_ne!(a, create(&config(), &mut Rng::new(322)).unwrap());
         }
         #[test]
         fn classics_use_named_designs() {
-            let _guard = rng_lock();
             let config = config();
             for s in 0..50 {
-                seed(s);
-                let tile = create(&config).unwrap();
+                let mut rng = Rng::new(s);
+                let tile = create(&config, &mut rng).unwrap();
                 for source in &tile.sources {
                     assert!(matches!(source, Source::Classic(_)));
                 }
@@ -446,7 +435,6 @@ mod three {
         }
         #[test]
         fn universe_builds_from_codes() {
-            let _guard = rng_lock();
             let config = Config {
                 catalog: Catalog::Universe,
                 min_size: 3,
@@ -455,8 +443,8 @@ mod three {
                 ..Config::default()
             };
             for s in 0..60 {
-                seed(s);
-                let tile = create(&config).unwrap();
+                let mut rng = Rng::new(s);
+                let tile = create(&config, &mut rng).unwrap();
                 let cell = build(&tile).unwrap();
                 assert_eq!(cell.width(), tile.width, "universe width seed {}", s);
                 for source in &tile.sources {
@@ -473,7 +461,7 @@ mod six {
     use super::three;
     use super::Config3d as Config;
     use crate::core::error::Result;
-    use crate::core::state::choice;
+    use crate::core::rng::Rng;
     use crate::gen::recipe::Tile;
     use crate::math::six::geometry::{cut, iso, pro};
     use crate::math::six::{Cell6d, Projection};
@@ -487,23 +475,23 @@ mod six {
         pub tile: Tile,
     }
 
-    fn projection() -> Projection {
-        choice(&[Projection::Iso, Projection::Pro, Projection::Cut])
+    fn projection(rng: &mut Rng) -> Projection {
+        *rng.choice(&[Projection::Iso, Projection::Pro, Projection::Cut])
     }
 
-    /// Draws a cube tile from the config under a random projection.
-    pub fn create(config: &Config) -> Result<HexTile> {
+    /// Draws a cube tile from the config under a projection drawn from the stream.
+    pub fn create(config: &Config, rng: &mut Rng) -> Result<HexTile> {
         Ok(HexTile {
-            projection: projection(),
-            tile: three::create(config)?,
+            projection: projection(rng),
+            tile: three::create(config, rng)?,
         })
     }
 
     /// Draws a random cube tile up to the given size under a random projection.
-    pub fn random_tile(max_size: usize) -> Result<HexTile> {
+    pub fn random_tile(max_size: usize, rng: &mut Rng) -> Result<HexTile> {
         Ok(HexTile {
-            projection: projection(),
-            tile: three::random_tile(max_size)?,
+            projection: projection(rng),
+            tile: three::random_tile(max_size, rng)?,
         })
     }
 
@@ -520,7 +508,6 @@ mod six {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::core::state::{guard as rng_lock, seed};
         use crate::gen::recipe::Group;
         fn config() -> Config {
             Config {
@@ -532,11 +519,10 @@ mod six {
         }
         #[test]
         fn projects_every_group_in_every_projection() {
-            let _guard = rng_lock();
             let config = config();
             for s in 0..40 {
-                seed(s);
-                let hex = create(&config).unwrap();
+                let mut rng = Rng::new(s);
+                let hex = create(&config, &mut rng).unwrap();
                 let cell = build(&hex).unwrap();
                 assert!(
                     cell.width() > 0,
@@ -549,7 +535,6 @@ mod six {
         }
         #[test]
         fn magic_projects() {
-            let _guard = rng_lock();
             let config = Config {
                 min_size: 3,
                 max_size: 15,
@@ -559,8 +544,8 @@ mod six {
             };
             let mut built = 0;
             for s in 0..30 {
-                seed(s);
-                if let Ok(hex) = create(&config) {
+                let mut rng = Rng::new(s);
+                if let Ok(hex) = create(&config, &mut rng) {
                     let cell = build(&hex).unwrap();
                     assert!(cell.width() > 0);
                     built += 1;

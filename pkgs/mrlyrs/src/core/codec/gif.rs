@@ -166,9 +166,9 @@ mod tests {
     }
     #[test]
     fn gif_round_trips_a_full_palette() {
-        let mut random = crate::core::chacha::ChaCha8::from_u64(11);
+        let mut random = crate::core::rng::Rng::new(11);
         let palette: Vec<[u8; 4]> = (0..256).map(|i| [i as u8, 9, 9, 255]).collect();
-        let frame: Vec<u8> = (0..128 * 128).map(|_| random.next_u32() as u8).collect();
+        let frame: Vec<u8> = (0..128 * 128).map(|_| random.below(256) as u8).collect();
         let bytes = gif(&[&frame[..]], &palette, 128, 128, 1, 4).unwrap();
         let out = ungif(&bytes);
         assert_eq!((out.width, out.height), (128, 128));
