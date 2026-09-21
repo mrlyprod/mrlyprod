@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "wasm": "bash ../scripts/wasm.sh",
-    "dev": "bun scripts/dev.ts",
+    "dev": "bun --hot scripts/dev.ts",
     "build": "bun scripts/site.ts",
     "boot": "bun scripts/boot.ts",
     "push": "bun scripts/push.ts",
