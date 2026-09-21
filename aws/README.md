@@ -10,6 +10,6 @@
 - The build mounts `site/node_modules` from the `/opt/node` layer when `/opt/node/bun.lock.sha256` matches the checkout's `bun.lock`, else installs with `--frozen-lockfile`; then it runs `scripts/pkg.ts` and `bun run push` there.
 - `NODE_LAYER_DIR` overrides `/opt/node` on the desk; the layer is built from the lockfile by the console outside this repo.
 - `net.test.ts` covers the payload parser and the modules decision: `bun test` from `aws/` (a path filter would also match the `/git/` copies under `site/dist`).
-- `s3.ts` is the S3 client it shares with `site/scripts/pkg.ts` and `push.ts`: credentials from the environment, no SDK.
+- `site/kit/s3.ts` is the S3 client it shares with `site/scripts/pkg.ts` and `push.ts`: bucket names and credentials from the environment, no SDK.
 - The Lambda never runs cargo: `scripts/wasm.sh` only builds `pkg/`.
 - Bundled with `bun build aws/net.ts --target=bun` into one `handler.js`; the infrastructure console lives outside this repo.

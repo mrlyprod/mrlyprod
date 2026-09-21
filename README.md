@@ -15,6 +15,6 @@
 - `site/` the website at mrly.net that draws them; `site/README.md` says how to run it under bun.
 - `site/` is the site: `scripts/` the build, `ui/` the design kit every page wears, and `kit/` a stamped copy of the shared kit, the builder and the code viewer with it.
 - `pkgs/js/mrlyjs/` is reserved for MrlyRs in JavaScript: the wasm bridge, later.
-- `aws/` is the Lambda that ships the site: `net.ts` builds on push, `s3.ts` talks to the bucket.
+- `aws/` is the Lambda that ships the site: `net.ts` builds on push, the kit's `site/kit/s3.ts` talks to the bucket.
 - `cargo test --workspace` runs every test; `cargo doc --workspace --no-deps --open` reads the crates.
 - MIT. This is the way. Why is the secret.

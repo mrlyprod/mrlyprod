@@ -2,7 +2,7 @@ import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { build, digest, globals, today, type Manifest, type Output } from "../kit/ssg/build.ts";
-import { client, del, getText, list, putBytes, DEV_BUCKET, NET_BUCKET } from "../../aws/s3.ts";
+import { client, del, getText, list, need, putBytes } from "../kit/s3.ts";
 import { spec } from "./site.ts";
 
 /* WHERE */
@@ -79,8 +79,8 @@ function spread(manifest: Manifest): Map<string, string> {
 /* PUSH */
 
 async function push(options: { dry?: boolean } = {}): Promise<{ rendered: number; uploaded: number; deleted: number }> {
-  const dev = client(DEV_BUCKET);
-  const net = client(NET_BUCKET);
+  const dev = client(need("MRLYDEV_BUCKET"));
+  const net = client(need("MRLYNET_BUCKET"));
   const found = await getText(dev, REMOTE);
   const old: Manifest = found ? JSON.parse(found) : {};
   const carry = join(tmpdir(), `mrlynet-remote-${process.pid}.json`);

@@ -2,7 +2,7 @@ import type { S3Client } from "bun";
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync, renameSync, rmSync, symlinkSync } from "node:fs";
 import { join } from "node:path";
-import { client, DEV_BUCKET, getText, putBytes } from "./s3.ts";
+import { client, getText, need, putBytes } from "../site/kit/s3.ts";
 
 /* WHERE */
 
@@ -258,7 +258,7 @@ async function handler(request?: Request): Promise<Response> {
   const began = Date.now();
   mark = began;
   const wake = readEvent(await payload(request));
-  const s3 = client(DEV_BUCKET);
+  const s3 = client(need("MRLYDEV_BUCKET"));
   const stored = await readHead(s3);
   const known = seen(wake, stored);
   if (known) {

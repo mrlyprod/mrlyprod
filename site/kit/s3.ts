@@ -1,15 +1,20 @@
 import { S3Client } from "bun";
 
+/* ENV */
+
+export function need(key: string): string {
+  const value = process.env[key];
+  if (!value) throw new Error(`${key} is not set`);
+  return value;
+}
+
 /* WHERE */
 
-export const REGION = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || "us-east-2";
-export const NET_BUCKET = process.env.MRLYNET_BUCKET || "mrlynet";
-export const DEV_BUCKET = process.env.MRLYDEV_BUCKET || "mrlydev";
-export const PROD_BUCKET = process.env.MRLYPROD_BUCKET || "mrlyprod";
+const REGION = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || "us-east-2";
 
 /* CREDENTIALS */
 
-export type Creds = {
+type Creds = {
   accessKeyId: string;
   secretAccessKey: string;
   sessionToken?: string;
@@ -18,7 +23,7 @@ export type Creds = {
 
 let held: Creds | null = null;
 
-export function credentials(): Creds {
+function credentials(): Creds {
   if (held) return held;
   const id = process.env.AWS_ACCESS_KEY_ID;
   const secret = process.env.AWS_SECRET_ACCESS_KEY;
@@ -79,7 +84,7 @@ export async function putBytes(
 
 /* RETRY */
 
-export async function retry<T>(work: () => Promise<T>, tries = 4): Promise<T> {
+async function retry<T>(work: () => Promise<T>, tries = 4): Promise<T> {
   let wait = 500;
   for (let n = 1; ; n++) {
     try {

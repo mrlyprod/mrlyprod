@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { client, list, PROD_BUCKET } from "../../aws/s3.ts";
+import { client, list, need } from "../kit/s3.ts";
 
 /* HASH */
 
@@ -35,14 +35,15 @@ export async function ensurePkg(root = resolve(import.meta.dir, "..")): Promise<
   if (existsSync(dir) && pkgFiles(dir).length > 0) return dir;
   const hash = readFileSync(join(root, "pkg.lock"), "utf8").trim();
   const prefix = `pkg/${hash}/`;
-  const s3 = client(PROD_BUCKET);
+  const bucket = need("MRLYPROD_BUCKET");
+  const s3 = client(bucket);
   const keys = (await list(s3, prefix)).filter((key) => key.length > prefix.length);
   for (const key of keys) {
     const to = join(dir, key.slice(prefix.length));
     mkdirSync(dirname(to), { recursive: true });
     writeFileSync(to, Buffer.from(await s3.file(key).arrayBuffer()));
   }
-  if (keys.length === 0) throw new Error(`no objects at s3://${PROD_BUCKET}/${prefix}`);
+  if (keys.length === 0) throw new Error(`no objects at s3://${bucket}/${prefix}`);
   return dir;
 }
 
