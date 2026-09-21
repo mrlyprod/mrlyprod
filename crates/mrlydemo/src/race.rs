@@ -1,6 +1,6 @@
 use crate::{code_of, Fault};
-use mrlycore::Rng;
-use mrlymath::two;
+use mrlyrs::core::Rng;
+use mrlyrs::math::two;
 use wasm_bindgen::prelude::*;
 
 /// A race: seeded walkers loose on a flat design, each stepping blind and losing the turn when a hole blocks it.

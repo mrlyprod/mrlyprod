@@ -1,7 +1,7 @@
-use mrlycore::errors::Result;
 use mrlyfig::board::Board;
 use mrlyfig::{ink, plot, save};
-use mrlymath::three;
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::three;
 
 const CODE: u128 = 126;
 const LEVEL: usize = 7;

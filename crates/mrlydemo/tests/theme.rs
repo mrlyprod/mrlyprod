@@ -1,6 +1,6 @@
-use mrlycore::colors::LIGHT;
 use mrlydemo::set_theme;
 use mrlydemo::spiral::spiral_pixels;
+use mrlyrs::core::colors::LIGHT;
 
 #[test]
 fn the_light_theme_paints_the_ground_white() {

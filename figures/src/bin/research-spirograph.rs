@@ -1,8 +1,8 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, plot, save, Board};
 use mrlylab::roulette;
-use mrlymath::two;
-use mrlynum::spirograph::{
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::two;
+use mrlyrs::num::spirograph::{
     cover, disc, distinct, nodes as law, pencils, trace, track, Cover, Pencil, Track,
 };
 use std::collections::HashSet;

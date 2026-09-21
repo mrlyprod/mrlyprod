@@ -1,8 +1,8 @@
 use super::sample::{membership, pack};
 use super::stack::merge;
 use super::{Combine, Spec};
-use mrlycore::errors::{value_error, Result};
-use mrlycore::tensor::Tensor;
+use mrlyrs::core::errors::{value_error, Result};
+use mrlyrs::core::tensor::Tensor;
 
 /// A cubic grid of f32 samples, x-major.
 #[derive(Clone, Debug, PartialEq)]
@@ -221,7 +221,7 @@ pub fn volume(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mrlymath::bang::corners_to_code;
+    use mrlyrs::math::bang::corners_to_code;
 
     fn low() -> Spec {
         Spec::new(corners_to_code(&[vec![0, 0, 0]], 3, 2), 2, 3)

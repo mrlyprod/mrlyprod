@@ -1,7 +1,7 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, plot, save, Board, Frame};
-use mrlynum::design::elements;
-use mrlynum::zeta::{Complex, Line};
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::design::elements;
+use mrlyrs::num::zeta::{Complex, Line};
 
 const PEEL: u32 = 8;
 const DEPTH: usize = 10;
@@ -400,9 +400,9 @@ fn compute() -> Result<()> {
     let path = mrlyfig::out::root().join(DATA);
     let folder = path.parent().expect("the data path lost its folder");
     std::fs::create_dir_all(folder)
-        .map_err(|e| mrlycore::MrlyError::Value(format!("cannot make {folder:?}: {e}")))?;
+        .map_err(|e| mrlyrs::core::MrlyError::Value(format!("cannot make {folder:?}: {e}")))?;
     std::fs::write(&path, text)
-        .map_err(|e| mrlycore::MrlyError::Value(format!("cannot write {path:?}: {e}")))?;
+        .map_err(|e| mrlyrs::core::MrlyError::Value(format!("cannot write {path:?}: {e}")))?;
     println!("data research-zeta {} zeros", dz.len() + fz.len());
     Ok(())
 }
@@ -410,7 +410,7 @@ fn compute() -> Result<()> {
 fn render() -> Result<()> {
     let path = mrlyfig::out::root().join(DATA);
     let text = std::fs::read_to_string(&path).map_err(|e| {
-        mrlycore::MrlyError::Value(format!(
+        mrlyrs::core::MrlyError::Value(format!(
             "cannot read {path:?}: {e}; run the example with compute"
         ))
     })?;

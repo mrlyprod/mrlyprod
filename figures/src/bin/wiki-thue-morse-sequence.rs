@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board};
-use mrlynum::morse::{digits, lift, Lift};
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::morse::{digits, lift, Lift};
 
 const STRIP: usize = 64;
 const SIDE: usize = 32;

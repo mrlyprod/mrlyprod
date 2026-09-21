@@ -1,12 +1,12 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board};
+use mrlyrs::core::errors::Result;
 
 const WORDMARK: &str = "MRLYPROD";
 
 fn main() -> Result<()> {
     let mut board = Board::square();
     let area = board.frame(0.08);
-    let grid = mrlyfont::raster(WORDMARK);
+    let grid = mrlyrs::font::raster(WORDMARK);
     let rows = grid.len();
     let cols = grid[0].len();
     assert_eq!((rows, cols), (5, 47));

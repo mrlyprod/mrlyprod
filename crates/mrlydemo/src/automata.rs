@@ -1,6 +1,6 @@
 use crate::Grid;
-use mrlycore::{json, Json, Rng, Tensor};
-use mrlymath::life::elementary;
+use mrlyrs::core::{json, Json, Rng, Tensor};
+use mrlyrs::life::elementary;
 use wasm_bindgen::prelude::*;
 
 fn diagram(cells: Tensor) -> Grid {

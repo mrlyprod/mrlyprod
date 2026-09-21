@@ -1,8 +1,8 @@
-use mrlycore::errors::Result;
-use mrlycore::Rng;
 use mrlyfig::{ink, save, Board};
-use mrlymath::life::design_mask;
-use mrlynum::fft::{convolve_with, embed_kernel, transform};
+use mrlyrs::core::errors::Result;
+use mrlyrs::core::Rng;
+use mrlyrs::life::design_mask;
+use mrlyrs::num::fft::{convolve_with, embed_kernel, transform};
 
 const SIZE: usize = 256;
 const STEPS: usize = 64;

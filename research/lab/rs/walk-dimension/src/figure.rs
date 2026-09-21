@@ -1,5 +1,5 @@
-use mrlycore::colors::{BLUE, LIGHT, ORANGE, WHITE};
-use mrlycore::png;
+use mrlyrs::core::colors::{BLUE, LIGHT, ORANGE, WHITE};
+use mrlyrs::core::png;
 use std::path::Path;
 
 pub const WIDTH: usize = 1760;

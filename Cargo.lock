@@ -41,9 +41,7 @@ checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
 name = "automata-census"
 version = "0.3.0"
 dependencies = [
- "mrlycore",
- "mrlymath",
- "mrlynum",
+ "mrlyrs",
 ]
 
 [[package]]
@@ -98,7 +96,7 @@ version = "0.3.0"
 name = "carry-skeleton"
 version = "0.3.0"
 dependencies = [
- "mrlynum",
+ "mrlyrs",
 ]
 
 [[package]]
@@ -121,16 +119,14 @@ checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
 name = "circle-crop"
 version = "0.3.0"
 dependencies = [
- "mrlycore",
- "mrlymath",
+ "mrlyrs",
 ]
 
 [[package]]
 name = "code-factorisation"
 version = "0.3.0"
 dependencies = [
- "mrlycore",
- "mrlymath",
+ "mrlyrs",
  "num-bigint",
 ]
 
@@ -151,8 +147,7 @@ dependencies = [
 name = "crop-counts"
 version = "0.3.0"
 dependencies = [
- "mrlycore",
- "mrlymath",
+ "mrlyrs",
 ]
 
 [[package]]
@@ -227,8 +222,7 @@ checksum = "930c7171c8df9fb1782bdf9b918ed9ed2d33d1d22300abb754f9085bc48bf8e8"
 name = "design-census"
 version = "0.3.0"
 dependencies = [
- "mrlymath",
- "mrlynum",
+ "mrlyrs",
  "num-bigint",
  "num-rational",
 ]
@@ -237,7 +231,7 @@ dependencies = [
 name = "dimension-one-ladder"
 version = "0.3.0"
 dependencies = [
- "mrlynum",
+ "mrlyrs",
 ]
 
 [[package]]
@@ -382,7 +376,7 @@ dependencies = [
 name = "farey-discrepancy"
 version = "0.3.0"
 dependencies = [
- "mrlynum",
+ "mrlyrs",
 ]
 
 [[package]]
@@ -398,12 +392,9 @@ dependencies = [
 name = "figures"
 version = "0.3.0"
 dependencies = [
- "mrlycore",
  "mrlyfig",
- "mrlyfont",
  "mrlylab",
- "mrlymath",
- "mrlynum",
+ "mrlyrs",
 ]
 
 [[package]]
@@ -619,9 +610,7 @@ checksum = "e17592d60ebacc7d5e169f4663c5f84f9161cc90328abcfe8456f41e4dfcb284"
 name = "hexagon-moire"
 version = "0.3.0"
 dependencies = [
- "mrlycore",
- "mrlymath",
- "mrlynum",
+ "mrlyrs",
  "num-bigint",
  "num-rational",
 ]
@@ -682,9 +671,8 @@ checksum = "b6d2cec3eae94f9f509c767b45932f1ada8350c4bdb85af2fcab4a3c14807981"
 name = "life-atlas"
 version = "0.3.0"
 dependencies = [
- "mrlycore",
  "mrlylab",
- "mrlymath",
+ "mrlyrs",
 ]
 
 [[package]]
@@ -710,8 +698,7 @@ dependencies = [
 name = "magic-words"
 version = "0.3.0"
 dependencies = [
- "mrlycore",
- "mrlymath",
+ "mrlyrs",
 ]
 
 [[package]]
@@ -733,7 +720,7 @@ checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
 name = "memory-meter"
 version = "0.3.0"
 dependencies = [
- "mrlynum",
+ "mrlyrs",
 ]
 
 [[package]]
@@ -765,24 +752,11 @@ name = "mobius-designs"
 version = "0.3.0"
 
 [[package]]
-name = "mrlycore"
-version = "0.3.0"
-dependencies = [
- "gif",
- "png",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "mrlydemo"
 version = "0.3.0"
 dependencies = [
- "mrlycore",
- "mrlyfont",
  "mrlylab",
- "mrlymath",
- "mrlynum",
+ "mrlyrs",
  "wasm-bindgen",
 ]
 
@@ -790,47 +764,25 @@ dependencies = [
 name = "mrlyfig"
 version = "0.3.0"
 dependencies = [
- "mrlycore",
- "mrlymath",
-]
-
-[[package]]
-name = "mrlyfont"
-version = "0.3.0"
-dependencies = [
- "mrlycore",
- "serde_json",
+ "mrlyrs",
 ]
 
 [[package]]
 name = "mrlylab"
 version = "0.3.0"
 dependencies = [
- "mrlycore",
- "mrlymath",
- "mrlynum",
-]
-
-[[package]]
-name = "mrlymath"
-version = "0.3.0"
-dependencies = [
- "mrlycore",
- "mrlynum",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "mrlynum"
-version = "0.3.0"
-dependencies = [
- "mrlycore",
+ "mrlyrs",
 ]
 
 [[package]]
 name = "mrlyrs"
-version = "0.3.0"
+version = "0.2.0"
+dependencies = [
+ "gif",
+ "png",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "nano-gemm"
@@ -987,7 +939,7 @@ dependencies = [
 name = "oeis-terms"
 version = "0.3.0"
 dependencies = [
- "mrlynum",
+ "mrlyrs",
  "num-bigint",
 ]
 
@@ -1165,8 +1117,7 @@ checksum = "69cdb34c158ceb288df11e18b4bd39de994f6657d83847bdffdbd7f346754b0f"
 name = "radix-designs"
 version = "0.3.0"
 dependencies = [
- "mrlymath",
- "mrlynum",
+ "mrlyrs",
 ]
 
 [[package]]
@@ -1286,15 +1237,14 @@ dependencies = [
 name = "roulette-cover"
 version = "0.3.0"
 dependencies = [
- "mrlynum",
+ "mrlyrs",
 ]
 
 [[package]]
 name = "roulette-loops"
 version = "0.3.0"
 dependencies = [
- "mrlycore",
- "mrlynum",
+ "mrlyrs",
 ]
 
 [[package]]
@@ -1302,15 +1252,14 @@ name = "roulette-nodes"
 version = "0.3.0"
 dependencies = [
  "mrlylab",
- "mrlynum",
+ "mrlyrs",
 ]
 
 [[package]]
 name = "roulette-reaches"
 version = "0.3.0"
 dependencies = [
- "mrlycore",
- "mrlynum",
+ "mrlyrs",
 ]
 
 [[package]]
@@ -1416,18 +1365,14 @@ name = "spectral-spacings"
 version = "0.3.0"
 dependencies = [
  "faer",
- "mrlycore",
- "mrlymath",
- "mrlynum",
+ "mrlyrs",
 ]
 
 [[package]]
 name = "spin-census"
 version = "0.3.0"
 dependencies = [
- "mrlycore",
- "mrlymath",
- "mrlynum",
+ "mrlyrs",
 ]
 
 [[package]]
@@ -1608,9 +1553,7 @@ name = "walk-dimension"
 version = "0.3.0"
 dependencies = [
  "faer",
- "mrlycore",
- "mrlymath",
- "mrlynum",
+ "mrlyrs",
 ]
 
 [[package]]

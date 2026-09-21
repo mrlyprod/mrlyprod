@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board, Frame, Grid, Ramp};
-use mrlymath::dim::carry;
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::dim::carry;
 
 const BASES: [usize; 2] = [3, 5];
 const DIMS: [usize; 8] = [2, 3, 4, 5, 6, 7, 8, 9];

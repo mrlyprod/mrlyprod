@@ -1,7 +1,7 @@
 use crate::{checked, code_of, Fault, Pixels};
-use mrlycore::Colorizer;
 use mrlylab::moire::{pairs, presets, render};
 use mrlylab::press;
+use mrlyrs::core::Colorizer;
 use wasm_bindgen::prelude::*;
 
 /// Lists the first members of a design in the sequence press, each as a decimal string.
@@ -54,7 +54,7 @@ pub fn moire(
         _ => Colorizer::fire(),
     };
     let png = render(&field, &colorizer, levels, false, invert, 1)?;
-    let (width, height, colors) = mrlycore::unpng(&png)?;
+    let (width, height, colors) = mrlyrs::core::unpng(&png)?;
     Ok(Pixels::of(width, height, colors))
 }
 

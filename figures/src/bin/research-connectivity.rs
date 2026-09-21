@@ -1,9 +1,9 @@
-use mrlycore::errors::Result;
-use mrlycore::Color;
-use mrlycore::Rng;
 use mrlyfig::board::{Board, Frame};
 use mrlyfig::{ink, save, Grid};
-use mrlymath::two::designs;
+use mrlyrs::core::errors::Result;
+use mrlyrs::core::Color;
+use mrlyrs::core::Rng;
+use mrlyrs::math::two::designs;
 
 const SIDE: usize = 64;
 const CELLS: usize = 729;

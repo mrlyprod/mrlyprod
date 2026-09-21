@@ -1,8 +1,8 @@
-use mrlycore::errors::Result;
-use mrlycore::Color;
 use mrlyfig::{ink, plot, save, Board, Frame};
-use mrlynum::lattice::totients;
-use mrlynum::zeta::{novelty_main, novelty_wave, sharp_novelty, smoothed_novelty, Line};
+use mrlyrs::core::errors::Result;
+use mrlyrs::core::Color;
+use mrlyrs::num::lattice::totients;
+use mrlyrs::num::zeta::{novelty_main, novelty_wave, sharp_novelty, smoothed_novelty, Line};
 use std::f64::consts::PI;
 
 const REACH: usize = 3_000_000;

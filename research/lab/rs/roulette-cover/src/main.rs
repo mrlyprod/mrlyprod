@@ -1,4 +1,4 @@
-use mrlynum::spirograph::{
+use mrlyrs::num::spirograph::{
     cover, disc, pencils, point, representatives, signed_area, track, Kind, Pencil, Track,
 };
 use std::f64::consts::{PI, TAU};

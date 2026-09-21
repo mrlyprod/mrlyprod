@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, plot, save, Board};
-use mrlynum::factor::mobius;
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::factor::mobius;
 
 const LENGTH: u32 = 16;
 const STEPS: usize = 1 << LENGTH;

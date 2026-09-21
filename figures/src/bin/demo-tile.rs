@@ -1,7 +1,7 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board, Grid};
-use mrlymath::two;
-use mrlymath::two::census;
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::two;
+use mrlyrs::math::two::census;
 
 const CODE: u128 = 495;
 const NUMBER: usize = 3;

@@ -1,7 +1,7 @@
-use mrlymath::bang::factory::{code_to_corners, corners_to_code, residue_corners};
-use mrlymath::bang::Code;
-use mrlynum::factor::{divisors, factorize, gcd, mobius, radical};
-use mrlynum::series::zeta;
+use mrlyrs::math::bang::factory::{code_to_corners, corners_to_code, residue_corners};
+use mrlyrs::math::bang::Code;
+use mrlyrs::num::factor::{divisors, factorize, gcd, mobius, radical};
+use mrlyrs::num::series::zeta;
 use std::collections::BTreeSet;
 
 const BUDGET: usize = 200_000;

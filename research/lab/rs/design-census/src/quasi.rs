@@ -1,5 +1,5 @@
-use mrlymath::bang::Code;
-use mrlymath::formulas::fill;
+use mrlyrs::math::bang::Code;
+use mrlyrs::math::formulas::fill;
 use num_bigint::{BigInt, Sign};
 use num_rational::BigRational;
 

@@ -1,8 +1,8 @@
-use mrlycore::errors::Result;
-use mrlycore::tensor::Tensor;
 use mrlyfig::{ink, iso, save, Board};
-use mrlymath::three::Cell3d;
-use mrlymath::two::designs;
+use mrlyrs::core::errors::Result;
+use mrlyrs::core::tensor::Tensor;
+use mrlyrs::math::three::Cell3d;
+use mrlyrs::math::two::designs;
 
 const CODES: [u128; 12] = [15, 11, 10, 5, 1, 9, 7, 13, 12, 3, 6, 14];
 const SIDE: usize = 9;

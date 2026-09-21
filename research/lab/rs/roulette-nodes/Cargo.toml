@@ -5,4 +5,4 @@ edition.workspace = true
 
 [dependencies]
 mrlylab.workspace = true
-mrlynum.workspace = true
+mrlyrs.workspace = true

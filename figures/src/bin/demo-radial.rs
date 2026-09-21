@@ -1,9 +1,9 @@
-use mrlycore::errors::Result;
 use mrlyfig::board::{Board, Frame};
 use mrlyfig::ink::Ramp;
 use mrlyfig::{field, ink, save};
-use mrlymath::two;
-use mrlynum::spin;
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::two;
+use mrlyrs::num::spin;
 
 const LEVEL: usize = 4;
 const SIDE: usize = 81;

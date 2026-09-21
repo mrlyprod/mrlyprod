@@ -9,7 +9,7 @@
 - The ghost star of the rendered carpet stack on a 1200 by 2399 raster, and its log-corrected decay in the ideal and the lattice frame.
 - The cell frame of the ghost star: the arm's rational ink law to n = 2001, the decay ladders at L = 0 mod 4, L = 2 mod 4 and odd L out to L = 6400, and the band half-widths with their held-out predictions.
 - The width family in closed form: the derived tail weight E(K) against its 8-periodic run, the per-layer identity in exact rationals at 14 distinct half-widths broken out by n mod 8, and the summed ladders with the constant, both 1/L^2 branches and the sliding window's own L residue trap.
-- The constants from the mrlynum series and the partial character sums at N = 53 and 55.
+- The constants from the `mrlyrs::num` series and the partial character sums at N = 53 and 55.
 - The one-layer law: the six ink-law coefficients of each family, the summed identity against the counted hexagons in exact rationals, and the approach in both classes of the layer count.
 - Every domain is the source's own; nothing was shrunk. Under a minute.
 

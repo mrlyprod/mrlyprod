@@ -1,8 +1,8 @@
-use mrlycore::errors::Result;
 use mrlyfig::board::{Board, Frame};
 use mrlyfig::ink::Ramp;
 use mrlyfig::{field, ink, save};
-use mrlymath::two;
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::two;
 use std::f64::consts::TAU;
 
 const CODE: u128 = 495;

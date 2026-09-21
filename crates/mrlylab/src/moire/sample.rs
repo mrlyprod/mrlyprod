@@ -1,6 +1,6 @@
 use super::Lattice;
-use mrlycore::errors::Result;
-use mrlymath::bang::code_to_corners;
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::bang::code_to_corners;
 
 /// Returns the two lattice coordinates of each pixel centre along a row.
 pub fn axes(size: usize, lattice: Lattice, row: usize) -> (Vec<f64>, Vec<f64>) {

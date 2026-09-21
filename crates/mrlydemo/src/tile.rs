@@ -1,10 +1,10 @@
 #![allow(clippy::too_many_arguments)]
 
 use crate::{code_of, Fault, Grid};
-use mrlycore::json;
-use mrlymath::six::{self, Cell6d};
-use mrlymath::three::{self, Cell3d};
-use mrlymath::two::{self, Cell2d};
+use mrlyrs::core::json;
+use mrlyrs::math::six::{self, Cell6d};
+use mrlyrs::math::three::{self, Cell3d};
+use mrlyrs::math::two::{self, Cell2d};
 use wasm_bindgen::prelude::*;
 
 const PLANE_CELLS: usize = 262_144;
@@ -206,7 +206,7 @@ fn readings(
     tile_fills: u128,
     tile_exposed: u128,
     copies: u128,
-) -> mrlycore::Json {
+) -> mrlyrs::core::Json {
     json!({
         "copies": copies.to_string(),
         "fills": fills.to_string(),
@@ -225,7 +225,7 @@ fn plane_census(
     level: usize,
     base: usize,
     reps: &[usize],
-) -> Result<mrlycore::Json, Fault> {
+) -> Result<mrlyrs::core::Json, Fault> {
     let (cell, sheet) = plane(code, number, level, base, reps)?;
     let copies = (reps[0] * reps[1]) as u128;
     let fills = two::census::fills(&sheet) as u128;
@@ -258,7 +258,7 @@ fn solid_census(
     level: usize,
     base: usize,
     reps: &[usize],
-) -> Result<mrlycore::Json, Fault> {
+) -> Result<mrlyrs::core::Json, Fault> {
     let (cell, sheet) = solid(code, number, level, base, reps)?;
     let copies = (reps[0] * reps[1] * reps[2]) as u128;
     let fills = three::census::fills(&sheet) as u128;
@@ -294,7 +294,7 @@ fn hex_census(
     projection: &str,
     reps: &[usize],
     crop: bool,
-) -> Result<mrlycore::Json, Fault> {
+) -> Result<mrlyrs::core::Json, Fault> {
     let (hex, sheet) = hex_sheet(code, number, level, base, projection, reps, crop)?;
     let (hex, sheet) = (six::skin(&hex), six::skin(&sheet));
     let one = six::census(&hex, false);

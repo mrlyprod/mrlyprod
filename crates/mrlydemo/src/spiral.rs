@@ -1,7 +1,7 @@
 use crate::{rgba, theme, Fault, Pixels};
-use mrlycore::json;
-use mrlynum::factor::factorize;
-use mrlynum::spiral::{self, Diagonal, Lattice, Mark};
+use mrlyrs::core::json;
+use mrlyrs::num::factor::factorize;
+use mrlyrs::num::spiral::{self, Diagonal, Lattice, Mark};
 use wasm_bindgen::prelude::*;
 
 const SIDE: usize = 401;

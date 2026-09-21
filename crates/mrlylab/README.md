@@ -1,6 +1,6 @@
 # mrlylab
 
-The laboratory of Mrly: the campaign machinery that explores and measures the designs. It rests on mrlycore and mrlymath, and unlike them it is free to break its API, because studies land here one module at a time as the research promotes them.
+The laboratory of Mrly: the campaign machinery that explores and measures the designs. It rests on `mrlyrs`, and unlike them it is free to break its API, because studies land here one module at a time as the research promotes them.
 
 Three studies live here today. The moire study samples a design's residue rule over a pixel grid at one side number after another and stacks those layers into a field whose interference it renders to png. The sequence press reads the integers through the same rule, one digit per residue corner, keeps the ones every digit lands inside, and weighs every design of a universe in a single sweep.
 

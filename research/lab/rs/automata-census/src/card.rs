@@ -2,8 +2,8 @@ use crate::dynamics::{injective, surjective};
 use crate::groups::{group, orbit};
 use crate::seed::Census;
 use crate::table::{genus, levels};
-use mrlymath::bang::universe::degree;
-use mrlynum::boolean::walsh_spectrum;
+use mrlyrs::math::bang::universe::degree;
+use mrlyrs::num::boolean::walsh_spectrum;
 use std::collections::BTreeSet;
 
 fn line(rule: usize, census: &Census, b3: &[crate::groups::Elem]) -> String {

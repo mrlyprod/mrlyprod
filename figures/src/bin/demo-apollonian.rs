@@ -1,7 +1,7 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board, Color, Frame};
-use mrlynum::apollonian::{grow, is_ford, on_line, shadow, touches, Circle};
-use mrlynum::lattice::farey;
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::apollonian::{grow, is_ford, on_line, shadow, touches, Circle};
+use mrlyrs::num::lattice::farey;
 
 const TOP: i64 = 2048;
 const DEEP: usize = 32;

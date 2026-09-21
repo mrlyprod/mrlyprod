@@ -1,7 +1,7 @@
 use crate::Fault;
-use mrlycore::json;
-use mrlynum::formulas;
-use mrlynum::series::EULER;
+use mrlyrs::core::json;
+use mrlyrs::num::formulas;
+use mrlyrs::num::series::EULER;
 use std::f64::consts::{E, PI};
 use wasm_bindgen::prelude::*;
 

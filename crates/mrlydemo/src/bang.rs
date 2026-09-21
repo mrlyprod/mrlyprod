@@ -1,8 +1,8 @@
 use crate::{checked, code_of, Fault};
-use mrlycore::{json, Json, Rng};
-use mrlymath::bang::{self, baseq, code_to_corners, counting};
-use mrlymath::formulas;
-use mrlymath::name::{Bang, Named};
+use mrlyrs::core::{json, Json, Rng};
+use mrlyrs::math::bang::{self, baseq, code_to_corners, counting};
+use mrlyrs::math::formulas;
+use mrlyrs::math::name::{Bang, Named};
 use wasm_bindgen::prelude::*;
 
 fn strings(values: Vec<u128>) -> Vec<String> {

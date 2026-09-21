@@ -4,7 +4,7 @@
 - Two unfolders on every spectrum: a degree-12 Chebyshev least-squares fit of the counting staircase, and a local window of 21 levels; negative steps of the polynomial are clamped to zero and counted.
 - Per row: `P(s < 0.5)` against GOE's `1 - exp(-pi/16)` and Poisson's `1 - exp(-1/2)`, the Kolmogorov-Smirnov distances to both laws with their asymptotic p-values, and at tolerance `1e-9` the distinct eigenvalue count, the zero spacings `n - distinct`, the eigenvalues lying in repeated classes and the largest multiplicity.
 - Builds the level-4 slice as a graph and prints its node and edge counts without diagonalising it.
-- Dense eigenvalues through faer; every design comes from mrlymath and the cell graphs from mrlynum.
+- Dense eigenvalues through faer; every design comes from `mrlyrs::math` and the cell graphs from `mrlyrs::num`.
 
 ## RUN
 

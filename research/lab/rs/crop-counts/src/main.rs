@@ -1,6 +1,6 @@
-use mrlycore::tensor::Tensor;
-use mrlymath::bang::factory::create;
-use mrlymath::shape::{census, crop, named, Frac, Shape};
+use mrlyrs::core::tensor::Tensor;
+use mrlyrs::math::bang::factory::create;
+use mrlyrs::math::shape::{census, crop, named, Frac, Shape};
 
 // DESIGNS
 

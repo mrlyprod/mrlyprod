@@ -1,7 +1,7 @@
 use crate::{code_of, Fault, Grid};
-use mrlycore::json;
-use mrlymath::two;
-use mrlynum::morse::{self, Lift, LIFTS};
+use mrlyrs::core::json;
+use mrlyrs::math::two;
+use mrlyrs::num::morse::{self, Lift, LIFTS};
 use wasm_bindgen::prelude::*;
 
 const WORD_MAX: usize = 4096;

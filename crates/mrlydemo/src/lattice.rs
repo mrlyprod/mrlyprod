@@ -1,7 +1,7 @@
 use crate::{rgba, theme, Fault, Pixels};
-use mrlycore::{json, Json};
-use mrlynum::factor::gcd;
-use mrlynum::{lattice, series};
+use mrlyrs::core::{json, Json};
+use mrlyrs::num::factor::gcd;
+use mrlyrs::num::{lattice, series};
 use wasm_bindgen::prelude::*;
 
 /// Walks the Farey sequence of the order: each node's numerator, denominator and brightness, as JSON.

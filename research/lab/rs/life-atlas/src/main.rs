@@ -1,11 +1,11 @@
-use mrlycore::tensor::Tensor;
 use mrlylab::atlas::run::heat_frame;
 use mrlylab::atlas::{
     block_split, census, factors, fate_table, first_negative_lobe, mask_tensor, mini, pack, Census,
     Reading, Run,
 };
-use mrlymath::life::{animate, mask_offsets, moore, Boundary, Config, Fate};
-use mrlymath::two::{carpet, create, Cell2d};
+use mrlyrs::core::tensor::Tensor;
+use mrlyrs::life::{animate, mask_offsets, moore, Boundary, Config, Fate};
+use mrlyrs::math::two::{carpet, create, Cell2d};
 use std::collections::{BTreeMap, BTreeSet};
 
 const CAP: usize = 5000;

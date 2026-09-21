@@ -1,12 +1,12 @@
-use mrlycore::json::parse;
 use mrlydemo::star::*;
-use mrlymath::six::star::{arm_law, width_law, Star};
+use mrlyrs::core::json::parse;
+use mrlyrs::math::six::star::{arm_law, width_law, Star};
 
-fn read(layers: usize, half: usize) -> mrlycore::Json {
+fn read(layers: usize, half: usize) -> mrlyrs::core::Json {
     parse(&star_decay("23", layers, half).unwrap()).unwrap()
 }
 
-fn shown(value: &mrlycore::Json, places: usize) -> String {
+fn shown(value: &mrlyrs::core::Json, places: usize) -> String {
     format!("{:.*}", places, value.as_f64().unwrap())
 }
 
@@ -58,7 +58,7 @@ fn the_cell_frame_decay_settles_on_minus_a_quarter() {
     assert_eq!(shown(&deep["logged"], 10), "-0.2937725615");
     assert_eq!(shown(&deep["residual"], 8), "-0.11975831");
     assert_eq!(shown(&deep["slope"], 6), "-0.250092");
-    assert_eq!(deep["rows"][0]["slope"], mrlycore::Json::Null);
+    assert_eq!(deep["rows"][0]["slope"], mrlyrs::core::Json::Null);
     assert_eq!(shown(&deep["constant"], 10), "-0.2937605857");
     assert_eq!(deep["branch"], "0 mod 4");
     assert_eq!(shown(&deep["predicted"], 8), "-0.11979167");
@@ -95,11 +95,11 @@ fn the_square_term_reads_the_layer_count_mod_four() {
     assert_eq!(two["branch"], "2 mod 4");
     assert_eq!(shown(&two["predicted"], 8), "0.13020833");
     assert_eq!(shown(&two["residual"], 8), "0.13017437");
-    assert_eq!(two["slope"], mrlycore::Json::Null);
+    assert_eq!(two["slope"], mrlyrs::core::Json::Null);
     let odd = read(101, 0);
     assert_eq!(odd["branch"], "odd");
-    assert_eq!(odd["slope"], mrlycore::Json::Null);
-    assert_eq!(odd["predicted"], mrlycore::Json::Null);
+    assert_eq!(odd["slope"], mrlyrs::core::Json::Null);
+    assert_eq!(odd["predicted"], mrlyrs::core::Json::Null);
     assert_eq!(shown(&odd["linear"], 6), "0.249724");
     assert_eq!(shown(&odd["branchConstant"], 10), "-0.1687605857");
 }

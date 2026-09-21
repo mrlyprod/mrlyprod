@@ -1,5 +1,5 @@
-use mrlycore::json::parse;
 use mrlydemo::crop::{crop_circle, crop_collapse};
+use mrlyrs::core::json::parse;
 
 struct Circle {
     seen: Vec<u32>,
@@ -72,7 +72,7 @@ fn the_circle_count_the_page_prints() {
     assert!(crop_circle("7", 3, 9, 2, 2, "corner").is_err());
 }
 
-fn scales(read: &mrlycore::Json) -> Vec<i64> {
+fn scales(read: &mrlyrs::core::Json) -> Vec<i64> {
     read["scales"]
         .as_array()
         .unwrap()
@@ -81,7 +81,7 @@ fn scales(read: &mrlycore::Json) -> Vec<i64> {
         .collect()
 }
 
-fn profile(read: &mrlycore::Json, scale: usize) -> Vec<f64> {
+fn profile(read: &mrlyrs::core::Json, scale: usize) -> Vec<f64> {
     read["scales"][scale]["main"]
         .as_array()
         .unwrap()
@@ -90,7 +90,7 @@ fn profile(read: &mrlycore::Json, scale: usize) -> Vec<f64> {
         .collect()
 }
 
-fn ladder(read: &mrlycore::Json, key: &str) -> String {
+fn ladder(read: &mrlyrs::core::Json, key: &str) -> String {
     let rows = read["pairs"].as_array().unwrap();
     let step: Vec<String> = rows
         .iter()
@@ -186,7 +186,7 @@ fn the_two_scales_the_collapse_panel_lays_on_each_other() {
     assert!(crop_collapse("7", 1, 6, 2, 2, "corner", 16).is_err());
 }
 
-fn ridges(read: &mrlycore::Json) -> String {
+fn ridges(read: &mrlyrs::core::Json) -> String {
     let rows: Vec<String> = read["scales"]
         .as_array()
         .unwrap()
@@ -199,7 +199,7 @@ fn ridges(read: &mrlycore::Json) -> String {
     rows.join(",")
 }
 
-fn drift(read: &mrlycore::Json, scale: usize) -> Vec<f64> {
+fn drift(read: &mrlyrs::core::Json, scale: usize) -> Vec<f64> {
     read["scales"][scale]["drift"]
         .as_array()
         .unwrap()

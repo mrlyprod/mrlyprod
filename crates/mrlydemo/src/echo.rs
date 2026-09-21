@@ -1,6 +1,6 @@
 use crate::Fault;
-use mrlycore::json;
-use mrlynum::design;
+use mrlyrs::core::json;
+use mrlyrs::num::design;
 use wasm_bindgen::prelude::*;
 
 const SAMPLES: usize = 4096;
@@ -159,7 +159,7 @@ pub fn echo_read(base: u32, mask: u32, depth: usize, subtract: bool) -> Result<E
         .filter(|g| *g > BAND.0)
         .collect();
     let head: Vec<usize> = found.iter().copied().take(TOP).collect();
-    let rows: Vec<mrlycore::Json> = head
+    let rows: Vec<mrlyrs::core::Json> = head
         .iter()
         .map(|&at| {
             json!({

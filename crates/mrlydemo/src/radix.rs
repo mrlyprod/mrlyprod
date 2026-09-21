@@ -1,7 +1,7 @@
 use crate::Fault;
-use mrlycore::json;
-use mrlynum::gauss::Ring;
-use mrlynum::radix::{self, Base, Radix};
+use mrlyrs::core::json;
+use mrlyrs::num::gauss::Ring;
+use mrlyrs::num::radix::{self, Base, Radix};
 use wasm_bindgen::prelude::*;
 
 /// The drawing budget: the most points one level may carry.
@@ -143,7 +143,7 @@ fn word(ring: Ring) -> &'static str {
     }
 }
 
-fn card(name: &str, label: &str, radix: &Radix, level: usize, line: bool) -> mrlycore::Json {
+fn card(name: &str, label: &str, radix: &Radix, level: usize, line: bool) -> mrlyrs::core::Json {
     let (digits, twists) = spelling(radix);
     let base = radix.base().value();
     json!({
@@ -161,18 +161,18 @@ fn card(name: &str, label: &str, radix: &Radix, level: usize, line: bool) -> mrl
 
 /// Returns the dial itself: the rings, the bases offered on each, the units of each ring and the presets, as JSON.
 ///
-/// Every preset is a quintuple built by `mrlynum::radix`, spelled back as the digit list and the unit indices the page carries in its query.
+/// Every preset is a quintuple built by `mrlyrs::num::radix`, spelled back as the digit list and the unit indices the page carries in its query.
 #[wasm_bindgen]
 pub fn radix_menu() -> String {
     let places = |ring: Ring, list: &[(i64, i64)]| {
         list.iter()
             .map(|&(a, c)| json!({"a": a, "c": c, "norm": ring.norm(a, c)}))
-            .collect::<Vec<mrlycore::Json>>()
+            .collect::<Vec<mrlyrs::core::Json>>()
     };
     let bases = |ring: Ring, list: Vec<(i64, i64)>| {
         json!({
             "name": word(ring),
-            "units": ring.associates(1, 0).iter().map(|&(a, c)| json!({"a": a, "c": c})).collect::<Vec<mrlycore::Json>>(),
+            "units": ring.associates(1, 0).iter().map(|&(a, c)| json!({"a": a, "c": c})).collect::<Vec<mrlyrs::core::Json>>(),
             "bases": places(ring, &list),
         })
     };
@@ -236,10 +236,10 @@ pub fn radix_read(
         "dimension": radix.dimension(),
         "canonical": radix.canonical(),
         "code": radix.code().to_string(),
-        "residues": residues.iter().map(|&(x, y)| json!({"a": x, "c": y})).collect::<Vec<mrlycore::Json>>(),
-        "digits": radix.digits().iter().map(|&(x, y)| json!({"a": x, "c": y, "class": base.class((x, y))})).collect::<Vec<mrlycore::Json>>(),
+        "residues": residues.iter().map(|&(x, y)| json!({"a": x, "c": y})).collect::<Vec<mrlyrs::core::Json>>(),
+        "digits": radix.digits().iter().map(|&(x, y)| json!({"a": x, "c": y, "class": base.class((x, y))})).collect::<Vec<mrlyrs::core::Json>>(),
         "twists": radix.twists().iter().map(|u| units.iter().position(|v| v == u).expect("a twist is a unit")).collect::<Vec<usize>>(),
-        "units": units.iter().map(|&(x, y)| json!({"a": x, "c": y})).collect::<Vec<mrlycore::Json>>(),
+        "units": units.iter().map(|&(x, y)| json!({"a": x, "c": y})).collect::<Vec<mrlyrs::core::Json>>(),
     })
     .to_string())
 }

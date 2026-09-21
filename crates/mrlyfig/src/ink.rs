@@ -1,5 +1,5 @@
-use mrlycore::colors::{Theme, DARK, LIGHT};
-use mrlycore::Color;
+use mrlyrs::core::colors::{Theme, DARK, LIGHT};
+use mrlyrs::core::Color;
 use std::sync::OnceLock;
 
 // THEME

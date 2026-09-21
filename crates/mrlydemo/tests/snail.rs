@@ -1,5 +1,5 @@
-use mrlycore::json::parse;
 use mrlydemo::snail::*;
+use mrlyrs::core::json::parse;
 
 #[test]
 fn the_snail_exports_answer() {

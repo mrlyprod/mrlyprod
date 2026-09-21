@@ -1,8 +1,8 @@
-use mrlycore::colors::{shades, ORANGE};
-use mrlycore::errors::Result;
 use mrlyfig::{iso, save, Board};
-use mrlymath::shape::{self, Frac, Region};
-use mrlymath::three::{designs, Cell3d};
+use mrlyrs::core::colors::{shades, ORANGE};
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::shape::{self, Frac, Region};
+use mrlyrs::math::three::{designs, Cell3d};
 
 fn main() -> Result<()> {
     let mut board = Board::square();

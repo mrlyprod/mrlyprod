@@ -1,9 +1,9 @@
-use mrlycore::errors::Result;
 use mrlyfig::board::Board;
 use mrlyfig::ink::Ramp;
 use mrlyfig::{ink, save};
-use mrlynum::factor::lcm;
-use mrlynum::lattice;
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::factor::lcm;
+use mrlyrs::num::lattice;
 
 const ORDER: usize = 60;
 

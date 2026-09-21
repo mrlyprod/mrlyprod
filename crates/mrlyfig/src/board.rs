@@ -1,7 +1,7 @@
 use crate::ink;
-use mrlycore::codec;
-use mrlycore::errors::Result;
-use mrlycore::Color;
+use mrlyrs::core::codec;
+use mrlyrs::core::errors::Result;
+use mrlyrs::core::Color;
 
 // FRAME
 

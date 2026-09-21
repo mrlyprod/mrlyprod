@@ -1,7 +1,7 @@
-use mrlycore::errors::Result;
 use mrlyfig::board::{Board, Frame};
 use mrlyfig::{ink, save, Grid};
-use mrlymath::two::designs;
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::two::designs;
 
 fn panel(board: &mut Board, frame: Frame, level: usize, gap: f64) -> Result<()> {
     let cells = designs::create(495, 3, level, 0, 3)?;

@@ -1,6 +1,6 @@
-use mrlycore::colors::DARK;
 use mrlydemo::bang::random_between;
 use mrlydemo::weights::*;
+use mrlyrs::core::colors::DARK;
 
 const OBJECT: &str = "69";
 const CARPET: &str = "495";

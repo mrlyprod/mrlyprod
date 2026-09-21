@@ -1,6 +1,6 @@
-use mrlycore::json::parse;
 use mrlydemo::spirograph::*;
 use mrlydemo::two::two_grid;
+use mrlyrs::core::json::parse;
 
 fn carpet() -> Vec<u8> {
     let grid = two_grid("495", 3, 1, 0, 3).unwrap();
@@ -10,7 +10,7 @@ fn carpet() -> Vec<u8> {
     grid.types
 }
 
-fn read(pens: &str, track: &str, ring: usize, wheel: usize, laps: usize) -> mrlycore::Json {
+fn read(pens: &str, track: &str, ring: usize, wheel: usize, laps: usize) -> mrlyrs::core::Json {
     parse(
         &spirograph_read(
             &carpet(),

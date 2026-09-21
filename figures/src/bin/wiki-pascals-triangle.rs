@@ -1,5 +1,5 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board};
+use mrlyrs::core::errors::Result;
 
 const ROWS: usize = 64;
 

@@ -1,7 +1,7 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board, Grid};
-use mrlymath::two::designs;
-use mrlynum::classics::gcd;
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::two::designs;
+use mrlyrs::num::classics::gcd;
 
 fn main() -> Result<()> {
     let side = 32;

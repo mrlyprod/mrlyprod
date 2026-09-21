@@ -20,7 +20,7 @@
 - The Thue-Morse value is printed with its certificate. Counts along a gasket-and-domino word are astronomical, so the study works with `log2 comp` factored through the largest term of the sum, which is exact to the last printed digit; every rate is a labelled float, every saturation extremum small enough to name is an exact rational, and the certificate is asserted at every length from 4 to `2^14` on all 16 pairs and both letter readings.
 - The invariant cone is printed in exact rationals and checked against the raw matrices step by step, together with the three reasons it does not give the rate: the wrong direction of the orbit, the observation functional sitting on the boundary of the dual cone, and the matrix-norm exponent along `3^inf` being a different number from the component exponent.
 - The boundary frequency is printed twice, once over `(3, 6)` where a diagonal letter carries it and once over `(3, 7)` where no diagonal letter exists, and the second sweep prints a whole block of lengths so the accumulation set is visible as an interval rather than as two sampled points.
-- Every geometric figure is cross-checked against `mrlymath::bang::magic` cell for cell on all 225 words of length 2 and all 3375 of length 3, so two independently written renderers stand behind every count.
+- Every geometric figure is cross-checked against `mrlyrs::math::bang::magic` cell for cell on all 225 words of length 2 and all 3375 of length 3, so two independently written renderers stand behind every count.
 - Block reduction gets the same treatment: a periodic word rendered flat by the study is compared cell for cell with `Tensor::fractal` of its one-period composite, on six cases at periods 2 and 3 and lengths to 6.
 - Structural laws are asserted, not the headline counts: the study exits nonzero if a product law, a closed form, the matching bound, the representation or the factory cross-check fails.
 
@@ -55,4 +55,4 @@
 - connectivity.md the by-products: `(6^k + 4)/5` reading 2, 8, 44, 260, 1556, 9332, the largest count `1094` at `L = 8`, and the tripling word's range `[0.4792, 1.4379]`.
 - research/claims/ the transfer-state row: `kappa = 2^(L-1)` on `(15^(L-1), 3)` at `L = 1..10` with maxima 1, 2, 4, 8 over all words of length 1 to 4.
 - research/claims/ the block-reduction row: six periodic cases at periods 2 and 3 and lengths to 6, matching cell for cell.
-- `mrlymath::bang::magic`, `mrlymath::bang::MagicLayer` and `mrlycore::Tensor::fractal`, the crate paths both renderers are checked against.
+- `mrlyrs::math::bang::magic`, `mrlyrs::math::bang::MagicLayer` and `mrlyrs::core::Tensor::fractal`, the crate paths both renderers are checked against.

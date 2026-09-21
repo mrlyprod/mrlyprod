@@ -8,7 +8,7 @@
 - A398348: `n x n x n` binary arrays up to `D_n^3` semidirect `S_3`, order `48*n^3`, by Burnside for `n = 1..14`.
 - The cycle walk maps every cell under `(x_0, x_1, x_2) -> (eps_t * x_{p(t)} + s_t mod n)` and walks the cycles.
 - Cross-checks: fixed points of the powers of the affine map `x -> M x + t` to `n = 8`, and direct orbit enumeration of all `2^(n^3)` colourings to `n = 2`.
-- Uses `mrlynum::factor::coprime` and `num-bigint` for the Burnside sums.
+- Uses `mrlyrs::num::factor::coprime` and `num-bigint` for the Burnside sums.
 
 ## RUN
 

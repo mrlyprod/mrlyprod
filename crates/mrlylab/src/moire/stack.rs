@@ -1,7 +1,7 @@
 use super::field::Field;
 use super::layer::{layer, Layer};
 use super::{Combine, Lattice, Spec};
-use mrlycore::errors::Result;
+use mrlyrs::core::errors::Result;
 
 /// Folds one boolean layer into the accumulator under the combine, the first layer seeding a meet.
 pub fn merge(acc: &mut [f32], mask: &[bool], combine: Combine, first: bool) {
@@ -132,7 +132,7 @@ mod tests {
     }
     #[test]
     fn sponge_slice0_equals_carpet_stack() {
-        use mrlymath::bang::corners_to_code;
+        use mrlyrs::math::bang::corners_to_code;
         let carpet_corners: Vec<Vec<u8>> = (0..3)
             .flat_map(|a| (0..3).map(move |b| vec![a as u8, b as u8]))
             .filter(|c| !(c[0] == 1 && c[1] == 1))

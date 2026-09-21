@@ -1,5 +1,5 @@
 use crate::rules::{output, RULES};
-use mrlymath::bang::code_to_corners;
+use mrlyrs::math::bang::code_to_corners;
 
 pub fn report() {
     println!("IDENTITY");

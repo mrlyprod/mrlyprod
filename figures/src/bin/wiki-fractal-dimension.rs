@@ -1,7 +1,7 @@
-use mrlycore::errors::Result;
-use mrlycore::Color;
 use mrlyfig::{ink, save, Board, Frame, Grid};
-use mrlymath::two::designs;
+use mrlyrs::core::errors::Result;
+use mrlyrs::core::Color;
+use mrlyrs::math::two::designs;
 
 const BOXES: usize = 3;
 const GUTTER: f64 = 52.0;

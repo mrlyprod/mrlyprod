@@ -117,15 +117,17 @@ report('claims', `${claims.length} files, ${rows.length} claims`, ledger);
 
 const NAME = /\b(?:fn|const|static|struct|enum|trait|type|mod|union)\s+([A-Za-z_]\w*)/g;
 const declared = new Map<string, Set<string>>();
-for (const crate of there('crates')
-  ? readdirSync(at('crates'), { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name)
-  : []) {
-  const names = new Set<string>();
-  for (const file of under(`crates/${crate}/src`, '.rs')) {
-    names.add(stem(file));
-    for (const hit of readFileSync(at(file), 'utf8').matchAll(NAME)) names.add(hit[1]);
+for (const home of ['crates', 'pkgs']) {
+  for (const crate of there(home)
+    ? readdirSync(at(home), { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name)
+    : []) {
+    const names = new Set<string>();
+    for (const file of under(`${home}/${crate}/src`, '.rs')) {
+      names.add(stem(file));
+      for (const hit of readFileSync(at(file), 'utf8').matchAll(NAME)) names.add(hit[1]);
+    }
+    declared.set(crate, names);
   }
-  declared.set(crate, names);
 }
 
 const studies = new Set(

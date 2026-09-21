@@ -1,5 +1,5 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board};
+use mrlyrs::core::errors::Result;
 
 const ARROWS: usize = 8;
 const MATRIX: [[f64; 2]; 2] = [[2.0, 1.0], [1.0, 3.0]];

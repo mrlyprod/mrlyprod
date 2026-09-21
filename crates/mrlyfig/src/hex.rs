@@ -1,9 +1,9 @@
 use crate::board::{Board, Frame};
-use mrlycore::errors::Result;
-use mrlycore::Color;
-use mrlymath::six::geometry::orientation;
-use mrlymath::six::Cell6d;
-use mrlymath::six::Orientation;
+use mrlyrs::core::errors::Result;
+use mrlyrs::core::Color;
+use mrlyrs::math::six::geometry::orientation;
+use mrlyrs::math::six::Cell6d;
+use mrlyrs::math::six::Orientation;
 
 // GEOMETRY
 

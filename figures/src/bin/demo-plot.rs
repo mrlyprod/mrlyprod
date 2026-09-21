@@ -1,7 +1,7 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board};
 use mrlylab::ledger::{terms, Axis, Key, Measure, BUDGET};
-use mrlynum::blend::delta;
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::blend::delta;
 
 const ROWS: usize = 8;
 

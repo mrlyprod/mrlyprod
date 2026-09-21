@@ -5,7 +5,7 @@ mod spectral;
 mod walkers;
 
 use design::{components, plane, sponge, Graph, BASE};
-use mrlycore::{Rng, Tensor};
+use mrlyrs::core::{Rng, Tensor};
 use std::path::Path;
 
 const SUBJECTS: [u128; 7] = [79, 95, 127, 239, 255, 495, 511];

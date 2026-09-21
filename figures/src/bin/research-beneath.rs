@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board, Frame};
-use mrlynum::radix::koch;
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::radix::koch;
 
 const LEVEL: usize = 6;
 const POINTS: usize = 4096;

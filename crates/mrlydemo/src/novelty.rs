@@ -1,6 +1,8 @@
 use crate::Fault;
-use mrlynum::lattice::totients;
-use mrlynum::zeta::{novelty_main, novelty_wave, sharp_novelty, smoothed_novelty, Complex, Line};
+use mrlyrs::num::lattice::totients;
+use mrlyrs::num::zeta::{
+    novelty_main, novelty_wave, sharp_novelty, smoothed_novelty, Complex, Line,
+};
 use wasm_bindgen::prelude::*;
 
 const LOW: f64 = 8.0;

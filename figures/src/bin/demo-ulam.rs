@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board};
-use mrlynum::spiral::{diagonal, flags, Lattice};
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::spiral::{diagonal, flags, Lattice};
 
 const SIDE: usize = 201;
 const REACH: i64 = 100;

@@ -1,7 +1,7 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board, Color, Ramp};
-use mrlynum::factor::gcd;
-use mrlynum::lattice::totients;
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::factor::gcd;
+use mrlyrs::num::lattice::totients;
 
 const TOP: i64 = 2048;
 const DEEP: usize = 32;

@@ -1,9 +1,9 @@
-use mrlycore::colors::{shades, INDIGO};
-use mrlycore::errors::Result;
 use mrlyfig::{iso, save, Board};
 use mrlylab::moire::volume::volume;
 use mrlylab::moire::{Combine, Spec};
-use mrlymath::three::Cell3d;
+use mrlyrs::core::colors::{shades, INDIGO};
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::three::Cell3d;
 
 const CODE: u128 = 23;
 const SIZE: usize = 64;

@@ -1,5 +1,3 @@
-use mrlycore::colors::{Color, DARK};
-use mrlycore::json::parse;
 use mrlydemo::automata::*;
 use mrlydemo::bang::*;
 use mrlydemo::blend::*;
@@ -26,8 +24,10 @@ use mrlydemo::tile::*;
 use mrlydemo::two::*;
 use mrlydemo::volume::*;
 use mrlydemo::zeta::*;
+use mrlyrs::core::colors::{Color, DARK};
+use mrlyrs::core::json::parse;
 
-fn column(rows: &mrlycore::Json, key: &str) -> String {
+fn column(rows: &mrlyrs::core::Json, key: &str) -> String {
     rows.as_array()
         .unwrap()
         .iter()
@@ -1088,7 +1088,7 @@ fn word(codes: &[&str], numbers: &[u32], bases: &[u32]) -> (Vec<String>, Vec<u32
     )
 }
 
-fn census(codes: &[&str], numbers: &[u32], dimension: usize, bases: &[u32]) -> mrlycore::Json {
+fn census(codes: &[&str], numbers: &[u32], dimension: usize, bases: &[u32]) -> mrlyrs::core::Json {
     let (codes, numbers, bases) = word(codes, numbers, bases);
     parse(&magic_census(codes, numbers, dimension, bases).unwrap()).unwrap()
 }
@@ -1256,7 +1256,7 @@ fn the_morse_fixture_the_page_prints() {
     assert_eq!(row(3)["folds"], false);
     assert_eq!(row(3)["faults"], 1376);
     assert_eq!(row(3)["first"], parse("[1,3]").unwrap());
-    assert_eq!(row(3)["design"], mrlycore::Json::Null);
+    assert_eq!(row(3)["design"], mrlyrs::core::Json::Null);
 
     for level in 1..10 {
         let rows = parse(&morse_gallery(level).unwrap()).unwrap();
@@ -1310,7 +1310,7 @@ fn the_morse_fixture_the_page_prints() {
     assert_eq!(flat["morse_faults"], 127);
     let wide = parse(&morse_filter("495", 3, 3, 2, "design").unwrap()).unwrap();
     assert_eq!(wide["closed_exact"], true);
-    assert_eq!(wide["morse_faults"], mrlycore::Json::Null);
+    assert_eq!(wide["morse_faults"], mrlyrs::core::Json::Null);
     assert_eq!(wide["side"], 27);
 
     assert!(morse_word(0).is_err());
@@ -1332,7 +1332,7 @@ fn the_tile_fixture_the_page_prints() {
         parse(&tile_census(code, number, level, base, dimension, projection, reps, crop).unwrap())
             .unwrap()
     };
-    let count = |cell: &mrlycore::Json, key: &str| cell[key].as_str().unwrap().to_string();
+    let count = |cell: &mrlyrs::core::Json, key: &str| cell[key].as_str().unwrap().to_string();
 
     let wide = read(2, "495", 3, 2, 3, "", vec![5, 5], false);
     assert_eq!(wide["tile"], parse("[9,9]").unwrap());
@@ -1705,7 +1705,7 @@ fn the_carry_sign_law_alternates_at_both_bases() {
     let wide = parse(&carry_signs(13).unwrap()).unwrap();
     let past = wide.as_array().unwrap().last().unwrap();
     assert_eq!(past["three"]["sign"], 1);
-    assert_eq!(past["five"], mrlycore::Json::Null);
+    assert_eq!(past["five"], mrlyrs::core::Json::Null);
     let ladder = parse(&carry_ratios(3, 50).unwrap()).unwrap();
     let last = ladder.as_array().unwrap().last().unwrap();
     assert_eq!(last["dimension"], 50);

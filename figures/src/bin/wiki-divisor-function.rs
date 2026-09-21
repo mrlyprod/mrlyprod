@@ -1,5 +1,5 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, plot, save, Board};
+use mrlyrs::core::errors::Result;
 
 const X: usize = 36;
 const ROOT: usize = 6;

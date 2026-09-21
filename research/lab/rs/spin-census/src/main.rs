@@ -76,15 +76,15 @@ fn anchors(table: &[(usize, usize)]) {
     let grid = plane(127, BASE, 4);
     let bulk = shells(&grid, (1, 1));
     let side = grid.shape[0];
-    let rings = mrlynum::spin::profile(&design::floats(&grid), side, 6000);
-    let crate_mass = mrlynum::spin::mass(&rings, side);
+    let rings = mrlyrs::num::spin::profile(&design::floats(&grid), side, 6000);
+    let crate_mass = mrlyrs::num::spin::mass(&rings, side);
     println!(
         "code 127 level 4: shell total {} crate profile mass {:.2} gap {:.2e}",
         bulk.total(),
         crate_mass,
         (crate_mass - bulk.total() as f64).abs() / bulk.total() as f64
     );
-    let step = mrlynum::spin::reach(side) / 5999.0;
+    let step = mrlyrs::num::spin::reach(side) / 5999.0;
     for radius in [9.0f64, 27.0, 40.5] {
         let cut = (radius / step) as usize;
         let partial: f64 = (1..=cut)

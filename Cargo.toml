@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
-members = ["crates/*", "figures", "research/lab/rs/*", "pkgs/rs/*"]
-default-members = ["crates/*"]
+members = ["pkgs/mrlyrs", "crates/*", "figures", "research/lab/rs/*"]
+default-members = ["pkgs/mrlyrs", "crates/*"]
 
 [workspace.package]
 version = "0.3.0"
@@ -21,14 +21,10 @@ codegen-units = 16
 strip = false
 
 [workspace.dependencies]
-mrlycore = { path = "crates/mrlycore", version = "0.3.0" }
-mrlynum = { path = "crates/mrlynum", version = "0.3.0" }
-mrlymath = { path = "crates/mrlymath", version = "0.3.0" }
-mrlyfont = { path = "crates/mrlyfont", version = "0.3.0" }
 mrlylab = { path = "crates/mrlylab", version = "0.3.0" }
 mrlyfig = { path = "crates/mrlyfig", version = "0.3.0" }
 mrlydemo = { path = "crates/mrlydemo", version = "0.3.0" }
-mrlyrs = { path = "pkgs/rs/mrlyrs", version = "0.3.0" }
+mrlyrs = { path = "pkgs/mrlyrs", version = "0.2.0" }
 num-bigint = "0.4"
 num-rational = "0.4"
 faer = "0.24"

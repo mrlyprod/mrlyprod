@@ -1,11 +1,11 @@
-use mrlycore::errors::Result;
-use mrlycore::tensor::Tensor;
-use mrlycore::MrlyError;
-use mrlycore::Rng;
 use mrlyfig::out::root;
 use mrlyfig::{ink, save, Board};
-use mrlymath::life::{design_mask, lattice_index, next_grid, Boundary};
-use mrlymath::two::Cell2d;
+use mrlyrs::core::errors::Result;
+use mrlyrs::core::tensor::Tensor;
+use mrlyrs::core::MrlyError;
+use mrlyrs::core::Rng;
+use mrlyrs::life::{design_mask, lattice_index, next_grid, Boundary};
+use mrlyrs::math::two::Cell2d;
 use std::path::PathBuf;
 
 const NAME: &str = "demo-mrlylife";

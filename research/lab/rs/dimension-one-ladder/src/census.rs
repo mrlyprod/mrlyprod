@@ -1,4 +1,4 @@
-use mrlynum::factor::gcd;
+use mrlyrs::num::factor::gcd;
 
 pub struct Ray {
     pub a: u64,

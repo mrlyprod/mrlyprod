@@ -1,7 +1,7 @@
 use crate::groups::{group, orbit, Elem};
 use crate::rules::RULES;
-use mrlymath::bang::universe::degree;
-use mrlynum::boolean::walsh_spectrum;
+use mrlyrs::math::bang::universe::degree;
+use mrlyrs::num::boolean::walsh_spectrum;
 use std::collections::BTreeSet;
 
 pub fn levelset(code: usize) -> bool {

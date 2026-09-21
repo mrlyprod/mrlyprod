@@ -1,5 +1,5 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board, Ramp};
+use mrlyrs::core::errors::Result;
 
 const BASE: i64 = 7;
 const DROP: i64 = 3;

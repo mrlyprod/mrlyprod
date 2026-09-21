@@ -1,7 +1,7 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, plot, save, Board};
-use mrlynum::classics::primes;
-use mrlynum::formulas;
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::classics::primes;
+use mrlyrs::num::formulas;
 
 const TOP: usize = 200;
 const SAMPLES: usize = 1200;

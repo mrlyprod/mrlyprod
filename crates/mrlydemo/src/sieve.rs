@@ -1,7 +1,7 @@
 use crate::{Fault, Grid};
-use mrlycore::json;
-use mrlymath::space::{Pack, Vec3};
-use mrlynum::sieve;
+use mrlyrs::core::json;
+use mrlyrs::math::space::{Pack, Vec3};
+use mrlyrs::num::sieve;
 use wasm_bindgen::prelude::*;
 
 const PLANE_SITES: usize = 4_000_000;
@@ -70,7 +70,7 @@ pub fn wallis_read(
     let axes = axes(dimension)?;
     let schedule = word(kind, letter, levels.max(2))?;
     let word = word(kind, letter, levels)?;
-    let rows: Vec<mrlycore::Json> = (1..=word.len())
+    let rows: Vec<mrlyrs::core::Json> = (1..=word.len())
         .map(|n| {
             let prefix = &word[..n];
             json!({

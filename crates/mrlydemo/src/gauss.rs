@@ -1,8 +1,8 @@
 use crate::spin::ramp_of;
 use crate::{rgba, theme, Fault, Pixels};
-use mrlycore::json;
-use mrlynum::factor::factorize_wide;
-use mrlynum::gauss::{peak, shells, Class, Ring, Window};
+use mrlyrs::core::json;
+use mrlyrs::num::factor::factorize_wide;
+use mrlyrs::num::gauss::{peak, shells, Class, Ring, Window};
 use wasm_bindgen::prelude::*;
 
 const RADIUS: u32 = 200;

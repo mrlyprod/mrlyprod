@@ -1,8 +1,8 @@
-use mrlycore::errors::Result;
-use mrlycore::{Color, Rng};
 use mrlyfig::{ink, plot, save, Board, Frame};
-use mrlymath::two::designs;
-use mrlymath::two::Cell2d;
+use mrlyrs::core::errors::Result;
+use mrlyrs::core::{Color, Rng};
+use mrlyrs::math::two::designs;
+use mrlyrs::math::two::Cell2d;
 use std::collections::VecDeque;
 
 const LEVEL: usize = 4;

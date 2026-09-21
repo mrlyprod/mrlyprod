@@ -1,9 +1,9 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, iso, save, Board, Color};
-use mrlymath::bang::bang;
-use mrlymath::three::designs;
-use mrlymath::three::faces::quads;
-use mrlymath::three::Cell3d;
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::bang::bang;
+use mrlyrs::math::three::designs;
+use mrlyrs::math::three::faces::quads;
+use mrlyrs::math::three::Cell3d;
 
 const ROWS: usize = 9;
 const WIDEST: f64 = 6.5;

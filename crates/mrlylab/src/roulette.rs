@@ -1,6 +1,6 @@
-use mrlycore::errors::{value_error, Result};
-use mrlynum::factor::gcd;
-use mrlynum::spirograph::{trace, Pencil, Track};
+use mrlyrs::core::errors::{value_error, Result};
+use mrlyrs::num::factor::gcd;
+use mrlyrs::num::spirograph::{trace, Pencil, Track};
 use std::collections::HashMap;
 
 const GRID: (usize, usize) = (8, 1024);
@@ -55,7 +55,7 @@ impl Nodes {
     }
 }
 
-/// Counts the nodes of the roulette the pencils draw on the track: `mrlynum::spirograph::trace` at `samples` points a pencil, every pair of polyline segments tested for a proper crossing by orientation signs on a grid of buckets, and crossings within `tol` of the picture's longer side read as one node. A pair of segments is counted in one bucket alone, the first they share, so no crossing is counted twice; the sign of an orientation is `side`, exact for any endpoints whose two differences are exact, which two `f32` endpoints are while the picture's coordinates keep their exponents within 29 of one another, as these pictures do. A seat at the wheel's centre draws one circle `b` times over and the count is meaningless there, the passes crossing one another as the sampling wanders.
+/// Counts the nodes of the roulette the pencils draw on the track: `mrlyrs::num::spirograph::trace` at `samples` points a pencil, every pair of polyline segments tested for a proper crossing by orientation signs on a grid of buckets, and crossings within `tol` of the picture's longer side read as one node. A pair of segments is counted in one bucket alone, the first they share, so no crossing is counted twice; the sign of an orientation is `side`, exact for any endpoints whose two differences are exact, which two `f32` endpoints are while the picture's coordinates keep their exponents within 29 of one another, as these pictures do. A seat at the wheel's centre draws one circle `b` times over and the count is meaningless there, the passes crossing one another as the sampling wanders.
 pub fn nodes(track: &Track, pencils: &[Pencil], samples: usize, tol: f64) -> Result<Nodes> {
     if pencils.is_empty() {
         return value_error("a roulette needs a pencil.");
@@ -154,7 +154,7 @@ pub fn nodes(track: &Track, pencils: &[Pencil], samples: usize, tol: f64) -> Res
     Ok(out)
 }
 
-/// One pencil for every distinct curve, the coincidence law read on the exact seats when `exact` says the seats carry no jitter: the first pencil of each family, in the order they came in. On a circle the seats fall into classes under the rotation group of order `gcd(b, 4)`, which is the clause `mrlynum::spirograph::distinct` and `mrlynum::spirograph::representatives` read; on a line and on a polygon every distinct seat draws its own curve, two seats of one radius on a line drawing translates of one shape and never one curve.
+/// One pencil for every distinct curve, the coincidence law read on the exact seats when `exact` says the seats carry no jitter: the first pencil of each family, in the order they came in. On a circle the seats fall into classes under the rotation group of order `gcd(b, 4)`, which is the clause `mrlyrs::num::spirograph::distinct` and `mrlyrs::num::spirograph::representatives` read; on a line and on a polygon every distinct seat draws its own curve, two seats of one radius on a line drawing translates of one shape and never one curve.
 pub fn spread(track: &Track, pencils: &[Pencil], exact: bool) -> Vec<Pencil> {
     if !exact {
         return pencils.to_vec();
@@ -299,7 +299,7 @@ fn join(parent: &mut [usize], a: usize, b: usize) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mrlynum::spirograph::{distinct, pencils, track};
+    use mrlyrs::num::spirograph::{distinct, pencils, track};
 
     fn carpet() -> Vec<u8> {
         vec![1, 1, 1, 1, 0, 1, 1, 1, 1]

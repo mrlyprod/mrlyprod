@@ -1,5 +1,5 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board};
+use mrlyrs::core::errors::Result;
 
 const CELLS: usize = 4;
 const PATTERNS: usize = 16;

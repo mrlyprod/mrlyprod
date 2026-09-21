@@ -1,9 +1,9 @@
 use crate::{checked, code_of, Fault};
-use mrlycore::{json, Json};
-use mrlymath::formulas::six as formulas;
-use mrlymath::six::{self, Cell6d};
-use mrlymath::three;
-use mrlynum::boolean;
+use mrlyrs::core::{json, Json};
+use mrlyrs::math::formulas::six as formulas;
+use mrlyrs::math::six::{self, Cell6d};
+use mrlyrs::math::three;
+use mrlyrs::num::boolean;
 use wasm_bindgen::prelude::*;
 
 /// Projects the cube the code names to a hexagon, iso, pro or cut, and renders it as SVG at the scale.

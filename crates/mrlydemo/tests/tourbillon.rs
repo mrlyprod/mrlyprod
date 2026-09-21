@@ -1,5 +1,5 @@
-use mrlycore::json::parse;
 use mrlydemo::tourbillon::*;
+use mrlyrs::core::json::parse;
 
 fn read(
     top: usize,
@@ -9,7 +9,7 @@ fn read(
     set: &str,
     weights: &str,
     blend: &str,
-) -> mrlycore::Json {
+) -> mrlyrs::core::Json {
     let field = tourbillon(
         top, size, schedule, increment, set, weights, "cells", blend, 1,
     )

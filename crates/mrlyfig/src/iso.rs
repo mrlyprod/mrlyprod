@@ -1,7 +1,7 @@
 use crate::board::{Board, Frame};
-use mrlycore::Color;
-use mrlymath::three::faces::quads;
-use mrlymath::three::Cell3d;
+use mrlyrs::core::Color;
+use mrlyrs::math::three::faces::quads;
+use mrlyrs::math::three::Cell3d;
 
 // PROJECTION
 

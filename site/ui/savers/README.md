@@ -51,7 +51,7 @@
 - `frame.js`: the xorshift, the palette read, the colour parse and `run()`, the shared life every saver hangs from.
 - `matrix.js`: the rain, and the pure `fell(y, h, roll)` reset rule.
 - `sleep.js`: the bouncer and the pure `bounce(p, v, max)` wall.
-- `tiles.js`: mrlytiles, the five 2D design rules ported from `crates/mrlymath` `two::designs`, plus `seed(design, n)`, `kron(base, level)` and `tile(design, n, level)` giving `{ size, cells }` over a `Uint8Array`.
+- `tiles.js`: mrlytiles, the five 2D design rules ported from `pkgs/mrlyrs` `math::two::designs`, plus `seed(design, n)`, `kron(base, level)` and `tile(design, n, level)` giving `{ size, cells }` over a `Uint8Array`.
 - `fractal.js`: both fractals, the pure `fit`, `autoMaxIter`, `escaper` and `wayfind`.
 - `gl.js`: the WebGL2 program: one vertex shader, one fragment shader branching on `u_julia`, the quad and the uniform table; `build()` checks every compile and the link and returns `null` on failure, and the fractal then draws nothing.
 - `savers.test.js`: the pure rules, run with `bun test ui/savers/savers.test.js`.

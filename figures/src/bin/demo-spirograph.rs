@@ -1,7 +1,7 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board};
-use mrlymath::two;
-use mrlynum::spirograph::{distinct, frame, pencils, trace, track, Kind};
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::two;
+use mrlyrs::num::spirograph::{distinct, frame, pencils, trace, track, Kind};
 
 const CODE: u128 = 495;
 const SIDE: usize = 3;

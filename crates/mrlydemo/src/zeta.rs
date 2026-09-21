@@ -1,5 +1,5 @@
 use crate::Fault;
-use mrlynum::zeta::{self, Line, JOIN};
+use mrlyrs::num::zeta::{self, Line, JOIN};
 use wasm_bindgen::prelude::*;
 
 const REACH: f64 = 250.0;

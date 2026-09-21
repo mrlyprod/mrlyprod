@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, plot, save, Board};
-use mrlynum::series::{harmonic, EULER};
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::series::{harmonic, EULER};
 
 const TOP: usize = 30;
 const SAMPLES: usize = 1600;

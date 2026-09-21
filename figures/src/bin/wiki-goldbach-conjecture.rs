@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, plot, save, Board};
-use mrlynum::formulas;
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::formulas;
 
 const TOP: usize = 400;
 

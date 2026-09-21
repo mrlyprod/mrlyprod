@@ -1,8 +1,8 @@
-use mrlycore::errors::Result;
 use mrlyfig::board::Frame;
 use mrlyfig::{ink, save, Board, Grid};
-use mrlymath::formulas::counting;
-use mrlymath::two::designs;
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::formulas::counting;
+use mrlyrs::math::two::designs;
 
 const CODES: [u128; 6] = [1, 3, 7, 9, 11, 15];
 const SIDES: [usize; 4] = [3, 5, 7, 9];

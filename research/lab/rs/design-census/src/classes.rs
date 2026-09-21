@@ -1,10 +1,10 @@
 use crate::fills::cell_index;
 use crate::tables::write_csv;
-use mrlymath::bang::baseq::fill_from_corners;
-use mrlymath::bang::counting;
-use mrlymath::bang::factory::code_to_corners;
-use mrlymath::bang::Code;
-use mrlymath::rules::render;
+use mrlyrs::math::bang::baseq::fill_from_corners;
+use mrlyrs::math::bang::counting;
+use mrlyrs::math::bang::factory::code_to_corners;
+use mrlyrs::math::bang::Code;
+use mrlyrs::math::rules::render;
 use num_bigint::BigUint;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;

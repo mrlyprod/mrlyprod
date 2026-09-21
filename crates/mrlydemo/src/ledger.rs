@@ -1,11 +1,11 @@
 use crate::{checked, code_of, Fault};
-use mrlycore::{json, Json};
 use mrlylab::ledger::{
     self, identify, keys, numbers, search, sequence, Axis, Key, Measure, Sequence, Tier, BUDGET,
     RECORDS,
 };
-use mrlymath::bang::factory;
-use mrlymath::formulas;
+use mrlyrs::core::{json, Json};
+use mrlyrs::math::bang::factory;
+use mrlyrs::math::formulas;
 use std::collections::BTreeMap;
 use std::sync::{Mutex, OnceLock};
 use wasm_bindgen::prelude::*;

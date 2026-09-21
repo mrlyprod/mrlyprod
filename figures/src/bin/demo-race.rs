@@ -1,7 +1,7 @@
-use mrlycore::errors::Result;
-use mrlycore::Rng;
 use mrlyfig::{ink, save, Board, Color, Frame, Grid};
-use mrlymath::two;
+use mrlyrs::core::errors::Result;
+use mrlyrs::core::Rng;
+use mrlyrs::math::two;
 
 const NUMBER: usize = 3;
 const BASE: usize = 3;

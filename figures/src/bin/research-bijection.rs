@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board};
-use mrlymath::bang;
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::bang;
 
 const CENSUS: usize = 16;
 const STAMP_COLS: usize = 4;

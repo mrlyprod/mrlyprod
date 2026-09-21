@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
 use mrlyfig::board::Frame;
 use mrlyfig::{ink, save, Board, Grid};
+use mrlyrs::core::errors::Result;
 
 const M: u32 = 5;
 const K: u32 = 7;

@@ -1,8 +1,8 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board};
-use mrlymath::bang::{magic, MagicLayer};
-use mrlymath::name::Bang;
-use mrlymath::two;
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::bang::{magic, MagicLayer};
+use mrlyrs::math::name::Bang;
+use mrlyrs::math::two;
 
 const SIDE: usize = 105;
 const UNIT: f64 = 8.0;

@@ -1,10 +1,10 @@
 use super::presets::{Mask, Preset, Rule, Seed};
 use super::readings::{canonical, read, translate_of, Reading};
-use mrlycore::errors::{value_error, Result};
-use mrlycore::rng::Rng;
-use mrlycore::tensor::Tensor;
-use mrlymath::life::{animate, churn, design_mask, lattice_index, Boundary, Config, Fate};
-use mrlymath::two::{create, Cell2d};
+use mrlyrs::core::errors::{value_error, Result};
+use mrlyrs::core::rng::Rng;
+use mrlyrs::core::tensor::Tensor;
+use mrlyrs::life::{animate, churn, design_mask, lattice_index, Boundary, Config, Fate};
+use mrlyrs::math::two::{create, Cell2d};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// The record of one run.

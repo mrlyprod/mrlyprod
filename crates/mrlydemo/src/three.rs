@@ -1,8 +1,8 @@
 use crate::{code_of, Fault};
-use mrlycore::json;
-use mrlymath::formulas;
-use mrlymath::space::Pack;
-use mrlymath::three::{self, Cell3d};
+use mrlyrs::core::json;
+use mrlyrs::math::formulas;
+use mrlyrs::math::space::Pack;
+use mrlyrs::math::three::{self, Cell3d};
 use wasm_bindgen::prelude::*;
 
 fn cell(code: &str, number: usize, level: usize, base: usize) -> Result<Cell3d, Fault> {

@@ -1,9 +1,9 @@
-use mrlycore::errors::Result;
-use mrlycore::Color;
 use mrlyfig::{ink, plot, save, Board, Frame};
-use mrlynum::design::elements;
-use mrlynum::factor::{gcd, mobius_sieve};
-use mrlynum::lattice::farey;
+use mrlyrs::core::errors::Result;
+use mrlyrs::core::Color;
+use mrlyrs::num::design::elements;
+use mrlyrs::num::factor::{gcd, mobius_sieve};
+use mrlyrs::num::lattice::farey;
 
 const BASE: u64 = 3;
 const DIGITS: [u64; 2] = [0, 1];

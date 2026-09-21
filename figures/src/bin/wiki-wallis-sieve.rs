@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board, Color};
-use mrlynum::sieve;
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::sieve;
 
 const LEVELS: usize = 3;
 const SPAN: f64 = 840.0;

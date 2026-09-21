@@ -1,6 +1,6 @@
 use super::field::Field;
-use mrlycore::errors::{value_error, Result};
-use mrlycore::ramp::Colorizer;
+use mrlyrs::core::errors::{value_error, Result};
+use mrlyrs::core::ramp::Colorizer;
 
 /// Quantizes a field into colored levels and encodes PNG bytes, or an error at scale zero.
 pub fn render(
@@ -25,7 +25,7 @@ pub fn render(
         let c = colorizer.color(bucket + 1, levels);
         rgba[i] = [c.r, c.g, c.b, 255];
     }
-    mrlycore::png(&rgba, size, size, scale)
+    mrlyrs::core::png(&rgba, size, size, scale)
 }
 
 #[cfg(test)]
@@ -83,7 +83,7 @@ mod tests {
             ),
         ];
         for (bytes, side, sum, corner, centre) in &cases {
-            let (w, h, pixels) = mrlycore::unpng(bytes).unwrap();
+            let (w, h, pixels) = mrlyrs::core::unpng(bytes).unwrap();
             assert_eq!((w, h), (*side, *side));
             let bytes: u64 = pixels.iter().flatten().map(|&b| u64::from(b)).sum();
             assert_eq!(bytes, *sum);

@@ -1,5 +1,5 @@
-use mrlynum::factor::mobius_sieve;
-use mrlynum::memory::{allowed_windows, kappa, perron, Rule};
+use mrlyrs::num::factor::mobius_sieve;
+use mrlyrs::num::memory::{allowed_windows, kappa, perron, Rule};
 use std::env;
 use std::time::Instant;
 

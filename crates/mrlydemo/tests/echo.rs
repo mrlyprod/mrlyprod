@@ -1,14 +1,14 @@
-use mrlycore::json::parse;
 use mrlydemo::echo::*;
-use mrlynum::design;
+use mrlyrs::core::json::parse;
+use mrlyrs::num::design;
 
-fn read(base: u32, mask: u32, depth: usize, subtract: bool) -> (Echo, mrlycore::Json) {
+fn read(base: u32, mask: u32, depth: usize, subtract: bool) -> (Echo, mrlyrs::core::Json) {
     let echo = echo_read(base, mask, depth, subtract).unwrap();
     let json = parse(&echo.read).unwrap();
     (echo, json)
 }
 
-fn shown(value: &mrlycore::Json, places: usize) -> String {
+fn shown(value: &mrlyrs::core::Json, places: usize) -> String {
     format!("{:.*}", places, value.as_f64().unwrap())
 }
 
@@ -140,7 +140,7 @@ fn the_caps_hold_the_depth_and_the_sieve() {
     assert_eq!(caps["samples"], 4096);
     let (_, deep) = read(3, 0b011, 17, false);
     assert_eq!(deep["sieve"], false);
-    assert_eq!(deep["share"], mrlycore::Json::Null);
+    assert_eq!(deep["share"], mrlyrs::core::Json::Null);
     let (thin, shallow) = read(3, 0b011, 14, false);
     assert_eq!(deep["last"], 157);
     assert_eq!(shallow["last"], 11);

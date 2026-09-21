@@ -1,14 +1,14 @@
-use mrlycore::Tensor;
-use mrlymath::bang::baseq::axis_maps;
-use mrlymath::bang::factory::{corners_to_code, residue_corners};
-use mrlymath::bang::universe::permutations;
-use mrlynum::graph::core_graph;
+use mrlyrs::core::Tensor;
+use mrlyrs::math::bang::baseq::axis_maps;
+use mrlyrs::math::bang::factory::{corners_to_code, residue_corners};
+use mrlyrs::math::bang::universe::permutations;
+use mrlyrs::num::graph::core_graph;
 use std::collections::BTreeSet;
 
 pub const BASE: usize = 3;
 
 pub fn plane(code: u128, base: usize, level: usize) -> Tensor {
-    mrlymath::two::create(code, base, level, 0, base)
+    mrlyrs::math::two::create(code, base, level, 0, base)
         .expect("a plane design renders")
         .types()
         .clone()
@@ -23,7 +23,7 @@ pub fn sponge_code() -> u128 {
 }
 
 pub fn sponge(level: usize) -> Tensor {
-    mrlymath::three::create(sponge_code(), BASE, level, BASE)
+    mrlyrs::math::three::create(sponge_code(), BASE, level, BASE)
         .expect("the sponge renders")
         .types()
         .clone()

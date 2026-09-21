@@ -1,5 +1,5 @@
 use crate::{checked, rgba, theme, Fault, Pixels};
-use mrlymath::two;
+use mrlyrs::math::two;
 use wasm_bindgen::prelude::*;
 
 const REACH: usize = 1024;

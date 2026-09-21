@@ -1,11 +1,11 @@
-use mrlycore::colors::{shades, ORANGE};
-use mrlycore::errors::Result;
 use mrlyfig::board::Frame;
 use mrlyfig::{iso, save, Board, Color};
-use mrlymath::bang::{magic, MagicLayer};
-use mrlymath::name::Bang;
-use mrlymath::three::designs;
-use mrlymath::three::Cell3d;
+use mrlyrs::core::colors::{shades, ORANGE};
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::bang::{magic, MagicLayer};
+use mrlyrs::math::name::Bang;
+use mrlyrs::math::three::designs;
+use mrlyrs::math::three::Cell3d;
 
 const NUMBER: usize = 3;
 const SHARE: [f64; 3] = [0.26, 0.33, 0.4];

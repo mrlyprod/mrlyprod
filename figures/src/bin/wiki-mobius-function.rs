@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board, Grid};
-use mrlynum::factor::{mobius, mobius_sieve};
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::factor::{mobius, mobius_sieve};
 
 const TOP: usize = 100;
 const SIDE: usize = 10;

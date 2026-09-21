@@ -4,6 +4,5 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-mrlycore.workspace = true
-mrlymath.workspace = true
+mrlyrs.workspace = true
 num-bigint.workspace = true

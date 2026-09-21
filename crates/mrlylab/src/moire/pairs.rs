@@ -1,6 +1,6 @@
 use crate::moire::{layer, Layer, Spec};
-use mrlycore::errors::{value_error, Result};
-use mrlynum::factor::lcm;
+use mrlyrs::core::errors::{value_error, Result};
+use mrlyrs::num::factor::lcm;
 
 fn odd_blocks(span: u64, block: u64) -> u64 {
     block * (span / (2 * block)) + (span % (2 * block)).saturating_sub(block)

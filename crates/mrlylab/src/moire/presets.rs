@@ -1,8 +1,8 @@
 use super::field::Field;
 use super::stack::stack;
 use super::{Combine, Lattice, Spec};
-use mrlycore::errors::{value_error, Result};
-use mrlymath::bang::corners_to_code;
+use mrlyrs::core::errors::{value_error, Result};
+use mrlyrs::math::bang::corners_to_code;
 
 /// One named moire recipe: the design, the scales it stacks and the lattice it samples.
 #[derive(Clone, Debug, PartialEq)]

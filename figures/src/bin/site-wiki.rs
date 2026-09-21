@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board, Frame, Grid};
-use mrlymath::two::designs;
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::two::designs;
 
 const CODES: [u128; 7] = [7, 14, 3, 5, 9, 6, 15];
 const SIDE: usize = 9;

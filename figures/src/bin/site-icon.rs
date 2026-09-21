@@ -1,5 +1,5 @@
-use mrlycore::errors::Result;
 use mrlyfig::{grid, ink, save, Board, Grid};
+use mrlyrs::core::errors::Result;
 
 fn main() -> Result<()> {
     let mut board = Board::new(512, 512, ink::ground());

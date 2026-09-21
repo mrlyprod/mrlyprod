@@ -1,9 +1,9 @@
-use mrlycore::json::parse;
-use mrlycore::Tensor;
 use mrlydemo::chladni::*;
 use mrlydemo::life::life_noise;
-use mrlymath::life::{design_mask, next_grid, Boundary};
-use mrlymath::two::Cell2d;
+use mrlyrs::core::json::parse;
+use mrlyrs::core::Tensor;
+use mrlyrs::life::{design_mask, next_grid, Boundary};
+use mrlyrs::math::two::Cell2d;
 
 fn agree(
     code: u128,

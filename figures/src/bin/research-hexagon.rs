@@ -1,8 +1,8 @@
-use mrlycore::errors::Result;
-use mrlycore::tile::Design;
 use mrlyfig::board::Board;
 use mrlyfig::ink::Ramp;
 use mrlyfig::{hex, ink, save};
+use mrlyrs::core::errors::Result;
+use mrlyrs::core::tile::Design;
 
 const MESH: usize = 110;
 const DEEPEST: i64 = 55;
@@ -14,7 +14,7 @@ struct Rule {
 
 impl Rule {
     fn new(design: Design) -> Result<Rule> {
-        let cube = mrlymath::three::named(design, 2, 1)?;
+        let cube = mrlyrs::math::three::named(design, 2, 1)?;
         let mut corners = [false; 8];
         for (slot, corner) in corners.iter_mut().enumerate() {
             *corner = cube.types().get(&[slot >> 2, (slot >> 1) & 1, slot & 1]) == 1;

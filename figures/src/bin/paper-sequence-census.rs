@@ -1,8 +1,8 @@
-use mrlycore::errors::Result;
-use mrlycore::Color;
 use mrlyfig::board::Frame;
 use mrlyfig::{ink, save, Board, Grid};
-use mrlymath::two::designs;
+use mrlyrs::core::errors::Result;
+use mrlyrs::core::Color;
+use mrlyrs::math::two::designs;
 
 const SIDE: usize = 5;
 const GAP: f64 = 0.14;

@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, plot, save, Board, Frame};
-use mrlynum::design;
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::design;
 
 const BASE: u64 = 10;
 const DIGITS: [u64; 9] = [0, 1, 2, 3, 4, 5, 6, 7, 8];
@@ -10,7 +10,14 @@ const FLOOR: usize = 101;
 const BAND: (f64, f64) = (4.0, 60.0);
 const THRESHOLD: f64 = 8.0;
 
-fn column(board: &mut Board, frame: Frame, x: f64, thick: f64, color: mrlycore::Color, dash: f64) {
+fn column(
+    board: &mut Board,
+    frame: Frame,
+    x: f64,
+    thick: f64,
+    color: mrlyrs::core::Color,
+    dash: f64,
+) {
     if dash <= 0.0 {
         board.segment((x, frame.y), (x, frame.y + frame.h), thick, color);
         return;

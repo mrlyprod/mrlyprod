@@ -1,9 +1,9 @@
-use mrlycore::errors::Result;
-use mrlycore::Color;
 use mrlyfig::board::Frame;
 use mrlyfig::{ink, save, Board, Grid};
-use mrlymath::bang::{magic, word, MagicLayer};
-use mrlymath::name::Bang;
+use mrlyrs::core::errors::Result;
+use mrlyrs::core::Color;
+use mrlyrs::math::bang::{magic, word, MagicLayer};
+use mrlyrs::math::name::Bang;
 
 fn letter(code: u128) -> MagicLayer {
     MagicLayer::new(Bang::new(code, 2, 2), 2)

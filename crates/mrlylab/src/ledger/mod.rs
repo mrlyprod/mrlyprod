@@ -12,9 +12,9 @@ pub use measure::{Cost, Measure};
 pub use records::{identify, Record, RECORDS};
 pub use terms::{closed, fill_polynomial, terms};
 
-use mrlycore::errors::{value_error, Result};
-use mrlymath::bang::{baseq, Code};
-use mrlymath::name::{Bang, Named, Sequence as SequenceName};
+use mrlyrs::core::errors::{value_error, Result};
+use mrlyrs::math::bang::{baseq, Code};
+use mrlyrs::math::name::{Bang, Named, Sequence as SequenceName};
 use std::collections::BTreeMap;
 use std::sync::{Mutex, OnceLock};
 

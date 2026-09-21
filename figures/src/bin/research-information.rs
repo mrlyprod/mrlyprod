@@ -1,8 +1,8 @@
-use mrlycore::errors::Result;
-use mrlycore::Color;
 use mrlyfig::board::Frame;
 use mrlyfig::{ink, save, Board, Grid};
-use mrlymath::two::designs;
+use mrlyrs::core::errors::Result;
+use mrlyrs::core::Color;
+use mrlyrs::math::two::designs;
 
 const CODE: u128 = 495;
 const SPLIT: usize = 9;

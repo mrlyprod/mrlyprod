@@ -1,8 +1,8 @@
-use mrlycore::errors::Result;
-use mrlycore::Color;
 use mrlyfig::{ink, save, Board, Grid};
-use mrlymath::bang::factory;
-use mrlymath::shape::crossing_tree;
+use mrlyrs::core::errors::Result;
+use mrlyrs::core::Color;
+use mrlyrs::math::bang::factory;
+use mrlyrs::math::shape::crossing_tree;
 
 const RADIUS: u64 = 242;
 const LEVEL: usize = 5;

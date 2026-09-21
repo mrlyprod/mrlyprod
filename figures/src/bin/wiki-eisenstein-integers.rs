@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board};
-use mrlynum::gauss::{Ring, Window};
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::gauss::{Ring, Window};
 
 const REACH: u64 = 8;
 const POINTS: usize = 217;

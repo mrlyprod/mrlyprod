@@ -1,5 +1,5 @@
-use mrlymath::bang::universe::{orbit, Code};
-use mrlymath::life::{Boundary, Counts, Sequence};
+use mrlyrs::life::{Boundary, Counts, Sequence};
+use mrlyrs::math::bang::universe::{orbit, Code};
 
 /// The Moore neighbourhood's code at side 3 in the plane.
 pub const MOORE: Code = 7;

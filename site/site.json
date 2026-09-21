@@ -114,7 +114,7 @@
     "claims": { "path": "../research/claims", "ext": ".md" },
     "papers": { "path": "../research/papers", "ext": ".md" },
     "figures": { "path": "../files/figures", "ext": ".png" },
-    "names": { "path": "../crates/mrlymath/NAMES.md" },
+    "names": { "path": "../pkgs/mrlyrs/NAMES.md" },
     "demos": { "path": "demos", "deep": true },
     "lib": { "path": "lib", "deep": true },
     "pkg": { "path": "pkg", "deep": true },

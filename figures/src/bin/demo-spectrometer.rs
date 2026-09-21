@@ -1,8 +1,8 @@
-use mrlycore::errors::Result;
 use mrlyfig::board::{Board, Frame};
 use mrlyfig::{hex, ink, save};
-use mrlymath::six;
-use mrlymath::six::Cell6d;
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::six;
+use mrlyrs::math::six::Cell6d;
 
 const CODES: [u128; 9] = [0, 1, 3, 7, 23, 31, 63, 127, 255];
 const SIDE: usize = 11;

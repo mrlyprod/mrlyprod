@@ -1,6 +1,6 @@
 use super::sample::{axes, membership};
 use super::{Lattice, Spec};
-use mrlycore::errors::{value_error, Result};
+use mrlyrs::core::errors::{value_error, Result};
 
 /// The recipe for one moire layer.
 #[derive(Clone, Debug)]

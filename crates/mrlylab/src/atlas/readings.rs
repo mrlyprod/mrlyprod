@@ -1,10 +1,10 @@
-use mrlycore::errors::Result;
-use mrlycore::tensor::Tensor;
-use mrlymath::dim::graph::{core_graph, tunnel_graph};
-use mrlymath::life::{churn, entropy};
-use mrlymath::two::{census, Cell2d};
-use mrlynum::fft::{peak_ring, radial_profile};
-use mrlynum::graph::census::components;
+use mrlyrs::core::errors::Result;
+use mrlyrs::core::tensor::Tensor;
+use mrlyrs::life::{churn, entropy};
+use mrlyrs::math::dim::graph::{core_graph, tunnel_graph};
+use mrlyrs::math::two::{census, Cell2d};
+use mrlyrs::num::fft::{peak_ring, radial_profile};
+use mrlyrs::num::graph::census::components;
 use std::f64::consts::PI;
 
 /// The dihedral subgroup fixing a frame, by order and name.
@@ -448,7 +448,7 @@ pub fn translate_of(a: &Tensor, b: &Tensor) -> Option<(usize, usize)> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mrlymath::two::carpet;
+    use mrlyrs::math::two::carpet;
     fn blinker() -> Cell2d {
         let mut t = Tensor::new(vec![5, 5]);
         t.set(&[1, 2], 1);
@@ -543,7 +543,7 @@ mod tests {
         assert_eq!(translate_of(a.types(), b.types()), Some((3, 3)));
         assert_eq!(translate_of(a.types(), a.types()), Some((0, 0)));
         assert_eq!(canonical(a.types()), canonical(b.types()));
-        let carpet = mrlymath::two::carpet(3, 2).unwrap();
+        let carpet = mrlyrs::math::two::carpet(3, 2).unwrap();
         let moved = Cell2d::new(Tensor::of(canonical(carpet.types()), vec![9, 9]));
         assert_eq!(factors(moved.types()), None);
         let (_, _, d, outer, inner) = shifted_factors(moved.types()).unwrap();
@@ -556,7 +556,7 @@ mod tests {
         };
         assert!(translate_of(&tile(495), &tile(outer)).is_some());
         assert_eq!(
-            first_negative_lobe(&mrlymath::life::moore().types().clone(), 27),
+            first_negative_lobe(&mrlyrs::life::moore().types().clone(), 27),
             9
         );
     }

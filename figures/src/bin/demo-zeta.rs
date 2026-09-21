@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board};
-use mrlynum::zeta::Line;
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::zeta::Line;
 
 const REACH: f64 = 50.0;
 const STEPS: usize = 8000;

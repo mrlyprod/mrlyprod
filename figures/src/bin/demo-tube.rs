@@ -1,7 +1,7 @@
-use mrlycore::errors::Result;
 use mrlyfig::board::{Board, Frame};
 use mrlyfig::{ink, plot, save, Grid};
-use mrlymath::two;
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::two;
 
 const CODE: u128 = 495;
 const SIDE: usize = 3;

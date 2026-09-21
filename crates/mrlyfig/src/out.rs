@@ -1,6 +1,6 @@
 use crate::board::Board;
 use crate::ink;
-use mrlycore::errors::{value_error, Result};
+use mrlyrs::core::errors::{value_error, Result};
 use std::path::PathBuf;
 
 // OUTPUT
@@ -19,14 +19,14 @@ pub fn save(name: &str, board: &Board) -> Result<PathBuf> {
     let name = format!("{name}-{}", ink::name());
     let folder = root().join("files").join("figures");
     std::fs::create_dir_all(&folder)
-        .map_err(|e| mrlycore::MrlyError::Value(format!("cannot make {folder:?}: {e}")))?;
+        .map_err(|e| mrlyrs::core::MrlyError::Value(format!("cannot make {folder:?}: {e}")))?;
     let path = folder.join(format!("{name}.png"));
     let bytes = board.png()?;
     if bytes.is_empty() {
         return value_error("the png came back empty.");
     }
     std::fs::write(&path, bytes)
-        .map_err(|e| mrlycore::MrlyError::Value(format!("cannot write {path:?}: {e}")))?;
+        .map_err(|e| mrlyrs::core::MrlyError::Value(format!("cannot write {path:?}: {e}")))?;
     println!("figure {name} {}x{}", board.width, board.height);
     Ok(path)
 }

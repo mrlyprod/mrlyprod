@@ -1,7 +1,7 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board};
-use mrlynum::factor::gcd;
-use mrlynum::gauss::Ring;
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::factor::gcd;
+use mrlyrs::num::gauss::Ring;
 
 const RADIUS: i64 = 30;
 

@@ -1,6 +1,6 @@
-use mrlycore::json::parse;
-use mrlycore::Json;
 use mrlydemo::radix::*;
+use mrlyrs::core::json::parse;
+use mrlyrs::core::Json;
 
 fn preset(name: &str) -> Json {
     let menu = parse(&radix_menu()).unwrap();

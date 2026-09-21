@@ -1,6 +1,6 @@
 use crate::{code_of, Fault, Grid};
-use mrlycore::json;
-use mrlymath::six::star::{arm_law, chi8, constant, decay, width_law, Branch, Star};
+use mrlyrs::core::json;
+use mrlyrs::math::six::star::{arm_law, chi8, constant, decay, width_law, Branch, Star};
 use wasm_bindgen::prelude::*;
 
 const LAYER_CAP: usize = 800;

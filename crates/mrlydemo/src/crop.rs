@@ -1,13 +1,13 @@
 #![allow(clippy::too_many_arguments)]
 
 use crate::{code_of, theme, Fault, Grid};
-use mrlycore::json;
-use mrlycore::tensor::Tensor;
-use mrlymath::bang::factory;
-use mrlymath::formulas;
-use mrlymath::shape::{self, Frac, Shape};
-use mrlymath::space::Pack;
-use mrlymath::three::{self, Cell3d};
+use mrlyrs::core::json;
+use mrlyrs::core::tensor::Tensor;
+use mrlyrs::math::bang::factory;
+use mrlyrs::math::formulas;
+use mrlyrs::math::shape::{self, Frac, Shape};
+use mrlyrs::math::space::Pack;
+use mrlyrs::math::three::{self, Cell3d};
 use wasm_bindgen::prelude::*;
 
 fn radius_of(rnum: u32, rden: u32) -> Result<Frac, Fault> {
@@ -184,8 +184,8 @@ pub fn crop_census(
         "filled_out": tally.filled[0],
         "filled_cut": tally.filled[1],
         "filled_in": tally.filled[2],
-        "exposed_before": mrlynum::census::exposed(&types).to_string(),
-        "exposed_after": mrlynum::census::exposed(&after).to_string(),
+        "exposed_before": mrlyrs::num::census::exposed(&types).to_string(),
+        "exposed_after": mrlyrs::num::census::exposed(&after).to_string(),
     })
     .to_string())
 }
@@ -227,7 +227,7 @@ pub fn crop_series(
             "x": x,
             "filled_in": tally.filled[2],
             "filled_cut": tally.filled[1],
-            "exposed_after": mrlynum::census::exposed(&after).to_string(),
+            "exposed_after": mrlyrs::num::census::exposed(&after).to_string(),
         })
     };
     let mut rows = Vec::new();
@@ -503,7 +503,7 @@ fn holds(shape: &Shape, side: usize, index: &[usize]) -> bool {
                 return false;
             }
             let l = center.iter().fold(radius.den, |acc, c| {
-                acc / mrlynum::classics::gcd(acc as u128, c.den as u128) as i64 * c.den
+                acc / mrlyrs::num::classics::gcd(acc as u128, c.den as u128) as i64 * c.den
             });
             let scale = 2 * side as i128 * l as i128;
             let rr = radius.num as i128 * (scale / radius.den as i128);

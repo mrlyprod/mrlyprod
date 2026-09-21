@@ -3,8 +3,8 @@
 - One step of `m n + 1` in base 2 split into its `GF(2)` skeleton and its carry, and the carry read as an object of the memory dial of [beneath](../../../notes/beneath.md).
 - Digits run least significant first, so `2n` is a shift towards the higher digits and the ripple carry runs in the same direction as the skeleton's dependency.
 - The skeleton of `3n + 1` is `n xor 2n xor 1`; the carry word is `defect(n) = (3n + 1) xor (n xor 2n xor 1)` and the local carry count is `d_loc(n) = popcount(defect(n))`.
-- Every rule reading here is `mrlynum::memory::Rule`: `Rule::new(1, k, code)` at window width `k`, with the window `(c_1, ..., c_k)` read as `w = sum_j c_j 2^(k - j)`, first digit most significant, and `Rule::allowed(w)` true when bit `w` of the code is set.
-- `rho` and `kappa` are `mrlynum::memory::perron` and `mrlynum::memory::kappa`, which split the digraph into strongly connected components and make each component's Perron root exact against its integer characteristic polynomial.
+- Every rule reading here is `mrlyrs::num::memory::Rule`: `Rule::new(1, k, code)` at window width `k`, with the window `(c_1, ..., c_k)` read as `w = sum_j c_j 2^(k - j)`, first digit most significant, and `Rule::allowed(w)` true when bit `w` of the code is set.
+- `rho` and `kappa` are `mrlyrs::num::memory::perron` and `mrlyrs::num::memory::kappa`, which split the digraph into strongly connected components and make each component's Perron root exact against its integer characteristic polynomial.
 
 ## THE METHOD
 

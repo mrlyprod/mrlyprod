@@ -1,6 +1,6 @@
 use crate::Fault;
-use mrlycore::json;
-use mrlynum::spiral::{self, Growth, Snail};
+use mrlyrs::core::json;
+use mrlyrs::num::spiral::{self, Growth, Snail};
 use wasm_bindgen::prelude::*;
 
 const TOP: u32 = 2000;

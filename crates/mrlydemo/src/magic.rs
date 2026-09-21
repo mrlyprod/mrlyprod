@@ -1,13 +1,13 @@
 use crate::{checked, Fault, Grid};
-use mrlycore::tile::{Group, Source, Tile};
-use mrlycore::{json, Json, Tensor};
 use mrlylab::press;
-use mrlymath::bang::{magic, word, MagicLayer};
-use mrlymath::name::{Bang, Named, Word};
-use mrlymath::six::{self, Cell6d};
-use mrlymath::space::Pack;
-use mrlymath::three::{quads, Cell3d};
-use mrlymath::two::Cell2d;
+use mrlyrs::core::tile::{Group, Source, Tile};
+use mrlyrs::core::{json, Json, Tensor};
+use mrlyrs::math::bang::{magic, word, MagicLayer};
+use mrlyrs::math::name::{Bang, Named, Word};
+use mrlyrs::math::six::{self, Cell6d};
+use mrlyrs::math::space::Pack;
+use mrlyrs::math::three::{quads, Cell3d};
+use mrlyrs::math::two::Cell2d;
 use wasm_bindgen::prelude::*;
 
 const PLANE_SIDE: usize = 243;
@@ -154,7 +154,7 @@ pub fn magic_perimeter(
     bases: Vec<u32>,
 ) -> Result<String, Fault> {
     let tile = drawn(&letters(codes, numbers, 2, bases)?, PLANE_SIDE)?;
-    Ok(mrlymath::two::census::perimeter(&Cell2d::new(tile)).to_string())
+    Ok(mrlyrs::math::two::census::perimeter(&Cell2d::new(tile)).to_string())
 }
 
 // HEXAGON
@@ -463,7 +463,7 @@ fn spelt(
 ) -> Result<Word, Fault> {
     let layers = letters(codes, numbers, dimension, bases)?;
     Ok(Word {
-        kind: mrlymath::name::word::Kind,
+        kind: mrlyrs::math::name::word::Kind,
         dim: dimension,
         magic: layers.iter().map(|layer| layer.design.code).collect(),
         side: layers.iter().map(|layer| layer.number).collect(),

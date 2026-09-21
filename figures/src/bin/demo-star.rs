@@ -1,8 +1,8 @@
-use mrlycore::errors::Result;
 use mrlyfig::board::Board;
 use mrlyfig::ink::Ramp;
 use mrlyfig::{ink, save};
-use mrlymath::six::star::Star;
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::six::star::Star;
 
 const CODE: u128 = 23;
 const LAYERS: usize = 28;

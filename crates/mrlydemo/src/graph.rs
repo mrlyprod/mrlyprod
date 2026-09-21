@@ -1,8 +1,8 @@
 use crate::{code_of, Fault};
-use mrlycore::json;
-use mrlymath::formulas::{self, six as hexagon};
-use mrlymath::{six, three, two};
-use mrlynum::graph::{self, census, roles, Layout as Relax, Network, Role};
+use mrlyrs::core::json;
+use mrlyrs::math::formulas::{self, six as hexagon};
+use mrlyrs::math::{six, three, two};
+use mrlyrs::num::graph::{self, census, roles, Layout as Relax, Network, Role};
 use wasm_bindgen::prelude::*;
 
 const LIMIT: u128 = 20000;
@@ -118,18 +118,18 @@ fn network(
         "flat" => {
             let cell = two::create(code, number, level, 0, base)?;
             let net = match kind {
-                "core" => two::graph::core_graph(&cell)?,
-                "edge" => two::graph::edge_graph(&cell)?,
-                _ => two::graph::tunnel_graph(&cell)?,
+                "core" => two::core_graph(&cell)?,
+                "edge" => two::edge_graph(&cell)?,
+                _ => two::tunnel_graph(&cell)?,
             };
             Ok((net, Some(two::census(&cell)?.euler)))
         }
         "cube" => {
             let cell = three::create(code, number, level, base)?;
             let net = match kind {
-                "core" => three::graph::core_graph(&cell)?,
-                "edge" => three::graph::edge_graph(&cell)?,
-                _ => three::graph::tunnel_graph(&cell)?,
+                "core" => three::core_graph(&cell)?,
+                "edge" => three::edge_graph(&cell)?,
+                _ => three::tunnel_graph(&cell)?,
             };
             Ok((net, Some(three::census(&cell)?.euler)))
         }

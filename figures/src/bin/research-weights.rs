@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
-use mrlycore::Color;
 use mrlyfig::{ink, plot, save, Board, Frame};
+use mrlyrs::core::errors::Result;
+use mrlyrs::core::Color;
 
 const LEVEL: u32 = 8;
 const SAMPLES: usize = 720;

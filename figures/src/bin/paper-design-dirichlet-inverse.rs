@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
-use mrlycore::Color;
 use mrlyfig::{ink, plot, save, Board, Frame};
+use mrlyrs::core::errors::Result;
+use mrlyrs::core::Color;
 
 const RE_WIDTH: f64 = 1.00;
 const IM_REACH: f64 = 60.0;

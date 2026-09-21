@@ -1,7 +1,7 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, iso, save, Board, Frame};
-use mrlymath::three::designs;
-use mrlymath::three::faces::quads;
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::three::designs;
+use mrlyrs::math::three::faces::quads;
 
 const SIDE: usize = 3;
 const HALF: f64 = SIDE as f64 / 2.0;

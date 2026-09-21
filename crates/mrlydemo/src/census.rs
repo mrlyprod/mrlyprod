@@ -1,5 +1,5 @@
-use mrlycore::{json, Json};
 use mrlylab::ledger::{closed, keys, terms, Cost, Key, Tier, TERMS};
+use mrlyrs::core::{json, Json};
 use std::sync::{Mutex, OnceLock};
 use wasm_bindgen::prelude::*;
 

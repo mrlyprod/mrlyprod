@@ -1,7 +1,7 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board};
-use mrlymath::two;
-use mrlynum::spiral::{snail, Growth};
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::two;
+use mrlyrs::num::spiral::{snail, Growth};
 
 const TOP: u64 = 300;
 const BASE: u64 = 2;

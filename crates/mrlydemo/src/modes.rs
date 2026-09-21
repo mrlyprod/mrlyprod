@@ -1,5 +1,5 @@
 use crate::{checked, Fault};
-use mrlymath::two;
+use mrlyrs::math::two;
 use std::f64::consts::TAU;
 use wasm_bindgen::prelude::*;
 

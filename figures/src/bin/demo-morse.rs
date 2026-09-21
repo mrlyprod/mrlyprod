@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board};
-use mrlynum::morse::{lift, Lift};
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::morse::{lift, Lift};
 
 const SIDE: usize = 32;
 

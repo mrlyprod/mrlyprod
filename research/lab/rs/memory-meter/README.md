@@ -2,7 +2,7 @@
 
 - The Mobius meter of a memory rule: `M_W(x) = sum of mu(n)` over the integers `n <= x` whose binary digit word the rule accepts, against that set's own mass `A_W(x)`.
 - Every width-`1`, width-`2` and width-`3` rule at dim `1`, base `2` is read: `4`, `16` and `256` codes, `276` rules in all, the width-`1` codes being the memoryless row.
-- An integer `n >= 1` is its minimal base-`2` word, coarsest digit first, no leading zero; `0` is excluded from every sum. The rule reading is `mrlynum::memory::Rule`: a window of `k` digits is `w = sum_j c_j 2^(k - j)`, bit `w` of the code is set when that window is allowed, a word is accepted when every one of its `k`-windows is allowed, and a word shorter than `k` is accepted.
+- An integer `n >= 1` is its minimal base-`2` word, coarsest digit first, no leading zero; `0` is excluded from every sum. The rule reading is `mrlyrs::num::memory::Rule`: a window of `k` digits is `w = sum_j c_j 2^(k - j)`, bit `w` of the code is set when that window is allowed, a word is accepted when every one of its `k`-windows is allowed, and a word shorter than `k` is accepted.
 - No exponent is fitted. Printed per rule and phase are `A_W(x)`, `M_W(x)`, `max abs M_W(t)` over `t <= x`, the ratios `M_W/sqrt(A_W)` and `max abs M_W/sqrt(A_W)`, with `kappa`, `rho` and `card W` from the crate.
 
 ## THE METHOD
@@ -11,8 +11,8 @@
 - The width-`2` and width-`1` profiles are induced from the width-`3` one: for a word of three digits or more every `2`-window is a prefix or a suffix of some `3`-window and every digit lies in one, so one `u8` per `n` carries all three widths. The words of one and two digits are entered by hand.
 - The mass per profile is a `256`-bucket count and `A_W` is its subset-sum transform at each phase; the meter is carried per rule so the running maximum is exact, and the subset-sum transform of the per-profile `mu` sums is asserted equal to it at every phase.
 - Phases are `x = floor(2^(level + j/4))` for `level 8..30` and `j = 0..3`, `89` of them, `2^30` last.
-- `mu` is `mrlynum::factor::mobius_sieve`, the crate's linear Mobius sieve; `mrlynum::sieve` carries the Sierpinski word and no Mobius, so nothing there is reused.
-- `rho` and `kappa` come from `mrlynum::memory::perron` and `kappa`, which split the digraph into strongly connected components and make each component's Perron root exact against its integer characteristic polynomial, so every printed root is an algebraic integer of the right minimal polynomial.
+- `mu` is `mrlyrs::num::factor::mobius_sieve`, the crate's linear Mobius sieve; `mrlyrs::num::sieve` carries the Sierpinski word and no Mobius, so nothing there is reused.
+- `rho` and `kappa` come from `mrlyrs::num::memory::perron` and `kappa`, which split the digraph into strongly connected components and make each component's Perron root exact against its integer characteristic polynomial, so every printed root is an algebraic integer of the right minimal polynomial.
 
 ## THE CONTROLS
 

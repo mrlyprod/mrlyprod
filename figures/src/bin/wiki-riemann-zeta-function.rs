@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board};
-use mrlynum::lattice::zeta_whole;
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::lattice::zeta_whole;
 
 const TERMS: usize = 40;
 const POWERS: [u32; 3] = [2, 3, 4];

@@ -1,7 +1,7 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, plot, save, Board, Frame};
-use mrlynum::lattice::totients;
-use mrlynum::zeta::{novelty_main, novelty_wave, smoothed_novelty, Line};
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::lattice::totients;
+use mrlyrs::num::zeta::{novelty_main, novelty_wave, smoothed_novelty, Line};
 
 const LOW: f64 = 8.0;
 const HIGH: f64 = 14.0;

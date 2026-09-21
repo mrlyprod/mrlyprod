@@ -1,8 +1,8 @@
-use mrlycore::errors::Result;
-use mrlycore::Color;
 use mrlyfig::{ink, plot, save, Board, Frame};
-use mrlynum::formulas;
-use mrlynum::series::EULER;
+use mrlyrs::core::errors::Result;
+use mrlyrs::core::Color;
+use mrlyrs::num::formulas;
+use mrlyrs::num::series::EULER;
 use std::f64::consts::{E, PI};
 
 const TOP: usize = 2000;

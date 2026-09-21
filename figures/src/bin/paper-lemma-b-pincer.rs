@@ -1,5 +1,5 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board};
+use mrlyrs::core::errors::Result;
 
 const LOWER: f64 = 0.447_597_813_453;
 const UPPER: f64 = 0.640_212_193_8;

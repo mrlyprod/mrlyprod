@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, plot, save, Board};
-use mrlynum::factor::mobius_sieve;
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::factor::mobius_sieve;
 
 const TOP: usize = 1000;
 

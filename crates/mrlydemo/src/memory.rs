@@ -1,6 +1,6 @@
 use crate::{Fault, Grid};
-use mrlycore::json;
-use mrlynum::memory::{self, Rule};
+use mrlyrs::core::json;
+use mrlyrs::num::memory::{self, Rule};
 use wasm_bindgen::prelude::*;
 
 /// The sheet budget: the most sites one drawing may carry.

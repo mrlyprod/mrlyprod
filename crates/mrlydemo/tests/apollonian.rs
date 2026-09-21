@@ -1,6 +1,6 @@
-use mrlycore::json::parse;
-use mrlycore::Json;
 use mrlydemo::apollonian::*;
+use mrlyrs::core::json::parse;
+use mrlyrs::core::Json;
 
 fn read(root: &str, cap: u32, order: usize) -> Json {
     parse(&apollonian_read(root, cap, order).unwrap()).unwrap()

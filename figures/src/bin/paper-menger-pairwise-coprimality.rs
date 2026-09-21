@@ -1,7 +1,7 @@
-use mrlycore::errors::Result;
 use mrlyfig::board::Frame;
 use mrlyfig::{ink, save, Board, Grid};
-use mrlymath::three;
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::three;
 
 fn outline(board: &mut Board, cell: (f64, f64, f64, f64), thick: f64) {
     let (x, y, w, h) = cell;

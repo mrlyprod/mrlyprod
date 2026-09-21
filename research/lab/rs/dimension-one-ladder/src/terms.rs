@@ -1,6 +1,6 @@
 use crate::design::Design;
-use mrlynum::classics::primes;
-use mrlynum::factor::{gcd, mobius_sieve};
+use mrlyrs::num::classics::primes;
+use mrlyrs::num::factor::{gcd, mobius_sieve};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Instant;
 

@@ -1,7 +1,7 @@
 use crate::Fault;
-use mrlycore::{json, Json};
-use mrlymath::dim::carry;
-use mrlynum::blend;
+use mrlyrs::core::{json, Json};
+use mrlyrs::math::dim::carry;
+use mrlyrs::num::blend;
 use wasm_bindgen::prelude::*;
 
 const LEVELS: usize = 32;

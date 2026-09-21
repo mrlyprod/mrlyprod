@@ -1,7 +1,7 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, plot, save, Board};
-use mrlynum::lattice::totients;
-use mrlynum::prime::is_prime;
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::lattice::totients;
+use mrlyrs::num::prime::is_prime;
 
 const TOP: usize = 60;
 

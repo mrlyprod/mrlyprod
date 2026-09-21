@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board};
-use mrlynum::factor::gcd;
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::factor::gcd;
 
 const ORDER: usize = 8;
 

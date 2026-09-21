@@ -1,10 +1,10 @@
 use crate::{code_of, Fault};
-use mrlycore::{json, Json};
-use mrlymath::six;
-use mrlymath::three;
-use mrlymath::two;
-use mrlynum::graph::{census, largest_component, Network};
-use mrlynum::spectrum as spectra;
+use mrlyrs::core::{json, Json};
+use mrlyrs::math::six;
+use mrlyrs::math::three;
+use mrlyrs::math::two;
+use mrlyrs::num::graph::{census, largest_component, Network};
+use mrlyrs::num::spectrum as spectra;
 use wasm_bindgen::prelude::*;
 
 const LIMIT: usize = 1100;
@@ -20,7 +20,7 @@ fn graph_of(
     let code = code_of(code)?;
     match kind {
         "flat" => {
-            let whole = two::graph::core_graph(&two::create(code, number, level, 0, 2)?)?;
+            let whole = two::core_graph(&two::create(code, number, level, 0, 2)?)?;
             let pieces = census::components(&whole);
             Ok((whole, pieces))
         }

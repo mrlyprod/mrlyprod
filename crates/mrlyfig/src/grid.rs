@@ -1,6 +1,6 @@
 use crate::board::{Board, Frame};
-use mrlycore::Color;
-use mrlymath::two::Cell2d;
+use mrlyrs::core::Color;
+use mrlyrs::math::two::Cell2d;
 
 // GRID
 

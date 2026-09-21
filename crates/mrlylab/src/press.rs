@@ -1,6 +1,6 @@
-use mrlycore::errors::{value_error, Result};
-use mrlymath::bang::factory::{code_to_corners, MagicLayer};
-use mrlymath::bang::universe::Code;
+use mrlyrs::core::errors::{value_error, Result};
+use mrlyrs::math::bang::factory::{code_to_corners, MagicLayer};
+use mrlyrs::math::bang::universe::Code;
 
 /// The largest corner count the tally press accepts, keeping its table a million rows.
 pub const CORNERS: usize = 20;
@@ -435,15 +435,15 @@ pub fn profile(code: Code, dimension: usize, base: usize, level: usize) -> Resul
     if level < 1 {
         return value_error("level must be at least 1.");
     }
-    let layer = MagicLayer::new(mrlymath::name::Bang::new(code, dimension, base), base);
+    let layer = MagicLayer::new(mrlyrs::math::name::Bang::new(code, dimension, base), base);
     word_profile(&vec![layer; level])
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mrlymath::bang::factory::create;
-    use mrlymath::name::Bang;
+    use mrlyrs::math::bang::factory::create;
+    use mrlyrs::math::name::Bang;
 
     #[test]
     fn usage_of_zero_is_the_zero_corner() {
@@ -582,7 +582,7 @@ mod tests {
             MagicLayer::new(Bang::new(7, 2, 2), 3),
             MagicLayer::new(Bang::new(14, 2, 2), 5),
         ];
-        let tensor = mrlymath::bang::factory::magic(&word).unwrap();
+        let tensor = mrlyrs::math::bang::factory::magic(&word).unwrap();
         let side = 15u128;
         let list = word_members(&word).unwrap();
         assert_eq!(list.len() as u128, word_count(&word).unwrap());
@@ -611,7 +611,7 @@ mod tests {
             MagicLayer::new(Bang::new(7, 2, 2), 3),
             MagicLayer::new(Bang::new(14, 2, 2), 5),
         ];
-        let tensor = mrlymath::bang::factory::magic(&word).unwrap();
+        let tensor = mrlyrs::math::bang::factory::magic(&word).unwrap();
         let side = 15usize;
         let mut direct = vec![0u128; 2 * side - 1];
         for (flat, &b) in tensor.bytes().iter().enumerate() {

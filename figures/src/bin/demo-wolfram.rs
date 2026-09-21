@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board};
-use mrlymath::life::elementary;
+use mrlyrs::core::errors::Result;
+use mrlyrs::life::elementary;
 
 const RULE: u8 = 110;
 const STEPS: usize = 256;

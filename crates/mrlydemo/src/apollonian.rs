@@ -1,7 +1,7 @@
 use crate::Fault;
-use mrlycore::{json, Json};
-use mrlynum::apollonian as gasket;
-use mrlynum::apollonian::{Circle, Packing};
+use mrlyrs::core::{json, Json};
+use mrlyrs::num::apollonian as gasket;
+use mrlyrs::num::apollonian::{Circle, Packing};
 use wasm_bindgen::prelude::*;
 
 const STRIDE: usize = 5;

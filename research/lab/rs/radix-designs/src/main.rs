@@ -1,6 +1,6 @@
-use mrlymath::bang::factory::create;
-use mrlynum::gauss::Ring;
-use mrlynum::radix::{flowsnake, gasket, koch, terdragon, tile, twindragon, Base, Radix};
+use mrlyrs::math::bang::factory::create;
+use mrlyrs::num::gauss::Ring;
+use mrlyrs::num::radix::{flowsnake, gasket, koch, terdragon, tile, twindragon, Base, Radix};
 use std::collections::{HashMap, HashSet};
 use std::time::Instant;
 

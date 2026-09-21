@@ -78,7 +78,7 @@ What is reached: grids to `256 x 256` in 2D and `81^3` - 160000 occupied cells -
 
 ## Order in the mixed product
 
-A design's fractal is one tile substituted into itself. Replace the repeated tile by an ordered word of different tiles - `A_w = A_(c_1) (x) ... (x) A_(c_level)`, first factor outermost - and every observable on this page can be asked a new question: does it depend on the order of the word, or only on the multiset of factors? An observable is **order-blind** if only the multiset matters, **order-sensitive** if two orderings of one multiset can differ. Base 2, dim 2, the 15 non-empty codes, corner order as in [the core](core.md). Every count in this section is printed by `lab/rs/magic-words`, which draws each word twice, once inside the study and once through `mrlymath::bang::magic`, and gets the same cells both ways.
+A design's fractal is one tile substituted into itself. Replace the repeated tile by an ordered word of different tiles - `A_w = A_(c_1) (x) ... (x) A_(c_level)`, first factor outermost - and every observable on this page can be asked a new question: does it depend on the order of the word, or only on the multiset of factors? An observable is **order-blind** if only the multiset matters, **order-sensitive** if two orderings of one multiset can differ. Base 2, dim 2, the 15 non-empty codes, corner order as in [the core](core.md). Every count in this section is printed by `lab/rs/magic-words`, which draws each word twice, once inside the study and once through `mrlyrs::math::bang::magic`, and gets the same cells both ways.
 
 | observable | length 2, of 105 multisets | length 3, of 210 multisets | status |
 |---|---|---|---|

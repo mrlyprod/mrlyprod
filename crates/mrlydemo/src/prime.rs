@@ -1,7 +1,7 @@
 use crate::{Fault, Grid};
-use mrlycore::json;
 use mrlylab::moire::pairs;
-use mrlynum::prime;
+use mrlyrs::core::json;
+use mrlyrs::num::prime;
 use wasm_bindgen::prelude::*;
 
 const SHEET: usize = 400;

@@ -1,6 +1,6 @@
 use crate::{code_of, Fault, Grid};
-use mrlycore::json;
-use mrlymath::two::{self, Cell2d};
+use mrlyrs::core::json;
+use mrlyrs::math::two::{self, Cell2d};
 use wasm_bindgen::prelude::*;
 
 fn cell(

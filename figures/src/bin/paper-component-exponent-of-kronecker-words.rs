@@ -1,7 +1,7 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board, Grid};
-use mrlymath::bang::{word, MagicLayer};
-use mrlymath::name::Bang;
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::bang::{word, MagicLayer};
+use mrlyrs::math::name::Bang;
 
 const CODES: usize = 15;
 const LENGTH: usize = 32;

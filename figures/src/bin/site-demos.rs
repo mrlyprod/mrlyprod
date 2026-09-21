@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board};
-use mrlymath::two::designs;
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::two::designs;
 
 const TILE: usize = 27;
 const CELL: f64 = 4.0;

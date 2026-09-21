@@ -1,8 +1,8 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board};
-use mrlymath::two::designs;
-use mrlymath::two::graph::core_graph;
-use mrlynum::graph::{census, roles, Role};
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::two::core_graph;
+use mrlyrs::math::two::designs;
+use mrlyrs::num::graph::{census, roles, Role};
 
 const LEVEL: usize = 3;
 const SIDE: f64 = 8.0;

@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board};
-use mrlynum::memory::{cells, counts, Rule};
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::memory::{cells, counts, Rule};
 
 const WIDTH: usize = 3;
 const CODE: u64 = 23;

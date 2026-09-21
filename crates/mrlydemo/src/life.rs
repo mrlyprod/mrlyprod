@@ -1,9 +1,9 @@
 #![allow(clippy::too_many_arguments)]
 
 use crate::{code_of, Fault, Grid};
-use mrlycore::{json, Rng, Tensor};
-use mrlymath::life::{self, Boundary, Config, Sequence};
-use mrlymath::two::Cell2d;
+use mrlyrs::core::{json, Rng, Tensor};
+use mrlyrs::life::{self, Boundary, Config, Sequence};
+use mrlyrs::math::two::Cell2d;
 use wasm_bindgen::prelude::*;
 
 fn grid(types: &[u8], width: usize, height: usize) -> Result<Cell2d, Fault> {

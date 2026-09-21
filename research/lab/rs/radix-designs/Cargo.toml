@@ -4,5 +4,4 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-mrlymath.workspace = true
-mrlynum.workspace = true
+mrlyrs.workspace = true

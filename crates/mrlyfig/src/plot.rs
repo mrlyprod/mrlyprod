@@ -1,5 +1,5 @@
 use crate::board::{Board, Frame};
-use mrlycore::Color;
+use mrlyrs::core::Color;
 
 // RANGES
 

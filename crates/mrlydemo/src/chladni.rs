@@ -2,9 +2,9 @@
 
 use crate::life::life_noise;
 use crate::{code_of, Fault, Grid};
-use mrlycore::json;
-use mrlymath::life;
-use mrlynum::fft::{
+use mrlyrs::core::json;
+use mrlyrs::life;
+use mrlyrs::num::fft::{
     convolve_with, embed_kernel, log_spectrum, peak_ring, radial_profile, transform,
 };
 use wasm_bindgen::prelude::*;

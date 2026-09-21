@@ -1,7 +1,7 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board, Grid};
-use mrlymath::shape::{self, Frac, Region};
-use mrlymath::two::designs;
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::shape::{self, Frac, Region};
+use mrlyrs::math::two::designs;
 
 fn main() -> Result<()> {
     let mut board = Board::square();

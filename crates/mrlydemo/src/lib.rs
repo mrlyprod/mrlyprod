@@ -1,8 +1,8 @@
 #![doc = include_str!("../README.md")]
 #![deny(missing_docs)]
 
-use mrlycore::colors::{Color, Theme, DARK, LIGHT};
-use mrlycore::MrlyError;
+use mrlyrs::core::colors::{Color, Theme, DARK, LIGHT};
+use mrlyrs::core::MrlyError;
 use std::cell::Cell;
 use wasm_bindgen::prelude::*;
 
@@ -179,6 +179,6 @@ fn code_of(text: &str) -> Result<u128, Fault> {
 
 fn checked(code: &str, dimension: usize, base: usize) -> Result<u128, Fault> {
     let code = code_of(code)?;
-    mrlymath::bang::code_to_corners(code, dimension, base)?;
+    mrlyrs::math::bang::code_to_corners(code, dimension, base)?;
     Ok(code)
 }

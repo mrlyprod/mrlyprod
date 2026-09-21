@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
-use mrlycore::Color;
 use mrlyfig::{ink, save, Board, Grid};
+use mrlyrs::core::errors::Result;
+use mrlyrs::core::Color;
 
 const SIDE: usize = 8;
 const GUTTER: f64 = 3.0;

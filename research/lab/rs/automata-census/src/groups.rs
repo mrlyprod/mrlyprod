@@ -1,6 +1,6 @@
 use crate::rules::RULES;
-use mrlymath::bang::symmetries;
-use mrlymath::bang::universe::{apply, corner_index, corners, permutations};
+use mrlyrs::math::bang::symmetries;
+use mrlyrs::math::bang::universe::{apply, corner_index, corners, permutations};
 use std::collections::BTreeSet;
 
 pub type Elem = (Vec<usize>, Vec<u8>, bool);

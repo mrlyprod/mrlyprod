@@ -1,8 +1,8 @@
 use crate::{code_of, Fault, Grid, Pixels};
-use mrlycore::{json, Colorizer};
 use mrlylab::moire::{presets, render, Field};
-use mrlymath::six;
-use mrlynum::spin;
+use mrlyrs::core::{json, Colorizer};
+use mrlyrs::math::six;
+use mrlyrs::num::spin;
 use wasm_bindgen::prelude::*;
 
 pub(crate) fn ramp_of(ramp: &str) -> Colorizer {
@@ -62,7 +62,7 @@ fn painted(
     }
     let field = Field::from_data(data, size);
     let png = render(&field, &ramp_of(ramp), levels, false, invert, 1)?;
-    let (width, height, colors) = mrlycore::unpng(&png)?;
+    let (width, height, colors) = mrlyrs::core::unpng(&png)?;
     Ok(Pixels::of(width, height, colors))
 }
 

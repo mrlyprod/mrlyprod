@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, plot, save, Board};
-use mrlynum::gauss::{Class, Ring, Window};
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::gauss::{Class, Ring, Window};
 
 const REACH: u64 = 40;
 

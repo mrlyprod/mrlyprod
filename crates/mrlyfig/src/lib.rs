@@ -21,5 +21,5 @@ pub mod plot;
 pub use board::{Board, Frame};
 pub use grid::Grid;
 pub use ink::Ramp;
-pub use mrlycore::Color;
+pub use mrlyrs::core::Color;
 pub use out::save;

@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, plot, save, Board, Frame};
-use mrlynum::radix::flowsnake;
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::radix::flowsnake;
 
 const LEVEL: usize = 6;
 const WORDS: usize = 117649;

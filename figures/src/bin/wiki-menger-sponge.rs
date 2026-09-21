@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, iso, save, Board};
-use mrlymath::three::designs;
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::three::designs;
 
 const CODE: u128 = 23;
 const LEVEL: usize = 3;

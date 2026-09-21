@@ -1,8 +1,8 @@
 use crate::{code_of, rgba, theme, Fault, Pixels};
-use mrlycore::json;
-use mrlycore::tensor::Tensor;
-use mrlymath::bang::factory;
-use mrlymath::shape::{crossing_tree, Shell};
+use mrlyrs::core::json;
+use mrlyrs::core::tensor::Tensor;
+use mrlyrs::math::bang::factory;
+use mrlyrs::math::shape::{crossing_tree, Shell};
 use wasm_bindgen::prelude::*;
 
 const RADIUS_CAP: u32 = 242;

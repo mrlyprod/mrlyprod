@@ -1,8 +1,8 @@
 use crate::{code_of, Fault};
-use mrlycore::json::parse;
-use mrlycore::{json, Json, Map};
 use mrlylab::ledger::{self, Axis, Key, Measure};
-use mrlynum::blend;
+use mrlyrs::core::json::parse;
+use mrlyrs::core::{json, Json, Map};
+use mrlyrs::num::blend;
 use wasm_bindgen::prelude::*;
 
 // TERMS

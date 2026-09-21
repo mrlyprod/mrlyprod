@@ -63,15 +63,15 @@ impl Record {
     }
 }
 
-const FILLS: &str = "mrlymath::formulas::fill";
+const FILLS: &str = "mrlyrs::math::formulas::fill";
 const SIDES: &str = "mrlylab::ledger::terms, the odd-side law";
-const EXPOSURE: &str = "mrlymath::formulas::exposure";
+const EXPOSURE: &str = "mrlyrs::math::formulas::exposure";
 
 /// Every OEIS entry the tree cites, by id.
 pub static RECORDS: &[Record] = &[
-    record("A000029", "Number of necklaces with n beads of 2 colors, allowing turning over (these are also called bracelets)", 0, "1, 2, 3, 4, 6, 8, 13, 18, 30, 46, 78, 126", Tag::Verified, "none", "mrlymath::bang::baseq::bracelets, the base line at dim 1"),
+    record("A000029", "Number of necklaces with n beads of 2 colors, allowing turning over (these are also called bracelets)", 0, "1, 2, 3, 4, 6, 8, 13, 18, 30, 46, 78, 126", Tag::Verified, "none", "mrlyrs::math::bang::baseq::bracelets, the base line at dim 1"),
     record("A000070", "a(n) = Sum_{k=0..n} p(k) where p(k) = number of partitions of k", 0, "1, 2, 4, 7, 12, 19, 30, 45, 67, 97, 139, 195", Tag::Verified, "none", "REFS.md"),
-    record("A000244", "Powers of 3: a(n) = 3^n", 0, "1, 3, 9, 27, 81, 243, 729, 2187, 6561, 19683, 59049, 177147", Tag::Proved, "3^level", "mrlymath::three::diagonal, every admissible cut of bang dim 3, code 126 at side 2"),
+    record("A000244", "Powers of 3: a(n) = 3^n", 0, "1, 3, 9, 27, 81, 243, 729, 2187, 6561, 19683, 59049, 177147", Tag::Proved, "3^level", "mrlyrs::math::three::diagonal, every admissible cut of bang dim 3, code 126 at side 2"),
     record("A000290", "The squares: a(n) = n^2", 0, "0, 1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121", Tag::Proved, "k^2", SIDES).keyed(1, 2, Measure::Fills, Axis::Side, 0),
     record("A000351", "Powers of 5: a(n) = 5^n", 0, "1, 5, 25, 125, 625, 3125, 15625, 78125, 390625, 1953125, 9765625, 48828125", Tag::Proved, "5^level", FILLS).keyed(9, 2, Measure::Fills, Axis::Level, 0),
     record("A000370", "Number of NPN-equivalence classes of Boolean functions of n or fewer variables", 0, "1, 2, 4, 14, 222, 616126, 200253952527184", Tag::Verified, "none", "bijection.md, the NPN sibling at dim 1..4"),
@@ -79,13 +79,13 @@ pub static RECORDS: &[Record] = &[
     record("A000420", "Powers of 7: a(n) = 7^n", 0, "1, 7, 49, 343, 2401, 16807, 117649, 823543, 5764801, 40353607, 282475249, 1977326743", Tag::Proved, "7^level", FILLS).keyed(11, 2, Measure::Fills, Axis::Level, 0),
     record("A000567", "Octagonal numbers: n*(3*n-2)", 0, "0, 1, 8, 21, 40, 65, 96, 133, 176, 225, 280, 341", Tag::Proved, "k(3k - 2)", SIDES).keyed(7, 2, Measure::Fills, Axis::Side, 0),
     record("A000578", "The cubes: a(n) = n^3", 0, "0, 1, 8, 27, 64, 125, 216, 343, 512, 729, 1000, 1331", Tag::Proved, "k^3", SIDES).keyed(1, 3, Measure::Fills, Axis::Side, 0),
-    record("A000616", "a(-1)=1 by convention; for n >= 0, a(n) = number of irreducible Boolean functions of n variables", -1, "1, 2, 3, 6, 22, 402, 1228158, 400507806843728", Tag::Proved, "none", "mrlymath::bang::counting::sequence, bijection.md"),
+    record("A000616", "a(-1)=1 by convention; for n >= 0, a(n) = number of irreducible Boolean functions of n variables", -1, "1, 2, 3, 6, 22, 402, 1228158, 400507806843728", Tag::Proved, "none", "mrlyrs::math::bang::counting::sequence, bijection.md"),
     record("A001018", "Powers of 8: a(n) = 8^n", 0, "1, 8, 64, 512, 4096, 32768, 262144, 2097152, 16777216, 134217728, 1073741824, 8589934592", Tag::Proved, "8^level", FILLS).keyed(7, 2, Measure::Fills, Axis::Level, 0),
     record("A001024", "Powers of 15: a(n) = 15^n", 0, "1, 15, 225, 3375, 50625, 759375, 11390625, 170859375, 2562890625, 38443359375", Tag::Verified, "15^n", "REFS.md"),
     record("A001316", "Gould's sequence: number of odd entries in row n of Pascal's triangle", 0, "1, 2, 2, 4, 2, 4, 4, 8, 2, 4, 4, 8", Tag::Verified, "2^wt(n)", "REFS.md"),
     record("A001481", "Numbers that are the sum of 2 squares", 1, "0, 1, 2, 4, 5, 8, 9, 10, 13, 16, 17, 18", Tag::Verified, "none", "spin.md, the ring radii of a spun square lattice"),
     record("A001844", "Centered square numbers: a(n) = 2*n*(n+1)+1", 0, "1, 5, 13, 25, 41, 61, 85, 113, 145, 181, 221, 265", Tag::Proved, "2k^2 - 2k + 1", SIDES).keyed(9, 2, Measure::Fills, Axis::Side, -1),
-    record("A002407", "Cuban primes: primes which are the difference of two consecutive cubes", 1, "7, 19, 37, 61, 127, 271, 331, 397, 547, 631, 919, 1657", Tag::Verified, "none", "mrlymath::formulas::six theorems, slices.md"),
+    record("A002407", "Cuban primes: primes which are the difference of two consecutive cubes", 1, "7, 19, 37, 61, 127, 271, 331, 397, 547, 631, 919, 1657", Tag::Verified, "none", "mrlyrs::math::formulas::six theorems, slices.md"),
     record("A003136", "Loeschian numbers: numbers of the form x^2 + xy + y^2", 1, "0, 1, 3, 4, 7, 9, 12, 13, 16, 19, 21, 25", Tag::Verified, "none", "spin.md, the ring radii of a spun hexagonal lattice"),
     record("A003180", "Number of equivalence classes of Boolean functions of n variables under action of symmetric group", 0, "2, 4, 12, 80, 3984, 37333248, 25626412338274304", Tag::Verified, "none", "bijection.md, the axis-permutation orbits at a one-term shift"),
     record("A003215", "Hex (or centered hexagonal) numbers: 3*n*(n+1)+1", 0, "1, 7, 19, 37, 61, 91, 127, 169, 217, 271, 331, 397", Tag::Proved, "3k^2 - 3k + 1", SIDES).keyed(11, 2, Measure::Fills, Axis::Side, -1),
@@ -94,12 +94,12 @@ pub static RECORDS: &[Record] = &[
     record("A004018", "Theta series of square lattice: number of ways of writing n as a sum of 2 squares", 0, "1, 4, 4, 0, 4, 8, 0, 0, 4, 4, 8, 0", Tag::Verified, "4(d_1(n) - d_3(n))", "mrlydemo::ring_weights, spin.md"),
     record("A004662", "Powers of 3 written in base 8", 0, "1, 3, 11, 33, 121, 363, 1331, 4213, 14641, 46343, 163251, 531773", Tag::Verified, "none", "this page, a near miss of A396934 - 1"),
     record("A005418", "Number of (n-1)-bead black-white reversible strings", 1, "1, 2, 3, 6, 10, 20, 36, 72, 136, 272, 528, 1056", Tag::Verified, "none", "REFS.md"),
-    record("A005728", "Number of fractions in Farey series of order n", 0, "1, 2, 3, 5, 7, 11, 13, 19, 23, 29, 33, 43", Tag::Verified, "1 + sum of phi(k) for k <= n", "mrlynum::lattice::farey, the lit nodes of the stack in farey.md"),
+    record("A005728", "Number of fractions in Farey series of order n", 0, "1, 2, 3, 5, 7, 11, 13, 19, 23, 29, 33, 43", Tag::Verified, "1 + sum of phi(k) for k <= n", "mrlyrs::num::lattice::farey, the lit nodes of the stack in farey.md"),
     record("A005898", "Centered cube numbers: n^3 + (n+1)^3", 0, "1, 9, 35, 91, 189, 341, 559, 855, 1241, 1729, 2331, 3059", Tag::Proved, "k^3 + (k - 1)^3", SIDES).keyed(129, 3, Measure::Fills, Axis::Side, -1),
     record("A009964", "Powers of 20", 0, "1, 20, 400, 8000, 160000, 3200000, 64000000, 1280000000, 25600000000, 512000000000", Tag::Proved, "20^level", FILLS).keyed(23, 3, Measure::Fills, Axis::Level, 0),
     record("A009971", "Powers of 27", 0, "1, 27, 729, 19683, 531441, 14348907, 387420489, 10460353203, 282429536481, 7625597484987", Tag::Proved, "27^level", FILLS).keyed(255, 3, Measure::Fills, Axis::Level, 0),
     record("A011934", "a(n) = abs(1^3 - 2^3 + 3^3 - 4^3 + ... + (-1)^(n+1)*n^3)", 0, "0, 1, 7, 20, 44, 81, 135, 208, 304, 425, 575, 756", Tag::Verified, "none", "this page, the parent of the bisections A103532 and A395241"),
-    record("A016185", "a(n) = 9^n - 8^n", 0, "0, 1, 17, 217, 2465, 26281, 269297, 2685817, 26269505, 253202761, 2413042577, 22791125017", Tag::Proved, "9^level - 8^level", "mrlymath::formulas::void").keyed(7, 2, Measure::Voids, Axis::Level, 0),
+    record("A016185", "a(n) = 9^n - 8^n", 0, "0, 1, 17, 217, 2465, 26281, 269297, 2685817, 26269505, 253202761, 2413042577, 22791125017", Tag::Proved, "9^level - 8^level", "mrlyrs::math::formulas::void").keyed(7, 2, Measure::Voids, Axis::Level, 0),
     record("A016754", "Odd squares: a(n) = (2n+1)^2, also centered octagonal numbers", 0, "1, 9, 25, 49, 81, 121, 169, 225, 289, 361, 441, 529", Tag::Proved, "(2k - 1)^2", SIDES).keyed(15, 2, Measure::Fills, Axis::Side, -1),
     record("A016755", "Odd cubes: a(n) = (2*n + 1)^3", 0, "1, 27, 125, 343, 729, 1331, 2197, 3375, 4913, 6859, 9261, 12167", Tag::Proved, "(2k - 1)^3", SIDES).keyed(255, 3, Measure::Fills, Axis::Side, -1),
     record("A018413", "Divisors of 363", 1, "1, 3, 11, 33, 121, 363", Tag::Verified, "none", "this page, a near miss of A396934 - 1"),
@@ -117,9 +117,9 @@ pub static RECORDS: &[Record] = &[
     record("A154105", "a(n) = 12*n^2 + 18*n + 7", 0, "7, 37, 91, 169, 271, 397, 547, 721, 919, 1141, 1387, 1657", Tag::Verified, "12n^2 + 18n + 7", "slices.md, the centered hexagonal vertices at n = k - 1"),
     record("A192908", "Constant term in the reduction by (x^2 -> x + 1) of a polynomial family; a(n) = 2*Fibonacci(2n-2) + 1", 0, "1, 1, 3, 7, 17, 43, 111, 289, 755, 1975, 5169, 13531", Tag::Verified, "2 F(2n - 2) + 1", "REFS.md"),
     record("A229896", "Sizes of logical groups of the same integer in A229895", 1, "1, 1, 4, 1, 5, 27, 1, 7, 37, 256, 1, 9, 61, 369, 3125, 1, 11, 91, 671, 4651, 46656, 1, 13, 127, 1105, 9031, 70993, 823543, 1, 15, 169, 1695, 15961, 144495, 1273609, 16777216, 1, 17, 217, 2465, 26281, 269297, 2685817, 26269505, 387420489", Tag::Verified, "none", "this page, an interior window holding the carpet voids"),
-    record("A255016", "Number of toroidal n X n binary arrays, allowing rotation and/or reflection of rows and/or columns as well as matrix transposition", 0, "1, 2, 6, 26, 805, 172112, 239123150, 1436120190288, 36028817512382026", Tag::Verified, "none", "mrlymath::bang::baseq::sequence at dim 2, bijection.md"),
+    record("A255016", "Number of toroidal n X n binary arrays, allowing rotation and/or reflection of rows and/or columns as well as matrix transposition", 0, "1, 2, 6, 26, 805, 172112, 239123150, 1436120190288, 36028817512382026", Tag::Verified, "none", "mrlyrs::math::bang::baseq::sequence at dim 2, bijection.md"),
     record("A268240", "Pascal's tetrahedron of trinomial coefficients read mod 2", 0, "1, 1, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1", Tag::Verified, "none", "REFS.md"),
-    record("A299916", "a(n) = A299914(2n+1); the six-pointed-star holes of the Menger slice, by a comment", 0, "1, 6, 42, 306, 2250, 16578, 122202, 900882, 6641514, 48963042, 360969210, 2661166386", Tag::Verified, "a(n) = 9a(n-1) - 12a(n-2)", "mrlymath::formulas::cut_fills, slices.md").keyed(23, 3, Measure::Triangles, Axis::Level, 1),
+    record("A299916", "a(n) = A299914(2n+1); the six-pointed-star holes of the Menger slice, by a comment", 0, "1, 6, 42, 306, 2250, 16578, 122202, 900882, 6641514, 48963042, 360969210, 2661166386", Tag::Verified, "a(n) = 9a(n-1) - 12a(n-2)", "mrlyrs::math::formulas::cut_fills, slices.md").keyed(23, 3, Measure::Triangles, Axis::Level, 1),
     record("A332705", "Number of unit square faces (or surface area) of a stage-n Menger sponge", 0, "6, 72, 1056, 18048, 336384, 6531072, 129048576, 2568388608, 51267108864, 1024536870912", Tag::Proved, "2*20^level + 4*8^level", EXPOSURE).keyed(23, 3, Measure::Surface, Axis::Level, 0),
     record("A347825", "Number of ways to cut a 2 X n rectangle into rectangles with integer sides up to symmetries of the rectangle", 0, "1, 2, 6, 17, 61, 220, 883, 3597, 15232, 65130, 282294, 1229729", Tag::Verified, "none", "this page, a near miss of A396934/2"),
     record("A361870", "Array read by downward antidiagonals: nonequivalent 2-colorings of the cells of an n-dimensional hypercube with edges k cells long", 0, "2, 2, 1, 2, 2, 1, 2, 3, 2, 1, 2, 6", Tag::Verified, "none", "README.md, the rigid hypercube census"),

@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board, Grid, Ramp};
-use mrlynum::prime::Sieve;
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::prime::Sieve;
 
 const LIMIT: usize = 100;
 const SIDE: usize = 10;

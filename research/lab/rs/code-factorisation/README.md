@@ -9,7 +9,7 @@
 - Counting at prime-power side runs the irreducible series `I = T/(1+T)` over the grading in `num-bigint`, and the same machinery is cross-validated in one dimension against exhaustive brute force at `N = 4, 8, 16, 9`.
 - One dimension is not decoration: the diagonal embedding `D -> {(x,x)}` carries cut sets and irreducibility, so a line sweep is a tile sweep, and the exhaustive line sweep runs every non-empty subset of `{0..N-1}` at `N = 1..20`.
 - Both readings of the one-cell statistic are printed, because a one-cell letter anywhere and a one-cell outer factor are different counts that happen to give 48 on the same 50 tiles; the study checks the three 48-sets are equal rather than assuming it.
-- Every geometric figure is cross-checked against `mrlymath::bang::factory::create` and `mrlycore::Tensor::kron` cell for cell, on all 526 letters and all 7665 shape-(2,3) products, so two independently written renderers stand behind every count.
+- Every geometric figure is cross-checked against `mrlyrs::math::bang::factory::create` and `mrlyrs::core::Tensor::kron` cell for cell, on all 526 letters and all 7665 shape-(2,3) products, so two independently written renderers stand behind every count.
 - Structural laws are asserted, not the headline counts: the study exits non-zero if the block test and the product census disagree, if `121` is not the rectangle set, if `3375` is not the triple-product set, if the criterion mismatches, if gcd closure fails, or if a witness stops being a witness.
 
 ## RUN
@@ -35,4 +35,4 @@
 - magic.md the word census at side 12: 114975 words and 114975 composites per shape, pairwise 2565, 2565, 483, triple 483, union 339795, with `2565 = 15 x 171` and the side-12 witness in one image only.
 - magic.md the cut-set sweeps: zero gcd-closure failures over every line to `N = 20` and over the 339795 side-12 composites, 132 and 2376 lcm-closure failures, first at `N = 12` with cut set `{1,2,3,4,12}`, and zero mismatches of the incomparable-divisor criterion.
 - magic.md the render collisions: `2:480 3:15 4:1 5:1 6:1 7:1 8:1 9:1 12:1 18:1`, the carpet's unique side-3 partner `c495` of fill 8, and the side-9 fills 65, 72, 64 on three pairwise distinct tiles.
-- `mrlymath::bang::factory::create` and `mrlycore::Tensor::kron`, the crate paths both renderers are checked against.
+- `mrlyrs::math::bang::factory::create` and `mrlyrs::core::Tensor::kron`, the crate paths both renderers are checked against.

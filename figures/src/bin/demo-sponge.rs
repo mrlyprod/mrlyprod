@@ -1,7 +1,7 @@
-use mrlycore::colors::{shades, GREEN};
-use mrlycore::errors::Result;
 use mrlyfig::{ink, iso, save, Board, Color, Frame};
-use mrlymath::three::designs;
+use mrlyrs::core::colors::{shades, GREEN};
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::three::designs;
 
 const CODE: u128 = 127;
 const NUMBER: usize = 2;

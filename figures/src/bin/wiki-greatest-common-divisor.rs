@@ -1,7 +1,7 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board, Grid, Ramp};
-use mrlynum::factor::gcd;
-use mrlynum::lattice::coprime_pairs;
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::factor::gcd;
+use mrlyrs::num::lattice::coprime_pairs;
 
 const SIDE: usize = 24;
 

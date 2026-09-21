@@ -1,8 +1,8 @@
-use mrlycore::errors::Result;
 use mrlyfig::board::{Board, Frame};
 use mrlyfig::ink::Ramp;
 use mrlyfig::{field, ink, save};
 use mrlylab::moire::pairs::correlation;
+use mrlyrs::core::errors::Result;
 
 const SCALES: usize = 31;
 const CELL: f64 = 28.0;

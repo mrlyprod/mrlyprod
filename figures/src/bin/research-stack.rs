@@ -1,8 +1,8 @@
-use mrlycore::errors::Result;
 use mrlyfig::board::Board;
 use mrlyfig::ink::Ramp;
 use mrlyfig::{ink, save};
-use mrlynum::gauss::{classes, Ring};
+use mrlyrs::core::errors::Result;
+use mrlyrs::num::gauss::{classes, Ring};
 use std::collections::HashSet;
 
 const RING: Ring = Ring::Gaussian;

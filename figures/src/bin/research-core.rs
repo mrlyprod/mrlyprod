@@ -1,8 +1,8 @@
-use mrlycore::errors::Result;
 use mrlyfig::board::{Board, Frame};
 use mrlyfig::{ink, save, Grid};
-use mrlymath::bang;
-use mrlymath::two::designs;
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::bang;
+use mrlyrs::math::two::designs;
 
 fn main() -> Result<()> {
     let mut board = Board::square();

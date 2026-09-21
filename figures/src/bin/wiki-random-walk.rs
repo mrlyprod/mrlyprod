@@ -1,6 +1,6 @@
-use mrlycore::errors::Result;
-use mrlycore::Rng;
 use mrlyfig::{ink, save, Board};
+use mrlyrs::core::errors::Result;
+use mrlyrs::core::Rng;
 
 const SIDE: i64 = 64;
 const STEPS: usize = 1024;

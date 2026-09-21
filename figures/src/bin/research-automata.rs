@@ -1,7 +1,7 @@
-use mrlycore::errors::Result;
-use mrlycore::Color;
 use mrlyfig::{ink, save, Board};
-use mrlymath::life::elementary;
+use mrlyrs::core::errors::Result;
+use mrlyrs::core::Color;
+use mrlyrs::life::elementary;
 
 const CENSUS: usize = 16;
 const STEPS: usize = 31;

@@ -1,9 +1,9 @@
 use crate::spin::ramp_of;
 use crate::{code_of, Fault, Pixels};
-use mrlycore::json;
 use mrlylab::moire::{self, Combine, Spec, Volume};
-use mrlymath::space::Pack;
-use mrlymath::three::{self, Cell3d};
+use mrlyrs::core::json;
+use mrlyrs::math::space::Pack;
+use mrlyrs::math::three::{self, Cell3d};
 use wasm_bindgen::prelude::*;
 
 fn combine_of(name: &str) -> Result<Combine, Fault> {

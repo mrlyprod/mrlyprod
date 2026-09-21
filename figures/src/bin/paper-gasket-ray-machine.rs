@@ -1,7 +1,7 @@
-use mrlycore::errors::Result;
 use mrlyfig::{ink, save, Board};
-use mrlymath::two::designs;
-use mrlynum::classics::{fibonacci, gcd};
+use mrlyrs::core::errors::Result;
+use mrlyrs::math::two::designs;
+use mrlyrs::num::classics::{fibonacci, gcd};
 use std::collections::HashMap;
 
 const LEVEL: usize = 5;
