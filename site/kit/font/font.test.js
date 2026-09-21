@@ -5,8 +5,10 @@ import { animate, cycle, letters, merge, HOLD } from './font.js';
 import FONT from './font.json' with { type: 'json' };
 
 const WORDMARK = 'MRLYPROD';
+const PKG = join(import.meta.dir, '..', '..', 'pkg');
+const HAS = existsSync(join(PKG, 'mrlydemo.js'));
 
-test('the wordmark writes itself in stroke order, one cell a frame', () => {
+test.skipIf(!HAS)('the wordmark writes itself in stroke order, one cell a frame', () => {
   const write = animate(WORDMARK, 1);
   expect([write.rows, write.cols, write.fps]).toEqual([7, 49, 25]);
   expect(write.frames[0]).toEqual([]);
@@ -18,7 +20,7 @@ test('the wordmark writes itself in stroke order, one cell a frame', () => {
   expect(write.frames[103].length).toBe(lit);
 });
 
-test('the eight letters fold into an X in twenty-two frames', () => {
+test.skipIf(!HAS)('the eight letters fold into an X in twenty-two frames', () => {
   const folded = merge(WORDMARK, 1);
   expect(folded.length).toBe(22);
   expect(folded[0]).toEqual(animate(WORDMARK, 1).frames[103]);
@@ -27,7 +29,7 @@ test('the eight letters fold into an X in twenty-two frames', () => {
   expect(folded[21]).toEqual(x);
 });
 
-test('the cycle loops through both halves with a rest after each', () => {
+test.skipIf(!HAS)('the cycle loops through both halves with a rest after each', () => {
   const anim = cycle(WORDMARK, 1);
   expect(anim.frames.length).toBe(2 * 104 + 2 * 22 + 4 * HOLD);
   expect(anim.frames.length).toBe(352);
@@ -37,7 +39,7 @@ test('the cycle loops through both halves with a rest after each', () => {
   }
 });
 
-test('any string writes itself and a lone glyph has nothing to merge', () => {
+test.skipIf(!HAS)('any string writes itself and a lone glyph has nothing to merge', () => {
   for (const text of ['a', 'hi', 'mrly.net', '(1)']) {
     const write = animate(text, 2);
     const { rows, cols, grid } = letters(text);
@@ -47,11 +49,9 @@ test('any string writes itself and a lone glyph has nothing to merge', () => {
   expect(merge('A', 1).length).toBe(1);
 });
 
-test('the kit matches the crate frame for frame', async () => {
-  const pkg = join(import.meta.dir, '..', 'pkg');
-  if (!existsSync(join(pkg, 'mrlydemo.js'))) return;
-  const wasm = await import(join(pkg, 'mrlydemo.js'));
-  await wasm.default({ module_or_path: await Bun.file(join(pkg, 'mrlydemo_bg.wasm')).arrayBuffer() });
+test.skipIf(!HAS)('the kit matches the crate frame for frame', async () => {
+  const wasm = await import(join(PKG, 'mrlydemo.js'));
+  await wasm.default({ module_or_path: await Bun.file(join(PKG, 'mrlydemo_bg.wasm')).arrayBuffer() });
   for (const text of ['MRLYPROD', 'SIERPINSKI', 'mrly.net', '(1)', 'Hi 42', 'A']) {
     expect(animate(text, 1)).toEqual(JSON.parse(wasm.font_animate(text, 1)));
     expect(cycle(text, 1, 25)).toEqual(JSON.parse(wasm.font_cycle(text, 1, 25)));

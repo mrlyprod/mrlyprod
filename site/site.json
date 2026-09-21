@@ -122,8 +122,10 @@
     "hash": true,
     "files": [
       "palette.css",
-      "palette.js",
-      "theme.js"
+      "theme/palette.js",
+      "theme/theme.js",
+      "font/font.js",
+      "font/font.json"
     ]
   },
   "assets": [
@@ -136,8 +138,6 @@
         "base.css",
         "chrome.css",
         "chrome.js",
-        "font.js",
-        "font.json",
         "logo.js",
         "savers/index.js",
         "savers/frame.js",

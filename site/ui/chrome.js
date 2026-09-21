@@ -204,7 +204,7 @@ async function footer(canvas) {
     next.removeAttribute('aria-hidden');
     next.setAttribute('role', 'img');
     if (label) next.setAttribute('aria-label', label);
-    const { cycle, mark } = await import('./font.js');
+    const { cycle, mark } = await import('../kit/font/font.js');
     next.stop = mark(next, cycle(next.dataset.text || 'MRLYPROD', 1));
   } else {
     next.setAttribute('aria-hidden', 'true');

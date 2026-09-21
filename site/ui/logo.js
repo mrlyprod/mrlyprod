@@ -1,4 +1,4 @@
-import FONT from './font.json' with { type: 'json' };
+import FONT from '../kit/font/font.json' with { type: 'json' };
 
 const MASK = FONT.X.rows;
 
