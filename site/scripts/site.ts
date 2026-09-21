@@ -734,6 +734,17 @@ function cart(site: Site, route: Route): Output[] {
   return [{ path: "cart/index.html", bytes: shell(site, { route: route.route, name: "Cart", description: lead, body, type: "website" }) }];
 }
 
+/* STATS */
+
+const WATCH = "The CDN, the Lambdas and the bucket, read from the bucket every minute.";
+
+function stats(site: Site, route: Route): Output[] {
+  const body = `<div class="lede"><h1 id="stats">Stats</h1><p class="lead">${escape(WATCH)} Raw: <a href="/stats/stats.json">stats.json</a>.</p></div>
+<section><h2 id="cloud">Cloud</h2><div data-stats="cloud"><p class="fine">Loading</p></div></section>
+<section><h2 id="errors">Errors</h2><div data-stats="errors"><p class="fine">Loading</p></div></section>`;
+  return [{ path: "stats/index.html", bytes: shell(site, { route: route.route, name: "Stats", description: WATCH, body, type: "website", scripts: [site.asset("stats.js")] }) }];
+}
+
 const MISSION = SITE.tagline;
 
 const DOORS = [
@@ -1061,6 +1072,7 @@ async function collect(site: Site) {
     data: DRESS,
   });
   routes.push({ route: "/cart/", kind: "cart", name: "Cart", hidden: true });
+  routes.push({ route: "/stats/", kind: "stats", name: "Stats", hidden: true });
   routes.push({ route: "/404.html", kind: "missing", name: "Nothing here", hidden: true });
   return { routes, nav };
 }
@@ -1081,6 +1093,7 @@ const KINDS: Record<string, (site: Site, route: Route) => Output[] | Promise<Out
   page,
   menu,
   cart,
+  stats,
   missing,
   thin,
   math: standard,

@@ -88,7 +88,7 @@
   },
   "push": {
     "prefix": "",
-    "guard": ["cdn/"],
+    "guard": ["cdn/", "stats/stats.json"],
     "bucket": "MRLYNET_BUCKET",
     "store": { "bucket": "MRLYDEV_BUCKET", "prefix": "build/net" },
     "hashed": ["(^|/)lib-[^/]+\\.js$", "(^|/)lib-[^/]+\\.css$", "\\.wasm$", "-[0-9a-f]{8}\\.[^./]+$"]
@@ -153,6 +153,7 @@
         "chrome.css",
         "chrome.js",
         "logo.js",
+        "stats.js",
         "savers/index.js",
         "savers/frame.js",
         "savers/matrix.js",
