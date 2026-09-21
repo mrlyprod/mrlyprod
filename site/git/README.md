@@ -44,7 +44,7 @@
 - One highlighter per process, no grammar loaded until a file wants it; a grammar that fails to load is remembered as a miss.
 - The theme is `createCssVariablesTheme` with prefix `--code-`, and nothing ships that variable: every token becomes a `tk-*` class, so no output carries a `style` attribute.
 - 16 grammars: c css csv html javascript json jsx markdown python rust shellscript toml tsx typescript wgsl yaml. Anything else paints nothing and the escaped text stands.
-- `ui/code.css` colours the classes from the kit's tokens and sizes the gutter from the `d2`-`d6` class `block()` writes.
+- `kit/code/code.css` colours the classes from the contract's `--kit-*` names and sizes the gutter from the `d2`-`d6` class `block()` writes.
 
 ## FINGERPRINT
 
@@ -55,7 +55,7 @@
 ## HOOKS
 
 - The module never imports the chrome, so `spec.git` carries it: `{ page, md, code, served }`; no `spec.git` at all means the routes are collected and nothing is rendered.
-- `page(site, leaf)` wraps a body in the site's page template; `leaf.code` asks it for the seti stylesheet.
+- `page(site, leaf)` wraps a body in the site's page template; `leaf.code` asks it for the code viewer's stylesheets, the contract first.
 - `md(site, text, from)` renders markdown the site's way, with the site's math, where `from` is the repo-relative path of the file being read.
 - A link in that markdown goes through `ssg/links.ts`, so a `/git/` page and a site page resolve the same link the same way; `link(dir, url)` is the `/git/` fallback that resolver ends on.
 - `served(site, path)` is the mirror seam: it hands back the URL the site already serves that repo file at, or null; `site.serves` maps a bundled source file to its published URL and `site.made` holds every path the build has written.

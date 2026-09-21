@@ -43,8 +43,8 @@
 - A repo binary the site already serves gets no `/raw/` twin: the figures under `/figures/` and the kit's fonts and icons under `/ui/` are linked where they already live, which keeps 17 MB out of `dist/`.
 - `site.json` carries the `llms` block: the paragraph `llms.txt` opens on and the links it points at, `/raw/README.md`, `/research/`, `/git/` and `/papers/`.
 - `robots.txt` allows everything and names GPTBot, ClaudeBot, Claude-Web, CCBot, Google-Extended, anthropic-ai and PerplexityBot one block each.
-- The highlighter is the kit's, server-side Shiki over 16 grammars; `ui/code.css` rides with `seti.css` on every code page.
-- `public/pages.css` carries only what the kit has no rule for: the tiles, the home, the openers, the plates and the `Elsewhere` list; the code viewer's own CSS lives in the kit's `code.css`.
+- The highlighter is the kit's, server-side Shiki over 16 grammars; `kit/code/code.css` rides with `contract.css` and `seti.css` on every code page.
+- `public/pages.css` carries only what the kit has no rule for: the tiles, the home, the openers, the plates and the `Elsewhere` list; the code viewer's own CSS lives in the kit, at `kit/code/code.css`.
 - Every route carries a canonical link, a description, Open Graph and Twitter cards pointing at the one `/og.png`, and JSON-LD where it has an author.
 - A note, a page, a post or a paper names a single figure by writing its bare name as an image target, `![caption](walks-fig)`: the build finds `../files/figures/walks-fig.png`, ships it as `/figures/walks-fig.png` with the route, and throws when the file is missing.
 - `bun run check` prints the fixture numbers the crate's host test asserts; both must agree.

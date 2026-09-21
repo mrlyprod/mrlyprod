@@ -167,7 +167,7 @@ ${meta(route, name, description, type, image)}
 <link rel="stylesheet" href="${site.asset("fonts/fonts.css")}">
 <link rel="stylesheet" href="/pages.css">
 ${TINT}
-${code ? `<link rel="stylesheet" href="${site.asset("code.css")}">\n<link rel="stylesheet" href="${site.asset("seti/seti.css")}">\n` : ""}${ld}<script type="module" src="${site.asset("chrome.js")}"></script>${more}
+${code ? `<link rel="stylesheet" href="${site.asset("contract.css")}">\n<link rel="stylesheet" href="${site.asset("code.css")}">\n<link rel="stylesheet" href="${site.asset("seti/seti.css")}">\n` : ""}${ld}<script type="module" src="${site.asset("chrome.js")}"></script>${more}
 </head>
 <body>
 ${main}

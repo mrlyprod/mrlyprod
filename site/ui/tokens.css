@@ -73,6 +73,28 @@
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* KIT */
+
+:root {
+  --site-line: var(--line);
+  --site-hair: var(--hair);
+  --site-panel: var(--panel);
+  --site-art: var(--art);
+  --site-fg: var(--fg);
+  --site-dim: var(--dim);
+  --site-accent: var(--accent);
+  --site-mix: var(--mix);
+  --site-mono: var(--mono);
+  --site-read: var(--read);
+  --site-r2: var(--r2);
+  --site-s1: var(--s1);
+  --site-s2: var(--s2);
+  --site-s3: var(--s3);
+  --site-s4: var(--s4);
+  --site-s5: var(--s5);
+  --site-s6: var(--s6);
+}
+
 /* FACE */
 
 :root[data-font="sans"] { --face: "Noto Sans", var(--sans); }

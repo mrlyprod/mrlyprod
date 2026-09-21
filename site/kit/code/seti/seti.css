@@ -13,10 +13,10 @@
 .si {
   flex: none;
   font-family: "seti";
-  font-size: var(--font-size);
+  font-size: var(--kit-icon);
   line-height: 1;
   text-align: center;
-  width: var(--font-size);
+  width: var(--kit-icon);
 }
 
 .si::before {

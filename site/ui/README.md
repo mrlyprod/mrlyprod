@@ -3,6 +3,7 @@
 - mrly.net's own design kit, not a package: plain CSS, a little vanilla JS, a little React. No build step, no Tailwind, no CSS-in-JS.
 - House style: palette first (the fifteen colors, generated), theme and tokens second (`tokens.css`, by hand), one class per idea, semantic HTML, light on `:root` and dark twice (`prefers-color-scheme` guarded by `:root:not([data-theme="light"])`, then `:root[data-theme="dark"]`), AA contrast in both, 44px targets on coarse pointers, no motion under `prefers-reduced-motion`.
 - The palette and the two role sets sit in the kit beside this folder: `../kit/palette.css`, `../kit/palette.js` and `../kit/theme.js`, generated, never hand-edited.
+- The code viewer's skin sits there too, `../kit/code/code.css` and `../kit/code/seti/`, behind `../kit/code/contract.css`: it reads only `--kit-*` names and this folder answers with `--site-*`.
 - The palette names black, white and thirteen hues (`--red --orange --yellow --green --mint --teal --cyan --blue --indigo --purple --pink --brown --gray`), one flat value each, no shades.
 - `tokens.css` resolves the roles `--ground --bg --panel --deep --line --fg --dim --accent --on-accent` per theme.
 - `--art` is `var(--ground)`, the ground of every canvas and figure; a figure pair ships as one `<picture>`, the dark WebP in `<source media="screen and (prefers-color-scheme: dark)">` and the light WebP in the `<img>`, so only one half is fetched and print takes the light one.
@@ -24,7 +25,7 @@
 - `Grid({ nodes })` is the one gallery: a leaf with `figure: { dark, light }` is a picture tile, `text` its caption, `dates` its stamps, a leaf without a figure a plain tile. Every index page, the demo gallery, the home doors and the menu draw it, so they all look the same.
 - `Menu({ tree })` lays a whole tree out as sections, one per group with a shelf per subgroup, leaves under Pages, each a `Grid`. A site's `/menu/` route is that over its navigator dressed with figures.
 - The footer's legal line sits two pixels off the bottom of the page, over the full-screen animation and never under it.
-- Print is one story in three files: `base.css` sets the page margin, black on white, 11pt, the light figure of every pair, the read column full width, headings kept with their text, figures, tables, code and block math unbroken, code wrapped, and every link's target in brackets after it; `chrome.css` turns the skip link, both bars, both panes, the scrim and the footer off, lets main fill the sheet and keeps the opener at 20rem; `code.css` drops the line numbers and the code frame and wraps long lines. Nothing is hidden but the chrome: a paper or a note prints from the browser as it reads.
+- Print is one story in three files: `base.css` sets the page margin, black on white, 11pt, the light figure of every pair, the read column full width, headings kept with their text, figures, tables, code and block math unbroken, code wrapped, and every link's target in brackets after it; `chrome.css` turns the skip link, both bars, both panes, the scrim and the footer off, lets main fill the sheet and keeps the opener at 20rem; the kit's `code.css` drops the line numbers and the code frame and wraps long lines. Nothing is hidden but the chrome: a paper or a note prints from the browser as it reads.
 - The opener is the page's own figure over the title: one `figure.opener`, at most 32rem wide, centred, hairline framed on the `--art` ground.
 
 ## FOOTER
@@ -40,7 +41,7 @@
 
 ## FILES
 
-- `tokens.css`: loaded after the kit's `palette.css`; the roles light on `:root` and dark twice, `--art --scrim --mix`, type (system stacks ending in Noto Symbols 2 and Noto Color Emoji as fallbacks), `--face` per `data-font`, space, shape, frame, motion.
+- `tokens.css`: loaded after the kit's `palette.css`; the roles light on `:root` and dark twice, `--art --scrim --mix`, type (system stacks ending in Noto Symbols 2 and Noto Color Emoji as fallbacks), `--face` per `data-font`, space, shape, frame, motion, and the `--site-*` hooks the kit's `contract.css` reads, each one a reference so both themes follow.
 - `base.css`: reset, text, links, focus, `.prose`, reduced motion, print.
 - `chrome.css`: skip link, `.top` header and `.dock` bar, `.panes` with `.pane.left` / `.pane.right` and `.scrim`, `.tree`, `.contents`, `.settings` with its `.theme` button and `.pick` selects, `.menu`, `.base` footer, controls (`.row`, `.set`, label, select, range, checkbox, `button` and `.button`, `.tabs`), `.stats`, `.chip`, `.badge`, tables, `.cards`, `.gallery` / `.tile`, `.opener`, `.elsewhere`, and the chrome's print rules.
 - `chrome.js`: vanilla ESM, runs on load; the scroll spot, drawers, theme, the `<picture>` halves under a `data-theme` override, font, tint, saver, cart, contents highlight, footer mark, tree reveal, lazy tree; exports `wire()` for pages that render later.
@@ -50,15 +51,12 @@
 - `chrome.jsx`: React, renders the whole page for `react-dom/client` and `react-dom/server`.
 - `config.js`: `configure(site)` takes `site.json`, `conf()` reads it back, `tintCss()` writes the accent blocks, `headScript()` writes the boot script. Keys the kit itself reads: `title since prefix tint menu cart company`.
 - `savers/`: the four screensavers the footer can wear, vanilla ESM over one canvas, with their own README. Every one inks itself from `--accent`, so the Tint setting is their primary colour. A site lists `savers/*.js` (`tiles.js` included) beside `logo.js` in the `ui` bundle, and the kit's `palette.js` and `theme.js` in the `kit` bundle, or the footer has nothing to import.
-- `code.css`: the code viewer: the path bar, the file list, the numbered `<pre>` with its `d2`-`d6` gutter, images and PDFs, and the `tk-*` token colours the `git` highlighter emits. Loaded on code pages only, beside `seti/seti.css`.
 - `fonts/`: `fonts.css` and the vendored faces, all OFL with their licences beside them: Noto Sans, Noto Serif and Noto Sans Mono (variable 400-700, Latin), MrlyFont from `crates/mrlyfont`, Noto Sans Symbols 2, and Noto Color Emoji in ten unicode-range shards. A site lists them under an `assets` bundle with `hash: true`, the builder rewrites each `url()` in the css to the hashed name, and the head links `site.asset("fonts/fonts.css")`; a face is fetched only when a page needs it. `symbols.woff2` is cut from the master at `files/fonts/symbols.ttf` down to the glyphs the built pages print, with `bun run symbols`, which rewrites its `src` and `unicode-range` here; `fonts.test.ts` fails if a page prints a symbol the cut face lacks.
-- `seti/`: the SETI file-icon font for the code viewer.
 
 ## EXPORTS
 
 - `font.js`: `letters(text)` gives `{ rows, cols, grid }`; `animate(text, pad)` writes, `merge(text, pad)` folds, `cycle(text, pad, hold)` chains write, hold, merge, hold, unfold, hold, unwrite, hold into `{ rows, cols, fps, frames }`; `mark(canvas, anim)` plays an anim in the canvas's own `color`, repaints on the `theme` event, and returns a stop function the caller must keep.
 - `chrome.js`: `wire()`, idempotent, syncs aria state, applies theme, font, tint and saver, paints the cart, reveals the current leaf in the tree, and attaches the contents observer and the footer mark.
 - `config.js`: `configure(site)`, `conf()`, `HUES`, `tintCss(hue)`, `headScript(prefix)`.
-- `seti/seti.ts`: `seti(path)` gives the class string for a path.
 - `chrome.jsx`: `Shell({ route, title, lead, tree, current, contents, controls, wide, children })`, `Glyph({ text, className, label })`, `Grid({ nodes })`, `Menu({ tree })`; the header, dock, tree, contents, controls, settings and footer are Shell's own parts, not doors.
 - The header always draws the site's wordmark; `prefix` moves the localStorage keys and is read in the browser from `<html data-prefix>`.
