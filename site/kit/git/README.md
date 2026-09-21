@@ -1,13 +1,14 @@
 # git
 
-- mrly.net's own code viewer, not a package: `/git/` browses the repo the site lives in, `/raw/` serves its exact bytes.
+- The kit's code viewer, optional: `/git/` browses the repo the site lives in, `/raw/` serves its exact bytes.
 - The input is always this repo's own tree, never another; no `git` block in `site.json` means no routes at all.
 - `../ssg/build.ts` owns the bookkeeping and calls in: `scan()` appends the routes, `render()` and `fingerprint()` dispatch on the kind.
 
 ## SITE.JSON
 
 - `git`: `{ root, slug, branch }`. `root` is the repo root relative to the site, `slug` is `owner/name` on GitHub, `branch` defaults to `main`.
-- mrly.net declares `{ "root": "..", "slug": "mrlyprod/mrlyprod", "branch": "main" }`, so the site publishes the repo it lives in.
+- A site whose repo root sits one level up declares `{ "root": "..", "slug": "owner/repo", "branch": "main" }` and publishes the repo it lives in.
+- The three Shiki packages `deps.json` names under `git` are needed only by a site with this block; `code.ts` loads them lazily, so a site without one never resolves them.
 
 ## TREE
 

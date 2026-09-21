@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { halves } from '../ssg/pic.ts';
+import { halves } from '../kit/ssg/pic.ts';
 import { letters } from './font.js';
 import { wire } from './chrome.js';
 import { conf, HUES } from './config.js';

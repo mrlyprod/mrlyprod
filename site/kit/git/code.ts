@@ -40,7 +40,7 @@ export const version: string = installed();
 
 /* CORE */
 
-const NAME = "mrly";
+const NAME = "kit";
 
 let held: Promise<HighlighterCore> | undefined;
 

@@ -1,10 +1,9 @@
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, unlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmdirSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { basename, dirname, extname, join, normalize, relative, resolve } from "node:path";
 import { deflateSync } from "node:zlib";
 import { collect as gitRoutes, forest, isGit, mirror, owner, print as gitPrint, render as gitRender, type Hooks } from "../git/git.ts";
 import { index, stamp, type Index } from "./links.ts";
-import { grid, logoSvg } from "../ui/logo.js";
 
 /* TYPES */
 
@@ -33,6 +32,8 @@ export type Input = { name: string; path: string; files: string[]; missing: bool
 
 export type Bundle = { path: string; out: string; hash: boolean; files: string[]; ext?: string };
 
+export type Icons = { rows: string[]; svg: string };
+
 export type Site = {
   root: string;
   out: string;
@@ -43,6 +44,8 @@ export type Site = {
   nav: Node[];
   stamp: string;
   index: Index | null;
+  copies: Output[];
+  styles: string[];
   serves: Map<string, string>;
   made: Set<string>;
   asset: (name: string) => string;
@@ -50,27 +53,34 @@ export type Site = {
   bytes: (file: string) => Uint8Array;
 };
 
+export type Decl = { path: string; out?: string; hash?: boolean; files?: string[]; ext?: string };
+
 export type Config = {
   title?: string;
+  name?: string;
   root?: string;
   inputs?: Record<string, { path: string; ext?: string; deep?: boolean }>;
-  kit?: { path: string; out?: string; hash?: boolean; files?: string[]; ext?: string };
-  assets?: { path: string; out?: string; hash?: boolean; files?: string[]; ext?: string }[];
+  kit?: Decl;
+  assets?: Decl[];
   manifest?: Record<string, unknown>;
   robots?: { disallow?: string[] };
   llms?: { about?: string; links?: { href: string; name?: string; note?: string }[] };
   [key: string]: unknown;
 };
 
+export type Picked = { routes: Route[]; nav?: Node[] };
+
 export type Spec = {
   root: string;
   out: string;
   config?: Config;
   templates?: string[];
-  collect: (site: Site) => Promise<{ routes: Route[]; nav?: Node[] }> | { routes: Route[]; nav?: Node[] };
+  prepare?: () => Promise<void> | void;
+  collect: (site: Site) => Promise<Picked> | Picked;
   render: (site: Site, route: Route) => Promise<Output[]> | Output[];
   globals?: (site: Site) => Promise<Output[]> | Output[];
   inline?: string[];
+  icons?: Icons;
   git?: Hooks;
   asset?: (name: string, body: Uint8Array) => Bytes;
 };
@@ -135,26 +145,23 @@ function inputs(root: string, config: Config): Record<string, Input> {
 }
 
 function templates(spec: Spec): string {
-  const here = resolve(import.meta.dir);
+  const here = resolve(import.meta.dir, "..");
   const dirs = [here, ...(spec.templates ?? []).map((d) => resolve(spec.root, d))];
   const parts: Bytes[] = [];
   for (const dir of dirs) for (const file of walk(dir)) parts.push(relative(dir, file), bytes(file));
   return digest(parts);
 }
 
-function bundle(root: string, decl: NonNullable<Config["kit"]>): Bundle {
+const outDir = (decl: Decl) => (decl.out ?? "ui").replace(/^\/|\/$/g, "");
+
+function bundle(root: string, decl: Decl): Bundle {
   const path = resolve(root, decl.path);
   const named = decl.files ?? walk(path, false).map((f) => f.slice(path.length + 1));
   const files = decl.ext ? named.filter((f) => f.endsWith(decl.ext!)) : named;
-  return { path, out: (decl.out ?? "ui").replace(/^\/|\/$/g, ""), hash: decl.hash ?? false, files };
+  return { path, out: outDir(decl), hash: decl.hash ?? false, files };
 }
 
-function bundles(root: string, config: Config): Bundle[] {
-  const list: Bundle[] = [];
-  if (config.kit) list.push(bundle(root, config.kit));
-  for (const decl of config.assets ?? []) list.push(bundle(root, decl));
-  return list;
-}
+const decls = (config: Config): Decl[] => [...(config.kit ? [config.kit] : []), ...(config.assets ?? [])];
 
 /* ASSETS */
 
@@ -175,7 +182,7 @@ function place(one: Bundle, spec: Spec, assets: Map<string, string>, copies: Out
     if (known.has(dep)) return visit(dep);
     const placed = serves.get(join(one.path, dep));
     if (placed) return placed;
-    if (existsSync(join(one.path, dep))) throw new Error(`ssg: ${name} names ${dep}, which the kit's files do not list`);
+    if (existsSync(join(one.path, dep))) throw new Error(`ssg: ${name} names ${dep}, which the bundle's files do not list`);
     return null;
   };
   const visit = (name: string): string => {
@@ -222,11 +229,11 @@ const shows = (nodes: Node[], href: string): boolean =>
   nodes.some((node) => node.href === href || shows(node.nodes ?? [], href));
 
 export async function scan(spec: Spec): Promise<Site> {
+  if (spec.prepare) await spec.prepare();
   const root = resolve(spec.root);
   const config = spec.config ?? (JSON.parse(readFileSync(join(root, "site.json"), "utf8")) as Config);
   const found = inputs(root, config);
-  const list = bundles(root, config);
-  const kit = list[0] ?? null;
+  const list = decls(config).map((decl) => bundle(root, decl));
   const assets = new Map<string, string>();
   const copies: Output[] = [];
   const serves = new Map<string, string>();
@@ -236,11 +243,13 @@ export async function scan(spec: Spec): Promise<Site> {
     out: resolve(spec.out),
     config,
     inputs: found,
-    kit,
+    kit: config.kit ? list[0] : null,
     routes: [],
     nav: [],
     stamp: "",
     index: null,
+    copies,
+    styles: [...assets].filter(([name]) => name.endsWith(".css")).map(([, href]) => href).sort(),
     serves,
     made: new Set(copies.map((one) => one.path)),
     asset: (name) => {
@@ -271,7 +280,6 @@ export async function scan(spec: Spec): Promise<Site> {
     JSON.stringify([...assets]),
     stamp(site.index),
   ]);
-  (site as { copies?: Output[] }).copies = copies;
   return site;
 }
 
@@ -290,7 +298,7 @@ export function label(site: Site, file: string): string {
   return file === base ? name : `${name}/${file.slice(base.length + 1)}`;
 }
 
-function fingerprint(site: Site, route: Route, spec?: Spec): string {
+export function fingerprint(site: Site, route: Route, spec?: Spec): string {
   if (isGit(route)) return gitPrint(site, route, spec?.git);
   const files = route.inputs ?? (route.source ? [route.source] : []);
   const named = files.map((file) => [label(site, file), file] as const).sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
@@ -358,11 +366,11 @@ function png(size: number, dark: (x: number, y: number) => boolean): Uint8Array 
   return out;
 }
 
-function icons(): Output[] {
-  const rows = grid(1);
-  const mark = (size: number) => png(size, (x, y) => rows[Math.floor((y * 5) / size)][Math.floor((x * 5) / size)] === "1");
+function icons({ rows, svg }: Icons): Output[] {
+  const n = rows.length;
+  const mark = (size: number) => png(size, (x, y) => rows[Math.floor((y * n) / size)][Math.floor((x * n) / size)] === "1");
   return [
-    { path: "favicon.svg", bytes: logoSvg(1, "#000000", "#ffffff") },
+    { path: "favicon.svg", bytes: svg },
     { path: "favicon.png", bytes: mark(40) },
     { path: "apple-touch-icon.png", bytes: mark(180) },
     { path: "icon-192.png", bytes: mark(192) },
@@ -409,13 +417,13 @@ function llms(site: Site, root: string): string {
   const rows = (decl.links ?? [])
     .filter((one) => known.has(one.href))
     .map((one) => `- [${one.name ?? one.href}](${root}${one.href})${one.note ? `: ${one.note}` : ""}`);
-  const head = [`# ${site.config.title ?? ""}`, "", `> ${root}`, ""];
+  const head = [`# ${site.config.title ?? site.config.name ?? ""}`, "", `> ${root}`, ""];
   if (decl.about) head.push(decl.about, "");
   return [...head, ...rows, ""].join("\n");
 }
 
 export async function globals(site: Site, spec: Spec): Promise<Output[]> {
-  const out: Output[] = [...((site as { copies?: Output[] }).copies ?? [])];
+  const out: Output[] = [...site.copies];
   const root = clean(site.config.root as string);
   const shown = links(site, spec);
   const urls = shown.map((l) => `<url><loc>${escape(root + l.route)}</loc><lastmod>${l.at || today()}</lastmod></url>`);
@@ -424,9 +432,9 @@ export async function globals(site: Site, spec: Spec): Promise<Output[]> {
     bytes: `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>\n`,
   });
   out.push({ path: "robots.txt", bytes: robots(site, root) });
-  out.push({ path: "llms.txt", bytes: llms(site, root) });
+  if (site.config.llms) out.push({ path: "llms.txt", bytes: llms(site, root) });
   if (site.config.manifest) out.push({ path: "manifest.webmanifest", bytes: JSON.stringify(site.config.manifest, null, 2) + "\n" });
-  if (site.config.icons !== false) out.push(...icons());
+  if (spec.icons) out.push(...icons(spec.icons));
   const wood = forest(site);
   if (wood) out.push({ path: "git/tree.json", bytes: JSON.stringify(wood), type: "application/json" });
   const pub = site.config.inputs?.public ? site.input("public") : null;
@@ -520,13 +528,22 @@ export async function build(spec: Spec, options: { manifest?: string; force?: bo
     kept.add(item.path);
   }
   let removed = 0;
-  for (const record of Object.values(old)) {
-    for (const p of record.outputs) {
-      if (kept.has(p)) continue;
-      const file = join(site.out, p);
-      if (!existsSync(file)) continue;
-      unlinkSync(file);
-      removed++;
+  const drop = (p: string) => {
+    const file = join(site.out, p);
+    if (!existsSync(file)) return;
+    unlinkSync(file);
+    removed++;
+    let dir = dirname(file);
+    while (dir !== site.out && existsSync(dir) && readdirSync(dir).length === 0) {
+      rmdirSync(dir);
+      dir = dirname(dir);
+    }
+  };
+  for (const record of Object.values(old)) for (const p of record.outputs) if (!kept.has(p)) drop(p);
+  for (const out of new Set(decls(site.config).map(outDir))) {
+    for (const file of walk(join(site.out, out))) {
+      const p = relative(site.out, file);
+      if (!kept.has(p)) drop(p);
     }
   }
   if (path) {
@@ -538,8 +555,10 @@ export async function build(spec: Spec, options: { manifest?: string; force?: bo
 
 /* HELPERS */
 
+export const page = (route: string) => (route === "/" ? "index.html" : `${route.replace(/^\/|\/$/g, "")}/index.html`);
+
 export const jsonText = (data: unknown) => JSON.stringify(data).replace(/</g, "\\u003c");
 
 export const jsonScript = (data: unknown) => `<script type="application/ld+json">${jsonText(data)}</script>`;
 
-export { escape, digest, today };
+export { escape, digest, short, today };

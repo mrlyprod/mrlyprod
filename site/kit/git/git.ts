@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { seti } from "../kit/code/seti/seti.ts";
+import { seti } from "../code/seti/seti.ts";
 import { paint, version } from "./code.ts";
 import { bytes, digest, escape, type Bytes, type Node, type Output, type Route, type Site, type Spec } from "../ssg/build.ts";
 

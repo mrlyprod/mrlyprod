@@ -6,6 +6,11 @@ import { block, collect, dirRoute, explorer, fileRoute, forest, gist, href, lang
 import { paint } from "./code.ts";
 import type { Site, Spec } from "../ssg/build.ts";
 
+const shiki = await import("@shikijs/core").then(
+  () => true,
+  () => false,
+);
+
 /* TREE */
 
 const home = join(tmpdir(), `mrlygit-${process.pid}`);
@@ -156,7 +161,7 @@ test("the gutter class counts the digits of the last line", async () => {
 
 /* PAINT */
 
-test("a rust snippet paints one string per line", async () => {
+test.skipIf(!shiki)("a rust snippet paints one string per line", async () => {
   const out = await paint("fn main() {\n    let a = 1;\n}\n", "rust");
   expect(out).not.toBeNull();
   expect(out!.length).toBe(3);
@@ -169,7 +174,7 @@ test("an unknown extension paints nothing", async () => {
   expect(await paint("hello\n", "text")).toBeNull();
 });
 
-test("a painted block carries tk classes into the line body", async () => {
+test.skipIf(!shiki)("a painted block carries tk classes into the line body", async () => {
   const out = await block("fn a() {}\n", "rust");
   expect(out).toContain('<span class="t"><span class="tk-keyword">fn</span>');
 });

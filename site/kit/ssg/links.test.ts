@@ -107,7 +107,7 @@ test("a path the repo does not carry stays as written", () => {
 });
 
 test("a site with no git routes falls to the github blob", () => {
-  expect(resolve(site(false), "pages/about.md", "../lib/tree.js")).toBe("https://github.com/acme/site/blob/main/lib/tree.js");
+  expect(resolve(site(false), "pages/about.md", "../tools/tree.js")).toBe("https://github.com/acme/site/blob/main/tools/tree.js");
 });
 
 test("a script-bearing scheme never survives as a link", () => {
@@ -120,4 +120,25 @@ test("an outside link and a rooted link pass through", () => {
   for (const url of ["https://mrly.net", "http://mrly.net", "mailto:help@mrly.net", "tel:+1", "#top", "/demos/"]) {
     expect(resolve(mrly, "research/core.md", url)).toBe(url);
   }
+});
+
+/* NO GIT */
+
+const shop = (() => {
+  const one = {
+    root: net,
+    config: {},
+    inputs: { pages: input("pages", `${net}/pages`), readme: input("readme", `${home}/README.md`) },
+    routes: [{ route: "/about/", kind: "page", source: `${home}/README.md` }, ...routes.filter((one) => one.kind === "page")],
+  } as unknown as Site;
+  one.index = index(one);
+  return one;
+})();
+
+test("a declared input outside the site root lands on its route", () => {
+  expect(resolve(shop, "pages/about.md", "../../README.md")).toBe("/about/");
+});
+
+test("a site with no git block and no slug leaves a miss as written", () => {
+  expect(resolve(shop, "pages/about.md", "privacy.md")).toBe("privacy.md");
 });

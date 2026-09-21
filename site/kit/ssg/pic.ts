@@ -1,4 +1,4 @@
-import { escape } from "../kit/ssg/md.ts";
+import { escape } from "./md.ts";
 
 /* PAIRS */
 

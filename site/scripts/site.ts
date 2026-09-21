@@ -3,14 +3,15 @@ import { dirname, join, relative, resolve } from "node:path";
 import { createElement as h } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import katex from "katex";
-import { build, bytes, jsonScript, jsonText, walk, type Node, type Output, type Route, type Site, type Spec } from "../ssg/build.ts";
-import { config as gitConfig, isGit } from "../git/git.ts";
-import { resolve as resolveLink } from "../ssg/links.ts";
-import { themed } from "../ssg/pic.ts";
+import { build, bytes, jsonScript, jsonText, walk, type Node, type Output, type Route, type Site, type Spec } from "../kit/ssg/build.ts";
+import { config as gitConfig, isGit } from "../kit/git/git.ts";
+import { resolve as resolveLink } from "../kit/ssg/links.ts";
+import { themed } from "../kit/ssg/pic.ts";
 import { escape, front, inline, plain, render as md, summary, title } from "../kit/ssg/md.ts";
 import { sidebar, tree } from "../lib/tree.js";
 import { Glyph, Grid, Menu, Shell } from "../ui/chrome.jsx";
 import { claimsScript, headScript, inlineScripts, tintCss } from "../ui/config.js";
+import { grid as glyphs, logoSvg } from "../ui/logo.js";
 import SITE from "../lib/site.js";
 import { shelf } from "./shelf.ts";
 
@@ -1130,8 +1131,9 @@ export const counted = () => ({ ...counts });
 export const spec: Spec = {
   root: org,
   out: dist,
-  templates: ["lib", "scripts", "ui", "git", "kit"],
+  templates: ["lib", "scripts", "ui"],
   inline: inlineScripts(SITE.prefix),
+  icons: { rows: glyphs(1), svg: logoSvg(1, "#000000", "#ffffff") },
   collect,
   render: draw,
   globals: extras,
