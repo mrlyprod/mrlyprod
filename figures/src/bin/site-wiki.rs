@@ -1,5 +1,5 @@
 use mrlyfig::{ink, save, Board, Frame, Grid};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::math::two::designs;
 
 const CODES: [u128; 7] = [7, 14, 3, 5, 9, 6, 15];

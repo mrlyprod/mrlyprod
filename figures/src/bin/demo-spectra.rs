@@ -1,8 +1,8 @@
 use mrlyfig::{ink, plot, save, Board};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
+use mrlyrs::math::graph::{census, largest_component};
+use mrlyrs::math::spectrum::{laplacian_spectrum, spectral_fit, spectral_points};
 use mrlyrs::math::{six, three};
-use mrlyrs::num::graph::{census, largest_component};
-use mrlyrs::num::spectrum::{laplacian_spectrum, spectral_fit, spectral_points};
 
 const WINDOW: f64 = 0.10;
 

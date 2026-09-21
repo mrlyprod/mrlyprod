@@ -1,15 +1,15 @@
 use super::Cell2d;
-use crate::core::atoms;
-use crate::core::errors::{value_error, Result};
+use crate::core::error::{value_error, Result};
 use crate::core::tensor::Tensor;
-use crate::core::tile::Design;
+use crate::math::atoms;
+use crate::math::bang::catalog::Design;
 use crate::math::bang::factory;
 use crate::math::bang::universe::Code;
 
 pub use crate::math::bang::factory::levels_code;
 
 fn build(pattern: Tensor, level: usize, rotation: usize) -> Result<Cell2d> {
-    let mut cell = crate::math::dim::grow::<2>(pattern, level)?;
+    let mut cell = crate::math::cell::grow::<2>(pattern, level)?;
     if rotation != 0 {
         cell = cell.rotate(rotation);
     }

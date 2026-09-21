@@ -1,5 +1,5 @@
 use mrlyfig::{ink, save, Board};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use std::f64::consts::PI;
 
 const NAME: &str = "paper-first-base-below-a-quarter";

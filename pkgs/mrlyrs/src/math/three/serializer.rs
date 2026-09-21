@@ -1,8 +1,8 @@
 use super::Cell3d;
-use crate::core::errors::{value_error, Result};
+use crate::core::error::{value_error, Result};
 use crate::core::tensor::Tensor;
 use crate::core::{json, Json};
-use crate::math::dim::serializer::{byte_cube, count_cube, parse, tag_layer, types_field};
+use crate::math::cell::serializer::{byte_cube, count_cube, parse, tag_layer, types_field};
 use serde::Deserialize;
 
 /// Unrolls the cell into nested lists, plane by row by site.
@@ -86,7 +86,7 @@ pub fn from_json(text: &str) -> Result<Cell3d> {
 mod tests {
     use super::*;
     use crate::core::cell::mapping;
-    use crate::core::enums::Mode;
+    use crate::core::cell::Mode;
     use crate::math::three::designs;
     #[test]
     fn json_round_trip_with_colors_and_tags() {

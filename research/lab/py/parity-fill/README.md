@@ -1,7 +1,7 @@
 # parity-fill
 
 - Computes the inked fraction of the unit square under the parity blend of the odd carpet stack: the XOR of the layers `C_n(u, v) = chi_n(u) chi_n(v)`, `n = 1, 3, ..., N`, with `chi_n(u) = 1` iff `floor(n u)` is odd.
-- The parity blend is the sum of the layers folded to its parity, `mrlyrs::num::spin::Blend::Parity`, which on `0/1` layers is exactly their XOR.
+- The parity blend is the sum of the layers folded to its parity, `mrlyrs::math::spin::Blend::Parity`, which on `0/1` layers is exactly their XOR.
 - Layer `n = 1` is blank on `[0, 1)^2`, so the XOR is carried by the scales `3, 5, ..., N` alone and the expansion runs over subsets of those.
 - The exact route is the subset expansion. With `s_n = 1 - 2 C_n` in `{+1, -1}`, `prod_n s_n = (-1)^(sum_n C_n) = 1 - 2 XOR`, so `fill = (1 - E[prod_n s_n])/2`; expanding `prod_n (1 - 2 C_n) = sum_S (-2)^|S| prod_(n in S) C_n` and splitting `prod_(n in S) C_n(u, v) = [prod_(n in S) chi_n(u)][prod_(n in S) chi_n(v)]` factorises each mean, so `E[prod_(n in S) C_n] = m_S^2` with `m_S` the measure of the set of `u` in `[0, 1)` where every `floor(n u)`, `n in S`, is odd. Hence `fill(N) = (1 - sum_S (-2)^|S| m_S^2)/2`.
 - `m_S` is exact and rational: every `chi_n`, `n in S`, is constant on each cell of the grid of side `1/lcm(S)`, so `m_S` is a cell count over `lcm(S)`. All `2^L` masses, `L` the number of layers, come from one pass over the grid of `lcm(3, 5, ..., 21) = 14549535`, which records the scale set of each cell and then sums over supersets (`mass_table`).
@@ -38,4 +38,4 @@
 
 - `stack.md` THE SPUN PICTURE: the same field this study folds by parity is the one that study averages, scales `n = 1, 3, ..., 55`, `28` layers, disc-masked raster; the mean-blend paper coverage `0.7682` there and the parity fill here are two blends of one stack.
 - `stack.md` SELECTING THE SCALES: the moire correlation law's coprime independence is what makes the exact and independent fills agree at `N = 3` and `N = 5`, and the joint mass `m_{3,5,7} = 0` is what makes them disagree at `N = 7`.
-- `mrlyrs::num::spin::Blend::Parity`: the blend this study measures, the sum of the copies folded to its parity.
+- `mrlyrs::math::spin::Blend::Parity`: the blend this study measures, the sum of the copies folded to its parity.

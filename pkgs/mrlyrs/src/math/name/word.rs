@@ -1,5 +1,5 @@
 use super::{kind, Bang, Named};
-use crate::core::errors::{value_error, Result};
+use crate::core::error::{value_error, Result};
 use serde::{Deserialize, Serialize};
 
 kind!("word");

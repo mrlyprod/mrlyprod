@@ -1,6 +1,6 @@
 use crate::{Fault, Grid};
-use mrlylab::moire::pairs;
 use mrlyrs::core::json;
+use mrlyrs::math::moire::pairs;
 use mrlyrs::num::prime;
 use wasm_bindgen::prelude::*;
 

@@ -1,8 +1,8 @@
 use mrlyfig::board::Board;
 use mrlyfig::ink::Ramp;
 use mrlyfig::{hex, ink, save};
-use mrlyrs::core::errors::Result;
-use mrlyrs::core::tile::Design;
+use mrlyrs::core::error::Result;
+use mrlyrs::gen::recipe::Design;
 
 const MESH: usize = 110;
 const DEEPEST: i64 = 55;

@@ -1,6 +1,6 @@
 use mrlydemo::spirograph::*;
 use mrlydemo::two::two_grid;
-use mrlyrs::core::json::parse;
+use mrlyrs::core::error::parse;
 
 fn carpet() -> Vec<u8> {
     let grid = two_grid("495", 3, 1, 0, 3).unwrap();

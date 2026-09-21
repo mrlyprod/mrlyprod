@@ -8,8 +8,6 @@ pub mod automaton;
 pub mod blend;
 /// The boolean-function measures: Walsh spectra, nonlinearity, balance and avalanche.
 pub mod boolean;
-/// The grid tallies: value counts and exposed faces.
-pub mod census;
 /// The classic sequences and the exact arithmetic under them.
 pub mod classics;
 /// The digit designs on the integer line: their elements, their Mobius meter, its density echo and the ordinates its spectrum carries.
@@ -22,8 +20,6 @@ pub mod fft;
 pub mod formulas;
 /// The primes of the plane: the Gaussian and the Eisenstein integers, their classes, windows and ring weights.
 pub mod gauss;
-/// The spatial network: its nodes, branches, extraction and census.
-pub mod graph;
 /// The peeled ladder: the Dirichlet series of a digit design continued to the whole plane, its Lyndon cofactor and the residues at its poles, each value carrying its bound.
 pub mod ladder;
 /// The visible lattice: totients, coprime pairs, the constant a dimension recovers and the Farey nodes.
@@ -40,15 +36,7 @@ pub mod radix;
 pub mod series;
 /// The punctured schedules: the Wallis sieve and its kin, their words, rasters, punctures and limits.
 pub mod sieve;
-/// The symmetric eigensolver and the Laplacian spectra it reads off a network.
-pub mod spectrum;
-/// The turntable: the exact circle means of a raster about its centre, the profile they trace and the wheel it paints.
-pub mod spin;
 /// The spirals: the whole numbers wound on the square and the hexagonal lattice, marked and read along a quadratic.
 pub mod spiral;
-/// The spirograph: a byte grid as a wheel with a pencil in every cell, rolled on a line, a circle or a polygon, and the curves it draws.
-pub mod spirograph;
-/// The tourbillon: the odd parity carpets turned one angle a layer and stacked inside the inscribed disc.
-pub mod tourbillon;
 /// The critical line: zeta at one half plus i t and off it, its zeros, the prime staircase they rebuild and the novelty meter their waves predict.
 pub mod zeta;

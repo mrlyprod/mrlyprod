@@ -1,8 +1,8 @@
 use mrlyfig::{iso, save, Board};
-use mrlylab::moire::volume::volume;
-use mrlylab::moire::{Combine, Spec};
 use mrlyrs::core::colors::{shades, INDIGO};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
+use mrlyrs::math::moire::volume::volume;
+use mrlyrs::math::moire::{Combine, Spec};
 use mrlyrs::math::three::Cell3d;
 
 const CODE: u128 = 23;

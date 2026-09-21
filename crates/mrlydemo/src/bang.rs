@@ -1,7 +1,7 @@
 use crate::{checked, code_of, Fault};
 use mrlyrs::core::{json, Json, Rng};
 use mrlyrs::math::bang::{self, baseq, code_to_corners, counting};
-use mrlyrs::math::formulas;
+use mrlyrs::math::counts;
 use mrlyrs::math::name::{Bang, Named};
 use wasm_bindgen::prelude::*;
 
@@ -85,7 +85,7 @@ pub fn fills(
     level: u32,
     base: usize,
 ) -> Result<String, Fault> {
-    Ok(formulas::fill(code_of(code)?, number, dimension, level, base)?.to_string())
+    Ok(counts::fill(code_of(code)?, number, dimension, level, base)?.to_string())
 }
 
 /// Counts the empty sites of the code's fractal at the level in closed form, as a decimal string.
@@ -97,7 +97,7 @@ pub fn voids(
     level: u32,
     base: usize,
 ) -> Result<String, Fault> {
-    Ok(formulas::void(code_of(code)?, number, dimension, level, base)?.to_string())
+    Ok(counts::void(code_of(code)?, number, dimension, level, base)?.to_string())
 }
 
 /// Returns the filled fraction of the code's fractal at the level.
@@ -109,7 +109,7 @@ pub fn ratio(
     level: u32,
     base: usize,
 ) -> Result<f64, Fault> {
-    Ok(formulas::ratio(
+    Ok(counts::ratio(
         code_of(code)?,
         number,
         dimension,
@@ -126,7 +126,7 @@ pub fn dimension(
     base_dimension: usize,
     base: usize,
 ) -> Result<f64, Fault> {
-    Ok(formulas::dimension(
+    Ok(counts::dimension(
         code_of(code)?,
         number,
         base_dimension,
@@ -207,7 +207,7 @@ pub fn fill_cap(
 ) -> Result<usize, Fault> {
     let code = checked(code, dimension, base)?;
     let fits = |level: u32| {
-        formulas::fill(code, number, dimension, level, base)
+        counts::fill(code, number, dimension, level, base)
             .is_ok_and(|count| count <= budget as u128)
     };
     let mut level = 1;

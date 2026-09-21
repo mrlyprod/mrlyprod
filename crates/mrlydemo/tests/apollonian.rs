@@ -1,5 +1,5 @@
 use mrlydemo::apollonian::*;
-use mrlyrs::core::json::parse;
+use mrlyrs::core::error::parse;
 use mrlyrs::core::Json;
 
 fn read(root: &str, cap: u32, order: usize) -> Json {

@@ -1,6 +1,6 @@
 use crate::{checked, code_of, Fault};
 use mrlyrs::core::{json, Json};
-use mrlyrs::math::formulas::six as formulas;
+use mrlyrs::math::counts::six as formulas;
 use mrlyrs::math::six::{self, Cell6d};
 use mrlyrs::math::three;
 use mrlyrs::num::boolean;

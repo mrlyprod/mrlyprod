@@ -1,6 +1,6 @@
 use mrlyfig::board::{Board, Frame};
 use mrlyfig::{ink, save, Grid};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::math::two::designs;
 
 fn panel(board: &mut Board, frame: Frame, level: usize, gap: f64) -> Result<()> {

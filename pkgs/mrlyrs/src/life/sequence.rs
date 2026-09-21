@@ -1,6 +1,6 @@
-use crate::core::errors::{value_error, Result};
+use crate::core::error::{value_error, Result};
 use crate::core::rng::Rng;
-use crate::math::formulas;
+use crate::math::counts;
 use crate::math::two::{self, census};
 use crate::num::classics;
 
@@ -335,12 +335,12 @@ pub fn sequence(seq: Sequence, limit: usize) -> Result<Vec<usize>> {
         Sequence::LineVoids => mrly_sequence(limit, |n| Ok(census::voids(&two::hline(n, 1)?))),
         Sequence::StarFills => mrly_sequence(limit, |n| Ok(census::fills(&two::star(n, 1)?))),
         Sequence::StarVoids => mrly_sequence(limit, |n| Ok(census::voids(&two::star(n, 1)?))),
-        Sequence::CodeFills(code) => mrly_sequence(limit, |n| {
-            Ok(formulas::fill(code, n, DIM, 1, BASE)? as usize)
-        }),
-        Sequence::CodeVoids(code) => mrly_sequence(limit, |n| {
-            Ok(formulas::void(code, n, DIM, 1, BASE)? as usize)
-        }),
+        Sequence::CodeFills(code) => {
+            mrly_sequence(limit, |n| Ok(counts::fill(code, n, DIM, 1, BASE)? as usize))
+        }
+        Sequence::CodeVoids(code) => {
+            mrly_sequence(limit, |n| Ok(counts::void(code, n, DIM, 1, BASE)? as usize))
+        }
         _ => unreachable!(),
     }
 }
@@ -554,14 +554,14 @@ mod tests {
     }
     #[test]
     fn code_sequences_match_formulas() {
-        use crate::math::formulas;
+        use crate::math::counts;
         for code in [1u128, 7, 14, 15] {
             let seq = sequence(Sequence::CodeFills(code), 50).unwrap();
             let expected: Vec<usize> = {
                 let mut v = Vec::new();
                 let mut n = 1;
                 while n <= 53 {
-                    let f = formulas::fill(code, n, 2, 1, 2).unwrap() as usize;
+                    let f = counts::fill(code, n, 2, 1, 2).unwrap() as usize;
                     if f <= 50 && !v.contains(&f) {
                         v.push(f);
                     }

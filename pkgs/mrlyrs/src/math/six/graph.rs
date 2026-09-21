@@ -1,8 +1,8 @@
 use super::census::{corners, edges_of};
 use super::models::Cell6d;
 use super::{FILL, VOID};
-use crate::core::errors::Result;
-use crate::num::graph::models::Network;
+use crate::core::error::Result;
+use crate::math::graph::models::Network;
 use std::collections::BTreeMap;
 
 type Point = (i64, i64);
@@ -97,7 +97,7 @@ pub fn slice_edge_graph(cell: &Cell6d, value: Option<u8>) -> Result<Network> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::formulas::six as formulas;
+    use crate::math::counts::six as formulas;
     use crate::math::six::geometry::blank;
     use crate::math::six::{Orientation, Projection};
     fn solid(radius: usize) -> Cell6d {

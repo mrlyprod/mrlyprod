@@ -1,6 +1,6 @@
 use super::codec;
 use super::colors::Color;
-use super::errors::{value_error, MrlyError, Result};
+use super::error::{value_error, MrlyError, Result};
 use super::resample::{self, Filter};
 use serde::{Deserialize, Serialize};
 

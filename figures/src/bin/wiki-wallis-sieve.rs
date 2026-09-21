@@ -1,5 +1,5 @@
 use mrlyfig::{ink, save, Board, Color};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::num::sieve;
 
 const LEVELS: usize = 3;

@@ -1,5 +1,5 @@
 use mrlyfig::{ink, plot, save, Board};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 
 const RE_LO: f64 = -1.0;
 const RE_HI: f64 = 1.0;

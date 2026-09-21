@@ -1,5 +1,5 @@
 use mrlyfig::{ink, plot, save, Board, Grid};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use std::f64::consts::TAU;
 
 const STATES: usize = 3;

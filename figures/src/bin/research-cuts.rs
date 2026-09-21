@@ -1,6 +1,6 @@
 use mrlyfig::board::Board;
 use mrlyfig::{ink, plot, save};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::math::three;
 
 const CODE: u128 = 126;

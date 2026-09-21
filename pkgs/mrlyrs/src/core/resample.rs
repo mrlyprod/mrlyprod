@@ -1,4 +1,4 @@
-use super::errors::{value_error, Result};
+use super::error::{value_error, Result};
 
 /// The way a resampling weighs the source pixels it reads.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

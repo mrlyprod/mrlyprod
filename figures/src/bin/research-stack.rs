@@ -1,7 +1,7 @@
 use mrlyfig::board::Board;
 use mrlyfig::ink::Ramp;
 use mrlyfig::{ink, save};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::num::gauss::{classes, Ring};
 use std::collections::HashSet;
 

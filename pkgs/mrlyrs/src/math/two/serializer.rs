@@ -1,8 +1,8 @@
 use super::Cell2d;
-use crate::core::errors::{value_error, Result};
+use crate::core::error::{value_error, Result};
 use crate::core::json;
 use crate::core::tensor::Tensor;
-use crate::math::dim::serializer::{
+use crate::math::cell::serializer::{
     byte_grid, color_grid, count_grid, parse, tag_layer, types_field,
 };
 

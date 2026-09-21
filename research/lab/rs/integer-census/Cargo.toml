@@ -4,4 +4,4 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-mrlylab.workspace = true
+ledger.workspace = true

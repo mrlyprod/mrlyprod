@@ -1,4 +1,4 @@
-use crate::core::errors::{value_error, Result};
+use crate::core::error::{value_error, Result};
 use crate::core::ramp::Colorizer;
 use crate::core::tensor::Tensor;
 use crate::math::two::{self, Cell2d};

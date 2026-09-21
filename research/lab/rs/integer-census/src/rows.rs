@@ -1,4 +1,4 @@
-use mrlylab::ledger::{closed, keys, terms, Closed, Cost, Key, Tier, TERMS};
+use ledger::{closed, keys, terms, Closed, Cost, Key, Tier, TERMS};
 use std::thread;
 
 pub const CEILING: i128 = 100_000;

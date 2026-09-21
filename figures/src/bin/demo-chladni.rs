@@ -1,5 +1,5 @@
 use mrlyfig::{ink, save, Board};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::core::Rng;
 use mrlyrs::life::design_mask;
 use mrlyrs::num::fft::{convolve_with, embed_kernel, transform};

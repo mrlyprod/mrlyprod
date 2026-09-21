@@ -1,5 +1,5 @@
 use mrlyfig::{ink, plot, save, Board, Color, Frame};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use std::f64::consts::PI;
 
 const VERTICES: usize = 32;

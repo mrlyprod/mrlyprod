@@ -2,9 +2,9 @@ use super::geometry::orientation;
 use super::models::Cell6d;
 use super::painter::paint;
 use super::Orientation;
+use crate::core::cell::Mode;
 use crate::core::colors::Color;
-use crate::core::enums::Mode;
-use crate::core::errors::{value_error, Result};
+use crate::core::error::{value_error, Result};
 
 /// A screen triangle: three grid points and an RGBA color.
 pub type Triangle = ([(i64, i64); 3], [u8; 4]);

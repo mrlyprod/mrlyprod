@@ -215,7 +215,7 @@ mod tests {
 #[cfg(test)]
 mod theorems {
     use super::*;
-    use crate::math::formulas::six as formulas;
+    use crate::math::counts::six as formulas;
     use crate::math::six::geometry::cut;
     use crate::math::six::graph::slice_core_graph;
     use crate::math::three;

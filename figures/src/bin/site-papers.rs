@@ -1,5 +1,5 @@
 use mrlyfig::{ink, iso, save, Board};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::core::tensor::Tensor;
 use mrlyrs::math::three::Cell3d;
 use mrlyrs::math::two::designs;

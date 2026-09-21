@@ -1,5 +1,5 @@
 use mrlyfig::{ink, save, Board};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::num::gauss::{Ring, Window};
 
 const REACH: u64 = 8;

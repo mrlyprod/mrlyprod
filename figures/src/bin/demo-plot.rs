@@ -1,6 +1,6 @@
+use ledger::{terms, Axis, Key, Measure, BUDGET};
 use mrlyfig::{ink, save, Board};
-use mrlylab::ledger::{terms, Axis, Key, Measure, BUDGET};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::num::blend::delta;
 
 const ROWS: usize = 8;

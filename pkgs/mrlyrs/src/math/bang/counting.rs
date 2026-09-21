@@ -1,4 +1,4 @@
-use crate::core::errors::{value_error, Result};
+use crate::core::error::{value_error, Result};
 use crate::num::classics::{factorial, gcd};
 use crate::num::factor::{divisors, mobius};
 use std::collections::BTreeMap;

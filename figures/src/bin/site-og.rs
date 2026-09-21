@@ -1,5 +1,5 @@
 use mrlyfig::{grid, ink, save, Board, Frame, Grid};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 
 const CELL: f64 = 18.0;
 const ACROSS: usize = 10;

@@ -7,5 +7,5 @@ publish = false
 
 [dependencies]
 mrlyrs.workspace = true
-mrlylab.workspace = true
+ledger.workspace = true
 mrlyfig.workspace = true

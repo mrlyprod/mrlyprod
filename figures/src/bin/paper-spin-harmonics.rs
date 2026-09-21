@@ -1,5 +1,5 @@
 use mrlyfig::{ink, save, Board, Grid};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 
 const SIDE: usize = 3;
 const CODE: u32 = 45;

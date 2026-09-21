@@ -4,7 +4,7 @@ mod rows;
 mod tables;
 
 use census::{Census, CHAMPIONS, MISSES, WINDOWS};
-use mrlylab::ledger::{designs, Closed, Cost, Measure, Tier, SPACES, TERMS};
+use ledger::{designs, Closed, Cost, Measure, Tier, SPACES, TERMS};
 use rows::{Row, Sheet, Stop, CAP, CEILING, CELLS};
 use std::env;
 use std::path::{Path, PathBuf};
@@ -12,7 +12,7 @@ use std::time::Instant;
 
 fn definition() -> Vec<String> {
     vec![
-        "A registry row is one (design, measure, axis) key of `mrlylab::ledger::keys` over the four tiers.".to_string(),
+        "A registry row is one (design, measure, axis) key of `ledger::keys` over the four tiers.".to_string(),
         format!("A row's rendered window is its first `min({CAP}, B)` terms, `B` the leading terms whose footprint fits {CELLS} cells, under the ledger's own budget of {CELLS} cells a term."),
         "A term's footprint is 1 cell for a closed measure, `number^dimension + level * span` for a convolved measure, `number^(dimension * level)` for a grid measure.".to_string(),
         format!("A row whose rendered terms are strictly increasing stops at the first term above {CEILING}; the count of rows truncated this way is printed, never assumed to lose nothing."),

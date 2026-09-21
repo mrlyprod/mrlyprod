@@ -1,7 +1,7 @@
 use super::models::Cell6d;
 use super::{Orientation, Projection, FILL, GRID, LEFT, RIGHT, UP, VOID};
 use crate::core::cell::{remap, Cell};
-use crate::core::errors::{value_error, Result};
+use crate::core::error::{value_error, Result};
 use crate::core::tensor::Tensor;
 use crate::math::three::Cell3d;
 use crate::math::two::Cell2d;

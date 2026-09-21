@@ -1,5 +1,5 @@
 use mrlyfig::{ink, save, Board};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 
 fn main() -> Result<()> {
     let mut board = Board::square();

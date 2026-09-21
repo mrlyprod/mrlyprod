@@ -1,17 +1,17 @@
 use mrlyrs::core::paint::{self, Config as PaintConfig, Edition, Paint};
 use mrlyrs::core::state::seed;
-use mrlyrs::core::tile::Tile;
 use mrlyrs::core::{json, Image, Json};
-use mrlyrs::math::two::tile as tile2d;
+use mrlyrs::gen::build::{build_2d, create_2d, Config2d};
+use mrlyrs::gen::recipe::Tile;
 
 const SEED: u64 = 7;
 
-fn tiles() -> tile2d::Config {
-    tile2d::Config {
+fn tiles() -> Config2d {
+    Config2d {
         min_size: 3,
         max_size: 9,
         anti: Some(false),
-        ..tile2d::Config::default()
+        ..Config2d::default()
     }
 }
 
@@ -34,8 +34,8 @@ fn main() {
     let mut rows = Vec::new();
     for (i, edition) in Edition::all().into_iter().enumerate() {
         seed(SEED + i as u64);
-        let tile = tile2d::create(&config).expect("no tile fits the size constraints");
-        let mut cell = tile2d::build(&tile).expect("the tile would not build");
+        let tile = create_2d(&config).expect("no tile fits the size constraints");
+        let mut cell = build_2d(&tile).expect("the tile would not build");
         let recipe = PaintConfig {
             editions: Some(vec![edition]),
             ..PaintConfig::default()

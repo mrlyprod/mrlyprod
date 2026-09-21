@@ -1,6 +1,6 @@
 use mrlyfig::out::root;
 use mrlyfig::{ink, save, Board, Ramp};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::core::tensor::Tensor;
 use mrlyrs::core::MrlyError;
 use mrlyrs::life::{design_mask, next_grid, Boundary};

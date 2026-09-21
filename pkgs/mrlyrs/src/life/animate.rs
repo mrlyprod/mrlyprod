@@ -1,7 +1,7 @@
 use super::models::{Config, Life};
 use super::step::next_grid;
 use super::Fate;
-use crate::core::errors::Result;
+use crate::core::error::Result;
 use crate::math::two::Cell2d;
 use std::collections::HashMap;
 

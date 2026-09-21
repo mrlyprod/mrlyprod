@@ -3,10 +3,9 @@
 /// The stroke-order writing animations of text.
 pub mod animate;
 /// The raw bitmap tables of the font.
-pub mod glyphs;
-/// The glyph builders for uppers, lowers, digits, extras and specials.
-pub mod letters;
-mod models;
+pub mod bitmaps;
+/// The glyph, its trimming and descenders, and the builders for uppers, lowers, digits, extras and specials.
+pub mod glyph;
 /// The Unicode names of the font's characters.
 pub mod names;
 /// The stroke orders that write each character.
@@ -15,19 +14,15 @@ pub mod paths;
 pub mod pens;
 /// The 0/1 grid a text renders to.
 pub mod raster;
-/// The descenders and the trimming of bitmaps.
-pub mod shape;
 
 use std::collections::BTreeMap;
 use std::sync::OnceLock;
 
 pub use animate::{animate, cycle, merge, Anim, FPS, HOLD};
-pub use letters::all;
-pub use models::Glyph;
+pub use glyph::{all, trim, Glyph};
 pub use names::name_of;
 pub use paths::{draft, floor, path, strokes};
 pub use raster::raster;
-pub use shape::trim;
 
 fn book() -> &'static BTreeMap<char, Glyph> {
     static BOOK: OnceLock<BTreeMap<char, Glyph>> = OnceLock::new();
@@ -126,16 +121,16 @@ mod tests {
     #[test]
     fn count_matches_layout() {
         assert_eq!(supported().len(), 108);
-        assert_eq!(letters::uppers().len(), 26);
-        assert_eq!(letters::lowers().len(), 26);
-        assert_eq!(letters::digits().len(), 10);
-        assert_eq!(letters::extras().len(), 42);
-        assert_eq!(letters::specials().len(), 4);
+        assert_eq!(glyph::uppers().len(), 26);
+        assert_eq!(glyph::lowers().len(), 26);
+        assert_eq!(glyph::digits().len(), 10);
+        assert_eq!(glyph::extras().len(), 42);
+        assert_eq!(glyph::specials().len(), 4);
     }
     #[test]
     fn descenders_flagged() {
-        assert!(shape::descends('$'));
-        assert!(shape::descends('('));
-        assert!(!shape::descends('A'));
+        assert!(glyph::descends('$'));
+        assert!(glyph::descends('('));
+        assert!(!glyph::descends('A'));
     }
 }

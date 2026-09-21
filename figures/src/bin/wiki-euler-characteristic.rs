@@ -1,5 +1,5 @@
 use mrlyfig::{ink, iso, save, Board, Frame, Grid};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::math::two::{census, designs};
 
 const SIDE: usize = 9;

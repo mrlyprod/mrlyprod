@@ -1,4 +1,4 @@
-use crate::core::errors::{value_error, Result};
+use crate::core::error::{value_error, Result};
 
 /// The largest digit span a rule may read, so its code fits a `u64`.
 pub const SPAN: usize = 6;

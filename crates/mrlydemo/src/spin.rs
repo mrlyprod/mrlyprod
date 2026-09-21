@@ -1,8 +1,8 @@
 use crate::{code_of, Fault, Grid, Pixels};
-use mrlylab::moire::{presets, render, Field};
 use mrlyrs::core::{json, Colorizer};
+use mrlyrs::math::moire::{presets, render, Field};
 use mrlyrs::math::six;
-use mrlyrs::num::spin;
+use mrlyrs::math::spin;
 use wasm_bindgen::prelude::*;
 
 pub(crate) fn ramp_of(ramp: &str) -> Colorizer {

@@ -1,5 +1,5 @@
 use mrlyfig::{ink, plot, save, Board, Frame};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 
 const SQUARES: usize = 12;
 const TERMS: usize = 40;

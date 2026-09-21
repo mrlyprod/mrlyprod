@@ -1,6 +1,6 @@
 use crate::Fault;
 use mrlyrs::core::{json, Json};
-use mrlyrs::math::dim::carry;
+use mrlyrs::math::counts::ladder;
 use mrlyrs::num::blend;
 use wasm_bindgen::prelude::*;
 
@@ -75,11 +75,11 @@ fn logarithm(value: f64, base: usize) -> f64 {
 }
 
 fn reading(base: usize, dimension: usize) -> Result<Json, Fault> {
-    let block = carry::even_block(base, dimension)?;
-    let root = carry::perron(&block)?;
-    let full = carry::fill(base, dimension)? as f64;
+    let block = ladder::even_block(base, dimension)?;
+    let root = ladder::perron(&block)?;
+    let full = ladder::fill(base, dimension)? as f64;
     Ok(json!({
-        "sign": carry::sign(base, dimension)?,
+        "sign": ladder::sign(base, dimension)?,
         "root": root,
         "gap": root - full / base as f64,
         "log_root": logarithm(root, base),
@@ -90,7 +90,7 @@ fn reading(base: usize, dimension: usize) -> Result<Json, Fault> {
 /// The widest dimension the exact carry arithmetic reaches at the base.
 #[wasm_bindgen]
 pub fn carry_cap(base: usize) -> Result<usize, Fault> {
-    Ok(carry::cap(base)?)
+    Ok(ladder::cap(base)?)
 }
 
 /// Reads the base-`q` slice carry automaton in dimension `D`, as JSON.
@@ -106,15 +106,15 @@ pub fn carry_block(base: usize, dimension: usize, levels: usize) -> Result<Strin
             "levels must be between 1 and {LEVELS}."
         )));
     }
-    let top = carry::cap(base)?;
+    let top = ladder::cap(base)?;
     if !(2..=top).contains(&dimension) {
         return Err(Fault::new(format!(
             "base {base} carries the dimensions 2 to {top} in exact integers."
         )));
     }
-    let block = carry::even_block(base, dimension)?;
-    let poly = carry::characteristic(&block)?;
-    let terms = carry::ladder(base, dimension, levels)?;
+    let block = ladder::even_block(base, dimension)?;
+    let poly = ladder::characteristic(&block)?;
+    let terms = ladder::ladder(base, dimension, levels)?;
     let order = dimension.div_ceil(2);
     let rule = blend::recurrence(&terms);
     let found = rule.as_ref().map(|rule| rule.len());
@@ -123,13 +123,13 @@ pub fn carry_block(base: usize, dimension: usize, levels: usize) -> Result<Strin
         "dimension": dimension,
         "cap": top,
         "order": order,
-        "digits": carry::digit_polynomial(base, dimension)?,
+        "digits": ladder::digit_polynomial(base, dimension)?,
         "block": block,
         "characteristic": decimals(&poly),
         "polynomial": polynomial_text(&poly),
-        "trace": carry::trace(&block).to_string(),
-        "determinant": carry::determinant(&block)?.to_string(),
-        "fill": carry::fill(base, dimension)?.to_string(),
+        "trace": ladder::trace(&block).to_string(),
+        "determinant": ladder::determinant(&block)?.to_string(),
+        "fill": ladder::fill(base, dimension)?.to_string(),
         "read": reading(base, dimension)?,
         "law": if dimension.is_multiple_of(2) { -1 } else { 1 },
         "open": dimension % 2 == 1 && dimension % 3 == 1,
@@ -139,7 +139,7 @@ pub fn carry_block(base: usize, dimension: usize, levels: usize) -> Result<Strin
         "capped": terms.len() <= levels,
         "found": json!(found),
         "fits": found == Some(order),
-        "spectral": json!(carry::spectral_ratio(base, dimension)?),
+        "spectral": json!(ladder::spectral_ratio(base, dimension)?),
     })
     .to_string())
 }
@@ -187,7 +187,7 @@ pub fn carry_ratios(base: usize, top: usize) -> Result<String, Fault> {
         .map(|dimension| {
             json!({
                 "dimension": dimension,
-                "ratio": json!(carry::spectral_ratio(base, dimension).ok().flatten()),
+                "ratio": json!(ladder::spectral_ratio(base, dimension).ok().flatten()),
                 "free": (dimension as f64 + 2.0) / (dimension as f64 - 2.0),
             })
         })

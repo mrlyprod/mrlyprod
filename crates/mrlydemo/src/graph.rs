@@ -1,8 +1,8 @@
 use crate::{code_of, Fault};
 use mrlyrs::core::json;
-use mrlyrs::math::formulas::{self, six as hexagon};
+use mrlyrs::math::counts::{self, six as hexagon};
+use mrlyrs::math::graph::{self, census, roles, Layout as Relax, Network, Role};
 use mrlyrs::math::{six, three, two};
-use mrlyrs::num::graph::{self, census, roles, Layout as Relax, Network, Role};
 use wasm_bindgen::prelude::*;
 
 const LIMIT: u128 = 20000;
@@ -59,9 +59,9 @@ fn bound(
         });
     }
     Ok(match kind {
-        "core" => formulas::fill(code, number, dim, level, base)?,
-        "tunnel" => formulas::void(code, number, dim, level, base)?,
-        _ => formulas::fill(code, number, dim, level, base)? << dim,
+        "core" => counts::fill(code, number, dim, level, base)?,
+        "tunnel" => counts::void(code, number, dim, level, base)?,
+        _ => counts::fill(code, number, dim, level, base)? << dim,
     })
 }
 

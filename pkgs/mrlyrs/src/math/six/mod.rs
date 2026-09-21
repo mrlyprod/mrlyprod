@@ -17,8 +17,6 @@ pub mod renderer;
 pub mod serializer;
 /// The ghost star of the hexagonal cut stack: the arm ink law, the background and the cell-frame decay.
 pub mod star;
-/// The random 3d tiles flattened through their projections.
-pub mod tile;
 /// The pieces, holes and enclosed voids of a hex slice's fill.
 pub mod topology;
 
@@ -66,5 +64,4 @@ pub use painter::paint;
 pub use raster::raster;
 pub use renderer::{svg, triangles};
 pub use serializer::{from_json, to_json};
-pub use tile::{build as build_tile, random_tile, HexTile};
 pub use topology::{components, giant, giant_network, holes, rim_holes, spectral_exponent};

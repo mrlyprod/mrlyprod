@@ -1,7 +1,7 @@
 use crate::{checked, code_of, Fault, Pixels};
-use mrlylab::moire::{pairs, presets, render};
-use mrlylab::press;
 use mrlyrs::core::Colorizer;
+use mrlyrs::math::moire::{pairs, presets, render};
+use mrlyrs::math::press;
 use wasm_bindgen::prelude::*;
 
 /// Lists the first members of a design in the sequence press, each as a decimal string.

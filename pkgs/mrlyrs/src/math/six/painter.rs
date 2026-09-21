@@ -1,7 +1,7 @@
 use super::models::Cell6d;
 use crate::core::cell::mapping;
+use crate::core::cell::Mode;
 use crate::core::colors::Color;
-use crate::core::enums::Mode;
 use std::collections::HashMap;
 
 /// Colors each triangle by its type through the custom or default mapping in the given or type mode.

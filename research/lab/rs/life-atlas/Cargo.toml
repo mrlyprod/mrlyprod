@@ -6,4 +6,4 @@ edition.workspace = true
 
 [dependencies]
 mrlyrs.workspace = true
-mrlylab.workspace = true
+atlas.workspace = true

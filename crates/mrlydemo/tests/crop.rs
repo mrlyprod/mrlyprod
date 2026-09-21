@@ -1,5 +1,5 @@
 use mrlydemo::crop::{crop_circle, crop_collapse};
-use mrlyrs::core::json::parse;
+use mrlyrs::core::error::parse;
 
 struct Circle {
     seen: Vec<u32>,

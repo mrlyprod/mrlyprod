@@ -1,9 +1,29 @@
 use super::colors::{Color, ALPHA, BLACK, BLUE, GREEN, RED, WHITE};
-use super::enums::Mode;
-use super::errors::{value_error, Result};
+use super::error::{value_error, Result};
 use super::state;
 use super::tensor::{Dtype, Tensor};
 use std::collections::HashMap;
+
+/// The ways paint picks a color within a type's palette.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Mode {
+    /// The first palette color, always.
+    Type,
+    /// The color each cell's tag indexes.
+    Tag,
+    /// The color the flat position indexes.
+    Index,
+    /// The colors cycled in encounter order.
+    Enumerate,
+    /// A random palette color per cell.
+    Random,
+    /// The color the row index picks.
+    Row,
+    /// The color the column index picks.
+    Column,
+    /// The color the depth index picks.
+    Depth,
+}
 
 /// A grid of type bytes with optional per-cell colors and tags.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -359,8 +379,8 @@ pub fn mosaic(mask: &Tensor, cells: &[Cell]) -> Result<Cell> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::atoms;
     use crate::core::state::{guard, seed};
+    use crate::math::atoms;
     #[test]
     fn rot90_map_matches_tensor() {
         let t = Tensor::of((0..24).map(|v| v as u8).collect(), vec![2, 3, 4]);

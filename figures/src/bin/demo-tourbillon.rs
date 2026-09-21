@@ -1,8 +1,8 @@
 use mrlyfig::board::Board;
 use mrlyfig::ink::Ramp;
 use mrlyfig::{field, ink, save};
-use mrlyrs::core::errors::Result;
-use mrlyrs::num::tourbillon;
+use mrlyrs::core::error::Result;
+use mrlyrs::math::tourbillon;
 
 const TOP: usize = 55;
 const RASTER: usize = 1024;

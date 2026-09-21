@@ -1,6 +1,6 @@
 use crate::Fault;
 use mrlyrs::core::{json, Json};
-use mrlyrs::num::tourbillon as spun;
+use mrlyrs::math::tourbillon as spun;
 use wasm_bindgen::prelude::*;
 
 const EYE_CAP: usize = 60;

@@ -1,6 +1,6 @@
 use crate::census::{self, Census, CHAMPIONS};
 use crate::rows::{Row, Sheet, Stop, CAP, CEILING, DEEP};
-use mrlylab::ledger::Tier;
+use ledger::Tier;
 
 pub const BANDS: [i128; 5] = [10, 100, 1_000, 10_000, CEILING];
 pub const TAIL: i128 = 30_000;

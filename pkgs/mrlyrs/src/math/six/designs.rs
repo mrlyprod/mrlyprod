@@ -1,6 +1,6 @@
 use super::geometry::{cut, iso, pro};
 use super::models::Cell6d;
-use crate::core::errors::Result;
+use crate::core::error::Result;
 use crate::math::bang::universe::Code;
 use crate::math::three;
 

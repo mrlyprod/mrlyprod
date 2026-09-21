@@ -1,6 +1,7 @@
+use crate::space::Pack;
 use crate::{Fault, Grid};
 use mrlyrs::core::json;
-use mrlyrs::math::space::{Pack, Vec3};
+use mrlyrs::math::three::Vec3;
 use mrlyrs::num::sieve;
 use wasm_bindgen::prelude::*;
 

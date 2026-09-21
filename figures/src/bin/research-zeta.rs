@@ -1,5 +1,5 @@
 use mrlyfig::{ink, plot, save, Board, Frame};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::num::design::elements;
 use mrlyrs::num::zeta::{Complex, Line};
 

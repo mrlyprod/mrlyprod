@@ -1,6 +1,6 @@
 use mrlyfig::board::{Board, Frame};
 use mrlyfig::{ink, save, Grid};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::core::Color;
 use mrlyrs::core::Rng;
 use mrlyrs::math::two::designs;

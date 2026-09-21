@@ -88,7 +88,7 @@ Words, not letters. One word per thing, the same word everywhere. Letters live o
 - Keys: `dim`, `base`, `code`, `measure`, `axis`.
 - `base` elides at 2, and the design half obeys the bang code law.
 - `measure` is one of `fills`, `voids`, `surface`, `peak`, `heights`, `vertices`, `edges`, `faces`, `euler`, `triangles`, `holes`, `pieces`; `axis` is `level` or `side`.
-- Carrier: `name::Sequence { dim, base, code, measure, axis }`; `mrlylab::ledger::Key::named` builds one and `Key::id` hashes it to the row's anchor.
+- Carrier: `name::Sequence { dim, base, code, measure, axis }`; `ledger::Key::named` builds one and `Key::id` hashes it to the row's anchor.
 - The carpet's odd-side fills are `{"kind":"sequence","dim":2,"code":7,"measure":"fills","axis":"side"}`, file `sequence_dim=2_code=7_measure=fills_axis=side`, id `8a9e4ce8`.
 
 ## KIND TILE
@@ -99,7 +99,7 @@ Words, not letters. One word per thing, the same word everywhere. Letters live o
 - `level` elides at 1, `turn` when nothing turns, `anti` when no slot swaps, `flip` and `invert` at false.
 - Classics fold to their codes: Carpet 7, Net 14, Htree 3, Vtree 5, Void 9, Point 8, Dust 1, Hline 12, Vline 10, Star 6. Codes sit in the plane, 0 to 15.
 - A lone anti folds into `invert`; anti is dead on a special tile; width, height and base never print and the size law rebuilds them.
-- Carrier: `name::Tile`; `Tile::of` folds a `mrlyrs::core::tile::Tile` and `Tile::recipe` builds one back, resized and checked.
+- Carrier: `name::Tile`; `Tile::of` folds a `mrlyrs::gen::recipe::Tile` and `Tile::recipe` builds one back, resized and checked.
 - Examples: `{"kind":"tile","code":7,"side":3,"level":2}` the starter carpet, `{"kind":"tile","code":3,"side":5,"turn":1,"invert":true}`, `{"kind":"tile","magic":[7,14],"side":[3,5],"turn":[0,2],"anti":[false,true],"invert":true}`, `{"kind":"tile","special":5,"factor":3,"side":5,"flip":true}`, `{"kind":"tile","mosaic":[7,14,5],"factor":3,"side":3,"turn":[0,1,0],"anti":[false,false,true],"invert":true}`.
 
 ## KIND WORD

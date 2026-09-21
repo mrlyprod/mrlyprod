@@ -1,9 +1,9 @@
 use mrlyfig::board::{Board, Frame};
 use mrlyfig::ink::Ramp;
 use mrlyfig::{field, ink, save};
-use mrlylab::moire::presets::{self, Preset};
-use mrlylab::moire::sample;
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
+use mrlyrs::math::moire::presets::{self, Preset};
+use mrlyrs::math::moire::sample;
 
 const LIMIT: usize = 9;
 const LAYERS: usize = 5;

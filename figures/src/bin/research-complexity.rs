@@ -1,8 +1,8 @@
 use mrlyfig::{ink, plot, save, Board};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
+use mrlyrs::math::spectrum::{laplacian_spectrum, multiplicity};
 use mrlyrs::math::two::core_graph;
 use mrlyrs::math::two::designs;
-use mrlyrs::num::spectrum::{laplacian_spectrum, multiplicity};
 
 const LEVEL: usize = 6;
 

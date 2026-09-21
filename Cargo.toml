@@ -21,10 +21,11 @@ codegen-units = 16
 strip = false
 
 [workspace.dependencies]
-mrlylab = { path = "crates/mrlylab", version = "0.3.0" }
 mrlyfig = { path = "crates/mrlyfig", version = "0.3.0" }
 mrlydemo = { path = "crates/mrlydemo", version = "0.3.0" }
 mrlyrs = { path = "pkgs/mrlyrs", version = "0.2.0" }
+ledger = { path = "research/lab/rs/ledger", version = "0.3.0" }
+atlas = { path = "research/lab/rs/atlas", version = "0.3.0" }
 num-bigint = "0.4"
 num-rational = "0.4"
 faer = "0.24"

@@ -1,8 +1,8 @@
 use super::models::Cell6d;
 use super::{Orientation, Projection};
-use crate::core::errors::Result;
+use crate::core::error::Result;
 use crate::core::json;
-use crate::math::dim::serializer::parse;
+use crate::math::cell::serializer::parse;
 use crate::math::two;
 
 fn projection_name(p: Projection) -> &'static str {

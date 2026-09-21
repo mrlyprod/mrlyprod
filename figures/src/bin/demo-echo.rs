@@ -1,5 +1,5 @@
 use mrlyfig::{ink, plot, save, Board, Frame};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::num::design;
 
 const BASE: u64 = 10;

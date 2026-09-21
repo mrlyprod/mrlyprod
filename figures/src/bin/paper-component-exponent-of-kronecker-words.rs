@@ -1,5 +1,5 @@
 use mrlyfig::{ink, save, Board, Grid};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::math::bang::{word, MagicLayer};
 use mrlyrs::math::name::Bang;
 

@@ -1,12 +1,12 @@
 use super::Cell3d;
 use crate::core::cell::remap;
-use crate::core::errors::{value_error, Result};
+use crate::core::error::{value_error, Result};
 use crate::core::tensor::Tensor;
-use crate::math::dim::geometry;
-use crate::math::dim::models::{dtype_for, Cell2d};
+use crate::math::cell::geometry;
+use crate::math::cell::models::{dtype_for, Cell2d};
 use std::sync::OnceLock;
 
-pub use crate::math::dim::geometry::{magic, mosaic, perforate};
+pub use crate::math::cell::geometry::{magic, mosaic, perforate};
 
 /// Returns the 24 rotation triples that reach each distinct cube orientation.
 pub fn orientations() -> &'static Vec<(usize, usize, usize)> {
@@ -227,7 +227,7 @@ mod tests {
     #[test]
     fn extrude_undoes_slice_on_every_axis() {
         use crate::core::cell::mapping;
-        use crate::core::enums::Mode;
+        use crate::core::cell::Mode;
         let flat = two::carpet(3, 2)
             .unwrap()
             .layers()
@@ -256,7 +256,7 @@ mod tests {
     #[test]
     fn extrude_carries_colors_and_tags() {
         use crate::core::cell::mapping;
-        use crate::core::enums::Mode;
+        use crate::core::cell::Mode;
         let flat = two::carpet(3, 1)
             .unwrap()
             .layers()

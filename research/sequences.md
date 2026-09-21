@@ -2,7 +2,7 @@
 
 Integer sequences fall out of the fractal work: cell counts, coprimality counts, Euler characteristics, design counts. This page is the ledger they are cited from. Every entry below meets the same standard, and nothing is listed that does not.
 
-The registry behind this page is `mrlylab::ledger`, which reads every measure of every design as a sequence and renders this page through `cargo run -p mrlylab --bin ledger`; the b-files behind the submitted entries live in `lab/rs/oeis-terms`. The [sequences demo](../site/demos/sequences/) searches the same registry live in the browser: type terms, a name, a record or a code and read the design that writes them; the [tour](../site/demos/tour/) walks a dozen of these sequences with a live picture each, the odd-side law first. The formal census of these sequences, with the fill law, the general exposed-face recurrence and the A056040 identification, is the [sequence-census paper](https://github.com/carlomitchener/carlomitchener/tree/main/research/sequence-census). The fractal work itself stays on [the front page](README.md) and the pages that cite this ledger.
+The registry behind this page is `ledger`, which reads every measure of every design as a sequence and renders this page through `cargo run -p ledger`; the b-files behind the submitted entries live in `lab/rs/oeis-terms`. The [sequences demo](../site/demos/sequences/) searches the same registry live in the browser: type terms, a name, a record or a code and read the design that writes them; the [tour](../site/demos/tour/) walks a dozen of these sequences with a live picture each, the odd-side law first. The formal census of these sequences, with the fill law, the general exposed-face recurrence and the A056040 identification, is the [sequence-census paper](https://github.com/carlomitchener/carlomitchener/tree/main/research/sequence-census). The fractal work itself stays on [the front page](README.md) and the pages that cite this ledger.
 
 ## WHY IT MATTERS
 
@@ -89,7 +89,7 @@ This sequence is A398348, whose data is that run verbatim, with a b-file to `n =
 
 ### The odd-side fills
 
-At odd side `2k - 1` an axis splits into `k` low positions and `k - 1` high, so a base-2 design fills `sum over its corners of k^(zeros) (k - 1)^(ones)`, a polynomial in `k` of degree `dim`; **Proved** in [Discoveries](/research/discoveries/), generator `mrlyrs::math::formulas::counting`. The six designs of the plane read as the polygonal numbers, and the dust, the sponge and the solid of the cube as the cubes, the divisor counts of `240^n` and the odd cubes. Every row below is read by `mrlylab::ledger::terms` from `k = 2`, the first odd side past the unit cell, and checked term by term against its record; `id` is the sequence name's eight-hex digest, the anchor of the row, and `shift` is the record's index less the ledger's `k`.
+At odd side `2k - 1` an axis splits into `k` low positions and `k - 1` high, so a base-2 design fills `sum over its corners of k^(zeros) (k - 1)^(ones)`, a polynomial in `k` of degree `dim`; **Proved** in [Discoveries](/research/discoveries/), generator `mrlyrs::math::counts::counting`. The six designs of the plane read as the polygonal numbers, and the dust, the sponge and the solid of the cube as the cubes, the divisor counts of `240^n` and the odd cubes. Every row below is read by `ledger::terms` from `k = 2`, the first odd side past the unit cell, and checked term by term against its record; `id` is the sequence name's eight-hex digest, the anchor of the row, and `shift` is the record's index less the ledger's `k`.
 
 | id | design | key | closed form | terms from `k = 2` | record | shift | status |
 |---|---|---|---|---|---|---|---|
@@ -111,7 +111,7 @@ The odd-side fill of a design is a product of norm forms, one per irreducible fa
 
 ### The level axis
 
-At side 3 the fill of a level is the tile's fill to the power `level` and the voids are the grid less the fill, while the exposed faces obey `V(level + 1) = occ V(level) - 2 sum P S^level` over the axes, `occ` the tile's filled cells, `P` its adjacent filled pairs along the axis and `S` the cross positions whose two end cells are both filled; `mrlyrs::math::formulas::exposure` closes it in every dimension and `mrlyrs::math::formulas::exposure_recurrence` spells the recurrence. **Proved**, and checked against the rendered census on every code of the cube to level 3. The sponge's slice count is A299916 from its second term, its recurrence **Proved** by the carry automaton on the cuts note, the census checked to level 4 by `mrlyrs::math::formulas::cut_fills`.
+At side 3 the fill of a level is the tile's fill to the power `level` and the voids are the grid less the fill, while the exposed faces obey `V(level + 1) = occ V(level) - 2 sum P S^level` over the axes, `occ` the tile's filled cells, `P` its adjacent filled pairs along the axis and `S` the cross positions whose two end cells are both filled; `mrlyrs::math::counts::exposure` closes it in every dimension and `mrlyrs::math::counts::exposure_recurrence` spells the recurrence. **Proved**, and checked against the rendered census on every code of the cube to level 3. The sponge's slice count is A299916 from its second term, its recurrence **Proved** by the carry automaton on the cuts note, the census checked to level 4 by `mrlyrs::math::counts::cut_fills`.
 
 | id | design | key | closed form | terms from level 1 | record | shift | status |
 |---|---|---|---|---|---|---|---|
@@ -231,7 +231,7 @@ Every OEIS entry this ledger holds, read against the live entry on its name, its
 
 ## DOCS
 
-- `mrlylab::ledger` - the registry: every measure of every design as a sequence, the curated records with their shifts, and this page, rendered by `cargo run -p mrlylab --bin ledger` and pinned by a test.
+- `ledger` - the registry: every measure of every design as a sequence, the curated records with their shifts, and this page, rendered by `cargo run -p ledger` and pinned by a test.
 - `lab/rs/oeis-terms` - the b-files behind the submitted entries: A396934 to `n = 20`, A398348 to `n = 14`.
 - `lab/rs/design-census` - the fill-class and coprimality censuses behind the established entries.
 - `lab/py/slice-ladder-controls` - the generator behind both candidate rows.

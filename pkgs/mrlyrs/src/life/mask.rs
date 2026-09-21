@@ -1,4 +1,4 @@
-use crate::core::errors::{value_error, Result};
+use crate::core::error::{value_error, Result};
 use crate::core::tensor::Tensor;
 use crate::math::bang::factory;
 use crate::math::bang::universe::Code;

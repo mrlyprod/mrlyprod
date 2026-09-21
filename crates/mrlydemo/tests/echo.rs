@@ -1,5 +1,5 @@
 use mrlydemo::echo::*;
-use mrlyrs::core::json::parse;
+use mrlyrs::core::error::parse;
 use mrlyrs::num::design;
 
 fn read(base: u32, mask: u32, depth: usize, subtract: bool) -> (Echo, mrlyrs::core::Json) {

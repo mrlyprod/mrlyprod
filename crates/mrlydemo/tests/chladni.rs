@@ -1,6 +1,6 @@
 use mrlydemo::chladni::*;
 use mrlydemo::life::life_noise;
-use mrlyrs::core::json::parse;
+use mrlyrs::core::error::parse;
 use mrlyrs::core::Tensor;
 use mrlyrs::life::{design_mask, next_grid, Boundary};
 use mrlyrs::math::two::Cell2d;

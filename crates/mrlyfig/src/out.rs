@@ -1,6 +1,6 @@
 use crate::board::Board;
 use crate::ink;
-use mrlyrs::core::errors::{value_error, Result};
+use mrlyrs::core::error::{value_error, Result};
 use std::path::PathBuf;
 
 // OUTPUT

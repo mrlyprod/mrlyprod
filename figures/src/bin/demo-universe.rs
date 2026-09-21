@@ -1,6 +1,6 @@
 use mrlyfig::{ink, iso, save, Board, Color};
 use mrlyrs::core::colors::{shades, INDIGO};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::math::bang::bang;
 use mrlyrs::math::three::designs;
 use mrlyrs::math::three::faces::quads;

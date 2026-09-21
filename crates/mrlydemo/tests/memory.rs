@@ -1,6 +1,6 @@
 use mrlydemo::memory::*;
 use mrlydemo::two::two_grid;
-use mrlyrs::core::json::parse;
+use mrlyrs::core::error::parse;
 
 fn read(dimension: usize, width: usize, code: &str, levels: usize) -> mrlyrs::core::Json {
     parse(&memory_read(dimension, width, code, levels).unwrap()).unwrap()

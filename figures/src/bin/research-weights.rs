@@ -1,5 +1,5 @@
 use mrlyfig::{ink, plot, save, Board, Frame};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::core::Color;
 
 const LEVEL: u32 = 8;

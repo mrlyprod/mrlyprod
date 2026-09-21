@@ -1,4 +1,4 @@
-use crate::core::errors::{value_error, Result};
+use crate::core::error::{value_error, Result};
 use crate::core::tensor::Tensor;
 use crate::num::classics::gcd;
 
@@ -662,7 +662,7 @@ pub fn crossing_tree(radius: u64, number: u64, keep: &[bool]) -> Shell {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::atoms;
+    use crate::math::atoms;
     use crate::math::bang::factory::create;
 
     struct Lcg(u64);

@@ -1,5 +1,5 @@
 use mrlyfig::{ink, plot, save, Board, Frame};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::core::Color;
 
 const RE_WIDTH: f64 = 1.00;

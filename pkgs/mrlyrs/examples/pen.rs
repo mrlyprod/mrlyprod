@@ -1,4 +1,4 @@
-use mrlyrs::font::letters::{digits, extras, lowers, specials, uppers};
+use mrlyrs::font::glyph::{digits, extras, lowers, specials, uppers};
 use mrlyrs::font::{draft, floor, glyph, strokes, trim, Glyph};
 
 fn key(c: char) -> String {

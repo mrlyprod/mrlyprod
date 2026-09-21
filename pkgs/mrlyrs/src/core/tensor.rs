@@ -282,11 +282,11 @@ impl Tensor {
     /// Drops one axis by fixing it at an index.
     ///
     /// ```
-    /// let sponge = mrlyrs::core::atoms::carpet_3d(3);
-    /// assert_eq!(sponge.slice(2, 0).unwrap(), mrlyrs::core::atoms::carpet_2d(3));
+    /// let sponge = mrlyrs::math::atoms::carpet_3d(3);
+    /// assert_eq!(sponge.slice(2, 0).unwrap(), mrlyrs::math::atoms::carpet_2d(3));
     /// ```
     pub fn slice(&self, axis: usize, index: usize) -> crate::core::Result<Tensor> {
-        use crate::core::errors::value_error;
+        use crate::core::error::value_error;
         if axis >= self.shape.len() {
             return value_error("slice axis is past the tensor's rank.");
         }
@@ -356,7 +356,7 @@ impl Tensor {
         wrap: bool,
         dtype: Dtype,
     ) -> crate::core::Result<Tensor> {
-        use crate::core::errors::value_error;
+        use crate::core::error::value_error;
         if mask.shape.len() != self.shape.len() {
             return value_error("mask must have the same number of dimensions.");
         }
@@ -465,7 +465,7 @@ impl Tensor {
     }
     /// Averages every position over its masked neighborhood, rounded.
     pub fn blur(&self, mask: &Tensor, wrap: bool) -> crate::core::Result<Tensor> {
-        use crate::core::errors::value_error;
+        use crate::core::error::value_error;
         if mask.shape.len() != self.shape.len() {
             return value_error("mask must have the same number of dimensions.");
         }
@@ -523,7 +523,7 @@ impl Tensor {
     }
     /// Stamps the value wherever the tiled mask is nonzero.
     pub fn perforate(&self, mask: &Tensor, value: u8) -> crate::core::Result<Tensor> {
-        use crate::core::errors::value_error;
+        use crate::core::error::value_error;
         if mask.shape.len() != self.shape.len() {
             return value_error("mask must have the same number of dimensions.");
         }
@@ -548,11 +548,68 @@ impl Tensor {
         }
         Ok(out)
     }
+    /// Counts the cells holding one value.
+    pub fn count(&self, value: u8) -> usize {
+        self.bytes().iter().filter(|&&v| v == value).count()
+    }
+    /// Counts the faces where filled cells meet empty cells or the boundary: perimeter in 2d, surface in 3d.
+    pub fn exposed(&self) -> u128 {
+        let dims = self.shape.clone();
+        let rank = dims.len();
+        let mut total: u128 = 0;
+        for flat in 0..self.size() {
+            if self.bytes()[flat] == 0 {
+                continue;
+            }
+            let mut rem = flat;
+            let mut coord = Vec::with_capacity(rank);
+            for axis in 0..rank {
+                let stride: usize = dims[(axis + 1)..].iter().product();
+                coord.push(rem / stride);
+                rem %= stride;
+            }
+            for axis in 0..rank {
+                if coord[axis] == 0 || {
+                    let mut lo = coord.clone();
+                    lo[axis] -= 1;
+                    self.get(&lo) == 0
+                } {
+                    total += 1;
+                }
+                if coord[axis] + 1 == dims[axis] || {
+                    let mut hi = coord.clone();
+                    hi[axis] += 1;
+                    self.get(&hi) == 0
+                } {
+                    total += 1;
+                }
+            }
+        }
+        total
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::math::atoms;
+    #[test]
+    fn exposed_is_perimeter_in_2d() {
+        assert_eq!(atoms::ones_2d(1).exposed(), 4);
+        assert_eq!(atoms::ones_2d(3).exposed(), 12);
+        assert_eq!(atoms::carpet_2d(3).exposed(), 16);
+    }
+    #[test]
+    fn exposed_is_surface_in_3d() {
+        assert_eq!(atoms::ones_3d(1).exposed(), 6);
+        assert_eq!(atoms::ones_3d(2).exposed(), 24);
+    }
+    #[test]
+    fn count_tallies_one_value() {
+        let c = atoms::carpet_2d(3);
+        assert_eq!(c.count(1), 8);
+        assert_eq!(c.count(0), 1);
+    }
     #[test]
     fn kron_matches_numpy_semantics() {
         let a = Tensor::of(vec![1, 0, 0, 1], vec![2, 2]);
@@ -681,7 +738,7 @@ mod tests {
     #[test]
     fn slice_commutes_with_the_fractal() {
         for (n, level) in [(3, 2), (5, 2), (3, 3)] {
-            let seed = crate::core::atoms::xtree_3d(n);
+            let seed = crate::math::atoms::xtree_3d(n);
             for axis in 0..3 {
                 let deep = seed.fractal(level).slice(axis, 0).unwrap();
                 let flat = seed.slice(axis, 0).unwrap().fractal(level);

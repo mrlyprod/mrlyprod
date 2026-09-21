@@ -1,4 +1,4 @@
-use crate::core::errors::Result;
+use crate::core::error::Result;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
@@ -7,12 +7,8 @@ pub(crate) mod text;
 
 /// The bang name: a design code pinned to its dimension, lattice and base.
 pub mod bang;
-/// The rule name: a life rule's birth and survival counts and whether the edge wraps.
-pub mod rule;
 /// The sequence name: a design's reading pinned to its measure and axis.
 pub mod sequence;
-/// The tile name: a full tile recipe folded to its one canonical object.
-pub mod tile;
 /// The word name: an ordered list of design letters, each at its own side.
 pub mod word;
 
@@ -103,15 +99,15 @@ macro_rules! kind {
 pub(crate) use kind;
 
 pub use bang::{Bang, Lattice};
-pub use rule::Rule;
 pub use sequence::Sequence;
-pub use tile::{classic_code, Tile};
 pub use word::Word;
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::gen::name::Tile;
     use crate::life::Counts;
+    use crate::life::Rule;
 
     #[test]
     fn every_kind_has_one_canonical_string_and_one_id() {

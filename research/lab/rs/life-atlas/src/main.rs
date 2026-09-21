@@ -1,5 +1,5 @@
-use mrlylab::atlas::run::heat_frame;
-use mrlylab::atlas::{
+use atlas::run::heat_frame;
+use atlas::{
     block_split, census, factors, fate_table, first_negative_lobe, mask_tensor, mini, pack, Census,
     Reading, Run,
 };

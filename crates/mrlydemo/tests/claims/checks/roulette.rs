@@ -1,5 +1,5 @@
-use mrlylab::roulette::{nodes, spread, Nodes};
-use mrlyrs::num::spirograph::{pencils, track, Pencil};
+use mrlyrs::math::roulette::{nodes, spread, Nodes};
+use mrlyrs::math::spirograph::{pencils, track, Pencil};
 
 const TOL: f64 = 4e-4;
 

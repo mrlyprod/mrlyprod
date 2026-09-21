@@ -1,5 +1,5 @@
 use super::universe::Code;
-use crate::core::errors::{value_error, Result};
+use crate::core::error::{value_error, Result};
 use crate::core::Tensor;
 use crate::math::name::{Bang, Named};
 use crate::math::rules;

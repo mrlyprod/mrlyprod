@@ -1,7 +1,7 @@
 use mrlydemo::census::{
     census_champions, census_misses, census_report, census_walk, census_window, census_writers,
 };
-use mrlyrs::core::json::parse;
+use mrlyrs::core::error::parse;
 use mrlyrs::core::Json;
 
 const TIERS: [(&str, u64); 4] = [

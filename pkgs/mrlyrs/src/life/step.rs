@@ -1,8 +1,8 @@
 use super::Boundary;
 use crate::core::cell::Cell;
-use crate::core::errors::Result;
+use crate::core::error::Result;
 use crate::core::tensor::Tensor;
-use crate::math::dim::models::counting_dtype;
+use crate::math::cell::models::counting_dtype;
 use crate::math::two::Cell2d;
 
 /// Advances a grid one generation under birth and survive counts, a neighbor mask and a boundary.

@@ -1,5 +1,5 @@
 use super::colors::{gradient, shades, Color, BLACK, BLUE, ORANGE, RED, WHITE, YELLOW};
-use super::errors::Result;
+use super::error::Result;
 
 /// A rule that turns counter values into colors.
 #[derive(Clone, Debug)]

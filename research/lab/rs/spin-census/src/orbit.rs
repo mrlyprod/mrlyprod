@@ -1,5 +1,5 @@
 use crate::design::{floats, plane, BASE};
-use mrlyrs::num::spin::harmonics;
+use mrlyrs::math::spin::harmonics;
 
 pub fn spectrum(code: u128, level: usize, rings: usize, orders: usize) -> Vec<f64> {
     let grid = plane(code, BASE, level);

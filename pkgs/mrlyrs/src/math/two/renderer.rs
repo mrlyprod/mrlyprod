@@ -1,8 +1,8 @@
 use super::Cell2d;
 use crate::core::cell::mapping;
-use crate::core::enums::Mode;
-use crate::core::errors::Result;
-use crate::math::dim::push_glyph;
+use crate::core::cell::Mode;
+use crate::core::error::Result;
+use crate::math::cell::push_glyph;
 use std::collections::HashMap;
 
 fn painted(cell: &Cell2d) -> Vec<[u8; 4]> {

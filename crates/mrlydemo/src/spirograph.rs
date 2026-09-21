@@ -1,7 +1,7 @@
 use crate::Fault;
 use mrlyrs::core::{json, Json};
-use mrlyrs::num::spirograph as roulette;
-use mrlyrs::num::spirograph::{Kind, Pencil, Track};
+use mrlyrs::math::spirograph as roulette;
+use mrlyrs::math::spirograph::{Kind, Pencil, Track};
 use wasm_bindgen::prelude::*;
 
 #[allow(clippy::too_many_arguments)]

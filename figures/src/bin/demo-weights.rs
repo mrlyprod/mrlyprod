@@ -1,7 +1,7 @@
 use mrlyfig::board::{Board, Frame};
 use mrlyfig::ink::Ramp;
 use mrlyfig::{field, ink, save};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::math::two;
 
 const CODE: u128 = 495;

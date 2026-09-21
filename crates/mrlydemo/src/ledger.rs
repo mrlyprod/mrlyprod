@@ -1,11 +1,11 @@
 use crate::{checked, code_of, Fault};
-use mrlylab::ledger::{
+use ledger::{
     self, identify, keys, numbers, search, sequence, Axis, Key, Measure, Sequence, Tier, BUDGET,
     RECORDS,
 };
 use mrlyrs::core::{json, Json};
 use mrlyrs::math::bang::factory;
-use mrlyrs::math::formulas;
+use mrlyrs::math::counts;
 use std::collections::BTreeMap;
 use std::sync::{Mutex, OnceLock};
 use wasm_bindgen::prelude::*;
@@ -172,7 +172,7 @@ pub fn ledger_profile(
     level: u32,
 ) -> Result<Vec<String>, Fault> {
     let tile = factory::create(checked(code, dimension, base)?, number, dimension, base, 1)?;
-    Ok(formulas::profile_of_tile(&tile, level)?
+    Ok(counts::profile_of_tile(&tile, level)?
         .iter()
         .map(|count| count.to_string())
         .collect())

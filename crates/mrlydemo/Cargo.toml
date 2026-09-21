@@ -13,7 +13,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 mrlyrs.workspace = true
-mrlylab.workspace = true
+ledger.workspace = true
 wasm-bindgen = "=0.2.125"
 
 [package.metadata.wasm-pack.profile.release]

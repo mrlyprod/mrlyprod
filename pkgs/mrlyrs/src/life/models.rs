@@ -1,6 +1,6 @@
 use super::sequence::Counts;
 use super::{Boundary, Fate};
-use crate::core::errors::Result;
+use crate::core::error::Result;
 use crate::math::two::Cell2d;
 
 /// The rulebook of a life run.

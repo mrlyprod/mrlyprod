@@ -1,5 +1,5 @@
 use super::factory::{self, MagicLayer};
-use crate::core::errors::{value_error, Result};
+use crate::core::error::{value_error, Result};
 use crate::core::Tensor;
 use crate::math::name::Bang;
 

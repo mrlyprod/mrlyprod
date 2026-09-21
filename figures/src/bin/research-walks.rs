@@ -1,5 +1,5 @@
 use mrlyfig::{ink, plot, save, Board, Frame};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::core::{Color, Rng};
 use mrlyrs::math::two::designs;
 use mrlyrs::math::two::Cell2d;

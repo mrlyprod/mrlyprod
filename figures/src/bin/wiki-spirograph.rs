@@ -1,6 +1,6 @@
 use mrlyfig::{ink, save, Board};
-use mrlyrs::core::errors::Result;
-use mrlyrs::num::spirograph::{frame as bounds, point, track, Kind, Pencil};
+use mrlyrs::core::error::Result;
+use mrlyrs::math::spirograph::{frame as bounds, point, track, Kind, Pencil};
 
 const RING: usize = 7;
 const WHEEL: usize = 3;

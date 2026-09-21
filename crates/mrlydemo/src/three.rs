@@ -1,7 +1,7 @@
+use crate::space::Pack;
 use crate::{code_of, Fault};
 use mrlyrs::core::json;
-use mrlyrs::math::formulas;
-use mrlyrs::math::space::Pack;
+use mrlyrs::math::counts;
 use mrlyrs::math::three::{self, Cell3d};
 use wasm_bindgen::prelude::*;
 
@@ -70,7 +70,7 @@ pub fn three_census(code: &str, number: usize, level: usize, base: usize) -> Res
 /// Counts the exposed faces of the cube at the level by exact recurrence, without building it.
 #[wasm_bindgen]
 pub fn three_surface(code: &str, number: usize, level: u32, base: usize) -> Result<String, Fault> {
-    Ok(formulas::surface(code_of(code)?, number, level, base)?.to_string())
+    Ok(counts::surface(code_of(code)?, number, level, base)?.to_string())
 }
 
 // DIAGONAL

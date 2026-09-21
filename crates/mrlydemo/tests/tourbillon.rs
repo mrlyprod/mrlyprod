@@ -1,5 +1,5 @@
 use mrlydemo::tourbillon::*;
-use mrlyrs::core::json::parse;
+use mrlyrs::core::error::parse;
 
 fn read(
     top: usize,

@@ -1,10 +1,10 @@
 use super::Cell2d;
 use crate::core::cell::{remap, Cell};
-use crate::core::errors::{value_error, Result};
+use crate::core::error::{value_error, Result};
 use crate::core::tensor::{Dtype, Tensor};
 use crate::math::three::Cell3d;
 
-pub use crate::math::dim::geometry::{magic, mosaic, perforate};
+pub use crate::math::cell::geometry::{magic, mosaic, perforate};
 
 fn widest(cells: &[Cell2d]) -> Option<Dtype> {
     cells
@@ -103,7 +103,7 @@ pub fn to_3d(cell: &Cell2d) -> Cell3d {
 mod tests {
     use super::*;
     use crate::core::cell::mapping;
-    use crate::core::enums::Mode;
+    use crate::core::cell::Mode;
     use crate::math::two::designs;
     #[test]
     fn special_rotations_preserve_sum() {

@@ -1,6 +1,6 @@
 use super::factory::residue_corners;
 use super::universe::{permutations, Code};
-use crate::core::errors::{value_error, Result};
+use crate::core::error::{value_error, Result};
 use crate::num::classics::factorial;
 use std::collections::{BTreeSet, HashMap};
 

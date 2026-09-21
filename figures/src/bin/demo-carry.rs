@@ -1,6 +1,6 @@
 use mrlyfig::{ink, save, Board, Frame, Grid, Ramp};
-use mrlyrs::core::errors::Result;
-use mrlyrs::math::dim::carry;
+use mrlyrs::core::error::Result;
+use mrlyrs::math::counts::ladder;
 
 const BASES: [usize; 2] = [3, 5];
 const DIMS: [usize; 8] = [2, 3, 4, 5, 6, 7, 8, 9];
@@ -9,9 +9,9 @@ fn main() -> Result<()> {
     let mut board = Board::square();
     let area = board.frame(0.08);
     let panels = Grid::new(area, 4, 4, 0.05);
-    assert_eq!(carry::cap(3)?, 15);
-    assert_eq!(carry::cap(5)?, 11);
-    assert_eq!(carry::even_block(3, 3)?, vec![vec![6, 6], vec![1, 3]]);
+    assert_eq!(ladder::cap(3)?, 15);
+    assert_eq!(ladder::cap(5)?, 11);
+    assert_eq!(ladder::even_block(3, 3)?, vec![vec![6, 6], vec![1, 3]]);
     let mut drawn = 0usize;
     for (turn, base) in BASES.iter().enumerate() {
         let ramp = Ramp::tone(
@@ -23,7 +23,7 @@ fn main() -> Result<()> {
             },
         );
         for (step, dimension) in DIMS.iter().enumerate() {
-            let block = carry::even_block(*base, *dimension)?;
+            let block = ladder::even_block(*base, *dimension)?;
             let width = block.len();
             assert_eq!(width, dimension.div_ceil(2));
             let slot = turn * DIMS.len() + step;

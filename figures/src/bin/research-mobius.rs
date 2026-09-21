@@ -1,5 +1,5 @@
 use mrlyfig::{ink, plot, save, Board};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::num::factor::mobius;
 
 const LENGTH: u32 = 16;

@@ -1,0 +1,9 @@
+[package]
+name = "atlas"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+mrlyrs.workspace = true

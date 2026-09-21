@@ -1,5 +1,5 @@
 use mrlyfig::{ink, save, Board};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 
 const THREE: [usize; 20] = [
     0, 1, 2, 4, 6, 8, 11, 14, 18, 22, 27, 32, 38, 44, 50, 57, 64, 72, 81, 89,

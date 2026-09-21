@@ -1,9 +1,9 @@
 use super::edge_graph;
 use super::Cell3d;
-use crate::core::errors::Result;
-use crate::math::dim::census;
+use crate::core::error::Result;
+use crate::math::cell::census;
 
-pub use crate::math::dim::census::{edges, vertices};
+pub use crate::math::cell::census::{edges, vertices};
 
 /// The tally of a cube's sites.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -127,7 +127,7 @@ pub fn census(cell: &Cell3d) -> Result<Census> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::formulas;
+    use crate::math::counts;
     use crate::math::three::designs;
     #[test]
     fn census_matches_formulas() {
@@ -136,11 +136,11 @@ mod tests {
                 let cell = designs::create(code, 3, level as usize, 2).unwrap();
                 assert_eq!(
                     fills(&cell) as u128,
-                    formulas::fill(code, 3, 3, level, 2).unwrap()
+                    counts::fill(code, 3, 3, level, 2).unwrap()
                 );
                 assert_eq!(
                     surface(&cell),
-                    formulas::surface(code, 3, level, 2).unwrap(),
+                    counts::surface(code, 3, level, 2).unwrap(),
                     "code={code} l={level}"
                 );
             }

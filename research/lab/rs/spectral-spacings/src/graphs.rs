@@ -1,6 +1,6 @@
 use mrlyrs::core::{Rng, Tensor};
 use mrlyrs::math::bang::factory::{corners_to_code, residue_corners};
-use mrlyrs::num::graph::core_graph;
+use mrlyrs::math::graph::core_graph;
 use std::collections::HashMap;
 
 pub struct Graph {

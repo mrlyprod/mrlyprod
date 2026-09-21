@@ -1,4 +1,4 @@
-use mrlyrs::core::tile::Design;
+use mrlyrs::gen::recipe::Design;
 use mrlyrs::math::three::Cell3d;
 
 #[derive(Clone, Copy, PartialEq, Eq)]

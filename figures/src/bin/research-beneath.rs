@@ -1,5 +1,5 @@
 use mrlyfig::{ink, save, Board, Frame};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::num::radix::koch;
 
 const LEVEL: usize = 6;

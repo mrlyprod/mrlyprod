@@ -1,7 +1,7 @@
 use mrlyfig::board::Frame;
 use mrlyfig::{ink, save, Board, Grid};
-use mrlyrs::core::errors::Result;
-use mrlyrs::math::formulas::counting;
+use mrlyrs::core::error::Result;
+use mrlyrs::math::counts::counting;
 use mrlyrs::math::two::designs;
 
 const CODES: [u128; 6] = [1, 3, 7, 9, 11, 15];

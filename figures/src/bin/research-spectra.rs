@@ -1,6 +1,6 @@
 use mrlyfig::board::{Board, Frame};
 use mrlyfig::{hex, ink, save};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::core::Color;
 use mrlyrs::math::six;
 use mrlyrs::math::six::Cell6d;

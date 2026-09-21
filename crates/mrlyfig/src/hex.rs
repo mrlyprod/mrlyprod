@@ -1,5 +1,5 @@
 use crate::board::{Board, Frame};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::core::Color;
 use mrlyrs::math::six::geometry::orientation;
 use mrlyrs::math::six::Cell6d;

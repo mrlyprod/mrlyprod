@@ -1,10 +1,10 @@
 use mrlyfig::board::{Board, Frame};
 use mrlyfig::ink::Ramp;
 use mrlyfig::{field, ink, save};
-use mrlylab::moire::stack::stack;
-use mrlylab::moire::{Combine, Field, Lattice, Spec};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::core::Color;
+use mrlyrs::math::moire::stack::stack;
+use mrlyrs::math::moire::{Combine, Field, Lattice, Spec};
 
 const SCALES: usize = 20;
 const SHEET: usize = 1075;

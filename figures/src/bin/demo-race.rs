@@ -1,5 +1,5 @@
 use mrlyfig::{ink, save, Board, Color, Frame, Grid};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::core::Rng;
 use mrlyrs::math::two;
 

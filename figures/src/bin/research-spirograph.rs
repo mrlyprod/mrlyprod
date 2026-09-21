@@ -1,10 +1,10 @@
 use mrlyfig::{ink, plot, save, Board};
-use mrlylab::roulette;
-use mrlyrs::core::errors::Result;
-use mrlyrs::math::two;
-use mrlyrs::num::spirograph::{
+use mrlyrs::core::error::Result;
+use mrlyrs::math::roulette;
+use mrlyrs::math::spirograph::{
     cover, disc, distinct, nodes as law, pencils, trace, track, Cover, Pencil, Track,
 };
+use mrlyrs::math::two;
 use std::collections::HashSet;
 
 const CODE: u128 = 495;

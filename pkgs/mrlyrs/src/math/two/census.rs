@@ -1,9 +1,9 @@
 use super::edge_graph;
 use super::Cell2d;
-use crate::core::errors::Result;
-use crate::math::dim::census;
+use crate::core::error::Result;
+use crate::math::cell::census;
 
-pub use crate::math::dim::census::{edges, vertices};
+pub use crate::math::cell::census::{edges, vertices};
 
 /// One reading of a cell: its sites, its outline and its topology.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -75,7 +75,7 @@ pub fn census(cell: &Cell2d) -> Result<Census> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::formulas;
+    use crate::math::counts;
     use crate::math::two::designs;
     #[test]
     fn census_matches_formulas() {
@@ -84,12 +84,12 @@ mod tests {
                 let cell = designs::create(code, 3, level as usize, 0, 2).unwrap();
                 assert_eq!(
                     fills(&cell) as u128,
-                    formulas::fill(code, 3, 2, level, 2).unwrap(),
+                    counts::fill(code, 3, 2, level, 2).unwrap(),
                     "code={code} l={level}"
                 );
                 assert_eq!(
                     voids(&cell) as u128,
-                    formulas::void(code, 3, 2, level, 2).unwrap()
+                    counts::void(code, 3, 2, level, 2).unwrap()
                 );
             }
         }

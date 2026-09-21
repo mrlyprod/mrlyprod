@@ -6,7 +6,7 @@ The alphabet holds 108 characters: the uppers, their corner-rounded lowers, the 
 
 ## Parts
 
-- **glyphs** holds the raw bitmaps; **letters** builds them into glyphs.
+- **bitmaps** holds the raw bitmaps; **glyph** builds them into glyphs and trims them.
 - **pens** holds every glyph's hand-penned strokes; **paths** reads them and drafts new ones.
 - **raster** lays a text out as one 0/1 grid.
 - **animate** writes a text cell by cell, folds it into a stack, and loops the cycle.

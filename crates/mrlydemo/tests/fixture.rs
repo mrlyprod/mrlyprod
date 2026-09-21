@@ -25,7 +25,7 @@ use mrlydemo::two::*;
 use mrlydemo::volume::*;
 use mrlydemo::zeta::*;
 use mrlyrs::core::colors::{Color, DARK};
-use mrlyrs::core::json::parse;
+use mrlyrs::core::error::parse;
 
 fn column(rows: &mrlyrs::core::Json, key: &str) -> String {
     rows.as_array()

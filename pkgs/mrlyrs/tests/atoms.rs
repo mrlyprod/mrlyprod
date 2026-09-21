@@ -1,6 +1,6 @@
 mod tests {
-    use mrlyrs::core::atoms::*;
     use mrlyrs::core::tensor::Tensor;
+    use mrlyrs::math::atoms::*;
     use mrlyrs::math::bang::factory::{corners_to_code, create, residue_corners};
     use mrlyrs::math::bang::universe::Code;
     type Atom = fn(usize) -> Tensor;

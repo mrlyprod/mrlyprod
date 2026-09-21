@@ -1,5 +1,5 @@
 use mrlydemo::star::*;
-use mrlyrs::core::json::parse;
+use mrlyrs::core::error::parse;
 use mrlyrs::math::six::star::{arm_law, width_law, Star};
 
 fn read(layers: usize, half: usize) -> mrlyrs::core::Json {

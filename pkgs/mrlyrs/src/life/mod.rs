@@ -14,6 +14,8 @@ pub mod metrics;
 pub mod models;
 /// The PNG frames and the gif movie of grids and runs.
 pub mod render;
+/// The rule name: a life rule's birth and survival counts and whether the edge wraps.
+pub mod rule;
 /// The named sources of neighbor-count values, and the counts they lay down.
 pub mod sequence;
 /// The one-generation advance of a grid.
@@ -78,5 +80,6 @@ pub use mask::{design_mask, lattice_index, mask_offsets};
 pub use metrics::{churn, entropy};
 pub use models::{Config, Life};
 pub use render::{frames, frames_of, movie};
+pub use rule::Rule;
 pub use sequence::{counts, Counts, Sequence};
 pub use step::next_grid;

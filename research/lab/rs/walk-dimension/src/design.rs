@@ -2,7 +2,7 @@ use mrlyrs::core::Tensor;
 use mrlyrs::math::bang::baseq::axis_maps;
 use mrlyrs::math::bang::factory::{corners_to_code, residue_corners};
 use mrlyrs::math::bang::universe::permutations;
-use mrlyrs::num::graph::core_graph;
+use mrlyrs::math::graph::core_graph;
 use std::collections::BTreeSet;
 
 pub const BASE: usize = 3;

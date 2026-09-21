@@ -1,5 +1,5 @@
 use mrlyfig::{ink, save, Board, Grid, Ramp};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::num::prime::Sieve;
 
 const LIMIT: usize = 400;

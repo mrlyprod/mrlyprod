@@ -1,5 +1,5 @@
 use mrlyfig::{ink, save, Board, Grid};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::core::Color;
 use mrlyrs::math::bang::factory;
 use mrlyrs::math::shape::crossing_tree;

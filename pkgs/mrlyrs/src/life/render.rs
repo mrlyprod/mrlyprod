@@ -1,7 +1,7 @@
 use super::models::Life;
+use crate::core::cell::Mode;
 use crate::core::colors::{Color, BLACK, WHITE};
-use crate::core::enums::Mode;
-use crate::core::errors::{value_error, Result};
+use crate::core::error::{value_error, Result};
 use crate::math::two::{self, Cell2d};
 use std::collections::HashMap;
 

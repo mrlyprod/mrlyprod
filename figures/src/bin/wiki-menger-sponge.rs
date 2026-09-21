@@ -1,5 +1,5 @@
 use mrlyfig::{ink, iso, save, Board};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::math::three::designs;
 
 const CODE: u128 = 23;

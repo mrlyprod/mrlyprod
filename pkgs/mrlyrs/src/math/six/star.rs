@@ -1,4 +1,4 @@
-use crate::core::errors::{value_error, Result};
+use crate::core::error::{value_error, Result};
 use crate::math::bang::code_to_corners;
 use crate::num::series::{CATALAN, EULER};
 

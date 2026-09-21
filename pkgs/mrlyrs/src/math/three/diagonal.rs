@@ -1,17 +1,17 @@
 use crate::core::colors::{
     BLUE, BROWN, CYAN, GREEN, INDIGO, MINT, ORANGE, PINK, PURPLE, RED, TEAL, YELLOW,
 };
-use crate::core::errors::{value_error, Result};
+use crate::core::error::{value_error, Result};
 use crate::core::Color;
 use crate::math::bang::factory;
 use crate::math::bang::universe::Code;
-use crate::math::formulas::profile_of_tile;
+use crate::math::counts::profile_of_tile;
 
 const PALETTE: [Color; 12] = [
     RED, ORANGE, YELLOW, GREEN, MINT, TEAL, CYAN, BLUE, INDIGO, PURPLE, PINK, BROWN,
 ];
 
-use crate::math::formulas::diagonal::WIDEST;
+use crate::math::counts::diagonal::WIDEST;
 
 struct Solid {
     filled: Vec<bool>,

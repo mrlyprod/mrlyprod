@@ -1,11 +1,10 @@
-use super::cell::{moore, Cell};
+use super::cell::{moore, Cell, Mode};
 use super::colors::{gradient, Color};
 use super::colors::{
     BLACK, BLUE, BROWN, CYAN, GRAY, GREEN, INDIGO, MINT, ORANGE, PINK, PURPLE, RED, TEAL, WHITE,
     YELLOW,
 };
-use super::enums::Mode;
-use super::errors::{value_error, MrlyError, Result};
+use super::error::{value_error, MrlyError, Result};
 use super::rng::Rng;
 use super::state::{choice, randint, sample, shuffle};
 use super::tensor::{Dtype, Tensor};
@@ -564,9 +563,9 @@ pub fn paint(cell: &mut Cell, config: &Config, mask: Option<&Tensor>) -> Result<
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::atoms;
     use crate::core::json;
     use crate::core::state::{guard, seed};
+    use crate::math::atoms;
     fn round_trip(paint: &Paint) -> Paint {
         serde_json::from_value(serde_json::to_value(paint).unwrap()).unwrap()
     }

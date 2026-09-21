@@ -1,10 +1,10 @@
 use crate::{code_of, Fault};
 use mrlyrs::core::{json, Json};
+use mrlyrs::math::graph::{census, largest_component, Network};
 use mrlyrs::math::six;
+use mrlyrs::math::spectrum as spectra;
 use mrlyrs::math::three;
 use mrlyrs::math::two;
-use mrlyrs::num::graph::{census, largest_component, Network};
-use mrlyrs::num::spectrum as spectra;
 use wasm_bindgen::prelude::*;
 
 const LIMIT: usize = 1100;

@@ -10,12 +10,10 @@ pub mod faces;
 pub mod geometry;
 /// The JSON form of a cube.
 pub mod serializer;
-/// The random tiles and the cubes they build.
-pub mod tile;
 
-pub use crate::math::dim::graph::{core_graph, edge_graph, tunnel_graph};
-pub use crate::math::dim::models::Cell3d;
-pub use crate::math::dim::paint;
+pub use crate::math::cell::graph::{core_graph, edge_graph, tunnel_graph};
+pub use crate::math::cell::models::Cell3d;
+pub use crate::math::cell::paint;
 pub use census::{census, euler, fills, hidden, Census};
 pub use designs::{
     carpet, create, dust, from_corners, level_set, levels_code, named, net, ones, point, star,
@@ -24,10 +22,9 @@ pub use designs::{
 pub use diagonal::{
     profile, project, shadow, slice as diagonal_slice, support, svg as diagonal_svg,
 };
-pub use faces::{quads, wires, Quad};
+pub use faces::{quads, wires, Quad, Vec3};
 pub use geometry::{extrude, magic, manhattan_layers, merge, mosaic, orientations, slice, special};
 pub use serializer::{from_json, to_json};
-pub use tile::{build, create as create_tile, random_tile};
 
 #[cfg(test)]
 mod tests {

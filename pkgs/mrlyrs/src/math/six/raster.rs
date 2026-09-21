@@ -1,7 +1,7 @@
 use super::geometry::orientation;
 use super::models::Cell6d;
 use super::{Orientation, FILL, GRID};
-use crate::core::errors::{value_error, Result};
+use crate::core::error::{value_error, Result};
 
 const ROW: f64 = 0.866_025_403_784_438_6;
 

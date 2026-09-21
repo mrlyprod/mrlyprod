@@ -1,39 +1,34 @@
-/// The seeded artwork run from tile recipe to rendered files.
-pub mod artwork;
-/// The payload a cell's filled sites carry, framed in a sheet.
-pub mod carry;
 /// The fill, void, perimeter, corner, edge and Euler counts of a flat cell.
 pub mod census;
 /// The builders of coded, corner, noise and carpet cells.
 pub mod designs;
 /// The merges, magic folds, masked mosaics and the cube lift of flat cells.
 pub mod geometry;
+/// The payload a cell's filled sites carry, framed in a sheet.
+pub mod payload;
 /// The text and PNG renderings of a flat cell.
 pub mod renderer;
 /// The JSON form of a flat cell.
 pub mod serializer;
-/// The random tiles and the flat cells they build.
-pub mod tile;
 
-pub use crate::math::dim::graph::{core_graph, edge_graph, tunnel_graph};
-pub use crate::math::dim::models::Cell2d;
-pub use crate::math::dim::paint;
-pub use carry::{capacity, embed, extract, read, sheet};
+pub use crate::math::cell::graph::{core_graph, edge_graph, tunnel_graph};
+pub use crate::math::cell::models::Cell2d;
+pub use crate::math::cell::paint;
 pub use census::{census, euler, fills, Census};
 pub use designs::{
     carpet, create, dust, from_corners, hline, htree, level_set, levels_code, named, net, ones,
     point, star, vline, void, vtree, zeros,
 };
 pub use geometry::{magic, merge, mosaic, special, to_3d};
+pub use payload::{capacity, embed, extract, read, sheet};
 pub use renderer::{png, text};
 pub use serializer::{from_json, to_json};
-pub use tile::{build, create as create_tile, random_tile};
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::core::colors::{BLACK, WHITE};
-    use crate::num::graph::census;
+    use crate::math::graph::census;
     #[test]
     fn default_paint_is_black_on_white() {
         let c = paint(designs::carpet(3, 1).unwrap(), None, None);
@@ -61,8 +56,8 @@ mod tests {
 #[cfg(test)]
 mod spectra {
     use super::*;
-    use crate::num::graph::census;
-    use crate::num::spectrum::{clusters, laplacian_spectrum, multiplicity};
+    use crate::math::graph::census;
+    use crate::math::spectrum::{clusters, laplacian_spectrum, multiplicity};
 
     #[test]
     fn the_sierpinski_normalised_spectrum_holds_its_degeneracy_table() {

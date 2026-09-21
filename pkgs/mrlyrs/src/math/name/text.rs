@@ -1,4 +1,4 @@
-use crate::core::errors::{value_error, Result};
+use crate::core::error::{value_error, Result};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum Atom {

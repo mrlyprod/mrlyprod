@@ -1,4 +1,4 @@
-use mrlyrs::num::spirograph::{frame, trace, track, Kind, Pencil};
+use mrlyrs::math::spirograph::{frame, trace, track, Kind, Pencil};
 use std::f64::consts::{PI, TAU};
 
 // THE TRACK

@@ -1,9 +1,9 @@
 use mrlyfig::board::{Board, Frame};
 use mrlyfig::ink::Ramp;
 use mrlyfig::{field, ink, save};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::math::six;
-use mrlyrs::num::spin;
+use mrlyrs::math::spin;
 
 const PANEL: usize = 430;
 const TRIANGLES: usize = 486;

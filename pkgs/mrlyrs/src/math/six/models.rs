@@ -1,5 +1,5 @@
 use super::{Orientation, Projection, FILL, VOID};
-use crate::core::errors::Result;
+use crate::core::error::Result;
 use crate::core::tensor::Tensor;
 use crate::math::two::Cell2d;
 

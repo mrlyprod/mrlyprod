@@ -1,4 +1,4 @@
-use super::shape::descends;
+use super::glyph::descends;
 use super::{glyph, trim};
 
 pub(crate) struct Block {

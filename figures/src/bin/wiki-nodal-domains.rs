@@ -1,5 +1,5 @@
 use mrlyfig::{field, ink, save, Board, Frame, Ramp};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use std::f64::consts::PI;
 
 const RES: usize = 256;

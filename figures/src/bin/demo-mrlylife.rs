@@ -1,6 +1,6 @@
 use mrlyfig::out::root;
 use mrlyfig::{ink, save, Board};
-use mrlyrs::core::errors::Result;
+use mrlyrs::core::error::Result;
 use mrlyrs::core::tensor::Tensor;
 use mrlyrs::core::MrlyError;
 use mrlyrs::core::Rng;

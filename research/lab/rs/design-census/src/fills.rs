@@ -7,7 +7,7 @@ use mrlyrs::math::bang::counting;
 use mrlyrs::math::bang::factory::{corners_to_code, levels_code, residue_corners};
 use mrlyrs::math::bang::universe;
 use mrlyrs::math::bang::Code;
-use mrlyrs::math::formulas::{fill, void};
+use mrlyrs::math::counts::{fill, void};
 use mrlyrs::math::rules::render;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;

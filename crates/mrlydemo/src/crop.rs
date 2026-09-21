@@ -1,12 +1,12 @@
 #![allow(clippy::too_many_arguments)]
 
+use crate::space::Pack;
 use crate::{code_of, theme, Fault, Grid};
 use mrlyrs::core::json;
 use mrlyrs::core::tensor::Tensor;
 use mrlyrs::math::bang::factory;
-use mrlyrs::math::formulas;
+use mrlyrs::math::counts;
 use mrlyrs::math::shape::{self, Frac, Shape};
-use mrlyrs::math::space::Pack;
 use mrlyrs::math::three::{self, Cell3d};
 use wasm_bindgen::prelude::*;
 
@@ -184,8 +184,8 @@ pub fn crop_census(
         "filled_out": tally.filled[0],
         "filled_cut": tally.filled[1],
         "filled_in": tally.filled[2],
-        "exposed_before": mrlyrs::num::census::exposed(&types).to_string(),
-        "exposed_after": mrlyrs::num::census::exposed(&after).to_string(),
+        "exposed_before": types.exposed().to_string(),
+        "exposed_after": after.exposed().to_string(),
     })
     .to_string())
 }
@@ -227,7 +227,7 @@ pub fn crop_series(
             "x": x,
             "filled_in": tally.filled[2],
             "filled_cut": tally.filled[1],
-            "exposed_after": mrlyrs::num::census::exposed(&after).to_string(),
+            "exposed_after": after.exposed().to_string(),
         })
     };
     let mut rows = Vec::new();
@@ -329,8 +329,8 @@ pub fn crop_collapse(
     let table = circle_table(code, number, level, base, dimension, centre)?;
     let seen: Vec<f64> = table.iter().map(|row| row.seen as f64).collect();
     let top = seen.len() - 1;
-    let mass = formulas::fill(code_of(code)?, number, dimension, 1, base)?;
-    let d = formulas::dimension(code_of(code)?, number, dimension, base)?;
+    let mass = counts::fill(code_of(code)?, number, dimension, 1, base)?;
+    let d = counts::dimension(code_of(code)?, number, dimension, base)?;
     let step = number as f64;
     let mut scales = Vec::new();
     let (mut mains, mut levels) = (Vec::new(), Vec::new());

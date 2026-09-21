@@ -2,10 +2,10 @@ use super::census::{corners, edges_of, fills_only};
 use super::graph::slice_core_graph;
 use super::models::Cell6d;
 use super::{FILL, VOID};
-use crate::core::errors::{value_error, Result};
-use crate::num::graph::largest_component;
-use crate::num::graph::models::Network;
-use crate::num::spectrum::{laplacian_spectrum, spectral_exponent as slope};
+use crate::core::error::{value_error, Result};
+use crate::math::graph::largest_component;
+use crate::math::graph::models::Network;
+use crate::math::spectrum::{laplacian_spectrum, spectral_exponent as slope};
 use std::collections::BTreeMap;
 
 type Point = (i64, i64);
@@ -149,12 +149,12 @@ pub fn rim_holes(cell: &Cell6d) -> Result<usize> {
 mod theorems {
     use super::*;
     use crate::math::bang::universe::orbit;
-    use crate::math::formulas::six::centered_hexagonal;
+    use crate::math::counts::six::centered_hexagonal;
+    use crate::math::graph::census::components as network_components;
     use crate::math::six::census::census;
     use crate::math::six::geometry::cut;
     use crate::math::six::GRID;
     use crate::math::three::{self, Cell3d};
-    use crate::num::graph::census::components as network_components;
 
     fn slice(code: u128, number: usize, level: usize) -> Cell6d {
         cut(&three::create(code, number, level, 2).unwrap()).unwrap()
@@ -359,8 +359,8 @@ mod theorems {
 mod spectra {
     use super::*;
     use crate::math::six::geometry::cut;
+    use crate::math::spectrum::laplacian_spectrum;
     use crate::math::three;
-    use crate::num::spectrum::laplacian_spectrum;
 
     fn slice(code: u128, number: usize, level: usize) -> Cell6d {
         cut(&three::create(code, number, level, 2).unwrap()).unwrap()

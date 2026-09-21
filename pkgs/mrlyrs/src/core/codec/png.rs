@@ -1,4 +1,4 @@
-use crate::core::errors::{value_error, MrlyError, Result};
+use crate::core::error::{value_error, MrlyError, Result};
 use crate::core::resample::block;
 use png::{
     AdaptiveFilterType, BitDepth, ColorType, Compression, Decoder, Encoder, FilterType,
