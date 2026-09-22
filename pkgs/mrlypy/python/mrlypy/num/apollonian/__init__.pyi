@@ -12,12 +12,18 @@ class Circle:
     @property
     def k(self) -> int:
         """The curvature."""
+    @k.setter
+    def k(self, value: int) -> None: ...
     @property
     def x(self) -> int:
         """The curvature times the centre's abscissa."""
+    @x.setter
+    def x(self, value: int) -> None: ...
     @property
     def y(self) -> int:
         """The curvature times the centre's ordinate."""
+    @y.setter
+    def y(self, value: int) -> None: ...
     def centre(self) -> tuple[float, float] | None:
         """The centre, none on a line."""
     def is_line(self) -> bool:

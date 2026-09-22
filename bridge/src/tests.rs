@@ -2,7 +2,8 @@ use crate::model::*;
 use crate::parse::{self, Files};
 use crate::report;
 use crate::resolve::{self, Built};
-use std::path::Path;
+use crate::{cli, js, py};
+use std::path::{Path, PathBuf};
 
 fn build(lib: &str) -> Built {
     let files: Files = [("lib.rs".to_string(), lib.to_string())]
@@ -37,6 +38,22 @@ fn kind<'a>(m: &'a Manifest, path: &str) -> &'a TypeCross {
         .find(|t| t.path == path)
         .unwrap_or_else(|| panic!("no {path} in {paths:?}"))
         .cross
+}
+
+fn scratch(name: &str, lib: &str, units: &str) -> PathBuf {
+    let root = std::env::temp_dir().join(format!("bridge-{name}-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(root.join("bridge")).expect("a scratch root");
+    std::fs::write(root.join("bridge/units.txt"), units).expect("units.txt");
+    let m = manifest(lib);
+    cli::write(&m, &root).expect("the cli writes");
+    py::write(&m, &root).expect("the python bridge writes");
+    js::write(&m, &root).expect("the js bridge writes");
+    root
+}
+
+fn read(root: &Path, file: &str) -> String {
+    std::fs::read_to_string(root.join(file)).unwrap_or_else(|_| panic!("no {file}"))
 }
 
 const ERROR: &str = "pub mod core { pub mod error { pub enum Error { Value(String) } pub type Result<T> = std::result::Result<T, Error>; } pub use error::{Error, Result}; }";
@@ -490,6 +507,68 @@ fn a_public_trait_adds_its_methods_to_every_implementing_type() {
     assert!(m.functions.iter().all(|f| f.name != "KIND"));
 }
 
+#[test]
+fn a_public_class_field_gets_a_setter_unless_it_holds_a_borrow() {
+    let root = scratch("setter", "pub mod life { #[derive(Clone, Copy, Serialize, Deserialize)] pub enum Boundary { Constant, Wrap } #[derive(Clone, Serialize, Deserialize)] pub struct Config { pub boundary: Boundary, pub padding: usize, pub name: &'static str } impl Config { pub fn budget(&self) -> usize { 0 } } }", "life\n");
+    let rust = read(&root, "pkgs/mrlypy/src/gen.rs");
+    assert!(rust.contains("pub fn set_boundary(&mut self, value: PySerde<mrlyrs::life::Boundary>) -> PyResult<()> {"));
+    assert!(rust.contains("self.0.padding = value;"));
+    assert!(!rust.contains("set_name"));
+    assert!(read(&root, "pkgs/mrlypy/python/mrlypy/life/__init__.pyi").contains("@boundary.setter"));
+    let wasm = read(&root, "pkgs/mrlyjs/units/life/src/lib.rs");
+    assert!(wasm.contains("pub fn set_boundary(&mut self, value: JsValue) -> Result<(), JsValue> {"));
+    assert!(wasm.contains("self.inner.padding = value;"));
+    assert!(!wasm.contains("set_name"));
+    let dts = read(&root, "pkgs/mrlyjs/life.d.ts");
+    assert!(dts.contains("set boundary(value: Boundary);"));
+    assert!(dts.contains("readonly name: string;"));
+    std::fs::remove_dir_all(root).ok();
+}
+
+#[test]
+fn default_crosses_as_a_static_on_the_type_and_an_alias_fixes_n() {
+    let lib = "pub mod gen { #[derive(Clone, Default, Serialize, Deserialize)] pub struct Paint { pub n: u8 } #[derive(Clone, Serialize, Deserialize)] pub struct Field { pub n: u8 } impl Field { pub fn size(&self) -> u8 { 0 } } impl Default for Field { fn default() -> Field { Field { n: 1 } } } #[derive(Clone, Serialize, Deserialize)] pub struct ConfigNd<const N: usize> { pub n: u8 } impl<const N: usize> Default for ConfigNd<N> { fn default() -> Self { ConfigNd { n: 0 } } } pub type Config2d = ConfigNd<2>; } pub mod core { #[derive(Clone, Default, Serialize, Deserialize)] pub struct Rng { s: u64 } }";
+    let m = manifest(lib);
+    let paint = function(&m, "gen::Paint::default");
+    assert_eq!(
+        (paint.source, paint.owner.as_deref(), paint.self_kind, &paint.cross),
+        (Source::Default, Some("gen::Paint"), None, &Cross::Ok)
+    );
+    assert_eq!(paint.ret, Ty::Plain { path: "gen::Paint".into() });
+    assert_eq!(
+        function(&m, "gen::Field::default").ret,
+        Ty::Class { path: "gen::Field".into(), dim: None }
+    );
+    assert_eq!(
+        function(&m, "gen::Config2d::default").ret,
+        Ty::Plain { path: "gen::ConfigNd".into() }
+    );
+    let defaults: Vec<&str> = m
+        .functions
+        .iter()
+        .filter(|f| f.source == Source::Default)
+        .map(|f| f.path.as_str())
+        .collect();
+    assert_eq!(defaults, ["gen::Config2d::default", "gen::Field::default", "gen::Paint::default"]);
+    let root = scratch("default", lib, "gen\n");
+    assert!(read(&root, "pkgs/mrlypy/python/mrlypy/gen/__init__.pyi").contains("class Config2d:\n    @staticmethod\n    def default() -> dict[str, Any]:"));
+    assert!(read(&root, "pkgs/mrlyjs/gen.d.ts").contains("static default(): Field;"));
+    assert!(read(&root, "pkgs/mrlyrs/src/bin/mrly.rs").contains("(\"gen.Config2d.default\", \"() -> gen.ConfigNd\""));
+    std::fs::remove_dir_all(root).ok();
+}
+
+#[test]
+fn the_hand_rng_declares_choice_and_shuffle_in_both_bridges() {
+    let root = scratch("rng", "pub mod core { pub struct Rng { s: u64 } impl Rng { pub fn new(seed: u64) -> Rng { Rng { s: seed } } pub fn choice<'a, T>(&mut self, items: &'a [T]) -> &'a T { &items[0] } pub fn shuffle<T>(&mut self, seq: &mut [T]) {} } }", "core\n");
+    let stub = read(&root, "pkgs/mrlypy/python/mrlypy/core/__init__.pyi");
+    assert!(stub.contains("    def choice(self, seq: Any) -> Any:"));
+    assert!(stub.contains("    def shuffle(self, seq: list[Any]) -> None:"));
+    let dts = read(&root, "pkgs/mrlyjs/core.d.ts");
+    assert!(dts.contains("    choice<T>(items: ArrayLike<T>): T;"));
+    assert!(dts.contains("    shuffle<T>(items: T[]): void;"));
+    std::fs::remove_dir_all(root).ok();
+}
+
 fn crate_files() -> Files {
     parse::load(Path::new(concat!(
         env!("CARGO_MANIFEST_DIR"),
@@ -529,6 +608,7 @@ fn function_entries_match_the_pub_fn_grep() {
         .count();
     let generated = fns.iter().filter(|f| f.source == Source::NamedEnum).count();
     let traits = fns.iter().filter(|f| f.source == Source::Trait).count();
+    let defaults = fns.iter().filter(|f| f.source == Source::Default).count();
     let text = &files["math/name/mod.rs"];
     let start = text.find("pub trait Named").expect("the trait");
     let end = start + text[start..].find("\n}\n").expect("its end");
@@ -557,6 +637,6 @@ fn function_entries_match_the_pub_fn_grep() {
         "every grep line is a written pub fn or sits inside macro_rules"
     );
     assert_eq!(generated, 2 * named, "named_enum! writes all and name");
-    assert_eq!(fns.len(), written + constant + generated + traits);
+    assert_eq!(fns.len(), written + constant + generated + traits + defaults);
     assert!(built.collisions.is_empty(), "{:?}", built.collisions);
 }

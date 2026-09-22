@@ -92,6 +92,7 @@ export const image = {
     blur: wasm.image_blur,
 };
 export const paint = {
+    Config: wasm.paint_Config,
     Edition: wasm.paint_Edition,
     Ink: wasm.paint_Ink,
     Paint: wasm.paint_Paint,

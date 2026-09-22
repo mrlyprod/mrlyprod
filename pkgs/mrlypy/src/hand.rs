@@ -534,4 +534,23 @@ impl PyRng {
     pub fn sample_indices(&mut self, length: usize, amount: usize) -> Vec<usize> {
         self.0.sample_indices(length, amount)
     }
+    /// Draws one item of the sequence, the same draw as Rust's choice.
+    pub fn choice<'py>(&mut self, seq: &Bound<'py, PyAny>) -> PyResult<Bound<'py, PyAny>> {
+        let indices: Vec<usize> = (0..seq.len()?).collect();
+        let index = *ok(self.0.choice(&indices))?;
+        seq.get_item(index)
+    }
+    /// Shuffles the list in place, the same permutation as Rust's shuffle.
+    pub fn shuffle(&mut self, seq: &Bound<'_, PyList>) -> PyResult<()> {
+        let mut order: Vec<usize> = (0..seq.len()).collect();
+        self.0.shuffle(&mut order);
+        let items: Vec<Bound<'_, PyAny>> = order
+            .into_iter()
+            .map(|index| seq.get_item(index))
+            .collect::<PyResult<_>>()?;
+        for (at, item) in items.into_iter().enumerate() {
+            seq.set_item(at, item)?;
+        }
+        Ok(())
+    }
 }

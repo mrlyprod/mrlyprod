@@ -62,6 +62,10 @@ export class Rng {
     chance(p: number): boolean;
     /** Draws amount distinct indices below length, or every index when amount is larger. */
     sample_indices(length: number, amount: number): Uint32Array;
+    /** Draws one item of the array, the same draw as Rust's choice. */
+    choice<T>(items: ArrayLike<T>): T;
+    /** Shuffles the array in place, the same permutation as Rust's shuffle. */
+    shuffle<T>(items: T[]): void;
 }
 /** Builds every glyph in font order: uppers, lowers, digits, extras, specials. */
 export function all(): Glyph[];
@@ -134,9 +138,11 @@ export class Glyph {
     /** Writes the Glyph as plain data. */
     toJSON(): GlyphData;
     /** The character the glyph draws. */
-    readonly char: string;
+    get char(): string;
+    set char(value: string);
     /** The bitmap rows of '0' and '1' characters. */
-    readonly rows: string[];
+    get rows(): string[];
+    set rows(value: string[]);
     /** Returns the number of rows. */
     height(): number;
     /** Returns the cell width of the first row, or 0 for an empty glyph. */

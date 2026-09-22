@@ -26,6 +26,7 @@ pub fn build(files: &Files, version: &str) -> Result<Built> {
         reach,
         cross: HashMap::new(),
         paths: HashMap::new(),
+        defaults: HashMap::new(),
     };
     builder.classify_types()?;
     let manifest = builder.manifest(version);
@@ -261,6 +262,7 @@ struct Builder<'a> {
     reach: Reach,
     cross: HashMap<Key, TypeCross>,
     paths: HashMap<Key, String>,
+    defaults: HashMap<Key, String>,
 }
 
 impl Builder<'_> {
@@ -294,7 +296,11 @@ impl Builder<'_> {
     }
 
     fn impl_owner(&self, module: &str, imp: &parse::Impl) -> Option<(Key, Option<u8>)> {
-        let syn::Type::Path(p) = &imp.self_ty else {
+        self.type_key(module, &imp.self_ty)
+    }
+
+    fn type_key(&self, module: &str, ty: &syn::Type) -> Option<(Key, Option<u8>)> {
+        let syn::Type::Path(p) = ty else {
             return None;
         };
         let segs: Vec<String> = p
@@ -343,6 +349,10 @@ impl Builder<'_> {
                 let Some((key, _)) = self.impl_owner(mk, imp) else {
                     continue;
                 };
+                if imp.trait_path.as_ref().and_then(|p| p.last()).is_some_and(|t| t == "Default") {
+                    self.defaults.insert(key, format!("{}:{}", m.file, imp.line));
+                    continue;
+                }
                 let fns = match &imp.trait_path {
                     Some(path) => match self.trait_of(mk, path) {
                         Some((_, tr)) => &tr.fns,
@@ -358,6 +368,14 @@ impl Builder<'_> {
         for (mk, m) in &self.tree.modules {
             for (i, item) in m.items.iter().enumerate() {
                 let key = (mk.clone(), i);
+                let derived = match item {
+                    Item::Struct(s) => s.derives.iter().any(|d| d == "Default").then_some(s.line),
+                    Item::Enum(e) => e.derives.iter().any(|d| d == "Default").then_some(e.line),
+                    _ => None,
+                };
+                if let Some(line) = derived {
+                    self.defaults.insert(key.clone(), format!("{}:{line}", m.file));
+                }
                 let (name, cross) = match item {
                     Item::Struct(s) => {
                         let cross = if HAND.contains(&s.name.as_str()) {
@@ -655,6 +673,7 @@ impl Builder<'_> {
                             variants: vec![],
                             alias: None,
                         });
+                        functions.extend(self.default_of(&key, path, s.const_generic));
                     }
                     Item::Enum(e) => {
                         let Some(path) = self.paths.get(&key) else {
@@ -684,6 +703,7 @@ impl Builder<'_> {
                                 .collect(),
                             alias: None,
                         });
+                        functions.extend(self.default_of(&key, path, false));
                     }
                     Item::Alias(a) => {
                         let Some(path) = self.public_path(&key, &a.name) else {
@@ -702,6 +722,7 @@ impl Builder<'_> {
                                 None => TypeCross::Plain,
                             },
                         };
+                        functions.extend(self.alias_default(mk, a, &path, &ty));
                         types.push(Type {
                             path,
                             name: a.name.clone(),
@@ -850,6 +871,28 @@ impl Builder<'_> {
         }
     }
 
+    fn default_of(&self, key: &Key, owner: &str, generic: bool) -> Option<Function> {
+        let at = self.defaults.get(key)?;
+        let path = owner.to_string();
+        let ret = match self.cross.get(key)? {
+            TypeCross::Class => Ty::Class { path, dim: None },
+            TypeCross::Plain => Ty::Plain { path },
+            TypeCross::Enum { .. } => Ty::Enum { path },
+            TypeCross::Hand { .. } | TypeCross::Uncrossable { .. } => return None,
+        };
+        (!generic).then(|| default_fn(owner, at, ret))
+    }
+
+    fn alias_default(&self, module: &str, alias: &parse::Alias, owner: &str, ty: &Ty) -> Option<Function> {
+        if alias.generic || !matches!(ty, Ty::Plain { .. } | Ty::Class { .. } | Ty::Enum { .. }) {
+            return None;
+        }
+        let (target, _) = self.type_key(module, &alias.ty)?;
+        let at = self.defaults.get(&target)?;
+        let generic = matches!(&self.module(&target.0).items[target.1], Item::Struct(s) if s.const_generic);
+        generic.then(|| default_fn(owner, at, ty.clone()))
+    }
+
     fn fields(&self, scope: &Scope, fields: &[parse::Field]) -> Vec<Field> {
         fields
             .iter()
@@ -984,6 +1027,26 @@ impl Builder<'_> {
             return skip(reason);
         }
         Cross::Ok
+    }
+}
+
+fn default_fn(owner: &str, defined_at: &str, ret: Ty) -> Function {
+    let name = owner.rsplit("::").next().unwrap_or(owner);
+    Function {
+        path: format!("{owner}::default"),
+        name: "default".into(),
+        module: parent(owner),
+        defined_at: defined_at.to_string(),
+        docs: vec![format!("Returns the default {name}.")],
+        owner: Some(owner.to_string()),
+        self_kind: None,
+        params: vec![],
+        ret,
+        dims: vec![],
+        via: None,
+        source: Source::Default,
+        constant: false,
+        cross: Cross::Ok,
     }
 }
 

@@ -1328,6 +1328,9 @@ fn emit_class(cx: &Cx, out: &mut String, depth: usize, module: &str, class: &Own
             into(cx, &field.ty, "value")?
         ));
         out.push_str(&format!("{inner}}}\n"));
+        if field.ty.settable() {
+            emit_setter(cx, out, depth + 1, &field.name, &field.ty)?;
+        }
     }
     for f in &class.fns {
         let place = if f.self_kind.is_some() {
@@ -1356,6 +1359,24 @@ fn emit_class(cx: &Cx, out: &mut String, depth: usize, module: &str, class: &Own
         ));
     }
     out.push_str(&format!("{pad}}}\n\n"));
+    Ok(())
+}
+
+fn emit_setter(cx: &Cx, out: &mut String, depth: usize, field: &str, ty: &Ty) -> Result<()> {
+    let pad = indent(depth);
+    let deep = indent(depth + 1);
+    let plan = plan(cx, "value", ty)?;
+    out.push_str(&format!("{pad}#[setter]\n"));
+    out.push_str(&format!("{pad}#[pyo3(name = {})]\n", quote(&py_name(field))));
+    out.push_str(&format!(
+        "{pad}pub fn set_{field}(&mut self, value: {}) -> PyResult<()> {{\n",
+        plan.decl
+    ));
+    for line in &plan.lets {
+        out.push_str(&format!("{deep}{line}\n"));
+    }
+    out.push_str(&format!("{deep}self.0.{field} = {};\n", plan.pass));
+    out.push_str(&format!("{deep}Ok(())\n{pad}}}\n"));
     Ok(())
 }
 
@@ -1727,6 +1748,13 @@ fn stub_class(cx: &Cx, out: &mut String, class: &Owned, here: &str) -> Result<()
         } else {
             docstring(out, 2, &summary(&field.docs));
         }
+        if field.ty.settable() {
+            out.push_str(&format!(
+                "    @{0}.setter\n    def {0}(self, value: {1}) -> None: ...\n",
+                py_name(&field.name),
+                py_type(cx, &field.ty, here)
+            ));
+        }
         wrote = true;
     }
     for f in &class.fns {
@@ -1800,6 +1828,8 @@ fn stub_rng(cx: &Cx, out: &mut String, here: &str) -> Result<()> {
             stub_fn(cx, out, 1, &export, Place::Method(cx.ty("core::Rng")?), here)?;
         }
     }
+    out.push_str("    def choice(self, seq: Any) -> Any:\n        \"\"\"Draws one item of the sequence, the same draw as Rust's choice.\"\"\"\n");
+    out.push_str("    def shuffle(self, seq: list[Any]) -> None:\n        \"\"\"Shuffles the list in place, the same permutation as Rust's shuffle.\"\"\"\n");
     out.push('\n');
     Ok(())
 }

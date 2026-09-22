@@ -9,18 +9,28 @@ class Design:
     @property
     def i(self) -> int:
         """The design's code."""
+    @i.setter
+    def i(self, value: int) -> None: ...
     @property
     def dimension(self) -> int:
         """The design's dimension."""
+    @dimension.setter
+    def dimension(self, value: int) -> None: ...
     @property
     def canonical(self) -> bool:
         """Whether this code is the smallest in its orbit."""
+    @canonical.setter
+    def canonical(self, value: bool) -> None: ...
     @property
     def class_rep(self) -> int:
         """The smallest code in the orbit."""
+    @class_rep.setter
+    def class_rep(self, value: int) -> None: ...
     @property
     def orbit_size(self) -> int:
         """The number of codes in the orbit."""
+    @orbit_size.setter
+    def orbit_size(self, value: int) -> None: ...
     def anf(self) -> str:
         """Returns the design's algebraic normal form as a string."""
     def degree(self) -> int:
@@ -41,9 +51,13 @@ class Universe:
     @property
     def dimension(self) -> int:
         """The universe's dimension."""
+    @dimension.setter
+    def dimension(self, value: int) -> None: ...
     @property
     def total(self) -> int:
         """The number of codes in the universe."""
+    @total.setter
+    def total(self, value: int) -> None: ...
     def all(self) -> list[Design]:
         """Returns every design in code order."""
     def canonical(self) -> list[Design]:

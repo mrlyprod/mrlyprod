@@ -124,6 +124,7 @@ pub enum Source {
     Written,
     NamedEnum,
     Trait,
+    Default,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -219,6 +220,9 @@ impl Ty {
             }
             _ => {}
         }
+    }
+    pub fn settable(&self) -> bool {
+        !matches!(self, Ty::Ref { .. })
     }
     pub fn any(&self, test: &dyn Fn(&Ty) -> bool) -> bool {
         let mut hit = false;

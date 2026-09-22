@@ -16,13 +16,18 @@
 - A public trait of the crate (`math::name::Named`) adds every method it declares, required or default, to each type with an `impl Named for X`: `X::to_json` and `X::checked` self first, `X::from_json` and `X::from_url` static, `Self` read as X, docs and `defined_at` from the trait fn, `source: trait`, and `trait` holding the trait's path. Trait consts (`KIND`, `LISTS`, `BARE`) do not cross.
 - A backend calls a trait method through the trait, never as an inherent method: `<mrlyrs::life::Rule as mrlyrs::math::name::Named>::from_json(text)` and `<Rule as Named>::to_json(&rule)`; `use mrlyrs::math::name::Named;` in scope also works. A type with trait self methods is a class.
 - `Display` and `FromStr` are std traits and do not cross; `named_enum!` types cross as their word instead.
+- `Default`, derived or an `impl Default for X`, adds a static `X::default`, `source: default`: a class returns an instance, plain data its dict or object, an enum its word; the CLI door is `X.default`.
+- A const-generic type's `default` lands on each alias that fixes N (`gen::build::Config2d::default`); hand types get none.
 
 ## KINDS
 
 - `hand`: Tensor, Cell, CellNd (Cell2d, Cell3d), Cell6d, Color, Code, Rng; each `hand.rs` owns their crossing per the plan's CROSSING.
-- `class`: a struct, or an enum with data, that has a self-taking method; holds the Rust value, public fields as getters, methods as methods; never leaves its wasm unit. A class deriving Deserialize should get a from-data constructor in each backend.
+- `Rng.choice(seq)` and `Rng.shuffle(list)` are written in both `hand.rs`: Rust's `choice` and `shuffle` run on the index list, so a seed draws what Rust draws; the generic Rust fns stay in `skip.txt`.
+- `class`: a struct, or an enum with data, that has a self-taking method; holds the Rust value, public fields as getters and setters, methods as methods; never leaves its wasm unit. A class deriving Deserialize should get a from-data constructor in each backend.
+- A setter reads its value the way a parameter of that type crosses in; a field holding a borrow (`Preset::name: &'static str`) stays read-only.
 - A field under `#[serde(skip)]`, `skip_serializing` or `skip_deserializing` cannot round-trip as data, so its type is a `class` too; the field records `serde_skip`, its getter carries it, the data form (`to_dict`, `toJSON`, the CLI's JSON) drops it as serde does.
 - `plain`: a struct or data enum with Serialize and Deserialize, no self methods and no skipped field; a dict, an object, JSON; no per-type code.
+- Plain input is strict: a missing key is an error. serde fills missing keys from `Default` only for a type carrying `#[serde(default)]`, in every bridge; no type carries it today, so start from `X.default()` and change keys.
 - `enum`: a fieldless enum with Serialize and Deserialize; a string; `named` carries the `named_enum!` words, and `all()` crosses.
 - `uncrossable`: anything else (`Error`, `Result`, `Pen`); a function touching one is skipped with the reason.
 - A function is `ok`, `skip` with a reason, or `private`. Skips: a type generic, a closure, `impl Trait`, a fn pointer or private type, a `&'static` or explicit-lifetime return, a `&mut` borrow returned, an iterator, a `&mut` plain or slice argument, a class from another unit.
@@ -43,4 +48,4 @@
 - `root` is the workspace root; write generated files under `pkgs/` and never hand-edit them; a wrong line is a generator fix.
 - `units.txt` names the wasm units, one per line; a unit is the first segment of a path; `all` is every unit.
 - `docs` are the `///` lines for docstrings; `defined_at` is `file:line` under `pkgs/mrlyrs/src`; `derives` and `serde` attributes are recorded verbatim.
-- `cargo test -p bridge`: one test per rule in `src/tests.rs`, a determinism test, and the count test: entries = `pub fn` grep lines - lines inside `macro_rules` + `pub const fn` + 2 per named enum + trait fns x `impl Named` blocks.
+- `cargo test -p bridge`: one test per rule in `src/tests.rs`, a determinism test, and the count test: entries = `pub fn` grep lines - lines inside `macro_rules` + `pub const fn` + 2 per named enum + trait fns x `impl Named` blocks + 1 per `default`.

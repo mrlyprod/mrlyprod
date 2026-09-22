@@ -91,6 +91,27 @@ impl Buf {
             Buf::I32(v) => Buf::I32(idx.iter().map(|&i| v[i]).collect()),
         }
     }
+    fn hits(&self, target: u8) -> Vec<u8> {
+        fn flags<T: Copy + Into<i64>>(v: &[T], target: u8) -> Vec<u8> {
+            v.iter()
+                .map(|&x| u8::from(x.into() == i64::from(target)))
+                .collect()
+        }
+        match self {
+            Buf::U8(v) => flags(v, target),
+            Buf::U16(v) => flags(v, target),
+            Buf::U32(v) => flags(v, target),
+            Buf::I32(v) => flags(v, target),
+        }
+    }
+    fn counts(dtype: Dtype, counts: &[u32]) -> Buf {
+        match dtype {
+            Dtype::U8 => Buf::U8(counts.iter().map(|&c| c as u8).collect()),
+            Dtype::U16 => Buf::U16(counts.iter().map(|&c| c as u16).collect()),
+            Dtype::U32 => Buf::U32(counts.to_vec()),
+            Dtype::I32 => Buf::I32(counts.iter().map(|&c| c as i32).collect()),
+        }
+    }
 }
 
 /// An n-dimensional grid of small integers.
@@ -119,6 +140,104 @@ fn unravel(flat: usize, shape: &[usize]) -> Vec<usize> {
             i
         })
         .collect()
+}
+
+fn source(
+    row: usize,
+    offset: &[isize],
+    shape: &[usize],
+    steps: &[usize],
+    wrap: bool,
+) -> Option<usize> {
+    let mut flat = 0;
+    for ((&n, &step), &o) in shape.iter().zip(steps).zip(offset) {
+        let n = n as isize;
+        let mut p = ((row / step) as isize % n) + o;
+        if wrap {
+            p = p.rem_euclid(n);
+        } else if !(0..n).contains(&p) {
+            return None;
+        }
+        flat += p as usize * step;
+    }
+    Some(flat)
+}
+
+fn window_counts(
+    hits: &[u8],
+    shape: &[usize],
+    mask: &Tensor,
+    side: &[usize],
+    wrap: bool,
+) -> Vec<u32> {
+    let rank = shape.len() - 1;
+    let (width, lane) = (shape[rank], side[rank]);
+    let half = lane / 2;
+    let span = width + lane;
+    let mut prefix = vec![0u32; hits.len() / width * span];
+    for (row, sums) in hits.chunks(width).zip(prefix.chunks_mut(span)) {
+        let mut at = (width - half % width) % width;
+        let mut total = 0;
+        for (k, slot) in sums.iter_mut().enumerate().skip(1) {
+            let hit = if wrap {
+                let hit = row[at];
+                at = if at + 1 == width { 0 } else { at + 1 };
+                hit
+            } else {
+                (k - 1)
+                    .checked_sub(half)
+                    .and_then(|i| row.get(i))
+                    .copied()
+                    .unwrap_or(0)
+            };
+            total += u32::from(hit);
+            *slot = total;
+        }
+    }
+    let (outer, steps, mask_steps) = (
+        &shape[..rank],
+        strides(&shape[..rank]),
+        strides(&side[..rank]),
+    );
+    let mut counts = vec![0u32; hits.len()];
+    let mut offset = vec![0isize; rank];
+    let mut runs = Vec::new();
+    for m in 0..mask.size() / lane {
+        runs.clear();
+        let mut start = None;
+        for i in 0..=lane {
+            match (i < lane && mask.data.at(m * lane + i) == 1, start) {
+                (true, None) => start = Some(i),
+                (false, Some(s)) => {
+                    runs.push((s, i));
+                    start = None;
+                }
+                _ => {}
+            }
+        }
+        if runs.is_empty() {
+            continue;
+        }
+        for ((slot, &n), &step) in offset.iter_mut().zip(&side[..rank]).zip(&mask_steps) {
+            *slot = ((m / step) % n) as isize - (n / 2) as isize;
+        }
+        for (p, out) in counts.chunks_mut(width).enumerate() {
+            let Some(q) = source(p, &offset, outer, &steps, wrap) else {
+                continue;
+            };
+            let sums = &prefix[q * span..(q + 1) * span];
+            for &(s, e) in &runs {
+                for ((c, &hi), &lo) in out
+                    .iter_mut()
+                    .zip(&sums[e..e + width])
+                    .zip(&sums[s..s + width])
+                {
+                    *c += hi - lo;
+                }
+            }
+        }
+    }
+    counts
 }
 
 impl Tensor {
@@ -535,49 +654,21 @@ impl Tensor {
         if target > 1 {
             return value_error("Bit to count (target) must be 0 or 1.");
         }
-        let center: Vec<usize> = mask.shape.iter().map(|&n| n / 2).collect();
-        let mut offsets = Vec::new();
-        for flat in 0..mask.size() {
-            if mask.data.at(flat) == 1 {
-                let idx = mask.multi(flat);
-                offsets.push(
-                    idx.iter()
-                        .zip(&center)
-                        .map(|(&i, &c)| i as isize - c as isize)
-                        .collect::<Vec<isize>>(),
-                );
-            }
+        if self.size() == 0 {
+            return Ok(Tensor::typed(self.shape.clone(), dtype));
         }
-        let mut out = Tensor::typed(self.shape.clone(), dtype);
-        for flat in 0..self.size() {
-            let idx = self.multi(flat);
-            let mut count: u32 = 0;
-            for offset in &offsets {
-                let mut source = Vec::with_capacity(idx.len());
-                let mut inside = true;
-                for axis in 0..idx.len() {
-                    let n = self.shape[axis] as isize;
-                    let mut p = idx[axis] as isize + offset[axis];
-                    if wrap {
-                        p = p.rem_euclid(n);
-                    } else if p < 0 || p >= n {
-                        inside = false;
-                        break;
-                    }
-                    source.push(p as usize);
-                }
-                if inside && self.data.at(self.index(&source)) == target as i64 {
-                    count += 1;
-                }
-            }
-            if count as i64 > dtype.max() {
-                return value_error(
-                    "neighbor count exceeds dtype range; widen the neighbors dtype.",
-                );
-            }
-            out.data.put(flat, count as i64);
+        let (shape, side) = match self.shape.len() {
+            0 => (vec![1], vec![1]),
+            _ => (self.shape.clone(), mask.shape.clone()),
+        };
+        let counts = window_counts(&self.data.hits(target), &shape, mask, &side, wrap);
+        if counts.iter().any(|&c| i64::from(c) > dtype.max()) {
+            return value_error("neighbor count exceeds dtype range; widen the neighbors dtype.");
         }
-        Ok(out)
+        Ok(Tensor {
+            data: Buf::counts(dtype, &counts),
+            shape: self.shape.clone(),
+        })
     }
     /// Maps every element to one at or above the threshold, zero below.
     pub fn binarize(&self, threshold: u8) -> Tensor {
@@ -857,6 +948,82 @@ mod tests {
         let wide = grid.neighbors(&mask, 1, true, Dtype::U16).unwrap();
         assert_eq!(wide.dtype(), Dtype::U16);
         assert_eq!(wide.at(wide.index(&[20, 20])), 33 * 33);
+    }
+    fn naive(grid: &Tensor, mask: &Tensor, target: u8, wrap: bool, dtype: Dtype) -> Result<Tensor> {
+        let offsets: Vec<Vec<isize>> = (0..mask.size())
+            .filter(|&m| mask.at(m) == 1)
+            .map(|m| {
+                let idx = mask.multi(m);
+                let half = mask.shape.iter().map(|&n| (n / 2) as isize);
+                idx.iter().zip(half).map(|(&i, c)| i as isize - c).collect()
+            })
+            .collect();
+        let mut out = Tensor::typed(grid.shape.clone(), dtype);
+        for flat in 0..grid.size() {
+            let idx = grid.multi(flat);
+            let mut count = 0;
+            for offset in &offsets {
+                let source: Option<Vec<usize>> = idx
+                    .iter()
+                    .zip(offset)
+                    .zip(&grid.shape)
+                    .map(|((&i, &o), &n)| {
+                        let (p, n) = (i as isize + o, n as isize);
+                        match wrap {
+                            true => Some(p.rem_euclid(n) as usize),
+                            false => (0..n).contains(&p).then_some(p as usize),
+                        }
+                    })
+                    .collect();
+                if source.is_some_and(|s| grid.at(grid.index(&s)) == i64::from(target)) {
+                    count += 1;
+                }
+            }
+            if count > dtype.max() {
+                return value_error(
+                    "neighbor count exceeds dtype range; widen the neighbors dtype.",
+                );
+            }
+            out.put(flat, count);
+        }
+        Ok(out)
+    }
+    #[test]
+    fn neighbors_match_the_naive_count() {
+        let mut rng = crate::core::rng::Rng::new(3);
+        let mut noise = |shape: Vec<usize>| {
+            let data: Vec<u8> = (0..shape.iter().product::<usize>())
+                .map(|_| [0, 1, 1, 2][rng.below(4)])
+                .collect();
+            match rng.below(4) {
+                0 => Tensor::u8(data, shape),
+                1 => Tensor::u16(data.iter().map(|&v| v.into()).collect(), shape),
+                2 => Tensor::u32(data.iter().map(|&v| v.into()).collect(), shape),
+                _ => Tensor::i32(data.iter().map(|&v| v.into()).collect(), shape),
+            }
+            .unwrap()
+        };
+        let mut checked = 0;
+        for rank in 0..=3 {
+            for round in 0..24 {
+                let shape = (0..rank).map(|axis| (round * 7 + axis * 5) % 9).collect();
+                let side = (0..rank).map(|axis| 2 * ((round + axis) % 6) + 1).collect();
+                let (grid, mask) = (noise(shape), noise(side));
+                for (wrap, target) in [(false, 0), (false, 1), (true, 0), (true, 1)] {
+                    for dtype in [Dtype::U8, Dtype::U16, Dtype::U32, Dtype::I32] {
+                        let fast = grid.neighbors(&mask, target, wrap, dtype);
+                        let slow = naive(&grid, &mask, target, wrap, dtype);
+                        assert_eq!(
+                            fast.map_err(|e| e.to_string()),
+                            slow.map_err(|e| e.to_string()),
+                            "rank {rank} round {round} wrap {wrap} target {target} {dtype:?}"
+                        );
+                        checked += 1;
+                    }
+                }
+            }
+        }
+        assert_eq!(checked, 4 * 24 * 16);
     }
     #[test]
     fn invert_round_trip() {

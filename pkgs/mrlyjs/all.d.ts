@@ -62,6 +62,10 @@ export class Rng {
     chance(p: number): boolean;
     /** Draws amount distinct indices below length, or every index when amount is larger. */
     sample_indices(length: number, amount: number): Uint32Array;
+    /** Draws one item of the array, the same draw as Rust's choice. */
+    choice<T>(items: ArrayLike<T>): T;
+    /** Shuffles the array in place, the same permutation as Rust's shuffle. */
+    shuffle<T>(items: T[]): void;
 }
 export declare namespace core {
     /** Squashes rgba pixels to the hex aspect, returning the new width, height and pixels. */
@@ -79,6 +83,8 @@ export declare namespace core {
     /** A rule that turns counter values into colors. */
     export type Colorizer = { Bins: { background: ColorData; ramp: ColorData[] } };
     export const Colorizer: {
+        /** Returns the default Colorizer. */
+        default(): core.Colorizer;
         /** Builds the blue-to-red diverging ramp around a white middle. */
         diverge(): core.Colorizer;
         /** Builds the black-through-ember fire ramp: black, dark red, orange, light yellow. */
@@ -116,13 +122,17 @@ export declare namespace core {
         /** Writes the Image as plain data. */
         toJSON(): ImageData;
         /** The width in pixels. */
-        readonly width: number;
+        get width(): number;
+        set width(value: number);
         /** The height in pixels. */
-        readonly height: number;
+        get height(): number;
+        set height(value: number);
         /** The palette index of every pixel, row by row. */
-        readonly rows: Uint32Array[];
+        get rows(): Uint32Array[];
+        set rows(value: ArrayLike<number>[]);
         /** The colors the rows index. */
-        readonly palette: Color[];
+        get palette(): Color[];
+        set palette(value: Color[]);
         /** Returns the flat rgba pixels, transparent wherever an index misses the palette. */
         colors(): Uint8Array[];
         /** Builds a paletted image from raw rgba pixels, growing the palette as new colors appear. */
@@ -326,49 +336,71 @@ export declare namespace core {
             /** Writes the Theme as plain data. */
             toJSON(): ThemeData;
             /** The ground every figure is painted on. */
-            readonly ground: Color;
+            get ground(): Color;
+            set ground(value: Color);
             /** The page background, one step off the ground. */
-            readonly bg: Color;
+            get bg(): Color;
+            set bg(value: Color);
             /** The raised panel. */
-            readonly panel: Color;
+            get panel(): Color;
+            set panel(value: Color);
             /** The sunken well. */
-            readonly deep: Color;
+            get deep(): Color;
+            set deep(value: Color);
             /** The hairline between things. */
-            readonly line: Color;
+            get line(): Color;
+            set line(value: Color);
             /** The foreground, the strongest tone. */
-            readonly fg: Color;
+            get fg(): Color;
+            set fg(value: Color);
             /** The dimmed foreground, for anything secondary. */
-            readonly dim: Color;
+            get dim(): Color;
+            set dim(value: Color);
             /** The interactive accent. */
-            readonly accent: Color;
+            get accent(): Color;
+            set accent(value: Color);
             /** The tone written on the accent. */
-            readonly on_accent: Color;
+            get on_accent(): Color;
+            set on_accent(value: Color);
             /** The red ink. */
-            readonly red: Color;
+            get red(): Color;
+            set red(value: Color);
             /** The orange ink. */
-            readonly orange: Color;
+            get orange(): Color;
+            set orange(value: Color);
             /** The yellow ink. */
-            readonly yellow: Color;
+            get yellow(): Color;
+            set yellow(value: Color);
             /** The green ink. */
-            readonly green: Color;
+            get green(): Color;
+            set green(value: Color);
             /** The mint ink. */
-            readonly mint: Color;
+            get mint(): Color;
+            set mint(value: Color);
             /** The teal ink. */
-            readonly teal: Color;
+            get teal(): Color;
+            set teal(value: Color);
             /** The cyan ink. */
-            readonly cyan: Color;
+            get cyan(): Color;
+            set cyan(value: Color);
             /** The blue ink. */
-            readonly blue: Color;
+            get blue(): Color;
+            set blue(value: Color);
             /** The indigo ink. */
-            readonly indigo: Color;
+            get indigo(): Color;
+            set indigo(value: Color);
             /** The purple ink. */
-            readonly purple: Color;
+            get purple(): Color;
+            set purple(value: Color);
             /** The pink ink. */
-            readonly pink: Color;
+            get pink(): Color;
+            set pink(value: Color);
             /** The brown ink. */
-            readonly brown: Color;
+            get brown(): Color;
+            set brown(value: Color);
             /** The gray ink. */
-            readonly gray: Color;
+            get gray(): Color;
+            set gray(value: Color);
             /** The thirteen inks in name order. */
             hues(): Color[];
             /** The six inks a figure cycles through: blue, orange, yellow, green, pink, indigo. */
@@ -409,6 +441,10 @@ export declare namespace core {
             /** The forced target, or None for a coin flip. */
             target?: core.paint.Target;
         }
+        export const Config: {
+            /** Returns the default Config. */
+            default(): core.paint.Config;
+        };
         /** The seven ways a paint distributes its colors over a cell. */
         export type Edition = "Simple" | "Index" | "Layers" | "Neighbors" | "Rows" | "Columns" | "Random";
         export const Edition: {
@@ -449,17 +485,23 @@ export declare namespace core {
             /** Writes the Paint as plain data. */
             toJSON(): PaintData;
             /** The coloring edition. */
-            readonly edition: core.paint.Edition;
+            get edition(): core.paint.Edition;
+            set edition(value: core.paint.Edition);
             /** The secondary color scheme. */
-            readonly scheme: core.paint.Scheme;
+            get scheme(): core.paint.Scheme;
+            set scheme(value: core.paint.Scheme);
             /** The side the primary ink lands on. */
-            readonly target: core.paint.Target;
+            get target(): core.paint.Target;
+            set target(value: core.paint.Target);
             /** The primary ink. */
-            readonly primary: core.paint.Ink;
+            get primary(): core.paint.Ink;
+            set primary(value: core.paint.Ink);
             /** The secondary inks. */
-            readonly secondary: core.paint.Ink[];
+            get secondary(): core.paint.Ink[];
+            set secondary(value: core.paint.Ink[]);
             /** The shade indices of a multitone ramp. */
-            readonly shades: Uint32Array;
+            get shades(): Uint32Array;
+            set shades(value: ArrayLike<number>);
             /** Returns true for the Simple edition. */
             is_simple(): boolean;
         }
@@ -651,9 +693,11 @@ export declare namespace font {
         /** Writes the Glyph as plain data. */
         toJSON(): GlyphData;
         /** The character the glyph draws. */
-        readonly char: string;
+        get char(): string;
+        set char(value: string);
         /** The bitmap rows of '0' and '1' characters. */
-        readonly rows: string[];
+        get rows(): string[];
+        set rows(value: string[]);
         /** Returns the number of rows. */
         height(): number;
         /** Returns the cell width of the first row, or 0 for an empty glyph. */
@@ -677,7 +721,7 @@ export declare namespace gen {
     export function classic_code_nd(design: gen.recipe.Design, dimension: number): string | undefined;
     /** Draws a hex key of the given length from the stream. */
     export function hex_key(length: number, rng: Rng): string;
-    /** Draws one named design from the stream. */
+    /** Draws one of the four flat classics from the stream: carpet, net, vertical tree or void. */
     export function random_design(rng: Rng): gen.recipe.Design;
     /** Draws a design's turn from the stream: a tree turns 0 or 1, every other design 0 to 3. */
     export function random_rotation(design: gen.recipe.Design, rng: Rng): number;
@@ -729,25 +773,35 @@ export declare namespace gen {
         /** Writes the Tile as plain data. */
         toJSON(): TileData;
         /** The construction family. */
-        readonly group: gen.Group;
+        get group(): gen.Group;
+        set group(value: gen.Group);
         /** The base factor of the construction. */
-        readonly factor: number;
+        get factor(): number;
+        set factor(value: number);
         /** The origin of each layer. */
-        readonly sources: gen.recipe.Source[];
+        get sources(): gen.recipe.Source[];
+        set sources(value: gen.recipe.Source[]);
         /** The grid size of each source. */
-        readonly numbers: Uint32Array;
+        get numbers(): Uint32Array;
+        set numbers(value: ArrayLike<number>);
         /** The fractal level of each source. */
-        readonly levels: Uint32Array;
+        get levels(): Uint32Array;
+        set levels(value: ArrayLike<number>);
         /** The quarter-turn rotation of each source. */
-        readonly rotations: Uint32Array;
+        get rotations(): Uint32Array;
+        set rotations(value: ArrayLike<number>);
         /** Whether the finished tile inverts. */
-        readonly invert: boolean;
+        get invert(): boolean;
+        set invert(value: boolean);
         /** Whether the finished tile flips. */
-        readonly flip: boolean;
+        get flip(): boolean;
+        set flip(value: boolean);
         /** The tile's width in cells. */
-        readonly width: number;
+        get width(): number;
+        set width(value: number);
         /** The tile's height in cells. */
-        readonly height: number;
+        get height(): number;
+        set height(value: number);
         /** Checks that the slots, numbers and sizes agree. */
         check(): void;
         /** Returns whether the recipe is a magic tile of one repeated source at one repeated number, */
@@ -778,6 +832,16 @@ export declare namespace gen {
         export function random_tile_3d(max_size: number, rng: Rng): gen.Tile;
         /** Draws a random cube tile up to the given size under a random projection. */
         export function random_tile_6d(max_size: number, rng: Rng): gen.build.HexTile;
+        export type Config2d = gen.draw.ConfigNd;
+        export const Config2d: {
+            /** Returns the default Config2d. */
+            default(): gen.draw.ConfigNd;
+        };
+        export type Config3d = gen.draw.ConfigNd;
+        export const Config3d: {
+            /** Returns the default Config3d. */
+            default(): gen.draw.ConfigNd;
+        };
         /** A cube tile paired with the projection that flattens it. */
         export interface HexTile {
             /** The projection that flattens the tile. */
@@ -806,6 +870,10 @@ export declare namespace gen {
     export namespace name {
         /** One value for every slot of a tile, or one value per slot. */
         export type Slots = number | number[];
+        export const Slots: {
+            /** Returns the default Slots. */
+            default(): gen.name.Slots;
+        };
         export interface TileData {
             /** The kind word. */
             kind: string;
@@ -839,25 +907,35 @@ export declare namespace gen {
             /** Writes the Tile as plain data. */
             toJSON(): TileData;
             /** The one design of a flat or fractal tile. */
-            readonly code: string | undefined;
+            get code(): string | undefined;
+            set code(value: string | number | bigint | undefined);
             /** The mask code of a special tile. */
-            readonly special: string | undefined;
+            get special(): string | undefined;
+            set special(value: string | number | bigint | undefined);
             /** The letters of a magic tile, first letter outermost. */
-            readonly magic: string[];
+            get magic(): string[];
+            set magic(value: (string | number | bigint)[]);
             /** The three codes of a mosaic tile. */
-            readonly mosaic: string[];
+            get mosaic(): string[];
+            set mosaic(value: (string | number | bigint)[]);
             /** The side of the mask of a special or mosaic tile. */
-            readonly factor: number | undefined;
+            get factor(): number | undefined;
+            set factor(value: number | undefined);
             /** The side each slot renders at, one per letter for a magic tile. */
-            readonly side: gen.name.Slots;
+            get side(): gen.name.Slots;
+            set side(value: gen.name.Slots);
             /** The power a fractal tile is raised to, absent at one. */
-            readonly level: number | undefined;
+            get level(): number | undefined;
+            set level(value: number | undefined);
             /** The quarter turns of each slot, absent when nothing turns. */
-            readonly turn: gen.name.Slots;
+            get turn(): gen.name.Slots;
+            set turn(value: gen.name.Slots);
             /** Whether a special tile flips its mask. */
-            readonly flip: boolean;
+            get flip(): boolean;
+            set flip(value: boolean);
             /** Whether the finished tile inverts. */
-            readonly invert: boolean;
+            get invert(): boolean;
+            set invert(value: boolean);
             /** Folds a decoded value to its canonical form, or an error for one outside the kind. */
             checked(): gen.name.Tile;
             /** Reads a filename back into the value, or an error. */
@@ -934,6 +1012,10 @@ export declare namespace gen {
             /** The width and height repetition pairs to render. */
             files: [number, number][];
         }
+        export const Config: {
+            /** Returns the default Config. */
+            default(): gen.variation.Config;
+        };
         export interface FileData {
             /** The count of tile repetitions across. */
             width: number;
@@ -950,11 +1032,14 @@ export declare namespace gen {
             /** Writes the File as plain data. */
             toJSON(): FileData;
             /** The count of tile repetitions across. */
-            readonly width: number;
+            get width(): number;
+            set width(value: number);
             /** The count of tile repetitions down. */
-            readonly height: number;
+            get height(): number;
+            set height(value: number);
             /** The encoded PNG bytes, empty until rendered and left out of the json. */
-            readonly png: Uint8Array;
+            get png(): Uint8Array;
+            set png(value: ArrayLike<number>);
         }
         export interface VariationData {
             /** The random hex identifier. */
@@ -983,23 +1068,32 @@ export declare namespace gen {
             /** Writes the Variation as plain data. */
             toJSON(): VariationData;
             /** The random hex identifier. */
-            readonly key: string;
+            get key(): string;
+            set key(value: string);
             /** The seed the variation is drawn under. */
-            readonly seed: bigint;
+            get seed(): bigint;
+            set seed(value: number | bigint);
             /** The paint edition. */
-            readonly edition: core.paint.Edition;
+            get edition(): core.paint.Edition;
+            set edition(value: core.paint.Edition);
             /** The primary inks, when the config fixes them. */
-            readonly primaries: core.paint.Ink[] | undefined;
+            get primaries(): core.paint.Ink[] | undefined;
+            set primaries(value: core.paint.Ink[] | undefined);
             /** The tile recipe. */
-            readonly tile: gen.Tile;
+            get tile(): gen.Tile;
+            set tile(value: gen.Tile);
             /** The mask tile, present only under the Neighbors edition. */
-            readonly mask: gen.Tile | undefined;
+            get mask(): gen.Tile | undefined;
+            set mask(value: gen.Tile | undefined);
             /** The paint, set by generate. */
-            readonly paint: core.paint.Paint | undefined;
+            get paint(): core.paint.Paint | undefined;
+            set paint(value: core.paint.Paint | undefined);
             /** The built base cell, set by generate and left out of the json. */
-            readonly base: Cell | undefined;
+            get base(): Cell | undefined;
+            set base(value: Cell | undefined);
             /** The renderings, filled by render. */
-            readonly files: gen.variation.File[];
+            get files(): gen.variation.File[];
+            set files(value: gen.variation.File[]);
             /** Returns whether the edition paints the whole tiled canvas. */
             is_cover(): boolean;
             /** Returns whether the edition paints the base cell before tiling. */
@@ -1104,19 +1198,26 @@ export declare namespace life {
         /** Writes the Config as plain data. */
         toJSON(): ConfigData;
         /** The neighborhood mask. */
-        readonly mask: Cell;
+        get mask(): Cell;
+        set mask(value: Cell);
         /** The neighbor counts that create a cell. */
-        readonly birth: life.Counts;
+        get birth(): life.Counts;
+        set birth(value: life.Counts);
         /** The neighbor counts that keep a cell. */
-        readonly survive: life.Counts;
+        get survive(): life.Counts;
+        set survive(value: life.Counts);
         /** The edge policy. */
-        readonly boundary: life.Boundary;
+        get boundary(): life.Boundary;
+        set boundary(value: life.Boundary);
         /** The generation cap. */
-        readonly max_generations: number;
+        get max_generations(): number;
+        set max_generations(value: number);
         /** The tiling factor applied to the seed. */
-        readonly grid_size: number;
+        get grid_size(): number;
+        set grid_size(value: number);
         /** The dead border added around the seed. */
-        readonly padding: number;
+        get padding(): number;
+        set padding(value: number);
         /** Returns the largest neighbor count the mask can reach. */
         budget(): number;
         /** Resolves the birth and survive counts against the mask's budget. */
@@ -1163,13 +1264,17 @@ export declare namespace life {
         /** Writes the Life as plain data. */
         toJSON(): LifeData;
         /** Every generation in order. */
-        readonly grids: Cell[];
+        get grids(): Cell[];
+        set grids(value: Cell[]);
         /** The run's ending. */
-        readonly fate: life.Fate;
+        get fate(): life.Fate;
+        set fate(value: life.Fate);
         /** The number of recorded generations. */
-        readonly count: number;
+        get count(): number;
+        set count(value: number);
         /** The cycle length when the fate is a loop, else zero. */
-        readonly loop_length: number;
+        get loop_length(): number;
+        set loop_length(value: number);
         /** Returns the final grid, or None when the run is empty. */
         last(): Cell | undefined;
     }
@@ -1193,11 +1298,14 @@ export declare namespace life {
         /** Writes the Rule as plain data. */
         toJSON(): RuleData;
         /** The neighbor counts that create a cell, listed or drawn from a sequence. */
-        readonly birth: life.Counts;
+        get birth(): life.Counts;
+        set birth(value: life.Counts);
         /** The neighbor counts that keep a cell, listed or drawn from a sequence. */
-        readonly survive: life.Counts;
+        get survive(): life.Counts;
+        set survive(value: life.Counts);
         /** Whether the edge wraps, false unless said. */
-        readonly wrap: boolean;
+        get wrap(): boolean;
+        set wrap(value: boolean);
         /** Returns the edge policy the rule runs under. */
         boundary(): life.Boundary;
         /** Folds a decoded value to its canonical form, or an error for one outside the kind. */
@@ -1383,15 +1491,20 @@ export declare namespace math {
             /** Writes the Design as plain data. */
             toJSON(): DesignData;
             /** The design's code. */
-            readonly i: string;
+            get i(): string;
+            set i(value: string | number | bigint);
             /** The design's dimension. */
-            readonly dimension: number;
+            get dimension(): number;
+            set dimension(value: number);
             /** Whether this code is the smallest in its orbit. */
-            readonly canonical: boolean;
+            get canonical(): boolean;
+            set canonical(value: boolean);
             /** The smallest code in the orbit. */
-            readonly class_rep: string;
+            get class_rep(): string;
+            set class_rep(value: string | number | bigint);
             /** The number of codes in the orbit. */
-            readonly orbit_size: number;
+            get orbit_size(): number;
+            set orbit_size(value: number);
             /** Returns the design's algebraic normal form as a string. */
             anf(): string;
             /** Returns the design's algebraic degree, or -1 for the zero design. */
@@ -1423,9 +1536,11 @@ export declare namespace math {
             /** Writes the Universe as plain data. */
             toJSON(): UniverseData;
             /** The universe's dimension. */
-            readonly dimension: number;
+            get dimension(): number;
+            set dimension(value: number);
             /** The number of codes in the universe. */
-            readonly total: number;
+            get total(): number;
+            set total(value: number);
             /** Returns every design in code order. */
             all(): math.bang.Design[];
             /** Returns the designs whose codes lead their orbits. */
@@ -1728,11 +1843,14 @@ export declare namespace math {
             /** Writes the Exposure as plain data. */
             toJSON(): ExposureData;
             /** The filled cells of the tile. */
-            readonly occupancy: string;
+            get occupancy(): string;
+            set occupancy(value: string | number | bigint);
             /** The exposed faces of the tile. */
-            readonly exposed: string;
+            get exposed(): string;
+            set exposed(value: string | number | bigint);
             /** Per axis, the adjacent filled pairs and the spanning positions. */
-            readonly axes: [string, string][];
+            get axes(): [string, string][];
+            set axes(value: ([string | number | bigint, string | number | bigint])[]);
             /** Returns the exposed faces of the level-fold Kronecker power, or none past a u128. */
             at(level: number): string | undefined;
             /** Folds the counts from the filled residue corners at a side number, without rendering the tile. */
@@ -1883,11 +2001,14 @@ export declare namespace math {
             /** Writes the Network as plain data. */
             toJSON(): NetworkData;
             /** The dimension every position must match. */
-            readonly dim: number;
+            get dim(): number;
+            set dim(value: number);
             /** The nodes in insertion order. */
-            readonly nodes: math.graph.Node[];
+            get nodes(): math.graph.Node[];
+            set nodes(value: math.graph.Node[]);
             /** The branches in insertion order. */
-            readonly branches: math.graph.Branch[];
+            get branches(): math.graph.Branch[];
+            set branches(value: math.graph.Branch[]);
             /** Appends a branch between two node indices. */
             add_branch(parent: number, child: number, radius: number): void;
             /** Appends a node at the position and returns its index. */
@@ -1942,9 +2063,11 @@ export declare namespace math {
             /** Writes the Field as plain data. */
             toJSON(): FieldData;
             /** The samples in row-major order. */
-            readonly data: Float32Array;
+            get data(): Float32Array;
+            set data(value: ArrayLike<number>);
             /** The side length in samples. */
-            readonly size: number;
+            get size(): number;
+            set size(value: number);
             /** Returns the samples widened to f64. */
             as_f64(): Float64Array;
             /** Wraps row-major samples of the given side. */
@@ -2015,15 +2138,20 @@ export declare namespace math {
             /** The name the recipe answers to. */
             readonly name: string;
             /** The design sampled at every scale. */
-            readonly spec: math.moire.Spec;
+            get spec(): math.moire.Spec;
+            set spec(value: math.moire.Spec);
             /** The side numbers stacked. */
-            readonly numbers: Uint32Array;
+            get numbers(): Uint32Array;
+            set numbers(value: ArrayLike<number>);
             /** The way the layers merge. */
-            readonly combine: math.moire.Combine;
+            get combine(): math.moire.Combine;
+            set combine(value: math.moire.Combine);
             /** The fractal depth of each layer. */
-            readonly level: number;
+            get level(): number;
+            set level(value: number);
             /** The lattice the layers are sampled on. */
-            readonly lattice: math.moire.Lattice;
+            get lattice(): math.moire.Lattice;
+            set lattice(value: math.moire.Lattice);
             /** The carpet stack: every base-three corner but the centre, summed over odd scales. */
             static carpet(limit: number): math.moire.Preset;
             /** Samples the preset into a square field of the given side. */
@@ -2064,9 +2192,11 @@ export declare namespace math {
             /** Writes the Volume as plain data. */
             toJSON(): VolumeData;
             /** The samples, x-major, then y, then z. */
-            readonly data: Float32Array;
+            get data(): Float32Array;
+            set data(value: ArrayLike<number>);
             /** The side in samples. */
-            readonly size: number;
+            get size(): number;
+            set size(value: number);
             /** Reads the sample at a voxel. */
             at(x: number, y: number, z: number): number;
             /** Counts the samples at or above the level. */
@@ -2141,15 +2271,20 @@ export declare namespace math {
             /** Writes the Bang as plain data. */
             toJSON(): BangData;
             /** The number of axes. */
-            readonly dim: number;
+            get dim(): number;
+            set dim(value: number);
             /** The lattice, square unless said. */
-            readonly lattice: math.name.Lattice;
+            get lattice(): math.name.Lattice;
+            set lattice(value: math.name.Lattice);
             /** The digits per axis, 2 unless said. */
-            readonly base: number;
+            get base(): number;
+            set base(value: number);
             /** The design as a number. */
-            readonly code: string;
+            get code(): string;
+            set code(value: string | number | bigint);
             /** One unit index per filled digit, absent when nothing turns. */
-            readonly twist: Uint32Array | undefined;
+            get twist(): Uint32Array | undefined;
+            set twist(value: ArrayLike<number> | undefined);
             /** Returns the number of digits the code addresses. */
             cells(): number;
             /** Folds a decoded value to its canonical form, or an error for one outside the kind. */
@@ -2174,6 +2309,8 @@ export declare namespace math {
         /** The lattice the cells sit on. */
         export type Lattice = "square" | "hex";
         export const Lattice: {
+            /** Returns the default Lattice. */
+            default(): math.name.Lattice;
             /** Returns whether this is the square lattice. */
             is_square(lattice: math.name.Lattice): boolean;
             /** Returns the number of unit directions a twist may pick from. */
@@ -2203,15 +2340,20 @@ export declare namespace math {
             /** Writes the Sequence as plain data. */
             toJSON(): SequenceData;
             /** The number of axes. */
-            readonly dim: number;
+            get dim(): number;
+            set dim(value: number);
             /** The digits per axis, 2 unless said. */
-            readonly base: number;
+            get base(): number;
+            set base(value: number);
             /** The design as a number. */
-            readonly code: string;
+            get code(): string;
+            set code(value: string | number | bigint);
             /** The reading taken. */
-            readonly measure: string;
+            get measure(): string;
+            set measure(value: string);
             /** The index the reading runs along. */
-            readonly axis: string;
+            get axis(): string;
+            set axis(value: string);
             /** Folds a decoded value to its canonical form, or an error for one outside the kind. */
             checked(): math.name.Sequence;
             /** Returns the design pinned to its dimension and base. */
@@ -2255,13 +2397,17 @@ export declare namespace math {
             /** Writes the Word as plain data. */
             toJSON(): WordData;
             /** The number of axes every letter shares. */
-            readonly dim: number;
+            get dim(): number;
+            set dim(value: number);
             /** The codes of the letters in order. */
-            readonly magic: string[];
+            get magic(): string[];
+            set magic(value: (string | number | bigint)[]);
             /** The side each letter renders at. */
-            readonly side: Uint32Array;
+            get side(): Uint32Array;
+            set side(value: ArrayLike<number>);
             /** The base of each letter, absent when every letter is base 2. */
-            readonly base: Uint32Array | undefined;
+            get base(): Uint32Array | undefined;
+            set base(value: ArrayLike<number> | undefined);
             /** Returns the base of every letter, 2 where the name says nothing. */
             bases(): Uint32Array;
             /** Folds a decoded value to its canonical form, or an error for one outside the kind. */
@@ -2328,9 +2474,11 @@ export declare namespace math {
             /** Writes the Press as plain data. */
             toJSON(): PressData;
             /** The design dimension of the universe. */
-            readonly dimension: number;
+            get dimension(): number;
+            set dimension(value: number);
             /** The numeral base of the universe. */
-            readonly base: number;
+            get base(): number;
+            set base(value: number);
             /** Adds a weighted number to its usage bucket. */
             add(number: string | number | bigint, weight: string | number | bigint): void;
             /** Returns the total weight the design at a code has collected. */
@@ -2373,21 +2521,31 @@ export declare namespace math {
             /** Writes the Nodes as plain data. */
             toJSON(): NodesData;
             /** The curves counted, in the order the pencils came in. */
-            readonly curves: number;
+            get curves(): number;
+            set curves(value: number);
             /** How often each curve crosses itself, curve by curve. */
-            readonly selves: Uint32Array;
+            get selves(): Uint32Array;
+            set selves(value: ArrayLike<number>);
             /** How often each pair of curves crosses, the lower curve first, in lexicographic order. */
-            readonly pairs: Uint32Array;
+            get pairs(): Uint32Array;
+            set pairs(value: ArrayLike<number>);
             /** The most crossings one node carries: one at a plain double point, and `n(n - 1)/2` where `n` branches meet. */
-            readonly most: number;
+            get most(): number;
+            set most(value: number);
             /** The nodes more than one crossing clusters at. */
-            readonly crowded: number;
+            get crowded(): number;
+            set crowded(value: number);
             /** The distinct points the crossings sit at, one for every cluster. */
-            readonly points: number;
+            get points(): number;
+            set points(value: number);
             /** The branches through every node added up, which is the edge count of the picture as a plane graph, `n` at a node where `n` branches meet and `2` times `points` when no node is crowded. */
-            readonly branches: number;
+            get branches(): number;
+            set branches(value: number);
             /** The segment pairs that meet without crossing: collinear or end to end. */
-            readonly touches: number;
+            get touches(): number;
+            set touches(value: number);
+            /** Returns the default Nodes. */
+            static default(): math.roulette.Nodes;
             /** How often the curves `i` and `j` cross, either order, and zero when they are one curve. */
             pair(i: number, j: number): number;
             /** Every crossing of two curves. */
@@ -2445,9 +2603,11 @@ export declare namespace math {
             /** Writes the Frac as plain data. */
             toJSON(): FracData;
             /** The numerator, carrying the sign. */
-            readonly num: bigint;
+            get num(): bigint;
+            set num(value: number | bigint);
             /** The denominator, always positive. */
-            readonly den: bigint;
+            get den(): bigint;
+            set den(value: number | bigint);
             /** Returns the exact difference. */
             minus(other: math.shape.Frac): math.shape.Frac;
             /** Returns the exact sum. */
@@ -2720,9 +2880,11 @@ export declare namespace math {
                 /** Writes the Share as plain data. */
                 toJSON(): ShareData;
                 /** The count of inked cells. */
-                readonly inked: bigint;
+                get inked(): bigint;
+                set inked(value: number | bigint);
                 /** The count of cells read. */
-                readonly cells: bigint;
+                get cells(): bigint;
+                set cells(value: number | bigint);
                 /** The share in lowest terms, numerator then denominator. */
                 reduced(): [bigint, bigint];
                 /** The share as a real number. */
@@ -2894,6 +3056,10 @@ export declare namespace math {
             /** The pencils on corners. */
             corners: number;
         }
+        export const Seats: {
+            /** Returns the default Seats. */
+            default(): math.spirograph.Seats;
+        };
         /** A track and the path the wheel's centre takes along it: the wheel of radius `wheel` rolls without slipping, on the left of the track when `side` is minus one and on the right when it is plus one, and turns by `side` times the centre's path length over the wheel's radius. */
         export interface Track {
             /** The kind: `line`, `in`, `out`, `polyin` or `polyout`. */
@@ -3067,11 +3233,14 @@ export declare namespace math {
             /** Writes the Vec3 as plain data. */
             toJSON(): Vec3Data;
             /** The x component. */
-            readonly x: number;
+            get x(): number;
+            set x(value: number);
             /** The y component. */
-            readonly y: number;
+            get y(): number;
+            set y(value: number);
             /** The z component. */
-            readonly z: number;
+            get z(): number;
+            set z(value: number);
             /** Returns the cross product, perpendicular to both vectors. */
             cross(o: math.three.Vec3): math.three.Vec3;
             /** Returns the dot product of the two vectors. */
@@ -3294,11 +3463,14 @@ export declare namespace num {
             /** Writes the Circle as plain data. */
             toJSON(): CircleData;
             /** The curvature. */
-            readonly k: bigint;
+            get k(): bigint;
+            set k(value: number | bigint);
             /** The curvature times the centre's abscissa. */
-            readonly x: bigint;
+            get x(): bigint;
+            set x(value: number | bigint);
             /** The curvature times the centre's ordinate. */
-            readonly y: bigint;
+            get y(): bigint;
+            set y(value: number | bigint);
             /** The centre, none on a line. */
             centre(): [number, number] | undefined;
             /** Whether the circle is a line. */
@@ -3610,7 +3782,7 @@ export declare namespace num {
             /** Counts every class inside. */
             census(): num.gauss.Census;
             /** Classifies a point: prime when its norm is a rational prime, or when it is a unit times a rational prime that stays prime. */
-            class_(a: number | bigint, b: number | bigint): num.gauss.Class;
+            class(a: number | bigint, b: number | bigint): num.gauss.Class;
             /** Returns whether a point lies inside. */
             holds(a: number | bigint, b: number | bigint): boolean;
             /** Lists every point inside, row by row from the bottom left of the bounding square. */
@@ -3733,11 +3905,14 @@ export declare namespace num {
             /** Writes the Rule as plain data. */
             toJSON(): RuleData;
             /** The dimension `D`, one to three. */
-            readonly dimension: number;
+            get dimension(): number;
+            set dimension(value: number);
             /** The window width `k`, at least one. */
-            readonly width: number;
+            get width(): number;
+            set width(value: number);
             /** The window code, bit `w` set when window `w` is allowed. */
-            readonly code: bigint;
+            get code(): bigint;
+            set code(value: number | bigint);
             /** Returns whether a word, coarsest digit first, is accepted. */
             accepts(word: ArrayLike<number>): boolean;
             /** Returns whether the window is allowed, and false for any window out of range. */
@@ -3925,7 +4100,7 @@ export declare namespace num {
             /** Writes the Base as plain data. */
             toJSON(): BaseData;
             /** Returns the index in the canonical residue system of the class of a point. */
-            class_(z: [number | bigint, number | bigint]): number;
+            class(z: [number | bigint, number | bigint]): number;
             /** Returns whether two points are congruent modulo the base. */
             congruent(z: [number | bigint, number | bigint], w: [number | bigint, number | bigint]): boolean;
             /** Returns the symmetry group of the base as permutations of the canonical residue indices: every unit multiplication, and every unit times conjugation when the conjugate of the base is an associate of the base. */
@@ -4203,13 +4378,17 @@ export declare namespace num {
             /** Writes the Complex as plain data. */
             toJSON(): ComplexData;
             /** The real part. */
-            readonly re: number;
+            get re(): number;
+            set re(value: number);
             /** The imaginary part. */
-            readonly im: number;
+            get im(): number;
+            set im(value: number);
             /** Returns the modulus. */
             abs(): number;
             /** Returns the principal argument. */
             arg(): number;
+            /** Returns the default Complex. */
+            static default(): num.zeta.Complex;
             /** Returns the exponential. */
             exp(): num.zeta.Complex;
             /** Returns the principal logarithm. */
@@ -4229,6 +4408,8 @@ export declare namespace num {
             toJSON(): LineData;
             /** Counts the zeros on the line below t. */
             count(t: number): number;
+            /** Returns the default Line. */
+            static default(): num.zeta.Line;
             /** Returns Z(t) from the Euler-Maclaurin value turned onto the real axis. */
             exact(t: number): number;
             /** Returns the n-th Gram point, where theta is n pi, by Newton from the right. */

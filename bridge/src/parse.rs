@@ -112,6 +112,7 @@ pub struct Const {
 }
 
 pub struct Impl {
+    pub line: usize,
     pub trait_path: Option<Vec<String>>,
     pub self_ty: syn::Type,
     pub const_params: Vec<String>,
@@ -526,6 +527,7 @@ fn implementation(i: &syn::ItemImpl) -> Impl {
         .as_ref()
         .map(|(_, path, _)| path.segments.iter().map(|s| s.ident.to_string()).collect());
     Impl {
+        line: i.impl_token.span.start().line,
         trait_path,
         self_ty: (*i.self_ty).clone(),
         const_params,
@@ -611,6 +613,7 @@ impl NamedEnum {
         (
             enumeration,
             Impl {
+                line,
                 trait_path: None,
                 self_ty,
                 const_params: vec![],

@@ -62,6 +62,10 @@ export class Rng {
     chance(p: number): boolean;
     /** Draws amount distinct indices below length, or every index when amount is larger. */
     sample_indices(length: number, amount: number): Uint32Array;
+    /** Draws one item of the array, the same draw as Rust's choice. */
+    choice<T>(items: ArrayLike<T>): T;
+    /** Shuffles the array in place, the same permutation as Rust's shuffle. */
+    shuffle<T>(items: T[]): void;
 }
 /** Squashes rgba pixels to the hex aspect, returning the new width, height and pixels. */
 export function hex_fit(pixels: ArrayLike<number>[], width: number, height: number, vertical: boolean, filter: Filter): [number, number, Uint8Array[]];
@@ -78,6 +82,8 @@ export function PNG_MAGIC(): Uint8Array;
 /** A rule that turns counter values into colors. */
 export type Colorizer = { Bins: { background: ColorData; ramp: ColorData[] } };
 export const Colorizer: {
+    /** Returns the default Colorizer. */
+    default(): Colorizer;
     /** Builds the blue-to-red diverging ramp around a white middle. */
     diverge(): Colorizer;
     /** Builds the black-through-ember fire ramp: black, dark red, orange, light yellow. */
@@ -115,13 +121,17 @@ export class Image {
     /** Writes the Image as plain data. */
     toJSON(): ImageData;
     /** The width in pixels. */
-    readonly width: number;
+    get width(): number;
+    set width(value: number);
     /** The height in pixels. */
-    readonly height: number;
+    get height(): number;
+    set height(value: number);
     /** The palette index of every pixel, row by row. */
-    readonly rows: Uint32Array[];
+    get rows(): Uint32Array[];
+    set rows(value: ArrayLike<number>[]);
     /** The colors the rows index. */
-    readonly palette: Color[];
+    get palette(): Color[];
+    set palette(value: Color[]);
     /** Returns the flat rgba pixels, transparent wherever an index misses the palette. */
     colors(): Uint8Array[];
     /** Builds a paletted image from raw rgba pixels, growing the palette as new colors appear. */
@@ -325,49 +335,71 @@ export declare namespace colors {
         /** Writes the Theme as plain data. */
         toJSON(): ThemeData;
         /** The ground every figure is painted on. */
-        readonly ground: Color;
+        get ground(): Color;
+        set ground(value: Color);
         /** The page background, one step off the ground. */
-        readonly bg: Color;
+        get bg(): Color;
+        set bg(value: Color);
         /** The raised panel. */
-        readonly panel: Color;
+        get panel(): Color;
+        set panel(value: Color);
         /** The sunken well. */
-        readonly deep: Color;
+        get deep(): Color;
+        set deep(value: Color);
         /** The hairline between things. */
-        readonly line: Color;
+        get line(): Color;
+        set line(value: Color);
         /** The foreground, the strongest tone. */
-        readonly fg: Color;
+        get fg(): Color;
+        set fg(value: Color);
         /** The dimmed foreground, for anything secondary. */
-        readonly dim: Color;
+        get dim(): Color;
+        set dim(value: Color);
         /** The interactive accent. */
-        readonly accent: Color;
+        get accent(): Color;
+        set accent(value: Color);
         /** The tone written on the accent. */
-        readonly on_accent: Color;
+        get on_accent(): Color;
+        set on_accent(value: Color);
         /** The red ink. */
-        readonly red: Color;
+        get red(): Color;
+        set red(value: Color);
         /** The orange ink. */
-        readonly orange: Color;
+        get orange(): Color;
+        set orange(value: Color);
         /** The yellow ink. */
-        readonly yellow: Color;
+        get yellow(): Color;
+        set yellow(value: Color);
         /** The green ink. */
-        readonly green: Color;
+        get green(): Color;
+        set green(value: Color);
         /** The mint ink. */
-        readonly mint: Color;
+        get mint(): Color;
+        set mint(value: Color);
         /** The teal ink. */
-        readonly teal: Color;
+        get teal(): Color;
+        set teal(value: Color);
         /** The cyan ink. */
-        readonly cyan: Color;
+        get cyan(): Color;
+        set cyan(value: Color);
         /** The blue ink. */
-        readonly blue: Color;
+        get blue(): Color;
+        set blue(value: Color);
         /** The indigo ink. */
-        readonly indigo: Color;
+        get indigo(): Color;
+        set indigo(value: Color);
         /** The purple ink. */
-        readonly purple: Color;
+        get purple(): Color;
+        set purple(value: Color);
         /** The pink ink. */
-        readonly pink: Color;
+        get pink(): Color;
+        set pink(value: Color);
         /** The brown ink. */
-        readonly brown: Color;
+        get brown(): Color;
+        set brown(value: Color);
         /** The gray ink. */
-        readonly gray: Color;
+        get gray(): Color;
+        set gray(value: Color);
         /** The thirteen inks in name order. */
         hues(): Color[];
         /** The six inks a figure cycles through: blue, orange, yellow, green, pink, indigo. */
@@ -408,6 +440,10 @@ export declare namespace paint {
         /** The forced target, or None for a coin flip. */
         target?: paint.Target;
     }
+    export const Config: {
+        /** Returns the default Config. */
+        default(): paint.Config;
+    };
     /** The seven ways a paint distributes its colors over a cell. */
     export type Edition = "Simple" | "Index" | "Layers" | "Neighbors" | "Rows" | "Columns" | "Random";
     export const Edition: {
@@ -448,17 +484,23 @@ export declare namespace paint {
         /** Writes the Paint as plain data. */
         toJSON(): PaintData;
         /** The coloring edition. */
-        readonly edition: paint.Edition;
+        get edition(): paint.Edition;
+        set edition(value: paint.Edition);
         /** The secondary color scheme. */
-        readonly scheme: paint.Scheme;
+        get scheme(): paint.Scheme;
+        set scheme(value: paint.Scheme);
         /** The side the primary ink lands on. */
-        readonly target: paint.Target;
+        get target(): paint.Target;
+        set target(value: paint.Target);
         /** The primary ink. */
-        readonly primary: paint.Ink;
+        get primary(): paint.Ink;
+        set primary(value: paint.Ink);
         /** The secondary inks. */
-        readonly secondary: paint.Ink[];
+        get secondary(): paint.Ink[];
+        set secondary(value: paint.Ink[]);
         /** The shade indices of a multitone ramp. */
-        readonly shades: Uint32Array;
+        get shades(): Uint32Array;
+        set shades(value: ArrayLike<number>);
         /** Returns true for the Simple edition. */
         is_simple(): boolean;
     }

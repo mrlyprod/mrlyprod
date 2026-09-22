@@ -214,6 +214,7 @@ fn run(words: &[String]) -> std::result::Result<(), Fail> {
 // DOORS
 
 static DOORS: &[Door] = &[
+    ("core.Colorizer.default", "() -> core.Colorizer", Some(door_core_colorizer_default)),
     ("core.Colorizer.diverge", "() -> core.Colorizer", Some(door_core_colorizer_diverge)),
     ("core.Colorizer.fire", "() -> core.Colorizer", Some(door_core_colorizer_fire)),
     ("core.Colorizer.gradient_bins", "(background: Color, colors: [Color], shades: usize) -> core.Colorizer", Some(door_core_colorizer_gradient_bins)),
@@ -276,6 +277,7 @@ static DOORS: &[Door] = &[
     ("core.hex_fit", "(pixels: [[u8; 4]], width: usize, height: usize, vertical: bool, filter: core.Filter) -> (usize, usize, [[u8; 4]])", Some(door_core_hex_fit)),
     ("core.hex_size", "(width: usize, height: usize, vertical: bool) -> (usize, usize)", Some(door_core_hex_size)),
     ("core.image.blur", "(pixels: [[u8; 4]], width: usize, height: usize, radius: usize) -> [[u8; 4]]", Some(door_core_image_blur)),
+    ("core.paint.Config.default", "() -> core.paint.Config", Some(door_core_paint_config_default)),
     ("core.paint.Edition.all", "() -> [core.paint.Edition; 7]", Some(door_core_paint_edition_all)),
     ("core.paint.Edition.mode", "(self: core.paint.Edition) -> core.Mode?", Some(door_core_paint_edition_mode)),
     ("core.paint.Ink.all", "() -> [core.paint.Ink; 15]", Some(door_core_paint_ink_all)),
@@ -377,6 +379,8 @@ static DOORS: &[Door] = &[
     ("gen.Tile.resize", "(self: gen.Tile) -> null # uncallable: mutates its argument in place", None),
     ("gen.Tile.size", "(self: gen.Tile, width: usize, height: usize) -> gen.Tile", Some(door_gen_tile_size)),
     ("gen.background", "(seed: u64, width: usize, height: usize) -> [u8]", Some(door_gen_background)),
+    ("gen.build.Config2d.default", "() -> gen.draw.ConfigNd", Some(door_gen_build_config2d_default)),
+    ("gen.build.Config3d.default", "() -> gen.draw.ConfigNd", Some(door_gen_build_config3d_default)),
     ("gen.build.build_2d", "(tile: gen.Tile) -> Cell2d", Some(door_gen_build_build_2d)),
     ("gen.build.build_3d", "(tile: gen.Tile) -> Cell3d", Some(door_gen_build_build_3d)),
     ("gen.build.build_6d", "(hex: gen.build.HexTile) -> Cell6d", Some(door_gen_build_build_6d)),
@@ -389,6 +393,7 @@ static DOORS: &[Door] = &[
     ("gen.classic_code", "(design: gen.recipe.Design) -> u128?", Some(door_gen_classic_code)),
     ("gen.classic_code_nd", "(design: gen.recipe.Design, dimension: usize) -> u128?", Some(door_gen_classic_code_nd)),
     ("gen.hex_key", "(length: usize, rng: Rng(seed)) -> String", Some(door_gen_hex_key)),
+    ("gen.name.Slots.default", "() -> gen.name.Slots", Some(door_gen_name_slots_default)),
     ("gen.name.Tile.checked", "(self: gen.name.Tile) -> gen.name.Tile", Some(door_gen_name_tile_checked)),
     ("gen.name.Tile.from_file", "(text: str) -> gen.name.Tile", Some(door_gen_name_tile_from_file)),
     ("gen.name.Tile.from_json", "(text: str) -> gen.name.Tile", Some(door_gen_name_tile_from_json)),
@@ -410,6 +415,7 @@ static DOORS: &[Door] = &[
     ("gen.recipe.products", "(min_size: usize, max_size: usize, count: usize, parity: gen.Parity) -> [[usize]]", Some(door_gen_recipe_products)),
     ("gen.recipe.size", "(number: i64, level: i64) -> usize?", Some(door_gen_recipe_size)),
     ("gen.tree_mask", "(n: usize) -> Tensor", Some(door_gen_tree_mask)),
+    ("gen.variation.Config.default", "() -> gen.variation.Config", Some(door_gen_variation_config_default)),
     ("gen.variation.File.new", "(width: usize, height: usize) -> gen.variation.File", Some(door_gen_variation_file_new)),
     ("gen.variation.Variation.is_cover", "(self: gen.variation.Variation) -> bool", Some(door_gen_variation_variation_is_cover)),
     ("gen.variation.Variation.is_prime", "(self: gen.variation.Variation) -> bool", Some(door_gen_variation_variation_is_prime)),
@@ -744,6 +750,7 @@ static DOORS: &[Door] = &[
     ("math.name.Bang.to_json", "(self: math.name.Bang) -> String", Some(door_math_name_bang_to_json)),
     ("math.name.Bang.to_mrly", "(self: math.name.Bang) -> String", Some(door_math_name_bang_to_mrly)),
     ("math.name.Bang.to_url", "(self: math.name.Bang) -> String", Some(door_math_name_bang_to_url)),
+    ("math.name.Lattice.default", "() -> math.name.Lattice", Some(door_math_name_lattice_default)),
     ("math.name.Lattice.is_square", "(self: math.name.Lattice) -> bool", Some(door_math_name_lattice_is_square)),
     ("math.name.Lattice.units", "(self: math.name.Lattice) -> usize", Some(door_math_name_lattice_units)),
     ("math.name.Sequence.checked", "(self: math.name.Sequence) -> math.name.Sequence", Some(door_math_name_sequence_checked)),
@@ -787,6 +794,7 @@ static DOORS: &[Door] = &[
     ("math.press.word_member", "(layers: [math.bang.MagicLayer], number: u128) -> bool", Some(door_math_press_word_member)),
     ("math.press.word_members", "(layers: [math.bang.MagicLayer]) -> [u128]", Some(door_math_press_word_members)),
     ("math.press.word_profile", "(layers: [math.bang.MagicLayer]) -> [u128]", Some(door_math_press_word_profile)),
+    ("math.roulette.Nodes.default", "() -> math.roulette.Nodes", Some(door_math_roulette_nodes_default)),
     ("math.roulette.Nodes.pair", "(self: math.roulette.Nodes, i: usize, j: usize) -> usize", Some(door_math_roulette_nodes_pair)),
     ("math.roulette.Nodes.paired", "(self: math.roulette.Nodes) -> usize", Some(door_math_roulette_nodes_paired)),
     ("math.roulette.Nodes.selved", "(self: math.roulette.Nodes) -> usize", Some(door_math_roulette_nodes_selved)),
@@ -905,6 +913,7 @@ static DOORS: &[Door] = &[
     ("math.spin.ring", "(data: [f32], size: usize, radius: f64) -> f64", Some(door_math_spin_ring)),
     ("math.spin.turns", "(power: [f64]) -> usize", Some(door_math_spin_turns)),
     ("math.spin.wheel", "(profile: [f32], size: usize) -> [f32]", Some(door_math_spin_wheel)),
+    ("math.spirograph.Seats.default", "() -> math.spirograph.Seats", Some(door_math_spirograph_seats_default)),
     ("math.spirograph.cell", "(width: usize, height: usize, reach: f64) -> f64", Some(door_math_spirograph_cell)),
     ("math.spirograph.cover", "(track: math.spirograph.Track, pencils: [math.spirograph.Pencil], exact: bool, samples: usize, side: usize) -> math.spirograph.Cover", Some(door_math_spirograph_cover)),
     ("math.spirograph.disc", "(track: math.spirograph.Track, pencils: [math.spirograph.Pencil]) -> math.spirograph.Disc", Some(door_math_spirograph_disc)),
@@ -1293,11 +1302,13 @@ static DOORS: &[Door] = &[
     ("num.spiral.snail", "(base: u64, top: u64, growth: num.spiral.Growth) -> num.spiral.Snail", Some(door_num_spiral_snail)),
     ("num.zeta.Complex.abs", "(self: num.zeta.Complex) -> f64", Some(door_num_zeta_complex_abs)),
     ("num.zeta.Complex.arg", "(self: num.zeta.Complex) -> f64", Some(door_num_zeta_complex_arg)),
+    ("num.zeta.Complex.default", "() -> num.zeta.Complex", Some(door_num_zeta_complex_default)),
     ("num.zeta.Complex.exp", "(self: num.zeta.Complex) -> num.zeta.Complex", Some(door_num_zeta_complex_exp)),
     ("num.zeta.Complex.ln", "(self: num.zeta.Complex) -> num.zeta.Complex", Some(door_num_zeta_complex_ln)),
     ("num.zeta.Complex.new", "(re: f64, im: f64) -> num.zeta.Complex", Some(door_num_zeta_complex_new)),
     ("num.zeta.Complex.turn", "(angle: f64) -> num.zeta.Complex", Some(door_num_zeta_complex_turn)),
     ("num.zeta.Line.count", "(self: num.zeta.Line, t: f64) -> usize", Some(door_num_zeta_line_count)),
+    ("num.zeta.Line.default", "() -> num.zeta.Line", Some(door_num_zeta_line_default)),
     ("num.zeta.Line.exact", "(self: num.zeta.Line, t: f64) -> f64", Some(door_num_zeta_line_exact)),
     ("num.zeta.Line.gram", "(self: num.zeta.Line, n: i64) -> f64", Some(door_num_zeta_line_gram)),
     ("num.zeta.Line.maclaurin", "(self: num.zeta.Line, t: f64) -> num.zeta.Complex", Some(door_num_zeta_line_maclaurin)),
@@ -1324,6 +1335,11 @@ static DOORS: &[Door] = &[
 ];
 
 // CALLS
+
+fn door_core_colorizer_default(name: &str, args: &[Value]) -> Done {
+    count(name, args, 0)?;
+    Ok(give!(mrlyrs::core::Colorizer::default()))
+}
 
 fn door_core_colorizer_diverge(name: &str, args: &[Value]) -> Done {
     count(name, args, 0)?;
@@ -1762,6 +1778,11 @@ fn door_core_image_blur(name: &str, args: &[Value]) -> Done {
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
     Ok(give!(mrlyrs::core::image::blur(&a0, a1, a2, a3)))
+}
+
+fn door_core_paint_config_default(name: &str, args: &[Value]) -> Done {
+    count(name, args, 0)?;
+    Ok(give!(mrlyrs::core::paint::Config::default()))
 }
 
 fn door_core_paint_edition_all(name: &str, args: &[Value]) -> Done {
@@ -2371,6 +2392,16 @@ fn door_gen_background(name: &str, args: &[Value]) -> Done {
     match mrlyrs::gen::background(a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
 }
 
+fn door_gen_build_config2d_default(name: &str, args: &[Value]) -> Done {
+    count(name, args, 0)?;
+    Ok(give!(mrlyrs::gen::build::Config2d::default()))
+}
+
+fn door_gen_build_config3d_default(name: &str, args: &[Value]) -> Done {
+    count(name, args, 0)?;
+    Ok(give!(mrlyrs::gen::build::Config3d::default()))
+}
+
 fn door_gen_build_build_2d(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::gen::Tile = take!(name, 0, &args[0]);
@@ -2449,6 +2480,11 @@ fn door_gen_hex_key(name: &str, args: &[Value]) -> Done {
     let a0: usize = take!(name, 0, &args[0]);
     let mut a1 = mrlyrs::core::Rng::new(seed(name, 1, &args[1])?);
     Ok(give!(mrlyrs::gen::hex_key(a0, &mut a1)))
+}
+
+fn door_gen_name_slots_default(name: &str, args: &[Value]) -> Done {
+    count(name, args, 0)?;
+    Ok(give!(mrlyrs::gen::name::Slots::default()))
 }
 
 fn door_gen_name_tile_checked(name: &str, args: &[Value]) -> Done {
@@ -2585,6 +2621,11 @@ fn door_gen_tree_mask(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: usize = take!(name, 0, &args[0]);
     match mrlyrs::gen::tree_mask(a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+}
+
+fn door_gen_variation_config_default(name: &str, args: &[Value]) -> Done {
+    count(name, args, 0)?;
+    Ok(give!(mrlyrs::gen::variation::Config::default()))
 }
 
 fn door_gen_variation_file_new(name: &str, args: &[Value]) -> Done {
@@ -5037,6 +5078,11 @@ fn door_math_name_bang_to_url(name: &str, args: &[Value]) -> Done {
     match <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::to_url(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
 }
 
+fn door_math_name_lattice_default(name: &str, args: &[Value]) -> Done {
+    count(name, args, 0)?;
+    Ok(give!(mrlyrs::math::name::Lattice::default()))
+}
+
 fn door_math_name_lattice_is_square(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::name::Lattice = take!(name, 0, &args[0]);
@@ -5316,6 +5362,11 @@ fn door_math_press_word_profile(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: Vec<mrlyrs::math::bang::MagicLayer> = take!(name, 0, &args[0]);
     match mrlyrs::math::press::word_profile(&a0) { Ok(value) => Ok({ let mut list0 = Vec::new(); for item0 in value { list0.push(Value::String(item0.to_string())); } Value::Array(list0) }), Err(error) => Err(Fail::Error(error.to_string())) }
+}
+
+fn door_math_roulette_nodes_default(name: &str, args: &[Value]) -> Done {
+    count(name, args, 0)?;
+    Ok(give!(mrlyrs::math::roulette::Nodes::default()))
 }
 
 fn door_math_roulette_nodes_pair(name: &str, args: &[Value]) -> Done {
@@ -6153,6 +6204,11 @@ fn door_math_spin_wheel(name: &str, args: &[Value]) -> Done {
     let a0: Vec<f32> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     Ok(give!(mrlyrs::math::spin::wheel(&a0, a1)))
+}
+
+fn door_math_spirograph_seats_default(name: &str, args: &[Value]) -> Done {
+    count(name, args, 0)?;
+    Ok(give!(mrlyrs::math::spirograph::Seats::default()))
 }
 
 fn door_math_spirograph_cell(name: &str, args: &[Value]) -> Done {
@@ -8842,6 +8898,11 @@ fn door_num_zeta_complex_arg(name: &str, args: &[Value]) -> Done {
     Ok(give!(mrlyrs::num::zeta::Complex::arg(a0)))
 }
 
+fn door_num_zeta_complex_default(name: &str, args: &[Value]) -> Done {
+    count(name, args, 0)?;
+    Ok(give!(mrlyrs::num::zeta::Complex::default()))
+}
+
 fn door_num_zeta_complex_exp(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::num::zeta::Complex = take!(name, 0, &args[0]);
@@ -8872,6 +8933,11 @@ fn door_num_zeta_line_count(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::num::zeta::Line = take!(name, 0, &args[0]);
     let a1: f64 = take!(name, 1, &args[1]);
     Ok(give!(mrlyrs::num::zeta::Line::count(&a0, a1)))
+}
+
+fn door_num_zeta_line_default(name: &str, args: &[Value]) -> Done {
+    count(name, args, 0)?;
+    Ok(give!(mrlyrs::num::zeta::Line::default()))
 }
 
 fn door_num_zeta_line_exact(name: &str, args: &[Value]) -> Done {

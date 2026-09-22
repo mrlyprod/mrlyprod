@@ -62,6 +62,10 @@ export class Rng {
     chance(p: number): boolean;
     /** Draws amount distinct indices below length, or every index when amount is larger. */
     sample_indices(length: number, amount: number): Uint32Array;
+    /** Draws one item of the array, the same draw as Rust's choice. */
+    choice<T>(items: ArrayLike<T>): T;
+    /** Shuffles the array in place, the same permutation as Rust's shuffle. */
+    shuffle<T>(items: T[]): void;
 }
 export declare namespace apollonian {
     /** The bilinear form `B(u, v) = (sum u)(sum v) - 2 sum u v` that the reflection preserves. */
@@ -111,11 +115,14 @@ export declare namespace apollonian {
         /** Writes the Circle as plain data. */
         toJSON(): CircleData;
         /** The curvature. */
-        readonly k: bigint;
+        get k(): bigint;
+        set k(value: number | bigint);
         /** The curvature times the centre's abscissa. */
-        readonly x: bigint;
+        get x(): bigint;
+        set x(value: number | bigint);
         /** The curvature times the centre's ordinate. */
-        readonly y: bigint;
+        get y(): bigint;
+        set y(value: number | bigint);
         /** The centre, none on a line. */
         centre(): [number, number] | undefined;
         /** Whether the circle is a line. */
@@ -427,7 +434,7 @@ export declare namespace gauss {
         /** Counts every class inside. */
         census(): gauss.Census;
         /** Classifies a point: prime when its norm is a rational prime, or when it is a unit times a rational prime that stays prime. */
-        class_(a: number | bigint, b: number | bigint): gauss.Class;
+        class(a: number | bigint, b: number | bigint): gauss.Class;
         /** Returns whether a point lies inside. */
         holds(a: number | bigint, b: number | bigint): boolean;
         /** Lists every point inside, row by row from the bottom left of the bounding square. */
@@ -550,11 +557,14 @@ export declare namespace memory {
         /** Writes the Rule as plain data. */
         toJSON(): RuleData;
         /** The dimension `D`, one to three. */
-        readonly dimension: number;
+        get dimension(): number;
+        set dimension(value: number);
         /** The window width `k`, at least one. */
-        readonly width: number;
+        get width(): number;
+        set width(value: number);
         /** The window code, bit `w` set when window `w` is allowed. */
-        readonly code: bigint;
+        get code(): bigint;
+        set code(value: number | bigint);
         /** Returns whether a word, coarsest digit first, is accepted. */
         accepts(word: ArrayLike<number>): boolean;
         /** Returns whether the window is allowed, and false for any window out of range. */
@@ -742,7 +752,7 @@ export declare namespace radix {
         /** Writes the Base as plain data. */
         toJSON(): BaseData;
         /** Returns the index in the canonical residue system of the class of a point. */
-        class_(z: [number | bigint, number | bigint]): number;
+        class(z: [number | bigint, number | bigint]): number;
         /** Returns whether two points are congruent modulo the base. */
         congruent(z: [number | bigint, number | bigint], w: [number | bigint, number | bigint]): boolean;
         /** Returns the symmetry group of the base as permutations of the canonical residue indices: every unit multiplication, and every unit times conjugation when the conjugate of the base is an associate of the base. */
@@ -1020,13 +1030,17 @@ export declare namespace zeta {
         /** Writes the Complex as plain data. */
         toJSON(): ComplexData;
         /** The real part. */
-        readonly re: number;
+        get re(): number;
+        set re(value: number);
         /** The imaginary part. */
-        readonly im: number;
+        get im(): number;
+        set im(value: number);
         /** Returns the modulus. */
         abs(): number;
         /** Returns the principal argument. */
         arg(): number;
+        /** Returns the default Complex. */
+        static default(): zeta.Complex;
         /** Returns the exponential. */
         exp(): zeta.Complex;
         /** Returns the principal logarithm. */
@@ -1046,6 +1060,8 @@ export declare namespace zeta {
         toJSON(): LineData;
         /** Counts the zeros on the line below t. */
         count(t: number): number;
+        /** Returns the default Line. */
+        static default(): zeta.Line;
         /** Returns Z(t) from the Euler-Maclaurin value turned onto the real axis. */
         exact(t: number): number;
         /** Returns the n-th Gram point, where theta is n pi, by Newton from the right. */

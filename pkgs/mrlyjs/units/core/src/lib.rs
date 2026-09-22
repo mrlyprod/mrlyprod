@@ -1062,11 +1062,21 @@ impl Image {
         let value = self.inner.width;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_width(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.width = value;
+        Ok(())
+    }
     /// The height in pixels.
     #[wasm_bindgen(getter)]
     pub fn height(&self) -> Result<usize, JsValue> {
         let value = self.inner.height;
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_height(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.height = value;
+        Ok(())
     }
     /// The palette index of every pixel, row by row.
     #[wasm_bindgen(getter)]
@@ -1074,11 +1084,23 @@ impl Image {
         let value = self.inner.rows.clone();
         hand::list_to_js(&value, |x1| Ok(hand::typed(&(*x1)[..])))
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_rows(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::from_js::<Vec<Vec<usize>>>(&value)?;
+        self.inner.rows = value;
+        Ok(())
+    }
     /// The colors the rows index.
     #[wasm_bindgen(getter)]
     pub fn palette(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.palette.clone();
         hand::list_to_js(&value, |x1| Ok(hand::color_to_js(*x1)))
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_palette(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::list_from_js(&value, hand::color_from_js)?;
+        self.inner.palette = value;
+        Ok(())
     }
     /// Returns the flat rgba pixels, transparent wherever an index misses the palette.
     pub fn colors(&self) -> Result<JsValue, JsValue> {
@@ -1136,11 +1158,23 @@ impl colors_Theme {
         let value = self.inner.ground;
         Ok(hand::color_to_js(value))
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_ground(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::color_from_js(&value)?;
+        self.inner.ground = value;
+        Ok(())
+    }
     /// The page background, one step off the ground.
     #[wasm_bindgen(getter)]
     pub fn bg(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.bg;
         Ok(hand::color_to_js(value))
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_bg(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::color_from_js(&value)?;
+        self.inner.bg = value;
+        Ok(())
     }
     /// The raised panel.
     #[wasm_bindgen(getter)]
@@ -1148,11 +1182,23 @@ impl colors_Theme {
         let value = self.inner.panel;
         Ok(hand::color_to_js(value))
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_panel(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::color_from_js(&value)?;
+        self.inner.panel = value;
+        Ok(())
+    }
     /// The sunken well.
     #[wasm_bindgen(getter)]
     pub fn deep(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.deep;
         Ok(hand::color_to_js(value))
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_deep(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::color_from_js(&value)?;
+        self.inner.deep = value;
+        Ok(())
     }
     /// The hairline between things.
     #[wasm_bindgen(getter)]
@@ -1160,11 +1206,23 @@ impl colors_Theme {
         let value = self.inner.line;
         Ok(hand::color_to_js(value))
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_line(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::color_from_js(&value)?;
+        self.inner.line = value;
+        Ok(())
+    }
     /// The foreground, the strongest tone.
     #[wasm_bindgen(getter)]
     pub fn fg(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.fg;
         Ok(hand::color_to_js(value))
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_fg(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::color_from_js(&value)?;
+        self.inner.fg = value;
+        Ok(())
     }
     /// The dimmed foreground, for anything secondary.
     #[wasm_bindgen(getter)]
@@ -1172,11 +1230,23 @@ impl colors_Theme {
         let value = self.inner.dim;
         Ok(hand::color_to_js(value))
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_dim(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::color_from_js(&value)?;
+        self.inner.dim = value;
+        Ok(())
+    }
     /// The interactive accent.
     #[wasm_bindgen(getter)]
     pub fn accent(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.accent;
         Ok(hand::color_to_js(value))
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_accent(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::color_from_js(&value)?;
+        self.inner.accent = value;
+        Ok(())
     }
     /// The tone written on the accent.
     #[wasm_bindgen(getter)]
@@ -1184,11 +1254,23 @@ impl colors_Theme {
         let value = self.inner.on_accent;
         Ok(hand::color_to_js(value))
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_on_accent(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::color_from_js(&value)?;
+        self.inner.on_accent = value;
+        Ok(())
+    }
     /// The red ink.
     #[wasm_bindgen(getter)]
     pub fn red(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.red;
         Ok(hand::color_to_js(value))
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_red(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::color_from_js(&value)?;
+        self.inner.red = value;
+        Ok(())
     }
     /// The orange ink.
     #[wasm_bindgen(getter)]
@@ -1196,11 +1278,23 @@ impl colors_Theme {
         let value = self.inner.orange;
         Ok(hand::color_to_js(value))
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_orange(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::color_from_js(&value)?;
+        self.inner.orange = value;
+        Ok(())
+    }
     /// The yellow ink.
     #[wasm_bindgen(getter)]
     pub fn yellow(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.yellow;
         Ok(hand::color_to_js(value))
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_yellow(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::color_from_js(&value)?;
+        self.inner.yellow = value;
+        Ok(())
     }
     /// The green ink.
     #[wasm_bindgen(getter)]
@@ -1208,11 +1302,23 @@ impl colors_Theme {
         let value = self.inner.green;
         Ok(hand::color_to_js(value))
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_green(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::color_from_js(&value)?;
+        self.inner.green = value;
+        Ok(())
+    }
     /// The mint ink.
     #[wasm_bindgen(getter)]
     pub fn mint(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.mint;
         Ok(hand::color_to_js(value))
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_mint(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::color_from_js(&value)?;
+        self.inner.mint = value;
+        Ok(())
     }
     /// The teal ink.
     #[wasm_bindgen(getter)]
@@ -1220,11 +1326,23 @@ impl colors_Theme {
         let value = self.inner.teal;
         Ok(hand::color_to_js(value))
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_teal(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::color_from_js(&value)?;
+        self.inner.teal = value;
+        Ok(())
+    }
     /// The cyan ink.
     #[wasm_bindgen(getter)]
     pub fn cyan(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.cyan;
         Ok(hand::color_to_js(value))
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_cyan(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::color_from_js(&value)?;
+        self.inner.cyan = value;
+        Ok(())
     }
     /// The blue ink.
     #[wasm_bindgen(getter)]
@@ -1232,11 +1350,23 @@ impl colors_Theme {
         let value = self.inner.blue;
         Ok(hand::color_to_js(value))
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_blue(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::color_from_js(&value)?;
+        self.inner.blue = value;
+        Ok(())
+    }
     /// The indigo ink.
     #[wasm_bindgen(getter)]
     pub fn indigo(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.indigo;
         Ok(hand::color_to_js(value))
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_indigo(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::color_from_js(&value)?;
+        self.inner.indigo = value;
+        Ok(())
     }
     /// The purple ink.
     #[wasm_bindgen(getter)]
@@ -1244,11 +1374,23 @@ impl colors_Theme {
         let value = self.inner.purple;
         Ok(hand::color_to_js(value))
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_purple(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::color_from_js(&value)?;
+        self.inner.purple = value;
+        Ok(())
+    }
     /// The pink ink.
     #[wasm_bindgen(getter)]
     pub fn pink(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.pink;
         Ok(hand::color_to_js(value))
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_pink(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::color_from_js(&value)?;
+        self.inner.pink = value;
+        Ok(())
     }
     /// The brown ink.
     #[wasm_bindgen(getter)]
@@ -1256,11 +1398,23 @@ impl colors_Theme {
         let value = self.inner.brown;
         Ok(hand::color_to_js(value))
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_brown(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::color_from_js(&value)?;
+        self.inner.brown = value;
+        Ok(())
+    }
     /// The gray ink.
     #[wasm_bindgen(getter)]
     pub fn gray(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.gray;
         Ok(hand::color_to_js(value))
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_gray(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::color_from_js(&value)?;
+        self.inner.gray = value;
+        Ok(())
     }
     /// The thirteen inks in name order.
     pub fn hues(&self) -> Result<JsValue, JsValue> {
@@ -1298,11 +1452,23 @@ impl paint_Paint {
         let value = self.inner.edition;
         hand::to_js(&value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_edition(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::from_js::<mrlyrs::core::paint::Edition>(&value)?;
+        self.inner.edition = value;
+        Ok(())
+    }
     /// The secondary color scheme.
     #[wasm_bindgen(getter)]
     pub fn scheme(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.scheme;
         hand::to_js(&value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_scheme(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::from_js::<mrlyrs::core::paint::Scheme>(&value)?;
+        self.inner.scheme = value;
+        Ok(())
     }
     /// The side the primary ink lands on.
     #[wasm_bindgen(getter)]
@@ -1310,11 +1476,23 @@ impl paint_Paint {
         let value = self.inner.target;
         hand::to_js(&value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_target(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::from_js::<mrlyrs::core::paint::Target>(&value)?;
+        self.inner.target = value;
+        Ok(())
+    }
     /// The primary ink.
     #[wasm_bindgen(getter)]
     pub fn primary(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.primary;
         hand::to_js(&value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_primary(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::from_js::<mrlyrs::core::paint::Ink>(&value)?;
+        self.inner.primary = value;
+        Ok(())
     }
     /// The secondary inks.
     #[wasm_bindgen(getter)]
@@ -1322,11 +1500,22 @@ impl paint_Paint {
         let value = self.inner.secondary.clone();
         hand::to_js(&value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_secondary(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::from_js::<Vec<mrlyrs::core::paint::Ink>>(&value)?;
+        self.inner.secondary = value;
+        Ok(())
+    }
     /// The shade indices of a multitone ramp.
     #[wasm_bindgen(getter)]
     pub fn shades(&self) -> Result<Vec<usize>, JsValue> {
         let value = self.inner.shades.clone();
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_shades(&mut self, value: Vec<usize>) -> Result<(), JsValue> {
+        self.inner.shades = value;
+        Ok(())
     }
     /// Returns true for the Simple edition.
     pub fn is_simple(&self) -> Result<bool, JsValue> {
@@ -1348,6 +1537,12 @@ pub struct Colorizer {}
 
 #[wasm_bindgen]
 impl Colorizer {
+    /// Returns the default Colorizer.
+    #[wasm_bindgen(js_name = "default")]
+    pub fn default_() -> Result<JsValue, JsValue> {
+        let value = mrlyrs::core::Colorizer::default();
+        hand::to_js(&value)
+    }
     /// Builds the blue-to-red diverging ramp around a white middle.
     pub fn diverge() -> Result<JsValue, JsValue> {
         let value = mrlyrs::core::Colorizer::diverge();
@@ -1383,6 +1578,20 @@ impl Dtype {
         let dtype = hand::from_js::<mrlyrs::core::Dtype>(&dtype)?;
         let value = dtype.max();
         Ok(value)
+    }
+}
+
+/// The constraints a caller may put on a random paint.
+#[wasm_bindgen]
+pub struct paint_Config {}
+
+#[wasm_bindgen]
+impl paint_Config {
+    /// Returns the default Config.
+    #[wasm_bindgen(js_name = "default")]
+    pub fn default_() -> Result<JsValue, JsValue> {
+        let value = mrlyrs::core::paint::Config::default();
+        hand::to_js(&value)
     }
 }
 

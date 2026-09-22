@@ -10,9 +10,13 @@ class Press:
     @property
     def dimension(self) -> int:
         """The design dimension of the universe."""
+    @dimension.setter
+    def dimension(self, value: int) -> None: ...
     @property
     def base(self) -> int:
         """The numeral base of the universe."""
+    @base.setter
+    def base(self, value: int) -> None: ...
     def add(self, number: int, weight: int) -> None:
         """Adds a weighted number to its usage bucket."""
     @staticmethod

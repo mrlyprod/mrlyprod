@@ -20,7 +20,8 @@ const WORDS: &[&str] = &[
 ];
 
 const RNG_METHODS: &[&str] = &[
-    "new", "unit", "below", "range", "boolean", "chance", "sample_indices", "__state", "__restore",
+    "new", "unit", "below", "range", "boolean", "chance", "sample_indices", "choice", "shuffle",
+    "__state", "__restore",
 ];
 
 const JS_RESERVED: &[&str] = &[
@@ -784,18 +785,23 @@ impl<'a> Unit<'a> {
         let doc = doc_line(&head.docs);
         let indent = if matches!(owner, Owner::Class(_) | Owner::Holder(_)) { "    " } else { "" };
         let constructor = matches!(owner, Owner::Class(_)) && head.name == "new" && head.self_kind.is_none();
+        let renamed = match owner {
+            Owner::Holder(_) => head.name == "new" || head.name == "default",
+            Owner::Class(_) => head.name == "default",
+            Owner::Free | Owner::Hand(_) => false,
+        };
         if !doc.is_empty() {
             writeln!(out, "{indent}/// {doc}").ok();
         }
         if constructor {
             writeln!(out, "{indent}#[wasm_bindgen(constructor)]").ok();
-        } else if matches!(owner, Owner::Holder(_)) && head.name == "new" {
-            writeln!(out, "{indent}#[wasm_bindgen(js_name = \"new\")]").ok();
+        } else if renamed {
+            writeln!(out, "{indent}#[wasm_bindgen(js_name = \"{}\")]", head.name).ok();
         } else if indent.is_empty() {
             writeln!(out, "#[wasm_bindgen]").ok();
         }
-        let rust_name = if matches!(owner, Owner::Holder(_)) && head.name == "new" {
-            "new_".to_string()
+        let rust_name = if renamed {
+            format!("{}_", head.name)
         } else if indent.is_empty() {
             self.export(&name)
         } else {
@@ -1044,6 +1050,25 @@ impl<'a> Unit<'a> {
             writeln!(out, "        let value = {value};").ok();
             writeln!(out, "        {}", ret.done).ok();
             writeln!(out, "    }}").ok();
+            if field.ty.settable() {
+                let plan = self.plan_param("value", &field.ty, cx, false)?;
+                writeln!(out, "    #[wasm_bindgen(setter)]").ok();
+                writeln!(
+                    out,
+                    "    pub fn set_{}(&mut self, {}: {}) -> Result<(), JsValue> {{",
+                    field.name, plan.name, plan.sig
+                )
+                .ok();
+                for line in &plan.pre {
+                    writeln!(out, "        {line}").ok();
+                }
+                writeln!(out, "        self.inner.{} = {};", field.name, plan.arg).ok();
+                for line in &plan.post {
+                    writeln!(out, "        {line}").ok();
+                }
+                writeln!(out, "        Ok(())").ok();
+                writeln!(out, "    }}").ok();
+            }
         }
         for group in groups {
             self.emit_group(out, group, Owner::Class(t))?;
@@ -1447,13 +1472,19 @@ impl<'a> Unit<'a> {
                     if !d.is_empty() {
                         writeln!(out, "{inner}/** {d} */").ok();
                     }
-                    writeln!(
-                        out,
-                        "{inner}readonly {}: {};",
-                        ident(&field.name),
-                        self.ts_direct(&field.ty, true)
-                    )
-                    .ok();
+                    let out_ty = self.ts_direct(&field.ty, true);
+                    if field.ty.settable() {
+                        writeln!(out, "{inner}get {}(): {out_ty};", field.name).ok();
+                        writeln!(
+                            out,
+                            "{inner}set {}(value: {});",
+                            field.name,
+                            self.ts_direct(&field.ty, false)
+                        )
+                        .ok();
+                    } else {
+                        writeln!(out, "{inner}readonly {}: {out_ty};", ident(&field.name)).ok();
+                    }
                 }
                 for g in groups {
                     let f = g[0];
@@ -1465,7 +1496,7 @@ impl<'a> Unit<'a> {
                         writeln!(out, "{inner}/** {d} */").ok();
                     }
                     let prefix = if f.self_kind.is_none() { "static " } else { "" };
-                    writeln!(out, "{inner}{prefix}{}({params}): {ret};", ident(&f.name)).ok();
+                    writeln!(out, "{inner}{prefix}{}({params}): {ret};", f.name).ok();
                 }
                 writeln!(out, "{pad}}}").ok();
             }
@@ -1574,7 +1605,7 @@ impl<'a> Unit<'a> {
         writeln!(out, "/** A hex cell inside plain data, serde's form. */").ok();
         writeln!(out, "export interface Cell6dData {{\n    cell: {{ cell: CellData }};\n    projection: {projection};\n    orientation: {orientation};\n    start: number;\n}}").ok();
         writeln!(out, "/** A seeded random stream, opened from a number or a bigint seed. */").ok();
-        writeln!(out, "export class Rng {{\n    constructor(seed: number | bigint | string);\n    free(): void;\n    /** Draws a float at or above zero and below one. */\n    unit(): number;\n    /** Draws an integer below n, or zero when n is zero. */\n    below(n: number): number;\n    /** Draws an integer between lo and hi inclusive, or lo when hi is not above lo. */\n    range(lo: number, hi: number): number;\n    /** Draws a fair coin flip. */\n    boolean(): boolean;\n    /** Returns true with probability p. */\n    chance(p: number): boolean;\n    /** Draws amount distinct indices below length, or every index when amount is larger. */\n    sample_indices(length: number, amount: number): Uint32Array;\n}}").ok();
+        writeln!(out, "export class Rng {{\n    constructor(seed: number | bigint | string);\n    free(): void;\n    /** Draws a float at or above zero and below one. */\n    unit(): number;\n    /** Draws an integer below n, or zero when n is zero. */\n    below(n: number): number;\n    /** Draws an integer between lo and hi inclusive, or lo when hi is not above lo. */\n    range(lo: number, hi: number): number;\n    /** Draws a fair coin flip. */\n    boolean(): boolean;\n    /** Returns true with probability p. */\n    chance(p: number): boolean;\n    /** Draws amount distinct indices below length, or every index when amount is larger. */\n    sample_indices(length: number, amount: number): Uint32Array;\n    /** Draws one item of the array, the same draw as Rust's choice. */\n    choice<T>(items: ArrayLike<T>): T;\n    /** Shuffles the array in place, the same permutation as Rust's shuffle. */\n    shuffle<T>(items: T[]): void;\n}}").ok();
         let mut tree = DeclTree::default();
         let groups = self.groups();
         let mut owned: BTreeMap<&str, Vec<Vec<&Function>>> = BTreeMap::new();

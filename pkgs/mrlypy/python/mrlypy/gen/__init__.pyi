@@ -10,33 +10,53 @@ class Tile:
     @property
     def group(self) -> Literal["General", "Fractal", "Magic", "Special", "Mosaic"]:
         """The construction family."""
+    @group.setter
+    def group(self, value: Literal["General", "Fractal", "Magic", "Special", "Mosaic"]) -> None: ...
     @property
     def factor(self) -> int:
         """The base factor of the construction."""
+    @factor.setter
+    def factor(self, value: int) -> None: ...
     @property
     def sources(self) -> list[Any]:
         """The origin of each layer."""
+    @sources.setter
+    def sources(self, value: list[Any]) -> None: ...
     @property
     def numbers(self) -> list[int]:
         """The grid size of each source."""
+    @numbers.setter
+    def numbers(self, value: list[int]) -> None: ...
     @property
     def levels(self) -> list[int]:
         """The fractal level of each source."""
+    @levels.setter
+    def levels(self, value: list[int]) -> None: ...
     @property
     def rotations(self) -> list[int]:
         """The quarter-turn rotation of each source."""
+    @rotations.setter
+    def rotations(self, value: list[int]) -> None: ...
     @property
     def invert(self) -> bool:
         """Whether the finished tile inverts."""
+    @invert.setter
+    def invert(self, value: bool) -> None: ...
     @property
     def flip(self) -> bool:
         """Whether the finished tile flips."""
+    @flip.setter
+    def flip(self, value: bool) -> None: ...
     @property
     def width(self) -> int:
         """The tile's width in cells."""
+    @width.setter
+    def width(self, value: int) -> None: ...
     @property
     def height(self) -> int:
         """The tile's height in cells."""
+    @height.setter
+    def height(self, value: int) -> None: ...
     def check(self) -> None:
         """Checks that the slots, numbers and sizes agree."""
     def degenerate(self) -> bool:
@@ -86,7 +106,7 @@ def hex_key(length: int, rng: mrlypy.core.Rng) -> str:
     """Draws a hex key of the given length from the stream."""
 
 def random_design(rng: mrlypy.core.Rng) -> Literal["Carpet", "Net", "Htree", "Vtree", "Void", "Xtree", "Ytree", "Ztree", "Point", "Dust", "Hline", "Vline", "Star", "Xline", "Yline", "Zline"]:
-    """Draws one named design from the stream."""
+    """Draws one of the four flat classics from the stream: carpet, net, vertical tree or void."""
 
 def random_rotation(design: Literal["Carpet", "Net", "Htree", "Vtree", "Void", "Xtree", "Ytree", "Ztree", "Point", "Dust", "Hline", "Vline", "Star", "Xline", "Yline", "Zline"], rng: mrlypy.core.Rng) -> int:
     """Draws a design's turn from the stream: a tree turns 0 or 1, every other design 0 to 3."""

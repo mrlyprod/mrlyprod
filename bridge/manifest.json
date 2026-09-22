@@ -26,7 +26,7 @@
         "",
         "The doors: [`Tensor::of`](crate::core::tensor::Tensor::of), [`Tensor::rot90`](crate::core::tensor::Tensor::rot90), [`Color::from_hex`](crate::core::colors::Color::from_hex), [`Color::to_hex`](crate::core::colors::Color::to_hex), [`png`](crate::core::png()), [`unpng`](crate::core::unpng()), [`gif`](crate::core::gif()) and [`Colorizer::color`](crate::core::ramp::Colorizer::color)."
       ],
-      "items": 27
+      "items": 28
     },
     {
       "path": "core::cell",
@@ -75,7 +75,7 @@
       "docs": [
         "The editions that distribute a palette over a cell."
       ],
-      "items": 26
+      "items": 27
     },
     {
       "path": "core::ramp",
@@ -215,7 +215,7 @@
       "docs": [
         "The recipe to cell builders, one per dimension, and the random draws that feed them."
       ],
-      "items": 12
+      "items": 14
     },
     {
       "path": "gen::draw",
@@ -231,7 +231,7 @@
       "docs": [
         "The tile name: a full tile recipe folded to its one canonical object."
       ],
-      "items": 13
+      "items": 14
     },
     {
       "path": "gen::recipe",
@@ -247,7 +247,7 @@
       "docs": [
         "The seeded artwork run from tile recipe to rendered files."
       ],
-      "items": 9
+      "items": 10
     },
     {
       "path": "life",
@@ -715,7 +715,7 @@
         "Every mathematical thing prints one canonical JSON object, and the url, filename, prose and id",
         "views are functions of that one string."
       ],
-      "items": 40
+      "items": 41
     },
     {
       "path": "math::name::bang",
@@ -755,7 +755,7 @@
       "docs": [
         "The nodes of a roulette: where the curves a wheel's pencils draw cross themselves and one another."
       ],
-      "items": 8
+      "items": 9
     },
     {
       "path": "math::rules",
@@ -887,7 +887,7 @@
       "docs": [
         "The spirograph: a byte grid as a wheel with a pencil in every cell, rolled on a line, a circle or a polygon, and the curves it draws."
       ],
-      "items": 28
+      "items": 29
     },
     {
       "path": "math::three",
@@ -1210,7 +1210,7 @@
       "docs": [
         "The critical line: zeta at one half plus i t and off it, its zeros, the prime staircase they rebuild and the novelty meter their waves predict."
       ],
-      "items": 33
+      "items": 35
     }
   ],
   "types": [
@@ -1959,7 +1959,7 @@
     {
       "path": "core::Tensor",
       "name": "Tensor",
-      "defined_at": "core/tensor.rs:98",
+      "defined_at": "core/tensor.rs:119",
       "docs": [
         "An n-dimensional grid of small integers."
       ],
@@ -14826,6 +14826,29 @@
   ],
   "functions": [
     {
+      "path": "core::Colorizer::default",
+      "name": "default",
+      "module": "core",
+      "defined_at": "core/ramp.rs:87",
+      "docs": [
+        "Returns the default Colorizer."
+      ],
+      "owner": "core::Colorizer",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "plain",
+        "path": "core::Colorizer"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "default",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
       "path": "core::Colorizer::diverge",
       "name": "diverge",
       "module": "core",
@@ -17780,6 +17803,29 @@
       }
     },
     {
+      "path": "core::paint::Config::default",
+      "name": "default",
+      "module": "core::paint",
+      "defined_at": "core/paint.rs:136",
+      "docs": [
+        "Returns the default Config."
+      ],
+      "owner": "core::paint::Config",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "plain",
+        "path": "core::paint::Config"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "default",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
       "path": "core::paint::Edition::all",
       "name": "all",
       "module": "core::paint",
@@ -19184,7 +19230,7 @@
       "path": "core::tensor::at",
       "name": "at",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:276",
+      "defined_at": "core/tensor.rs:395",
       "docs": [
         "Returns the element at a flat index, which must be below the size like a slice index."
       ],
@@ -19215,7 +19261,7 @@
       "path": "core::tensor::binarize",
       "name": "binarize",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:583",
+      "defined_at": "core/tensor.rs:674",
       "docs": [
         "Maps every element to one at or above the threshold, zero below."
       ],
@@ -19247,7 +19293,7 @@
       "path": "core::tensor::binarize_otsu",
       "name": "binarize_otsu",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:632",
+      "defined_at": "core/tensor.rs:723",
       "docs": [
         "Binarizes at one above the Otsu threshold."
       ],
@@ -19271,7 +19317,7 @@
       "path": "core::tensor::blur",
       "name": "blur",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:640",
+      "defined_at": "core/tensor.rs:731",
       "docs": [
         "Averages every position over its masked neighborhood, rounded.",
         "",
@@ -19323,7 +19369,7 @@
       "path": "core::tensor::bytes",
       "name": "bytes",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:225",
+      "defined_at": "core/tensor.rs:344",
       "docs": [
         "Returns the elements as bytes.",
         "",
@@ -19357,7 +19403,7 @@
       "path": "core::tensor::bytes_mut",
       "name": "bytes_mut",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:236",
+      "defined_at": "core/tensor.rs:355",
       "docs": [
         "Returns the elements as mutable bytes.",
         "",
@@ -19392,7 +19438,7 @@
       "path": "core::tensor::count",
       "name": "count",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:727",
+      "defined_at": "core/tensor.rs:818",
       "docs": [
         "Counts the cells holding one value."
       ],
@@ -19423,7 +19469,7 @@
       "path": "core::tensor::dtype",
       "name": "dtype",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:213",
+      "defined_at": "core/tensor.rs:332",
       "docs": [
         "Returns the element width."
       ],
@@ -19446,7 +19492,7 @@
       "path": "core::tensor::exposed",
       "name": "exposed",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:733",
+      "defined_at": "core/tensor.rs:824",
       "docs": [
         "Counts the faces where filled cells meet empty cells or the boundary: perimeter in 2d, surface in 3d."
       ],
@@ -19468,7 +19514,7 @@
       "path": "core::tensor::filled",
       "name": "filled",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:142",
+      "defined_at": "core/tensor.rs:261",
       "docs": [
         "Builds a tensor of the shape and width filled with one value."
       ],
@@ -19517,7 +19563,7 @@
       "path": "core::tensor::flip",
       "name": "flip",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:403",
+      "defined_at": "core/tensor.rs:522",
       "docs": [
         "Reverses the tensor along one axis.",
         "",
@@ -19556,7 +19602,7 @@
       "path": "core::tensor::fractal",
       "name": "fractal",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:370",
+      "defined_at": "core/tensor.rs:489",
       "docs": [
         "Folds the tensor into its level-fold Kronecker power.",
         "",
@@ -19595,7 +19641,7 @@
       "path": "core::tensor::full",
       "name": "full",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:130",
+      "defined_at": "core/tensor.rs:249",
       "docs": [
         "Builds a u8 tensor filled with one value."
       ],
@@ -19637,7 +19683,7 @@
       "path": "core::tensor::get",
       "name": "get",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:322",
+      "defined_at": "core/tensor.rs:441",
       "docs": [
         "Returns the byte at a multi-index.",
         "",
@@ -19679,7 +19725,7 @@
       "path": "core::tensor::i32",
       "name": "i32",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:209",
+      "defined_at": "core/tensor.rs:328",
       "docs": [
         "Wraps an i32 vector as a tensor of the shape.",
         "",
@@ -19731,7 +19777,7 @@
       "path": "core::tensor::i32s",
       "name": "i32s",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:269",
+      "defined_at": "core/tensor.rs:388",
       "docs": [
         "Returns the elements as i32s.",
         "",
@@ -19765,7 +19811,7 @@
       "path": "core::tensor::index",
       "name": "index",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:288",
+      "defined_at": "core/tensor.rs:407",
       "docs": [
         "Folds a multi-index into its flat index."
       ],
@@ -19800,7 +19846,7 @@
       "path": "core::tensor::invert",
       "name": "invert",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:391",
+      "defined_at": "core/tensor.rs:510",
       "docs": [
         "Flips every element between zero and one."
       ],
@@ -19824,7 +19870,7 @@
       "path": "core::tensor::kron",
       "name": "kron",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:337",
+      "defined_at": "core/tensor.rs:456",
       "docs": [
         "Builds the Kronecker product of the two tensors."
       ],
@@ -19862,7 +19908,7 @@
       "path": "core::tensor::layers",
       "name": "layers",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:505",
+      "defined_at": "core/tensor.rs:624",
       "docs": [
         "Numbers every position by its concentric ring out from the center."
       ],
@@ -19894,7 +19940,7 @@
       "path": "core::tensor::neighbors",
       "name": "neighbors",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:528",
+      "defined_at": "core/tensor.rs:647",
       "docs": [
         "Counts each position's masked neighbors holding the target bit.",
         "",
@@ -19960,7 +20006,7 @@
       "path": "core::tensor::new",
       "name": "new",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:126",
+      "defined_at": "core/tensor.rs:245",
       "docs": [
         "Builds a zeroed u8 tensor of the shape."
       ],
@@ -19995,7 +20041,7 @@
       "path": "core::tensor::of",
       "name": "of",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:160",
+      "defined_at": "core/tensor.rs:279",
       "docs": [
         "Wraps a byte vector as a tensor of the shape.",
         "",
@@ -20053,7 +20099,7 @@
       "path": "core::tensor::otsu_threshold",
       "name": "otsu_threshold",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:592",
+      "defined_at": "core/tensor.rs:683",
       "docs": [
         "Returns the Otsu threshold splitting the histogram at greatest variance."
       ],
@@ -20076,7 +20122,7 @@
       "path": "core::tensor::pad",
       "name": "pad",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:474",
+      "defined_at": "core/tensor.rs:593",
       "docs": [
         "Wraps the tensor in a count-thick border of one value."
       ],
@@ -20115,7 +20161,7 @@
       "path": "core::tensor::perforate",
       "name": "perforate",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:701",
+      "defined_at": "core/tensor.rs:792",
       "docs": [
         "Stamps the value wherever the tiled mask is nonzero.",
         "",
@@ -20167,7 +20213,7 @@
       "path": "core::tensor::put",
       "name": "put",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:280",
+      "defined_at": "core/tensor.rs:399",
       "docs": [
         "Writes the element at a flat index, which must be below the size like a slice index."
       ],
@@ -20204,7 +20250,7 @@
       "path": "core::tensor::rot90",
       "name": "rot90",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:462",
+      "defined_at": "core/tensor.rs:581",
       "docs": [
         "Rotates the tensor k quarter turns in the plane of two axes.",
         "",
@@ -20266,7 +20312,7 @@
       "path": "core::tensor::set",
       "name": "set",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:331",
+      "defined_at": "core/tensor.rs:450",
       "docs": [
         "Writes the byte at a multi-index.",
         "",
@@ -20314,7 +20360,7 @@
       "path": "core::tensor::size",
       "name": "size",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:217",
+      "defined_at": "core/tensor.rs:336",
       "docs": [
         "Returns the number of elements."
       ],
@@ -20337,7 +20383,7 @@
       "path": "core::tensor::slice",
       "name": "slice",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:435",
+      "defined_at": "core/tensor.rs:554",
       "docs": [
         "Drops one axis by fixing it at an index.",
         "",
@@ -20388,7 +20434,7 @@
       "path": "core::tensor::sum",
       "name": "sum",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:284",
+      "defined_at": "core/tensor.rs:403",
       "docs": [
         "Returns the sum of all elements."
       ],
@@ -20411,7 +20457,7 @@
       "path": "core::tensor::tile",
       "name": "tile",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:490",
+      "defined_at": "core/tensor.rs:609",
       "docs": [
         "Repeats the tensor the given number of times along each axis.",
         "",
@@ -20454,7 +20500,7 @@
       "path": "core::tensor::transpose",
       "name": "transpose",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:416",
+      "defined_at": "core/tensor.rs:535",
       "docs": [
         "Swaps two axes.",
         "",
@@ -20500,7 +20546,7 @@
       "path": "core::tensor::typed",
       "name": "typed",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:134",
+      "defined_at": "core/tensor.rs:253",
       "docs": [
         "Builds a zeroed tensor of the shape and width."
       ],
@@ -20542,7 +20588,7 @@
       "path": "core::tensor::u16",
       "name": "u16",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:193",
+      "defined_at": "core/tensor.rs:312",
       "docs": [
         "Wraps a u16 vector as a tensor of the shape.",
         "",
@@ -20601,7 +20647,7 @@
       "path": "core::tensor::u16s",
       "name": "u16s",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:247",
+      "defined_at": "core/tensor.rs:366",
       "docs": [
         "Returns the elements as u16s.",
         "",
@@ -20635,7 +20681,7 @@
       "path": "core::tensor::u32",
       "name": "u32",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:201",
+      "defined_at": "core/tensor.rs:320",
       "docs": [
         "Wraps a u32 vector as a tensor of the shape.",
         "",
@@ -20687,7 +20733,7 @@
       "path": "core::tensor::u32s",
       "name": "u32s",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:258",
+      "defined_at": "core/tensor.rs:377",
       "docs": [
         "Returns the elements as u32s.",
         "",
@@ -20721,7 +20767,7 @@
       "path": "core::tensor::u8",
       "name": "u8",
       "module": "core::tensor",
-      "defined_at": "core/tensor.rs:178",
+      "defined_at": "core/tensor.rs:297",
       "docs": [
         "Wraps a u8 vector as a tensor of the shape, the same door as [`Tensor::of`].",
         "",
@@ -22149,6 +22195,52 @@
       }
     },
     {
+      "path": "gen::build::Config2d::default",
+      "name": "default",
+      "module": "gen::build",
+      "defined_at": "gen/draw.rs:25",
+      "docs": [
+        "Returns the default Config2d."
+      ],
+      "owner": "gen::build::Config2d",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "plain",
+        "path": "gen::draw::ConfigNd"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "default",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "gen::build::Config3d::default",
+      "name": "default",
+      "module": "gen::build",
+      "defined_at": "gen/draw.rs:25",
+      "docs": [
+        "Returns the default Config3d."
+      ],
+      "owner": "gen::build::Config3d",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "plain",
+        "path": "gen::draw::ConfigNd"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "default",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
       "path": "gen::build::build_2d",
       "name": "build",
       "module": "gen::build",
@@ -22878,6 +22970,29 @@
       }
     },
     {
+      "path": "gen::name::Slots::default",
+      "name": "default",
+      "module": "gen::name",
+      "defined_at": "gen/name.rs:116",
+      "docs": [
+        "Returns the default Slots."
+      ],
+      "owner": "gen::name::Slots",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "plain",
+        "path": "gen::name::Slots"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "default",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
       "path": "gen::name::Tile::checked",
       "name": "checked",
       "module": "gen::name",
@@ -23207,7 +23322,7 @@
       "module": "gen",
       "defined_at": "gen/draw.rs:48",
       "docs": [
-        "Draws one named design from the stream."
+        "Draws one of the four flat classics from the stream: carpet, net, vertical tree or void."
       ],
       "owner": null,
       "self_kind": null,
@@ -23711,6 +23826,29 @@
       "dims": [],
       "trait": null,
       "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "gen::variation::Config::default",
+      "name": "default",
+      "module": "gen::variation",
+      "defined_at": "gen/variation.rs:43",
+      "docs": [
+        "Returns the default Config."
+      ],
+      "owner": "gen::variation::Config",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "plain",
+        "path": "gen::variation::Config"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "default",
       "constant": false,
       "cross": {
         "status": "ok"
@@ -38096,6 +38234,29 @@
       }
     },
     {
+      "path": "math::name::Lattice::default",
+      "name": "default",
+      "module": "math::name",
+      "defined_at": "math/name/bang.rs:10",
+      "docs": [
+        "Returns the default Lattice."
+      ],
+      "owner": "math::name::Lattice",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "enum",
+        "path": "math::name::Lattice"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "default",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
       "path": "math::name::Lattice::is_square",
       "name": "is_square",
       "module": "math::name",
@@ -39729,6 +39890,30 @@
       "dims": [],
       "trait": null,
       "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::roulette::Nodes::default",
+      "name": "default",
+      "module": "math::roulette",
+      "defined_at": "math/roulette.rs:14",
+      "docs": [
+        "Returns the default Nodes."
+      ],
+      "owner": "math::roulette::Nodes",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "class",
+        "path": "math::roulette::Nodes",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "default",
       "constant": false,
       "cross": {
         "status": "ok"
@@ -42302,7 +42487,7 @@
       "path": "math::six::png",
       "name": "png",
       "module": "math::six",
-      "defined_at": "math/six/renderer.rs:436",
+      "defined_at": "math/six/renderer.rs:484",
       "docs": [
         "Rasters a cell's triangles to PNG bytes at the given scale, stroked and padded when an outline is given.",
         "",
@@ -42691,7 +42876,7 @@
       "path": "math::six::rect_png",
       "name": "rect_png",
       "module": "math::six",
-      "defined_at": "math/six/renderer.rs:447",
+      "defined_at": "math/six/renderer.rs:495",
       "docs": [
         "Rasters the hexagon tiled three by three and cropped to one interlocking rectangle to PNG bytes.",
         "",
@@ -45491,6 +45676,29 @@
       "dims": [],
       "trait": null,
       "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::spirograph::Seats::default",
+      "name": "default",
+      "module": "math::spirograph",
+      "defined_at": "math/spirograph.rs:49",
+      "docs": [
+        "Returns the default Seats."
+      ],
+      "owner": "math::spirograph::Seats",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "plain",
+        "path": "math::spirograph::Seats"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "default",
       "constant": false,
       "cross": {
         "status": "ok"
@@ -51147,7 +51355,7 @@
       "path": "math::two::svg",
       "name": "svg",
       "module": "math::two",
-      "defined_at": "math/two/renderer.rs:211",
+      "defined_at": "math/two/renderer.rs:213",
       "docs": [
         "Renders the cell to an SVG string at the given scale, stroked and padded when an outline is given.",
         "",
@@ -62832,6 +63040,30 @@
       }
     },
     {
+      "path": "num::zeta::Complex::default",
+      "name": "default",
+      "module": "num::zeta",
+      "defined_at": "num/zeta.rs:18",
+      "docs": [
+        "Returns the default Complex."
+      ],
+      "owner": "num::zeta::Complex",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "class",
+        "path": "num::zeta::Complex",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "default",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
       "path": "num::zeta::Complex::exp",
       "name": "exp",
       "module": "num::zeta",
@@ -62976,6 +63208,30 @@
       "dims": [],
       "trait": null,
       "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::zeta::Line::default",
+      "name": "default",
+      "module": "num::zeta",
+      "defined_at": "num/zeta.rs:167",
+      "docs": [
+        "Returns the default Line."
+      ],
+      "owner": "num::zeta::Line",
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "class",
+        "path": "num::zeta::Line",
+        "dim": null
+      },
+      "dims": [],
+      "trait": null,
+      "source": "default",
       "constant": false,
       "cross": {
         "status": "ok"

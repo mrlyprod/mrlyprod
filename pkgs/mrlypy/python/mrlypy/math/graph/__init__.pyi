@@ -34,12 +34,18 @@ class Network:
     @property
     def dim(self) -> int:
         """The dimension every position must match."""
+    @dim.setter
+    def dim(self, value: int) -> None: ...
     @property
     def nodes(self) -> list[dict[str, Any]]:
         """The nodes in insertion order."""
+    @nodes.setter
+    def nodes(self, value: list[dict[str, Any]]) -> None: ...
     @property
     def branches(self) -> list[dict[str, Any]]:
         """The branches in insertion order."""
+    @branches.setter
+    def branches(self, value: list[dict[str, Any]]) -> None: ...
     def add_branch(self, parent: int, child: int, radius: float) -> None:
         """Appends a branch between two node indices."""
     def add_node(self, position: list[float]) -> int:

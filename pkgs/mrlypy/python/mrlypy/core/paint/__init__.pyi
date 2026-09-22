@@ -9,21 +9,33 @@ class Paint:
     @property
     def edition(self) -> Literal["Simple", "Index", "Layers", "Neighbors", "Rows", "Columns", "Random"]:
         """The coloring edition."""
+    @edition.setter
+    def edition(self, value: Literal["Simple", "Index", "Layers", "Neighbors", "Rows", "Columns", "Random"]) -> None: ...
     @property
     def scheme(self) -> Literal["Multicolor", "Multitone"]:
         """The secondary color scheme."""
+    @scheme.setter
+    def scheme(self, value: Literal["Multicolor", "Multitone"]) -> None: ...
     @property
     def target(self) -> Literal["Fill", "Void"]:
         """The side the primary ink lands on."""
+    @target.setter
+    def target(self, value: Literal["Fill", "Void"]) -> None: ...
     @property
     def primary(self) -> Literal["Black", "White", "Red", "Orange", "Yellow", "Green", "Mint", "Teal", "Cyan", "Blue", "Indigo", "Purple", "Pink", "Brown", "Gray"]:
         """The primary ink."""
+    @primary.setter
+    def primary(self, value: Literal["Black", "White", "Red", "Orange", "Yellow", "Green", "Mint", "Teal", "Cyan", "Blue", "Indigo", "Purple", "Pink", "Brown", "Gray"]) -> None: ...
     @property
     def secondary(self) -> list[Literal["Black", "White", "Red", "Orange", "Yellow", "Green", "Mint", "Teal", "Cyan", "Blue", "Indigo", "Purple", "Pink", "Brown", "Gray"]]:
         """The secondary inks."""
+    @secondary.setter
+    def secondary(self, value: list[Literal["Black", "White", "Red", "Orange", "Yellow", "Green", "Mint", "Teal", "Cyan", "Blue", "Indigo", "Purple", "Pink", "Brown", "Gray"]]) -> None: ...
     @property
     def shades(self) -> list[int]:
         """The shade indices of a multitone ramp."""
+    @shades.setter
+    def shades(self, value: list[int]) -> None: ...
     def is_simple(self) -> bool:
         """Returns true for the Simple edition."""
     @staticmethod
@@ -34,6 +46,12 @@ class Paint:
         """Reads plain data into the class."""
     def to_dict(self) -> Any:
         """Returns the value as plain data."""
+
+class Config:
+    """The constraints a caller may put on a random paint."""
+    @staticmethod
+    def default() -> dict[str, Any]:
+        """Returns the default Config."""
 
 class Edition:
     """The seven ways a paint distributes its colors over a cell."""

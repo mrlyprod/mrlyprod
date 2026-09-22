@@ -8,12 +8,18 @@ class Exposure:
     @property
     def occupancy(self) -> int:
         """The filled cells of the tile."""
+    @occupancy.setter
+    def occupancy(self, value: int) -> None: ...
     @property
     def exposed(self) -> int:
         """The exposed faces of the tile."""
+    @exposed.setter
+    def exposed(self, value: int) -> None: ...
     @property
     def axes(self) -> list[tuple[int, int]]:
         """Per axis, the adjacent filled pairs and the spanning positions."""
+    @axes.setter
+    def axes(self, value: list[tuple[int, int]]) -> None: ...
     def at(self, level: int) -> int | None:
         """Returns the exposed faces of the level-fold Kronecker power, or none past a u128."""
     @staticmethod

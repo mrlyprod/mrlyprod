@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { Rng, core, gen, initSync, math, num } from "./index.js";
+import { Rng, core, gen, initSync, life, math, num } from "./index.js";
 
 const bytes = await Bun.file(new URL("./pkg/all/mrlyjs_all_bg.wasm", import.meta.url)).arrayBuffer();
 initSync({ module: bytes });
@@ -77,4 +77,25 @@ test("a class holds its value, reads its fields and crosses as plain data", () =
   expect(tile.group).toBe("Fractal");
   expect(gen.Tile.from(tile.toJSON()).toJSON()).toEqual(tile.toJSON());
   expect(() => tile.check()).toThrow("wrong slot count");
+});
+
+test("a class field is set, a default crosses, and the Rng chooses and shuffles as rust does", () => {
+  const config = new life.Config(math.two.carpet(3, 1), life.Counts.list([3]), life.Counts.list([2, 3]));
+  expect(config.boundary).toBe("Constant");
+  config.boundary = "Wrap";
+  expect(config.boundary).toBe("Wrap");
+  expect(config.toJSON().boundary).toBe("Wrap");
+  expect(() => { config.boundary = "Nope"; }).toThrow("unknown variant");
+  const tile = gen.build.create_2d(gen.build.Config2d.default(), new Rng(1));
+  expect([tile.group, tile.width]).toEqual(["Special", 9]);
+  const items = ["a", "b", "c", "d", "e", "f", "g"];
+  expect(new Rng(5).choice(items)).toBe("c");
+  expect(new Rng(5).choice(items)).toBe(items[new Rng(5).below(items.length)]);
+  expect(() => new Rng(1).choice([])).toThrow("a choice wants at least one item.");
+  const once = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+  const again = [...once];
+  new Rng(9).shuffle(once);
+  new Rng(9).shuffle(again);
+  expect(once).toEqual([2, 8, 4, 7, 9, 0, 6, 1, 3, 5]);
+  expect(again).toEqual(once);
 });

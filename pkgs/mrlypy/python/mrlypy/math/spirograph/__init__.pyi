@@ -9,6 +9,12 @@ RADIUS_CAP: int
 RASTER_CAP: int
 SIDES: tuple[int, int]
 
+class Seats:
+    """The mass of a byte grid taken as a wheel: how many pencils of each kind it seats."""
+    @staticmethod
+    def default() -> dict[str, Any]:
+        """Returns the default Seats."""
+
 def cell(width: int, height: int, reach: float) -> float:
     """The side of one cell in wheel radii at a reach, the number the page needs to draw the tile on the wheel."""
 

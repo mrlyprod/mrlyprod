@@ -12,9 +12,13 @@ class Glyph:
     @property
     def char(self) -> str:
         """The character the glyph draws."""
+    @char.setter
+    def char(self, value: str) -> None: ...
     @property
     def rows(self) -> list[str]:
         """The bitmap rows of '0' and '1' characters."""
+    @rows.setter
+    def rows(self, value: list[str]) -> None: ...
     def height(self) -> int:
         """Returns the number of rows."""
     @staticmethod

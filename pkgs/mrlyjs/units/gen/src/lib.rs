@@ -102,7 +102,7 @@ pub fn hex_key(length: usize, rng: &mut hand::Rng) -> Result<String, JsValue> {
     Ok(value)
 }
 
-/// Draws one named design from the stream.
+/// Draws one of the four flat classics from the stream: carpet, net, vertical tree or void.
 #[wasm_bindgen]
 pub fn random_design(rng: &mut hand::Rng) -> Result<JsValue, JsValue> {
     let value = mrlyrs::gen::random_design(rng.stream());
@@ -261,11 +261,22 @@ impl Tile {
         let value = self.inner.group;
         hand::to_js(&value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_group(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::from_js::<mrlyrs::gen::Group>(&value)?;
+        self.inner.group = value;
+        Ok(())
+    }
     /// The base factor of the construction.
     #[wasm_bindgen(getter)]
     pub fn factor(&self) -> Result<usize, JsValue> {
         let value = self.inner.factor;
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_factor(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.factor = value;
+        Ok(())
     }
     /// The origin of each layer.
     #[wasm_bindgen(getter)]
@@ -273,11 +284,22 @@ impl Tile {
         let value = self.inner.sources.clone();
         hand::to_js(&value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_sources(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::from_js::<Vec<mrlyrs::gen::recipe::Source>>(&value)?;
+        self.inner.sources = value;
+        Ok(())
+    }
     /// The grid size of each source.
     #[wasm_bindgen(getter)]
     pub fn numbers(&self) -> Result<Vec<usize>, JsValue> {
         let value = self.inner.numbers.clone();
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_numbers(&mut self, value: Vec<usize>) -> Result<(), JsValue> {
+        self.inner.numbers = value;
+        Ok(())
     }
     /// The fractal level of each source.
     #[wasm_bindgen(getter)]
@@ -285,11 +307,21 @@ impl Tile {
         let value = self.inner.levels.clone();
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_levels(&mut self, value: Vec<usize>) -> Result<(), JsValue> {
+        self.inner.levels = value;
+        Ok(())
+    }
     /// The quarter-turn rotation of each source.
     #[wasm_bindgen(getter)]
     pub fn rotations(&self) -> Result<Vec<usize>, JsValue> {
         let value = self.inner.rotations.clone();
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_rotations(&mut self, value: Vec<usize>) -> Result<(), JsValue> {
+        self.inner.rotations = value;
+        Ok(())
     }
     /// Whether the finished tile inverts.
     #[wasm_bindgen(getter)]
@@ -297,11 +329,21 @@ impl Tile {
         let value = self.inner.invert;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_invert(&mut self, value: bool) -> Result<(), JsValue> {
+        self.inner.invert = value;
+        Ok(())
+    }
     /// Whether the finished tile flips.
     #[wasm_bindgen(getter)]
     pub fn flip(&self) -> Result<bool, JsValue> {
         let value = self.inner.flip;
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_flip(&mut self, value: bool) -> Result<(), JsValue> {
+        self.inner.flip = value;
+        Ok(())
     }
     /// The tile's width in cells.
     #[wasm_bindgen(getter)]
@@ -309,11 +351,21 @@ impl Tile {
         let value = self.inner.width;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_width(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.width = value;
+        Ok(())
+    }
     /// The tile's height in cells.
     #[wasm_bindgen(getter)]
     pub fn height(&self) -> Result<usize, JsValue> {
         let value = self.inner.height;
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_height(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.height = value;
+        Ok(())
     }
     /// Checks that the slots, numbers and sizes agree.
     pub fn check(&self) -> Result<(), JsValue> {
@@ -373,11 +425,23 @@ impl name_Tile {
         let value = self.inner.code;
         hand::option_to_js(value.as_ref(), |x1| Ok(JsValue::from_str(&x1.to_string())))
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_code(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::option_from_js(&value, hand::u128_from_js)?;
+        self.inner.code = value;
+        Ok(())
+    }
     /// The mask code of a special tile.
     #[wasm_bindgen(getter)]
     pub fn special(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.special;
         hand::option_to_js(value.as_ref(), |x1| Ok(JsValue::from_str(&x1.to_string())))
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_special(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::option_from_js(&value, hand::u128_from_js)?;
+        self.inner.special = value;
+        Ok(())
     }
     /// The letters of a magic tile, first letter outermost.
     #[wasm_bindgen(getter)]
@@ -385,11 +449,23 @@ impl name_Tile {
         let value = self.inner.magic.clone();
         hand::list_to_js(&value, |x1| Ok(JsValue::from_str(&x1.to_string())))
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_magic(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::list_from_js(&value, hand::u128_from_js)?;
+        self.inner.magic = value;
+        Ok(())
+    }
     /// The three codes of a mosaic tile.
     #[wasm_bindgen(getter)]
     pub fn mosaic(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.mosaic.clone();
         hand::list_to_js(&value, |x1| Ok(JsValue::from_str(&x1.to_string())))
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_mosaic(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::list_from_js(&value, hand::u128_from_js)?;
+        self.inner.mosaic = value;
+        Ok(())
     }
     /// The side of the mask of a special or mosaic tile.
     #[wasm_bindgen(getter)]
@@ -397,11 +473,23 @@ impl name_Tile {
         let value = self.inner.factor;
         hand::to_js(&value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_factor(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::from_js::<Option<usize>>(&value)?;
+        self.inner.factor = value;
+        Ok(())
+    }
     /// The side each slot renders at, one per letter for a magic tile.
     #[wasm_bindgen(getter)]
     pub fn side(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.side.clone();
         hand::to_js(&value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_side(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::from_js::<mrlyrs::gen::name::Slots>(&value)?;
+        self.inner.side = value;
+        Ok(())
     }
     /// The power a fractal tile is raised to, absent at one.
     #[wasm_bindgen(getter)]
@@ -409,11 +497,23 @@ impl name_Tile {
         let value = self.inner.level;
         hand::to_js(&value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_level(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::from_js::<Option<usize>>(&value)?;
+        self.inner.level = value;
+        Ok(())
+    }
     /// The quarter turns of each slot, absent when nothing turns.
     #[wasm_bindgen(getter)]
     pub fn turn(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.turn.clone();
         hand::to_js(&value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_turn(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::from_js::<mrlyrs::gen::name::Slots>(&value)?;
+        self.inner.turn = value;
+        Ok(())
     }
     /// Whether a special tile flips its mask.
     #[wasm_bindgen(getter)]
@@ -421,11 +521,21 @@ impl name_Tile {
         let value = self.inner.flip;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_flip(&mut self, value: bool) -> Result<(), JsValue> {
+        self.inner.flip = value;
+        Ok(())
+    }
     /// Whether the finished tile inverts.
     #[wasm_bindgen(getter)]
     pub fn invert(&self) -> Result<bool, JsValue> {
         let value = self.inner.invert;
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_invert(&mut self, value: bool) -> Result<(), JsValue> {
+        self.inner.invert = value;
+        Ok(())
     }
     /// Folds a decoded value to its canonical form, or an error for one outside the kind.
     pub fn checked(&self) -> Result<name_Tile, JsValue> {
@@ -508,17 +618,32 @@ impl variation_File {
         let value = self.inner.width;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_width(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.width = value;
+        Ok(())
+    }
     /// The count of tile repetitions down.
     #[wasm_bindgen(getter)]
     pub fn height(&self) -> Result<usize, JsValue> {
         let value = self.inner.height;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_height(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.height = value;
+        Ok(())
+    }
     /// The encoded PNG bytes, empty until rendered and left out of the json.
     #[wasm_bindgen(getter)]
     pub fn png(&self) -> Result<Vec<u8>, JsValue> {
         let value = self.inner.png.clone();
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_png(&mut self, value: Vec<u8>) -> Result<(), JsValue> {
+        self.inner.png = value;
+        Ok(())
     }
     /// Builds a file of the given repetition counts with no PNG bytes.
     #[wasm_bindgen(constructor)]
@@ -552,11 +677,22 @@ impl variation_Variation {
         let value = self.inner.key.clone();
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_key(&mut self, value: String) -> Result<(), JsValue> {
+        self.inner.key = value;
+        Ok(())
+    }
     /// The seed the variation is drawn under.
     #[wasm_bindgen(getter)]
     pub fn seed(&self) -> Result<u64, JsValue> {
         let value = self.inner.seed;
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_seed(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::u64_from_js(&value)?;
+        self.inner.seed = value;
+        Ok(())
     }
     /// The paint edition.
     #[wasm_bindgen(getter)]
@@ -564,11 +700,23 @@ impl variation_Variation {
         let value = self.inner.edition;
         hand::to_js(&value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_edition(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::from_js::<mrlyrs::core::paint::Edition>(&value)?;
+        self.inner.edition = value;
+        Ok(())
+    }
     /// The primary inks, when the config fixes them.
     #[wasm_bindgen(getter)]
     pub fn primaries(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.primaries.clone();
         hand::to_js(&value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_primaries(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::from_js::<Option<Vec<mrlyrs::core::paint::Ink>>>(&value)?;
+        self.inner.primaries = value;
+        Ok(())
     }
     /// The tile recipe.
     #[wasm_bindgen(getter)]
@@ -576,11 +724,22 @@ impl variation_Variation {
         let value = self.inner.tile.clone();
         Ok(Tile { inner: value })
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_tile(&mut self, value: &Tile) -> Result<(), JsValue> {
+        self.inner.tile = value.inner.clone();
+        Ok(())
+    }
     /// The mask tile, present only under the Neighbors edition.
     #[wasm_bindgen(getter)]
     pub fn mask(&self) -> Result<Option<Tile>, JsValue> {
         let value = self.inner.mask.clone();
         Ok(value.map(|inner| Tile { inner }))
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_mask(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::option_from_js(&value, |x1| hand::from_js::<mrlyrs::gen::Tile>(&hand::plain(x1)?))?;
+        self.inner.mask = value;
+        Ok(())
     }
     /// The built base cell, set by generate and left out of the json.
     #[wasm_bindgen(getter)]
@@ -588,11 +747,23 @@ impl variation_Variation {
         let value = self.inner.base.clone();
         hand::option_to_js(value.as_ref(), hand::cell2d_to_js)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_base(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::option_from_js(&value, hand::cell2d_from_js)?;
+        self.inner.base = value;
+        Ok(())
+    }
     /// The renderings, filled by render.
     #[wasm_bindgen(getter)]
     pub fn files(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.files.clone();
         hand::list_to_js(&value, |x1| Ok(JsValue::from(variation_File { inner: x1.clone() })))
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_files(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::list_from_js(&value, |x1| hand::from_js::<mrlyrs::gen::variation::File>(&hand::plain(x1)?))?;
+        self.inner.files = value;
+        Ok(())
     }
     /// Returns whether the edition paints the whole tiled canvas.
     pub fn is_cover(&self) -> Result<bool, JsValue> {
@@ -638,6 +809,48 @@ impl Parity {
     }
 }
 
+/// The constraints a random flat tile is drawn under.
+#[wasm_bindgen]
+pub struct build_Config2d {}
+
+#[wasm_bindgen]
+impl build_Config2d {
+    /// Returns the default Config2d.
+    #[wasm_bindgen(js_name = "default")]
+    pub fn default_() -> Result<JsValue, JsValue> {
+        let value = mrlyrs::gen::build::Config2d::default();
+        hand::to_js(&value)
+    }
+}
+
+/// The constraints a random cube tile is drawn under, shared by the hex pipeline.
+#[wasm_bindgen]
+pub struct build_Config3d {}
+
+#[wasm_bindgen]
+impl build_Config3d {
+    /// Returns the default Config3d.
+    #[wasm_bindgen(js_name = "default")]
+    pub fn default_() -> Result<JsValue, JsValue> {
+        let value = mrlyrs::gen::build::Config3d::default();
+        hand::to_js(&value)
+    }
+}
+
+/// One value for every slot of a tile, or one value per slot.
+#[wasm_bindgen]
+pub struct name_Slots {}
+
+#[wasm_bindgen]
+impl name_Slots {
+    /// Returns the default Slots.
+    #[wasm_bindgen(js_name = "default")]
+    pub fn default_() -> Result<JsValue, JsValue> {
+        let value = mrlyrs::gen::name::Slots::default();
+        hand::to_js(&value)
+    }
+}
+
 /// The named designs a source can point at: the four classics and their four antis.
 #[wasm_bindgen]
 pub struct recipe_Design {}
@@ -647,6 +860,20 @@ impl recipe_Design {
     /// Returns every Design in canonical order.
     pub fn all() -> Result<JsValue, JsValue> {
         let value = mrlyrs::gen::recipe::Design::all();
+        hand::to_js(&value)
+    }
+}
+
+/// The settings an artwork is drawn under.
+#[wasm_bindgen]
+pub struct variation_Config {}
+
+#[wasm_bindgen]
+impl variation_Config {
+    /// Returns the default Config.
+    #[wasm_bindgen(js_name = "default")]
+    pub fn default_() -> Result<JsValue, JsValue> {
+        let value = mrlyrs::gen::variation::Config::default();
         hand::to_js(&value)
     }
 }

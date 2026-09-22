@@ -415,6 +415,7 @@ export const spirograph = {
     RADIUS_CAP: wasm.spirograph_RADIUS_CAP,
     RASTER_CAP: wasm.spirograph_RASTER_CAP,
     SIDES: wasm.spirograph_SIDES,
+    Seats: wasm.spirograph_Seats,
     cell: wasm.spirograph_cell,
     cover: wasm.spirograph_cover,
     disc: wasm.spirograph_disc,

@@ -22,6 +22,10 @@ class Rng:
         """Draws amount distinct indices below length, or every index when amount is larger."""
     def unit(self) -> float:
         """Draws a float at or above zero and below one."""
+    def choice(self, seq: Any) -> Any:
+        """Draws one item of the sequence, the same draw as Rust's choice."""
+    def shuffle(self, seq: list[Any]) -> None:
+        """Shuffles the list in place, the same permutation as Rust's shuffle."""
 
 class Image:
     """A paletted image: rows of palette indices and the palette they point into, hex strings in json."""
@@ -29,15 +33,23 @@ class Image:
     @property
     def width(self) -> int:
         """The width in pixels."""
+    @width.setter
+    def width(self, value: int) -> None: ...
     @property
     def height(self) -> int:
         """The height in pixels."""
+    @height.setter
+    def height(self, value: int) -> None: ...
     @property
     def rows(self) -> list[list[int]]:
         """The palette index of every pixel, row by row."""
+    @rows.setter
+    def rows(self, value: list[list[int]]) -> None: ...
     @property
     def palette(self) -> list[tuple[int, int, int, int]]:
         """The colors the rows index."""
+    @palette.setter
+    def palette(self, value: list[tuple[int, int, int, int]]) -> None: ...
     def colors(self) -> NDArray[Any]:
         """Returns the flat rgba pixels, transparent wherever an index misses the palette."""
     @staticmethod
@@ -58,6 +70,9 @@ class Image:
 
 class Colorizer:
     """A rule that turns counter values into colors."""
+    @staticmethod
+    def default() -> Any:
+        """Returns the default Colorizer."""
     @staticmethod
     def diverge() -> Any:
         """Builds the blue-to-red diverging ramp around a white middle."""

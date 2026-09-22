@@ -62,6 +62,10 @@ export class Rng {
     chance(p: number): boolean;
     /** Draws amount distinct indices below length, or every index when amount is larger. */
     sample_indices(length: number, amount: number): Uint32Array;
+    /** Draws one item of the array, the same draw as Rust's choice. */
+    choice<T>(items: ArrayLike<T>): T;
+    /** Shuffles the array in place, the same permutation as Rust's shuffle. */
+    shuffle<T>(items: T[]): void;
 }
 export declare namespace atoms {
     /** Builds an n by n carpet, on where at most one coordinate is odd. */
@@ -183,15 +187,20 @@ export declare namespace bang {
         /** Writes the Design as plain data. */
         toJSON(): DesignData;
         /** The design's code. */
-        readonly i: string;
+        get i(): string;
+        set i(value: string | number | bigint);
         /** The design's dimension. */
-        readonly dimension: number;
+        get dimension(): number;
+        set dimension(value: number);
         /** Whether this code is the smallest in its orbit. */
-        readonly canonical: boolean;
+        get canonical(): boolean;
+        set canonical(value: boolean);
         /** The smallest code in the orbit. */
-        readonly class_rep: string;
+        get class_rep(): string;
+        set class_rep(value: string | number | bigint);
         /** The number of codes in the orbit. */
-        readonly orbit_size: number;
+        get orbit_size(): number;
+        set orbit_size(value: number);
         /** Returns the design's algebraic normal form as a string. */
         anf(): string;
         /** Returns the design's algebraic degree, or -1 for the zero design. */
@@ -223,9 +232,11 @@ export declare namespace bang {
         /** Writes the Universe as plain data. */
         toJSON(): UniverseData;
         /** The universe's dimension. */
-        readonly dimension: number;
+        get dimension(): number;
+        set dimension(value: number);
         /** The number of codes in the universe. */
-        readonly total: number;
+        get total(): number;
+        set total(value: number);
         /** Returns every design in code order. */
         all(): bang.Design[];
         /** Returns the designs whose codes lead their orbits. */
@@ -536,11 +547,14 @@ export declare namespace counts {
         /** Writes the Exposure as plain data. */
         toJSON(): ExposureData;
         /** The filled cells of the tile. */
-        readonly occupancy: string;
+        get occupancy(): string;
+        set occupancy(value: string | number | bigint);
         /** The exposed faces of the tile. */
-        readonly exposed: string;
+        get exposed(): string;
+        set exposed(value: string | number | bigint);
         /** Per axis, the adjacent filled pairs and the spanning positions. */
-        readonly axes: [string, string][];
+        get axes(): [string, string][];
+        set axes(value: ([string | number | bigint, string | number | bigint])[]);
         /** Returns the exposed faces of the level-fold Kronecker power, or none past a u128. */
         at(level: number): string | undefined;
         /** Folds the counts from the filled residue corners at a side number, without rendering the tile. */
@@ -701,11 +715,14 @@ export declare namespace graph {
         /** Writes the Network as plain data. */
         toJSON(): NetworkData;
         /** The dimension every position must match. */
-        readonly dim: number;
+        get dim(): number;
+        set dim(value: number);
         /** The nodes in insertion order. */
-        readonly nodes: graph.Node[];
+        get nodes(): graph.Node[];
+        set nodes(value: graph.Node[]);
         /** The branches in insertion order. */
-        readonly branches: graph.Branch[];
+        get branches(): graph.Branch[];
+        set branches(value: graph.Branch[]);
         /** Appends a branch between two node indices. */
         add_branch(parent: number, child: number, radius: number): void;
         /** Appends a node at the position and returns its index. */
@@ -760,9 +777,11 @@ export declare namespace moire {
         /** Writes the Field as plain data. */
         toJSON(): FieldData;
         /** The samples in row-major order. */
-        readonly data: Float32Array;
+        get data(): Float32Array;
+        set data(value: ArrayLike<number>);
         /** The side length in samples. */
-        readonly size: number;
+        get size(): number;
+        set size(value: number);
         /** Returns the samples widened to f64. */
         as_f64(): Float64Array;
         /** Wraps row-major samples of the given side. */
@@ -833,15 +852,20 @@ export declare namespace moire {
         /** The name the recipe answers to. */
         readonly name: string;
         /** The design sampled at every scale. */
-        readonly spec: moire.Spec;
+        get spec(): moire.Spec;
+        set spec(value: moire.Spec);
         /** The side numbers stacked. */
-        readonly numbers: Uint32Array;
+        get numbers(): Uint32Array;
+        set numbers(value: ArrayLike<number>);
         /** The way the layers merge. */
-        readonly combine: moire.Combine;
+        get combine(): moire.Combine;
+        set combine(value: moire.Combine);
         /** The fractal depth of each layer. */
-        readonly level: number;
+        get level(): number;
+        set level(value: number);
         /** The lattice the layers are sampled on. */
-        readonly lattice: moire.Lattice;
+        get lattice(): moire.Lattice;
+        set lattice(value: moire.Lattice);
         /** The carpet stack: every base-three corner but the centre, summed over odd scales. */
         static carpet(limit: number): moire.Preset;
         /** Samples the preset into a square field of the given side. */
@@ -882,9 +906,11 @@ export declare namespace moire {
         /** Writes the Volume as plain data. */
         toJSON(): VolumeData;
         /** The samples, x-major, then y, then z. */
-        readonly data: Float32Array;
+        get data(): Float32Array;
+        set data(value: ArrayLike<number>);
         /** The side in samples. */
-        readonly size: number;
+        get size(): number;
+        set size(value: number);
         /** Reads the sample at a voxel. */
         at(x: number, y: number, z: number): number;
         /** Counts the samples at or above the level. */
@@ -959,15 +985,20 @@ export declare namespace name {
         /** Writes the Bang as plain data. */
         toJSON(): BangData;
         /** The number of axes. */
-        readonly dim: number;
+        get dim(): number;
+        set dim(value: number);
         /** The lattice, square unless said. */
-        readonly lattice: name.Lattice;
+        get lattice(): name.Lattice;
+        set lattice(value: name.Lattice);
         /** The digits per axis, 2 unless said. */
-        readonly base: number;
+        get base(): number;
+        set base(value: number);
         /** The design as a number. */
-        readonly code: string;
+        get code(): string;
+        set code(value: string | number | bigint);
         /** One unit index per filled digit, absent when nothing turns. */
-        readonly twist: Uint32Array | undefined;
+        get twist(): Uint32Array | undefined;
+        set twist(value: ArrayLike<number> | undefined);
         /** Returns the number of digits the code addresses. */
         cells(): number;
         /** Folds a decoded value to its canonical form, or an error for one outside the kind. */
@@ -992,6 +1023,8 @@ export declare namespace name {
     /** The lattice the cells sit on. */
     export type Lattice = "square" | "hex";
     export const Lattice: {
+        /** Returns the default Lattice. */
+        default(): name.Lattice;
         /** Returns whether this is the square lattice. */
         is_square(lattice: name.Lattice): boolean;
         /** Returns the number of unit directions a twist may pick from. */
@@ -1021,15 +1054,20 @@ export declare namespace name {
         /** Writes the Sequence as plain data. */
         toJSON(): SequenceData;
         /** The number of axes. */
-        readonly dim: number;
+        get dim(): number;
+        set dim(value: number);
         /** The digits per axis, 2 unless said. */
-        readonly base: number;
+        get base(): number;
+        set base(value: number);
         /** The design as a number. */
-        readonly code: string;
+        get code(): string;
+        set code(value: string | number | bigint);
         /** The reading taken. */
-        readonly measure: string;
+        get measure(): string;
+        set measure(value: string);
         /** The index the reading runs along. */
-        readonly axis: string;
+        get axis(): string;
+        set axis(value: string);
         /** Folds a decoded value to its canonical form, or an error for one outside the kind. */
         checked(): name.Sequence;
         /** Returns the design pinned to its dimension and base. */
@@ -1073,13 +1111,17 @@ export declare namespace name {
         /** Writes the Word as plain data. */
         toJSON(): WordData;
         /** The number of axes every letter shares. */
-        readonly dim: number;
+        get dim(): number;
+        set dim(value: number);
         /** The codes of the letters in order. */
-        readonly magic: string[];
+        get magic(): string[];
+        set magic(value: (string | number | bigint)[]);
         /** The side each letter renders at. */
-        readonly side: Uint32Array;
+        get side(): Uint32Array;
+        set side(value: ArrayLike<number>);
         /** The base of each letter, absent when every letter is base 2. */
-        readonly base: Uint32Array | undefined;
+        get base(): Uint32Array | undefined;
+        set base(value: ArrayLike<number> | undefined);
         /** Returns the base of every letter, 2 where the name says nothing. */
         bases(): Uint32Array;
         /** Folds a decoded value to its canonical form, or an error for one outside the kind. */
@@ -1146,9 +1188,11 @@ export declare namespace press {
         /** Writes the Press as plain data. */
         toJSON(): PressData;
         /** The design dimension of the universe. */
-        readonly dimension: number;
+        get dimension(): number;
+        set dimension(value: number);
         /** The numeral base of the universe. */
-        readonly base: number;
+        get base(): number;
+        set base(value: number);
         /** Adds a weighted number to its usage bucket. */
         add(number: string | number | bigint, weight: string | number | bigint): void;
         /** Returns the total weight the design at a code has collected. */
@@ -1191,21 +1235,31 @@ export declare namespace roulette {
         /** Writes the Nodes as plain data. */
         toJSON(): NodesData;
         /** The curves counted, in the order the pencils came in. */
-        readonly curves: number;
+        get curves(): number;
+        set curves(value: number);
         /** How often each curve crosses itself, curve by curve. */
-        readonly selves: Uint32Array;
+        get selves(): Uint32Array;
+        set selves(value: ArrayLike<number>);
         /** How often each pair of curves crosses, the lower curve first, in lexicographic order. */
-        readonly pairs: Uint32Array;
+        get pairs(): Uint32Array;
+        set pairs(value: ArrayLike<number>);
         /** The most crossings one node carries: one at a plain double point, and `n(n - 1)/2` where `n` branches meet. */
-        readonly most: number;
+        get most(): number;
+        set most(value: number);
         /** The nodes more than one crossing clusters at. */
-        readonly crowded: number;
+        get crowded(): number;
+        set crowded(value: number);
         /** The distinct points the crossings sit at, one for every cluster. */
-        readonly points: number;
+        get points(): number;
+        set points(value: number);
         /** The branches through every node added up, which is the edge count of the picture as a plane graph, `n` at a node where `n` branches meet and `2` times `points` when no node is crowded. */
-        readonly branches: number;
+        get branches(): number;
+        set branches(value: number);
         /** The segment pairs that meet without crossing: collinear or end to end. */
-        readonly touches: number;
+        get touches(): number;
+        set touches(value: number);
+        /** Returns the default Nodes. */
+        static default(): roulette.Nodes;
         /** How often the curves `i` and `j` cross, either order, and zero when they are one curve. */
         pair(i: number, j: number): number;
         /** Every crossing of two curves. */
@@ -1263,9 +1317,11 @@ export declare namespace shape {
         /** Writes the Frac as plain data. */
         toJSON(): FracData;
         /** The numerator, carrying the sign. */
-        readonly num: bigint;
+        get num(): bigint;
+        set num(value: number | bigint);
         /** The denominator, always positive. */
-        readonly den: bigint;
+        get den(): bigint;
+        set den(value: number | bigint);
         /** Returns the exact difference. */
         minus(other: shape.Frac): shape.Frac;
         /** Returns the exact sum. */
@@ -1538,9 +1594,11 @@ export declare namespace six {
             /** Writes the Share as plain data. */
             toJSON(): ShareData;
             /** The count of inked cells. */
-            readonly inked: bigint;
+            get inked(): bigint;
+            set inked(value: number | bigint);
             /** The count of cells read. */
-            readonly cells: bigint;
+            get cells(): bigint;
+            set cells(value: number | bigint);
             /** The share in lowest terms, numerator then denominator. */
             reduced(): [bigint, bigint];
             /** The share as a real number. */
@@ -1712,6 +1770,10 @@ export declare namespace spirograph {
         /** The pencils on corners. */
         corners: number;
     }
+    export const Seats: {
+        /** Returns the default Seats. */
+        default(): spirograph.Seats;
+    };
     /** A track and the path the wheel's centre takes along it: the wheel of radius `wheel` rolls without slipping, on the left of the track when `side` is minus one and on the right when it is plus one, and turns by `side` times the centre's path length over the wheel's radius. */
     export interface Track {
         /** The kind: `line`, `in`, `out`, `polyin` or `polyout`. */
@@ -1885,11 +1947,14 @@ export declare namespace three {
         /** Writes the Vec3 as plain data. */
         toJSON(): Vec3Data;
         /** The x component. */
-        readonly x: number;
+        get x(): number;
+        set x(value: number);
         /** The y component. */
-        readonly y: number;
+        get y(): number;
+        set y(value: number);
         /** The z component. */
-        readonly z: number;
+        get z(): number;
+        set z(value: number);
         /** Returns the cross product, perpendicular to both vectors. */
         cross(o: three.Vec3): three.Vec3;
         /** Returns the dot product of the two vectors. */

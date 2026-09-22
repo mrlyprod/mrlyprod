@@ -10,13 +10,20 @@ class Complex:
     @property
     def re(self) -> float:
         """The real part."""
+    @re.setter
+    def re(self, value: float) -> None: ...
     @property
     def im(self) -> float:
         """The imaginary part."""
+    @im.setter
+    def im(self, value: float) -> None: ...
     def abs(self) -> float:
         """Returns the modulus."""
     def arg(self) -> float:
         """Returns the principal argument."""
+    @staticmethod
+    def default() -> Complex:
+        """Returns the default Complex."""
     def exp(self) -> Complex:
         """Returns the exponential."""
     def ln(self) -> Complex:
@@ -38,6 +45,9 @@ class Line:
     def __init__(self) -> None: ...
     def count(self, t: float) -> int:
         """Counts the zeros on the line below t."""
+    @staticmethod
+    def default() -> Line:
+        """Returns the default Line."""
     def exact(self, t: float) -> float:
         """Returns Z(t) from the Euler-Maclaurin value turned onto the real axis."""
     def gram(self, n: int) -> float:

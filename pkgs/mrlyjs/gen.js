@@ -13,6 +13,8 @@ export const random_design = wasm.random_design;
 export const random_rotation = wasm.random_rotation;
 export const tree_mask = wasm.tree_mask;
 export const build = {
+    Config2d: wasm.build_Config2d,
+    Config3d: wasm.build_Config3d,
     build_2d: wasm.build_build_2d,
     build_3d: wasm.build_build_3d,
     build_6d: wasm.build_build_6d,
@@ -24,6 +26,7 @@ export const build = {
     random_tile_6d: wasm.build_random_tile_6d,
 };
 export const name = {
+    Slots: wasm.name_Slots,
     Tile: wasm.name_Tile,
 };
 export const recipe = {
@@ -42,6 +45,7 @@ export const recipe = {
     size: wasm.recipe_size,
 };
 export const variation = {
+    Config: wasm.variation_Config,
     File: wasm.variation_File,
     Variation: wasm.variation_Variation,
     create: wasm.variation_create,

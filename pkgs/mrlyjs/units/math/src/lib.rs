@@ -3775,11 +3775,22 @@ impl bang_Design {
         let value = self.inner.i;
         Ok(JsValue::from_str(&hand::code_to_js(value)))
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_i(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::code_from_js(&value)?;
+        self.inner.i = value;
+        Ok(())
+    }
     /// The design's dimension.
     #[wasm_bindgen(getter)]
     pub fn dimension(&self) -> Result<usize, JsValue> {
         let value = self.inner.dimension;
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_dimension(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.dimension = value;
+        Ok(())
     }
     /// Whether this code is the smallest in its orbit.
     #[wasm_bindgen(getter)]
@@ -3787,17 +3798,33 @@ impl bang_Design {
         let value = self.inner.canonical;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_canonical(&mut self, value: bool) -> Result<(), JsValue> {
+        self.inner.canonical = value;
+        Ok(())
+    }
     /// The smallest code in the orbit.
     #[wasm_bindgen(getter)]
     pub fn class_rep(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.class_rep;
         Ok(JsValue::from_str(&hand::code_to_js(value)))
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_class_rep(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::code_from_js(&value)?;
+        self.inner.class_rep = value;
+        Ok(())
+    }
     /// The number of codes in the orbit.
     #[wasm_bindgen(getter)]
     pub fn orbit_size(&self) -> Result<usize, JsValue> {
         let value = self.inner.orbit_size;
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_orbit_size(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.orbit_size = value;
+        Ok(())
     }
     /// Returns the design's algebraic normal form as a string.
     pub fn anf(&self) -> Result<String, JsValue> {
@@ -3845,11 +3872,21 @@ impl bang_Universe {
         let value = self.inner.dimension;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_dimension(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.dimension = value;
+        Ok(())
+    }
     /// The number of codes in the universe.
     #[wasm_bindgen(getter)]
     pub fn total(&self) -> Result<usize, JsValue> {
         let value = self.inner.total;
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_total(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.total = value;
+        Ok(())
     }
     /// Returns every design in code order.
     pub fn all(&self) -> Result<JsValue, JsValue> {
@@ -3904,17 +3941,35 @@ impl counts_Exposure {
         let value = self.inner.occupancy;
         Ok(JsValue::from_str(&value.to_string()))
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_occupancy(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::u128_from_js(&value)?;
+        self.inner.occupancy = value;
+        Ok(())
+    }
     /// The exposed faces of the tile.
     #[wasm_bindgen(getter)]
     pub fn exposed(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.exposed;
         Ok(JsValue::from_str(&value.to_string()))
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_exposed(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::u128_from_js(&value)?;
+        self.inner.exposed = value;
+        Ok(())
+    }
     /// Per axis, the adjacent filled pairs and the spanning positions.
     #[wasm_bindgen(getter)]
     pub fn axes(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.axes.clone();
         hand::list_to_js(&value, |x1| Ok(hand::tuple_to_js(&[JsValue::from_str(&x1.0.to_string()), JsValue::from_str(&x1.1.to_string())])))
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_axes(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::list_from_js(&value, |x1| Ok((hand::u128_from_js(&hand::item(x1, 0)?)?, hand::u128_from_js(&hand::item(x1, 1)?)?)))?;
+        self.inner.axes = value;
+        Ok(())
     }
     /// Returns the exposed faces of the level-fold Kronecker power, or none past a u128.
     pub fn at(&self, level: u32) -> Result<JsValue, JsValue> {
@@ -4028,17 +4083,34 @@ impl graph_Network {
         let value = self.inner.dim;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_dim(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.dim = value;
+        Ok(())
+    }
     /// The nodes in insertion order.
     #[wasm_bindgen(getter)]
     pub fn nodes(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.nodes.clone();
         hand::to_js(&value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_nodes(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::from_js::<Vec<mrlyrs::math::graph::Node>>(&value)?;
+        self.inner.nodes = value;
+        Ok(())
+    }
     /// The branches in insertion order.
     #[wasm_bindgen(getter)]
     pub fn branches(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.branches.clone();
         hand::to_js(&value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_branches(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::from_js::<Vec<mrlyrs::math::graph::Branch>>(&value)?;
+        self.inner.branches = value;
+        Ok(())
     }
     /// Appends a branch between two node indices.
     pub fn add_branch(&mut self, parent: usize, child: usize, radius: f64) -> Result<(), JsValue> {
@@ -4092,11 +4164,21 @@ impl moire_Field {
         let value = self.inner.data.clone();
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_data(&mut self, value: Vec<f32>) -> Result<(), JsValue> {
+        self.inner.data = value;
+        Ok(())
+    }
     /// The side length in samples.
     #[wasm_bindgen(getter)]
     pub fn size(&self) -> Result<usize, JsValue> {
         let value = self.inner.size;
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_size(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.size = value;
+        Ok(())
     }
     /// Returns the samples widened to f64.
     pub fn as_f64(&self) -> Result<Vec<f64>, JsValue> {
@@ -4161,11 +4243,22 @@ impl moire_Preset {
         let value = self.inner.spec;
         hand::to_js(&value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_spec(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::from_js::<mrlyrs::math::moire::Spec>(&value)?;
+        self.inner.spec = value;
+        Ok(())
+    }
     /// The side numbers stacked.
     #[wasm_bindgen(getter)]
     pub fn numbers(&self) -> Result<Vec<usize>, JsValue> {
         let value = self.inner.numbers.clone();
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_numbers(&mut self, value: Vec<usize>) -> Result<(), JsValue> {
+        self.inner.numbers = value;
+        Ok(())
     }
     /// The way the layers merge.
     #[wasm_bindgen(getter)]
@@ -4173,17 +4266,34 @@ impl moire_Preset {
         let value = self.inner.combine;
         hand::to_js(&value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_combine(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::from_js::<mrlyrs::math::moire::Combine>(&value)?;
+        self.inner.combine = value;
+        Ok(())
+    }
     /// The fractal depth of each layer.
     #[wasm_bindgen(getter)]
     pub fn level(&self) -> Result<usize, JsValue> {
         let value = self.inner.level;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_level(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.level = value;
+        Ok(())
+    }
     /// The lattice the layers are sampled on.
     #[wasm_bindgen(getter)]
     pub fn lattice(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.lattice;
         hand::to_js(&value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_lattice(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::from_js::<mrlyrs::math::moire::Lattice>(&value)?;
+        self.inner.lattice = value;
+        Ok(())
     }
     /// The carpet stack: every base-three corner but the centre, summed over odd scales.
     pub fn carpet(limit: usize) -> Result<moire_Preset, JsValue> {
@@ -4236,11 +4346,21 @@ impl moire_Volume {
         let value = self.inner.data.clone();
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_data(&mut self, value: Vec<f32>) -> Result<(), JsValue> {
+        self.inner.data = value;
+        Ok(())
+    }
     /// The side in samples.
     #[wasm_bindgen(getter)]
     pub fn size(&self) -> Result<usize, JsValue> {
         let value = self.inner.size;
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_size(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.size = value;
+        Ok(())
     }
     /// Reads the sample at a voxel.
     pub fn at(&self, x: usize, y: usize, z: usize) -> Result<f32, JsValue> {
@@ -4316,11 +4436,22 @@ impl name_Bang {
         let value = self.inner.dim;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_dim(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.dim = value;
+        Ok(())
+    }
     /// The lattice, square unless said.
     #[wasm_bindgen(getter)]
     pub fn lattice(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.lattice;
         hand::to_js(&value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_lattice(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::from_js::<mrlyrs::math::name::Lattice>(&value)?;
+        self.inner.lattice = value;
+        Ok(())
     }
     /// The digits per axis, 2 unless said.
     #[wasm_bindgen(getter)]
@@ -4328,17 +4459,34 @@ impl name_Bang {
         let value = self.inner.base;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_base(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.base = value;
+        Ok(())
+    }
     /// The design as a number.
     #[wasm_bindgen(getter)]
     pub fn code(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.code;
         Ok(JsValue::from_str(&value.to_string()))
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_code(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::u128_from_js(&value)?;
+        self.inner.code = value;
+        Ok(())
+    }
     /// One unit index per filled digit, absent when nothing turns.
     #[wasm_bindgen(getter)]
     pub fn twist(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.twist.clone();
         hand::option_to_js(value.as_ref(), |x1| Ok(hand::typed(&(*x1)[..])))
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_twist(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::from_js::<Option<Vec<usize>>>(&value)?;
+        self.inner.twist = value;
+        Ok(())
     }
     /// Returns the number of digits the code addresses.
     pub fn cells(&self) -> Result<u32, JsValue> {
@@ -4423,11 +4571,21 @@ impl name_Sequence {
         let value = self.inner.dim;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_dim(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.dim = value;
+        Ok(())
+    }
     /// The digits per axis, 2 unless said.
     #[wasm_bindgen(getter)]
     pub fn base(&self) -> Result<usize, JsValue> {
         let value = self.inner.base;
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_base(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.base = value;
+        Ok(())
     }
     /// The design as a number.
     #[wasm_bindgen(getter)]
@@ -4435,17 +4593,33 @@ impl name_Sequence {
         let value = self.inner.code;
         Ok(JsValue::from_str(&value.to_string()))
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_code(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::u128_from_js(&value)?;
+        self.inner.code = value;
+        Ok(())
+    }
     /// The reading taken.
     #[wasm_bindgen(getter)]
     pub fn measure(&self) -> Result<String, JsValue> {
         let value = self.inner.measure.clone();
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_measure(&mut self, value: String) -> Result<(), JsValue> {
+        self.inner.measure = value;
+        Ok(())
+    }
     /// The index the reading runs along.
     #[wasm_bindgen(getter)]
     pub fn axis(&self) -> Result<String, JsValue> {
         let value = self.inner.axis.clone();
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_axis(&mut self, value: String) -> Result<(), JsValue> {
+        self.inner.axis = value;
+        Ok(())
     }
     /// Folds a decoded value to its canonical form, or an error for one outside the kind.
     pub fn checked(&self) -> Result<name_Sequence, JsValue> {
@@ -4530,11 +4704,22 @@ impl name_Word {
         let value = self.inner.dim;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_dim(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.dim = value;
+        Ok(())
+    }
     /// The codes of the letters in order.
     #[wasm_bindgen(getter)]
     pub fn magic(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.magic.clone();
         hand::list_to_js(&value, |x1| Ok(JsValue::from_str(&x1.to_string())))
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_magic(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::list_from_js(&value, hand::u128_from_js)?;
+        self.inner.magic = value;
+        Ok(())
     }
     /// The side each letter renders at.
     #[wasm_bindgen(getter)]
@@ -4542,11 +4727,22 @@ impl name_Word {
         let value = self.inner.side.clone();
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_side(&mut self, value: Vec<usize>) -> Result<(), JsValue> {
+        self.inner.side = value;
+        Ok(())
+    }
     /// The base of each letter, absent when every letter is base 2.
     #[wasm_bindgen(getter)]
     pub fn base(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.base.clone();
         hand::option_to_js(value.as_ref(), |x1| Ok(hand::typed(&(*x1)[..])))
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_base(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::from_js::<Option<Vec<usize>>>(&value)?;
+        self.inner.base = value;
+        Ok(())
     }
     /// Returns the base of every letter, 2 where the name says nothing.
     pub fn bases(&self) -> Result<Vec<usize>, JsValue> {
@@ -4636,11 +4832,21 @@ impl press_Press {
         let value = self.inner.dimension;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_dimension(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.dimension = value;
+        Ok(())
+    }
     /// The numeral base of the universe.
     #[wasm_bindgen(getter)]
     pub fn base(&self) -> Result<usize, JsValue> {
         let value = self.inner.base;
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_base(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.base = value;
+        Ok(())
     }
     /// Adds a weighted number to its usage bucket.
     pub fn add(&mut self, number: JsValue, weight: JsValue) -> Result<(), JsValue> {
@@ -4692,11 +4898,21 @@ impl roulette_Nodes {
         let value = self.inner.curves;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_curves(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.curves = value;
+        Ok(())
+    }
     /// How often each curve crosses itself, curve by curve.
     #[wasm_bindgen(getter)]
     pub fn selves(&self) -> Result<Vec<usize>, JsValue> {
         let value = self.inner.selves.clone();
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_selves(&mut self, value: Vec<usize>) -> Result<(), JsValue> {
+        self.inner.selves = value;
+        Ok(())
     }
     /// How often each pair of curves crosses, the lower curve first, in lexicographic order.
     #[wasm_bindgen(getter)]
@@ -4704,11 +4920,21 @@ impl roulette_Nodes {
         let value = self.inner.pairs.clone();
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_pairs(&mut self, value: Vec<usize>) -> Result<(), JsValue> {
+        self.inner.pairs = value;
+        Ok(())
+    }
     /// The most crossings one node carries: one at a plain double point, and `n(n - 1)/2` where `n` branches meet.
     #[wasm_bindgen(getter)]
     pub fn most(&self) -> Result<usize, JsValue> {
         let value = self.inner.most;
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_most(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.most = value;
+        Ok(())
     }
     /// The nodes more than one crossing clusters at.
     #[wasm_bindgen(getter)]
@@ -4716,11 +4942,21 @@ impl roulette_Nodes {
         let value = self.inner.crowded;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_crowded(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.crowded = value;
+        Ok(())
+    }
     /// The distinct points the crossings sit at, one for every cluster.
     #[wasm_bindgen(getter)]
     pub fn points(&self) -> Result<usize, JsValue> {
         let value = self.inner.points;
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_points(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.points = value;
+        Ok(())
     }
     /// The branches through every node added up, which is the edge count of the picture as a plane graph, `n` at a node where `n` branches meet and `2` times `points` when no node is crowded.
     #[wasm_bindgen(getter)]
@@ -4728,11 +4964,27 @@ impl roulette_Nodes {
         let value = self.inner.branches;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_branches(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.branches = value;
+        Ok(())
+    }
     /// The segment pairs that meet without crossing: collinear or end to end.
     #[wasm_bindgen(getter)]
     pub fn touches(&self) -> Result<usize, JsValue> {
         let value = self.inner.touches;
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_touches(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.touches = value;
+        Ok(())
+    }
+    /// Returns the default Nodes.
+    #[wasm_bindgen(js_name = "default")]
+    pub fn default_() -> Result<roulette_Nodes, JsValue> {
+        let value = mrlyrs::math::roulette::Nodes::default();
+        Ok(roulette_Nodes { inner: value })
     }
     /// How often the curves `i` and `j` cross, either order, and zero when they are one curve.
     pub fn pair(&self, i: usize, j: usize) -> Result<usize, JsValue> {
@@ -4780,11 +5032,23 @@ impl shape_Frac {
         let value = self.inner.num;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_num(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::i64_from_js(&value)?;
+        self.inner.num = value;
+        Ok(())
+    }
     /// The denominator, always positive.
     #[wasm_bindgen(getter)]
     pub fn den(&self) -> Result<i64, JsValue> {
         let value = self.inner.den;
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_den(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::i64_from_js(&value)?;
+        self.inner.den = value;
+        Ok(())
     }
     /// Returns the exact difference.
     pub fn minus(&self, other: &shape_Frac) -> Result<shape_Frac, JsValue> {
@@ -4841,11 +5105,23 @@ impl six_star_Share {
         let value = self.inner.inked;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_inked(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::i64_from_js(&value)?;
+        self.inner.inked = value;
+        Ok(())
+    }
     /// The count of cells read.
     #[wasm_bindgen(getter)]
     pub fn cells(&self) -> Result<i64, JsValue> {
         let value = self.inner.cells;
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_cells(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::i64_from_js(&value)?;
+        self.inner.cells = value;
+        Ok(())
     }
     /// The share in lowest terms, numerator then denominator.
     pub fn reduced(&self) -> Result<JsValue, JsValue> {
@@ -4932,17 +5208,32 @@ impl three_Vec3 {
         let value = self.inner.x;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_x(&mut self, value: f32) -> Result<(), JsValue> {
+        self.inner.x = value;
+        Ok(())
+    }
     /// The y component.
     #[wasm_bindgen(getter)]
     pub fn y(&self) -> Result<f32, JsValue> {
         let value = self.inner.y;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_y(&mut self, value: f32) -> Result<(), JsValue> {
+        self.inner.y = value;
+        Ok(())
+    }
     /// The z component.
     #[wasm_bindgen(getter)]
     pub fn z(&self) -> Result<f32, JsValue> {
         let value = self.inner.z;
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_z(&mut self, value: f32) -> Result<(), JsValue> {
+        self.inner.z = value;
+        Ok(())
     }
     /// Returns the cross product, perpendicular to both vectors.
     pub fn cross(&self, o: &three_Vec3) -> Result<three_Vec3, JsValue> {
@@ -5042,6 +5333,12 @@ pub struct name_Lattice {}
 
 #[wasm_bindgen]
 impl name_Lattice {
+    /// Returns the default Lattice.
+    #[wasm_bindgen(js_name = "default")]
+    pub fn default_() -> Result<JsValue, JsValue> {
+        let value = mrlyrs::math::name::Lattice::default();
+        hand::to_js(&value)
+    }
     /// Returns whether this is the square lattice.
     pub fn is_square(lattice: JsValue) -> Result<bool, JsValue> {
         let lattice = hand::from_js::<mrlyrs::math::name::Lattice>(&lattice)?;
@@ -5116,6 +5413,20 @@ impl spin_Blend {
     /// Reads a blend by name: mean, sum, union, meet, parity or difference.
     pub fn named(name: &str) -> Result<JsValue, JsValue> {
         let value = mrlyrs::math::spin::Blend::named(name);
+        hand::to_js(&value)
+    }
+}
+
+/// The mass of a byte grid taken as a wheel: how many pencils of each kind it seats.
+#[wasm_bindgen]
+pub struct spirograph_Seats {}
+
+#[wasm_bindgen]
+impl spirograph_Seats {
+    /// Returns the default Seats.
+    #[wasm_bindgen(js_name = "default")]
+    pub fn default_() -> Result<JsValue, JsValue> {
+        let value = mrlyrs::math::spirograph::Seats::default();
         hand::to_js(&value)
     }
 }

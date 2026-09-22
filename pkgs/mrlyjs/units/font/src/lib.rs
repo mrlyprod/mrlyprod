@@ -203,11 +203,22 @@ impl Glyph {
         let value = self.inner.char;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_char(&mut self, value: char) -> Result<(), JsValue> {
+        self.inner.char = value;
+        Ok(())
+    }
     /// The bitmap rows of '0' and '1' characters.
     #[wasm_bindgen(getter)]
     pub fn rows(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.rows.clone();
         hand::to_js(&value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_rows(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::from_js::<Vec<String>>(&value)?;
+        self.inner.rows = value;
+        Ok(())
     }
     /// Returns the number of rows.
     pub fn height(&self) -> Result<usize, JsValue> {

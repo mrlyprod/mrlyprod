@@ -79,8 +79,13 @@ pub fn summary(m: &Manifest, macro_body_fns: usize) -> Vec<String> {
         .iter()
         .filter(|f| f.source == Source::Trait)
         .count();
+    let defaults = m
+        .functions
+        .iter()
+        .filter(|f| f.source == Source::Default)
+        .count();
     lines.push(format!(
-        "functions {}: ok {}, skip {}, private {}; {written} pub fn + {constant} pub const fn + {generated} macro-written + {traits} trait methods; {macro_body_fns} pub fn lines inside macro_rules",
+        "functions {}: ok {}, skip {}, private {}; {written} pub fn + {constant} pub const fn + {generated} macro-written + {traits} trait methods + {defaults} defaults; {macro_body_fns} pub fn lines inside macro_rules",
         m.functions.len(),
         total[0],
         total[1],

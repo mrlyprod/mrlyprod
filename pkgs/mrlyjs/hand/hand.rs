@@ -597,6 +597,25 @@ impl Rng {
             .map(|index| index as u32)
             .collect()
     }
+    /// Draws one item of the array, the same draw as Rust's choice.
+    pub fn choice(&mut self, items: JsValue) -> Result<JsValue, JsValue> {
+        let indices: Vec<u32> = (0..length(&items)?).collect();
+        let index = *self.stream.choice(&indices).map_err(throw)?;
+        js_sys::Reflect::get_u32(&items, index)
+    }
+    /// Shuffles the array in place, the same permutation as Rust's shuffle.
+    pub fn shuffle(&mut self, items: JsValue) -> Result<(), JsValue> {
+        let mut order: Vec<u32> = (0..length(&items)?).collect();
+        self.stream.shuffle(&mut order);
+        let moved = order
+            .into_iter()
+            .map(|index| js_sys::Reflect::get_u32(&items, index))
+            .collect::<Result<Vec<JsValue>, JsValue>>()?;
+        for (at, item) in (0..).zip(moved) {
+            js_sys::Reflect::set_u32(&items, at, &item)?;
+        }
+        Ok(())
+    }
     /// Prints the stream state, the way an optional stream crosses in.
     #[wasm_bindgen(js_name = "__state")]
     pub fn state(&self) -> Result<String, JsValue> {
@@ -617,6 +636,17 @@ impl Rng {
     pub fn stream(&mut self) -> &mut Stream {
         &mut self.stream
     }
+}
+
+fn length(items: &JsValue) -> Result<u32, JsValue> {
+    if !items.is_object() {
+        return Err(refuse("an array was wanted here."));
+    }
+    field(items, "length")?
+        .as_f64()
+        .filter(|n| n.is_finite() && *n >= 0.0)
+        .map(|n| n as u32)
+        .ok_or_else(|| refuse("an array was wanted here."))
 }
 
 fn method(value: &JsValue, name: &str) -> Result<js_sys::Function, JsValue> {

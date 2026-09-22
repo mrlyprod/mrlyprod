@@ -139,6 +139,7 @@ pub fn png(
     let (h, w) = (cell.height(), cell.width());
     let (img_w, img_h) = (w * scale + padding * 2, h * scale + padding * 2);
     let side = scale + 1;
+    let body = if shape == Shape::Square { scale } else { side };
     let stencil = stencil(shape, scale);
     let edge = outline.map(|c| (rim(&stencil, side, width), [c.r, c.g, c.b, c.a]));
     let mut pixels = vec![[0u8; 4]; img_w * img_h];
@@ -156,6 +157,7 @@ pub fn png(
                     }
                     pixels[(y0 + i) * img_w + x0 + j] = match &edge {
                         Some((rim, ink)) if rim[i * side + j] => *ink,
+                        _ if i.max(j) >= body => continue,
                         _ => rgba,
                     };
                 }
@@ -241,7 +243,7 @@ pub fn svg(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::colors::RED;
+    use crate::core::colors::{ALPHA, RED, WHITE};
     use crate::core::tensor::Tensor;
     use crate::core::PNG_MAGIC;
     use crate::math::two::designs;
@@ -265,6 +267,17 @@ mod tests {
         let bytes = png(&c, 4, None, 1, Shape::Square).unwrap();
         assert_eq!(&bytes[0..8], &PNG_MAGIC);
         assert!(bytes.len() > 100);
+    }
+    #[test]
+    fn a_transparent_site_round_trips_the_png() {
+        let mut c = Cell2d::new(Tensor::of(vec![0, 0, 0], vec![1, 3]).unwrap()).unwrap();
+        let colors: Vec<[u8; 4]> = [WHITE, ALPHA, Color::rgb(17, 17, 17)]
+            .iter()
+            .map(|c| [c.r, c.g, c.b, c.a])
+            .collect();
+        c.cell.colors = Some(colors.clone());
+        let bytes = png(&c, 1, None, 0, Shape::Square).unwrap();
+        assert_eq!(crate::core::unpng(&bytes).unwrap(), (3, 1, colors));
     }
     #[test]
     fn outlined_and_round_pngs_differ_from_the_bare_square() {

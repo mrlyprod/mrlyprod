@@ -44,10 +44,10 @@ impl<const N: usize> ConfigNd<N> {
     }
 }
 
-/// Draws one named design from the stream.
+/// Draws one of the four flat classics from the stream: carpet, net, vertical tree or void.
 pub fn random_design(rng: &mut Rng) -> Design {
-    let designs = Design::all();
-    designs[rng.below(designs.len())]
+    const DRAWN: [Design; 4] = [Design::Carpet, Design::Net, Design::Vtree, Design::Void];
+    DRAWN[rng.below(DRAWN.len())]
 }
 
 /// Draws a design's turn from the stream: a tree turns 0 or 1, every other design 0 to 3.
@@ -309,6 +309,28 @@ mod tests {
                 );
             }
         }
+    }
+    #[test]
+    fn every_drawn_design_builds_flat() {
+        let mut drawn = Vec::new();
+        for s in 0..256 {
+            let mut rng = Rng::new(s);
+            let design = random_design(&mut rng);
+            let mut tile = Tile::new(Group::General).size(3, 3);
+            tile.sources = vec![Source::Classic(design)];
+            tile.numbers = vec![3];
+            tile.levels = vec![1];
+            tile.rotations = vec![random_rotation(design, &mut rng) as usize];
+            tile.factor = 3;
+            assert!(
+                crate::gen::build::build_2d(&tile).is_ok(),
+                "seed {s} drew {design:?}"
+            );
+            drawn.push(design);
+        }
+        drawn.sort_by_key(|d| d.name());
+        drawn.dedup();
+        assert_eq!(drawn.len(), 4);
     }
     #[test]
     fn a_tree_turns_a_half() {

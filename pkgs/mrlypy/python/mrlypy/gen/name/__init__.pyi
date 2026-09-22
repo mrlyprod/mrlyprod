@@ -8,33 +8,53 @@ class Tile:
     @property
     def code(self) -> int | None:
         """The one design of a flat or fractal tile."""
+    @code.setter
+    def code(self, value: int | None) -> None: ...
     @property
     def special(self) -> int | None:
         """The mask code of a special tile."""
+    @special.setter
+    def special(self, value: int | None) -> None: ...
     @property
     def magic(self) -> list[int]:
         """The letters of a magic tile, first letter outermost."""
+    @magic.setter
+    def magic(self, value: list[int]) -> None: ...
     @property
     def mosaic(self) -> list[int]:
         """The three codes of a mosaic tile."""
+    @mosaic.setter
+    def mosaic(self, value: list[int]) -> None: ...
     @property
     def factor(self) -> int | None:
         """The side of the mask of a special or mosaic tile."""
+    @factor.setter
+    def factor(self, value: int | None) -> None: ...
     @property
     def side(self) -> Any:
         """The side each slot renders at, one per letter for a magic tile."""
+    @side.setter
+    def side(self, value: Any) -> None: ...
     @property
     def level(self) -> int | None:
         """The power a fractal tile is raised to, absent at one."""
+    @level.setter
+    def level(self, value: int | None) -> None: ...
     @property
     def turn(self) -> Any:
         """The quarter turns of each slot, absent when nothing turns."""
+    @turn.setter
+    def turn(self, value: Any) -> None: ...
     @property
     def flip(self) -> bool:
         """Whether a special tile flips its mask."""
+    @flip.setter
+    def flip(self, value: bool) -> None: ...
     @property
     def invert(self) -> bool:
         """Whether the finished tile inverts."""
+    @invert.setter
+    def invert(self, value: bool) -> None: ...
     def checked(self) -> Tile:
         """Folds a decoded value to its canonical form, or an error for one outside the kind."""
     @staticmethod
@@ -66,3 +86,9 @@ class Tile:
         """Reads plain data into the class."""
     def to_dict(self) -> Any:
         """Returns the value as plain data."""
+
+class Slots:
+    """One value for every slot of a tile, or one value per slot."""
+    @staticmethod
+    def default() -> Any:
+        """Returns the default Slots."""

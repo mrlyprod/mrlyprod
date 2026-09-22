@@ -62,6 +62,10 @@ export class Rng {
     chance(p: number): boolean;
     /** Draws amount distinct indices below length, or every index when amount is larger. */
     sample_indices(length: number, amount: number): Uint32Array;
+    /** Draws one item of the array, the same draw as Rust's choice. */
+    choice<T>(items: ArrayLike<T>): T;
+    /** Shuffles the array in place, the same permutation as Rust's shuffle. */
+    shuffle<T>(items: T[]): void;
 }
 /** Draws one seeded artwork and returns its PNG bytes: a random flat tile under the default recipe */
 export function background(seed: number | bigint, width: number, height: number): Uint8Array;
@@ -71,7 +75,7 @@ export function classic_code(design: recipe.Design): string | undefined;
 export function classic_code_nd(design: recipe.Design, dimension: number): string | undefined;
 /** Draws a hex key of the given length from the stream. */
 export function hex_key(length: number, rng: Rng): string;
-/** Draws one named design from the stream. */
+/** Draws one of the four flat classics from the stream: carpet, net, vertical tree or void. */
 export function random_design(rng: Rng): recipe.Design;
 /** Draws a design's turn from the stream: a tree turns 0 or 1, every other design 0 to 3. */
 export function random_rotation(design: recipe.Design, rng: Rng): number;
@@ -123,25 +127,35 @@ export class Tile {
     /** Writes the Tile as plain data. */
     toJSON(): TileData;
     /** The construction family. */
-    readonly group: Group;
+    get group(): Group;
+    set group(value: Group);
     /** The base factor of the construction. */
-    readonly factor: number;
+    get factor(): number;
+    set factor(value: number);
     /** The origin of each layer. */
-    readonly sources: recipe.Source[];
+    get sources(): recipe.Source[];
+    set sources(value: recipe.Source[]);
     /** The grid size of each source. */
-    readonly numbers: Uint32Array;
+    get numbers(): Uint32Array;
+    set numbers(value: ArrayLike<number>);
     /** The fractal level of each source. */
-    readonly levels: Uint32Array;
+    get levels(): Uint32Array;
+    set levels(value: ArrayLike<number>);
     /** The quarter-turn rotation of each source. */
-    readonly rotations: Uint32Array;
+    get rotations(): Uint32Array;
+    set rotations(value: ArrayLike<number>);
     /** Whether the finished tile inverts. */
-    readonly invert: boolean;
+    get invert(): boolean;
+    set invert(value: boolean);
     /** Whether the finished tile flips. */
-    readonly flip: boolean;
+    get flip(): boolean;
+    set flip(value: boolean);
     /** The tile's width in cells. */
-    readonly width: number;
+    get width(): number;
+    set width(value: number);
     /** The tile's height in cells. */
-    readonly height: number;
+    get height(): number;
+    set height(value: number);
     /** Checks that the slots, numbers and sizes agree. */
     check(): void;
     /** Returns whether the recipe is a magic tile of one repeated source at one repeated number, */
@@ -172,6 +186,16 @@ export declare namespace build {
     export function random_tile_3d(max_size: number, rng: Rng): Tile;
     /** Draws a random cube tile up to the given size under a random projection. */
     export function random_tile_6d(max_size: number, rng: Rng): build.HexTile;
+    export type Config2d = draw.ConfigNd;
+    export const Config2d: {
+        /** Returns the default Config2d. */
+        default(): draw.ConfigNd;
+    };
+    export type Config3d = draw.ConfigNd;
+    export const Config3d: {
+        /** Returns the default Config3d. */
+        default(): draw.ConfigNd;
+    };
     /** A cube tile paired with the projection that flattens it. */
     export interface HexTile {
         /** The projection that flattens the tile. */
@@ -218,17 +242,23 @@ export declare namespace core {
             /** Writes the Paint as plain data. */
             toJSON(): PaintData;
             /** The coloring edition. */
-            readonly edition: core.paint.Edition;
+            get edition(): core.paint.Edition;
+            set edition(value: core.paint.Edition);
             /** The secondary color scheme. */
-            readonly scheme: core.paint.Scheme;
+            get scheme(): core.paint.Scheme;
+            set scheme(value: core.paint.Scheme);
             /** The side the primary ink lands on. */
-            readonly target: core.paint.Target;
+            get target(): core.paint.Target;
+            set target(value: core.paint.Target);
             /** The primary ink. */
-            readonly primary: core.paint.Ink;
+            get primary(): core.paint.Ink;
+            set primary(value: core.paint.Ink);
             /** The secondary inks. */
-            readonly secondary: core.paint.Ink[];
+            get secondary(): core.paint.Ink[];
+            set secondary(value: core.paint.Ink[]);
             /** The shade indices of a multitone ramp. */
-            readonly shades: Uint32Array;
+            get shades(): Uint32Array;
+            set shades(value: ArrayLike<number>);
         }
         /** The two ways secondary colors are drawn. */
         export type Scheme = "Multicolor" | "Multitone";
@@ -262,6 +292,10 @@ export declare namespace math {
 export declare namespace name {
     /** One value for every slot of a tile, or one value per slot. */
     export type Slots = number | number[];
+    export const Slots: {
+        /** Returns the default Slots. */
+        default(): name.Slots;
+    };
     export interface TileData {
         /** The kind word. */
         kind: string;
@@ -295,25 +329,35 @@ export declare namespace name {
         /** Writes the Tile as plain data. */
         toJSON(): TileData;
         /** The one design of a flat or fractal tile. */
-        readonly code: string | undefined;
+        get code(): string | undefined;
+        set code(value: string | number | bigint | undefined);
         /** The mask code of a special tile. */
-        readonly special: string | undefined;
+        get special(): string | undefined;
+        set special(value: string | number | bigint | undefined);
         /** The letters of a magic tile, first letter outermost. */
-        readonly magic: string[];
+        get magic(): string[];
+        set magic(value: (string | number | bigint)[]);
         /** The three codes of a mosaic tile. */
-        readonly mosaic: string[];
+        get mosaic(): string[];
+        set mosaic(value: (string | number | bigint)[]);
         /** The side of the mask of a special or mosaic tile. */
-        readonly factor: number | undefined;
+        get factor(): number | undefined;
+        set factor(value: number | undefined);
         /** The side each slot renders at, one per letter for a magic tile. */
-        readonly side: name.Slots;
+        get side(): name.Slots;
+        set side(value: name.Slots);
         /** The power a fractal tile is raised to, absent at one. */
-        readonly level: number | undefined;
+        get level(): number | undefined;
+        set level(value: number | undefined);
         /** The quarter turns of each slot, absent when nothing turns. */
-        readonly turn: name.Slots;
+        get turn(): name.Slots;
+        set turn(value: name.Slots);
         /** Whether a special tile flips its mask. */
-        readonly flip: boolean;
+        get flip(): boolean;
+        set flip(value: boolean);
         /** Whether the finished tile inverts. */
-        readonly invert: boolean;
+        get invert(): boolean;
+        set invert(value: boolean);
         /** Folds a decoded value to its canonical form, or an error for one outside the kind. */
         checked(): name.Tile;
         /** Reads a filename back into the value, or an error. */
@@ -390,6 +434,10 @@ export declare namespace variation {
         /** The width and height repetition pairs to render. */
         files: [number, number][];
     }
+    export const Config: {
+        /** Returns the default Config. */
+        default(): variation.Config;
+    };
     export interface FileData {
         /** The count of tile repetitions across. */
         width: number;
@@ -406,11 +454,14 @@ export declare namespace variation {
         /** Writes the File as plain data. */
         toJSON(): FileData;
         /** The count of tile repetitions across. */
-        readonly width: number;
+        get width(): number;
+        set width(value: number);
         /** The count of tile repetitions down. */
-        readonly height: number;
+        get height(): number;
+        set height(value: number);
         /** The encoded PNG bytes, empty until rendered and left out of the json. */
-        readonly png: Uint8Array;
+        get png(): Uint8Array;
+        set png(value: ArrayLike<number>);
     }
     export interface VariationData {
         /** The random hex identifier. */
@@ -439,21 +490,29 @@ export declare namespace variation {
         /** Writes the Variation as plain data. */
         toJSON(): VariationData;
         /** The random hex identifier. */
-        readonly key: string;
+        get key(): string;
+        set key(value: string);
         /** The seed the variation is drawn under. */
-        readonly seed: bigint;
+        get seed(): bigint;
+        set seed(value: number | bigint);
         /** The paint edition. */
-        readonly edition: core.paint.Edition;
+        get edition(): core.paint.Edition;
+        set edition(value: core.paint.Edition);
         /** The primary inks, when the config fixes them. */
-        readonly primaries: core.paint.Ink[] | undefined;
+        get primaries(): core.paint.Ink[] | undefined;
+        set primaries(value: core.paint.Ink[] | undefined);
         /** The tile recipe. */
-        readonly tile: Tile;
+        get tile(): Tile;
+        set tile(value: Tile);
         /** The mask tile, present only under the Neighbors edition. */
-        readonly mask: Tile | undefined;
+        get mask(): Tile | undefined;
+        set mask(value: Tile | undefined);
         /** The built base cell, set by generate and left out of the json. */
-        readonly base: Cell | undefined;
+        get base(): Cell | undefined;
+        set base(value: Cell | undefined);
         /** The renderings, filled by render. */
-        readonly files: variation.File[];
+        get files(): variation.File[];
+        set files(value: variation.File[]);
         /** Returns whether the edition paints the whole tiled canvas. */
         is_cover(): boolean;
         /** Returns whether the edition paints the base cell before tiling. */

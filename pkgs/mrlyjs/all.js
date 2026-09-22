@@ -93,6 +93,7 @@ export const core = {
         blur: wasm.core_image_blur,
     },
     paint: {
+        Config: wasm.core_paint_Config,
         Edition: wasm.core_paint_Edition,
         Ink: wasm.core_paint_Ink,
         Paint: wasm.core_paint_Paint,
@@ -207,6 +208,8 @@ export const gen = {
     random_rotation: wasm.gen_random_rotation,
     tree_mask: wasm.gen_tree_mask,
     build: {
+        Config2d: wasm.gen_build_Config2d,
+        Config3d: wasm.gen_build_Config3d,
         build_2d: wasm.gen_build_build_2d,
         build_3d: wasm.gen_build_build_3d,
         build_6d: wasm.gen_build_build_6d,
@@ -218,6 +221,7 @@ export const gen = {
         random_tile_6d: wasm.gen_build_random_tile_6d,
     },
     name: {
+        Slots: wasm.gen_name_Slots,
         Tile: wasm.gen_name_Tile,
     },
     recipe: {
@@ -236,6 +240,7 @@ export const gen = {
         size: wasm.gen_recipe_size,
     },
     variation: {
+        Config: wasm.gen_variation_Config,
         File: wasm.gen_variation_File,
         Variation: wasm.gen_variation_Variation,
         create: wasm.gen_variation_create,
@@ -706,6 +711,7 @@ export const math = {
         RADIUS_CAP: wasm.math_spirograph_RADIUS_CAP,
         RASTER_CAP: wasm.math_spirograph_RASTER_CAP,
         SIDES: wasm.math_spirograph_SIDES,
+        Seats: wasm.math_spirograph_Seats,
         cell: wasm.math_spirograph_cell,
         cover: wasm.math_spirograph_cover,
         disc: wasm.math_spirograph_disc,

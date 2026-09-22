@@ -4,6 +4,18 @@ from numpy.typing import NDArray
 import mrlypy.core
 import mrlypy.gen
 
+class Config2d:
+    """The constraints a random flat tile is drawn under."""
+    @staticmethod
+    def default() -> dict[str, Any]:
+        """Returns the default Config2d."""
+
+class Config3d:
+    """The constraints a random cube tile is drawn under, shared by the hex pipeline."""
+    @staticmethod
+    def default() -> dict[str, Any]:
+        """Returns the default Config3d."""
+
 def build_2d(tile: mrlypy.gen.Tile) -> dict[str, Any]:
     """Builds the flat cell the tile describes."""
 

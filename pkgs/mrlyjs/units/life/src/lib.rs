@@ -281,11 +281,22 @@ impl Config {
         let value = self.inner.mask.clone();
         hand::cell2d_to_js(&value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_mask(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::cell2d_from_js(&value)?;
+        self.inner.mask = value;
+        Ok(())
+    }
     /// The neighbor counts that create a cell.
     #[wasm_bindgen(getter)]
     pub fn birth(&self) -> Result<Counts, JsValue> {
         let value = self.inner.birth.clone();
         Ok(Counts { inner: value })
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_birth(&mut self, value: &Counts) -> Result<(), JsValue> {
+        self.inner.birth = value.inner.clone();
+        Ok(())
     }
     /// The neighbor counts that keep a cell.
     #[wasm_bindgen(getter)]
@@ -293,11 +304,22 @@ impl Config {
         let value = self.inner.survive.clone();
         Ok(Counts { inner: value })
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_survive(&mut self, value: &Counts) -> Result<(), JsValue> {
+        self.inner.survive = value.inner.clone();
+        Ok(())
+    }
     /// The edge policy.
     #[wasm_bindgen(getter)]
     pub fn boundary(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.boundary;
         hand::to_js(&value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_boundary(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::from_js::<mrlyrs::life::Boundary>(&value)?;
+        self.inner.boundary = value;
+        Ok(())
     }
     /// The generation cap.
     #[wasm_bindgen(getter)]
@@ -305,17 +327,32 @@ impl Config {
         let value = self.inner.max_generations;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_max_generations(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.max_generations = value;
+        Ok(())
+    }
     /// The tiling factor applied to the seed.
     #[wasm_bindgen(getter)]
     pub fn grid_size(&self) -> Result<usize, JsValue> {
         let value = self.inner.grid_size;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_grid_size(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.grid_size = value;
+        Ok(())
+    }
     /// The dead border added around the seed.
     #[wasm_bindgen(getter)]
     pub fn padding(&self) -> Result<usize, JsValue> {
         let value = self.inner.padding;
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_padding(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.padding = value;
+        Ok(())
     }
     /// Returns the largest neighbor count the mask can reach.
     pub fn budget(&self) -> Result<usize, JsValue> {
@@ -395,11 +432,23 @@ impl Life {
         let value = self.inner.grids.clone();
         hand::list_to_js(&value, hand::cell2d_to_js)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_grids(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::list_from_js(&value, hand::cell2d_from_js)?;
+        self.inner.grids = value;
+        Ok(())
+    }
     /// The run's ending.
     #[wasm_bindgen(getter)]
     pub fn fate(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.fate;
         hand::to_js(&value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_fate(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::from_js::<mrlyrs::life::Fate>(&value)?;
+        self.inner.fate = value;
+        Ok(())
     }
     /// The number of recorded generations.
     #[wasm_bindgen(getter)]
@@ -407,11 +456,21 @@ impl Life {
         let value = self.inner.count;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_count(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.count = value;
+        Ok(())
+    }
     /// The cycle length when the fate is a loop, else zero.
     #[wasm_bindgen(getter)]
     pub fn loop_length(&self) -> Result<usize, JsValue> {
         let value = self.inner.loop_length;
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_loop_length(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.loop_length = value;
+        Ok(())
     }
     /// Returns the final grid, or None when the run is empty.
     pub fn last(&self) -> Result<JsValue, JsValue> {
@@ -444,17 +503,32 @@ impl Rule {
         let value = self.inner.birth.clone();
         Ok(Counts { inner: value })
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_birth(&mut self, value: &Counts) -> Result<(), JsValue> {
+        self.inner.birth = value.inner.clone();
+        Ok(())
+    }
     /// The neighbor counts that keep a cell, listed or drawn from a sequence.
     #[wasm_bindgen(getter)]
     pub fn survive(&self) -> Result<Counts, JsValue> {
         let value = self.inner.survive.clone();
         Ok(Counts { inner: value })
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_survive(&mut self, value: &Counts) -> Result<(), JsValue> {
+        self.inner.survive = value.inner.clone();
+        Ok(())
+    }
     /// Whether the edge wraps, false unless said.
     #[wasm_bindgen(getter)]
     pub fn wrap(&self) -> Result<bool, JsValue> {
         let value = self.inner.wrap;
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_wrap(&mut self, value: bool) -> Result<(), JsValue> {
+        self.inner.wrap = value;
+        Ok(())
     }
     /// Returns the edge policy the rule runs under.
     pub fn boundary(&self) -> Result<JsValue, JsValue> {

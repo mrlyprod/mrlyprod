@@ -248,11 +248,29 @@ impl Canvas {
         if y < 0 || y >= self.height as i64 {
             return;
         }
-        let lo = x0.min(x1).max(0);
-        let hi = x0.max(x1).min(self.width as i64 - 1);
-        for x in lo..=hi {
+        for x in x0.max(0)..=x1.min(self.width as i64 - 1) {
             self.pixels[y as usize * self.width + x as usize] = rgba;
         }
+    }
+}
+
+struct Edge {
+    x0: f64,
+    y0: i64,
+    top: i64,
+    bottom: i64,
+    slope: f64,
+}
+
+impl Edge {
+    fn at(&self, y: i64) -> f64 {
+        (y - self.y0) as f64 * self.slope + self.x0
+    }
+    fn holds(&self, y: i64) -> bool {
+        y >= self.top && y <= self.bottom
+    }
+    fn ends(&self, y: i64) -> bool {
+        y == self.top || y == self.bottom
     }
 }
 
@@ -272,6 +290,27 @@ fn round_down(v: f64) -> i64 {
     }
 }
 
+fn corner(earlier: &[Edge], edge: &Edge, y: i64, x: f64) -> f64 {
+    let step = if y == edge.bottom { y - 1 } else { y + 1 };
+    for other in earlier {
+        if !other.ends(y) || other.slope == 0.0 || x.round() != other.at(y).round() {
+            continue;
+        }
+        if !other.holds(step) {
+            continue;
+        }
+        let (mine, theirs) = (edge.at(step), other.at(step));
+        if x > mine + 1.0 && x > theirs + 1.0 {
+            return mine.max(theirs).round() + 1.0;
+        }
+        if x < mine - 1.0 && x < theirs - 1.0 {
+            return mine.min(theirs).round() - 1.0;
+        }
+        return x;
+    }
+    x
+}
+
 fn flood(canvas: &mut Canvas, points: &[(i64, i64)], rgba: [u8; 4]) {
     let n = points.len();
     let mut edges = Vec::with_capacity(n);
@@ -281,29 +320,38 @@ fn flood(canvas: &mut Canvas, points: &[(i64, i64)], rgba: [u8; 4]) {
         let (x0, y0) = points[i];
         let (x1, y1) = points[(i + 1) % n];
         let (top, bottom) = (y0.min(y1), y0.max(y1));
-        if top == bottom {
-            canvas.span(x0, top, x1, rgba);
-            continue;
-        }
         lo = lo.min(top);
         hi = hi.max(bottom);
-        edges.push((
-            x0 as f64,
+        if top == bottom {
+            canvas.span(x0.min(x1), top, x0.max(x1), rgba);
+            continue;
+        }
+        edges.push(Edge {
+            x0: x0 as f64,
             y0,
             top,
             bottom,
-            (x1 - x0) as f64 / (y1 - y0) as f64,
-        ));
+            slope: (x1 - x0) as f64 / (y1 - y0) as f64,
+        });
     }
-    let mut crossings: Vec<f64> = Vec::with_capacity(edges.len());
-    for y in lo.max(0)..=hi.min(canvas.height as i64) {
+    let hi = hi.min(canvas.height as i64);
+    let mut crossings: Vec<f64> = Vec::with_capacity(edges.len() * 2);
+    for y in lo.max(0)..=hi {
         crossings.clear();
-        for &(x0, y0, top, bottom, slope) in &edges {
-            if y >= top && y <= bottom {
-                crossings.push((y - y0) as f64 * slope + x0);
+        for (i, edge) in edges.iter().enumerate() {
+            if !edge.holds(y) {
+                continue;
+            }
+            let x = edge.at(y);
+            if y == edge.bottom && y < hi {
+                crossings.extend([x, x]);
+            } else if edge.ends(y) && edge.slope != 0.0 {
+                crossings.push(corner(&edges[..i], edge, y, x));
+            } else {
+                crossings.push(x);
             }
         }
-        crossings.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        crossings.sort_by(f64::total_cmp);
         for pair in crossings.chunks_exact(2) {
             canvas.span(round_up(pair[0]), y, round_down(pair[1]), rgba);
         }
@@ -462,8 +510,9 @@ mod tests {
     use crate::core::unpng;
     use crate::math::bang::Code;
     use crate::math::six::designs::iso_design;
-    use crate::math::six::geometry::{blank, cut};
+    use crate::math::six::geometry::{blank, cut, iso};
     use crate::math::six::models::Cell6d;
+    use crate::math::six::painter::paint;
     use crate::math::six::{Orientation, Projection};
     use crate::math::three;
     fn carpet_cut() -> Cell6d {
@@ -545,6 +594,14 @@ mod tests {
         let (width, height, pixels) = unpng(&bytes).unwrap();
         assert_eq!((width, height), (120, 120));
         assert_eq!(pixels.iter().filter(|p| p[3] != 0).count(), 10859);
+    }
+    #[test]
+    fn vertical_rows_tile_without_seams() {
+        let cube = three::carpet(3, 1).unwrap();
+        let hex = paint(iso(&cube).unwrap(), None, None, None).unwrap();
+        let (width, height, pixels) = unpng(&png(&hex, 10, None, 0).unwrap()).unwrap();
+        assert_eq!((width, height), (120, 120));
+        assert_eq!(pixels.iter().filter(|p| p[3] == 0).count(), 3541);
     }
     #[test]
     fn rect_svg_carries_the_cropped_window() {

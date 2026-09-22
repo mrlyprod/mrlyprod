@@ -1436,17 +1436,35 @@ impl apollonian_Circle {
         let value = self.inner.k;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_k(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::i64_from_js(&value)?;
+        self.inner.k = value;
+        Ok(())
+    }
     /// The curvature times the centre's abscissa.
     #[wasm_bindgen(getter)]
     pub fn x(&self) -> Result<i64, JsValue> {
         let value = self.inner.x;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_x(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::i64_from_js(&value)?;
+        self.inner.x = value;
+        Ok(())
+    }
     /// The curvature times the centre's ordinate.
     #[wasm_bindgen(getter)]
     pub fn y(&self) -> Result<i64, JsValue> {
         let value = self.inner.y;
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_y(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::i64_from_js(&value)?;
+        self.inner.y = value;
+        Ok(())
     }
     /// The centre, none on a line.
     pub fn centre(&self) -> Result<JsValue, JsValue> {
@@ -1708,17 +1726,33 @@ impl memory_Rule {
         let value = self.inner.dimension;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_dimension(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.dimension = value;
+        Ok(())
+    }
     /// The window width `k`, at least one.
     #[wasm_bindgen(getter)]
     pub fn width(&self) -> Result<usize, JsValue> {
         let value = self.inner.width;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_width(&mut self, value: usize) -> Result<(), JsValue> {
+        self.inner.width = value;
+        Ok(())
+    }
     /// The window code, bit `w` set when window `w` is allowed.
     #[wasm_bindgen(getter)]
     pub fn code(&self) -> Result<u64, JsValue> {
         let value = self.inner.code;
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_code(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::u64_from_js(&value)?;
+        self.inner.code = value;
+        Ok(())
     }
     /// Returns whether a word, coarsest digit first, is accepted.
     pub fn accepts(&self, word: &[usize]) -> Result<bool, JsValue> {
@@ -2029,11 +2063,21 @@ impl zeta_Complex {
         let value = self.inner.re;
         Ok(value)
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_re(&mut self, value: f64) -> Result<(), JsValue> {
+        self.inner.re = value;
+        Ok(())
+    }
     /// The imaginary part.
     #[wasm_bindgen(getter)]
     pub fn im(&self) -> Result<f64, JsValue> {
         let value = self.inner.im;
         Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_im(&mut self, value: f64) -> Result<(), JsValue> {
+        self.inner.im = value;
+        Ok(())
     }
     /// Returns the modulus.
     pub fn abs(&self) -> Result<f64, JsValue> {
@@ -2044,6 +2088,12 @@ impl zeta_Complex {
     pub fn arg(&self) -> Result<f64, JsValue> {
         let value = self.inner.arg();
         Ok(value)
+    }
+    /// Returns the default Complex.
+    #[wasm_bindgen(js_name = "default")]
+    pub fn default_() -> Result<zeta_Complex, JsValue> {
+        let value = mrlyrs::num::zeta::Complex::default();
+        Ok(zeta_Complex { inner: value })
     }
     /// Returns the exponential.
     pub fn exp(&self) -> Result<zeta_Complex, JsValue> {
@@ -2090,6 +2140,12 @@ impl zeta_Line {
     pub fn count(&self, t: f64) -> Result<usize, JsValue> {
         let value = self.inner.count(t);
         Ok(value)
+    }
+    /// Returns the default Line.
+    #[wasm_bindgen(js_name = "default")]
+    pub fn default_() -> Result<zeta_Line, JsValue> {
+        let value = mrlyrs::num::zeta::Line::default();
+        Ok(zeta_Line { inner: value })
     }
     /// Returns Z(t) from the Euler-Maclaurin value turned onto the real axis.
     pub fn exact(&self, t: f64) -> Result<f64, JsValue> {

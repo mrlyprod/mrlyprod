@@ -365,12 +365,26 @@ pub mod core {
                 let value = self.0.ground;
                 (PyColor(value)).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "ground")]
+            pub fn set_ground(&mut self, value: PyColor) -> PyResult<()> {
+                let value = value.0;
+                self.0.ground = value;
+                Ok(())
+            }
             /// The page background, one step off the ground.
             #[getter]
             #[pyo3(name = "bg")]
             pub fn bg<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.bg;
                 (PyColor(value)).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "bg")]
+            pub fn set_bg(&mut self, value: PyColor) -> PyResult<()> {
+                let value = value.0;
+                self.0.bg = value;
+                Ok(())
             }
             /// The raised panel.
             #[getter]
@@ -379,12 +393,26 @@ pub mod core {
                 let value = self.0.panel;
                 (PyColor(value)).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "panel")]
+            pub fn set_panel(&mut self, value: PyColor) -> PyResult<()> {
+                let value = value.0;
+                self.0.panel = value;
+                Ok(())
+            }
             /// The sunken well.
             #[getter]
             #[pyo3(name = "deep")]
             pub fn deep<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.deep;
                 (PyColor(value)).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "deep")]
+            pub fn set_deep(&mut self, value: PyColor) -> PyResult<()> {
+                let value = value.0;
+                self.0.deep = value;
+                Ok(())
             }
             /// The hairline between things.
             #[getter]
@@ -393,12 +421,26 @@ pub mod core {
                 let value = self.0.line;
                 (PyColor(value)).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "line")]
+            pub fn set_line(&mut self, value: PyColor) -> PyResult<()> {
+                let value = value.0;
+                self.0.line = value;
+                Ok(())
+            }
             /// The foreground, the strongest tone.
             #[getter]
             #[pyo3(name = "fg")]
             pub fn fg<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.fg;
                 (PyColor(value)).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "fg")]
+            pub fn set_fg(&mut self, value: PyColor) -> PyResult<()> {
+                let value = value.0;
+                self.0.fg = value;
+                Ok(())
             }
             /// The dimmed foreground, for anything secondary.
             #[getter]
@@ -407,12 +449,26 @@ pub mod core {
                 let value = self.0.dim;
                 (PyColor(value)).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "dim")]
+            pub fn set_dim(&mut self, value: PyColor) -> PyResult<()> {
+                let value = value.0;
+                self.0.dim = value;
+                Ok(())
+            }
             /// The interactive accent.
             #[getter]
             #[pyo3(name = "accent")]
             pub fn accent<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.accent;
                 (PyColor(value)).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "accent")]
+            pub fn set_accent(&mut self, value: PyColor) -> PyResult<()> {
+                let value = value.0;
+                self.0.accent = value;
+                Ok(())
             }
             /// The tone written on the accent.
             #[getter]
@@ -421,12 +477,26 @@ pub mod core {
                 let value = self.0.on_accent;
                 (PyColor(value)).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "on_accent")]
+            pub fn set_on_accent(&mut self, value: PyColor) -> PyResult<()> {
+                let value = value.0;
+                self.0.on_accent = value;
+                Ok(())
+            }
             /// The red ink.
             #[getter]
             #[pyo3(name = "red")]
             pub fn red<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.red;
                 (PyColor(value)).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "red")]
+            pub fn set_red(&mut self, value: PyColor) -> PyResult<()> {
+                let value = value.0;
+                self.0.red = value;
+                Ok(())
             }
             /// The orange ink.
             #[getter]
@@ -435,12 +505,26 @@ pub mod core {
                 let value = self.0.orange;
                 (PyColor(value)).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "orange")]
+            pub fn set_orange(&mut self, value: PyColor) -> PyResult<()> {
+                let value = value.0;
+                self.0.orange = value;
+                Ok(())
+            }
             /// The yellow ink.
             #[getter]
             #[pyo3(name = "yellow")]
             pub fn yellow<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.yellow;
                 (PyColor(value)).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "yellow")]
+            pub fn set_yellow(&mut self, value: PyColor) -> PyResult<()> {
+                let value = value.0;
+                self.0.yellow = value;
+                Ok(())
             }
             /// The green ink.
             #[getter]
@@ -449,12 +533,26 @@ pub mod core {
                 let value = self.0.green;
                 (PyColor(value)).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "green")]
+            pub fn set_green(&mut self, value: PyColor) -> PyResult<()> {
+                let value = value.0;
+                self.0.green = value;
+                Ok(())
+            }
             /// The mint ink.
             #[getter]
             #[pyo3(name = "mint")]
             pub fn mint<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.mint;
                 (PyColor(value)).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "mint")]
+            pub fn set_mint(&mut self, value: PyColor) -> PyResult<()> {
+                let value = value.0;
+                self.0.mint = value;
+                Ok(())
             }
             /// The teal ink.
             #[getter]
@@ -463,12 +561,26 @@ pub mod core {
                 let value = self.0.teal;
                 (PyColor(value)).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "teal")]
+            pub fn set_teal(&mut self, value: PyColor) -> PyResult<()> {
+                let value = value.0;
+                self.0.teal = value;
+                Ok(())
+            }
             /// The cyan ink.
             #[getter]
             #[pyo3(name = "cyan")]
             pub fn cyan<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.cyan;
                 (PyColor(value)).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "cyan")]
+            pub fn set_cyan(&mut self, value: PyColor) -> PyResult<()> {
+                let value = value.0;
+                self.0.cyan = value;
+                Ok(())
             }
             /// The blue ink.
             #[getter]
@@ -477,12 +589,26 @@ pub mod core {
                 let value = self.0.blue;
                 (PyColor(value)).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "blue")]
+            pub fn set_blue(&mut self, value: PyColor) -> PyResult<()> {
+                let value = value.0;
+                self.0.blue = value;
+                Ok(())
+            }
             /// The indigo ink.
             #[getter]
             #[pyo3(name = "indigo")]
             pub fn indigo<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.indigo;
                 (PyColor(value)).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "indigo")]
+            pub fn set_indigo(&mut self, value: PyColor) -> PyResult<()> {
+                let value = value.0;
+                self.0.indigo = value;
+                Ok(())
             }
             /// The purple ink.
             #[getter]
@@ -491,12 +617,26 @@ pub mod core {
                 let value = self.0.purple;
                 (PyColor(value)).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "purple")]
+            pub fn set_purple(&mut self, value: PyColor) -> PyResult<()> {
+                let value = value.0;
+                self.0.purple = value;
+                Ok(())
+            }
             /// The pink ink.
             #[getter]
             #[pyo3(name = "pink")]
             pub fn pink<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.pink;
                 (PyColor(value)).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "pink")]
+            pub fn set_pink(&mut self, value: PyColor) -> PyResult<()> {
+                let value = value.0;
+                self.0.pink = value;
+                Ok(())
             }
             /// The brown ink.
             #[getter]
@@ -505,12 +645,26 @@ pub mod core {
                 let value = self.0.brown;
                 (PyColor(value)).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "brown")]
+            pub fn set_brown(&mut self, value: PyColor) -> PyResult<()> {
+                let value = value.0;
+                self.0.brown = value;
+                Ok(())
+            }
             /// The gray ink.
             #[getter]
             #[pyo3(name = "gray")]
             pub fn gray<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.gray;
                 (PyColor(value)).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "gray")]
+            pub fn set_gray(&mut self, value: PyColor) -> PyResult<()> {
+                let value = value.0;
+                self.0.gray = value;
+                Ok(())
             }
             /// The thirteen inks in name order.
             #[pyo3(name = "hues", signature = ())]
@@ -816,12 +970,26 @@ pub mod core {
                 let value = self.0.edition;
                 (PySerde(value)).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "edition")]
+            pub fn set_edition(&mut self, value: PySerde<mrlyrs::core::paint::Edition>) -> PyResult<()> {
+                let value = value.0;
+                self.0.edition = value;
+                Ok(())
+            }
             /// The secondary color scheme.
             #[getter]
             #[pyo3(name = "scheme")]
             pub fn scheme<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.scheme;
                 (PySerde(value)).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "scheme")]
+            pub fn set_scheme(&mut self, value: PySerde<mrlyrs::core::paint::Scheme>) -> PyResult<()> {
+                let value = value.0;
+                self.0.scheme = value;
+                Ok(())
             }
             /// The side the primary ink lands on.
             #[getter]
@@ -830,12 +998,26 @@ pub mod core {
                 let value = self.0.target;
                 (PySerde(value)).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "target")]
+            pub fn set_target(&mut self, value: PySerde<mrlyrs::core::paint::Target>) -> PyResult<()> {
+                let value = value.0;
+                self.0.target = value;
+                Ok(())
+            }
             /// The primary ink.
             #[getter]
             #[pyo3(name = "primary")]
             pub fn primary<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.primary;
                 (PySerde(value)).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "primary")]
+            pub fn set_primary(&mut self, value: PySerde<mrlyrs::core::paint::Ink>) -> PyResult<()> {
+                let value = value.0;
+                self.0.primary = value;
+                Ok(())
             }
             /// The secondary inks.
             #[getter]
@@ -844,12 +1026,25 @@ pub mod core {
                 let value = self.0.secondary.clone();
                 ((value).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "secondary")]
+            pub fn set_secondary(&mut self, value: Vec<PySerde<mrlyrs::core::paint::Ink>>) -> PyResult<()> {
+                let value = value.into_iter().map(|x| x.0).collect::<Vec<_>>();
+                self.0.secondary = value;
+                Ok(())
+            }
             /// The shade indices of a multitone ramp.
             #[getter]
             #[pyo3(name = "shades")]
             pub fn shades<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.shades.clone();
                 (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "shades")]
+            pub fn set_shades(&mut self, value: Vec<usize>) -> PyResult<()> {
+                self.0.shades = value;
+                Ok(())
             }
             /// Returns true for the Simple edition.
             #[pyo3(name = "is_simple", signature = ())]
@@ -873,6 +1068,21 @@ pub mod core {
             /// Returns the value as plain data.
             pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 crate::hand::serde_into_py(py, &self.0)
+            }
+        }
+
+        /// The constraints a caller may put on a random paint.
+        #[pyclass(name = "Config", module = "mrlypy.core.paint", skip_from_py_object)]
+        pub struct Config;
+
+        #[pymethods]
+        impl Config {
+            /// Returns the default Config.
+            #[staticmethod]
+            #[pyo3(name = "default", signature = ())]
+            pub fn default<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::core::paint::Config::default();
+                (PySerde(out)).into_bound_py_any(py)
             }
         }
 
@@ -1042,6 +1252,7 @@ pub mod core {
             let m = PyModule::new(py, "mrlypy.core.paint")?;
             m.setattr("__doc__", "The editions that distribute a palette over a cell.")?;
             m.add_class::<Paint>()?;
+            m.add_class::<Config>()?;
             m.add_class::<Edition>()?;
             m.add_class::<Ink>()?;
             m.add_class::<Scheme>()?;
@@ -1054,7 +1265,7 @@ pub mod core {
             m.add_function(wrap_pyfunction!(reroll, &m)?)?;
             m.add_function(wrap_pyfunction!(setup, &m)?)?;
             m.add_function(wrap_pyfunction!(tag, &m)?)?;
-            let names: Vec<&str> = vec!["apply", "coat", "paint", "prime", "random_edition", "reroll", "setup", "tag", "Paint", "Edition", "Ink", "Scheme", "Target"];
+            let names: Vec<&str> = vec!["apply", "coat", "paint", "prime", "random_edition", "reroll", "setup", "tag", "Paint", "Config", "Edition", "Ink", "Scheme", "Target"];
             m.add("__all__", names)?;
             parent.add("paint", &m)?;
             sys.set_item("mrlypy._mrlypy.core.paint", &m)?;
@@ -1612,12 +1823,24 @@ pub mod core {
             let value = self.0.width;
             (value).into_bound_py_any(py)
         }
+        #[setter]
+        #[pyo3(name = "width")]
+        pub fn set_width(&mut self, value: usize) -> PyResult<()> {
+            self.0.width = value;
+            Ok(())
+        }
         /// The height in pixels.
         #[getter]
         #[pyo3(name = "height")]
         pub fn height<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let value = self.0.height;
             (value).into_bound_py_any(py)
+        }
+        #[setter]
+        #[pyo3(name = "height")]
+        pub fn set_height(&mut self, value: usize) -> PyResult<()> {
+            self.0.height = value;
+            Ok(())
         }
         /// The palette index of every pixel, row by row.
         #[getter]
@@ -1626,12 +1849,25 @@ pub mod core {
             let value = self.0.rows.clone();
             (value).into_bound_py_any(py)
         }
+        #[setter]
+        #[pyo3(name = "rows")]
+        pub fn set_rows(&mut self, value: Vec<Vec<usize>>) -> PyResult<()> {
+            self.0.rows = value;
+            Ok(())
+        }
         /// The colors the rows index.
         #[getter]
         #[pyo3(name = "palette")]
         pub fn palette<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let value = self.0.palette.clone();
             ((value).into_iter().map(PyColor).collect::<Vec<_>>()).into_bound_py_any(py)
+        }
+        #[setter]
+        #[pyo3(name = "palette")]
+        pub fn set_palette(&mut self, value: Vec<PyColor>) -> PyResult<()> {
+            let value = value.into_iter().map(|x| x.0).collect::<Vec<_>>();
+            self.0.palette = value;
+            Ok(())
         }
         /// Returns the flat rgba pixels, transparent wherever an index misses the palette.
         #[pyo3(name = "colors", signature = ())]
@@ -1685,6 +1921,13 @@ pub mod core {
 
     #[pymethods]
     impl Colorizer {
+        /// Returns the default Colorizer.
+        #[staticmethod]
+        #[pyo3(name = "default", signature = ())]
+        pub fn default<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::core::Colorizer::default();
+            (PySerde(out)).into_bound_py_any(py)
+        }
         /// Builds the blue-to-red diverging ramp around a white middle.
         #[staticmethod]
         #[pyo3(name = "diverge", signature = ())]
@@ -1880,12 +2123,24 @@ pub mod font {
             let value = self.0.char;
             (value).into_bound_py_any(py)
         }
+        #[setter]
+        #[pyo3(name = "char")]
+        pub fn set_char(&mut self, value: char) -> PyResult<()> {
+            self.0.char = value;
+            Ok(())
+        }
         /// The bitmap rows of '0' and '1' characters.
         #[getter]
         #[pyo3(name = "rows")]
         pub fn rows<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let value = self.0.rows.clone();
             (value).into_bound_py_any(py)
+        }
+        #[setter]
+        #[pyo3(name = "rows")]
+        pub fn set_rows(&mut self, value: Vec<String>) -> PyResult<()> {
+            self.0.rows = value;
+            Ok(())
         }
         /// Returns the number of rows.
         #[pyo3(name = "height", signature = ())]
@@ -2130,6 +2385,36 @@ pub mod gen_ {
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
 
+        /// The constraints a random flat tile is drawn under.
+        #[pyclass(name = "Config2d", module = "mrlypy.gen.build", skip_from_py_object)]
+        pub struct Config2d;
+
+        #[pymethods]
+        impl Config2d {
+            /// Returns the default Config2d.
+            #[staticmethod]
+            #[pyo3(name = "default", signature = ())]
+            pub fn default<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::gen::build::Config2d::default();
+                (PySerde(out)).into_bound_py_any(py)
+            }
+        }
+
+        /// The constraints a random cube tile is drawn under, shared by the hex pipeline.
+        #[pyclass(name = "Config3d", module = "mrlypy.gen.build", skip_from_py_object)]
+        pub struct Config3d;
+
+        #[pymethods]
+        impl Config3d {
+            /// Returns the default Config3d.
+            #[staticmethod]
+            #[pyo3(name = "default", signature = ())]
+            pub fn default<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::gen::build::Config3d::default();
+                (PySerde(out)).into_bound_py_any(py)
+            }
+        }
+
         /// Builds the flat cell the tile describes.
         #[pyfunction]
         #[pyo3(name = "build_2d", signature = (tile))]
@@ -2209,6 +2494,8 @@ pub mod gen_ {
         pub fn init(py: Python<'_>, parent: &Bound<'_, PyModule>, sys: &Bound<'_, PyDict>) -> PyResult<()> {
             let m = PyModule::new(py, "mrlypy.gen.build")?;
             m.setattr("__doc__", "The recipe to cell builders, one per dimension, and the random draws that feed them.")?;
+            m.add_class::<Config2d>()?;
+            m.add_class::<Config3d>()?;
             m.add_function(wrap_pyfunction!(build_2d, &m)?)?;
             m.add_function(wrap_pyfunction!(build_3d, &m)?)?;
             m.add_function(wrap_pyfunction!(build_6d, &m)?)?;
@@ -2218,7 +2505,7 @@ pub mod gen_ {
             m.add_function(wrap_pyfunction!(random_tile_2d, &m)?)?;
             m.add_function(wrap_pyfunction!(random_tile_3d, &m)?)?;
             m.add_function(wrap_pyfunction!(random_tile_6d, &m)?)?;
-            let names: Vec<&str> = vec!["build_2d", "build_3d", "build_6d", "create_2d", "create_3d", "create_6d", "random_tile_2d", "random_tile_3d", "random_tile_6d"];
+            let names: Vec<&str> = vec!["build_2d", "build_3d", "build_6d", "create_2d", "create_3d", "create_6d", "random_tile_2d", "random_tile_3d", "random_tile_6d", "Config2d", "Config3d"];
             m.add("__all__", names)?;
             parent.add("build", &m)?;
             sys.set_item("mrlypy._mrlypy.gen.build", &m)?;
@@ -2247,12 +2534,24 @@ pub mod gen_ {
                 let value = self.0.code;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "code")]
+            pub fn set_code(&mut self, value: Option<u128>) -> PyResult<()> {
+                self.0.code = value;
+                Ok(())
+            }
             /// The mask code of a special tile.
             #[getter]
             #[pyo3(name = "special")]
             pub fn special<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.special;
                 (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "special")]
+            pub fn set_special(&mut self, value: Option<u128>) -> PyResult<()> {
+                self.0.special = value;
+                Ok(())
             }
             /// The letters of a magic tile, first letter outermost.
             #[getter]
@@ -2261,12 +2560,24 @@ pub mod gen_ {
                 let value = self.0.magic.clone();
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "magic")]
+            pub fn set_magic(&mut self, value: Vec<u128>) -> PyResult<()> {
+                self.0.magic = value;
+                Ok(())
+            }
             /// The three codes of a mosaic tile.
             #[getter]
             #[pyo3(name = "mosaic")]
             pub fn mosaic<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.mosaic.clone();
                 (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "mosaic")]
+            pub fn set_mosaic(&mut self, value: Vec<u128>) -> PyResult<()> {
+                self.0.mosaic = value;
+                Ok(())
             }
             /// The side of the mask of a special or mosaic tile.
             #[getter]
@@ -2275,12 +2586,25 @@ pub mod gen_ {
                 let value = self.0.factor;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "factor")]
+            pub fn set_factor(&mut self, value: Option<usize>) -> PyResult<()> {
+                self.0.factor = value;
+                Ok(())
+            }
             /// The side each slot renders at, one per letter for a magic tile.
             #[getter]
             #[pyo3(name = "side")]
             pub fn side<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.side.clone();
                 (PySerde(value)).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "side")]
+            pub fn set_side(&mut self, value: PySerde<mrlyrs::gen::name::Slots>) -> PyResult<()> {
+                let value = value.0;
+                self.0.side = value;
+                Ok(())
             }
             /// The power a fractal tile is raised to, absent at one.
             #[getter]
@@ -2289,12 +2613,25 @@ pub mod gen_ {
                 let value = self.0.level;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "level")]
+            pub fn set_level(&mut self, value: Option<usize>) -> PyResult<()> {
+                self.0.level = value;
+                Ok(())
+            }
             /// The quarter turns of each slot, absent when nothing turns.
             #[getter]
             #[pyo3(name = "turn")]
             pub fn turn<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.turn.clone();
                 (PySerde(value)).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "turn")]
+            pub fn set_turn(&mut self, value: PySerde<mrlyrs::gen::name::Slots>) -> PyResult<()> {
+                let value = value.0;
+                self.0.turn = value;
+                Ok(())
             }
             /// Whether a special tile flips its mask.
             #[getter]
@@ -2303,12 +2640,24 @@ pub mod gen_ {
                 let value = self.0.flip;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "flip")]
+            pub fn set_flip(&mut self, value: bool) -> PyResult<()> {
+                self.0.flip = value;
+                Ok(())
+            }
             /// Whether the finished tile inverts.
             #[getter]
             #[pyo3(name = "invert")]
             pub fn invert<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.invert;
                 (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "invert")]
+            pub fn set_invert(&mut self, value: bool) -> PyResult<()> {
+                self.0.invert = value;
+                Ok(())
             }
             /// Folds a decoded value to its canonical form, or an error for one outside the kind.
             #[pyo3(name = "checked", signature = ())]
@@ -2391,11 +2740,27 @@ pub mod gen_ {
             }
         }
 
+        /// One value for every slot of a tile, or one value per slot.
+        #[pyclass(name = "Slots", module = "mrlypy.gen.name", skip_from_py_object)]
+        pub struct Slots;
+
+        #[pymethods]
+        impl Slots {
+            /// Returns the default Slots.
+            #[staticmethod]
+            #[pyo3(name = "default", signature = ())]
+            pub fn default<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::gen::name::Slots::default();
+                (PySerde(out)).into_bound_py_any(py)
+            }
+        }
+
         pub fn init(py: Python<'_>, parent: &Bound<'_, PyModule>, sys: &Bound<'_, PyDict>) -> PyResult<()> {
             let m = PyModule::new(py, "mrlypy.gen.name")?;
             m.setattr("__doc__", "The tile name: a full tile recipe folded to its one canonical object.")?;
             m.add_class::<Tile>()?;
-            let names: Vec<&str> = vec!["Tile"];
+            m.add_class::<Slots>()?;
+            let names: Vec<&str> = vec!["Tile", "Slots"];
             m.add("__all__", names)?;
             parent.add("name", &m)?;
             sys.set_item("mrlypy._mrlypy.gen.name", &m)?;
@@ -2503,7 +2868,7 @@ pub mod gen_ {
 
     /// The seeded artwork run from tile recipe to rendered files.
     pub mod variation {
-        use crate::hand::{ok, PyCellNd, PyRng, PySerde};
+        use crate::hand::{ok, PyCell2d, PyCellNd, PyRng, PySerde};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -2529,6 +2894,12 @@ pub mod gen_ {
                 let value = self.0.width;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "width")]
+            pub fn set_width(&mut self, value: usize) -> PyResult<()> {
+                self.0.width = value;
+                Ok(())
+            }
             /// The count of tile repetitions down.
             #[getter]
             #[pyo3(name = "height")]
@@ -2536,12 +2907,24 @@ pub mod gen_ {
                 let value = self.0.height;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "height")]
+            pub fn set_height(&mut self, value: usize) -> PyResult<()> {
+                self.0.height = value;
+                Ok(())
+            }
             /// The encoded PNG bytes, empty until rendered and left out of the json.
             #[getter]
             #[pyo3(name = "png")]
             pub fn png<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.png.clone();
                 (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "png")]
+            pub fn set_png(&mut self, value: Vec<u8>) -> PyResult<()> {
+                self.0.png = value;
+                Ok(())
             }
             /// Builds a file of the given repetition counts with no PNG bytes.
             #[staticmethod]
@@ -2575,12 +2958,24 @@ pub mod gen_ {
                 let value = self.0.key.clone();
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "key")]
+            pub fn set_key(&mut self, value: String) -> PyResult<()> {
+                self.0.key = value;
+                Ok(())
+            }
             /// The seed the variation is drawn under.
             #[getter]
             #[pyo3(name = "seed")]
             pub fn seed<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.seed;
                 (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "seed")]
+            pub fn set_seed(&mut self, value: u64) -> PyResult<()> {
+                self.0.seed = value;
+                Ok(())
             }
             /// The paint edition.
             #[getter]
@@ -2589,12 +2984,26 @@ pub mod gen_ {
                 let value = self.0.edition;
                 (PySerde(value)).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "edition")]
+            pub fn set_edition(&mut self, value: PySerde<mrlyrs::core::paint::Edition>) -> PyResult<()> {
+                let value = value.0;
+                self.0.edition = value;
+                Ok(())
+            }
             /// The primary inks, when the config fixes them.
             #[getter]
             #[pyo3(name = "primaries")]
             pub fn primaries<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.primaries.clone();
                 ((value).map(|x| (x).into_iter().map(PySerde).collect::<Vec<_>>())).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "primaries")]
+            pub fn set_primaries(&mut self, value: Option<Vec<PySerde<mrlyrs::core::paint::Ink>>>) -> PyResult<()> {
+                let value = value.map(|x| x.into_iter().map(|x| x.0).collect::<Vec<_>>());
+                self.0.primaries = value;
+                Ok(())
             }
             /// The tile recipe.
             #[getter]
@@ -2603,12 +3012,26 @@ pub mod gen_ {
                 let value = self.0.tile.clone();
                 (crate::gen::gen_::Tile(value)).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "tile")]
+            pub fn set_tile(&mut self, value: crate::gen::gen_::Tile) -> PyResult<()> {
+                let value = value.0;
+                self.0.tile = value;
+                Ok(())
+            }
             /// The mask tile, present only under the Neighbors edition.
             #[getter]
             #[pyo3(name = "mask")]
             pub fn mask<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.mask.clone();
                 ((value).map(crate::gen::gen_::Tile)).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "mask")]
+            pub fn set_mask(&mut self, value: Option<crate::gen::gen_::Tile>) -> PyResult<()> {
+                let value = value.map(|x| x.0);
+                self.0.mask = value;
+                Ok(())
             }
             /// The paint, set by generate.
             #[getter]
@@ -2617,6 +3040,13 @@ pub mod gen_ {
                 let value = self.0.paint.clone();
                 ((value).map(crate::gen::core::paint::Paint)).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "paint")]
+            pub fn set_paint(&mut self, value: Option<crate::gen::core::paint::Paint>) -> PyResult<()> {
+                let value = value.map(|x| x.0);
+                self.0.paint = value;
+                Ok(())
+            }
             /// The built base cell, set by generate and left out of the json.
             #[getter]
             #[pyo3(name = "base")]
@@ -2624,12 +3054,26 @@ pub mod gen_ {
                 let value = self.0.base.clone();
                 ((value).map(PyCellNd)).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "base")]
+            pub fn set_base(&mut self, value: Option<PyCell2d>) -> PyResult<()> {
+                let value = value.map(|x| x.0);
+                self.0.base = value;
+                Ok(())
+            }
             /// The renderings, filled by render.
             #[getter]
             #[pyo3(name = "files")]
             pub fn files<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.files.clone();
                 ((value).into_iter().map(crate::gen::gen_::variation::File).collect::<Vec<_>>()).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "files")]
+            pub fn set_files(&mut self, value: Vec<crate::gen::gen_::variation::File>) -> PyResult<()> {
+                let value = value.into_iter().map(|x| x.0).collect::<Vec<_>>();
+                self.0.files = value;
+                Ok(())
             }
             /// Returns whether the edition paints the whole tiled canvas.
             #[pyo3(name = "is_cover", signature = ())]
@@ -2651,6 +3095,21 @@ pub mod gen_ {
             /// Returns the value as plain data.
             pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 crate::hand::serde_into_py(py, &self.0)
+            }
+        }
+
+        /// The settings an artwork is drawn under.
+        #[pyclass(name = "Config", module = "mrlypy.gen.variation", skip_from_py_object)]
+        pub struct Config;
+
+        #[pymethods]
+        impl Config {
+            /// Returns the default Config.
+            #[staticmethod]
+            #[pyo3(name = "default", signature = ())]
+            pub fn default<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::gen::variation::Config::default();
+                (PySerde(out)).into_bound_py_any(py)
             }
         }
 
@@ -2690,10 +3149,11 @@ pub mod gen_ {
             m.setattr("__doc__", "The seeded artwork run from tile recipe to rendered files.")?;
             m.add_class::<File>()?;
             m.add_class::<Variation>()?;
+            m.add_class::<Config>()?;
             m.add_function(wrap_pyfunction!(create, &m)?)?;
             m.add_function(wrap_pyfunction!(generate, &m)?)?;
             m.add_function(wrap_pyfunction!(render, &m)?)?;
-            let names: Vec<&str> = vec!["create", "generate", "render", "File", "Variation"];
+            let names: Vec<&str> = vec!["create", "generate", "render", "File", "Variation", "Config"];
             m.add("__all__", names)?;
             parent.add("variation", &m)?;
             sys.set_item("mrlypy._mrlypy.gen.variation", &m)?;
@@ -2723,12 +3183,25 @@ pub mod gen_ {
             let value = self.0.group;
             (PySerde(value)).into_bound_py_any(py)
         }
+        #[setter]
+        #[pyo3(name = "group")]
+        pub fn set_group(&mut self, value: PySerde<mrlyrs::gen::Group>) -> PyResult<()> {
+            let value = value.0;
+            self.0.group = value;
+            Ok(())
+        }
         /// The base factor of the construction.
         #[getter]
         #[pyo3(name = "factor")]
         pub fn factor<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let value = self.0.factor;
             (value).into_bound_py_any(py)
+        }
+        #[setter]
+        #[pyo3(name = "factor")]
+        pub fn set_factor(&mut self, value: usize) -> PyResult<()> {
+            self.0.factor = value;
+            Ok(())
         }
         /// The origin of each layer.
         #[getter]
@@ -2737,12 +3210,25 @@ pub mod gen_ {
             let value = self.0.sources.clone();
             ((value).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
         }
+        #[setter]
+        #[pyo3(name = "sources")]
+        pub fn set_sources(&mut self, value: Vec<PySerde<mrlyrs::gen::recipe::Source>>) -> PyResult<()> {
+            let value = value.into_iter().map(|x| x.0).collect::<Vec<_>>();
+            self.0.sources = value;
+            Ok(())
+        }
         /// The grid size of each source.
         #[getter]
         #[pyo3(name = "numbers")]
         pub fn numbers<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let value = self.0.numbers.clone();
             (value).into_bound_py_any(py)
+        }
+        #[setter]
+        #[pyo3(name = "numbers")]
+        pub fn set_numbers(&mut self, value: Vec<usize>) -> PyResult<()> {
+            self.0.numbers = value;
+            Ok(())
         }
         /// The fractal level of each source.
         #[getter]
@@ -2751,12 +3237,24 @@ pub mod gen_ {
             let value = self.0.levels.clone();
             (value).into_bound_py_any(py)
         }
+        #[setter]
+        #[pyo3(name = "levels")]
+        pub fn set_levels(&mut self, value: Vec<usize>) -> PyResult<()> {
+            self.0.levels = value;
+            Ok(())
+        }
         /// The quarter-turn rotation of each source.
         #[getter]
         #[pyo3(name = "rotations")]
         pub fn rotations<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let value = self.0.rotations.clone();
             (value).into_bound_py_any(py)
+        }
+        #[setter]
+        #[pyo3(name = "rotations")]
+        pub fn set_rotations(&mut self, value: Vec<usize>) -> PyResult<()> {
+            self.0.rotations = value;
+            Ok(())
         }
         /// Whether the finished tile inverts.
         #[getter]
@@ -2765,12 +3263,24 @@ pub mod gen_ {
             let value = self.0.invert;
             (value).into_bound_py_any(py)
         }
+        #[setter]
+        #[pyo3(name = "invert")]
+        pub fn set_invert(&mut self, value: bool) -> PyResult<()> {
+            self.0.invert = value;
+            Ok(())
+        }
         /// Whether the finished tile flips.
         #[getter]
         #[pyo3(name = "flip")]
         pub fn flip<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let value = self.0.flip;
             (value).into_bound_py_any(py)
+        }
+        #[setter]
+        #[pyo3(name = "flip")]
+        pub fn set_flip(&mut self, value: bool) -> PyResult<()> {
+            self.0.flip = value;
+            Ok(())
         }
         /// The tile's width in cells.
         #[getter]
@@ -2779,12 +3289,24 @@ pub mod gen_ {
             let value = self.0.width;
             (value).into_bound_py_any(py)
         }
+        #[setter]
+        #[pyo3(name = "width")]
+        pub fn set_width(&mut self, value: usize) -> PyResult<()> {
+            self.0.width = value;
+            Ok(())
+        }
         /// The tile's height in cells.
         #[getter]
         #[pyo3(name = "height")]
         pub fn height<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let value = self.0.height;
             (value).into_bound_py_any(py)
+        }
+        #[setter]
+        #[pyo3(name = "height")]
+        pub fn set_height(&mut self, value: usize) -> PyResult<()> {
+            self.0.height = value;
+            Ok(())
         }
         /// Checks that the slots, numbers and sizes agree.
         #[pyo3(name = "check", signature = ())]
@@ -2909,7 +3431,7 @@ pub mod gen_ {
         (out).into_bound_py_any(py)
     }
 
-    /// Draws one named design from the stream.
+    /// Draws one of the four flat classics from the stream: carpet, net, vertical tree or void.
     #[pyfunction]
     #[pyo3(name = "random_design", signature = (rng))]
     pub fn random_design<'py>(py: Python<'py>, rng: &mut PyRng) -> PyResult<Bound<'py, PyAny>> {
@@ -3073,12 +3595,26 @@ pub mod life {
             let value = self.0.mask.clone();
             (PyCellNd(value)).into_bound_py_any(py)
         }
+        #[setter]
+        #[pyo3(name = "mask")]
+        pub fn set_mask(&mut self, value: PyCell2d) -> PyResult<()> {
+            let value = value.0;
+            self.0.mask = value;
+            Ok(())
+        }
         /// The neighbor counts that create a cell.
         #[getter]
         #[pyo3(name = "birth")]
         pub fn birth<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let value = self.0.birth.clone();
             (crate::gen::life::Counts(value)).into_bound_py_any(py)
+        }
+        #[setter]
+        #[pyo3(name = "birth")]
+        pub fn set_birth(&mut self, value: crate::gen::life::Counts) -> PyResult<()> {
+            let value = value.0;
+            self.0.birth = value;
+            Ok(())
         }
         /// The neighbor counts that keep a cell.
         #[getter]
@@ -3087,12 +3623,26 @@ pub mod life {
             let value = self.0.survive.clone();
             (crate::gen::life::Counts(value)).into_bound_py_any(py)
         }
+        #[setter]
+        #[pyo3(name = "survive")]
+        pub fn set_survive(&mut self, value: crate::gen::life::Counts) -> PyResult<()> {
+            let value = value.0;
+            self.0.survive = value;
+            Ok(())
+        }
         /// The edge policy.
         #[getter]
         #[pyo3(name = "boundary")]
         pub fn boundary<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let value = self.0.boundary;
             (PySerde(value)).into_bound_py_any(py)
+        }
+        #[setter]
+        #[pyo3(name = "boundary")]
+        pub fn set_boundary(&mut self, value: PySerde<mrlyrs::life::Boundary>) -> PyResult<()> {
+            let value = value.0;
+            self.0.boundary = value;
+            Ok(())
         }
         /// The generation cap.
         #[getter]
@@ -3101,6 +3651,12 @@ pub mod life {
             let value = self.0.max_generations;
             (value).into_bound_py_any(py)
         }
+        #[setter]
+        #[pyo3(name = "max_generations")]
+        pub fn set_max_generations(&mut self, value: usize) -> PyResult<()> {
+            self.0.max_generations = value;
+            Ok(())
+        }
         /// The tiling factor applied to the seed.
         #[getter]
         #[pyo3(name = "grid_size")]
@@ -3108,12 +3664,24 @@ pub mod life {
             let value = self.0.grid_size;
             (value).into_bound_py_any(py)
         }
+        #[setter]
+        #[pyo3(name = "grid_size")]
+        pub fn set_grid_size(&mut self, value: usize) -> PyResult<()> {
+            self.0.grid_size = value;
+            Ok(())
+        }
         /// The dead border added around the seed.
         #[getter]
         #[pyo3(name = "padding")]
         pub fn padding<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let value = self.0.padding;
             (value).into_bound_py_any(py)
+        }
+        #[setter]
+        #[pyo3(name = "padding")]
+        pub fn set_padding(&mut self, value: usize) -> PyResult<()> {
+            self.0.padding = value;
+            Ok(())
         }
         /// Returns the largest neighbor count the mask can reach.
         #[pyo3(name = "budget", signature = ())]
@@ -3201,12 +3769,26 @@ pub mod life {
             let value = self.0.grids.clone();
             ((value).into_iter().map(PyCellNd).collect::<Vec<_>>()).into_bound_py_any(py)
         }
+        #[setter]
+        #[pyo3(name = "grids")]
+        pub fn set_grids(&mut self, value: Vec<PyCell2d>) -> PyResult<()> {
+            let value = value.into_iter().map(|x| x.0).collect::<Vec<_>>();
+            self.0.grids = value;
+            Ok(())
+        }
         /// The run's ending.
         #[getter]
         #[pyo3(name = "fate")]
         pub fn fate<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let value = self.0.fate;
             (PySerde(value)).into_bound_py_any(py)
+        }
+        #[setter]
+        #[pyo3(name = "fate")]
+        pub fn set_fate(&mut self, value: PySerde<mrlyrs::life::Fate>) -> PyResult<()> {
+            let value = value.0;
+            self.0.fate = value;
+            Ok(())
         }
         /// The number of recorded generations.
         #[getter]
@@ -3215,12 +3797,24 @@ pub mod life {
             let value = self.0.count;
             (value).into_bound_py_any(py)
         }
+        #[setter]
+        #[pyo3(name = "count")]
+        pub fn set_count(&mut self, value: usize) -> PyResult<()> {
+            self.0.count = value;
+            Ok(())
+        }
         /// The cycle length when the fate is a loop, else zero.
         #[getter]
         #[pyo3(name = "loop_length")]
         pub fn loop_length<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let value = self.0.loop_length;
             (value).into_bound_py_any(py)
+        }
+        #[setter]
+        #[pyo3(name = "loop_length")]
+        pub fn set_loop_length(&mut self, value: usize) -> PyResult<()> {
+            self.0.loop_length = value;
+            Ok(())
         }
         /// Returns the final grid, or None when the run is empty.
         #[pyo3(name = "last", signature = ())]
@@ -3262,6 +3856,13 @@ pub mod life {
             let value = self.0.birth.clone();
             (crate::gen::life::Counts(value)).into_bound_py_any(py)
         }
+        #[setter]
+        #[pyo3(name = "birth")]
+        pub fn set_birth(&mut self, value: crate::gen::life::Counts) -> PyResult<()> {
+            let value = value.0;
+            self.0.birth = value;
+            Ok(())
+        }
         /// The neighbor counts that keep a cell, listed or drawn from a sequence.
         #[getter]
         #[pyo3(name = "survive")]
@@ -3269,12 +3870,25 @@ pub mod life {
             let value = self.0.survive.clone();
             (crate::gen::life::Counts(value)).into_bound_py_any(py)
         }
+        #[setter]
+        #[pyo3(name = "survive")]
+        pub fn set_survive(&mut self, value: crate::gen::life::Counts) -> PyResult<()> {
+            let value = value.0;
+            self.0.survive = value;
+            Ok(())
+        }
         /// Whether the edge wraps, false unless said.
         #[getter]
         #[pyo3(name = "wrap")]
         pub fn wrap<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let value = self.0.wrap;
             (value).into_bound_py_any(py)
+        }
+        #[setter]
+        #[pyo3(name = "wrap")]
+        pub fn set_wrap(&mut self, value: bool) -> PyResult<()> {
+            self.0.wrap = value;
+            Ok(())
         }
         /// Returns the edge policy the rule runs under.
         #[pyo3(name = "boundary", signature = ())]
@@ -4734,12 +5348,25 @@ pub mod math {
                 let value = self.0.i;
                 (PyCode(value)).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "i")]
+            pub fn set_i(&mut self, value: PyCode) -> PyResult<()> {
+                let value = value.0;
+                self.0.i = value;
+                Ok(())
+            }
             /// The design's dimension.
             #[getter]
             #[pyo3(name = "dimension")]
             pub fn dimension<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.dimension;
                 (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "dimension")]
+            pub fn set_dimension(&mut self, value: usize) -> PyResult<()> {
+                self.0.dimension = value;
+                Ok(())
             }
             /// Whether this code is the smallest in its orbit.
             #[getter]
@@ -4748,6 +5375,12 @@ pub mod math {
                 let value = self.0.canonical;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "canonical")]
+            pub fn set_canonical(&mut self, value: bool) -> PyResult<()> {
+                self.0.canonical = value;
+                Ok(())
+            }
             /// The smallest code in the orbit.
             #[getter]
             #[pyo3(name = "class_rep")]
@@ -4755,12 +5388,25 @@ pub mod math {
                 let value = self.0.class_rep;
                 (PyCode(value)).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "class_rep")]
+            pub fn set_class_rep(&mut self, value: PyCode) -> PyResult<()> {
+                let value = value.0;
+                self.0.class_rep = value;
+                Ok(())
+            }
             /// The number of codes in the orbit.
             #[getter]
             #[pyo3(name = "orbit_size")]
             pub fn orbit_size<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.orbit_size;
                 (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "orbit_size")]
+            pub fn set_orbit_size(&mut self, value: usize) -> PyResult<()> {
+                self.0.orbit_size = value;
+                Ok(())
             }
             /// Returns the design's algebraic normal form as a string.
             #[pyo3(name = "anf", signature = ())]
@@ -4817,12 +5463,24 @@ pub mod math {
                 let value = self.0.dimension;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "dimension")]
+            pub fn set_dimension(&mut self, value: usize) -> PyResult<()> {
+                self.0.dimension = value;
+                Ok(())
+            }
             /// The number of codes in the universe.
             #[getter]
             #[pyo3(name = "total")]
             pub fn total<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.total;
                 (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "total")]
+            pub fn set_total(&mut self, value: usize) -> PyResult<()> {
+                self.0.total = value;
+                Ok(())
             }
             /// Returns every design in code order.
             #[pyo3(name = "all", signature = ())]
@@ -6135,6 +6793,12 @@ pub mod math {
                 let value = self.0.occupancy;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "occupancy")]
+            pub fn set_occupancy(&mut self, value: u128) -> PyResult<()> {
+                self.0.occupancy = value;
+                Ok(())
+            }
             /// The exposed faces of the tile.
             #[getter]
             #[pyo3(name = "exposed")]
@@ -6142,12 +6806,24 @@ pub mod math {
                 let value = self.0.exposed;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "exposed")]
+            pub fn set_exposed(&mut self, value: u128) -> PyResult<()> {
+                self.0.exposed = value;
+                Ok(())
+            }
             /// Per axis, the adjacent filled pairs and the spanning positions.
             #[getter]
             #[pyo3(name = "axes")]
             pub fn axes<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.axes.clone();
                 (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "axes")]
+            pub fn set_axes(&mut self, value: Vec<(u128, u128)>) -> PyResult<()> {
+                self.0.axes = value;
+                Ok(())
             }
             /// Returns the exposed faces of the level-fold Kronecker power, or none past a u128.
             #[pyo3(name = "at", signature = (level))]
@@ -6516,6 +7192,12 @@ pub mod math {
                 let value = self.0.dim;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "dim")]
+            pub fn set_dim(&mut self, value: usize) -> PyResult<()> {
+                self.0.dim = value;
+                Ok(())
+            }
             /// The nodes in insertion order.
             #[getter]
             #[pyo3(name = "nodes")]
@@ -6523,12 +7205,26 @@ pub mod math {
                 let value = self.0.nodes.clone();
                 ((value).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "nodes")]
+            pub fn set_nodes(&mut self, value: Vec<PySerde<mrlyrs::math::graph::Node>>) -> PyResult<()> {
+                let value = value.into_iter().map(|x| x.0).collect::<Vec<_>>();
+                self.0.nodes = value;
+                Ok(())
+            }
             /// The branches in insertion order.
             #[getter]
             #[pyo3(name = "branches")]
             pub fn branches<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.branches.clone();
                 ((value).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "branches")]
+            pub fn set_branches(&mut self, value: Vec<PySerde<mrlyrs::math::graph::Branch>>) -> PyResult<()> {
+                let value = value.into_iter().map(|x| x.0).collect::<Vec<_>>();
+                self.0.branches = value;
+                Ok(())
             }
             /// Appends a branch between two node indices.
             #[pyo3(name = "add_branch", signature = (parent, child, radius))]
@@ -6807,12 +7503,24 @@ pub mod math {
                 let value = self.0.data.clone();
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "data")]
+            pub fn set_data(&mut self, value: Vec<f32>) -> PyResult<()> {
+                self.0.data = value;
+                Ok(())
+            }
             /// The side length in samples.
             #[getter]
             #[pyo3(name = "size")]
             pub fn size<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.size;
                 (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "size")]
+            pub fn set_size(&mut self, value: usize) -> PyResult<()> {
+                self.0.size = value;
+                Ok(())
             }
             /// Returns the samples widened to f64.
             #[pyo3(name = "as_f64", signature = ())]
@@ -6890,12 +7598,25 @@ pub mod math {
                 let value = self.0.spec;
                 (PySerde(value)).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "spec")]
+            pub fn set_spec(&mut self, value: PySerde<mrlyrs::math::moire::Spec>) -> PyResult<()> {
+                let value = value.0;
+                self.0.spec = value;
+                Ok(())
+            }
             /// The side numbers stacked.
             #[getter]
             #[pyo3(name = "numbers")]
             pub fn numbers<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.numbers.clone();
                 (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "numbers")]
+            pub fn set_numbers(&mut self, value: Vec<usize>) -> PyResult<()> {
+                self.0.numbers = value;
+                Ok(())
             }
             /// The way the layers merge.
             #[getter]
@@ -6904,6 +7625,13 @@ pub mod math {
                 let value = self.0.combine;
                 (PySerde(value)).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "combine")]
+            pub fn set_combine(&mut self, value: PySerde<mrlyrs::math::moire::Combine>) -> PyResult<()> {
+                let value = value.0;
+                self.0.combine = value;
+                Ok(())
+            }
             /// The fractal depth of each layer.
             #[getter]
             #[pyo3(name = "level")]
@@ -6911,12 +7639,25 @@ pub mod math {
                 let value = self.0.level;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "level")]
+            pub fn set_level(&mut self, value: usize) -> PyResult<()> {
+                self.0.level = value;
+                Ok(())
+            }
             /// The lattice the layers are sampled on.
             #[getter]
             #[pyo3(name = "lattice")]
             pub fn lattice<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.lattice;
                 (PySerde(value)).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "lattice")]
+            pub fn set_lattice(&mut self, value: PySerde<mrlyrs::math::moire::Lattice>) -> PyResult<()> {
+                let value = value.0;
+                self.0.lattice = value;
+                Ok(())
             }
             /// The carpet stack: every base-three corner but the centre, summed over odd scales.
             #[staticmethod]
@@ -6979,12 +7720,24 @@ pub mod math {
                 let value = self.0.data.clone();
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "data")]
+            pub fn set_data(&mut self, value: Vec<f32>) -> PyResult<()> {
+                self.0.data = value;
+                Ok(())
+            }
             /// The side in samples.
             #[getter]
             #[pyo3(name = "size")]
             pub fn size<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.size;
                 (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "size")]
+            pub fn set_size(&mut self, value: usize) -> PyResult<()> {
+                self.0.size = value;
+                Ok(())
             }
             /// Reads the sample at a voxel.
             #[pyo3(name = "at", signature = (x, y, z))]
@@ -7213,12 +7966,25 @@ pub mod math {
                 let value = self.0.dim;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "dim")]
+            pub fn set_dim(&mut self, value: usize) -> PyResult<()> {
+                self.0.dim = value;
+                Ok(())
+            }
             /// The lattice, square unless said.
             #[getter]
             #[pyo3(name = "lattice")]
             pub fn lattice<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.lattice;
                 (PySerde(value)).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "lattice")]
+            pub fn set_lattice(&mut self, value: PySerde<mrlyrs::math::name::Lattice>) -> PyResult<()> {
+                let value = value.0;
+                self.0.lattice = value;
+                Ok(())
             }
             /// The digits per axis, 2 unless said.
             #[getter]
@@ -7227,6 +7993,12 @@ pub mod math {
                 let value = self.0.base;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "base")]
+            pub fn set_base(&mut self, value: usize) -> PyResult<()> {
+                self.0.base = value;
+                Ok(())
+            }
             /// The design as a number.
             #[getter]
             #[pyo3(name = "code")]
@@ -7234,12 +8006,24 @@ pub mod math {
                 let value = self.0.code;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "code")]
+            pub fn set_code(&mut self, value: u128) -> PyResult<()> {
+                self.0.code = value;
+                Ok(())
+            }
             /// One unit index per filled digit, absent when nothing turns.
             #[getter]
             #[pyo3(name = "twist")]
             pub fn twist<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.twist.clone();
                 (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "twist")]
+            pub fn set_twist(&mut self, value: Option<Vec<usize>>) -> PyResult<()> {
+                self.0.twist = value;
+                Ok(())
             }
             /// Returns the number of digits the code addresses.
             #[pyo3(name = "cells", signature = ())]
@@ -7343,12 +8127,24 @@ pub mod math {
                 let value = self.0.dim;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "dim")]
+            pub fn set_dim(&mut self, value: usize) -> PyResult<()> {
+                self.0.dim = value;
+                Ok(())
+            }
             /// The digits per axis, 2 unless said.
             #[getter]
             #[pyo3(name = "base")]
             pub fn base<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.base;
                 (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "base")]
+            pub fn set_base(&mut self, value: usize) -> PyResult<()> {
+                self.0.base = value;
+                Ok(())
             }
             /// The design as a number.
             #[getter]
@@ -7357,6 +8153,12 @@ pub mod math {
                 let value = self.0.code;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "code")]
+            pub fn set_code(&mut self, value: u128) -> PyResult<()> {
+                self.0.code = value;
+                Ok(())
+            }
             /// The reading taken.
             #[getter]
             #[pyo3(name = "measure")]
@@ -7364,12 +8166,24 @@ pub mod math {
                 let value = self.0.measure.clone();
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "measure")]
+            pub fn set_measure(&mut self, value: String) -> PyResult<()> {
+                self.0.measure = value;
+                Ok(())
+            }
             /// The index the reading runs along.
             #[getter]
             #[pyo3(name = "axis")]
             pub fn axis<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.axis.clone();
                 (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "axis")]
+            pub fn set_axis(&mut self, value: String) -> PyResult<()> {
+                self.0.axis = value;
+                Ok(())
             }
             /// Folds a decoded value to its canonical form, or an error for one outside the kind.
             #[pyo3(name = "checked", signature = ())]
@@ -7473,12 +8287,24 @@ pub mod math {
                 let value = self.0.dim;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "dim")]
+            pub fn set_dim(&mut self, value: usize) -> PyResult<()> {
+                self.0.dim = value;
+                Ok(())
+            }
             /// The codes of the letters in order.
             #[getter]
             #[pyo3(name = "magic")]
             pub fn magic<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.magic.clone();
                 (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "magic")]
+            pub fn set_magic(&mut self, value: Vec<u128>) -> PyResult<()> {
+                self.0.magic = value;
+                Ok(())
             }
             /// The side each letter renders at.
             #[getter]
@@ -7487,12 +8313,24 @@ pub mod math {
                 let value = self.0.side.clone();
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "side")]
+            pub fn set_side(&mut self, value: Vec<usize>) -> PyResult<()> {
+                self.0.side = value;
+                Ok(())
+            }
             /// The base of each letter, absent when every letter is base 2.
             #[getter]
             #[pyo3(name = "base")]
             pub fn base<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.base.clone();
                 (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "base")]
+            pub fn set_base(&mut self, value: Option<Vec<usize>>) -> PyResult<()> {
+                self.0.base = value;
+                Ok(())
             }
             /// Returns the base of every letter, 2 where the name says nothing.
             #[pyo3(name = "bases", signature = ())]
@@ -7587,6 +8425,13 @@ pub mod math {
 
         #[pymethods]
         impl Lattice {
+            /// Returns the default Lattice.
+            #[staticmethod]
+            #[pyo3(name = "default", signature = ())]
+            pub fn default<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::math::name::Lattice::default();
+                (PySerde(out)).into_bound_py_any(py)
+            }
             /// Returns whether this is the square lattice.
             #[staticmethod]
             #[pyo3(name = "is_square", signature = (lattice))]
@@ -7647,12 +8492,24 @@ pub mod math {
                 let value = self.0.dimension;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "dimension")]
+            pub fn set_dimension(&mut self, value: usize) -> PyResult<()> {
+                self.0.dimension = value;
+                Ok(())
+            }
             /// The numeral base of the universe.
             #[getter]
             #[pyo3(name = "base")]
             pub fn base<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.base;
                 (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "base")]
+            pub fn set_base(&mut self, value: usize) -> PyResult<()> {
+                self.0.base = value;
+                Ok(())
             }
             /// Adds a weighted number to its usage bucket.
             #[pyo3(name = "add", signature = (number, weight))]
@@ -7860,12 +8717,24 @@ pub mod math {
                 let value = self.0.curves;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "curves")]
+            pub fn set_curves(&mut self, value: usize) -> PyResult<()> {
+                self.0.curves = value;
+                Ok(())
+            }
             /// How often each curve crosses itself, curve by curve.
             #[getter]
             #[pyo3(name = "selves")]
             pub fn selves<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.selves.clone();
                 (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "selves")]
+            pub fn set_selves(&mut self, value: Vec<usize>) -> PyResult<()> {
+                self.0.selves = value;
+                Ok(())
             }
             /// How often each pair of curves crosses, the lower curve first, in lexicographic order.
             #[getter]
@@ -7874,12 +8743,24 @@ pub mod math {
                 let value = self.0.pairs.clone();
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "pairs")]
+            pub fn set_pairs(&mut self, value: Vec<usize>) -> PyResult<()> {
+                self.0.pairs = value;
+                Ok(())
+            }
             /// The most crossings one node carries: one at a plain double point, and `n(n - 1)/2` where `n` branches meet.
             #[getter]
             #[pyo3(name = "most")]
             pub fn most<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.most;
                 (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "most")]
+            pub fn set_most(&mut self, value: usize) -> PyResult<()> {
+                self.0.most = value;
+                Ok(())
             }
             /// The nodes more than one crossing clusters at.
             #[getter]
@@ -7888,12 +8769,24 @@ pub mod math {
                 let value = self.0.crowded;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "crowded")]
+            pub fn set_crowded(&mut self, value: usize) -> PyResult<()> {
+                self.0.crowded = value;
+                Ok(())
+            }
             /// The distinct points the crossings sit at, one for every cluster.
             #[getter]
             #[pyo3(name = "points")]
             pub fn points<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.points;
                 (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "points")]
+            pub fn set_points(&mut self, value: usize) -> PyResult<()> {
+                self.0.points = value;
+                Ok(())
             }
             /// The branches through every node added up, which is the edge count of the picture as a plane graph, `n` at a node where `n` branches meet and `2` times `points` when no node is crowded.
             #[getter]
@@ -7902,12 +8795,31 @@ pub mod math {
                 let value = self.0.branches;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "branches")]
+            pub fn set_branches(&mut self, value: usize) -> PyResult<()> {
+                self.0.branches = value;
+                Ok(())
+            }
             /// The segment pairs that meet without crossing: collinear or end to end.
             #[getter]
             #[pyo3(name = "touches")]
             pub fn touches<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.touches;
                 (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "touches")]
+            pub fn set_touches(&mut self, value: usize) -> PyResult<()> {
+                self.0.touches = value;
+                Ok(())
+            }
+            /// Returns the default Nodes.
+            #[staticmethod]
+            #[pyo3(name = "default", signature = ())]
+            pub fn default<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::math::roulette::Nodes::default();
+                (crate::gen::math::roulette::Nodes(out)).into_bound_py_any(py)
             }
             /// How often the curves `i` and `j` cross, either order, and zero when they are one curve.
             #[pyo3(name = "pair", signature = (i, j))]
@@ -8052,12 +8964,24 @@ pub mod math {
                 let value = self.0.num;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "num")]
+            pub fn set_num(&mut self, value: i64) -> PyResult<()> {
+                self.0.num = value;
+                Ok(())
+            }
             /// The denominator, always positive.
             #[getter]
             #[pyo3(name = "den")]
             pub fn den<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.den;
                 (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "den")]
+            pub fn set_den(&mut self, value: i64) -> PyResult<()> {
+                self.0.den = value;
+                Ok(())
             }
             /// Returns the exact difference.
             #[pyo3(name = "minus", signature = (other))]
@@ -8264,12 +9188,24 @@ pub mod math {
                     let value = self.0.inked;
                     (value).into_bound_py_any(py)
                 }
+                #[setter]
+                #[pyo3(name = "inked")]
+                pub fn set_inked(&mut self, value: i64) -> PyResult<()> {
+                    self.0.inked = value;
+                    Ok(())
+                }
                 /// The count of cells read.
                 #[getter]
                 #[pyo3(name = "cells")]
                 pub fn cells<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                     let value = self.0.cells;
                     (value).into_bound_py_any(py)
+                }
+                #[setter]
+                #[pyo3(name = "cells")]
+                pub fn set_cells(&mut self, value: i64) -> PyResult<()> {
+                    self.0.cells = value;
+                    Ok(())
                 }
                 /// The share in lowest terms, numerator then denominator.
                 #[pyo3(name = "reduced", signature = ())]
@@ -9266,6 +10202,21 @@ pub mod math {
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
 
+        /// The mass of a byte grid taken as a wheel: how many pencils of each kind it seats.
+        #[pyclass(name = "Seats", module = "mrlypy.math.spirograph", skip_from_py_object)]
+        pub struct Seats;
+
+        #[pymethods]
+        impl Seats {
+            /// Returns the default Seats.
+            #[staticmethod]
+            #[pyo3(name = "default", signature = ())]
+            pub fn default<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::math::spirograph::Seats::default();
+                (PySerde(out)).into_bound_py_any(py)
+            }
+        }
+
         /// The side of one cell in wheel radii at a reach, the number the page needs to draw the tile on the wheel.
         #[pyfunction]
         #[pyo3(name = "cell", signature = (width, height, reach))]
@@ -9410,6 +10361,7 @@ pub mod math {
         pub fn init(py: Python<'_>, parent: &Bound<'_, PyModule>, sys: &Bound<'_, PyDict>) -> PyResult<()> {
             let m = PyModule::new(py, "mrlypy.math.spirograph")?;
             m.setattr("__doc__", "The spirograph: a byte grid as a wheel with a pencil in every cell, rolled on a line, a circle or a polygon, and the curves it draws.")?;
+            m.add_class::<Seats>()?;
             m.add_function(wrap_pyfunction!(cell, &m)?)?;
             m.add_function(wrap_pyfunction!(cover, &m)?)?;
             m.add_function(wrap_pyfunction!(disc, &m)?)?;
@@ -9431,7 +10383,7 @@ pub mod math {
             m.add("RADIUS_CAP", mrlyrs::math::spirograph::RADIUS_CAP)?;
             m.add("RASTER_CAP", mrlyrs::math::spirograph::RASTER_CAP)?;
             m.add("SIDES", mrlyrs::math::spirograph::SIDES)?;
-            let names: Vec<&str> = vec!["cell", "cover", "disc", "distinct", "frame", "nodes", "pencils", "point", "pose", "representatives", "seats", "signed_area", "trace", "track", "turn", "LAPS_CAP", "PENCIL_CAP", "POINT_CAP", "RADIUS_CAP", "RASTER_CAP", "SIDES"];
+            let names: Vec<&str> = vec!["cell", "cover", "disc", "distinct", "frame", "nodes", "pencils", "point", "pose", "representatives", "seats", "signed_area", "trace", "track", "turn", "Seats", "LAPS_CAP", "PENCIL_CAP", "POINT_CAP", "RADIUS_CAP", "RASTER_CAP", "SIDES"];
             m.add("__all__", names)?;
             parent.add("spirograph", &m)?;
             sys.set_item("mrlypy._mrlypy.math.spirograph", &m)?;
@@ -9469,6 +10421,12 @@ pub mod math {
                 let value = self.0.x;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "x")]
+            pub fn set_x(&mut self, value: f32) -> PyResult<()> {
+                self.0.x = value;
+                Ok(())
+            }
             /// The y component.
             #[getter]
             #[pyo3(name = "y")]
@@ -9476,12 +10434,24 @@ pub mod math {
                 let value = self.0.y;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "y")]
+            pub fn set_y(&mut self, value: f32) -> PyResult<()> {
+                self.0.y = value;
+                Ok(())
+            }
             /// The z component.
             #[getter]
             #[pyo3(name = "z")]
             pub fn z<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.z;
                 (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "z")]
+            pub fn set_z(&mut self, value: f32) -> PyResult<()> {
+                self.0.z = value;
+                Ok(())
             }
             /// Returns the cross product, perpendicular to both vectors.
             #[pyo3(name = "cross", signature = (o))]
@@ -10657,6 +11627,12 @@ pub mod num {
                 let value = self.0.k;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "k")]
+            pub fn set_k(&mut self, value: i64) -> PyResult<()> {
+                self.0.k = value;
+                Ok(())
+            }
             /// The curvature times the centre's abscissa.
             #[getter]
             #[pyo3(name = "x")]
@@ -10664,12 +11640,24 @@ pub mod num {
                 let value = self.0.x;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "x")]
+            pub fn set_x(&mut self, value: i64) -> PyResult<()> {
+                self.0.x = value;
+                Ok(())
+            }
             /// The curvature times the centre's ordinate.
             #[getter]
             #[pyo3(name = "y")]
             pub fn y<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.y;
                 (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "y")]
+            pub fn set_y(&mut self, value: i64) -> PyResult<()> {
+                self.0.y = value;
+                Ok(())
             }
             /// The centre, none on a line.
             #[pyo3(name = "centre", signature = ())]
@@ -12114,6 +13102,12 @@ pub mod num {
                 let value = self.0.dimension;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "dimension")]
+            pub fn set_dimension(&mut self, value: usize) -> PyResult<()> {
+                self.0.dimension = value;
+                Ok(())
+            }
             /// The window width `k`, at least one.
             #[getter]
             #[pyo3(name = "width")]
@@ -12121,12 +13115,24 @@ pub mod num {
                 let value = self.0.width;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "width")]
+            pub fn set_width(&mut self, value: usize) -> PyResult<()> {
+                self.0.width = value;
+                Ok(())
+            }
             /// The window code, bit `w` set when window `w` is allowed.
             #[getter]
             #[pyo3(name = "code")]
             pub fn code<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.code;
                 (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "code")]
+            pub fn set_code(&mut self, value: u64) -> PyResult<()> {
+                self.0.code = value;
+                Ok(())
             }
             /// Returns whether a word, coarsest digit first, is accepted.
             #[pyo3(name = "accepts", signature = (word))]
@@ -13480,12 +14486,24 @@ pub mod num {
                 let value = self.0.re;
                 (value).into_bound_py_any(py)
             }
+            #[setter]
+            #[pyo3(name = "re")]
+            pub fn set_re(&mut self, value: f64) -> PyResult<()> {
+                self.0.re = value;
+                Ok(())
+            }
             /// The imaginary part.
             #[getter]
             #[pyo3(name = "im")]
             pub fn im<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.im;
                 (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "im")]
+            pub fn set_im(&mut self, value: f64) -> PyResult<()> {
+                self.0.im = value;
+                Ok(())
             }
             /// Returns the modulus.
             #[pyo3(name = "abs", signature = ())]
@@ -13498,6 +14516,13 @@ pub mod num {
             pub fn arg<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::zeta::Complex::arg(self.0);
                 (out).into_bound_py_any(py)
+            }
+            /// Returns the default Complex.
+            #[staticmethod]
+            #[pyo3(name = "default", signature = ())]
+            pub fn default<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::zeta::Complex::default();
+                (crate::gen::num::zeta::Complex(out)).into_bound_py_any(py)
             }
             /// Returns the exponential.
             #[pyo3(name = "exp", signature = ())]
@@ -13554,6 +14579,13 @@ pub mod num {
             pub fn count<'py>(&self, py: Python<'py>, t: f64) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::zeta::Line::count(&self.0, t);
                 (out).into_bound_py_any(py)
+            }
+            /// Returns the default Line.
+            #[staticmethod]
+            #[pyo3(name = "default", signature = ())]
+            pub fn default<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::zeta::Line::default();
+                (crate::gen::num::zeta::Line(out)).into_bound_py_any(py)
             }
             /// Returns Z(t) from the Euler-Maclaurin value turned onto the real axis.
             #[pyo3(name = "exact", signature = (t))]

@@ -12,12 +12,18 @@ class Rule:
     @property
     def dimension(self) -> int:
         """The dimension `D`, one to three."""
+    @dimension.setter
+    def dimension(self, value: int) -> None: ...
     @property
     def width(self) -> int:
         """The window width `k`, at least one."""
+    @width.setter
+    def width(self, value: int) -> None: ...
     @property
     def code(self) -> int:
         """The window code, bit `w` set when window `w` is allowed."""
+    @code.setter
+    def code(self, value: int) -> None: ...
     def accepts(self, word: list[int]) -> bool:
         """Returns whether a word, coarsest digit first, is accepted."""
     def allowed(self, window: int) -> bool:

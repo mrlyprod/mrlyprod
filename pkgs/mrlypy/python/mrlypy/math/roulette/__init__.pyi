@@ -7,27 +7,46 @@ class Nodes:
     @property
     def curves(self) -> int:
         """The curves counted, in the order the pencils came in."""
+    @curves.setter
+    def curves(self, value: int) -> None: ...
     @property
     def selves(self) -> list[int]:
         """How often each curve crosses itself, curve by curve."""
+    @selves.setter
+    def selves(self, value: list[int]) -> None: ...
     @property
     def pairs(self) -> list[int]:
         """How often each pair of curves crosses, the lower curve first, in lexicographic order."""
+    @pairs.setter
+    def pairs(self, value: list[int]) -> None: ...
     @property
     def most(self) -> int:
         """The most crossings one node carries: one at a plain double point, and `n(n - 1)/2` where `n` branches meet."""
+    @most.setter
+    def most(self, value: int) -> None: ...
     @property
     def crowded(self) -> int:
         """The nodes more than one crossing clusters at."""
+    @crowded.setter
+    def crowded(self, value: int) -> None: ...
     @property
     def points(self) -> int:
         """The distinct points the crossings sit at, one for every cluster."""
+    @points.setter
+    def points(self, value: int) -> None: ...
     @property
     def branches(self) -> int:
         """The branches through every node added up, which is the edge count of the picture as a plane graph, `n` at a node where `n` branches meet and `2` times `points` when no node is crowded."""
+    @branches.setter
+    def branches(self, value: int) -> None: ...
     @property
     def touches(self) -> int:
         """The segment pairs that meet without crossing: collinear or end to end."""
+    @touches.setter
+    def touches(self, value: int) -> None: ...
+    @staticmethod
+    def default() -> Nodes:
+        """Returns the default Nodes."""
     def pair(self, i: int, j: int) -> int:
         """How often the curves `i` and `j` cross, either order, and zero when they are one curve."""
     def paired(self) -> int:

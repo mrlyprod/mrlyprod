@@ -10,12 +10,18 @@ class Vec3:
     @property
     def x(self) -> float:
         """The x component."""
+    @x.setter
+    def x(self, value: float) -> None: ...
     @property
     def y(self) -> float:
         """The y component."""
+    @y.setter
+    def y(self, value: float) -> None: ...
     @property
     def z(self) -> float:
         """The z component."""
+    @z.setter
+    def z(self, value: float) -> None: ...
     def cross(self, o: Vec3) -> Vec3:
         """Returns the cross product, perpendicular to both vectors."""
     def dot(self, o: Vec3) -> float:

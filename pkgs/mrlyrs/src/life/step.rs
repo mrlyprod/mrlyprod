@@ -29,17 +29,17 @@ pub fn next_grid(
 ) -> Result<Cell2d> {
     let types = cell.types();
     let neighbors = types.neighbors(mask, 1, boundary.wrap(), counting_dtype(mask))?;
-    let mut next = Tensor::new(types.shape.clone());
-    for i in 0..types.size() {
-        let n = neighbors.at(i) as usize;
-        let lives = if types.at(i) == 1 {
-            survive.contains(&n)
-        } else {
-            birth.contains(&n)
-        };
-        next.put(i, i64::from(lives));
+    let side = mask.size() + 1;
+    let mut rule = vec![0u8; 2 * side];
+    for (row, counts) in [birth, survive].into_iter().enumerate() {
+        for &n in counts.iter().filter(|&&n| n < side) {
+            rule[row * side + n] = 1;
+        }
     }
-    Cell2d::new(next)
+    let next = (0..types.size())
+        .map(|i| rule[usize::from(types.at(i) == 1) * side + neighbors.at(i) as usize])
+        .collect();
+    Cell2d::new(Tensor::of(next, types.shape.clone())?)
 }
 
 #[cfg(test)]

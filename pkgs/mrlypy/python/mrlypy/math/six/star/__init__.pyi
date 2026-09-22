@@ -7,9 +7,13 @@ class Share:
     @property
     def inked(self) -> int:
         """The count of inked cells."""
+    @inked.setter
+    def inked(self, value: int) -> None: ...
     @property
     def cells(self) -> int:
         """The count of cells read."""
+    @cells.setter
+    def cells(self, value: int) -> None: ...
     def reduced(self) -> tuple[int, int]:
         """The share in lowest terms, numerator then denominator."""
     def value(self) -> float:

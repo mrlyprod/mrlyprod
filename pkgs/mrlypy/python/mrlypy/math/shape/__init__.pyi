@@ -10,9 +10,13 @@ class Frac:
     @property
     def num(self) -> int:
         """The numerator, carrying the sign."""
+    @num.setter
+    def num(self, value: int) -> None: ...
     @property
     def den(self) -> int:
         """The denominator, always positive."""
+    @den.setter
+    def den(self, value: int) -> None: ...
     def minus(self, other: Frac) -> Frac:
         """Returns the exact difference."""
     @staticmethod

@@ -9,9 +9,13 @@ class Field:
     @property
     def data(self) -> list[float]:
         """The samples in row-major order."""
+    @data.setter
+    def data(self, value: list[float]) -> None: ...
     @property
     def size(self) -> int:
         """The side length in samples."""
+    @size.setter
+    def size(self, value: int) -> None: ...
     def as_f64(self) -> list[float]:
         """Returns the samples widened to f64."""
     @staticmethod
@@ -42,18 +46,28 @@ class Preset:
     @property
     def spec(self) -> dict[str, Any]:
         """The design sampled at every scale."""
+    @spec.setter
+    def spec(self, value: dict[str, Any]) -> None: ...
     @property
     def numbers(self) -> list[int]:
         """The side numbers stacked."""
+    @numbers.setter
+    def numbers(self, value: list[int]) -> None: ...
     @property
     def combine(self) -> Literal["Sum", "And", "Xor"]:
         """The way the layers merge."""
+    @combine.setter
+    def combine(self, value: Literal["Sum", "And", "Xor"]) -> None: ...
     @property
     def level(self) -> int:
         """The fractal depth of each layer."""
+    @level.setter
+    def level(self, value: int) -> None: ...
     @property
     def lattice(self) -> Literal["Square", "Hex"]:
         """The lattice the layers are sampled on."""
+    @lattice.setter
+    def lattice(self, value: Literal["Square", "Hex"]) -> None: ...
     @staticmethod
     def carpet(limit: int) -> Preset:
         """The carpet stack: every base-three corner but the centre, summed over odd scales."""
@@ -77,9 +91,13 @@ class Volume:
     @property
     def data(self) -> list[float]:
         """The samples, x-major, then y, then z."""
+    @data.setter
+    def data(self, value: list[float]) -> None: ...
     @property
     def size(self) -> int:
         """The side in samples."""
+    @size.setter
+    def size(self, value: int) -> None: ...
     def at(self, x: int, y: int, z: int) -> float:
         """Reads the sample at a voxel."""
     def count(self, level: float) -> int:

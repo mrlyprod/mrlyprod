@@ -8,18 +8,28 @@ class Bang:
     @property
     def dim(self) -> int:
         """The number of axes."""
+    @dim.setter
+    def dim(self, value: int) -> None: ...
     @property
     def lattice(self) -> Literal["square", "hex"]:
         """The lattice, square unless said."""
+    @lattice.setter
+    def lattice(self, value: Literal["square", "hex"]) -> None: ...
     @property
     def base(self) -> int:
         """The digits per axis, 2 unless said."""
+    @base.setter
+    def base(self, value: int) -> None: ...
     @property
     def code(self) -> int:
         """The design as a number."""
+    @code.setter
+    def code(self, value: int) -> None: ...
     @property
     def twist(self) -> list[int] | None:
         """One unit index per filled digit, absent when nothing turns."""
+    @twist.setter
+    def twist(self, value: list[int] | None) -> None: ...
     def cells(self) -> int:
         """Returns the number of digits the code addresses."""
     def checked(self) -> Bang:
@@ -58,18 +68,28 @@ class Sequence:
     @property
     def dim(self) -> int:
         """The number of axes."""
+    @dim.setter
+    def dim(self, value: int) -> None: ...
     @property
     def base(self) -> int:
         """The digits per axis, 2 unless said."""
+    @base.setter
+    def base(self, value: int) -> None: ...
     @property
     def code(self) -> int:
         """The design as a number."""
+    @code.setter
+    def code(self, value: int) -> None: ...
     @property
     def measure(self) -> str:
         """The reading taken."""
+    @measure.setter
+    def measure(self, value: str) -> None: ...
     @property
     def axis(self) -> str:
         """The index the reading runs along."""
+    @axis.setter
+    def axis(self, value: str) -> None: ...
     def checked(self) -> Sequence:
         """Folds a decoded value to its canonical form, or an error for one outside the kind."""
     def design(self) -> Bang:
@@ -108,15 +128,23 @@ class Word:
     @property
     def dim(self) -> int:
         """The number of axes every letter shares."""
+    @dim.setter
+    def dim(self, value: int) -> None: ...
     @property
     def magic(self) -> list[int]:
         """The codes of the letters in order."""
+    @magic.setter
+    def magic(self, value: list[int]) -> None: ...
     @property
     def side(self) -> list[int]:
         """The side each letter renders at."""
+    @side.setter
+    def side(self, value: list[int]) -> None: ...
     @property
     def base(self) -> list[int] | None:
         """The base of each letter, absent when every letter is base 2."""
+    @base.setter
+    def base(self, value: list[int] | None) -> None: ...
     def bases(self) -> list[int]:
         """Returns the base of every letter, 2 where the name says nothing."""
     def checked(self) -> Word:
@@ -153,6 +181,9 @@ class Word:
 
 class Lattice:
     """The lattice the cells sit on."""
+    @staticmethod
+    def default() -> Literal["square", "hex"]:
+        """Returns the default Lattice."""
     @staticmethod
     def is_square(lattice: Literal["square", "hex"]) -> bool:
         """Returns whether this is the square lattice."""

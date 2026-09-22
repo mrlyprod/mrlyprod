@@ -62,6 +62,10 @@ export class Rng {
     chance(p: number): boolean;
     /** Draws amount distinct indices below length, or every index when amount is larger. */
     sample_indices(length: number, amount: number): Uint32Array;
+    /** Draws one item of the array, the same draw as Rust's choice. */
+    choice<T>(items: ArrayLike<T>): T;
+    /** Shuffles the array in place, the same permutation as Rust's shuffle. */
+    shuffle<T>(items: T[]): void;
 }
 /** Returns whether a rule is affine, its algebraic degree at most one. */
 export function affine(rule: number): boolean;
@@ -159,19 +163,26 @@ export class Config {
     /** Writes the Config as plain data. */
     toJSON(): ConfigData;
     /** The neighborhood mask. */
-    readonly mask: Cell;
+    get mask(): Cell;
+    set mask(value: Cell);
     /** The neighbor counts that create a cell. */
-    readonly birth: Counts;
+    get birth(): Counts;
+    set birth(value: Counts);
     /** The neighbor counts that keep a cell. */
-    readonly survive: Counts;
+    get survive(): Counts;
+    set survive(value: Counts);
     /** The edge policy. */
-    readonly boundary: Boundary;
+    get boundary(): Boundary;
+    set boundary(value: Boundary);
     /** The generation cap. */
-    readonly max_generations: number;
+    get max_generations(): number;
+    set max_generations(value: number);
     /** The tiling factor applied to the seed. */
-    readonly grid_size: number;
+    get grid_size(): number;
+    set grid_size(value: number);
     /** The dead border added around the seed. */
-    readonly padding: number;
+    get padding(): number;
+    set padding(value: number);
     /** Returns the largest neighbor count the mask can reach. */
     budget(): number;
     /** Resolves the birth and survive counts against the mask's budget. */
@@ -218,13 +229,17 @@ export class Life {
     /** Writes the Life as plain data. */
     toJSON(): LifeData;
     /** Every generation in order. */
-    readonly grids: Cell[];
+    get grids(): Cell[];
+    set grids(value: Cell[]);
     /** The run's ending. */
-    readonly fate: Fate;
+    get fate(): Fate;
+    set fate(value: Fate);
     /** The number of recorded generations. */
-    readonly count: number;
+    get count(): number;
+    set count(value: number);
     /** The cycle length when the fate is a loop, else zero. */
-    readonly loop_length: number;
+    get loop_length(): number;
+    set loop_length(value: number);
     /** Returns the final grid, or None when the run is empty. */
     last(): Cell | undefined;
 }
@@ -248,11 +263,14 @@ export class Rule {
     /** Writes the Rule as plain data. */
     toJSON(): RuleData;
     /** The neighbor counts that create a cell, listed or drawn from a sequence. */
-    readonly birth: Counts;
+    get birth(): Counts;
+    set birth(value: Counts);
     /** The neighbor counts that keep a cell, listed or drawn from a sequence. */
-    readonly survive: Counts;
+    get survive(): Counts;
+    set survive(value: Counts);
     /** Whether the edge wraps, false unless said. */
-    readonly wrap: boolean;
+    get wrap(): boolean;
+    set wrap(value: boolean);
     /** Returns the edge policy the rule runs under. */
     boundary(): Boundary;
     /** Folds a decoded value to its canonical form, or an error for one outside the kind. */

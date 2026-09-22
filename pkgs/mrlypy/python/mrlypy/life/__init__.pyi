@@ -9,24 +9,38 @@ class Config:
     @property
     def mask(self) -> dict[str, Any]:
         """The neighborhood mask."""
+    @mask.setter
+    def mask(self, value: dict[str, Any]) -> None: ...
     @property
     def birth(self) -> Counts:
         """The neighbor counts that create a cell."""
+    @birth.setter
+    def birth(self, value: Counts) -> None: ...
     @property
     def survive(self) -> Counts:
         """The neighbor counts that keep a cell."""
+    @survive.setter
+    def survive(self, value: Counts) -> None: ...
     @property
     def boundary(self) -> Literal["Constant", "Wrap"]:
         """The edge policy."""
+    @boundary.setter
+    def boundary(self, value: Literal["Constant", "Wrap"]) -> None: ...
     @property
     def max_generations(self) -> int:
         """The generation cap."""
+    @max_generations.setter
+    def max_generations(self, value: int) -> None: ...
     @property
     def grid_size(self) -> int:
         """The tiling factor applied to the seed."""
+    @grid_size.setter
+    def grid_size(self, value: int) -> None: ...
     @property
     def padding(self) -> int:
         """The dead border added around the seed."""
+    @padding.setter
+    def padding(self, value: int) -> None: ...
     def budget(self) -> int:
         """Returns the largest neighbor count the mask can reach."""
     def counts(self) -> tuple[list[int], list[int]]:
@@ -61,15 +75,23 @@ class Life:
     @property
     def grids(self) -> list[dict[str, Any]]:
         """Every generation in order."""
+    @grids.setter
+    def grids(self, value: list[dict[str, Any]]) -> None: ...
     @property
     def fate(self) -> Literal["Dead", "Alive", "Loop", "Timeout"]:
         """The run's ending."""
+    @fate.setter
+    def fate(self, value: Literal["Dead", "Alive", "Loop", "Timeout"]) -> None: ...
     @property
     def count(self) -> int:
         """The number of recorded generations."""
+    @count.setter
+    def count(self, value: int) -> None: ...
     @property
     def loop_length(self) -> int:
         """The cycle length when the fate is a loop, else zero."""
+    @loop_length.setter
+    def loop_length(self, value: int) -> None: ...
     def last(self) -> dict[str, Any] | None:
         """Returns the final grid, or None when the run is empty."""
     @staticmethod
@@ -84,12 +106,18 @@ class Rule:
     @property
     def birth(self) -> Counts:
         """The neighbor counts that create a cell, listed or drawn from a sequence."""
+    @birth.setter
+    def birth(self, value: Counts) -> None: ...
     @property
     def survive(self) -> Counts:
         """The neighbor counts that keep a cell, listed or drawn from a sequence."""
+    @survive.setter
+    def survive(self, value: Counts) -> None: ...
     @property
     def wrap(self) -> bool:
         """Whether the edge wraps, false unless said."""
+    @wrap.setter
+    def wrap(self, value: bool) -> None: ...
     def boundary(self) -> Literal["Constant", "Wrap"]:
         """Returns the edge policy the rule runs under."""
     def checked(self) -> Rule:
