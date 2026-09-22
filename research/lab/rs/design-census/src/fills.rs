@@ -50,7 +50,8 @@ pub fn orbits_report() {
         let walk = representatives(2, dimension)
             .expect("the walk stays under the code limit")
             .len();
-        let order = group_order(2, dimension);
+        let order =
+            group_order(2, dimension).expect("dimension four is under the factorial ceiling");
         let burnside = burnside(2, dimension);
         println!("D {dimension}: order {order} orbit walk {walk} Burnside {burnside}");
     }

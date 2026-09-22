@@ -25,14 +25,28 @@ pub fn axis_maps(base: usize) -> Vec<Vec<usize>> {
 }
 
 /// Returns the symmetry group order counted from the enumerated axis maps.
-pub fn group_order(base: usize, dimension: usize) -> u128 {
-    (axis_maps(base).len() as u128).pow(dimension as u32) * factorial(dimension)
+pub fn group_order(base: usize, dimension: usize) -> Result<u128> {
+    order(axis_maps(base).len() as u128, dimension)
 }
 
 /// Returns the closed-form group order the axis-map count must match.
-pub fn predicted_group_order(base: usize, dimension: usize) -> u128 {
+pub fn predicted_group_order(base: usize, dimension: usize) -> Result<u128> {
     let per_axis = if base == 2 { 2u128 } else { 2 * base as u128 };
-    per_axis.pow(dimension as u32) * factorial(dimension)
+    order(per_axis, dimension)
+}
+
+fn order(per_axis: u128, dimension: usize) -> Result<u128> {
+    let axes = match u32::try_from(dimension)
+        .ok()
+        .and_then(|d| per_axis.checked_pow(d))
+    {
+        Some(axes) => axes,
+        None => return overflow_error(format!("a group over {dimension} axes passes u128")),
+    };
+    match axes.checked_mul(factorial(dimension)?) {
+        Some(out) => Ok(out),
+        None => overflow_error(format!("a group over {dimension} axes passes u128")),
+    }
 }
 
 fn choices(axis: &[Vec<usize>], dimension: usize) -> Vec<Vec<usize>> {
@@ -258,8 +272,8 @@ mod tests {
         for base in 2..=5 {
             for dimension in 1..=3 {
                 assert_eq!(
-                    group_order(base, dimension),
-                    predicted_group_order(base, dimension)
+                    group_order(base, dimension).unwrap(),
+                    predicted_group_order(base, dimension).unwrap()
                 );
             }
         }

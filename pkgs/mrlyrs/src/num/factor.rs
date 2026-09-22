@@ -1,3 +1,5 @@
+use crate::core::error::{overflow_error, Result};
+
 /// Returns the greatest common divisor of two numbers by the Euclidean algorithm, zero for two zeroes.
 ///
 /// ```
@@ -39,9 +41,16 @@ pub fn reduce(numerator: u128, denominator: u128) -> (u128, u128) {
     }
 }
 
-/// Returns the factorial of the number, the product of one through it, exact up to thirty-four.
-pub fn factorial(number: usize) -> u128 {
-    (1..=number as u128).product()
+/// Returns the factorial of the number, the product of one through it, erring past thirty-four.
+pub fn factorial(number: usize) -> Result<u128> {
+    let mut out: u128 = 1;
+    for step in 1..=number as u128 {
+        match out.checked_mul(step) {
+            Some(next) => out = next,
+            None => return overflow_error(format!("a factorial of {number} passes u128")),
+        }
+    }
+    Ok(out)
 }
 
 fn peel(prime: u64, rest: &mut u64, out: &mut Vec<(u64, u32)>) {
@@ -399,13 +408,15 @@ mod tests {
     }
 
     #[test]
-    fn refuses_nothing_below_the_exact_ceiling() {
-        assert_eq!(factorial(0), 1);
-        assert_eq!(factorial(1), 1);
+    fn refuses_a_factorial_past_the_exact_ceiling() {
+        assert_eq!(factorial(0).unwrap(), 1);
+        assert_eq!(factorial(1).unwrap(), 1);
         assert_eq!(
-            factorial(34),
+            factorial(34).unwrap(),
             295_232_799_039_604_140_847_618_609_643_520_000_000
         );
+        assert!(factorial(35).is_err());
+        assert!(factorial(usize::MAX).is_err());
     }
 
     #[test]

@@ -7,6 +7,10 @@ repository.workspace = true
 description = "MrlyMath, the mathematics of designs: the substrate, the integers, the designs in space, the life engine and the pixel alphabet in one crate."
 homepage = "https://mrly.net"
 readme = "README.md"
+rust-version = "1.96"
+keywords = ["mathematics", "fractal", "cellular-automata", "png", "generative"]
+categories = ["mathematics", "science", "multimedia::images"]
+include = ["src/**", "README.md", "NAMES.md", "fixtures/**"]
 
 [dependencies]
 png = "0.17"
