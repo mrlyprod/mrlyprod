@@ -37,6 +37,12 @@ pub enum Item {
     Alias(Alias),
     Const(Const),
     Impl(Impl),
+    Trait(Trait),
+}
+
+pub struct Trait {
+    pub name: String,
+    pub fns: Vec<Fn>,
 }
 
 pub struct Fn {
@@ -105,6 +111,7 @@ pub struct Const {
 }
 
 pub struct Impl {
+    pub trait_path: Option<Vec<String>>,
     pub self_ty: syn::Type,
     pub const_params: Vec<String>,
     pub type_params: Vec<String>,
@@ -245,8 +252,24 @@ impl Walker<'_> {
                         ty: (*c.ty).clone(),
                     }));
                 }
-                syn::Item::Impl(i) if !is_test(&i.attrs) && i.trait_.is_none() => {
+                syn::Item::Impl(i) if !is_test(&i.attrs) => {
                     module.items.push(Item::Impl(implementation(i)));
+                }
+                syn::Item::Trait(t) if !is_test(&t.attrs) && is_public(&t.vis) => {
+                    let fns = t
+                        .items
+                        .iter()
+                        .filter_map(|item| match item {
+                            syn::TraitItem::Fn(f) => {
+                                Some(function(&f.sig, docs_of(&f.attrs), false))
+                            }
+                            _ => None,
+                        })
+                        .collect();
+                    module.items.push(Item::Trait(Trait {
+                        name: t.ident.to_string(),
+                        fns,
+                    }));
                 }
                 syn::Item::Macro(m) if m.mac.path.is_ident("named_enum") => {
                     let line = m.mac.path.span().start().line;
@@ -496,7 +519,12 @@ fn implementation(i: &syn::ItemImpl) -> Impl {
             _ => None,
         })
         .collect();
+    let trait_path = i
+        .trait_
+        .as_ref()
+        .map(|(_, path, _)| path.segments.iter().map(|s| s.ident.to_string()).collect());
     Impl {
+        trait_path,
         self_ty: (*i.self_ty).clone(),
         const_params,
         type_params,
@@ -581,6 +609,7 @@ impl NamedEnum {
         (
             enumeration,
             Impl {
+                trait_path: None,
                 self_ty,
                 const_params: vec![],
                 type_params: vec![],

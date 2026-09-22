@@ -456,6 +456,30 @@ fn consts_are_listed_with_their_type() {
     );
 }
 
+#[test]
+fn a_public_trait_adds_its_methods_to_every_implementing_type() {
+    let m = manifest("pub mod name { pub trait Named: Sized { const KIND: &'static str; #[doc = \" Folds.\"] fn checked(self) -> Result<Self, u8>; fn to_json(&self) -> String { String::new() } fn from_json(text: &str) -> Result<Self, u8> { todo!() } } pub mod word { #[derive(Serialize, Deserialize)] pub struct Word { pub n: u8 } impl super::Named for Word { const KIND: &'static str = \"word\"; fn checked(self) -> Result<Self, u8> { Ok(self) } } } }");
+    assert_eq!(kind(&m, "name::word::Word"), &TypeCross::Class);
+    let checked = function(&m, "name::word::Word::checked");
+    assert_eq!(
+        (checked.self_kind, checked.source, checked.via.as_deref()),
+        (Some(SelfKind::Value), Source::Trait, Some("name::Named"))
+    );
+    assert_eq!(checked.docs, vec!["Folds."]);
+    assert!(checked.defined_at.starts_with("lib.rs:"));
+    let from = function(&m, "name::word::Word::from_json");
+    assert_eq!(
+        (from.self_kind, from.owner.as_deref()),
+        (None, Some("name::word::Word"))
+    );
+    assert!(
+        matches!(from.cross, Cross::Skip { .. }),
+        "Result<Self, u8> is not the crate Result"
+    );
+    assert_eq!(function(&m, "name::word::Word::to_json").ret, Ty::String);
+    assert!(m.functions.iter().all(|f| f.name != "KIND"));
+}
+
 fn crate_files() -> Files {
     parse::load(Path::new(concat!(
         env!("CARGO_MANIFEST_DIR"),
@@ -494,6 +518,23 @@ fn function_entries_match_the_pub_fn_grep() {
         .filter(|f| f.source == Source::Written && f.constant)
         .count();
     let generated = fns.iter().filter(|f| f.source == Source::NamedEnum).count();
+    let traits = fns.iter().filter(|f| f.source == Source::Trait).count();
+    let text = &files["math/name/mod.rs"];
+    let start = text.find("pub trait Named").expect("the trait");
+    let end = start + text[start..].find("\n}\n").expect("its end");
+    let trait_fns = text[start..end]
+        .lines()
+        .filter(|l| l.starts_with("    fn "))
+        .count();
+    let impls: usize = files
+        .values()
+        .map(|t| t.matches("impl Named for ").count())
+        .sum();
+    assert_eq!(
+        traits,
+        impls * trait_fns,
+        "every impl Named carries every trait fn"
+    );
     let named = built
         .manifest
         .types
@@ -506,6 +547,6 @@ fn function_entries_match_the_pub_fn_grep() {
         "every grep line is a written pub fn or sits inside macro_rules"
     );
     assert_eq!(generated, 2 * named, "named_enum! writes all and name");
-    assert_eq!(fns.len(), written + constant + generated);
+    assert_eq!(fns.len(), written + constant + generated + traits);
     assert!(built.collisions.is_empty(), "{:?}", built.collisions);
 }

@@ -4,7 +4,7 @@ version = "0.2.0"
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "The core wasm unit of mrlyjs: the substrate of mrlyrs in a browser."
+description = "The core wasm unit of mrlyjs: the core module of mrlyrs in a browser."
 publish = false
 
 [lib]

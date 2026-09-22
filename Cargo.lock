@@ -838,7 +838,79 @@ name = "mobius-designs"
 version = "0.3.0"
 
 [[package]]
+name = "mrlyjs_all"
+version = "0.2.0"
+dependencies = [
+ "js-sys",
+ "mrlyrs",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "mrlyjs_core"
+version = "0.2.0"
+dependencies = [
+ "js-sys",
+ "mrlyrs",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "mrlyjs_font"
+version = "0.2.0"
+dependencies = [
+ "js-sys",
+ "mrlyrs",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "mrlyjs_gen"
+version = "0.2.0"
+dependencies = [
+ "js-sys",
+ "mrlyrs",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "mrlyjs_life"
+version = "0.2.0"
+dependencies = [
+ "js-sys",
+ "mrlyrs",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "mrlyjs_math"
+version = "0.2.0"
+dependencies = [
+ "js-sys",
+ "mrlyrs",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "mrlyjs_num"
 version = "0.2.0"
 dependencies = [
  "js-sys",

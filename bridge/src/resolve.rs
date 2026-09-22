@@ -61,6 +61,7 @@ fn item_name(item: &Item) -> Option<&str> {
         Item::Enum(e) => Some(&e.name),
         Item::Alias(a) => Some(&a.name),
         Item::Const(c) => Some(&c.name),
+        Item::Trait(t) => Some(&t.name),
         Item::Impl(_) => None,
     }
 }
@@ -318,21 +319,39 @@ impl Builder<'_> {
         })
     }
 
+    fn trait_of(&self, module: &str, path: &[String]) -> Option<(Key, &parse::Trait)> {
+        let targets = if path.len() == 1 {
+            lookup_from(self.tree, module, &path[0])
+        } else {
+            resolve_from(self.tree, module, path)
+        };
+        targets.into_iter().find_map(|t| match t {
+            Target::Item(m, i) => match &self.module(&m).items[i] {
+                Item::Trait(tr) => Some(((m, i), tr)),
+                _ => None,
+            },
+            _ => None,
+        })
+    }
+
     fn classify_types(&mut self) -> Result<()> {
         let mut with_methods = HashSet::new();
         let mut hand_seen: HashMap<String, usize> = HashMap::new();
         for (mk, m) in &self.tree.modules {
             for item in &m.items {
-                if let Item::Impl(imp) = item {
-                    if let Some((key, _)) = self.impl_owner(mk, imp) {
-                        if imp
-                            .fns
-                            .iter()
-                            .any(|f| f.self_kind.is_some() && !f.generated)
-                        {
-                            with_methods.insert(key);
-                        }
-                    }
+                let Item::Impl(imp) = item else { continue };
+                let Some((key, _)) = self.impl_owner(mk, imp) else {
+                    continue;
+                };
+                let fns = match &imp.trait_path {
+                    Some(path) => match self.trait_of(mk, path) {
+                        Some((_, tr)) => &tr.fns,
+                        None => continue,
+                    },
+                    None => &imp.fns,
+                };
+                if fns.iter().any(|f| f.self_kind.is_some() && !f.generated) {
+                    with_methods.insert(key);
                 }
             }
         }
@@ -375,7 +394,11 @@ impl Builder<'_> {
                         };
                         (&e.name, cross)
                     }
-                    _ => continue,
+                    Item::Trait(_)
+                    | Item::Fn(_)
+                    | Item::Alias(_)
+                    | Item::Const(_)
+                    | Item::Impl(_) => continue,
                 };
                 if let Some(p) = self.public_path(&key, name) {
                     self.paths.insert(key.clone(), p);
@@ -723,6 +746,41 @@ impl Builder<'_> {
                             join(mk, &f.name),
                         ));
                     }
+                    Item::Trait(_) => {}
+                    Item::Impl(imp) if imp.trait_path.is_some() => {
+                        let path = imp.trait_path.as_deref().unwrap_or_default();
+                        let Some((tkey, tr)) = self.trait_of(mk, path) else {
+                            continue;
+                        };
+                        let Some(via) = self.public_path(&tkey, &tr.name) else {
+                            continue;
+                        };
+                        let Some(owner) = self.owner(mk, imp) else {
+                            continue;
+                        };
+                        let Some(owner_path) = owner.path.clone() else {
+                            continue;
+                        };
+                        let file = self.module(&tkey.0).file.clone();
+                        for f in &tr.fns {
+                            let path = match owner.cross {
+                                TypeCross::Hand { .. } => join(&owner.module, &f.name),
+                                _ => format!("{owner_path}::{}", f.name),
+                            };
+                            let mut entry = self.function(
+                                &tkey.0,
+                                &file,
+                                f,
+                                Some(path.clone()),
+                                Some((&owner, imp)),
+                                path,
+                            );
+                            entry.module = owner.module.clone();
+                            entry.source = Source::Trait;
+                            entry.via = Some(via.clone());
+                            functions.push(entry);
+                        }
+                    }
                     Item::Impl(imp) => {
                         let Some(owner) = self.owner(mk, imp) else {
                             let text = imp.self_ty.to_token_stream().to_string().replace(' ', "");
@@ -852,6 +910,7 @@ impl Builder<'_> {
             params,
             ret,
             dims,
+            via: None,
             source: if f.generated {
                 Source::NamedEnum
             } else {

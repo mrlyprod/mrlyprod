@@ -1,5 +1,8 @@
+mod cli;
+mod js;
 mod model;
 mod parse;
+mod py;
 mod report;
 mod resolve;
 #[cfg(test)]
@@ -10,7 +13,7 @@ use std::path::{Path, PathBuf};
 
 type Backend = fn(&Manifest, &Path) -> Result<()>;
 
-const BACKENDS: &[(&str, Backend)] = &[];
+const BACKENDS: &[(&str, Backend)] = &[("cli", cli::write), ("py", py::write), ("js", js::write)];
 
 fn main() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));

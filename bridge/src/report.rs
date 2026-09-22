@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 pub fn skip_lines(m: &Manifest) -> Vec<String> {
     m.functions
         .iter()
-        .filter(|f| f.source == Source::Written)
+        .filter(|f| f.source != Source::NamedEnum)
         .filter_map(|f| match &f.cross {
             Cross::Skip { reason } => Some(format!("{} {reason}", f.path)),
             _ => None,
@@ -17,7 +17,7 @@ pub fn check_skip(m: &Manifest, skip_txt: &str) -> Vec<String> {
     let skipped: Vec<&str> = m
         .functions
         .iter()
-        .filter(|f| f.source == Source::Written && matches!(f.cross, Cross::Skip { .. }))
+        .filter(|f| f.source != Source::NamedEnum && matches!(f.cross, Cross::Skip { .. }))
         .map(|f| f.path.as_str())
         .collect();
     let listed: Vec<&str> = skip_txt
@@ -74,8 +74,13 @@ pub fn summary(m: &Manifest, macro_body_fns: usize) -> Vec<String> {
         .iter()
         .filter(|f| f.source == Source::NamedEnum)
         .count();
+    let traits = m
+        .functions
+        .iter()
+        .filter(|f| f.source == Source::Trait)
+        .count();
     lines.push(format!(
-        "functions {}: ok {}, skip {}, private {}; {written} pub fn + {constant} pub const fn + {generated} macro-written; {macro_body_fns} pub fn lines inside macro_rules",
+        "functions {}: ok {}, skip {}, private {}; {written} pub fn + {constant} pub const fn + {generated} macro-written + {traits} trait methods; {macro_body_fns} pub fn lines inside macro_rules",
         m.functions.len(),
         total[0],
         total[1],

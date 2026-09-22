@@ -13,7 +13,9 @@
 - Plain types and enums keep associated functions under the type name, self first when there is one: `gen::recipe::Tile::new`, `life::Boundary::wrap(boundary)`, `life::Fate::all()`.
 - A class keeps its methods as methods: `life::Life::step`.
 - Two entries with one path and disjoint `dims` are one exported name that dispatches on the cell's dimension, 2 or 3; group by `path`.
-- Trait methods (`Named::to_json`, `Display`, `FromStr`) are not `pub fn` and do not cross.
+- A public trait of the crate (`math::name::Named`) adds every method it declares, required or default, to each type with an `impl Named for X`: `X::to_json` and `X::checked` self first, `X::from_json` and `X::from_url` static, `Self` read as X, docs and `defined_at` from the trait fn, `source: trait`, and `trait` holding the trait's path. Trait consts (`KIND`, `LISTS`, `BARE`) do not cross.
+- A backend calls a trait method through the trait, never as an inherent method: `<mrlyrs::life::Rule as mrlyrs::math::name::Named>::from_json(text)` and `<Rule as Named>::to_json(&rule)`; `use mrlyrs::math::name::Named;` in scope also works. A type with trait self methods is a class.
+- `Display` and `FromStr` are std traits and do not cross; `named_enum!` types cross as their word instead.
 
 ## KINDS
 
@@ -40,4 +42,4 @@
 - `root` is the workspace root; write generated files under `pkgs/` and never hand-edit them; a wrong line is a generator fix.
 - `units.txt` names the wasm units, one per line; a unit is the first segment of a path; `all` is every unit.
 - `docs` are the `///` lines for docstrings; `defined_at` is `file:line` under `pkgs/mrlyrs/src`; `derives` and `serde` attributes are recorded verbatim.
-- `cargo test -p bridge`: one test per rule in `src/tests.rs`, a determinism test, and the count test against the `pub fn` grep.
+- `cargo test -p bridge`: one test per rule in `src/tests.rs`, a determinism test, and the count test: entries = `pub fn` grep lines - lines inside `macro_rules` + `pub const fn` + 2 per named enum + trait fns x `impl Named` blocks.

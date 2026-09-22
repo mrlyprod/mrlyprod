@@ -12,42 +12,56 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./pkg/all/mrlyjs_all.d.ts",
+      "types": "./all.d.ts",
       "default": "./index.js"
     },
     "./core": {
-      "types": "./pkg/core/mrlyjs_core.d.ts",
-      "default": "./pkg/core/mrlyjs_core.js"
+      "types": "./core.d.ts",
+      "default": "./core.js"
     },
     "./num": {
-      "types": "./pkg/num/mrlyjs_num.d.ts",
-      "default": "./pkg/num/mrlyjs_num.js"
+      "types": "./num.d.ts",
+      "default": "./num.js"
     },
     "./math": {
-      "types": "./pkg/math/mrlyjs_math.d.ts",
-      "default": "./pkg/math/mrlyjs_math.js"
+      "types": "./math.d.ts",
+      "default": "./math.js"
     },
     "./gen": {
-      "types": "./pkg/gen/mrlyjs_gen.d.ts",
-      "default": "./pkg/gen/mrlyjs_gen.js"
+      "types": "./gen.d.ts",
+      "default": "./gen.js"
     },
     "./life": {
-      "types": "./pkg/life/mrlyjs_life.d.ts",
-      "default": "./pkg/life/mrlyjs_life.js"
+      "types": "./life.d.ts",
+      "default": "./life.js"
     },
     "./font": {
-      "types": "./pkg/font/mrlyjs_font.d.ts",
-      "default": "./pkg/font/mrlyjs_font.js"
+      "types": "./font.d.ts",
+      "default": "./font.js"
     },
     "./all": {
-      "types": "./pkg/all/mrlyjs_all.d.ts",
-      "default": "./pkg/all/mrlyjs_all.js"
+      "types": "./all.d.ts",
+      "default": "./all.js"
     },
     "./pkg/*": "./pkg/*"
   },
   "files": [
     "pkg/",
     "index.js",
+    "core.js",
+    "num.js",
+    "math.js",
+    "gen.js",
+    "life.js",
+    "font.js",
+    "all.js",
+    "core.d.ts",
+    "num.d.ts",
+    "math.d.ts",
+    "gen.d.ts",
+    "life.d.ts",
+    "font.d.ts",
+    "all.d.ts",
     "README.md"
   ],
   "scripts": {

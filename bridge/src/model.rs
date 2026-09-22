@@ -96,6 +96,8 @@ pub struct Function {
     pub params: Vec<Param>,
     pub ret: Ty,
     pub dims: Vec<u8>,
+    #[serde(rename = "trait")]
+    pub via: Option<String>,
     pub source: Source,
     pub constant: bool,
     pub cross: Cross,
@@ -120,6 +122,7 @@ pub struct Param {
 pub enum Source {
     Written,
     NamedEnum,
+    Trait,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

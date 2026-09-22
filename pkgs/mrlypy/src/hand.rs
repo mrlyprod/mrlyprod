@@ -7,10 +7,12 @@ use mrlyrs::math::bang::Code;
 use mrlyrs::math::cell::models::CellNd;
 use mrlyrs::math::six::{Cell6d, Orientation, Projection};
 use numpy::ndarray::{ArrayD, IxDyn};
-use numpy::{Element, IntoPyArray, PyReadonlyArrayDyn, PyUntypedArrayMethods};
+use numpy::{
+    Element, IntoPyArray, PyReadonlyArrayDyn, PyReadwriteArrayDyn, PyUntypedArrayMethods,
+};
 use pyo3::exceptions::{PyOverflowError, PyValueError};
 use pyo3::prelude::*;
-use pyo3::types::PyDict;
+use pyo3::types::{PyDict, PyList, PyTuple};
 use pyo3::{Borrowed, IntoPyObjectExt};
 use pythonize::{depythonize, pythonize};
 use serde::de::DeserializeOwned;
@@ -67,6 +69,30 @@ pub fn tensor_into_py<'py>(py: Python<'py>, tensor: &Tensor) -> PyResult<Bound<'
         Dtype::U16 => owned(py, shape, ok(tensor.u16s())?.to_vec()),
         Dtype::U32 => owned(py, shape, ok(tensor.u32s())?.to_vec()),
         Dtype::I32 => owned(py, shape, ok(tensor.i32s())?.to_vec()),
+    }
+}
+
+fn copy_back<T: Element + Copy>(obj: &Bound<'_, PyAny>, data: &[T]) -> PyResult<()> {
+    let mut view = obj.extract::<PyReadwriteArrayDyn<T>>().map_err(|_| {
+        bad("a mutated tensor writes back into a writable array of its own dtype.")
+    })?;
+    let slot = view
+        .as_slice_mut()
+        .map_err(|_| bad("a mutated tensor writes back into a C-contiguous array."))?;
+    if slot.len() != data.len() {
+        return Err(bad("a mutated tensor keeps its shape."));
+    }
+    slot.copy_from_slice(data);
+    Ok(())
+}
+
+/// Copies a mutated tensor back into the numpy array it was read from.
+pub fn tensor_write_back(obj: &Bound<'_, PyAny>, tensor: &Tensor) -> PyResult<()> {
+    match tensor.dtype() {
+        Dtype::U8 => copy_back(obj, ok(tensor.bytes())?),
+        Dtype::U16 => copy_back(obj, ok(tensor.u16s())?),
+        Dtype::U32 => copy_back(obj, ok(tensor.u32s())?),
+        Dtype::I32 => copy_back(obj, ok(tensor.i32s())?),
     }
 }
 
@@ -183,6 +209,40 @@ pub fn cell_from_py(obj: &Bound<'_, PyAny>) -> PyResult<Cell> {
         colors,
         tags,
     })
+}
+
+/// Writes a mutated cell's types, colors and tags back into the dict it was read from.
+pub fn cell_write_back(obj: &Bound<'_, PyAny>, cell: Cell) -> PyResult<()> {
+    let fresh = cell_into_py(obj.py(), cell)?;
+    for key in ["types", "colors", "tags"] {
+        obj.set_item(key, fresh.get_item(key)?)?;
+    }
+    Ok(())
+}
+
+/// Reads the rank of the array, the cell dict or the first of a list of them.
+pub fn ndim(obj: &Bound<'_, PyAny>) -> PyResult<usize> {
+    if let Ok(dict) = obj.cast::<PyDict>() {
+        return match dict.get_item("types")? {
+            Some(types) => ndim(&types),
+            None => Err(bad("a cell wants a \"types\" array.")),
+        };
+    }
+    if let Ok(list) = obj.cast::<PyList>() {
+        return match list.get_item(0) {
+            Ok(first) => ndim(&first),
+            Err(_) => Err(bad("a dispatch wants at least one cell.")),
+        };
+    }
+    if let Ok(tuple) = obj.cast::<PyTuple>() {
+        return match tuple.get_item(0) {
+            Ok(first) => ndim(&first),
+            Err(_) => Err(bad("a dispatch wants at least one cell.")),
+        };
+    }
+    obj.getattr("ndim")
+        .and_then(|rank| rank.extract::<usize>())
+        .map_err(|_| bad("a dispatch wants a numpy array, a cell dict or a list of them."))
 }
 
 impl<'py> IntoPyObject<'py> for PyCell {
@@ -317,6 +377,68 @@ impl<'py> FromPyObject<'_, 'py> for PyColor {
     }
 }
 
+// PIXELS
+
+/// One rgba pixel crossing as a four-tuple of channel bytes.
+pub struct PyRgba(pub [u8; 4]);
+
+impl<'py> IntoPyObject<'py> for PyRgba {
+    type Target = PyAny;
+    type Output = Bound<'py, PyAny>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let [r, g, b, a] = self.0;
+        (r, g, b, a).into_bound_py_any(py)
+    }
+}
+
+impl<'py> FromPyObject<'_, 'py> for PyRgba {
+    type Error = PyErr;
+    fn extract(obj: Borrowed<'_, 'py, PyAny>) -> PyResult<PyRgba> {
+        let rgba = obj
+            .extract::<[u8; 4]>()
+            .map_err(|_| bad("a pixel wants four channel bytes."))?;
+        Ok(PyRgba(rgba))
+    }
+}
+
+/// A run of rgba pixels crossing as an (n, 4) uint8 array, a list of four-tuples read too.
+pub struct PyPixels(pub Vec<[u8; 4]>);
+
+impl<'py> IntoPyObject<'py> for PyPixels {
+    type Target = PyAny;
+    type Output = Bound<'py, PyAny>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let count = self.0.len();
+        let flat: Vec<u8> = self.0.into_iter().flatten().collect();
+        owned(py, &[count, 4], flat)
+    }
+}
+
+impl<'py> FromPyObject<'_, 'py> for PyPixels {
+    type Error = PyErr;
+    fn extract(obj: Borrowed<'_, 'py, PyAny>) -> PyResult<PyPixels> {
+        if let Ok(view) = obj.extract::<PyReadonlyArrayDyn<u8>>() {
+            if view.shape().last() != Some(&4) {
+                return Err(bad("pixels want a trailing axis of four channels."));
+            }
+            let data = view
+                .as_slice()
+                .map_err(|_| bad("pixels want a C-contiguous array."))?;
+            return Ok(PyPixels(
+                data.chunks_exact(4)
+                    .map(|rgba| [rgba[0], rgba[1], rgba[2], rgba[3]])
+                    .collect(),
+            ));
+        }
+        let listed = obj
+            .extract::<Vec<PyRgba>>()
+            .map_err(|_| bad("pixels want an (n, 4) uint8 array or a list of four-tuples."))?;
+        Ok(PyPixels(listed.into_iter().map(|p| p.0).collect()))
+    }
+}
+
 // CODE
 
 /// A design code crossing as a Python int.
@@ -378,7 +500,7 @@ impl<'py, T: DeserializeOwned> FromPyObject<'_, 'py> for PySerde<T> {
 // RNG
 
 /// The seeded random stream, one class, passed wherever Rust takes a mutable stream.
-#[pyclass(name = "Rng", module = "mrlypy")]
+#[pyclass(name = "Rng", module = "mrlypy.core")]
 pub struct PyRng(pub Rng);
 
 #[pymethods]

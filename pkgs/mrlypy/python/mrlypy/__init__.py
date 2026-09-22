@@ -1,5 +1,5 @@
-from . import _mrlypy
-from ._mrlypy import *
+from mrlypy import _mrlypy
+from mrlypy import core, font, gen, life, math, num
 
 __version__ = _mrlypy.__version__
-__all__ = [name for name in dir(_mrlypy) if not name.startswith("_")]
+__all__ = ["core", "font", "gen", "life", "math", "num"]

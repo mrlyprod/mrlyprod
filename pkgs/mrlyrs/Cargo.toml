@@ -12,6 +12,10 @@ keywords = ["mathematics", "fractal", "cellular-automata", "png", "generative"]
 categories = ["mathematics", "science", "multimedia::images"]
 include = ["src/**", "README.md", "NAMES.md", "fixtures/**"]
 
+[[bin]]
+name = "mrly"
+path = "src/bin/mrly.rs"
+
 [dependencies]
 png = "0.17"
 gif = { version = "0.14", default-features = false, features = ["std"] }
