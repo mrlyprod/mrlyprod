@@ -1,4 +1,29 @@
-#![doc = include_str!("README.md")]
+//! The designs in space.
+//!
+//! A small integer code picks the filled corners of a hypercube, that seed grows level by level
+//! into a fractal design, and the same code always unfolds into the same shape, so a design can be
+//! named, counted and drawn again from its number alone. Half the module generates and half
+//! measures; everything rests on the tensors and cells of [`crate::core`] and the sequences of
+//! [`crate::num`].
+//!
+//! - `atoms` fills a tensor with a carpet, a net, beams or noise.
+//! - `bang` enumerates the design codes, their symmetries and their counts.
+//! - `cell` holds the N-dimensional cell and the pipeline the fixed dimensions share.
+//! - `two`, `three` and `six` run that pipeline for flat cells, cubes and hexagons.
+//! - `counts` gives the same fills, surfaces, hex slices and carry ladder in closed form.
+//! - `graph` lifts a grid into nodes and branches; `spectrum` reads the Laplacian spectra off it.
+//! - `shape` crops a cell against a rational shape, cell by cell, with no floats.
+//! - `rules` marks the cells of a hypercube whose coordinate residues satisfy a rule.
+//! - `moire` layers one design at many scales into an interference field.
+//! - `press` weighs the integers a design's digit rule keeps.
+//! - `spin` spins a raster about its centre; `tourbillon` stacks the turned parity carpets.
+//! - `spirograph` rolls a byte grid as a wheel; `roulette` counts where its curves cross.
+//! - `name` prints and parses the one canonical JSON object of every design, rule, tile and word.
+//!
+//! The doors are [`crate::math::atoms::carpet_2d`], [`crate::math::bang::bang`],
+//! [`crate::math::two::carpet`], [`crate::math::two::census()`], [`crate::math::two::to_json`],
+//! [`crate::math::counts::fill`], [`crate::math::three::census::surface`] and
+//! [`crate::math::spectrum::laplacian_spectrum`].
 
 /// Ready-made tensors: zeros, ones, noise and carpets in two or three dimensions.
 pub mod atoms;

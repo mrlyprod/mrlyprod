@@ -128,3 +128,15 @@ pub fn all() -> Vec<Glyph> {
     glyphs.extend(specials());
     glyphs
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn trim_cuts_blank_edge_columns_and_collapses_an_empty_bitmap() {
+        let rows = vec!["00100".to_string(), "00100".to_string()];
+        assert_eq!(trim(&rows), vec!["1".to_string(), "1".to_string()]);
+        assert_eq!(trim(&vec!["00000".to_string(); 5]), vec!["0"; 5]);
+    }
+}

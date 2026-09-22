@@ -21,12 +21,16 @@ pub struct Rule {
 }
 
 impl Rule {
-    /// Builds a rule, or an error when the dimension, the width or the code is out of range.
+    /// Builds a rule from its dimension, its width and its code.
     ///
     /// ```
     /// assert!(mrlyrs::num::memory::Rule::new(1, 2, 7).is_ok());
     /// assert!(mrlyrs::num::memory::Rule::new(2, 4, 0).is_err());
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Errs when the dimension is not one, two or three, the width is zero, the window count overruns, or the code runs past it.
     pub fn new(dimension: usize, width: usize, code: u64) -> Result<Rule> {
         if !(1..=3).contains(&dimension) {
             return value_error(format!("dimension {dimension} is not one, two or three."));
@@ -59,11 +63,15 @@ impl Rule {
         })
     }
 
-    /// Returns the rule that allows every window, or an error when the dimension or the width is out of range.
+    /// Returns the rule that allows every window.
     ///
     /// ```
     /// assert_eq!(mrlyrs::num::memory::Rule::full(1, 2).unwrap().code, 15);
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Errs when the dimension is not one, two or three, the width is zero, or the window count overruns.
     pub fn full(dimension: usize, width: usize) -> Result<Rule> {
         let rule = Rule::new(dimension, width, 0)?;
         Ok(Rule {

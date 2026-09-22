@@ -45,6 +45,10 @@ pub fn perimeter(cell: &Cell2d) -> u128 {
 /// let ring = mrlyrs::math::two::carpet(3, 1).unwrap();
 /// assert_eq!(mrlyrs::math::two::census::euler(&ring).unwrap(), 0);
 /// ```
+///
+/// # Errors
+///
+/// Errors when the edge network cannot be lifted from the cell.
 pub fn euler(cell: &Cell2d) -> Result<i64> {
     let outline = edge_graph(cell)?;
     Ok(outline.nodes.len() as i64 - outline.branches.len() as i64 + fills(cell) as i64)
@@ -58,6 +62,10 @@ pub fn euler(cell: &Cell2d) -> Result<i64> {
 /// assert_eq!((census.fills, census.voids, census.perimeter), (8, 1, 16));
 /// assert_eq!((census.vertices, census.edges, census.euler), (16, 24, 0));
 /// ```
+///
+/// # Errors
+///
+/// Errors when the edge network cannot be lifted from the cell.
 pub fn census(cell: &Cell2d) -> Result<Census> {
     let outline = edge_graph(cell)?;
     let (vertices, edges) = (outline.nodes.len(), outline.branches.len());

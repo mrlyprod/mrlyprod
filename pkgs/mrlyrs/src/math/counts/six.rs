@@ -17,36 +17,60 @@ fn odd_k(number: usize) -> Result<u128> {
 }
 
 /// Returns the core node count of the solid slice, defined for odd number.
+///
+/// # Errors
+///
+/// Errors at an even side number.
 pub fn solid_slice_core_nodes(number: usize) -> Result<u128> {
     let k = odd_k(number)? as i128;
     Ok((24 * k * k - 24 * k + 6) as u128)
 }
 
 /// Returns the core edge count of the solid slice, defined for odd number.
+///
+/// # Errors
+///
+/// Errors at an even side number.
 pub fn solid_slice_core_edges(number: usize) -> Result<u128> {
     let k = odd_k(number)? as i128;
     Ok((36 * k * k - 42 * k + 12) as u128)
 }
 
 /// Returns the triangle count of the solid slice, defined for odd number.
+///
+/// # Errors
+///
+/// Errors at an even side number.
 pub fn solid_slice_triangles(number: usize) -> Result<u128> {
     odd_k(number)?;
     Ok(6 * (number as u128).pow(2))
 }
 
 /// Returns the boundary edge count of the solid slice, defined for odd number.
+///
+/// # Errors
+///
+/// Errors at an even side number.
 pub fn solid_slice_boundary(number: usize) -> Result<u128> {
     odd_k(number)?;
     Ok(6 * number as u128)
 }
 
 /// Returns the vertex count of the solid slice, defined for odd number.
+///
+/// # Errors
+///
+/// Errors at an even side number.
 pub fn solid_slice_vertices(number: usize) -> Result<u128> {
     let k = odd_k(number)? as i128;
     Ok((12 * k * k - 6 * k + 1) as u128)
 }
 
 /// Returns the interior edge count of the solid slice, defined for odd number.
+///
+/// # Errors
+///
+/// Errors at an even side number.
 pub fn solid_slice_interior(number: usize) -> Result<u128> {
     let k = odd_k(number)? as i128;
     Ok((36 * k * k - 42 * k + 12) as u128)
@@ -59,12 +83,20 @@ pub fn centered_hexagonal(m: usize) -> u128 {
 }
 
 /// Returns the distinct triangle-edge count of the solid slice, defined for odd number.
+///
+/// # Errors
+///
+/// Errors at an even side number.
 pub fn solid_slice_edges(number: usize) -> Result<u128> {
     let k = odd_k(number)? as i128;
     Ok((36 * k * k - 30 * k + 6) as u128)
 }
 
 /// Returns the filled triangle count of the code's pro projection at the given level, without rendering it.
+///
+/// # Errors
+///
+/// Errors when the code is out of range for a base-2 cube.
 pub fn pro_fills(code: Code, number: usize, level: u32) -> Result<u128> {
     let filled = code_to_corners(code, 3, 2)?;
     let boundary = ((number - 1) % 2) as u8;
@@ -86,11 +118,19 @@ pub fn pro_fills(code: Code, number: usize, level: u32) -> Result<u128> {
 }
 
 /// Returns the empty triangle count of the code's pro projection at the given level.
+///
+/// # Errors
+///
+/// Errors when the code is out of range for a base-2 cube.
 pub fn pro_voids(code: Code, number: usize, level: u32) -> Result<u128> {
     Ok(grid_triangles(number, level) - pro_fills(code, number, level)?)
 }
 
 /// Returns the filled triangle count of the code's cut section at the given level, without rendering it.
+///
+/// # Errors
+///
+/// Errors when the code is out of range for a base-2 cube.
 pub fn cut_fills(code: Code, number: usize, level: u32) -> Result<u128> {
     let filled: HashSet<Vec<u8>> = code_to_corners(code, 3, 2)?.into_iter().collect();
     let scaled = number.pow(level);
@@ -128,6 +168,10 @@ pub fn cut_fills(code: Code, number: usize, level: u32) -> Result<u128> {
 }
 
 /// Returns the empty triangle count of the code's cut section at the given level.
+///
+/// # Errors
+///
+/// Errors when the code is out of range for a base-2 cube.
 pub fn cut_voids(code: Code, number: usize, level: u32) -> Result<u128> {
     Ok(grid_triangles(number, level) - cut_fills(code, number, level)?)
 }

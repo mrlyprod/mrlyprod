@@ -1,4 +1,15 @@
-#![doc = include_str!("README.md")]
+//! The alphabet: a stroked pixel font of 108 characters, painted whole or written stroke by stroke.
+//!
+//! - `bitmaps` holds the raw on/off rows; `glyph` builds them into glyphs and trims them.
+//! - `pens` holds every glyph's hand-penned strokes; `paths` reads them and drafts new ones.
+//! - `names` gives a character its Unicode name.
+//! - `raster` lays a text out as one 0/1 grid; `animate` writes it cell by cell and loops the cycle.
+//!
+//! The font is the uppers, their corner-rounded lowers, the digits, the punctuation and arrows, and four specials; most glyphs are five rows of five, the ten that dip below the baseline are seven.
+//!
+//! The doors: [`glyph`](crate::font::glyph()), [`supported`](crate::font::supported()), [`map`](crate::font::map()), [`raster`](crate::font::raster()), [`path`](crate::font::path()), [`floor`](crate::font::floor()), [`animate`](crate::font::animate()), [`merge`](crate::font::merge()), [`cycle`](crate::font::cycle()) and [`name_of`](crate::font::name_of()).
+//!
+//! `cargo run -p mrlyrs --example pen` prints the pen tables; `-- X` drafts one glyph and its stroke floor.
 
 /// The stroke-order writing animations of text.
 pub mod animate;
@@ -46,6 +57,11 @@ pub fn glyph(c: char) -> Option<Glyph> {
 }
 
 /// Returns every character in the font, in font order.
+///
+/// ```
+/// let font = mrlyrs::font::supported();
+/// assert_eq!((font.len(), font[0]), (108, 'A'));
+/// ```
 pub fn supported() -> Vec<char> {
     order().clone()
 }
@@ -59,17 +75,6 @@ pub fn map() -> BTreeMap<char, Vec<String>> {
 mod tests {
     use super::*;
     const WORDMARK: &str = "MRLYPROD";
-
-    #[test]
-    fn the_book_never_reorders_the_font() {
-        let straight: Vec<char> = all().iter().map(|g| g.char).collect();
-        assert_eq!(
-            supported(),
-            straight,
-            "the font app seeds its order from supported()"
-        );
-        assert_eq!(supported().first(), Some(&'A'), "uppers still lead");
-    }
 
     #[test]
     fn the_cached_glyph_is_the_built_glyph() {
@@ -107,16 +112,6 @@ mod tests {
         let a = glyph('a').unwrap();
         assert_eq!(a.rows, vec!["01110", "10001", "11111", "10001", "00000"]);
         assert_eq!(glyph('A').unwrap().rows[0], "11111");
-    }
-    #[test]
-    fn trim_collapses_blank() {
-        let space = glyph(' ').unwrap();
-        assert_eq!(trim(&space.rows), vec!["0"; 5]);
-    }
-    #[test]
-    fn trim_drops_edge_columns() {
-        let rows = vec!["00100".to_string(), "00100".to_string()];
-        assert_eq!(trim(&rows), vec!["1".to_string(), "1".to_string()]);
     }
     #[test]
     fn count_matches_layout() {

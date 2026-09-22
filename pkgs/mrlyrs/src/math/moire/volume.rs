@@ -54,6 +54,10 @@ impl Volume {
         }
     }
     /// Wraps x-major samples of the side.
+    ///
+    /// # Errors
+    ///
+    /// Errors when the count is not the side cubed.
     pub fn from_data(data: Vec<f32>, size: usize) -> Result<Volume> {
         if data.len() != size * size * size {
             return value_error("data must be size*size*size.");
@@ -124,6 +128,10 @@ impl Volume {
 }
 
 /// Frames the plane normal to the direction, at the offset from zero to one across the box along it; the window is the smallest square holding every section on that normal.
+///
+/// # Errors
+///
+/// Errors on a zero normal.
 pub fn frame(normal: [f64; 3], offset: f64) -> Result<Frame> {
     let Some(n) = unit(normal) else {
         return value_error("the normal must not be zero.");
@@ -198,6 +206,10 @@ fn layer(spec: Spec, number: usize, level: usize, size: usize) -> Result<Vec<boo
 }
 
 /// Layers one cube design at several side numbers into a volume under the chosen combine.
+///
+/// # Errors
+///
+/// Errors at size zero, or on a code out of range.
 pub fn volume(
     spec: Spec,
     numbers: &[usize],

@@ -17,7 +17,11 @@ fn bits(row: &[u8]) -> Result<()> {
     }
 }
 
-/// Advances one row one generation, a constant-0 boundary unless the edges wrap, or an error for a row that is not all bits.
+/// Advances one row one generation, a constant-0 boundary unless the edges wrap.
+///
+/// # Errors
+///
+/// Errs when the row holds a value above one.
 pub fn step(row: &[u8], rule: u8, wrap: bool) -> Result<Vec<u8>> {
     bits(row)?;
     Ok(advance(row, rule, wrap))
@@ -50,13 +54,17 @@ fn advance(row: &[u8], rule: u8, wrap: bool) -> Vec<u8> {
         .collect()
 }
 
-/// Returns the space-time diagram of a seed row, row 0 the seed and then one row per generation, or an error for a row that is not all bits.
+/// Returns the space-time diagram of a seed row, row 0 the seed and then one row per generation.
 ///
 /// ```
 /// let run = mrlyrs::life::history(&[0, 0, 1, 0, 0], 90, 2, false).unwrap();
 /// assert_eq!(run.shape, vec![3, 5]);
 /// assert!(mrlyrs::life::history(&[0, 2, 0], 90, 1, false).is_err());
 /// ```
+///
+/// # Errors
+///
+/// Errs when the row holds a value above one.
 pub fn history(row: &[u8], rule: u8, steps: usize, wrap: bool) -> Result<Tensor> {
     bits(row)?;
     let width = row.len();
@@ -71,6 +79,10 @@ pub fn history(row: &[u8], rule: u8, steps: usize, wrap: bool) -> Result<Tensor>
 }
 
 /// Returns the single-seed diagram: one live cell run the given generations on a line padded by `steps` cells beyond the `2 steps + 1` window on each side, cropped back to that window.
+///
+/// # Errors
+///
+/// Errs when the diagram's cells do not fill its shape.
 pub fn single_seed(rule: u8, steps: usize) -> Result<Tensor> {
     let window = 2 * steps + 1;
     let width = window + 2 * steps;
@@ -110,6 +122,10 @@ pub fn affine(rule: u8) -> bool {
 }
 
 /// Returns the design name a rule carries, `bang dim 3, code <rule>`.
+///
+/// # Errors
+///
+/// Errs when the name will not print as a line of prose.
 pub fn rule_name(rule: u8) -> Result<String> {
     Bang::new(rule as u128, 3, 2).to_mrly()
 }

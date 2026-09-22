@@ -4,6 +4,10 @@ use crate::core::error::Result;
 use crate::core::tensor::Tensor;
 
 /// Merges same-shaped cells into one block laid out by the per-axis repetition counts.
+///
+/// # Errors
+///
+/// Errors when the cells differ in shape or do not fill the arrangement.
 pub fn merge_reps<const N: usize>(cells: &[CellNd<N>], reps: &[usize]) -> Result<CellNd<N>> {
     let inner: Vec<cell::Cell> = cells.iter().map(|c| c.cell.clone()).collect();
     Ok(CellNd {
@@ -12,6 +16,10 @@ pub fn merge_reps<const N: usize>(cells: &[CellNd<N>], reps: &[usize]) -> Result
 }
 
 /// Folds two or more cells into one by chained Kronecker combination.
+///
+/// # Errors
+///
+/// Errors when the cells differ in shape.
 pub fn magic<const N: usize>(cells: &[CellNd<N>]) -> Result<CellNd<N>> {
     let inner: Vec<cell::Cell> = cells.iter().map(|c| c.cell.clone()).collect();
     Ok(CellNd {
@@ -20,6 +28,10 @@ pub fn magic<const N: usize>(cells: &[CellNd<N>]) -> Result<CellNd<N>> {
 }
 
 /// Builds a cell by placing at each mask site the cell its value indexes.
+///
+/// # Errors
+///
+/// Errors when the mask and the cells do not fit one another.
 pub fn mosaic<const N: usize>(mask: &Tensor, cells: &[CellNd<N>]) -> Result<CellNd<N>> {
     let inner: Vec<cell::Cell> = cells.iter().map(|c| c.cell.clone()).collect();
     Ok(CellNd {
@@ -28,6 +40,10 @@ pub fn mosaic<const N: usize>(mask: &Tensor, cells: &[CellNd<N>]) -> Result<Cell
 }
 
 /// Writes the value into the cell wherever the tiled mask is nonzero.
+///
+/// # Errors
+///
+/// Errors when the mask does not tile the cell.
 pub fn perforate<const N: usize>(mask: &Tensor, cell: &CellNd<N>, value: u8) -> Result<CellNd<N>> {
     cell.clone().perforate(mask, value)
 }

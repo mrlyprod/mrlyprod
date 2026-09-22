@@ -44,6 +44,10 @@ fn painted(cell: &Cell6d) -> Vec<[u8; 4]> {
 }
 
 /// Folds a cell into colored screen triangles, dropping the transparent ones.
+///
+/// # Errors
+///
+/// Errors for a cell that is not a hexagon.
 pub fn triangles(cell: &Cell6d) -> Result<Vec<Triangle>> {
     let inner = &cell.cell;
     let (height, width) = (inner.height(), inner.width());
@@ -150,7 +154,11 @@ fn sheet(view: &Rect, scale: usize, stroke: &str) -> String {
     out.join("\n")
 }
 
-/// Renders a cell's triangles to an SVG string at the given scale, stroked and padded when an outline is given, or an error when nothing renders.
+/// Renders a cell's triangles to an SVG string at the given scale, stroked and padded when an outline is given.
+///
+/// # Errors
+///
+/// Errors when nothing renders.
 pub fn svg(cell: &Cell6d, scale: usize, outline: Option<Color>, width: usize) -> Result<String> {
     let padding = if outline.is_some() { width as i64 } else { 0 };
     Ok(sheet(

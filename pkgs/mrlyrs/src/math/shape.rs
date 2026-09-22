@@ -27,7 +27,11 @@ fn reduce(num: i128, den: i128) -> Result<Frac> {
 }
 
 impl Frac {
-    /// Builds the reduced fraction num over den, or an error on a zero denominator.
+    /// Builds the reduced fraction num over den.
+    ///
+    /// # Errors
+    ///
+    /// Errors on a zero denominator.
     pub fn new(num: i64, den: i64) -> Result<Frac> {
         reduce(num as i128, den as i128)
     }
@@ -35,21 +39,33 @@ impl Frac {
     pub fn whole(num: i64) -> Frac {
         Frac { num, den: 1 }
     }
-    /// Returns the exact sum, or an error when the reduced result passes i64.
+    /// Returns the exact sum.
+    ///
+    /// # Errors
+    ///
+    /// Errors when the reduced result passes an i64.
     pub fn plus(self, other: Frac) -> Result<Frac> {
         reduce(
             self.num as i128 * other.den as i128 + other.num as i128 * self.den as i128,
             self.den as i128 * other.den as i128,
         )
     }
-    /// Returns the exact difference, or an error when the reduced result passes i64.
+    /// Returns the exact difference.
+    ///
+    /// # Errors
+    ///
+    /// Errors when the reduced result passes an i64.
     pub fn minus(self, other: Frac) -> Result<Frac> {
         reduce(
             self.num as i128 * other.den as i128 - other.num as i128 * self.den as i128,
             self.den as i128 * other.den as i128,
         )
     }
-    /// Returns the exact product, or an error when the reduced result passes i64.
+    /// Returns the exact product.
+    ///
+    /// # Errors
+    ///
+    /// Errors when the reduced result passes an i64.
     pub fn times(self, other: Frac) -> Result<Frac> {
         reduce(
             self.num as i128 * other.num as i128,
@@ -183,6 +199,10 @@ fn classify_ball(center: &[Frac], radius: Frac, side: usize, index: &[usize]) ->
 /// The cell at the index occupies the closed box from the index to the index plus one on each axis, and the shape's unit-box coordinates are scaled by the side.
 ///
 /// A polytope is judged wall by wall: Out means some wall excludes the cell, In means every wall contains it, and Cut means neither - so a cell that touches each wall's feasible side separately reads Cut even when the wall intersection misses it, a conservative call that never mislabels In or Out.
+///
+/// # Errors
+///
+/// Errors when the shape's exact scale passes an i64.
 pub fn classify(shape: &Shape, side: usize, index: &[usize]) -> Result<Region> {
     match shape {
         Shape::Ball { center, radius } => classify_ball(center, *radius, side, index),
@@ -202,6 +222,10 @@ pub fn classify(shape: &Shape, side: usize, index: &[usize]) -> Result<Region> {
 }
 
 /// Classifies every cell of the grid, packing Out, Cut and In as 0, 1 and 2; the first extent sets the lattice side.
+///
+/// # Errors
+///
+/// Errors when the shape's exact scale passes an i64.
 pub fn regions(shape: &Shape, dims: &[usize]) -> Result<Tensor> {
     let side = dims.first().copied().unwrap_or(0);
     let rank = dims.len();
@@ -318,9 +342,13 @@ fn pyramid(radius: Frac) -> Result<Shape> {
     })
 }
 
-/// Builds a named shape of the dimension, centered at one half on every axis, or an error for an unknown or irrational name.
+/// Builds a named shape of the dimension, centered at one half on every axis.
 ///
 /// Regular hexagons and equilateral triangles have irrational walls in the grid frame, so they are excluded on purpose rather than approximated.
+///
+/// # Errors
+///
+/// Errors for an unknown name, or one whose walls are irrational on the grid.
 pub fn named(name: &str, dimension: usize, radius: Frac) -> Result<Shape> {
     match (name, dimension) {
         ("ball", _) => Ok(Shape::Ball {
@@ -344,6 +372,17 @@ pub fn named(name: &str, dimension: usize, radius: Frac) -> Result<Shape> {
 // CROPPING
 
 /// Zeroes every cell of the design outside the shape, keeping Cut cells on request; anti-crop is Shape::Anti.
+///
+/// ```
+/// use mrlyrs::math::shape::{crop, named, Frac};
+/// let solid = mrlyrs::math::atoms::ones_2d(9);
+/// let disc = named("ball", 2, Frac::new(1, 2).unwrap()).unwrap();
+/// assert_eq!(crop(&solid, &disc, true).unwrap().sum(), 77);
+/// ```
+///
+/// # Errors
+///
+/// Errors when the shape's exact scale passes an i64.
 pub fn crop(types: &Tensor, shape: &Shape, keep_cut: bool) -> Result<Tensor> {
     let map = regions(shape, &types.shape)?;
     let mut out = types.clone();
@@ -360,7 +399,11 @@ pub fn crop(types: &Tensor, shape: &Shape, keep_cut: bool) -> Result<Tensor> {
 /// The refine output ceiling in cells.
 pub const REFINE_LIMIT: usize = 20_000_000;
 
-/// Replicates each design cell base to the extra per axis and keeps a sub-cell only where its own region passes, or an error past the cell ceiling.
+/// Replicates each design cell base to the extra per axis and keeps a sub-cell only where its own region passes.
+///
+/// # Errors
+///
+/// Errors below base one, or past the cell ceiling.
 pub fn refine(
     types: &Tensor,
     shape: &Shape,
@@ -433,6 +476,10 @@ pub struct ShapeCensus {
 }
 
 /// Tallies the design's cells and filled cells per region of the shape.
+///
+/// # Errors
+///
+/// Errors when the shape's exact scale passes an i64.
 pub fn census(shape: &Shape, types: &Tensor) -> Result<ShapeCensus> {
     let map = regions(shape, &types.shape)?;
     let mut out = ShapeCensus {
@@ -864,17 +911,6 @@ mod tests {
         assert_eq!(crop(&sponge, &ball, false).unwrap().sum(), 0);
         let tally = census(&ball, &sponge).unwrap();
         assert_eq!(tally.cells, [0, 26, 1]);
-    }
-
-    #[test]
-    fn carpet_ball_crop_trims_the_corners() {
-        let carpet = create(Code(7), 3, 2, 2, 2).unwrap();
-        let ball = named("ball", 2, Frac::new(1, 2).unwrap()).unwrap();
-        let kept = crop(&carpet, &ball, true).unwrap();
-        assert_eq!(kept.get(&[0, 0]).unwrap(), 0);
-        assert_eq!(kept.get(&[8, 8]).unwrap(), 0);
-        assert!(kept.sum() > 0);
-        assert!(kept.sum() < carpet.sum());
     }
 
     #[test]

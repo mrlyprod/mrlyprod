@@ -1,3 +1,8 @@
+//! The moire fields.
+//!
+//! One design sampled at many scales and stacked makes an interference pattern; the layers, their
+//! combination, the volume they cut and the PNG they render live here.
+
 /// The square grid of f32 samples.
 pub mod field;
 /// The recipe and sampling of one moire layer.

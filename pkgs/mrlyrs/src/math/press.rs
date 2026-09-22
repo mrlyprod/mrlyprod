@@ -24,6 +24,10 @@ fn corner_count(dimension: usize, base: usize) -> Result<usize> {
 /// assert_eq!(mrlyrs::math::press::usage(0, 2, 2).unwrap().get(), 1);
 /// assert_eq!(mrlyrs::math::press::usage(6, 2, 2).unwrap().get(), 0b0110);
 /// ```
+///
+/// # Errors
+///
+/// Errors when the dimension and base reach a hundred and twenty-eight corners.
 pub fn usage(number: u128, dimension: usize, base: usize) -> Result<Code> {
     Ok(mask(number, corner_count(dimension, base)? as u128))
 }
@@ -52,11 +56,19 @@ fn mask(number: u128, radix: u128) -> Code {
 /// let members: Vec<u128> = (0..30).filter(|&n| mrlyrs::math::press::member(Code::from(0b0111u64), n, 2, 2).unwrap()).collect();
 /// assert_eq!(members, vec![0, 1, 2, 4, 5, 6, 8, 9, 10, 16, 17, 18, 20, 21, 22, 24, 25, 26]);
 /// ```
+///
+/// # Errors
+///
+/// Errors when the dimension and base reach a hundred and twenty-eight corners.
 pub fn member(code: Code, number: u128, dimension: usize, base: usize) -> Result<bool> {
     Ok(usage(number, dimension, base)?.get() & !code.get() == 0)
 }
 
 /// Returns the count of distinct digit vectors the number uses.
+///
+/// # Errors
+///
+/// Errors when the dimension and base reach a hundred and twenty-eight corners.
 pub fn distinct(number: u128, dimension: usize, base: usize) -> Result<u32> {
     Ok(usage(number, dimension, base)?.get().count_ones())
 }
@@ -70,6 +82,10 @@ pub fn distinct(number: u128, dimension: usize, base: usize) -> Result<u32> {
 /// ```
 /// assert_eq!(mrlyrs::math::press::containing(6, 2, 2).unwrap(), 4);
 /// ```
+///
+/// # Errors
+///
+/// Errors when the dimension and base reach a hundred and twenty-eight corners.
 pub fn containing(number: u128, dimension: usize, base: usize) -> Result<u128> {
     Ok(1 << (corner_count(dimension, base)? as u32 - distinct(number, dimension, base)?))
 }
@@ -79,6 +95,10 @@ pub fn containing(number: u128, dimension: usize, base: usize) -> Result<u128> {
 /// ```
 /// assert_eq!(mrlyrs::math::press::coordinates(6, 2, 2).unwrap(), vec![1, 2]);
 /// ```
+///
+/// # Errors
+///
+/// Errors when the dimension and base reach a hundred and twenty-eight corners.
 pub fn coordinates(number: u128, dimension: usize, base: usize) -> Result<Vec<u128>> {
     let radix = corner_count(dimension, base)? as u128;
     let mut out = vec![0u128; dimension];
@@ -98,7 +118,9 @@ pub fn coordinates(number: u128, dimension: usize, base: usize) -> Result<Vec<u1
 
 /// Weaves dimension coordinates back into their single interleaved number.
 ///
-/// Errors on no coordinate at all, and when the woven number passes a hundred and twenty-eight bits.
+/// # Errors
+///
+/// Errors on an empty coordinate list, past a hundred and twenty-seven corners, or when the woven number passes a u128.
 pub fn interleave(coords: &[u128], base: usize) -> Result<u128> {
     if coords.is_empty() {
         return value_error("interleave needs at least one coordinate.");
@@ -135,6 +157,10 @@ pub fn interleave(coords: &[u128], base: usize) -> Result<u128> {
 /// use mrlyrs::math::bang::Code;
 /// assert_eq!(mrlyrs::math::press::members(Code::from(0b10u64), 1, 2, 5).unwrap(), vec![1, 3, 7, 15, 31]);
 /// ```
+///
+/// # Errors
+///
+/// Errors when the dimension and base reach a hundred and twenty-eight corners.
 pub fn members(code: Code, dimension: usize, base: usize, count: usize) -> Result<Vec<u128>> {
     let radix = corner_count(dimension, base)? as u128;
     let allowed: Vec<u128> = (0..radix).filter(|&i| (code.get() >> i) & 1 == 1).collect();
@@ -199,6 +225,10 @@ pub fn members(code: Code, dimension: usize, base: usize, count: usize) -> Resul
 /// use mrlyrs::math::bang::Code;
 /// assert_eq!(mrlyrs::math::press::count_below(Code::from(0b0111u64), 2, 2, 27).unwrap(), 18);
 /// ```
+///
+/// # Errors
+///
+/// Errors when the dimension and base reach a hundred and twenty-eight corners.
 pub fn count_below(code: Code, dimension: usize, base: usize, limit: u128) -> Result<u128> {
     let radix = corner_count(dimension, base)? as u128;
     let allowed: Vec<u128> = (0..radix).filter(|&i| (code.get() >> i) & 1 == 1).collect();
@@ -249,7 +279,18 @@ pub struct Press {
 }
 
 impl Press {
-    /// Builds an empty press over every design of the dimension and base, or an error past twenty corners, where the bucket table leaves a million rows.
+    /// Builds an empty press over every design of the dimension and base.
+    ///
+    /// ```
+    /// use mrlyrs::math::bang::Code;
+    /// let mut press = mrlyrs::math::press::Press::new(2, 2).unwrap();
+    /// press.add(6, 1);
+    /// assert_eq!((press.total(Code::from(6u64)), press.total(Code::from(1u64))), (1, 0));
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Errors past twenty corners, where the bucket table would leave a million rows.
     pub fn new(dimension: usize, base: usize) -> Result<Press> {
         let corners = corner_count(dimension, base)?;
         if corners > CORNERS {
@@ -301,6 +342,10 @@ fn layer_radix(layer: &MagicLayer) -> u128 {
 ///
 /// A cell is allowed when its coordinate residues form a filled corner, which is the
 /// tile the layer renders read as a digit alphabet.
+///
+/// # Errors
+///
+/// Errors when a layer's code is out of range.
 pub fn layer_table(layer: &MagicLayer) -> Result<Vec<bool>> {
     let corners = code_to_corners(
         Code::from(layer.design.code),
@@ -335,6 +380,10 @@ fn word_tables(layers: &[MagicLayer]) -> Result<Vec<Vec<bool>>> {
 }
 
 /// Counts the members of a magic word from its layer fills, without enumeration.
+///
+/// # Errors
+///
+/// Errors when a layer's code is out of range.
 pub fn word_count(layers: &[MagicLayer]) -> Result<u128> {
     let tables = word_tables(layers)?;
     Ok(tables
@@ -348,6 +397,10 @@ pub fn word_count(layers: &[MagicLayer]) -> Result<u128> {
 /// The number is read in the word's mixed radix, one digit per layer with the first
 /// layer most significant, and every digit must land on an allowed cell of its tile.
 /// A number past the word's domain is an error.
+///
+/// # Errors
+///
+/// Errors on a code out of range, or a number past the word's domain.
 pub fn word_member(layers: &[MagicLayer], number: u128) -> Result<bool> {
     let tables = word_tables(layers)?;
     let mut rest = number;
@@ -367,6 +420,10 @@ pub fn word_member(layers: &[MagicLayer], number: u128) -> Result<bool> {
 ///
 /// The member count is the product of the layer fills, so measure with `word_count`
 /// before pressing a word too rich to hold.
+///
+/// # Errors
+///
+/// Errors when a layer's code is out of range.
 pub fn word_members(layers: &[MagicLayer]) -> Result<Vec<u128>> {
     let tables = word_tables(layers)?;
     let alphabets: Vec<Vec<u128>> = tables
@@ -411,6 +468,10 @@ pub fn word_members(layers: &[MagicLayer]) -> Result<Vec<u128>> {
 /// The profile of a tile lists, per coordinate sum, its filled cells, and the profile
 /// of a Kronecker word is the product of its layer profiles with strides, so no cell
 /// of the composed design is ever enumerated.
+///
+/// # Errors
+///
+/// Errors when a layer's code is out of range.
 pub fn word_profile(layers: &[MagicLayer]) -> Result<Vec<u128>> {
     let tables = word_tables(layers)?;
     let dimension = layers[0].design.dim;
@@ -446,6 +507,10 @@ pub fn word_profile(layers: &[MagicLayer]) -> Result<Vec<u128>> {
 }
 
 /// Returns the diagonal slice profile of one design pressed to a fractal level.
+///
+/// # Errors
+///
+/// Errors below level one, or on a code out of range.
 pub fn profile(code: Code, dimension: usize, base: usize, level: usize) -> Result<Vec<u128>> {
     if level < 1 {
         return value_error("level must be at least 1.");

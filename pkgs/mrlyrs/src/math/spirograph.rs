@@ -55,6 +55,10 @@ pub struct Seats {
 }
 
 /// Seats one pencil per chosen site of a byte grid: `fill` the filled cells, `void` the empty ones, `both`, or `corners` the corners of the filled cells, each once. The tile is scaled so its circumradius is `reach` wheel radii, and `jitter` moves every seat by up to that fraction of a cell each way, seeded.
+///
+/// # Errors
+///
+/// Errors on a grid that is not width by height, a reach or jitter out of range, or a mode that is not fill, void, both or corners.
 pub fn pencils(
     types: &[u8],
     width: usize,
@@ -254,6 +258,10 @@ pub struct Track {
 }
 
 /// Lays a track: `line` a straight line under the wheel for `laps` turns; `in` and `out` a circle of radius `ring` with the wheel inside or outside, closing after the reduced denominator of `ring` over `wheel` orbits; `polyin` and `polyout` a regular polygon of `sides` sides and circumradius `ring` for `laps` laps.
+///
+/// # Errors
+///
+/// Errors on a radius or lap count out of range, a wheel that does not fit its ring, or a kind that is not line, in, out, polyin or polyout.
 pub fn track(kind: &str, ring: usize, wheel: usize, sides: usize, laps: usize) -> Result<Track> {
     if !(1..=RADIUS_CAP).contains(&wheel) || !(1..=RADIUS_CAP).contains(&ring) {
         return value_error(format!(
@@ -420,6 +428,10 @@ pub fn point(track: &Track, pencil: &Pencil, s: f64) -> (f64, f64) {
 }
 
 /// Traces every pencil along the whole track at `samples` evenly spaced path lengths, first and last included: pencil by pencil, sample by sample, x then y.
+///
+/// # Errors
+///
+/// Errors under two samples, or past the point cap.
 pub fn trace(track: &Track, pencils: &[Pencil], samples: usize) -> Result<Vec<f32>> {
     if samples < 2 {
         return value_error("a trace needs at least two samples.");
@@ -577,6 +589,10 @@ pub fn signed_area(track: &Track, pencil: &Pencil) -> Option<f64> {
 }
 
 /// The disc a circle roulette sits in: the wheel's centre turns on a circle of radius `rho`, and a seat `d` from the wheel's centre puts the pencil at `|z|^2 = rho^2 + d^2 + 2 rho d cos(a t / b -+ arg p)`, whose phase runs over `a` full turns, so that curve lies in the closed annulus from `abs(rho - d)` to `rho + d` and attains both bounds. The whole roulette therefore never leaves the disc of radius `rho + max d` and enters no disc of radius under `min abs(rho - d)`, the least over the seats and not the outermost seat's own, since seats on both sides of `rho` each keep their own inner radius. Refuses a line or a polygon track, whose roulette need not close and has no wall.
+///
+/// # Errors
+///
+/// Errors on a line or a polygon track.
 pub fn disc(track: &Track, pencils: &[Pencil]) -> Result<Disc> {
     let ((x, y), rho) = ring(track)?;
     let reach = |p: &Pencil| track.wheel * p.x.hypot(p.y);
@@ -594,6 +610,10 @@ pub fn disc(track: &Track, pencils: &[Pencil]) -> Result<Disc> {
 }
 
 /// The shape between the walls of a circle roulette, on a raster of `side` by `side` pixels over the disc, row zero at the top and the ordinate falling down the rows. Every distinct curve under the coincidence law is drawn once as a polyline of at least `samples` points, and of enough points that consecutive points land in one pixel or in two of the eight that touch, so the polylines make a wall no four-connected flood crosses. One flood starts from every pixel of the raster's edge, the fluid poured from outside; one starts from the centre pixel, the fluid poured at the centre, and is empty when the centre is a wall or the outside already reached it; the shape is the rest of the disc, pockets included. `covered` is the shape's share of the disc's pixels, the wall's own pixels counted in and reported apart as `wall`, and `hole` is the centre flood's share. `winding` is the mean signed winding number of the disc's pixel centres, read off crossings of the same polylines by scanline and never off a flood, and `areas` is the closed form it converges to, the distinct curves' `signed_area` summed over the disc's area: the pair checks the polylines and the raster against Green's theorem and never the floods, which are guarded instead by the sample spacing of at most half a pixel, which makes the wall eight-connected and a four-connected flood unable to cross it. Every share carries a boundary error of the order of the polylines' length times the pixel side over the disc's area.
+///
+/// # Errors
+///
+/// Errors on a line or a polygon track, a raster side out of range, under two samples, or past the point cap.
 pub fn cover(
     track: &Track,
     pencils: &[Pencil],

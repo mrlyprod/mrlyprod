@@ -12,6 +12,17 @@ pub const PNG_MAGIC: [u8; 8] = [137, 80, 78, 71, 13, 10, 26, 10];
 ///
 /// Images of 256 colors or fewer are written as a palette png at the smallest bit depth that
 /// fits; everything else stays 8-bit rgba. Both forms read back through [`unpng`].
+///
+/// # Errors
+///
+/// Errs on a scale below one, a colors length that is not width by height, or a scaled side past 32 bits.
+///
+/// ```
+/// let bytes = mrlyrs::core::png(&[[255, 0, 0, 255], [0, 0, 255, 255]], 2, 1, 1)?;
+/// let (width, height, colors) = mrlyrs::core::unpng(&bytes)?;
+/// assert_eq!((width, height, colors[1]), (2, 1, [0, 0, 255, 255]));
+/// # Ok::<(), mrlyrs::Error>(())
+/// ```
 pub fn png(colors: &[[u8; 4]], width: usize, height: usize, scale: usize) -> Result<Vec<u8>> {
     if scale < 1 {
         return value_error("scale must be at least 1.");
@@ -127,9 +138,13 @@ fn indices(
     data
 }
 
-/// Decodes a png to its width, height, and rgba colors, or an error for a broken file.
+/// Decodes a png to its width, height, and rgba colors.
 ///
 /// Grayscale, rgb, palette and 16-bit files all come back as 8-bit rgba.
+///
+/// # Errors
+///
+/// Errs when the bytes are not a png the decoder can expand to rgba.
 pub fn unpng(bytes: &[u8]) -> Result<(usize, usize, Vec<[u8; 4]>)> {
     let mut decoder = Decoder::new(bytes);
     decoder.set_transformations(Transformations::normalize_to_color8());

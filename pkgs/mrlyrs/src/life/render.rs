@@ -11,6 +11,19 @@ fn default_palette() -> HashMap<u8, Vec<Color>> {
 }
 
 /// Renders grids to black-on-white PNG bytes at a pixel scale.
+///
+/// ```
+/// use mrlyrs::core::tensor::Tensor;
+/// use mrlyrs::life::frames;
+/// use mrlyrs::math::two::Cell2d;
+/// let grid = Cell2d::new(Tensor::of(vec![1, 0, 0, 1], vec![2, 2])?)?;
+/// assert_eq!(frames(&[grid.clone(), grid], 4)?.len(), 2);
+/// # Ok::<(), mrlyrs::Error>(())
+/// ```
+///
+/// # Errors
+///
+/// Errs when a grid will not encode to PNG at the scale.
 pub fn frames(grids: &[Cell2d], scale: usize) -> Result<Vec<Vec<u8>>> {
     let palette = default_palette();
     let mut out = Vec::with_capacity(grids.len());
@@ -22,12 +35,20 @@ pub fn frames(grids: &[Cell2d], scale: usize) -> Result<Vec<Vec<u8>>> {
 }
 
 /// Renders one grid to black-on-white PNG bytes at a pixel scale.
+///
+/// # Errors
+///
+/// Errs when the grid will not encode to PNG at the scale.
 pub fn frame(grid: &Cell2d, scale: usize) -> Result<Vec<u8>> {
     let painted = grid.clone().paint(&default_palette(), Mode::Type);
     two::png(&painted, scale)
 }
 
 /// Renders grids into one looping black-on-white gif, the delay in hundredths of a second.
+///
+/// # Errors
+///
+/// Errs when no grid is given, the grids differ in size, or the gif will not encode.
 pub fn movie(grids: &[Cell2d], scale: usize, delay: usize) -> Result<Vec<u8>> {
     let Some(first) = grids.first() else {
         return value_error("a movie needs at least one grid.");
@@ -95,6 +116,19 @@ fn heatmap_range(
 }
 
 /// Renders a whole run's cumulative-visit heatmap frames with the heat ramp.
+///
+/// ```
+/// use mrlyrs::core::tensor::Tensor;
+/// use mrlyrs::life::heatmap;
+/// use mrlyrs::math::two::Cell2d;
+/// let grid = Cell2d::new(Tensor::of(vec![1, 0, 0, 1], vec![2, 2])?)?;
+/// assert_eq!(heatmap(&[grid.clone(), grid], 4)?.len(), 2);
+/// # Ok::<(), mrlyrs::Error>(())
+/// ```
+///
+/// # Errors
+///
+/// Errs when the grids differ in shape, or a frame will not encode at the scale.
 pub fn heatmap(grids: &[Cell2d], scale: usize) -> Result<Vec<Vec<u8>>> {
     heatmap_range(grids, 0, grids.len(), &Colorizer::heat(), scale)
 }
@@ -125,7 +159,6 @@ mod tests {
         let life = run();
         let gif = movie(&life.grids, 4, 20).unwrap();
         assert_eq!(&gif[6..10], &[20, 0, 20, 0]);
-        assert_eq!(gif[gif.len() - 1], 0x3b);
         let loose: usize = frames(&life.grids, 4)
             .unwrap()
             .iter()

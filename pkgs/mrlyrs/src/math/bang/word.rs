@@ -96,6 +96,10 @@ fn pieces(tile: &Tensor) -> u128 {
 /// assert_eq!((gasket.fill, gasket.components), (3, 1));
 /// assert_eq!((gasket.touch_h, gasket.touch_v), (1, 1));
 /// ```
+///
+/// # Errors
+///
+/// Errors for a layer that is not a plane reading.
 pub fn letter(layer: &MagicLayer) -> Result<Letter> {
     if layer.design.dim != 2 {
         return value_error("a letter's run and contact counts are a plane reading.");
@@ -178,6 +182,10 @@ fn grow(state: &Counts, side: u128, read: &Letter) -> Option<Counts> {
 /// connected nor contact-free both splits and merges and is refused.
 ///
 /// The list stops at the last prefix whose counts fit a u128 rather than wrapping.
+///
+/// # Errors
+///
+/// Errors for a letter that neither connects nor stays contact-free.
 pub fn prefixes(layers: &[MagicLayer]) -> Result<Vec<Counts>> {
     let mut state = Counts {
         side: 1,
@@ -214,6 +222,10 @@ pub fn prefixes(layers: &[MagicLayer]) -> Result<Vec<Counts>> {
 /// assert_eq!(word::components(&[domino.clone(), diagonal.clone()]).unwrap(), 4);
 /// assert_eq!(word::components(&[diagonal, domino]).unwrap(), 2);
 /// ```
+///
+/// # Errors
+///
+/// Errors on an empty word, or when the component count passes a u128.
 pub fn components(layers: &[MagicLayer]) -> Result<u128> {
     let counts = prefixes(layers)?;
     if counts.len() < layers.len() {
@@ -228,6 +240,10 @@ pub fn components(layers: &[MagicLayer]) -> Result<u128> {
 // PRODUCTS
 
 /// Lists the filled cells of every letter, the product of which is the word's fill.
+///
+/// # Errors
+///
+/// Errors when a layer's code is out of range.
 pub fn fills(layers: &[MagicLayer]) -> Result<Vec<u128>> {
     layers
         .iter()
@@ -236,6 +252,10 @@ pub fn fills(layers: &[MagicLayer]) -> Result<Vec<u128>> {
 }
 
 /// Returns the side of a word, the product of its letter sides.
+///
+/// # Errors
+///
+/// Errors when the word's side passes a u128.
 pub fn side(layers: &[MagicLayer]) -> Result<u128> {
     let mut out = 1u128;
     for layer in layers {
@@ -248,6 +268,10 @@ pub fn side(layers: &[MagicLayer]) -> Result<u128> {
 }
 
 /// Returns the filled cells of a word, the product of its letter fills.
+///
+/// # Errors
+///
+/// Errors when the word's fill passes a u128.
 pub fn fill(layers: &[MagicLayer]) -> Result<u128> {
     let mut out = 1u128;
     for count in fills(layers)? {
@@ -268,6 +292,10 @@ pub fn fill(layers: &[MagicLayer]) -> Result<u128> {
 /// let two = word::dimension(&[carpet.clone(), carpet]).unwrap();
 /// assert!((two - 8f64.ln() / 3f64.ln()).abs() < 1e-12);
 /// ```
+///
+/// # Errors
+///
+/// Errors on an empty word, or one whose letters are all side one.
 pub fn dimension(layers: &[MagicLayer]) -> Result<f64> {
     if layers.is_empty() {
         return value_error("a word needs at least one letter.");
@@ -320,6 +348,10 @@ pub fn native(layers: &[MagicLayer]) -> bool {
 /// It reads `sum_c f_c log2 comp(A_c)`, the one linear functional exact on constant words,
 /// which on the plane alphabet at side two is `(f_6 + f_9) log 2`. It is a prediction and not
 /// a theorem: at interior frequency it is refuted on 78 of the 105 letter pairs and exact on 27.
+///
+/// # Errors
+///
+/// Errors on an empty word.
 pub fn constant_functional(layers: &[MagicLayer]) -> Result<f64> {
     if layers.is_empty() {
         return value_error("a word needs at least one letter.");
@@ -393,6 +425,10 @@ pub fn spell(schedule: Schedule, pair: (MagicLayer, MagicLayer), length: usize) 
 /// At interior letter frequency the two meet: the component exponent is order-blind and equals
 /// the fill exponent on every one of the 105 letter pairs but the domino against the full tile.
 /// The list stops at the last prefix whose counts fit a u128.
+///
+/// # Errors
+///
+/// Errors for a letter that neither connects nor stays contact-free.
 pub fn rates(layers: &[MagicLayer]) -> Result<Vec<(f64, f64)>> {
     Ok(prefixes(layers)?
         .iter()
@@ -422,6 +458,10 @@ pub fn rates(layers: &[MagicLayer]) -> Result<Vec<(f64, f64)>> {
 /// let one = word::dimension(&word::staircase(1).unwrap()).unwrap();
 /// assert!((one - 8f64.ln() / 3f64.ln()).abs() < 1e-9);
 /// ```
+///
+/// # Errors
+///
+/// Errors on an empty block list.
 pub fn staircase(depth: usize) -> Result<Vec<MagicLayer>> {
     if depth < 1 {
         return value_error("a staircase needs at least one block.");

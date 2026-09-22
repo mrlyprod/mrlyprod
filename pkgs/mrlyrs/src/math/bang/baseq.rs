@@ -93,7 +93,11 @@ fn cycles(
     count
 }
 
-/// Counts base-q designs distinct under symmetry, or an error when the Burnside average breaks.
+/// Counts base-q designs distinct under symmetry.
+///
+/// # Errors
+///
+/// Errors below base one or dimension one, or when the Burnside average is not whole.
 pub fn distinct_designs(base: usize, dimension: usize) -> Result<u128> {
     if base < 1 {
         return value_error("base must be at least 1.");
@@ -161,7 +165,11 @@ pub fn orbit(group: &[Vec<usize>], code: Code) -> BTreeSet<Code> {
     group.iter().map(|element| carry(element, code)).collect()
 }
 
-/// Returns the least code of the design's orbit, or an error for an empty group.
+/// Returns the least code of the design's orbit.
+///
+/// # Errors
+///
+/// Errors on an empty group.
 pub fn canonical(group: &[Vec<usize>], code: Code) -> Result<Code> {
     match orbit(group, code).into_iter().next() {
         Some(least) => Ok(least),
@@ -169,11 +177,15 @@ pub fn canonical(group: &[Vec<usize>], code: Code) -> Result<Code> {
     }
 }
 
-/// Walks every code of a base and dimension and returns each orbit's least code with the orbit's size, or an error past the walk limit.
+/// Walks every code of a base and dimension and returns each orbit's least code with the orbit's size.
 ///
 /// ```
 /// assert_eq!(mrlyrs::math::bang::baseq::representatives(3, 1).unwrap().len(), 4);
 /// ```
+///
+/// # Errors
+///
+/// Errors when the cell count passes the walk limit.
 pub fn representatives(base: usize, dimension: usize) -> Result<Vec<(Code, usize)>> {
     let cells = base.pow(dimension as u32);
     if cells > WALK_LIMIT {
@@ -198,7 +210,11 @@ pub fn representatives(base: usize, dimension: usize) -> Result<Vec<(Code, usize
     Ok(out)
 }
 
-/// Returns the raw design count before symmetry, two to the number of cells, or an error past a u128.
+/// Returns the raw design count before symmetry, two to the number of cells.
+///
+/// # Errors
+///
+/// Errors when the cell count reaches the hundred and twenty-eight bits a u128 holds.
 pub fn total_designs(base: usize, dimension: usize) -> Result<u128> {
     let cells = base.pow(dimension as u32);
     if cells >= 128 {
@@ -210,6 +226,10 @@ pub fn total_designs(base: usize, dimension: usize) -> Result<u128> {
 }
 
 /// Returns the distinct-design counts for dimensions 1 through max_dimension.
+///
+/// # Errors
+///
+/// Errors below base one, or when a Burnside average is not whole.
 pub fn sequence(base: usize, max_dimension: usize) -> Result<Vec<u128>> {
     (1..=max_dimension)
         .map(|d| distinct_designs(base, d))
@@ -217,6 +237,10 @@ pub fn sequence(base: usize, max_dimension: usize) -> Result<Vec<u128>> {
 }
 
 /// Returns the distinct one-dimensional design counts for bases 1 through max_base.
+///
+/// # Errors
+///
+/// Errors when a Burnside average is not whole.
 pub fn bracelets(max_base: usize) -> Result<Vec<u128>> {
     (1..=max_base).map(|q| distinct_designs(q, 1)).collect()
 }
@@ -256,7 +280,11 @@ pub fn fill_from_corners(filled: &[Vec<u8>], number: usize, dimension: usize) ->
         .sum()
 }
 
-/// Returns the collapsed fill count at an even side number, or an error at odd.
+/// Returns the collapsed fill count at an even side number.
+///
+/// # Errors
+///
+/// Errors at an odd side number.
 pub fn even_fill_is_balanced(number: usize, dimension: usize, popcount: u128) -> Result<u128> {
     if !number.is_multiple_of(2) {
         return value_error("the duality collapse holds only at even number.");
@@ -291,7 +319,7 @@ mod tests {
     #[test]
     fn the_walk_agrees_with_burnside_and_the_base_two_universe() {
         use super::super::catalog::universe_codes;
-        for (base, dimension) in [(3usize, 1usize), (3, 2), (4, 1), (4, 2), (5, 1)] {
+        for (base, dimension) in [(3usize, 1usize), (3, 2), (4, 1), (5, 1)] {
             let walk = representatives(base, dimension).unwrap();
             assert_eq!(
                 walk.len() as u128,
@@ -301,7 +329,7 @@ mod tests {
             let total: usize = walk.iter().map(|&(_, size)| size).sum();
             assert_eq!(total, 1 << base.pow(dimension as u32));
         }
-        for dimension in 1..=4 {
+        for dimension in 1..=3 {
             let codes: Vec<u128> = representatives(2, dimension)
                 .unwrap()
                 .into_iter()
@@ -310,8 +338,21 @@ mod tests {
             assert_eq!(codes, universe_codes(dimension).unwrap());
         }
         assert_eq!(representatives(3, 2).unwrap().len(), 26);
-        assert_eq!(representatives(4, 2).unwrap().len(), 805);
+        assert_eq!(distinct_designs(4, 2).unwrap(), 805);
         assert!(representatives(3, 3).is_err());
+    }
+
+    #[test]
+    #[ignore = "two walks of sixteen cells, 65536 codes each, 90 s; run it in release"]
+    fn the_sixteen_cell_walks_agree_with_burnside_and_the_universe() {
+        use super::super::catalog::universe_codes;
+        let codes: Vec<u128> = representatives(2, 4)
+            .unwrap()
+            .into_iter()
+            .map(|(code, _)| code.get())
+            .collect();
+        assert_eq!(codes, universe_codes(4).unwrap());
+        assert_eq!(representatives(4, 2).unwrap().len(), 805);
     }
     #[test]
     fn bracelet_sequence_is_a000029() {

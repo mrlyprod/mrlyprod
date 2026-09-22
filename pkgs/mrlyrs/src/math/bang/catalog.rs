@@ -6,6 +6,10 @@ use std::collections::BTreeMap;
 use std::sync::{Mutex, OnceLock};
 
 /// Returns the canonical design codes of a dimension, computed once and cached for the process.
+///
+/// # Errors
+///
+/// Errors outside dimensions one to four.
 pub fn universe_codes(dimension: usize) -> Result<&'static [u128]> {
     static CACHE: OnceLock<Mutex<BTreeMap<usize, &'static [u128]>>> = OnceLock::new();
     let cache = CACHE.get_or_init(|| Mutex::new(BTreeMap::new()));
@@ -27,6 +31,10 @@ pub fn universe_codes(dimension: usize) -> Result<&'static [u128]> {
 }
 
 /// Builds the tile sources a catalog names at a dimension.
+///
+/// # Errors
+///
+/// Errors outside dimensions one to four.
 pub fn sources(catalog: &Catalog, dimension: usize) -> Result<Vec<Source>> {
     Ok(match catalog {
         Catalog::Classics => classics(dimension)

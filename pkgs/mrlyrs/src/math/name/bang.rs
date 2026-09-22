@@ -77,7 +77,11 @@ impl Bang {
             twist: None,
         }
     }
-    /// Returns the number of digits the code addresses, or an error past the u128 code space.
+    /// Returns the number of digits the code addresses.
+    ///
+    /// # Errors
+    ///
+    /// Errors below dimension one, below base two, or past the u128 code space.
     pub fn cells(&self) -> Result<u32> {
         if self.dim < 1 {
             return value_error("dim must be at least 1.");

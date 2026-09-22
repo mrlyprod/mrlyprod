@@ -155,6 +155,10 @@ pub fn echo_series(values: &[u64], log_x: &[f64], exponent: f64) -> Vec<f64> {
 }
 
 /// Returns the frequency axis and the power spectrum of the series: the mean removed, a Hann window laid on, a real transform taken, and bin j read as the ordinate 2 pi j over the log range.
+///
+/// # Errors
+///
+/// Errs when the log grid holds fewer points than the series.
 pub fn spectrum(log_x: &[f64], series: &[f64]) -> Result<(Vec<f64>, Vec<f64>)> {
     let n = series.len();
     if n < 2 || !n.is_power_of_two() {
@@ -216,7 +220,11 @@ pub fn score(power: &[f64], width: usize) -> Vec<f64> {
         .collect()
 }
 
-/// Returns the bins inside the band that rise above both neighbours and clear the score threshold, strongest first, or an error when the axis is shorter than the score.
+/// Returns the bins inside the band that rise above both neighbours and clear the score threshold, strongest first.
+///
+/// # Errors
+///
+/// Errs when the axis holds fewer bins than the score.
 pub fn peaks(gamma: &[f64], score: &[f64], band: (f64, f64), threshold: f64) -> Result<Vec<usize>> {
     if gamma.len() < score.len() {
         return shape_error(format!(

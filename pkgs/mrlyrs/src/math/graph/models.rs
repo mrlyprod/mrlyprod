@@ -41,7 +41,11 @@ impl Network {
             branches: Vec::new(),
         }
     }
-    /// Appends a node at the position and returns its index, or an error on a dimension mismatch.
+    /// Appends a node at the position and returns its index.
+    ///
+    /// # Errors
+    ///
+    /// Errors on a dimension mismatch.
     pub fn add_node(&mut self, position: Vec<f64>) -> Result<usize> {
         if position.len() != self.dim {
             return value_error(format!(
@@ -54,7 +58,11 @@ impl Network {
         self.nodes.push(Node { position, index });
         Ok(index)
     }
-    /// Appends a branch between two node indices, or an error when either is out of range.
+    /// Appends a branch between two node indices.
+    ///
+    /// # Errors
+    ///
+    /// Errors when either index is out of range.
     pub fn add_branch(&mut self, parent: usize, child: usize, radius: f64) -> Result<()> {
         let n = self.nodes.len();
         if parent >= n || child >= n {
@@ -67,7 +75,11 @@ impl Network {
         });
         Ok(())
     }
-    /// Returns each node's branch count, indexed like the node list, or an error when a branch names a node the network does not hold.
+    /// Returns each node's branch count, indexed like the node list.
+    ///
+    /// # Errors
+    ///
+    /// Errors when a branch names a node the network does not hold.
     pub fn degree(&self) -> Result<Vec<usize>> {
         let n = self.nodes.len();
         let mut deg = vec![0; n];
@@ -83,7 +95,11 @@ impl Network {
         }
         Ok(deg)
     }
-    /// Returns the undirected neighbor lists of every node, or an error when a branch names a node the network does not hold.
+    /// Returns the undirected neighbor lists of every node.
+    ///
+    /// # Errors
+    ///
+    /// Errors when a branch names a node the network does not hold.
     pub fn adjacency(&self) -> Result<HashMap<usize, Vec<usize>>> {
         let n = self.nodes.len();
         let mut adj: HashMap<usize, Vec<usize>> = (0..n).map(|i| (i, Vec::new())).collect();

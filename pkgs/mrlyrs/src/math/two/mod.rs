@@ -1,3 +1,8 @@
+//! The flat-cell pipeline.
+//!
+//! The shared cell pipeline pinned to two dimensions: coded and carpet cells, their censuses,
+//! their payloads, their text and PNG renderings and their JSON.
+
 /// The fill, void, perimeter, corner, edge and Euler counts of a flat cell.
 pub mod census;
 /// The builders of coded, corner, noise and carpet cells.
@@ -28,7 +33,6 @@ pub use serializer::{from_json, to_json};
 mod tests {
     use super::*;
     use crate::core::colors::{BLACK, WHITE};
-    use crate::math::graph::census;
     #[test]
     fn default_paint_is_black_on_white() {
         let c = paint(designs::carpet(3, 1).unwrap(), None, None);
@@ -41,16 +45,6 @@ mod tests {
             .count();
         assert_eq!(blacks as u64, designs::carpet(3, 1).unwrap().types().sum());
     }
-    #[test]
-    fn carpet_graphs() {
-        let cell = designs::carpet(3, 1).unwrap();
-        let core = core_graph(&cell).unwrap();
-        assert_eq!(core.nodes.len(), 8);
-        assert_eq!(core.branches.len(), 8);
-        assert_eq!(census(&core).unwrap().components, 1);
-        assert_eq!(tunnel_graph(&cell).unwrap().nodes.len(), 1);
-        assert!(edge_graph(&cell).unwrap().nodes.len() > 8);
-    }
 }
 
 #[cfg(test)]
@@ -61,6 +55,27 @@ mod spectra {
     use crate::math::spectrum::{clusters, laplacian_spectrum, multiplicity};
 
     #[test]
+    #[ignore = "level six is 729 nodes through the cubic eigensolver, 2.8 s; run it in release"]
+    fn the_deep_sierpinski_spectrum_holds_its_degeneracy_row() {
+        let root = 30f64.sqrt() / 6.0;
+        let cell = designs::create(Code(7), 2, 6, 0, 2).unwrap();
+        let graph = core_graph(&cell).unwrap();
+        assert_eq!(graph.nodes.len(), 729);
+        let spectrum = laplacian_spectrum(&graph, true).unwrap();
+        let groups = clusters(&spectrum, 1e-9).unwrap();
+        let repeated: usize = groups.iter().filter(|g| g.1 > 1).map(|g| g.1).sum();
+        assert_eq!(groups.len(), 289);
+        assert_eq!(groups.iter().filter(|g| g.1 > 1).count(), 67);
+        assert_eq!(
+            (repeated as f64 / 729.0 * 10000.0).round() / 10000.0,
+            0.6955
+        );
+        assert_eq!(multiplicity(&spectrum, 1.0, 1e-12), 243);
+        assert_eq!(multiplicity(&spectrum, 1.0 - root, 1e-12), 28);
+        assert_eq!(multiplicity(&spectrum, 1.0 + root, 1e-12), 28);
+    }
+
+    #[test]
     fn the_sierpinski_normalised_spectrum_holds_its_degeneracy_table() {
         let root = 30f64.sqrt() / 6.0;
         let rows = [
@@ -69,7 +84,6 @@ mod spectra {
             (3, 27, 17, 3, 0.4815, 9, 2),
             (4, 81, 43, 9, 0.5802, 27, 4),
             (5, 243, 111, 25, 0.6461, 81, 10),
-            (6, 729, 289, 67, 0.6955, 243, 28),
         ];
         for (level, nodes, distinct, classes, fraction, one, pair) in rows {
             let cell = designs::create(Code(7), 2, level, 0, 2).unwrap();

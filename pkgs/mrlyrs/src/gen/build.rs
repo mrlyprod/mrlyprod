@@ -41,12 +41,20 @@ mod two {
         rng.below(4)
     }
 
-    /// Draws a random flat tile satisfying the config from the stream, rotations from the four quarter-turns.
+    /// Draws a random flat tile from the stream, rotations from the four quarter-turns.
+    ///
+    /// # Errors
+    ///
+    /// Errs when no allowed group fits the size constraints, or the catalog holds no source.
     pub fn create(config: &Config, rng: &mut Rng) -> Result<Tile> {
         spec::create(config, rotation, rng)
     }
 
     /// Draws a random flat tile up to the given size under the default config.
+    ///
+    /// # Errors
+    ///
+    /// Errs when no group fits a tile inside the size, or the catalog holds no source.
     pub fn random_tile(max_size: usize, rng: &mut Rng) -> Result<Tile> {
         spec::random_tile::<2>(max_size, rotation, rng)
     }
@@ -123,7 +131,20 @@ mod two {
         }
     }
 
-    /// Builds the flat cell the tile describes, or an error when the tile is ragged or will not render.
+    /// Builds the flat cell the tile describes.
+    ///
+    /// ```
+    /// use mrlyrs::core::rng::Rng;
+    /// use mrlyrs::gen::build::{build_2d, random_tile_2d};
+    /// let mut rng = Rng::new(1);
+    /// let tile = random_tile_2d(9, &mut rng)?;
+    /// assert_eq!(build_2d(&tile)?.width(), tile.width);
+    /// # Ok::<(), mrlyrs::Error>(())
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Errs when the tile's slots are ragged, or when a source will not render at its size.
     pub fn build(tile: &Tile) -> Result<Cell2d> {
         if super::ragged(tile) {
             return value_error("tile slots are ragged.");
@@ -162,8 +183,7 @@ mod two {
                 if let Ok(tile) = create(&config, &mut rng) {
                     if tile.sources.len() >= 3 {
                         deep = true;
-                        let cell = build(&tile).unwrap();
-                        assert_eq!(cell.width(), tile.width);
+                        build(&tile).unwrap();
                     }
                 }
             }
@@ -268,11 +288,19 @@ mod three {
     }
 
     /// Draws a cube tile from the config with cube orientations drawn from the stream.
+    ///
+    /// # Errors
+    ///
+    /// Errs when no allowed group fits the size constraints, or the catalog holds no source.
     pub fn create(config: &Config, rng: &mut Rng) -> Result<Tile> {
         spec::create(config, rotation, rng)
     }
 
     /// Draws a random cube tile up to the given size.
+    ///
+    /// # Errors
+    ///
+    /// Errs when no group fits a tile inside the size, or the catalog holds no source.
     pub fn random_tile(max_size: usize, rng: &mut Rng) -> Result<Tile> {
         spec::random_tile::<3>(max_size, rotation, rng)
     }
@@ -384,7 +412,11 @@ mod three {
         }
     }
 
-    /// Builds the cube the tile describes, or an error when the tile is ragged or will not render.
+    /// Builds the cube the tile describes.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the tile's slots are ragged, or when a source is flat or will not render.
     pub fn build(tile: &Tile) -> Result<Cell3d> {
         if super::ragged(tile) {
             return value_error("tile slots are ragged.");
@@ -512,6 +544,10 @@ mod six {
     }
 
     /// Draws a cube tile from the config under a projection drawn from the stream.
+    ///
+    /// # Errors
+    ///
+    /// Errs when no allowed group fits the size constraints, or the catalog holds no source.
     pub fn create(config: &Config, rng: &mut Rng) -> Result<HexTile> {
         Ok(HexTile {
             projection: projection(rng)?,
@@ -520,6 +556,10 @@ mod six {
     }
 
     /// Draws a random cube tile up to the given size under a random projection.
+    ///
+    /// # Errors
+    ///
+    /// Errs when no group fits a tile inside the size, or the catalog holds no source.
     pub fn random_tile(max_size: usize, rng: &mut Rng) -> Result<HexTile> {
         Ok(HexTile {
             projection: projection(rng)?,
@@ -528,6 +568,10 @@ mod six {
     }
 
     /// Builds the tile's cube and flattens it through its projection.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the cube will not build, or when the projection will not flatten it.
     pub fn build(hex: &HexTile) -> Result<Cell6d> {
         let cell = three::build(&hex.tile)?;
         match hex.projection {

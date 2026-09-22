@@ -13,6 +13,13 @@ pub fn reach(size: usize) -> f64 {
 
 /// The arcs of the circle of the radius about the raster's centre: each as its start angle, end angle and the value of the one cell it lies in, zero outside.
 ///
+/// ```
+/// let arcs = mrlyrs::math::spin::arcs(&[1.0, 1.0, 1.0, 1.0], 2, 0.5).unwrap();
+/// assert!(arcs.iter().all(|arc| arc.2 == 1.0));
+/// ```
+///
+/// # Errors
+///
 /// Errors when the sample count is not the side squared.
 pub fn arcs(data: &[f32], size: usize, radius: f64) -> Result<Vec<(f64, f64, f32)>> {
     if data.len() != size * size {
@@ -70,6 +77,10 @@ pub fn arcs(data: &[f32], size: usize, radius: f64) -> Result<Vec<(f64, f64, f32
 /// assert!((mrlyrs::math::spin::ring(&solid, 4, 1.0).unwrap() - 1.0).abs() < 1e-12);
 /// assert!(mrlyrs::math::spin::ring(&solid, 4, 3.0).unwrap().abs() < 1e-12);
 /// ```
+///
+/// # Errors
+///
+/// Errors when the sample count is not the side squared.
 pub fn ring(data: &[f32], size: usize, radius: f64) -> Result<f64> {
     Ok(arcs(data, size, radius)?
         .iter()
@@ -79,6 +90,10 @@ pub fn ring(data: &[f32], size: usize, radius: f64) -> Result<f64> {
 }
 
 /// The circular-harmonic power of a raster: for every order `m` up to the last, the energy `sum |c_m(r)|^2 2 pi r dr` of its `m`-th harmonic over rings radii, each ring's coefficient exact from its arcs.
+///
+/// # Errors
+///
+/// Errors when the sample count is not the side squared.
 pub fn harmonics(data: &[f32], size: usize, rings: usize, orders: usize) -> Result<Vec<f64>> {
     let rings = rings.max(2);
     let far = reach(size);
@@ -178,6 +193,10 @@ impl Blend {
 }
 
 /// Stacks a raster radially: copies turned by multiples of the step, in turns, about the centre and merged by the blend, on an output raster of the side whose inscribed circle is the source's corner circle, every pixel the mean of samples by samples points.
+///
+/// # Errors
+///
+/// Errors when the sample count is not the side squared.
 pub fn radial(
     data: &[f32],
     size: usize,
@@ -234,6 +253,10 @@ pub fn radial(
 }
 
 /// The ring profile: the circle means at steps radii spaced evenly from the centre to the corner circle.
+///
+/// # Errors
+///
+/// Errors when the sample count is not the side squared.
 pub fn profile(data: &[f32], size: usize, steps: usize) -> Result<Vec<f32>> {
     let steps = steps.max(2);
     let far = reach(size);

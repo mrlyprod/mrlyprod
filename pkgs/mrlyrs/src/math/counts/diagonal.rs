@@ -34,6 +34,10 @@ fn histogram(tile: &Tensor) -> BTreeMap<usize, u128> {
 /// let counts = mrlyrs::math::counts::profile_of_tile(&gasket, 4).unwrap();
 /// assert_eq!(counts[15..=30].iter().copied().collect::<Vec<u128>>(), vec![81u128; 16]);
 /// ```
+///
+/// # Errors
+///
+/// Errors for a tile that is not a hypercube, a level below one, a side past the widest, or counts past a u128.
 pub fn profile_of_tile(tile: &Tensor, level: u32) -> Result<Vec<u128>> {
     let dimension = tile.shape.len();
     let number = tile.shape.first().copied().unwrap_or(0);

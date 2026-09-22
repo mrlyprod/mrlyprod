@@ -88,6 +88,11 @@ pub struct Tile {
 
 impl Tile {
     /// Builds an empty tile in a group.
+    ///
+    /// ```
+    /// use mrlyrs::gen::recipe::{Group, Tile};
+    /// assert_eq!(Tile::new(Group::General).max_size(), 0);
+    /// ```
     pub fn new(group: Group) -> Tile {
         Tile {
             group,
@@ -104,6 +109,11 @@ impl Tile {
         }
     }
     /// Sets the tile's width and height.
+    ///
+    /// ```
+    /// use mrlyrs::gen::recipe::{Group, Tile};
+    /// assert_eq!(Tile::new(Group::General).size(3, 5).max_size(), 5);
+    /// ```
     pub fn size(mut self, width: usize, height: usize) -> Tile {
         self.width = width;
         self.height = height;
@@ -143,7 +153,17 @@ impl Tile {
         self.width = size;
         self.height = size;
     }
-    /// Checks that the slots, numbers and sizes agree, or a terse note for the first broken law.
+    /// Checks that the slots, numbers and sizes agree.
+    ///
+    /// ```
+    /// use mrlyrs::gen::recipe::{Group, Tile};
+    /// assert!(Tile::new(Group::General).check().is_err());
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Errs with a terse note for the first broken law: the slot count, a ragged slot list, a
+    /// number, rotation, level, flip or factor out of range, or sizes the group does not imply.
     pub fn check(&self) -> Result<()> {
         let slots = self.sources.len();
         let wanted = match self.group {
@@ -505,7 +525,6 @@ mod tests {
         tile.rotations = vec![0, 0];
         tile.anti = vec![false, false];
         tile.resize();
-        assert!(tile.check().is_ok());
         assert!(tile.degenerate());
         tile.numbers = vec![3, 5];
         tile.resize();

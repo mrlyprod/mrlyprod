@@ -180,7 +180,11 @@ pub fn exposure_recurrence(tile: &Tensor) -> Vec<i128> {
     Exposure::of_tile(tile).recurrence()
 }
 
-/// Returns the exposed face count of the code's fractal in any dimension at the given level, folded from its corners, or an error past a u128.
+/// Returns the exposed face count of the code's fractal in any dimension at the given level, folded from its corners.
+///
+/// # Errors
+///
+/// Errors when the code is out of range, or the exposure passes a hundred and twenty-eight bits.
 pub fn exposure(
     code: Code,
     number: usize,
@@ -196,6 +200,10 @@ pub fn exposure(
 }
 
 /// Returns the exposed face count of the code's 3D fractal at the given level.
+///
+/// # Errors
+///
+/// Errors when the code is out of range, or the exposure passes a hundred and twenty-eight bits.
 pub fn surface(code: Code, number: usize, level: u32, base: usize) -> Result<u128> {
     exposure(code, number, 3, level, base)
 }
@@ -208,7 +216,7 @@ mod tests {
     fn prediction_matches_census_on_every_cube_code() {
         for bits in 0..256u128 {
             let code = Code(bits);
-            for level in 1..4u32 {
+            for level in 1..3u32 {
                 let direct = factory::create(code, 3, 3, 2, level as usize).unwrap();
                 assert_eq!(
                     surface(code, 3, level, 2).unwrap(),
@@ -216,6 +224,19 @@ mod tests {
                     "code={code} l={level}"
                 );
             }
+        }
+    }
+    #[test]
+    #[ignore = "two hundred and fifty-six level-three cubes, 2 s; run it in release"]
+    fn prediction_matches_census_on_every_cube_code_at_the_third_level() {
+        for bits in 0..256u128 {
+            let code = Code(bits);
+            let direct = factory::create(code, 3, 3, 2, 3).unwrap();
+            assert_eq!(
+                surface(code, 3, 3, 2).unwrap(),
+                direct.exposed(),
+                "code={code}"
+            );
         }
     }
     #[test]

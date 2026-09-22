@@ -40,11 +40,19 @@ pub fn orientations() -> &'static Vec<(usize, usize, usize)> {
 }
 
 /// Merges the cells into one cube arranged width by height by depth.
+///
+/// # Errors
+///
+/// Errors when the cells differ in shape or do not fill the arrangement.
 pub fn merge(cells: &[Cell3d], width: usize, height: usize, depth: usize) -> Result<Cell3d> {
     geometry::merge_reps(cells, &[height, width, depth])
 }
 
 /// Orients a copy of the cell by each mask value and merges them in the mask's shape.
+///
+/// # Errors
+///
+/// Errors when the mask is not 3d, or holds a value past twenty-three.
 pub fn special(mask: &Tensor, cell: &Cell3d) -> Result<Cell3d> {
     if mask.shape.len() != 3 {
         return value_error("special mask must be 3d.");
@@ -85,6 +93,10 @@ fn slice_map(cube: &[usize], axis: usize, index: usize) -> (Vec<usize>, Vec<usiz
 /// let front = mrlyrs::math::three::slice(&sponge, 2, 0).unwrap();
 /// assert_eq!(front, mrlyrs::math::two::carpet(3, 2).unwrap());
 /// ```
+///
+/// # Errors
+///
+/// Errors when the axis or the index is past the cube.
 pub fn slice(cell: &Cell3d, axis: usize, index: usize) -> Result<Cell2d> {
     if axis > 2 {
         return value_error("slice axis is past the cube's rank.");
@@ -128,6 +140,10 @@ fn lift_map(shape: &[usize], axis: usize, depth: usize) -> (Vec<usize>, Vec<usiz
 /// assert_eq!(cube.depth(), 4);
 /// assert_eq!(mrlyrs::math::three::slice(&cube, 2, 3).unwrap(), flat);
 /// ```
+///
+/// # Errors
+///
+/// Errors when the axis is not 0, 1 or 2, or the depth is below one.
 pub fn extrude(cell: &Cell2d, axis: usize, depth: usize) -> Result<Cell3d> {
     if axis > 2 {
         return value_error("extrude axis must be 0, 1 or 2.");

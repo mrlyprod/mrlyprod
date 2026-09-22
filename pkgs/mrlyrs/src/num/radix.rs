@@ -27,7 +27,11 @@ pub struct Base {
 }
 
 impl Base {
-    /// Fixes a base in a ring, or an error below norm two.
+    /// Fixes a base in a ring.
+    ///
+    /// # Errors
+    ///
+    /// Errs below norm two.
     pub fn new(ring: Ring, value: (i64, i64)) -> Result<Base> {
         let norm = ring.norm(value.0, value.1);
         if norm < 2 {
@@ -68,6 +72,10 @@ impl Base {
     /// use mrlyrs::num::radix::Base;
     /// assert_eq!(Base::new(Ring::Gaussian, (1, 1)).unwrap().residues().unwrap(), vec![(0, 0), (1, 0)]);
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Errs when the greedy sweep finds fewer classes than the norm.
     pub fn residues(self) -> Result<Vec<(i64, i64)>> {
         let q = self.norm();
         let reach = (2 * q).isqrt() as i64 + 1;
@@ -104,7 +112,11 @@ impl Base {
         }
         Ok(out)
     }
-    /// Returns the index in the canonical residue system of the class of a point, or an error when the system is incomplete.
+    /// Returns the index in the canonical residue system of the class of a point.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the residue system is short, or when the point lies in no class of it.
     pub fn class(self, z: (i64, i64)) -> Result<usize> {
         match self.residues()?.iter().position(|&w| self.congruent(z, w)) {
             Some(index) => Ok(index),
@@ -123,6 +135,10 @@ impl Base {
     /// Multiplying every digit by a unit `v` carries the attractor of a design to `v` times that attractor over the same base, so the unit group acts; conjugation carries the base to its conjugate and joins the group exactly when that is an associate.
     ///
     /// The list is the Burnside multiset, one entry per abstract group element, and not the order of the permutation group it induces: the action need not be faithful, so entries repeat, and the acting image is the deduplicated list.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the residue system is short, or when an image lies in no class of it.
     pub fn group(self) -> Result<Vec<Vec<usize>>> {
         let residues = self.residues()?;
         let mirror = self.mirrored();
@@ -165,9 +181,13 @@ pub struct Radix {
 }
 
 impl Radix {
-    /// Builds a design from a base, a digit list and a unit twist per digit, or an error on a length mismatch, a twist whose norm is not one, or two digits congruent modulo the base.
+    /// Builds a design from a base, a digit list and a unit twist per digit.
     ///
     /// Pairwise incongruent digits are the hypothesis of the untwisted fill law: they are what recovers the last digit from the word read modulo the base, so a repeated class is refused here rather than silently gluing words.
+    ///
+    /// # Errors
+    ///
+    /// Errs on a length mismatch, on a twist whose norm is not one, and on two digits congruent modulo the base.
     pub fn new(base: Base, digits: Vec<(i64, i64)>, twists: Vec<(i64, i64)>) -> Result<Radix> {
         if digits.len() != twists.len() {
             return shape_error(format!(
@@ -197,7 +217,11 @@ impl Radix {
             twists,
         })
     }
-    /// Builds an untwisted design from a code over the canonical residue system, bit `i` of the code selecting residue `i`, or an error when the class count or the code overruns a u128.
+    /// Builds an untwisted design from a code over the canonical residue system, bit `i` of the code selecting residue `i`.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the class count passes 128, and when the code runs past the classes.
     pub fn from_code(base: Base, code: u128) -> Result<Radix> {
         let residues = base.residues()?;
         if residues.len() >= 128 {
@@ -221,7 +245,11 @@ impl Radix {
         let twists = vec![(1, 0); digits.len()];
         Radix::new(base, digits, twists)
     }
-    /// Returns the design with the twists named by their index in the unit list, the units in turning order from one, or an error at an index past the unit list.
+    /// Returns the design with the twists named by their index in the unit list, the units in turning order from one.
+    ///
+    /// # Errors
+    ///
+    /// Errs at a twist index past the unit list.
     pub fn with_twists(self, units: &[usize]) -> Result<Radix> {
         let list = self.base.ring().associates(1, 0);
         let mut twists = Vec::with_capacity(units.len());
@@ -259,6 +287,10 @@ impl Radix {
         self.digits.len()
     }
     /// Returns the code of the classes the digits occupy, which names the design only when the digits are the canonical representatives.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the residue system is short, or when a digit lies in no class of it.
     pub fn code(&self) -> Result<u128> {
         let mut out = 0u128;
         for &d in &self.digits {
@@ -267,6 +299,10 @@ impl Radix {
         Ok(out)
     }
     /// Returns whether every digit is the canonical representative of its class.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the residue system is short.
     pub fn canonical(&self) -> Result<bool> {
         let residues = self.base.residues()?;
         Ok(self.digits.iter().all(|d| residues.contains(d)))
@@ -322,6 +358,10 @@ impl Radix {
 /// Returns the Koch curve as a radix design: base `3` on the hexagonal lattice, digits `0, 1, 2 + omega, 2`, twists `1, e^(i pi/3), e^(-i pi/3), 1`.
 ///
 /// The digits are not the canonical residues: `2` and `-1` share a class and the canonical system holds `-1`, so the code alone does not name this design.
+///
+/// # Errors
+///
+/// The fixed design is in range, so this never errs.
 pub fn koch() -> Result<Radix> {
     let base = Base::new(Ring::Eisenstein, (3, 0))?;
     let digits = vec![(0, 0), (1, 0), (2, 1), (2, 0)];
@@ -329,11 +369,19 @@ pub fn koch() -> Result<Radix> {
 }
 
 /// Returns the Sierpinski gasket as a radix design: base `2` on the hexagonal lattice, three of the four residues, code `7`.
+///
+/// # Errors
+///
+/// The fixed design is in range, so this never errs.
 pub fn gasket() -> Result<Radix> {
     Radix::from_code(Base::new(Ring::Eisenstein, (2, 0))?, 7)
 }
 
 /// Returns the twindragon as a radix design: base `1 + i` on the square lattice, the full residue system, code `3`.
+///
+/// # Errors
+///
+/// The fixed design is in range, so this never errs.
 pub fn twindragon() -> Result<Radix> {
     Radix::from_code(Base::new(Ring::Gaussian, (1, 1))?, 3)
 }
@@ -341,11 +389,19 @@ pub fn twindragon() -> Result<Radix> {
 /// Returns the terdragon as a radix design: base `2 + omega` on the hexagonal lattice, the full residue system, code `7`, twisted by `1, omega, 1`.
 ///
 /// The untwisted code misses the curve: reading the L-system `F -> F + F - F` at `120` degrees as a turtle, three segments to a level, and normalising by the endpoint gives the segment starts word for word only under this twist.
+///
+/// # Errors
+///
+/// The fixed design is in range, so this never errs.
 pub fn terdragon() -> Result<Radix> {
     Radix::from_code(Base::new(Ring::Eisenstein, (2, 1))?, 7)?.with_twists(&[0, 2, 0])
 }
 
 /// Returns the flowsnake as a radix design: base `3 + omega` of norm seven on the hexagonal lattice, the full residue system, code `127`.
+///
+/// # Errors
+///
+/// The fixed design is in range, so this never errs.
 pub fn flowsnake() -> Result<Radix> {
     Radix::from_code(Base::new(Ring::Eisenstein, (3, 1))?, 127)
 }
@@ -353,6 +409,10 @@ pub fn flowsnake() -> Result<Radix> {
 /// Returns the plane design of a cell code as a radix design: base the rational integer `m`, of norm `m^2`, on the square lattice, no twist, digits the box residues `{x + y i : 0 <= x, y < m}`.
 ///
 /// Bit `y m + x` of the code is the cell at row `y` and column `x` of the `m` by `m` tile, the column the real part and the row the imaginary part, so the level-`L` words scaled by `m^L` are exactly the filled cells of the level-`L` tile read as `(column, row)`.
+///
+/// # Errors
+///
+/// Errs below a side of two, at a tile of 128 cells or more, and at a code running past the cells.
 pub fn tile(m: u64, code: u128) -> Result<Radix> {
     let base = Base::new(Ring::Gaussian, (m as i64, 0))?;
     let cells = (m * m) as usize;

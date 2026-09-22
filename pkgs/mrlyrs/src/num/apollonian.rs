@@ -114,6 +114,10 @@ fn circle(k: i64, x: i64, y: i64) -> Circle {
 ///     assert!(sound(&root(name).unwrap()));
 /// }
 /// ```
+///
+/// # Errors
+///
+/// Errs at a name outside [`ROOTS`].
 pub fn root(name: &str) -> Result<Quad> {
     Ok(match name {
         "strip" => [
@@ -165,6 +169,10 @@ pub struct Packing {
 }
 
 /// Grows the named packing to the curvature cap, one circle per node of the reflection tree and the root quadruple excluded, so `circles.len()` is the census `N(T)`. On the strip only the two root swaps that replace a line are taken, which are exactly the two that stay inside one period.
+///
+/// # Errors
+///
+/// Errs at a name outside [`ROOTS`], and at a curvature cap outside two through [`CURVATURE_CAP`].
 pub fn grow(name: &str, cap: i64) -> Result<Packing> {
     let seed = root(name)?;
     if !(2..=CURVATURE_CAP).contains(&cap) {
@@ -311,6 +319,10 @@ pub struct Shadow {
 }
 
 /// Reads the Farey stack of the order against the packing: the nodes lit inside the open period against the tangency points of the line-tangent circles of curvature at most `2 Q^2`, and the brightness `floor(Q/b)` summed on the nodes against `Q(Q + 1)/2`. Off the strip there is no line and every count is zero.
+///
+/// # Errors
+///
+/// Errs at an order outside one through [`ORDER_CAP`].
 pub fn shadow(p: &Packing, order: usize) -> Result<Shadow> {
     if order == 0 || order > ORDER_CAP {
         return value_error(format!("the depth must be between 1 and {ORDER_CAP}."));

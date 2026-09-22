@@ -200,7 +200,20 @@ fn creator<const N: usize>(group: Group) -> Creator<N> {
     }
 }
 
-/// Draws a random tile satisfying the config from the stream, or an error when no group fits the size constraints.
+/// Draws a random tile satisfying the config from the stream.
+///
+/// ```
+/// use mrlyrs::core::rng::Rng;
+/// use mrlyrs::gen::draw::{create, ConfigNd};
+/// let mut rng = Rng::new(1);
+/// let tile = create(&ConfigNd::<2>::default(), |rng| rng.below(4), &mut rng)?;
+/// assert!((3..=9).contains(&tile.max_size()));
+/// # Ok::<(), mrlyrs::Error>(())
+/// ```
+///
+/// # Errors
+///
+/// Errs when no allowed group fits the size constraints, or when the catalog holds no source.
 pub fn create<const N: usize>(
     config: &ConfigNd<N>,
     rotation: Rotation,
@@ -229,6 +242,10 @@ pub fn create<const N: usize>(
 }
 
 /// Draws a random tile up to the given size under the default config.
+///
+/// # Errors
+///
+/// Errs when no group fits a tile inside the size, or when the catalog holds no source.
 pub fn random_tile<const N: usize>(
     max_size: usize,
     rotation: Rotation,

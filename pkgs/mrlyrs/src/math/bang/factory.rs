@@ -33,7 +33,11 @@ pub fn residue_corners(dimension: usize, base: usize) -> Vec<Vec<u8>> {
         .collect()
 }
 
-/// Returns the code count of a dimension and base, two to the number of corners, or an error past a u128.
+/// Returns the code count of a dimension and base, two to the number of corners.
+///
+/// # Errors
+///
+/// Errors when the corner count reaches the hundred and twenty-eight bits a u128 code holds.
 pub fn total_codes(dimension: usize, base: usize) -> Result<Code> {
     let cells = base.pow(dimension as u32);
     if cells >= 128 {
@@ -44,7 +48,11 @@ pub fn total_codes(dimension: usize, base: usize) -> Result<Code> {
     Ok(Code(1 << cells))
 }
 
-/// Unpacks a code into its filled residue corners, or an error when the code is out of range.
+/// Unpacks a code into its filled residue corners.
+///
+/// # Errors
+///
+/// Errors when the code names a corner the dimension and base do not hold.
 pub fn code_to_corners(code: Code, dimension: usize, base: usize) -> Result<Vec<Vec<u8>>> {
     let cells = residue_corners(dimension, base);
     let code = code.get();
@@ -119,6 +127,10 @@ fn render(
 /// assert_eq!(menger.shape, vec![3, 3, 3]);
 /// assert_eq!(menger.sum(), 20);
 /// ```
+///
+/// # Errors
+///
+/// Errors when the code is out of range for the dimension and base.
 pub fn create(
     code: Code,
     number: usize,
@@ -130,13 +142,17 @@ pub fn create(
     render(&filled, number, dimension, base, level)
 }
 
-/// Renders a design from its canonical JSON name, or an error for any other object.
+/// Renders a design from its canonical JSON name.
+///
+/// # Errors
+///
+/// Errors for JSON that is not a bang name.
 pub fn create_named(spec: &str, number: usize, level: usize) -> Result<Tensor> {
     let bang = Bang::from_json(spec)?;
     create(Code::from(bang.code), number, bang.dim, bang.base, level)
 }
 
-/// Composes the layers into one mixed-design cell by the ordered Kronecker product, first layer outermost, or an error below two layers or across dimensions.
+/// Composes the layers into one mixed-design cell by the ordered Kronecker product, first layer outermost.
 ///
 /// A run of one repeated layer is the ordinary self-similar fractal level.
 ///
@@ -148,6 +164,10 @@ pub fn create_named(spec: &str, number: usize, level: usize) -> Result<Tensor> {
 /// let void = MagicLayer::new(Bang::new(9, 2, 2), 5);
 /// assert_eq!(magic(&[carpet, net, void]).unwrap().shape, vec![105, 105]);
 /// ```
+///
+/// # Errors
+///
+/// Errors below two layers, across dimensions, or on a code out of range.
 pub fn magic(layers: &[MagicLayer]) -> Result<Tensor> {
     if layers.len() < 2 {
         return value_error("magic needs at least two layers.");
@@ -173,7 +193,11 @@ pub fn magic(layers: &[MagicLayer]) -> Result<Tensor> {
     Ok(out.expect("two or more layers leave a tile"))
 }
 
-/// Composes JSON-named layers in order, or an error for any object that is not a bang.
+/// Composes JSON-named layers in order.
+///
+/// # Errors
+///
+/// Errors for an object that is not a bang name, or layers that do not compose.
 pub fn magic_named(layers: &[(&str, usize)]) -> Result<Tensor> {
     let parsed: Result<Vec<MagicLayer>> = layers
         .iter()
@@ -183,6 +207,10 @@ pub fn magic_named(layers: &[(&str, usize)]) -> Result<Tensor> {
 }
 
 /// Renders a design straight from its filled residue corners.
+///
+/// # Errors
+///
+/// Errors when a corner does not hold one residue per axis.
 pub fn create_from_corners(
     filled: &[Vec<u8>],
     number: usize,

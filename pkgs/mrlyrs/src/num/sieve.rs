@@ -29,11 +29,15 @@ fn letter(side: u64) -> Result<u64> {
     Ok(side)
 }
 
-/// Returns the side of the word, the product of its letters' sides, or an error when a letter is not an odd side from three or the product overruns a u128.
+/// Returns the side of the word, the product of its letters' sides.
 ///
 /// ```
 /// assert_eq!(mrlyrs::num::sieve::side(&mrlyrs::num::sieve::odd_word(4)).unwrap(), 945);
 /// ```
+///
+/// # Errors
+///
+/// Errs when a letter is not an odd side from three, or when the product overruns a u128.
 pub fn side(word: &[u64]) -> Result<u128> {
     let mut run = 1u128;
     for &s in word {
@@ -45,11 +49,15 @@ pub fn side(word: &[u64]) -> Result<u128> {
     Ok(run)
 }
 
-/// Returns the cells the word leaves, the product of its letters' fills, one punctured tile a letter, or an error when a letter is bad or the product overruns a u128.
+/// Returns the cells the word leaves, the product of its letters' fills, one punctured tile a letter.
 ///
 /// ```
 /// assert_eq!(mrlyrs::num::sieve::cells(&mrlyrs::num::sieve::odd_word(3), 2).unwrap(), 9216);
 /// ```
+///
+/// # Errors
+///
+/// Errs when a letter is not an odd side from three, or when the product overruns a u128.
 pub fn cells(word: &[u64], dimension: u32) -> Result<u128> {
     let mut run = 1u128;
     for &s in word {
@@ -62,11 +70,15 @@ pub fn cells(word: &[u64], dimension: u32) -> Result<u128> {
     Ok(run)
 }
 
-/// Returns the punctures the word makes, one per surviving cell at every level, or an error when a letter is bad or the count overruns a u128.
+/// Returns the punctures the word makes, one per surviving cell at every level.
 ///
 /// ```
 /// assert_eq!(mrlyrs::num::sieve::holes(&mrlyrs::num::sieve::odd_word(3), 2).unwrap(), 1 + 8 + 192);
 /// ```
+///
+/// # Errors
+///
+/// Errs when a letter is not an odd side from three, or when the count overruns a u128.
 pub fn holes(word: &[u64], dimension: u32) -> Result<u128> {
     let mut total = 0u128;
     for place in 0..word.len() {
@@ -81,6 +93,10 @@ pub fn holes(word: &[u64], dimension: u32) -> Result<u128> {
 /// let flat = mrlyrs::num::sieve::ratio(&mrlyrs::num::sieve::flat_word(3, 2), 2).unwrap();
 /// assert!((flat - 64.0 / 81.0).abs() < 1e-15);
 /// ```
+///
+/// # Errors
+///
+/// Errs when a letter is not an odd side from three.
 pub fn ratio(word: &[u64], dimension: u32) -> Result<f64> {
     let mut run = 1.0f64;
     for &s in word {
@@ -97,6 +113,10 @@ pub fn ratio(word: &[u64], dimension: u32) -> Result<f64> {
 /// let carpet = mrlyrs::num::sieve::exponent(&mrlyrs::num::sieve::flat_word(3, 5), 2).unwrap();
 /// assert!((carpet - 8f64.ln() / 3f64.ln()).abs() < 1e-12);
 /// ```
+///
+/// # Errors
+///
+/// Errs when a letter is not an odd side from three.
 pub fn exponent(word: &[u64], dimension: u32) -> Result<f64> {
     let mut up = 0.0f64;
     let mut down = 0.0f64;
@@ -118,6 +138,10 @@ pub fn exponent(word: &[u64], dimension: u32) -> Result<f64> {
 /// assert_eq!(side, 15);
 /// assert_eq!(cells.iter().filter(|&&b| b == 1).count(), 192);
 /// ```
+///
+/// # Errors
+///
+/// Errs when a letter is not an odd side from three.
 pub fn raster(word: &[u64]) -> Result<(usize, Vec<u8>)> {
     let mut side = 1usize;
     let mut sites = vec![1u8];
@@ -154,6 +178,10 @@ pub fn raster(word: &[u64]) -> Result<(usize, Vec<u8>)> {
 /// assert_eq!(holes.len() / 3, 9);
 /// assert_eq!(&holes[..3], &[5, 5, 5]);
 /// ```
+///
+/// # Errors
+///
+/// Errs when a letter is not an odd side from three, or when the word's side overruns a u128.
 pub fn punctures(word: &[u64], dimension: u32) -> Result<Vec<u64>> {
     let axes = dimension as usize;
     let mut scale = side(word)? as u64;
@@ -246,6 +274,10 @@ pub fn solid_limit() -> f64 {
 /// assert!((mrlyrs::num::sieve::limit(&[5, 7, 9], 2).unwrap().unwrap() - 0.883_572_933_822_129_3).abs() < 1e-15);
 /// assert_eq!(mrlyrs::num::sieve::limit(&[3, 7, 11], 2).unwrap(), None);
 /// ```
+///
+/// # Errors
+///
+/// Errs when a letter is not an odd side from three.
 pub fn limit(word: &[u64], dimension: u32) -> Result<Option<f64>> {
     if word.len() < 2 {
         return Ok(None);

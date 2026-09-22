@@ -41,11 +41,21 @@ impl Colorizer {
         }
     }
     /// Builds a binned colorizer from a gradient through the given stops.
+    ///
+    /// # Errors
+    ///
+    /// Errs on an empty stop list.
     pub fn gradient_bins(background: Color, colors: &[Color], shades: usize) -> Result<Colorizer> {
         let ramp = dedup(gradient(colors, shades.max(1))?);
         Ok(Colorizer::Bins { background, ramp })
     }
     /// Returns the color for one value against the range maximum: the background at zero, the top of the ramp from the maximum up.
+    ///
+    /// ```
+    /// use mrlyrs::core::{colors::WHITE, Colorizer};
+    /// let heat = Colorizer::heat();
+    /// assert_eq!(heat.color(0, 10), WHITE);
+    /// ```
     pub fn color(&self, value: usize, max: usize) -> Color {
         match self {
             Colorizer::Bins { background, ramp } => {

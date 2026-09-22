@@ -1,3 +1,8 @@
+//! The hexagon world, the projection of `three`.
+//!
+//! A coded cube flattened to an iso, pro or cut hexagon, meshed into triangles, then counted,
+//! graphed, rastered and drawn like any other cell.
+
 /// The triangle, corner and edge tallies of a hex cell, whose census and euler take the extra include_grid flag.
 pub mod census;
 /// The coded cubes projected to iso, pro and cut hexagons.

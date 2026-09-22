@@ -36,7 +36,11 @@ pub struct Layout {
 }
 
 impl Layout {
-    /// Starts a layout from flat positions, `dim` floats per node, and the branch pairs, or an error when a branch points off the list.
+    /// Starts a layout from flat positions, `dim` floats per node, and the branch pairs.
+    ///
+    /// # Errors
+    ///
+    /// Errors when a branch points off the list, or the positions are not dim floats a node.
     pub fn new(
         positions: &[f64],
         branches: &[(usize, usize)],
@@ -79,6 +83,10 @@ impl Layout {
         })
     }
     /// Starts a layout from a network's own positions and branches.
+    ///
+    /// # Errors
+    ///
+    /// Errors when a branch names a node the network does not hold.
     pub fn from_network(network: &Network, seed: u64) -> Result<Layout> {
         let positions: Vec<f64> = network
             .nodes

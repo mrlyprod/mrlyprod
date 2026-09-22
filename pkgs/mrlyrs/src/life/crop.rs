@@ -2,7 +2,11 @@ use crate::core::error::{shape_error, Result};
 use crate::core::tensor::Tensor;
 use crate::math::two::Cell2d;
 
-/// Crops a frame sequence to the centred square bounding every cell ever alive, or an error when the frames differ in shape.
+/// Crops a frame sequence to the centred square bounding every cell ever alive.
+///
+/// # Errors
+///
+/// Errs when the frames do not share one shape.
 pub fn crop(grids: &[Cell2d]) -> Result<Vec<Cell2d>> {
     let Some(first) = grids.first() else {
         return Ok(Vec::new());
@@ -64,6 +68,10 @@ pub fn crop(grids: &[Cell2d]) -> Result<Vec<Cell2d>> {
 }
 
 /// Tiles every frame n by n to reach at least min_canvas a side, unchanged when already there.
+///
+/// # Errors
+///
+/// Errs when a frame will not tile to the canvas.
 pub fn tessellate(grids: &[Cell2d], min_canvas: usize) -> Result<Vec<Cell2d>> {
     let Some(first) = grids.first() else {
         return Ok(Vec::new());

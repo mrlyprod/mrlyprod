@@ -3,6 +3,16 @@ use crate::math::two::Cell2d;
 use std::f64::consts::LN_2;
 
 /// Returns the mean fraction of sites changed between consecutive grids.
+///
+/// ```
+/// use mrlyrs::core::tensor::Tensor;
+/// use mrlyrs::life::churn;
+/// use mrlyrs::math::two::Cell2d;
+/// let flat = Cell2d::new(Tensor::new(vec![2, 2]))?;
+/// let most = Cell2d::new(Tensor::of(vec![1, 1, 1, 0], vec![2, 2])?)?;
+/// assert_eq!(churn(&[flat, most]), 0.75);
+/// # Ok::<(), mrlyrs::Error>(())
+/// ```
 pub fn churn(grids: &[Cell2d]) -> f64 {
     if grids.len() < 2 {
         return 0.0;
@@ -15,6 +25,15 @@ pub fn churn(grids: &[Cell2d]) -> f64 {
 }
 
 /// Returns the grid's binary Shannon entropy in millibits.
+///
+/// ```
+/// use mrlyrs::core::tensor::Tensor;
+/// use mrlyrs::life::entropy;
+/// use mrlyrs::math::two::Cell2d;
+/// let half = Cell2d::new(Tensor::of(vec![1, 1, 0, 0], vec![2, 2])?)?;
+/// assert_eq!(entropy(&half), 1000);
+/// # Ok::<(), mrlyrs::Error>(())
+/// ```
 pub fn entropy(grid: &Cell2d) -> i64 {
     let types = grid.types();
     let total = types.size();

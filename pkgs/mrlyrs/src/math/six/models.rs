@@ -67,6 +67,10 @@ impl Cell6d {
         }
     }
     /// Rounds each triangle to the mean of its masked neighborhood, wrapping on request.
+    ///
+    /// # Errors
+    ///
+    /// Errors when the mask does not match the cell's rank.
     pub fn blur(self, mask: &Tensor, wrap: bool) -> Result<Cell6d> {
         Ok(Cell6d {
             cell: self.cell.blur(mask, wrap)?,
@@ -74,6 +78,10 @@ impl Cell6d {
         })
     }
     /// Writes the value wherever the tiled mask is nonzero.
+    ///
+    /// # Errors
+    ///
+    /// Errors when the mask does not tile the cell.
     pub fn perforate(self, mask: &Tensor, value: u8) -> Result<Cell6d> {
         Ok(Cell6d {
             cell: self.cell.perforate(mask, value)?,

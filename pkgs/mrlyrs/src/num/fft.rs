@@ -8,6 +8,10 @@ use std::f64::consts::PI;
 /// mrlyrs::num::fft::fft(&mut re, &mut im, false).unwrap();
 /// assert_eq!(re, vec![1.0; 4]);
 /// ```
+///
+/// # Errors
+///
+/// Errs when the two parts differ in length, or when the length is no power of two.
 pub fn fft(re: &mut [f64], im: &mut [f64], inverse: bool) -> Result<()> {
     let n = re.len();
     if n != im.len() {
@@ -65,6 +69,10 @@ pub fn fft(re: &mut [f64], im: &mut [f64], inverse: bool) -> Result<()> {
 }
 
 /// Transforms a size-square field in place, rows first and then columns.
+///
+/// # Errors
+///
+/// Errs when the buffers are not the size squared, or when the size is no power of two.
 pub fn fft2(re: &mut [f64], im: &mut [f64], size: usize, inverse: bool) -> Result<()> {
     if re.len() != size * size {
         return shape_error(format!(
@@ -93,6 +101,10 @@ pub fn fft2(re: &mut [f64], im: &mut [f64], size: usize, inverse: bool) -> Resul
 }
 
 /// Returns the magnitudes of a square field's transform, shifted so zero frequency sits at the centre.
+///
+/// # Errors
+///
+/// Errs when the field is not the size squared, or when the size is no power of two.
 pub fn magnitude_spectrum(field: &[f64], size: usize) -> Result<Vec<f64>> {
     let mut re = field.to_vec();
     let mut im = vec![0.0; field.len()];
@@ -111,6 +123,10 @@ pub fn magnitude_spectrum(field: &[f64], size: usize) -> Result<Vec<f64>> {
 }
 
 /// Transforms a real size-square field forward by fft2, returning the real and imaginary parts.
+///
+/// # Errors
+///
+/// Errs when the field is not the size squared, or when the size is no power of two.
 pub fn transform(field: &[f64], size: usize) -> Result<(Vec<f64>, Vec<f64>)> {
     let mut re = field.to_vec();
     let mut im = vec![0.0; field.len()];
@@ -119,6 +135,10 @@ pub fn transform(field: &[f64], size: usize) -> Result<(Vec<f64>, Vec<f64>)> {
 }
 
 /// Lays an odd-side mask into a size-square kernel with the mask centre at index (0, 0) and negative offsets wrapped; the cell at offset (dr, dc) lands at (-dr, -dc) modulo size, so convolving a field by the kernel reads at every site the mask-weighted sum over its neighbours, the neighbour count the life step counts.
+///
+/// # Errors
+///
+/// Errs at an even mask side, at a side past the field, and when the mask is not the side squared.
 pub fn embed_kernel(mask: &[u8], side: usize, size: usize) -> Result<Vec<f64>> {
     if side.is_multiple_of(2) {
         return value_error(format!("the mask side {side} is not odd."));
@@ -186,12 +206,20 @@ pub fn convolve_with(
 }
 
 /// Circularly convolves a size-square field on the torus by a kernel of the same shape through fft2 both ways.
+///
+/// # Errors
+///
+/// Errs when the field or the kernel is not the size squared, or when the size is no power of two.
 pub fn convolve(field: &[f64], kernel: &[f64], size: usize) -> Result<Vec<f64>> {
     let (kernel_re, kernel_im) = transform(kernel, size)?;
     convolve_with(field, &kernel_re, &kernel_im, size)
 }
 
 /// Returns the centred magnitude spectrum of a size-square field through log(1 + magnitude), the DC bin included at the centre.
+///
+/// # Errors
+///
+/// Errs when the field is not the size squared, or when the size is no power of two.
 pub fn log_spectrum(field: &[f64], size: usize) -> Result<Vec<f64>> {
     Ok(magnitude_spectrum(field, size)?
         .into_iter()
@@ -200,6 +228,10 @@ pub fn log_spectrum(field: &[f64], size: usize) -> Result<Vec<f64>> {
 }
 
 /// Averages a centred size-square spectrum over rings of integer radius from the centre bin, a bin joining the ring its distance rounds to, rings 0 through size over two; ring k holds the frequencies near k cycles per field.
+///
+/// # Errors
+///
+/// Errs when the spectrum is not the size squared.
 pub fn radial_profile(spectrum: &[f64], size: usize) -> Result<Vec<f64>> {
     if spectrum.len() != size * size {
         return shape_error(format!(

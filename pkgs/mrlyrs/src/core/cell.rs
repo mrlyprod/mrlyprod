@@ -86,7 +86,11 @@ impl Cell {
         self.tags = self.tags.map(|t| t.pad(count, value));
         self
     }
-    /// Rotates the cell k quarter turns in the plane of the given axes, carrying colors and tags along, or an error for axes off the cell.
+    /// Rotates the cell k quarter turns in the plane of the given axes, carrying colors and tags along.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the axes are not two distinct axes of the cell.
     pub fn rotate(self, k: usize, axes: (usize, usize)) -> Result<Cell> {
         let map = rot90_map(&self.types.shape, k, axes)?;
         let mut shape = self.types.shape.clone();
@@ -96,6 +100,10 @@ impl Cell {
         remap(&self, &map, &shape)
     }
     /// Grows the types to the level-fold Kronecker power of themselves, dropping colors and tags.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the level is below one.
     pub fn fractal(mut self, level: usize) -> Result<Cell> {
         if level < 1 {
             return value_error("Fractal level must be at least 1.");
@@ -105,7 +113,11 @@ impl Cell {
         self.tags = None;
         Ok(self)
     }
-    /// Repeats the cell reps times along each axis, carrying colors and tags along, or an error without one count per axis.
+    /// Repeats the cell reps times along each axis, carrying colors and tags along.
+    ///
+    /// # Errors
+    ///
+    /// Errs without one count per axis.
     pub fn tile(self, reps: &[usize]) -> Result<Cell> {
         let shape: Vec<usize> = self
             .types
@@ -122,6 +134,10 @@ impl Cell {
         self
     }
     /// Tags every cell with its count of target-valued neighbors under the mask.
+    ///
+    /// # Errors
+    ///
+    /// Errs on a mask of another rank or an even side, a target above one, or a count past the dtype.
     pub fn neighbors(
         mut self,
         mask: &Tensor,
@@ -145,12 +161,20 @@ impl Cell {
         self
     }
     /// Replaces every type with the rounded mean of its masked neighborhood, dropping colors.
+    ///
+    /// # Errors
+    ///
+    /// Errs on a mask of another rank, an even side, or a mask with nothing on.
     pub fn blur(mut self, mask: &Tensor, wrap: bool) -> Result<Cell> {
         self.types = self.types.blur(mask, wrap)?;
         self.colors = None;
         Ok(self)
     }
     /// Stamps value wherever the tiled mask is on, dropping colors.
+    ///
+    /// # Errors
+    ///
+    /// Errs on a mask of another rank or a side that does not evenly tile the cell.
     pub fn perforate(mut self, mask: &Tensor, value: u8) -> Result<Cell> {
         self.types = self.types.perforate(mask, value)?;
         self.colors = None;
@@ -221,7 +245,11 @@ fn axis_index(t: &Tensor, flat: usize, axis: usize) -> usize {
     (flat / stride) % t.shape[axis]
 }
 
-/// Builds the flat source index of every destination cell after tiling reps copies per axis, or an error without one count per axis.
+/// Builds the flat source index of every destination cell after tiling reps copies per axis.
+///
+/// # Errors
+///
+/// Errs without one count per axis.
 pub fn tile_map(shape: &[usize], reps: &[usize]) -> Result<Vec<usize>> {
     if reps.len() != shape.len() {
         return shape_error(format!(
@@ -247,9 +275,11 @@ pub fn tile_map(shape: &[usize], reps: &[usize]) -> Result<Vec<usize>> {
     Ok(map)
 }
 
-/// Rebuilds a cell's types, colors and tags at the new shape from one destination-to-source index map, or an error when the map does not fit.
+/// Rebuilds a cell's types, colors and tags at the new shape from one destination-to-source index map.
 ///
-/// The map holds one source index per destination cell, so it must be as long as the shape's size and point inside the cell.
+/// # Errors
+///
+/// Errs when the map is not the shape's size, or points past the cell.
 pub fn remap(cell: &Cell, map: &[usize], shape: &[usize]) -> Result<Cell> {
     let size: usize = shape.iter().product();
     if map.len() != size {
@@ -301,7 +331,11 @@ pub fn moore(dimension: usize) -> Tensor {
     mask
 }
 
-/// Builds the flat source index of every destination cell after k quarter turns in the plane of the axes, or an error when the axes are not two distinct axes of the shape.
+/// Builds the flat source index of every destination cell after k quarter turns in the plane of the axes.
+///
+/// # Errors
+///
+/// Errs when the axes are not two distinct axes of the shape.
 pub fn rot90_map(shape: &[usize], k: usize, axes: (usize, usize)) -> Result<Vec<usize>> {
     let (a, b) = axes;
     if a >= shape.len() || b >= shape.len() {
@@ -338,7 +372,11 @@ pub fn rot90_map(shape: &[usize], k: usize, axes: (usize, usize)) -> Result<Vec<
     Ok(data)
 }
 
-/// Stitches same-shaped cells into one grid of reps blocks per axis, or an error when counts or shapes disagree.
+/// Stitches same-shaped cells into one grid of reps blocks per axis.
+///
+/// # Errors
+///
+/// Errs on an empty list, a cell count that is not the product of reps, a rank mismatch, or cells of unequal shape.
 pub fn merge(cells: &[Cell], reps: &[usize]) -> Result<Cell> {
     if cells.is_empty() {
         return value_error("Cannot merge an empty list of cells.");
@@ -385,6 +423,10 @@ pub fn merge(cells: &[Cell], reps: &[usize]) -> Result<Cell> {
 }
 
 /// Folds at least two cells into one by chained Kronecker products.
+///
+/// # Errors
+///
+/// Errs with fewer than two cells.
 pub fn magic(cells: &[Cell]) -> Result<Cell> {
     if cells.len() < 2 {
         return value_error("Magic composition requires at least two cells.");
@@ -397,6 +439,10 @@ pub fn magic(cells: &[Cell]) -> Result<Cell> {
 }
 
 /// Lays the cell each mask entry indexes into that entry's place and merges the lot.
+///
+/// # Errors
+///
+/// Errs when a mask entry indexes no cell, or the picked cells do not merge.
 pub fn mosaic(mask: &Tensor, cells: &[Cell]) -> Result<Cell> {
     let picked: Result<Vec<Cell>> = (0..mask.size())
         .map(|flat| {

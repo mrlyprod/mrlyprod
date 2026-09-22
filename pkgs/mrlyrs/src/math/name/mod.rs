@@ -1,3 +1,8 @@
+//! The mrly names.
+//!
+//! Every mathematical thing prints one canonical JSON object, and the url, filename, prose and id
+//! views are functions of that one string.
+
 use crate::core::error::Result;
 use serde::de::DeserializeOwned;
 use serde::Serialize;

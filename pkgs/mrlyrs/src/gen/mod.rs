@@ -1,3 +1,18 @@
+//! The generator: the pipeline from a recipe to a file, for datasets, the automator, backgrounds.
+//!
+//! - `recipe`: the tile recipe, its families, groups, parities, catalog and size lists.
+//! - `draw`: one recipe drawn at random from a seeded stream under size constraints.
+//! - `build`: the recipe to cell builders, one per dimension.
+//! - `variation`: the seeded artwork, from recipe through paint to rendered files.
+//! - `name`: the canonical name of a recipe, and the recipe back out of it.
+//!
+//! The doors: [`Tile::new`](crate::gen::recipe::Tile::new),
+//! [`Tile::size`](crate::gen::recipe::Tile::size),
+//! [`Tile::check`](crate::gen::recipe::Tile::check),
+//! [`draw::create`](crate::gen::draw::create), [`build_2d`](crate::gen::build::build_2d),
+//! [`variation::create`](crate::gen::variation::create),
+//! [`Tile::of`](crate::gen::name::Tile::of) and [`background`](crate::gen::background).
+
 /// The recipe to cell builders, one per dimension, and the random draws that feed them.
 pub mod build;
 /// The random tile drawing the dimensions share, on the seeded stream.
@@ -19,6 +34,16 @@ use crate::core::rng::Rng;
 ///
 /// The seed opens one stream, `variation::create` draws its own seed from it, and the paint and
 /// render follow on the same stream, so one seed always paints the same background.
+///
+/// ```
+/// let png = mrlyrs::gen::background(1, 2, 2)?;
+/// assert_eq!(png[..8], [137, 80, 78, 71, 13, 10, 26, 10]);
+/// # Ok::<(), mrlyrs::Error>(())
+/// ```
+///
+/// # Errors
+///
+/// Errs when the width or the height is zero, or when the artwork will not draw or render.
 pub fn background(seed: u64, width: usize, height: usize) -> Result<Vec<u8>> {
     if width == 0 || height == 0 {
         return value_error("a background wants a width and a height above zero.");

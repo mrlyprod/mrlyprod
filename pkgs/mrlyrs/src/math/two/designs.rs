@@ -17,6 +17,10 @@ fn build(pattern: Tensor, level: usize, rotation: usize) -> Result<Cell2d> {
 }
 
 /// Builds the design a universe code names, deepened to the level and rotated by quarter-turns.
+///
+/// # Errors
+///
+/// Errors when the code is out of range, or the level is below one.
 pub fn create(
     code: Code,
     number: usize,
@@ -28,6 +32,10 @@ pub fn create(
 }
 
 /// Builds the design straight from its filled residue corners, deepened to the level and rotated by quarter-turns.
+///
+/// # Errors
+///
+/// Errors when a corner does not fit the dimension and base, or the level is below one.
 pub fn from_corners(
     corners: &[Vec<u8>],
     number: usize,
@@ -51,6 +59,10 @@ pub fn from_corners(
 ///     mrlyrs::math::two::carpet(n, 1).unwrap()
 /// );
 /// ```
+///
+/// # Errors
+///
+/// Errors below level one.
 pub fn level_set(
     number: usize,
     levels: &[usize],
@@ -62,6 +74,10 @@ pub fn level_set(
 }
 
 /// Builds the design the name picks, deepened to the level and rotated by quarter-turns.
+///
+/// # Errors
+///
+/// Errors for a design that is not 2d, or a level below one.
 pub fn named(design: Design, number: usize, level: usize, rotation: usize) -> Result<Cell2d> {
     let pattern = match design {
         Design::Carpet => atoms::carpet_2d(number),
@@ -80,61 +96,114 @@ pub fn named(design: Design, number: usize, level: usize, rotation: usize) -> Re
 }
 
 /// Builds an all-empty cell of the given size and level.
+///
+/// # Errors
+///
+/// Errors below level one.
 pub fn zeros(number: usize, level: usize) -> Result<Cell2d> {
     build(atoms::zeros_2d(number), level, 0)
 }
 
 /// Builds an all-filled cell of the given size and level.
+///
+/// # Errors
+///
+/// Errors below level one.
 pub fn ones(number: usize, level: usize) -> Result<Cell2d> {
     build(atoms::ones_2d(number), level, 0)
 }
 
 /// Builds the carpet fractal, its seed pierced at every odd-odd site, deepened to the level.
+///
+/// ```
+/// let cell = mrlyrs::math::two::carpet(3, 2).unwrap();
+/// assert_eq!((cell.width(), mrlyrs::math::two::fills(&cell)), (9, 64));
+/// ```
+///
+/// # Errors
+///
+/// Errors below level one.
 pub fn carpet(number: usize, level: usize) -> Result<Cell2d> {
     build(atoms::carpet_2d(number), level, 0)
 }
 
 /// Builds the net fractal, its seed on wherever a coordinate is odd, deepened to the level.
+///
+/// # Errors
+///
+/// Errors below level one.
 pub fn net(number: usize, level: usize) -> Result<Cell2d> {
     build(atoms::net_2d(number), level, 0)
 }
 
 /// Builds the htree fractal, its seed striped along even rows, deepened to the level.
+///
+/// # Errors
+///
+/// Errors below level one.
 pub fn htree(number: usize, level: usize) -> Result<Cell2d> {
     build(atoms::htree_2d(number), level, 0)
 }
 
 /// Builds the vtree fractal, its seed striped along even columns, deepened to the level.
+///
+/// # Errors
+///
+/// Errors below level one.
 pub fn vtree(number: usize, level: usize) -> Result<Cell2d> {
     build(atoms::vtree_2d(number), level, 0)
 }
 
 /// Builds the void fractal, its seed a checkerboard on even parity, deepened to the level.
+///
+/// # Errors
+///
+/// Errors below level one.
 pub fn void(number: usize, level: usize) -> Result<Cell2d> {
     build(atoms::void_2d(number), level, 0)
 }
 
 /// Builds the point fractal, its seed on at every odd-odd site, deepened to the level.
+///
+/// # Errors
+///
+/// Errors below level one.
 pub fn point(number: usize, level: usize) -> Result<Cell2d> {
     build(atoms::point_2d(number), level, 0)
 }
 
 /// Builds the dust fractal, its seed on at every even-even site, deepened to the level.
+///
+/// # Errors
+///
+/// Errors below level one.
 pub fn dust(number: usize, level: usize) -> Result<Cell2d> {
     build(atoms::dust_2d(number), level, 0)
 }
 
 /// Builds the hline fractal, its seed striped along odd rows, deepened to the level.
+///
+/// # Errors
+///
+/// Errors below level one.
 pub fn hline(number: usize, level: usize) -> Result<Cell2d> {
     build(atoms::hline_2d(number), level, 0)
 }
 
 /// Builds the vline fractal, its seed striped along odd columns, deepened to the level.
+///
+/// # Errors
+///
+/// Errors below level one.
 pub fn vline(number: usize, level: usize) -> Result<Cell2d> {
     build(atoms::vline_2d(number), level, 0)
 }
 
 /// Builds the star fractal, its seed on where exactly one coordinate is odd, deepened to the level.
+///
+/// # Errors
+///
+/// Errors below level one.
 pub fn star(number: usize, level: usize) -> Result<Cell2d> {
     build(atoms::star_2d(number), level, 0)
 }

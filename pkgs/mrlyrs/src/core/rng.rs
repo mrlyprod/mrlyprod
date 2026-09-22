@@ -16,6 +16,12 @@ fn splitmix(state: &mut u64) -> u64 {
 
 impl Rng {
     /// Builds the stream from a seed.
+    ///
+    /// ```
+    /// use mrlyrs::core::Rng;
+    /// let mut rng = Rng::new(42);
+    /// assert_eq!(rng.below(6), Rng::new(42).below(6));
+    /// ```
     pub fn new(seed: u64) -> Rng {
         let mut state = seed;
         let mut s = [0u64; 4];
@@ -77,7 +83,11 @@ impl Rng {
     pub fn chance(&mut self, p: f64) -> bool {
         self.unit() < p
     }
-    /// Draws one element of the slice, or an error when the slice is empty.
+    /// Draws one element of the slice.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the slice is empty.
     pub fn choice<'a, T>(&mut self, items: &'a [T]) -> Result<&'a T> {
         if items.is_empty() {
             return value_error("a choice wants at least one item.");

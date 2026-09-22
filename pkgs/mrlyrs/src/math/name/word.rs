@@ -29,7 +29,11 @@ pub struct Word {
 }
 
 impl Word {
-    /// Pins an ordered letter list at base 2, or an error below two letters or outside the code range.
+    /// Pins an ordered letter list at base 2.
+    ///
+    /// # Errors
+    ///
+    /// Errors below two letters, or outside the code range.
     pub fn new(dim: usize, letters: &[(u128, usize)]) -> Result<Word> {
         Word {
             kind: Kind,
@@ -124,13 +128,6 @@ mod tests {
         assert_eq!(Word::from_url(&word.to_url().unwrap()).unwrap(), word);
         assert_eq!(Word::from_file(&word.to_file().unwrap()).unwrap(), word);
         assert_eq!(word.to_id().len(), 8);
-    }
-    #[test]
-    fn the_word_name_round_trips() {
-        for letters in [vec![(3u128, 2usize), (6, 2)], vec![(7, 3), (14, 7), (9, 5)]] {
-            let word = Word::new(2, &letters).unwrap();
-            assert_eq!(Word::from_json(&word.to_json()).unwrap(), word);
-        }
     }
     #[test]
     fn order_shows_in_the_name() {

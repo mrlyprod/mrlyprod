@@ -3,7 +3,7 @@
 /// - A token is one row digit then one column digit over the trimmed bitmap; rows and columns never pass 6.
 /// - One stroke per string, cells in drawing order, each 4-adjacent to the one before it.
 /// - Long strokes: start where a hand starts the shape and lift only where a hand lifts.
-/// - The tables follow `glyphs.rs` order: UPPERS, LOWERS, DIGITS, EXTRAS, SPECIALS.
+/// - The tables follow `bitmaps.rs` order: UPPERS, LOWERS, DIGITS, EXTRAS, SPECIALS.
 /// - Draft a glyph with `cargo run -p mrlyrs --example pen -- X`, then edit it by hand.
 /// - The mechanical rules are tests in `paths.rs`; taste is not, so P keeps its one-cell stroke.
 pub type Pen = (char, &'static [&'static str]);

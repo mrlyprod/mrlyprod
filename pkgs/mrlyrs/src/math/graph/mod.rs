@@ -1,3 +1,8 @@
+//! The spatial network.
+//!
+//! A grid lifts into nodes and branches, as a core, an edge or a tunnel network, and the census
+//! reads its roles, tips, junctions and components back.
+
 /// The role tags, lengths, tip, junction and component counts of a network.
 pub mod census;
 /// The core, edge and tunnel networks lifted from a grid.

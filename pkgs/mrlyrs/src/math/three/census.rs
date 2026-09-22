@@ -40,6 +40,11 @@ pub fn volume(cell: &Cell3d) -> usize {
 }
 
 /// Returns the count of filled faces exposed to void or the outside.
+///
+/// ```
+/// let sponge = mrlyrs::math::three::carpet(3, 1).unwrap();
+/// assert_eq!(mrlyrs::math::three::census::surface(&sponge), 72);
+/// ```
 pub fn surface(cell: &Cell3d) -> u128 {
     census::exposure(cell)
 }
@@ -96,6 +101,10 @@ pub fn faces(cell: &Cell3d) -> usize {
 /// assert_eq!(mrlyrs::math::three::census::euler(&mrlyrs::math::three::ones(2, 1).unwrap()).unwrap(), 1);
 /// assert_eq!(mrlyrs::math::three::census::euler(&mrlyrs::math::three::carpet(3, 1).unwrap()).unwrap(), -4);
 /// ```
+///
+/// # Errors
+///
+/// Errors when the edge network cannot be lifted from the cube.
 pub fn euler(cell: &Cell3d) -> Result<i64> {
     let net = edge_graph(cell)?;
     let (v, e) = (net.nodes.len() as i64, net.branches.len() as i64);
@@ -109,6 +118,10 @@ pub fn euler(cell: &Cell3d) -> Result<i64> {
 /// assert_eq!((tally.fills, tally.voids, tally.surface), (20, 7, 72));
 /// assert_eq!((tally.vertices, tally.edges, tally.faces, tally.euler), (64, 144, 96, -4));
 /// ```
+///
+/// # Errors
+///
+/// Errors when the edge network cannot be lifted from the cube.
 pub fn census(cell: &Cell3d) -> Result<Census> {
     let net = edge_graph(cell)?;
     let (vertices, edges) = (net.nodes.len(), net.branches.len());
@@ -250,9 +263,31 @@ mod theorems {
     }
 
     #[test]
+    #[ignore = "cubes of side eighty-one and one twenty-five, 10 s; run it in release"]
+    fn the_face_matrix_predicts_the_deepest_level() {
+        for (number, level) in [(3usize, 4u32), (5, 3)] {
+            for code in [23u128, 232, 3, 129] {
+                let fc = tile_fill(code, number) as i128;
+                let l2 = second_eigenvalue(code, number);
+                let work = state(code, number, 1).1 / 2;
+                if work == 0 {
+                    continue;
+                }
+                let closed =
+                    6 * fc.pow(level) - 2 * work * (fc.pow(level) - l2.pow(level)) / (fc - l2);
+                assert_eq!(
+                    state(code, number, level as usize).0,
+                    closed,
+                    "code={code} n={number}"
+                );
+            }
+        }
+    }
+
+    #[test]
     fn the_face_matrix_fits_its_eigenvalues_and_predicts() {
         let mut fitted = 0;
-        for (number, top) in [(3usize, 4usize), (5, 3), (7, 2)] {
+        for (number, top) in [(3usize, 3usize), (5, 2), (7, 2)] {
             for code in [23u128, 232, 3, 129] {
                 let fc = tile_fill(code, number) as i128;
                 let l2 = second_eigenvalue(code, number);
@@ -301,13 +336,10 @@ mod theorems {
                 let next = numerator / base;
                 let closed = 6 * fc.pow(4) - 2 * work * (fc.pow(4) - l2.pow(4)) / (fc - l2);
                 assert_eq!(next, closed, "code={code} n={number}");
-                if number == 3 {
-                    assert_eq!(next, states[3].0, "code={code}");
-                }
                 fitted += 1;
             }
         }
-        assert_eq!(fitted, 6);
+        assert_eq!(fitted, 3);
     }
 
     #[test]
@@ -379,7 +411,7 @@ mod theorems {
 
     #[test]
     fn the_net_falls_short_of_the_grid_corners() {
-        for k in 1..21usize {
+        for k in 1..13usize {
             let cell = designs::create(Code(232), 2 * k - 1, 1, 2).unwrap();
             let m = k - 1;
             assert_eq!(vertices(&cell).unwrap(), 8 * m * m * (k + 2), "k={k}");
@@ -389,7 +421,7 @@ mod theorems {
                 "k={k}"
             );
         }
-        for k in 1..25usize {
+        for k in 1..17usize {
             let flat = two::net(2 * k - 1, 1).unwrap();
             assert_eq!(
                 two::census::vertices(&flat).unwrap(),

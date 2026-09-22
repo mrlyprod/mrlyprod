@@ -1,3 +1,8 @@
+//! The N-dimensional cell and the pipeline the fixed dimensions share.
+//!
+//! A seed pattern grows into a fractal cell here, and `two`, `three` and `six` are that one
+//! pipeline pinned to a dimension: census, geometry, graphs, painting, text and JSON.
+
 /// The fill, void and exposure counts of an N-dimensional cell.
 pub mod census;
 /// The growth of a seed pattern into a fractal cell.

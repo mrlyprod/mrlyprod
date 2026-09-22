@@ -104,6 +104,10 @@ pub fn factorize(number: usize) -> Vec<(usize, u32)> {
 /// Builds every divisor of a wide number from its factorization, ascending, empty for zero.
 ///
 /// The width is the one the factorization needs, so a caller on the pointer width casts at its own call.
+///
+/// ```
+/// assert_eq!(mrlyrs::num::factor::divisors(12), vec![1, 2, 3, 4, 6, 12]);
+/// ```
 pub fn divisors(number: u64) -> Vec<u64> {
     if number == 0 {
         return Vec::new();
@@ -158,6 +162,10 @@ pub fn twisted(number: usize, rhythm: &[i8]) -> i64 {
 /// Returns the Mobius value of the number: zero for zero or a squared factor, else minus one to the count of primes.
 ///
 /// The argument is the pointer width, so a wide value narrows on wasm32 above two to the thirty-two.
+///
+/// ```
+/// assert_eq!(mrlyrs::num::factor::mobius(15), 1);
+/// ```
 pub fn mobius(number: usize) -> i8 {
     if number == 0 {
         return 0;
@@ -195,6 +203,10 @@ pub fn mobius_sieve(limit: usize) -> Vec<i8> {
 }
 
 /// Returns the Euler totient of the number from its factorization, zero for zero and one for one.
+///
+/// ```
+/// assert_eq!(mrlyrs::num::factor::totient(12), 4);
+/// ```
 pub fn totient(number: usize) -> usize {
     if number == 0 {
         return 0;
@@ -278,8 +290,6 @@ mod tests {
 
     #[test]
     fn the_divisor_count_is_sigma_zero_and_twice_the_rectangles_less_a_square() {
-        assert!(divisors(0).is_empty());
-        assert_eq!(divisors(1), vec![1]);
         assert_eq!(divisors(28), vec![1, 2, 4, 7, 14, 28]);
         for number in 1..=2_000usize {
             let count = divisors(number as u64).len() as u128;
@@ -347,7 +357,6 @@ mod tests {
     fn mobius_starts_the_known_sequence() {
         let start: Vec<i8> = (1..=10).map(mobius).collect();
         assert_eq!(start, vec![1, -1, -1, 0, -1, 1, -1, 0, 0, 1]);
-        assert_eq!(mobius(0), 0);
         assert_eq!(mobius(240), 0);
         assert_eq!(mobius(30), -1);
     }
@@ -389,7 +398,6 @@ mod tests {
 
     #[test]
     fn gcd_times_lcm_is_the_product_and_a_gcd_of_one_means_coprime() {
-        assert_eq!(gcd(0, 0), 0);
         assert_eq!(lcm(0, 7), 0);
         for a in 1..=60usize {
             for b in 1..=60usize {

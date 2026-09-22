@@ -33,7 +33,11 @@ impl Layer {
     }
 }
 
-/// Samples a design over the pixel grid into a boolean mask, or an error below dimension 2.
+/// Samples a design over the pixel grid into a boolean mask.
+///
+/// # Errors
+///
+/// Errors below dimension two, or on a code out of range.
 pub fn layer(params: &Layer) -> Result<Vec<bool>> {
     let Spec {
         code,

@@ -56,6 +56,17 @@ impl Nodes {
 }
 
 /// Counts the nodes of the roulette the pencils draw on the track: `mrlyrs::math::spirograph::trace` at `samples` points a pencil, every pair of polyline segments tested for a proper crossing by orientation signs on a grid of buckets, and crossings within `tol` of the picture's longer side read as one node. A pair of segments is counted in one bucket alone, the first they share, so no crossing is counted twice; the sign of an orientation is `side`, exact for any endpoints whose two differences are exact, which two `f32` endpoints are while the picture's coordinates keep their exponents within 29 of one another, as these pictures do. A seat at the wheel's centre draws one circle `b` times over and the count is meaningless there, the passes crossing one another as the sampling wanders.
+///
+/// ```
+/// use mrlyrs::math::spirograph::{pencils, track};
+/// let seats = pencils(&[1, 0, 0, 1], 2, 2, "fill", 0.5, 0.0, 1).unwrap();
+/// let path = track("in", 3, 1, 4, 1).unwrap();
+/// assert_eq!(mrlyrs::math::roulette::nodes(&path, &seats, 600, 4e-4).unwrap().total(), 6);
+/// ```
+///
+/// # Errors
+///
+/// Errors on an empty pencil list, under three samples, a tolerance outside zero to one, or a trace with no extent.
 pub fn nodes(track: &Track, pencils: &[Pencil], samples: usize, tol: f64) -> Result<Nodes> {
     if pencils.is_empty() {
         return value_error("a roulette needs a pencil.");

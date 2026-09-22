@@ -1,4 +1,15 @@
-#![doc = include_str!("README.md")]
+//! The substrate: the road from a grid of bytes to pixels, with nothing mrly on it.
+//!
+//! - `tensor` makes and tallies the byte grids; `cell` dresses one in colors and tags.
+//! - `colors` holds the rgba color, the two themes and the house palette; `paint` spreads a palette over a cell.
+//! - `ramp` turns counter values into colors; `resample` rescales pixels and squashes them for hex.
+//! - `image` holds the paletted pixels; `codec` writes them as a png or a gif and reads a png back.
+//! - `rng` deals seeded chance: one xoshiro256++ stream, passed by hand, never global.
+//! - `error` holds the one error, its Result and the json parser; `named` names an enum.
+//!
+//! The json value and map are serde_json's, kept under `preserve_order` so an object comes back in the order it was written and both bridges print the same text.
+//!
+//! The doors: [`Tensor::of`](crate::core::tensor::Tensor::of), [`Tensor::rot90`](crate::core::tensor::Tensor::rot90), [`Color::from_hex`](crate::core::colors::Color::from_hex), [`Color::to_hex`](crate::core::colors::Color::to_hex), [`png`](crate::core::png()), [`unpng`](crate::core::unpng()), [`gif`](crate::core::gif()) and [`Colorizer::color`](crate::core::ramp::Colorizer::color).
 
 /// The cell grid: type bytes with optional per-cell colors and tags.
 pub mod cell;

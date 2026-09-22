@@ -109,7 +109,16 @@ pub fn harmonic(terms: usize) -> f64 {
     (1..=terms).map(|k| 1.0 / k as f64).sum()
 }
 
-/// Returns the zeta value above one, the partial sum closed by its Euler-Maclaurin tail, or an error at an s of one or below, where the sum does not converge.
+/// Returns the zeta value above one, the partial sum closed by its Euler-Maclaurin tail.
+///
+/// ```
+/// assert!((mrlyrs::num::series::zeta(2.0, 1_000)? - 1.644_934_066_8).abs() < 1e-9);
+/// # Ok::<(), mrlyrs::Error>(())
+/// ```
+///
+/// # Errors
+///
+/// Errs at an s of one or below, and at a NaN, where the sum does not converge.
 pub fn zeta(s: f64, terms: usize) -> Result<f64> {
     if s <= 1.0 || s.is_nan() {
         return value_error(format!("zeta needs an s above one, not {s}."));
@@ -143,6 +152,10 @@ pub fn beta(s: f64, terms: usize) -> f64 {
 }
 
 /// Returns the Dirichlet lambda value, one minus two to the minus s times zeta.
+///
+/// # Errors
+///
+/// Errs at an s of one or below, and at a NaN, where zeta does not converge.
 pub fn lambda(s: f64, terms: usize) -> Result<f64> {
     Ok((1.0 - 2f64.powf(-s)) * zeta(s, terms)?)
 }
@@ -186,9 +199,13 @@ pub fn dirichlet(s: f64, rhythm: &[i8], terms: usize) -> f64 {
     sum
 }
 
-/// Counts the lattice points of the dimension-cube of the limit whose coordinates share no divisor, by Mobius inversion, or an error at a zero dimension.
+/// Counts the lattice points of the dimension-cube of the limit whose coordinates share no divisor, by Mobius inversion.
 ///
 /// The count wraps once the limit to the dimension passes a signed hundred and twenty-eight bits.
+///
+/// # Errors
+///
+/// Errs at a zero dimension.
 pub fn visible(limit: usize, dimension: u32) -> Result<u128> {
     if dimension == 0 {
         return value_error("a visible count needs a dimension above zero.");
@@ -306,7 +323,11 @@ fn binomial(n: usize, k: usize) -> i128 {
     out
 }
 
-/// Builds the first Bernoulli numbers as exact reduced fractions on the minus one half convention, or an error past a count of thirty-two, where the fractions overflow a signed hundred and twenty-eight bits.
+/// Builds the first Bernoulli numbers as exact reduced fractions on the minus one half convention.
+///
+/// # Errors
+///
+/// Errs past a count of thirty-two, where the fractions overrun a signed hundred and twenty-eight bits.
 pub fn bernoulli(count: usize) -> Result<Vec<(i128, i128)>> {
     if count > 32 {
         return overflow_error(format!(

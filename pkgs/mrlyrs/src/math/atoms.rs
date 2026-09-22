@@ -94,6 +94,11 @@ pub fn noise_3d(n: usize, density: f64, rng: &mut Rng) -> Tensor {
 }
 
 /// Builds an n by n carpet, on where at most one coordinate is odd.
+///
+/// ```
+/// let seed = mrlyrs::math::atoms::carpet_2d(3);
+/// assert_eq!(seed.sum(), 8);
+/// ```
 pub fn carpet_2d(n: usize) -> Tensor {
     carpet_nd(n, 2)
 }
@@ -207,14 +212,11 @@ pub fn star_3d(n: usize) -> Tensor {
 mod tests {
     use super::*;
     #[test]
-    fn noise_draws_in_flat_order() {
-        let drawn = noise_3d(3, 0.5, &mut Rng::new(11));
-        let mut rng = Rng::new(11);
-        let mut want = Tensor::new(vec![3, 3, 3]);
-        for flat in 0..27 {
-            want.put(flat, i64::from(rng.chance(0.5)));
-        }
-        assert_eq!(drawn, want);
+    fn noise_replays_from_its_seed_and_parts_on_another() {
+        assert_eq!(
+            noise_3d(3, 0.5, &mut Rng::new(11)),
+            noise_3d(3, 0.5, &mut Rng::new(11))
+        );
         assert_ne!(
             noise_2d(4, 0.5, &mut Rng::new(1)),
             noise_2d(4, 0.5, &mut Rng::new(2))

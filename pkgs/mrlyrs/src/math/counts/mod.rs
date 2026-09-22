@@ -1,3 +1,8 @@
+//! The closed-form counts.
+//!
+//! Every number the censuses reach by walking a built cell, this folder reaches by formula:
+//! fills, grids, exposed surfaces, hex slices and the base-q carry ladder.
+
 /// The closed-form fill and grid counts of coded fractals.
 pub mod counting;
 /// The diagonal profile of any tile's power, as a digit polynomial.

@@ -43,6 +43,10 @@ fn stacked(cells: &[Cell2d]) -> Cell {
 }
 
 /// Merges same-shaped cells into one block of the given width and height in cells, colors and tags kept.
+///
+/// # Errors
+///
+/// Errors on an empty list, a wrong cell count, or cells of different shapes.
 pub fn merge(cells: &[Cell2d], width: usize, height: usize) -> Result<Cell2d> {
     if cells.is_empty() {
         return value_error("Cannot merge an empty list of cells.");
@@ -72,7 +76,11 @@ pub fn merge(cells: &[Cell2d], width: usize, height: usize) -> Result<Cell2d> {
     })
 }
 
-/// Tiles quarter-turned copies of the cell as the 2d mask directs, or an error at a rotation past 3.
+/// Tiles quarter-turned copies of the cell as the 2d mask directs.
+///
+/// # Errors
+///
+/// Errors when the mask is not 2d, or holds a rotation past three.
 pub fn special(mask: &Tensor, cell: &Cell2d) -> Result<Cell2d> {
     if mask.shape.len() != 2 {
         return value_error("special mask must be 2d.");

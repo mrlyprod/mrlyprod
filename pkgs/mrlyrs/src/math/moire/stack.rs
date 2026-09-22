@@ -29,6 +29,16 @@ pub fn merge(acc: &mut [f32], mask: &[bool], combine: Combine, first: bool) {
 }
 
 /// Layers one design at several side numbers into a field under the chosen combine.
+///
+/// ```
+/// use mrlyrs::math::moire::{stack, Combine, Lattice, Spec};
+/// let field = stack(Spec::new(7, 2, 2), &[3, 5], Combine::Sum, 1, Lattice::Square, 16, &[]).unwrap();
+/// assert_eq!(field.data.len(), 256);
+/// ```
+///
+/// # Errors
+///
+/// Errors below dimension two, or on a code out of range.
 pub fn stack(
     spec: Spec,
     numbers: &[usize],
@@ -56,6 +66,10 @@ pub fn stack(
 }
 
 /// Sums layers of several designs at one side number into a field.
+///
+/// # Errors
+///
+/// Errors below dimension two, or on a code out of range.
 pub fn stack_codes(
     specs: &[Spec],
     number: usize,

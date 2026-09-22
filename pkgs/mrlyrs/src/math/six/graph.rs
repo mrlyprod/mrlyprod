@@ -45,16 +45,28 @@ fn adjacency_graph(cell: &Cell6d, keep: impl Fn(u8) -> bool) -> Result<Network> 
 }
 
 /// Builds the network of filled triangles joined by shared edges.
+///
+/// # Errors
+///
+/// Errors when a triangle index falls outside the sheet.
 pub fn slice_core_graph(cell: &Cell6d) -> Result<Network> {
     adjacency_graph(cell, |v| v == FILL)
 }
 
 /// Builds the network of fill and void triangles joined by shared edges.
+///
+/// # Errors
+///
+/// Errors when a triangle index falls outside the sheet.
 pub fn slice_dual_graph(cell: &Cell6d) -> Result<Network> {
     adjacency_graph(cell, |v| v == FILL || v == VOID)
 }
 
 /// Builds the corner-and-edge network of the triangles matching the value, or of every fill and void.
+///
+/// # Errors
+///
+/// Errors when a triangle index falls outside the sheet.
 pub fn slice_edge_graph(cell: &Cell6d, value: Option<u8>) -> Result<Network> {
     let inner = &cell.cell;
     let start = cell.start as i64;

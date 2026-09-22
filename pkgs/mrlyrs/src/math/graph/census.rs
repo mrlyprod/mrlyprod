@@ -44,6 +44,10 @@ pub enum Role {
 /// net.add_branch(0, 1, 1.0).unwrap();
 /// assert_eq!(mrlyrs::math::graph::roles(&net).unwrap(), vec![mrlyrs::math::graph::Role::Tip; 2]);
 /// ```
+///
+/// # Errors
+///
+/// Errors when a branch names a node the network does not hold.
 pub fn roles(network: &Network) -> Result<Vec<Role>> {
     Ok(network
         .degree()?
@@ -58,11 +62,19 @@ pub fn roles(network: &Network) -> Result<Vec<Role>> {
 }
 
 /// Counts the nodes of degree one.
+///
+/// # Errors
+///
+/// Errors when a branch names a node the network does not hold.
 pub fn tips(network: &Network) -> Result<usize> {
     Ok(roles(network)?.iter().filter(|&&r| r == Role::Tip).count())
 }
 
 /// Counts the nodes of degree three or more.
+///
+/// # Errors
+///
+/// Errors when a branch names a node the network does not hold.
 pub fn junctions(network: &Network) -> Result<usize> {
     Ok(roles(network)?
         .iter()
@@ -71,6 +83,10 @@ pub fn junctions(network: &Network) -> Result<usize> {
 }
 
 /// Counts the connected components of the network.
+///
+/// # Errors
+///
+/// Errors when a branch names a node the network does not hold.
 pub fn components(network: &Network) -> Result<usize> {
     let n = network.nodes.len();
     if n == 0 {
@@ -108,6 +124,10 @@ pub fn components(network: &Network) -> Result<usize> {
 /// net.add_branch(0, 1, 1.0).unwrap();
 /// assert_eq!(mrlyrs::math::graph::largest_component(&net).unwrap().nodes.len(), 2);
 /// ```
+///
+/// # Errors
+///
+/// Errors when a branch names a node the network does not hold.
 pub fn largest_component(network: &Network) -> Result<Network> {
     let n = network.nodes.len();
     let adjacency = network.adjacency()?;
@@ -249,6 +269,10 @@ pub struct Census {
 /// net.add_node(vec![3.0, 4.0]).unwrap();
 /// assert_eq!(mrlyrs::math::graph::census(&net).unwrap().components, 2);
 /// ```
+///
+/// # Errors
+///
+/// Errors when a branch names a node the network does not hold.
 pub fn census(network: &Network) -> Result<Census> {
     Ok(Census {
         nodes: network.nodes.len(),

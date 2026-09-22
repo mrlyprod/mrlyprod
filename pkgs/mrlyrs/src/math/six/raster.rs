@@ -6,6 +6,10 @@ use crate::core::error::{value_error, Result};
 const ROW: f64 = 0.866_025_403_784_438_6;
 
 /// Rasterizes a hex cell's fills on a square of the side at the true hex aspect, one for a fill triangle and zero elsewhere.
+///
+/// # Errors
+///
+/// Errors at size zero, for a cell that is not a hexagon, or when nothing is filled.
 pub fn raster(cell: &Cell6d, size: usize) -> Result<Vec<f32>> {
     if size == 0 {
         return value_error("size must be at least 1.");

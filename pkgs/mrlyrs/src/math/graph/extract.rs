@@ -24,7 +24,11 @@ fn coords_of(grid: &Tensor) -> Vec<Vec<usize>> {
     out
 }
 
-/// Extracts the network of filled sites joined to their axis neighbors, or an error off 2D and 3D.
+/// Extracts the network of filled sites joined to their axis neighbors.
+///
+/// # Errors
+///
+/// Errors off two and three dimensions.
 pub fn core_graph(grid: &Tensor) -> Result<Network> {
     let dim = grid.shape.len();
     if dim != 2 && dim != 3 {
@@ -59,11 +63,19 @@ pub fn core_graph(grid: &Tensor) -> Result<Network> {
 }
 
 /// Extracts the core graph of the inverted grid, joining empty sites instead.
+///
+/// # Errors
+///
+/// Errors off two and three dimensions.
 pub fn tunnel_graph(grid: &Tensor) -> Result<Network> {
     core_graph(&grid.invert())
 }
 
-/// Extracts the network of corners and edges outlining every filled site, or an error off 2D and 3D.
+/// Extracts the network of corners and edges outlining every filled site.
+///
+/// # Errors
+///
+/// Errors off two and three dimensions.
 pub fn edge_graph(grid: &Tensor) -> Result<Network> {
     let dim = grid.shape.len();
     if dim != 2 && dim != 3 {

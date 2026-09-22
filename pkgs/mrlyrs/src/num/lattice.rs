@@ -33,7 +33,11 @@ pub fn zeta_factor(dimension: u32) -> Option<f64> {
     Some(sign * (num as f64 / den as f64) * 2f64.powi(d as i32) / (2.0 * factorial))
 }
 
-/// The value zeta takes at a whole argument above one, the exact Bernoulli form at an even one and the Euler-Maclaurin sum at an odd one, or an error at one or below, where the sum does not converge.
+/// The value zeta takes at a whole argument above one, the exact Bernoulli form at an even one and the Euler-Maclaurin sum at an odd one.
+///
+/// # Errors
+///
+/// Errs at a whole argument of one or below, where the sum does not converge.
 pub fn zeta_whole(s: u32) -> Result<f64> {
     if s <= 1 {
         return value_error(format!("zeta needs a whole argument above one, not {s}."));
@@ -44,12 +48,20 @@ pub fn zeta_whole(s: u32) -> Result<f64> {
     }
 }
 
-/// The density the visible count of a window in the dimension walks to, one over zeta of the dimension, or an error at a dimension of one or below.
+/// The density the visible count of a window in the dimension walks to, one over zeta of the dimension.
+///
+/// # Errors
+///
+/// Errs at a dimension of one or below.
 pub fn visible_density(dimension: u32) -> Result<f64> {
     Ok(1.0 / zeta_whole(dimension)?)
 }
 
-/// Recovers the constant the dimension hides from the visible count of the window, pi at an even dimension and zeta of the dimension at an odd one, or an error at a zero dimension.
+/// Recovers the constant the dimension hides from the visible count of the window, pi at an even dimension and zeta of the dimension at an odd one.
+///
+/// # Errors
+///
+/// Errs at a zero dimension.
 pub fn recovered(n: usize, dimension: u32) -> Result<f64> {
     let density = series::visible(n, dimension)? as f64 / (n as f64).powi(dimension as i32);
     let zeta = 1.0 / density;
@@ -82,6 +94,11 @@ pub struct Node2d {
 }
 
 /// Walks the Farey sequence of the order by the Stern-Brocot mediant recurrence from zero over one to one over one: every reduced fraction with denominator at most the order, ascending.
+///
+/// ```
+/// let nodes = mrlyrs::num::lattice::farey(3);
+/// assert_eq!(nodes.len(), 5);
+/// ```
 pub fn farey(order: usize) -> Vec<Node> {
     let mut out = Vec::new();
     if order == 0 {

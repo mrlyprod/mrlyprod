@@ -50,6 +50,10 @@ pub fn chi8(number: usize) -> i64 {
 /// use mrlyrs::math::six::star::arm_law;
 /// assert_eq!(arm_law(7).unwrap().reduced(), (4, 7));
 /// ```
+///
+/// # Errors
+///
+/// Errors at an even layer number.
 pub fn arm_law(number: usize) -> Result<Share> {
     if number == 0 || number.is_multiple_of(2) {
         return value_error("the layer number must be odd.");
@@ -167,6 +171,10 @@ pub struct Star {
 
 impl Star {
     /// Reads the star of a base-2 space code, the carpet being `23`.
+    ///
+    /// # Errors
+    ///
+    /// Errors when the code is out of range for a base-2 cube.
     pub fn new(code: u128) -> Result<Star> {
         let filled = code_to_corners(Code::from(code), 3, 2)?;
         let mut corners = [false; 8];
@@ -204,6 +212,10 @@ impl Star {
     /// use mrlyrs::math::six::star::Star;
     /// assert_eq!(Star::new(23).unwrap().hexagon(3).unwrap().reduced(), (7, 9));
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Errors at an even layer number.
     pub fn hexagon(&self, number: usize) -> Result<Share> {
         if number == 0 || number.is_multiple_of(2) {
             return value_error("the layer number must be odd.");
@@ -242,6 +254,10 @@ impl Star {
     /// use mrlyrs::math::six::star::{arm_law, Star};
     /// assert_eq!(Star::new(23).unwrap().arm(9, 0).unwrap(), arm_law(9).unwrap());
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Errors at an even layer number.
     pub fn arm(&self, number: usize, half: usize) -> Result<Share> {
         if number == 0 || number.is_multiple_of(2) {
             return value_error("the layer number must be odd.");
@@ -266,6 +282,10 @@ impl Star {
     }
 
     /// The per-layer excess of the star band over the hexagon across the first `L` odd layers.
+    ///
+    /// # Errors
+    ///
+    /// Errors below one layer, or at an even layer number.
     pub fn excesses(&self, layers: usize, half: usize) -> Result<Vec<f64>> {
         if layers == 0 {
             return value_error("the layer count must be at least one.");
@@ -287,6 +307,10 @@ impl Star {
 /// vanishes at even `L` alone, so a window from `L/2` to `L` cancels it only when `L` is divisible by
 /// four. At `L = 2 mod 4` the half is odd and the window converges somewhere else entirely, so the
 /// slope is refused there rather than reported wrong.
+///
+/// # Errors
+///
+/// Errors below two layers, or past the excesses read.
 pub fn decay(excesses: &[f64], layers: usize) -> Result<Decay> {
     if layers < 2 || layers > excesses.len() {
         return value_error("the layer count must be at least two and within the excesses read.");

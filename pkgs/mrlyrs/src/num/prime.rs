@@ -2,6 +2,10 @@ use crate::num::factor::{divisors, factorize_wide};
 use crate::num::series::li;
 
 /// Returns whether the number is prime, by trial division on the six-step wheel.
+///
+/// ```
+/// assert!(mrlyrs::num::prime::is_prime(97));
+/// ```
 pub fn is_prime(number: usize) -> bool {
     if number < 2 {
         return false;
@@ -204,6 +208,10 @@ pub fn flags(limit: usize) -> Vec<bool> {
 }
 
 /// Returns the primes up to the limit, the finished sieve read as a list.
+///
+/// ```
+/// assert_eq!(mrlyrs::num::prime::primes(20), vec![2, 3, 5, 7, 11, 13, 17, 19]);
+/// ```
 pub fn primes(limit: usize) -> Vec<usize> {
     flags(limit)
         .iter()

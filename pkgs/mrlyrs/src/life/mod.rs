@@ -1,3 +1,22 @@
+//! The engine: a rule over a grid, stepped, recorded, measured and rendered.
+//!
+//! - `step`: one generation of a grid under birth and survive counts.
+//! - `animate`: a seed run until it fixes, loops or times out.
+//! - `models`: the run config and the recorded life.
+//! - `metrics`: the entropy, churn and chaos readings of a run.
+//! - `crop`: the centred cropping and tiling of a run's frames.
+//! - `mask`: the design masks a rule reads and the lattice they generate.
+//! - `source`: the named sources of neighbor counts, and the counts they lay down.
+//! - `elementary`: the one-line automata and the card of one rule.
+//! - `render`: the PNG frames, the visit heatmap and the gif movie.
+//! - `rule`: the canonical name of a rule.
+//!
+//! The doors: [`next_grid`](crate::life::next_grid), [`animate`](crate::life::animate()),
+//! [`entropy`](crate::life::entropy), [`churn`](crate::life::churn),
+//! [`counts`](crate::life::counts), [`frames`](crate::life::frames),
+//! [`heatmap`](crate::life::heatmap), [`history`](crate::life::history) and
+//! [`Rule`](crate::life::Rule).
+
 /// The run of a seed until it fixes, loops or times out.
 pub mod animate;
 /// The centred cropping and tiling of a run's frames.
@@ -24,6 +43,10 @@ use crate::core::named_enum;
 use crate::math::two::Cell2d;
 
 /// Builds the 3 by 3 Moore mask, every site on but the center.
+///
+/// # Errors
+///
+/// Errs when the mask tensor will not make a flat cell.
 pub fn moore() -> Result<Cell2d> {
     Cell2d::new(crate::core::cell::moore(2))
 }

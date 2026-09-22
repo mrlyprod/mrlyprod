@@ -18,7 +18,11 @@ pub fn hadamard(a: &[i128], b: &[i128]) -> Vec<i128> {
     a.iter().zip(b).map(|(&x, &y)| x * y).collect()
 }
 
-/// Convolves two sequences, keeping the exact prefix their shared length affords, or an error when a sum passes a signed hundred and twenty-eight bits.
+/// Convolves two sequences, keeping the exact prefix their shared length affords.
+///
+/// # Errors
+///
+/// Errs when a term passes a signed hundred and twenty-eight bits.
 pub fn cauchy(a: &[i128], b: &[i128]) -> Result<Vec<i128>> {
     let length = a.len().min(b.len());
     let mut out = Vec::with_capacity(length);
@@ -44,7 +48,11 @@ pub fn shift(a: &[i128], count: usize) -> Vec<i128> {
     a.iter().skip(count).copied().collect()
 }
 
-/// Keeps every step-th term from the offset onward, or an error at a step of zero.
+/// Keeps every step-th term from the offset onward.
+///
+/// # Errors
+///
+/// Errs at a step of zero.
 pub fn decimate(a: &[i128], step: usize, offset: usize) -> Result<Vec<i128>> {
     if step == 0 {
         return value_error("a decimation needs a step above zero.");
@@ -57,7 +65,11 @@ pub fn delta(a: &[i128]) -> Vec<i128> {
     a.windows(2).map(|w| w[1] - w[0]).collect()
 }
 
-/// Returns the partial sums of a sequence, or an error when one passes a signed hundred and twenty-eight bits.
+/// Returns the partial sums of a sequence.
+///
+/// # Errors
+///
+/// Errs when a partial sum passes a signed hundred and twenty-eight bits.
 pub fn sigma(a: &[i128]) -> Result<Vec<i128>> {
     let mut total = 0i128;
     let mut out = Vec::with_capacity(a.len());

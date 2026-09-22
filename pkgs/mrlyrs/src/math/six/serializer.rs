@@ -30,6 +30,10 @@ pub fn to_json(cell: &Cell6d) -> String {
 }
 
 /// Parses a cell from JSON, defaulting any missing projection metadata.
+///
+/// # Errors
+///
+/// Errors when the text is not a hex cell.
 pub fn from_json(text: &str) -> Result<Cell6d> {
     let data = parse(text)?;
     let inner = two::from_json(text)?;

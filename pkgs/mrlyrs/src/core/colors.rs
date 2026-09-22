@@ -204,7 +204,11 @@ pub const LIGHT: Theme = Theme {
     ..INKS
 };
 
-/// Returns the palette color a name spells, or an error for a stranger.
+/// Returns the palette color a name spells.
+///
+/// # Errors
+///
+/// Errs when no palette color carries the name.
 pub fn named(name: &str) -> Result<Color> {
     match NAMES.iter().position(|&n| n == name) {
         Some(i) => Ok(PALETTE[i]),
@@ -246,6 +250,11 @@ impl Color {
         Color { r, g, b, a }
     }
     /// Formats the color as lowercase hex, appending the alpha pair only when not opaque.
+    ///
+    /// ```
+    /// use mrlyrs::core::Color;
+    /// assert_eq!(Color::rgba(0, 140, 255, 128).to_hex(), "#008cff80");
+    /// ```
     pub fn to_hex(&self) -> String {
         if self.a == 255 {
             format!("#{:02x}{:02x}{:02x}", self.r, self.g, self.b)
@@ -253,7 +262,11 @@ impl Color {
             format!("#{:02x}{:02x}{:02x}{:02x}", self.r, self.g, self.b, self.a)
         }
     }
-    /// Parses a #RRGGBB or #RRGGBBAA code, hash optional, or an error for anything else.
+    /// Parses a #RRGGBB or #RRGGBBAA code, hash optional.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the text is not six or eight ascii hex digits after an optional hash.
     ///
     /// ```
     /// assert_eq!(mrlyrs::core::Color::from_hex("#ff3d40").unwrap(), mrlyrs::core::colors::RED);
@@ -292,7 +305,11 @@ impl Color {
     pub fn invert(&self) -> Color {
         Color::rgba(255 - self.r, 255 - self.g, 255 - self.b, self.a)
     }
-    /// Returns the color scaled toward black below level 50 and toward white above, or an error past 100.
+    /// Returns the color scaled toward black below level 50 and toward white above.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the level is past 100.
     pub fn lightness(&self, level: u8) -> Result<Color> {
         if level > 100 {
             return value_error(format!("Level must be between 0 and 100, got {level}"));
@@ -324,7 +341,11 @@ impl Color {
     }
 }
 
-/// Blends two colors linearly by ratio, or an error outside the unit interval.
+/// Blends two colors linearly by ratio.
+///
+/// # Errors
+///
+/// Errs when the ratio falls outside zero to one.
 pub fn mix(color_1: Color, color_2: Color, ratio: f64) -> Result<Color> {
     if !(0.0..=1.0).contains(&ratio) {
         return value_error(format!("Ratio must be between 0.0 and 1.0, got {ratio}"));
@@ -339,6 +360,10 @@ pub fn mix(color_1: Color, color_2: Color, ratio: f64) -> Result<Color> {
 }
 
 /// Builds a gradient of steps colors sweeping evenly through the given stops.
+///
+/// # Errors
+///
+/// Errs on an empty stop list or fewer than one step.
 pub fn gradient(colors: &[Color], steps: usize) -> Result<Vec<Color>> {
     if colors.is_empty() {
         return value_error("Cannot create a gradient from an empty list of colors.");

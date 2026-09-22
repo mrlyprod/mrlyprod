@@ -34,13 +34,17 @@ pub struct Design {
 }
 
 impl Design {
-    /// Builds a design on the base and the digit set, choosing the peel depth, or an error when the base or the digits are out of range.
+    /// Builds a design on the base and the digit set, choosing the peel depth.
     ///
     /// ```
     /// let design = mrlyrs::num::ladder::Design::new(3, &[0, 1]).unwrap();
     /// assert_eq!(design.peel(), 7);
     /// assert!((design.abscissa() - 0.630_929_753_571_457).abs() < 1e-14);
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Errs at a base under two, at fewer than two digits, at a digit outside the base, or at an all-zero digit set.
     pub fn new(base: u64, digits: &[u64]) -> Result<Design> {
         let mut set: Vec<u64> = digits.to_vec();
         set.sort_unstable();
@@ -60,12 +64,16 @@ impl Design {
         Design::with_peel(base, &set, peel)
     }
 
-    /// Builds a design at an explicit peel depth, at least two, or an error when the base, the digits or the depth are out of range.
+    /// Builds a design at an explicit peel depth, at least two.
     ///
     /// ```
     /// let shallow = mrlyrs::num::ladder::Design::with_peel(2, &[0, 1], 4).unwrap();
     /// assert_eq!(shallow.peel(), 4);
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Errs at a bad base or digit set, and at a peel depth under two or past the exact integers.
     pub fn with_peel(base: u64, digits: &[u64], peel: usize) -> Result<Design> {
         let mut set: Vec<u64> = digits.to_vec();
         set.sort_unstable();
@@ -306,7 +314,7 @@ fn tune(
 
 // READINGS
 
-/// Returns `zeta_F(s)` and the bound it is known to, or an error when the tolerance is out of reach or the point sits on the blind lattice.
+/// Returns `zeta_F(s)` and the bound it is known to.
 ///
 /// The bound is the propagated truncation bound, which is proved, plus [`ROUNDING`] times the scale the ladder carries, which is a measured allowance; the acceptance test charges every term the returned bound carries, the Dirichlet polynomial's own scale included, so the returned bound is never above the tolerance asked.
 /// The recursion walks `w = s + j` upward and divides by `1 - k q^(-w)`, so it cannot read `s = alpha - m + 2 pi i j / log q` for a whole `m >= 0`: at those points it raises and names the pole. On a full digit set that lattice is `s = 1, 0, -1, -2, ...`, where `zeta_F` is `zeta` and only `s = 1` is singular.
@@ -317,15 +325,23 @@ fn tune(
 /// let (value, bound) = mrlyrs::num::ladder::zeta(&design, s, 1e-10).unwrap();
 /// assert!((value.re - std::f64::consts::PI * std::f64::consts::PI / 6.0).abs() < bound);
 /// ```
+///
+/// # Errors
+///
+/// Errs when the tolerance is out of reach, or when the point sits on the blind lattice.
 pub fn zeta(design: &Design, s: Complex, tolerance: f64) -> Result<(Complex, f64)> {
     let (value, bound) = tune(design, s, tolerance, true, poly_scale(&design.low, s.re))?;
     Ok((poly(&design.low, s) + value, bound))
 }
 
-/// Returns the Lyndon cofactor `Z(s) = zeta_F(s) (1 - k q^(-s))` and the bound it is known to, or an error when the tolerance is out of reach or the point sits on the blind lattice.
+/// Returns the Lyndon cofactor `Z(s) = zeta_F(s) (1 - k q^(-s))` and the bound it is known to.
 ///
 /// The cofactor is the ladder numerator over the finite polynomial, so it is analytic on `Re s > alpha - 1` and a zero census on it needs no pole-free strip.
 /// The blind lattice here is `s = alpha - m + 2 pi i j / log q` for a whole `m >= 1`: the numerator itself is read at `m = 0`, which is what makes the residue available.
+///
+/// # Errors
+///
+/// Errs when the tolerance is out of reach, or when the point sits on the blind lattice.
 pub fn cofactor(design: &Design, s: Complex, tolerance: f64) -> Result<(Complex, f64)> {
     let base = design.base as f64;
     let size = design.digits.len() as f64;
@@ -335,10 +351,14 @@ pub fn cofactor(design: &Design, s: Complex, tolerance: f64) -> Result<(Complex,
     Ok((front * poly(&design.low, s) + value, bound))
 }
 
-/// Returns the residue of `zeta_F` at `s_(m,j) = alpha - m + 2 pi i j / log q` and the bound it is known to, or an error when the tolerance is out of reach.
+/// Returns the residue of `zeta_F` at `s_(m,j) = alpha - m + 2 pi i j / log q` and the bound it is known to.
 ///
 /// At `m = 0` the factor `1 - k q^(-s)` has derivative `log q`, so the residue is the ladder numerator over `log q`; the column below comes off the same recursion, `(1 - q^m) R_m = sum_(l = 1)^m binom(-s_(m,j), l) q^(-s_(m,j)-l) gamma_l R_(m-l)`.
 /// The head term `(1 - k q^(-s)) D_(P-1)(s)` is dropped, since the factor vanishes at the pole; in double precision the factor is not exactly zero, and the residue of the dropped term, about `1e-15` at base 10, is not charged separately and sits inside the carried scale.
+///
+/// # Errors
+///
+/// Errs when the tolerance is out of reach.
 pub fn residue(design: &Design, m: usize, j: i64, tolerance: f64) -> Result<(Complex, f64)> {
     let base = design.base as f64;
     let (head, err) = tune(design, design.pole(0, j), tolerance, false, 0.0)?;

@@ -204,6 +204,10 @@ fn weight_of(scale: usize, weights: &str) -> Result<f64> {
 /// The layers of a stack: every scale one, three, five up to the top the set keeps, each with its weight and its angle.
 ///
 /// The schedule is unspun, degrees, golden, primes, random or gaussian, the layer set is odd, primes, squarefree or prime powers and the weights are plain, mobius or harmonic. The weights are rescaled so their magnitudes sum to the layer count, so the mean blend stays paper coverage and the sum blend stays the inked layer count.
+///
+/// # Errors
+///
+/// Errors at an even top or one out of range, or for a schedule, set or weights name the stack does not know.
 pub fn layers(
     top: usize,
     schedule: &str,
@@ -365,6 +369,10 @@ fn corners(layer: &Layer, size: usize, inside: &[bool], mark: &mut [u8]) {
 /// Rasters the layers onto a square of the size, every one turned about the centre by its own angle and masked to the inscribed disc, then merged site by site.
 ///
 /// The render mode is cells, the lit squares of the carpet, edges, the boundaries between its cells, or corners, the vertices of its lit squares. The weights ride on the layers under the linear blends only. Sites outside the disc are NaN.
+///
+/// # Errors
+///
+/// Errors for a mode that is not cells, edges or corners, or a raster past the site budget.
 pub fn stack(list: &[Layer], size: usize, mode: &str, blend: Blend) -> Result<Vec<f32>> {
     if !["cells", "edges", "corners"].contains(&mode) {
         return value_error(format!(
@@ -466,6 +474,10 @@ fn peaks(field: &[f32], size: usize, top: usize) -> Vec<[f64; 3]> {
 /// Spins the odd parity carpets at the scales one, three, five up to the top into one stack on a square of the size, every layer turned about the centre by its own angle and masked to the inscribed disc, so every pixel sees every layer.
 ///
 /// The schedule is unspun, degrees, golden, primes, random or gaussian, the layer set is odd, primes, squarefree or prime powers, the weights are plain, mobius or harmonic, the render mode is cells, edges or corners and the blend is mean, sum, union, meet, parity or difference. The weights are scaled to average magnitude one and apply only under the linear blends, so mean is paper coverage and sum is the inked layer count. Sites outside the disc are NaN.
+///
+/// # Errors
+///
+/// Errors at a raster or top out of range, or for a schedule, set, weights or blend name the stack does not know.
 #[allow(clippy::too_many_arguments)]
 pub fn field(
     top: usize,
@@ -487,6 +499,10 @@ pub fn field(
 /// Reads a spun stack against the schedule that made it: the layer count, the first eight scales and angles, the mean and RMS contrast over the disc, that contrast times the root of the layer count, the exact centre value, whether the blend carries the weights, the span the raster covers and the brightest three sites.
 ///
 /// The centre is computed from the layers at the exact half-half point, never sampled off the raster, so no turn of the layers moves it.
+///
+/// # Errors
+///
+/// Errors when the field is not size by size, or a name the stack does not know.
 #[allow(clippy::too_many_arguments)]
 pub fn stats(
     field: &[f32],

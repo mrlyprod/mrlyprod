@@ -3,6 +3,10 @@ use crate::core::error::Result;
 use crate::core::tensor::Tensor;
 
 /// Grows a seed pattern into a cell, deepened to its fractal past level one.
+///
+/// # Errors
+///
+/// Errors when the pattern's rank is not N, or the level is below one.
 pub fn grow<const N: usize>(pattern: Tensor, level: usize) -> Result<CellNd<N>> {
     let mut cell = CellNd::<N>::new(pattern)?;
     if level > 1 {

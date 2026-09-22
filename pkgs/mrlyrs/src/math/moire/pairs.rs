@@ -64,12 +64,16 @@ pub struct Witness {
     pub prime: bool,
 }
 
-/// Puts an odd scale of three or more on trial against every earlier odd scale, or an error for another scale.
+/// Puts an odd scale of three or more on trial against every earlier odd scale.
 ///
 /// ```
 /// let trial = mrlyrs::math::moire::pairs::witness(9).unwrap();
 /// assert_eq!((trial.scales, trial.at, trial.prime), (vec![3, 5, 7], 3, false));
 /// ```
+///
+/// # Errors
+///
+/// Errors for a scale that is not odd and three or more.
 pub fn witness(scale: usize) -> Result<Witness> {
     if scale < 3 || scale.is_multiple_of(2) {
         return value_error("the stack has odd scales from three.");
@@ -93,7 +97,11 @@ pub fn witness(scale: usize) -> Result<Witness> {
     })
 }
 
-/// Returns the Pearson correlation of two rendered carpet layers on their lcm grid, sampled rather than integrated, or an error when either scale is zero.
+/// Returns the Pearson correlation of two rendered carpet layers on their lcm grid, sampled rather than integrated.
+///
+/// # Errors
+///
+/// Errors when either scale is zero.
 pub fn sampled(m: usize, n: usize) -> Result<f64> {
     if m == 0 || n == 0 {
         return value_error("a sampled pair needs two scales of at least one.");

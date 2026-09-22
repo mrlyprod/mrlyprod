@@ -57,7 +57,11 @@ pub fn is_hex(cell: &Cell2d) -> bool {
     }
 }
 
-/// Returns the orientation a hexagon's width and height imply, or an error when they are equal.
+/// Returns the orientation a hexagon's width and height imply.
+///
+/// # Errors
+///
+/// Errors when the width and the height are equal.
 pub fn orientation(width: usize, height: usize) -> Result<Orientation> {
     if width > height {
         return Ok(Orientation::Horizontal);
@@ -75,6 +79,10 @@ pub fn orientation(width: usize, height: usize) -> Result<Orientation> {
 /// let hex = blank(2, Orientation::Horizontal, 1, 0).unwrap();
 /// assert_eq!(hex.types().shape, vec![4, 7]);
 /// ```
+///
+/// # Errors
+///
+/// Errors below radius one.
 pub fn blank(radius: usize, orient: Orientation, fill: u8, void: u8) -> Result<Cell2d> {
     if radius == 0 {
         return value_error("a hexagon needs a radius of at least one.");
@@ -118,6 +126,10 @@ pub fn blank(radius: usize, orient: Orientation, fill: u8, void: u8) -> Result<C
 }
 
 /// Wraps a hexagonal cell in k rings of the given value, carrying colors and tags along.
+///
+/// # Errors
+///
+/// Errors for a cell that is not a hexagon.
 pub fn pad(cell: &Cell6d, k: usize, value: u8) -> Result<Cell6d> {
     if k < 1 {
         return Ok(cell.clone());
@@ -164,6 +176,10 @@ pub fn pad(cell: &Cell6d, k: usize, value: u8) -> Result<Cell6d> {
 }
 
 /// Projects a cube into the isometric hexagon of top, left and right faces.
+///
+/// # Errors
+///
+/// Errors for a cell that is not a cube.
 pub fn iso(cell: &Cell3d) -> Result<Cell6d> {
     if !is_cube(cell) {
         return value_error("Cell must be a cube.");
@@ -202,6 +218,10 @@ pub fn iso(cell: &Cell3d) -> Result<Cell6d> {
 }
 
 /// Projects a cube's three facing sides into a hexagon of fills and voids.
+///
+/// # Errors
+///
+/// Errors for a cell that is not a cube.
 pub fn pro(cell: &Cell3d) -> Result<Cell6d> {
     if !is_cube(cell) {
         return value_error("Cell must be a cube.");
@@ -264,6 +284,10 @@ pub fn pro(cell: &Cell3d) -> Result<Cell6d> {
 }
 
 /// Slices a cube through its center across the main diagonal into a hexagon.
+///
+/// # Errors
+///
+/// Errors for a cell that is not a cube.
 pub fn cut(cell: &Cell3d) -> Result<Cell6d> {
     if !is_cube(cell) {
         return value_error("Cell must be a cube.");
@@ -314,6 +338,10 @@ pub fn cut(cell: &Cell3d) -> Result<Cell6d> {
 }
 
 /// Stamps a hexagonal cell at every set mask entry into one interlocking sheet, colors and tags included.
+///
+/// # Errors
+///
+/// Errors for a cell that is not a hexagon.
 pub fn tessellate(cell: &Cell6d, mask: &Tensor) -> Result<Cell2d> {
     let inner = &cell.cell;
     if !is_hex(inner) {
@@ -374,6 +402,10 @@ pub fn tessellate(cell: &Cell6d, mask: &Tensor) -> Result<Cell2d> {
 }
 
 /// Tessellates a hexagonal cell over a full width-by-height mask.
+///
+/// # Errors
+///
+/// Errors for a cell that is not a hexagon.
 pub fn tile(cell: &Cell6d, width: usize, height: usize) -> Result<Cell2d> {
     tessellate(cell, &Tensor::full(vec![height, width], 1))
 }
@@ -383,6 +415,10 @@ pub fn tile(cell: &Cell6d, width: usize, height: usize) -> Result<Cell2d> {
 /// ```
 /// assert_eq!(mrlyrs::math::six::tile_step((11, 6)).unwrap(), (2, 3));
 /// ```
+///
+/// # Errors
+///
+/// Errors when the width and the height are equal.
 pub fn tile_step(size: (usize, usize)) -> Result<(usize, usize)> {
     let (w, h) = size;
     Ok(match orientation(w, h)? {
@@ -392,6 +428,10 @@ pub fn tile_step(size: (usize, usize)) -> Result<(usize, usize)> {
 }
 
 /// Crops one interlocking step off each side of a sheet tiled at the given size.
+///
+/// # Errors
+///
+/// Errors when the width and the height are equal.
 pub fn tile_crop(cell: &Cell2d, size: (usize, usize)) -> Result<Cell2d> {
     let (crop_x, crop_y) = tile_step(size)?;
     crop(cell, crop_x, crop_y)
@@ -400,6 +440,10 @@ pub fn tile_crop(cell: &Cell2d, size: (usize, usize)) -> Result<Cell2d> {
 /// Tessellates a hexagon over a full width-by-height mask and returns the sheet as a projected cell, cropped to the interlocking rectangle on request.
 ///
 /// The sheet keeps the tile's projection and orientation. A crop slides the triangle grid by the interlocking step on both axes, so the start parity flips whenever that step is odd; without the flip every triangle in the sheet points the wrong way.
+///
+/// # Errors
+///
+/// Errors for a cell that is not a hexagon.
 pub fn tile_cell(cell: &Cell6d, width: usize, height: usize, crop: bool) -> Result<Cell6d> {
     let size = (cell.width(), cell.height());
     let orient = orientation(size.0, size.1)?;
@@ -434,6 +478,10 @@ pub fn skin(cell: &Cell6d) -> Cell6d {
 /// Backs a cell onto a backdrop whose longer axis matches its orientation, leaving every triangle where it stood.
 ///
 /// A renderer reads a sheet's orientation off its frame, so a tall sheet of wide hexagons would draw every triangle on its side; the spare columns or rows are backdrop and reach neither the census nor the picture.
+///
+/// # Errors
+///
+/// Errors when the backdrop does not take the cell's triangles.
 pub fn framed(cell: &Cell6d) -> Result<Cell6d> {
     let (h, w) = (cell.height(), cell.width());
     let (width, height) = match cell.orientation {
@@ -504,6 +552,10 @@ pub fn radial_mask(radius: usize, orient: Orientation) -> Tensor {
 }
 
 /// Tessellates a hexagonal cell over the disc mask of the given radius.
+///
+/// # Errors
+///
+/// Errors for a cell that is not a hexagon.
 pub fn radial(cell: &Cell6d, radius: usize) -> Result<Cell2d> {
     let inner = &cell.cell;
     if !is_hex(inner) {
@@ -514,6 +566,10 @@ pub fn radial(cell: &Cell6d, radius: usize) -> Result<Cell2d> {
 }
 
 /// Crops the interlocking overhang off a disc tiled at the given radius and tile size.
+///
+/// # Errors
+///
+/// Errors when the width and the height are equal.
 pub fn radial_crop(cell: &Cell2d, radius: usize, size: (usize, usize)) -> Result<Cell2d> {
     let (w, h) = size;
     let orient = orientation(w, h)?;

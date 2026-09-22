@@ -5,7 +5,13 @@ use crate::math::bang::Code;
 use crate::math::two;
 use crate::num::factor::gcd;
 
-/// Builds the base-2 design mask a code names at an odd side grown to the given Kronecker level, its centre popped.
+/// Builds the base-2 design mask a code names at an odd side grown to the given Kronecker
+/// level, its centre popped.
+///
+/// # Errors
+///
+/// Errs when the dimension is not 1 or 2, the side is even, the level is zero, or the side
+/// overflows a usize.
 pub fn design_mask(dimension: usize, code: Code, number: usize, level: usize) -> Result<Tensor> {
     if !(1..=2).contains(&dimension) {
         return value_error("a mask lives in dimension 1 or 2.");

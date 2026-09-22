@@ -41,7 +41,11 @@ pub struct CellNd<const N: usize> {
 }
 
 impl<const N: usize> CellNd<N> {
-    /// Builds a cell from an N-dimensional tensor of types, or an error when the rank is not N.
+    /// Builds a cell from an N-dimensional tensor of types.
+    ///
+    /// # Errors
+    ///
+    /// Errors when the tensor's rank is not N.
     pub fn new(types: Tensor) -> Result<CellNd<N>> {
         if types.shape.len() != N {
             return shape_error(format!(
@@ -81,7 +85,11 @@ impl<const N: usize> CellNd<N> {
             cell: self.cell.pad(count, value),
         }
     }
-    /// Deepens the cell into its level-fold fractal, or an error below level one.
+    /// Deepens the cell into its level-fold fractal.
+    ///
+    /// # Errors
+    ///
+    /// Errors below level one.
     pub fn fractal(self, level: usize) -> Result<CellNd<N>> {
         Ok(CellNd {
             cell: self.cell.fractal(level)?,
@@ -94,6 +102,10 @@ impl<const N: usize> CellNd<N> {
         }
     }
     /// Tags each site with its count of masked neighbors matching the target, wrapping on request.
+    ///
+    /// # Errors
+    ///
+    /// Errors when the mask does not match the cell's rank.
     pub fn neighbors(self, mask: &Tensor, target: u8, wrap: bool) -> Result<CellNd<N>> {
         let dtype = counting_dtype(mask);
         Ok(CellNd {
@@ -113,12 +125,20 @@ impl<const N: usize> CellNd<N> {
         }
     }
     /// Rounds each site to the mean of its masked neighborhood, wrapping on request.
+    ///
+    /// # Errors
+    ///
+    /// Errors when the mask does not match the cell's rank.
     pub fn blur(self, mask: &Tensor, wrap: bool) -> Result<CellNd<N>> {
         Ok(CellNd {
             cell: self.cell.blur(mask, wrap)?,
         })
     }
     /// Writes the value wherever the tiled mask is nonzero.
+    ///
+    /// # Errors
+    ///
+    /// Errors when the mask does not tile the cell.
     pub fn perforate(self, mask: &Tensor, value: u8) -> Result<CellNd<N>> {
         Ok(CellNd {
             cell: self.cell.perforate(mask, value)?,
@@ -139,13 +159,21 @@ impl<const N: usize> CellNd<N> {
 }
 
 impl CellNd<2> {
-    /// Rotates the cell k quarter turns in the plane, or an error for a cell without two axes.
+    /// Rotates the cell k quarter turns in the plane.
+    ///
+    /// # Errors
+    ///
+    /// Errors for a cell without two axes.
     pub fn rotate(self, k: usize) -> Result<Cell2d> {
         Ok(CellNd {
             cell: self.cell.rotate(k, (0, 1))?,
         })
     }
-    /// Repeats the cell into a width-by-height array of copies, or an error for a cell without two axes.
+    /// Repeats the cell into a width-by-height array of copies.
+    ///
+    /// # Errors
+    ///
+    /// Errors for a cell without two axes.
     pub fn tile(self, width: usize, height: usize) -> Result<Cell2d> {
         Ok(CellNd {
             cell: self.cell.tile(&[height, width])?,
@@ -158,13 +186,21 @@ impl CellNd<3> {
     pub fn depth(&self) -> usize {
         self.cell.types.shape[2]
     }
-    /// Rotates the cell k quarter turns about the given pair of axes, or an error for axes off the cell.
+    /// Rotates the cell k quarter turns about the given pair of axes.
+    ///
+    /// # Errors
+    ///
+    /// Errors for axes the cell does not hold.
     pub fn rotate(self, k: usize, axes: (usize, usize)) -> Result<Cell3d> {
         Ok(CellNd {
             cell: self.cell.rotate(k, axes)?,
         })
     }
-    /// Turns the cell into one of the 24 cube orientations, or an error past the table.
+    /// Turns the cell into one of the 24 cube orientations.
+    ///
+    /// # Errors
+    ///
+    /// Errors past orientation twenty-three.
     pub fn orient(self, index: usize) -> Result<Cell3d> {
         let table = crate::math::three::orientations();
         match table.get(index) {
@@ -172,7 +208,11 @@ impl CellNd<3> {
             None => value_error(format!("orientation index {index} out of range (0..23).")),
         }
     }
-    /// Repeats the cell into a width-by-height-by-depth array of copies, or an error for a cell without three axes.
+    /// Repeats the cell into a width-by-height-by-depth array of copies.
+    ///
+    /// # Errors
+    ///
+    /// Errors for a cell without three axes.
     pub fn tile(self, width: usize, height: usize, depth: usize) -> Result<Cell3d> {
         Ok(CellNd {
             cell: self.cell.tile(&[height, width, depth])?,
@@ -191,32 +231,34 @@ mod tests {
         assert_eq!(binarized.types(), cell.types());
     }
     #[test]
-    fn blur_wrapper_preserves_shape() {
-        let cell = Cell2d::new(atoms::carpet_2d(3)).unwrap();
-        let mask = Tensor::full(vec![3, 3], 1);
-        let blurred = cell.clone().blur(&mask, true).unwrap();
-        assert_eq!(blurred.types().shape, cell.types().shape);
+    fn blur_keeps_the_shape_at_every_rank() {
+        let flat = Cell2d::new(atoms::carpet_2d(3)).unwrap();
+        let blurred = flat
+            .clone()
+            .blur(&Tensor::full(vec![3, 3], 1), true)
+            .unwrap();
+        assert_eq!(blurred.types().shape, flat.types().shape);
+        let cube = Cell3d::new(atoms::carpet_3d(3)).unwrap();
+        let blurred = cube
+            .clone()
+            .blur(&Tensor::full(vec![3, 3, 3], 1), true)
+            .unwrap();
+        assert_eq!(blurred.types().shape, cube.types().shape);
     }
     #[test]
-    fn perforate_wrapper_zero_mask_is_identity() {
-        let cell = Cell2d::new(atoms::carpet_2d(3)).unwrap();
-        let mask = Tensor::new(cell.types().shape.clone());
-        let perforated = cell.clone().perforate(&mask, 5).unwrap();
-        assert_eq!(perforated.types(), cell.types());
-    }
-    #[test]
-    fn blur_wrapper_preserves_shape_3d() {
-        let cell = Cell3d::new(atoms::carpet_3d(3)).unwrap();
-        let mask = Tensor::full(vec![3, 3, 3], 1);
-        let blurred = cell.clone().blur(&mask, true).unwrap();
-        assert_eq!(blurred.types().shape, cell.types().shape);
-    }
-    #[test]
-    fn perforate_wrapper_zero_mask_is_identity_3d() {
-        let cell = Cell3d::new(atoms::carpet_3d(3)).unwrap();
-        let mask = Tensor::new(cell.types().shape.clone());
-        let perforated = cell.clone().perforate(&mask, 5).unwrap();
-        assert_eq!(perforated.types(), cell.types());
+    fn a_zero_mask_perforates_nothing_at_every_rank() {
+        let flat = Cell2d::new(atoms::carpet_2d(3)).unwrap();
+        let mask = Tensor::new(flat.types().shape.clone());
+        assert_eq!(
+            flat.clone().perforate(&mask, 5).unwrap().types(),
+            flat.types()
+        );
+        let cube = Cell3d::new(atoms::carpet_3d(3)).unwrap();
+        let mask = Tensor::new(cube.types().shape.clone());
+        assert_eq!(
+            cube.clone().perforate(&mask, 5).unwrap().types(),
+            cube.types()
+        );
     }
     #[test]
     fn counting_dtype_widens_with_the_mask() {

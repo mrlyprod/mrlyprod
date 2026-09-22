@@ -145,7 +145,11 @@ impl Tensor {
             shape,
         }
     }
-    /// Wraps a byte vector as a tensor of the shape, or an error when the two sizes differ.
+    /// Wraps a byte vector as a tensor of the shape.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the data length is not the shape's product.
     ///
     /// ```
     /// use mrlyrs::core::tensor::Tensor;
@@ -173,14 +177,22 @@ impl Tensor {
     pub fn size(&self) -> usize {
         self.data.len()
     }
-    /// Returns the elements as bytes, or an error for a wider tensor.
+    /// Returns the elements as bytes.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the tensor is wider than one byte.
     pub fn bytes(&self) -> Result<&[u8]> {
         match &self.data {
             Buf::U8(v) => Ok(v),
             other => shape_error(format!("tensor is {:?}, not u8.", other.dtype())),
         }
     }
-    /// Returns the elements as mutable bytes, or an error for a wider tensor.
+    /// Returns the elements as mutable bytes.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the tensor is wider than one byte.
     pub fn bytes_mut(&mut self) -> Result<&mut [u8]> {
         match &mut self.data {
             Buf::U8(v) => Ok(v),
@@ -229,12 +241,20 @@ impl Tensor {
         }
         Ok(axis)
     }
-    /// Returns the byte at a multi-index, or an error when the index misses the shape or the tensor is wider.
+    /// Returns the byte at a multi-index.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the index misses the shape or the tensor is wider than one byte.
     pub fn get(&self, multi: &[usize]) -> Result<u8> {
         let flat = self.flat(multi)?;
         Ok(self.bytes()?[flat])
     }
-    /// Writes the byte at a multi-index, or an error when the index misses the shape or the tensor is wider.
+    /// Writes the byte at a multi-index.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the index misses the shape or the tensor is wider than one byte.
     pub fn set(&mut self, multi: &[usize], value: u8) -> Result<()> {
         let flat = self.flat(multi)?;
         self.bytes_mut()?[flat] = value;
@@ -302,7 +322,11 @@ impl Tensor {
         }
         out
     }
-    /// Reverses the tensor along one axis, or an error for an axis past the rank.
+    /// Reverses the tensor along one axis.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the axis is past the rank.
     pub fn flip(&self, axis: usize) -> Result<Tensor> {
         let n = self.shape[self.axis(axis)?];
         Ok(self.remap(self.shape.clone(), |idx| {
@@ -311,7 +335,11 @@ impl Tensor {
             src
         }))
     }
-    /// Swaps two axes, or an error for an axis past the rank.
+    /// Swaps two axes.
+    ///
+    /// # Errors
+    ///
+    /// Errs when either axis is past the rank.
     pub fn transpose(&self, a: usize, b: usize) -> Result<Tensor> {
         let mut shape = self.shape.clone();
         shape.swap(self.axis(a)?, self.axis(b)?);
@@ -322,6 +350,10 @@ impl Tensor {
         }))
     }
     /// Drops one axis by fixing it at an index.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the axis is past the rank or the index is past the axis.
     ///
     /// ```
     /// let sponge = mrlyrs::math::atoms::carpet_3d(3);
@@ -342,7 +374,11 @@ impl Tensor {
             src
         }))
     }
-    /// Rotates the tensor k quarter turns in the plane of two axes, or an error when the axes are not two distinct axes of the tensor.
+    /// Rotates the tensor k quarter turns in the plane of two axes.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the axes are not two distinct axes of the tensor.
     ///
     /// ```
     /// use mrlyrs::core::tensor::Tensor;
@@ -373,7 +409,11 @@ impl Tensor {
         }
         out
     }
-    /// Repeats the tensor the given number of times along each axis, or an error without one count per axis.
+    /// Repeats the tensor the given number of times along each axis.
+    ///
+    /// # Errors
+    ///
+    /// Errs without one count per axis.
     pub fn tile(&self, reps: &[usize]) -> Result<Tensor> {
         if reps.len() != self.shape.len() {
             return shape_error(format!(
@@ -407,7 +447,11 @@ impl Tensor {
         }
         out
     }
-    /// Counts each position's masked neighbors holding the target bit, or an error when the mask or count does not fit.
+    /// Counts each position's masked neighbors holding the target bit.
+    ///
+    /// # Errors
+    ///
+    /// Errs on a mask of another rank or an even side, a target above one, or a count past the dtype.
     pub fn neighbors(&self, mask: &Tensor, target: u8, wrap: bool, dtype: Dtype) -> Result<Tensor> {
         if mask.shape.len() != self.shape.len() {
             return value_error("mask must have the same number of dimensions.");
@@ -516,6 +560,10 @@ impl Tensor {
         self.binarize(self.otsu_threshold().saturating_add(1))
     }
     /// Averages every position over its masked neighborhood, rounded.
+    ///
+    /// # Errors
+    ///
+    /// Errs on a mask of another rank, an even side, or a mask with nothing on.
     pub fn blur(&self, mask: &Tensor, wrap: bool) -> Result<Tensor> {
         if mask.shape.len() != self.shape.len() {
             return value_error("mask must have the same number of dimensions.");
@@ -573,6 +621,10 @@ impl Tensor {
         Ok(out)
     }
     /// Stamps the value wherever the tiled mask is nonzero.
+    ///
+    /// # Errors
+    ///
+    /// Errs on a mask of another rank or a side that does not evenly tile the tensor.
     pub fn perforate(&self, mask: &Tensor, value: u8) -> Result<Tensor> {
         if mask.shape.len() != self.shape.len() {
             return value_error("mask must have the same number of dimensions.");

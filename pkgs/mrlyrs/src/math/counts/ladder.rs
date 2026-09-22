@@ -65,6 +65,10 @@ fn convolve(left: &[i128], right: &[i128]) -> Result<Vec<i128>> {
 /// ```
 /// assert_eq!(mrlyrs::math::counts::ladder::digit_polynomial(3, 3).unwrap(), vec![1, 3, 3, 6, 3, 3, 1]);
 /// ```
+///
+/// # Errors
+///
+/// Errors at an even base under three, or a dimension outside two to the ceiling.
 pub fn digit_polynomial(base: usize, dimension: usize) -> Result<Vec<i128>> {
     let centre = middle(base)?;
     sized(dimension)?;
@@ -84,6 +88,10 @@ pub fn digit_polynomial(base: usize, dimension: usize) -> Result<Vec<i128>> {
 /// assert_eq!(mrlyrs::math::counts::ladder::fill(3, 3).unwrap(), 20);
 /// assert_eq!(mrlyrs::math::counts::ladder::fill(5, 3).unwrap(), 112);
 /// ```
+///
+/// # Errors
+///
+/// Errors at an even base under three, a dimension outside two to the ceiling, or a product past an i128.
 pub fn fill(base: usize, dimension: usize) -> Result<i128> {
     middle(base)?;
     sized(dimension)?;
@@ -109,6 +117,10 @@ fn coefficient(poly: &[i128], index: i128) -> i128 {
 /// A level of the design adds one base-`q` digit per coordinate, so the height of the central
 /// diagonal hyperplane moves by a digit sum `s` and a carry `c -> (c + mD - s)/q` with `m` the
 /// middle digit; the map contracts onto this window from every start.
+///
+/// # Errors
+///
+/// Errors at an even base under three, or a dimension outside two to the ceiling.
 pub fn carry_matrix(base: usize, dimension: usize) -> Result<Vec<Vec<i128>>> {
     let poly = digit_polynomial(base, dimension)?;
     let shift = (middle(base)? * dimension) as i128;
@@ -132,6 +144,10 @@ pub fn carry_matrix(base: usize, dimension: usize) -> Result<Vec<Vec<i128>>> {
 /// ```
 /// assert_eq!(mrlyrs::math::counts::ladder::even_block(3, 3).unwrap(), vec![vec![6, 6], vec![1, 3]]);
 /// ```
+///
+/// # Errors
+///
+/// Errors at an even base under three, or a dimension outside two to the ceiling.
 pub fn even_block(base: usize, dimension: usize) -> Result<Vec<Vec<i128>>> {
     let poly = digit_polynomial(base, dimension)?;
     let shift = (middle(base)? * dimension) as i128;
@@ -190,6 +206,10 @@ fn multiply(left: &[Vec<i128>], right: &[Vec<i128>]) -> Result<Vec<Vec<i128>>> {
 /// let block = mrlyrs::math::counts::ladder::even_block(3, 3).unwrap();
 /// assert_eq!(mrlyrs::math::counts::ladder::characteristic(&block).unwrap(), vec![1, -9, 12]);
 /// ```
+///
+/// # Errors
+///
+/// Errors when the walk leaves a remainder, or a coefficient passes an i128.
 pub fn characteristic(rows: &[Vec<i128>]) -> Result<Vec<i128>> {
     let n = rows.len();
     let mut held: Vec<Vec<i128>> = (0..n)
@@ -218,6 +238,10 @@ pub fn characteristic(rows: &[Vec<i128>]) -> Result<Vec<i128>> {
 /// let block = mrlyrs::math::counts::ladder::even_block(3, 3).unwrap();
 /// assert_eq!(mrlyrs::math::counts::ladder::determinant(&block).unwrap(), 12);
 /// ```
+///
+/// # Errors
+///
+/// Errors when the walk leaves a remainder, or a coefficient passes an i128.
 pub fn determinant(rows: &[Vec<i128>]) -> Result<i128> {
     let poly = characteristic(rows)?;
     let last = poly[rows.len()];
@@ -240,6 +264,10 @@ pub fn determinant(rows: &[Vec<i128>]) -> Result<i128> {
 /// let terms = mrlyrs::math::counts::ladder::ladder(3, 3, 6).unwrap();
 /// assert_eq!(terms, vec![1, 6, 42, 306, 2250, 16578, 122202]);
 /// ```
+///
+/// # Errors
+///
+/// Errors at an even base under three, or a dimension outside two to the ceiling.
 pub fn ladder(base: usize, dimension: usize, levels: usize) -> Result<Vec<i128>> {
     let block = even_block(base, dimension)?;
     let n = block.len();
@@ -280,6 +308,10 @@ pub fn ladder(base: usize, dimension: usize, levels: usize) -> Result<Vec<i128>>
 /// let root = mrlyrs::math::counts::ladder::perron(&block).unwrap();
 /// assert!((root - (9.0 + 33f64.sqrt()) / 2.0).abs() < 1e-9);
 /// ```
+///
+/// # Errors
+///
+/// Errors when the block has no positive row sum, or no root inside its bound.
 pub fn perron(rows: &[Vec<i128>]) -> Result<f64> {
     let poly = characteristic(rows)?;
     let bound = rows
@@ -328,6 +360,10 @@ pub fn perron(rows: &[Vec<i128>]) -> Result<f64> {
 /// assert_eq!(mrlyrs::math::counts::ladder::sign(3, 3).unwrap(), 1);
 /// assert_eq!(mrlyrs::math::counts::ladder::sign(3, 4).unwrap(), -1);
 /// ```
+///
+/// # Errors
+///
+/// Errors at an even base under three, a dimension outside two to the ceiling, or a term past an i128.
 pub fn sign(base: usize, dimension: usize) -> Result<i32> {
     let block = even_block(base, dimension)?;
     let poly = characteristic(&block)?;
@@ -356,6 +392,10 @@ pub fn sign(base: usize, dimension: usize) -> Result<i32> {
 /// assert_eq!(mrlyrs::math::counts::ladder::cap(3).unwrap(), 15);
 /// assert_eq!(mrlyrs::math::counts::ladder::cap(5).unwrap(), 11);
 /// ```
+///
+/// # Errors
+///
+/// Errors at an even base under three, or past the dimension the ladder reaches.
 pub fn cap(base: usize) -> Result<usize> {
     middle(base)?;
     let mut top = 0;
@@ -417,6 +457,10 @@ fn settle(walk: &[Vec<f64>], left: bool) -> Option<Vec<f64>> {
 /// Power iteration finds the leading pair, Hotelling deflation takes it out and a second walk,
 /// reprojected every sweep so rounding cannot bring the leader back, reads the runner up. At base
 /// three the ratio falls to `(D + 2)/(D - 2)`, so no fixed spectral gap survives the dimensions.
+///
+/// # Errors
+///
+/// Errors at an even base under three, or a dimension outside two to the ceiling.
 pub fn spectral_ratio(base: usize, dimension: usize) -> Result<Option<f64>> {
     let block = even_block(base, dimension)?;
     let n = block.len();

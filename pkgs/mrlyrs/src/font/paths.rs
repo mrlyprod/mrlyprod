@@ -17,6 +17,10 @@ pub fn strokes(c: char) -> Vec<Vec<(usize, usize)>> {
 }
 
 /// Flattens the character's strokes into one cell-by-cell drawing order.
+///
+/// ```
+/// assert_eq!(mrlyrs::font::path('A')[0], (4, 0));
+/// ```
 pub fn path(c: char) -> Vec<(usize, usize)> {
     strokes(c).into_iter().flatten().collect()
 }

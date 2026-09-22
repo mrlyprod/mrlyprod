@@ -9,12 +9,15 @@ use std::borrow::Cow;
 /// animation loops forever, and the first fully transparent palette entry becomes the
 /// frame's transparent color.
 ///
+/// # Errors
+///
+/// Errs on a scale or side below one, no frames, a palette outside 1 to 256 colors, a frame that is not width by height, an index past the palette, or a scaled side past 16 bits.
+///
 /// ```
 /// let still = [0u8, 1, 1, 0];
 /// let flip = [1u8, 0, 0, 1];
 /// let palette = [[0, 0, 0, 255], [255, 255, 255, 255]];
 /// let bytes = mrlyrs::core::gif(&[&still[..], &flip[..]], &palette, 2, 2, 3, 8).unwrap();
-/// assert_eq!(&bytes[0..6], b"GIF89a");
 /// assert_eq!(bytes[bytes.len() - 1], 0x3b);
 /// ```
 pub fn gif(

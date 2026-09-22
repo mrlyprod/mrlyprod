@@ -73,7 +73,7 @@ fn walk_words(
 }
 
 impl Automaton {
-    /// Builds the ladder of a rule, choosing the peel depth, or an error when the rule admits no element or its state space overruns the exact integers.
+    /// Builds the ladder of a rule, choosing the peel depth.
     ///
     /// ```
     /// let golden = mrlyrs::num::memory::Rule::new(1, 2, 7).unwrap();
@@ -81,6 +81,10 @@ impl Automaton {
     /// assert_eq!(ladder.states(), 2);
     /// assert!((ladder.abscissa() - 0.694_241_913_630_617_4).abs() < 1e-15);
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Errs when the rule accepts no element with a nonzero leading digit, or when its peel overruns the exact integers.
     pub fn new(rule: &Rule) -> Result<Automaton> {
         let mut peel = rule.width.max(2);
         let base = rule.letters() as u64;
@@ -100,7 +104,7 @@ impl Automaton {
         Automaton::with_peel(rule, peel)
     }
 
-    /// Builds the ladder at an explicit peel depth, at least the rule width and at least two, or an error when the rule admits no element or the depth overruns the exact integers.
+    /// Builds the ladder at an explicit peel depth, at least the rule width and at least two.
     ///
     /// ```
     /// let full = mrlyrs::num::memory::Rule::full(1, 2).unwrap();
@@ -108,6 +112,10 @@ impl Automaton {
     /// assert_eq!(ladder.peel(), 7);
     /// assert_eq!(ladder.abscissa(), 1.0);
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Errs when the rule accepts no such element, and at a peel depth under the rule width or two, or past the exact integers.
     pub fn with_peel(rule: &Rule, peel: usize) -> Result<Automaton> {
         let base = rule.letters() as u64;
         let states = rule.states();
@@ -723,7 +731,7 @@ impl Automaton {
 // READINGS
 
 impl Automaton {
-    /// Returns `zeta_W(s)` and the bound it is known to, or an error when the tolerance is out of reach or a level of the walk sits on a pole of the resolvent.
+    /// Returns `zeta_W(s)` and the bound it is known to.
     ///
     /// The bound is the propagated truncation bound, carried entrywise as a nonnegative vector through `(I - q^(-w) T)^(-1)`, plus [`ROUNDING`] times the scale the ladder carries, which is a measured allowance and not a proof.
     /// Right of the abscissa the inverse is majorised by its Neumann series, `sum_i (q^(-Re w) T)^i`, which is entrywise nonnegative and needs no norm and no primitivity; left of it the bound runs through the computed inverse certified by its own residual, `abs(C) (y + norm(y) r/(1-r) 1)` with `r = norm(I - (I - q^(-w) T) C)`, and the module raises rather than return when `r >= 1`.
@@ -735,6 +743,10 @@ impl Automaton {
     /// let (value, bound) = ladder.zeta(s, 1e-10).unwrap();
     /// assert!((value.re - std::f64::consts::PI * std::f64::consts::PI / 6.0).abs() < bound);
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Errs when the tolerance is out of reach, or when a level of the walk sits on a pole of the resolvent.
     pub fn zeta(&self, s: Complex, tolerance: f64) -> Result<(Complex, f64)> {
         let head = poly_scale(&self.low, s.re);
         let (value, carried) = self.tune(s, tolerance, true, head)?;
@@ -746,6 +758,10 @@ impl Automaton {
     /// Returns the matrix Lyndon cofactor `Z_W(s) = det(I - q^(-s) T) zeta_W(s)` and the bound it is known to.
     ///
     /// The scalar `1 - k q^(-s)` becomes the determinant, and the cofactor is carried as `det(I - q^(-s) T) D_(P-1)(s) + 1^T adj(I - q^(-s) T) N(s)` with `N` the ladder numerator, so it is read on the whole `m = 0` pole comb where `zeta_W` itself is singular.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the tolerance is out of reach.
     pub fn cofactor(&self, s: Complex, tolerance: f64) -> Result<(Complex, f64)> {
         let x = raise(self.base as f64, -s);
         let det = self.det(x);
@@ -765,10 +781,14 @@ impl Automaton {
         Ok((det * poly(&self.low, s) + sum, bound))
     }
 
-    /// Returns the residue of `zeta_W` at a simple pole `w0` of the resolvent and the bound it is known to, or an error when `w0` is not a simple root of `det(I - q^(-w) T)`.
+    /// Returns the residue of `zeta_W` at a simple pole `w0` of the resolvent and the bound it is known to.
     ///
     /// At such a point the resolvent is `adj(I - x T) / det(I - x T)` with `x = q^(-w)`, so the residue is `1^T adj(I - x0 T) N(w0)` over `-x0 log q det'(x0)`: the adjugate is the spectral projector in polynomial form, and no eigenvector is solved for.
     /// The head term `det(I - q^(-s) T) D_(P-1)(s)` is dropped, since the determinant vanishes at the pole.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the tolerance is out of reach, or when `w0` is not a simple root of `det(I - q^(-w) T)`.
     pub fn residue(&self, w0: Complex, tolerance: f64) -> Result<(Complex, f64)> {
         let base = self.base as f64;
         let x = raise(base, -w0);

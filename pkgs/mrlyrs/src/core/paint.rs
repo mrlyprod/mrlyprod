@@ -321,6 +321,10 @@ fn apply_colors(mut paint: Paint, max_val: usize, rng: &mut Rng) -> Paint {
 }
 
 /// Tags the cell for the Layers and Neighbors editions and returns the distinct tag count on the secondary side.
+///
+/// # Errors
+///
+/// Errs when the Neighbors mask does not fit the cell.
 pub fn tag(
     cell: &mut Cell,
     edition: Edition,
@@ -349,6 +353,10 @@ pub fn tag(
 }
 
 /// Tags the cell for Layers and Neighbors paints and sizes the palette to the tag count.
+///
+/// # Errors
+///
+/// Errs when the tagging does.
 pub fn prime(
     mut paint: Paint,
     cell: &mut Cell,
@@ -389,6 +397,10 @@ fn secondary_colors(paint: &Paint) -> Result<Vec<Color>> {
 }
 
 /// Colors the cell from the paint's inks under its edition mode, scattering the Random edition from the stream.
+///
+/// # Errors
+///
+/// Errs when a multitone paint carries no base color to shade.
 pub fn apply(paint: &Paint, cell: &mut Cell, rng: &mut Rng) -> Result<()> {
     let primary = primary_colors(paint);
     let secondary = secondary_colors(paint)?;
@@ -427,12 +439,20 @@ fn scatter(cell: &mut Cell, void_inks: &[Color], fill_inks: &[Color], rng: &mut 
 }
 
 /// Replays a stored paint onto a cell, tagging first and applying it from the stream.
+///
+/// # Errors
+///
+/// Errs when the tagging or the coloring does.
 pub fn coat(cell: &mut Cell, paint: &Paint, mask: Option<&Tensor>, rng: &mut Rng) -> Result<()> {
     tag(cell, paint.edition, paint.target, mask)?;
     apply(paint, cell, rng)
 }
 
 /// Draws a random paint under the config, applies it to the cell, and returns the recipe.
+///
+/// # Errors
+///
+/// Errs when the tagging or the coloring does.
 pub fn paint(
     cell: &mut Cell,
     config: &Config,

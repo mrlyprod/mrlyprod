@@ -2,7 +2,11 @@ use super::field::Field;
 use crate::core::error::{value_error, Result};
 use crate::core::ramp::Colorizer;
 
-/// Quantizes a field into colored levels and encodes PNG bytes, or an error at scale zero.
+/// Quantizes a field into colored levels and encodes PNG bytes.
+///
+/// # Errors
+///
+/// Errors at scale zero.
 pub fn render(
     field: &Field,
     colorizer: &Colorizer,

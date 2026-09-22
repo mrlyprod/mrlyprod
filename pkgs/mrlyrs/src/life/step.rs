@@ -5,6 +5,21 @@ use crate::math::cell::models::counting_dtype;
 use crate::math::two::Cell2d;
 
 /// Advances a grid one generation under birth and survive counts, a neighbor mask and a boundary.
+///
+/// ```
+/// use mrlyrs::core::tensor::Tensor;
+/// use mrlyrs::life::{moore, next_grid, Boundary};
+/// use mrlyrs::math::two::Cell2d;
+/// let bar = Cell2d::new(Tensor::of(vec![0, 0, 0, 1, 1, 1, 0, 0, 0], vec![3, 3])?)?;
+/// let mask = moore()?.types().clone();
+/// let next = next_grid(&bar, &[3], &[2, 3], &mask, Boundary::Constant)?;
+/// assert_eq!(next.types().get(&[0, 1])?, 1);
+/// # Ok::<(), mrlyrs::Error>(())
+/// ```
+///
+/// # Errors
+///
+/// Errs when the mask will not count the grid's neighbors, an even side for one.
 pub fn next_grid(
     cell: &Cell2d,
     birth: &[usize],

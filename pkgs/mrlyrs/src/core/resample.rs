@@ -29,6 +29,10 @@ pub fn hex_size(width: usize, height: usize, vertical: bool) -> (usize, usize) {
 }
 
 /// Squashes rgba pixels to the hex aspect, returning the new width, height and pixels.
+///
+/// # Errors
+///
+/// Errs on a side of zero or a pixels length that is not width by height.
 pub fn hex_fit(
     pixels: &[[u8; 4]],
     width: usize,
@@ -41,7 +45,11 @@ pub fn hex_fit(
     Ok((out_w, out_h, out))
 }
 
-/// Resamples rgba pixels to a new size, or an error on an empty side or a length mismatch.
+/// Resamples rgba pixels to a new size.
+///
+/// # Errors
+///
+/// Errs on a side of zero, a pixels length that is not width by height, or an output size that overflows.
 ///
 /// ```
 /// let pixels = [[255, 0, 0, 255], [0, 0, 255, 255]];
@@ -76,7 +84,11 @@ pub fn resample(
     })
 }
 
-/// Draws every source element as a scale by scale block, growing both sides by scale, or an error when the source does not fill width by height.
+/// Draws every source element as a scale by scale block, growing both sides by scale.
+///
+/// # Errors
+///
+/// Errs when the source is not width by height, or the grown size overflows.
 ///
 /// ```
 /// let out = mrlyrs::core::resample::block(&[1u8, 2], 2, 1, 2).unwrap();
@@ -249,17 +261,6 @@ mod tests {
     }
 
     #[test]
-    fn nearest_upscale_matches_block_replication() {
-        let pixels = ramp(4, 3);
-        let out = resample(&pixels, 4, 3, 12, 9, Filter::Nearest).unwrap();
-        for y in 0..9 {
-            for x in 0..12 {
-                assert_eq!(out[y * 12 + x], pixels[(y / 3) * 4 + x / 3], "at {x},{y}");
-            }
-        }
-    }
-
-    #[test]
     fn box_downscale_averages_the_block() {
         let pixels = vec![
             [0, 0, 0, 255],
@@ -330,23 +331,11 @@ mod tests {
     }
 
     #[test]
-    fn block_replicates_every_source_element() {
-        let src: Vec<u8> = (0..6).collect();
-        assert_eq!(block(&src, 3, 2, 1).unwrap(), src);
-        let grown = block(&src, 3, 2, 3).unwrap();
-        assert_eq!(grown.len(), 54);
-        for y in 0..6 {
-            for x in 0..9 {
-                assert_eq!(grown[y * 9 + x], src[(y / 3) * 3 + x / 3], "at {x},{y}");
-            }
-        }
-    }
-
-    #[test]
     fn block_matches_a_nearest_upscale() {
         let pixels = ramp(4, 3);
         let out = resample(&pixels, 4, 3, 12, 9, Filter::Nearest).unwrap();
         assert_eq!(block(&pixels, 4, 3, 3).unwrap(), out);
+        assert_eq!(block(&pixels, 4, 3, 1).unwrap(), pixels);
     }
 
     #[test]

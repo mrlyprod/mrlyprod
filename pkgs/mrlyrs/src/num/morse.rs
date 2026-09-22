@@ -144,6 +144,10 @@ pub fn lift(kind: Lift, side: usize) -> Vec<u8> {
 ///
 /// The bits ride the exclusive or, so the power is the digit rule of the tile: a site takes the
 /// exclusive or of the tile's bits at its base-side digit pairs.
+///
+/// # Errors
+///
+/// Errs when the tile is not the side squared, or when the level passes what a machine holds.
 pub fn power(tile: &[u8], number: usize, level: usize) -> Result<Vec<u8>> {
     if tile.len() != number * number {
         return value_error(format!(
@@ -193,6 +197,10 @@ pub struct Fold {
 /// its corner block is `T` with every bit flipped by `(L - 1) t00`, and folding that block `L`
 /// times flips the grid by `L (L - 1) t00`, which is even. So a grid folds if and only if it
 /// folds from its corner block, and no search over tiles is needed.
+///
+/// # Errors
+///
+/// Errs when the grid is not the side squared, below a tile side of two, and when the side is no power of the tile side.
 pub fn fold(grid: &[u8], side: usize, number: usize) -> Result<Fold> {
     if grid.len() != side * side {
         return value_error(format!("a side-{side} grid wants {} bits.", side * side));

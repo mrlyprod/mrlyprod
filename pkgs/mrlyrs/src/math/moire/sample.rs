@@ -26,6 +26,10 @@ pub fn axes(size: usize, lattice: Lattice, row: usize) -> (Vec<f64>, Vec<f64>) {
 }
 
 /// Unpacks a code into its residue-corner truth table.
+///
+/// # Errors
+///
+/// Errors when the code is out of range for the dimension and base.
 pub fn membership(code: u128, base: usize, dimension: usize) -> Result<Vec<bool>> {
     let corners = code_to_corners(Code::from(code), dimension, base)?;
     let total = base.pow(dimension as u32);

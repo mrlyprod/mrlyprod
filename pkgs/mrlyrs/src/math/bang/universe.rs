@@ -206,6 +206,10 @@ pub struct Design {
 
 impl Design {
     /// Returns the design's name as a line of prose, `bang dim 2, code 7`.
+    ///
+    /// # Errors
+    ///
+    /// Errors when the design's name does not read back.
     pub fn name(&self) -> Result<String> {
         crate::math::name::Named::to_mrly(&crate::math::name::Bang::new(
             self.i.get(),
@@ -246,7 +250,11 @@ pub struct Universe {
 }
 
 impl Universe {
-    /// Enumerates every orbit of a dimension from 1 to 4, or an error outside that range.
+    /// Enumerates every orbit of a dimension from 1 to 4.
+    ///
+    /// # Errors
+    ///
+    /// Errors outside dimensions one to four.
     pub fn new(dimension: usize) -> Result<Universe> {
         if !(1..=4).contains(&dimension) {
             return value_error(format!(
@@ -305,6 +313,10 @@ impl Universe {
 /// assert_eq!(u.total, 16);
 /// assert_eq!(u.distinct(), 6);
 /// ```
+///
+/// # Errors
+///
+/// Errors outside dimensions one to four.
 pub fn bang(dimension: usize) -> Result<Universe> {
     Universe::new(dimension)
 }
@@ -422,6 +434,5 @@ mod tests {
         assert!(bang(0).is_err());
         assert!(bang(5).is_err());
         assert!(Universe::new(5).is_err());
-        assert_eq!(bang(2).unwrap().distinct(), 6);
     }
 }

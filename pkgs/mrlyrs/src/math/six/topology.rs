@@ -43,11 +43,19 @@ fn pieces(network: &Network) -> Result<Vec<usize>> {
 /// let slice = mrlyrs::math::six::cut(&mrlyrs::math::three::carpet(5, 1).unwrap()).unwrap();
 /// assert_eq!(mrlyrs::math::six::topology::components(&slice).unwrap(), 7);
 /// ```
+///
+/// # Errors
+///
+/// Errors when a triangle index falls outside the sheet.
 pub fn components(cell: &Cell6d) -> Result<usize> {
     Ok(pieces(&slice_core_graph(cell)?)?.len())
 }
 
 /// Returns the triangle count of the fill's largest connected piece.
+///
+/// # Errors
+///
+/// Errors when a triangle index falls outside the sheet.
 pub fn giant(cell: &Cell6d) -> Result<usize> {
     Ok(pieces(&slice_core_graph(cell)?)?
         .into_iter()
@@ -56,11 +64,19 @@ pub fn giant(cell: &Cell6d) -> Result<usize> {
 }
 
 /// Returns the largest connected piece of the filled-triangle network as a network of its own.
+///
+/// # Errors
+///
+/// Errors when a triangle index falls outside the sheet.
 pub fn giant_network(cell: &Cell6d) -> Result<Network> {
     largest_component(&slice_core_graph(cell)?)
 }
 
 /// Reads the spectral dimension of the giant piece: twice the low-window log-log slope of the normalised Laplacian's integrated density of states.
+///
+/// # Errors
+///
+/// Errors when the giant piece is too small to fit an exponent.
 pub fn spectral_exponent(cell: &Cell6d, window: f64) -> Result<f64> {
     let spectrum = laplacian_spectrum(&giant_network(cell)?, true)?;
     match slope(&spectrum, window) {
@@ -75,12 +91,20 @@ pub fn spectral_exponent(cell: &Cell6d, window: f64) -> Result<f64> {
 /// let slice = mrlyrs::math::six::cut(&mrlyrs::math::three::carpet(3, 1).unwrap()).unwrap();
 /// assert_eq!(mrlyrs::math::six::topology::holes(&slice).unwrap(), 1);
 /// ```
+///
+/// # Errors
+///
+/// Errors when a triangle index falls outside the sheet.
 pub fn holes(cell: &Cell6d) -> Result<usize> {
     let count = components(cell)? as i64;
     Ok((count - fills_only(cell).euler).max(0) as usize)
 }
 
 /// Counts the void regions the rim never reaches, the second route to the hole count.
+///
+/// # Errors
+///
+/// Errors when a triangle index falls outside the sheet.
 pub fn rim_holes(cell: &Cell6d) -> Result<usize> {
     let inner = &cell.cell;
     let start = cell.start as i64;
@@ -317,21 +341,27 @@ mod theorems {
 
     #[test]
     fn the_carpet_slice_percolates_at_base_three() {
-        for (level, triangles) in [(1usize, 42usize), (2, 306), (3, 2250), (4, 16578)] {
+        for (level, triangles) in [(1usize, 42usize), (2, 306), (3, 2250)] {
             let cut = slice(23, 3, level);
             assert_eq!(census(&cut, false).fills, triangles, "l={level}");
             assert_eq!(components(&cut).unwrap(), 1, "l={level}");
             assert_eq!(giant(&cut).unwrap(), triangles, "l={level}");
-            if level == 4 {
-                let core = slice_core_graph(&cut).unwrap();
-                assert_eq!((core.nodes.len(), core.branches.len()), (16578, 21546));
-            }
         }
     }
 
     #[test]
+    #[ignore = "level four is 16578 triangles, 11 s; run it in release"]
+    fn the_deep_carpet_slice_still_percolates_at_base_three() {
+        let cut = slice(23, 3, 4);
+        assert_eq!(census(&cut, false).fills, 16578);
+        assert_eq!(giant(&cut).unwrap(), 16578);
+        let core = slice_core_graph(&cut).unwrap();
+        assert_eq!((core.nodes.len(), core.branches.len()), (16578, 21546));
+    }
+
+    #[test]
     fn the_other_slices_shatter_or_never_grow_at_base_three() {
-        for level in 1..5usize {
+        for level in 1..4usize {
             let net = slice(232, 3, level);
             assert_eq!(census(&net, false).fills, 12, "l={level}");
             assert_eq!(components(&net).unwrap(), 1, "l={level}");
@@ -389,7 +419,6 @@ mod spectra {
         let rows = [
             (23u128, 3usize, 1usize, 42usize, 0.91),
             (23, 3, 2, 306, 1.25),
-            (255, 9, 1, 486, 1.61),
             (23, 5, 2, 192, 1.05),
         ];
         for (code, number, level, nodes, want) in rows {
@@ -404,10 +433,11 @@ mod spectra {
     }
 
     #[test]
-    #[ignore = "two thousand nodes each; run it in release"]
+    #[ignore = "up to two thousand nodes each, 3 s; run it in release"]
     fn the_deep_slices_hold_their_spectral_exponents() {
         for (code, number, level, nodes, want) in [
-            (23u128, 3usize, 3usize, 2250usize, 1.44),
+            (255u128, 9usize, 1usize, 486usize, 1.61),
+            (23, 3, 3, 2250, 1.44),
             (255, 19, 1, 2166, 1.79),
         ] {
             let (got_nodes, zeros, exponent) = reading(code, number, level);

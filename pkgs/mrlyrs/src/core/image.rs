@@ -66,10 +66,18 @@ impl Image {
         out
     }
     /// Encodes the image as a png at the given scale.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the codec refuses the scale or the scaled size.
     pub fn png(&self, scale: usize) -> Result<Vec<u8>> {
         codec::png(&self.colors(), self.width, self.height, scale)
     }
     /// Resamples the image to a new size, its palette rebuilt from the blended pixels.
+    ///
+    /// # Errors
+    ///
+    /// Errs on a side of zero or a size that overflows.
     pub fn resample(&self, width: usize, height: usize, filter: Filter) -> Result<Image> {
         let pixels = resample::resample(
             &self.colors(),
@@ -115,7 +123,7 @@ impl TryFrom<Parts> for Image {
 mod tests {
     use super::*;
     use crate::core::json;
-    use crate::core::PNG_MAGIC;
+    use crate::core::unpng;
 
     fn sample() -> Image {
         Image::new(
@@ -172,7 +180,9 @@ mod tests {
     #[test]
     fn png_delegates_to_the_codec() {
         let bytes = sample().png(4).unwrap();
-        assert_eq!(&bytes[0..8], &PNG_MAGIC);
+        let (width, height, pixels) = unpng(&bytes).unwrap();
+        assert_eq!((width, height), (8, 8));
+        assert_eq!(pixels[0], [255, 0, 0, 255]);
         assert!(sample().png(0).is_err());
     }
 

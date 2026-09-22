@@ -36,6 +36,10 @@ pub fn text(cell: &Cell2d, glyphs: Option<&HashMap<u8, char>>) -> Vec<String> {
 }
 
 /// Renders the cell to PNG bytes at the given pixel scale, painting it by type when unpainted.
+///
+/// # Errors
+///
+/// Errors when the encoder refuses the cell's size or scale.
 pub fn png(cell: &Cell2d, scale: usize) -> Result<Vec<u8>> {
     let colors = painted(cell);
     crate::core::png(&colors, cell.width(), cell.height(), scale)

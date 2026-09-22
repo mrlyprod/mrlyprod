@@ -212,23 +212,6 @@ mod tests {
     }
 
     #[test]
-    fn the_last_frame_is_the_padded_raster() {
-        let write = animate(WORDMARK, 1);
-        let grid = raster(WORDMARK);
-        let want: Vec<usize> = grid
-            .iter()
-            .enumerate()
-            .flat_map(|(r, row)| {
-                row.iter()
-                    .enumerate()
-                    .filter(|&(_, &v)| v == 1)
-                    .map(move |(c, _)| (1 + r) * 49 + 1 + c)
-            })
-            .collect();
-        assert_eq!(*write.frames.last().unwrap(), want);
-    }
-
-    #[test]
     fn merging_collapses_in_twenty_two_frames() {
         let merged = merge(WORDMARK, 1);
         assert_eq!(merged.len(), 22);

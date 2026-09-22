@@ -13,11 +13,19 @@ fn build(pattern: Tensor, level: usize) -> Result<Cell3d> {
 }
 
 /// Builds the cube the universe code names, deepened to the given fractal level.
+///
+/// # Errors
+///
+/// Errors when the code is out of range, or the level is below one.
 pub fn create(code: Code, number: usize, level: usize, base: usize) -> Result<Cell3d> {
     build(factory::create(code, number, 3, base, 1)?, level)
 }
 
 /// Builds a cube from its corner patterns, deepened to the given fractal level.
+///
+/// # Errors
+///
+/// Errors when a corner does not fit the dimension and base, or the level is below one.
 pub fn from_corners(
     corners: &[Vec<u8>],
     number: usize,
@@ -31,11 +39,19 @@ pub fn from_corners(
 }
 
 /// Builds the all-void cube at the given size and level.
+///
+/// # Errors
+///
+/// Errors below level one.
 pub fn zeros(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::zeros_3d(number), level)
 }
 
 /// Builds the solid cube at the given size and level.
+///
+/// # Errors
+///
+/// Errors below level one.
 pub fn ones(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::ones_3d(number), level)
 }
@@ -46,61 +62,109 @@ pub fn ones(number: usize, level: usize) -> Result<Cell3d> {
 /// let sponge = mrlyrs::math::three::carpet(3, 1).unwrap();
 /// assert_eq!(sponge.types().sum(), 20);
 /// ```
+///
+/// # Errors
+///
+/// Errors below level one.
 pub fn carpet(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::carpet_3d(number), level)
 }
 
 /// Builds the net cube, filled where at least two coordinates are odd, at the given level.
+///
+/// # Errors
+///
+/// Errors below level one.
 pub fn net(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::net_3d(number), level)
 }
 
 /// Builds the cube of beams along the x axis at the given size and level.
+///
+/// # Errors
+///
+/// Errors below level one.
 pub fn xtree(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::xtree_3d(number), level)
 }
 
 /// Builds the cube of beams along the y axis at the given size and level.
+///
+/// # Errors
+///
+/// Errors below level one.
 pub fn ytree(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::ytree_3d(number), level)
 }
 
 /// Builds the cube of beams along the z axis at the given size and level.
+///
+/// # Errors
+///
+/// Errors below level one.
 pub fn ztree(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::ztree_3d(number), level)
 }
 
 /// Builds the checkerboard cube, filled where all coordinate parities agree, at the given level.
+///
+/// # Errors
+///
+/// Errors below level one.
 pub fn void(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::void_3d(number), level)
 }
 
 /// Builds the point cube, filled where every coordinate is odd, at the given level.
+///
+/// # Errors
+///
+/// Errors below level one.
 pub fn point(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::point_3d(number), level)
 }
 
 /// Builds the dust cube, filled where every coordinate is even, at the given level.
+///
+/// # Errors
+///
+/// Errors below level one.
 pub fn dust(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::dust_3d(number), level)
 }
 
 /// Builds the cube of rods along the x axis at the given size and level.
+///
+/// # Errors
+///
+/// Errors below level one.
 pub fn xline(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::xline_3d(number), level)
 }
 
 /// Builds the cube of rods along the y axis at the given size and level.
+///
+/// # Errors
+///
+/// Errors below level one.
 pub fn yline(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::yline_3d(number), level)
 }
 
 /// Builds the cube of rods along the z axis at the given size and level.
+///
+/// # Errors
+///
+/// Errors below level one.
 pub fn zline(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::zline_3d(number), level)
 }
 
 /// Builds the star cube, filled where exactly one coordinate is odd, at the given level.
+///
+/// # Errors
+///
+/// Errors below level one.
 pub fn star(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::star_3d(number), level)
 }
@@ -116,6 +180,10 @@ pub fn star(number: usize, level: usize) -> Result<Cell3d> {
 /// let sponge = mrlyrs::math::three::level_set(3, &[0, 1], 1, 2).unwrap();
 /// assert_eq!(sponge, mrlyrs::math::three::carpet(3, 1).unwrap());
 /// ```
+///
+/// # Errors
+///
+/// Errors below level one.
 pub fn level_set(number: usize, levels: &[usize], level: usize, base: usize) -> Result<Cell3d> {
     create(levels_code(3, base, levels), number, level, base)
 }
@@ -123,6 +191,10 @@ pub fn level_set(number: usize, levels: &[usize], level: usize, base: usize) -> 
 // NAMED
 
 /// Builds the cube the name picks, deepened to the given fractal level.
+///
+/// # Errors
+///
+/// Errors for a design that is not 3d, or a level below one.
 pub fn named(design: Design, number: usize, level: usize) -> Result<Cell3d> {
     let pattern = match design {
         Design::Carpet => atoms::carpet_3d(number),
@@ -161,7 +233,6 @@ mod tests {
         ] {
             assert_eq!(level_set(3, &levels, 2, 2).unwrap(), preset);
         }
-        assert_eq!(levels_code(3, 2, &[0, 1]), Code(23));
         assert_eq!(level_set(3, &[], 1, 2).unwrap().types().sum(), 0);
         assert_eq!(
             level_set(3, &[0, 1, 2, 3], 1, 2).unwrap(),

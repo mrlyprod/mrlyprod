@@ -37,17 +37,34 @@ pub fn fill_from_corners(
 }
 
 /// Returns the filled cell count of the code's fractal at the given level, without rendering it.
+///
+/// ```
+/// use mrlyrs::math::bang::Code;
+/// assert_eq!(mrlyrs::math::counts::fill(Code::from(7u64), 3, 2, 2, 2).unwrap(), 64);
+/// ```
+///
+/// # Errors
+///
+/// Errors when the code is out of range for the dimension and base.
 pub fn fill(code: Code, number: usize, dimension: usize, level: u32, base: usize) -> Result<u128> {
     let filled = factory::code_to_corners(code, dimension, base)?;
     Ok(fill_from_corners(&filled, number, dimension, level, base))
 }
 
 /// Returns the empty cell count, grid minus fill.
+///
+/// # Errors
+///
+/// Errors when the code is out of range for the dimension and base.
 pub fn void(code: Code, number: usize, dimension: usize, level: u32, base: usize) -> Result<u128> {
     Ok(grid(number, dimension, level) - fill(code, number, dimension, level, base)?)
 }
 
 /// Returns the filled fraction of the grid, or 0.0 for an empty grid.
+///
+/// # Errors
+///
+/// Errors when the code is out of range for the dimension and base.
 pub fn ratio(code: Code, number: usize, dimension: usize, level: u32, base: usize) -> Result<f64> {
     let total = grid(number, dimension, level);
     if total == 0 {
@@ -62,6 +79,10 @@ pub fn ratio(code: Code, number: usize, dimension: usize, level: u32, base: usiz
 /// use mrlyrs::math::bang::Code;
 /// assert_eq!(mrlyrs::math::counts::rational(Code::from(7u64), 3, 2, 2, 2).unwrap(), (64, 81));
 /// ```
+///
+/// # Errors
+///
+/// Errors when the code is out of range for the dimension and base.
 pub fn rational(
     code: Code,
     number: usize,
@@ -86,6 +107,10 @@ pub fn rational(
 /// assert_eq!(mrlyrs::math::counts::limit(Code::from(7u64), 2, 1, 2).unwrap(), (3, 4));
 /// assert_eq!(mrlyrs::math::counts::limit(Code::from(7u64), 2, 2, 2).unwrap(), (9, 16));
 /// ```
+///
+/// # Errors
+///
+/// Errors when the code is out of range, or the limit overflows at this level.
 pub fn limit(code: Code, dimension: usize, level: u32, base: usize) -> Result<(u128, u128)> {
     let corners = factory::code_to_corners(code, dimension, base)?.len() as u128;
     let slots = (base as u128).pow(dimension as u32);
@@ -97,6 +122,10 @@ pub fn limit(code: Code, dimension: usize, level: u32, base: usize) -> Result<(u
 }
 
 /// Returns the code's fractal dimension, the log of its one-level fill over the log of number.
+///
+/// # Errors
+///
+/// Errors when the code is out of range for the dimension and base.
 pub fn dimension(code: Code, number: usize, base_dimension: usize, base: usize) -> Result<f64> {
     if number == 1 {
         return Ok(base_dimension as f64);

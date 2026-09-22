@@ -42,16 +42,28 @@ impl std::error::Error for Error {
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// Wraps a message in an Err of the value variant.
+///
+/// # Errors
+///
+/// Always errs; the Ok side is only there to fit the caller's return type.
 pub fn value_error<T>(message: impl Into<String>) -> Result<T> {
     Err(Error::Value(message.into()))
 }
 
 /// Wraps a message in an Err of the shape variant.
+///
+/// # Errors
+///
+/// Always errs; the Ok side is only there to fit the caller's return type.
 pub fn shape_error<T>(message: impl Into<String>) -> Result<T> {
     Err(Error::Shape(message.into()))
 }
 
 /// Wraps a message in an Err of the overflow variant.
+///
+/// # Errors
+///
+/// Always errs; the Ok side is only there to fit the caller's return type.
 pub fn overflow_error<T>(message: impl Into<String>) -> Result<T> {
     Err(Error::Overflow(message.into()))
 }
@@ -80,7 +92,11 @@ impl From<gif::EncodingError> for Error {
     }
 }
 
-/// Parses JSON text into a value, or an error naming where it broke.
+/// Parses JSON text into a value.
+///
+/// # Errors
+///
+/// Errs when the text is not valid json, naming where it broke.
 ///
 /// ```
 /// let v = mrlyrs::core::error::parse(r#"{"tags": [3, 5]}"#).unwrap();

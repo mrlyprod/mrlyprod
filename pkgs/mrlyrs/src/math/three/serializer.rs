@@ -67,7 +67,11 @@ pub fn to_json(cell: &Cell3d) -> String {
     data.to_string()
 }
 
-/// Parses a cell from its JSON, colors and tags included, or a parse error.
+/// Parses a cell from its JSON, colors and tags included.
+///
+/// # Errors
+///
+/// Errors when the text is not a cube.
 pub fn from_json(text: &str) -> Result<Cell3d> {
     let data = parse(text)?;
     let lists = byte_cube(types_field(&data)?)?;

@@ -28,6 +28,12 @@ fn from_lists(lists: &[Vec<u8>]) -> Result<Cell2d> {
 }
 
 /// Serializes the cell to a JSON string of its types, with colors and tags when present.
+///
+/// ```
+/// let cell = mrlyrs::math::two::carpet(3, 1).unwrap();
+/// let text = mrlyrs::math::two::to_json(&cell);
+/// assert_eq!(mrlyrs::math::two::from_json(&text).unwrap(), cell);
+/// ```
 pub fn to_json(cell: &Cell2d) -> String {
     let mut data = json!({
         "v": 1,
@@ -48,7 +54,11 @@ pub fn to_json(cell: &Cell2d) -> String {
     data.to_string()
 }
 
-/// Restores a cell from its JSON string, colors and tags included, or a parse error.
+/// Restores a cell from its JSON string, colors and tags included.
+///
+/// # Errors
+///
+/// Errors when the text is not a flat cell.
 pub fn from_json(text: &str) -> Result<Cell2d> {
     let data = parse(text)?;
     let lists = byte_grid(types_field(&data)?)?;

@@ -17,7 +17,11 @@ impl Field {
             size,
         }
     }
-    /// Wraps row-major samples of the given side, or an error when the count is not the side squared.
+    /// Wraps row-major samples of the given side.
+    ///
+    /// # Errors
+    ///
+    /// Errors when the count is not the side squared.
     pub fn from_data(data: Vec<f32>, size: usize) -> Result<Field> {
         if data.len() != size * size {
             return shape_error(format!(

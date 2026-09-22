@@ -101,7 +101,20 @@ fn pop_center(tile: &Tile, cell: &mut two::Cell2d) {
     cell.cell.types = types;
 }
 
-/// Draws a variation's seed from the stream, then the variation itself on that seed, with a mask when the edition is Neighbors.
+/// Draws a variation's seed from the stream, then the variation itself on that seed, with a
+/// mask when the edition is Neighbors.
+///
+/// ```
+/// use mrlyrs::core::rng::Rng;
+/// use mrlyrs::gen::variation::{create, Config};
+/// let mut rng = Rng::new(1);
+/// assert_eq!(create(&Config::default(), &mut rng)?.key.len(), 8);
+/// # Ok::<(), mrlyrs::Error>(())
+/// ```
+///
+/// # Errors
+///
+/// Errs when the tile config draws no tile, or when the Neighbors mask will not draw.
 pub fn create(config: &Config, rng: &mut Rng) -> Result<Variation> {
     let s = rng.range(0, i64::MAX) as u64;
     let mut rng = Rng::new(s);
@@ -130,7 +143,12 @@ pub fn create(config: &Config, rng: &mut Rng) -> Result<Variation> {
     })
 }
 
-/// Builds the variation's base cell and draws its paint from the stream, painting the base under a prime edition.
+/// Builds the variation's base cell and draws its paint from the stream, painting the base
+/// under a prime edition.
+///
+/// # Errors
+///
+/// Errs when the tile or its mask will not build, or when the paint will not lay down.
 pub fn generate(mut variation: Variation, config: &Config, rng: &mut Rng) -> Result<Variation> {
     let _ = config;
     let mut base = build_2d(&variation.tile)?;
@@ -160,7 +178,12 @@ pub fn generate(mut variation: Variation, config: &Config, rng: &mut Rng) -> Res
     Ok(variation)
 }
 
-/// Renders every file of the variation to PNG at the given scale, scattering a Random edition from the stream, or an error before generate.
+/// Renders every file of the variation to PNG at the given scale, scattering a Random edition
+/// from the stream.
+///
+/// # Errors
+///
+/// Errs when generate has not run, or when a file will not tile or encode at the scale.
 pub fn render(mut variation: Variation, scale: usize, rng: &mut Rng) -> Result<Variation> {
     let base = match &variation.base {
         Some(base) => base.clone(),

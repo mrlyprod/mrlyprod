@@ -1,3 +1,8 @@
+//! The universe of design codes.
+//!
+//! A code is a bitmask over the residue corners of a hypercube; this folder packs corners into
+//! codes, folds codes into symmetry classes, counts the classes and spells the magic words.
+
 /// The base-q symmetry maps, the design counts raw and distinct, and the fill classes.
 pub mod baseq;
 /// The cached canonical codes and tile sources of a dimension.

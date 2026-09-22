@@ -17,6 +17,20 @@ fn prepare(seed: &Cell2d, config: &Config) -> Result<Cell2d> {
 }
 
 /// Runs a seed under a config until it fixes, loops or times out, recording every generation.
+///
+/// ```
+/// use mrlyrs::core::tensor::Tensor;
+/// use mrlyrs::life::{animate, moore, Config, Fate};
+/// use mrlyrs::math::two::Cell2d;
+/// let bar = Cell2d::new(Tensor::of(vec![0, 0, 0, 1, 1, 1, 0, 0, 0], vec![3, 3])?)?;
+/// let life = animate(&bar, &Config::new(moore()?, vec![3], vec![2, 3]))?;
+/// assert_eq!(life.fate, Fate::Loop);
+/// # Ok::<(), mrlyrs::Error>(())
+/// ```
+///
+/// # Errors
+///
+/// Errs when the mask will not step the grid, or the drawn counts will not resolve.
 pub fn animate(seed: &Cell2d, config: &Config) -> Result<Life> {
     let mask = config.mask.types().clone();
     let (birth, survive) = config.counts()?;

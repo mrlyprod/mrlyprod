@@ -11,6 +11,10 @@ pub const BASE: usize = 2;
 /// let t = mrlyrs::math::rules::render(carpet, 3, 2, 2).unwrap();
 /// assert_eq!(t.bytes().unwrap(), vec![1, 1, 1, 1, 0, 1, 1, 1, 1]);
 /// ```
+///
+/// # Errors
+///
+/// Errors when the number, the dimension or the base is below one.
 pub fn render<F>(rule: F, number: usize, dimension: usize, base: usize) -> Result<Tensor>
 where
     F: Fn(&[u8]) -> bool,

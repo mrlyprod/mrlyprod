@@ -74,6 +74,10 @@ impl Preset {
         }
     }
     /// Samples the preset into a square field of the given side.
+    ///
+    /// # Errors
+    ///
+    /// Errors when the preset's code is out of range.
     pub fn field(&self, size: usize) -> Result<Field> {
         stack(
             self.spec,
@@ -97,13 +101,17 @@ pub fn all(limit: usize) -> Vec<Preset> {
     ]
 }
 
-/// Returns the preset the name picks, or an error naming the ones there are.
+/// Returns the preset the name picks.
 ///
 /// ```
 /// let preset = mrlyrs::math::moire::presets::named("heatmap", 9).unwrap();
 /// assert_eq!(preset.numbers, vec![1, 3, 5, 7, 9]);
 /// assert!(mrlyrs::math::moire::presets::named("soup", 9).is_err());
 /// ```
+///
+/// # Errors
+///
+/// Errors for a name that is not heatmap, weave, hive or carpet.
 pub fn named(name: &str, limit: usize) -> Result<Preset> {
     match all(limit).into_iter().find(|p| p.name == name) {
         Some(preset) => Ok(preset),

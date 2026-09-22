@@ -35,6 +35,10 @@ pub fn capacity(cell: &Cell2d) -> usize {
 }
 
 /// Writes the payload over the cell's filled sites, repeating it until every site is spoken for.
+///
+/// # Errors
+///
+/// Errors when the payload needs more sites than the cell carries.
 pub fn embed(cell: &Cell2d, payload: &[u8]) -> Result<Cell2d> {
     let sites = sites(cell);
     let bits = message(payload);
@@ -53,6 +57,10 @@ pub fn embed(cell: &Cell2d, payload: &[u8]) -> Result<Cell2d> {
 }
 
 /// Reads the payload back, the plain cell naming the sites the carried one wrote over.
+///
+/// # Errors
+///
+/// Errors when the two cells differ in shape, or the header does not fit.
 pub fn extract(carrier: &Cell2d, carried: &Cell2d) -> Result<Vec<u8>> {
     if carrier.types().shape != carried.types().shape {
         return value_error("carrier and carried must share one shape.");
@@ -78,6 +86,10 @@ pub fn extract(carrier: &Cell2d, carried: &Cell2d) -> Result<Vec<u8>> {
 }
 
 /// Builds the framed sheet of four same-sized cells, the fourth carrying the payload.
+///
+/// # Errors
+///
+/// Errors when the payload needs more sites than the carrier holds.
 pub fn sheet(cells: &[Cell2d; 4], payload: &[u8]) -> Result<Cell2d> {
     let carried = embed(&cells[3], payload)?;
     let laid = [
@@ -90,6 +102,10 @@ pub fn sheet(cells: &[Cell2d; 4], payload: &[u8]) -> Result<Cell2d> {
 }
 
 /// Reads the payload back from a framed sheet, the plain fourth cell naming the sites.
+///
+/// # Errors
+///
+/// Errors when the sheet is not five carriers across and down.
 pub fn read(sheet: &Cell2d, carrier: &Cell2d) -> Result<Vec<u8>> {
     let (w, h) = (carrier.width(), carrier.height());
     if sheet.width() != w * 5 || sheet.height() != h * 5 {

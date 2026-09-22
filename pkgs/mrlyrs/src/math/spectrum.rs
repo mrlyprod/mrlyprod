@@ -140,6 +140,10 @@ fn implicit_ql(d: &mut [f64], e: &mut [f64]) -> Result<()> {
 /// let values = mrlyrs::math::spectrum::symmetric_eigenvalues(&m).unwrap();
 /// assert!((values[0] - 1.0).abs() < 1e-12 && (values[1] - 3.0).abs() < 1e-12);
 /// ```
+///
+/// # Errors
+///
+/// Errors on a matrix that is not square or not symmetric, or a spectrum that is not a number.
 pub fn symmetric_eigenvalues(matrix: &[Vec<f64>]) -> Result<Vec<f64>> {
     let n = matrix.len();
     for row in matrix {
@@ -170,6 +174,10 @@ pub fn symmetric_eigenvalues(matrix: &[Vec<f64>]) -> Result<Vec<f64>> {
 ///
 /// Self-loops are ignored and the degrees are the adjacency row sums. Errors when a
 /// node carries no branch and the normalised form is asked for.
+///
+/// # Errors
+///
+/// Errors when a node carries no branch under the normalised reading.
 pub fn laplacian(network: &Network, normalised: bool) -> Result<Vec<Vec<f64>>> {
     let n = network.nodes.len();
     let mut matrix = vec![vec![0.0; n]; n];
@@ -209,19 +217,27 @@ pub fn laplacian(network: &Network, normalised: bool) -> Result<Vec<Vec<f64>>> {
 /// let values = mrlyrs::math::spectrum::laplacian_spectrum(&net, true).unwrap();
 /// assert!(values[0].abs() < 1e-12 && (values[1] - 2.0).abs() < 1e-12);
 /// ```
+///
+/// # Errors
+///
+/// Errors when a node carries no branch, or the spectrum is not a number.
 pub fn laplacian_spectrum(network: &Network, normalised: bool) -> Result<Vec<f64>> {
     symmetric_eigenvalues(&laplacian(network, normalised)?)
 }
 
 // READINGS
 
-/// Groups eigenvalues into runs split by consecutive gaps above the tolerance, each run its mean and its size, or an error on a NaN.
+/// Groups eigenvalues into runs split by consecutive gaps above the tolerance, each run its mean and its size.
 ///
 /// ```
 /// let groups = mrlyrs::math::spectrum::clusters(&[0.0, 1e-15, 2.0], 1e-9).unwrap();
 /// assert_eq!(groups.len(), 2);
 /// assert_eq!(groups[0].1, 2);
 /// ```
+///
+/// # Errors
+///
+/// Errors on a NaN.
 pub fn clusters(eigenvalues: &[f64], tolerance: f64) -> Result<Vec<(f64, usize)>> {
     if eigenvalues.iter().any(|v| v.is_nan()) {
         return value_error("The eigenvalues hold a NaN.");

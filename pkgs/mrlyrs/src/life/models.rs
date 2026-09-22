@@ -40,6 +40,10 @@ impl Config {
         self.mask.types().sum() as usize
     }
     /// Resolves the birth and survive counts against the mask's budget.
+    ///
+    /// # Errors
+    ///
+    /// Errs when a drawn side's sequence will not build inside the budget.
     pub fn counts(&self) -> Result<(Vec<usize>, Vec<usize>)> {
         let budget = self.budget();
         Ok((self.birth.values(budget)?, self.survive.values(budget)?))
