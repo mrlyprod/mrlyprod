@@ -19,7 +19,9 @@ pub use counting::{
 };
 pub use diagonal::profile_of_tile;
 pub use six::{centered_hexagonal, cut_fills, cut_voids, pro_fills, pro_voids};
-pub use surface::{exposure, exposure_of_tile, exposure_recurrence, surface, Exposure};
+pub use surface::{
+    edges_of_tile, exposure, exposure_of_tile, exposure_recurrence, surface, Exposure,
+};
 
 #[cfg(test)]
 mod tests {

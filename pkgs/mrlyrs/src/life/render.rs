@@ -7,10 +7,10 @@ use crate::math::two::{self, Cell2d};
 use std::collections::HashMap;
 
 fn default_palette() -> HashMap<u8, Vec<Color>> {
-    HashMap::from([(0, vec![WHITE]), (1, vec![BLACK])])
+    HashMap::from([(0, vec![BLACK]), (1, vec![WHITE])])
 }
 
-/// Renders grids to black-on-white PNG bytes at a pixel scale.
+/// Renders grids to white-on-black PNG bytes at a pixel scale.
 ///
 /// ```
 /// use mrlyrs::core::tensor::Tensor;
@@ -28,20 +28,20 @@ pub fn frames(grids: &[Cell2d], scale: usize) -> Result<Vec<Vec<u8>>> {
     let palette = default_palette();
     let mut out = Vec::with_capacity(grids.len());
     for grid in grids {
-        let painted = grid.clone().paint(&palette, Mode::Type);
-        out.push(two::png(&painted, scale)?);
+        let painted = grid.clone().paint(&palette, Mode::Type, None)?;
+        out.push(two::png(&painted, scale, None, 1, two::Shape::Square)?);
     }
     Ok(out)
 }
 
-/// Renders one grid to black-on-white PNG bytes at a pixel scale.
+/// Renders one grid to white-on-black PNG bytes at a pixel scale.
 ///
 /// # Errors
 ///
 /// Errs when the grid will not encode to PNG at the scale.
 pub fn frame(grid: &Cell2d, scale: usize) -> Result<Vec<u8>> {
-    let painted = grid.clone().paint(&default_palette(), Mode::Type);
-    two::png(&painted, scale)
+    let painted = grid.clone().paint(&default_palette(), Mode::Type, None)?;
+    two::png(&painted, scale, None, 1, two::Shape::Square)
 }
 
 /// Renders grids into one looping black-on-white gif, the delay in hundredths of a second.
@@ -110,7 +110,7 @@ fn heatmap_range(
         let colors = colorizer.colors(&cumulative, max);
         let mut cell = Cell2d::new(Tensor::new(shape.clone()))?;
         cell.cell.colors = Some(colors);
-        out.push(two::png(&cell, scale)?);
+        out.push(two::png(&cell, scale, None, 1, two::Shape::Square)?);
     }
     Ok(out)
 }

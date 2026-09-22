@@ -188,8 +188,8 @@ pub fn largest_component(network: &Network) -> Result<Network> {
     Ok(giant)
 }
 
-/// Estimates the box-counting dimension of the node cloud over a ladder of halving boxes.
-pub fn fractal_dimension(network: &Network) -> f64 {
+/// Estimates the box-counting dimension of the node cloud over a ladder of halving boxes, one rung per sample.
+pub fn fractal_dimension(network: &Network, samples: usize) -> f64 {
     let positions: Vec<&Vec<f64>> = network.nodes.iter().map(|n| &n.position).collect();
     if positions.len() < 2 {
         return 0.0;
@@ -215,7 +215,7 @@ pub fn fractal_dimension(network: &Network) -> f64 {
         .collect();
     let mut scales: Vec<f64> = Vec::new();
     let mut log_count: Vec<f64> = Vec::new();
-    for k in 0..=RUNGS {
+    for k in 0..samples.min(RUNGS as usize + 1) as u32 {
         let split = f64::from_bits(((1023 + k) as u64) << 52);
         let last = (1i64 << k) - 1;
         let mut boxes: HashSet<Vec<i64>> = HashSet::new();
@@ -230,6 +230,9 @@ pub fn fractal_dimension(network: &Network) -> f64 {
         if boxes.len() == distinct.len() {
             break;
         }
+    }
+    if scales.len() < 2 {
+        return 0.0;
     }
     let n = scales.len() as f64;
     let mean_x: f64 = scales.iter().sum::<f64>() / n;
@@ -282,7 +285,7 @@ pub fn census(network: &Network) -> Result<Census> {
         junctions: junctions(network)?,
         components: components(network)?,
         total_length: total_length(network),
-        fractal_dimension: fractal_dimension(network),
+        fractal_dimension: fractal_dimension(network, 12),
     })
 }
 
@@ -316,9 +319,9 @@ mod tests {
         let mut net = Network::new(2);
         net.add_node(vec![0.0, 0.0]).unwrap();
         net.add_node(vec![3.0, 4.0]).unwrap();
-        assert_eq!(fractal_dimension(&net), 1.0);
+        assert_eq!(fractal_dimension(&net, 12), 1.0);
         net.add_node(vec![0.0, 0.0]).unwrap();
-        assert_eq!(fractal_dimension(&net), 1.0);
+        assert_eq!(fractal_dimension(&net, 12), 1.0);
     }
     #[test]
     fn the_carpet_dimension_holds_its_pinned_value() {
@@ -326,6 +329,16 @@ mod tests {
         let d = census(&network).unwrap().fractal_dimension;
         assert!((0.0..=3.0).contains(&d), "dimension {d}");
         assert!((d - 1.787589465914211).abs() < 1e-12, "dimension {d}");
+    }
+
+    #[test]
+    fn two_sample_counts_read_two_dimensions() {
+        let network = core_graph(&atoms::carpet_2d(3).fractal(3)).unwrap();
+        let coarse = fractal_dimension(&network, 4);
+        let fine = fractal_dimension(&network, 12);
+        assert!(coarse.is_finite() && fine.is_finite());
+        assert!(coarse > 0.0 && fine > 0.0);
+        assert!((coarse - fine).abs() > 1e-9);
     }
 
     #[test]

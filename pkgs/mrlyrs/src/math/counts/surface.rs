@@ -3,6 +3,7 @@ use crate::core::tensor::Tensor;
 use crate::math::bang::factory;
 use crate::math::bang::Code;
 use crate::math::counts::counting::{fill_from_corners, positions};
+use crate::math::graph::core_graph;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
@@ -181,6 +182,49 @@ pub fn exposure_recurrence(tile: &Tensor) -> Vec<i128> {
     Exposure::of_tile(tile).recurrence()
 }
 
+fn branches(grid: &Tensor) -> Option<i128> {
+    Some(core_graph(grid).ok()?.branches.len() as i128)
+}
+
+/// Returns the branch count of the tile's level-fold Kronecker power, fitted to its two-term
+/// recurrence over four powers, or none past a u128.
+///
+/// ```
+/// let carpet = mrlyrs::math::atoms::carpet_2d(3);
+/// assert_eq!(mrlyrs::math::counts::edges_of_tile(&carpet, 2), Some(88));
+/// ```
+pub fn edges_of_tile(tile: &Tensor, level: u32) -> Option<u128> {
+    if level == 0 {
+        return None;
+    }
+    let first = branches(tile)?;
+    if first == 0 {
+        return Some(0);
+    }
+    if level == 1 {
+        return u128::try_from(first).ok();
+    }
+    let mut seq = vec![first];
+    let mut grid = tile.clone();
+    for _ in 0..3 {
+        grid = grid.kron(tile);
+        seq.push(branches(&grid)?);
+    }
+    let det = seq[0].checked_mul(seq[2])? - seq[1].checked_mul(seq[1])?;
+    if det == 0 {
+        return None;
+    }
+    let sum = seq[0].checked_mul(seq[3])? - seq[1].checked_mul(seq[2])?;
+    let product = seq[1].checked_mul(seq[3])? - seq[2].checked_mul(seq[2])?;
+    while seq.len() < level as usize {
+        let last = seq[seq.len() - 1];
+        let prior = seq[seq.len() - 2];
+        let next = sum.checked_mul(last)? - product.checked_mul(prior)?;
+        seq.push(next / det);
+    }
+    u128::try_from(seq[level as usize - 1]).ok()
+}
+
 /// Returns the exposed face count of the code's fractal in any dimension at the given level, folded from its corners.
 ///
 /// # Errors
@@ -213,6 +257,12 @@ pub fn surface(code: Code, number: usize, level: u32, base: usize) -> Result<u12
 mod tests {
     use super::*;
     use crate::math::atoms;
+    #[test]
+    fn edges_follow_the_fitted_recurrence() {
+        let carpet = atoms::carpet_2d(3);
+        assert_eq!(edges_of_tile(&carpet, 2), Some(88));
+        assert_eq!(edges_of_tile(&carpet, 10), Some(1_717_892_440));
+    }
     #[test]
     fn prediction_matches_census_on_every_cube_code() {
         for bits in 0..256u128 {

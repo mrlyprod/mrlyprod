@@ -73,3 +73,39 @@ pub fn from_json(text: &str) -> Result<Cell2d> {
     }
     Ok(cell)
 }
+
+/// Builds a cell from rows of digits, the inverse of the text rendering.
+///
+/// # Errors
+///
+/// Errors when a row is empty, ragged, or holds anything but decimal digits.
+pub fn from_strings(rows: &[String]) -> Result<Cell2d> {
+    let mut lists = Vec::with_capacity(rows.len());
+    for row in rows {
+        let mut digits = Vec::with_capacity(row.len());
+        for glyph in row.chars() {
+            match glyph.to_digit(10) {
+                Some(d) => digits.push(d as u8),
+                None => return value_error(format!("'{glyph}' is not a digit.")),
+            }
+        }
+        lists.push(digits);
+    }
+    from_lists(&lists)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::math::two::designs::carpet;
+    use crate::math::two::renderer::text;
+    #[test]
+    fn strings_round_trip_a_carpet() {
+        let cell = carpet(3, 1).unwrap();
+        assert_eq!(from_strings(&text(&cell, None)).unwrap(), cell);
+    }
+    #[test]
+    fn strings_refuse_a_glyph_that_is_not_a_digit() {
+        assert!(from_strings(&["#".to_string()]).is_err());
+    }
+}

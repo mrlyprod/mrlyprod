@@ -1,5 +1,6 @@
 use super::error::{value_error, Error, Result};
 use super::rng::Rng;
+use super::tensor::Tensor;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// An rgba color with byte channels.
@@ -391,8 +392,83 @@ pub fn gradient(colors: &[Color], steps: usize) -> Result<Vec<Color>> {
     Ok(result)
 }
 
+// SAMPLING
+
+/// Snaps every pixel to the palette color nearest it in squared rgba distance, first on a tie.
+///
+/// Returns the pixels untouched when the palette is empty.
+pub fn snap(pixels: &[[u8; 4]], palette: &[Color]) -> Vec<[u8; 4]> {
+    if palette.is_empty() {
+        return pixels.to_vec();
+    }
+    let inks: Vec<[u8; 4]> = palette.iter().map(|c| [c.r, c.g, c.b, c.a]).collect();
+    let far = |a: [u8; 4], b: [u8; 4]| -> u32 {
+        (0..4)
+            .map(|i| {
+                let d = a[i].abs_diff(b[i]) as u32;
+                d * d
+            })
+            .sum()
+    };
+    pixels
+        .iter()
+        .map(|&px| {
+            let mut best = 0;
+            let mut near = far(px, inks[0]);
+            for (i, &ink) in inks.iter().enumerate().skip(1) {
+                let d = far(px, ink);
+                if d < near {
+                    near = d;
+                    best = i;
+                }
+            }
+            inks[best]
+        })
+        .collect()
+}
+
+/// Reads rgba pixels as a type grid, one wherever the rgb mean falls below the level.
+pub fn luma_types(pixels: &[[u8; 4]], width: usize, height: usize, level: u8) -> Tensor {
+    let mut types = Tensor::new(vec![height, width]);
+    for flat in 0..width * height {
+        let px = pixels.get(flat).copied().unwrap_or([0, 0, 0, 0]);
+        let mean = (px[0] as f64 + px[1] as f64 + px[2] as f64) / 3.0;
+        types.put(flat, i64::from(mean < level as f64));
+    }
+    types
+}
+
 #[cfg(test)]
 mod tests {
+    fn carpet_pixels() -> Vec<[u8; 4]> {
+        use crate::core::cell::{mapping, Cell, Mode};
+        Cell::new(crate::math::atoms::carpet_2d(3))
+            .paint(&mapping(), Mode::Type, None)
+            .unwrap()
+            .colors
+            .unwrap()
+    }
+
+    #[test]
+    fn snap_takes_the_nearest_palette_color() {
+        use super::*;
+        let palette = [Color::rgb(255, 0, 0), Color::rgb(0, 0, 255)];
+        let snapped = snap(&carpet_pixels(), &palette);
+        assert_eq!(snapped[0], [255, 0, 0, 255]);
+        assert!(snapped
+            .iter()
+            .all(|px| palette.iter().any(|c| *px == [c.r, c.g, c.b, c.a])));
+        assert_eq!(snap(&carpet_pixels(), &[]), carpet_pixels());
+    }
+
+    #[test]
+    fn luma_types_reads_dark_pixels_as_one() {
+        use super::*;
+        let types = luma_types(&carpet_pixels(), 3, 3, 128);
+        assert_eq!(types.shape, vec![3, 3]);
+        assert_eq!(types.bytes().unwrap(), &[1, 1, 1, 1, 0, 1, 1, 1, 1]);
+    }
+
     #[test]
     fn refuses_from_hex() {
         use super::*;

@@ -411,7 +411,7 @@ pub fn apply(paint: &Paint, cell: &mut Cell, rng: &mut Rng) -> Result<()> {
     match paint.edition.mode() {
         Some(mode) => {
             let mapping = HashMap::from([(0, void_inks), (1, fill_inks)]);
-            *cell = cell.clone().paint(&mapping, mode);
+            *cell = cell.clone().paint(&mapping, mode, Some(rng))?;
         }
         None => scatter(cell, &void_inks, &fill_inks, rng),
     }

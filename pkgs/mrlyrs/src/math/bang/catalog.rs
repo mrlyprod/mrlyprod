@@ -46,6 +46,7 @@ pub fn sources(catalog: &Catalog, dimension: usize) -> Result<Vec<Source>> {
             .map(|&code| Source::Code(code))
             .collect(),
         Catalog::Codes(list) => list.iter().map(|&code| Source::Code(code)).collect(),
+        Catalog::Designs(list) => list.iter().map(|&design| Source::Classic(design)).collect(),
     })
 }
 
@@ -58,6 +59,8 @@ pub enum Catalog {
     Universe,
     /// An explicit list of codes.
     Codes(Vec<u128>),
+    /// An explicit list of named designs.
+    Designs(Vec<Design>),
 }
 
 named_enum! {

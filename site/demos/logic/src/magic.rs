@@ -188,6 +188,7 @@ pub fn magic_hex(
         scale,
         None,
         0,
+        None,
     )?)
 }
 
@@ -267,7 +268,6 @@ fn recipe(layers: &[MagicLayer]) -> Tile {
     tile.numbers = layers.iter().map(|layer| layer.number).collect();
     tile.levels = vec![1; layers.len()];
     tile.rotations = vec![0; layers.len()];
-    tile.anti = vec![false; layers.len()];
     tile.resize();
     tile
 }

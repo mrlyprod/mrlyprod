@@ -2,9 +2,7 @@ use crate::core::error::{value_error, Result};
 use crate::core::named_enum;
 use serde::{Deserialize, Serialize};
 
-pub use crate::math::bang::catalog::{
-    antis, classics, Catalog, Design, Source, ANTIS_2D, ANTIS_3D, CLASSICS_2D, CLASSICS_3D,
-};
+pub use crate::math::bang::catalog::{classics, Catalog, Design, Source, CLASSICS_2D, CLASSICS_3D};
 
 /// The smallest side, number or factor a tile may take.
 pub const MIN_SIDE: usize = 2;
@@ -74,8 +72,6 @@ pub struct Tile {
     pub levels: Vec<usize>,
     /// The quarter-turn rotation of each source.
     pub rotations: Vec<usize>,
-    /// Whether each source swaps fill and void.
-    pub anti: Vec<bool>,
     /// Whether the finished tile inverts.
     pub invert: bool,
     /// Whether the finished tile flips.
@@ -101,7 +97,6 @@ impl Tile {
             numbers: Vec::new(),
             levels: Vec::new(),
             rotations: Vec::new(),
-            anti: Vec::new(),
             invert: false,
             flip: false,
             width: 0,
@@ -177,7 +172,6 @@ impl Tile {
         if self.numbers.len() != slots
             || self.levels.len() != slots
             || self.rotations.len() != slots
-            || self.anti.len() != slots
         {
             return value_error("ragged slots");
         }
@@ -398,7 +392,6 @@ mod tests {
         tile.numbers = vec![5, 9];
         tile.levels = vec![1, 1];
         tile.rotations = vec![0, 0];
-        tile.anti = vec![false, true];
         tile.factor = 5;
         let json = serde_json::to_value(&tile).unwrap();
         assert_eq!(json["group"], "Magic");
@@ -413,7 +406,6 @@ mod tests {
         tile.numbers = vec![3];
         tile.levels = vec![2];
         tile.rotations = vec![0];
-        tile.anti = vec![false];
         tile.resize();
         assert_eq!((tile.factor, tile.width, tile.height), (3, 9, 9));
         tile.group = Group::Special;
@@ -446,7 +438,6 @@ mod tests {
         tile.numbers = vec![3];
         tile.levels = vec![1];
         tile.rotations = vec![0];
-        tile.anti = vec![false];
         tile.resize();
         assert!(tile.check().is_ok());
         let mut zero = tile.clone();
@@ -477,7 +468,6 @@ mod tests {
         special.numbers = vec![3];
         special.levels = vec![1];
         special.rotations = vec![0];
-        special.anti = vec![false];
         special.factor = 1;
         special.resize();
         assert_eq!(note(&special), "factor is 2 to 64");
@@ -486,7 +476,6 @@ mod tests {
         mosaic.numbers = vec![3, 3, 5];
         mosaic.levels = vec![1; 3];
         mosaic.rotations = vec![0; 3];
-        mosaic.anti = vec![false; 3];
         mosaic.factor = 3;
         mosaic.resize();
         assert_eq!(note(&mosaic), "mosaic shares one number");
@@ -523,7 +512,6 @@ mod tests {
         tile.numbers = vec![3, 3];
         tile.levels = vec![1, 1];
         tile.rotations = vec![0, 0];
-        tile.anti = vec![false, false];
         tile.resize();
         assert!(tile.degenerate());
         tile.numbers = vec![3, 5];

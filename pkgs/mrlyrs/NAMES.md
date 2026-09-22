@@ -18,7 +18,6 @@ Words, not letters. One word per thing, the same word everywhere. Letters live o
 | `special` | the mask code of a special tile |
 | `factor` | the side of a special or mosaic mask |
 | `turn` | quarter turns of a slot |
-| `anti` | whether a slot swaps fill and void |
 | `flip` | whether a special tile flips its mask |
 | `invert` | whether the finished tile inverts |
 | `fill`, `void`, `cells` | counts of a render |
@@ -94,13 +93,13 @@ Words, not letters. One word per thing, the same word everywhere. Letters live o
 ## KIND TILE
 
 - The key that carries the codes says the group: `code` flat or, with `level`, fractal; `magic` a list of letters; `special` one mask code; `mosaic` three codes.
-- Keys in order: `code` | `special` | `magic` | `mosaic`, `factor`, `side`, `level`, `turn`, `anti`, `flip`, `invert`.
+- Keys in order: `code` | `special` | `magic` | `mosaic`, `factor`, `side`, `level`, `turn`, `flip`, `invert`.
 - `side` and `turn` are one number for one slot and one number per slot for a magic tile; a mosaic shares one side.
-- `level` elides at 1, `turn` when nothing turns, `anti` when no slot swaps, `flip` and `invert` at false.
+- `level` elides at 1, `turn` when nothing turns, `flip` and `invert` at false.
 - Classics fold to their codes: Carpet 7, Net 14, Htree 3, Vtree 5, Void 9, Point 8, Dust 1, Hline 12, Vline 10, Star 6. Codes sit in the plane, 0 to 15.
-- A lone anti folds into `invert`; anti is dead on a special tile; width, height and base never print and the size law rebuilds them.
+- Width, height and base never print and the size law rebuilds them.
 - Carrier: `name::Tile`; `Tile::of` folds a `mrlyrs::gen::recipe::Tile` and `Tile::recipe` builds one back, resized and checked.
-- Examples: `{"kind":"tile","code":7,"side":3,"level":2}` the starter carpet, `{"kind":"tile","code":3,"side":5,"turn":1,"invert":true}`, `{"kind":"tile","magic":[7,14],"side":[3,5],"turn":[0,2],"anti":[false,true],"invert":true}`, `{"kind":"tile","special":5,"factor":3,"side":5,"flip":true}`, `{"kind":"tile","mosaic":[7,14,5],"factor":3,"side":3,"turn":[0,1,0],"anti":[false,false,true],"invert":true}`.
+- Examples: `{"kind":"tile","code":7,"side":3,"level":2}` the starter carpet, `{"kind":"tile","code":3,"side":5,"turn":1,"invert":true}`, `{"kind":"tile","magic":[7,14],"side":[3,5],"turn":[0,2],"invert":true}`, `{"kind":"tile","special":5,"factor":3,"side":5,"flip":true}`, `{"kind":"tile","mosaic":[7,14,5],"factor":3,"side":3,"turn":[0,1,0],"invert":true}`.
 
 ## KIND WORD
 

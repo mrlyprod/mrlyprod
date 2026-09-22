@@ -25,7 +25,7 @@ pub fn hex_svg(
         "cut" => six::cut_design(Code::from(code), number, level, base)?,
         _ => six::iso_design(Code::from(code), number, level, base)?,
     };
-    Ok(six::svg(&cell, scale, None, 0)?)
+    Ok(six::svg(&cell, scale, None, 0, None)?)
 }
 
 // SLICE

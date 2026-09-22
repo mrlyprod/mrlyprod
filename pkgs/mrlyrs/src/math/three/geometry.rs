@@ -45,7 +45,7 @@ pub fn orientations() -> &'static Vec<(usize, usize, usize)> {
 ///
 /// Errors when the cells differ in shape or do not fill the arrangement.
 pub fn merge(cells: &[Cell3d], width: usize, height: usize, depth: usize) -> Result<Cell3d> {
-    geometry::merge_reps(cells, &[height, width, depth])
+    geometry::merge_reps(cells, &[depth, height, width])
 }
 
 /// Orients a copy of the cell by each mask value and merges them in the mask's shape.
@@ -66,7 +66,7 @@ pub fn special(mask: &Tensor, cell: &Cell3d) -> Result<Cell3d> {
         .map(|&k| cell.clone().orient(k as usize))
         .collect();
     let oriented = oriented?;
-    merge(&oriented, mask.shape[1], mask.shape[0], mask.shape[2])
+    merge(&oriented, mask.shape[2], mask.shape[1], mask.shape[0])
 }
 
 fn slice_map(cube: &[usize], axis: usize, index: usize) -> (Vec<usize>, Vec<usize>) {
@@ -136,9 +136,9 @@ fn lift_map(shape: &[usize], axis: usize, depth: usize) -> (Vec<usize>, Vec<usiz
 ///
 /// ```
 /// let flat = mrlyrs::math::two::carpet(3, 2).unwrap();
-/// let cube = mrlyrs::math::three::extrude(&flat, 2, 4).unwrap();
+/// let cube = mrlyrs::math::three::extrude(&flat, 0, 4).unwrap();
 /// assert_eq!(cube.depth(), 4);
-/// assert_eq!(mrlyrs::math::three::slice(&cube, 2, 3).unwrap(), flat);
+/// assert_eq!(mrlyrs::math::three::slice(&cube, 0, 3).unwrap(), flat);
 /// ```
 ///
 /// # Errors
@@ -154,6 +154,32 @@ pub fn extrude(cell: &Cell2d, axis: usize, depth: usize) -> Result<Cell3d> {
     let (shape, map) = lift_map(&cell.types().shape, axis, depth);
     Ok(Cell3d {
         cell: remap(&cell.cell, &map, &shape)?,
+    })
+}
+
+/// Repeats every plane of a cube depth times along its leading axis, colors and tags with it.
+///
+/// ```
+/// let stack = mrlyrs::math::three::extrude_cube(&mrlyrs::math::three::carpet(3, 1).unwrap(), 2).unwrap();
+/// assert_eq!(stack.types().shape, vec![6, 3, 3]);
+/// assert_eq!(stack.types().sum(), 40);
+/// ```
+///
+/// # Errors
+///
+/// Errors when the depth is below one.
+pub fn extrude_cube(cell: &Cell3d, depth: usize) -> Result<Cell3d> {
+    if depth == 0 {
+        return value_error("extrude depth must be at least 1.");
+    }
+    let shape = &cell.types().shape;
+    let plane = shape[1] * shape[2];
+    let stacked = vec![shape[0] * depth, shape[1], shape[2]];
+    let map: Vec<usize> = (0..stacked[0] * plane)
+        .map(|flat| (flat / plane / depth) * plane + flat % plane)
+        .collect();
+    Ok(Cell3d {
+        cell: remap(&cell.cell, &map, &stacked)?,
     })
 }
 
@@ -261,7 +287,8 @@ mod tests {
         let flat = two::carpet(3, 2)
             .unwrap()
             .layers()
-            .paint(&mapping(), Mode::Index);
+            .paint(&mapping(), Mode::Index, None)
+            .unwrap();
         for axis in 0..3 {
             let cube = extrude(&flat, axis, 4).unwrap();
             assert_eq!(cube.types().shape[axis], 4);
@@ -279,7 +306,7 @@ mod tests {
     fn extrude_lifts_a_flat_face_of_a_cube_back() {
         let sponge = designs::carpet(3, 2).unwrap();
         let face = slice(&sponge, 2, 0).unwrap();
-        let column = extrude(&face, 2, sponge.depth()).unwrap();
+        let column = extrude(&face, 2, sponge.types().shape[2]).unwrap();
         assert_eq!(column.types().shape, sponge.types().shape);
         assert_eq!(slice(&column, 2, 5).unwrap(), face);
     }
@@ -290,7 +317,8 @@ mod tests {
         let flat = two::carpet(3, 1)
             .unwrap()
             .layers()
-            .paint(&mapping(), Mode::Type);
+            .paint(&mapping(), Mode::Type, None)
+            .unwrap();
         let cube = extrude(&flat, 0, 3).unwrap();
         let colors = cube.cell.colors.as_ref().unwrap();
         let tags = cube.cell.tags.as_ref().unwrap();
@@ -305,6 +333,15 @@ mod tests {
             }
         }
     }
+    #[test]
+    fn extrude_cube_repeats_every_plane() {
+        let stack = extrude_cube(&designs::carpet(3, 1).unwrap(), 2).unwrap();
+        assert_eq!(stack.types().shape, vec![6, 3, 3]);
+        assert_eq!(stack.types().sum(), 40);
+        assert_eq!(slice(&stack, 0, 0).unwrap(), slice(&stack, 0, 1).unwrap());
+        assert!(extrude_cube(&designs::carpet(3, 1).unwrap(), 0).is_err());
+    }
+
     #[test]
     fn manhattan_layers_are_diamond_shells() {
         let cube = manhattan_layers(designs::ones(3, 1).unwrap());

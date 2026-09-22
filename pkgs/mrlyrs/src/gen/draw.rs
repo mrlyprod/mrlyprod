@@ -1,7 +1,7 @@
 use crate::core::error::{value_error, Result};
 use crate::core::rng::Rng;
 use crate::gen::recipe::{
-    generals, nestings, powers, products, uniform, Catalog, Group, Parity, Source, Tile,
+    generals, nestings, powers, products, uniform, Catalog, Design, Group, Parity, Source, Tile,
 };
 use serde::{Deserialize, Serialize};
 
@@ -20,8 +20,6 @@ pub struct ConfigNd<const N: usize> {
     pub parity: Parity,
     /// The forced inversion flag, or None to flip a coin.
     pub invert: Option<bool>,
-    /// The forced anti flag for every source, or None to flip coins.
-    pub anti: Option<bool>,
 }
 
 impl<const N: usize> Default for ConfigNd<N> {
@@ -33,7 +31,6 @@ impl<const N: usize> Default for ConfigNd<N> {
             max_size: 9,
             parity: Parity::Odds,
             invert: None,
-            anti: None,
         }
     }
 }
@@ -47,7 +44,22 @@ impl<const N: usize> ConfigNd<N> {
     }
 }
 
-type Rotation = fn(&mut Rng) -> usize;
+/// Draws one named design from the stream.
+pub fn random_design(rng: &mut Rng) -> Design {
+    let designs = Design::all();
+    designs[rng.below(designs.len())]
+}
+
+/// Draws a design's turn from the stream: a tree turns 0 or 1, every other design 0 to 3.
+pub fn random_rotation(design: Design, rng: &mut Rng) -> u8 {
+    let turns = match design {
+        Design::Htree | Design::Vtree | Design::Xtree | Design::Ytree | Design::Ztree => 2,
+        _ => 4,
+    };
+    rng.below(turns) as u8
+}
+
+type Rotation = fn(Source, &mut Rng) -> usize;
 
 fn general<const N: usize>(
     config: &ConfigNd<N>,
@@ -64,7 +76,7 @@ fn general<const N: usize>(
     tile.sources = vec![source];
     tile.numbers = vec![n];
     tile.levels = vec![1];
-    tile.rotations = vec![rotation(rng)];
+    tile.rotations = vec![rotation(source, rng)];
     tile.factor = n;
     Ok(Some(tile))
 }
@@ -85,7 +97,7 @@ fn fractal<const N: usize>(
     tile.sources = vec![source];
     tile.numbers = vec![n];
     tile.levels = vec![level];
-    tile.rotations = vec![rotation(rng)];
+    tile.rotations = vec![rotation(source, rng)];
     tile.factor = n;
     Ok(Some(tile))
 }
@@ -131,7 +143,7 @@ fn magic<const N: usize>(
     tile.sources = sources.clone();
     tile.numbers = numbers.clone();
     tile.levels = vec![1; count];
-    tile.rotations = sources.iter().map(|_| rotation(rng)).collect();
+    tile.rotations = sources.iter().map(|&s| rotation(s, rng)).collect();
     tile.factor = numbers[0];
     Ok(Some(tile))
 }
@@ -153,7 +165,7 @@ fn special<const N: usize>(
     tile.sources = vec![source];
     tile.numbers = vec![n];
     tile.levels = vec![1];
-    tile.rotations = vec![rotation(rng)];
+    tile.rotations = vec![rotation(source, rng)];
     tile.factor = factor;
     tile.flip = rng.boolean();
     Ok(Some(tile))
@@ -184,7 +196,7 @@ fn mosaic<const N: usize>(
     tile.sources = sources.clone();
     tile.numbers = vec![n, n, n];
     tile.levels = vec![1, 1, 1];
-    tile.rotations = sources.iter().map(|_| rotation(rng)).collect();
+    tile.rotations = sources.iter().map(|&s| rotation(s, rng)).collect();
     tile.factor = factor;
     Ok(Some(tile))
 }
@@ -207,7 +219,7 @@ fn creator<const N: usize>(group: Group) -> Creator<N> {
 /// use mrlyrs::core::rng::Rng;
 /// use mrlyrs::gen::draw::{create, ConfigNd};
 /// let mut rng = Rng::new(1);
-/// let tile = create(&ConfigNd::<2>::default(), |rng| rng.below(4), &mut rng)?;
+/// let tile = create(&ConfigNd::<2>::default(), |_, rng| rng.below(4), &mut rng)?;
 /// assert!((3..=9).contains(&tile.max_size()));
 /// # Ok::<(), mrlyrs::Error>(())
 /// ```
@@ -233,11 +245,6 @@ pub fn create<const N: usize>(
         Some(tile) => tile,
         None => return value_error("could not generate a tile within the size constraints."),
     };
-    let count = tile.sources.len();
-    tile.anti = match config.anti {
-        Some(flag) => vec![flag; count],
-        None => (0..count).map(|_| rng.boolean()).collect(),
-    };
     tile.invert = config.invert.unwrap_or_else(|| rng.boolean());
     Ok(tile)
 }
@@ -262,7 +269,7 @@ pub fn random_tile<const N: usize>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    fn turn(rng: &mut Rng) -> usize {
+    fn turn(_: Source, rng: &mut Rng) -> usize {
         rng.below(4)
     }
     #[test]
@@ -285,5 +292,34 @@ mod tests {
         };
         assert!(create(&sourceless, turn, &mut rng).is_err());
         assert!(random_tile::<2>(1, turn, &mut rng).is_err());
+    }
+    #[test]
+    fn a_named_catalog_draws_only_its_designs() {
+        let config: ConfigNd<2> = ConfigNd {
+            catalog: Catalog::Designs(vec![Design::Carpet, Design::Net]),
+            ..Default::default()
+        };
+        for s in 0..64 {
+            let mut rng = Rng::new(s);
+            let tile = crate::gen::build::create_2d(&config, &mut rng).unwrap();
+            for source in &tile.sources {
+                assert!(
+                    matches!(source, Source::Classic(Design::Carpet | Design::Net)),
+                    "seed {s}"
+                );
+            }
+        }
+    }
+    #[test]
+    fn a_tree_turns_a_half() {
+        let config: ConfigNd<2> = ConfigNd {
+            catalog: Catalog::Designs(vec![Design::Vtree]),
+            ..Default::default()
+        };
+        for s in 0..64 {
+            let mut rng = Rng::new(s);
+            let tile = crate::gen::build::create_2d(&config, &mut rng).unwrap();
+            assert!(tile.rotations.iter().all(|&turn| turn < 2), "seed {s}");
+        }
     }
 }

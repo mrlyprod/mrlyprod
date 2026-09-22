@@ -18,14 +18,39 @@ const CODES_2D: [(Design, u128); 10] = [
     (Design::Star, 6),
 ];
 
+const CODES_3D: [(Design, u128); 12] = [
+    (Design::Carpet, 23),
+    (Design::Net, 232),
+    (Design::Xtree, 17),
+    (Design::Ytree, 5),
+    (Design::Ztree, 3),
+    (Design::Void, 129),
+    (Design::Point, 128),
+    (Design::Dust, 1),
+    (Design::Xline, 136),
+    (Design::Yline, 160),
+    (Design::Zline, 192),
+    (Design::Star, 22),
+];
+
 const TOTAL_2D: u128 = 16;
 
-/// Returns the plane's bang code of a classic design, or None for one outside the plane.
-pub fn classic_code(design: Design) -> Option<u128> {
-    CODES_2D
+/// Returns the bang code of a named design in a dimension, or None where it has no design.
+pub fn classic_code_nd(design: Design, dimension: usize) -> Option<u128> {
+    let table: &[(Design, u128)] = match dimension {
+        2 => &CODES_2D,
+        3 => &CODES_3D,
+        _ => return None,
+    };
+    table
         .iter()
         .find(|&&(d, _)| d == design)
         .map(|&(_, code)| code)
+}
+
+/// Returns the plane's bang code of a classic design, or None for one outside the plane.
+pub fn classic_code(design: Design) -> Option<u128> {
+    classic_code_nd(design, 2)
 }
 
 fn code_of(source: Source) -> Result<u128> {
@@ -98,8 +123,8 @@ impl Default for Slots {
 ///
 /// The key that carries the codes says the group: `code` is one design flat or, with `level`, raised
 /// to a power; `magic` is a list of letters; `special` is one mask code over a factor; `mosaic` is
-/// three codes behind a tree mask. Classics fold to their codes, a lone anti folds into `invert`,
-/// and a level of one folds away, so aliases that draw one picture share one name.
+/// three codes behind a tree mask. Classics fold to their codes and a level of one folds away, so
+/// aliases that draw one picture share one name.
 ///
 /// ```
 /// use mrlyrs::gen::name::Tile;
@@ -136,9 +161,6 @@ pub struct Tile {
     /// The quarter turns of each slot, absent when nothing turns.
     #[serde(default, skip_serializing_if = "Slots::is_still")]
     pub turn: Slots,
-    /// Whether each slot swaps fill and void, absent when none does.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub anti: Vec<bool>,
     /// Whether a special tile flips its mask.
     #[serde(default, skip_serializing_if = "is_false")]
     pub flip: bool,
@@ -158,7 +180,6 @@ fn blank() -> Tile {
         side: Slots::One(0),
         level: None,
         turn: Slots::One(0),
-        anti: Vec::new(),
         flip: false,
         invert: false,
     }
@@ -198,13 +219,11 @@ impl Tile {
                     name.level = (level != 1).then_some(level);
                 }
                 name.turn = Slots::One(slot(&recipe.rotations, "rotation")? % 4);
-                name.invert = slot(&recipe.anti, "anti flag")? ^ recipe.invert;
             }
             Group::Magic => {
                 name.magic = codes;
                 name.side = Slots::Each(recipe.numbers.clone());
                 name.turn = turns(recipe);
-                name.anti = recipe.anti.clone();
             }
             Group::Special => {
                 name.special = Some(slot(&codes, "source")?);
@@ -218,7 +237,6 @@ impl Tile {
                 name.factor = Some(recipe.factor);
                 name.side = Slots::One(slot(&recipe.numbers, "number")?);
                 name.turn = turns(recipe);
-                name.anti = recipe.anti.clone();
             }
         }
         Ok(name.fold())
@@ -226,9 +244,6 @@ impl Tile {
     fn fold(mut self) -> Tile {
         if self.turn.is_still() {
             self.turn = Slots::One(0);
-        }
-        if self.anti.iter().all(|&a| !a) {
-            self.anti.clear();
         }
         self
     }
@@ -254,20 +269,8 @@ impl Tile {
         }
         Ok(group)
     }
-    fn anti(&self, count: usize) -> Result<Vec<bool>> {
-        match self.anti.len() {
-            0 => Ok(vec![false; count]),
-            n if n == count => Ok(self.anti.clone()),
-            n => value_error(format!(
-                "a {count}-slot tile wants {count} anti flags, not {n}."
-            )),
-        }
-    }
-    fn lone(&self, count: usize) -> Result<()> {
-        if !self.anti.is_empty() {
-            return value_error("anti folds into invert on a one-slot tile.");
-        }
-        if count == 1 && self.factor.is_some() {
+    fn lone(&self) -> Result<()> {
+        if self.factor.is_some() {
             return value_error("factor is special or mosaic only.");
         }
         Ok(())
@@ -283,7 +286,7 @@ impl Tile {
         recipe.invert = self.invert;
         match group {
             Group::General | Group::Fractal => {
-                self.lone(1)?;
+                self.lone()?;
                 if self.flip {
                     return value_error("flip is special only.");
                 }
@@ -291,7 +294,6 @@ impl Tile {
                 recipe.numbers = vec![self.side.one("side")?];
                 recipe.levels = vec![self.level.unwrap_or(1)];
                 recipe.rotations = vec![self.turn.one("turn")?];
-                recipe.anti = vec![false];
             }
             Group::Magic => {
                 let count = self.magic.len();
@@ -306,12 +308,8 @@ impl Tile {
                 recipe.numbers = self.side.each(count, "side")?;
                 recipe.levels = vec![1; count];
                 recipe.rotations = self.turn.each(count, "turn")?;
-                recipe.anti = self.anti(count)?;
             }
             Group::Special => {
-                if !self.anti.is_empty() {
-                    return value_error("anti is dead on a special tile.");
-                }
                 let Some(factor) = self.factor else {
                     return value_error("a special tile wants its factor.");
                 };
@@ -320,7 +318,6 @@ impl Tile {
                 recipe.numbers = vec![self.side.one("side")?];
                 recipe.levels = vec![1];
                 recipe.rotations = vec![self.turn.one("turn")?];
-                recipe.anti = vec![false];
                 recipe.flip = self.flip;
             }
             Group::Mosaic => {
@@ -339,7 +336,6 @@ impl Tile {
                 recipe.numbers = vec![self.side.one("side")?; 3];
                 recipe.levels = vec![1; 3];
                 recipe.rotations = self.turn.each(3, "turn")?;
-                recipe.anti = self.anti(3)?;
             }
         }
         recipe.resize();
@@ -352,7 +348,7 @@ impl Tile {
 
 impl Named for Tile {
     const KIND: &'static str = "tile";
-    const LISTS: &'static [&'static str] = &["magic", "mosaic", "anti"];
+    const LISTS: &'static [&'static str] = &["magic", "mosaic"];
     fn checked(self) -> Result<Tile> {
         Tile::of(&self.recipe()?)
     }
@@ -365,13 +361,16 @@ mod tests {
     use crate::gen::build::{build_2d, create_2d, Config2d};
     use crate::gen::recipe::{Catalog, Parity};
     use crate::math::bang::Code;
+    use crate::math::counts;
+    use crate::math::three;
     use crate::math::two::designs;
 
     const CARPET: &str = r#"{"kind":"tile","code":7,"side":3,"level":2}"#;
     const GENERAL: &str = r#"{"kind":"tile","code":3,"side":5,"turn":1,"invert":true}"#;
-    const MAGIC: &str = r#"{"kind":"tile","magic":[7,14],"side":[3,5],"turn":[0,2],"anti":[false,true],"invert":true}"#;
+    const MAGIC: &str = r#"{"kind":"tile","magic":[7,14],"side":[3,5],"turn":[0,2],"invert":true}"#;
     const SPECIAL: &str = r#"{"kind":"tile","special":5,"factor":3,"side":5,"flip":true}"#;
-    const MOSAIC: &str = r#"{"kind":"tile","mosaic":[7,14,5],"factor":3,"side":3,"turn":[0,1,0],"anti":[false,false,true],"invert":true}"#;
+    const MOSAIC: &str =
+        r#"{"kind":"tile","mosaic":[7,14,5],"factor":3,"side":3,"turn":[0,1,0],"invert":true}"#;
 
     fn built(recipe: &Recipe) -> crate::math::two::Cell2d {
         build_2d(recipe).unwrap()
@@ -382,7 +381,6 @@ mod tests {
         recipe.numbers = vec![3];
         recipe.levels = vec![2];
         recipe.rotations = vec![0];
-        recipe.anti = vec![false];
         recipe.resize();
         recipe
     }
@@ -408,6 +406,20 @@ mod tests {
         }
     }
     #[test]
+    fn cube_codes_match_their_renders() {
+        assert_eq!(classic_code_nd(Design::Carpet, 3), Some(23));
+        assert_eq!(counts::fill(Code::from(23u64), 3, 3, 2, 2).unwrap(), 400);
+        for (design, code) in CODES_3D {
+            let by_code = three::designs::create(Code::from(code), 3, 1, 2).unwrap();
+            assert_eq!(
+                three::designs::named(design, 3, 1).unwrap(),
+                by_code,
+                "{}",
+                design.name()
+            );
+        }
+    }
+    #[test]
     fn example_names_hold_verbatim() {
         assert_eq!(
             Tile::of(&fractal(Design::Carpet)).unwrap().to_json(),
@@ -418,7 +430,6 @@ mod tests {
         general.numbers = vec![5];
         general.levels = vec![1];
         general.rotations = vec![1];
-        general.anti = vec![false];
         general.invert = true;
         general.resize();
         assert_eq!(Tile::of(&general).unwrap().to_json(), GENERAL);
@@ -427,7 +438,6 @@ mod tests {
         magic.numbers = vec![3, 5];
         magic.levels = vec![1, 1];
         magic.rotations = vec![0, 2];
-        magic.anti = vec![false, true];
         magic.invert = true;
         magic.resize();
         assert_eq!(Tile::of(&magic).unwrap().to_json(), MAGIC);
@@ -437,7 +447,6 @@ mod tests {
         special.numbers = vec![5];
         special.levels = vec![1];
         special.rotations = vec![0];
-        special.anti = vec![true];
         special.flip = true;
         special.resize();
         assert_eq!(Tile::of(&special).unwrap().to_json(), SPECIAL);
@@ -447,7 +456,6 @@ mod tests {
         mosaic.numbers = vec![3, 3, 3];
         mosaic.levels = vec![1, 1, 1];
         mosaic.rotations = vec![0, 1, 0];
-        mosaic.anti = vec![false, false, true];
         mosaic.invert = true;
         mosaic.resize();
         assert_eq!(Tile::of(&mosaic).unwrap().to_json(), MOSAIC);
@@ -457,15 +465,15 @@ mod tests {
         let magic = Tile::from_json(MAGIC).unwrap();
         assert_eq!(
             magic.to_url().unwrap(),
-            "/tile?magic=7,14&side=3,5&turn=0,2&anti=false,true&invert=true"
+            "/tile?magic=7,14&side=3,5&turn=0,2&invert=true"
         );
         assert_eq!(
             magic.to_file().unwrap(),
-            "tile_magic=[7,14]_side=[3,5]_turn=[0,2]_anti=[false,true]_invert=true"
+            "tile_magic=[7,14]_side=[3,5]_turn=[0,2]_invert=true"
         );
         assert_eq!(
             magic.to_mrly().unwrap(),
-            "tile magic [7 14], side [3 5], turn [0 2], anti [false true], invert"
+            "tile magic [7 14], side [3 5], turn [0 2], invert"
         );
         let carpet = Tile::from_json(CARPET).unwrap();
         assert_eq!(carpet.to_url().unwrap(), "/tile?code=7&side=3&level=2");
@@ -511,25 +519,6 @@ mod tests {
         assert_eq!(built(&recipe), built(&flat));
     }
     #[test]
-    fn anti_invert_pairs_share_one_name_and_one_picture() {
-        let mut plain = fractal(Design::Carpet);
-        let mut folded = plain.clone();
-        folded.anti = vec![true];
-        folded.invert = true;
-        assert_eq!(Tile::of(&plain).unwrap(), Tile::of(&folded).unwrap());
-        assert_eq!(built(&plain), built(&folded));
-        plain.invert = true;
-        let mut alias = plain.clone();
-        alias.anti = vec![true];
-        alias.invert = false;
-        assert_eq!(Tile::of(&plain).unwrap(), Tile::of(&alias).unwrap());
-        assert_eq!(built(&plain), built(&alias));
-        assert_eq!(
-            Tile::of(&plain).unwrap().to_json(),
-            r#"{"kind":"tile","code":7,"side":3,"level":2,"invert":true}"#
-        );
-    }
-    #[test]
     fn classics_and_codes_share_one_name() {
         let by_classic = fractal(Design::Net);
         let mut by_code = by_classic.clone();
@@ -538,32 +527,14 @@ mod tests {
         assert_eq!(built(&by_classic), built(&by_code));
     }
     #[test]
-    fn dead_special_anti_folds_away() {
-        let mut special = Recipe::new(Group::Special);
-        special.sources = vec![Source::Code(5)];
-        special.factor = 3;
-        special.numbers = vec![3];
-        special.levels = vec![1];
-        special.rotations = vec![0];
-        special.anti = vec![true];
-        special.resize();
-        let parsed = Tile::from_json(&Tile::of(&special).unwrap().to_json())
-            .unwrap()
-            .recipe()
-            .unwrap();
-        assert_eq!(parsed.anti, vec![false]);
-        assert_eq!(built(&special), built(&parsed));
-    }
-    #[test]
     fn a_spelt_default_folds_to_the_canonical_string() {
-        let spelt = r#"{"kind":"tile","side":[3,5],"magic":[7,14],"turn":[0,0],"anti":[false,false],"invert":false}"#;
+        let spelt = r#"{"kind":"tile","side":[3,5],"magic":[7,14],"turn":[0,0],"invert":false}"#;
         let tile = Tile::from_json(spelt).unwrap();
         assert_eq!(
             tile.to_json(),
             r#"{"kind":"tile","magic":[7,14],"side":[3,5]}"#
         );
         assert_eq!(tile.turn, Slots::One(0));
-        assert!(tile.anti.is_empty());
     }
     #[test]
     fn refuses_a_name_or_a_recipe_that_cannot_draw() {
@@ -572,7 +543,6 @@ mod tests {
             r#"{"kind":"tile","code":16,"side":3}"#,
             r#"{"kind":"tile","code":7,"side":99}"#,
             r#"{"kind":"tile","code":7,"side":3,"flip":true}"#,
-            r#"{"kind":"tile","code":7,"side":3,"anti":[true]}"#,
             r#"{"kind":"tile","code":7,"side":3,"factor":3}"#,
             r#"{"kind":"tile","code":7,"side":[3]}"#,
             r#"{"kind":"tile","code":7,"side":3,"level":7}"#,
@@ -581,13 +551,11 @@ mod tests {
             r#"{"kind":"tile","sparkle":7,"side":3}"#,
             r#"{"kind":"tile","magic":[7],"side":[3]}"#,
             r#"{"kind":"tile","magic":[7,14],"side":3}"#,
-            r#"{"kind":"tile","magic":[7,14],"side":[3,5],"anti":[true]}"#,
             r#"{"kind":"tile","magic":[7,14],"side":[3,5],"level":2}"#,
             r#"{"kind":"tile","mosaic":[7,14,5],"factor":3,"side":[3,3,3]}"#,
             r#"{"kind":"tile","mosaic":[7,14],"factor":3,"side":3}"#,
             r#"{"kind":"tile","mosaic":[7,14,5],"side":3}"#,
             r#"{"kind":"tile","special":5,"side":5}"#,
-            r#"{"kind":"tile","special":5,"factor":3,"side":5,"anti":[true]}"#,
             r#"{"kind":"bang","dim":2,"code":7}"#,
             "tile code 7, side 3, level 2",
             "tile_code=7_side=3_level=2",

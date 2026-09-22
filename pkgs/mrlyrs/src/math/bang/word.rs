@@ -624,7 +624,7 @@ mod tests {
         assert_eq!((iso.width(), iso.height()), (18, 35));
         assert_eq!((read.fills, read.voids), (486, 0));
         assert_eq!(six::fills_only(&iso).boundary_edges, 88);
-        let drawing = six::svg(&six::cut(&solid).unwrap(), 2, None, 0).unwrap();
+        let drawing = six::svg(&six::cut(&solid).unwrap(), 2, None, 0, None).unwrap();
         assert_eq!(drawing.matches("<polygon").count(), 486);
     }
 }

@@ -21,7 +21,7 @@ pub fn crop(grids: &[Cell2d]) -> Result<Vec<Cell2d>> {
     for grid in grids {
         let types = grid.types();
         for (slot, i) in any.iter_mut().zip(0..types.size()) {
-            if types.at(i) == 1 {
+            if types.at(i) != 0 {
                 *slot = true;
                 found = true;
             }
@@ -95,6 +95,14 @@ mod tests {
         let cropped = crop(&[Cell2d::new(t).unwrap()]).unwrap();
         assert_eq!(cropped[0].types().shape, vec![1, 1]);
         assert_eq!(cropped[0].types().get(&[0, 0]).unwrap(), 1);
+    }
+    #[test]
+    fn crops_on_any_nonzero_type() {
+        let mut t = Tensor::new(vec![5, 5]);
+        t.set(&[2, 3], 2).unwrap();
+        let cropped = crop(&[Cell2d::new(t).unwrap()]).unwrap();
+        assert_eq!(cropped[0].types().shape, vec![1, 1]);
+        assert_eq!(cropped[0].types().sum(), 2);
     }
     #[test]
     fn empty_is_returned_unchanged() {

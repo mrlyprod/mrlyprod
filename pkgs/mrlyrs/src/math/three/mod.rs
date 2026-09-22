@@ -13,6 +13,8 @@ pub mod diagonal;
 pub mod faces;
 /// The orientations, merges, masked mosaics, slices and lifts of cubes.
 pub mod geometry;
+/// The text and Wavefront OBJ renderings of a cube.
+pub mod renderer;
 /// The JSON form of a cube.
 pub mod serializer;
 
@@ -21,15 +23,18 @@ pub use crate::math::cell::models::Cell3d;
 pub use crate::math::cell::paint;
 pub use census::{census, euler, fills, hidden, Census};
 pub use designs::{
-    carpet, create, dust, from_corners, level_set, levels_code, named, net, ones, point, star,
-    void, xline, xtree, yline, ytree, zeros, zline, ztree,
+    carpet, create, dust, from_corners, level_set, levels_code, named, net, noise, ones, point,
+    star, void, xline, xtree, yline, ytree, zeros, zline, ztree,
 };
 pub use diagonal::{
     profile, project, shadow, slice as diagonal_slice, support, svg as diagonal_svg,
 };
 pub use faces::{quads, wires, Quad, Vec3};
-pub use geometry::{extrude, magic, manhattan_layers, merge, mosaic, orientations, slice, special};
-pub use serializer::{from_json, to_json};
+pub use geometry::{
+    extrude, extrude_cube, magic, manhattan_layers, merge, mosaic, orientations, slice, special,
+};
+pub use renderer::{text, to_obj};
+pub use serializer::{from_json, from_strings, to_json, to_strings};
 
 #[cfg(test)]
 mod tests {

@@ -9,7 +9,7 @@ pub type Config3d = ConfigNd<3>;
 
 pub use six::{build as build_6d, create as create_6d, random_tile as random_tile_6d, HexTile};
 pub use three::{build as build_3d, create as create_3d, random_tile as random_tile_3d};
-pub use two::{build as build_2d, create as create_2d, random_tile as random_tile_2d};
+pub use two::{build as build_2d, create as create_2d, random_tile as random_tile_2d, tree_mask};
 
 // SLOTS
 
@@ -37,8 +37,11 @@ mod two {
     use crate::math::bang::Code;
     use crate::math::two::{designs, geometry, Cell2d};
 
-    fn rotation(rng: &mut Rng) -> usize {
-        rng.below(4)
+    fn rotation(source: Source, rng: &mut Rng) -> usize {
+        match source {
+            Source::Classic(design) => spec::random_rotation(design, rng) as usize,
+            Source::Code(_) => rng.below(4),
+        }
     }
 
     /// Draws a random flat tile from the stream, rotations from the four quarter-turns.
@@ -67,14 +70,20 @@ mod two {
     }
 
     fn cell(tile: &Tile, i: usize, level: usize) -> Result<Cell2d> {
-        let mut c = source_cell(tile.sources[i], tile.numbers[i], level, tile.rotations[i])?;
-        if tile.anti.get(i).copied().unwrap_or(false) {
-            c = c.anti();
-        }
-        Ok(c)
+        source_cell(tile.sources[i], tile.numbers[i], level, tile.rotations[i])
     }
 
-    fn tree_mask(n: usize) -> Result<Tensor> {
+    /// Builds the mask of a mosaic tile: the two trees of the side, two where they cross.
+    ///
+    /// ```
+    /// assert_eq!(mrlyrs::gen::build::tree_mask(3)?.sum(), 12);
+    /// # Ok::<(), mrlyrs::Error>(())
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Errs when the side will not draw a tree.
+    pub fn tree_mask(n: usize) -> Result<Tensor> {
         let vertical = designs::vtree(n, 1)?;
         let horizontal = vertical.clone().rotate(1)?;
         let v = vertical.types();
@@ -174,7 +183,6 @@ mod two {
                 min_size: 3,
                 max_size: 300,
                 groups: vec![Group::Magic],
-                anti: Some(false),
                 ..Config::default()
             };
             let mut deep = false;
@@ -196,7 +204,6 @@ mod two {
                 min_size: 3,
                 max_size: 64,
                 groups: vec![Group::Magic],
-                anti: Some(false),
                 ..Config::default()
             };
             for s in 0..200 {
@@ -215,7 +222,6 @@ mod two {
                 min_size: 9,
                 max_size: 9,
                 groups: vec![Group::Magic],
-                anti: Some(false),
                 ..Config::default()
             };
             for s in 0..20 {
@@ -232,7 +238,7 @@ mod two {
             let parsed: Tile = serde_json::from_value(json!({
                 "group": "General", "factor": 0,
                 "sources": [{ "design": "Carpet" }],
-                "numbers": [], "levels": [], "rotations": [], "anti": [],
+                "numbers": [], "levels": [], "rotations": [],
                 "invert": false, "flip": false, "width": 0, "height": 0,
             }))
             .unwrap();
@@ -246,7 +252,6 @@ mod two {
             cubic.numbers = vec![3];
             cubic.levels = vec![1];
             cubic.rotations = vec![0];
-            cubic.anti = vec![false];
             cubic.resize();
             assert!(build(&cubic).is_err());
         }
@@ -257,7 +262,6 @@ mod two {
                 max_size: 64,
                 parity: Parity::Evens,
                 groups: vec![Group::General],
-                anti: Some(false),
                 ..Config::default()
             };
             for s in 0..50 {
@@ -283,7 +287,7 @@ mod three {
     use crate::math::bang::Code;
     use crate::math::three::{designs, geometry, Cell3d};
 
-    fn rotation(rng: &mut Rng) -> usize {
+    fn rotation(_: Source, rng: &mut Rng) -> usize {
         rng.below(24)
     }
 
@@ -335,11 +339,7 @@ mod three {
     }
 
     fn cell(tile: &Tile, i: usize, level: usize) -> Result<Cell3d> {
-        let mut c = source_cell(tile.sources[i], tile.numbers[i], level, tile.rotations[i])?;
-        if tile.anti.get(i).copied().unwrap_or(false) {
-            c = c.anti();
-        }
-        Ok(c)
+        source_cell(tile.sources[i], tile.numbers[i], level, tile.rotations[i])
     }
 
     fn orient_mask(n: usize, fill: u8) -> Result<Tensor> {
@@ -436,7 +436,6 @@ mod three {
             Config {
                 min_size: 3,
                 max_size: 27,
-                anti: Some(false),
                 ..Config::default()
             }
         }
@@ -493,7 +492,6 @@ mod three {
             flat.numbers = vec![3];
             flat.levels = vec![1];
             flat.rotations = vec![0];
-            flat.anti = vec![false];
             flat.resize();
             assert!(build(&flat).is_err());
         }
@@ -503,7 +501,6 @@ mod three {
                 catalog: Catalog::Universe,
                 min_size: 3,
                 max_size: 9,
-                anti: Some(false),
                 ..Config::default()
             };
             for s in 0..60 {
@@ -589,7 +586,6 @@ mod six {
             Config {
                 min_size: 3,
                 max_size: 9,
-                anti: Some(false),
                 ..Config::default()
             }
         }
@@ -623,7 +619,6 @@ mod six {
                 min_size: 3,
                 max_size: 15,
                 groups: vec![Group::Magic],
-                anti: Some(false),
                 ..Config::default()
             };
             let mut built = 0;

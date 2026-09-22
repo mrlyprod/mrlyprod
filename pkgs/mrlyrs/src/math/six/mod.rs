@@ -66,10 +66,11 @@ pub use geometry::{
     blank, cut, framed, is_cube, is_hex, iso, orientation, pad, pro, radial, radial_crop,
     radial_mask, skin, tessellate, tile, tile_cell, tile_crop, tile_step,
 };
+pub use graph::{slice_core_graph, slice_dual_graph, slice_edge_graph, slice_tunnel_graph};
 pub use models::Cell6d;
 pub use painter::paint;
 pub use raster::raster;
-pub use renderer::{svg, triangles};
+pub use renderer::{east, north, png, rect_png, rect_svg, south, svg, triangles, west};
 pub use serializer::{from_json, to_json};
 pub use topology::{components, giant, giant_network, holes, rim_holes, spectral_exponent};
 

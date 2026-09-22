@@ -52,9 +52,9 @@ pub fn to_json(cell: &Cell3d) -> String {
     let shape = &cell.types().shape;
     let mut data = json!({
         "v": 1,
-        "height": shape[0],
-        "width": shape[1],
-        "depth": shape[2],
+        "depth": shape[0],
+        "height": shape[1],
+        "width": shape[2],
         "types": to_lists(cell),
     });
     if let Some(colors) = &cell.cell.colors {
@@ -87,6 +87,48 @@ pub fn from_json(text: &str) -> Result<Cell3d> {
     Ok(cell)
 }
 
+/// Unrolls the cube into one string of digits per row, grouped plane by plane.
+///
+/// ```
+/// let rows = mrlyrs::math::three::to_strings(&mrlyrs::math::three::carpet(3, 1).unwrap());
+/// assert_eq!(rows[0], ["111", "101", "111"]);
+/// ```
+pub fn to_strings(cell: &Cell3d) -> Vec<Vec<String>> {
+    to_lists(cell)
+        .iter()
+        .map(|plane| {
+            plane
+                .iter()
+                .map(|row| row.iter().map(|site| site.to_string()).collect())
+                .collect()
+        })
+        .collect()
+}
+
+/// Builds a cube from one string of digits per row, grouped plane by plane.
+///
+/// # Errors
+///
+/// Errors when the planes are empty, ragged, or hold anything but digits.
+pub fn from_strings(data: &[Vec<String>]) -> Result<Cell3d> {
+    let mut lists = Vec::with_capacity(data.len());
+    for plane in data {
+        let mut rows = Vec::with_capacity(plane.len());
+        for row in plane {
+            let mut sites = Vec::with_capacity(row.len());
+            for site in row.chars() {
+                match site.to_digit(10) {
+                    Some(value) => sites.push(value as u8),
+                    None => return value_error(format!("'{site}' is not a digit.")),
+                }
+            }
+            rows.push(sites);
+        }
+        lists.push(rows);
+    }
+    from_lists(&lists)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -98,7 +140,8 @@ mod tests {
         let c = designs::carpet(3, 1)
             .unwrap()
             .layers()
-            .paint(&mapping(), Mode::Type);
+            .paint(&mapping(), Mode::Type, None)
+            .unwrap();
         let restored = from_json(&to_json(&c)).unwrap();
         assert_eq!(c, restored);
         assert!(restored.cell.colors.is_some());
@@ -116,6 +159,14 @@ mod tests {
         assert_eq!(restored, long);
         assert_eq!(restored.cell.tags.as_ref().unwrap().at(0), 299);
     }
+    #[test]
+    fn strings_round_trip_the_sponge() {
+        let c = designs::carpet(3, 1).unwrap();
+        let rows = to_strings(&c);
+        assert_eq!(rows[0], ["111", "101", "111"]);
+        assert_eq!(from_strings(&rows).unwrap(), c);
+    }
+
     #[test]
     fn lists_round_trip() {
         let c = designs::void(4, 1).unwrap();

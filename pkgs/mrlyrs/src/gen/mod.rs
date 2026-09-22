@@ -9,8 +9,10 @@
 //! The doors: [`Tile::new`](crate::gen::recipe::Tile::new),
 //! [`Tile::size`](crate::gen::recipe::Tile::size),
 //! [`Tile::check`](crate::gen::recipe::Tile::check),
-//! [`draw::create`](crate::gen::draw::create), [`build_2d`](crate::gen::build::build_2d),
-//! [`variation::create`](crate::gen::variation::create),
+//! [`draw::create`](crate::gen::draw::create), [`random_design`](crate::gen::random_design),
+//! [`random_rotation`](crate::gen::random_rotation), [`build_2d`](crate::gen::build::build_2d),
+//! [`tree_mask`](crate::gen::tree_mask), [`variation::create`](crate::gen::variation::create),
+//! [`hex_key`](crate::gen::hex_key), [`classic_code_nd`](crate::gen::classic_code_nd),
 //! [`Tile::of`](crate::gen::name::Tile::of) and [`background`](crate::gen::background).
 
 /// The recipe to cell builders, one per dimension, and the random draws that feed them.
@@ -24,7 +26,11 @@ pub mod recipe;
 /// The seeded artwork run from tile recipe to rendered files.
 pub mod variation;
 
+pub use build::tree_mask;
+pub use draw::{random_design, random_rotation};
+pub use name::{classic_code, classic_code_nd};
 pub use recipe::{Group, Parity, Tile};
+pub use variation::hex_key;
 
 use crate::core::error::{value_error, Result};
 use crate::core::rng::Rng;

@@ -1,5 +1,6 @@
 use super::Cell3d;
 use crate::core::error::{value_error, Result};
+use crate::core::rng::Rng;
 use crate::core::tensor::Tensor;
 use crate::math::atoms;
 use crate::math::bang::catalog::Design;
@@ -54,6 +55,15 @@ pub fn zeros(number: usize, level: usize) -> Result<Cell3d> {
 /// Errors below level one.
 pub fn ones(number: usize, level: usize) -> Result<Cell3d> {
     build(atoms::ones_3d(number), level)
+}
+
+/// Builds a cube whose every site turns on with probability density, at the given level.
+///
+/// # Errors
+///
+/// Errors below level one.
+pub fn noise(number: usize, level: usize, density: f64, rng: &mut Rng) -> Result<Cell3d> {
+    build(atoms::noise_3d(number, density, rng), level)
 }
 
 /// Builds the Menger sponge, filled where at most one coordinate is odd, at the given level.
@@ -217,6 +227,18 @@ pub fn named(design: Design, number: usize, level: usize) -> Result<Cell3d> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn noise_fills_a_cube_at_the_density() {
+        let mut rng = Rng::new(1);
+        assert_eq!(
+            noise(5, 1, 0.5, &mut rng).unwrap().types().shape,
+            vec![5, 5, 5]
+        );
+        let big = noise(27, 1, 0.5, &mut rng).unwrap();
+        let fraction = big.types().sum() as f64 / big.types().size() as f64;
+        assert!((fraction - 0.5).abs() < 0.05, "{fraction}");
+    }
+
     #[test]
     fn carpet_is_menger() {
         let c = carpet(3, 1).unwrap();

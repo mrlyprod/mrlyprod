@@ -2,6 +2,7 @@ use crate::core::cell::Cell;
 use crate::core::cell::Mode;
 use crate::core::colors::Color;
 use crate::core::error::{shape_error, value_error, Result};
+use crate::core::rng::Rng;
 use crate::core::tensor::{Dtype, Tensor};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -58,13 +59,15 @@ impl<const N: usize> CellNd<N> {
             cell: Cell::new(types),
         })
     }
-    /// Returns the size of axis 1.
+    /// Returns the size of the last axis.
     pub fn width(&self) -> usize {
-        self.cell.types.shape[1]
+        let shape = &self.cell.types.shape;
+        shape[shape.len() - 1]
     }
-    /// Returns the size of axis 0.
+    /// Returns the size of the axis before the last.
     pub fn height(&self) -> usize {
-        self.cell.types.shape[0]
+        let shape = &self.cell.types.shape;
+        shape[shape.len() - 2]
     }
     /// Returns the tensor of types.
     pub fn types(&self) -> &Tensor {
@@ -152,10 +155,19 @@ impl<const N: usize> CellNd<N> {
         }
     }
     /// Colors each site by its type through the mapping in the given mode.
-    pub fn paint(self, mapping: &HashMap<u8, Vec<Color>>, mode: Mode) -> CellNd<N> {
-        CellNd {
-            cell: self.cell.paint(mapping, mode),
-        }
+    ///
+    /// # Errors
+    ///
+    /// Errors when the Random mode arrives without a stream to draw from.
+    pub fn paint(
+        self,
+        mapping: &HashMap<u8, Vec<Color>>,
+        mode: Mode,
+        rng: Option<&mut Rng>,
+    ) -> Result<CellNd<N>> {
+        Ok(CellNd {
+            cell: self.cell.paint(mapping, mode, rng)?,
+        })
     }
 }
 
@@ -183,9 +195,9 @@ impl CellNd<2> {
 }
 
 impl CellNd<3> {
-    /// Returns the size of axis 2.
+    /// Returns the size of axis 0, the cube's leading axis.
     pub fn depth(&self) -> usize {
-        self.cell.types.shape[2]
+        self.cell.types.shape[0]
     }
     /// Rotates the cell k quarter turns about the given pair of axes.
     ///
@@ -216,7 +228,7 @@ impl CellNd<3> {
     /// Errors for a cell without three axes.
     pub fn tile(self, width: usize, height: usize, depth: usize) -> Result<Cell3d> {
         Ok(CellNd {
-            cell: self.cell.tile(&[height, width, depth])?,
+            cell: self.cell.tile(&[depth, height, width])?,
         })
     }
 }
@@ -276,6 +288,18 @@ mod tests {
         let counted = grid.neighbors(&mask, 1, true).unwrap();
         let tags = counted.cell.tags.as_ref().unwrap();
         assert_eq!(tags.at(0), 17 * 17 - 1);
+    }
+
+    #[test]
+    fn a_cube_tiles_along_depth_height_width() {
+        let cube = Cell3d::new(atoms::carpet_3d(3)).unwrap();
+        assert_eq!(cube.tile(1, 1, 2).unwrap().types().shape, vec![6, 3, 3]);
+    }
+
+    #[test]
+    fn a_cube_names_its_axes_depth_height_width() {
+        let cube = Cell3d::new(Tensor::new(vec![2, 3, 3])).unwrap();
+        assert_eq!((cube.depth(), cube.height(), cube.width()), (2, 3, 3));
     }
 
     #[test]

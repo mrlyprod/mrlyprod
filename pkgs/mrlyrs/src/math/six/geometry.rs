@@ -656,7 +656,9 @@ mod tests {
             ),
             None,
             None,
-        );
+            None,
+        )
+        .unwrap();
         assert!(painted.cell.cell.colors.is_some());
         let sheet = tile(&painted, 2, 2).unwrap();
         let colors = sheet.cell.colors.as_ref().unwrap();
@@ -689,7 +691,9 @@ mod tests {
             ),
             None,
             None,
-        );
+            None,
+        )
+        .unwrap();
         let source = painted.cell.cell.colors.clone().unwrap();
         let wider = pad(&painted, 1, GRID).unwrap();
         let grown = wider.cell.cell.colors.as_ref().unwrap();

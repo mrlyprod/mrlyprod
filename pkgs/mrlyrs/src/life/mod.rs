@@ -3,7 +3,7 @@
 //! - `step`: one generation of a grid under birth and survive counts.
 //! - `animate`: a seed run until it fixes, loops or times out.
 //! - `models`: the run config and the recorded life.
-//! - `metrics`: the entropy, churn and chaos readings of a run.
+//! - `metrics`: the entropy and churn readings of a run.
 //! - `crop`: the centred cropping and tiling of a run's frames.
 //! - `mask`: the design masks a rule reads and the lattice they generate.
 //! - `source`: the named sources of neighbor counts, and the counts they lay down.
@@ -25,7 +25,7 @@ pub mod crop;
 pub mod elementary;
 /// The design masks a rule reads and the lattice they generate.
 pub mod mask;
-/// The entropy, churn and chaos readings of a run.
+/// The entropy and churn readings of a run.
 pub mod metrics;
 /// The run config and the recorded life.
 pub mod models;
@@ -52,13 +52,15 @@ pub fn moore() -> Result<Cell2d> {
     Cell2d::new(crate::core::cell::moore(2))
 }
 
-/// The edge policy of a life grid.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub enum Boundary {
-    /// The fixed dead border.
-    Constant,
-    /// The toroidal edge.
-    Wrap,
+named_enum! {
+    /// The edge policy of a life grid.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    pub enum Boundary {
+        /// The fixed dead border.
+        Constant => "Constant",
+        /// The toroidal edge.
+        Wrap => "Wrap",
+    }
 }
 
 impl Boundary {
@@ -114,6 +116,13 @@ mod tests {
     fn names_parse_back() {
         for fate in Fate::all() {
             assert_eq!(fate, fate.name().parse().unwrap());
+        }
+    }
+    #[test]
+    fn boundary_names_parse_back() {
+        assert_eq!(Boundary::all().len(), 2);
+        for boundary in Boundary::all() {
+            assert_eq!(boundary, boundary.name().parse().unwrap());
         }
     }
     #[test]

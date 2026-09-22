@@ -9,7 +9,6 @@ fn tiles() -> Config2d {
     Config2d {
         min_size: 3,
         max_size: 9,
-        anti: Some(false),
         ..Config2d::default()
     }
 }

@@ -22,7 +22,7 @@ use mrlyrs::{core, font, gen, life, math, num};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::str::FromStr;
 
-fn turn(rng: &mut Rng) -> usize {
+fn turn(_: Source, rng: &mut Rng) -> usize {
     rng.below(4)
 }
 
@@ -905,7 +905,6 @@ const BAD: &[(&str, fn())] = &[
         cubic.numbers = vec![3];
         cubic.levels = vec![1];
         cubic.rotations = vec![0];
-        cubic.anti = vec![false];
         cubic.resize();
         let _ = gen::build::build_2d(&cubic);
     }),
@@ -947,7 +946,6 @@ const BAD: &[(&str, fn())] = &[
         flat.numbers = vec![3];
         flat.levels = vec![1];
         flat.rotations = vec![0];
-        flat.anti = vec![false];
         flat.resize();
         let _ = gen::build::build_3d(&flat);
     }),

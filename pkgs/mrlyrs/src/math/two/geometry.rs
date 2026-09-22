@@ -101,15 +101,45 @@ pub fn special(mask: &Tensor, cell: &Cell2d) -> Result<Cell2d> {
 /// ```
 /// let flat = mrlyrs::math::two::carpet(3, 2).unwrap();
 /// let solid = mrlyrs::math::two::to_3d(&flat);
-/// assert_eq!(mrlyrs::math::three::slice(&solid, 2, 0).unwrap(), flat);
+/// assert_eq!(mrlyrs::math::three::slice(&solid, 0, 0).unwrap(), flat);
 /// ```
 pub fn to_3d(cell: &Cell2d) -> Cell3d {
-    crate::math::three::extrude(cell, 2, 1).expect("a one-deep lift on the last axis always holds")
+    crate::math::three::extrude(cell, 0, 1)
+        .expect("a one-deep lift on the leading axis always holds")
+}
+
+/// Tiles the mask over the shape and crops it, the perforation pattern itself.
+///
+/// # Errors
+///
+/// Errors when the mask or the shape is not two-axis, or the mask is empty.
+pub fn mask(mask: &Tensor, shape: &[usize]) -> Result<Tensor> {
+    if mask.shape.len() != 2 || shape.len() != 2 {
+        return value_error("a flat mask tiles a two-axis shape.");
+    }
+    let (mh, mw) = (mask.shape[0], mask.shape[1]);
+    if mh == 0 || mw == 0 {
+        return value_error("cannot tile an empty mask.");
+    }
+    let (h, w) = (shape[0], shape[1]);
+    let mut out = Tensor::typed(vec![h, w], mask.dtype());
+    for y in 0..h {
+        for x in 0..w {
+            out.put(y * w + x, mask.at((y % mh) * mw + x % mw));
+        }
+    }
+    Ok(out)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn mask_tiles_and_crops_to_the_shape() {
+        let tiled = mask(&crate::math::atoms::carpet_2d(2), &[4, 4]).unwrap();
+        let flat: Vec<i64> = (0..tiled.size()).map(|i| tiled.at(i)).collect();
+        assert_eq!(flat, vec![1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0]);
+    }
     use crate::core::cell::mapping;
     use crate::core::cell::Mode;
     use crate::math::two::designs;
@@ -134,7 +164,8 @@ mod tests {
         let painted = designs::carpet(3, 1)
             .unwrap()
             .layers()
-            .paint(&mapping(), Mode::Type);
+            .paint(&mapping(), Mode::Type, None)
+            .unwrap();
         let plain = designs::void(3, 1).unwrap();
         let block = merge(
             &[painted.clone(), plain, painted.clone(), painted.clone()],
@@ -169,11 +200,12 @@ mod tests {
         let flat = designs::htree(5, 1)
             .unwrap()
             .layers()
-            .paint(&mapping(), Mode::Index);
+            .paint(&mapping(), Mode::Index, None)
+            .unwrap();
         let solid = to_3d(&flat);
-        assert_eq!(solid.types().shape, vec![5, 5, 1]);
+        assert_eq!(solid.types().shape, vec![1, 5, 5]);
         assert_eq!(solid.types().sum(), flat.types().sum());
         assert_eq!(solid.cell.colors, flat.cell.colors);
-        assert_eq!(crate::math::three::slice(&solid, 2, 0).unwrap(), flat);
+        assert_eq!(crate::math::three::slice(&solid, 0, 0).unwrap(), flat);
     }
 }

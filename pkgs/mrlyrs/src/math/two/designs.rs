@@ -1,5 +1,6 @@
 use super::Cell2d;
 use crate::core::error::{value_error, Result};
+use crate::core::rng::Rng;
 use crate::core::tensor::Tensor;
 use crate::math::atoms;
 use crate::math::bang::catalog::Design;
@@ -113,6 +114,15 @@ pub fn ones(number: usize, level: usize) -> Result<Cell2d> {
     build(atoms::ones_2d(number), level, 0)
 }
 
+/// Builds a random cell, each seed site drawn on with probability density, deepened to the level.
+///
+/// # Errors
+///
+/// Errors below level one.
+pub fn noise(number: usize, level: usize, density: f64, rng: &mut Rng) -> Result<Cell2d> {
+    build(atoms::noise_2d(number, density, rng), level, 0)
+}
+
 /// Builds the carpet fractal, its seed pierced at every odd-odd site, deepened to the level.
 ///
 /// ```
@@ -211,6 +221,17 @@ pub fn star(number: usize, level: usize) -> Result<Cell2d> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn noise_fills_its_shape_at_the_density() {
+        let mut rng = Rng::new(1);
+        assert_eq!(
+            noise(5, 1, 0.5, &mut rng).unwrap().types().shape,
+            vec![5, 5]
+        );
+        let wide = noise(81, 1, 0.5, &mut rng).unwrap();
+        let fill = wide.types().sum() as f64 / wide.types().size() as f64;
+        assert!((fill - 0.5).abs() < 0.05);
+    }
     #[test]
     fn carpet_fractal_growth() {
         let c = carpet(3, 3).unwrap();

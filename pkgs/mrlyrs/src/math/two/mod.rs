@@ -21,13 +21,13 @@ pub use crate::math::cell::models::Cell2d;
 pub use crate::math::cell::paint;
 pub use census::{census, euler, fills, Census};
 pub use designs::{
-    carpet, create, dust, from_corners, hline, htree, level_set, levels_code, named, net, ones,
-    point, star, vline, void, vtree, zeros,
+    carpet, create, dust, from_corners, hline, htree, level_set, levels_code, named, net, noise,
+    ones, point, star, vline, void, vtree, zeros,
 };
-pub use geometry::{magic, merge, mosaic, special, to_3d};
+pub use geometry::{magic, mask, merge, mosaic, special, to_3d};
 pub use payload::{capacity, embed, extract, read, sheet};
-pub use renderer::{png, text};
-pub use serializer::{from_json, to_json};
+pub use renderer::{png, svg, text, Shape};
+pub use serializer::{from_json, from_strings, to_json};
 
 #[cfg(test)]
 mod tests {
@@ -42,7 +42,7 @@ mod tests {
     }
     #[test]
     fn default_paint_is_black_on_white() {
-        let c = paint(designs::carpet(3, 1).unwrap(), None, None);
+        let c = paint(designs::carpet(3, 1).unwrap(), None, None, None).unwrap();
         let colors = c.cell.colors.as_ref().unwrap();
         assert_eq!(colors[0], [BLACK.r, BLACK.g, BLACK.b, 255]);
         assert_eq!(colors[4], [WHITE.r, WHITE.g, WHITE.b, 255]);

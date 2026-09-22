@@ -120,15 +120,15 @@ pub fn tile_cells(
     let reps = reps_of(&[wide, high, deep], 3)?;
     let (_, sheet) = solid(code, number, level, base, &reps)?;
     let grid = sheet.types();
-    let (cols, deep) = (grid.shape[1], grid.shape[2]);
+    let (rows, cols) = (grid.shape[1], grid.shape[2]);
     budget(three::fills(&sheet), SOLID_FILLS, "cubes")?;
     let mut out = Vec::new();
     for (flat, &site) in grid.bytes()?.iter().enumerate() {
         if site != 0 {
             out.extend([
-                (flat / (cols * deep)) as u32,
-                (flat / deep % cols) as u32,
-                (flat % deep) as u32,
+                (flat % cols) as u32,
+                (flat / cols % rows) as u32,
+                (flat / (rows * cols)) as u32,
             ]);
         }
     }
@@ -195,7 +195,7 @@ pub fn tile_svg(
 ) -> Result<String, Fault> {
     let reps = reps_of(&[wide, high], 2)?;
     let (_, sheet) = hex_sheet(code, number, level, base, projection, &reps, crop)?;
-    Ok(six::svg(&six::framed(&sheet)?, scale, None, 0)?)
+    Ok(six::svg(&six::framed(&sheet)?, scale, None, 0, None)?)
 }
 
 // CENSUS

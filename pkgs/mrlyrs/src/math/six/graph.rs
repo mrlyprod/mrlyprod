@@ -53,6 +53,15 @@ pub fn slice_core_graph(cell: &Cell6d) -> Result<Network> {
     adjacency_graph(cell, |v| v == FILL)
 }
 
+/// Builds the network of void triangles joined by shared edges, the pore network of the slice.
+///
+/// # Errors
+///
+/// Errors when a triangle index falls outside the sheet.
+pub fn slice_tunnel_graph(cell: &Cell6d) -> Result<Network> {
+    adjacency_graph(cell, |v| v == VOID)
+}
+
 /// Builds the network of fill and void triangles joined by shared edges.
 ///
 /// # Errors
@@ -138,6 +147,11 @@ mod tests {
             slice_core_graph(&solid(3)).unwrap().branches.len() as u128,
             solid_slice_core_edges(3).unwrap()
         );
+    }
+    #[test]
+    fn the_carpet_slice_tunnels_twelve_ways() {
+        let hex = crate::math::six::cut(&crate::math::three::carpet(3, 1).unwrap()).unwrap();
+        assert_eq!(slice_tunnel_graph(&hex).unwrap().branches.len(), 12);
     }
     #[test]
     fn dual_contains_core() {

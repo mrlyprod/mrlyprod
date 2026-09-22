@@ -88,7 +88,13 @@ impl Variation {
     }
 }
 
-fn hex_key(length: usize, rng: &mut Rng) -> String {
+/// Draws a hex key of the given length from the stream.
+///
+/// ```
+/// use mrlyrs::core::rng::Rng;
+/// assert_eq!(mrlyrs::gen::variation::hex_key(8, &mut Rng::new(1)).len(), 8);
+/// ```
+pub fn hex_key(length: usize, rng: &mut Rng) -> String {
     const DIGITS: &[u8; 16] = b"0123456789abcdef";
     (0..length).map(|_| DIGITS[rng.below(16)] as char).collect()
 }
@@ -202,7 +208,7 @@ pub fn render(mut variation: Variation, scale: usize, rng: &mut Rng) -> Result<V
             engine::apply(&paint, &mut cell, rng)?;
             canvas.cell = cell;
         }
-        file.png = two::png(&canvas, scale)?;
+        file.png = two::png(&canvas, scale, None, 1, two::Shape::Square)?;
     }
     variation.files = files;
     Ok(variation)
@@ -213,6 +219,12 @@ mod tests {
     use super::*;
     use crate::core::json;
     use crate::gen::recipe::{Catalog, Parity};
+    #[test]
+    fn a_hex_key_is_hex_of_the_length() {
+        let key = hex_key(8, &mut Rng::new(1));
+        assert_eq!(key.len(), 8);
+        assert!(key.chars().all(|c| "0123456789abcdef".contains(c)));
+    }
     fn round_trip(variation: &Variation) -> Variation {
         serde_json::from_value(serde_json::to_value(variation).unwrap()).unwrap()
     }
@@ -221,7 +233,6 @@ mod tests {
             tile: Config2d {
                 min_size: 3,
                 max_size: 27,
-                anti: Some(false),
                 ..Config2d::default()
             },
             paint: PaintConfig::default(),
@@ -248,7 +259,7 @@ mod tests {
             .unwrap()
             .tile(file.width, file.height)
             .unwrap();
-        two::png(&bare, scale).unwrap()
+        two::png(&bare, scale, None, 1, two::Shape::Square).unwrap()
     }
     fn run(config: &Config, seed: u64, scale: usize) -> Variation {
         let mut rng = Rng::new(seed);
@@ -336,7 +347,6 @@ mod tests {
                 min_size: 4,
                 max_size: 16,
                 parity: Parity::Evens,
-                anti: Some(false),
                 ..Config2d::default()
             },
             paint: PaintConfig {

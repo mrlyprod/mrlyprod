@@ -1,5 +1,6 @@
 use super::colors::{Color, ALPHA, BLACK, BLUE, GREEN, RED, WHITE};
 use super::error::{shape_error, value_error, Result};
+use super::rng::Rng;
 use super::tensor::{Dtype, Tensor};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -15,6 +16,8 @@ pub enum Mode {
     Index,
     /// The colors cycled in encounter order.
     Enumerate,
+    /// A color drawn from the stream for every cell.
+    Random,
     /// The color the row index picks.
     Row,
     /// The color the column index picks.
@@ -206,7 +209,20 @@ impl Cell {
         Cell::new(self.types.kron(&other.types))
     }
     /// Colors every mapped cell, picking within each type's palette by the mode.
-    pub fn paint(mut self, mapping: &HashMap<u8, Vec<Color>>, mode: Mode) -> Cell {
+    ///
+    /// # Errors
+    ///
+    /// Errs when the Random mode arrives without a stream to draw from.
+    pub fn paint(
+        mut self,
+        mapping: &HashMap<u8, Vec<Color>>,
+        mode: Mode,
+        rng: Option<&mut Rng>,
+    ) -> Result<Cell> {
+        let mut stream = rng;
+        if mode == Mode::Random && stream.is_none() {
+            return value_error("a random paint wants a random stream.");
+        }
         let size = self.size();
         let mut colors = self
             .colors
@@ -232,6 +248,10 @@ impl Cell {
                         enumerated += 1;
                         i % rgba.len()
                     }
+                    Mode::Random => match stream.as_deref_mut() {
+                        Some(rng) => rng.below(rgba.len()),
+                        None => 0,
+                    },
                     Mode::Index => flat % rgba.len(),
                     Mode::Tag => match &self.tags {
                         Some(tags) if tags.size() == size => tags.at(flat) as usize % rgba.len(),
@@ -254,7 +274,7 @@ impl Cell {
             }
         }
         self.colors = Some(colors);
-        self
+        Ok(self)
     }
 }
 
@@ -498,7 +518,8 @@ mod tests {
     fn remap_carries_types_colors_and_tags() {
         let painted = Cell::new(atoms::carpet_2d(3))
             .layers(Dtype::U8)
-            .paint(&mapping(), Mode::Type);
+            .paint(&mapping(), Mode::Type, None)
+            .unwrap();
         let map = rot90_map(&painted.types.shape, 1, (0, 1)).unwrap();
         let turned = remap(&painted, &map, &[3, 3]).unwrap();
         assert_eq!(turned.types, painted.types.rot90(1, (0, 1)).unwrap());
@@ -556,7 +577,9 @@ mod tests {
     }
     #[test]
     fn paint_type_mode() {
-        let cell = Cell::new(atoms::carpet_2d(3)).paint(&mapping(), Mode::Type);
+        let cell = Cell::new(atoms::carpet_2d(3))
+            .paint(&mapping(), Mode::Type, None)
+            .unwrap();
         let colors = cell.colors.as_ref().unwrap();
         assert_eq!(colors[0], [0, 0, 0, 255]);
         assert_eq!(colors[4], [255, 255, 255, 255]);
@@ -571,10 +594,34 @@ mod tests {
         assert_eq!(dark, 8);
     }
     #[test]
+    fn paint_random_mode_replays_its_seed() {
+        let map = HashMap::from([(0, vec![WHITE, RED]), (1, vec![BLACK, BLUE])]);
+        let draw = |seed: u64| {
+            Cell::new(atoms::carpet_2d(3))
+                .paint(&map, Mode::Random, Some(&mut Rng::new(seed)))
+                .unwrap()
+                .colors
+                .unwrap()
+        };
+        let once = draw(5);
+        assert_eq!(once, draw(5));
+        let plain = Cell::new(atoms::carpet_2d(3))
+            .paint(&map, Mode::Type, None)
+            .unwrap();
+        assert_ne!(once, plain.colors.unwrap());
+        let mut seen = once.clone();
+        seen.sort_unstable();
+        seen.dedup();
+        assert!(seen.len() >= 2, "{seen:?}");
+        let loose = Cell::new(atoms::carpet_2d(3)).paint(&map, Mode::Random, None);
+        assert!(matches!(loose, Err(crate::core::Error::Value(_))));
+    }
+    #[test]
     fn tile_carries_colors_and_tags() {
         let painted = Cell::new(atoms::carpet_2d(3))
             .layers(Dtype::U8)
-            .paint(&mapping(), Mode::Type);
+            .paint(&mapping(), Mode::Type, None)
+            .unwrap();
         let tiled = painted.clone().tile(&[2, 3]).unwrap();
         assert_eq!(tiled.types.shape, vec![6, 9]);
         let colors = tiled.colors.as_ref().unwrap();
@@ -598,7 +645,8 @@ mod tests {
     #[test]
     fn binarize_clears_colors_and_thresholds() {
         let cell = Cell::new(atoms::carpet_2d(3))
-            .paint(&mapping(), Mode::Type)
+            .paint(&mapping(), Mode::Type, None)
+            .unwrap()
             .binarize(1);
         assert!(cell.colors.is_none());
         assert_eq!(
