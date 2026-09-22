@@ -30,11 +30,11 @@ macro_rules! named_enum {
         }
 
         impl ::std::str::FromStr for $name {
-            type Err = $crate::core::error::MrlyError;
+            type Err = $crate::core::error::Error;
             fn from_str(word: &str) -> ::std::result::Result<$name, Self::Err> {
                 match word {
                     $($word => Ok($name::$variant),)+
-                    other => Err($crate::core::error::MrlyError::Value(format!(
+                    other => Err($crate::core::error::Error::Value(format!(
                         "unknown {} {other:?}.",
                         stringify!($name).to_lowercase()
                     ))),

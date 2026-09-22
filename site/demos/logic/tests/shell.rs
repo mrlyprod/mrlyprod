@@ -3,10 +3,11 @@ use demos::shell::*;
 use mrlyrs::core::error::parse;
 use mrlyrs::core::tensor::Tensor;
 use mrlyrs::math::bang::factory;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::shape::{crossing_shell, crossing_tree, radial_census};
 
 fn keep(code: u128) -> Vec<bool> {
-    factory::create(code, 3, 2, 2, 1)
+    factory::create(Code::from(code), 3, 2, 2, 1)
         .unwrap()
         .bytes()
         .iter()
@@ -76,7 +77,7 @@ fn the_live_leaves_are_the_crossings_the_page_draws() {
         let seats = keep(code);
         for depth in 1..=5u32 {
             let side = 3u64.pow(depth);
-            let grid = factory::create(code, 3, 2, 2, depth as usize).unwrap();
+            let grid = factory::create(Code::from(code), 3, 2, 2, depth as usize).unwrap();
             let table = radial_census(&grid, &[0, 0], side - 1);
             for radius in side / 3..side {
                 let tree = crossing_tree(radius, 3, &seats);

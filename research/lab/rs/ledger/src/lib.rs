@@ -16,12 +16,12 @@ pub use records::{identify, Record, RECORDS};
 pub use terms::{closed, fill_polynomial, terms};
 
 use mrlyrs::core::error::{value_error, Result};
-use mrlyrs::math::bang::{baseq, Code};
+use mrlyrs::math::bang::baseq;
 use mrlyrs::math::name::{Bang, Named, Sequence as SequenceName};
 use std::collections::BTreeMap;
 use std::sync::{Mutex, OnceLock};
 
-type Walked = BTreeMap<(usize, usize), &'static [Code]>;
+type Walked = BTreeMap<(usize, usize), &'static [u128]>;
 
 /// The dimension and base pairs the ledger walks.
 pub const SPACES: [(usize, usize); 9] = [
@@ -114,7 +114,7 @@ impl Tag {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Key {
     /// The design's code.
-    pub code: Code,
+    pub code: u128,
     /// The design's dimension.
     pub dimension: usize,
     /// The numeral base of the corners.
@@ -128,7 +128,7 @@ pub struct Key {
 impl Key {
     /// Pins a design sequence to its address.
     pub const fn new(
-        code: Code,
+        code: u128,
         dimension: usize,
         base: usize,
         measure: Measure,
@@ -337,18 +337,18 @@ impl Sequence {
 /// assert_eq!(ledger::designs(2, 2).unwrap(), [0, 1, 3, 6, 7, 15]);
 /// assert_eq!(ledger::designs(2, 3).unwrap().len(), 26);
 /// ```
-pub fn designs(dimension: usize, base: usize) -> Result<&'static [Code]> {
+pub fn designs(dimension: usize, base: usize) -> Result<&'static [u128]> {
     static CACHE: OnceLock<Mutex<Walked>> = OnceLock::new();
     let cache = CACHE.get_or_init(|| Mutex::new(BTreeMap::new()));
     let mut guard = cache.lock().expect("the design cache is not poisoned");
     if let Some(codes) = guard.get(&(dimension, base)) {
         return Ok(codes);
     }
-    let codes: Vec<Code> = baseq::representatives(base, dimension)?
+    let codes: Vec<u128> = baseq::representatives(base, dimension)?
         .into_iter()
-        .map(|(code, _)| code)
+        .map(|(code, _)| code.get())
         .collect();
-    let leaked: &'static [Code] = Box::leak(codes.into_boxed_slice());
+    let leaked: &'static [u128] = Box::leak(codes.into_boxed_slice());
     guard.insert((dimension, base), leaked);
     Ok(leaked)
 }

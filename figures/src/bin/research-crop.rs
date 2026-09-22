@@ -1,12 +1,13 @@
 use figures::{ink, save, Board, Grid};
 use mrlyrs::core::error::Result;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::shape::{self, Frac, Region};
 use mrlyrs::math::two::designs;
 
 fn main() -> Result<()> {
     let mut board = Board::square();
     let area = board.frame(0.08);
-    let cells = designs::create(7, 3, 4, 0, 2)?;
+    let cells = designs::create(Code::from(7u128), 3, 4, 0, 2)?;
     let side = cells.width();
     assert_eq!(side, 81);
     let types = cells.types();

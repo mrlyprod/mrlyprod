@@ -35,7 +35,7 @@ const PUBLISHED: [&str; 16] = [
 
 fn brute(design: Code, number: usize, dimension: usize, level: usize) -> u128 {
     let tile = render(
-        |r| design >> cell_index(r, 2) & 1 == 1,
+        |r| design.get() >> cell_index(r, 2) & 1 == 1,
         number,
         dimension,
         2,
@@ -52,7 +52,7 @@ fn closed(design: Code, number: usize, dimension: usize, level: usize) -> u128 {
 fn profile(design: Code, dimension: usize) -> Vec<usize> {
     let mut out = vec![0usize; dimension + 1];
     for corner in 0..1usize << dimension {
-        if design >> corner & 1 == 1 {
+        if design.get() >> corner & 1 == 1 {
             out[corner.count_ones() as usize] += 1;
         }
     }
@@ -70,10 +70,12 @@ pub fn a129824(dimension: usize) -> BigUint {
 }
 
 fn weight_at_most_one(dimension: usize) -> Code {
-    (0..1usize << dimension)
-        .filter(|corner| corner.count_ones() <= 1)
-        .map(|corner| 1u128 << corner)
-        .sum()
+    Code::from(
+        (0..1usize << dimension)
+            .filter(|corner| corner.count_ones() <= 1)
+            .map(|corner| 1u128 << corner)
+            .sum::<u128>(),
+    )
 }
 
 fn compare(dimension: usize) -> (usize, usize) {
@@ -90,8 +92,8 @@ fn compare(dimension: usize) -> (usize, usize) {
                         for &n in &SIDES {
                             for &level in &LEVELS {
                                 checks += 1;
-                                if brute(design, n, dimension, level)
-                                    != closed(design, n, dimension, level)
+                                if brute(Code::from(design), n, dimension, level)
+                                    != closed(Code::from(design), n, dimension, level)
                                 {
                                     bad += 1;
                                 }
@@ -114,11 +116,11 @@ fn distinct(dimension: usize) -> (usize, usize) {
     let mut seen: BTreeMap<Vec<u128>, BTreeSet<Vec<usize>>> = BTreeMap::new();
     for design in 0..1u128 << (1usize << dimension) {
         let sequence: Vec<u128> = (1..=SEQUENCE)
-            .map(|n| closed(design, n, dimension, 1))
+            .map(|n| closed(Code::from(design), n, dimension, 1))
             .collect();
         seen.entry(sequence)
             .or_default()
-            .insert(profile(design, dimension));
+            .insert(profile(Code::from(design), dimension));
     }
     let collisions = seen.values().filter(|profiles| profiles.len() > 1).count();
     (seen.len(), collisions)

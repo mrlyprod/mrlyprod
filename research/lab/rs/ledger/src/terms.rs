@@ -1,7 +1,7 @@
 use super::{Axis, Closed, Key, Measure};
 use mrlyrs::core::error::{value_error, Result};
 use mrlyrs::core::tensor::Tensor;
-use mrlyrs::math::bang::{code_to_corners, factory};
+use mrlyrs::math::bang::{code_to_corners, factory, Code};
 use mrlyrs::math::counts;
 use mrlyrs::math::{six, three, two};
 
@@ -14,7 +14,7 @@ fn grid(number: usize, dimension: usize, level: u32) -> Option<u128> {
 }
 
 fn tile(key: &Key, number: usize) -> Result<Tensor> {
-    factory::create(key.code, number, key.dimension, key.base, 1)
+    factory::create(Code::from(key.code), number, key.dimension, key.base, 1)
 }
 
 fn complex(key: &Key, number: usize, level: u32) -> Result<i128> {
@@ -27,7 +27,13 @@ fn complex(key: &Key, number: usize, level: u32) -> Result<i128> {
     } = *key;
     let value = match dimension {
         2 => {
-            let tally = two::census(&two::create(code, number, level as usize, 0, base)?)?;
+            let tally = two::census(&two::create(
+                Code::from(code),
+                number,
+                level as usize,
+                0,
+                base,
+            )?)?;
             match measure {
                 Measure::Vertices => tally.vertices as i128,
                 Measure::Edges => tally.edges as i128,
@@ -36,7 +42,12 @@ fn complex(key: &Key, number: usize, level: u32) -> Result<i128> {
             }
         }
         _ => {
-            let tally = three::census(&three::create(code, number, level as usize, base)?)?;
+            let tally = three::census(&three::create(
+                Code::from(code),
+                number,
+                level as usize,
+                base,
+            )?)?;
             match measure {
                 Measure::Vertices => tally.vertices as i128,
                 Measure::Edges => tally.edges as i128,
@@ -57,7 +68,7 @@ fn term(key: &Key, number: usize, level: u32, cells: u128) -> Result<Option<i128
         ..
     } = *key;
     let fill = || -> Result<Option<u128>> {
-        Ok(counts::fill(code, number, dimension, 1, base)?.checked_pow(level))
+        Ok(counts::fill(Code::from(code), number, dimension, 1, base)?.checked_pow(level))
     };
     let within = |cost: Option<u128>| cost.is_some_and(|cost| cost <= cells);
     let value = match measure {
@@ -66,7 +77,7 @@ fn term(key: &Key, number: usize, level: u32, cells: u128) -> Result<Option<i128
             .zip(fill()?)
             .map(|(grid, fill)| (grid - fill) as i128),
         Measure::Surface => {
-            let corners = code_to_corners(code, dimension, base)?;
+            let corners = code_to_corners(Code::from(code), dimension, base)?;
             counts::Exposure::from_corners(&corners, number, dimension, base)
                 .at(level)
                 .map(|faces| faces as i128)
@@ -98,13 +109,18 @@ fn term(key: &Key, number: usize, level: u32, cells: u128) -> Result<Option<i128
             if !within(cost) {
                 return Ok(None);
             }
-            Some(counts::cut_fills(code, number, level)? as i128)
+            Some(counts::cut_fills(Code::from(code), number, level)? as i128)
         }
         Measure::Holes | Measure::Pieces => {
             if !within(grid(number, dimension, level)) {
                 return Ok(None);
             }
-            let slice = six::cut(&three::create(code, number, level as usize, base)?)?;
+            let slice = six::cut(&three::create(
+                Code::from(code),
+                number,
+                level as usize,
+                base,
+            )?)?;
             Some(if measure == Measure::Holes {
                 six::holes(&slice)? as i128
             } else {
@@ -125,7 +141,7 @@ fn term(key: &Key, number: usize, level: u32, cells: u128) -> Result<Option<i128
 /// assert_eq!(terms(&sponge, 3, BUDGET).unwrap(), (vec![72, 1056, 18048], false));
 /// ```
 pub fn terms(key: &Key, count: usize, cells: u128) -> Result<(Vec<i128>, bool)> {
-    code_to_corners(key.code, key.dimension, key.base)?;
+    code_to_corners(Code::from(key.code), key.dimension, key.base)?;
     if !key.measure.applies(key.dimension, key.base) {
         return value_error(format!(
             "{} does not read dimension {} base {}.",
@@ -188,8 +204,8 @@ pub fn closed(key: &Key) -> Result<Option<Closed>> {
         measure,
         axis,
     } = *key;
-    let corners = code_to_corners(code, dimension, base)?;
-    let fill = || counts::fill(code, key.number(), dimension, 1, base);
+    let corners = code_to_corners(Code::from(code), dimension, base)?;
+    let fill = || counts::fill(Code::from(code), key.number(), dimension, 1, base);
     let form = match (measure, axis) {
         (Measure::Fills, Axis::Level) => Closed::Power(fill()?),
         (Measure::Voids, Axis::Level) => {

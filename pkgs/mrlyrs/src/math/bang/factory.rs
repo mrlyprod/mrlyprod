@@ -1,4 +1,4 @@
-use super::universe::Code;
+use super::code::Code;
 use crate::core::error::{value_error, Result};
 use crate::core::Tensor;
 use crate::math::name::{Bang, Named};
@@ -37,12 +37,13 @@ pub fn residue_corners(dimension: usize, base: usize) -> Vec<Vec<u8>> {
 pub fn total_codes(dimension: usize, base: usize) -> Code {
     let cells = base.pow(dimension as u32);
     assert!(cells < 128, "too many cells for a u128 code");
-    1 << cells
+    Code(1 << cells)
 }
 
 /// Unpacks a code into its filled residue corners, or an error when the code is out of range.
 pub fn code_to_corners(code: Code, dimension: usize, base: usize) -> Result<Vec<Vec<u8>>> {
     let cells = residue_corners(dimension, base);
+    let code = code.get();
     if code >= (1 << cells.len()) {
         return value_error(format!(
             "code {code} out of range for dimension {dimension} base {base} (0..{}).",
@@ -60,8 +61,8 @@ pub fn code_to_corners(code: Code, dimension: usize, base: usize) -> Result<Vec<
 /// Returns the code of the design filled wherever a corner's residue sum lands in the levels.
 ///
 /// ```
-/// assert_eq!(mrlyrs::math::bang::factory::levels_code(3, 2, &[0, 1]), 23);
-/// assert_eq!(mrlyrs::math::bang::factory::levels_code(2, 2, &[0, 1]), 7);
+/// assert_eq!(mrlyrs::math::bang::factory::levels_code(3, 2, &[0, 1]).get(), 23);
+/// assert_eq!(mrlyrs::math::bang::factory::levels_code(2, 2, &[0, 1]).get(), 7);
 /// ```
 pub fn levels_code(dimension: usize, base: usize, levels: &[usize]) -> Code {
     let filled: Vec<Vec<u8>> = residue_corners(dimension, base)
@@ -75,12 +76,14 @@ pub fn levels_code(dimension: usize, base: usize, levels: &[usize]) -> Code {
 pub fn corners_to_code(filled: &[Vec<u8>], dimension: usize, base: usize) -> Code {
     let cells = residue_corners(dimension, base);
     let wanted: HashSet<&Vec<u8>> = filled.iter().collect();
-    cells
-        .iter()
-        .enumerate()
-        .filter(|(_, c)| wanted.contains(c))
-        .map(|(i, _)| 1 << i)
-        .sum()
+    Code(
+        cells
+            .iter()
+            .enumerate()
+            .filter(|(_, c)| wanted.contains(c))
+            .map(|(i, _)| 1 << i)
+            .sum(),
+    )
 }
 
 fn render(
@@ -101,7 +104,8 @@ fn render(
 /// Renders a coded design to a tensor at its side number, dimension, base and fractal level.
 ///
 /// ```
-/// let menger = mrlyrs::math::bang::factory::create(23, 3, 3, 2, 1).unwrap();
+/// use mrlyrs::math::bang::Code;
+/// let menger = mrlyrs::math::bang::factory::create(Code::from(23u64), 3, 3, 2, 1).unwrap();
 /// assert_eq!(menger.shape, vec![3, 3, 3]);
 /// assert_eq!(menger.sum(), 20);
 /// ```
@@ -119,7 +123,7 @@ pub fn create(
 /// Renders a design from its canonical JSON name, or an error for any other object.
 pub fn create_named(spec: &str, number: usize, level: usize) -> Result<Tensor> {
     let bang = Bang::from_json(spec)?;
-    create(bang.code, number, bang.dim, bang.base, level)
+    create(Code::from(bang.code), number, bang.dim, bang.base, level)
 }
 
 /// Composes the layers into one mixed-design cell by the ordered Kronecker product, first layer outermost, or an error below two layers or across dimensions.
@@ -145,7 +149,7 @@ pub fn magic(layers: &[MagicLayer]) -> Result<Tensor> {
     let mut out: Option<Tensor> = None;
     for layer in layers {
         let next = create(
-            layer.design.code,
+            Code::from(layer.design.code),
             layer.number,
             dimension,
             layer.design.base,
@@ -184,8 +188,8 @@ mod tests {
     use super::*;
     #[test]
     fn menger_carpet_code() {
-        assert_eq!(levels_code(3, 2, &[0, 1]), 23);
-        let truth = create(23, 3, 3, 2, 1).unwrap();
+        assert_eq!(levels_code(3, 2, &[0, 1]), Code(23));
+        let truth = create(Code(23), 3, 3, 2, 1).unwrap();
         assert_eq!(
             create_named(r#"{"kind":"bang","dim":3,"code":23}"#, 3, 1).unwrap(),
             truth
@@ -195,7 +199,7 @@ mod tests {
     }
     #[test]
     fn menger_holds_its_pinned_bytes() {
-        let truth = create(23, 3, 3, 2, 1).unwrap();
+        let truth = create(Code(23), 3, 3, 2, 1).unwrap();
         let pinned = vec![
             1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1,
         ];
@@ -211,7 +215,7 @@ mod tests {
     #[test]
     fn code_corner_round_trip() {
         for d in 2..=3 {
-            for code in [0, 1, 7, total_codes(d, 2) - 1] {
+            for code in [Code(0), Code(1), Code(7), Code(total_codes(d, 2).get() - 1)] {
                 let filled = code_to_corners(code, d, 2).unwrap();
                 assert_eq!(corners_to_code(&filled, d, 2), code);
             }
@@ -219,12 +223,13 @@ mod tests {
     }
     #[test]
     fn out_of_range_rejected() {
-        assert!(code_to_corners(16, 2, 2).is_err());
-        assert!(code_to_corners(100, 2, 2).is_err());
+        assert!(code_to_corners(Code(16), 2, 2).is_err());
+        assert!(code_to_corners(Code(100), 2, 2).is_err());
     }
     #[test]
     fn all_3d_codes_render() {
-        for code in 0..256 {
+        for bits in 0..256 {
+            let code = Code(bits);
             let arr = create(code, 3, 3, 2, 1).unwrap();
             assert_eq!(arr.shape, vec![3, 3, 3]);
             let filled = code_to_corners(code, 3, 2).unwrap();
@@ -252,7 +257,7 @@ mod tests {
         let carpet = MagicLayer::new(Bang::new(7, 2, 2), 3);
         assert_eq!(
             magic(&[carpet.clone(), carpet.clone(), carpet]).unwrap(),
-            create(7, 3, 2, 2, 3).unwrap()
+            create(Code(7), 3, 2, 2, 3).unwrap()
         );
     }
     #[test]
@@ -261,10 +266,10 @@ mod tests {
         let net = MagicLayer::new(Bang::new(14, 2, 2), 7);
         let void = MagicLayer::new(Bang::new(9, 2, 2), 5);
         let got = magic(&[carpet, net, void]).unwrap();
-        let expected = create(7, 3, 2, 2, 1)
+        let expected = create(Code(7), 3, 2, 2, 1)
             .unwrap()
-            .kron(&create(14, 7, 2, 2, 1).unwrap())
-            .kron(&create(9, 5, 2, 2, 1).unwrap());
+            .kron(&create(Code(14), 7, 2, 2, 1).unwrap())
+            .kron(&create(Code(9), 5, 2, 2, 1).unwrap());
         assert_eq!(got, expected);
         assert_eq!(got.shape, vec![105, 105]);
         assert_eq!(got.sum(), 8 * 33 * 13);

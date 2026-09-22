@@ -2,9 +2,10 @@ use figures::out::root;
 use figures::{ink, save, Board, Ramp};
 use mrlyrs::core::error::Result;
 use mrlyrs::core::tensor::Tensor;
-use mrlyrs::core::MrlyError;
 use mrlyrs::life::{design_mask, next_grid, Boundary};
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two::Cell2d;
+use mrlyrs::Error;
 use std::path::PathBuf;
 
 const NAME: &str = "demo-life";
@@ -26,7 +27,7 @@ fn write_data(first: &[i32], live: &[u8]) -> Result<PathBuf> {
     let file = path();
     let folder = file.parent().unwrap().to_path_buf();
     std::fs::create_dir_all(&folder)
-        .map_err(|e| MrlyError::Value(format!("cannot make {folder:?}: {e}")))?;
+        .map_err(|e| Error::Value(format!("cannot make {folder:?}: {e}")))?;
     let one: Vec<String> = first.iter().map(|step| step.to_string()).collect();
     let two: Vec<String> = live.iter().map(|bit| bit.to_string()).collect();
     let text = format!(
@@ -34,8 +35,7 @@ fn write_data(first: &[i32], live: &[u8]) -> Result<PathBuf> {
         one.join(","),
         two.join(",")
     );
-    std::fs::write(&file, text)
-        .map_err(|e| MrlyError::Value(format!("cannot write {file:?}: {e}")))?;
+    std::fs::write(&file, text).map_err(|e| Error::Value(format!("cannot write {file:?}: {e}")))?;
     Ok(file)
 }
 
@@ -55,7 +55,7 @@ fn field(text: &str, name: &str) -> Vec<i32> {
 fn read_data() -> Result<(Vec<i32>, Vec<i32>)> {
     let file = path();
     let raw = std::fs::read_to_string(&file)
-        .map_err(|e| MrlyError::Value(format!("cannot read {file:?}: {e}; run -- compute")))?;
+        .map_err(|e| Error::Value(format!("cannot read {file:?}: {e}; run -- compute")))?;
     let text: String = raw.chars().filter(|c| !c.is_whitespace()).collect();
     Ok((field(&text, "first"), field(&text, "live")))
 }
@@ -63,7 +63,7 @@ fn read_data() -> Result<(Vec<i32>, Vec<i32>)> {
 // PRESS
 
 fn compute() -> Result<()> {
-    let mask = design_mask(2, 7, 3, 1)?;
+    let mask = design_mask(2, Code::from(7u128), 3, 1)?;
     assert_eq!(mask.shape, vec![3, 3]);
     assert_eq!((0..mask.size()).filter(|&i| mask.at(i) == 1).count(), 8);
 

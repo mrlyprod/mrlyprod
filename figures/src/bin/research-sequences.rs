@@ -1,6 +1,7 @@
 use figures::board::Frame;
 use figures::{ink, save, Board, Grid};
 use mrlyrs::core::error::Result;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::counts::counting;
 use mrlyrs::math::two::designs;
 
@@ -28,11 +29,11 @@ fn main() -> Result<()> {
     }
     for (row, code) in CODES.iter().enumerate() {
         for (col, number) in SIDES.iter().enumerate() {
-            let cells = designs::create(*code, *number, 1, 0, 2)?;
+            let cells = designs::create(Code::from(*code), *number, 1, 0, 2)?;
             assert_eq!(cells.width(), *number);
             assert_eq!(
                 cells.types().sum() as u128,
-                counting::fill(*code, *number, 2, 1, 2)?
+                counting::fill(Code::from(*code), *number, 2, 1, 2)?
             );
             let tile = Frame::new(
                 block.x + col as f64 * pitch,

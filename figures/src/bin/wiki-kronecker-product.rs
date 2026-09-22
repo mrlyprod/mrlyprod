@@ -1,5 +1,6 @@
 use figures::{ink, save, Board, Frame, Grid};
 use mrlyrs::core::error::Result;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two::designs;
 
 const CODE: u128 = 7;
@@ -13,7 +14,7 @@ fn main() -> Result<()> {
     let top = area.y + (area.h - tile) / 2.0;
     let mut fills = Vec::new();
     for (index, level) in LEVELS.iter().enumerate() {
-        let design = designs::create(CODE, 3, *level, 0, 2)?;
+        let design = designs::create(Code::from(CODE), 3, *level, 0, 2)?;
         let side = design.width();
         assert_eq!(side, 3usize.pow(*level as u32));
         let x = area.x + index as f64 * (tile + GUTTER);

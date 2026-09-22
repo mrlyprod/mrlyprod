@@ -3,6 +3,7 @@ use demos::life::life_noise;
 use mrlyrs::core::error::parse;
 use mrlyrs::core::Tensor;
 use mrlyrs::life::{design_mask, next_grid, Boundary};
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two::Cell2d;
 
 fn agree(
@@ -15,7 +16,7 @@ fn agree(
     kept: &[usize],
 ) -> usize {
     let size = 32;
-    let mask = design_mask(2, code, side, level).unwrap();
+    let mask = design_mask(2, Code::from(code), side, level).unwrap();
     let mut fast = life_noise(size, size, 0.5, 11);
     let mut slow = Cell2d::new(Tensor::of(fast.clone(), vec![size, size]));
     let name = code.to_string();

@@ -2,6 +2,7 @@ use figures::board::Frame;
 use figures::{ink, save, Board, Grid};
 use mrlyrs::core::error::Result;
 use mrlyrs::core::Color;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two::designs;
 
 const CODE: u128 = 495;
@@ -9,7 +10,7 @@ const SPLIT: usize = 9;
 const SIDE: usize = SPLIT * SPLIT;
 
 fn render(level: usize) -> Result<Vec<Vec<bool>>> {
-    let cells = designs::create(CODE, 3, level, 0, 3)?;
+    let cells = designs::create(Code::from(CODE), 3, level, 0, 3)?;
     let types = cells.types();
     let side = cells.width();
     Ok((0..side)

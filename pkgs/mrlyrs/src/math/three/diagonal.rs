@@ -4,7 +4,7 @@ use crate::core::colors::{
 use crate::core::error::{value_error, Result};
 use crate::core::Color;
 use crate::math::bang::factory;
-use crate::math::bang::universe::Code;
+use crate::math::bang::Code;
 use crate::math::counts::profile_of_tile;
 
 const PALETTE: [Color; 12] = [
@@ -87,7 +87,8 @@ impl Solid {
 /// pattern's weight sums, so no cell of the solid is ever built.
 ///
 /// ```
-/// let counts = mrlyrs::math::three::profile(126, 2, 4, 2).unwrap();
+/// use mrlyrs::math::bang::Code;
+/// let counts = mrlyrs::math::three::profile(Code::from(126u64), 2, 4, 2).unwrap();
 /// assert_eq!(counts[15..=30].iter().copied().collect::<Vec<u128>>(), vec![81u128; 16]);
 /// ```
 pub fn profile(code: Code, number: usize, level: usize, base: usize) -> Result<Vec<u128>> {
@@ -107,7 +108,8 @@ pub fn support(counts: &[u128]) -> Option<(usize, usize)> {
 /// Lists the filled cells on the diagonal plane `x + y + z = height`, as `x, y, z` triples.
 ///
 /// ```
-/// assert_eq!(mrlyrs::math::three::diagonal_slice(126, 2, 3, 2, 10).unwrap().len(), 27);
+/// use mrlyrs::math::bang::Code;
+/// assert_eq!(mrlyrs::math::three::diagonal_slice(Code::from(126u64), 2, 3, 2, 10).unwrap().len(), 27);
 /// ```
 pub fn slice(
     code: Code,
@@ -218,7 +220,7 @@ mod tests {
     }
 
     fn digit_build(level: usize) -> Vec<[u32; 3]> {
-        let corners = factory::code_to_corners(126, 3, 2).unwrap();
+        let corners = factory::code_to_corners(Code(126), 3, 2).unwrap();
         let mut points = vec![[0u32, 0, 0]];
         for _ in 0..level {
             let mut next = Vec::with_capacity(points.len() * corners.len());
@@ -294,8 +296,8 @@ mod tests {
         for code in [23u128, 105, 126, 127] {
             for number in [2usize, 3] {
                 for level in 1..3 {
-                    let scanned = scan(code, number, level, 2);
-                    let counts = profile(code, number, level, 2).unwrap();
+                    let scanned = scan(Code(code), number, level, 2);
+                    let counts = profile(Code(code), number, level, 2).unwrap();
                     assert_eq!(counts.len(), scanned.len());
                     for (height, wanted) in scanned.iter().enumerate() {
                         assert_eq!(
@@ -303,7 +305,7 @@ mod tests {
                             wanted.len() as u128,
                             "code {code} number {number} level {level} height {height}"
                         );
-                        let mut got = slice(code, number, level, 2, height).unwrap();
+                        let mut got = slice(Code(code), number, level, 2, height).unwrap();
                         let mut want = wanted.clone();
                         got.sort_unstable();
                         want.sort_unstable();
@@ -322,7 +324,7 @@ mod tests {
             for point in digit_build(level) {
                 buckets[(point[0] + point[1] + point[2]) as usize].push(point);
             }
-            let counts = profile(126, 2, level, 2).unwrap();
+            let counts = profile(Code(126), 2, level, 2).unwrap();
             assert_eq!(counts.len(), buckets.len());
             for (height, bucket) in buckets.iter_mut().enumerate() {
                 assert_eq!(
@@ -330,7 +332,7 @@ mod tests {
                     bucket.len() as u128,
                     "level {level} height {height}"
                 );
-                let mut got = slice(126, 2, level, 2, height).unwrap();
+                let mut got = slice(Code(126), 2, level, 2, height).unwrap();
                 got.sort_unstable();
                 bucket.sort_unstable();
                 assert_eq!(got, *bucket, "level {level} height {height}");
@@ -341,7 +343,7 @@ mod tests {
     #[test]
     fn every_slice_of_one_two_six_holds_three_to_the_level() {
         for level in 1..=14usize {
-            let counts = profile(126, 2, level, 2).unwrap();
+            let counts = profile(Code(126), 2, level, 2).unwrap();
             let (low, high) = support(&counts).unwrap();
             assert_eq!((low, high), ((1 << level) - 1, (1 << (level + 1)) - 2));
             let wanted = 3u128.pow(level as u32);
@@ -354,7 +356,7 @@ mod tests {
     fn the_two_central_heights_carry_two_times_three_to_the_level() {
         for (index, &total) in [18u128, 54, 162, 486, 1458, 4374, 13122].iter().enumerate() {
             let level = index + 2;
-            let counts = profile(126, 2, level, 2).unwrap();
+            let counts = profile(Code(126), 2, level, 2).unwrap();
             let low = ((1usize << level) - 1) + (1 << (level - 1)) - 1;
             assert_eq!(counts[low] + counts[low + 1], total);
             assert_eq!(counts[low], 3u128.pow(level as u32));
@@ -373,8 +375,8 @@ mod tests {
         ];
         for level in 2..=8usize {
             let low = ((1usize << level) - 1) + (1 << (level - 1)) - 1;
-            let mut union = slice(126, 2, level, 2, low).unwrap();
-            union.extend(slice(126, 2, level, 2, low + 1).unwrap());
+            let mut union = slice(Code(126), 2, level, 2, low).unwrap();
+            union.extend(slice(Code(126), 2, level, 2, low + 1).unwrap());
             let mut classes = [0usize; 6];
             let mut ties = 0;
             for point in &union {
@@ -402,7 +404,7 @@ mod tests {
         let mut shadows = HashSet::new();
         let mut total = 0;
         for (slot, height) in [low, low + 1].into_iter().enumerate() {
-            for point in slice(126, 2, 7, 2, height).unwrap() {
+            for point in slice(Code(126), 2, 7, 2, height).unwrap() {
                 let corner = ((point[0] >> 6) * 4 + (point[1] >> 6) * 2 + (point[2] >> 6)) as usize;
                 *pieces.entry((slot, corner)).or_default() += 1;
                 shadows.insert(shadow(point));
@@ -443,7 +445,7 @@ mod tests {
                             .collect(),
                     );
                 }
-                slices.extend(slice(126, 2, level, 2, base + offset).unwrap());
+                slices.extend(slice(Code(126), 2, level, 2, base + offset).unwrap());
             }
             assert_eq!(pieces.len(), 6);
             let each = 3usize.pow(level as u32 - 1);
@@ -474,9 +476,11 @@ mod tests {
         ];
         for level in 2..=8usize {
             let low = ((1usize << level) - 1) + (1 << (level - 1)) - 1;
-            let below: HashSet<[u32; 3]> =
-                slice(126, 2, level, 2, low).unwrap().into_iter().collect();
-            let above: HashSet<[u32; 3]> = slice(126, 2, level, 2, low + 1)
+            let below: HashSet<[u32; 3]> = slice(Code(126), 2, level, 2, low)
+                .unwrap()
+                .into_iter()
+                .collect();
+            let above: HashSet<[u32; 3]> = slice(Code(126), 2, level, 2, low + 1)
                 .unwrap()
                 .into_iter()
                 .collect();
@@ -541,7 +545,7 @@ mod tests {
                     }
                     set = next;
                 }
-                let got: HashSet<[u32; 3]> = slice(126, 2, level, 2, low + offset)
+                let got: HashSet<[u32; 3]> = slice(Code(126), 2, level, 2, low + offset)
                     .unwrap()
                     .into_iter()
                     .collect();
@@ -559,7 +563,7 @@ mod tests {
             (126, (15, 30), 16, 81, 81),
             (127, (0, 30), 31, 1, 162),
         ] {
-            let counts = profile(code, 2, 4, 2).unwrap();
+            let counts = profile(Code(code), 2, 4, 2).unwrap();
             assert_eq!(support(&counts).unwrap(), span);
             let live: Vec<u128> = counts[span.0..=span.1]
                 .iter()
@@ -578,7 +582,7 @@ mod tests {
     fn the_one_two_seven_cut_matches_no_closed_form() {
         for (index, &top) in [3u128, 12, 45, 162, 594, 2187].iter().enumerate() {
             let level = index + 1;
-            let counts = profile(127, 2, level, 2).unwrap();
+            let counts = profile(Code(127), 2, level, 2).unwrap();
             assert_eq!(*counts.iter().max().unwrap(), top);
             assert_eq!(*counts.iter().filter(|&&count| count > 0).min().unwrap(), 1);
             assert_eq!(counts.iter().sum::<u128>(), 7u128.pow(level as u32));
@@ -592,7 +596,7 @@ mod tests {
         for (index, &wanted) in [3usize, 9, 27, 81, 243].iter().enumerate() {
             let level = index + 1;
             let low = (1usize << level) - 1;
-            let points = slice(126, 2, level, 2, low).unwrap();
+            let points = slice(Code(126), 2, level, 2, low).unwrap();
             assert_eq!(points.len(), 3usize.pow(level as u32));
             assert_eq!(points.len(), wanted);
             assert_eq!(odd_trinomials(low), wanted);
@@ -603,7 +607,7 @@ mod tests {
     fn the_flat_slice_has_pairwise_disjoint_binary_supports() {
         for level in 1..=6usize {
             let last = (1u32 << level) - 1;
-            let got: HashSet<[u32; 3]> = slice(126, 2, level, 2, last as usize)
+            let got: HashSet<[u32; 3]> = slice(Code(126), 2, level, 2, last as usize)
                 .unwrap()
                 .into_iter()
                 .collect();
@@ -624,11 +628,11 @@ mod tests {
     #[test]
     fn the_twenty_three_slices_are_three_to_the_digit_sum() {
         assert_eq!(
-            &profile(23, 2, 3, 2).unwrap()[..8],
+            &profile(Code(23), 2, 3, 2).unwrap()[..8],
             &[1u128, 3, 3, 9, 3, 9, 9, 27]
         );
         for level in 1..=6u32 {
-            let counts = profile(23, 2, level as usize, 2).unwrap();
+            let counts = profile(Code(23), 2, level as usize, 2).unwrap();
             for (height, &count) in counts.iter().enumerate() {
                 let wanted = if height < (1 << level) {
                     3u128.pow((height as u32).count_ones())
@@ -643,14 +647,14 @@ mod tests {
     #[test]
     fn the_six_cut_codes_are_canonical() {
         for code in [23u128, 63, 105, 111, 126, 127] {
-            let orbit = crate::math::bang::universe::orbit(code, 3);
-            assert_eq!(*orbit.iter().next().unwrap(), code);
+            let orbit = crate::math::bang::universe::orbit(Code(code), 3);
+            assert_eq!(*orbit.iter().next().unwrap(), Code(code));
         }
     }
 
     #[test]
     fn the_centred_corners_are_the_octahedron_axes() {
-        let corners = factory::code_to_corners(126, 3, 2).unwrap();
+        let corners = factory::code_to_corners(Code(126), 3, 2).unwrap();
         let doubled: Vec<[i64; 3]> = corners
             .iter()
             .map(|corner| {
@@ -693,7 +697,7 @@ mod tests {
 
     #[test]
     fn the_svg_draws_one_circle_for_every_cell() {
-        let art = svg(126, 2, 3, 2, &[10, 11], 4).unwrap();
+        let art = svg(Code(126), 2, 3, 2, &[10, 11], 4).unwrap();
         assert_eq!(art.matches("<circle").count(), 54);
         assert!(!art.contains("<rect"));
         let fills: HashSet<&str> = art
@@ -703,7 +707,7 @@ mod tests {
             .collect();
         assert_eq!(fills.len(), 6);
         assert!(fills.contains(RED.to_hex().as_str()));
-        assert!(svg(0, 2, 2, 2, &[3], 4).is_err());
-        assert!(profile(126, 2, 0, 2).is_err());
+        assert!(svg(Code(0), 2, 2, 2, &[3], 4).is_err());
+        assert!(profile(Code(126), 2, 0, 2).is_err());
     }
 }

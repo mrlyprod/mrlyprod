@@ -1,12 +1,18 @@
 use crate::space::Pack;
 use crate::{code_of, Fault};
 use mrlyrs::core::json;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::counts;
 use mrlyrs::math::three::{self, Cell3d};
 use wasm_bindgen::prelude::*;
 
 fn cell(code: &str, number: usize, level: usize, base: usize) -> Result<Cell3d, Fault> {
-    Ok(three::create(code_of(code)?, number, level, base)?)
+    Ok(three::create(
+        Code::from(code_of(code)?),
+        number,
+        level,
+        base,
+    )?)
 }
 
 /// Packs the exposed faces of the cube the code names: two section lengths, then six floats per vertex, position and normal, in the unit box.
@@ -70,7 +76,7 @@ pub fn three_census(code: &str, number: usize, level: usize, base: usize) -> Res
 /// Counts the exposed faces of the cube at the level by exact recurrence, without building it.
 #[wasm_bindgen]
 pub fn three_surface(code: &str, number: usize, level: u32, base: usize) -> Result<String, Fault> {
-    Ok(counts::surface(code_of(code)?, number, level, base)?.to_string())
+    Ok(counts::surface(Code::from(code_of(code)?), number, level, base)?.to_string())
 }
 
 // DIAGONAL
@@ -91,7 +97,7 @@ pub fn diagonal_profile(
     base: usize,
 ) -> Result<String, Fault> {
     depth(level)?;
-    let counts = three::profile(code_of(code)?, number, level, base)?;
+    let counts = three::profile(Code::from(code_of(code)?), number, level, base)?;
     let (low, high) = three::support(&counts)
         .ok_or_else(|| Fault::new(format!("code {code} fills no cell, so it has no cut.")))?;
     let span = &counts[low..=high];
@@ -123,7 +129,7 @@ pub fn diagonal_count(
     height: usize,
 ) -> Result<String, Fault> {
     depth(level)?;
-    let counts = three::profile(code_of(code)?, number, level, base)?;
+    let counts = three::profile(Code::from(code_of(code)?), number, level, base)?;
     Ok(counts.get(height).copied().unwrap_or(0).to_string())
 }
 
@@ -137,7 +143,7 @@ pub fn diagonal_digits(
     height: usize,
 ) -> Result<String, Fault> {
     depth(level)?;
-    let counts = three::profile(code_of(code)?, number, level, base)?;
+    let counts = three::profile(Code::from(code_of(code)?), number, level, base)?;
     let (low, _) = three::support(&counts)
         .ok_or_else(|| Fault::new(format!("code {code} fills no cell, so it has no cut.")))?;
     Ok(format!("{:b}", height.saturating_sub(low)))
@@ -153,7 +159,7 @@ pub fn diagonal_total(
     heights: Vec<u32>,
 ) -> Result<String, Fault> {
     depth(level)?;
-    let counts = three::profile(code_of(code)?, number, level, base)?;
+    let counts = three::profile(Code::from(code_of(code)?), number, level, base)?;
     let total: u128 = heights
         .iter()
         .map(|&height| counts.get(height as usize).copied().unwrap_or(0))
@@ -174,7 +180,7 @@ pub fn diagonal_svg(
     depth(level)?;
     let heights: Vec<usize> = heights.iter().map(|&height| height as usize).collect();
     Ok(three::diagonal_svg(
-        code_of(code)?,
+        Code::from(code_of(code)?),
         number,
         level,
         base,

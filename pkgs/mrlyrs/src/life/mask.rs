@@ -1,7 +1,7 @@
 use crate::core::error::{value_error, Result};
 use crate::core::tensor::Tensor;
 use crate::math::bang::factory;
-use crate::math::bang::universe::Code;
+use crate::math::bang::Code;
 use crate::math::two;
 use crate::num::factor::gcd;
 
@@ -90,7 +90,7 @@ mod tests {
     use super::*;
     #[test]
     fn the_moore_mask_couples() {
-        let mask = design_mask(2, 7, 3, 1).unwrap();
+        let mask = design_mask(2, Code(7), 3, 1).unwrap();
         assert_eq!((mask.shape.clone(), mask.sum()), (vec![3, 3], 8));
         assert_eq!(lattice_index(&mask), 1);
     }
@@ -98,21 +98,21 @@ mod tests {
     fn the_parity_tiles_alternate_by_side() {
         let read: Vec<usize> = [3, 5, 7, 9]
             .iter()
-            .map(|&n| lattice_index(&design_mask(1, 1, n, 1).unwrap()))
+            .map(|&n| lattice_index(&design_mask(1, Code(1), n, 1).unwrap()))
             .collect();
         assert_eq!(read, vec![1, 2, 1, 2]);
     }
     #[test]
     fn the_cantor_tower_runs_one_two_one() {
         let read: Vec<usize> = (1..=3)
-            .map(|level| lattice_index(&design_mask(1, 1, 3, level).unwrap()))
+            .map(|level| lattice_index(&design_mask(1, Code(1), 3, level).unwrap()))
             .collect();
         assert_eq!(read, vec![1, 2, 1]);
     }
     #[test]
     fn the_diagonal_mask_decouples_and_the_von_neumann_one_does_not() {
-        assert_eq!(lattice_index(&design_mask(2, 9, 3, 1).unwrap()), 2);
-        assert_eq!(lattice_index(&design_mask(2, 6, 3, 1).unwrap()), 1);
+        assert_eq!(lattice_index(&design_mask(2, Code(9), 3, 1).unwrap()), 2);
+        assert_eq!(lattice_index(&design_mask(2, Code(6), 3, 1).unwrap()), 1);
     }
     #[test]
     fn a_rank_deficient_mask_reads_zero() {
@@ -122,13 +122,13 @@ mod tests {
     }
     #[test]
     fn even_sides_and_wide_dimensions_are_rejected() {
-        assert!(design_mask(2, 7, 4, 1).is_err());
-        assert!(design_mask(3, 7, 3, 1).is_err());
-        assert!(design_mask(1, 1, 3, 0).is_err());
+        assert!(design_mask(2, Code(7), 4, 1).is_err());
+        assert!(design_mask(3, Code(7), 3, 1).is_err());
+        assert!(design_mask(1, Code(1), 3, 0).is_err());
     }
     #[test]
     fn the_centre_is_popped_at_every_level() {
-        let mask = design_mask(2, 7, 3, 2).unwrap();
+        let mask = design_mask(2, Code(7), 3, 2).unwrap();
         assert_eq!(mask.shape, vec![9, 9]);
         assert_eq!(mask.get(&[4, 4]), 0);
     }

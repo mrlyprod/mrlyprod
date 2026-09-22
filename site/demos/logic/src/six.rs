@@ -1,5 +1,6 @@
 use crate::{checked, code_of, Fault};
 use mrlyrs::core::{json, Json};
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::counts::six::{
     solid_slice_boundary, solid_slice_edges, solid_slice_triangles, solid_slice_vertices,
 };
@@ -20,9 +21,9 @@ pub fn hex_svg(
 ) -> Result<String, Fault> {
     let code = code_of(code)?;
     let cell = match projection {
-        "pro" => six::pro_design(code, number, level, base)?,
-        "cut" => six::cut_design(code, number, level, base)?,
-        _ => six::iso_design(code, number, level, base)?,
+        "pro" => six::pro_design(Code::from(code), number, level, base)?,
+        "cut" => six::cut_design(Code::from(code), number, level, base)?,
+        _ => six::iso_design(Code::from(code), number, level, base)?,
     };
     Ok(six::svg(&cell, scale, None, 0)?)
 }
@@ -31,7 +32,7 @@ pub fn hex_svg(
 
 fn slice(code: &str, number: usize, level: usize, base: usize) -> Result<Cell6d, Fault> {
     Ok(six::cut(&three::create(
-        code_of(code)?,
+        Code::from(code_of(code)?),
         number,
         level,
         base,
@@ -77,7 +78,7 @@ pub fn slice_series(code: &str, max_k: usize) -> Result<String, Fault> {
     let mut rows = Vec::new();
     for k in 1..=max_k {
         let number = 2 * k - 1;
-        let cell = six::cut(&three::create(code, number, 1, 2)?)?;
+        let cell = six::cut(&three::create(Code::from(code), number, 1, 2)?)?;
         rows.push(json!({
             "k": k,
             "n": number,

@@ -1,5 +1,6 @@
 use crate::core::error::{value_error, Result};
 use crate::core::rng::Rng;
+use crate::math::bang::Code;
 use crate::math::counts;
 use crate::math::two::{self, census};
 use crate::num::prime;
@@ -336,12 +337,12 @@ pub fn sequence(seq: Source, limit: usize) -> Result<Vec<usize>> {
         Source::LineVoids => mrly_sequence(limit, |n| Ok(census::voids(&two::hline(n, 1)?))),
         Source::StarFills => mrly_sequence(limit, |n| Ok(census::fills(&two::star(n, 1)?))),
         Source::StarVoids => mrly_sequence(limit, |n| Ok(census::voids(&two::star(n, 1)?))),
-        Source::CodeFills(code) => {
-            mrly_sequence(limit, |n| Ok(counts::fill(code, n, DIM, 1, BASE)? as usize))
-        }
-        Source::CodeVoids(code) => {
-            mrly_sequence(limit, |n| Ok(counts::void(code, n, DIM, 1, BASE)? as usize))
-        }
+        Source::CodeFills(code) => mrly_sequence(limit, |n| {
+            Ok(counts::fill(Code::from(code), n, DIM, 1, BASE)? as usize)
+        }),
+        Source::CodeVoids(code) => mrly_sequence(limit, |n| {
+            Ok(counts::void(Code::from(code), n, DIM, 1, BASE)? as usize)
+        }),
         _ => unreachable!(),
     }
 }
@@ -562,7 +563,7 @@ mod tests {
                 let mut v = Vec::new();
                 let mut n = 1;
                 while n <= 53 {
-                    let f = counts::fill(code, n, 2, 1, 2).unwrap() as usize;
+                    let f = counts::fill(Code::from(code), n, 2, 1, 2).unwrap() as usize;
                     if f <= 50 && !v.contains(&f) {
                         v.push(f);
                     }

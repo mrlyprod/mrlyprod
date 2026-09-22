@@ -1,4 +1,4 @@
-use crate::core::error::{value_error, MrlyError, Result};
+use crate::core::error::{value_error, Result};
 use crate::core::resample::block;
 use png::{
     AdaptiveFilterType, BitDepth, ColorType, Compression, Decoder, Encoder, FilterType,
@@ -7,18 +7,6 @@ use png::{
 
 /// The eight bytes every png file starts with.
 pub const PNG_MAGIC: [u8; 8] = [137, 80, 78, 71, 13, 10, 26, 10];
-
-impl From<png::EncodingError> for MrlyError {
-    fn from(error: png::EncodingError) -> MrlyError {
-        MrlyError::Value(error.to_string())
-    }
-}
-
-impl From<png::DecodingError> for MrlyError {
-    fn from(error: png::DecodingError) -> MrlyError {
-        MrlyError::Value(error.to_string())
-    }
-}
 
 /// Encodes rgba colors as a png, drawing each source pixel as a scale by scale block.
 ///

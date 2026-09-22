@@ -57,10 +57,11 @@ pub fn from_json(text: &str) -> Result<Cell6d> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::math::bang::Code;
     use crate::math::six::designs::cut_design;
     #[test]
     fn json_round_trip() {
-        let c = cut_design(23, 3, 1, 2).unwrap();
+        let c = cut_design(Code(23), 3, 1, 2).unwrap();
         let restored = from_json(&to_json(&c)).unwrap();
         assert_eq!(c, restored);
     }

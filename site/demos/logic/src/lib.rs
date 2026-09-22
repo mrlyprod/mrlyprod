@@ -2,7 +2,8 @@
 #![deny(missing_docs)]
 
 use mrlyrs::core::colors::{Color, Theme, DARK, LIGHT};
-use mrlyrs::core::MrlyError;
+use mrlyrs::math::bang::Code;
+use mrlyrs::Error;
 use std::cell::Cell;
 use wasm_bindgen::prelude::*;
 
@@ -151,8 +152,8 @@ impl Fault {
     }
 }
 
-impl From<MrlyError> for Fault {
-    fn from(error: MrlyError) -> Fault {
+impl From<Error> for Fault {
+    fn from(error: Error) -> Fault {
         Fault(error.to_string())
     }
 }
@@ -181,6 +182,6 @@ fn code_of(text: &str) -> Result<u128, Fault> {
 
 fn checked(code: &str, dimension: usize, base: usize) -> Result<u128, Fault> {
     let code = code_of(code)?;
-    mrlyrs::math::bang::code_to_corners(code, dimension, base)?;
+    mrlyrs::math::bang::code_to_corners(Code::from(code), dimension, base)?;
     Ok(code)
 }

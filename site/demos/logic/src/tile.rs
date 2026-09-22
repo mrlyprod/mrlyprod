@@ -2,6 +2,7 @@
 
 use crate::{code_of, Fault, Grid};
 use mrlyrs::core::json;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::six::{self, Cell6d};
 use mrlyrs::math::three::{self, Cell3d};
 use mrlyrs::math::two::{self, Cell2d};
@@ -57,7 +58,7 @@ fn plane(
     base: usize,
     reps: &[usize],
 ) -> Result<(Cell2d, Cell2d), Fault> {
-    let cell = two::create(code_of(code)?, number, level, 0, base)?;
+    let cell = two::create(Code::from(code_of(code)?), number, level, 0, base)?;
     budget(
         cell.width() * reps[0] * cell.height() * reps[1],
         PLANE_CELLS,
@@ -95,7 +96,7 @@ fn solid(
     base: usize,
     reps: &[usize],
 ) -> Result<(Cell3d, Cell3d), Fault> {
-    let cell = three::create(code_of(code)?, number, level, base)?;
+    let cell = three::create(Code::from(code_of(code)?), number, level, base)?;
     budget(
         cell.width() * reps[0] * cell.height() * reps[1] * cell.depth() * reps[2],
         SOLID_CELLS,
@@ -146,9 +147,9 @@ fn hexagon(
     let code = code_of(code)?;
     budget(side_of(number, level)?, HEX_SIDE, "cells to a side")?;
     Ok(match projection {
-        "pro" => six::pro_design(code, number, level, base)?,
-        "cut" => six::cut_design(code, number, level, base)?,
-        _ => six::iso_design(code, number, level, base)?,
+        "pro" => six::pro_design(Code::from(code), number, level, base)?,
+        "cut" => six::cut_design(Code::from(code), number, level, base)?,
+        _ => six::iso_design(Code::from(code), number, level, base)?,
     })
 }
 

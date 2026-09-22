@@ -75,21 +75,22 @@ pub fn census(cell: &Cell2d) -> Result<Census> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::math::bang::Code;
     use crate::math::counts;
     use crate::math::two::designs;
     #[test]
     fn census_matches_formulas() {
         for code in [7u128, 14, 9, 5] {
             for level in 1..4u32 {
-                let cell = designs::create(code, 3, level as usize, 0, 2).unwrap();
+                let cell = designs::create(Code(code), 3, level as usize, 0, 2).unwrap();
                 assert_eq!(
                     fills(&cell) as u128,
-                    counts::fill(code, 3, 2, level, 2).unwrap(),
+                    counts::fill(Code(code), 3, 2, level, 2).unwrap(),
                     "code={code} l={level}"
                 );
                 assert_eq!(
                     voids(&cell) as u128,
-                    counts::void(code, 3, 2, level, 2).unwrap()
+                    counts::void(Code(code), 3, 2, level, 2).unwrap()
                 );
             }
         }

@@ -1,18 +1,19 @@
 use mrlyrs::life::{Boundary, Counts, Source};
-use mrlyrs::math::bang::universe::{orbit, Code};
+use mrlyrs::math::bang::universe::orbit;
+use mrlyrs::math::bang::Code;
 
 /// The Moore neighbourhood's code at side 3 in the plane.
-pub const MOORE: Code = 7;
+pub const MOORE: u128 = 7;
 /// The Menger tile's code at side 3 in space.
-pub const MENGER: Code = 23;
+pub const MENGER: u128 = 23;
 /// The 26-cell neighbourhood's code at side 3 in space.
-pub const MOORE_3D: Code = 127;
+pub const MOORE_3D: u128 = 127;
 
 /// One seed design: a universe code drawn at a side and a Kronecker level.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Seed {
     /// The universe code.
-    pub code: Code,
+    pub code: u128,
     /// The odd side of the level-1 tile.
     pub side: usize,
     /// The Kronecker level.
@@ -25,7 +26,7 @@ pub enum Mask {
     /// The design a code names at a side and level, centre popped.
     Design {
         /// The universe code.
-        code: Code,
+        code: u128,
         /// The odd side.
         side: usize,
         /// The Kronecker level.
@@ -180,10 +181,13 @@ impl Preset {
 }
 
 /// Returns the smallest code of every non-empty orbit of a dimension's designs.
-pub fn classes(dimension: usize) -> Vec<Code> {
-    let total: Code = 1 << (1 << dimension);
+pub fn classes(dimension: usize) -> Vec<u128> {
+    let total: u128 = 1 << (1 << dimension);
     (1..total)
-        .filter(|&code| orbit(code, dimension).iter().next() == Some(&code))
+        .filter(|&bits| {
+            let code = Code::from(bits);
+            orbit(code, dimension).iter().next() == Some(&code)
+        })
         .collect()
 }
 

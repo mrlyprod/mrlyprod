@@ -1,6 +1,7 @@
 use figures::board::Board;
 use figures::{ink, plot, save};
 use mrlyrs::core::error::Result;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::three;
 
 const CODE: u128 = 126;
@@ -24,11 +25,11 @@ fn pieces(points: &[[u32; 3]]) -> Vec<usize> {
 }
 
 fn main() -> Result<()> {
-    let profile = three::profile(CODE, 2, LEVEL, 2)?;
+    let profile = three::profile(Code::from(CODE), 2, LEVEL, 2)?;
     let mut cuts = Vec::new();
     for height in HEIGHTS {
         assert_eq!(profile[height], 2187);
-        let points = three::diagonal_slice(CODE, 2, LEVEL, 2, height)?;
+        let points = three::diagonal_slice(Code::from(CODE), 2, LEVEL, 2, height)?;
         assert_eq!(points.len(), 2187);
         assert_eq!(pieces(&points), vec![729, 729, 729]);
         cuts.push(points);

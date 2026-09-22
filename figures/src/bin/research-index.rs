@@ -1,10 +1,11 @@
 use figures::board::{Board, Frame};
 use figures::{ink, save, Grid};
 use mrlyrs::core::error::Result;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two::designs;
 
 fn panel(board: &mut Board, frame: Frame, level: usize, gap: f64) -> Result<()> {
-    let cells = designs::create(495, 3, level, 0, 3)?;
+    let cells = designs::create(Code::from(495u128), 3, level, 0, 3)?;
     let side = cells.width();
     assert_eq!(side, 3usize.pow(level as u32));
     Grid::new(frame, side, side, gap)

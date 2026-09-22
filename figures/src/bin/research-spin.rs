@@ -2,6 +2,7 @@ use figures::board::Board;
 use figures::ink::Ramp;
 use figures::{ink, save};
 use mrlyrs::core::error::Result;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::spin;
 use mrlyrs::math::two;
 
@@ -32,7 +33,7 @@ fn mirror(cell: &two::Cell2d) -> Vec<f32> {
 }
 
 fn main() -> Result<()> {
-    let carpet = two::designs::create(495, 3, LEVEL, 0, 3)?;
+    let carpet = two::designs::create(Code::from(495u128), 3, LEVEL, 0, 3)?;
     assert_eq!(carpet.width(), SIDE);
     assert_eq!(carpet.types().sum(), 8u64.pow(LEVEL as u32));
     let span = 2 * SIDE;

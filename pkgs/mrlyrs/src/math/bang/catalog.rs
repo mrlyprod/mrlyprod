@@ -15,7 +15,7 @@ pub fn universe_codes(dimension: usize) -> &'static [u128] {
     let codes: Vec<u128> = bang(dimension)
         .canonical()
         .into_iter()
-        .map(|design| design.i)
+        .map(|design| design.i.get())
         .collect();
     let leaked: &'static [u128] = Box::leak(codes.into_boxed_slice());
     guard.insert(dimension, leaked);

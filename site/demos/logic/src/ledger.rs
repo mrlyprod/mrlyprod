@@ -5,6 +5,7 @@ use ledger::{
 };
 use mrlyrs::core::{json, Json};
 use mrlyrs::math::bang::factory;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::counts;
 use std::collections::BTreeMap;
 use std::sync::{Mutex, OnceLock};
@@ -171,7 +172,13 @@ pub fn ledger_profile(
     number: usize,
     level: u32,
 ) -> Result<Vec<String>, Fault> {
-    let tile = factory::create(checked(code, dimension, base)?, number, dimension, base, 1)?;
+    let tile = factory::create(
+        Code::from(checked(code, dimension, base)?),
+        number,
+        dimension,
+        base,
+        1,
+    )?;
     Ok(counts::profile_of_tile(&tile, level)?
         .iter()
         .map(|count| count.to_string())

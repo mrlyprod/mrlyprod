@@ -1,13 +1,7 @@
-use crate::core::error::{value_error, MrlyError, Result};
+use crate::core::error::{value_error, Result};
 use crate::core::resample::block;
 use gif::{DisposalMethod, Encoder, Frame, Repeat};
 use std::borrow::Cow;
-
-impl From<gif::EncodingError> for MrlyError {
-    fn from(error: gif::EncodingError) -> MrlyError {
-        MrlyError::Value(error.to_string())
-    }
-}
 
 /// Encodes indexed frames as an animated gif89a, each source pixel a scale by scale block.
 ///

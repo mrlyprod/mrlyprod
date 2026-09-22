@@ -127,20 +127,21 @@ pub fn census(cell: &Cell3d) -> Result<Census> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::math::bang::Code;
     use crate::math::counts;
     use crate::math::three::designs;
     #[test]
     fn census_matches_formulas() {
         for code in [23u128, 129, 17, 232] {
             for level in 1..3u32 {
-                let cell = designs::create(code, 3, level as usize, 2).unwrap();
+                let cell = designs::create(Code(code), 3, level as usize, 2).unwrap();
                 assert_eq!(
                     fills(&cell) as u128,
-                    counts::fill(code, 3, 3, level, 2).unwrap()
+                    counts::fill(Code(code), 3, 3, level, 2).unwrap()
                 );
                 assert_eq!(
                     surface(&cell),
-                    counts::surface(code, 3, level, 2).unwrap(),
+                    counts::surface(Code(code), 3, level, 2).unwrap(),
                     "code={code} l={level}"
                 );
             }
@@ -197,16 +198,17 @@ mod tests {
 mod theorems {
     use super::*;
     use crate::math::bang::universe::{orbit, total_exposure, touches_every_corner};
+    use crate::math::bang::Code;
     use crate::math::three::designs;
     use crate::math::two;
     use std::collections::BTreeSet;
 
     fn tile_fill(code: u128, number: usize) -> u128 {
-        fills(&designs::create(code, number, 1, 2).unwrap()) as u128
+        fills(&designs::create(Code(code), number, 1, 2).unwrap()) as u128
     }
 
     fn state(code: u128, number: usize, level: usize) -> (i128, i128) {
-        let cell = designs::create(code, number, level, 2).unwrap();
+        let cell = designs::create(Code(code), number, level, 2).unwrap();
         (surface(&cell) as i128, hidden(&cell) as i128)
     }
 
@@ -232,7 +234,7 @@ mod theorems {
             let fc = tile_fill(code, 3);
             for (index, &want) in faces.iter().enumerate() {
                 let level = index + 1;
-                let cell = designs::create(code, 3, level, 2).unwrap();
+                let cell = designs::create(Code(code), 3, level, 2).unwrap();
                 assert_eq!(surface(&cell), want, "code={code} l={level}");
                 assert_eq!(
                     hidden(&cell),
@@ -242,7 +244,7 @@ mod theorems {
             }
         }
         let carpet: Vec<u128> = (1..5)
-            .map(|level| hidden(&designs::create(23, 3, level, 2).unwrap()))
+            .map(|level| hidden(&designs::create(Code(23), 3, level, 2).unwrap()))
             .collect();
         assert_eq!(carpet, [48, 1344, 29952, 623616]);
     }
@@ -312,17 +314,17 @@ mod theorems {
     fn the_void_buries_no_face() {
         for k in 1..13u128 {
             let number = 2 * k as usize - 1;
-            let cell = designs::create(129, number, 1, 2).unwrap();
+            let cell = designs::create(Code(129), number, 1, 2).unwrap();
             let cells = k * k * k + (k - 1) * (k - 1) * (k - 1);
             assert_eq!(fills(&cell) as u128, cells, "k={k}");
             assert_eq!(surface(&cell), 6 * cells, "k={k}");
             assert_eq!(hidden(&cell), 0, "k={k}");
-            let flat = two::create(9, number, 1, 0, 2).unwrap();
+            let flat = two::create(Code(9), number, 1, 0, 2).unwrap();
             let tally = two::census::census(&flat).unwrap();
             assert_eq!(tally.edges as u128, tally.perimeter, "k={k}");
         }
         for level in 1..5u32 {
-            let cell = designs::create(129, 3, level as usize, 2).unwrap();
+            let cell = designs::create(Code(129), 3, level as usize, 2).unwrap();
             assert_eq!(surface(&cell), 6 * 9u128.pow(level), "l={level}");
         }
     }
@@ -331,15 +333,19 @@ mod theorems {
     fn total_exposure_holds_for_the_independent_corner_sets() {
         for number in [3usize, 5, 7] {
             for code in 0..256u128 {
-                let cell = designs::create(code, number, 1, 2).unwrap();
+                let cell = designs::create(Code(code), number, 1, 2).unwrap();
                 let open = surface(&cell) == 6 * fills(&cell) as u128;
-                assert_eq!(open, total_exposure(code, 3), "code={code} n={number}");
+                assert_eq!(
+                    open,
+                    total_exposure(Code(code), 3),
+                    "code={code} n={number}"
+                );
             }
         }
-        let exposed: Vec<u128> = (0..256).filter(|&c| total_exposure(c, 3)).collect();
+        let exposed: Vec<u128> = (0..256).filter(|&c| total_exposure(Code(c), 3)).collect();
         let classes: BTreeSet<u128> = exposed
             .iter()
-            .map(|&c| *orbit(c, 3).iter().next().unwrap())
+            .map(|&c| orbit(Code(c), 3).iter().next().unwrap().get())
             .collect();
         assert_eq!(exposed.len(), 35);
         assert_eq!(
@@ -354,13 +360,19 @@ mod theorems {
             let number = 2 * k - 1;
             let grid = (number + 1).pow(3);
             for code in 0..256u128 {
-                let cell = designs::create(code, number, 1, 2).unwrap();
+                let cell = designs::create(Code(code), number, 1, 2).unwrap();
                 let whole = vertices(&cell).unwrap() == grid;
-                assert_eq!(whole, touches_every_corner(code, 3), "code={code} k={k}");
+                assert_eq!(
+                    whole,
+                    touches_every_corner(Code(code), 3),
+                    "code={code} k={k}"
+                );
             }
         }
         assert_eq!(
-            (0..256u128).filter(|&c| touches_every_corner(c, 3)).count(),
+            (0..256u128)
+                .filter(|&c| touches_every_corner(Code(c), 3))
+                .count(),
             128
         );
     }
@@ -368,7 +380,7 @@ mod theorems {
     #[test]
     fn the_net_falls_short_of_the_grid_corners() {
         for k in 1..21usize {
-            let cell = designs::create(232, 2 * k - 1, 1, 2).unwrap();
+            let cell = designs::create(Code(232), 2 * k - 1, 1, 2).unwrap();
             let m = k - 1;
             assert_eq!(vertices(&cell).unwrap(), 8 * m * m * (k + 2), "k={k}");
             assert_eq!(

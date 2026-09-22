@@ -1,6 +1,7 @@
 use figures::{ink, save, Board, Frame, Grid};
 use mrlyrs::core::error::Result;
 use mrlyrs::core::Color;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two::designs;
 
 const BOXES: usize = 3;
@@ -19,7 +20,7 @@ fn main() -> Result<()> {
     let area = board.frame(0.08);
     let tile = (area.w - 2.0 * GUTTER) / 3.0;
     let top = area.y + (area.h - tile) / 2.0;
-    let carpet = designs::create(495, 3, 3, 0, 3)?;
+    let carpet = designs::create(Code::from(495u128), 3, 3, 0, 3)?;
     let side = carpet.width();
     assert_eq!(side, 27);
 

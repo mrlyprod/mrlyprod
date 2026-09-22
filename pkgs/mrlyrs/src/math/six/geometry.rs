@@ -524,6 +524,7 @@ pub fn radial_crop(cell: &Cell2d, radius: usize, size: (usize, usize)) -> Result
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::math::bang::Code;
     use crate::math::three;
     #[test]
     fn blank_frames_both_orientations() {
@@ -635,7 +636,7 @@ mod tests {
     }
     #[test]
     fn the_sheet_keeps_the_tile_pointing_the_same_way() {
-        let hex = crate::math::six::cut_design(23, 3, 1, 2).unwrap();
+        let hex = crate::math::six::cut_design(Code(23), 3, 1, 2).unwrap();
         assert_eq!((hex.width(), hex.height()), (11, 6));
         for (wide, high) in [(5usize, 5usize), (3, 9)] {
             for crop in [false, true] {
@@ -683,7 +684,7 @@ mod tests {
     }
     #[test]
     fn the_sheet_lays_every_copy_on_the_triangle_lattice() {
-        let hex = crate::math::six::cut_design(23, 3, 1, 2).unwrap();
+        let hex = crate::math::six::cut_design(Code(23), 3, 1, 2).unwrap();
         let one = filled_corners(&hex);
         let (dx, dy, shift) = (9i64, 6i64, 3i64);
         for (wide, high) in [(5usize, 5usize), (3usize, 9usize)] {
@@ -701,7 +702,7 @@ mod tests {
     }
     #[test]
     fn the_crop_flips_the_start_parity_when_its_step_is_odd() {
-        let hex = crate::math::six::cut_design(23, 3, 1, 2).unwrap();
+        let hex = crate::math::six::cut_design(Code(23), 3, 1, 2).unwrap();
         let (step_x, step_y) = tile_step((hex.width(), hex.height())).unwrap();
         assert_eq!((step_x, step_y), (2, 3));
         let plain = tile_cell(&hex, 5, 5, false).unwrap();
@@ -727,7 +728,7 @@ mod tests {
     }
     #[test]
     fn skin_turns_the_iso_faces_into_one_figure() {
-        let iso = crate::math::six::iso_design(23, 3, 1, 2).unwrap();
+        let iso = crate::math::six::iso_design(Code(23), 3, 1, 2).unwrap();
         let bare = crate::math::six::census(&iso, false);
         assert_eq!((bare.fills, bare.voids), (0, 0));
         let painted = iso
@@ -743,12 +744,12 @@ mod tests {
         assert_eq!(read.triangles, painted);
         assert_eq!(read.grids, bare.grids);
         assert!(painted > 0);
-        let sliced = crate::math::six::cut_design(23, 3, 1, 2).unwrap();
+        let sliced = crate::math::six::cut_design(Code(23), 3, 1, 2).unwrap();
         assert_eq!(skin(&sliced).cell, sliced.cell);
     }
     #[test]
     fn framed_leaves_a_sheet_that_already_points_right_alone() {
-        let hex = crate::math::six::cut_design(23, 3, 1, 2).unwrap();
+        let hex = crate::math::six::cut_design(Code(23), 3, 1, 2).unwrap();
         let wide = tile_cell(&hex, 5, 5, false).unwrap();
         assert_eq!(framed(&wide).cell, wide.cell);
         let tall = tile_cell(&hex, 3, 9, false).unwrap();

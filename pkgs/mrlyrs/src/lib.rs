@@ -1,5 +1,6 @@
 #![doc = include_str!("../README.md")]
 #![deny(missing_docs)]
+#![forbid(unsafe_code)]
 
 /// The substrate: tensors, cells, colors, images, codecs, resampling and seeded chance.
 pub mod core;
@@ -13,6 +14,8 @@ pub mod life;
 pub mod math;
 /// The integers: primes, divisors, series, lattices, spectra and networks.
 pub mod num;
+
+pub use crate::core::error::{Error, Result};
 
 #[cfg(test)]
 mod tests {

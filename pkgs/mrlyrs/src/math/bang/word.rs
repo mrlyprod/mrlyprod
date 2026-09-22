@@ -1,3 +1,4 @@
+use super::code::Code;
 use super::factory::{self, MagicLayer};
 use crate::core::error::{value_error, Result};
 use crate::core::named_enum;
@@ -40,7 +41,7 @@ pub struct Counts {
 
 fn tile_of(layer: &MagicLayer) -> Result<Tensor> {
     factory::create(
-        layer.design.code,
+        Code::from(layer.design.code),
         layer.number,
         layer.design.dim,
         layer.design.base,

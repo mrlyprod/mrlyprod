@@ -1,6 +1,7 @@
 use figures::board::{Board, Frame};
 use figures::{hex, ink, save};
 use mrlyrs::core::error::Result;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::six;
 use mrlyrs::math::six::Cell6d;
 
@@ -33,7 +34,7 @@ fn main() -> Result<()> {
         if corners > 0 {
             assert_eq!(code & CODES[corners - 1], CODES[corners - 1]);
         }
-        let slice = six::cut_design(*code, SIDE, 1, 2)?;
+        let slice = six::cut_design(Code::from(*code), SIDE, 1, 2)?;
         let fills = six::fills(&slice);
         assert!(fills >= last);
         last = fills;
@@ -49,7 +50,10 @@ fn main() -> Result<()> {
         });
     }
     assert_eq!(hex::count(SIDE), 726);
-    assert_eq!(six::fills(&six::cut_design(CODES[8], SIDE, 1, 2)?), 726);
+    assert_eq!(
+        six::fills(&six::cut_design(Code::from(CODES[8]), SIDE, 1, 2)?),
+        726
+    );
     assert!(ink_total > 0);
     save("demo-spectrometer", &board)?;
     Ok(())

@@ -2,6 +2,7 @@ use figures::board::{Board, Frame};
 use figures::ink::Ramp;
 use figures::{field, ink, save};
 use mrlyrs::core::error::Result;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two;
 use std::f64::consts::TAU;
 
@@ -14,7 +15,7 @@ const FLOOR: f64 = 0.09;
 const REACH: f64 = 0.60;
 
 fn digits() -> Result<Vec<(usize, usize)>> {
-    let tile = two::designs::create(CODE, SIDE, 1, 0, SIDE)?;
+    let tile = two::designs::create(Code::from(CODE), SIDE, 1, 0, SIDE)?;
     let types = tile.types();
     Ok((0..SIDE)
         .flat_map(|a| (0..SIDE).map(move |b| (a, b)))

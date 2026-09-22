@@ -1,4 +1,4 @@
-use crate::core::error::{value_error, MrlyError, Result};
+use crate::core::error::{value_error, Error, Result};
 use crate::core::paint::{self as engine, Config as PaintConfig, Edition, Ink, Paint};
 use crate::core::rng::Rng;
 use crate::gen::build::{build_2d, create_2d, Config2d};
@@ -169,7 +169,7 @@ pub fn render(mut variation: Variation, scale: usize, rng: &mut Rng) -> Result<V
     let paint = variation
         .paint
         .clone()
-        .ok_or_else(|| MrlyError::Value("call generate before render.".into()))?;
+        .ok_or_else(|| Error::Value("call generate before render.".into()))?;
     let cover = variation.is_cover();
     let mut files = std::mem::take(&mut variation.files);
     for file in files.iter_mut() {

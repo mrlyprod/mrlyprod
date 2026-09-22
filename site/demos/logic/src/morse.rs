@@ -1,5 +1,6 @@
 use crate::{code_of, Fault, Grid};
 use mrlyrs::core::json;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two;
 use mrlyrs::num::morse::{self, Lift, LIFTS};
 use wasm_bindgen::prelude::*;
@@ -21,7 +22,7 @@ fn tile_of(code: &str, number: usize, base: usize) -> Result<Vec<u8>, Fault> {
     if number < 2 {
         return Err(Fault::new(format!("side {number} is below two.")));
     }
-    let cell = two::create(code_of(code)?, number, 1, 0, base)?;
+    let cell = two::create(Code::from(code_of(code)?), number, 1, 0, base)?;
     Ok(cell.types().bytes().to_vec())
 }
 
@@ -43,7 +44,7 @@ fn side_of(number: usize, level: usize) -> Result<usize, Fault> {
 
 fn design_of(tile: &[u8]) -> Option<String> {
     for code in 0..16u128 {
-        let cell = two::create(code, 2, 1, 0, 2).ok()?;
+        let cell = two::create(Code::from(code), 2, 1, 0, 2).ok()?;
         if signs_of(cell.types().bytes()) == tile {
             return Some(code.to_string());
         }
@@ -173,11 +174,11 @@ fn levels(code: &str, number: usize, base: usize, level: usize, fold: &str) -> R
     let tile = tile_of(code, number, base)?;
     let (coarse, fine) = match fold {
         "design" => (
-            two::create(code_of(code)?, number, level, 0, base)?
+            two::create(Code::from(code_of(code)?), number, level, 0, base)?
                 .types()
                 .bytes()
                 .to_vec(),
-            two::create(code_of(code)?, number, level + 1, 0, base)?
+            two::create(Code::from(code_of(code)?), number, level + 1, 0, base)?
                 .types()
                 .bytes()
                 .to_vec(),

@@ -1,5 +1,5 @@
 use crate::core::error::{value_error, Result};
-use crate::math::bang::code_to_corners;
+use crate::math::bang::{code_to_corners, Code};
 use crate::num::series::{CATALAN, EULER};
 
 /// The exact reading of a cut layer: how many cells were inked out of how many were read.
@@ -168,7 +168,7 @@ pub struct Star {
 impl Star {
     /// Reads the star of a base-2 space code, the carpet being `23`.
     pub fn new(code: u128) -> Result<Star> {
-        let filled = code_to_corners(code, 3, 2)?;
+        let filled = code_to_corners(Code::from(code), 3, 2)?;
         let mut corners = [false; 8];
         for corner in filled {
             corners[usize::from(corner[0]) << 2

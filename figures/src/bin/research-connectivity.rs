@@ -3,6 +3,7 @@ use figures::{ink, save, Grid};
 use mrlyrs::core::error::Result;
 use mrlyrs::core::Color;
 use mrlyrs::core::Rng;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two::designs;
 
 const SIDE: usize = 64;
@@ -44,7 +45,7 @@ fn main() -> Result<()> {
     let gap = rule * 4.0;
     let side = (lay.w - gap) / 2.0;
 
-    let cells = designs::create(7, 2, 6, 0, 2)?;
+    let cells = designs::create(Code::from(7u128), 2, 6, 0, 2)?;
     assert_eq!(cells.width(), SIDE);
     let types = cells.types();
     let gasket: Vec<bool> = (0..SIDE * SIDE).map(|flat| types.at(flat) != 0).collect();

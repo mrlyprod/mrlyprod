@@ -75,7 +75,7 @@ pub struct Row {
 
 fn rendered(code: Code, number: usize, dimension: usize, base: usize) -> u128 {
     let tile = render(
-        |r| code >> cell_index(r, base) & 1 == 1,
+        |r| code.get() >> cell_index(r, base) & 1 == 1,
         number,
         dimension,
         base,
@@ -95,7 +95,9 @@ fn live_degree(cells: &[Vec<u8>], live: impl Fn(usize) -> bool) -> i64 {
 }
 
 fn mobius_degree(code: Code, cells: &[Vec<u8>], dimension: usize, base: usize) -> i64 {
-    let mut coeff: Vec<i64> = (0..cells.len()).map(|i| (code >> i & 1) as i64).collect();
+    let mut coeff: Vec<i64> = (0..cells.len())
+        .map(|i| (code.get() >> i & 1) as i64)
+        .collect();
     for axis in 0..dimension {
         for value in (1..base as u8).rev() {
             for (index, cell) in cells.iter().enumerate() {
@@ -151,7 +153,9 @@ fn inverse_vandermonde(q: usize) -> Vec<Vec<i64>> {
 
 fn gfq_degree(code: Code, cells: &[Vec<u8>], dimension: usize, q: usize) -> i64 {
     let inverse = inverse_vandermonde(q);
-    let mut coeff: Vec<i64> = (0..cells.len()).map(|i| (code >> i & 1) as i64).collect();
+    let mut coeff: Vec<i64> = (0..cells.len())
+        .map(|i| (code.get() >> i & 1) as i64)
+        .collect();
     for axis in 0..dimension {
         let mut next = vec![0i64; cells.len()];
         for cell in cells.iter().filter(|cell| cell[axis] == 0) {
@@ -212,7 +216,7 @@ fn row(base: usize, dimension: usize, code: Code, orbit: usize, label: String) -
         code,
         label,
         orbit,
-        popcount: code.count_ones(),
+        popcount: code.get().count_ones(),
         gf2: (base == 2).then(|| universe::degree(code, dimension)),
         gfq: gfq_degree(code, &cells, dimension, base),
         mobius: mobius_degree(code, &cells, dimension, base),

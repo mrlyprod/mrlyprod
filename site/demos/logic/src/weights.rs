@@ -1,4 +1,5 @@
 use crate::{checked, rgba, theme, Fault, Pixels};
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two;
 use wasm_bindgen::prelude::*;
 
@@ -19,7 +20,7 @@ fn corners_of(code: &str, number: usize, base: usize) -> Result<Vec<(usize, usiz
     if number < 2 {
         return Err(Fault::new("the side must be at least two."));
     }
-    let tile = two::create(checked(code, 2, base)?, number, 1, 0, base)?;
+    let tile = two::create(Code::from(checked(code, 2, base)?), number, 1, 0, base)?;
     let types = tile.types().bytes().to_vec();
     let corners: Vec<(usize, usize)> = (0..number * number)
         .filter(|&at| types[at] != 0)

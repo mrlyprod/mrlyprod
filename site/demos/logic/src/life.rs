@@ -3,6 +3,7 @@
 use crate::{code_of, Fault, Grid};
 use mrlyrs::core::{json, Rng, Tensor};
 use mrlyrs::life::{self, Boundary, Config, Source};
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two::Cell2d;
 use wasm_bindgen::prelude::*;
 
@@ -107,7 +108,7 @@ fn mask_grid(mask: &[u8], width: usize, height: usize) -> Result<Tensor, Fault> 
 /// Builds the base-2 design mask a code names at an odd side grown to the given Kronecker level, its centre popped; dimension 1 gives a grid of height one.
 #[wasm_bindgen]
 pub fn life_mask(dimension: usize, code: &str, number: usize, level: usize) -> Result<Grid, Fault> {
-    let mask = life::design_mask(dimension, code_of(code)?, number, level)?;
+    let mask = life::design_mask(dimension, Code::from(code_of(code)?), number, level)?;
     let width = *mask.shape.last().expect("a mask carries a shape");
     Ok(Grid {
         width: width as u32,

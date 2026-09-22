@@ -1,5 +1,6 @@
 use figures::{ink, save, Board};
 use mrlyrs::core::error::Result;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two;
 use mrlyrs::num::spiral::{snail, Growth};
 
@@ -41,7 +42,7 @@ fn main() -> Result<()> {
     for level in 0..shell.levels.len() {
         art.push(match level {
             0 => None,
-            _ => Some(two::create(CODE, BASE as usize, level, 0, 2)?),
+            _ => Some(two::create(Code::from(CODE), BASE as usize, level, 0, 2)?),
         });
     }
     let mut drawn = 0usize;

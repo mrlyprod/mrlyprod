@@ -1,5 +1,6 @@
 use crate::{code_of, Fault};
 use mrlyrs::core::json;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::counts::{self, six as hexagon};
 use mrlyrs::math::graph::{self, census, roles, Layout as Relax, Network, Role};
 use mrlyrs::math::{six, three, two};
@@ -59,9 +60,9 @@ fn bound(
         });
     }
     Ok(match kind {
-        "core" => counts::fill(code, number, dim, level, base)?,
-        "tunnel" => counts::void(code, number, dim, level, base)?,
-        _ => counts::fill(code, number, dim, level, base)? << dim,
+        "core" => counts::fill(Code::from(code), number, dim, level, base)?,
+        "tunnel" => counts::void(Code::from(code), number, dim, level, base)?,
+        _ => counts::fill(Code::from(code), number, dim, level, base)? << dim,
     })
 }
 
@@ -116,7 +117,7 @@ fn network(
     let code = code_of(code)?;
     match space {
         "flat" => {
-            let cell = two::create(code, number, level, 0, base)?;
+            let cell = two::create(Code::from(code), number, level, 0, base)?;
             let net = match kind {
                 "core" => two::core_graph(&cell)?,
                 "edge" => two::edge_graph(&cell)?,
@@ -125,7 +126,7 @@ fn network(
             Ok((net, Some(two::census(&cell)?.euler)))
         }
         "cube" => {
-            let cell = three::create(code, number, level, base)?;
+            let cell = three::create(Code::from(code), number, level, base)?;
             let net = match kind {
                 "core" => three::core_graph(&cell)?,
                 "edge" => three::edge_graph(&cell)?,
@@ -134,7 +135,7 @@ fn network(
             Ok((net, Some(three::census(&cell)?.euler)))
         }
         _ => {
-            let cell = six::cut(&three::create(code, number, level, base)?)?;
+            let cell = six::cut(&three::create(Code::from(code), number, level, base)?)?;
             let mut net = match kind {
                 "core" => six::graph::slice_core_graph(&cell)?,
                 "dual" => six::graph::slice_dual_graph(&cell)?,

@@ -2,6 +2,7 @@ use figures::{ink, save, Board, Grid};
 use mrlyrs::core::error::Result;
 use mrlyrs::core::Color;
 use mrlyrs::math::bang::factory;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::shape::crossing_tree;
 
 const RADIUS: u64 = 242;
@@ -19,7 +20,7 @@ fn outline(board: &mut Board, grid: &Grid, x: u64, y: u64, step: usize, thick: f
 }
 
 fn main() -> Result<()> {
-    let tile = factory::create(7, 3, 2, 2, 1)?;
+    let tile = factory::create(Code::from(7u128), 3, 2, 2, 1)?;
     let keep: Vec<bool> = tile.bytes().iter().map(|&byte| byte != 0).collect();
     let tree = crossing_tree(RADIUS, 3, &keep);
     assert_eq!(tree.orphans, 0);
@@ -32,7 +33,7 @@ fn main() -> Result<()> {
     }
     assert_eq!(tree.levels[0].len(), 485);
 
-    let design = factory::create(7, 3, 2, 2, LEVEL)?;
+    let design = factory::create(Code::from(7u128), 3, 2, 2, LEVEL)?;
     assert_eq!(design.shape, vec![SIDE, SIDE]);
     assert_eq!(design.sum(), 32768);
 

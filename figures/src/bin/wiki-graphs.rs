@@ -1,5 +1,6 @@
 use figures::{ink, save, Board};
 use mrlyrs::core::error::Result;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::graph::{census, roles, Role};
 use mrlyrs::math::two::core_graph;
 use mrlyrs::math::two::designs;
@@ -8,7 +9,7 @@ const LEVEL: usize = 3;
 const SIDE: f64 = 8.0;
 
 fn main() -> Result<()> {
-    let cell = designs::create(7, 2, LEVEL, 0, 2)?;
+    let cell = designs::create(Code::from(7u128), 2, LEVEL, 0, 2)?;
     let network = core_graph(&cell)?;
     let tally = census(&network);
     let tags = roles(&network);

@@ -1,5 +1,6 @@
 use figures::{ink, save, Board, Frame, Grid};
 use mrlyrs::core::error::Result;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two::designs;
 
 const CODE: u128 = 7;
@@ -32,7 +33,7 @@ fn main() -> Result<()> {
         }
     }
     assert_eq!(lit, CODE.count_ones());
-    let carpet = designs::create(CODE, 3, 3, 0, 2)?;
+    let carpet = designs::create(Code::from(CODE), 3, 3, 0, 2)?;
     assert_eq!(carpet.types().sum(), 512);
     let under = board.height as f64 - TOP - WIDE;
     Grid::new(Frame::new(left, under, WIDE, WIDE), SIDE, SIDE, 0.0).paint(

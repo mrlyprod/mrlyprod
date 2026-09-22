@@ -1,6 +1,7 @@
 use figures::{ink, iso, save, Board};
 use mrlyrs::core::error::Result;
 use mrlyrs::core::tensor::Tensor;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::three::Cell3d;
 use mrlyrs::math::two::designs;
 
@@ -18,8 +19,8 @@ fn main() -> Result<()> {
     let wide = (PILES - 1) * APART + SIDE;
     let mut sheets = Vec::new();
     for code in CODES {
-        let sheet = designs::create(code, 3, 2, 0, 2)?;
-        let seed = designs::create(code, 3, 1, 0, 2)?;
+        let sheet = designs::create(Code::from(code), 3, 2, 0, 2)?;
+        let seed = designs::create(Code::from(code), 3, 1, 0, 2)?;
         assert_eq!(sheet.types().shape, vec![SIDE, SIDE]);
         assert_eq!(sheet.types().sum(), seed.types().sum().pow(2));
         sheets.push((sheet.types().sum(), sheet));

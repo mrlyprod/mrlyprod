@@ -2,6 +2,7 @@ use figures::board::{Board, Frame};
 use figures::{hex, ink, save};
 use mrlyrs::core::error::Result;
 use mrlyrs::core::Color;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::six;
 use mrlyrs::math::six::Cell6d;
 
@@ -69,7 +70,7 @@ fn hexagon(
 }
 
 fn main() -> Result<()> {
-    let slice = six::cut_design(105, SIDE, 1, 2)?;
+    let slice = six::cut_design(Code::from(105u128), SIDE, 1, 2)?;
     assert_eq!(hex::count(SIDE), 294);
     assert_eq!(six::fills(&slice), 72);
 

@@ -91,6 +91,7 @@ pub fn raster(cell: &Cell6d, size: usize) -> Result<Vec<f32>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::math::bang::Code;
     use crate::math::six::{census, cut_design};
 
     fn fraction(cell: &Cell6d, size: usize) -> f64 {
@@ -108,7 +109,7 @@ mod tests {
 
     #[test]
     fn the_solid_cut_fills_its_hexagon() {
-        let cell = cut_design(255, 3, 1, 2).unwrap();
+        let cell = cut_design(Code(255), 3, 1, 2).unwrap();
         let expect = hexagon_share(&cell);
         assert!((fraction(&cell, 400) - expect).abs() < 0.01, "{expect}");
         let centre = raster(&cell, 101).unwrap()[50 * 101 + 50];
@@ -117,7 +118,7 @@ mod tests {
 
     #[test]
     fn the_carpet_cut_is_pierced_at_the_centre() {
-        let cell = cut_design(23, 3, 1, 2).unwrap();
+        let cell = cut_design(Code(23), 3, 1, 2).unwrap();
         let expect = hexagon_share(&cell);
         assert!((fraction(&cell, 400) - expect).abs() < 0.01, "{expect}");
         let centre = raster(&cell, 101).unwrap()[50 * 101 + 50];
@@ -126,6 +127,6 @@ mod tests {
 
     #[test]
     fn an_empty_size_is_refused() {
-        assert!(raster(&cut_design(23, 3, 1, 2).unwrap(), 0).is_err());
+        assert!(raster(&cut_design(Code(23), 3, 1, 2).unwrap(), 0).is_err());
     }
 }

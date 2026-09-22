@@ -1,5 +1,6 @@
 use crate::{checked, code_of, Fault};
 use mrlyrs::core::{json, Json, Rng};
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::bang::{self, baseq, code_to_corners};
 use mrlyrs::math::counts;
 use mrlyrs::math::name::{Bang, Named};
@@ -20,7 +21,7 @@ fn draw(rng: &mut Rng, dimension: usize, base: usize) -> Result<u128, Fault> {
         .ok_or_else(|| Fault::new("too many corners to draw a code."))?;
     loop {
         let code = (0..cells).fold(0u128, |code, bit| code | (u128::from(rng.boolean()) << bit));
-        if code.count_ones() >= 2 && code_to_corners(code, dimension, base).is_ok() {
+        if code.count_ones() >= 2 && code_to_corners(Code::from(code), dimension, base).is_ok() {
             return Ok(code);
         }
     }
@@ -85,7 +86,7 @@ pub fn fills(
     level: u32,
     base: usize,
 ) -> Result<String, Fault> {
-    Ok(counts::fill(code_of(code)?, number, dimension, level, base)?.to_string())
+    Ok(counts::fill(Code::from(code_of(code)?), number, dimension, level, base)?.to_string())
 }
 
 /// Counts the empty sites of the code's fractal at the level in closed form, as a decimal string.
@@ -97,7 +98,7 @@ pub fn voids(
     level: u32,
     base: usize,
 ) -> Result<String, Fault> {
-    Ok(counts::void(code_of(code)?, number, dimension, level, base)?.to_string())
+    Ok(counts::void(Code::from(code_of(code)?), number, dimension, level, base)?.to_string())
 }
 
 /// Returns the filled fraction of the code's fractal at the level.
@@ -110,7 +111,7 @@ pub fn ratio(
     base: usize,
 ) -> Result<f64, Fault> {
     Ok(counts::ratio(
-        code_of(code)?,
+        Code::from(code_of(code)?),
         number,
         dimension,
         level,
@@ -127,7 +128,7 @@ pub fn dimension(
     base: usize,
 ) -> Result<f64, Fault> {
     Ok(counts::dimension(
-        code_of(code)?,
+        Code::from(code_of(code)?),
         number,
         base_dimension,
         base,
@@ -207,7 +208,7 @@ pub fn fill_cap(
 ) -> Result<usize, Fault> {
     let code = checked(code, dimension, base)?;
     let fits = |level: u32| {
-        counts::fill(code, number, dimension, level, base)
+        counts::fill(Code::from(code), number, dimension, level, base)
             .is_ok_and(|count| count <= budget as u128)
     };
     let mut level = 1;

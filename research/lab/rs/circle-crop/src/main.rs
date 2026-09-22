@@ -3,6 +3,7 @@ mod transfer;
 
 use mrlyrs::core::Tensor;
 use mrlyrs::math::bang::factory::create;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::shape::{census, named, Frac, Shape};
 
 // ROOTS
@@ -29,8 +30,8 @@ fn bucket(quad: u64) -> u64 {
 
 fn design(dimension: usize, level: usize) -> Tensor {
     match dimension {
-        2 => create(7, 3, 2, 2, level).unwrap(),
-        _ => create(23, 3, 3, 2, level).unwrap(),
+        2 => create(Code::from(7u128), 3, 2, 2, level).unwrap(),
+        _ => create(Code::from(23u128), 3, 3, 2, level).unwrap(),
     }
 }
 

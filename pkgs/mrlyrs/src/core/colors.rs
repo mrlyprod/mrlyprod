@@ -1,4 +1,4 @@
-use super::error::{value_error, MrlyError, Result};
+use super::error::{value_error, Error, Result};
 use super::rng::Rng;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -263,9 +263,9 @@ impl Color {
         let byte = |i: usize| -> Result<u8> {
             let pair = code
                 .get(i..i + 2)
-                .ok_or_else(|| MrlyError::Value(format!("invalid hex code {hex:?}.")))?;
+                .ok_or_else(|| Error::Value(format!("invalid hex code {hex:?}.")))?;
             u8::from_str_radix(pair, 16)
-                .map_err(|_| MrlyError::Value(format!("invalid hex code {hex:?}.")))
+                .map_err(|_| Error::Value(format!("invalid hex code {hex:?}.")))
         };
         if !code.is_ascii() {
             return value_error("Hex code must be in format #RRGGBB or #RRGGBBAA");

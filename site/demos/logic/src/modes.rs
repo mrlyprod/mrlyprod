@@ -1,4 +1,5 @@
 use crate::{checked, Fault};
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two;
 use std::f64::consts::TAU;
 use wasm_bindgen::prelude::*;
@@ -31,7 +32,7 @@ impl Mask {
                     "side {number} at level {level} passes the {REACH} sites a side the torus allows."
                 ))
             })?;
-        let tile = two::create(checked(code, 2, base)?, number, 1, 0, base)?;
+        let tile = two::create(Code::from(checked(code, 2, base)?), number, 1, 0, base)?;
         let types = tile.types().bytes().to_vec();
         let digits: Vec<(usize, usize)> = (0..number * number)
             .filter(|&at| types[at] != 0)

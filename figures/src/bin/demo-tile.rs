@@ -1,5 +1,6 @@
 use figures::{ink, save, Board, Grid};
 use mrlyrs::core::error::Result;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two;
 use mrlyrs::math::two::census;
 
@@ -14,7 +15,7 @@ const SIDE: usize = 45;
 fn main() -> Result<()> {
     let mut board = Board::square();
     let frame = board.frame(0.08);
-    let tile = two::create(CODE, NUMBER, LEVEL, 0, BASE)?;
+    let tile = two::create(Code::from(CODE), NUMBER, LEVEL, 0, BASE)?;
     assert_eq!((tile.width(), census::fills(&tile)), (TILE, 64));
     assert_eq!(census::perimeter(&tile), 80);
     let sheet = tile.tile(COPIES, COPIES);

@@ -1,4 +1,4 @@
-use crate::core::error::{value_error, MrlyError, Result};
+use crate::core::error::{value_error, Error, Result};
 use crate::gen::recipe::{Design, Group, Source, Tile as Recipe};
 use crate::math::name::{kind, Named};
 use serde::{Deserialize, Serialize};
@@ -320,7 +320,7 @@ impl Tile {
         recipe.resize();
         recipe
             .check()
-            .map_err(|note| MrlyError::Value(format!("tile fails its check: {note}.")))?;
+            .map_err(|note| Error::Value(format!("tile fails its check: {note}.")))?;
         Ok(recipe)
     }
 }
@@ -339,6 +339,7 @@ mod tests {
     use crate::core::rng::Rng;
     use crate::gen::build::{build_2d, create_2d, Config2d};
     use crate::gen::recipe::{Catalog, Parity};
+    use crate::math::bang::Code;
     use crate::math::two::designs;
 
     const CARPET: &str = r#"{"kind":"tile","code":7,"side":3,"level":2}"#;
@@ -364,7 +365,7 @@ mod tests {
     #[test]
     fn classic_codes_match_their_renders() {
         for (design, code) in CODES_2D {
-            let by_name = designs::create(code, 3, 1, 0, 2).unwrap();
+            let by_name = designs::create(Code::from(code), 3, 1, 0, 2).unwrap();
             let by_classic = match design {
                 Design::Carpet => designs::carpet(3, 1).unwrap(),
                 Design::Net => designs::net(3, 1).unwrap(),

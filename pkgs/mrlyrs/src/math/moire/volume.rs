@@ -224,7 +224,7 @@ mod tests {
     use crate::math::bang::corners_to_code;
 
     fn low() -> Spec {
-        Spec::new(corners_to_code(&[vec![0, 0, 0]], 3, 2), 2, 3)
+        Spec::new(corners_to_code(&[vec![0, 0, 0]], 3, 2).get(), 2, 3)
     }
 
     #[test]

@@ -1,5 +1,5 @@
 use super::models::dtype_for;
-use crate::core::error::{value_error, MrlyError, Result};
+use crate::core::error::{value_error, Error, Result};
 use crate::core::tensor::Tensor;
 use crate::core::Json;
 use serde::Deserialize;
@@ -12,7 +12,7 @@ pub fn parse(text: &str) -> Result<Json> {
 /// Returns the types field of the data, or an error when it is missing.
 pub fn types_field(data: &Json) -> Result<&Json> {
     data.get("types")
-        .ok_or_else(|| MrlyError::Value("missing types.".to_string()))
+        .ok_or_else(|| Error::Value("missing types.".to_string()))
 }
 
 /// Reads a nested JSON array into rows of bytes.

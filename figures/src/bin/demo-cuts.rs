@@ -1,6 +1,7 @@
 use figures::board::{Board, Frame};
 use figures::{ink, plot, save};
 use mrlyrs::core::error::Result;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::three;
 
 const CODE: u128 = 126;
@@ -29,7 +30,7 @@ fn panels(frame: Frame, gap: f64) -> Vec<Frame> {
 }
 
 fn main() -> Result<()> {
-    let counts = three::profile(CODE, 2, LEVEL, 2)?;
+    let counts = three::profile(Code::from(CODE), 2, LEVEL, 2)?;
     let (low, high) = three::support(&counts).expect("the design fills some height");
     let cells = 3usize.pow(LEVEL as u32);
     assert_eq!((low, high), (15, 30));
@@ -37,7 +38,7 @@ fn main() -> Result<()> {
     let mut cuts = Vec::new();
     for (height, count) in counts.iter().enumerate().take(high + 1).skip(low) {
         assert_eq!(*count, cells as u128);
-        let points = three::diagonal_slice(CODE, 2, LEVEL, 2, height)?;
+        let points = three::diagonal_slice(Code::from(CODE), 2, LEVEL, 2, height)?;
         assert_eq!(points.len(), cells);
         cuts.push(
             points

@@ -1,5 +1,6 @@
 use crate::{code_of, Fault, Grid, Pixels};
 use mrlyrs::core::{json, Colorizer};
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::moire::{presets, render, Field};
 use mrlyrs::math::six;
 use mrlyrs::math::spin;
@@ -20,7 +21,7 @@ fn slice_raster(
     base: usize,
     size: usize,
 ) -> Result<Vec<f32>, Fault> {
-    let cell = six::cut_design(code_of(code)?, number, level, base)?;
+    let cell = six::cut_design(Code::from(code_of(code)?), number, level, base)?;
     Ok(six::raster(&cell, size)?)
 }
 

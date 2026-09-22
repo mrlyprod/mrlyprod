@@ -29,7 +29,8 @@ fn histogram(tile: &Tensor) -> BTreeMap<usize, u128> {
 /// weight sums, so no cell of the power is ever built; the tile must be a hypercube.
 ///
 /// ```
-/// let gasket = mrlyrs::math::bang::factory::create(126, 2, 3, 2, 1).unwrap();
+/// use mrlyrs::math::bang::Code;
+/// let gasket = mrlyrs::math::bang::factory::create(Code::from(126u64), 2, 3, 2, 1).unwrap();
 /// let counts = mrlyrs::math::counts::profile_of_tile(&gasket, 4).unwrap();
 /// assert_eq!(counts[15..=30].iter().copied().collect::<Vec<u128>>(), vec![81u128; 16]);
 /// ```
@@ -77,10 +78,10 @@ pub fn profile_of_tile(tile: &Tensor, level: u32) -> Result<Vec<u128>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::bang::factory;
+    use crate::math::bang::{factory, Code};
     #[test]
     fn the_profile_sums_to_the_fill_and_matches_a_rendered_count() {
-        for code in [7u128, 9, 11] {
+        for code in [Code(7), Code(9), Code(11)] {
             let tile = factory::create(code, 3, 2, 2, 1).unwrap();
             let counts = profile_of_tile(&tile, 3).unwrap();
             let rendered = factory::create(code, 3, 2, 2, 3).unwrap();
@@ -93,7 +94,7 @@ mod tests {
             }
             assert_eq!(counts, direct, "code={code}");
         }
-        let tile = factory::create(23, 3, 3, 2, 1).unwrap();
+        let tile = factory::create(Code(23), 3, 3, 2, 1).unwrap();
         assert_eq!(profile_of_tile(&tile, 1).unwrap(), [1, 3, 3, 6, 3, 3, 1]);
         assert!(profile_of_tile(&tile, 0).is_err());
         assert!(profile_of_tile(&crate::math::atoms::ones_3d(2), 20).is_err());

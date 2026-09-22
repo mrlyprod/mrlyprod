@@ -1,7 +1,7 @@
 use crate::core::error::{value_error, Result};
 use crate::core::tensor::Tensor;
 use crate::math::bang::factory;
-use crate::math::bang::universe::Code;
+use crate::math::bang::Code;
 use crate::math::counts::counting::{fill_from_corners, positions};
 use std::collections::HashSet;
 
@@ -161,7 +161,8 @@ impl Exposure {
 /// Returns the exposed face count of the tile's level-fold Kronecker power in closed form, or none past a u128.
 ///
 /// ```
-/// let carpet = mrlyrs::math::bang::factory::create(7, 3, 2, 2, 1).unwrap();
+/// use mrlyrs::math::bang::Code;
+/// let carpet = mrlyrs::math::bang::factory::create(Code::from(7u64), 3, 2, 2, 1).unwrap();
 /// let perimeter: Vec<u128> = (1..5).map(|level| mrlyrs::math::counts::exposure_of_tile(&carpet, level).unwrap()).collect();
 /// assert_eq!(perimeter, [16, 80, 496, 3536]);
 /// ```
@@ -172,7 +173,8 @@ pub fn exposure_of_tile(tile: &Tensor, level: u32) -> Option<u128> {
 /// Returns the coefficients of the recurrence the tile's exposure obeys.
 ///
 /// ```
-/// let sponge = mrlyrs::math::bang::factory::create(23, 3, 3, 2, 1).unwrap();
+/// use mrlyrs::math::bang::Code;
+/// let sponge = mrlyrs::math::bang::factory::create(Code::from(23u64), 3, 3, 2, 1).unwrap();
 /// assert_eq!(mrlyrs::math::counts::exposure_recurrence(&sponge), [28, -160]);
 /// ```
 pub fn exposure_recurrence(tile: &Tensor) -> Vec<i128> {
@@ -205,7 +207,8 @@ mod tests {
     use crate::math::atoms;
     #[test]
     fn prediction_matches_census_on_every_cube_code() {
-        for code in 0..256u128 {
+        for bits in 0..256u128 {
+            let code = Code(bits);
             for level in 1..4u32 {
                 let direct = factory::create(code, 3, 3, 2, level as usize).unwrap();
                 assert_eq!(
@@ -218,7 +221,8 @@ mod tests {
     }
     #[test]
     fn prediction_matches_census_in_the_plane_and_beyond() {
-        for code in 0..16u128 {
+        for bits in 0..16u128 {
+            let code = Code(bits);
             for number in [2usize, 3, 4, 5] {
                 for level in 1..4u32 {
                     let direct = factory::create(code, number, 2, 2, level as usize).unwrap();
@@ -230,20 +234,28 @@ mod tests {
                 }
             }
         }
-        for code in [1u128, 23, 255, 4369, 65535, 32767] {
+        for code in [
+            Code(1),
+            Code(23),
+            Code(255),
+            Code(4369),
+            Code(65535),
+            Code(32767),
+        ] {
             for level in 1..3u32 {
                 let direct = factory::create(code, 3, 4, 2, level as usize).unwrap();
                 assert_eq!(exposure(code, 3, 4, level, 2).unwrap(), direct.exposed());
             }
         }
-        for code in [7u128, 100, 511] {
+        for code in [Code(7), Code(100), Code(511)] {
             let direct = factory::create(code, 3, 2, 3, 3).unwrap();
             assert_eq!(exposure(code, 3, 2, 3, 3).unwrap(), direct.exposed());
         }
     }
     #[test]
     fn the_recurrence_holds_on_every_cube_code() {
-        for code in 0..256u128 {
+        for bits in 0..256u128 {
+            let code = Code(bits);
             let tile = factory::create(code, 3, 3, 2, 1).unwrap();
             let rule = exposure_recurrence(&tile);
             let terms: Vec<i128> = (1..8u32)
@@ -261,7 +273,8 @@ mod tests {
     }
     #[test]
     fn the_corners_fold_what_the_tile_shows() {
-        for code in 0..256u128 {
+        for bits in 0..256u128 {
+            let code = Code(bits);
             for number in [1usize, 2, 3, 4, 5, 7] {
                 let filled = factory::code_to_corners(code, 3, 2).unwrap();
                 let tile = factory::create(code, number, 3, 2, 1).unwrap();
@@ -273,13 +286,13 @@ mod tests {
             }
         }
         for (code, dimension, base) in [
-            (7u128, 2usize, 3usize),
-            (100, 2, 3),
-            (511, 2, 3),
-            (4369, 4, 2),
-            (32767, 4, 2),
-            (1, 1, 2),
-            (2, 1, 3),
+            (Code(7), 2usize, 3usize),
+            (Code(100), 2, 3),
+            (Code(511), 2, 3),
+            (Code(4369), 4, 2),
+            (Code(32767), 4, 2),
+            (Code(1), 1, 2),
+            (Code(2), 1, 3),
         ] {
             for number in [2usize, 3, 4, 5, 6, 9] {
                 let filled = factory::code_to_corners(code, dimension, base).unwrap();
@@ -294,16 +307,20 @@ mod tests {
     }
     #[test]
     fn the_classics_close() {
-        let sponge: Vec<u128> = (1..4).map(|l| surface(23, 3, l, 2).unwrap()).collect();
+        let sponge: Vec<u128> = (1..4)
+            .map(|l| surface(Code(23), 3, l, 2).unwrap())
+            .collect();
         assert_eq!(sponge, [72, 1056, 18048]);
-        let carpet: Vec<u128> = (1..5).map(|l| exposure(7, 3, 2, l, 2).unwrap()).collect();
+        let carpet: Vec<u128> = (1..5)
+            .map(|l| exposure(Code(7), 3, 2, l, 2).unwrap())
+            .collect();
         assert_eq!(carpet, [16, 80, 496, 3536]);
         assert_eq!(
-            exposure_recurrence(&factory::create(7, 3, 2, 2, 1).unwrap()),
+            exposure_recurrence(&factory::create(Code(7), 3, 2, 2, 1).unwrap()),
             [11, -24]
         );
         assert_eq!(exposure_of_tile(&atoms::ones_3d(2), 3), Some(384));
         assert_eq!(exposure_of_tile(&atoms::ones_3d(1), 5), Some(6));
-        assert!(exposure(23, 3, 3, 120, 2).is_err());
+        assert!(exposure(Code(23), 3, 3, 120, 2).is_err());
     }
 }

@@ -1,5 +1,6 @@
 use crate::{code_of, Fault, Grid};
 use mrlyrs::core::json;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two::{self, Cell2d};
 use wasm_bindgen::prelude::*;
 
@@ -10,7 +11,13 @@ fn cell(
     rotation: usize,
     base: usize,
 ) -> Result<Cell2d, Fault> {
-    Ok(two::create(code_of(code)?, number, level, rotation, base)?)
+    Ok(two::create(
+        Code::from(code_of(code)?),
+        number,
+        level,
+        rotation,
+        base,
+    )?)
 }
 
 /// Builds the flat design the code names as a byte grid, one byte per site.

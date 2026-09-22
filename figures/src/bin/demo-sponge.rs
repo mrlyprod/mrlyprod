@@ -1,6 +1,7 @@
 use figures::{ink, iso, save, Board, Color, Frame};
 use mrlyrs::core::colors::{shades, GREEN};
 use mrlyrs::core::error::Result;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::three::designs;
 
 const CODE: u128 = 127;
@@ -22,8 +23,8 @@ fn corner(frame: Frame, size: f64, right: bool) -> Frame {
 }
 
 fn main() -> Result<()> {
-    let seed = designs::create(CODE, NUMBER, 1, 2)?;
-    let solid = designs::create(CODE, NUMBER, LEVEL, 2)?;
+    let seed = designs::create(Code::from(CODE), NUMBER, 1, 2)?;
+    let solid = designs::create(Code::from(CODE), NUMBER, LEVEL, 2)?;
     assert_eq!(seed.types().sum(), 7);
     assert_eq!(solid.types().sum(), 7u64.pow(LEVEL as u32));
     assert_eq!(solid.types().shape, vec![16, 16, 16]);

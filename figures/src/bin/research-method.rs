@@ -1,6 +1,7 @@
 use figures::{ink, iso, save, Board, Color};
 use mrlyrs::core::error::Result;
 use mrlyrs::math::bang::bang;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::three::designs;
 use mrlyrs::math::three::faces::quads;
 use mrlyrs::math::three::Cell3d;
@@ -72,7 +73,7 @@ fn main() -> Result<()> {
     let frame = board.frame(0.08);
     let mut rows: Vec<Vec<u128>> = vec![Vec::new(); ROWS];
     for design in bang(3).canonical() {
-        rows[design.i.count_ones() as usize].push(design.i);
+        rows[design.i.get().count_ones() as usize].push(design.i.get());
     }
     assert_eq!(
         rows.iter().map(|r| r.len()).collect::<Vec<usize>>(),
@@ -100,7 +101,7 @@ fn main() -> Result<()> {
                     ink::mix(ink::line(), ink::dim(), 0.3),
                 );
             }
-            let cube = designs::create(*code, 2, 1, 2)?;
+            let cube = designs::create(Code::from(*code), 2, 1, 2)?;
             assert_eq!(cube.types().sum(), r as u64);
             stamp(&mut board, &cube, cx, cy, s, shade);
         }

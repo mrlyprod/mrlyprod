@@ -1,5 +1,6 @@
 use figures::{ink, save, Board, Frame, Grid};
 use mrlyrs::core::error::Result;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two::designs;
 
 const CODES: [u128; 7] = [7, 14, 3, 5, 9, 6, 15];
@@ -38,7 +39,7 @@ fn main() -> Result<()> {
     }
     let mut cells = 0u64;
     for (index, code) in CODES.iter().enumerate() {
-        let design = designs::create(*code, 3, 2, 0, 2)?;
+        let design = designs::create(Code::from(*code), 3, 2, 0, 2)?;
         assert_eq!(design.width(), SIDE);
         let tone = if index == 0 {
             ink::yellow()

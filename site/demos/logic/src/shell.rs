@@ -2,6 +2,7 @@ use crate::{code_of, rgba, theme, Fault, Pixels};
 use mrlyrs::core::json;
 use mrlyrs::core::tensor::Tensor;
 use mrlyrs::math::bang::factory;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::shape::{crossing_tree, Shell};
 use wasm_bindgen::prelude::*;
 
@@ -19,7 +20,7 @@ fn guarded(code: &str, number: usize, base: usize, radius: u32) -> Result<(Shell
             "the radius must be between 1 and {RADIUS_CAP} cells."
         )));
     }
-    let tile = factory::create(code_of(code)?, number, 2, base, 1)?;
+    let tile = factory::create(Code::from(code_of(code)?), number, 2, base, 1)?;
     let keep: Vec<bool> = tile.bytes().iter().map(|&b| b != 0).collect();
     let tree = crossing_tree(radius as u64, number as u64, &keep);
     let depth = tree.levels.len() - 1;
@@ -27,7 +28,13 @@ fn guarded(code: &str, number: usize, base: usize, radius: u32) -> Result<(Shell
 }
 
 fn body(code: &str, number: usize, base: usize, depth: usize) -> Result<Tensor, Fault> {
-    Ok(factory::create(code_of(code)?, number, 2, base, depth)?)
+    Ok(factory::create(
+        Code::from(code_of(code)?),
+        number,
+        2,
+        base,
+        depth,
+    )?)
 }
 
 fn seated(

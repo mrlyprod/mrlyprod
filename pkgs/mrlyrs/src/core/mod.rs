@@ -25,7 +25,7 @@ pub mod tensor;
 pub use cell::{Cell, Mode};
 pub use codec::{gif, png, unpng, PNG_MAGIC};
 pub use colors::Color;
-pub use error::{MrlyError, Result};
+pub use error::{Error, Result};
 pub use image::Image;
 pub(crate) use named::named_enum;
 pub use ramp::Colorizer;

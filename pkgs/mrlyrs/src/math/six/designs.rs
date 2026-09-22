@@ -1,7 +1,7 @@
 use super::geometry::{cut, iso, pro};
 use super::models::Cell6d;
 use crate::core::error::Result;
-use crate::math::bang::universe::Code;
+use crate::math::bang::Code;
 use crate::math::three;
 
 /// Builds the coded 3d design and projects it isometrically.
@@ -24,9 +24,9 @@ mod tests {
     use super::*;
     #[test]
     fn menger_projections_build() {
-        let i = iso_design(23, 3, 1, 2).unwrap();
-        let p = pro_design(23, 3, 1, 2).unwrap();
-        let c = cut_design(23, 3, 1, 2).unwrap();
+        let i = iso_design(Code(23), 3, 1, 2).unwrap();
+        let p = pro_design(Code(23), 3, 1, 2).unwrap();
+        let c = cut_design(Code(23), 3, 1, 2).unwrap();
         assert!(i.cell.types().sum() > 0);
         assert!(p.cell.types().sum() > 0);
         assert!(c.cell.types().sum() > 0);

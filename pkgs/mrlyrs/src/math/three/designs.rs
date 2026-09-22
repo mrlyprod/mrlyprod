@@ -4,7 +4,7 @@ use crate::core::tensor::Tensor;
 use crate::math::atoms;
 use crate::math::bang::catalog::Design;
 use crate::math::bang::factory;
-use crate::math::bang::universe::Code;
+use crate::math::bang::Code;
 
 pub use crate::math::bang::factory::levels_code;
 
@@ -150,7 +150,7 @@ mod tests {
         let c = carpet(3, 1).unwrap();
         assert_eq!(c.types().sum(), 20);
         assert_eq!(carpet(3, 2).unwrap().types().sum(), 400);
-        assert_eq!(create(23, 3, 1, 2).unwrap(), c);
+        assert_eq!(create(Code(23), 3, 1, 2).unwrap(), c);
     }
     #[test]
     fn the_level_sets_name_the_symmetric_three() {
@@ -161,7 +161,7 @@ mod tests {
         ] {
             assert_eq!(level_set(3, &levels, 2, 2).unwrap(), preset);
         }
-        assert_eq!(levels_code(3, 2, &[0, 1]), 23);
+        assert_eq!(levels_code(3, 2, &[0, 1]), Code(23));
         assert_eq!(level_set(3, &[], 1, 2).unwrap().types().sum(), 0);
         assert_eq!(
             level_set(3, &[0, 1, 2, 3], 1, 2).unwrap(),

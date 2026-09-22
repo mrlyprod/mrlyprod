@@ -664,6 +664,7 @@ mod tests {
     use super::*;
     use crate::math::atoms;
     use crate::math::bang::factory::create;
+    use crate::math::bang::Code;
 
     struct Lcg(u64);
 
@@ -840,7 +841,7 @@ mod tests {
 
     #[test]
     fn census_and_crops_partition_the_grid() {
-        let types = create(7, 3, 2, 2, 2).unwrap();
+        let types = create(Code(7), 3, 2, 2, 2).unwrap();
         let ball = named("ball", 2, Frac::new(1, 2)).unwrap();
         let tally = census(&ball, &types);
         assert_eq!(tally.cells.iter().sum::<usize>(), 81);
@@ -866,7 +867,7 @@ mod tests {
 
     #[test]
     fn sponge_ball_crop_counts() {
-        let sponge = create(23, 3, 3, 2, 1).unwrap();
+        let sponge = create(Code(23), 3, 3, 2, 1).unwrap();
         assert_eq!(sponge.sum(), 20);
         let ball = named("ball", 3, Frac::new(1, 2)).unwrap();
         assert_eq!(crop(&sponge, &ball, true).sum(), 20);
@@ -877,7 +878,7 @@ mod tests {
 
     #[test]
     fn carpet_ball_crop_trims_the_corners() {
-        let carpet = create(7, 3, 2, 2, 2).unwrap();
+        let carpet = create(Code(7), 3, 2, 2, 2).unwrap();
         let ball = named("ball", 2, Frac::new(1, 2)).unwrap();
         let kept = crop(&carpet, &ball, true);
         assert_eq!(kept.get(&[0, 0]), 0);
@@ -966,7 +967,7 @@ mod tests {
     }
 
     fn corner_seen(code: u128, dimension: usize, level: usize, r_max: u64) -> Vec<u64> {
-        let types = create(code, 3, dimension, 2, level).unwrap();
+        let types = create(Code(code), 3, dimension, 2, level).unwrap();
         let table = radial_census(&types, &vec![0; dimension], r_max);
         (1..=r_max as usize).map(|r| table[r].seen).collect()
     }
@@ -982,8 +983,8 @@ mod tests {
 
     #[test]
     fn radial_census_does_not_depend_on_the_level() {
-        let shallow = create(7, 3, 2, 2, 4).unwrap();
-        let deep = create(7, 3, 2, 2, 5).unwrap();
+        let shallow = create(Code(7), 3, 2, 2, 4).unwrap();
+        let deep = create(Code(7), 3, 2, 2, 5).unwrap();
         let reach = 80;
         let near = radial_census(&shallow, &[0, 0], reach);
         let far = radial_census(&deep, &[0, 0], reach);
@@ -994,7 +995,7 @@ mod tests {
     #[test]
     fn radial_census_matches_the_ball_census() {
         for (code, dimension, level) in [(7u128, 2usize, 4usize), (23, 3, 3)] {
-            let types = create(code, 3, dimension, 2, level).unwrap();
+            let types = create(Code(code), 3, dimension, 2, level).unwrap();
             let side = types.shape[0];
             let table = radial_census(&types, &vec![0; dimension], side as u64 - 1);
             for r in [1usize, 5, 17, side - 1] {
@@ -1055,7 +1056,7 @@ mod tests {
 
     #[test]
     fn crossing_tree_hangs_every_box_on_a_crossed_parent() {
-        let tile = create(7, 3, 2, 2, 1).unwrap();
+        let tile = create(Code(7), 3, 2, 2, 1).unwrap();
         let keep: Vec<bool> = tile.bytes().iter().map(|&b| b != 0).collect();
         for radius in 1..=120u64 {
             let tree = crossing_tree(radius, 3, &keep);
@@ -1076,10 +1077,10 @@ mod tests {
     #[test]
     fn the_live_leaves_are_the_designs_crossed_cells() {
         for code in [7u128, 5, 11, 15] {
-            let tile = create(code, 3, 2, 2, 1).unwrap();
+            let tile = create(Code(code), 3, 2, 2, 1).unwrap();
             let keep: Vec<bool> = tile.bytes().iter().map(|&b| b != 0).collect();
             for depth in 1..=4usize {
-                let grid = create(code, 3, 2, 2, depth).unwrap();
+                let grid = create(Code(code), 3, 2, 2, depth).unwrap();
                 let side = 3u64.pow(depth as u32);
                 let table = radial_census(&grid, &[0, 0], side - 1);
                 for radius in side / 3..side {

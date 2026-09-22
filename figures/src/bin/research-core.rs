@@ -2,6 +2,7 @@ use figures::board::{Board, Frame};
 use figures::{ink, save, Grid};
 use mrlyrs::core::error::Result;
 use mrlyrs::math::bang;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two::designs;
 
 fn main() -> Result<()> {
@@ -10,12 +11,12 @@ fn main() -> Result<()> {
     let universe = bang::bang(2);
     assert_eq!(universe.total, 16);
     assert_eq!(universe.distinct(), 6);
-    let canonical: Vec<u128> = universe.canonical().iter().map(|d| d.i).collect();
+    let canonical: Vec<u128> = universe.canonical().iter().map(|d| d.i.get()).collect();
     assert_eq!(canonical, vec![0, 1, 3, 6, 7, 15]);
     let gutter = area.w * 0.030;
     let side = (area.w - 3.0 * gutter) / 4.0;
     for code in 0..16u128 {
-        let design = universe.design(code);
+        let design = universe.design(Code::from(code));
         let color = if design.canonical {
             ink::yellow()
         } else {
@@ -25,7 +26,7 @@ fn main() -> Result<()> {
         let y = area.y + (code / 4) as f64 * (side + gutter);
         let frame = Frame::new(x, y, side, side);
         board.rect(frame.x, frame.y, frame.w, frame.h, ink::panel());
-        let cells = designs::create(code, 2, 4, 0, 2)?;
+        let cells = designs::create(Code::from(code), 2, 4, 0, 2)?;
         assert_eq!(cells.width(), 16);
         Grid::new(frame, 16, 16, 0.0)
             .paint(&mut board, &cells, |kind| (kind != 0).then_some(color));

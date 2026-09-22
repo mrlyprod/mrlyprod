@@ -1,7 +1,5 @@
+use super::code::Code;
 use std::collections::BTreeSet;
-
-/// The bitmask of filled corners that names a design.
-pub type Code = u128;
 
 /// Returns every permutation of 0..n in sorted order.
 pub fn permutations(n: usize) -> Vec<Vec<usize>> {
@@ -74,13 +72,13 @@ pub fn orbit(code: Code, dimension: usize) -> BTreeSet<Code> {
     let group = symmetries(dimension);
     let mut out = BTreeSet::new();
     for g in &group {
-        let mut image: Code = 0;
+        let mut image: u128 = 0;
         for (i, cell) in cells.iter().enumerate() {
-            if (code >> i) & 1 == 1 {
+            if (code.get() >> i) & 1 == 1 {
                 image |= 1 << corner_index(&apply(g, cell));
             }
         }
-        out.insert(image);
+        out.insert(Code(image));
     }
     out
 }
@@ -88,7 +86,9 @@ pub fn orbit(code: Code, dimension: usize) -> BTreeSet<Code> {
 /// Returns the algebraic normal form coefficients of a code, one per corner.
 pub fn anf(code: Code, dimension: usize) -> Vec<u8> {
     let cells = corners(dimension);
-    let mut coeff: Vec<u8> = (0..cells.len()).map(|i| ((code >> i) & 1) as u8).collect();
+    let mut coeff: Vec<u8> = (0..cells.len())
+        .map(|i| ((code.get() >> i) & 1) as u8)
+        .collect();
     for axis in 0..dimension {
         for (i, cell) in cells.iter().enumerate() {
             if cell[axis] == 1 {
@@ -119,11 +119,13 @@ pub fn degree(code: Code, dimension: usize) -> i32 {
 /// Such a design buries no face at any side and any level, so its surface is six per cell.
 ///
 /// ```
-/// assert!(mrlyrs::math::bang::universe::total_exposure(129, 3));
-/// assert!(!mrlyrs::math::bang::universe::total_exposure(23, 3));
+/// use mrlyrs::math::bang::Code;
+/// assert!(mrlyrs::math::bang::universe::total_exposure(Code::from(129u64), 3));
+/// assert!(!mrlyrs::math::bang::universe::total_exposure(Code::from(23u64), 3));
 /// ```
 pub fn total_exposure(code: Code, dimension: usize) -> bool {
     let cells = corners(dimension);
+    let code = code.get();
     for (i, cell) in cells.iter().enumerate() {
         if (code >> i) & 1 == 0 {
             continue;
@@ -142,12 +144,13 @@ pub fn total_exposure(code: Code, dimension: usize) -> bool {
 /// Returns whether a code fills the all-even corner, the rule that touches every grid corner at odd side.
 ///
 /// ```
-/// assert!(mrlyrs::math::bang::universe::touches_every_corner(23, 3));
-/// assert!(!mrlyrs::math::bang::universe::touches_every_corner(232, 3));
+/// use mrlyrs::math::bang::Code;
+/// assert!(mrlyrs::math::bang::universe::touches_every_corner(Code::from(23u64), 3));
+/// assert!(!mrlyrs::math::bang::universe::touches_every_corner(Code::from(232u64), 3));
 /// ```
 pub fn touches_every_corner(code: Code, dimension: usize) -> bool {
     let all_even: Vec<u8> = vec![0; dimension];
-    (code >> corner_index(&all_even)) & 1 == 1
+    (code.get() >> corner_index(&all_even)) & 1 == 1
 }
 
 /// Formats the algebraic normal form of a code as a sum of monomials.
@@ -203,7 +206,11 @@ pub struct Design {
 impl Design {
     /// Returns the design's name as a line of prose, `bang dim 2, code 7`.
     pub fn name(&self) -> String {
-        crate::math::name::Named::to_mrly(&crate::math::name::Bang::new(self.i, self.dimension, 2))
+        crate::math::name::Named::to_mrly(&crate::math::name::Bang::new(
+            self.i.get(),
+            self.dimension,
+            2,
+        ))
     }
     /// Returns the design's filled corners in sorted order.
     pub fn rule(&self) -> Vec<Vec<u8>> {
@@ -211,7 +218,7 @@ impl Design {
         let mut out: Vec<Vec<u8>> = cells
             .into_iter()
             .enumerate()
-            .filter(|(i, _)| (self.i >> i) & 1 == 1)
+            .filter(|(i, _)| (self.i.get() >> i) & 1 == 1)
             .map(|(_, c)| c)
             .collect();
         out.sort();
@@ -248,7 +255,7 @@ impl Universe {
         let mut class_rep = Vec::with_capacity(total);
         let mut orbit_size = Vec::with_capacity(total);
         for code in 0..total {
-            let orb = orbit(code as Code, dimension);
+            let orb = orbit(Code::from(code as u128), dimension);
             class_rep.push(*orb.iter().next().unwrap());
             orbit_size.push(orb.len());
         }
@@ -261,19 +268,19 @@ impl Universe {
     }
     /// Returns the design at a code with its precomputed orbit facts.
     pub fn design(&self, code: Code) -> Design {
-        let rep = self.class_rep[code as usize];
+        let rep = self.class_rep[code.get() as usize];
         Design {
             i: code,
             dimension: self.dimension,
             canonical: rep == code,
             class_rep: rep,
-            orbit_size: self.orbit_size[code as usize],
+            orbit_size: self.orbit_size[code.get() as usize],
         }
     }
     /// Returns every design in code order.
     pub fn all(&self) -> Vec<Design> {
         (0..self.total)
-            .map(|code| self.design(code as Code))
+            .map(|code| self.design(Code::from(code as u128)))
             .collect()
     }
     /// Returns the designs whose codes lead their orbits.
@@ -319,7 +326,7 @@ mod tests {
             for k in 0..=(1usize << d) {
                 let code = (1u128 << k) - 1;
                 if (code as usize) < u.total {
-                    assert!(u.design(code).canonical);
+                    assert!(u.design(Code::from(code)).canonical);
                 }
             }
         }
@@ -327,10 +334,10 @@ mod tests {
     #[test]
     fn anti_closure_3d() {
         let u = bang(3);
-        let full: Code = (1 << (1 << 3)) - 1;
+        let full: u128 = (1 << (1 << 3)) - 1;
         let reps: Vec<Code> = u.canonical().iter().map(|d| d.class_rep).collect();
         for d in u.canonical() {
-            let anti = full ^ d.i;
+            let anti = Code::from(full ^ d.i.get());
             assert!(reps.contains(&u.design(anti).class_rep));
         }
     }
@@ -361,38 +368,44 @@ mod tests {
     }
     #[test]
     fn total_exposure_names_the_independent_corner_sets() {
-        let exposed: Vec<Code> = (0..256).filter(|&c| total_exposure(c, 3)).collect();
+        let exposed: Vec<Code> = (0..256u128)
+            .map(Code::from)
+            .filter(|&c| total_exposure(c, 3))
+            .collect();
         assert_eq!(exposed.len(), 35);
         let classes: BTreeSet<Code> = exposed
             .iter()
             .map(|&c| *orbit(c, 3).iter().next().unwrap())
             .collect();
         assert_eq!(
-            classes.into_iter().collect::<Vec<Code>>(),
+            classes.into_iter().map(Code::get).collect::<Vec<u128>>(),
             [0, 1, 6, 22, 24, 105]
         );
-        assert!(total_exposure(129, 3));
-        assert!(!total_exposure(23, 3));
+        assert!(total_exposure(Code::from(129u64), 3));
+        assert!(!total_exposure(Code::from(23u64), 3));
     }
 
     #[test]
     fn half_the_rules_hold_the_all_even_corner() {
         assert_eq!(
-            (0..256).filter(|&c| touches_every_corner(c, 3)).count(),
+            (0..256u128)
+                .map(Code::from)
+                .filter(|&c| touches_every_corner(c, 3))
+                .count(),
             128
         );
         for code in [23u128, 3, 129] {
-            assert!(touches_every_corner(code, 3), "code={code}");
+            assert!(touches_every_corner(Code::from(code), 3), "code={code}");
         }
-        assert!(!touches_every_corner(232, 3));
+        assert!(!touches_every_corner(Code::from(232u64), 3));
     }
 
     #[test]
     fn names_and_anf() {
         let u = bang(2);
-        assert_eq!(u.design(0).name(), "bang dim 2, code 0");
-        assert_eq!(u.design(7).name(), "bang dim 2, code 7");
-        assert_eq!(u.design(0).anf(), "0");
-        assert_eq!(u.design(1).anf(), "1+y+x+xy");
+        assert_eq!(u.design(Code::from(0u64)).name(), "bang dim 2, code 0");
+        assert_eq!(u.design(Code::from(7u64)).name(), "bang dim 2, code 7");
+        assert_eq!(u.design(Code::from(0u64)).anf(), "0");
+        assert_eq!(u.design(Code::from(1u64)).anf(), "1+y+x+xy");
     }
 }

@@ -83,10 +83,11 @@ impl Cell6d {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::math::bang::Code;
     use crate::math::six::designs::iso_design;
     #[test]
     fn binarize_wrapper_keeps_projection_metadata() {
-        let hex = iso_design(23, 3, 1, 2).unwrap();
+        let hex = iso_design(Code(23), 3, 1, 2).unwrap();
         let binarized = hex.clone().binarize(1);
         assert_eq!(binarized.projection, hex.projection);
         assert_eq!(binarized.orientation, hex.orientation);
@@ -94,7 +95,7 @@ mod tests {
     }
     #[test]
     fn perforate_wrapper_zero_mask_is_identity_6d() {
-        let hex = iso_design(23, 3, 1, 2).unwrap();
+        let hex = iso_design(Code(23), 3, 1, 2).unwrap();
         let mask = Tensor::new(hex.cell.types().shape.clone());
         let perforated = hex.clone().perforate(&mask, 5).unwrap();
         assert_eq!(perforated.cell.types(), hex.cell.types());

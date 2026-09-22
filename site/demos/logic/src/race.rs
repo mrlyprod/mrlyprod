@@ -1,5 +1,6 @@
 use crate::{code_of, Fault};
 use mrlyrs::core::Rng;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two;
 use wasm_bindgen::prelude::*;
 
@@ -27,7 +28,7 @@ impl Race {
         walkers: usize,
         seed: u32,
     ) -> Result<Race, Fault> {
-        let cell = two::create(code_of(code)?, number, level, 0, base)?;
+        let cell = two::create(Code::from(code_of(code)?), number, level, 0, base)?;
         let side = cell.width();
         let types = cell.types().bytes().to_vec();
         let centre = (side as i64 - 1) / 2;

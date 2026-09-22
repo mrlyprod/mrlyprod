@@ -1,5 +1,6 @@
 use crate::{checked, code_of, Fault, Pixels};
 use mrlyrs::core::Colorizer;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::moire::{pairs, presets, render};
 use mrlyrs::math::press;
 use wasm_bindgen::prelude::*;
@@ -13,7 +14,7 @@ pub fn press_members(
     count: usize,
 ) -> Result<Vec<String>, Fault> {
     let code = checked(code, dimension, base)?;
-    Ok(press::members(code, dimension, base, count)
+    Ok(press::members(Code::from(code), dimension, base, count)
         .iter()
         .map(|m| m.to_string())
         .collect())
@@ -28,7 +29,7 @@ pub fn press_count_below(
     limit: &str,
 ) -> Result<String, Fault> {
     let code = checked(code, dimension, base)?;
-    Ok(press::count_below(code, dimension, base, code_of(limit)?).to_string())
+    Ok(press::count_below(Code::from(code), dimension, base, code_of(limit)?).to_string())
 }
 
 /// Names the moire presets.

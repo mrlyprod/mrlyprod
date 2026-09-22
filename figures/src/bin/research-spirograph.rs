@@ -1,5 +1,6 @@
 use figures::{ink, plot, save, Board};
 use mrlyrs::core::error::Result;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::roulette;
 use mrlyrs::math::spirograph::{
     cover, disc, distinct, nodes as law, pencils, trace, track, Cover, Pencil, Track,
@@ -28,7 +29,7 @@ const HAIR: f64 = 1.1;
 const DOT: f64 = 2.6;
 
 fn main() -> Result<()> {
-    let tile = two::create(CODE, SIDE, LEVEL, 0, BASE)?;
+    let tile = two::create(Code::from(CODE), SIDE, LEVEL, 0, BASE)?;
     let types = tile.types().bytes().to_vec();
     let path = track("in", RING, WHEEL, 4, 1)?;
     let pens = pencils(&types, tile.width(), tile.height(), "fill", REACH, 0.0, 1)?;

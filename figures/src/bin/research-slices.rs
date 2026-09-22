@@ -2,6 +2,7 @@ use figures::board::{Board, Frame};
 use figures::{hex, ink, save};
 use mrlyrs::core::error::Result;
 use mrlyrs::core::Color;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::six;
 use mrlyrs::math::six::Cell6d;
 
@@ -69,8 +70,8 @@ fn hexagon(
 }
 
 fn main() -> Result<()> {
-    let carpet = six::cut_design(23, SIDE, 1, 2)?;
-    let net = six::cut_design(232, SIDE, 1, 2)?;
+    let carpet = six::cut_design(Code::from(23u128), SIDE, 1, 2)?;
+    let net = six::cut_design(Code::from(232u128), SIDE, 1, 2)?;
     assert_eq!(six::fills(&carpet), 486);
     assert_eq!(six::fills(&net), 240);
     assert_eq!(six::holes(&carpet)?, 19);

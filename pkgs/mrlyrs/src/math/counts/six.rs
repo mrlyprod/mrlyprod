@@ -1,6 +1,6 @@
 use crate::core::error::{value_error, Result};
 use crate::math::bang::code_to_corners;
-use crate::math::bang::universe::Code;
+use crate::math::bang::Code;
 use crate::math::counts::counting::positions;
 use std::collections::HashSet;
 
@@ -139,7 +139,15 @@ mod tests {
     fn pro_and_cut_match_census() {
         use crate::math::six::{cut, pro};
         use crate::math::three;
-        for code in [0u128, 8, 17, 23, 129, 232, 255] {
+        for code in [
+            Code(0),
+            Code(8),
+            Code(17),
+            Code(23),
+            Code(129),
+            Code(232),
+            Code(255),
+        ] {
             for number in [1usize, 2, 3, 4, 5, 7] {
                 for level in 1..3u32 {
                     if number.pow(level) > 9 {
@@ -172,11 +180,11 @@ mod tests {
     }
     #[test]
     fn menger_projections() {
-        assert_eq!(pro_fills(23, 3, 1).unwrap(), 48);
-        assert_eq!(pro_fills(23, 3, 2).unwrap(), 384);
-        assert_eq!(cut_fills(23, 3, 1).unwrap(), 42);
-        assert_eq!(cut_fills(23, 3, 2).unwrap(), 306);
-        assert_eq!(cut_fills(255, 3, 1).unwrap(), 54);
+        assert_eq!(pro_fills(Code(23), 3, 1).unwrap(), 48);
+        assert_eq!(pro_fills(Code(23), 3, 2).unwrap(), 384);
+        assert_eq!(cut_fills(Code(23), 3, 1).unwrap(), 42);
+        assert_eq!(cut_fills(Code(23), 3, 2).unwrap(), 306);
+        assert_eq!(cut_fills(Code(255), 3, 1).unwrap(), 54);
     }
     #[test]
     fn closed_forms_at_small_numbers() {

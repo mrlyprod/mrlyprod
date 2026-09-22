@@ -1,5 +1,6 @@
 use figures::{ink, save, Board, Grid};
 use mrlyrs::core::error::Result;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two::designs;
 
 const CODE: u128 = 495;
@@ -8,7 +9,7 @@ const LEVEL: usize = 4;
 fn main() -> Result<()> {
     let mut board = Board::square();
     let area = board.frame(0.08);
-    let design = designs::create(CODE, 3, LEVEL, 0, 3)?;
+    let design = designs::create(Code::from(CODE), 3, LEVEL, 0, 3)?;
     let side = design.width();
     assert_eq!(side, 81);
     assert_eq!(design.types().sum(), 4096);

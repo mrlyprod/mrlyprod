@@ -38,7 +38,7 @@ pub fn the_coprime_law_survives_the_spin() -> Result<(), String> {
 }
 
 fn layer(scale: usize) -> Result<Field, String> {
-    let spec = Spec::new(corners_to_code(&[vec![0, 0]], 2, 2), 2, 2);
+    let spec = Spec::new(corners_to_code(&[vec![0, 0]], 2, 2).get(), 2, 2);
     stack(spec, &[scale], Combine::Sum, 1, Lattice::Square, SIZE, &[])
         .map_err(|_| format!("the layer at {scale} does not build"))
 }

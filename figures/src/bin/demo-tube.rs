@@ -1,6 +1,7 @@
 use figures::board::{Board, Frame};
 use figures::{ink, plot, save, Grid};
 use mrlyrs::core::error::Result;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two;
 
 const CODE: u128 = 495;
@@ -81,7 +82,7 @@ fn limit(t: f64) -> f64 {
 }
 
 fn main() -> Result<()> {
-    let cells = two::create(CODE, SIDE, LEVEL, 0, SIDE)?;
+    let cells = two::create(Code::from(CODE), SIDE, LEVEL, 0, SIDE)?;
     let types = cells.types().bytes().to_vec();
     assert_eq!(types.len(), SPAN * SPAN);
     assert_eq!(types.iter().filter(|&&b| b != 0).count(), 32768);

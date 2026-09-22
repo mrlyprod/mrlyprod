@@ -1,11 +1,13 @@
 use crate::rules::{output, RULES};
 use mrlyrs::math::bang::code_to_corners;
+use mrlyrs::math::bang::Code;
 
 pub fn report() {
     println!("IDENTITY");
     let mut checked = 0usize;
     for rule in 0..RULES {
-        let corners = code_to_corners(rule as u128, 3, 2).expect("the code fits three axes");
+        let corners =
+            code_to_corners(Code::from(rule as u128), 3, 2).expect("the code fits three axes");
         let mut from_design = [false; 8];
         for corner in &corners {
             from_design[4 * corner[0] as usize + 2 * corner[1] as usize + corner[2] as usize] =

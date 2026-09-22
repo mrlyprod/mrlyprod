@@ -1,5 +1,6 @@
 use figures::{ink, plot, save, Board};
 use mrlyrs::core::error::Result;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::graph::{census, largest_component};
 use mrlyrs::math::spectrum::{laplacian_spectrum, spectral_fit, spectral_points};
 use mrlyrs::math::{six, three};
@@ -7,7 +8,7 @@ use mrlyrs::math::{six, three};
 const WINDOW: f64 = 0.10;
 
 fn main() -> Result<()> {
-    let cell = six::cut(&three::create(23, 3, 2, 2)?)?;
+    let cell = six::cut(&three::create(Code::from(23u128), 3, 2, 2)?)?;
     let whole = six::graph::slice_core_graph(&cell)?;
     let pieces = census(&whole).components;
     let network = largest_component(&whole);

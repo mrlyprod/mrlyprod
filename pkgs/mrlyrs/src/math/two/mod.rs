@@ -56,6 +56,7 @@ mod tests {
 #[cfg(test)]
 mod spectra {
     use super::*;
+    use crate::math::bang::Code;
     use crate::math::graph::census;
     use crate::math::spectrum::{clusters, laplacian_spectrum, multiplicity};
 
@@ -71,7 +72,7 @@ mod spectra {
             (6, 729, 289, 67, 0.6955, 243, 28),
         ];
         for (level, nodes, distinct, classes, fraction, one, pair) in rows {
-            let cell = designs::create(7, 2, level, 0, 2).unwrap();
+            let cell = designs::create(Code(7), 2, level, 0, 2).unwrap();
             let graph = core_graph(&cell).unwrap();
             assert_eq!(graph.nodes.len(), nodes, "l={level}");
             assert_eq!(census(&graph).components, 1, "l={level}");

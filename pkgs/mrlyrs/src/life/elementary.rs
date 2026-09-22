@@ -1,5 +1,6 @@
 use crate::core::tensor::Tensor;
-use crate::math::bang::universe::{apply, corner_index, corners, degree, orbit, symmetries, Code};
+use crate::math::bang::universe::{apply, corner_index, corners, degree, orbit, symmetries};
+use crate::math::bang::Code;
 use crate::math::name::{Bang, Named};
 use std::collections::BTreeSet;
 
@@ -81,7 +82,7 @@ pub fn lambda(rule: u8) -> f64 {
 
 /// Returns the GF(2) algebraic degree of a rule, minus one for the zero rule.
 pub fn rule_degree(rule: u8) -> i32 {
-    degree(rule as Code, 3)
+    degree(Code::from(rule as u64), 3)
 }
 
 /// Returns whether a rule is affine, its algebraic degree at most one.
@@ -91,7 +92,7 @@ pub fn affine(rule: u8) -> bool {
 
 /// Returns the design name a rule carries, `bang dim 3, code <rule>`.
 pub fn rule_name(rule: u8) -> String {
-    Bang::new(rule as Code, 3, 2).to_mrly()
+    Bang::new(rule as u128, 3, 2).to_mrly()
 }
 
 fn act(rule: u8, element: &(Vec<usize>, Vec<u8>), complement: bool) -> u8 {
@@ -111,9 +112,9 @@ fn act(rule: u8, element: &(Vec<usize>, Vec<u8>), complement: bool) -> u8 {
 
 /// Returns the rules a rule reaches under the signed axis permutations of the cube, in ascending order.
 pub fn cube_orbit(rule: u8) -> Vec<u8> {
-    orbit(rule as Code, 3)
+    orbit(Code::from(rule as u64), 3)
         .into_iter()
-        .map(|c| c as u8)
+        .map(|c| c.get() as u8)
         .collect()
 }
 
@@ -319,7 +320,7 @@ mod tests {
     #[test]
     fn rule_60_draws_the_level_four_gasket() {
         let diagram = single_seed(60, 16);
-        let tile = crate::math::two::create(13, 2, 4, 0, 2).unwrap();
+        let tile = crate::math::two::create(Code::from(13u64), 2, 4, 0, 2).unwrap();
         let centre = diagram.shape[1] / 2;
         for t in 0..16 {
             for j in 0..16 {

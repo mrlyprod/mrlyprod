@@ -5,6 +5,7 @@ use atlas::{
 };
 use mrlyrs::core::tensor::Tensor;
 use mrlyrs::life::{animate, mask_offsets, moore, Boundary, Config, Fate};
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two::{carpet, create, Cell2d};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -248,9 +249,15 @@ fn reading_line(r: &Reading) -> String {
 }
 
 fn board_of(run: &Run) -> Cell2d {
-    create(run.seed.code, run.seed.side, run.seed.level, 0, 2)
-        .unwrap()
-        .tile(run.tessellation, run.tessellation)
+    create(
+        Code::from(run.seed.code),
+        run.seed.side,
+        run.seed.level,
+        0,
+        2,
+    )
+    .unwrap()
+    .tile(run.tessellation, run.tessellation)
 }
 
 fn rows_of(tile: &Tensor) -> String {
@@ -280,7 +287,7 @@ fn rules(census: &Census) {
 fn seeds(census: &Census) {
     println!("\nSEEDS the level-1 tile of every seed class, rows top to bottom");
     for seed in &census.preset.seeds {
-        let tile = create(seed.code, seed.side, seed.level, 0, 2).unwrap();
+        let tile = create(Code::from(seed.code), seed.side, seed.level, 0, 2).unwrap();
         println!(
             "  {}s{}l{} {}",
             seed.code,
@@ -460,7 +467,14 @@ fn lemma(census: &Census) {
         for o in &offsets {
             small.set(&[(1 + o[0] / 3) as usize, (1 + o[1] / 3) as usize], 1);
         }
-        let seed = create(run.seed.code, run.seed.side, run.seed.level, 0, 2).unwrap();
+        let seed = create(
+            Code::from(run.seed.code),
+            run.seed.side,
+            run.seed.level,
+            0,
+            2,
+        )
+        .unwrap();
         let outer = Cell2d::new(Tensor::full(vec![3, 3], 1));
         let quotient = animate(&outer, &config(run, small, 9, 3)).unwrap();
         let full = animate(&board, &config(run, mask, 27, 9)).unwrap();

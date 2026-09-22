@@ -1,6 +1,6 @@
 use crate::core::error::{value_error, Result};
 use crate::math::bang::factory::{code_to_corners, MagicLayer};
-use crate::math::bang::universe::Code;
+use crate::math::bang::Code;
 
 /// The largest corner count the tally press accepts, keeping its table a million rows.
 pub const CORNERS: usize = 20;
@@ -17,21 +17,21 @@ fn corner_count(dimension: usize, base: usize) -> usize {
 /// residue corner of the design cube, and zero uses exactly the zero corner.
 ///
 /// ```
-/// assert_eq!(mrlyrs::math::press::usage(0, 2, 2), 1);
-/// assert_eq!(mrlyrs::math::press::usage(6, 2, 2), 0b0110);
+/// assert_eq!(mrlyrs::math::press::usage(0, 2, 2).get(), 1);
+/// assert_eq!(mrlyrs::math::press::usage(6, 2, 2).get(), 0b0110);
 /// ```
 pub fn usage(number: u128, dimension: usize, base: usize) -> Code {
     let radix = corner_count(dimension, base) as u128;
     if number == 0 {
-        return 1;
+        return Code(1);
     }
-    let mut out: Code = 0;
+    let mut out: u128 = 0;
     let mut rest = number;
     while rest > 0 {
         out |= 1 << (rest % radix);
         rest /= radix;
     }
-    out
+    Code(out)
 }
 
 /// Returns whether every digit vector of the number lies in the design.
@@ -41,16 +41,17 @@ pub fn usage(number: u128, dimension: usize, base: usize) -> Code {
 /// At dimension one it is the classic restricted-digit set.
 ///
 /// ```
-/// let members: Vec<u128> = (0..30).filter(|&n| mrlyrs::math::press::member(0b0111, n, 2, 2)).collect();
+/// use mrlyrs::math::bang::Code;
+/// let members: Vec<u128> = (0..30).filter(|&n| mrlyrs::math::press::member(Code::from(0b0111u64), n, 2, 2)).collect();
 /// assert_eq!(members, vec![0, 1, 2, 4, 5, 6, 8, 9, 10, 16, 17, 18, 20, 21, 22, 24, 25, 26]);
 /// ```
 pub fn member(code: Code, number: u128, dimension: usize, base: usize) -> bool {
-    usage(number, dimension, base) & !code == 0
+    usage(number, dimension, base).get() & !code.get() == 0
 }
 
 /// Returns the count of distinct digit vectors the number uses.
 pub fn distinct(number: u128, dimension: usize, base: usize) -> u32 {
-    usage(number, dimension, base).count_ones()
+    usage(number, dimension, base).get().count_ones()
 }
 
 /// Returns the number of designs of the dimension and base that contain the number.
@@ -123,11 +124,12 @@ pub fn interleave(coords: &[u128], base: usize) -> u128 {
 /// Stops early where the next member would pass a hundred and twenty-eight bits.
 ///
 /// ```
-/// assert_eq!(mrlyrs::math::press::members(0b10, 1, 2, 5), vec![1, 3, 7, 15, 31]);
+/// use mrlyrs::math::bang::Code;
+/// assert_eq!(mrlyrs::math::press::members(Code::from(0b10u64), 1, 2, 5), vec![1, 3, 7, 15, 31]);
 /// ```
 pub fn members(code: Code, dimension: usize, base: usize, count: usize) -> Vec<u128> {
     let radix = corner_count(dimension, base) as u128;
-    let allowed: Vec<u128> = (0..radix).filter(|&i| (code >> i) & 1 == 1).collect();
+    let allowed: Vec<u128> = (0..radix).filter(|&i| (code.get() >> i) & 1 == 1).collect();
     let mut out = Vec::with_capacity(count);
     if count == 0 || allowed.is_empty() {
         return out;
@@ -186,11 +188,12 @@ pub fn members(code: Code, dimension: usize, base: usize, count: usize) -> Vec<u
 /// Counts the members of a design below the limit.
 ///
 /// ```
-/// assert_eq!(mrlyrs::math::press::count_below(0b0111, 2, 2, 27), 18);
+/// use mrlyrs::math::bang::Code;
+/// assert_eq!(mrlyrs::math::press::count_below(Code::from(0b0111u64), 2, 2, 27), 18);
 /// ```
 pub fn count_below(code: Code, dimension: usize, base: usize, limit: u128) -> u128 {
     let radix = corner_count(dimension, base) as u128;
-    let allowed: Vec<u128> = (0..radix).filter(|&i| (code >> i) & 1 == 1).collect();
+    let allowed: Vec<u128> = (0..radix).filter(|&i| (code.get() >> i) & 1 == 1).collect();
     if limit == 0 || allowed.is_empty() {
         return 0;
     }
@@ -256,10 +259,11 @@ impl Press {
     }
     /// Adds a weighted number to its usage bucket.
     pub fn add(&mut self, number: u128, weight: i128) {
-        self.tallies[usage(number, self.dimension, self.base) as usize] += weight;
+        self.tallies[usage(number, self.dimension, self.base).get() as usize] += weight;
     }
     /// Returns the total weight the design at a code has collected.
     pub fn total(&self, code: Code) -> i128 {
+        let code = code.get();
         let mut sum = self.tallies[0];
         let mut sub = code;
         while sub != 0 {
@@ -291,7 +295,11 @@ fn layer_radix(layer: &MagicLayer) -> u128 {
 /// A cell is allowed when its coordinate residues form a filled corner, which is the
 /// tile the layer renders read as a digit alphabet.
 pub fn layer_table(layer: &MagicLayer) -> Result<Vec<bool>> {
-    let corners = code_to_corners(layer.design.code, layer.design.dim, layer.design.base)?;
+    let corners = code_to_corners(
+        Code::from(layer.design.code),
+        layer.design.dim,
+        layer.design.base,
+    )?;
     let dimension = layer.design.dim;
     let base = layer.design.base;
     let side = layer.number;
@@ -435,7 +443,10 @@ pub fn profile(code: Code, dimension: usize, base: usize, level: usize) -> Resul
     if level < 1 {
         return value_error("level must be at least 1.");
     }
-    let layer = MagicLayer::new(crate::math::name::Bang::new(code, dimension, base), base);
+    let layer = MagicLayer::new(
+        crate::math::name::Bang::new(code.get(), dimension, base),
+        base,
+    );
     word_profile(&vec![layer; level])
 }
 
@@ -447,14 +458,14 @@ mod tests {
 
     #[test]
     fn usage_of_zero_is_the_zero_corner() {
-        assert_eq!(usage(0, 2, 2), 1);
-        assert_eq!(usage(0, 1, 10), 1);
+        assert_eq!(usage(0, 2, 2).get(), 1);
+        assert_eq!(usage(0, 1, 10).get(), 1);
         assert_eq!(distinct(0, 2, 2), 1);
     }
 
     #[test]
     fn membership_matches_a_digit_check_at_base_ten() {
-        let no_seven: Code = !(1 << 7) & ((1 << 10) - 1);
+        let no_seven = Code(!(1u128 << 7) & ((1u128 << 10) - 1));
         for n in 0..10_000u128 {
             let digits_clean = !n.to_string().contains('7');
             assert_eq!(member(no_seven, n, 1, 10), digits_clean, "{n}");
@@ -463,12 +474,12 @@ mod tests {
 
     #[test]
     fn members_of_the_repunit_design_are_the_mersenne_numbers() {
-        assert_eq!(members(0b10, 1, 2, 6), vec![1, 3, 7, 15, 31, 63]);
+        assert_eq!(members(Code(0b10), 1, 2, 6), vec![1, 3, 7, 15, 31, 63]);
     }
 
     #[test]
     fn members_walk_ascending_and_agree_with_membership() {
-        for code in [0b0111u128, 0b0110, 0b1001, 0b1111] {
+        for code in [Code(0b0111), Code(0b0110), Code(0b1001), Code(0b1111)] {
             let list = members(code, 2, 2, 40);
             for pair in list.windows(2) {
                 assert!(pair[0] < pair[1]);
@@ -481,7 +492,13 @@ mod tests {
 
     #[test]
     fn count_below_agrees_with_the_member_walk() {
-        for code in [0b0111u128, 0b0110, 0b1011, 0b0001, 0b0000] {
+        for code in [
+            Code(0b0111),
+            Code(0b0110),
+            Code(0b1011),
+            Code(0b0001),
+            Code(0b0000),
+        ] {
             let list = members(code, 2, 2, 60);
             for limit in 0..300u128 {
                 let walked = list.iter().filter(|&&m| m < limit).count() as u128;
@@ -494,7 +511,7 @@ mod tests {
 
     #[test]
     fn the_member_count_at_a_level_boundary_is_the_geometric_sum() {
-        let code: Code = 0b0111;
+        let code = Code(0b0111);
         let k: u128 = 3;
         for level in 1..6u32 {
             let boundary = 4u128.pow(level);
@@ -505,7 +522,7 @@ mod tests {
 
     #[test]
     fn membership_matches_the_rendered_fractal() {
-        for code in [7u128, 6, 9, 11] {
+        for code in [Code(7), Code(6), Code(9), Code(11)] {
             let level = 3;
             let tile = create(code, 2, 2, 2, level).unwrap();
             let side = 1u128 << level;
@@ -513,8 +530,8 @@ mod tests {
                 let coords = coordinates(n, 2, 2);
                 let flat = (coords[0] * side + coords[1]) as usize;
                 let filled = tile.bytes()[flat] == 1;
-                let padded =
-                    member(code, n, 2, 2) && (code & 1 == 1 || n >= 4u128.pow(level as u32 - 1));
+                let padded = member(code, n, 2, 2)
+                    && (code.get() & 1 == 1 || n >= 4u128.pow(level as u32 - 1));
                 assert_eq!(padded, filled, "{code} {n}");
             }
         }
@@ -532,7 +549,9 @@ mod tests {
     #[test]
     fn containing_counts_the_designs_that_hold_the_number() {
         for n in 0..500u128 {
-            let direct = (0..16u128).filter(|&code| member(code, n, 2, 2)).count();
+            let direct = (0..16u128)
+                .filter(|&code| member(Code(code), n, 2, 2))
+                .count();
             assert_eq!(containing(n, 2, 2), direct as u128, "{n}");
         }
     }
@@ -557,10 +576,10 @@ mod tests {
             let direct: i128 = weights
                 .iter()
                 .enumerate()
-                .filter(|(n, _)| member(code, *n as u128, 2, 2))
+                .filter(|(n, _)| member(Code(code), *n as u128, 2, 2))
                 .map(|(_, &w)| w)
                 .sum();
-            assert_eq!(press.total(code), direct, "{code}");
+            assert_eq!(press.total(Code(code)), direct, "{code}");
             assert_eq!(totals[code as usize], direct, "{code}");
         }
     }
@@ -570,7 +589,7 @@ mod tests {
         let layer = MagicLayer::new(Bang::new(7, 2, 2), 2);
         let word = vec![layer; 3];
         for n in 0..64u128 {
-            let padded = member(7, n, 2, 2);
+            let padded = member(Code(7), n, 2, 2);
             assert_eq!(word_member(&word, n).unwrap(), padded, "{n}");
         }
         assert_eq!(word_count(&word).unwrap(), 27);
@@ -624,7 +643,7 @@ mod tests {
 
     #[test]
     fn profile_totals_are_the_fill_powers() {
-        let native = profile(7, 2, 2, 4).unwrap();
+        let native = profile(Code(7), 2, 2, 4).unwrap();
         assert_eq!(native.iter().sum::<u128>(), 3u128.pow(4));
         let sponge = vec![MagicLayer::new(Bang::new(23, 3, 2), 3); 3];
         let classic = word_profile(&sponge).unwrap();

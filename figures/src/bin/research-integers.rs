@@ -3,7 +3,7 @@ use figures::out::root;
 use figures::{ink, save, Board, Grid};
 use ledger::{keys, terms, Cost, Key, Tier};
 use mrlyrs::core::error::Result;
-use mrlyrs::core::MrlyError;
+use mrlyrs::Error;
 use std::path::PathBuf;
 
 const NAME: &str = "research-integers";
@@ -110,17 +110,17 @@ fn write_data(counts: &[u32]) -> Result<PathBuf> {
     let file = path();
     let folder = file.parent().unwrap().to_path_buf();
     std::fs::create_dir_all(&folder)
-        .map_err(|e| MrlyError::Value(format!("cannot make {folder:?}: {e}")))?;
+        .map_err(|e| Error::Value(format!("cannot make {folder:?}: {e}")))?;
     let body: Vec<String> = counts.iter().map(|count| count.to_string()).collect();
     std::fs::write(&file, format!("[{}]", body.join(",")))
-        .map_err(|e| MrlyError::Value(format!("cannot write {file:?}: {e}")))?;
+        .map_err(|e| Error::Value(format!("cannot write {file:?}: {e}")))?;
     Ok(file)
 }
 
 fn read_data() -> Result<Vec<u32>> {
     let file = path();
     let text = std::fs::read_to_string(&file)
-        .map_err(|e| MrlyError::Value(format!("cannot read {file:?}: {e}; run -- compute")))?;
+        .map_err(|e| Error::Value(format!("cannot read {file:?}: {e}; run -- compute")))?;
     Ok(text
         .trim()
         .trim_start_matches('[')

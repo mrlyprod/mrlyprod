@@ -1,6 +1,7 @@
 use figures::{ink, save, Board, Color, Frame, Grid};
 use mrlyrs::core::error::Result;
 use mrlyrs::core::Rng;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two;
 
 const NUMBER: usize = 3;
@@ -33,7 +34,7 @@ impl Swarm {
 }
 
 fn race(code: u128, seed: u64) -> Result<Swarm> {
-    let cell = two::create(code, NUMBER, LEVEL, 0, BASE)?;
+    let cell = two::create(Code::from(code), NUMBER, LEVEL, 0, BASE)?;
     let types = cell.types();
     let filled: Vec<bool> = (0..SIDE * SIDE)
         .map(|flat| types.get(&[flat / SIDE, flat % SIDE]) != 0)

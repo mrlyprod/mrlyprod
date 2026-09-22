@@ -1,5 +1,6 @@
 use figures::{ink, plot, save, Board};
 use mrlyrs::core::error::Result;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::spectrum::{laplacian_spectrum, multiplicity};
 use mrlyrs::math::two::core_graph;
 use mrlyrs::math::two::designs;
@@ -7,7 +8,7 @@ use mrlyrs::math::two::designs;
 const LEVEL: usize = 6;
 
 fn main() -> Result<()> {
-    let cell = designs::create(7, 2, LEVEL, 0, 2)?;
+    let cell = designs::create(Code::from(7u128), 2, LEVEL, 0, 2)?;
     let network = core_graph(&cell)?;
     let mut values = laplacian_spectrum(&network, true)?;
     values.sort_by(|a, b| a.partial_cmp(b).unwrap());

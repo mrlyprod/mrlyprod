@@ -2,10 +2,11 @@ use figures::out::root;
 use figures::{ink, save, Board};
 use mrlyrs::core::error::Result;
 use mrlyrs::core::tensor::Tensor;
-use mrlyrs::core::MrlyError;
 use mrlyrs::core::Rng;
 use mrlyrs::life::{design_mask, lattice_index, next_grid, Boundary};
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two::Cell2d;
+use mrlyrs::Error;
 use std::path::PathBuf;
 
 const NAME: &str = "demo-mrlylife";
@@ -43,7 +44,7 @@ fn write_data(mask: &[u8], cells: &[u8]) -> Result<PathBuf> {
     let file = path();
     let folder = file.parent().unwrap().to_path_buf();
     std::fs::create_dir_all(&folder)
-        .map_err(|e| MrlyError::Value(format!("cannot make {folder:?}: {e}")))?;
+        .map_err(|e| Error::Value(format!("cannot make {folder:?}: {e}")))?;
     let one: Vec<String> = mask.iter().map(|bit| bit.to_string()).collect();
     let two: Vec<String> = cells.iter().map(|bit| bit.to_string()).collect();
     let text = format!(
@@ -51,8 +52,7 @@ fn write_data(mask: &[u8], cells: &[u8]) -> Result<PathBuf> {
         one.join(","),
         two.join(",")
     );
-    std::fs::write(&file, text)
-        .map_err(|e| MrlyError::Value(format!("cannot write {file:?}: {e}")))?;
+    std::fs::write(&file, text).map_err(|e| Error::Value(format!("cannot write {file:?}: {e}")))?;
     Ok(file)
 }
 
@@ -72,7 +72,7 @@ fn field(text: &str, name: &str) -> Vec<u8> {
 fn read_data() -> Result<(Vec<u8>, Vec<u8>)> {
     let file = path();
     let raw = std::fs::read_to_string(&file)
-        .map_err(|e| MrlyError::Value(format!("cannot read {file:?}: {e}; run -- compute")))?;
+        .map_err(|e| Error::Value(format!("cannot read {file:?}: {e}; run -- compute")))?;
     let text: String = raw.chars().filter(|c| !c.is_whitespace()).collect();
     Ok((field(&text, "mask"), field(&text, "cells")))
 }
@@ -80,7 +80,7 @@ fn read_data() -> Result<(Vec<u8>, Vec<u8>)> {
 // PRESS
 
 fn compute() -> Result<()> {
-    let mask = design_mask(2, 7, 3, 2)?;
+    let mask = design_mask(2, Code::from(7u128), 3, 2)?;
     assert_eq!(mask.shape, vec![MASK, MASK]);
     assert_eq!((0..mask.size()).filter(|&i| mask.at(i) == 1).count(), SITES);
     assert_eq!(mask.get(&[MASK / 2, MASK / 2]), 0);

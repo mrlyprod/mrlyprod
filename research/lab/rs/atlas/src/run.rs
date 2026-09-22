@@ -4,6 +4,7 @@ use mrlyrs::core::error::{value_error, Result};
 use mrlyrs::core::rng::Rng;
 use mrlyrs::core::tensor::Tensor;
 use mrlyrs::life::{animate, churn, design_mask, lattice_index, Boundary, Config, Fate};
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two::{create, Cell2d};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -81,13 +82,16 @@ pub struct Census {
 }
 
 fn board(seed: &Seed, tessellation: usize) -> Result<Cell2d> {
-    Ok(create(seed.code, seed.side, seed.level, 0, 2)?.tile(tessellation, tessellation))
+    Ok(
+        create(Code::from(seed.code), seed.side, seed.level, 0, 2)?
+            .tile(tessellation, tessellation),
+    )
 }
 
 /// Resolves a mask against the tessellated board, the centre popped.
 pub fn mask_tensor(mask: &Mask, board: &Cell2d) -> Result<Tensor> {
     match mask {
-        Mask::Design { code, side, level } => design_mask(2, *code, *side, *level),
+        Mask::Design { code, side, level } => design_mask(2, Code::from(*code), *side, *level),
         Mask::Copy { inverted } => {
             let mut tensor = board.types().clone();
             if *inverted {

@@ -2,6 +2,7 @@ use figures::{ink, save, Board};
 use mrlyrs::core::error::Result;
 use mrlyrs::core::Rng;
 use mrlyrs::life::design_mask;
+use mrlyrs::math::bang::Code;
 use mrlyrs::num::fft::{convolve_with, embed_kernel, transform};
 
 const SIZE: usize = 256;
@@ -80,7 +81,7 @@ impl Rule {
 fn main() -> Result<()> {
     let mut board = Board::square();
     let area = board.frame(0.04);
-    let mask = design_mask(2, CODE, BASE, LEVEL)?;
+    let mask = design_mask(2, Code::from(CODE), BASE, LEVEL)?;
     assert_eq!(mask.shape, vec![SPAN, SPAN]);
     assert_eq!(BASE.pow(LEVEL as u32), SPAN);
     assert_eq!(mask.sum() as usize, BUDGET);

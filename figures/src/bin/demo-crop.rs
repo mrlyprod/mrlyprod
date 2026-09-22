@@ -1,13 +1,14 @@
 use figures::{iso, save, Board};
 use mrlyrs::core::colors::{shades, ORANGE};
 use mrlyrs::core::error::Result;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::shape::{self, Frac, Region};
 use mrlyrs::math::three::{designs, Cell3d};
 
 fn main() -> Result<()> {
     let mut board = Board::square();
     let frame = board.frame(0.08);
-    let sponge = designs::create(23, 3, 3, 2)?;
+    let sponge = designs::create(Code::from(23u128), 3, 3, 2)?;
     assert_eq!(sponge.width(), 27);
     assert_eq!(sponge.types().sum(), 8000);
     let cut = shape::named("octahedron", 3, Frac::new(1, 2))?;

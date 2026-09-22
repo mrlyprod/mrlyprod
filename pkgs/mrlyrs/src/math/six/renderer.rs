@@ -163,6 +163,7 @@ pub fn svg(cell: &Cell6d, scale: usize, outline: Option<Color>, width: usize) ->
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::math::bang::Code;
     use crate::math::six::designs::iso_design;
     use crate::math::six::geometry::blank;
     use crate::math::six::models::Cell6d;
@@ -175,7 +176,7 @@ mod tests {
     }
     #[test]
     fn iso_renders_triangles() {
-        let i = iso_design(23, 3, 1, 2).unwrap();
+        let i = iso_design(Code(23), 3, 1, 2).unwrap();
         let tris = triangles(&i).unwrap();
         assert!(!tris.is_empty());
         let s = svg(&i, 10, None, 1).unwrap();
@@ -184,7 +185,7 @@ mod tests {
     }
     #[test]
     fn outline_strokes_and_pads_the_svg() {
-        let i = iso_design(23, 3, 1, 2).unwrap();
+        let i = iso_design(Code(23), 3, 1, 2).unwrap();
         let plain = svg(&i, 4, None, 1).unwrap();
         let lined = svg(&i, 4, Some(Color::rgba(255, 0, 0, 255)), 2).unwrap();
         assert!(lined.contains("stroke-width=\"2\""));

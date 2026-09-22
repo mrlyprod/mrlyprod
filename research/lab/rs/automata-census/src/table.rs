@@ -1,6 +1,7 @@
 use crate::groups::{group, orbit, Elem};
 use crate::rules::RULES;
 use mrlyrs::math::bang::universe::degree;
+use mrlyrs::math::bang::Code;
 use mrlyrs::num::boolean::walsh_spectrum;
 use std::collections::BTreeSet;
 
@@ -79,7 +80,7 @@ pub fn rows() -> Vec<Row> {
             let ob = orbit(code, &b3);
             let oh = orbit(code, &h);
             let oz = orbit(code, &both);
-            let d = degree(code as u128, 3);
+            let d = degree(Code::from(code as u128), 3);
             Row {
                 code,
                 rep_b3: *ob.iter().next().expect("nonempty"),

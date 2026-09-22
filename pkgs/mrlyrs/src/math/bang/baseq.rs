@@ -1,5 +1,6 @@
+use super::code::Code;
 use super::factory::residue_corners;
-use super::universe::{permutations, Code};
+use super::universe::permutations;
 use crate::core::error::{value_error, Result};
 use crate::num::factor::factorial;
 use std::collections::{BTreeSet, HashMap};
@@ -131,12 +132,14 @@ pub fn group(base: usize, dimension: usize) -> Vec<Vec<usize>> {
 
 /// Carries a code through one group element.
 pub fn carry(element: &[usize], code: Code) -> Code {
-    element
-        .iter()
-        .enumerate()
-        .filter(|(index, _)| code >> index & 1 == 1)
-        .map(|(_, &image)| 1u128 << image)
-        .sum()
+    Code(
+        element
+            .iter()
+            .enumerate()
+            .filter(|(index, _)| code.get() >> index & 1 == 1)
+            .map(|(_, &image)| 1u128 << image)
+            .sum(),
+    )
 }
 
 /// Returns every code a design reaches under the group.
@@ -167,14 +170,15 @@ pub fn representatives(base: usize, dimension: usize) -> Result<Vec<(Code, usize
     let group = group(base, dimension);
     let mut seen = vec![false; 1 << cells];
     let mut out = Vec::new();
-    for code in 0..1u128 << cells {
-        if seen[code as usize] {
+    for bits in 0..1u128 << cells {
+        if seen[bits as usize] {
             continue;
         }
+        let code = Code::from(bits);
         let orbit = orbit(&group, code);
         out.push((code, orbit.len()));
         for member in orbit {
-            seen[member as usize] = true;
+            seen[member.get() as usize] = true;
         }
     }
     Ok(out)
@@ -277,10 +281,10 @@ mod tests {
             assert_eq!(total, 1 << base.pow(dimension as u32));
         }
         for dimension in 1..=4 {
-            let codes: Vec<Code> = representatives(2, dimension)
+            let codes: Vec<u128> = representatives(2, dimension)
                 .unwrap()
                 .into_iter()
-                .map(|(code, _)| code)
+                .map(|(code, _)| code.get())
                 .collect();
             assert_eq!(codes, universe_codes(dimension));
         }

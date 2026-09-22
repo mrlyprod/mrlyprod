@@ -3,6 +3,7 @@ use crate::groups::{group, orbit};
 use crate::seed::Census;
 use crate::table::{genus, levels};
 use mrlyrs::math::bang::universe::degree;
+use mrlyrs::math::bang::Code;
 use mrlyrs::num::boolean::walsh_spectrum;
 use std::collections::BTreeSet;
 
@@ -13,7 +14,7 @@ fn line(rule: usize, census: &Census, b3: &[crate::groups::Elem]) -> String {
         u8::from(surjective(rule)),
         u8::from(injective(rule)),
         census.class[rule],
-        degree(rule as u128, 3),
+        degree(Code::from(rule as u128), 3),
         (rule as u32).count_ones(),
         genus(rule, b3),
         census.occurring[rule],
@@ -56,7 +57,10 @@ pub fn report(census: &Census) {
     }
     let surj: BTreeSet<u8> = big.iter().map(|r| u8::from(surjective(*r))).collect();
     let revs: BTreeSet<u8> = big.iter().map(|r| u8::from(injective(*r))).collect();
-    let degs: BTreeSet<i32> = big.iter().map(|r| degree(*r as u128, 3)).collect();
+    let degs: BTreeSet<i32> = big
+        .iter()
+        .map(|r| degree(Code::from(*r as u128), 3))
+        .collect();
     let pops: BTreeSet<u32> = big.iter().map(|r| (*r as u32).count_ones()).collect();
     let diagrams: BTreeSet<usize> = big.iter().map(|r| census.class[*r]).collect();
     let occs: BTreeSet<u8> = big.iter().map(|r| census.occurring[*r]).collect();

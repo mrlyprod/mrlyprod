@@ -1,5 +1,6 @@
 use crate::{code_of, Fault};
 use mrlyrs::core::{json, Json};
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::graph::{census, largest_component, Network};
 use mrlyrs::math::six;
 use mrlyrs::math::spectrum as spectra;
@@ -20,12 +21,12 @@ fn graph_of(
     let code = code_of(code)?;
     match kind {
         "flat" => {
-            let whole = two::core_graph(&two::create(code, number, level, 0, 2)?)?;
+            let whole = two::core_graph(&two::create(Code::from(code), number, level, 0, 2)?)?;
             let pieces = census::components(&whole);
             Ok((whole, pieces))
         }
         "slice" => {
-            let cell = six::cut(&three::create(code, number, level, 2)?)?;
+            let cell = six::cut(&three::create(Code::from(code), number, level, 2)?)?;
             let whole = six::graph::slice_core_graph(&cell)?;
             let pieces = census::components(&whole);
             Ok((largest_component(&whole), pieces))

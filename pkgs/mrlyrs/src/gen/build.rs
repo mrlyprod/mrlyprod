@@ -19,6 +19,7 @@ mod two {
     use crate::core::tensor::Tensor;
     use crate::gen::draw as spec;
     use crate::gen::recipe::{Group, Source, Tile};
+    use crate::math::bang::Code;
     use crate::math::two::{designs, geometry, Cell2d};
 
     fn rotation(rng: &mut Rng) -> usize {
@@ -38,7 +39,7 @@ mod two {
     fn source_cell(source: Source, number: usize, level: usize, rotation: usize) -> Result<Cell2d> {
         match source {
             Source::Classic(design) => designs::named(design, number, level, rotation),
-            Source::Code(code) => designs::create(code, number, level, rotation, 2),
+            Source::Code(code) => designs::create(Code::from(code), number, level, rotation, 2),
         }
     }
 
@@ -247,6 +248,7 @@ mod three {
     use crate::core::tensor::Tensor;
     use crate::gen::draw as spec;
     use crate::gen::recipe::{Design, Group, Source, Tile};
+    use crate::math::bang::Code;
     use crate::math::three::{designs, geometry, Cell3d};
 
     fn rotation(rng: &mut Rng) -> usize {
@@ -284,7 +286,7 @@ mod three {
     fn source_cell(source: Source, number: usize, level: usize, rotation: usize) -> Result<Cell3d> {
         let mut c = match source {
             Source::Classic(design) => design_cell(design, number, level)?,
-            Source::Code(code) => designs::create(code, number, level, 2)?,
+            Source::Code(code) => designs::create(Code::from(code), number, level, 2)?,
         };
         if rotation != 0 {
             c = c.orient(rotation)?;

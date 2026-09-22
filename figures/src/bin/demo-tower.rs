@@ -2,6 +2,7 @@ use figures::board::Frame;
 use figures::{iso, save, Board, Color};
 use mrlyrs::core::colors::{shades, ORANGE};
 use mrlyrs::core::error::Result;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::bang::{magic, MagicLayer};
 use mrlyrs::math::name::Bang;
 use mrlyrs::math::three::designs;
@@ -22,7 +23,7 @@ fn word() -> [MagicLayer; 3] {
 fn block(k: usize) -> Result<Cell3d> {
     let letters = word();
     if k == 1 {
-        return designs::create(letters[0].design.code, NUMBER, 1, 2);
+        return designs::create(Code::from(letters[0].design.code), NUMBER, 1, 2);
     }
     Ok(Cell3d::new(magic(&letters[..k])?))
 }

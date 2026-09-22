@@ -4,7 +4,7 @@ use crate::core::tensor::Tensor;
 use crate::math::atoms;
 use crate::math::bang::catalog::Design;
 use crate::math::bang::factory;
-use crate::math::bang::universe::Code;
+use crate::math::bang::Code;
 
 pub use crate::math::bang::factory::levels_code;
 
@@ -151,7 +151,7 @@ mod tests {
     #[test]
     fn create_matches_carpet() {
         let by_name = carpet(5, 2).unwrap();
-        let by_code = create(7, 5, 2, 0, 2).unwrap();
+        let by_code = create(Code(7), 5, 2, 0, 2).unwrap();
         assert_eq!(by_name, by_code);
     }
     #[test]

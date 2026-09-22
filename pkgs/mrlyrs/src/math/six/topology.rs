@@ -149,6 +149,7 @@ pub fn rim_holes(cell: &Cell6d) -> Result<usize> {
 mod theorems {
     use super::*;
     use crate::math::bang::universe::orbit;
+    use crate::math::bang::Code;
     use crate::math::counts::six::centered_hexagonal;
     use crate::math::graph::census::components as network_components;
     use crate::math::six::census::census;
@@ -157,7 +158,7 @@ mod theorems {
     use crate::math::three::{self, Cell3d};
 
     fn slice(code: u128, number: usize, level: usize) -> Cell6d {
-        cut(&three::create(code, number, level, 2).unwrap()).unwrap()
+        cut(&three::create(Code(code), number, level, 2).unwrap()).unwrap()
     }
 
     fn section_area(cell: &Cell3d) -> u128 {
@@ -194,7 +195,11 @@ mod theorems {
         for (code, fill, class) in expected {
             let cut = slice(code, 3, 1);
             assert_eq!(census(&cut, false).fills, fill, "code={code}");
-            assert_eq!(*orbit(code, 3).iter().next().unwrap(), class, "code={code}");
+            assert_eq!(
+                *orbit(Code(code), 3).iter().next().unwrap(),
+                Code(class),
+                "code={code}"
+            );
         }
     }
 
@@ -242,8 +247,8 @@ mod theorems {
     #[test]
     fn the_layer_weighted_area_is_a_second_route_to_the_fill() {
         for number in 1..17usize {
-            let carpet = three::create(23, number, 1, 2).unwrap();
-            let net = three::create(232, number, 1, 2).unwrap();
+            let carpet = three::create(Code(23), number, 1, 2).unwrap();
+            let net = three::create(Code(232), number, 1, 2).unwrap();
             let whole = 6 * (number as u128).pow(2);
             assert_eq!(
                 section_area(&carpet) + section_area(&net),
@@ -255,7 +260,7 @@ mod theorems {
                 continue;
             }
             for code in [23u128, 232, 3, 129] {
-                let cell = three::create(code, number, 1, 2).unwrap();
+                let cell = three::create(Code(code), number, 1, 2).unwrap();
                 assert_eq!(
                     section_area(&cell),
                     census(&cut(&cell).unwrap(), false).fills as u128,
@@ -358,12 +363,13 @@ mod theorems {
 #[cfg(test)]
 mod spectra {
     use super::*;
+    use crate::math::bang::Code;
     use crate::math::six::geometry::cut;
     use crate::math::spectrum::laplacian_spectrum;
     use crate::math::three;
 
     fn slice(code: u128, number: usize, level: usize) -> Cell6d {
-        cut(&three::create(code, number, level, 2).unwrap()).unwrap()
+        cut(&three::create(Code(code), number, level, 2).unwrap()).unwrap()
     }
 
     fn reading(code: u128, number: usize, level: usize) -> (usize, usize, f64) {

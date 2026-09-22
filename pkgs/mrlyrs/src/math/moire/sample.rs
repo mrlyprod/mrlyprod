@@ -1,6 +1,6 @@
 use super::Lattice;
 use crate::core::error::Result;
-use crate::math::bang::code_to_corners;
+use crate::math::bang::{code_to_corners, Code};
 
 /// Returns the two lattice coordinates of each pixel centre along a row.
 pub fn axes(size: usize, lattice: Lattice, row: usize) -> (Vec<f64>, Vec<f64>) {
@@ -27,7 +27,7 @@ pub fn axes(size: usize, lattice: Lattice, row: usize) -> (Vec<f64>, Vec<f64>) {
 
 /// Unpacks a code into its residue-corner truth table.
 pub fn membership(code: u128, base: usize, dimension: usize) -> Result<Vec<bool>> {
-    let corners = code_to_corners(code, dimension, base)?;
+    let corners = code_to_corners(Code::from(code), dimension, base)?;
     let total = base.pow(dimension as u32);
     let mut table = vec![false; total];
     for corner in corners {

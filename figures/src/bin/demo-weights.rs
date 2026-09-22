@@ -2,6 +2,7 @@ use figures::board::{Board, Frame};
 use figures::ink::Ramp;
 use figures::{field, ink, save};
 use mrlyrs::core::error::Result;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two;
 
 const CODE: u128 = 495;
@@ -14,7 +15,7 @@ const SHARES: [f64; 8] = [5.0, 4.0, 3.0, 4.0, 2.0, 3.0, 2.0, 1.0];
 const WHOLE: f64 = 24.0;
 
 fn corners() -> Result<Vec<(usize, usize)>> {
-    let tile = two::designs::create(CODE, SIDE, 1, 0, SIDE)?;
+    let tile = two::designs::create(Code::from(CODE), SIDE, 1, 0, SIDE)?;
     let types = tile.types();
     Ok((0..SIDE)
         .flat_map(|a| (0..SIDE).map(move |b| (a, b)))

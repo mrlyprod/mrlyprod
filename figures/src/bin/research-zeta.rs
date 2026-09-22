@@ -400,9 +400,9 @@ fn compute() -> Result<()> {
     let path = figures::out::root().join(DATA);
     let folder = path.parent().expect("the data path lost its folder");
     std::fs::create_dir_all(folder)
-        .map_err(|e| mrlyrs::core::MrlyError::Value(format!("cannot make {folder:?}: {e}")))?;
+        .map_err(|e| mrlyrs::Error::Value(format!("cannot make {folder:?}: {e}")))?;
     std::fs::write(&path, text)
-        .map_err(|e| mrlyrs::core::MrlyError::Value(format!("cannot write {path:?}: {e}")))?;
+        .map_err(|e| mrlyrs::Error::Value(format!("cannot write {path:?}: {e}")))?;
     println!("data research-zeta {} zeros", dz.len() + fz.len());
     Ok(())
 }
@@ -410,7 +410,7 @@ fn compute() -> Result<()> {
 fn render() -> Result<()> {
     let path = figures::out::root().join(DATA);
     let text = std::fs::read_to_string(&path).map_err(|e| {
-        mrlyrs::core::MrlyError::Value(format!(
+        mrlyrs::Error::Value(format!(
             "cannot read {path:?}: {e}; run the example with compute"
         ))
     })?;

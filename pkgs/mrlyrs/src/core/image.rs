@@ -1,6 +1,6 @@
 use super::codec;
 use super::colors::Color;
-use super::error::{value_error, MrlyError, Result};
+use super::error::{value_error, Error, Result};
 use super::resample::{self, Filter};
 use serde::{Deserialize, Serialize};
 
@@ -92,7 +92,7 @@ struct Parts {
 }
 
 impl TryFrom<Parts> for Image {
-    type Error = MrlyError;
+    type Error = Error;
 
     fn try_from(parts: Parts) -> Result<Image> {
         let Parts {

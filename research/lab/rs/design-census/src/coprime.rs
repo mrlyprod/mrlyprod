@@ -285,9 +285,9 @@ fn base6() -> Vec<Code> {
 
 pub fn report() {
     let families = [
-        survey(2, 2, 1..16, "base 2 D 2"),
-        survey(2, 3, 1..256, "base 2 D 3"),
-        survey(3, 2, 1..512, "base 3 D 2"),
+        survey(2, 2, (1..16u128).map(Code::from), "base 2 D 2"),
+        survey(2, 3, (1..256u128).map(Code::from), "base 2 D 3"),
+        survey(3, 2, (1..512u128).map(Code::from), "base 3 D 2"),
         survey(3, 3, [sponge()].into_iter(), "menger sponge"),
         survey(6, 2, base6().into_iter(), "base 6 samples"),
     ];

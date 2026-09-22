@@ -1,6 +1,7 @@
 use figures::board::{Board, Frame};
 use figures::{hex, ink, save};
 use mrlyrs::core::error::Result;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::six;
 use mrlyrs::math::six::Cell6d;
 
@@ -28,7 +29,7 @@ fn main() -> Result<()> {
     let mut triangles = 0usize;
     for k in 1..=WIDE * WIDE {
         let side = 2 * k - 1;
-        let slice = six::cut_design(CODE, side, 1, 2)?;
+        let slice = six::cut_design(Code::from(CODE), side, 1, 2)?;
         let pieces = six::components(&slice)?;
         let holes = six::holes(&slice)?;
         if k % 2 == 0 {

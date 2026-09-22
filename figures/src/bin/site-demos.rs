@@ -1,5 +1,6 @@
 use figures::{ink, save, Board};
 use mrlyrs::core::error::Result;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two::designs;
 
 const TILE: usize = 27;
@@ -22,7 +23,7 @@ fn main() -> Result<()> {
     let top = ((board.height as f64 - height) / 2.0).round();
     let mut painted = 0usize;
     for (place, code) in DESIGNS.iter().enumerate() {
-        let design = designs::create(*code, 3, 3, 0, 3)?;
+        let design = designs::create(Code::from(*code), 3, 3, 0, 3)?;
         let types = design.types();
         let tone = ink::inks()[place % 3];
         let x = left + (place % COLS) as f64 * (side + GUTTER);

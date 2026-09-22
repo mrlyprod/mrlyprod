@@ -5,6 +5,7 @@ use crate::{code_of, theme, Fault, Grid};
 use mrlyrs::core::json;
 use mrlyrs::core::tensor::Tensor;
 use mrlyrs::math::bang::factory;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::counts;
 use mrlyrs::math::shape::{self, Frac, Shape};
 use mrlyrs::math::three::{self, Cell3d};
@@ -50,7 +51,7 @@ fn design(
     level: usize,
 ) -> Result<Tensor, Fault> {
     Ok(factory::create(
-        code_of(code)?,
+        Code::from(code_of(code)?),
         number,
         dimension,
         base,
@@ -329,8 +330,8 @@ pub fn crop_collapse(
     let table = circle_table(code, number, level, base, dimension, centre)?;
     let seen: Vec<f64> = table.iter().map(|row| row.seen as f64).collect();
     let top = seen.len() - 1;
-    let mass = counts::fill(code_of(code)?, number, dimension, 1, base)?;
-    let d = counts::dimension(code_of(code)?, number, dimension, base)?;
+    let mass = counts::fill(Code::from(code_of(code)?), number, dimension, 1, base)?;
+    let d = counts::dimension(Code::from(code_of(code)?), number, dimension, base)?;
     let step = number as f64;
     let mut scales = Vec::new();
     let (mut mains, mut levels) = (Vec::new(), Vec::new());

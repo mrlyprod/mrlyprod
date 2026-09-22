@@ -1,4 +1,5 @@
 use mrlyrs::math::bang::factory::create;
+use mrlyrs::math::bang::Code;
 use mrlyrs::num::gauss::Ring;
 use mrlyrs::num::radix::{flowsnake, gasket, koch, terdragon, tile, twindragon, Base, Radix};
 use std::collections::{HashMap, HashSet};
@@ -379,7 +380,7 @@ fn run_today() {
         for code in 0..(1u128 << cells) {
             let design = tile(m, code);
             let got: HashSet<(i64, i64)> = design.words(level).into_iter().collect();
-            let tensor = create(code, m as usize, 2, m as usize, level).unwrap();
+            let tensor = create(Code::from(code), m as usize, 2, m as usize, level).unwrap();
             let side = m.pow(level as u32) as usize;
             let mut want = HashSet::new();
             for row in 0..side {

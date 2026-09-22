@@ -1,5 +1,6 @@
 use figures::{ink, save, Board};
 use mrlyrs::core::error::Result;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::bang::{magic, MagicLayer};
 use mrlyrs::math::name::Bang;
 use mrlyrs::math::two;
@@ -14,7 +15,7 @@ fn main() -> Result<()> {
         MagicLayer::new(Bang::new(14, 2, 2), 7),
         MagicLayer::new(Bang::new(9, 2, 2), 5),
     ];
-    let first = two::create(7, 3, 1, 0, 2)?;
+    let first = two::create(Code::from(7u128), 3, 1, 0, 2)?;
     let pair = magic(&letters[..2])?;
     let whole = magic(&letters)?;
     assert_eq!(first.width(), 3);

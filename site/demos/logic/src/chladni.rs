@@ -4,6 +4,7 @@ use crate::life::life_noise;
 use crate::{code_of, Fault, Grid};
 use mrlyrs::core::json;
 use mrlyrs::life;
+use mrlyrs::math::bang::Code;
 use mrlyrs::num::fft::{
     convolve_with, embed_kernel, log_spectrum, peak_ring, radial_profile, transform,
 };
@@ -35,7 +36,7 @@ struct Mask {
 
 fn mask_of(code: &str, side: usize, level: usize, size: usize) -> Result<Mask, Fault> {
     checked_size(size)?;
-    let mask = life::design_mask(2, code_of(code)?, side, level)?;
+    let mask = life::design_mask(2, Code::from(code_of(code)?), side, level)?;
     let span = mask.shape[0];
     if span > size {
         return Err(Fault::new("the mask does not fit the field."));

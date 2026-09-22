@@ -22,7 +22,7 @@ pub struct Preset {
 }
 
 fn parity() -> Spec {
-    Spec::new(corners_to_code(&[vec![0, 0]], 2, 2), 2, 2)
+    Spec::new(corners_to_code(&[vec![0, 0]], 2, 2).get(), 2, 2)
 }
 
 fn pierced() -> Spec {
@@ -30,7 +30,7 @@ fn pierced() -> Spec {
         .flat_map(|a| (0..3u8).map(move |b| vec![a, b]))
         .filter(|corner| corner != &vec![1, 1])
         .collect();
-    Spec::new(corners_to_code(&corners, 2, 3), 3, 2)
+    Spec::new(corners_to_code(&corners, 2, 3).get(), 3, 2)
 }
 
 fn odds(limit: usize) -> Vec<usize> {

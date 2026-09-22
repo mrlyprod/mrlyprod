@@ -1,35 +1,82 @@
 use super::Json;
-use std::error::Error;
 use std::fmt;
 
 /// The one error type of the crate.
+#[non_exhaustive]
 #[derive(Debug)]
-pub enum MrlyError {
+pub enum Error {
     /// A value that broke a rule, carrying the message.
     Value(String),
+    /// A length, extent or dtype that does not match, carrying the message.
+    Shape(String),
+    /// A count that runs past the width of its integer, carrying the message.
+    Overflow(String),
+    /// A json text that would not parse, carrying the reader's own error.
+    Json(serde_json::Error),
+    /// A png or gif codec that refused, carrying its message.
+    Codec(String),
 }
 
-impl fmt::Display for MrlyError {
+impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            MrlyError::Value(message) => write!(f, "{message}"),
+            Error::Value(message) => write!(f, "{message}"),
+            Error::Shape(message) => write!(f, "{message}"),
+            Error::Overflow(message) => write!(f, "{message}"),
+            Error::Json(error) => write!(f, "json: {error}"),
+            Error::Codec(message) => write!(f, "{message}"),
         }
     }
 }
 
-impl Error for MrlyError {}
+impl std::error::Error for Error {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Error::Json(error) => Some(error),
+            _ => None,
+        }
+    }
+}
 
-/// The crate's result, erring with MrlyError.
-pub type Result<T> = std::result::Result<T, MrlyError>;
+/// The crate's result, erring with Error.
+pub type Result<T> = std::result::Result<T, Error>;
 
 /// Wraps a message in an Err of the value variant.
 pub fn value_error<T>(message: impl Into<String>) -> Result<T> {
-    Err(MrlyError::Value(message.into()))
+    Err(Error::Value(message.into()))
 }
 
-impl From<serde_json::Error> for MrlyError {
-    fn from(error: serde_json::Error) -> MrlyError {
-        MrlyError::Value(format!("json: {error}"))
+/// Wraps a message in an Err of the shape variant.
+pub fn shape_error<T>(message: impl Into<String>) -> Result<T> {
+    Err(Error::Shape(message.into()))
+}
+
+/// Wraps a message in an Err of the overflow variant.
+pub fn overflow_error<T>(message: impl Into<String>) -> Result<T> {
+    Err(Error::Overflow(message.into()))
+}
+
+impl From<serde_json::Error> for Error {
+    fn from(error: serde_json::Error) -> Error {
+        Error::Json(error)
+    }
+}
+
+impl From<png::EncodingError> for Error {
+    fn from(error: png::EncodingError) -> Error {
+        Error::Codec(error.to_string())
+    }
+}
+
+impl From<png::DecodingError> for Error {
+    fn from(error: png::DecodingError) -> Error {
+        Error::Codec(error.to_string())
+    }
+}
+
+impl From<gif::EncodingError> for Error {
+    fn from(error: gif::EncodingError) -> Error {
+        Error::Codec(error.to_string())
     }
 }
 

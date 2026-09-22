@@ -1,5 +1,6 @@
 use figures::{ink, save, Board};
 use mrlyrs::core::error::Result;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::spirograph::{distinct, frame, pencils, trace, track, Kind};
 use mrlyrs::math::two;
 
@@ -19,7 +20,7 @@ const THICK: f64 = 2.2;
 const HAIR: f64 = 1.5;
 
 fn main() -> Result<()> {
-    let cell = two::create(CODE, SIDE, LEVEL, 0, BASE)?;
+    let cell = two::create(Code::from(CODE), SIDE, LEVEL, 0, BASE)?;
     let types = cell.types().bytes().to_vec();
     let path = track("in", RING, WHEEL, 4, 1)?;
     let pens = pencils(&types, cell.width(), cell.height(), "both", REACH, 0.0, 1)?;

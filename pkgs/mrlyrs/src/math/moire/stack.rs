@@ -151,7 +151,7 @@ mod tests {
         let numbers: Vec<usize> = (1..20).step_by(2).collect();
         let size = 48;
         let carpet = stack(
-            Spec::new(carpet_code, 3, 2),
+            Spec::new(carpet_code.get(), 3, 2),
             &numbers,
             Combine::Sum,
             1,
@@ -161,7 +161,7 @@ mod tests {
         )
         .unwrap();
         let sponge = stack(
-            Spec::new(sponge_code, 3, 3),
+            Spec::new(sponge_code.get(), 3, 3),
             &numbers,
             Combine::Sum,
             1,

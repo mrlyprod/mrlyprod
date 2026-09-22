@@ -2,6 +2,7 @@ use figures::board::Frame;
 use figures::{ink, save, Board, Grid};
 use mrlyrs::core::error::Result;
 use mrlyrs::core::Color;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two::designs;
 
 const SIDE: usize = 5;
@@ -22,7 +23,7 @@ fn outline(board: &mut Board, frame: Frame, thick: f64) {
 }
 
 fn panel(board: &mut Board, frame: Frame, code: u128, tone: Color) -> Result<usize> {
-    let design = designs::create(code, SIDE, 1, 0, 2)?;
+    let design = designs::create(Code::from(code), SIDE, 1, 0, 2)?;
     let types = design.types();
     let grid = Grid::new(frame, SIDE, SIDE, GAP);
     let mut filled = 0usize;

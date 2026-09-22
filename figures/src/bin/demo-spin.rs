@@ -2,6 +2,7 @@ use figures::board::{Board, Frame};
 use figures::ink::Ramp;
 use figures::{field, ink, save};
 use mrlyrs::core::error::Result;
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::six;
 use mrlyrs::math::spin;
 
@@ -10,7 +11,7 @@ const TRIANGLES: usize = 486;
 const STEPS: usize = 2048;
 
 fn main() -> Result<()> {
-    let cut = six::cut_design(23, 3, 2, 2)?;
+    let cut = six::cut_design(Code::from(23u128), 3, 2, 2)?;
     let tally = six::census(&cut, false);
     assert_eq!(tally.triangles, TRIANGLES);
     assert!(tally.fills > 0 && tally.fills < TRIANGLES);

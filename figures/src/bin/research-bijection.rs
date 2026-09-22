@@ -1,6 +1,7 @@
 use figures::{ink, save, Board};
 use mrlyrs::core::error::Result;
 use mrlyrs::math::bang;
+use mrlyrs::math::bang::Code;
 
 const CENSUS: usize = 16;
 const STAMP_COLS: usize = 4;
@@ -22,7 +23,7 @@ fn main() -> Result<()> {
     let pad = bit * 0.10;
     let mut gold = 0usize;
     for code in 0..256u128 {
-        let design = universe.design(code);
+        let design = universe.design(Code::from(code));
         let color = if design.canonical {
             gold += 1;
             ink::yellow()

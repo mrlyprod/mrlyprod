@@ -1,6 +1,7 @@
 use figures::{ink, plot, save, Board, Frame};
 use mrlyrs::core::error::Result;
 use mrlyrs::core::{Color, Rng};
+use mrlyrs::math::bang::Code;
 use mrlyrs::math::two::designs;
 use mrlyrs::math::two::Cell2d;
 use std::collections::VecDeque;
@@ -101,7 +102,7 @@ fn walk(side: usize, mask: &[bool], start: usize, seed: u64) -> Vec<usize> {
 }
 
 fn panel(board: &mut Board, area: Frame, code: u128, color: Color) -> Result<usize> {
-    let cell = designs::create(code, 3, LEVEL, 0, 3)?;
+    let cell = designs::create(Code::from(code), 3, LEVEL, 0, 3)?;
     let (side, mask) = sites(&cell);
     let step = area.w / side as f64;
     let dot = step * 0.7;

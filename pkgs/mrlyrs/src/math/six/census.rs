@@ -215,6 +215,7 @@ mod tests {
 #[cfg(test)]
 mod theorems {
     use super::*;
+    use crate::math::bang::Code;
     use crate::math::counts::six::{
         solid_slice_boundary, solid_slice_edges, solid_slice_interior, solid_slice_triangles,
         solid_slice_vertices,
@@ -338,7 +339,7 @@ mod theorems {
             for design in [None, Some(23u128), Some(232), Some(3), Some(129)] {
                 let cell = match design {
                     None => three::ones(3, level).unwrap(),
-                    Some(code) => three::create(code, 3, level, 2).unwrap(),
+                    Some(code) => three::create(Code(code), 3, level, 2).unwrap(),
                 };
                 let slice = cut(&cell).unwrap();
                 let sub = fills_only(&slice);
