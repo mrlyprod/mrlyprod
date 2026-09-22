@@ -463,6 +463,7 @@ pub fn spectral_ratio(base: usize, dimension: usize) -> Result<Option<f64>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::math::bang::Code;
 
     fn brute(base: usize, dimension: usize) -> Vec<i128> {
         let centre = (base - 1) / 2;
@@ -647,5 +648,17 @@ mod tests {
         }
         let fifty = spectral_ratio(3, 50).unwrap().unwrap();
         assert!((fifty - 13.0 / 12.0).abs() < 1e-9, "ratio {fifty}");
+    }
+    #[test]
+    fn the_ladder_is_the_sponge_diagonal_count() {
+        let terms = ladder(3, 3, 5).unwrap();
+        assert_eq!(terms, vec![1, 6, 42, 306, 2250, 16578]);
+        let counted: Vec<u128> = (1..=5)
+            .map(|level| {
+                let height = 3 * (3usize.pow(level as u32) - 1) / 2;
+                crate::math::three::profile(Code::from(23u64), 3, level, 2).unwrap()[height]
+            })
+            .collect();
+        assert_eq!(counted, vec![6, 42, 306, 2250, 16578]);
     }
 }

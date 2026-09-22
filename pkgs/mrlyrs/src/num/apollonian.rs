@@ -387,7 +387,33 @@ mod tests {
     fn the_census_lands_on_the_counts_the_generator_prints() {
         assert_eq!(grow("strip", 1000).unwrap().circles.len(), 950);
         assert_eq!(grow("-1,2,2,3", 1000).unwrap().circles.len(), 3325);
-        assert_eq!(grow("strip", 2048).unwrap().circles.len(), 2448);
+        assert_eq!(grow("-2,3,6,7", 1000).unwrap().circles.len(), 1297);
+        assert_eq!(grow("-3,4,12,13", 1000).unwrap().circles.len(), 741);
+        let strip = grow("strip", 2048).unwrap();
+        assert_eq!(strip.circles.len(), 2448);
+        assert_eq!((strip.quads, strip.broken, strip.strayed), (2449, 0, 0));
+    }
+
+    #[test]
+    fn a_circle_carries_the_radius_and_the_centre_its_curvature_names() {
+        let p = grow("strip", 2048).unwrap();
+        assert_eq!(p.circles[0], Circle { k: 8, x: 4, y: 1 });
+        for c in &p.circles {
+            let r = c.radius().unwrap();
+            let (x, y) = c.centre().unwrap();
+            assert!((r * c.k.abs() as f64 - 1.0).abs() < 1e-12);
+            assert!(x > -r && x < 1.0 + r && y > 0.0 && y < 1.0);
+            if is_ford(*c) {
+                let den = ((c.k / 2) as f64).sqrt().round();
+                assert!((y - r).abs() < 1e-12 && (c.k as f64 - 2.0 * den * den).abs() < 1e-12);
+            }
+        }
+        let seed = root("strip").unwrap();
+        assert!(seed[0].centre().is_none() && seed[0].radius().is_none());
+        assert_eq!(seed[2].centre().unwrap(), (0.0, 0.5));
+        assert_eq!(seed[3].centre().unwrap(), (1.0, 0.5));
+        assert_eq!(seed[2].radius().unwrap(), 0.5);
+        assert_eq!(root("-1,2,2,3").unwrap()[0].radius().unwrap(), 1.0);
     }
 
     #[test]
@@ -395,6 +421,22 @@ mod tests {
         let p = grow("strip", 2048).unwrap();
         let marks = touches(&p);
         assert_eq!(marks.len(), 323);
+        assert_eq!(
+            marks[0],
+            Touch {
+                num: 1,
+                den: 32,
+                k: 2048
+            }
+        );
+        assert_eq!(
+            marks[322],
+            Touch {
+                num: 31,
+                den: 32,
+                k: 2048
+            }
+        );
         assert!(p
             .circles
             .iter()
@@ -430,7 +472,12 @@ mod tests {
             (79, 79, 0, 136)
         );
         assert!(!shadow(&grow("strip", 512).unwrap(), 32).unwrap().covered);
+        assert_eq!(
+            shadow(&grow("-1,2,2,3", 1000).unwrap(), 32).unwrap().nodes,
+            0
+        );
         assert!(shadow(&p, ORDER_CAP + 1).is_err());
+        assert!(shadow(&p, 0).is_err());
     }
 
     #[test]
@@ -440,7 +487,10 @@ mod tests {
             frame(&grow("-1,2,2,3", 512).unwrap()),
             [-1.0, -1.0, 1.0, 1.0]
         );
+        assert_eq!((CURVATURE_CAP, CIRCLE_CAP, ORDER_CAP), (8192, 200_000, 64));
+        assert_eq!(ROOTS.len(), 4);
         assert!(grow("gasket", 512).is_err());
         assert!(grow("strip", CURVATURE_CAP + 1).is_err());
+        assert!(grow("strip", 1).is_err());
     }
 }

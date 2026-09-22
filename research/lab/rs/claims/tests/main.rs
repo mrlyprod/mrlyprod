@@ -1,10 +1,6 @@
-mod checks;
-mod ledger;
-mod registry;
-mod report;
-
-use registry::{Cost, Verdict};
-use report::Run;
+use claims::registry::{Cost, Verdict};
+use claims::report::Run;
+use claims::{ledger, registry, report};
 use std::path::Path;
 
 #[test]
@@ -13,7 +9,7 @@ fn the_ledger_claims_hold() {
         .map(|name| name == "all")
         .unwrap_or(false);
     let lane = if all { Cost::Dear } else { Cost::Cheap };
-    let folder = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../research/claims");
+    let folder = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../claims");
     let mut files: Vec<_> = std::fs::read_dir(&folder)
         .expect("the claims folder is readable")
         .map(|entry| entry.expect("an entry reads").path())

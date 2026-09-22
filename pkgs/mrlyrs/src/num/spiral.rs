@@ -1,26 +1,21 @@
+use crate::core::named_enum;
 use crate::num::factor::mobius_sieve;
 use crate::num::prime::{flags, is_prime};
 
 const HEX: [(i64, i64); 6] = [(1, 0), (1, -1), (0, -1), (-1, 0), (-1, 1), (0, 1)];
 
-/// The two lattices a spiral of the whole numbers is wound on, one at the centre and two to its right.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Lattice {
-    /// Unit squares turning anticlockwise with y up: ring k holds 8k cells and ends at the odd square (2k + 1)^2 on the diagonal below right.
-    Square,
-    /// Hexagons in axial coordinates q and r, r growing downward: ring r holds 6r cells and ends at the centered hexagonal number 3r^2 + 3r + 1 below right of the centre.
-    Hex,
+named_enum! {
+    /// The two lattices a spiral of the whole numbers is wound on, one at the centre and two to its right.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum Lattice {
+        /// Unit squares turning anticlockwise with y up: ring k holds 8k cells and ends at the odd square (2k + 1)^2 on the diagonal below right.
+        Square => "square",
+        /// Hexagons in axial coordinates q and r, r growing downward: ring r holds 6r cells and ends at the centered hexagonal number 3r^2 + 3r + 1 below right of the centre.
+        Hex => "hex",
+    }
 }
 
 impl Lattice {
-    /// Reads a lattice from its name.
-    pub fn named(name: &str) -> Option<Lattice> {
-        match name {
-            "square" => Some(Lattice::Square),
-            "hex" => Some(Lattice::Hex),
-            _ => None,
-        }
-    }
     /// Returns the outermost ring of a sheet the odd side wide, half the side rounded down.
     pub fn radius(self, side: usize) -> usize {
         side.saturating_sub(1) / 2
@@ -138,29 +133,18 @@ impl Lattice {
     }
 }
 
-/// What a cell is painted for.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Mark {
-    /// The primes.
-    Prime,
-    /// The primes with a prime two away.
-    Twin,
-    /// The numbers no prime squares into.
-    Squarefree,
-    /// The Mobius value: one, minus one, or zero for a squared factor.
-    Mobius,
-}
-
-impl Mark {
-    /// Reads a mark from its name.
-    pub fn named(name: &str) -> Option<Mark> {
-        match name {
-            "prime" => Some(Mark::Prime),
-            "twin" => Some(Mark::Twin),
-            "squarefree" => Some(Mark::Squarefree),
-            "mobius" => Some(Mark::Mobius),
-            _ => None,
-        }
+named_enum! {
+    /// What a cell is painted for.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum Mark {
+        /// The primes.
+        Prime => "prime",
+        /// The primes with a prime two away.
+        Twin => "twin",
+        /// The numbers no prime squares into.
+        Squarefree => "squarefree",
+        /// The Mobius value: one, minus one, or zero for a squared factor.
+        Mobius => "mobius",
     }
 }
 
@@ -254,23 +238,14 @@ pub fn diagonal(lattice: Lattice, side: usize, a: i64, b: i64, c: i64) -> Diagon
     }
 }
 
-/// Which cells of the square winding grow into a tile.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Growth {
-    /// Only the primes grow; one and every composite stay unit cells.
-    Prime,
-    /// Every number grows.
-    Every,
-}
-
-impl Growth {
-    /// Reads a growth from its name.
-    pub fn named(name: &str) -> Option<Growth> {
-        match name {
-            "prime" => Some(Growth::Prime),
-            "every" => Some(Growth::Every),
-            _ => None,
-        }
+named_enum! {
+    /// Which cells of the square winding grow into a tile.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum Growth {
+        /// Only the primes grow; one and every composite stay unit cells.
+        Prime => "prime",
+        /// Every number grows.
+        Every => "every",
     }
 }
 
@@ -488,10 +463,21 @@ mod tests {
                 assert_eq!(lattice.ring(top + 1), lattice.radius(side) as u64 + 1);
             }
         }
-        assert_eq!(Lattice::named("hex"), Some(Lattice::Hex));
-        assert_eq!(Lattice::named("cube"), None);
-        assert_eq!(Mark::named("twin"), Some(Mark::Twin));
-        assert_eq!(Mark::named("odd"), None);
+    }
+
+    #[test]
+    fn names_parse_back() {
+        for lattice in Lattice::all() {
+            assert_eq!(lattice, lattice.name().parse().unwrap());
+        }
+        for mark in Mark::all() {
+            assert_eq!(mark, mark.name().parse().unwrap());
+        }
+        for growth in Growth::all() {
+            assert_eq!(growth, growth.name().parse().unwrap());
+        }
+        assert!("cube".parse::<Lattice>().is_err());
+        assert!("some".parse::<Growth>().is_err());
     }
 
     #[test]
@@ -668,8 +654,5 @@ mod tests {
         assert_eq!(level_of(1000, 10), 3);
         assert_eq!(level_of(5, 1), level_of(5, 2));
         assert_eq!(snail(1, 0, Growth::Every).tiles.len(), 1);
-        assert_eq!(Growth::named("prime"), Some(Growth::Prime));
-        assert_eq!(Growth::named("every"), Some(Growth::Every));
-        assert_eq!(Growth::named("some"), None);
     }
 }

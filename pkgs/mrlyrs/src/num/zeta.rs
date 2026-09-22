@@ -556,11 +556,12 @@ mod tests {
     #[test]
     fn the_zeros_and_their_count_are_the_classic_ones() {
         let line = Line::new();
-        let first = line.zeros(5);
+        let first = line.zeros(10);
         let known = [14.134_725, 21.022_040, 25.010_858, 30.424_876, 32.935_062];
         for (got, want) in first.iter().zip(known) {
             assert!((got - want).abs() < 1e-6, "{got} {want}");
         }
+        assert!((first[9] - 49.773_832).abs() < 1e-5);
         assert_eq!(line.count(100.0), 29);
         assert_eq!(line.count(200.0), 79);
         assert_eq!(line.count(10.0), 0);
@@ -600,17 +601,39 @@ mod tests {
             prefix[n] = prefix[n - 1] + phi[n];
         }
         let main = novelty_main();
-        let (mut peak, mut miss) = (0.0f64, 0.0f64);
-        for k in 0..=96 {
-            let j = 8.0 + k as f64 / 16.0;
-            let y = 2.0f64.powf(-j);
-            let dot = smoothed_novelty(&phi, y, main) / y.powf(1.5);
-            peak = peak.max(dot.abs());
-            miss = miss.max((dot - novelty_wave(&gammas, &coef, y.ln())).abs());
-        }
-        assert!(miss / peak < 5e-2, "{miss} {peak}");
-        let rough = sharp_novelty(&prefix, 2.0f64.powf(-10.0)) / 2.0f64.powf(-10.0);
-        assert!(rough.abs() < 2.0 && rough != 0.0);
+        let heights: Vec<f64> = (0..=96).map(|k| 8.0 + k as f64 / 16.0).collect();
+        let dots: Vec<f64> = heights
+            .iter()
+            .map(|&j| {
+                let y = 2.0f64.powf(-j);
+                smoothed_novelty(&phi, y, main) / y.powf(1.5)
+            })
+            .collect();
+        let peak = dots.iter().fold(0.0f64, |a, v| a.max(v.abs()));
+        assert!(peak > 0.3 && peak < 0.6, "{peak}");
+        let miss = |count: usize| {
+            heights
+                .iter()
+                .zip(&dots)
+                .map(|(&j, &dot)| {
+                    let wave = novelty_wave(&gammas[..count], &coef[..count], -j * 2f64.ln());
+                    (dot - wave).abs()
+                })
+                .fold(0.0f64, f64::max)
+                / peak
+        };
+        assert_eq!(miss(0), 1.0);
+        assert!(miss(1) > 0.3 && miss(1) < 0.7, "{}", miss(1));
+        assert!(miss(10) < 5e-2, "{}", miss(10));
+        let rough: Vec<f64> = heights
+            .iter()
+            .map(|&j| {
+                let y = 2.0f64.powf(-j);
+                sharp_novelty(&prefix, y) / y
+            })
+            .collect();
+        assert!(rough.iter().all(|v| v.abs() < 2.0));
+        assert!(rough.iter().any(|v| v.abs() > 0.1));
     }
 
     #[test]

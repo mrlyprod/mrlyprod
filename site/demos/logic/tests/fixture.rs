@@ -1,7 +1,6 @@
 use demos::automata::*;
 use demos::bang::*;
 use demos::blend::*;
-use demos::carry::*;
 use demos::census::*;
 use demos::gauss::*;
 use demos::graph::*;
@@ -1424,52 +1423,6 @@ fn the_tile_fixture_the_page_prints() {
 }
 
 #[test]
-fn the_word_reaches_every_dimension_the_tower_draws() {
-    let word = |list: [&str; 2]| list.iter().map(|c| c.to_string()).collect::<Vec<String>>();
-    let sponge = word(["23", "23"]);
-    let sides = vec![3u32, 3];
-    let bases = vec![2u32, 2];
-
-    assert_eq!(
-        magic_perimeter(word(["7", "9"]), vec![3, 5], bases.clone()).unwrap(),
-        "368"
-    );
-    assert_eq!(
-        magic_perimeter(
-            vec!["7".into(), "14".into(), "9".into()],
-            vec![3, 7, 5],
-            vec![2, 2, 2]
-        )
-        .unwrap(),
-        "11856"
-    );
-
-    let cut =
-        parse(&magic_hex_census(sponge.clone(), sides.clone(), bases.clone(), "cut").unwrap())
-            .unwrap();
-    assert_eq!(cut["grid"], parse("[35,18]").unwrap());
-    assert_eq!(cut["triangles"], 486);
-    assert_eq!(cut["fills"], 306);
-    assert_eq!(cut["voids"], 180);
-    assert_eq!(cut["exposed"], 162);
-    assert_eq!(cut["euler"], 1);
-    let solo = parse(&slice_census("23", 3, 2, 2).unwrap()).unwrap();
-    assert_eq!(cut["fills"], solo["fills"]);
-    assert_eq!(cut["triangles"], solo["triangles"]);
-
-    let iso =
-        parse(&magic_hex_census(sponge.clone(), sides.clone(), bases.clone(), "iso").unwrap())
-            .unwrap();
-    assert_eq!(iso["grid"], parse("[18,35]").unwrap());
-    assert_eq!(iso["fills"], 486);
-    assert_eq!(iso["voids"], 0);
-    assert_eq!(iso["exposed"], 88);
-
-    let art = magic_hex(sponge, sides, bases, "cut", 2).unwrap();
-    assert_eq!(art.matches("<polygon").count(), 486);
-}
-
-#[test]
 fn the_blend_exports_answer() {
     let budget = "500000";
     let surface = ledger_terms("23", 3, 2, "surface", "level", 8, budget).unwrap();
@@ -1588,129 +1541,6 @@ fn the_blend_exports_answer() {
     assert!(blend_series("7", 2, 2, "faces", "level", 3, budget, 3).is_err());
     assert!(blend_family(3, 3, "fills", "level", 3, budget).is_err());
     assert!(blend_mix(fills, faces, "twist", 0, 3).is_err());
-}
-
-#[test]
-fn the_carry_automaton_reads_the_published_block() {
-    assert_eq!(carry_cap(3).unwrap(), 15);
-    assert_eq!(carry_cap(5).unwrap(), 11);
-    let anchor = parse(&carry_block(3, 3, 6).unwrap()).unwrap();
-    assert_eq!(anchor["digits"].to_string(), "[1,3,3,6,3,3,1]");
-    assert_eq!(anchor["block"].to_string(), "[[6,6],[1,3]]");
-    assert_eq!(anchor["characteristic"].to_string(), r#"["1","-9","12"]"#);
-    assert_eq!(anchor["polynomial"], "x^2 - 9 x + 12");
-    assert_eq!(
-        (
-            anchor["trace"].clone(),
-            anchor["determinant"].clone(),
-            anchor["fill"].clone()
-        ),
-        ("9".into(), "12".into(), "20".into())
-    );
-    let root = anchor["read"]["root"].as_f64().unwrap();
-    assert!((root - (9.0 + 33f64.sqrt()) / 2.0).abs() < 1e-9);
-    assert!((anchor["read"]["log_root"].as_f64().unwrap() - 1.818_410).abs() < 1e-6);
-    assert!((anchor["read"]["log_fill"].as_f64().unwrap() - 1.726_833).abs() < 1e-6);
-    assert_eq!(anchor["read"]["sign"], 1);
-    assert_eq!(
-        anchor["terms"].to_string(),
-        r#"["1","6","42","306","2250","16578","122202"]"#
-    );
-    assert_eq!(
-        anchor["ratios"].to_string(),
-        r#"["6","7","7.2857","7.3529","7.368","7.3713"]"#
-    );
-    let traces: Vec<String> = (2..=7)
-        .map(|dimension| {
-            parse(&carry_block(3, dimension, 1).unwrap()).unwrap()["trace"].to_string()
-        })
-        .collect();
-    assert_eq!(traces.join(","), r#""2","9","11","60","47","336""#);
-    let ladder = |base: usize, dimension: usize, levels: usize| {
-        parse(&carry_block(base, dimension, levels).unwrap()).unwrap()["terms"].to_string()
-    };
-    assert_eq!(
-        ladder(3, 4, 6),
-        r#"["1","6","132","1848","29040","441408","6772128"]"#
-    );
-    assert_eq!(ladder(3, 5, 4), r#"["1","30","1000","35700","1321600"]"#);
-    assert_eq!(ladder(3, 6, 4), r#"["1","20","4030","242300","24642700"]"#);
-    assert_eq!(ladder(5, 3, 4), r#"["1","18","414","9702","227646"]"#);
-    let deep = parse(&carry_block(3, 15, 32).unwrap()).unwrap();
-    assert_eq!(
-        (deep["levels"].clone(), deep["capped"].clone()),
-        (7.into(), true.into())
-    );
-    assert!(carry_block(3, 16, 4).is_err());
-    assert!(carry_block(5, 12, 4).is_err());
-    assert!(carry_block(4, 3, 4).is_err());
-    assert!(carry_block(3, 3, 0).is_err());
-    assert!(carry_signs(1).is_err());
-    assert!(carry_ratios(3, 3).is_err());
-}
-
-#[test]
-fn the_carry_ladder_is_the_sponge_diagonal_count() {
-    let anchor = parse(&carry_block(3, 3, 5).unwrap()).unwrap();
-    let counted: Vec<String> = (1..=5)
-        .map(|level| {
-            let height = 3 * (3usize.pow(level as u32) - 1) / 2;
-            diagonal_count("23", 3, level, 2, height).unwrap()
-        })
-        .collect();
-    assert_eq!(counted.join(","), "6,42,306,2250,16578");
-    assert_eq!(
-        anchor["terms"].to_string(),
-        r#"["1","6","42","306","2250","16578"]"#
-    );
-    assert_eq!(
-        parse(&slice_census("23", 3, 1, 2).unwrap()).unwrap()["fills"],
-        42
-    );
-    assert_eq!(
-        parse(&slice_census("23", 3, 2, 2).unwrap()).unwrap()["fills"],
-        306
-    );
-    assert_eq!(
-        column(&parse(&slice_series("23", 2).unwrap()).unwrap(), "fills"),
-        "6,42"
-    );
-    for dimension in 2..=6 {
-        let order = dimension / 2 + dimension % 2;
-        let row = parse(&carry_block(3, dimension, 2 * order + 1).unwrap()).unwrap();
-        assert_eq!(row["order"], order, "dimension {dimension}");
-        assert_eq!(row["found"], order, "dimension {dimension}");
-        assert_eq!(row["fits"], true, "dimension {dimension}");
-    }
-}
-
-#[test]
-fn the_carry_sign_law_alternates_at_both_bases() {
-    let table = parse(&carry_signs(10).unwrap()).unwrap();
-    let rows = table.as_array().unwrap();
-    let read = |key: &str| {
-        rows.iter()
-            .map(|row| row[key]["sign"].to_string())
-            .collect::<Vec<String>>()
-            .join(",")
-    };
-    assert_eq!(column(&table, "law"), "-1,1,-1,1,-1,1,-1,1,-1");
-    assert_eq!(read("three"), "-1,1,-1,1,-1,1,-1,1,-1");
-    assert_eq!(read("five"), "-1,1,-1,1,-1,1,-1,1,-1");
-    assert_eq!(column(&table, "order"), "1,2,2,3,3,4,4,5,5");
-    assert_eq!(
-        column(&table, "open"),
-        "false,false,false,false,false,true,false,false,false"
-    );
-    let wide = parse(&carry_signs(13).unwrap()).unwrap();
-    let past = wide.as_array().unwrap().last().unwrap();
-    assert_eq!(past["three"]["sign"], 1);
-    assert_eq!(past["five"], mrlyrs::core::Json::Null);
-    let ladder = parse(&carry_ratios(3, 50).unwrap()).unwrap();
-    let last = ladder.as_array().unwrap().last().unwrap();
-    assert_eq!(last["dimension"], 50);
-    assert!((last["ratio"].as_f64().unwrap() - 13.0 / 12.0).abs() < 1e-9);
-    assert!((last["free"].as_f64().unwrap() - 13.0 / 12.0).abs() < 1e-12);
 }
 
 #[test]

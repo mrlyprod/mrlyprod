@@ -130,6 +130,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "claims"
+version = "0.3.0"
+dependencies = [
+ "demos",
+ "mrlyrs",
+]
+
+[[package]]
 name = "code-factorisation"
 version = "0.3.0"
 dependencies = [

@@ -780,9 +780,12 @@ mod tests {
         let fills = pencils(&ring(), 3, 3, "fill", 0.9, 0.0, 1).unwrap();
         assert_eq!(fills.len(), 8);
         assert_eq!(seats(&fills).fills, 8);
+        let voids = pencils(&ring(), 3, 3, "void", 0.9, 0.0, 1).unwrap();
+        assert_eq!(voids.len(), 1);
+        assert_eq!(voids[0].seat, (0, 0));
         assert_eq!(
-            pencils(&ring(), 3, 3, "void", 0.9, 0.0, 1).unwrap()[0].seat,
-            (0, 0)
+            seats(&pencils(&ring(), 3, 3, "corners", 0.9, 0.0, 1).unwrap()).corners,
+            16
         );
         assert_eq!(
             pencils(&ring(), 3, 3, "corners", 0.9, 0.0, 1)
@@ -830,6 +833,19 @@ mod tests {
         assert_eq!(path.ratio, (7, 3));
         assert_eq!((path.orbits, path.fold), (3, 7));
         assert!((path.total - TAU * 4.0 * 3.0).abs() < 1e-9);
+        assert_eq!(
+            format!("{:.6}", path.total / (TAU * path.wheel)),
+            "4.000000"
+        );
+        let start = pose(&path, 0.0);
+        assert_eq!(
+            format!("{:.6} {:.6}", start.0, start.1),
+            "4.000000 0.000000"
+        );
+        assert_eq!(format!("{:.6}", turn(&path, 0.0)), "0.000000");
+        let end = pose(&path, path.total);
+        assert_eq!(format!("{:.6}", end.0), "4.000000");
+        assert_eq!(format!("{:.6}", turn(&path, path.total) / PI), "-8.000000");
     }
 
     #[test]
@@ -958,6 +974,44 @@ mod tests {
         assert!((cover.winding - want).abs() < slack);
         assert!(cover.covered > 0.0 && cover.hole > 0.0);
         assert!((cover.covered + cover.hole) < 1.0);
+        assert_eq!(
+            format!("{:.6} {:.6}", bounds.radius, bounds.hole),
+            "5.800000 2.200000"
+        );
+        let walled = super::cover(&seven, &fills, true, 2, 256).unwrap();
+        assert_eq!(walled.mask.len(), 256 * 256);
+        assert_eq!(
+            format!(
+                "{:.6} {:.6} {:.6} {:.6} {:.6}",
+                walled.covered, walled.hole, walled.wall, walled.winding, walled.areas
+            ),
+            "0.814487 0.140825 0.269255 9.104609 9.103448"
+        );
+        let inside = walled.mask.iter().filter(|&&code| code > 0).count();
+        let shape = walled.mask.iter().filter(|&&code| code == 3).count();
+        assert_eq!(format!("{:.6}", shape as f64 / inside as f64), "0.814487");
+    }
+
+    #[test]
+    fn one_curve_of_a_wheel_covers_the_area_its_closed_form_names() {
+        let one = pencils(&[1, 0, 0], 3, 1, "fill", 0.9, 0.0, 1).unwrap();
+        let d = one[0].x.hypot(one[0].y);
+        for (kind, rho, want) in [
+            ("in", 2.0, "0.014922 0.500622 0.508005 0.507814"),
+            ("out", 4.0, "0.016671 0.819733 0.828554 0.828445"),
+        ] {
+            let path = track(kind, 3, 1, 4, 1).unwrap();
+            let form = rho * (rho + path.side * d * d) / (rho + d).powi(2);
+            let drawn = cover(&path, &one, true, 2, 256).unwrap();
+            assert!((drawn.areas - form).abs() < 1e-12);
+            assert_eq!(
+                format!(
+                    "{:.6} {:.6} {:.6} {:.6}",
+                    drawn.covered, drawn.hole, drawn.winding, form
+                ),
+                want
+            );
+        }
     }
 
     #[test]

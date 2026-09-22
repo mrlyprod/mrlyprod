@@ -323,4 +323,19 @@ mod tests {
         assert_eq!(peak_wavelength(&[9.0], 16), 0.0);
         assert_eq!(peak_ring(&[]), 0);
     }
+    #[test]
+    fn a_plain_stripe_reads_one_ring_at_a_quarter_of_the_side() {
+        let size = 32;
+        let field: Vec<f64> = (0..size * size)
+            .map(|i| if (i % size) % 4 < 2 { 1.0 } else { 0.0 })
+            .collect();
+        let spectrum = log_spectrum(&field, size);
+        assert_eq!(spectrum.len(), size * size);
+        let top = spectrum.iter().cloned().fold(0.0f64, f64::max);
+        assert_eq!(spectrum[16 * size + 16], top);
+        let profile = radial_profile(&spectrum, size);
+        assert_eq!(profile.len(), 17);
+        assert_eq!(peak_ring(&profile), 8);
+        assert_eq!(peak_wavelength(&profile, size), 4.0);
+    }
 }

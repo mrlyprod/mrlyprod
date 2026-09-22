@@ -564,7 +564,10 @@ mod tests {
             .collect();
         assert_eq!(counts, vec![28, 15, 23, 19]);
         assert!(layers(54, "unspun", 0.0, "odd", "plain", 1).is_err());
+        assert!(layers(201, "unspun", 0.0, "odd", "plain", 1).is_err());
         assert!(layers(55, "spiral", 0.0, "odd", "plain", 1).is_err());
+        assert!(layers(55, "unspun", 0.0, "even", "plain", 1).is_err());
+        assert!(layers(55, "unspun", 0.0, "odd", "zeta", 1).is_err());
     }
 
     #[test]
@@ -579,6 +582,8 @@ mod tests {
             .fold(f32::NEG_INFINITY, f32::max);
         assert_eq!(high, 18.0);
         assert!(raster[0].is_nan());
+        let read = stats(&raster, 512, 55, "unspun", 0.0, "odd", "plain", "sum", 1).unwrap();
+        assert_eq!((read.high, read.low), (18.0, 0.0));
         assert!(stack(&list, 512, "dots", Blend::Sum).is_err());
     }
 
@@ -596,6 +601,95 @@ mod tests {
         assert_eq!(folded.centre, 0.0);
         assert!(!folded.weighted);
         assert!(field(55, 4096, "unspun", 0.0, "odd", "plain", "cells", "mean", 1).is_err());
+        assert!(field(55, 512, "unspun", 0.0, "odd", "plain", "cells", "blur", 1).is_err());
         assert!(stats(&raster, 256, 55, "unspun", 0.0, "odd", "plain", "mean", 1).is_err());
+        let odd = field(51, 64, "unspun", 0.0, "odd", "plain", "cells", "sum", 1).unwrap();
+        assert_eq!(
+            stats(&odd, 64, 51, "unspun", 0.0, "odd", "plain", "sum", 1)
+                .unwrap()
+                .centre,
+            13.0
+        );
+        assert_eq!(
+            stats(&odd, 64, 51, "unspun", 0.0, "odd", "plain", "parity", 1)
+                .unwrap()
+                .centre,
+            1.0
+        );
+    }
+
+    #[test]
+    fn no_turn_of_the_layers_moves_the_centre() {
+        let centre = |schedule: &str, increment: f64| {
+            let raster = field(
+                55, 64, schedule, increment, "odd", "plain", "cells", "mean", 1,
+            )
+            .unwrap();
+            stats(
+                &raster, 64, 55, schedule, increment, "odd", "plain", "mean", 1,
+            )
+            .unwrap()
+            .centre
+        };
+        for step in 0..8 {
+            assert_eq!(centre("degrees", f64::from(step)), 14.0 / 28.0);
+        }
+        for schedule in ["golden", "primes", "random", "gaussian"] {
+            assert_eq!(centre(schedule, 0.0), 14.0 / 28.0);
+        }
+    }
+
+    #[test]
+    fn the_three_modes_read_the_same_layers_apart() {
+        let shares: Vec<String> = ["cells", "edges", "corners"]
+            .iter()
+            .map(|mode| {
+                let raster =
+                    field(55, 256, "golden", 0.0, "odd", "plain", mode, "mean", 1).unwrap();
+                let read =
+                    stats(&raster, 256, 55, "golden", 0.0, "odd", "plain", "mean", 1).unwrap();
+                format!("{:.6}", read.mean)
+            })
+            .collect();
+        assert_eq!(shares.join(" "), "0.231722 0.111924 0.141211");
+    }
+
+    #[test]
+    fn the_quarter_turn_lattice_lists_its_angles_smallest_first() {
+        let list = eyes(12);
+        assert_eq!(list.len(), 185);
+        let first: Vec<String> = list
+            .iter()
+            .take(8)
+            .map(|eye| format!("{:.6}", eye.angle))
+            .collect();
+        assert_eq!(
+            first.join(" "),
+            "0.000000 7.500000 8.181818 9.000000 10.000000 11.250000 12.857143 15.000000"
+        );
+        assert_eq!((list[1].numer, list[1].denom), (90, 12));
+        assert!(list.windows(2).all(|pair| pair[0].angle <= pair[1].angle));
+    }
+
+    #[test]
+    fn a_ninetieth_increment_folds_the_layers_into_angle_classes() {
+        let read = |increment: f64, schedule: &str| {
+            let raster = field(
+                55, 64, schedule, increment, "odd", "plain", "cells", "mean", 1,
+            )
+            .unwrap();
+            stats(
+                &raster, 64, 55, schedule, increment, "odd", "plain", "mean", 1,
+            )
+            .unwrap()
+        };
+        let coarse = read(18.0, "degrees");
+        assert_eq!(coarse.period, Some(5));
+        assert_eq!((coarse.classes, coarse.pairs), (5, 65));
+        let fine = read(7.5, "degrees");
+        assert_eq!(fine.period, Some(12));
+        assert_eq!(fine.classes, 12);
+        let loose = read(0.0, "golden");
+        assert_eq!((loose.classes, loose.pairs), (28, 0));
     }
 }

@@ -551,4 +551,37 @@ mod tests {
         assert!(native(&[MagicLayer::new(Bang::new(7, 2, 2), 2)]));
         assert!(!native(&native_pair));
     }
+    #[test]
+    fn the_word_reaches_every_dimension_the_tower_draws() {
+        use crate::math::six;
+        use crate::math::three::Cell3d;
+        use crate::math::two::{census::perimeter, Cell2d};
+        let tower = |codes: &[u128], sides: &[usize], dimension: usize| -> Vec<MagicLayer> {
+            codes
+                .iter()
+                .zip(sides)
+                .map(|(&code, &side)| MagicLayer::new(Bang::new(code, dimension, 2), side))
+                .collect()
+        };
+        let pair = tower(&[7, 9], &[3, 5], 2);
+        assert_eq!(perimeter(&Cell2d::new(magic(&pair).unwrap())), 368);
+        let three = tower(&[7, 14, 9], &[3, 7, 5], 2);
+        assert_eq!(perimeter(&Cell2d::new(magic(&three).unwrap())), 11856);
+        let sponge = tower(&[23, 23], &[3, 3], 3);
+        let solid = Cell3d::new(magic(&sponge).unwrap());
+        let cut = six::skin(&six::cut(&solid).unwrap());
+        let tally = six::census(&cut, false);
+        assert_eq!((cut.width(), cut.height()), (35, 18));
+        assert_eq!(tally.triangles, 486);
+        assert_eq!((tally.fills, tally.voids), (306, 180));
+        assert_eq!(tally.euler, 1);
+        assert_eq!(six::fills_only(&cut).boundary_edges, 162);
+        let iso = six::skin(&six::iso(&solid).unwrap());
+        let read = six::census(&iso, false);
+        assert_eq!((iso.width(), iso.height()), (18, 35));
+        assert_eq!((read.fills, read.voids), (486, 0));
+        assert_eq!(six::fills_only(&iso).boundary_edges, 88);
+        let drawing = six::svg(&six::cut(&solid).unwrap(), 2, None, 0).unwrap();
+        assert_eq!(drawing.matches("<polygon").count(), 486);
+    }
 }

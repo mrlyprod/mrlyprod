@@ -337,6 +337,8 @@ mod tests {
             let number = 2 * step + 1;
             assert_eq!(star.arm(number, 0).unwrap(), arm_law(number).unwrap());
         }
+        let chi: Vec<i64> = (0..8).map(|step| chi8(2 * step + 1)).collect();
+        assert_eq!(chi, vec![1, -1, -1, 1, 1, -1, -1, 1]);
         assert!((0..1001).all(|step| {
             let number = 2 * step + 1;
             star.arm(number, 0).unwrap() == arm_law(number).unwrap()
@@ -354,6 +356,14 @@ mod tests {
                 0.5 + chi as f64 / 8.0 + 1.0 / (2 * n) as f64 - chi as f64 / (8 * n * n) as f64;
             assert!((star.hexagon(number).unwrap().value() - want).abs() < 1e-12);
         }
+        let shares: Vec<String> = (0..4)
+            .map(|step| format!("{:.6}", star.hexagon(2 * step + 1).unwrap().value()))
+            .collect();
+        assert_eq!(shares.join(" "), "1.000000 0.777778 0.480000 0.693878");
+        assert_eq!(
+            format!("{:.6}", star.excesses(2, 0).unwrap()[1]),
+            "-0.444444"
+        );
     }
 
     #[test]
@@ -364,15 +374,41 @@ mod tests {
         assert_eq!(format!("{:.6}", read.scaled), "-1.126964");
         assert_eq!(format!("{:.10}", read.logged), "-0.2939128437");
         assert_eq!(format!("{:.8}", read.residual), "-0.11937029");
+        let hundred = decay(&excesses, 100).unwrap();
+        assert_eq!(format!("{:.6}", hundred.scaled), "-1.445065");
+        assert_eq!(format!("{:.10}", hundred.logged), "-0.2937725615");
+        assert_eq!(format!("{:.8}", hundred.residual), "-0.11975831");
+        assert_eq!(
+            format!("{:.6}", hundred.slope.expect("a window at L = 0 mod 4")),
+            "-0.250092"
+        );
+        assert_eq!(
+            format!(
+                "{:.6}",
+                decay(&excesses, 128)
+                    .unwrap()
+                    .slope
+                    .expect("a window at L = 0 mod 4")
+            ),
+            "-0.249968"
+        );
         let deep = decay(&excesses, 400).unwrap();
         assert_eq!(format!("{:.6}", deep.scaled), "-1.791627");
         assert_eq!(format!("{:.10}", deep.logged), "-0.2937613344");
         assert_eq!(format!("{:.8}", deep.residual), "-0.11978958");
         assert!((deep.slope.expect("a window at L = 0 mod 4") + 0.25).abs() < 1e-4);
-        assert_eq!(decay(&excesses, 102).unwrap().slope, None);
+        let twice = decay(&excesses, 102).unwrap();
+        assert_eq!(twice.slope, None);
+        assert_eq!(format!("{:.8}", twice.residual), "0.13017437");
+        let odd = decay(&excesses, 101).unwrap();
+        assert_eq!(odd.slope, None);
+        assert_eq!(format!("{:.6}", odd.linear), "0.249724");
         assert_eq!(format!("{:.10}", Branch::Zero.constant()), "-0.2937605857");
+        assert_eq!(format!("{:.10}", Branch::Odd.constant()), "-0.1687605857");
         assert_eq!(Branch::of(400).residual(), Some(-23.0 / 192.0));
         assert_eq!(Branch::of(402).residual(), Some(25.0 / 192.0));
+        assert_eq!(Branch::of(400).name(), "0 mod 4");
+        assert_eq!(Branch::of(402).name(), "2 mod 4");
         assert_eq!(Branch::of(401).name(), "odd");
     }
 
@@ -381,7 +417,23 @@ mod tests {
         let star = Star::new(23).unwrap();
         assert_eq!(width_law(1), width_law(0));
         assert_eq!(width_law(3), width_law(2));
-        assert_eq!(format!("{:.6}", width_law(3)), "-0.166667");
+        let family: Vec<String> = [0usize, 2, 4, 6, 8, 10, 12]
+            .iter()
+            .map(|half| format!("{:.6}", width_law(*half)))
+            .collect();
+        assert_eq!(
+            family.join(" "),
+            "-0.250000 -0.166667 -0.100000 -0.107143 -0.138889 -0.136364 -0.115385"
+        );
+        let odds: Vec<String> = [1usize, 3, 5, 7]
+            .iter()
+            .map(|half| format!("{:.6}", width_law(*half)))
+            .collect();
+        assert_eq!(odds.join(" "), "-0.250000 -0.166667 -0.100000 -0.107143");
+        let banded: Vec<(i64, i64)> = (0..4)
+            .map(|step| star.arm(2 * step + 1, 2).unwrap().reduced())
+            .collect();
+        assert_eq!(banded, vec![(1, 1), (5, 9), (4, 15), (16, 21)]);
         for half in [1usize, 2, 3, 4, 6] {
             let excesses = star.excesses(400, half).unwrap();
             let slope = decay(&excesses, 400)
@@ -389,6 +441,18 @@ mod tests {
                 .slope
                 .expect("a window at L = 0 mod 4");
             assert!((slope - width_law(half)).abs() < 2e-4);
+            if half == 2 {
+                assert_eq!(
+                    format!(
+                        "{:.6}",
+                        decay(&excesses, 200)
+                            .unwrap()
+                            .slope
+                            .expect("a window at L = 0 mod 4")
+                    ),
+                    "-0.166654"
+                );
+            }
         }
     }
 

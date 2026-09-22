@@ -19,8 +19,7 @@ struct Sheet {
 
 impl Sheet {
     fn new(lattice: &str, side: usize, size: usize) -> Result<Sheet, Fault> {
-        let lattice =
-            Lattice::named(lattice).ok_or_else(|| Fault::new("the lattice is square or hex."))?;
+        let lattice = lattice.parse::<Lattice>()?;
         if side.is_multiple_of(2) || side > SIDE {
             return Err(Fault::new(format!("the side is odd and at most {SIDE}.")));
         }
@@ -131,8 +130,7 @@ pub fn spiral_pixels(
     size: usize,
 ) -> Result<Pixels, Fault> {
     let sheet = Sheet::new(lattice, side, size)?;
-    let mark = Mark::named(mark)
-        .ok_or_else(|| Fault::new("the mark is prime, twin, squarefree or mobius."))?;
+    let mark = mark.parse::<Mark>()?;
     let quadratic = read(sheet.lattice, side, a, b, c)?;
     let ink = theme();
     let ground = rgba(ink.ground);
@@ -166,8 +164,7 @@ pub fn spiral_pixels(
 /// Returns the cell of a number and its ring: x right and y up on the square, axial q and r on the hexagon.
 #[wasm_bindgen]
 pub fn spiral_xy(lattice: &str, n: u32) -> Result<Vec<i32>, Fault> {
-    let lattice =
-        Lattice::named(lattice).ok_or_else(|| Fault::new("the lattice is square or hex."))?;
+    let lattice = lattice.parse::<Lattice>()?;
     let (x, y) = lattice.xy(u64::from(n));
     Ok(vec![x as i32, y as i32, lattice.ring(u64::from(n)) as i32])
 }

@@ -19,6 +19,7 @@ pub mod source;
 /// The one-generation advance of a grid.
 pub mod step;
 
+use crate::core::named_enum;
 use crate::math::two::Cell2d;
 
 /// Builds the 3 by 3 Moore mask, every site on but the center.
@@ -42,28 +43,18 @@ impl Boundary {
     }
 }
 
-/// The ending of a life run.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Fate {
-    /// The empty fixed point.
-    Dead,
-    /// The living fixed point.
-    Alive,
-    /// The periodic cycle.
-    Loop,
-    /// The generation cap reached before settling.
-    Timeout,
-}
-
-impl Fate {
-    /// Returns the fate's lowercase name.
-    pub fn name(self) -> &'static str {
-        match self {
-            Fate::Dead => "dead",
-            Fate::Alive => "alive",
-            Fate::Loop => "loop",
-            Fate::Timeout => "timeout",
-        }
+named_enum! {
+    /// The ending of a life run.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum Fate {
+        /// The empty fixed point.
+        Dead => "dead",
+        /// The living fixed point.
+        Alive => "alive",
+        /// The periodic cycle.
+        Loop => "loop",
+        /// The generation cap reached before settling.
+        Timeout => "timeout",
     }
 }
 
@@ -88,4 +79,16 @@ pub(crate) fn blinker() -> Cell2d {
     t.set(&[2, 2], 1);
     t.set(&[3, 2], 1);
     Cell2d::new(t)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn names_parse_back() {
+        for fate in Fate::all() {
+            assert_eq!(fate, fate.name().parse().unwrap());
+        }
+    }
 }

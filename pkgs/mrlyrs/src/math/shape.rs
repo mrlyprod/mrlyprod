@@ -979,6 +979,25 @@ mod tests {
             [1, 3, 7, 12, 16, 22, 30, 38, 48, 63, 77, 91]
         );
         assert_eq!(corner_seen(23, 3, 4, 8), [1, 4, 13, 28, 47, 65, 95, 137]);
+        let carpet = create(Code::from(7u64), 3, 2, 2, 6).unwrap();
+        let table = radial_census(&carpet, &[0, 0], 243);
+        let powers: Vec<u64> = (1..=5).map(|k| table[3usize.pow(k)].seen).collect();
+        assert_eq!(powers, [7, 48, 385, 3080, 24610]);
+        assert_eq!(table[81].seen, 8 * table[27].seen);
+        let cuts: Vec<u64> = [27usize, 81, 243].iter().map(|&r| table[r].cut).collect();
+        assert_eq!(cuts, [42, 114, 306]);
+    }
+
+    #[test]
+    fn the_centre_disc_opens_at_the_first_radius_the_design_reaches() {
+        let carpet = create(Code::from(7u64), 3, 2, 2, 6).unwrap();
+        let hole = radial_census(&carpet, &[729, 729], 364);
+        assert_eq!(hole.len(), 365);
+        assert_eq!((1..hole.len()).find(|&r| hole[r].seen > 0), Some(122));
+        let sponge = create(Code::from(23u64), 3, 3, 2, 4).unwrap();
+        let deep = radial_census(&sponge, &[81, 81, 81], 40);
+        assert_eq!(deep.len(), 41);
+        assert_eq!((1..deep.len()).find(|&r| deep[r].seen > 0), Some(20));
     }
 
     #[test]
@@ -1052,23 +1071,37 @@ mod tests {
                 assert_eq!(crossing_shell(radius, 5, level.min(5)).len() as u64, five);
             }
         }
+        for radius in [728u64, 729, 1000, 2186, 2187, 6560] {
+            for level in 0..9u32 {
+                let want = 2 * (radius / 3u64.pow(level)) + 1;
+                assert_eq!(crossing_shell(radius, 3, level).len() as u64, want);
+            }
+        }
     }
 
     #[test]
     fn crossing_tree_hangs_every_box_on_a_crossed_parent() {
         let tile = create(Code(7), 3, 2, 2, 1).unwrap();
         let keep: Vec<bool> = tile.bytes().iter().map(|&b| b != 0).collect();
+        let ones = Tensor::full(vec![243, 243], 1);
+        let whole = radial_census(&ones, &[0, 0], 242);
         for radius in 1..=120u64 {
             let tree = crossing_tree(radius, 3, &keep);
             assert_eq!(tree.orphans, 0, "r={radius}");
             assert_eq!(tree.levels.last().unwrap().len(), 1);
             assert_eq!(tree.levels[0].len() as u64, 2 * radius + 1);
+            assert_eq!(whole[radius as usize].cut, 2 * radius + 1, "r={radius}");
+            let mut depth = 0u32;
+            while 3u64.pow(depth) <= radius {
+                depth += 1;
+            }
+            assert_eq!(tree.levels.len() as u32, depth + 1, "r={radius}");
             for level in 0..tree.levels.len() - 1 {
                 for cell in &tree.levels[level] {
                     let parent = tree.levels[level + 1][cell.parent];
                     assert_eq!((parent.x, parent.y), (cell.x / 3, cell.y / 3));
                     assert_eq!(cell.seat, ((cell.x % 3) * 3 + cell.y % 3) as usize);
-                    assert!(!cell.live || parent.live);
+                    assert_eq!(cell.live, parent.live && keep[cell.seat]);
                 }
             }
         }

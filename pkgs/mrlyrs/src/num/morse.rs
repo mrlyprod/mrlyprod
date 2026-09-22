@@ -1,4 +1,5 @@
 use crate::core::error::{value_error, Result};
+use crate::core::named_enum;
 
 // THE WORD
 
@@ -87,42 +88,25 @@ pub fn doubling(length: usize) -> Vec<u8> {
 
 // LIFTS
 
-/// The four ways the word lifts from a line to the plane, one sign at every site.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Lift {
-    /// `t(i) xor t(j)`, the sign grid of the two-by-two tile `[[+1, -1], [-1, +1]]`.
-    Parity,
-    /// `t(i and j)`, the Walsh-Hadamard pattern.
-    And,
-    /// `t(i xor j)`, which the parity of a xor forces equal to the first lift.
-    Xor,
-    /// `t(i + j)`, the one that carries and so does not fold.
-    Sum,
+named_enum! {
+    /// The four ways the word lifts from a line to the plane, one sign at every site.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum Lift {
+        /// `t(i) xor t(j)`, the sign grid of the two-by-two tile `[[+1, -1], [-1, +1]]`.
+        Parity => "parity",
+        /// `t(i and j)`, the Walsh-Hadamard pattern.
+        And => "and",
+        /// `t(i xor j)`, which the parity of a xor forces equal to the first lift.
+        Xor => "xor",
+        /// `t(i + j)`, the one that carries and so does not fold.
+        Sum => "sum",
+    }
 }
 
 /// Lists the lifts in the order the gallery draws them.
-pub const LIFTS: [Lift; 4] = [Lift::Parity, Lift::And, Lift::Xor, Lift::Sum];
+pub const LIFTS: [Lift; 4] = Lift::all();
 
 impl Lift {
-    /// Parses a lift's display name, or errs on an unknown name.
-    pub fn parse(name: &str) -> Result<Lift> {
-        match name {
-            "parity" => Ok(Lift::Parity),
-            "and" => Ok(Lift::And),
-            "xor" => Ok(Lift::Xor),
-            "sum" => Ok(Lift::Sum),
-            other => value_error(format!("unknown lift {other:?}.")),
-        }
-    }
-    /// Returns the lift's display name.
-    pub fn name(self) -> &'static str {
-        match self {
-            Lift::Parity => "parity",
-            Lift::And => "and",
-            Lift::Xor => "xor",
-            Lift::Sum => "sum",
-        }
-    }
     /// Returns the lift's formula, written the way the page prints it.
     pub fn formula(self) -> &'static str {
         match self {
@@ -368,6 +352,13 @@ mod tests {
             let side = 1 << level;
             let grown = upsample(&coarse, side, 2);
             assert_eq!(difference(&grown, &fine), repeat(&tile, 2, side * 2));
+        }
+    }
+
+    #[test]
+    fn names_parse_back() {
+        for lift in Lift::all() {
+            assert_eq!(lift, lift.name().parse().unwrap());
         }
     }
 }

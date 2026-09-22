@@ -34,8 +34,11 @@ pub fn next_grid(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::life::{blinker, moore};
+    use crate::core::rng::Rng;
+    use crate::life::{blinker, design_mask, moore};
+    use crate::math::bang::Code;
     use crate::math::two::designs;
+    use crate::num::fft::{convolve_with, embed_kernel, transform};
     #[test]
     fn conway_blinker_oscillates() {
         let cell = blinker();
@@ -67,5 +70,56 @@ mod tests {
         assert_eq!(kept.types().sum() as usize, 21 * 21);
         let gone = next_grid(&cell, &[], &[full - 1], &mask, Boundary::Wrap).unwrap();
         assert_eq!(gone.types().sum(), 0);
+    }
+    #[test]
+    fn the_fft_step_is_the_crate_step_on_a_design_mask() {
+        let size = 32;
+        for (code, side, level, birth, survive) in [
+            (7u128, 3usize, 1usize, (0.375, 0.375), (0.25, 0.375)),
+            (7, 3, 2, (0.28, 0.38), (0.28, 0.48)),
+        ] {
+            let mask = design_mask(2, Code::from(code), side, level).unwrap();
+            let span = mask.shape[0];
+            let budget = mask.sum() as usize;
+            let window = |lo: f64, hi: f64| -> Vec<usize> {
+                (0..=budget)
+                    .filter(|&k| {
+                        let share = k as f64 / budget as f64;
+                        lo <= share && share <= hi
+                    })
+                    .collect()
+            };
+            let born = window(birth.0, birth.1);
+            let kept = window(survive.0, survive.1);
+            let (kernel_re, kernel_im) = transform(&embed_kernel(mask.bytes(), span, size), size);
+            let mut rng = Rng::new(11);
+            let mut fast: Vec<u8> = (0..size * size)
+                .map(|_| u8::from(rng.chance(0.5)))
+                .collect();
+            let mut slow = Cell2d::new(Tensor::of(fast.clone(), vec![size, size]));
+            for step in 0..8 {
+                let field: Vec<f64> = fast
+                    .iter()
+                    .map(|&t| if t != 0 { 1.0 } else { 0.0 })
+                    .collect();
+                let counts = convolve_with(&field, &kernel_re, &kernel_im, size);
+                for (slot, &count) in fast.iter_mut().zip(&counts) {
+                    let n = (count.round().max(0.0) as usize).min(budget);
+                    let lives = if *slot != 0 {
+                        kept.contains(&n)
+                    } else {
+                        born.contains(&n)
+                    };
+                    *slot = u8::from(lives);
+                }
+                slow = next_grid(&slow, &born, &kept, &mask, Boundary::Wrap).unwrap();
+                assert_eq!(
+                    fast,
+                    slow.types().bytes(),
+                    "code {code} level {level} step {step}"
+                );
+            }
+            assert!(fast.iter().any(|&t| t != 0));
+        }
     }
 }

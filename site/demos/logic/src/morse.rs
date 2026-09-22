@@ -102,7 +102,7 @@ pub fn morse_stage(rounds: usize) -> Result<Vec<u8>, Fault> {
 #[wasm_bindgen]
 pub fn morse_lift(kind: &str, level: usize) -> Result<Grid, Fault> {
     let side = side_of(2, level)?;
-    let types = morse::lift(Lift::parse(kind)?, side);
+    let types = morse::lift(kind.parse::<Lift>()?, side);
     Ok(Grid {
         width: side as u32,
         height: side as u32,

@@ -264,6 +264,110 @@ mod tests {
     use super::*;
     use crate::num::factor::mobius;
 
+    const SAMPLES: usize = 4096;
+    const FLOOR: usize = 101;
+    const BAND: (f64, f64) = (4.0, 60.0);
+    const THRESHOLD: f64 = 8.0;
+    const TOP: usize = 10;
+    const ECHO_CAP: u128 = 1 << 24;
+
+    struct Echo {
+        count: usize,
+        last: i64,
+        peak: i64,
+        alpha: f64,
+        span: f64,
+        bin: f64,
+        sieve: bool,
+        logx: Vec<f64>,
+        drawn: Vec<f64>,
+        echo: Vec<f64>,
+        rest: Vec<f64>,
+        gamma: Vec<f64>,
+        marks: Vec<f64>,
+        head: Vec<usize>,
+        found: usize,
+        hits: usize,
+        lines: usize,
+        zeros: Vec<f64>,
+        lattice: Vec<f64>,
+        share: f64,
+        residual: f64,
+        chance: f64,
+        chance_lines: f64,
+    }
+
+    fn read(base: u64, mask: u32, depth: usize, subtract: bool) -> Echo {
+        let digits = digits_of(mask, base);
+        let values = elements(base, &digits, depth);
+        let mu: Vec<i8> = values.iter().map(|&v| mobius(v as usize)).collect();
+        let running = meter(&mu);
+        let alpha = (digits.len() as f64).ln() / (base as f64).ln();
+        let exponent = alpha / 2.0;
+        let logx = log_grid(&values, SAMPLES);
+        let drawn = resample(&values, &running, exponent, &logx);
+        let sieve = u128::from(base).pow(depth as u32) <= ECHO_CAP;
+        let echo = if sieve {
+            echo_series(&values, &logx, exponent)
+        } else {
+            Vec::new()
+        };
+        let rest: Vec<f64> = drawn
+            .iter()
+            .zip(echo.iter())
+            .map(|(whole, part)| whole - part)
+            .collect();
+        let taken = if subtract && sieve { &rest } else { &drawn };
+        let (gamma, power) = spectrum(&logx, taken);
+        let marks = score(&power, FLOOR);
+        let found = peaks(&gamma, &marks, BAND, THRESHOLD);
+        let bin = gamma[1];
+        let zeros: Vec<f64> = ZETA_ORDINATES
+            .iter()
+            .copied()
+            .filter(|g| *g > BAND.0 && *g < BAND.1)
+            .collect();
+        let lattice: Vec<f64> = pole_lattice(base, BAND.1)
+            .into_iter()
+            .filter(|g| *g > BAND.0)
+            .collect();
+        let head: Vec<usize> = found.iter().copied().take(TOP).collect();
+        let scale = upper_rms(&drawn);
+        let width = BAND.1 - BAND.0;
+        let chance = |list: &[f64]| (2.0 * bin * list.len() as f64 / width).min(1.0);
+        Echo {
+            count: values.len(),
+            last: running.last().copied().unwrap(),
+            peak: running.iter().map(|v| v.abs()).max().unwrap(),
+            alpha,
+            span: logx.last().unwrap() - logx.first().unwrap(),
+            bin,
+            sieve,
+            hits: head
+                .iter()
+                .filter(|&&at| nearest(gamma[at], &zeros) <= bin)
+                .count(),
+            lines: head
+                .iter()
+                .filter(|&&at| nearest(gamma[at], &lattice) <= bin)
+                .count(),
+            found: found.len(),
+            head,
+            share: upper_rms(&echo) / scale,
+            residual: upper_rms(&rest) / scale,
+            chance: chance(&zeros),
+            chance_lines: chance(&lattice),
+            logx,
+            drawn,
+            echo,
+            rest,
+            gamma,
+            marks,
+            zeros,
+            lattice,
+        }
+    }
+
     #[test]
     fn the_design_is_the_digit_strings_in_order() {
         assert_eq!(elements(10, &[0, 1], 2), vec![1, 10, 11]);
@@ -293,5 +397,111 @@ mod tests {
         for j in [1usize, 7, 100, 512] {
             assert_eq!(gamma[j], 2.0 * PI * j as f64 / range);
         }
+    }
+
+    #[test]
+    fn the_meter_reproduces_the_design_census() {
+        let census = |base: u64, digits: &[u64], depth: usize| {
+            let values = elements(base, digits, depth);
+            let mu: Vec<i8> = values.iter().map(|&v| mobius(v as usize)).collect();
+            let running = meter(&mu);
+            (
+                running.last().copied().unwrap(),
+                running.iter().map(|value| value.abs()).max().unwrap(),
+            )
+        };
+        let anchors = [
+            (3u64, vec![0u64, 1], 14usize, (11i64, 105i64)),
+            (3, vec![0, 1], 16, (149, 173)),
+            (3, vec![0, 2], 14, (-10, 67)),
+            (3, vec![1, 2], 8, (-31, 33)),
+        ];
+        for (base, digits, depth, want) in anchors {
+            assert_eq!(census(base, &digits, depth), want, "base {base} {digits:?}");
+        }
+        assert_eq!(size(&[0, 1], 14), 16383);
+        assert_eq!(size(&[0, 1], 20), 1048575);
+    }
+
+    #[test]
+    fn the_full_digit_set_is_the_classical_mertens_control() {
+        let full: Vec<u64> = (0..10).collect();
+        let values = elements(10, &full, 6);
+        let mu: Vec<i8> = values.iter().map(|&v| mobius(v as usize)).collect();
+        assert_eq!(meter(&mu).last().copied().unwrap(), 212);
+        let page = read(10, 0b11_1111_1111, 5, false);
+        assert_eq!((page.count, page.last, page.peak), (99999, -48, 132));
+        assert_eq!(format!("{:.6}", page.alpha), "1.000000");
+    }
+
+    #[test]
+    fn the_full_digit_set_is_its_own_echo() {
+        let page = read(10, 0b11_1111_1111, 5, false);
+        assert_eq!(format!("{:.6}", page.share), "1.000000");
+        assert_eq!(format!("{:.6}", page.residual), "0.000000");
+        assert!(page.rest.iter().all(|v| v.abs() < 1e-9));
+        assert!(page
+            .echo
+            .iter()
+            .zip(&page.drawn)
+            .all(|(part, whole)| (part - whole).abs() < 1e-9));
+    }
+
+    #[test]
+    fn the_control_peaks_land_on_the_zeta_ordinates() {
+        let page = read(10, 0b11_1111_1111, 5, false);
+        assert_eq!((page.zeros.len(), page.lattice.len()), (13, 20));
+        assert_eq!(format!("{:.6}", page.bin), "0.545618");
+        assert_eq!((page.found, page.hits, page.lines), (13, 10, 6));
+        assert_eq!(format!("{:.6}", page.chance), "0.253323");
+        assert_eq!(format!("{:.6}", page.chance_lines), "0.389727");
+        let leading: Vec<String> = page
+            .head
+            .iter()
+            .take(5)
+            .map(|&at| format!("{:.4}", page.gamma[at]))
+            .collect();
+        assert_eq!(leading.join(" "), "30.5546 32.7371 25.0984 21.2791 14.1861");
+        let wide = read(2, 0b11, 18, false);
+        assert_eq!((wide.found, wide.hits, wide.lines), (13, 10, 0));
+        assert_eq!(wide.last, 24);
+        assert_eq!(wide.lattice.len(), 6);
+        assert_eq!(wide.gamma.len(), 2049);
+    }
+
+    #[test]
+    fn the_design_carries_the_zeros_through_its_echo() {
+        let page = read(10, 0b1_1111_1111, 5, false);
+        assert_eq!((page.count, page.last, page.peak), (59048, 201, 268));
+        assert_eq!(format!("{:.6}", page.alpha), "0.954243");
+        assert_eq!(format!("{:.6}", page.span), "11.395132");
+        assert_eq!(format!("{:.6}", page.bin), "0.551257");
+        assert_eq!((page.found, page.hits, page.lines), (5, 5, 2));
+        assert_eq!(format!("{:.6}", page.chance), "0.255941");
+        assert_eq!(format!("{:.6}", page.chance_lines), "0.393755");
+        let top = page.head[0];
+        assert_eq!(format!("{:.4}", page.gamma[top]), "14.3327");
+        assert_eq!(format!("{:.4}", page.marks[top]), "32.2266");
+        assert_eq!(
+            format!("{:.4}", nearest(page.gamma[top], &page.zeros)),
+            "0.1980"
+        );
+        assert_eq!(format!("{:.6}", page.share), "0.354137");
+        assert_eq!(format!("{:.6}", page.residual), "0.967810");
+        assert_eq!(page.logx.len(), SAMPLES);
+        let rest = read(10, 0b1_1111_1111, 5, true);
+        assert_eq!((rest.found, rest.hits), (0, 0));
+    }
+
+    #[test]
+    fn past_the_sieve_cap_the_echo_is_not_drawn() {
+        let deep = read(3, 0b011, 17, false);
+        assert!(!deep.sieve);
+        assert!(deep.echo.is_empty());
+        assert_eq!(deep.last, 157);
+        let shallow = read(3, 0b011, 14, false);
+        assert!(shallow.sieve);
+        assert_eq!((shallow.last, shallow.peak), (11, 105));
+        assert_eq!(shallow.echo.len(), SAMPLES);
     }
 }

@@ -7,8 +7,7 @@ const TOP: u32 = 2000;
 const BASE: u32 = 8;
 
 fn read(base: u32, top: u32, growth: &str) -> Result<Snail, Fault> {
-    let growth =
-        Growth::named(growth).ok_or_else(|| Fault::new("the growth is prime or every."))?;
+    let growth = growth.parse::<Growth>()?;
     if !(2..=BASE).contains(&base) {
         return Err(Fault::new(format!("the base is 2 to {BASE}.")));
     }

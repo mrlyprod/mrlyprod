@@ -164,7 +164,7 @@ pub fn terms(key: &Key, count: usize, cells: u128) -> Result<(Vec<i128>, bool)> 
 /// Expands the odd-side fill at side `2k - 1`, `sum over the corners of k^(zeros) (k - 1)^(ones)`, into coefficients by rising power of `k`.
 ///
 /// ```
-/// let carpet = mrlyrs::math::bang::code_to_corners(7, 2, 2).unwrap();
+/// let carpet = mrlyrs::math::bang::code_to_corners(mrlyrs::math::bang::Code::from(7u64), 2, 2).unwrap();
 /// assert_eq!(ledger::fill_polynomial(&carpet, 2), [0, -2, 3]);
 /// ```
 pub fn fill_polynomial(corners: &[Vec<u8>], dimension: usize) -> Vec<i128> {
