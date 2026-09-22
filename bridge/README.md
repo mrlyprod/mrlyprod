@@ -21,7 +21,8 @@
 
 - `hand`: Tensor, Cell, CellNd (Cell2d, Cell3d), Cell6d, Color, Code, Rng; each `hand.rs` owns their crossing per the plan's CROSSING.
 - `class`: a struct, or an enum with data, that has a self-taking method; holds the Rust value, public fields as getters, methods as methods; never leaves its wasm unit. A class deriving Deserialize should get a from-data constructor in each backend.
-- `plain`: a struct or data enum with Serialize and Deserialize and no self methods; a dict, an object, JSON; no per-type code.
+- A field under `#[serde(skip)]`, `skip_serializing` or `skip_deserializing` cannot round-trip as data, so its type is a `class` too; the field records `serde_skip`, its getter carries it, the data form (`to_dict`, `toJSON`, the CLI's JSON) drops it as serde does.
+- `plain`: a struct or data enum with Serialize and Deserialize, no self methods and no skipped field; a dict, an object, JSON; no per-type code.
 - `enum`: a fieldless enum with Serialize and Deserialize; a string; `named` carries the `named_enum!` words, and `all()` crosses.
 - `uncrossable`: anything else (`Error`, `Result`, `Pen`); a function touching one is skipped with the reason.
 - A function is `ok`, `skip` with a reason, or `private`. Skips: a type generic, a closure, `impl Trait`, a fn pointer or private type, a `&'static` or explicit-lifetime return, a `&mut` borrow returned, an iterator, a `&mut` plain or slice argument, a class from another unit.

@@ -134,7 +134,7 @@ fn borrowed(ty: &Ty) -> bool {
 
 // NAMES
 
-fn show(shop: &Shop, ty: &Ty, dim: Option<u8>) -> String {
+fn show(ty: &Ty, dim: Option<u8>) -> String {
     match ty {
         Ty::Unit => "null".to_string(),
         Ty::Scalar { name } => name.clone(),
@@ -145,23 +145,23 @@ fn show(shop: &Shop, ty: &Ty, dim: Option<u8>) -> String {
         Ty::Code => "Code".to_string(),
         Ty::Json => "Json".to_string(),
         Ty::Vec { item } | Ty::Slice { item, .. } | Ty::Set { item } => {
-            format!("[{}]", show(shop, item, dim))
+            format!("[{}]", show(item, dim))
         }
-        Ty::Option { item } => format!("{}?", show(shop, item, dim)),
-        Ty::Array { item, len } => format!("[{}; {len}]", show(shop, item, dim)),
+        Ty::Option { item } => format!("{}?", show(item, dim)),
+        Ty::Array { item, len } => format!("[{}; {len}]", show(item, dim)),
         Ty::Tuple { items } => {
-            let parts: Vec<String> = items.iter().map(|item| show(shop, item, dim)).collect();
+            let parts: Vec<String> = items.iter().map(|item| show(item, dim)).collect();
             format!("({})", parts.join(", "))
         }
-        Ty::Map { key, value } => format!("{{{}: {}}}", show(shop, key, dim), show(shop, value, dim)),
+        Ty::Map { key, value } => format!("{{{}: {}}}", show(key, dim), show(value, dim)),
         Ty::Ref { mutable, item, .. } => {
             if *mutable && rng(item) {
                 "Rng(seed)".to_string()
             } else {
-                show(shop, item, dim)
+                show(item, dim)
             }
         }
-        Ty::Result { item } => show(shop, item, dim),
+        Ty::Result { item } => show(item, dim),
         Ty::Hand { name, dim: own } => match (name.as_str(), own.or(dim)) {
             ("CellNd", Some(n)) => format!("Cell{n}d"),
             ("CellNd", None) => "Cell".to_string(),
@@ -316,7 +316,7 @@ fn seen(shop: &Shop, ty: &Ty, dim: Option<u8>) -> Result<String> {
 
 // WRITING
 
-fn give(shop: &Shop, ty: &Ty, value: &str, deep: usize) -> Result<String> {
+fn give(ty: &Ty, value: &str, deep: usize) -> Result<String> {
     if !special(ty) {
         return Ok(match ty {
             Ty::Unit => "Value::Null".to_string(),
@@ -327,21 +327,21 @@ fn give(shop: &Shop, ty: &Ty, value: &str, deep: usize) -> Result<String> {
         Ty::U128 | Ty::I128 => format!("Value::String({value}.to_string())"),
         Ty::Code => format!("Value::String({value}.get().to_string())"),
         Ty::Hand { .. } => format!("tint({value})"),
-        Ty::Ref { item, .. } | Ty::Result { item } => give(shop, item, value, deep)?,
+        Ty::Ref { item, .. } | Ty::Result { item } => give(item, value, deep)?,
         Ty::Option { item } => format!(
             "match {value} {{ Some(item{deep}) => {}, None => Value::Null }}",
-            give(shop, item, &format!("item{deep}"), deep + 1)?
+            give(item, &format!("item{deep}"), deep + 1)?
         ),
         Ty::Vec { item } | Ty::Slice { item, .. } | Ty::Set { item } | Ty::Array { item, .. } => {
             format!(
                 "{{ let mut list{deep} = Vec::new(); for item{deep} in {value} {{ list{deep}.push({}); }} Value::Array(list{deep}) }}",
-                give(shop, item, &format!("item{deep}"), deep + 1)?
+                give(item, &format!("item{deep}"), deep + 1)?
             )
         }
         Ty::Tuple { items } => {
             let mut parts = Vec::new();
             for (index, item) in items.iter().enumerate() {
-                parts.push(give(shop, item, &format!("parts{deep}.{index}"), deep + 1)?);
+                parts.push(give(item, &format!("parts{deep}.{index}"), deep + 1)?);
             }
             format!(
                 "{{ let parts{deep} = {value}; Value::Array(vec![{}]) }}",
@@ -350,7 +350,7 @@ fn give(shop: &Shop, ty: &Ty, value: &str, deep: usize) -> Result<String> {
         }
         Ty::Map { value: held, .. } => format!(
             "{{ let mut pairs{deep} = serde_json::Map::new(); for (key{deep}, item{deep}) in {value} {{ pairs{deep}.insert(key{deep}.to_string(), {}); }} Value::Object(pairs{deep}) }}",
-            give(shop, held, &format!("item{deep}"), deep + 1)?
+            give(held, &format!("item{deep}"), deep + 1)?
         ),
         other => return Err(format!("{other:?} cannot be written")),
     })
@@ -397,12 +397,12 @@ fn sign(shop: &Shop, function: &Function) -> Result<String> {
     let args = args_of(shop, function)?;
     let parts: Vec<String> = args
         .iter()
-        .map(|(name, ty)| format!("{name}: {}", show(shop, ty, dim)))
+        .map(|(name, ty)| format!("{name}: {}", show(ty, dim)))
         .collect();
     Ok(format!(
         "({}) -> {}",
         parts.join(", "),
-        show(shop, &function.ret, dim)
+        show(&function.ret, dim)
     ))
 }
 
@@ -542,7 +542,7 @@ fn one(shop: &Shop, function: &Function, dim: Option<u8>) -> Result<Made> {
         Ty::Result { item } => {
             let good = match item.as_ref() {
                 Ty::Unit => "Ok(()) => Ok(Value::Null)".to_string(),
-                other => match give(shop, other, "value", 0) {
+                other => match give(other, "value", 0) {
                     Ok(text) => format!("Ok(value) => Ok({text})"),
                     Err(reason) => return Ok(Made::Shut(reason)),
                 },
@@ -550,7 +550,7 @@ fn one(shop: &Shop, function: &Function, dim: Option<u8>) -> Result<Made> {
             format!("match {call} {{ {good}, Err(error) => Err(Fail::Error(error.to_string())) }}")
         }
         Ty::Unit => format!("{call};\nOk(Value::Null)"),
-        other => match give(shop, other, &call, 0) {
+        other => match give(other, &call, 0) {
             Ok(text) => format!("Ok({text})"),
             Err(reason) => return Ok(Made::Shut(reason)),
         },

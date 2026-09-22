@@ -5,7 +5,7 @@ description = "MrlyMath, the mathematics of designs, bridged into Python."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.13"
-dependencies = ["numpy>=2.5"]
+dependencies = ["numpy>=2"]
 
 [project.urls]
 Homepage = "https://mrly.net"

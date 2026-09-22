@@ -62,6 +62,7 @@ pub struct Field {
     pub public: bool,
     pub docs: Vec<String>,
     pub serde: Vec<String>,
+    pub serde_skip: bool,
     pub ty: Ty,
 }
 

@@ -5,6 +5,27 @@ import mrlypy.core
 import mrlypy.core.paint
 import mrlypy.gen
 
+class File:
+    """One rendering of an artwork, sized in tile repetitions."""
+    def __init__(self, width: int, height: int) -> None: ...
+    @property
+    def width(self) -> int:
+        """The count of tile repetitions across."""
+    @property
+    def height(self) -> int:
+        """The count of tile repetitions down."""
+    @property
+    def png(self) -> bytes:
+        """The encoded PNG bytes, empty until rendered and left out of the json."""
+    @staticmethod
+    def new(width: int, height: int) -> File:
+        """Builds a file of the given repetition counts with no PNG bytes."""
+    @staticmethod
+    def from_dict(data: Any) -> File:
+        """Reads plain data into the class."""
+    def to_dict(self) -> Any:
+        """Returns the value as plain data."""
+
 class Variation:
     """One seeded artwork, from tile recipe to rendered files."""
     @property
@@ -32,7 +53,7 @@ class Variation:
     def base(self) -> dict[str, Any] | None:
         """The built base cell, set by generate and left out of the json."""
     @property
-    def files(self) -> list[dict[str, Any]]:
+    def files(self) -> list[File]:
         """The renderings, filled by render."""
     def is_cover(self) -> bool:
         """Returns whether the edition paints the whole tiled canvas."""
@@ -43,12 +64,6 @@ class Variation:
         """Reads plain data into the class."""
     def to_dict(self) -> Any:
         """Returns the value as plain data."""
-
-class File:
-    """One rendering of an artwork, sized in tile repetitions."""
-    @staticmethod
-    def new(width: int, height: int) -> dict[str, Any]:
-        """Builds a file of the given repetition counts with no PNG bytes."""
 
 def create(config: dict[str, Any], rng: mrlypy.core.Rng) -> Variation:
     """Draws a variation's seed from the stream, then the variation itself on that seed, with a

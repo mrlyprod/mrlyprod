@@ -185,6 +185,16 @@ fn a_serde_struct_without_self_methods_is_plain_and_keeps_its_constructors() {
 }
 
 #[test]
+fn a_serde_skipped_field_makes_a_class() {
+    let m = manifest("pub mod gen { #[derive(Serialize, Deserialize)] pub struct File { pub width: usize, #[serde(default, skip_serializing_if = \"Vec::is_empty\")] pub tags: Vec<u8>, #[serde(skip)] pub png: Vec<u8> } #[derive(Serialize, Deserialize)] pub struct Tile { #[serde(default, skip_serializing_if = \"Option::is_none\")] pub side: Option<usize> } }");
+    assert_eq!(kind(&m, "gen::File"), &TypeCross::Class);
+    assert_eq!(kind(&m, "gen::Tile"), &TypeCross::Plain);
+    let file = m.types.iter().find(|t| t.path == "gen::File").expect("File is listed");
+    let skips: Vec<bool> = file.fields.iter().map(|f| f.serde_skip).collect();
+    assert_eq!(skips, [false, false, true]);
+}
+
+#[test]
 fn a_struct_with_a_self_method_is_a_class() {
     let m = manifest("pub mod life { #[derive(Serialize, Deserialize)] pub struct Life { pub time: usize } impl Life { pub fn step(&mut self) {} } }");
     assert_eq!(kind(&m, "life::Life"), &TypeCross::Class);

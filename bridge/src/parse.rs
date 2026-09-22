@@ -74,6 +74,7 @@ pub struct Field {
     pub public: bool,
     pub docs: Vec<String>,
     pub serde: Vec<String>,
+    pub serde_skip: bool,
     pub ty: syn::Type,
 }
 
@@ -456,6 +457,7 @@ fn fields_of(fields: &syn::Fields) -> Vec<Field> {
             public: is_public(&f.vis),
             docs: docs_of(&f.attrs),
             serde: serde_of(&f.attrs),
+            serde_skip: serde_skip(&f.attrs),
             ty: f.ty.clone(),
         })
         .collect()
@@ -661,6 +663,28 @@ fn derives_of(attrs: &[Attribute]) -> Vec<String> {
         }
     }
     out
+}
+
+fn serde_skip(attrs: &[Attribute]) -> bool {
+    let mut skip = false;
+    for list in attrs
+        .iter()
+        .filter(|a| a.path().is_ident("serde"))
+        .filter_map(|a| a.meta.require_list().ok())
+    {
+        let mut key = true;
+        for token in list.tokens.clone() {
+            match token {
+                proc_macro2::TokenTree::Punct(p) if p.as_char() == ',' => key = true,
+                proc_macro2::TokenTree::Ident(id) if key => {
+                    skip |= ["skip", "skip_serializing", "skip_deserializing"].contains(&id.to_string().as_str());
+                    key = false;
+                }
+                _ => key = false,
+            }
+        }
+    }
+    skip
 }
 
 fn serde_of(attrs: &[Attribute]) -> Vec<String> {

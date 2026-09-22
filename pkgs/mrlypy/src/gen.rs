@@ -1,27 +1,4 @@
-#![allow(
-    clippy::too_many_arguments,
-    clippy::type_complexity,
-    clippy::redundant_closure,
-    clippy::clone_on_copy,
-    clippy::needless_borrow,
-    clippy::needless_borrows_for_generic_args,
-    clippy::useless_conversion,
-    clippy::let_and_return,
-    clippy::unit_arg,
-    clippy::map_identity,
-    clippy::iter_cloned_collect,
-    clippy::unnecessary_to_owned,
-    clippy::new_ret_no_self,
-    clippy::wrong_self_convention,
-    clippy::should_implement_trait,
-    clippy::needless_lifetimes,
-    clippy::let_unit_value,
-    clippy::unused_unit,
-    unused_imports,
-    unused_mut,
-    unused_variables,
-    dead_code
-)]
+#![allow(clippy::too_many_arguments)]
 
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
@@ -29,16 +6,14 @@ use pyo3::types::PyDict;
 /// The substrate: tensors, cells, colors, images, codecs, resampling and seeded chance.
 /// The substrate: the road from a grid of bytes to pixels, with nothing mrly on it.
 pub mod core {
-    use crate::hand::*;
-    use pyo3::exceptions::PyValueError;
+    use crate::hand::{ok, PyColor, PyPixels, PyRng, PySerde};
     use pyo3::prelude::*;
     use pyo3::types::PyDict;
     use pyo3::IntoPyObjectExt;
 
     /// The cell grid: type bytes with optional per-cell colors and tags.
     pub mod cell {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok, PyCell, PyColor, PyRgba, PyRng, PySerde, PyTensor};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -139,9 +114,9 @@ pub mod core {
         /// Returns the default mapping of the first six types to white, black, alpha, red, green, and blue.
         #[pyfunction]
         #[pyo3(name = "mapping", signature = ())]
-        pub fn mapping<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn mapping<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::core::cell::mapping();
-            ((out).into_iter().map(|(k, v)| (k, (v).into_iter().map(|x| PyColor(x)).collect::<Vec<_>>())).collect::<std::collections::HashMap<_, _>>()).into_bound_py_any(py)
+            ((out).into_iter().map(|(k, v)| (k, (v).into_iter().map(PyColor).collect::<Vec<_>>())).collect::<std::collections::HashMap<_, _>>()).into_bound_py_any(py)
         }
 
         /// Stitches same-shaped cells into one grid of reps blocks per axis.
@@ -332,8 +307,7 @@ pub mod core {
     /// The png and gif codecs, rented from the png and gif crates.
     /// A png is written paletted whenever 256 colors or fewer fit, rgba otherwise; a gif is always paletted and always loops.
     pub mod codec {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok, PyPixels};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -372,8 +346,7 @@ pub mod core {
 
     /// The rgba color, its themes and the fifteen-color palette utils/colors.py stamps.
     pub mod colors {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok, PyColor, PyPixels, PyRgba, PyRng, PyTensor};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -389,167 +362,167 @@ pub mod core {
             #[getter]
             #[pyo3(name = "ground")]
             pub fn ground<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.ground.clone();
+                let value = self.0.ground;
                 (PyColor(value)).into_bound_py_any(py)
             }
             /// The page background, one step off the ground.
             #[getter]
             #[pyo3(name = "bg")]
             pub fn bg<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.bg.clone();
+                let value = self.0.bg;
                 (PyColor(value)).into_bound_py_any(py)
             }
             /// The raised panel.
             #[getter]
             #[pyo3(name = "panel")]
             pub fn panel<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.panel.clone();
+                let value = self.0.panel;
                 (PyColor(value)).into_bound_py_any(py)
             }
             /// The sunken well.
             #[getter]
             #[pyo3(name = "deep")]
             pub fn deep<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.deep.clone();
+                let value = self.0.deep;
                 (PyColor(value)).into_bound_py_any(py)
             }
             /// The hairline between things.
             #[getter]
             #[pyo3(name = "line")]
             pub fn line<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.line.clone();
+                let value = self.0.line;
                 (PyColor(value)).into_bound_py_any(py)
             }
             /// The foreground, the strongest tone.
             #[getter]
             #[pyo3(name = "fg")]
             pub fn fg<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.fg.clone();
+                let value = self.0.fg;
                 (PyColor(value)).into_bound_py_any(py)
             }
             /// The dimmed foreground, for anything secondary.
             #[getter]
             #[pyo3(name = "dim")]
             pub fn dim<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.dim.clone();
+                let value = self.0.dim;
                 (PyColor(value)).into_bound_py_any(py)
             }
             /// The interactive accent.
             #[getter]
             #[pyo3(name = "accent")]
             pub fn accent<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.accent.clone();
+                let value = self.0.accent;
                 (PyColor(value)).into_bound_py_any(py)
             }
             /// The tone written on the accent.
             #[getter]
             #[pyo3(name = "on_accent")]
             pub fn on_accent<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.on_accent.clone();
+                let value = self.0.on_accent;
                 (PyColor(value)).into_bound_py_any(py)
             }
             /// The red ink.
             #[getter]
             #[pyo3(name = "red")]
             pub fn red<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.red.clone();
+                let value = self.0.red;
                 (PyColor(value)).into_bound_py_any(py)
             }
             /// The orange ink.
             #[getter]
             #[pyo3(name = "orange")]
             pub fn orange<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.orange.clone();
+                let value = self.0.orange;
                 (PyColor(value)).into_bound_py_any(py)
             }
             /// The yellow ink.
             #[getter]
             #[pyo3(name = "yellow")]
             pub fn yellow<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.yellow.clone();
+                let value = self.0.yellow;
                 (PyColor(value)).into_bound_py_any(py)
             }
             /// The green ink.
             #[getter]
             #[pyo3(name = "green")]
             pub fn green<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.green.clone();
+                let value = self.0.green;
                 (PyColor(value)).into_bound_py_any(py)
             }
             /// The mint ink.
             #[getter]
             #[pyo3(name = "mint")]
             pub fn mint<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.mint.clone();
+                let value = self.0.mint;
                 (PyColor(value)).into_bound_py_any(py)
             }
             /// The teal ink.
             #[getter]
             #[pyo3(name = "teal")]
             pub fn teal<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.teal.clone();
+                let value = self.0.teal;
                 (PyColor(value)).into_bound_py_any(py)
             }
             /// The cyan ink.
             #[getter]
             #[pyo3(name = "cyan")]
             pub fn cyan<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.cyan.clone();
+                let value = self.0.cyan;
                 (PyColor(value)).into_bound_py_any(py)
             }
             /// The blue ink.
             #[getter]
             #[pyo3(name = "blue")]
             pub fn blue<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.blue.clone();
+                let value = self.0.blue;
                 (PyColor(value)).into_bound_py_any(py)
             }
             /// The indigo ink.
             #[getter]
             #[pyo3(name = "indigo")]
             pub fn indigo<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.indigo.clone();
+                let value = self.0.indigo;
                 (PyColor(value)).into_bound_py_any(py)
             }
             /// The purple ink.
             #[getter]
             #[pyo3(name = "purple")]
             pub fn purple<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.purple.clone();
+                let value = self.0.purple;
                 (PyColor(value)).into_bound_py_any(py)
             }
             /// The pink ink.
             #[getter]
             #[pyo3(name = "pink")]
             pub fn pink<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.pink.clone();
+                let value = self.0.pink;
                 (PyColor(value)).into_bound_py_any(py)
             }
             /// The brown ink.
             #[getter]
             #[pyo3(name = "brown")]
             pub fn brown<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.brown.clone();
+                let value = self.0.brown;
                 (PyColor(value)).into_bound_py_any(py)
             }
             /// The gray ink.
             #[getter]
             #[pyo3(name = "gray")]
             pub fn gray<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.gray.clone();
+                let value = self.0.gray;
                 (PyColor(value)).into_bound_py_any(py)
             }
             /// The thirteen inks in name order.
             #[pyo3(name = "hues", signature = ())]
-            pub fn hues<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn hues<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::core::colors::Theme::hues(&self.0);
-                ((out).into_iter().map(|x| PyColor(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+                ((out).into_iter().map(PyColor).collect::<Vec<_>>()).into_bound_py_any(py)
             }
             /// The six inks a figure cycles through: blue, orange, yellow, green, pink, indigo.
             #[pyo3(name = "inks", signature = ())]
-            pub fn inks<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn inks<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::core::colors::Theme::inks(&self.0);
-                ((out).into_iter().map(|x| PyColor(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+                ((out).into_iter().map(PyColor).collect::<Vec<_>>()).into_bound_py_any(py)
             }
             /// Reads plain data into the class.
             #[staticmethod]
@@ -602,7 +575,7 @@ pub mod core {
         pub fn gradient<'py>(py: Python<'py>, colors: Vec<PyColor>, steps: usize) -> PyResult<Bound<'py, PyAny>> {
             let colors = colors.into_iter().map(|x| x.0).collect::<Vec<_>>();
             let out = mrlyrs::core::colors::gradient(&colors, steps);
-            ((ok(out)?).into_iter().map(|x| PyColor(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((ok(out)?).into_iter().map(PyColor).collect::<Vec<_>>()).into_bound_py_any(py)
         }
 
         /// Returns the foreground rgba of the dark or the light theme.
@@ -688,7 +661,7 @@ pub mod core {
         pub fn shades<'py>(py: Python<'py>, hue: PyColor) -> PyResult<Bound<'py, PyAny>> {
             let hue = hue.0;
             let out = mrlyrs::core::colors::shades(hue);
-            ((out).into_iter().map(|x| PyColor(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((out).into_iter().map(PyColor).collect::<Vec<_>>()).into_bound_py_any(py)
         }
 
         /// Snaps every pixel to the palette color nearest it in squared rgba distance, first on a tie.
@@ -744,7 +717,7 @@ pub mod core {
             m.add("MINT", PyColor(mrlyrs::core::colors::MINT))?;
             m.add("NAMES", (mrlyrs::core::colors::NAMES).into_iter().map(|x| (x).to_string()).collect::<Vec<_>>())?;
             m.add("ORANGE", PyColor(mrlyrs::core::colors::ORANGE))?;
-            m.add("PALETTE", (mrlyrs::core::colors::PALETTE).into_iter().map(|x| PyColor(x)).collect::<Vec<_>>())?;
+            m.add("PALETTE", (mrlyrs::core::colors::PALETTE).into_iter().map(PyColor).collect::<Vec<_>>())?;
             m.add("PINK", PyColor(mrlyrs::core::colors::PINK))?;
             m.add("PURPLE", PyColor(mrlyrs::core::colors::PURPLE))?;
             m.add("RED", PyColor(mrlyrs::core::colors::RED))?;
@@ -761,8 +734,7 @@ pub mod core {
 
     /// The one error type, its Result and the json parser over the rented value.
     pub mod error {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok, PySerde};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -789,8 +761,7 @@ pub mod core {
 
     /// The paletted image and its rows.
     pub mod image {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{PyPixels};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -818,8 +789,7 @@ pub mod core {
 
     /// The editions that distribute a palette over a cell.
     pub mod paint {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok, PyColor, PyRng, PySerde, PyTensor};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -843,28 +813,28 @@ pub mod core {
             #[getter]
             #[pyo3(name = "edition")]
             pub fn edition<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.edition.clone();
+                let value = self.0.edition;
                 (PySerde(value)).into_bound_py_any(py)
             }
             /// The secondary color scheme.
             #[getter]
             #[pyo3(name = "scheme")]
             pub fn scheme<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.scheme.clone();
+                let value = self.0.scheme;
                 (PySerde(value)).into_bound_py_any(py)
             }
             /// The side the primary ink lands on.
             #[getter]
             #[pyo3(name = "target")]
             pub fn target<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.target.clone();
+                let value = self.0.target;
                 (PySerde(value)).into_bound_py_any(py)
             }
             /// The primary ink.
             #[getter]
             #[pyo3(name = "primary")]
             pub fn primary<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.primary.clone();
+                let value = self.0.primary;
                 (PySerde(value)).into_bound_py_any(py)
             }
             /// The secondary inks.
@@ -872,7 +842,7 @@ pub mod core {
             #[pyo3(name = "secondary")]
             pub fn secondary<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.secondary.clone();
-                ((value).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+                ((value).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
             }
             /// The shade indices of a multitone ramp.
             #[getter]
@@ -883,14 +853,14 @@ pub mod core {
             }
             /// Returns true for the Simple edition.
             #[pyo3(name = "is_simple", signature = ())]
-            pub fn is_simple<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn is_simple<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::core::paint::Paint::is_simple(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Builds a black-primary, fill-target, multicolor paint for an edition.
             #[staticmethod]
             #[pyo3(name = "new", signature = (edition))]
-            pub fn new<'py>(py: Python<'py>, edition: PySerde<mrlyrs::core::paint::Edition>) -> PyResult<Bound<'py, PyAny>> {
+            pub fn new_<'py>(py: Python<'py>, edition: PySerde<mrlyrs::core::paint::Edition>) -> PyResult<Bound<'py, PyAny>> {
                 let edition = edition.0;
                 let out = mrlyrs::core::paint::Paint::new(edition);
                 (crate::gen::core::paint::Paint(out)).into_bound_py_any(py)
@@ -915,9 +885,9 @@ pub mod core {
             /// Returns every Edition in canonical order.
             #[staticmethod]
             #[pyo3(name = "all", signature = ())]
-            pub fn all<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn all<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::core::paint::Edition::all();
-                ((out).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+                ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
             }
             /// Returns the cell-painting mode this edition renders with, or None for Random, which scatters.
             #[staticmethod]
@@ -925,7 +895,7 @@ pub mod core {
             pub fn mode<'py>(py: Python<'py>, edition: PySerde<mrlyrs::core::paint::Edition>) -> PyResult<Bound<'py, PyAny>> {
                 let edition = edition.0;
                 let out = mrlyrs::core::paint::Edition::mode(edition);
-                ((out).map(|x| PySerde(x))).into_bound_py_any(py)
+                ((out).map(PySerde)).into_bound_py_any(py)
             }
         }
 
@@ -938,9 +908,9 @@ pub mod core {
             /// Returns every Ink in canonical order.
             #[staticmethod]
             #[pyo3(name = "all", signature = ())]
-            pub fn all<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn all<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::core::paint::Ink::all();
-                ((out).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+                ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
             }
             /// Returns the ink's color.
             #[staticmethod]
@@ -961,9 +931,9 @@ pub mod core {
             /// Returns every Scheme in canonical order.
             #[staticmethod]
             #[pyo3(name = "all", signature = ())]
-            pub fn all<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn all<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::core::paint::Scheme::all();
-                ((out).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+                ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
             }
         }
 
@@ -976,9 +946,9 @@ pub mod core {
             /// Returns every Target in canonical order.
             #[staticmethod]
             #[pyo3(name = "all", signature = ())]
-            pub fn all<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn all<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::core::paint::Target::all();
-                ((out).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+                ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
             }
         }
 
@@ -1094,8 +1064,7 @@ pub mod core {
 
     /// The colorizers that turn counter values into colors.
     pub mod ramp {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{PyColor, PyPixels, PySerde};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -1133,8 +1102,7 @@ pub mod core {
 
     /// The seeded random stream.
     pub mod rng {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{PyRng};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -1215,8 +1183,7 @@ pub mod core {
 
     /// The tensor and its dtypes.
     pub mod tensor {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok, PySerde, PyTensor};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -1453,9 +1420,9 @@ pub mod core {
         #[pyo3(name = "put", signature = (tensor, flat, value))]
         pub fn put<'py>(py: Python<'py>, tensor: &Bound<'_, PyAny>, flat: usize, value: i64) -> PyResult<Bound<'py, PyAny>> {
             let mut tensor_owned = crate::hand::tensor_from_py(tensor)?;
-            let out = mrlyrs::core::Tensor::put(&mut tensor_owned, flat, value);
+            mrlyrs::core::Tensor::put(&mut tensor_owned, flat, value);
             crate::hand::tensor_write_back(tensor, &tensor_owned)?;
-            (out).into_bound_py_any(py)
+            ().into_bound_py_any(py)
         }
 
         /// Rotates the tensor k quarter turns in the plane of two axes.
@@ -1642,14 +1609,14 @@ pub mod core {
         #[getter]
         #[pyo3(name = "width")]
         pub fn width<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let value = self.0.width.clone();
+            let value = self.0.width;
             (value).into_bound_py_any(py)
         }
         /// The height in pixels.
         #[getter]
         #[pyo3(name = "height")]
         pub fn height<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let value = self.0.height.clone();
+            let value = self.0.height;
             (value).into_bound_py_any(py)
         }
         /// The palette index of every pixel, row by row.
@@ -1664,11 +1631,11 @@ pub mod core {
         #[pyo3(name = "palette")]
         pub fn palette<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let value = self.0.palette.clone();
-            ((value).into_iter().map(|x| PyColor(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((value).into_iter().map(PyColor).collect::<Vec<_>>()).into_bound_py_any(py)
         }
         /// Returns the flat rgba pixels, transparent wherever an index misses the palette.
         #[pyo3(name = "colors", signature = ())]
-        pub fn colors<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn colors<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::core::Image::colors(&self.0);
             (PyPixels(out)).into_bound_py_any(py)
         }
@@ -1683,7 +1650,7 @@ pub mod core {
         /// Builds an image from its four parts.
         #[staticmethod]
         #[pyo3(name = "new", signature = (width, height, rows, palette))]
-        pub fn new<'py>(py: Python<'py>, width: usize, height: usize, rows: Vec<Vec<usize>>, palette: Vec<PyColor>) -> PyResult<Bound<'py, PyAny>> {
+        pub fn new_<'py>(py: Python<'py>, width: usize, height: usize, rows: Vec<Vec<usize>>, palette: Vec<PyColor>) -> PyResult<Bound<'py, PyAny>> {
             let palette = palette.into_iter().map(|x| x.0).collect::<Vec<_>>();
             let out = mrlyrs::core::Image::new(width, height, rows, palette);
             (crate::gen::core::Image(out)).into_bound_py_any(py)
@@ -1721,14 +1688,14 @@ pub mod core {
         /// Builds the blue-to-red diverging ramp around a white middle.
         #[staticmethod]
         #[pyo3(name = "diverge", signature = ())]
-        pub fn diverge<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn diverge<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::core::Colorizer::diverge();
             (PySerde(out)).into_bound_py_any(py)
         }
         /// Builds the black-through-ember fire ramp: black, dark red, orange, light yellow.
         #[staticmethod]
         #[pyo3(name = "fire", signature = ())]
-        pub fn fire<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn fire<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::core::Colorizer::fire();
             (PySerde(out)).into_bound_py_any(py)
         }
@@ -1744,7 +1711,7 @@ pub mod core {
         /// Builds the white-to-black heat ramp.
         #[staticmethod]
         #[pyo3(name = "heat", signature = ())]
-        pub fn heat<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn heat<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::core::Colorizer::heat();
             (PySerde(out)).into_bound_py_any(py)
         }
@@ -1835,16 +1802,13 @@ pub mod core {
 /// The alphabet: the stroked pixel glyphs, their rasters and their writing animations.
 /// The alphabet: a stroked pixel font of 108 characters, painted whole or written stroke by stroke.
 pub mod font {
-    use crate::hand::*;
-    use pyo3::exceptions::PyValueError;
+    use crate::hand::{PySerde};
     use pyo3::prelude::*;
     use pyo3::types::PyDict;
     use pyo3::IntoPyObjectExt;
 
     /// The stroke orders that write each character.
     pub mod paths {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -1871,8 +1835,6 @@ pub mod font {
 
     /// The hand-penned stroke tables, one per glyph.
     pub mod pens {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -1880,7 +1842,7 @@ pub mod font {
         /// Returns every pen in font order: uppers, lowers, digits, extras, specials.
         #[pyfunction]
         #[pyo3(name = "all", signature = ())]
-        pub fn all<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn all<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::font::pens::all();
             (out).into_bound_py_any(py)
         }
@@ -1915,7 +1877,7 @@ pub mod font {
         #[getter]
         #[pyo3(name = "char")]
         pub fn char_<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let value = self.0.char.clone();
+            let value = self.0.char;
             (value).into_bound_py_any(py)
         }
         /// The bitmap rows of '0' and '1' characters.
@@ -1927,20 +1889,20 @@ pub mod font {
         }
         /// Returns the number of rows.
         #[pyo3(name = "height", signature = ())]
-        pub fn height<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn height<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::font::Glyph::height(&self.0);
             (out).into_bound_py_any(py)
         }
         /// Builds a glyph from its character and rows.
         #[staticmethod]
         #[pyo3(name = "new", signature = (char_, rows))]
-        pub fn new<'py>(py: Python<'py>, char_: char, rows: Vec<String>) -> PyResult<Bound<'py, PyAny>> {
+        pub fn new_<'py>(py: Python<'py>, char_: char, rows: Vec<String>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::font::Glyph::new(char_, rows);
             (crate::gen::font::Glyph(out)).into_bound_py_any(py)
         }
         /// Returns the cell width of the first row, or 0 for an empty glyph.
         #[pyo3(name = "width", signature = ())]
-        pub fn width<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn width<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::font::Glyph::width(&self.0);
             (out).into_bound_py_any(py)
         }
@@ -1958,9 +1920,9 @@ pub mod font {
     /// Builds every glyph in font order: uppers, lowers, digits, extras, specials.
     #[pyfunction]
     #[pyo3(name = "all", signature = ())]
-    pub fn all<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+    pub fn all<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let out = mrlyrs::font::all();
-        ((out).into_iter().map(|x| crate::gen::font::Glyph(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+        ((out).into_iter().map(crate::gen::font::Glyph).collect::<Vec<_>>()).into_bound_py_any(py)
     }
 
     /// Writes the text in stroke order, one cell per frame, from an empty padded board to the full raster.
@@ -1983,9 +1945,9 @@ pub mod font {
     /// Builds the ten digit glyphs.
     #[pyfunction]
     #[pyo3(name = "digits", signature = ())]
-    pub fn digits<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+    pub fn digits<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let out = mrlyrs::font::digits();
-        ((out).into_iter().map(|x| crate::gen::font::Glyph(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+        ((out).into_iter().map(crate::gen::font::Glyph).collect::<Vec<_>>()).into_bound_py_any(py)
     }
 
     /// Drafts a stroke order for a trimmed bitmap by walking its lit cells: start at a lowest-left free end, keep heading, lift when stuck.
@@ -1999,9 +1961,9 @@ pub mod font {
     /// Builds the punctuation, symbol and arrow glyphs.
     #[pyfunction]
     #[pyo3(name = "extras", signature = ())]
-    pub fn extras<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+    pub fn extras<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let out = mrlyrs::font::extras();
-        ((out).into_iter().map(|x| crate::gen::font::Glyph(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+        ((out).into_iter().map(crate::gen::font::Glyph).collect::<Vec<_>>()).into_bound_py_any(py)
     }
 
     /// Returns the least strokes that can write a trimmed bitmap: the minimum cover of its lit cells by 4-adjacent paths, zero for a blank.
@@ -2017,7 +1979,7 @@ pub mod font {
     #[pyo3(name = "glyph", signature = (c))]
     pub fn glyph<'py>(py: Python<'py>, c: char) -> PyResult<Bound<'py, PyAny>> {
         let out = mrlyrs::font::glyph(c);
-        ((out).map(|x| crate::gen::font::Glyph(x))).into_bound_py_any(py)
+        ((out).map(crate::gen::font::Glyph)).into_bound_py_any(py)
     }
 
     /// Blanks the four corner cells of an uppercase bitmap into its rounded lowercase form.
@@ -2032,15 +1994,15 @@ pub mod font {
     /// Builds the twenty-six lowercase glyphs by rounding the uppers' corners.
     #[pyfunction]
     #[pyo3(name = "lowers", signature = ())]
-    pub fn lowers<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+    pub fn lowers<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let out = mrlyrs::font::lowers();
-        ((out).into_iter().map(|x| crate::gen::font::Glyph(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+        ((out).into_iter().map(crate::gen::font::Glyph).collect::<Vec<_>>()).into_bound_py_any(py)
     }
 
     /// Returns the whole font as a map from character to bitmap rows.
     #[pyfunction]
     #[pyo3(name = "map", signature = ())]
-    pub fn map<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+    pub fn map<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let out = mrlyrs::font::map();
         (out).into_bound_py_any(py)
     }
@@ -2080,9 +2042,9 @@ pub mod font {
     /// Builds the four seven-row glyphs: dollar, at, copyright and registered.
     #[pyfunction]
     #[pyo3(name = "specials", signature = ())]
-    pub fn specials<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+    pub fn specials<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let out = mrlyrs::font::specials();
-        ((out).into_iter().map(|x| crate::gen::font::Glyph(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+        ((out).into_iter().map(crate::gen::font::Glyph).collect::<Vec<_>>()).into_bound_py_any(py)
     }
 
     /// Returns the character's ordered strokes over its trimmed bitmap, or none for a character outside the font.
@@ -2096,7 +2058,7 @@ pub mod font {
     /// Returns every character in the font, in font order.
     #[pyfunction]
     #[pyo3(name = "supported", signature = ())]
-    pub fn supported<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+    pub fn supported<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let out = mrlyrs::font::supported();
         (out).into_bound_py_any(py)
     }
@@ -2112,9 +2074,9 @@ pub mod font {
     /// Builds the twenty-six uppercase glyphs.
     #[pyfunction]
     #[pyo3(name = "uppers", signature = ())]
-    pub fn uppers<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+    pub fn uppers<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let out = mrlyrs::font::uppers();
-        ((out).into_iter().map(|x| crate::gen::font::Glyph(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+        ((out).into_iter().map(crate::gen::font::Glyph).collect::<Vec<_>>()).into_bound_py_any(py)
     }
 
     pub fn init(py: Python<'_>, parent: &Bound<'_, PyModule>, sys: &Bound<'_, PyDict>) -> PyResult<()> {
@@ -2156,16 +2118,14 @@ pub mod font {
 /// The generator: the whole pipeline from a recipe to a file.
 /// The generator: the pipeline from a recipe to a file, for datasets, the automator, backgrounds.
 pub mod gen_ {
-    use crate::hand::*;
-    use pyo3::exceptions::PyValueError;
+    use crate::hand::{ok, PyRng, PySerde, PyTensor};
     use pyo3::prelude::*;
     use pyo3::types::PyDict;
     use pyo3::IntoPyObjectExt;
 
     /// The recipe to cell builders, one per dimension, and the random draws that feed them.
     pub mod build {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok, PyCell6d, PyCellNd, PyRng, PySerde};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -2268,8 +2228,7 @@ pub mod gen_ {
 
     /// The tile name: a full tile recipe folded to its one canonical object.
     pub mod name {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok, PySerde};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -2285,14 +2244,14 @@ pub mod gen_ {
             #[getter]
             #[pyo3(name = "code")]
             pub fn code<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.code.clone();
+                let value = self.0.code;
                 (value).into_bound_py_any(py)
             }
             /// The mask code of a special tile.
             #[getter]
             #[pyo3(name = "special")]
             pub fn special<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.special.clone();
+                let value = self.0.special;
                 (value).into_bound_py_any(py)
             }
             /// The letters of a magic tile, first letter outermost.
@@ -2313,7 +2272,7 @@ pub mod gen_ {
             #[getter]
             #[pyo3(name = "factor")]
             pub fn factor<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.factor.clone();
+                let value = self.0.factor;
                 (value).into_bound_py_any(py)
             }
             /// The side each slot renders at, one per letter for a magic tile.
@@ -2327,7 +2286,7 @@ pub mod gen_ {
             #[getter]
             #[pyo3(name = "level")]
             pub fn level<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.level.clone();
+                let value = self.0.level;
                 (value).into_bound_py_any(py)
             }
             /// The quarter turns of each slot, absent when nothing turns.
@@ -2341,19 +2300,19 @@ pub mod gen_ {
             #[getter]
             #[pyo3(name = "flip")]
             pub fn flip<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.flip.clone();
+                let value = self.0.flip;
                 (value).into_bound_py_any(py)
             }
             /// Whether the finished tile inverts.
             #[getter]
             #[pyo3(name = "invert")]
             pub fn invert<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.invert.clone();
+                let value = self.0.invert;
                 (value).into_bound_py_any(py)
             }
             /// Folds a decoded value to its canonical form, or an error for one outside the kind.
             #[pyo3(name = "checked", signature = ())]
-            pub fn checked<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn checked<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::checked(self.0.clone());
                 (crate::gen::gen_::name::Tile(ok(out)?)).into_bound_py_any(py)
             }
@@ -2387,37 +2346,37 @@ pub mod gen_ {
             }
             /// Builds the recipe the name folds, resized and checked.
             #[pyo3(name = "recipe", signature = ())]
-            pub fn recipe<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn recipe<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::gen::name::Tile::recipe(&self.0);
                 (crate::gen::gen_::Tile(ok(out)?)).into_bound_py_any(py)
             }
             /// Prints the kind and the `key=value` pairs joined by underscores, lists in brackets, or an error when the name does not read back.
             #[pyo3(name = "to_file", signature = ())]
-            pub fn to_file<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn to_file<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::to_file(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Prints the first eight hex digits of the sha256 of the canonical JSON.
             #[pyo3(name = "to_id", signature = ())]
-            pub fn to_id<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn to_id<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::to_id(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Prints the canonical JSON object.
             #[pyo3(name = "to_json", signature = ())]
-            pub fn to_json<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn to_json<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::to_json(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
             #[pyo3(name = "to_mrly", signature = ())]
-            pub fn to_mrly<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn to_mrly<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::to_mrly(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back.
             #[pyo3(name = "to_url", signature = ())]
-            pub fn to_url<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn to_url<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::to_url(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
@@ -2446,8 +2405,7 @@ pub mod gen_ {
 
     /// The tile recipe: its families, groups, parities, catalog and size lists.
     pub mod recipe {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{PySerde};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -2461,9 +2419,9 @@ pub mod gen_ {
             /// Returns every Design in canonical order.
             #[staticmethod]
             #[pyo3(name = "all", signature = ())]
-            pub fn all<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn all<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::gen::recipe::Design::all();
-                ((out).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+                ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
             }
         }
 
@@ -2472,7 +2430,7 @@ pub mod gen_ {
         #[pyo3(name = "classics", signature = (dimension))]
         pub fn classics<'py>(py: Python<'py>, dimension: usize) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::gen::recipe::classics(dimension);
-            ((out).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
         }
 
         /// Returns every flat size in the range that passes the parity filter.
@@ -2529,8 +2487,8 @@ pub mod gen_ {
             m.add_function(wrap_pyfunction!(powers, &m)?)?;
             m.add_function(wrap_pyfunction!(products, &m)?)?;
             m.add_function(wrap_pyfunction!(size, &m)?)?;
-            m.add("CLASSICS_2D", (mrlyrs::gen::recipe::CLASSICS_2D).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>())?;
-            m.add("CLASSICS_3D", (mrlyrs::gen::recipe::CLASSICS_3D).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>())?;
+            m.add("CLASSICS_2D", (mrlyrs::gen::recipe::CLASSICS_2D).into_iter().map(PySerde).collect::<Vec<_>>())?;
+            m.add("CLASSICS_3D", (mrlyrs::gen::recipe::CLASSICS_3D).into_iter().map(PySerde).collect::<Vec<_>>())?;
             m.add("MAX_LEVEL", mrlyrs::gen::recipe::MAX_LEVEL)?;
             m.add("MAX_SIDE", mrlyrs::gen::recipe::MAX_SIDE)?;
             m.add("MAX_SLOTS", mrlyrs::gen::recipe::MAX_SLOTS)?;
@@ -2545,11 +2503,63 @@ pub mod gen_ {
 
     /// The seeded artwork run from tile recipe to rendered files.
     pub mod variation {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok, PyCellNd, PyRng, PySerde};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
+
+        /// One rendering of an artwork, sized in tile repetitions.
+        #[pyclass(name = "File", module = "mrlypy.gen.variation", from_py_object)]
+        #[derive(Clone)]
+        pub struct File(pub mrlyrs::gen::variation::File);
+
+        #[pymethods]
+        impl File {
+            /// Builds a file of the given repetition counts with no PNG bytes.
+            #[new]
+            #[pyo3(signature = (width, height))]
+            pub fn __new__(width: usize, height: usize) -> PyResult<Self> {
+                let out = mrlyrs::gen::variation::File::new(width, height);
+                Ok(Self(out))
+            }
+            /// The count of tile repetitions across.
+            #[getter]
+            #[pyo3(name = "width")]
+            pub fn width<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let value = self.0.width;
+                (value).into_bound_py_any(py)
+            }
+            /// The count of tile repetitions down.
+            #[getter]
+            #[pyo3(name = "height")]
+            pub fn height<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let value = self.0.height;
+                (value).into_bound_py_any(py)
+            }
+            /// The encoded PNG bytes, empty until rendered and left out of the json.
+            #[getter]
+            #[pyo3(name = "png")]
+            pub fn png<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let value = self.0.png.clone();
+                (value).into_bound_py_any(py)
+            }
+            /// Builds a file of the given repetition counts with no PNG bytes.
+            #[staticmethod]
+            #[pyo3(name = "new", signature = (width, height))]
+            pub fn new_<'py>(py: Python<'py>, width: usize, height: usize) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::gen::variation::File::new(width, height);
+                (crate::gen::gen_::variation::File(out)).into_bound_py_any(py)
+            }
+            /// Reads plain data into the class.
+            #[staticmethod]
+            pub fn from_dict(data: &Bound<'_, PyAny>) -> PyResult<Self> {
+                Ok(Self(crate::hand::serde_from_py(data)?))
+            }
+            /// Returns the value as plain data.
+            pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                crate::hand::serde_into_py(py, &self.0)
+            }
+        }
 
         /// One seeded artwork, from tile recipe to rendered files.
         #[pyclass(name = "Variation", module = "mrlypy.gen.variation", from_py_object)]
@@ -2569,14 +2579,14 @@ pub mod gen_ {
             #[getter]
             #[pyo3(name = "seed")]
             pub fn seed<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.seed.clone();
+                let value = self.0.seed;
                 (value).into_bound_py_any(py)
             }
             /// The paint edition.
             #[getter]
             #[pyo3(name = "edition")]
             pub fn edition<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.edition.clone();
+                let value = self.0.edition;
                 (PySerde(value)).into_bound_py_any(py)
             }
             /// The primary inks, when the config fixes them.
@@ -2584,7 +2594,7 @@ pub mod gen_ {
             #[pyo3(name = "primaries")]
             pub fn primaries<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.primaries.clone();
-                ((value).map(|x| (x).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>())).into_bound_py_any(py)
+                ((value).map(|x| (x).into_iter().map(PySerde).collect::<Vec<_>>())).into_bound_py_any(py)
             }
             /// The tile recipe.
             #[getter]
@@ -2598,38 +2608,38 @@ pub mod gen_ {
             #[pyo3(name = "mask")]
             pub fn mask<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.mask.clone();
-                ((value).map(|x| crate::gen::gen_::Tile(x))).into_bound_py_any(py)
+                ((value).map(crate::gen::gen_::Tile)).into_bound_py_any(py)
             }
             /// The paint, set by generate.
             #[getter]
             #[pyo3(name = "paint")]
             pub fn paint<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.paint.clone();
-                ((value).map(|x| crate::gen::core::paint::Paint(x))).into_bound_py_any(py)
+                ((value).map(crate::gen::core::paint::Paint)).into_bound_py_any(py)
             }
             /// The built base cell, set by generate and left out of the json.
             #[getter]
             #[pyo3(name = "base")]
             pub fn base<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.base.clone();
-                ((value).map(|x| PyCellNd(x))).into_bound_py_any(py)
+                ((value).map(PyCellNd)).into_bound_py_any(py)
             }
             /// The renderings, filled by render.
             #[getter]
             #[pyo3(name = "files")]
             pub fn files<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.files.clone();
-                ((value).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+                ((value).into_iter().map(crate::gen::gen_::variation::File).collect::<Vec<_>>()).into_bound_py_any(py)
             }
             /// Returns whether the edition paints the whole tiled canvas.
             #[pyo3(name = "is_cover", signature = ())]
-            pub fn is_cover<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn is_cover<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::gen::variation::Variation::is_cover(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Returns whether the edition paints the base cell before tiling.
             #[pyo3(name = "is_prime", signature = ())]
-            pub fn is_prime<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn is_prime<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::gen::variation::Variation::is_prime(&self.0);
                 (out).into_bound_py_any(py)
             }
@@ -2641,21 +2651,6 @@ pub mod gen_ {
             /// Returns the value as plain data.
             pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 crate::hand::serde_into_py(py, &self.0)
-            }
-        }
-
-        /// One rendering of an artwork, sized in tile repetitions.
-        #[pyclass(name = "File", module = "mrlypy.gen.variation", skip_from_py_object)]
-        pub struct File;
-
-        #[pymethods]
-        impl File {
-            /// Builds a file of the given repetition counts with no PNG bytes.
-            #[staticmethod]
-            #[pyo3(name = "new", signature = (width, height))]
-            pub fn new<'py>(py: Python<'py>, width: usize, height: usize) -> PyResult<Bound<'py, PyAny>> {
-                let out = mrlyrs::gen::variation::File::new(width, height);
-                (PySerde(out)).into_bound_py_any(py)
             }
         }
 
@@ -2693,12 +2688,12 @@ pub mod gen_ {
         pub fn init(py: Python<'_>, parent: &Bound<'_, PyModule>, sys: &Bound<'_, PyDict>) -> PyResult<()> {
             let m = PyModule::new(py, "mrlypy.gen.variation")?;
             m.setattr("__doc__", "The seeded artwork run from tile recipe to rendered files.")?;
-            m.add_class::<Variation>()?;
             m.add_class::<File>()?;
+            m.add_class::<Variation>()?;
             m.add_function(wrap_pyfunction!(create, &m)?)?;
             m.add_function(wrap_pyfunction!(generate, &m)?)?;
             m.add_function(wrap_pyfunction!(render, &m)?)?;
-            let names: Vec<&str> = vec!["create", "generate", "render", "Variation", "File"];
+            let names: Vec<&str> = vec!["create", "generate", "render", "File", "Variation"];
             m.add("__all__", names)?;
             parent.add("variation", &m)?;
             sys.set_item("mrlypy._mrlypy.gen.variation", &m)?;
@@ -2725,14 +2720,14 @@ pub mod gen_ {
         #[getter]
         #[pyo3(name = "group")]
         pub fn group<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let value = self.0.group.clone();
+            let value = self.0.group;
             (PySerde(value)).into_bound_py_any(py)
         }
         /// The base factor of the construction.
         #[getter]
         #[pyo3(name = "factor")]
         pub fn factor<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let value = self.0.factor.clone();
+            let value = self.0.factor;
             (value).into_bound_py_any(py)
         }
         /// The origin of each layer.
@@ -2740,7 +2735,7 @@ pub mod gen_ {
         #[pyo3(name = "sources")]
         pub fn sources<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let value = self.0.sources.clone();
-            ((value).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((value).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
         }
         /// The grid size of each source.
         #[getter]
@@ -2767,62 +2762,62 @@ pub mod gen_ {
         #[getter]
         #[pyo3(name = "invert")]
         pub fn invert<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let value = self.0.invert.clone();
+            let value = self.0.invert;
             (value).into_bound_py_any(py)
         }
         /// Whether the finished tile flips.
         #[getter]
         #[pyo3(name = "flip")]
         pub fn flip<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let value = self.0.flip.clone();
+            let value = self.0.flip;
             (value).into_bound_py_any(py)
         }
         /// The tile's width in cells.
         #[getter]
         #[pyo3(name = "width")]
         pub fn width<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let value = self.0.width.clone();
+            let value = self.0.width;
             (value).into_bound_py_any(py)
         }
         /// The tile's height in cells.
         #[getter]
         #[pyo3(name = "height")]
         pub fn height<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let value = self.0.height.clone();
+            let value = self.0.height;
             (value).into_bound_py_any(py)
         }
         /// Checks that the slots, numbers and sizes agree.
         #[pyo3(name = "check", signature = ())]
-        pub fn check<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn check<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::gen::Tile::check(&self.0);
             (ok(out)?).into_bound_py_any(py)
         }
         /// Returns whether the recipe is a magic tile of one repeated source at one repeated number,
         /// the shape a fractal tile of the same factor and level already draws.
         #[pyo3(name = "degenerate", signature = ())]
-        pub fn degenerate<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn degenerate<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::gen::Tile::degenerate(&self.0);
             (out).into_bound_py_any(py)
         }
         /// Returns the larger of width and height.
         #[pyo3(name = "max_size", signature = ())]
-        pub fn max_size<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn max_size<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::gen::Tile::max_size(&self.0);
             (out).into_bound_py_any(py)
         }
         /// Builds an empty tile in a group.
         #[staticmethod]
         #[pyo3(name = "new", signature = (group))]
-        pub fn new<'py>(py: Python<'py>, group: PySerde<mrlyrs::gen::Group>) -> PyResult<Bound<'py, PyAny>> {
+        pub fn new_<'py>(py: Python<'py>, group: PySerde<mrlyrs::gen::Group>) -> PyResult<Bound<'py, PyAny>> {
             let group = group.0;
             let out = mrlyrs::gen::Tile::new(group);
             (crate::gen::gen_::Tile(out)).into_bound_py_any(py)
         }
         /// Recomputes the factor and side length the group and numbers imply, zero when they overflow.
         #[pyo3(name = "resize", signature = ())]
-        pub fn resize<'py>(&mut self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
-            let out = mrlyrs::gen::Tile::resize(&mut self.0);
-            (out).into_bound_py_any(py)
+        pub fn resize<'py>(&mut self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+            mrlyrs::gen::Tile::resize(&mut self.0);
+            ().into_bound_py_any(py)
         }
         /// Sets the tile's width and height.
         #[pyo3(name = "size", signature = (width, height))]
@@ -2850,9 +2845,9 @@ pub mod gen_ {
         /// Returns every Group in canonical order.
         #[staticmethod]
         #[pyo3(name = "all", signature = ())]
-        pub fn all<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn all<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::gen::Group::all();
-            ((out).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
         }
     }
 
@@ -2865,9 +2860,9 @@ pub mod gen_ {
         /// Returns every Parity in canonical order.
         #[staticmethod]
         #[pyo3(name = "all", signature = ())]
-        pub fn all<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn all<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::gen::Parity::all();
-            ((out).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
         }
         /// Returns true when the number passes the filter.
         #[staticmethod]
@@ -2967,16 +2962,13 @@ pub mod gen_ {
 /// The engine: a rule over a grid, stepped, recorded, measured and rendered.
 /// The engine: a rule over a grid, stepped, recorded, measured and rendered.
 pub mod life {
-    use crate::hand::*;
-    use pyo3::exceptions::PyValueError;
+    use crate::hand::{ok, PyCell2d, PyCellNd, PyCode, PySerde, PyTensor};
     use pyo3::prelude::*;
     use pyo3::types::PyDict;
     use pyo3::IntoPyObjectExt;
 
     /// The elementary automata: their stepping, their space-time diagrams and the card of one rule.
     pub mod elementary {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -3003,8 +2995,7 @@ pub mod life {
 
     /// The PNG frames, the cumulative-visit heatmap and the gif movie of grids.
     pub mod render {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok, PyCell2d};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -3032,8 +3023,7 @@ pub mod life {
 
     /// The named sources of neighbor-count values, and the counts they lay down.
     pub mod source {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -3101,46 +3091,46 @@ pub mod life {
         #[getter]
         #[pyo3(name = "boundary")]
         pub fn boundary<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let value = self.0.boundary.clone();
+            let value = self.0.boundary;
             (PySerde(value)).into_bound_py_any(py)
         }
         /// The generation cap.
         #[getter]
         #[pyo3(name = "max_generations")]
         pub fn max_generations<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let value = self.0.max_generations.clone();
+            let value = self.0.max_generations;
             (value).into_bound_py_any(py)
         }
         /// The tiling factor applied to the seed.
         #[getter]
         #[pyo3(name = "grid_size")]
         pub fn grid_size<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let value = self.0.grid_size.clone();
+            let value = self.0.grid_size;
             (value).into_bound_py_any(py)
         }
         /// The dead border added around the seed.
         #[getter]
         #[pyo3(name = "padding")]
         pub fn padding<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let value = self.0.padding.clone();
+            let value = self.0.padding;
             (value).into_bound_py_any(py)
         }
         /// Returns the largest neighbor count the mask can reach.
         #[pyo3(name = "budget", signature = ())]
-        pub fn budget<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn budget<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::life::Config::budget(&self.0);
             (out).into_bound_py_any(py)
         }
         /// Resolves the birth and survive counts against the mask's budget.
         #[pyo3(name = "counts", signature = ())]
-        pub fn counts<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn counts<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::life::Config::counts(&self.0);
             (ok(out)?).into_bound_py_any(py)
         }
         /// Builds a config with a constant boundary, a 64-generation cap, no tiling and no padding.
         #[staticmethod]
         #[pyo3(name = "new", signature = (mask, birth, survive))]
-        pub fn new<'py>(py: Python<'py>, mask: PyCell2d, birth: crate::gen::life::Counts, survive: crate::gen::life::Counts) -> PyResult<Bound<'py, PyAny>> {
+        pub fn new_<'py>(py: Python<'py>, mask: PyCell2d, birth: crate::gen::life::Counts, survive: crate::gen::life::Counts) -> PyResult<Bound<'py, PyAny>> {
             let mask = mask.0;
             let birth = birth.0;
             let survive = survive.0;
@@ -3209,32 +3199,32 @@ pub mod life {
         #[pyo3(name = "grids")]
         pub fn grids<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let value = self.0.grids.clone();
-            ((value).into_iter().map(|x| PyCellNd(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((value).into_iter().map(PyCellNd).collect::<Vec<_>>()).into_bound_py_any(py)
         }
         /// The run's ending.
         #[getter]
         #[pyo3(name = "fate")]
         pub fn fate<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let value = self.0.fate.clone();
+            let value = self.0.fate;
             (PySerde(value)).into_bound_py_any(py)
         }
         /// The number of recorded generations.
         #[getter]
         #[pyo3(name = "count")]
         pub fn count<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let value = self.0.count.clone();
+            let value = self.0.count;
             (value).into_bound_py_any(py)
         }
         /// The cycle length when the fate is a loop, else zero.
         #[getter]
         #[pyo3(name = "loop_length")]
         pub fn loop_length<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let value = self.0.loop_length.clone();
+            let value = self.0.loop_length;
             (value).into_bound_py_any(py)
         }
         /// Returns the final grid, or None when the run is empty.
         #[pyo3(name = "last", signature = ())]
-        pub fn last<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn last<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::life::Life::last(&self.0);
             ((out).map(|x| PyCellNd((x).clone()))).into_bound_py_any(py)
         }
@@ -3283,18 +3273,18 @@ pub mod life {
         #[getter]
         #[pyo3(name = "wrap")]
         pub fn wrap<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let value = self.0.wrap.clone();
+            let value = self.0.wrap;
             (value).into_bound_py_any(py)
         }
         /// Returns the edge policy the rule runs under.
         #[pyo3(name = "boundary", signature = ())]
-        pub fn boundary<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn boundary<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::life::Rule::boundary(&self.0);
             (PySerde(out)).into_bound_py_any(py)
         }
         /// Folds a decoded value to its canonical form, or an error for one outside the kind.
         #[pyo3(name = "checked", signature = ())]
-        pub fn checked<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn checked<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = <mrlyrs::life::Rule as mrlyrs::math::name::Named>::checked(self.0.clone());
             (crate::gen::life::Rule(ok(out)?)).into_bound_py_any(py)
         }
@@ -3329,7 +3319,7 @@ pub mod life {
         /// Builds a rule from its counts and edge policy, listed counts folded to a sorted set.
         #[staticmethod]
         #[pyo3(name = "new", signature = (birth, survive, wrap))]
-        pub fn new<'py>(py: Python<'py>, birth: crate::gen::life::Counts, survive: crate::gen::life::Counts, wrap: bool) -> PyResult<Bound<'py, PyAny>> {
+        pub fn new_<'py>(py: Python<'py>, birth: crate::gen::life::Counts, survive: crate::gen::life::Counts, wrap: bool) -> PyResult<Bound<'py, PyAny>> {
             let birth = birth.0;
             let survive = survive.0;
             let out = mrlyrs::life::Rule::new(birth, survive, wrap);
@@ -3344,31 +3334,31 @@ pub mod life {
         }
         /// Prints the kind and the `key=value` pairs joined by underscores, lists in brackets, or an error when the name does not read back.
         #[pyo3(name = "to_file", signature = ())]
-        pub fn to_file<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn to_file<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = <mrlyrs::life::Rule as mrlyrs::math::name::Named>::to_file(&self.0);
             (ok(out)?).into_bound_py_any(py)
         }
         /// Prints the first eight hex digits of the sha256 of the canonical JSON.
         #[pyo3(name = "to_id", signature = ())]
-        pub fn to_id<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn to_id<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = <mrlyrs::life::Rule as mrlyrs::math::name::Named>::to_id(&self.0);
             (out).into_bound_py_any(py)
         }
         /// Prints the canonical JSON object.
         #[pyo3(name = "to_json", signature = ())]
-        pub fn to_json<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn to_json<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = <mrlyrs::life::Rule as mrlyrs::math::name::Named>::to_json(&self.0);
             (out).into_bound_py_any(py)
         }
         /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
         #[pyo3(name = "to_mrly", signature = ())]
-        pub fn to_mrly<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn to_mrly<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = <mrlyrs::life::Rule as mrlyrs::math::name::Named>::to_mrly(&self.0);
             (ok(out)?).into_bound_py_any(py)
         }
         /// Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back.
         #[pyo3(name = "to_url", signature = ())]
-        pub fn to_url<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn to_url<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = <mrlyrs::life::Rule as mrlyrs::math::name::Named>::to_url(&self.0);
             (ok(out)?).into_bound_py_any(py)
         }
@@ -3393,40 +3383,40 @@ pub mod life {
         /// Returns every fixed sequence, the seeded and coded families excluded.
         #[staticmethod]
         #[pyo3(name = "all", signature = ())]
-        pub fn all<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn all<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::life::Source::all();
-            ((out).into_iter().map(|x| crate::gen::life::Source(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((out).into_iter().map(crate::gen::life::Source).collect::<Vec<_>>()).into_bound_py_any(py)
         }
         /// Returns the seventeen mrly design families: the grid, the four classics and their antis.
         #[staticmethod]
         #[pyo3(name = "designs", signature = ())]
-        pub fn designs<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn designs<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::life::Source::designs();
-            ((out).into_iter().map(|x| crate::gen::life::Source(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((out).into_iter().map(crate::gen::life::Source).collect::<Vec<_>>()).into_bound_py_any(py)
         }
         /// Returns whether the sequence is a seeded random draw.
         #[pyo3(name = "is_random", signature = ())]
-        pub fn is_random<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
-            let out = mrlyrs::life::Source::is_random(self.0.clone());
+        pub fn is_random<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::life::Source::is_random(self.0);
             (out).into_bound_py_any(py)
         }
         /// Returns the sequence's parseable name, the one string that regenerates it.
         #[pyo3(name = "name", signature = ())]
-        pub fn name<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
-            let out = mrlyrs::life::Source::name(self.0.clone());
+        pub fn name<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::life::Source::name(self.0);
             (out).into_bound_py_any(py)
         }
         /// Returns the six number sequences, the random one listed under seed zero.
         #[staticmethod]
         #[pyo3(name = "numbers", signature = ())]
-        pub fn numbers<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn numbers<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::life::Source::numbers();
-            ((out).into_iter().map(|x| crate::gen::life::Source(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((out).into_iter().map(crate::gen::life::Source).collect::<Vec<_>>()).into_bound_py_any(py)
         }
         /// Returns the sequence's OEIS id, or None off the encyclopedia.
         #[pyo3(name = "oeis", signature = ())]
-        pub fn oeis<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
-            let out = mrlyrs::life::Source::oeis(self.0.clone());
+        pub fn oeis<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::life::Source::oeis(self.0);
             (out).into_bound_py_any(py)
         }
         /// Parses a sequence name back to its source.
@@ -3463,9 +3453,9 @@ pub mod life {
         /// Returns every Boundary in canonical order.
         #[staticmethod]
         #[pyo3(name = "all", signature = ())]
-        pub fn all<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn all<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::life::Boundary::all();
-            ((out).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
         }
         /// Returns whether the edges wrap.
         #[staticmethod]
@@ -3486,9 +3476,9 @@ pub mod life {
         /// Returns every Fate in canonical order.
         #[staticmethod]
         #[pyo3(name = "all", signature = ())]
-        pub fn all<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn all<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::life::Fate::all();
-            ((out).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
         }
     }
 
@@ -3541,7 +3531,7 @@ pub mod life {
     pub fn crop<'py>(py: Python<'py>, grids: Vec<PyCell2d>) -> PyResult<Bound<'py, PyAny>> {
         let grids = grids.into_iter().map(|x| x.0).collect::<Vec<_>>();
         let out = mrlyrs::life::crop(&grids);
-        ((ok(out)?).into_iter().map(|x| PyCellNd(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+        ((ok(out)?).into_iter().map(PyCellNd).collect::<Vec<_>>()).into_bound_py_any(py)
     }
 
     /// Returns the rules a rule reaches under the signed axis permutations of the cube, in ascending order.
@@ -3642,7 +3632,7 @@ pub mod life {
     /// Builds the 3 by 3 Moore mask, every site on but the center.
     #[pyfunction]
     #[pyo3(name = "moore", signature = ())]
-    pub fn moore<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+    pub fn moore<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let out = mrlyrs::life::moore();
         (PyCellNd(ok(out)?)).into_bound_py_any(py)
     }
@@ -3745,7 +3735,7 @@ pub mod life {
     pub fn tessellate<'py>(py: Python<'py>, grids: Vec<PyCell2d>, min_canvas: usize) -> PyResult<Bound<'py, PyAny>> {
         let grids = grids.into_iter().map(|x| x.0).collect::<Vec<_>>();
         let out = mrlyrs::life::tessellate(&grids, min_canvas);
-        ((ok(out)?).into_iter().map(|x| PyCellNd(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+        ((ok(out)?).into_iter().map(PyCellNd).collect::<Vec<_>>()).into_bound_py_any(py)
     }
 
     /// Returns the rules a rule reaches under left-right reflection and conjugation, Wolfram's equivalence, in ascending order.
@@ -3811,16 +3801,12 @@ pub mod life {
 /// The designs in space: codes, cells, cubes, hexagons, their counts, graphs and names.
 /// The designs in space.
 pub mod math {
-    use crate::hand::*;
-    use pyo3::exceptions::PyValueError;
     use pyo3::prelude::*;
     use pyo3::types::PyDict;
-    use pyo3::IntoPyObjectExt;
 
     /// Ready-made tensors: zeros, ones, noise and carpets in two or three dimensions.
     pub mod atoms {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{PyRng, PyTensor};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -4163,16 +4149,14 @@ pub mod math {
     /// The universe of design codes: corners, symmetries and their counts.
     /// The universe of design codes.
     pub mod bang {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok, PyCode, PySerde, PyTensor};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
 
         /// The base-q symmetry maps, the design counts raw and distinct, and the fill classes.
         pub mod baseq {
-            use crate::hand::*;
-            use pyo3::exceptions::PyValueError;
+            use crate::hand::{ok, PyCode};
             use pyo3::prelude::*;
             use pyo3::types::PyDict;
             use pyo3::IntoPyObjectExt;
@@ -4273,7 +4257,7 @@ pub mod math {
             pub fn orbit<'py>(py: Python<'py>, group: Vec<Vec<usize>>, code: PyCode) -> PyResult<Bound<'py, PyAny>> {
                 let code = code.0;
                 let out = mrlyrs::math::bang::baseq::orbit(&group, code);
-                ((out).into_iter().map(|x| PyCode(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+                ((out).into_iter().map(PyCode).collect::<Vec<_>>()).into_bound_py_any(py)
             }
 
             /// Returns the closed-form group order the axis-map count must match.
@@ -4338,8 +4322,7 @@ pub mod math {
 
         /// The cached canonical codes and tile sources of a dimension.
         pub mod catalog {
-            use crate::hand::*;
-            use pyo3::exceptions::PyValueError;
+            use crate::hand::{PySerde};
             use pyo3::prelude::*;
             use pyo3::types::PyDict;
             use pyo3::IntoPyObjectExt;
@@ -4349,15 +4332,15 @@ pub mod math {
             #[pyo3(name = "antis", signature = (dimension))]
             pub fn antis<'py>(py: Python<'py>, dimension: usize) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::bang::catalog::antis(dimension);
-                ((out).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+                ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
             }
 
             pub fn init(py: Python<'_>, parent: &Bound<'_, PyModule>, sys: &Bound<'_, PyDict>) -> PyResult<()> {
                 let m = PyModule::new(py, "mrlypy.math.bang.catalog")?;
                 m.setattr("__doc__", "The cached canonical codes and tile sources of a dimension.")?;
                 m.add_function(wrap_pyfunction!(antis, &m)?)?;
-                m.add("ANTIS_2D", (mrlyrs::math::bang::catalog::ANTIS_2D).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>())?;
-                m.add("ANTIS_3D", (mrlyrs::math::bang::catalog::ANTIS_3D).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>())?;
+                m.add("ANTIS_2D", (mrlyrs::math::bang::catalog::ANTIS_2D).into_iter().map(PySerde).collect::<Vec<_>>())?;
+                m.add("ANTIS_3D", (mrlyrs::math::bang::catalog::ANTIS_3D).into_iter().map(PySerde).collect::<Vec<_>>())?;
                 let names: Vec<&str> = vec!["antis", "ANTIS_2D", "ANTIS_3D"];
                 m.add("__all__", names)?;
                 parent.add("catalog", &m)?;
@@ -4368,8 +4351,7 @@ pub mod math {
 
         /// The design code: the bitmask of filled corners, printed and parsed as one number.
         pub mod code {
-            use crate::hand::*;
-            use pyo3::exceptions::PyValueError;
+            use crate::hand::{PyCode};
             use pyo3::prelude::*;
             use pyo3::types::PyDict;
             use pyo3::IntoPyObjectExt;
@@ -4397,8 +4379,7 @@ pub mod math {
 
         /// The packing of residue corners into codes and back.
         pub mod factory {
-            use crate::hand::*;
-            use pyo3::exceptions::PyValueError;
+            use crate::hand::{ok, PyCode, PyTensor};
             use pyo3::prelude::*;
             use pyo3::types::PyDict;
             use pyo3::IntoPyObjectExt;
@@ -4462,8 +4443,7 @@ pub mod math {
 
         /// The corners, codes and symmetries that name designs.
         pub mod universe {
-            use crate::hand::*;
-            use pyo3::exceptions::PyValueError;
+            use crate::hand::{PyCode};
             use pyo3::prelude::*;
             use pyo3::types::PyDict;
             use pyo3::IntoPyObjectExt;
@@ -4517,7 +4497,7 @@ pub mod math {
             pub fn orbit<'py>(py: Python<'py>, code: PyCode, dimension: usize) -> PyResult<Bound<'py, PyAny>> {
                 let code = code.0;
                 let out = mrlyrs::math::bang::universe::orbit(code, dimension);
-                ((out).into_iter().map(|x| PyCode(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+                ((out).into_iter().map(PyCode).collect::<Vec<_>>()).into_bound_py_any(py)
             }
 
             /// Returns every permutation of 0..n in sorted order.
@@ -4548,8 +4528,7 @@ pub mod math {
 
         /// The magic words: their products, their component counts and the schedules that spell them.
         pub mod word {
-            use crate::hand::*;
-            use pyo3::exceptions::PyValueError;
+            use crate::hand::{ok, PySerde};
             use pyo3::prelude::*;
             use pyo3::types::PyDict;
             use pyo3::IntoPyObjectExt;
@@ -4563,9 +4542,9 @@ pub mod math {
                 /// Returns every Schedule in canonical order.
                 #[staticmethod]
                 #[pyo3(name = "all", signature = ())]
-                pub fn all<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+                pub fn all<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                     let out = mrlyrs::math::bang::word::Schedule::all();
-                    ((out).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+                    ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
                 }
                 /// Returns the letter frequencies the schedule tends to.
                 #[staticmethod]
@@ -4666,7 +4645,7 @@ pub mod math {
             pub fn prefixes<'py>(py: Python<'py>, layers: Vec<PySerde<mrlyrs::math::bang::MagicLayer>>) -> PyResult<Bound<'py, PyAny>> {
                 let layers = layers.into_iter().map(|x| x.0).collect::<Vec<_>>();
                 let out = mrlyrs::math::bang::word::prefixes(&layers);
-                ((ok(out)?).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+                ((ok(out)?).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
             }
 
             /// Returns the prefix rates of a plane word in log two units, the component rate
@@ -4695,7 +4674,7 @@ pub mod math {
                 let schedule = schedule.0;
                 let pair = { let t = pair; (t.0.0, t.1.0) };
                 let out = mrlyrs::math::bang::word::spell(schedule, pair, length);
-                ((out).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+                ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
             }
 
             /// Builds the carpet staircase word to the depth, the stacked prefixes `magic(3)`,
@@ -4704,7 +4683,7 @@ pub mod math {
             #[pyo3(name = "staircase", signature = (depth))]
             pub fn staircase<'py>(py: Python<'py>, depth: usize) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::bang::word::staircase(depth);
-                ((ok(out)?).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+                ((ok(out)?).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
             }
 
             /// Returns the Thue-Morse letter at the place, the parity of its binary digit sum.
@@ -4752,58 +4731,58 @@ pub mod math {
             #[getter]
             #[pyo3(name = "i")]
             pub fn i<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.i.clone();
+                let value = self.0.i;
                 (PyCode(value)).into_bound_py_any(py)
             }
             /// The design's dimension.
             #[getter]
             #[pyo3(name = "dimension")]
             pub fn dimension<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.dimension.clone();
+                let value = self.0.dimension;
                 (value).into_bound_py_any(py)
             }
             /// Whether this code is the smallest in its orbit.
             #[getter]
             #[pyo3(name = "canonical")]
             pub fn canonical<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.canonical.clone();
+                let value = self.0.canonical;
                 (value).into_bound_py_any(py)
             }
             /// The smallest code in the orbit.
             #[getter]
             #[pyo3(name = "class_rep")]
             pub fn class_rep<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.class_rep.clone();
+                let value = self.0.class_rep;
                 (PyCode(value)).into_bound_py_any(py)
             }
             /// The number of codes in the orbit.
             #[getter]
             #[pyo3(name = "orbit_size")]
             pub fn orbit_size<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.orbit_size.clone();
+                let value = self.0.orbit_size;
                 (value).into_bound_py_any(py)
             }
             /// Returns the design's algebraic normal form as a string.
             #[pyo3(name = "anf", signature = ())]
-            pub fn anf<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn anf<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::bang::Design::anf(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Returns the design's algebraic degree, or -1 for the zero design.
             #[pyo3(name = "degree", signature = ())]
-            pub fn degree<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn degree<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::bang::Design::degree(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Returns the design's name as a line of prose, `bang dim 2, code 7`.
             #[pyo3(name = "name", signature = ())]
-            pub fn name<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn name<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::bang::Design::name(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Returns the design's filled corners in sorted order.
             #[pyo3(name = "rule", signature = ())]
-            pub fn rule<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn rule<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::bang::Design::rule(&self.0);
                 (out).into_bound_py_any(py)
             }
@@ -4835,27 +4814,27 @@ pub mod math {
             #[getter]
             #[pyo3(name = "dimension")]
             pub fn dimension<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.dimension.clone();
+                let value = self.0.dimension;
                 (value).into_bound_py_any(py)
             }
             /// The number of codes in the universe.
             #[getter]
             #[pyo3(name = "total")]
             pub fn total<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.total.clone();
+                let value = self.0.total;
                 (value).into_bound_py_any(py)
             }
             /// Returns every design in code order.
             #[pyo3(name = "all", signature = ())]
-            pub fn all<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn all<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::bang::Universe::all(&self.0);
-                ((out).into_iter().map(|x| crate::gen::math::bang::Design(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+                ((out).into_iter().map(crate::gen::math::bang::Design).collect::<Vec<_>>()).into_bound_py_any(py)
             }
             /// Returns the designs whose codes lead their orbits.
             #[pyo3(name = "canonical", signature = ())]
-            pub fn canonical<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn canonical<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::bang::Universe::canonical(&self.0);
-                ((out).into_iter().map(|x| crate::gen::math::bang::Design(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+                ((out).into_iter().map(crate::gen::math::bang::Design).collect::<Vec<_>>()).into_bound_py_any(py)
             }
             /// Returns the design at a code with its precomputed orbit facts.
             #[pyo3(name = "design", signature = (code))]
@@ -4866,14 +4845,14 @@ pub mod math {
             }
             /// Returns the number of distinct orbits.
             #[pyo3(name = "distinct", signature = ())]
-            pub fn distinct<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn distinct<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::bang::Universe::distinct(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Enumerates every orbit of a dimension from 1 to 4.
             #[staticmethod]
             #[pyo3(name = "new", signature = (dimension))]
-            pub fn new<'py>(py: Python<'py>, dimension: usize) -> PyResult<Bound<'py, PyAny>> {
+            pub fn new_<'py>(py: Python<'py>, dimension: usize) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::bang::Universe::new(dimension);
                 (crate::gen::math::bang::Universe(ok(out)?)).into_bound_py_any(py)
             }
@@ -4897,7 +4876,7 @@ pub mod math {
             /// Pins a design to the side number it renders at.
             #[staticmethod]
             #[pyo3(name = "new", signature = (design, number))]
-            pub fn new<'py>(py: Python<'py>, design: crate::gen::math::name::Bang, number: usize) -> PyResult<Bound<'py, PyAny>> {
+            pub fn new_<'py>(py: Python<'py>, design: crate::gen::math::name::Bang, number: usize) -> PyResult<Bound<'py, PyAny>> {
                 let design = design.0;
                 let out = mrlyrs::math::bang::MagicLayer::new(design, number);
                 (PySerde(out)).into_bound_py_any(py)
@@ -4958,7 +4937,7 @@ pub mod math {
         #[pyfunction]
         #[pyo3(name = "magic_named", signature = (layers))]
         pub fn magic_named<'py>(py: Python<'py>, layers: Vec<(String, usize)>) -> PyResult<Bound<'py, PyAny>> {
-            let layers = layers.iter().map(|y| (y.0.as_str(), y.1.clone())).collect::<Vec<_>>();
+            let layers = layers.iter().map(|y| (y.0.as_str(), y.1)).collect::<Vec<_>>();
             let out = mrlyrs::math::bang::magic_named(&layers);
             (PyTensor(ok(out)?)).into_bound_py_any(py)
         }
@@ -4969,7 +4948,7 @@ pub mod math {
         pub fn sources<'py>(py: Python<'py>, catalog: PySerde<mrlyrs::gen::recipe::Catalog>, dimension: usize) -> PyResult<Bound<'py, PyAny>> {
             let catalog = catalog.0;
             let out = mrlyrs::math::bang::sources(&catalog, dimension);
-            ((ok(out)?).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((ok(out)?).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
         }
 
         /// Returns the full symmetry group as axis permutations paired with flip patterns.
@@ -5041,7 +5020,7 @@ pub mod math {
     /// The dimension-generic cell and the pipeline the fixed dimensions share.
     /// The N-dimensional cell and the pipeline the fixed dimensions share.
     pub mod cell {
-        use crate::hand::*;
+        use crate::hand::{ok, PyCell2d, PyCell3d, PyCellNd, PyColor, PyRng, PySerde, PyTensor};
         use pyo3::exceptions::PyValueError;
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
@@ -5049,7 +5028,7 @@ pub mod math {
 
         /// The fill, void and exposure counts of an N-dimensional cell.
         pub mod census {
-            use crate::hand::*;
+            use crate::hand::{ok, PyCell2d, PyCell3d};
             use pyo3::exceptions::PyValueError;
             use pyo3::prelude::*;
             use pyo3::types::PyDict;
@@ -5183,7 +5162,7 @@ pub mod math {
 
         /// The merges, magic folds, mosaics and perforations of N-dimensional cells.
         pub mod geometry {
-            use crate::hand::*;
+            use crate::hand::{ok, PyCell2d, PyCell3d, PyCellNd, PyTensor};
             use pyo3::exceptions::PyValueError;
             use pyo3::prelude::*;
             use pyo3::types::PyDict;
@@ -5250,7 +5229,7 @@ pub mod math {
 
         /// The N-dimensional cell and its fixed-dimension aliases.
         pub mod models {
-            use crate::hand::*;
+            use crate::hand::{ok, PyCell2d, PyCell3d, PyCellNd, PyColor, PyRng, PySerde, PyTensor};
             use pyo3::exceptions::PyValueError;
             use pyo3::prelude::*;
             use pyo3::types::PyDict;
@@ -5742,8 +5721,7 @@ pub mod math {
 
         /// The JSON reading the cell serializers share.
         pub mod serializer {
-            use crate::hand::*;
-            use pyo3::exceptions::PyValueError;
+            use crate::hand::{ok, PyPixels, PySerde, PyTensor};
             use pyo3::prelude::*;
             use pyo3::types::PyDict;
             use pyo3::IntoPyObjectExt;
@@ -5772,7 +5750,7 @@ pub mod math {
             pub fn color_grid<'py>(py: Python<'py>, value: PySerde<serde_json::Value>) -> PyResult<Bound<'py, PyAny>> {
                 let value = value.0;
                 let out = mrlyrs::math::cell::serializer::color_grid(&value);
-                ((ok(out)?).into_iter().map(|x| PyPixels(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+                ((ok(out)?).into_iter().map(PyPixels).collect::<Vec<_>>()).into_bound_py_any(py)
             }
 
             /// Reads a triply nested JSON array of counts into one flat run; a count must fit in thirty-two bits.
@@ -5905,19 +5883,15 @@ pub mod math {
     /// The closed-form counts: fills, surfaces, hex slices and the carry ladder, without rendering.
     /// The closed-form counts.
     pub mod counts {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok, PyCode, PyTensor};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
 
         /// The diagonal profile of any tile's power, as a digit polynomial.
         pub mod diagonal {
-            use crate::hand::*;
-            use pyo3::exceptions::PyValueError;
             use pyo3::prelude::*;
             use pyo3::types::PyDict;
-            use pyo3::IntoPyObjectExt;
 
             pub fn init(py: Python<'_>, parent: &Bound<'_, PyModule>, sys: &Bound<'_, PyDict>) -> PyResult<()> {
                 let m = PyModule::new(py, "mrlypy.math.counts.diagonal")?;
@@ -5933,8 +5907,7 @@ pub mod math {
 
         /// The base-q slice carry automaton: its digit polynomial, its matrix, its ladder and its sign law.
         pub mod ladder {
-            use crate::hand::*;
-            use pyo3::exceptions::PyValueError;
+            use crate::hand::{ok};
             use pyo3::prelude::*;
             use pyo3::types::PyDict;
             use pyo3::IntoPyObjectExt;
@@ -6060,8 +6033,7 @@ pub mod math {
 
         /// The closed-form triangle, node and edge counts of hex slices.
         pub mod six {
-            use crate::hand::*;
-            use pyo3::exceptions::PyValueError;
+            use crate::hand::{ok};
             use pyo3::prelude::*;
             use pyo3::types::PyDict;
             use pyo3::IntoPyObjectExt;
@@ -6160,14 +6132,14 @@ pub mod math {
             #[getter]
             #[pyo3(name = "occupancy")]
             pub fn occupancy<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.occupancy.clone();
+                let value = self.0.occupancy;
                 (value).into_bound_py_any(py)
             }
             /// The exposed faces of the tile.
             #[getter]
             #[pyo3(name = "exposed")]
             pub fn exposed<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.exposed.clone();
+                let value = self.0.exposed;
                 (value).into_bound_py_any(py)
             }
             /// Per axis, the adjacent filled pairs and the spanning positions.
@@ -6200,7 +6172,7 @@ pub mod math {
             }
             /// Returns the coefficients `c` of the recurrence `a(L) = c[0] a(L-1) + c[1] a(L-2) + ...` the exposure obeys.
             #[pyo3(name = "recurrence", signature = ())]
-            pub fn recurrence<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn recurrence<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::counts::Exposure::recurrence(&self.0);
                 (out).into_bound_py_any(py)
             }
@@ -6440,8 +6412,7 @@ pub mod math {
     /// The spatial network: its nodes, branches, extraction and census.
     /// The spatial network.
     pub mod graph {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok, PySerde, PyTensor};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -6462,7 +6433,7 @@ pub mod math {
             }
             /// Returns the mean net force per node in units of `k` after the last tick.
             #[pyo3(name = "energy", signature = ())]
-            pub fn energy<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn energy<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::graph::Layout::energy(&self.0);
                 (out).into_bound_py_any(py)
             }
@@ -6475,32 +6446,32 @@ pub mod math {
             }
             /// Returns the ideal branch length `k`.
             #[pyo3(name = "ideal", signature = ())]
-            pub fn ideal<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn ideal<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::graph::Layout::ideal(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Returns the mean distance a node moved in the last tick.
             #[pyo3(name = "moved", signature = ())]
-            pub fn moved<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn moved<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::graph::Layout::moved(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Starts a layout from flat positions, `dim` floats per node, and the branch pairs.
             #[staticmethod]
             #[pyo3(name = "new", signature = (positions, branches, dim, seed))]
-            pub fn new<'py>(py: Python<'py>, positions: Vec<f64>, branches: Vec<(usize, usize)>, dim: usize, seed: u64) -> PyResult<Bound<'py, PyAny>> {
+            pub fn new_<'py>(py: Python<'py>, positions: Vec<f64>, branches: Vec<(usize, usize)>, dim: usize, seed: u64) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::graph::Layout::new(&positions, &branches, dim, seed);
                 (crate::gen::math::graph::Layout(ok(out)?)).into_bound_py_any(py)
             }
             /// Returns the node count.
             #[pyo3(name = "nodes", signature = ())]
-            pub fn nodes<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn nodes<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::graph::Layout::nodes(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Returns the positions, `dim` floats per node.
             #[pyo3(name = "positions", signature = ())]
-            pub fn positions<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn positions<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::graph::Layout::positions(&self.0);
                 ((out).to_vec()).into_bound_py_any(py)
             }
@@ -6512,13 +6483,13 @@ pub mod math {
             }
             /// Returns the cap on one node's move in the next tick.
             #[pyo3(name = "temperature", signature = ())]
-            pub fn temperature<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn temperature<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::graph::Layout::temperature(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Returns the ticks stepped so far.
             #[pyo3(name = "ticks", signature = ())]
-            pub fn ticks<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn ticks<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::graph::Layout::ticks(&self.0);
                 (out).into_bound_py_any(py)
             }
@@ -6542,7 +6513,7 @@ pub mod math {
             #[getter]
             #[pyo3(name = "dim")]
             pub fn dim<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.dim.clone();
+                let value = self.0.dim;
                 (value).into_bound_py_any(py)
             }
             /// The nodes in insertion order.
@@ -6550,14 +6521,14 @@ pub mod math {
             #[pyo3(name = "nodes")]
             pub fn nodes<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.nodes.clone();
-                ((value).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+                ((value).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
             }
             /// The branches in insertion order.
             #[getter]
             #[pyo3(name = "branches")]
             pub fn branches<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let value = self.0.branches.clone();
-                ((value).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+                ((value).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
             }
             /// Appends a branch between two node indices.
             #[pyo3(name = "add_branch", signature = (parent, child, radius))]
@@ -6573,20 +6544,20 @@ pub mod math {
             }
             /// Returns the undirected neighbor lists of every node.
             #[pyo3(name = "adjacency", signature = ())]
-            pub fn adjacency<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn adjacency<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::graph::Network::adjacency(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Returns each node's branch count, indexed like the node list.
             #[pyo3(name = "degree", signature = ())]
-            pub fn degree<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn degree<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::graph::Network::degree(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Builds an empty network of the given dimension.
             #[staticmethod]
             #[pyo3(name = "new", signature = (dim))]
-            pub fn new<'py>(py: Python<'py>, dim: usize) -> PyResult<Bound<'py, PyAny>> {
+            pub fn new_<'py>(py: Python<'py>, dim: usize) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::graph::Network::new(dim);
                 (crate::gen::math::graph::Network(out)).into_bound_py_any(py)
             }
@@ -6664,7 +6635,7 @@ pub mod math {
         #[pyo3(name = "roles", signature = (network))]
         pub fn roles<'py>(py: Python<'py>, network: PyRef<'_, crate::gen::math::graph::Network>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::math::graph::roles(&network.0);
-            ((ok(out)?).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((ok(out)?).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
         }
 
         /// Counts the nodes of degree one.
@@ -6719,16 +6690,14 @@ pub mod math {
     /// The moire fields layered from sampled designs.
     /// The moire fields.
     pub mod moire {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok, PySerde, PyTensor};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
 
         /// The exact correlations of flat carpet layers, and the prime detector they make.
         pub mod pairs {
-            use crate::hand::*;
-            use pyo3::exceptions::PyValueError;
+            use crate::hand::{ok, PySerde};
             use pyo3::prelude::*;
             use pyo3::types::PyDict;
             use pyo3::IntoPyObjectExt;
@@ -6773,8 +6742,7 @@ pub mod math {
 
         /// The lattice coordinates and code-membership tests behind the layers.
         pub mod sample {
-            use crate::hand::*;
-            use pyo3::exceptions::PyValueError;
+            use crate::hand::{ok, PySerde};
             use pyo3::prelude::*;
             use pyo3::types::PyDict;
             use pyo3::IntoPyObjectExt;
@@ -6843,12 +6811,12 @@ pub mod math {
             #[getter]
             #[pyo3(name = "size")]
             pub fn size<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.size.clone();
+                let value = self.0.size;
                 (value).into_bound_py_any(py)
             }
             /// Returns the samples widened to f64.
             #[pyo3(name = "as_f64", signature = ())]
-            pub fn as_f64<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn as_f64<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::moire::Field::as_f64(&self.0);
                 (out).into_bound_py_any(py)
             }
@@ -6861,26 +6829,26 @@ pub mod math {
             }
             /// Returns the largest sample.
             #[pyo3(name = "max", signature = ())]
-            pub fn max<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn max<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::moire::Field::max(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Returns the mean sample, or zero for an empty field.
             #[pyo3(name = "mean", signature = ())]
-            pub fn mean<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn mean<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::moire::Field::mean(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Returns the smallest sample.
             #[pyo3(name = "min", signature = ())]
-            pub fn min<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn min<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::moire::Field::min(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Builds a zeroed field of the given side.
             #[staticmethod]
             #[pyo3(name = "new", signature = (size))]
-            pub fn new<'py>(py: Python<'py>, size: usize) -> PyResult<Bound<'py, PyAny>> {
+            pub fn new_<'py>(py: Python<'py>, size: usize) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::moire::Field::new(size);
                 (crate::gen::math::moire::Field(out)).into_bound_py_any(py)
             }
@@ -6919,7 +6887,7 @@ pub mod math {
             #[getter]
             #[pyo3(name = "spec")]
             pub fn spec<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.spec.clone();
+                let value = self.0.spec;
                 (PySerde(value)).into_bound_py_any(py)
             }
             /// The side numbers stacked.
@@ -6933,21 +6901,21 @@ pub mod math {
             #[getter]
             #[pyo3(name = "combine")]
             pub fn combine<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.combine.clone();
+                let value = self.0.combine;
                 (PySerde(value)).into_bound_py_any(py)
             }
             /// The fractal depth of each layer.
             #[getter]
             #[pyo3(name = "level")]
             pub fn level<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.level.clone();
+                let value = self.0.level;
                 (value).into_bound_py_any(py)
             }
             /// The lattice the layers are sampled on.
             #[getter]
             #[pyo3(name = "lattice")]
             pub fn lattice<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.lattice.clone();
+                let value = self.0.lattice;
                 (PySerde(value)).into_bound_py_any(py)
             }
             /// The carpet stack: every base-three corner but the centre, summed over odd scales.
@@ -7015,7 +6983,7 @@ pub mod math {
             #[getter]
             #[pyo3(name = "size")]
             pub fn size<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.size.clone();
+                let value = self.0.size;
                 (value).into_bound_py_any(py)
             }
             /// Reads the sample at a voxel.
@@ -7039,20 +7007,20 @@ pub mod math {
             }
             /// Returns the largest sample.
             #[pyo3(name = "max", signature = ())]
-            pub fn max<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn max<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::moire::Volume::max(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Returns the smallest sample.
             #[pyo3(name = "min", signature = ())]
-            pub fn min<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn min<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::moire::Volume::min(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Builds a zeroed volume of the side.
             #[staticmethod]
             #[pyo3(name = "new", signature = (size))]
-            pub fn new<'py>(py: Python<'py>, size: usize) -> PyResult<Bound<'py, PyAny>> {
+            pub fn new_<'py>(py: Python<'py>, size: usize) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::moire::Volume::new(size);
                 (crate::gen::math::moire::Volume(out)).into_bound_py_any(py)
             }
@@ -7095,7 +7063,7 @@ pub mod math {
             /// Builds a layer at level 1 on a 512-pixel square lattice.
             #[staticmethod]
             #[pyo3(name = "new", signature = (spec, number))]
-            pub fn new<'py>(py: Python<'py>, spec: PySerde<mrlyrs::math::moire::Spec>, number: usize) -> PyResult<Bound<'py, PyAny>> {
+            pub fn new_<'py>(py: Python<'py>, spec: PySerde<mrlyrs::math::moire::Spec>, number: usize) -> PyResult<Bound<'py, PyAny>> {
                 let spec = spec.0;
                 let out = mrlyrs::math::moire::Layer::new(spec, number);
                 (PySerde(out)).into_bound_py_any(py)
@@ -7111,7 +7079,7 @@ pub mod math {
             /// Builds a spec from a code, base and dimension.
             #[staticmethod]
             #[pyo3(name = "new", signature = (code, base, dimension))]
-            pub fn new<'py>(py: Python<'py>, code: u128, base: usize, dimension: usize) -> PyResult<Bound<'py, PyAny>> {
+            pub fn new_<'py>(py: Python<'py>, code: u128, base: usize, dimension: usize) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::moire::Spec::new(code, base, dimension);
                 (PySerde(out)).into_bound_py_any(py)
             }
@@ -7122,7 +7090,7 @@ pub mod math {
         #[pyo3(name = "all", signature = (limit))]
         pub fn all<'py>(py: Python<'py>, limit: usize) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::math::moire::all(limit);
-            ((out).into_iter().map(|x| crate::gen::math::moire::Preset(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((out).into_iter().map(crate::gen::math::moire::Preset).collect::<Vec<_>>()).into_bound_py_any(py)
         }
 
         /// Frames the plane normal to the direction, at the offset from zero to one across the box along it; the window is the smallest square holding every section on that normal.
@@ -7219,8 +7187,7 @@ pub mod math {
     /// The mrly names: one canonical JSON object for every mathematical thing.
     /// The mrly names.
     pub mod name {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok, PySerde};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -7243,28 +7210,28 @@ pub mod math {
             #[getter]
             #[pyo3(name = "dim")]
             pub fn dim<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.dim.clone();
+                let value = self.0.dim;
                 (value).into_bound_py_any(py)
             }
             /// The lattice, square unless said.
             #[getter]
             #[pyo3(name = "lattice")]
             pub fn lattice<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.lattice.clone();
+                let value = self.0.lattice;
                 (PySerde(value)).into_bound_py_any(py)
             }
             /// The digits per axis, 2 unless said.
             #[getter]
             #[pyo3(name = "base")]
             pub fn base<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.base.clone();
+                let value = self.0.base;
                 (value).into_bound_py_any(py)
             }
             /// The design as a number.
             #[getter]
             #[pyo3(name = "code")]
             pub fn code<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.code.clone();
+                let value = self.0.code;
                 (value).into_bound_py_any(py)
             }
             /// One unit index per filled digit, absent when nothing turns.
@@ -7276,13 +7243,13 @@ pub mod math {
             }
             /// Returns the number of digits the code addresses.
             #[pyo3(name = "cells", signature = ())]
-            pub fn cells<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn cells<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::name::Bang::cells(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Folds a decoded value to its canonical form, or an error for one outside the kind.
             #[pyo3(name = "checked", signature = ())]
-            pub fn checked<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn checked<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::checked(self.0.clone());
                 (crate::gen::math::name::Bang(ok(out)?)).into_bound_py_any(py)
             }
@@ -7310,37 +7277,37 @@ pub mod math {
             /// Pins a code to its dimension and base on the square lattice.
             #[staticmethod]
             #[pyo3(name = "new", signature = (code, dim, base))]
-            pub fn new<'py>(py: Python<'py>, code: u128, dim: usize, base: usize) -> PyResult<Bound<'py, PyAny>> {
+            pub fn new_<'py>(py: Python<'py>, code: u128, dim: usize, base: usize) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::name::Bang::new(code, dim, base);
                 (crate::gen::math::name::Bang(out)).into_bound_py_any(py)
             }
             /// Prints the kind and the `key=value` pairs joined by underscores, lists in brackets, or an error when the name does not read back.
             #[pyo3(name = "to_file", signature = ())]
-            pub fn to_file<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn to_file<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::to_file(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Prints the first eight hex digits of the sha256 of the canonical JSON.
             #[pyo3(name = "to_id", signature = ())]
-            pub fn to_id<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn to_id<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::to_id(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Prints the canonical JSON object.
             #[pyo3(name = "to_json", signature = ())]
-            pub fn to_json<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn to_json<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::to_json(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
             #[pyo3(name = "to_mrly", signature = ())]
-            pub fn to_mrly<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn to_mrly<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::to_mrly(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back.
             #[pyo3(name = "to_url", signature = ())]
-            pub fn to_url<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn to_url<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::to_url(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
@@ -7373,21 +7340,21 @@ pub mod math {
             #[getter]
             #[pyo3(name = "dim")]
             pub fn dim<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.dim.clone();
+                let value = self.0.dim;
                 (value).into_bound_py_any(py)
             }
             /// The digits per axis, 2 unless said.
             #[getter]
             #[pyo3(name = "base")]
             pub fn base<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.base.clone();
+                let value = self.0.base;
                 (value).into_bound_py_any(py)
             }
             /// The design as a number.
             #[getter]
             #[pyo3(name = "code")]
             pub fn code<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.code.clone();
+                let value = self.0.code;
                 (value).into_bound_py_any(py)
             }
             /// The reading taken.
@@ -7406,13 +7373,13 @@ pub mod math {
             }
             /// Folds a decoded value to its canonical form, or an error for one outside the kind.
             #[pyo3(name = "checked", signature = ())]
-            pub fn checked<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn checked<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::checked(self.0.clone());
                 (crate::gen::math::name::Sequence(ok(out)?)).into_bound_py_any(py)
             }
             /// Returns the design pinned to its dimension and base.
             #[pyo3(name = "design", signature = ())]
-            pub fn design<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn design<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::name::Sequence::design(&self.0);
                 (crate::gen::math::name::Bang(out)).into_bound_py_any(py)
             }
@@ -7440,37 +7407,37 @@ pub mod math {
             /// Pins a design's reading to its measure and axis.
             #[staticmethod]
             #[pyo3(name = "new", signature = (code, dim, base, measure, axis))]
-            pub fn new<'py>(py: Python<'py>, code: u128, dim: usize, base: usize, measure: &str, axis: &str) -> PyResult<Bound<'py, PyAny>> {
+            pub fn new_<'py>(py: Python<'py>, code: u128, dim: usize, base: usize, measure: &str, axis: &str) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::name::Sequence::new(code, dim, base, measure, axis);
                 (crate::gen::math::name::Sequence(out)).into_bound_py_any(py)
             }
             /// Prints the kind and the `key=value` pairs joined by underscores, lists in brackets, or an error when the name does not read back.
             #[pyo3(name = "to_file", signature = ())]
-            pub fn to_file<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn to_file<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_file(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Prints the first eight hex digits of the sha256 of the canonical JSON.
             #[pyo3(name = "to_id", signature = ())]
-            pub fn to_id<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn to_id<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_id(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Prints the canonical JSON object.
             #[pyo3(name = "to_json", signature = ())]
-            pub fn to_json<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn to_json<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_json(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
             #[pyo3(name = "to_mrly", signature = ())]
-            pub fn to_mrly<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn to_mrly<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_mrly(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back.
             #[pyo3(name = "to_url", signature = ())]
-            pub fn to_url<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn to_url<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_url(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
@@ -7503,7 +7470,7 @@ pub mod math {
             #[getter]
             #[pyo3(name = "dim")]
             pub fn dim<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.dim.clone();
+                let value = self.0.dim;
                 (value).into_bound_py_any(py)
             }
             /// The codes of the letters in order.
@@ -7529,13 +7496,13 @@ pub mod math {
             }
             /// Returns the base of every letter, 2 where the name says nothing.
             #[pyo3(name = "bases", signature = ())]
-            pub fn bases<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn bases<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::name::Word::bases(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Folds a decoded value to its canonical form, or an error for one outside the kind.
             #[pyo3(name = "checked", signature = ())]
-            pub fn checked<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn checked<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::checked(self.0.clone());
                 (crate::gen::math::name::Word(ok(out)?)).into_bound_py_any(py)
             }
@@ -7562,44 +7529,44 @@ pub mod math {
             }
             /// Returns every letter as a design pinned to the word's dimension and its own base.
             #[pyo3(name = "letters", signature = ())]
-            pub fn letters<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn letters<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::name::Word::letters(&self.0);
-                ((out).into_iter().map(|x| crate::gen::math::name::Bang(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+                ((out).into_iter().map(crate::gen::math::name::Bang).collect::<Vec<_>>()).into_bound_py_any(py)
             }
             /// Pins an ordered letter list at base 2.
             #[staticmethod]
             #[pyo3(name = "new", signature = (dim, letters))]
-            pub fn new<'py>(py: Python<'py>, dim: usize, letters: Vec<(u128, usize)>) -> PyResult<Bound<'py, PyAny>> {
+            pub fn new_<'py>(py: Python<'py>, dim: usize, letters: Vec<(u128, usize)>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::name::Word::new(dim, &letters);
                 (crate::gen::math::name::Word(ok(out)?)).into_bound_py_any(py)
             }
             /// Prints the kind and the `key=value` pairs joined by underscores, lists in brackets, or an error when the name does not read back.
             #[pyo3(name = "to_file", signature = ())]
-            pub fn to_file<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn to_file<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::to_file(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Prints the first eight hex digits of the sha256 of the canonical JSON.
             #[pyo3(name = "to_id", signature = ())]
-            pub fn to_id<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn to_id<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::to_id(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Prints the canonical JSON object.
             #[pyo3(name = "to_json", signature = ())]
-            pub fn to_json<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn to_json<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::to_json(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
             #[pyo3(name = "to_mrly", signature = ())]
-            pub fn to_mrly<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn to_mrly<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::to_mrly(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back.
             #[pyo3(name = "to_url", signature = ())]
-            pub fn to_url<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn to_url<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::to_url(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
@@ -7655,8 +7622,7 @@ pub mod math {
 
     /// The sequence press: the integers a design's digit rule keeps, weighed all at once.
     pub mod press {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok, PyCode, PySerde};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -7678,26 +7644,26 @@ pub mod math {
             #[getter]
             #[pyo3(name = "dimension")]
             pub fn dimension<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.dimension.clone();
+                let value = self.0.dimension;
                 (value).into_bound_py_any(py)
             }
             /// The numeral base of the universe.
             #[getter]
             #[pyo3(name = "base")]
             pub fn base<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.base.clone();
+                let value = self.0.base;
                 (value).into_bound_py_any(py)
             }
             /// Adds a weighted number to its usage bucket.
             #[pyo3(name = "add", signature = (number, weight))]
             pub fn add<'py>(&mut self, py: Python<'py>, number: u128, weight: i128) -> PyResult<Bound<'py, PyAny>> {
-                let out = mrlyrs::math::press::Press::add(&mut self.0, number, weight);
-                (out).into_bound_py_any(py)
+                mrlyrs::math::press::Press::add(&mut self.0, number, weight);
+                ().into_bound_py_any(py)
             }
             /// Builds an empty press over every design of the dimension and base.
             #[staticmethod]
             #[pyo3(name = "new", signature = (dimension, base))]
-            pub fn new<'py>(py: Python<'py>, dimension: usize, base: usize) -> PyResult<Bound<'py, PyAny>> {
+            pub fn new_<'py>(py: Python<'py>, dimension: usize, base: usize) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::press::Press::new(dimension, base);
                 (crate::gen::math::press::Press(ok(out)?)).into_bound_py_any(py)
             }
@@ -7710,7 +7676,7 @@ pub mod math {
             }
             /// Returns every design's total in code order by one subset-sum transform.
             #[pyo3(name = "totals", signature = ())]
-            pub fn totals<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn totals<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::press::Press::totals(&self.0);
                 (out).into_bound_py_any(py)
             }
@@ -7875,8 +7841,7 @@ pub mod math {
 
     /// The nodes of a roulette: where the curves a wheel's pencils draw cross themselves and one another.
     pub mod roulette {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok, PySerde};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -7892,7 +7857,7 @@ pub mod math {
             #[getter]
             #[pyo3(name = "curves")]
             pub fn curves<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.curves.clone();
+                let value = self.0.curves;
                 (value).into_bound_py_any(py)
             }
             /// How often each curve crosses itself, curve by curve.
@@ -7913,35 +7878,35 @@ pub mod math {
             #[getter]
             #[pyo3(name = "most")]
             pub fn most<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.most.clone();
+                let value = self.0.most;
                 (value).into_bound_py_any(py)
             }
             /// The nodes more than one crossing clusters at.
             #[getter]
             #[pyo3(name = "crowded")]
             pub fn crowded<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.crowded.clone();
+                let value = self.0.crowded;
                 (value).into_bound_py_any(py)
             }
             /// The distinct points the crossings sit at, one for every cluster.
             #[getter]
             #[pyo3(name = "points")]
             pub fn points<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.points.clone();
+                let value = self.0.points;
                 (value).into_bound_py_any(py)
             }
             /// The branches through every node added up, which is the edge count of the picture as a plane graph, `n` at a node where `n` branches meet and `2` times `points` when no node is crowded.
             #[getter]
             #[pyo3(name = "branches")]
             pub fn branches<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.branches.clone();
+                let value = self.0.branches;
                 (value).into_bound_py_any(py)
             }
             /// The segment pairs that meet without crossing: collinear or end to end.
             #[getter]
             #[pyo3(name = "touches")]
             pub fn touches<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.touches.clone();
+                let value = self.0.touches;
                 (value).into_bound_py_any(py)
             }
             /// How often the curves `i` and `j` cross, either order, and zero when they are one curve.
@@ -7952,19 +7917,19 @@ pub mod math {
             }
             /// Every crossing of two curves.
             #[pyo3(name = "paired", signature = ())]
-            pub fn paired<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn paired<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::roulette::Nodes::paired(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Every self crossing.
             #[pyo3(name = "selved", signature = ())]
-            pub fn selved<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn selved<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::roulette::Nodes::selved(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Every crossing, self and pair together, which counts a node where `n` branches meet `n(n - 1)/2` times; `points` is the count of distinct nodes and the two agree exactly when `crowded` is zero.
             #[pyo3(name = "total", signature = ())]
-            pub fn total<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn total<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::roulette::Nodes::total(&self.0);
                 (out).into_bound_py_any(py)
             }
@@ -8004,7 +7969,7 @@ pub mod math {
             let track = track.0;
             let pencils = pencils.into_iter().map(|x| x.0).collect::<Vec<_>>();
             let out = mrlyrs::math::roulette::spread(&track, &pencils, exact);
-            ((out).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
         }
 
         pub fn init(py: Python<'_>, parent: &Bound<'_, PyModule>, sys: &Bound<'_, PyDict>) -> PyResult<()> {
@@ -8024,8 +7989,7 @@ pub mod math {
 
     /// The residue rules that mark a hypercube's cells.
     pub mod rules {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok, PyTensor};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -8062,8 +8026,7 @@ pub mod math {
 
     /// The exact crop machinery: rational shapes classified cell by cell, no floats.
     pub mod shape {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok, PySerde, PyTensor};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -8086,27 +8049,27 @@ pub mod math {
             #[getter]
             #[pyo3(name = "num")]
             pub fn num<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.num.clone();
+                let value = self.0.num;
                 (value).into_bound_py_any(py)
             }
             /// The denominator, always positive.
             #[getter]
             #[pyo3(name = "den")]
             pub fn den<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.den.clone();
+                let value = self.0.den;
                 (value).into_bound_py_any(py)
             }
             /// Returns the exact difference.
             #[pyo3(name = "minus", signature = (other))]
             pub fn minus<'py>(&self, py: Python<'py>, other: crate::gen::math::shape::Frac) -> PyResult<Bound<'py, PyAny>> {
                 let other = other.0;
-                let out = mrlyrs::math::shape::Frac::minus(self.0.clone(), other);
+                let out = mrlyrs::math::shape::Frac::minus(self.0, other);
                 (crate::gen::math::shape::Frac(ok(out)?)).into_bound_py_any(py)
             }
             /// Builds the reduced fraction num over den.
             #[staticmethod]
             #[pyo3(name = "new", signature = (num, den))]
-            pub fn new<'py>(py: Python<'py>, num: i64, den: i64) -> PyResult<Bound<'py, PyAny>> {
+            pub fn new_<'py>(py: Python<'py>, num: i64, den: i64) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::shape::Frac::new(num, den);
                 (crate::gen::math::shape::Frac(ok(out)?)).into_bound_py_any(py)
             }
@@ -8114,14 +8077,14 @@ pub mod math {
             #[pyo3(name = "plus", signature = (other))]
             pub fn plus<'py>(&self, py: Python<'py>, other: crate::gen::math::shape::Frac) -> PyResult<Bound<'py, PyAny>> {
                 let other = other.0;
-                let out = mrlyrs::math::shape::Frac::plus(self.0.clone(), other);
+                let out = mrlyrs::math::shape::Frac::plus(self.0, other);
                 (crate::gen::math::shape::Frac(ok(out)?)).into_bound_py_any(py)
             }
             /// Returns the exact product.
             #[pyo3(name = "times", signature = (other))]
             pub fn times<'py>(&self, py: Python<'py>, other: crate::gen::math::shape::Frac) -> PyResult<Bound<'py, PyAny>> {
                 let other = other.0;
-                let out = mrlyrs::math::shape::Frac::times(self.0.clone(), other);
+                let out = mrlyrs::math::shape::Frac::times(self.0, other);
                 (crate::gen::math::shape::Frac(ok(out)?)).into_bound_py_any(py)
             }
             /// Wraps an integer as a fraction over one.
@@ -8218,7 +8181,7 @@ pub mod math {
         pub fn radial_census<'py>(py: Python<'py>, types: PyTensor, centre: Vec<i64>, r_max: u64) -> PyResult<Bound<'py, PyAny>> {
             let types = types.0;
             let out = mrlyrs::math::shape::radial_census(&types, &centre, r_max);
-            ((out).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
         }
 
         /// Replicates each design cell base to the extra per axis and keeps a sub-cell only where its own region passes.
@@ -8275,16 +8238,14 @@ pub mod math {
     /// The hexagon world: cubes flattened to triangle-meshed hexes.
     /// The hexagon world, the projection of `three`.
     pub mod six {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok, PyCell2d, PyCell3d, PyCell6d, PyCellNd, PyCode, PyColor, PyRgba, PyRng, PySerde, PyTensor};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
 
         /// The ghost star of the hexagonal cut stack: the arm ink law, the background and the cell-frame decay.
         pub mod star {
-            use crate::hand::*;
-            use pyo3::exceptions::PyValueError;
+            use crate::hand::{ok, PySerde};
             use pyo3::prelude::*;
             use pyo3::types::PyDict;
             use pyo3::IntoPyObjectExt;
@@ -8300,26 +8261,26 @@ pub mod math {
                 #[getter]
                 #[pyo3(name = "inked")]
                 pub fn inked<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                    let value = self.0.inked.clone();
+                    let value = self.0.inked;
                     (value).into_bound_py_any(py)
                 }
                 /// The count of cells read.
                 #[getter]
                 #[pyo3(name = "cells")]
                 pub fn cells<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                    let value = self.0.cells.clone();
+                    let value = self.0.cells;
                     (value).into_bound_py_any(py)
                 }
                 /// The share in lowest terms, numerator then denominator.
                 #[pyo3(name = "reduced", signature = ())]
-                pub fn reduced<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
-                    let out = mrlyrs::math::six::star::Share::reduced(self.0.clone());
+                pub fn reduced<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                    let out = mrlyrs::math::six::star::Share::reduced(self.0);
                     (out).into_bound_py_any(py)
                 }
                 /// The share as a real number.
                 #[pyo3(name = "value", signature = ())]
-                pub fn value<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
-                    let out = mrlyrs::math::six::star::Share::value(self.0.clone());
+                pub fn value<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                    let out = mrlyrs::math::six::star::Share::value(self.0);
                     (out).into_bound_py_any(py)
                 }
                 /// Reads plain data into the class.
@@ -8373,7 +8334,7 @@ pub mod math {
                 /// Reads the star of a base-2 space code, the carpet being `23`.
                 #[staticmethod]
                 #[pyo3(name = "new", signature = (code))]
-                pub fn new<'py>(py: Python<'py>, code: u128) -> PyResult<Bound<'py, PyAny>> {
+                pub fn new_<'py>(py: Python<'py>, code: u128) -> PyResult<Bound<'py, PyAny>> {
                     let out = mrlyrs::math::six::star::Star::new(code);
                     (crate::gen::math::six::star::Star(ok(out)?)).into_bound_py_any(py)
                 }
@@ -8446,7 +8407,7 @@ pub mod math {
             /// The constant beside the decay, `ln(1 + sqrt 2)/(2 sqrt 2) - G/8 - gamma/4 - (ln 2)/2`.
             #[pyfunction]
             #[pyo3(name = "constant", signature = ())]
-            pub fn constant<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn constant<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::six::star::constant();
                 (out).into_bound_py_any(py)
             }
@@ -9068,8 +9029,7 @@ pub mod math {
 
     /// The symmetric eigensolver and the Laplacian spectra it reads off a network.
     pub mod spectrum {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -9159,8 +9119,7 @@ pub mod math {
 
     /// The turntable: the exact circle means of a raster about its centre, the profile they trace and the wheel it paints.
     pub mod spin {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok, PySerde};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -9184,7 +9143,7 @@ pub mod math {
             #[pyo3(name = "named", signature = (name))]
             pub fn named<'py>(py: Python<'py>, name: &str) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::spin::Blend::named(name);
-                ((out).map(|x| PySerde(x))).into_bound_py_any(py)
+                ((out).map(PySerde)).into_bound_py_any(py)
             }
         }
 
@@ -9302,8 +9261,7 @@ pub mod math {
 
     /// The spirograph: a byte grid as a wheel with a pencil in every cell, rolled on a line, a circle or a polygon, and the curves it draws.
     pub mod spirograph {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok, PySerde};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -9371,7 +9329,7 @@ pub mod math {
         #[pyo3(name = "pencils", signature = (types, width, height, mode, reach, jitter, seed))]
         pub fn pencils<'py>(py: Python<'py>, types: Vec<u8>, width: usize, height: usize, mode: &str, reach: f64, jitter: f64, seed: u32) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::math::spirograph::pencils(&types, width, height, mode, reach, jitter, seed);
-            ((ok(out)?).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((ok(out)?).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
         }
 
         /// Where a pencil is after `s` of path length: the centre plus the seat turned with the wheel.
@@ -9484,7 +9442,7 @@ pub mod math {
     /// The cube pipeline: designs, tiles, graphs and renderings in three dimensions.
     /// The cube pipeline.
     pub mod three {
-        use crate::hand::*;
+        use crate::hand::{ok, PyCell2d, PyCell3d, PyCellNd, PyCode, PyRng, PySerde, PyTensor};
         use pyo3::exceptions::PyValueError;
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
@@ -9508,48 +9466,48 @@ pub mod math {
             #[getter]
             #[pyo3(name = "x")]
             pub fn x<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.x.clone();
+                let value = self.0.x;
                 (value).into_bound_py_any(py)
             }
             /// The y component.
             #[getter]
             #[pyo3(name = "y")]
             pub fn y<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.y.clone();
+                let value = self.0.y;
                 (value).into_bound_py_any(py)
             }
             /// The z component.
             #[getter]
             #[pyo3(name = "z")]
             pub fn z<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.z.clone();
+                let value = self.0.z;
                 (value).into_bound_py_any(py)
             }
             /// Returns the cross product, perpendicular to both vectors.
             #[pyo3(name = "cross", signature = (o))]
             pub fn cross<'py>(&self, py: Python<'py>, o: crate::gen::math::three::Vec3) -> PyResult<Bound<'py, PyAny>> {
                 let o = o.0;
-                let out = mrlyrs::math::three::Vec3::cross(self.0.clone(), o);
+                let out = mrlyrs::math::three::Vec3::cross(self.0, o);
                 (crate::gen::math::three::Vec3(out)).into_bound_py_any(py)
             }
             /// Returns the dot product of the two vectors.
             #[pyo3(name = "dot", signature = (o))]
             pub fn dot<'py>(&self, py: Python<'py>, o: crate::gen::math::three::Vec3) -> PyResult<Bound<'py, PyAny>> {
                 let o = o.0;
-                let out = mrlyrs::math::three::Vec3::dot(self.0.clone(), o);
+                let out = mrlyrs::math::three::Vec3::dot(self.0, o);
                 (out).into_bound_py_any(py)
             }
             /// Builds a vector from its components.
             #[staticmethod]
             #[pyo3(name = "new", signature = (x, y, z))]
-            pub fn new<'py>(py: Python<'py>, x: f32, y: f32, z: f32) -> PyResult<Bound<'py, PyAny>> {
+            pub fn new_<'py>(py: Python<'py>, x: f32, y: f32, z: f32) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::three::Vec3::new(x, y, z);
                 (crate::gen::math::three::Vec3(out)).into_bound_py_any(py)
             }
             /// Multiplies every component by the scalar.
             #[pyo3(name = "scale", signature = (s))]
             pub fn scale<'py>(&self, py: Python<'py>, s: f32) -> PyResult<Bound<'py, PyAny>> {
-                let out = mrlyrs::math::three::Vec3::scale(self.0.clone(), s);
+                let out = mrlyrs::math::three::Vec3::scale(self.0, s);
                 (crate::gen::math::three::Vec3(out)).into_bound_py_any(py)
             }
             /// Reads plain data into the class.
@@ -9845,7 +9803,7 @@ pub mod math {
         /// Returns the 24 rotation triples that reach each distinct cube orientation.
         #[pyfunction]
         #[pyo3(name = "orientations", signature = ())]
-        pub fn orientations<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn orientations<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::math::three::orientations();
             (out).into_bound_py_any(py)
         }
@@ -9881,7 +9839,7 @@ pub mod math {
         pub fn quads<'py>(py: Python<'py>, cell: PyCell3d) -> PyResult<Bound<'py, PyAny>> {
             let cell = cell.0;
             let out = mrlyrs::math::three::quads(&cell);
-            ((out).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
         }
 
         /// Returns the integer shadow `(x - y, x + y - 2z)`, the projection with its irrational scales dropped.
@@ -9941,7 +9899,7 @@ pub mod math {
         #[pyo3(name = "text", signature = (cell, glyphs=None))]
         pub fn text<'py>(py: Python<'py>, cell: PyCell3d, glyphs: Option<std::collections::HashMap<u8, String>>) -> PyResult<Bound<'py, PyAny>> {
             let cell = cell.0;
-            let glyphs = glyphs.map(|x| x.into_iter().map(|(k, v)| (k, v)).collect());
+            let glyphs = glyphs.map(|x| x.into_iter().collect());
             let out = mrlyrs::math::three::text(&cell, glyphs.as_ref());
             (out).into_bound_py_any(py)
         }
@@ -10027,7 +9985,7 @@ pub mod math {
         pub fn wires<'py>(py: Python<'py>, cell: PyCell3d) -> PyResult<Bound<'py, PyAny>> {
             let cell = cell.0;
             let out = mrlyrs::math::three::wires(&cell);
-            ((out).into_iter().map(|x| (x).into_iter().map(|x| crate::gen::math::three::Vec3(x)).collect::<Vec<_>>()).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((out).into_iter().map(|x| (x).into_iter().map(crate::gen::math::three::Vec3).collect::<Vec<_>>()).collect::<Vec<_>>()).into_bound_py_any(py)
         }
 
         /// Builds the cube of rods along the x axis at the given size and level.
@@ -10153,8 +10111,7 @@ pub mod math {
 
     /// The tourbillon: the odd parity carpets turned one angle a layer and stacked inside the inscribed disc.
     pub mod tourbillon {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok, PySerde};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -10164,7 +10121,7 @@ pub mod math {
         #[pyo3(name = "eyes", signature = (qmax))]
         pub fn eyes<'py>(py: Python<'py>, qmax: usize) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::math::tourbillon::eyes(qmax);
-            ((out).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
         }
 
         /// Spins the odd parity carpets at the scales one, three, five up to the top into one stack on a square of the size, every layer turned about the centre by its own angle and masked to the inscribed disc, so every pixel sees every layer.
@@ -10180,7 +10137,7 @@ pub mod math {
         #[pyo3(name = "layers", signature = (top, schedule, increment, set, weights, seed))]
         pub fn layers<'py>(py: Python<'py>, top: usize, schedule: &str, increment: f64, set: &str, weights: &str, seed: u32) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::math::tourbillon::layers(top, schedule, increment, set, weights, seed);
-            ((ok(out)?).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((ok(out)?).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
         }
 
         /// The least whole number of increments that closes a quarter turn, none once the count passes the cap.
@@ -10239,16 +10196,14 @@ pub mod math {
     /// The flat-cell pipeline: designs, tiles, graphs and renderings in two dimensions.
     /// The flat-cell pipeline.
     pub mod two {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok, PyCell2d, PyCellNd, PyCode, PyColor, PyRng, PySerde, PyTensor};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
 
         /// The payload a cell's filled sites carry, framed in a sheet.
         pub mod payload {
-            use crate::hand::*;
-            use pyo3::exceptions::PyValueError;
+            use crate::hand::{PyTensor};
             use pyo3::prelude::*;
             use pyo3::types::PyDict;
             use pyo3::IntoPyObjectExt;
@@ -10256,7 +10211,7 @@ pub mod math {
             /// The five by five mask a carried mosaic lays its four tiles out under.
             #[pyfunction]
             #[pyo3(name = "frame", signature = ())]
-            pub fn frame<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn frame<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::math::two::payload::frame();
                 (PyTensor(out)).into_bound_py_any(py)
             }
@@ -10533,7 +10488,7 @@ pub mod math {
         #[pyo3(name = "text", signature = (cell, glyphs=None))]
         pub fn text<'py>(py: Python<'py>, cell: PyCell2d, glyphs: Option<std::collections::HashMap<u8, String>>) -> PyResult<Bound<'py, PyAny>> {
             let cell = cell.0;
-            let glyphs = glyphs.map(|x| x.into_iter().map(|(k, v)| (k, v)).collect());
+            let glyphs = glyphs.map(|x| x.into_iter().collect());
             let out = mrlyrs::math::two::text(&cell, glyphs.as_ref());
             (out).into_bound_py_any(py)
         }
@@ -10678,16 +10633,12 @@ pub mod math {
 /// The integers: primes, divisors, series, lattices, spectra and networks.
 /// The instruments of number: primes, divisors, series, spectra, lattices and the designs the digits draw.
 pub mod num {
-    use crate::hand::*;
-    use pyo3::exceptions::PyValueError;
     use pyo3::prelude::*;
     use pyo3::types::PyDict;
-    use pyo3::IntoPyObjectExt;
 
     /// The Apollonian gasket: a packing grown from its root quadruple in exact integers, the Ford circles it rests on the line, and the Farey stack they shadow.
     pub mod apollonian {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok, PySerde};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -10703,39 +10654,39 @@ pub mod num {
             #[getter]
             #[pyo3(name = "k")]
             pub fn k<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.k.clone();
+                let value = self.0.k;
                 (value).into_bound_py_any(py)
             }
             /// The curvature times the centre's abscissa.
             #[getter]
             #[pyo3(name = "x")]
             pub fn x<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.x.clone();
+                let value = self.0.x;
                 (value).into_bound_py_any(py)
             }
             /// The curvature times the centre's ordinate.
             #[getter]
             #[pyo3(name = "y")]
             pub fn y<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.y.clone();
+                let value = self.0.y;
                 (value).into_bound_py_any(py)
             }
             /// The centre, none on a line.
             #[pyo3(name = "centre", signature = ())]
-            pub fn centre<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
-                let out = mrlyrs::num::apollonian::Circle::centre(self.0.clone());
+            pub fn centre<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::apollonian::Circle::centre(self.0);
                 (out).into_bound_py_any(py)
             }
             /// Whether the circle is a line.
             #[pyo3(name = "is_line", signature = ())]
-            pub fn is_line<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
-                let out = mrlyrs::num::apollonian::Circle::is_line(self.0.clone());
+            pub fn is_line<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::apollonian::Circle::is_line(self.0);
                 (out).into_bound_py_any(py)
             }
             /// The radius, none on a line.
             #[pyo3(name = "radius", signature = ())]
-            pub fn radius<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
-                let out = mrlyrs::num::apollonian::Circle::radius(self.0.clone());
+            pub fn radius<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::apollonian::Circle::radius(self.0);
                 (out).into_bound_py_any(py)
             }
             /// Reads plain data into the class.
@@ -10806,7 +10757,7 @@ pub mod num {
         #[pyo3(name = "root", signature = (name))]
         pub fn root<'py>(py: Python<'py>, name: &str) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::num::apollonian::root(name);
-            ((ok(out)?).into_iter().map(|x| crate::gen::num::apollonian::Circle(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((ok(out)?).into_iter().map(crate::gen::num::apollonian::Circle).collect::<Vec<_>>()).into_bound_py_any(py)
         }
 
         /// Reads the Farey stack of the order against the packing: the nodes lit inside the open period against the tangency points of the line-tangent circles of curvature at most `2 Q^2`, and the brightness `floor(Q/b)` summed on the nodes against `Q(Q + 1)/2`. Off the strip there is no line and every count is zero.
@@ -10833,7 +10784,7 @@ pub mod num {
         pub fn swap<'py>(py: Python<'py>, q: [crate::gen::num::apollonian::Circle; 4], at: usize) -> PyResult<Bound<'py, PyAny>> {
             let q = q.map(|x| x.0);
             let out = mrlyrs::num::apollonian::swap(&q, at);
-            ((out).into_iter().map(|x| crate::gen::num::apollonian::Circle(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((out).into_iter().map(crate::gen::num::apollonian::Circle).collect::<Vec<_>>()).into_bound_py_any(py)
         }
 
         /// The tangency points on the line `y = 0`, ascending: one per circle of the packing with `k y = 1`, the root excluded. Empty off the strip.
@@ -10842,7 +10793,7 @@ pub mod num {
         pub fn touches<'py>(py: Python<'py>, p: PySerde<mrlyrs::num::apollonian::Packing>) -> PyResult<Bound<'py, PyAny>> {
             let p = p.0;
             let out = mrlyrs::num::apollonian::touches(&p);
-            ((out).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
         }
 
         pub fn init(py: Python<'_>, parent: &Bound<'_, PyModule>, sys: &Bound<'_, PyDict>) -> PyResult<()> {
@@ -10874,8 +10825,7 @@ pub mod num {
 
     /// The matrix ladder: the Dirichlet series of a memory design continued through its transfer matrix, its determinant cofactor and the residues on its pole combs.
     pub mod automaton {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -10896,13 +10846,13 @@ pub mod num {
             }
             /// Returns the abscissa `alpha = log_q rho`, with `rho` the exact Perron root of [`crate::num::memory::perron`].
             #[pyo3(name = "abscissa", signature = ())]
-            pub fn abscissa<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn abscissa<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::automaton::Automaton::abscissa(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Returns the base `q = 2^D`.
             #[pyo3(name = "base", signature = ())]
-            pub fn base<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn base<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::automaton::Automaton::base(&self.0);
                 (out).into_bound_py_any(py)
             }
@@ -10915,38 +10865,38 @@ pub mod num {
             }
             /// Returns the coefficients `c_0 .. c_n` of `det(I - x T) = sum c_i x^i`, the ladder denominator read as a polynomial in `x = q^(-s)`.
             #[pyo3(name = "denominator", signature = ())]
-            pub fn denominator<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn denominator<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::automaton::Automaton::denominator(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Returns the transfer matrix `T = Gamma_0` the ladder runs on, the transpose of [`crate::num::memory::transfer`], entry `(u', u)` counting the letters carrying `u` to `u'`.
             #[pyo3(name = "matrix", signature = ())]
-            pub fn matrix<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn matrix<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::automaton::Automaton::matrix(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Builds the ladder of a rule, choosing the peel depth.
             #[staticmethod]
             #[pyo3(name = "new", signature = (rule))]
-            pub fn new<'py>(py: Python<'py>, rule: PyRef<'_, crate::gen::num::memory::Rule>) -> PyResult<Bound<'py, PyAny>> {
+            pub fn new_<'py>(py: Python<'py>, rule: PyRef<'_, crate::gen::num::memory::Rule>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::automaton::Automaton::new(&rule.0);
                 (crate::gen::num::automaton::Automaton(ok(out)?)).into_bound_py_any(py)
             }
             /// Returns the peel depth `P`.
             #[pyo3(name = "peel", signature = ())]
-            pub fn peel<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn peel<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::automaton::Automaton::peel(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Returns the pole spacing `2 pi / log q`.
             #[pyo3(name = "period", signature = ())]
-            pub fn period<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn period<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::automaton::Automaton::period(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Returns the Collatz-Wielandt bracket `(low, high)` of the Perron root of the transfer matrix, the ratios the ladder divides with.
             #[pyo3(name = "perron", signature = ())]
-            pub fn perron<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn perron<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::automaton::Automaton::perron(&self.0);
                 (out).into_bound_py_any(py)
             }
@@ -10959,13 +10909,13 @@ pub mod num {
             }
             /// Returns the rule.
             #[pyo3(name = "rule", signature = ())]
-            pub fn rule<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn rule<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::automaton::Automaton::rule(&self.0);
                 (crate::gen::num::memory::Rule(out)).into_bound_py_any(py)
             }
             /// Returns the state count `q^(k-1)`.
             #[pyo3(name = "states", signature = ())]
-            pub fn states<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn states<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::automaton::Automaton::states(&self.0);
                 (out).into_bound_py_any(py)
             }
@@ -11009,8 +10959,7 @@ pub mod num {
 
     /// The sequence blender: term ops, exact recurrences and growth rates.
     pub mod blend {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -11136,8 +11085,6 @@ pub mod num {
 
     /// The boolean-function measures: Walsh spectra, nonlinearity, balance and avalanche.
     pub mod boolean {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -11191,8 +11138,7 @@ pub mod num {
 
     /// The digit designs on the integer line: their elements, their Mobius meter, its density echo and the ordinates its spectrum carries.
     pub mod design {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -11337,8 +11283,7 @@ pub mod num {
 
     /// The divisor arithmetic: factorizations, divisors, totients, radicals, the Mobius values and the exact whole-number arithmetic under them.
     pub mod factor {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -11509,8 +11454,7 @@ pub mod num {
 
     /// The fast Fourier transform in one and two dimensions.
     pub mod fft {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -11609,8 +11553,7 @@ pub mod num {
 
     /// The primes of the plane: the Gaussian and the Eisenstein integers, their classes, windows and ring weights.
     pub mod gauss {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{PySerde};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -11632,7 +11575,7 @@ pub mod num {
             }
             /// Counts every class inside.
             #[pyo3(name = "census", signature = ())]
-            pub fn census<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn census<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::gauss::Window::census(&self.0);
                 (PySerde(out)).into_bound_py_any(py)
             }
@@ -11651,26 +11594,26 @@ pub mod num {
             /// Opens the window of a ring out to a reach, sieving every norm inside it.
             #[staticmethod]
             #[pyo3(name = "new", signature = (ring, radius))]
-            pub fn new<'py>(py: Python<'py>, ring: PySerde<mrlyrs::num::gauss::Ring>, radius: u64) -> PyResult<Bound<'py, PyAny>> {
+            pub fn new_<'py>(py: Python<'py>, ring: PySerde<mrlyrs::num::gauss::Ring>, radius: u64) -> PyResult<Bound<'py, PyAny>> {
                 let ring = ring.0;
                 let out = mrlyrs::num::gauss::Window::new(ring, radius);
                 (crate::gen::num::gauss::Window(out)).into_bound_py_any(py)
             }
             /// Lists every point inside, row by row from the bottom left of the bounding square.
             #[pyo3(name = "points", signature = ())]
-            pub fn points<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn points<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::gauss::Window::points(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Returns the reach.
             #[pyo3(name = "radius", signature = ())]
-            pub fn radius<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn radius<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::gauss::Window::radius(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Returns the ring.
             #[pyo3(name = "ring", signature = ())]
-            pub fn ring<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn ring<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::gauss::Window::ring(&self.0);
                 (PySerde(out)).into_bound_py_any(py)
             }
@@ -11792,7 +11735,7 @@ pub mod num {
             #[pyo3(name = "named", signature = (name))]
             pub fn named<'py>(py: Python<'py>, name: &str) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::gauss::Ring::named(name);
-                ((out).map(|x| PySerde(x))).into_bound_py_any(py)
+                ((out).map(PySerde)).into_bound_py_any(py)
             }
             /// Returns the point nearest a place in the plane.
             #[staticmethod]
@@ -11922,8 +11865,7 @@ pub mod num {
 
     /// The peeled ladder: the Dirichlet series of a digit design continued to the whole plane, its Lyndon cofactor and the residues at its poles, each value carrying its bound.
     pub mod ladder {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -11944,38 +11886,38 @@ pub mod num {
             }
             /// Returns the abscissa `alpha = log_q k`.
             #[pyo3(name = "abscissa", signature = ())]
-            pub fn abscissa<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn abscissa<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::ladder::Design::abscissa(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Returns the base.
             #[pyo3(name = "base", signature = ())]
-            pub fn base<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn base<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::ladder::Design::base(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Returns the digit set, ascending.
             #[pyo3(name = "digits", signature = ())]
-            pub fn digits<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn digits<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::ladder::Design::digits(&self.0);
                 ((out).to_vec()).into_bound_py_any(py)
             }
             /// Builds a design on the base and the digit set, choosing the peel depth.
             #[staticmethod]
             #[pyo3(name = "new", signature = (base, digits))]
-            pub fn new<'py>(py: Python<'py>, base: u64, digits: Vec<u64>) -> PyResult<Bound<'py, PyAny>> {
+            pub fn new_<'py>(py: Python<'py>, base: u64, digits: Vec<u64>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::ladder::Design::new(base, &digits);
                 (crate::gen::num::ladder::Design(ok(out)?)).into_bound_py_any(py)
             }
             /// Returns the peel depth.
             #[pyo3(name = "peel", signature = ())]
-            pub fn peel<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn peel<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::ladder::Design::peel(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Returns the pole spacing `2 pi / log q`.
             #[pyo3(name = "period", signature = ())]
-            pub fn period<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn period<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::ladder::Design::period(&self.0);
                 (out).into_bound_py_any(py)
             }
@@ -12047,8 +11989,7 @@ pub mod num {
 
     /// The visible lattice: coprime pairs, the constant a dimension recovers and the Farey nodes.
     pub mod lattice {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok, PySerde};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -12066,7 +12007,7 @@ pub mod num {
         #[pyo3(name = "farey", signature = (order))]
         pub fn farey<'py>(py: Python<'py>, order: usize) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::num::lattice::farey(order);
-            ((out).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
         }
 
         /// Lists the grid crossings of a window's nodes, row-major over the ascending axis nodes.
@@ -12074,7 +12015,7 @@ pub mod num {
         #[pyo3(name = "grid", signature = (n))]
         pub fn grid<'py>(py: Python<'py>, n: usize) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::num::lattice::grid(n);
-            ((out).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
         }
 
         /// Counts the nodes window n lights that window n minus one lacked: two at window one, phi of n after.
@@ -12147,8 +12088,7 @@ pub mod num {
 
     /// The memory designs: a rule on `k` consecutive digits, its transfer matrix, the words it accepts and the Perron root that is their dimension.
     pub mod memory {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -12171,21 +12111,21 @@ pub mod num {
             #[getter]
             #[pyo3(name = "dimension")]
             pub fn dimension<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.dimension.clone();
+                let value = self.0.dimension;
                 (value).into_bound_py_any(py)
             }
             /// The window width `k`, at least one.
             #[getter]
             #[pyo3(name = "width")]
             pub fn width<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.width.clone();
+                let value = self.0.width;
                 (value).into_bound_py_any(py)
             }
             /// The window code, bit `w` set when window `w` is allowed.
             #[getter]
             #[pyo3(name = "code")]
             pub fn code<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.code.clone();
+                let value = self.0.code;
                 (value).into_bound_py_any(py)
             }
             /// Returns whether a word, coarsest digit first, is accepted.
@@ -12202,13 +12142,13 @@ pub mod num {
             }
             /// Returns the letters that stand in at least one allowed window.
             #[pyo3(name = "alphabet", signature = ())]
-            pub fn alphabet<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn alphabet<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::memory::Rule::alphabet(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Returns the count of rules of this shape, `2^(2^(k D))`.
             #[pyo3(name = "codes", signature = ())]
-            pub fn codes<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn codes<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::memory::Rule::codes(&self.0);
                 (out).into_bound_py_any(py)
             }
@@ -12221,26 +12161,26 @@ pub mod num {
             }
             /// Returns the letter count `2^D`, the digit vectors of the cube's corners.
             #[pyo3(name = "letters", signature = ())]
-            pub fn letters<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn letters<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::memory::Rule::letters(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Builds a rule from its dimension, its width and its code.
             #[staticmethod]
             #[pyo3(name = "new", signature = (dimension, width, code))]
-            pub fn new<'py>(py: Python<'py>, dimension: usize, width: usize, code: u64) -> PyResult<Bound<'py, PyAny>> {
+            pub fn new_<'py>(py: Python<'py>, dimension: usize, width: usize, code: u64) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::memory::Rule::new(dimension, width, code);
                 (crate::gen::num::memory::Rule(ok(out)?)).into_bound_py_any(py)
             }
             /// Returns the state count `2^((k - 1) D)`, the windows of one digit less that the transfer matrix runs on.
             #[pyo3(name = "states", signature = ())]
-            pub fn states<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn states<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::memory::Rule::states(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Returns the window count `2^(k D)`.
             #[pyo3(name = "windows", signature = ())]
-            pub fn windows<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn windows<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::memory::Rule::windows(&self.0);
                 (out).into_bound_py_any(py)
             }
@@ -12335,8 +12275,7 @@ pub mod num {
 
     /// The Thue-Morse world: the digit rule, the substitution, the plane lifts, the runs and the period-doubling word.
     pub mod morse {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok, PySerde};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -12350,9 +12289,9 @@ pub mod num {
             /// Returns every Lift in canonical order.
             #[staticmethod]
             #[pyo3(name = "all", signature = ())]
-            pub fn all<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn all<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::morse::Lift::all();
-                ((out).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+                ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
             }
             /// Returns the sign at a site, zero for plus one and one for minus one.
             #[staticmethod]
@@ -12503,7 +12442,7 @@ pub mod num {
             m.add_function(wrap_pyfunction!(stage, &m)?)?;
             m.add_function(wrap_pyfunction!(substitution, &m)?)?;
             m.add_function(wrap_pyfunction!(upsample, &m)?)?;
-            m.add("LIFTS", (mrlyrs::num::morse::LIFTS).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>())?;
+            m.add("LIFTS", (mrlyrs::num::morse::LIFTS).into_iter().map(PySerde).collect::<Vec<_>>())?;
             let names: Vec<&str> = vec!["boundary", "difference", "digits", "doubling", "faults", "fold", "letter", "lift", "power", "repeat", "runs", "stage", "substitution", "upsample", "Lift", "LIFTS"];
             m.add("__all__", names)?;
             parent.add("morse", &m)?;
@@ -12514,8 +12453,7 @@ pub mod num {
 
     /// The prime objects: the sieve and its readings, values, ranks, gaps, the counts they make and the shape readings of a number.
     pub mod prime {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{PySerde};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -12536,50 +12474,50 @@ pub mod num {
             }
             /// Returns the count of numbers marked prime so far.
             #[pyo3(name = "count", signature = ())]
-            pub fn count<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn count<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::prime::Sieve::count(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Returns whether every number is settled.
             #[pyo3(name = "done", signature = ())]
-            pub fn done<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn done<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::prime::Sieve::done(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Runs the sieve to the end.
             #[pyo3(name = "finish", signature = ())]
-            pub fn finish<'py>(&mut self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
-                let out = mrlyrs::num::prime::Sieve::finish(&mut self.0);
-                (out).into_bound_py_any(py)
+            pub fn finish<'py>(&mut self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                mrlyrs::num::prime::Sieve::finish(&mut self.0);
+                ().into_bound_py_any(py)
             }
             /// Starts a sieve over zero through the limit with every number untouched; it is done at once when no prime has its square inside.
             #[staticmethod]
             #[pyo3(name = "new", signature = (limit))]
-            pub fn new<'py>(py: Python<'py>, limit: usize) -> PyResult<Bound<'py, PyAny>> {
+            pub fn new_<'py>(py: Python<'py>, limit: usize) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::prime::Sieve::new(limit);
                 (crate::gen::num::prime::Sieve(out)).into_bound_py_any(py)
             }
             /// Returns the count of primes used so far.
             #[pyo3(name = "rank", signature = ())]
-            pub fn rank<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn rank<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::prime::Sieve::rank(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Uses the next prime: marks it prime, strikes its untouched multiples from its square with its rank plus one, and returns it; zero once done.
             #[pyo3(name = "step", signature = ())]
-            pub fn step<'py>(&mut self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn step<'py>(&mut self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::prime::Sieve::step(&mut self.0);
                 (out).into_bound_py_any(py)
             }
             /// Returns the count of numbers the last step struck.
             #[pyo3(name = "struck", signature = ())]
-            pub fn struck<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn struck<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::prime::Sieve::struck(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Returns the type of every number from zero: zero untouched, one prime, and one past the rank of the prime that struck it.
             #[pyo3(name = "types", signature = ())]
-            pub fn types<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn types<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::prime::Sieve::types(&self.0);
                 ((out).to_vec()).into_bound_py_any(py)
             }
@@ -12599,7 +12537,7 @@ pub mod num {
         #[pyo3(name = "chart", signature = (top, bins))]
         pub fn chart<'py>(py: Python<'py>, top: usize, bins: usize) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::num::prime::chart(top, bins);
-            ((out).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
         }
 
         /// Returns whether every number from zero through the limit is prime, the finished sieve read flag by flag.
@@ -12695,7 +12633,7 @@ pub mod num {
         #[pyo3(name = "study", signature = (limit))]
         pub fn study<'py>(py: Python<'py>, limit: usize) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::num::prime::study(limit);
-            ((out).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+            ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
         }
 
         pub fn init(py: Python<'_>, parent: &Bound<'_, PyModule>, sys: &Bound<'_, PyDict>) -> PyResult<()> {
@@ -12725,8 +12663,7 @@ pub mod num {
 
     /// The radix designs: a digit set inside the residues of a base in a ring, a unit twist per digit, and the points their words land on.
     pub mod radix {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok, PySerde};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -12749,63 +12686,63 @@ pub mod num {
             /// Returns the index in the canonical residue system of the class of a point.
             #[pyo3(name = "class_", signature = (z))]
             pub fn class_<'py>(&self, py: Python<'py>, z: (i64, i64)) -> PyResult<Bound<'py, PyAny>> {
-                let out = mrlyrs::num::radix::Base::class(self.0.clone(), z);
+                let out = mrlyrs::num::radix::Base::class(self.0, z);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Returns whether two points are congruent modulo the base.
             #[pyo3(name = "congruent", signature = (z, w))]
             pub fn congruent<'py>(&self, py: Python<'py>, z: (i64, i64), w: (i64, i64)) -> PyResult<Bound<'py, PyAny>> {
-                let out = mrlyrs::num::radix::Base::congruent(self.0.clone(), z, w);
+                let out = mrlyrs::num::radix::Base::congruent(self.0, z, w);
                 (out).into_bound_py_any(py)
             }
             /// Returns the symmetry group of the base as permutations of the canonical residue indices: every unit multiplication, and every unit times conjugation when the conjugate of the base is an associate of the base.
             #[pyo3(name = "group", signature = ())]
-            pub fn group<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
-                let out = mrlyrs::num::radix::Base::group(self.0.clone());
+            pub fn group<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::radix::Base::group(self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Returns whether the conjugate of the base is an associate of the base, which is when the mirror joins the symmetry group.
             #[pyo3(name = "mirrored", signature = ())]
-            pub fn mirrored<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
-                let out = mrlyrs::num::radix::Base::mirrored(self.0.clone());
+            pub fn mirrored<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::radix::Base::mirrored(self.0);
                 (out).into_bound_py_any(py)
             }
             /// Fixes a base in a ring.
             #[staticmethod]
             #[pyo3(name = "new", signature = (ring, value))]
-            pub fn new<'py>(py: Python<'py>, ring: PySerde<mrlyrs::num::gauss::Ring>, value: (i64, i64)) -> PyResult<Bound<'py, PyAny>> {
+            pub fn new_<'py>(py: Python<'py>, ring: PySerde<mrlyrs::num::gauss::Ring>, value: (i64, i64)) -> PyResult<Bound<'py, PyAny>> {
                 let ring = ring.0;
                 let out = mrlyrs::num::radix::Base::new(ring, value);
                 (crate::gen::num::radix::Base(ok(out)?)).into_bound_py_any(py)
             }
             /// Returns the norm `q` of the base: the count of residue classes and the square of the scale.
             #[pyo3(name = "norm", signature = ())]
-            pub fn norm<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
-                let out = mrlyrs::num::radix::Base::norm(self.0.clone());
+            pub fn norm<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::radix::Base::norm(self.0);
                 (out).into_bound_py_any(py)
             }
             /// Returns the base raised to a level.
             #[pyo3(name = "power", signature = (level))]
             pub fn power<'py>(&self, py: Python<'py>, level: usize) -> PyResult<Bound<'py, PyAny>> {
-                let out = mrlyrs::num::radix::Base::power(self.0.clone(), level);
+                let out = mrlyrs::num::radix::Base::power(self.0, level);
                 (out).into_bound_py_any(py)
             }
             /// Returns the canonical complete residue system modulo the base: the `q` representatives of least norm, ties broken by argument in `[0, 2 pi)`.
             #[pyo3(name = "residues", signature = ())]
-            pub fn residues<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
-                let out = mrlyrs::num::radix::Base::residues(self.0.clone());
+            pub fn residues<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::radix::Base::residues(self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Returns the ring.
             #[pyo3(name = "ring", signature = ())]
-            pub fn ring<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
-                let out = mrlyrs::num::radix::Base::ring(self.0.clone());
+            pub fn ring<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::radix::Base::ring(self.0);
                 (PySerde(out)).into_bound_py_any(py)
             }
             /// Returns the base element.
             #[pyo3(name = "value", signature = ())]
-            pub fn value<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
-                let out = mrlyrs::num::radix::Base::value(self.0.clone());
+            pub fn value<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::radix::Base::value(self.0);
                 (out).into_bound_py_any(py)
             }
             /// Reads plain data into the class.
@@ -12836,31 +12773,31 @@ pub mod num {
             }
             /// Returns the base.
             #[pyo3(name = "base", signature = ())]
-            pub fn base<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn base<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::radix::Radix::base(&self.0);
                 (crate::gen::num::radix::Base(out)).into_bound_py_any(py)
             }
             /// Returns whether every digit is the canonical representative of its class.
             #[pyo3(name = "canonical", signature = ())]
-            pub fn canonical<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn canonical<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::radix::Radix::canonical(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Returns the code of the classes the digits occupy, which names the design only when the digits are the canonical representatives.
             #[pyo3(name = "code", signature = ())]
-            pub fn code<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn code<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::radix::Radix::code(&self.0);
                 (ok(out)?).into_bound_py_any(py)
             }
             /// Returns the digits.
             #[pyo3(name = "digits", signature = ())]
-            pub fn digits<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn digits<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::radix::Radix::digits(&self.0);
                 ((out).to_vec()).into_bound_py_any(py)
             }
             /// Returns the similarity dimension `log |F| / log sqrt(q)`, the ratio of the digit count to the scale of the base.
             #[pyo3(name = "dimension", signature = ())]
-            pub fn dimension<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn dimension<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::radix::Radix::dimension(&self.0);
                 (out).into_bound_py_any(py)
             }
@@ -12887,7 +12824,7 @@ pub mod num {
             /// Builds a design from a base, a digit list and a unit twist per digit.
             #[staticmethod]
             #[pyo3(name = "new", signature = (base, digits, twists))]
-            pub fn new<'py>(py: Python<'py>, base: crate::gen::num::radix::Base, digits: Vec<(i64, i64)>, twists: Vec<(i64, i64)>) -> PyResult<Bound<'py, PyAny>> {
+            pub fn new_<'py>(py: Python<'py>, base: crate::gen::num::radix::Base, digits: Vec<(i64, i64)>, twists: Vec<(i64, i64)>) -> PyResult<Bound<'py, PyAny>> {
                 let base = base.0;
                 let out = mrlyrs::num::radix::Radix::new(base, digits, twists);
                 (crate::gen::num::radix::Radix(ok(out)?)).into_bound_py_any(py)
@@ -12900,19 +12837,19 @@ pub mod num {
             }
             /// Returns the ring.
             #[pyo3(name = "ring", signature = ())]
-            pub fn ring<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn ring<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::radix::Radix::ring(&self.0);
                 (PySerde(out)).into_bound_py_any(py)
             }
             /// Returns the digit count `|F|`.
             #[pyo3(name = "size", signature = ())]
-            pub fn size<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn size<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::radix::Radix::size(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Returns the twists.
             #[pyo3(name = "twists", signature = ())]
-            pub fn twists<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn twists<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::radix::Radix::twists(&self.0);
                 ((out).to_vec()).into_bound_py_any(py)
             }
@@ -12942,7 +12879,7 @@ pub mod num {
         /// Returns the flowsnake as a radix design: base `3 + omega` of norm seven on the hexagonal lattice, the full residue system, code `127`.
         #[pyfunction]
         #[pyo3(name = "flowsnake", signature = ())]
-        pub fn flowsnake<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn flowsnake<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::num::radix::flowsnake();
             (crate::gen::num::radix::Radix(ok(out)?)).into_bound_py_any(py)
         }
@@ -12950,7 +12887,7 @@ pub mod num {
         /// Returns the Sierpinski gasket as a radix design: base `2` on the hexagonal lattice, three of the four residues, code `7`.
         #[pyfunction]
         #[pyo3(name = "gasket", signature = ())]
-        pub fn gasket<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn gasket<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::num::radix::gasket();
             (crate::gen::num::radix::Radix(ok(out)?)).into_bound_py_any(py)
         }
@@ -12958,7 +12895,7 @@ pub mod num {
         /// Returns the Koch curve as a radix design: base `3` on the hexagonal lattice, digits `0, 1, 2 + omega, 2`, twists `1, e^(i pi/3), e^(-i pi/3), 1`.
         #[pyfunction]
         #[pyo3(name = "koch", signature = ())]
-        pub fn koch<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn koch<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::num::radix::koch();
             (crate::gen::num::radix::Radix(ok(out)?)).into_bound_py_any(py)
         }
@@ -12966,7 +12903,7 @@ pub mod num {
         /// Returns the terdragon as a radix design: base `2 + omega` on the hexagonal lattice, the full residue system, code `7`, twisted by `1, omega, 1`.
         #[pyfunction]
         #[pyo3(name = "terdragon", signature = ())]
-        pub fn terdragon<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn terdragon<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::num::radix::terdragon();
             (crate::gen::num::radix::Radix(ok(out)?)).into_bound_py_any(py)
         }
@@ -12982,7 +12919,7 @@ pub mod num {
         /// Returns the twindragon as a radix design: base `1 + i` on the square lattice, the full residue system, code `3`.
         #[pyfunction]
         #[pyo3(name = "twindragon", signature = ())]
-        pub fn twindragon<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn twindragon<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::num::radix::twindragon();
             (crate::gen::num::radix::Radix(ok(out)?)).into_bound_py_any(py)
         }
@@ -13008,8 +12945,7 @@ pub mod num {
 
     /// The infinite sums: the classic sequences, zeta and its Dirichlet cousins, the partials that walk to pi, e and gamma, the visible count and the Bernoulli fractions.
     pub mod series {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -13248,8 +13184,7 @@ pub mod num {
 
     /// The punctured schedules: the Wallis sieve and its kin, their words, rasters, punctures and limits.
     pub mod sieve {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{ok};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -13337,7 +13272,7 @@ pub mod num {
         /// Returns the limit of the solid Wallis sieve's surviving volume, the product of one minus n to the minus three over the odd n from three, in closed form.
         #[pyfunction]
         #[pyo3(name = "solid_limit", signature = ())]
-        pub fn solid_limit<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn solid_limit<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::num::sieve::solid_limit();
             (out).into_bound_py_any(py)
         }
@@ -13367,8 +13302,7 @@ pub mod num {
 
     /// The spirals: the whole numbers wound on the square and the hexagonal lattice, marked and read along a quadratic.
     pub mod spiral {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
+        use crate::hand::{PySerde};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -13382,9 +13316,9 @@ pub mod num {
             /// Returns every Growth in canonical order.
             #[staticmethod]
             #[pyo3(name = "all", signature = ())]
-            pub fn all<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn all<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::spiral::Growth::all();
-                ((out).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+                ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
             }
         }
 
@@ -13397,9 +13331,9 @@ pub mod num {
             /// Returns every Lattice in canonical order.
             #[staticmethod]
             #[pyo3(name = "all", signature = ())]
-            pub fn all<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn all<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::spiral::Lattice::all();
-                ((out).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+                ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
             }
             /// Returns the count of numbers a sheet the odd side wide holds: the side squared, or the hexagon of that many cells across.
             #[staticmethod]
@@ -13460,9 +13394,9 @@ pub mod num {
             /// Returns every Mark in canonical order.
             #[staticmethod]
             #[pyo3(name = "all", signature = ())]
-            pub fn all<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn all<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::spiral::Mark::all();
-                ((out).into_iter().map(|x| PySerde(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+                ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
             }
         }
 
@@ -13521,8 +13455,6 @@ pub mod num {
 
     /// The critical line: zeta at one half plus i t and off it, its zeros, the prime staircase they rebuild and the novelty meter their waves predict.
     pub mod zeta {
-        use crate::hand::*;
-        use pyo3::exceptions::PyValueError;
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -13545,44 +13477,44 @@ pub mod num {
             #[getter]
             #[pyo3(name = "re")]
             pub fn re<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.re.clone();
+                let value = self.0.re;
                 (value).into_bound_py_any(py)
             }
             /// The imaginary part.
             #[getter]
             #[pyo3(name = "im")]
             pub fn im<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.im.clone();
+                let value = self.0.im;
                 (value).into_bound_py_any(py)
             }
             /// Returns the modulus.
             #[pyo3(name = "abs", signature = ())]
-            pub fn abs<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
-                let out = mrlyrs::num::zeta::Complex::abs(self.0.clone());
+            pub fn abs<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::zeta::Complex::abs(self.0);
                 (out).into_bound_py_any(py)
             }
             /// Returns the principal argument.
             #[pyo3(name = "arg", signature = ())]
-            pub fn arg<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
-                let out = mrlyrs::num::zeta::Complex::arg(self.0.clone());
+            pub fn arg<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::zeta::Complex::arg(self.0);
                 (out).into_bound_py_any(py)
             }
             /// Returns the exponential.
             #[pyo3(name = "exp", signature = ())]
-            pub fn exp<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
-                let out = mrlyrs::num::zeta::Complex::exp(self.0.clone());
+            pub fn exp<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::zeta::Complex::exp(self.0);
                 (crate::gen::num::zeta::Complex(out)).into_bound_py_any(py)
             }
             /// Returns the principal logarithm.
             #[pyo3(name = "ln", signature = ())]
-            pub fn ln<'py>(&self, py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
-                let out = mrlyrs::num::zeta::Complex::ln(self.0.clone());
+            pub fn ln<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::zeta::Complex::ln(self.0);
                 (crate::gen::num::zeta::Complex(out)).into_bound_py_any(py)
             }
             /// Builds a complex number from its parts.
             #[staticmethod]
             #[pyo3(name = "new", signature = (re, im))]
-            pub fn new<'py>(py: Python<'py>, re: f64, im: f64) -> PyResult<Bound<'py, PyAny>> {
+            pub fn new_<'py>(py: Python<'py>, re: f64, im: f64) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::zeta::Complex::new(re, im);
                 (crate::gen::num::zeta::Complex(out)).into_bound_py_any(py)
             }
@@ -13644,7 +13576,7 @@ pub mod num {
             /// Builds the line: the even Bernoulli numbers through the fourteenth and their Euler-Maclaurin weights.
             #[staticmethod]
             #[pyo3(name = "new", signature = ())]
-            pub fn new<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+            pub fn new_<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::zeta::Line::new();
                 (crate::gen::num::zeta::Line(out)).into_bound_py_any(py)
             }
@@ -13652,7 +13584,7 @@ pub mod num {
             #[pyo3(name = "novelty_coefficients", signature = (gammas))]
             pub fn novelty_coefficients<'py>(&self, py: Python<'py>, gammas: Vec<f64>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::zeta::Line::novelty_coefficients(&self.0, &gammas);
-                ((out).into_iter().map(|x| crate::gen::num::zeta::Complex(x)).collect::<Vec<_>>()).into_bound_py_any(py)
+                ((out).into_iter().map(crate::gen::num::zeta::Complex).collect::<Vec<_>>()).into_bound_py_any(py)
             }
             /// Returns zeta and its derivative together at any complex s but one, by the same Euler-Maclaurin sum: the modulus of t plus ten terms and seven Bernoulli corrections, each term differentiated in s.
             #[pyo3(name = "pair", signature = (s))]
@@ -13744,7 +13676,7 @@ pub mod num {
         /// Returns the main term of the smoothed novelty: six over pi squared times the bump's transform at two.
         #[pyfunction]
         #[pyo3(name = "novelty_main", signature = ())]
-        pub fn novelty_main<'py>(py: Python<'py>, ) -> PyResult<Bound<'py, PyAny>> {
+        pub fn novelty_main<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
             let out = mrlyrs::num::zeta::novelty_main();
             (out).into_bound_py_any(py)
         }

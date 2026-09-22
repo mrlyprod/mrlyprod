@@ -484,6 +484,50 @@ impl name_Tile {
     }
 }
 
+/// One rendering of an artwork, sized in tile repetitions.
+#[wasm_bindgen]
+pub struct variation_File {
+    inner: mrlyrs::gen::variation::File,
+}
+
+#[wasm_bindgen]
+impl variation_File {
+    /// Reads the File from its plain data.
+    #[wasm_bindgen(js_name = "from")]
+    pub fn from_plain(data: JsValue) -> Result<variation_File, JsValue> {
+        Ok(variation_File { inner: hand::from_js(&data)? })
+    }
+    /// Writes the File as plain data.
+    #[wasm_bindgen(js_name = "toJSON")]
+    pub fn to_plain(&self) -> Result<JsValue, JsValue> {
+        hand::to_js(&self.inner)
+    }
+    /// The count of tile repetitions across.
+    #[wasm_bindgen(getter)]
+    pub fn width(&self) -> Result<usize, JsValue> {
+        let value = self.inner.width;
+        Ok(value)
+    }
+    /// The count of tile repetitions down.
+    #[wasm_bindgen(getter)]
+    pub fn height(&self) -> Result<usize, JsValue> {
+        let value = self.inner.height;
+        Ok(value)
+    }
+    /// The encoded PNG bytes, empty until rendered and left out of the json.
+    #[wasm_bindgen(getter)]
+    pub fn png(&self) -> Result<Vec<u8>, JsValue> {
+        let value = self.inner.png.clone();
+        Ok(value)
+    }
+    /// Builds a file of the given repetition counts with no PNG bytes.
+    #[wasm_bindgen(constructor)]
+    pub fn new(width: usize, height: usize) -> Result<variation_File, JsValue> {
+        let value = mrlyrs::gen::variation::File::new(width, height);
+        Ok(variation_File { inner: value })
+    }
+}
+
 /// One seeded artwork, from tile recipe to rendered files.
 #[wasm_bindgen]
 pub struct variation_Variation {
@@ -548,7 +592,7 @@ impl variation_Variation {
     #[wasm_bindgen(getter)]
     pub fn files(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.files.clone();
-        hand::to_js(&value)
+        hand::list_to_js(&value, |x1| Ok(JsValue::from(variation_File { inner: x1.clone() })))
     }
     /// Returns whether the edition paints the whole tiled canvas.
     pub fn is_cover(&self) -> Result<bool, JsValue> {
@@ -603,20 +647,6 @@ impl recipe_Design {
     /// Returns every Design in canonical order.
     pub fn all() -> Result<JsValue, JsValue> {
         let value = mrlyrs::gen::recipe::Design::all();
-        hand::to_js(&value)
-    }
-}
-
-/// One rendering of an artwork, sized in tile repetitions.
-#[wasm_bindgen]
-pub struct variation_File {}
-
-#[wasm_bindgen]
-impl variation_File {
-    /// Builds a file of the given repetition counts with no PNG bytes.
-    #[wasm_bindgen(js_name = "new")]
-    pub fn new_(width: usize, height: usize) -> Result<JsValue, JsValue> {
-        let value = mrlyrs::gen::variation::File::new(width, height);
         hand::to_js(&value)
     }
 }

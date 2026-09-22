@@ -326,7 +326,7 @@ impl<'a> Unit<'a> {
 
     // CROSSINGS IN
 
-    fn from_js(&self, ty: &Ty, e: &str, cx: Cx, depth: usize) -> Result<String> {
+    fn cross_in(&self, ty: &Ty, e: &str, cx: Cx, depth: usize) -> Result<String> {
         if pure_in(ty) {
             return Ok(format!("hand::from_js::<{}>({e})?", self.rust_ty(ty, cx)?));
         }
@@ -346,28 +346,28 @@ impl<'a> Unit<'a> {
             Ty::Json => format!("hand::json_from_js({e})?"),
             Ty::Vec { item } | Ty::Slice { item, .. } | Ty::Set { item } => format!(
                 "hand::list_from_js({e}, {})?",
-                closure(&x, ok(self.from_js(item, &x, cx, depth + 1)?))
+                closure(&x, ok(self.cross_in(item, &x, cx, depth + 1)?))
             ),
             Ty::Option { item } => format!(
                 "hand::option_from_js({e}, {})?",
-                closure(&x, ok(self.from_js(item, &x, cx, depth + 1)?))
+                closure(&x, ok(self.cross_in(item, &x, cx, depth + 1)?))
             ),
             Ty::Tuple { items } => {
                 let mut parts = vec![];
                 for (i, t) in items.iter().enumerate() {
-                    parts.push(self.from_js(t, &format!("&hand::item({e}, {i})?"), cx, depth + 1)?);
+                    parts.push(self.cross_in(t, &format!("&hand::item({e}, {i})?"), cx, depth + 1)?);
                 }
                 format!("({})", parts.join(", "))
             }
             Ty::Array { item, len } => format!(
                 "hand::array_from_js::<_, {len}>({e}, {})?",
-                closure(&x, ok(self.from_js(item, &x, cx, depth + 1)?))
+                closure(&x, ok(self.cross_in(item, &x, cx, depth + 1)?))
             ),
-            Ty::Ref { item, .. } | Ty::Result { item } => self.from_js(item, e, cx, depth)?,
+            Ty::Ref { item, .. } | Ty::Result { item } => self.cross_in(item, e, cx, depth)?,
             Ty::Map { key, value } => format!(
                 "hand::map_from_js::<{}, _>({e}, {})?",
                 self.rust_ty(key, cx)?,
-                closure(&x, ok(self.from_js(value, &x, cx, depth + 1)?))
+                closure(&x, ok(self.cross_in(value, &x, cx, depth + 1)?))
             ),
             Ty::Hand { name, dim } => match name.as_str() {
                 "Tensor" => format!("hand::tensor_from_js({e})?"),
@@ -396,7 +396,7 @@ impl<'a> Unit<'a> {
 
     // CROSSINGS OUT
 
-    fn to_js(&self, ty: &Ty, e: &str, cx: Cx, depth: usize) -> Result<String> {
+    fn cross_out(&self, ty: &Ty, e: &str, cx: Cx, depth: usize) -> Result<String> {
         if pure_out(ty) {
             return Ok(format!("hand::to_js({e})?"));
         }
@@ -421,34 +421,34 @@ impl<'a> Unit<'a> {
             Ty::Vec { item } | Ty::Slice { item, .. } | Ty::Array { item, .. } | Ty::Set { item } => {
                 format!(
                     "hand::list_to_js({e}, {})?",
-                    closure(&x, ok(self.to_js(item, &x, cx, depth + 1)?))
+                    closure(&x, ok(self.cross_out(item, &x, cx, depth + 1)?))
                 )
             }
             Ty::Option { item } => match &**item {
                 Ty::Ref { item: inner, .. } => format!(
                     "hand::option_to_js({}, {})?",
                     deref(e),
-                    closure(&x, ok(self.to_js(inner, &x, cx, depth + 1)?))
+                    closure(&x, ok(self.cross_out(inner, &x, cx, depth + 1)?))
                 ),
                 _ => format!(
                     "hand::option_to_js({}.as_ref(), {})?",
                     place(e),
-                    closure(&x, ok(self.to_js(item, &x, cx, depth + 1)?))
+                    closure(&x, ok(self.cross_out(item, &x, cx, depth + 1)?))
                 ),
             },
             Ty::Tuple { items } => {
                 let mut parts = vec![];
                 for (i, t) in items.iter().enumerate() {
-                    parts.push(self.to_js(t, &format!("&{}.{i}", place(e)), cx, depth + 1)?);
+                    parts.push(self.cross_out(t, &format!("&{}.{i}", place(e)), cx, depth + 1)?);
                 }
                 format!("hand::tuple_to_js(&[{}])", parts.join(", "))
             }
             Ty::Ref { item, .. } | Ty::Result { item } => {
-                self.to_js(item, &format!("({})", deref(e)), cx, depth)?
+                self.cross_out(item, &format!("({})", deref(e)), cx, depth)?
             }
             Ty::Map { value, .. } => format!(
                 "hand::map_to_js({e}, {})?",
-                closure(&x, ok(self.to_js(value, &x, cx, depth + 1)?))
+                closure(&x, ok(self.cross_out(value, &x, cx, depth + 1)?))
             ),
             Ty::Hand { name, dim } => match name.as_str() {
                 "Tensor" => format!("hand::tensor_to_js({e})?"),
@@ -503,7 +503,7 @@ impl<'a> Unit<'a> {
                         format!("Ok(value.map(|inner| {ident} {{ inner }}))"),
                     )
                 }
-                _ => plan("JsValue", ok(self.to_js(ty, "&value", cx, 1)?)),
+                _ => plan("JsValue", ok(self.cross_out(ty, "&value", cx, 1)?)),
             },
             Ty::Hand { name, .. } if name == "Rng" => {
                 plan("hand::Rng", "Ok(hand::Rng::wrap(value))".into())
@@ -518,10 +518,10 @@ impl<'a> Unit<'a> {
                     )
                 }
                 Ty::Str => plan("String", "Ok(value.to_string())".into()),
-                _ => plan("JsValue", ok(self.to_js(item, "value", cx, 1)?)),
+                _ => plan("JsValue", ok(self.cross_out(item, "value", cx, 1)?)),
             },
-            Ty::Slice { .. } => plan("JsValue", ok(self.to_js(ty, "value", cx, 1)?)),
-            _ => plan("JsValue", ok(self.to_js(ty, "&value", cx, 1)?)),
+            Ty::Slice { .. } => plan("JsValue", ok(self.cross_out(ty, "value", cx, 1)?)),
+            _ => plan("JsValue", ok(self.cross_out(ty, "&value", cx, 1)?)),
         })
     }
 
@@ -544,7 +544,7 @@ impl<'a> Unit<'a> {
             post: vec![],
         };
         let read = |inner: &Ty| -> Result<String> {
-            let converted = self.from_js(inner, &format!("&{n}"), cx, 1)?;
+            let converted = self.cross_in(inner, &format!("&{n}"), cx, 1)?;
             Ok(if extra {
                 let want = format!("a {}d cell wants {name}.", cx.dim.unwrap_or(0));
                 format!("let {n} = if {n}.is_undefined() {{ return Err(hand::refuse(\"{want}\")); }} else {{ {converted} }};")
@@ -591,7 +591,7 @@ impl<'a> Unit<'a> {
             Ty::Ref { mutable: true, item, .. } => match &**item {
                 Ty::Hand { name, .. } if name == "Tensor" || name == "Cell" => {
                     let back = if name == "Tensor" { "tensor_into_js" } else { "cell_into_js" };
-                    let converted = self.from_js(item, &format!("&{n}"), cx, 1)?;
+                    let converted = self.cross_in(item, &format!("&{n}"), cx, 1)?;
                     js(
                         vec![format!("let mut {n}_value = {converted};")],
                         format!("&mut {n}_value"),
@@ -834,7 +834,7 @@ impl<'a> Unit<'a> {
                     plans.push(self.plan_param(n, ty, cx, *extra)?);
                 }
                 writeln!(out, "{indent}        {dim} => {{").ok();
-                self.emit_body(out, f, owner, &plans, &ret, cx, &format!("{indent}            "))?;
+                out.push_str(&self.emit_body(f, owner, &plans, &ret, cx, &format!("{indent}            "))?);
                 writeln!(out, "{indent}        }}").ok();
             }
             writeln!(
@@ -844,7 +844,7 @@ impl<'a> Unit<'a> {
             .ok();
             writeln!(out, "{indent}    }}").ok();
         } else {
-            self.emit_body(out, head, owner, &plans, &ret, cx, &format!("{indent}    "))?;
+            out.push_str(&self.emit_body(head, owner, &plans, &ret, cx, &format!("{indent}    "))?);
         }
         writeln!(out, "{indent}}}").ok();
         Ok(())
@@ -869,17 +869,16 @@ impl<'a> Unit<'a> {
         }
     }
 
-    #[allow(clippy::too_many_arguments)]
     fn emit_body(
         &self,
-        out: &mut String,
         f: &Function,
         owner: Owner,
         plans: &[ParamPlan],
         ret: &RetPlan,
         cx: Cx,
         pad: &str,
-    ) -> Result<()> {
+    ) -> Result<String> {
+        let mut out = String::new();
         for plan in plans {
             for line in &plan.pre {
                 writeln!(out, "{pad}{line}").ok();
@@ -959,7 +958,7 @@ impl<'a> Unit<'a> {
             }
         }
         writeln!(out, "{pad}{}", ret.done).ok();
-        Ok(())
+        Ok(out)
     }
 
     fn emit_const(&self, out: &mut String, c: &Const) -> Result<()> {
@@ -1525,7 +1524,7 @@ impl<'a> Unit<'a> {
     }
 
     fn ts_fields(&self, out: &mut String, t: &Type, pad: &str, all: bool) {
-        for field in t.fields.iter().filter(|f| all || f.public) {
+        for field in t.fields.iter().filter(|f| (all || f.public) && !f.serde_skip) {
             let d = doc_line(&field.docs);
             if !d.is_empty() {
                 writeln!(out, "{pad}/** {d} */").ok();

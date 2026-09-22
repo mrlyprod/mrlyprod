@@ -365,7 +365,7 @@ impl Builder<'_> {
                             TypeCross::Hand {
                                 name: s.name.clone(),
                             }
-                        } else if with_methods.contains(&key) {
+                        } else if with_methods.contains(&key) || s.fields.iter().any(|f| f.serde_skip) {
                             TypeCross::Class
                         } else if serde_both(&s.derives) {
                             TypeCross::Plain
@@ -383,7 +383,9 @@ impl Builder<'_> {
                                 named: e.named,
                                 words: e.variants.iter().filter_map(|v| v.word.clone()).collect(),
                             }
-                        } else if with_methods.contains(&key) {
+                        } else if with_methods.contains(&key)
+                            || e.variants.iter().flat_map(|v| &v.fields).any(|f| f.serde_skip)
+                        {
                             TypeCross::Class
                         } else if serde_both(&e.derives) {
                             TypeCross::Plain
@@ -856,6 +858,7 @@ impl Builder<'_> {
                 public: f.public,
                 docs: f.docs.clone(),
                 serde: f.serde.clone(),
+                serde_skip: f.serde_skip,
                 ty: self.ty(scope, &f.ty),
             })
             .collect()

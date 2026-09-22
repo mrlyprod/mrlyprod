@@ -1,5 +1,5 @@
 use crate::model::*;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
 const NATIVE: &str = "mrlypy._mrlypy";
@@ -30,14 +30,18 @@ const HAND_SELF: &[(&str, &str)] = &[
     ("Rng", "rng"),
 ];
 
-const HEADER: &str = "#![allow(\n    clippy::too_many_arguments,\n    clippy::type_complexity,\n    clippy::redundant_closure,\n    clippy::clone_on_copy,\n    clippy::needless_borrow,\n    clippy::needless_borrows_for_generic_args,\n    clippy::useless_conversion,\n    clippy::let_and_return,\n    clippy::unit_arg,\n    clippy::map_identity,\n    clippy::iter_cloned_collect,\n    clippy::unnecessary_to_owned,\n    clippy::new_ret_no_self,\n    clippy::wrong_self_convention,\n    clippy::should_implement_trait,\n    clippy::needless_lifetimes,\n    clippy::let_unit_value,\n    clippy::unused_unit,\n    unused_imports,\n    unused_mut,\n    unused_variables,\n    dead_code\n)]\n";
+const HEADER: &str = "#![allow(clippy::too_many_arguments)]\n";
 
-const USES: &str = "use crate::hand::*;\nuse pyo3::exceptions::PyValueError;\nuse pyo3::prelude::*;\nuse pyo3::types::PyDict;\nuse pyo3::IntoPyObjectExt;\n";
+const HAND_NAMES: &[&str] = &[
+    "ok", "PyCell", "PyCell2d", "PyCell3d", "PyCell6d", "PyCellNd", "PyCode", "PyColor",
+    "PyPixels", "PyRgba", "PyRng", "PySerde", "PyTensor",
+];
 
 pub fn write(manifest: &Manifest, root: &Path) -> Result<()> {
     let cx = Cx::new(manifest);
     let tree = build(&cx)?;
     let pkg = root.join("pkgs/mrlypy");
+    save(&pkg.join("src/lib.rs"), &lib_file())?;
     save(&pkg.join("src/gen.rs"), &rust_file(&cx, &tree)?)?;
     let python = pkg.join("python/mrlypy");
     python_files(&cx, &tree, &python)?;
@@ -146,6 +150,19 @@ impl<'a> Cx<'a> {
         self.types
             .get(path)
             .is_some_and(|t| t.derives.iter().any(|d| d == derive))
+    }
+
+    fn is_copy(&self, ty: &Ty) -> bool {
+        match ty {
+            Ty::Scalar { .. } | Ty::U128 | Ty::I128 | Ty::Code => true,
+            Ty::Hand { name, .. } => name == "Color" || name == "Code",
+            Ty::Tuple { items } => items.iter().all(|t| self.is_copy(t)),
+            Ty::Array { item, .. } | Ty::Option { item } => self.is_copy(item),
+            Ty::Plain { path } | Ty::Enum { path } | Ty::Class { path, .. } => {
+                self.derives(path, "Copy")
+            }
+            _ => false,
+        }
     }
 
     fn words(&self, path: &str) -> Vec<String> {
@@ -525,8 +542,8 @@ fn decl(cx: &Cx, ty: &Ty) -> Result<String> {
     })
 }
 
-fn own(cx: &Cx, ty: &Ty, var: &str) -> Result<Option<String>> {
-    Ok(match ty {
+fn own(ty: &Ty, var: &str) -> Option<String> {
+    match ty {
         Ty::Code
         | Ty::Json
         | Ty::Hand { .. }
@@ -537,21 +554,21 @@ fn own(cx: &Cx, ty: &Ty, var: &str) -> Result<Option<String>> {
             if is_rgba(item) {
                 Some(format!("{var}.0"))
             } else {
-                own(cx, item, "x")?
+                own(item, "x")
                     .map(|e| format!("{var}.into_iter().map(|x| {e}).collect::<Vec<_>>()"))
             }
         }
-        Ty::Set { item } => Some(format!(
-            "{var}.into_iter().map(|x| {}).collect()",
-            own(cx, item, "x")?.unwrap_or_else(|| "x".into())
-        )),
-        Ty::Option { item } => own(cx, item, "x")?.map(|e| format!("{var}.map(|x| {e})")),
+        Ty::Set { item } => Some(match own(item, "x") {
+            Some(e) => format!("{var}.into_iter().map(|x| {e}).collect()"),
+            None => format!("{var}.into_iter().collect()"),
+        }),
+        Ty::Option { item } => own(item, "x").map(|e| format!("{var}.map(|x| {e})")),
         Ty::Tuple { items } => {
             let mut any = false;
             let mut parts = Vec::new();
             for (i, t) in items.iter().enumerate() {
                 let slot = format!("t.{i}");
-                match own(cx, t, &slot)? {
+                match own(t, &slot) {
                     Some(e) => {
                         any = true;
                         parts.push(e);
@@ -565,16 +582,16 @@ fn own(cx: &Cx, ty: &Ty, var: &str) -> Result<Option<String>> {
             if is_rgba(ty) {
                 Some(format!("{var}.0"))
             } else {
-                own(cx, item, "x")?.map(|e| format!("{var}.map(|x| {e})"))
+                own(item, "x").map(|e| format!("{var}.map(|x| {e})"))
             }
         }
-        Ty::Map { value, .. } => Some(format!(
-            "{var}.into_iter().map(|(k, v)| (k, {})).collect()",
-            own(cx, value, "v")?.unwrap_or_else(|| "v".into())
-        )),
-        Ty::Ref { item, .. } => own(cx, item, var)?,
+        Ty::Map { value, .. } => Some(match own(value, "v") {
+            Some(e) => format!("{var}.into_iter().map(|(k, v)| (k, {e})).collect()"),
+            None => format!("{var}.into_iter().collect()"),
+        }),
+        Ty::Ref { item, .. } => own(item, var),
         _ => None,
-    })
+    }
 }
 
 fn needs_view(ty: &Ty) -> bool {
@@ -606,6 +623,8 @@ fn view(cx: &Cx, ty: &Ty, x: &str) -> Result<String> {
                 let slot = format!("{x}.{i}");
                 parts.push(if needs_view(t) {
                     view(cx, t, &slot)?
+                } else if cx.is_copy(t) {
+                    slot
                 } else {
                     format!("{slot}.clone()")
                 });
@@ -635,7 +654,7 @@ fn value(cx: &Cx, var: &str, ty: &Ty, p: &mut Plan) -> Result<()> {
         }
     }
     p.decl = decl(cx, ty)?;
-    if let Some(e) = own(cx, ty, var)? {
+    if let Some(e) = own(ty, var) {
         p.lets.push(format!("let {var} = {e};"));
     }
     if let Ty::Slice { item, .. } | Ty::Vec { item } = ty {
@@ -783,8 +802,8 @@ fn into(cx: &Cx, ty: &Ty, e: &str) -> Result<String> {
         Ty::Vec { item } | Ty::Array { item, .. } => {
             if needs_into(item) {
                 format!(
-                    "({e}).into_iter().map(|x| {}).collect::<Vec<_>>()",
-                    into(cx, item, "x")?
+                    "({e}).into_iter().map({}).collect::<Vec<_>>()",
+                    mapper(into(cx, item, "x")?)
                 )
             } else {
                 e.into()
@@ -796,12 +815,12 @@ fn into(cx: &Cx, ty: &Ty, e: &str) -> Result<String> {
             &format!("({e}).to_vec()"),
         )?,
         Ty::Set { item } => format!(
-            "({e}).into_iter().map(|x| {}).collect::<Vec<_>>()",
-            into(cx, item, "x")?
+            "({e}).into_iter().map({}).collect::<Vec<_>>()",
+            mapper(into(cx, item, "x")?)
         ),
         Ty::Option { item } => {
             if needs_into(item) {
-                format!("({e}).map(|x| {})", into(cx, item, "x")?)
+                format!("({e}).map({})", mapper(into(cx, item, "x")?))
             } else {
                 e.into()
             }
@@ -833,6 +852,15 @@ fn into(cx: &Cx, ty: &Ty, e: &str) -> Result<String> {
             return Err(format!("{ty:?} cannot cross as a return"))
         }
     })
+}
+
+fn mapper(body: String) -> String {
+    match body.strip_suffix("(x)") {
+        Some(ctor) if !ctor.is_empty() && ctor.chars().all(|c| c.is_alphanumeric() || c == '_' || c == ':') => {
+            ctor.to_string()
+        }
+        _ => format!("|x| {body}"),
+    }
 }
 
 // CALLS
@@ -909,9 +937,9 @@ fn self_name(cx: &Cx, f: &Function) -> Result<String> {
 
 fn raw_types(cx: &Cx, f: &Function, place: Place) -> Result<Vec<Ty>> {
     let mut out = Vec::new();
-    if f.self_kind.is_some() && !matches!(place, Place::Method(_)) {
+    if let (Some(kind), Place::Free | Place::Static(_)) = (f.self_kind, place) {
         let owner = f.owner.as_deref().ok_or("no owner")?;
-        out.push(self_ty(f.self_kind.unwrap(), owner_ty(cx, owner, None)?));
+        out.push(self_ty(kind, owner_ty(cx, owner, None)?));
     }
     out.extend(f.params.iter().map(|p| p.ty.clone()));
     Ok(out)
@@ -919,10 +947,9 @@ fn raw_types(cx: &Cx, f: &Function, place: Place) -> Result<Vec<Ty>> {
 
 fn args(cx: &Cx, f: &Function, place: Place, dim: Option<u8>) -> Result<Vec<Arg>> {
     let mut out = Vec::new();
-    let leading_self = f.self_kind.is_some() && !matches!(place, Place::Method(_));
-    if leading_self {
+    if let (Some(kind), Place::Free | Place::Static(_)) = (f.self_kind, place) {
         let owner = f.owner.as_deref().ok_or("no owner")?;
-        let ty = self_ty(f.self_kind.unwrap(), owner_ty(cx, owner, dim)?);
+        let ty = self_ty(kind, owner_ty(cx, owner, dim)?);
         let name = self_name(cx, f)?;
         let rust = rust_ident(&name);
         out.push(Arg {
@@ -1020,9 +1047,10 @@ fn body(cx: &Cx, out: &mut String, depth: usize, f: &Function, place: Place, arg
         }
     }
     let mut passes: Vec<String> = Vec::new();
-    if let (Place::Method(_), Some(kind)) = (place, f.self_kind) {
+    if let (Place::Method(owner), Some(kind)) = (place, f.self_kind) {
         passes.push(
             match kind {
+                SelfKind::Value if cx.derives(&owner.path, "Copy") => "self.0",
                 SelfKind::Value => "self.0.clone()",
                 SelfKind::Ref => "&self.0",
                 SelfKind::Mut => "&mut self.0",
@@ -1031,32 +1059,31 @@ fn body(cx: &Cx, out: &mut String, depth: usize, f: &Function, place: Place, arg
         );
     }
     passes.extend(args.iter().map(|a| a.plan.pass.clone()));
-    out.push_str(&format!(
-        "{pad}let out = {}({});\n",
-        callee(f, dim),
-        passes.join(", ")
-    ));
+    let ret = match dim {
+        Some(d) => subst(&f.ret, d),
+        None => f.ret.clone(),
+    };
+    let call = format!("{}({})", callee(f, dim), passes.join(", "));
+    if ret == Ty::Unit {
+        out.push_str(&format!("{pad}{call};\n"));
+    } else {
+        out.push_str(&format!("{pad}let out = {call};\n"));
+    }
     for a in args {
         for l in &a.plan.post {
             out.push_str(&format!("{pad}{l}\n"));
         }
     }
-    let ret = match dim {
-        Some(d) => subst(&f.ret, d),
-        None => f.ret.clone(),
-    };
-    out.push_str(&format!(
-        "{pad}({}).into_bound_py_any(py)\n",
-        into(cx, &ret, "out")?
-    ));
+    let done = if ret == Ty::Unit { "()".to_string() } else { format!("({})", into(cx, &ret, "out")?) };
+    out.push_str(&format!("{pad}{done}.into_bound_py_any(py)\n"));
     Ok(())
 }
 
-fn receiver(place: Place, f: &Function) -> &'static str {
+fn receiver(place: Place, f: &Function) -> Option<&'static str> {
     match (place, f.self_kind) {
-        (Place::Method(_), Some(SelfKind::Mut)) => "&mut self, ",
-        (Place::Method(_), Some(_)) => "&self, ",
-        _ => "",
+        (Place::Method(_), Some(SelfKind::Mut)) => Some("&mut self"),
+        (Place::Method(_), Some(_)) => Some("&self"),
+        _ => None,
     }
 }
 
@@ -1074,14 +1101,15 @@ fn emit_simple(cx: &Cx, out: &mut String, depth: usize, f: &Function, place: Pla
         quote(name),
         signature(&args)
     ));
-    let params: Vec<String> = args
-        .iter()
-        .map(|a| format!("{}: {}", a.rust, a.plan.decl))
-        .collect();
+    let mut params: Vec<String> = receiver(place, f).map(str::to_string).into_iter().collect();
+    params.push("py: Python<'py>".to_string());
+    params.extend(args.iter().map(|a| format!("{}: {}", a.rust, a.plan.decl)));
+    let ident = match place {
+        Place::Method(_) | Place::Static(_) if name == "new" => "new_".to_string(),
+        _ => rust_ident(name),
+    };
     out.push_str(&format!(
-        "{pad}pub fn {}<'py>({}py: Python<'py>, {}) -> PyResult<Bound<'py, PyAny>> {{\n",
-        rust_ident(name),
-        receiver(place, f),
+        "{pad}pub fn {ident}<'py>({}) -> PyResult<Bound<'py, PyAny>> {{\n",
         params.join(", ")
     ));
     body(cx, out, depth + 1, f, place, &args, dim)?;
@@ -1288,7 +1316,7 @@ fn emit_class(cx: &Cx, out: &mut String, depth: usize, module: &str, class: &Own
             "{inner}pub fn {}<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {{\n",
             rust_ident(&py_name(&field.name))
         ));
-        let taken = if matches!(field.ty, Ty::Ref { .. }) { "" } else { ".clone()" };
+        let taken = if matches!(field.ty, Ty::Ref { .. }) || cx.is_copy(&field.ty) { "" } else { ".clone()" };
         out.push_str(&format!(
             "{}let value = self.0.{}{taken};\n",
             indent(depth + 2),
@@ -1349,18 +1377,74 @@ fn emit_holder(cx: &Cx, out: &mut String, depth: usize, module: &str, holder: &O
     Ok(())
 }
 
+fn free_words(text: &str) -> BTreeSet<&str> {
+    let mut words = BTreeSet::new();
+    for line in text.lines().filter(|l| !l.trim_start().starts_with("///")) {
+        let mut start = None;
+        let mut quoted = false;
+        let mut escaped = false;
+        for (i, c) in line.char_indices().chain([(line.len(), ' ')]) {
+            if quoted {
+                quoted = escaped || c != '"';
+                escaped = !escaped && c == '\\';
+                continue;
+            }
+            if c.is_alphanumeric() || c == '_' {
+                start.get_or_insert(i);
+                continue;
+            }
+            if let Some(s) = start.take() {
+                if !line[..s].ends_with("::") && !line[..s].ends_with('.') {
+                    words.insert(&line[s..i]);
+                }
+            }
+            quoted = c == '"';
+        }
+    }
+    words
+}
+
+fn uses(body: &str) -> Vec<String> {
+    let words = free_words(body);
+    let mut lines = Vec::new();
+    let hand: Vec<&str> = HAND_NAMES.iter().copied().filter(|n| words.contains(n)).collect();
+    if !hand.is_empty() {
+        lines.push(format!("use crate::hand::{{{}}};", hand.join(", ")));
+    }
+    if words.contains("PyValueError") {
+        lines.push("use pyo3::exceptions::PyValueError;".to_string());
+    }
+    lines.push("use pyo3::prelude::*;".to_string());
+    lines.push("use pyo3::types::PyDict;".to_string());
+    if body.contains(".into_bound_py_any(") {
+        lines.push("use pyo3::IntoPyObjectExt;".to_string());
+    }
+    lines
+}
+
 fn emit_module(cx: &Cx, out: &mut String, depth: usize, node: &Node) -> Result<()> {
     let pad = indent(depth);
     let inner = indent(depth + 1);
+    let mut children = String::new();
+    for child in node.children.values() {
+        emit_module(cx, &mut children, depth + 1, child)?;
+    }
+    let mut body = String::new();
+    emit_items(cx, &mut body, depth, node)?;
     doc_lines(out, depth, &summary(&node.docs));
     out.push_str(&format!("{pad}pub mod {} {{\n", rust_ident(node.name())));
-    for line in USES.lines() {
+    for line in uses(&body) {
         out.push_str(&format!("{inner}{line}\n"));
     }
     out.push('\n');
-    for child in node.children.values() {
-        emit_module(cx, out, depth + 1, child)?;
-    }
+    out.push_str(&children);
+    out.push_str(&body);
+    out.push_str(&format!("{pad}}}\n\n"));
+    Ok(())
+}
+
+fn emit_items(cx: &Cx, out: &mut String, depth: usize, node: &Node) -> Result<()> {
+    let inner = indent(depth + 1);
     for class in &node.classes {
         emit_class(cx, out, depth + 1, &node.path, class)?;
     }
@@ -1424,8 +1508,14 @@ fn emit_module(cx: &Cx, out: &mut String, depth: usize, node: &Node) -> Result<(
         quote(&format!("{NATIVE}.{}", dotted(&node.path)))
     ));
     out.push_str(&format!("{deep}Ok(())\n{inner}}}\n"));
-    out.push_str(&format!("{pad}}}\n\n"));
     Ok(())
+}
+
+fn lib_file() -> String {
+    let module = NATIVE.rsplit_once('.').map_or(NATIVE, |(_, m)| m);
+    format!(
+        "mod gen;\npub mod hand;\n\nuse pyo3::prelude::*;\n\n#[pymodule]\nfn {module}(py: Python<'_>, module: &Bound<'_, PyModule>) -> PyResult<()> {{\n    module.add(\"__version__\", env!(\"CARGO_PKG_VERSION\"))?;\n    gen::init(py, module)\n}}\n"
+    )
 }
 
 fn rust_file(cx: &Cx, root: &Node) -> Result<String> {
@@ -1478,13 +1568,12 @@ fn py_type(cx: &Cx, ty: &Ty, here: &str) -> String {
                 .collect::<Vec<_>>()
                 .join(", ")
         ),
-        Ty::Array { item, len } => {
+        Ty::Array { item, .. } => {
             if is_rgba(ty) {
                 "tuple[int, int, int, int]".into()
             } else if is_u8(item) {
                 "bytes".into()
             } else {
-                let _ = len;
                 format!("list[{}]", py_type(cx, item, here))
             }
         }
@@ -1540,12 +1629,11 @@ fn docstring(out: &mut String, depth: usize, docs: &[String]) {
     out.push_str(&format!("{}\"\"\"{text}\"\"\"\n", indent(depth)));
 }
 
-fn stub_params(cx: &Cx, f: &Function, args: &[Arg], here: &str, dim: Option<u8>) -> Vec<String> {
+fn stub_params(cx: &Cx, args: &[Arg], here: &str) -> Vec<String> {
     let optional_from = args
         .iter()
         .rposition(|a| !a.plan.optional)
         .map_or(0, |i| i + 1);
-    let _ = (f, dim);
     args.iter()
         .enumerate()
         .map(|(i, a)| {
@@ -1563,7 +1651,7 @@ fn stub_fn(cx: &Cx, out: &mut String, depth: usize, export: &Export, place: Plac
     let pad = indent(depth);
     let name = py_name(&export.name);
     let (f, dim) = export.variants[0];
-    let mut params = stub_params(cx, f, &args(cx, f, place, dim)?, here, dim);
+    let mut params = stub_params(cx, &args(cx, f, place, dim)?, here);
     let mut ret = py_type(cx, &subst_opt(&f.ret, dim), here);
     if export.variants.len() > 1 {
         let mut seen: Vec<String> = params.iter().map(|p| p.split(':').next().unwrap().to_string()).collect();
@@ -1621,7 +1709,7 @@ fn stub_class(cx: &Cx, out: &mut String, class: &Owned, here: &str) -> Result<()
     let mut wrote = !ty.docs.is_empty();
     for f in class.fns.iter().filter(|f| is_constructor(f)) {
         let args = args(cx, f, Place::Static(ty), None)?;
-        let params = stub_params(cx, f, &args, here, None);
+        let params = stub_params(cx, &args, here);
         let mut all = vec!["self".to_string()];
         all.extend(params);
         out.push_str(&format!("    def __init__({}) -> None: ...\n", all.join(", ")));
@@ -1705,7 +1793,7 @@ fn stub_rng(cx: &Cx, out: &mut String, here: &str) -> Result<()> {
         if f.name == "new" {
             let args = args(cx, f, Place::Free, None)?;
             let mut all = vec!["self".to_string()];
-            all.extend(stub_params(cx, f, &args, here, None));
+            all.extend(stub_params(cx, &args, here));
             out.push_str(&format!("    def __init__({}) -> None:\n", all.join(", ")));
             docstring(out, 2, &summary(&f.docs));
         } else if f.self_kind.is_some() {

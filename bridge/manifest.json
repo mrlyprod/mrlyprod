@@ -1246,6 +1246,7 @@
               "public": false,
               "docs": [],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "string"
               }
@@ -1265,6 +1266,7 @@
               "public": false,
               "docs": [],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "string"
               }
@@ -1284,6 +1286,7 @@
               "public": false,
               "docs": [],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "string"
               }
@@ -1303,6 +1306,7 @@
               "public": false,
               "docs": [],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "unknown",
                 "text": "serde_json :: Error"
@@ -1323,6 +1327,7 @@
               "public": false,
               "docs": [],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "string"
               }
@@ -1384,6 +1389,7 @@
             "The type of every cell."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "hand",
             "name": "Tensor",
@@ -1397,6 +1403,7 @@
             "The painted rgba of every cell, once painted."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "option",
             "item": {
@@ -1419,6 +1426,7 @@
             "The tag layer over the cells, once built."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "option",
             "item": {
@@ -1462,6 +1470,7 @@
             "The red channel."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u8"
@@ -1474,6 +1483,7 @@
             "The green channel."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u8"
@@ -1486,6 +1496,7 @@
             "The blue channel."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u8"
@@ -1498,6 +1509,7 @@
             "The alpha channel, 255 for opaque."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u8"
@@ -1543,6 +1555,7 @@
                 "The color at zero."
               ],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "hand",
                 "name": "Color",
@@ -1556,6 +1569,7 @@
                 "The colors binned across the range."
               ],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "vec",
                 "item": {
@@ -1722,6 +1736,7 @@
             "The width in pixels."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -1734,6 +1749,7 @@
             "The height in pixels."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -1746,6 +1762,7 @@
             "The palette index of every pixel, row by row."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -1764,6 +1781,7 @@
             "The colors the rows index."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -1924,6 +1942,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "array",
             "item": {
@@ -1965,6 +1984,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "plain",
             "path": "core::tensor::Buf"
@@ -1977,6 +1997,7 @@
             "The extent of each axis."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -2019,6 +2040,7 @@
             "The ground every figure is painted on."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "hand",
             "name": "Color",
@@ -2032,6 +2054,7 @@
             "The page background, one step off the ground."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "hand",
             "name": "Color",
@@ -2045,6 +2068,7 @@
             "The raised panel."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "hand",
             "name": "Color",
@@ -2058,6 +2082,7 @@
             "The sunken well."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "hand",
             "name": "Color",
@@ -2071,6 +2096,7 @@
             "The hairline between things."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "hand",
             "name": "Color",
@@ -2084,6 +2110,7 @@
             "The foreground, the strongest tone."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "hand",
             "name": "Color",
@@ -2097,6 +2124,7 @@
             "The dimmed foreground, for anything secondary."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "hand",
             "name": "Color",
@@ -2110,6 +2138,7 @@
             "The interactive accent."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "hand",
             "name": "Color",
@@ -2123,6 +2152,7 @@
             "The tone written on the accent."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "hand",
             "name": "Color",
@@ -2136,6 +2166,7 @@
             "The red ink."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "hand",
             "name": "Color",
@@ -2149,6 +2180,7 @@
             "The orange ink."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "hand",
             "name": "Color",
@@ -2162,6 +2194,7 @@
             "The yellow ink."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "hand",
             "name": "Color",
@@ -2175,6 +2208,7 @@
             "The green ink."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "hand",
             "name": "Color",
@@ -2188,6 +2222,7 @@
             "The mint ink."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "hand",
             "name": "Color",
@@ -2201,6 +2236,7 @@
             "The teal ink."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "hand",
             "name": "Color",
@@ -2214,6 +2250,7 @@
             "The cyan ink."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "hand",
             "name": "Color",
@@ -2227,6 +2264,7 @@
             "The blue ink."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "hand",
             "name": "Color",
@@ -2240,6 +2278,7 @@
             "The indigo ink."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "hand",
             "name": "Color",
@@ -2253,6 +2292,7 @@
             "The purple ink."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "hand",
             "name": "Color",
@@ -2266,6 +2306,7 @@
             "The pink ink."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "hand",
             "name": "Color",
@@ -2279,6 +2320,7 @@
             "The brown ink."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "hand",
             "name": "Color",
@@ -2292,6 +2334,7 @@
             "The gray ink."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "hand",
             "name": "Color",
@@ -2330,6 +2373,7 @@
             "The editions allowed, or None for all seven."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "option",
             "item": {
@@ -2348,6 +2392,7 @@
             "The primary inks allowed, or None for black and white."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "option",
             "item": {
@@ -2366,6 +2411,7 @@
             "The forced target, or None for a coin flip."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "option",
             "item": {
@@ -2689,6 +2735,7 @@
             "The coloring edition."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "enum",
             "path": "core::paint::Edition"
@@ -2701,6 +2748,7 @@
             "The secondary color scheme."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "enum",
             "path": "core::paint::Scheme"
@@ -2713,6 +2761,7 @@
             "The side the primary ink lands on."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "enum",
             "path": "core::paint::Target"
@@ -2725,6 +2774,7 @@
             "The primary ink."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "enum",
             "path": "core::paint::Ink"
@@ -2737,6 +2787,7 @@
             "The secondary inks."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -2752,6 +2803,7 @@
             "The shade indices of a multitone ramp."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -2902,6 +2954,7 @@
               "public": false,
               "docs": [],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "vec",
                 "item": {
@@ -2925,6 +2978,7 @@
               "public": false,
               "docs": [],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "vec",
                 "item": {
@@ -2948,6 +3002,7 @@
               "public": false,
               "docs": [],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "vec",
                 "item": {
@@ -2971,6 +3026,7 @@
               "public": false,
               "docs": [],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "vec",
                 "item": {
@@ -3013,6 +3069,7 @@
             "The board height in cells."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -3025,6 +3082,7 @@
             "The board width in cells."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -3037,6 +3095,7 @@
             "The playback rate in frames per second."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -3049,6 +3108,7 @@
             "The frames, each a sorted list of lit row-major cell indices."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -3093,6 +3153,7 @@
             "The character the glyph draws."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "char"
@@ -3105,6 +3166,7 @@
             "The bitmap rows of '0' and '1' characters."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -3337,6 +3399,7 @@
             "The construction family."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "enum",
             "path": "gen::Group"
@@ -3349,6 +3412,7 @@
             "The base factor of the construction."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -3361,6 +3425,7 @@
             "The origin of each layer."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -3376,6 +3441,7 @@
             "The grid size of each source."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -3391,6 +3457,7 @@
             "The fractal level of each source."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -3406,6 +3473,7 @@
             "The quarter-turn rotation of each source."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -3421,6 +3489,7 @@
             "Whether the finished tile inverts."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "bool"
@@ -3433,6 +3502,7 @@
             "Whether the finished tile flips."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "bool"
@@ -3445,6 +3515,7 @@
             "The tile's width in cells."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -3457,6 +3528,7 @@
             "The tile's height in cells."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -3535,6 +3607,7 @@
             "The projection that flattens the tile."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "enum",
             "path": "math::six::Projection"
@@ -3547,6 +3620,7 @@
             "The cube tile underneath."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "class",
             "path": "gen::Tile",
@@ -3584,6 +3658,7 @@
             "The tile groups allowed."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -3599,6 +3674,7 @@
             "The catalog the sources are drawn from."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "plain",
             "path": "gen::recipe::Catalog"
@@ -3611,6 +3687,7 @@
             "The smallest allowed side."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -3623,6 +3700,7 @@
             "The largest allowed side."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -3635,6 +3713,7 @@
             "The parity the sizes must keep."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "enum",
             "path": "gen::Parity"
@@ -3647,6 +3726,7 @@
             "The forced inversion flag, or None to flip a coin."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "option",
             "item": {
@@ -3698,6 +3778,7 @@
               "public": false,
               "docs": [],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "scalar",
                 "name": "usize"
@@ -3718,6 +3799,7 @@
               "public": false,
               "docs": [],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "vec",
                 "item": {
@@ -3776,6 +3858,7 @@
             "The kind word."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "unknown",
             "text": "unknown type Kind"
@@ -3790,6 +3873,7 @@
           "serde": [
             "default , skip_serializing_if = \"Option::is_none\""
           ],
+          "serde_skip": false,
           "ty": {
             "t": "option",
             "item": {
@@ -3806,6 +3890,7 @@
           "serde": [
             "default , skip_serializing_if = \"Option::is_none\""
           ],
+          "serde_skip": false,
           "ty": {
             "t": "option",
             "item": {
@@ -3822,6 +3907,7 @@
           "serde": [
             "default , skip_serializing_if = \"Vec::is_empty\""
           ],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -3838,6 +3924,7 @@
           "serde": [
             "default , skip_serializing_if = \"Vec::is_empty\""
           ],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -3854,6 +3941,7 @@
           "serde": [
             "default , skip_serializing_if = \"Option::is_none\""
           ],
+          "serde_skip": false,
           "ty": {
             "t": "option",
             "item": {
@@ -3869,6 +3957,7 @@
             "The side each slot renders at, one per letter for a magic tile."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "plain",
             "path": "gen::name::Slots"
@@ -3883,6 +3972,7 @@
           "serde": [
             "default , skip_serializing_if = \"Option::is_none\""
           ],
+          "serde_skip": false,
           "ty": {
             "t": "option",
             "item": {
@@ -3900,6 +3990,7 @@
           "serde": [
             "default , skip_serializing_if = \"Slots::is_still\""
           ],
+          "serde_skip": false,
           "ty": {
             "t": "plain",
             "path": "gen::name::Slots"
@@ -3914,6 +4005,7 @@
           "serde": [
             "default , skip_serializing_if = \"is_false\""
           ],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "bool"
@@ -3928,6 +4020,7 @@
           "serde": [
             "default , skip_serializing_if = \"is_false\""
           ],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "bool"
@@ -3991,6 +4084,7 @@
               "public": false,
               "docs": [],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "vec",
                 "item": {
@@ -4013,6 +4107,7 @@
               "public": false,
               "docs": [],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "vec",
                 "item": {
@@ -4257,6 +4352,7 @@
               "public": false,
               "docs": [],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "enum",
                 "path": "gen::recipe::Design"
@@ -4281,6 +4377,7 @@
               "serde": [
                 "with = \"decimal\""
               ],
+              "serde_skip": false,
               "ty": {
                 "t": "u128"
               }
@@ -4317,6 +4414,7 @@
             "The constraints the tile is drawn under."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "plain",
             "path": "gen::draw::ConfigNd"
@@ -4329,6 +4427,7 @@
             "The constraints the paint is drawn under."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "plain",
             "path": "core::paint::Config"
@@ -4341,6 +4440,7 @@
             "The width and height repetition pairs to render."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -4371,7 +4471,7 @@
       ],
       "kind": "struct",
       "cross": {
-        "kind": "plain"
+        "kind": "class"
       },
       "derives": [
         "Clone",
@@ -4391,6 +4491,7 @@
             "The count of tile repetitions across."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -4403,6 +4504,7 @@
             "The count of tile repetitions down."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -4417,6 +4519,7 @@
           "serde": [
             "skip"
           ],
+          "serde_skip": true,
           "ty": {
             "t": "vec",
             "item": {
@@ -4456,6 +4559,7 @@
             "The random hex identifier."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "string"
           }
@@ -4467,6 +4571,7 @@
             "The seed the variation is drawn under."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u64"
@@ -4479,6 +4584,7 @@
             "The paint edition."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "enum",
             "path": "core::paint::Edition"
@@ -4491,6 +4597,7 @@
             "The primary inks, when the config fixes them."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "option",
             "item": {
@@ -4509,6 +4616,7 @@
             "The tile recipe."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "class",
             "path": "gen::Tile",
@@ -4522,6 +4630,7 @@
             "The mask tile, present only under the Neighbors edition."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "option",
             "item": {
@@ -4538,6 +4647,7 @@
             "The paint, set by generate."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "option",
             "item": {
@@ -4556,6 +4666,7 @@
           "serde": [
             "skip"
           ],
+          "serde_skip": true,
           "ty": {
             "t": "option",
             "item": {
@@ -4572,11 +4683,13 @@
             "The renderings, filled by render."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
-              "t": "plain",
-              "path": "gen::variation::File"
+              "t": "class",
+              "path": "gen::variation::File",
+              "dim": null
             }
           }
         }
@@ -4661,6 +4774,7 @@
             "The neighborhood mask."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "hand",
             "name": "CellNd",
@@ -4674,6 +4788,7 @@
             "The neighbor counts that create a cell."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "class",
             "path": "life::Counts",
@@ -4687,6 +4802,7 @@
             "The neighbor counts that keep a cell."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "class",
             "path": "life::Counts",
@@ -4700,6 +4816,7 @@
             "The edge policy."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "enum",
             "path": "life::Boundary"
@@ -4712,6 +4829,7 @@
             "The generation cap."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -4724,6 +4842,7 @@
             "The tiling factor applied to the seed."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -4736,6 +4855,7 @@
             "The dead border added around the seed."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -4784,6 +4904,7 @@
               "public": false,
               "docs": [],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "vec",
                 "item": {
@@ -4809,6 +4930,7 @@
                 "The sequence behind the counts."
               ],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "class",
                 "path": "life::Source",
@@ -4822,6 +4944,7 @@
                 "Whether zero stays in the counts."
               ],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "scalar",
                 "name": "bool"
@@ -4834,6 +4957,7 @@
                 "Whether one stays in the counts."
               ],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "scalar",
                 "name": "bool"
@@ -4941,6 +5065,7 @@
             "Every generation in order."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -4957,6 +5082,7 @@
             "The run's ending."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "enum",
             "path": "life::Fate"
@@ -4969,6 +5095,7 @@
             "The number of recorded generations."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -4981,6 +5108,7 @@
             "The cycle length when the fate is a loop, else zero."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -5030,6 +5158,7 @@
             "The kind word."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "unknown",
             "text": "unknown type Kind"
@@ -5044,6 +5173,7 @@
           "serde": [
             "with = \"counts\""
           ],
+          "serde_skip": false,
           "ty": {
             "t": "class",
             "path": "life::Counts",
@@ -5059,6 +5189,7 @@
           "serde": [
             "with = \"counts\""
           ],
+          "serde_skip": false,
           "ty": {
             "t": "class",
             "path": "life::Counts",
@@ -5074,6 +5205,7 @@
           "serde": [
             "default , skip_serializing_if = \"is_false\""
           ],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "bool"
@@ -5149,6 +5281,7 @@
               "public": false,
               "docs": [],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "scalar",
                 "name": "u64"
@@ -5349,6 +5482,7 @@
               "public": false,
               "docs": [],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "u128"
               }
@@ -5368,6 +5502,7 @@
               "public": false,
               "docs": [],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "u128"
               }
@@ -5420,6 +5555,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "u128"
           }
@@ -5455,6 +5591,7 @@
             "The design's code."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "code"
           }
@@ -5466,6 +5603,7 @@
             "The design's dimension."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -5478,6 +5616,7 @@
             "Whether this code is the smallest in its orbit."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "bool"
@@ -5490,6 +5629,7 @@
             "The smallest code in the orbit."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "code"
           }
@@ -5501,6 +5641,7 @@
             "The number of codes in the orbit."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -5539,6 +5680,7 @@
             "The layer's coded design."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "class",
             "path": "math::name::Bang",
@@ -5552,6 +5694,7 @@
             "The layer's side number."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -5586,6 +5729,7 @@
             "The universe's dimension."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -5598,6 +5742,7 @@
             "The number of codes in the universe."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -5608,6 +5753,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -5620,6 +5766,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -5662,6 +5809,7 @@
             "The side, the product of the prefix's letter sides."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "u128"
           }
@@ -5673,6 +5821,7 @@
             "The filled cells, the product of the prefix's letter fills."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "u128"
           }
@@ -5684,6 +5833,7 @@
             "The 4-connected components."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "u128"
           }
@@ -5695,6 +5845,7 @@
             "The maximal horizontal runs of filled cells."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "u128"
           }
@@ -5706,6 +5857,7 @@
             "The maximal vertical runs of filled cells."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "u128"
           }
@@ -5744,6 +5896,7 @@
             "The count of filled cells."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "u128"
           }
@@ -5755,6 +5908,7 @@
             "The count of maximal horizontal runs of filled cells."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "u128"
           }
@@ -5766,6 +5920,7 @@
             "The count of maximal vertical runs of filled cells."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "u128"
           }
@@ -5777,6 +5932,7 @@
             "The count of rows whose first and last cells are both filled."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "u128"
           }
@@ -5788,6 +5944,7 @@
             "The count of columns whose first and last cells are both filled."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "u128"
           }
@@ -5799,6 +5956,7 @@
             "The count of 4-connected components."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "u128"
           }
@@ -5897,6 +6055,7 @@
             "The wrapped cell."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "hand",
             "name": "Cell",
@@ -5939,6 +6098,7 @@
             "The filled cells of the tile."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "u128"
           }
@@ -5950,6 +6110,7 @@
             "The exposed faces of the tile."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "u128"
           }
@@ -5961,6 +6122,7 @@
             "Per axis, the adjacent filled pairs and the spanning positions."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -6008,6 +6170,7 @@
             "The index of the node the branch leaves."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -6020,6 +6183,7 @@
             "The index of the node the branch reaches."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -6032,6 +6196,7 @@
             "The thickness of the branch."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -6069,6 +6234,7 @@
             "The node count."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -6081,6 +6247,7 @@
             "The branch count."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -6093,6 +6260,7 @@
             "The count of degree-one nodes."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -6105,6 +6273,7 @@
             "The count of nodes of degree three or more."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -6117,6 +6286,7 @@
             "The connected component count."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -6129,6 +6299,7 @@
             "The summed branch length."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -6141,6 +6312,7 @@
             "The box-counting dimension estimate."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -6185,6 +6357,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -6195,6 +6368,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -6208,6 +6382,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -6230,6 +6405,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -6240,6 +6416,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -6250,6 +6427,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -6260,6 +6438,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -6270,6 +6449,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -6280,6 +6460,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "hand",
             "name": "Rng",
@@ -6318,6 +6499,7 @@
             "The dimension every position must match."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -6330,6 +6512,7 @@
             "The nodes in insertion order."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -6345,6 +6528,7 @@
             "The branches in insertion order."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -6385,6 +6569,7 @@
             "The coordinates, one per dimension."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -6400,6 +6585,7 @@
             "The node's place in the network's list."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -6557,6 +6743,7 @@
             "The samples in row-major order."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -6572,6 +6759,7 @@
             "The side length in samples."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -6609,6 +6797,7 @@
             "The point of the plane the window is centred on."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "array",
             "item": {
@@ -6625,6 +6814,7 @@
             "The unit axis the window's columns run along."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "array",
             "item": {
@@ -6641,6 +6831,7 @@
             "The unit axis the window's rows run along."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "array",
             "item": {
@@ -6657,6 +6848,7 @@
             "The unit normal."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "array",
             "item": {
@@ -6673,6 +6865,7 @@
             "The side of the square window."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -6756,6 +6949,7 @@
             "The design to sample."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "plain",
             "path": "math::moire::Spec"
@@ -6768,6 +6962,7 @@
             "The side number of the residue grid."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -6780,6 +6975,7 @@
             "The fractal depth."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -6792,6 +6988,7 @@
             "The sampling lattice."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "enum",
             "path": "math::moire::Lattice"
@@ -6804,6 +7001,7 @@
             "The output side in pixels."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -6816,6 +7014,7 @@
             "The 0..1 positions fixing the axes beyond the first two."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -6855,6 +7054,7 @@
             "The name the recipe answers to."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "ref",
             "mutable": false,
@@ -6871,6 +7071,7 @@
             "The design sampled at every scale."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "plain",
             "path": "math::moire::Spec"
@@ -6883,6 +7084,7 @@
             "The side numbers stacked."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -6898,6 +7100,7 @@
             "The way the layers merge."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "enum",
             "path": "math::moire::Combine"
@@ -6910,6 +7113,7 @@
             "The fractal depth of each layer."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -6922,6 +7126,7 @@
             "The lattice the layers are sampled on."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "enum",
             "path": "math::moire::Lattice"
@@ -6961,6 +7166,7 @@
             "The design code."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "u128"
           }
@@ -6972,6 +7178,7 @@
             "The residue base."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -6984,6 +7191,7 @@
             "The design dimension."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -7021,6 +7229,7 @@
             "The samples, x-major, then y, then z."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -7036,6 +7245,7 @@
             "The side in samples."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -7073,6 +7283,7 @@
             "The scale on trial."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -7085,6 +7296,7 @@
             "The earlier odd scales, three up to the scale less two."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -7100,6 +7312,7 @@
             "The exact correlation with each earlier scale."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -7115,6 +7328,7 @@
             "The largest correlation in the row, zero for an empty row."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -7127,6 +7341,7 @@
             "The earlier scale carrying the largest correlation, zero when the row is clear."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -7139,6 +7354,7 @@
             "Whether the row is exactly clear, which is the scale being prime."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "bool"
@@ -7187,6 +7403,7 @@
             "The kind word."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "unknown",
             "text": "unknown type Kind"
@@ -7199,6 +7416,7 @@
             "The number of axes."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -7213,6 +7431,7 @@
           "serde": [
             "default , skip_serializing_if = \"Lattice::is_square\""
           ],
+          "serde_skip": false,
           "ty": {
             "t": "enum",
             "path": "math::name::Lattice"
@@ -7227,6 +7446,7 @@
           "serde": [
             "default = \"two\" , skip_serializing_if = \"is_two\""
           ],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -7239,6 +7459,7 @@
             "The design as a number."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "u128"
           }
@@ -7252,6 +7473,7 @@
           "serde": [
             "default , skip_serializing_if = \"Option::is_none\""
           ],
+          "serde_skip": false,
           "ty": {
             "t": "option",
             "item": {
@@ -7360,6 +7582,7 @@
             "The kind word."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "unknown",
             "text": "unknown type Kind"
@@ -7372,6 +7595,7 @@
             "The number of axes."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -7386,6 +7610,7 @@
           "serde": [
             "default = \"two\" , skip_serializing_if = \"is_two\""
           ],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -7398,6 +7623,7 @@
             "The design as a number."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "u128"
           }
@@ -7409,6 +7635,7 @@
             "The reading taken."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "string"
           }
@@ -7420,6 +7647,7 @@
             "The index the reading runs along."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "string"
           }
@@ -7467,6 +7695,7 @@
             "The kind word."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "unknown",
             "text": "unknown type Kind"
@@ -7479,6 +7708,7 @@
             "The number of axes every letter shares."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -7491,6 +7721,7 @@
             "The codes of the letters in order."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -7505,6 +7736,7 @@
             "The side each letter renders at."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -7522,6 +7754,7 @@
           "serde": [
             "default , skip_serializing_if = \"Option::is_none\""
           ],
+          "serde_skip": false,
           "ty": {
             "t": "option",
             "item": {
@@ -7566,6 +7799,7 @@
             "The design dimension of the universe."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -7578,6 +7812,7 @@
             "The numeral base of the universe."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -7588,6 +7823,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -7598,6 +7834,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -7639,6 +7876,7 @@
             "The curves counted, in the order the pencils came in."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -7651,6 +7889,7 @@
             "How often each curve crosses itself, curve by curve."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -7666,6 +7905,7 @@
             "How often each pair of curves crosses, the lower curve first, in lexicographic order."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -7681,6 +7921,7 @@
             "The most crossings one node carries: one at a plain double point, and `n(n - 1)/2` where `n` branches meet."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -7693,6 +7934,7 @@
             "The nodes more than one crossing clusters at."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -7705,6 +7947,7 @@
             "The distinct points the crossings sit at, one for every cluster."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -7717,6 +7960,7 @@
             "The branches through every node added up, which is the edge count of the picture as a plane graph, `n` at a node where `n` branches meet and `2` times `points` when no node is crowded."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -7729,6 +7973,7 @@
             "The segment pairs that meet without crossing: collinear or end to end."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -7768,6 +8013,7 @@
             "The numerator, carrying the sign."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "i64"
@@ -7780,6 +8026,7 @@
             "The denominator, always positive."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "i64"
@@ -7818,6 +8065,7 @@
             "The integer outward normal."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -7833,6 +8081,7 @@
             "The rational offset the linear form stays under."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "class",
             "path": "math::shape::Frac",
@@ -7873,6 +8122,7 @@
             "The filled cells whose own centre lies within the radius."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u64"
@@ -7885,6 +8135,7 @@
             "The filled cells lying wholly within the radius."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u64"
@@ -7897,6 +8148,7 @@
             "The filled cells the sphere of the radius crosses."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u64"
@@ -8000,6 +8252,7 @@
                 "The rational center, one coordinate per axis."
               ],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "vec",
                 "item": {
@@ -8016,6 +8269,7 @@
                 "The rational radius."
               ],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "class",
                 "path": "math::shape::Frac",
@@ -8039,6 +8293,7 @@
                 "The bounding walls."
               ],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "vec",
                 "item": {
@@ -8062,6 +8317,7 @@
               "public": false,
               "docs": [],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "unknown",
                 "text": "unknown type Box < Shape >"
@@ -8102,6 +8358,7 @@
             "The cell count of each region."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "array",
             "item": {
@@ -8118,6 +8375,7 @@
             "The filled-cell count of each region."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "array",
             "item": {
@@ -8158,6 +8416,7 @@
             "The radius in cells."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u64"
@@ -8170,6 +8429,7 @@
             "The side of a box measured in the boxes one level below it."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u64"
@@ -8182,6 +8442,7 @@
             "The boxes of level `j`, the crossed cells at `0` and the single root last, each level in the arc's own order."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -8200,6 +8461,7 @@
             "The boxes whose parent is missing from the level above, which the crossing identity forbids."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -8239,6 +8501,7 @@
             "The box's first coordinate in its own level's grid."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u64"
@@ -8251,6 +8514,7 @@
             "The box's second coordinate in its own level's grid."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u64"
@@ -8263,6 +8527,7 @@
             "The seat the box takes in its parent, row-major over the side, and the side squared at the root."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -8275,6 +8540,7 @@
             "The parent's place in the level above, and `usize::MAX` at the root or when the level above holds no such box."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -8287,6 +8553,7 @@
             "Whether every seat from the root down to this box is one the design keeps."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "bool"
@@ -8326,6 +8593,7 @@
             "The triangle grid of type codes."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "hand",
             "name": "CellNd",
@@ -8339,6 +8607,7 @@
             "The projection that made the grid."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "enum",
             "path": "math::six::Projection"
@@ -8351,6 +8620,7 @@
             "The way the hexagon points."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "enum",
             "path": "math::six::Orientation"
@@ -8363,6 +8633,7 @@
             "The parity of the first triangle."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u8"
@@ -8401,6 +8672,7 @@
             "The count of tallied triangles."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -8413,6 +8685,7 @@
             "The count of filled triangles."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -8425,6 +8698,7 @@
             "The count of void triangles."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -8437,6 +8711,7 @@
             "The count of backdrop triangles."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -8449,6 +8724,7 @@
             "The count of distinct corners."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -8461,6 +8737,7 @@
             "The count of distinct edges."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -8473,6 +8750,7 @@
             "The count of edges touching one triangle."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -8485,6 +8763,7 @@
             "The count of edges shared by two triangles."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -8497,6 +8776,7 @@
             "The Euler characteristic of the mesh."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "i64"
@@ -8741,6 +9021,7 @@
             "The layer count `L`."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -8753,6 +9034,7 @@
             "The mean excess of the star over the background across the first `L` odd layers."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -8765,6 +9047,7 @@
             "That excess times `L`."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -8777,6 +9060,7 @@
             "The scaled excess plus `(ln L)/4`, which settles on the branch constant."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -8789,6 +9073,7 @@
             "The miss of the settled value against the branch constant."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -8801,6 +9086,7 @@
             "The miss times `L`, the reading odd `L` leaves behind."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -8813,6 +9099,7 @@
             "The miss times `L` squared, the reading even `L` leaves behind."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -8825,6 +9112,7 @@
             "The slope of the scaled excess against `ln L`, read from `L/2` to `L`, absent unless `L` is divisible by four."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "option",
             "item": {
@@ -8867,6 +9155,7 @@
             "The count of inked cells."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "i64"
@@ -8879,6 +9168,7 @@
             "The count of cells read."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "i64"
@@ -8916,6 +9206,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "array",
             "item": {
@@ -9040,6 +9331,7 @@
             "The raster row by row, four codes: zero outside the disc, one the flood from the raster's edge, two the flood from the centre, three the shape, the walls and their pockets included."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -9055,6 +9347,7 @@
             "The raster's side in pixels."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -9067,6 +9360,7 @@
             "The shape's share of the disc's pixels, the walls counted in."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -9079,6 +9373,7 @@
             "The centre flood's share of the disc's pixels."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -9091,6 +9386,7 @@
             "The share of the disc's pixels the polylines themselves mark, the boundary error `covered` carries and loses as the raster grows."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -9103,6 +9399,7 @@
             "The mean signed winding number of the disc's pixel centres, read by scanline off the polylines."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -9115,6 +9412,7 @@
             "The closed form `winding` converges to: the distinct curves' signed areas summed and divided by the disc's area."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -9153,6 +9451,7 @@
             "The centre's abscissa in the track's units, the centre of the ring."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -9165,6 +9464,7 @@
             "The centre's ordinate in the track's units."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -9177,6 +9477,7 @@
             "The radius no curve leaves, in the track's units: `rho + d` with `rho` the centre circle's radius and `d = r abs(p)` the outermost seat, which is `(a - b)/b + abs(p)` wheel radii inside and `(a + b)/b + abs(p)` outside."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -9189,6 +9490,7 @@
             "The radius no curve enters, in the track's units: the least of `abs(rho - d)` over the seats, which is not `rho` less the outermost seat when the seats straddle `rho`, and `rho` itself when no pencil is seated."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -9283,6 +9585,7 @@
             "The seat's abscissa, in wheel radii."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -9295,6 +9598,7 @@
             "The seat's ordinate, up the page, in wheel radii."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -9307,6 +9611,7 @@
             "The exact seat, twice the cell coordinates from the tile centre, before any jitter."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "tuple",
             "items": [
@@ -9328,6 +9633,7 @@
             "What the pencil sits on."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "enum",
             "path": "math::spirograph::Kind"
@@ -9375,6 +9681,7 @@
                 "Where the run starts."
               ],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "tuple",
                 "items": [
@@ -9396,6 +9703,7 @@
                 "Where the run ends."
               ],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "tuple",
                 "items": [
@@ -9427,6 +9735,7 @@
                 "The point turned about."
               ],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "tuple",
                 "items": [
@@ -9448,6 +9757,7 @@
                 "The radius of the turn."
               ],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "scalar",
                 "name": "f64"
@@ -9460,6 +9770,7 @@
                 "The angle the turn starts at."
               ],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "scalar",
                 "name": "f64"
@@ -9472,6 +9783,7 @@
                 "The angle the turn ends at, past the start."
               ],
               "serde": [],
+              "serde_skip": false,
               "ty": {
                 "t": "scalar",
                 "name": "f64"
@@ -9513,6 +9825,7 @@
             "The pencils on filled cells."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -9525,6 +9838,7 @@
             "The pencils on empty cells."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -9537,6 +9851,7 @@
             "The pencils on corners."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -9574,6 +9889,7 @@
             "The kind: `line`, `in`, `out`, `polyin` or `polyout`."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "string"
           }
@@ -9585,6 +9901,7 @@
             "The wheel's radius."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -9597,6 +9914,7 @@
             "The pieces of the centre path, in order."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -9612,6 +9930,7 @@
             "The length of the centre path."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -9624,6 +9943,7 @@
             "Minus one inside the track, plus one outside it."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -9636,6 +9956,7 @@
             "The track itself as a polyline, closed when `closed` says so."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -9660,6 +9981,7 @@
             "Whether the outline closes on itself."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "bool"
@@ -9672,6 +9994,7 @@
             "The ring's radius over the wheel's in lowest terms on a circle, zero over zero elsewhere."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "tuple",
             "items": [
@@ -9693,6 +10016,7 @@
             "How many times the centre goes round: the ratio's denominator on a circle, the laps on a polygon, one on a line."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -9705,6 +10029,7 @@
             "The rotation order of the whole picture: the ratio's numerator on a circle, none elsewhere."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -9766,6 +10091,7 @@
             "The count of filled sites."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -9778,6 +10104,7 @@
             "The count of empty sites."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -9790,6 +10117,7 @@
             "The count of exposed faces."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "u128"
           }
@@ -9801,6 +10129,7 @@
             "The count of corners the filled sites touch."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -9813,6 +10142,7 @@
             "The count of unit edges the filled sites touch."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -9825,6 +10155,7 @@
             "The count of unit faces the filled sites touch, shared ones counted once."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -9837,6 +10168,7 @@
             "The Euler characteristic of the filled complex."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "i64"
@@ -9871,6 +10203,7 @@
             "The outward unit normal."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "class",
             "path": "math::three::Vec3",
@@ -9884,6 +10217,7 @@
             "The four corners in winding order."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "array",
             "item": {
@@ -9927,6 +10261,7 @@
             "The x component."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f32"
@@ -9939,6 +10274,7 @@
             "The y component."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f32"
@@ -9951,6 +10287,7 @@
             "The z component."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f32"
@@ -9989,6 +10326,7 @@
             "The turn in degrees."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -10001,6 +10339,7 @@
             "The numerator, ninety times a."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -10013,6 +10352,7 @@
             "The denominator q."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -10051,6 +10391,7 @@
             "The odd scale, the number of cells across the carpet."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -10063,6 +10404,7 @@
             "The weight, scaled so the magnitudes average one."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -10075,6 +10417,7 @@
             "The turn about the centre, in degrees."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -10112,6 +10455,7 @@
             "The count of layers in the stack."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -10124,6 +10468,7 @@
             "The first eight scales."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -10139,6 +10484,7 @@
             "The first eight angles, in degrees."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -10154,6 +10500,7 @@
             "The mean over the disc."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -10166,6 +10513,7 @@
             "The RMS contrast over the disc."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -10178,6 +10526,7 @@
             "The RMS contrast times the root of the layer count."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -10190,6 +10539,7 @@
             "The exact value at the centre, computed and never sampled."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -10202,6 +10552,7 @@
             "Whether the blend carries the weights."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "bool"
@@ -10214,6 +10565,7 @@
             "The smallest value over the disc."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -10226,6 +10578,7 @@
             "The largest value over the disc."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -10238,6 +10591,7 @@
             "The count of sites inside the disc."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -10250,6 +10604,7 @@
             "The brightest three sites, each as its unit coordinates and its value."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -10269,6 +10624,7 @@
             "The least whole number of increments that closes a quarter turn, none past the cap."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "option",
             "item": {
@@ -10284,6 +10640,7 @@
             "The count of distinct angle classes the layers fall in, read a quarter turn apart."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -10296,6 +10653,7 @@
             "The count of layer pairs sharing an angle class."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -10357,6 +10715,7 @@
             "The count of filled sites."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -10369,6 +10728,7 @@
             "The count of empty sites."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -10381,6 +10741,7 @@
             "The count of filled faces open to emptiness or the border."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "u128"
           }
@@ -10392,6 +10753,7 @@
             "The count of distinct corners the filled sites touch."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -10404,6 +10766,7 @@
             "The count of distinct unit edges the filled sites carry."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -10416,6 +10779,7 @@
             "The Euler characteristic, vertices less edges plus filled sites."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "i64"
@@ -10514,6 +10878,7 @@
             "The curvature."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "i64"
@@ -10526,6 +10891,7 @@
             "The curvature times the centre's abscissa."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "i64"
@@ -10538,6 +10904,7 @@
             "The curvature times the centre's ordinate."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "i64"
@@ -10572,6 +10939,7 @@
             "The root quadruple the growth started from."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "array",
             "item": {
@@ -10589,6 +10957,7 @@
             "Whether the root carries a line, so the packing is the strip and the growth keeps one period."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "bool"
@@ -10601,6 +10970,7 @@
             "The curvature the growth stopped at."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "i64"
@@ -10613,6 +10983,7 @@
             "The circles the growth made, the root excluded, in curvature order."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -10629,6 +11000,7 @@
             "The quadruples the growth made, the root counted."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u64"
@@ -10641,6 +11013,7 @@
             "The quadruples that failed one of the six invariants."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u64"
@@ -10653,6 +11026,7 @@
             "The circles centred outside the open period, which the strip must have none of."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u64"
@@ -10713,6 +11087,7 @@
             "The depth the stack is read at."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -10725,6 +11100,7 @@
             "The curvature a circle of denominator the order carries, twice the order squared."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "i64"
@@ -10737,6 +11113,7 @@
             "Whether the packing was grown far enough to carry every node of that depth."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "bool"
@@ -10749,6 +11126,7 @@
             "The stack's nodes inside the open period."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -10761,6 +11139,7 @@
             "The packing's tangency points of denominator at most the order."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -10773,6 +11152,7 @@
             "The nodes no tangency point rests on, plus the tangency points no node lights."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -10785,6 +11165,7 @@
             "The circles below the reach tangent to the line that are not Ford circles."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -10797,6 +11178,7 @@
             "The brightness of the period summed node by node, the node `0/1` on the period's edge counted."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "u128"
           }
@@ -10808,6 +11190,7 @@
             "The closed form that brightness lands on, `Q(Q + 1)/2`."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "u128"
           }
@@ -10846,6 +11229,7 @@
             "The numerator of the reduced fraction."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "i64"
@@ -10858,6 +11242,7 @@
             "The denominator of the reduced fraction."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "i64"
@@ -10870,6 +11255,7 @@
             "The curvature of the circle resting there, which the Ford identification forces to be `2 den^2`."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "i64"
@@ -10910,6 +11296,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "class",
             "path": "num::memory::Rule",
@@ -10921,6 +11308,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u64"
@@ -10931,6 +11319,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -10941,6 +11330,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -10951,6 +11341,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u64"
@@ -10961,6 +11352,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -10987,6 +11379,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -11003,6 +11396,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -11016,6 +11410,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -11032,6 +11427,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -11045,6 +11441,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -11058,6 +11455,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -11068,6 +11466,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -11078,6 +11477,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -11091,6 +11491,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -11137,6 +11538,7 @@
             "The count of points."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -11149,6 +11551,7 @@
             "The count of primes."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -11161,6 +11564,7 @@
             "The split primes."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -11173,6 +11577,7 @@
             "The inert primes."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -11185,6 +11590,7 @@
             "The ramified primes."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -11197,6 +11603,7 @@
             "The units."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -11209,6 +11616,7 @@
             "The composites."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -11221,6 +11629,7 @@
             "The primes over the points."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -11385,6 +11794,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "enum",
             "path": "num::gauss::Ring"
@@ -11395,6 +11805,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u64"
@@ -11405,6 +11816,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -11447,6 +11859,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u64"
@@ -11457,6 +11870,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -11470,6 +11884,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -11480,6 +11895,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -11490,6 +11906,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u64"
@@ -11500,6 +11917,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -11513,6 +11931,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -11526,6 +11945,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -11568,6 +11988,7 @@
             "The numerator, coprime to the denominator."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u64"
@@ -11580,6 +12001,7 @@
             "The denominator."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u64"
@@ -11592,6 +12014,7 @@
             "The count of scales putting a line here: the floor of the window over the denominator."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u64"
@@ -11631,6 +12054,7 @@
             "The horizontal node."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "plain",
             "path": "num::lattice::Node"
@@ -11643,6 +12067,7 @@
             "The vertical node."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "plain",
             "path": "num::lattice::Node"
@@ -11655,6 +12080,7 @@
             "The product of the two axis brightnesses."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u64"
@@ -11700,6 +12126,7 @@
             "The dimension `D`, one to three."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -11712,6 +12139,7 @@
             "The window width `k`, at least one."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -11724,6 +12152,7 @@
             "The window code, bit `w` set when window `w` is allowed."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u64"
@@ -11760,6 +12189,7 @@
             "The corner tile the test folds, row major."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -11775,6 +12205,7 @@
             "The side of the tile."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -11787,6 +12218,7 @@
             "The count of tile factors the side asks for."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -11799,6 +12231,7 @@
             "Whether the grid is that tile's Kronecker power."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "bool"
@@ -11811,6 +12244,7 @@
             "The count of sites where the grid and the power differ."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -11823,6 +12257,7 @@
             "The first differing site in row-major order, when there is one."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "option",
             "item": {
@@ -11943,6 +12378,7 @@
             "The count of stones."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u64"
@@ -11955,6 +12391,7 @@
             "The prime and exponent pairs, ascending."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -11979,6 +12416,7 @@
             "Whether the stones make a single row and nothing else."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "bool"
@@ -11991,6 +12429,7 @@
             "Every rectangle as a pair of sides, the shorter first, ascending."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -12042,6 +12481,7 @@
             "The prime itself."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -12054,6 +12494,7 @@
             "The one-based rank in the prime sequence, so two has index one."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -12066,6 +12507,7 @@
             "The distance from the previous prime, zero for two."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -12078,6 +12520,7 @@
             "The twin flag: whether a prime sits exactly two away on either side, false for two."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "bool"
@@ -12090,6 +12533,7 @@
             "The two positive sides whose squares sum to the prime, when they exist."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "option",
             "item": {
@@ -12140,6 +12584,7 @@
             "The point on the number line."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -12152,6 +12597,7 @@
             "The count of primes up to it."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -12164,6 +12610,7 @@
             "The guess x over ln x."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -12176,6 +12623,7 @@
             "The logarithmic integral."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -12212,6 +12660,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -12225,6 +12674,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -12235,6 +12685,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -12245,6 +12696,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -12255,6 +12707,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "bool"
@@ -12292,6 +12745,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "enum",
             "path": "num::gauss::Ring"
@@ -12302,6 +12756,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "tuple",
             "items": [
@@ -12347,6 +12802,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "class",
             "path": "num::radix::Base",
@@ -12358,6 +12814,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -12380,6 +12837,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -12429,6 +12887,7 @@
             "The count of numbers the sheet holds."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -12441,6 +12900,7 @@
             "The count of primes among them."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -12453,6 +12913,7 @@
             "The primes as a share of the numbers."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -12465,6 +12926,7 @@
             "The values of the quadratic inside the sheet, k counting up from zero."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -12480,6 +12942,7 @@
             "The cell of each value."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -12504,6 +12967,7 @@
             "Whether each value is prime."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -12519,6 +12983,7 @@
             "The count of values that are prime."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -12531,6 +12996,7 @@
             "The count of primes before the first composite."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -12543,6 +13009,7 @@
             "The hits as a share of the values, zero when the quadratic misses the sheet."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -12750,6 +13217,7 @@
             "The base every tile side is a power of."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u64"
@@ -12762,6 +13230,7 @@
             "Every tile, in the order one, two, three and on."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -12777,6 +13246,7 @@
             "The count of primes at or below the top."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "usize"
@@ -12789,6 +13259,7 @@
             "The count of tiles at each level, from zero up."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -12804,6 +13275,7 @@
             "The sum of the tile areas, a tile counted once wherever it overlaps another."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "u128"
           }
@@ -12815,6 +13287,7 @@
             "The lower-left corner of the box the tiles fill."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "tuple",
             "items": [
@@ -12836,6 +13309,7 @@
             "The upper-right corner of the box the tiles fill."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "tuple",
             "items": [
@@ -12884,6 +13358,7 @@
             "The number the tile stands for."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u64"
@@ -12896,6 +13371,7 @@
             "The level the design is grown to."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u32"
@@ -12908,6 +13384,7 @@
             "The side of the tile, the base raised to the level."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "u64"
@@ -12920,6 +13397,7 @@
             "Whether the number is prime."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "bool"
@@ -12932,6 +13410,7 @@
             "The x of the lower-left corner."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "i64"
@@ -12944,6 +13423,7 @@
             "The y of the lower-left corner."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "i64"
@@ -12983,6 +13463,7 @@
             "The real part."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -12995,6 +13476,7 @@
             "The imaginary part."
           ],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "scalar",
             "name": "f64"
@@ -13027,6 +13509,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -13040,6 +13523,7 @@
           "public": false,
           "docs": [],
           "serde": [],
+          "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
@@ -23259,8 +23743,9 @@
         }
       ],
       "ret": {
-        "t": "plain",
-        "path": "gen::variation::File"
+        "t": "class",
+        "path": "gen::variation::File",
+        "dim": null
       },
       "dims": [],
       "trait": null,

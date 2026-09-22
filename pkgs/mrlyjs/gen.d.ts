@@ -390,19 +390,28 @@ export declare namespace variation {
         /** The width and height repetition pairs to render. */
         files: [number, number][];
     }
-    /** One rendering of an artwork, sized in tile repetitions. */
-    export interface File {
+    export interface FileData {
         /** The count of tile repetitions across. */
         width: number;
         /** The count of tile repetitions down. */
         height: number;
-        /** The encoded PNG bytes, empty until rendered and left out of the json. */
-        png: number[];
     }
-    export const File: {
+    /** One rendering of an artwork, sized in tile repetitions. */
+    export class File {
         /** Builds a file of the given repetition counts with no PNG bytes. */
-        "new"(width: number, height: number): variation.File;
-    };
+        constructor(width: number, height: number);
+        free(): void;
+        /** Reads the File from its plain data. */
+        static from(data: FileData): File;
+        /** Writes the File as plain data. */
+        toJSON(): FileData;
+        /** The count of tile repetitions across. */
+        readonly width: number;
+        /** The count of tile repetitions down. */
+        readonly height: number;
+        /** The encoded PNG bytes, empty until rendered and left out of the json. */
+        readonly png: Uint8Array;
+    }
     export interface VariationData {
         /** The random hex identifier. */
         key: string;
@@ -418,10 +427,8 @@ export declare namespace variation {
         mask?: TileData;
         /** The paint, set by generate. */
         paint?: core.paint.PaintData;
-        /** The built base cell, set by generate and left out of the json. */
-        base?: { cell: CellData };
         /** The renderings, filled by render. */
-        files: variation.File[];
+        files: variation.FileData[];
     }
     /** One seeded artwork, from tile recipe to rendered files. */
     export class Variation {
