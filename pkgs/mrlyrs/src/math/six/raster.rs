@@ -11,7 +11,7 @@ pub fn raster(cell: &Cell6d, size: usize) -> Result<Vec<f32>> {
         return value_error("size must be at least 1.");
     }
     let (width, height) = (cell.width(), cell.height());
-    let types = cell.cell.cell.types.bytes();
+    let types = cell.cell.cell.types.bytes()?;
     let flipped = orientation(width, height)? == Orientation::Vertical;
     let (cols, rows) = if flipped {
         (height, width)
@@ -126,7 +126,7 @@ mod tests {
     }
 
     #[test]
-    fn an_empty_size_is_refused() {
+    fn refuses_an_empty_size() {
         assert!(raster(&cut_design(Code(23), 3, 1, 2).unwrap(), 0).is_err());
     }
 }

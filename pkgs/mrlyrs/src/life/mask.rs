@@ -1,4 +1,4 @@
-use crate::core::error::{value_error, Result};
+use crate::core::error::{overflow_error, value_error, Result};
 use crate::core::tensor::Tensor;
 use crate::math::bang::factory;
 use crate::math::bang::Code;
@@ -16,13 +16,16 @@ pub fn design_mask(dimension: usize, code: Code, number: usize, level: usize) ->
     if level < 1 {
         return value_error("level must be at least 1.");
     }
+    let Some(side) = number.checked_pow(level as u32) else {
+        return overflow_error(format!("the mask side {number}^{level} overflows usize."));
+    };
     let mut mask = if dimension == 1 {
         factory::create(code, number, 1, 2, level)?
     } else {
         two::create(code, number, level, 0, 2)?.types().clone()
     };
-    let centre = (number.pow(level as u32) - 1) / 2;
-    mask.set(&vec![centre; dimension], 0);
+    let centre = (side - 1) / 2;
+    mask.set(&vec![centre; dimension], 0)?;
     Ok(mask)
 }
 
@@ -41,7 +44,7 @@ pub fn mask_offsets(mask: &Tensor) -> Vec<Vec<i64>> {
     let centre: Vec<i64> = mask.shape.iter().map(|&n| (n as i64 - 1) / 2).collect();
     let mut out = Vec::new();
     for flat in 0..mask.size() {
-        if mask.bytes()[flat] != 1 {
+        if mask.at(flat) != 1 {
             continue;
         }
         let mut rest = flat;
@@ -116,20 +119,21 @@ mod tests {
     }
     #[test]
     fn a_rank_deficient_mask_reads_zero() {
-        let flat = Tensor::of(vec![0, 0, 0, 1, 0, 1, 0, 0, 0], vec![3, 3]);
+        let flat = Tensor::of(vec![0, 0, 0, 1, 0, 1, 0, 0, 0], vec![3, 3]).unwrap();
         assert_eq!(lattice_index(&flat), 0);
         assert_eq!(lattice_index(&Tensor::new(vec![3, 3])), 0);
     }
     #[test]
-    fn even_sides_and_wide_dimensions_are_rejected() {
+    fn refuses_design_mask() {
         assert!(design_mask(2, Code(7), 4, 1).is_err());
         assert!(design_mask(3, Code(7), 3, 1).is_err());
         assert!(design_mask(1, Code(1), 3, 0).is_err());
+        assert!(design_mask(2, Code(7), 3, 1000).is_err());
     }
     #[test]
     fn the_centre_is_popped_at_every_level() {
         let mask = design_mask(2, Code(7), 3, 2).unwrap();
         assert_eq!(mask.shape, vec![9, 9]);
-        assert_eq!(mask.get(&[4, 4]), 0);
+        assert_eq!(mask.get(&[4, 4]).unwrap(), 0);
     }
 }

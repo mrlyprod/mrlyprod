@@ -97,7 +97,7 @@ fn pop_center(tile: &Tile, cell: &mut two::Cell2d) {
     let _ = tile;
     let center = cell.width() / 2;
     let mut types = cell.cell.types.clone();
-    types.set(&[center, center], 0);
+    types.put(types.index(&[center, center]), 0);
     cell.cell.types = types;
 }
 
@@ -173,7 +173,7 @@ pub fn render(mut variation: Variation, scale: usize, rng: &mut Rng) -> Result<V
     let cover = variation.is_cover();
     let mut files = std::mem::take(&mut variation.files);
     for file in files.iter_mut() {
-        let mut canvas = base.clone().tile(file.width, file.height);
+        let mut canvas = base.clone().tile(file.width, file.height)?;
         if cover {
             let mut cell = canvas.cell.clone();
             engine::apply(&paint, &mut cell, rng)?;
@@ -189,7 +189,7 @@ pub fn render(mut variation: Variation, scale: usize, rng: &mut Rng) -> Result<V
 mod tests {
     use super::*;
     use crate::core::json;
-    use crate::gen::recipe::Parity;
+    use crate::gen::recipe::{Catalog, Parity};
     fn round_trip(variation: &Variation) -> Variation {
         serde_json::from_value(serde_json::to_value(variation).unwrap()).unwrap()
     }
@@ -221,7 +221,10 @@ mod tests {
     }
     fn bare_png(variation: &Variation, file: &File, scale: usize) -> Vec<u8> {
         let base = variation.base.as_ref().unwrap();
-        let bare = two::Cell2d::new(base.types().clone()).tile(file.width, file.height);
+        let bare = two::Cell2d::new(base.types().clone())
+            .unwrap()
+            .tile(file.width, file.height)
+            .unwrap();
         two::png(&bare, scale).unwrap()
     }
     fn run(config: &Config, seed: u64, scale: usize) -> Variation {
@@ -361,7 +364,27 @@ mod tests {
         }
     }
     #[test]
-    fn variation_json_rejects_garbage() {
+    fn refuses_a_config_or_a_record_it_cannot_draw() {
+        let mut rng = Rng::new(5);
+        let narrow = Config {
+            tile: Config2d {
+                min_size: 9,
+                max_size: 3,
+                ..Config2d::default()
+            },
+            ..config()
+        };
+        assert!(create(&narrow, &mut rng).is_err());
+        let sourceless = Config {
+            tile: Config2d {
+                catalog: Catalog::Codes(Vec::new()),
+                ..Config2d::default()
+            },
+            ..config()
+        };
+        assert!(create(&sourceless, &mut rng).is_err());
+        let drawn = create(&config(), &mut rng).unwrap();
+        assert!(render(drawn, 1, &mut rng).is_err());
         assert!(serde_json::from_value::<Variation>(json!({})).is_err());
         assert!(serde_json::from_value::<File>(json!({ "width": 2 })).is_err());
     }

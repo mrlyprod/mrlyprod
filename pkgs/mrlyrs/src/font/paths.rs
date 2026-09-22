@@ -60,24 +60,22 @@ fn degree(cell: (usize, usize), left: &BTreeSet<(usize, usize)>) -> usize {
         .count()
 }
 
-fn opening(left: &BTreeSet<(usize, usize)>) -> (usize, usize) {
-    *left
-        .iter()
+fn opening(left: &BTreeSet<(usize, usize)>) -> Option<(usize, usize)> {
+    left.iter()
         .min_by_key(|&&cell| (degree(cell, left) != 1, usize::MAX - cell.0, cell.1))
-        .expect("opening is only asked of a non-empty set")
+        .copied()
 }
 
 /// Drafts a stroke order for a trimmed bitmap by walking its lit cells: start at a lowest-left free end, keep heading, lift when stuck.
 pub fn draft(rows: &[String]) -> Vec<Vec<(usize, usize)>> {
     let mut left = lit_of(rows);
     let mut out = Vec::new();
-    while !left.is_empty() {
-        let start = opening(&left);
+    while let Some(start) = opening(&left) {
         left.remove(&start);
         let mut stroke = vec![start];
+        let mut cur = start;
         let mut heading: Option<(i64, i64)> = None;
         loop {
-            let cur = *stroke.last().unwrap();
             let ahead = heading
                 .and_then(|d| step(cur, d))
                 .filter(|n| left.contains(n));
@@ -90,6 +88,7 @@ pub fn draft(rows: &[String]) -> Vec<Vec<(usize, usize)>> {
             heading = Some((next.0 as i64 - cur.0 as i64, next.1 as i64 - cur.1 as i64));
             left.remove(&next);
             stroke.push(next);
+            cur = next;
         }
         out.push(stroke);
     }

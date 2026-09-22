@@ -13,7 +13,7 @@ const MARGIN: f64 = 0.08;
 const THIN: f64 = 1.4;
 
 fn main() -> Result<()> {
-    let design = koch();
+    let design = koch()?;
     assert_eq!(design.size(), DIGITS);
     assert_eq!(design.base().norm(), NORM);
     assert_eq!(design.fill(LEVEL), POINTS as u128);

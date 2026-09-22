@@ -51,12 +51,11 @@ fn tile_of(layer: &MagicLayer) -> Result<Tensor> {
 
 fn pieces(tile: &Tensor) -> u128 {
     let (rows, cols) = (tile.shape[0], tile.shape[1]);
-    let bytes = tile.bytes();
     let mut seen = vec![false; rows * cols];
     let mut count = 0u128;
     let mut stack: Vec<usize> = Vec::new();
     for start in 0..rows * cols {
-        if bytes[start] == 0 || seen[start] {
+        if tile.at(start) == 0 || seen[start] {
             continue;
         }
         count += 1;
@@ -65,7 +64,7 @@ fn pieces(tile: &Tensor) -> u128 {
         while let Some(at) = stack.pop() {
             let (r, c) = (at / cols, at % cols);
             let walk = |next: usize, seen: &mut Vec<bool>, stack: &mut Vec<usize>| {
-                if bytes[next] != 0 && !seen[next] {
+                if tile.at(next) != 0 && !seen[next] {
                     seen[next] = true;
                     stack.push(next);
                 }
@@ -103,7 +102,7 @@ pub fn letter(layer: &MagicLayer) -> Result<Letter> {
     }
     let tile = tile_of(layer)?;
     let (rows, cols) = (tile.shape[0], tile.shape[1]);
-    let on = |r: usize, c: usize| tile.bytes()[r * cols + c] != 0;
+    let on = |r: usize, c: usize| tile.at(r * cols + c) != 0;
     let (mut fill, mut runs_h, mut runs_v) = (0u128, 0u128, 0u128);
     let (mut touch_h, mut touch_v) = (0u128, 0u128);
     for r in 0..rows {
@@ -504,7 +503,7 @@ mod tests {
     }
 
     #[test]
-    fn a_letter_that_splits_and_merges_is_refused() {
+    fn refuses_a_letter_that_splits_and_merges() {
         let void = plain(9, 5);
         assert!(components(&[plain(7, 3), void]).is_err());
     }
@@ -564,11 +563,14 @@ mod tests {
                 .collect()
         };
         let pair = tower(&[7, 9], &[3, 5], 2);
-        assert_eq!(perimeter(&Cell2d::new(magic(&pair).unwrap())), 368);
+        assert_eq!(perimeter(&Cell2d::new(magic(&pair).unwrap()).unwrap()), 368);
         let three = tower(&[7, 14, 9], &[3, 7, 5], 2);
-        assert_eq!(perimeter(&Cell2d::new(magic(&three).unwrap())), 11856);
+        assert_eq!(
+            perimeter(&Cell2d::new(magic(&three).unwrap()).unwrap()),
+            11856
+        );
         let sponge = tower(&[23, 23], &[3, 3], 3);
-        let solid = Cell3d::new(magic(&sponge).unwrap());
+        let solid = Cell3d::new(magic(&sponge).unwrap()).unwrap();
         let cut = six::skin(&six::cut(&solid).unwrap());
         let tally = six::census(&cut, false);
         assert_eq!((cut.width(), cut.height()), (35, 18));

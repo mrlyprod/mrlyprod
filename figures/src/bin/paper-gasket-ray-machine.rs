@@ -14,7 +14,7 @@ fn main() -> Result<()> {
     let mut points = Vec::new();
     for row in 0..side {
         for col in 0..side {
-            if types.get(&[row, col]) != 0 {
+            if types.get(&[row, col])? != 0 {
                 points.push((row, col));
             }
         }

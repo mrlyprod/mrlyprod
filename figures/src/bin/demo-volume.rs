@@ -15,7 +15,7 @@ fn main() -> Result<()> {
     assert_eq!(field.data.len(), SIZE * SIZE * SIZE);
     assert_eq!(field.max(), mark);
     assert_eq!(field.count(mark), 34416);
-    let shell = Cell3d::new(field.solid(mark));
+    let shell = Cell3d::new(field.solid(mark))?;
     assert_eq!(shell.types().sum(), 34416);
 
     let mut board = Board::square();

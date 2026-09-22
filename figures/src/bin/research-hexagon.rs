@@ -17,7 +17,7 @@ impl Rule {
         let cube = mrlyrs::math::three::named(design, 2, 1)?;
         let mut corners = [false; 8];
         for (slot, corner) in corners.iter_mut().enumerate() {
-            *corner = cube.types().get(&[slot >> 2, (slot >> 1) & 1, slot & 1]) == 1;
+            *corner = cube.types().get(&[slot >> 2, (slot >> 1) & 1, slot & 1])? == 1;
         }
         Ok(Rule { corners })
     }

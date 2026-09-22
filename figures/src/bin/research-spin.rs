@@ -26,7 +26,7 @@ fn mirror(cell: &two::Cell2d) -> Vec<f32> {
             } else {
                 col - SIDE
             };
-            out[row * span + col] = types.get(&[y, x]) as f32;
+            out[row * span + col] = types.at(types.index(&[y, x])) as f32;
         }
     }
     out
@@ -40,7 +40,7 @@ fn main() -> Result<()> {
     let board_data = mirror(&carpet);
     let profile: Vec<f64> = (0..=RINGS)
         .map(|k| spin::ring(&board_data, span, SIDE as f64 * k as f64 / RINGS as f64))
-        .collect();
+        .collect::<Result<Vec<f64>>>()?;
     assert!((profile[0] - 1.0).abs() < 1e-9);
     let lo = profile.iter().copied().fold(f64::MAX, f64::min);
     let hi = profile.iter().copied().fold(f64::MIN, f64::max);

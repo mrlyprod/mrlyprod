@@ -40,9 +40,9 @@ fn main() -> Result<()> {
     let alpha = (DIGITS.len() as f64).ln() / (BASE as f64).ln();
     let logx = design::log_grid(&values, SAMPLES);
     let series = design::resample(&values, &running, alpha / 2.0, &logx);
-    let (gamma, power) = design::spectrum(&logx, &series);
+    let (gamma, power) = design::spectrum(&logx, &series)?;
     let score = design::score(&power, FLOOR);
-    let found = design::peaks(&gamma, &score, BAND, THRESHOLD);
+    let found = design::peaks(&gamma, &score, BAND, THRESHOLD)?;
     let bin = gamma[1];
     let zeros: Vec<f64> = design::ZETA_ORDINATES
         .iter()

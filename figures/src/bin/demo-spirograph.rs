@@ -21,7 +21,7 @@ const HAIR: f64 = 1.5;
 
 fn main() -> Result<()> {
     let cell = two::create(Code::from(CODE), SIDE, LEVEL, 0, BASE)?;
-    let types = cell.types().bytes().to_vec();
+    let types = cell.types().bytes()?.to_vec();
     let path = track("in", RING, WHEEL, 4, 1)?;
     let pens = pencils(&types, cell.width(), cell.height(), "both", REACH, 0.0, 1)?;
     assert_eq!(pens.len(), PENCILS);

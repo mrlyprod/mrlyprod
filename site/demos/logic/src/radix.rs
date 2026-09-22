@@ -88,7 +88,7 @@ fn design(ring: &str, a: i32, c: i32, digits: &str, twists: &str) -> Result<Radi
         )));
     }
     let turns = picked.into_iter().map(|i| units[i]).collect();
-    let base = Base::new(ring, (a, c));
+    let base = Base::new(ring, (a, c))?;
     for (i, &z) in digits.iter().enumerate() {
         for &w in &digits[..i] {
             if base.congruent(z, w) {
@@ -99,7 +99,7 @@ fn design(ring: &str, a: i32, c: i32, digits: &str, twists: &str) -> Result<Radi
             }
         }
     }
-    Ok(Radix::new(base, digits, turns))
+    Ok(Radix::new(base, digits, turns)?)
 }
 
 fn levelled(radix: &Radix, level: usize) -> Result<usize, Fault> {
@@ -163,7 +163,7 @@ fn card(name: &str, label: &str, radix: &Radix, level: usize, line: bool) -> mrl
 ///
 /// Every preset is a quintuple built by `mrlyrs::num::radix`, spelled back as the digit list and the unit indices the page carries in its query.
 #[wasm_bindgen]
-pub fn radix_menu() -> String {
+pub fn radix_menu() -> Result<String, Fault> {
     let places = |ring: Ring, list: &[(i64, i64)]| {
         list.iter()
             .map(|&(a, c)| json!({"a": a, "c": c, "norm": ring.norm(a, c)}))
@@ -176,21 +176,21 @@ pub fn radix_menu() -> String {
             "bases": places(ring, &list),
         })
     };
-    json!({
+    Ok(json!({
         "rings": [
             bases(Ring::Gaussian, vec![(2, 0), (1, 1), (2, 1), (3, 0)]),
             bases(Ring::Eisenstein, vec![(2, 0), (2, 1), (3, 0), (3, 1)]),
         ],
         "presets": [
-            card("koch", "the Koch curve", &radix::koch(), 5, true),
-            card("gasket", "the gasket", &radix::gasket(), 7, false),
-            card("twindragon", "the twindragon", &radix::twindragon(), 14, false),
-            card("tile7", "the norm-7 tile", &radix::flowsnake(), 5, false),
-            card("carpet", "the carpet, box digits", &radix::tile(3, CARPET), 5, false),
+            card("koch", "the Koch curve", &radix::koch()?, 5, true),
+            card("gasket", "the gasket", &radix::gasket()?, 7, false),
+            card("twindragon", "the twindragon", &radix::twindragon()?, 14, false),
+            card("tile7", "the norm-7 tile", &radix::flowsnake()?, 5, false),
+            card("carpet", "the carpet, box digits", &radix::tile(3, CARPET)?, 5, false),
         ],
         "points": POINTS,
     })
-    .to_string()
+    .to_string())
 }
 
 /// Returns the deepest level a digit list is drawn at: the largest `L` with `(card F)^L` inside the budget.
@@ -218,10 +218,14 @@ pub fn radix_read(
     let radix = design(ring, a, c, digits, twists)?;
     let cap = levelled(&radix, level)?;
     let base = radix.base();
-    let residues = base.residues();
+    let residues = base.residues()?;
     let units = radix.ring().associates(1, 0);
     let fill = radix.fill(level);
     let distinct = radix.distinct(level);
+    let mut placed: Vec<mrlyrs::core::Json> = Vec::with_capacity(radix.size());
+    for &(x, y) in radix.digits() {
+        placed.push(json!({"a": x, "c": y, "class": base.class((x, y))?}));
+    }
     Ok(json!({
         "ring": word(radix.ring()),
         "a": base.value().0,
@@ -234,10 +238,10 @@ pub fn radix_read(
         "distinct": distinct,
         "glued": (distinct as u128) < fill,
         "dimension": radix.dimension(),
-        "canonical": radix.canonical(),
-        "code": radix.code().to_string(),
+        "canonical": radix.canonical()?,
+        "code": radix.code()?.to_string(),
         "residues": residues.iter().map(|&(x, y)| json!({"a": x, "c": y})).collect::<Vec<mrlyrs::core::Json>>(),
-        "digits": radix.digits().iter().map(|&(x, y)| json!({"a": x, "c": y, "class": base.class((x, y))})).collect::<Vec<mrlyrs::core::Json>>(),
+        "digits": placed,
         "twists": radix.twists().iter().map(|u| units.iter().position(|v| v == u).expect("a twist is a unit")).collect::<Vec<usize>>(),
         "units": units.iter().map(|&(x, y)| json!({"a": x, "c": y})).collect::<Vec<mrlyrs::core::Json>>(),
     })

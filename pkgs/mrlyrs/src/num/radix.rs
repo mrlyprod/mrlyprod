@@ -1,3 +1,4 @@
+use crate::core::error::{overflow_error, shape_error, value_error, Result};
 use crate::num::gauss::Ring;
 use std::collections::HashSet;
 use std::f64::consts::TAU;
@@ -26,13 +27,13 @@ pub struct Base {
 }
 
 impl Base {
-    /// Fixes a base in a ring, panicking below norm two.
-    pub fn new(ring: Ring, value: (i64, i64)) -> Base {
-        assert!(
-            ring.norm(value.0, value.1) >= 2,
-            "a base needs norm two or more"
-        );
-        Base { ring, value }
+    /// Fixes a base in a ring, or an error below norm two.
+    pub fn new(ring: Ring, value: (i64, i64)) -> Result<Base> {
+        let norm = ring.norm(value.0, value.1);
+        if norm < 2 {
+            return value_error(format!("a base needs norm two or more, not {norm}."));
+        }
+        Ok(Base { ring, value })
     }
     /// Returns the ring.
     pub fn ring(self) -> Ring {
@@ -65,9 +66,9 @@ impl Base {
     /// ```
     /// use mrlyrs::num::gauss::Ring;
     /// use mrlyrs::num::radix::Base;
-    /// assert_eq!(Base::new(Ring::Gaussian, (1, 1)).residues(), vec![(0, 0), (1, 0)]);
+    /// assert_eq!(Base::new(Ring::Gaussian, (1, 1)).unwrap().residues().unwrap(), vec![(0, 0), (1, 0)]);
     /// ```
-    pub fn residues(self) -> Vec<(i64, i64)> {
+    pub fn residues(self) -> Result<Vec<(i64, i64)>> {
         let q = self.norm();
         let reach = (2 * q).isqrt() as i64 + 1;
         let mut pool = Vec::new();
@@ -94,15 +95,21 @@ impl Base {
                 out.push(z);
             }
         }
-        assert_eq!(out.len(), q as usize, "the residue system is incomplete");
-        out
+        if out.len() != q as usize {
+            return value_error(format!(
+                "the residue system of {:?} holds {} of {q} classes.",
+                self.value,
+                out.len()
+            ));
+        }
+        Ok(out)
     }
-    /// Returns the index in the canonical residue system of the class of a point.
-    pub fn class(self, z: (i64, i64)) -> usize {
-        self.residues()
-            .iter()
-            .position(|&w| self.congruent(z, w))
-            .expect("every point lies in a residue class")
+    /// Returns the index in the canonical residue system of the class of a point, or an error when the system is incomplete.
+    pub fn class(self, z: (i64, i64)) -> Result<usize> {
+        match self.residues()?.iter().position(|&w| self.congruent(z, w)) {
+            Some(index) => Ok(index),
+            None => value_error(format!("the point {z:?} lies in no residue class.")),
+        }
     }
     /// Returns whether the conjugate of the base is an associate of the base, which is when the mirror joins the symmetry group.
     pub fn mirrored(self) -> bool {
@@ -116,8 +123,8 @@ impl Base {
     /// Multiplying every digit by a unit `v` carries the attractor of a design to `v` times that attractor over the same base, so the unit group acts; conjugation carries the base to its conjugate and joins the group exactly when that is an associate.
     ///
     /// The list is the Burnside multiset, one entry per abstract group element, and not the order of the permutation group it induces: the action need not be faithful, so entries repeat, and the acting image is the deduplicated list.
-    pub fn group(self) -> Vec<Vec<usize>> {
-        let residues = self.residues();
+    pub fn group(self) -> Result<Vec<Vec<usize>>> {
+        let residues = self.residues()?;
         let mirror = self.mirrored();
         let mut out = Vec::new();
         for unit in self.ring.associates(1, 0) {
@@ -125,25 +132,27 @@ impl Base {
                 if flip && !mirror {
                     continue;
                 }
-                let map: Vec<usize> = residues
-                    .iter()
-                    .map(|&z| {
-                        let w = if flip {
-                            self.ring.conjugate(z.0, z.1)
-                        } else {
-                            z
-                        };
-                        let image = self.ring.mul(unit, w);
-                        residues
-                            .iter()
-                            .position(|&r| self.congruent(image, r))
-                            .expect("a unit multiple lands in a class")
-                    })
-                    .collect();
+                let mut map = Vec::with_capacity(residues.len());
+                for &z in &residues {
+                    let w = if flip {
+                        self.ring.conjugate(z.0, z.1)
+                    } else {
+                        z
+                    };
+                    let image = self.ring.mul(unit, w);
+                    match residues.iter().position(|&r| self.congruent(image, r)) {
+                        Some(index) => map.push(index),
+                        None => {
+                            return value_error(format!(
+                                "the unit multiple {image:?} lies in no residue class."
+                            ))
+                        }
+                    }
+                }
                 out.push(map);
             }
         }
-        out
+        Ok(out)
     }
 }
 
@@ -156,35 +165,53 @@ pub struct Radix {
 }
 
 impl Radix {
-    /// Builds a design from a base, a digit list and a unit twist per digit, panicking on a length mismatch, a twist whose norm is not one, or two digits congruent modulo the base.
+    /// Builds a design from a base, a digit list and a unit twist per digit, or an error on a length mismatch, a twist whose norm is not one, or two digits congruent modulo the base.
     ///
     /// Pairwise incongruent digits are the hypothesis of the untwisted fill law: they are what recovers the last digit from the word read modulo the base, so a repeated class is refused here rather than silently gluing words.
-    pub fn new(base: Base, digits: Vec<(i64, i64)>, twists: Vec<(i64, i64)>) -> Radix {
-        assert_eq!(digits.len(), twists.len(), "one twist per digit");
+    pub fn new(base: Base, digits: Vec<(i64, i64)>, twists: Vec<(i64, i64)>) -> Result<Radix> {
+        if digits.len() != twists.len() {
+            return shape_error(format!(
+                "there are {} digits and {} twists.",
+                digits.len(),
+                twists.len()
+            ));
+        }
         for &(a, b) in &twists {
-            assert_eq!(base.ring().norm(a, b), 1, "a twist is a unit");
+            let norm = base.ring().norm(a, b);
+            if norm != 1 {
+                return value_error(format!("the twist {:?} has norm {norm}, not one.", (a, b)));
+            }
         }
         for (i, &z) in digits.iter().enumerate() {
             for &w in &digits[..i] {
-                assert!(
-                    !base.congruent(z, w),
-                    "the digits {w:?} and {z:?} are congruent modulo the base"
-                );
+                if base.congruent(z, w) {
+                    return value_error(format!(
+                        "the digits {w:?} and {z:?} are congruent modulo the base."
+                    ));
+                }
             }
         }
-        Radix {
+        Ok(Radix {
             base,
             digits,
             twists,
-        }
+        })
     }
-    /// Builds an untwisted design from a code over the canonical residue system: bit `i` of the code selects residue `i`.
-    pub fn from_code(base: Base, code: u128) -> Radix {
-        let residues = base.residues();
-        assert!(
-            code >> residues.len() == 0,
-            "code out of range for the base"
-        );
+    /// Builds an untwisted design from a code over the canonical residue system, bit `i` of the code selecting residue `i`, or an error when the class count or the code overruns a u128.
+    pub fn from_code(base: Base, code: u128) -> Result<Radix> {
+        let residues = base.residues()?;
+        if residues.len() >= 128 {
+            return overflow_error(format!(
+                "the base holds {} classes and a code carries 128.",
+                residues.len()
+            ));
+        }
+        if code >> residues.len() != 0 {
+            return value_error(format!(
+                "the code {code} runs past the {} classes of the base.",
+                residues.len()
+            ));
+        }
         let digits: Vec<(i64, i64)> = residues
             .into_iter()
             .enumerate()
@@ -194,10 +221,21 @@ impl Radix {
         let twists = vec![(1, 0); digits.len()];
         Radix::new(base, digits, twists)
     }
-    /// Returns the design with the twists named by their index in the unit list, the units in turning order from one.
-    pub fn with_twists(self, units: &[usize]) -> Radix {
+    /// Returns the design with the twists named by their index in the unit list, the units in turning order from one, or an error at an index past the unit list.
+    pub fn with_twists(self, units: &[usize]) -> Result<Radix> {
         let list = self.base.ring().associates(1, 0);
-        let twists = units.iter().map(|&i| list[i]).collect();
+        let mut twists = Vec::with_capacity(units.len());
+        for &i in units {
+            match list.get(i) {
+                Some(&unit) => twists.push(unit),
+                None => {
+                    return value_error(format!(
+                        "the unit index {i} runs past the {} units of the ring.",
+                        list.len()
+                    ))
+                }
+            }
+        }
         Radix::new(self.base, self.digits, twists)
     }
     /// Returns the base.
@@ -221,17 +259,17 @@ impl Radix {
         self.digits.len()
     }
     /// Returns the code of the classes the digits occupy, which names the design only when the digits are the canonical representatives.
-    pub fn code(&self) -> u128 {
+    pub fn code(&self) -> Result<u128> {
         let mut out = 0u128;
         for &d in &self.digits {
-            out |= 1 << self.base.class(d);
+            out |= 1 << self.base.class(d)?;
         }
-        out
+        Ok(out)
     }
     /// Returns whether every digit is the canonical representative of its class.
-    pub fn canonical(&self) -> bool {
-        let residues = self.base.residues();
-        self.digits.iter().all(|d| residues.contains(d))
+    pub fn canonical(&self) -> Result<bool> {
+        let residues = self.base.residues()?;
+        Ok(self.digits.iter().all(|d| residues.contains(d)))
     }
     /// Returns the count of words of a level, `|F|^L`.
     pub fn fill(&self, level: usize) -> u128 {
@@ -284,41 +322,48 @@ impl Radix {
 /// Returns the Koch curve as a radix design: base `3` on the hexagonal lattice, digits `0, 1, 2 + omega, 2`, twists `1, e^(i pi/3), e^(-i pi/3), 1`.
 ///
 /// The digits are not the canonical residues: `2` and `-1` share a class and the canonical system holds `-1`, so the code alone does not name this design.
-pub fn koch() -> Radix {
-    let base = Base::new(Ring::Eisenstein, (3, 0));
+pub fn koch() -> Result<Radix> {
+    let base = Base::new(Ring::Eisenstein, (3, 0))?;
     let digits = vec![(0, 0), (1, 0), (2, 1), (2, 0)];
-    Radix::new(base, digits, vec![(1, 0); 4]).with_twists(&[0, 1, 5, 0])
+    Radix::new(base, digits, vec![(1, 0); 4])?.with_twists(&[0, 1, 5, 0])
 }
 
 /// Returns the Sierpinski gasket as a radix design: base `2` on the hexagonal lattice, three of the four residues, code `7`.
-pub fn gasket() -> Radix {
-    Radix::from_code(Base::new(Ring::Eisenstein, (2, 0)), 7)
+pub fn gasket() -> Result<Radix> {
+    Radix::from_code(Base::new(Ring::Eisenstein, (2, 0))?, 7)
 }
 
 /// Returns the twindragon as a radix design: base `1 + i` on the square lattice, the full residue system, code `3`.
-pub fn twindragon() -> Radix {
-    Radix::from_code(Base::new(Ring::Gaussian, (1, 1)), 3)
+pub fn twindragon() -> Result<Radix> {
+    Radix::from_code(Base::new(Ring::Gaussian, (1, 1))?, 3)
 }
 
 /// Returns the terdragon as a radix design: base `2 + omega` on the hexagonal lattice, the full residue system, code `7`, twisted by `1, omega, 1`.
 ///
 /// The untwisted code misses the curve: reading the L-system `F -> F + F - F` at `120` degrees as a turtle, three segments to a level, and normalising by the endpoint gives the segment starts word for word only under this twist.
-pub fn terdragon() -> Radix {
-    Radix::from_code(Base::new(Ring::Eisenstein, (2, 1)), 7).with_twists(&[0, 2, 0])
+pub fn terdragon() -> Result<Radix> {
+    Radix::from_code(Base::new(Ring::Eisenstein, (2, 1))?, 7)?.with_twists(&[0, 2, 0])
 }
 
 /// Returns the flowsnake as a radix design: base `3 + omega` of norm seven on the hexagonal lattice, the full residue system, code `127`.
-pub fn flowsnake() -> Radix {
-    Radix::from_code(Base::new(Ring::Eisenstein, (3, 1)), 127)
+pub fn flowsnake() -> Result<Radix> {
+    Radix::from_code(Base::new(Ring::Eisenstein, (3, 1))?, 127)
 }
 
 /// Returns the plane design of a cell code as a radix design: base the rational integer `m`, of norm `m^2`, on the square lattice, no twist, digits the box residues `{x + y i : 0 <= x, y < m}`.
 ///
 /// Bit `y m + x` of the code is the cell at row `y` and column `x` of the `m` by `m` tile, the column the real part and the row the imaginary part, so the level-`L` words scaled by `m^L` are exactly the filled cells of the level-`L` tile read as `(column, row)`.
-pub fn tile(m: u64, code: u128) -> Radix {
-    let base = Base::new(Ring::Gaussian, (m as i64, 0));
+pub fn tile(m: u64, code: u128) -> Result<Radix> {
+    let base = Base::new(Ring::Gaussian, (m as i64, 0))?;
     let cells = (m * m) as usize;
-    assert!(code >> cells == 0, "code out of range for the base");
+    if cells >= 128 {
+        return overflow_error(format!(
+            "a {m} by {m} tile holds {cells} cells and a code carries 128."
+        ));
+    }
+    if code >> cells != 0 {
+        return value_error(format!("the code {code} runs past the {cells} cells."));
+    }
     let digits: Vec<(i64, i64)> = (0..cells)
         .filter(|i| (code >> i) & 1 == 1)
         .map(|i| ((i as u64 % m) as i64, (i as u64 / m) as i64))
@@ -337,9 +382,9 @@ mod tests {
 
     #[test]
     fn the_canonical_residues_are_a_complete_system() {
-        let three = Base::new(Ring::Eisenstein, (3, 0));
+        let three = Base::new(Ring::Eisenstein, (3, 0)).unwrap();
         assert_eq!(
-            three.residues(),
+            three.residues().unwrap(),
             vec![
                 (0, 0),
                 (1, 0),
@@ -353,25 +398,31 @@ mod tests {
             ]
         );
         assert_eq!(
-            Base::new(Ring::Gaussian, (1, 1)).residues(),
+            Base::new(Ring::Gaussian, (1, 1))
+                .unwrap()
+                .residues()
+                .unwrap(),
             vec![(0, 0), (1, 0)]
         );
         assert_eq!(
-            Base::new(Ring::Gaussian, (2, 1)).residues(),
+            Base::new(Ring::Gaussian, (2, 1))
+                .unwrap()
+                .residues()
+                .unwrap(),
             vec![(0, 0), (1, 0), (0, 1), (-1, 0), (0, -1)]
         );
         let bases = [
-            Base::new(Ring::Gaussian, (2, 0)),
-            Base::new(Ring::Gaussian, (1, 1)),
-            Base::new(Ring::Gaussian, (2, 1)),
-            Base::new(Ring::Gaussian, (3, 0)),
-            Base::new(Ring::Eisenstein, (2, 0)),
-            Base::new(Ring::Eisenstein, (2, 1)),
-            Base::new(Ring::Eisenstein, (3, 0)),
-            Base::new(Ring::Eisenstein, (3, 1)),
+            Base::new(Ring::Gaussian, (2, 0)).unwrap(),
+            Base::new(Ring::Gaussian, (1, 1)).unwrap(),
+            Base::new(Ring::Gaussian, (2, 1)).unwrap(),
+            Base::new(Ring::Gaussian, (3, 0)).unwrap(),
+            Base::new(Ring::Eisenstein, (2, 0)).unwrap(),
+            Base::new(Ring::Eisenstein, (2, 1)).unwrap(),
+            Base::new(Ring::Eisenstein, (3, 0)).unwrap(),
+            Base::new(Ring::Eisenstein, (3, 1)).unwrap(),
         ];
         for base in bases {
-            let residues = base.residues();
+            let residues = base.residues().unwrap();
             assert_eq!(residues.len(), base.norm() as usize);
             for (i, &z) in residues.iter().enumerate() {
                 for &w in &residues[..i] {
@@ -387,51 +438,62 @@ mod tests {
                     assert_eq!(hits, 1, "{base:?} {a} {b}");
                 }
             }
-            for map in base.group() {
+            for map in base.group().unwrap() {
                 let seen: HashSet<usize> = map.iter().copied().collect();
                 assert_eq!(seen.len(), residues.len(), "{base:?}");
             }
             assert_eq!(
-                base.group().len(),
+                base.group().unwrap().len(),
                 base.ring().units() * if base.mirrored() { 2 } else { 1 }
             );
         }
-        let multiset = Base::new(Ring::Gaussian, (1, 1)).group();
+        let multiset = Base::new(Ring::Gaussian, (1, 1)).unwrap().group().unwrap();
         let image: HashSet<&Vec<usize>> = multiset.iter().collect();
         assert_eq!(multiset.len(), 8);
         assert_eq!(image.len(), 1);
     }
 
     #[test]
-    #[should_panic(expected = "congruent modulo the base")]
-    fn a_congruent_digit_pair_is_refused() {
-        let base = Base::new(Ring::Eisenstein, (3, 0));
+    fn refuses_a_base_a_digit_list_and_a_code_out_of_range() {
+        assert!(Base::new(Ring::Gaussian, (1, 0)).is_err());
+        assert!(Base::new(Ring::Eisenstein, (0, 0)).is_err());
+        assert!(Base::new(Ring::Gaussian, (1, 1)).is_ok());
+        let base = Base::new(Ring::Eisenstein, (3, 0)).unwrap();
         assert!(base.congruent((2, 0), (-1, 0)));
-        Radix::new(base, vec![(0, 0), (2, 0), (-1, 0)], vec![(1, 0); 3]);
+        assert!(Radix::new(base, vec![(0, 0), (2, 0), (-1, 0)], vec![(1, 0); 3]).is_err());
+        assert!(Radix::new(base, vec![(0, 0), (1, 0)], vec![(1, 0); 3]).is_err());
+        assert!(Radix::new(base, vec![(0, 0)], vec![(2, 0)]).is_err());
+        assert!(Radix::new(base, vec![(0, 0), (1, 0)], vec![(1, 0); 2]).is_ok());
+        assert!(Radix::from_code(base, 1 << 9).is_err());
+        assert!(Radix::from_code(base, (1 << 9) - 1).is_ok());
+        assert!(twindragon().unwrap().with_twists(&[0, 9]).is_err());
+        assert!(tile(3, 1 << 9).is_err());
+        assert!(tile(12, 1).is_err());
+        assert!(tile(3, (1 << 9) - 1).is_ok());
     }
 
     #[test]
     fn the_canonical_residues_build_a_design() {
         let bases = [
-            Base::new(Ring::Gaussian, (1, 1)),
-            Base::new(Ring::Gaussian, (2, 1)),
-            Base::new(Ring::Eisenstein, (2, 0)),
-            Base::new(Ring::Eisenstein, (3, 0)),
-            Base::new(Ring::Eisenstein, (3, 1)),
+            Base::new(Ring::Gaussian, (1, 1)).unwrap(),
+            Base::new(Ring::Gaussian, (2, 1)).unwrap(),
+            Base::new(Ring::Eisenstein, (2, 0)).unwrap(),
+            Base::new(Ring::Eisenstein, (3, 0)).unwrap(),
+            Base::new(Ring::Eisenstein, (3, 1)).unwrap(),
         ];
         for base in bases {
-            let digits = base.residues();
+            let digits = base.residues().unwrap();
             let twists = vec![(1, 0); digits.len()];
-            let design = Radix::new(base, digits, twists);
+            let design = Radix::new(base, digits, twists).unwrap();
             assert_eq!(design.size(), base.norm() as usize);
-            assert!(design.canonical());
+            assert!(design.canonical().unwrap());
         }
-        assert_eq!(koch().size(), 4);
+        assert_eq!(koch().unwrap().size(), 4);
     }
 
     #[test]
     fn the_terdragon_is_the_twist_the_l_system_reads() {
-        let design = terdragon();
+        let design = terdragon().unwrap();
         assert_eq!(design.twists().to_vec(), vec![(1, 0), (0, 1), (1, 0)]);
         let level = 2;
         let mut word = b"F".to_vec();
@@ -484,9 +546,9 @@ mod tests {
 
     #[test]
     fn the_twisted_koch_words_are_the_textbook_maps() {
-        let koch = koch();
+        let koch = koch().unwrap();
         assert_eq!(koch.size(), 4);
-        assert!(!koch.canonical());
+        assert!(!koch.canonical().unwrap());
         assert_eq!(koch.base().norm(), 9);
         assert_eq!(koch.digits(), [(0, 0), (1, 0), (2, 1), (2, 0)]);
         assert_eq!(koch.fill(2), 16);
@@ -524,11 +586,11 @@ mod tests {
 
     #[test]
     fn the_real_base_with_no_twist_is_the_plane_cell() {
-        let carpet = tile(3, 0b111101111);
+        let carpet = tile(3, 0b111101111).unwrap();
         assert_eq!(carpet.size(), 8);
         assert_eq!(carpet.ring(), Ring::Gaussian);
         assert_eq!(carpet.base().norm(), 9);
-        assert!(!carpet.canonical());
+        assert!(!carpet.canonical().unwrap());
         assert!((carpet.dimension() - 8f64.ln() / 3f64.ln()).abs() < 1e-12);
         assert_eq!(format!("{:.6}", carpet.dimension()), "1.892789");
         assert_eq!(carpet.fill(2), 64);
@@ -549,7 +611,13 @@ mod tests {
 
     #[test]
     fn the_fill_law_counts_every_word_and_the_twist_only_moves_it() {
-        for design in [gasket(), twindragon(), terdragon(), flowsnake(), koch()] {
+        for design in [
+            gasket().unwrap(),
+            twindragon().unwrap(),
+            terdragon().unwrap(),
+            flowsnake().unwrap(),
+            koch().unwrap(),
+        ] {
             for level in 0..=4 {
                 assert_eq!(design.words(level).len() as u128, design.fill(level));
                 assert!(design.distinct(level) <= design.words(level).len());
@@ -561,23 +629,23 @@ mod tests {
                     < 1e-12
             );
         }
-        let plain = twindragon();
-        let turned = plain.clone().with_twists(&[0, 1]);
+        let plain = twindragon().unwrap();
+        let turned = plain.clone().with_twists(&[0, 1]).unwrap();
         assert_eq!(plain.words(4).len(), turned.words(4).len());
         assert_ne!(plain.words(4), turned.words(4));
-        let plain_pair = Radix::from_code(Base::new(Ring::Gaussian, (2, 0)), 3);
+        let plain_pair = Radix::from_code(Base::new(Ring::Gaussian, (2, 0)).unwrap(), 3).unwrap();
         assert_eq!(plain_pair.distinct(2), 4);
-        let glue = plain_pair.with_twists(&[0, 2]);
+        let glue = plain_pair.with_twists(&[0, 2]).unwrap();
         assert_eq!(glue.words(2), vec![(0, 0), (1, 0), (2, 0), (1, 0)]);
         assert_eq!(glue.fill(2), 4);
         assert_eq!(glue.distinct(2), 3);
-        assert_eq!(glue.code(), 3);
-        assert!(glue.canonical());
-        assert_eq!(gasket().code(), 7);
-        assert_eq!(flowsnake().code(), 127);
-        assert!((gasket().dimension() - 3f64.ln() / 2f64.ln()).abs() < 1e-12);
-        assert!((twindragon().dimension() - 2.0).abs() < 1e-12);
-        assert!((terdragon().dimension() - 2.0).abs() < 1e-12);
-        assert!((flowsnake().dimension() - 2.0).abs() < 1e-12);
+        assert_eq!(glue.code().unwrap(), 3);
+        assert!(glue.canonical().unwrap());
+        assert_eq!(gasket().unwrap().code().unwrap(), 7);
+        assert_eq!(flowsnake().unwrap().code().unwrap(), 127);
+        assert!((gasket().unwrap().dimension() - 3f64.ln() / 2f64.ln()).abs() < 1e-12);
+        assert!((twindragon().unwrap().dimension() - 2.0).abs() < 1e-12);
+        assert!((terdragon().unwrap().dimension() - 2.0).abs() < 1e-12);
+        assert!((flowsnake().unwrap().dimension() - 2.0).abs() < 1e-12);
     }
 }

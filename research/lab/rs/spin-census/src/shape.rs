@@ -246,13 +246,7 @@ pub fn control() {
     let mut mismatch = 0usize;
     for code in 1..512u128 {
         let grid = plane(code, BASE, 2);
-        let live: Vec<usize> = grid
-            .bytes()
-            .iter()
-            .enumerate()
-            .filter(|(_, b)| **b != 0)
-            .map(|(f, _)| f)
-            .collect();
+        let live: Vec<usize> = (0..grid.size()).filter(|&f| grid.at(f) != 0).collect();
         if live != kron_plane(code, BASE) {
             mismatch += 1;
         }

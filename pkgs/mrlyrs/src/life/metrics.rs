@@ -16,12 +16,12 @@ pub fn churn(grids: &[Cell2d]) -> f64 {
 
 /// Returns the grid's binary Shannon entropy in millibits.
 pub fn entropy(grid: &Cell2d) -> i64 {
-    let bytes = grid.types().bytes();
-    let total = bytes.len();
+    let types = grid.types();
+    let total = types.size();
     if total == 0 {
         return 0;
     }
-    let ones = bytes.iter().filter(|&&b| b == 1).count();
+    let ones = types.count(1);
     let p = ones as f64 / total as f64;
     if p == 0.0 || p == 1.0 {
         return 0;
@@ -44,7 +44,7 @@ mod tests {
     use crate::core::tensor::Tensor;
 
     fn grid(bits: &[u8], side: usize) -> Cell2d {
-        Cell2d::new(Tensor::of(bits.to_vec(), vec![side, side]))
+        Cell2d::new(Tensor::of(bits.to_vec(), vec![side, side]).unwrap()).unwrap()
     }
 
     #[test]

@@ -29,7 +29,7 @@ fn slice_raster(
 #[wasm_bindgen]
 pub fn profile(field: &[f32], size: usize, steps: usize) -> Result<Vec<f32>, Fault> {
     square(field, size)?;
-    Ok(spin::profile(field, size, steps))
+    Ok(spin::profile(field, size, steps)?)
 }
 
 /// Rasterizes the diagonal slice of the cube the code names on a square of the size: one byte per pixel, one on a fill.
@@ -61,7 +61,7 @@ fn painted(
             "the field must be size by size with size at least 1.",
         ));
     }
-    let field = Field::from_data(data, size);
+    let field = Field::from_data(data, size)?;
     let png = render(&field, &ramp_of(ramp), levels, false, invert, 1)?;
     let (width, height, colors) = mrlyrs::core::unpng(&png)?;
     Ok(Pixels::of(width, height, colors))
@@ -137,7 +137,7 @@ pub fn radial(
         step / 360.0,
         blend,
         samples,
-    ))
+    )?)
 }
 
 /// The circular-harmonic power of a square field over rings radii: one energy per order from zero to the last, each ring's coefficients exact from its arcs.
@@ -149,7 +149,7 @@ pub fn harmonics(
     orders: usize,
 ) -> Result<Vec<f64>, Fault> {
     square(field, size)?;
-    Ok(spin::harmonics(field, size, rings, orders))
+    Ok(spin::harmonics(field, size, rings, orders)?)
 }
 
 /// The rotation order a harmonic power spectrum reveals: the gcd of the live orders, zero when none lives.

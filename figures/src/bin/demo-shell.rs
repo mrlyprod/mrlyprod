@@ -21,7 +21,7 @@ fn outline(board: &mut Board, grid: &Grid, x: u64, y: u64, step: usize, thick: f
 
 fn main() -> Result<()> {
     let tile = factory::create(Code::from(7u128), 3, 2, 2, 1)?;
-    let keep: Vec<bool> = tile.bytes().iter().map(|&byte| byte != 0).collect();
+    let keep: Vec<bool> = tile.bytes()?.iter().map(|&byte| byte != 0).collect();
     let tree = crossing_tree(RADIUS, 3, &keep);
     assert_eq!(tree.orphans, 0);
     assert_eq!(tree.levels.len(), LEVEL + 1);
@@ -41,7 +41,7 @@ fn main() -> Result<()> {
     let grid = Grid::new(board.frame(0.08), SIDE, SIDE, 0.0);
     for x in 0..SIDE {
         for y in 0..SIDE {
-            if design.bytes()[x * SIDE + y] != 0 {
+            if design.bytes()?[x * SIDE + y] != 0 {
                 grid.fill(&mut board, y, SIDE - 1 - x, ink::line());
             }
         }

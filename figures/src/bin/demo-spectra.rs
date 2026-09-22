@@ -10,8 +10,8 @@ const WINDOW: f64 = 0.10;
 fn main() -> Result<()> {
     let cell = six::cut(&three::create(Code::from(23u128), 3, 2, 2)?)?;
     let whole = six::graph::slice_core_graph(&cell)?;
-    let pieces = census(&whole).components;
-    let network = largest_component(&whole);
+    let pieces = census(&whole)?.components;
+    let network = largest_component(&whole)?;
     let values = laplacian_spectrum(&network, true)?;
     let points = spectral_points(&values);
     let (intercept, slope, fitted) = spectral_fit(&values, WINDOW).expect("the low window fits");

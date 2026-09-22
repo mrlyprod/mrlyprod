@@ -10,7 +10,8 @@ const WIDE: usize = 4;
 
 fn at(cell: &Cell6d, side: usize, row: usize, col: usize) -> u8 {
     let offset = (cell.width() - hex::row_len(side, row)) / 2;
-    cell.cell.types().get(&[row, col + offset])
+    let types = cell.cell.types();
+    types.at(types.index(&[row, col + offset])) as u8
 }
 
 fn panels(frame: Frame, gap: f64) -> Vec<Frame> {

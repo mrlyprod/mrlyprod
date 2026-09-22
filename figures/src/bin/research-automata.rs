@@ -38,7 +38,7 @@ fn main() -> Result<()> {
         if elementary::surjective(rule) {
             surjective += 1;
         }
-        let diagram = elementary::single_seed(rule, STEPS);
+        let diagram = elementary::single_seed(rule, STEPS)?;
         assert_eq!(diagram.shape, vec![rows, WINDOW]);
         let ox = (area.x + (rule as usize % CENSUS) as f64 * pitch).round();
         let oy = (area.y + (rule as usize / CENSUS) as f64 * pitch + rise).round();

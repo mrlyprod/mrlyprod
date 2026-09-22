@@ -250,17 +250,6 @@ impl Source {
     pub fn is_random(self) -> bool {
         matches!(self, Source::Random(_))
     }
-    fn is_number(self) -> bool {
-        matches!(
-            self,
-            Source::Evens
-                | Source::Odds
-                | Source::Random(_)
-                | Source::Primes
-                | Source::Binary
-                | Source::Fibonacci
-        )
-    }
 }
 
 const HEADS: [&str; 3] = ["random_", "code_fills_", "code_voids_"];
@@ -308,18 +297,13 @@ fn mrly_sequence(limit: usize, count_of: impl Fn(usize) -> Result<usize>) -> Res
 
 /// Generates the sequence's values up to the limit.
 pub fn sequence(seq: Source, limit: usize) -> Result<Vec<usize>> {
-    if seq.is_number() {
-        return Ok(match seq {
-            Source::Evens => series::evens(limit),
-            Source::Odds => series::odds(limit),
-            Source::Random(seed) => random_subset(seed, limit),
-            Source::Primes => prime::primes(limit),
-            Source::Binary => series::binary(limit),
-            Source::Fibonacci => series::fibonacci(limit),
-            _ => unreachable!(),
-        });
-    }
     match seq {
+        Source::Evens => Ok(series::evens(limit)),
+        Source::Odds => Ok(series::odds(limit)),
+        Source::Random(seed) => Ok(random_subset(seed, limit)),
+        Source::Primes => Ok(prime::primes(limit)),
+        Source::Binary => Ok(series::binary(limit)),
+        Source::Fibonacci => Ok(series::fibonacci(limit)),
         Source::GridSquares => mrly_sequence(limit, |n| Ok(n * n)),
         Source::CarpetFills => mrly_sequence(limit, |n| Ok(census::fills(&two::carpet(n, 1)?))),
         Source::CarpetVoids => mrly_sequence(limit, |n| Ok(census::voids(&two::carpet(n, 1)?))),
@@ -343,7 +327,6 @@ pub fn sequence(seq: Source, limit: usize) -> Result<Vec<usize>> {
         Source::CodeVoids(code) => mrly_sequence(limit, |n| {
             Ok(counts::void(Code::from(code), n, DIM, 1, BASE)? as usize)
         }),
-        _ => unreachable!(),
     }
 }
 
@@ -591,5 +574,17 @@ mod tests {
         assert_eq!(drawn.values(8).unwrap(), vec![2, 3, 5, 8]);
         let wide = Counts::drawn(Source::Fibonacci, true, true);
         assert_eq!(wide.values(24).unwrap(), vec![0, 1, 2, 3, 5, 8, 13, 21]);
+    }
+    #[test]
+    fn refuses_counts() {
+        assert!(counts(Source::CodeFills(1 << 20), 8, true, true).is_err());
+        assert!(counts(Source::CodeVoids(1 << 20), 8, true, true).is_err());
+        assert!(Counts::drawn(Source::CodeFills(1 << 20), false, false)
+            .values(8)
+            .is_err());
+        assert_eq!(
+            counts(Source::Evens, 0, false, false).unwrap(),
+            Vec::<usize>::new()
+        );
     }
 }

@@ -87,8 +87,8 @@ impl Volume {
     /// Thresholds into a byte tensor: one where a sample reaches the level, zero below.
     pub fn solid(&self, level: f32) -> Tensor {
         let mut grid = Tensor::new(vec![self.size; 3]);
-        for (site, &v) in grid.bytes_mut().iter_mut().zip(self.data.iter()) {
-            *site = (v >= level) as u8;
+        for (flat, &v) in self.data.iter().take(grid.size()).enumerate() {
+            grid.put(flat, i64::from(v >= level));
         }
         grid
     }

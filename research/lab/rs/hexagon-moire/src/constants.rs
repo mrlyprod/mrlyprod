@@ -225,7 +225,7 @@ fn split() {
 pub fn run() {
     let catalan = beta(2.0, TERMS);
     let eisenstein = dirichlet(2.0, &[0, 1, -1], TERMS);
-    let zeta3 = zeta(3.0, 2_000_000);
+    let zeta3 = zeta(3.0, 2_000_000).expect("three is above one");
     println!("constants from their own series");
     println!("  G = {catalan:.10}  L(2, chi_-3) = {eisenstein:.10}  zeta(3) = {zeta3:.10}");
     println!(

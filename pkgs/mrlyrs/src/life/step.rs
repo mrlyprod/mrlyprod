@@ -1,5 +1,4 @@
 use super::Boundary;
-use crate::core::cell::Cell;
 use crate::core::error::Result;
 use crate::core::tensor::Tensor;
 use crate::math::cell::models::counting_dtype;
@@ -13,22 +12,19 @@ pub fn next_grid(
     mask: &Tensor,
     boundary: Boundary,
 ) -> Result<Cell2d> {
-    let dtype = counting_dtype(mask);
-    let counted = Cell::new(cell.types().clone()).neighbors(mask, 1, boundary.wrap(), dtype)?;
-    let neighbors = counted.tags.expect("neighbors sets tags");
-    let types = &counted.types;
+    let types = cell.types();
+    let neighbors = types.neighbors(mask, 1, boundary.wrap(), counting_dtype(mask))?;
     let mut next = Tensor::new(types.shape.clone());
-    for (i, slot) in next.bytes_mut().iter_mut().enumerate() {
+    for i in 0..types.size() {
         let n = neighbors.at(i) as usize;
-        let alive = types.bytes()[i] == 1;
-        let lives = if alive {
+        let lives = if types.at(i) == 1 {
             survive.contains(&n)
         } else {
             birth.contains(&n)
         };
-        *slot = if lives { 1 } else { 0 };
+        next.put(i, i64::from(lives));
     }
-    Ok(Cell2d::new(next))
+    Cell2d::new(next)
 }
 
 #[cfg(test)]
@@ -42,20 +38,20 @@ mod tests {
     #[test]
     fn conway_blinker_oscillates() {
         let cell = blinker();
-        let mask = moore().types().clone();
+        let mask = moore().unwrap().types().clone();
         let next = next_grid(&cell, &[3], &[2, 3], &mask, Boundary::Constant).unwrap();
-        assert_eq!(next.types().get(&[2, 1]), 1);
-        assert_eq!(next.types().get(&[2, 2]), 1);
-        assert_eq!(next.types().get(&[2, 3]), 1);
-        assert_eq!(next.types().get(&[1, 2]), 0);
-        assert_eq!(next.types().get(&[3, 2]), 0);
+        assert_eq!(next.types().get(&[2, 1]).unwrap(), 1);
+        assert_eq!(next.types().get(&[2, 2]).unwrap(), 1);
+        assert_eq!(next.types().get(&[2, 3]).unwrap(), 1);
+        assert_eq!(next.types().get(&[1, 2]).unwrap(), 0);
+        assert_eq!(next.types().get(&[3, 2]).unwrap(), 0);
         let back = next_grid(&next, &[3], &[2, 3], &mask, Boundary::Constant).unwrap();
         assert_eq!(back.types(), cell.types());
     }
     #[test]
     fn empty_stays_empty() {
         let cell = designs::zeros(3, 1).unwrap();
-        let mask = moore().types().clone();
+        let mask = moore().unwrap().types().clone();
         let next = next_grid(&cell, &[3], &[2, 3], &mask, Boundary::Constant).unwrap();
         assert_eq!(next.types().sum(), 0);
     }
@@ -63,9 +59,9 @@ mod tests {
     fn wide_masks_count_beyond_a_byte() {
         use crate::core::tensor::Tensor;
         let mut mask = Tensor::full(vec![17, 17], 1);
-        mask.set(&[8, 8], 0);
+        mask.set(&[8, 8], 0).unwrap();
         let full = 17 * 17 - 1;
-        let cell = Cell2d::new(Tensor::full(vec![21, 21], 1));
+        let cell = Cell2d::new(Tensor::full(vec![21, 21], 1)).unwrap();
         let kept = next_grid(&cell, &[], &[full], &mask, Boundary::Wrap).unwrap();
         assert_eq!(kept.types().sum() as usize, 21 * 21);
         let gone = next_grid(&cell, &[], &[full - 1], &mask, Boundary::Wrap).unwrap();
@@ -91,18 +87,23 @@ mod tests {
             };
             let born = window(birth.0, birth.1);
             let kept = window(survive.0, survive.1);
-            let (kernel_re, kernel_im) = transform(&embed_kernel(mask.bytes(), span, size), size);
+            let (kernel_re, kernel_im) = transform(
+                &embed_kernel(mask.bytes().unwrap(), span, size).unwrap(),
+                size,
+            )
+            .unwrap();
             let mut rng = Rng::new(11);
             let mut fast: Vec<u8> = (0..size * size)
                 .map(|_| u8::from(rng.chance(0.5)))
                 .collect();
-            let mut slow = Cell2d::new(Tensor::of(fast.clone(), vec![size, size]));
+            let mut slow =
+                Cell2d::new(Tensor::of(fast.clone(), vec![size, size]).unwrap()).unwrap();
             for step in 0..8 {
                 let field: Vec<f64> = fast
                     .iter()
                     .map(|&t| if t != 0 { 1.0 } else { 0.0 })
                     .collect();
-                let counts = convolve_with(&field, &kernel_re, &kernel_im, size);
+                let counts = convolve_with(&field, &kernel_re, &kernel_im, size).unwrap();
                 for (slot, &count) in fast.iter_mut().zip(&counts) {
                     let n = (count.round().max(0.0) as usize).min(budget);
                     let lives = if *slot != 0 {
@@ -115,7 +116,7 @@ mod tests {
                 slow = next_grid(&slow, &born, &kept, &mask, Boundary::Wrap).unwrap();
                 assert_eq!(
                     fast,
-                    slow.types().bytes(),
+                    slow.types().bytes().unwrap(),
                     "code {code} level {level} step {step}"
                 );
             }

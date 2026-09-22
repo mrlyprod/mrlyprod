@@ -203,8 +203,16 @@ mod tests {
         let x = xtree(3, 1).unwrap();
         let z = ztree(3, 1).unwrap();
         let images: Vec<Vec<u8>> = (0..24)
-            .map(|i| x.clone().orient(i).unwrap().types().bytes().to_vec())
+            .map(|i| {
+                x.clone()
+                    .orient(i)
+                    .unwrap()
+                    .types()
+                    .bytes()
+                    .unwrap()
+                    .to_vec()
+            })
             .collect();
-        assert!(images.contains(&z.types().bytes().to_vec()));
+        assert!(images.contains(&z.types().bytes().unwrap().to_vec()));
     }
 }

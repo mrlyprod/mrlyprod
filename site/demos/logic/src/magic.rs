@@ -69,7 +69,7 @@ pub fn magic_grid(codes: Vec<String>, numbers: Vec<u32>, bases: Vec<u32>) -> Res
     Ok(Grid {
         width: tile.shape[1] as u32,
         height: tile.shape[0] as u32,
-        types: tile.bytes().to_vec(),
+        types: tile.bytes()?.to_vec(),
     })
 }
 
@@ -85,7 +85,7 @@ pub fn magic_faces(
 ) -> Result<Vec<f32>, Fault> {
     let tile = drawn(&letters(codes, numbers, 3, bases)?, SOLID_SIDE)?;
     let mut pack = Pack::new();
-    for quad in quads(&Cell3d::new(tile)) {
+    for quad in quads(&Cell3d::new(tile)?) {
         pack.quad(quad.verts, quad.normal);
     }
     Ok(pack.buffer())
@@ -101,7 +101,7 @@ pub fn magic_cells(
     let tile = drawn(&letters(codes, numbers, 3, bases)?, SOLID_SIDE)?;
     let (cols, deep) = (tile.shape[1], tile.shape[2]);
     let mut out = Vec::new();
-    for (flat, &site) in tile.bytes().iter().enumerate() {
+    for (flat, &site) in tile.bytes()?.iter().enumerate() {
         if site != 0 {
             out.extend([
                 (flat / (cols * deep)) as u32,
@@ -122,7 +122,7 @@ pub fn magic_surface(
 ) -> Result<String, Fault> {
     let tile = drawn(&letters(codes, numbers, 3, bases)?, SOLID_SIDE)?;
     let (rows, cols, deep) = (tile.shape[0], tile.shape[1], tile.shape[2]);
-    let bytes = tile.bytes();
+    let bytes = tile.bytes()?;
     let mut faces = 0u128;
     for i in 0..rows {
         for j in 0..cols {
@@ -154,7 +154,7 @@ pub fn magic_perimeter(
     bases: Vec<u32>,
 ) -> Result<String, Fault> {
     let tile = drawn(&letters(codes, numbers, 2, bases)?, PLANE_SIDE)?;
-    Ok(mrlyrs::math::two::census::perimeter(&Cell2d::new(tile)).to_string())
+    Ok(mrlyrs::math::two::census::perimeter(&Cell2d::new(tile)?).to_string())
 }
 
 // HEXAGON
@@ -166,7 +166,7 @@ fn hexed(
     projection: &str,
 ) -> Result<Cell6d, Fault> {
     let tile = drawn(&letters(codes, numbers, 3, bases)?, HEX_SIDE)?;
-    let cell = Cell3d::new(tile);
+    let cell = Cell3d::new(tile)?;
     Ok(match projection {
         "pro" => six::pro(&cell)?,
         "cut" => six::cut(&cell)?,
@@ -222,12 +222,11 @@ pub fn magic_hex_census(
 
 fn pieces(tile: &Tensor) -> u128 {
     let (rows, cols) = (tile.shape[0], tile.shape[1]);
-    let bytes = tile.bytes();
     let mut seen = vec![false; rows * cols];
     let mut count = 0u128;
     let mut stack: Vec<usize> = Vec::new();
     for start in 0..rows * cols {
-        if bytes[start] == 0 || seen[start] {
+        if tile.at(start) == 0 || seen[start] {
             continue;
         }
         count += 1;
@@ -249,7 +248,7 @@ fn pieces(tile: &Tensor) -> u128 {
                 steps.push(at + 1);
             }
             for next in steps {
-                if bytes[next] != 0 && !seen[next] {
+                if tile.at(next) != 0 && !seen[next] {
                     seen[next] = true;
                     stack.push(next);
                 }
@@ -321,18 +320,18 @@ pub fn magic_census(
         .iter()
         .zip(&fills)
         .map(|(layer, count)| {
-            json!({
+            Ok(json!({
                 "code": layer.design.code.to_string(),
                 "number": layer.number,
                 "base": layer.design.base,
-                "name": Bang::new(layer.design.code, dimension, layer.design.base).to_mrly(),
+                "name": Bang::new(layer.design.code, dimension, layer.design.base).to_mrly()?,
                 "fill": count.to_string(),
                 "cells": (layer.number as u128).pow(dimension as u32).to_string(),
                 "dimension": (*count as f64).ln() / (layer.number as f64).ln(),
                 "native": layer.number == layer.design.base,
-            })
+            }))
         })
-        .collect();
+        .collect::<Result<Vec<Json>, Fault>>()?;
     Ok(json!({
         "length": layers.len(),
         "side": side.to_string(),
@@ -480,7 +479,7 @@ pub fn magic_name(
     bases: Vec<u32>,
     dimension: usize,
 ) -> Result<String, Fault> {
-    Ok(spelt(codes, numbers, bases, dimension)?.to_mrly())
+    Ok(spelt(codes, numbers, bases, dimension)?.to_mrly()?)
 }
 
 /// Prints the file name of a word, the form a query string carries.
@@ -491,7 +490,7 @@ pub fn magic_key(
     bases: Vec<u32>,
     dimension: usize,
 ) -> Result<String, Fault> {
-    Ok(spelt(codes, numbers, bases, dimension)?.to_file())
+    Ok(spelt(codes, numbers, bases, dimension)?.to_file()?)
 }
 
 /// Reads a word's file name back into its dim, codes, sides and bases, as JSON.
@@ -542,8 +541,8 @@ pub fn magic_rates(
         "schedule": schedule,
         "length": rows.len(),
         "letters": [
-            Bang::new(pair.0.design.code, 2, pair.0.design.base).to_mrly(),
-            Bang::new(pair.1.design.code, 2, pair.1.design.base).to_mrly(),
+            Bang::new(pair.0.design.code, 2, pair.0.design.base).to_mrly()?,
+            Bang::new(pair.1.design.code, 2, pair.1.design.base).to_mrly()?,
         ],
         "rows": rows.iter().map(|(a, b)| vec![*a, *b]).collect::<Vec<Vec<f64>>>(),
         "control": mirror.iter().map(|(a, _)| *a).collect::<Vec<f64>>(),

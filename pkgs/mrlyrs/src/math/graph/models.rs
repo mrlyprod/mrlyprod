@@ -67,24 +67,37 @@ impl Network {
         });
         Ok(())
     }
-    /// Returns each node's branch count, indexed like the node list.
-    pub fn degree(&self) -> Vec<usize> {
-        let mut deg = vec![0; self.nodes.len()];
+    /// Returns each node's branch count, indexed like the node list, or an error when a branch names a node the network does not hold.
+    pub fn degree(&self) -> Result<Vec<usize>> {
+        let n = self.nodes.len();
+        let mut deg = vec![0; n];
         for b in &self.branches {
+            if b.parent >= n || b.child >= n {
+                return value_error(format!(
+                    "Branch endpoints out of range: {}, {}",
+                    b.parent, b.child
+                ));
+            }
             deg[b.parent] += 1;
             deg[b.child] += 1;
         }
-        deg
+        Ok(deg)
     }
-    /// Returns the undirected neighbor lists of every node.
-    pub fn adjacency(&self) -> HashMap<usize, Vec<usize>> {
-        let mut adj: HashMap<usize, Vec<usize>> =
-            (0..self.nodes.len()).map(|i| (i, Vec::new())).collect();
+    /// Returns the undirected neighbor lists of every node, or an error when a branch names a node the network does not hold.
+    pub fn adjacency(&self) -> Result<HashMap<usize, Vec<usize>>> {
+        let n = self.nodes.len();
+        let mut adj: HashMap<usize, Vec<usize>> = (0..n).map(|i| (i, Vec::new())).collect();
         for b in &self.branches {
-            adj.get_mut(&b.parent).unwrap().push(b.child);
-            adj.get_mut(&b.child).unwrap().push(b.parent);
+            if b.parent >= n || b.child >= n {
+                return value_error(format!(
+                    "Branch endpoints out of range: {}, {}",
+                    b.parent, b.child
+                ));
+            }
+            adj.entry(b.parent).or_default().push(b.child);
+            adj.entry(b.child).or_default().push(b.parent);
         }
-        adj
+        Ok(adj)
     }
 }
 
@@ -97,8 +110,24 @@ mod tests {
         let a = n.add_node(vec![0.0, 0.0]).unwrap();
         let b = n.add_node(vec![1.0, 0.0]).unwrap();
         n.add_branch(a, b, 1.0).unwrap();
-        assert_eq!(n.degree(), vec![1, 1]);
+        assert_eq!(n.degree().unwrap(), vec![1, 1]);
         assert!(n.add_node(vec![0.0]).is_err());
         assert!(n.add_branch(0, 5, 1.0).is_err());
+    }
+
+    #[test]
+    fn refuses_a_stray_dimension_and_a_branch_past_the_nodes() {
+        let mut net = Network::new(2);
+        net.add_node(vec![0.0, 0.0]).unwrap();
+        net.add_node(vec![1.0, 0.0]).unwrap();
+        assert!(net.add_node(vec![0.0]).is_err());
+        assert!(net.add_branch(0, 5, 1.0).is_err());
+        net.branches.push(Branch {
+            parent: 0,
+            child: 9,
+            radius: 1.0,
+        });
+        assert!(net.degree().is_err());
+        assert!(net.adjacency().is_err());
     }
 }

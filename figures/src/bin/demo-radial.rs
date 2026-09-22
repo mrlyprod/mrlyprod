@@ -19,10 +19,10 @@ fn main() -> Result<()> {
     let carpet = two::designs::create(Code::from(495u128), 3, LEVEL, 0, 3)?;
     assert_eq!(carpet.width(), SIDE);
     assert_eq!(carpet.types().sum(), 8u64.pow(LEVEL as u32));
-    let source: Vec<f32> = carpet.types().bytes().iter().map(|&b| b as f32).collect();
+    let source: Vec<f32> = carpet.types().bytes()?.iter().map(|&b| b as f32).collect();
     assert_eq!(source.len(), SIDE * SIDE);
 
-    let power = spin::harmonics(&source, SIDE, RINGS, ORDERS);
+    let power = spin::harmonics(&source, SIDE, RINGS, ORDERS)?;
     assert_eq!(spin::turns(&power), ORDER);
     assert_eq!(spin::petals(COPIES, ORDER), 12);
 
@@ -34,7 +34,7 @@ fn main() -> Result<()> {
         1.0 / COPIES as f64,
         spin::Blend::Mean,
         SAMPLES,
-    );
+    )?;
     assert_eq!(stack.len(), OUT * OUT);
     let values: Vec<f64> = stack.iter().map(|&v| v as f64).collect();
     let high = values.iter().copied().fold(f64::MIN, f64::max);

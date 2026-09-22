@@ -22,14 +22,14 @@ fn graph_of(
     match kind {
         "flat" => {
             let whole = two::core_graph(&two::create(Code::from(code), number, level, 0, 2)?)?;
-            let pieces = census::components(&whole);
+            let pieces = census::components(&whole)?;
             Ok((whole, pieces))
         }
         "slice" => {
             let cell = six::cut(&three::create(Code::from(code), number, level, 2)?)?;
             let whole = six::graph::slice_core_graph(&cell)?;
-            let pieces = census::components(&whole);
-            Ok((largest_component(&whole), pieces))
+            let pieces = census::components(&whole)?;
+            Ok((largest_component(&whole)?, pieces))
         }
         _ => Err(Fault::new(format!(
             "kind {kind:?} is neither \"flat\" nor \"slice\"."
@@ -61,7 +61,7 @@ pub fn spectrum(
         )));
     }
     let eigenvalues = spectra::laplacian_spectrum(&network, normalised)?;
-    let groups = spectra::clusters(&eigenvalues, TOLERANCE);
+    let groups = spectra::clusters(&eigenvalues, TOLERANCE)?;
     let fit = spectra::spectral_fit(&eigenvalues, window);
     let repeated: usize = groups.iter().filter(|g| g.1 > 1).map(|g| g.1).sum();
     let fraction = if nodes == 0 {

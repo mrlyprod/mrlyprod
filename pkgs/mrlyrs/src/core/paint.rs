@@ -184,8 +184,8 @@ impl Paint {
 /// Draws a random edition from the allowed list, or from all seven.
 pub fn random_edition(editions: Option<&[Edition]>, rng: &mut Rng) -> Edition {
     match editions {
-        Some(list) if !list.is_empty() => *rng.choice(list),
-        _ => *rng.choice(&Edition::all()),
+        Some(list) if !list.is_empty() => *rng.choice(list).expect("a list with items"),
+        _ => *rng.choice(&Edition::all()).expect("seven editions"),
     }
 }
 
@@ -202,7 +202,7 @@ fn random_primary(primaries: Option<&[Ink]>, rng: &mut Rng) -> Ink {
     if choices.is_empty() {
         choices = vec![Ink::Black, Ink::White];
     }
-    *rng.choice(&choices)
+    *rng.choice(&choices).expect("black and white at least")
 }
 
 fn random_secondary(count: Option<usize>, primary: Option<Ink>, rng: &mut Rng) -> Vec<Ink> {
@@ -257,33 +257,36 @@ pub fn reroll(mut paint: Paint, rng: &mut Rng) -> Paint {
 
 /// Draws the paint's scheme, target and primary under the config, then rerolls the rest.
 pub fn setup(mut paint: Paint, config: &Config, rng: &mut Rng) -> Paint {
-    paint.scheme = *rng.choice(&[Scheme::Multicolor, Scheme::Multitone]);
-    paint.target = config
-        .target
-        .unwrap_or_else(|| *rng.choice(&[Target::Fill, Target::Void]));
+    paint.scheme = *rng
+        .choice(&[Scheme::Multicolor, Scheme::Multitone])
+        .expect("two schemes");
+    paint.target = config.target.unwrap_or_else(|| {
+        *rng.choice(&[Target::Fill, Target::Void])
+            .expect("two targets")
+    });
     paint.primary = random_primary(config.primaries.as_deref(), rng);
     reroll(paint, rng)
 }
 
-fn remap_tags(target: Target, cell: &mut Cell) -> usize {
+fn remap_tags(target: Target, cell: &mut Cell) -> Result<usize> {
     let target_value = match target {
         Target::Fill => 0,
         Target::Void => 1,
     };
     let tags = match &cell.tags {
         Some(tags) => tags.clone(),
-        None => return 0,
+        None => return Ok(0),
     };
     let relevant: Vec<u8> = cell
         .types
-        .bytes()
+        .bytes()?
         .iter()
-        .zip(tags.bytes().iter())
+        .zip(tags.bytes()?.iter())
         .filter(|(&t, _)| t == target_value)
         .map(|(_, &tag)| tag)
         .collect();
     if relevant.is_empty() {
-        return 0;
+        return Ok(0);
     }
     let mut unique: Vec<u8> = relevant.clone();
     unique.sort_unstable();
@@ -294,12 +297,12 @@ fn remap_tags(target: Target, cell: &mut Cell) -> usize {
         .map(|(i, &tag)| (tag, i as u8))
         .collect();
     let data: Vec<u8> = tags
-        .bytes()
+        .bytes()?
         .iter()
         .map(|tag| *lookup.get(tag).unwrap_or(&0))
         .collect();
-    cell.tags = Some(Tensor::of(data, tags.shape.clone()));
-    unique.len()
+    cell.tags = Some(Tensor::of(data, tags.shape.clone())?);
+    Ok(unique.len())
 }
 
 fn apply_colors(mut paint: Paint, max_val: usize, rng: &mut Rng) -> Paint {
@@ -327,7 +330,7 @@ pub fn tag(
     match edition {
         Edition::Layers => {
             *cell = cell.clone().layers(Dtype::U8);
-            Ok(remap_tags(target, cell))
+            remap_tags(target, cell)
         }
         Edition::Neighbors => {
             let owned;
@@ -339,7 +342,7 @@ pub fn tag(
                 }
             };
             *cell = cell.clone().neighbors(neighbor_mask, 1, false, Dtype::U8)?;
-            Ok(remap_tags(target, cell))
+            remap_tags(target, cell)
         }
         _ => Ok(0),
     }
@@ -408,16 +411,16 @@ fn scatter(cell: &mut Cell, void_inks: &[Color], fill_inks: &[Color], rng: &mut 
     let mut colors = cell
         .colors
         .take()
+        .filter(|colors| colors.len() == size)
         .unwrap_or_else(|| vec![[0, 0, 0, 0]; size]);
-    for (flat, &t) in cell.types.bytes().iter().enumerate() {
-        let palette = match t {
+    for (flat, slot) in colors.iter_mut().enumerate() {
+        let palette = match cell.types.at(flat) {
             0 => void_inks,
             1 => fill_inks,
             _ => continue,
         };
-        if !palette.is_empty() {
-            let c = rng.choice(palette);
-            colors[flat] = [c.r, c.g, c.b, c.a];
+        if let Ok(c) = rng.choice(palette) {
+            *slot = [c.r, c.g, c.b, c.a];
         }
     }
     cell.colors = Some(colors);
@@ -502,7 +505,7 @@ mod tests {
     }
     #[test]
     fn random_edition_scatters_from_the_stream() {
-        let types = Tensor::of(vec![0, 1, 1, 0], vec![2, 2]);
+        let types = Tensor::of(vec![0, 1, 1, 0], vec![2, 2]).unwrap();
         let scattered = |seed: u64| {
             let mut cell = Cell::new(types.clone());
             scatter(
@@ -638,7 +641,7 @@ mod tests {
         let mut types = Tensor::new(vec![45, 5]);
         for count in 0..9 {
             for &(dy, dx) in offsets.iter().take(count) {
-                types.set(&[5 * count + 1 + dy, 1 + dx], 1);
+                types.set(&[5 * count + 1 + dy, 1 + dx], 1).unwrap();
             }
         }
         let mut cell = Cell::new(types);

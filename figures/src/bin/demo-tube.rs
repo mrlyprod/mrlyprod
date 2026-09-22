@@ -83,7 +83,7 @@ fn limit(t: f64) -> f64 {
 
 fn main() -> Result<()> {
     let cells = two::create(Code::from(CODE), SIDE, LEVEL, 0, SIDE)?;
-    let types = cells.types().bytes().to_vec();
+    let types = cells.types().bytes()?.to_vec();
     assert_eq!(types.len(), SPAN * SPAN);
     assert_eq!(types.iter().filter(|&&b| b != 0).count(), 32768);
     let dist = transform(&types, SPAN);

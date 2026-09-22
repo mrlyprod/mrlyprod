@@ -10,7 +10,8 @@ const SIDE: usize = 7;
 
 fn at(cell: &Cell6d, row: usize, col: usize) -> u8 {
     let offset = (cell.width() - hex::row_len(SIDE, row)) / 2;
-    cell.cell.types().get(&[row, col + offset])
+    let types = cell.cell.types();
+    types.at(types.index(&[row, col + offset])) as u8
 }
 
 const RATIO: f64 = 0.866_025_403_784_438_6;

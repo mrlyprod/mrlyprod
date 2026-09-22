@@ -37,12 +37,12 @@ pub fn gif(
     if palette.is_empty() || palette.len() > 256 {
         return value_error("palette must hold 1 to 256 colors.");
     }
-    let (out_w, out_h) = (width * scale, height * scale);
-    if out_w > u16::MAX as usize || out_h > u16::MAX as usize {
+    let fits = |n: usize| n.checked_mul(scale).filter(|&n| n <= u16::MAX as usize);
+    let (Some(out_w), Some(out_h)) = (fits(width), fits(height)) else {
         return value_error("gif size must fit in 16 bits.");
-    }
+    };
     for frame in frames {
-        if frame.len() != width * height {
+        if Some(frame.len()) != width.checked_mul(height) {
             return value_error("every frame must hold width * height indices.");
         }
         if frame.iter().any(|&i| i as usize >= palette.len()) {
@@ -58,7 +58,7 @@ pub fn gif(
         Some(_) => DisposalMethod::Background,
         None => DisposalMethod::Keep,
     };
-    let out = Vec::with_capacity(frames.len() * out_w * out_h / 2 + 1024);
+    let out = Vec::with_capacity(frames.len().saturating_mul(out_w * out_h / 2) + 1024);
     let mut encoder = Encoder::new(out, out_w as u16, out_h as u16, &table)?;
     encoder.set_repeat(Repeat::Infinite)?;
     for frame in frames {
@@ -68,7 +68,7 @@ pub fn gif(
             transparent,
             width: out_w as u16,
             height: out_h as u16,
-            buffer: Cow::Owned(block(frame, width, height, scale)),
+            buffer: Cow::Owned(block(frame, width, height, scale)?),
             ..Frame::default()
         })?;
     }
@@ -179,7 +179,7 @@ mod tests {
         assert_eq!(&ungif(&bytes).frames[0].buffer[..], &frame[..]);
     }
     #[test]
-    fn gif_rejects_bad_inputs() {
+    fn refuses_gif() {
         let frame = [0u8, 1, 1, 0];
         let palette = [[0, 0, 0, 255], [255, 255, 255, 255]];
         assert!(gif(&[&frame[..]], &palette, 2, 2, 0, 5).is_err());

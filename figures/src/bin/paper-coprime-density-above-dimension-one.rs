@@ -13,7 +13,7 @@ fn main() -> Result<()> {
     let mut visible = 0usize;
     for y in 0..side {
         for x in 0..side {
-            if types.get(&[y, x]) == 0 {
+            if types.get(&[y, x])? == 0 {
                 continue;
             }
             filled += 1;

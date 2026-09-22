@@ -14,7 +14,11 @@ fn render(level: usize) -> Result<Vec<Vec<bool>>> {
     let types = cells.types();
     let side = cells.width();
     Ok((0..side)
-        .map(|row| (0..side).map(|col| types.get(&[row, col]) != 0).collect())
+        .map(|row| {
+            (0..side)
+                .map(|col| types.get(&[row, col]).is_ok_and(|v| v != 0))
+                .collect()
+        })
         .collect())
 }
 

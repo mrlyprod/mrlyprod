@@ -1,6 +1,6 @@
 use crate::core::cell::Mode;
 use crate::core::colors::{Color, BLACK, WHITE};
-use crate::core::error::{value_error, Result};
+use crate::core::error::{shape_error, value_error, Result};
 use crate::core::ramp::Colorizer;
 use crate::core::tensor::Tensor;
 use crate::math::two::{self, Cell2d};
@@ -69,22 +69,25 @@ fn heatmap_range(
     }
     let span = &grids[start..end];
     let shape = span[0].types().shape.clone();
+    if span.iter().any(|grid| grid.types().shape != shape) {
+        return shape_error("every grid must share one shape.");
+    }
     let size = span[0].types().size();
     let mut total = vec![0usize; size];
     for grid in span {
-        for (i, &v) in grid.types().bytes().iter().enumerate() {
-            total[i] += v as usize;
+        for (i, slot) in total.iter_mut().enumerate() {
+            *slot += grid.types().at(i) as usize;
         }
     }
     let max = (*total.iter().max().unwrap_or(&0)).max(1);
     let mut cumulative = vec![0usize; size];
     let mut out = Vec::with_capacity(span.len());
     for grid in span {
-        for (i, &v) in grid.types().bytes().iter().enumerate() {
-            cumulative[i] += v as usize;
+        for (i, slot) in cumulative.iter_mut().enumerate() {
+            *slot += grid.types().at(i) as usize;
         }
         let colors = colorizer.colors(&cumulative, max);
-        let mut cell = Cell2d::new(Tensor::new(shape.clone()));
+        let mut cell = Cell2d::new(Tensor::new(shape.clone()))?;
         cell.cell.colors = Some(colors);
         out.push(two::png(&cell, scale)?);
     }
@@ -104,7 +107,7 @@ mod tests {
         let config = Config {
             boundary: Boundary::Constant,
             max_generations: 8,
-            ..Config::new(moore(), vec![3], vec![2, 3])
+            ..Config::new(moore().unwrap(), vec![3], vec![2, 3])
         };
         animate(&blinker(), &config).unwrap()
     }
@@ -130,7 +133,7 @@ mod tests {
             .sum();
         assert!(gif.len() < loose);
         assert!(movie(&[], 4, 20).is_err());
-        let smaller = Cell2d::new(Tensor::new(vec![3, 3]));
+        let smaller = Cell2d::new(Tensor::new(vec![3, 3])).unwrap();
         assert!(movie(&[smaller, life.grids[0].clone()], 4, 20).is_err());
     }
     #[test]
@@ -145,8 +148,13 @@ mod tests {
         assert_eq!(pngs.len(), 1);
     }
     #[test]
-    fn a_backwards_heatmap_range_errors() {
+    fn refuses_heatmap() {
         let life = run();
-        assert!(heatmap_range(&life.grids, 2, 1, &Colorizer::heat(), 4).is_err());
+        let heat = Colorizer::heat();
+        assert!(heatmap_range(&life.grids, 2, 1, &heat, 4).is_err());
+        assert!(heatmap_range(&life.grids, 0, life.count + 1, &heat, 4).is_err());
+        let odd = Cell2d::new(Tensor::new(vec![3, 3])).unwrap();
+        assert!(heatmap(&[life.grids[0].clone(), odd], 4).is_err());
+        assert!(heatmap(&life.grids, 0).is_err());
     }
 }

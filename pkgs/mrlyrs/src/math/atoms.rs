@@ -10,7 +10,7 @@ fn build(n: usize, rank: usize, mut rule: impl FnMut(&[usize]) -> bool) -> Tenso
             at[axis] = rest % n;
             rest /= n;
         }
-        out.bytes_mut()[flat] = rule(&at) as u8;
+        out.put(flat, i64::from(rule(&at)));
     }
     out
 }
@@ -212,7 +212,7 @@ mod tests {
         let mut rng = Rng::new(11);
         let mut want = Tensor::new(vec![3, 3, 3]);
         for flat in 0..27 {
-            want.bytes_mut()[flat] = u8::from(rng.chance(0.5));
+            want.put(flat, i64::from(rng.chance(0.5)));
         }
         assert_eq!(drawn, want);
         assert_ne!(
@@ -230,7 +230,7 @@ mod tests {
                 (vtree_2d(n), vline_2d(n)),
                 (void_2d(n), star_2d(n)),
             ] {
-                let both = classic.bytes().iter().zip(anti.bytes());
+                let both = classic.bytes().unwrap().iter().zip(anti.bytes().unwrap());
                 assert!(both.map(|(a, b)| a + b).all(|v| v == 1));
             }
         }
@@ -240,11 +240,12 @@ mod tests {
         for n in [3, 5, 7] {
             let sum: Vec<u8> = dust_3d(n)
                 .bytes()
+                .unwrap()
                 .iter()
-                .zip(star_3d(n).bytes())
+                .zip(star_3d(n).bytes().unwrap())
                 .map(|(a, b)| a + b)
                 .collect();
-            assert_eq!(sum, carpet_3d(n).bytes());
+            assert_eq!(sum, carpet_3d(n).bytes().unwrap());
         }
     }
 }

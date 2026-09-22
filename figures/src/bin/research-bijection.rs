@@ -10,7 +10,7 @@ const STAMP_ROWS: usize = 2;
 fn main() -> Result<()> {
     let mut board = Board::square();
     let area = board.frame(0.08);
-    let universe = bang::bang(3);
+    let universe = bang::bang(3)?;
     assert_eq!(universe.total, 256);
     assert_eq!(universe.distinct(), 22);
     assert_eq!(bang::baseq::distinct_designs(2, 3)?, 22);

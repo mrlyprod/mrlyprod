@@ -1,5 +1,5 @@
 use super::code::Code;
-use crate::core::error::{value_error, Result};
+use crate::core::error::{overflow_error, value_error, Result};
 use crate::core::Tensor;
 use crate::math::name::{Bang, Named};
 use crate::math::rules;
@@ -33,17 +33,27 @@ pub fn residue_corners(dimension: usize, base: usize) -> Vec<Vec<u8>> {
         .collect()
 }
 
-/// Returns the code count of a dimension and base, two to the number of corners.
-pub fn total_codes(dimension: usize, base: usize) -> Code {
+/// Returns the code count of a dimension and base, two to the number of corners, or an error past a u128.
+pub fn total_codes(dimension: usize, base: usize) -> Result<Code> {
     let cells = base.pow(dimension as u32);
-    assert!(cells < 128, "too many cells for a u128 code");
-    Code(1 << cells)
+    if cells >= 128 {
+        return overflow_error(format!(
+            "dimension {dimension} base {base} has {cells} corners, past the 127 a u128 code holds."
+        ));
+    }
+    Ok(Code(1 << cells))
 }
 
 /// Unpacks a code into its filled residue corners, or an error when the code is out of range.
 pub fn code_to_corners(code: Code, dimension: usize, base: usize) -> Result<Vec<Vec<u8>>> {
     let cells = residue_corners(dimension, base);
     let code = code.get();
+    if cells.len() >= 128 {
+        return overflow_error(format!(
+            "dimension {dimension} base {base} has {} corners, past the 127 a u128 code holds.",
+            cells.len()
+        ));
+    }
     if code >= (1 << cells.len()) {
         return value_error(format!(
             "code {code} out of range for dimension {dimension} base {base} (0..{}).",
@@ -203,7 +213,7 @@ mod tests {
         let pinned = vec![
             1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1,
         ];
-        assert_eq!(truth.bytes(), pinned);
+        assert_eq!(truth.bytes().unwrap(), pinned);
     }
     #[test]
     fn create_named_takes_the_canonical_name_only() {
@@ -215,16 +225,16 @@ mod tests {
     #[test]
     fn code_corner_round_trip() {
         for d in 2..=3 {
-            for code in [Code(0), Code(1), Code(7), Code(total_codes(d, 2).get() - 1)] {
+            for code in [
+                Code(0),
+                Code(1),
+                Code(7),
+                Code(total_codes(d, 2).unwrap().get() - 1),
+            ] {
                 let filled = code_to_corners(code, d, 2).unwrap();
                 assert_eq!(corners_to_code(&filled, d, 2), code);
             }
         }
-    }
-    #[test]
-    fn out_of_range_rejected() {
-        assert!(code_to_corners(Code(16), 2, 2).is_err());
-        assert!(code_to_corners(Code(100), 2, 2).is_err());
     }
     #[test]
     fn all_3d_codes_render() {
@@ -290,9 +300,13 @@ mod tests {
         assert_eq!(got.shape, vec![9, 9]);
     }
     #[test]
-    fn magic_rejects_too_few_or_mismatched_layers() {
+    fn refuses_a_code_past_its_range_and_a_word_of_too_few_or_mismatched_layers() {
         let plane = MagicLayer::new(Bang::new(7, 2, 2), 3);
         let cube = MagicLayer::new(Bang::new(23, 3, 2), 3);
+        assert!(code_to_corners(Code(16), 2, 2).is_err());
+        assert!(code_to_corners(Code(100), 2, 2).is_err());
+        assert!(code_to_corners(Code(1), 7, 2).is_err());
+        assert!(total_codes(7, 2).is_err());
         assert!(magic(&[]).is_err());
         assert!(magic(std::slice::from_ref(&plane)).is_err());
         assert!(magic(&[plane, cube]).is_err());

@@ -21,7 +21,7 @@ fn corners_of(code: &str, number: usize, base: usize) -> Result<Vec<(usize, usiz
         return Err(Fault::new("the side must be at least two."));
     }
     let tile = two::create(Code::from(checked(code, 2, base)?), number, 1, 0, base)?;
-    let types = tile.types().bytes().to_vec();
+    let types = tile.types().bytes()?.to_vec();
     let corners: Vec<(usize, usize)> = (0..number * number)
         .filter(|&at| types[at] != 0)
         .map(|at| (at / number, at % number))

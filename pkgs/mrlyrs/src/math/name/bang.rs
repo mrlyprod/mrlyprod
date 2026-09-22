@@ -189,7 +189,7 @@ mod tests {
         );
     }
     #[test]
-    fn only_a_fitting_bang_parses() {
+    fn refuses_every_text_that_is_not_a_bang() {
         for bad in [
             r#"{"kind":"rule","dim":2,"code":7}"#,
             r#"{"dim":2,"code":7}"#,
@@ -225,35 +225,35 @@ mod tests {
             )
         );
         assert_eq!(Bang::from_json(&text).unwrap(), wide);
-        assert_eq!(Bang::from_file(&wide.to_file()).unwrap(), wide);
+        assert_eq!(Bang::from_file(&wide.to_file().unwrap()).unwrap(), wide);
     }
     #[test]
     fn the_koch_row_holds_through_every_view() {
         let koch = koch();
         assert_eq!(
-            koch.to_url(),
+            koch.to_url().unwrap(),
             "/bang?dim=2&lattice=hex&base=3&code=39&twist=0,1,5,0"
         );
         assert_eq!(
-            koch.to_file(),
+            koch.to_file().unwrap(),
             "bang_dim=2_lattice=hex_base=3_code=39_twist=[0,1,5,0]"
         );
         assert_eq!(
-            koch.to_mrly(),
+            koch.to_mrly().unwrap(),
             "bang dim 2, hex, base 3, code 39, twist [0 1 5 0]"
         );
-        assert_eq!(Bang::from_url(&koch.to_url()).unwrap(), koch);
-        assert_eq!(Bang::from_file(&koch.to_file()).unwrap(), koch);
+        assert_eq!(Bang::from_url(&koch.to_url().unwrap()).unwrap(), koch);
+        assert_eq!(Bang::from_file(&koch.to_file().unwrap()).unwrap(), koch);
         assert_eq!(koch.to_id().len(), 8);
         assert_ne!(koch.to_id(), Bang::new(39, 2, 3).to_id());
-        assert_eq!(Bang::new(7, 2, 2).to_mrly(), "bang dim 2, code 7");
-        assert_eq!(Bang::new(7, 2, 2).to_file(), "bang_dim=2_code=7");
+        assert_eq!(Bang::new(7, 2, 2).to_mrly().unwrap(), "bang dim 2, code 7");
+        assert_eq!(Bang::new(7, 2, 2).to_file().unwrap(), "bang_dim=2_code=7");
     }
     #[test]
     fn seeded_values_round_trip() {
         let mut rng = Rng::new(11);
         for _ in 0..500 {
-            let base = *rng.choice(&[2usize, 3]);
+            let base = *rng.choice(&[2usize, 3]).unwrap();
             let top = if base == 2 { 4 } else { 3 };
             let dim = rng.range(1, top) as usize;
             let cells = (base as u32).pow(dim as u32);
@@ -262,8 +262,8 @@ mod tests {
             let text = bang.to_json();
             assert_eq!(Bang::from_json(&text).unwrap(), bang);
             assert_eq!(Bang::from_json(&text).unwrap().to_json(), text);
-            assert_eq!(Bang::from_url(&bang.to_url()).unwrap(), bang);
-            assert_eq!(Bang::from_file(&bang.to_file()).unwrap(), bang);
+            assert_eq!(Bang::from_url(&bang.to_url().unwrap()).unwrap(), bang);
+            assert_eq!(Bang::from_file(&bang.to_file().unwrap()).unwrap(), bang);
         }
     }
 }

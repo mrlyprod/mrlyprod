@@ -137,14 +137,21 @@ pub(crate) fn pairs(json: &str) -> Result<Vec<(String, Atom)>> {
     Ok(out)
 }
 
-fn kinded(json: &str) -> (String, Vec<(String, Atom)>) {
-    let mut list = pairs(json).expect("a canonical name reads back");
+fn kinded(json: &str) -> Result<(String, Vec<(String, Atom)>)> {
+    let mut list = pairs(json)?;
+    if list.is_empty() {
+        return value_error(format!("name {json:?} carries no kind."));
+    }
     let (key, kind) = list.remove(0);
-    assert_eq!(key, "kind");
+    if key != "kind" {
+        return value_error(format!("name {json:?} opens with {key:?}, not a kind."));
+    }
     let Atom::Word(kind) = kind else {
-        panic!("the kind is a word");
+        return value_error(format!(
+            "name {json:?} spells its kind as something but a word."
+        ));
     };
-    (kind, list)
+    Ok((kind, list))
 }
 
 pub(crate) fn json(kind: &str, fields: &[(String, Atom)]) -> String {
@@ -163,16 +170,16 @@ fn key(text: &str) -> Result<&str> {
     value_error(format!("key {text:?} strays outside a-z."))
 }
 
-pub(crate) fn url(json: &str) -> String {
-    let (kind, fields) = kinded(json);
+pub(crate) fn url(json: &str) -> Result<String> {
+    let (kind, fields) = kinded(json)?;
     if fields.is_empty() {
-        return format!("/{kind}");
+        return Ok(format!("/{kind}"));
     }
     let query: Vec<String> = fields
         .iter()
         .map(|(key, value)| format!("{key}={}", value.plain()))
         .collect();
-    format!("/{kind}?{}", query.join("&"))
+    Ok(format!("/{kind}?{}", query.join("&")))
 }
 
 pub(crate) fn url_to_json(text: &str, kind: &str, lists: &[&str]) -> Result<String> {
@@ -202,8 +209,8 @@ pub(crate) fn url_to_json(text: &str, kind: &str, lists: &[&str]) -> Result<Stri
     Ok(json(kind, &fields))
 }
 
-pub(crate) fn file(json: &str) -> String {
-    let (kind, fields) = kinded(json);
+pub(crate) fn file(json: &str) -> Result<String> {
+    let (kind, fields) = kinded(json)?;
     let mut out = kind;
     for (key, value) in &fields {
         let spelt = match value {
@@ -212,7 +219,7 @@ pub(crate) fn file(json: &str) -> String {
         };
         out.push_str(&format!("_{key}={spelt}"));
     }
-    out
+    Ok(out)
 }
 
 fn opens_field(text: &str) -> bool {
@@ -247,8 +254,8 @@ pub(crate) fn file_to_json(text: &str, kind: &str) -> Result<String> {
     Ok(json(kind, &fields))
 }
 
-pub(crate) fn mrly(json: &str, bare: &[&str]) -> String {
-    let (kind, fields) = kinded(json);
+pub(crate) fn mrly(json: &str, bare: &[&str]) -> Result<String> {
+    let (kind, fields) = kinded(json)?;
     let mut parts = Vec::new();
     for (key, value) in &fields {
         parts.push(match value {
@@ -262,9 +269,9 @@ pub(crate) fn mrly(json: &str, bare: &[&str]) -> String {
         });
     }
     if parts.is_empty() {
-        return kind;
+        return Ok(kind);
     }
-    format!("{kind} {}", parts.join(", "))
+    Ok(format!("{kind} {}", parts.join(", ")))
 }
 
 pub(crate) fn longest<'a>(text: &'a str, names: &[String]) -> Option<(usize, &'a str)> {
@@ -289,7 +296,7 @@ mod tests {
 
     #[test]
     fn the_canonical_text_reads_into_pairs_and_back() {
-        let (kind, fields) = kinded(KOCH);
+        let (kind, fields) = kinded(KOCH).unwrap();
         assert_eq!(kind, "bang");
         assert_eq!(fields.len(), 5);
         assert_eq!(fields[1], ("lattice".into(), Atom::Word("hex".into())));
@@ -301,39 +308,42 @@ mod tests {
     #[test]
     fn the_views_hold_verbatim() {
         assert_eq!(
-            url(KOCH),
+            url(KOCH).unwrap(),
             "/bang?dim=2&lattice=hex&base=3&code=39&twist=0,1,5,0"
         );
         assert_eq!(
-            file(KOCH),
+            file(KOCH).unwrap(),
             "bang_dim=2_lattice=hex_base=3_code=39_twist=[0,1,5,0]"
         );
         assert_eq!(
-            mrly(KOCH, &["lattice"]),
+            mrly(KOCH, &["lattice"]).unwrap(),
             "bang dim 2, hex, base 3, code 39, twist [0 1 5 0]"
         );
         assert_eq!(
-            mrly(KOCH, &[]),
+            mrly(KOCH, &[]).unwrap(),
             "bang dim 2, lattice hex, base 3, code 39, twist [0 1 5 0]"
         );
     }
 
     #[test]
     fn the_decodable_views_read_back() {
-        assert_eq!(url_to_json(&url(KOCH), "bang", &["twist"]).unwrap(), KOCH);
-        assert_eq!(file_to_json(&file(KOCH), "bang").unwrap(), KOCH);
+        assert_eq!(
+            url_to_json(&url(KOCH).unwrap(), "bang", &["twist"]).unwrap(),
+            KOCH
+        );
+        assert_eq!(file_to_json(&file(KOCH).unwrap(), "bang").unwrap(), KOCH);
         let rule = r#"{"kind":"rule","birth":[3],"survive":"grid_squares_ones","wrap":true}"#;
         assert_eq!(
-            url_to_json(&url(rule), "rule", &["birth", "survive"]).unwrap(),
+            url_to_json(&url(rule).unwrap(), "rule", &["birth", "survive"]).unwrap(),
             rule
         );
-        assert_eq!(file_to_json(&file(rule), "rule").unwrap(), rule);
+        assert_eq!(file_to_json(&file(rule).unwrap(), "rule").unwrap(), rule);
         let empty = r#"{"kind":"rule","birth":[],"survive":[]}"#;
         assert_eq!(
-            url_to_json(&url(empty), "rule", &["birth", "survive"]).unwrap(),
+            url_to_json(&url(empty).unwrap(), "rule", &["birth", "survive"]).unwrap(),
             empty
         );
-        assert_eq!(file_to_json(&file(empty), "rule").unwrap(), empty);
+        assert_eq!(file_to_json(&file(empty).unwrap(), "rule").unwrap(), empty);
         assert!(url_to_json("/rule?dim=2", "bang", &[]).is_err());
         assert!(url_to_json("bang?dim=2", "bang", &[]).is_err());
         assert!(url_to_json("/bang?dim", "bang", &[]).is_err());
@@ -346,10 +356,19 @@ mod tests {
     #[test]
     fn a_bare_kind_prints_alone() {
         let plain = r#"{"kind":"rule"}"#;
-        assert_eq!(url(plain), "/rule");
-        assert_eq!(file(plain), "rule");
-        assert_eq!(mrly(plain, &[]), "rule");
+        assert_eq!(url(plain).unwrap(), "/rule");
+        assert_eq!(file(plain).unwrap(), "rule");
+        assert_eq!(mrly(plain, &[]).unwrap(), "rule");
         assert_eq!(url_to_json("/rule", "rule", &[]).unwrap(), plain);
         assert_eq!(file_to_json("rule", "rule").unwrap(), plain);
+    }
+
+    #[test]
+    fn refuses_a_text_without_a_kind() {
+        for bad in ["{}", r#"{"dim":2}"#, r#"{"kind":3}"#, r#"{"kind":"bang""#] {
+            assert!(url(bad).is_err(), "{bad}");
+            assert!(file(bad).is_err(), "{bad}");
+            assert!(mrly(bad, &[]).is_err(), "{bad}");
+        }
     }
 }

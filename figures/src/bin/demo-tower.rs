@@ -25,7 +25,7 @@ fn block(k: usize) -> Result<Cell3d> {
     if k == 1 {
         return designs::create(Code::from(letters[0].design.code), NUMBER, 1, 2);
     }
-    Ok(Cell3d::new(magic(&letters[..k])?))
+    Cell3d::new(magic(&letters[..k])?)
 }
 
 fn shade() -> [Color; 3] {

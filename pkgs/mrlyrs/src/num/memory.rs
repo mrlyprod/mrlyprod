@@ -59,17 +59,17 @@ impl Rule {
         })
     }
 
-    /// Returns the rule that allows every window.
+    /// Returns the rule that allows every window, or an error when the dimension or the width is out of range.
     ///
     /// ```
-    /// assert_eq!(mrlyrs::num::memory::Rule::full(1, 2).code, 15);
+    /// assert_eq!(mrlyrs::num::memory::Rule::full(1, 2).unwrap().code, 15);
     /// ```
-    pub fn full(dimension: usize, width: usize) -> Rule {
-        let rule = Rule::new(dimension, width, 0).expect("a zero code is always in range");
-        Rule {
+    pub fn full(dimension: usize, width: usize) -> Result<Rule> {
+        let rule = Rule::new(dimension, width, 0)?;
+        Ok(Rule {
             code: (rule.codes() - 1) as u64,
             ..rule
-        }
+        })
     }
 
     /// Returns the letter count `2^D`, the digit vectors of the cube's corners.
@@ -478,7 +478,7 @@ fn component_root(block: &[Vec<i128>]) -> f64 {
 /// Returns the growth exponent `log_2 rho`, the growth per digit of the accepted word count.
 ///
 /// ```
-/// let full = mrlyrs::num::memory::Rule::full(2, 1);
+/// let full = mrlyrs::num::memory::Rule::full(2, 1).unwrap();
 /// assert!((mrlyrs::num::memory::exponent(&full) - 2.0).abs() < 1e-12);
 /// ```
 pub fn exponent(rule: &Rule) -> f64 {
@@ -512,7 +512,7 @@ pub fn allowed_windows(rule: &Rule) -> usize {
 /// ```
 /// let golden = mrlyrs::num::memory::Rule::new(1, 2, 7).unwrap();
 /// assert!((mrlyrs::num::memory::kappa(&golden) - 0.098_239_336_730).abs() < 1e-9);
-/// assert_eq!(mrlyrs::num::memory::kappa(&mrlyrs::num::memory::Rule::full(2, 2)), 0.0);
+/// assert_eq!(mrlyrs::num::memory::kappa(&mrlyrs::num::memory::Rule::full(2, 2).unwrap()), 0.0);
 /// ```
 pub fn kappa(rule: &Rule) -> f64 {
     let windows = allowed_windows(rule);
@@ -543,7 +543,11 @@ mod tests {
                 for cell in cells(&rule, level) {
                     sheet[cell as usize] = 1;
                 }
-                assert_eq!(sheet, design.types().bytes(), "code {code} level {level}");
+                assert_eq!(
+                    sheet,
+                    design.types().bytes().unwrap(),
+                    "code {code} level {level}"
+                );
             }
         }
     }
@@ -620,7 +624,7 @@ mod tests {
     fn the_full_rule_counts_every_word() {
         for dimension in 1..=3 {
             for width in 1..=SPAN / dimension {
-                let rule = Rule::full(dimension, width);
+                let rule = Rule::full(dimension, width).unwrap();
                 let want: Vec<u64> = (1..=5).map(|l| 1u64 << (dimension * l)).collect();
                 assert_eq!(counts(&rule, 5), want, "d{dimension} k{width}");
                 assert!((exponent(&rule) - dimension as f64).abs() < 1e-12);
@@ -660,12 +664,16 @@ mod tests {
     }
 
     #[test]
-    fn a_rule_out_of_range_is_refused() {
+    fn refuses_a_rule_out_of_range() {
         assert!(Rule::new(0, 1, 0).is_err());
         assert!(Rule::new(4, 1, 0).is_err());
         assert!(Rule::new(1, 0, 0).is_err());
         assert!(Rule::new(3, 3, 0).is_err());
         assert!(Rule::new(1, 7, 0).is_err());
         assert!(Rule::new(1, 2, 16).is_err());
+        assert!(Rule::full(0, 1).is_err());
+        assert!(Rule::full(1, 0).is_err());
+        assert!(Rule::full(3, 3).is_err());
+        assert!(Rule::full(1, 2).is_ok());
     }
 }

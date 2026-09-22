@@ -57,7 +57,7 @@ impl Grid {
         let (height, width) = (cells.height(), cells.width());
         for row in 0..self.rows.min(height) {
             for col in 0..self.cols.min(width) {
-                if let Some(color) = ink(types.get(&[row, col])) {
+                if let Some(color) = ink(types.at(row * width + col) as u8) {
                     self.fill(board, col, row, color);
                 }
             }

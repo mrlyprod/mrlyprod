@@ -44,7 +44,10 @@ impl Rule {
         let cube = family.cube(2);
         let mut corners = [false; 8];
         for (slot, corner) in corners.iter_mut().enumerate() {
-            *corner = cube.types().get(&[slot >> 2, (slot >> 1) & 1, slot & 1]) == 1;
+            *corner = cube
+                .types()
+                .get(&[slot >> 2, (slot >> 1) & 1, slot & 1])
+                .is_ok_and(|v| v == 1);
         }
         Rule { corners }
     }

@@ -34,31 +34,38 @@ pub(crate) fn descends(c: char) -> bool {
     DESCENDERS.contains(&c)
 }
 
-/// Cuts blank edge columns from a bitmap, collapsing an all-blank one to a single '0' column.
+/// Cuts blank edge columns from a bitmap, collapsing an all-blank one to a single '0' column; a row shorter than the cut keeps what it has.
 pub fn trim(rows: &[String]) -> Vec<String> {
     let grid: Vec<Vec<char>> = rows.iter().map(|row| row.chars().collect()).collect();
-    if grid.is_empty() || grid[0].is_empty() {
+    let width = grid.iter().map(Vec::len).max().unwrap_or(0);
+    if width == 0 {
         return rows.to_vec();
     }
-    let width = grid[0].len();
-    let lit = |col: usize| grid.iter().any(|row| row[col] == '1');
-    let Some(start) = (0..width).find(|&col| lit(col)) else {
+    let lit = |col: usize| grid.iter().any(|row| row.get(col) == Some(&'1'));
+    let (Some(start), Some(end)) = (
+        (0..width).find(|&col| lit(col)),
+        (0..width).rev().find(|&col| lit(col)),
+    ) else {
         return grid.iter().map(|_| "0".to_string()).collect();
     };
-    let end = (0..width).rev().find(|&col| lit(col)).unwrap();
     grid.iter()
-        .map(|row| row[start..=end].iter().collect())
+        .map(|row| row.iter().skip(start).take(end + 1 - start).collect())
         .collect()
 }
 
 /// Blanks the four corner cells of an uppercase bitmap into its rounded lowercase form.
 pub fn lower(rows: &[&str]) -> Vec<String> {
     let mut grid: Vec<Vec<char>> = rows.iter().map(|row| row.chars().collect()).collect();
-    let last = grid.len() - 1;
-    let right = grid[0].len() - 1;
-    for &y in &[0, last] {
-        grid[y][0] = '0';
-        grid[y][right] = '0';
+    let last = grid.len().saturating_sub(1);
+    for y in [0, last] {
+        if let Some(row) = grid.get_mut(y) {
+            if let Some(first) = row.first_mut() {
+                *first = '0';
+            }
+            if let Some(end) = row.last_mut() {
+                *end = '0';
+            }
+        }
     }
     grid.into_iter()
         .map(|row| row.into_iter().collect())

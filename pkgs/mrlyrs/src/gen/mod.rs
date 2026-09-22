@@ -20,6 +20,9 @@ use crate::core::rng::Rng;
 /// The seed opens one stream, `variation::create` draws its own seed from it, and the paint and
 /// render follow on the same stream, so one seed always paints the same background.
 pub fn background(seed: u64, width: usize, height: usize) -> Result<Vec<u8>> {
+    if width == 0 || height == 0 {
+        return value_error("a background wants a width and a height above zero.");
+    }
     let mut rng = Rng::new(seed);
     let config = variation::Config {
         files: vec![(width, height)],
@@ -44,5 +47,10 @@ mod tests {
         assert_eq!(&a[1..4], b"PNG");
         assert_eq!(a, b);
         assert_ne!(a, background(8, 2, 3).unwrap());
+    }
+    #[test]
+    fn refuses_a_background_with_no_pixels() {
+        assert!(background(7, 0, 3).is_err());
+        assert!(background(7, 2, 0).is_err());
     }
 }

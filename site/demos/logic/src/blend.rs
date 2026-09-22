@@ -260,17 +260,17 @@ fn mixed(left: &[i128], right: &[i128], op: &str, argument: i32) -> Result<Vec<i
                     )?;
                 }
             }
-            Ok(blend::cauchy(left, right))
+            Ok(blend::cauchy(left, right)?)
         }
         "shift" => Ok(blend::shift(left, argument.max(0) as usize)),
-        "decimate" => Ok(blend::decimate(left, argument.max(1) as usize, 0)),
+        "decimate" => Ok(blend::decimate(left, argument.max(1) as usize, 0)?),
         "delta" => Ok(blend::delta(left)),
         "sigma" => {
             let mut sum = 0i128;
             for &term in left {
                 sum = held(sum.checked_add(term))?;
             }
-            Ok(blend::sigma(left))
+            Ok(blend::sigma(left)?)
         }
         "scale" => {
             for &term in left {

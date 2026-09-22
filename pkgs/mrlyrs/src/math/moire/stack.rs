@@ -52,7 +52,7 @@ pub fn stack(
         merge(&mut acc, &layer(&params)?, combine, first);
         first = false;
     }
-    Ok(Field::from_data(acc, size))
+    Field::from_data(acc, size)
 }
 
 /// Sums layers of several designs at one side number into a field.
@@ -79,7 +79,7 @@ pub fn stack_codes(
             *a += b as u8 as f32;
         }
     }
-    Ok(Field::from_data(acc, size))
+    Field::from_data(acc, size)
 }
 
 #[cfg(test)]

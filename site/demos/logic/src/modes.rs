@@ -33,7 +33,7 @@ impl Mask {
                 ))
             })?;
         let tile = two::create(Code::from(checked(code, 2, base)?), number, 1, 0, base)?;
-        let types = tile.types().bytes().to_vec();
+        let types = tile.types().bytes()?.to_vec();
         let digits: Vec<(usize, usize)> = (0..number * number)
             .filter(|&at| types[at] != 0)
             .map(|at| (at / number, at % number))

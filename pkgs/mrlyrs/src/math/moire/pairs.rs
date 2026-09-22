@@ -93,21 +93,24 @@ pub fn witness(scale: usize) -> Result<Witness> {
     })
 }
 
-/// Returns the Pearson correlation of two rendered carpet layers on their lcm grid, sampled rather than integrated.
-pub fn sampled(m: usize, n: usize) -> f64 {
+/// Returns the Pearson correlation of two rendered carpet layers on their lcm grid, sampled rather than integrated, or an error when either scale is zero.
+pub fn sampled(m: usize, n: usize) -> Result<f64> {
+    if m == 0 || n == 0 {
+        return value_error("a sampled pair needs two scales of at least one.");
+    }
     let size = lcm(m, n);
     let mask = |number| {
         let params = Layer {
             size,
             ..Layer::new(Spec::new(7, 2, 2), number)
         };
-        layer(&params).unwrap()
+        layer(&params)
     };
-    let (a, b) = (mask(m), mask(n));
+    let (a, b) = (mask(m)?, mask(n)?);
     let mean = |v: &[bool]| v.iter().filter(|&&x| x).count() as f64 / v.len() as f64;
     let (ea, eb) = (mean(&a), mean(&b));
     let eab = a.iter().zip(&b).filter(|(&x, &y)| x && y).count() as f64 / a.len() as f64;
-    (eab - ea * eb) / (ea * (1.0 - ea) * eb * (1.0 - eb)).sqrt()
+    Ok((eab - ea * eb) / (ea * (1.0 - ea) * eb * (1.0 - eb)).sqrt())
 }
 
 #[cfg(test)]
@@ -130,5 +133,11 @@ mod tests {
                 assert_eq!(overlap(m, n), brute(m, n), "{m} {n}");
             }
         }
+    }
+
+    #[test]
+    fn refuses_a_zero_scale() {
+        assert!(sampled(0, 3).is_err());
+        assert!(sampled(3, 0).is_err());
     }
 }

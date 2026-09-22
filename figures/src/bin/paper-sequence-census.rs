@@ -29,7 +29,7 @@ fn panel(board: &mut Board, frame: Frame, code: u128, tone: Color) -> Result<usi
     let mut filled = 0usize;
     for row in 0..SIDE {
         for col in 0..SIDE {
-            if types.get(&[row, col]) == 0 {
+            if types.get(&[row, col])? == 0 {
                 continue;
             }
             filled += 1;

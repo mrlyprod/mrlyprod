@@ -45,6 +45,7 @@ fn layer(scale: usize) -> Result<Field, String> {
 
 fn profiled(field: &Field) -> Vec<f64> {
     profile(&field.data, SIZE, STEPS)
+        .unwrap_or_default()
         .iter()
         .map(|&value| value as f64)
         .collect()

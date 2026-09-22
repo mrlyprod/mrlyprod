@@ -33,7 +33,7 @@ impl Solid {
             _ => return value_error(format!("the side must stay at or below {WIDEST}.")),
         };
         let pattern = factory::create(code, number, 3, base, 1)?;
-        let filled: Vec<bool> = pattern.bytes().iter().map(|&byte| byte != 0).collect();
+        let filled: Vec<bool> = pattern.bytes()?.iter().map(|&byte| byte != 0).collect();
         let mut ranks = vec![0usize; filled.len()];
         let mut count = 0;
         for (flat, &live) in filled.iter().enumerate() {
@@ -208,7 +208,7 @@ mod tests {
         let grid = cell.types();
         let side = grid.shape[0];
         let mut out = vec![Vec::new(); 3 * (side - 1) + 1];
-        for (flat, &site) in grid.bytes().iter().enumerate() {
+        for (flat, &site) in grid.bytes().unwrap().iter().enumerate() {
             if site == 0 {
                 continue;
             }

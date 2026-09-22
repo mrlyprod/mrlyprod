@@ -1,3 +1,4 @@
+use crate::core::error::{shape_error, Result};
 use crate::num::factor::gcd;
 use std::f64::consts::{PI, SQRT_2};
 
@@ -11,10 +12,18 @@ pub fn reach(size: usize) -> f64 {
 }
 
 /// The arcs of the circle of the radius about the raster's centre: each as its start angle, end angle and the value of the one cell it lies in, zero outside.
-pub fn arcs(data: &[f32], size: usize, radius: f64) -> Vec<(f64, f64, f32)> {
-    assert_eq!(data.len(), size * size, "data must be size*size");
+///
+/// Errors when the sample count is not the side squared.
+pub fn arcs(data: &[f32], size: usize, radius: f64) -> Result<Vec<(f64, f64, f32)>> {
+    if data.len() != size * size {
+        return shape_error(format!(
+            "a raster of side {size} needs {} samples, got {}.",
+            size * size,
+            data.len()
+        ));
+    }
     if size == 0 {
-        return Vec::new();
+        return Ok(Vec::new());
     }
     let c = centre(size);
     let r = radius.max(1e-9);
@@ -32,7 +41,7 @@ pub fn arcs(data: &[f32], size: usize, radius: f64) -> Vec<(f64, f64, f32)> {
             cuts.push((PI - b).rem_euclid(2.0 * PI));
         }
     }
-    cuts.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    cuts.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     let mut out = Vec::with_capacity(cuts.len());
     for pair in cuts.windows(2) {
         let (a, b) = (pair[0], pair[1]);
@@ -51,33 +60,33 @@ pub fn arcs(data: &[f32], size: usize, radius: f64) -> Vec<(f64, f64, f32)> {
         }
         out.push((a, b, value));
     }
-    out
+    Ok(out)
 }
 
 /// The exact mean of a square raster over the circle of the radius about its centre, each cell read as a constant and the outside as zero.
 ///
 /// ```
 /// let solid = vec![1.0; 16];
-/// assert!((mrlyrs::math::spin::ring(&solid, 4, 1.0) - 1.0).abs() < 1e-12);
-/// assert!(mrlyrs::math::spin::ring(&solid, 4, 3.0).abs() < 1e-12);
+/// assert!((mrlyrs::math::spin::ring(&solid, 4, 1.0).unwrap() - 1.0).abs() < 1e-12);
+/// assert!(mrlyrs::math::spin::ring(&solid, 4, 3.0).unwrap().abs() < 1e-12);
 /// ```
-pub fn ring(data: &[f32], size: usize, radius: f64) -> f64 {
-    arcs(data, size, radius)
+pub fn ring(data: &[f32], size: usize, radius: f64) -> Result<f64> {
+    Ok(arcs(data, size, radius)?
         .iter()
         .map(|&(a, b, v)| v as f64 * (b - a))
         .sum::<f64>()
-        / (2.0 * PI)
+        / (2.0 * PI))
 }
 
 /// The circular-harmonic power of a raster: for every order `m` up to the last, the energy `sum |c_m(r)|^2 2 pi r dr` of its `m`-th harmonic over rings radii, each ring's coefficient exact from its arcs.
-pub fn harmonics(data: &[f32], size: usize, rings: usize, orders: usize) -> Vec<f64> {
+pub fn harmonics(data: &[f32], size: usize, rings: usize, orders: usize) -> Result<Vec<f64>> {
     let rings = rings.max(2);
     let far = reach(size);
     let step = far / (rings - 1) as f64;
     let mut power = vec![0.0; orders + 1];
     for k in 0..rings {
         let r = k as f64 * step;
-        let pieces = arcs(data, size, r);
+        let pieces = arcs(data, size, r)?;
         let mut re = vec![0.0; orders + 1];
         let mut im = vec![0.0; orders + 1];
         for &(a, b, v) in &pieces {
@@ -97,7 +106,7 @@ pub fn harmonics(data: &[f32], size: usize, rings: usize, orders: usize) -> Vec<
             power[m] += (x * x + y * y) * 2.0 * PI * r * step;
         }
     }
-    power
+    Ok(power)
 }
 
 /// The rotation order a harmonic power spectrum reveals: the gcd of the orders carrying more than a ten-thousandth of the power, the share pixel aliasing stays under, or zero when none does.
@@ -177,8 +186,14 @@ pub fn radial(
     step: f64,
     blend: Blend,
     samples: usize,
-) -> Vec<f32> {
-    assert_eq!(data.len(), size * size, "data must be size*size");
+) -> Result<Vec<f32>> {
+    if data.len() != size * size {
+        return shape_error(format!(
+            "a raster of side {size} needs {} samples, got {}.",
+            size * size,
+            data.len()
+        ));
+    }
     let copies = copies.max(1);
     let samples = samples.max(1);
     let c = centre(size);
@@ -215,15 +230,15 @@ pub fn radial(
             field.push(total / (samples * samples) as f32);
         }
     }
-    field
+    Ok(field)
 }
 
 /// The ring profile: the circle means at steps radii spaced evenly from the centre to the corner circle.
-pub fn profile(data: &[f32], size: usize, steps: usize) -> Vec<f32> {
+pub fn profile(data: &[f32], size: usize, steps: usize) -> Result<Vec<f32>> {
     let steps = steps.max(2);
     let far = reach(size);
     (0..steps)
-        .map(|k| ring(data, size, far * k as f64 / (steps - 1) as f64) as f32)
+        .map(|k| Ok(ring(data, size, far * k as f64 / (steps - 1) as f64)? as f32))
         .collect()
 }
 
@@ -269,7 +284,7 @@ pub fn mass(profile: &[f32], size: usize) -> f64 {
 ///
 /// ```
 /// let solid = vec![1.0; 64];
-/// let rings = mrlyrs::math::spin::profile(&solid, 8, 4000);
+/// let rings = mrlyrs::math::spin::profile(&solid, 8, 4000).unwrap();
 /// let inner = mrlyrs::math::spin::mass_within(&rings, 8, 3.0);
 /// assert!((inner / (9.0 * std::f64::consts::PI) - 1.0).abs() < 1e-3);
 /// ```
@@ -300,7 +315,7 @@ mod tests {
     use crate::math::atoms;
 
     fn floats(grid: &crate::core::tensor::Tensor) -> Vec<f32> {
-        grid.bytes().iter().map(|&b| b as f32).collect()
+        grid.bytes().unwrap().iter().map(|&b| b as f32).collect()
     }
 
     #[test]
@@ -308,22 +323,22 @@ mod tests {
         let side = 8usize;
         let solid = floats(&atoms::ones_2d(side));
         for r in [0.5, 2.0, 3.99] {
-            assert!((ring(&solid, side, r) - 1.0).abs() < 1e-12);
+            assert!((ring(&solid, side, r).unwrap() - 1.0).abs() < 1e-12);
         }
         for r in [4.5, 5.0, 5.5] {
             let expect = 1.0 - 4.0 / PI * (side as f64 / 2.0 / r).acos();
-            assert!((ring(&solid, side, r) - expect).abs() < 1e-12);
+            assert!((ring(&solid, side, r).unwrap() - expect).abs() < 1e-12);
         }
-        assert!(ring(&solid, side, reach(side) + 0.01).abs() < 1e-12);
+        assert!(ring(&solid, side, reach(side) + 0.01).unwrap().abs() < 1e-12);
     }
 
     #[test]
     fn the_carpet_opens_on_a_black_disc() {
         let carpet = atoms::carpet_nd(3, 2).kron(&atoms::carpet_nd(3, 2));
         let data = floats(&carpet);
-        assert!(ring(&data, 9, 1.4).abs() < 1e-12);
-        assert!(ring(&data, 9, 2.0) > 0.0);
-        assert!((ring(&data, 9, 1.0) - 0.0).abs() < 1e-12);
+        assert!(ring(&data, 9, 1.4).unwrap().abs() < 1e-12);
+        assert!(ring(&data, 9, 2.0).unwrap() > 0.0);
+        assert!((ring(&data, 9, 1.0).unwrap() - 0.0).abs() < 1e-12);
     }
 
     #[test]
@@ -334,7 +349,7 @@ mod tests {
         let data = floats(&carpet);
         let fills = data.iter().sum::<f32>() as f64;
         assert_eq!(fills, 512.0);
-        let rings = profile(&data, 27, 4000);
+        let rings = profile(&data, 27, 4000).unwrap();
         assert!((mass(&rings, 27) - fills).abs() / fills < 0.002);
     }
 
@@ -345,13 +360,13 @@ mod tests {
         let side = 81usize;
         let wide = 2 * side;
         let mut data = vec![0.0f32; wide * wide];
-        let bytes = carpet.bytes();
+        let bytes = carpet.bytes().unwrap();
         for row in 0..side {
             for col in 0..side {
                 data[(row + side) * wide + col + side] = bytes[row * side + col] as f32;
             }
         }
-        let rings = profile(&data, wide, 4000);
+        let rings = profile(&data, wide, 4000).unwrap();
         assert!(mass_within(&rings, wide, 1e-6).abs() < 1e-9);
         for radius in [12.0f64, 18.0, 27.0] {
             let near = mass_within(&rings, wide, radius);
@@ -365,14 +380,14 @@ mod tests {
 
     #[test]
     fn the_wheel_reads_the_profile_by_radius() {
-        let rings = profile(&floats(&atoms::ones_2d(8)), 8, 64);
+        let rings = profile(&floats(&atoms::ones_2d(8)), 8, 64).unwrap();
         let spun = wheel(&rings, 16);
         assert_eq!(spun.len(), 256);
         assert!((spun[8 * 16 + 8] - 1.0).abs() < 1e-6);
         assert!((spun[8 * 16 + 12] - 1.0).abs() < 1e-6);
         assert!(spun[8 * 16 + 15] < 0.2);
         assert_eq!(spun[0], 0.0);
-        assert_eq!(profile(&[], 0, 0).len(), 2);
+        assert_eq!(profile(&[], 0, 0).unwrap().len(), 2);
     }
 
     fn at(field: &[f32], out: usize, size: usize, px: f64, py: f64) -> f32 {
@@ -385,7 +400,7 @@ mod tests {
     #[test]
     fn two_squares_at_an_eighth_turn_make_a_star() {
         let solid = floats(&atoms::ones_2d(8));
-        let stack = |blend| radial(&solid, 8, 64, 2, 0.125, blend, 1);
+        let stack = |blend| radial(&solid, 8, 64, 2, 0.125, blend, 1).unwrap();
         let probe = |blend, px, py| at(&stack(blend), 64, 8, px, py);
         assert_eq!(probe(Blend::Union, 0.0, 0.0), 1.0);
         assert_eq!(probe(Blend::Union, 0.0, -5.0), 1.0);
@@ -401,7 +416,7 @@ mod tests {
 
     #[test]
     fn the_harmonics_read_the_rotation_order() {
-        let square = harmonics(&floats(&atoms::ones_2d(8)), 8, 128, 12);
+        let square = harmonics(&floats(&atoms::ones_2d(8)), 8, 128, 12).unwrap();
         assert!(square[0] > 0.0);
         assert!(square[4] > 1e-3 * square[0]);
         assert!(square[8] > 1e-3 * square[0]);
@@ -413,14 +428,24 @@ mod tests {
         for i in [5, 6, 9, 10, 4, 11] {
             bar[i] = 1.0;
         }
-        assert_eq!(turns(&harmonics(&bar, 4, 64, 8)), 2);
+        assert_eq!(turns(&harmonics(&bar, 4, 64, 8).unwrap()), 2);
         let mut blob = vec![0.0f32; 16];
         blob[0] = 1.0;
-        assert_eq!(turns(&harmonics(&blob, 4, 64, 8)), 1);
+        assert_eq!(turns(&harmonics(&blob, 4, 64, 8).unwrap()), 1);
         assert_eq!(turns(&[1.0, 0.0, 0.0]), 0);
         assert_eq!(
             (petals(6, 4), petals(8, 4), petals(5, 1), petals(3, 0)),
             (12, 8, 5, 0)
         );
+    }
+
+    #[test]
+    fn refuses_a_raster_that_is_not_the_side_squared() {
+        let short = vec![1.0f32; 15];
+        assert!(arcs(&short, 4, 1.0).is_err());
+        assert!(ring(&short, 4, 1.0).is_err());
+        assert!(harmonics(&short, 4, 8, 4).is_err());
+        assert!(profile(&short, 4, 8).is_err());
+        assert!(radial(&short, 4, 4, 2, 0.5, Blend::Mean, 1).is_err());
     }
 }

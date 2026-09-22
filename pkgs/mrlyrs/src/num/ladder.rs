@@ -532,7 +532,7 @@ mod tests {
     }
 
     #[test]
-    fn the_constructor_rejects_a_design_it_cannot_peel() {
+    fn refuses_a_design_it_cannot_peel() {
         assert!(Design::new(5, &[3]).is_err());
         assert!(Design::new(5, &[0]).is_err());
         assert!(Design::new(1, &[0, 1]).is_err());

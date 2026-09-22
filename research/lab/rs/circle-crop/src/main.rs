@@ -61,8 +61,7 @@ fn sweep(types: &Tensor, shift: i64, r_max: u64) -> Sweep {
         all_touch: vec![0; width],
     };
     let mut index = vec![0i64; rank];
-    let bytes = types.bytes();
-    for cell in bytes {
+    for flat in 0..types.size() {
         let mut centre = 0u64;
         let mut far = 0u64;
         let mut near = 0u64;
@@ -74,7 +73,7 @@ fn sweep(types: &Tensor, shift: i64, r_max: u64) -> Sweep {
             near += low * low;
         }
         let slots = [bucket(centre), bucket(far), bucket(near)];
-        let filled = *cell != 0;
+        let filled = types.at(flat) != 0;
         for (which, slot) in slots.iter().enumerate() {
             if *slot > r_max {
                 continue;
@@ -148,8 +147,12 @@ fn ball(dimension: usize, shift: i64, radius: Frac) -> Shape {
 
 fn oracle(label: &str, types: &Tensor, shift: i64, side: usize, table: &Sweep, radii: &[u64]) {
     for r in radii {
-        let shape = ball(types.shape.len(), shift, Frac::new(*r as i64, side as i64));
-        let tally = census(&shape, types);
+        let shape = ball(
+            types.shape.len(),
+            shift,
+            Frac::new(*r as i64, side as i64).unwrap(),
+        );
+        let tally = census(&shape, types).unwrap();
         assert_eq!(tally.filled[2] as u64, table.inside[*r as usize]);
         assert_eq!(tally.filled[1] as u64, table.cut(*r));
         assert_eq!(tally.cells[2] as u64, table.all_inside[*r as usize]);
@@ -954,8 +957,8 @@ fn digits(dimension: usize) -> Vec<Vec<f64>> {
     let types = design(dimension, 1);
     let mut out: Vec<Vec<f64>> = Vec::new();
     let mut index = vec![0usize; dimension];
-    for cell in types.bytes() {
-        if *cell != 0 {
+    for flat in 0..types.size() {
+        if types.at(flat) != 0 {
             out.push(index.iter().map(|value| *value as f64).collect());
         }
         for axis in (0..dimension).rev() {

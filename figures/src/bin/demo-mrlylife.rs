@@ -21,11 +21,11 @@ const SITES: usize = 64;
 
 // LIFE
 
-fn soup(seed: u64) -> Cell2d {
+fn soup(seed: u64) -> Result<Cell2d> {
     let mut rng = Rng::new(seed);
     let mut types = Tensor::new(vec![SIDE, SIDE]);
-    for slot in types.bytes_mut().iter_mut() {
-        *slot = u8::from(rng.chance(DENSITY));
+    for flat in 0..types.size() {
+        types.put(flat, i64::from(rng.chance(DENSITY)));
     }
     Cell2d::new(types)
 }
@@ -83,10 +83,10 @@ fn compute() -> Result<()> {
     let mask = design_mask(2, Code::from(7u128), 3, 2)?;
     assert_eq!(mask.shape, vec![MASK, MASK]);
     assert_eq!((0..mask.size()).filter(|&i| mask.at(i) == 1).count(), SITES);
-    assert_eq!(mask.get(&[MASK / 2, MASK / 2]), 0);
+    assert_eq!(mask.get(&[MASK / 2, MASK / 2])?, 0);
     assert_eq!(lattice_index(&mask), 1);
 
-    let mut cell = soup(SEED);
+    let mut cell = soup(SEED)?;
     for _ in 0..GENERATIONS {
         cell = next_grid(&cell, &[3], &[2, 3], &mask, Boundary::Wrap)?;
     }

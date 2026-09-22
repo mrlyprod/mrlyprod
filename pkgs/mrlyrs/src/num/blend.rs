@@ -1,3 +1,4 @@
+use crate::core::error::{overflow_error, value_error, Result};
 use crate::num::factor::gcd;
 
 const PRIMES: [u64; 3] = [2_147_483_647, 2_147_483_629, 2_147_483_587];
@@ -17,20 +18,25 @@ pub fn hadamard(a: &[i128], b: &[i128]) -> Vec<i128> {
     a.iter().zip(b).map(|(&x, &y)| x * y).collect()
 }
 
-/// Convolves two sequences, keeping the exact prefix their shared length affords.
-///
-/// Panics when a convolution sum passes a signed hundred and twenty-eight bits.
-pub fn cauchy(a: &[i128], b: &[i128]) -> Vec<i128> {
+/// Convolves two sequences, keeping the exact prefix their shared length affords, or an error when a sum passes a signed hundred and twenty-eight bits.
+pub fn cauchy(a: &[i128], b: &[i128]) -> Result<Vec<i128>> {
     let length = a.len().min(b.len());
-    (0..length)
-        .map(|n| {
-            (0..=n).fold(0i128, |sum, i| {
-                a[i].checked_mul(b[n - i])
-                    .and_then(|v| sum.checked_add(v))
-                    .expect("the convolution passes a hundred and twenty-eight bits")
-            })
-        })
-        .collect()
+    let mut out = Vec::with_capacity(length);
+    for n in 0..length {
+        let mut sum = 0i128;
+        for i in 0..=n {
+            match a[i].checked_mul(b[n - i]).and_then(|v| sum.checked_add(v)) {
+                Some(value) => sum = value,
+                None => {
+                    return overflow_error(format!(
+                        "the convolution passes a signed hundred and twenty-eight bits at term {n}."
+                    ))
+                }
+            }
+        }
+        out.push(sum);
+    }
+    Ok(out)
 }
 
 /// Drops the first terms of a sequence.
@@ -38,12 +44,12 @@ pub fn shift(a: &[i128], count: usize) -> Vec<i128> {
     a.iter().skip(count).copied().collect()
 }
 
-/// Keeps every step-th term from the offset onward.
-///
-/// Panics at a step of zero.
-pub fn decimate(a: &[i128], step: usize, offset: usize) -> Vec<i128> {
-    assert!(step > 0, "decimate needs a step above zero");
-    a.iter().skip(offset).step_by(step).copied().collect()
+/// Keeps every step-th term from the offset onward, or an error at a step of zero.
+pub fn decimate(a: &[i128], step: usize, offset: usize) -> Result<Vec<i128>> {
+    if step == 0 {
+        return value_error("a decimation needs a step above zero.");
+    }
+    Ok(a.iter().skip(offset).step_by(step).copied().collect())
 }
 
 /// Returns the first differences of a sequence, one term shorter.
@@ -51,19 +57,22 @@ pub fn delta(a: &[i128]) -> Vec<i128> {
     a.windows(2).map(|w| w[1] - w[0]).collect()
 }
 
-/// Returns the partial sums of a sequence.
-///
-/// Panics when a partial sum passes a signed hundred and twenty-eight bits.
-pub fn sigma(a: &[i128]) -> Vec<i128> {
+/// Returns the partial sums of a sequence, or an error when one passes a signed hundred and twenty-eight bits.
+pub fn sigma(a: &[i128]) -> Result<Vec<i128>> {
     let mut total = 0i128;
-    a.iter()
-        .map(|&x| {
-            total = total
-                .checked_add(x)
-                .expect("the partial sums pass a hundred and twenty-eight bits");
-            total
-        })
-        .collect()
+    let mut out = Vec::with_capacity(a.len());
+    for (place, &x) in a.iter().enumerate() {
+        match total.checked_add(x) {
+            Some(value) => total = value,
+            None => {
+                return overflow_error(format!(
+                    "the partial sums pass a signed hundred and twenty-eight bits at term {place}."
+                ))
+            }
+        }
+        out.push(total);
+    }
+    Ok(out)
 }
 
 /// Multiplies every term of a sequence by the factor.
@@ -428,12 +437,12 @@ mod tests {
         let fib = fibonacci(40);
         let squared = hadamard(&fib, &fib);
         assert_eq!(recurrence(&squared).unwrap().len(), 3);
-        let summed = sigma(&fib);
+        let summed = sigma(&fib).unwrap();
         assert_eq!(recurrence(&summed).unwrap().len(), 3);
-        let paired = decimate(&fib, 2, 0);
+        let paired = decimate(&fib, 2, 0).unwrap();
         let rule = recurrence(&paired).unwrap();
         assert_eq!(rule, vec![(3, 1), (-1, 1)]);
-        let convolved = cauchy(&fib, &fib);
+        let convolved = cauchy(&fib, &fib).unwrap();
         assert_eq!(recurrence(&convolved).unwrap().len(), 4);
     }
 
@@ -444,11 +453,11 @@ mod tests {
         assert_eq!(add(&a, &b), vec![11, 22, 33]);
         assert_eq!(sub(&b, &a), vec![9, 18, 27]);
         assert_eq!(hadamard(&a, &b), vec![10, 40, 90]);
-        assert_eq!(cauchy(&a, &b), vec![10, 40, 100]);
+        assert_eq!(cauchy(&a, &b).unwrap(), vec![10, 40, 100]);
         assert_eq!(shift(&a, 2), vec![3, 4, 5]);
-        assert_eq!(decimate(&a, 2, 1), vec![2, 4]);
+        assert_eq!(decimate(&a, 2, 1).unwrap(), vec![2, 4]);
         assert_eq!(delta(&a), vec![1, 1, 1, 1]);
-        assert_eq!(sigma(&a), vec![1, 3, 6, 10, 15]);
+        assert_eq!(sigma(&a).unwrap(), vec![1, 3, 6, 10, 15]);
         assert_eq!(scale(&a, -2), vec![-2, -4, -6, -8, -10]);
     }
 
@@ -465,8 +474,10 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "decimate needs a step above zero")]
-    fn decimate_refuses_a_zero_step() {
-        let _ = decimate(&[1, 2, 3], 0, 0);
+    fn refuses_a_zero_step_and_a_sum_past_the_width() {
+        assert!(decimate(&[1, 2, 3], 0, 0).is_err());
+        assert!(decimate(&[1, 2, 3], 1, 0).is_ok());
+        assert!(sigma(&[i128::MAX, 1]).is_err());
+        assert!(cauchy(&[i128::MAX, 1], &[2, 1]).is_err());
     }
 }

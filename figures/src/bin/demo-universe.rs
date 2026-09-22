@@ -82,7 +82,7 @@ fn weight(corner: &[u8]) -> u64 {
 fn main() -> Result<()> {
     let mut board = Board::square();
     let frame = board.frame(0.08);
-    let gallery = bang(3).canonical();
+    let gallery = bang(3)?.canonical();
     assert_eq!(gallery.len(), 22);
     assert_eq!(ROWS.iter().sum::<usize>(), gallery.len());
     let shade = shades(INDIGO);

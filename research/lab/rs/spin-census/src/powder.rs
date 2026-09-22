@@ -10,15 +10,14 @@ pub struct Powder {
 
 fn rings(grid: &Tensor, pad: usize, bins: usize) -> Vec<(f64, f64, f64)> {
     let side = grid.shape[0];
-    let bytes = grid.bytes();
     let mut re = vec![0.0f64; pad * pad];
     let mut im = vec![0.0f64; pad * pad];
     for row in 0..side {
         for col in 0..side {
-            re[row * pad + col] = bytes[row * side + col] as f64;
+            re[row * pad + col] = grid.at(row * side + col) as f64;
         }
     }
-    fft2(&mut re, &mut im, pad, false);
+    fft2(&mut re, &mut im, pad, false).expect("the pad square is pad by pad");
     let half = (pad / 2) as i64;
     let top = (half as f64 * 2f64.sqrt()).ln();
     let mut sums = vec![0.0f64; bins];

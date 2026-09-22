@@ -103,7 +103,7 @@ impl Automaton {
     /// Builds the ladder at an explicit peel depth, at least the rule width and at least two, or an error when the rule admits no element or the depth overruns the exact integers.
     ///
     /// ```
-    /// let full = mrlyrs::num::memory::Rule::full(1, 2);
+    /// let full = mrlyrs::num::memory::Rule::full(1, 2).unwrap();
     /// let ladder = mrlyrs::num::automaton::Automaton::with_peel(&full, 7).unwrap();
     /// assert_eq!(ladder.peel(), 7);
     /// assert_eq!(ladder.abscissa(), 1.0);
@@ -729,7 +729,7 @@ impl Automaton {
     /// Right of the abscissa the inverse is majorised by its Neumann series, `sum_i (q^(-Re w) T)^i`, which is entrywise nonnegative and needs no norm and no primitivity; left of it the bound runs through the computed inverse certified by its own residual, `abs(C) (y + norm(y) r/(1-r) 1)` with `r = norm(I - (I - q^(-w) T) C)`, and the module raises rather than return when `r >= 1`.
     ///
     /// ```
-    /// let full = mrlyrs::num::memory::Rule::full(1, 2);
+    /// let full = mrlyrs::num::memory::Rule::full(1, 2).unwrap();
     /// let ladder = mrlyrs::num::automaton::Automaton::new(&full).unwrap();
     /// let s = mrlyrs::num::zeta::Complex::new(2.0, 0.0);
     /// let (value, bound) = ladder.zeta(s, 1e-10).unwrap();
@@ -824,7 +824,7 @@ mod tests {
     fn the_full_rule_is_the_base_two_design() {
         let design = Design::new(2, &[0, 1]).unwrap();
         for width in [2usize, 3] {
-            let ladder = Automaton::new(&Rule::full(1, width)).unwrap();
+            let ladder = Automaton::new(&Rule::full(1, width).unwrap()).unwrap();
             assert_eq!(ladder.states(), 1 << (width - 1));
             assert_eq!(ladder.abscissa(), 1.0);
             let mut wanted = vec![0.0; 1 << (width - 1)];
@@ -1097,7 +1097,7 @@ mod tests {
     }
 
     #[test]
-    fn the_ladder_refuses_a_level_it_cannot_invert() {
+    fn refuses_a_level_it_cannot_invert() {
         let ladder = golden();
         let phi = (1.0 + 5f64.sqrt()) / 2.0;
         let w0 = Complex::new(phi.log2(), 0.0);

@@ -31,11 +31,8 @@ pub fn sponge(level: usize) -> Tensor {
 }
 
 pub fn filled(grid: &Tensor) -> Vec<usize> {
-    grid.bytes()
-        .iter()
-        .enumerate()
-        .filter(|(_, cell)| **cell != 0)
-        .map(|(flat, _)| flat)
+    (0..grid.size())
+        .filter(|&flat| grid.at(flat) != 0)
         .collect()
 }
 
@@ -129,12 +126,12 @@ pub fn components(grid: &Tensor) -> Components {
     let best = (0..graph.nodes())
         .max_by_key(|node| (sizes[*node], usize::MAX - node))
         .unwrap_or(0);
-    let mut bytes = vec![0u8; grid.size()];
+    let mut giant = Tensor::new(grid.shape.clone());
     let mut low = vec![usize::MAX; grid.shape.len()];
     let mut high = vec![0usize; grid.shape.len()];
     for (node, flat) in graph.cells.iter().enumerate() {
         if labels[node] == best {
-            bytes[*flat] = 1;
+            giant.put(*flat, 1);
             for (axis, at) in coords(*flat, &grid.shape).iter().enumerate() {
                 low[axis] = low[axis].min(*at);
                 high[axis] = high[axis].max(*at);
@@ -146,7 +143,7 @@ pub fn components(grid: &Tensor) -> Components {
     let held = if graph.nodes() == 0 { 0 } else { sizes[best] };
     Components {
         count,
-        giant: Tensor::of(bytes, grid.shape.clone()),
+        giant,
         share: if graph.nodes() == 0 {
             0.0
         } else {

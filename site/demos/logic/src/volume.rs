@@ -56,14 +56,14 @@ pub fn volume_count(data: &[f32], size: usize, level: f32) -> Result<usize, Faul
 /// Counts the exposed faces of the voxels at or above the level.
 #[wasm_bindgen]
 pub fn volume_surface(data: &[f32], size: usize, level: f32) -> Result<usize, Fault> {
-    let cell = Cell3d::new(volume_of(data, size)?.solid(level));
+    let cell = Cell3d::new(volume_of(data, size)?.solid(level))?;
     Ok(three::quads(&cell).len())
 }
 
 /// Packs the exposed faces of the voxels at or above the level: two section lengths, then six floats per vertex, position and normal, in the unit box.
 #[wasm_bindgen]
 pub fn volume_faces(data: &[f32], size: usize, level: f32) -> Result<Vec<f32>, Fault> {
-    let cell = Cell3d::new(volume_of(data, size)?.solid(level));
+    let cell = Cell3d::new(volume_of(data, size)?.solid(level))?;
     let mut pack = Pack::new();
     for quad in three::quads(&cell) {
         pack.quad(quad.verts, quad.normal);

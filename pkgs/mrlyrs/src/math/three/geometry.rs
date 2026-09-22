@@ -13,17 +13,23 @@ pub fn orientations() -> &'static Vec<(usize, usize, usize)> {
     static TABLE: OnceLock<Vec<(usize, usize, usize)>> = OnceLock::new();
     TABLE.get_or_init(|| {
         let mut probe = Tensor::new(vec![3, 3, 3]);
-        for (flat, item) in probe.bytes_mut().iter_mut().enumerate() {
-            *item = flat as u8;
+        for flat in 0..probe.size() {
+            probe.put(flat, flat as i64);
         }
         let mut seen: Vec<Vec<u8>> = Vec::new();
         let mut table = Vec::new();
         for a in 0..4 {
             for b in 0..4 {
                 for c in 0..4 {
-                    let image = probe.rot90(a, (1, 2)).rot90(b, (0, 2)).rot90(c, (0, 1));
-                    if !seen.contains(&image.bytes().to_vec()) {
-                        seen.push(image.bytes().to_vec());
+                    let turned = probe
+                        .rot90(a, (1, 2))
+                        .and_then(|t| t.rot90(b, (0, 2)))
+                        .and_then(|t| t.rot90(c, (0, 1)));
+                    let Ok(image) = turned.and_then(|t| t.bytes().map(<[u8]>::to_vec)) else {
+                        continue;
+                    };
+                    if !seen.contains(&image) {
+                        seen.push(image);
                         table.push((a, b, c));
                     }
                 }
@@ -43,11 +49,11 @@ pub fn special(mask: &Tensor, cell: &Cell3d) -> Result<Cell3d> {
     if mask.shape.len() != 3 {
         return value_error("special mask must be 3d.");
     }
-    if mask.bytes().iter().any(|&v| v > 23) {
+    if mask.bytes()?.iter().any(|&v| v > 23) {
         return value_error("Invalid orientation value. Must be 0..23.");
     }
     let oriented: Result<Vec<Cell3d>> = mask
-        .bytes()
+        .bytes()?
         .iter()
         .map(|&k| cell.clone().orient(k as usize))
         .collect();
@@ -88,7 +94,7 @@ pub fn slice(cell: &Cell3d, axis: usize, index: usize) -> Result<Cell2d> {
     }
     let (shape, map) = slice_map(&cell.types().shape, axis, index);
     Ok(Cell2d {
-        cell: remap(&cell.cell, &map, &shape),
+        cell: remap(&cell.cell, &map, &shape)?,
     })
 }
 
@@ -131,7 +137,7 @@ pub fn extrude(cell: &Cell2d, axis: usize, depth: usize) -> Result<Cell3d> {
     }
     let (shape, map) = lift_map(&cell.types().shape, axis, depth);
     Ok(Cell3d {
-        cell: remap(&cell.cell, &map, &shape),
+        cell: remap(&cell.cell, &map, &shape)?,
     })
 }
 
@@ -189,7 +195,15 @@ mod tests {
     fn orientations_are_distinct_on_chiral_design() {
         let tree = designs::xtree(3, 1).unwrap();
         let images: Vec<Vec<u8>> = (0..24)
-            .map(|i| tree.clone().orient(i).unwrap().types().bytes().to_vec())
+            .map(|i| {
+                tree.clone()
+                    .orient(i)
+                    .unwrap()
+                    .types()
+                    .bytes()
+                    .unwrap()
+                    .to_vec()
+            })
             .collect();
         let mut unique = images.clone();
         unique.sort();
@@ -201,7 +215,7 @@ mod tests {
         let c = designs::carpet(3, 1).unwrap();
         let mask = Tensor::new(vec![2, 2, 2]);
         let s = special(&mask, &c).unwrap();
-        assert_eq!(s, c.clone().tile(2, 2, 2));
+        assert_eq!(s, c.clone().tile(2, 2, 2).unwrap());
     }
     #[test]
     fn only_the_carpet_and_two_trees_face_a_flat_name() {
@@ -279,19 +293,22 @@ mod tests {
     fn manhattan_layers_are_diamond_shells() {
         let cube = manhattan_layers(designs::ones(3, 1).unwrap());
         let tags = cube.cell.tags.as_ref().unwrap();
-        assert_eq!(tags.get(&[1, 1, 1]), 0);
-        assert_eq!(tags.get(&[0, 1, 1]), 1);
-        assert_eq!(tags.get(&[0, 0, 1]), 2);
-        assert_eq!(tags.get(&[0, 0, 0]), 3);
+        assert_eq!(tags.get(&[1, 1, 1]).unwrap(), 0);
+        assert_eq!(tags.get(&[0, 1, 1]).unwrap(), 1);
+        assert_eq!(tags.get(&[0, 0, 1]).unwrap(), 2);
+        assert_eq!(tags.get(&[0, 0, 0]).unwrap(), 3);
         let boxes = designs::ones(3, 1).unwrap().layers();
-        assert_eq!(boxes.cell.tags.as_ref().unwrap().get(&[0, 0, 0]), 1);
+        assert_eq!(
+            boxes.cell.tags.as_ref().unwrap().get(&[0, 0, 0]).unwrap(),
+            1
+        );
     }
     #[test]
     fn manhattan_layers_widen_past_a_byte() {
         use crate::core::tensor::Dtype;
         let small = manhattan_layers(designs::ones(3, 1).unwrap());
         assert_eq!(small.cell.tags.as_ref().unwrap().dtype(), Dtype::U8);
-        let long = manhattan_layers(Cell3d::new(Tensor::full(vec![1, 1, 600], 1)));
+        let long = manhattan_layers(Cell3d::new(Tensor::full(vec![1, 1, 600], 1)).unwrap());
         let tags = long.cell.tags.as_ref().unwrap();
         assert_eq!(tags.dtype(), Dtype::U16);
         assert_eq!(tags.at(0), 299);

@@ -90,6 +90,7 @@ fn tile_maps(base: Base) -> Vec<Map> {
     let b = ring.place(base.value().0, base.value().1);
     let scale = complex_div((1.0, 0.0), b);
     base.residues()
+        .unwrap()
         .into_iter()
         .map(|d| {
             let place = ring.place(d.0, d.1);
@@ -214,26 +215,26 @@ fn run_compare() {
     println!("COMPARE  each design against an independent f64 iterated function system, seed 0");
     face_off(
         "gasket    ",
-        &gasket(),
+        &gasket().unwrap(),
         &gasket_maps(),
         true,
         "independent: the three ratio 1/2 similarities fixing an equilateral triangle placed at (1,1), (3,1), (2,1+sqrt 3); a translation and a positive scaling are allowed because that statement fixes the gasket only up to similarity, and the turn residual printed above is the check that no rotation was needed",
     );
     face_off(
         "koch      ",
-        &koch(),
+        &koch().unwrap(),
         &koch_maps(),
         false,
         "independent in f64 only: z/3, e^(i pi/3) z/3 + 1/3, e^(-i pi/3) z/3 + 1/2 + i sqrt(3)/6, z/3 + 2/3 are the crate maps coefficient for coefficient, so this is a float self-check of exact ring arithmetic and no motion is allowed",
     );
     face_off(
         "twindragon",
-        &twindragon(),
+        &twindragon().unwrap(),
         &twindragon_maps(),
         false,
         "self-check by definition: z/(1+i) and (z+1)/(1+i) are the radix maps of base 1+i on its two residues, so no motion is allowed and the number is f64 round-off",
     );
-    let seven = flowsnake();
+    let seven = flowsnake().unwrap();
     face_off(
         "tile7     ",
         &seven,
@@ -243,8 +244,12 @@ fn run_compare() {
     );
     println!("  terdragon against the L-system F -> F + F - F at 120 degrees, three segments, unsourced reading");
     let level = 8;
-    let twisted = terdragon_reading("  twisted  ", &terdragon(), level);
-    let plain = terdragon_reading("  untwisted", &terdragon().with_twists(&[0, 0, 0]), level);
+    let twisted = terdragon_reading("  twisted  ", &terdragon().unwrap(), level);
+    let plain = terdragon_reading(
+        "  untwisted",
+        &terdragon().unwrap().with_twists(&[0, 0, 0]).unwrap(),
+        level,
+    );
     println!(
         "  verdict: the twisted reading {} and the untwisted code 7 {}",
         if twisted < 1e-9 { "matches" } else { "misses" },
@@ -257,7 +262,7 @@ fn run_compare() {
 // KOCH
 
 fn run_koch() {
-    let design = koch();
+    let design = koch().unwrap();
     println!(
         "KOCH  base {} on {}",
         spell(design.ring(), design.base().value()),
@@ -280,8 +285,8 @@ fn run_koch() {
     );
     println!(
         "  canonical digits {}  class code {}",
-        design.canonical(),
-        design.code()
+        design.canonical().unwrap(),
+        design.code().unwrap()
     );
     println!("  the four maps are phi_d coefficient for coefficient, so the column below is a float self-check");
     println!("  level  words  fill  distinct  worst");
@@ -317,7 +322,7 @@ fn report(name: &str, design: &Radix) {
         "{name}  {}  base {}  q {q}  code {}  |F| {size}  fill |F|^L  dim {:.6}",
         ring_word(ring),
         spell(ring, design.base().value()),
-        design.code(),
+        design.code().unwrap(),
         design.dimension()
     );
     println!(
@@ -335,12 +340,18 @@ fn report(name: &str, design: &Radix) {
 
 fn run_named() {
     println!("NAMED  codes only; the names are tested by the verb compare and nowhere here");
-    report("code 7 at 2        ", &gasket());
-    report("code 3 at 1+i      ", &twindragon());
-    report("code 7 at 2+w      ", &terdragon().with_twists(&[0, 0, 0]));
-    report("code 127 at 3+w    ", &flowsnake());
-    report("code 147 at 3      ", &koch());
-    let glue = Radix::from_code(Base::new(Ring::Gaussian, (2, 0)), 3).with_twists(&[0, 2]);
+    report("code 7 at 2        ", &gasket().unwrap());
+    report("code 3 at 1+i      ", &twindragon().unwrap());
+    report(
+        "code 7 at 2+w      ",
+        &terdragon().unwrap().with_twists(&[0, 0, 0]).unwrap(),
+    );
+    report("code 127 at 3+w    ", &flowsnake().unwrap());
+    report("code 147 at 3      ", &koch().unwrap());
+    let glue = Radix::from_code(Base::new(Ring::Gaussian, (2, 0)).unwrap(), 3)
+        .unwrap()
+        .with_twists(&[0, 2])
+        .unwrap();
     println!(
         "twist glue  Z[i]  base 2  q 4  code 3  |F| 2  twists 1 -1  dim {:.6}",
         glue.dimension()
@@ -378,14 +389,14 @@ fn run_today() {
     for m in [2u64, 3u64] {
         let cells = (m * m) as usize;
         for code in 0..(1u128 << cells) {
-            let design = tile(m, code);
+            let design = tile(m, code).unwrap();
             let got: HashSet<(i64, i64)> = design.words(level).into_iter().collect();
             let tensor = create(Code::from(code), m as usize, 2, m as usize, level).unwrap();
             let side = m.pow(level as u32) as usize;
             let mut want = HashSet::new();
             for row in 0..side {
                 for col in 0..side {
-                    if tensor.bytes()[row * side + col] == 1 {
+                    if tensor.at(row * side + col) == 1 {
                         want.insert((col as i64, row as i64));
                     }
                 }
@@ -406,11 +417,11 @@ fn run_today() {
         "  the code is read in box row-major order, bit r m + c, not in canonical residue order"
     );
     for m in [2u64, 3u64] {
-        let full = tile(m, (1u128 << (m * m)) - 1);
-        let base = Base::new(Ring::Gaussian, (m as i64, 0));
+        let full = tile(m, (1u128 << (m * m)) - 1).unwrap();
+        let base = Base::new(Ring::Gaussian, (m as i64, 0)).unwrap();
         println!(
             "  m {m}: box residues are the canonical system {}",
-            full.canonical()
+            full.canonical().unwrap()
         );
         println!(
             "    box {}",
@@ -423,6 +434,7 @@ fn run_today() {
         println!(
             "    canonical {}",
             base.residues()
+                .unwrap()
                 .iter()
                 .map(|&z| spell(Ring::Gaussian, z))
                 .collect::<Vec<_>>()
@@ -521,9 +533,9 @@ fn run_census() {
     );
     println!("  ring  base  q  abstract  image  mirror  codes  classes  walk");
     for (ring, value) in bases {
-        let base = Base::new(ring, value);
+        let base = Base::new(ring, value).unwrap();
         let q = base.norm() as usize;
-        let group = base.group();
+        let group = base.group().unwrap();
         let count = burnside(&group);
         let seen = walk(&group, q);
         assert_eq!(count, seen, "Burnside and the orbit walk disagree");
@@ -539,6 +551,7 @@ fn run_census() {
         println!(
             "    residues {}",
             base.residues()
+                .unwrap()
                 .iter()
                 .map(|&z| spell(ring, z))
                 .collect::<Vec<_>>()
@@ -546,7 +559,7 @@ fn run_census() {
         );
     }
     println!("  abstract is the order of R^* semidirect <conj>, image the order it acts through on the residues");
-    let base = Base::new(Ring::Eisenstein, (3, 0));
+    let base = Base::new(Ring::Eisenstein, (3, 0)).unwrap();
     let q = base.norm() as usize;
     let twisted: u128 = (0..1u128 << q)
         .map(|code| 6u128.pow(code.count_ones()))
@@ -554,7 +567,7 @@ fn run_census() {
     println!(
         "  base 3 on Z[omega]: {} codes in {} classes of codes; over the codes, not the classes, the twist vectors number sum_k binom(9,k) 6^k = {twisted} = 7^{q}",
         1u128 << q,
-        burnside(&base.group())
+        burnside(&base.group().unwrap())
     );
     assert_eq!(twisted, 7u128.pow(q as u32));
     let mut sizes: HashMap<usize, usize> = HashMap::new();
@@ -992,10 +1005,10 @@ fn run_affine() {
         "  ring  base  q  |F|  codes  orbits  simil  affine   ssplit   smerge   asplit   amerge"
     );
     for (ring, value) in bases {
-        let base = Base::new(ring, value);
-        let residues = base.residues();
+        let base = Base::new(ring, value).unwrap();
+        let residues = base.residues().unwrap();
         let q = residues.len();
-        let group = base.group();
+        let group = base.group().unwrap();
         let real = value.1 == 0;
         let mut codes_seen = 0u128;
         let mut orbits_seen = 0usize;
@@ -1081,9 +1094,9 @@ fn run_affine() {
     println!(
         "  over the same cells the affine count is below the code count in {affine_below}, equal in {affine_equal} and above it in {affine_above}, and the two partitions cross in {affine_crossed}"
     );
-    let base = Base::new(Ring::Eisenstein, (3, 0));
-    let residues = base.residues();
-    let group = base.group();
+    let base = Base::new(Ring::Eisenstein, (3, 0)).unwrap();
+    let residues = base.residues().unwrap();
+    let group = base.group().unwrap();
     println!(
         "  the fixed witnesses at base 3 on Z[omega], |F| = 3, untwisted canonical digit sets"
     );

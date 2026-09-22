@@ -57,7 +57,11 @@ fn alphabet() {
             let mine = mask_tile(code as u64, base);
             for r in 0..base {
                 for c in 0..base {
-                    assert_eq!(truth.get(&[r, c]) == 1, mine.at(r, c), "letter render");
+                    assert_eq!(
+                        truth.get(&[r, c]).is_ok_and(|v| v == 1),
+                        mine.at(r, c),
+                        "letter render"
+                    );
                 }
             }
             letters += 1;
@@ -73,7 +77,11 @@ fn alphabet() {
             let mine = kron(&mine_left, &mask_tile(b as u64, 3));
             for r in 0..6 {
                 for c in 0..6 {
-                    assert_eq!(truth.get(&[r, c]) == 1, mine.at(r, c), "product render");
+                    assert_eq!(
+                        truth.get(&[r, c]).is_ok_and(|v| v == 1),
+                        mine.at(r, c),
+                        "product render"
+                    );
                 }
             }
             products += 1;

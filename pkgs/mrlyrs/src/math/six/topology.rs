@@ -11,9 +11,9 @@ use std::collections::BTreeMap;
 type Point = (i64, i64);
 type Edge = (Point, Point);
 
-fn pieces(network: &Network) -> Vec<usize> {
+fn pieces(network: &Network) -> Result<Vec<usize>> {
     let n = network.nodes.len();
-    let adjacency = network.adjacency();
+    let adjacency = network.adjacency()?;
     let mut seen = vec![false; n];
     let mut sizes = Vec::new();
     for start in 0..n {
@@ -34,7 +34,7 @@ fn pieces(network: &Network) -> Vec<usize> {
         }
         sizes.push(size);
     }
-    sizes
+    Ok(sizes)
 }
 
 /// Counts the connected pieces of the fill, triangles joined across shared edges.
@@ -44,12 +44,12 @@ fn pieces(network: &Network) -> Vec<usize> {
 /// assert_eq!(mrlyrs::math::six::topology::components(&slice).unwrap(), 7);
 /// ```
 pub fn components(cell: &Cell6d) -> Result<usize> {
-    Ok(pieces(&slice_core_graph(cell)?).len())
+    Ok(pieces(&slice_core_graph(cell)?)?.len())
 }
 
 /// Returns the triangle count of the fill's largest connected piece.
 pub fn giant(cell: &Cell6d) -> Result<usize> {
-    Ok(pieces(&slice_core_graph(cell)?)
+    Ok(pieces(&slice_core_graph(cell)?)?
         .into_iter()
         .max()
         .unwrap_or(0))
@@ -57,7 +57,7 @@ pub fn giant(cell: &Cell6d) -> Result<usize> {
 
 /// Returns the largest connected piece of the filled-triangle network as a network of its own.
 pub fn giant_network(cell: &Cell6d) -> Result<Network> {
-    Ok(largest_component(&slice_core_graph(cell)?))
+    largest_component(&slice_core_graph(cell)?)
 }
 
 /// Reads the spectral dimension of the giant piece: twice the low-window log-log slope of the normalised Laplacian's integrated density of states.
@@ -89,7 +89,7 @@ pub fn rim_holes(cell: &Cell6d) -> Result<usize> {
     let mut mesh: BTreeMap<Edge, usize> = BTreeMap::new();
     for y in 0..height {
         for x in 0..width {
-            let v = inner.types().get(&[y, x]);
+            let v = inner.types().get(&[y, x])?;
             if v != FILL && v != VOID {
                 continue;
             }
@@ -168,7 +168,7 @@ mod theorems {
         for i in 0..side {
             for j in 0..side {
                 for l in 0..side {
-                    if grid.get(&[i, j, l]) == 0 {
+                    if grid.get(&[i, j, l]).unwrap() == 0 {
                         continue;
                     }
                     let layer = 3 * side as i64 - 2 * (i + j + l) as i64;
@@ -218,8 +218,8 @@ mod theorems {
             let (left, right) = (carpet.cell.types(), net.cell.types());
             assert_eq!(left.shape, right.shape, "n={number}");
             let mut filled = 0;
-            for (index, &value) in left.bytes().iter().enumerate() {
-                let other = right.bytes()[index];
+            for (index, &value) in left.bytes().unwrap().iter().enumerate() {
+                let other = right.bytes().unwrap()[index];
                 if value == GRID || other == GRID {
                     assert_eq!(value, other, "n={number}");
                     continue;
@@ -280,7 +280,7 @@ mod theorems {
             let cut = slice(23, 2 * k - 1, 1);
             assert_eq!(components(&cut).unwrap(), want_pieces, "k={k}");
             assert_eq!(
-                network_components(&slice_core_graph(&cut).unwrap()),
+                network_components(&slice_core_graph(&cut).unwrap()).unwrap(),
                 want_pieces,
                 "k={k}"
             );

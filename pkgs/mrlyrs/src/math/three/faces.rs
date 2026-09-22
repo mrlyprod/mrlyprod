@@ -84,13 +84,13 @@ pub fn quads(cell: &Cell3d) -> Vec<Quad> {
         if i >= dx || j >= dy || k >= dz {
             return true;
         }
-        grid.get(&[i, j, k]) == 0
+        grid.at(grid.index(&[i, j, k])) == 0
     };
     let mut out = Vec::new();
     for i in 0..dx {
         for j in 0..dy {
             for k in 0..dz {
-                if grid.get(&[i, j, k]) == 0 {
+                if grid.at(grid.index(&[i, j, k])) == 0 {
                     continue;
                 }
                 let (ii, jj, kk) = (i as isize, j as isize, k as isize);

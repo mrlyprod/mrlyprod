@@ -70,11 +70,11 @@ fn compute() -> Result<()> {
     let mut types = Tensor::new(vec![SIDE, SIDE]);
     let corner = SIDE / 2 - 1;
     for (x, y) in SEED {
-        types.set(&[corner + y, corner + x], 1);
+        types.set(&[corner + y, corner + x], 1)?;
     }
-    assert_eq!(types.bytes().iter().filter(|&&on| on == 1).count(), 5);
+    assert_eq!(types.bytes()?.iter().filter(|&&on| on == 1).count(), 5);
 
-    let mut cell = Cell2d::new(types);
+    let mut cell = Cell2d::new(types)?;
     let mut first = vec![-1i32; SIDE * SIDE];
     for step in 0..=STEPS {
         let live = cell.types();

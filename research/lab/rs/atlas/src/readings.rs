@@ -57,12 +57,12 @@ pub fn read(frame: &Cell2d, previous: Option<&Cell2d>) -> Result<Reading> {
     let pieces = if fill == 0 {
         0
     } else {
-        components(&core_graph(frame)?)
+        components(&core_graph(frame)?)?
     };
     let holes = if fill == side * side {
         0
     } else {
-        components(&tunnel_graph(frame)?)
+        components(&tunnel_graph(frame)?)?
     };
     let euler = census::euler(frame)?;
     let (ring, share, ring_cut) = spectrum_peaks(grid);
@@ -103,8 +103,8 @@ pub fn block_split(frame: &Tensor, d: usize) -> Option<(Tensor, Tensor)> {
             let mut live = false;
             for p in 0..n {
                 for q in 0..n {
-                    if frame.get(&[i * n + p, j * n + q]) != 0 {
-                        block.set(&[p, q], 1);
+                    if frame.get(&[i * n + p, j * n + q]).ok()? != 0 {
+                        block.set(&[p, q], 1).ok()?;
                         live = true;
                     }
                 }
@@ -112,11 +112,11 @@ pub fn block_split(frame: &Tensor, d: usize) -> Option<(Tensor, Tensor)> {
             if !live {
                 continue;
             }
-            outer.set(&[i, j], 1);
+            outer.set(&[i, j], 1).ok()?;
             match &inner {
                 None => inner = Some(block),
                 Some(first) => {
-                    if first.bytes() != block.bytes() {
+                    if *first != block {
                         return None;
                     }
                 }
@@ -140,8 +140,8 @@ pub fn pack(tile: &Tensor) -> Option<u128> {
         return None;
     }
     let mut code: u128 = 0;
-    for (i, &b) in tile.bytes().iter().enumerate() {
-        if b != 0 {
+    for i in 0..tile.size() {
+        if tile.at(i) != 0 {
             code |= 1 << i;
         }
     }
@@ -166,14 +166,13 @@ pub fn shifted_factors(grid: &Tensor) -> Option<(usize, usize, usize, u128, u128
     if grid.sum() == 0 {
         return None;
     }
-    let bytes = grid.bytes();
     let mut shifted = Tensor::new(vec![n, n]);
     for dr in 0..n {
         for dc in 0..n {
             for r in 0..n {
                 for c in 0..n {
-                    let v = bytes[((r + dr) % n) * n + (c + dc) % n];
-                    shifted.bytes_mut()[r * n + c] = v;
+                    let v = grid.at(((r + dr) % n) * n + (c + dc) % n);
+                    shifted.put(r * n + c, v);
                 }
             }
             if let Some((d, a, b)) = factors(&shifted) {
@@ -187,8 +186,12 @@ pub fn shifted_factors(grid: &Tensor) -> Option<(usize, usize, usize, u128, u128
 fn images(grid: &Tensor) -> Vec<Tensor> {
     let mut out = Vec::with_capacity(8);
     for k in 0..4 {
-        let turned = grid.rot90(k, (0, 1));
-        out.push(turned.flip(1));
+        let Ok(turned) = grid.rot90(k, (0, 1)) else {
+            break;
+        };
+        if let Ok(flipped) = turned.flip(1) {
+            out.push(flipped);
+        }
         out.push(turned);
     }
     out
@@ -196,13 +199,13 @@ fn images(grid: &Tensor) -> Vec<Tensor> {
 
 /// Returns the dihedral subgroup fixing the frame.
 pub fn symmetry(grid: &Tensor) -> Symmetry {
-    let same = |t: &Tensor| t.bytes() == grid.bytes();
-    let r90 = same(&grid.rot90(1, (0, 1)));
-    let r180 = same(&grid.rot90(2, (0, 1)));
-    let fh = same(&grid.flip(1));
-    let fv = same(&grid.flip(0));
-    let t = same(&grid.transpose(0, 1));
-    let at = same(&grid.rot90(2, (0, 1)).transpose(0, 1));
+    let same = |t: Result<Tensor>| t.is_ok_and(|image| image.bytes().ok() == grid.bytes().ok());
+    let r90 = same(grid.rot90(1, (0, 1)));
+    let r180 = same(grid.rot90(2, (0, 1)));
+    let fh = same(grid.flip(1));
+    let fv = same(grid.flip(0));
+    let t = same(grid.transpose(0, 1));
+    let at = same(grid.rot90(2, (0, 1)).and_then(|t| t.transpose(0, 1)));
     let order = 1 + [r90, r180, r90, fh, fv, t, at]
         .iter()
         .filter(|&&b| b)
@@ -233,7 +236,7 @@ pub fn box_slope(grid: &Tensor) -> f64 {
         let mut boxes = vec![false; m * m];
         for r in 0..side {
             for c in 0..side {
-                if grid.get(&[r, c]) != 0 {
+                if grid.at(grid.index(&[r, c])) != 0 {
                     boxes[(r / b) * m + c / b] = true;
                 }
             }
@@ -313,7 +316,7 @@ fn centred(values: &[f64], n: usize) -> Vec<f64> {
 /// Returns the centred power square of a frame on its own torus.
 pub fn power_square(grid: &Tensor) -> Vec<f64> {
     let n = grid.shape[0];
-    let field: Vec<f64> = grid.bytes().iter().map(|&b| b as f64).collect();
+    let field: Vec<f64> = (0..grid.size()).map(|i| grid.at(i) as f64).collect();
     let (re, im) = dft2(&field, n);
     let power: Vec<f64> = re.iter().zip(&im).map(|(a, b)| a * a + b * b).collect();
     centred(&power, n)
@@ -359,7 +362,7 @@ fn spectrum_peaks(grid: &Tensor) -> (usize, f64, usize) {
             }
         }
     }
-    let cut = peak_ring(&radial_profile(&power, n));
+    let cut = peak_ring(&radial_profile(&power, n).expect("the power square is n by n"));
     (ring, on_ring / total, cut)
 }
 
@@ -370,7 +373,7 @@ pub fn first_negative_lobe(mask: &Tensor, canvas: usize) -> usize {
     let mut field = vec![0.0; canvas * canvas];
     for r in 0..side {
         for c in 0..side {
-            if mask.get(&[r, c]) != 0 {
+            if mask.at(mask.index(&[r, c])) != 0 {
                 let rr = (r + canvas - centre % canvas) % canvas;
                 let cc = (c + canvas - centre % canvas) % canvas;
                 field[rr * canvas + cc] += 1.0;
@@ -378,7 +381,8 @@ pub fn first_negative_lobe(mask: &Tensor, canvas: usize) -> usize {
         }
     }
     let (re, _) = dft2(&field, canvas);
-    let profile = radial_profile(&centred(&re, canvas), canvas);
+    let profile =
+        radial_profile(&centred(&re, canvas), canvas).expect("the field is canvas by canvas");
     profile
         .iter()
         .enumerate()
@@ -392,12 +396,12 @@ pub fn first_negative_lobe(mask: &Tensor, canvas: usize) -> usize {
 pub fn canonical(grid: &Tensor) -> Vec<u8> {
     let n = grid.shape[0];
     if grid.sum() == 0 {
-        return grid.bytes().to_vec();
+        return grid.bytes().map(<[u8]>::to_vec).unwrap_or_default();
     }
     let mut best: Option<Vec<u8>> = None;
     let mut shifted = vec![0u8; n * n];
     for image in images(grid) {
-        let bytes = image.bytes();
+        let Ok(bytes) = image.bytes() else { continue };
         for r0 in 0..n {
             for c0 in 0..n {
                 if bytes[r0 * n + c0] == 0 {
@@ -424,7 +428,7 @@ pub fn translate_of(a: &Tensor, b: &Tensor) -> Option<(usize, usize)> {
     if a.shape != b.shape || a.sum() != b.sum() {
         return None;
     }
-    let (x, y) = (a.bytes(), b.bytes());
+    let (x, y) = (a.bytes().ok()?, b.bytes().ok()?);
     let first = x.iter().position(|&v| v != 0)?;
     let (r0, c0) = (first / n, first % n);
     for r1 in 0..n {
@@ -451,10 +455,10 @@ mod tests {
     use mrlyrs::math::two::carpet;
     fn blinker() -> Cell2d {
         let mut t = Tensor::new(vec![5, 5]);
-        t.set(&[1, 2], 1);
-        t.set(&[2, 2], 1);
-        t.set(&[3, 2], 1);
-        Cell2d::new(t)
+        t.set(&[1, 2], 1).unwrap();
+        t.set(&[2, 2], 1).unwrap();
+        t.set(&[3, 2], 1).unwrap();
+        Cell2d::new(t).unwrap()
     }
     #[test]
     fn the_blinker_reads_one_bar_of_d2_with_no_cut() {
@@ -479,13 +483,13 @@ mod tests {
         assert_eq!(reading.factors, None);
         assert!(reading.ring > 0 && reading.share > 0.0);
         assert_eq!(reading.entropy, entropy(&blinker()));
-        let turned = Cell2d::new(blinker().types().rot90(1, (0, 1)));
+        let turned = Cell2d::new(blinker().types().rot90(1, (0, 1)).unwrap()).unwrap();
         assert_eq!(canonical(blinker().types()), canonical(turned.types()));
         assert_eq!(read(&turned, Some(&blinker())).unwrap().churn, 4.0 / 25.0);
     }
     #[test]
     fn the_full_block_is_d4_with_a_flat_spectrum_and_cuts_at_two() {
-        let block = Cell2d::new(Tensor::full(vec![4, 4], 1));
+        let block = Cell2d::new(Tensor::full(vec![4, 4], 1)).unwrap();
         let reading = read(&block, None).unwrap();
         assert_eq!(
             (
@@ -526,9 +530,12 @@ mod tests {
         assert_eq!(reading.cuts, vec![3]);
         assert_eq!(reading.factors, Some((3, 495, 495)));
         let (outer, inner) = block_split(frame.types(), 3).unwrap();
-        assert_eq!(outer.kron(&inner).bytes(), frame.types().bytes());
         assert_eq!(
-            block_split(&frame.types().rot90(1, (0, 1)), 3).map(|(a, _)| pack(&a)),
+            outer.kron(&inner).bytes().unwrap(),
+            frame.types().bytes().unwrap()
+        );
+        assert_eq!(
+            block_split(&frame.types().rot90(1, (0, 1)).unwrap(), 3).map(|(a, _)| pack(&a)),
             Some(Some(495))
         );
     }
@@ -536,15 +543,16 @@ mod tests {
     fn a_shifted_frame_is_found_and_read_back() {
         let a = blinker();
         let mut t = Tensor::new(vec![5, 5]);
-        t.set(&[4, 0], 1);
-        t.set(&[0, 0], 1);
-        t.set(&[1, 0], 1);
-        let b = Cell2d::new(t);
+        t.set(&[4, 0], 1).unwrap();
+        t.set(&[0, 0], 1).unwrap();
+        t.set(&[1, 0], 1).unwrap();
+        let b = Cell2d::new(t).unwrap();
         assert_eq!(translate_of(a.types(), b.types()), Some((3, 3)));
         assert_eq!(translate_of(a.types(), a.types()), Some((0, 0)));
         assert_eq!(canonical(a.types()), canonical(b.types()));
         let carpet = mrlyrs::math::two::carpet(3, 2).unwrap();
-        let moved = Cell2d::new(Tensor::of(canonical(carpet.types()), vec![9, 9]));
+        let moved =
+            Cell2d::new(Tensor::of(canonical(carpet.types()), vec![9, 9]).unwrap()).unwrap();
         assert_eq!(factors(moved.types()), None);
         let (_, _, d, outer, inner) = shifted_factors(moved.types()).unwrap();
         assert_eq!((d, inner), (3, 495));
@@ -553,10 +561,11 @@ mod tests {
                 (0..9).map(|i| ((code >> i) & 1) as u8).collect(),
                 vec![3, 3],
             )
+            .unwrap()
         };
         assert!(translate_of(&tile(495), &tile(outer)).is_some());
         assert_eq!(
-            first_negative_lobe(&mrlyrs::life::moore().types().clone(), 27),
+            first_negative_lobe(&mrlyrs::life::moore().unwrap().types().clone(), 27),
             9
         );
     }

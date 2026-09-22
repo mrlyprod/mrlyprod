@@ -43,7 +43,7 @@ fn main() -> Result<()> {
                     for col in 0..BOXES {
                         for r in row * block..(row + 1) * block {
                             for c in col * block..(col + 1) * block {
-                                if carpet.types().get(&[r, c]) != 0 {
+                                if carpet.types().get(&[r, c]).is_ok_and(|v| v != 0) {
                                     on[row][col] = true;
                                 }
                             }

@@ -64,7 +64,7 @@ fn plane(
         PLANE_CELLS,
         "cells",
     )?;
-    let sheet = cell.clone().tile(reps[0], reps[1]);
+    let sheet = cell.clone().tile(reps[0], reps[1])?;
     Ok((cell, sheet))
 }
 
@@ -83,7 +83,7 @@ pub fn tile_grid(
     Ok(Grid {
         width: sheet.width() as u32,
         height: sheet.height() as u32,
-        types: sheet.types().bytes().to_vec(),
+        types: sheet.types().bytes()?.to_vec(),
     })
 }
 
@@ -102,7 +102,7 @@ fn solid(
         SOLID_CELLS,
         "cells",
     )?;
-    let sheet = cell.clone().tile(reps[0], reps[1], reps[2]);
+    let sheet = cell.clone().tile(reps[0], reps[1], reps[2])?;
     Ok((cell, sheet))
 }
 
@@ -123,7 +123,7 @@ pub fn tile_cells(
     let (cols, deep) = (grid.shape[1], grid.shape[2]);
     budget(three::fills(&sheet), SOLID_FILLS, "cubes")?;
     let mut out = Vec::new();
-    for (flat, &site) in grid.bytes().iter().enumerate() {
+    for (flat, &site) in grid.bytes()?.iter().enumerate() {
         if site != 0 {
             out.extend([
                 (flat / (cols * deep)) as u32,
@@ -195,7 +195,7 @@ pub fn tile_svg(
 ) -> Result<String, Fault> {
     let reps = reps_of(&[wide, high], 2)?;
     let (_, sheet) = hex_sheet(code, number, level, base, projection, &reps, crop)?;
-    Ok(six::svg(&six::framed(&sheet), scale, None, 0)?)
+    Ok(six::svg(&six::framed(&sheet)?, scale, None, 0)?)
 }
 
 // CENSUS

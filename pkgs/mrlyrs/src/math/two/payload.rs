@@ -17,7 +17,11 @@ const FRAME: [u8; 25] = [
 
 /// The five by five mask a carried mosaic lays its four tiles out under.
 pub fn frame() -> Tensor {
-    Tensor::of(FRAME.to_vec(), vec![5, 5])
+    let mut frame = Tensor::new(vec![5, 5]);
+    for (flat, &value) in FRAME.iter().enumerate().take(frame.size()) {
+        frame.put(flat, i64::from(value));
+    }
+    frame
 }
 
 /// Returns the payload bytes the cell's filled sites can hold, its length header paid for.
@@ -91,7 +95,7 @@ pub fn read(sheet: &Cell2d, carrier: &Cell2d) -> Result<Vec<u8>> {
     if sheet.width() != w * 5 || sheet.height() != h * 5 {
         return value_error("sheet must be five carriers across and down.");
     }
-    extract(carrier, &block(sheet, 1, 1, w, h))
+    extract(carrier, &block(sheet, 1, 1, w, h)?)
 }
 
 fn sites(cell: &Cell2d) -> Vec<usize> {
@@ -112,14 +116,13 @@ fn spread(bytes: &[u8]) -> Vec<u8> {
         .collect()
 }
 
-fn block(cell: &Cell2d, row: usize, col: usize, width: usize, height: usize) -> Cell2d {
+fn block(cell: &Cell2d, row: usize, col: usize, width: usize, height: usize) -> Result<Cell2d> {
+    let source = cell.types();
     let mut types = Tensor::new(vec![height, width]);
     for y in 0..height {
         for x in 0..width {
-            types.set(
-                &[y, x],
-                cell.types().get(&[row * height + y, col * width + x]),
-            );
+            let from = source.index(&[row * height + y, col * width + x]);
+            types.put(types.index(&[y, x]), source.at(from));
         }
     }
     Cell2d::new(types)
@@ -196,7 +199,7 @@ mod tests {
     }
 
     #[test]
-    fn a_stray_length_is_refused() {
+    fn refuses_a_stray_length() {
         let plain = carrier();
         let mut carried = embed(&plain, b"x").unwrap();
         for &site in sites(&plain).iter().take(HEADER) {
@@ -209,14 +212,14 @@ mod tests {
     fn the_sheet_frames_the_carrier() {
         let tiles = [
             designs::carpet(3, 3).unwrap(),
-            designs::vtree(3, 3).unwrap().rotate(1),
+            designs::vtree(3, 3).unwrap().rotate(1).unwrap(),
             designs::vtree(3, 3).unwrap(),
             designs::carpet(3, 3).unwrap(),
         ];
         let framed = sheet(&tiles, b"Hello, World!").unwrap();
         assert_eq!((framed.width(), framed.height()), (135, 135));
         assert_eq!(read(&framed, &tiles[3]).unwrap(), b"Hello, World!");
-        let corner = block(&framed, 0, 0, 27, 27);
+        let corner = block(&framed, 0, 0, 27, 27).unwrap();
         assert_eq!(corner.types(), tiles[0].types());
         assert!(read(&tiles[3].clone(), &tiles[3]).is_err());
     }
@@ -225,12 +228,12 @@ mod tests {
     fn the_frame_names_four_tiles() {
         let mask = frame();
         assert_eq!(mask.shape, vec![5, 5]);
-        assert_eq!(mask.get(&[0, 0]), 0);
-        assert_eq!(mask.get(&[0, 1]), 1);
-        assert_eq!(mask.get(&[1, 0]), 2);
-        assert_eq!(mask.get(&[2, 2]), 3);
+        assert_eq!(mask.get(&[0, 0]).unwrap(), 0);
+        assert_eq!(mask.get(&[0, 1]).unwrap(), 1);
+        assert_eq!(mask.get(&[1, 0]).unwrap(), 2);
+        assert_eq!(mask.get(&[2, 2]).unwrap(), 3);
         let mut seen = [0usize; 4];
-        for &value in mask.bytes() {
+        for &value in mask.bytes().unwrap() {
             seen[value as usize] += 1;
         }
         assert_eq!(seen, [4, 6, 6, 9]);

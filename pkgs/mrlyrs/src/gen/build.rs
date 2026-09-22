@@ -1,4 +1,5 @@
 use crate::gen::draw::ConfigNd;
+use crate::gen::recipe::{Group, Tile};
 
 /// The constraints a random flat tile is drawn under.
 pub type Config2d = ConfigNd<2>;
@@ -9,6 +10,20 @@ pub type Config3d = ConfigNd<3>;
 pub use six::{build as build_6d, create as create_6d, random_tile as random_tile_6d, HexTile};
 pub use three::{build as build_3d, create as create_3d, random_tile as random_tile_3d};
 pub use two::{build as build_2d, create as create_2d, random_tile as random_tile_2d};
+
+// SLOTS
+
+fn ragged(tile: &Tile) -> bool {
+    let slots = tile.sources.len();
+    let wanted = match tile.group {
+        Group::Mosaic => 3,
+        _ => 1,
+    };
+    slots < wanted
+        || tile.numbers.len() < slots
+        || tile.levels.len() < slots
+        || tile.rotations.len() < slots
+}
 
 // TWO
 
@@ -53,20 +68,20 @@ mod two {
 
     fn tree_mask(n: usize) -> Result<Tensor> {
         let vertical = designs::vtree(n, 1)?;
-        let horizontal = vertical.clone().rotate(1);
+        let horizontal = vertical.clone().rotate(1)?;
         let v = vertical.types();
         let h = horizontal.types();
         let mut data = vec![0u8; v.size()];
         for (flat, item) in data.iter_mut().enumerate() {
-            let a = v.bytes()[flat];
-            let b = h.bytes()[flat];
+            let a = v.at(flat);
+            let b = h.at(flat);
             *item = match (a, b) {
                 (1, 1) => 2,
                 (1, _) | (_, 1) => 1,
                 _ => 0,
             };
         }
-        Ok(Tensor::of(data, v.shape.clone()))
+        Tensor::of(data, v.shape.clone())
     }
 
     fn build_general(tile: &Tile) -> Result<Cell2d> {
@@ -108,21 +123,9 @@ mod two {
         }
     }
 
-    fn ragged(tile: &Tile) -> bool {
-        let slots = tile.sources.len();
-        let wanted = match tile.group {
-            Group::Mosaic => 3,
-            _ => 1,
-        };
-        slots < wanted
-            || tile.numbers.len() < slots
-            || tile.levels.len() < slots
-            || tile.rotations.len() < slots
-    }
-
     /// Builds the flat cell the tile describes, or an error when the tile is ragged or will not render.
     pub fn build(tile: &Tile) -> Result<Cell2d> {
-        if ragged(tile) {
+        if super::ragged(tile) {
             return value_error("tile slots are ragged.");
         }
         let mut c = builder(tile.group)(tile)?;
@@ -204,7 +207,7 @@ mod two {
             }
         }
         #[test]
-        fn build_errors_on_a_ragged_tile() {
+        fn refuses_a_flat_tile_it_cannot_build() {
             use crate::core::json;
             let parsed: Tile = serde_json::from_value(json!({
                 "group": "General", "factor": 0,
@@ -217,6 +220,15 @@ mod two {
             let mut bare = Tile::new(Group::Mosaic);
             bare.sources = vec![Source::Classic(Design::Carpet)];
             assert!(build(&bare).is_err());
+            assert!(build(&Tile::new(Group::General)).is_err());
+            let mut cubic = Tile::new(Group::General);
+            cubic.sources = vec![Source::Classic(Design::Xtree)];
+            cubic.numbers = vec![3];
+            cubic.levels = vec![1];
+            cubic.rotations = vec![0];
+            cubic.anti = vec![false];
+            cubic.resize();
+            assert!(build(&cubic).is_err());
         }
         #[test]
         fn evens_parity_builds() {
@@ -306,11 +318,11 @@ mod three {
         let line = designs::xtree(n, 1)?;
         let t = line.types();
         let data: Vec<u8> = t
-            .bytes()
+            .bytes()?
             .iter()
             .map(|&v| if v == 1 { fill } else { 0 })
             .collect();
-        Ok(Tensor::of(data, t.shape.clone()))
+        Tensor::of(data, t.shape.clone())
     }
 
     fn index_mask(n: usize) -> Result<Tensor> {
@@ -320,15 +332,15 @@ mod three {
         let (xt, yt, zt) = (x.types(), y.types(), z.types());
         let mut data = vec![0u8; xt.size()];
         for (flat, item) in data.iter_mut().enumerate() {
-            *item = if zt.bytes()[flat] == 1 {
+            *item = if zt.at(flat) == 1 {
                 2
-            } else if yt.bytes()[flat] == 1 {
+            } else if yt.at(flat) == 1 {
                 1
             } else {
                 0
             };
         }
-        Ok(Tensor::of(data, xt.shape.clone()))
+        Tensor::of(data, xt.shape.clone())
     }
 
     fn build_general(tile: &Tile) -> Result<Cell3d> {
@@ -372,8 +384,11 @@ mod three {
         }
     }
 
-    /// Builds a tile's cube through its group's builder, inverting on request.
+    /// Builds the cube the tile describes, or an error when the tile is ragged or will not render.
     pub fn build(tile: &Tile) -> Result<Cell3d> {
+        if super::ragged(tile) {
+            return value_error("tile slots are ragged.");
+        }
         let mut c = builder(tile.group)(tile)?;
         if tile.invert {
             c = c.invert();
@@ -436,6 +451,21 @@ mod three {
             }
         }
         #[test]
+        fn refuses_a_cube_tile_it_cannot_build() {
+            assert!(build(&Tile::new(Group::General)).is_err());
+            let mut bare = Tile::new(Group::Mosaic);
+            bare.sources = vec![Source::Classic(Design::Carpet)];
+            assert!(build(&bare).is_err());
+            let mut flat = Tile::new(Group::General);
+            flat.sources = vec![Source::Classic(Design::Htree)];
+            flat.numbers = vec![3];
+            flat.levels = vec![1];
+            flat.rotations = vec![0];
+            flat.anti = vec![false];
+            flat.resize();
+            assert!(build(&flat).is_err());
+        }
+        #[test]
         fn universe_builds_from_codes() {
             let config = Config {
                 catalog: Catalog::Universe,
@@ -477,14 +507,14 @@ mod six {
         pub tile: Tile,
     }
 
-    fn projection(rng: &mut Rng) -> Projection {
-        *rng.choice(&[Projection::Iso, Projection::Pro, Projection::Cut])
+    fn projection(rng: &mut Rng) -> Result<Projection> {
+        Ok(*rng.choice(&[Projection::Iso, Projection::Pro, Projection::Cut])?)
     }
 
     /// Draws a cube tile from the config under a projection drawn from the stream.
     pub fn create(config: &Config, rng: &mut Rng) -> Result<HexTile> {
         Ok(HexTile {
-            projection: projection(rng),
+            projection: projection(rng)?,
             tile: three::create(config, rng)?,
         })
     }
@@ -492,7 +522,7 @@ mod six {
     /// Draws a random cube tile up to the given size under a random projection.
     pub fn random_tile(max_size: usize, rng: &mut Rng) -> Result<HexTile> {
         Ok(HexTile {
-            projection: projection(rng),
+            projection: projection(rng)?,
             tile: three::random_tile(max_size, rng)?,
         })
     }
@@ -534,6 +564,14 @@ mod six {
                 );
                 assert!(cell.height() > 0, "empty height seed {}", s);
             }
+        }
+        #[test]
+        fn refuses_a_hex_tile_it_cannot_build() {
+            let bare = HexTile {
+                projection: Projection::Iso,
+                tile: Tile::new(Group::General),
+            };
+            assert!(build(&bare).is_err());
         }
         #[test]
         fn magic_projects() {

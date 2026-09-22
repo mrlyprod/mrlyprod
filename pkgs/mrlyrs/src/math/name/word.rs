@@ -108,12 +108,21 @@ mod tests {
             word.to_json(),
             r#"{"kind":"word","dim":2,"magic":[7,14,9],"side":[3,7,5]}"#
         );
-        assert_eq!(word.to_url(), "/word?dim=2&magic=7,14,9&side=3,7,5");
-        assert_eq!(word.to_file(), "word_dim=2_magic=[7,14,9]_side=[3,7,5]");
-        assert_eq!(word.to_mrly(), "word dim 2, magic [7 14 9], side [3 7 5]");
+        assert_eq!(
+            word.to_url().unwrap(),
+            "/word?dim=2&magic=7,14,9&side=3,7,5"
+        );
+        assert_eq!(
+            word.to_file().unwrap(),
+            "word_dim=2_magic=[7,14,9]_side=[3,7,5]"
+        );
+        assert_eq!(
+            word.to_mrly().unwrap(),
+            "word dim 2, magic [7 14 9], side [3 7 5]"
+        );
         assert_eq!(Word::from_json(&word.to_json()).unwrap(), word);
-        assert_eq!(Word::from_url(&word.to_url()).unwrap(), word);
-        assert_eq!(Word::from_file(&word.to_file()).unwrap(), word);
+        assert_eq!(Word::from_url(&word.to_url().unwrap()).unwrap(), word);
+        assert_eq!(Word::from_file(&word.to_file().unwrap()).unwrap(), word);
         assert_eq!(word.to_id().len(), 8);
     }
     #[test]
@@ -157,7 +166,7 @@ mod tests {
         assert_eq!(plain.checked().unwrap().base, None);
     }
     #[test]
-    fn the_grammar_refuses_what_it_cannot_draw() {
+    fn refuses_every_word_the_grammar_cannot_draw() {
         assert!(Word::new(2, &[(7, 3)]).is_err());
         assert!(Word::new(2, &[(273, 3), (9, 2)]).is_err());
         assert!(Word::new(2, &[(0, 3), (9, 2)]).is_err());

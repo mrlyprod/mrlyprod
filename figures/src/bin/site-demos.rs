@@ -31,7 +31,7 @@ fn main() -> Result<()> {
         let mut filled = 0usize;
         for row in 0..TILE {
             for col in 0..TILE {
-                if types.get(&[row, col]) == 0 {
+                if types.get(&[row, col])? == 0 {
                     continue;
                 }
                 filled += 1;

@@ -1,4 +1,5 @@
 use super::models::{Branch, Network, Node};
+use crate::core::error::Result;
 use std::collections::HashSet;
 use std::f64::consts::LN_2;
 
@@ -41,11 +42,11 @@ pub enum Role {
 /// net.add_node(vec![0.0, 0.0]).unwrap();
 /// net.add_node(vec![1.0, 0.0]).unwrap();
 /// net.add_branch(0, 1, 1.0).unwrap();
-/// assert_eq!(mrlyrs::math::graph::roles(&net), vec![mrlyrs::math::graph::Role::Tip; 2]);
+/// assert_eq!(mrlyrs::math::graph::roles(&net).unwrap(), vec![mrlyrs::math::graph::Role::Tip; 2]);
 /// ```
-pub fn roles(network: &Network) -> Vec<Role> {
-    network
-        .degree()
+pub fn roles(network: &Network) -> Result<Vec<Role>> {
+    Ok(network
+        .degree()?
         .iter()
         .map(|&d| match d {
             0 => Role::Alone,
@@ -53,29 +54,29 @@ pub fn roles(network: &Network) -> Vec<Role> {
             2 => Role::Through,
             _ => Role::Junction,
         })
-        .collect()
+        .collect())
 }
 
 /// Counts the nodes of degree one.
-pub fn tips(network: &Network) -> usize {
-    roles(network).iter().filter(|&&r| r == Role::Tip).count()
+pub fn tips(network: &Network) -> Result<usize> {
+    Ok(roles(network)?.iter().filter(|&&r| r == Role::Tip).count())
 }
 
 /// Counts the nodes of degree three or more.
-pub fn junctions(network: &Network) -> usize {
-    roles(network)
+pub fn junctions(network: &Network) -> Result<usize> {
+    Ok(roles(network)?
         .iter()
         .filter(|&&r| r == Role::Junction)
-        .count()
+        .count())
 }
 
 /// Counts the connected components of the network.
-pub fn components(network: &Network) -> usize {
+pub fn components(network: &Network) -> Result<usize> {
     let n = network.nodes.len();
     if n == 0 {
-        return 0;
+        return Ok(0);
     }
-    let adjacency = network.adjacency();
+    let adjacency = network.adjacency()?;
     let mut seen = vec![false; n];
     let mut count = 0;
     for start in 0..n {
@@ -94,7 +95,7 @@ pub fn components(network: &Network) -> usize {
             }
         }
     }
-    count
+    Ok(count)
 }
 
 /// Extracts the largest connected piece as a network of its own, branches re-indexed.
@@ -105,11 +106,11 @@ pub fn components(network: &Network) -> usize {
 /// let mut net = mrlyrs::math::graph::Network::new(1);
 /// for i in 0..3 { net.add_node(vec![i as f64]).unwrap(); }
 /// net.add_branch(0, 1, 1.0).unwrap();
-/// assert_eq!(mrlyrs::math::graph::largest_component(&net).nodes.len(), 2);
+/// assert_eq!(mrlyrs::math::graph::largest_component(&net).unwrap().nodes.len(), 2);
 /// ```
-pub fn largest_component(network: &Network) -> Network {
+pub fn largest_component(network: &Network) -> Result<Network> {
     let n = network.nodes.len();
-    let adjacency = network.adjacency();
+    let adjacency = network.adjacency()?;
     let mut label = vec![usize::MAX; n];
     let mut sizes: Vec<usize> = Vec::new();
     for start in 0..n {
@@ -139,7 +140,7 @@ pub fn largest_component(network: &Network) -> Network {
     }
     let mut giant = Network::new(network.dim);
     if sizes.is_empty() {
-        return giant;
+        return Ok(giant);
     }
     let mut index_of = vec![usize::MAX; n];
     for (old, node) in network.nodes.iter().enumerate() {
@@ -163,7 +164,7 @@ pub fn largest_component(network: &Network) -> Network {
             radius: branch.radius,
         });
     }
-    giant
+    Ok(giant)
 }
 
 /// Estimates the box-counting dimension of the node cloud over a ladder of halving boxes.
@@ -246,18 +247,18 @@ pub struct Census {
 /// let mut net = mrlyrs::math::graph::Network::new(2);
 /// net.add_node(vec![0.0, 0.0]).unwrap();
 /// net.add_node(vec![3.0, 4.0]).unwrap();
-/// assert_eq!(mrlyrs::math::graph::census(&net).components, 2);
+/// assert_eq!(mrlyrs::math::graph::census(&net).unwrap().components, 2);
 /// ```
-pub fn census(network: &Network) -> Census {
-    Census {
+pub fn census(network: &Network) -> Result<Census> {
+    Ok(Census {
         nodes: network.nodes.len(),
         branches: network.branches.len(),
-        tips: tips(network),
-        junctions: junctions(network),
-        components: components(network),
+        tips: tips(network)?,
+        junctions: junctions(network)?,
+        components: components(network)?,
         total_length: total_length(network),
         fractal_dimension: fractal_dimension(network),
-    }
+    })
 }
 
 #[cfg(test)]
@@ -268,7 +269,7 @@ mod tests {
     #[test]
     fn carpet_census() {
         let network = core_graph(&atoms::carpet_2d(3)).unwrap();
-        let c = census(&network);
+        let c = census(&network).unwrap();
         assert_eq!(c.nodes, 8);
         assert_eq!(c.branches, 8);
         assert_eq!(c.components, 1);
@@ -277,7 +278,7 @@ mod tests {
     #[test]
     fn carpet_census_holds_its_pinned_counts() {
         let network = core_graph(&atoms::carpet_2d(3).fractal(4)).unwrap();
-        let c = census(&network);
+        let c = census(&network).unwrap();
         assert_eq!(c.nodes, 4096);
         assert_eq!(c.branches, 6424);
         assert_eq!(c.tips, 0);
@@ -297,8 +298,25 @@ mod tests {
     #[test]
     fn the_carpet_dimension_holds_its_pinned_value() {
         let network = core_graph(&atoms::carpet_2d(3).fractal(4)).unwrap();
-        let d = census(&network).fractal_dimension;
+        let d = census(&network).unwrap().fractal_dimension;
         assert!((0.0..=3.0).contains(&d), "dimension {d}");
         assert!((d - 1.787589465914211).abs() < 1e-12, "dimension {d}");
+    }
+
+    #[test]
+    fn refuses_a_branch_past_the_nodes() {
+        let mut net = Network::new(1);
+        net.add_node(vec![0.0]).unwrap();
+        net.branches.push(Branch {
+            parent: 0,
+            child: 4,
+            radius: 1.0,
+        });
+        assert!(roles(&net).is_err());
+        assert!(tips(&net).is_err());
+        assert!(junctions(&net).is_err());
+        assert!(components(&net).is_err());
+        assert!(largest_component(&net).is_err());
+        assert!(census(&net).is_err());
     }
 }

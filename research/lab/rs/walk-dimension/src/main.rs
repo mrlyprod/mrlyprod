@@ -313,7 +313,7 @@ fn walker_census(subjects: &[Subject]) -> Vec<f64> {
     let mut out = Vec::new();
     for subject in subjects {
         let giant = components(&(subject.grid)(subject.walk_level)).giant;
-        let nodes = giant.bytes().iter().filter(|cell| **cell != 0).count();
+        let nodes = giant.size() - giant.count(0);
         let narrow = giant.shape.iter().min().copied().unwrap_or(0) as f64;
         let trace = walkers::grid_walk(&giant, &mut rng, walkers::WALKERS, 5.0);
         let (dw, drift) = walkers::fit(&trace, (narrow / 6.0).powi(2));

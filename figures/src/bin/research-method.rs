@@ -72,7 +72,7 @@ fn main() -> Result<()> {
     let mut board = Board::square();
     let frame = board.frame(0.08);
     let mut rows: Vec<Vec<u128>> = vec![Vec::new(); ROWS];
-    for design in bang(3).canonical() {
+    for design in bang(3)?.canonical() {
         rows[design.i.get().count_ones() as usize].push(design.i.get());
     }
     assert_eq!(

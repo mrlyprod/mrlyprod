@@ -47,7 +47,7 @@ fn mask_of(code: &str, side: usize, level: usize, size: usize) -> Result<Mask, F
     }
     Ok(Mask {
         span,
-        cells: mask.bytes().to_vec(),
+        cells: mask.bytes()?.to_vec(),
         budget,
     })
 }
@@ -83,7 +83,7 @@ impl Engine {
         size: usize,
     ) -> Result<Engine, Fault> {
         let mask = mask_of(code, side, level, size)?;
-        let (kernel_re, kernel_im) = transform(&embed_kernel(&mask.cells, mask.span, size), size);
+        let (kernel_re, kernel_im) = transform(&embed_kernel(&mask.cells, mask.span, size)?, size)?;
         Ok(Engine {
             size,
             budget: mask.budget,
@@ -94,11 +94,11 @@ impl Engine {
             field: vec![0.0; size * size],
         })
     }
-    fn step(&mut self, types: &mut [u8]) {
+    fn step(&mut self, types: &mut [u8]) -> Result<(), Fault> {
         for (slot, &t) in self.field.iter_mut().zip(types.iter()) {
             *slot = if t != 0 { 1.0 } else { 0.0 };
         }
-        let counts = convolve_with(&self.field, &self.kernel_re, &self.kernel_im, self.size);
+        let counts = convolve_with(&self.field, &self.kernel_re, &self.kernel_im, self.size)?;
         for (slot, &count) in types.iter_mut().zip(&counts) {
             let n = (count.round().max(0.0) as usize).min(self.budget);
             let lives = if *slot != 0 {
@@ -108,6 +108,7 @@ impl Engine {
             };
             *slot = u8::from(lives);
         }
+        Ok(())
     }
 }
 
@@ -129,7 +130,7 @@ pub fn chladni_run(
     let mut engine = Engine::new(code, side, level, b_lo, b_hi, s_lo, s_hi, size)?;
     let mut types = life_noise(size, size, density, seed);
     for _ in 0..steps {
-        engine.step(&mut types);
+        engine.step(&mut types)?;
     }
     Ok(Grid {
         width: size as u32,
@@ -154,7 +155,7 @@ pub fn chladni_next(
     field_of(types, size)?;
     let mut engine = Engine::new(code, side, level, b_lo, b_hi, s_lo, s_hi, size)?;
     let mut next = types.to_vec();
-    engine.step(&mut next);
+    engine.step(&mut next)?;
     Ok(next)
 }
 
@@ -179,7 +180,7 @@ pub fn chladni_kernel(code: &str, side: usize, level: usize, size: usize) -> Res
 /// Reads the centred log magnitude spectrum of a size-square 0/1 field, scaled to at most one by its peak.
 #[wasm_bindgen]
 pub fn chladni_spectrum(types: &[u8], size: usize) -> Result<Vec<f32>, Fault> {
-    let spectrum = log_spectrum(&field_of(types, size)?, size);
+    let spectrum = log_spectrum(&field_of(types, size)?, size)?;
     let top = spectrum.iter().cloned().fold(0.0f64, f64::max);
     let scale = if top > 0.0 { 1.0 / top } else { 0.0 };
     Ok(spectrum.iter().map(|&v| (v * scale) as f32).collect())
@@ -188,7 +189,7 @@ pub fn chladni_spectrum(types: &[u8], size: usize) -> Result<Vec<f32>, Fault> {
 /// Reads the ring means of a size-square 0/1 field's log spectrum, the peak ring past the centre and its wavelength in cells, as JSON.
 #[wasm_bindgen]
 pub fn chladni_profile(types: &[u8], size: usize) -> Result<String, Fault> {
-    let profile = radial_profile(&log_spectrum(&field_of(types, size)?, size), size);
+    let profile = radial_profile(&log_spectrum(&field_of(types, size)?, size)?, size)?;
     let ring = peak_ring(&profile);
     let wavelength = if ring == 0 {
         0.0

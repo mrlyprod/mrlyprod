@@ -32,8 +32,8 @@ fn main() -> Result<()> {
     assert_eq!(word::side(&reverse)?, SIDE as u128);
     assert_eq!(word::fill(&forward)?, word::fill(&reverse)?);
 
-    let left = Cell2d::new(magic(&forward)?);
-    let right = Cell2d::new(magic(&reverse)?);
+    let left = Cell2d::new(magic(&forward)?)?;
+    let right = Cell2d::new(magic(&reverse)?)?;
     assert_eq!((left.width(), left.height()), (SIDE, SIDE));
     assert_eq!((right.width(), right.height()), (SIDE, SIDE));
     assert_eq!(left.types().sum(), right.types().sum());

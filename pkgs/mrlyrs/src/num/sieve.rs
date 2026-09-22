@@ -1,3 +1,4 @@
+use crate::core::error::{overflow_error, value_error, Result};
 use std::f64::consts::FRAC_PI_4;
 
 /// The limit of the plane Wallis sieve's surviving area, pi over four.
@@ -21,62 +22,71 @@ pub fn flat_word(side: u64, levels: usize) -> Vec<u64> {
     vec![side; levels]
 }
 
-fn letter(side: u64) -> u64 {
-    assert!(
-        side >= 3 && side % 2 == 1,
-        "a letter is an odd side from three"
-    );
-    side
+fn letter(side: u64) -> Result<u64> {
+    if side < 3 || side.is_multiple_of(2) {
+        return value_error(format!("a letter is an odd side from three, not {side}."));
+    }
+    Ok(side)
 }
 
-/// Returns the side of the word, the product of its letters' sides, and panics when that overruns a u128.
+/// Returns the side of the word, the product of its letters' sides, or an error when a letter is not an odd side from three or the product overruns a u128.
 ///
 /// ```
-/// assert_eq!(mrlyrs::num::sieve::side(&mrlyrs::num::sieve::odd_word(4)), 945);
+/// assert_eq!(mrlyrs::num::sieve::side(&mrlyrs::num::sieve::odd_word(4)).unwrap(), 945);
 /// ```
-pub fn side(word: &[u64]) -> u128 {
-    word.iter().fold(1u128, |run, &s| {
-        run.checked_mul(u128::from(letter(s)))
-            .expect("the word's side overruns a u128")
-    })
+pub fn side(word: &[u64]) -> Result<u128> {
+    let mut run = 1u128;
+    for &s in word {
+        run = match run.checked_mul(u128::from(letter(s)?)) {
+            Some(value) => value,
+            None => return overflow_error("the word's side overruns a u128."),
+        };
+    }
+    Ok(run)
 }
 
-/// Returns the cells the word leaves, the product of its letters' fills, one punctured tile a letter, and panics when that overruns a u128.
+/// Returns the cells the word leaves, the product of its letters' fills, one punctured tile a letter, or an error when a letter is bad or the product overruns a u128.
 ///
 /// ```
-/// assert_eq!(mrlyrs::num::sieve::cells(&mrlyrs::num::sieve::odd_word(3), 2), 9216);
+/// assert_eq!(mrlyrs::num::sieve::cells(&mrlyrs::num::sieve::odd_word(3), 2).unwrap(), 9216);
 /// ```
-pub fn cells(word: &[u64], dimension: u32) -> u128 {
-    word.iter().fold(1u128, |run, &s| {
-        let fill = u128::from(letter(s)).pow(dimension) - 1;
-        run.checked_mul(fill)
-            .expect("the word's cells overrun a u128")
-    })
+pub fn cells(word: &[u64], dimension: u32) -> Result<u128> {
+    let mut run = 1u128;
+    for &s in word {
+        let fill = u128::from(letter(s)?).pow(dimension) - 1;
+        run = match run.checked_mul(fill) {
+            Some(value) => value,
+            None => return overflow_error("the word's cells overrun a u128."),
+        };
+    }
+    Ok(run)
 }
 
-/// Returns the punctures the word makes, one per surviving cell at every level, and panics when that overruns a u128.
+/// Returns the punctures the word makes, one per surviving cell at every level, or an error when a letter is bad or the count overruns a u128.
 ///
 /// ```
-/// assert_eq!(mrlyrs::num::sieve::holes(&mrlyrs::num::sieve::odd_word(3), 2), 1 + 8 + 192);
+/// assert_eq!(mrlyrs::num::sieve::holes(&mrlyrs::num::sieve::odd_word(3), 2).unwrap(), 1 + 8 + 192);
 /// ```
-pub fn holes(word: &[u64], dimension: u32) -> u128 {
+pub fn holes(word: &[u64], dimension: u32) -> Result<u128> {
     let mut total = 0u128;
     for place in 0..word.len() {
-        total += cells(&word[..place], dimension);
+        total += cells(&word[..place], dimension)?;
     }
-    total
+    Ok(total)
 }
 
 /// Returns the share of the whole the word leaves, the product of one minus the inverse of each letter's site count, exact as a product of the letters' fills.
 ///
 /// ```
-/// let flat = mrlyrs::num::sieve::ratio(&mrlyrs::num::sieve::flat_word(3, 2), 2);
+/// let flat = mrlyrs::num::sieve::ratio(&mrlyrs::num::sieve::flat_word(3, 2), 2).unwrap();
 /// assert!((flat - 64.0 / 81.0).abs() < 1e-15);
 /// ```
-pub fn ratio(word: &[u64], dimension: u32) -> f64 {
-    word.iter().fold(1.0f64, |run, &s| {
-        run * (1.0 - 1.0 / (letter(s) as f64).powi(dimension as i32))
-    })
+pub fn ratio(word: &[u64], dimension: u32) -> Result<f64> {
+    let mut run = 1.0f64;
+    for &s in word {
+        run *= 1.0 - 1.0 / (letter(s)? as f64).powi(dimension as i32);
+    }
+    Ok(run)
 }
 
 /// Returns the box exponent the word reads at its own scale, the logarithm of its cells over the logarithm of its side, which walks up to the dimension on a schedule of distinct growing letters and stands still on any schedule that reuses its letters.
@@ -84,35 +94,35 @@ pub fn ratio(word: &[u64], dimension: u32) -> f64 {
 /// Changing the letter is not enough: the alternating word 3, 5, 3, 5 changes at every step and freezes at log 192 / log 15, its ratio falling to nothing like a fixed-ratio schedule. The hypothesis that buys a positive area is strictly increasing odd letters, under which sum s_k^(-d) converges.
 ///
 /// ```
-/// let carpet = mrlyrs::num::sieve::exponent(&mrlyrs::num::sieve::flat_word(3, 5), 2);
+/// let carpet = mrlyrs::num::sieve::exponent(&mrlyrs::num::sieve::flat_word(3, 5), 2).unwrap();
 /// assert!((carpet - 8f64.ln() / 3f64.ln()).abs() < 1e-12);
 /// ```
-pub fn exponent(word: &[u64], dimension: u32) -> f64 {
+pub fn exponent(word: &[u64], dimension: u32) -> Result<f64> {
     let mut up = 0.0f64;
     let mut down = 0.0f64;
     for &s in word {
-        let s = letter(s) as f64;
+        let s = letter(s)? as f64;
         up += (s.powi(dimension as i32) - 1.0).ln();
         down += s.ln();
     }
     if down == 0.0 {
-        return dimension as f64;
+        return Ok(dimension as f64);
     }
-    up / down
+    Ok(up / down)
 }
 
 /// Builds the plane sieve the word spells as a raster: its side, then one byte a site, row by row, one where the site survives and zero where a level punched it out.
 ///
 /// ```
-/// let (side, cells) = mrlyrs::num::sieve::raster(&mrlyrs::num::sieve::odd_word(2));
+/// let (side, cells) = mrlyrs::num::sieve::raster(&mrlyrs::num::sieve::odd_word(2)).unwrap();
 /// assert_eq!(side, 15);
 /// assert_eq!(cells.iter().filter(|&&b| b == 1).count(), 192);
 /// ```
-pub fn raster(word: &[u64]) -> (usize, Vec<u8>) {
+pub fn raster(word: &[u64]) -> Result<(usize, Vec<u8>)> {
     let mut side = 1usize;
     let mut sites = vec![1u8];
     for &s in word {
-        let s = letter(s) as usize;
+        let s = letter(s)? as usize;
         let half = s / 2;
         let wide = side * s;
         let mut next = vec![0u8; wide * wide];
@@ -134,24 +144,24 @@ pub fn raster(word: &[u64]) -> (usize, Vec<u8>) {
         side = wide;
         sites = next;
     }
-    (side, sites)
+    Ok((side, sites))
 }
 
 /// Lists every puncture the word makes in the given dimension: its corner along each axis and then its side, all in units of the word's finest cell, so a level-one hole is the widest block in the list.
 ///
 /// ```
-/// let holes = mrlyrs::num::sieve::punctures(&mrlyrs::num::sieve::odd_word(2), 2);
+/// let holes = mrlyrs::num::sieve::punctures(&mrlyrs::num::sieve::odd_word(2), 2).unwrap();
 /// assert_eq!(holes.len() / 3, 9);
 /// assert_eq!(&holes[..3], &[5, 5, 5]);
 /// ```
-pub fn punctures(word: &[u64], dimension: u32) -> Vec<u64> {
+pub fn punctures(word: &[u64], dimension: u32) -> Result<Vec<u64>> {
     let axes = dimension as usize;
-    let mut scale = side(word) as u64;
+    let mut scale = side(word)? as u64;
     let mut alive: Vec<u64> = vec![0; axes];
     let mut out: Vec<u64> = Vec::new();
     let mut digits = vec![0u64; axes];
     for (place, &s) in word.iter().enumerate() {
-        let s = letter(s);
+        let s = letter(s)?;
         let half = s / 2;
         let last = place + 1 == word.len();
         scale /= s;
@@ -185,7 +195,7 @@ pub fn punctures(word: &[u64], dimension: u32) -> Vec<u64> {
             alive = next;
         }
     }
-    out
+    Ok(out)
 }
 
 // THE SOLID LIMIT
@@ -231,33 +241,37 @@ pub fn solid_limit() -> f64 {
 /// A run of consecutive odd letters from a, of two letters or more, names the schedule a, a + 2, a + 4 and on: its letters are strictly increasing, sum s_k^(-d) converges, and the limit is positive, pi over four in the plane and the closed form above in the cube divided by the head the run skips. Two or more copies of one letter name the fixed-ratio schedule, whose limit is zero; that is what repetition costs, and an alternating word such as 3, 5, 3, 5 changes at every step and still loses the whole measure. Every other word, and every word of one letter, names no schedule and reads None.
 ///
 /// ```
-/// assert_eq!(mrlyrs::num::sieve::limit(&mrlyrs::num::sieve::odd_word(3), 2), Some(std::f64::consts::FRAC_PI_4));
-/// assert_eq!(mrlyrs::num::sieve::limit(&mrlyrs::num::sieve::flat_word(3, 3), 2), Some(0.0));
-/// assert!((mrlyrs::num::sieve::limit(&[5, 7, 9], 2).unwrap() - 0.883_572_933_822_129_3).abs() < 1e-15);
-/// assert_eq!(mrlyrs::num::sieve::limit(&[3, 7, 11], 2), None);
+/// assert_eq!(mrlyrs::num::sieve::limit(&mrlyrs::num::sieve::odd_word(3), 2).unwrap(), Some(std::f64::consts::FRAC_PI_4));
+/// assert_eq!(mrlyrs::num::sieve::limit(&mrlyrs::num::sieve::flat_word(3, 3), 2).unwrap(), Some(0.0));
+/// assert!((mrlyrs::num::sieve::limit(&[5, 7, 9], 2).unwrap().unwrap() - 0.883_572_933_822_129_3).abs() < 1e-15);
+/// assert_eq!(mrlyrs::num::sieve::limit(&[3, 7, 11], 2).unwrap(), None);
 /// ```
-pub fn limit(word: &[u64], dimension: u32) -> Option<f64> {
+pub fn limit(word: &[u64], dimension: u32) -> Result<Option<f64>> {
     if word.len() < 2 {
-        return None;
+        return Ok(None);
     }
-    let first = letter(word[0]);
-    if word.iter().all(|&s| letter(s) == first) {
-        return Some(0.0);
+    let first = letter(word[0])?;
+    let mut flat = true;
+    for &s in word {
+        flat &= letter(s)? == first;
+    }
+    if flat {
+        return Ok(Some(0.0));
     }
     if !word
         .iter()
         .enumerate()
         .all(|(k, &s)| s == first + 2 * k as u64)
     {
-        return None;
+        return Ok(None);
     }
     let whole = match dimension {
         2 => PLANE_LIMIT,
         3 => solid_limit(),
-        _ => return None,
+        _ => return Ok(None),
     };
     let head = odd_word(((first - 3) / 2) as usize);
-    Some(whole / ratio(&head, dimension))
+    Ok(Some(whole / ratio(&head, dimension)?))
 }
 
 #[cfg(test)]
@@ -277,15 +291,15 @@ mod tests {
     }
 
     fn brute(word: &[u64]) -> usize {
-        raster(word).1.iter().filter(|&&b| b == 1).count()
+        raster(word).unwrap().1.iter().filter(|&&b| b == 1).count()
     }
 
     #[test]
     fn the_odd_word_walks_the_sides_of_the_classical_sieve() {
         let word = odd_word(4);
-        let sides: Vec<u128> = (1..=4).map(|n| side(&word[..n])).collect();
+        let sides: Vec<u128> = (1..=4).map(|n| side(&word[..n]).unwrap()).collect();
         assert_eq!(sides, vec![3, 15, 105, 945]);
-        let counts: Vec<u128> = (1..=4).map(|n| cells(&word[..n], 2)).collect();
+        let counts: Vec<u128> = (1..=4).map(|n| cells(&word[..n], 2).unwrap()).collect();
         assert_eq!(counts, vec![8, 192, 9216, 737_280]);
     }
 
@@ -293,24 +307,32 @@ mod tests {
     fn the_raster_counts_what_the_product_promises() {
         let word = odd_word(3);
         for n in 1..=3 {
-            assert_eq!(brute(&word[..n]) as u128, cells(&word[..n], 2), "level {n}");
+            assert_eq!(
+                brute(&word[..n]) as u128,
+                cells(&word[..n], 2).unwrap(),
+                "level {n}"
+            );
         }
         for n in 1..=4 {
             let flat = flat_word(3, n);
-            assert_eq!(brute(&flat) as u128, cells(&flat, 2), "carpet level {n}");
+            assert_eq!(
+                brute(&flat) as u128,
+                cells(&flat, 2).unwrap(),
+                "carpet level {n}"
+            );
         }
         let five = flat_word(5, 2);
-        assert_eq!(brute(&five) as u128, cells(&five, 2));
+        assert_eq!(brute(&five) as u128, cells(&five, 2).unwrap());
     }
 
     #[test]
     fn the_raster_is_the_ratio_times_the_area() {
         for n in 1..=3 {
             let word = odd_word(n);
-            let (wide, sites) = raster(&word);
+            let (wide, sites) = raster(&word).unwrap();
             let lit = sites.iter().filter(|&&b| b == 1).count() as f64;
             assert!(
-                (lit / (wide * wide) as f64 - ratio(&word, 2)).abs() < 1e-12,
+                (lit / (wide * wide) as f64 - ratio(&word, 2).unwrap()).abs() < 1e-12,
                 "level {n}"
             );
         }
@@ -322,15 +344,18 @@ mod tests {
             for n in 1..=3 {
                 let word = odd_word(n);
                 let axes = dimension as usize;
-                let list = punctures(&word, dimension);
-                assert_eq!(list.len() / (axes + 1), holes(&word, dimension) as usize);
+                let list = punctures(&word, dimension).unwrap();
+                assert_eq!(
+                    list.len() / (axes + 1),
+                    holes(&word, dimension).unwrap() as usize
+                );
                 let volume: u128 = list
                     .chunks(axes + 1)
                     .map(|hole| u128::from(hole[axes]).pow(dimension))
                     .sum();
-                let whole = side(&word).pow(dimension);
+                let whole = side(&word).unwrap().pow(dimension);
                 assert_eq!(
-                    volume + cells(&word, dimension),
+                    volume + cells(&word, dimension).unwrap(),
                     whole,
                     "{dimension}d level {n}"
                 );
@@ -342,22 +367,23 @@ mod tests {
     fn the_plane_ratio_is_the_wallis_product_the_series_walks() {
         for n in 1..=40 {
             assert!(
-                (ratio(&odd_word(n), 2) - wallis_quarter_pi(n)).abs() < 1e-15,
+                (ratio(&odd_word(n), 2).unwrap() - wallis_quarter_pi(n)).abs() < 1e-15,
                 "level {n}"
             );
         }
-        assert!((ratio(&odd_word(200_000), 2) - PLANE_LIMIT).abs() < 1e-5);
+        assert!((ratio(&odd_word(200_000), 2).unwrap() - PLANE_LIMIT).abs() < 1e-5);
     }
 
     #[test]
     fn the_carpet_schedule_freezes_the_ratio_and_the_exponent() {
         for n in 1..=8 {
             let word = flat_word(3, n);
-            assert!((ratio(&word, 2) - (8.0f64 / 9.0).powi(n as i32)).abs() < 1e-15);
-            assert!((exponent(&word, 2) - 8f64.ln() / 3f64.ln()).abs() < 1e-12);
+            assert!((ratio(&word, 2).unwrap() - (8.0f64 / 9.0).powi(n as i32)).abs() < 1e-15);
+            assert!((exponent(&word, 2).unwrap() - 8f64.ln() / 3f64.ln()).abs() < 1e-12);
         }
         let long = odd_word(4_000);
-        assert!(exponent(&long, 2) > 1.999_5 && exponent(&long, 2) < 2.0);
+        let read = exponent(&long, 2).unwrap();
+        assert!(read > 1.999_5 && read < 2.0);
     }
 
     #[test]
@@ -385,40 +411,52 @@ mod tests {
         let pinned = 192f64.ln() / 15f64.ln();
         for pairs in 1..=4 {
             let word: Vec<u64> = [3u64, 5].iter().cycle().take(2 * pairs).copied().collect();
-            assert!((exponent(&word, 2) - pinned).abs() < 1e-12, "{pairs}");
+            assert!(
+                (exponent(&word, 2).unwrap() - pinned).abs() < 1e-12,
+                "{pairs}"
+            );
         }
         assert_eq!(format!("{pinned:.6}"), "1.941432");
-        assert!(ratio(&[3, 5, 3, 5], 2) < ratio(&odd_word(4), 2));
+        assert!(ratio(&[3, 5, 3, 5], 2).unwrap() < ratio(&odd_word(4), 2).unwrap());
     }
 
     #[test]
     fn the_limit_names_a_schedule_or_says_it_cannot() {
-        let plane = limit(&[5, 7, 9], 2).unwrap();
+        let plane = limit(&[5, 7, 9], 2).unwrap().unwrap();
         assert!((plane - FRAC_PI_4 / (8.0 / 9.0)).abs() < 1e-15, "{plane}");
         assert_eq!(format!("{plane:.6}"), "0.883573");
-        let solid = limit(&[5, 7, 9], 3).unwrap();
+        let solid = limit(&[5, 7, 9], 3).unwrap().unwrap();
         assert!(
             (solid - solid_limit() / (26.0 / 27.0)).abs() < 1e-15,
             "{solid}"
         );
-        assert_eq!(limit(&odd_word(4), 2), Some(PLANE_LIMIT));
-        assert_eq!(limit(&flat_word(7, 3), 2), Some(0.0));
-        assert_eq!(limit(&[3, 7, 11], 2), None);
-        assert_eq!(limit(&[5], 2), None);
-        assert_eq!(limit(&[3, 5, 3, 5], 2), None);
-        assert_eq!(limit(&odd_word(4), 4), None);
+        assert_eq!(limit(&odd_word(4), 2).unwrap(), Some(PLANE_LIMIT));
+        assert_eq!(limit(&flat_word(7, 3), 2).unwrap(), Some(0.0));
+        assert_eq!(limit(&[3, 7, 11], 2).unwrap(), None);
+        assert_eq!(limit(&[5], 2).unwrap(), None);
+        assert_eq!(limit(&[3, 5, 3, 5], 2).unwrap(), None);
+        assert_eq!(limit(&odd_word(4), 4).unwrap(), None);
     }
 
     #[test]
     fn the_plane_ratio_at_two_million_factors_rounds_to_nine_digits() {
-        let read = ratio(&odd_word(2_000_000), 2);
+        let read = ratio(&odd_word(2_000_000), 2).unwrap();
         assert_eq!(format!("{read:.9}"), "0.785398262");
         assert!(read > PLANE_LIMIT);
     }
 
     #[test]
-    #[should_panic(expected = "a letter is an odd side from three")]
-    fn an_even_letter_has_no_centre_to_punch() {
-        let _ = cells(&[4], 2);
+    fn refuses_a_letter_that_is_not_an_odd_side_from_three() {
+        for bad in [0u64, 1, 2, 4, 6] {
+            assert!(side(&[bad]).is_err(), "{bad}");
+            assert!(cells(&[bad], 2).is_err(), "{bad}");
+            assert!(holes(&[bad, 3], 2).is_err(), "{bad}");
+            assert!(ratio(&[bad], 2).is_err(), "{bad}");
+            assert!(exponent(&[bad], 2).is_err(), "{bad}");
+            assert!(raster(&[bad]).is_err(), "{bad}");
+            assert!(punctures(&[bad], 2).is_err(), "{bad}");
+            assert!(limit(&[bad, bad + 2], 2).is_err(), "{bad}");
+        }
+        assert!(side(&[3]).is_ok());
     }
 }

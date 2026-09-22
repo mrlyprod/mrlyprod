@@ -9,7 +9,7 @@ pub const BASE: usize = 2;
 /// ```
 /// let carpet = |p: &[u8]| p.iter().map(|&b| b as usize).sum::<usize>() <= 1;
 /// let t = mrlyrs::math::rules::render(carpet, 3, 2, 2).unwrap();
-/// assert_eq!(t.bytes(), vec![1, 1, 1, 1, 0, 1, 1, 1, 1]);
+/// assert_eq!(t.bytes().unwrap(), vec![1, 1, 1, 1, 0, 1, 1, 1, 1]);
 /// ```
 pub fn render<F>(rule: F, number: usize, dimension: usize, base: usize) -> Result<Tensor>
 where
@@ -32,7 +32,7 @@ where
             residue[axis] = ((rem % number) % base) as u8;
             rem /= number;
         }
-        out.bytes_mut()[flat] = rule(&residue) as u8;
+        out.put(flat, i64::from(rule(&residue) as u8));
     }
     Ok(out)
 }
@@ -54,11 +54,12 @@ mod tests {
             2,
         )
         .unwrap();
-        assert_eq!(t.bytes(), vec![1, 1, 1, 1, 0, 1, 1, 1, 1]);
+        assert_eq!(t.bytes().unwrap(), vec![1, 1, 1, 1, 0, 1, 1, 1, 1]);
     }
     #[test]
-    fn render_rejects_bad_input() {
+    fn refuses_a_zero_number_dimension_or_base() {
         assert!(render(|_| true, 0, 2, 2).is_err());
         assert!(render(|_| true, 3, 0, 2).is_err());
+        assert!(render(|_| true, 3, 2, 0).is_err());
     }
 }

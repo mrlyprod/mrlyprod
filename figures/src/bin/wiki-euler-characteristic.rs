@@ -77,7 +77,7 @@ fn holes(board: &mut Board, frame: Frame) -> Result<usize> {
     let mut found = 0usize;
     for row in 0..SIDE {
         for col in 0..SIDE {
-            if seen[row][col] || carpet.types().get(&[row, col]) != 0 {
+            if seen[row][col] || carpet.types().get(&[row, col])? != 0 {
                 continue;
             }
             let mut stack = vec![(row, col)];
@@ -89,7 +89,7 @@ fn holes(board: &mut Board, frame: Frame) -> Result<usize> {
                             c: usize,
                             stack: &mut Vec<(usize, usize)>,
                             seen: &mut [[bool; SIDE]; SIDE]| {
-                    if !seen[r][c] && carpet.types().get(&[r, c]) == 0 {
+                    if !seen[r][c] && carpet.types().get(&[r, c]).is_ok_and(|v| v == 0) {
                         seen[r][c] = true;
                         stack.push((r, c));
                     }

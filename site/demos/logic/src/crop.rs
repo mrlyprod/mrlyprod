@@ -15,7 +15,7 @@ fn radius_of(rnum: u32, rden: u32) -> Result<Frac, Fault> {
     if rden == 0 {
         return Err(Fault::new("the radius denominator must be at least 1."));
     }
-    Ok(Frac::new(rnum as i64, rden as i64))
+    Ok(Frac::new(rnum as i64, rden as i64)?)
 }
 
 fn shape_of(
@@ -83,12 +83,12 @@ pub fn crop_grid(
     let kept = match policy {
         "refined1" => shape::refine(&types, &shape, number, 1, false)?,
         "refined2" => shape::refine(&types, &shape, number, 2, false)?,
-        _ => shape::crop(&types, &shape, keep_of(policy)?),
+        _ => shape::crop(&types, &shape, keep_of(policy)?)?,
     };
     Ok(Grid {
         width: kept.shape[1] as u32,
         height: kept.shape[0] as u32,
-        types: kept.bytes().to_vec(),
+        types: kept.bytes()?.to_vec(),
     })
 }
 
@@ -108,7 +108,7 @@ pub fn crop_cells(
     let kept = cropped_cube(code, number, level, base, shape, rnum, rden, anti, policy)?;
     let grid = kept.types();
     let mut out = Vec::new();
-    for (flat, &site) in grid.bytes().iter().enumerate() {
+    for (flat, &site) in grid.bytes()?.iter().enumerate() {
         if site != 0 {
             let (i, rest) = (
                 flat / (grid.shape[1] * grid.shape[2]),
@@ -158,7 +158,7 @@ fn cropped_cube(
 ) -> Result<Cell3d, Fault> {
     let types = design(code, number, 3, base, level)?;
     let shape = shape_of(shape, 3, rnum, rden, anti)?;
-    Ok(Cell3d::new(shape::crop(&types, &shape, keep_of(policy)?)))
+    Ok(Cell3d::new(shape::crop(&types, &shape, keep_of(policy)?)?)?)
 }
 
 /// Tallies the design against the shape: cells and fills per region, and the exposed measure before and after the touching crop, as JSON.
@@ -176,8 +176,8 @@ pub fn crop_census(
 ) -> Result<String, Fault> {
     let types = design(code, number, dimension, base, level)?;
     let shape = shape_of(shape, dimension, rnum, rden, anti)?;
-    let tally = shape::census(&shape, &types);
-    let after = shape::crop(&types, &shape, true);
+    let tally = shape::census(&shape, &types)?;
+    let after = shape::crop(&types, &shape, true)?;
     Ok(json!({
         "cells_out": tally.cells[0],
         "cells_cut": tally.cells[1],
@@ -221,15 +221,15 @@ pub fn crop_series(
     axis: &str,
     steps: usize,
 ) -> Result<String, Fault> {
-    let entry = |x: f64, types: &Tensor, s: &Shape| {
-        let tally = shape::census(s, types);
-        let after = shape::crop(types, s, true);
-        json!({
+    let entry = |x: f64, types: &Tensor, s: &Shape| -> Result<mrlyrs::core::Json, Fault> {
+        let tally = shape::census(s, types)?;
+        let after = shape::crop(types, s, true)?;
+        Ok(json!({
             "x": x,
             "filled_in": tally.filled[2],
             "filled_cut": tally.filled[1],
             "exposed_after": after.exposed().to_string(),
-        })
+        }))
     };
     let mut rows = Vec::new();
     match axis {
@@ -242,7 +242,7 @@ pub fn crop_series(
                 } else {
                     design(code, number, dimension, base, depth)?
                 };
-                rows.push(entry(depth as f64, &types, &s));
+                rows.push(entry(depth as f64, &types, &s)?);
             }
         }
         "radius" => {
@@ -250,7 +250,7 @@ pub fn crop_series(
             let types = design(code, number, dimension, base, level)?;
             for num in 1..=steps {
                 let s = shape_of(shape, dimension, num as u32, steps as u32, anti)?;
-                rows.push(entry(num as f64 / steps as f64, &types, &s));
+                rows.push(entry(num as f64 / steps as f64, &types, &s)?);
             }
         }
         _ => return Err(Fault::new(format!("axis {axis:?} is not level or radius."))),
@@ -407,21 +407,26 @@ pub fn crop_collapse(
 }
 
 fn outline(name: &str, r: Frac) -> Option<Vec<[Frac; 2]>> {
-    let h = Frac::new(1, 2);
-    let q = r * h;
-    let m = Frac::whole(0) - r;
-    let mq = Frac::whole(0) - q;
-    let shifted = |points: Vec<[Frac; 2]>| points.iter().map(|[a, b]| [h + *a, h + *b]).collect();
+    let h = Frac::new(1, 2).ok()?;
+    let q = r.times(h).ok()?;
+    let m = Frac::whole(0).minus(r).ok()?;
+    let mq = Frac::whole(0).minus(q).ok()?;
+    let shifted = |points: Vec<[Frac; 2]>| {
+        points
+            .iter()
+            .map(|[a, b]| Some([h.plus(*a).ok()?, h.plus(*b).ok()?]))
+            .collect::<Option<Vec<[Frac; 2]>>>()
+    };
     match name {
-        "box" => Some(shifted(vec![[m, m], [m, r], [r, r], [r, m]])),
-        "diamond" => Some(shifted(vec![
+        "box" => shifted(vec![[m, m], [m, r], [r, r], [r, m]]),
+        "diamond" => shifted(vec![
             [m, Frac::whole(0)],
             [Frac::whole(0), r],
             [r, Frac::whole(0)],
             [Frac::whole(0), m],
-        ])),
-        "triangle" => Some(shifted(vec![[m, Frac::whole(0)], [r, m], [r, r]])),
-        "octagon" => Some(shifted(vec![
+        ]),
+        "triangle" => shifted(vec![[m, Frac::whole(0)], [r, m], [r, r]]),
+        "octagon" => shifted(vec![
             [m, mq],
             [m, q],
             [mq, r],
@@ -430,7 +435,7 @@ fn outline(name: &str, r: Frac) -> Option<Vec<[Frac; 2]>> {
             [r, mq],
             [q, m],
             [mq, m],
-        ])),
+        ]),
         _ => None,
     }
 }
@@ -450,7 +455,7 @@ pub fn crop_svg(
 ) -> Result<String, Fault> {
     let types = design(code, number, 2, base, level)?;
     let cropper = shape_of(shape, 2, rnum, rden, anti)?;
-    let kept = shape::crop(&types, &cropper, true);
+    let kept = shape::crop(&types, &cropper, true)?;
     let r = radius_of(rnum, rden)?;
     let side = kept.shape[0];
     let span = side * scale;
@@ -464,7 +469,7 @@ pub fn crop_svg(
             format!("<polygon points=\"{}\"", listed.join(" "))
         }
         None => {
-            let centre = px(Frac::new(1, 2));
+            let centre = px(Frac::new(1, 2)?);
             format!("<circle cx=\"{centre}\" cy=\"{centre}\" r=\"{}\"", px(r))
         }
     };
@@ -483,7 +488,7 @@ pub fn crop_svg(
     let ground = theme().ground.to_hex();
     for a0 in 0..side {
         for a1 in 0..side {
-            if kept.get(&[a0, a1]) == 0 {
+            if kept.get(&[a0, a1])? == 0 {
                 continue;
             }
             let (x, y) = (a1 * scale, a0 * scale);

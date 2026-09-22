@@ -145,9 +145,9 @@ pub fn echo_read(base: u32, mask: u32, depth: usize, subtract: bool) -> Result<E
         .map(|(whole, part)| whole - part)
         .collect();
     let taken = if subtract && sieve { &rest } else { &meter };
-    let (gamma, power) = design::spectrum(&logx, taken);
+    let (gamma, power) = design::spectrum(&logx, taken)?;
     let score = design::score(&power, FLOOR);
-    let found = design::peaks(&gamma, &score, BAND, THRESHOLD);
+    let found = design::peaks(&gamma, &score, BAND, THRESHOLD)?;
     let bin = gamma.get(1).copied().unwrap_or(0.0);
     let zeros: Vec<f64> = design::ZETA_ORDINATES
         .iter()

@@ -82,10 +82,7 @@ pub struct Census {
 }
 
 fn board(seed: &Seed, tessellation: usize) -> Result<Cell2d> {
-    Ok(
-        create(Code::from(seed.code), seed.side, seed.level, 0, 2)?
-            .tile(tessellation, tessellation),
-    )
+    create(Code::from(seed.code), seed.side, seed.level, 0, 2)?.tile(tessellation, tessellation)
 }
 
 /// Resolves a mask against the tessellated board, the centre popped.
@@ -98,7 +95,7 @@ pub fn mask_tensor(mask: &Mask, board: &Cell2d) -> Result<Tensor> {
                 tensor = tensor.invert();
             }
             let centre = (tensor.shape[0] - 1) / 2;
-            tensor.set(&[centre, centre], 0);
+            tensor.set(&[centre, centre], 0)?;
             Ok(tensor)
         }
     }
@@ -108,8 +105,8 @@ fn bounding_side(grid: &Tensor) -> usize {
     let n = grid.shape[0];
     let (mut rmin, mut rmax, mut cmin, mut cmax) = (n, 0, n, 0);
     let mut any = false;
-    for (i, &v) in grid.bytes().iter().enumerate() {
-        if v != 0 {
+    for i in 0..grid.size() {
+        if grid.at(i) != 0 {
             let (r, c) = (i / n, i % n);
             rmin = rmin.min(r);
             rmax = rmax.max(r);
@@ -153,12 +150,12 @@ fn growth(grids: &[Cell2d]) -> f64 {
 }
 
 /// Returns the median level set of a run's cumulative visit counts as one frame.
-pub fn heat_frame(grids: &[Cell2d]) -> Cell2d {
+pub fn heat_frame(grids: &[Cell2d]) -> mrlyrs::Result<Cell2d> {
     let shape = grids[0].types().shape.clone();
     let mut total = vec![0usize; grids[0].types().size()];
     for grid in grids {
-        for (i, &v) in grid.types().bytes().iter().enumerate() {
-            total[i] += v as usize;
+        for (i, slot) in total.iter_mut().enumerate() {
+            *slot += grid.types().at(i) as usize;
         }
     }
     let mut positive: Vec<usize> = total.iter().copied().filter(|&v| v > 0).collect();
@@ -167,8 +164,11 @@ pub fn heat_frame(grids: &[Cell2d]) -> Cell2d {
         .get(positive.len() / 2)
         .copied()
         .unwrap_or(usize::MAX);
-    let bytes: Vec<u8> = total.iter().map(|&v| u8::from(v >= level)).collect();
-    Cell2d::new(Tensor::of(bytes, shape))
+    let mut heat = Tensor::new(shape);
+    for (i, &v) in total.iter().enumerate() {
+        heat.put(i, i64::from(v >= level));
+    }
+    Cell2d::new(heat)
 }
 
 fn mover(grids: &[Cell2d]) -> Option<(usize, usize, usize)> {
@@ -209,7 +209,7 @@ pub fn run_one(
     let tensor = mask_tensor(mask, &board)?;
     let mask_index = lattice_index(&tensor);
     let config = Config {
-        mask: Cell2d::new(tensor),
+        mask: Cell2d::new(tensor)?,
         birth: rule.birth(),
         survive: rule.survive(),
         boundary,
@@ -243,7 +243,7 @@ pub fn run_one(
     } else {
         None
     };
-    let heat = read(&heat_frame(&life.grids), None)?;
+    let heat = read(&heat_frame(&life.grids)?, None)?;
     Ok(Run {
         seed: *seed,
         tessellation,
@@ -277,7 +277,7 @@ fn sweep(preset: &Preset) -> Result<(Vec<Cell>, usize)> {
             for mask in &preset.masks {
                 let tensor = mask_tensor(mask, &board)?;
                 let mut signature = tensor.shape.iter().map(|&n| n as u8).collect::<Vec<u8>>();
-                signature.extend_from_slice(tensor.bytes());
+                signature.extend_from_slice(tensor.bytes()?);
                 if !seen.insert(signature) {
                     duplicates += preset.rules.len() * preset.boundaries.len();
                     continue;
@@ -378,7 +378,7 @@ mod tests {
         assert_eq!(run.heat.side, 27);
         let copy = mask_tensor(&Mask::Copy { inverted: true }, &board(&seed, 3).unwrap()).unwrap();
         assert_eq!(copy.shape, vec![9, 9]);
-        assert_eq!(copy.get(&[4, 4]), 0);
+        assert_eq!(copy.get(&[4, 4]).unwrap(), 0);
         assert_eq!(copy.sum(), 9 * 5 - 1);
     }
 }

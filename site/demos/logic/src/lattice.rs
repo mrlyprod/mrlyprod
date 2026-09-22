@@ -83,14 +83,14 @@ fn shade(layer: usize, layers: bool) -> [u8; 4] {
 #[wasm_bindgen]
 pub fn visible_read(n: usize, dimension: u32) -> Result<String, Fault> {
     let (n, dimension) = (window(n)?, depth(dimension)?);
-    let lit = series::visible(n, dimension);
+    let lit = series::visible(n, dimension)?;
     let total = (n as u128).pow(dimension);
-    let constant = lattice::recovered(n, dimension);
+    let constant = lattice::recovered(n, dimension)?;
     let even = dimension.is_multiple_of(2);
     let truth = if even {
         std::f64::consts::PI
     } else {
-        lattice::zeta_whole(dimension)
+        lattice::zeta_whole(dimension)?
     };
     Ok(json!({
         "n": n,
@@ -98,7 +98,7 @@ pub fn visible_read(n: usize, dimension: u32) -> Result<String, Fault> {
         "lit": lit.to_string(),
         "total": total.to_string(),
         "density": lit as f64 / total as f64,
-        "limit": lattice::visible_density(dimension),
+        "limit": lattice::visible_density(dimension)?,
         "name": if even { "pi".to_string() } else { format!("zeta({dimension})") },
         "constant": constant,
         "truth": truth,
@@ -141,7 +141,7 @@ pub fn visible_walk(n: usize, dimension: u32, stops: usize) -> Result<Vec<f64>, 
     for k in 1..=stops {
         let at = (n * k / stops).max(1);
         out.push(at as f64);
-        out.push(lattice::recovered(at, dimension));
+        out.push(lattice::recovered(at, dimension)?);
     }
     Ok(out)
 }

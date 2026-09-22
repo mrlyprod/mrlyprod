@@ -81,7 +81,7 @@ fn bracket(corners: &[Vec<u8>], base: usize) -> f64 {
 }
 
 fn foreign(base: usize, dimension: usize) -> f64 {
-    let mut out = 1.0 / zeta(dimension as f64, ZETA_TERMS);
+    let mut out = 1.0 / zeta(dimension as f64, ZETA_TERMS).expect("the dimension is above one");
     for (prime, _) in factorize(base) {
         out /= 1.0 - (prime as f64).powi(-(dimension as i32));
     }

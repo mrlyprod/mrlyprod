@@ -508,4 +508,12 @@ mod tests {
         assert_eq!(chart(7, 3)[0].x, 2);
         assert!(chart(1, 5).is_empty());
     }
+
+    #[test]
+    fn refuses_nothing_and_reads_under_two_as_composite() {
+        assert!(!is_prime(0));
+        assert!(!is_prime(1));
+        assert!(is_prime(2));
+        assert!(!is_prime(usize::MAX));
+    }
 }

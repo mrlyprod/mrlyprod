@@ -226,7 +226,7 @@ fn main() -> Result<()> {
     let sponge = carpet(3, LEVEL)?;
     assert_eq!(sponge.types().sum(), 160000);
     let dust = slice(&sponge, 2, (SIDE - 1) / 2)?;
-    let cells = dust.types().bytes().to_vec();
+    let cells = dust.types().bytes()?.to_vec();
     assert_eq!(cells.len(), SIDE * SIDE);
     assert_eq!(cells.iter().filter(|&&b| b != 0).count(), 256);
 

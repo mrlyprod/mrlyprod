@@ -1,7 +1,7 @@
 use super::code::Code;
 use super::factory::residue_corners;
 use super::universe::permutations;
-use crate::core::error::{value_error, Result};
+use crate::core::error::{overflow_error, value_error, Result};
 use crate::num::factor::factorial;
 use std::collections::{BTreeSet, HashMap};
 
@@ -147,12 +147,12 @@ pub fn orbit(group: &[Vec<usize>], code: Code) -> BTreeSet<Code> {
     group.iter().map(|element| carry(element, code)).collect()
 }
 
-/// Returns the least code of the design's orbit.
-pub fn canonical(group: &[Vec<usize>], code: Code) -> Code {
-    orbit(group, code)
-        .into_iter()
-        .next()
-        .expect("the group is not empty")
+/// Returns the least code of the design's orbit, or an error for an empty group.
+pub fn canonical(group: &[Vec<usize>], code: Code) -> Result<Code> {
+    match orbit(group, code).into_iter().next() {
+        Some(least) => Ok(least),
+        None => value_error("a canonical code needs a group of at least one element."),
+    }
 }
 
 /// Walks every code of a base and dimension and returns each orbit's least code with the orbit's size, or an error past the walk limit.
@@ -184,11 +184,15 @@ pub fn representatives(base: usize, dimension: usize) -> Result<Vec<(Code, usize
     Ok(out)
 }
 
-/// Returns the raw design count before symmetry, two to the number of cells.
-pub fn total_designs(base: usize, dimension: usize) -> u128 {
+/// Returns the raw design count before symmetry, two to the number of cells, or an error past a u128.
+pub fn total_designs(base: usize, dimension: usize) -> Result<u128> {
     let cells = base.pow(dimension as u32);
-    assert!(cells < 128, "too many cells for a u128 count");
-    1 << cells
+    if cells >= 128 {
+        return overflow_error(format!(
+            "base {base} dimension {dimension} has {cells} cells, past the 127 a u128 count holds."
+        ));
+    }
+    Ok(1 << cells)
 }
 
 /// Returns the distinct-design counts for dimensions 1 through max_dimension.
@@ -264,7 +268,10 @@ mod tests {
     fn base2_matches_bang() {
         use super::super::universe::bang;
         for d in 1..=3 {
-            assert_eq!(distinct_designs(2, d).unwrap(), bang(d).distinct() as u128);
+            assert_eq!(
+                distinct_designs(2, d).unwrap(),
+                bang(d).unwrap().distinct() as u128
+            );
         }
     }
     #[test]
@@ -286,7 +293,7 @@ mod tests {
                 .into_iter()
                 .map(|(code, _)| code.get())
                 .collect();
-            assert_eq!(codes, universe_codes(dimension));
+            assert_eq!(codes, universe_codes(dimension).unwrap());
         }
         assert_eq!(representatives(3, 2).unwrap().len(), 26);
         assert_eq!(representatives(4, 2).unwrap().len(), 805);
@@ -313,7 +320,15 @@ mod tests {
     }
     #[test]
     fn totals_doubly_exponential() {
-        let totals: Vec<u128> = (1..=4).map(|d| total_designs(2, d)).collect();
+        let totals: Vec<u128> = (1..=4).map(|d| total_designs(2, d).unwrap()).collect();
         assert_eq!(totals, vec![4, 16, 256, 65536]);
+    }
+
+    #[test]
+    fn refuses_an_empty_group_and_a_count_past_a_u128() {
+        assert!(canonical(&[], Code(1)).is_err());
+        assert!(canonical(&group(2, 2), Code(1)).is_ok());
+        assert!(total_designs(2, 7).is_err());
+        assert!(representatives(3, 4).is_err());
     }
 }

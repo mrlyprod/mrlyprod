@@ -19,8 +19,8 @@ fn tones(word: &[u64], side: u64) -> Vec<(u64, Color)> {
 fn main() -> Result<()> {
     let mut board = Board::square();
     let word = sieve::odd_word(LEVELS);
-    let (side, sites) = sieve::raster(&word);
-    let holes = sieve::punctures(&word, 2);
+    let (side, sites) = sieve::raster(&word)?;
+    let holes = sieve::punctures(&word, 2)?;
     assert_eq!(side, 105);
     assert_eq!(sites.iter().filter(|&&b| b == 1).count(), 9216);
     assert_eq!(holes.len() / 3, 201);

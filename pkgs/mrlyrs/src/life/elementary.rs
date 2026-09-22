@@ -1,16 +1,29 @@
+use crate::core::error::{value_error, Result};
 use crate::core::tensor::Tensor;
 use crate::math::bang::universe::{apply, corner_index, corners, degree, orbit, symmetries};
 use crate::math::bang::Code;
 use crate::math::name::{Bang, Named};
 use std::collections::BTreeSet;
 
-/// Returns the bit a rule sends the neighbourhood to, reading bit `4l + 2c + r` in Wolfram's numbering.
+/// Returns the bit a rule sends the neighbourhood to, reading bit `4l + 2c + r` in Wolfram's numbering off the low bit of each cell.
 pub fn output(rule: u8, l: u8, c: u8, r: u8) -> u8 {
-    (rule >> (4 * l + 2 * c + r)) & 1
+    (rule >> (4 * (l & 1) + 2 * (c & 1) + (r & 1))) & 1
 }
 
-/// Advances one row one generation, a constant-0 boundary unless the edges wrap.
-pub fn step(row: &[u8], rule: u8, wrap: bool) -> Vec<u8> {
+fn bits(row: &[u8]) -> Result<()> {
+    match row.iter().find(|&&cell| cell > 1) {
+        Some(cell) => value_error(format!("a row holds bits, not {cell}.")),
+        None => Ok(()),
+    }
+}
+
+/// Advances one row one generation, a constant-0 boundary unless the edges wrap, or an error for a row that is not all bits.
+pub fn step(row: &[u8], rule: u8, wrap: bool) -> Result<Vec<u8>> {
+    bits(row)?;
+    Ok(advance(row, rule, wrap))
+}
+
+fn advance(row: &[u8], rule: u8, wrap: bool) -> Vec<u8> {
     let width = row.len();
     (0..width)
         .map(|i| {
@@ -37,30 +50,36 @@ pub fn step(row: &[u8], rule: u8, wrap: bool) -> Vec<u8> {
         .collect()
 }
 
-/// Returns the space-time diagram of a seed row: row 0 the seed, then one row per generation.
-pub fn history(row: &[u8], rule: u8, steps: usize, wrap: bool) -> Tensor {
+/// Returns the space-time diagram of a seed row, row 0 the seed and then one row per generation, or an error for a row that is not all bits.
+///
+/// ```
+/// let run = mrlyrs::life::history(&[0, 0, 1, 0, 0], 90, 2, false).unwrap();
+/// assert_eq!(run.shape, vec![3, 5]);
+/// assert!(mrlyrs::life::history(&[0, 2, 0], 90, 1, false).is_err());
+/// ```
+pub fn history(row: &[u8], rule: u8, steps: usize, wrap: bool) -> Result<Tensor> {
+    bits(row)?;
     let width = row.len();
     let mut cells = Vec::with_capacity((steps + 1) * width);
     cells.extend_from_slice(row);
     let mut current = row.to_vec();
     for _ in 0..steps {
-        current = step(&current, rule, wrap);
+        current = advance(&current, rule, wrap);
         cells.extend_from_slice(&current);
     }
     Tensor::of(cells, vec![steps + 1, width])
 }
 
 /// Returns the single-seed diagram: one live cell run the given generations on a line padded by `steps` cells beyond the `2 steps + 1` window on each side, cropped back to that window.
-pub fn single_seed(rule: u8, steps: usize) -> Tensor {
+pub fn single_seed(rule: u8, steps: usize) -> Result<Tensor> {
     let window = 2 * steps + 1;
     let width = window + 2 * steps;
     let mut row = vec![0u8; width];
     row[width / 2] = 1;
-    let full = history(&row, rule, steps, false);
     let mut cells = Vec::with_capacity((steps + 1) * window);
-    for t in 0..=steps {
-        let start = t * width + steps;
-        cells.extend_from_slice(&full.bytes()[start..start + window]);
+    for _ in 0..=steps {
+        cells.extend_from_slice(&row[steps..steps + window]);
+        row = advance(&row, rule, false);
     }
     Tensor::of(cells, vec![steps + 1, window])
 }
@@ -91,7 +110,7 @@ pub fn affine(rule: u8) -> bool {
 }
 
 /// Returns the design name a rule carries, `bang dim 3, code <rule>`.
-pub fn rule_name(rule: u8) -> String {
+pub fn rule_name(rule: u8) -> Result<String> {
     Bang::new(rule as u128, 3, 2).to_mrly()
 }
 
@@ -319,14 +338,14 @@ mod tests {
     }
     #[test]
     fn rule_60_draws_the_level_four_gasket() {
-        let diagram = single_seed(60, 16);
+        let diagram = single_seed(60, 16).unwrap();
         let tile = crate::math::two::create(Code::from(13u64), 2, 4, 0, 2).unwrap();
         let centre = diagram.shape[1] / 2;
         for t in 0..16 {
             for j in 0..16 {
                 assert_eq!(
-                    diagram.get(&[t, centre + j]),
-                    tile.types().get(&[t, j]),
+                    diagram.get(&[t, centre + j]).unwrap(),
+                    tile.types().get(&[t, j]).unwrap(),
                     "t={t} j={j}"
                 );
             }
@@ -335,10 +354,14 @@ mod tests {
     }
     #[test]
     fn rule_150_row_populations_are_a071053() {
-        let diagram = single_seed(150, 11);
+        let diagram = single_seed(150, 11).unwrap();
         let width = diagram.shape[1];
         let counts: Vec<u32> = (0..12)
-            .map(|t| (0..width).map(|i| diagram.get(&[t, i]) as u32).sum())
+            .map(|t| {
+                (0..width)
+                    .map(|i| diagram.get(&[t, i]).unwrap() as u32)
+                    .sum()
+            })
             .collect();
         assert_eq!(counts, vec![1, 3, 3, 5, 3, 9, 5, 11, 3, 9, 9, 15]);
     }
@@ -363,20 +386,29 @@ mod tests {
     #[test]
     fn a_ring_steps_around_itself() {
         let row = [1, 0, 0, 0, 0];
-        assert_eq!(step(&row, 170, true), vec![0, 0, 0, 0, 1]);
-        assert_eq!(step(&row, 170, false), vec![0, 0, 0, 0, 0]);
+        assert_eq!(step(&row, 170, true).unwrap(), vec![0, 0, 0, 0, 1]);
+        assert_eq!(step(&row, 170, false).unwrap(), vec![0, 0, 0, 0, 0]);
+    }
+    #[test]
+    fn refuses_history() {
+        assert!(history(&[0, 2, 0], 90, 1, false).is_err());
+        assert!(step(&[1, 0, 9], 90, true).is_err());
+        assert_eq!(history(&[], 90, 2, false).unwrap().shape, vec![3, 0]);
     }
     #[test]
     fn a_line_steps_through_the_grid_stepper() {
         let row = vec![0, 1, 1, 0, 1, 0, 0];
-        let mask = Tensor::of(vec![1, 0, 1], vec![1, 3]);
-        let cell = Cell2d::new(Tensor::of(row.clone(), vec![1, 7]));
+        let mask = Tensor::of(vec![1, 0, 1], vec![1, 3]).unwrap();
+        let cell = Cell2d::new(Tensor::of(row.clone(), vec![1, 7]).unwrap()).unwrap();
         let next = next_grid(&cell, &[1], &[0, 1], &mask, Boundary::Constant).unwrap();
-        assert_eq!(next.types().bytes(), step(&row, 94, false));
+        assert_eq!(
+            next.types().bytes().unwrap(),
+            step(&row, 94, false).unwrap()
+        );
     }
     #[test]
     fn the_card_pieces_read_rule_110() {
-        assert_eq!(rule_name(110), "bang dim 3, code 110");
+        assert_eq!(rule_name(110).unwrap(), "bang dim 3, code 110");
         assert_eq!(corner_bits(110), vec![0, 1, 1, 1, 0, 1, 1, 0]);
         assert_eq!(
             (popcount(110), rule_degree(110), genus(110)),

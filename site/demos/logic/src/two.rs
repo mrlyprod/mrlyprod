@@ -33,7 +33,7 @@ pub fn two_grid(
     Ok(Grid {
         width: cell.width() as u32,
         height: cell.height() as u32,
-        types: cell.types().bytes().to_vec(),
+        types: cell.types().bytes()?.to_vec(),
     })
 }
 

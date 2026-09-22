@@ -21,7 +21,7 @@ fn main() -> Result<()> {
     let lit: f64 = source.iter().map(|&v| v as f64).sum();
     assert!(lit > 0.0);
 
-    let profile = spin::profile(&source, PANEL, STEPS);
+    let profile = spin::profile(&source, PANEL, STEPS)?;
     assert_eq!(profile.len(), STEPS);
     let mass = spin::mass(&profile, PANEL);
     assert!((mass - lit).abs() < 0.03 * lit);

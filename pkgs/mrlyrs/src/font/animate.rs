@@ -85,22 +85,24 @@ pub fn merge(text: &str, pad: usize) -> Vec<Vec<usize>> {
     frames
 }
 
-/// Chains the write, the merge and their reversals into one loop, resting hold frames after each.
+/// Chains the write, the merge and their reversals into one loop, resting hold frames after each movement that has any.
 pub fn cycle(write: &Anim, merge: &[Vec<usize>], hold: usize) -> Anim {
     let mut frames: Vec<Vec<usize>> = Vec::new();
-    let rest = |frame: &Vec<usize>, out: &mut Vec<Vec<usize>>| {
-        for _ in 0..hold {
-            out.push(frame.clone());
+    let rest = |frame: Option<&Vec<usize>>, out: &mut Vec<Vec<usize>>| {
+        if let Some(frame) = frame {
+            for _ in 0..hold {
+                out.push(frame.clone());
+            }
         }
     };
     frames.extend(write.frames.iter().cloned());
-    rest(write.frames.last().unwrap(), &mut frames);
+    rest(write.frames.last(), &mut frames);
     frames.extend(merge.iter().cloned());
-    rest(merge.last().unwrap(), &mut frames);
+    rest(merge.last(), &mut frames);
     frames.extend(merge.iter().rev().cloned());
-    rest(merge.first().unwrap(), &mut frames);
+    rest(merge.first(), &mut frames);
     frames.extend(write.frames.iter().rev().cloned());
-    rest(write.frames.first().unwrap(), &mut frames);
+    rest(write.frames.first(), &mut frames);
     Anim {
         rows: write.rows,
         cols: write.cols,
@@ -283,5 +285,13 @@ mod tests {
     #[test]
     fn a_lone_glyph_has_nothing_to_merge() {
         assert_eq!(merge("A", 1).len(), 1);
+    }
+
+    #[test]
+    fn a_missing_movement_rests_nothing() {
+        let write = animate("A", 1);
+        let looped = cycle(&write, &[], HOLD);
+        assert_eq!(looped.frames.len(), 2 * write.frames.len() + 2 * HOLD);
+        assert_eq!(cycle(&animate("", 0), &[], HOLD).frames.len(), 2 + 2 * HOLD);
     }
 }

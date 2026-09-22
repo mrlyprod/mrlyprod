@@ -16,7 +16,7 @@ fn sites(cell: &Cell2d) -> (usize, Vec<bool>) {
     let mut mask = vec![false; side * side];
     for row in 0..side {
         for col in 0..side {
-            mask[row * side + col] = types.get(&[row, col]) != 0;
+            mask[row * side + col] = types.get(&[row, col]).is_ok_and(|v| v != 0);
         }
     }
     (side, mask)

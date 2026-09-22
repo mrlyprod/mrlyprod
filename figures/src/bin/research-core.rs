@@ -8,7 +8,7 @@ use mrlyrs::math::two::designs;
 fn main() -> Result<()> {
     let mut board = Board::square();
     let area = board.frame(0.08);
-    let universe = bang::bang(2);
+    let universe = bang::bang(2)?;
     assert_eq!(universe.total, 16);
     assert_eq!(universe.distinct(), 6);
     let canonical: Vec<u128> = universe.canonical().iter().map(|d| d.i.get()).collect();

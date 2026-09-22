@@ -99,7 +99,7 @@ pub fn draw(
     let mut paint = Vec::new();
     for y in 0..height {
         for x in 0..width {
-            let color = match ink(types.get(&[y, x])) {
+            let color = match ink(types.at(y * width + x) as u8) {
                 Some(color) => color,
                 None => continue,
             };

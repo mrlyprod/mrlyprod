@@ -74,7 +74,7 @@ pub fn faces(cell: &Cell3d) -> usize {
     for i in 0..dx {
         for j in 0..dy {
             for k in 0..dz {
-                if grid.get(&[i, j, k]) == 0 {
+                if grid.at(grid.index(&[i, j, k])) == 0 {
                     continue;
                 }
                 for step in 0..2 {

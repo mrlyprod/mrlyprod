@@ -41,11 +41,13 @@ impl Cell6d {
     }
     /// Swaps every fill triangle for a void and back.
     pub fn anti(mut self) -> Cell6d {
-        for v in self.cell.cell.types.bytes_mut().iter_mut() {
-            if *v == FILL {
-                *v = VOID;
-            } else if *v == VOID {
-                *v = FILL;
+        let types = &mut self.cell.cell.types;
+        for flat in 0..types.size() {
+            let v = types.at(flat);
+            if v == i64::from(FILL) {
+                types.put(flat, i64::from(VOID));
+            } else if v == i64::from(VOID) {
+                types.put(flat, i64::from(FILL));
             }
         }
         self

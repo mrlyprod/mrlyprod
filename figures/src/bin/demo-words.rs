@@ -27,11 +27,11 @@ fn main() -> Result<()> {
     for row in 0..SIDE {
         for col in 0..SIDE {
             let mut deep = 0usize;
-            if single.get(&[row / 35, col / 35]) != 0 {
+            if single.get(&[row / 35, col / 35])? != 0 {
                 deep += 1;
-                if pair.get(&[row / 5, col / 5]) != 0 {
+                if pair.get(&[row / 5, col / 5])? != 0 {
                     deep += 1;
-                    if whole.get(&[row, col]) != 0 {
+                    if whole.get(&[row, col])? != 0 {
                         deep += 1;
                     }
                 }

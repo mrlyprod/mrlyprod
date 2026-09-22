@@ -31,11 +31,16 @@ fn crate_tile(code: usize, level: usize) -> Vec<Vec<u8>> {
     let seed = Tensor::of(
         (0..4).map(|i| ((code >> i) & 1) as u8).collect(),
         vec![2, 2],
-    );
+    )
+    .expect("four bits fill a two by two");
     let grid = seed.fractal(level);
     let side = 1usize << level;
     (0..side)
-        .map(|row| (0..side).map(|column| grid.get(&[row, column])).collect())
+        .map(|row| {
+            (0..side)
+                .map(|column| grid.at(grid.index(&[row, column])) as u8)
+                .collect()
+        })
         .collect()
 }
 

@@ -19,7 +19,7 @@ fn digits() -> Result<Vec<(usize, usize)>> {
     let types = tile.types();
     Ok((0..SIDE)
         .flat_map(|a| (0..SIDE).map(move |b| (a, b)))
-        .filter(|&(a, b)| types.get(&[a, b]) != 0)
+        .filter(|&(a, b)| types.get(&[a, b]).is_ok_and(|v| v != 0))
         .collect())
 }
 

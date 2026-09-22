@@ -1545,16 +1545,27 @@ fn the_blend_exports_answer() {
 
 #[test]
 fn the_automata_exports_answer() {
-    assert_eq!(eca_next(&[0, 0, 1, 0, 0], 110, false), vec![0, 1, 1, 0, 0]);
-    assert_eq!(eca_next(&[1, 0, 0, 0, 0], 170, true), vec![0, 0, 0, 0, 1]);
-    let run = eca_history(&[0, 0, 1, 0, 0], 110, 3, false);
+    assert_eq!(
+        eca_next(&[0, 0, 1, 0, 0], 110, false).unwrap(),
+        vec![0, 1, 1, 0, 0]
+    );
+    assert_eq!(
+        eca_next(&[1, 0, 0, 0, 0], 170, true).unwrap(),
+        vec![0, 0, 0, 0, 1]
+    );
+    let run = eca_history(&[0, 0, 1, 0, 0], 110, 3, false).unwrap();
     assert_eq!((run.width, run.height), (5, 4));
     assert_eq!(&run.types[5..10], &[0, 1, 1, 0, 0]);
-    let cone = eca_seed(110, 31);
+    let cone = eca_seed(110, 31).unwrap();
     assert_eq!((cone.width, cone.height), (63, 32));
     assert_eq!(cone.types.iter().map(|&b| b as u32).sum::<u32>(), 326);
     assert_eq!(
-        eca_seed(90, 8).types.iter().map(|&b| b as u32).sum::<u32>(),
+        eca_seed(90, 8)
+            .unwrap()
+            .types
+            .iter()
+            .map(|&b| b as u32)
+            .sum::<u32>(),
         29
     );
     let card = parse(&eca_card(110)).unwrap();
@@ -1604,7 +1615,7 @@ fn the_automata_exports_answer() {
     assert_eq!(life_mask_index(&diagonal.types, 3, 3).unwrap(), 2);
     let row = [0, 1, 1, 0, 1, 0, 0];
     let stepped = life_next_masked(&row, 7, 1, &[1], &[0, 1], &line.types, 3, 1, false).unwrap();
-    assert_eq!(stepped, eca_next(&row, 94, false));
+    assert_eq!(stepped, eca_next(&row, 94, false).unwrap());
     let paced = parse(
         &life_run_masked(
             &blinker(),

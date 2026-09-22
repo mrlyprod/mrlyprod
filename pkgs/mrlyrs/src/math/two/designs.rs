@@ -11,7 +11,7 @@ pub use crate::math::bang::factory::levels_code;
 fn build(pattern: Tensor, level: usize, rotation: usize) -> Result<Cell2d> {
     let mut cell = crate::math::cell::grow::<2>(pattern, level)?;
     if rotation != 0 {
-        cell = cell.rotate(rotation);
+        cell = cell.rotate(rotation)?;
     }
     Ok(cell)
 }
@@ -175,7 +175,7 @@ mod tests {
         let deep = level_set(3, &[0, 1], 2, 0, 2).unwrap();
         assert_eq!(deep, carpet(3, 2).unwrap());
         let turned = level_set(5, &[1, 2], 1, 1, 2).unwrap();
-        assert_eq!(turned, net(5, 1).unwrap().rotate(1));
+        assert_eq!(turned, net(5, 1).unwrap().rotate(1).unwrap());
     }
     #[test]
     fn named_builders_take_a_rotation() {
@@ -188,7 +188,10 @@ mod tests {
         ] {
             assert_eq!(named(design, 5, 1, 0).unwrap(), plain);
             for k in 1..4 {
-                assert_eq!(named(design, 5, 1, k).unwrap(), plain.clone().rotate(k));
+                assert_eq!(
+                    named(design, 5, 1, k).unwrap(),
+                    plain.clone().rotate(k).unwrap()
+                );
             }
         }
         assert_eq!(named(Design::Vtree, 5, 1, 1).unwrap(), htree(5, 1).unwrap());

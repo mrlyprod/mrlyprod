@@ -1,3 +1,5 @@
+use crate::core::error::{shape_error, Result};
+
 /// A square grid of f32 samples.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Field {
@@ -15,10 +17,16 @@ impl Field {
             size,
         }
     }
-    /// Wraps row-major samples of the given side.
-    pub fn from_data(data: Vec<f32>, size: usize) -> Field {
-        assert_eq!(data.len(), size * size, "data must be size*size");
-        Field { data, size }
+    /// Wraps row-major samples of the given side, or an error when the count is not the side squared.
+    pub fn from_data(data: Vec<f32>, size: usize) -> Result<Field> {
+        if data.len() != size * size {
+            return shape_error(format!(
+                "a field of side {size} needs {} samples, got {}.",
+                size * size,
+                data.len()
+            ));
+        }
+        Ok(Field { data, size })
     }
     /// Returns the smallest sample.
     pub fn min(&self) -> f32 {
@@ -54,5 +62,17 @@ impl Field {
             let span = (hi - lo).max(f32::EPSILON);
             self.data.iter().map(|&v| (v - lo) / span).collect()
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn refuses_a_count_that_is_not_the_side_squared() {
+        assert!(Field::from_data(vec![0.0; 3], 2).is_err());
+        assert!(Field::from_data(vec![0.0; 5], 2).is_err());
+        assert!(Field::from_data(vec![0.0; 4], 2).is_ok());
     }
 }

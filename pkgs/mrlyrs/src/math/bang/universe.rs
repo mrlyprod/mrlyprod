@@ -1,4 +1,5 @@
 use super::code::Code;
+use crate::core::error::{value_error, Result};
 use std::collections::BTreeSet;
 
 /// Returns every permutation of 0..n in sorted order.
@@ -205,7 +206,7 @@ pub struct Design {
 
 impl Design {
     /// Returns the design's name as a line of prose, `bang dim 2, code 7`.
-    pub fn name(&self) -> String {
+    pub fn name(&self) -> Result<String> {
         crate::math::name::Named::to_mrly(&crate::math::name::Bang::new(
             self.i.get(),
             self.dimension,
@@ -245,12 +246,13 @@ pub struct Universe {
 }
 
 impl Universe {
-    /// Enumerates every orbit of a dimension from 1 to 4.
-    pub fn new(dimension: usize) -> Self {
-        assert!(
-            (1..=4).contains(&dimension),
-            "bang is enumerable only for dimensions 1-4"
-        );
+    /// Enumerates every orbit of a dimension from 1 to 4, or an error outside that range.
+    pub fn new(dimension: usize) -> Result<Universe> {
+        if !(1..=4).contains(&dimension) {
+            return value_error(format!(
+                "a universe is enumerable only for dimensions 1 to 4, not {dimension}."
+            ));
+        }
         let total = 1usize << (1usize << dimension);
         let mut class_rep = Vec::with_capacity(total);
         let mut orbit_size = Vec::with_capacity(total);
@@ -259,12 +261,12 @@ impl Universe {
             class_rep.push(*orb.iter().next().unwrap());
             orbit_size.push(orb.len());
         }
-        Universe {
+        Ok(Universe {
             dimension,
             total,
             class_rep,
             orbit_size,
-        }
+        })
     }
     /// Returns the design at a code with its precomputed orbit facts.
     pub fn design(&self, code: Code) -> Design {
@@ -299,11 +301,11 @@ impl Universe {
 /// Builds the universe of a dimension.
 ///
 /// ```
-/// let u = mrlyrs::math::bang::bang(2);
+/// let u = mrlyrs::math::bang::bang(2).unwrap();
 /// assert_eq!(u.total, 16);
 /// assert_eq!(u.distinct(), 6);
 /// ```
-pub fn bang(dimension: usize) -> Universe {
+pub fn bang(dimension: usize) -> Result<Universe> {
     Universe::new(dimension)
 }
 
@@ -312,17 +314,17 @@ mod tests {
     use super::*;
     #[test]
     fn total_and_distinct_counts() {
-        assert_eq!(bang(1).distinct(), 3);
-        assert_eq!(bang(2).distinct(), 6);
-        assert_eq!(bang(3).distinct(), 22);
-        assert_eq!(bang(1).total, 4);
-        assert_eq!(bang(2).total, 16);
-        assert_eq!(bang(3).total, 256);
+        assert_eq!(bang(1).unwrap().distinct(), 3);
+        assert_eq!(bang(2).unwrap().distinct(), 6);
+        assert_eq!(bang(3).unwrap().distinct(), 22);
+        assert_eq!(bang(1).unwrap().total, 4);
+        assert_eq!(bang(2).unwrap().total, 16);
+        assert_eq!(bang(3).unwrap().total, 256);
     }
     #[test]
     fn prefix_codes_canonical() {
         for d in 1..=3 {
-            let u = bang(d);
+            let u = bang(d).unwrap();
             for k in 0..=(1usize << d) {
                 let code = (1u128 << k) - 1;
                 if (code as usize) < u.total {
@@ -333,7 +335,7 @@ mod tests {
     }
     #[test]
     fn anti_closure_3d() {
-        let u = bang(3);
+        let u = bang(3).unwrap();
         let full: u128 = (1 << (1 << 3)) - 1;
         let reps: Vec<Code> = u.canonical().iter().map(|d| d.class_rep).collect();
         for d in u.canonical() {
@@ -344,7 +346,7 @@ mod tests {
     #[test]
     fn orbit_sizes_partition() {
         for d in 2..=3usize {
-            let u = bang(d);
+            let u = bang(d).unwrap();
             let order = (1usize << d) * (1..=d).product::<usize>();
             let total: usize = u.canonical().iter().map(|x| x.orbit_size).sum();
             assert_eq!(total, u.total);
@@ -355,7 +357,7 @@ mod tests {
     }
     #[test]
     fn degree_histogram_3d() {
-        let u = bang(3);
+        let u = bang(3).unwrap();
         let mut hist = std::collections::HashMap::new();
         for d in u.canonical() {
             *hist.entry(d.degree()).or_insert(0) += 1;
@@ -402,10 +404,24 @@ mod tests {
 
     #[test]
     fn names_and_anf() {
-        let u = bang(2);
-        assert_eq!(u.design(Code::from(0u64)).name(), "bang dim 2, code 0");
-        assert_eq!(u.design(Code::from(7u64)).name(), "bang dim 2, code 7");
+        let u = bang(2).unwrap();
+        assert_eq!(
+            u.design(Code::from(0u64)).name().unwrap(),
+            "bang dim 2, code 0"
+        );
+        assert_eq!(
+            u.design(Code::from(7u64)).name().unwrap(),
+            "bang dim 2, code 7"
+        );
         assert_eq!(u.design(Code::from(0u64)).anf(), "0");
         assert_eq!(u.design(Code::from(1u64)).anf(), "1+y+x+xy");
+    }
+
+    #[test]
+    fn refuses_a_dimension_outside_one_to_four() {
+        assert!(bang(0).is_err());
+        assert!(bang(5).is_err());
+        assert!(Universe::new(5).is_err());
+        assert_eq!(bang(2).unwrap().distinct(), 6);
     }
 }

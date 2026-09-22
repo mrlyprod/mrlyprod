@@ -75,7 +75,7 @@ mod tests {
             assert_eq!(h.sum(), v.sum());
             for x in 0..n {
                 for y in 0..n {
-                    assert_eq!(h.get(&[x, y]), v.get(&[y, x]));
+                    assert_eq!(h.get(&[x, y]).unwrap(), v.get(&[y, x]).unwrap());
                 }
             }
         }

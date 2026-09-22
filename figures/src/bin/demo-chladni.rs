@@ -51,21 +51,21 @@ struct Rule {
 }
 
 impl Rule {
-    fn new(mask: &[u8]) -> Rule {
-        let (kernel_re, kernel_im) = transform(&embed_kernel(mask, SPAN, SIZE), SIZE);
-        Rule {
+    fn new(mask: &[u8]) -> Result<Rule> {
+        let (kernel_re, kernel_im) = transform(&embed_kernel(mask, SPAN, SIZE)?, SIZE)?;
+        Ok(Rule {
             kernel_re,
             kernel_im,
             born: window(BIRTH.0, BIRTH.1),
             kept: window(SURVIVE.0, SURVIVE.1),
             field: vec![0.0; SIZE * SIZE],
-        }
+        })
     }
-    fn step(&mut self, types: &mut [u8]) {
+    fn step(&mut self, types: &mut [u8]) -> Result<()> {
         for (slot, &t) in self.field.iter_mut().zip(types.iter()) {
             *slot = f64::from(t.min(1));
         }
-        let sums = convolve_with(&self.field, &self.kernel_re, &self.kernel_im, SIZE);
+        let sums = convolve_with(&self.field, &self.kernel_re, &self.kernel_im, SIZE)?;
         for (slot, &sum) in types.iter_mut().zip(&sums) {
             let n = (sum.round().max(0.0) as usize).min(BUDGET);
             let lives = if *slot != 0 {
@@ -75,6 +75,7 @@ impl Rule {
             };
             *slot = u8::from(lives);
         }
+        Ok(())
     }
 }
 
@@ -85,14 +86,14 @@ fn main() -> Result<()> {
     assert_eq!(mask.shape, vec![SPAN, SPAN]);
     assert_eq!(BASE.pow(LEVEL as u32), SPAN);
     assert_eq!(mask.sum() as usize, BUDGET);
-    assert_eq!(mask.get(&[SPAN / 2, SPAN / 2]), 0);
-    let mut rule = Rule::new(mask.bytes());
+    assert_eq!(mask.get(&[SPAN / 2, SPAN / 2])?, 0);
+    let mut rule = Rule::new(mask.bytes()?)?;
     assert_eq!(counts(&rule.born), BORN);
     assert_eq!(counts(&rule.kept), KEPT);
 
     let mut types = soup(SEED, DENSITY);
     for _ in 0..STEPS {
-        rule.step(&mut types);
+        rule.step(&mut types)?;
     }
     let live = types.iter().filter(|&&t| t != 0).count();
     assert!(live > 0);
@@ -115,7 +116,7 @@ fn main() -> Result<()> {
     let mut stamped = 0usize;
     for row in 0..SPAN {
         for col in 0..SPAN {
-            if mask.get(&[row, col]) == 1 {
+            if mask.get(&[row, col])? == 1 {
                 let x = sx + col as f64 * STAMP;
                 let y = sy + row as f64 * STAMP;
                 board.rect(x, y, STAMP, STAMP, ink::yellow());

@@ -72,10 +72,13 @@ pub fn orientation(width: usize, height: usize) -> Result<Orientation> {
 ///
 /// ```
 /// use mrlyrs::math::six::{blank, Orientation};
-/// let hex = blank(2, Orientation::Horizontal, 1, 0);
+/// let hex = blank(2, Orientation::Horizontal, 1, 0).unwrap();
 /// assert_eq!(hex.types().shape, vec![4, 7]);
 /// ```
-pub fn blank(radius: usize, orient: Orientation, fill: u8, void: u8) -> Cell2d {
+pub fn blank(radius: usize, orient: Orientation, fill: u8, void: u8) -> Result<Cell2d> {
+    if radius == 0 {
+        return value_error("a hexagon needs a radius of at least one.");
+    }
     let n = radius;
     let (height, width) = match orient {
         Orientation::Horizontal => (2 * n, 4 * n - 1),
@@ -106,8 +109,8 @@ pub fn blank(radius: usize, orient: Orientation, fill: u8, void: u8) -> Cell2d {
         .unwrap() as usize;
         if p > 0 {
             for c in 0..p {
-                types.set(&[r, c], void);
-                types.set(&[r, width - 1 - c], void);
+                types.put(types.index(&[r, c]), i64::from(void));
+                types.put(types.index(&[r, width - 1 - c]), i64::from(void));
             }
         }
     }
@@ -128,13 +131,13 @@ pub fn pad(cell: &Cell6d, k: usize, value: u8) -> Result<Cell6d> {
         Orientation::Horizontal => inner.height() / 2,
         Orientation::Vertical => inner.width() / 2,
     };
-    let base = blank(n + k, orient, value, GRID);
+    let base = blank(n + k, orient, value, GRID)?;
     let (base_h, base_w) = (base.height(), base.width());
     let (tile_h, tile_w) = (inner.height(), inner.width());
     let y_off = (base_h - tile_h) / 2;
     let x_off = (base_w - tile_w) / 2;
     let mut front = inner.clone();
-    for v in front.cell.types.bytes_mut().iter_mut() {
+    for v in front.cell.types.bytes_mut()?.iter_mut() {
         if *v == GRID {
             *v = value;
         }
@@ -152,7 +155,7 @@ pub fn pad(cell: &Cell6d, k: usize, value: u8) -> Result<Cell6d> {
         .collect();
     Ok(Cell6d::new(
         Cell2d {
-            cell: remap(&backed(&front, &base, value), &map, &[base_h, base_w]),
+            cell: remap(&backed(&front, &base, value), &map, &[base_h, base_w])?,
         },
         cell.projection,
         orient,
@@ -173,25 +176,25 @@ pub fn iso(cell: &Cell3d) -> Result<Cell6d> {
     for z in 0..n {
         for y in 0..n {
             for x in 0..n {
-                if grid.get(&[x, y, z]) == 0 {
+                if grid.get(&[x, y, z])? == 0 {
                     continue;
                 }
                 let gx = x as isize - y as isize + (n as isize - 1);
                 let gy = x as isize + y as isize - 2 * z as isize + (2 * n as isize - 2);
                 if gx >= 0 && gx < width as isize - 1 && gy >= 0 && gy < height as isize - 2 {
                     let (gx, gy) = (gx as usize, gy as usize);
-                    types.set(&[gy, gx], UP);
-                    types.set(&[gy, gx + 1], UP);
-                    types.set(&[gy + 1, gx], LEFT);
-                    types.set(&[gy + 1, gx + 1], RIGHT);
-                    types.set(&[gy + 2, gx], LEFT);
-                    types.set(&[gy + 2, gx + 1], RIGHT);
+                    types.set(&[gy, gx], UP)?;
+                    types.set(&[gy, gx + 1], UP)?;
+                    types.set(&[gy + 1, gx], LEFT)?;
+                    types.set(&[gy + 1, gx + 1], RIGHT)?;
+                    types.set(&[gy + 2, gx], LEFT)?;
+                    types.set(&[gy + 2, gx + 1], RIGHT)?;
                 }
             }
         }
     }
     Ok(Cell6d::new(
-        Cell2d::new(types),
+        Cell2d::new(types)?,
         Projection::Iso,
         Orientation::Vertical,
         1,
@@ -209,7 +212,7 @@ pub fn pro(cell: &Cell3d) -> Result<Cell6d> {
     let height = 4 * n - 1;
     let mut types = Tensor::full(vec![height, width], GRID);
     let place = |x: usize, y: usize, z: usize, face: u8, types: &mut Tensor| {
-        let val = if grid.get(&[x, y, z]) == 1 {
+        let val = if grid.at(grid.index(&[x, y, z])) == 1 {
             FILL
         } else {
             VOID
@@ -220,16 +223,16 @@ pub fn pro(cell: &Cell3d) -> Result<Cell6d> {
             let (gx, gy) = (gx as usize, gy as usize);
             match face {
                 0 => {
-                    types.set(&[gy + 1, gx], val);
-                    types.set(&[gy + 2, gx], val);
+                    types.put(types.index(&[gy + 1, gx]), i64::from(val));
+                    types.put(types.index(&[gy + 2, gx]), i64::from(val));
                 }
                 1 => {
-                    types.set(&[gy + 1, gx + 1], val);
-                    types.set(&[gy + 2, gx + 1], val);
+                    types.put(types.index(&[gy + 1, gx + 1]), i64::from(val));
+                    types.put(types.index(&[gy + 2, gx + 1]), i64::from(val));
                 }
                 _ => {
-                    types.set(&[gy, gx], val);
-                    types.set(&[gy, gx + 1], val);
+                    types.put(types.index(&[gy, gx]), i64::from(val));
+                    types.put(types.index(&[gy, gx + 1]), i64::from(val));
                 }
             }
         }
@@ -253,7 +256,7 @@ pub fn pro(cell: &Cell3d) -> Result<Cell6d> {
         }
     }
     Ok(Cell6d::new(
-        Cell2d::new(types),
+        Cell2d::new(types)?,
         Projection::Pro,
         Orientation::Vertical,
         1,
@@ -281,13 +284,13 @@ pub fn cut(cell: &Cell3d) -> Result<Cell6d> {
         let mut row = Vec::new();
         for x in min_x..=max_x {
             let y = target - x;
-            row.push(grid.get(&[x, y, z]));
+            row.push(grid.get(&[x, y, z])?);
         }
         rows.push(row);
     }
     if rows.is_empty() {
         return Ok(Cell6d::new(
-            Cell2d::new(Tensor::new(vec![1, 1])),
+            Cell2d::new(Tensor::new(vec![1, 1]))?,
             Projection::Cut,
             Orientation::Horizontal,
             0,
@@ -299,11 +302,11 @@ pub fn cut(cell: &Cell3d) -> Result<Cell6d> {
     for (r, row) in rows.iter().enumerate() {
         let offset = (width - row.len()) / 2;
         for (c, &v) in row.iter().enumerate() {
-            types.set(&[r, c + offset], if v == 1 { FILL } else { VOID });
+            types.set(&[r, c + offset], if v == 1 { FILL } else { VOID })?;
         }
     }
     Ok(Cell6d::new(
-        Cell2d::new(types),
+        Cell2d::new(types)?,
         Projection::Cut,
         Orientation::Horizontal,
         0,
@@ -325,7 +328,7 @@ pub fn tessellate(cell: &Cell6d, mask: &Tensor) -> Result<Cell2d> {
     let mut positions = Vec::new();
     for r in 0..mask.shape[0] {
         for c in 0..mask.shape[1] {
-            if mask.get(&[r, c]) == 0 {
+            if mask.get(&[r, c])? == 0 {
                 continue;
             }
             let (mut px, mut py) = (c * dx, r * dy);
@@ -345,7 +348,7 @@ pub fn tessellate(cell: &Cell6d, mask: &Tensor) -> Result<Cell2d> {
         }
     }
     if positions.is_empty() {
-        return Ok(Cell2d::new(Tensor::new(vec![1, 1])));
+        return Cell2d::new(Tensor::new(vec![1, 1]));
     }
     let min_x = positions.iter().map(|p| p.0).min().unwrap();
     let min_y = positions.iter().map(|p| p.1).min().unwrap();
@@ -358,15 +361,15 @@ pub fn tessellate(cell: &Cell6d, mask: &Tensor) -> Result<Cell2d> {
         let (dest_x, dest_y) = (px - min_x, py - min_y);
         for y in 0..tile_h {
             for x in 0..tile_w {
-                if inner.types().get(&[y, x]) != GRID {
+                if inner.types().get(&[y, x])? != GRID {
                     map[(dest_y + y) * final_w + dest_x + x] = y * tile_w + x;
                 }
             }
         }
     }
-    let back = Cell2d::new(Tensor::full(vec![1, 1], GRID));
+    let back = Cell2d::new(Tensor::full(vec![1, 1], GRID))?;
     Ok(Cell2d {
-        cell: remap(&backed(inner, &back, 0), &map, &[final_h, final_w]),
+        cell: remap(&backed(inner, &back, 0), &map, &[final_h, final_w])?,
     })
 }
 
@@ -419,9 +422,10 @@ pub fn tile_cell(cell: &Cell6d, width: usize, height: usize, crop: bool) -> Resu
 /// The other two projections already speak in fills and voids and come back untouched.
 pub fn skin(cell: &Cell6d) -> Cell6d {
     let mut out = cell.clone();
-    for v in out.cell.cell.types.bytes_mut().iter_mut() {
-        if [UP, LEFT, RIGHT].contains(v) {
-            *v = FILL;
+    let types = &mut out.cell.cell.types;
+    for flat in 0..types.size() {
+        if [UP, LEFT, RIGHT].map(i64::from).contains(&types.at(flat)) {
+            types.put(flat, i64::from(FILL));
         }
     }
     out
@@ -430,38 +434,38 @@ pub fn skin(cell: &Cell6d) -> Cell6d {
 /// Backs a cell onto a backdrop whose longer axis matches its orientation, leaving every triangle where it stood.
 ///
 /// A renderer reads a sheet's orientation off its frame, so a tall sheet of wide hexagons would draw every triangle on its side; the spare columns or rows are backdrop and reach neither the census nor the picture.
-pub fn framed(cell: &Cell6d) -> Cell6d {
+pub fn framed(cell: &Cell6d) -> Result<Cell6d> {
     let (h, w) = (cell.height(), cell.width());
     let (width, height) = match cell.orientation {
         Orientation::Horizontal if w <= h => (h + 1, h),
         Orientation::Vertical if h <= w => (w, w + 1),
-        _ => return cell.clone(),
+        _ => return Ok(cell.clone()),
     };
     let mut types = Tensor::filled(vec![height, width], GRID as i64, cell.cell.types().dtype());
     for y in 0..h {
         for x in 0..w {
-            types.set(&[y, x], cell.cell.types().get(&[y, x]));
+            types.put(types.index(&[y, x]), cell.cell.types().at(y * w + x));
         }
     }
-    Cell6d::new(
-        Cell2d::new(types),
+    Ok(Cell6d::new(
+        Cell2d::new(types)?,
         cell.projection,
         cell.orientation,
         cell.start,
-    )
+    ))
 }
 
 fn crop(cell: &Cell2d, crop_x: usize, crop_y: usize) -> Result<Cell2d> {
     let (current_h, current_w) = (cell.height(), cell.width());
     if crop_y * 2 >= current_h || crop_x * 2 >= current_w {
-        return Ok(Cell2d::new(Tensor::new(vec![1, 1])));
+        return Cell2d::new(Tensor::new(vec![1, 1]));
     }
     let (new_h, new_w) = (current_h - 2 * crop_y, current_w - 2 * crop_x);
     let map: Vec<usize> = (0..new_h * new_w)
         .map(|flat| (flat / new_w + crop_y) * current_w + flat % new_w + crop_x)
         .collect();
     Ok(Cell2d {
-        cell: remap(&cell.cell, &map, &[new_h, new_w]),
+        cell: remap(&cell.cell, &map, &[new_h, new_w])?,
     })
 }
 
@@ -492,7 +496,7 @@ pub fn radial_mask(radius: usize, orient: Orientation) -> Tensor {
             let dq = q - c_q;
             let dr = r_axial - c_r;
             if (dq.abs() + dr.abs() + (dq + dr).abs()) / 2 < radius as isize {
-                mask.set(&[r, c], 1);
+                mask.put(mask.index(&[r, c]), 1);
             }
         }
     }
@@ -528,15 +532,15 @@ mod tests {
     use crate::math::three;
     #[test]
     fn blank_frames_both_orientations() {
-        let b = blank(2, Orientation::Horizontal, 1, 0);
+        let b = blank(2, Orientation::Horizontal, 1, 0).unwrap();
         assert_eq!(b.types().shape, vec![4, 7]);
         assert_eq!(
-            b.types().bytes(),
+            b.types().bytes().unwrap(),
             vec![
                 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0
             ]
         );
-        let v = blank(2, Orientation::Vertical, 1, 0);
+        let v = blank(2, Orientation::Vertical, 1, 0).unwrap();
         assert_eq!(v.types().shape, vec![7, 4]);
         assert!(is_hex(&b));
         assert!(is_hex(&v));
@@ -544,12 +548,12 @@ mod tests {
     #[test]
     fn radial_mask_is_the_hex_disc() {
         let m = radial_mask(2, Orientation::Horizontal);
-        assert_eq!(m.bytes(), vec![0, 1, 0, 1, 1, 1, 1, 1, 1]);
+        assert_eq!(m.bytes().unwrap(), vec![0, 1, 0, 1, 1, 1, 1, 1, 1]);
     }
     #[test]
     fn radial_crop_trims_the_overhang() {
         let hex = Cell6d::new(
-            blank(2, Orientation::Horizontal, FILL, GRID),
+            blank(2, Orientation::Horizontal, FILL, GRID).unwrap(),
             Projection::Cut,
             Orientation::Horizontal,
             0,
@@ -567,7 +571,12 @@ mod tests {
         let radius = 3;
         let rings = radius - 1;
         for orient in [Orientation::Horizontal, Orientation::Vertical] {
-            let hex = Cell6d::new(blank(2, orient, FILL, GRID), Projection::Cut, orient, 0);
+            let hex = Cell6d::new(
+                blank(2, orient, FILL, GRID).unwrap(),
+                Projection::Cut,
+                orient,
+                0,
+            );
             let (w, h) = (hex.width(), hex.height());
             let disc = radial(&hex, radius).unwrap();
             let cropped = radial_crop(&disc, radius, (w, h)).unwrap();
@@ -584,7 +593,7 @@ mod tests {
     fn tessellate_and_crop_carry_colors_and_tags() {
         let painted = crate::math::six::paint(
             Cell6d::new(
-                blank(2, Orientation::Horizontal, FILL, GRID),
+                blank(2, Orientation::Horizontal, FILL, GRID).unwrap(),
                 Projection::Cut,
                 Orientation::Horizontal,
                 0,
@@ -599,7 +608,13 @@ mod tests {
         let opaque = colors.iter().filter(|c| c[3] > 0).count();
         assert_eq!(
             opaque,
-            sheet.types().bytes().iter().filter(|&&v| v != GRID).count()
+            sheet
+                .types()
+                .bytes()
+                .unwrap()
+                .iter()
+                .filter(|&&v| v != GRID)
+                .count()
         );
         let cropped = tile_crop(&sheet, (painted.width(), painted.height())).unwrap();
         assert_eq!(
@@ -611,7 +626,7 @@ mod tests {
     fn pad_carries_colors_across_the_ring() {
         let painted = crate::math::six::paint(
             Cell6d::new(
-                blank(2, Orientation::Horizontal, FILL, VOID),
+                blank(2, Orientation::Horizontal, FILL, VOID).unwrap(),
                 Projection::Cut,
                 Orientation::Horizontal,
                 0,
@@ -642,7 +657,7 @@ mod tests {
             for crop in [false, true] {
                 let sheet = tile_cell(&hex, wide, high, crop).unwrap();
                 assert_eq!(sheet.orientation, Orientation::Horizontal);
-                let shown = framed(&sheet);
+                let shown = framed(&sheet).unwrap();
                 assert!(shown.width() > shown.height(), "{wide}x{high} {crop}");
                 assert_eq!(
                     orientation(shown.width(), shown.height()).unwrap(),
@@ -662,7 +677,7 @@ mod tests {
         let mut out = std::collections::BTreeSet::new();
         for y in 0..cell.height() {
             for x in 0..cell.width() {
-                if cell.cell.types().get(&[y, x]) == FILL {
+                if cell.cell.types().get(&[y, x]).unwrap() == FILL {
                     out.insert(crate::math::six::census::corners(
                         x as i64,
                         y as i64,
@@ -735,6 +750,7 @@ mod tests {
             .cell
             .types()
             .bytes()
+            .unwrap()
             .iter()
             .filter(|&&v| [UP, LEFT, RIGHT].contains(&v))
             .count();
@@ -751,13 +767,13 @@ mod tests {
     fn framed_leaves_a_sheet_that_already_points_right_alone() {
         let hex = crate::math::six::cut_design(Code(23), 3, 1, 2).unwrap();
         let wide = tile_cell(&hex, 5, 5, false).unwrap();
-        assert_eq!(framed(&wide).cell, wide.cell);
+        assert_eq!(framed(&wide).unwrap().cell, wide.cell);
         let tall = tile_cell(&hex, 3, 9, false).unwrap();
         assert!(tall.width() < tall.height());
-        assert_eq!(framed(&tall).height(), tall.height());
-        assert_eq!(framed(&tall).width(), tall.height() + 1);
+        assert_eq!(framed(&tall).unwrap().height(), tall.height());
+        assert_eq!(framed(&tall).unwrap().width(), tall.height() + 1);
         assert_eq!(
-            crate::math::six::census(&framed(&tall), false).fills,
+            crate::math::six::census(&framed(&tall).unwrap(), false).fills,
             crate::math::six::census(&tall, false).fills
         );
     }
@@ -772,6 +788,13 @@ mod tests {
         let q = cut(&c).unwrap();
         assert_eq!(q.orientation, Orientation::Horizontal);
         assert_eq!(q.start, 0);
-        assert!(iso(&three::Cell3d::new(Tensor::new(vec![2, 3, 2]))).is_err());
+        assert!(iso(&three::Cell3d::new(Tensor::new(vec![2, 3, 2])).unwrap()).is_err());
+    }
+
+    #[test]
+    fn refuses_a_zero_radius() {
+        assert!(blank(0, Orientation::Horizontal, FILL, VOID).is_err());
+        assert!(blank(0, Orientation::Vertical, FILL, VOID).is_err());
+        assert!(blank(1, Orientation::Horizontal, FILL, VOID).is_ok());
     }
 }

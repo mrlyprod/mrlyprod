@@ -1,3 +1,4 @@
+use crate::core::error::{overflow_error, value_error, Result};
 use crate::num::factor::{gcd, mobius_sieve};
 use crate::num::prime::primes;
 use std::f64::consts::PI;
@@ -108,17 +109,17 @@ pub fn harmonic(terms: usize) -> f64 {
     (1..=terms).map(|k| 1.0 / k as f64).sum()
 }
 
-/// Returns the zeta value above one: the partial sum closed by its Euler-Maclaurin tail.
-///
-/// Panics at an s of one or below, where the sum does not converge.
-pub fn zeta(s: f64, terms: usize) -> f64 {
-    assert!(s > 1.0, "zeta needs an s above one");
+/// Returns the zeta value above one, the partial sum closed by its Euler-Maclaurin tail, or an error at an s of one or below, where the sum does not converge.
+pub fn zeta(s: f64, terms: usize) -> Result<f64> {
+    if s <= 1.0 || s.is_nan() {
+        return value_error(format!("zeta needs an s above one, not {s}."));
+    }
     let mut sum = 0.0;
     for k in 1..=terms {
         sum += (k as f64).powf(-s);
     }
     let n = terms as f64;
-    sum + n.powf(1.0 - s) / (s - 1.0) - n.powf(-s) / 2.0 + s * n.powf(-s - 1.0) / 12.0
+    Ok(sum + n.powf(1.0 - s) / (s - 1.0) - n.powf(-s) / 2.0 + s * n.powf(-s - 1.0) / 12.0)
 }
 
 /// Returns the Euler product of zeta, one over one minus p to the minus s over the primes up to the limit.
@@ -142,8 +143,8 @@ pub fn beta(s: f64, terms: usize) -> f64 {
 }
 
 /// Returns the Dirichlet lambda value, one minus two to the minus s times zeta.
-pub fn lambda(s: f64, terms: usize) -> f64 {
-    (1.0 - 2f64.powf(-s)) * zeta(s, terms)
+pub fn lambda(s: f64, terms: usize) -> Result<f64> {
+    Ok((1.0 - 2f64.powf(-s)) * zeta(s, terms)?)
 }
 
 /// Returns the mod-eight rhythm of the number, the discriminant minus-eight character: one on one and three, minus one on five and seven, zero on the evens.
@@ -185,11 +186,13 @@ pub fn dirichlet(s: f64, rhythm: &[i8], terms: usize) -> f64 {
     sum
 }
 
-/// Counts the lattice points of the dimension-cube of the limit whose coordinates share no divisor, by Mobius inversion.
+/// Counts the lattice points of the dimension-cube of the limit whose coordinates share no divisor, by Mobius inversion, or an error at a zero dimension.
 ///
-/// Panics at a zero dimension, and wraps once the limit to the dimension passes a signed hundred and twenty-eight bits.
-pub fn visible(limit: usize, dimension: u32) -> u128 {
-    assert!(dimension > 0, "visible needs a dimension above zero");
+/// The count wraps once the limit to the dimension passes a signed hundred and twenty-eight bits.
+pub fn visible(limit: usize, dimension: u32) -> Result<u128> {
+    if dimension == 0 {
+        return value_error("a visible count needs a dimension above zero.");
+    }
     let mu = mobius_sieve(limit);
     let mut total: i128 = 0;
     for (k, &value) in mu.iter().enumerate().skip(1) {
@@ -199,7 +202,7 @@ pub fn visible(limit: usize, dimension: u32) -> u128 {
         let block = (limit / k) as i128;
         total += i128::from(value) * block.pow(dimension);
     }
-    total as u128
+    Ok(total as u128)
 }
 
 // THE PARTIALS THAT WALK TO A CONSTANT
@@ -303,11 +306,13 @@ fn binomial(n: usize, k: usize) -> i128 {
     out
 }
 
-/// Builds the first Bernoulli numbers as exact reduced fractions on the minus one half convention.
-///
-/// Panics past a count of thirty-two, where the exact fractions overflow a signed hundred and twenty-eight bits.
-pub fn bernoulli(count: usize) -> Vec<(i128, i128)> {
-    assert!(count <= 32, "the exact fractions overflow past thirty-two");
+/// Builds the first Bernoulli numbers as exact reduced fractions on the minus one half convention, or an error past a count of thirty-two, where the fractions overflow a signed hundred and twenty-eight bits.
+pub fn bernoulli(count: usize) -> Result<Vec<(i128, i128)>> {
+    if count > 32 {
+        return overflow_error(format!(
+            "the exact fractions overflow past thirty-two, not {count}."
+        ));
+    }
     let mut out: Vec<(i128, i128)> = Vec::with_capacity(count);
     for m in 0..count {
         if m == 0 {
@@ -321,7 +326,7 @@ pub fn bernoulli(count: usize) -> Vec<(i128, i128)> {
         }
         out.push(reduce(-sum.0, sum.1 * (m + 1) as i128));
     }
-    out
+    Ok(out)
 }
 
 #[cfg(test)]
@@ -368,9 +373,9 @@ mod tests {
 
     #[test]
     fn zeta_meets_the_basel_the_apery_and_the_quartic_sum() {
-        assert!((zeta(2.0, 10_000) - BASEL).abs() < 1e-9);
-        assert!((zeta(3.0, 10_000) - APERY).abs() < 1e-12);
-        assert!((zeta(4.0, 10_000) - PI.powi(4) / 90.0).abs() < 1e-9);
+        assert!((zeta(2.0, 10_000).unwrap() - BASEL).abs() < 1e-9);
+        assert!((zeta(3.0, 10_000).unwrap() - APERY).abs() < 1e-12);
+        assert!((zeta(4.0, 10_000).unwrap() - PI.powi(4) / 90.0).abs() < 1e-9);
     }
 
     #[test]
@@ -387,7 +392,7 @@ mod tests {
 
     #[test]
     fn half_lambda_is_the_grid_fluctuation_constant() {
-        assert!((0.5 * lambda(4.0, 10_000) - PI.powi(4) / 192.0).abs() < 1e-9);
+        assert!((0.5 * lambda(4.0, 10_000).unwrap() - PI.powi(4) / 192.0).abs() < 1e-9);
     }
 
     #[test]
@@ -405,16 +410,20 @@ mod tests {
     #[test]
     fn visible_counts_the_coprime_pairs_of_a_window() {
         for n in 1..=2_000 {
-            assert_eq!(visible(n, 2), u128::from(coprime_pairs(n)), "window {n}");
+            assert_eq!(
+                visible(n, 2).unwrap(),
+                u128::from(coprime_pairs(n)),
+                "window {n}"
+            );
         }
     }
 
     #[test]
     fn the_visible_density_is_one_over_zeta() {
-        let flat = visible(10_000, 2) as f64 / 1e8;
+        let flat = visible(10_000, 2).unwrap() as f64 / 1e8;
         assert!((flat - VISIBLE).abs() < 1e-3);
-        let cube = visible(1_000, 3) as f64 / 1e9;
-        assert!((cube - 1.0 / zeta(3.0, 100_000)).abs() < 1e-2);
+        let cube = visible(1_000, 3).unwrap() as f64 / 1e9;
+        assert!((cube - 1.0 / zeta(3.0, 100_000).unwrap()).abs() < 1e-2);
     }
 
     #[test]
@@ -425,7 +434,7 @@ mod tests {
 
     #[test]
     fn bernoulli_pins_the_known_fractions() {
-        let list = bernoulli(32);
+        let list = bernoulli(32).unwrap();
         assert_eq!(list[0], (1, 1));
         assert_eq!(list[1], (-1, 2));
         assert_eq!(list[2], (1, 6));
@@ -436,7 +445,7 @@ mod tests {
 
     #[test]
     fn every_odd_bernoulli_past_the_first_is_zero() {
-        for (index, &(num, den)) in bernoulli(32).iter().enumerate().skip(3) {
+        for (index, &(num, den)) in bernoulli(32).unwrap().iter().enumerate().skip(3) {
             if !index.is_multiple_of(2) {
                 assert_eq!((num, den), (0, 1), "index {index}");
             }
@@ -444,21 +453,23 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "visible needs a dimension above zero")]
-    fn visible_refuses_a_zero_dimension() {
-        let _ = visible(10, 0);
+    fn refuses_a_zero_dimension() {
+        assert!(visible(10, 0).is_err());
+        assert!(visible(10, 1).is_ok());
     }
 
     #[test]
-    #[should_panic(expected = "the exact fractions overflow past thirty-two")]
-    fn bernoulli_refuses_a_count_past_thirty_two() {
-        let _ = bernoulli(33);
+    fn refuses_a_count_past_thirty_two() {
+        assert!(bernoulli(33).is_err());
+        assert!(bernoulli(32).is_ok());
     }
 
     #[test]
-    #[should_panic(expected = "zeta needs an s above one")]
-    fn zeta_refuses_an_s_of_one() {
-        let _ = zeta(1.0, 10);
+    fn refuses_an_s_at_one_or_below() {
+        assert!(zeta(1.0, 10).is_err());
+        assert!(zeta(0.5, 10).is_err());
+        assert!(zeta(f64::NAN, 10).is_err());
+        assert!(zeta(1.5, 10).is_ok());
     }
 
     #[test]

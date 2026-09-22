@@ -1,14 +1,18 @@
-use crate::core::error::{value_error, Result};
+use crate::core::error::{overflow_error, value_error, Result};
 use crate::math::bang::factory::{code_to_corners, MagicLayer};
 use crate::math::bang::Code;
 
 /// The largest corner count the tally press accepts, keeping its table a million rows.
 pub const CORNERS: usize = 20;
 
-fn corner_count(dimension: usize, base: usize) -> usize {
+fn corner_count(dimension: usize, base: usize) -> Result<usize> {
     let count = base.pow(dimension as u32);
-    assert!(count < 128, "too many corners for a u128 code");
-    count
+    if count >= 128 {
+        return overflow_error(format!(
+            "dimension {dimension} base {base} has {count} corners, past the 127 a u128 code holds."
+        ));
+    }
+    Ok(count)
 }
 
 /// Returns the corner-usage mask of a number, one bit per digit vector its expansion uses.
@@ -17,11 +21,14 @@ fn corner_count(dimension: usize, base: usize) -> usize {
 /// residue corner of the design cube, and zero uses exactly the zero corner.
 ///
 /// ```
-/// assert_eq!(mrlyrs::math::press::usage(0, 2, 2).get(), 1);
-/// assert_eq!(mrlyrs::math::press::usage(6, 2, 2).get(), 0b0110);
+/// assert_eq!(mrlyrs::math::press::usage(0, 2, 2).unwrap().get(), 1);
+/// assert_eq!(mrlyrs::math::press::usage(6, 2, 2).unwrap().get(), 0b0110);
 /// ```
-pub fn usage(number: u128, dimension: usize, base: usize) -> Code {
-    let radix = corner_count(dimension, base) as u128;
+pub fn usage(number: u128, dimension: usize, base: usize) -> Result<Code> {
+    Ok(mask(number, corner_count(dimension, base)? as u128))
+}
+
+fn mask(number: u128, radix: u128) -> Code {
     if number == 0 {
         return Code(1);
     }
@@ -42,16 +49,16 @@ pub fn usage(number: u128, dimension: usize, base: usize) -> Code {
 ///
 /// ```
 /// use mrlyrs::math::bang::Code;
-/// let members: Vec<u128> = (0..30).filter(|&n| mrlyrs::math::press::member(Code::from(0b0111u64), n, 2, 2)).collect();
+/// let members: Vec<u128> = (0..30).filter(|&n| mrlyrs::math::press::member(Code::from(0b0111u64), n, 2, 2).unwrap()).collect();
 /// assert_eq!(members, vec![0, 1, 2, 4, 5, 6, 8, 9, 10, 16, 17, 18, 20, 21, 22, 24, 25, 26]);
 /// ```
-pub fn member(code: Code, number: u128, dimension: usize, base: usize) -> bool {
-    usage(number, dimension, base).get() & !code.get() == 0
+pub fn member(code: Code, number: u128, dimension: usize, base: usize) -> Result<bool> {
+    Ok(usage(number, dimension, base)?.get() & !code.get() == 0)
 }
 
 /// Returns the count of distinct digit vectors the number uses.
-pub fn distinct(number: u128, dimension: usize, base: usize) -> u32 {
-    usage(number, dimension, base).get().count_ones()
+pub fn distinct(number: u128, dimension: usize, base: usize) -> Result<u32> {
+    Ok(usage(number, dimension, base)?.get().count_ones())
 }
 
 /// Returns the number of designs of the dimension and base that contain the number.
@@ -61,19 +68,19 @@ pub fn distinct(number: u128, dimension: usize, base: usize) -> u32 {
 /// two to the distinct-vector count.
 ///
 /// ```
-/// assert_eq!(mrlyrs::math::press::containing(6, 2, 2), 4);
+/// assert_eq!(mrlyrs::math::press::containing(6, 2, 2).unwrap(), 4);
 /// ```
-pub fn containing(number: u128, dimension: usize, base: usize) -> u128 {
-    1 << (corner_count(dimension, base) as u32 - distinct(number, dimension, base))
+pub fn containing(number: u128, dimension: usize, base: usize) -> Result<u128> {
+    Ok(1 << (corner_count(dimension, base)? as u32 - distinct(number, dimension, base)?))
 }
 
 /// Splits a number into its dimension coordinates, one base digit peeled per axis in parallel.
 ///
 /// ```
-/// assert_eq!(mrlyrs::math::press::coordinates(6, 2, 2), vec![1, 2]);
+/// assert_eq!(mrlyrs::math::press::coordinates(6, 2, 2).unwrap(), vec![1, 2]);
 /// ```
-pub fn coordinates(number: u128, dimension: usize, base: usize) -> Vec<u128> {
-    let radix = corner_count(dimension, base) as u128;
+pub fn coordinates(number: u128, dimension: usize, base: usize) -> Result<Vec<u128>> {
+    let radix = corner_count(dimension, base)? as u128;
     let mut out = vec![0u128; dimension];
     let mut rest = number;
     let mut place: u128 = 1;
@@ -86,19 +93,18 @@ pub fn coordinates(number: u128, dimension: usize, base: usize) -> Vec<u128> {
         rest /= radix;
         place *= base as u128;
     }
-    out
+    Ok(out)
 }
 
 /// Weaves dimension coordinates back into their single interleaved number.
 ///
-/// Panics when the woven number passes a hundred and twenty-eight bits.
-pub fn interleave(coords: &[u128], base: usize) -> u128 {
-    assert!(
-        !coords.is_empty(),
-        "interleave needs at least one coordinate"
-    );
+/// Errors on no coordinate at all, and when the woven number passes a hundred and twenty-eight bits.
+pub fn interleave(coords: &[u128], base: usize) -> Result<u128> {
+    if coords.is_empty() {
+        return value_error("interleave needs at least one coordinate.");
+    }
     let dimension = coords.len();
-    let radix = corner_count(dimension, base) as u128;
+    let radix = corner_count(dimension, base)? as u128;
     let mut digits = Vec::new();
     let mut rest: Vec<u128> = coords.to_vec();
     while rest.iter().any(|&c| c > 0) {
@@ -111,12 +117,14 @@ pub fn interleave(coords: &[u128], base: usize) -> u128 {
     }
     let mut out: u128 = 0;
     for &corner in digits.iter().rev() {
-        out = out
-            .checked_mul(radix)
-            .and_then(|v| v.checked_add(corner))
-            .expect("the woven number passes a hundred and twenty-eight bits");
+        out = match out.checked_mul(radix).and_then(|v| v.checked_add(corner)) {
+            Some(value) => value,
+            None => {
+                return overflow_error("the woven number passes a hundred and twenty-eight bits.")
+            }
+        };
     }
-    out
+    Ok(out)
 }
 
 /// Returns the first members of a design in ascending order.
@@ -125,14 +133,14 @@ pub fn interleave(coords: &[u128], base: usize) -> u128 {
 ///
 /// ```
 /// use mrlyrs::math::bang::Code;
-/// assert_eq!(mrlyrs::math::press::members(Code::from(0b10u64), 1, 2, 5), vec![1, 3, 7, 15, 31]);
+/// assert_eq!(mrlyrs::math::press::members(Code::from(0b10u64), 1, 2, 5).unwrap(), vec![1, 3, 7, 15, 31]);
 /// ```
-pub fn members(code: Code, dimension: usize, base: usize, count: usize) -> Vec<u128> {
-    let radix = corner_count(dimension, base) as u128;
+pub fn members(code: Code, dimension: usize, base: usize, count: usize) -> Result<Vec<u128>> {
+    let radix = corner_count(dimension, base)? as u128;
     let allowed: Vec<u128> = (0..radix).filter(|&i| (code.get() >> i) & 1 == 1).collect();
     let mut out = Vec::with_capacity(count);
     if count == 0 || allowed.is_empty() {
-        return out;
+        return Ok(out);
     }
     if allowed[0] == 0 {
         out.push(0);
@@ -143,7 +151,7 @@ pub fn members(code: Code, dimension: usize, base: usize, count: usize) -> Vec<u
         if allowed[0] == 0 {
             slots[0] = 1;
             if allowed.len() == 1 {
-                return out;
+                return Ok(out);
             }
         }
         'level: loop {
@@ -162,11 +170,11 @@ pub fn members(code: Code, dimension: usize, base: usize, count: usize) -> Vec<u
                 }
             }
             if !fits {
-                return out;
+                return Ok(out);
             }
             out.push(value);
             if out.len() == count {
-                return out;
+                return Ok(out);
             }
             for place in (0..length).rev() {
                 slots[place] += 1;
@@ -179,23 +187,23 @@ pub fn members(code: Code, dimension: usize, base: usize, count: usize) -> Vec<u
         }
         length += 1;
         if radix.checked_pow(length as u32 - 1).is_none() {
-            return out;
+            return Ok(out);
         }
     }
-    out
+    Ok(out)
 }
 
 /// Counts the members of a design below the limit.
 ///
 /// ```
 /// use mrlyrs::math::bang::Code;
-/// assert_eq!(mrlyrs::math::press::count_below(Code::from(0b0111u64), 2, 2, 27), 18);
+/// assert_eq!(mrlyrs::math::press::count_below(Code::from(0b0111u64), 2, 2, 27).unwrap(), 18);
 /// ```
-pub fn count_below(code: Code, dimension: usize, base: usize, limit: u128) -> u128 {
-    let radix = corner_count(dimension, base) as u128;
+pub fn count_below(code: Code, dimension: usize, base: usize, limit: u128) -> Result<u128> {
+    let radix = corner_count(dimension, base)? as u128;
     let allowed: Vec<u128> = (0..radix).filter(|&i| (code.get() >> i) & 1 == 1).collect();
     if limit == 0 || allowed.is_empty() {
-        return 0;
+        return Ok(0);
     }
     let mut digits = Vec::new();
     let mut rest = limit;
@@ -223,7 +231,7 @@ pub fn count_below(code: Code, dimension: usize, base: usize, limit: u128) -> u1
             break;
         }
     }
-    total
+    Ok(total)
 }
 
 /// The tally press: one pass over the integers weighs every design of a universe at once.
@@ -241,25 +249,24 @@ pub struct Press {
 }
 
 impl Press {
-    /// Builds an empty press over every design of the dimension and base.
-    ///
-    /// Panics past twenty corners, where the bucket table leaves a million rows.
-    pub fn new(dimension: usize, base: usize) -> Press {
-        let corners = corner_count(dimension, base);
-        assert!(
-            corners <= CORNERS,
-            "the tally press holds at most twenty corners"
-        );
-        Press {
+    /// Builds an empty press over every design of the dimension and base, or an error past twenty corners, where the bucket table leaves a million rows.
+    pub fn new(dimension: usize, base: usize) -> Result<Press> {
+        let corners = corner_count(dimension, base)?;
+        if corners > CORNERS {
+            return value_error(format!(
+                "the tally press holds at most {CORNERS} corners, not {corners}."
+            ));
+        }
+        Ok(Press {
             dimension,
             base,
             corners,
             tallies: vec![0; 1 << corners],
-        }
+        })
     }
     /// Adds a weighted number to its usage bucket.
     pub fn add(&mut self, number: u128, weight: i128) {
-        self.tallies[usage(number, self.dimension, self.base).get() as usize] += weight;
+        self.tallies[mask(number, self.corners as u128).get() as usize] += weight;
     }
     /// Returns the total weight the design at a code has collected.
     pub fn total(&self, code: Code) -> i128 {
@@ -458,9 +465,9 @@ mod tests {
 
     #[test]
     fn usage_of_zero_is_the_zero_corner() {
-        assert_eq!(usage(0, 2, 2).get(), 1);
-        assert_eq!(usage(0, 1, 10).get(), 1);
-        assert_eq!(distinct(0, 2, 2), 1);
+        assert_eq!(usage(0, 2, 2).unwrap().get(), 1);
+        assert_eq!(usage(0, 1, 10).unwrap().get(), 1);
+        assert_eq!(distinct(0, 2, 2).unwrap(), 1);
     }
 
     #[test]
@@ -468,23 +475,28 @@ mod tests {
         let no_seven = Code(!(1u128 << 7) & ((1u128 << 10) - 1));
         for n in 0..10_000u128 {
             let digits_clean = !n.to_string().contains('7');
-            assert_eq!(member(no_seven, n, 1, 10), digits_clean, "{n}");
+            assert_eq!(member(no_seven, n, 1, 10).unwrap(), digits_clean, "{n}");
         }
     }
 
     #[test]
     fn members_of_the_repunit_design_are_the_mersenne_numbers() {
-        assert_eq!(members(Code(0b10), 1, 2, 6), vec![1, 3, 7, 15, 31, 63]);
+        assert_eq!(
+            members(Code(0b10), 1, 2, 6).unwrap(),
+            vec![1, 3, 7, 15, 31, 63]
+        );
     }
 
     #[test]
     fn members_walk_ascending_and_agree_with_membership() {
         for code in [Code(0b0111), Code(0b0110), Code(0b1001), Code(0b1111)] {
-            let list = members(code, 2, 2, 40);
+            let list = members(code, 2, 2, 40).unwrap();
             for pair in list.windows(2) {
                 assert!(pair[0] < pair[1]);
             }
-            let scanned: Vec<u128> = (0..200).filter(|&n| member(code, n, 2, 2)).collect();
+            let scanned: Vec<u128> = (0..200)
+                .filter(|&n| member(code, n, 2, 2).unwrap())
+                .collect();
             let shared = list.len().min(scanned.len());
             assert_eq!(list[..shared], scanned[..shared], "{code}");
         }
@@ -499,11 +511,15 @@ mod tests {
             Code(0b0001),
             Code(0b0000),
         ] {
-            let list = members(code, 2, 2, 60);
+            let list = members(code, 2, 2, 60).unwrap();
             for limit in 0..300u128 {
                 let walked = list.iter().filter(|&&m| m < limit).count() as u128;
                 if list.len() < 60 || walked < 60 {
-                    assert_eq!(count_below(code, 2, 2, limit), walked, "{code} {limit}");
+                    assert_eq!(
+                        count_below(code, 2, 2, limit).unwrap(),
+                        walked,
+                        "{code} {limit}"
+                    );
                 }
             }
         }
@@ -516,7 +532,7 @@ mod tests {
         for level in 1..6u32 {
             let boundary = 4u128.pow(level);
             let full: u128 = 1 + (k - 1) * (k.pow(level) - 1) / (k - 1);
-            assert_eq!(count_below(code, 2, 2, boundary), full);
+            assert_eq!(count_below(code, 2, 2, boundary).unwrap(), full);
         }
     }
 
@@ -527,10 +543,10 @@ mod tests {
             let tile = create(code, 2, 2, 2, level).unwrap();
             let side = 1u128 << level;
             for n in 0..4u128.pow(level as u32) {
-                let coords = coordinates(n, 2, 2);
+                let coords = coordinates(n, 2, 2).unwrap();
                 let flat = (coords[0] * side + coords[1]) as usize;
-                let filled = tile.bytes()[flat] == 1;
-                let padded = member(code, n, 2, 2)
+                let filled = tile.bytes().unwrap()[flat] == 1;
+                let padded = member(code, n, 2, 2).unwrap()
                     && (code.get() & 1 == 1 || n >= 4u128.pow(level as u32 - 1));
                 assert_eq!(padded, filled, "{code} {n}");
             }
@@ -540,9 +556,9 @@ mod tests {
     #[test]
     fn coordinates_and_interleave_round_trip() {
         for n in 0..5_000u128 {
-            assert_eq!(interleave(&coordinates(n, 2, 2), 2), n);
-            assert_eq!(interleave(&coordinates(n, 3, 2), 2), n);
-            assert_eq!(interleave(&coordinates(n, 2, 3), 3), n);
+            assert_eq!(interleave(&coordinates(n, 2, 2).unwrap(), 2).unwrap(), n);
+            assert_eq!(interleave(&coordinates(n, 3, 2).unwrap(), 2).unwrap(), n);
+            assert_eq!(interleave(&coordinates(n, 2, 3).unwrap(), 3).unwrap(), n);
         }
     }
 
@@ -550,23 +566,29 @@ mod tests {
     fn containing_counts_the_designs_that_hold_the_number() {
         for n in 0..500u128 {
             let direct = (0..16u128)
-                .filter(|&code| member(Code(code), n, 2, 2))
+                .filter(|&code| member(Code(code), n, 2, 2).unwrap())
                 .count();
-            assert_eq!(containing(n, 2, 2), direct as u128, "{n}");
+            assert_eq!(containing(n, 2, 2).unwrap(), direct as u128, "{n}");
         }
     }
 
     #[test]
     fn the_membership_average_over_all_designs_is_two_to_minus_distinct() {
         for n in 0..2_000u128 {
-            assert_eq!(containing(n, 2, 2), 1 << (4 - distinct(n, 2, 2)));
-            assert_eq!(containing(n, 3, 2), 1 << (8 - distinct(n, 3, 2)));
+            assert_eq!(
+                containing(n, 2, 2).unwrap(),
+                1 << (4 - distinct(n, 2, 2).unwrap())
+            );
+            assert_eq!(
+                containing(n, 3, 2).unwrap(),
+                1 << (8 - distinct(n, 3, 2).unwrap())
+            );
         }
     }
 
     #[test]
     fn the_press_totals_agree_with_direct_member_sums() {
-        let mut press = Press::new(2, 2);
+        let mut press = Press::new(2, 2).unwrap();
         let weights: Vec<i128> = (0..600).map(|n| (n as i128 % 7) - 3).collect();
         for (n, &w) in weights.iter().enumerate() {
             press.add(n as u128, w);
@@ -576,7 +598,7 @@ mod tests {
             let direct: i128 = weights
                 .iter()
                 .enumerate()
-                .filter(|(n, _)| member(Code(code), *n as u128, 2, 2))
+                .filter(|(n, _)| member(Code(code), *n as u128, 2, 2).unwrap())
                 .map(|(_, &w)| w)
                 .sum();
             assert_eq!(press.total(Code(code)), direct, "{code}");
@@ -589,7 +611,7 @@ mod tests {
         let layer = MagicLayer::new(Bang::new(7, 2, 2), 2);
         let word = vec![layer; 3];
         for n in 0..64u128 {
-            let padded = member(Code(7), n, 2, 2);
+            let padded = member(Code(7), n, 2, 2).unwrap();
             assert_eq!(word_member(&word, n).unwrap(), padded, "{n}");
         }
         assert_eq!(word_count(&word).unwrap(), 27);
@@ -618,7 +640,7 @@ mod tests {
                 y += (cell % s) * place;
                 place *= s;
             }
-            let filled = tensor.bytes()[(x * side + y) as usize] == 1;
+            let filled = tensor.bytes().unwrap()[(x * side + y) as usize] == 1;
             assert_eq!(word_member(&word, n).unwrap(), filled, "{n}");
             assert_eq!(list.contains(&n), filled, "{n}");
         }
@@ -633,7 +655,7 @@ mod tests {
         let tensor = crate::math::bang::factory::magic(&word).unwrap();
         let side = 15usize;
         let mut direct = vec![0u128; 2 * side - 1];
-        for (flat, &b) in tensor.bytes().iter().enumerate() {
+        for (flat, &b) in tensor.bytes().unwrap().iter().enumerate() {
             if b == 1 {
                 direct[flat / side + flat % side] += 1;
             }
@@ -651,13 +673,22 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "the tally press holds at most twenty corners")]
-    fn the_press_refuses_a_universe_past_twenty_corners() {
-        let _ = Press::new(5, 2);
+    fn refuses_a_universe_past_its_corners_and_an_empty_weave() {
+        assert!(Press::new(5, 2).is_err());
+        assert!(Press::new(7, 2).is_err());
+        assert!(usage(1, 7, 2).is_err());
+        assert!(member(Code(1), 1, 7, 2).is_err());
+        assert!(distinct(1, 7, 2).is_err());
+        assert!(containing(1, 7, 2).is_err());
+        assert!(coordinates(1, 7, 2).is_err());
+        assert!(members(Code(1), 7, 2, 1).is_err());
+        assert!(count_below(Code(1), 7, 2, 4).is_err());
+        assert!(interleave(&[], 2).is_err());
+        assert!(interleave(&[u128::MAX, u128::MAX], 2).is_err());
     }
 
     #[test]
-    fn a_word_refuses_mismatched_dimensions_and_numbers_past_its_domain() {
+    fn refuses_a_word_of_mismatched_dimensions_or_a_number_past_its_domain() {
         let plane = MagicLayer::new(Bang::new(7, 2, 2), 3);
         let cube = MagicLayer::new(Bang::new(23, 3, 2), 3);
         assert!(word_member(&[plane.clone(), cube], 0).is_err());

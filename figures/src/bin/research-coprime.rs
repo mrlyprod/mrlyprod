@@ -16,7 +16,7 @@ fn main() -> Result<()> {
     let mut lit = 0usize;
     for row in 0..side {
         for col in 0..side {
-            if types.get(&[row, col]) == 0 {
+            if types.get(&[row, col])? == 0 {
                 continue;
             }
             let x = (col + 1) as u128;

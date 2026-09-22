@@ -13,7 +13,10 @@ fn grid(types: &[u8], width: usize, height: usize) -> Result<Cell2d, Fault> {
             "the grid bytes do not match width times height.",
         ));
     }
-    Ok(Cell2d::new(Tensor::of(types.to_vec(), vec![height, width])))
+    Ok(Cell2d::new(Tensor::of(
+        types.to_vec(),
+        vec![height, width],
+    )?)?)
 }
 
 fn counts(list: &[u32]) -> Vec<usize> {
@@ -38,7 +41,7 @@ pub fn life_next(
     survive: &[u32],
     wrap: bool,
 ) -> Result<Vec<u8>, Fault> {
-    let mask = life::moore().types().clone();
+    let mask = life::moore()?.types().clone();
     let next = life::next_grid(
         &grid(types, width, height)?,
         &counts(birth),
@@ -46,7 +49,7 @@ pub fn life_next(
         &mask,
         boundary(wrap),
     )?;
-    Ok(next.types().bytes().to_vec())
+    Ok(next.types().bytes()?.to_vec())
 }
 
 /// Runs a seed until it fixes, loops or times out: the fate, the generation count and the loop length, as JSON.
@@ -63,7 +66,7 @@ pub fn life_run(
     let config = Config {
         boundary: boundary(wrap),
         max_generations,
-        ..Config::new(life::moore(), counts(birth), counts(survive))
+        ..Config::new(life::moore()?, counts(birth), counts(survive))
     };
     let run = life::animate(&grid(types, width, height)?, &config)?;
     Ok(json!({
@@ -102,7 +105,7 @@ fn mask_grid(mask: &[u8], width: usize, height: usize) -> Result<Tensor, Fault> 
             "the mask bytes do not match width times height.",
         ));
     }
-    Ok(Tensor::of(mask.to_vec(), vec![height, width]))
+    Ok(Tensor::of(mask.to_vec(), vec![height, width])?)
 }
 
 /// Builds the base-2 design mask a code names at an odd side grown to the given Kronecker level, its centre popped; dimension 1 gives a grid of height one.
@@ -113,7 +116,7 @@ pub fn life_mask(dimension: usize, code: &str, number: usize, level: usize) -> R
     Ok(Grid {
         width: width as u32,
         height: (mask.size() / width) as u32,
-        types: mask.bytes().to_vec(),
+        types: mask.bytes()?.to_vec(),
     })
 }
 
@@ -122,7 +125,7 @@ pub fn life_mask(dimension: usize, code: &str, number: usize, level: usize) -> R
 pub fn life_mask_index(mask: &[u8], width: usize, height: usize) -> Result<u32, Fault> {
     let grid = mask_grid(mask, width, height)?;
     let flat = if height == 1 {
-        Tensor::of(mask.to_vec(), vec![width])
+        Tensor::of(mask.to_vec(), vec![width])?
     } else {
         grid
     };
@@ -149,7 +152,7 @@ pub fn life_next_masked(
         &mask_grid(mask, mask_width, mask_height)?,
         boundary(wrap),
     )?;
-    Ok(next.types().bytes().to_vec())
+    Ok(next.types().bytes()?.to_vec())
 }
 
 /// Runs a seed on the given mask until it fixes, loops or times out: the fate, the generation count and the loop length, as JSON.
@@ -166,7 +169,7 @@ pub fn life_run_masked(
     wrap: bool,
     max_generations: usize,
 ) -> Result<String, Fault> {
-    let shape = Cell2d::new(mask_grid(mask, mask_width, mask_height)?);
+    let shape = Cell2d::new(mask_grid(mask, mask_width, mask_height)?)?;
     let config = Config {
         boundary: boundary(wrap),
         max_generations,

@@ -8,8 +8,8 @@ pub const WIDEST: usize = 1 << 18;
 fn histogram(tile: &Tensor) -> BTreeMap<usize, u128> {
     let shape = &tile.shape;
     let mut out = BTreeMap::new();
-    for (flat, &cell) in tile.bytes().iter().enumerate() {
-        if cell == 0 {
+    for flat in 0..tile.size() {
+        if tile.at(flat) == 0 {
             continue;
         }
         let mut rest = flat;
@@ -87,7 +87,7 @@ mod tests {
             let rendered = factory::create(code, 3, 2, 2, 3).unwrap();
             assert_eq!(counts.iter().sum::<u128>(), u128::from(rendered.sum()));
             let mut direct = vec![0u128; counts.len()];
-            for (flat, &cell) in rendered.bytes().iter().enumerate() {
+            for (flat, &cell) in rendered.bytes().unwrap().iter().enumerate() {
                 if cell != 0 {
                     direct[flat / 27 + flat % 27] += 1;
                 }

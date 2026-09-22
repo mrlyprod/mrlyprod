@@ -41,24 +41,24 @@ pub trait Named: Serialize + DeserializeOwned + Sized {
     fn to_id(&self) -> String {
         sha::short(self.to_json().as_bytes())
     }
-    /// Prints the kind as a path and the keys as a query string, lists comma-joined.
-    fn to_url(&self) -> String {
+    /// Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back.
+    fn to_url(&self) -> Result<String> {
         text::url(&self.to_json())
     }
     /// Reads a path and query string back into the value, or an error.
     fn from_url(text: &str) -> Result<Self> {
         Self::from_json(&text::url_to_json(text, Self::KIND, Self::LISTS)?)
     }
-    /// Prints the kind and the `key=value` pairs joined by underscores, lists in brackets.
-    fn to_file(&self) -> String {
+    /// Prints the kind and the `key=value` pairs joined by underscores, lists in brackets, or an error when the name does not read back.
+    fn to_file(&self) -> Result<String> {
         text::file(&self.to_json())
     }
     /// Reads a filename back into the value, or an error.
     fn from_file(text: &str) -> Result<Self> {
         Self::from_json(&text::file_to_json(text, Self::KIND)?)
     }
-    /// Prints the kind and the keys as a line of prose for pages.
-    fn to_mrly(&self) -> String {
+    /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
+    fn to_mrly(&self) -> Result<String> {
         text::mrly(&self.to_json(), Self::BARE)
     }
 }

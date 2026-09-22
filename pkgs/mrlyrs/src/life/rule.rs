@@ -10,13 +10,15 @@ fn is_false(flag: &bool) -> bool {
     !flag
 }
 
+fn sorted(mut list: Vec<usize>) -> Vec<usize> {
+    list.sort_unstable();
+    list.dedup();
+    list
+}
+
 fn fold(counts: Counts) -> Counts {
     match counts {
-        Counts::List(mut list) => {
-            list.sort_unstable();
-            list.dedup();
-            Counts::List(list)
-        }
+        Counts::List(list) => Counts::List(sorted(list)),
         drawn => drawn,
     }
 }
@@ -28,18 +30,15 @@ mod counts {
     use serde::{Deserializer, Serializer};
     use std::fmt;
 
-    pub fn spell(counts: &Counts) -> Option<String> {
-        let Counts::Drawn { seq, zeros, ones } = counts else {
-            return None;
-        };
+    fn word(seq: Source, zeros: bool, ones: bool) -> String {
         let mut out = seq.name();
-        if *zeros {
+        if zeros {
             out.push_str("_zeros");
         }
-        if *ones {
+        if ones {
             out.push_str("_ones");
         }
-        Some(out)
+        out
     }
 
     pub fn read(text: &str) -> Option<Counts> {
@@ -58,17 +57,16 @@ mod counts {
     pub fn serialize<S: Serializer>(counts: &Counts, serializer: S) -> Result<S::Ok, S::Error> {
         match counts {
             Counts::List(list) => {
-                let folded = super::fold(Counts::List(list.clone()));
-                let Counts::List(folded) = folded else {
-                    unreachable!()
-                };
+                let folded = super::sorted(list.clone());
                 let mut seq = serializer.serialize_seq(Some(folded.len()))?;
                 for n in folded {
                     seq.serialize_element(&n)?;
                 }
                 seq.end()
             }
-            drawn => serializer.serialize_str(&spell(drawn).expect("a drawn side spells")),
+            Counts::Drawn { seq, zeros, ones } => {
+                serializer.serialize_str(&word(*seq, *zeros, *ones))
+            }
         }
     }
 
@@ -174,8 +172,8 @@ mod tests {
 
     fn wide_mask(side: usize) -> Cell2d {
         let mut mask = Tensor::full(vec![side, side], 1);
-        mask.set(&[side / 2, side / 2], 0);
-        Cell2d::new(mask)
+        mask.set(&[side / 2, side / 2], 0).unwrap();
+        Cell2d::new(mask).unwrap()
     }
 
     #[test]
@@ -183,18 +181,21 @@ mod tests {
         let conway = Rule::new(vec![3], vec![2, 3], false);
         assert_eq!(conway.to_json(), CONWAY);
         assert_eq!(Rule::from_json(CONWAY).unwrap(), conway);
-        assert_eq!(conway.to_url(), "/rule?birth=3&survive=2,3");
-        assert_eq!(conway.to_file(), "rule_birth=[3]_survive=[2,3]");
-        assert_eq!(conway.to_mrly(), "rule birth [3], survive [2 3]");
-        assert_eq!(Rule::from_url(&conway.to_url()).unwrap(), conway);
-        assert_eq!(Rule::from_file(&conway.to_file()).unwrap(), conway);
+        assert_eq!(conway.to_url().unwrap(), "/rule?birth=3&survive=2,3");
+        assert_eq!(conway.to_file().unwrap(), "rule_birth=[3]_survive=[2,3]");
+        assert_eq!(conway.to_mrly().unwrap(), "rule birth [3], survive [2 3]");
+        assert_eq!(Rule::from_url(&conway.to_url().unwrap()).unwrap(), conway);
+        assert_eq!(Rule::from_file(&conway.to_file().unwrap()).unwrap(), conway);
         assert_eq!(conway.to_id().len(), 8);
         let wrapped = Rule::new(vec![3], vec![2, 3], true);
         assert_eq!(
             wrapped.to_json(),
             r#"{"kind":"rule","birth":[3],"survive":[2,3],"wrap":true}"#
         );
-        assert_eq!(wrapped.to_mrly(), "rule birth [3], survive [2 3], wrap");
+        assert_eq!(
+            wrapped.to_mrly().unwrap(),
+            "rule birth [3], survive [2 3], wrap"
+        );
         assert_ne!(wrapped.to_id(), conway.to_id());
     }
     #[test]
@@ -208,19 +209,19 @@ mod tests {
         assert_eq!(wide.to_json(), text);
         assert_eq!(Rule::from_json(text).unwrap(), wide);
         assert_eq!(
-            wide.to_url(),
+            wide.to_url().unwrap(),
             "/rule?birth=12,13&survive=fibonacci&wrap=true"
         );
         assert_eq!(
-            wide.to_file(),
+            wide.to_file().unwrap(),
             "rule_birth=[12,13]_survive=fibonacci_wrap=true"
         );
         assert_eq!(
-            wide.to_mrly(),
+            wide.to_mrly().unwrap(),
             "rule birth [12 13], survive fibonacci, wrap"
         );
-        assert_eq!(Rule::from_url(&wide.to_url()).unwrap(), wide);
-        assert_eq!(Rule::from_file(&wide.to_file()).unwrap(), wide);
+        assert_eq!(Rule::from_url(&wide.to_url().unwrap()).unwrap(), wide);
+        assert_eq!(Rule::from_file(&wide.to_file().unwrap()).unwrap(), wide);
     }
     #[test]
     fn to_json_folds_to_the_canonical_counts() {
@@ -273,7 +274,7 @@ mod tests {
             r#"{"kind":"rule","birth":[3,12],"survive":[2,3,48],"wrap":true}"#
         );
         assert_eq!(Rule::from_json(&rule.to_json()).unwrap(), rule);
-        let mut config = Config::new(moore(), vec![3], vec![2, 3]);
+        let mut config = Config::new(moore().unwrap(), vec![3], vec![2, 3]);
         config.survive = Counts::List(vec![48]);
         assert_eq!(Rule::of(&config).survive, Counts::List(vec![48]));
     }
@@ -301,8 +302,8 @@ mod tests {
             r#"{"kind":"rule","birth":"fibonacci_ones","survive":"grid_squares","wrap":true}"#
         );
         assert_eq!(Rule::from_json(&rule.to_json()).unwrap(), rule);
-        assert_eq!(Rule::from_url(&rule.to_url()).unwrap(), rule);
-        assert_eq!(Rule::from_file(&rule.to_file()).unwrap(), rule);
+        assert_eq!(Rule::from_url(&rule.to_url().unwrap()).unwrap(), rule);
+        assert_eq!(Rule::from_file(&rule.to_file().unwrap()).unwrap(), rule);
         let seeded = Rule::new(
             Counts::drawn(Source::Random(4848495), true, false),
             vec![3],
@@ -313,9 +314,9 @@ mod tests {
             r#"{"kind":"rule","birth":"random_4848495_zeros","survive":[3]}"#
         );
         assert_eq!(Rule::from_json(&seeded.to_json()).unwrap(), seeded);
-        assert_eq!(Rule::from_file(&seeded.to_file()).unwrap(), seeded);
+        assert_eq!(Rule::from_file(&seeded.to_file().unwrap()).unwrap(), seeded);
         assert_eq!(
-            seeded.to_file(),
+            seeded.to_file().unwrap(),
             "rule_birth=random_4848495_zeros_survive=[3]"
         );
     }
@@ -335,9 +336,9 @@ mod tests {
         assert!(survive.iter().any(|&n| n > 9), "{survive:?}");
         let mut seed = Tensor::new(vec![15, 15]);
         for (y, x) in [(6, 7), (7, 6), (7, 7), (7, 8), (8, 7)] {
-            seed.set(&[y, x], 1);
+            seed.set(&[y, x], 1).unwrap();
         }
-        let seed = Cell2d::new(seed);
+        let seed = Cell2d::new(seed).unwrap();
         let back = Rule::from_json(&Rule::of(&config).to_json()).unwrap();
         assert_eq!(back, rule);
         let mut replay = back.config(mask);
@@ -352,7 +353,7 @@ mod tests {
     }
     #[test]
     fn the_moore_budget_stays_in_the_digits() {
-        let config = Rule::new(vec![3], vec![2, 3], false).config(moore());
+        let config = Rule::new(vec![3], vec![2, 3], false).config(moore().unwrap());
         assert_eq!(config.budget(), 8);
     }
     #[test]
@@ -376,8 +377,8 @@ mod tests {
             );
             assert_eq!(back.wrap, rule.wrap);
             assert_eq!(back.to_json(), text);
-            assert_eq!(Rule::from_url(&rule.to_url()).unwrap(), rule);
-            assert_eq!(Rule::from_file(&rule.to_file()).unwrap(), rule);
+            assert_eq!(Rule::from_url(&rule.to_url().unwrap()).unwrap(), rule);
+            assert_eq!(Rule::from_file(&rule.to_file().unwrap()).unwrap(), rule);
         }
     }
     #[test]
@@ -388,14 +389,22 @@ mod tests {
             let pick = |rng: &mut Rng| match rng.below(3) {
                 0 => Source::Random(rng.range(0, i64::MAX) as u64),
                 1 => Source::CodeFills(rng.below(16) as u128),
-                _ => *rng.choice(&pool),
+                _ => *rng.choice(&pool).unwrap(),
             };
             let side = |rng: &mut Rng| Counts::drawn(pick(rng), rng.boolean(), rng.boolean());
             let rule = Rule::new(side(&mut rng), side(&mut rng), false);
             let text = rule.to_json();
             assert_eq!(Rule::from_json(&text).unwrap(), rule, "{text}");
-            assert_eq!(Rule::from_url(&rule.to_url()).unwrap(), rule, "{text}");
-            assert_eq!(Rule::from_file(&rule.to_file()).unwrap(), rule, "{text}");
+            assert_eq!(
+                Rule::from_url(&rule.to_url().unwrap()).unwrap(),
+                rule,
+                "{text}"
+            );
+            assert_eq!(
+                Rule::from_file(&rule.to_file().unwrap()).unwrap(),
+                rule,
+                "{text}"
+            );
         }
     }
 }

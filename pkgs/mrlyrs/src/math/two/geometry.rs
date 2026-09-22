@@ -68,7 +68,7 @@ pub fn merge(cells: &[Cell2d], width: usize, height: usize) -> Result<Cell2d> {
         }
     }
     Ok(Cell2d {
-        cell: remap(&stacked(cells), &map, &shape),
+        cell: remap(&stacked(cells), &map, &shape)?,
     })
 }
 
@@ -77,14 +77,14 @@ pub fn special(mask: &Tensor, cell: &Cell2d) -> Result<Cell2d> {
     if mask.shape.len() != 2 {
         return value_error("special mask must be 2d.");
     }
-    if mask.bytes().iter().any(|&v| v > 3) {
+    if mask.bytes()?.iter().any(|&v| v > 3) {
         return value_error("Invalid rotation value. Must be 0, 1, 2, or 3.");
     }
     let rotated: Vec<Cell2d> = mask
-        .bytes()
+        .bytes()?
         .iter()
         .map(|&k| cell.clone().rotate(k as usize))
-        .collect();
+        .collect::<Result<_>>()?;
     merge(&rotated, mask.shape[1], mask.shape[0])
 }
 
@@ -108,18 +108,18 @@ mod tests {
     #[test]
     fn special_rotations_preserve_sum() {
         let tree = designs::htree(3, 1).unwrap();
-        let mask = Tensor::of(vec![0, 1, 3, 2], vec![2, 2]);
+        let mask = Tensor::of(vec![0, 1, 3, 2], vec![2, 2]).unwrap();
         let s = special(&mask, &tree).unwrap();
         assert_eq!(s.width(), 6);
         assert_eq!(s.types().sum(), 4 * tree.types().sum());
-        assert!(special(&Tensor::of(vec![4], vec![1, 1]), &tree).is_err());
+        assert!(special(&Tensor::of(vec![4], vec![1, 1]).unwrap(), &tree).is_err());
     }
     #[test]
     fn special_identity_mask_is_tile() {
         let c = designs::carpet(3, 1).unwrap();
         let mask = Tensor::new(vec![2, 3]);
         let s = special(&mask, &c).unwrap();
-        assert_eq!(s, c.clone().tile(3, 2));
+        assert_eq!(s, c.clone().tile(3, 2).unwrap());
     }
     #[test]
     fn merge_carries_colors_and_tags() {

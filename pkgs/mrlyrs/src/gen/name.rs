@@ -28,12 +28,23 @@ pub fn classic_code(design: Design) -> Option<u128> {
         .map(|&(_, code)| code)
 }
 
-fn code_of(source: Source) -> u128 {
+fn code_of(source: Source) -> Result<u128> {
     match source {
-        Source::Classic(design) => {
-            classic_code(design).expect("a 3d-only design has no code in the plane")
-        }
-        Source::Code(code) => code,
+        Source::Classic(design) => match classic_code(design) {
+            Some(code) => Ok(code),
+            None => value_error(format!(
+                "design {} has no code in the plane.",
+                design.name()
+            )),
+        },
+        Source::Code(code) => Ok(code),
+    }
+}
+
+fn slot<T: Copy>(values: &[T], what: &str) -> Result<T> {
+    match values.first() {
+        Some(&value) => Ok(value),
+        None => value_error(format!("a recipe with no {what} has no name.")),
     }
 }
 
@@ -95,7 +106,7 @@ impl Default for Slots {
 /// use mrlyrs::math::name::Named;
 /// let carpet = Tile::from_json(r#"{"kind":"tile","code":7,"side":3,"level":2}"#).unwrap();
 /// assert_eq!(carpet.recipe().unwrap().width, 9);
-/// assert_eq!(Tile::of(&carpet.recipe().unwrap()), carpet);
+/// assert_eq!(Tile::of(&carpet.recipe().unwrap()).unwrap(), carpet);
 /// ```
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -165,19 +176,25 @@ fn plane(code: u128) -> Result<u128> {
 }
 
 impl Tile {
-    /// Folds a recipe to its name.
-    pub fn of(recipe: &Recipe) -> Tile {
-        let codes: Vec<u128> = recipe.sources.iter().map(|&s| code_of(s)).collect();
+    /// Folds a recipe to its name, or an error when the recipe has no name to fold to.
+    pub fn of(recipe: &Recipe) -> Result<Tile> {
+        let codes = recipe
+            .sources
+            .iter()
+            .map(|&s| code_of(s))
+            .collect::<Result<Vec<u128>>>()?;
         let mut name = blank();
         name.invert = recipe.invert;
         match recipe.group {
             Group::General | Group::Fractal => {
-                name.code = Some(codes[0]);
-                name.side = Slots::One(recipe.numbers[0]);
-                name.level = (recipe.group == Group::Fractal && recipe.levels[0] != 1)
-                    .then_some(recipe.levels[0]);
-                name.turn = Slots::One(recipe.rotations[0] % 4);
-                name.invert = recipe.anti[0] ^ recipe.invert;
+                name.code = Some(slot(&codes, "source")?);
+                name.side = Slots::One(slot(&recipe.numbers, "number")?);
+                if recipe.group == Group::Fractal {
+                    let level = slot(&recipe.levels, "level")?;
+                    name.level = (level != 1).then_some(level);
+                }
+                name.turn = Slots::One(slot(&recipe.rotations, "rotation")? % 4);
+                name.invert = slot(&recipe.anti, "anti flag")? ^ recipe.invert;
             }
             Group::Magic => {
                 name.magic = codes;
@@ -186,21 +203,21 @@ impl Tile {
                 name.anti = recipe.anti.clone();
             }
             Group::Special => {
-                name.special = Some(codes[0]);
+                name.special = Some(slot(&codes, "source")?);
                 name.factor = Some(recipe.factor);
-                name.side = Slots::One(recipe.numbers[0]);
-                name.turn = Slots::One(recipe.rotations[0] % 4);
+                name.side = Slots::One(slot(&recipe.numbers, "number")?);
+                name.turn = Slots::One(slot(&recipe.rotations, "rotation")? % 4);
                 name.flip = recipe.flip;
             }
             Group::Mosaic => {
                 name.mosaic = codes;
                 name.factor = Some(recipe.factor);
-                name.side = Slots::One(recipe.numbers[0]);
+                name.side = Slots::One(slot(&recipe.numbers, "number")?);
                 name.turn = turns(recipe);
                 name.anti = recipe.anti.clone();
             }
         }
-        name.fold()
+        Ok(name.fold())
     }
     fn fold(mut self) -> Tile {
         if self.turn.is_still() {
@@ -329,7 +346,7 @@ impl Named for Tile {
     const KIND: &'static str = "tile";
     const LISTS: &'static [&'static str] = &["magic", "mosaic", "anti"];
     fn checked(self) -> Result<Tile> {
-        Ok(Tile::of(&self.recipe()?))
+        Tile::of(&self.recipe()?)
     }
 }
 
@@ -384,7 +401,10 @@ mod tests {
     }
     #[test]
     fn example_names_hold_verbatim() {
-        assert_eq!(Tile::of(&fractal(Design::Carpet)).to_json(), CARPET);
+        assert_eq!(
+            Tile::of(&fractal(Design::Carpet)).unwrap().to_json(),
+            CARPET
+        );
         let mut general = Recipe::new(Group::General);
         general.sources = vec![Source::Code(3)];
         general.numbers = vec![5];
@@ -393,7 +413,7 @@ mod tests {
         general.anti = vec![false];
         general.invert = true;
         general.resize();
-        assert_eq!(Tile::of(&general).to_json(), GENERAL);
+        assert_eq!(Tile::of(&general).unwrap().to_json(), GENERAL);
         let mut magic = Recipe::new(Group::Magic);
         magic.sources = vec![Source::Classic(Design::Carpet), Source::Code(14)];
         magic.numbers = vec![3, 5];
@@ -402,7 +422,7 @@ mod tests {
         magic.anti = vec![false, true];
         magic.invert = true;
         magic.resize();
-        assert_eq!(Tile::of(&magic).to_json(), MAGIC);
+        assert_eq!(Tile::of(&magic).unwrap().to_json(), MAGIC);
         let mut special = Recipe::new(Group::Special);
         special.sources = vec![Source::Classic(Design::Vtree)];
         special.factor = 3;
@@ -412,7 +432,7 @@ mod tests {
         special.anti = vec![true];
         special.flip = true;
         special.resize();
-        assert_eq!(Tile::of(&special).to_json(), SPECIAL);
+        assert_eq!(Tile::of(&special).unwrap().to_json(), SPECIAL);
         let mut mosaic = Recipe::new(Group::Mosaic);
         mosaic.sources = vec![Source::Code(7), Source::Code(14), Source::Code(5)];
         mosaic.factor = 3;
@@ -422,29 +442,29 @@ mod tests {
         mosaic.anti = vec![false, false, true];
         mosaic.invert = true;
         mosaic.resize();
-        assert_eq!(Tile::of(&mosaic).to_json(), MOSAIC);
+        assert_eq!(Tile::of(&mosaic).unwrap().to_json(), MOSAIC);
     }
     #[test]
     fn the_views_hold_verbatim() {
         let magic = Tile::from_json(MAGIC).unwrap();
         assert_eq!(
-            magic.to_url(),
+            magic.to_url().unwrap(),
             "/tile?magic=7,14&side=3,5&turn=0,2&anti=false,true&invert=true"
         );
         assert_eq!(
-            magic.to_file(),
+            magic.to_file().unwrap(),
             "tile_magic=[7,14]_side=[3,5]_turn=[0,2]_anti=[false,true]_invert=true"
         );
         assert_eq!(
-            magic.to_mrly(),
+            magic.to_mrly().unwrap(),
             "tile magic [7 14], side [3 5], turn [0 2], anti [false true], invert"
         );
         let carpet = Tile::from_json(CARPET).unwrap();
-        assert_eq!(carpet.to_url(), "/tile?code=7&side=3&level=2");
-        assert_eq!(carpet.to_file(), "tile_code=7_side=3_level=2");
-        assert_eq!(carpet.to_mrly(), "tile code 7, side 3, level 2");
+        assert_eq!(carpet.to_url().unwrap(), "/tile?code=7&side=3&level=2");
+        assert_eq!(carpet.to_file().unwrap(), "tile_code=7_side=3_level=2");
+        assert_eq!(carpet.to_mrly().unwrap(), "tile code 7, side 3, level 2");
         assert_eq!(
-            Tile::from_json(SPECIAL).unwrap().to_mrly(),
+            Tile::from_json(SPECIAL).unwrap().to_mrly().unwrap(),
             "tile special 5, factor 3, side 5, flip"
         );
     }
@@ -453,10 +473,18 @@ mod tests {
         for name in [CARPET, GENERAL, MAGIC, SPECIAL, MOSAIC] {
             let tile = Tile::from_json(name).unwrap();
             let recipe = tile.recipe().unwrap();
-            assert_eq!(recipe.check(), Ok(()));
+            assert!(recipe.check().is_ok());
             assert_eq!(tile.to_json(), name);
-            assert_eq!(Tile::from_url(&tile.to_url()).unwrap(), tile, "{name}");
-            assert_eq!(Tile::from_file(&tile.to_file()).unwrap(), tile, "{name}");
+            assert_eq!(
+                Tile::from_url(&tile.to_url().unwrap()).unwrap(),
+                tile,
+                "{name}"
+            );
+            assert_eq!(
+                Tile::from_file(&tile.to_file().unwrap()).unwrap(),
+                tile,
+                "{name}"
+            );
             let cell = built(&recipe);
             assert_eq!(cell.width(), recipe.width);
         }
@@ -466,7 +494,7 @@ mod tests {
         let mut flat = fractal(Design::Carpet);
         flat.levels = vec![1];
         flat.resize();
-        let name = Tile::of(&flat);
+        let name = Tile::of(&flat).unwrap();
         assert_eq!(name.to_json(), r#"{"kind":"tile","code":7,"side":3}"#);
         let spelt = Tile::from_json(r#"{"kind":"tile","code":7,"side":3,"level":1}"#).unwrap();
         assert_eq!(spelt, name);
@@ -480,16 +508,16 @@ mod tests {
         let mut folded = plain.clone();
         folded.anti = vec![true];
         folded.invert = true;
-        assert_eq!(Tile::of(&plain), Tile::of(&folded));
+        assert_eq!(Tile::of(&plain).unwrap(), Tile::of(&folded).unwrap());
         assert_eq!(built(&plain), built(&folded));
         plain.invert = true;
         let mut alias = plain.clone();
         alias.anti = vec![true];
         alias.invert = false;
-        assert_eq!(Tile::of(&plain), Tile::of(&alias));
+        assert_eq!(Tile::of(&plain).unwrap(), Tile::of(&alias).unwrap());
         assert_eq!(built(&plain), built(&alias));
         assert_eq!(
-            Tile::of(&plain).to_json(),
+            Tile::of(&plain).unwrap().to_json(),
             r#"{"kind":"tile","code":7,"side":3,"level":2,"invert":true}"#
         );
     }
@@ -498,7 +526,7 @@ mod tests {
         let by_classic = fractal(Design::Net);
         let mut by_code = by_classic.clone();
         by_code.sources = vec![Source::Code(14)];
-        assert_eq!(Tile::of(&by_classic), Tile::of(&by_code));
+        assert_eq!(Tile::of(&by_classic).unwrap(), Tile::of(&by_code).unwrap());
         assert_eq!(built(&by_classic), built(&by_code));
     }
     #[test]
@@ -511,7 +539,7 @@ mod tests {
         special.rotations = vec![0];
         special.anti = vec![true];
         special.resize();
-        let parsed = Tile::from_json(&Tile::of(&special).to_json())
+        let parsed = Tile::from_json(&Tile::of(&special).unwrap().to_json())
             .unwrap()
             .recipe()
             .unwrap();
@@ -530,7 +558,7 @@ mod tests {
         assert!(tile.anti.is_empty());
     }
     #[test]
-    fn only_a_tile_that_draws_parses() {
+    fn refuses_a_name_or_a_recipe_that_cannot_draw() {
         for bad in [
             r#"{"kind":"tile","code":7,"side":3,"turn":4}"#,
             r#"{"kind":"tile","code":16,"side":3}"#,
@@ -558,6 +586,11 @@ mod tests {
         ] {
             assert!(Tile::from_json(bad).is_err(), "{bad}");
         }
+        assert!(Tile::of(&Recipe::new(Group::General)).is_err());
+        let mut cubic = fractal(Design::Xtree);
+        cubic.resize();
+        assert!(classic_code(Design::Xtree).is_none());
+        assert!(Tile::of(&cubic).is_err());
     }
     #[test]
     fn seeded_tiles_round_trip() {
@@ -571,14 +604,22 @@ mod tests {
         for s in 0..300 {
             let mut rng = Rng::new(s);
             let recipe = create_2d(&config, &mut rng).unwrap();
-            let name = Tile::of(&recipe);
+            let name = Tile::of(&recipe).unwrap();
             let text = name.to_json();
             let parsed = Tile::from_json(&text).unwrap();
             assert_eq!(parsed.to_json(), text, "seed {s}");
-            assert_eq!(Tile::from_url(&name.to_url()).unwrap(), name, "seed {s}");
-            assert_eq!(Tile::from_file(&name.to_file()).unwrap(), name, "seed {s}");
+            assert_eq!(
+                Tile::from_url(&name.to_url().unwrap()).unwrap(),
+                name,
+                "seed {s}"
+            );
+            assert_eq!(
+                Tile::from_file(&name.to_file().unwrap()).unwrap(),
+                name,
+                "seed {s}"
+            );
             let back = parsed.recipe().unwrap();
-            assert_eq!(back.check(), Ok(()), "seed {s}");
+            assert!(back.check().is_ok(), "seed {s}");
             assert_eq!(built(&back), built(&recipe), "seed {s}");
         }
     }
@@ -593,7 +634,7 @@ mod tests {
         for s in 0..300 {
             let mut rng = Rng::new(s);
             let recipe = create_2d(&config, &mut rng).unwrap();
-            let text = Tile::of(&recipe).to_json();
+            let text = Tile::of(&recipe).unwrap().to_json();
             let parsed = Tile::from_json(&text).unwrap();
             assert_eq!(parsed.to_json(), text, "seed {s}");
             assert_eq!(built(&parsed.recipe().unwrap()), built(&recipe), "seed {s}");

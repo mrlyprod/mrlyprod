@@ -1,4 +1,4 @@
-use super::error::{value_error, Result};
+use super::error::{overflow_error, shape_error, value_error, Result};
 
 /// The way a resampling weighs the source pixels it reads.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -60,8 +60,11 @@ pub fn resample(
     if width == 0 || height == 0 || out_w == 0 || out_h == 0 {
         return value_error("resample sides must be at least 1.");
     }
-    if pixels.len() != width * height {
+    if Some(pixels.len()) != width.checked_mul(height) {
         return value_error("pixels length must equal width * height.");
+    }
+    if out_w.checked_mul(out_h).is_none() {
+        return overflow_error("resample output size overflows usize.");
     }
     if (out_w, out_h) == (width, height) {
         return Ok(pixels.to_vec());
@@ -73,17 +76,26 @@ pub fn resample(
     })
 }
 
-/// Draws every source element as a scale by scale block, growing both sides by scale.
+/// Draws every source element as a scale by scale block, growing both sides by scale, or an error when the source does not fill width by height.
 ///
 /// ```
-/// let out = mrlyrs::core::resample::block(&[1u8, 2], 2, 1, 2);
+/// let out = mrlyrs::core::resample::block(&[1u8, 2], 2, 1, 2).unwrap();
 /// assert_eq!(out, vec![1, 1, 2, 2, 1, 1, 2, 2]);
 /// ```
-pub fn block<T: Copy>(src: &[T], width: usize, height: usize, scale: usize) -> Vec<T> {
-    if scale == 1 {
-        return src.to_vec();
+pub fn block<T: Copy>(src: &[T], width: usize, height: usize, scale: usize) -> Result<Vec<T>> {
+    if Some(src.len()) != width.checked_mul(height) {
+        return shape_error("block source length must equal width * height.");
     }
-    let mut out = Vec::with_capacity(width * height * scale * scale);
+    if scale == 1 {
+        return Ok(src.to_vec());
+    }
+    let Some(size) = width
+        .checked_mul(scale)
+        .and_then(|w| height.checked_mul(scale).and_then(|h| w.checked_mul(h)))
+    else {
+        return overflow_error("block output size overflows usize.");
+    };
+    let mut out = Vec::with_capacity(size);
     for y in 0..height {
         let start = out.len();
         for x in 0..width {
@@ -96,7 +108,7 @@ pub fn block<T: Copy>(src: &[T], width: usize, height: usize, scale: usize) -> V
             out.extend_from_within(row.clone());
         }
     }
-    out
+    Ok(out)
 }
 
 fn nearest(
@@ -301,19 +313,27 @@ mod tests {
     }
 
     #[test]
-    fn resample_rejects_bad_sizes() {
+    fn refuses_resample() {
         let pixels = ramp(2, 2);
         assert!(resample(&pixels, 2, 2, 0, 4, Filter::Nearest).is_err());
         assert!(resample(&pixels, 2, 2, 4, 0, Filter::Nearest).is_err());
         assert!(resample(&pixels, 0, 2, 4, 4, Filter::Nearest).is_err());
         assert!(resample(&pixels, 3, 2, 4, 4, Filter::Nearest).is_err());
+        assert!(resample(&pixels, 2, 2, usize::MAX, 2, Filter::Nearest).is_err());
+    }
+
+    #[test]
+    fn refuses_block() {
+        assert!(block(&[1u8, 2, 3], 2, 2, 1).is_err());
+        assert!(block(&[1u8, 2, 3, 4], 2, 2, usize::MAX).is_err());
+        assert_eq!(block::<u8>(&[], 0, 3, 2).unwrap(), Vec::<u8>::new());
     }
 
     #[test]
     fn block_replicates_every_source_element() {
         let src: Vec<u8> = (0..6).collect();
-        assert_eq!(block(&src, 3, 2, 1), src);
-        let grown = block(&src, 3, 2, 3);
+        assert_eq!(block(&src, 3, 2, 1).unwrap(), src);
+        let grown = block(&src, 3, 2, 3).unwrap();
         assert_eq!(grown.len(), 54);
         for y in 0..6 {
             for x in 0..9 {
@@ -326,7 +346,7 @@ mod tests {
     fn block_matches_a_nearest_upscale() {
         let pixels = ramp(4, 3);
         let out = resample(&pixels, 4, 3, 12, 9, Filter::Nearest).unwrap();
-        assert_eq!(block(&pixels, 4, 3, 3), out);
+        assert_eq!(block(&pixels, 4, 3, 3).unwrap(), out);
     }
 
     #[test]

@@ -10,7 +10,7 @@ fn center(coord: &[usize]) -> Vec<f64> {
 fn coords_of(grid: &Tensor) -> Vec<Vec<usize>> {
     let mut out = Vec::new();
     for flat in 0..grid.size() {
-        if grid.bytes()[flat] != 0 {
+        if grid.at(flat) != 0 {
             let mut rem = flat;
             let mut multi = Vec::with_capacity(grid.shape.len());
             for axis in 0..grid.shape.len() {
@@ -46,7 +46,7 @@ pub fn core_graph(grid: &Tensor) -> Result<Network> {
             }
             let mut neighbor = coord.clone();
             neighbor[axis] += 1;
-            if grid.get(&neighbor) != 0 {
+            if grid.get(&neighbor)? != 0 {
                 network.add_branch(
                     index_of[grid.index(coord)],
                     index_of[grid.index(&neighbor)],

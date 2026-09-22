@@ -18,13 +18,13 @@ fn main() -> Result<()> {
     let tile = two::create(Code::from(CODE), NUMBER, LEVEL, 0, BASE)?;
     assert_eq!((tile.width(), census::fills(&tile)), (TILE, 64));
     assert_eq!(census::perimeter(&tile), 80);
-    let sheet = tile.tile(COPIES, COPIES);
+    let sheet = tile.tile(COPIES, COPIES)?;
     assert_eq!((sheet.width(), census::fills(&sheet)), (SIDE, 1600));
     assert_eq!(census::perimeter(&sheet), 1280);
     let buried = 25 * 80 - census::perimeter(&sheet);
     assert_eq!(buried, 720);
     let types = sheet.types();
-    let on = |row: usize, col: usize| types.get(&[row, col]) != 0;
+    let on = |row: usize, col: usize| types.get(&[row, col]).is_ok_and(|v| v != 0);
     let grid = Grid::new(frame, SIDE, SIDE, 0.0);
     for row in 0..SIDE {
         for col in 0..SIDE {

@@ -37,7 +37,7 @@ fn race(code: u128, seed: u64) -> Result<Swarm> {
     let cell = two::create(Code::from(code), NUMBER, LEVEL, 0, BASE)?;
     let types = cell.types();
     let filled: Vec<bool> = (0..SIDE * SIDE)
-        .map(|flat| types.get(&[flat / SIDE, flat % SIDE]) != 0)
+        .map(|flat| types.get(&[flat / SIDE, flat % SIDE]).is_ok_and(|v| v != 0))
         .collect();
     let centre = ((SIDE - 1) / 2) as i64;
     let home = (0..SIDE * SIDE)

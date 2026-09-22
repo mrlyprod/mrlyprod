@@ -161,7 +161,7 @@ impl Key {
     /// assert_eq!(key.id(), "753b6b49");
     /// ```
     pub fn name(&self) -> String {
-        self.named().to_file()
+        self.named().to_file().unwrap_or_default()
     }
     /// Returns the first eight hex digits of the sha256 of the sequence's canonical JSON.
     pub fn id(&self) -> String {

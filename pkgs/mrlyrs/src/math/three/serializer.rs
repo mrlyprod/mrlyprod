@@ -7,13 +7,14 @@ use serde::Deserialize;
 
 /// Unrolls the cell into nested lists, plane by row by site.
 fn to_lists(cell: &Cell3d) -> Vec<Vec<Vec<u8>>> {
-    let shape = &cell.types().shape;
+    let types = cell.types();
+    let shape = &types.shape;
     (0..shape[0])
         .map(|i| {
             (0..shape[1])
                 .map(|j| {
                     (0..shape[2])
-                        .map(|k| cell.types().get(&[i, j, k]))
+                        .map(|k| types.at(types.index(&[i, j, k])) as u8)
                         .collect()
                 })
                 .collect()
@@ -33,7 +34,7 @@ fn from_lists(lists: &[Vec<Vec<u8>>]) -> Result<Cell3d> {
         }
     }
     let data: Vec<u8> = lists.iter().flatten().flatten().copied().collect();
-    Ok(Cell3d::new(Tensor::of(data, vec![a, b, c])))
+    Cell3d::new(Tensor::of(data, vec![a, b, c])?)
 }
 
 fn color_cube(value: &Json) -> Result<Vec<Vec<Vec<[u8; 4]>>>> {
@@ -103,7 +104,7 @@ mod tests {
     fn json_round_trip_with_tags_past_a_byte() {
         use crate::core::tensor::Dtype;
         use crate::math::three::manhattan_layers;
-        let long = manhattan_layers(Cell3d::new(Tensor::full(vec![1, 1, 600], 1)));
+        let long = manhattan_layers(Cell3d::new(Tensor::full(vec![1, 1, 600], 1)).unwrap());
         let tags = long.cell.tags.as_ref().unwrap();
         assert_eq!(tags.dtype(), Dtype::U16);
         assert_eq!(tags.at(0), 299);

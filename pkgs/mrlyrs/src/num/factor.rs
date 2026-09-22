@@ -390,4 +390,35 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn refuses_nothing_the_euclid_walk_can_be_given() {
+        assert_eq!(gcd(0, 0), 0);
+        assert_eq!(gcd(0, 9), 9);
+        assert_eq!(gcd(u128::MAX, 0), u128::MAX);
+    }
+
+    #[test]
+    fn refuses_nothing_below_the_exact_ceiling() {
+        assert_eq!(factorial(0), 1);
+        assert_eq!(factorial(1), 1);
+        assert_eq!(
+            factorial(34),
+            295_232_799_039_604_140_847_618_609_643_520_000_000
+        );
+    }
+
+    #[test]
+    fn refuses_nothing_and_reads_zero_as_no_divisors() {
+        assert!(divisors(0).is_empty());
+        assert_eq!(divisors(1), vec![1]);
+        assert_eq!(divisors(u64::MAX).len(), 128);
+    }
+
+    #[test]
+    fn refuses_nothing_and_reads_zero_as_a_zero_mobius() {
+        assert_eq!(mobius(0), 0);
+        assert_eq!(mobius(1), 1);
+        assert_eq!(mobius(4), 0);
+    }
 }

@@ -53,7 +53,7 @@ fn main() -> Result<()> {
         let tone = if tile.prime { ink::blue() } else { ink::dim() };
         for row in 0..side {
             for col in 0..side {
-                if types.get(&[row, col]) == 0 {
+                if types.get(&[row, col])? == 0 {
                     continue;
                 }
                 let (x, y) = at(

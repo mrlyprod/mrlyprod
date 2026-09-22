@@ -12,7 +12,7 @@ pub fn plane(code: u128, base: usize, level: usize) -> Tensor {
 }
 
 pub fn floats(grid: &Tensor) -> Vec<f32> {
-    grid.bytes().iter().map(|&b| b as f32).collect()
+    (0..grid.size()).map(|i| grid.at(i) as f32).collect()
 }
 
 pub fn bit_cells() -> Vec<(usize, usize)> {
@@ -21,6 +21,7 @@ pub fn bit_cells() -> Vec<(usize, usize)> {
             let grid = plane(1u128 << bit, BASE, 1);
             let flat = grid
                 .bytes()
+                .expect("a design is bytes")
                 .iter()
                 .position(|cell| *cell != 0)
                 .expect("one filled cell");

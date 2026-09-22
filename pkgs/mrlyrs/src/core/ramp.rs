@@ -45,7 +45,7 @@ impl Colorizer {
         let ramp = dedup(gradient(colors, shades.max(1))?);
         Ok(Colorizer::Bins { background, ramp })
     }
-    /// Returns the color for one value against the range maximum.
+    /// Returns the color for one value against the range maximum: the background at zero, the top of the ramp from the maximum up.
     pub fn color(&self, value: usize, max: usize) -> Color {
         match self {
             Colorizer::Bins { background, ramp } => {
@@ -55,7 +55,7 @@ impl Colorizer {
                 if max <= 1 {
                     return ramp[ramp.len() - 1];
                 }
-                let idx = (value - 1) * (ramp.len() - 1) / (max - 1).max(1);
+                let idx = (value - 1).saturating_mul(ramp.len() - 1) / (max - 1);
                 ramp[idx.min(ramp.len() - 1)]
             }
         }

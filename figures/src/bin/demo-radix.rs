@@ -10,7 +10,7 @@ const MARGIN: f64 = 0.08;
 const DOT: f64 = 1.2;
 
 fn main() -> Result<()> {
-    let design = flowsnake();
+    let design = flowsnake()?;
     assert_eq!(design.size(), DIGITS);
     assert_eq!(design.base().norm(), NORM);
     assert_eq!(design.fill(LEVEL), WORDS as u128);

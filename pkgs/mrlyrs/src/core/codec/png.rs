@@ -1,4 +1,4 @@
-use crate::core::error::{value_error, Result};
+use crate::core::error::{overflow_error, value_error, Result};
 use crate::core::resample::block;
 use png::{
     AdaptiveFilterType, BitDepth, ColorType, Compression, Decoder, Encoder, FilterType,
@@ -16,11 +16,15 @@ pub fn png(colors: &[[u8; 4]], width: usize, height: usize, scale: usize) -> Res
     if scale < 1 {
         return value_error("scale must be at least 1.");
     }
-    if colors.len() != width * height {
+    if Some(colors.len()) != width.checked_mul(height) {
         return value_error("colors length must equal width * height.");
     }
-    let pixels = block(colors, width, height, scale);
-    let (width, height) = (width * scale, height * scale);
+    let scaled = |n: usize| n.checked_mul(scale).filter(|&n| u32::try_from(n).is_ok());
+    let (Some(out_w), Some(out_h)) = (scaled(width), scaled(height)) else {
+        return overflow_error("png side must fit in 32 bits.");
+    };
+    let pixels = block(colors, width, height, scale)?;
+    let (width, height) = (out_w, out_h);
     let mut bytes = Vec::with_capacity(pixels.len() + 128);
     {
         let mut encoder = Encoder::new(&mut bytes, width as u32, height as u32);
@@ -193,11 +197,12 @@ mod tests {
         assert_eq!(&bytes[20..24], &8u32.to_be_bytes());
     }
     #[test]
-    fn png_rejects_bad_inputs() {
+    fn refuses_png() {
         let colors = vec![[0, 0, 0, 255]];
         assert!(png(&colors, 1, 1, 0).is_err());
         assert!(png(&colors, 2, 2, 1).is_err());
         assert!(png(&[], 0, 0, 1).is_err());
+        assert!(png(&colors, 1, 1, 1 << 40).is_err());
     }
     #[test]
     fn unpng_round_trips_the_encoder() {
@@ -322,7 +327,7 @@ mod tests {
         assert_eq!(unpng(&bytes).unwrap().2, [[0x12, 0xff, 0x80, 0x00]]);
     }
     #[test]
-    fn unpng_rejects_garbage() {
+    fn refuses_unpng() {
         assert!(unpng(&[]).is_err());
         assert!(unpng(b"not a png at all").is_err());
         let mut bytes = png(&[[1, 2, 3, 4]], 1, 1, 1).unwrap();

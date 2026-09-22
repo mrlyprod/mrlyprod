@@ -197,7 +197,7 @@ pub fn graph_roles(
     kind: &str,
 ) -> Result<Vec<u8>, Fault> {
     let (net, _) = network(space, code, number, level, base, kind)?;
-    Ok(roles(&net)
+    Ok(roles(&net)?
         .iter()
         .map(|role| match role {
             Role::Alone => 0,
@@ -219,7 +219,7 @@ pub fn graph_census(
     kind: &str,
 ) -> Result<String, Fault> {
     let (net, euler) = network(space, code, number, level, base, kind)?;
-    let tally = census(&net);
+    let tally = census(&net)?;
     Ok(json!({
         "dim": net.dim,
         "nodes": tally.nodes,

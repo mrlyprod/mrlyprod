@@ -1,3 +1,5 @@
+use super::error::{shape_error, value_error, Result};
+
 /// The element widths a tensor can hold.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Dtype {
@@ -143,12 +145,25 @@ impl Tensor {
             shape,
         }
     }
-    /// Wraps a byte vector as a tensor of the shape.
-    pub fn of(data: Vec<u8>, shape: Vec<usize>) -> Self {
-        Tensor {
+    /// Wraps a byte vector as a tensor of the shape, or an error when the two sizes differ.
+    ///
+    /// ```
+    /// use mrlyrs::core::tensor::Tensor;
+    /// assert_eq!(Tensor::of(vec![1, 0, 0, 1], vec![2, 2]).unwrap().sum(), 2);
+    /// assert!(Tensor::of(vec![1, 0, 0], vec![2, 2]).is_err());
+    /// ```
+    pub fn of(data: Vec<u8>, shape: Vec<usize>) -> Result<Tensor> {
+        let size: usize = shape.iter().product();
+        if data.len() != size {
+            return shape_error(format!(
+                "tensor data holds {} elements, shape {shape:?} wants {size}.",
+                data.len()
+            ));
+        }
+        Ok(Tensor {
             data: Buf::U8(data),
             shape,
-        }
+        })
     }
     /// Returns the element width.
     pub fn dtype(&self) -> Dtype {
@@ -158,25 +173,25 @@ impl Tensor {
     pub fn size(&self) -> usize {
         self.data.len()
     }
-    /// Returns the elements as bytes, panicking for wider tensors.
-    pub fn bytes(&self) -> &[u8] {
+    /// Returns the elements as bytes, or an error for a wider tensor.
+    pub fn bytes(&self) -> Result<&[u8]> {
         match &self.data {
-            Buf::U8(v) => v,
-            other => panic!("tensor is {:?}, not u8", other.dtype()),
+            Buf::U8(v) => Ok(v),
+            other => shape_error(format!("tensor is {:?}, not u8.", other.dtype())),
         }
     }
-    /// Returns the elements as mutable bytes, panicking for wider tensors.
-    pub fn bytes_mut(&mut self) -> &mut [u8] {
+    /// Returns the elements as mutable bytes, or an error for a wider tensor.
+    pub fn bytes_mut(&mut self) -> Result<&mut [u8]> {
         match &mut self.data {
-            Buf::U8(v) => v,
-            other => panic!("tensor is {:?}, not u8", other.dtype()),
+            Buf::U8(v) => Ok(v),
+            other => shape_error(format!("tensor is {:?}, not u8.", other.dtype())),
         }
     }
-    /// Returns the element at a flat index.
+    /// Returns the element at a flat index, which must be below the size like a slice index.
     pub fn at(&self, flat: usize) -> i64 {
         self.data.at(flat)
     }
-    /// Writes the element at a flat index.
+    /// Writes the element at a flat index, which must be below the size like a slice index.
     pub fn put(&mut self, flat: usize, value: i64) {
         self.data.put(flat, value);
     }
@@ -189,14 +204,41 @@ impl Tensor {
         let s = strides(&self.shape);
         multi.iter().zip(&s).map(|(m, st)| m * st).sum()
     }
-    /// Returns the byte at a multi-index.
-    pub fn get(&self, multi: &[usize]) -> u8 {
-        self.bytes()[self.index(multi)]
+    fn flat(&self, multi: &[usize]) -> Result<usize> {
+        if multi.len() != self.shape.len() {
+            return shape_error(format!(
+                "index {multi:?} has {} axes, the tensor has {}.",
+                multi.len(),
+                self.shape.len()
+            ));
+        }
+        if multi.iter().zip(&self.shape).any(|(&i, &n)| i >= n) {
+            return shape_error(format!(
+                "index {multi:?} is past the shape {:?}.",
+                self.shape
+            ));
+        }
+        Ok(self.index(multi))
     }
-    /// Writes the byte at a multi-index.
-    pub fn set(&mut self, multi: &[usize], value: u8) {
-        let i = self.index(multi);
-        self.bytes_mut()[i] = value;
+    fn axis(&self, axis: usize) -> Result<usize> {
+        if axis >= self.shape.len() {
+            return value_error(format!(
+                "axis {axis} is past the tensor's rank {}.",
+                self.shape.len()
+            ));
+        }
+        Ok(axis)
+    }
+    /// Returns the byte at a multi-index, or an error when the index misses the shape or the tensor is wider.
+    pub fn get(&self, multi: &[usize]) -> Result<u8> {
+        let flat = self.flat(multi)?;
+        Ok(self.bytes()?[flat])
+    }
+    /// Writes the byte at a multi-index, or an error when the index misses the shape or the tensor is wider.
+    pub fn set(&mut self, multi: &[usize], value: u8) -> Result<()> {
+        let flat = self.flat(multi)?;
+        self.bytes_mut()?[flat] = value;
+        Ok(())
     }
     /// Builds the Kronecker product of the two tensors.
     pub fn kron(&self, other: &Tensor) -> Tensor {
@@ -228,7 +270,7 @@ impl Tensor {
     ///
     /// ```
     /// use mrlyrs::core::tensor::Tensor;
-    /// let f = Tensor::of(vec![1, 1, 0, 1], vec![2, 2]).fractal(2);
+    /// let f = Tensor::of(vec![1, 1, 0, 1], vec![2, 2]).unwrap().fractal(2);
     /// assert_eq!(f.shape, vec![4, 4]);
     /// assert_eq!(f.sum(), 9);
     /// ```
@@ -260,24 +302,24 @@ impl Tensor {
         }
         out
     }
-    /// Reverses the tensor along one axis.
-    pub fn flip(&self, axis: usize) -> Tensor {
-        let n = self.shape[axis];
-        self.remap(self.shape.clone(), |idx| {
+    /// Reverses the tensor along one axis, or an error for an axis past the rank.
+    pub fn flip(&self, axis: usize) -> Result<Tensor> {
+        let n = self.shape[self.axis(axis)?];
+        Ok(self.remap(self.shape.clone(), |idx| {
             let mut src = idx.to_vec();
             src[axis] = n - 1 - src[axis];
             src
-        })
+        }))
     }
-    /// Swaps two axes.
-    pub fn transpose(&self, a: usize, b: usize) -> Tensor {
+    /// Swaps two axes, or an error for an axis past the rank.
+    pub fn transpose(&self, a: usize, b: usize) -> Result<Tensor> {
         let mut shape = self.shape.clone();
-        shape.swap(a, b);
-        self.remap(shape, |idx| {
+        shape.swap(self.axis(a)?, self.axis(b)?);
+        Ok(self.remap(shape, |idx| {
             let mut src = idx.to_vec();
             src.swap(a, b);
             src
-        })
+        }))
     }
     /// Drops one axis by fixing it at an index.
     ///
@@ -285,8 +327,7 @@ impl Tensor {
     /// let sponge = mrlyrs::math::atoms::carpet_3d(3);
     /// assert_eq!(sponge.slice(2, 0).unwrap(), mrlyrs::math::atoms::carpet_2d(3));
     /// ```
-    pub fn slice(&self, axis: usize, index: usize) -> crate::core::Result<Tensor> {
-        use crate::core::error::value_error;
+    pub fn slice(&self, axis: usize, index: usize) -> Result<Tensor> {
         if axis >= self.shape.len() {
             return value_error("slice axis is past the tensor's rank.");
         }
@@ -301,13 +342,24 @@ impl Tensor {
             src
         }))
     }
-    /// Rotates the tensor k quarter turns in the plane of two axes.
-    pub fn rot90(&self, k: usize, axes: (usize, usize)) -> Tensor {
+    /// Rotates the tensor k quarter turns in the plane of two axes, or an error when the axes are not two distinct axes of the tensor.
+    ///
+    /// ```
+    /// use mrlyrs::core::tensor::Tensor;
+    /// let a = Tensor::of(vec![1, 2, 3, 4], vec![2, 2]).unwrap();
+    /// assert_eq!(a.rot90(1, (0, 1)).unwrap().bytes().unwrap(), &[2, 4, 1, 3]);
+    /// assert!(a.rot90(1, (0, 2)).is_err());
+    /// ```
+    pub fn rot90(&self, k: usize, axes: (usize, usize)) -> Result<Tensor> {
+        let (a, b) = (self.axis(axes.0)?, self.axis(axes.1)?);
+        if a == b {
+            return value_error(format!("rot90 needs two distinct axes, got {axes:?}."));
+        }
         let mut out = self.clone();
         for _ in 0..k % 4 {
-            out = out.transpose(axes.0, axes.1).flip(axes.0);
+            out = out.transpose(a, b)?.flip(a)?;
         }
-        out
+        Ok(out)
     }
     /// Wraps the tensor in a count-thick border of one value.
     pub fn pad(&self, count: usize, value: u8) -> Tensor {
@@ -321,13 +373,20 @@ impl Tensor {
         }
         out
     }
-    /// Repeats the tensor the given number of times along each axis.
-    pub fn tile(&self, reps: &[usize]) -> Tensor {
+    /// Repeats the tensor the given number of times along each axis, or an error without one count per axis.
+    pub fn tile(&self, reps: &[usize]) -> Result<Tensor> {
+        if reps.len() != self.shape.len() {
+            return shape_error(format!(
+                "tile wants one count per axis, got {} for rank {}.",
+                reps.len(),
+                self.shape.len()
+            ));
+        }
         let shape: Vec<usize> = self.shape.iter().zip(reps).map(|(n, r)| n * r).collect();
         let inner = self.shape.clone();
-        self.remap(shape, |idx| {
+        Ok(self.remap(shape, |idx| {
             idx.iter().zip(&inner).map(|(i, n)| i % n).collect()
-        })
+        }))
     }
     /// Numbers every position by its concentric ring out from the center.
     pub fn layers(&self, dtype: Dtype) -> Tensor {
@@ -349,14 +408,7 @@ impl Tensor {
         out
     }
     /// Counts each position's masked neighbors holding the target bit, or an error when the mask or count does not fit.
-    pub fn neighbors(
-        &self,
-        mask: &Tensor,
-        target: u8,
-        wrap: bool,
-        dtype: Dtype,
-    ) -> crate::core::Result<Tensor> {
-        use crate::core::error::value_error;
+    pub fn neighbors(&self, mask: &Tensor, target: u8, wrap: bool, dtype: Dtype) -> Result<Tensor> {
         if mask.shape.len() != self.shape.len() {
             return value_error("mask must have the same number of dimensions.");
         }
@@ -397,7 +449,7 @@ impl Tensor {
                     }
                     source.push(p as usize);
                 }
-                if inside && self.get(&source) == target {
+                if inside && self.data.at(self.index(&source)) == target as i64 {
                     count += 1;
                 }
             }
@@ -464,8 +516,7 @@ impl Tensor {
         self.binarize(self.otsu_threshold().saturating_add(1))
     }
     /// Averages every position over its masked neighborhood, rounded.
-    pub fn blur(&self, mask: &Tensor, wrap: bool) -> crate::core::Result<Tensor> {
-        use crate::core::error::value_error;
+    pub fn blur(&self, mask: &Tensor, wrap: bool) -> Result<Tensor> {
         if mask.shape.len() != self.shape.len() {
             return value_error("mask must have the same number of dimensions.");
         }
@@ -522,8 +573,7 @@ impl Tensor {
         Ok(out)
     }
     /// Stamps the value wherever the tiled mask is nonzero.
-    pub fn perforate(&self, mask: &Tensor, value: u8) -> crate::core::Result<Tensor> {
-        use crate::core::error::value_error;
+    pub fn perforate(&self, mask: &Tensor, value: u8) -> Result<Tensor> {
         if mask.shape.len() != self.shape.len() {
             return value_error("mask must have the same number of dimensions.");
         }
@@ -550,7 +600,9 @@ impl Tensor {
     }
     /// Counts the cells holding one value.
     pub fn count(&self, value: u8) -> usize {
-        self.bytes().iter().filter(|&&v| v == value).count()
+        (0..self.size())
+            .filter(|&i| self.data.at(i) == value as i64)
+            .count()
     }
     /// Counts the faces where filled cells meet empty cells or the boundary: perimeter in 2d, surface in 3d.
     pub fn exposed(&self) -> u128 {
@@ -558,7 +610,7 @@ impl Tensor {
         let rank = dims.len();
         let mut total: u128 = 0;
         for flat in 0..self.size() {
-            if self.bytes()[flat] == 0 {
+            if self.data.at(flat) == 0 {
                 continue;
             }
             let mut rem = flat;
@@ -572,14 +624,14 @@ impl Tensor {
                 if coord[axis] == 0 || {
                     let mut lo = coord.clone();
                     lo[axis] -= 1;
-                    self.get(&lo) == 0
+                    self.data.at(self.index(&lo)) == 0
                 } {
                     total += 1;
                 }
                 if coord[axis] + 1 == dims[axis] || {
                     let mut hi = coord.clone();
                     hi[axis] += 1;
-                    self.get(&hi) == 0
+                    self.data.at(self.index(&hi)) == 0
                 } {
                     total += 1;
                 }
@@ -593,6 +645,9 @@ impl Tensor {
 mod tests {
     use super::*;
     use crate::math::atoms;
+    fn of(data: Vec<u8>, shape: Vec<usize>) -> Tensor {
+        Tensor::of(data, shape).unwrap()
+    }
     #[test]
     fn exposed_is_perimeter_in_2d() {
         assert_eq!(atoms::ones_2d(1).exposed(), 4);
@@ -612,28 +667,28 @@ mod tests {
     }
     #[test]
     fn kron_matches_numpy_semantics() {
-        let a = Tensor::of(vec![1, 0, 0, 1], vec![2, 2]);
-        let b = Tensor::of(vec![1, 1, 1, 1], vec![2, 2]);
+        let a = of(vec![1, 0, 0, 1], vec![2, 2]);
+        let b = of(vec![1, 1, 1, 1], vec![2, 2]);
         let k = a.kron(&b);
         assert_eq!(k.shape, vec![4, 4]);
         assert_eq!(k.sum(), 8);
-        assert_eq!(k.get(&[0, 0]), 1);
-        assert_eq!(k.get(&[0, 2]), 0);
-        assert_eq!(k.get(&[3, 3]), 1);
+        assert_eq!(k.get(&[0, 0]).unwrap(), 1);
+        assert_eq!(k.get(&[0, 2]).unwrap(), 0);
+        assert_eq!(k.get(&[3, 3]).unwrap(), 1);
     }
     #[test]
     fn fractal_sum_is_power() {
-        let a = Tensor::of(vec![1, 1, 0, 1, 1, 0, 0, 0, 1], vec![3, 3]);
+        let a = of(vec![1, 1, 0, 1, 1, 0, 0, 0, 1], vec![3, 3]);
         let f = a.fractal(3);
         assert_eq!(f.shape, vec![27, 27]);
         assert_eq!(f.sum(), a.sum().pow(3));
     }
     #[test]
     fn rot90_matches_numpy() {
-        let a = Tensor::of(vec![1, 2, 3, 4], vec![2, 2]);
-        assert_eq!(a.rot90(1, (0, 1)).bytes(), &[2, 4, 1, 3]);
-        assert_eq!(a.rot90(2, (0, 1)).bytes(), &[4, 3, 2, 1]);
-        assert_eq!(a.rot90(4, (0, 1)), a);
+        let a = of(vec![1, 2, 3, 4], vec![2, 2]);
+        assert_eq!(a.rot90(1, (0, 1)).unwrap().bytes().unwrap(), &[2, 4, 1, 3]);
+        assert_eq!(a.rot90(2, (0, 1)).unwrap().bytes().unwrap(), &[4, 3, 2, 1]);
+        assert_eq!(a.rot90(4, (0, 1)).unwrap(), a);
     }
     #[test]
     fn pad_and_tile() {
@@ -641,30 +696,30 @@ mod tests {
         let p = a.pad(1, 0);
         assert_eq!(p.shape, vec![4, 4]);
         assert_eq!(p.sum(), 4);
-        assert_eq!(p.get(&[0, 0]), 0);
-        assert_eq!(p.get(&[1, 1]), 1);
-        let t = a.tile(&[2, 3]);
+        assert_eq!(p.get(&[0, 0]).unwrap(), 0);
+        assert_eq!(p.get(&[1, 1]).unwrap(), 1);
+        let t = a.tile(&[2, 3]).unwrap();
         assert_eq!(t.shape, vec![4, 6]);
         assert_eq!(t.sum(), 24);
     }
     #[test]
     fn layers_rings() {
         let l = Tensor::new(vec![5, 5]).layers(Dtype::U8);
-        assert_eq!(l.get(&[2, 2]), 0);
-        assert_eq!(l.get(&[1, 2]), 1);
-        assert_eq!(l.get(&[0, 0]), 2);
-        assert_eq!(l.get(&[4, 0]), 2);
+        assert_eq!(l.get(&[2, 2]).unwrap(), 0);
+        assert_eq!(l.get(&[1, 2]).unwrap(), 1);
+        assert_eq!(l.get(&[0, 0]).unwrap(), 2);
+        assert_eq!(l.get(&[4, 0]).unwrap(), 2);
     }
     #[test]
     fn neighbors_moore() {
         let mut mask = Tensor::full(vec![3, 3], 1);
-        mask.set(&[1, 1], 0);
+        mask.set(&[1, 1], 0).unwrap();
         let ones = Tensor::full(vec![3, 3], 1);
         let n = ones.neighbors(&mask, 1, false, Dtype::U8).unwrap();
-        assert_eq!(n.get(&[1, 1]), 8);
-        assert_eq!(n.get(&[0, 0]), 3);
+        assert_eq!(n.get(&[1, 1]).unwrap(), 8);
+        assert_eq!(n.get(&[0, 0]).unwrap(), 3);
         let w = ones.neighbors(&mask, 1, true, Dtype::U8).unwrap();
-        assert_eq!(w.get(&[0, 0]), 8);
+        assert_eq!(w.get(&[0, 0]).unwrap(), 8);
         assert!(ones
             .neighbors(&Tensor::full(vec![2, 2], 1), 1, false, Dtype::U8)
             .is_err());
@@ -680,7 +735,7 @@ mod tests {
     }
     #[test]
     fn invert_round_trip() {
-        let a = Tensor::of(vec![1, 0, 0, 1], vec![2, 2]);
+        let a = of(vec![1, 0, 0, 1], vec![2, 2]);
         assert_eq!(a.invert().invert(), a);
         assert_eq!(a.invert().sum(), 2);
     }
@@ -694,24 +749,24 @@ mod tests {
     }
     #[test]
     fn binarize_thresholds_pointwise() {
-        let a = Tensor::of(vec![0, 50, 128, 255], vec![2, 2]);
+        let a = of(vec![0, 50, 128, 255], vec![2, 2]);
         let b = a.binarize(128);
-        assert_eq!(b.bytes(), &[0, 0, 1, 1]);
+        assert_eq!(b.bytes().unwrap(), &[0, 0, 1, 1]);
     }
     #[test]
     fn otsu_splits_bimodal_histogram() {
         let mut data = vec![10u8; 20];
         data.extend(vec![200u8; 20]);
-        let a = Tensor::of(data, vec![40, 1]);
+        let a = of(data, vec![40, 1]);
         let t = a.otsu_threshold();
         assert!((10..200).contains(&t));
         let b = a.binarize_otsu();
-        assert_eq!(b.bytes()[0..20].iter().sum::<u8>(), 0);
-        assert_eq!(b.bytes()[20..40].iter().sum::<u8>(), 20);
+        assert_eq!(b.bytes().unwrap()[0..20].iter().sum::<u8>(), 0);
+        assert_eq!(b.bytes().unwrap()[20..40].iter().sum::<u8>(), 20);
     }
     #[test]
     fn blur_preserves_mean_under_wrap() {
-        let a = Tensor::of((0..25).map(|v| (v * 7) % 251).collect(), vec![5, 5]);
+        let a = of((0..25).map(|v| (v * 7) % 251).collect(), vec![5, 5]);
         let mask = Tensor::full(vec![3, 3], 1);
         let b = a.blur(&mask, true).unwrap();
         let mean_a: f64 = a.sum() as f64 / a.size() as f64;
@@ -720,7 +775,7 @@ mod tests {
     }
     #[test]
     fn perforate_zero_mask_is_identity() {
-        let a = Tensor::of(vec![1, 2, 3, 4], vec![2, 2]);
+        let a = of(vec![1, 2, 3, 4], vec![2, 2]);
         let mask = Tensor::new(vec![2, 2]);
         let p = a.perforate(&mask, 9).unwrap();
         assert_eq!(p, a);
@@ -728,11 +783,11 @@ mod tests {
     #[test]
     fn perforate_writes_masked_positions() {
         let a = Tensor::new(vec![4, 4]);
-        let mask = Tensor::of(vec![1, 0, 0, 1], vec![2, 2]);
+        let mask = of(vec![1, 0, 0, 1], vec![2, 2]);
         let p = a.perforate(&mask, 7).unwrap();
-        assert_eq!(p.get(&[0, 0]), 7);
-        assert_eq!(p.get(&[0, 1]), 0);
-        assert_eq!(p.get(&[1, 1]), 7);
+        assert_eq!(p.get(&[0, 0]).unwrap(), 7);
+        assert_eq!(p.get(&[0, 1]).unwrap(), 0);
+        assert_eq!(p.get(&[1, 1]).unwrap(), 7);
         assert_eq!(p.sum(), 8 * 7);
     }
     #[test]
@@ -748,10 +803,56 @@ mod tests {
     }
     #[test]
     fn slice_takes_an_index_and_rejects_a_bad_one() {
-        let a = Tensor::of(vec![0, 1, 2, 3, 4, 5], vec![2, 3]);
-        assert_eq!(a.slice(0, 1).unwrap(), Tensor::of(vec![3, 4, 5], vec![3]));
-        assert_eq!(a.slice(1, 2).unwrap(), Tensor::of(vec![2, 5], vec![2]));
+        let a = of(vec![0, 1, 2, 3, 4, 5], vec![2, 3]);
+        assert_eq!(a.slice(0, 1).unwrap(), of(vec![3, 4, 5], vec![3]));
+        assert_eq!(a.slice(1, 2).unwrap(), of(vec![2, 5], vec![2]));
         assert!(a.slice(2, 0).is_err());
         assert!(a.slice(1, 3).is_err());
+    }
+    #[test]
+    fn refuses_of() {
+        assert!(Tensor::of(vec![1, 2, 3], vec![2, 2]).is_err());
+        assert!(Tensor::of(vec![1, 2, 3, 4, 5], vec![2, 2]).is_err());
+        assert!(Tensor::of(vec![1], vec![]).is_ok());
+        assert!(Tensor::of(vec![], vec![0, 3]).is_ok());
+    }
+    #[test]
+    fn refuses_rot90() {
+        let a = of(vec![1, 2, 3, 4], vec![2, 2]);
+        assert!(a.rot90(1, (0, 2)).is_err());
+        assert!(a.rot90(1, (2, 0)).is_err());
+        assert!(a.rot90(1, (1, 1)).is_err());
+        assert!(a.flip(2).is_err());
+        assert!(a.transpose(0, 2).is_err());
+        assert!(a.transpose(2, 0).is_err());
+    }
+    #[test]
+    fn refuses_get_and_set() {
+        let mut a = of(vec![1, 2, 3, 4], vec![2, 2]);
+        assert!(a.get(&[0]).is_err());
+        assert!(a.get(&[0, 0, 0]).is_err());
+        assert!(a.get(&[2, 0]).is_err());
+        assert!(a.get(&[0, 2]).is_err());
+        assert!(a.set(&[1], 9).is_err());
+        assert!(a.set(&[0, 2], 9).is_err());
+        let mut wide = Tensor::typed(vec![2, 2], Dtype::U16);
+        assert!(wide.get(&[0, 0]).is_err());
+        assert!(wide.set(&[0, 0], 9).is_err());
+    }
+    #[test]
+    fn refuses_bytes_of_a_wider_tensor() {
+        for dtype in [Dtype::U16, Dtype::U32, Dtype::I32] {
+            let mut wide = Tensor::typed(vec![2, 2], dtype);
+            assert!(wide.bytes().is_err());
+            assert!(wide.bytes_mut().is_err());
+        }
+        assert!(Tensor::new(vec![2, 2]).bytes().is_ok());
+    }
+    #[test]
+    fn refuses_tile() {
+        let a = Tensor::full(vec![2, 2], 1);
+        assert!(a.tile(&[2]).is_err());
+        assert!(a.tile(&[2, 2, 2]).is_err());
+        assert!(a.tile(&[]).is_err());
     }
 }

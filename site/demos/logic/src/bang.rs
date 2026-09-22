@@ -35,7 +35,7 @@ pub fn universe(dimension: usize) -> Result<String, Fault> {
             "the universe gallery runs from dimension 1 to 3.",
         ));
     }
-    let universe = bang::bang(dimension);
+    let universe = bang::bang(dimension)?;
     let designs: Vec<Json> = universe
         .canonical()
         .iter()
@@ -43,7 +43,7 @@ pub fn universe(dimension: usize) -> Result<String, Fault> {
             json!({
                 "code": design.i.to_string(),
                 "orbit": design.orbit_size,
-                "name": design.name(),
+                "name": design.name().unwrap_or_default(),
                 "degree": design.degree(),
                 "anf": design.anf(),
                 "corners": design.rule(),
@@ -138,7 +138,7 @@ pub fn dimension(
 /// Prints the name of a design code at its dimension and base as a line of prose.
 #[wasm_bindgen]
 pub fn name_of(code: &str, dimension: usize, base: usize) -> Result<String, Fault> {
-    Ok(Bang::new(checked(code, dimension, base)?, dimension, base).to_mrly())
+    Ok(Bang::new(checked(code, dimension, base)?, dimension, base).to_mrly()?)
 }
 
 /// Reads a design's file name back into its code, dim and base, as JSON.

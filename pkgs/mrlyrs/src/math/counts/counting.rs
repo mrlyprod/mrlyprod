@@ -116,7 +116,7 @@ mod tests {
     fn fill_matches_rendered_sum() {
         for dimension in 2..=3usize {
             for code in [Code(0), Code(1), Code(7), Code(23), Code(100)] {
-                if code >= factory::total_codes(dimension, 2) {
+                if code >= factory::total_codes(dimension, 2).unwrap() {
                     continue;
                 }
                 for number in 1..6 {
@@ -166,6 +166,16 @@ mod tests {
         assert_eq!(limit(code, 3, 3, 2).unwrap(), (1, 8));
         assert_eq!(limit(Code(0), 2, 1, 2).unwrap(), (0, 1));
         assert_eq!(limit(Code(15), 2, 4, 2).unwrap(), (1, 1));
+    }
+    #[test]
+    fn refuses_a_code_past_its_range_and_a_level_past_a_u128() {
+        assert!(fill(Code(16), 3, 2, 1, 2).is_err());
+        assert!(void(Code(16), 3, 2, 1, 2).is_err());
+        assert!(ratio(Code(16), 3, 2, 1, 2).is_err());
+        assert!(rational(Code(16), 3, 2, 1, 2).is_err());
+        assert!(dimension(Code(16), 3, 2, 2).is_err());
+        assert!(fill(Code(1), 3, 7, 1, 2).is_err());
+        assert!(limit(Code(16), 2, 1, 2).is_err());
         assert!(limit(Code(7), 2, 1000, 2).is_err());
     }
     #[test]

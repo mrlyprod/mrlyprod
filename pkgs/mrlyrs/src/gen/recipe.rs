@@ -1,3 +1,4 @@
+use crate::core::error::{value_error, Result};
 use crate::core::named_enum;
 use serde::{Deserialize, Serialize};
 
@@ -143,7 +144,7 @@ impl Tile {
         self.height = size;
     }
     /// Checks that the slots, numbers and sizes agree, or a terse note for the first broken law.
-    pub fn check(&self) -> std::result::Result<(), &'static str> {
+    pub fn check(&self) -> Result<()> {
         let slots = self.sources.len();
         let wanted = match self.group {
             Group::Mosaic => slots == 3,
@@ -151,50 +152,50 @@ impl Tile {
             _ => slots == 1,
         };
         if !wanted {
-            return Err("wrong slot count");
+            return value_error("wrong slot count");
         }
         if self.numbers.len() != slots
             || self.levels.len() != slots
             || self.rotations.len() != slots
             || self.anti.len() != slots
         {
-            return Err("ragged slots");
+            return value_error("ragged slots");
         }
         if self
             .numbers
             .iter()
             .any(|&n| !(MIN_SIDE..=MAX_SIDE).contains(&n))
         {
-            return Err("numbers are 2 to 64");
+            return value_error("numbers are 2 to 64");
         }
         if self.rotations.iter().any(|&r| r > 3) {
-            return Err("rotation is 0 to 3");
+            return value_error("rotation is 0 to 3");
         }
         if self.flip && self.group != Group::Special {
-            return Err("flip is special only");
+            return value_error("flip is special only");
         }
         if self.group == Group::Fractal {
             if !(1..=MAX_LEVEL).contains(&self.levels[0]) {
-                return Err("level is 1 to 6");
+                return value_error("level is 1 to 6");
             }
         } else if self.levels.iter().any(|&l| l != 1) {
-            return Err("level is fractal only");
+            return value_error("level is fractal only");
         }
         if matches!(self.group, Group::Special | Group::Mosaic)
             && !(MIN_SIDE..=MAX_SIDE).contains(&self.factor)
         {
-            return Err("factor is 2 to 64");
+            return value_error("factor is 2 to 64");
         }
         if self.group == Group::Mosaic && self.numbers.iter().any(|&n| n != self.numbers[0]) {
-            return Err("mosaic shares one number");
+            return value_error("mosaic shares one number");
         }
         let mut probe = self.clone();
         probe.resize();
         if probe.width != self.width || probe.height != self.height || probe.factor != self.factor {
-            return Err("sizes disagree");
+            return value_error("sizes disagree");
         }
         if !(MIN_SIDE..=MAX_SIDE).contains(&self.max_size()) {
-            return Err("size is 2 to 64");
+            return value_error("size is 2 to 64");
         }
         Ok(())
     }
@@ -416,25 +417,65 @@ mod tests {
         assert_eq!(huge.width, 0);
     }
     #[test]
-    fn check_names_the_first_broken_law() {
+    fn refuses_a_recipe_that_breaks_a_law() {
+        let note = |tile: &Tile| tile.check().unwrap_err().to_string();
         let mut tile = Tile::new(Group::General);
-        assert_eq!(tile.check(), Err("wrong slot count"));
+        assert_eq!(note(&tile), "wrong slot count");
         tile.sources = vec![Source::Code(7)];
-        assert_eq!(tile.check(), Err("ragged slots"));
+        assert_eq!(note(&tile), "ragged slots");
         tile.numbers = vec![3];
         tile.levels = vec![1];
         tile.rotations = vec![0];
         tile.anti = vec![false];
         tile.resize();
-        assert_eq!(tile.check(), Ok(()));
-        tile.rotations = vec![4];
-        assert_eq!(tile.check(), Err("rotation is 0 to 3"));
-        tile.rotations = vec![0];
-        tile.flip = true;
-        assert_eq!(tile.check(), Err("flip is special only"));
-        tile.flip = false;
-        tile.width = 5;
-        assert_eq!(tile.check(), Err("sizes disagree"));
+        assert!(tile.check().is_ok());
+        let mut zero = tile.clone();
+        zero.numbers = vec![0];
+        zero.resize();
+        assert_eq!(note(&zero), "numbers are 2 to 64");
+        let mut wide = tile.clone();
+        wide.numbers = vec![99];
+        wide.resize();
+        assert_eq!(note(&wide), "numbers are 2 to 64");
+        let mut turned = tile.clone();
+        turned.rotations = vec![4];
+        assert_eq!(note(&turned), "rotation is 0 to 3");
+        let mut flipped = tile.clone();
+        flipped.flip = true;
+        assert_eq!(note(&flipped), "flip is special only");
+        let mut levelled = tile.clone();
+        levelled.levels = vec![2];
+        assert_eq!(note(&levelled), "level is fractal only");
+        let mut deep = tile.clone();
+        deep.group = Group::Fractal;
+        deep.levels = vec![7];
+        deep.resize();
+        assert_eq!(note(&deep), "level is 1 to 6");
+        assert_eq!(note(&tile.clone().size(5, 5)), "sizes disagree");
+        let mut special = Tile::new(Group::Special);
+        special.sources = vec![Source::Code(7)];
+        special.numbers = vec![3];
+        special.levels = vec![1];
+        special.rotations = vec![0];
+        special.anti = vec![false];
+        special.factor = 1;
+        special.resize();
+        assert_eq!(note(&special), "factor is 2 to 64");
+        let mut mosaic = Tile::new(Group::Mosaic);
+        mosaic.sources = vec![Source::Code(7); 3];
+        mosaic.numbers = vec![3, 3, 5];
+        mosaic.levels = vec![1; 3];
+        mosaic.rotations = vec![0; 3];
+        mosaic.anti = vec![false; 3];
+        mosaic.factor = 3;
+        mosaic.resize();
+        assert_eq!(note(&mosaic), "mosaic shares one number");
+        let mut huge = tile.clone();
+        huge.group = Group::Fractal;
+        huge.numbers = vec![9];
+        huge.levels = vec![3];
+        huge.resize();
+        assert_eq!(note(&huge), "size is 2 to 64");
     }
     #[test]
     fn powers_generalize_beyond_classic_bases() {
@@ -464,7 +505,7 @@ mod tests {
         tile.rotations = vec![0, 0];
         tile.anti = vec![false, false];
         tile.resize();
-        assert_eq!(tile.check(), Ok(()));
+        assert!(tile.check().is_ok());
         assert!(tile.degenerate());
         tile.numbers = vec![3, 5];
         tile.resize();

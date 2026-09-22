@@ -4,7 +4,7 @@ use mrlyrs::math::spin::harmonics;
 pub fn spectrum(code: u128, level: usize, rings: usize, orders: usize) -> Vec<f64> {
     let grid = plane(code, BASE, level);
     let side = grid.shape[0];
-    harmonics(&floats(&grid), side, rings, orders)
+    harmonics(&floats(&grid), side, rings, orders).unwrap_or_default()
 }
 
 pub fn agree(left: &[f64], right: &[f64], tolerance: f64) -> bool {

@@ -47,7 +47,7 @@ mod tests {
         let core = core_graph(&cell).unwrap();
         assert_eq!(core.nodes.len(), 8);
         assert_eq!(core.branches.len(), 8);
-        assert_eq!(census(&core).components, 1);
+        assert_eq!(census(&core).unwrap().components, 1);
         assert_eq!(tunnel_graph(&cell).unwrap().nodes.len(), 1);
         assert!(edge_graph(&cell).unwrap().nodes.len() > 8);
     }
@@ -75,9 +75,9 @@ mod spectra {
             let cell = designs::create(Code(7), 2, level, 0, 2).unwrap();
             let graph = core_graph(&cell).unwrap();
             assert_eq!(graph.nodes.len(), nodes, "l={level}");
-            assert_eq!(census(&graph).components, 1, "l={level}");
+            assert_eq!(census(&graph).unwrap().components, 1, "l={level}");
             let spectrum = laplacian_spectrum(&graph, true).unwrap();
-            let groups = clusters(&spectrum, 1e-9);
+            let groups = clusters(&spectrum, 1e-9).unwrap();
             let repeated: usize = groups.iter().filter(|g| g.1 > 1).map(|g| g.1).sum();
             assert_eq!(groups.len(), distinct, "l={level}");
             assert_eq!(

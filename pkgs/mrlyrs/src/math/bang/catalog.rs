@@ -1,40 +1,44 @@
 use super::universe::bang;
+use crate::core::error::Result;
 use crate::core::named_enum;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::sync::{Mutex, OnceLock};
 
 /// Returns the canonical design codes of a dimension, computed once and cached for the process.
-pub fn universe_codes(dimension: usize) -> &'static [u128] {
+pub fn universe_codes(dimension: usize) -> Result<&'static [u128]> {
     static CACHE: OnceLock<Mutex<BTreeMap<usize, &'static [u128]>>> = OnceLock::new();
     let cache = CACHE.get_or_init(|| Mutex::new(BTreeMap::new()));
-    let mut guard = cache.lock().unwrap();
+    let mut guard = match cache.lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => poisoned.into_inner(),
+    };
     if let Some(codes) = guard.get(&dimension) {
-        return codes;
+        return Ok(codes);
     }
-    let codes: Vec<u128> = bang(dimension)
+    let codes: Vec<u128> = bang(dimension)?
         .canonical()
         .into_iter()
         .map(|design| design.i.get())
         .collect();
     let leaked: &'static [u128] = Box::leak(codes.into_boxed_slice());
     guard.insert(dimension, leaked);
-    leaked
+    Ok(leaked)
 }
 
 /// Builds the tile sources a catalog names at a dimension.
-pub fn sources(catalog: &Catalog, dimension: usize) -> Vec<Source> {
-    match catalog {
+pub fn sources(catalog: &Catalog, dimension: usize) -> Result<Vec<Source>> {
+    Ok(match catalog {
         Catalog::Classics => classics(dimension)
             .into_iter()
             .map(Source::Classic)
             .collect(),
-        Catalog::Universe => universe_codes(dimension)
+        Catalog::Universe => universe_codes(dimension)?
             .iter()
             .map(|&code| Source::Code(code))
             .collect(),
         Catalog::Codes(list) => list.iter().map(|&code| Source::Code(code)).collect(),
-    }
+    })
 }
 
 /// The pool of sources a tile may draw from.
@@ -186,14 +190,14 @@ mod tests {
     #[test]
     fn catalog_classics_are_named_designs() {
         assert_eq!(
-            sources(&Catalog::Classics, 2),
+            sources(&Catalog::Classics, 2).unwrap(),
             CLASSICS_2D
                 .into_iter()
                 .map(Source::Classic)
                 .collect::<Vec<_>>()
         );
         assert_eq!(
-            sources(&Catalog::Classics, 3),
+            sources(&Catalog::Classics, 3).unwrap(),
             CLASSICS_3D
                 .into_iter()
                 .map(Source::Classic)
@@ -202,8 +206,8 @@ mod tests {
     }
     #[test]
     fn catalog_universe_has_full_orbit_counts() {
-        assert_eq!(sources(&Catalog::Universe, 2).len(), 6);
-        assert_eq!(sources(&Catalog::Universe, 3).len(), 22);
+        assert_eq!(sources(&Catalog::Universe, 2).unwrap().len(), 6);
+        assert_eq!(sources(&Catalog::Universe, 3).unwrap().len(), 22);
     }
     #[test]
     fn source_json_round_trips() {
@@ -228,5 +232,12 @@ mod tests {
         assert!(read(json!({ "code": "soup" })).is_err());
         assert!(read(json!({ "code": true })).is_err());
         assert!(read(json!({ "design": "Soup" })).is_err());
+    }
+
+    #[test]
+    fn refuses_a_dimension_the_universe_cannot_enumerate() {
+        assert!(universe_codes(5).is_err());
+        assert!(sources(&Catalog::Universe, 5).is_err());
+        assert!(sources(&Catalog::Classics, 5).is_ok());
     }
 }

@@ -279,6 +279,7 @@ pub fn block_reduction() -> (usize, usize) {
         let same = power.shape == vec![grid.side, grid.side]
             && power
                 .bytes()
+                .expect("the factory renders bytes")
                 .iter()
                 .zip(grid.cells.iter())
                 .all(|(byte, cell)| (*byte == 1) == *cell);
@@ -305,6 +306,7 @@ pub fn crate_agreement(length: usize) -> (usize, usize) {
         let same = tensor.shape == vec![grid.side, grid.side]
             && tensor
                 .bytes()
+                .expect("the factory renders bytes")
                 .iter()
                 .zip(grid.cells.iter())
                 .all(|(byte, cell)| (*byte == 1) == *cell);

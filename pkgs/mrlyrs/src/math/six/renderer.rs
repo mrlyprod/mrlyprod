@@ -205,7 +205,7 @@ mod tests {
     #[test]
     fn hexagon_renders() {
         let hex = Cell6d::new(
-            blank(3, Orientation::Horizontal, 1, 0),
+            blank(3, Orientation::Horizontal, 1, 0).unwrap(),
             Projection::Cut,
             Orientation::Horizontal,
             0,
@@ -214,12 +214,13 @@ mod tests {
         assert!(!tris.is_empty());
     }
     #[test]
-    fn nothing_to_render_errors_in_both_doors() {
+    fn refuses_a_sheet_with_nothing_to_draw() {
         let bare = Cell6d::new(
             crate::math::two::Cell2d::new(crate::core::Tensor::full(
                 vec![2, 3],
                 crate::math::six::GRID,
-            )),
+            ))
+            .unwrap(),
             Projection::Cut,
             Orientation::Horizontal,
             0,

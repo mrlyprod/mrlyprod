@@ -15,7 +15,7 @@ pub(crate) struct Block {
 impl Block {
     /// Reports the block width in columns.
     pub fn width(&self) -> usize {
-        self.rows[0].len()
+        self.rows.first().map_or(0, String::len)
     }
 }
 
@@ -36,7 +36,7 @@ pub(crate) fn layout(text: &str) -> Layout {
             blocks: Vec::new(),
         };
     }
-    let height = if text.chars().any(descends) { 7 } else { 5 };
+    let height: usize = if text.chars().any(descends) { 7 } else { 5 };
     let shapes: Vec<(char, Vec<String>)> = text
         .chars()
         .map(|c| match glyph(c) {
@@ -44,20 +44,20 @@ pub(crate) fn layout(text: &str) -> Layout {
             _ => (c, vec!["000".to_string(); 5]),
         })
         .collect();
-    let width = shapes.iter().map(|s| s.1[0].len()).sum::<usize>() + shapes.len() - 1;
     let mut blocks = Vec::new();
     let mut col = 0;
     for (c, rows) in shapes {
-        let offset = (height - rows.len()) / 2;
-        let step = rows[0].len() + 1;
-        blocks.push(Block {
+        let offset = height.saturating_sub(rows.len()) / 2;
+        let block = Block {
             char: c,
             rows,
             col,
             offset,
-        });
-        col += step;
+        };
+        col += block.width() + 1;
+        blocks.push(block);
     }
+    let width = col - 1;
     Layout {
         height,
         width,

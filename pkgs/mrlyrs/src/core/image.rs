@@ -141,7 +141,7 @@ mod tests {
     }
 
     #[test]
-    fn from_json_rejects_garbage() {
+    fn refuses_from_json() {
         let read = |value| serde_json::from_value::<Image>(value);
         assert!(read(json!(null)).is_err());
         assert!(read(json!({ "width": 1, "height": 1 })).is_err());

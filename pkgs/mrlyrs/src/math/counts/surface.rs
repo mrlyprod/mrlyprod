@@ -12,7 +12,7 @@ fn strides(shape: &[usize]) -> Vec<usize> {
 }
 
 fn occupancy(tile: &Tensor) -> u128 {
-    tile.bytes().iter().filter(|&&v| v != 0).count() as u128
+    (tile.size() - tile.count(0)) as u128
 }
 
 /// Counts, per axis, the adjacent filled pairs and the cross positions whose two end cells are both filled.
@@ -21,21 +21,20 @@ fn occupancy(tile: &Tensor) -> u128 {
 /// spanning positions of the block multiply level by level, so the exposure closes.
 pub fn pairs(tile: &Tensor) -> Vec<(u128, u128)> {
     let shape = &tile.shape;
-    let bytes = tile.bytes();
     let strides = strides(shape);
     (0..shape.len())
         .map(|axis| {
             let (stride, side) = (strides[axis], shape[axis]);
             let (mut adjacent, mut spanning) = (0u128, 0u128);
-            for (flat, &cell) in bytes.iter().enumerate() {
-                if cell == 0 {
+            for flat in 0..tile.size() {
+                if tile.at(flat) == 0 {
                     continue;
                 }
                 let position = flat / stride % side;
-                if position == 0 && bytes[flat + (side - 1) * stride] != 0 {
+                if position == 0 && tile.at(flat + (side - 1) * stride) != 0 {
                     spanning += 1;
                 }
-                if position + 1 < side && bytes[flat + stride] != 0 {
+                if position + 1 < side && tile.at(flat + stride) != 0 {
                     adjacent += 1;
                 }
             }

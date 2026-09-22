@@ -29,7 +29,7 @@ fn exposed(types: &Tensor) -> usize {
             index[axis] = rem % dims[axis];
             rem /= dims[axis];
         }
-        if types.bytes()[flat] == 0 {
+        if types.at(flat) == 0 {
             continue;
         }
         for axis in 0..rank {
@@ -41,7 +41,7 @@ fn exposed(types: &Tensor) -> usize {
                 }
                 probe.copy_from_slice(&index);
                 probe[axis] = next as usize;
-                if types.get(&probe) == 0 {
+                if types.at(types.index(&probe)) == 0 {
                     count += 1;
                 }
             }
@@ -54,11 +54,11 @@ fn exposed(types: &Tensor) -> usize {
 
 fn line(label: &str, name: &str, dimension: usize, radius: Frac, types: &Tensor) {
     let shape = named(name, dimension, radius).unwrap();
-    let tally = census(&shape, types);
-    let kept = crop(types, &shape, true);
-    let inner = crop(types, &shape, false);
-    let anti_kept = crop(types, &Shape::Anti(Box::new(shape.clone())), true);
-    let anti_inner = crop(types, &Shape::Anti(Box::new(shape)), false);
+    let tally = census(&shape, types).unwrap();
+    let kept = crop(types, &shape, true).unwrap();
+    let inner = crop(types, &shape, false).unwrap();
+    let anti_kept = crop(types, &Shape::Anti(Box::new(shape.clone())), true).unwrap();
+    let anti_inner = crop(types, &Shape::Anti(Box::new(shape)), false).unwrap();
     let filled = types.sum();
     assert_eq!(tally.filled.iter().sum::<usize>() as u64, filled);
     assert_eq!(kept.sum() as usize, tally.filled[1] + tally.filled[2]);
@@ -79,7 +79,7 @@ fn line(label: &str, name: &str, dimension: usize, radius: Frac, types: &Tensor)
 
 fn main() {
     println!("crop-counts generator: CARGO_BUILD_JOBS=4 cargo run --release -p crop-counts");
-    let half = Frac::new(1, 2);
+    let half = Frac::new(1, 2).unwrap();
     for level in 0..=5usize {
         let carpet = design(2, level);
         for name in ["ball", "diamond"] {
@@ -95,7 +95,7 @@ fn main() {
     let carpet = design(2, 4);
     let sponge = design(3, 3);
     for rnum in 1..=24i64 {
-        let radius = Frac::new(rnum, 24);
+        let radius = Frac::new(rnum, 24).unwrap();
         for name in ["ball", "diamond"] {
             line("sweep carpet L=4", name, 2, radius, &carpet);
             line("sweep sponge L=3", name, 3, radius, &sponge);

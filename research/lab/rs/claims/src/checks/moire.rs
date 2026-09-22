@@ -32,7 +32,7 @@ pub fn the_moire_correlation_law_for_odd() -> Result<(), String> {
         ));
     }
     for (m, n) in SAMPLED {
-        let gap = (correlation(m, n) - sampled(m, n)).abs();
+        let gap = (correlation(m, n) - sampled(m, n).map_err(|e| e.to_string())?).abs();
         if gap > 1e-12 {
             return Err(format!(
                 "the sampled layers part from the law by {gap} at {m} and {n}"

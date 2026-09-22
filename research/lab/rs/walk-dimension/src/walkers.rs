@@ -27,8 +27,9 @@ pub fn grid_walk(grid: &Tensor, rng: &mut Rng, walkers: usize, side_cap: f64) ->
     let shape = grid.shape.clone();
     let dims = shape.len();
     let stride = strides(&shape);
-    let bytes = grid.bytes();
-    let mut cells: Vec<usize> = (0..grid.size()).filter(|flat| bytes[*flat] != 0).collect();
+    let mut cells: Vec<usize> = (0..grid.size())
+        .filter(|&flat| grid.at(flat) != 0)
+        .collect();
     let mut low = vec![usize::MAX; dims];
     let mut high = vec![0usize; dims];
     for flat in &cells {
@@ -80,7 +81,7 @@ pub fn grid_walk(grid: &Tensor, rng: &mut Rng, walkers: usize, side_cap: f64) ->
                 continue;
             }
             let next = (seat[walker] as i64 + step * stride[axis] as i64) as usize;
-            if bytes[next] != 0 {
+            if grid.at(next) != 0 {
                 place[walker][axis] = moved;
                 seat[walker] = next;
             }

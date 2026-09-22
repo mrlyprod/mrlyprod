@@ -21,7 +21,7 @@ fn adjacency_graph(cell: &Cell6d, keep: impl Fn(u8) -> bool) -> Result<Network> 
     let mut cells = Vec::new();
     for y in 0..height {
         for x in 0..width {
-            if keep(inner.types().get(&[y, x])) {
+            if keep(inner.types().get(&[y, x])?) {
                 cells.push((x as i64, y as i64));
             }
         }
@@ -68,7 +68,7 @@ pub fn slice_edge_graph(cell: &Cell6d, value: Option<u8>) -> Result<Network> {
     let mut seen: BTreeMap<Edge, bool> = BTreeMap::new();
     for y in 0..height {
         for x in 0..width {
-            if !keep(inner.types().get(&[y, x])) {
+            if !keep(inner.types().get(&[y, x])?) {
                 continue;
             }
             let c = corners(x as i64, y as i64, start);
@@ -107,7 +107,8 @@ mod tests {
                 Orientation::Horizontal,
                 FILL,
                 crate::math::six::GRID,
-            ),
+            )
+            .unwrap(),
             Projection::Cut,
             Orientation::Horizontal,
             0,

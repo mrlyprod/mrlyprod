@@ -38,7 +38,7 @@ fn is_two(base: &usize) -> bool {
 ///     carpet.to_json(),
 ///     r#"{"kind":"sequence","dim":2,"code":7,"measure":"fills","axis":"side"}"#
 /// );
-/// assert_eq!(carpet.to_file(), "sequence_dim=2_code=7_measure=fills_axis=side");
+/// assert_eq!(carpet.to_file().unwrap(), "sequence_dim=2_code=7_measure=fills_axis=side");
 /// ```
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -124,16 +124,25 @@ mod tests {
     #[test]
     fn the_carpet_row_holds_through_every_view() {
         assert_eq!(
-            carpet().to_file(),
+            carpet().to_file().unwrap(),
             "sequence_dim=2_code=7_measure=fills_axis=side"
         );
         assert_eq!(
-            carpet().to_url(),
+            carpet().to_url().unwrap(),
             "/sequence?dim=2&code=7&measure=fills&axis=side"
         );
-        assert_eq!(carpet().to_mrly(), "sequence dim 2, code 7, fills, side");
-        assert_eq!(Sequence::from_file(&carpet().to_file()).unwrap(), carpet());
-        assert_eq!(Sequence::from_url(&carpet().to_url()).unwrap(), carpet());
+        assert_eq!(
+            carpet().to_mrly().unwrap(),
+            "sequence dim 2, code 7, fills, side"
+        );
+        assert_eq!(
+            Sequence::from_file(&carpet().to_file().unwrap()).unwrap(),
+            carpet()
+        );
+        assert_eq!(
+            Sequence::from_url(&carpet().to_url().unwrap()).unwrap(),
+            carpet()
+        );
     }
     #[test]
     fn the_id_is_eight_stable_hex_digits() {
@@ -146,7 +155,7 @@ mod tests {
         assert_ne!(id, Sequence::new(7, 2, 2, "fills", "level").to_id());
     }
     #[test]
-    fn only_a_fitting_sequence_parses() {
+    fn refuses_every_text_that_is_not_a_sequence() {
         for bad in [
             r#"{"kind":"bang","dim":2,"code":7}"#,
             r#"{"kind":"sequence","dim":2,"code":7,"measure":"area","axis":"side"}"#,

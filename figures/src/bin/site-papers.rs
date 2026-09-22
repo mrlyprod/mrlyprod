@@ -37,14 +37,14 @@ fn main() -> Result<()> {
         let oz = step * LIFT;
         for a in 0..SIDE {
             for b in 0..SIDE {
-                if cells.get(&[a, b]) != 0 {
-                    grid.set(&[ox + a, b, oz], 1);
+                if cells.get(&[a, b])? != 0 {
+                    grid.set(&[ox + a, b, oz], 1)?;
                 }
             }
         }
     }
     assert_eq!(grid.sum(), want);
-    let shelf = Cell3d::new(grid);
+    let shelf = Cell3d::new(grid)?;
     iso::draw(
         &mut board,
         frame,

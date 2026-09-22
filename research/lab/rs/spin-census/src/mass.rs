@@ -25,12 +25,11 @@ impl Mass {
 
 pub fn shells(grid: &Tensor, digit: (usize, usize)) -> Mass {
     let side = grid.shape[0];
-    let bytes = grid.bytes();
     let anchor = (side as i64 * digit.0 as i64, side as i64 * digit.1 as i64);
     let mut keys: Vec<u32> = Vec::new();
     for row in 0..side {
         for col in 0..side {
-            if bytes[row * side + col] == 0 {
+            if grid.at(row * side + col) == 0 {
                 continue;
             }
             let dr = 2 * row as i64 + 1 - anchor.0;
@@ -55,7 +54,6 @@ pub fn shells(grid: &Tensor, digit: (usize, usize)) -> Mass {
 /// The nearest filled cell to the fixed point of the digit, as four times its squared distance, an exact integer.
 pub fn nearest_cell(grid: &Tensor, digit: (usize, usize)) -> u64 {
     let side = grid.shape[0];
-    let bytes = grid.bytes();
     let anchor = (side as i64 * digit.0 as i64, side as i64 * digit.1 as i64);
     let reach = |at: i64, low: i64| -> i64 {
         let (a, b) = (2 * low - at, at - 2 * (low + 1));
@@ -64,7 +62,7 @@ pub fn nearest_cell(grid: &Tensor, digit: (usize, usize)) -> u64 {
     let mut best = u64::MAX;
     for row in 0..side {
         for col in 0..side {
-            if bytes[row * side + col] == 0 {
+            if grid.at(row * side + col) == 0 {
                 continue;
             }
             let dr = reach(anchor.0, row as i64);

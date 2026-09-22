@@ -11,8 +11,8 @@ const SIDE: f64 = 32.0;
 fn main() -> Result<()> {
     let cell = designs::create(Code::from(7u128), 2, LEVEL, 0, 2)?;
     let network = core_graph(&cell)?;
-    let tally = census(&network);
-    let tags = roles(&network);
+    let tally = census(&network)?;
+    let tags = roles(&network)?;
     let tips = tags.iter().filter(|r| **r == Role::Tip).count();
     let paths = tags.iter().filter(|r| **r == Role::Through).count();
     let junctions = tags.iter().filter(|r| **r == Role::Junction).count();

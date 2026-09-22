@@ -35,7 +35,7 @@ fn panel(board: &mut Board, frame: Frame, order: (u128, u128), tone: Color) -> R
     let mut filled = 0usize;
     for row in 0..4 {
         for col in 0..4 {
-            if picture.get(&[row, col]) == 0 {
+            if picture.get(&[row, col])? == 0 {
                 continue;
             }
             filled += 1;

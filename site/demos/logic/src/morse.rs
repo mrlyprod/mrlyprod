@@ -23,7 +23,7 @@ fn tile_of(code: &str, number: usize, base: usize) -> Result<Vec<u8>, Fault> {
         return Err(Fault::new(format!("side {number} is below two.")));
     }
     let cell = two::create(Code::from(code_of(code)?), number, 1, 0, base)?;
-    Ok(cell.types().bytes().to_vec())
+    Ok(cell.types().bytes()?.to_vec())
 }
 
 fn signs_of(tile: &[u8]) -> Vec<u8> {
@@ -45,7 +45,7 @@ fn side_of(number: usize, level: usize) -> Result<usize, Fault> {
 fn design_of(tile: &[u8]) -> Option<String> {
     for code in 0..16u128 {
         let cell = two::create(Code::from(code), 2, 1, 0, 2).ok()?;
-        if signs_of(cell.types().bytes()) == tile {
+        if signs_of(cell.types().bytes().ok()?) == tile {
             return Some(code.to_string());
         }
     }
@@ -176,11 +176,11 @@ fn levels(code: &str, number: usize, base: usize, level: usize, fold: &str) -> R
         "design" => (
             two::create(Code::from(code_of(code)?), number, level, 0, base)?
                 .types()
-                .bytes()
+                .bytes()?
                 .to_vec(),
             two::create(Code::from(code_of(code)?), number, level + 1, 0, base)?
                 .types()
-                .bytes()
+                .bytes()?
                 .to_vec(),
         ),
         "sign" => {

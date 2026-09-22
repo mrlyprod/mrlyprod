@@ -94,7 +94,7 @@ impl Field {
             })?;
         let code = checked(code, 2, base)?;
         let tile = two::create(Code::from(code), number, 1, 0, base)?;
-        let digits = tile.types().bytes().iter().filter(|&&b| b != 0).count();
+        let digits = tile.types().bytes()?.iter().filter(|&&b| b != 0).count();
         if digits == 0 {
             return Err(Fault::new("the empty design has no tube."));
         }
@@ -102,7 +102,7 @@ impl Field {
         if cell.width() != side || cell.height() != side {
             return Err(Fault::new("the design is not a square grid."));
         }
-        let dist = transform(cell.types().bytes(), side);
+        let dist = transform(cell.types().bytes()?, side);
         Ok(Field {
             side,
             number,
@@ -226,7 +226,7 @@ pub fn tube_class(code: &str, number: usize, base: usize) -> Result<bool, Fault>
         return Ok(false);
     }
     let tile = two::create(Code::from(checked(code, 2, base)?), number, 1, 0, base)?;
-    let types = tile.types().bytes().to_vec();
+    let types = tile.types().bytes()?.to_vec();
     if types.len() != number * number {
         return Ok(false);
     }

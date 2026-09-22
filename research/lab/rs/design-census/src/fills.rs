@@ -234,7 +234,12 @@ fn case(base: usize, dimension: usize) -> (Vec<Row>, bool) {
     if full {
         let labels: BTreeMap<Code, &str> = named(base, dimension)
             .into_iter()
-            .map(|(name, code)| (canonical(&group, code), name))
+            .map(|(name, code)| {
+                (
+                    canonical(&group, code).expect("the group is not empty"),
+                    name,
+                )
+            })
             .collect();
         let rows = representatives(base, dimension)
             .expect("the walk stays under the code limit")
@@ -249,7 +254,7 @@ fn case(base: usize, dimension: usize) -> (Vec<Row>, bool) {
         let rows = named(base, dimension)
             .into_iter()
             .map(|(name, code)| {
-                let representative = canonical(&group, code);
+                let representative = canonical(&group, code).expect("the group is not empty");
                 let size = orbit(&group, representative).len();
                 row(base, dimension, representative, size, name.to_string())
             })

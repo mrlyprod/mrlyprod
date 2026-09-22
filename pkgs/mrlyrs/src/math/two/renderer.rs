@@ -27,7 +27,7 @@ pub fn text(cell: &Cell2d, glyphs: Option<&HashMap<u8, char>>) -> Vec<String> {
     for y in 0..h {
         let mut row = String::with_capacity(w);
         for x in 0..w {
-            let v = cell.types().get(&[y, x]);
+            let v = cell.types().at(y * w + x) as u8;
             push_glyph(&mut row, v, glyphs);
         }
         rows.push(row);

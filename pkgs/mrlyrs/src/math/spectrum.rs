@@ -2,6 +2,7 @@
 
 use crate::core::error::{value_error, Result};
 use crate::math::graph::models::Network;
+use std::cmp::Ordering;
 
 const SWEEPS: usize = 60;
 const ZERO: f64 = 1e-12;
@@ -156,7 +157,10 @@ pub fn symmetric_eigenvalues(matrix: &[Vec<f64>]) -> Result<Vec<f64>> {
     let mut work: Vec<Vec<f64>> = matrix.to_vec();
     let (mut d, mut e) = tridiagonalise(&mut work);
     implicit_ql(&mut d, &mut e)?;
-    d.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    if d.iter().any(|v| v.is_nan()) {
+        return value_error("The spectrum is not a number; the matrix carries a NaN or overflows.");
+    }
+    d.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
     Ok(d)
 }
 
@@ -211,16 +215,19 @@ pub fn laplacian_spectrum(network: &Network, normalised: bool) -> Result<Vec<f64
 
 // READINGS
 
-/// Groups eigenvalues into runs split by consecutive gaps above the tolerance, each run its mean and its size.
+/// Groups eigenvalues into runs split by consecutive gaps above the tolerance, each run its mean and its size, or an error on a NaN.
 ///
 /// ```
-/// let groups = mrlyrs::math::spectrum::clusters(&[0.0, 1e-15, 2.0], 1e-9);
+/// let groups = mrlyrs::math::spectrum::clusters(&[0.0, 1e-15, 2.0], 1e-9).unwrap();
 /// assert_eq!(groups.len(), 2);
 /// assert_eq!(groups[0].1, 2);
 /// ```
-pub fn clusters(eigenvalues: &[f64], tolerance: f64) -> Vec<(f64, usize)> {
+pub fn clusters(eigenvalues: &[f64], tolerance: f64) -> Result<Vec<(f64, usize)>> {
+    if eigenvalues.iter().any(|v| v.is_nan()) {
+        return value_error("The eigenvalues hold a NaN.");
+    }
     let mut values = eigenvalues.to_vec();
-    values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
     let mut groups = Vec::new();
     let mut start = 0;
     for index in 1..=values.len() {
@@ -230,7 +237,7 @@ pub fn clusters(eigenvalues: &[f64], tolerance: f64) -> Vec<(f64, usize)> {
             start = index;
         }
     }
-    groups
+    Ok(groups)
 }
 
 /// Counts the eigenvalues within the tolerance of a value.
@@ -253,7 +260,7 @@ pub fn multiplicity(eigenvalues: &[f64], value: f64, tolerance: f64) -> usize {
 /// ```
 pub fn spectral_points(eigenvalues: &[f64]) -> Vec<(f64, f64)> {
     let mut values: Vec<f64> = eigenvalues.iter().map(|&v| v.max(0.0)).collect();
-    values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
     let total = values.len();
     let mut points = Vec::new();
     let mut index = 0;
@@ -347,7 +354,7 @@ mod tests {
             let mut want: Vec<f64> = (0..n)
                 .map(|k| 2.0 - 2.0 * (PI * k as f64 / n as f64).cos())
                 .collect();
-            want.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            want.sort_by(|a, b| a.total_cmp(b));
             for (got, expected) in values.iter().zip(&want) {
                 assert!((got - expected).abs() < 1e-10, "n={n} {got} {expected}");
             }
@@ -372,7 +379,7 @@ mod tests {
             let mut want: Vec<f64> = (0..n)
                 .map(|k| 1.0 - (2.0 * PI * k as f64 / n as f64).cos())
                 .collect();
-            want.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            want.sort_by(|a, b| a.total_cmp(b));
             for (got, expected) in values.iter().zip(&want) {
                 assert!((got - expected).abs() < 1e-10, "n={n} {got} {expected}");
             }
@@ -421,19 +428,23 @@ mod tests {
     }
 
     #[test]
-    fn a_crooked_matrix_is_refused() {
+    fn refuses_a_crooked_matrix_a_nan_and_a_node_without_a_branch() {
         assert!(symmetric_eigenvalues(&[vec![1.0, 2.0]]).is_err());
         assert!(symmetric_eigenvalues(&[vec![1.0, 2.0], vec![3.0, 1.0]]).is_err());
+        assert!(symmetric_eigenvalues(&[vec![f64::NAN]]).is_err());
+        assert!(symmetric_eigenvalues(&[vec![f64::NAN, 0.0], vec![0.0, 1.0]]).is_err());
+        assert!(clusters(&[0.0, f64::NAN], 1e-9).is_err());
         let mut lonely = Network::new(1);
         lonely.add_node(vec![0.0]).unwrap();
         assert!(laplacian(&lonely, true).is_err());
         assert!(laplacian(&lonely, false).is_ok());
+        assert!(laplacian_spectrum(&lonely, true).is_err());
     }
 
     #[test]
     fn the_clusters_and_multiplicities_split_a_hand_made_list() {
         let values = [0.0, 1e-15, 2e-15, 1.0, 1.0 + 1e-13, 1.0 - 1e-13, 2.0];
-        let groups = clusters(&values, 1e-9);
+        let groups = clusters(&values, 1e-9).unwrap();
         assert_eq!(
             groups.iter().map(|g| g.1).collect::<Vec<usize>>(),
             [3, 3, 1]
@@ -444,7 +455,7 @@ mod tests {
         assert_eq!(multiplicity(&values, 1.0, 1e-12), 3);
         assert_eq!(multiplicity(&values, 1.0, 1e-14), 1);
         assert_eq!(multiplicity(&values, 0.0, 1e-9), 3);
-        assert_eq!(clusters(&[], 1e-9).len(), 0);
+        assert_eq!(clusters(&[], 1e-9).unwrap().len(), 0);
         assert_eq!(spectral_exponent(&[0.0, 0.0], 0.1), None);
         assert_eq!(spectral_fit(&[0.0, 0.0], 0.1), None);
     }

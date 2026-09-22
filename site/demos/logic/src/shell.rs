@@ -21,7 +21,7 @@ fn guarded(code: &str, number: usize, base: usize, radius: u32) -> Result<(Shell
         )));
     }
     let tile = factory::create(Code::from(code_of(code)?), number, 2, base, 1)?;
-    let keep: Vec<bool> = tile.bytes().iter().map(|&b| b != 0).collect();
+    let keep: Vec<bool> = tile.bytes()?.iter().map(|&b| b != 0).collect();
     let tree = crossing_tree(radius as u64, number as u64, &keep);
     let depth = tree.levels.len() - 1;
     Ok((tree, depth))
@@ -195,7 +195,7 @@ pub fn shell_pixels(
     };
     for x in 0..side {
         for y in 0..side {
-            if grid.bytes()[x * side + y] != 0 {
+            if grid.at(x * side + y) != 0 {
                 block(
                     x * scale,
                     y * scale,

@@ -10,7 +10,7 @@ fn main() -> Result<()> {
     let area = board.frame(0.08);
     let rows = STEPS + 1;
     let window = 2 * STEPS + 1;
-    let diagram = elementary::single_seed(RULE, STEPS);
+    let diagram = elementary::single_seed(RULE, STEPS)?;
     assert_eq!(diagram.shape, vec![rows, window]);
 
     let mut lo = window;

@@ -16,7 +16,10 @@ fn main() -> Result<()> {
             frame.y + frame.h * (1.0 - (value - FLOOR) / (ROOF - FLOOR)),
         )
     };
-    let limits: Vec<f64> = POWERS.iter().map(|&s| zeta_whole(s)).collect();
+    let limits: Vec<f64> = POWERS
+        .iter()
+        .map(|&s| zeta_whole(s))
+        .collect::<Result<Vec<f64>>>()?;
     for limit in &limits {
         let (_, y) = place(1, *limit);
         board.segment((frame.x, y), (frame.x + frame.w, y), 1.5, ink::line());

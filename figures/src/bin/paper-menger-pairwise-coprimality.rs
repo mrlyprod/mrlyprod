@@ -32,7 +32,7 @@ fn main() -> Result<()> {
         for a in 0..3 {
             for b in 0..3 {
                 let (x, y, w, h) = grid.cell(b, a);
-                if types.get(&[a, b, c]) == 0 {
+                if types.get(&[a, b, c])? == 0 {
                     outline(&mut board, (x, y, w, h), 4.0);
                     continue;
                 }

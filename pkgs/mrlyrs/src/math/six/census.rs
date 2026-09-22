@@ -93,7 +93,7 @@ pub fn census(cell: &Cell6d, include_grid: bool) -> Census {
     let mut mesh = Mesh::default();
     for y in 0..height {
         for x in 0..width {
-            let v = inner.types().get(&[y, x]);
+            let v = inner.types().at(y * width + x) as u8;
             match v {
                 FILL => fills += 1,
                 VOID => voids += 1,
@@ -114,17 +114,12 @@ pub fn census(cell: &Cell6d, include_grid: bool) -> Census {
 ///
 /// ```
 /// use mrlyrs::math::six::{blank, Cell6d, Orientation, Projection, FILL, VOID};
-/// let hex = blank(2, Orientation::Horizontal, FILL, VOID);
+/// let hex = blank(2, Orientation::Horizontal, FILL, VOID).unwrap();
 /// let cell = Cell6d::new(hex, Projection::Cut, Orientation::Horizontal, 0);
 /// assert_eq!(mrlyrs::math::six::census::fills(&cell), 24);
 /// ```
 pub fn fills(cell: &Cell6d) -> usize {
-    cell.cell
-        .types()
-        .bytes()
-        .iter()
-        .filter(|&&v| v == FILL)
-        .count()
+    cell.cell.types().count(FILL)
 }
 
 /// Returns the Euler characteristic of the cell's mesh, counting the backdrop only on request.
@@ -141,7 +136,7 @@ pub fn fills_only(cell: &Cell6d) -> Census {
     let mut mesh = Mesh::default();
     for y in 0..height {
         for x in 0..width {
-            if inner.types().get(&[y, x]) != FILL {
+            if inner.types().at(y * width + x) != i64::from(FILL) {
                 continue;
             }
             fills += 1;
@@ -159,7 +154,7 @@ mod tests {
     use crate::math::two::Cell2d;
     fn hex(radius: usize) -> Cell6d {
         Cell6d::new(
-            blank(radius, Orientation::Horizontal, FILL, VOID),
+            blank(radius, Orientation::Horizontal, FILL, VOID).unwrap(),
             Projection::Cut,
             Orientation::Horizontal,
             0,
@@ -186,10 +181,15 @@ mod tests {
     #[test]
     fn single_triangle() {
         let mut t = crate::core::Tensor::new(vec![1, 2]);
-        t.set(&[0, 0], FILL);
-        t.set(&[0, 1], GRID);
+        t.set(&[0, 0], FILL).unwrap();
+        t.set(&[0, 1], GRID).unwrap();
         let c = census(
-            &Cell6d::new(Cell2d::new(t), Projection::Cut, Orientation::Horizontal, 0),
+            &Cell6d::new(
+                Cell2d::new(t).unwrap(),
+                Projection::Cut,
+                Orientation::Horizontal,
+                0,
+            ),
             false,
         );
         assert_eq!(c.triangles, 1);

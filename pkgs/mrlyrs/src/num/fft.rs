@@ -1,19 +1,27 @@
+use crate::core::error::{shape_error, value_error, Result};
 use std::f64::consts::PI;
 
 /// Transforms parallel real and imaginary slices in place over a power-of-two length, unscaled in either direction.
 ///
 /// ```
 /// let (mut re, mut im) = (vec![1.0, 0.0, 0.0, 0.0], vec![0.0; 4]);
-/// mrlyrs::num::fft::fft(&mut re, &mut im, false);
+/// mrlyrs::num::fft::fft(&mut re, &mut im, false).unwrap();
 /// assert_eq!(re, vec![1.0; 4]);
 /// ```
-pub fn fft(re: &mut [f64], im: &mut [f64], inverse: bool) {
+pub fn fft(re: &mut [f64], im: &mut [f64], inverse: bool) -> Result<()> {
     let n = re.len();
-    assert_eq!(n, im.len(), "re and im must be equal length");
-    if n <= 1 {
-        return;
+    if n != im.len() {
+        return shape_error(format!(
+            "the real part holds {n} and the imaginary part {}.",
+            im.len()
+        ));
     }
-    assert!(n.is_power_of_two(), "fft length must be a power of two");
+    if n <= 1 {
+        return Ok(());
+    }
+    if !n.is_power_of_two() {
+        return value_error(format!("the length {n} is not a power of two."));
+    }
     let mut j = 0usize;
     for i in 1..n {
         let mut bit = n >> 1;
@@ -53,14 +61,20 @@ pub fn fft(re: &mut [f64], im: &mut [f64], inverse: bool) {
         }
         len <<= 1;
     }
+    Ok(())
 }
 
 /// Transforms a size-square field in place, rows first and then columns.
-pub fn fft2(re: &mut [f64], im: &mut [f64], size: usize, inverse: bool) {
-    assert_eq!(re.len(), size * size, "buffer must be size*size");
+pub fn fft2(re: &mut [f64], im: &mut [f64], size: usize, inverse: bool) -> Result<()> {
+    if re.len() != size * size {
+        return shape_error(format!(
+            "the buffer holds {} and the field is {size} by {size}.",
+            re.len()
+        ));
+    }
     for r in 0..size {
         let s = r * size;
-        fft(&mut re[s..s + size], &mut im[s..s + size], inverse);
+        fft(&mut re[s..s + size], &mut im[s..s + size], inverse)?;
     }
     let mut cre = vec![0.0; size];
     let mut cim = vec![0.0; size];
@@ -69,19 +83,20 @@ pub fn fft2(re: &mut [f64], im: &mut [f64], size: usize, inverse: bool) {
             cre[r] = re[r * size + c];
             cim[r] = im[r * size + c];
         }
-        fft(&mut cre, &mut cim, inverse);
+        fft(&mut cre, &mut cim, inverse)?;
         for r in 0..size {
             re[r * size + c] = cre[r];
             im[r * size + c] = cim[r];
         }
     }
+    Ok(())
 }
 
 /// Returns the magnitudes of a square field's transform, shifted so zero frequency sits at the centre.
-pub fn magnitude_spectrum(field: &[f64], size: usize) -> Vec<f64> {
+pub fn magnitude_spectrum(field: &[f64], size: usize) -> Result<Vec<f64>> {
     let mut re = field.to_vec();
     let mut im = vec![0.0; field.len()];
-    fft2(&mut re, &mut im, size, false);
+    fft2(&mut re, &mut im, size, false)?;
     let mut out = vec![0.0; size * size];
     let half = size / 2;
     for r in 0..size {
@@ -92,22 +107,31 @@ pub fn magnitude_spectrum(field: &[f64], size: usize) -> Vec<f64> {
             out[rr * size + cc] = mag;
         }
     }
-    out
+    Ok(out)
 }
 
 /// Transforms a real size-square field forward by fft2, returning the real and imaginary parts.
-pub fn transform(field: &[f64], size: usize) -> (Vec<f64>, Vec<f64>) {
+pub fn transform(field: &[f64], size: usize) -> Result<(Vec<f64>, Vec<f64>)> {
     let mut re = field.to_vec();
     let mut im = vec![0.0; field.len()];
-    fft2(&mut re, &mut im, size, false);
-    (re, im)
+    fft2(&mut re, &mut im, size, false)?;
+    Ok((re, im))
 }
 
 /// Lays an odd-side mask into a size-square kernel with the mask centre at index (0, 0) and negative offsets wrapped; the cell at offset (dr, dc) lands at (-dr, -dc) modulo size, so convolving a field by the kernel reads at every site the mask-weighted sum over its neighbours, the neighbour count the life step counts.
-pub fn embed_kernel(mask: &[u8], side: usize, size: usize) -> Vec<f64> {
-    assert!(side % 2 == 1, "the mask side must be odd");
-    assert!(side <= size, "the mask must fit the field");
-    assert_eq!(mask.len(), side * side, "mask must be side*side");
+pub fn embed_kernel(mask: &[u8], side: usize, size: usize) -> Result<Vec<f64>> {
+    if side.is_multiple_of(2) {
+        return value_error(format!("the mask side {side} is not odd."));
+    }
+    if side > size {
+        return value_error(format!("the mask side {side} overruns the field {size}."));
+    }
+    if mask.len() != side * side {
+        return shape_error(format!(
+            "the mask holds {} and its side is {side}.",
+            mask.len()
+        ));
+    }
     let centre = side / 2;
     let mut out = vec![0.0; size * size];
     for r in 0..side {
@@ -121,16 +145,31 @@ pub fn embed_kernel(mask: &[u8], side: usize, size: usize) -> Vec<f64> {
             out[rr * size + cc] = f64::from(value);
         }
     }
-    out
+    Ok(out)
 }
 
 /// Convolves a size-square field on the torus by a kernel already transformed by fft2, the inverse scaled back by size squared.
-pub fn convolve_with(field: &[f64], kernel_re: &[f64], kernel_im: &[f64], size: usize) -> Vec<f64> {
+pub fn convolve_with(
+    field: &[f64],
+    kernel_re: &[f64],
+    kernel_im: &[f64],
+    size: usize,
+) -> Result<Vec<f64>> {
     let n = size * size;
-    assert_eq!(field.len(), n, "field must be size*size");
-    assert_eq!(kernel_re.len(), n, "kernel must be size*size");
-    assert_eq!(kernel_im.len(), n, "kernel must be size*size");
-    let (mut re, mut im) = transform(field, size);
+    if field.len() != n {
+        return shape_error(format!(
+            "the field holds {} and is {size} by {size}.",
+            field.len()
+        ));
+    }
+    if kernel_re.len() != n || kernel_im.len() != n {
+        return shape_error(format!(
+            "the kernel holds {} and {} against a {size} by {size} field.",
+            kernel_re.len(),
+            kernel_im.len()
+        ));
+    }
+    let (mut re, mut im) = transform(field, size)?;
     for ((a, b), (&kr, &ki)) in re
         .iter_mut()
         .zip(im.iter_mut())
@@ -140,29 +179,34 @@ pub fn convolve_with(field: &[f64], kernel_re: &[f64], kernel_im: &[f64], size: 
         *a = fr * kr - fi * ki;
         *b = fr * ki + fi * kr;
     }
-    fft2(&mut re, &mut im, size, true);
+    fft2(&mut re, &mut im, size, true)?;
     let scale = 1.0 / n as f64;
     re.iter_mut().for_each(|v| *v *= scale);
-    re
+    Ok(re)
 }
 
 /// Circularly convolves a size-square field on the torus by a kernel of the same shape through fft2 both ways.
-pub fn convolve(field: &[f64], kernel: &[f64], size: usize) -> Vec<f64> {
-    let (kernel_re, kernel_im) = transform(kernel, size);
+pub fn convolve(field: &[f64], kernel: &[f64], size: usize) -> Result<Vec<f64>> {
+    let (kernel_re, kernel_im) = transform(kernel, size)?;
     convolve_with(field, &kernel_re, &kernel_im, size)
 }
 
 /// Returns the centred magnitude spectrum of a size-square field through log(1 + magnitude), the DC bin included at the centre.
-pub fn log_spectrum(field: &[f64], size: usize) -> Vec<f64> {
-    magnitude_spectrum(field, size)
+pub fn log_spectrum(field: &[f64], size: usize) -> Result<Vec<f64>> {
+    Ok(magnitude_spectrum(field, size)?
         .into_iter()
         .map(f64::ln_1p)
-        .collect()
+        .collect())
 }
 
 /// Averages a centred size-square spectrum over rings of integer radius from the centre bin, a bin joining the ring its distance rounds to, rings 0 through size over two; ring k holds the frequencies near k cycles per field.
-pub fn radial_profile(spectrum: &[f64], size: usize) -> Vec<f64> {
-    assert_eq!(spectrum.len(), size * size, "spectrum must be size*size");
+pub fn radial_profile(spectrum: &[f64], size: usize) -> Result<Vec<f64>> {
+    if spectrum.len() != size * size {
+        return shape_error(format!(
+            "the spectrum holds {} and the field is {size} by {size}.",
+            spectrum.len()
+        ));
+    }
     let half = size / 2;
     let mut sums = vec![0.0; half + 1];
     let mut counts = vec![0usize; half + 1];
@@ -177,10 +221,11 @@ pub fn radial_profile(spectrum: &[f64], size: usize) -> Vec<f64> {
             }
         }
     }
-    sums.iter()
+    Ok(sums
+        .iter()
         .zip(&counts)
         .map(|(&sum, &count)| if count == 0 { 0.0 } else { sum / count as f64 })
-        .collect()
+        .collect())
 }
 
 /// Finds the ring past the centre where a radial profile peaks, a tie broken at the smaller ring; zero when the profile holds no ring past ring 0.
@@ -212,7 +257,7 @@ mod tests {
         let mut re = vec![0.0; 8];
         let mut im = vec![0.0; 8];
         re[0] = 1.0;
-        fft(&mut re, &mut im, false);
+        fft(&mut re, &mut im, false).unwrap();
         for k in 0..8 {
             let mag = (re[k].powi(2) + im[k].powi(2)).sqrt();
             assert!((mag - 1.0).abs() < 1e-9, "bin {k} mag {mag}");
@@ -223,8 +268,8 @@ mod tests {
         let orig: Vec<f64> = (0..16).map(|i| (i as f64 * 0.7).sin()).collect();
         let mut re = orig.clone();
         let mut im = vec![0.0; 16];
-        fft(&mut re, &mut im, false);
-        fft(&mut re, &mut im, true);
+        fft(&mut re, &mut im, false).unwrap();
+        fft(&mut re, &mut im, true).unwrap();
         for (i, v) in orig.iter().enumerate() {
             assert!((re[i] / 16.0 - v).abs() < 1e-9, "index {i}");
         }
@@ -237,7 +282,7 @@ mod tests {
             .collect();
         let mut re = signal.clone();
         let mut im = vec![0.0; n];
-        fft(&mut re, &mut im, false);
+        fft(&mut re, &mut im, false).unwrap();
         let mag: Vec<f64> = (0..n)
             .map(|k| (re[k].powi(2) + im[k].powi(2)).sqrt())
             .collect();
@@ -253,7 +298,7 @@ mod tests {
     fn spectrum2d_centres_dc() {
         let size = 8;
         let field = vec![2.0; size * size];
-        let spec = magnitude_spectrum(&field, size);
+        let spec = magnitude_spectrum(&field, size).unwrap();
         let centre = (size / 2) * size + size / 2;
         let max = spec.iter().cloned().fold(0.0f64, f64::max);
         assert!((spec[centre] - max).abs() < 1e-9);
@@ -264,7 +309,7 @@ mod tests {
     }
     #[test]
     fn the_embedded_kernel_wraps_the_mask_about_the_origin() {
-        let kernel = embed_kernel(&moore(), 3, 8);
+        let kernel = embed_kernel(&moore(), 3, 8).unwrap();
         assert_eq!(kernel.iter().sum::<f64>(), 8.0);
         assert_eq!(kernel[0], 0.0);
         for (r, c) in [
@@ -282,10 +327,10 @@ mod tests {
     }
     #[test]
     fn an_off_centre_mask_cell_reads_the_neighbour_the_life_step_reads() {
-        let kernel = embed_kernel(&[0, 1, 0, 0, 0, 0, 0, 0, 0], 3, 8);
+        let kernel = embed_kernel(&[0, 1, 0, 0, 0, 0, 0, 0, 0], 3, 8).unwrap();
         let mut field = vec![0.0; 64];
         field[3 * 8 + 3] = 1.0;
-        let read = convolve(&field, &kernel, 8);
+        let read = convolve(&field, &kernel, 8).unwrap();
         for (i, v) in read.iter().enumerate() {
             let want = if i == 4 * 8 + 3 { 1.0 } else { 0.0 };
             assert!((v - want).abs() < 1e-9, "index {i} read {v}");
@@ -293,16 +338,16 @@ mod tests {
     }
     #[test]
     fn the_moore_count_of_a_full_torus_is_eight_everywhere() {
-        let kernel = embed_kernel(&moore(), 3, 16);
+        let kernel = embed_kernel(&moore(), 3, 16).unwrap();
         let field = vec![1.0; 256];
-        let counts = convolve(&field, &kernel, 16);
+        let counts = convolve(&field, &kernel, 16).unwrap();
         assert!(counts.iter().all(|v| (v - 8.0).abs() < 1e-9));
-        let (re, im) = transform(&kernel, 16);
-        assert_eq!(convolve_with(&field, &re, &im, 16), counts);
+        let (re, im) = transform(&kernel, 16).unwrap();
+        assert_eq!(convolve_with(&field, &re, &im, 16).unwrap(), counts);
     }
     #[test]
     fn the_log_spectrum_of_a_flat_field_is_one_centred_bin() {
-        let spec = log_spectrum(&[2.0; 16], 4);
+        let spec = log_spectrum(&[2.0; 16], 4).unwrap();
         assert!((spec[2 * 4 + 2] - 32f64.ln_1p()).abs() < 1e-9);
         assert!(spec
             .iter()
@@ -313,7 +358,7 @@ mod tests {
     fn the_radial_profile_averages_rounded_rings_up_to_the_half_size() {
         let mut spec = vec![1.0; 16];
         spec[2 * 4 + 2] = 5.0;
-        assert_eq!(radial_profile(&spec, 4), vec![5.0, 1.0, 1.0]);
+        assert_eq!(radial_profile(&spec, 4).unwrap(), vec![5.0, 1.0, 1.0]);
     }
     #[test]
     fn the_peak_ring_skips_the_centre_and_breaks_ties_low() {
@@ -329,13 +374,35 @@ mod tests {
         let field: Vec<f64> = (0..size * size)
             .map(|i| if (i % size) % 4 < 2 { 1.0 } else { 0.0 })
             .collect();
-        let spectrum = log_spectrum(&field, size);
+        let spectrum = log_spectrum(&field, size).unwrap();
         assert_eq!(spectrum.len(), size * size);
         let top = spectrum.iter().cloned().fold(0.0f64, f64::max);
         assert_eq!(spectrum[16 * size + 16], top);
-        let profile = radial_profile(&spectrum, size);
+        let profile = radial_profile(&spectrum, size).unwrap();
         assert_eq!(profile.len(), 17);
         assert_eq!(peak_ring(&profile), 8);
         assert_eq!(peak_wavelength(&profile, size), 4.0);
+    }
+    #[test]
+    fn refuses_a_buffer_that_does_not_match_its_field() {
+        let mut re = vec![0.0; 8];
+        let mut im = vec![0.0; 4];
+        assert!(fft(&mut re, &mut im, false).is_err());
+        let mut short = vec![0.0; 6];
+        let mut pair = vec![0.0; 6];
+        assert!(fft(&mut short, &mut pair, false).is_err());
+        let mut nine = vec![0.0; 9];
+        let mut also = vec![0.0; 9];
+        assert!(fft2(&mut nine, &mut also, 4, false).is_err());
+        assert!(magnitude_spectrum(&[1.0; 9], 4).is_err());
+        assert!(transform(&[1.0; 9], 4).is_err());
+        assert!(log_spectrum(&[1.0; 9], 4).is_err());
+        assert!(radial_profile(&[1.0; 9], 4).is_err());
+        assert!(embed_kernel(&[1; 4], 2, 8).is_err());
+        assert!(embed_kernel(&[1; 81], 9, 8).is_err());
+        assert!(embed_kernel(&[1; 8], 3, 8).is_err());
+        assert!(convolve_with(&[1.0; 9], &[1.0; 16], &[1.0; 16], 4).is_err());
+        assert!(convolve_with(&[1.0; 16], &[1.0; 9], &[1.0; 16], 4).is_err());
+        assert!(convolve(&[1.0; 16], &[1.0; 9], 4).is_err());
     }
 }

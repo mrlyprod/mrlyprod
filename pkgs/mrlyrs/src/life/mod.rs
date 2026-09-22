@@ -19,11 +19,12 @@ pub mod source;
 /// The one-generation advance of a grid.
 pub mod step;
 
+use crate::core::error::Result;
 use crate::core::named_enum;
 use crate::math::two::Cell2d;
 
 /// Builds the 3 by 3 Moore mask, every site on but the center.
-pub fn moore() -> Cell2d {
+pub fn moore() -> Result<Cell2d> {
     Cell2d::new(crate::core::cell::moore(2))
 }
 
@@ -75,10 +76,10 @@ pub use step::next_grid;
 #[cfg(test)]
 pub(crate) fn blinker() -> Cell2d {
     let mut t = crate::core::tensor::Tensor::new(vec![5, 5]);
-    t.set(&[1, 2], 1);
-    t.set(&[2, 2], 1);
-    t.set(&[3, 2], 1);
-    Cell2d::new(t)
+    t.set(&[1, 2], 1).unwrap();
+    t.set(&[2, 2], 1).unwrap();
+    t.set(&[3, 2], 1).unwrap();
+    Cell2d::new(t).unwrap()
 }
 
 #[cfg(test)]

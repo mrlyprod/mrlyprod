@@ -10,7 +10,7 @@ use crate::math::cell::serializer::{
 fn to_lists(cell: &Cell2d) -> Vec<Vec<u8>> {
     let (h, w) = (cell.height(), cell.width());
     (0..h)
-        .map(|y| (0..w).map(|x| cell.types().get(&[y, x])).collect())
+        .map(|y| (0..w).map(|x| cell.types().at(y * w + x) as u8).collect())
         .collect()
 }
 
@@ -24,7 +24,7 @@ fn from_lists(lists: &[Vec<u8>]) -> Result<Cell2d> {
         return value_error("all rows must have the same length.");
     }
     let data: Vec<u8> = lists.iter().flatten().copied().collect();
-    Ok(Cell2d::new(Tensor::of(data, vec![h, w])))
+    Cell2d::new(Tensor::of(data, vec![h, w])?)
 }
 
 /// Serializes the cell to a JSON string of its types, with colors and tags when present.

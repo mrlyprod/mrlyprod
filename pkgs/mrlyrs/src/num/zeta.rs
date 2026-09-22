@@ -171,20 +171,21 @@ impl Default for Line {
 impl Line {
     /// Builds the line: the even Bernoulli numbers through the fourteenth and their Euler-Maclaurin weights.
     pub fn new() -> Line {
-        let fractions = bernoulli(2 * TAIL + 1);
-        let bern: Vec<f64> = (0..=TAIL)
-            .map(|k| {
-                let (num, den) = fractions[2 * k];
-                num as f64 / den as f64
-            })
+        let fractions = bernoulli(2 * TAIL + 1).unwrap_or_default();
+        let bern: Vec<f64> = fractions
+            .iter()
+            .step_by(2)
+            .map(|&(num, den)| num as f64 / den as f64)
             .collect();
         let mut factorial = 1.0;
-        let tail = (0..=TAIL)
-            .map(|k| {
+        let tail = bern
+            .iter()
+            .enumerate()
+            .map(|(k, &value)| {
                 if k > 0 {
                     factorial *= ((2 * k - 1) * 2 * k) as f64;
                 }
-                bern[k] / factorial
+                value / factorial
             })
             .collect();
         Line { bern, tail }

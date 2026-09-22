@@ -93,7 +93,7 @@ pub fn sponge(level: usize) -> Graph {
 }
 
 pub fn square(side: usize) -> Graph {
-    Graph::of(&Tensor::of(vec![1; side * side], vec![side, side]))
+    Graph::of(&Tensor::full(vec![side, side], 1))
 }
 
 pub fn random(nodes: usize, p: f64, seed: u64) -> Graph {

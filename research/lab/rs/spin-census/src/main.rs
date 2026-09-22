@@ -76,7 +76,7 @@ fn anchors(table: &[(usize, usize)]) {
     let grid = plane(127, BASE, 4);
     let bulk = shells(&grid, (1, 1));
     let side = grid.shape[0];
-    let rings = mrlyrs::math::spin::profile(&design::floats(&grid), side, 6000);
+    let rings = mrlyrs::math::spin::profile(&design::floats(&grid), side, 6000).unwrap();
     let crate_mass = mrlyrs::math::spin::mass(&rings, side);
     println!(
         "code 127 level 4: shell total {} crate profile mass {:.2} gap {:.2e}",

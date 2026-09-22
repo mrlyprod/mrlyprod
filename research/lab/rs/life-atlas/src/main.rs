@@ -136,7 +136,7 @@ fn footprint(canvas: usize, side: usize, d: usize) -> usize {
 
 fn scan(frame: &Tensor, cuts: &[usize], side: usize) -> Scan {
     let n = frame.shape[0];
-    let bytes = frame.bytes();
+    let bytes = frame.bytes().expect("a frame is bytes");
     let mut buf = Blocks::new(n);
     let mut best = Kind::None;
     let mut in_place = Kind::None;
@@ -157,7 +157,8 @@ fn scan(frame: &Tensor, cuts: &[usize], side: usize) -> Scan {
                 }
                 if kind == Kind::Proper && witness.is_none() {
                     let fill = buf.outer[..d * d].iter().filter(|&&v| v != 0).count();
-                    let tile = Tensor::of(buf.inner[..m * m].to_vec(), vec![m, m]);
+                    let tile = Tensor::of(buf.inner[..m * m].to_vec(), vec![m, m])
+                        .expect("the inner block fills its square");
                     let code = pack(&tile).unwrap_or(0);
                     witness = Some((dr, dc, d, fill, code, tile.sum() as usize));
                 }
@@ -258,6 +259,7 @@ fn board_of(run: &Run) -> Cell2d {
     )
     .unwrap()
     .tile(run.tessellation, run.tessellation)
+    .unwrap()
 }
 
 fn rows_of(tile: &Tensor) -> String {
@@ -265,7 +267,13 @@ fn rows_of(tile: &Tensor) -> String {
     (0..n)
         .map(|r| {
             (0..n)
-                .map(|c| if tile.get(&[r, c]) != 0 { '#' } else { '.' })
+                .map(|c| {
+                    if tile.get(&[r, c]).is_ok_and(|v| v != 0) {
+                        '#'
+                    } else {
+                        '.'
+                    }
+                })
                 .collect::<String>()
         })
         .collect::<Vec<String>>()
@@ -404,7 +412,7 @@ fn closure(census: &Census) {
 
 fn config(run: &Run, mask: Tensor, canvas: usize, board_side: usize) -> Config {
     Config {
-        mask: Cell2d::new(mask),
+        mask: Cell2d::new(mask).unwrap(),
         birth: run.rule.birth(),
         survive: run.rule.survive(),
         boundary: run.boundary,
@@ -425,7 +433,7 @@ fn heat(census: &Census) {
     let cuts = cuts_of(census.preset.canvas);
     let mut entries = Vec::new();
     for run in &census.runs {
-        let frame = heat_frame(&replay(run));
+        let frame = heat_frame(&replay(run)).unwrap();
         entries.push(Entry {
             label: run.label(),
             index: run.mask_index,
@@ -465,7 +473,9 @@ fn lemma(census: &Census) {
         }
         let mut small = Tensor::new(vec![3, 3]);
         for o in &offsets {
-            small.set(&[(1 + o[0] / 3) as usize, (1 + o[1] / 3) as usize], 1);
+            small
+                .set(&[(1 + o[0] / 3) as usize, (1 + o[1] / 3) as usize], 1)
+                .unwrap();
         }
         let seed = create(
             Code::from(run.seed.code),
@@ -475,7 +485,7 @@ fn lemma(census: &Census) {
             2,
         )
         .unwrap();
-        let outer = Cell2d::new(Tensor::full(vec![3, 3], 1));
+        let outer = Cell2d::new(Tensor::full(vec![3, 3], 1)).unwrap();
         let quotient = animate(&outer, &config(run, small, 9, 3)).unwrap();
         let full = animate(&board, &config(run, mask, 27, 9)).unwrap();
         assert_eq!(full.fate, quotient.fate, "{} fates differ", run.label());
@@ -487,8 +497,8 @@ fn lemma(census: &Census) {
         );
         for (a, x) in quotient.grids.iter().zip(&full.grids) {
             assert_eq!(
-                a.types().kron(seed.types()).bytes(),
-                x.types().bytes(),
+                a.types().kron(seed.types()).bytes().unwrap(),
+                x.types().bytes().unwrap(),
                 "{} frame differs",
                 run.label()
             );
@@ -555,15 +565,15 @@ fn stills(census: &Census) {
 
 fn self_check() {
     let mut t = Tensor::new(vec![5, 5]);
-    t.set(&[1, 2], 1);
-    t.set(&[2, 2], 1);
-    t.set(&[3, 2], 1);
+    t.set(&[1, 2], 1).unwrap();
+    t.set(&[2, 2], 1).unwrap();
+    t.set(&[3, 2], 1).unwrap();
     let config = Config {
         boundary: Boundary::Constant,
         max_generations: 16,
-        ..Config::new(moore(), vec![3], vec![2, 3])
+        ..Config::new(moore().unwrap(), vec![3], vec![2, 3])
     };
-    let life = animate(&Cell2d::new(t), &config).unwrap();
+    let life = animate(&Cell2d::new(t).unwrap(), &config).unwrap();
     assert_eq!(
         (life.fate, life.loop_length),
         (Fate::Loop, 2),
@@ -578,12 +588,12 @@ fn self_check() {
     let (outer, inner) = block_split(frame.types(), 3).unwrap();
     let mut buf = Blocks::new(9);
     assert!(
-        split_into(frame.types().bytes(), 9, (0, 0), 3, &mut buf),
+        split_into(frame.types().bytes().unwrap(), 9, (0, 0), 3, &mut buf),
         "the shift split must find the carpet cut"
     );
     assert_eq!(
         (&buf.outer[..9], &buf.inner[..9]),
-        (outer.bytes(), inner.bytes()),
+        (outer.bytes().unwrap(), inner.bytes().unwrap()),
         "the shift split must match block_split"
     );
     println!("\nSELF-CHECK blinker period 2 under b3s23, carpet level 2 factors as (3, 495, 495), the shift split agrees with block_split at shift (0,0)");

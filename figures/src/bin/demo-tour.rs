@@ -20,7 +20,9 @@ fn main() -> Result<()> {
     let on = |row: i64, col: i64| {
         (0..SIDE as i64).contains(&row)
             && (0..SIDE as i64).contains(&col)
-            && types.get(&[row as usize, col as usize]) != 0
+            && types
+                .get(&[row as usize, col as usize])
+                .is_ok_and(|v| v != 0)
     };
     let grid = Grid::new(frame, SIDE, SIDE, 0.0);
     let body = ink::mix(ink::line(), ink::dim(), 0.35);

@@ -1,7 +1,7 @@
 use crate::core::cell::Cell;
 use crate::core::cell::Mode;
 use crate::core::colors::Color;
-use crate::core::error::{value_error, Result};
+use crate::core::error::{shape_error, value_error, Result};
 use crate::core::tensor::{Dtype, Tensor};
 use std::collections::HashMap;
 
@@ -41,12 +41,17 @@ pub struct CellNd<const N: usize> {
 }
 
 impl<const N: usize> CellNd<N> {
-    /// Builds a cell from an N-dimensional tensor of types.
-    pub fn new(types: Tensor) -> CellNd<N> {
-        assert_eq!(types.shape.len(), N, "CellNd requires a {N}d tensor");
-        CellNd {
-            cell: Cell::new(types),
+    /// Builds a cell from an N-dimensional tensor of types, or an error when the rank is not N.
+    pub fn new(types: Tensor) -> Result<CellNd<N>> {
+        if types.shape.len() != N {
+            return shape_error(format!(
+                "a {N}d cell needs a {N}d tensor, got {}d.",
+                types.shape.len()
+            ));
         }
+        Ok(CellNd {
+            cell: Cell::new(types),
+        })
     }
     /// Returns the size of axis 1.
     pub fn width(&self) -> usize {
@@ -134,17 +139,17 @@ impl<const N: usize> CellNd<N> {
 }
 
 impl CellNd<2> {
-    /// Rotates the cell k quarter turns in the plane.
-    pub fn rotate(self, k: usize) -> Cell2d {
-        CellNd {
-            cell: self.cell.rotate(k, (0, 1)),
-        }
+    /// Rotates the cell k quarter turns in the plane, or an error for a cell without two axes.
+    pub fn rotate(self, k: usize) -> Result<Cell2d> {
+        Ok(CellNd {
+            cell: self.cell.rotate(k, (0, 1))?,
+        })
     }
-    /// Repeats the cell into a width-by-height array of copies.
-    pub fn tile(self, width: usize, height: usize) -> Cell2d {
-        CellNd {
-            cell: self.cell.tile(&[height, width]),
-        }
+    /// Repeats the cell into a width-by-height array of copies, or an error for a cell without two axes.
+    pub fn tile(self, width: usize, height: usize) -> Result<Cell2d> {
+        Ok(CellNd {
+            cell: self.cell.tile(&[height, width])?,
+        })
     }
 }
 
@@ -153,25 +158,25 @@ impl CellNd<3> {
     pub fn depth(&self) -> usize {
         self.cell.types.shape[2]
     }
-    /// Rotates the cell k quarter turns about the given pair of axes.
-    pub fn rotate(self, k: usize, axes: (usize, usize)) -> Cell3d {
-        CellNd {
-            cell: self.cell.rotate(k, axes),
-        }
+    /// Rotates the cell k quarter turns about the given pair of axes, or an error for axes off the cell.
+    pub fn rotate(self, k: usize, axes: (usize, usize)) -> Result<Cell3d> {
+        Ok(CellNd {
+            cell: self.cell.rotate(k, axes)?,
+        })
     }
     /// Turns the cell into one of the 24 cube orientations, or an error past the table.
     pub fn orient(self, index: usize) -> Result<Cell3d> {
         let table = crate::math::three::orientations();
         match table.get(index) {
-            Some(&(a, b, c)) => Ok(self.rotate(a, (1, 2)).rotate(b, (0, 2)).rotate(c, (0, 1))),
+            Some(&(a, b, c)) => self.rotate(a, (1, 2))?.rotate(b, (0, 2))?.rotate(c, (0, 1)),
             None => value_error(format!("orientation index {index} out of range (0..23).")),
         }
     }
-    /// Repeats the cell into a width-by-height-by-depth array of copies.
-    pub fn tile(self, width: usize, height: usize, depth: usize) -> Cell3d {
-        CellNd {
-            cell: self.cell.tile(&[height, width, depth]),
-        }
+    /// Repeats the cell into a width-by-height-by-depth array of copies, or an error for a cell without three axes.
+    pub fn tile(self, width: usize, height: usize, depth: usize) -> Result<Cell3d> {
+        Ok(CellNd {
+            cell: self.cell.tile(&[height, width, depth])?,
+        })
     }
 }
 
@@ -181,34 +186,34 @@ mod tests {
     use crate::math::atoms;
     #[test]
     fn binarize_wrapper_thresholds_pointwise() {
-        let cell = Cell2d::new(atoms::carpet_2d(3));
+        let cell = Cell2d::new(atoms::carpet_2d(3)).unwrap();
         let binarized = cell.clone().binarize(1);
         assert_eq!(binarized.types(), cell.types());
     }
     #[test]
     fn blur_wrapper_preserves_shape() {
-        let cell = Cell2d::new(atoms::carpet_2d(3));
+        let cell = Cell2d::new(atoms::carpet_2d(3)).unwrap();
         let mask = Tensor::full(vec![3, 3], 1);
         let blurred = cell.clone().blur(&mask, true).unwrap();
         assert_eq!(blurred.types().shape, cell.types().shape);
     }
     #[test]
     fn perforate_wrapper_zero_mask_is_identity() {
-        let cell = Cell2d::new(atoms::carpet_2d(3));
+        let cell = Cell2d::new(atoms::carpet_2d(3)).unwrap();
         let mask = Tensor::new(cell.types().shape.clone());
         let perforated = cell.clone().perforate(&mask, 5).unwrap();
         assert_eq!(perforated.types(), cell.types());
     }
     #[test]
     fn blur_wrapper_preserves_shape_3d() {
-        let cell = Cell3d::new(atoms::carpet_3d(3));
+        let cell = Cell3d::new(atoms::carpet_3d(3)).unwrap();
         let mask = Tensor::full(vec![3, 3, 3], 1);
         let blurred = cell.clone().blur(&mask, true).unwrap();
         assert_eq!(blurred.types().shape, cell.types().shape);
     }
     #[test]
     fn perforate_wrapper_zero_mask_is_identity_3d() {
-        let cell = Cell3d::new(atoms::carpet_3d(3));
+        let cell = Cell3d::new(atoms::carpet_3d(3)).unwrap();
         let mask = Tensor::new(cell.types().shape.clone());
         let perforated = cell.clone().perforate(&mask, 5).unwrap();
         assert_eq!(perforated.types(), cell.types());
@@ -223,10 +228,17 @@ mod tests {
     #[test]
     fn neighbors_wrapper_survives_a_wide_mask() {
         let mut mask = Tensor::full(vec![17, 17], 1);
-        mask.set(&[8, 8], 0);
-        let grid = Cell2d::new(Tensor::full(vec![21, 21], 1));
+        mask.set(&[8, 8], 0).unwrap();
+        let grid = Cell2d::new(Tensor::full(vec![21, 21], 1)).unwrap();
         let counted = grid.neighbors(&mask, 1, true).unwrap();
         let tags = counted.cell.tags.as_ref().unwrap();
         assert_eq!(tags.at(0), 17 * 17 - 1);
+    }
+
+    #[test]
+    fn refuses_a_tensor_of_the_wrong_rank() {
+        assert!(Cell2d::new(Tensor::new(vec![2, 2, 2])).is_err());
+        assert!(Cell3d::new(Tensor::new(vec![2, 2])).is_err());
+        assert!(CellNd::<1>::new(Tensor::new(vec![2, 2])).is_err());
     }
 }

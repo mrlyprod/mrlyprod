@@ -1,3 +1,5 @@
+use crate::core::error::{value_error, Result};
+
 /// A seeded xoshiro256++ random stream.
 #[derive(Clone, Debug)]
 pub struct Rng {
@@ -75,9 +77,12 @@ impl Rng {
     pub fn chance(&mut self, p: f64) -> bool {
         self.unit() < p
     }
-    /// Draws one element of the slice.
-    pub fn choice<'a, T>(&mut self, items: &'a [T]) -> &'a T {
-        &items[self.below(items.len())]
+    /// Draws one element of the slice, or an error when the slice is empty.
+    pub fn choice<'a, T>(&mut self, items: &'a [T]) -> Result<&'a T> {
+        if items.is_empty() {
+            return value_error("a choice wants at least one item.");
+        }
+        Ok(&items[self.below(items.len())])
     }
     /// Shuffles the slice in place.
     pub fn shuffle<T>(&mut self, seq: &mut [T]) {
@@ -140,6 +145,13 @@ mod tests {
         sorted.sort_unstable();
         assert_eq!(sorted, (0..20).collect::<Vec<usize>>());
         assert_ne!(items, sorted);
+    }
+    #[test]
+    fn refuses_a_choice_with_nothing_to_draw() {
+        let mut rng = Rng::new(2);
+        let empty: [usize; 0] = [];
+        assert!(rng.choice(&empty).is_err());
+        assert_eq!(*rng.choice(&[7]).unwrap(), 7);
     }
     #[test]
     fn sample_indices_are_distinct_and_in_range() {

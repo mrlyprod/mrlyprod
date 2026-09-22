@@ -369,7 +369,7 @@ pub fn gradient(colors: &[Color], steps: usize) -> Result<Vec<Color>> {
 #[cfg(test)]
 mod tests {
     #[test]
-    fn from_hex_errors_on_non_ascii_instead_of_panicking() {
+    fn refuses_from_hex() {
         use super::*;
         for bad in [
             "a\u{e9}bcd",

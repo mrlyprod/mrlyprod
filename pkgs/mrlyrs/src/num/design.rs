@@ -1,3 +1,4 @@
+use crate::core::error::{shape_error, Result};
 use crate::num::factor::mobius_sieve;
 use crate::num::fft::fft;
 use std::f64::consts::PI;
@@ -154,10 +155,16 @@ pub fn echo_series(values: &[u64], log_x: &[f64], exponent: f64) -> Vec<f64> {
 }
 
 /// Returns the frequency axis and the power spectrum of the series: the mean removed, a Hann window laid on, a real transform taken, and bin j read as the ordinate 2 pi j over the log range.
-pub fn spectrum(log_x: &[f64], series: &[f64]) -> (Vec<f64>, Vec<f64>) {
+pub fn spectrum(log_x: &[f64], series: &[f64]) -> Result<(Vec<f64>, Vec<f64>)> {
     let n = series.len();
     if n < 2 || !n.is_power_of_two() {
-        return (Vec::new(), Vec::new());
+        return Ok((Vec::new(), Vec::new()));
+    }
+    if log_x.len() < n {
+        return shape_error(format!(
+            "the grid holds {} and the series {n}.",
+            log_x.len()
+        ));
     }
     let step = (log_x[n - 1] - log_x[0]) / (n - 1) as f64;
     let mean = series.iter().sum::<f64>() / n as f64;
@@ -170,12 +177,12 @@ pub fn spectrum(log_x: &[f64], series: &[f64]) -> (Vec<f64>, Vec<f64>) {
         })
         .collect();
     let mut im = vec![0.0f64; n];
-    fft(&mut re, &mut im, false);
+    fft(&mut re, &mut im, false)?;
     let range = n as f64 * step;
     let bins = n / 2 + 1;
     let gamma = (0..bins).map(|j| 2.0 * PI * j as f64 / range).collect();
     let power = (0..bins).map(|j| re[j] * re[j] + im[j] * im[j]).collect();
-    (gamma, power)
+    Ok((gamma, power))
 }
 
 /// Returns the running median of the power over a window of the given width, the window clamped at the ends.
@@ -193,8 +200,7 @@ pub fn median_floor(power: &[f64], width: usize) -> Vec<f64> {
                 *cell = power[at];
             }
             let mid = width / 2;
-            let (_, value, _) =
-                window.select_nth_unstable_by(mid, |a, b| a.partial_cmp(b).unwrap());
+            let (_, value, _) = window.select_nth_unstable_by(mid, |a, b| a.total_cmp(b));
             *value
         })
         .collect()
@@ -210,8 +216,15 @@ pub fn score(power: &[f64], width: usize) -> Vec<f64> {
         .collect()
 }
 
-/// Returns the bins inside the band that rise above both neighbours and clear the score threshold, strongest first.
-pub fn peaks(gamma: &[f64], score: &[f64], band: (f64, f64), threshold: f64) -> Vec<usize> {
+/// Returns the bins inside the band that rise above both neighbours and clear the score threshold, strongest first, or an error when the axis is shorter than the score.
+pub fn peaks(gamma: &[f64], score: &[f64], band: (f64, f64), threshold: f64) -> Result<Vec<usize>> {
+    if gamma.len() < score.len() {
+        return shape_error(format!(
+            "the axis holds {} and the score {}.",
+            gamma.len(),
+            score.len()
+        ));
+    }
     let mut found: Vec<usize> = (1..score.len().saturating_sub(1))
         .filter(|&i| {
             gamma[i] > band.0
@@ -221,8 +234,8 @@ pub fn peaks(gamma: &[f64], score: &[f64], band: (f64, f64), threshold: f64) -> 
                 && score[i] > threshold
         })
         .collect();
-    found.sort_by(|&a, &b| score[b].partial_cmp(&score[a]).unwrap());
-    found
+    found.sort_by(|&a, &b| score[b].total_cmp(&score[a]));
+    Ok(found)
 }
 
 /// Returns the design's pole lattice below the top, the ordinates 2 pi j over log q of the poles its Dirichlet series carries.
@@ -318,9 +331,9 @@ mod tests {
             .map(|(whole, part)| whole - part)
             .collect();
         let taken = if subtract && sieve { &rest } else { &drawn };
-        let (gamma, power) = spectrum(&logx, taken);
+        let (gamma, power) = spectrum(&logx, taken).unwrap();
         let marks = score(&power, FLOOR);
-        let found = peaks(&gamma, &marks, BAND, THRESHOLD);
+        let found = peaks(&gamma, &marks, BAND, THRESHOLD).unwrap();
         let bin = gamma[1];
         let zeros: Vec<f64> = ZETA_ORDINATES
             .iter()
@@ -388,7 +401,7 @@ mod tests {
         let running = meter(&mu);
         let log_x = log_grid(&values, 1024);
         let series = resample(&values, &running, 0.5 * 2f64.ln() / 3f64.ln(), &log_x);
-        let (gamma, power) = spectrum(&log_x, &series);
+        let (gamma, power) = spectrum(&log_x, &series).unwrap();
         assert_eq!(gamma.len(), 513);
         assert_eq!(power.len(), 513);
         let step = (log_x[1023] - log_x[0]) / 1023.0;
@@ -503,5 +516,14 @@ mod tests {
         assert!(shallow.sieve);
         assert_eq!((shallow.last, shallow.peak), (11, 105));
         assert_eq!(shallow.echo.len(), SAMPLES);
+    }
+
+    #[test]
+    fn refuses_an_axis_shorter_than_what_it_indexes() {
+        assert!(peaks(&[1.0, 2.0], &[1.0, 2.0, 3.0], BAND, THRESHOLD).is_err());
+        assert!(peaks(&[1.0, 2.0, 3.0], &[1.0, 2.0, 3.0], BAND, THRESHOLD).is_ok());
+        assert!(spectrum(&[0.0, 1.0], &[1.0, 2.0, 3.0, 4.0]).is_err());
+        assert!(spectrum(&[0.0, 1.0, 2.0, 3.0], &[1.0, 2.0, 3.0, 4.0]).is_ok());
+        assert!(spectrum(&[], &[1.0, 2.0, 3.0]).is_ok());
     }
 }

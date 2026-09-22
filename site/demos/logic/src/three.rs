@@ -41,7 +41,7 @@ pub fn three_cells(
     let cell = cell(code, number, level, base)?;
     let grid = cell.types();
     let mut out = Vec::new();
-    for (flat, &site) in grid.bytes().iter().enumerate() {
+    for (flat, &site) in grid.bytes()?.iter().enumerate() {
         if site != 0 {
             let (i, rest) = (
                 flat / (grid.shape[1] * grid.shape[2]),

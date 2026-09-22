@@ -457,7 +457,7 @@ mod tests {
     }
 
     #[test]
-    fn even_layers_are_refused_and_the_code_is_checked() {
+    fn refuses_an_even_layer_and_a_code_past_its_range() {
         let star = Star::new(23).unwrap();
         assert!(star.hexagon(4).is_err());
         assert!(star.arm(0, 0).is_err());

@@ -12,18 +12,18 @@ fn main() -> Result<()> {
     assert_eq!(side, 81);
     let types = cells.types();
     assert_eq!(types.sum(), 4096);
-    let ball = shape::named("ball", 2, Frac::new(1, 2))?;
-    let tally = shape::census(&ball, types);
+    let ball = shape::named("ball", 2, Frac::new(1, 2)?)?;
+    let tally = shape::census(&ball, types)?;
     assert_eq!(tally.filled[Region::In as usize], 2908);
     assert_eq!(tally.filled[Region::Cut as usize], 204);
-    let map = shape::regions(&ball, &[side, side]);
+    let map = shape::regions(&ball, &[side, side])?;
     let grid = Grid::new(area, side, side, 0.10);
     for row in 0..side {
         for col in 0..side {
-            if types.get(&[row, col]) == 0 {
+            if types.get(&[row, col])? == 0 {
                 continue;
             }
-            let tone = match map.get(&[row, col]) {
+            let tone = match map.get(&[row, col])? {
                 2 => ink::yellow(),
                 1 => ink::orange(),
                 _ => continue,

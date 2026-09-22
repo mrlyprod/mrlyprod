@@ -30,7 +30,7 @@ impl Race {
     ) -> Result<Race, Fault> {
         let cell = two::create(Code::from(code_of(code)?), number, level, 0, base)?;
         let side = cell.width();
-        let types = cell.types().bytes().to_vec();
+        let types = cell.types().bytes()?.to_vec();
         let centre = (side as i64 - 1) / 2;
         let home = (0..side * side)
             .filter(|&flat| types[flat] != 0)
