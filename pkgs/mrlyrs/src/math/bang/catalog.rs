@@ -10,24 +10,23 @@ use std::sync::{Mutex, OnceLock};
 /// # Errors
 ///
 /// Errors outside dimensions one to four.
-pub fn universe_codes(dimension: usize) -> Result<&'static [u128]> {
-    static CACHE: OnceLock<Mutex<BTreeMap<usize, &'static [u128]>>> = OnceLock::new();
+pub fn universe_codes(dimension: usize) -> Result<Vec<u128>> {
+    static CACHE: OnceLock<Mutex<BTreeMap<usize, Vec<u128>>>> = OnceLock::new();
     let cache = CACHE.get_or_init(|| Mutex::new(BTreeMap::new()));
     let mut guard = match cache.lock() {
         Ok(guard) => guard,
         Err(poisoned) => poisoned.into_inner(),
     };
     if let Some(codes) = guard.get(&dimension) {
-        return Ok(codes);
+        return Ok(codes.clone());
     }
     let codes: Vec<u128> = bang(dimension)?
         .canonical()
         .into_iter()
         .map(|design| design.i.get())
         .collect();
-    let leaked: &'static [u128] = Box::leak(codes.into_boxed_slice());
-    guard.insert(dimension, leaked);
-    Ok(leaked)
+    guard.insert(dimension, codes.clone());
+    Ok(codes)
 }
 
 /// Builds the tile sources a catalog names at a dimension.

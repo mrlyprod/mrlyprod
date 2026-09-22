@@ -1,0 +1,7 @@
+core
+num
+math
+gen
+life
+font
+all

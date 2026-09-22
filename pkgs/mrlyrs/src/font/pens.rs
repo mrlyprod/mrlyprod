@@ -577,7 +577,14 @@ pub const SPECIALS: &[Pen] = &[
 ];
 
 /// Returns every pen in font order: uppers, lowers, digits, extras, specials.
-pub fn all() -> Vec<Pen> {
+pub fn all() -> Vec<(char, Vec<String>)> {
+    table()
+        .into_iter()
+        .map(|(c, strokes)| (c, strokes.iter().map(|s| s.to_string()).collect()))
+        .collect()
+}
+
+pub(crate) fn table() -> Vec<Pen> {
     [UPPERS, LOWERS, DIGITS, EXTRAS, SPECIALS]
         .into_iter()
         .flatten()

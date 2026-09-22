@@ -1,0 +1,242 @@
+[
+  {
+    "fn": "font::glyph",
+    "in": {
+      "c": "a"
+    },
+    "out": [
+      "01110",
+      "10001",
+      "11111",
+      "10001",
+      "00000"
+    ],
+    "note": "the five bitmap rows of the rounded lowercase a"
+  },
+  {
+    "fn": "font::raster::raster",
+    "in": {
+      "text": "42"
+    },
+    "out": [
+      [
+        1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    ],
+    "note": "the text as one 0/1 grid, its trimmed glyphs a blank column apart"
+  },
+  {
+    "fn": "font::path",
+    "in": {
+      "c": "M"
+    },
+    "out": [
+      [
+        4,
+        0
+      ],
+      [
+        3,
+        0
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        0,
+        3
+      ],
+      [
+        0,
+        4
+      ],
+      [
+        1,
+        4
+      ],
+      [
+        2,
+        4
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        4,
+        4
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        2
+      ],
+      [
+        3,
+        2
+      ],
+      [
+        4,
+        2
+      ]
+    ],
+    "note": "the tuple-list crossing: the stroke order as (row, col) pairs"
+  },
+  {
+    "fn": "font::animate::animate",
+    "in": {
+      "text": "MRLY",
+      "pad": 1
+    },
+    "out": {
+      "rows": 7,
+      "cols": 25,
+      "fps": 25,
+      "frames": 51,
+      "last": [
+        26,
+        27,
+        28,
+        29,
+        30,
+        32,
+        33,
+        34,
+        35,
+        36,
+        38,
+        44,
+        48,
+        51,
+        53,
+        55,
+        57,
+        63,
+        69,
+        73,
+        76,
+        78,
+        80,
+        82,
+        88,
+        94,
+        95,
+        96,
+        97,
+        98,
+        101,
+        103,
+        105,
+        107,
+        113,
+        123,
+        126,
+        128,
+        130,
+        132,
+        138,
+        139,
+        140,
+        141,
+        142,
+        144,
+        145,
+        146,
+        147,
+        148
+      ]
+    },
+    "note": "the board, the rate, the frame count and the finished frame"
+  },
+  {
+    "fn": "font::map",
+    "in": {},
+    "out": {
+      "sha256": "735caa450d1d4ecd0251fd7991999cb51b3a7780efcc0b47364c7c05ca48fdd7",
+      "len": 108
+    },
+    "note": "sha256 of serde's json of the whole table, which pins all 108 glyphs"
+  }
+]

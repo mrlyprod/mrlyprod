@@ -246,7 +246,7 @@ pub fn regions(shape: &Shape, dims: &[usize]) -> Result<Tensor> {
 // CATALOG
 
 /// Lists the named shapes of a dimension.
-pub fn shapes(dimension: usize) -> Vec<&'static str> {
+pub fn shapes(dimension: usize) -> Vec<String> {
     let mut out = vec!["ball", "box", "diamond"];
     if dimension == 2 {
         out.extend(["triangle", "octagon"]);
@@ -254,7 +254,7 @@ pub fn shapes(dimension: usize) -> Vec<&'static str> {
     if dimension == 3 {
         out.extend(["octahedron", "tetrahedron", "pyramid"]);
     }
-    out
+    out.into_iter().map(String::from).collect()
 }
 
 fn half(normal: Vec<i64>, offset: Frac) -> Half {
@@ -977,7 +977,7 @@ mod tests {
         let r = Frac::new(1, 2).unwrap();
         for dimension in 2..=3 {
             for name in shapes(dimension) {
-                assert!(named(name, dimension, r).is_ok(), "{name} d{dimension}");
+                assert!(named(&name, dimension, r).is_ok(), "{name} d{dimension}");
             }
         }
         assert!(named("hexagon", 2, r).is_err());
@@ -991,7 +991,7 @@ mod tests {
         for (dimension, side) in [(2usize, 12usize), (3, 8)] {
             let ones = Tensor::full(vec![side; dimension], 1);
             for name in shapes(dimension) {
-                let shape = named(name, dimension, r).unwrap();
+                let shape = named(&name, dimension, r).unwrap();
                 let inside = crop(&ones, &shape, false).unwrap().sum();
                 let touched = crop(&ones, &shape, true).unwrap().sum();
                 assert!(inside > 0, "{name} d{dimension} inside");

@@ -68,7 +68,7 @@ pub use field::Field;
 pub use layer::{layer, Layer};
 pub use presets::{all, named, Preset};
 pub use render::render;
-pub use stack::{merge, stack, stack_codes};
+pub use stack::{stack, stack_codes};
 pub use volume::{frame, volume, Frame, Volume};
 
 #[cfg(test)]

@@ -107,7 +107,7 @@ fn heatmap_range(
         for (i, slot) in cumulative.iter_mut().enumerate() {
             *slot += grid.types().at(i) as usize;
         }
-        let colors = colorizer.colors(&cumulative, max);
+        let colors = crate::core::ramp::colors(colorizer, &cumulative, max);
         let mut cell = Cell2d::new(Tensor::new(shape.clone()))?;
         cell.cell.colors = Some(colors);
         out.push(two::png(&cell, scale, None, 1, two::Shape::Square)?);
@@ -141,7 +141,7 @@ mod tests {
         let config = Config {
             boundary: Boundary::Constant,
             max_generations: 8,
-            ..Config::new(moore().unwrap(), vec![3], vec![2, 3])
+            ..Config::new(moore().unwrap(), vec![3].into(), vec![2, 3].into())
         };
         animate(&blinker(), &config).unwrap()
     }

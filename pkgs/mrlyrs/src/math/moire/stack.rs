@@ -4,7 +4,7 @@ use super::{Combine, Lattice, Spec};
 use crate::core::error::Result;
 
 /// Folds one boolean layer into the accumulator under the combine, the first layer seeding a meet.
-pub fn merge(acc: &mut [f32], mask: &[bool], combine: Combine, first: bool) {
+pub(crate) fn merge(acc: &mut [f32], mask: &[bool], combine: Combine, first: bool) {
     match combine {
         Combine::Sum => {
             for (a, &b) in acc.iter_mut().zip(mask.iter()) {

@@ -40,7 +40,7 @@ pub use error::{Error, Result};
 pub use image::Image;
 pub(crate) use named::named_enum;
 pub use ramp::Colorizer;
-pub use resample::{hex_fit, hex_size, resample, Filter};
+pub use resample::{block, hex_fit, hex_size, resample, Filter, HEX_RATIO};
 pub use rng::Rng;
 pub use serde_json::{json, Value as Json};
 pub use tensor::{Dtype, Tensor};

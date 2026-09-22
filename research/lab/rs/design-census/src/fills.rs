@@ -75,13 +75,11 @@ pub struct Row {
 }
 
 fn rendered(code: Code, number: usize, dimension: usize, base: usize) -> u128 {
-    let tile = render(
-        |r| code.get() >> cell_index(r, base) & 1 == 1,
-        number,
-        dimension,
-        base,
-    )
-    .expect("the tile renders");
+    let filled: Vec<Vec<u8>> = residue_corners(dimension, base)
+        .into_iter()
+        .filter(|r| code.get() >> cell_index(r, base) & 1 == 1)
+        .collect();
+    let tile = render(&filled, number, dimension, base).expect("the tile renders");
     u128::from(tile.sum())
 }
 

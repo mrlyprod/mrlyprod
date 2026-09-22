@@ -5,7 +5,7 @@ const STEPS: [(i64, i64); 4] = [(-1, 0), (0, 1), (1, 0), (0, -1)];
 
 /// Returns the character's hand-penned strokes from the pen tables, or None outside the font.
 pub fn penned(c: char) -> Option<Vec<Vec<(usize, usize)>>> {
-    pens::all()
+    pens::table()
         .into_iter()
         .find(|&(key, _)| key == c)
         .map(|pen| parse(&pen))
@@ -188,7 +188,7 @@ mod tests {
 
     #[test]
     fn the_pens_cover_the_font_once_in_order() {
-        let keys: Vec<char> = pens::all().into_iter().map(|(c, _)| c).collect();
+        let keys: Vec<char> = pens::table().into_iter().map(|(c, _)| c).collect();
         assert_eq!(keys, supported(), "the pen tables drifted from the font");
         let distinct: BTreeSet<char> = keys.iter().copied().collect();
         assert_eq!(distinct.len(), keys.len(), "a glyph is penned twice");

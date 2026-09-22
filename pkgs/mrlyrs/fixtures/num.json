@@ -1,0 +1,147 @@
+[
+  {
+    "fn": "num::factor::factorial",
+    "in": {
+      "number": 25
+    },
+    "out": "15511210043330985984000000",
+    "note": "the u128 crossing: 25! as a decimal string"
+  },
+  {
+    "fn": "num::factor::gcd",
+    "in": {
+      "pairs": [
+        [
+          "1071",
+          "462"
+        ],
+        [
+          "1267650600228229401496703205376",
+          "1152921504606846976"
+        ]
+      ]
+    },
+    "out": [
+      "21",
+      "1152921504606846976"
+    ],
+    "note": "two calls, (1071, 462) and (2^100, 2^60), u128 in and out as decimal strings"
+  },
+  {
+    "fn": "num::factor::divisors",
+    "in": {
+      "number": 360
+    },
+    "out": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      8,
+      9,
+      10,
+      12,
+      15,
+      18,
+      20,
+      24,
+      30,
+      36,
+      40,
+      45,
+      60,
+      72,
+      90,
+      120,
+      180,
+      360
+    ],
+    "note": "the 24 divisors of 360 in ascending order"
+  },
+  {
+    "fn": "num::factor::mobius_sieve",
+    "in": {
+      "limit": 30
+    },
+    "out": [
+      0,
+      1,
+      -1,
+      -1,
+      0,
+      -1,
+      1,
+      -1,
+      0,
+      0,
+      1,
+      -1,
+      0,
+      -1,
+      1,
+      1,
+      0,
+      -1,
+      0,
+      -1,
+      0,
+      1,
+      1,
+      -1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      -1,
+      -1
+    ],
+    "note": "OEIS A008683 with a leading pad: 31 entries, mu(n) at index n"
+  },
+  {
+    "fn": "num::prime::is_prime",
+    "in": {
+      "from": 1,
+      "to": 100
+    },
+    "out": [
+      2,
+      3,
+      5,
+      7,
+      11,
+      13,
+      17,
+      19,
+      23,
+      29,
+      31,
+      37,
+      41,
+      43,
+      47,
+      53,
+      59,
+      61,
+      67,
+      71,
+      73,
+      79,
+      83,
+      89,
+      97
+    ],
+    "note": "the 25 numbers in 1..=100 the test keeps"
+  },
+  {
+    "fn": "num::series::zeta",
+    "in": {
+      "s": 2.0,
+      "terms": 1000
+    },
+    "out": 1.644934066848,
+    "note": "the f64 crossing: pi squared over six, rounded to 12 decimals"
+  }
+]

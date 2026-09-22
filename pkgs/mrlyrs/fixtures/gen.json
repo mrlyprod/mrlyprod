@@ -1,0 +1,187 @@
+[
+  {
+    "fn": "gen::name::Tile::recipe",
+    "in": {
+      "name": "{\"kind\":\"tile\",\"code\":7,\"side\":3,\"level\":2}"
+    },
+    "out": {
+      "recipe": {
+        "group": "Fractal",
+        "factor": 3,
+        "sources": [
+          {
+            "code": "7"
+          }
+        ],
+        "numbers": [
+          3
+        ],
+        "levels": [
+          2
+        ],
+        "rotations": [
+          0
+        ],
+        "invert": false,
+        "flip": false,
+        "width": 9,
+        "height": 9
+      },
+      "json": "{\"kind\":\"tile\",\"code\":7,\"side\":3,\"level\":2}",
+      "id": "2e71262d"
+    },
+    "note": "the name read, unfolded to a recipe, folded back and hashed"
+  },
+  {
+    "fn": "gen::draw::create",
+    "in": {
+      "config": "ConfigNd::<2>::default()",
+      "rotation": "rng.below(4)",
+      "seed": 2026
+    },
+    "out": "{\"kind\":\"tile\",\"code\":9,\"side\":3,\"turn\":3,\"invert\":true}",
+    "note": "the drawn recipe as the canonical json of its name"
+  },
+  {
+    "fn": "gen::build::build_2d",
+    "in": {
+      "tile": {
+        "fn": "gen::name::Tile::recipe",
+        "in": {
+          "name": "{\"kind\":\"tile\",\"code\":7,\"side\":3,\"level\":2}"
+        }
+      }
+    },
+    "out": {
+      "v": 1,
+      "width": 9,
+      "height": 9,
+      "types": [
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          1,
+          0,
+          1,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          1,
+          0,
+          1,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      ]
+    },
+    "note": "the classic carpet recipe built into its 9 by 9 cell"
+  },
+  {
+    "fn": "gen::variation::create",
+    "in": {
+      "config": "variation::Config::default()",
+      "seed": 2026
+    },
+    "out": {
+      "key": "e2dd6f7e",
+      "seed": "3938389287658704331",
+      "edition": "Neighbors",
+      "tile": "{\"kind\":\"tile\",\"magic\":[14,9],\"side\":[3,3],\"turn\":[3,1],\"invert\":true}"
+    },
+    "note": "seed is a u64 drawn from the stream, so it crosses as a decimal string"
+  },
+  {
+    "fn": "gen::background",
+    "in": {
+      "seed": 1,
+      "width": 2,
+      "height": 2
+    },
+    "out": "bd5f1aa731045ea8da5d178465c0e0b9aa0660d0267c42479f104764fe900b32",
+    "note": "sha256 of the png bytes of a whole seeded artwork"
+  }
+]

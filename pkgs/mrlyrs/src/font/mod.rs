@@ -30,7 +30,7 @@ use std::collections::BTreeMap;
 use std::sync::OnceLock;
 
 pub use animate::{animate, cycle, merge, Anim, FPS, HOLD};
-pub use glyph::{all, trim, Glyph};
+pub use glyph::{all, digits, extras, lower, lowers, specials, trim, uppers, Glyph};
 pub use names::name_of;
 pub use paths::{draft, floor, path, strokes};
 pub use raster::raster;

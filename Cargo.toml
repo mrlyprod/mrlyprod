@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["pkgs/mrlyrs", "figures", "site/demos/logic", "research/lab/rs/*"]
+members = ["pkgs/mrlyrs", "bridge", "pkgs/mrlypy", "pkgs/mrlyjs/units/*", "figures", "site/demos/logic", "research/lab/rs/*"]
 default-members = ["pkgs/mrlyrs", "site/demos/logic"]
 
 [workspace.package]

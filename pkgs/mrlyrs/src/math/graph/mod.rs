@@ -12,7 +12,10 @@ pub mod layout;
 /// The node, branch and network types.
 pub mod models;
 
-pub use census::{census, largest_component, roles, Census, Role};
+pub use census::{
+    census, components, fractal_dimension, junctions, largest_component, roles, tips, total_length,
+    Census, Role,
+};
 pub use extract::{core_graph, edge_graph, tunnel_graph};
 pub use layout::Layout;
 pub use models::{Branch, Network, Node};

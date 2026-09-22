@@ -1,6 +1,6 @@
 {
   "name": "mrlyjs",
-  "version": "0.0.1",
+  "version": "0.2.0",
   "description": "MrlyProd; or, Marley Productions",
   "license": "MIT",
   "homepage": "https://mrly.net",
@@ -10,11 +10,43 @@
     "directory": "pkgs/mrlyjs"
   },
   "type": "module",
-  "main": "index.js",
   "exports": {
-    ".": "./index.js"
+    ".": {
+      "types": "./pkg/all/mrlyjs_all.d.ts",
+      "default": "./index.js"
+    },
+    "./core": {
+      "types": "./pkg/core/mrlyjs_core.d.ts",
+      "default": "./pkg/core/mrlyjs_core.js"
+    },
+    "./num": {
+      "types": "./pkg/num/mrlyjs_num.d.ts",
+      "default": "./pkg/num/mrlyjs_num.js"
+    },
+    "./math": {
+      "types": "./pkg/math/mrlyjs_math.d.ts",
+      "default": "./pkg/math/mrlyjs_math.js"
+    },
+    "./gen": {
+      "types": "./pkg/gen/mrlyjs_gen.d.ts",
+      "default": "./pkg/gen/mrlyjs_gen.js"
+    },
+    "./life": {
+      "types": "./pkg/life/mrlyjs_life.d.ts",
+      "default": "./pkg/life/mrlyjs_life.js"
+    },
+    "./font": {
+      "types": "./pkg/font/mrlyjs_font.d.ts",
+      "default": "./pkg/font/mrlyjs_font.js"
+    },
+    "./all": {
+      "types": "./pkg/all/mrlyjs_all.d.ts",
+      "default": "./pkg/all/mrlyjs_all.js"
+    },
+    "./pkg/*": "./pkg/*"
   },
   "files": [
+    "pkg/",
     "index.js",
     "README.md"
   ],

@@ -50,37 +50,38 @@ impl Colorizer {
         let ramp = dedup(gradient(colors, shades.max(1))?);
         Ok(Colorizer::Bins { background, ramp })
     }
-    /// Returns the color for one value against the range maximum: the background at zero, the top of the ramp from the maximum up.
-    ///
-    /// ```
-    /// use mrlyrs::core::{colors::WHITE, Colorizer};
-    /// let heat = Colorizer::heat();
-    /// assert_eq!(heat.color(0, 10), WHITE);
-    /// ```
-    pub fn color(&self, value: usize, max: usize) -> Color {
-        match self {
-            Colorizer::Bins { background, ramp } => {
-                if value == 0 || ramp.is_empty() {
-                    return *background;
-                }
-                if max <= 1 {
-                    return ramp[ramp.len() - 1];
-                }
-                let idx = (value - 1).saturating_mul(ramp.len() - 1) / (max - 1);
-                ramp[idx.min(ramp.len() - 1)]
+}
+
+/// Returns the color for one value against the range maximum: the background at zero, the top of the ramp from the maximum up.
+///
+/// ```
+/// use mrlyrs::core::{colors::WHITE, ramp::color, Colorizer};
+/// assert_eq!(color(&Colorizer::heat(), 0, 10), WHITE);
+/// ```
+pub fn color(colorizer: &Colorizer, value: usize, max: usize) -> Color {
+    match colorizer {
+        Colorizer::Bins { background, ramp } => {
+            if value == 0 || ramp.is_empty() {
+                return *background;
             }
+            if max <= 1 {
+                return ramp[ramp.len() - 1];
+            }
+            let idx = (value - 1).saturating_mul(ramp.len() - 1) / (max - 1);
+            ramp[idx.min(ramp.len() - 1)]
         }
     }
-    /// Maps a slice of values to rgba pixels against the range maximum.
-    pub fn colors(&self, values: &[usize], max: usize) -> Vec<[u8; 4]> {
-        values
-            .iter()
-            .map(|&v| {
-                let c = self.color(v, max);
-                [c.r, c.g, c.b, c.a]
-            })
-            .collect()
-    }
+}
+
+/// Maps a slice of values to rgba pixels against the range maximum.
+pub fn colors(colorizer: &Colorizer, values: &[usize], max: usize) -> Vec<[u8; 4]> {
+    values
+        .iter()
+        .map(|&v| {
+            let c = color(colorizer, v, max);
+            [c.r, c.g, c.b, c.a]
+        })
+        .collect()
 }
 
 impl Default for Colorizer {
@@ -105,14 +106,14 @@ mod tests {
     #[test]
     fn heat_is_white_bg_dark_max() {
         let r = Colorizer::heat();
-        assert_eq!(r.color(0, 10), WHITE);
-        assert_eq!(r.color(10, 10), BLACK);
+        assert_eq!(color(&r, 0, 10), WHITE);
+        assert_eq!(color(&r, 10, 10), BLACK);
     }
     #[test]
     fn bins_spread_across_range() {
         let r = Colorizer::gradient_bins(WHITE, &[WHITE, BLACK], 4).unwrap();
-        let low = r.color(1, 100);
-        let high = r.color(100, 100);
+        let low = color(&r, 1, 100);
+        let high = color(&r, 100, 100);
         assert!(low.r > high.r);
     }
     #[test]

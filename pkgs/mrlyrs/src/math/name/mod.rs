@@ -126,7 +126,7 @@ mod tests {
     #[test]
     fn every_kind_has_one_canonical_string_and_one_id() {
         let bang = Bang::new(7, 2, 2);
-        let rule = Rule::new(vec![3], vec![2, 3], false);
+        let rule = Rule::new(vec![3].into(), vec![2, 3].into(), false);
         let word = Word::new(2, &[(7, 3), (14, 7)]).unwrap();
         let tile = Tile::from_json(r#"{"kind":"tile","code":7,"side":3,"level":2}"#).unwrap();
         let sequence = Sequence::new(7, 2, 2, "fills", "side");

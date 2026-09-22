@@ -130,12 +130,13 @@ impl Branch {
     }
 
     /// The name of the branch.
-    pub fn name(self) -> &'static str {
+    pub fn name(self) -> String {
         match self {
             Branch::Zero => "0 mod 4",
             Branch::Two => "2 mod 4",
             Branch::Odd => "odd",
         }
+        .to_string()
     }
 }
 

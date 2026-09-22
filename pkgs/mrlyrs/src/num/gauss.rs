@@ -210,7 +210,7 @@ pub enum Class {
 
 impl Class {
     /// Returns the class as a word.
-    pub fn word(self) -> &'static str {
+    pub fn word(self) -> String {
         match self {
             Class::Zero => "zero",
             Class::Unit => "unit",
@@ -219,6 +219,7 @@ impl Class {
             Class::Inert => "inert",
             Class::Composite => "composite",
         }
+        .to_string()
     }
     /// Returns whether the class is prime.
     pub fn prime(self) -> bool {

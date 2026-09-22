@@ -34,13 +34,11 @@ const PUBLISHED: [&str; 16] = [
 ];
 
 fn brute(design: Code, number: usize, dimension: usize, level: usize) -> u128 {
-    let tile = render(
-        |r| design.get() >> cell_index(r, 2) & 1 == 1,
-        number,
-        dimension,
-        2,
-    )
-    .expect("the tile renders");
+    let filled: Vec<Vec<u8>> = mrlyrs::math::bang::factory::residue_corners(dimension, 2)
+        .into_iter()
+        .filter(|r| design.get() >> cell_index(r, 2) & 1 == 1)
+        .collect();
+    let tile = render(&filled, number, dimension, 2).expect("the tile renders");
     u128::from(tile.fractal(level).sum())
 }
 

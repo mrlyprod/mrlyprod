@@ -1,0 +1,251 @@
+[
+  {
+    "fn": "math::atoms::carpet_2d",
+    "in": {
+      "n": 3
+    },
+    "out": {
+      "shape": [
+        3,
+        3
+      ],
+      "data": [
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    "note": "the 3 by 3 seed every carpet design rests on"
+  },
+  {
+    "fn": "math::two::carpet",
+    "in": {
+      "number": 3,
+      "level": 2
+    },
+    "out": {
+      "v": 1,
+      "width": 9,
+      "height": 9,
+      "types": [
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          1,
+          0,
+          1,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          1,
+          0,
+          1,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      ]
+    },
+    "note": "the byte-grid crossing: the cell as math::two::to_json writes it"
+  },
+  {
+    "fn": "math::two::census::census",
+    "in": {
+      "cell": {
+        "fn": "math::two::carpet",
+        "in": {
+          "number": 3,
+          "level": 2
+        }
+      }
+    },
+    "out": {
+      "fills": 64,
+      "voids": 17,
+      "perimeter": 80,
+      "vertices": 96,
+      "edges": 168,
+      "euler": -8
+    },
+    "note": "a struct crossing: the Census through its serde derive"
+  },
+  {
+    "fn": "math::counts::fill",
+    "in": {
+      "code": "23",
+      "number": 3,
+      "dimension": 3,
+      "level": 2,
+      "base": 2
+    },
+    "out": "400",
+    "note": "the sponge's filled cells in closed form, u128 as a decimal string"
+  },
+  {
+    "fn": "math::bang::bang",
+    "in": {
+      "dimension": 3
+    },
+    "out": 22,
+    "note": "Universe::distinct() of the dimension-3 universe"
+  },
+  {
+    "fn": "math::three::census::census",
+    "in": {
+      "cell": {
+        "fn": "math::three::carpet",
+        "in": {
+          "number": 3,
+          "level": 1
+        }
+      }
+    },
+    "out": "72",
+    "note": "the .surface field only, u128 as a decimal string"
+  },
+  {
+    "fn": "math::spectrum::laplacian_spectrum",
+    "in": {
+      "network": {
+        "dim": 1,
+        "nodes": [
+          [
+            0.0
+          ],
+          [
+            1.0
+          ],
+          [
+            2.0
+          ],
+          [
+            3.0
+          ],
+          [
+            4.0
+          ]
+        ],
+        "branches": [
+          [
+            0,
+            1,
+            1.0
+          ],
+          [
+            1,
+            2,
+            1.0
+          ],
+          [
+            2,
+            3,
+            1.0
+          ],
+          [
+            3,
+            4,
+            1.0
+          ]
+        ]
+      },
+      "normalised": false
+    },
+    "out": [
+      0.0,
+      0.38196601125,
+      1.38196601125,
+      2.61803398875,
+      3.61803398875
+    ],
+    "note": "the five eigenvalues of a 5-node path, ascending, to 12 decimals"
+  }
+]

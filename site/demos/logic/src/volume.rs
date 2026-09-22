@@ -142,7 +142,7 @@ pub fn paint_span(
             let t = ((value - low) / span).clamp(0.0, 1.0);
             let t = if invert { 1.0 - t } else { t };
             let bucket = ((t * (levels - 1) as f32).round() as usize).min(levels - 1);
-            let c = colorizer.color(bucket + 1, levels);
+            let c = mrlyrs::core::ramp::color(&colorizer, bucket + 1, levels);
             [c.r, c.g, c.b, 255]
         })
         .collect();

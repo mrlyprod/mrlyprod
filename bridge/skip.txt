@@ -1,0 +1,12 @@
+core::block generic over the pixel type, u8 in gif and [u8; 4] in png
+core::error::overflow_error an error constructor, generic over the Ok type
+core::error::shape_error an error constructor, generic over the Ok type
+core::error::value_error an error constructor, generic over the Ok type
+core::rng::choice generic over the item type; below(len) picks an index from any list
+core::rng::shuffle generic over the item type; sample_indices permutes any list
+core::tensor::bytes_mut a mutable borrow into the buffer; put writes one value
+gen::draw::create takes a rotation fn pointer; build::create_2d and create_3d cross
+gen::draw::random_tile takes a rotation fn pointer; build::random_tile_2d and random_tile_3d cross
+gen::recipe::uniform generic over the item type, used on Source and usize
+num::fft::fft transforms two mutable slices in place
+num::fft::fft2 transforms two mutable slices in place

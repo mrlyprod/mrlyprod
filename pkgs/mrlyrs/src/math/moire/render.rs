@@ -26,7 +26,7 @@ pub fn render(
     for (i, &v) in norm.iter().enumerate() {
         let t = if invert { 1.0 - v } else { v };
         let bucket = ((t * max_val as f32).round() as usize).min(max_val);
-        let c = colorizer.color(bucket + 1, levels);
+        let c = crate::core::ramp::color(colorizer, bucket + 1, levels);
         rgba[i] = [c.r, c.g, c.b, 255];
     }
     crate::core::png(&rgba, size, size, scale)

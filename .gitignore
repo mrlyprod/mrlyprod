@@ -22,8 +22,10 @@ target/
 # DEMOS
 site/node_modules/
 site/pkg/
+pkgs/mrlyjs/pkg/
 
 # PYTHON
 .venv/
 __pycache__/
 .pytest_cache/
+pkgs/mrlypy/python/mrlypy/*.so

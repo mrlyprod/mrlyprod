@@ -19,7 +19,7 @@ pub mod serializer;
 pub use crate::math::cell::graph::{core_graph, edge_graph, tunnel_graph};
 pub use crate::math::cell::models::Cell2d;
 pub use crate::math::cell::paint;
-pub use census::{census, euler, fills, Census};
+pub use census::{census, euler, fills, perimeter, voids, Census};
 pub use designs::{
     carpet, create, dust, from_corners, hline, htree, level_set, levels_code, named, net, noise,
     ones, point, star, vline, void, vtree, zeros,

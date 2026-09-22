@@ -109,13 +109,14 @@ pub const LIFTS: [Lift; 4] = Lift::all();
 
 impl Lift {
     /// Returns the lift's formula, written the way the page prints it.
-    pub fn formula(self) -> &'static str {
+    pub fn formula(self) -> String {
         match self {
             Lift::Parity => "t(i) xor t(j)",
             Lift::And => "t(i and j)",
             Lift::Xor => "t(i xor j)",
             Lift::Sum => "t(i + j)",
         }
+        .to_string()
     }
     /// Returns the sign at a site, zero for plus one and one for minus one.
     pub fn at(self, i: u64, j: u64) -> u8 {

@@ -1,0 +1,128 @@
+[
+  {
+    "fn": "core::Tensor::rot90",
+    "in": {
+      "data": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "shape": [
+        3,
+        4
+      ],
+      "k": 1,
+      "axes": [
+        0,
+        1
+      ]
+    },
+    "out": {
+      "shape": [
+        4,
+        3
+      ],
+      "data": [
+        3,
+        7,
+        11,
+        2,
+        6,
+        10,
+        1,
+        5,
+        9,
+        0,
+        4,
+        8
+      ]
+    },
+    "note": "one quarter turn in the (0, 1) plane, the numpy law"
+  },
+  {
+    "fn": "core::Color::from_hex",
+    "in": {
+      "hex": "#ff3d40"
+    },
+    "out": {
+      "rgba": [
+        255,
+        61,
+        64,
+        255
+      ],
+      "hex": "#ff3d40"
+    },
+    "note": "the house red parsed, then printed back by to_hex"
+  },
+  {
+    "fn": "core::png",
+    "in": {
+      "colors": [
+        [
+          255,
+          0,
+          0,
+          255
+        ],
+        [
+          0,
+          255,
+          0,
+          255
+        ],
+        [
+          0,
+          0,
+          255,
+          255
+        ],
+        [
+          255,
+          255,
+          255,
+          255
+        ]
+      ],
+      "width": 2,
+      "height": 2,
+      "scale": 3
+    },
+    "out": "4eefe6c1267c79b22624cc282926bb3cd13378d91a2d8f737a456d90e63a9f46",
+    "note": "sha256 of the png bytes, which pins the encoder and the scale"
+  },
+  {
+    "fn": "core::Colorizer::color",
+    "in": {
+      "background": "#000000",
+      "ramp": [
+        "#ff3d40",
+        "#3d40ff"
+      ],
+      "shades": 4,
+      "values": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "max": 9
+    },
+    "out": [
+      "#000000",
+      "#ff3d40",
+      "#ff3d40",
+      "#ff3d40"
+    ],
+    "note": "gradient_bins first; four shades against a max of 9 bin every live value at the ramp head"
+  }
+]

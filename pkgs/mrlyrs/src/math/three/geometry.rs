@@ -9,34 +9,36 @@ use std::sync::OnceLock;
 pub use crate::math::cell::geometry::{magic, mosaic, perforate};
 
 /// Returns the 24 rotation triples that reach each distinct cube orientation.
-pub fn orientations() -> &'static Vec<(usize, usize, usize)> {
+pub fn orientations() -> Vec<(usize, usize, usize)> {
     static TABLE: OnceLock<Vec<(usize, usize, usize)>> = OnceLock::new();
-    TABLE.get_or_init(|| {
-        let mut probe = Tensor::new(vec![3, 3, 3]);
-        for flat in 0..probe.size() {
-            probe.put(flat, flat as i64);
-        }
-        let mut seen: Vec<Vec<u8>> = Vec::new();
-        let mut table = Vec::new();
-        for a in 0..4 {
-            for b in 0..4 {
-                for c in 0..4 {
-                    let turned = probe
-                        .rot90(a, (1, 2))
-                        .and_then(|t| t.rot90(b, (0, 2)))
-                        .and_then(|t| t.rot90(c, (0, 1)));
-                    let Ok(image) = turned.and_then(|t| t.bytes().map(<[u8]>::to_vec)) else {
-                        continue;
-                    };
-                    if !seen.contains(&image) {
-                        seen.push(image);
-                        table.push((a, b, c));
+    TABLE
+        .get_or_init(|| {
+            let mut probe = Tensor::new(vec![3, 3, 3]);
+            for flat in 0..probe.size() {
+                probe.put(flat, flat as i64);
+            }
+            let mut seen: Vec<Vec<u8>> = Vec::new();
+            let mut table = Vec::new();
+            for a in 0..4 {
+                for b in 0..4 {
+                    for c in 0..4 {
+                        let turned = probe
+                            .rot90(a, (1, 2))
+                            .and_then(|t| t.rot90(b, (0, 2)))
+                            .and_then(|t| t.rot90(c, (0, 1)));
+                        let Ok(image) = turned.and_then(|t| t.bytes().map(<[u8]>::to_vec)) else {
+                            continue;
+                        };
+                        if !seen.contains(&image) {
+                            seen.push(image);
+                            table.push((a, b, c));
+                        }
                     }
                 }
             }
-        }
-        table
-    })
+            table
+        })
+        .clone()
 }
 
 /// Merges the cells into one cube arranged width by height by depth.

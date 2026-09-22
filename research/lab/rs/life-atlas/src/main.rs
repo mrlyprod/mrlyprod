@@ -571,7 +571,7 @@ fn self_check() {
     let config = Config {
         boundary: Boundary::Constant,
         max_generations: 16,
-        ..Config::new(moore().unwrap(), vec![3], vec![2, 3])
+        ..Config::new(moore().unwrap(), vec![3].into(), vec![2, 3].into())
     };
     let life = animate(&Cell2d::new(t).unwrap(), &config).unwrap();
     assert_eq!(

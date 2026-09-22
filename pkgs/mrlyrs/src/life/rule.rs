@@ -99,7 +99,7 @@ mod counts {
 /// ```
 /// use mrlyrs::life::Rule;
 /// use mrlyrs::math::name::Named;
-/// let conway = Rule::new(vec![3], vec![2, 3], false);
+/// let conway = Rule::new(vec![3].into(), vec![2, 3].into(), false);
 /// assert_eq!(conway.to_json(), r#"{"kind":"rule","birth":[3],"survive":[2,3]}"#);
 /// Rule::from_json(&conway.to_json())?;
 /// # Ok::<(), mrlyrs::Error>(())
@@ -122,11 +122,11 @@ pub struct Rule {
 
 impl Rule {
     /// Builds a rule from its counts and edge policy, listed counts folded to a sorted set.
-    pub fn new(birth: impl Into<Counts>, survive: impl Into<Counts>, wrap: bool) -> Rule {
+    pub fn new(birth: Counts, survive: Counts, wrap: bool) -> Rule {
         Rule {
             kind: Kind,
-            birth: fold(birth.into()),
-            survive: fold(survive.into()),
+            birth: fold(birth),
+            survive: fold(survive),
             wrap,
         }
     }
@@ -179,7 +179,7 @@ mod tests {
 
     #[test]
     fn conway_holds_through_every_view() {
-        let conway = Rule::new(vec![3], vec![2, 3], false);
+        let conway = Rule::new(vec![3].into(), vec![2, 3].into(), false);
         assert_eq!(conway.to_json(), CONWAY);
         assert_eq!(Rule::from_json(CONWAY).unwrap(), conway);
         assert_eq!(conway.to_url().unwrap(), "/rule?birth=3&survive=2,3");
@@ -188,7 +188,7 @@ mod tests {
         assert_eq!(Rule::from_url(&conway.to_url().unwrap()).unwrap(), conway);
         assert_eq!(Rule::from_file(&conway.to_file().unwrap()).unwrap(), conway);
         assert_eq!(conway.to_id().len(), 8);
-        let wrapped = Rule::new(vec![3], vec![2, 3], true);
+        let wrapped = Rule::new(vec![3].into(), vec![2, 3].into(), true);
         assert_eq!(
             wrapped.to_json(),
             r#"{"kind":"rule","birth":[3],"survive":[2,3],"wrap":true}"#
@@ -202,7 +202,7 @@ mod tests {
     #[test]
     fn the_wide_row_holds() {
         let wide = Rule::new(
-            vec![12, 13],
+            vec![12, 13].into(),
             Counts::drawn(Source::Fibonacci, false, false),
             true,
         );
@@ -226,12 +226,12 @@ mod tests {
     }
     #[test]
     fn to_json_folds_to_the_canonical_counts() {
-        let messy = Rule::new(vec![3, 3, 1], vec![9, 2], false);
+        let messy = Rule::new(vec![3, 3, 1].into(), vec![9, 2].into(), false);
         assert_eq!(
             messy.to_json(),
             r#"{"kind":"rule","birth":[1,3],"survive":[2,9]}"#
         );
-        let empty = Rule::new(Vec::new(), Vec::new(), false);
+        let empty = Rule::new(Counts::List(Vec::new()), Counts::List(Vec::new()), false);
         assert_eq!(
             empty.to_json(),
             r#"{"kind":"rule","birth":[],"survive":[]}"#
@@ -241,7 +241,7 @@ mod tests {
         let spelt =
             Rule::from_json(r#"{"kind":"rule","survive":[3,2,3],"birth":[3],"wrap":false}"#)
                 .unwrap();
-        assert_eq!(spelt, Rule::new(vec![3], vec![2, 3], false));
+        assert_eq!(spelt, Rule::new(vec![3].into(), vec![2, 3].into(), false));
         assert_eq!(spelt.to_json(), CONWAY);
     }
     #[test]
@@ -268,19 +268,19 @@ mod tests {
     }
     #[test]
     fn a_listed_count_above_nine_has_a_name() {
-        let rule = Rule::new(vec![3, 12], vec![2, 3, 48], true);
+        let rule = Rule::new(vec![3, 12].into(), vec![2, 3, 48].into(), true);
         assert_eq!(
             rule.to_json(),
             r#"{"kind":"rule","birth":[3,12],"survive":[2,3,48],"wrap":true}"#
         );
-        let mut config = Config::new(moore().unwrap(), vec![3], vec![2, 3]);
+        let mut config = Config::new(moore().unwrap(), vec![3].into(), vec![2, 3].into());
         config.survive = Counts::List(vec![48]);
         assert_eq!(Rule::of(&config).survive, Counts::List(vec![48]));
     }
     #[test]
     fn config_round_trips_through_the_rule() {
         let mask = crate::math::two::designs::ones(3, 1).unwrap();
-        let rule = Rule::new(vec![3, 6], vec![2, 3], true);
+        let rule = Rule::new(vec![3, 6].into(), vec![2, 3].into(), true);
         let config = rule.config(mask);
         assert_eq!(config.boundary, Boundary::Wrap);
         assert_eq!(Rule::of(&config), rule);
@@ -304,7 +304,7 @@ mod tests {
         assert_eq!(Rule::from_file(&rule.to_file().unwrap()).unwrap(), rule);
         let seeded = Rule::new(
             Counts::drawn(Source::Random(4848495), true, false),
-            vec![3],
+            vec![3].into(),
             false,
         );
         assert_eq!(
@@ -350,7 +350,7 @@ mod tests {
     }
     #[test]
     fn the_moore_budget_stays_in_the_digits() {
-        let config = Rule::new(vec![3], vec![2, 3], false).config(moore().unwrap());
+        let config = Rule::new(vec![3].into(), vec![2, 3].into(), false).config(moore().unwrap());
         assert_eq!(config.budget(), 8);
     }
     #[test]
@@ -361,7 +361,7 @@ mod tests {
                 let count = rng.below(5);
                 (0..count).map(|_| rng.below(50)).collect::<Vec<usize>>()
             };
-            let rule = Rule::new(draw(&mut rng), draw(&mut rng), rng.boolean());
+            let rule = Rule::new(draw(&mut rng).into(), draw(&mut rng).into(), rng.boolean());
             let text = rule.to_json();
             let back = Rule::from_json(&text).unwrap();
             assert_eq!(

@@ -178,7 +178,7 @@ const BAD: &[(&str, fn())] = &[
         let _ = gif(&[&[0u8, 1, 2, 0][..]], &[[0, 0, 0, 255]], 2, 2, 1, 5);
     }),
     ("core::ramp::color, a zero maximum", || {
-        let _ = Colorizer::heat().color(usize::MAX, 0);
+        let _ = mrlyrs::core::ramp::color(&Colorizer::heat(), usize::MAX, 0);
     }),
     ("core::resample::resample, a zero target", || {
         let _ = resample(&[[0u8, 0, 0, 255]; 4], 2, 2, 0, 4, Filter::Nearest);
@@ -600,7 +600,7 @@ const BAD: &[(&str, fn())] = &[
         let _ = math::press::interleave(&[], 2);
     }),
     ("math::rules::render, a zero number", || {
-        let _ = math::rules::render(|_| true, 0, 2, 2);
+        let _ = math::rules::render(&[], 0, 2, 2);
     }),
     ("math::shape::Frac::new, a zero denominator", || {
         let _ = Frac::new(1, 0);
@@ -745,10 +745,10 @@ const BAD: &[(&str, fn())] = &[
         let _ = math::shape::crop(&math::atoms::ones_2d(1), &wild_shape(), true);
     }),
     ("math::rules::render, a zero dimension", || {
-        let _ = math::rules::render(|_| true, 3, 0, 2);
+        let _ = math::rules::render(&[], 3, 0, 2);
     }),
     ("math::rules::render, a zero base", || {
-        let _ = math::rules::render(|_| true, 3, 2, 0);
+        let _ = math::rules::render(&[], 3, 2, 0);
     }),
     (
         "math::name::Sequence::from_json, a measure the axis has not",
@@ -767,7 +767,7 @@ const BAD: &[(&str, fn())] = &[
     // LIFE
     ("life::animate, an even mask", || {
         let even = Cell2d::new(Tensor::full(vec![2, 2], 1)).unwrap();
-        let config = Config::new(even, vec![3], vec![2, 3]);
+        let config = Config::new(even, vec![3].into(), vec![2, 3].into());
         let seed = Cell2d::new(Tensor::full(vec![3, 3], 1)).unwrap();
         let _ = life::animate(&seed, &config);
     }),
@@ -828,7 +828,7 @@ const BAD: &[(&str, fn())] = &[
         || {
             let mask = Cell2d::new(Tensor::full(vec![3, 3], 1)).unwrap();
             let drawn = Counts::drawn(Seq::CodeFills(1 << 20), false, false);
-            let _ = Config::new(mask, drawn, vec![2, 3]).counts();
+            let _ = Config::new(mask, drawn, vec![2, 3].into()).counts();
         },
     ),
     // FONT

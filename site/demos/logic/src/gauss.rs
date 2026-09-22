@@ -103,7 +103,7 @@ pub fn ring_pixels(
                 ("class", Class::Inert) => rgba(ink.orange),
                 ("class", Class::Ramified) => rgba(ink.pink),
                 ("norm", _) => {
-                    let c = fire.color(sheet.ring().norm(a, b) as usize, top);
+                    let c = mrlyrs::core::ramp::color(&fire, sheet.ring().norm(a, b) as usize, top);
                     [c.r, c.g, c.b, 255]
                 }
                 _ => rgba(ink.yellow),

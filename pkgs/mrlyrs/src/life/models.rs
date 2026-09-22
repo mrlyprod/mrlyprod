@@ -25,11 +25,11 @@ pub struct Config {
 
 impl Config {
     /// Builds a config with a constant boundary, a 64-generation cap, no tiling and no padding.
-    pub fn new(mask: Cell2d, birth: impl Into<Counts>, survive: impl Into<Counts>) -> Config {
+    pub fn new(mask: Cell2d, birth: Counts, survive: Counts) -> Config {
         Config {
             mask,
-            birth: birth.into(),
-            survive: survive.into(),
+            birth,
+            survive,
             boundary: Boundary::Constant,
             max_generations: 64,
             grid_size: 1,

@@ -240,14 +240,14 @@ impl Source {
         ]
     }
     /// Returns the sequence's OEIS id, or None off the encyclopedia.
-    pub fn oeis(self) -> Option<&'static str> {
+    pub fn oeis(self) -> Option<String> {
         match self {
-            Source::Evens => Some("A005843"),
-            Source::Odds => Some("A005408"),
-            Source::Primes => Some("A000040"),
-            Source::Binary => Some("A000079"),
-            Source::Fibonacci => Some("A000045"),
-            Source::GridSquares => Some("A016754"),
+            Source::Evens => Some("A005843".to_string()),
+            Source::Odds => Some("A005408".to_string()),
+            Source::Primes => Some("A000040".to_string()),
+            Source::Binary => Some("A000079".to_string()),
+            Source::Fibonacci => Some("A000045".to_string()),
+            Source::GridSquares => Some("A016754".to_string()),
             _ => None,
         }
     }
@@ -383,6 +383,10 @@ pub enum Counts {
 }
 
 impl Counts {
+    /// Spells the counts outright.
+    pub fn list(counts: Vec<usize>) -> Counts {
+        Counts::List(counts)
+    }
     /// Builds the counts a sequence lays down, keeping zeros and ones on request.
     pub fn drawn(seq: Source, zeros: bool, ones: bool) -> Counts {
         Counts::Drawn { seq, zeros, ones }
@@ -407,7 +411,7 @@ impl Counts {
 
 impl From<Vec<usize>> for Counts {
     fn from(list: Vec<usize>) -> Counts {
-        Counts::List(list)
+        Counts::list(list)
     }
 }
 
@@ -528,7 +532,7 @@ mod tests {
         let mut listed = 0;
         for s in Source::all() {
             if let Some(id) = s.oeis() {
-                assert_eq!(Source::parse(id).unwrap(), s);
+                assert_eq!(Source::parse(&id).unwrap(), s);
                 listed += 1;
             }
         }

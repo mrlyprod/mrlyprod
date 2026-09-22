@@ -21,7 +21,7 @@ pub mod renderer;
 pub mod serializer;
 pub use designs::grow;
 pub use painter::paint;
-pub use renderer::push_glyph;
+pub(crate) use renderer::push_glyph;
 
 #[cfg(test)]
 mod tests {

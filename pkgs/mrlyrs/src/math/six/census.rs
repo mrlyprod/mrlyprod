@@ -15,7 +15,7 @@ fn south(x: i64, y: i64) -> [Point; 3] {
 }
 
 /// Returns the three corner points of the triangle at x, y under the start parity.
-pub fn corners(x: i64, y: i64, start: i64) -> [Point; 3] {
+pub(crate) fn corners(x: i64, y: i64, start: i64) -> [Point; 3] {
     if (x + y + start).rem_euclid(2) == 0 {
         north(x, y)
     } else {
@@ -24,7 +24,7 @@ pub fn corners(x: i64, y: i64, start: i64) -> [Point; 3] {
 }
 
 /// Returns a triangle's three edges, each sorted low corner first.
-pub fn edges_of(c: &[Point; 3]) -> [Edge; 3] {
+pub(crate) fn edges_of(c: &[Point; 3]) -> [Edge; 3] {
     let sorted = |a: Point, b: Point| if a <= b { (a, b) } else { (b, a) };
     [sorted(c[0], c[1]), sorted(c[1], c[2]), sorted(c[0], c[2])]
 }

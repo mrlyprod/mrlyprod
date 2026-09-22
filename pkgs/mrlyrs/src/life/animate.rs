@@ -23,7 +23,7 @@ fn prepare(seed: &Cell2d, config: &Config) -> Result<Cell2d> {
 /// use mrlyrs::life::{animate, moore, Config, Fate};
 /// use mrlyrs::math::two::Cell2d;
 /// let bar = Cell2d::new(Tensor::of(vec![0, 0, 0, 1, 1, 1, 0, 0, 0], vec![3, 3])?)?;
-/// let life = animate(&bar, &Config::new(moore()?, vec![3], vec![2, 3]))?;
+/// let life = animate(&bar, &Config::new(moore()?, vec![3].into(), vec![2, 3].into()))?;
 /// assert_eq!(life.fate, Fate::Loop);
 /// # Ok::<(), mrlyrs::Error>(())
 /// ```
@@ -78,7 +78,7 @@ mod tests {
         Config {
             boundary: Boundary::Constant,
             max_generations: 16,
-            ..Config::new(mask, vec![3], vec![2, 3])
+            ..Config::new(mask, vec![3].into(), vec![2, 3].into())
         }
     }
     #[test]
@@ -102,7 +102,7 @@ mod tests {
         let even = Cell2d::new(Tensor::full(vec![2, 2], 1)).unwrap();
         assert!(animate(&blinker(), &conway(even)).is_err());
         let drawn = Counts::drawn(Source::CodeFills(1 << 20), false, false);
-        let wide = Config::new(moore().unwrap(), drawn, vec![2, 3]);
+        let wide = Config::new(moore().unwrap(), drawn, vec![2, 3].into());
         assert!(animate(&blinker(), &wide).is_err());
     }
     #[test]

@@ -1,15 +1,21 @@
 [project]
 name = "mrlypy"
-version = "0.0.1"
-description = "MrlyProd; or, Marley Productions"
+version = "0.2.0"
+description = "MrlyMath, the mathematics of designs, bridged into Python."
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.9"
+requires-python = ">=3.13"
+dependencies = ["numpy>=2.5"]
 
 [project.urls]
 Homepage = "https://mrly.net"
 Repository = "https://github.com/mrlyprod/mrlyprod"
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["maturin>=1.15,<2"]
+build-backend = "maturin"
+
+[tool.maturin]
+module-name = "mrlypy._mrlypy"
+python-source = "python"
+exclude = ["**/__pycache__/**"]

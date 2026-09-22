@@ -4,10 +4,11 @@ use crate::core::cell::Mode;
 use crate::core::colors::Color;
 use crate::core::error::{value_error, Result};
 use crate::math::cell::push_glyph;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// The outline a flat cell's sites are drawn with.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub enum Shape {
     /// A filled cell-sized square.
     Square,

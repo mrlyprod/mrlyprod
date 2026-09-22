@@ -115,8 +115,7 @@ fn render(
     if level < 1 {
         return value_error("level must be at least 1.");
     }
-    let wanted: HashSet<Vec<u8>> = filled.iter().cloned().collect();
-    let tile = rules::render(|p| wanted.contains(p), number, dimension, base)?;
+    let tile = rules::render(filled, number, dimension, base)?;
     Ok(tile.fractal(level))
 }
 

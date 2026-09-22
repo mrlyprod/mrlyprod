@@ -66,7 +66,7 @@ pub fn life_run(
     let config = Config {
         boundary: boundary(wrap),
         max_generations,
-        ..Config::new(life::moore()?, counts(birth), counts(survive))
+        ..Config::new(life::moore()?, counts(birth).into(), counts(survive).into())
     };
     let run = life::animate(&grid(types, width, height)?, &config)?;
     Ok(json!({
@@ -173,7 +173,7 @@ pub fn life_run_masked(
     let config = Config {
         boundary: boundary(wrap),
         max_generations,
-        ..Config::new(shape, counts(birth), counts(survive))
+        ..Config::new(shape, counts(birth).into(), counts(survive).into())
     };
     let run = life::animate(&grid(types, width, height)?, &config)?;
     Ok(json!({

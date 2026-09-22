@@ -207,15 +207,16 @@ fn pinned(rule: u8) -> bool {
 }
 
 /// Returns the genus of a rule's cube class: `iso` when it meets a level set, `axis` when it meets an axis-pinned block, else `comp`.
-pub fn genus(rule: u8) -> &'static str {
+pub fn genus(rule: u8) -> String {
     let class = cube_orbit(rule);
-    if class.iter().any(|&c| level_set(c)) {
+    let word = if class.iter().any(|&c| level_set(c)) {
         "iso"
     } else if class.iter().any(|&c| pinned(c)) {
         "axis"
     } else {
         "comp"
-    }
+    };
+    word.to_string()
 }
 
 fn arrows(rule: u8) -> Vec<(usize, usize, u8)> {
@@ -311,10 +312,10 @@ pub fn outer_totalistic(rule: u8) -> Option<(Vec<usize>, Vec<usize>)> {
 }
 
 /// Returns the base-2 plane design a rule's single seed draws, or None when it draws none.
-pub fn gasket(rule: u8) -> Option<&'static str> {
+pub fn gasket(rule: u8) -> Option<String> {
     match rule {
-        60 | 90 => Some("bang dim 2, code 13"),
-        102 => Some("bang dim 2, code 14"),
+        60 | 90 => Some("bang dim 2, code 13".to_string()),
+        102 => Some("bang dim 2, code 14".to_string()),
         _ => None,
     }
 }
@@ -366,7 +367,7 @@ mod tests {
                 );
             }
         }
-        assert_eq!(gasket(60), Some("bang dim 2, code 13"));
+        assert_eq!(gasket(60).as_deref(), Some("bang dim 2, code 13"));
     }
     #[test]
     fn rule_150_row_populations_are_a071053() {
@@ -427,7 +428,7 @@ mod tests {
         assert_eq!(rule_name(110).unwrap(), "bang dim 3, code 110");
         assert_eq!(corner_bits(110), vec![0, 1, 1, 1, 0, 1, 1, 0]);
         assert_eq!(
-            (popcount(110), rule_degree(110), genus(110)),
+            (popcount(110), rule_degree(110), genus(110).as_str()),
             (5, 3, "comp")
         );
         assert!((lambda(110) - 0.625).abs() < 1e-12);
