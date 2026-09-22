@@ -2,7 +2,8 @@ use crate::model::*;
 use crate::parse::{self, Files};
 use crate::report;
 use crate::resolve::{self, Built};
-use crate::{cli, js, py};
+use crate::{cli, js, py, version};
+use serde_json::{json, Value};
 use std::path::{Path, PathBuf};
 
 fn build(lib: &str) -> Built {
@@ -567,6 +568,68 @@ fn the_hand_rng_declares_choice_and_shuffle_in_both_bridges() {
     assert!(dts.contains("    choice<T>(items: ArrayLike<T>): T;"));
     assert!(dts.contains("    shuffle<T>(items: T[]): void;"));
     std::fs::remove_dir_all(root).ok();
+}
+
+#[test]
+fn every_copy_takes_the_manifest_version() {
+    let lib = "pub mod core { pub fn f() {} }";
+    let root = scratch("version", lib, "core\n");
+    let py = "[package]\nname = \"mrlypy\"\nversion = \"0.1.0\"\n\n[dependencies]\npyo3 = { version = \"0.29\" }\n";
+    let js = "{\n  \"name\": \"mrlyjs\",\n  \"version\": \"0.1.0\",\n  \"type\": \"module\"\n}\n";
+    std::fs::write(root.join("pkgs/mrlypy/Cargo.toml"), py).expect("a crate");
+    std::fs::write(root.join("pkgs/mrlyjs/package.json"), js).expect("a package");
+    let mut m = manifest(lib);
+    m.version = "1.2.3".into();
+    js::write(&m, &root).expect("the js bridge writes");
+    version::write(&m, &root).expect("the stamps write");
+    assert!(read(&root, "pkgs/mrlyjs/units/core/Cargo.toml").contains("\nversion = \"1.2.3\"\n"));
+    assert_eq!(
+        read(&root, "pkgs/mrlypy/Cargo.toml"),
+        py.replace("0.1.0", "1.2.3")
+    );
+    assert_eq!(
+        read(&root, "pkgs/mrlyjs/package.json"),
+        js.replace("0.1.0", "1.2.3")
+    );
+    std::fs::remove_dir_all(root).ok();
+}
+
+fn entry(path: &str, ret: &str, status: &str) -> Value {
+    json!({"path": path, "self_kind": null, "params": [], "ret": {"t": "scalar", "name": ret}, "dims": [], "cross": {"status": status}})
+}
+
+#[test]
+fn a_removed_or_changed_path_breaks_and_an_addition_does_not() {
+    let old = [
+        entry("a", "u8", "ok"),
+        entry("b", "u8", "ok"),
+        entry("c", "u8", "ok"),
+        entry("d", "u8", "ok"),
+        entry("p", "u8", "private"),
+    ];
+    let new = [
+        entry("a", "u8", "ok"),
+        entry("b", "u16", "ok"),
+        entry("d", "u8", "skip"),
+        entry("e", "u8", "ok"),
+    ];
+    let diff = version::diff(&json!({"functions": old}), &json!({"functions": new}));
+    assert_eq!(diff.removed, ["c", "d"]);
+    assert_eq!(diff.changed, ["b"]);
+    assert_eq!(diff.added, 1);
+    let grown = [&old[..4], &[entry("e", "u8", "ok")]].concat();
+    let diff = version::diff(&json!({"functions": old}), &json!({"functions": grown}));
+    assert!(diff.removed.is_empty() && diff.changed.is_empty());
+    assert_eq!(diff.added, 1);
+}
+
+#[test]
+fn a_break_needs_the_minor_under_one_and_the_major_from_one() {
+    assert_eq!(version::need((0, 2, 3), true), (0, 3, 0));
+    assert_eq!(version::need((0, 2, 3), false), (0, 2, 4));
+    assert_eq!(version::need((1, 2, 3), true), (2, 0, 0));
+    assert!(version::semver("0.10.0") > version::semver("0.9.9"));
+    assert_eq!(version::semver("0.2"), None);
 }
 
 fn crate_files() -> Files {

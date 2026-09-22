@@ -4,7 +4,6 @@ members = ["pkgs/mrlyrs", "bridge", "pkgs/mrlypy", "pkgs/mrlyjs/units/*", "figur
 default-members = ["pkgs/mrlyrs", "site/demos/logic"]
 
 [workspace.package]
-version = "0.3.0"
 edition = "2021"
 license = "MIT"
 repository = "https://github.com/mrlyprod/mrlyprod"
@@ -21,10 +20,10 @@ codegen-units = 16
 strip = false
 
 [workspace.dependencies]
-demos = { path = "site/demos/logic", version = "0.3.0" }
-mrlyrs = { path = "pkgs/mrlyrs", version = "0.2.0" }
-ledger = { path = "research/lab/rs/ledger", version = "0.3.0" }
-atlas = { path = "research/lab/rs/atlas", version = "0.3.0" }
+demos = { path = "site/demos/logic" }
+mrlyrs = { path = "pkgs/mrlyrs" }
+ledger = { path = "research/lab/rs/ledger" }
+atlas = { path = "research/lab/rs/atlas" }
 num-bigint = "0.4"
 num-rational = "0.4"
 faer = "0.24"

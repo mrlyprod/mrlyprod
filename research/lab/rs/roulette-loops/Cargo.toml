@@ -1,6 +1,5 @@
 [package]
 name = "roulette-loops"
-version.workspace = true
 edition.workspace = true
 
 [dependencies]

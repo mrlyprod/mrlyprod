@@ -1,6 +1,5 @@
 [package]
 name = "automata-census"
-version.workspace = true
 edition.workspace = true
 
 [dependencies]

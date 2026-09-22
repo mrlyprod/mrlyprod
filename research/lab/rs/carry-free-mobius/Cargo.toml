@@ -1,6 +1,5 @@
 [package]
 name = "carry-free-mobius"
-version.workspace = true
 edition.workspace = true
 
 [dependencies]

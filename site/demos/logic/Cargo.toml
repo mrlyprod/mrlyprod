@@ -1,6 +1,5 @@
 [package]
 name = "demos"
-version.workspace = true
 edition.workspace = true
 description = "The eyes of Mrly: the wasm bridge that hands the designs to a browser."
 license.workspace = true

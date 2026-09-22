@@ -9,6 +9,8 @@ cd "$HERE/.."
 USAGE="usage: publish.sh <rs|py|js> [--dry]"
 MANIFEST=pkgs/mrlypy/Cargo.toml
 WHEELS=target/wheels
+VERSION="$(sed -n 's/^version = "\(.*\)"$/\1/p' pkgs/mrlyrs/Cargo.toml | head -1)"
+TAG="v$VERSION"
 
 target=""
 dry=""
@@ -51,20 +53,18 @@ clean() {
   return 1
 }
 
-crate_version() { sed -n 's/^version = "\(.*\)"/\1/p' "$1" | head -1; }
-
-json_version() { sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$1" | head -1; }
-
-versions() {
-  local rs py bridge js
-  rs="$(crate_version pkgs/mrlyrs/Cargo.toml)"
-  py="$(crate_version pkgs/mrlypy/pyproject.toml)"
-  bridge="$(crate_version pkgs/mrlypy/Cargo.toml)"
-  js="$(json_version pkgs/mrlyjs/package.json)"
-  echo "   mrlyrs $rs, mrlypy $py, mrlypy crate $bridge, mrlyjs $js"
-  [ "$rs" = "$py" ] && [ "$rs" = "$bridge" ] && [ "$rs" = "$js" ] && return 0
-  echo "the versions differ; one number ships all three" >&2
+tagged() {
+  git rev-parse -q --verify "refs/tags/$TAG" > /dev/null || return 0
+  [ "$(git rev-parse "$TAG^{commit}")" = "$(git rev-parse HEAD)" ] && return 0
+  echo "$TAG is at another commit; every target of $VERSION ships from it" >&2
   return 1
+}
+
+release() {
+  if ! git rev-parse -q --verify "refs/tags/$TAG" > /dev/null; then
+    git tag -a "$TAG" -m "mrlyrs, mrlypy and mrlyjs $VERSION"
+  fi
+  git push origin "$TAG"
 }
 
 tests() {
@@ -120,6 +120,8 @@ js() {
 step "tokens" tokens
 step "bridge" scripts/bridge.sh
 step "clean" clean
-step "versions" versions
+step "bump" scripts/bridge.sh bump
+step "tag" tagged
 step "tests" tests
 "$target"
+[ -n "$dry" ] || step "tag $TAG" release

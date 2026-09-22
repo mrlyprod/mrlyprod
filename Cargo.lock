@@ -19,11 +19,11 @@ dependencies = [
 
 [[package]]
 name = "apollonian"
-version = "0.3.0"
+version = "0.0.0"
 
 [[package]]
 name = "atlas"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "mrlyrs",
 ]
@@ -46,7 +46,7 @@ checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
 
 [[package]]
 name = "automata-census"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "mrlyrs",
 ]
@@ -108,11 +108,11 @@ checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
 
 [[package]]
 name = "carry-free-mobius"
-version = "0.3.0"
+version = "0.0.0"
 
 [[package]]
 name = "carry-skeleton"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "mrlyrs",
 ]
@@ -135,14 +135,14 @@ checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
 
 [[package]]
 name = "circle-crop"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "mrlyrs",
 ]
 
 [[package]]
 name = "claims"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "demos",
  "mrlyrs",
@@ -150,7 +150,7 @@ dependencies = [
 
 [[package]]
 name = "code-factorisation"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "mrlyrs",
  "num-bigint",
@@ -158,7 +158,7 @@ dependencies = [
 
 [[package]]
 name = "coprime-terms"
-version = "0.3.0"
+version = "0.0.0"
 
 [[package]]
 name = "crc32fast"
@@ -171,7 +171,7 @@ dependencies = [
 
 [[package]]
 name = "crop-counts"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "mrlyrs",
 ]
@@ -246,7 +246,7 @@ checksum = "930c7171c8df9fb1782bdf9b918ed9ed2d33d1d22300abb754f9085bc48bf8e8"
 
 [[package]]
 name = "demos"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "ledger",
  "mrlyrs",
@@ -255,7 +255,7 @@ dependencies = [
 
 [[package]]
 name = "design-census"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "mrlyrs",
  "num-bigint",
@@ -264,7 +264,7 @@ dependencies = [
 
 [[package]]
 name = "dimension-one-ladder"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "mrlyrs",
 ]
@@ -409,7 +409,7 @@ dependencies = [
 
 [[package]]
 name = "farey-discrepancy"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "mrlyrs",
 ]
@@ -425,7 +425,7 @@ dependencies = [
 
 [[package]]
 name = "figures"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "ledger",
  "mrlyrs",
@@ -666,7 +666,7 @@ checksum = "e17592d60ebacc7d5e169f4663c5f84f9161cc90328abcfe8456f41e4dfcb284"
 
 [[package]]
 name = "hexagon-moire"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "mrlyrs",
  "num-bigint",
@@ -685,7 +685,7 @@ dependencies = [
 
 [[package]]
 name = "integer-census"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "ledger",
 ]
@@ -726,7 +726,7 @@ checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 
 [[package]]
 name = "ledger"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "mrlyrs",
 ]
@@ -745,7 +745,7 @@ checksum = "b6d2cec3eae94f9f509c767b45932f1ada8350c4bdb85af2fcab4a3c14807981"
 
 [[package]]
 name = "life-atlas"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "atlas",
  "mrlyrs",
@@ -772,7 +772,7 @@ dependencies = [
 
 [[package]]
 name = "magic-words"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "mrlyrs",
 ]
@@ -804,14 +804,14 @@ checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
 
 [[package]]
 name = "memory-meter"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "mrlyrs",
 ]
 
 [[package]]
 name = "mertens-numerology"
-version = "0.3.0"
+version = "0.0.0"
 
 [[package]]
 name = "miniz_oxide"
@@ -835,7 +835,7 @@ dependencies = [
 
 [[package]]
 name = "mobius-designs"
-version = "0.3.0"
+version = "0.0.0"
 
 [[package]]
 name = "mrlyjs_all"
@@ -1127,7 +1127,7 @@ dependencies = [
 
 [[package]]
 name = "oeis-terms"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "mrlyrs",
  "num-bigint",
@@ -1387,7 +1387,7 @@ checksum = "69cdb34c158ceb288df11e18b4bd39de994f6657d83847bdffdbd7f346754b0f"
 
 [[package]]
 name = "radix-designs"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "mrlyrs",
 ]
@@ -1506,35 +1506,35 @@ checksum = "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4"
 
 [[package]]
 name = "rho-decoupling"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "num-bigint",
 ]
 
 [[package]]
 name = "roulette-cover"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "mrlyrs",
 ]
 
 [[package]]
 name = "roulette-loops"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "mrlyrs",
 ]
 
 [[package]]
 name = "roulette-nodes"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "mrlyrs",
 ]
 
 [[package]]
 name = "roulette-reaches"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "mrlyrs",
 ]
@@ -1662,7 +1662,7 @@ checksum = "ba467056f1b547ed52077911161fc86985becbc60e8e1857c8a144dab0def891"
 
 [[package]]
 name = "spectral-spacings"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "faer",
  "mrlyrs",
@@ -1670,7 +1670,7 @@ dependencies = [
 
 [[package]]
 name = "spin-census"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "mrlyrs",
 ]
@@ -1690,7 +1690,7 @@ dependencies = [
 
 [[package]]
 name = "sumset-density"
-version = "0.3.0"
+version = "0.0.0"
 
 [[package]]
 name = "syn"
@@ -1776,7 +1776,7 @@ dependencies = [
 
 [[package]]
 name = "three-base-thin"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "num-bigint",
 ]
@@ -1856,7 +1856,7 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "walk-dimension"
-version = "0.3.0"
+version = "0.0.0"
 dependencies = [
  "faer",
  "mrlyrs",

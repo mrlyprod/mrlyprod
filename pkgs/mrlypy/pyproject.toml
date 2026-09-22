@@ -1,6 +1,6 @@
 [project]
 name = "mrlypy"
-version = "0.2.0"
+dynamic = ["version"]
 description = "MrlyMath, the mathematics of designs, bridged into Python."
 readme = "README.md"
 license = "MIT"

@@ -1,6 +1,5 @@
 [package]
 name = "crop-counts"
-version.workspace = true
 edition.workspace = true
 
 [dependencies]

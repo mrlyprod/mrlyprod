@@ -1,6 +1,5 @@
 [package]
 name = "claims"
-version.workspace = true
 edition.workspace = true
 publish = false
 

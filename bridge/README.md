@@ -3,6 +3,7 @@
 - `scripts/bridge.sh` runs `cargo run -q -p bridge` under the cargo lock: it parses `pkgs/mrlyrs/src` (not `src/bin`) with `syn`, writes `bridge/manifest.json`, prints the skip report and the per-unit counts, then runs every backend listed in `BACKENDS` in `main.rs`.
 - It exits 1 on a name collision, on a skippable written function missing from `skip.txt`, or on a `skip.txt` line naming nothing; the manifest is written first either way.
 - `model.rs` is the contract: `Manifest { krate, version, modules, types, consts, functions }`, serde with `preserve_order`; read the JSON or the types.
+- The one version is the `version` line of `pkgs/mrlyrs/Cargo.toml`: the manifest and the unit crates take it, `version.rs` stamps the `version` line of `pkgs/mrlypy/Cargo.toml` and `pkgs/mrlyjs/package.json`, maturin reads mrlypy's; `scripts/bump.sh` moves it, and `bridge bump` gates a publish against the highest `v*` tag's manifest.
 
 ## NAMES
 

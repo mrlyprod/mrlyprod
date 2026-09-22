@@ -1,7 +1,6 @@
 [package]
 license.workspace = true
 name = "life-atlas"
-version.workspace = true
 edition.workspace = true
 
 [dependencies]

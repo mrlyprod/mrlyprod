@@ -1,4 +1,3 @@
 [package]
 name = "mertens-numerology"
-version.workspace = true
 edition.workspace = true

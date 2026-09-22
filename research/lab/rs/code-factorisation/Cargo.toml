@@ -1,6 +1,5 @@
 [package]
 name = "code-factorisation"
-version.workspace = true
 edition.workspace = true
 
 [dependencies]

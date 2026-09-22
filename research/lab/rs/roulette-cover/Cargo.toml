@@ -1,6 +1,5 @@
 [package]
 name = "roulette-cover"
-version.workspace = true
 edition.workspace = true
 
 [dependencies]

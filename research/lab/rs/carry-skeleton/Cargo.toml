@@ -1,6 +1,5 @@
 [package]
 name = "carry-skeleton"
-version.workspace = true
 edition.workspace = true
 
 [dependencies]

@@ -7,18 +7,30 @@ mod report;
 mod resolve;
 #[cfg(test)]
 mod tests;
+mod version;
 
 use model::{Manifest, Result};
 use std::path::{Path, PathBuf};
 
 type Backend = fn(&Manifest, &Path) -> Result<()>;
 
-const BACKENDS: &[(&str, Backend)] = &[("cli", cli::write), ("py", py::write), ("js", js::write)];
+const BACKENDS: &[(&str, Backend)] = &[
+    ("cli", cli::write),
+    ("py", py::write),
+    ("js", js::write),
+    ("version", version::write),
+];
 
 fn main() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let root = root.parent().expect("bridge sits in the workspace");
-    if let Err(error) = run(root) {
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    let done = match args.iter().map(String::as_str).collect::<Vec<_>>()[..] {
+        [] => run(root),
+        ["bump"] => version::bump(root),
+        _ => Err("usage: bridge [bump]".to_string()),
+    };
+    if let Err(error) = done {
         eprintln!("{error}");
         std::process::exit(1);
     }
@@ -27,7 +39,7 @@ fn main() {
 fn run(root: &Path) -> Result<()> {
     let src = root.join("pkgs/mrlyrs/src");
     let files = parse::load(&src)?;
-    let version = version(&root.join("pkgs/mrlyrs/Cargo.toml"))?;
+    let version = version::read(root)?;
     let built = resolve::build(&files, &version)?;
     let json = serde_json::to_string_pretty(&built.manifest).map_err(|e| e.to_string())?;
     std::fs::write(root.join("bridge/manifest.json"), json + "\n").map_err(|e| e.to_string())?;
@@ -47,13 +59,4 @@ fn run(root: &Path) -> Result<()> {
         write(&built.manifest, root).map_err(|e| format!("{name}: {e}"))?;
     }
     Ok(())
-}
-
-fn version(cargo_toml: &Path) -> Result<String> {
-    let text = std::fs::read_to_string(cargo_toml).map_err(|e| e.to_string())?;
-    text.lines()
-        .find_map(|l| l.strip_prefix("version = \""))
-        .and_then(|l| l.strip_suffix('"'))
-        .map(str::to_string)
-        .ok_or_else(|| format!("no version in {}", cargo_toml.display()))
 }

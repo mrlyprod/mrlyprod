@@ -1,6 +1,5 @@
 [package]
 name = "design-census"
-version.workspace = true
 edition.workspace = true
 
 [dependencies]

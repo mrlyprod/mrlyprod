@@ -1,6 +1,5 @@
 [package]
 name = "spectral-spacings"
-version.workspace = true
 edition.workspace = true
 
 [dependencies]

@@ -1,6 +1,5 @@
 [package]
 name = "mobius-designs"
-version.workspace = true
 edition.workspace = true
 
 [dependencies]

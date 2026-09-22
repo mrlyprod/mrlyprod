@@ -1,6 +1,5 @@
 [package]
 name = "apollonian"
-version.workspace = true
 edition.workspace = true
 
 [dependencies]

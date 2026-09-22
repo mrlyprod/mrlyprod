@@ -49,7 +49,7 @@ pub fn write(manifest: &Manifest, root: &Path) -> Result<()> {
     for name in &names {
         let unit = Unit::new(manifest, name);
         let dir = js.join("units").join(name);
-        save(&dir.join("Cargo.toml"), &cargo_toml(name))?;
+        save(&dir.join("Cargo.toml"), &cargo_toml(name, &manifest.version))?;
         save(&dir.join("src/hand.rs"), HAND_RS)?;
         save(&dir.join("src/lib.rs"), &unit.lib_rs()?)?;
         save(&js.join(format!("{name}.js")), &unit.wrapper_js())?;
@@ -69,14 +69,14 @@ fn save(path: &Path, text: &str) -> Result<()> {
     std::fs::write(path, text).map_err(|e| format!("{}: {e}", path.display()))
 }
 
-fn cargo_toml(name: &str) -> String {
+fn cargo_toml(name: &str, version: &str) -> String {
     let what = if name == "all" {
         "every module of mrlyrs".to_string()
     } else {
         format!("the {name} module of mrlyrs")
     };
     format!(
-        "[package]\nname = \"mrlyjs_{name}\"\nversion = \"0.2.0\"\nedition.workspace = true\nlicense.workspace = true\nrepository.workspace = true\ndescription = \"The {name} wasm unit of mrlyjs: {what} in a browser.\"\npublish = false\n\n[lib]\ncrate-type = [\"cdylib\"]\n\n[dependencies]\nmrlyrs.workspace = true\nwasm-bindgen = \"0.2\"\nserde-wasm-bindgen = \"0.6\"\njs-sys = \"0.3\"\nserde = {{ version = \"1\", features = [\"derive\"] }}\nserde_json = \"1\"\n\n[package.metadata.wasm-pack.profile.release]\nwasm-opt = false\n"
+        "[package]\nname = \"mrlyjs_{name}\"\nversion = \"{version}\"\nedition.workspace = true\nlicense.workspace = true\nrepository.workspace = true\ndescription = \"The {name} wasm unit of mrlyjs: {what} in a browser.\"\npublish = false\n\n[lib]\ncrate-type = [\"cdylib\"]\n\n[dependencies]\nmrlyrs.workspace = true\nwasm-bindgen = \"0.2\"\nserde-wasm-bindgen = \"0.6\"\njs-sys = \"0.3\"\nserde = {{ version = \"1\", features = [\"derive\"] }}\nserde_json = \"1\"\n\n[package.metadata.wasm-pack.profile.release]\nwasm-opt = false\n"
     )
 }
 
