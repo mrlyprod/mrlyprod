@@ -531,7 +531,7 @@ mod six {
     use crate::math::six::{Cell6d, Projection};
 
     /// A cube tile paired with the projection that flattens it.
-    #[derive(Clone, Debug)]
+    #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     pub struct HexTile {
         /// The projection that flattens the tile.
         pub projection: Projection,

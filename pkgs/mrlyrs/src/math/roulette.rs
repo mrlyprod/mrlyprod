@@ -1,6 +1,7 @@
 use crate::core::error::{value_error, Result};
 use crate::math::spirograph::{trace, Pencil, Track};
 use crate::num::factor::gcd;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 const GRID: (usize, usize) = (8, 1024);
@@ -9,7 +10,7 @@ const JOIN: f64 = 1e-5;
 // THE NODES
 
 /// Every crossing of a traced roulette: the curves against themselves, the curves against one another, and how crowded the worst node is.
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Nodes {
     /// The curves counted, in the order the pencils came in.
     pub curves: usize,

@@ -1,6 +1,7 @@
 use crate::core::error::{value_error, Result};
 use crate::num::factor::gcd;
 use crate::num::lattice::farey;
+use serde::{Deserialize, Serialize};
 
 /// The largest curvature a packing is grown to.
 pub const CURVATURE_CAP: i64 = 8192;
@@ -14,7 +15,7 @@ pub const ROOTS: [&str; 4] = ["strip", "-1,2,2,3", "-2,3,6,7", "-3,4,12,13"];
 // THE OBJECTS
 
 /// A circle in the integer coordinates `(k, k x, k y)`: a line is `k = 0` with `(k x, k y)` its outward unit normal, and the curvature is negative on the circle that contains a bounded packing.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct Circle {
     /// The curvature.
     pub k: i64,
@@ -151,6 +152,7 @@ pub fn root(name: &str) -> Result<Quad> {
 // THE GROWTH
 
 /// A packing grown from its root in exact integers.
+#[derive(Serialize, Deserialize)]
 pub struct Packing {
     /// The root quadruple the growth started from.
     pub root: Quad,
@@ -248,7 +250,7 @@ pub fn frame(p: &Packing) -> [f64; 4] {
 // THE FORD CIRCLES
 
 /// A tangency point on the line `y = 0`: the reduced fraction the circle rests at and the curvature it carries.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Touch {
     /// The numerator of the reduced fraction.
     pub num: i64,
@@ -297,6 +299,7 @@ pub fn touches(p: &Packing) -> Vec<Touch> {
 // THE SHADOW
 
 /// The Farey stack read against the packing's tangency points.
+#[derive(Serialize, Deserialize)]
 pub struct Shadow {
     /// The depth the stack is read at.
     pub order: usize,

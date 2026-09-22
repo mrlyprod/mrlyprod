@@ -1,7 +1,8 @@
 use crate::core::error::{value_error, Result};
+use serde::{Deserialize, Serialize};
 
 /// A seeded xoshiro256++ random stream.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Rng {
     s: [u64; 4],
 }

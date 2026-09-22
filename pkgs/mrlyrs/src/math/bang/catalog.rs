@@ -50,7 +50,7 @@ pub fn sources(catalog: &Catalog, dimension: usize) -> Result<Vec<Source>> {
 }
 
 /// The pool of sources a tile may draw from.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Catalog {
     /// The classic designs only.
     Classics,

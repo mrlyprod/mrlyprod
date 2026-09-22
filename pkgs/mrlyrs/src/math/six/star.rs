@@ -1,9 +1,10 @@
 use crate::core::error::{value_error, Result};
 use crate::math::bang::{code_to_corners, Code};
 use crate::num::series::{CATALAN, EULER};
+use serde::{Deserialize, Serialize};
 
 /// The exact reading of a cut layer: how many cells were inked out of how many were read.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Share {
     /// The count of inked cells.
     pub inked: i64,
@@ -94,7 +95,7 @@ pub fn width_law(half: usize) -> f64 {
 }
 
 /// The three classes of layer count the `1/L^2` term of the decay reads.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Branch {
     /// `L` divisible by four, where the residual is `-23/192`.
     Zero,
@@ -139,7 +140,7 @@ impl Branch {
 }
 
 /// The `L`-layer reading of the ghost star's decay in the cell frame.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Decay {
     /// The layer count `L`.
     pub layers: usize,
@@ -165,6 +166,7 @@ pub struct Decay {
 /// a time and nothing resampled, so the half-cell displacement `1/(2n)` between consecutive layers
 /// is carried rather than averaged away. A cell `(x, y, z)` of the plane `x + y + z = 6n - 2` is
 /// inked when the design's corner mask holds the three block parities `floor(c/4) mod 2`.
+#[derive(Serialize, Deserialize)]
 pub struct Star {
     corners: [bool; 8],
 }

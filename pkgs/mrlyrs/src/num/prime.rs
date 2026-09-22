@@ -1,5 +1,6 @@
 use crate::num::factor::{divisors, factorize_wide};
 use crate::num::series::li;
+use serde::{Deserialize, Serialize};
 
 /// Returns whether the number is prime, by trial division on the six-step wheel.
 ///
@@ -82,7 +83,7 @@ pub fn squares(number: usize) -> Option<(usize, usize)> {
 }
 
 /// The prime object: one prime with its rank, the step behind it and the shapes it makes.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Prime {
     /// The prime itself.
     pub value: usize,
@@ -112,7 +113,7 @@ pub fn study(limit: usize) -> Vec<Prime> {
 }
 
 /// The sieve of Eratosthenes taken one prime at a time, each number remembering which prime struck it.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Sieve {
     types: Vec<u8>,
     at: usize,
@@ -262,7 +263,7 @@ pub fn goldbach_record(top: usize) -> Vec<usize> {
 }
 
 /// A number as a pile of stones: its prime factors, whether it is prime, and every rectangle the stones make.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Pile {
     /// The count of stones.
     pub number: u64,
@@ -297,7 +298,7 @@ pub fn pile(number: u64) -> Pile {
 }
 
 /// One reading of the prime count against its two smooth guesses.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Reading {
     /// The point on the number line.
     pub x: usize,

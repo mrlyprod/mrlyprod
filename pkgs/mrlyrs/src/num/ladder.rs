@@ -1,6 +1,7 @@
 use crate::core::error::{value_error, Result};
 use crate::num::design::elements;
 use crate::num::zeta::{raise, Complex};
+use serde::{Deserialize, Serialize};
 
 /// The relative rounding allowance the double-precision ladder charges against the scale it carries.
 ///
@@ -21,7 +22,7 @@ const RATIO_CAP: f64 = 0.9;
 /// The elements are the whole numbers whose base-`q` digits all lie in `F` with a nonzero leading digit, and the object is their Dirichlet series `zeta_F(s) = sum n^(-s)`, of abscissa `alpha = log_q k` for `k = card F`.
 /// With `E_j` the sum over the elements of exactly `j` digits and `G_P = sum_(j >= P) E_j`, splitting an element on its last digit gives `(1 - k q^(-w)) G_P(w) = E_P(w) + sum_(l >= 1) binom(-w, l) q^(-w-l) gamma_l G_P(w+l)` with `gamma_l = sum_(a in F) a^l`, and `zeta_F = D_(P-1) + G_P` for the finite Dirichlet polynomial `D_(P-1)` over the elements below `q^(P-1)`.
 /// The `l`-series has ratio `max F / q^P`, so the peel depth buys the convergence and the small quantity `G_P` is carried directly, never as a difference of two large ones.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Design {
     base: u64,
     digits: Vec<u64>,

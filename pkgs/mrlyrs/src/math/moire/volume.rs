@@ -3,9 +3,10 @@ use super::stack::merge;
 use super::{Combine, Spec};
 use crate::core::error::{value_error, Result};
 use crate::core::tensor::Tensor;
+use serde::{Deserialize, Serialize};
 
 /// A cubic grid of f32 samples, x-major.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Volume {
     /// The samples, x-major, then y, then z.
     pub data: Vec<f32>,
@@ -14,7 +15,7 @@ pub struct Volume {
 }
 
 /// A plane through the unit box, framed for sampling: its centre, its two in-plane axes and the width of the square window that holds the whole section, all in the box `[-1, 1]^3`.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Frame {
     /// The point of the plane the window is centred on.
     pub centre: [f64; 3],

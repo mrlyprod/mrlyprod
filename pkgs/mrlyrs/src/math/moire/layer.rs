@@ -1,9 +1,10 @@
 use super::sample::{axes, membership};
 use super::{Lattice, Spec};
 use crate::core::error::{value_error, Result};
+use serde::{Deserialize, Serialize};
 
 /// The recipe for one moire layer.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Layer {
     /// The design to sample.
     pub spec: Spec,

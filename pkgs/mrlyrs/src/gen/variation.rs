@@ -30,7 +30,7 @@ impl File {
 }
 
 /// The settings an artwork is drawn under.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Config {
     /// The constraints the tile is drawn under.
     pub tile: Config2d,

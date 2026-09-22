@@ -34,6 +34,7 @@ pub use serializer::{from_json, to_json};
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::math::round_trip;
     #[test]
     fn menger_graphs() {
         let cell = designs::carpet(3, 1).unwrap();
@@ -41,5 +42,12 @@ mod tests {
         assert_eq!(core.nodes.len(), 20);
         let tunnels = tunnel_graph(&cell).unwrap();
         assert_eq!(tunnels.nodes.len(), 7);
+    }
+    #[test]
+    fn serde_round_trips() {
+        let cube = designs::carpet(3, 1).unwrap();
+        round_trip(census(&cube).unwrap());
+        round_trip(Vec3::new(1.0, -2.0, 0.5));
+        round_trip(cube);
     }
 }

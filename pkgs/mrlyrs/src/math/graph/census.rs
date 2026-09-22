@@ -1,5 +1,6 @@
 use super::models::{Branch, Network, Node};
 use crate::core::error::Result;
+use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::f64::consts::LN_2;
 
@@ -23,7 +24,7 @@ pub fn total_length(network: &Network) -> f64 {
 }
 
 /// What a node's degree makes it.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Role {
     /// A node no branch touches.
     Alone,
@@ -243,7 +244,7 @@ pub fn fractal_dimension(network: &Network) -> f64 {
 }
 
 /// The measurements of one network.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Census {
     /// The node count.
     pub nodes: usize,

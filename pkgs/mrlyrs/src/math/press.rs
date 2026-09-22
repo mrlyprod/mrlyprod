@@ -1,6 +1,7 @@
 use crate::core::error::{overflow_error, value_error, Result};
 use crate::math::bang::factory::{code_to_corners, MagicLayer};
 use crate::math::bang::Code;
+use serde::{Deserialize, Serialize};
 
 /// The largest corner count the tally press accepts, keeping its table a million rows.
 pub const CORNERS: usize = 20;
@@ -269,6 +270,7 @@ pub fn count_below(code: Code, dimension: usize, base: usize, limit: u128) -> Re
 /// Each added number lands its weight in the bucket of its corner-usage mask, and a
 /// design's total is the sum over the submasks of its code, so a single sweep prices
 /// a Mertens sum, a member count or a prime count for all two to the corners designs.
+#[derive(Serialize, Deserialize)]
 pub struct Press {
     /// The design dimension of the universe.
     pub dimension: usize,

@@ -1,7 +1,8 @@
 use super::bitmaps::{DIGITS, EXTRAS, SPECIALS, UPPERS};
+use serde::{Deserialize, Serialize};
 
 /// One character's pixel bitmap.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Glyph {
     /// The character the glyph draws.
     pub char: char,

@@ -1,5 +1,6 @@
 use crate::core::error::{value_error, Result};
 use crate::core::named_enum;
+use serde::{Deserialize, Serialize};
 
 // THE WORD
 
@@ -90,7 +91,7 @@ pub fn doubling(length: usize) -> Vec<u8> {
 
 named_enum! {
     /// The four ways the word lifts from a line to the plane, one sign at every site.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
     pub enum Lift {
         /// `t(i) xor t(j)`, the sign grid of the two-by-two tile `[[+1, -1], [-1, +1]]`.
         Parity => "parity",
@@ -175,7 +176,7 @@ pub fn power(tile: &[u8], number: usize, level: usize) -> Result<Vec<u8>> {
 }
 
 /// The verdict on whether a grid is the Kronecker power of its own corner tile.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Fold {
     /// The corner tile the test folds, row major.
     pub tile: Vec<u8>,

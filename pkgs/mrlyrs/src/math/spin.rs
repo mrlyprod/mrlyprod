@@ -1,5 +1,6 @@
 use crate::core::error::{shape_error, Result};
 use crate::num::factor::gcd;
+use serde::{Deserialize, Serialize};
 use std::f64::consts::{PI, SQRT_2};
 
 fn centre(size: usize) -> f64 {
@@ -144,7 +145,7 @@ pub fn petals(copies: usize, order: usize) -> usize {
 }
 
 /// The way radial copies merge: their mean, their sum, their union, their meet, their parity or what the first keeps that no other has.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Blend {
     /// The mean of the copies.
     Mean,

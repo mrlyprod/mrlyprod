@@ -1,4 +1,5 @@
 use crate::core::error::{value_error, Result};
+use serde::{Deserialize, Serialize};
 
 /// The largest digit span a rule may read, so its code fits a `u64`.
 pub const SPAN: usize = 6;
@@ -10,7 +11,7 @@ pub const SPAN: usize = 6;
 /// The code therefore lives in `[0, 2^(2^(k D)))`, which forces `k D <= SPAN`.
 /// A word `d_1 d_2 ... d_L` is read coarsest digit first and is accepted when every window of `k` consecutive digits is allowed; for `L < k` there is no window, so every word is accepted.
 /// Width 1 is the memoryless design of the same code: the cells of `bang dim <dim>, code <code>` at that level.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Rule {
     /// The dimension `D`, one to three.
     pub dimension: usize,

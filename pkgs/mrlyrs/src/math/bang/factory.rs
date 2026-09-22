@@ -3,10 +3,11 @@ use crate::core::error::{overflow_error, value_error, Result};
 use crate::core::Tensor;
 use crate::math::name::{Bang, Named};
 use crate::math::rules;
+use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
 /// One ordered layer of a magic composition: a coded design at its own side number.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MagicLayer {
     /// The layer's coded design.
     pub design: Bang,

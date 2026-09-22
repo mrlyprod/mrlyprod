@@ -3,9 +3,10 @@ use crate::core::rng::Rng;
 use crate::gen::recipe::{
     generals, nestings, powers, products, uniform, Catalog, Group, Parity, Source, Tile,
 };
+use serde::{Deserialize, Serialize};
 
 /// The constraints a random tile is drawn under.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ConfigNd<const N: usize> {
     /// The tile groups allowed.
     pub groups: Vec<Group>,

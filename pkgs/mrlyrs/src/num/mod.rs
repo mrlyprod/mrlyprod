@@ -70,3 +70,40 @@ pub mod sieve;
 pub mod spiral;
 /// The critical line: zeta at one half plus i t and off it, its zeros, the prime staircase they rebuild and the novelty meter their waves predict.
 pub mod zeta;
+
+#[cfg(test)]
+mod tests {
+    use super::gauss::Ring;
+    use super::lattice::farey;
+    use super::memory::Rule;
+    use super::prime::study;
+    use super::zeta::Complex;
+
+    #[test]
+    fn serde_round_trips() {
+        let prime = study(10)[2];
+        assert_eq!(
+            prime,
+            serde_json::from_str(&serde_json::to_string(&prime).unwrap()).unwrap()
+        );
+        let node = farey(3)[1];
+        assert_eq!(
+            node,
+            serde_json::from_str(&serde_json::to_string(&node).unwrap()).unwrap()
+        );
+        let rule = Rule::new(1, 2, 7).unwrap();
+        assert_eq!(
+            rule,
+            serde_json::from_str(&serde_json::to_string(&rule).unwrap()).unwrap()
+        );
+        let point = Complex::new(0.5, 14.134_725);
+        assert_eq!(
+            point,
+            serde_json::from_str(&serde_json::to_string(&point).unwrap()).unwrap()
+        );
+        assert_eq!(
+            Ring::Eisenstein,
+            serde_json::from_str(&serde_json::to_string(&Ring::Eisenstein).unwrap()).unwrap()
+        );
+    }
+}

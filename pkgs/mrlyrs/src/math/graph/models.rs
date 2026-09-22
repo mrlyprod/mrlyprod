@@ -1,8 +1,9 @@
 use crate::core::error::{value_error, Result};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// A point of the network.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Node {
     /// The coordinates, one per dimension.
     pub position: Vec<f64>,
@@ -11,7 +12,7 @@ pub struct Node {
 }
 
 /// A link between two nodes.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Branch {
     /// The index of the node the branch leaves.
     pub parent: usize,
@@ -22,7 +23,7 @@ pub struct Branch {
 }
 
 /// A spatial graph of nodes and branches.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Network {
     /// The dimension every position must match.
     pub dim: usize,

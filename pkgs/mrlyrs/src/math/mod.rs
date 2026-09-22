@@ -61,3 +61,41 @@ pub mod three;
 pub mod tourbillon;
 /// The flat-cell pipeline: designs, tiles, graphs and renderings in two dimensions.
 pub mod two;
+
+// SERDE
+
+#[cfg(test)]
+pub(crate) fn round_trip<T>(value: T)
+where
+    T: serde::Serialize + serde::de::DeserializeOwned + PartialEq + std::fmt::Debug,
+{
+    let text = serde_json::to_string(&value).unwrap();
+    assert_eq!(serde_json::from_str::<T>(&text).unwrap(), value, "{text}");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::round_trip;
+    use crate::math::shape::{Frac, Region};
+    use crate::math::spin::Blend;
+    use crate::math::spirograph::{Kind, Pencil};
+    use crate::math::tourbillon::Eye;
+
+    #[test]
+    fn serde_round_trips() {
+        round_trip(Frac { num: -3, den: 4 });
+        round_trip(Region::Cut);
+        round_trip(Blend::Parity);
+        round_trip(Pencil {
+            x: 0.5,
+            y: -0.25,
+            seat: (1, -2),
+            kind: Kind::Corner,
+        });
+        round_trip(Eye {
+            angle: 45.0,
+            numer: 90,
+            denom: 2,
+        });
+    }
+}

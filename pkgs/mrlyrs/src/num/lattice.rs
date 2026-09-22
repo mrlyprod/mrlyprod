@@ -1,6 +1,7 @@
 use crate::core::error::{value_error, Result};
 use crate::num::factor::totients;
 use crate::num::series;
+use serde::{Deserialize, Serialize};
 use std::f64::consts::PI;
 
 /// Counts the ordered pairs of coprime coordinates between one and n: twice the totient sum less one.
@@ -72,7 +73,7 @@ pub fn recovered(n: usize, dimension: u32) -> Result<f64> {
 }
 
 /// A visible node: a reduced fraction and the brightness a stack of scales one through the window gives it.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Node {
     /// The numerator, coprime to the denominator.
     pub num: u64,
@@ -83,7 +84,7 @@ pub struct Node {
 }
 
 /// A grid crossing of two visible nodes, its brightness the separable product.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Node2d {
     /// The horizontal node.
     pub x: Node,

@@ -132,7 +132,7 @@ impl Ink {
 const LEVELS: [u8; 2] = [33, 66];
 
 /// The constraints a caller may put on a random paint.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Config {
     /// The editions allowed, or None for all seven.
     pub editions: Option<Vec<Edition>>,

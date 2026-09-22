@@ -47,3 +47,34 @@ pub use tensor::{Dtype, Tensor};
 
 /// An object's entries, kept in insertion order.
 pub type Map = serde_json::Map<String, Json>;
+
+#[cfg(test)]
+mod tests {
+    use super::cell::Mode;
+    use super::colors::{Color, DARK, RED, WHITE};
+    use super::paint::Config;
+    use super::ramp::Colorizer;
+    use super::resample::Filter;
+    use super::rng::Rng;
+    use serde::de::DeserializeOwned;
+    use serde::Serialize;
+
+    fn same<T: Serialize + DeserializeOwned>(value: &T) -> bool {
+        let text = serde_json::to_string(value).unwrap();
+        let back: T = serde_json::from_str(&text).unwrap();
+        serde_json::to_string(&back).unwrap() == text
+    }
+
+    #[test]
+    fn serde_round_trips() {
+        assert!(same(&DARK));
+        assert!(same(&Mode::Tag));
+        assert!(same(&Filter::Box));
+        assert!(same(&Colorizer::Bins {
+            background: Color::rgb(0, 0, 0),
+            ramp: vec![WHITE, RED],
+        }));
+        assert!(same(&Config::default()));
+        assert!(same(&Rng::new(7)));
+    }
+}

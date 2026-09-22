@@ -22,3 +22,16 @@ pub mod serializer;
 pub use designs::grow;
 pub use painter::paint;
 pub use renderer::push_glyph;
+
+#[cfg(test)]
+mod tests {
+    use crate::math::round_trip;
+    use crate::math::{three, two};
+
+    #[test]
+    fn serde_round_trips() {
+        round_trip(two::designs::carpet(3, 1).unwrap());
+        round_trip(three::designs::carpet(3, 1).unwrap());
+        round_trip(two::paint(two::designs::carpet(3, 1).unwrap(), None, None));
+    }
+}

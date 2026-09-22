@@ -1,6 +1,7 @@
 use crate::core::error::{value_error, Result};
 use crate::num::memory::{transfer, Rule};
 use crate::num::zeta::{raise, Complex};
+use serde::{Deserialize, Serialize};
 
 /// The relative rounding allowance the double-precision matrix ladder charges against the scale it carries.
 ///
@@ -27,7 +28,7 @@ const PIVOT_FLOOR: f64 = 1e-12;
 /// [`crate::num::memory::Rule::accepts`] holds a word shorter than the width `k` to be accepted, there being no window in it, so every integer below `q^(k-1)` with a nonzero leading digit sits in `S_W` for every rule of that width, and the head polynomial carries them.
 /// With `E_j(w)` the vector whose entry `u` sums `n^(-w)` over accepted words of exactly `j` digits ending in state `u`, and `G_P = sum_(j >= P) E_j`, splitting a word on its last digit gives `(I - q^(-w) T) G_P(w) = E_P(w) + sum_(l >= 1) binom(-w, l) q^(-w-l) Gamma_l G_P(w+l)`, where `Gamma_l(u', u) = sum a^l` over the letters `a` with the window `(u, a)` allowed and `u' = shift(u, a)`, and `T = Gamma_0` is [`crate::num::memory::transfer`] transposed.
 /// Then `zeta_W(w) = 1^T D_(P-1)(w) + 1^T G_P(w)` with `D_(P-1)` the Dirichlet polynomial over the accepted words of at most `P-1` digits, and the scalar ladder of [`crate::num::ladder`] is the width one case with `card F` where `T` stands.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Automaton {
     rule: Rule,
     base: u64,

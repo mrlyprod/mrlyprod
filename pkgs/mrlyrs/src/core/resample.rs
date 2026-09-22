@@ -1,7 +1,8 @@
 use super::error::{overflow_error, shape_error, value_error, Result};
+use serde::{Deserialize, Serialize};
 
 /// The way a resampling weighs the source pixels it reads.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Filter {
     /// The single nearest source pixel, palettes and hard edges kept.
     Nearest,

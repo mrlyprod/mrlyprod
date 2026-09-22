@@ -4,9 +4,10 @@ use crate::core::error::{value_error, Result};
 use crate::core::named_enum;
 use crate::core::Tensor;
 use crate::math::name::Bang;
+use serde::{Deserialize, Serialize};
 
 /// The plane geometry of one letter, the numbers a word's counts fold through.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Letter {
     /// The count of filled cells.
     pub fill: u128,
@@ -23,7 +24,7 @@ pub struct Letter {
 }
 
 /// The counts a word carries at one prefix length.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Counts {
     /// The side, the product of the prefix's letter sides.
     pub side: u128,
@@ -367,7 +368,7 @@ pub fn constant_functional(layers: &[MagicLayer]) -> Result<f64> {
 
 named_enum! {
     /// The named infinite schedules over an ordered pair of letters.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
     pub enum Schedule {
         /// The Thue-Morse word, the parity of the binary digit sum of the place.
         ThueMorse => "thue-morse",

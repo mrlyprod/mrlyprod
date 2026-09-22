@@ -1,6 +1,7 @@
 use crate::core::error::{value_error, Result};
 use crate::math::moire::{layer, Layer, Spec};
 use crate::num::factor::lcm;
+use serde::{Deserialize, Serialize};
 
 fn odd_blocks(span: u64, block: u64) -> u64 {
     block * (span / (2 * block)) + (span % (2 * block)).saturating_sub(block)
@@ -48,7 +49,7 @@ pub fn correlation(m: usize, n: usize) -> f64 {
 }
 
 /// The witness row of an odd scale: its correlation with every earlier odd scale from three, and the verdict the row gives.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Witness {
     /// The scale on trial.
     pub scale: usize,

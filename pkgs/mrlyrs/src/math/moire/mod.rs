@@ -3,6 +3,8 @@
 //! One design sampled at many scales and stacked makes an interference pattern; the layers, their
 //! combination, the volume they cut and the PNG they render live here.
 
+use serde::{Deserialize, Serialize};
+
 /// The square grid of f32 samples.
 pub mod field;
 /// The recipe and sampling of one moire layer.
@@ -21,7 +23,7 @@ pub mod stack;
 pub mod volume;
 
 /// The sampling lattice of a moire field.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Lattice {
     /// The square lattice.
     Square,
@@ -30,7 +32,7 @@ pub enum Lattice {
 }
 
 /// The way stacked layers merge.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Combine {
     /// The layer-count sum.
     Sum,
@@ -41,7 +43,7 @@ pub enum Combine {
 }
 
 /// The identity of a design: its code, base and dimension.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Spec {
     /// The design code.
     pub code: u128,
@@ -68,3 +70,19 @@ pub use presets::{all, named, Preset};
 pub use render::render;
 pub use stack::{merge, stack, stack_codes};
 pub use volume::{frame, volume, Frame, Volume};
+
+#[cfg(test)]
+mod tests {
+    use super::{Combine, Field, Lattice, Spec};
+    use crate::math::moire::pairs::witness;
+    use crate::math::round_trip;
+
+    #[test]
+    fn serde_round_trips() {
+        round_trip(Spec::new(7, 2, 2));
+        round_trip(Lattice::Hex);
+        round_trip(Combine::Xor);
+        round_trip(Field::new(2));
+        round_trip(witness(9).unwrap());
+    }
+}

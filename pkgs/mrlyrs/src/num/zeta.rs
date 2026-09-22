@@ -1,5 +1,6 @@
 use crate::num::prime::primes;
 use crate::num::series::bernoulli;
+use serde::{Deserialize, Serialize};
 use std::f64::consts::PI;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
@@ -13,7 +14,7 @@ const TOLERANCE: f64 = 1e-9;
 const NODES: usize = 4096;
 
 /// A complex number: a real and an imaginary part.
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct Complex {
     /// The real part.
     pub re: f64,
@@ -157,6 +158,7 @@ pub fn corrections(p: f64) -> [f64; 4] {
 }
 
 /// The critical line: the Bernoulli numbers and the Euler-Maclaurin weights the two engines share, built once.
+#[derive(Serialize, Deserialize)]
 pub struct Line {
     bern: Vec<f64>,
     tail: Vec<f64>,

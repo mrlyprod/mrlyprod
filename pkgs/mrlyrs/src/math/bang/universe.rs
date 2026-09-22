@@ -1,5 +1,6 @@
 use super::code::Code;
 use crate::core::error::{value_error, Result};
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
 /// Returns every permutation of 0..n in sorted order.
@@ -190,7 +191,7 @@ pub fn anf_string(code: Code, dimension: usize) -> String {
 }
 
 /// A single design with its place in the orbit structure.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Design {
     /// The design's code.
     pub i: Code,
@@ -240,6 +241,7 @@ impl Design {
 }
 
 /// The complete enumeration of one dimension's designs and orbits.
+#[derive(Serialize, Deserialize)]
 pub struct Universe {
     /// The universe's dimension.
     pub dimension: usize,

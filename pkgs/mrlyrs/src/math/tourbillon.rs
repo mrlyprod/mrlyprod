@@ -3,6 +3,7 @@ use crate::core::Rng;
 use crate::math::spin::Blend;
 use crate::num::factor::{factorize, gcd, mobius, squarefree};
 use crate::num::prime::{is_prime, primes, squares};
+use serde::{Deserialize, Serialize};
 
 const SCALE_CAP: usize = 199;
 const SIZE_FLOOR: usize = 16;
@@ -17,7 +18,7 @@ const TIGHT: f64 = 1e-9;
 // THE LAYERS
 
 /// One carpet of a stack: the odd scale it is drawn at, the weight the linear blends carry it at and the turn it takes about the centre, in degrees.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Layer {
     /// The odd scale, the number of cells across the carpet.
     pub scale: usize,
@@ -28,7 +29,7 @@ pub struct Layer {
 }
 
 /// The readings of a spun stack: its layers, the first eight scales and angles, the mean and RMS contrast over the disc, that contrast times the root of the layer count, the exact centre value, whether the blend carries the weights, the span the raster covers, the sites inside the disc and the brightest three.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Stats {
     /// The count of layers in the stack.
     pub layers: usize,
@@ -63,7 +64,7 @@ pub struct Stats {
 }
 
 /// One angle of the quarter-turn lattice: the turn in degrees and the ninety a over q that names it.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Eye {
     /// The turn in degrees.
     pub angle: f64,

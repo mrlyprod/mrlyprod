@@ -1,5 +1,6 @@
 use crate::core::error::{overflow_error, shape_error, value_error, Result};
 use crate::num::gauss::Ring;
+use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::f64::consts::TAU;
 
@@ -20,7 +21,7 @@ fn argument(ring: Ring, a: i64, b: i64) -> f64 {
 }
 
 /// The base of a radix design: a ring and an element of norm at least two, the scale every word is read against.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Base {
     ring: Ring,
     value: (i64, i64),
@@ -173,7 +174,7 @@ impl Base {
 }
 
 /// A radix design: a digit set inside one ring, placed by a base with a unit twist per digit.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Radix {
     base: Base,
     digits: Vec<(i64, i64)>,

@@ -1,7 +1,8 @@
 use super::error::{shape_error, value_error, Result};
+use serde::{Deserialize, Serialize};
 
 /// The element widths a tensor can hold.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Dtype {
     /// Unsigned 8-bit elements.
     U8,
@@ -26,7 +27,7 @@ impl Dtype {
 }
 
 /// The typed storage behind a tensor.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Buf {
     /// Unsigned 8-bit storage.
     U8(Vec<u8>),
@@ -93,7 +94,7 @@ impl Buf {
 }
 
 /// An n-dimensional grid of small integers.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Tensor {
     data: Buf,
     /// The extent of each axis.
@@ -157,6 +158,9 @@ impl Tensor {
     /// assert!(Tensor::of(vec![1, 0, 0], vec![2, 2]).is_err());
     /// ```
     pub fn of(data: Vec<u8>, shape: Vec<usize>) -> Result<Tensor> {
+        Tensor::wrap(Buf::U8(data), shape)
+    }
+    fn wrap(data: Buf, shape: Vec<usize>) -> Result<Tensor> {
         let size: usize = shape.iter().product();
         if data.len() != size {
             return shape_error(format!(
@@ -164,10 +168,46 @@ impl Tensor {
                 data.len()
             ));
         }
-        Ok(Tensor {
-            data: Buf::U8(data),
-            shape,
-        })
+        Ok(Tensor { data, shape })
+    }
+    /// Wraps a u8 vector as a tensor of the shape, the same door as [`Tensor::of`].
+    ///
+    /// # Errors
+    ///
+    /// Errs when the data length is not the shape's product.
+    pub fn u8(data: Vec<u8>, shape: Vec<usize>) -> Result<Tensor> {
+        Tensor::wrap(Buf::U8(data), shape)
+    }
+    /// Wraps a u16 vector as a tensor of the shape.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the data length is not the shape's product.
+    ///
+    /// ```
+    /// use mrlyrs::core::tensor::{Dtype, Tensor};
+    /// let t = Tensor::u16(vec![1, 2, 3, 4], vec![2, 2]).unwrap();
+    /// assert_eq!((t.dtype(), t.sum()), (Dtype::U16, 10));
+    /// assert!(Tensor::u16(vec![1, 2, 3], vec![2, 2]).is_err());
+    /// ```
+    pub fn u16(data: Vec<u16>, shape: Vec<usize>) -> Result<Tensor> {
+        Tensor::wrap(Buf::U16(data), shape)
+    }
+    /// Wraps a u32 vector as a tensor of the shape.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the data length is not the shape's product.
+    pub fn u32(data: Vec<u32>, shape: Vec<usize>) -> Result<Tensor> {
+        Tensor::wrap(Buf::U32(data), shape)
+    }
+    /// Wraps an i32 vector as a tensor of the shape.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the data length is not the shape's product.
+    pub fn i32(data: Vec<i32>, shape: Vec<usize>) -> Result<Tensor> {
+        Tensor::wrap(Buf::I32(data), shape)
     }
     /// Returns the element width.
     pub fn dtype(&self) -> Dtype {
@@ -197,6 +237,39 @@ impl Tensor {
         match &mut self.data {
             Buf::U8(v) => Ok(v),
             other => shape_error(format!("tensor is {:?}, not u8.", other.dtype())),
+        }
+    }
+    /// Returns the elements as u16s.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the tensor is not two bytes wide.
+    pub fn u16s(&self) -> Result<&[u16]> {
+        match &self.data {
+            Buf::U16(v) => Ok(v),
+            other => shape_error(format!("tensor is {:?}, not u16.", other.dtype())),
+        }
+    }
+    /// Returns the elements as u32s.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the tensor is not four unsigned bytes wide.
+    pub fn u32s(&self) -> Result<&[u32]> {
+        match &self.data {
+            Buf::U32(v) => Ok(v),
+            other => shape_error(format!("tensor is {:?}, not u32.", other.dtype())),
+        }
+    }
+    /// Returns the elements as i32s.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the tensor is not four signed bytes wide.
+    pub fn i32s(&self) -> Result<&[i32]> {
+        match &self.data {
+            Buf::I32(v) => Ok(v),
+            other => shape_error(format!("tensor is {:?}, not i32.", other.dtype())),
         }
     }
     /// Returns the element at a flat index, which must be below the size like a slice index.
@@ -906,5 +979,47 @@ mod tests {
         assert!(a.tile(&[2]).is_err());
         assert!(a.tile(&[2, 2, 2]).is_err());
         assert!(a.tile(&[]).is_err());
+    }
+    #[test]
+    fn typed_constructors_refuse_a_wrong_length() {
+        assert!(Tensor::u8(vec![1, 2, 3], vec![2, 2]).is_err());
+        assert!(Tensor::u16(vec![1, 2, 3], vec![2, 2]).is_err());
+        assert!(Tensor::u32(vec![1, 2, 3], vec![2, 2]).is_err());
+        assert!(Tensor::i32(vec![1, 2, 3], vec![2, 2]).is_err());
+        assert_eq!(Tensor::u8(vec![1, 2, 3, 4], vec![2, 2]).unwrap().sum(), 10);
+    }
+    #[test]
+    fn typed_slices_read_their_own_width() {
+        assert_eq!(
+            Tensor::u8(vec![1, 2], vec![2]).unwrap().bytes().unwrap(),
+            [1, 2]
+        );
+        assert_eq!(
+            Tensor::u16(vec![1, 2], vec![2]).unwrap().u16s().unwrap(),
+            [1, 2]
+        );
+        assert_eq!(
+            Tensor::u32(vec![1, 2], vec![2]).unwrap().u32s().unwrap(),
+            [1, 2]
+        );
+        assert_eq!(
+            Tensor::i32(vec![-1, 2], vec![2]).unwrap().i32s().unwrap(),
+            [-1, 2]
+        );
+        assert!(Tensor::u8(vec![1, 2], vec![2]).unwrap().u16s().is_err());
+    }
+    #[test]
+    fn serde_round_trip() {
+        for tensor in [
+            Tensor::u8(vec![1, 0, 0, 1], vec![2, 2]).unwrap(),
+            Tensor::u16(vec![1, 300], vec![2]).unwrap(),
+            Tensor::u32(vec![70000], vec![1]).unwrap(),
+            Tensor::i32(vec![-7, 7], vec![2]).unwrap(),
+        ] {
+            let text = serde_json::to_string(&tensor).unwrap();
+            assert_eq!(tensor, serde_json::from_str::<Tensor>(&text).unwrap());
+        }
+        let text = serde_json::to_string(&Tensor::u16(vec![1, 300], vec![2]).unwrap()).unwrap();
+        assert_eq!(text, r#"{"data":{"U16":[1,300]},"shape":[2]}"#);
     }
 }

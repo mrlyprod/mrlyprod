@@ -3,6 +3,8 @@
 //! A coded cube flattened to an iso, pro or cut hexagon, meshed into triangles, then counted,
 //! graphed, rastered and drawn like any other cell.
 
+use serde::{Deserialize, Serialize};
+
 /// The triangle, corner and edge tallies of a hex cell, whose census and euler take the extra include_grid flag.
 pub mod census;
 /// The coded cubes projected to iso, pro and cut hexagons.
@@ -39,7 +41,7 @@ pub const LEFT: u8 = 4;
 pub const RIGHT: u8 = 5;
 
 /// The two ways a hexagon can point.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Orientation {
     /// The hexagon wider than it is tall.
     Horizontal,
@@ -48,7 +50,7 @@ pub enum Orientation {
 }
 
 /// The three ways a cube flattens to a hexagon.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Projection {
     /// The isometric view of top, left and right faces.
     Iso,
@@ -70,3 +72,21 @@ pub use raster::raster;
 pub use renderer::{svg, triangles};
 pub use serializer::{from_json, to_json};
 pub use topology::{components, giant, giant_network, holes, rim_holes, spectral_exponent};
+
+#[cfg(test)]
+mod tests {
+    use super::{Orientation, Projection};
+    use crate::math::round_trip;
+    use crate::math::six::star::{Branch, Share};
+
+    #[test]
+    fn serde_round_trips() {
+        round_trip(Orientation::Vertical);
+        round_trip(Projection::Cut);
+        round_trip(Share {
+            inked: 7,
+            cells: 19,
+        });
+        round_trip(Branch::Odd);
+    }
+}

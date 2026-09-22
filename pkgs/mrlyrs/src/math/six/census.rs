@@ -1,5 +1,6 @@
 use super::models::Cell6d;
 use super::{FILL, GRID, VOID};
+use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 type Point = (i64, i64);
@@ -29,7 +30,7 @@ pub fn edges_of(c: &[Point; 3]) -> [Edge; 3] {
 }
 
 /// The tally of a triangle mesh.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Census {
     /// The count of tallied triangles.
     pub triangles: usize,

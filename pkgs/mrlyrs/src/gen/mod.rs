@@ -78,4 +78,11 @@ mod tests {
         assert!(background(7, 0, 3).is_err());
         assert!(background(7, 2, 0).is_err());
     }
+    #[test]
+    fn serde_round_trips() {
+        for parity in Parity::all() {
+            let text = serde_json::to_string(&parity).unwrap();
+            assert_eq!(parity, serde_json::from_str(&text).unwrap());
+        }
+    }
 }

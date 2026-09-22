@@ -2,9 +2,10 @@ use super::source::Counts;
 use super::{Boundary, Fate};
 use crate::core::error::Result;
 use crate::math::two::Cell2d;
+use serde::{Deserialize, Serialize};
 
 /// The rulebook of a life run.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Config {
     /// The neighborhood mask.
     pub mask: Cell2d,
@@ -51,7 +52,7 @@ impl Config {
 }
 
 /// The recorded run of one seed.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Life {
     /// Every generation in order.
     pub grids: Vec<Cell2d>,

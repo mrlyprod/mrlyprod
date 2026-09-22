@@ -1,10 +1,11 @@
 use crate::num::prime::flags;
 use crate::num::prime::is_prime;
+use serde::{Deserialize, Serialize};
 
 const ROOT3: f64 = 1.732_050_807_568_877_2;
 
 /// The two rings of whole numbers in the plane, each a pair (a, b) on its own lattice.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Ring {
     /// a + b i on the square lattice: norm a^2 + b^2, four units, the window a square.
     Gaussian,
@@ -191,7 +192,7 @@ impl Ring {
 }
 
 /// What a point of the ring is.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Class {
     /// The origin.
     Zero,
@@ -226,7 +227,7 @@ impl Class {
 }
 
 /// The tallies of a window: every class counted and the share of primes.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Census {
     /// The count of points.
     pub points: usize,
@@ -247,7 +248,7 @@ pub struct Census {
 }
 
 /// The symmetric window of one ring: every point within a reach, with the norms sieved once.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Window {
     ring: Ring,
     radius: u64,

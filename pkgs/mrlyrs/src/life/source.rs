@@ -5,6 +5,7 @@ use crate::math::counts;
 use crate::math::two::{self, census};
 use crate::num::prime;
 use crate::num::series;
+use serde::{Deserialize, Serialize};
 
 const DIM: usize = 2;
 const BASE: usize = 2;
@@ -21,7 +22,7 @@ const BASE: usize = 2;
 /// | GridSquares | A016754 |
 ///
 /// Random, the other mrly families and the code families carry no OEIS id.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Source {
     /// The even numbers.
     Evens,
@@ -366,7 +367,7 @@ pub fn counts(
 ///
 /// A list spells its counts outright and holds them all; a drawn side names the
 /// sequence behind them, so any budget of neighbors rebuilds the same counts.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Counts {
     /// The counts listed outright.
     List(Vec<usize>),

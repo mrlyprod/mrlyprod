@@ -1,12 +1,13 @@
 use crate::core::named_enum;
 use crate::num::factor::mobius_sieve;
 use crate::num::prime::{flags, is_prime};
+use serde::{Deserialize, Serialize};
 
 const HEX: [(i64, i64); 6] = [(1, 0), (1, -1), (0, -1), (-1, 0), (-1, 1), (0, 1)];
 
 named_enum! {
     /// The two lattices a spiral of the whole numbers is wound on, one at the centre and two to its right.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
     pub enum Lattice {
         /// Unit squares turning anticlockwise with y up: ring k holds 8k cells and ends at the odd square (2k + 1)^2 on the diagonal below right.
         Square => "square",
@@ -135,7 +136,7 @@ impl Lattice {
 
 named_enum! {
     /// What a cell is painted for.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
     pub enum Mark {
         /// The primes.
         Prime => "prime",
@@ -174,7 +175,7 @@ pub fn marks(mark: Mark, limit: usize) -> Vec<i8> {
 }
 
 /// The readout of one quadratic a k^2 + b k + c across a sheet: where it lands and how often on a prime.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Diagonal {
     /// The count of numbers the sheet holds.
     pub top: usize,
@@ -240,7 +241,7 @@ pub fn diagonal(lattice: Lattice, side: usize, a: i64, b: i64, c: i64) -> Diagon
 
 named_enum! {
     /// Which cells of the square winding grow into a tile.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
     pub enum Growth {
         /// Only the primes grow; one and every composite stay unit cells.
         Prime => "prime",
@@ -250,7 +251,7 @@ named_enum! {
 }
 
 /// One tile of the snail: the number it stands for, its level, the side of its square, whether the number is prime, and the lower-left corner it is laid at.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Tile {
     /// The number the tile stands for.
     pub n: u64,
@@ -267,7 +268,7 @@ pub struct Tile {
 }
 
 /// The snail: every tile of the winding, the tallies, the area drawn and the box filled.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Snail {
     /// The base every tile side is a power of.
     pub base: u64,

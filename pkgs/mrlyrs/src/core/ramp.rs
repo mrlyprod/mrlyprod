@@ -1,8 +1,9 @@
 use super::colors::{gradient, shades, Color, BLACK, BLUE, ORANGE, RED, WHITE, YELLOW};
 use super::error::Result;
+use serde::{Deserialize, Serialize};
 
 /// A rule that turns counter values into colors.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Colorizer {
     /// The background at zero, then the ramp binned across the range.
     Bins {

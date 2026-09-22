@@ -41,6 +41,7 @@ pub mod step;
 use crate::core::error::Result;
 use crate::core::named_enum;
 use crate::math::two::Cell2d;
+use serde::{Deserialize, Serialize};
 
 /// Builds the 3 by 3 Moore mask, every site on but the center.
 ///
@@ -52,7 +53,7 @@ pub fn moore() -> Result<Cell2d> {
 }
 
 /// The edge policy of a life grid.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Boundary {
     /// The fixed dead border.
     Constant,
@@ -69,7 +70,7 @@ impl Boundary {
 
 named_enum! {
     /// The ending of a life run.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
     pub enum Fate {
         /// The empty fixed point.
         Dead => "dead",
@@ -114,5 +115,26 @@ mod tests {
         for fate in Fate::all() {
             assert_eq!(fate, fate.name().parse().unwrap());
         }
+    }
+    #[test]
+    fn serde_round_trips() {
+        let counts = Counts::drawn(Source::Random(7), true, false);
+        assert_eq!(
+            counts,
+            serde_json::from_str(&serde_json::to_string(&counts).unwrap()).unwrap()
+        );
+        let listed = Counts::List(vec![2, 3]);
+        assert_eq!(
+            listed,
+            serde_json::from_str(&serde_json::to_string(&listed).unwrap()).unwrap()
+        );
+        assert_eq!(
+            Boundary::Wrap,
+            serde_json::from_str(&serde_json::to_string(&Boundary::Wrap).unwrap()).unwrap()
+        );
+        assert_eq!(
+            Fate::Loop,
+            serde_json::from_str(&serde_json::to_string(&Fate::Loop).unwrap()).unwrap()
+        );
     }
 }

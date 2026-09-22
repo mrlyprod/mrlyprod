@@ -1,8 +1,9 @@
 use super::edge_graph;
 use super::Cell3d;
+use serde::{Deserialize, Serialize};
 
 /// A three-component vector of f32.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Vec3 {
     /// The x component.
     pub x: f32,
@@ -56,6 +57,7 @@ impl Vec3 {
 }
 
 /// An outward face of a filled site: its normal and four corners.
+#[derive(Serialize, Deserialize)]
 pub struct Quad {
     /// The outward unit normal.
     pub normal: Vec3,

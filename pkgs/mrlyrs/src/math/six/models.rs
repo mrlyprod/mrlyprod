@@ -2,9 +2,10 @@ use super::{Orientation, Projection, FILL, VOID};
 use crate::core::error::Result;
 use crate::core::tensor::Tensor;
 use crate::math::two::Cell2d;
+use serde::{Deserialize, Serialize};
 
 /// The projected cell: a triangle grid with its projection, orientation and start parity.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Cell6d {
     /// The triangle grid of type codes.
     pub cell: Cell2d,

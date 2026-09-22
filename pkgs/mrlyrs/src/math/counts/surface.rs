@@ -3,6 +3,7 @@ use crate::core::tensor::Tensor;
 use crate::math::bang::factory;
 use crate::math::bang::Code;
 use crate::math::counts::counting::{fill_from_corners, positions};
+use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
 fn strides(shape: &[usize]) -> Vec<usize> {
@@ -47,7 +48,7 @@ pub fn pairs(tile: &Tensor) -> Vec<(u128, u128)> {
 ///
 /// With `occ` filled cells, `V(1)` exposed faces and per axis `P` adjacent pairs and `S` spanning
 /// positions, `V(L + 1) = occ V(L) - 2 sum P S^L`: the perimeter in the plane, the surface in space.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Exposure {
     /// The filled cells of the tile.
     pub occupancy: u128,

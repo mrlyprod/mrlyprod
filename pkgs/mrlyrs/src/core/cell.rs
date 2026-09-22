@@ -1,10 +1,11 @@
 use super::colors::{Color, ALPHA, BLACK, BLUE, GREEN, RED, WHITE};
 use super::error::{shape_error, value_error, Result};
 use super::tensor::{Dtype, Tensor};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// The ways paint picks a color within a type's palette.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Mode {
     /// The first palette color, always.
     Type,
@@ -23,7 +24,7 @@ pub enum Mode {
 }
 
 /// A grid of type bytes with optional per-cell colors and tags.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Cell {
     /// The type of every cell.
     pub types: Tensor,
@@ -69,6 +70,26 @@ impl Cell {
             .and_then(|colors| colors.get(flat))
             .copied()
             .unwrap_or([0, 0, 0, 0])
+    }
+    /// Returns the flat rgba bytes of the cells, four to a cell, the stored color where there is one and opaque black everywhere else.
+    ///
+    /// ```
+    /// use mrlyrs::core::cell::Cell;
+    /// use mrlyrs::core::tensor::Tensor;
+    /// assert_eq!(Cell::new(Tensor::new(vec![1, 2])).rgba(), vec![0, 0, 0, 255, 0, 0, 0, 255]);
+    /// ```
+    pub fn rgba(&self) -> Vec<u8> {
+        let mut out = Vec::with_capacity(self.size() * 4);
+        for flat in 0..self.size() {
+            let color = self
+                .colors
+                .as_ref()
+                .and_then(|colors| colors.get(flat))
+                .copied()
+                .unwrap_or([0, 0, 0, 255]);
+            out.extend_from_slice(&color);
+        }
+        out
     }
     /// Flips every type to one minus itself.
     pub fn invert(mut self) -> Cell {
@@ -617,5 +638,24 @@ mod tests {
         let mask = Tensor::of(vec![0, 2, 0, 0], vec![2, 2]).unwrap();
         assert!(mosaic(&mask, std::slice::from_ref(&cell)).is_err());
         assert!(magic(&[cell]).is_err());
+    }
+    #[test]
+    fn rgba_is_four_bytes_a_cell() {
+        let bare = Cell::new(Tensor::new(vec![2, 2]));
+        assert_eq!(bare.rgba().len(), 4 * bare.size());
+        assert_eq!(bare.rgba()[4..8], [0, 0, 0, 255]);
+        let mut painted = Cell::new(Tensor::new(vec![2, 2]));
+        painted.colors = Some(vec![[1, 2, 3, 4], [5, 6, 7, 8]]);
+        assert_eq!(painted.rgba().len(), 16);
+        assert_eq!(painted.rgba()[4..8], [5, 6, 7, 8]);
+        assert_eq!(painted.rgba()[8..12], [0, 0, 0, 255]);
+    }
+    #[test]
+    fn serde_round_trip() {
+        let mut cell = Cell::new(Tensor::of(vec![0, 1, 1, 0], vec![2, 2]).unwrap());
+        cell.colors = Some(vec![[1, 2, 3, 4]; 4]);
+        cell.tags = Some(Tensor::u16(vec![0, 1, 2, 3], vec![2, 2]).unwrap());
+        let text = serde_json::to_string(&cell).unwrap();
+        assert_eq!(cell, serde_json::from_str::<Cell>(&text).unwrap());
     }
 }

@@ -1,11 +1,12 @@
 use crate::core::error::{overflow_error, value_error, Result};
 use crate::core::tensor::Tensor;
 use crate::num::factor::gcd;
+use serde::{Deserialize, Serialize};
 
 // FRACTIONS
 
 /// An exact rational number with a positive, reduced denominator.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Frac {
     /// The numerator, carrying the sign.
     pub num: i64,
@@ -85,7 +86,7 @@ fn lcm(a: i64, b: i64) -> Result<i64> {
 // SHAPES
 
 /// A closed half-space: the points x with normal dot x at most offset.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Half {
     /// The integer outward normal.
     pub normal: Vec<i64>,
@@ -94,7 +95,7 @@ pub struct Half {
 }
 
 /// An exact region of the unit box, scaled onto the lattice by the side.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Shape {
     /// The closed ball of the given rational center and radius.
     Ball {
@@ -113,7 +114,7 @@ pub enum Shape {
 }
 
 /// Where one lattice cell sits relative to a shape.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[repr(u8)]
 pub enum Region {
     /// The cell lies fully outside the shape.
@@ -467,7 +468,7 @@ pub fn refine(
 // CENSUS
 
 /// The per-region tallies of a shape over a design, indexed Out, Cut, In.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ShapeCensus {
     /// The cell count of each region.
     pub cells: [usize; 3],
@@ -499,7 +500,7 @@ pub fn census(shape: &Shape, types: &Tensor) -> Result<ShapeCensus> {
 // RADIAL
 
 /// The tallies of one design against a single integer radius about a centre.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RadialCounts {
     /// The filled cells whose own centre lies within the radius.
     pub seen: u64,
@@ -580,7 +581,7 @@ pub fn radial_census(types: &Tensor, centre: &[i64], r_max: u64) -> Vec<RadialCo
 // CROSSING SHELL
 
 /// One box of a crossing shell: where it sits, the seat it takes in its parent and whether the design keeps its path.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ShellBox {
     /// The box's first coordinate in its own level's grid.
     pub x: u64,
@@ -595,7 +596,7 @@ pub struct ShellBox {
 }
 
 /// The rooted tree of the boxes one circle crosses, level by level.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Shell {
     /// The radius in cells.
     pub radius: u64,

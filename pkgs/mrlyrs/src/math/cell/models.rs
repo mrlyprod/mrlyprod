@@ -3,6 +3,7 @@ use crate::core::cell::Mode;
 use crate::core::colors::Color;
 use crate::core::error::{shape_error, value_error, Result};
 use crate::core::tensor::{Dtype, Tensor};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// The two-dimensional cell.
@@ -34,7 +35,7 @@ pub fn counting_dtype(mask: &Tensor) -> Dtype {
 }
 
 /// A cell whose tensor is pinned to N dimensions.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CellNd<const N: usize> {
     /// The wrapped cell.
     pub cell: Cell,

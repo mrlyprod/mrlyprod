@@ -75,7 +75,7 @@ pub fn shades(hue: Color) -> [Color; 3] {
 // THEME
 
 /// One theme: the surfaces of a dark or a light ground and the thirteen inks, the same on both.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Theme {
     /// The ground every figure is painted on.
     pub ground: Color,

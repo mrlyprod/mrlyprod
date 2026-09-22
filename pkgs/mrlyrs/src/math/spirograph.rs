@@ -1,6 +1,7 @@
 use crate::core::error::{value_error, Result};
 use crate::core::Rng;
 use crate::num::factor::gcd;
+use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::f64::consts::{PI, TAU};
 
@@ -20,7 +21,7 @@ const RING: usize = 360;
 // THE PENCILS
 
 /// What a pencil sits on: a filled cell, an empty cell, or a corner of a filled cell.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Kind {
     /// The centre of a filled cell.
     Fill,
@@ -31,7 +32,7 @@ pub enum Kind {
 }
 
 /// A pencil on the wheel: its seat in units of the wheel's radius with the tile centre at the origin, the exact seat it came from, and its kind.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Pencil {
     /// The seat's abscissa, in wheel radii.
     pub x: f64,
@@ -44,7 +45,7 @@ pub struct Pencil {
 }
 
 /// The mass of a byte grid taken as a wheel: how many pencils of each kind it seats.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Seats {
     /// The pencils on filled cells.
     pub fills: usize,
@@ -156,7 +157,7 @@ fn seat_pencil(seat: (i64, i64), kind: Kind) -> Pencil {
 // THE TRACK
 
 /// One piece of the centre path: a straight run, or a turn about a point.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Piece {
     /// A straight run from one point to another.
     Run {
@@ -233,7 +234,7 @@ impl Piece {
 }
 
 /// A track and the path the wheel's centre takes along it: the wheel of radius `wheel` rolls without slipping, on the left of the track when `side` is minus one and on the right when it is plus one, and turns by `side` times the centre's path length over the wheel's radius.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Track {
     /// The kind: `line`, `in`, `out`, `polyin` or `polyout`.
     pub kind: String,
@@ -548,7 +549,7 @@ pub fn nodes(track: &Track, pencils: &[Pencil], exact: bool) -> Option<u64> {
 pub const RASTER_CAP: usize = 4096;
 
 /// The disc a circle roulette sits in, in the track's units.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Disc {
     /// The centre's abscissa in the track's units, the centre of the ring.
     pub x: f64,
@@ -561,7 +562,7 @@ pub struct Disc {
 }
 
 /// The shape between the walls on a raster, with its numbers.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Cover {
     /// The raster row by row, four codes: zero outside the disc, one the flood from the raster's edge, two the flood from the centre, three the shape, the walls and their pockets included.
     pub mask: Vec<u8>,

@@ -37,7 +37,7 @@ named_enum! {
 
 named_enum! {
     /// The parity filter over candidate sizes.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
     pub enum Parity {
         /// Even sizes only.
         Evens => "Evens",

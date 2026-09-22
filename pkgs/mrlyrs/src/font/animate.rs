@@ -1,5 +1,6 @@
 use super::paths::strokes;
 use super::raster::{layout, Block, Layout};
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
 /// The playback rate of every animation, in frames per second.
@@ -9,7 +10,7 @@ pub const FPS: usize = 25;
 pub const HOLD: usize = 25;
 
 /// A frame-by-frame animation over a fixed board.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Anim {
     /// The board height in cells.
     pub rows: usize,

@@ -1,7 +1,8 @@
 use crate::core::error::{shape_error, Result};
+use serde::{Deserialize, Serialize};
 
 /// A square grid of f32 samples.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Field {
     /// The samples in row-major order.
     pub data: Vec<f32>,

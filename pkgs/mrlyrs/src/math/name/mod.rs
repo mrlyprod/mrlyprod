@@ -113,6 +113,15 @@ mod tests {
     use crate::gen::name::Tile;
     use crate::life::Counts;
     use crate::life::Rule;
+    use crate::math::round_trip;
+
+    #[test]
+    fn serde_round_trips() {
+        round_trip(Bang::new(7, 2, 2));
+        round_trip(Word::new(2, &[(7, 3), (14, 7)]).unwrap());
+        round_trip(Sequence::new(7, 2, 2, "fills", "side"));
+        round_trip(Lattice::Hex);
+    }
 
     #[test]
     fn every_kind_has_one_canonical_string_and_one_id() {

@@ -2,11 +2,12 @@ use super::edge_graph;
 use super::Cell2d;
 use crate::core::error::Result;
 use crate::math::cell::census;
+use serde::{Deserialize, Serialize};
 
 pub use crate::math::cell::census::{edges, vertices};
 
 /// One reading of a cell: its sites, its outline and its topology.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Census {
     /// The count of filled sites.
     pub fills: usize,

@@ -33,6 +33,13 @@ pub use serializer::{from_json, to_json};
 mod tests {
     use super::*;
     use crate::core::colors::{BLACK, WHITE};
+    use crate::math::round_trip;
+    #[test]
+    fn serde_round_trips() {
+        let cell = designs::carpet(3, 1).unwrap();
+        round_trip(census(&cell).unwrap());
+        round_trip(cell);
+    }
     #[test]
     fn default_paint_is_black_on_white() {
         let c = paint(designs::carpet(3, 1).unwrap(), None, None);

@@ -3,9 +3,10 @@ use super::stack::stack;
 use super::{Combine, Lattice, Spec};
 use crate::core::error::{value_error, Result};
 use crate::math::bang::corners_to_code;
+use serde::Serialize;
 
 /// One named moire recipe: the design, the scales it stacks and the lattice it samples.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct Preset {
     /// The name the recipe answers to.
     pub name: &'static str,

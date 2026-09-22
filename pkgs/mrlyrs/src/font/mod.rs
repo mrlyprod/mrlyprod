@@ -128,4 +128,17 @@ mod tests {
         assert!(glyph::descends('('));
         assert!(!glyph::descends('A'));
     }
+    #[test]
+    fn serde_round_trips() {
+        let mark = glyph('A').unwrap();
+        assert_eq!(
+            mark,
+            serde_json::from_str(&serde_json::to_string(&mark).unwrap()).unwrap()
+        );
+        let write = animate("MRLY", 1);
+        assert_eq!(
+            write,
+            serde_json::from_str(&serde_json::to_string(&write).unwrap()).unwrap()
+        );
+    }
 }

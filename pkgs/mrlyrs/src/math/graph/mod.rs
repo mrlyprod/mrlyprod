@@ -16,3 +16,25 @@ pub use census::{census, largest_component, roles, Census, Role};
 pub use extract::{core_graph, edge_graph, tunnel_graph};
 pub use layout::Layout;
 pub use models::{Branch, Network, Node};
+
+#[cfg(test)]
+mod tests {
+    use super::{census, Network, Role};
+    use crate::math::round_trip;
+
+    #[test]
+    fn serde_round_trips() {
+        let mut net = Network::new(2);
+        for corner in [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]] {
+            net.add_node(corner.to_vec()).unwrap();
+        }
+        for (a, b) in [(0, 1), (1, 2), (2, 3), (3, 0)] {
+            net.add_branch(a, b, 1.0).unwrap();
+        }
+        round_trip(net.nodes[0].clone());
+        round_trip(net.branches[0].clone());
+        round_trip(Role::Junction);
+        round_trip(census(&net).unwrap());
+        round_trip(net);
+    }
+}
