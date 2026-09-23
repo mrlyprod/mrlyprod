@@ -5,10 +5,10 @@ use std::path::Path;
 const NATIVE: &str = "mrlypy._mrlypy";
 
 const PYTHON_KEYWORDS: &[&str] = &[
-    "False", "None", "True", "and", "as", "assert", "async", "await", "break", "class",
-    "continue", "def", "del", "elif", "else", "except", "finally", "for", "from", "global", "if",
-    "import", "in", "is", "lambda", "nonlocal", "not", "or", "pass", "raise", "return", "try",
-    "while", "with", "yield",
+    "False", "None", "True", "and", "as", "assert", "async", "await", "break", "class", "continue",
+    "def", "del", "elif", "else", "except", "finally", "for", "from", "global", "if", "import",
+    "in", "is", "lambda", "nonlocal", "not", "or", "pass", "raise", "return", "try", "while",
+    "with", "yield",
 ];
 
 const RUST_KEYWORDS: &[&str] = &[
@@ -121,7 +121,11 @@ struct Cx<'a> {
 
 impl<'a> Cx<'a> {
     fn new(manifest: &'a Manifest) -> Cx<'a> {
-        let types = manifest.types.iter().map(|t| (t.path.as_str(), t)).collect();
+        let types = manifest
+            .types
+            .iter()
+            .map(|t| (t.path.as_str(), t))
+            .collect();
         Cx { manifest, types }
     }
 
@@ -169,18 +173,17 @@ impl<'a> Cx<'a> {
         let Some(ty) = self.types.get(path) else {
             return Vec::new();
         };
-        let rename_all = ty
-            .serde
-            .iter()
-            .find_map(|s| s.strip_prefix("rename_all = ").map(|v| v.trim_matches('"').to_string()));
+        let rename_all = ty.serde.iter().find_map(|s| {
+            s.strip_prefix("rename_all = ")
+                .map(|v| v.trim_matches('"').to_string())
+        });
         ty.variants
             .iter()
             .map(|v| {
-                if let Some(word) = v
-                    .serde
-                    .iter()
-                    .find_map(|s| s.strip_prefix("rename = ").map(|w| w.trim_matches('"').to_string()))
-                {
+                if let Some(word) = v.serde.iter().find_map(|s| {
+                    s.strip_prefix("rename = ")
+                        .map(|w| w.trim_matches('"').to_string())
+                }) {
                     return word;
                 }
                 match rename_all.as_deref() {
@@ -235,10 +238,13 @@ impl<'a> Node<'a> {
             }
             sofar.push_str(seg);
             let full = sofar.clone();
-            node = node.children.entry(seg.to_string()).or_insert_with(|| Node {
-                path: full,
-                ..Node::default()
-            });
+            node = node
+                .children
+                .entry(seg.to_string())
+                .or_insert_with(|| Node {
+                    path: full,
+                    ..Node::default()
+                });
         }
         node
     }
@@ -263,7 +269,10 @@ impl<'a> Node<'a> {
         };
         let export = &mut self.exports[index];
         for dim in dims {
-            let clash = export.variants.iter().any(|(_, d)| d.is_none() || *d == dim)
+            let clash = export
+                .variants
+                .iter()
+                .any(|(_, d)| d.is_none() || *d == dim)
                 || (dim.is_none() && !export.variants.is_empty());
             if clash {
                 return Err(format!("{name} is exported twice in {path}"));
@@ -298,7 +307,10 @@ impl<'a> Node<'a> {
         let names = self.item_names();
         for (i, name) in names.iter().enumerate() {
             if names[..i].contains(name) {
-                return Err(format!("{name} is named twice in mrlypy.{}", dotted(&self.path)));
+                return Err(format!(
+                    "{name} is named twice in mrlypy.{}",
+                    dotted(&self.path)
+                ));
             }
             if self.children.contains_key(name) {
                 return Err(format!(
@@ -309,13 +321,21 @@ impl<'a> Node<'a> {
         }
         for class in &self.classes {
             let mut seen: Vec<String> = Vec::new();
-            for field in class.ty.fields.iter().filter(|f| f.public && crossable(&f.ty)) {
+            for field in class
+                .ty
+                .fields
+                .iter()
+                .filter(|f| f.public && crossable(&f.ty))
+            {
                 seen.push(py_name(&field.name));
             }
             for f in &class.fns {
                 let name = py_name(&f.name);
                 if seen.contains(&name) {
-                    return Err(format!("{} has a field and a method named {name}", class.ty.path));
+                    return Err(format!(
+                        "{} has a field and a method named {name}",
+                        class.ty.path
+                    ));
                 }
                 seen.push(name);
             }
@@ -346,7 +366,12 @@ fn build<'a>(cx: &Cx<'a>) -> Result<Node<'a>> {
         root.reach(&m.path).docs = m.docs.clone();
     }
     let mut owned: BTreeMap<&str, Vec<&'a Function>> = BTreeMap::new();
-    for f in cx.manifest.functions.iter().filter(|f| f.cross == Cross::Ok) {
+    for f in cx
+        .manifest
+        .functions
+        .iter()
+        .filter(|f| f.cross == Cross::Ok)
+    {
         match &f.owner {
             None => root.reach(&f.module).push_export(f)?,
             Some(owner) => match &cx.ty(owner)?.cross {
@@ -501,7 +526,10 @@ fn decl(cx: &Cx, ty: &Ty) -> Result<String> {
         }
         Ty::Option { item } => format!("Option<{}>", decl(cx, item)?),
         Ty::Tuple { items } => {
-            let parts = items.iter().map(|t| decl(cx, t)).collect::<Result<Vec<_>>>()?;
+            let parts = items
+                .iter()
+                .map(|t| decl(cx, t))
+                .collect::<Result<Vec<_>>>()?;
             format!("({})", parts.join(", "))
         }
         Ty::Array { item, len } => {
@@ -519,9 +547,7 @@ fn decl(cx: &Cx, ty: &Ty) -> Result<String> {
             Ty::Class { .. } => return Err("a class by reference inside a container".into()),
             other => decl(cx, other)?,
         },
-        Ty::Ref { mutable: true, .. } => {
-            return Err("a mutable borrow inside a container".into())
-        }
+        Ty::Ref { mutable: true, .. } => return Err("a mutable borrow inside a container".into()),
         Ty::Map { key, value } => format!(
             "std::collections::HashMap<{}, {}>",
             decl(cx, key)?,
@@ -856,7 +882,12 @@ fn into(cx: &Cx, ty: &Ty, e: &str) -> Result<String> {
 
 fn mapper(body: String) -> String {
     match body.strip_suffix("(x)") {
-        Some(ctor) if !ctor.is_empty() && ctor.chars().all(|c| c.is_alphanumeric() || c == '_' || c == ':') => {
+        Some(ctor)
+            if !ctor.is_empty()
+                && ctor
+                    .chars()
+                    .all(|c| c.is_alphanumeric() || c == '_' || c == ':') =>
+        {
             ctor.to_string()
         }
         _ => format!("|x| {body}"),
@@ -1039,7 +1070,15 @@ fn merged_docs(variants: &[&Function]) -> Vec<String> {
     docs
 }
 
-fn body(cx: &Cx, out: &mut String, depth: usize, f: &Function, place: Place, args: &[Arg], dim: Option<u8>) -> Result<()> {
+fn body(
+    cx: &Cx,
+    out: &mut String,
+    depth: usize,
+    f: &Function,
+    place: Place,
+    args: &[Arg],
+    dim: Option<u8>,
+) -> Result<()> {
     let pad = indent(depth);
     for a in args {
         for l in &a.plan.lets {
@@ -1074,7 +1113,11 @@ fn body(cx: &Cx, out: &mut String, depth: usize, f: &Function, place: Place, arg
             out.push_str(&format!("{pad}{l}\n"));
         }
     }
-    let done = if ret == Ty::Unit { "()".to_string() } else { format!("({})", into(cx, &ret, "out")?) };
+    let done = if ret == Ty::Unit {
+        "()".to_string()
+    } else {
+        format!("({})", into(cx, &ret, "out")?)
+    };
     out.push_str(&format!("{pad}{done}.into_bound_py_any(py)\n"));
     Ok(())
 }
@@ -1087,7 +1130,15 @@ fn receiver(place: Place, f: &Function) -> Option<&'static str> {
     }
 }
 
-fn emit_simple(cx: &Cx, out: &mut String, depth: usize, f: &Function, place: Place, name: &str, dim: Option<u8>) -> Result<()> {
+fn emit_simple(
+    cx: &Cx,
+    out: &mut String,
+    depth: usize,
+    f: &Function,
+    place: Place,
+    name: &str,
+    dim: Option<u8>,
+) -> Result<()> {
     let pad = indent(depth);
     let args = args(cx, f, place, dim)?;
     doc_lines(out, depth, &summary(&f.docs));
@@ -1117,7 +1168,14 @@ fn emit_simple(cx: &Cx, out: &mut String, depth: usize, f: &Function, place: Pla
     Ok(())
 }
 
-fn emit_dispatch(cx: &Cx, out: &mut String, depth: usize, pairs: &[(&Function, Option<u8>)], place: Place, name: &str) -> Result<()> {
+fn emit_dispatch(
+    cx: &Cx,
+    out: &mut String,
+    depth: usize,
+    pairs: &[(&Function, Option<u8>)],
+    place: Place,
+    name: &str,
+) -> Result<()> {
     let pad = indent(depth);
     let variants: Vec<&Function> = pairs.iter().map(|(f, _)| *f).collect();
     let mut per: Vec<(u8, Vec<Arg>)> = Vec::new();
@@ -1129,8 +1187,16 @@ fn emit_dispatch(cx: &Cx, out: &mut String, depth: usize, pairs: &[(&Function, O
     for (_, args) in &per {
         for a in args {
             if !union.iter().any(|u| u.0 == a.py) {
-                let shared = per.iter().all(|(_, other)| other.iter().any(|o| o.py == a.py));
-                union.push((a.py.clone(), a.rust.clone(), a.plan.decl.clone(), a.plan.optional, shared));
+                let shared = per
+                    .iter()
+                    .all(|(_, other)| other.iter().any(|o| o.py == a.py));
+                union.push((
+                    a.py.clone(),
+                    a.rust.clone(),
+                    a.plan.decl.clone(),
+                    a.plan.optional,
+                    shared,
+                ));
             }
         }
     }
@@ -1163,7 +1229,13 @@ fn emit_dispatch(cx: &Cx, out: &mut String, depth: usize, pairs: &[(&Function, O
     let sig: Vec<String> = union
         .iter()
         .enumerate()
-        .map(|(i, u)| if i >= optional_from { format!("{}=None", u.1) } else { u.1.clone() })
+        .map(|(i, u)| {
+            if i >= optional_from {
+                format!("{}=None", u.1)
+            } else {
+                u.1.clone()
+            }
+        })
         .collect();
     out.push_str(&format!(
         "{pad}#[pyo3(name = {}, signature = ({}))]\n",
@@ -1188,7 +1260,9 @@ fn emit_dispatch(cx: &Cx, out: &mut String, depth: usize, pairs: &[(&Function, O
         params.join(", ")
     ));
     let inner = indent(depth + 1);
-    out.push_str(&format!("{inner}let dim = crate::hand::ndim({pivot_name})?;\n"));
+    out.push_str(&format!(
+        "{inner}let dim = crate::hand::ndim({pivot_name})?;\n"
+    ));
     out.push_str(&format!("{inner}match dim {{\n"));
     for ((dim, args), v) in per.iter().zip(&variants) {
         let arm = indent(depth + 2);
@@ -1202,7 +1276,11 @@ fn emit_dispatch(cx: &Cx, out: &mut String, depth: usize, pairs: &[(&Function, O
             ));
         }
         for a in args {
-            let shared = union.iter().find(|u| u.0 == a.py).map(|u| u.4).unwrap_or(true);
+            let shared = union
+                .iter()
+                .find(|u| u.0 == a.py)
+                .map(|u| u.4)
+                .unwrap_or(true);
             if !shared {
                 out.push_str(&format!(
                     "{deep}let {} = {}.ok_or_else(|| PyValueError::new_err({}))?;\n",
@@ -1218,14 +1296,22 @@ fn emit_dispatch(cx: &Cx, out: &mut String, depth: usize, pairs: &[(&Function, O
     out.push_str(&format!(
         "{}other => Err(PyValueError::new_err(format!({}))),\n",
         indent(depth + 2),
-        quote(&format!("{name} wants a 2d or 3d argument, got {{other}}d."))
+        quote(&format!(
+            "{name} wants a 2d or 3d argument, got {{other}}d."
+        ))
     ));
     out.push_str(&format!("{inner}}}\n"));
     out.push_str(&format!("{pad}}}\n"));
     Ok(())
 }
 
-fn emit_export(cx: &Cx, out: &mut String, depth: usize, export: &Export, place: Place) -> Result<()> {
+fn emit_export(
+    cx: &Cx,
+    out: &mut String,
+    depth: usize,
+    export: &Export,
+    place: Place,
+) -> Result<()> {
     let name = py_name(&export.name);
     if export.variants.len() == 1 {
         let (f, dim) = export.variants[0];
@@ -1247,7 +1333,12 @@ fn is_constructor(f: &Function) -> bool {
 
 fn emit_constructor(cx: &Cx, out: &mut String, depth: usize, f: &Function) -> Result<()> {
     let pad = indent(depth);
-    let args = args(cx, f, Place::Static(cx.ty(f.owner.as_deref().unwrap())?), None)?;
+    let args = args(
+        cx,
+        f,
+        Place::Static(cx.ty(f.owner.as_deref().unwrap())?),
+        None,
+    )?;
     doc_lines(out, depth, &summary(&f.docs));
     out.push_str(&format!("{pad}#[new]\n"));
     out.push_str(&format!("{pad}#[pyo3(signature = {})]\n", signature(&args)));
@@ -1276,7 +1367,11 @@ fn emit_constructor(cx: &Cx, out: &mut String, depth: usize, f: &Function) -> Re
             out.push_str(&format!("{inner}{l}\n"));
         }
     }
-    let unwrapped = if matches!(f.ret, Ty::Result { .. }) { "ok(out)?" } else { "out" };
+    let unwrapped = if matches!(f.ret, Ty::Result { .. }) {
+        "ok(out)?"
+    } else {
+        "out"
+    };
     out.push_str(&format!("{inner}Ok(Self({unwrapped}))\n"));
     out.push_str(&format!("{pad}}}\n"));
     Ok(())
@@ -1292,7 +1387,11 @@ fn emit_class(cx: &Cx, out: &mut String, depth: usize, module: &str, class: &Own
         "{pad}#[pyclass(name = {}, module = {}, {})]\n",
         quote(&ty.name),
         quote(&format!("mrlypy.{}", dotted(module))),
-        if clone { "from_py_object" } else { "skip_from_py_object" }
+        if clone {
+            "from_py_object"
+        } else {
+            "skip_from_py_object"
+        }
     ));
     if clone {
         out.push_str(&format!("{pad}#[derive(Clone)]\n"));
@@ -1316,7 +1415,11 @@ fn emit_class(cx: &Cx, out: &mut String, depth: usize, module: &str, class: &Own
             "{inner}pub fn {}<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {{\n",
             rust_ident(&py_name(&field.name))
         ));
-        let taken = if matches!(field.ty, Ty::Ref { .. }) || cx.is_copy(&field.ty) { "" } else { ".clone()" };
+        let taken = if matches!(field.ty, Ty::Ref { .. }) || cx.is_copy(&field.ty) {
+            ""
+        } else {
+            ".clone()"
+        };
         out.push_str(&format!(
             "{}let value = self.0.{}{taken};\n",
             indent(depth + 2),
@@ -1341,7 +1444,15 @@ fn emit_class(cx: &Cx, out: &mut String, depth: usize, module: &str, class: &Own
         } else {
             Place::Static(ty)
         };
-        emit_simple(cx, out, depth + 1, f, place, &py_name(&f.name), f.dims.first().copied())?;
+        emit_simple(
+            cx,
+            out,
+            depth + 1,
+            f,
+            place,
+            &py_name(&f.name),
+            f.dims.first().copied(),
+        )?;
     }
     if cx.derives(&ty.path, "Deserialize") {
         out.push_str(&format!("{inner}/// Reads plain data into the class.\n"));
@@ -1367,7 +1478,10 @@ fn emit_setter(cx: &Cx, out: &mut String, depth: usize, field: &str, ty: &Ty) ->
     let deep = indent(depth + 1);
     let plan = plan(cx, "value", ty)?;
     out.push_str(&format!("{pad}#[setter]\n"));
-    out.push_str(&format!("{pad}#[pyo3(name = {})]\n", quote(&py_name(field))));
+    out.push_str(&format!(
+        "{pad}#[pyo3(name = {})]\n",
+        quote(&py_name(field))
+    ));
     out.push_str(&format!(
         "{pad}pub fn set_{field}(&mut self, value: {}) -> PyResult<()> {{\n",
         plan.decl
@@ -1380,7 +1494,13 @@ fn emit_setter(cx: &Cx, out: &mut String, depth: usize, field: &str, ty: &Ty) ->
     Ok(())
 }
 
-fn emit_holder(cx: &Cx, out: &mut String, depth: usize, module: &str, holder: &Owned) -> Result<()> {
+fn emit_holder(
+    cx: &Cx,
+    out: &mut String,
+    depth: usize,
+    module: &str,
+    holder: &Owned,
+) -> Result<()> {
     let pad = indent(depth);
     let ty = holder.ty;
     doc_lines(out, depth, &summary(&ty.docs));
@@ -1392,7 +1512,15 @@ fn emit_holder(cx: &Cx, out: &mut String, depth: usize, module: &str, holder: &O
     out.push_str(&format!("{pad}pub struct {};\n\n", ty.name));
     out.push_str(&format!("{pad}#[pymethods]\n{pad}impl {} {{\n", ty.name));
     for f in &holder.fns {
-        emit_simple(cx, out, depth + 1, f, Place::Static(ty), &py_name(&f.name), f.dims.first().copied())?;
+        emit_simple(
+            cx,
+            out,
+            depth + 1,
+            f,
+            Place::Static(ty),
+            &py_name(&f.name),
+            f.dims.first().copied(),
+        )?;
     }
     out.push_str(&format!("{pad}}}\n\n"));
     Ok(())
@@ -1428,7 +1556,11 @@ fn free_words(text: &str) -> BTreeSet<&str> {
 fn uses(body: &str) -> Vec<String> {
     let words = free_words(body);
     let mut lines = Vec::new();
-    let hand: Vec<&str> = HAND_NAMES.iter().copied().filter(|n| words.contains(n)).collect();
+    let hand: Vec<&str> = HAND_NAMES
+        .iter()
+        .copied()
+        .filter(|n| words.contains(n))
+        .collect();
     if !hand.is_empty() {
         lines.push(format!("use crate::hand::{{{}}};", hand.join(", ")));
     }
@@ -1546,7 +1678,9 @@ fn rust_file(cx: &Cx, root: &Node) -> Result<String> {
         emit_module(cx, &mut out, 0, child)?;
     }
     out.push_str("pub fn init(py: Python<'_>, root: &Bound<'_, PyModule>) -> PyResult<()> {\n");
-    out.push_str("    let sys = py.import(\"sys\")?.getattr(\"modules\")?.cast_into::<PyDict>()?;\n");
+    out.push_str(
+        "    let sys = py.import(\"sys\")?.getattr(\"modules\")?.cast_into::<PyDict>()?;\n",
+    );
     for child in root.children.values() {
         out.push_str(&format!(
             "    {}::init(py, root, &sys)?;\n",
@@ -1622,7 +1756,11 @@ fn py_type(cx: &Cx, ty: &Ty, here: &str) -> String {
             } else {
                 format!(
                     "Literal[{}]",
-                    words.iter().map(|w| py_str(w)).collect::<Vec<_>>().join(", ")
+                    words
+                        .iter()
+                        .map(|w| py_str(w))
+                        .collect::<Vec<_>>()
+                        .join(", ")
                 )
             }
         }
@@ -1668,14 +1806,24 @@ fn stub_params(cx: &Cx, args: &[Arg], here: &str) -> Vec<String> {
         .collect()
 }
 
-fn stub_fn(cx: &Cx, out: &mut String, depth: usize, export: &Export, place: Place, here: &str) -> Result<()> {
+fn stub_fn(
+    cx: &Cx,
+    out: &mut String,
+    depth: usize,
+    export: &Export,
+    place: Place,
+    here: &str,
+) -> Result<()> {
     let pad = indent(depth);
     let name = py_name(&export.name);
     let (f, dim) = export.variants[0];
     let mut params = stub_params(cx, &args(cx, f, place, dim)?, here);
     let mut ret = py_type(cx, &subst_opt(&f.ret, dim), here);
     if export.variants.len() > 1 {
-        let mut seen: Vec<String> = params.iter().map(|p| p.split(':').next().unwrap().to_string()).collect();
+        let mut seen: Vec<String> = params
+            .iter()
+            .map(|p| p.split(':').next().unwrap().to_string())
+            .collect();
         for (v, d) in &export.variants[1..] {
             for a in &args(cx, v, place, *d)? {
                 if !seen.contains(&a.py) {
@@ -1703,10 +1851,7 @@ fn stub_fn(cx: &Cx, out: &mut String, depth: usize, export: &Export, place: Plac
     if matches!(place, Place::Static(_)) {
         out.push_str(&format!("{pad}@staticmethod\n"));
     }
-    out.push_str(&format!(
-        "{pad}def {name}({}) -> {ret}:\n",
-        all.join(", ")
-    ));
+    out.push_str(&format!("{pad}def {name}({}) -> {ret}:\n", all.join(", ")));
     let docs = merged_docs(&variants);
     if docs.is_empty() {
         out.push_str(&format!("{}...\n", indent(depth + 1)));
@@ -1733,7 +1878,10 @@ fn stub_class(cx: &Cx, out: &mut String, class: &Owned, here: &str) -> Result<()
         let params = stub_params(cx, &args, here);
         let mut all = vec!["self".to_string()];
         all.extend(params);
-        out.push_str(&format!("    def __init__({}) -> None: ...\n", all.join(", ")));
+        out.push_str(&format!(
+            "    def __init__({}) -> None: ...\n",
+            all.join(", ")
+        ));
         wrote = true;
     }
     for field in ty.fields.iter().filter(|f| f.public && crossable(&f.ty)) {
@@ -1778,7 +1926,9 @@ fn stub_class(cx: &Cx, out: &mut String, class: &Owned, here: &str) -> Result<()
         wrote = true;
     }
     if cx.derives(&ty.path, "Serialize") {
-        out.push_str("    def to_dict(self) -> Any:\n        \"\"\"Returns the value as plain data.\"\"\"\n");
+        out.push_str(
+            "    def to_dict(self) -> Any:\n        \"\"\"Returns the value as plain data.\"\"\"\n",
+        );
         wrote = true;
     }
     if !wrote {
@@ -1825,7 +1975,14 @@ fn stub_rng(cx: &Cx, out: &mut String, here: &str) -> Result<()> {
             out.push_str(&format!("    def __init__({}) -> None:\n", all.join(", ")));
             docstring(out, 2, &summary(&f.docs));
         } else if f.self_kind.is_some() {
-            stub_fn(cx, out, 1, &export, Place::Method(cx.ty("core::Rng")?), here)?;
+            stub_fn(
+                cx,
+                out,
+                1,
+                &export,
+                Place::Method(cx.ty("core::Rng")?),
+                here,
+            )?;
         }
     }
     out.push_str("    def choice(self, seq: Any) -> Any:\n        \"\"\"Draws one item of the sequence, the same draw as Rust's choice.\"\"\"\n");
@@ -1884,10 +2041,7 @@ fn stub_file(cx: &Cx, node: &Node) -> Result<String> {
 
 fn init_file(node: &Node) -> String {
     let mut out = String::new();
-    out.push_str(&format!(
-        "from {NATIVE}.{} import *\n",
-        dotted(&node.path)
-    ));
+    out.push_str(&format!("from {NATIVE}.{} import *\n", dotted(&node.path)));
     if !node.children.is_empty() {
         let children: Vec<&str> = node.children.keys().map(String::as_str).collect();
         out.push_str(&format!("from . import {}\n", children.join(", ")));

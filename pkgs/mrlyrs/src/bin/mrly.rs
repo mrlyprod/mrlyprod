@@ -163,7 +163,11 @@ fn cell_rank(name: &str, args: &[Value], at: usize) -> std::result::Result<usize
 
 fn cells_rank(name: &str, args: &[Value], at: usize) -> std::result::Result<usize, Fail> {
     let value = slot(name, args, at)?;
-    match value.as_array().and_then(|list| list.first()).and_then(walls) {
+    match value
+        .as_array()
+        .and_then(|list| list.first())
+        .and_then(walls)
+    {
         Some(rank) => Ok(rank),
         None => Err(bad(name, at, "a list of cells")),
     }
@@ -1354,9 +1358,18 @@ fn door_core_colorizer_fire(name: &str, args: &[Value]) -> Done {
 fn door_core_colorizer_gradient_bins(name: &str, args: &[Value]) -> Done {
     count(name, args, 3)?;
     let a0: mrlyrs::core::Color = color(name, 0, &args[0])?;
-    let a1: Vec<mrlyrs::core::Color> = { let mut list0 = Vec::new(); for item0 in items(name, 1, &args[1])? { list0.push(color(name, 1, item0)?); } list0 };
+    let a1: Vec<mrlyrs::core::Color> = {
+        let mut list0 = Vec::new();
+        for item0 in items(name, 1, &args[1])? {
+            list0.push(color(name, 1, item0)?);
+        }
+        list0
+    };
     let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::core::Colorizer::gradient_bins(a0, &a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Colorizer::gradient_bins(a0, &a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_colorizer_heat(name: &str, args: &[Value]) -> Done {
@@ -1389,7 +1402,13 @@ fn door_core_image_new(name: &str, args: &[Value]) -> Done {
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: Vec<Vec<usize>> = take!(name, 2, &args[2]);
-    let a3: Vec<mrlyrs::core::Color> = { let mut list0 = Vec::new(); for item0 in items(name, 3, &args[3])? { list0.push(color(name, 3, item0)?); } list0 };
+    let a3: Vec<mrlyrs::core::Color> = {
+        let mut list0 = Vec::new();
+        for item0 in items(name, 3, &args[3])? {
+            list0.push(color(name, 3, item0)?);
+        }
+        list0
+    };
     Ok(give!(mrlyrs::core::Image::new(a0, a1, a2, a3)))
 }
 
@@ -1397,7 +1416,10 @@ fn door_core_image_png(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::core::Image = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::core::Image::png(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Image::png(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_image_resample(name: &str, args: &[Value]) -> Done {
@@ -1406,7 +1428,10 @@ fn door_core_image_resample(name: &str, args: &[Value]) -> Done {
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
     let a3: mrlyrs::core::Filter = take!(name, 3, &args[3]);
-    match mrlyrs::core::Image::resample(&a0, a1, a2, a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Image::resample(&a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_cell_anti(name: &str, args: &[Value]) -> Done {
@@ -1433,7 +1458,10 @@ fn door_core_cell_blur(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::core::Cell = take!(name, 0, &args[0]);
     let a1: mrlyrs::core::Tensor = take!(name, 1, &args[1]);
     let a2: bool = take!(name, 2, &args[2]);
-    match mrlyrs::core::Cell::blur(a0, &a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Cell::blur(a0, &a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_cell_color_at(name: &str, args: &[Value]) -> Done {
@@ -1454,7 +1482,10 @@ fn door_core_cell_fractal(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::core::Cell = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::core::Cell::fractal(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Cell::fractal(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_cell_invert(name: &str, args: &[Value]) -> Done {
@@ -1473,19 +1504,37 @@ fn door_core_cell_layers(name: &str, args: &[Value]) -> Done {
 fn door_core_cell_magic(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: Vec<mrlyrs::core::Cell> = take!(name, 0, &args[0]);
-    match mrlyrs::core::cell::magic(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::cell::magic(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_cell_mapping(name: &str, args: &[Value]) -> Done {
     count(name, args, 0)?;
-    Ok({ let mut pairs0 = serde_json::Map::new(); for (key0, item0) in mrlyrs::core::cell::mapping() { pairs0.insert(key0.to_string(), { let mut list1 = Vec::new(); for item1 in item0 { list1.push(tint(item1)); } Value::Array(list1) }); } Value::Object(pairs0) })
+    Ok({
+        let mut pairs0 = serde_json::Map::new();
+        for (key0, item0) in mrlyrs::core::cell::mapping() {
+            pairs0.insert(key0.to_string(), {
+                let mut list1 = Vec::new();
+                for item1 in item0 {
+                    list1.push(tint(item1));
+                }
+                Value::Array(list1)
+            });
+        }
+        Value::Object(pairs0)
+    })
 }
 
 fn door_core_cell_merge(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<mrlyrs::core::Cell> = take!(name, 0, &args[0]);
     let a1: Vec<usize> = take!(name, 1, &args[1]);
-    match mrlyrs::core::cell::merge(&a0, &a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::cell::merge(&a0, &a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_cell_moore(name: &str, args: &[Value]) -> Done {
@@ -1498,7 +1547,10 @@ fn door_core_cell_mosaic(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
     let a1: Vec<mrlyrs::core::Cell> = take!(name, 1, &args[1]);
-    match mrlyrs::core::cell::mosaic(&a0, &a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::cell::mosaic(&a0, &a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_cell_neighbors(name: &str, args: &[Value]) -> Done {
@@ -1508,7 +1560,10 @@ fn door_core_cell_neighbors(name: &str, args: &[Value]) -> Done {
     let a2: u8 = take!(name, 2, &args[2]);
     let a3: bool = take!(name, 3, &args[3]);
     let a4: mrlyrs::core::Dtype = take!(name, 4, &args[4]);
-    match mrlyrs::core::Cell::neighbors(a0, &a1, a2, a3, a4) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Cell::neighbors(a0, &a1, a2, a3, a4) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_cell_new(name: &str, args: &[Value]) -> Done {
@@ -1528,10 +1583,35 @@ fn door_core_cell_pad(name: &str, args: &[Value]) -> Done {
 fn door_core_cell_paint(name: &str, args: &[Value]) -> Done {
     count(name, args, 4)?;
     let a0: mrlyrs::core::Cell = take!(name, 0, &args[0]);
-    let a1 = { let mut pairs0: Vec<(u8, Vec<mrlyrs::core::Color>)> = Vec::new(); for (text0, item0) in fields(name, 1, &args[1])? { let key0 = match text0.parse() { Ok(key) => key, Err(_) => return Err(bad(name, 1, "an object key")) }; pairs0.push((key0, { let mut list1 = Vec::new(); for item1 in items(name, 1, item0)? { list1.push(color(name, 1, item1)?); } list1 })); } pairs0 }.into_iter().collect();
+    let a1 = {
+        let mut pairs0: Vec<(u8, Vec<mrlyrs::core::Color>)> = Vec::new();
+        for (text0, item0) in fields(name, 1, &args[1])? {
+            let key0 = match text0.parse() {
+                Ok(key) => key,
+                Err(_) => return Err(bad(name, 1, "an object key")),
+            };
+            pairs0.push((key0, {
+                let mut list1 = Vec::new();
+                for item1 in items(name, 1, item0)? {
+                    list1.push(color(name, 1, item1)?);
+                }
+                list1
+            }));
+        }
+        pairs0
+    }
+    .into_iter()
+    .collect();
     let a2: mrlyrs::core::Mode = take!(name, 2, &args[2]);
-    let mut a3 = if args[3].is_null() { None } else { Some(mrlyrs::core::Rng::new(seed(name, 3, &args[3])?)) };
-    match mrlyrs::core::Cell::paint(a0, &a1, a2, a3.as_mut()) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    let mut a3 = if args[3].is_null() {
+        None
+    } else {
+        Some(mrlyrs::core::Rng::new(seed(name, 3, &args[3])?))
+    };
+    match mrlyrs::core::Cell::paint(a0, &a1, a2, a3.as_mut()) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_cell_perforate(name: &str, args: &[Value]) -> Done {
@@ -1539,7 +1619,10 @@ fn door_core_cell_perforate(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::core::Cell = take!(name, 0, &args[0]);
     let a1: mrlyrs::core::Tensor = take!(name, 1, &args[1]);
     let a2: u8 = take!(name, 2, &args[2]);
-    match mrlyrs::core::Cell::perforate(a0, &a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Cell::perforate(a0, &a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_cell_remap(name: &str, args: &[Value]) -> Done {
@@ -1547,7 +1630,10 @@ fn door_core_cell_remap(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::core::Cell = take!(name, 0, &args[0]);
     let a1: Vec<usize> = take!(name, 1, &args[1]);
     let a2: Vec<usize> = take!(name, 2, &args[2]);
-    match mrlyrs::core::cell::remap(&a0, &a1, &a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::cell::remap(&a0, &a1, &a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_cell_rgba(name: &str, args: &[Value]) -> Done {
@@ -1561,7 +1647,10 @@ fn door_core_cell_rot90_map(name: &str, args: &[Value]) -> Done {
     let a0: Vec<usize> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: (usize, usize) = take!(name, 2, &args[2]);
-    match mrlyrs::core::cell::rot90_map(&a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::cell::rot90_map(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_cell_rotate(name: &str, args: &[Value]) -> Done {
@@ -1569,7 +1658,10 @@ fn door_core_cell_rotate(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::core::Cell = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: (usize, usize) = take!(name, 2, &args[2]);
-    match mrlyrs::core::Cell::rotate(a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Cell::rotate(a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_cell_shape(name: &str, args: &[Value]) -> Done {
@@ -1588,25 +1680,35 @@ fn door_core_cell_tile(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::core::Cell = take!(name, 0, &args[0]);
     let a1: Vec<usize> = take!(name, 1, &args[1]);
-    match mrlyrs::core::Cell::tile(a0, &a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Cell::tile(a0, &a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_cell_tile_map(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<usize> = take!(name, 0, &args[0]);
     let a1: Vec<usize> = take!(name, 1, &args[1]);
-    match mrlyrs::core::cell::tile_map(&a0, &a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::cell::tile_map(&a0, &a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_codec_gif(name: &str, args: &[Value]) -> Done {
     count(name, args, 6)?;
-    let a0: Vec<Vec<u8>> = take!(name, 0, &args[0]); let b0: Vec<&[u8]> = a0.iter().map(|item| item.as_slice()).collect();
+    let a0: Vec<Vec<u8>> = take!(name, 0, &args[0]);
+    let b0: Vec<&[u8]> = a0.iter().map(|item| item.as_slice()).collect();
     let a1: Vec<[u8; 4]> = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
     let a4: usize = take!(name, 4, &args[4]);
     let a5: usize = take!(name, 5, &args[5]);
-    match mrlyrs::core::codec::gif(&b0, &a1, a2, a3, a4, a5) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::codec::gif(&b0, &a1, a2, a3, a4, a5) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_codec_png(name: &str, args: &[Value]) -> Done {
@@ -1615,19 +1717,34 @@ fn door_core_codec_png(name: &str, args: &[Value]) -> Done {
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
-    match mrlyrs::core::codec::png(&a0, a1, a2, a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::codec::png(&a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_colors_theme_hues(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::core::colors::Theme = take!(name, 0, &args[0]);
-    Ok({ let mut list0 = Vec::new(); for item0 in mrlyrs::core::colors::Theme::hues(&a0) { list0.push(tint(item0)); } Value::Array(list0) })
+    Ok({
+        let mut list0 = Vec::new();
+        for item0 in mrlyrs::core::colors::Theme::hues(&a0) {
+            list0.push(tint(item0));
+        }
+        Value::Array(list0)
+    })
 }
 
 fn door_core_colors_theme_inks(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::core::colors::Theme = take!(name, 0, &args[0]);
-    Ok({ let mut list0 = Vec::new(); for item0 in mrlyrs::core::colors::Theme::inks(&a0) { list0.push(tint(item0)); } Value::Array(list0) })
+    Ok({
+        let mut list0 = Vec::new();
+        for item0 in mrlyrs::core::colors::Theme::inks(&a0) {
+            list0.push(tint(item0));
+        }
+        Value::Array(list0)
+    })
 }
 
 fn door_core_colors_alpha(name: &str, args: &[Value]) -> Done {
@@ -1652,14 +1769,32 @@ fn door_core_colors_css(name: &str, args: &[Value]) -> Done {
 fn door_core_colors_from_hex(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: String = take!(name, 0, &args[0]);
-    match mrlyrs::core::Color::from_hex(a0.as_str()) { Ok(value) => Ok(tint(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Color::from_hex(a0.as_str()) {
+        Ok(value) => Ok(tint(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_colors_gradient(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
-    let a0: Vec<mrlyrs::core::Color> = { let mut list0 = Vec::new(); for item0 in items(name, 0, &args[0])? { list0.push(color(name, 0, item0)?); } list0 };
+    let a0: Vec<mrlyrs::core::Color> = {
+        let mut list0 = Vec::new();
+        for item0 in items(name, 0, &args[0])? {
+            list0.push(color(name, 0, item0)?);
+        }
+        list0
+    };
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::core::colors::gradient(&a0, a1) { Ok(value) => Ok({ let mut list0 = Vec::new(); for item0 in value { list0.push(tint(item0)); } Value::Array(list0) }), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::colors::gradient(&a0, a1) {
+        Ok(value) => Ok({
+            let mut list0 = Vec::new();
+            for item0 in value {
+                list0.push(tint(item0));
+            }
+            Value::Array(list0)
+        }),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_colors_ink(name: &str, args: &[Value]) -> Done {
@@ -1678,7 +1813,10 @@ fn door_core_colors_lightness(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::core::Color = color(name, 0, &args[0])?;
     let a1: u8 = take!(name, 1, &args[1]);
-    match mrlyrs::core::Color::lightness(&a0, a1) { Ok(value) => Ok(tint(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Color::lightness(&a0, a1) {
+        Ok(value) => Ok(tint(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_colors_luma_types(name: &str, args: &[Value]) -> Done {
@@ -1695,13 +1833,19 @@ fn door_core_colors_mix(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::core::Color = color(name, 0, &args[0])?;
     let a1: mrlyrs::core::Color = color(name, 1, &args[1])?;
     let a2: f64 = take!(name, 2, &args[2]);
-    match mrlyrs::core::colors::mix(a0, a1, a2) { Ok(value) => Ok(tint(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::colors::mix(a0, a1, a2) {
+        Ok(value) => Ok(tint(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_colors_named(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: String = take!(name, 0, &args[0]);
-    match mrlyrs::core::colors::named(a0.as_str()) { Ok(value) => Ok(tint(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::colors::named(a0.as_str()) {
+        Ok(value) => Ok(tint(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_colors_random(name: &str, args: &[Value]) -> Done {
@@ -1731,13 +1875,25 @@ fn door_core_colors_rgba(name: &str, args: &[Value]) -> Done {
 fn door_core_colors_shades(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::core::Color = color(name, 0, &args[0])?;
-    Ok({ let mut list0 = Vec::new(); for item0 in mrlyrs::core::colors::shades(a0) { list0.push(tint(item0)); } Value::Array(list0) })
+    Ok({
+        let mut list0 = Vec::new();
+        for item0 in mrlyrs::core::colors::shades(a0) {
+            list0.push(tint(item0));
+        }
+        Value::Array(list0)
+    })
 }
 
 fn door_core_colors_snap(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<[u8; 4]> = take!(name, 0, &args[0]);
-    let a1: Vec<mrlyrs::core::Color> = { let mut list0 = Vec::new(); for item0 in items(name, 1, &args[1])? { list0.push(color(name, 1, item0)?); } list0 };
+    let a1: Vec<mrlyrs::core::Color> = {
+        let mut list0 = Vec::new();
+        for item0 in items(name, 1, &args[1])? {
+            list0.push(color(name, 1, item0)?);
+        }
+        list0
+    };
     Ok(give!(mrlyrs::core::colors::snap(&a0, &a1)))
 }
 
@@ -1750,7 +1906,10 @@ fn door_core_colors_to_hex(name: &str, args: &[Value]) -> Done {
 fn door_core_error_parse(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: String = take!(name, 0, &args[0]);
-    match mrlyrs::core::error::parse(a0.as_str()) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::error::parse(a0.as_str()) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_hex_fit(name: &str, args: &[Value]) -> Done {
@@ -1760,7 +1919,10 @@ fn door_core_hex_fit(name: &str, args: &[Value]) -> Done {
     let a2: usize = take!(name, 2, &args[2]);
     let a3: bool = take!(name, 3, &args[3]);
     let a4: mrlyrs::core::Filter = take!(name, 4, &args[4]);
-    match mrlyrs::core::hex_fit(&a0, a1, a2, a3, a4) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::hex_fit(&a0, a1, a2, a3, a4) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_hex_size(name: &str, args: &[Value]) -> Done {
@@ -1833,7 +1995,10 @@ fn door_core_paint_random_edition(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Option<Vec<mrlyrs::core::paint::Edition>> = take!(name, 0, &args[0]);
     let mut a1 = mrlyrs::core::Rng::new(seed(name, 1, &args[1])?);
-    Ok(give!(mrlyrs::core::paint::random_edition(a0.as_deref(), &mut a1)))
+    Ok(give!(mrlyrs::core::paint::random_edition(
+        a0.as_deref(),
+        &mut a1
+    )))
 }
 
 fn door_core_paint_reroll(name: &str, args: &[Value]) -> Done {
@@ -1875,7 +2040,10 @@ fn door_core_resample(name: &str, args: &[Value]) -> Done {
     let a3: usize = take!(name, 3, &args[3]);
     let a4: usize = take!(name, 4, &args[4]);
     let a5: mrlyrs::core::Filter = take!(name, 5, &args[5]);
-    match mrlyrs::core::resample(&a0, a1, a2, a3, a4, a5) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::resample(&a0, a1, a2, a3, a4, a5) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_rng_below(name: &str, args: &[Value]) -> Done {
@@ -1951,13 +2119,19 @@ fn door_core_tensor_blur(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
     let a1: mrlyrs::core::Tensor = take!(name, 1, &args[1]);
     let a2: bool = take!(name, 2, &args[2]);
-    match mrlyrs::core::Tensor::blur(&a0, &a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Tensor::blur(&a0, &a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_tensor_bytes(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
-    match mrlyrs::core::Tensor::bytes(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Tensor::bytes(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_tensor_count(name: &str, args: &[Value]) -> Done {
@@ -1976,7 +2150,9 @@ fn door_core_tensor_dtype(name: &str, args: &[Value]) -> Done {
 fn door_core_tensor_exposed(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
-    Ok(Value::String(mrlyrs::core::Tensor::exposed(&a0).to_string()))
+    Ok(Value::String(
+        mrlyrs::core::Tensor::exposed(&a0).to_string(),
+    ))
 }
 
 fn door_core_tensor_filled(name: &str, args: &[Value]) -> Done {
@@ -1991,7 +2167,10 @@ fn door_core_tensor_flip(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::core::Tensor::flip(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Tensor::flip(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_tensor_fractal(name: &str, args: &[Value]) -> Done {
@@ -2012,20 +2191,29 @@ fn door_core_tensor_get(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
     let a1: Vec<usize> = take!(name, 1, &args[1]);
-    match mrlyrs::core::Tensor::get(&a0, &a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Tensor::get(&a0, &a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_tensor_i32(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<i32> = take!(name, 0, &args[0]);
     let a1: Vec<usize> = take!(name, 1, &args[1]);
-    match mrlyrs::core::Tensor::i32(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Tensor::i32(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_tensor_i32s(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
-    match mrlyrs::core::Tensor::i32s(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Tensor::i32s(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_tensor_index(name: &str, args: &[Value]) -> Done {
@@ -2062,7 +2250,10 @@ fn door_core_tensor_neighbors(name: &str, args: &[Value]) -> Done {
     let a2: u8 = take!(name, 2, &args[2]);
     let a3: bool = take!(name, 3, &args[3]);
     let a4: mrlyrs::core::Dtype = take!(name, 4, &args[4]);
-    match mrlyrs::core::Tensor::neighbors(&a0, &a1, a2, a3, a4) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Tensor::neighbors(&a0, &a1, a2, a3, a4) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_tensor_new(name: &str, args: &[Value]) -> Done {
@@ -2075,7 +2266,10 @@ fn door_core_tensor_of(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<u8> = take!(name, 0, &args[0]);
     let a1: Vec<usize> = take!(name, 1, &args[1]);
-    match mrlyrs::core::Tensor::of(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Tensor::of(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_tensor_otsu_threshold(name: &str, args: &[Value]) -> Done {
@@ -2097,7 +2291,10 @@ fn door_core_tensor_perforate(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
     let a1: mrlyrs::core::Tensor = take!(name, 1, &args[1]);
     let a2: u8 = take!(name, 2, &args[2]);
-    match mrlyrs::core::Tensor::perforate(&a0, &a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Tensor::perforate(&a0, &a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_tensor_rot90(name: &str, args: &[Value]) -> Done {
@@ -2105,7 +2302,10 @@ fn door_core_tensor_rot90(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: (usize, usize) = take!(name, 2, &args[2]);
-    match mrlyrs::core::Tensor::rot90(&a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Tensor::rot90(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_tensor_size(name: &str, args: &[Value]) -> Done {
@@ -2119,7 +2319,10 @@ fn door_core_tensor_slice(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::core::Tensor::slice(&a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Tensor::slice(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_tensor_sum(name: &str, args: &[Value]) -> Done {
@@ -2132,7 +2335,10 @@ fn door_core_tensor_tile(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
     let a1: Vec<usize> = take!(name, 1, &args[1]);
-    match mrlyrs::core::Tensor::tile(&a0, &a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Tensor::tile(&a0, &a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_tensor_transpose(name: &str, args: &[Value]) -> Done {
@@ -2140,7 +2346,10 @@ fn door_core_tensor_transpose(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::core::Tensor::transpose(&a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Tensor::transpose(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_tensor_typed(name: &str, args: &[Value]) -> Done {
@@ -2154,39 +2363,57 @@ fn door_core_tensor_u16(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<u16> = take!(name, 0, &args[0]);
     let a1: Vec<usize> = take!(name, 1, &args[1]);
-    match mrlyrs::core::Tensor::u16(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Tensor::u16(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_tensor_u16s(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
-    match mrlyrs::core::Tensor::u16s(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Tensor::u16s(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_tensor_u32(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<u32> = take!(name, 0, &args[0]);
     let a1: Vec<usize> = take!(name, 1, &args[1]);
-    match mrlyrs::core::Tensor::u32(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Tensor::u32(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_tensor_u32s(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
-    match mrlyrs::core::Tensor::u32s(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Tensor::u32s(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_tensor_u8(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<u8> = take!(name, 0, &args[0]);
     let a1: Vec<usize> = take!(name, 1, &args[1]);
-    match mrlyrs::core::Tensor::u8(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::Tensor::u8(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_unpng(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: Vec<u8> = take!(name, 0, &args[0]);
-    match mrlyrs::core::unpng(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::core::unpng(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_font_glyph_height(name: &str, args: &[Value]) -> Done {
@@ -2258,7 +2485,8 @@ fn door_font_glyph(name: &str, args: &[Value]) -> Done {
 
 fn door_font_lower(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
-    let a0: Vec<String> = take!(name, 0, &args[0]); let b0: Vec<&str> = a0.iter().map(|item| item.as_str()).collect();
+    let a0: Vec<String> = take!(name, 0, &args[0]);
+    let b0: Vec<&str> = a0.iter().map(|item| item.as_str()).collect();
     Ok(give!(mrlyrs::font::lower(&b0)))
 }
 
@@ -2355,7 +2583,10 @@ fn door_gen_parity_keep(name: &str, args: &[Value]) -> Done {
 fn door_gen_tile_check(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::gen::Tile = take!(name, 0, &args[0]);
-    match mrlyrs::gen::Tile::check(&a0) { Ok(()) => Ok(Value::Null), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::gen::Tile::check(&a0) {
+        Ok(()) => Ok(Value::Null),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_gen_tile_degenerate(name: &str, args: &[Value]) -> Done {
@@ -2389,7 +2620,10 @@ fn door_gen_background(name: &str, args: &[Value]) -> Done {
     let a0: u64 = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::gen::background(a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::gen::background(a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_gen_build_config2d_default(name: &str, args: &[Value]) -> Done {
@@ -2405,74 +2639,107 @@ fn door_gen_build_config3d_default(name: &str, args: &[Value]) -> Done {
 fn door_gen_build_build_2d(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::gen::Tile = take!(name, 0, &args[0]);
-    match mrlyrs::gen::build::build_2d(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::gen::build::build_2d(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_gen_build_build_3d(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::gen::Tile = take!(name, 0, &args[0]);
-    match mrlyrs::gen::build::build_3d(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::gen::build::build_3d(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_gen_build_build_6d(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::gen::build::HexTile = take!(name, 0, &args[0]);
-    match mrlyrs::gen::build::build_6d(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::gen::build::build_6d(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_gen_build_create_2d(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0 = take!(name, 0, &args[0]);
     let mut a1 = mrlyrs::core::Rng::new(seed(name, 1, &args[1])?);
-    match mrlyrs::gen::build::create_2d(&a0, &mut a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::gen::build::create_2d(&a0, &mut a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_gen_build_create_3d(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0 = take!(name, 0, &args[0]);
     let mut a1 = mrlyrs::core::Rng::new(seed(name, 1, &args[1])?);
-    match mrlyrs::gen::build::create_3d(&a0, &mut a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::gen::build::create_3d(&a0, &mut a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_gen_build_create_6d(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0 = take!(name, 0, &args[0]);
     let mut a1 = mrlyrs::core::Rng::new(seed(name, 1, &args[1])?);
-    match mrlyrs::gen::build::create_6d(&a0, &mut a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::gen::build::create_6d(&a0, &mut a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_gen_build_random_tile_2d(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let mut a1 = mrlyrs::core::Rng::new(seed(name, 1, &args[1])?);
-    match mrlyrs::gen::build::random_tile_2d(a0, &mut a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::gen::build::random_tile_2d(a0, &mut a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_gen_build_random_tile_3d(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let mut a1 = mrlyrs::core::Rng::new(seed(name, 1, &args[1])?);
-    match mrlyrs::gen::build::random_tile_3d(a0, &mut a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::gen::build::random_tile_3d(a0, &mut a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_gen_build_random_tile_6d(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let mut a1 = mrlyrs::core::Rng::new(seed(name, 1, &args[1])?);
-    match mrlyrs::gen::build::random_tile_6d(a0, &mut a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::gen::build::random_tile_6d(a0, &mut a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_gen_classic_code(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::gen::recipe::Design = take!(name, 0, &args[0]);
-    Ok(match mrlyrs::gen::classic_code(a0) { Some(item0) => Value::String(item0.to_string()), None => Value::Null })
+    Ok(match mrlyrs::gen::classic_code(a0) {
+        Some(item0) => Value::String(item0.to_string()),
+        None => Value::Null,
+    })
 }
 
 fn door_gen_classic_code_nd(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::gen::recipe::Design = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    Ok(match mrlyrs::gen::classic_code_nd(a0, a1) { Some(item0) => Value::String(item0.to_string()), None => Value::Null })
+    Ok(match mrlyrs::gen::classic_code_nd(a0, a1) {
+        Some(item0) => Value::String(item0.to_string()),
+        None => Value::Null,
+    })
 }
 
 fn door_gen_hex_key(name: &str, args: &[Value]) -> Done {
@@ -2490,67 +2757,98 @@ fn door_gen_name_slots_default(name: &str, args: &[Value]) -> Done {
 fn door_gen_name_tile_checked(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::gen::name::Tile = take!(name, 0, &args[0]);
-    match <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::checked(a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::checked(a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_gen_name_tile_from_file(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: String = take!(name, 0, &args[0]);
-    match <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::from_file(a0.as_str()) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::from_file(a0.as_str()) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_gen_name_tile_from_json(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: String = take!(name, 0, &args[0]);
-    match <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::from_json(a0.as_str()) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::from_json(a0.as_str()) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_gen_name_tile_from_url(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: String = take!(name, 0, &args[0]);
-    match <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::from_url(a0.as_str()) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::from_url(a0.as_str()) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_gen_name_tile_of(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::gen::Tile = take!(name, 0, &args[0]);
-    match mrlyrs::gen::name::Tile::of(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::gen::name::Tile::of(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_gen_name_tile_recipe(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::gen::name::Tile = take!(name, 0, &args[0]);
-    match mrlyrs::gen::name::Tile::recipe(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::gen::name::Tile::recipe(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_gen_name_tile_to_file(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::gen::name::Tile = take!(name, 0, &args[0]);
-    match <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::to_file(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::to_file(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_gen_name_tile_to_id(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::gen::name::Tile = take!(name, 0, &args[0]);
-    Ok(give!(<mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::to_id(&a0)))
+    Ok(give!(
+        <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::to_id(&a0)
+    ))
 }
 
 fn door_gen_name_tile_to_json(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::gen::name::Tile = take!(name, 0, &args[0]);
-    Ok(give!(<mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::to_json(&a0)))
+    Ok(give!(
+        <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::to_json(&a0)
+    ))
 }
 
 fn door_gen_name_tile_to_mrly(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::gen::name::Tile = take!(name, 0, &args[0]);
-    match <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::to_mrly(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::to_mrly(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_gen_name_tile_to_url(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::gen::name::Tile = take!(name, 0, &args[0]);
-    match <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::to_url(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::to_url(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_gen_random_design(name: &str, args: &[Value]) -> Done {
@@ -2620,7 +2918,10 @@ fn door_gen_recipe_size(name: &str, args: &[Value]) -> Done {
 fn door_gen_tree_mask(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: usize = take!(name, 0, &args[0]);
-    match mrlyrs::gen::tree_mask(a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::gen::tree_mask(a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_gen_variation_config_default(name: &str, args: &[Value]) -> Done {
@@ -2651,7 +2952,10 @@ fn door_gen_variation_create(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::gen::variation::Config = take!(name, 0, &args[0]);
     let mut a1 = mrlyrs::core::Rng::new(seed(name, 1, &args[1])?);
-    match mrlyrs::gen::variation::create(&a0, &mut a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::gen::variation::create(&a0, &mut a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_gen_variation_generate(name: &str, args: &[Value]) -> Done {
@@ -2659,7 +2963,10 @@ fn door_gen_variation_generate(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::gen::variation::Variation = take!(name, 0, &args[0]);
     let a1: mrlyrs::gen::variation::Config = take!(name, 1, &args[1]);
     let mut a2 = mrlyrs::core::Rng::new(seed(name, 2, &args[2])?);
-    match mrlyrs::gen::variation::generate(a0, &a1, &mut a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::gen::variation::generate(a0, &a1, &mut a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_gen_variation_render(name: &str, args: &[Value]) -> Done {
@@ -2667,7 +2974,10 @@ fn door_gen_variation_render(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::gen::variation::Variation = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let mut a2 = mrlyrs::core::Rng::new(seed(name, 2, &args[2])?);
-    match mrlyrs::gen::variation::render(a0, a1, &mut a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::gen::variation::render(a0, a1, &mut a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_life_boundary_all(name: &str, args: &[Value]) -> Done {
@@ -2690,7 +3000,10 @@ fn door_life_config_budget(name: &str, args: &[Value]) -> Done {
 fn door_life_config_counts(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::life::Config = take!(name, 0, &args[0]);
-    match mrlyrs::life::Config::counts(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::life::Config::counts(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_life_config_new(name: &str, args: &[Value]) -> Done {
@@ -2719,7 +3032,10 @@ fn door_life_counts_values(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::life::Counts = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::life::Counts::values(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::life::Counts::values(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_life_fate_all(name: &str, args: &[Value]) -> Done {
@@ -2742,7 +3058,10 @@ fn door_life_rule_boundary(name: &str, args: &[Value]) -> Done {
 fn door_life_rule_checked(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::life::Rule = take!(name, 0, &args[0]);
-    match <mrlyrs::life::Rule as mrlyrs::math::name::Named>::checked(a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::life::Rule as mrlyrs::math::name::Named>::checked(a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_life_rule_config(name: &str, args: &[Value]) -> Done {
@@ -2755,19 +3074,28 @@ fn door_life_rule_config(name: &str, args: &[Value]) -> Done {
 fn door_life_rule_from_file(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: String = take!(name, 0, &args[0]);
-    match <mrlyrs::life::Rule as mrlyrs::math::name::Named>::from_file(a0.as_str()) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::life::Rule as mrlyrs::math::name::Named>::from_file(a0.as_str()) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_life_rule_from_json(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: String = take!(name, 0, &args[0]);
-    match <mrlyrs::life::Rule as mrlyrs::math::name::Named>::from_json(a0.as_str()) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::life::Rule as mrlyrs::math::name::Named>::from_json(a0.as_str()) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_life_rule_from_url(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: String = take!(name, 0, &args[0]);
-    match <mrlyrs::life::Rule as mrlyrs::math::name::Named>::from_url(a0.as_str()) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::life::Rule as mrlyrs::math::name::Named>::from_url(a0.as_str()) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_life_rule_new(name: &str, args: &[Value]) -> Done {
@@ -2787,31 +3115,44 @@ fn door_life_rule_of(name: &str, args: &[Value]) -> Done {
 fn door_life_rule_to_file(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::life::Rule = take!(name, 0, &args[0]);
-    match <mrlyrs::life::Rule as mrlyrs::math::name::Named>::to_file(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::life::Rule as mrlyrs::math::name::Named>::to_file(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_life_rule_to_id(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::life::Rule = take!(name, 0, &args[0]);
-    Ok(give!(<mrlyrs::life::Rule as mrlyrs::math::name::Named>::to_id(&a0)))
+    Ok(give!(
+        <mrlyrs::life::Rule as mrlyrs::math::name::Named>::to_id(&a0)
+    ))
 }
 
 fn door_life_rule_to_json(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::life::Rule = take!(name, 0, &args[0]);
-    Ok(give!(<mrlyrs::life::Rule as mrlyrs::math::name::Named>::to_json(&a0)))
+    Ok(give!(
+        <mrlyrs::life::Rule as mrlyrs::math::name::Named>::to_json(&a0)
+    ))
 }
 
 fn door_life_rule_to_mrly(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::life::Rule = take!(name, 0, &args[0]);
-    match <mrlyrs::life::Rule as mrlyrs::math::name::Named>::to_mrly(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::life::Rule as mrlyrs::math::name::Named>::to_mrly(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_life_rule_to_url(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::life::Rule = take!(name, 0, &args[0]);
-    match <mrlyrs::life::Rule as mrlyrs::math::name::Named>::to_url(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::life::Rule as mrlyrs::math::name::Named>::to_url(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_life_source_all(name: &str, args: &[Value]) -> Done {
@@ -2850,7 +3191,10 @@ fn door_life_source_oeis(name: &str, args: &[Value]) -> Done {
 fn door_life_source_parse(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: String = take!(name, 0, &args[0]);
-    match mrlyrs::life::Source::parse(a0.as_str()) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::life::Source::parse(a0.as_str()) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_life_source_read(name: &str, args: &[Value]) -> Done {
@@ -2869,7 +3213,10 @@ fn door_life_animate(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
     let a1: mrlyrs::life::Config = take!(name, 1, &args[1]);
-    match mrlyrs::life::animate(&a0, &a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::life::animate(&a0, &a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_life_churn(name: &str, args: &[Value]) -> Done {
@@ -2890,13 +3237,19 @@ fn door_life_counts(name: &str, args: &[Value]) -> Done {
     let a1: usize = take!(name, 1, &args[1]);
     let a2: bool = take!(name, 2, &args[2]);
     let a3: bool = take!(name, 3, &args[3]);
-    match mrlyrs::life::counts(a0, a1, a2, a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::life::counts(a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_life_crop(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: Vec<mrlyrs::math::cell::models::CellNd<2>> = take!(name, 0, &args[0]);
-    match mrlyrs::life::crop(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::life::crop(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_life_cube_orbit(name: &str, args: &[Value]) -> Done {
@@ -2911,7 +3264,10 @@ fn door_life_design_mask(name: &str, args: &[Value]) -> Done {
     let a1: mrlyrs::math::bang::Code = mrlyrs::math::bang::Code::from(big(name, 1, &args[1])?);
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
-    match mrlyrs::life::design_mask(a0, a1, a2, a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::life::design_mask(a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_life_elementary_output(name: &str, args: &[Value]) -> Done {
@@ -2933,7 +3289,10 @@ fn door_life_frames(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<mrlyrs::math::cell::models::CellNd<2>> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::life::frames(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::life::frames(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_life_gasket(name: &str, args: &[Value]) -> Done {
@@ -2952,7 +3311,10 @@ fn door_life_heatmap(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<mrlyrs::math::cell::models::CellNd<2>> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::life::heatmap(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::life::heatmap(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_life_history(name: &str, args: &[Value]) -> Done {
@@ -2961,7 +3323,10 @@ fn door_life_history(name: &str, args: &[Value]) -> Done {
     let a1: u8 = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
     let a3: bool = take!(name, 3, &args[3]);
-    match mrlyrs::life::history(&a0, a1, a2, a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::life::history(&a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_life_lambda(name: &str, args: &[Value]) -> Done {
@@ -2984,7 +3349,10 @@ fn door_life_mask_offsets(name: &str, args: &[Value]) -> Done {
 
 fn door_life_moore(name: &str, args: &[Value]) -> Done {
     count(name, args, 0)?;
-    match mrlyrs::life::moore() { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::life::moore() {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_life_movie(name: &str, args: &[Value]) -> Done {
@@ -2992,7 +3360,10 @@ fn door_life_movie(name: &str, args: &[Value]) -> Done {
     let a0: Vec<mrlyrs::math::cell::models::CellNd<2>> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::life::movie(&a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::life::movie(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_life_next_grid(name: &str, args: &[Value]) -> Done {
@@ -3002,7 +3373,10 @@ fn door_life_next_grid(name: &str, args: &[Value]) -> Done {
     let a2: Vec<usize> = take!(name, 2, &args[2]);
     let a3: mrlyrs::core::Tensor = take!(name, 3, &args[3]);
     let a4: mrlyrs::life::Boundary = take!(name, 4, &args[4]);
-    match mrlyrs::life::next_grid(&a0, &a1, &a2, &a3, a4) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::life::next_grid(&a0, &a1, &a2, &a3, a4) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_life_npn_class(name: &str, args: &[Value]) -> Done {
@@ -3027,7 +3401,10 @@ fn door_life_render_frame(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::life::render::frame(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::life::render::frame(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_life_reversible(name: &str, args: &[Value]) -> Done {
@@ -3045,21 +3422,30 @@ fn door_life_rule_degree(name: &str, args: &[Value]) -> Done {
 fn door_life_rule_name(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: u8 = take!(name, 0, &args[0]);
-    match mrlyrs::life::rule_name(a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::life::rule_name(a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_life_single_seed(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: u8 = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::life::single_seed(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::life::single_seed(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_life_source_sequence(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::life::Source = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::life::source::sequence(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::life::source::sequence(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_life_step(name: &str, args: &[Value]) -> Done {
@@ -3067,7 +3453,10 @@ fn door_life_step(name: &str, args: &[Value]) -> Done {
     let a0: Vec<u8> = take!(name, 0, &args[0]);
     let a1: u8 = take!(name, 1, &args[1]);
     let a2: bool = take!(name, 2, &args[2]);
-    match mrlyrs::life::step(&a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::life::step(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_life_surjective(name: &str, args: &[Value]) -> Done {
@@ -3080,7 +3469,10 @@ fn door_life_tessellate(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<mrlyrs::math::cell::models::CellNd<2>> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::life::tessellate(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::life::tessellate(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_life_wolfram_class(name: &str, args: &[Value]) -> Done {
@@ -3334,7 +3726,10 @@ fn door_math_bang_design_degree(name: &str, args: &[Value]) -> Done {
 fn door_math_bang_design_name(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::bang::Design = take!(name, 0, &args[0]);
-    match mrlyrs::math::bang::Design::name(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::Design::name(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_design_rule(name: &str, args: &[Value]) -> Done {
@@ -3378,13 +3773,19 @@ fn door_math_bang_universe_distinct(name: &str, args: &[Value]) -> Done {
 fn door_math_bang_universe_new(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: usize = take!(name, 0, &args[0]);
-    match mrlyrs::math::bang::Universe::new(a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::Universe::new(a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_bang(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: usize = take!(name, 0, &args[0]);
-    match mrlyrs::math::bang::bang(a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::bang(a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_baseq_axis_maps(name: &str, args: &[Value]) -> Done {
@@ -3396,40 +3797,65 @@ fn door_math_bang_baseq_axis_maps(name: &str, args: &[Value]) -> Done {
 fn door_math_bang_baseq_bracelets(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: usize = take!(name, 0, &args[0]);
-    match mrlyrs::math::bang::baseq::bracelets(a0) { Ok(value) => Ok({ let mut list0 = Vec::new(); for item0 in value { list0.push(Value::String(item0.to_string())); } Value::Array(list0) }), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::baseq::bracelets(a0) {
+        Ok(value) => Ok({
+            let mut list0 = Vec::new();
+            for item0 in value {
+                list0.push(Value::String(item0.to_string()));
+            }
+            Value::Array(list0)
+        }),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_baseq_canonical(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<Vec<usize>> = take!(name, 0, &args[0]);
     let a1: mrlyrs::math::bang::Code = mrlyrs::math::bang::Code::from(big(name, 1, &args[1])?);
-    match mrlyrs::math::bang::baseq::canonical(&a0, a1) { Ok(value) => Ok(Value::String(value.get().to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::baseq::canonical(&a0, a1) {
+        Ok(value) => Ok(Value::String(value.get().to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_baseq_carry(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<usize> = take!(name, 0, &args[0]);
     let a1: mrlyrs::math::bang::Code = mrlyrs::math::bang::Code::from(big(name, 1, &args[1])?);
-    Ok(Value::String(mrlyrs::math::bang::baseq::carry(&a0, a1).get().to_string()))
+    Ok(Value::String(
+        mrlyrs::math::bang::baseq::carry(&a0, a1).get().to_string(),
+    ))
 }
 
 fn door_math_bang_baseq_class_sequence(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: usize = take!(name, 0, &args[0]);
-    Ok({ let mut list0 = Vec::new(); for item0 in mrlyrs::math::bang::baseq::class_sequence(a0) { list0.push(Value::String(item0.to_string())); } Value::Array(list0) })
+    Ok({
+        let mut list0 = Vec::new();
+        for item0 in mrlyrs::math::bang::baseq::class_sequence(a0) {
+            list0.push(Value::String(item0.to_string()));
+        }
+        Value::Array(list0)
+    })
 }
 
 fn door_math_bang_baseq_classes(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: usize = take!(name, 0, &args[0]);
-    Ok(Value::String(mrlyrs::math::bang::baseq::classes(a0).to_string()))
+    Ok(Value::String(
+        mrlyrs::math::bang::baseq::classes(a0).to_string(),
+    ))
 }
 
 fn door_math_bang_baseq_distinct_designs(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::bang::baseq::distinct_designs(a0, a1) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::baseq::distinct_designs(a0, a1) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_baseq_even_fill_is_balanced(name: &str, args: &[Value]) -> Done {
@@ -3437,7 +3863,10 @@ fn door_math_bang_baseq_even_fill_is_balanced(name: &str, args: &[Value]) -> Don
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: u128 = big(name, 2, &args[2])?;
-    match mrlyrs::math::bang::baseq::even_fill_is_balanced(a0, a1, a2) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::baseq::even_fill_is_balanced(a0, a1, a2) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_baseq_fill_from_corners(name: &str, args: &[Value]) -> Done {
@@ -3445,7 +3874,9 @@ fn door_math_bang_baseq_fill_from_corners(name: &str, args: &[Value]) -> Done {
     let a0: Vec<Vec<u8>> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    Ok(Value::String(mrlyrs::math::bang::baseq::fill_from_corners(&a0, a1, a2).to_string()))
+    Ok(Value::String(
+        mrlyrs::math::bang::baseq::fill_from_corners(&a0, a1, a2).to_string(),
+    ))
 }
 
 fn door_math_bang_baseq_group(name: &str, args: &[Value]) -> Done {
@@ -3459,42 +3890,81 @@ fn door_math_bang_baseq_group_order(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::bang::baseq::group_order(a0, a1) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::baseq::group_order(a0, a1) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_baseq_orbit(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<Vec<usize>> = take!(name, 0, &args[0]);
     let a1: mrlyrs::math::bang::Code = mrlyrs::math::bang::Code::from(big(name, 1, &args[1])?);
-    Ok({ let mut list0 = Vec::new(); for item0 in mrlyrs::math::bang::baseq::orbit(&a0, a1) { list0.push(Value::String(item0.get().to_string())); } Value::Array(list0) })
+    Ok({
+        let mut list0 = Vec::new();
+        for item0 in mrlyrs::math::bang::baseq::orbit(&a0, a1) {
+            list0.push(Value::String(item0.get().to_string()));
+        }
+        Value::Array(list0)
+    })
 }
 
 fn door_math_bang_baseq_predicted_group_order(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::bang::baseq::predicted_group_order(a0, a1) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::baseq::predicted_group_order(a0, a1) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_baseq_representatives(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::bang::baseq::representatives(a0, a1) { Ok(value) => Ok({ let mut list0 = Vec::new(); for item0 in value { list0.push({ let parts1 = item0; Value::Array(vec![Value::String(parts1.0.get().to_string()), give!(parts1.1)]) }); } Value::Array(list0) }), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::baseq::representatives(a0, a1) {
+        Ok(value) => Ok({
+            let mut list0 = Vec::new();
+            for item0 in value {
+                list0.push({
+                    let parts1 = item0;
+                    Value::Array(vec![
+                        Value::String(parts1.0.get().to_string()),
+                        give!(parts1.1),
+                    ])
+                });
+            }
+            Value::Array(list0)
+        }),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_baseq_sequence(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::bang::baseq::sequence(a0, a1) { Ok(value) => Ok({ let mut list0 = Vec::new(); for item0 in value { list0.push(Value::String(item0.to_string())); } Value::Array(list0) }), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::baseq::sequence(a0, a1) {
+        Ok(value) => Ok({
+            let mut list0 = Vec::new();
+            for item0 in value {
+                list0.push(Value::String(item0.to_string()));
+            }
+            Value::Array(list0)
+        }),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_baseq_total_designs(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::bang::baseq::total_designs(a0, a1) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::baseq::total_designs(a0, a1) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_catalog_antis(name: &str, args: &[Value]) -> Done {
@@ -3514,7 +3984,10 @@ fn door_math_bang_code_to_corners(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::math::bang::Code = mrlyrs::math::bang::Code::from(big(name, 0, &args[0])?);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::math::bang::code_to_corners(a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::code_to_corners(a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_corners(name: &str, args: &[Value]) -> Done {
@@ -3528,7 +4001,11 @@ fn door_math_bang_corners_to_code(name: &str, args: &[Value]) -> Done {
     let a0: Vec<Vec<u8>> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    Ok(Value::String(mrlyrs::math::bang::corners_to_code(&a0, a1, a2).get().to_string()))
+    Ok(Value::String(
+        mrlyrs::math::bang::corners_to_code(&a0, a1, a2)
+            .get()
+            .to_string(),
+    ))
 }
 
 fn door_math_bang_factory_create(name: &str, args: &[Value]) -> Done {
@@ -3538,7 +4015,10 @@ fn door_math_bang_factory_create(name: &str, args: &[Value]) -> Done {
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
     let a4: usize = take!(name, 4, &args[4]);
-    match mrlyrs::math::bang::factory::create(a0, a1, a2, a3, a4) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::factory::create(a0, a1, a2, a3, a4) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_factory_create_from_corners(name: &str, args: &[Value]) -> Done {
@@ -3548,7 +4028,10 @@ fn door_math_bang_factory_create_from_corners(name: &str, args: &[Value]) -> Don
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
     let a4: usize = take!(name, 4, &args[4]);
-    match mrlyrs::math::bang::factory::create_from_corners(&a0, a1, a2, a3, a4) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::factory::create_from_corners(&a0, a1, a2, a3, a4) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_factory_create_named(name: &str, args: &[Value]) -> Done {
@@ -3556,7 +4039,10 @@ fn door_math_bang_factory_create_named(name: &str, args: &[Value]) -> Done {
     let a0: String = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::math::bang::factory::create_named(a0.as_str(), a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::factory::create_named(a0.as_str(), a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_factory_residue_corners(name: &str, args: &[Value]) -> Done {
@@ -3570,7 +4056,10 @@ fn door_math_bang_factory_total_codes(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::bang::factory::total_codes(a0, a1) { Ok(value) => Ok(Value::String(value.get().to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::factory::total_codes(a0, a1) {
+        Ok(value) => Ok(Value::String(value.get().to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_levels_code(name: &str, args: &[Value]) -> Done {
@@ -3578,26 +4067,40 @@ fn door_math_bang_levels_code(name: &str, args: &[Value]) -> Done {
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: Vec<usize> = take!(name, 2, &args[2]);
-    Ok(Value::String(mrlyrs::math::bang::levels_code(a0, a1, &a2).get().to_string()))
+    Ok(Value::String(
+        mrlyrs::math::bang::levels_code(a0, a1, &a2)
+            .get()
+            .to_string(),
+    ))
 }
 
 fn door_math_bang_magic(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: Vec<mrlyrs::math::bang::MagicLayer> = take!(name, 0, &args[0]);
-    match mrlyrs::math::bang::magic(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::magic(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_magic_named(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
-    let a0: Vec<(String, usize)> = take!(name, 0, &args[0]); let b0: Vec<(&str, usize)> = a0.iter().map(|item| (item.0.as_str(), item.1)).collect();
-    match mrlyrs::math::bang::magic_named(&b0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    let a0: Vec<(String, usize)> = take!(name, 0, &args[0]);
+    let b0: Vec<(&str, usize)> = a0.iter().map(|item| (item.0.as_str(), item.1)).collect();
+    match mrlyrs::math::bang::magic_named(&b0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_sources(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::gen::recipe::Catalog = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::bang::sources(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::sources(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_symmetries(name: &str, args: &[Value]) -> Done {
@@ -3658,7 +4161,13 @@ fn door_math_bang_universe_orbit(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::math::bang::Code = mrlyrs::math::bang::Code::from(big(name, 0, &args[0])?);
     let a1: usize = take!(name, 1, &args[1]);
-    Ok({ let mut list0 = Vec::new(); for item0 in mrlyrs::math::bang::universe::orbit(a0, a1) { list0.push(Value::String(item0.get().to_string())); } Value::Array(list0) })
+    Ok({
+        let mut list0 = Vec::new();
+        for item0 in mrlyrs::math::bang::universe::orbit(a0, a1) {
+            list0.push(Value::String(item0.get().to_string()));
+        }
+        Value::Array(list0)
+    })
 }
 
 fn door_math_bang_universe_permutations(name: &str, args: &[Value]) -> Done {
@@ -3670,7 +4179,16 @@ fn door_math_bang_universe_permutations(name: &str, args: &[Value]) -> Done {
 fn door_math_bang_universe_codes(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: usize = take!(name, 0, &args[0]);
-    match mrlyrs::math::bang::universe_codes(a0) { Ok(value) => Ok({ let mut list0 = Vec::new(); for item0 in value { list0.push(Value::String(item0.to_string())); } Value::Array(list0) }), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::universe_codes(a0) {
+        Ok(value) => Ok({
+            let mut list0 = Vec::new();
+            for item0 in value {
+                list0.push(Value::String(item0.to_string()));
+            }
+            Value::Array(list0)
+        }),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_word_schedule_all(name: &str, args: &[Value]) -> Done {
@@ -3694,37 +4212,61 @@ fn door_math_bang_word_schedule_place(name: &str, args: &[Value]) -> Done {
 fn door_math_bang_word_components(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: Vec<mrlyrs::math::bang::MagicLayer> = take!(name, 0, &args[0]);
-    match mrlyrs::math::bang::word::components(&a0) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::word::components(&a0) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_word_constant_functional(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: Vec<mrlyrs::math::bang::MagicLayer> = take!(name, 0, &args[0]);
-    match mrlyrs::math::bang::word::constant_functional(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::word::constant_functional(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_word_dimension(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: Vec<mrlyrs::math::bang::MagicLayer> = take!(name, 0, &args[0]);
-    match mrlyrs::math::bang::word::dimension(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::word::dimension(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_word_fill(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: Vec<mrlyrs::math::bang::MagicLayer> = take!(name, 0, &args[0]);
-    match mrlyrs::math::bang::word::fill(&a0) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::word::fill(&a0) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_word_fills(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: Vec<mrlyrs::math::bang::MagicLayer> = take!(name, 0, &args[0]);
-    match mrlyrs::math::bang::word::fills(&a0) { Ok(value) => Ok({ let mut list0 = Vec::new(); for item0 in value { list0.push(Value::String(item0.to_string())); } Value::Array(list0) }), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::word::fills(&a0) {
+        Ok(value) => Ok({
+            let mut list0 = Vec::new();
+            for item0 in value {
+                list0.push(Value::String(item0.to_string()));
+            }
+            Value::Array(list0)
+        }),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_word_letter(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::bang::MagicLayer = take!(name, 0, &args[0]);
-    match mrlyrs::math::bang::word::letter(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::word::letter(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_word_native(name: &str, args: &[Value]) -> Done {
@@ -3742,25 +4284,37 @@ fn door_math_bang_word_period(name: &str, args: &[Value]) -> Done {
 fn door_math_bang_word_prefixes(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: Vec<mrlyrs::math::bang::MagicLayer> = take!(name, 0, &args[0]);
-    match mrlyrs::math::bang::word::prefixes(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::word::prefixes(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_word_rates(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: Vec<mrlyrs::math::bang::MagicLayer> = take!(name, 0, &args[0]);
-    match mrlyrs::math::bang::word::rates(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::word::rates(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_word_side(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: Vec<mrlyrs::math::bang::MagicLayer> = take!(name, 0, &args[0]);
-    match mrlyrs::math::bang::word::side(&a0) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::word::side(&a0) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_word_spell(name: &str, args: &[Value]) -> Done {
     count(name, args, 3)?;
     let a0: mrlyrs::math::bang::word::Schedule = take!(name, 0, &args[0]);
-    let a1: (mrlyrs::math::bang::MagicLayer, mrlyrs::math::bang::MagicLayer) = take!(name, 1, &args[1]);
+    let a1: (
+        mrlyrs::math::bang::MagicLayer,
+        mrlyrs::math::bang::MagicLayer,
+    ) = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
     Ok(give!(mrlyrs::math::bang::word::spell(a0, a1, a2)))
 }
@@ -3768,7 +4322,10 @@ fn door_math_bang_word_spell(name: &str, args: &[Value]) -> Done {
 fn door_math_bang_word_staircase(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: usize = take!(name, 0, &args[0]);
-    match mrlyrs::math::bang::word::staircase(a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::bang::word::staircase(a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_bang_word_thue_morse(name: &str, args: &[Value]) -> Done {
@@ -3779,225 +4336,303 @@ fn door_math_bang_word_thue_morse(name: &str, args: &[Value]) -> Done {
 
 fn door_math_cell_census_edges(name: &str, args: &[Value]) -> Done {
     match cell_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    match mrlyrs::math::cell::census::edges::<2>(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    3 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    match mrlyrs::math::cell::census::edges::<3>(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+            match mrlyrs::math::cell::census::edges::<2>(&a0) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        3 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
+            match mrlyrs::math::cell::census::edges::<3>(&a0) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
 fn door_math_cell_census_exposure(name: &str, args: &[Value]) -> Done {
     match cell_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    Ok(Value::String(mrlyrs::math::cell::census::exposure::<2>(&a0).to_string()))
-    }
-    3 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    Ok(Value::String(mrlyrs::math::cell::census::exposure::<3>(&a0).to_string()))
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+            Ok(Value::String(
+                mrlyrs::math::cell::census::exposure::<2>(&a0).to_string(),
+            ))
+        }
+        3 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
+            Ok(Value::String(
+                mrlyrs::math::cell::census::exposure::<3>(&a0).to_string(),
+            ))
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
 fn door_math_cell_census_fills(name: &str, args: &[Value]) -> Done {
     match cell_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::math::cell::census::fills::<2>(&a0)))
-    }
-    3 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::math::cell::census::fills::<3>(&a0)))
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+            Ok(give!(mrlyrs::math::cell::census::fills::<2>(&a0)))
+        }
+        3 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
+            Ok(give!(mrlyrs::math::cell::census::fills::<3>(&a0)))
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
 fn door_math_cell_census_vertices(name: &str, args: &[Value]) -> Done {
     match cell_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    match mrlyrs::math::cell::census::vertices::<2>(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    3 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    match mrlyrs::math::cell::census::vertices::<3>(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+            match mrlyrs::math::cell::census::vertices::<2>(&a0) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        3 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
+            match mrlyrs::math::cell::census::vertices::<3>(&a0) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
 fn door_math_cell_census_voids(name: &str, args: &[Value]) -> Done {
     match cell_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::math::cell::census::voids::<2>(&a0)))
-    }
-    3 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::math::cell::census::voids::<3>(&a0)))
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+            Ok(give!(mrlyrs::math::cell::census::voids::<2>(&a0)))
+        }
+        3 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
+            Ok(give!(mrlyrs::math::cell::census::voids::<3>(&a0)))
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
 fn door_math_cell_geometry_merge_reps(name: &str, args: &[Value]) -> Done {
     match cells_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 2)?;
-    let a0: Vec<mrlyrs::math::cell::models::CellNd<2>> = take!(name, 0, &args[0]);
-    let a1: Vec<usize> = take!(name, 1, &args[1]);
-    match mrlyrs::math::cell::geometry::merge_reps::<2>(&a0, &a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    3 => {
-    count(name, args, 2)?;
-    let a0: Vec<mrlyrs::math::cell::models::CellNd<3>> = take!(name, 0, &args[0]);
-    let a1: Vec<usize> = take!(name, 1, &args[1]);
-    match mrlyrs::math::cell::geometry::merge_reps::<3>(&a0, &a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 2)?;
+            let a0: Vec<mrlyrs::math::cell::models::CellNd<2>> = take!(name, 0, &args[0]);
+            let a1: Vec<usize> = take!(name, 1, &args[1]);
+            match mrlyrs::math::cell::geometry::merge_reps::<2>(&a0, &a1) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        3 => {
+            count(name, args, 2)?;
+            let a0: Vec<mrlyrs::math::cell::models::CellNd<3>> = take!(name, 0, &args[0]);
+            let a1: Vec<usize> = take!(name, 1, &args[1]);
+            match mrlyrs::math::cell::geometry::merge_reps::<3>(&a0, &a1) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
 fn door_math_cell_geometry_perforate(name: &str, args: &[Value]) -> Done {
     match cell_rank(name, args, 1)? {
-    2 => {
-    count(name, args, 3)?;
-    let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
-    let a1: mrlyrs::math::cell::models::CellNd<2> = take!(name, 1, &args[1]);
-    let a2: u8 = take!(name, 2, &args[2]);
-    match mrlyrs::math::cell::geometry::perforate::<2>(&a0, &a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    3 => {
-    count(name, args, 3)?;
-    let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
-    let a1: mrlyrs::math::cell::models::CellNd<3> = take!(name, 1, &args[1]);
-    let a2: u8 = take!(name, 2, &args[2]);
-    match mrlyrs::math::cell::geometry::perforate::<3>(&a0, &a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 3)?;
+            let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
+            let a1: mrlyrs::math::cell::models::CellNd<2> = take!(name, 1, &args[1]);
+            let a2: u8 = take!(name, 2, &args[2]);
+            match mrlyrs::math::cell::geometry::perforate::<2>(&a0, &a1, a2) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        3 => {
+            count(name, args, 3)?;
+            let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
+            let a1: mrlyrs::math::cell::models::CellNd<3> = take!(name, 1, &args[1]);
+            let a2: u8 = take!(name, 2, &args[2]);
+            match mrlyrs::math::cell::geometry::perforate::<3>(&a0, &a1, a2) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
 fn door_math_cell_grow(name: &str, args: &[Value]) -> Done {
     match tensor_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 2)?;
-    let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::cell::grow::<2>(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    3 => {
-    count(name, args, 2)?;
-    let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::cell::grow::<3>(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 2)?;
+            let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
+            let a1: usize = take!(name, 1, &args[1]);
+            match mrlyrs::math::cell::grow::<2>(a0, a1) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        3 => {
+            count(name, args, 2)?;
+            let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
+            let a1: usize = take!(name, 1, &args[1]);
+            match mrlyrs::math::cell::grow::<3>(a0, a1) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
 fn door_math_cell_models_anti(name: &str, args: &[Value]) -> Done {
     match cell_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::math::cell::models::CellNd::<2>::anti(a0)))
-    }
-    3 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::math::cell::models::CellNd::<3>::anti(a0)))
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+            Ok(give!(mrlyrs::math::cell::models::CellNd::<2>::anti(a0)))
+        }
+        3 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
+            Ok(give!(mrlyrs::math::cell::models::CellNd::<3>::anti(a0)))
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
 fn door_math_cell_models_binarize(name: &str, args: &[Value]) -> Done {
     match cell_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 2)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    let a1: u8 = take!(name, 1, &args[1]);
-    Ok(give!(mrlyrs::math::cell::models::CellNd::<2>::binarize(a0, a1)))
-    }
-    3 => {
-    count(name, args, 2)?;
-    let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    let a1: u8 = take!(name, 1, &args[1]);
-    Ok(give!(mrlyrs::math::cell::models::CellNd::<3>::binarize(a0, a1)))
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 2)?;
+            let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+            let a1: u8 = take!(name, 1, &args[1]);
+            Ok(give!(mrlyrs::math::cell::models::CellNd::<2>::binarize(
+                a0, a1
+            )))
+        }
+        3 => {
+            count(name, args, 2)?;
+            let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
+            let a1: u8 = take!(name, 1, &args[1]);
+            Ok(give!(mrlyrs::math::cell::models::CellNd::<3>::binarize(
+                a0, a1
+            )))
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
 fn door_math_cell_models_binarize_otsu(name: &str, args: &[Value]) -> Done {
     match cell_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::math::cell::models::CellNd::<2>::binarize_otsu(a0)))
-    }
-    3 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::math::cell::models::CellNd::<3>::binarize_otsu(a0)))
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+            Ok(give!(
+                mrlyrs::math::cell::models::CellNd::<2>::binarize_otsu(a0)
+            ))
+        }
+        3 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
+            Ok(give!(
+                mrlyrs::math::cell::models::CellNd::<3>::binarize_otsu(a0)
+            ))
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
 fn door_math_cell_models_blur(name: &str, args: &[Value]) -> Done {
     match cell_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 3)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    let a1: mrlyrs::core::Tensor = take!(name, 1, &args[1]);
-    let a2: bool = take!(name, 2, &args[2]);
-    match mrlyrs::math::cell::models::CellNd::<2>::blur(a0, &a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    3 => {
-    count(name, args, 3)?;
-    let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    let a1: mrlyrs::core::Tensor = take!(name, 1, &args[1]);
-    let a2: bool = take!(name, 2, &args[2]);
-    match mrlyrs::math::cell::models::CellNd::<3>::blur(a0, &a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 3)?;
+            let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+            let a1: mrlyrs::core::Tensor = take!(name, 1, &args[1]);
+            let a2: bool = take!(name, 2, &args[2]);
+            match mrlyrs::math::cell::models::CellNd::<2>::blur(a0, &a1, a2) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        3 => {
+            count(name, args, 3)?;
+            let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
+            let a1: mrlyrs::core::Tensor = take!(name, 1, &args[1]);
+            let a2: bool = take!(name, 2, &args[2]);
+            match mrlyrs::math::cell::models::CellNd::<3>::blur(a0, &a1, a2) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
 fn door_math_cell_models_combine(name: &str, args: &[Value]) -> Done {
     match cell_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 2)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    let a1: mrlyrs::math::cell::models::CellNd<2> = take!(name, 1, &args[1]);
-    Ok(give!(mrlyrs::math::cell::models::CellNd::<2>::combine(&a0, &a1)))
-    }
-    3 => {
-    count(name, args, 2)?;
-    let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    let a1: mrlyrs::math::cell::models::CellNd<3> = take!(name, 1, &args[1]);
-    Ok(give!(mrlyrs::math::cell::models::CellNd::<3>::combine(&a0, &a1)))
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 2)?;
+            let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+            let a1: mrlyrs::math::cell::models::CellNd<2> = take!(name, 1, &args[1]);
+            Ok(give!(mrlyrs::math::cell::models::CellNd::<2>::combine(
+                &a0, &a1
+            )))
+        }
+        3 => {
+            count(name, args, 2)?;
+            let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
+            let a1: mrlyrs::math::cell::models::CellNd<3> = take!(name, 1, &args[1]);
+            Ok(give!(mrlyrs::math::cell::models::CellNd::<3>::combine(
+                &a0, &a1
+            )))
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
@@ -4021,105 +4656,135 @@ fn door_math_cell_models_dtype_for(name: &str, args: &[Value]) -> Done {
 
 fn door_math_cell_models_fractal(name: &str, args: &[Value]) -> Done {
     match cell_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 2)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::cell::models::CellNd::<2>::fractal(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    3 => {
-    count(name, args, 2)?;
-    let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::cell::models::CellNd::<3>::fractal(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 2)?;
+            let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+            let a1: usize = take!(name, 1, &args[1]);
+            match mrlyrs::math::cell::models::CellNd::<2>::fractal(a0, a1) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        3 => {
+            count(name, args, 2)?;
+            let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
+            let a1: usize = take!(name, 1, &args[1]);
+            match mrlyrs::math::cell::models::CellNd::<3>::fractal(a0, a1) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
 fn door_math_cell_models_height(name: &str, args: &[Value]) -> Done {
     match cell_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::math::cell::models::CellNd::<2>::height(&a0)))
-    }
-    3 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::math::cell::models::CellNd::<3>::height(&a0)))
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+            Ok(give!(mrlyrs::math::cell::models::CellNd::<2>::height(&a0)))
+        }
+        3 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
+            Ok(give!(mrlyrs::math::cell::models::CellNd::<3>::height(&a0)))
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
 fn door_math_cell_models_invert(name: &str, args: &[Value]) -> Done {
     match cell_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::math::cell::models::CellNd::<2>::invert(a0)))
-    }
-    3 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::math::cell::models::CellNd::<3>::invert(a0)))
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+            Ok(give!(mrlyrs::math::cell::models::CellNd::<2>::invert(a0)))
+        }
+        3 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
+            Ok(give!(mrlyrs::math::cell::models::CellNd::<3>::invert(a0)))
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
 fn door_math_cell_models_layers(name: &str, args: &[Value]) -> Done {
     match cell_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::math::cell::models::CellNd::<2>::layers(a0)))
-    }
-    3 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::math::cell::models::CellNd::<3>::layers(a0)))
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+            Ok(give!(mrlyrs::math::cell::models::CellNd::<2>::layers(a0)))
+        }
+        3 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
+            Ok(give!(mrlyrs::math::cell::models::CellNd::<3>::layers(a0)))
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
 fn door_math_cell_models_neighbors(name: &str, args: &[Value]) -> Done {
     match cell_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 4)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    let a1: mrlyrs::core::Tensor = take!(name, 1, &args[1]);
-    let a2: u8 = take!(name, 2, &args[2]);
-    let a3: bool = take!(name, 3, &args[3]);
-    match mrlyrs::math::cell::models::CellNd::<2>::neighbors(a0, &a1, a2, a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    3 => {
-    count(name, args, 4)?;
-    let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    let a1: mrlyrs::core::Tensor = take!(name, 1, &args[1]);
-    let a2: u8 = take!(name, 2, &args[2]);
-    let a3: bool = take!(name, 3, &args[3]);
-    match mrlyrs::math::cell::models::CellNd::<3>::neighbors(a0, &a1, a2, a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 4)?;
+            let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+            let a1: mrlyrs::core::Tensor = take!(name, 1, &args[1]);
+            let a2: u8 = take!(name, 2, &args[2]);
+            let a3: bool = take!(name, 3, &args[3]);
+            match mrlyrs::math::cell::models::CellNd::<2>::neighbors(a0, &a1, a2, a3) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        3 => {
+            count(name, args, 4)?;
+            let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
+            let a1: mrlyrs::core::Tensor = take!(name, 1, &args[1]);
+            let a2: u8 = take!(name, 2, &args[2]);
+            let a3: bool = take!(name, 3, &args[3]);
+            match mrlyrs::math::cell::models::CellNd::<3>::neighbors(a0, &a1, a2, a3) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
 fn door_math_cell_models_new(name: &str, args: &[Value]) -> Done {
     match tensor_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
-    match mrlyrs::math::cell::models::CellNd::<2>::new(a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    3 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
-    match mrlyrs::math::cell::models::CellNd::<3>::new(a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
+            match mrlyrs::math::cell::models::CellNd::<2>::new(a0) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        3 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
+            match mrlyrs::math::cell::models::CellNd::<3>::new(a0) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
@@ -4127,219 +4792,399 @@ fn door_math_cell_models_orient(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::cell::models::CellNd::<3>::orient(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::cell::models::CellNd::<3>::orient(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_cell_models_pad(name: &str, args: &[Value]) -> Done {
     match cell_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 3)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    let a2: u8 = take!(name, 2, &args[2]);
-    Ok(give!(mrlyrs::math::cell::models::CellNd::<2>::pad(a0, a1, a2)))
-    }
-    3 => {
-    count(name, args, 3)?;
-    let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    let a2: u8 = take!(name, 2, &args[2]);
-    Ok(give!(mrlyrs::math::cell::models::CellNd::<3>::pad(a0, a1, a2)))
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 3)?;
+            let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+            let a1: usize = take!(name, 1, &args[1]);
+            let a2: u8 = take!(name, 2, &args[2]);
+            Ok(give!(mrlyrs::math::cell::models::CellNd::<2>::pad(
+                a0, a1, a2
+            )))
+        }
+        3 => {
+            count(name, args, 3)?;
+            let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
+            let a1: usize = take!(name, 1, &args[1]);
+            let a2: u8 = take!(name, 2, &args[2]);
+            Ok(give!(mrlyrs::math::cell::models::CellNd::<3>::pad(
+                a0, a1, a2
+            )))
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
 fn door_math_cell_models_paint(name: &str, args: &[Value]) -> Done {
     match cell_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 4)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    let a1 = { let mut pairs0: Vec<(u8, Vec<mrlyrs::core::Color>)> = Vec::new(); for (text0, item0) in fields(name, 1, &args[1])? { let key0 = match text0.parse() { Ok(key) => key, Err(_) => return Err(bad(name, 1, "an object key")) }; pairs0.push((key0, { let mut list1 = Vec::new(); for item1 in items(name, 1, item0)? { list1.push(color(name, 1, item1)?); } list1 })); } pairs0 }.into_iter().collect();
-    let a2: mrlyrs::core::Mode = take!(name, 2, &args[2]);
-    let mut a3 = if args[3].is_null() { None } else { Some(mrlyrs::core::Rng::new(seed(name, 3, &args[3])?)) };
-    match mrlyrs::math::cell::models::CellNd::<2>::paint(a0, &a1, a2, a3.as_mut()) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    3 => {
-    count(name, args, 4)?;
-    let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    let a1 = { let mut pairs0: Vec<(u8, Vec<mrlyrs::core::Color>)> = Vec::new(); for (text0, item0) in fields(name, 1, &args[1])? { let key0 = match text0.parse() { Ok(key) => key, Err(_) => return Err(bad(name, 1, "an object key")) }; pairs0.push((key0, { let mut list1 = Vec::new(); for item1 in items(name, 1, item0)? { list1.push(color(name, 1, item1)?); } list1 })); } pairs0 }.into_iter().collect();
-    let a2: mrlyrs::core::Mode = take!(name, 2, &args[2]);
-    let mut a3 = if args[3].is_null() { None } else { Some(mrlyrs::core::Rng::new(seed(name, 3, &args[3])?)) };
-    match mrlyrs::math::cell::models::CellNd::<3>::paint(a0, &a1, a2, a3.as_mut()) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 4)?;
+            let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+            let a1 = {
+                let mut pairs0: Vec<(u8, Vec<mrlyrs::core::Color>)> = Vec::new();
+                for (text0, item0) in fields(name, 1, &args[1])? {
+                    let key0 = match text0.parse() {
+                        Ok(key) => key,
+                        Err(_) => return Err(bad(name, 1, "an object key")),
+                    };
+                    pairs0.push((key0, {
+                        let mut list1 = Vec::new();
+                        for item1 in items(name, 1, item0)? {
+                            list1.push(color(name, 1, item1)?);
+                        }
+                        list1
+                    }));
+                }
+                pairs0
+            }
+            .into_iter()
+            .collect();
+            let a2: mrlyrs::core::Mode = take!(name, 2, &args[2]);
+            let mut a3 = if args[3].is_null() {
+                None
+            } else {
+                Some(mrlyrs::core::Rng::new(seed(name, 3, &args[3])?))
+            };
+            match mrlyrs::math::cell::models::CellNd::<2>::paint(a0, &a1, a2, a3.as_mut()) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        3 => {
+            count(name, args, 4)?;
+            let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
+            let a1 = {
+                let mut pairs0: Vec<(u8, Vec<mrlyrs::core::Color>)> = Vec::new();
+                for (text0, item0) in fields(name, 1, &args[1])? {
+                    let key0 = match text0.parse() {
+                        Ok(key) => key,
+                        Err(_) => return Err(bad(name, 1, "an object key")),
+                    };
+                    pairs0.push((key0, {
+                        let mut list1 = Vec::new();
+                        for item1 in items(name, 1, item0)? {
+                            list1.push(color(name, 1, item1)?);
+                        }
+                        list1
+                    }));
+                }
+                pairs0
+            }
+            .into_iter()
+            .collect();
+            let a2: mrlyrs::core::Mode = take!(name, 2, &args[2]);
+            let mut a3 = if args[3].is_null() {
+                None
+            } else {
+                Some(mrlyrs::core::Rng::new(seed(name, 3, &args[3])?))
+            };
+            match mrlyrs::math::cell::models::CellNd::<3>::paint(a0, &a1, a2, a3.as_mut()) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
 fn door_math_cell_models_perforate(name: &str, args: &[Value]) -> Done {
     match cell_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 3)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    let a1: mrlyrs::core::Tensor = take!(name, 1, &args[1]);
-    let a2: u8 = take!(name, 2, &args[2]);
-    match mrlyrs::math::cell::models::CellNd::<2>::perforate(a0, &a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    3 => {
-    count(name, args, 3)?;
-    let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    let a1: mrlyrs::core::Tensor = take!(name, 1, &args[1]);
-    let a2: u8 = take!(name, 2, &args[2]);
-    match mrlyrs::math::cell::models::CellNd::<3>::perforate(a0, &a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 3)?;
+            let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+            let a1: mrlyrs::core::Tensor = take!(name, 1, &args[1]);
+            let a2: u8 = take!(name, 2, &args[2]);
+            match mrlyrs::math::cell::models::CellNd::<2>::perforate(a0, &a1, a2) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        3 => {
+            count(name, args, 3)?;
+            let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
+            let a1: mrlyrs::core::Tensor = take!(name, 1, &args[1]);
+            let a2: u8 = take!(name, 2, &args[2]);
+            match mrlyrs::math::cell::models::CellNd::<3>::perforate(a0, &a1, a2) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
 fn door_math_cell_models_rotate(name: &str, args: &[Value]) -> Done {
     match cell_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 2)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::cell::models::CellNd::<2>::rotate(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    3 => {
-    count(name, args, 3)?;
-    let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    let a2: (usize, usize) = take!(name, 2, &args[2]);
-    match mrlyrs::math::cell::models::CellNd::<3>::rotate(a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 2)?;
+            let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+            let a1: usize = take!(name, 1, &args[1]);
+            match mrlyrs::math::cell::models::CellNd::<2>::rotate(a0, a1) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        3 => {
+            count(name, args, 3)?;
+            let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
+            let a1: usize = take!(name, 1, &args[1]);
+            let a2: (usize, usize) = take!(name, 2, &args[2]);
+            match mrlyrs::math::cell::models::CellNd::<3>::rotate(a0, a1, a2) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
 fn door_math_cell_models_tile(name: &str, args: &[Value]) -> Done {
     match cell_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 3)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::math::cell::models::CellNd::<2>::tile(a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    3 => {
-    count(name, args, 4)?;
-    let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    let a2: usize = take!(name, 2, &args[2]);
-    let a3: usize = take!(name, 3, &args[3]);
-    match mrlyrs::math::cell::models::CellNd::<3>::tile(a0, a1, a2, a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 3)?;
+            let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+            let a1: usize = take!(name, 1, &args[1]);
+            let a2: usize = take!(name, 2, &args[2]);
+            match mrlyrs::math::cell::models::CellNd::<2>::tile(a0, a1, a2) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        3 => {
+            count(name, args, 4)?;
+            let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
+            let a1: usize = take!(name, 1, &args[1]);
+            let a2: usize = take!(name, 2, &args[2]);
+            let a3: usize = take!(name, 3, &args[3]);
+            match mrlyrs::math::cell::models::CellNd::<3>::tile(a0, a1, a2, a3) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
 fn door_math_cell_models_types(name: &str, args: &[Value]) -> Done {
     match cell_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::math::cell::models::CellNd::<2>::types(&a0)))
-    }
-    3 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::math::cell::models::CellNd::<3>::types(&a0)))
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+            Ok(give!(mrlyrs::math::cell::models::CellNd::<2>::types(&a0)))
+        }
+        3 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
+            Ok(give!(mrlyrs::math::cell::models::CellNd::<3>::types(&a0)))
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
 fn door_math_cell_models_width(name: &str, args: &[Value]) -> Done {
     match cell_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::math::cell::models::CellNd::<2>::width(&a0)))
-    }
-    3 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::math::cell::models::CellNd::<3>::width(&a0)))
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+            Ok(give!(mrlyrs::math::cell::models::CellNd::<2>::width(&a0)))
+        }
+        3 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
+            Ok(give!(mrlyrs::math::cell::models::CellNd::<3>::width(&a0)))
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
 fn door_math_cell_paint(name: &str, args: &[Value]) -> Done {
     match cell_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 4)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    let a1: Option<_> = if Value::is_null(&args[1]) { None } else { Some({ let mut pairs0: Vec<(u8, Vec<mrlyrs::core::Color>)> = Vec::new(); for (text0, item0) in fields(name, 1, &args[1])? { let key0 = match text0.parse() { Ok(key) => key, Err(_) => return Err(bad(name, 1, "an object key")) }; pairs0.push((key0, { let mut list1 = Vec::new(); for item1 in items(name, 1, item0)? { list1.push(color(name, 1, item1)?); } list1 })); } pairs0 }.into_iter().collect()) };
-    let a2: Option<mrlyrs::core::Mode> = take!(name, 2, &args[2]);
-    let mut a3 = if args[3].is_null() { None } else { Some(mrlyrs::core::Rng::new(seed(name, 3, &args[3])?)) };
-    match mrlyrs::math::cell::paint::<2>(a0, a1.as_ref(), a2, a3.as_mut()) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    3 => {
-    count(name, args, 4)?;
-    let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    let a1: Option<_> = if Value::is_null(&args[1]) { None } else { Some({ let mut pairs0: Vec<(u8, Vec<mrlyrs::core::Color>)> = Vec::new(); for (text0, item0) in fields(name, 1, &args[1])? { let key0 = match text0.parse() { Ok(key) => key, Err(_) => return Err(bad(name, 1, "an object key")) }; pairs0.push((key0, { let mut list1 = Vec::new(); for item1 in items(name, 1, item0)? { list1.push(color(name, 1, item1)?); } list1 })); } pairs0 }.into_iter().collect()) };
-    let a2: Option<mrlyrs::core::Mode> = take!(name, 2, &args[2]);
-    let mut a3 = if args[3].is_null() { None } else { Some(mrlyrs::core::Rng::new(seed(name, 3, &args[3])?)) };
-    match mrlyrs::math::cell::paint::<3>(a0, a1.as_ref(), a2, a3.as_mut()) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 4)?;
+            let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+            let a1: Option<_> = if Value::is_null(&args[1]) {
+                None
+            } else {
+                Some(
+                    {
+                        let mut pairs0: Vec<(u8, Vec<mrlyrs::core::Color>)> = Vec::new();
+                        for (text0, item0) in fields(name, 1, &args[1])? {
+                            let key0 = match text0.parse() {
+                                Ok(key) => key,
+                                Err(_) => return Err(bad(name, 1, "an object key")),
+                            };
+                            pairs0.push((key0, {
+                                let mut list1 = Vec::new();
+                                for item1 in items(name, 1, item0)? {
+                                    list1.push(color(name, 1, item1)?);
+                                }
+                                list1
+                            }));
+                        }
+                        pairs0
+                    }
+                    .into_iter()
+                    .collect(),
+                )
+            };
+            let a2: Option<mrlyrs::core::Mode> = take!(name, 2, &args[2]);
+            let mut a3 = if args[3].is_null() {
+                None
+            } else {
+                Some(mrlyrs::core::Rng::new(seed(name, 3, &args[3])?))
+            };
+            match mrlyrs::math::cell::paint::<2>(a0, a1.as_ref(), a2, a3.as_mut()) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        3 => {
+            count(name, args, 4)?;
+            let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
+            let a1: Option<_> = if Value::is_null(&args[1]) {
+                None
+            } else {
+                Some(
+                    {
+                        let mut pairs0: Vec<(u8, Vec<mrlyrs::core::Color>)> = Vec::new();
+                        for (text0, item0) in fields(name, 1, &args[1])? {
+                            let key0 = match text0.parse() {
+                                Ok(key) => key,
+                                Err(_) => return Err(bad(name, 1, "an object key")),
+                            };
+                            pairs0.push((key0, {
+                                let mut list1 = Vec::new();
+                                for item1 in items(name, 1, item0)? {
+                                    list1.push(color(name, 1, item1)?);
+                                }
+                                list1
+                            }));
+                        }
+                        pairs0
+                    }
+                    .into_iter()
+                    .collect(),
+                )
+            };
+            let a2: Option<mrlyrs::core::Mode> = take!(name, 2, &args[2]);
+            let mut a3 = if args[3].is_null() {
+                None
+            } else {
+                Some(mrlyrs::core::Rng::new(seed(name, 3, &args[3])?))
+            };
+            match mrlyrs::math::cell::paint::<3>(a0, a1.as_ref(), a2, a3.as_mut()) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
 fn door_math_cell_serializer_byte_cube(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: serde_json::Value = take!(name, 0, &args[0]);
-    match mrlyrs::math::cell::serializer::byte_cube(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::cell::serializer::byte_cube(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_cell_serializer_byte_grid(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: serde_json::Value = take!(name, 0, &args[0]);
-    match mrlyrs::math::cell::serializer::byte_grid(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::cell::serializer::byte_grid(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_cell_serializer_color_grid(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: serde_json::Value = take!(name, 0, &args[0]);
-    match mrlyrs::math::cell::serializer::color_grid(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::cell::serializer::color_grid(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_cell_serializer_count_cube(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: serde_json::Value = take!(name, 0, &args[0]);
-    match mrlyrs::math::cell::serializer::count_cube(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::cell::serializer::count_cube(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_cell_serializer_count_grid(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: serde_json::Value = take!(name, 0, &args[0]);
-    match mrlyrs::math::cell::serializer::count_grid(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::cell::serializer::count_grid(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_cell_serializer_parse(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: String = take!(name, 0, &args[0]);
-    match mrlyrs::math::cell::serializer::parse(a0.as_str()) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::cell::serializer::parse(a0.as_str()) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_cell_serializer_tag_layer(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<i64> = take!(name, 0, &args[0]);
     let a1: Vec<usize> = take!(name, 1, &args[1]);
-    match mrlyrs::math::cell::serializer::tag_layer(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::cell::serializer::tag_layer(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_cell_serializer_types_field(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: serde_json::Value = take!(name, 0, &args[0]);
-    match mrlyrs::math::cell::serializer::types_field(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::cell::serializer::types_field(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_exposure_at(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::math::counts::Exposure = take!(name, 0, &args[0]);
     let a1: u32 = take!(name, 1, &args[1]);
-    Ok(match mrlyrs::math::counts::Exposure::at(&a0, a1) { Some(item0) => Value::String(item0.to_string()), None => Value::Null })
+    Ok(match mrlyrs::math::counts::Exposure::at(&a0, a1) {
+        Some(item0) => Value::String(item0.to_string()),
+        None => Value::Null,
+    })
 }
 
 fn door_math_counts_exposure_from_corners(name: &str, args: &[Value]) -> Done {
@@ -4348,7 +5193,9 @@ fn door_math_counts_exposure_from_corners(name: &str, args: &[Value]) -> Done {
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
-    Ok(give!(mrlyrs::math::counts::Exposure::from_corners(&a0, a1, a2, a3)))
+    Ok(give!(mrlyrs::math::counts::Exposure::from_corners(
+        &a0, a1, a2, a3
+    )))
 }
 
 fn door_math_counts_exposure_of_tile(name: &str, args: &[Value]) -> Done {
@@ -4360,13 +5207,21 @@ fn door_math_counts_exposure_of_tile(name: &str, args: &[Value]) -> Done {
 fn door_math_counts_exposure_recurrence(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::counts::Exposure = take!(name, 0, &args[0]);
-    Ok({ let mut list0 = Vec::new(); for item0 in mrlyrs::math::counts::Exposure::recurrence(&a0) { list0.push(Value::String(item0.to_string())); } Value::Array(list0) })
+    Ok({
+        let mut list0 = Vec::new();
+        for item0 in mrlyrs::math::counts::Exposure::recurrence(&a0) {
+            list0.push(Value::String(item0.to_string()));
+        }
+        Value::Array(list0)
+    })
 }
 
 fn door_math_counts_centered_hexagonal(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: usize = take!(name, 0, &args[0]);
-    Ok(Value::String(mrlyrs::math::counts::centered_hexagonal(a0).to_string()))
+    Ok(Value::String(
+        mrlyrs::math::counts::centered_hexagonal(a0).to_string(),
+    ))
 }
 
 fn door_math_counts_cut_fills(name: &str, args: &[Value]) -> Done {
@@ -4374,7 +5229,10 @@ fn door_math_counts_cut_fills(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::math::bang::Code = mrlyrs::math::bang::Code::from(big(name, 0, &args[0])?);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: u32 = take!(name, 2, &args[2]);
-    match mrlyrs::math::counts::cut_fills(a0, a1, a2) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::counts::cut_fills(a0, a1, a2) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_cut_voids(name: &str, args: &[Value]) -> Done {
@@ -4382,7 +5240,10 @@ fn door_math_counts_cut_voids(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::math::bang::Code = mrlyrs::math::bang::Code::from(big(name, 0, &args[0])?);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: u32 = take!(name, 2, &args[2]);
-    match mrlyrs::math::counts::cut_voids(a0, a1, a2) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::counts::cut_voids(a0, a1, a2) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_dimension(name: &str, args: &[Value]) -> Done {
@@ -4391,14 +5252,20 @@ fn door_math_counts_dimension(name: &str, args: &[Value]) -> Done {
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
-    match mrlyrs::math::counts::dimension(a0, a1, a2, a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::counts::dimension(a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_edges_of_tile(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
     let a1: u32 = take!(name, 1, &args[1]);
-    Ok(match mrlyrs::math::counts::edges_of_tile(&a0, a1) { Some(item0) => Value::String(item0.to_string()), None => Value::Null })
+    Ok(match mrlyrs::math::counts::edges_of_tile(&a0, a1) {
+        Some(item0) => Value::String(item0.to_string()),
+        None => Value::Null,
+    })
 }
 
 fn door_math_counts_exposure(name: &str, args: &[Value]) -> Done {
@@ -4408,20 +5275,32 @@ fn door_math_counts_exposure(name: &str, args: &[Value]) -> Done {
     let a2: usize = take!(name, 2, &args[2]);
     let a3: u32 = take!(name, 3, &args[3]);
     let a4: usize = take!(name, 4, &args[4]);
-    match mrlyrs::math::counts::exposure(a0, a1, a2, a3, a4) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::counts::exposure(a0, a1, a2, a3, a4) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_exposure_of_tile_2(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
     let a1: u32 = take!(name, 1, &args[1]);
-    Ok(match mrlyrs::math::counts::exposure_of_tile(&a0, a1) { Some(item0) => Value::String(item0.to_string()), None => Value::Null })
+    Ok(match mrlyrs::math::counts::exposure_of_tile(&a0, a1) {
+        Some(item0) => Value::String(item0.to_string()),
+        None => Value::Null,
+    })
 }
 
 fn door_math_counts_exposure_recurrence_2(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
-    Ok({ let mut list0 = Vec::new(); for item0 in mrlyrs::math::counts::exposure_recurrence(&a0) { list0.push(Value::String(item0.to_string())); } Value::Array(list0) })
+    Ok({
+        let mut list0 = Vec::new();
+        for item0 in mrlyrs::math::counts::exposure_recurrence(&a0) {
+            list0.push(Value::String(item0.to_string()));
+        }
+        Value::Array(list0)
+    })
 }
 
 fn door_math_counts_fill(name: &str, args: &[Value]) -> Done {
@@ -4431,7 +5310,10 @@ fn door_math_counts_fill(name: &str, args: &[Value]) -> Done {
     let a2: usize = take!(name, 2, &args[2]);
     let a3: u32 = take!(name, 3, &args[3]);
     let a4: usize = take!(name, 4, &args[4]);
-    match mrlyrs::math::counts::fill(a0, a1, a2, a3, a4) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::counts::fill(a0, a1, a2, a3, a4) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_fill_from_corners(name: &str, args: &[Value]) -> Done {
@@ -4441,7 +5323,9 @@ fn door_math_counts_fill_from_corners(name: &str, args: &[Value]) -> Done {
     let a2: usize = take!(name, 2, &args[2]);
     let a3: u32 = take!(name, 3, &args[3]);
     let a4: usize = take!(name, 4, &args[4]);
-    Ok(Value::String(mrlyrs::math::counts::fill_from_corners(&a0, a1, a2, a3, a4).to_string()))
+    Ok(Value::String(
+        mrlyrs::math::counts::fill_from_corners(&a0, a1, a2, a3, a4).to_string(),
+    ))
 }
 
 fn door_math_counts_grid(name: &str, args: &[Value]) -> Done {
@@ -4449,53 +5333,136 @@ fn door_math_counts_grid(name: &str, args: &[Value]) -> Done {
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: u32 = take!(name, 2, &args[2]);
-    Ok(Value::String(mrlyrs::math::counts::grid(a0, a1, a2).to_string()))
+    Ok(Value::String(
+        mrlyrs::math::counts::grid(a0, a1, a2).to_string(),
+    ))
 }
 
 fn door_math_counts_ladder_cap(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: usize = take!(name, 0, &args[0]);
-    match mrlyrs::math::counts::ladder::cap(a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::counts::ladder::cap(a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_ladder_carry_matrix(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::counts::ladder::carry_matrix(a0, a1) { Ok(value) => Ok({ let mut list0 = Vec::new(); for item0 in value { list0.push({ let mut list1 = Vec::new(); for item1 in item0 { list1.push(Value::String(item1.to_string())); } Value::Array(list1) }); } Value::Array(list0) }), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::counts::ladder::carry_matrix(a0, a1) {
+        Ok(value) => Ok({
+            let mut list0 = Vec::new();
+            for item0 in value {
+                list0.push({
+                    let mut list1 = Vec::new();
+                    for item1 in item0 {
+                        list1.push(Value::String(item1.to_string()));
+                    }
+                    Value::Array(list1)
+                });
+            }
+            Value::Array(list0)
+        }),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_ladder_characteristic(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
-    let a0: Vec<Vec<i128>> = { let mut list0 = Vec::new(); for item0 in items(name, 0, &args[0])? { list0.push({ let mut list1 = Vec::new(); for item1 in items(name, 0, item0)? { list1.push(small(name, 0, item1)?); } list1 }); } list0 };
-    match mrlyrs::math::counts::ladder::characteristic(&a0) { Ok(value) => Ok({ let mut list0 = Vec::new(); for item0 in value { list0.push(Value::String(item0.to_string())); } Value::Array(list0) }), Err(error) => Err(Fail::Error(error.to_string())) }
+    let a0: Vec<Vec<i128>> = {
+        let mut list0 = Vec::new();
+        for item0 in items(name, 0, &args[0])? {
+            list0.push({
+                let mut list1 = Vec::new();
+                for item1 in items(name, 0, item0)? {
+                    list1.push(small(name, 0, item1)?);
+                }
+                list1
+            });
+        }
+        list0
+    };
+    match mrlyrs::math::counts::ladder::characteristic(&a0) {
+        Ok(value) => Ok({
+            let mut list0 = Vec::new();
+            for item0 in value {
+                list0.push(Value::String(item0.to_string()));
+            }
+            Value::Array(list0)
+        }),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_ladder_determinant(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
-    let a0: Vec<Vec<i128>> = { let mut list0 = Vec::new(); for item0 in items(name, 0, &args[0])? { list0.push({ let mut list1 = Vec::new(); for item1 in items(name, 0, item0)? { list1.push(small(name, 0, item1)?); } list1 }); } list0 };
-    match mrlyrs::math::counts::ladder::determinant(&a0) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    let a0: Vec<Vec<i128>> = {
+        let mut list0 = Vec::new();
+        for item0 in items(name, 0, &args[0])? {
+            list0.push({
+                let mut list1 = Vec::new();
+                for item1 in items(name, 0, item0)? {
+                    list1.push(small(name, 0, item1)?);
+                }
+                list1
+            });
+        }
+        list0
+    };
+    match mrlyrs::math::counts::ladder::determinant(&a0) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_ladder_digit_polynomial(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::counts::ladder::digit_polynomial(a0, a1) { Ok(value) => Ok({ let mut list0 = Vec::new(); for item0 in value { list0.push(Value::String(item0.to_string())); } Value::Array(list0) }), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::counts::ladder::digit_polynomial(a0, a1) {
+        Ok(value) => Ok({
+            let mut list0 = Vec::new();
+            for item0 in value {
+                list0.push(Value::String(item0.to_string()));
+            }
+            Value::Array(list0)
+        }),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_ladder_even_block(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::counts::ladder::even_block(a0, a1) { Ok(value) => Ok({ let mut list0 = Vec::new(); for item0 in value { list0.push({ let mut list1 = Vec::new(); for item1 in item0 { list1.push(Value::String(item1.to_string())); } Value::Array(list1) }); } Value::Array(list0) }), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::counts::ladder::even_block(a0, a1) {
+        Ok(value) => Ok({
+            let mut list0 = Vec::new();
+            for item0 in value {
+                list0.push({
+                    let mut list1 = Vec::new();
+                    for item1 in item0 {
+                        list1.push(Value::String(item1.to_string()));
+                    }
+                    Value::Array(list1)
+                });
+            }
+            Value::Array(list0)
+        }),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_ladder_fill(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::counts::ladder::fill(a0, a1) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::counts::ladder::fill(a0, a1) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_ladder_ladder(name: &str, args: &[Value]) -> Done {
@@ -4503,33 +5470,77 @@ fn door_math_counts_ladder_ladder(name: &str, args: &[Value]) -> Done {
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::math::counts::ladder::ladder(a0, a1, a2) { Ok(value) => Ok({ let mut list0 = Vec::new(); for item0 in value { list0.push(Value::String(item0.to_string())); } Value::Array(list0) }), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::counts::ladder::ladder(a0, a1, a2) {
+        Ok(value) => Ok({
+            let mut list0 = Vec::new();
+            for item0 in value {
+                list0.push(Value::String(item0.to_string()));
+            }
+            Value::Array(list0)
+        }),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_ladder_perron(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
-    let a0: Vec<Vec<i128>> = { let mut list0 = Vec::new(); for item0 in items(name, 0, &args[0])? { list0.push({ let mut list1 = Vec::new(); for item1 in items(name, 0, item0)? { list1.push(small(name, 0, item1)?); } list1 }); } list0 };
-    match mrlyrs::math::counts::ladder::perron(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    let a0: Vec<Vec<i128>> = {
+        let mut list0 = Vec::new();
+        for item0 in items(name, 0, &args[0])? {
+            list0.push({
+                let mut list1 = Vec::new();
+                for item1 in items(name, 0, item0)? {
+                    list1.push(small(name, 0, item1)?);
+                }
+                list1
+            });
+        }
+        list0
+    };
+    match mrlyrs::math::counts::ladder::perron(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_ladder_sign(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::counts::ladder::sign(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::counts::ladder::sign(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_ladder_spectral_ratio(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::counts::ladder::spectral_ratio(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::counts::ladder::spectral_ratio(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_ladder_trace(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
-    let a0: Vec<Vec<i128>> = { let mut list0 = Vec::new(); for item0 in items(name, 0, &args[0])? { list0.push({ let mut list1 = Vec::new(); for item1 in items(name, 0, item0)? { list1.push(small(name, 0, item1)?); } list1 }); } list0 };
-    Ok(Value::String(mrlyrs::math::counts::ladder::trace(&a0).to_string()))
+    let a0: Vec<Vec<i128>> = {
+        let mut list0 = Vec::new();
+        for item0 in items(name, 0, &args[0])? {
+            list0.push({
+                let mut list1 = Vec::new();
+                for item1 in items(name, 0, item0)? {
+                    list1.push(small(name, 0, item1)?);
+                }
+                list1
+            });
+        }
+        list0
+    };
+    Ok(Value::String(
+        mrlyrs::math::counts::ladder::trace(&a0).to_string(),
+    ))
 }
 
 fn door_math_counts_limit(name: &str, args: &[Value]) -> Done {
@@ -4538,13 +5549,34 @@ fn door_math_counts_limit(name: &str, args: &[Value]) -> Done {
     let a1: usize = take!(name, 1, &args[1]);
     let a2: u32 = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
-    match mrlyrs::math::counts::limit(a0, a1, a2, a3) { Ok(value) => Ok({ let parts0 = value; Value::Array(vec![Value::String(parts0.0.to_string()), Value::String(parts0.1.to_string())]) }), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::counts::limit(a0, a1, a2, a3) {
+        Ok(value) => Ok({
+            let parts0 = value;
+            Value::Array(vec![
+                Value::String(parts0.0.to_string()),
+                Value::String(parts0.1.to_string()),
+            ])
+        }),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_pairs(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
-    Ok({ let mut list0 = Vec::new(); for item0 in mrlyrs::math::counts::pairs(&a0) { list0.push({ let parts1 = item0; Value::Array(vec![Value::String(parts1.0.to_string()), Value::String(parts1.1.to_string())]) }); } Value::Array(list0) })
+    Ok({
+        let mut list0 = Vec::new();
+        for item0 in mrlyrs::math::counts::pairs(&a0) {
+            list0.push({
+                let parts1 = item0;
+                Value::Array(vec![
+                    Value::String(parts1.0.to_string()),
+                    Value::String(parts1.1.to_string()),
+                ])
+            });
+        }
+        Value::Array(list0)
+    })
 }
 
 fn door_math_counts_positions(name: &str, args: &[Value]) -> Done {
@@ -4552,7 +5584,9 @@ fn door_math_counts_positions(name: &str, args: &[Value]) -> Done {
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    Ok(Value::String(mrlyrs::math::counts::positions(a0, a1, a2).to_string()))
+    Ok(Value::String(
+        mrlyrs::math::counts::positions(a0, a1, a2).to_string(),
+    ))
 }
 
 fn door_math_counts_pro_fills(name: &str, args: &[Value]) -> Done {
@@ -4560,7 +5594,10 @@ fn door_math_counts_pro_fills(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::math::bang::Code = mrlyrs::math::bang::Code::from(big(name, 0, &args[0])?);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: u32 = take!(name, 2, &args[2]);
-    match mrlyrs::math::counts::pro_fills(a0, a1, a2) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::counts::pro_fills(a0, a1, a2) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_pro_voids(name: &str, args: &[Value]) -> Done {
@@ -4568,14 +5605,26 @@ fn door_math_counts_pro_voids(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::math::bang::Code = mrlyrs::math::bang::Code::from(big(name, 0, &args[0])?);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: u32 = take!(name, 2, &args[2]);
-    match mrlyrs::math::counts::pro_voids(a0, a1, a2) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::counts::pro_voids(a0, a1, a2) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_profile_of_tile(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
     let a1: u32 = take!(name, 1, &args[1]);
-    match mrlyrs::math::counts::profile_of_tile(&a0, a1) { Ok(value) => Ok({ let mut list0 = Vec::new(); for item0 in value { list0.push(Value::String(item0.to_string())); } Value::Array(list0) }), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::counts::profile_of_tile(&a0, a1) {
+        Ok(value) => Ok({
+            let mut list0 = Vec::new();
+            for item0 in value {
+                list0.push(Value::String(item0.to_string()));
+            }
+            Value::Array(list0)
+        }),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_ratio(name: &str, args: &[Value]) -> Done {
@@ -4585,7 +5634,10 @@ fn door_math_counts_ratio(name: &str, args: &[Value]) -> Done {
     let a2: usize = take!(name, 2, &args[2]);
     let a3: u32 = take!(name, 3, &args[3]);
     let a4: usize = take!(name, 4, &args[4]);
-    match mrlyrs::math::counts::ratio(a0, a1, a2, a3, a4) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::counts::ratio(a0, a1, a2, a3, a4) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_rational(name: &str, args: &[Value]) -> Done {
@@ -4595,56 +5647,88 @@ fn door_math_counts_rational(name: &str, args: &[Value]) -> Done {
     let a2: usize = take!(name, 2, &args[2]);
     let a3: u32 = take!(name, 3, &args[3]);
     let a4: usize = take!(name, 4, &args[4]);
-    match mrlyrs::math::counts::rational(a0, a1, a2, a3, a4) { Ok(value) => Ok({ let parts0 = value; Value::Array(vec![Value::String(parts0.0.to_string()), Value::String(parts0.1.to_string())]) }), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::counts::rational(a0, a1, a2, a3, a4) {
+        Ok(value) => Ok({
+            let parts0 = value;
+            Value::Array(vec![
+                Value::String(parts0.0.to_string()),
+                Value::String(parts0.1.to_string()),
+            ])
+        }),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_six_grid_triangles(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: u32 = take!(name, 1, &args[1]);
-    Ok(Value::String(mrlyrs::math::counts::six::grid_triangles(a0, a1).to_string()))
+    Ok(Value::String(
+        mrlyrs::math::counts::six::grid_triangles(a0, a1).to_string(),
+    ))
 }
 
 fn door_math_counts_six_solid_slice_boundary(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: usize = take!(name, 0, &args[0]);
-    match mrlyrs::math::counts::six::solid_slice_boundary(a0) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::counts::six::solid_slice_boundary(a0) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_six_solid_slice_core_edges(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: usize = take!(name, 0, &args[0]);
-    match mrlyrs::math::counts::six::solid_slice_core_edges(a0) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::counts::six::solid_slice_core_edges(a0) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_six_solid_slice_core_nodes(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: usize = take!(name, 0, &args[0]);
-    match mrlyrs::math::counts::six::solid_slice_core_nodes(a0) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::counts::six::solid_slice_core_nodes(a0) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_six_solid_slice_edges(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: usize = take!(name, 0, &args[0]);
-    match mrlyrs::math::counts::six::solid_slice_edges(a0) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::counts::six::solid_slice_edges(a0) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_six_solid_slice_interior(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: usize = take!(name, 0, &args[0]);
-    match mrlyrs::math::counts::six::solid_slice_interior(a0) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::counts::six::solid_slice_interior(a0) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_six_solid_slice_triangles(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: usize = take!(name, 0, &args[0]);
-    match mrlyrs::math::counts::six::solid_slice_triangles(a0) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::counts::six::solid_slice_triangles(a0) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_six_solid_slice_vertices(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: usize = take!(name, 0, &args[0]);
-    match mrlyrs::math::counts::six::solid_slice_vertices(a0) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::counts::six::solid_slice_vertices(a0) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_surface(name: &str, args: &[Value]) -> Done {
@@ -4653,7 +5737,10 @@ fn door_math_counts_surface(name: &str, args: &[Value]) -> Done {
     let a1: usize = take!(name, 1, &args[1]);
     let a2: u32 = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
-    match mrlyrs::math::counts::surface(a0, a1, a2, a3) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::counts::surface(a0, a1, a2, a3) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_counts_void(name: &str, args: &[Value]) -> Done {
@@ -4663,19 +5750,28 @@ fn door_math_counts_void(name: &str, args: &[Value]) -> Done {
     let a2: usize = take!(name, 2, &args[2]);
     let a3: u32 = take!(name, 3, &args[3]);
     let a4: usize = take!(name, 4, &args[4]);
-    match mrlyrs::math::counts::void(a0, a1, a2, a3, a4) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::counts::void(a0, a1, a2, a3, a4) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_graph_network_adjacency(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::graph::Network = take!(name, 0, &args[0]);
-    match mrlyrs::math::graph::Network::adjacency(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::graph::Network::adjacency(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_graph_network_degree(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::graph::Network = take!(name, 0, &args[0]);
-    match mrlyrs::math::graph::Network::degree(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::graph::Network::degree(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_graph_network_new(name: &str, args: &[Value]) -> Done {
@@ -4687,25 +5783,37 @@ fn door_math_graph_network_new(name: &str, args: &[Value]) -> Done {
 fn door_math_graph_census(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::graph::Network = take!(name, 0, &args[0]);
-    match mrlyrs::math::graph::census(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::graph::census(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_graph_components(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::graph::Network = take!(name, 0, &args[0]);
-    match mrlyrs::math::graph::components(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::graph::components(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_graph_core_graph(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
-    match mrlyrs::math::graph::core_graph(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::graph::core_graph(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_graph_edge_graph(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
-    match mrlyrs::math::graph::edge_graph(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::graph::edge_graph(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_graph_fractal_dimension(name: &str, args: &[Value]) -> Done {
@@ -4718,25 +5826,37 @@ fn door_math_graph_fractal_dimension(name: &str, args: &[Value]) -> Done {
 fn door_math_graph_junctions(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::graph::Network = take!(name, 0, &args[0]);
-    match mrlyrs::math::graph::junctions(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::graph::junctions(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_graph_largest_component(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::graph::Network = take!(name, 0, &args[0]);
-    match mrlyrs::math::graph::largest_component(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::graph::largest_component(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_graph_roles(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::graph::Network = take!(name, 0, &args[0]);
-    match mrlyrs::math::graph::roles(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::graph::roles(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_graph_tips(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::graph::Network = take!(name, 0, &args[0]);
-    match mrlyrs::math::graph::tips(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::graph::tips(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_graph_total_length(name: &str, args: &[Value]) -> Done {
@@ -4748,7 +5868,10 @@ fn door_math_graph_total_length(name: &str, args: &[Value]) -> Done {
 fn door_math_graph_tunnel_graph(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
-    match mrlyrs::math::graph::tunnel_graph(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::graph::tunnel_graph(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_moire_field_as_f64(name: &str, args: &[Value]) -> Done {
@@ -4761,7 +5884,10 @@ fn door_math_moire_field_from_data(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<f32> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::moire::Field::from_data(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::moire::Field::from_data(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_moire_field_max(name: &str, args: &[Value]) -> Done {
@@ -4854,7 +5980,10 @@ fn door_math_moire_volume_from_data(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<f32> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::moire::Volume::from_data(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::moire::Volume::from_data(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_moire_volume_max(name: &str, args: &[Value]) -> Done {
@@ -4907,20 +6036,29 @@ fn door_math_moire_frame(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: [f64; 3] = take!(name, 0, &args[0]);
     let a1: f64 = take!(name, 1, &args[1]);
-    match mrlyrs::math::moire::frame(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::moire::frame(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_moire_layer(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::moire::Layer = take!(name, 0, &args[0]);
-    match mrlyrs::math::moire::layer(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::moire::layer(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_moire_named(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: String = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::moire::named(a0.as_str(), a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::moire::named(a0.as_str(), a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_moire_pairs_correlation(name: &str, args: &[Value]) -> Done {
@@ -4934,13 +6072,19 @@ fn door_math_moire_pairs_sampled(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::moire::pairs::sampled(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::moire::pairs::sampled(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_moire_pairs_witness(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: usize = take!(name, 0, &args[0]);
-    match mrlyrs::math::moire::pairs::witness(a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::moire::pairs::witness(a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_moire_render(name: &str, args: &[Value]) -> Done {
@@ -4951,7 +6095,10 @@ fn door_math_moire_render(name: &str, args: &[Value]) -> Done {
     let a3: bool = take!(name, 3, &args[3]);
     let a4: bool = take!(name, 4, &args[4]);
     let a5: usize = take!(name, 5, &args[5]);
-    match mrlyrs::math::moire::render(&a0, &a1, a2, a3, a4, a5) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::moire::render(&a0, &a1, a2, a3, a4, a5) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_moire_sample_axes(name: &str, args: &[Value]) -> Done {
@@ -4967,7 +6114,10 @@ fn door_math_moire_sample_membership(name: &str, args: &[Value]) -> Done {
     let a0: u128 = big(name, 0, &args[0])?;
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::math::moire::sample::membership(a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::moire::sample::membership(a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_moire_sample_pack(name: &str, args: &[Value]) -> Done {
@@ -4986,7 +6136,10 @@ fn door_math_moire_stack(name: &str, args: &[Value]) -> Done {
     let a4: mrlyrs::math::moire::Lattice = take!(name, 4, &args[4]);
     let a5: usize = take!(name, 5, &args[5]);
     let a6: Vec<f64> = take!(name, 6, &args[6]);
-    match mrlyrs::math::moire::stack(a0, &a1, a2, a3, a4, a5, &a6) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::moire::stack(a0, &a1, a2, a3, a4, a5, &a6) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_moire_stack_codes(name: &str, args: &[Value]) -> Done {
@@ -4997,7 +6150,10 @@ fn door_math_moire_stack_codes(name: &str, args: &[Value]) -> Done {
     let a3: mrlyrs::math::moire::Lattice = take!(name, 3, &args[3]);
     let a4: usize = take!(name, 4, &args[4]);
     let a5: Vec<f64> = take!(name, 5, &args[5]);
-    match mrlyrs::math::moire::stack_codes(&a0, a1, a2, a3, a4, &a5) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::moire::stack_codes(&a0, a1, a2, a3, a4, &a5) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_moire_volume(name: &str, args: &[Value]) -> Done {
@@ -5007,37 +6163,55 @@ fn door_math_moire_volume(name: &str, args: &[Value]) -> Done {
     let a2: mrlyrs::math::moire::Combine = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
     let a4: usize = take!(name, 4, &args[4]);
-    match mrlyrs::math::moire::volume(a0, &a1, a2, a3, a4) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::moire::volume(a0, &a1, a2, a3, a4) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_name_bang_cells(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::name::Bang = take!(name, 0, &args[0]);
-    match mrlyrs::math::name::Bang::cells(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::name::Bang::cells(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_name_bang_checked(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::name::Bang = take!(name, 0, &args[0]);
-    match <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::checked(a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::checked(a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_name_bang_from_file(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: String = take!(name, 0, &args[0]);
-    match <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::from_file(a0.as_str()) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::from_file(a0.as_str()) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_name_bang_from_json(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: String = take!(name, 0, &args[0]);
-    match <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::from_json(a0.as_str()) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::from_json(a0.as_str()) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_name_bang_from_url(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: String = take!(name, 0, &args[0]);
-    match <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::from_url(a0.as_str()) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::from_url(a0.as_str()) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_name_bang_new(name: &str, args: &[Value]) -> Done {
@@ -5051,31 +6225,44 @@ fn door_math_name_bang_new(name: &str, args: &[Value]) -> Done {
 fn door_math_name_bang_to_file(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::name::Bang = take!(name, 0, &args[0]);
-    match <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::to_file(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::to_file(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_name_bang_to_id(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::name::Bang = take!(name, 0, &args[0]);
-    Ok(give!(<mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::to_id(&a0)))
+    Ok(give!(
+        <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::to_id(&a0)
+    ))
 }
 
 fn door_math_name_bang_to_json(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::name::Bang = take!(name, 0, &args[0]);
-    Ok(give!(<mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::to_json(&a0)))
+    Ok(give!(
+        <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::to_json(&a0)
+    ))
 }
 
 fn door_math_name_bang_to_mrly(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::name::Bang = take!(name, 0, &args[0]);
-    match <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::to_mrly(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::to_mrly(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_name_bang_to_url(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::name::Bang = take!(name, 0, &args[0]);
-    match <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::to_url(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::to_url(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_name_lattice_default(name: &str, args: &[Value]) -> Done {
@@ -5098,7 +6285,10 @@ fn door_math_name_lattice_units(name: &str, args: &[Value]) -> Done {
 fn door_math_name_sequence_checked(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::name::Sequence = take!(name, 0, &args[0]);
-    match <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::checked(a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::checked(a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_name_sequence_design(name: &str, args: &[Value]) -> Done {
@@ -5110,19 +6300,28 @@ fn door_math_name_sequence_design(name: &str, args: &[Value]) -> Done {
 fn door_math_name_sequence_from_file(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: String = take!(name, 0, &args[0]);
-    match <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::from_file(a0.as_str()) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::from_file(a0.as_str()) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_name_sequence_from_json(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: String = take!(name, 0, &args[0]);
-    match <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::from_json(a0.as_str()) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::from_json(a0.as_str()) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_name_sequence_from_url(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: String = take!(name, 0, &args[0]);
-    match <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::from_url(a0.as_str()) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::from_url(a0.as_str()) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_name_sequence_new(name: &str, args: &[Value]) -> Done {
@@ -5132,37 +6331,56 @@ fn door_math_name_sequence_new(name: &str, args: &[Value]) -> Done {
     let a2: usize = take!(name, 2, &args[2]);
     let a3: String = take!(name, 3, &args[3]);
     let a4: String = take!(name, 4, &args[4]);
-    Ok(give!(mrlyrs::math::name::Sequence::new(a0, a1, a2, a3.as_str(), a4.as_str())))
+    Ok(give!(mrlyrs::math::name::Sequence::new(
+        a0,
+        a1,
+        a2,
+        a3.as_str(),
+        a4.as_str()
+    )))
 }
 
 fn door_math_name_sequence_to_file(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::name::Sequence = take!(name, 0, &args[0]);
-    match <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_file(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_file(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_name_sequence_to_id(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::name::Sequence = take!(name, 0, &args[0]);
-    Ok(give!(<mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_id(&a0)))
+    Ok(give!(
+        <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_id(&a0)
+    ))
 }
 
 fn door_math_name_sequence_to_json(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::name::Sequence = take!(name, 0, &args[0]);
-    Ok(give!(<mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_json(&a0)))
+    Ok(give!(
+        <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_json(&a0)
+    ))
 }
 
 fn door_math_name_sequence_to_mrly(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::name::Sequence = take!(name, 0, &args[0]);
-    match <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_mrly(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_mrly(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_name_sequence_to_url(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::name::Sequence = take!(name, 0, &args[0]);
-    match <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_url(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_url(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_name_word_bases(name: &str, args: &[Value]) -> Done {
@@ -5174,25 +6392,37 @@ fn door_math_name_word_bases(name: &str, args: &[Value]) -> Done {
 fn door_math_name_word_checked(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::name::Word = take!(name, 0, &args[0]);
-    match <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::checked(a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::checked(a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_name_word_from_file(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: String = take!(name, 0, &args[0]);
-    match <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::from_file(a0.as_str()) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::from_file(a0.as_str()) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_name_word_from_json(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: String = take!(name, 0, &args[0]);
-    match <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::from_json(a0.as_str()) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::from_json(a0.as_str()) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_name_word_from_url(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: String = take!(name, 0, &args[0]);
-    match <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::from_url(a0.as_str()) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::from_url(a0.as_str()) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_name_word_letters(name: &str, args: &[Value]) -> Done {
@@ -5204,58 +6434,94 @@ fn door_math_name_word_letters(name: &str, args: &[Value]) -> Done {
 fn door_math_name_word_new(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
-    let a1: Vec<(u128, usize)> = { let mut list0 = Vec::new(); for item0 in items(name, 1, &args[1])? { list0.push({ let parts1 = parts(name, 1, item0, 2)?; (big(name, 1, &parts1[0])?, take!(name, 1, &parts1[1])) }); } list0 };
-    match mrlyrs::math::name::Word::new(a0, &a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    let a1: Vec<(u128, usize)> = {
+        let mut list0 = Vec::new();
+        for item0 in items(name, 1, &args[1])? {
+            list0.push({
+                let parts1 = parts(name, 1, item0, 2)?;
+                (big(name, 1, &parts1[0])?, take!(name, 1, &parts1[1]))
+            });
+        }
+        list0
+    };
+    match mrlyrs::math::name::Word::new(a0, &a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_name_word_to_file(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::name::Word = take!(name, 0, &args[0]);
-    match <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::to_file(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::to_file(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_name_word_to_id(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::name::Word = take!(name, 0, &args[0]);
-    Ok(give!(<mrlyrs::math::name::Word as mrlyrs::math::name::Named>::to_id(&a0)))
+    Ok(give!(
+        <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::to_id(&a0)
+    ))
 }
 
 fn door_math_name_word_to_json(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::name::Word = take!(name, 0, &args[0]);
-    Ok(give!(<mrlyrs::math::name::Word as mrlyrs::math::name::Named>::to_json(&a0)))
+    Ok(give!(
+        <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::to_json(&a0)
+    ))
 }
 
 fn door_math_name_word_to_mrly(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::name::Word = take!(name, 0, &args[0]);
-    match <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::to_mrly(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::to_mrly(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_name_word_to_url(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::name::Word = take!(name, 0, &args[0]);
-    match <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::to_url(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::to_url(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_press_press_new(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::press::Press::new(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::press::Press::new(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_press_press_total(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::math::press::Press = take!(name, 0, &args[0]);
     let a1: mrlyrs::math::bang::Code = mrlyrs::math::bang::Code::from(big(name, 1, &args[1])?);
-    Ok(Value::String(mrlyrs::math::press::Press::total(&a0, a1).to_string()))
+    Ok(Value::String(
+        mrlyrs::math::press::Press::total(&a0, a1).to_string(),
+    ))
 }
 
 fn door_math_press_press_totals(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::press::Press = take!(name, 0, &args[0]);
-    Ok({ let mut list0 = Vec::new(); for item0 in mrlyrs::math::press::Press::totals(&a0) { list0.push(Value::String(item0.to_string())); } Value::Array(list0) })
+    Ok({
+        let mut list0 = Vec::new();
+        for item0 in mrlyrs::math::press::Press::totals(&a0) {
+            list0.push(Value::String(item0.to_string()));
+        }
+        Value::Array(list0)
+    })
 }
 
 fn door_math_press_containing(name: &str, args: &[Value]) -> Done {
@@ -5263,7 +6529,10 @@ fn door_math_press_containing(name: &str, args: &[Value]) -> Done {
     let a0: u128 = big(name, 0, &args[0])?;
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::math::press::containing(a0, a1, a2) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::press::containing(a0, a1, a2) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_press_coordinates(name: &str, args: &[Value]) -> Done {
@@ -5271,7 +6540,16 @@ fn door_math_press_coordinates(name: &str, args: &[Value]) -> Done {
     let a0: u128 = big(name, 0, &args[0])?;
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::math::press::coordinates(a0, a1, a2) { Ok(value) => Ok({ let mut list0 = Vec::new(); for item0 in value { list0.push(Value::String(item0.to_string())); } Value::Array(list0) }), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::press::coordinates(a0, a1, a2) {
+        Ok(value) => Ok({
+            let mut list0 = Vec::new();
+            for item0 in value {
+                list0.push(Value::String(item0.to_string()));
+            }
+            Value::Array(list0)
+        }),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_press_count_below(name: &str, args: &[Value]) -> Done {
@@ -5280,7 +6558,10 @@ fn door_math_press_count_below(name: &str, args: &[Value]) -> Done {
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
     let a3: u128 = big(name, 3, &args[3])?;
-    match mrlyrs::math::press::count_below(a0, a1, a2, a3) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::press::count_below(a0, a1, a2, a3) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_press_distinct(name: &str, args: &[Value]) -> Done {
@@ -5288,20 +6569,35 @@ fn door_math_press_distinct(name: &str, args: &[Value]) -> Done {
     let a0: u128 = big(name, 0, &args[0])?;
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::math::press::distinct(a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::press::distinct(a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_press_interleave(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
-    let a0: Vec<u128> = { let mut list0 = Vec::new(); for item0 in items(name, 0, &args[0])? { list0.push(big(name, 0, item0)?); } list0 };
+    let a0: Vec<u128> = {
+        let mut list0 = Vec::new();
+        for item0 in items(name, 0, &args[0])? {
+            list0.push(big(name, 0, item0)?);
+        }
+        list0
+    };
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::press::interleave(&a0, a1) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::press::interleave(&a0, a1) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_press_layer_table(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::bang::MagicLayer = take!(name, 0, &args[0]);
-    match mrlyrs::math::press::layer_table(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::press::layer_table(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_press_member(name: &str, args: &[Value]) -> Done {
@@ -5310,7 +6606,10 @@ fn door_math_press_member(name: &str, args: &[Value]) -> Done {
     let a1: u128 = big(name, 1, &args[1])?;
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
-    match mrlyrs::math::press::member(a0, a1, a2, a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::press::member(a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_press_members(name: &str, args: &[Value]) -> Done {
@@ -5319,7 +6618,16 @@ fn door_math_press_members(name: &str, args: &[Value]) -> Done {
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
-    match mrlyrs::math::press::members(a0, a1, a2, a3) { Ok(value) => Ok({ let mut list0 = Vec::new(); for item0 in value { list0.push(Value::String(item0.to_string())); } Value::Array(list0) }), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::press::members(a0, a1, a2, a3) {
+        Ok(value) => Ok({
+            let mut list0 = Vec::new();
+            for item0 in value {
+                list0.push(Value::String(item0.to_string()));
+            }
+            Value::Array(list0)
+        }),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_press_profile(name: &str, args: &[Value]) -> Done {
@@ -5328,7 +6636,16 @@ fn door_math_press_profile(name: &str, args: &[Value]) -> Done {
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
-    match mrlyrs::math::press::profile(a0, a1, a2, a3) { Ok(value) => Ok({ let mut list0 = Vec::new(); for item0 in value { list0.push(Value::String(item0.to_string())); } Value::Array(list0) }), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::press::profile(a0, a1, a2, a3) {
+        Ok(value) => Ok({
+            let mut list0 = Vec::new();
+            for item0 in value {
+                list0.push(Value::String(item0.to_string()));
+            }
+            Value::Array(list0)
+        }),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_press_usage(name: &str, args: &[Value]) -> Done {
@@ -5336,32 +6653,59 @@ fn door_math_press_usage(name: &str, args: &[Value]) -> Done {
     let a0: u128 = big(name, 0, &args[0])?;
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::math::press::usage(a0, a1, a2) { Ok(value) => Ok(Value::String(value.get().to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::press::usage(a0, a1, a2) {
+        Ok(value) => Ok(Value::String(value.get().to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_press_word_count(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: Vec<mrlyrs::math::bang::MagicLayer> = take!(name, 0, &args[0]);
-    match mrlyrs::math::press::word_count(&a0) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::press::word_count(&a0) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_press_word_member(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<mrlyrs::math::bang::MagicLayer> = take!(name, 0, &args[0]);
     let a1: u128 = big(name, 1, &args[1])?;
-    match mrlyrs::math::press::word_member(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::press::word_member(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_press_word_members(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: Vec<mrlyrs::math::bang::MagicLayer> = take!(name, 0, &args[0]);
-    match mrlyrs::math::press::word_members(&a0) { Ok(value) => Ok({ let mut list0 = Vec::new(); for item0 in value { list0.push(Value::String(item0.to_string())); } Value::Array(list0) }), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::press::word_members(&a0) {
+        Ok(value) => Ok({
+            let mut list0 = Vec::new();
+            for item0 in value {
+                list0.push(Value::String(item0.to_string()));
+            }
+            Value::Array(list0)
+        }),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_press_word_profile(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: Vec<mrlyrs::math::bang::MagicLayer> = take!(name, 0, &args[0]);
-    match mrlyrs::math::press::word_profile(&a0) { Ok(value) => Ok({ let mut list0 = Vec::new(); for item0 in value { list0.push(Value::String(item0.to_string())); } Value::Array(list0) }), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::press::word_profile(&a0) {
+        Ok(value) => Ok({
+            let mut list0 = Vec::new();
+            for item0 in value {
+                list0.push(Value::String(item0.to_string()));
+            }
+            Value::Array(list0)
+        }),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_roulette_nodes_default(name: &str, args: &[Value]) -> Done {
@@ -5401,7 +6745,10 @@ fn door_math_roulette_nodes(name: &str, args: &[Value]) -> Done {
     let a1: Vec<mrlyrs::math::spirograph::Pencil> = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
     let a3: f64 = take!(name, 3, &args[3]);
-    match mrlyrs::math::roulette::nodes(&a0, &a1, a2, a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::roulette::nodes(&a0, &a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_roulette_side(name: &str, args: &[Value]) -> Done {
@@ -5426,7 +6773,10 @@ fn door_math_rules_render(name: &str, args: &[Value]) -> Done {
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
-    match mrlyrs::math::rules::render(&a0, a1, a2, a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::rules::render(&a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_rules_tree_axes(name: &str, args: &[Value]) -> Done {
@@ -5440,28 +6790,40 @@ fn door_math_shape_frac_minus(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::math::shape::Frac = take!(name, 0, &args[0]);
     let a1: mrlyrs::math::shape::Frac = take!(name, 1, &args[1]);
-    match mrlyrs::math::shape::Frac::minus(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::shape::Frac::minus(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_shape_frac_new(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: i64 = take!(name, 0, &args[0]);
     let a1: i64 = take!(name, 1, &args[1]);
-    match mrlyrs::math::shape::Frac::new(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::shape::Frac::new(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_shape_frac_plus(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::math::shape::Frac = take!(name, 0, &args[0]);
     let a1: mrlyrs::math::shape::Frac = take!(name, 1, &args[1]);
-    match mrlyrs::math::shape::Frac::plus(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::shape::Frac::plus(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_shape_frac_times(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::math::shape::Frac = take!(name, 0, &args[0]);
     let a1: mrlyrs::math::shape::Frac = take!(name, 1, &args[1]);
-    match mrlyrs::math::shape::Frac::times(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::shape::Frac::times(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_shape_frac_whole(name: &str, args: &[Value]) -> Done {
@@ -5480,7 +6842,10 @@ fn door_math_shape_census(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::math::shape::Shape = take!(name, 0, &args[0]);
     let a1: mrlyrs::core::Tensor = take!(name, 1, &args[1]);
-    match mrlyrs::math::shape::census(&a0, &a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::shape::census(&a0, &a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_shape_classify(name: &str, args: &[Value]) -> Done {
@@ -5488,7 +6853,10 @@ fn door_math_shape_classify(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::math::shape::Shape = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: Vec<usize> = take!(name, 2, &args[2]);
-    match mrlyrs::math::shape::classify(&a0, a1, &a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::shape::classify(&a0, a1, &a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_shape_crop(name: &str, args: &[Value]) -> Done {
@@ -5496,7 +6864,10 @@ fn door_math_shape_crop(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
     let a1: mrlyrs::math::shape::Shape = take!(name, 1, &args[1]);
     let a2: bool = take!(name, 2, &args[2]);
-    match mrlyrs::math::shape::crop(&a0, &a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::shape::crop(&a0, &a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_shape_crossing_shell(name: &str, args: &[Value]) -> Done {
@@ -5520,7 +6891,10 @@ fn door_math_shape_named(name: &str, args: &[Value]) -> Done {
     let a0: String = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: mrlyrs::math::shape::Frac = take!(name, 2, &args[2]);
-    match mrlyrs::math::shape::named(a0.as_str(), a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::shape::named(a0.as_str(), a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_shape_radial_census(name: &str, args: &[Value]) -> Done {
@@ -5538,14 +6912,20 @@ fn door_math_shape_refine(name: &str, args: &[Value]) -> Done {
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
     let a4: bool = take!(name, 4, &args[4]);
-    match mrlyrs::math::shape::refine(&a0, &a1, a2, a3, a4) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::shape::refine(&a0, &a1, a2, a3, a4) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_shape_regions(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::math::shape::Shape = take!(name, 0, &args[0]);
     let a1: Vec<usize> = take!(name, 1, &args[1]);
-    match mrlyrs::math::shape::regions(&a0, &a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::shape::regions(&a0, &a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_shape_shapes(name: &str, args: &[Value]) -> Done {
@@ -5579,7 +6959,10 @@ fn door_math_six_blank(name: &str, args: &[Value]) -> Done {
     let a1: mrlyrs::math::six::Orientation = take!(name, 1, &args[1]);
     let a2: u8 = take!(name, 2, &args[2]);
     let a3: u8 = take!(name, 3, &args[3]);
-    match mrlyrs::math::six::blank(a0, a1, a2, a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::blank(a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_blur(name: &str, args: &[Value]) -> Done {
@@ -5587,7 +6970,10 @@ fn door_math_six_blur(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::math::six::Cell6d = take!(name, 0, &args[0]);
     let a1: mrlyrs::core::Tensor = take!(name, 1, &args[1]);
     let a2: bool = take!(name, 2, &args[2]);
-    match mrlyrs::math::six::Cell6d::blur(a0, &a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::Cell6d::blur(a0, &a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_census(name: &str, args: &[Value]) -> Done {
@@ -5600,13 +6986,19 @@ fn door_math_six_census(name: &str, args: &[Value]) -> Done {
 fn door_math_six_components(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::six::Cell6d = take!(name, 0, &args[0]);
-    match mrlyrs::math::six::components(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::components(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_cut(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    match mrlyrs::math::six::cut(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::cut(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_cut_design(name: &str, args: &[Value]) -> Done {
@@ -5615,7 +7007,10 @@ fn door_math_six_cut_design(name: &str, args: &[Value]) -> Done {
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
-    match mrlyrs::math::six::cut_design(a0, a1, a2, a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::cut_design(a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_east(name: &str, args: &[Value]) -> Done {
@@ -5647,25 +7042,37 @@ fn door_math_six_fills_only(name: &str, args: &[Value]) -> Done {
 fn door_math_six_framed(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::six::Cell6d = take!(name, 0, &args[0]);
-    match mrlyrs::math::six::framed(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::framed(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_from_json(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: String = take!(name, 0, &args[0]);
-    match mrlyrs::math::six::from_json(a0.as_str()) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::from_json(a0.as_str()) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_giant(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::six::Cell6d = take!(name, 0, &args[0]);
-    match mrlyrs::math::six::giant(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::giant(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_giant_network(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::six::Cell6d = take!(name, 0, &args[0]);
-    match mrlyrs::math::six::giant_network(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::giant_network(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_height(name: &str, args: &[Value]) -> Done {
@@ -5677,7 +7084,10 @@ fn door_math_six_height(name: &str, args: &[Value]) -> Done {
 fn door_math_six_holes(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::six::Cell6d = take!(name, 0, &args[0]);
-    match mrlyrs::math::six::holes(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::holes(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_is_cube(name: &str, args: &[Value]) -> Done {
@@ -5695,7 +7105,10 @@ fn door_math_six_is_hex(name: &str, args: &[Value]) -> Done {
 fn door_math_six_iso(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    match mrlyrs::math::six::iso(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::iso(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_iso_design(name: &str, args: &[Value]) -> Done {
@@ -5704,7 +7117,10 @@ fn door_math_six_iso_design(name: &str, args: &[Value]) -> Done {
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
-    match mrlyrs::math::six::iso_design(a0, a1, a2, a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::iso_design(a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_new(name: &str, args: &[Value]) -> Done {
@@ -5727,7 +7143,10 @@ fn door_math_six_orientation(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::six::orientation(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::orientation(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_pad(name: &str, args: &[Value]) -> Done {
@@ -5735,16 +7154,50 @@ fn door_math_six_pad(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::math::six::Cell6d = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: u8 = take!(name, 2, &args[2]);
-    match mrlyrs::math::six::pad(&a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::pad(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_paint(name: &str, args: &[Value]) -> Done {
     count(name, args, 4)?;
     let a0: mrlyrs::math::six::Cell6d = take!(name, 0, &args[0]);
-    let a1: Option<_> = if Value::is_null(&args[1]) { None } else { Some({ let mut pairs0: Vec<(u8, Vec<mrlyrs::core::Color>)> = Vec::new(); for (text0, item0) in fields(name, 1, &args[1])? { let key0 = match text0.parse() { Ok(key) => key, Err(_) => return Err(bad(name, 1, "an object key")) }; pairs0.push((key0, { let mut list1 = Vec::new(); for item1 in items(name, 1, item0)? { list1.push(color(name, 1, item1)?); } list1 })); } pairs0 }.into_iter().collect()) };
+    let a1: Option<_> = if Value::is_null(&args[1]) {
+        None
+    } else {
+        Some(
+            {
+                let mut pairs0: Vec<(u8, Vec<mrlyrs::core::Color>)> = Vec::new();
+                for (text0, item0) in fields(name, 1, &args[1])? {
+                    let key0 = match text0.parse() {
+                        Ok(key) => key,
+                        Err(_) => return Err(bad(name, 1, "an object key")),
+                    };
+                    pairs0.push((key0, {
+                        let mut list1 = Vec::new();
+                        for item1 in items(name, 1, item0)? {
+                            list1.push(color(name, 1, item1)?);
+                        }
+                        list1
+                    }));
+                }
+                pairs0
+            }
+            .into_iter()
+            .collect(),
+        )
+    };
     let a2: Option<mrlyrs::core::Mode> = take!(name, 2, &args[2]);
-    let mut a3 = if args[3].is_null() { None } else { Some(mrlyrs::core::Rng::new(seed(name, 3, &args[3])?)) };
-    match mrlyrs::math::six::paint(a0, a1.as_ref(), a2, a3.as_mut()) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    let mut a3 = if args[3].is_null() {
+        None
+    } else {
+        Some(mrlyrs::core::Rng::new(seed(name, 3, &args[3])?))
+    };
+    match mrlyrs::math::six::paint(a0, a1.as_ref(), a2, a3.as_mut()) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_perforate(name: &str, args: &[Value]) -> Done {
@@ -5752,22 +7205,35 @@ fn door_math_six_perforate(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::math::six::Cell6d = take!(name, 0, &args[0]);
     let a1: mrlyrs::core::Tensor = take!(name, 1, &args[1]);
     let a2: u8 = take!(name, 2, &args[2]);
-    match mrlyrs::math::six::Cell6d::perforate(a0, &a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::Cell6d::perforate(a0, &a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_png(name: &str, args: &[Value]) -> Done {
     count(name, args, 4)?;
     let a0: mrlyrs::math::six::Cell6d = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    let a2: Option<mrlyrs::core::Color> = if Value::is_null(&args[2]) { None } else { Some(color(name, 2, &args[2])?) };
+    let a2: Option<mrlyrs::core::Color> = if Value::is_null(&args[2]) {
+        None
+    } else {
+        Some(color(name, 2, &args[2])?)
+    };
     let a3: usize = take!(name, 3, &args[3]);
-    match mrlyrs::math::six::png(&a0, a1, a2, a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::png(&a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_pro(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    match mrlyrs::math::six::pro(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::pro(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_pro_design(name: &str, args: &[Value]) -> Done {
@@ -5776,14 +7242,20 @@ fn door_math_six_pro_design(name: &str, args: &[Value]) -> Done {
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
-    match mrlyrs::math::six::pro_design(a0, a1, a2, a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::pro_design(a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_radial(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::math::six::Cell6d = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::six::radial(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::radial(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_radial_crop(name: &str, args: &[Value]) -> Done {
@@ -5791,7 +7263,10 @@ fn door_math_six_radial_crop(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: (usize, usize) = take!(name, 2, &args[2]);
-    match mrlyrs::math::six::radial_crop(&a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::radial_crop(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_radial_mask(name: &str, args: &[Value]) -> Done {
@@ -5805,7 +7280,10 @@ fn door_math_six_raster(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::math::six::Cell6d = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::six::raster(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::raster(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_rect_png(name: &str, args: &[Value]) -> Done {
@@ -5813,7 +7291,10 @@ fn door_math_six_rect_png(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::math::six::Cell6d = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: Option<usize> = take!(name, 2, &args[2]);
-    match mrlyrs::math::six::rect_png(&a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::rect_png(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_rect_svg(name: &str, args: &[Value]) -> Done {
@@ -5821,13 +7302,19 @@ fn door_math_six_rect_svg(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::math::six::Cell6d = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: Option<usize> = take!(name, 2, &args[2]);
-    match mrlyrs::math::six::rect_svg(&a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::rect_svg(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_rim_holes(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::six::Cell6d = take!(name, 0, &args[0]);
-    match mrlyrs::math::six::rim_holes(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::rim_holes(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_skin(name: &str, args: &[Value]) -> Done {
@@ -5839,26 +7326,38 @@ fn door_math_six_skin(name: &str, args: &[Value]) -> Done {
 fn door_math_six_slice_core_graph(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::six::Cell6d = take!(name, 0, &args[0]);
-    match mrlyrs::math::six::slice_core_graph(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::slice_core_graph(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_slice_dual_graph(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::six::Cell6d = take!(name, 0, &args[0]);
-    match mrlyrs::math::six::slice_dual_graph(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::slice_dual_graph(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_slice_edge_graph(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::math::six::Cell6d = take!(name, 0, &args[0]);
     let a1: Option<u8> = take!(name, 1, &args[1]);
-    match mrlyrs::math::six::slice_edge_graph(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::slice_edge_graph(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_slice_tunnel_graph(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::six::Cell6d = take!(name, 0, &args[0]);
-    match mrlyrs::math::six::slice_tunnel_graph(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::slice_tunnel_graph(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_south(name: &str, args: &[Value]) -> Done {
@@ -5872,7 +7371,10 @@ fn door_math_six_spectral_exponent(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::math::six::Cell6d = take!(name, 0, &args[0]);
     let a1: f64 = take!(name, 1, &args[1]);
-    match mrlyrs::math::six::spectral_exponent(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::spectral_exponent(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_star_branch_constant(name: &str, args: &[Value]) -> Done {
@@ -5916,7 +7418,10 @@ fn door_math_six_star_star_arm(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::math::six::star::Star = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::math::six::star::Star::arm(&a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::star::Star::arm(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_star_star_cell(name: &str, args: &[Value]) -> Done {
@@ -5933,26 +7438,38 @@ fn door_math_six_star_star_excesses(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::math::six::star::Star = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::math::six::star::Star::excesses(&a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::star::Star::excesses(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_star_star_hexagon(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::math::six::star::Star = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::six::star::Star::hexagon(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::star::Star::hexagon(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_star_star_new(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: u128 = big(name, 0, &args[0])?;
-    match mrlyrs::math::six::star::Star::new(a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::star::Star::new(a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_star_arm_law(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: usize = take!(name, 0, &args[0]);
-    match mrlyrs::math::six::star::arm_law(a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::star::arm_law(a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_star_chi8(name: &str, args: &[Value]) -> Done {
@@ -5970,7 +7487,10 @@ fn door_math_six_star_decay(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<f64> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::six::star::decay(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::star::decay(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_star_width_law(name: &str, args: &[Value]) -> Done {
@@ -5983,17 +7503,27 @@ fn door_math_six_svg(name: &str, args: &[Value]) -> Done {
     count(name, args, 5)?;
     let a0: mrlyrs::math::six::Cell6d = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    let a2: Option<mrlyrs::core::Color> = if Value::is_null(&args[2]) { None } else { Some(color(name, 2, &args[2])?) };
+    let a2: Option<mrlyrs::core::Color> = if Value::is_null(&args[2]) {
+        None
+    } else {
+        Some(color(name, 2, &args[2])?)
+    };
     let a3: usize = take!(name, 3, &args[3]);
     let a4: Option<usize> = take!(name, 4, &args[4]);
-    match mrlyrs::math::six::svg(&a0, a1, a2, a3, a4) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::svg(&a0, a1, a2, a3, a4) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_tessellate(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::math::six::Cell6d = take!(name, 0, &args[0]);
     let a1: mrlyrs::core::Tensor = take!(name, 1, &args[1]);
-    match mrlyrs::math::six::tessellate(&a0, &a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::tessellate(&a0, &a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_tile(name: &str, args: &[Value]) -> Done {
@@ -6001,7 +7531,10 @@ fn door_math_six_tile(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::math::six::Cell6d = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::math::six::tile(&a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::tile(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_tile_cell(name: &str, args: &[Value]) -> Done {
@@ -6010,20 +7543,29 @@ fn door_math_six_tile_cell(name: &str, args: &[Value]) -> Done {
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
     let a3: bool = take!(name, 3, &args[3]);
-    match mrlyrs::math::six::tile_cell(&a0, a1, a2, a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::tile_cell(&a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_tile_crop(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
     let a1: (usize, usize) = take!(name, 1, &args[1]);
-    match mrlyrs::math::six::tile_crop(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::tile_crop(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_tile_step(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: (usize, usize) = take!(name, 0, &args[0]);
-    match mrlyrs::math::six::tile_step(a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::tile_step(a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_to_json(name: &str, args: &[Value]) -> Done {
@@ -6036,7 +7578,10 @@ fn door_math_six_triangles(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::math::six::Cell6d = take!(name, 0, &args[0]);
     let a1: Option<usize> = take!(name, 1, &args[1]);
-    match mrlyrs::math::six::triangles(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::six::triangles(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_six_west(name: &str, args: &[Value]) -> Done {
@@ -6056,21 +7601,30 @@ fn door_math_spectrum_clusters(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<f64> = take!(name, 0, &args[0]);
     let a1: f64 = take!(name, 1, &args[1]);
-    match mrlyrs::math::spectrum::clusters(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::spectrum::clusters(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_spectrum_laplacian(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::math::graph::Network = take!(name, 0, &args[0]);
     let a1: bool = take!(name, 1, &args[1]);
-    match mrlyrs::math::spectrum::laplacian(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::spectrum::laplacian(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_spectrum_laplacian_spectrum(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::math::graph::Network = take!(name, 0, &args[0]);
     let a1: bool = take!(name, 1, &args[1]);
-    match mrlyrs::math::spectrum::laplacian_spectrum(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::spectrum::laplacian_spectrum(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_spectrum_multiplicity(name: &str, args: &[Value]) -> Done {
@@ -6104,7 +7658,10 @@ fn door_math_spectrum_spectral_points(name: &str, args: &[Value]) -> Done {
 fn door_math_spectrum_symmetric_eigenvalues(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: Vec<Vec<f64>> = take!(name, 0, &args[0]);
-    match mrlyrs::math::spectrum::symmetric_eigenvalues(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::spectrum::symmetric_eigenvalues(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_spin_blend_fold(name: &str, args: &[Value]) -> Done {
@@ -6125,7 +7682,10 @@ fn door_math_spin_arcs(name: &str, args: &[Value]) -> Done {
     let a0: Vec<f32> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: f64 = take!(name, 2, &args[2]);
-    match mrlyrs::math::spin::arcs(&a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::spin::arcs(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_spin_harmonics(name: &str, args: &[Value]) -> Done {
@@ -6134,7 +7694,10 @@ fn door_math_spin_harmonics(name: &str, args: &[Value]) -> Done {
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
-    match mrlyrs::math::spin::harmonics(&a0, a1, a2, a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::spin::harmonics(&a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_spin_mass(name: &str, args: &[Value]) -> Done {
@@ -6164,7 +7727,10 @@ fn door_math_spin_profile(name: &str, args: &[Value]) -> Done {
     let a0: Vec<f32> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::math::spin::profile(&a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::spin::profile(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_spin_radial(name: &str, args: &[Value]) -> Done {
@@ -6176,7 +7742,10 @@ fn door_math_spin_radial(name: &str, args: &[Value]) -> Done {
     let a4: f64 = take!(name, 4, &args[4]);
     let a5: mrlyrs::math::spin::Blend = take!(name, 5, &args[5]);
     let a6: usize = take!(name, 6, &args[6]);
-    match mrlyrs::math::spin::radial(&a0, a1, a2, a3, a4, a5, a6) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::spin::radial(&a0, a1, a2, a3, a4, a5, a6) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_spin_reach(name: &str, args: &[Value]) -> Done {
@@ -6190,7 +7759,10 @@ fn door_math_spin_ring(name: &str, args: &[Value]) -> Done {
     let a0: Vec<f32> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: f64 = take!(name, 2, &args[2]);
-    match mrlyrs::math::spin::ring(&a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::spin::ring(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_spin_turns(name: &str, args: &[Value]) -> Done {
@@ -6226,14 +7798,20 @@ fn door_math_spirograph_cover(name: &str, args: &[Value]) -> Done {
     let a2: bool = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
     let a4: usize = take!(name, 4, &args[4]);
-    match mrlyrs::math::spirograph::cover(&a0, &a1, a2, a3, a4) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::spirograph::cover(&a0, &a1, a2, a3, a4) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_spirograph_disc(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::math::spirograph::Track = take!(name, 0, &args[0]);
     let a1: Vec<mrlyrs::math::spirograph::Pencil> = take!(name, 1, &args[1]);
-    match mrlyrs::math::spirograph::disc(&a0, &a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::spirograph::disc(&a0, &a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_spirograph_distinct(name: &str, args: &[Value]) -> Done {
@@ -6268,7 +7846,10 @@ fn door_math_spirograph_pencils(name: &str, args: &[Value]) -> Done {
     let a4: f64 = take!(name, 4, &args[4]);
     let a5: f64 = take!(name, 5, &args[5]);
     let a6: u32 = take!(name, 6, &args[6]);
-    match mrlyrs::math::spirograph::pencils(&a0, a1, a2, a3.as_str(), a4, a5, a6) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::spirograph::pencils(&a0, a1, a2, a3.as_str(), a4, a5, a6) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_spirograph_point(name: &str, args: &[Value]) -> Done {
@@ -6291,7 +7872,9 @@ fn door_math_spirograph_representatives(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::math::spirograph::Track = take!(name, 0, &args[0]);
     let a1: Vec<mrlyrs::math::spirograph::Pencil> = take!(name, 1, &args[1]);
     let a2: bool = take!(name, 2, &args[2]);
-    Ok(give!(mrlyrs::math::spirograph::representatives(&a0, &a1, a2)))
+    Ok(give!(mrlyrs::math::spirograph::representatives(
+        &a0, &a1, a2
+    )))
 }
 
 fn door_math_spirograph_seats(name: &str, args: &[Value]) -> Done {
@@ -6312,7 +7895,10 @@ fn door_math_spirograph_trace(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::math::spirograph::Track = take!(name, 0, &args[0]);
     let a1: Vec<mrlyrs::math::spirograph::Pencil> = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::math::spirograph::trace(&a0, &a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::spirograph::trace(&a0, &a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_spirograph_track(name: &str, args: &[Value]) -> Done {
@@ -6322,7 +7908,10 @@ fn door_math_spirograph_track(name: &str, args: &[Value]) -> Done {
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
     let a4: usize = take!(name, 4, &args[4]);
-    match mrlyrs::math::spirograph::track(a0.as_str(), a1, a2, a3, a4) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::spirograph::track(a0.as_str(), a1, a2, a3, a4) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_spirograph_turn(name: &str, args: &[Value]) -> Done {
@@ -6365,28 +7954,42 @@ fn door_math_three_carpet(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::three::carpet(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::carpet(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_census(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    match mrlyrs::math::three::census(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::census(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_core_graph(name: &str, args: &[Value]) -> Done {
     match cell_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    match mrlyrs::math::three::core_graph::<2>(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    3 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    match mrlyrs::math::three::core_graph::<3>(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+            match mrlyrs::math::three::core_graph::<2>(&a0) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        3 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
+            match mrlyrs::math::three::core_graph::<3>(&a0) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
@@ -6396,7 +7999,10 @@ fn door_math_three_create(name: &str, args: &[Value]) -> Done {
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
-    match mrlyrs::math::three::create(a0, a1, a2, a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::create(a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_diagonal_slice(name: &str, args: &[Value]) -> Done {
@@ -6406,7 +8012,10 @@ fn door_math_three_diagonal_slice(name: &str, args: &[Value]) -> Done {
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
     let a4: usize = take!(name, 4, &args[4]);
-    match mrlyrs::math::three::diagonal_slice(a0, a1, a2, a3, a4) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::diagonal_slice(a0, a1, a2, a3, a4) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_diagonal_svg(name: &str, args: &[Value]) -> Done {
@@ -6417,36 +8026,53 @@ fn door_math_three_diagonal_svg(name: &str, args: &[Value]) -> Done {
     let a3: usize = take!(name, 3, &args[3]);
     let a4: Vec<usize> = take!(name, 4, &args[4]);
     let a5: usize = take!(name, 5, &args[5]);
-    match mrlyrs::math::three::diagonal_svg(a0, a1, a2, a3, &a4, a5) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::diagonal_svg(a0, a1, a2, a3, &a4, a5) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_dust(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::three::dust(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::dust(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_edge_graph(name: &str, args: &[Value]) -> Done {
     match cell_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    match mrlyrs::math::three::edge_graph::<2>(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    3 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    match mrlyrs::math::three::edge_graph::<3>(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+            match mrlyrs::math::three::edge_graph::<2>(&a0) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        3 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
+            match mrlyrs::math::three::edge_graph::<3>(&a0) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
 fn door_math_three_euler(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    match mrlyrs::math::three::euler(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::euler(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_extrude(name: &str, args: &[Value]) -> Done {
@@ -6454,14 +8080,20 @@ fn door_math_three_extrude(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::math::three::extrude(&a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::extrude(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_extrude_cube(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::three::extrude_cube(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::extrude_cube(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_faces(name: &str, args: &[Value]) -> Done {
@@ -6482,19 +8114,28 @@ fn door_math_three_from_corners(name: &str, args: &[Value]) -> Done {
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
-    match mrlyrs::math::three::from_corners(&a0, a1, a2, a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::from_corners(&a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_from_json(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: String = take!(name, 0, &args[0]);
-    match mrlyrs::math::three::from_json(a0.as_str()) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::from_json(a0.as_str()) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_from_strings(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: Vec<Vec<String>> = take!(name, 0, &args[0]);
-    match mrlyrs::math::three::from_strings(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::from_strings(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_hidden(name: &str, args: &[Value]) -> Done {
@@ -6509,22 +8150,33 @@ fn door_math_three_level_set(name: &str, args: &[Value]) -> Done {
     let a1: Vec<usize> = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
-    match mrlyrs::math::three::level_set(a0, &a1, a2, a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::level_set(a0, &a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_magic(name: &str, args: &[Value]) -> Done {
     match cells_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 1)?;
-    let a0: Vec<mrlyrs::math::cell::models::CellNd<2>> = take!(name, 0, &args[0]);
-    match mrlyrs::math::three::magic::<2>(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    3 => {
-    count(name, args, 1)?;
-    let a0: Vec<mrlyrs::math::cell::models::CellNd<3>> = take!(name, 0, &args[0]);
-    match mrlyrs::math::three::magic::<3>(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 1)?;
+            let a0: Vec<mrlyrs::math::cell::models::CellNd<2>> = take!(name, 0, &args[0]);
+            match mrlyrs::math::three::magic::<2>(&a0) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        3 => {
+            count(name, args, 1)?;
+            let a0: Vec<mrlyrs::math::cell::models::CellNd<3>> = take!(name, 0, &args[0]);
+            match mrlyrs::math::three::magic::<3>(&a0) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
@@ -6540,24 +8192,35 @@ fn door_math_three_merge(name: &str, args: &[Value]) -> Done {
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
-    match mrlyrs::math::three::merge(&a0, a1, a2, a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::merge(&a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_mosaic(name: &str, args: &[Value]) -> Done {
     match cells_rank(name, args, 1)? {
-    2 => {
-    count(name, args, 2)?;
-    let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
-    let a1: Vec<mrlyrs::math::cell::models::CellNd<2>> = take!(name, 1, &args[1]);
-    match mrlyrs::math::three::mosaic::<2>(&a0, &a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    3 => {
-    count(name, args, 2)?;
-    let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
-    let a1: Vec<mrlyrs::math::cell::models::CellNd<3>> = take!(name, 1, &args[1]);
-    match mrlyrs::math::three::mosaic::<3>(&a0, &a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 2)?;
+            let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
+            let a1: Vec<mrlyrs::math::cell::models::CellNd<2>> = take!(name, 1, &args[1]);
+            match mrlyrs::math::three::mosaic::<2>(&a0, &a1) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        3 => {
+            count(name, args, 2)?;
+            let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
+            let a1: Vec<mrlyrs::math::cell::models::CellNd<3>> = take!(name, 1, &args[1]);
+            match mrlyrs::math::three::mosaic::<3>(&a0, &a1) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
@@ -6566,14 +8229,20 @@ fn door_math_three_named(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::gen::recipe::Design = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::math::three::named(a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::named(a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_net(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::three::net(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::net(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_noise(name: &str, args: &[Value]) -> Done {
@@ -6582,14 +8251,20 @@ fn door_math_three_noise(name: &str, args: &[Value]) -> Done {
     let a1: usize = take!(name, 1, &args[1]);
     let a2: f64 = take!(name, 2, &args[2]);
     let mut a3 = mrlyrs::core::Rng::new(seed(name, 3, &args[3])?);
-    match mrlyrs::math::three::noise(a0, a1, a2, &mut a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::noise(a0, a1, a2, &mut a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_ones(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::three::ones(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::ones(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_orientations(name: &str, args: &[Value]) -> Done {
@@ -6601,7 +8276,10 @@ fn door_math_three_point(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::three::point(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::point(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_profile(name: &str, args: &[Value]) -> Done {
@@ -6610,7 +8288,16 @@ fn door_math_three_profile(name: &str, args: &[Value]) -> Done {
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
-    match mrlyrs::math::three::profile(a0, a1, a2, a3) { Ok(value) => Ok({ let mut list0 = Vec::new(); for item0 in value { list0.push(Value::String(item0.to_string())); } Value::Array(list0) }), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::profile(a0, a1, a2, a3) {
+        Ok(value) => Ok({
+            let mut list0 = Vec::new();
+            for item0 in value {
+                list0.push(Value::String(item0.to_string()));
+            }
+            Value::Array(list0)
+        }),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_project(name: &str, args: &[Value]) -> Done {
@@ -6636,26 +8323,41 @@ fn door_math_three_slice(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::math::three::slice(&a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::slice(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_special(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
     let a1: mrlyrs::math::cell::models::CellNd<3> = take!(name, 1, &args[1]);
-    match mrlyrs::math::three::special(&a0, &a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::special(&a0, &a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_star(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::three::star(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::star(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_support(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
-    let a0: Vec<u128> = { let mut list0 = Vec::new(); for item0 in items(name, 0, &args[0])? { list0.push(big(name, 0, item0)?); } list0 };
+    let a0: Vec<u128> = {
+        let mut list0 = Vec::new();
+        for item0 in items(name, 0, &args[0])? {
+            list0.push(big(name, 0, item0)?);
+        }
+        list0
+    };
     Ok(give!(mrlyrs::math::three::support(&a0)))
 }
 
@@ -6692,17 +8394,25 @@ fn door_math_three_to_strings(name: &str, args: &[Value]) -> Done {
 
 fn door_math_three_tunnel_graph(name: &str, args: &[Value]) -> Done {
     match cell_rank(name, args, 0)? {
-    2 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    match mrlyrs::math::three::tunnel_graph::<2>(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    3 => {
-    count(name, args, 1)?;
-    let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
-    match mrlyrs::math::three::tunnel_graph::<3>(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
-    }
-    other => Err(usage(format!("{name} wants a 2d or 3d argument, got {other}d"))),
+        2 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+            match mrlyrs::math::three::tunnel_graph::<2>(&a0) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        3 => {
+            count(name, args, 1)?;
+            let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
+            match mrlyrs::math::three::tunnel_graph::<3>(&a0) {
+                Ok(value) => Ok(give!(value)),
+                Err(error) => Err(Fail::Error(error.to_string())),
+            }
+        }
+        other => Err(usage(format!(
+            "{name} wants a 2d or 3d argument, got {other}d"
+        ))),
     }
 }
 
@@ -6710,7 +8420,10 @@ fn door_math_three_void(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::three::void(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::void(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_voids(name: &str, args: &[Value]) -> Done {
@@ -6735,49 +8448,70 @@ fn door_math_three_xline(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::three::xline(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::xline(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_xtree(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::three::xtree(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::xtree(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_yline(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::three::yline(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::yline(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_ytree(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::three::ytree(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::ytree(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_zeros(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::three::zeros(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::zeros(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_zline(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::three::zline(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::zline(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_three_ztree(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::three::ztree(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::three::ztree(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_tourbillon_eyes(name: &str, args: &[Value]) -> Done {
@@ -6797,7 +8531,20 @@ fn door_math_tourbillon_field(name: &str, args: &[Value]) -> Done {
     let a6: String = take!(name, 6, &args[6]);
     let a7: String = take!(name, 7, &args[7]);
     let a8: u32 = take!(name, 8, &args[8]);
-    match mrlyrs::math::tourbillon::field(a0, a1, a2.as_str(), a3, a4.as_str(), a5.as_str(), a6.as_str(), a7.as_str(), a8) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::tourbillon::field(
+        a0,
+        a1,
+        a2.as_str(),
+        a3,
+        a4.as_str(),
+        a5.as_str(),
+        a6.as_str(),
+        a7.as_str(),
+        a8,
+    ) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_tourbillon_layers(name: &str, args: &[Value]) -> Done {
@@ -6808,7 +8555,10 @@ fn door_math_tourbillon_layers(name: &str, args: &[Value]) -> Done {
     let a3: String = take!(name, 3, &args[3]);
     let a4: String = take!(name, 4, &args[4]);
     let a5: u32 = take!(name, 5, &args[5]);
-    match mrlyrs::math::tourbillon::layers(a0, a1.as_str(), a2, a3.as_str(), a4.as_str(), a5) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::tourbillon::layers(a0, a1.as_str(), a2, a3.as_str(), a4.as_str(), a5) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_tourbillon_period(name: &str, args: &[Value]) -> Done {
@@ -6829,7 +8579,10 @@ fn door_math_tourbillon_stack(name: &str, args: &[Value]) -> Done {
     let a1: usize = take!(name, 1, &args[1]);
     let a2: String = take!(name, 2, &args[2]);
     let a3: mrlyrs::math::spin::Blend = take!(name, 3, &args[3]);
-    match mrlyrs::math::tourbillon::stack(&a0, a1, a2.as_str(), a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::tourbillon::stack(&a0, a1, a2.as_str(), a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_tourbillon_stats(name: &str, args: &[Value]) -> Done {
@@ -6843,7 +8596,20 @@ fn door_math_tourbillon_stats(name: &str, args: &[Value]) -> Done {
     let a6: String = take!(name, 6, &args[6]);
     let a7: String = take!(name, 7, &args[7]);
     let a8: u32 = take!(name, 8, &args[8]);
-    match mrlyrs::math::tourbillon::stats(&a0, a1, a2, a3.as_str(), a4, a5.as_str(), a6.as_str(), a7.as_str(), a8) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::tourbillon::stats(
+        &a0,
+        a1,
+        a2,
+        a3.as_str(),
+        a4,
+        a5.as_str(),
+        a6.as_str(),
+        a7.as_str(),
+        a8,
+    ) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_capacity(name: &str, args: &[Value]) -> Done {
@@ -6856,13 +8622,19 @@ fn door_math_two_carpet(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::two::carpet(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::carpet(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_census(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    match mrlyrs::math::two::census(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::census(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_create(name: &str, args: &[Value]) -> Done {
@@ -6872,34 +8644,49 @@ fn door_math_two_create(name: &str, args: &[Value]) -> Done {
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
     let a4: usize = take!(name, 4, &args[4]);
-    match mrlyrs::math::two::create(a0, a1, a2, a3, a4) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::create(a0, a1, a2, a3, a4) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_dust(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::two::dust(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::dust(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_embed(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
     let a1: Vec<u8> = take!(name, 1, &args[1]);
-    match mrlyrs::math::two::embed(&a0, &a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::embed(&a0, &a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_euler(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    match mrlyrs::math::two::euler(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::euler(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_extract(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
     let a1: mrlyrs::math::cell::models::CellNd<2> = take!(name, 1, &args[1]);
-    match mrlyrs::math::two::extract(&a0, &a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::extract(&a0, &a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_fills(name: &str, args: &[Value]) -> Done {
@@ -6915,33 +8702,48 @@ fn door_math_two_from_corners(name: &str, args: &[Value]) -> Done {
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
     let a4: usize = take!(name, 4, &args[4]);
-    match mrlyrs::math::two::from_corners(&a0, a1, a2, a3, a4) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::from_corners(&a0, a1, a2, a3, a4) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_from_json(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: String = take!(name, 0, &args[0]);
-    match mrlyrs::math::two::from_json(a0.as_str()) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::from_json(a0.as_str()) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_from_strings(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: Vec<String> = take!(name, 0, &args[0]);
-    match mrlyrs::math::two::from_strings(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::from_strings(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_hline(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::two::hline(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::hline(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_htree(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::two::htree(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::htree(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_level_set(name: &str, args: &[Value]) -> Done {
@@ -6951,14 +8753,20 @@ fn door_math_two_level_set(name: &str, args: &[Value]) -> Done {
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
     let a4: usize = take!(name, 4, &args[4]);
-    match mrlyrs::math::two::level_set(a0, &a1, a2, a3, a4) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::level_set(a0, &a1, a2, a3, a4) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_mask(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
     let a1: Vec<usize> = take!(name, 1, &args[1]);
-    match mrlyrs::math::two::mask(&a0, &a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::mask(&a0, &a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_merge(name: &str, args: &[Value]) -> Done {
@@ -6966,7 +8774,10 @@ fn door_math_two_merge(name: &str, args: &[Value]) -> Done {
     let a0: Vec<mrlyrs::math::cell::models::CellNd<2>> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::math::two::merge(&a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::merge(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_named(name: &str, args: &[Value]) -> Done {
@@ -6975,14 +8786,20 @@ fn door_math_two_named(name: &str, args: &[Value]) -> Done {
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
-    match mrlyrs::math::two::named(a0, a1, a2, a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::named(a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_net(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::two::net(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::net(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_noise(name: &str, args: &[Value]) -> Done {
@@ -6991,14 +8808,20 @@ fn door_math_two_noise(name: &str, args: &[Value]) -> Done {
     let a1: usize = take!(name, 1, &args[1]);
     let a2: f64 = take!(name, 2, &args[2]);
     let mut a3 = mrlyrs::core::Rng::new(seed(name, 3, &args[3])?);
-    match mrlyrs::math::two::noise(a0, a1, a2, &mut a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::noise(a0, a1, a2, &mut a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_ones(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::two::ones(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::ones(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_payload_frame(name: &str, args: &[Value]) -> Done {
@@ -7016,52 +8839,78 @@ fn door_math_two_png(name: &str, args: &[Value]) -> Done {
     count(name, args, 5)?;
     let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    let a2: Option<mrlyrs::core::Color> = if Value::is_null(&args[2]) { None } else { Some(color(name, 2, &args[2])?) };
+    let a2: Option<mrlyrs::core::Color> = if Value::is_null(&args[2]) {
+        None
+    } else {
+        Some(color(name, 2, &args[2])?)
+    };
     let a3: usize = take!(name, 3, &args[3]);
     let a4: mrlyrs::math::two::Shape = take!(name, 4, &args[4]);
-    match mrlyrs::math::two::png(&a0, a1, a2, a3, a4) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::png(&a0, a1, a2, a3, a4) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_point(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::two::point(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::point(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_read(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
     let a1: mrlyrs::math::cell::models::CellNd<2> = take!(name, 1, &args[1]);
-    match mrlyrs::math::two::read(&a0, &a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::read(&a0, &a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_sheet(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: [mrlyrs::math::cell::models::CellNd<2>; 4] = take!(name, 0, &args[0]);
     let a1: Vec<u8> = take!(name, 1, &args[1]);
-    match mrlyrs::math::two::sheet(&a0, &a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::sheet(&a0, &a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_special(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::core::Tensor = take!(name, 0, &args[0]);
     let a1: mrlyrs::math::cell::models::CellNd<2> = take!(name, 1, &args[1]);
-    match mrlyrs::math::two::special(&a0, &a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::special(&a0, &a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_star(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::two::star(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::star(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_svg(name: &str, args: &[Value]) -> Done {
     count(name, args, 5)?;
     let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    let a2: Option<mrlyrs::core::Color> = if Value::is_null(&args[2]) { None } else { Some(color(name, 2, &args[2])?) };
+    let a2: Option<mrlyrs::core::Color> = if Value::is_null(&args[2]) {
+        None
+    } else {
+        Some(color(name, 2, &args[2])?)
+    };
     let a3: usize = take!(name, 3, &args[3]);
     let a4: mrlyrs::math::two::Shape = take!(name, 4, &args[4]);
     Ok(give!(mrlyrs::math::two::svg(&a0, a1, a2, a3, a4)))
@@ -7090,14 +8939,20 @@ fn door_math_two_vline(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::two::vline(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::vline(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_void(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::two::void(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::void(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_voids(name: &str, args: &[Value]) -> Done {
@@ -7110,14 +8965,20 @@ fn door_math_two_vtree(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::two::vtree(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::vtree(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_two_zeros(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::math::two::zeros(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::math::two::zeros(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_apollonian_circle_centre(name: &str, args: &[Value]) -> Done {
@@ -7142,7 +9003,9 @@ fn door_num_apollonian_form(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: [i64; 4] = take!(name, 0, &args[0]);
     let a1: [i64; 4] = take!(name, 1, &args[1]);
-    Ok(Value::String(mrlyrs::num::apollonian::form(a0, a1).to_string()))
+    Ok(Value::String(
+        mrlyrs::num::apollonian::form(a0, a1).to_string(),
+    ))
 }
 
 fn door_num_apollonian_frame(name: &str, args: &[Value]) -> Done {
@@ -7155,7 +9018,10 @@ fn door_num_apollonian_grow(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: String = take!(name, 0, &args[0]);
     let a1: i64 = take!(name, 1, &args[1]);
-    match mrlyrs::num::apollonian::grow(a0.as_str(), a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::apollonian::grow(a0.as_str(), a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_apollonian_is_ford(name: &str, args: &[Value]) -> Done {
@@ -7180,14 +9046,20 @@ fn door_num_apollonian_reflect(name: &str, args: &[Value]) -> Done {
 fn door_num_apollonian_root(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: String = take!(name, 0, &args[0]);
-    match mrlyrs::num::apollonian::root(a0.as_str()) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::apollonian::root(a0.as_str()) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_apollonian_shadow(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::num::apollonian::Packing = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::num::apollonian::shadow(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::apollonian::shadow(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_apollonian_sound(name: &str, args: &[Value]) -> Done {
@@ -7226,7 +9098,10 @@ fn door_num_automaton_automaton_cofactor(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::num::automaton::Automaton = take!(name, 0, &args[0]);
     let a1: mrlyrs::num::zeta::Complex = take!(name, 1, &args[1]);
     let a2: f64 = take!(name, 2, &args[2]);
-    match mrlyrs::num::automaton::Automaton::cofactor(&a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::automaton::Automaton::cofactor(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_automaton_automaton_denominator(name: &str, args: &[Value]) -> Done {
@@ -7244,7 +9119,10 @@ fn door_num_automaton_automaton_matrix(name: &str, args: &[Value]) -> Done {
 fn door_num_automaton_automaton_new(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::num::memory::Rule = take!(name, 0, &args[0]);
-    match mrlyrs::num::automaton::Automaton::new(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::automaton::Automaton::new(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_automaton_automaton_peel(name: &str, args: &[Value]) -> Done {
@@ -7270,7 +9148,10 @@ fn door_num_automaton_automaton_residue(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::num::automaton::Automaton = take!(name, 0, &args[0]);
     let a1: mrlyrs::num::zeta::Complex = take!(name, 1, &args[1]);
     let a2: f64 = take!(name, 2, &args[2]);
-    match mrlyrs::num::automaton::Automaton::residue(&a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::automaton::Automaton::residue(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_automaton_automaton_rule(name: &str, args: &[Value]) -> Done {
@@ -7289,7 +9170,10 @@ fn door_num_automaton_automaton_with_peel(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::num::memory::Rule = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::num::automaton::Automaton::with_peel(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::automaton::Automaton::with_peel(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_automaton_automaton_zeta(name: &str, args: &[Value]) -> Done {
@@ -7297,87 +9181,282 @@ fn door_num_automaton_automaton_zeta(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::num::automaton::Automaton = take!(name, 0, &args[0]);
     let a1: mrlyrs::num::zeta::Complex = take!(name, 1, &args[1]);
     let a2: f64 = take!(name, 2, &args[2]);
-    match mrlyrs::num::automaton::Automaton::zeta(&a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::automaton::Automaton::zeta(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_blend_add(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
-    let a0: Vec<i128> = { let mut list0 = Vec::new(); for item0 in items(name, 0, &args[0])? { list0.push(small(name, 0, item0)?); } list0 };
-    let a1: Vec<i128> = { let mut list0 = Vec::new(); for item0 in items(name, 1, &args[1])? { list0.push(small(name, 1, item0)?); } list0 };
-    Ok({ let mut list0 = Vec::new(); for item0 in mrlyrs::num::blend::add(&a0, &a1) { list0.push(Value::String(item0.to_string())); } Value::Array(list0) })
+    let a0: Vec<i128> = {
+        let mut list0 = Vec::new();
+        for item0 in items(name, 0, &args[0])? {
+            list0.push(small(name, 0, item0)?);
+        }
+        list0
+    };
+    let a1: Vec<i128> = {
+        let mut list0 = Vec::new();
+        for item0 in items(name, 1, &args[1])? {
+            list0.push(small(name, 1, item0)?);
+        }
+        list0
+    };
+    Ok({
+        let mut list0 = Vec::new();
+        for item0 in mrlyrs::num::blend::add(&a0, &a1) {
+            list0.push(Value::String(item0.to_string()));
+        }
+        Value::Array(list0)
+    })
 }
 
 fn door_num_blend_cauchy(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
-    let a0: Vec<i128> = { let mut list0 = Vec::new(); for item0 in items(name, 0, &args[0])? { list0.push(small(name, 0, item0)?); } list0 };
-    let a1: Vec<i128> = { let mut list0 = Vec::new(); for item0 in items(name, 1, &args[1])? { list0.push(small(name, 1, item0)?); } list0 };
-    match mrlyrs::num::blend::cauchy(&a0, &a1) { Ok(value) => Ok({ let mut list0 = Vec::new(); for item0 in value { list0.push(Value::String(item0.to_string())); } Value::Array(list0) }), Err(error) => Err(Fail::Error(error.to_string())) }
+    let a0: Vec<i128> = {
+        let mut list0 = Vec::new();
+        for item0 in items(name, 0, &args[0])? {
+            list0.push(small(name, 0, item0)?);
+        }
+        list0
+    };
+    let a1: Vec<i128> = {
+        let mut list0 = Vec::new();
+        for item0 in items(name, 1, &args[1])? {
+            list0.push(small(name, 1, item0)?);
+        }
+        list0
+    };
+    match mrlyrs::num::blend::cauchy(&a0, &a1) {
+        Ok(value) => Ok({
+            let mut list0 = Vec::new();
+            for item0 in value {
+                list0.push(Value::String(item0.to_string()));
+            }
+            Value::Array(list0)
+        }),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_blend_characteristic(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
-    let a0: Vec<(i128, i128)> = { let mut list0 = Vec::new(); for item0 in items(name, 0, &args[0])? { list0.push({ let parts1 = parts(name, 0, item0, 2)?; (small(name, 0, &parts1[0])?, small(name, 0, &parts1[1])?) }); } list0 };
-    Ok({ let mut list0 = Vec::new(); for item0 in mrlyrs::num::blend::characteristic(&a0) { list0.push({ let parts1 = item0; Value::Array(vec![Value::String(parts1.0.to_string()), Value::String(parts1.1.to_string())]) }); } Value::Array(list0) })
+    let a0: Vec<(i128, i128)> = {
+        let mut list0 = Vec::new();
+        for item0 in items(name, 0, &args[0])? {
+            list0.push({
+                let parts1 = parts(name, 0, item0, 2)?;
+                (small(name, 0, &parts1[0])?, small(name, 0, &parts1[1])?)
+            });
+        }
+        list0
+    };
+    Ok({
+        let mut list0 = Vec::new();
+        for item0 in mrlyrs::num::blend::characteristic(&a0) {
+            list0.push({
+                let parts1 = item0;
+                Value::Array(vec![
+                    Value::String(parts1.0.to_string()),
+                    Value::String(parts1.1.to_string()),
+                ])
+            });
+        }
+        Value::Array(list0)
+    })
 }
 
 fn door_num_blend_decimate(name: &str, args: &[Value]) -> Done {
     count(name, args, 3)?;
-    let a0: Vec<i128> = { let mut list0 = Vec::new(); for item0 in items(name, 0, &args[0])? { list0.push(small(name, 0, item0)?); } list0 };
+    let a0: Vec<i128> = {
+        let mut list0 = Vec::new();
+        for item0 in items(name, 0, &args[0])? {
+            list0.push(small(name, 0, item0)?);
+        }
+        list0
+    };
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::num::blend::decimate(&a0, a1, a2) { Ok(value) => Ok({ let mut list0 = Vec::new(); for item0 in value { list0.push(Value::String(item0.to_string())); } Value::Array(list0) }), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::blend::decimate(&a0, a1, a2) {
+        Ok(value) => Ok({
+            let mut list0 = Vec::new();
+            for item0 in value {
+                list0.push(Value::String(item0.to_string()));
+            }
+            Value::Array(list0)
+        }),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_blend_delta(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
-    let a0: Vec<i128> = { let mut list0 = Vec::new(); for item0 in items(name, 0, &args[0])? { list0.push(small(name, 0, item0)?); } list0 };
-    Ok({ let mut list0 = Vec::new(); for item0 in mrlyrs::num::blend::delta(&a0) { list0.push(Value::String(item0.to_string())); } Value::Array(list0) })
+    let a0: Vec<i128> = {
+        let mut list0 = Vec::new();
+        for item0 in items(name, 0, &args[0])? {
+            list0.push(small(name, 0, item0)?);
+        }
+        list0
+    };
+    Ok({
+        let mut list0 = Vec::new();
+        for item0 in mrlyrs::num::blend::delta(&a0) {
+            list0.push(Value::String(item0.to_string()));
+        }
+        Value::Array(list0)
+    })
 }
 
 fn door_num_blend_growth(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
-    let a0: Vec<(i128, i128)> = { let mut list0 = Vec::new(); for item0 in items(name, 0, &args[0])? { list0.push({ let parts1 = parts(name, 0, item0, 2)?; (small(name, 0, &parts1[0])?, small(name, 0, &parts1[1])?) }); } list0 };
+    let a0: Vec<(i128, i128)> = {
+        let mut list0 = Vec::new();
+        for item0 in items(name, 0, &args[0])? {
+            list0.push({
+                let parts1 = parts(name, 0, item0, 2)?;
+                (small(name, 0, &parts1[0])?, small(name, 0, &parts1[1])?)
+            });
+        }
+        list0
+    };
     Ok(give!(mrlyrs::num::blend::growth(&a0)))
 }
 
 fn door_num_blend_hadamard(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
-    let a0: Vec<i128> = { let mut list0 = Vec::new(); for item0 in items(name, 0, &args[0])? { list0.push(small(name, 0, item0)?); } list0 };
-    let a1: Vec<i128> = { let mut list0 = Vec::new(); for item0 in items(name, 1, &args[1])? { list0.push(small(name, 1, item0)?); } list0 };
-    Ok({ let mut list0 = Vec::new(); for item0 in mrlyrs::num::blend::hadamard(&a0, &a1) { list0.push(Value::String(item0.to_string())); } Value::Array(list0) })
+    let a0: Vec<i128> = {
+        let mut list0 = Vec::new();
+        for item0 in items(name, 0, &args[0])? {
+            list0.push(small(name, 0, item0)?);
+        }
+        list0
+    };
+    let a1: Vec<i128> = {
+        let mut list0 = Vec::new();
+        for item0 in items(name, 1, &args[1])? {
+            list0.push(small(name, 1, item0)?);
+        }
+        list0
+    };
+    Ok({
+        let mut list0 = Vec::new();
+        for item0 in mrlyrs::num::blend::hadamard(&a0, &a1) {
+            list0.push(Value::String(item0.to_string()));
+        }
+        Value::Array(list0)
+    })
 }
 
 fn door_num_blend_recurrence(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
-    let a0: Vec<i128> = { let mut list0 = Vec::new(); for item0 in items(name, 0, &args[0])? { list0.push(small(name, 0, item0)?); } list0 };
-    Ok(match mrlyrs::num::blend::recurrence(&a0) { Some(item0) => { let mut list1 = Vec::new(); for item1 in item0 { list1.push({ let parts2 = item1; Value::Array(vec![Value::String(parts2.0.to_string()), Value::String(parts2.1.to_string())]) }); } Value::Array(list1) }, None => Value::Null })
+    let a0: Vec<i128> = {
+        let mut list0 = Vec::new();
+        for item0 in items(name, 0, &args[0])? {
+            list0.push(small(name, 0, item0)?);
+        }
+        list0
+    };
+    Ok(match mrlyrs::num::blend::recurrence(&a0) {
+        Some(item0) => {
+            let mut list1 = Vec::new();
+            for item1 in item0 {
+                list1.push({
+                    let parts2 = item1;
+                    Value::Array(vec![
+                        Value::String(parts2.0.to_string()),
+                        Value::String(parts2.1.to_string()),
+                    ])
+                });
+            }
+            Value::Array(list1)
+        }
+        None => Value::Null,
+    })
 }
 
 fn door_num_blend_scale(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
-    let a0: Vec<i128> = { let mut list0 = Vec::new(); for item0 in items(name, 0, &args[0])? { list0.push(small(name, 0, item0)?); } list0 };
+    let a0: Vec<i128> = {
+        let mut list0 = Vec::new();
+        for item0 in items(name, 0, &args[0])? {
+            list0.push(small(name, 0, item0)?);
+        }
+        list0
+    };
     let a1: i128 = small(name, 1, &args[1])?;
-    Ok({ let mut list0 = Vec::new(); for item0 in mrlyrs::num::blend::scale(&a0, a1) { list0.push(Value::String(item0.to_string())); } Value::Array(list0) })
+    Ok({
+        let mut list0 = Vec::new();
+        for item0 in mrlyrs::num::blend::scale(&a0, a1) {
+            list0.push(Value::String(item0.to_string()));
+        }
+        Value::Array(list0)
+    })
 }
 
 fn door_num_blend_shift(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
-    let a0: Vec<i128> = { let mut list0 = Vec::new(); for item0 in items(name, 0, &args[0])? { list0.push(small(name, 0, item0)?); } list0 };
+    let a0: Vec<i128> = {
+        let mut list0 = Vec::new();
+        for item0 in items(name, 0, &args[0])? {
+            list0.push(small(name, 0, item0)?);
+        }
+        list0
+    };
     let a1: usize = take!(name, 1, &args[1]);
-    Ok({ let mut list0 = Vec::new(); for item0 in mrlyrs::num::blend::shift(&a0, a1) { list0.push(Value::String(item0.to_string())); } Value::Array(list0) })
+    Ok({
+        let mut list0 = Vec::new();
+        for item0 in mrlyrs::num::blend::shift(&a0, a1) {
+            list0.push(Value::String(item0.to_string()));
+        }
+        Value::Array(list0)
+    })
 }
 
 fn door_num_blend_sigma(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
-    let a0: Vec<i128> = { let mut list0 = Vec::new(); for item0 in items(name, 0, &args[0])? { list0.push(small(name, 0, item0)?); } list0 };
-    match mrlyrs::num::blend::sigma(&a0) { Ok(value) => Ok({ let mut list0 = Vec::new(); for item0 in value { list0.push(Value::String(item0.to_string())); } Value::Array(list0) }), Err(error) => Err(Fail::Error(error.to_string())) }
+    let a0: Vec<i128> = {
+        let mut list0 = Vec::new();
+        for item0 in items(name, 0, &args[0])? {
+            list0.push(small(name, 0, item0)?);
+        }
+        list0
+    };
+    match mrlyrs::num::blend::sigma(&a0) {
+        Ok(value) => Ok({
+            let mut list0 = Vec::new();
+            for item0 in value {
+                list0.push(Value::String(item0.to_string()));
+            }
+            Value::Array(list0)
+        }),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_blend_sub(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
-    let a0: Vec<i128> = { let mut list0 = Vec::new(); for item0 in items(name, 0, &args[0])? { list0.push(small(name, 0, item0)?); } list0 };
-    let a1: Vec<i128> = { let mut list0 = Vec::new(); for item0 in items(name, 1, &args[1])? { list0.push(small(name, 1, item0)?); } list0 };
-    Ok({ let mut list0 = Vec::new(); for item0 in mrlyrs::num::blend::sub(&a0, &a1) { list0.push(Value::String(item0.to_string())); } Value::Array(list0) })
+    let a0: Vec<i128> = {
+        let mut list0 = Vec::new();
+        for item0 in items(name, 0, &args[0])? {
+            list0.push(small(name, 0, item0)?);
+        }
+        list0
+    };
+    let a1: Vec<i128> = {
+        let mut list0 = Vec::new();
+        for item0 in items(name, 1, &args[1])? {
+            list0.push(small(name, 1, item0)?);
+        }
+        list0
+    };
+    Ok({
+        let mut list0 = Vec::new();
+        for item0 in mrlyrs::num::blend::sub(&a0, &a1) {
+            list0.push(Value::String(item0.to_string()));
+        }
+        Value::Array(list0)
+    })
 }
 
 fn door_num_boolean_is_balanced(name: &str, args: &[Value]) -> Done {
@@ -7464,7 +9543,10 @@ fn door_num_design_peaks(name: &str, args: &[Value]) -> Done {
     let a1: Vec<f64> = take!(name, 1, &args[1]);
     let a2: (f64, f64) = take!(name, 2, &args[2]);
     let a3: f64 = take!(name, 3, &args[3]);
-    match mrlyrs::num::design::peaks(&a0, &a1, a2, a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::design::peaks(&a0, &a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_design_pole_lattice(name: &str, args: &[Value]) -> Done {
@@ -7494,14 +9576,19 @@ fn door_num_design_size(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<u64> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    Ok(Value::String(mrlyrs::num::design::size(&a0, a1).to_string()))
+    Ok(Value::String(
+        mrlyrs::num::design::size(&a0, a1).to_string(),
+    ))
 }
 
 fn door_num_design_spectrum(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<f64> = take!(name, 0, &args[0]);
     let a1: Vec<f64> = take!(name, 1, &args[1]);
-    match mrlyrs::num::design::spectrum(&a0, &a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::design::spectrum(&a0, &a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_design_upper_rms(name: &str, args: &[Value]) -> Done {
@@ -7532,7 +9619,10 @@ fn door_num_factor_divisors(name: &str, args: &[Value]) -> Done {
 fn door_num_factor_factorial(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: usize = take!(name, 0, &args[0]);
-    match mrlyrs::num::factor::factorial(a0) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::factor::factorial(a0) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_factor_factorize(name: &str, args: &[Value]) -> Done {
@@ -7583,14 +9673,22 @@ fn door_num_factor_reduce(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: u128 = big(name, 0, &args[0])?;
     let a1: u128 = big(name, 1, &args[1])?;
-    Ok({ let parts0 = mrlyrs::num::factor::reduce(a0, a1); Value::Array(vec![Value::String(parts0.0.to_string()), Value::String(parts0.1.to_string())]) })
+    Ok({
+        let parts0 = mrlyrs::num::factor::reduce(a0, a1);
+        Value::Array(vec![
+            Value::String(parts0.0.to_string()),
+            Value::String(parts0.1.to_string()),
+        ])
+    })
 }
 
 fn door_num_factor_sigma(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: u32 = take!(name, 1, &args[1]);
-    Ok(Value::String(mrlyrs::num::factor::sigma(a0, a1).to_string()))
+    Ok(Value::String(
+        mrlyrs::num::factor::sigma(a0, a1).to_string(),
+    ))
 }
 
 fn door_num_factor_squarefree(name: &str, args: &[Value]) -> Done {
@@ -7623,7 +9721,10 @@ fn door_num_fft_convolve(name: &str, args: &[Value]) -> Done {
     let a0: Vec<f64> = take!(name, 0, &args[0]);
     let a1: Vec<f64> = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::num::fft::convolve(&a0, &a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::fft::convolve(&a0, &a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_fft_convolve_with(name: &str, args: &[Value]) -> Done {
@@ -7632,7 +9733,10 @@ fn door_num_fft_convolve_with(name: &str, args: &[Value]) -> Done {
     let a1: Vec<f64> = take!(name, 1, &args[1]);
     let a2: Vec<f64> = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
-    match mrlyrs::num::fft::convolve_with(&a0, &a1, &a2, a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::fft::convolve_with(&a0, &a1, &a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_fft_embed_kernel(name: &str, args: &[Value]) -> Done {
@@ -7640,21 +9744,30 @@ fn door_num_fft_embed_kernel(name: &str, args: &[Value]) -> Done {
     let a0: Vec<u8> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::num::fft::embed_kernel(&a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::fft::embed_kernel(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_fft_log_spectrum(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<f64> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::num::fft::log_spectrum(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::fft::log_spectrum(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_fft_magnitude_spectrum(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<f64> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::num::fft::magnitude_spectrum(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::fft::magnitude_spectrum(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_fft_peak_ring(name: &str, args: &[Value]) -> Done {
@@ -7674,14 +9787,20 @@ fn door_num_fft_radial_profile(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<f64> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::num::fft::radial_profile(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::fft::radial_profile(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_fft_transform(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<f64> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::num::fft::transform(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::fft::transform(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_gauss_class_prime(name: &str, args: &[Value]) -> Done {
@@ -7934,7 +10053,10 @@ fn door_num_ladder_design_new(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: u64 = take!(name, 0, &args[0]);
     let a1: Vec<u64> = take!(name, 1, &args[1]);
-    match mrlyrs::num::ladder::Design::new(a0, &a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::ladder::Design::new(a0, &a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_ladder_design_peel(name: &str, args: &[Value]) -> Done {
@@ -7962,7 +10084,10 @@ fn door_num_ladder_design_with_peel(name: &str, args: &[Value]) -> Done {
     let a0: u64 = take!(name, 0, &args[0]);
     let a1: Vec<u64> = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::num::ladder::Design::with_peel(a0, &a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::ladder::Design::with_peel(a0, &a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_ladder_cofactor(name: &str, args: &[Value]) -> Done {
@@ -7970,7 +10095,10 @@ fn door_num_ladder_cofactor(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::num::ladder::Design = take!(name, 0, &args[0]);
     let a1: mrlyrs::num::zeta::Complex = take!(name, 1, &args[1]);
     let a2: f64 = take!(name, 2, &args[2]);
-    match mrlyrs::num::ladder::cofactor(&a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::ladder::cofactor(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_ladder_residue(name: &str, args: &[Value]) -> Done {
@@ -7979,7 +10107,10 @@ fn door_num_ladder_residue(name: &str, args: &[Value]) -> Done {
     let a1: usize = take!(name, 1, &args[1]);
     let a2: i64 = take!(name, 2, &args[2]);
     let a3: f64 = take!(name, 3, &args[3]);
-    match mrlyrs::num::ladder::residue(&a0, a1, a2, a3) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::ladder::residue(&a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_ladder_zeta(name: &str, args: &[Value]) -> Done {
@@ -7987,7 +10118,10 @@ fn door_num_ladder_zeta(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::num::ladder::Design = take!(name, 0, &args[0]);
     let a1: mrlyrs::num::zeta::Complex = take!(name, 1, &args[1]);
     let a2: f64 = take!(name, 2, &args[2]);
-    match mrlyrs::num::ladder::zeta(&a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::ladder::zeta(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_lattice_coprime_pairs(name: &str, args: &[Value]) -> Done {
@@ -8024,13 +10158,19 @@ fn door_num_lattice_recovered(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: u32 = take!(name, 1, &args[1]);
-    match mrlyrs::num::lattice::recovered(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::lattice::recovered(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_lattice_visible_density(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: u32 = take!(name, 0, &args[0]);
-    match mrlyrs::num::lattice::visible_density(a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::lattice::visible_density(a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_lattice_zeta_factor(name: &str, args: &[Value]) -> Done {
@@ -8042,7 +10182,10 @@ fn door_num_lattice_zeta_factor(name: &str, args: &[Value]) -> Done {
 fn door_num_lattice_zeta_whole(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: u32 = take!(name, 0, &args[0]);
-    match mrlyrs::num::lattice::zeta_whole(a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::lattice::zeta_whole(a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_memory_rule_accepts(name: &str, args: &[Value]) -> Done {
@@ -8068,14 +10211,19 @@ fn door_num_memory_rule_alphabet(name: &str, args: &[Value]) -> Done {
 fn door_num_memory_rule_codes(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::num::memory::Rule = take!(name, 0, &args[0]);
-    Ok(Value::String(mrlyrs::num::memory::Rule::codes(&a0).to_string()))
+    Ok(Value::String(
+        mrlyrs::num::memory::Rule::codes(&a0).to_string(),
+    ))
 }
 
 fn door_num_memory_rule_full(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::num::memory::Rule::full(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::memory::Rule::full(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_memory_rule_letters(name: &str, args: &[Value]) -> Done {
@@ -8089,7 +10237,10 @@ fn door_num_memory_rule_new(name: &str, args: &[Value]) -> Done {
     let a0: usize = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: u64 = take!(name, 2, &args[2]);
-    match mrlyrs::num::memory::Rule::new(a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::memory::Rule::new(a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_memory_rule_states(name: &str, args: &[Value]) -> Done {
@@ -8204,7 +10355,10 @@ fn door_num_morse_fold(name: &str, args: &[Value]) -> Done {
     let a0: Vec<u8> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::num::morse::fold(&a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::morse::fold(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_morse_letter(name: &str, args: &[Value]) -> Done {
@@ -8225,7 +10379,10 @@ fn door_num_morse_power(name: &str, args: &[Value]) -> Done {
     let a0: Vec<u8> = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::num::morse::power(&a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::morse::power(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_morse_repeat(name: &str, args: &[Value]) -> Done {
@@ -8381,7 +10538,10 @@ fn door_num_radix_base_class(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::num::radix::Base = take!(name, 0, &args[0]);
     let a1: (i64, i64) = take!(name, 1, &args[1]);
-    match mrlyrs::num::radix::Base::class(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::radix::Base::class(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_radix_base_congruent(name: &str, args: &[Value]) -> Done {
@@ -8395,7 +10555,10 @@ fn door_num_radix_base_congruent(name: &str, args: &[Value]) -> Done {
 fn door_num_radix_base_group(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::num::radix::Base = take!(name, 0, &args[0]);
-    match mrlyrs::num::radix::Base::group(a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::radix::Base::group(a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_radix_base_mirrored(name: &str, args: &[Value]) -> Done {
@@ -8408,7 +10571,10 @@ fn door_num_radix_base_new(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::num::gauss::Ring = take!(name, 0, &args[0]);
     let a1: (i64, i64) = take!(name, 1, &args[1]);
-    match mrlyrs::num::radix::Base::new(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::radix::Base::new(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_radix_base_norm(name: &str, args: &[Value]) -> Done {
@@ -8427,7 +10593,10 @@ fn door_num_radix_base_power(name: &str, args: &[Value]) -> Done {
 fn door_num_radix_base_residues(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::num::radix::Base = take!(name, 0, &args[0]);
-    match mrlyrs::num::radix::Base::residues(a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::radix::Base::residues(a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_radix_base_ring(name: &str, args: &[Value]) -> Done {
@@ -8451,13 +10620,19 @@ fn door_num_radix_radix_base(name: &str, args: &[Value]) -> Done {
 fn door_num_radix_radix_canonical(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::num::radix::Radix = take!(name, 0, &args[0]);
-    match mrlyrs::num::radix::Radix::canonical(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::radix::Radix::canonical(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_radix_radix_code(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::num::radix::Radix = take!(name, 0, &args[0]);
-    match mrlyrs::num::radix::Radix::code(&a0) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::radix::Radix::code(&a0) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_radix_radix_digits(name: &str, args: &[Value]) -> Done {
@@ -8483,14 +10658,19 @@ fn door_num_radix_radix_fill(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::num::radix::Radix = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    Ok(Value::String(mrlyrs::num::radix::Radix::fill(&a0, a1).to_string()))
+    Ok(Value::String(
+        mrlyrs::num::radix::Radix::fill(&a0, a1).to_string(),
+    ))
 }
 
 fn door_num_radix_radix_from_code(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::num::radix::Base = take!(name, 0, &args[0]);
     let a1: u128 = big(name, 1, &args[1])?;
-    match mrlyrs::num::radix::Radix::from_code(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::radix::Radix::from_code(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_radix_radix_new(name: &str, args: &[Value]) -> Done {
@@ -8498,7 +10678,10 @@ fn door_num_radix_radix_new(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::num::radix::Base = take!(name, 0, &args[0]);
     let a1: Vec<(i64, i64)> = take!(name, 1, &args[1]);
     let a2: Vec<(i64, i64)> = take!(name, 2, &args[2]);
-    match mrlyrs::num::radix::Radix::new(a0, a1, a2) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::radix::Radix::new(a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_radix_radix_plane(name: &str, args: &[Value]) -> Done {
@@ -8530,7 +10713,10 @@ fn door_num_radix_radix_with_twists(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::num::radix::Radix = take!(name, 0, &args[0]);
     let a1: Vec<usize> = take!(name, 1, &args[1]);
-    match mrlyrs::num::radix::Radix::with_twists(a0, &a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::radix::Radix::with_twists(a0, &a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_radix_radix_words(name: &str, args: &[Value]) -> Done {
@@ -8542,34 +10728,52 @@ fn door_num_radix_radix_words(name: &str, args: &[Value]) -> Done {
 
 fn door_num_radix_flowsnake(name: &str, args: &[Value]) -> Done {
     count(name, args, 0)?;
-    match mrlyrs::num::radix::flowsnake() { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::radix::flowsnake() {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_radix_gasket(name: &str, args: &[Value]) -> Done {
     count(name, args, 0)?;
-    match mrlyrs::num::radix::gasket() { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::radix::gasket() {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_radix_koch(name: &str, args: &[Value]) -> Done {
     count(name, args, 0)?;
-    match mrlyrs::num::radix::koch() { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::radix::koch() {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_radix_terdragon(name: &str, args: &[Value]) -> Done {
     count(name, args, 0)?;
-    match mrlyrs::num::radix::terdragon() { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::radix::terdragon() {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_radix_tile(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: u64 = take!(name, 0, &args[0]);
     let a1: u128 = big(name, 1, &args[1])?;
-    match mrlyrs::num::radix::tile(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::radix::tile(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_radix_twindragon(name: &str, args: &[Value]) -> Done {
     count(name, args, 0)?;
-    match mrlyrs::num::radix::twindragon() { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::radix::twindragon() {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_series_basel(name: &str, args: &[Value]) -> Done {
@@ -8581,7 +10785,22 @@ fn door_num_series_basel(name: &str, args: &[Value]) -> Done {
 fn door_num_series_bernoulli(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: usize = take!(name, 0, &args[0]);
-    match mrlyrs::num::series::bernoulli(a0) { Ok(value) => Ok({ let mut list0 = Vec::new(); for item0 in value { list0.push({ let parts1 = item0; Value::Array(vec![Value::String(parts1.0.to_string()), Value::String(parts1.1.to_string())]) }); } Value::Array(list0) }), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::series::bernoulli(a0) {
+        Ok(value) => Ok({
+            let mut list0 = Vec::new();
+            for item0 in value {
+                list0.push({
+                    let parts1 = item0;
+                    Value::Array(vec![
+                        Value::String(parts1.0.to_string()),
+                        Value::String(parts1.1.to_string()),
+                    ])
+                });
+            }
+            Value::Array(list0)
+        }),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_series_beta(name: &str, args: &[Value]) -> Done {
@@ -8670,7 +10889,10 @@ fn door_num_series_lambda(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: f64 = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::num::series::lambda(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::series::lambda(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_series_leibniz(name: &str, args: &[Value]) -> Done {
@@ -8701,7 +10923,10 @@ fn door_num_series_visible(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
     let a1: u32 = take!(name, 1, &args[1]);
-    match mrlyrs::num::series::visible(a0, a1) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::series::visible(a0, a1) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_series_wallis_half_pi(name: &str, args: &[Value]) -> Done {
@@ -8720,21 +10945,30 @@ fn door_num_series_zeta(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: f64 = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::num::series::zeta(a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::series::zeta(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_sieve_cells(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<u64> = take!(name, 0, &args[0]);
     let a1: u32 = take!(name, 1, &args[1]);
-    match mrlyrs::num::sieve::cells(&a0, a1) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::sieve::cells(&a0, a1) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_sieve_exponent(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<u64> = take!(name, 0, &args[0]);
     let a1: u32 = take!(name, 1, &args[1]);
-    match mrlyrs::num::sieve::exponent(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::sieve::exponent(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_sieve_flat_word(name: &str, args: &[Value]) -> Done {
@@ -8748,14 +10982,20 @@ fn door_num_sieve_holes(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<u64> = take!(name, 0, &args[0]);
     let a1: u32 = take!(name, 1, &args[1]);
-    match mrlyrs::num::sieve::holes(&a0, a1) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::sieve::holes(&a0, a1) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_sieve_limit(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<u64> = take!(name, 0, &args[0]);
     let a1: u32 = take!(name, 1, &args[1]);
-    match mrlyrs::num::sieve::limit(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::sieve::limit(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_sieve_odd_word(name: &str, args: &[Value]) -> Done {
@@ -8768,26 +11008,38 @@ fn door_num_sieve_punctures(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<u64> = take!(name, 0, &args[0]);
     let a1: u32 = take!(name, 1, &args[1]);
-    match mrlyrs::num::sieve::punctures(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::sieve::punctures(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_sieve_raster(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: Vec<u64> = take!(name, 0, &args[0]);
-    match mrlyrs::num::sieve::raster(&a0) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::sieve::raster(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_sieve_ratio(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<u64> = take!(name, 0, &args[0]);
     let a1: u32 = take!(name, 1, &args[1]);
-    match mrlyrs::num::sieve::ratio(&a0, a1) { Ok(value) => Ok(give!(value)), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::sieve::ratio(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_sieve_side(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: Vec<u64> = take!(name, 0, &args[0]);
-    match mrlyrs::num::sieve::side(&a0) { Ok(value) => Ok(Value::String(value.to_string())), Err(error) => Err(Fail::Error(error.to_string())) }
+    match mrlyrs::num::sieve::side(&a0) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_sieve_solid_limit(name: &str, args: &[Value]) -> Done {
@@ -8970,7 +11222,9 @@ fn door_num_zeta_line_novelty_coefficients(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: mrlyrs::num::zeta::Line = take!(name, 0, &args[0]);
     let a1: Vec<f64> = take!(name, 1, &args[1]);
-    Ok(give!(mrlyrs::num::zeta::Line::novelty_coefficients(&a0, &a1)))
+    Ok(give!(mrlyrs::num::zeta::Line::novelty_coefficients(
+        &a0, &a1
+    )))
 }
 
 fn door_num_zeta_line_pair(name: &str, args: &[Value]) -> Done {

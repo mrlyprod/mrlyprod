@@ -1,68 +1,18 @@
-use figures::out::root;
 use figures::{ink, save, Board, Ramp};
 use mrlyrs::core::error::Result;
 use mrlyrs::core::tensor::Tensor;
 use mrlyrs::life::{design_mask, next_grid, Boundary};
 use mrlyrs::math::bang::Code;
 use mrlyrs::math::two::Cell2d;
-use mrlyrs::Error;
-use std::path::PathBuf;
 
 const NAME: &str = "demo-life";
 const SIDE: usize = 96;
 const STEPS: usize = 512;
 const SEED: [(usize, usize); 5] = [(1, 0), (2, 0), (0, 1), (1, 1), (1, 2)];
 
-// DATA
+// LIFE
 
-fn path() -> PathBuf {
-    root()
-        .join("files")
-        .join("figures")
-        .join("data")
-        .join(format!("{NAME}.json"))
-}
-
-fn write_data(first: &[i32], live: &[u8]) -> Result<PathBuf> {
-    let file = path();
-    let folder = file.parent().unwrap().to_path_buf();
-    std::fs::create_dir_all(&folder)
-        .map_err(|e| Error::Value(format!("cannot make {folder:?}: {e}")))?;
-    let one: Vec<String> = first.iter().map(|step| step.to_string()).collect();
-    let two: Vec<String> = live.iter().map(|bit| bit.to_string()).collect();
-    let text = format!(
-        "{{\"first\":[{}],\"live\":[{}]}}",
-        one.join(","),
-        two.join(",")
-    );
-    std::fs::write(&file, text).map_err(|e| Error::Value(format!("cannot write {file:?}: {e}")))?;
-    Ok(file)
-}
-
-fn field(text: &str, name: &str) -> Vec<i32> {
-    let head = format!("\"{name}\":[");
-    let Some(start) = text.find(&head) else {
-        return Vec::new();
-    };
-    let body = &text[start + head.len()..];
-    let end = body.find(']').unwrap_or(0);
-    body[..end]
-        .split(',')
-        .filter_map(|token| token.parse().ok())
-        .collect()
-}
-
-fn read_data() -> Result<(Vec<i32>, Vec<i32>)> {
-    let file = path();
-    let raw = std::fs::read_to_string(&file)
-        .map_err(|e| Error::Value(format!("cannot read {file:?}: {e}; run -- compute")))?;
-    let text: String = raw.chars().filter(|c| !c.is_whitespace()).collect();
-    Ok((field(&text, "first"), field(&text, "live")))
-}
-
-// PRESS
-
-fn compute() -> Result<()> {
+fn life() -> Result<(Vec<i32>, Vec<u8>)> {
     let mask = design_mask(2, Code::from(7u128), 3, 1)?;
     assert_eq!(mask.shape, vec![3, 3]);
     assert_eq!((0..mask.size()).filter(|&i| mask.at(i) == 1).count(), 8);
@@ -94,19 +44,13 @@ fn compute() -> Result<()> {
     let alive = standing.iter().filter(|&&bit| bit != 0).count();
     assert!(alive > 0);
     assert!(ever > alive);
-
-    let file = write_data(&first, &standing)?;
-    println!("{NAME} {ever} ever {alive} live after {STEPS} -> {file:?}");
-    Ok(())
+    Ok((first, standing))
 }
 
-fn draw() -> Result<()> {
-    let (first, live) = read_data()?;
-    assert_eq!(first.len(), SIDE * SIDE);
-    assert_eq!(live.len(), SIDE * SIDE);
-    assert!(first.iter().any(|&mark| mark >= 0));
-    assert!(live.iter().any(|&bit| bit != 0));
+// PRESS
 
+fn main() -> Result<()> {
+    let (first, live) = life()?;
     let mut board = Board::square();
     let area = board.frame(0.08);
     let scale = (area.w / SIDE as f64).floor().max(1.0);
@@ -130,11 +74,4 @@ fn draw() -> Result<()> {
     }
     save(NAME, &board)?;
     Ok(())
-}
-
-fn main() -> Result<()> {
-    if std::env::args().nth(1).as_deref() == Some("compute") {
-        return compute();
-    }
-    draw()
 }

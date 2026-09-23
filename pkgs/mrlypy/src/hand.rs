@@ -7,9 +7,7 @@ use mrlyrs::math::bang::Code;
 use mrlyrs::math::cell::models::CellNd;
 use mrlyrs::math::six::{Cell6d, Orientation, Projection};
 use numpy::ndarray::{ArrayD, IxDyn};
-use numpy::{
-    Element, IntoPyArray, PyReadonlyArrayDyn, PyReadwriteArrayDyn, PyUntypedArrayMethods,
-};
+use numpy::{Element, IntoPyArray, PyReadonlyArrayDyn, PyReadwriteArrayDyn, PyUntypedArrayMethods};
 use pyo3::exceptions::{PyOverflowError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList, PyTuple};
@@ -73,9 +71,9 @@ pub fn tensor_into_py<'py>(py: Python<'py>, tensor: &Tensor) -> PyResult<Bound<'
 }
 
 fn copy_back<T: Element + Copy>(obj: &Bound<'_, PyAny>, data: &[T]) -> PyResult<()> {
-    let mut view = obj.extract::<PyReadwriteArrayDyn<T>>().map_err(|_| {
-        bad("a mutated tensor writes back into a writable array of its own dtype.")
-    })?;
+    let mut view = obj
+        .extract::<PyReadwriteArrayDyn<T>>()
+        .map_err(|_| bad("a mutated tensor writes back into a writable array of its own dtype."))?;
     let slot = view
         .as_slice_mut()
         .map_err(|_| bad("a mutated tensor writes back into a C-contiguous array."))?;

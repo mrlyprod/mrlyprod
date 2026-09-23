@@ -26,7 +26,10 @@ fn replays(module: &str) {
     );
     for (index, (was, now)) in saved.iter().zip(&fresh).enumerate() {
         let name = was["fn"].as_str().unwrap_or("?");
-        assert_eq!(was["fn"], now["fn"], "{module}.json row {index} is not {name}");
+        assert_eq!(
+            was["fn"], now["fn"],
+            "{module}.json row {index} is not {name}"
+        );
         assert_eq!(
             was["in"], now["in"],
             "{module}.json row {index} {name}: the arguments drifted"

@@ -680,7 +680,8 @@ fn serde_skip(attrs: &[Attribute]) -> bool {
             match token {
                 proc_macro2::TokenTree::Punct(p) if p.as_char() == ',' => key = true,
                 proc_macro2::TokenTree::Ident(id) if key => {
-                    skip |= ["skip", "skip_serializing", "skip_deserializing"].contains(&id.to_string().as_str());
+                    skip |= ["skip", "skip_serializing", "skip_deserializing"]
+                        .contains(&id.to_string().as_str());
                     key = false;
                 }
                 _ => key = false,

@@ -46,7 +46,9 @@ pub fn apollonian_on_line(c: &apollonian_Circle) -> Result<bool, JsValue> {
 /// Reflects the circle at the seat through the other three, `v' = 2(v_1 + v_2 + v_3) - v` on all three coordinates at once, which is the second root of the Descartes quadratic and needs no square root.
 #[wasm_bindgen]
 pub fn apollonian_reflect(q: JsValue, at: usize) -> Result<apollonian_Circle, JsValue> {
-    let q = hand::array_from_js::<_, 4>(&q, |x1| hand::from_js::<mrlyrs::num::apollonian::Circle>(&hand::plain(x1)?))?;
+    let q = hand::array_from_js::<_, 4>(&q, |x1| {
+        hand::from_js::<mrlyrs::num::apollonian::Circle>(&hand::plain(x1)?)
+    })?;
     let value = mrlyrs::num::apollonian::reflect(&q, at);
     Ok(apollonian_Circle { inner: value })
 }
@@ -55,7 +57,9 @@ pub fn apollonian_reflect(q: JsValue, at: usize) -> Result<apollonian_Circle, Js
 #[wasm_bindgen]
 pub fn apollonian_root(name: &str) -> Result<JsValue, JsValue> {
     let value = mrlyrs::num::apollonian::root(name).map_err(hand::throw)?;
-    hand::list_to_js(&value, |x1| Ok(JsValue::from(apollonian_Circle { inner: *x1 })))
+    hand::list_to_js(&value, |x1| {
+        Ok(JsValue::from(apollonian_Circle { inner: *x1 }))
+    })
 }
 
 /// Reads the Farey stack of the order against the packing: the nodes lit inside the open period against the tangency points of the line-tangent circles of curvature at most `2 Q^2`, and the brightness `floor(Q/b)` summed on the nodes against `Q(Q + 1)/2`. Off the strip there is no line and every count is zero.
@@ -69,7 +73,9 @@ pub fn apollonian_shadow(p: JsValue, order: usize) -> Result<JsValue, JsValue> {
 /// Whether the quadruple carries all six exact invariants: Descartes `B(k, k) = 0`, the position half `B(k, kx) = B(k, ky) = B(kx, ky) = 0`, and the frame `B(kx, kx) = B(ky, ky) = -4`.
 #[wasm_bindgen]
 pub fn apollonian_sound(q: JsValue) -> Result<bool, JsValue> {
-    let q = hand::array_from_js::<_, 4>(&q, |x1| hand::from_js::<mrlyrs::num::apollonian::Circle>(&hand::plain(x1)?))?;
+    let q = hand::array_from_js::<_, 4>(&q, |x1| {
+        hand::from_js::<mrlyrs::num::apollonian::Circle>(&hand::plain(x1)?)
+    })?;
     let value = mrlyrs::num::apollonian::sound(&q);
     Ok(value)
 }
@@ -77,9 +83,13 @@ pub fn apollonian_sound(q: JsValue) -> Result<bool, JsValue> {
 /// The quadruple with the circle at the seat replaced by its reflection.
 #[wasm_bindgen]
 pub fn apollonian_swap(q: JsValue, at: usize) -> Result<JsValue, JsValue> {
-    let q = hand::array_from_js::<_, 4>(&q, |x1| hand::from_js::<mrlyrs::num::apollonian::Circle>(&hand::plain(x1)?))?;
+    let q = hand::array_from_js::<_, 4>(&q, |x1| {
+        hand::from_js::<mrlyrs::num::apollonian::Circle>(&hand::plain(x1)?)
+    })?;
     let value = mrlyrs::num::apollonian::swap(&q, at);
-    hand::list_to_js(&value, |x1| Ok(JsValue::from(apollonian_Circle { inner: *x1 })))
+    hand::list_to_js(&value, |x1| {
+        Ok(JsValue::from(apollonian_Circle { inner: *x1 }))
+    })
 }
 
 /// The tangency points on the line `y = 0`, ascending: one per circle of the packing with `k y = 1`, the root excluded. Empty off the strip.
@@ -111,9 +121,19 @@ pub fn blend_cauchy(a: JsValue, b: JsValue) -> Result<JsValue, JsValue> {
 /// Returns the monic characteristic polynomial of a recurrence, highest power first.
 #[wasm_bindgen]
 pub fn blend_characteristic(coefficients: JsValue) -> Result<JsValue, JsValue> {
-    let coefficients = hand::list_from_js(&coefficients, |x1| Ok((hand::i128_from_js(&hand::item(x1, 0)?)?, hand::i128_from_js(&hand::item(x1, 1)?)?)))?;
+    let coefficients = hand::list_from_js(&coefficients, |x1| {
+        Ok((
+            hand::i128_from_js(&hand::item(x1, 0)?)?,
+            hand::i128_from_js(&hand::item(x1, 1)?)?,
+        ))
+    })?;
     let value = mrlyrs::num::blend::characteristic(&coefficients);
-    hand::list_to_js(&value, |x1| Ok(hand::tuple_to_js(&[JsValue::from_str(&x1.0.to_string()), JsValue::from_str(&x1.1.to_string())])))
+    hand::list_to_js(&value, |x1| {
+        Ok(hand::tuple_to_js(&[
+            JsValue::from_str(&x1.0.to_string()),
+            JsValue::from_str(&x1.1.to_string()),
+        ]))
+    })
 }
 
 /// Keeps every step-th term from the offset onward.
@@ -135,7 +155,12 @@ pub fn blend_delta(a: JsValue) -> Result<JsValue, JsValue> {
 /// Returns the largest positive real root of a recurrence's characteristic polynomial, the growth rate, or a not-a-number where no real root lands.
 #[wasm_bindgen]
 pub fn blend_growth(coefficients: JsValue) -> Result<f64, JsValue> {
-    let coefficients = hand::list_from_js(&coefficients, |x1| Ok((hand::i128_from_js(&hand::item(x1, 0)?)?, hand::i128_from_js(&hand::item(x1, 1)?)?)))?;
+    let coefficients = hand::list_from_js(&coefficients, |x1| {
+        Ok((
+            hand::i128_from_js(&hand::item(x1, 0)?)?,
+            hand::i128_from_js(&hand::item(x1, 1)?)?,
+        ))
+    })?;
     let value = mrlyrs::num::blend::growth(&coefficients);
     Ok(value)
 }
@@ -154,7 +179,14 @@ pub fn blend_hadamard(a: JsValue, b: JsValue) -> Result<JsValue, JsValue> {
 pub fn blend_recurrence(terms: JsValue) -> Result<JsValue, JsValue> {
     let terms = hand::list_from_js(&terms, hand::i128_from_js)?;
     let value = mrlyrs::num::blend::recurrence(&terms);
-    hand::option_to_js(value.as_ref(), |x1| hand::list_to_js(x1, |x2| Ok(hand::tuple_to_js(&[JsValue::from_str(&x2.0.to_string()), JsValue::from_str(&x2.1.to_string())]))))
+    hand::option_to_js(value.as_ref(), |x1| {
+        hand::list_to_js(x1, |x2| {
+            Ok(hand::tuple_to_js(&[
+                JsValue::from_str(&x2.0.to_string()),
+                JsValue::from_str(&x2.1.to_string()),
+            ]))
+        })
+    })
 }
 
 /// Multiplies every term of a sequence by the factor.
@@ -233,7 +265,11 @@ pub fn design_digits_of(mask: u32, base: JsValue) -> Result<Vec<u64>, JsValue> {
 
 /// Returns the density echo, the sum of mu(n) A_F(n)/n over the whole numbers up to each grid point divided by x to the exponent, sieving the Mobius values to the largest element.
 #[wasm_bindgen]
-pub fn design_echo_series(values: JsValue, log_x: &[f64], exponent: f64) -> Result<Vec<f64>, JsValue> {
+pub fn design_echo_series(
+    values: JsValue,
+    log_x: &[f64],
+    exponent: f64,
+) -> Result<Vec<f64>, JsValue> {
     let values = hand::list_from_js(&values, hand::u64_from_js)?;
     let value = mrlyrs::num::design::echo_series(&values, log_x, exponent);
     Ok(value)
@@ -279,7 +315,12 @@ pub fn design_nearest(value: f64, list: &[f64]) -> Result<f64, JsValue> {
 
 /// Returns the bins inside the band that rise above both neighbours and clear the score threshold, strongest first.
 #[wasm_bindgen]
-pub fn design_peaks(gamma: &[f64], score: &[f64], band: JsValue, threshold: f64) -> Result<Vec<usize>, JsValue> {
+pub fn design_peaks(
+    gamma: &[f64],
+    score: &[f64],
+    band: JsValue,
+    threshold: f64,
+) -> Result<Vec<usize>, JsValue> {
     let band = hand::from_js::<(f64, f64)>(&band)?;
     let value = mrlyrs::num::design::peaks(gamma, score, band, threshold).map_err(hand::throw)?;
     Ok(value)
@@ -295,7 +336,12 @@ pub fn design_pole_lattice(base: JsValue, top: f64) -> Result<Vec<f64>, JsValue>
 
 /// Reads the running meter at every point of the log grid and divides by x to the exponent.
 #[wasm_bindgen]
-pub fn design_resample(values: JsValue, running: JsValue, exponent: f64, log_x: &[f64]) -> Result<Vec<f64>, JsValue> {
+pub fn design_resample(
+    values: JsValue,
+    running: JsValue,
+    exponent: f64,
+    log_x: &[f64],
+) -> Result<Vec<f64>, JsValue> {
     let values = hand::list_from_js(&values, hand::u64_from_js)?;
     let running = hand::list_from_js(&running, hand::i64_from_js)?;
     let value = mrlyrs::num::design::resample(&values, &running, exponent, log_x);
@@ -321,7 +367,10 @@ pub fn design_size(digits: JsValue, depth: usize) -> Result<JsValue, JsValue> {
 #[wasm_bindgen]
 pub fn design_spectrum(log_x: &[f64], series: &[f64]) -> Result<JsValue, JsValue> {
     let value = mrlyrs::num::design::spectrum(log_x, series).map_err(hand::throw)?;
-    Ok(hand::tuple_to_js(&[hand::typed(&(value.0)[..]), hand::typed(&(value.1)[..])]))
+    Ok(hand::tuple_to_js(&[
+        hand::typed(&(value.0)[..]),
+        hand::typed(&(value.1)[..]),
+    ]))
 }
 
 /// Returns the root mean square of the upper half of the series, the size the echo and the meter are compared at.
@@ -372,7 +421,12 @@ pub fn factor_factorize(number: usize) -> Result<JsValue, JsValue> {
 pub fn factor_factorize_wide(number: JsValue) -> Result<JsValue, JsValue> {
     let number = hand::u64_from_js(&number)?;
     let value = mrlyrs::num::factor::factorize_wide(number);
-    hand::list_to_js(&value, |x1| Ok(hand::tuple_to_js(&[JsValue::from(x1.0), hand::to_js(&x1.1)?])))
+    hand::list_to_js(&value, |x1| {
+        Ok(hand::tuple_to_js(&[
+            JsValue::from(x1.0),
+            hand::to_js(&x1.1)?,
+        ]))
+    })
 }
 
 /// Returns the greatest common divisor of two numbers by the Euclidean algorithm, zero for two zeroes.
@@ -418,7 +472,10 @@ pub fn factor_reduce(numerator: JsValue, denominator: JsValue) -> Result<JsValue
     let numerator = hand::u128_from_js(&numerator)?;
     let denominator = hand::u128_from_js(&denominator)?;
     let value = mrlyrs::num::factor::reduce(numerator, denominator);
-    Ok(hand::tuple_to_js(&[JsValue::from_str(&value.0.to_string()), JsValue::from_str(&value.1.to_string())]))
+    Ok(hand::tuple_to_js(&[
+        JsValue::from_str(&value.0.to_string()),
+        JsValue::from_str(&value.1.to_string()),
+    ]))
 }
 
 /// Returns the sum of every divisor of the number raised to the power, so power zero counts them.
@@ -465,8 +522,14 @@ pub fn fft_convolve(field: &[f64], kernel: &[f64], size: usize) -> Result<Vec<f6
 
 /// Convolves a size-square field on the torus by a kernel already transformed by fft2, the inverse scaled back by size squared.
 #[wasm_bindgen]
-pub fn fft_convolve_with(field: &[f64], kernel_re: &[f64], kernel_im: &[f64], size: usize) -> Result<Vec<f64>, JsValue> {
-    let value = mrlyrs::num::fft::convolve_with(field, kernel_re, kernel_im, size).map_err(hand::throw)?;
+pub fn fft_convolve_with(
+    field: &[f64],
+    kernel_re: &[f64],
+    kernel_im: &[f64],
+    size: usize,
+) -> Result<Vec<f64>, JsValue> {
+    let value =
+        mrlyrs::num::fft::convolve_with(field, kernel_re, kernel_im, size).map_err(hand::throw)?;
     Ok(value)
 }
 
@@ -516,7 +579,10 @@ pub fn fft_radial_profile(spectrum: &[f64], size: usize) -> Result<Vec<f64>, JsV
 #[wasm_bindgen]
 pub fn fft_transform(field: &[f64], size: usize) -> Result<JsValue, JsValue> {
     let value = mrlyrs::num::fft::transform(field, size).map_err(hand::throw)?;
-    Ok(hand::tuple_to_js(&[hand::typed(&(value.0)[..]), hand::typed(&(value.1)[..])]))
+    Ok(hand::tuple_to_js(&[
+        hand::typed(&(value.0)[..]),
+        hand::typed(&(value.1)[..]),
+    ]))
 }
 
 /// Lists one point per associate class of the nonzero points of norm at most the bound: canonical associates, in order of norm and then of coordinates.
@@ -525,7 +591,12 @@ pub fn gauss_classes(ring: JsValue, bound: JsValue) -> Result<JsValue, JsValue> 
     let ring = hand::from_js::<mrlyrs::num::gauss::Ring>(&ring)?;
     let bound = hand::u64_from_js(&bound)?;
     let value = mrlyrs::num::gauss::classes(ring, bound);
-    hand::list_to_js(&value, |x1| Ok(hand::tuple_to_js(&[JsValue::from(x1.0), JsValue::from(x1.1)])))
+    hand::list_to_js(&value, |x1| {
+        Ok(hand::tuple_to_js(&[
+            JsValue::from(x1.0),
+            JsValue::from(x1.1),
+        ]))
+    })
 }
 
 /// Returns the norm from one through the limit with the most points and that count, the earliest on a tie.
@@ -546,24 +617,49 @@ pub fn gauss_shells(ring: JsValue, limit: usize) -> Result<Vec<u32>, JsValue> {
 
 /// Returns the Lyndon cofactor `Z(s) = zeta_F(s) (1 - k q^(-s))` and the bound it is known to.
 #[wasm_bindgen]
-pub fn ladder_cofactor(design: &ladder_Design, s: &zeta_Complex, tolerance: f64) -> Result<JsValue, JsValue> {
-    let value = mrlyrs::num::ladder::cofactor(&design.inner, s.inner, tolerance).map_err(hand::throw)?;
-    Ok(hand::tuple_to_js(&[JsValue::from(zeta_Complex { inner: value.0 }), hand::to_js(&value.1)?]))
+pub fn ladder_cofactor(
+    design: &ladder_Design,
+    s: &zeta_Complex,
+    tolerance: f64,
+) -> Result<JsValue, JsValue> {
+    let value =
+        mrlyrs::num::ladder::cofactor(&design.inner, s.inner, tolerance).map_err(hand::throw)?;
+    Ok(hand::tuple_to_js(&[
+        JsValue::from(zeta_Complex { inner: value.0 }),
+        hand::to_js(&value.1)?,
+    ]))
 }
 
 /// Returns the residue of `zeta_F` at `s_(m,j) = alpha - m + 2 pi i j / log q` and the bound it is known to.
 #[wasm_bindgen]
-pub fn ladder_residue(design: &ladder_Design, m: usize, j: JsValue, tolerance: f64) -> Result<JsValue, JsValue> {
+pub fn ladder_residue(
+    design: &ladder_Design,
+    m: usize,
+    j: JsValue,
+    tolerance: f64,
+) -> Result<JsValue, JsValue> {
     let j = hand::i64_from_js(&j)?;
-    let value = mrlyrs::num::ladder::residue(&design.inner, m, j, tolerance).map_err(hand::throw)?;
-    Ok(hand::tuple_to_js(&[JsValue::from(zeta_Complex { inner: value.0 }), hand::to_js(&value.1)?]))
+    let value =
+        mrlyrs::num::ladder::residue(&design.inner, m, j, tolerance).map_err(hand::throw)?;
+    Ok(hand::tuple_to_js(&[
+        JsValue::from(zeta_Complex { inner: value.0 }),
+        hand::to_js(&value.1)?,
+    ]))
 }
 
 /// Returns `zeta_F(s)` and the bound it is known to.
 #[wasm_bindgen]
-pub fn ladder_zeta(design: &ladder_Design, s: &zeta_Complex, tolerance: f64) -> Result<JsValue, JsValue> {
-    let value = mrlyrs::num::ladder::zeta(&design.inner, s.inner, tolerance).map_err(hand::throw)?;
-    Ok(hand::tuple_to_js(&[JsValue::from(zeta_Complex { inner: value.0 }), hand::to_js(&value.1)?]))
+pub fn ladder_zeta(
+    design: &ladder_Design,
+    s: &zeta_Complex,
+    tolerance: f64,
+) -> Result<JsValue, JsValue> {
+    let value =
+        mrlyrs::num::ladder::zeta(&design.inner, s.inner, tolerance).map_err(hand::throw)?;
+    Ok(hand::tuple_to_js(&[
+        JsValue::from(zeta_Complex { inner: value.0 }),
+        hand::to_js(&value.1)?,
+    ]))
 }
 
 /// Counts the ordered pairs of coprime coordinates between one and n: twice the totient sum less one.
@@ -925,7 +1021,12 @@ pub fn series_basel(n: usize) -> Result<f64, JsValue> {
 #[wasm_bindgen]
 pub fn series_bernoulli(count: usize) -> Result<JsValue, JsValue> {
     let value = mrlyrs::num::series::bernoulli(count).map_err(hand::throw)?;
-    hand::list_to_js(&value, |x1| Ok(hand::tuple_to_js(&[JsValue::from_str(&x1.0.to_string()), JsValue::from_str(&x1.1.to_string())])))
+    hand::list_to_js(&value, |x1| {
+        Ok(hand::tuple_to_js(&[
+            JsValue::from_str(&x1.0.to_string()),
+            JsValue::from_str(&x1.1.to_string()),
+        ]))
+    })
 }
 
 /// Returns the Dirichlet beta value, the alternating odd-denominator sum averaged over its last two partial sums.
@@ -1142,7 +1243,10 @@ pub fn sieve_punctures(word: JsValue, dimension: u32) -> Result<Vec<u64>, JsValu
 pub fn sieve_raster(word: JsValue) -> Result<JsValue, JsValue> {
     let word = hand::list_from_js(&word, hand::u64_from_js)?;
     let value = mrlyrs::num::sieve::raster(&word).map_err(hand::throw)?;
-    Ok(hand::tuple_to_js(&[hand::to_js(&value.0)?, hand::typed(&(value.1)[..])]))
+    Ok(hand::tuple_to_js(&[
+        hand::to_js(&value.0)?,
+        hand::typed(&(value.1)[..]),
+    ]))
 }
 
 /// Returns the share of the whole the word leaves, the product of one minus the inverse of each letter's site count, exact as a product of the letters' fills.
@@ -1170,7 +1274,13 @@ pub fn sieve_solid_limit() -> Result<f64, JsValue> {
 
 /// Reads the quadratic a k^2 + b k + c, a at least one, over the sheet the odd side wide: every value from one through the top, its cell, the prime hits and the opening streak.
 #[wasm_bindgen]
-pub fn spiral_diagonal(lattice: JsValue, side: usize, a: JsValue, b: JsValue, c: JsValue) -> Result<JsValue, JsValue> {
+pub fn spiral_diagonal(
+    lattice: JsValue,
+    side: usize,
+    a: JsValue,
+    b: JsValue,
+    c: JsValue,
+) -> Result<JsValue, JsValue> {
     let lattice = hand::from_js::<mrlyrs::num::spiral::Lattice>(&lattice)?;
     let a = hand::i64_from_js(&a)?;
     let b = hand::i64_from_js(&b)?;
@@ -1244,7 +1354,9 @@ pub fn zeta_novelty_main() -> Result<f64, JsValue> {
 /// Sums the waves of the zeros at log y: twice the real part of the coefficients times y to the minus i gamma, the smoothed error over y to the three halves that the zeros predict.
 #[wasm_bindgen]
 pub fn zeta_novelty_wave(gammas: &[f64], coef: JsValue, log_y: f64) -> Result<f64, JsValue> {
-    let coef = hand::list_from_js(&coef, |x1| hand::from_js::<mrlyrs::num::zeta::Complex>(&hand::plain(x1)?))?;
+    let coef = hand::list_from_js(&coef, |x1| {
+        hand::from_js::<mrlyrs::num::zeta::Complex>(&hand::plain(x1)?)
+    })?;
     let value = mrlyrs::num::zeta::novelty_wave(gammas, &coef, log_y);
     Ok(value)
 }
@@ -1423,7 +1535,9 @@ impl apollonian_Circle {
     /// Reads the Circle from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<apollonian_Circle, JsValue> {
-        Ok(apollonian_Circle { inner: hand::from_js(&data)? })
+        Ok(apollonian_Circle {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Circle as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -1494,7 +1608,9 @@ impl automaton_Automaton {
     /// Reads the Automaton from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<automaton_Automaton, JsValue> {
-        Ok(automaton_Automaton { inner: hand::from_js(&data)? })
+        Ok(automaton_Automaton {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Automaton as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -1513,8 +1629,14 @@ impl automaton_Automaton {
     }
     /// Returns the matrix Lyndon cofactor `Z_W(s) = det(I - q^(-s) T) zeta_W(s)` and the bound it is known to.
     pub fn cofactor(&self, s: &zeta_Complex, tolerance: f64) -> Result<JsValue, JsValue> {
-        let value = self.inner.cofactor(s.inner, tolerance).map_err(hand::throw)?;
-        Ok(hand::tuple_to_js(&[JsValue::from(zeta_Complex { inner: value.0 }), hand::to_js(&value.1)?]))
+        let value = self
+            .inner
+            .cofactor(s.inner, tolerance)
+            .map_err(hand::throw)?;
+        Ok(hand::tuple_to_js(&[
+            JsValue::from(zeta_Complex { inner: value.0 }),
+            hand::to_js(&value.1)?,
+        ]))
     }
     /// Returns the coefficients `c_0 .. c_n` of `det(I - x T) = sum c_i x^i`, the ladder denominator read as a polynomial in `x = q^(-s)`.
     pub fn denominator(&self) -> Result<Vec<f64>, JsValue> {
@@ -1549,8 +1671,14 @@ impl automaton_Automaton {
     }
     /// Returns the residue of `zeta_W` at a simple pole `w0` of the resolvent and the bound it is known to.
     pub fn residue(&self, w0: &zeta_Complex, tolerance: f64) -> Result<JsValue, JsValue> {
-        let value = self.inner.residue(w0.inner, tolerance).map_err(hand::throw)?;
-        Ok(hand::tuple_to_js(&[JsValue::from(zeta_Complex { inner: value.0 }), hand::to_js(&value.1)?]))
+        let value = self
+            .inner
+            .residue(w0.inner, tolerance)
+            .map_err(hand::throw)?;
+        Ok(hand::tuple_to_js(&[
+            JsValue::from(zeta_Complex { inner: value.0 }),
+            hand::to_js(&value.1)?,
+        ]))
     }
     /// Returns the rule.
     pub fn rule(&self) -> Result<memory_Rule, JsValue> {
@@ -1564,13 +1692,17 @@ impl automaton_Automaton {
     }
     /// Builds the ladder at an explicit peel depth, at least the rule width and at least two.
     pub fn with_peel(rule: &memory_Rule, peel: usize) -> Result<automaton_Automaton, JsValue> {
-        let value = mrlyrs::num::automaton::Automaton::with_peel(&rule.inner, peel).map_err(hand::throw)?;
+        let value =
+            mrlyrs::num::automaton::Automaton::with_peel(&rule.inner, peel).map_err(hand::throw)?;
         Ok(automaton_Automaton { inner: value })
     }
     /// Returns `zeta_W(s)` and the bound it is known to.
     pub fn zeta(&self, s: &zeta_Complex, tolerance: f64) -> Result<JsValue, JsValue> {
         let value = self.inner.zeta(s.inner, tolerance).map_err(hand::throw)?;
-        Ok(hand::tuple_to_js(&[JsValue::from(zeta_Complex { inner: value.0 }), hand::to_js(&value.1)?]))
+        Ok(hand::tuple_to_js(&[
+            JsValue::from(zeta_Complex { inner: value.0 }),
+            hand::to_js(&value.1)?,
+        ]))
     }
 }
 
@@ -1585,7 +1717,9 @@ impl gauss_Window {
     /// Reads the Window from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<gauss_Window, JsValue> {
-        Ok(gauss_Window { inner: hand::from_js(&data)? })
+        Ok(gauss_Window {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Window as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -1622,7 +1756,12 @@ impl gauss_Window {
     /// Lists every point inside, row by row from the bottom left of the bounding square.
     pub fn points(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.points();
-        hand::list_to_js(&value, |x1| Ok(hand::tuple_to_js(&[JsValue::from(x1.0), JsValue::from(x1.1)])))
+        hand::list_to_js(&value, |x1| {
+            Ok(hand::tuple_to_js(&[
+                JsValue::from(x1.0),
+                JsValue::from(x1.1),
+            ]))
+        })
     }
     /// Returns the reach.
     pub fn radius(&self) -> Result<u64, JsValue> {
@@ -1647,7 +1786,9 @@ impl ladder_Design {
     /// Reads the Design from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<ladder_Design, JsValue> {
-        Ok(ladder_Design { inner: hand::from_js(&data)? })
+        Ok(ladder_Design {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Design as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -1694,10 +1835,15 @@ impl ladder_Design {
         Ok(zeta_Complex { inner: value })
     }
     /// Builds a design at an explicit peel depth, at least two.
-    pub fn with_peel(base: JsValue, digits: JsValue, peel: usize) -> Result<ladder_Design, JsValue> {
+    pub fn with_peel(
+        base: JsValue,
+        digits: JsValue,
+        peel: usize,
+    ) -> Result<ladder_Design, JsValue> {
         let base = hand::u64_from_js(&base)?;
         let digits = hand::list_from_js(&digits, hand::u64_from_js)?;
-        let value = mrlyrs::num::ladder::Design::with_peel(base, &digits, peel).map_err(hand::throw)?;
+        let value =
+            mrlyrs::num::ladder::Design::with_peel(base, &digits, peel).map_err(hand::throw)?;
         Ok(ladder_Design { inner: value })
     }
 }
@@ -1713,7 +1859,9 @@ impl memory_Rule {
     /// Reads the Rule from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<memory_Rule, JsValue> {
-        Ok(memory_Rule { inner: hand::from_js(&data)? })
+        Ok(memory_Rule {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Rule as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -1814,7 +1962,9 @@ impl prime_Sieve {
     /// Reads the Sieve from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<prime_Sieve, JsValue> {
-        Ok(prime_Sieve { inner: hand::from_js(&data)? })
+        Ok(prime_Sieve {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Sieve as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -1875,7 +2025,9 @@ impl radix_Base {
     /// Reads the Base from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<radix_Base, JsValue> {
-        Ok(radix_Base { inner: hand::from_js(&data)? })
+        Ok(radix_Base {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Base as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -1884,14 +2036,23 @@ impl radix_Base {
     }
     /// Returns the index in the canonical residue system of the class of a point.
     pub fn class(&self, z: JsValue) -> Result<usize, JsValue> {
-        let z = (hand::i64_from_js(&hand::item(&z, 0)?)?, hand::i64_from_js(&hand::item(&z, 1)?)?);
+        let z = (
+            hand::i64_from_js(&hand::item(&z, 0)?)?,
+            hand::i64_from_js(&hand::item(&z, 1)?)?,
+        );
         let value = self.inner.class(z).map_err(hand::throw)?;
         Ok(value)
     }
     /// Returns whether two points are congruent modulo the base.
     pub fn congruent(&self, z: JsValue, w: JsValue) -> Result<bool, JsValue> {
-        let z = (hand::i64_from_js(&hand::item(&z, 0)?)?, hand::i64_from_js(&hand::item(&z, 1)?)?);
-        let w = (hand::i64_from_js(&hand::item(&w, 0)?)?, hand::i64_from_js(&hand::item(&w, 1)?)?);
+        let z = (
+            hand::i64_from_js(&hand::item(&z, 0)?)?,
+            hand::i64_from_js(&hand::item(&z, 1)?)?,
+        );
+        let w = (
+            hand::i64_from_js(&hand::item(&w, 0)?)?,
+            hand::i64_from_js(&hand::item(&w, 1)?)?,
+        );
         let value = self.inner.congruent(z, w);
         Ok(value)
     }
@@ -1909,7 +2070,10 @@ impl radix_Base {
     #[wasm_bindgen(constructor)]
     pub fn new(ring: JsValue, value: JsValue) -> Result<radix_Base, JsValue> {
         let ring = hand::from_js::<mrlyrs::num::gauss::Ring>(&ring)?;
-        let value = (hand::i64_from_js(&hand::item(&value, 0)?)?, hand::i64_from_js(&hand::item(&value, 1)?)?);
+        let value = (
+            hand::i64_from_js(&hand::item(&value, 0)?)?,
+            hand::i64_from_js(&hand::item(&value, 1)?)?,
+        );
         let value = mrlyrs::num::radix::Base::new(ring, value).map_err(hand::throw)?;
         Ok(radix_Base { inner: value })
     }
@@ -1921,12 +2085,20 @@ impl radix_Base {
     /// Returns the base raised to a level.
     pub fn power(&self, level: usize) -> Result<JsValue, JsValue> {
         let value = self.inner.power(level);
-        Ok(hand::tuple_to_js(&[JsValue::from(value.0), JsValue::from(value.1)]))
+        Ok(hand::tuple_to_js(&[
+            JsValue::from(value.0),
+            JsValue::from(value.1),
+        ]))
     }
     /// Returns the canonical complete residue system modulo the base: the `q` representatives of least norm, ties broken by argument in `[0, 2 pi)`.
     pub fn residues(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.residues().map_err(hand::throw)?;
-        hand::list_to_js(&value, |x1| Ok(hand::tuple_to_js(&[JsValue::from(x1.0), JsValue::from(x1.1)])))
+        hand::list_to_js(&value, |x1| {
+            Ok(hand::tuple_to_js(&[
+                JsValue::from(x1.0),
+                JsValue::from(x1.1),
+            ]))
+        })
     }
     /// Returns the ring.
     pub fn ring(&self) -> Result<JsValue, JsValue> {
@@ -1936,7 +2108,10 @@ impl radix_Base {
     /// Returns the base element.
     pub fn value(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.value();
-        Ok(hand::tuple_to_js(&[JsValue::from(value.0), JsValue::from(value.1)]))
+        Ok(hand::tuple_to_js(&[
+            JsValue::from(value.0),
+            JsValue::from(value.1),
+        ]))
     }
 }
 
@@ -1951,7 +2126,9 @@ impl radix_Radix {
     /// Reads the Radix from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<radix_Radix, JsValue> {
-        Ok(radix_Radix { inner: hand::from_js(&data)? })
+        Ok(radix_Radix {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Radix as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -1976,7 +2153,12 @@ impl radix_Radix {
     /// Returns the digits.
     pub fn digits(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.digits();
-        hand::list_to_js(value, |x1| Ok(hand::tuple_to_js(&[JsValue::from(x1.0), JsValue::from(x1.1)])))
+        hand::list_to_js(value, |x1| {
+            Ok(hand::tuple_to_js(&[
+                JsValue::from(x1.0),
+                JsValue::from(x1.1),
+            ]))
+        })
     }
     /// Returns the similarity dimension `log |F| / log sqrt(q)`, the ratio of the digit count to the scale of the base.
     pub fn dimension(&self) -> Result<f64, JsValue> {
@@ -2001,10 +2183,25 @@ impl radix_Radix {
     }
     /// Builds a design from a base, a digit list and a unit twist per digit.
     #[wasm_bindgen(constructor)]
-    pub fn new(base: &radix_Base, digits: JsValue, twists: JsValue) -> Result<radix_Radix, JsValue> {
-        let digits = hand::list_from_js(&digits, |x1| Ok((hand::i64_from_js(&hand::item(x1, 0)?)?, hand::i64_from_js(&hand::item(x1, 1)?)?)))?;
-        let twists = hand::list_from_js(&twists, |x1| Ok((hand::i64_from_js(&hand::item(x1, 0)?)?, hand::i64_from_js(&hand::item(x1, 1)?)?)))?;
-        let value = mrlyrs::num::radix::Radix::new(base.inner, digits, twists).map_err(hand::throw)?;
+    pub fn new(
+        base: &radix_Base,
+        digits: JsValue,
+        twists: JsValue,
+    ) -> Result<radix_Radix, JsValue> {
+        let digits = hand::list_from_js(&digits, |x1| {
+            Ok((
+                hand::i64_from_js(&hand::item(x1, 0)?)?,
+                hand::i64_from_js(&hand::item(x1, 1)?)?,
+            ))
+        })?;
+        let twists = hand::list_from_js(&twists, |x1| {
+            Ok((
+                hand::i64_from_js(&hand::item(x1, 0)?)?,
+                hand::i64_from_js(&hand::item(x1, 1)?)?,
+            ))
+        })?;
+        let value =
+            mrlyrs::num::radix::Radix::new(base.inner, digits, twists).map_err(hand::throw)?;
         Ok(radix_Radix { inner: value })
     }
     /// Returns the level-`L` points in the plane, the scaled words divided by `b^L`.
@@ -2025,7 +2222,12 @@ impl radix_Radix {
     /// Returns the twists.
     pub fn twists(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.twists();
-        hand::list_to_js(value, |x1| Ok(hand::tuple_to_js(&[JsValue::from(x1.0), JsValue::from(x1.1)])))
+        hand::list_to_js(value, |x1| {
+            Ok(hand::tuple_to_js(&[
+                JsValue::from(x1.0),
+                JsValue::from(x1.1),
+            ]))
+        })
     }
     /// Returns the design with the twists named by their index in the unit list, the units in turning order from one.
     pub fn with_twists(&self, units: &[usize]) -> Result<radix_Radix, JsValue> {
@@ -2035,7 +2237,12 @@ impl radix_Radix {
     /// Returns the level-`L` points in exact ring coordinates scaled by `b^L`.
     pub fn words(&self, level: usize) -> Result<JsValue, JsValue> {
         let value = self.inner.words(level);
-        hand::list_to_js(&value, |x1| Ok(hand::tuple_to_js(&[JsValue::from(x1.0), JsValue::from(x1.1)])))
+        hand::list_to_js(&value, |x1| {
+            Ok(hand::tuple_to_js(&[
+                JsValue::from(x1.0),
+                JsValue::from(x1.1),
+            ]))
+        })
     }
 }
 
@@ -2050,7 +2257,9 @@ impl zeta_Complex {
     /// Reads the Complex from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<zeta_Complex, JsValue> {
-        Ok(zeta_Complex { inner: hand::from_js(&data)? })
+        Ok(zeta_Complex {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Complex as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -2129,7 +2338,9 @@ impl zeta_Line {
     /// Reads the Line from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<zeta_Line, JsValue> {
-        Ok(zeta_Line { inner: hand::from_js(&data)? })
+        Ok(zeta_Line {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Line as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -2177,12 +2388,18 @@ impl zeta_Line {
     /// Returns zeta and its derivative together at any complex s but one, by the same Euler-Maclaurin sum: the modulus of t plus ten terms and seven Bernoulli corrections, each term differentiated in s.
     pub fn pair(&self, s: &zeta_Complex) -> Result<JsValue, JsValue> {
         let value = self.inner.pair(s.inner);
-        Ok(hand::tuple_to_js(&[JsValue::from(zeta_Complex { inner: value.0 }), JsValue::from(zeta_Complex { inner: value.1 })]))
+        Ok(hand::tuple_to_js(&[
+            JsValue::from(zeta_Complex { inner: value.0 }),
+            JsValue::from(zeta_Complex { inner: value.1 }),
+        ]))
     }
     /// Returns zeta on the line and Z(t) together, from the engine that serves the t.
     pub fn point(&self, t: f64) -> Result<JsValue, JsValue> {
         let value = self.inner.point(t);
-        Ok(hand::tuple_to_js(&[JsValue::from(zeta_Complex { inner: value.0 }), hand::to_js(&value.1)?]))
+        Ok(hand::tuple_to_js(&[
+            JsValue::from(zeta_Complex { inner: value.0 }),
+            hand::to_js(&value.1)?,
+        ]))
     }
     /// Returns the largest gap between the two engines over the t range on a grid.
     pub fn seam(&self, t0: f64, t1: f64, steps: usize) -> Result<f64, JsValue> {
@@ -2243,7 +2460,12 @@ impl gauss_Ring {
         let a = hand::i64_from_js(&a)?;
         let b = hand::i64_from_js(&b)?;
         let value = ring.associates(a, b);
-        hand::list_to_js(&value, |x1| Ok(hand::tuple_to_js(&[JsValue::from(x1.0), JsValue::from(x1.1)])))
+        hand::list_to_js(&value, |x1| {
+            Ok(hand::tuple_to_js(&[
+                JsValue::from(x1.0),
+                JsValue::from(x1.1),
+            ]))
+        })
     }
     /// Returns the canonical associate of a point: the one with `a > 0` and `b >= 0` on the square lattice, the one with `a > 0` and `0 <= b < a` on the hexagonal, the origin for the origin.
     pub fn canon(ring: JsValue, a: JsValue, b: JsValue) -> Result<JsValue, JsValue> {
@@ -2251,7 +2473,10 @@ impl gauss_Ring {
         let a = hand::i64_from_js(&a)?;
         let b = hand::i64_from_js(&b)?;
         let value = ring.canon(a, b);
-        Ok(hand::tuple_to_js(&[JsValue::from(value.0), JsValue::from(value.1)]))
+        Ok(hand::tuple_to_js(&[
+            JsValue::from(value.0),
+            JsValue::from(value.1),
+        ]))
     }
     /// Returns the conjugate: the mirror image in the real axis.
     pub fn conjugate(ring: JsValue, a: JsValue, b: JsValue) -> Result<JsValue, JsValue> {
@@ -2259,7 +2484,10 @@ impl gauss_Ring {
         let a = hand::i64_from_js(&a)?;
         let b = hand::i64_from_js(&b)?;
         let value = ring.conjugate(a, b);
-        Ok(hand::tuple_to_js(&[JsValue::from(value.0), JsValue::from(value.1)]))
+        Ok(hand::tuple_to_js(&[
+            JsValue::from(value.0),
+            JsValue::from(value.1),
+        ]))
     }
     /// Returns the count of points within the reach: the square or the hexagon.
     pub fn count(ring: JsValue, radius: JsValue) -> Result<usize, JsValue> {
@@ -2271,10 +2499,19 @@ impl gauss_Ring {
     /// Returns the quotient and the remainder of a point by a nonzero point: `z = q w + r` with the norm of `r` below the norm of `w`.
     pub fn div_rem(ring: JsValue, z: JsValue, w: JsValue) -> Result<JsValue, JsValue> {
         let ring = hand::from_js::<mrlyrs::num::gauss::Ring>(&ring)?;
-        let z = (hand::i64_from_js(&hand::item(&z, 0)?)?, hand::i64_from_js(&hand::item(&z, 1)?)?);
-        let w = (hand::i64_from_js(&hand::item(&w, 0)?)?, hand::i64_from_js(&hand::item(&w, 1)?)?);
+        let z = (
+            hand::i64_from_js(&hand::item(&z, 0)?)?,
+            hand::i64_from_js(&hand::item(&z, 1)?)?,
+        );
+        let w = (
+            hand::i64_from_js(&hand::item(&w, 0)?)?,
+            hand::i64_from_js(&hand::item(&w, 1)?)?,
+        );
         let value = ring.div_rem(z, w);
-        Ok(hand::tuple_to_js(&[hand::tuple_to_js(&[JsValue::from(value.0.0), JsValue::from(value.0.1)]), hand::tuple_to_js(&[JsValue::from(value.1.0), JsValue::from(value.1.1)])]))
+        Ok(hand::tuple_to_js(&[
+            hand::tuple_to_js(&[JsValue::from(value.0 .0), JsValue::from(value.0 .1)]),
+            hand::tuple_to_js(&[JsValue::from(value.1 .0), JsValue::from(value.1 .1)]),
+        ]))
     }
     /// Returns the fate of a whole number as a prime of the ring: split, inert or ramified, unit for one, zero for zero, composite otherwise.
     pub fn fate(ring: JsValue, n: JsValue) -> Result<JsValue, JsValue> {
@@ -2286,10 +2523,19 @@ impl gauss_Ring {
     /// Returns the greatest common divisor of two points as its canonical associate, by the nearest-point Euclidean algorithm, the origin for two origins.
     pub fn gaussian_gcd(ring: JsValue, z: JsValue, w: JsValue) -> Result<JsValue, JsValue> {
         let ring = hand::from_js::<mrlyrs::num::gauss::Ring>(&ring)?;
-        let z = (hand::i64_from_js(&hand::item(&z, 0)?)?, hand::i64_from_js(&hand::item(&z, 1)?)?);
-        let w = (hand::i64_from_js(&hand::item(&w, 0)?)?, hand::i64_from_js(&hand::item(&w, 1)?)?);
+        let z = (
+            hand::i64_from_js(&hand::item(&z, 0)?)?,
+            hand::i64_from_js(&hand::item(&z, 1)?)?,
+        );
+        let w = (
+            hand::i64_from_js(&hand::item(&w, 0)?)?,
+            hand::i64_from_js(&hand::item(&w, 1)?)?,
+        );
         let value = ring.gaussian_gcd(z, w);
-        Ok(hand::tuple_to_js(&[JsValue::from(value.0), JsValue::from(value.1)]))
+        Ok(hand::tuple_to_js(&[
+            JsValue::from(value.0),
+            JsValue::from(value.1),
+        ]))
     }
     /// Returns whether a rational prime stays prime in the ring: 3 mod 4, or 2 mod 3.
     pub fn inert(ring: JsValue, p: JsValue) -> Result<bool, JsValue> {
@@ -2301,10 +2547,19 @@ impl gauss_Ring {
     /// Returns the product of two points.
     pub fn mul(ring: JsValue, arg1: JsValue, arg2: JsValue) -> Result<JsValue, JsValue> {
         let ring = hand::from_js::<mrlyrs::num::gauss::Ring>(&ring)?;
-        let arg1 = (hand::i64_from_js(&hand::item(&arg1, 0)?)?, hand::i64_from_js(&hand::item(&arg1, 1)?)?);
-        let arg2 = (hand::i64_from_js(&hand::item(&arg2, 0)?)?, hand::i64_from_js(&hand::item(&arg2, 1)?)?);
+        let arg1 = (
+            hand::i64_from_js(&hand::item(&arg1, 0)?)?,
+            hand::i64_from_js(&hand::item(&arg1, 1)?)?,
+        );
+        let arg2 = (
+            hand::i64_from_js(&hand::item(&arg2, 0)?)?,
+            hand::i64_from_js(&hand::item(&arg2, 1)?)?,
+        );
         let value = ring.mul(arg1, arg2);
-        Ok(hand::tuple_to_js(&[JsValue::from(value.0), JsValue::from(value.1)]))
+        Ok(hand::tuple_to_js(&[
+            JsValue::from(value.0),
+            JsValue::from(value.1),
+        ]))
     }
     /// Reads a ring from its name.
     pub fn named(name: &str) -> Result<JsValue, JsValue> {
@@ -2315,7 +2570,10 @@ impl gauss_Ring {
     pub fn nearest(ring: JsValue, x: f64, y: f64) -> Result<JsValue, JsValue> {
         let ring = hand::from_js::<mrlyrs::num::gauss::Ring>(&ring)?;
         let value = ring.nearest(x, y);
-        Ok(hand::tuple_to_js(&[JsValue::from(value.0), JsValue::from(value.1)]))
+        Ok(hand::tuple_to_js(&[
+            JsValue::from(value.0),
+            JsValue::from(value.1),
+        ]))
     }
     /// Returns the norm of a point: its squared length.
     pub fn norm(ring: JsValue, a: JsValue, b: JsValue) -> Result<u64, JsValue> {
@@ -2366,7 +2624,10 @@ impl gauss_Ring {
         let a = hand::i64_from_js(&a)?;
         let b = hand::i64_from_js(&b)?;
         let value = ring.turn(a, b);
-        Ok(hand::tuple_to_js(&[JsValue::from(value.0), JsValue::from(value.1)]))
+        Ok(hand::tuple_to_js(&[
+            JsValue::from(value.0),
+            JsValue::from(value.1),
+        ]))
     }
     /// Returns the count of units: 4 or 6.
     pub fn units(ring: JsValue) -> Result<usize, JsValue> {
@@ -2475,7 +2736,10 @@ impl spiral_Lattice {
         let lattice = hand::from_js::<mrlyrs::num::spiral::Lattice>(&lattice)?;
         let n = hand::u64_from_js(&n)?;
         let value = lattice.xy(n);
-        Ok(hand::tuple_to_js(&[JsValue::from(value.0), JsValue::from(value.1)]))
+        Ok(hand::tuple_to_js(&[
+            JsValue::from(value.0),
+            JsValue::from(value.1),
+        ]))
     }
 }
 

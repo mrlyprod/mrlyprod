@@ -89,9 +89,9 @@ fn main() -> Result<()> {
 
     let table = panels[1].square().inset(panels[1].w * 0.12);
     let grid = Grid::new(table, STATES, STATES, 0.10);
-    for row in 0..STATES {
-        for col in 0..STATES {
-            let paint = if RULE[row][col] == 1 {
+    for (row, line) in RULE.iter().enumerate() {
+        for (col, &cell) in line.iter().enumerate() {
+            let paint = if cell == 1 {
                 ink::yellow()
             } else {
                 ink::fade(ink::line(), 0.45)

@@ -13,6 +13,7 @@ Codes cross the boundary as decimal strings, because a design code is a u128 and
 - **census** wraps `ledger`: which integers the whole registry writes inside a pinned window, how often, and which rows write one.
 - **chladni** wraps `mrlyrs::life` and `mrlyrs::num`: soups stepped on design masks by FFT, the kernel drawn, the spectrum and its ring profile.
 - **crop** wraps `mrlyrs::math` and `mrlyrs::num`: designs trimmed to rational shapes, tallied, swept, drawn and masked.
+- **dissection** wraps `mrlyrs::num`: a set missing one digit, its meter and prime count against its mass, its frequency grid cut into regions A, B, C1 and C2 with their `l^1` shares, and the chain certificate against `1/5`.
 - **echo** wraps `mrlyrs::num`: the design Mobius meter against log x, its density echo, residual and spectral ordinates.
 - **font** wraps `mrlyrs::font`: text laid out as a grid, written in stroke order, cycled and read glyph by glyph.
 - **partials** wraps `mrlyrs::num`: eight partial sums, products and prime counts read at one depth or walked to it.
@@ -37,6 +38,7 @@ Codes cross the boundary as decimal strings, because a design code is a u128 and
 - **spirograph** wraps `mrlyrs::num`: a flat design as the wheel, a pencil in every cell, rolled on a line, a circle or a polygon, traced, read and posed.
 - **spiral** wraps `mrlyrs::num`: the whole numbers wound on a square or hexagonal sheet, painted, clicked and read along a quadratic.
 - **star** wraps `mrlyrs::math`: the ghost star of the hexagon moire, its stacked cut, band, arm ink law and cell-frame decay.
+- **sumset** wraps `mrlyrs::num`: the sumset of Erdos problem 125 held as one bit array, read at an integer, stripped, enveloped in `log x`, and its level pairs with their gaps and energy ratios.
 - **three** wraps `mrlyrs::math`: the cubes as packed faces, filled cells and censuses.
 - **tile** wraps `mrlyrs::math`: a design repeated across the plane, the cube and the hexagonal mesh, drawn and counted.
 - **tourbillon** wraps `mrlyrs::num`: the odd parity carpets spun about the centre, one angle per layer, inside the inscribed disc.

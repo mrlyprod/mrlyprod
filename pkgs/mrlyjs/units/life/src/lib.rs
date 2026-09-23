@@ -36,8 +36,14 @@ pub fn corner_bits(rule: u8) -> Result<Vec<u8>, JsValue> {
 
 /// Returns the sequence up to max_neighbors, keeping zeros and ones only on request.
 #[wasm_bindgen]
-pub fn counts(seq: &Source, max_neighbors: usize, include_zeros: bool, include_ones: bool) -> Result<Vec<usize>, JsValue> {
-    let value = mrlyrs::life::counts(seq.inner, max_neighbors, include_zeros, include_ones).map_err(hand::throw)?;
+pub fn counts(
+    seq: &Source,
+    max_neighbors: usize,
+    include_zeros: bool,
+    include_ones: bool,
+) -> Result<Vec<usize>, JsValue> {
+    let value = mrlyrs::life::counts(seq.inner, max_neighbors, include_zeros, include_ones)
+        .map_err(hand::throw)?;
     Ok(value)
 }
 
@@ -58,7 +64,12 @@ pub fn cube_orbit(rule: u8) -> Result<Vec<u8>, JsValue> {
 
 /// Builds the base-2 design mask a code names at an odd side grown to the given Kronecker
 #[wasm_bindgen]
-pub fn design_mask(dimension: usize, code: JsValue, number: usize, level: usize) -> Result<JsValue, JsValue> {
+pub fn design_mask(
+    dimension: usize,
+    code: JsValue,
+    number: usize,
+    level: usize,
+) -> Result<JsValue, JsValue> {
     let code = hand::code_from_js(&code)?;
     let value = mrlyrs::life::design_mask(dimension, code, number, level).map_err(hand::throw)?;
     hand::tensor_to_js(&value)
@@ -156,11 +167,18 @@ pub fn movie(grids: JsValue, scale: usize, delay: usize) -> Result<Vec<u8>, JsVa
 
 /// Advances a grid one generation under birth and survive counts, a neighbor mask and a boundary.
 #[wasm_bindgen]
-pub fn next_grid(cell: JsValue, birth: &[usize], survive: &[usize], mask: JsValue, boundary: JsValue) -> Result<JsValue, JsValue> {
+pub fn next_grid(
+    cell: JsValue,
+    birth: &[usize],
+    survive: &[usize],
+    mask: JsValue,
+    boundary: JsValue,
+) -> Result<JsValue, JsValue> {
     let cell = hand::cell2d_from_js(&cell)?;
     let mask = hand::tensor_from_js(&mask)?;
     let boundary = hand::from_js::<mrlyrs::life::Boundary>(&boundary)?;
-    let value = mrlyrs::life::next_grid(&cell, birth, survive, &mask, boundary).map_err(hand::throw)?;
+    let value =
+        mrlyrs::life::next_grid(&cell, birth, survive, &mask, boundary).map_err(hand::throw)?;
     hand::cell2d_to_js(&value)
 }
 
@@ -175,7 +193,12 @@ pub fn npn_class(rule: u8) -> Result<Vec<u8>, JsValue> {
 #[wasm_bindgen]
 pub fn outer_totalistic(rule: u8) -> Result<JsValue, JsValue> {
     let value = mrlyrs::life::outer_totalistic(rule);
-    hand::option_to_js(value.as_ref(), |x1| Ok(hand::tuple_to_js(&[hand::typed(&(x1.0)[..]), hand::typed(&(x1.1)[..])])))
+    hand::option_to_js(value.as_ref(), |x1| {
+        Ok(hand::tuple_to_js(&[
+            hand::typed(&(x1.0)[..]),
+            hand::typed(&(x1.1)[..]),
+        ]))
+    })
 }
 
 /// Returns the count of neighbourhoods a rule sends to one.
@@ -268,7 +291,9 @@ impl Config {
     /// Reads the Config from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<Config, JsValue> {
-        Ok(Config { inner: hand::from_js(&data)? })
+        Ok(Config {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Config as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -362,7 +387,10 @@ impl Config {
     /// Resolves the birth and survive counts against the mask's budget.
     pub fn counts(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.counts().map_err(hand::throw)?;
-        Ok(hand::tuple_to_js(&[hand::typed(&(value.0)[..]), hand::typed(&(value.1)[..])]))
+        Ok(hand::tuple_to_js(&[
+            hand::typed(&(value.0)[..]),
+            hand::typed(&(value.1)[..]),
+        ]))
     }
     /// Builds a config with a constant boundary, a 64-generation cap, no tiling and no padding.
     #[wasm_bindgen(constructor)]
@@ -384,7 +412,9 @@ impl Counts {
     /// Reads the Counts from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<Counts, JsValue> {
-        Ok(Counts { inner: hand::from_js(&data)? })
+        Ok(Counts {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Counts as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -419,7 +449,9 @@ impl Life {
     /// Reads the Life from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<Life, JsValue> {
-        Ok(Life { inner: hand::from_js(&data)? })
+        Ok(Life {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Life as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -490,7 +522,9 @@ impl Rule {
     /// Reads the Rule from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<Rule, JsValue> {
-        Ok(Rule { inner: hand::from_js(&data)? })
+        Ok(Rule {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Rule as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -537,7 +571,8 @@ impl Rule {
     }
     /// Folds a decoded value to its canonical form, or an error for one outside the kind.
     pub fn checked(&self) -> Result<Rule, JsValue> {
-        let value = <mrlyrs::life::Rule as mrlyrs::math::name::Named>::checked(self.inner.clone()).map_err(hand::throw)?;
+        let value = <mrlyrs::life::Rule as mrlyrs::math::name::Named>::checked(self.inner.clone())
+            .map_err(hand::throw)?;
         Ok(Rule { inner: value })
     }
     /// Builds a life config running this rule over a neighborhood mask.
@@ -548,17 +583,20 @@ impl Rule {
     }
     /// Reads a filename back into the value, or an error.
     pub fn from_file(text: &str) -> Result<Rule, JsValue> {
-        let value = <mrlyrs::life::Rule as mrlyrs::math::name::Named>::from_file(text).map_err(hand::throw)?;
+        let value = <mrlyrs::life::Rule as mrlyrs::math::name::Named>::from_file(text)
+            .map_err(hand::throw)?;
         Ok(Rule { inner: value })
     }
     /// Reads a JSON object into its canonical value, or an error naming the broken key.
     pub fn from_json(text: &str) -> Result<Rule, JsValue> {
-        let value = <mrlyrs::life::Rule as mrlyrs::math::name::Named>::from_json(text).map_err(hand::throw)?;
+        let value = <mrlyrs::life::Rule as mrlyrs::math::name::Named>::from_json(text)
+            .map_err(hand::throw)?;
         Ok(Rule { inner: value })
     }
     /// Reads a path and query string back into the value, or an error.
     pub fn from_url(text: &str) -> Result<Rule, JsValue> {
-        let value = <mrlyrs::life::Rule as mrlyrs::math::name::Named>::from_url(text).map_err(hand::throw)?;
+        let value = <mrlyrs::life::Rule as mrlyrs::math::name::Named>::from_url(text)
+            .map_err(hand::throw)?;
         Ok(Rule { inner: value })
     }
     /// Builds a rule from its counts and edge policy, listed counts folded to a sorted set.
@@ -574,7 +612,8 @@ impl Rule {
     }
     /// Prints the kind and the `key=value` pairs joined by underscores, lists in brackets, or an error when the name does not read back.
     pub fn to_file(&self) -> Result<String, JsValue> {
-        let value = <mrlyrs::life::Rule as mrlyrs::math::name::Named>::to_file(&self.inner).map_err(hand::throw)?;
+        let value = <mrlyrs::life::Rule as mrlyrs::math::name::Named>::to_file(&self.inner)
+            .map_err(hand::throw)?;
         Ok(value)
     }
     /// Prints the first eight hex digits of the sha256 of the canonical JSON.
@@ -589,12 +628,14 @@ impl Rule {
     }
     /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
     pub fn to_mrly(&self) -> Result<String, JsValue> {
-        let value = <mrlyrs::life::Rule as mrlyrs::math::name::Named>::to_mrly(&self.inner).map_err(hand::throw)?;
+        let value = <mrlyrs::life::Rule as mrlyrs::math::name::Named>::to_mrly(&self.inner)
+            .map_err(hand::throw)?;
         Ok(value)
     }
     /// Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back.
     pub fn to_url(&self) -> Result<String, JsValue> {
-        let value = <mrlyrs::life::Rule as mrlyrs::math::name::Named>::to_url(&self.inner).map_err(hand::throw)?;
+        let value = <mrlyrs::life::Rule as mrlyrs::math::name::Named>::to_url(&self.inner)
+            .map_err(hand::throw)?;
         Ok(value)
     }
 }
@@ -610,7 +651,9 @@ impl Source {
     /// Reads the Source from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<Source, JsValue> {
-        Ok(Source { inner: hand::from_js(&data)? })
+        Ok(Source {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Source as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -655,7 +698,12 @@ impl Source {
     /// Reads a canonical name off the front of the text, returning the tail left over.
     pub fn read(text: &str) -> Result<JsValue, JsValue> {
         let value = mrlyrs::life::Source::read(text);
-        hand::option_to_js(value.as_ref(), |x1| Ok(hand::tuple_to_js(&[JsValue::from(Source { inner: x1.0 }), hand::to_js(&x1.1)?])))
+        hand::option_to_js(value.as_ref(), |x1| {
+            Ok(hand::tuple_to_js(&[
+                JsValue::from(Source { inner: x1.0 }),
+                hand::to_js(&x1.1)?,
+            ]))
+        })
     }
 }
 

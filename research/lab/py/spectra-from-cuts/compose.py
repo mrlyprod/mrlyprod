@@ -1,3 +1,4 @@
+import math
 import sys
 import time
 from fractions import Fraction
@@ -278,11 +279,275 @@ def verb_classes():
         print("%s: class of g sums to %s, classes of g +- 1 sum to %s each, mismatches to b = 101: %s" % (klass, mid, side, wrong))
 
 
-VERBS = {"block": verb_block, "forms": verb_forms, "split": verb_split, "classes": verb_classes}
+def filled_triples(b):
+    return [v for v in product(range(b), repeat=3) if sum(d % 2 for d in v) <= 1]
+
+
+def cells(b, level):
+    out = [(0, 0, 0)]
+    for k in range(level):
+        shift = b**k
+        out = [(x + shift * u[0], y + shift * u[1], z + shift * u[2]) for (x, y, z) in out for u in filled_triples(b)]
+    return out
+
+
+def section(v, o2):
+    pts = set()
+    for p in product((0, 1), repeat=3):
+        for i in range(3):
+            if p[i] == 0:
+                t2 = o2 - 2 * sum(p)
+                if 0 <= t2 <= 2:
+                    q = [2 * v[j] + 2 * p[j] for j in range(3)]
+                    q[i] += t2
+                    pts.add(tuple(q))
+    return sorted(pts)
+
+
+def shadow(q):
+    return (q[0] - q[1], q[0] + q[1] - 2 * q[2])
+
+
+def cross(o, a, c):
+    return (a[0] - o[0]) * (c[1] - o[1]) - (a[1] - o[1]) * (c[0] - o[0])
+
+
+def inside(poly, pts):
+    flat = [shadow(q) for q in poly]
+    for i in range(len(flat)):
+        for j in range(len(flat)):
+            if i != j:
+                side = [cross(flat[i], flat[j], r) for r in flat]
+                if all(s >= 0 for s in side) and any(s > 0 for s in side):
+                    if any(cross(flat[i], flat[j], shadow(q)) < 0 for q in pts):
+                        return False
+    return True
+
+
+TYPES = {1: "T+", 3: "H", 5: "T-"}
+
+
+def slice_tiles(b, level):
+    target = 3 * b**level
+    out = {}
+    for v in cells(b, level):
+        o2 = target - 2 * sum(v)
+        if 0 < o2 < 6:
+            out[v] = o2
+    return out
+
+
+def local_pattern(b, o2):
+    pattern = []
+    for u in filled_triples(b):
+        c2 = b * o2 - 2 * sum(u)
+        if 0 < c2 < 6:
+            pattern.append((u, TYPES[c2]))
+    return sorted(pattern)
+
+
+def verb_tiles():
+    print("TILES: the slice as a substitution on cut cells, each cut as a polygon, against the census block")
+    runs = [int(a) for a in sys.argv[2:]] or [5, 3]
+    for b in runs:
+        top = {3: 4, 5: 3, 7: 2}.get(b, 1)
+        patterns = {TYPES[o2]: local_pattern(b, o2) for o2 in (1, 3, 5)}
+        sub = {t: [sum(1 for _, s in patterns[t] if s == r) for r in ("H", "T+", "T-")] for t in ("H", "T+", "T-")}
+        flip = sorted((tuple(b - 1 - d for d in u), {"H": "H", "T+": "T-", "T-": "T+"}[s]) for u, s in patterns["T+"])
+        folded = [[sub["H"][0], sub["T+"][0]], [sub["H"][1] + sub["H"][2], sub["T+"][1] + sub["T+"][2]]]
+        print("b=%d substitution on (H, T+, T-): H -> %s, T+ -> %s, T- -> %s; folded on (H, T) %s; T- pattern is the half-turn of T+: %s" % (b, sub["H"], sub["T+"], sub["T-"], folded, flip == patterns["T-"]))
+        bad = []
+        census = []
+        prev = None
+        for level in range(1, top + 1):
+            tiles = slice_tiles(b, level)
+            shapes = {}
+            for v, o2 in tiles.items():
+                poly = section(v, o2)
+                base = min(poly)
+                shapes.setdefault(TYPES[o2], set()).add(tuple(tuple(q[j] - base[j] for j in range(3)) for q in poly))
+                sides = {sum((poly[i][j] - poly[k][j]) ** 2 for j in range(3)) for i in range(len(poly)) for k in range(len(poly)) if i != k}
+                if (len(poly), min(sides)) not in ((6, 2), (3, 2)) or (len(poly) == 3) != (o2 != 3):
+                    bad.append((level, "shape", v))
+            if any(len(s) != 1 for s in shapes.values()):
+                bad.append((level, "prototype"))
+            if prev is not None:
+                kids = {}
+                for v, o2 in tiles.items():
+                    parent = tuple(x // b for x in v)
+                    if parent not in prev:
+                        bad.append((level, "orphan", v))
+                        continue
+                    grown = [tuple(b * x for x in q) for q in section(parent, prev[parent])]
+                    if not inside(grown, section(v, o2)):
+                        bad.append((level, "outside", v))
+                    kids.setdefault(parent, []).append((tuple(x - b * y for x, y in zip(v, parent)), TYPES[o2]))
+                for parent, o2 in prev.items():
+                    if sorted(kids.get(parent, [])) != patterns[TYPES[o2]]:
+                        bad.append((level, "pattern", parent))
+            h = sum(1 for o2 in tiles.values() if o2 == 3)
+            census.append((h, len(tiles) - h))
+            prev = tiles
+        m = automaton(b, digit_polynomial(b))
+        want = power_column(m, top)[1:]
+        print("b=%d levels 1..%d: (hexagons, triangles) of cut cells %s, from the block %s, mismatches=%s" % (b, top, census, want, bad + ([("census",)] if census != want else [])))
+
+
+def odd_design_polynomial(b, d):
+    e = [1 if k % 2 == 0 else 0 for k in range(b)]
+    o = [1 - x for x in e]
+    head = [1]
+    for _ in range(d - 1):
+        head = convolve(head, e)
+    return [x + d * y for x, y in zip(convolve(head, e), convolve(head, o) + [0])]
+
+
+def carry_window(d):
+    return (d - 1) // 2
+
+
+def even_carry(b, d, p):
+    g, m = d * (b - 1) // 2, carry_window(d)
+    entry = lambda c, e: coefficient(p, c + g - b * e)
+    leak = sum(entry(c, e) for c in range(-m, m + 1) for e in (-m - 1, m + 1))
+    block = [[entry(i, 0) if j == 0 else entry(i, j) + entry(i, -j) for j in range(m + 1)] for i in range(m + 1)]
+    return block, leak
+
+
+def bareiss(rows, one, divide):
+    a = [list(r) for r in rows]
+    k, sign, prev = len(a), 1, one
+    for i in range(k - 1):
+        if a[i][i] == 0 * one:
+            swap = next((r for r in range(i + 1, k) if a[r][i] != 0 * one), None)
+            if swap is None:
+                return 0 * one
+            a[i], a[swap], sign = a[swap], a[i], -sign
+        for r in range(i + 1, k):
+            for c in range(i + 1, k):
+                a[r][c] = divide(a[r][c] * a[i][i] - a[r][i] * a[i][c], prev)
+        prev = a[i][i]
+    return sign * a[k - 1][k - 1]
+
+
+def census_terms(block, count, zero, one):
+    k = len(block)
+    vec = [one] + [zero] * (k - 1)
+    out = []
+    for _ in range(count):
+        out.append(vec[0])
+        vec = [sum((block[i][j] * vec[j] for j in range(k)), zero) for i in range(k)]
+    return out
+
+
+def hankel(block, zero, one, divide):
+    k = len(block)
+    a = census_terms(block, 2 * k - 1, zero, one)
+    return bareiss([[a[i + j] for j in range(k)] for i in range(k)], one, divide)
+
+
+def integer_divide(x, y):
+    return x // y
+
+
+def symbolic_entry(d, c, e, nu, n):
+    s_even = (nu * d + c + e + d) % 2 == 0
+    alpha, beta = Fraction(d - 2 * e, 2), Fraction(c + e - d - (0 if s_even else 1), 2)
+    if s_even:
+        terms = [((-1) ** i * sp.binomial(d, i), -i, 0) for i in range(d + 1)]
+    else:
+        terms = [(d * (-1) ** (i + i2) * sp.binomial(d - 1, i), -i - i2, i2) for i in range(d) for i2 in (0, 1)]
+    total, since = sp.Poly(0, n, domain="QQ"), 2
+    for coef, slope, shift in terms:
+        a, b0 = alpha + slope, beta + shift
+        if a > 0 or (a == 0 and b0 >= -(d - 1)):
+            if a > 0:
+                since = max(since, math.ceil((-(d - 1) - b0) / a))
+            y = sp.Poly(sp.Rational(a.numerator, a.denominator) * n + sp.Rational(b0.numerator, b0.denominator), n, domain="QQ")
+            term = sp.Poly(1, n, domain="QQ")
+            for r in range(1, d):
+                term = term * (y + r)
+            total += term * sp.Rational(int(coef), sp.factorial(d - 1))
+        elif a < 0:
+            since = max(since, math.floor(b0 / -a) + 1)
+    return total, since
+
+
+def symbolic_block(d, nu, n):
+    m = carry_window(d)
+    since = 2
+    block = []
+    for i in range(m + 1):
+        row = []
+        for j in range(m + 1):
+            f, t = symbolic_entry(d, i, j, nu, n)
+            since = max(since, t)
+            if j:
+                h, t = symbolic_entry(d, i, -j, nu, n)
+                f, since = f + h, max(since, t)
+            row.append(f)
+        block.append(row)
+    return block, since
+
+
+def root_bound(poly):
+    coeffs = [Fraction(int(sp.numer(c)), int(sp.denom(c))) for c in poly.all_coeffs()]
+    lead, deg = abs(coeffs[0]), len(coeffs) - 1
+    top = 0.0
+    for i in range(1, deg + 1):
+        ratio = abs(coeffs[i]) / lead / (2 if i == deg else 1)
+        if ratio:
+            top = max(top, float(ratio) ** (1.0 / i))
+    return int(2 * top * 1.001) + 2
+
+
+def verb_order():
+    print("ORDER: the central census of the solid with at most one odd coordinate, dim d at odd base b, has order exactly ceil(d/2)")
+    top_b, top_d = 25, 14
+    bad, real = [], 0
+    for d in range(2, top_d + 1):
+        for b in range(3, top_b + 1, 2):
+            p = odd_design_polynomial(b, d)
+            block, leak = even_carry(b, d, p)
+            h = hankel(block, 0, 1, integer_divide)
+            det = bareiss(block, 1, integer_divide)
+            x = sp.Symbol("x")
+            cp = sp.Matrix(block).charpoly(x)
+            if leak or h == 0 or det == 0:
+                bad.append((b, d, leak, h, det))
+            if sp.degree(sp.gcd(cp, cp.diff(x))) == 0 and cp.count_roots() == len(block):
+                real += 1
+    cases = (top_d - 1) * ((top_b - 1) // 2)
+    print("box odd b = 3..%d, d = 2..%d: %d cases, carry leaks, zero Hankel determinants or singular blocks: %s; distinct real eigenvalues in %d of %d" % (top_b, top_d, cases, bad, real, cases))
+    for d, levels in ((5, 5), (6, 4)):
+        blk, _ = even_carry(3, d, odd_design_polynomial(3, d))
+        print("base 3, d=%d census at levels 1..%d: %s" % (d, levels, census_terms(blk, levels + 1, 0, 1)[1:]))
+    n = sp.Symbol("n")
+    one = sp.Poly(1, n, domain="QQ")
+    divide = lambda x, y: x.exquo(y)
+    top_sym = int(sys.argv[2]) if len(sys.argv) > 2 else 8
+    for d in range(2, top_sym + 1):
+        for nu, klass in ((0, "3 mod 4"), (1, "1 mod 4")):
+            block, since = symbolic_block(d, nu, n)
+            h = hankel(block, 0 * one, one, divide)
+            det = bareiss(block, one, divide)
+            reach = max(since, root_bound(h), root_bound(det))
+            wrong = []
+            for nn in range(2 + nu, reach + 12, 2):
+                b = 2 * nn - 1
+                blk, leak = even_carry(b, d, odd_design_polynomial(b, d))
+                if leak or hankel(blk, 0, 1, integer_divide) == 0 or bareiss(blk, 1, integer_divide) == 0:
+                    wrong.append((b, "direct"))
+                if nn >= since and any(blk[i][j] != block[i][j].eval(nn) for i in range(len(blk)) for j in range(len(blk))):
+                    wrong.append((b, "transcription"))
+            print("d=%d b = %s: Hankel determinant of degree %d in n = (b+1)/2, block exact from n >= %d, no real root of it or of det M_even past n = %d, every odd b below checked directly, zero or mismatch: %s" % (d, klass, h.degree(), since, reach, wrong))
+
+
+VERBS = {"block": verb_block, "forms": verb_forms, "split": verb_split, "classes": verb_classes, "tiles": verb_tiles, "order": verb_order}
 
 
 def main():
-    names = sys.argv[1:] or ["block", "split", "classes"]
+    names = sys.argv[1:2] or ["block", "split", "classes", "tiles"]
     for name in names:
         start = time.time()
         VERBS[name]()

@@ -2,7 +2,7 @@ import subprocess
 import sys
 import time
 from fractions import Fraction
-from math import gcd, pi
+from math import gcd, log, pi
 
 import numpy as np
 
@@ -1023,7 +1023,7 @@ def verb_accepting():
         )
 
     print(f"\nTHE LAW METER, {name}: R(Q, d) = N_F(Q; d) d_co / A_F(Q) over d <= Q^(1/2), Q = 3^L")
-    print("    L |  d <= | max R | argmax | max R at coprime d | argmax | cells within 0.02 of the max | R(Q,4) | 1 + 2^(1-L/2) - 2^(2-L)")
+    print("    L |  d <= | max R | argmax | max R at coprime d | argmax | cells within 0.02 of the max | R(Q,4) | 1 + 2^(1-L/2) - 2^(2-L) | N at coprime argmax | Mobius peak there | peak/N^(1/2)")
     for lvl in range(8, 17):
         cut = base**lvl
         members = design_below(base, digits, lvl)
@@ -1044,7 +1044,13 @@ def verb_accepting():
         r4 = float(r[3])
         pred = 1 + 2 ** (1 - lvl / 2) - 2 ** (2 - lvl) if lvl % 2 == 0 else float("nan")
         near_s = " ".join(str(v) for v in near[:12]) + (" ..." if len(near) > 12 else "")
-        print(f"   {lvl:2d} | {top:5d} | {best:.4f} | {arg:6d} | {bestc:18.4f} | {argc:6d} | {near_s:28s} | {r4:.4f} | {pred:.4f}")
+        cs = np.sort(members[members % argc == 0] // argc)
+        mu = mobius_sieve(cut // argc)
+        peak = int(np.abs(np.cumsum(mu[cs])).max())
+        print(
+            f"   {lvl:2d} | {top:5d} | {best:.4f} | {arg:6d} | {bestc:18.4f} | {argc:6d} | {near_s:28s} | {r4:.4f} | {pred:.4f} | "
+            f"{cs.size:19d} | {peak:17d} | {peak / cs.size ** 0.5:12.4f}"
+        )
 
     print(f"\nTHE RIPPLE, {name}: A_4(3^L/4) / A_F(3^L/4) against #Acc_4/4 = 3/4, and N_F(3^L; 4) against 2^(L-2) + 2^(L/2-1) - 1")
     print("    L | N_F(3^L;4) = A_4(3^L/4) | A_F(floor(3^L/4)) |  ratio | 2^(L-2)+2^(L/2-1)-1 | A_4(3^L)/2^L")
@@ -1177,12 +1183,13 @@ def verb_repunit():
         mu = mobius_sieve(base**top_sieve + 1)
         sieve_time = time.time() - t0
         pari = repunit_pari(base, range(2, top_pari + 1))
+        alpha = log(len(digits)) / log(base)
         print(
             f"\nTHE REPUNIT DILATE, {name}: R_t = (b^t - 1)/(b - 1), x_t = floor(b^(2t)/R_t) = (b - 1)(b^t + 1), "
-            f"R_t^(-1) S_F below x_t = {{(b - 1) m + 1 : m in B_t}} union {{b^t + 1}}, N = 2^t + 1, T_s = sum over B_s of mu(b(b - 1) w + 1)"
+            f"R_t^(-1) S_F below x_t = {{(b - 1) m + 1 : m in B_t}} union {{b^t + 1}}, N = 2^t + 1, T_s = sum over B_s of mu(b(b - 1) w + 1), Y_t = R_t^((alpha - 1)/2) x_t^(alpha/2) the (U') yardstick"
         )
         print(
-            "    t |        R_t |          x_t |        N | T_(t-1) | T_(t-2) | mu(b^t+1) | M_F(x_t;R_t) | max abs M_F |         at y | N^(1/2) |  N^(0.6) | peak/N^(1/2) | peak/N^(0.6) | checks | pari s"
+            "    t |        R_t |          x_t |        N | T_(t-1) | T_(t-2) | mu(b^t+1) | M_F(x_t;R_t) | max abs M_F |         at y | N^(1/2) |  N^(0.6) | peak/N^(1/2) | peak/N^(0.6) |   peak/Y_t | checks | pari s"
         )
         for t in range(2, top_pari + 1):
             rep = repunit(base, t)
@@ -1190,6 +1197,7 @@ def verb_repunit():
             x = (base - 1) * (base**t + 1)
             assert x == base ** (2 * t) // rep
             ends, totals, peaks = pari[t][:3]
+            yard = rep ** ((alpha - 1) / 2) * x ** (alpha / 2)
             if t <= top_sieve:
                 b = padded_strings(base, digits, t)
                 aff = (base - 1) * b + 1
@@ -1214,7 +1222,7 @@ def verb_repunit():
                 ycol = "           -"
             print(
                 f"   {t:2d} | {rep:10d} | {x:12d} | {n:8d} | {tcol} | {total - end:9d} | {total:12d} | {peak:11d} | {ycol} | "
-                f"{n**0.5:7.1f} | {n**0.6:8.1f} | {peak / n**0.5:12.4f} | {peak / n**0.6:12.4f} | {checks:23s} | {pari[t][3]:.1f}"
+                f"{n**0.5:7.1f} | {n**0.6:8.1f} | {peak / n**0.5:12.4f} | {peak / n**0.6:12.4f} | {peak / yard:10.3f} | {checks:23s} | {pari[t][3]:.1f}"
             )
         print(f"   sieve to {base}^{top_sieve} + 1 in {sieve_time:.1f} s, design total {time.time() - t0:.1f} s")
 

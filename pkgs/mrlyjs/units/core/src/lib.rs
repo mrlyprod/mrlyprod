@@ -91,7 +91,9 @@ pub fn cell_magic(cells: JsValue) -> Result<JsValue, JsValue> {
 #[wasm_bindgen]
 pub fn cell_mapping() -> Result<JsValue, JsValue> {
     let value = mrlyrs::core::cell::mapping();
-    hand::map_to_js(&value, |x1| hand::list_to_js(x1, |x2| Ok(hand::color_to_js(*x2))))
+    hand::map_to_js(&value, |x1| {
+        hand::list_to_js(x1, |x2| Ok(hand::color_to_js(*x2)))
+    })
 }
 
 /// Stitches same-shaped cells into one grid of reps blocks per axis.
@@ -120,11 +122,19 @@ pub fn cell_mosaic(mask: JsValue, cells: JsValue) -> Result<JsValue, JsValue> {
 
 /// Tags every cell with its count of target-valued neighbors under the mask.
 #[wasm_bindgen]
-pub fn cell_neighbors(cell: JsValue, mask: JsValue, target: u8, wrap: bool, dtype: JsValue) -> Result<JsValue, JsValue> {
+pub fn cell_neighbors(
+    cell: JsValue,
+    mask: JsValue,
+    target: u8,
+    wrap: bool,
+    dtype: JsValue,
+) -> Result<JsValue, JsValue> {
     let cell = hand::cell_from_js(&cell)?;
     let mask = hand::tensor_from_js(&mask)?;
     let dtype = hand::from_js::<mrlyrs::core::Dtype>(&dtype)?;
-    let value = cell.neighbors(&mask, target, wrap, dtype).map_err(hand::throw)?;
+    let value = cell
+        .neighbors(&mask, target, wrap, dtype)
+        .map_err(hand::throw)?;
     hand::cell_to_js(&value)
 }
 
@@ -146,13 +156,23 @@ pub fn cell_pad(cell: JsValue, count: usize, value: u8) -> Result<JsValue, JsVal
 
 /// Colors every mapped cell, picking within each type's palette by the mode.
 #[wasm_bindgen]
-pub fn cell_paint(cell: JsValue, mapping: JsValue, mode: JsValue, rng: JsValue) -> Result<JsValue, JsValue> {
+pub fn cell_paint(
+    cell: JsValue,
+    mapping: JsValue,
+    mode: JsValue,
+    rng: JsValue,
+) -> Result<JsValue, JsValue> {
     let cell = hand::cell_from_js(&cell)?;
-    let mapping = hand::map_from_js::<u8, _>(&mapping, |x1| hand::list_from_js(x1, hand::color_from_js))?;
+    let mapping =
+        hand::map_from_js::<u8, _>(&mapping, |x1| hand::list_from_js(x1, hand::color_from_js))?;
     let mode = hand::from_js::<mrlyrs::core::Mode>(&mode)?;
     let mut rng_stream = hand::stream_from_js(&rng)?;
-    let value = cell.paint(&mapping, mode, rng_stream.as_mut()).map_err(hand::throw)?;
-    if let Some(stream) = &rng_stream { hand::stream_to_js(&rng, stream)?; }
+    let value = cell
+        .paint(&mapping, mode, rng_stream.as_mut())
+        .map_err(hand::throw)?;
+    if let Some(stream) = &rng_stream {
+        hand::stream_to_js(&rng, stream)?;
+    }
     hand::cell_to_js(&value)
 }
 
@@ -231,17 +251,30 @@ pub fn cell_tile_map(shape: &[usize], reps: &[usize]) -> Result<Vec<usize>, JsVa
 
 /// Encodes indexed frames as an animated gif89a, each source pixel a scale by scale block.
 #[wasm_bindgen]
-pub fn codec_gif(frames: JsValue, palette: JsValue, width: usize, height: usize, scale: usize, delay: usize) -> Result<Vec<u8>, JsValue> {
+pub fn codec_gif(
+    frames: JsValue,
+    palette: JsValue,
+    width: usize,
+    height: usize,
+    scale: usize,
+    delay: usize,
+) -> Result<Vec<u8>, JsValue> {
     let frames = hand::from_js::<Vec<Vec<u8>>>(&frames)?;
     let frames_view: Vec<&[u8]> = frames.iter().map(Vec::as_slice).collect();
     let palette = hand::from_js::<Vec<[u8; 4]>>(&palette)?;
-    let value = mrlyrs::core::codec::gif(&frames_view, &palette, width, height, scale, delay).map_err(hand::throw)?;
+    let value = mrlyrs::core::codec::gif(&frames_view, &palette, width, height, scale, delay)
+        .map_err(hand::throw)?;
     Ok(value)
 }
 
 /// Encodes rgba colors as a png, drawing each source pixel as a scale by scale block.
 #[wasm_bindgen]
-pub fn codec_png(colors: JsValue, width: usize, height: usize, scale: usize) -> Result<Vec<u8>, JsValue> {
+pub fn codec_png(
+    colors: JsValue,
+    width: usize,
+    height: usize,
+    scale: usize,
+) -> Result<Vec<u8>, JsValue> {
     let colors = hand::from_js::<Vec<[u8; 4]>>(&colors)?;
     let value = mrlyrs::core::codec::png(&colors, width, height, scale).map_err(hand::throw)?;
     Ok(value)
@@ -310,7 +343,12 @@ pub fn colors_lightness(color: JsValue, level: u8) -> Result<JsValue, JsValue> {
 
 /// Reads rgba pixels as a type grid, one wherever the rgb mean falls below the level.
 #[wasm_bindgen]
-pub fn colors_luma_types(pixels: JsValue, width: usize, height: usize, level: u8) -> Result<JsValue, JsValue> {
+pub fn colors_luma_types(
+    pixels: JsValue,
+    width: usize,
+    height: usize,
+    level: u8,
+) -> Result<JsValue, JsValue> {
     let pixels = hand::from_js::<Vec<[u8; 4]>>(&pixels)?;
     let value = mrlyrs::core::colors::luma_types(&pixels, width, height, level);
     hand::tensor_to_js(&value)
@@ -387,11 +425,22 @@ pub fn error_parse(text: &str) -> Result<JsValue, JsValue> {
 
 /// Squashes rgba pixels to the hex aspect, returning the new width, height and pixels.
 #[wasm_bindgen]
-pub fn hex_fit(pixels: JsValue, width: usize, height: usize, vertical: bool, filter: JsValue) -> Result<JsValue, JsValue> {
+pub fn hex_fit(
+    pixels: JsValue,
+    width: usize,
+    height: usize,
+    vertical: bool,
+    filter: JsValue,
+) -> Result<JsValue, JsValue> {
     let pixels = hand::from_js::<Vec<[u8; 4]>>(&pixels)?;
     let filter = hand::from_js::<mrlyrs::core::Filter>(&filter)?;
-    let value = mrlyrs::core::hex_fit(&pixels, width, height, vertical, filter).map_err(hand::throw)?;
-    Ok(hand::tuple_to_js(&[hand::to_js(&value.0)?, hand::to_js(&value.1)?, hand::list_to_js(&value.2, |x2| Ok(hand::typed(&(*x2)[..])))?]))
+    let value =
+        mrlyrs::core::hex_fit(&pixels, width, height, vertical, filter).map_err(hand::throw)?;
+    Ok(hand::tuple_to_js(&[
+        hand::to_js(&value.0)?,
+        hand::to_js(&value.1)?,
+        hand::list_to_js(&value.2, |x2| Ok(hand::typed(&(*x2)[..])))?,
+    ]))
 }
 
 /// Returns the size a hex rendering wears, the named axis squashed by the triangle ratio.
@@ -403,7 +452,12 @@ pub fn hex_size(width: usize, height: usize, vertical: bool) -> Result<JsValue, 
 
 /// Box-blurs rgba pixels by radius, each channel the mean of its edge-padded window.
 #[wasm_bindgen]
-pub fn image_blur(pixels: JsValue, width: usize, height: usize, radius: usize) -> Result<JsValue, JsValue> {
+pub fn image_blur(
+    pixels: JsValue,
+    width: usize,
+    height: usize,
+    radius: usize,
+) -> Result<JsValue, JsValue> {
     let pixels = hand::from_js::<Vec<[u8; 4]>>(&pixels)?;
     let value = mrlyrs::core::image::blur(&pixels, width, height, radius);
     hand::list_to_js(&value, |x1| Ok(hand::typed(&(*x1)[..])))
@@ -420,31 +474,54 @@ pub fn paint_apply(paint: &paint_Paint, cell: JsValue, rng: &mut hand::Rng) -> R
 
 /// Replays a stored paint onto a cell, tagging first and applying it from the stream.
 #[wasm_bindgen]
-pub fn paint_coat(cell: JsValue, paint: &paint_Paint, mask: JsValue, rng: &mut hand::Rng) -> Result<(), JsValue> {
+pub fn paint_coat(
+    cell: JsValue,
+    paint: &paint_Paint,
+    mask: JsValue,
+    rng: &mut hand::Rng,
+) -> Result<(), JsValue> {
     let mut cell_value = hand::cell_from_js(&cell)?;
     let mask = hand::option_from_js(&mask, hand::tensor_from_js)?;
-    mrlyrs::core::paint::coat(&mut cell_value, &paint.inner, mask.as_ref(), rng.stream()).map_err(hand::throw)?;
+    mrlyrs::core::paint::coat(&mut cell_value, &paint.inner, mask.as_ref(), rng.stream())
+        .map_err(hand::throw)?;
     hand::cell_into_js(&cell, &cell_value)?;
     Ok(())
 }
 
 /// Draws a random paint under the config, applies it to the cell, and returns the recipe.
 #[wasm_bindgen]
-pub fn paint_paint(cell: JsValue, config: JsValue, mask: JsValue, rng: &mut hand::Rng) -> Result<paint_Paint, JsValue> {
+pub fn paint_paint(
+    cell: JsValue,
+    config: JsValue,
+    mask: JsValue,
+    rng: &mut hand::Rng,
+) -> Result<paint_Paint, JsValue> {
     let mut cell_value = hand::cell_from_js(&cell)?;
     let config = hand::from_js::<mrlyrs::core::paint::Config>(&config)?;
     let mask = hand::option_from_js(&mask, hand::tensor_from_js)?;
-    let value = mrlyrs::core::paint::paint(&mut cell_value, &config, mask.as_ref(), rng.stream()).map_err(hand::throw)?;
+    let value = mrlyrs::core::paint::paint(&mut cell_value, &config, mask.as_ref(), rng.stream())
+        .map_err(hand::throw)?;
     hand::cell_into_js(&cell, &cell_value)?;
     Ok(paint_Paint { inner: value })
 }
 
 /// Tags the cell for Layers and Neighbors paints and sizes the palette to the tag count.
 #[wasm_bindgen]
-pub fn paint_prime(paint: &paint_Paint, cell: JsValue, mask: JsValue, rng: &mut hand::Rng) -> Result<paint_Paint, JsValue> {
+pub fn paint_prime(
+    paint: &paint_Paint,
+    cell: JsValue,
+    mask: JsValue,
+    rng: &mut hand::Rng,
+) -> Result<paint_Paint, JsValue> {
     let mut cell_value = hand::cell_from_js(&cell)?;
     let mask = hand::option_from_js(&mask, hand::tensor_from_js)?;
-    let value = mrlyrs::core::paint::prime(paint.inner.clone(), &mut cell_value, mask.as_ref(), rng.stream()).map_err(hand::throw)?;
+    let value = mrlyrs::core::paint::prime(
+        paint.inner.clone(),
+        &mut cell_value,
+        mask.as_ref(),
+        rng.stream(),
+    )
+    .map_err(hand::throw)?;
     hand::cell_into_js(&cell, &cell_value)?;
     Ok(paint_Paint { inner: value })
 }
@@ -466,7 +543,11 @@ pub fn paint_reroll(paint: &paint_Paint, rng: &mut hand::Rng) -> Result<paint_Pa
 
 /// Draws the paint's scheme, target and primary under the config, then rerolls the rest.
 #[wasm_bindgen]
-pub fn paint_setup(paint: &paint_Paint, config: JsValue, rng: &mut hand::Rng) -> Result<paint_Paint, JsValue> {
+pub fn paint_setup(
+    paint: &paint_Paint,
+    config: JsValue,
+    rng: &mut hand::Rng,
+) -> Result<paint_Paint, JsValue> {
     let config = hand::from_js::<mrlyrs::core::paint::Config>(&config)?;
     let value = mrlyrs::core::paint::setup(paint.inner.clone(), &config, rng.stream());
     Ok(paint_Paint { inner: value })
@@ -474,12 +555,18 @@ pub fn paint_setup(paint: &paint_Paint, config: JsValue, rng: &mut hand::Rng) ->
 
 /// Tags the cell for the Layers and Neighbors editions and returns the distinct tag count on the secondary side.
 #[wasm_bindgen]
-pub fn paint_tag(cell: JsValue, edition: JsValue, target: JsValue, mask: JsValue) -> Result<usize, JsValue> {
+pub fn paint_tag(
+    cell: JsValue,
+    edition: JsValue,
+    target: JsValue,
+    mask: JsValue,
+) -> Result<usize, JsValue> {
     let mut cell_value = hand::cell_from_js(&cell)?;
     let edition = hand::from_js::<mrlyrs::core::paint::Edition>(&edition)?;
     let target = hand::from_js::<mrlyrs::core::paint::Target>(&target)?;
     let mask = hand::option_from_js(&mask, hand::tensor_from_js)?;
-    let value = mrlyrs::core::paint::tag(&mut cell_value, edition, target, mask.as_ref()).map_err(hand::throw)?;
+    let value = mrlyrs::core::paint::tag(&mut cell_value, edition, target, mask.as_ref())
+        .map_err(hand::throw)?;
     hand::cell_into_js(&cell, &cell_value)?;
     Ok(value)
 }
@@ -502,10 +589,18 @@ pub fn ramp_colors(colorizer: JsValue, values: &[usize], max: usize) -> Result<J
 
 /// Resamples rgba pixels to a new size.
 #[wasm_bindgen]
-pub fn resample(pixels: JsValue, width: usize, height: usize, out_w: usize, out_h: usize, filter: JsValue) -> Result<JsValue, JsValue> {
+pub fn resample(
+    pixels: JsValue,
+    width: usize,
+    height: usize,
+    out_w: usize,
+    out_h: usize,
+    filter: JsValue,
+) -> Result<JsValue, JsValue> {
     let pixels = hand::from_js::<Vec<[u8; 4]>>(&pixels)?;
     let filter = hand::from_js::<mrlyrs::core::Filter>(&filter)?;
-    let value = mrlyrs::core::resample(&pixels, width, height, out_w, out_h, filter).map_err(hand::throw)?;
+    let value = mrlyrs::core::resample(&pixels, width, height, out_w, out_h, filter)
+        .map_err(hand::throw)?;
     hand::list_to_js(&value, |x1| Ok(hand::typed(&(*x1)[..])))
 }
 
@@ -549,7 +644,11 @@ pub fn rng_range_(rng: &mut hand::Rng, lo: JsValue, hi: JsValue) -> Result<i64, 
 
 /// Draws amount distinct indices below length, or every index when amount is larger.
 #[wasm_bindgen]
-pub fn rng_sample_indices_(rng: &mut hand::Rng, length: usize, amount: usize) -> Result<Vec<usize>, JsValue> {
+pub fn rng_sample_indices_(
+    rng: &mut hand::Rng,
+    length: usize,
+    amount: usize,
+) -> Result<Vec<usize>, JsValue> {
     let value = rng.stream().sample_indices(length, amount);
     Ok(value)
 }
@@ -628,7 +727,11 @@ pub fn tensor_exposed(tensor: JsValue) -> Result<JsValue, JsValue> {
 
 /// Builds a tensor of the shape and width filled with one value.
 #[wasm_bindgen]
-pub fn tensor_filled(shape: Vec<usize>, value: JsValue, dtype: JsValue) -> Result<JsValue, JsValue> {
+pub fn tensor_filled(
+    shape: Vec<usize>,
+    value: JsValue,
+    dtype: JsValue,
+) -> Result<JsValue, JsValue> {
     let value = hand::i64_from_js(&value)?;
     let dtype = hand::from_js::<mrlyrs::core::Dtype>(&dtype)?;
     let value = mrlyrs::core::Tensor::filled(shape, value, dtype);
@@ -717,11 +820,19 @@ pub fn tensor_layers(tensor: JsValue, dtype: JsValue) -> Result<JsValue, JsValue
 
 /// Counts each position's masked neighbors holding the target bit.
 #[wasm_bindgen]
-pub fn tensor_neighbors(tensor: JsValue, mask: JsValue, target: u8, wrap: bool, dtype: JsValue) -> Result<JsValue, JsValue> {
+pub fn tensor_neighbors(
+    tensor: JsValue,
+    mask: JsValue,
+    target: u8,
+    wrap: bool,
+    dtype: JsValue,
+) -> Result<JsValue, JsValue> {
     let tensor = hand::tensor_from_js(&tensor)?;
     let mask = hand::tensor_from_js(&mask)?;
     let dtype = hand::from_js::<mrlyrs::core::Dtype>(&dtype)?;
-    let value = tensor.neighbors(&mask, target, wrap, dtype).map_err(hand::throw)?;
+    let value = tensor
+        .neighbors(&mask, target, wrap, dtype)
+        .map_err(hand::throw)?;
     hand::tensor_to_js(&value)
 }
 
@@ -881,7 +992,11 @@ pub fn tensor_u8(data: Vec<u8>, shape: Vec<usize>) -> Result<JsValue, JsValue> {
 #[wasm_bindgen]
 pub fn unpng(bytes: &[u8]) -> Result<JsValue, JsValue> {
     let value = mrlyrs::core::unpng(bytes).map_err(hand::throw)?;
-    Ok(hand::tuple_to_js(&[hand::to_js(&value.0)?, hand::to_js(&value.1)?, hand::list_to_js(&value.2, |x2| Ok(hand::typed(&(*x2)[..])))?]))
+    Ok(hand::tuple_to_js(&[
+        hand::to_js(&value.0)?,
+        hand::to_js(&value.1)?,
+        hand::list_to_js(&value.2, |x2| Ok(hand::typed(&(*x2)[..])))?,
+    ]))
 }
 
 /// The height of an equilateral triangle over its side, the squash a hex rendering wears.
@@ -1049,7 +1164,9 @@ impl Image {
     /// Reads the Image from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<Image, JsValue> {
-        Ok(Image { inner: hand::from_js(&data)? })
+        Ok(Image {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Image as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -1115,7 +1232,12 @@ impl Image {
     }
     /// Builds an image from its four parts.
     #[wasm_bindgen(constructor)]
-    pub fn new(width: usize, height: usize, rows: JsValue, palette: JsValue) -> Result<Image, JsValue> {
+    pub fn new(
+        width: usize,
+        height: usize,
+        rows: JsValue,
+        palette: JsValue,
+    ) -> Result<Image, JsValue> {
         let rows = hand::from_js::<Vec<Vec<usize>>>(&rows)?;
         let palette = hand::list_from_js(&palette, hand::color_from_js)?;
         let value = mrlyrs::core::Image::new(width, height, rows, palette);
@@ -1129,7 +1251,10 @@ impl Image {
     /// Resamples the image to a new size, its palette rebuilt from the blended pixels.
     pub fn resample(&self, width: usize, height: usize, filter: JsValue) -> Result<Image, JsValue> {
         let filter = hand::from_js::<mrlyrs::core::Filter>(&filter)?;
-        let value = self.inner.resample(width, height, filter).map_err(hand::throw)?;
+        let value = self
+            .inner
+            .resample(width, height, filter)
+            .map_err(hand::throw)?;
         Ok(Image { inner: value })
     }
 }
@@ -1145,7 +1270,9 @@ impl colors_Theme {
     /// Reads the Theme from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<colors_Theme, JsValue> {
-        Ok(colors_Theme { inner: hand::from_js(&data)? })
+        Ok(colors_Theme {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Theme as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -1439,7 +1566,9 @@ impl paint_Paint {
     /// Reads the Paint from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<paint_Paint, JsValue> {
-        Ok(paint_Paint { inner: hand::from_js(&data)? })
+        Ok(paint_Paint {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Paint as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -1554,10 +1683,15 @@ impl Colorizer {
         hand::to_js(&value)
     }
     /// Builds a binned colorizer from a gradient through the given stops.
-    pub fn gradient_bins(background: JsValue, colors: JsValue, shades: usize) -> Result<JsValue, JsValue> {
+    pub fn gradient_bins(
+        background: JsValue,
+        colors: JsValue,
+        shades: usize,
+    ) -> Result<JsValue, JsValue> {
         let background = hand::color_from_js(&background)?;
         let colors = hand::list_from_js(&colors, hand::color_from_js)?;
-        let value = mrlyrs::core::Colorizer::gradient_bins(background, &colors, shades).map_err(hand::throw)?;
+        let value = mrlyrs::core::Colorizer::gradient_bins(background, &colors, shades)
+            .map_err(hand::throw)?;
         hand::to_js(&value)
     }
     /// Builds the white-to-black heat ramp.

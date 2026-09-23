@@ -834,6 +834,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "mixed-powers"
+version = "0.0.0"
+
+[[package]]
 name = "mobius-designs"
 version = "0.0.0"
 
@@ -1686,6 +1690,13 @@ dependencies = [
  "equator 0.4.2",
  "loom",
  "rayon",
+]
+
+[[package]]
+name = "sponge-window"
+version = "0.0.0"
+dependencies = [
+ "mrlyrs",
 ]
 
 [[package]]

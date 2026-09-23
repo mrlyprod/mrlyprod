@@ -126,7 +126,11 @@ pub fn recipe_classics(dimension: usize) -> Result<JsValue, JsValue> {
 
 /// Returns every flat size in the range that passes the parity filter.
 #[wasm_bindgen]
-pub fn recipe_generals(min_size: usize, max_size: usize, parity: JsValue) -> Result<Vec<usize>, JsValue> {
+pub fn recipe_generals(
+    min_size: usize,
+    max_size: usize,
+    parity: JsValue,
+) -> Result<Vec<usize>, JsValue> {
     let parity = hand::from_js::<mrlyrs::gen::Parity>(&parity)?;
     let value = mrlyrs::gen::recipe::generals(min_size, max_size, parity);
     Ok(value)
@@ -134,7 +138,11 @@ pub fn recipe_generals(min_size: usize, max_size: usize, parity: JsValue) -> Res
 
 /// Returns every factor list of depth two and beyond whose product lands in the size range.
 #[wasm_bindgen]
-pub fn recipe_nestings(min_size: usize, max_size: usize, parity: JsValue) -> Result<JsValue, JsValue> {
+pub fn recipe_nestings(
+    min_size: usize,
+    max_size: usize,
+    parity: JsValue,
+) -> Result<JsValue, JsValue> {
     let parity = hand::from_js::<mrlyrs::gen::Parity>(&parity)?;
     let value = mrlyrs::gen::recipe::nestings(min_size, max_size, parity);
     hand::list_to_js(&value, |x1| Ok(hand::typed(&(*x1)[..])))
@@ -142,7 +150,11 @@ pub fn recipe_nestings(min_size: usize, max_size: usize, parity: JsValue) -> Res
 
 /// Returns every factor and level whose power lands in the size range.
 #[wasm_bindgen]
-pub fn recipe_powers(min_size: usize, max_size: usize, parity: JsValue) -> Result<JsValue, JsValue> {
+pub fn recipe_powers(
+    min_size: usize,
+    max_size: usize,
+    parity: JsValue,
+) -> Result<JsValue, JsValue> {
     let parity = hand::from_js::<mrlyrs::gen::Parity>(&parity)?;
     let value = mrlyrs::gen::recipe::powers(min_size, max_size, parity);
     hand::to_js(&value)
@@ -150,7 +162,12 @@ pub fn recipe_powers(min_size: usize, max_size: usize, parity: JsValue) -> Resul
 
 /// Returns every count-long factor list whose product lands in the size range.
 #[wasm_bindgen]
-pub fn recipe_products(min_size: usize, max_size: usize, count: usize, parity: JsValue) -> Result<JsValue, JsValue> {
+pub fn recipe_products(
+    min_size: usize,
+    max_size: usize,
+    count: usize,
+    parity: JsValue,
+) -> Result<JsValue, JsValue> {
     let parity = hand::from_js::<mrlyrs::gen::Parity>(&parity)?;
     let value = mrlyrs::gen::recipe::products(min_size, max_size, count, parity);
     hand::list_to_js(&value, |x1| Ok(hand::typed(&(*x1)[..])))
@@ -174,7 +191,10 @@ pub fn tree_mask(n: usize) -> Result<JsValue, JsValue> {
 
 /// Draws a variation's seed from the stream, then the variation itself on that seed, with a
 #[wasm_bindgen]
-pub fn variation_create(config: JsValue, rng: &mut hand::Rng) -> Result<variation_Variation, JsValue> {
+pub fn variation_create(
+    config: JsValue,
+    rng: &mut hand::Rng,
+) -> Result<variation_Variation, JsValue> {
     let config = hand::from_js::<mrlyrs::gen::variation::Config>(&config)?;
     let value = mrlyrs::gen::variation::create(&config, rng.stream()).map_err(hand::throw)?;
     Ok(variation_Variation { inner: value })
@@ -182,16 +202,26 @@ pub fn variation_create(config: JsValue, rng: &mut hand::Rng) -> Result<variatio
 
 /// Builds the variation's base cell and draws its paint from the stream, painting the base
 #[wasm_bindgen]
-pub fn variation_generate(variation: &variation_Variation, config: JsValue, rng: &mut hand::Rng) -> Result<variation_Variation, JsValue> {
+pub fn variation_generate(
+    variation: &variation_Variation,
+    config: JsValue,
+    rng: &mut hand::Rng,
+) -> Result<variation_Variation, JsValue> {
     let config = hand::from_js::<mrlyrs::gen::variation::Config>(&config)?;
-    let value = mrlyrs::gen::variation::generate(variation.inner.clone(), &config, rng.stream()).map_err(hand::throw)?;
+    let value = mrlyrs::gen::variation::generate(variation.inner.clone(), &config, rng.stream())
+        .map_err(hand::throw)?;
     Ok(variation_Variation { inner: value })
 }
 
 /// Renders every file of the variation to PNG at the given scale, scattering a Random edition
 #[wasm_bindgen]
-pub fn variation_render(variation: &variation_Variation, scale: usize, rng: &mut hand::Rng) -> Result<variation_Variation, JsValue> {
-    let value = mrlyrs::gen::variation::render(variation.inner.clone(), scale, rng.stream()).map_err(hand::throw)?;
+pub fn variation_render(
+    variation: &variation_Variation,
+    scale: usize,
+    rng: &mut hand::Rng,
+) -> Result<variation_Variation, JsValue> {
+    let value = mrlyrs::gen::variation::render(variation.inner.clone(), scale, rng.stream())
+        .map_err(hand::throw)?;
     Ok(variation_Variation { inner: value })
 }
 
@@ -248,7 +278,9 @@ impl Tile {
     /// Reads the Tile from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<Tile, JsValue> {
-        Ok(Tile { inner: hand::from_js(&data)? })
+        Ok(Tile {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Tile as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -412,7 +444,9 @@ impl name_Tile {
     /// Reads the Tile from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<name_Tile, JsValue> {
-        Ok(name_Tile { inner: hand::from_js(&data)? })
+        Ok(name_Tile {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Tile as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -539,22 +573,27 @@ impl name_Tile {
     }
     /// Folds a decoded value to its canonical form, or an error for one outside the kind.
     pub fn checked(&self) -> Result<name_Tile, JsValue> {
-        let value = <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::checked(self.inner.clone()).map_err(hand::throw)?;
+        let value =
+            <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::checked(self.inner.clone())
+                .map_err(hand::throw)?;
         Ok(name_Tile { inner: value })
     }
     /// Reads a filename back into the value, or an error.
     pub fn from_file(text: &str) -> Result<name_Tile, JsValue> {
-        let value = <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::from_file(text).map_err(hand::throw)?;
+        let value = <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::from_file(text)
+            .map_err(hand::throw)?;
         Ok(name_Tile { inner: value })
     }
     /// Reads a JSON object into its canonical value, or an error naming the broken key.
     pub fn from_json(text: &str) -> Result<name_Tile, JsValue> {
-        let value = <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::from_json(text).map_err(hand::throw)?;
+        let value = <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::from_json(text)
+            .map_err(hand::throw)?;
         Ok(name_Tile { inner: value })
     }
     /// Reads a path and query string back into the value, or an error.
     pub fn from_url(text: &str) -> Result<name_Tile, JsValue> {
-        let value = <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::from_url(text).map_err(hand::throw)?;
+        let value = <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::from_url(text)
+            .map_err(hand::throw)?;
         Ok(name_Tile { inner: value })
     }
     /// Folds a recipe to its name.
@@ -569,7 +608,8 @@ impl name_Tile {
     }
     /// Prints the kind and the `key=value` pairs joined by underscores, lists in brackets, or an error when the name does not read back.
     pub fn to_file(&self) -> Result<String, JsValue> {
-        let value = <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::to_file(&self.inner).map_err(hand::throw)?;
+        let value = <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::to_file(&self.inner)
+            .map_err(hand::throw)?;
         Ok(value)
     }
     /// Prints the first eight hex digits of the sha256 of the canonical JSON.
@@ -584,12 +624,14 @@ impl name_Tile {
     }
     /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
     pub fn to_mrly(&self) -> Result<String, JsValue> {
-        let value = <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::to_mrly(&self.inner).map_err(hand::throw)?;
+        let value = <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::to_mrly(&self.inner)
+            .map_err(hand::throw)?;
         Ok(value)
     }
     /// Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back.
     pub fn to_url(&self) -> Result<String, JsValue> {
-        let value = <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::to_url(&self.inner).map_err(hand::throw)?;
+        let value = <mrlyrs::gen::name::Tile as mrlyrs::math::name::Named>::to_url(&self.inner)
+            .map_err(hand::throw)?;
         Ok(value)
     }
 }
@@ -605,7 +647,9 @@ impl variation_File {
     /// Reads the File from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<variation_File, JsValue> {
-        Ok(variation_File { inner: hand::from_js(&data)? })
+        Ok(variation_File {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the File as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -664,7 +708,9 @@ impl variation_Variation {
     /// Reads the Variation from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<variation_Variation, JsValue> {
-        Ok(variation_Variation { inner: hand::from_js(&data)? })
+        Ok(variation_Variation {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Variation as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -737,7 +783,9 @@ impl variation_Variation {
     }
     #[wasm_bindgen(setter)]
     pub fn set_mask(&mut self, value: JsValue) -> Result<(), JsValue> {
-        let value = hand::option_from_js(&value, |x1| hand::from_js::<mrlyrs::gen::Tile>(&hand::plain(x1)?))?;
+        let value = hand::option_from_js(&value, |x1| {
+            hand::from_js::<mrlyrs::gen::Tile>(&hand::plain(x1)?)
+        })?;
         self.inner.mask = value;
         Ok(())
     }
@@ -757,11 +805,15 @@ impl variation_Variation {
     #[wasm_bindgen(getter)]
     pub fn files(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.files.clone();
-        hand::list_to_js(&value, |x1| Ok(JsValue::from(variation_File { inner: x1.clone() })))
+        hand::list_to_js(&value, |x1| {
+            Ok(JsValue::from(variation_File { inner: x1.clone() }))
+        })
     }
     #[wasm_bindgen(setter)]
     pub fn set_files(&mut self, value: JsValue) -> Result<(), JsValue> {
-        let value = hand::list_from_js(&value, |x1| hand::from_js::<mrlyrs::gen::variation::File>(&hand::plain(x1)?))?;
+        let value = hand::list_from_js(&value, |x1| {
+            hand::from_js::<mrlyrs::gen::variation::File>(&hand::plain(x1)?)
+        })?;
         self.inner.files = value;
         Ok(())
     }

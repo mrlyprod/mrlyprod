@@ -349,8 +349,14 @@ impl Builder<'_> {
                 let Some((key, _)) = self.impl_owner(mk, imp) else {
                     continue;
                 };
-                if imp.trait_path.as_ref().and_then(|p| p.last()).is_some_and(|t| t == "Default") {
-                    self.defaults.insert(key, format!("{}:{}", m.file, imp.line));
+                if imp
+                    .trait_path
+                    .as_ref()
+                    .and_then(|p| p.last())
+                    .is_some_and(|t| t == "Default")
+                {
+                    self.defaults
+                        .insert(key, format!("{}:{}", m.file, imp.line));
                     continue;
                 }
                 let fns = match &imp.trait_path {
@@ -374,7 +380,8 @@ impl Builder<'_> {
                     _ => None,
                 };
                 if let Some(line) = derived {
-                    self.defaults.insert(key.clone(), format!("{}:{line}", m.file));
+                    self.defaults
+                        .insert(key.clone(), format!("{}:{line}", m.file));
                 }
                 let (name, cross) = match item {
                     Item::Struct(s) => {
@@ -383,7 +390,9 @@ impl Builder<'_> {
                             TypeCross::Hand {
                                 name: s.name.clone(),
                             }
-                        } else if with_methods.contains(&key) || s.fields.iter().any(|f| f.serde_skip) {
+                        } else if with_methods.contains(&key)
+                            || s.fields.iter().any(|f| f.serde_skip)
+                        {
                             TypeCross::Class
                         } else if serde_both(&s.derives) {
                             TypeCross::Plain
@@ -402,7 +411,10 @@ impl Builder<'_> {
                                 words: e.variants.iter().filter_map(|v| v.word.clone()).collect(),
                             }
                         } else if with_methods.contains(&key)
-                            || e.variants.iter().flat_map(|v| &v.fields).any(|f| f.serde_skip)
+                            || e.variants
+                                .iter()
+                                .flat_map(|v| &v.fields)
+                                .any(|f| f.serde_skip)
                         {
                             TypeCross::Class
                         } else if serde_both(&e.derives) {
@@ -883,13 +895,20 @@ impl Builder<'_> {
         (!generic).then(|| default_fn(owner, at, ret))
     }
 
-    fn alias_default(&self, module: &str, alias: &parse::Alias, owner: &str, ty: &Ty) -> Option<Function> {
+    fn alias_default(
+        &self,
+        module: &str,
+        alias: &parse::Alias,
+        owner: &str,
+        ty: &Ty,
+    ) -> Option<Function> {
         if alias.generic || !matches!(ty, Ty::Plain { .. } | Ty::Class { .. } | Ty::Enum { .. }) {
             return None;
         }
         let (target, _) = self.type_key(module, &alias.ty)?;
         let at = self.defaults.get(&target)?;
-        let generic = matches!(&self.module(&target.0).items[target.1], Item::Struct(s) if s.const_generic);
+        let generic =
+            matches!(&self.module(&target.0).items[target.1], Item::Struct(s) if s.const_generic);
         generic.then(|| default_fn(owner, at, ty.clone()))
     }
 

@@ -67,42 +67,64 @@ fn rendered(key: &Key) -> Option<Vec<i128>> {
     }
 }
 
-fn census() -> Vec<Vec<u32>> {
+fn tally(rows: &[Key], lane: usize, lanes: usize) -> Vec<Vec<u32>> {
     let width = WINDOW as usize + 1;
     let mut counts = vec![vec![0u32; width]; DEPTHS.len()];
-    let mut rows = 0usize;
-    for tier in Tier::ALL {
-        for key in keys(tier) {
-            rows += 1;
-            let Some(window) = rendered(&key) else {
-                continue;
-            };
-            for (slot, depth) in DEPTHS.iter().enumerate() {
-                let head = &window[..window.len().min(*depth)];
-                let mut written: Vec<usize> = head
-                    .iter()
-                    .filter(|&&term| (1..=WINDOW).contains(&term))
-                    .map(|&term| term as usize)
-                    .collect();
-                written.sort_unstable();
-                written.dedup();
-                for value in written {
-                    counts[slot][value] += 1;
-                }
+    for key in rows.iter().skip(lane).step_by(lanes) {
+        let Some(window) = rendered(key) else {
+            continue;
+        };
+        for (slot, depth) in DEPTHS.iter().enumerate() {
+            let head = &window[..window.len().min(*depth)];
+            let mut written: Vec<usize> = head
+                .iter()
+                .filter(|&&term| (1..=WINDOW).contains(&term))
+                .map(|&term| term as usize)
+                .collect();
+            written.sort_unstable();
+            written.dedup();
+            for value in written {
+                counts[slot][value] += 1;
             }
         }
     }
-    assert_eq!(rows, 18066);
     counts
 }
 
-// DATA
+fn census() -> Vec<Vec<u32>> {
+    let rows: Vec<Key> = Tier::ALL.into_iter().flat_map(keys).collect();
+    assert_eq!(rows.len(), 18066);
+    let lanes = std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(1);
+    let width = WINDOW as usize + 1;
+    let mut counts = vec![vec![0u32; width]; DEPTHS.len()];
+    std::thread::scope(|scope| {
+        let handles: Vec<_> = (0..lanes)
+            .map(|lane| {
+                let rows = &rows;
+                scope.spawn(move || tally(rows, lane, lanes))
+            })
+            .collect();
+        for handle in handles {
+            let part = handle.join().expect("a lane of the census");
+            for (total, tier) in counts.iter_mut().zip(part) {
+                for (sum, count) in total.iter_mut().zip(tier) {
+                    *sum += count;
+                }
+            }
+        }
+    });
+    counts
+}
+
+// FILE
 
 fn path() -> PathBuf {
     root()
         .join("files")
         .join("figures")
-        .join("data")
+        .join("census")
         .join(format!("{NAME}.json"))
 }
 

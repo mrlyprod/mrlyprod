@@ -235,6 +235,8 @@ const modeOne = Array.from(m.modes_value('495', 3, 2, 3, 1, 1)).map((v: number) 
 const modeTwo = Array.from(m.modes_value('127', 3, 2, 3, 1, 2)).map((v: number) => v.toFixed(6)).join(',');
 const modeWave = m.modes_pattern('495', 3, 2, 3, 1, 2);
 
+const mengerRead = JSON.parse(m.minkowski_read(1 / 12));
+const mengerWalk = JSON.parse(m.minkowski_walk(8, 72));
 const tubeField = m.tube_distance('495', 3, 6, 3);
 const tubeCarpet = m.tube_volume('495', 3, 6, 3, 21);
 const tubePairs = m.tube_profile('495', 3, 6, 3, 9);
@@ -811,6 +813,9 @@ checks.push(
   ['tube closed swing', tubeBand(3, 8), '1.35561708,1.35067021,0.366253'],
   ['tube profile head', `${tubePairs.length},${tubePairs[1]}`, '18,1.125'],
   ['tube class carpet and runner', `${m.tube_class('495', 3, 3)},${m.tube_class('127', 3, 3)}`, 'true,false'],
+  ['minkowski read at 1/12', `${mengerRead.tube.toFixed(9)} ${mengerRead.profile.toFixed(6)}`, '0.180947092 2.122723'],
+  ['minkowski walk open phases and swing', `${mengerWalk.u.length} ${mengerWalk.profile.filter((v: number | null) => v === null).length} ${mengerWalk.swing.toFixed(4)}`, '576 184 0.8125'],
+  ['minkowski slice centre', m.minkowski_slice(0.5, 3)[4].toFixed(6), (Math.SQRT2 / 6).toFixed(6)],
   ['weights corner order', Array.from(m.weights_corners('69', 3, 3)).join(','), '0,0,0,2,2,0'],
   ['weights pressure table', wTable, '3.102621 2.033103 1.000000 0.000000 -0.971990 -1.921688'],
   ['weights point at s -2', wPoint(-2), '-2.000000000 3.102620937 1.088179391 0.926262155'],
@@ -913,6 +918,48 @@ checks.push(
   ['novelty fit', `${meter.miss(0)} ${meter.miss(1).toFixed(3)} ${meter.miss(10).toExponential(2)}`, '1 0.446 4.47e-2'],
   ['novelty full meter', `${meterFull.heights().length} ${meterFull.sieve()} ${meterFull.gammas()[137].toFixed(6)} ${meterFull.amplitudes()[137].toExponential(3)}`, '193 2097152 299.840326 1.475e-7'],
   ['novelty full fit', `${meterFull.miss(30) < 5e-3} ${meterFull.miss(138) < 1e-4} ${Math.max(...meterFull.dots(false).map(Math.abs)).toFixed(4)}`, 'true true 0.5580'],
+);
+
+// SUMSET
+
+const sumsetRead = (level: number, x: number) => JSON.parse(m.sumset_read(level, x));
+const sumsetSix = (v: number) => Math.floor(v * 1e6);
+const sumsetPowers = [4, 5, 6, 7, 8, 9, 10].map((k) => sumsetRead(10, 3 ** k));
+const sumsetDip = sumsetRead(16, 14348906);
+const sumsetEnvelope = Array.from(m.sumset_envelope(16, 720) as Float32Array).filter((v) => !Number.isNaN(v));
+const sumsetStrip = m.sumset_strip(6, 0, 250, 250);
+const sumsetDark = Array.from({ length: 250 }, (_, i) => i).filter((i) => sumsetStrip[i] === 0);
+const sumsetPairs = JSON.parse(m.sumset_pairs(16));
+const sumsetFlag = (key: string) => sumsetPairs.filter((row: Record<string, unknown>) => row[key] === true).length;
+const sumsetCentre = sumsetPairs.find((row: { three: number; four: number }) => row.three === 15 && row.four === 12);
+
+checks.push(
+  ['sumset counts at 3^4..3^10', sumsetPowers.map((row) => row.count).join(','), '79,203,626,1941,5963,17025,45968'],
+  ['sumset D at 3^4..3^10', sumsetPowers.map((row) => sumsetSix(row.density)).join(','), '975308,835390,858710,887517,908855,864959,778472'],
+  ['sumset dip at 3^15 - 1', `${sumsetDip.count} ${sumsetSix(sumsetDip.density)} ${sumsetDip.member}`, '10953840 763391 false'],
+  ['sumset envelope ends', `${Math.min(...sumsetEnvelope).toFixed(5)} ${Math.max(...sumsetEnvelope)}`, '0.76339 1'],
+  ['sumset dark is A367090', `${sumsetDark.length} ${sumsetDark.slice(0, 6).join(',')}`, '40 62,63,143,144,207,208'],
+  ['sumset pairs to 3^16', `${sumsetPairs.length} ${sumsetFlag('clean')} ${sumsetFlag('copy')}`, '17 6 5'],
+  ['sumset Q rounded up', sumsetPairs.slice(0, 4).map((row: { ratio: number }) => Math.ceil(row.ratio * 1e6)).join(','), '1467705,1638125,1664808,1724517'],
+  ['sumset gap at (15, 12)', `${sumsetCentre.gap.join(',')} ${sumsetCentre.energy}`, '12766859,14348906 2737906338'],
+);
+
+// DISSECTION
+
+const cutRead = JSON.parse(m.dissection_read(10, 7));
+const cutTally = m.dissection_tally(10, 7, 6);
+const cutTallyRead = JSON.parse(cutTally.read);
+const cutGrid = JSON.parse(m.dissection_grid(10, 7, 3, 8).read);
+const cutChain = Array.from(m.dissection_chain() as Float32Array);
+
+checks.push(
+  ['dissection base 10 less 7', `${cutRead.kappa.join('/')} ${cutRead.consecutive} ${cutRead.level} ${cutRead.masses[6].toFixed(2)}`, '5/6 true 6 57350894.06'],
+  ['dissection reading and chain', `${cutRead.reading.toFixed(6)} ${cutRead.chain.toFixed(6)} ${cutRead.reach}`, '0.346831 0.494642 none'],
+  ['dissection walls', `${cutRead.walls.chain} ${cutRead.walls.window} ${cutRead.walls.digit} ${cutRead.walls.first}`, '584 301 115 65'],
+  ['dissection tally to 10^6', `${cutTallyRead.count} ${cutTallyRead.meter} ${cutTallyRead.root.toFixed(6)} ${cutTallyRead.primes.toFixed(6)}`, '531440 -9 -0.012346 0.997990'],
+  ['dissection grid cut', cutGrid.counts.join(','), '732,202,26,40'],
+  ['dissection grid shares', cutGrid.shares.map((v: number) => v.toFixed(6)).join(','), '0.505350,0.191985,0.006843,0.295822'],
+  ['dissection chain below a fifth', `${cutChain.length} ${cutChain.findIndex((v) => v < 0.2) + 3}`, '4094 584'],
 );
 
 export default checks;

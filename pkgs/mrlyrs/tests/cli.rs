@@ -83,7 +83,10 @@ fn life_replays_its_counts() {
 
 #[test]
 fn font_replays_its_path() {
-    assert_eq!(printed("font.path", r#"["M"]"#), stored("font", "font::path"));
+    assert_eq!(
+        printed("font.path", r#"["M"]"#),
+        stored("font", "font::path")
+    );
 }
 
 #[test]

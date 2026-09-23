@@ -17,6 +17,8 @@ pub mod geometry;
 pub mod renderer;
 /// The JSON form of a cube.
 pub mod serializer;
+/// The Menger sponge's distance, its tube inside the plus and its Minkowski profile.
+pub mod sponge;
 
 pub use crate::math::cell::graph::{core_graph, edge_graph, tunnel_graph};
 pub use crate::math::cell::models::Cell3d;

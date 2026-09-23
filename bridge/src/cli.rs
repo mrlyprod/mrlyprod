@@ -1,4 +1,6 @@
-use crate::model::{Cross, Function, Manifest, Result, SelfKind, Source, Ty, Type, TypeCross, TypeKind};
+use crate::model::{
+    Cross, Function, Manifest, Result, SelfKind, Source, Ty, Type, TypeCross, TypeKind,
+};
 use std::collections::BTreeMap;
 use std::path::Path;
 
@@ -431,7 +433,12 @@ fn callee(shop: &Shop, function: &Function, dim: Option<u8>) -> String {
 
 fn hold(shop: &Shop, ty: &Ty, at: usize, dim: Option<u8>) -> Result<Bind> {
     let slot = format!("args[{at}]");
-    if let Ty::Ref { mutable: true, item, .. } = ty {
+    if let Ty::Ref {
+        mutable: true,
+        item,
+        ..
+    } = ty
+    {
         if rng(item) {
             let open = format!("mrlyrs::core::Rng::new(seed(name, {at}, &{slot})?)");
             return Ok(Bind::Open(
@@ -442,11 +449,18 @@ fn hold(shop: &Shop, ty: &Ty, at: usize, dim: Option<u8>) -> Result<Bind> {
         return Ok(Bind::Shut("mutates its argument in place".to_string()));
     }
     if let Ty::Option { item } = ty {
-        if let Ty::Ref { mutable: true, item: held, .. } = item.as_ref() {
+        if let Ty::Ref {
+            mutable: true,
+            item: held,
+            ..
+        } = item.as_ref()
+        {
             if rng(held) {
                 let open = format!("mrlyrs::core::Rng::new(seed(name, {at}, &{slot})?)");
                 return Ok(Bind::Open(
-                    format!("let mut a{at} = if {slot}.is_null() {{ None }} else {{ Some({open}) }};"),
+                    format!(
+                        "let mut a{at} = if {slot}.is_null() {{ None }} else {{ Some({open}) }};"
+                    ),
                     format!("a{at}.as_mut()"),
                 ));
             }
@@ -854,10 +868,7 @@ fn render(doors: &[Door]) -> String {
             Some(_) => format!("Some({})", door.ident),
             None => "None".to_string(),
         };
-        out.push_str(&format!(
-            "    ({:?}, {:?}, {call}),\n",
-            door.name, door.sig
-        ));
+        out.push_str(&format!("    ({:?}, {:?}, {call}),\n", door.name, door.sig));
     }
     out.push_str("];\n\n// CALLS\n");
     for door in doors {

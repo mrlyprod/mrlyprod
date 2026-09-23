@@ -207,7 +207,11 @@ fn a_serde_skipped_field_makes_a_class() {
     let m = manifest("pub mod gen { #[derive(Serialize, Deserialize)] pub struct File { pub width: usize, #[serde(default, skip_serializing_if = \"Vec::is_empty\")] pub tags: Vec<u8>, #[serde(skip)] pub png: Vec<u8> } #[derive(Serialize, Deserialize)] pub struct Tile { #[serde(default, skip_serializing_if = \"Option::is_none\")] pub side: Option<usize> } }");
     assert_eq!(kind(&m, "gen::File"), &TypeCross::Class);
     assert_eq!(kind(&m, "gen::Tile"), &TypeCross::Plain);
-    let file = m.types.iter().find(|t| t.path == "gen::File").expect("File is listed");
+    let file = m
+        .types
+        .iter()
+        .find(|t| t.path == "gen::File")
+        .expect("File is listed");
     let skips: Vec<bool> = file.fields.iter().map(|f| f.serde_skip).collect();
     assert_eq!(skips, [false, false, true]);
 }
@@ -512,12 +516,16 @@ fn a_public_trait_adds_its_methods_to_every_implementing_type() {
 fn a_public_class_field_gets_a_setter_unless_it_holds_a_borrow() {
     let root = scratch("setter", "pub mod life { #[derive(Clone, Copy, Serialize, Deserialize)] pub enum Boundary { Constant, Wrap } #[derive(Clone, Serialize, Deserialize)] pub struct Config { pub boundary: Boundary, pub padding: usize, pub name: &'static str } impl Config { pub fn budget(&self) -> usize { 0 } } }", "life\n");
     let rust = read(&root, "pkgs/mrlypy/src/gen.rs");
-    assert!(rust.contains("pub fn set_boundary(&mut self, value: PySerde<mrlyrs::life::Boundary>) -> PyResult<()> {"));
+    assert!(rust.contains(
+        "pub fn set_boundary(&mut self, value: PySerde<mrlyrs::life::Boundary>) -> PyResult<()> {"
+    ));
     assert!(rust.contains("self.0.padding = value;"));
     assert!(!rust.contains("set_name"));
     assert!(read(&root, "pkgs/mrlypy/python/mrlypy/life/__init__.pyi").contains("@boundary.setter"));
     let wasm = read(&root, "pkgs/mrlyjs/units/life/src/lib.rs");
-    assert!(wasm.contains("pub fn set_boundary(&mut self, value: JsValue) -> Result<(), JsValue> {"));
+    assert!(
+        wasm.contains("pub fn set_boundary(&mut self, value: JsValue) -> Result<(), JsValue> {")
+    );
     assert!(wasm.contains("self.inner.padding = value;"));
     assert!(!wasm.contains("set_name"));
     let dts = read(&root, "pkgs/mrlyjs/life.d.ts");
@@ -532,17 +540,32 @@ fn default_crosses_as_a_static_on_the_type_and_an_alias_fixes_n() {
     let m = manifest(lib);
     let paint = function(&m, "gen::Paint::default");
     assert_eq!(
-        (paint.source, paint.owner.as_deref(), paint.self_kind, &paint.cross),
+        (
+            paint.source,
+            paint.owner.as_deref(),
+            paint.self_kind,
+            &paint.cross
+        ),
         (Source::Default, Some("gen::Paint"), None, &Cross::Ok)
     );
-    assert_eq!(paint.ret, Ty::Plain { path: "gen::Paint".into() });
+    assert_eq!(
+        paint.ret,
+        Ty::Plain {
+            path: "gen::Paint".into()
+        }
+    );
     assert_eq!(
         function(&m, "gen::Field::default").ret,
-        Ty::Class { path: "gen::Field".into(), dim: None }
+        Ty::Class {
+            path: "gen::Field".into(),
+            dim: None
+        }
     );
     assert_eq!(
         function(&m, "gen::Config2d::default").ret,
-        Ty::Plain { path: "gen::ConfigNd".into() }
+        Ty::Plain {
+            path: "gen::ConfigNd".into()
+        }
     );
     let defaults: Vec<&str> = m
         .functions
@@ -550,11 +573,20 @@ fn default_crosses_as_a_static_on_the_type_and_an_alias_fixes_n() {
         .filter(|f| f.source == Source::Default)
         .map(|f| f.path.as_str())
         .collect();
-    assert_eq!(defaults, ["gen::Config2d::default", "gen::Field::default", "gen::Paint::default"]);
+    assert_eq!(
+        defaults,
+        [
+            "gen::Config2d::default",
+            "gen::Field::default",
+            "gen::Paint::default"
+        ]
+    );
     let root = scratch("default", lib, "gen\n");
-    assert!(read(&root, "pkgs/mrlypy/python/mrlypy/gen/__init__.pyi").contains("class Config2d:\n    @staticmethod\n    def default() -> dict[str, Any]:"));
+    assert!(read(&root, "pkgs/mrlypy/python/mrlypy/gen/__init__.pyi")
+        .contains("class Config2d:\n    @staticmethod\n    def default() -> dict[str, Any]:"));
     assert!(read(&root, "pkgs/mrlyjs/gen.d.ts").contains("static default(): Field;"));
-    assert!(read(&root, "pkgs/mrlyrs/src/bin/mrly.rs").contains("(\"gen.Config2d.default\", \"() -> gen.ConfigNd\""));
+    assert!(read(&root, "pkgs/mrlyrs/src/bin/mrly.rs")
+        .contains("(\"gen.Config2d.default\", \"() -> gen.ConfigNd\""));
     std::fs::remove_dir_all(root).ok();
 }
 
@@ -700,6 +732,9 @@ fn function_entries_match_the_pub_fn_grep() {
         "every grep line is a written pub fn or sits inside macro_rules"
     );
     assert_eq!(generated, 2 * named, "named_enum! writes all and name");
-    assert_eq!(fns.len(), written + constant + generated + traits + defaults);
+    assert_eq!(
+        fns.len(),
+        written + constant + generated + traits + defaults
+    );
     assert!(built.collisions.is_empty(), "{:?}", built.collisions);
 }

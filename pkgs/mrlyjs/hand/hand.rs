@@ -139,7 +139,11 @@ fn decimal(value: &JsValue) -> Option<String> {
 fn wide_from_js<T: FromStr>(value: &JsValue, name: &str) -> Result<T, JsValue> {
     decimal(value)
         .and_then(|text| text.parse().ok())
-        .ok_or_else(|| refuse(&format!("{name} wants a decimal string, a whole number or a bigint.")))
+        .ok_or_else(|| {
+            refuse(&format!(
+                "{name} wants a decimal string, a whole number or a bigint."
+            ))
+        })
 }
 
 pub fn u128_to_js(value: u128) -> String {
@@ -222,7 +226,10 @@ pub fn item(value: &JsValue, index: u32) -> Result<JsValue, JsValue> {
         .dyn_ref::<js_sys::Array>()
         .ok_or_else(|| refuse("an array was wanted here."))?;
     if index >= array.length() {
-        return Err(refuse(&format!("an array of at least {} was wanted here.", index + 1)));
+        return Err(refuse(&format!(
+            "an array of at least {} was wanted here.",
+            index + 1
+        )));
     }
     Ok(array.get(index))
 }

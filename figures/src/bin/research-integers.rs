@@ -67,28 +67,47 @@ fn rendered(key: &Key) -> Option<Vec<i128>> {
     }
 }
 
-fn census() -> Vec<u32> {
+fn tally(rows: &[Key], lane: usize, lanes: usize) -> Vec<u32> {
     let mut counts = vec![0u32; WINDOW + 1];
-    let mut rows = 0usize;
-    for tier in Tier::ALL {
-        for key in keys(tier) {
-            rows += 1;
-            let Some(window) = rendered(&key) else {
-                continue;
-            };
-            let mut written: Vec<usize> = window
-                .iter()
-                .filter(|&&term| term >= 1 && term <= WINDOW as i128)
-                .map(|&term| term as usize)
-                .collect();
-            written.sort_unstable();
-            written.dedup();
-            for value in written {
-                counts[value] += 1;
-            }
+    for key in rows.iter().skip(lane).step_by(lanes) {
+        let Some(window) = rendered(key) else {
+            continue;
+        };
+        let mut written: Vec<usize> = window
+            .iter()
+            .filter(|&&term| term >= 1 && term <= WINDOW as i128)
+            .map(|&term| term as usize)
+            .collect();
+        written.sort_unstable();
+        written.dedup();
+        for value in written {
+            counts[value] += 1;
         }
     }
-    assert_eq!(rows, 18066);
+    counts
+}
+
+fn census() -> Vec<u32> {
+    let rows: Vec<Key> = Tier::ALL.into_iter().flat_map(keys).collect();
+    assert_eq!(rows.len(), 18066);
+    let lanes = std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(1);
+    let mut counts = vec![0u32; WINDOW + 1];
+    std::thread::scope(|scope| {
+        let handles: Vec<_> = (0..lanes)
+            .map(|lane| {
+                let rows = &rows;
+                scope.spawn(move || tally(rows, lane, lanes))
+            })
+            .collect();
+        for handle in handles {
+            let part = handle.join().expect("a lane of the census");
+            for (total, count) in counts.iter_mut().zip(part) {
+                *total += count;
+            }
+        }
+    });
     let never = counts[1..].iter().filter(|&&c| c == 0).count();
     let once = counts[1..].iter().filter(|&&c| c == 1).count();
     let many = counts[1..].iter().filter(|&&c| c > 1).count();
@@ -96,13 +115,13 @@ fn census() -> Vec<u32> {
     counts
 }
 
-// DATA
+// FILE
 
 fn path() -> PathBuf {
     root()
         .join("files")
         .join("figures")
-        .join("data")
+        .join("census")
         .join(format!("{NAME}.json"))
 }
 

@@ -542,6 +542,497 @@ fn energies(kmax: u32) {
     println!("{:.2} s", t0.elapsed().as_secs_f64());
 }
 
+// LADDER
+
+const CHUNK: u32 = 8;
+const WIDTH: u64 = 6561;
+
+fn chunk_tables() -> (Vec<u8>, Vec<u64>) {
+    let mut zt = vec![0u8; WIDTH as usize];
+    let mut ct = vec![0u64; WIDTH as usize];
+    for r in 0..WIDTH {
+        let mut x = r;
+        let mut z = 0u8;
+        for _ in 0..CHUNK {
+            let d = x % 3;
+            x /= 3;
+            if d == 2 {
+                x += 1;
+            } else if d == 0 {
+                z += 1;
+            }
+        }
+        zt[r as usize] = z;
+        ct[r as usize] = x;
+    }
+    (zt, ct)
+}
+
+fn low_strings(h: u32) -> Vec<(i64, u32)> {
+    let mut v = vec![(0i64, 0u32)];
+    let mut p = 1i64;
+    for _ in 0..h {
+        let mut next = Vec::with_capacity(v.len() * 3);
+        for &(x, z) in &v {
+            next.push((x - p, z));
+            next.push((x, z + 1));
+            next.push((x + p, z));
+        }
+        v = next;
+        p *= 4;
+    }
+    v
+}
+
+fn energy_fast(k: u32, m: u32) -> u128 {
+    let (zt, ct) = chunk_tables();
+    let chunks = k.div_ceil(CHUNK);
+    let pad = chunks * CHUNK - k;
+    let half = (3u64.pow(k) - 1) / 2;
+    let h = m.min(12);
+    let low = low_strings(h);
+    let reach = (4i64.pow(h) - 1) / 3;
+    let top = 3u64.pow(m - h);
+    let step = 4i64.pow(h);
+    let next = std::sync::atomic::AtomicU64::new(0);
+    let threads = std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(4);
+    std::thread::scope(|sc| {
+        let handles: Vec<_> = (0..threads)
+            .map(|_| {
+                sc.spawn(|| {
+                    let mut acc: u128 = 0;
+                    loop {
+                        let i = next.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                        if i >= top {
+                            return acc;
+                        }
+                        let mut j = i;
+                        let mut u = 0i64;
+                        let mut zu = 0u32;
+                        let mut p = 1i64;
+                        for _ in h..m {
+                            let d = (j % 3) as i64 - 1;
+                            j /= 3;
+                            u += d * p;
+                            if d == 0 {
+                                zu += 1;
+                            }
+                            p *= 4;
+                        }
+                        let base = u * step;
+                        if base.unsigned_abs() > half + reach as u64 {
+                            continue;
+                        }
+                        let mut part: u64 = 0;
+                        for &(v, zv) in &low {
+                            let mut t = (base + v).unsigned_abs();
+                            if t > half {
+                                continue;
+                            }
+                            let mut z = 0u32;
+                            for _ in 0..chunks {
+                                let r = (t % WIDTH) as usize;
+                                z += zt[r] as u32;
+                                t = t / WIDTH + ct[r];
+                            }
+                            part += 1u64 << (z - pad + zu + zv);
+                        }
+                        acc += part as u128;
+                    }
+                })
+            })
+            .collect();
+        handles.into_iter().map(|t| t.join().unwrap()).sum()
+    })
+}
+
+fn ladder_pairs(kmax: u32) -> Vec<(u32, u32)> {
+    let mut v = Vec::new();
+    for k in 6..=kmax {
+        let p3 = 3u128.pow(k);
+        for m in 1..=kmax {
+            let p4 = 4u128.pow(m);
+            if p3 < 3 * p4 && p4 < 4 * p3 {
+                v.push((k, m));
+            }
+        }
+    }
+    v
+}
+
+fn least_squares(pts: &[(f64, f64)]) -> (f64, f64, f64, f64) {
+    let n = pts.len() as f64;
+    let mx = pts.iter().map(|p| p.0).sum::<f64>() / n;
+    let my = pts.iter().map(|p| p.1).sum::<f64>() / n;
+    let sxx: f64 = pts.iter().map(|p| (p.0 - mx) * (p.0 - mx)).sum();
+    let sxy: f64 = pts.iter().map(|p| (p.0 - mx) * (p.1 - my)).sum();
+    let slope = sxy / sxx;
+    let icpt = my - slope * mx;
+    let rss: f64 = pts.iter().map(|p| (p.1 - icpt - slope * p.0).powi(2)).sum();
+    let se = (rss / (n - 2.0) / sxx).sqrt();
+    (slope, icpt, se, (rss / n).sqrt())
+}
+
+fn fits(tag: &str, rows: &[(u32, f64)], k0: u32) {
+    let pts: Vec<(u32, f64)> = rows.iter().filter(|r| r.0 >= k0).cloned().collect();
+    if pts.len() < 3 {
+        return;
+    }
+    let s = 2f64.ln() / 3f64.ln() - 0.5;
+    let power: Vec<(f64, f64)> = pts
+        .iter()
+        .map(|&(k, q)| (k as f64, q.ln() / 3f64.ln()))
+        .collect();
+    let (eta, c, se, _) = least_squares(&power);
+    let prss: f64 = pts
+        .iter()
+        .map(|&(k, q)| (q - 3f64.powf(c + eta * k as f64)).powi(2))
+        .sum::<f64>();
+    let sat: Vec<(f64, f64)> = pts
+        .iter()
+        .map(|&(k, q)| (3f64.powf(-s * k as f64), q))
+        .collect();
+    let (b, a, _, srms) = least_squares(&sat);
+    let rss_q = |e: f64| {
+        let g: Vec<f64> = pts.iter().map(|&(k, _)| 3f64.powf(e * k as f64)).collect();
+        let c = pts.iter().zip(&g).map(|(p, g)| p.1 * g).sum::<f64>()
+            / g.iter().map(|g| g * g).sum::<f64>();
+        (
+            pts.iter()
+                .zip(&g)
+                .map(|(p, g)| (p.1 - c * g).powi(2))
+                .sum::<f64>(),
+            c,
+        )
+    };
+    let (mut lo, mut hi) = (-0.1f64, 0.1f64);
+    for _ in 0..200 {
+        let m1 = lo + (hi - lo) / 3.0;
+        let m2 = hi - (hi - lo) / 3.0;
+        if rss_q(m1).0 < rss_q(m2).0 {
+            hi = m2;
+        } else {
+            lo = m1;
+        }
+    }
+    let eq = (lo + hi) / 2.0;
+    let qrms = (rss_q(eq).0 / pts.len() as f64).sqrt();
+    println!(
+        "fit {} k >= {} over {} pairs: power in log_3 Q: eta = {:.6} se {:.6} rms in Q {:.6}; power fitted in Q: eta = {:.6} rms in Q {:.6}; saturation a + b 3^(-s k), s = {:.6}: a = {:.6} b = {:.6} rms in Q {:.6}",
+        tag,
+        k0,
+        pts.len(),
+        eta,
+        se,
+        (prss / pts.len() as f64).sqrt(),
+        eq,
+        qrms,
+        s,
+        a,
+        b,
+        srms
+    );
+}
+
+fn ladder(kmax: u32, cache: Option<&str>) {
+    let t0 = Instant::now();
+    let mut known: std::collections::HashMap<(u32, u32), u128> = std::collections::HashMap::new();
+    if let Some(path) = cache {
+        if let Ok(text) = std::fs::read_to_string(path) {
+            for line in text.lines() {
+                let f: Vec<&str> = line.split_whitespace().collect();
+                if f.len() == 3 {
+                    known.insert(
+                        (f[0].parse().unwrap(), f[1].parse().unwrap()),
+                        f[2].parse().unwrap(),
+                    );
+                }
+            }
+        }
+    }
+    let mut all = Vec::new();
+    let mut chain = Vec::new();
+    let mut clean = Vec::new();
+    let mut worst = (0u32, 0u32, 0u128, 1u128, 0f64);
+    let mut least = (0u32, 0u32, 0u128, 1u128, f64::MAX);
+    let mut whole = Vec::new();
+    let mut chain_lo = (0u128, 1u128, f64::MAX);
+    let mut chain_hi = (0u128, 1u128, 0f64);
+    for (k, m) in ladder_pairs(kmax) {
+        let t1 = Instant::now();
+        let e = match known.get(&(k, m)) {
+            Some(&e) => e,
+            None => {
+                let e = energy_fast(k, m);
+                if let Some(path) = cache {
+                    use std::io::Write;
+                    let mut f = std::fs::OpenOptions::new()
+                        .create(true)
+                        .append(true)
+                        .open(path)
+                        .unwrap();
+                    writeln!(f, "{} {} {}", k, m, e).unwrap();
+                }
+                e
+            }
+        };
+        let pairs = 1u128 << (k + m);
+        let d = (3u128.pow(k) - 1) / 2 + (4u128.pow(m) - 1) / 3;
+        let range = d + 1;
+        let is_clean = 3u128.pow(k) > d && 4u128.pow(m) > d;
+        let copy = 2 * 4u128.pow(m) < 3u128.pow(k) + 5 || 3u128.pow(k + 1) < 4u128.pow(m) + 5;
+        let on_chain = 4u128.pow(m) >= 3u128.pow(k) && 4u128.pow(m) < 4 * 3u128.pow(k);
+        let q = (e as f64) * (range as f64) / (pairs as f64) / (pairs as f64);
+        println!(
+            "k = {:<2} m = {:<2} {}{} 4^m/3^k = {} energy {} Q {} bound {} {:.2} s",
+            k,
+            m,
+            if on_chain { "chain " } else { "      " },
+            if copy {
+                "copy "
+            } else if is_clean {
+                "clean"
+            } else {
+                "mixed"
+            },
+            ratio(k, m),
+            e,
+            six_up(e * range, pairs * pairs),
+            six(pairs * pairs, e * range),
+            t1.elapsed().as_secs_f64()
+        );
+        let (num, den) = (e * range, pairs * pairs);
+        if on_chain {
+            whole.push(q);
+            if q < chain_lo.2 {
+                chain_lo = (num, den, q);
+            }
+            if q > chain_hi.2 {
+                chain_hi = (num, den, q);
+            }
+        }
+        if copy {
+            continue;
+        }
+        all.push((k, q));
+        if on_chain {
+            chain.push((k, q));
+        }
+        if is_clean {
+            clean.push((k, q));
+        }
+        if q > worst.4 {
+            worst = (k, m, num, den, q);
+        }
+        if q < least.4 {
+            least = (k, m, num, den, q);
+        }
+    }
+    println!(
+        "{} pairs without copies, {} of them on the chain; Q in [{}, {}], the lower end truncated and the upper rounded up, least at ({}, {}), largest at ({}, {}); the whole chain, copies included, {} levels, Q in [{}, {}], mean {:.6}",
+        all.len(),
+        chain.len(),
+        six(least.2, least.3),
+        six_up(worst.2, worst.3),
+        least.0,
+        least.1,
+        worst.0,
+        worst.1,
+        whole.len(),
+        six(chain_lo.0, chain_lo.1),
+        six_up(chain_hi.0, chain_hi.1),
+        whole.iter().sum::<f64>() / whole.len() as f64
+    );
+    for k0 in [6u32, 11, 16] {
+        fits("all", &all, k0);
+        fits("chain", &chain, k0);
+        fits("clean", &clean, k0);
+    }
+    println!("{:.2} s", t0.elapsed().as_secs_f64());
+}
+
+fn constants() {
+    let alpha = 2f64.ln() / 3f64.ln();
+    let gamma = 1.0 / (2.0 - 2.0 * alpha);
+    let eb = 6f64.powf(1.0 / (2.0 * gamma)) * gamma / (gamma - 1.0);
+    let t = 30f64.powf(alpha);
+    let c0 = 2.0 * t * eb + 3.0 * t * 6f64.sqrt();
+    let up = |x: f64| (x * 1e6).ceil() / 1e6;
+    println!(
+        "alpha = {:.6} gamma = {:.6} E|b - b'|^(alpha - 1) <= {:.6} 30^alpha = {:.6} C_0 = 2 30^alpha E + 3 30^alpha 6^(1/2) = {:.6}, each rounded up",
+        alpha,
+        gamma,
+        up(eb),
+        up(t),
+        up(c0)
+    );
+}
+
+// PHASES
+
+fn window_energy(k: u32, strings: &[(i64, u32)], sigma: f64, zt: &[u8], ct: &[u64]) -> u128 {
+    let chunks = k.div_ceil(CHUNK);
+    let pad = chunks * CHUNK - k;
+    let half = (3u64.pow(k) - 1) / 2;
+    let mut acc: u128 = 0;
+    for &(v, zv) in strings {
+        let mut t = (-(sigma * v as f64)).round().abs() as u64;
+        if t > half {
+            continue;
+        }
+        let mut z = 0u32;
+        for _ in 0..chunks {
+            let r = (t % WIDTH) as usize;
+            z += zt[r] as u32;
+            t = t / WIDTH + ct[r];
+        }
+        acc += 1u128 << (z - pad + zv);
+    }
+    acc
+}
+
+fn tent_energy(k: u32, strings: &[(i64, u32)], sigma: f64, zt: &[u8], ct: &[u64]) -> f64 {
+    let chunks = k.div_ceil(CHUNK);
+    let pad = chunks * CHUNK - k;
+    let half = (3u64.pow(k) - 1) / 2;
+    let mut acc = 0f64;
+    for &(v, zv) in strings {
+        let y = -(sigma * v as f64);
+        let lo = y.floor();
+        for c in [lo, lo + 1.0] {
+            let w = 1.0 - (c - y).abs();
+            let mut t = c.abs() as u64;
+            if w <= 0.0 || t > half {
+                continue;
+            }
+            let mut z = 0u32;
+            for _ in 0..chunks {
+                let r = (t % WIDTH) as usize;
+                z += zt[r] as u32;
+                t = t / WIDTH + ct[r];
+            }
+            acc += w * (1u64 << (z - pad + zv)) as f64;
+        }
+    }
+    acc
+}
+
+fn phases(kmax: u32, grid: usize) {
+    let t0 = Instant::now();
+    let (zt, ct) = chunk_tables();
+    let mut ranks = Vec::new();
+    let mut qranks = Vec::new();
+    let mut locals = Vec::new();
+    let mut tents = Vec::new();
+    let mut lratios = Vec::new();
+    let mut tratios = Vec::new();
+    for k in 8..=kmax {
+        let mut m = 1u32;
+        while 4u128.pow(m) < 3u128.pow(k) {
+            m += 1;
+        }
+        let tau_k = 4f64.powi(m as i32) / 3f64.powi(k as i32);
+        let strings = low_strings(m);
+        let scale = 3f64.powi(k as i32) / 4f64.powi((k + m) as i32);
+        let exact = energy_fast(k, m);
+        let h0 = exact as f64 * scale;
+        let next = std::sync::atomic::AtomicUsize::new(0);
+        let threads = std::thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(4);
+        let mut values: Vec<(usize, f64, f64)> = std::thread::scope(|sc| {
+            let handles: Vec<_> = (0..threads)
+                .map(|_| {
+                    sc.spawn(|| {
+                        let mut out = Vec::new();
+                        loop {
+                            let i = next.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                            if i >= grid {
+                                return out;
+                            }
+                            let tau = 4f64.powf(i as f64 / grid as f64);
+                            let w = window_energy(k, &strings, tau / tau_k, &zt, &ct);
+                            let e = tent_energy(k, &strings, tau / tau_k, &zt, &ct);
+                            out.push((i, w as f64 * scale, e * scale));
+                        }
+                    })
+                })
+                .collect();
+            handles
+                .into_iter()
+                .flat_map(|h| h.join().unwrap())
+                .collect()
+        });
+        values.sort_by_key(|v| v.0);
+        let below = values.iter().filter(|v| v.1 < h0).count();
+        let flat = |i: usize, h: f64| h * (0.5 + 4f64.powf(i as f64 / grid as f64) / 3.0);
+        let q0 = h0 * (0.5 + tau_k / 3.0);
+        let qbelow = values.iter().filter(|v| flat(v.0, v.1) < q0).count();
+        let ik = (tau_k.ln() / 4f64.ln() * grid as f64) as i64;
+        let near: Vec<&(usize, f64, f64)> = values
+            .iter()
+            .filter(|v| (v.0 as i64 - ik).abs() <= (grid / 50) as i64)
+            .collect();
+        let local = near.iter().filter(|v| v.1 < h0).count() as f64 / near.len() as f64;
+        let tent = near.iter().filter(|v| v.2 < h0).count() as f64 / near.len() as f64;
+        let lmean = near.iter().map(|v| v.1).sum::<f64>() / near.len() as f64;
+        let tmean = near.iter().map(|v| v.2).sum::<f64>() / near.len() as f64;
+        tents.push(tent);
+        lratios.push(h0 / lmean);
+        tratios.push(h0 / tmean);
+        qranks.push(qbelow as f64 / grid as f64);
+        locals.push(local);
+        let mean = values.iter().map(|v| v.1).sum::<f64>() / grid as f64;
+        let lebmean = values
+            .iter()
+            .map(|v| v.1 * 4f64.powf(v.0 as f64 / grid as f64))
+            .sum::<f64>()
+            * 4f64.ln()
+            / grid as f64;
+        let (imax, hmax) =
+            values.iter().fold(
+                (0usize, 0f64),
+                |a, v| if v.1 > a.1 { (v.0, v.1) } else { a },
+            );
+        let rank = below as f64 / grid as f64;
+        ranks.push(rank);
+        println!(
+            "k = {:<2} m = {:<2} tau_k = {:.6} h_k(tau_k) = {:.6} rank {:.4} flat rank {:.4} local rank {:.4} tent local rank {:.4} local ratio {:.4} tent local ratio {:.4} log-mean {:.6} integral over [1, 4] {:.6} max {:.6} at tau = {:.6} {:.2} s",
+            k,
+            m,
+            tau_k,
+            h0,
+            rank,
+            qranks[qranks.len() - 1],
+            local,
+            tent,
+            lratios[lratios.len() - 1],
+            tratios[tratios.len() - 1],
+            mean,
+            lebmean,
+            hmax,
+            4f64.powf(imax as f64 / grid as f64),
+            t0.elapsed().as_secs_f64()
+        );
+    }
+    let n = ranks.len() as f64;
+    let mr = ranks.iter().sum::<f64>() / n;
+    let mq = qranks.iter().sum::<f64>() / n;
+    let ml = locals.iter().sum::<f64>() / n;
+    let mt = tents.iter().sum::<f64>() / n;
+    println!(
+        "mean rank {:.4}, mean flat rank {:.4}, mean local rank {:.4}, mean tent local rank {:.4} over {} levels, grid {}",
+        mr,
+        mq,
+        ml,
+        mt,
+        ranks.len(),
+        grid
+    );
+}
+
 // CONTROL
 
 const OEIS_A367090: [u64; 58] = [
@@ -612,7 +1103,18 @@ fn main() {
         Some("density") => density(args.get(2).and_then(|s| s.parse().ok()).unwrap_or(17)),
         Some("control") => control(),
         Some("energy") => energies(args.get(2).and_then(|s| s.parse().ok()).unwrap_or(17)),
-        _ => println!("verbs: density K, energy K, control"),
+        Some("ladder") => ladder(
+            args.get(2).and_then(|s| s.parse().ok()).unwrap_or(17),
+            args.get(3).map(|s| s.as_str()),
+        ),
+        Some("constants") => constants(),
+        Some("phases") => phases(
+            args.get(2).and_then(|s| s.parse().ok()).unwrap_or(12),
+            args.get(3).and_then(|s| s.parse().ok()).unwrap_or(1024),
+        ),
+        _ => {
+            println!("verbs: density K, energy K, ladder K [cache], phases K G, constants, control")
+        }
     }
 }
 
@@ -676,6 +1178,44 @@ mod tests {
     fn energy_matches_representation_histogram() {
         for (k, m) in [(4, 3), (6, 5), (9, 7)] {
             assert_eq!(energy(k, m), energy_direct(k, m));
+        }
+    }
+
+    #[test]
+    fn chunked_energy_matches_digit_energy() {
+        for k in 1..=11 {
+            for m in 1..=14 {
+                assert_eq!(energy_fast(k, m), energy(k, m), "k = {} m = {}", k, m);
+            }
+        }
+        assert_eq!(energy_fast(9, 7), energy_direct(9, 7));
+    }
+
+    #[test]
+    fn gap_copies_double_the_energy() {
+        for (k, m) in [(6, 4), (7, 5), (11, 8), (12, 9)] {
+            assert!(2 * 4u128.pow(m) < 3u128.pow(k) + 5);
+            assert_eq!(energy_fast(k, m), 2 * energy_fast(k - 1, m));
+        }
+        assert_ne!(energy_fast(13, 10), 2 * energy_fast(12, 10));
+        for (k, m) in [(9, 8), (14, 12)] {
+            assert!(3u128.pow(k + 1) < 4u128.pow(m) + 5);
+            assert_eq!(energy_fast(k, m), 2 * energy_fast(k, m - 1));
+        }
+    }
+
+    #[test]
+    fn window_energy_at_the_lattice_is_the_energy() {
+        let (zt, ct) = chunk_tables();
+        for (k, m) in [(6, 5), (9, 7), (10, 8), (12, 10)] {
+            assert_eq!(
+                window_energy(k, &low_strings(m), 1.0, &zt, &ct),
+                energy(k, m)
+            );
+            assert_eq!(
+                tent_energy(k, &low_strings(m), 1.0, &zt, &ct),
+                energy(k, m) as f64
+            );
         }
     }
 

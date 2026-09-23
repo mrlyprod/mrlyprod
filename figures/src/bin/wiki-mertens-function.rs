@@ -14,8 +14,8 @@ fn main() -> Result<()> {
     let mu = mobius_sieve(TOP);
     let mut walk: Vec<i64> = Vec::with_capacity(TOP);
     let mut sum = 0i64;
-    for n in 1..=TOP {
-        sum += i64::from(mu[n]);
+    for &m in &mu[1..=TOP] {
+        sum += i64::from(m);
         walk.push(sum);
     }
 

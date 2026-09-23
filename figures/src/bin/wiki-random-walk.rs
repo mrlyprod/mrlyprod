@@ -27,7 +27,7 @@ fn walk(seed: u64) -> Vec<(i64, i64)> {
 fn inside(trace: &[(i64, i64)]) -> bool {
     trace
         .iter()
-        .all(|&(x, y)| x >= 0 && x < SIDE && y >= 0 && y < SIDE)
+        .all(|&(x, y)| (0..SIDE).contains(&x) && (0..SIDE).contains(&y))
 }
 
 fn reach(trace: &[(i64, i64)]) -> f64 {

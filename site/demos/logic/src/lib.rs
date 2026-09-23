@@ -23,6 +23,8 @@ pub mod census;
 pub mod chladni;
 /// The exact crops: the designs trimmed to rational shapes, tallied, swept, drawn and masked.
 pub mod crop;
+/// The unconditional dissection: a set missing one digit, its meter and prime count against its mass, its frequency grid cut into four regions, and the chain certificate against the wall.
+pub mod dissection;
 /// The design Mobius meter: its elements, the meter drawn against log x, its density echo and residual, and the ordinates its spectrum carries.
 pub mod echo;
 /// The alphabet: text laid out as a grid, written in stroke order, cycled, and read glyph by glyph.
@@ -43,6 +45,8 @@ pub mod life;
 pub mod magic;
 /// The memory designs: a rule on `k` consecutive digits read, the words it accepts drawn, and the Perron root that measures them.
 pub mod memory;
+/// The Menger sponge's tube: its distance in a plane, its tube inside the plus, its Minkowski reading and the periodic profile that reading never settles on.
+pub mod minkowski;
 /// The standing patterns of a design mask: its eigenvalue field on the frequency torus, one eigenvalue, the large-values count and a real mode.
 pub mod modes;
 /// The Thue-Morse word: its two constructions, its plane lifts, its runs and the difference filter.
@@ -77,6 +81,8 @@ pub mod spiral;
 pub mod spirograph;
 /// The ghost star of the hexagon moire: the stacked cut, the band it is measured on, the arm ink law and the cell-frame decay.
 pub mod star;
+/// The sumset of Erdos problem 125: the base-3 design plus the base-4 design held as a bit array, its strip, its density envelope and the energy of its level pairs.
+pub mod sumset;
 /// The cubes as packed faces, filled cells and censuses.
 pub mod three;
 /// The tessellations: a design repeated across the plane, the cube and the hexagonal mesh, drawn and counted.

@@ -1,0 +1,5 @@
+[package]
+name = "mixed-powers"
+edition.workspace = true
+
+[dependencies]

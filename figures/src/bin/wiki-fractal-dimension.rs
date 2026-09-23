@@ -25,7 +25,7 @@ fn main() -> Result<()> {
     assert_eq!(side, 27);
 
     let mut lit = [0usize; 3];
-    for panel in 0..3usize {
+    for (panel, count) in lit.iter_mut().enumerate() {
         let x = area.x + panel as f64 * (tile + GUTTER);
         let frame = Frame::new(x, top, tile, tile);
         let mut on = [[false; BOXES]; BOXES];
@@ -39,15 +39,12 @@ fn main() -> Result<()> {
                     (kind != 0).then_some(ink::blue())
                 });
                 let block = side / BOXES;
-                for row in 0..BOXES {
-                    for col in 0..BOXES {
-                        for r in row * block..(row + 1) * block {
-                            for c in col * block..(col + 1) * block {
-                                if carpet.types().get(&[r, c]).is_ok_and(|v| v != 0) {
-                                    on[row][col] = true;
-                                }
-                            }
-                        }
+                for (row, line) in on.iter_mut().enumerate() {
+                    for (col, cell) in line.iter_mut().enumerate() {
+                        *cell = (row * block..(row + 1) * block).any(|r| {
+                            (col * block..(col + 1) * block)
+                                .any(|c| carpet.types().get(&[r, c]).is_ok_and(|v| v != 0))
+                        });
                     }
                 }
             }
@@ -67,8 +64,8 @@ fn main() -> Result<()> {
             }
         }
         let step = tile / BOXES as f64;
-        for row in 0..BOXES {
-            for col in 0..BOXES {
+        for (row, line) in on.iter().enumerate() {
+            for (col, &hit) in line.iter().enumerate() {
                 let cell = Frame::new(
                     frame.x + col as f64 * step,
                     frame.y + row as f64 * step,
@@ -76,9 +73,9 @@ fn main() -> Result<()> {
                     step,
                 );
                 outline(&mut board, cell, 1.5, ink::line());
-                if on[row][col] {
+                if hit {
                     outline(&mut board, cell.inset(step * 0.07), 6.0, ink::yellow());
-                    lit[panel] += 1;
+                    *count += 1;
                 }
             }
         }

@@ -5,6 +5,8 @@ use std::f64::consts::PI;
 const RES: usize = 256;
 const REACH: usize = 2;
 
+type Wave = Box<dyn Fn(f64, f64) -> f64>;
+
 fn main() -> Result<()> {
     let mut board = Board::square();
     let frame = board.frame(0.08);
@@ -16,7 +18,7 @@ fn main() -> Result<()> {
         Frame::new(frame.x, frame.y + side + gap, side, side),
         Frame::new(frame.x + side + gap, frame.y + side + gap, side, side),
     ];
-    let modes: [(Box<dyn Fn(f64, f64) -> f64>, u32, usize); 4] = [
+    let modes: [(Wave, u32, usize); 4] = [
         (Box::new(|x, y| mode(1, 1, x, y)), 2, 1),
         (Box::new(|x, y| mode(2, 1, x, y)), 5, 2),
         (Box::new(|x, y| mode(2, 2, x, y)), 8, 4),

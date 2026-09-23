@@ -12,8 +12,9 @@ const HEIGHT: f64 = 40.0;
 const WIDE: f64 = 1.20;
 const REACH: f64 = 0.70;
 const DISC: f64 = 0.45;
+const RUN: f64 = 0.03;
+const RISE: f64 = 0.1;
 const ONE: Complex = Complex::new(1.0, 0.0);
-const DATA: &str = "files/figures/data/research-zeta.json";
 
 struct Ladder {
     q: f64,
@@ -24,6 +25,7 @@ struct Ladder {
     qpow: Vec<f64>,
     head: Vec<f64>,
     blogs: Vec<f64>,
+    drops: Vec<Vec<f64>>,
     logs: Vec<f64>,
     fall: Vec<f64>,
 }
@@ -57,6 +59,14 @@ impl Ladder {
             .filter(|&&n| n >= split)
             .map(|&n| 1.0 / n as f64)
             .collect();
+        let drops = (0..NODES)
+            .map(|node| {
+                blogs
+                    .iter()
+                    .map(|&log| (-(node as f64) * log).exp())
+                    .collect()
+            })
+            .collect();
         let k = digits.len() as f64;
         let mut gamma = vec![k];
         for l in 1..=LMAX {
@@ -72,6 +82,7 @@ impl Ladder {
             qpow,
             head,
             blogs,
+            drops,
             logs,
             fall,
         }
@@ -98,13 +109,14 @@ impl Ladder {
             }
             *slot = acc;
         }
+        let phase: Vec<Complex> = self.blogs.iter().map(|&log| power(log, s)).collect();
         let mut numerator = Complex::default();
         for node in (0..top).rev() {
             let w = s + node as f64;
             let qw = power(self.lq, w);
             let mut num = Complex::default();
-            for &log in &self.blogs {
-                num = num + power(log, w);
+            for (p, &drop) in phase.iter().zip(&self.drops[node]) {
+                num = num + *p * drop;
             }
             let mut binom = ONE;
             for l in 1..=LMAX {
@@ -176,20 +188,41 @@ fn refine(l: &Ladder, seed: Complex) -> Option<Complex> {
 }
 
 fn hunt(l: &Ladder, lo: f64, hi: f64) -> Vec<Complex> {
-    let cols = ((hi - lo) / 0.03).round() as usize;
-    let rows = (HEIGHT / 0.03).round() as usize;
+    let cols = ((hi - lo) / RUN).round() as usize;
+    let rows = (HEIGHT / RISE).round() as usize;
     let at = |i: usize, j: usize| {
         Complex::new(
             lo + (hi - lo) * i as f64 / cols as f64,
             0.02 + (HEIGHT - 0.04) * j as f64 / rows as f64,
         )
     };
-    let mut grid = vec![0.0f64; (cols + 1) * (rows + 1)];
-    for i in 0..=cols {
-        for j in 0..=rows {
-            grid[i * (rows + 1) + j] = l.cofactor(at(i, j)).abs();
+    let lanes = std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(1);
+    let grid = std::thread::scope(|scope| {
+        let handles: Vec<_> = (0..lanes)
+            .map(|lane| {
+                let at = &at;
+                scope.spawn(move || {
+                    (lane..=cols)
+                        .step_by(lanes)
+                        .map(|i| {
+                            let column: Vec<f64> =
+                                (0..=rows).map(|j| l.cofactor(at(i, j)).abs()).collect();
+                            (i, column)
+                        })
+                        .collect::<Vec<_>>()
+                })
+            })
+            .collect();
+        let mut grid = vec![0.0f64; (cols + 1) * (rows + 1)];
+        for handle in handles {
+            for (i, column) in handle.join().expect("a lane of the hunt") {
+                grid[i * (rows + 1)..(i + 1) * (rows + 1)].copy_from_slice(&column);
+            }
         }
-    }
+        grid
+    });
     let mut found: Vec<Complex> = Vec::new();
     for i in 1..cols {
         for j in 1..rows {
@@ -219,7 +252,7 @@ fn hunt(l: &Ladder, lo: f64, hi: f64) -> Vec<Complex> {
     found
 }
 
-fn split(l: &Ladder, zeros: &[Complex]) -> (Vec<Complex>, Vec<Complex>, Vec<Complex>) {
+fn split(l: &Ladder, zeros: &[Complex]) -> Panel {
     let centres = l.centres();
     let mut teeth = Vec::new();
     let mut hollow = Vec::new();
@@ -242,7 +275,13 @@ fn split(l: &Ladder, zeros: &[Complex]) -> (Vec<Complex>, Vec<Complex>, Vec<Comp
             hollow.push(*z);
         }
     }
-    (teeth, hollow, family)
+    Panel {
+        alpha: l.alpha,
+        lq: l.lq,
+        teeth,
+        hollow,
+        family,
+    }
 }
 
 struct Panel {
@@ -299,49 +338,9 @@ fn panel(board: &mut Board, frame: Frame, p: &Panel) {
     }
 }
 
-fn flat(zs: &[Complex]) -> String {
-    zs.iter()
-        .flat_map(|z| [z.re, z.im])
-        .map(|v| format!("{v:?}"))
-        .collect::<Vec<String>>()
-        .join(",")
-}
+// PRESS
 
-fn field(text: &str, key: &str) -> Vec<f64> {
-    let head = format!("\"{key}\": [");
-    let from = text.find(&head).expect("the data file lost a key") + head.len();
-    let upto = from
-        + text[from..]
-            .find(']')
-            .expect("the data file lost a bracket");
-    text[from..upto]
-        .split(',')
-        .map(str::trim)
-        .filter(|t| !t.is_empty())
-        .map(|t| t.parse::<f64>().expect("the data file lost a number"))
-        .collect()
-}
-
-fn points(v: &[f64]) -> Vec<Complex> {
-    v.chunks(2).map(|c| Complex::new(c[0], c[1])).collect()
-}
-
-fn read(text: &str, name: &str) -> Panel {
-    let axis = field(text, &format!("{name}_axis"));
-    let teeth = points(&field(text, &format!("{name}_teeth")));
-    let hollow = points(&field(text, &format!("{name}_hollow")));
-    let family = points(&field(text, &format!("{name}_family")));
-    assert!(axis.len() == 2 && axis[1] > 0.0 && !family.is_empty());
-    Panel {
-        alpha: axis[0],
-        lq: axis[1],
-        teeth,
-        hollow,
-        family,
-    }
-}
-
-fn compute() -> Result<()> {
+fn main() -> Result<()> {
     let design = Ladder::new(3, &[0, 1]);
     let full = Ladder::new(2, &[0, 1]);
     let known = Line::new().zeros(6);
@@ -349,30 +348,32 @@ fn compute() -> Result<()> {
 
     let dz = hunt(&design, design.alpha - 0.92, design.alpha + 3.02);
     let fz = hunt(&full, full.alpha - 0.92, full.alpha + 3.02);
-    let (fteeth, fhollow, ffamily) = split(&full, &fz);
-    let (dteeth, dhollow, dfamily) = split(&design, &dz);
+    let f = split(&full, &fz);
+    let d = split(&design, &dz);
 
     assert_eq!(fz.len(), 10);
-    assert_eq!(fteeth.len(), 0);
-    assert_eq!(fhollow.len(), 4);
-    assert_eq!(ffamily.len(), 6);
-    for z in &fhollow {
+    assert_eq!(f.teeth.len(), 0);
+    assert_eq!(f.hollow.len(), 4);
+    assert_eq!(f.family.len(), 6);
+    for z in &f.hollow {
         assert!((z.re - full.alpha).abs() < 1e-6);
     }
-    for (z, g) in ffamily.iter().zip(&known) {
+    for (z, g) in f.family.iter().zip(&known) {
         assert!((z.re - 0.5).abs() < 1e-6 && (z.im - g).abs() < 1e-6);
     }
 
     assert_eq!(dz.len(), 13);
-    assert_eq!(dhollow.len(), 0);
-    assert_eq!(dteeth.len() + dfamily.len(), 13);
-    assert!(dteeth.iter().all(|z| (z.re - design.alpha).abs() > 1e-3));
-    assert!(dfamily.iter().any(|z| (z.re - 0.391038600).abs() < 1e-6));
-    assert!(dfamily
+    assert_eq!(d.hollow.len(), 0);
+    assert_eq!(d.teeth.len() + d.family.len(), 13);
+    assert!(d.teeth.iter().all(|z| (z.re - design.alpha).abs() > 1e-3));
+    assert!(d.family.iter().any(|z| (z.re - 0.391038600).abs() < 1e-6));
+    assert!(d
+        .family
         .iter()
         .any(|z| (z.re + 0.273079611).abs() < 1e-6 && (z.im - 39.262315320).abs() < 1e-6));
-    let least = dfamily.iter().map(|z| z.re).fold(f64::INFINITY, f64::min);
-    let most = dfamily
+    let least = d.family.iter().map(|z| z.re).fold(f64::INFINITY, f64::min);
+    let most = d
+        .family
         .iter()
         .map(|z| z.re)
         .fold(f64::NEG_INFINITY, f64::max);
@@ -384,54 +385,14 @@ fn compute() -> Result<()> {
         .iter()
         .all(|z| z.re > full.alpha - WIDE && z.re < full.alpha + REACH));
 
-    let daxis = format!("{:?},{:?}", design.alpha, design.lq);
-    let faxis = format!("{:?},{:?}", full.alpha, full.lq);
-    let text = format!(
-        "{{\n  \"design_axis\": [{}],\n  \"design_teeth\": [{}],\n  \"design_hollow\": [{}],\n  \"design_family\": [{}],\n  \"full_axis\": [{}],\n  \"full_teeth\": [{}],\n  \"full_hollow\": [{}],\n  \"full_family\": [{}]\n}}\n",
-        daxis,
-        flat(&dteeth),
-        flat(&dhollow),
-        flat(&dfamily),
-        faxis,
-        flat(&fteeth),
-        flat(&fhollow),
-        flat(&ffamily)
-    );
-    let path = figures::out::root().join(DATA);
-    let folder = path.parent().expect("the data path lost its folder");
-    std::fs::create_dir_all(folder)
-        .map_err(|e| mrlyrs::Error::Value(format!("cannot make {folder:?}: {e}")))?;
-    std::fs::write(&path, text)
-        .map_err(|e| mrlyrs::Error::Value(format!("cannot write {path:?}: {e}")))?;
-    println!("data research-zeta {} zeros", dz.len() + fz.len());
-    Ok(())
-}
-
-fn render() -> Result<()> {
-    let path = figures::out::root().join(DATA);
-    let text = std::fs::read_to_string(&path).map_err(|e| {
-        mrlyrs::Error::Value(format!(
-            "cannot read {path:?}: {e}; run the example with compute"
-        ))
-    })?;
-    let design = read(&text, "design");
-    let full = read(&text, "full");
     let mut board = Board::square();
     let area = board.area(0.08);
     let wide = area.w * 0.45;
     let tall = area.h * 0.80;
     let top = Frame::new(area.x, area.y, wide, tall);
     let bottom = Frame::new(area.x + area.w - wide, area.y + area.h - tall, wide, tall);
-    panel(&mut board, top, &design);
-    panel(&mut board, bottom, &full);
+    panel(&mut board, top, &d);
+    panel(&mut board, bottom, &f);
     save("research-zeta", &board)?;
     Ok(())
-}
-
-fn main() -> Result<()> {
-    if std::env::args().nth(1).as_deref() == Some("compute") {
-        compute()
-    } else {
-        render()
-    }
 }

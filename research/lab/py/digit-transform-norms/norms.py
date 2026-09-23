@@ -689,10 +689,10 @@ def perron_red(G, b, nd, iters=6000, floor_it=300, streak_need=50, tol=1e-13):
             break
     return lam, np.maximum(y, 1e-30)
 
-def cw_red(G, y, b, nd, side):
+def cw_red(G, y, b, nd, side, keep=None):
     U = b ** (nd - 2)
     G3 = G.reshape(b, U, b)
-    Y = y.reshape(U, b)
+    Y = (y if keep is None else np.where(keep, y, 0.0)).reshape(U, b)
     acc = np.empty((b, U))
     for c1 in range(b):
         r = up(G3[c1] * Y) if side else np.maximum(dn(G3[c1] * Y), 0.0)
@@ -701,14 +701,17 @@ def cw_red(G, y, b, nd, side):
             a = up(a + r[:, c0]) if side else np.maximum(dn(a + r[:, c0]), 0.0)
         acc[c1] = a
     ratio = acc.reshape(b * U) / y
+    if keep is not None:
+        ratio = ratio[keep]
     return float(up(ratio).max()) if side else float(dn(ratio).min())
 
-def alpha_band(b, a0, nd, m, wide=1):
+def alpha_band(b, a0, nd, m, wide=1, restrict=False):
     Ghi, Glo, slack = base_windows(b, a0, nd, m, wide)
     lh, yh = perron_red(Ghi, b, nd)
     ll, yl = perron_red(Glo, b, nd)
     mu_hi = cw_red(Ghi, yh, b, nd, True)
-    mu_lo = cw_red(Glo, yl, b, nd, False)
+    keep = yl > 1e-9 * yl.max() if restrict else None
+    mu_lo = cw_red(Glo, yl, b, nd, False, keep)
     eh = math.ceil(math.log(mu_hi) / math.log(b) * 1e7) / 1e7
     el = None if mu_lo <= 0.0 else math.floor(math.log(mu_lo) / math.log(b) * 1e7) / 1e7
     if not (mu_hi < b ** eh and (el is None or mu_lo > b ** el)):
@@ -797,12 +800,376 @@ def family_close(lo, hi, m, nds):
         print(f"  q={b:3d} {(b + 1) // 2:2d} distinct sets {nd} window digits: worst a0 = {arg:2d} at alpha_1 < {worst:.7f}{flag}")
     return rows, bad
 
+def floor_sweep(lo, hi, nds, m, near=0.02):
+    t0 = time.time()
+    rows = []
+    for b in range(lo, hi + 1):
+        for a0 in range((b + 1) // 2):
+            for nd in nds:
+                el, eh, mu_lo, mu_hi, slack = alpha_band(b, a0, nd, m, restrict=True)
+                if eh < 0.25 or (el is not None and el >= 0.25):
+                    break
+            rows.append((b, a0, nd, el, eh))
+    above = [r for r in rows if r[3] is not None and r[3] >= 0.25]
+    below = [r for r in rows if r[4] < 0.25]
+    unclear = [r for r in rows if r not in above and r not in below]
+    mono = all(r[3] is None or r[3] <= r[4] for r in rows)
+    ok = len(above) == len(rows)
+    key = min(rows, key=lambda r: -1.0 if r[3] is None else r[3])
+    spread = {}
+    for r in rows:
+        spread[r[2]] = spread.get(r[2], 0) + 1
+    head = f"no one-missing-digit set of any base {lo} <= q <= {hi} has alpha_1 < 1/4" if ok else f"{len(below)} set(s) certified below 1/4 and {len(unclear)} unclear in {lo} <= q <= {hi}"
+    print(f"{head}: {len(rows)} distinct sets, {len(above)} certified alpha_1 > 1/4 by the infimum matrix restricted to its live states, sub-scan {m}, windows used " + " ".join(f"{nd}:{spread[nd]}" for nd in sorted(spread)) + f"; closest q = {key[0]} missing {key[1]} at alpha_1 > {key[3]:.7f} {chk(1.0 if ok else 0.0, 1.0, 0.0)}, every lower certificate under its own upper one {chk(1.0 if mono else 0.0, 1.0, 0.0)}  ({time.time() - t0:.1f}s)")
+    for b in range(lo, hi + 1):
+        br = [r for r in rows if r[0] == b]
+        print(f"  q={b:3d} {len(br):2d} sets: " + " ".join(f"{a0}:[{-1.0 if el is None else el:.7f},{eh:.7f}]" for _, a0, nd, el, eh in br))
+    close_rows = sorted([r for r in rows if r[3] is None or r[3] < 0.25 + near], key=lambda r: -1.0 if r[3] is None else r[3])
+    print(f"cells within {near} of 1/4, every set whose certified lower bound is under {0.25 + near:.2f}: {len(close_rows)}, each run again at its mirror digit, whose transform is the same and whose Lipschitz slack is not")
+    for b, a0, nd, el, eh in close_rows:
+        ml, mh, _, _, _ = alpha_band(b, b - 1 - a0, nd, m, restrict=True)
+        meet = ml is not None and el is not None and max(el, ml) <= min(eh, mh) and ml >= 0.25
+        print(f"  q={b:3d} missing {a0:2d} at {nd} window digits: alpha_1 in [{'none' if el is None else f'{el:.7f}'}, {eh:.7f}], margin {'none' if el is None else f'{el - 0.25:+.7f}'}; mirror {b - 1 - a0} [{'none' if ml is None else f'{ml:.7f}'}, {mh:.7f}] {chk(1.0 if meet else 0.0, 1.0, 0.0)}")
+    for b, a0, nd, el, eh in below + unclear:
+        print(f"  NOT CERTIFIED ABOVE: q={b} missing {a0} at {nd} digits alpha_1 in [{'none' if el is None else f'{el:.7f}'}, {eh:.7f}]{'  CLEARS 1/4' if eh < 0.25 else ''}")
+    print(f"  the constant-phase digits, where a zero of |hat F| can empty a row of the infimum matrix: " + " ".join(f"q={b} a0={a0} [{el:.7f},{eh:.7f}]" for b, a0, nd, el, eh in rows if b % 2 and 2 * a0 == b - 1))
+    return rows
+
+def shift_floor(b, a0, N, m):
+    n = b ** N
+    P = 2 * m * n
+    Q = 4 * P
+    TW = twiddle(Q)
+    lip = up(up(2 * PI_UP * ((b * b) // 4 - abs(2 * a0 - b + 1) / 2)) / (b - 1))
+    i = np.arange(n, dtype=np.int64)
+    best = np.inf
+    CH = max(1, 400_000 // n)
+    for k0 in range(0, m, CH):
+        k = np.arange(k0, min(k0 + CH, m), dtype=np.int64)
+        base = (2 * k[:, None] + 1 + 2 * m * i[None, :]) % P
+        prod = np.ones(base.shape)
+        for j in range(N):
+            vl, _ = hat_missing_iv(b, a0, (base * b ** j) % P, P, Q, TW)
+            sl = up(up(lip * b ** j) / (2 * n * m))
+            prod = dn(prod * np.maximum(dn(vl - sl), 0.0))
+        tot = np.zeros(len(k))
+        for c in range(n):
+            tot = dn(tot + prod[:, c])
+        best = min(best, float(tot.min()))
+    return best
+
+def shift_sweep(lo, hi, Ns, ms):
+    t0 = time.time()
+    rows = []
+    for b in range(lo, hi + 1):
+        for a0 in range((b + 1) // 2):
+            got = None
+            for N in Ns:
+                if b ** N > 8000 or (N == 1 and b >= 16):
+                    continue
+                for m in ms:
+                    if b ** N * m > 2 ** 24:
+                        continue
+                    v = shift_floor(b, a0, N, m)
+                    e = math.floor(math.log(v) / (N * math.log(b)) * 1e7) / 1e7 if v > 0 else None
+                    if e is not None and v > b ** (N * e) and e > 0.25:
+                        got = (N, m, v, e)
+                        break
+                if got:
+                    break
+            rows.append((b, a0, got))
+    done = [r for r in rows if r[2]]
+    def at_grid(b, a0, N):
+        n = b ** N
+        i = np.arange(n)
+        prod = np.ones(n)
+        for j in range(N):
+            t = ((b ** j) * i % n) / n
+            prod *= np.abs(sum(np.exp(2j * np.pi * a * t) for a in range(b) if a != a0)) / (b - 1)
+        return float(prod.sum())
+    count = sum(math.ceil(b / 2) for b in range(lo, hi + 1))
+    under = all(g[2] <= at_grid(b, a0, g[0]) + 1e-9 for b, a0, g in done)
+    print(f"the shift floor, alpha_1 >= (1/N) log_q min_x Sigma_N(x): {len(done)} of the {len(rows)} distinct sets of {lo} <= q <= {hi} certified above 1/4 at one to three digits, the fewest digits and sub-scan that clear  ({time.time() - t0:.1f}s)")
+    print(f"  self-checks: the set count against sum of ceil(q/2) = {count} {chk(float(len(rows)), float(count), 0.0)}; every certified minimum under the grid sum Sigma_N(0) from the direct character sum, which any minimum must sit below {chk(1.0 if under else 0.0, 1.0, 0.0)}")
+    for b in range(lo, hi + 1):
+        br = [r for r in rows if r[0] == b]
+        print(f"  q={b:3d}: " + " ".join(f"{a0}:{'N' + str(g[0]) + ' ' + format(g[3], '.7f') if g else 'open'}" for _, a0, g in br))
+    left = [(b, a0) for b, a0, g in rows if not g]
+    print(f"  left to the window census: {left}")
+    return rows
+
+def grid_coef(b, a0):
+    mu = abs(a0 - (b - 1) / 2)
+    return mu * (b - 2 * mu) + 2 * mu * mu / (b - 1) - (b * b - 1) / (3 * b) - 4 * mu * mu / b
+
+def grid_floor(lo, hi, G):
+    t0 = time.time()
+    worst, bad, fd, low = np.inf, [], 0.0, []
+    for b in range(lo, hi + 1):
+        i = np.arange(b)
+        for a0 in range((b + 1) // 2):
+            sig = lambda th: hat_missing(b, a0, (th[:, None] + i[None, :]) / b).sum(axis=1)
+            th = 1e-3 + (1 - 2e-3) * (np.arange(G) + 0.5) / G
+            v = sig(th)
+            k = int(v.argmin())
+            fine = np.clip(th[k] + (np.arange(-1000, 1001) / 1000) / G, 1e-3, 1 - 1e-3)
+            v2 = sig(fine)
+            vmin = float(min(v.min(), v2.min()))
+            C = grid_coef(b, a0)
+            e = min(1e-3, 0.04 / b)
+            fdc = (float(sig(np.array([e]))[0]) - 2.0) / e ** 2
+            fd = max(fd, abs(fdc - math.pi ** 2 * C / (b - 1)) / max(1.0, abs(math.pi ** 2 * C / (b - 1))))
+            inner = 1 <= a0 <= b - 2 and 2 * a0 != b - 1
+            if inner != (C > 0):
+                bad.append((b, a0, C))
+            if inner:
+                worst = min(worst, vmin - 2.0)
+            else:
+                low.append((b, a0, vmin, float(fine[int(v2.argmin())]) if v2.min() <= v.min() else float(th[k])))
+    ok = not bad and worst > 0.0 and all(r[2] < 2.0 for r in low)
+    print(f"the one-digit sum at the grid, every digit of every base {lo} <= q <= {hi}: Sigma_1 = 2 + (pi^2 C/(q-1)) (qx)^2 + O(x^4), the coefficient against a finite difference at qx = min(1e-3, 0.04/q) to relative {fd:.1e} {chk_le(fd, 1e-3, 'finite difference')}, C > 0 exactly at the interior digits that are not the constant-phase digit {chk(0.0 if bad else 1.0, 1.0, 0.0)}; at those digits the float scan of {G} shifts with 1e-3 <= qx <= 1 - 1e-3, refined, stays above 2 by {worst:.1e} and more; at the end and constant-phase digits it falls below 2 at every base {chk(1.0 if ok else 0.0, 1.0, 0.0)}  ({time.time() - t0:.1f}s)")
+    for b, a0, vmin, arg in low:
+        if b <= 5 or b >= hi - 1:
+            print(f"  q={b:3d} missing {a0:2d} ({'end' if a0 in (0, b - 1) else 'constant phase'}): min Sigma_1 {vmin:.6f} at qx = {arg:.4f}, C = {grid_coef(b, a0):+.6f}")
+    return ok
+
+def win2_shared(b, m, nd=2):
+    W = b ** nd
+    P = 2 * m * W
+    Q = 4 * P
+    TW = twiddle(Q)
+    j = 2 * m * np.arange(W, dtype=np.int64)[:, None] + (2 * np.arange(m, dtype=np.int64) + 1)[None, :]
+    s1l, s1h = cos_iv(TW, (2 * j - P) % Q)
+    sbl, sbh = cos_iv(TW, (2 * b * j - P) % Q)
+    c1l, c1h = cos_iv(TW, (2 * j) % Q)
+    cbl, cbh = cos_iv(TW, (2 * b * j) % Q)
+    if s1l.min() <= 0.0:
+        raise SystemExit("denominator enclosure touches zero")
+    kl, kh = imul(sbl, sbh, dn(1.0 / s1h), up(1.0 / s1l))
+    al, ah = imul(cbl, cbh, s1l, s1h)
+    bl, bh = imul(sbl, sbh, c1l, c1h)
+    nl, nh = dn(dn(b * al) - bh), up(up(b * ah) - bl)
+    dd = up(up(PI_UP * np.maximum(np.abs(nl), np.abs(nh))) / dn(s1l * s1l))
+    hs = up(1.0 / (2 * W * m))
+    return (j, kl, kh) + isq(kl, kh) + (Q, TW, W, dd, hs)
+
+def win2_digit(b, a0, m, sh, side):
+    j, kl, kh, k2l, k2h, Q, TW, W, dd, hs = sh
+    phl, phh = cos_iv(TW, ((4 * a0 - 2 * b + 2) * j) % Q)
+    ml, mh = imul(kl, kh, phl, phh)
+    c = abs(2 * a0 - b + 1) / 2
+    d2 = up(up(PI_UP * PI_UP) * up((b * (b * b - 1)) / 3 + 4 * c * c))
+    move = up(up(hs * up(dd + up(2 * PI_UP * c))) + up(up(hs * hs) * d2 / 2))
+    if side:
+        vh = up(up(np.sqrt(np.maximum(up(up(k2h - dn(2.0 * ml)) + 1.0), 0.0))) + move)
+        return np.minimum(up(up(vh.max(axis=1)) / (b - 1)), 1.0)
+    vl = dn(dn(np.sqrt(np.maximum(dn(dn(k2l - up(2.0 * mh)) + 1.0), 0.0))) - move)
+    return np.maximum(dn(vl.min(axis=1) / (b - 1)), 0.0)
+
+def dense_cw(M, side):
+    y = np.ones(M.shape[0])
+    for _ in range(2000):
+        z = M @ y
+        if z.max() <= 0.0:
+            return 0.0
+        z /= z.max()
+        if np.abs(z - y).max() < 1e-14:
+            y = z
+            break
+        y = z
+    keep = np.ones(len(y), bool) if side else y > 1e-9 * y.max()
+    y = np.where(keep, np.maximum(y, 1e-300), 0.0)
+    acc = np.zeros(len(y))
+    for c in range(M.shape[1]):
+        acc = up(acc + up(M[:, c] * y[c])) if side else dn(acc + dn(M[:, c] * y[c]))
+    ratio = (up(acc / y) if side else dn(acc / np.where(keep, y, 1.0)))[keep]
+    return float(ratio.max() if side else ratio.min())
+
+def expo(b, mu, side):
+    if mu <= 0.0:
+        return None
+    e = (math.ceil if side else math.floor)(math.log(mu) / math.log(b) * 1e7) / 1e7
+    if not ((mu < b ** e) if side else (mu > b ** e)):
+        raise SystemExit(f"rounding unsafe at base {b}")
+    return e
+
+def wexp(b, a0, nd, m, cache, side):
+    key = (b, nd, m)
+    if key not in cache:
+        for k in [k for k in cache if k[0] != "y"]:
+            del cache[k]
+        cache[key] = win2_shared(b, m, nd)
+    G = win2_digit(b, a0, m, cache[key], side)
+    if nd == 2:
+        mu = dense_cw(G.reshape(b, b), side)
+    else:
+        U = b ** (nd - 2)
+        G3 = G.reshape(b, U, b)
+        y = cache.get(("y", side, b, nd), np.ones(b * U))
+        for it in range(600):
+            z = np.einsum("cub,ub->cu", G3, y.reshape(U, b)).reshape(b * U)
+            z /= z.max()
+            if it >= 30 and np.abs(z - y).max() < 1e-12:
+                y = z
+                break
+            y = z
+        cache[("y", side, b, nd)] = y
+        y = np.maximum(y, 1e-300)
+        mu = cw_red(G, y, b, nd, side, None if side else y > 1e-9 * y.max())
+    return expo(b, mu, side)
+
+def fifth_cell(b, a0, side, tries, cache):
+    for nd, m in tries:
+        e = wexp(b, a0, nd, m, cache, side)
+        if (e < 0.2) if side else (e is not None and e > 0.2):
+            return e, nd, m, True
+    return e, nd, m, False
+
+def fifth_walk(top):
+    t0 = time.time()
+    cache = {}
+    up_tries = [(2, 1), (2, 4), (3, 1)]
+    lo_tries = [(2, 1), (2, 4), (3, 1)]
+    rows, b = [], top
+    print(f"THE WALK DOWN FROM {top}: every excluded digit against alpha_1 < 1/5, the supremum matrix at two window digits, sub-scan 1 then 4, then three window digits, each cell's supremum bounded by its midpoint value plus the local derivative and a second-order term")
+    while True:
+        cells, fail = [], None
+        for a0 in range((b + 1) // 2):
+            e, nd, m, ok = fifth_cell(b, a0, True, up_tries, cache)
+            cells.append((a0, e, nd))
+            if not ok:
+                fail = (a0, e)
+                break
+        rows.append((b, cells, fail))
+        if fail is None:
+            w = max(cells, key=lambda r: r[1])
+            print(f"  q={b:3d} every digit below 1/5, worst a0 = {w[0]} at alpha_1 < {w[1]:.7f}; " + " ".join(f"{a0}:{e:.5f}" + ("" if nd == 2 else "@3") for a0, e, nd in cells), flush=True)
+            b -= 1
+            continue
+        print(f"  q={b:3d} a0 = {fail[0]} not certified below 1/5, alpha_1 < {fail[1]:.7f} at three window digits", flush=True)
+        break
+    q5 = b + 1
+    print(f"every excluded digit of every base {q5} <= q <= {top} certified alpha_1 < 1/5 ({time.time() - t0:.1f}s)")
+    return q5, rows
+
+def fifth_below(q5):
+    t0 = time.time()
+    cache = {}
+    below = []
+    for q in range(q5 - 1, 2, -1):
+        scan = sorted(((wexp(q, a0, 2, 1, cache, True), a0) for a0 in range((q + 1) // 2)), reverse=True)
+        cands = [(q - 1) // 2] + [a0 for _, a0 in scan if a0 != (q - 1) // 2]
+        got = None
+        for a0 in cands:
+            e, nd, m, ok = fifth_cell(q, a0, False, [(2, 1), (2, 4), (3, 1)], cache)
+            if ok:
+                got = (a0, e, nd)
+                break
+        below.append((q, got))
+    miss = [q for q, g in below if g is None]
+    near = [(q, g) for q, g in below if g and g[1] < 0.22]
+    print(f"every base 3 <= q <= {q5 - 1} carries a digit certified alpha_1 > 1/5 by the restricted infimum matrix, the middle digit tried first and then the digits by falling two-digit upper bound {chk(0.0 if miss else 1.0, 1.0, 0.0)}; unclear {miss}  ({time.time() - t0:.1f}s)")
+    print("  the witnesses under 0.22: " + " ".join(f"q={q} a0={g[0]} >{g[1]:.7f}" + ("" if g[2] == 2 else "@3") for q, g in near))
+    return below
+
+def fifth_some(lo, hi):
+    t0 = time.time()
+    cache = {}
+    first = None
+    for q in range(lo, hi + 1):
+        e, nd, m, ok = fifth_cell(q, 0, True, [(2, 1), (2, 4), (3, 1), (3, 4)], cache)
+        if ok:
+            first = (q, e, nd)
+            break
+    q1 = first[0]
+    print(f"the least base with a digit below 1/5: q = {q1} missing 0 at alpha_1 < {first[1]:.7f} on {first[2]} window digits  ({time.time() - t0:.1f}s)")
+    t1 = time.time()
+    rows, miss = [], []
+    for q in range(3, q1):
+        for a0 in range((q + 1) // 2):
+            e, nd, m, ok = fifth_cell(q, a0, False, [(2, 1), (2, 4), (3, 1), (3, 4), (4, 1)], cache)
+            rows.append((q, a0, e, nd))
+            if not ok:
+                miss.append((q, a0, e))
+    near = sorted([r for r in rows if r[2] is not None and r[2] < 0.22], key=lambda r: r[2])
+    print(f"no set of any base 3 <= q <= {q1 - 1} has alpha_1 < 1/5: {len(rows) - len(miss)} of the {len(rows)} distinct sets certified alpha_1 > 1/5 by the restricted infimum matrix {chk(0.0 if miss else 1.0, 1.0, 0.0)}; unclear {miss}; {len(near)} within 0.02 of the bar  ({time.time() - t1:.1f}s)")
+    for q, a0, e, nd in near:
+        print(f"  q={q:3d} missing {a0:2d}: alpha_1 > {e:.7f} on {nd} window digits")
+    return q1
+
+def dear_sweep(lo, hi, m):
+    t0 = time.time()
+    rows = []
+    for b in range(lo, hi + 1):
+        scan = [(alpha_band(b, a0, 3, m, restrict=True)[1], a0) for a0 in range((b + 1) // 2)]
+        a0 = max(scan)[1]
+        el, eh = alpha_band(b, a0, 4, m, restrict=True)[:2]
+        rows.append((b, a0, el, eh))
+    ok = all(el is not None and el >= 0.25 for _, _, el, _ in rows)
+    key = min(rows, key=lambda r: -1.0 if r[2] is None else r[2])
+    print(f"every base {lo} <= q <= {hi} carries a one-missing-digit set above 1/4: the digit of largest three-digit upper bound, certified at 4 window digits sub-scan {m} by the restricted infimum matrix; closest q = {key[0]} missing {key[1]} at alpha_1 > {key[2]:.7f} {chk(1.0 if ok else 0.0, 1.0, 0.0)}  ({time.time() - t0:.1f}s)")
+    print("  " + " ".join(f"q={b} a0={a0} [{-1.0 if el is None else el:.7f},{eh:.7f}]" for b, a0, el, eh in rows))
+    return rows
+
+def blind_iv(b, j, P, Q, TW):
+    jm = j % P
+    s1l, s1h = cos_iv(TW, (2 * jm - P) % Q)
+    sbl, sbh = cos_iv(TW, (2 * b * jm - P) % Q)
+    if s1l.min() <= 0.0:
+        raise SystemExit("denominator enclosure touches zero")
+    kl, kh = imul(sbl, sbh, dn(1.0 / s1h), up(1.0 / s1l))
+    al = np.where(kl >= 0.0, kl, np.where(kh <= 0.0, -kh, 0.0))
+    ah = np.maximum(np.abs(kl), np.abs(kh))
+    dl, dh = dn(al - 1.0), up(ah - 1.0)
+    el = np.where(dl >= 0.0, dl, np.where(dh <= 0.0, -dh, 0.0))
+    eh = np.maximum(np.abs(dl), np.abs(dh))
+    return dn(el / (b - 1)), up(eh / (b - 1))
+
+def blind_band(b, nd, m):
+    W = b ** nd
+    P = 2 * m * W
+    Q = 4 * P
+    TW = twiddle(Q)
+    lip = up(up(2 * PI_UP * ((b * b) // 4)) / (b - 1))
+    slack = up(lip / (2 * W * m))
+    off = (2 * np.arange(m) + 1).astype(np.int64)
+    Ghi, Glo = np.empty(W), np.empty(W)
+    CH = max(1, 400_000 // m)
+    for s0 in range(0, W, CH):
+        w = np.arange(s0, min(s0 + CH, W), dtype=np.int64)
+        vl, vh = blind_iv(b, 2 * m * w[:, None] + off[None, :], P, Q, TW)
+        Ghi[s0:s0 + CH] = np.minimum(up(vh.max(axis=1) + slack), 1.0)
+        Glo[s0:s0 + CH] = np.maximum(dn(vl.min(axis=1) - slack), 0.0)
+    lh, yh = perron_red(Ghi, b, nd)
+    ll, yl = perron_red(Glo, b, nd)
+    mu_hi = cw_red(Ghi, yh, b, nd, True)
+    mu_lo = cw_red(Glo, yl, b, nd, False, yl > 1e-9 * yl.max())
+    eh = math.ceil(math.log(mu_hi) / math.log(b) * 1e7) / 1e7
+    el = None if mu_lo <= 0.0 else math.floor(math.log(mu_lo) / math.log(b) * 1e7) / 1e7
+    if not (mu_hi < b ** eh and (el is None or mu_lo > b ** el)):
+        raise SystemExit(f"rounding unsafe at base {b}, the digit-blind minorant")
+    return el, eh
+
+def blind_sweep(lo, hi, nd, m):
+    t0 = time.time()
+    rows = [(b,) + blind_band(b, nd, m) for b in range(lo, hi + 1)]
+    for b, el, eh in rows:
+        tag = "ONE CERTIFICATE FOR EVERY DIGIT" if el is not None and el >= 0.25 else ("DEAD: no window of this minorant reaches 1/4" if eh < 0.25 else "undecided")
+        print(f"  q={b:3d} digit-blind minorant ||D_q| - 1|/(q-1), {nd} window digits sub-scan {m}: exponent in [{'none' if el is None else f'{el:.7f}'}, {eh:.7f}]  [{tag}]")
+    live = [b for b, el, eh in rows if el is not None and el >= 0.25]
+    dead = [b for b, el, eh in rows if eh < 0.25]
+    mono = all(el is None or el <= eh for b, el, eh in rows)
+    below = all(el is None or el <= alpha_band(b, 0, 3, m)[1] for b, el, eh in rows)
+    print(f"  self-checks: each lower bound under its own upper bound, Perron monotonicity {chk(1.0 if mono else 0.0, 1.0, 0.0)}; each lower bound under the certified upper bound of the set missing 0 at three window digits, since the minorant sits under |hat F| at every digit {chk(1.0 if below else 0.0, 1.0, 0.0)}")
+    print(f"the digit-blind minorant collapses the sweep to one certificate per base at q in {live} and is dead at q in {dead}  ({time.time() - t0:.1f}s)")
+    return rows
+
 def base_ladder(bases, nd, m, a0s):
     t0 = time.time()
     out = []
     for b in bases:
         a0 = a0s(b)
-        el, eh, mu_lo, mu_hi, slack = alpha_band(b, a0, nd, m)
+        el, eh, mu_lo, mu_hi, slack = alpha_band(b, a0, nd, m, restrict=True)
         out.append((b, a0, el, eh))
     print(f"certified alpha_1 ladder at {nd} digits sub-scan {m}, one missing digit per base: " + " ".join(f"q={b} a0={a0} [{-1.0 if el is None else el:.7f},{eh:.7f}]" for b, a0, el, eh in out) + f"  ({time.time() - t0:.1f}s)")
     return out
@@ -877,7 +1244,7 @@ def pair_windows(b, a, c, nd, m, wide=1):
         Glo[s0:s0 + CH] = np.maximum(dn(vl.min(axis=1) - slack), 0.0)
     return Ghi, Glo, slack
 
-def pair_band(b, a, c, nd, m, wide=1, side=None):
+def pair_band(b, a, c, nd, m, wide=1, side=None, restrict=False):
     Ghi, Glo, slack = pair_windows(b, a, c, nd, m, wide)
     eh = el = None
     mu_hi = mu_lo = 0.0
@@ -889,7 +1256,7 @@ def pair_band(b, a, c, nd, m, wide=1, side=None):
             raise SystemExit(f"rounding unsafe at base {b} missing {a},{c}")
     if side is None or not side:
         ll, yl = perron_red(Glo, b, nd)
-        mu_lo = cw_red(Glo, yl, b, nd, False)
+        mu_lo = cw_red(Glo, yl, b, nd, False, yl > 1e-9 * yl.max() if restrict else None)
         el = None if mu_lo <= 0.0 else math.floor(math.log(mu_lo) / math.log(b) * 1e7) / 1e7
         if el is not None and not mu_lo > b ** el:
             raise SystemExit(f"rounding unsafe at base {b} missing {a},{c}")
@@ -979,6 +1346,26 @@ def pair_some(b, nds, m, thr=0.25, name="1/4"):
             break
     print(f"  q={b:3d} {len(pair_sets(b)):5d} distinct sets, witness pair {{{arg[0]},{arg[1]}}} at {wnd} window digits: alpha_1 > {best:.7f} [{'FAILS' if best >= thr else 'no witness at these windows'} {name}] {chk(1.0 if best >= thr else 0.0, 1.0, 0.0)}  ({time.time() - t0:.1f}s)", flush=True)
     return b, best >= thr, arg, best
+
+def pair_holes(lo, hi, nds, m, near=0.02):
+    t0 = time.time()
+    rows = []
+    for b in range(lo, hi + 1):
+        for (a, c) in pair_sets(b):
+            if a + c != b - 1 and not (b % 4 == 2 and c - a == b // 2):
+                continue
+            for nd in nds:
+                el = pair_band(b, a, c, nd, m, side=False, restrict=True)[0]
+                if el is not None and el >= 0.25:
+                    break
+            rows.append((b, a, c, nd, el))
+    ok = all(el is not None and el >= 0.25 for *_, el in rows)
+    key = min(rows, key=lambda r: -1.0 if r[4] is None else r[4])
+    print(f"the zero class, every distinct pair set of every base {lo} <= q <= {hi} with S = 0 or D = q/2 at q/2 odd: {len(rows)} sets, all certified alpha_1 > 1/4 by the infimum matrix restricted to its live states at the shortest window in {tuple(nds)}, sub-scan {m}; closest q = {key[0]} missing {{{key[1]},{key[2]}}} at alpha_1 > {key[4]:.7f} {chk(1.0 if ok else 0.0, 1.0, 0.0)}  ({time.time() - t0:.1f}s)")
+    for b, a, c, nd, el in sorted(rows, key=lambda r: -1.0 if r[4] is None else r[4]):
+        if el is None or el < 0.25 + near:
+            print(f"  q={b:3d} missing {{{a},{c}}} S={a + c - b + 1} D={c - a} at {nd} window digits: alpha_1 > {'none' if el is None else f'{el:.7f}'}")
+    return rows
 
 def pair_ladder(bases, a, c, nd, m):
     t0 = time.time()
@@ -1093,10 +1480,27 @@ def main():
         thr, name = (1 / 3, "1/3") if len(v) > 2 and v[2] == "third" else (0.25, "1/4")
         for b in range(int(v[0]), int(v[1]) + 1):
             pair_first(b, [2, 3, 4, 5], 8, thr, name)
+    elif verb == "pairholes":
+        pair_holes(4, 31, [3, 4], 8)
     elif verb == "family":
         family_close(35, 125, 8, [2, 3, 4])
+    elif verb == "grid1":
+        grid_floor(3, 40, 2000)
+    elif verb == "fifth":
+        fifth_some(60, 200)
+        fifth_walk(int(sys.argv[2]) if len(sys.argv) > 2 else 300)
+    elif verb == "fifthbelow":
+        fifth_below(int(sys.argv[2]) if len(sys.argv) > 2 else 115)
+    elif verb == "shift":
+        shift_sweep(3, 20, [1, 2, 3], [512, 4096, 16384])
+    elif verb == "blind":
+        blind_sweep(3, 20, 4, 8)
+    elif verb == "floor":
+        v = [int(x) for x in sys.argv[2:]]
+        floor_sweep(v[0] if v else 3, v[1] if len(v) > 1 else 20, [4, 5], 8)
+        dear_sweep(21, 33, 8)
     else:
-        raise SystemExit("verbs: check grid sandwich certify windows moments lemma corollary criterion least six family pairs pairfail pairclear")
+        raise SystemExit("verbs: check grid sandwich certify windows moments lemma corollary criterion least six family floor fifth fifthbelow shift grid1 blind pairs pairholes pairfail pairclear")
     close(t0)
 
 main()

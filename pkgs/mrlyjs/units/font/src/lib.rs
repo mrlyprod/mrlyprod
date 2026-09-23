@@ -190,7 +190,9 @@ impl Glyph {
     /// Reads the Glyph from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<Glyph, JsValue> {
-        Ok(Glyph { inner: hand::from_js(&data)? })
+        Ok(Glyph {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Glyph as plain data.
     #[wasm_bindgen(js_name = "toJSON")]

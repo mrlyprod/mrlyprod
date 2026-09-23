@@ -10,6 +10,7 @@
 //! - `blend`: term ops on sequences, the exact recurrence behind one, its growth rate.
 //! - `boolean`: a truth table's Walsh spectrum, nonlinearity, balance and avalanche.
 //! - `design`: the digit designs on the line, their Mobius meter and the ordinates it carries.
+//! - `dissection`: the missing-digit sets cut by Dirichlet approximation: the four regions, the digit transform's `l^1` masses, the chain certificate and its wall.
 //! - `factor`: factorizations, divisors, totients, radicals, Mobius values, gcd and lcm.
 //! - `fft`: the fast Fourier transform in one and two dimensions.
 //! - `gauss`: the Gaussian and the Eisenstein integers, their classes, windows and shells.
@@ -22,6 +23,7 @@
 //! - `series`: the classic sequences, zeta and its cousins, the partials walking to pi, e and gamma.
 //! - `sieve`: the Wallis sieve and its kin as schedule words, with their rasters and limits.
 //! - `spiral`: the whole numbers wound on the square and the hexagonal lattice, marked and read.
+//! - `sumset`: the base-3 design plus the base-4 design, Erdos problem 125: its bit array, its density and the energy of its levels.
 //! - `zeta`: zeta on the critical line, its zeros, the prime staircase they rebuild.
 //!
 //! # Doors
@@ -42,6 +44,8 @@ pub mod blend;
 pub mod boolean;
 /// The digit designs on the integer line: their elements, their Mobius meter, its density echo and the ordinates its spectrum carries.
 pub mod design;
+/// The unconditional dissection of a missing-digit set: the four regions of the frequency grid, the `l^1` masses of the digit transform, the chain certificate against `1/5`, the constant `kappa_F` and the set's own meter and prime count.
+pub mod dissection;
 /// The divisor arithmetic: factorizations, divisors, totients, radicals, the Mobius values and the exact whole-number arithmetic under them.
 pub mod factor;
 /// The fast Fourier transform in one and two dimensions.
@@ -68,6 +72,8 @@ pub mod series;
 pub mod sieve;
 /// The spirals: the whole numbers wound on the square and the hexagonal lattice, marked and read along a quadratic.
 pub mod spiral;
+/// The sumset of Erdos problem 125: the base-3 design `{0, 1}` plus the base-4 design `{0, 1}` as a bit array, its density below `x`, the gaps its level pairs leave and their additive energy.
+pub mod sumset;
 /// The critical line: zeta at one half plus i t and off it, its zeros, the prime staircase they rebuild and the novelty meter their waves predict.
 pub mod zeta;
 

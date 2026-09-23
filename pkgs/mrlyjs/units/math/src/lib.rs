@@ -311,21 +311,31 @@ pub fn bang_baseq_classes(dimension: usize) -> Result<JsValue, JsValue> {
 /// Counts base-q designs distinct under symmetry.
 #[wasm_bindgen]
 pub fn bang_baseq_distinct_designs(base: usize, dimension: usize) -> Result<JsValue, JsValue> {
-    let value = mrlyrs::math::bang::baseq::distinct_designs(base, dimension).map_err(hand::throw)?;
+    let value =
+        mrlyrs::math::bang::baseq::distinct_designs(base, dimension).map_err(hand::throw)?;
     Ok(JsValue::from_str(&value.to_string()))
 }
 
 /// Returns the collapsed fill count at an even side number.
 #[wasm_bindgen]
-pub fn bang_baseq_even_fill_is_balanced(number: usize, dimension: usize, popcount: JsValue) -> Result<JsValue, JsValue> {
+pub fn bang_baseq_even_fill_is_balanced(
+    number: usize,
+    dimension: usize,
+    popcount: JsValue,
+) -> Result<JsValue, JsValue> {
     let popcount = hand::u128_from_js(&popcount)?;
-    let value = mrlyrs::math::bang::baseq::even_fill_is_balanced(number, dimension, popcount).map_err(hand::throw)?;
+    let value = mrlyrs::math::bang::baseq::even_fill_is_balanced(number, dimension, popcount)
+        .map_err(hand::throw)?;
     Ok(JsValue::from_str(&value.to_string()))
 }
 
 /// Returns the filled-cell count of a binary design at a side number, folded from its filled corners.
 #[wasm_bindgen]
-pub fn bang_baseq_fill_from_corners(filled: JsValue, number: usize, dimension: usize) -> Result<JsValue, JsValue> {
+pub fn bang_baseq_fill_from_corners(
+    filled: JsValue,
+    number: usize,
+    dimension: usize,
+) -> Result<JsValue, JsValue> {
     let filled = hand::from_js::<Vec<Vec<u8>>>(&filled)?;
     let value = mrlyrs::math::bang::baseq::fill_from_corners(&filled, number, dimension);
     Ok(JsValue::from_str(&value.to_string()))
@@ -357,7 +367,8 @@ pub fn bang_baseq_orbit(group: JsValue, code: JsValue) -> Result<JsValue, JsValu
 /// Returns the closed-form group order the axis-map count must match.
 #[wasm_bindgen]
 pub fn bang_baseq_predicted_group_order(base: usize, dimension: usize) -> Result<JsValue, JsValue> {
-    let value = mrlyrs::math::bang::baseq::predicted_group_order(base, dimension).map_err(hand::throw)?;
+    let value =
+        mrlyrs::math::bang::baseq::predicted_group_order(base, dimension).map_err(hand::throw)?;
     Ok(JsValue::from_str(&value.to_string()))
 }
 
@@ -365,7 +376,12 @@ pub fn bang_baseq_predicted_group_order(base: usize, dimension: usize) -> Result
 #[wasm_bindgen]
 pub fn bang_baseq_representatives(base: usize, dimension: usize) -> Result<JsValue, JsValue> {
     let value = mrlyrs::math::bang::baseq::representatives(base, dimension).map_err(hand::throw)?;
-    hand::list_to_js(&value, |x1| Ok(hand::tuple_to_js(&[JsValue::from_str(&hand::code_to_js(x1.0)), hand::to_js(&x1.1)?])))
+    hand::list_to_js(&value, |x1| {
+        Ok(hand::tuple_to_js(&[
+            JsValue::from_str(&hand::code_to_js(x1.0)),
+            hand::to_js(&x1.1)?,
+        ]))
+    })
 }
 
 /// Returns the distinct-design counts for dimensions 1 through max_dimension.
@@ -399,7 +415,11 @@ pub fn bang_code_get(code: JsValue) -> Result<JsValue, JsValue> {
 
 /// Unpacks a code into its filled residue corners.
 #[wasm_bindgen]
-pub fn bang_code_to_corners(code: JsValue, dimension: usize, base: usize) -> Result<JsValue, JsValue> {
+pub fn bang_code_to_corners(
+    code: JsValue,
+    dimension: usize,
+    base: usize,
+) -> Result<JsValue, JsValue> {
     let code = hand::code_from_js(&code)?;
     let value = mrlyrs::math::bang::code_to_corners(code, dimension, base).map_err(hand::throw)?;
     hand::list_to_js(&value, |x1| Ok(hand::typed(&(*x1)[..])))
@@ -414,7 +434,11 @@ pub fn bang_corners(dimension: usize) -> Result<JsValue, JsValue> {
 
 /// Packs filled residue corners back into their code.
 #[wasm_bindgen]
-pub fn bang_corners_to_code(filled: JsValue, dimension: usize, base: usize) -> Result<JsValue, JsValue> {
+pub fn bang_corners_to_code(
+    filled: JsValue,
+    dimension: usize,
+    base: usize,
+) -> Result<JsValue, JsValue> {
     let filled = hand::from_js::<Vec<Vec<u8>>>(&filled)?;
     let value = mrlyrs::math::bang::corners_to_code(&filled, dimension, base);
     Ok(JsValue::from_str(&hand::code_to_js(value)))
@@ -422,24 +446,44 @@ pub fn bang_corners_to_code(filled: JsValue, dimension: usize, base: usize) -> R
 
 /// Renders a coded design to a tensor at its side number, dimension, base and fractal level.
 #[wasm_bindgen]
-pub fn bang_factory_create(code: JsValue, number: usize, dimension: usize, base: usize, level: usize) -> Result<JsValue, JsValue> {
+pub fn bang_factory_create(
+    code: JsValue,
+    number: usize,
+    dimension: usize,
+    base: usize,
+    level: usize,
+) -> Result<JsValue, JsValue> {
     let code = hand::code_from_js(&code)?;
-    let value = mrlyrs::math::bang::factory::create(code, number, dimension, base, level).map_err(hand::throw)?;
+    let value = mrlyrs::math::bang::factory::create(code, number, dimension, base, level)
+        .map_err(hand::throw)?;
     hand::tensor_to_js(&value)
 }
 
 /// Renders a design straight from its filled residue corners.
 #[wasm_bindgen]
-pub fn bang_factory_create_from_corners(filled: JsValue, number: usize, dimension: usize, base: usize, level: usize) -> Result<JsValue, JsValue> {
+pub fn bang_factory_create_from_corners(
+    filled: JsValue,
+    number: usize,
+    dimension: usize,
+    base: usize,
+    level: usize,
+) -> Result<JsValue, JsValue> {
     let filled = hand::from_js::<Vec<Vec<u8>>>(&filled)?;
-    let value = mrlyrs::math::bang::factory::create_from_corners(&filled, number, dimension, base, level).map_err(hand::throw)?;
+    let value =
+        mrlyrs::math::bang::factory::create_from_corners(&filled, number, dimension, base, level)
+            .map_err(hand::throw)?;
     hand::tensor_to_js(&value)
 }
 
 /// Renders a design from its canonical JSON name.
 #[wasm_bindgen]
-pub fn bang_factory_create_named(spec: &str, number: usize, level: usize) -> Result<JsValue, JsValue> {
-    let value = mrlyrs::math::bang::factory::create_named(spec, number, level).map_err(hand::throw)?;
+pub fn bang_factory_create_named(
+    spec: &str,
+    number: usize,
+    level: usize,
+) -> Result<JsValue, JsValue> {
+    let value =
+        mrlyrs::math::bang::factory::create_named(spec, number, level).map_err(hand::throw)?;
     hand::tensor_to_js(&value)
 }
 
@@ -459,7 +503,11 @@ pub fn bang_factory_total_codes(dimension: usize, base: usize) -> Result<JsValue
 
 /// Returns the code of the design filled wherever a corner's residue sum lands in the levels.
 #[wasm_bindgen]
-pub fn bang_levels_code(dimension: usize, base: usize, levels: &[usize]) -> Result<JsValue, JsValue> {
+pub fn bang_levels_code(
+    dimension: usize,
+    base: usize,
+    levels: &[usize],
+) -> Result<JsValue, JsValue> {
     let value = mrlyrs::math::bang::levels_code(dimension, base, levels);
     Ok(JsValue::from_str(&hand::code_to_js(value)))
 }
@@ -476,7 +524,8 @@ pub fn bang_magic(layers: JsValue) -> Result<JsValue, JsValue> {
 #[wasm_bindgen]
 pub fn bang_magic_named(layers: JsValue) -> Result<JsValue, JsValue> {
     let layers = hand::from_js::<Vec<(String, usize)>>(&layers)?;
-    let layers_view: Vec<(&str, usize)> = layers.iter().map(|(a0, a1)| (a0.as_str(), *a1)).collect();
+    let layers_view: Vec<(&str, usize)> =
+        layers.iter().map(|(a0, a1)| (a0.as_str(), *a1)).collect();
     let value = mrlyrs::math::bang::magic_named(&layers_view).map_err(hand::throw)?;
     hand::tensor_to_js(&value)
 }
@@ -493,7 +542,12 @@ pub fn bang_sources(catalog: JsValue, dimension: usize) -> Result<JsValue, JsVal
 #[wasm_bindgen]
 pub fn bang_symmetries(dimension: usize) -> Result<JsValue, JsValue> {
     let value = mrlyrs::math::bang::symmetries(dimension);
-    hand::list_to_js(&value, |x1| Ok(hand::tuple_to_js(&[hand::typed(&(x1.0)[..]), hand::typed(&(x1.1)[..])])))
+    hand::list_to_js(&value, |x1| {
+        Ok(hand::tuple_to_js(&[
+            hand::typed(&(x1.0)[..]),
+            hand::typed(&(x1.1)[..]),
+        ]))
+    })
 }
 
 /// Returns whether no two filled corners of a code sit at Hamming distance one.
@@ -663,9 +717,16 @@ pub fn bang_word_side(layers: JsValue) -> Result<JsValue, JsValue> {
 
 /// Spells the first letters of a schedule over an ordered pair of letters.
 #[wasm_bindgen]
-pub fn bang_word_spell(schedule: JsValue, pair: JsValue, length: usize) -> Result<JsValue, JsValue> {
+pub fn bang_word_spell(
+    schedule: JsValue,
+    pair: JsValue,
+    length: usize,
+) -> Result<JsValue, JsValue> {
     let schedule = hand::from_js::<mrlyrs::math::bang::word::Schedule>(&schedule)?;
-    let pair = hand::from_js::<(mrlyrs::math::bang::MagicLayer, mrlyrs::math::bang::MagicLayer)>(&pair)?;
+    let pair = hand::from_js::<(
+        mrlyrs::math::bang::MagicLayer,
+        mrlyrs::math::bang::MagicLayer,
+    )>(&pair)?;
     let value = mrlyrs::math::bang::word::spell(schedule, pair, length);
     hand::to_js(&value)
 }
@@ -698,7 +759,9 @@ pub fn cell_census_edges(cell: JsValue) -> Result<usize, JsValue> {
             let value = mrlyrs::math::cell::census::edges::<3>(&cell).map_err(hand::throw)?;
             Ok(value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
@@ -716,7 +779,9 @@ pub fn cell_census_exposure(cell: JsValue) -> Result<JsValue, JsValue> {
             let value = mrlyrs::math::cell::census::exposure::<3>(&cell);
             Ok(JsValue::from_str(&value.to_string()))
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
@@ -734,7 +799,9 @@ pub fn cell_census_fills(cell: JsValue) -> Result<usize, JsValue> {
             let value = mrlyrs::math::cell::census::fills::<3>(&cell);
             Ok(value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
@@ -752,7 +819,9 @@ pub fn cell_census_vertices(cell: JsValue) -> Result<usize, JsValue> {
             let value = mrlyrs::math::cell::census::vertices::<3>(&cell).map_err(hand::throw)?;
             Ok(value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
@@ -770,7 +839,9 @@ pub fn cell_census_voids(cell: JsValue) -> Result<usize, JsValue> {
             let value = mrlyrs::math::cell::census::voids::<3>(&cell);
             Ok(value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
@@ -780,35 +851,47 @@ pub fn cell_geometry_merge_reps(cells: JsValue, reps: &[usize]) -> Result<JsValu
     match hand::cell_rank(&hand::first(&cells)?)? {
         2 => {
             let cells = hand::list_from_js(&cells, hand::cell2d_from_js)?;
-            let value = mrlyrs::math::cell::geometry::merge_reps::<2>(&cells, reps).map_err(hand::throw)?;
+            let value =
+                mrlyrs::math::cell::geometry::merge_reps::<2>(&cells, reps).map_err(hand::throw)?;
             hand::cell2d_to_js(&value)
         }
         3 => {
             let cells = hand::list_from_js(&cells, hand::cell3d_from_js)?;
-            let value = mrlyrs::math::cell::geometry::merge_reps::<3>(&cells, reps).map_err(hand::throw)?;
+            let value =
+                mrlyrs::math::cell::geometry::merge_reps::<3>(&cells, reps).map_err(hand::throw)?;
             hand::cell3d_to_js(&value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
 /// Writes the value into the cell wherever the tiled mask is nonzero.
 #[wasm_bindgen]
-pub fn cell_geometry_perforate(mask: JsValue, cell: JsValue, value: u8) -> Result<JsValue, JsValue> {
+pub fn cell_geometry_perforate(
+    mask: JsValue,
+    cell: JsValue,
+    value: u8,
+) -> Result<JsValue, JsValue> {
     match hand::cell_rank(&cell)? {
         2 => {
             let mask = hand::tensor_from_js(&mask)?;
             let cell = hand::cell2d_from_js(&cell)?;
-            let value = mrlyrs::math::cell::geometry::perforate::<2>(&mask, &cell, value).map_err(hand::throw)?;
+            let value = mrlyrs::math::cell::geometry::perforate::<2>(&mask, &cell, value)
+                .map_err(hand::throw)?;
             hand::cell2d_to_js(&value)
         }
         3 => {
             let mask = hand::tensor_from_js(&mask)?;
             let cell = hand::cell3d_from_js(&cell)?;
-            let value = mrlyrs::math::cell::geometry::perforate::<3>(&mask, &cell, value).map_err(hand::throw)?;
+            let value = mrlyrs::math::cell::geometry::perforate::<3>(&mask, &cell, value)
+                .map_err(hand::throw)?;
             hand::cell3d_to_js(&value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
@@ -826,7 +909,9 @@ pub fn cell_grow(pattern: JsValue, level: usize) -> Result<JsValue, JsValue> {
             let value = mrlyrs::math::cell::grow::<3>(pattern, level).map_err(hand::throw)?;
             hand::cell3d_to_js(&value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
@@ -844,7 +929,9 @@ pub fn cell_models_anti(cell: JsValue) -> Result<JsValue, JsValue> {
             let value = cell.anti();
             hand::cell3d_to_js(&value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
@@ -862,7 +949,9 @@ pub fn cell_models_binarize(cell: JsValue, threshold: u8) -> Result<JsValue, JsV
             let value = cell.binarize(threshold);
             hand::cell3d_to_js(&value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
@@ -880,7 +969,9 @@ pub fn cell_models_binarize_otsu(cell: JsValue) -> Result<JsValue, JsValue> {
             let value = cell.binarize_otsu();
             hand::cell3d_to_js(&value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
@@ -900,7 +991,9 @@ pub fn cell_models_blur(cell: JsValue, mask: JsValue, wrap: bool) -> Result<JsVa
             let value = cell.blur(&mask, wrap).map_err(hand::throw)?;
             hand::cell3d_to_js(&value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
@@ -920,7 +1013,9 @@ pub fn cell_models_combine(cell: JsValue, other: JsValue) -> Result<JsValue, JsV
             let value = cell.combine(&other);
             hand::cell3d_to_js(&value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
@@ -941,7 +1036,9 @@ pub fn cell_models_depth(cell: JsValue) -> Result<usize, JsValue> {
             let value = cell.depth();
             Ok(value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
@@ -967,7 +1064,9 @@ pub fn cell_models_fractal(cell: JsValue, level: usize) -> Result<JsValue, JsVal
             let value = cell.fractal(level).map_err(hand::throw)?;
             hand::cell3d_to_js(&value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
@@ -985,7 +1084,9 @@ pub fn cell_models_height(cell: JsValue) -> Result<usize, JsValue> {
             let value = cell.height();
             Ok(value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
@@ -1003,7 +1104,9 @@ pub fn cell_models_invert(cell: JsValue) -> Result<JsValue, JsValue> {
             let value = cell.invert();
             hand::cell3d_to_js(&value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
@@ -1021,13 +1124,20 @@ pub fn cell_models_layers(cell: JsValue) -> Result<JsValue, JsValue> {
             let value = cell.layers();
             hand::cell3d_to_js(&value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
 /// Tags each site with its count of masked neighbors matching the target, wrapping on request.
 #[wasm_bindgen]
-pub fn cell_models_neighbors(cell: JsValue, mask: JsValue, target: u8, wrap: bool) -> Result<JsValue, JsValue> {
+pub fn cell_models_neighbors(
+    cell: JsValue,
+    mask: JsValue,
+    target: u8,
+    wrap: bool,
+) -> Result<JsValue, JsValue> {
     match hand::cell_rank(&cell)? {
         2 => {
             let cell = hand::cell2d_from_js(&cell)?;
@@ -1041,7 +1151,9 @@ pub fn cell_models_neighbors(cell: JsValue, mask: JsValue, target: u8, wrap: boo
             let value = cell.neighbors(&mask, target, wrap).map_err(hand::throw)?;
             hand::cell3d_to_js(&value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
@@ -1059,7 +1171,9 @@ pub fn cell_models_new(types: JsValue) -> Result<JsValue, JsValue> {
             let value = mrlyrs::math::cell::models::CellNd::<3>::new(types).map_err(hand::throw)?;
             hand::cell3d_to_js(&value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
@@ -1072,7 +1186,9 @@ pub fn cell_models_orient(cell: JsValue, index: usize) -> Result<JsValue, JsValu
             let value = cell.orient(index).map_err(hand::throw)?;
             hand::cell3d_to_js(&value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
@@ -1090,33 +1206,54 @@ pub fn cell_models_pad(cell: JsValue, count: usize, value: u8) -> Result<JsValue
             let value = cell.pad(count, value);
             hand::cell3d_to_js(&value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
 /// Colors each site by its type through the mapping in the given mode.
 #[wasm_bindgen]
-pub fn cell_models_paint(cell: JsValue, mapping: JsValue, mode: JsValue, rng: JsValue) -> Result<JsValue, JsValue> {
+pub fn cell_models_paint(
+    cell: JsValue,
+    mapping: JsValue,
+    mode: JsValue,
+    rng: JsValue,
+) -> Result<JsValue, JsValue> {
     match hand::cell_rank(&cell)? {
         2 => {
             let cell = hand::cell2d_from_js(&cell)?;
-            let mapping = hand::map_from_js::<u8, _>(&mapping, |x1| hand::list_from_js(x1, hand::color_from_js))?;
+            let mapping = hand::map_from_js::<u8, _>(&mapping, |x1| {
+                hand::list_from_js(x1, hand::color_from_js)
+            })?;
             let mode = hand::from_js::<mrlyrs::core::Mode>(&mode)?;
             let mut rng_stream = hand::stream_from_js(&rng)?;
-            let value = cell.paint(&mapping, mode, rng_stream.as_mut()).map_err(hand::throw)?;
-            if let Some(stream) = &rng_stream { hand::stream_to_js(&rng, stream)?; }
+            let value = cell
+                .paint(&mapping, mode, rng_stream.as_mut())
+                .map_err(hand::throw)?;
+            if let Some(stream) = &rng_stream {
+                hand::stream_to_js(&rng, stream)?;
+            }
             hand::cell2d_to_js(&value)
         }
         3 => {
             let cell = hand::cell3d_from_js(&cell)?;
-            let mapping = hand::map_from_js::<u8, _>(&mapping, |x1| hand::list_from_js(x1, hand::color_from_js))?;
+            let mapping = hand::map_from_js::<u8, _>(&mapping, |x1| {
+                hand::list_from_js(x1, hand::color_from_js)
+            })?;
             let mode = hand::from_js::<mrlyrs::core::Mode>(&mode)?;
             let mut rng_stream = hand::stream_from_js(&rng)?;
-            let value = cell.paint(&mapping, mode, rng_stream.as_mut()).map_err(hand::throw)?;
-            if let Some(stream) = &rng_stream { hand::stream_to_js(&rng, stream)?; }
+            let value = cell
+                .paint(&mapping, mode, rng_stream.as_mut())
+                .map_err(hand::throw)?;
+            if let Some(stream) = &rng_stream {
+                hand::stream_to_js(&rng, stream)?;
+            }
             hand::cell3d_to_js(&value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
@@ -1136,7 +1273,9 @@ pub fn cell_models_perforate(cell: JsValue, mask: JsValue, value: u8) -> Result<
             let value = cell.perforate(&mask, value).map_err(hand::throw)?;
             hand::cell3d_to_js(&value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
@@ -1151,17 +1290,28 @@ pub fn cell_models_rotate(cell: JsValue, k: usize, axes: JsValue) -> Result<JsVa
         }
         3 => {
             let cell = hand::cell3d_from_js(&cell)?;
-            let axes = if axes.is_undefined() { return Err(hand::refuse("a 3d cell wants axes.")); } else { hand::from_js::<(usize, usize)>(&axes)? };
+            let axes = if axes.is_undefined() {
+                return Err(hand::refuse("a 3d cell wants axes."));
+            } else {
+                hand::from_js::<(usize, usize)>(&axes)?
+            };
             let value = cell.rotate(k, axes).map_err(hand::throw)?;
             hand::cell3d_to_js(&value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
 /// Repeats the cell into a width-by-height array of copies.
 #[wasm_bindgen]
-pub fn cell_models_tile(cell: JsValue, width: usize, height: usize, depth: JsValue) -> Result<JsValue, JsValue> {
+pub fn cell_models_tile(
+    cell: JsValue,
+    width: usize,
+    height: usize,
+    depth: JsValue,
+) -> Result<JsValue, JsValue> {
     match hand::cell_rank(&cell)? {
         2 => {
             let cell = hand::cell2d_from_js(&cell)?;
@@ -1170,11 +1320,17 @@ pub fn cell_models_tile(cell: JsValue, width: usize, height: usize, depth: JsVal
         }
         3 => {
             let cell = hand::cell3d_from_js(&cell)?;
-            let depth = if depth.is_undefined() { return Err(hand::refuse("a 3d cell wants depth.")); } else { hand::from_js::<usize>(&depth)? };
+            let depth = if depth.is_undefined() {
+                return Err(hand::refuse("a 3d cell wants depth."));
+            } else {
+                hand::from_js::<usize>(&depth)?
+            };
             let value = cell.tile(width, height, depth).map_err(hand::throw)?;
             hand::cell3d_to_js(&value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
@@ -1192,7 +1348,9 @@ pub fn cell_models_types(cell: JsValue) -> Result<JsValue, JsValue> {
             let value = cell.types();
             hand::tensor_to_js(value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
@@ -1210,33 +1368,54 @@ pub fn cell_models_width(cell: JsValue) -> Result<usize, JsValue> {
             let value = cell.width();
             Ok(value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
 /// Colors the cell through the given mapping and mode, defaulting to the standard palette by type.
 #[wasm_bindgen]
-pub fn cell_paint(cell: JsValue, custom: JsValue, mode: JsValue, rng: JsValue) -> Result<JsValue, JsValue> {
+pub fn cell_paint(
+    cell: JsValue,
+    custom: JsValue,
+    mode: JsValue,
+    rng: JsValue,
+) -> Result<JsValue, JsValue> {
     match hand::cell_rank(&cell)? {
         2 => {
             let cell = hand::cell2d_from_js(&cell)?;
-            let custom = hand::option_from_js(&custom, |x1| hand::map_from_js::<u8, _>(x1, |x2| hand::list_from_js(x2, hand::color_from_js)))?;
+            let custom = hand::option_from_js(&custom, |x1| {
+                hand::map_from_js::<u8, _>(x1, |x2| hand::list_from_js(x2, hand::color_from_js))
+            })?;
             let mode = hand::from_js::<Option<mrlyrs::core::Mode>>(&mode)?;
             let mut rng_stream = hand::stream_from_js(&rng)?;
-            let value = mrlyrs::math::cell::paint::<2>(cell, custom.as_ref(), mode, rng_stream.as_mut()).map_err(hand::throw)?;
-            if let Some(stream) = &rng_stream { hand::stream_to_js(&rng, stream)?; }
+            let value =
+                mrlyrs::math::cell::paint::<2>(cell, custom.as_ref(), mode, rng_stream.as_mut())
+                    .map_err(hand::throw)?;
+            if let Some(stream) = &rng_stream {
+                hand::stream_to_js(&rng, stream)?;
+            }
             hand::cell2d_to_js(&value)
         }
         3 => {
             let cell = hand::cell3d_from_js(&cell)?;
-            let custom = hand::option_from_js(&custom, |x1| hand::map_from_js::<u8, _>(x1, |x2| hand::list_from_js(x2, hand::color_from_js)))?;
+            let custom = hand::option_from_js(&custom, |x1| {
+                hand::map_from_js::<u8, _>(x1, |x2| hand::list_from_js(x2, hand::color_from_js))
+            })?;
             let mode = hand::from_js::<Option<mrlyrs::core::Mode>>(&mode)?;
             let mut rng_stream = hand::stream_from_js(&rng)?;
-            let value = mrlyrs::math::cell::paint::<3>(cell, custom.as_ref(), mode, rng_stream.as_mut()).map_err(hand::throw)?;
-            if let Some(stream) = &rng_stream { hand::stream_to_js(&rng, stream)?; }
+            let value =
+                mrlyrs::math::cell::paint::<3>(cell, custom.as_ref(), mode, rng_stream.as_mut())
+                    .map_err(hand::throw)?;
+            if let Some(stream) = &rng_stream {
+                hand::stream_to_js(&rng, stream)?;
+            }
             hand::cell3d_to_js(&value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
@@ -1245,7 +1424,9 @@ pub fn cell_paint(cell: JsValue, custom: JsValue, mode: JsValue, rng: JsValue) -
 pub fn cell_serializer_byte_cube(value: JsValue) -> Result<JsValue, JsValue> {
     let value = hand::from_js::<mrlyrs::core::Json>(&value)?;
     let value = mrlyrs::math::cell::serializer::byte_cube(&value).map_err(hand::throw)?;
-    hand::list_to_js(&value, |x1| hand::list_to_js(x1, |x2| Ok(hand::typed(&(*x2)[..]))))
+    hand::list_to_js(&value, |x1| {
+        hand::list_to_js(x1, |x2| Ok(hand::typed(&(*x2)[..])))
+    })
 }
 
 /// Reads a nested JSON array into rows of bytes.
@@ -1261,7 +1442,9 @@ pub fn cell_serializer_byte_grid(value: JsValue) -> Result<JsValue, JsValue> {
 pub fn cell_serializer_color_grid(value: JsValue) -> Result<JsValue, JsValue> {
     let value = hand::from_js::<mrlyrs::core::Json>(&value)?;
     let value = mrlyrs::math::cell::serializer::color_grid(&value).map_err(hand::throw)?;
-    hand::list_to_js(&value, |x1| hand::list_to_js(x1, |x2| Ok(hand::typed(&(*x2)[..]))))
+    hand::list_to_js(&value, |x1| {
+        hand::list_to_js(x1, |x2| Ok(hand::typed(&(*x2)[..])))
+    })
 }
 
 /// Reads a triply nested JSON array of counts into one flat run; a count must fit in thirty-two bits.
@@ -1328,9 +1511,15 @@ pub fn counts_cut_voids(code: JsValue, number: usize, level: u32) -> Result<JsVa
 
 /// Returns the code's fractal dimension, the log of its one-level fill over the log of number.
 #[wasm_bindgen]
-pub fn counts_dimension(code: JsValue, number: usize, base_dimension: usize, base: usize) -> Result<f64, JsValue> {
+pub fn counts_dimension(
+    code: JsValue,
+    number: usize,
+    base_dimension: usize,
+    base: usize,
+) -> Result<f64, JsValue> {
     let code = hand::code_from_js(&code)?;
-    let value = mrlyrs::math::counts::dimension(code, number, base_dimension, base).map_err(hand::throw)?;
+    let value =
+        mrlyrs::math::counts::dimension(code, number, base_dimension, base).map_err(hand::throw)?;
     Ok(value)
 }
 
@@ -1344,9 +1533,16 @@ pub fn counts_edges_of_tile(tile: JsValue, level: u32) -> Result<JsValue, JsValu
 
 /// Returns the exposed face count of the code's fractal in any dimension at the given level, folded from its corners.
 #[wasm_bindgen]
-pub fn counts_exposure(code: JsValue, number: usize, dimension: usize, level: u32, base: usize) -> Result<JsValue, JsValue> {
+pub fn counts_exposure(
+    code: JsValue,
+    number: usize,
+    dimension: usize,
+    level: u32,
+    base: usize,
+) -> Result<JsValue, JsValue> {
     let code = hand::code_from_js(&code)?;
-    let value = mrlyrs::math::counts::exposure(code, number, dimension, level, base).map_err(hand::throw)?;
+    let value = mrlyrs::math::counts::exposure(code, number, dimension, level, base)
+        .map_err(hand::throw)?;
     Ok(JsValue::from_str(&value.to_string()))
 }
 
@@ -1368,15 +1564,28 @@ pub fn counts_exposure_recurrence_(tile: JsValue) -> Result<JsValue, JsValue> {
 
 /// Returns the filled cell count of the code's fractal at the given level, without rendering it.
 #[wasm_bindgen]
-pub fn counts_fill(code: JsValue, number: usize, dimension: usize, level: u32, base: usize) -> Result<JsValue, JsValue> {
+pub fn counts_fill(
+    code: JsValue,
+    number: usize,
+    dimension: usize,
+    level: u32,
+    base: usize,
+) -> Result<JsValue, JsValue> {
     let code = hand::code_from_js(&code)?;
-    let value = mrlyrs::math::counts::fill(code, number, dimension, level, base).map_err(hand::throw)?;
+    let value =
+        mrlyrs::math::counts::fill(code, number, dimension, level, base).map_err(hand::throw)?;
     Ok(JsValue::from_str(&value.to_string()))
 }
 
 /// Sums each corner's position products into a base fill and raises it to the level.
 #[wasm_bindgen]
-pub fn counts_fill_from_corners(filled: JsValue, number: usize, _dimension: usize, level: u32, base: usize) -> Result<JsValue, JsValue> {
+pub fn counts_fill_from_corners(
+    filled: JsValue,
+    number: usize,
+    _dimension: usize,
+    level: u32,
+    base: usize,
+) -> Result<JsValue, JsValue> {
     let filled = hand::from_js::<Vec<Vec<u8>>>(&filled)?;
     let value = mrlyrs::math::counts::fill_from_corners(&filled, number, _dimension, level, base);
     Ok(JsValue::from_str(&value.to_string()))
@@ -1400,7 +1609,9 @@ pub fn counts_ladder_cap(base: usize) -> Result<usize, JsValue> {
 #[wasm_bindgen]
 pub fn counts_ladder_carry_matrix(base: usize, dimension: usize) -> Result<JsValue, JsValue> {
     let value = mrlyrs::math::counts::ladder::carry_matrix(base, dimension).map_err(hand::throw)?;
-    hand::list_to_js(&value, |x1| hand::list_to_js(x1, |x2| Ok(JsValue::from_str(&x2.to_string()))))
+    hand::list_to_js(&value, |x1| {
+        hand::list_to_js(x1, |x2| Ok(JsValue::from_str(&x2.to_string())))
+    })
 }
 
 /// The monic characteristic polynomial of a square integer matrix, highest power first.
@@ -1422,7 +1633,8 @@ pub fn counts_ladder_determinant(rows: JsValue) -> Result<JsValue, JsValue> {
 /// The digit polynomial of the base-`q` middle-digit design in dimension `D`, lowest power first.
 #[wasm_bindgen]
 pub fn counts_ladder_digit_polynomial(base: usize, dimension: usize) -> Result<JsValue, JsValue> {
-    let value = mrlyrs::math::counts::ladder::digit_polynomial(base, dimension).map_err(hand::throw)?;
+    let value =
+        mrlyrs::math::counts::ladder::digit_polynomial(base, dimension).map_err(hand::throw)?;
     hand::list_to_js(&value, |x1| Ok(JsValue::from_str(&x1.to_string())))
 }
 
@@ -1430,7 +1642,9 @@ pub fn counts_ladder_digit_polynomial(base: usize, dimension: usize) -> Result<J
 #[wasm_bindgen]
 pub fn counts_ladder_even_block(base: usize, dimension: usize) -> Result<JsValue, JsValue> {
     let value = mrlyrs::math::counts::ladder::even_block(base, dimension).map_err(hand::throw)?;
-    hand::list_to_js(&value, |x1| hand::list_to_js(x1, |x2| Ok(JsValue::from_str(&x2.to_string()))))
+    hand::list_to_js(&value, |x1| {
+        hand::list_to_js(x1, |x2| Ok(JsValue::from_str(&x2.to_string())))
+    })
 }
 
 /// The count of level-one cells the design keeps, `f_D = (q - 1)^(D-1) (q - 1 + D)`.
@@ -1442,8 +1656,13 @@ pub fn counts_ladder_fill(base: usize, dimension: usize) -> Result<JsValue, JsVa
 
 /// The counts `a_D(L)` of level-`L` cells meeting the central diagonal hyperplane, from `L = 0`.
 #[wasm_bindgen]
-pub fn counts_ladder_ladder(base: usize, dimension: usize, levels: usize) -> Result<JsValue, JsValue> {
-    let value = mrlyrs::math::counts::ladder::ladder(base, dimension, levels).map_err(hand::throw)?;
+pub fn counts_ladder_ladder(
+    base: usize,
+    dimension: usize,
+    levels: usize,
+) -> Result<JsValue, JsValue> {
+    let value =
+        mrlyrs::math::counts::ladder::ladder(base, dimension, levels).map_err(hand::throw)?;
     hand::list_to_js(&value, |x1| Ok(JsValue::from_str(&x1.to_string())))
 }
 
@@ -1465,7 +1684,8 @@ pub fn counts_ladder_sign(base: usize, dimension: usize) -> Result<i32, JsValue>
 /// The Perron root over the modulus of the second eigenvalue, or none where the block is one wide.
 #[wasm_bindgen]
 pub fn counts_ladder_spectral_ratio(base: usize, dimension: usize) -> Result<JsValue, JsValue> {
-    let value = mrlyrs::math::counts::ladder::spectral_ratio(base, dimension).map_err(hand::throw)?;
+    let value =
+        mrlyrs::math::counts::ladder::spectral_ratio(base, dimension).map_err(hand::throw)?;
     hand::to_js(&value)
 }
 
@@ -1479,10 +1699,18 @@ pub fn counts_ladder_trace(rows: JsValue) -> Result<JsValue, JsValue> {
 
 /// Returns the fill ratio the code walks toward as the side number grows, reduced.
 #[wasm_bindgen]
-pub fn counts_limit(code: JsValue, dimension: usize, level: u32, base: usize) -> Result<JsValue, JsValue> {
+pub fn counts_limit(
+    code: JsValue,
+    dimension: usize,
+    level: u32,
+    base: usize,
+) -> Result<JsValue, JsValue> {
     let code = hand::code_from_js(&code)?;
     let value = mrlyrs::math::counts::limit(code, dimension, level, base).map_err(hand::throw)?;
-    Ok(hand::tuple_to_js(&[JsValue::from_str(&value.0.to_string()), JsValue::from_str(&value.1.to_string())]))
+    Ok(hand::tuple_to_js(&[
+        JsValue::from_str(&value.0.to_string()),
+        JsValue::from_str(&value.1.to_string()),
+    ]))
 }
 
 /// Counts, per axis, the adjacent filled pairs and the cross positions whose two end cells are both filled.
@@ -1490,7 +1718,12 @@ pub fn counts_limit(code: JsValue, dimension: usize, level: u32, base: usize) ->
 pub fn counts_pairs(tile: JsValue) -> Result<JsValue, JsValue> {
     let tile = hand::tensor_from_js(&tile)?;
     let value = mrlyrs::math::counts::pairs(&tile);
-    hand::list_to_js(&value, |x1| Ok(hand::tuple_to_js(&[JsValue::from_str(&x1.0.to_string()), JsValue::from_str(&x1.1.to_string())])))
+    hand::list_to_js(&value, |x1| {
+        Ok(hand::tuple_to_js(&[
+            JsValue::from_str(&x1.0.to_string()),
+            JsValue::from_str(&x1.1.to_string()),
+        ]))
+    })
 }
 
 /// Counts the indices below number that equal residue modulo base.
@@ -1526,18 +1759,35 @@ pub fn counts_profile_of_tile(tile: JsValue, level: u32) -> Result<JsValue, JsVa
 
 /// Returns the filled fraction of the grid, or 0.0 for an empty grid.
 #[wasm_bindgen]
-pub fn counts_ratio(code: JsValue, number: usize, dimension: usize, level: u32, base: usize) -> Result<f64, JsValue> {
+pub fn counts_ratio(
+    code: JsValue,
+    number: usize,
+    dimension: usize,
+    level: u32,
+    base: usize,
+) -> Result<f64, JsValue> {
     let code = hand::code_from_js(&code)?;
-    let value = mrlyrs::math::counts::ratio(code, number, dimension, level, base).map_err(hand::throw)?;
+    let value =
+        mrlyrs::math::counts::ratio(code, number, dimension, level, base).map_err(hand::throw)?;
     Ok(value)
 }
 
 /// Returns the exact filled fraction as a fraction of fill over grid, reduced.
 #[wasm_bindgen]
-pub fn counts_rational(code: JsValue, number: usize, dimension: usize, level: u32, base: usize) -> Result<JsValue, JsValue> {
+pub fn counts_rational(
+    code: JsValue,
+    number: usize,
+    dimension: usize,
+    level: u32,
+    base: usize,
+) -> Result<JsValue, JsValue> {
     let code = hand::code_from_js(&code)?;
-    let value = mrlyrs::math::counts::rational(code, number, dimension, level, base).map_err(hand::throw)?;
-    Ok(hand::tuple_to_js(&[JsValue::from_str(&value.0.to_string()), JsValue::from_str(&value.1.to_string())]))
+    let value = mrlyrs::math::counts::rational(code, number, dimension, level, base)
+        .map_err(hand::throw)?;
+    Ok(hand::tuple_to_js(&[
+        JsValue::from_str(&value.0.to_string()),
+        JsValue::from_str(&value.1.to_string()),
+    ]))
 }
 
 /// Returns the triangles of the full hexagon with side number to the level.
@@ -1598,7 +1848,12 @@ pub fn counts_six_solid_slice_vertices(number: usize) -> Result<JsValue, JsValue
 
 /// Returns the exposed face count of the code's 3D fractal at the given level.
 #[wasm_bindgen]
-pub fn counts_surface(code: JsValue, number: usize, level: u32, base: usize) -> Result<JsValue, JsValue> {
+pub fn counts_surface(
+    code: JsValue,
+    number: usize,
+    level: u32,
+    base: usize,
+) -> Result<JsValue, JsValue> {
     let code = hand::code_from_js(&code)?;
     let value = mrlyrs::math::counts::surface(code, number, level, base).map_err(hand::throw)?;
     Ok(JsValue::from_str(&value.to_string()))
@@ -1606,9 +1861,16 @@ pub fn counts_surface(code: JsValue, number: usize, level: u32, base: usize) -> 
 
 /// Returns the empty cell count, grid minus fill.
 #[wasm_bindgen]
-pub fn counts_void(code: JsValue, number: usize, dimension: usize, level: u32, base: usize) -> Result<JsValue, JsValue> {
+pub fn counts_void(
+    code: JsValue,
+    number: usize,
+    dimension: usize,
+    level: u32,
+    base: usize,
+) -> Result<JsValue, JsValue> {
     let code = hand::code_from_js(&code)?;
-    let value = mrlyrs::math::counts::void(code, number, dimension, level, base).map_err(hand::throw)?;
+    let value =
+        mrlyrs::math::counts::void(code, number, dimension, level, base).map_err(hand::throw)?;
     Ok(JsValue::from_str(&value.to_string()))
 }
 
@@ -1696,7 +1958,9 @@ pub fn graph_tunnel_graph(grid: JsValue) -> Result<graph_Network, JsValue> {
 #[wasm_bindgen]
 pub fn moire_all(limit: usize) -> Result<JsValue, JsValue> {
     let value = mrlyrs::math::moire::all(limit);
-    hand::list_to_js(&value, |x1| Ok(JsValue::from(moire_Preset { inner: x1.clone() })))
+    hand::list_to_js(&value, |x1| {
+        Ok(JsValue::from(moire_Preset { inner: x1.clone() }))
+    })
 }
 
 /// Frames the plane normal to the direction, at the offset from zero to one across the box along it; the window is the smallest square holding every section on that normal.
@@ -1745,9 +2009,18 @@ pub fn moire_pairs_witness(scale: usize) -> Result<JsValue, JsValue> {
 
 /// Quantizes a field into colored levels and encodes PNG bytes.
 #[wasm_bindgen]
-pub fn moire_render(field: &moire_Field, colorizer: JsValue, levels: usize, symmetric: bool, invert: bool, scale: usize) -> Result<Vec<u8>, JsValue> {
+pub fn moire_render(
+    field: &moire_Field,
+    colorizer: JsValue,
+    levels: usize,
+    symmetric: bool,
+    invert: bool,
+    scale: usize,
+) -> Result<Vec<u8>, JsValue> {
     let colorizer = hand::from_js::<mrlyrs::core::Colorizer>(&colorizer)?;
-    let value = mrlyrs::math::moire::render(&field.inner, &colorizer, levels, symmetric, invert, scale).map_err(hand::throw)?;
+    let value =
+        mrlyrs::math::moire::render(&field.inner, &colorizer, levels, symmetric, invert, scale)
+            .map_err(hand::throw)?;
     Ok(value)
 }
 
@@ -1756,14 +2029,22 @@ pub fn moire_render(field: &moire_Field, colorizer: JsValue, levels: usize, symm
 pub fn moire_sample_axes(size: usize, lattice: JsValue, row: usize) -> Result<JsValue, JsValue> {
     let lattice = hand::from_js::<mrlyrs::math::moire::Lattice>(&lattice)?;
     let value = mrlyrs::math::moire::sample::axes(size, lattice, row);
-    Ok(hand::tuple_to_js(&[hand::typed(&(value.0)[..]), hand::typed(&(value.1)[..])]))
+    Ok(hand::tuple_to_js(&[
+        hand::typed(&(value.0)[..]),
+        hand::typed(&(value.1)[..]),
+    ]))
 }
 
 /// Unpacks a code into its residue-corner truth table.
 #[wasm_bindgen]
-pub fn moire_sample_membership(code: JsValue, base: usize, dimension: usize) -> Result<JsValue, JsValue> {
+pub fn moire_sample_membership(
+    code: JsValue,
+    base: usize,
+    dimension: usize,
+) -> Result<JsValue, JsValue> {
     let code = hand::u128_from_js(&code)?;
-    let value = mrlyrs::math::moire::sample::membership(code, base, dimension).map_err(hand::throw)?;
+    let value =
+        mrlyrs::math::moire::sample::membership(code, base, dimension).map_err(hand::throw)?;
     hand::to_js(&value)
 }
 
@@ -1776,35 +2057,63 @@ pub fn moire_sample_pack(residues: &[usize], base: usize) -> Result<usize, JsVal
 
 /// Layers one design at several side numbers into a field under the chosen combine.
 #[wasm_bindgen]
-pub fn moire_stack(spec: JsValue, numbers: &[usize], combine: JsValue, level: usize, lattice: JsValue, size: usize, slices: &[f64]) -> Result<moire_Field, JsValue> {
+pub fn moire_stack(
+    spec: JsValue,
+    numbers: &[usize],
+    combine: JsValue,
+    level: usize,
+    lattice: JsValue,
+    size: usize,
+    slices: &[f64],
+) -> Result<moire_Field, JsValue> {
     let spec = hand::from_js::<mrlyrs::math::moire::Spec>(&spec)?;
     let combine = hand::from_js::<mrlyrs::math::moire::Combine>(&combine)?;
     let lattice = hand::from_js::<mrlyrs::math::moire::Lattice>(&lattice)?;
-    let value = mrlyrs::math::moire::stack(spec, numbers, combine, level, lattice, size, slices).map_err(hand::throw)?;
+    let value = mrlyrs::math::moire::stack(spec, numbers, combine, level, lattice, size, slices)
+        .map_err(hand::throw)?;
     Ok(moire_Field { inner: value })
 }
 
 /// Sums layers of several designs at one side number into a field.
 #[wasm_bindgen]
-pub fn moire_stack_codes(specs: JsValue, number: usize, level: usize, lattice: JsValue, size: usize, slices: &[f64]) -> Result<moire_Field, JsValue> {
+pub fn moire_stack_codes(
+    specs: JsValue,
+    number: usize,
+    level: usize,
+    lattice: JsValue,
+    size: usize,
+    slices: &[f64],
+) -> Result<moire_Field, JsValue> {
     let specs = hand::from_js::<Vec<mrlyrs::math::moire::Spec>>(&specs)?;
     let lattice = hand::from_js::<mrlyrs::math::moire::Lattice>(&lattice)?;
-    let value = mrlyrs::math::moire::stack_codes(&specs, number, level, lattice, size, slices).map_err(hand::throw)?;
+    let value = mrlyrs::math::moire::stack_codes(&specs, number, level, lattice, size, slices)
+        .map_err(hand::throw)?;
     Ok(moire_Field { inner: value })
 }
 
 /// Layers one cube design at several side numbers into a volume under the chosen combine.
 #[wasm_bindgen]
-pub fn moire_volume(spec: JsValue, numbers: &[usize], combine: JsValue, level: usize, size: usize) -> Result<moire_Volume, JsValue> {
+pub fn moire_volume(
+    spec: JsValue,
+    numbers: &[usize],
+    combine: JsValue,
+    level: usize,
+    size: usize,
+) -> Result<moire_Volume, JsValue> {
     let spec = hand::from_js::<mrlyrs::math::moire::Spec>(&spec)?;
     let combine = hand::from_js::<mrlyrs::math::moire::Combine>(&combine)?;
-    let value = mrlyrs::math::moire::volume(spec, numbers, combine, level, size).map_err(hand::throw)?;
+    let value =
+        mrlyrs::math::moire::volume(spec, numbers, combine, level, size).map_err(hand::throw)?;
     Ok(moire_Volume { inner: value })
 }
 
 /// Returns the number of designs of the dimension and base that contain the number.
 #[wasm_bindgen]
-pub fn press_containing(number: JsValue, dimension: usize, base: usize) -> Result<JsValue, JsValue> {
+pub fn press_containing(
+    number: JsValue,
+    dimension: usize,
+    base: usize,
+) -> Result<JsValue, JsValue> {
     let number = hand::u128_from_js(&number)?;
     let value = mrlyrs::math::press::containing(number, dimension, base).map_err(hand::throw)?;
     Ok(JsValue::from_str(&value.to_string()))
@@ -1812,7 +2121,11 @@ pub fn press_containing(number: JsValue, dimension: usize, base: usize) -> Resul
 
 /// Splits a number into its dimension coordinates, one base digit peeled per axis in parallel.
 #[wasm_bindgen]
-pub fn press_coordinates(number: JsValue, dimension: usize, base: usize) -> Result<JsValue, JsValue> {
+pub fn press_coordinates(
+    number: JsValue,
+    dimension: usize,
+    base: usize,
+) -> Result<JsValue, JsValue> {
     let number = hand::u128_from_js(&number)?;
     let value = mrlyrs::math::press::coordinates(number, dimension, base).map_err(hand::throw)?;
     hand::list_to_js(&value, |x1| Ok(JsValue::from_str(&x1.to_string())))
@@ -1820,10 +2133,16 @@ pub fn press_coordinates(number: JsValue, dimension: usize, base: usize) -> Resu
 
 /// Counts the members of a design below the limit.
 #[wasm_bindgen]
-pub fn press_count_below(code: JsValue, dimension: usize, base: usize, limit: JsValue) -> Result<JsValue, JsValue> {
+pub fn press_count_below(
+    code: JsValue,
+    dimension: usize,
+    base: usize,
+    limit: JsValue,
+) -> Result<JsValue, JsValue> {
     let code = hand::code_from_js(&code)?;
     let limit = hand::u128_from_js(&limit)?;
-    let value = mrlyrs::math::press::count_below(code, dimension, base, limit).map_err(hand::throw)?;
+    let value =
+        mrlyrs::math::press::count_below(code, dimension, base, limit).map_err(hand::throw)?;
     Ok(JsValue::from_str(&value.to_string()))
 }
 
@@ -1853,7 +2172,12 @@ pub fn press_layer_table(layer: JsValue) -> Result<JsValue, JsValue> {
 
 /// Returns whether every digit vector of the number lies in the design.
 #[wasm_bindgen]
-pub fn press_member(code: JsValue, number: JsValue, dimension: usize, base: usize) -> Result<bool, JsValue> {
+pub fn press_member(
+    code: JsValue,
+    number: JsValue,
+    dimension: usize,
+    base: usize,
+) -> Result<bool, JsValue> {
     let code = hand::code_from_js(&code)?;
     let number = hand::u128_from_js(&number)?;
     let value = mrlyrs::math::press::member(code, number, dimension, base).map_err(hand::throw)?;
@@ -1862,7 +2186,12 @@ pub fn press_member(code: JsValue, number: JsValue, dimension: usize, base: usiz
 
 /// Returns the first members of a design in ascending order.
 #[wasm_bindgen]
-pub fn press_members(code: JsValue, dimension: usize, base: usize, count: usize) -> Result<JsValue, JsValue> {
+pub fn press_members(
+    code: JsValue,
+    dimension: usize,
+    base: usize,
+    count: usize,
+) -> Result<JsValue, JsValue> {
     let code = hand::code_from_js(&code)?;
     let value = mrlyrs::math::press::members(code, dimension, base, count).map_err(hand::throw)?;
     hand::list_to_js(&value, |x1| Ok(JsValue::from_str(&x1.to_string())))
@@ -1870,7 +2199,12 @@ pub fn press_members(code: JsValue, dimension: usize, base: usize, count: usize)
 
 /// Returns the diagonal slice profile of one design pressed to a fractal level.
 #[wasm_bindgen]
-pub fn press_profile(code: JsValue, dimension: usize, base: usize, level: usize) -> Result<JsValue, JsValue> {
+pub fn press_profile(
+    code: JsValue,
+    dimension: usize,
+    base: usize,
+    level: usize,
+) -> Result<JsValue, JsValue> {
     let code = hand::code_from_js(&code)?;
     let value = mrlyrs::math::press::profile(code, dimension, base, level).map_err(hand::throw)?;
     hand::list_to_js(&value, |x1| Ok(JsValue::from_str(&x1.to_string())))
@@ -1919,10 +2253,16 @@ pub fn press_word_profile(layers: JsValue) -> Result<JsValue, JsValue> {
 
 /// Counts the nodes of the roulette the pencils draw on the track: `mrlyrs::math::spirograph::trace` at `samples` points a pencil, every pair of polyline segments tested for a proper crossing by orientation signs on a grid of buckets, and crossings within `tol` of the picture's longer side read as one node. A pair of segments is counted in one bucket alone, the first they share, so no crossing is counted twice; the sign of an orientation is `side`, exact for any endpoints whose two differences are exact, which two `f32` endpoints are while the picture's coordinates keep their exponents within 29 of one another, as these pictures do. A seat at the wheel's centre draws one circle `b` times over and the count is meaningless there, the passes crossing one another as the sampling wanders.
 #[wasm_bindgen]
-pub fn roulette_nodes(track: JsValue, pencils: JsValue, samples: usize, tol: f64) -> Result<roulette_Nodes, JsValue> {
+pub fn roulette_nodes(
+    track: JsValue,
+    pencils: JsValue,
+    samples: usize,
+    tol: f64,
+) -> Result<roulette_Nodes, JsValue> {
     let track = hand::from_js::<mrlyrs::math::spirograph::Track>(&track)?;
     let pencils = hand::from_js::<Vec<mrlyrs::math::spirograph::Pencil>>(&pencils)?;
-    let value = mrlyrs::math::roulette::nodes(&track, &pencils, samples, tol).map_err(hand::throw)?;
+    let value =
+        mrlyrs::math::roulette::nodes(&track, &pencils, samples, tol).map_err(hand::throw)?;
     Ok(roulette_Nodes { inner: value })
 }
 
@@ -1947,9 +2287,15 @@ pub fn roulette_spread(track: JsValue, pencils: JsValue, exact: bool) -> Result<
 
 /// Builds a hypercube of the given side and rank, marking each cell whose coordinate residues are in the filled list.
 #[wasm_bindgen]
-pub fn rules_render(filled: JsValue, number: usize, dimension: usize, base: usize) -> Result<JsValue, JsValue> {
+pub fn rules_render(
+    filled: JsValue,
+    number: usize,
+    dimension: usize,
+    base: usize,
+) -> Result<JsValue, JsValue> {
     let filled = hand::from_js::<Vec<Vec<u8>>>(&filled)?;
-    let value = mrlyrs::math::rules::render(&filled, number, dimension, base).map_err(hand::throw)?;
+    let value =
+        mrlyrs::math::rules::render(&filled, number, dimension, base).map_err(hand::throw)?;
     hand::tensor_to_js(&value)
 }
 
@@ -1988,16 +2334,29 @@ pub fn shape_crop(types: JsValue, shape: JsValue, keep_cut: bool) -> Result<JsVa
 
 /// Lists the level-`level` boxes the circle of radius `radius` crosses, in the arc's own order.
 #[wasm_bindgen]
-pub fn shape_crossing_shell(radius: JsValue, number: JsValue, level: u32) -> Result<JsValue, JsValue> {
+pub fn shape_crossing_shell(
+    radius: JsValue,
+    number: JsValue,
+    level: u32,
+) -> Result<JsValue, JsValue> {
     let radius = hand::u64_from_js(&radius)?;
     let number = hand::u64_from_js(&number)?;
     let value = mrlyrs::math::shape::crossing_shell(radius, number, level);
-    hand::list_to_js(&value, |x1| Ok(hand::tuple_to_js(&[JsValue::from(x1.0), JsValue::from(x1.1)])))
+    hand::list_to_js(&value, |x1| {
+        Ok(hand::tuple_to_js(&[
+            JsValue::from(x1.0),
+            JsValue::from(x1.1),
+        ]))
+    })
 }
 
 /// Builds the whole crossing tree of one radius, pruned by the seats the design keeps.
 #[wasm_bindgen]
-pub fn shape_crossing_tree(radius: JsValue, number: JsValue, keep: JsValue) -> Result<JsValue, JsValue> {
+pub fn shape_crossing_tree(
+    radius: JsValue,
+    number: JsValue,
+    keep: JsValue,
+) -> Result<JsValue, JsValue> {
     let radius = hand::u64_from_js(&radius)?;
     let number = hand::u64_from_js(&number)?;
     let keep = hand::from_js::<Vec<bool>>(&keep)?;
@@ -2014,7 +2373,11 @@ pub fn shape_named(name: &str, dimension: usize, radius: &shape_Frac) -> Result<
 
 /// Counts a design's filled cells against every integer radius about one centre, in exact integer arithmetic.
 #[wasm_bindgen]
-pub fn shape_radial_census(types: JsValue, centre: JsValue, r_max: JsValue) -> Result<JsValue, JsValue> {
+pub fn shape_radial_census(
+    types: JsValue,
+    centre: JsValue,
+    r_max: JsValue,
+) -> Result<JsValue, JsValue> {
     let types = hand::tensor_from_js(&types)?;
     let centre = hand::list_from_js(&centre, hand::i64_from_js)?;
     let r_max = hand::u64_from_js(&r_max)?;
@@ -2024,10 +2387,17 @@ pub fn shape_radial_census(types: JsValue, centre: JsValue, r_max: JsValue) -> R
 
 /// Replicates each design cell base to the extra per axis and keeps a sub-cell only where its own region passes.
 #[wasm_bindgen]
-pub fn shape_refine(types: JsValue, shape: JsValue, base: usize, extra: usize, keep_cut: bool) -> Result<JsValue, JsValue> {
+pub fn shape_refine(
+    types: JsValue,
+    shape: JsValue,
+    base: usize,
+    extra: usize,
+    keep_cut: bool,
+) -> Result<JsValue, JsValue> {
     let types = hand::tensor_from_js(&types)?;
     let shape = hand::from_js::<mrlyrs::math::shape::Shape>(&shape)?;
-    let value = mrlyrs::math::shape::refine(&types, &shape, base, extra, keep_cut).map_err(hand::throw)?;
+    let value =
+        mrlyrs::math::shape::refine(&types, &shape, base, extra, keep_cut).map_err(hand::throw)?;
     hand::tensor_to_js(&value)
 }
 
@@ -2113,7 +2483,12 @@ pub fn six_cut(cell: JsValue) -> Result<JsValue, JsValue> {
 
 /// Builds the coded 3d design and slices its central hexagon.
 #[wasm_bindgen]
-pub fn six_cut_design(code: JsValue, number: usize, level: usize, base: usize) -> Result<JsValue, JsValue> {
+pub fn six_cut_design(
+    code: JsValue,
+    number: usize,
+    level: usize,
+    base: usize,
+) -> Result<JsValue, JsValue> {
     let code = hand::code_from_js(&code)?;
     let value = mrlyrs::math::six::cut_design(code, number, level, base).map_err(hand::throw)?;
     hand::cell6d_to_js(&value)
@@ -2125,7 +2500,12 @@ pub fn six_east(x: JsValue, y: JsValue) -> Result<JsValue, JsValue> {
     let x = hand::i64_from_js(&x)?;
     let y = hand::i64_from_js(&y)?;
     let value = mrlyrs::math::six::east(x, y);
-    hand::list_to_js(&value, |x1| Ok(hand::tuple_to_js(&[JsValue::from(x1.0), JsValue::from(x1.1)])))
+    hand::list_to_js(&value, |x1| {
+        Ok(hand::tuple_to_js(&[
+            JsValue::from(x1.0),
+            JsValue::from(x1.1),
+        ]))
+    })
 }
 
 /// Returns the Euler characteristic of the cell's mesh, counting the backdrop only on request.
@@ -2225,7 +2605,12 @@ pub fn six_iso(cell: JsValue) -> Result<JsValue, JsValue> {
 
 /// Builds the coded 3d design and projects it isometrically.
 #[wasm_bindgen]
-pub fn six_iso_design(code: JsValue, number: usize, level: usize, base: usize) -> Result<JsValue, JsValue> {
+pub fn six_iso_design(
+    code: JsValue,
+    number: usize,
+    level: usize,
+    base: usize,
+) -> Result<JsValue, JsValue> {
     let code = hand::code_from_js(&code)?;
     let value = mrlyrs::math::six::iso_design(code, number, level, base).map_err(hand::throw)?;
     hand::cell6d_to_js(&value)
@@ -2233,7 +2618,12 @@ pub fn six_iso_design(code: JsValue, number: usize, level: usize, base: usize) -
 
 /// Builds a cell from its four parts.
 #[wasm_bindgen]
-pub fn six_new(cell: JsValue, projection: JsValue, orientation: JsValue, start: u8) -> Result<JsValue, JsValue> {
+pub fn six_new(
+    cell: JsValue,
+    projection: JsValue,
+    orientation: JsValue,
+    start: u8,
+) -> Result<JsValue, JsValue> {
     let cell = hand::cell2d_from_js(&cell)?;
     let projection = hand::from_js::<mrlyrs::math::six::Projection>(&projection)?;
     let orientation = hand::from_js::<mrlyrs::math::six::Orientation>(&orientation)?;
@@ -2247,7 +2637,12 @@ pub fn six_north(x: JsValue, y: JsValue) -> Result<JsValue, JsValue> {
     let x = hand::i64_from_js(&x)?;
     let y = hand::i64_from_js(&y)?;
     let value = mrlyrs::math::six::north(x, y);
-    hand::list_to_js(&value, |x1| Ok(hand::tuple_to_js(&[JsValue::from(x1.0), JsValue::from(x1.1)])))
+    hand::list_to_js(&value, |x1| {
+        Ok(hand::tuple_to_js(&[
+            JsValue::from(x1.0),
+            JsValue::from(x1.1),
+        ]))
+    })
 }
 
 /// Returns the orientation a hexagon's width and height imply.
@@ -2267,13 +2662,23 @@ pub fn six_pad(cell: JsValue, k: usize, value: u8) -> Result<JsValue, JsValue> {
 
 /// Colors each triangle by its type through the custom or default mapping in the given or type mode.
 #[wasm_bindgen]
-pub fn six_paint(cell: JsValue, custom: JsValue, mode: JsValue, rng: JsValue) -> Result<JsValue, JsValue> {
+pub fn six_paint(
+    cell: JsValue,
+    custom: JsValue,
+    mode: JsValue,
+    rng: JsValue,
+) -> Result<JsValue, JsValue> {
     let cell = hand::cell6d_from_js(&cell)?;
-    let custom = hand::option_from_js(&custom, |x1| hand::map_from_js::<u8, _>(x1, |x2| hand::list_from_js(x2, hand::color_from_js)))?;
+    let custom = hand::option_from_js(&custom, |x1| {
+        hand::map_from_js::<u8, _>(x1, |x2| hand::list_from_js(x2, hand::color_from_js))
+    })?;
     let mode = hand::from_js::<Option<mrlyrs::core::Mode>>(&mode)?;
     let mut rng_stream = hand::stream_from_js(&rng)?;
-    let value = mrlyrs::math::six::paint(cell, custom.as_ref(), mode, rng_stream.as_mut()).map_err(hand::throw)?;
-    if let Some(stream) = &rng_stream { hand::stream_to_js(&rng, stream)?; }
+    let value = mrlyrs::math::six::paint(cell, custom.as_ref(), mode, rng_stream.as_mut())
+        .map_err(hand::throw)?;
+    if let Some(stream) = &rng_stream {
+        hand::stream_to_js(&rng, stream)?;
+    }
     hand::cell6d_to_js(&value)
 }
 
@@ -2288,7 +2693,12 @@ pub fn six_perforate(cell: JsValue, mask: JsValue, value: u8) -> Result<JsValue,
 
 /// Rasters a cell's triangles to PNG bytes at the given scale, stroked and padded when an outline is given.
 #[wasm_bindgen]
-pub fn six_png(cell: JsValue, scale: usize, outline: JsValue, width: usize) -> Result<Vec<u8>, JsValue> {
+pub fn six_png(
+    cell: JsValue,
+    scale: usize,
+    outline: JsValue,
+    width: usize,
+) -> Result<Vec<u8>, JsValue> {
     let cell = hand::cell6d_from_js(&cell)?;
     let outline = hand::option_from_js(&outline, hand::color_from_js)?;
     let value = mrlyrs::math::six::png(&cell, scale, outline, width).map_err(hand::throw)?;
@@ -2305,7 +2715,12 @@ pub fn six_pro(cell: JsValue) -> Result<JsValue, JsValue> {
 
 /// Builds the coded 3d design and projects its facing sides.
 #[wasm_bindgen]
-pub fn six_pro_design(code: JsValue, number: usize, level: usize, base: usize) -> Result<JsValue, JsValue> {
+pub fn six_pro_design(
+    code: JsValue,
+    number: usize,
+    level: usize,
+    base: usize,
+) -> Result<JsValue, JsValue> {
     let code = hand::code_from_js(&code)?;
     let value = mrlyrs::math::six::pro_design(code, number, level, base).map_err(hand::throw)?;
     hand::cell6d_to_js(&value)
@@ -2417,7 +2832,12 @@ pub fn six_south(x: JsValue, y: JsValue) -> Result<JsValue, JsValue> {
     let x = hand::i64_from_js(&x)?;
     let y = hand::i64_from_js(&y)?;
     let value = mrlyrs::math::six::south(x, y);
-    hand::list_to_js(&value, |x1| Ok(hand::tuple_to_js(&[JsValue::from(x1.0), JsValue::from(x1.1)])))
+    hand::list_to_js(&value, |x1| {
+        Ok(hand::tuple_to_js(&[
+            JsValue::from(x1.0),
+            JsValue::from(x1.1),
+        ]))
+    })
 }
 
 /// Reads the spectral dimension of the giant piece: twice the low-window log-log slope of the normalised Laplacian's integrated density of states.
@@ -2465,7 +2885,13 @@ pub fn six_star_width_law(half: usize) -> Result<f64, JsValue> {
 
 /// Renders a cell's triangles to an SVG string at the given scale, stroked and padded when an outline is given.
 #[wasm_bindgen]
-pub fn six_svg(cell: JsValue, scale: usize, outline: JsValue, width: usize, start: JsValue) -> Result<String, JsValue> {
+pub fn six_svg(
+    cell: JsValue,
+    scale: usize,
+    outline: JsValue,
+    width: usize,
+    start: JsValue,
+) -> Result<String, JsValue> {
     let cell = hand::cell6d_from_js(&cell)?;
     let outline = hand::option_from_js(&outline, hand::color_from_js)?;
     let start = hand::from_js::<Option<usize>>(&start)?;
@@ -2492,7 +2918,12 @@ pub fn six_tile(cell: JsValue, width: usize, height: usize) -> Result<JsValue, J
 
 /// Tessellates a hexagon over a full width-by-height mask and returns the sheet as a projected cell, cropped to the interlocking rectangle on request.
 #[wasm_bindgen]
-pub fn six_tile_cell(cell: JsValue, width: usize, height: usize, crop: bool) -> Result<JsValue, JsValue> {
+pub fn six_tile_cell(
+    cell: JsValue,
+    width: usize,
+    height: usize,
+    crop: bool,
+) -> Result<JsValue, JsValue> {
     let cell = hand::cell6d_from_js(&cell)?;
     let value = mrlyrs::math::six::tile_cell(&cell, width, height, crop).map_err(hand::throw)?;
     hand::cell6d_to_js(&value)
@@ -2529,7 +2960,17 @@ pub fn six_triangles(cell: JsValue, start: JsValue) -> Result<JsValue, JsValue> 
     let cell = hand::cell6d_from_js(&cell)?;
     let start = hand::from_js::<Option<usize>>(&start)?;
     let value = mrlyrs::math::six::triangles(&cell, start).map_err(hand::throw)?;
-    hand::list_to_js(&value, |x1| Ok(hand::tuple_to_js(&[hand::list_to_js(&x1.0, |x3| Ok(hand::tuple_to_js(&[JsValue::from(x3.0), JsValue::from(x3.1)])))?, hand::typed(&(x1.1)[..])])))
+    hand::list_to_js(&value, |x1| {
+        Ok(hand::tuple_to_js(&[
+            hand::list_to_js(&x1.0, |x3| {
+                Ok(hand::tuple_to_js(&[
+                    JsValue::from(x3.0),
+                    JsValue::from(x3.1),
+                ]))
+            })?,
+            hand::typed(&(x1.1)[..]),
+        ]))
+    })
 }
 
 /// The three corners of the west-pointing triangle at the grid column and row.
@@ -2538,7 +2979,12 @@ pub fn six_west(x: JsValue, y: JsValue) -> Result<JsValue, JsValue> {
     let x = hand::i64_from_js(&x)?;
     let y = hand::i64_from_js(&y)?;
     let value = mrlyrs::math::six::west(x, y);
-    hand::list_to_js(&value, |x1| Ok(hand::tuple_to_js(&[JsValue::from(x1.0), JsValue::from(x1.1)])))
+    hand::list_to_js(&value, |x1| {
+        Ok(hand::tuple_to_js(&[
+            JsValue::from(x1.0),
+            JsValue::from(x1.1),
+        ]))
+    })
 }
 
 /// Returns the grid width in triangles.
@@ -2559,20 +3005,29 @@ pub fn spectrum_clusters(eigenvalues: &[f64], tolerance: f64) -> Result<JsValue,
 /// Builds the Laplacian of a network, the combinatorial `D - A` or the normalised `I - D^-1/2 A D^-1/2`.
 #[wasm_bindgen]
 pub fn spectrum_laplacian(network: &graph_Network, normalised: bool) -> Result<JsValue, JsValue> {
-    let value = mrlyrs::math::spectrum::laplacian(&network.inner, normalised).map_err(hand::throw)?;
+    let value =
+        mrlyrs::math::spectrum::laplacian(&network.inner, normalised).map_err(hand::throw)?;
     hand::list_to_js(&value, |x1| Ok(hand::typed(&(*x1)[..])))
 }
 
 /// Returns the ascending Laplacian spectrum of a network, combinatorial or normalised.
 #[wasm_bindgen]
-pub fn spectrum_laplacian_spectrum(network: &graph_Network, normalised: bool) -> Result<Vec<f64>, JsValue> {
-    let value = mrlyrs::math::spectrum::laplacian_spectrum(&network.inner, normalised).map_err(hand::throw)?;
+pub fn spectrum_laplacian_spectrum(
+    network: &graph_Network,
+    normalised: bool,
+) -> Result<Vec<f64>, JsValue> {
+    let value = mrlyrs::math::spectrum::laplacian_spectrum(&network.inner, normalised)
+        .map_err(hand::throw)?;
     Ok(value)
 }
 
 /// Counts the eigenvalues within the tolerance of a value.
 #[wasm_bindgen]
-pub fn spectrum_multiplicity(eigenvalues: &[f64], value: f64, tolerance: f64) -> Result<usize, JsValue> {
+pub fn spectrum_multiplicity(
+    eigenvalues: &[f64],
+    value: f64,
+    tolerance: f64,
+) -> Result<usize, JsValue> {
     let value = mrlyrs::math::spectrum::multiplicity(eigenvalues, value, tolerance);
     Ok(value)
 }
@@ -2615,7 +3070,12 @@ pub fn spin_arcs(data: &[f32], size: usize, radius: f64) -> Result<JsValue, JsVa
 
 /// The circular-harmonic power of a raster: for every order `m` up to the last, the energy `sum |c_m(r)|^2 2 pi r dr` of its `m`-th harmonic over rings radii, each ring's coefficient exact from its arcs.
 #[wasm_bindgen]
-pub fn spin_harmonics(data: &[f32], size: usize, rings: usize, orders: usize) -> Result<Vec<f64>, JsValue> {
+pub fn spin_harmonics(
+    data: &[f32],
+    size: usize,
+    rings: usize,
+    orders: usize,
+) -> Result<Vec<f64>, JsValue> {
     let value = mrlyrs::math::spin::harmonics(data, size, rings, orders).map_err(hand::throw)?;
     Ok(value)
 }
@@ -2650,9 +3110,18 @@ pub fn spin_profile(data: &[f32], size: usize, steps: usize) -> Result<Vec<f32>,
 
 /// Stacks a raster radially: copies turned by multiples of the step, in turns, about the centre and merged by the blend, on an output raster of the side whose inscribed circle is the source's corner circle, every pixel the mean of samples by samples points.
 #[wasm_bindgen]
-pub fn spin_radial(data: &[f32], size: usize, out: usize, copies: usize, step: f64, blend: JsValue, samples: usize) -> Result<Vec<f32>, JsValue> {
+pub fn spin_radial(
+    data: &[f32],
+    size: usize,
+    out: usize,
+    copies: usize,
+    step: f64,
+    blend: JsValue,
+    samples: usize,
+) -> Result<Vec<f32>, JsValue> {
     let blend = hand::from_js::<mrlyrs::math::spin::Blend>(&blend)?;
-    let value = mrlyrs::math::spin::radial(data, size, out, copies, step, blend, samples).map_err(hand::throw)?;
+    let value = mrlyrs::math::spin::radial(data, size, out, copies, step, blend, samples)
+        .map_err(hand::throw)?;
     Ok(value)
 }
 
@@ -2693,10 +3162,17 @@ pub fn spirograph_cell(width: usize, height: usize, reach: f64) -> Result<f64, J
 
 /// The shape between the walls of a circle roulette, on a raster of `side` by `side` pixels over the disc, row zero at the top and the ordinate falling down the rows. Every distinct curve under the coincidence law is drawn once as a polyline of at least `samples` points, and of enough points that consecutive points land in one pixel or in two of the eight that touch, so the polylines make a wall no four-connected flood crosses. One flood starts from every pixel of the raster's edge, the fluid poured from outside; one starts from the centre pixel, the fluid poured at the centre, and is empty when the centre is a wall or the outside already reached it; the shape is the rest of the disc, pockets included. `covered` is the shape's share of the disc's pixels, the wall's own pixels counted in and reported apart as `wall`, and `hole` is the centre flood's share. `winding` is the mean signed winding number of the disc's pixel centres, read off crossings of the same polylines by scanline and never off a flood, and `areas` is the closed form it converges to, the distinct curves' `signed_area` summed over the disc's area: the pair checks the polylines and the raster against Green's theorem and never the floods, which are guarded instead by the sample spacing of at most half a pixel, which makes the wall eight-connected and a four-connected flood unable to cross it. Every share carries a boundary error of the order of the polylines' length times the pixel side over the disc's area.
 #[wasm_bindgen]
-pub fn spirograph_cover(track: JsValue, pencils: JsValue, exact: bool, samples: usize, side: usize) -> Result<JsValue, JsValue> {
+pub fn spirograph_cover(
+    track: JsValue,
+    pencils: JsValue,
+    exact: bool,
+    samples: usize,
+    side: usize,
+) -> Result<JsValue, JsValue> {
     let track = hand::from_js::<mrlyrs::math::spirograph::Track>(&track)?;
     let pencils = hand::from_js::<Vec<mrlyrs::math::spirograph::Pencil>>(&pencils)?;
-    let value = mrlyrs::math::spirograph::cover(&track, &pencils, exact, samples, side).map_err(hand::throw)?;
+    let value = mrlyrs::math::spirograph::cover(&track, &pencils, exact, samples, side)
+        .map_err(hand::throw)?;
     hand::to_js(&value)
 }
 
@@ -2711,7 +3187,11 @@ pub fn spirograph_disc(track: JsValue, pencils: JsValue) -> Result<JsValue, JsVa
 
 /// How many classes `representatives` finds: the distinct curves on a circle track, the shapes up to a shift along a line track, one class per pencil on a polygon and under jitter.
 #[wasm_bindgen]
-pub fn spirograph_distinct(track: JsValue, pencils: JsValue, exact: bool) -> Result<usize, JsValue> {
+pub fn spirograph_distinct(
+    track: JsValue,
+    pencils: JsValue,
+    exact: bool,
+) -> Result<usize, JsValue> {
     let track = hand::from_js::<mrlyrs::math::spirograph::Track>(&track)?;
     let pencils = hand::from_js::<Vec<mrlyrs::math::spirograph::Pencil>>(&pencils)?;
     let value = mrlyrs::math::spirograph::distinct(&track, &pencils, exact);
@@ -2738,8 +3218,17 @@ pub fn spirograph_nodes(track: JsValue, pencils: JsValue, exact: bool) -> Result
 
 /// Seats one pencil per chosen site of a byte grid: `fill` the filled cells, `void` the empty ones, `both`, or `corners` the corners of the filled cells, each once. The tile is scaled so its circumradius is `reach` wheel radii, and `jitter` moves every seat by up to that fraction of a cell each way, seeded.
 #[wasm_bindgen]
-pub fn spirograph_pencils(types: &[u8], width: usize, height: usize, mode: &str, reach: f64, jitter: f64, seed: u32) -> Result<JsValue, JsValue> {
-    let value = mrlyrs::math::spirograph::pencils(types, width, height, mode, reach, jitter, seed).map_err(hand::throw)?;
+pub fn spirograph_pencils(
+    types: &[u8],
+    width: usize,
+    height: usize,
+    mode: &str,
+    reach: f64,
+    jitter: f64,
+    seed: u32,
+) -> Result<JsValue, JsValue> {
+    let value = mrlyrs::math::spirograph::pencils(types, width, height, mode, reach, jitter, seed)
+        .map_err(hand::throw)?;
     hand::to_js(&value)
 }
 
@@ -2762,7 +3251,11 @@ pub fn spirograph_pose(track: JsValue, s: f64) -> Result<JsValue, JsValue> {
 
 /// One pencil per class, the first index of every class in the order the pencils were seated. On a circle track the classes are the distinct curves, by the coincidence law on exact seats: two pencils draw one curve iff a rotation of a full turn over the ratio's denominator carries one seat to the other, which the square lattice allows only by half turns when the denominator is even and by quarter turns when four divides it. On a line track the classes are the seat radii, and those are shapes up to a shift, not curves: turning a seat by `gamma` slides its whole ribbon `gamma` wheel radii along the line while the ribbon's period is a full turn of the wheel, so two seats of one radius draw translates of one shape and share no point unless the seats are equal. On a polygon every pencil is its own class, and so is every pencil under jitter.
 #[wasm_bindgen]
-pub fn spirograph_representatives(track: JsValue, pencils: JsValue, exact: bool) -> Result<Vec<usize>, JsValue> {
+pub fn spirograph_representatives(
+    track: JsValue,
+    pencils: JsValue,
+    exact: bool,
+) -> Result<Vec<usize>, JsValue> {
     let track = hand::from_js::<mrlyrs::math::spirograph::Track>(&track)?;
     let pencils = hand::from_js::<Vec<mrlyrs::math::spirograph::Pencil>>(&pencils)?;
     let value = mrlyrs::math::spirograph::representatives(&track, &pencils, exact);
@@ -2788,7 +3281,11 @@ pub fn spirograph_signed_area(track: JsValue, pencil: JsValue) -> Result<JsValue
 
 /// Traces every pencil along the whole track at `samples` evenly spaced path lengths, first and last included: pencil by pencil, sample by sample, x then y.
 #[wasm_bindgen]
-pub fn spirograph_trace(track: JsValue, pencils: JsValue, samples: usize) -> Result<Vec<f32>, JsValue> {
+pub fn spirograph_trace(
+    track: JsValue,
+    pencils: JsValue,
+    samples: usize,
+) -> Result<Vec<f32>, JsValue> {
     let track = hand::from_js::<mrlyrs::math::spirograph::Track>(&track)?;
     let pencils = hand::from_js::<Vec<mrlyrs::math::spirograph::Pencil>>(&pencils)?;
     let value = mrlyrs::math::spirograph::trace(&track, &pencils, samples).map_err(hand::throw)?;
@@ -2797,8 +3294,15 @@ pub fn spirograph_trace(track: JsValue, pencils: JsValue, samples: usize) -> Res
 
 /// Lays a track: `line` a straight line under the wheel for `laps` turns; `in` and `out` a circle of radius `ring` with the wheel inside or outside, closing after the reduced denominator of `ring` over `wheel` orbits; `polyin` and `polyout` a regular polygon of `sides` sides and circumradius `ring` for `laps` laps.
 #[wasm_bindgen]
-pub fn spirograph_track(kind: &str, ring: usize, wheel: usize, sides: usize, laps: usize) -> Result<JsValue, JsValue> {
-    let value = mrlyrs::math::spirograph::track(kind, ring, wheel, sides, laps).map_err(hand::throw)?;
+pub fn spirograph_track(
+    kind: &str,
+    ring: usize,
+    wheel: usize,
+    sides: usize,
+    laps: usize,
+) -> Result<JsValue, JsValue> {
+    let value =
+        mrlyrs::math::spirograph::track(kind, ring, wheel, sides, laps).map_err(hand::throw)?;
     hand::to_js(&value)
 }
 
@@ -2839,13 +3343,20 @@ pub fn three_core_graph(cell: JsValue) -> Result<graph_Network, JsValue> {
             let value = mrlyrs::math::three::core_graph::<3>(&cell).map_err(hand::throw)?;
             Ok(graph_Network { inner: value })
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
 /// Builds the cube the universe code names, deepened to the given fractal level.
 #[wasm_bindgen]
-pub fn three_create(code: JsValue, number: usize, level: usize, base: usize) -> Result<JsValue, JsValue> {
+pub fn three_create(
+    code: JsValue,
+    number: usize,
+    level: usize,
+    base: usize,
+) -> Result<JsValue, JsValue> {
     let code = hand::code_from_js(&code)?;
     let value = mrlyrs::math::three::create(code, number, level, base).map_err(hand::throw)?;
     hand::cell3d_to_js(&value)
@@ -2853,17 +3364,32 @@ pub fn three_create(code: JsValue, number: usize, level: usize, base: usize) -> 
 
 /// Lists the filled cells on the diagonal plane `x + y + z = height`, as `x, y, z` triples.
 #[wasm_bindgen]
-pub fn three_diagonal_slice(code: JsValue, number: usize, level: usize, base: usize, height: usize) -> Result<JsValue, JsValue> {
+pub fn three_diagonal_slice(
+    code: JsValue,
+    number: usize,
+    level: usize,
+    base: usize,
+    height: usize,
+) -> Result<JsValue, JsValue> {
     let code = hand::code_from_js(&code)?;
-    let value = mrlyrs::math::three::diagonal_slice(code, number, level, base, height).map_err(hand::throw)?;
+    let value = mrlyrs::math::three::diagonal_slice(code, number, level, base, height)
+        .map_err(hand::throw)?;
     hand::list_to_js(&value, |x1| Ok(hand::typed(&(*x1)[..])))
 }
 
 /// Draws the given diagonal slices as one circle per cell, coloured by height slot and top-scale corner.
 #[wasm_bindgen]
-pub fn three_diagonal_svg(code: JsValue, number: usize, level: usize, base: usize, heights: &[usize], scale: usize) -> Result<String, JsValue> {
+pub fn three_diagonal_svg(
+    code: JsValue,
+    number: usize,
+    level: usize,
+    base: usize,
+    heights: &[usize],
+    scale: usize,
+) -> Result<String, JsValue> {
     let code = hand::code_from_js(&code)?;
-    let value = mrlyrs::math::three::diagonal_svg(code, number, level, base, heights, scale).map_err(hand::throw)?;
+    let value = mrlyrs::math::three::diagonal_svg(code, number, level, base, heights, scale)
+        .map_err(hand::throw)?;
     Ok(value)
 }
 
@@ -2888,7 +3414,9 @@ pub fn three_edge_graph(cell: JsValue) -> Result<graph_Network, JsValue> {
             let value = mrlyrs::math::three::edge_graph::<3>(&cell).map_err(hand::throw)?;
             Ok(graph_Network { inner: value })
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
@@ -2934,9 +3462,15 @@ pub fn three_fills(cell: JsValue) -> Result<usize, JsValue> {
 
 /// Builds a cube from its corner patterns, deepened to the given fractal level.
 #[wasm_bindgen]
-pub fn three_from_corners(corners: JsValue, number: usize, level: usize, base: usize) -> Result<JsValue, JsValue> {
+pub fn three_from_corners(
+    corners: JsValue,
+    number: usize,
+    level: usize,
+    base: usize,
+) -> Result<JsValue, JsValue> {
     let corners = hand::from_js::<Vec<Vec<u8>>>(&corners)?;
-    let value = mrlyrs::math::three::from_corners(&corners, number, level, base).map_err(hand::throw)?;
+    let value =
+        mrlyrs::math::three::from_corners(&corners, number, level, base).map_err(hand::throw)?;
     hand::cell3d_to_js(&value)
 }
 
@@ -2965,7 +3499,12 @@ pub fn three_hidden(cell: JsValue) -> Result<JsValue, JsValue> {
 
 /// Builds the cube filled wherever the residue sum lands in the levels, at the given level.
 #[wasm_bindgen]
-pub fn three_level_set(number: usize, levels: &[usize], level: usize, base: usize) -> Result<JsValue, JsValue> {
+pub fn three_level_set(
+    number: usize,
+    levels: &[usize],
+    level: usize,
+    base: usize,
+) -> Result<JsValue, JsValue> {
     let value = mrlyrs::math::three::level_set(number, levels, level, base).map_err(hand::throw)?;
     hand::cell3d_to_js(&value)
 }
@@ -2984,7 +3523,9 @@ pub fn three_magic(cells: JsValue) -> Result<JsValue, JsValue> {
             let value = mrlyrs::math::three::magic::<3>(&cells).map_err(hand::throw)?;
             hand::cell3d_to_js(&value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
@@ -2998,7 +3539,12 @@ pub fn three_manhattan_layers(cell: JsValue) -> Result<JsValue, JsValue> {
 
 /// Merges the cells into one cube arranged width by height by depth.
 #[wasm_bindgen]
-pub fn three_merge(cells: JsValue, width: usize, height: usize, depth: usize) -> Result<JsValue, JsValue> {
+pub fn three_merge(
+    cells: JsValue,
+    width: usize,
+    height: usize,
+    depth: usize,
+) -> Result<JsValue, JsValue> {
     let cells = hand::list_from_js(&cells, hand::cell3d_from_js)?;
     let value = mrlyrs::math::three::merge(&cells, width, height, depth).map_err(hand::throw)?;
     hand::cell3d_to_js(&value)
@@ -3020,7 +3566,9 @@ pub fn three_mosaic(mask: JsValue, cells: JsValue) -> Result<JsValue, JsValue> {
             let value = mrlyrs::math::three::mosaic::<3>(&mask, &cells).map_err(hand::throw)?;
             hand::cell3d_to_js(&value)
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
@@ -3041,8 +3589,14 @@ pub fn three_net(number: usize, level: usize) -> Result<JsValue, JsValue> {
 
 /// Builds a cube whose every site turns on with probability density, at the given level.
 #[wasm_bindgen]
-pub fn three_noise(number: usize, level: usize, density: f64, rng: &mut hand::Rng) -> Result<JsValue, JsValue> {
-    let value = mrlyrs::math::three::noise(number, level, density, rng.stream()).map_err(hand::throw)?;
+pub fn three_noise(
+    number: usize,
+    level: usize,
+    density: f64,
+    rng: &mut hand::Rng,
+) -> Result<JsValue, JsValue> {
+    let value =
+        mrlyrs::math::three::noise(number, level, density, rng.stream()).map_err(hand::throw)?;
     hand::cell3d_to_js(&value)
 }
 
@@ -3069,7 +3623,12 @@ pub fn three_point(number: usize, level: usize) -> Result<JsValue, JsValue> {
 
 /// Counts the filled cells on every diagonal plane `x + y + z = s`, for `s` in `0..=3*(side - 1)`.
 #[wasm_bindgen]
-pub fn three_profile(code: JsValue, number: usize, level: usize, base: usize) -> Result<JsValue, JsValue> {
+pub fn three_profile(
+    code: JsValue,
+    number: usize,
+    level: usize,
+    base: usize,
+) -> Result<JsValue, JsValue> {
     let code = hand::code_from_js(&code)?;
     let value = mrlyrs::math::three::profile(code, number, level, base).map_err(hand::throw)?;
     hand::list_to_js(&value, |x1| Ok(JsValue::from_str(&x1.to_string())))
@@ -3096,7 +3655,10 @@ pub fn three_quads(cell: JsValue) -> Result<JsValue, JsValue> {
 pub fn three_shadow(point: JsValue) -> Result<JsValue, JsValue> {
     let point = hand::from_js::<[u32; 3]>(&point)?;
     let value = mrlyrs::math::three::shadow(point);
-    Ok(hand::tuple_to_js(&[JsValue::from(value.0), JsValue::from(value.1)]))
+    Ok(hand::tuple_to_js(&[
+        JsValue::from(value.0),
+        JsValue::from(value.1),
+    ]))
 }
 
 /// Takes the flat cell left when one axis of the cube is fixed at an index, colors and tags with it.
@@ -3143,7 +3705,9 @@ pub fn three_surface(cell: JsValue) -> Result<JsValue, JsValue> {
 #[wasm_bindgen]
 pub fn three_text(cell: JsValue, glyphs: JsValue) -> Result<JsValue, JsValue> {
     let cell = hand::cell3d_from_js(&cell)?;
-    let glyphs = hand::option_from_js(&glyphs, |x1| hand::map_from_js::<u8, _>(x1, hand::from_js::<String>))?;
+    let glyphs = hand::option_from_js(&glyphs, |x1| {
+        hand::map_from_js::<u8, _>(x1, hand::from_js::<String>)
+    })?;
     let value = mrlyrs::math::three::text(&cell, glyphs.as_ref());
     hand::to_js(&value)
 }
@@ -3186,7 +3750,9 @@ pub fn three_tunnel_graph(cell: JsValue) -> Result<graph_Network, JsValue> {
             let value = mrlyrs::math::three::tunnel_graph::<3>(&cell).map_err(hand::throw)?;
             Ok(graph_Network { inner: value })
         }
-        rank => Err(hand::refuse(&format!("a 2d or 3d cell was wanted, not {rank}d."))),
+        rank => Err(hand::refuse(&format!(
+            "a 2d or 3d cell was wanted, not {rank}d."
+        ))),
     }
 }
 
@@ -3218,7 +3784,9 @@ pub fn three_volume(cell: JsValue) -> Result<usize, JsValue> {
 pub fn three_wires(cell: JsValue) -> Result<JsValue, JsValue> {
     let cell = hand::cell3d_from_js(&cell)?;
     let value = mrlyrs::math::three::wires(&cell);
-    hand::list_to_js(&value, |x1| hand::list_to_js(x1, |x2| Ok(JsValue::from(three_Vec3 { inner: *x2 }))))
+    hand::list_to_js(&value, |x1| {
+        hand::list_to_js(x1, |x2| Ok(JsValue::from(three_Vec3 { inner: *x2 })))
+    })
 }
 
 /// Builds the cube of rods along the x axis at the given size and level.
@@ -3279,15 +3847,36 @@ pub fn tourbillon_eyes(qmax: usize) -> Result<JsValue, JsValue> {
 
 /// Spins the odd parity carpets at the scales one, three, five up to the top into one stack on a square of the size, every layer turned about the centre by its own angle and masked to the inscribed disc, so every pixel sees every layer.
 #[wasm_bindgen]
-pub fn tourbillon_field(top: usize, size: usize, schedule: &str, increment: f64, set: &str, weights: &str, mode: &str, blend: &str, seed: u32) -> Result<Vec<f32>, JsValue> {
-    let value = mrlyrs::math::tourbillon::field(top, size, schedule, increment, set, weights, mode, blend, seed).map_err(hand::throw)?;
+pub fn tourbillon_field(
+    top: usize,
+    size: usize,
+    schedule: &str,
+    increment: f64,
+    set: &str,
+    weights: &str,
+    mode: &str,
+    blend: &str,
+    seed: u32,
+) -> Result<Vec<f32>, JsValue> {
+    let value = mrlyrs::math::tourbillon::field(
+        top, size, schedule, increment, set, weights, mode, blend, seed,
+    )
+    .map_err(hand::throw)?;
     Ok(value)
 }
 
 /// The layers of a stack: every scale one, three, five up to the top the set keeps, each with its weight and its angle.
 #[wasm_bindgen]
-pub fn tourbillon_layers(top: usize, schedule: &str, increment: f64, set: &str, weights: &str, seed: u32) -> Result<JsValue, JsValue> {
-    let value = mrlyrs::math::tourbillon::layers(top, schedule, increment, set, weights, seed).map_err(hand::throw)?;
+pub fn tourbillon_layers(
+    top: usize,
+    schedule: &str,
+    increment: f64,
+    set: &str,
+    weights: &str,
+    seed: u32,
+) -> Result<JsValue, JsValue> {
+    let value = mrlyrs::math::tourbillon::layers(top, schedule, increment, set, weights, seed)
+        .map_err(hand::throw)?;
     hand::to_js(&value)
 }
 
@@ -3308,7 +3897,12 @@ pub fn tourbillon_sharing(list: JsValue) -> Result<JsValue, JsValue> {
 
 /// Rasters the layers onto a square of the size, every one turned about the centre by its own angle and masked to the inscribed disc, then merged site by site.
 #[wasm_bindgen]
-pub fn tourbillon_stack(list: JsValue, size: usize, mode: &str, blend: JsValue) -> Result<Vec<f32>, JsValue> {
+pub fn tourbillon_stack(
+    list: JsValue,
+    size: usize,
+    mode: &str,
+    blend: JsValue,
+) -> Result<Vec<f32>, JsValue> {
     let list = hand::from_js::<Vec<mrlyrs::math::tourbillon::Layer>>(&list)?;
     let blend = hand::from_js::<mrlyrs::math::spin::Blend>(&blend)?;
     let value = mrlyrs::math::tourbillon::stack(&list, size, mode, blend).map_err(hand::throw)?;
@@ -3317,8 +3911,21 @@ pub fn tourbillon_stack(list: JsValue, size: usize, mode: &str, blend: JsValue) 
 
 /// Reads a spun stack against the schedule that made it: the layer count, the first eight scales and angles, the mean and RMS contrast over the disc, that contrast times the root of the layer count, the exact centre value, whether the blend carries the weights, the span the raster covers and the brightest three sites.
 #[wasm_bindgen]
-pub fn tourbillon_stats(field: &[f32], size: usize, top: usize, schedule: &str, increment: f64, set: &str, weights: &str, blend: &str, seed: u32) -> Result<JsValue, JsValue> {
-    let value = mrlyrs::math::tourbillon::stats(field, size, top, schedule, increment, set, weights, blend, seed).map_err(hand::throw)?;
+pub fn tourbillon_stats(
+    field: &[f32],
+    size: usize,
+    top: usize,
+    schedule: &str,
+    increment: f64,
+    set: &str,
+    weights: &str,
+    blend: &str,
+    seed: u32,
+) -> Result<JsValue, JsValue> {
+    let value = mrlyrs::math::tourbillon::stats(
+        field, size, top, schedule, increment, set, weights, blend, seed,
+    )
+    .map_err(hand::throw)?;
     hand::to_js(&value)
 }
 
@@ -3347,9 +3954,16 @@ pub fn two_census(cell: JsValue) -> Result<JsValue, JsValue> {
 
 /// Builds the design a universe code names, deepened to the level and rotated by quarter-turns.
 #[wasm_bindgen]
-pub fn two_create(code: JsValue, number: usize, level: usize, rotation: usize, base: usize) -> Result<JsValue, JsValue> {
+pub fn two_create(
+    code: JsValue,
+    number: usize,
+    level: usize,
+    rotation: usize,
+    base: usize,
+) -> Result<JsValue, JsValue> {
     let code = hand::code_from_js(&code)?;
-    let value = mrlyrs::math::two::create(code, number, level, rotation, base).map_err(hand::throw)?;
+    let value =
+        mrlyrs::math::two::create(code, number, level, rotation, base).map_err(hand::throw)?;
     hand::cell2d_to_js(&value)
 }
 
@@ -3395,9 +4009,16 @@ pub fn two_fills(cell: JsValue) -> Result<usize, JsValue> {
 
 /// Builds the design straight from its filled residue corners, deepened to the level and rotated by quarter-turns.
 #[wasm_bindgen]
-pub fn two_from_corners(corners: JsValue, number: usize, level: usize, rotation: usize, base: usize) -> Result<JsValue, JsValue> {
+pub fn two_from_corners(
+    corners: JsValue,
+    number: usize,
+    level: usize,
+    rotation: usize,
+    base: usize,
+) -> Result<JsValue, JsValue> {
     let corners = hand::from_js::<Vec<Vec<u8>>>(&corners)?;
-    let value = mrlyrs::math::two::from_corners(&corners, number, level, rotation, base).map_err(hand::throw)?;
+    let value = mrlyrs::math::two::from_corners(&corners, number, level, rotation, base)
+        .map_err(hand::throw)?;
     hand::cell2d_to_js(&value)
 }
 
@@ -3432,8 +4053,15 @@ pub fn two_htree(number: usize, level: usize) -> Result<JsValue, JsValue> {
 
 /// Builds the level-set design, filling every residue corner whose digits sum to a named level.
 #[wasm_bindgen]
-pub fn two_level_set(number: usize, levels: &[usize], level: usize, rotation: usize, base: usize) -> Result<JsValue, JsValue> {
-    let value = mrlyrs::math::two::level_set(number, levels, level, rotation, base).map_err(hand::throw)?;
+pub fn two_level_set(
+    number: usize,
+    levels: &[usize],
+    level: usize,
+    rotation: usize,
+    base: usize,
+) -> Result<JsValue, JsValue> {
+    let value =
+        mrlyrs::math::two::level_set(number, levels, level, rotation, base).map_err(hand::throw)?;
     hand::cell2d_to_js(&value)
 }
 
@@ -3455,7 +4083,12 @@ pub fn two_merge(cells: JsValue, width: usize, height: usize) -> Result<JsValue,
 
 /// Builds the design the name picks, deepened to the level and rotated by quarter-turns.
 #[wasm_bindgen]
-pub fn two_named(design: JsValue, number: usize, level: usize, rotation: usize) -> Result<JsValue, JsValue> {
+pub fn two_named(
+    design: JsValue,
+    number: usize,
+    level: usize,
+    rotation: usize,
+) -> Result<JsValue, JsValue> {
     let design = hand::from_js::<mrlyrs::gen::recipe::Design>(&design)?;
     let value = mrlyrs::math::two::named(design, number, level, rotation).map_err(hand::throw)?;
     hand::cell2d_to_js(&value)
@@ -3470,8 +4103,14 @@ pub fn two_net(number: usize, level: usize) -> Result<JsValue, JsValue> {
 
 /// Builds a random cell, each seed site drawn on with probability density, deepened to the level.
 #[wasm_bindgen]
-pub fn two_noise(number: usize, level: usize, density: f64, rng: &mut hand::Rng) -> Result<JsValue, JsValue> {
-    let value = mrlyrs::math::two::noise(number, level, density, rng.stream()).map_err(hand::throw)?;
+pub fn two_noise(
+    number: usize,
+    level: usize,
+    density: f64,
+    rng: &mut hand::Rng,
+) -> Result<JsValue, JsValue> {
+    let value =
+        mrlyrs::math::two::noise(number, level, density, rng.stream()).map_err(hand::throw)?;
     hand::cell2d_to_js(&value)
 }
 
@@ -3499,7 +4138,13 @@ pub fn two_perimeter(cell: JsValue) -> Result<JsValue, JsValue> {
 
 /// Renders the cell to PNG bytes at the given pixel scale, stroked and padded when an outline is given.
 #[wasm_bindgen]
-pub fn two_png(cell: JsValue, scale: usize, outline: JsValue, width: usize, shape: JsValue) -> Result<Vec<u8>, JsValue> {
+pub fn two_png(
+    cell: JsValue,
+    scale: usize,
+    outline: JsValue,
+    width: usize,
+    shape: JsValue,
+) -> Result<Vec<u8>, JsValue> {
     let cell = hand::cell2d_from_js(&cell)?;
     let outline = hand::option_from_js(&outline, hand::color_from_js)?;
     let shape = hand::from_js::<mrlyrs::math::two::Shape>(&shape)?;
@@ -3549,7 +4194,13 @@ pub fn two_star(number: usize, level: usize) -> Result<JsValue, JsValue> {
 
 /// Renders the cell to an SVG string at the given scale, stroked and padded when an outline is given.
 #[wasm_bindgen]
-pub fn two_svg(cell: JsValue, scale: usize, outline: JsValue, width: usize, shape: JsValue) -> Result<String, JsValue> {
+pub fn two_svg(
+    cell: JsValue,
+    scale: usize,
+    outline: JsValue,
+    width: usize,
+    shape: JsValue,
+) -> Result<String, JsValue> {
     let cell = hand::cell2d_from_js(&cell)?;
     let outline = hand::option_from_js(&outline, hand::color_from_js)?;
     let shape = hand::from_js::<mrlyrs::math::two::Shape>(&shape)?;
@@ -3561,7 +4212,9 @@ pub fn two_svg(cell: JsValue, scale: usize, outline: JsValue, width: usize, shap
 #[wasm_bindgen]
 pub fn two_text(cell: JsValue, glyphs: JsValue) -> Result<JsValue, JsValue> {
     let cell = hand::cell2d_from_js(&cell)?;
-    let glyphs = hand::option_from_js(&glyphs, |x1| hand::map_from_js::<u8, _>(x1, hand::from_js::<String>))?;
+    let glyphs = hand::option_from_js(&glyphs, |x1| {
+        hand::map_from_js::<u8, _>(x1, hand::from_js::<String>)
+    })?;
     let value = mrlyrs::math::two::text(&cell, glyphs.as_ref());
     hand::to_js(&value)
 }
@@ -3762,7 +4415,9 @@ impl bang_Design {
     /// Reads the Design from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<bang_Design, JsValue> {
-        Ok(bang_Design { inner: hand::from_js(&data)? })
+        Ok(bang_Design {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Design as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -3859,7 +4514,9 @@ impl bang_Universe {
     /// Reads the Universe from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<bang_Universe, JsValue> {
-        Ok(bang_Universe { inner: hand::from_js(&data)? })
+        Ok(bang_Universe {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Universe as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -3891,12 +4548,16 @@ impl bang_Universe {
     /// Returns every design in code order.
     pub fn all(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.all();
-        hand::list_to_js(&value, |x1| Ok(JsValue::from(bang_Design { inner: x1.clone() })))
+        hand::list_to_js(&value, |x1| {
+            Ok(JsValue::from(bang_Design { inner: x1.clone() }))
+        })
     }
     /// Returns the designs whose codes lead their orbits.
     pub fn canonical(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.canonical();
-        hand::list_to_js(&value, |x1| Ok(JsValue::from(bang_Design { inner: x1.clone() })))
+        hand::list_to_js(&value, |x1| {
+            Ok(JsValue::from(bang_Design { inner: x1.clone() }))
+        })
     }
     /// Returns the design at a code with its precomputed orbit facts.
     pub fn design(&self, code: JsValue) -> Result<bang_Design, JsValue> {
@@ -3928,7 +4589,9 @@ impl counts_Exposure {
     /// Reads the Exposure from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<counts_Exposure, JsValue> {
-        Ok(counts_Exposure { inner: hand::from_js(&data)? })
+        Ok(counts_Exposure {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Exposure as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -3963,11 +4626,21 @@ impl counts_Exposure {
     #[wasm_bindgen(getter)]
     pub fn axes(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.axes.clone();
-        hand::list_to_js(&value, |x1| Ok(hand::tuple_to_js(&[JsValue::from_str(&x1.0.to_string()), JsValue::from_str(&x1.1.to_string())])))
+        hand::list_to_js(&value, |x1| {
+            Ok(hand::tuple_to_js(&[
+                JsValue::from_str(&x1.0.to_string()),
+                JsValue::from_str(&x1.1.to_string()),
+            ]))
+        })
     }
     #[wasm_bindgen(setter)]
     pub fn set_axes(&mut self, value: JsValue) -> Result<(), JsValue> {
-        let value = hand::list_from_js(&value, |x1| Ok((hand::u128_from_js(&hand::item(x1, 0)?)?, hand::u128_from_js(&hand::item(x1, 1)?)?)))?;
+        let value = hand::list_from_js(&value, |x1| {
+            Ok((
+                hand::u128_from_js(&hand::item(x1, 0)?)?,
+                hand::u128_from_js(&hand::item(x1, 1)?)?,
+            ))
+        })?;
         self.inner.axes = value;
         Ok(())
     }
@@ -3977,7 +4650,12 @@ impl counts_Exposure {
         hand::option_to_js(value.as_ref(), |x1| Ok(JsValue::from_str(&x1.to_string())))
     }
     /// Folds the counts from the filled residue corners at a side number, without rendering the tile.
-    pub fn from_corners(filled: JsValue, number: usize, dimension: usize, base: usize) -> Result<counts_Exposure, JsValue> {
+    pub fn from_corners(
+        filled: JsValue,
+        number: usize,
+        dimension: usize,
+        base: usize,
+    ) -> Result<counts_Exposure, JsValue> {
         let filled = hand::from_js::<Vec<Vec<u8>>>(&filled)?;
         let value = mrlyrs::math::counts::Exposure::from_corners(&filled, number, dimension, base);
         Ok(counts_Exposure { inner: value })
@@ -4011,7 +4689,8 @@ impl graph_Layout {
     /// Starts a layout from a network's own positions and branches.
     pub fn from_network(network: &graph_Network, seed: JsValue) -> Result<graph_Layout, JsValue> {
         let seed = hand::u64_from_js(&seed)?;
-        let value = mrlyrs::math::graph::Layout::from_network(&network.inner, seed).map_err(hand::throw)?;
+        let value =
+            mrlyrs::math::graph::Layout::from_network(&network.inner, seed).map_err(hand::throw)?;
         Ok(graph_Layout { inner: value })
     }
     /// Returns the ideal branch length `k`.
@@ -4026,10 +4705,16 @@ impl graph_Layout {
     }
     /// Starts a layout from flat positions, `dim` floats per node, and the branch pairs.
     #[wasm_bindgen(constructor)]
-    pub fn new(positions: &[f64], branches: JsValue, dim: usize, seed: JsValue) -> Result<graph_Layout, JsValue> {
+    pub fn new(
+        positions: &[f64],
+        branches: JsValue,
+        dim: usize,
+        seed: JsValue,
+    ) -> Result<graph_Layout, JsValue> {
         let branches = hand::from_js::<Vec<(usize, usize)>>(&branches)?;
         let seed = hand::u64_from_js(&seed)?;
-        let value = mrlyrs::math::graph::Layout::new(positions, &branches, dim, seed).map_err(hand::throw)?;
+        let value = mrlyrs::math::graph::Layout::new(positions, &branches, dim, seed)
+            .map_err(hand::throw)?;
         Ok(graph_Layout { inner: value })
     }
     /// Returns the node count.
@@ -4070,7 +4755,9 @@ impl graph_Network {
     /// Reads the Network from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<graph_Network, JsValue> {
-        Ok(graph_Network { inner: hand::from_js(&data)? })
+        Ok(graph_Network {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Network as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -4114,7 +4801,9 @@ impl graph_Network {
     }
     /// Appends a branch between two node indices.
     pub fn add_branch(&mut self, parent: usize, child: usize, radius: f64) -> Result<(), JsValue> {
-        self.inner.add_branch(parent, child, radius).map_err(hand::throw)?;
+        self.inner
+            .add_branch(parent, child, radius)
+            .map_err(hand::throw)?;
         Ok(())
     }
     /// Appends a node at the position and returns its index.
@@ -4151,7 +4840,9 @@ impl moire_Field {
     /// Reads the Field from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<moire_Field, JsValue> {
-        Ok(moire_Field { inner: hand::from_js(&data)? })
+        Ok(moire_Field {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Field as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -4333,7 +5024,9 @@ impl moire_Volume {
     /// Reads the Volume from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<moire_Volume, JsValue> {
-        Ok(moire_Volume { inner: hand::from_js(&data)? })
+        Ok(moire_Volume {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Volume as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -4397,7 +5090,10 @@ impl moire_Volume {
     pub fn plane(&self, frame: JsValue, out: usize) -> Result<JsValue, JsValue> {
         let frame = hand::from_js::<mrlyrs::math::moire::Frame>(&frame)?;
         let value = self.inner.plane(&frame, out);
-        Ok(hand::tuple_to_js(&[hand::typed(&(value.0)[..]), hand::typed(&(value.1)[..])]))
+        Ok(hand::tuple_to_js(&[
+            hand::typed(&(value.0)[..]),
+            hand::typed(&(value.1)[..]),
+        ]))
     }
     /// Reads the voxel a point of the unit cube falls in, or zero outside it.
     pub fn sample(&self, p: JsValue) -> Result<JsValue, JsValue> {
@@ -4423,7 +5119,9 @@ impl name_Bang {
     /// Reads the Bang from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<name_Bang, JsValue> {
-        Ok(name_Bang { inner: hand::from_js(&data)? })
+        Ok(name_Bang {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Bang as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -4495,22 +5193,27 @@ impl name_Bang {
     }
     /// Folds a decoded value to its canonical form, or an error for one outside the kind.
     pub fn checked(&self) -> Result<name_Bang, JsValue> {
-        let value = <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::checked(self.inner.clone()).map_err(hand::throw)?;
+        let value =
+            <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::checked(self.inner.clone())
+                .map_err(hand::throw)?;
         Ok(name_Bang { inner: value })
     }
     /// Reads a filename back into the value, or an error.
     pub fn from_file(text: &str) -> Result<name_Bang, JsValue> {
-        let value = <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::from_file(text).map_err(hand::throw)?;
+        let value = <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::from_file(text)
+            .map_err(hand::throw)?;
         Ok(name_Bang { inner: value })
     }
     /// Reads a JSON object into its canonical value, or an error naming the broken key.
     pub fn from_json(text: &str) -> Result<name_Bang, JsValue> {
-        let value = <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::from_json(text).map_err(hand::throw)?;
+        let value = <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::from_json(text)
+            .map_err(hand::throw)?;
         Ok(name_Bang { inner: value })
     }
     /// Reads a path and query string back into the value, or an error.
     pub fn from_url(text: &str) -> Result<name_Bang, JsValue> {
-        let value = <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::from_url(text).map_err(hand::throw)?;
+        let value = <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::from_url(text)
+            .map_err(hand::throw)?;
         Ok(name_Bang { inner: value })
     }
     /// Pins a code to its dimension and base on the square lattice.
@@ -4522,7 +5225,8 @@ impl name_Bang {
     }
     /// Prints the kind and the `key=value` pairs joined by underscores, lists in brackets, or an error when the name does not read back.
     pub fn to_file(&self) -> Result<String, JsValue> {
-        let value = <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::to_file(&self.inner).map_err(hand::throw)?;
+        let value = <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::to_file(&self.inner)
+            .map_err(hand::throw)?;
         Ok(value)
     }
     /// Prints the first eight hex digits of the sha256 of the canonical JSON.
@@ -4537,12 +5241,14 @@ impl name_Bang {
     }
     /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
     pub fn to_mrly(&self) -> Result<String, JsValue> {
-        let value = <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::to_mrly(&self.inner).map_err(hand::throw)?;
+        let value = <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::to_mrly(&self.inner)
+            .map_err(hand::throw)?;
         Ok(value)
     }
     /// Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back.
     pub fn to_url(&self) -> Result<String, JsValue> {
-        let value = <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::to_url(&self.inner).map_err(hand::throw)?;
+        let value = <mrlyrs::math::name::Bang as mrlyrs::math::name::Named>::to_url(&self.inner)
+            .map_err(hand::throw)?;
         Ok(value)
     }
 }
@@ -4558,7 +5264,9 @@ impl name_Sequence {
     /// Reads the Sequence from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<name_Sequence, JsValue> {
-        Ok(name_Sequence { inner: hand::from_js(&data)? })
+        Ok(name_Sequence {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Sequence as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -4623,7 +5331,10 @@ impl name_Sequence {
     }
     /// Folds a decoded value to its canonical form, or an error for one outside the kind.
     pub fn checked(&self) -> Result<name_Sequence, JsValue> {
-        let value = <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::checked(self.inner.clone()).map_err(hand::throw)?;
+        let value = <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::checked(
+            self.inner.clone(),
+        )
+        .map_err(hand::throw)?;
         Ok(name_Sequence { inner: value })
     }
     /// Returns the design pinned to its dimension and base.
@@ -4633,29 +5344,40 @@ impl name_Sequence {
     }
     /// Reads a filename back into the value, or an error.
     pub fn from_file(text: &str) -> Result<name_Sequence, JsValue> {
-        let value = <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::from_file(text).map_err(hand::throw)?;
+        let value = <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::from_file(text)
+            .map_err(hand::throw)?;
         Ok(name_Sequence { inner: value })
     }
     /// Reads a JSON object into its canonical value, or an error naming the broken key.
     pub fn from_json(text: &str) -> Result<name_Sequence, JsValue> {
-        let value = <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::from_json(text).map_err(hand::throw)?;
+        let value = <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::from_json(text)
+            .map_err(hand::throw)?;
         Ok(name_Sequence { inner: value })
     }
     /// Reads a path and query string back into the value, or an error.
     pub fn from_url(text: &str) -> Result<name_Sequence, JsValue> {
-        let value = <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::from_url(text).map_err(hand::throw)?;
+        let value = <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::from_url(text)
+            .map_err(hand::throw)?;
         Ok(name_Sequence { inner: value })
     }
     /// Pins a design's reading to its measure and axis.
     #[wasm_bindgen(constructor)]
-    pub fn new(code: JsValue, dim: usize, base: usize, measure: &str, axis: &str) -> Result<name_Sequence, JsValue> {
+    pub fn new(
+        code: JsValue,
+        dim: usize,
+        base: usize,
+        measure: &str,
+        axis: &str,
+    ) -> Result<name_Sequence, JsValue> {
         let code = hand::u128_from_js(&code)?;
         let value = mrlyrs::math::name::Sequence::new(code, dim, base, measure, axis);
         Ok(name_Sequence { inner: value })
     }
     /// Prints the kind and the `key=value` pairs joined by underscores, lists in brackets, or an error when the name does not read back.
     pub fn to_file(&self) -> Result<String, JsValue> {
-        let value = <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_file(&self.inner).map_err(hand::throw)?;
+        let value =
+            <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_file(&self.inner)
+                .map_err(hand::throw)?;
         Ok(value)
     }
     /// Prints the first eight hex digits of the sha256 of the canonical JSON.
@@ -4665,17 +5387,22 @@ impl name_Sequence {
     }
     /// Prints the canonical JSON object.
     pub fn to_json(&self) -> Result<String, JsValue> {
-        let value = <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_json(&self.inner);
+        let value =
+            <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_json(&self.inner);
         Ok(value)
     }
     /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
     pub fn to_mrly(&self) -> Result<String, JsValue> {
-        let value = <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_mrly(&self.inner).map_err(hand::throw)?;
+        let value =
+            <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_mrly(&self.inner)
+                .map_err(hand::throw)?;
         Ok(value)
     }
     /// Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back.
     pub fn to_url(&self) -> Result<String, JsValue> {
-        let value = <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_url(&self.inner).map_err(hand::throw)?;
+        let value =
+            <mrlyrs::math::name::Sequence as mrlyrs::math::name::Named>::to_url(&self.inner)
+                .map_err(hand::throw)?;
         Ok(value)
     }
 }
@@ -4691,7 +5418,9 @@ impl name_Word {
     /// Reads the Word from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<name_Word, JsValue> {
-        Ok(name_Word { inner: hand::from_js(&data)? })
+        Ok(name_Word {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Word as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -4751,39 +5480,52 @@ impl name_Word {
     }
     /// Folds a decoded value to its canonical form, or an error for one outside the kind.
     pub fn checked(&self) -> Result<name_Word, JsValue> {
-        let value = <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::checked(self.inner.clone()).map_err(hand::throw)?;
+        let value =
+            <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::checked(self.inner.clone())
+                .map_err(hand::throw)?;
         Ok(name_Word { inner: value })
     }
     /// Reads a filename back into the value, or an error.
     pub fn from_file(text: &str) -> Result<name_Word, JsValue> {
-        let value = <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::from_file(text).map_err(hand::throw)?;
+        let value = <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::from_file(text)
+            .map_err(hand::throw)?;
         Ok(name_Word { inner: value })
     }
     /// Reads a JSON object into its canonical value, or an error naming the broken key.
     pub fn from_json(text: &str) -> Result<name_Word, JsValue> {
-        let value = <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::from_json(text).map_err(hand::throw)?;
+        let value = <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::from_json(text)
+            .map_err(hand::throw)?;
         Ok(name_Word { inner: value })
     }
     /// Reads a path and query string back into the value, or an error.
     pub fn from_url(text: &str) -> Result<name_Word, JsValue> {
-        let value = <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::from_url(text).map_err(hand::throw)?;
+        let value = <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::from_url(text)
+            .map_err(hand::throw)?;
         Ok(name_Word { inner: value })
     }
     /// Returns every letter as a design pinned to the word's dimension and its own base.
     pub fn letters(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.letters();
-        hand::list_to_js(&value, |x1| Ok(JsValue::from(name_Bang { inner: x1.clone() })))
+        hand::list_to_js(&value, |x1| {
+            Ok(JsValue::from(name_Bang { inner: x1.clone() }))
+        })
     }
     /// Pins an ordered letter list at base 2.
     #[wasm_bindgen(constructor)]
     pub fn new(dim: usize, letters: JsValue) -> Result<name_Word, JsValue> {
-        let letters = hand::list_from_js(&letters, |x1| Ok((hand::u128_from_js(&hand::item(x1, 0)?)?, hand::from_js::<usize>(&hand::item(x1, 1)?)?)))?;
+        let letters = hand::list_from_js(&letters, |x1| {
+            Ok((
+                hand::u128_from_js(&hand::item(x1, 0)?)?,
+                hand::from_js::<usize>(&hand::item(x1, 1)?)?,
+            ))
+        })?;
         let value = mrlyrs::math::name::Word::new(dim, &letters).map_err(hand::throw)?;
         Ok(name_Word { inner: value })
     }
     /// Prints the kind and the `key=value` pairs joined by underscores, lists in brackets, or an error when the name does not read back.
     pub fn to_file(&self) -> Result<String, JsValue> {
-        let value = <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::to_file(&self.inner).map_err(hand::throw)?;
+        let value = <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::to_file(&self.inner)
+            .map_err(hand::throw)?;
         Ok(value)
     }
     /// Prints the first eight hex digits of the sha256 of the canonical JSON.
@@ -4798,12 +5540,14 @@ impl name_Word {
     }
     /// Prints the kind and the keys as a line of prose for pages, or an error when the name does not read back.
     pub fn to_mrly(&self) -> Result<String, JsValue> {
-        let value = <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::to_mrly(&self.inner).map_err(hand::throw)?;
+        let value = <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::to_mrly(&self.inner)
+            .map_err(hand::throw)?;
         Ok(value)
     }
     /// Prints the kind as a path and the keys as a query string, lists comma-joined, or an error when the name does not read back.
     pub fn to_url(&self) -> Result<String, JsValue> {
-        let value = <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::to_url(&self.inner).map_err(hand::throw)?;
+        let value = <mrlyrs::math::name::Word as mrlyrs::math::name::Named>::to_url(&self.inner)
+            .map_err(hand::throw)?;
         Ok(value)
     }
 }
@@ -4819,7 +5563,9 @@ impl press_Press {
     /// Reads the Press from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<press_Press, JsValue> {
-        Ok(press_Press { inner: hand::from_js(&data)? })
+        Ok(press_Press {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Press as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -4885,7 +5631,9 @@ impl roulette_Nodes {
     /// Reads the Nodes from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<roulette_Nodes, JsValue> {
-        Ok(roulette_Nodes { inner: hand::from_js(&data)? })
+        Ok(roulette_Nodes {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Nodes as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -5019,7 +5767,9 @@ impl shape_Frac {
     /// Reads the Frac from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<shape_Frac, JsValue> {
-        Ok(shape_Frac { inner: hand::from_js(&data)? })
+        Ok(shape_Frac {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Frac as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -5092,7 +5842,9 @@ impl six_star_Share {
     /// Reads the Share from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<six_star_Share, JsValue> {
-        Ok(six_star_Share { inner: hand::from_js(&data)? })
+        Ok(six_star_Share {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Share as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -5126,7 +5878,10 @@ impl six_star_Share {
     /// The share in lowest terms, numerator then denominator.
     pub fn reduced(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.reduced();
-        Ok(hand::tuple_to_js(&[JsValue::from(value.0), JsValue::from(value.1)]))
+        Ok(hand::tuple_to_js(&[
+            JsValue::from(value.0),
+            JsValue::from(value.1),
+        ]))
     }
     /// The share as a real number.
     pub fn value(&self) -> Result<f64, JsValue> {
@@ -5146,7 +5901,9 @@ impl six_star_Star {
     /// Reads the Star from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<six_star_Star, JsValue> {
-        Ok(six_star_Star { inner: hand::from_js(&data)? })
+        Ok(six_star_Star {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Star as plain data.
     #[wasm_bindgen(js_name = "toJSON")]
@@ -5195,7 +5952,9 @@ impl three_Vec3 {
     /// Reads the Vec3 from its plain data.
     #[wasm_bindgen(js_name = "from")]
     pub fn from_plain(data: JsValue) -> Result<three_Vec3, JsValue> {
-        Ok(three_Vec3 { inner: hand::from_js(&data)? })
+        Ok(three_Vec3 {
+            inner: hand::from_js(&data)?,
+        })
     }
     /// Writes the Vec3 as plain data.
     #[wasm_bindgen(js_name = "toJSON")]

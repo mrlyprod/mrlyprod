@@ -1,4 +1,6 @@
-use crate::model::{Const, Cross, Function, Manifest, Result, SelfKind, Ty, Type, TypeCross, TypeKind};
+use crate::model::{
+    Const, Cross, Function, Manifest, Result, SelfKind, Ty, Type, TypeCross, TypeKind,
+};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
 use std::path::Path;
@@ -7,39 +9,158 @@ const TYPED: &[&str] = &[
     "u8", "u16", "u32", "i8", "i16", "i32", "f32", "f64", "usize", "u64", "i64",
 ];
 
-const NATIVE_ITEM: &[&str] = &["u8", "u16", "u32", "i8", "i16", "i32", "f32", "f64", "usize"];
+const NATIVE_ITEM: &[&str] = &[
+    "u8", "u16", "u32", "i8", "i16", "i32", "f32", "f64", "usize",
+];
 
 const WORDS: &[&str] = &[
-    "void", "new", "class", "function", "default", "delete", "in", "var", "let", "const", "export",
-    "import", "switch", "case", "for", "if", "else", "this", "super", "with", "yield", "enum",
-    "await", "typeof", "instanceof", "return", "try", "catch", "finally", "throw", "while", "do",
-    "break", "continue", "debugger", "static", "interface", "package", "private", "protected",
-    "public", "implements", "arguments", "eval", "null", "true", "false", "extends", "as", "crate",
-    "extern", "fn", "impl", "loop", "match", "mod", "move", "mut", "pub", "ref", "self", "struct",
-    "trait", "type", "unsafe", "use", "where", "async", "dyn", "box", "macro", "gen",
+    "void",
+    "new",
+    "class",
+    "function",
+    "default",
+    "delete",
+    "in",
+    "var",
+    "let",
+    "const",
+    "export",
+    "import",
+    "switch",
+    "case",
+    "for",
+    "if",
+    "else",
+    "this",
+    "super",
+    "with",
+    "yield",
+    "enum",
+    "await",
+    "typeof",
+    "instanceof",
+    "return",
+    "try",
+    "catch",
+    "finally",
+    "throw",
+    "while",
+    "do",
+    "break",
+    "continue",
+    "debugger",
+    "static",
+    "interface",
+    "package",
+    "private",
+    "protected",
+    "public",
+    "implements",
+    "arguments",
+    "eval",
+    "null",
+    "true",
+    "false",
+    "extends",
+    "as",
+    "crate",
+    "extern",
+    "fn",
+    "impl",
+    "loop",
+    "match",
+    "mod",
+    "move",
+    "mut",
+    "pub",
+    "ref",
+    "self",
+    "struct",
+    "trait",
+    "type",
+    "unsafe",
+    "use",
+    "where",
+    "async",
+    "dyn",
+    "box",
+    "macro",
+    "gen",
 ];
 
 const RNG_METHODS: &[&str] = &[
-    "new", "unit", "below", "range", "boolean", "chance", "sample_indices", "choice", "shuffle",
-    "__state", "__restore",
+    "new",
+    "unit",
+    "below",
+    "range",
+    "boolean",
+    "chance",
+    "sample_indices",
+    "choice",
+    "shuffle",
+    "__state",
+    "__restore",
 ];
 
 const JS_RESERVED: &[&str] = &[
-    "new", "void", "class", "function", "default", "delete", "in", "var", "let", "const", "export",
-    "import", "switch", "case", "for", "if", "else", "this", "super", "with", "yield", "enum",
-    "await", "typeof", "instanceof", "return", "try", "catch", "finally", "throw", "while", "do",
-    "break", "continue", "debugger", "static", "interface", "package", "private", "protected",
-    "public", "implements", "null", "true", "false", "extends",
+    "new",
+    "void",
+    "class",
+    "function",
+    "default",
+    "delete",
+    "in",
+    "var",
+    "let",
+    "const",
+    "export",
+    "import",
+    "switch",
+    "case",
+    "for",
+    "if",
+    "else",
+    "this",
+    "super",
+    "with",
+    "yield",
+    "enum",
+    "await",
+    "typeof",
+    "instanceof",
+    "return",
+    "try",
+    "catch",
+    "finally",
+    "throw",
+    "while",
+    "do",
+    "break",
+    "continue",
+    "debugger",
+    "static",
+    "interface",
+    "package",
+    "private",
+    "protected",
+    "public",
+    "implements",
+    "null",
+    "true",
+    "false",
+    "extends",
 ];
 
-const HAND_RS: &str = "#[path = \"../../../hand/hand.rs\"]\nmod crossing;\n\npub use crossing::*;\n";
+const HAND_RS: &str =
+    "#[path = \"../../../hand/hand.rs\"]\nmod crossing;\n\npub use crossing::*;\n";
 
 const ALLOWS: &str = "#![allow(non_camel_case_types, non_snake_case, clippy::too_many_arguments)]";
 
 // FILES
 
 pub fn write(manifest: &Manifest, root: &Path) -> Result<()> {
-    let names = std::fs::read_to_string(root.join("bridge/units.txt")).map_err(|e| e.to_string())?;
+    let names =
+        std::fs::read_to_string(root.join("bridge/units.txt")).map_err(|e| e.to_string())?;
     let names: Vec<&str> = names
         .lines()
         .map(str::trim)
@@ -49,7 +170,10 @@ pub fn write(manifest: &Manifest, root: &Path) -> Result<()> {
     for name in &names {
         let unit = Unit::new(manifest, name);
         let dir = js.join("units").join(name);
-        save(&dir.join("Cargo.toml"), &cargo_toml(name, &manifest.version))?;
+        save(
+            &dir.join("Cargo.toml"),
+            &cargo_toml(name, &manifest.version),
+        )?;
         save(&dir.join("src/hand.rs"), HAND_RS)?;
         save(&dir.join("src/lib.rs"), &unit.lib_rs()?)?;
         save(&js.join(format!("{name}.js")), &unit.wrapper_js())?;
@@ -121,7 +245,11 @@ impl<'a> Unit<'a> {
         let mut unit = Unit {
             name,
             manifest,
-            types: manifest.types.iter().map(|t| (t.path.as_str(), t)).collect(),
+            types: manifest
+                .types
+                .iter()
+                .map(|t| (t.path.as_str(), t))
+                .collect(),
             reserved: BTreeSet::new(),
         };
         unit.reserved = unit.symbols();
@@ -356,7 +484,12 @@ impl<'a> Unit<'a> {
             Ty::Tuple { items } => {
                 let mut parts = vec![];
                 for (i, t) in items.iter().enumerate() {
-                    parts.push(self.cross_in(t, &format!("&hand::item({e}, {i})?"), cx, depth + 1)?);
+                    parts.push(self.cross_in(
+                        t,
+                        &format!("&hand::item({e}, {i})?"),
+                        cx,
+                        depth + 1,
+                    )?);
                 }
                 format!("({})", parts.join(", "))
             }
@@ -419,7 +552,10 @@ impl<'a> Unit<'a> {
             {
                 format!("hand::typed(&({})[..])", deref(e))
             }
-            Ty::Vec { item } | Ty::Slice { item, .. } | Ty::Array { item, .. } | Ty::Set { item } => {
+            Ty::Vec { item }
+            | Ty::Slice { item, .. }
+            | Ty::Array { item, .. }
+            | Ty::Set { item } => {
                 format!(
                     "hand::list_to_js({e}, {})?",
                     closure(&x, ok(self.cross_out(item, &x, cx, depth + 1)?))
@@ -465,7 +601,11 @@ impl<'a> Unit<'a> {
                 _ => format!("JsValue::from(hand::Rng::wrap({}.clone()))", place(e)),
             },
             Ty::Class { path, .. } if self.holds(path) => {
-                let inner = if self.is_copy(ty) { deref(e) } else { format!("{}.clone()", place(e)) };
+                let inner = if self.is_copy(ty) {
+                    deref(e)
+                } else {
+                    format!("{}.clone()", place(e))
+                };
                 format!("JsValue::from({} {{ inner: {inner} }})", self.local(path))
             }
             Ty::Class { .. } | Ty::Plain { .. } | Ty::Enum { .. } => format!("hand::to_js({e})?"),
@@ -485,9 +625,10 @@ impl<'a> Unit<'a> {
             Ty::Scalar { name } => plan(name, "Ok(value)".into()),
             Ty::String => plan("String", "Ok(value)".into()),
             Ty::Str => plan("String", "Ok(value.to_string())".into()),
-            Ty::Vec { item } if typed_scalar(item) => {
-                plan(&format!("Vec<{}>", self.rust_ty(item, cx)?), "Ok(value)".into())
-            }
+            Ty::Vec { item } if typed_scalar(item) => plan(
+                &format!("Vec<{}>", self.rust_ty(item, cx)?),
+                "Ok(value)".into(),
+            ),
             Ty::Slice { item, .. } | Ty::Array { item, .. } if typed_scalar(item) => plan(
                 &format!("Vec<{}>", self.rust_ty(item, cx)?),
                 "Ok(value.to_vec())".into(),
@@ -558,17 +699,26 @@ impl<'a> Unit<'a> {
         };
         if !extra {
             match ty {
-                Ty::Scalar { name } if !is_wide(name) => return Ok(native(name.clone(), n.clone())),
+                Ty::Scalar { name } if !is_wide(name) => {
+                    return Ok(native(name.clone(), n.clone()))
+                }
                 Ty::Str => return Ok(native("&str".into(), n.clone())),
                 Ty::String => return Ok(native("String".into(), n.clone())),
                 Ty::Slice { item, .. } if native_item(item) => {
                     return Ok(native(format!("&[{}]", self.rust_ty(item, cx)?), n.clone()))
                 }
                 Ty::Vec { item } if native_item(item) => {
-                    return Ok(native(format!("Vec<{}>", self.rust_ty(item, cx)?), n.clone()))
+                    return Ok(native(
+                        format!("Vec<{}>", self.rust_ty(item, cx)?),
+                        n.clone(),
+                    ))
                 }
                 Ty::Class { path, .. } if self.holds(path) => {
-                    let taken = if self.is_copy(ty) { format!("{n}.inner") } else { format!("{n}.inner.clone()") };
+                    let taken = if self.is_copy(ty) {
+                        format!("{n}.inner")
+                    } else {
+                        format!("{n}.inner.clone()")
+                    };
                     return Ok(native(format!("&{}", self.local(path)), taken));
                 }
                 Ty::Ref { mutable, item, .. } => match &**item {
@@ -589,9 +739,17 @@ impl<'a> Unit<'a> {
             }
         }
         Ok(match ty {
-            Ty::Ref { mutable: true, item, .. } => match &**item {
+            Ty::Ref {
+                mutable: true,
+                item,
+                ..
+            } => match &**item {
                 Ty::Hand { name, .. } if name == "Tensor" || name == "Cell" => {
-                    let back = if name == "Tensor" { "tensor_into_js" } else { "cell_into_js" };
+                    let back = if name == "Tensor" {
+                        "tensor_into_js"
+                    } else {
+                        "cell_into_js"
+                    };
                     let converted = self.cross_in(item, &format!("&{n}"), cx, 1)?;
                     js(
                         vec![format!("let mut {n}_value = {converted};")],
@@ -599,7 +757,12 @@ impl<'a> Unit<'a> {
                         vec![format!("hand::{back}(&{n}, &{n}_value)?;")],
                     )
                 }
-                _ => return Err(format!("{}: {name} mutates a value that cannot cross", cx.fname)),
+                _ => {
+                    return Err(format!(
+                        "{}: {name} mutates a value that cannot cross",
+                        cx.fname
+                    ))
+                }
             },
             Ty::Ref { item, .. } => owned(item, format!("&{n}"))?,
             Ty::Slice { item, .. } => match self.view(item, &n, cx)? {
@@ -611,7 +774,11 @@ impl<'a> Unit<'a> {
                 None => owned(ty, format!("&{n}"))?,
             },
             Ty::Option { item } => match &**item {
-                Ty::Ref { mutable: true, item: inner, .. } if is_rng(inner) => js(
+                Ty::Ref {
+                    mutable: true,
+                    item: inner,
+                    ..
+                } if is_rng(inner) => js(
                     vec![format!("let mut {n}_stream = hand::stream_from_js(&{n})?;")],
                     format!("{n}_stream.as_mut()"),
                     vec![format!(
@@ -677,7 +844,11 @@ impl<'a> Unit<'a> {
             dim: None,
         };
         let taken = f.params.iter().any(|p| p.name == hand_self(name));
-        let label = if taken { "self_".to_string() } else { hand_self(name).to_string() };
+        let label = if taken {
+            "self_".to_string()
+        } else {
+            hand_self(name).to_string()
+        };
         let ty = match (kind, name) {
             (SelfKind::Mut, _) => Ty::Ref {
                 mutable: true,
@@ -783,8 +954,13 @@ impl<'a> Unit<'a> {
             }
         }
         let doc = doc_line(&head.docs);
-        let indent = if matches!(owner, Owner::Class(_) | Owner::Holder(_)) { "    " } else { "" };
-        let constructor = matches!(owner, Owner::Class(_)) && head.name == "new" && head.self_kind.is_none();
+        let indent = if matches!(owner, Owner::Class(_) | Owner::Holder(_)) {
+            "    "
+        } else {
+            ""
+        };
+        let constructor =
+            matches!(owner, Owner::Class(_)) && head.name == "new" && head.self_kind.is_none();
         let renamed = match owner {
             Owner::Holder(_) => head.name == "new" || head.name == "default",
             Owner::Class(_) => head.name == "default",
@@ -840,7 +1016,14 @@ impl<'a> Unit<'a> {
                     plans.push(self.plan_param(n, ty, cx, *extra)?);
                 }
                 writeln!(out, "{indent}        {dim} => {{").ok();
-                out.push_str(&self.emit_body(f, owner, &plans, &ret, cx, &format!("{indent}            "))?);
+                out.push_str(&self.emit_body(
+                    f,
+                    owner,
+                    &plans,
+                    &ret,
+                    cx,
+                    &format!("{indent}            "),
+                )?);
                 writeln!(out, "{indent}        }}").ok();
             }
             writeln!(
@@ -850,7 +1033,14 @@ impl<'a> Unit<'a> {
             .ok();
             writeln!(out, "{indent}    }}").ok();
         } else {
-            out.push_str(&self.emit_body(head, owner, &plans, &ret, cx, &format!("{indent}    "))?);
+            out.push_str(&self.emit_body(
+                head,
+                owner,
+                &plans,
+                &ret,
+                cx,
+                &format!("{indent}    "),
+            )?);
         }
         writeln!(out, "{indent}}}").ok();
         Ok(())
@@ -861,16 +1051,20 @@ impl<'a> Unit<'a> {
             return true;
         }
         match owner {
-            Owner::Hand(t) => f.self_kind.is_some() && {
-                let label = hand_self(self.hand_name(t));
-                let taken = f.params.iter().any(|p| p.name == label);
-                (if taken { "self_" } else { label }) == name
-            },
-            Owner::Holder(t) => f.self_kind.is_some() && {
-                let label = t.name.to_lowercase();
-                let taken = f.params.iter().any(|p| p.name == label);
-                (if taken { "self_".to_string() } else { label }) == name
-            },
+            Owner::Hand(t) => {
+                f.self_kind.is_some() && {
+                    let label = hand_self(self.hand_name(t));
+                    let taken = f.params.iter().any(|p| p.name == label);
+                    (if taken { "self_" } else { label }) == name
+                }
+            }
+            Owner::Holder(t) => {
+                f.self_kind.is_some() && {
+                    let label = t.name.to_lowercase();
+                    let taken = f.params.iter().any(|p| p.name == label);
+                    (if taken { "self_".to_string() } else { label }) == name
+                }
+            }
             _ => false,
         }
     }
@@ -898,7 +1092,11 @@ impl<'a> Unit<'a> {
         };
         let args: Vec<String> = rest.iter().map(|p| p.arg.clone()).collect();
         let args = args.join(", ");
-        let turbo = if f.dims.is_empty() { String::new() } else { format!("::<{}>", cx.dim.unwrap_or(2)) };
+        let turbo = if f.dims.is_empty() {
+            String::new()
+        } else {
+            format!("::<{}>", cx.dim.unwrap_or(2))
+        };
         let call = match owner {
             Owner::Free => format!("mrlyrs::{}{turbo}({args})", f.path),
             Owner::Hand(t) => match receiver {
@@ -907,13 +1105,26 @@ impl<'a> Unit<'a> {
                         true => r.arg.trim_start_matches('&').to_string(),
                         false => format!("{}_value", r.name),
                     };
-                    let name = if self.hand_name(t) == "Rng" { r.arg.clone() } else { name };
+                    let name = if self.hand_name(t) == "Rng" {
+                        r.arg.clone()
+                    } else {
+                        name
+                    };
                     format!("{name}.{}({args})", f.name)
                 }
                 None => {
-                    let base = self.rust_ty(&Ty::Hand { name: self.hand_name(t).into(), dim: cx.dim }, cx)?;
+                    let base = self.rust_ty(
+                        &Ty::Hand {
+                            name: self.hand_name(t).into(),
+                            dim: cx.dim,
+                        },
+                        cx,
+                    )?;
                     let base = if self.hand_name(t) == "CellNd" {
-                        format!("mrlyrs::math::cell::models::CellNd::<{}>", cx.dim.unwrap_or(2))
+                        format!(
+                            "mrlyrs::math::cell::models::CellNd::<{}>",
+                            cx.dim.unwrap_or(2)
+                        )
                     } else {
                         base
                     };
@@ -933,7 +1144,11 @@ impl<'a> Unit<'a> {
                 match (&f.via, f.self_kind) {
                     (Some(via), None) => format!("<{base} as mrlyrs::{via}>::{}({args})", f.name),
                     (Some(via), Some(_)) => {
-                        let all = if args.is_empty() { me } else { format!("{me}, {args}") };
+                        let all = if args.is_empty() {
+                            me
+                        } else {
+                            format!("{me}, {args}")
+                        };
                         format!("<{base} as mrlyrs::{via}>::{}({all})", f.name)
                     }
                     (None, None) => format!("{base}::{}({args})", f.name),
@@ -991,7 +1206,11 @@ impl<'a> Unit<'a> {
         ty.walk(&mut |t| match t {
             Ty::Unknown { .. } | Ty::Opaque { .. } => ok = false,
             Ty::Class { path, .. } if !self.holds(path) => ok = false,
-            Ty::Ref { lifetime: Some(l), item, .. } if l == "'static" && !matches!(**item, Ty::Str) => ok = false,
+            Ty::Ref {
+                lifetime: Some(l),
+                item,
+                ..
+            } if l == "'static" && !matches!(**item, Ty::Str) => ok = false,
             _ => {}
         });
         ok
@@ -1008,19 +1227,36 @@ impl<'a> Unit<'a> {
             writeln!(out, "/// {doc}").ok();
         }
         writeln!(out, "#[wasm_bindgen]").ok();
-        writeln!(out, "pub struct {ident} {{\n    inner: mrlyrs::{},\n}}\n", t.path).ok();
+        writeln!(
+            out,
+            "pub struct {ident} {{\n    inner: mrlyrs::{},\n}}\n",
+            t.path
+        )
+        .ok();
         writeln!(out, "#[wasm_bindgen]\nimpl {ident} {{").ok();
         if derives(t, "Deserialize") {
             writeln!(out, "    /// Reads the {} from its plain data.", t.name).ok();
             writeln!(out, "    #[wasm_bindgen(js_name = \"from\")]").ok();
-            writeln!(out, "    pub fn from_plain(data: JsValue) -> Result<{ident}, JsValue> {{").ok();
-            writeln!(out, "        Ok({ident} {{ inner: hand::from_js(&data)? }})").ok();
+            writeln!(
+                out,
+                "    pub fn from_plain(data: JsValue) -> Result<{ident}, JsValue> {{"
+            )
+            .ok();
+            writeln!(
+                out,
+                "        Ok({ident} {{ inner: hand::from_js(&data)? }})"
+            )
+            .ok();
             writeln!(out, "    }}").ok();
         }
         if derives(t, "Serialize") {
             writeln!(out, "    /// Writes the {} as plain data.", t.name).ok();
             writeln!(out, "    #[wasm_bindgen(js_name = \"toJSON\")]").ok();
-            writeln!(out, "    pub fn to_plain(&self) -> Result<JsValue, JsValue> {{").ok();
+            writeln!(
+                out,
+                "    pub fn to_plain(&self) -> Result<JsValue, JsValue> {{"
+            )
+            .ok();
             writeln!(out, "        hand::to_js(&self.inner)").ok();
             writeln!(out, "    }}").ok();
         }
@@ -1038,8 +1274,7 @@ impl<'a> Unit<'a> {
             writeln!(
                 out,
                 "    pub fn {}(&self) -> Result<{}, JsValue> {{",
-                field.name,
-                ret.sig
+                field.name, ret.sig
             )
             .ok();
             let value = match field.ty {
@@ -1095,7 +1330,11 @@ impl<'a> Unit<'a> {
 
     fn lib_rs(&self) -> Result<String> {
         let mut out = String::new();
-        writeln!(out, "{ALLOWS}\n\nmod hand;\n\nuse wasm_bindgen::prelude::*;\n").ok();
+        writeln!(
+            out,
+            "{ALLOWS}\n\nmod hand;\n\nuse wasm_bindgen::prelude::*;\n"
+        )
+        .ok();
         let groups = self.groups();
         let mut owned: BTreeMap<&str, Vec<Vec<&Function>>> = BTreeMap::new();
         for group in &groups {
@@ -1105,7 +1344,10 @@ impl<'a> Unit<'a> {
                     out.push('\n');
                 }
                 Owner::Class(t) | Owner::Holder(t) => {
-                    owned.entry(t.path.as_str()).or_default().push(group.clone());
+                    owned
+                        .entry(t.path.as_str())
+                        .or_default()
+                        .push(group.clone());
                 }
             }
         }
@@ -1154,7 +1396,11 @@ impl<'a> Unit<'a> {
         for t in self.classes() {
             let key = format!("{}::{}", parent(&t.path), t.name);
             if seen.insert(key) {
-                tree.insert(self.rel(&parent(&t.path)), t.name.clone(), self.local(&t.path));
+                tree.insert(
+                    self.rel(&parent(&t.path)),
+                    t.name.clone(),
+                    self.local(&t.path),
+                );
             }
         }
         for c in self.consts() {
@@ -1167,8 +1413,16 @@ impl<'a> Unit<'a> {
     fn wrapper_js(&self) -> String {
         let name = self.name;
         let mut out = String::new();
-        writeln!(out, "import * as wasm from \"./pkg/{name}/mrlyjs_{name}.js\";\n").ok();
-        writeln!(out, "export {{ default, initSync }} from \"./pkg/{name}/mrlyjs_{name}.js\";").ok();
+        writeln!(
+            out,
+            "import * as wasm from \"./pkg/{name}/mrlyjs_{name}.js\";\n"
+        )
+        .ok();
+        writeln!(
+            out,
+            "export {{ default, initSync }} from \"./pkg/{name}/mrlyjs_{name}.js\";"
+        )
+        .ok();
         writeln!(out, "export const Rng = wasm.Rng;").ok();
         let tree = self.tree();
         for (leaf, export) in &tree.leaves {
@@ -1200,20 +1454,21 @@ impl<'a> Unit<'a> {
             Ty::U128 | Ty::I128 | Ty::Code if ret => "string".into(),
             Ty::U128 | Ty::I128 | Ty::Code => "string | number | bigint".into(),
             Ty::Json => "any".into(),
-            Ty::Vec { item } | Ty::Slice { item, .. } | Ty::Array { item, .. } | Ty::Set { item } => {
-                match &**item {
-                    Ty::Scalar { name } if TYPED.contains(&name.as_str()) => {
-                        if ret {
-                            typed_array(name).into()
-                        } else if is_wide(name) {
-                            "ArrayLike<number | bigint>".into()
-                        } else {
-                            "ArrayLike<number>".into()
-                        }
+            Ty::Vec { item }
+            | Ty::Slice { item, .. }
+            | Ty::Array { item, .. }
+            | Ty::Set { item } => match &**item {
+                Ty::Scalar { name } if TYPED.contains(&name.as_str()) => {
+                    if ret {
+                        typed_array(name).into()
+                    } else if is_wide(name) {
+                        "ArrayLike<number | bigint>".into()
+                    } else {
+                        "ArrayLike<number>".into()
                     }
-                    _ => format!("{}[]", self.ts_wrap(&self.ts_direct(item, ret))),
                 }
-            }
+                _ => format!("{}[]", self.ts_wrap(&self.ts_direct(item, ret))),
+            },
             Ty::Option { item } => format!("{} | undefined", self.ts_direct(item, ret)),
             Ty::Tuple { items } => format!(
                 "[{}]",
@@ -1258,13 +1513,20 @@ impl<'a> Unit<'a> {
             Ty::Str | Ty::String => "string".into(),
             Ty::U128 | Ty::I128 | Ty::Code => "bigint".into(),
             Ty::Json => "any".into(),
-            Ty::Vec { item } | Ty::Slice { item, .. } | Ty::Array { item, .. } | Ty::Set { item } => {
+            Ty::Vec { item }
+            | Ty::Slice { item, .. }
+            | Ty::Array { item, .. }
+            | Ty::Set { item } => {
                 format!("{}[]", self.ts_wrap(&self.ts_serde(item)))
             }
             Ty::Option { item } => format!("{} | undefined", self.ts_serde(item)),
             Ty::Tuple { items } => format!(
                 "[{}]",
-                items.iter().map(|t| self.ts_serde(t)).collect::<Vec<_>>().join(", ")
+                items
+                    .iter()
+                    .map(|t| self.ts_serde(t))
+                    .collect::<Vec<_>>()
+                    .join(", ")
             ),
             Ty::Ref { item, .. } | Ty::Result { item } => self.ts_serde(item),
             Ty::Map { value, .. } => format!("Record<string, {}>", self.ts_serde(value)),
@@ -1397,9 +1659,16 @@ impl<'a> Unit<'a> {
         let name = &t.name;
         match &t.cross {
             TypeCross::Enum { .. } => {
-                let words: Vec<String> =
-                    t.variants.iter().map(|v| enum_word(t, &v.name, &v.serde)).collect();
-                let union = words.iter().map(|w| format!("{w:?}")).collect::<Vec<_>>().join(" | ");
+                let words: Vec<String> = t
+                    .variants
+                    .iter()
+                    .map(|v| enum_word(t, &v.name, &v.serde))
+                    .collect();
+                let union = words
+                    .iter()
+                    .map(|w| format!("{w:?}"))
+                    .collect::<Vec<_>>()
+                    .join(" | ");
                 if !doc.is_empty() {
                     writeln!(out, "{pad}/** {doc} */").ok();
                 }
@@ -1441,7 +1710,9 @@ impl<'a> Unit<'a> {
                 }
                 writeln!(out, "{pad}export class {name} {{").ok();
                 let inner = format!("{pad}    ");
-                let constructor = groups.iter().find(|g| g[0].name == "new" && g[0].self_kind.is_none());
+                let constructor = groups
+                    .iter()
+                    .find(|g| g[0].name == "new" && g[0].self_kind.is_none());
                 match constructor {
                     Some(g) => {
                         let (d, params, _) = self.ts_function(g, Owner::Class(t));
@@ -1510,7 +1781,11 @@ impl<'a> Unit<'a> {
                 if !d.is_empty() {
                     writeln!(out, "{pad}    /** {d} */").ok();
                 }
-                let label = if f.name == "new" { "\"new\"".to_string() } else { f.name.clone() };
+                let label = if f.name == "new" {
+                    "\"new\"".to_string()
+                } else {
+                    f.name.clone()
+                };
                 writeln!(out, "{pad}    {label}({params}): {ret};").ok();
             }
             writeln!(out, "{pad}}};").ok();
@@ -1531,7 +1806,11 @@ impl<'a> Unit<'a> {
                 } else {
                     format!(
                         "[{}]",
-                        v.fields.iter().map(|f| self.ts_serde(&f.ty)).collect::<Vec<_>>().join(", ")
+                        v.fields
+                            .iter()
+                            .map(|f| self.ts_serde(&f.ty))
+                            .collect::<Vec<_>>()
+                            .join(", ")
                     )
                 })
             } else {
@@ -1555,7 +1834,11 @@ impl<'a> Unit<'a> {
     }
 
     fn ts_fields(&self, out: &mut String, t: &Type, pad: &str, all: bool) {
-        for field in t.fields.iter().filter(|f| (all || f.public) && !f.serde_skip) {
+        for field in t
+            .fields
+            .iter()
+            .filter(|f| (all || f.public) && !f.serde_skip)
+        {
             let d = doc_line(&field.docs);
             if !d.is_empty() {
                 writeln!(out, "{pad}/** {d} */").ok();
@@ -1571,7 +1854,11 @@ impl<'a> Unit<'a> {
     fn types_dts(&self) -> Result<String> {
         let name = self.name;
         let mut out = String::new();
-        writeln!(out, "export {{ default, initSync }} from \"./pkg/{name}/mrlyjs_{name}.js\";\n").ok();
+        writeln!(
+            out,
+            "export {{ default, initSync }} from \"./pkg/{name}/mrlyjs_{name}.js\";\n"
+        )
+        .ok();
         let words = |path: &str| -> String {
             self.ty(path)
                 .map(|t| {
@@ -1590,11 +1877,19 @@ impl<'a> Unit<'a> {
         let orientation = words("math::six::Orientation");
         writeln!(out, "/** An rgba color as four bytes. */").ok();
         writeln!(out, "export type Color = [number, number, number, number];").ok();
-        writeln!(out, "/** A tensor: its shape and its flat data as a typed array of its dtype. */").ok();
+        writeln!(
+            out,
+            "/** A tensor: its shape and its flat data as a typed array of its dtype. */"
+        )
+        .ok();
         writeln!(out, "export interface Tensor {{\n    shape: number[];\n    data: Uint8Array | Uint16Array | Uint32Array | Int32Array;\n}}").ok();
         writeln!(out, "/** A cell: the shape, the type bytes, and the flat rgba colors and the tags when present. */").ok();
         writeln!(out, "export interface Cell {{\n    shape: number[];\n    types: Uint8Array | Uint16Array | Uint32Array | Int32Array;\n    colors?: Uint8Array;\n    tags?: Uint8Array | Uint16Array | Uint32Array | Int32Array;\n}}").ok();
-        writeln!(out, "/** A hex cell: a flat cell with its projection, orientation and start row. */").ok();
+        writeln!(
+            out,
+            "/** A hex cell: a flat cell with its projection, orientation and start row. */"
+        )
+        .ok();
         writeln!(out, "export interface Cell6d {{\n    cell: Cell;\n    projection: {projection};\n    orientation: {orientation};\n    start: number;\n}}").ok();
         writeln!(out, "/** A color inside plain data, serde's form. */").ok();
         writeln!(out, "export interface ColorData {{\n    r: number;\n    g: number;\n    b: number;\n    a: number;\n}}").ok();
@@ -1604,7 +1899,11 @@ impl<'a> Unit<'a> {
         writeln!(out, "export interface CellData {{\n    types: TensorData;\n    colors?: number[][];\n    tags?: TensorData;\n}}").ok();
         writeln!(out, "/** A hex cell inside plain data, serde's form. */").ok();
         writeln!(out, "export interface Cell6dData {{\n    cell: {{ cell: CellData }};\n    projection: {projection};\n    orientation: {orientation};\n    start: number;\n}}").ok();
-        writeln!(out, "/** A seeded random stream, opened from a number or a bigint seed. */").ok();
+        writeln!(
+            out,
+            "/** A seeded random stream, opened from a number or a bigint seed. */"
+        )
+        .ok();
         writeln!(out, "export class Rng {{\n    constructor(seed: number | bigint | string);\n    free(): void;\n    /** Draws a float at or above zero and below one. */\n    unit(): number;\n    /** Draws an integer below n, or zero when n is zero. */\n    below(n: number): number;\n    /** Draws an integer between lo and hi inclusive, or lo when hi is not above lo. */\n    range(lo: number, hi: number): number;\n    /** Draws a fair coin flip. */\n    boolean(): boolean;\n    /** Returns true with probability p. */\n    chance(p: number): boolean;\n    /** Draws amount distinct indices below length, or every index when amount is larger. */\n    sample_indices(length: number, amount: number): Uint32Array;\n    /** Draws one item of the array, the same draw as Rust's choice. */\n    choice<T>(items: ArrayLike<T>): T;\n    /** Shuffles the array in place, the same permutation as Rust's shuffle. */\n    shuffle<T>(items: T[]): void;\n}}").ok();
         let mut tree = DeclTree::default();
         let groups = self.groups();
@@ -1624,7 +1923,10 @@ impl<'a> Unit<'a> {
                     tree.insert(self.rel(&group[0].module), text);
                 }
                 Owner::Class(t) | Owner::Holder(t) => {
-                    owned.entry(t.path.as_str()).or_default().push(group.clone());
+                    owned
+                        .entry(t.path.as_str())
+                        .or_default()
+                        .push(group.clone());
                 }
             }
         }
@@ -1643,7 +1945,10 @@ impl<'a> Unit<'a> {
         }
         for path in self.referenced() {
             let Some(t) = self.ty(&path) else { continue };
-            if matches!(t.cross, TypeCross::Hand { .. } | TypeCross::Uncrossable { .. }) {
+            if matches!(
+                t.cross,
+                TypeCross::Hand { .. } | TypeCross::Uncrossable { .. }
+            ) {
                 continue;
             }
             let groups = owned.get(path.as_str()).cloned().unwrap_or_default();
@@ -1716,7 +2021,11 @@ impl DeclTree {
             }
         }
         for (seg, child) in &self.children {
-            let keyword = if depth == 0 { "export declare namespace" } else { "export namespace" };
+            let keyword = if depth == 0 {
+                "export declare namespace"
+            } else {
+                "export namespace"
+            };
             out.push_str(&format!("{pad}{keyword} {seg} {{\n"));
             out.push_str(&child.render(depth + 1));
             out.push_str(&format!("{pad}}}\n"));
@@ -1741,7 +2050,9 @@ fn place(e: &str) -> String {
 fn closure(x: &str, body: String) -> String {
     let tail = format!("({x})");
     match body.strip_suffix(&tail) {
-        Some(path) if !path.contains(x) && !path.contains(' ') || path.starts_with("hand::from_js::<") => {
+        Some(path)
+            if !path.contains(x) && !path.contains(' ') || path.starts_with("hand::from_js::<") =>
+        {
             path.to_string()
         }
         _ => format!("|{x}| {body}"),
@@ -1790,10 +2101,15 @@ fn pure_in(ty: &Ty) -> bool {
     match ty {
         Ty::Unit | Ty::Str | Ty::String | Ty::Json | Ty::Plain { .. } | Ty::Enum { .. } => true,
         Ty::Scalar { name } => !is_wide(name),
-        Ty::Vec { item } | Ty::Slice { item, .. } | Ty::Option { item } | Ty::Array { item, .. } => {
-            pure_in(item)
-        }
-        Ty::Ref { mutable: false, item, .. } => pure_in(item),
+        Ty::Vec { item }
+        | Ty::Slice { item, .. }
+        | Ty::Option { item }
+        | Ty::Array { item, .. } => pure_in(item),
+        Ty::Ref {
+            mutable: false,
+            item,
+            ..
+        } => pure_in(item),
         Ty::Tuple { items } => items.iter().all(pure_in),
         _ => false,
     }
@@ -1849,13 +2165,14 @@ fn ident(name: &str) -> String {
     }
 }
 
-
 fn derives(t: &Type, what: &str) -> bool {
     t.derives.iter().any(|d| d == what)
 }
 
 fn doc_line(docs: &[String]) -> String {
-    docs.first().map(|d| d.trim().to_string()).unwrap_or_default()
+    docs.first()
+        .map(|d| d.trim().to_string())
+        .unwrap_or_default()
 }
 
 fn ts_leaf(name: &str) -> String {

@@ -14,11 +14,11 @@ fn main() -> Result<()> {
     let slot = frame.w / TOP as f64;
     let pad = slot * 0.14;
     let mut touching = 0usize;
-    for n in 1..=TOP {
-        let hit = n > 1 && phi[n] as usize == n - 1;
+    for (n, &value) in phi.iter().enumerate().take(TOP + 1).skip(1) {
+        let hit = n > 1 && value as usize == n - 1;
         assert_eq!(hit, is_prime(n));
         touching += hit as usize;
-        let height = frame.h * phi[n] as f64 / ceiling;
+        let height = frame.h * value as f64 / ceiling;
         board.rect(
             frame.x + (n - 1) as f64 * slot + pad,
             frame.y + frame.h - height,
