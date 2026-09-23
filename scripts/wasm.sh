@@ -10,17 +10,15 @@ font=$(mktemp)
 trap 'rm -f "$font"' EXIT
 
 units=$(cat bridge/units.txt)
+built=target/wasm32-unknown-unknown/release
 
-rm -rf "$PWD/pkgs/mrlyjs/pkg"
+cargo build --release --target wasm32-unknown-unknown --lib -p demos $(printf -- '-p mrlyjs_%s ' $units)
+
+rm -rf pkgs/mrlyjs/pkg site/pkg
 for unit in $units; do
-  crate="pkgs/mrlyjs/units/$unit"
-  out="$PWD/pkgs/mrlyjs/pkg/$unit"
-  wasm-pack build "$crate" --target web --release --out-dir "$out"
-  rm -f "$out/.gitignore" "$out/package.json" "$out/README.md" "$out/LICENSE"
+  wasm-bindgen "$built/mrlyjs_$unit.wasm" --target web --out-dir "pkgs/mrlyjs/pkg/$unit"
 done
-
-rm -rf "$PWD/site/pkg"
-wasm-pack build site/demos/logic --target web --release --out-dir "$PWD/site/pkg"
+wasm-bindgen "$built/demos.wasm" --target web --out-dir site/pkg
 cargo run -q -p mrlyrs --example book > "$font"
 install -m 644 "$font" site/kit/font/font.json
 
