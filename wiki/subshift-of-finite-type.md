@@ -1,0 +1,27 @@
+---
+title: Subshifts of finite type
+lead: Write an endless string of letters under a rule that forbids a few short words; the strings that obey form a subshift of finite type, and the number of words it allows grows at a rate read off one small table.
+prerequisites: transfer-matrix, spectral-radius
+---
+
+Take the two letters 0 and 1 and write a string that never ends. Now forbid one short word, `11`, so that two 1s may never stand side by side. The strings that obey are `0010100010...` and its like; `0110...` is out. The set of every obeying string is called the golden mean shift, and it is the simplest example of a subshift of finite type: all the endless strings over a finite alphabet that avoid a finite list of forbidden words.
+
+The word shift is there because the rule is the same at every place. Slide an allowed string one letter to the left and it is still allowed, so the set is closed under that slide, which is called the shift. Any set of strings closed under the shift, and cut out by some list of forbidden words, is a subshift. Finite type means the list is finite. Not every subshift is of finite type: asking for an even number of 0s between any two 1s needs the forbidden words `101`, `10001`, `1000001` and on for ever, and no finite list will do.
+
+A finite list is the same thing as a window. If the longest forbidden word has `k` letters, slide a window `k` letters wide along the string and check what it shows at each place. The string is allowed exactly when every view is allowed, and nothing outside the window ever matters. The rule remembers the last `k - 1` letters and nothing more. For the golden mean shift `k = 2`, and the window sees one pair at a time.
+
+The figure is the tree of allowed words. The dot in the middle is the empty word. Ring `n` holds the words of length `n`, each in the slice of the circle you get by reading the word as a binary fraction, so every word sits just outside the word it extends. A word ending in 0 is blue and a word ending in 1 is yellow. A blue word has two children. A yellow word has only one, and the grey stub beside that child is the word ending in `11` that the rule cuts off; nothing grows from a stub. Ring by ring the lit words number 2, 3, 5, 8, 13, 21, 34, 55, out of 2, 4, 8 and on to 256 slots.
+
+Those are the Fibonacci numbers, and the reason takes one line. An allowed word of length `n` ends either in `0`, after any allowed word of length `n - 1`, or in `01`, after any allowed word of length `n - 2`. So each count is the sum of the two before it.
+
+The window is also a machine, and the machine has a [transfer matrix](/wiki/transfer-matrix/). Its states are the last `k - 1` letters, here just the last letter. From 0 the next letter may be 0 or 1; from 1 it must be 0. The table is `[[1, 1], [1, 0]]`, and an allowed word of length `n` is a walk of `n - 1` steps through it. Add up the four entries of the table raised to the power `n - 1` and you get the count: the identity for `n = 1` gives 2, the table itself gives 3, its square `[[2, 1], [1, 1]]` gives 5.
+
+So the counts grow the way walks do, at a rate set by the table's largest eigenvalue in size, its [spectral radius](/wiki/spectral-radius/) `rho`. The table has no negative entries, and some power of it has every entry positive: here the square already does. For such a table Perron and Frobenius say `rho` is the one top eigenvalue, and the number of allowed words of length `n` is roughly a constant times `rho^n`. For the golden mean shift `rho` is the larger root of `r^2 = r + 1`, the golden ratio `(1 + sqrt 5)/2 = 1.618...`, which is where the name comes from. The ratios of the counts show it: `34/21 = 1.619` and `55/34 = 1.618`.
+
+The rate has a name of its own. The topological entropy of a subshift is the limit of `log(count)/n`, the growth rate on a log scale, and for a subshift of finite type it is exactly `log rho`. With no rule at all every letter is free and the entropy is `log 2`, one full bit per letter. The golden mean shift gets `log_2 1.618 = 0.694` bits per letter: forbidding `11` costs about three tenths of a bit on every letter, for ever. Two subshifts that differ only by a recoding of letters have the same entropy, so the number measures the rule itself and not the way it is written.
+
+The idea turns up wherever a long string is built under a local rule. Engineers writing bits to a disk forbid patterns the hardware reads badly, and the entropy is then the best rate any code can reach. In dynamics a smooth system is often coded by the sequence of regions it visits, and that sequence lives in a subshift of finite type. The standard introduction is [Lind and Marcus 1995](https://doi.org/10.1017/CBO9780511626302).
+
+## In the tree
+
+A design judges each digit alone, which is a window one digit wide. [Beneath a design](/research/beneath/) turns that width into a dial: a design with memory is a window rule on `k` digits, its accepted words are a subshift of finite type, and code `7` at `k = 2` is the golden mean shift of this page. The note prices the memory with `kappa`, the gap between the rate the windows alone suggest and the rate `log_2 rho` the rule really has. [The memory dial demo](/demos/memory/) prints the words a rule accepts at each level and the growth rate that replaces plain doubling. The count comes from [the transfer matrix](/wiki/transfer-matrix/) and the rate from [its spectral radius](/wiki/spectral-radius/).

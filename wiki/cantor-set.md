@@ -33,3 +33,5 @@ The pair is the integer shadow of a question of [Furstenberg](https://doi.org/10
 ## In the tree
 
 [Two bases](/research/cobham/) takes the sum of the base-3 and base-4 sets as its Object S: the gap the sum leaves at every scale, the clean scales where it is symmetric, and its density read against the sum of the two Cantor sets in the continuum, and [the three plus four demo](/demos/sumset/) lights those sums and the dark runs where a power of 3 nearly meets a power of 4. [Complex dimensions](/research/dimensions/) treats the Cantor design `{0,2}` at base 3 as a fractal string and shows why its tube never settles, which is [Minkowski content](/wiki/minkowski-content/). The set is the base-3 case of [missing-digit numbers](/wiki/missing-digit-numbers/), and its square and cube cousins are [the Sierpinski carpet](/wiki/sierpinski-carpet/) and [the Menger sponge](/wiki/menger-sponge/).
+
+The base-3 set `A` above, read as sensor positions, is the Cantor array: the differences of its points reach every whole number, which is [a hole-free difference coarray](/wiki/difference-coarray/).

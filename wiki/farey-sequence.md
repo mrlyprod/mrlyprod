@@ -20,4 +20,4 @@ The stack above draws the same fractions another way. Lay a ruler with n equal d
 
 ## In the tree
 
-The grid of every design at every scale, laid over itself, lights up at the Farey fractions, and the [Farey stack note](/research/farey/) reads that [moire](/wiki/moire/) as a diagram of the fractions and of how evenly they spread. The circles standing on the same fractions are in [the Apollonian demo](/demos/apollonian/), and counting the lit points of the grid is how [pi comes out of the grid](/research/pi/).
+The grid of every design at every scale, laid over itself, lights up at the Farey fractions, and the [Farey stack note](/research/farey/) reads that [moire](/wiki/moire/) as a diagram of the fractions and of how evenly they spread. The circles standing on the same fractions are in [the Apollonian demo](/demos/apollonian/), and counting the lit points of the grid is how [pi comes out of the grid](/research/pi/). Building every fraction by mediants alone, each exactly once, is the Stern-Brocot tree of [Stern's diatomic sequence](/wiki/stern-diatomic-sequence/).
