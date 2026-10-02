@@ -94,6 +94,9 @@ const wallisCarpet = JSON.parse(m.wallis_read('flat', 3, 5, 2));
 const wallisWalk = m.wallis_walk('odd', 3, 2, 200);
 const wallisGrid = m.wallis_grid('odd', 3, 3);
 const wallisBoxes = m.wallis_faces('odd', 3, 3);
+const stair7 = JSON.parse(m.staircase_read('7', 2, 3, false));
+const stair9 = JSON.parse(m.staircase_read('9', 2, 3, false));
+const stair150 = JSON.parse(m.staircase_read('150', 3, 3, false));
 const split = JSON.parse(m.slice_partition(3));
 const shape = JSON.parse(m.volume_shape(7, 64));
 const sieve = new m.Sieve(30);
@@ -506,6 +509,10 @@ const checks: [string, unknown, unknown][] = [
   ['wallis walk 200', `${wallisWalk.length} ${wallisWalk[0].toFixed(9)} ${wallisWalk[199].toFixed(9)}`, '200 0.888888889 0.786375634'],
   ['wallis raster is the count', `${wallisGrid.width} ${wallisGrid.types.reduce((a: number, b: number) => a + b, 0)}`, '105 9216'],
   ['wallis punctures packed', `${wallisBoxes[0] / 216} ${wallisBoxes.length - 2 === wallisBoxes[0]}`, '3251 true'],
+  ['staircase dim 2 code 7', `${stair7.closed} ${stair7.constant.toFixed(12)} ${stair7.drift.join('/')} ${stair7.correction.join('/')}`, '3 pi/(4 Gamma(1/3)) 0.879525401448 1/3 17/36'],
+  ['staircase dim 2 code 9', `${stair9.closed} ${stair9.reflection.toFixed(12)} ${stair9.parity.value.toFixed(12)}`, 'cosh(pi/2)/2 1.254589239329 1.254589239329'],
+  ['staircase dim 3 code 150', `${stair150.constant.toFixed(12)} ${stair150.parity.value.toFixed(12)}`, '0.948815485720 0.948815485720'],
+  ['staircase mirror and letters', `${stair7.mirror.code} ${stair7.mirror.both.toFixed(12)} ${stair7.mirror.product.toFixed(12)} ${stair7.levels.map((row: { fill: string }) => row.fill).join(',')}`, '14 0.765196606786 0.765196606786 8,21,40'],
   ['slice_partition 3', `${split.carpet},${split.net},${split.exact}`, '42,12,true'],
   ['volume_shape 7 64', `${shape.layers},${shape.voxels}`, '4,262144'],
   ['radial_share square', m.radial_share(m.harmonics(square, 8, 64, 8)).toFixed(1), '95.3'],

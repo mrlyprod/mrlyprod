@@ -1,5 +1,7 @@
 use crate::core::error::{overflow_error, value_error, Result};
-use std::f64::consts::FRAC_PI_4;
+use crate::num::zeta::Complex;
+use serde::{Deserialize, Serialize};
+use std::f64::consts::{FRAC_PI_4, LN_2, PI};
 
 /// The limit of the plane Wallis sieve's surviving area, pi over four.
 pub const PLANE_LIMIT: f64 = FRAC_PI_4;
@@ -306,6 +308,690 @@ pub fn limit(word: &[u64], dimension: u32) -> Result<Option<f64>> {
     Ok(Some(whole / ratio(&head, dimension)?))
 }
 
+/// Returns the Wallis sieve product of a parity design, `prod_(N odd >= 3) (1 - N^-dim)` for the corners with an odd count of odd coordinates and `prod (1 + N^-dim)` for the even count, at `dim >= 2`.
+///
+/// At odd `N` the sum of `(-1)^(x_1 + ... + x_dim)` over the box is 1, so the two designs fill `(N^dim -+ 1)/2` and the row word's constant is this product. The logarithm is summed over odd `N` from 3 to 999, smallest term first, and the tail past 1001 is the series `sum_j (-+1)^j / j sum N^(-dim j)`, each inner sum by Euler-Maclaurin through the fourth Bernoulli term, as for the solid limit.
+///
+/// ```
+/// let plane = mrlyrs::num::sieve::parity_product(2, true).unwrap();
+/// assert!((plane - std::f64::consts::FRAC_PI_4).abs() < 1e-15);
+/// ```
+///
+/// # Errors
+///
+/// Errs below two dimensions, where the product runs off to 0 or to infinity.
+pub fn parity_product(dimension: u32, odd: bool) -> Result<f64> {
+    if dimension < 2 {
+        return value_error(format!(
+            "a parity product converges from dim 2, not dim {dimension}."
+        ));
+    }
+    let power = dimension as i32;
+    let sign = if odd { -1.0 } else { 1.0 };
+    let mut log = 0.0f64;
+    let mut n = SPLIT - 2;
+    while n >= 3 {
+        log += (sign * (n as f64).powi(-power)).ln_1p();
+        n -= 2;
+    }
+    for j in 1..=4i32 {
+        let term = odd_tail(SPLIT, power * j) / f64::from(j);
+        log += if odd || j % 2 == 0 { -term } else { term };
+    }
+    Ok(log.exp())
+}
+
+// THE ROW WORD
+
+const ROW_DIMENSIONS: usize = 3;
+
+const STIRLING: [f64; 8] = [
+    1.0 / 12.0,
+    -1.0 / 360.0,
+    1.0 / 1260.0,
+    -1.0 / 1680.0,
+    1.0 / 1188.0,
+    -691.0 / 360_360.0,
+    1.0 / 156.0,
+    -3617.0 / 122_400.0,
+];
+
+/// One base-2 design read along the row word of odd sides `3, 5, ..., 2L+1`, out of its fill polynomial `P_F(n) = sum_j a_j n^(dim-j) (n-1)^j`.
+///
+/// The fill ratio is `(w/2^dim)^L L^drift C (1 + c_1/L + O(L^-2))`, `w` the corners, `drift = dim/2 - mean` and `c_1 = dim/8 + drift - var/2` over the odd count of the corners, and `C = Gamma(3/2)^dim / prod_i Gamma(2 - r_i)` over the roots of `P_F`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Row {
+    /// The odd-count profile: `a_j` corners with `j` odd coordinates, `j` from 0 to `dim`.
+    pub profile: Vec<u64>,
+    /// The drift, the power of `L` the fill carries past its ratio per level, as a reduced fraction.
+    pub drift: (i64, i64),
+    /// The first correction `c_1`, as a reduced fraction.
+    pub correction: (i64, i64),
+    /// The roots of the fill polynomial: the zeros, the ones, the rational roots, then the rest.
+    pub roots: Vec<Complex>,
+    /// The constant `C`, the Gamma form at the roots.
+    pub constant: f64,
+    /// The constant spelled: a rational, a power of `sqrt(pi)`, and the Gamma, `cosh`, `cos` or `sin` values the roots leave.
+    pub closed: String,
+    /// The constant by reflection alone, `(sqrt(pi)/2)^(m_0 + m_1) prod_pairs sin(pi r)/(4 r (1-r))`, when every root outside `0, 1/2, 1` pairs with `1 - r`.
+    pub reflection: Option<f64>,
+    /// The constant times the mirror design's, `prod_i sin(pi r_i)/(4 r_i (1 - r_i))` with `pi/4` at a root 0 or 1.
+    pub mirror: f64,
+    /// For a parity design at `dim >= 2`: whether its corners hold an odd count of odd coordinates, and its Wallis sieve product.
+    pub parity: Option<(bool, f64)>,
+}
+
+struct Split {
+    zero: usize,
+    one: usize,
+    rational: Vec<(i128, i128)>,
+    rest: Vec<i128>,
+}
+
+struct Form {
+    num: i128,
+    den: i128,
+    root: i128,
+    halves: u32,
+    top: Vec<String>,
+    bottom: Vec<String>,
+}
+
+fn gcd(a: i128, b: i128) -> i128 {
+    let (mut a, mut b) = (a.abs(), b.abs());
+    while b != 0 {
+        (a, b) = (b, a % b);
+    }
+    a.max(1)
+}
+
+fn binomial(n: usize, k: usize) -> i128 {
+    (0..k).fold(1i128, |acc, i| acc * (n - i) as i128 / (i + 1) as i128)
+}
+
+fn reduced(p: i128, q: i128) -> (i64, i64) {
+    let g = gcd(p, q) * q.signum();
+    ((p / g) as i64, (q / g) as i64)
+}
+
+fn fraction(p: i128, q: i128) -> String {
+    let (p, q) = reduced(p, q);
+    if q == 1 {
+        p.to_string()
+    } else {
+        format!("{p}/{q}")
+    }
+}
+
+fn square_part(n: i128) -> (i128, i128) {
+    let (mut s, mut t, mut f) = (1i128, n, 2i128);
+    while f * f <= t {
+        while t % (f * f) == 0 {
+            t /= f * f;
+            s *= f;
+        }
+        f += 1;
+    }
+    (s, t)
+}
+
+fn surd(s: i128, t: i128, v: i128) -> String {
+    let (s, v) = reduced(s, v);
+    let mut words = Vec::new();
+    if s != 1 || t == 1 {
+        words.push(s.to_string());
+    }
+    if t > 1 {
+        words.push(format!("sqrt{t}"));
+    }
+    let text = words.join(" ");
+    if v == 1 {
+        text
+    } else {
+        format!("{text}/{v}")
+    }
+}
+
+fn angle(s: i128, t: i128, v: i128) -> String {
+    let (s, v) = reduced(s, v);
+    let (s, v) = (i128::from(s), i128::from(v));
+    let mut words = Vec::new();
+    if s != 1 {
+        words.push(s.to_string());
+    }
+    words.push("pi".to_string());
+    if t > 1 && v % t == 0 {
+        let k = v / t;
+        let under = if k == 1 {
+            format!("sqrt{t}")
+        } else {
+            format!("({k} sqrt{t})")
+        };
+        return format!("{}/{under}", words.join(" "));
+    }
+    if t > 1 {
+        words.push(format!("sqrt{t}"));
+    }
+    let text = words.join(" ");
+    if v == 1 {
+        text
+    } else {
+        format!("{text}/{v}")
+    }
+}
+
+fn merged(tokens: &[String]) -> Vec<String> {
+    let mut seen: Vec<(String, usize)> = Vec::new();
+    for token in tokens {
+        match seen.iter_mut().find(|entry| entry.0 == *token) {
+            Some(entry) => entry.1 += 1,
+            None => seen.push((token.clone(), 1)),
+        }
+    }
+    seen.into_iter()
+        .map(|(t, k)| if k == 1 { t } else { format!("{t}^{k}") })
+        .collect()
+}
+
+impl Form {
+    fn scale(&mut self, p: i128, q: i128) {
+        self.num *= p;
+        self.den *= q;
+        let g = gcd(self.num, self.den);
+        self.num /= g;
+        self.den /= g;
+    }
+
+    fn radical(&mut self, t: i128) {
+        let (s, t) = square_part(self.root * t);
+        self.root = t;
+        self.scale(s, 1);
+    }
+
+    fn spell(&self) -> String {
+        let mut upper = Vec::new();
+        if self.num != 1 {
+            upper.push(self.num.to_string());
+        }
+        if self.root > 1 {
+            upper.push(format!("sqrt{}", self.root));
+        }
+        match self.halves {
+            0 => {}
+            1 => upper.push("sqrt(pi)".to_string()),
+            2 => upper.push("pi".to_string()),
+            h if h % 2 == 0 => upper.push(format!("pi^{}", h / 2)),
+            h => upper.push(format!("pi^({h}/2)")),
+        }
+        upper.extend(merged(&self.top));
+        let upper = if upper.is_empty() {
+            "1".to_string()
+        } else {
+            upper.join(" ")
+        };
+        let mut lower = Vec::new();
+        if self.den != 1 {
+            lower.push(self.den.to_string());
+        }
+        lower.extend(merged(&self.bottom));
+        match lower.len() {
+            0 => upper,
+            1 => format!("{upper}/{}", lower[0]),
+            _ => format!("{upper}/({})", lower.join(" ")),
+        }
+    }
+}
+
+fn row_dimension(profile: &[u64]) -> Result<usize> {
+    let dimension = profile.len().saturating_sub(1);
+    if !(1..=ROW_DIMENSIONS).contains(&dimension) {
+        return value_error(format!(
+            "a row profile holds dim + 1 counts at dim 1 to {ROW_DIMENSIONS}, not {}.",
+            profile.len()
+        ));
+    }
+    for (j, &a) in profile.iter().enumerate() {
+        if i128::from(a) > binomial(dimension, j) {
+            return value_error(format!(
+                "no design in dim {dimension} has {a} corners with {j} odd coordinates."
+            ));
+        }
+    }
+    if profile.iter().all(|&a| a == 0) {
+        return value_error("the empty design fills nothing.");
+    }
+    Ok(dimension)
+}
+
+fn scaled(poly: &[i128], p: i128, q: i128) -> i128 {
+    let degree = poly.len() - 1;
+    poly.iter()
+        .enumerate()
+        .map(|(k, &c)| c * p.pow(k as u32) * q.pow((degree - k) as u32))
+        .sum()
+}
+
+fn divide(poly: &[i128], p: i128, q: i128) -> Vec<i128> {
+    let degree = poly.len() - 1;
+    let mut out = vec![0i128; degree];
+    out[degree - 1] = poly[degree] / q;
+    for k in (1..degree).rev() {
+        out[k - 1] = (poly[k] + p * out[k]) / q;
+    }
+    out
+}
+
+fn split(profile: &[u64], dimension: usize) -> Split {
+    let low = profile.iter().position(|&a| a > 0).unwrap_or(0);
+    let high = profile.iter().rposition(|&a| a > 0).unwrap_or(0);
+    let mut core = vec![0i128; high - low + 1];
+    for (j, &a) in profile.iter().enumerate().take(high + 1).skip(low) {
+        let m = j - low;
+        for k in 0..=m {
+            let sign = if (m - k) % 2 == 0 { 1 } else { -1 };
+            core[high - j + k] += i128::from(a) * binomial(m, k) * sign;
+        }
+    }
+    let mut rational = Vec::new();
+    'search: while core.len() > 1 {
+        let lead = core[core.len() - 1].abs();
+        for q in 2..=lead {
+            if lead % q != 0 {
+                continue;
+            }
+            for p in 1..q {
+                if gcd(p, q) == 1 && scaled(&core, p, q) == 0 {
+                    rational.push((p, q));
+                    core = divide(&core, p, q);
+                    continue 'search;
+                }
+            }
+        }
+        break;
+    }
+    Split {
+        zero: dimension - high,
+        one: low,
+        rational,
+        rest: core,
+    }
+}
+
+fn quadratic(c: f64, b: f64, a: f64) -> [Complex; 2] {
+    let disc = b * b - 4.0 * a * c;
+    let re = -b / (2.0 * a);
+    let half = disc.abs().sqrt() / (2.0 * a);
+    if disc < 0.0 {
+        [Complex::new(re, -half), Complex::new(re, half)]
+    } else {
+        [Complex::new(re - half, 0.0), Complex::new(re + half, 0.0)]
+    }
+}
+
+fn rest_roots(rest: &[i128]) -> Vec<Complex> {
+    let c: Vec<f64> = rest.iter().map(|&x| x as f64).collect();
+    match c.len() {
+        3 => quadratic(c[0], c[1], c[2]).to_vec(),
+        4 => {
+            let f = |x: f64| ((c[3] * x + c[2]) * x + c[1]) * x + c[0];
+            let rising = f(1.0) > f(0.0);
+            let (mut low, mut high) = (0.0f64, 1.0f64);
+            for _ in 0..200 {
+                let mid = 0.5 * (low + high);
+                if (f(mid) > 0.0) == rising {
+                    high = mid;
+                } else {
+                    low = mid;
+                }
+            }
+            let r = 0.5 * (low + high);
+            let b = c[2] + r * c[3];
+            let mut out = vec![Complex::new(r, 0.0)];
+            out.extend(quadratic(c[1] + r * b, b, c[3]));
+            out
+        }
+        _ => Vec::new(),
+    }
+}
+
+fn ln_one_plus(u: Complex) -> Complex {
+    let size = 0.5 * (2.0 * u.re + u.re * u.re + u.im * u.im).ln_1p();
+    Complex::new(size, u.im.atan2(1.0 + u.re))
+}
+
+fn stirling(z: Complex) -> Complex {
+    let inverse = Complex::new(1.0, 0.0) / z;
+    let square = inverse * inverse;
+    let mut power = inverse;
+    let mut series = Complex::new(0.0, 0.0);
+    for c in STIRLING {
+        series = series + power * c;
+        power = power * square;
+    }
+    series
+}
+
+fn gamma_step(r: Complex) -> Complex {
+    let delta = Complex::new(0.5 - r.re, -r.im);
+    let mut low = 1.5f64;
+    let mut sum = Complex::new(0.0, 0.0);
+    while low < 16.0 {
+        sum = sum - ln_one_plus(delta * (1.0 / low));
+        low += 1.0;
+    }
+    let near = Complex::new(low, 0.0);
+    let far = near + delta;
+    let main = ln_one_plus(delta * (1.0 / low)) * (low - 0.5) + delta * far.ln() - delta;
+    sum + main + stirling(far) - stirling(near)
+}
+
+fn sine_ratio(r: Complex) -> Complex {
+    let (x, y) = (PI * r.re, PI * r.im);
+    let sine = Complex::new(x.sin() * y.cosh(), x.cos() * y.sinh());
+    let one = Complex::new(1.0, 0.0);
+    sine / (r * (one - r) * 4.0)
+}
+
+fn poly_text(poly: &[i128]) -> String {
+    let mut text = String::new();
+    for (k, &c) in poly.iter().enumerate().rev() {
+        if c == 0 {
+            continue;
+        }
+        let size = c.abs();
+        let body = match (k, size) {
+            (0, _) => size.to_string(),
+            (1, 1) => "n".to_string(),
+            (1, _) => format!("{size}n"),
+            (_, 1) => format!("n^{k}"),
+            _ => format!("{size}n^{k}"),
+        };
+        if text.is_empty() {
+            text = if c < 0 { format!("-{body}") } else { body };
+        } else {
+            text += if c < 0 { " - " } else { " + " };
+            text += &body;
+        }
+    }
+    text
+}
+
+fn spelled(split: &Split) -> String {
+    let mut form = Form {
+        num: 1,
+        den: 1,
+        root: 1,
+        halves: 0,
+        top: Vec::new(),
+        bottom: Vec::new(),
+    };
+    let mut note = String::new();
+    for _ in 0..split.zero + split.one {
+        form.halves += 1;
+        form.scale(1, 2);
+    }
+    let mut pool = split.rational.clone();
+    while let Some((p, q)) = pool.pop() {
+        if 2 * p == q {
+            continue;
+        }
+        if let Some(at) = pool.iter().position(|&(a, b)| b == q && a == q - p) {
+            pool.remove(at);
+            form.scale(q * q, 4 * p * (q - p));
+            let low = p.min(q - p);
+            match (low, q) {
+                (1, 6) => form.scale(1, 2),
+                (1, 4) => {
+                    form.radical(2);
+                    form.scale(1, 2);
+                }
+                (1, 3) => {
+                    form.radical(3);
+                    form.scale(1, 2);
+                }
+                _ => form.top.push(format!("sin({})", angle(low, 1, q))),
+            }
+        } else {
+            form.halves += 1;
+            form.scale(q, 2 * (q - p));
+            form.bottom.push(format!("Gamma({})", fraction(q - p, q)));
+        }
+    }
+    let rest = &split.rest;
+    if rest.len() == 3 {
+        let (c, b, a) = (rest[0], rest[1], rest[2]);
+        let disc = b * b - 4 * a * c;
+        let (s, t) = square_part(disc.abs());
+        if -b == a {
+            form.scale(a, 4 * c);
+            let wave = if disc < 0 { "cosh" } else { "cos" };
+            form.top.push(format!("{wave}({})", angle(s, t, 2 * a)));
+        } else {
+            form.halves += 2;
+            form.scale(1, 4);
+            let x = fraction(4 * a + b, 2 * a);
+            if disc < 0 {
+                let y = if t > 1 {
+                    format!("i {}", surd(s, t, 2 * a))
+                } else {
+                    let (u, v) = reduced(s, 2 * a);
+                    let head = if u == 1 {
+                        "i".to_string()
+                    } else {
+                        format!("{u}i")
+                    };
+                    if v == 1 {
+                        head
+                    } else {
+                        format!("{head}/{v}")
+                    }
+                };
+                form.bottom.push(format!("|Gamma({x} - {y})|^2"));
+            } else {
+                let y = surd(s, t, 2 * a);
+                form.bottom.push(format!("Gamma({x} - {y})"));
+                form.bottom.push(format!("Gamma({x} + {y})"));
+            }
+        }
+    } else if rest.len() == 4 {
+        form.halves += 3;
+        form.scale(1, 8);
+        for i in 1..=3 {
+            form.bottom.push(format!("Gamma(2 - r_{i})"));
+        }
+        note = format!(", r_i the roots of {}", poly_text(rest));
+    }
+    format!("{}{note}", form.spell())
+}
+
+fn reflected(split: &Split, roots: &[Complex]) -> Option<f64> {
+    let mut value = (PI.sqrt() / 2.0).powi((split.zero + split.one) as i32);
+    let mut pool = split.rational.clone();
+    while let Some((p, q)) = pool.pop() {
+        if 2 * p == q {
+            continue;
+        }
+        let at = pool.iter().position(|&(a, b)| b == q && a == q - p)?;
+        pool.remove(at);
+        value *= sine_ratio(Complex::new(p as f64 / q as f64, 0.0)).re;
+    }
+    match split.rest.len() {
+        1 => Some(value),
+        3 if -split.rest[1] == split.rest[2] => Some(value * sine_ratio(roots[roots.len() - 1]).re),
+        _ => None,
+    }
+}
+
+fn parity_of(profile: &[u64], dimension: usize) -> Option<bool> {
+    if dimension < 2 {
+        return None;
+    }
+    [true, false].into_iter().find(|&odd| {
+        profile.iter().enumerate().all(|(j, &a)| {
+            let want = if (j % 2 == 1) == odd {
+                binomial(dimension, j)
+            } else {
+                0
+            };
+            i128::from(a) == want
+        })
+    })
+}
+
+/// Counts a base-2 design's corners by how many odd coordinates each holds, the profile the row word reads: the code is a bitmask over the corners, corner `i` is the binary digits of `i` as `math::bang::code_to_corners` reads it, so its odd coordinates are the ones of `i`.
+///
+/// ```
+/// assert_eq!(mrlyrs::num::sieve::row_profile(7, 2).unwrap(), vec![1, 2, 0]);
+/// ```
+///
+/// # Errors
+///
+/// Errs outside dim 1 to 3, or on a code out of range for the dimension.
+pub fn row_profile(code: u128, dimension: usize) -> Result<Vec<u64>> {
+    if !(1..=ROW_DIMENSIONS).contains(&dimension) {
+        return value_error(format!(
+            "the row word reads dim 1 to {ROW_DIMENSIONS}, not dim {dimension}."
+        ));
+    }
+    let corners = 1u32 << dimension;
+    if code >> corners != 0 {
+        return value_error(format!(
+            "code {code} out of range for dimension {dimension} base 2 (0..{}).",
+            (1u128 << corners) - 1
+        ));
+    }
+    let mut profile = vec![0u64; dimension + 1];
+    for corner in (0..corners).filter(|&i| code >> i & 1 == 1) {
+        profile[corner.count_ones() as usize] += 1;
+    }
+    Ok(profile)
+}
+
+/// Returns the cells a design of this profile fills at one side, `sum_j a_j E^(dim-j) O^j` with `E` and `O` the even and the odd positions an axis holds: `P_F(n)` at side `2n - 1` and `w n^dim` at side `2n`.
+///
+/// # Errors
+///
+/// Errs on a profile no design in dim 1 to 3 holds, or when the fill overruns a u128.
+pub fn row_fill(profile: &[u64], side: u64) -> Result<u128> {
+    fill_at(profile, row_dimension(profile)?, side)
+}
+
+fn fill_at(profile: &[u64], dimension: usize, side: u64) -> Result<u128> {
+    let even = u128::from(side.div_ceil(2));
+    let odd = u128::from(side / 2);
+    let mut fill = 0u128;
+    for (j, &a) in profile.iter().enumerate() {
+        let term = even
+            .checked_pow((dimension - j) as u32)
+            .and_then(|e| odd.checked_pow(j as u32).and_then(|o| e.checked_mul(o)))
+            .and_then(|t| t.checked_mul(u128::from(a)))
+            .and_then(|t| fill.checked_add(t));
+        fill = match term {
+            Some(total) => total,
+            None => return overflow_error(format!("the fill at side {side} overruns a u128.")),
+        };
+    }
+    Ok(fill)
+}
+
+/// Reads the design of this profile along the row word: its drift, its first correction, the roots of its fill polynomial, its constant from the Gamma form, the constant spelled, and the constant again by reflection, against the mirror and as a Wallis sieve product wherever those apply.
+///
+/// The fill polynomial factors as `w n^(m_0) (n-1)^(m_1)` times a core with integer coefficients; its rational roots are found exactly and divided out, and what is left is a constant, an irreducible quadratic or, at dim 3, an irreducible cubic, whose roots are taken in floating point. Each `Gamma(2 - r)` is read against one `Gamma(3/2)` as a ratio, by the recurrence up past 16 and Stirling's series there, so the large terms cancel before they round.
+///
+/// ```
+/// let row = mrlyrs::num::sieve::row_law(&[1, 0, 1]).unwrap();
+/// assert_eq!(row.closed, "cosh(pi/2)/2");
+/// assert!((row.constant - (std::f64::consts::PI / 2.0).cosh() / 2.0).abs() < 1e-14);
+/// ```
+///
+/// # Errors
+///
+/// Errs on a profile no design in dim 1 to 3 holds.
+pub fn row_law(profile: &[u64]) -> Result<Row> {
+    let dimension = row_dimension(profile)?;
+    let d = dimension as i128;
+    let w: i128 = profile.iter().map(|&a| i128::from(a)).sum();
+    let first: i128 = profile
+        .iter()
+        .enumerate()
+        .map(|(j, &a)| j as i128 * i128::from(a))
+        .sum();
+    let second: i128 = profile
+        .iter()
+        .enumerate()
+        .map(|(j, &a)| (j * j) as i128 * i128::from(a))
+        .sum();
+    let drift = d * w - 2 * first;
+    let correction = d * w * w + 4 * w * drift - 4 * (w * second - first * first);
+    let split = split(profile, dimension);
+    let mut roots = vec![Complex::new(0.0, 0.0); split.zero];
+    roots.extend(vec![Complex::new(1.0, 0.0); split.one]);
+    for &(p, q) in &split.rational {
+        roots.push(Complex::new(p as f64 / q as f64, 0.0));
+    }
+    roots.extend(rest_roots(&split.rest));
+    let mut log = (split.zero + split.one) as f64 * (0.5 * PI.ln() - LN_2);
+    let mut mirror = Complex::new(FRAC_PI_4.powi((split.zero + split.one) as i32), 0.0);
+    for r in &roots[split.zero + split.one..] {
+        log -= gamma_step(*r).re;
+        mirror = mirror * sine_ratio(*r);
+    }
+    let parity = match parity_of(profile, dimension) {
+        Some(odd) => Some((odd, parity_product(dimension as u32, odd)?)),
+        None => None,
+    };
+    Ok(Row {
+        profile: profile.to_vec(),
+        drift: reduced(drift, 2 * w),
+        correction: reduced(correction, 8 * w * w),
+        constant: log.exp(),
+        closed: spelled(&split),
+        reflection: reflected(&split, &roots),
+        mirror: mirror.re,
+        parity,
+        roots,
+    })
+}
+
+/// Walks the renormalised fill `R_L (2^dim/w)^L / L^drift` of the design of this profile to every stop, `R_L` the product of the letters' fill ratios, on the odd sides `3, 5, ..., 2L+1` or on the even sides `2, 4, ..., 2L`.
+///
+/// Each letter adds `log(1 + (2^dim fill - w side^dim) / (w side^dim))`, the excess taken in exact integers; at an even side the excess is zero and the even word carries no drift, so its walk stands at 1.
+///
+/// # Errors
+///
+/// Errs on a profile no design in dim 1 to 3 holds, or on stops that are not rising whole numbers from 1.
+pub fn row_settle(profile: &[u64], stops: &[usize], even: bool) -> Result<Vec<f64>> {
+    let dimension = row_dimension(profile)?;
+    if stops.first().is_some_and(|&s| s == 0) || stops.windows(2).any(|pair| pair[0] >= pair[1]) {
+        return value_error("the stops must rise from level 1.");
+    }
+    let w: u128 = profile.iter().map(|&a| u128::from(a)).sum();
+    let drift = if even {
+        0.0
+    } else {
+        let row = row_law(profile)?;
+        row.drift.0 as f64 / row.drift.1 as f64
+    };
+    let mut out = Vec::with_capacity(stops.len());
+    let (mut sum, mut carry) = (0.0f64, 0.0f64);
+    let mut next = 0;
+    for level in 1..=stops.last().copied().unwrap_or(0) {
+        let side = (if even { 2 * level } else { 2 * level + 1 }) as u64;
+        let fill = fill_at(profile, dimension, side)?;
+        let whole = w * u128::from(side).pow(dimension as u32);
+        let excess = (fill << dimension) as i128 - whole as i128;
+        let term = (excess as f64 / whole as f64).ln_1p() - carry;
+        let total = sum + term;
+        carry = (total - sum) - term;
+        sum = total;
+        if stops[next] == level {
+            out.push((sum - drift * (level as f64).ln()).exp());
+            next += 1;
+        }
+    }
+    Ok(out)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -475,6 +1161,141 @@ mod tests {
         let read = ratio(&odd_word(2_000_000), 2).unwrap();
         assert_eq!(format!("{read:.9}"), "0.785398262");
         assert!(read > PLANE_LIMIT);
+    }
+
+    #[test]
+    fn the_row_fill_counts_every_rendered_letter() {
+        for dimension in 1..=3usize {
+            for code in 1..(1u128 << (1 << dimension)) {
+                let profile = row_profile(code, dimension).unwrap();
+                for side in 2..=7u64 {
+                    let tile = crate::math::bang::factory::create(
+                        crate::math::bang::Code::from(code),
+                        side as usize,
+                        dimension,
+                        2,
+                        1,
+                    )
+                    .unwrap();
+                    assert_eq!(
+                        row_fill(&profile, side).unwrap(),
+                        u128::from(tile.sum()),
+                        "dim {dimension} code {code} side {side}"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn the_row_constants_meet_their_closed_forms() {
+        let named: [(usize, u128, f64, &str, bool); 11] = [
+            (1, 1, 0.886_226_925_452_758, "sqrt(pi)/2", true),
+            (2, 7, 0.879_525_401_447_625_3, "3 pi/(4 Gamma(1/3))", false),
+            (2, 14, 0.870_010_809_837_738_6, "3 pi/(8 Gamma(2/3))", false),
+            (2, 6, FRAC_PI_4, "pi/4", true),
+            (2, 9, 1.254_589_239_329_028, "cosh(pi/2)/2", true),
+            (2, 11, 1.080_152_394_264_927, "3 cosh(pi/(2 sqrt3))/4", true),
+            (
+                3,
+                23,
+                0.767_916_038_651_074_6,
+                "pi^(3/2)/(2 Gamma(1/4))",
+                false,
+            ),
+            (
+                3,
+                232,
+                0.757_338_025_727_611_8,
+                "pi^(3/2)/(6 Gamma(3/4))",
+                false,
+            ),
+            (
+                3,
+                150,
+                0.948_815_485_719_679_6,
+                "pi^(3/2)/(8 |Gamma(7/4 - i sqrt3/4)|^2)",
+                false,
+            ),
+            (
+                3,
+                105,
+                1.052_420_668_167_879,
+                "pi^(3/2)/(8 |Gamma(5/4 - i sqrt3/4)|^2)",
+                false,
+            ),
+            (3, 129, 1.907_095_803_094_885, "cosh(pi sqrt3/2)/4", true),
+        ];
+        for (dimension, code, want, closed, reflects) in named {
+            let row = row_law(&row_profile(code, dimension).unwrap()).unwrap();
+            assert!(
+                (row.constant - want).abs() < 1e-14,
+                "code {code} {}",
+                row.constant
+            );
+            assert_eq!(row.closed, closed, "code {code}");
+            assert_eq!(row.reflection.is_some(), reflects, "code {code}");
+            if let Some(value) = row.reflection {
+                assert!((value - want).abs() < 1e-14, "code {code} {value}");
+            }
+            if let Some((_, product)) = row.parity {
+                assert!((product - want).abs() < 1e-14, "code {code} {product}");
+            }
+        }
+        assert!((solid_limit() - parity_product(3, true).unwrap()).abs() < 1e-15);
+    }
+
+    #[test]
+    fn a_design_times_its_mirror_reduces_by_reflection() {
+        for dimension in 1..=3usize {
+            let flip = (1usize << dimension) - 1;
+            for code in 1..(1u128 << (1 << dimension)) {
+                let mirror = (0..1usize << dimension)
+                    .filter(|&i| code >> i & 1 == 1)
+                    .fold(0u128, |acc, i| acc | 1 << (i ^ flip));
+                let own = row_law(&row_profile(code, dimension).unwrap()).unwrap();
+                let other = row_law(&row_profile(mirror, dimension).unwrap()).unwrap();
+                let product = own.constant * other.constant;
+                assert!(
+                    (own.mirror - product).abs() < 1e-13,
+                    "dim {dimension} code {code}"
+                );
+            }
+        }
+        let seven = row_law(&[1, 2, 0]).unwrap();
+        assert!((seven.mirror - 9.0 * 3f64.sqrt() * PI / 64.0).abs() < 1e-15);
+    }
+
+    #[test]
+    fn the_row_settles_on_its_constant_past_the_first_correction() {
+        let row = row_law(&[1, 2, 0]).unwrap();
+        let c1 = row.correction.0 as f64 / row.correction.1 as f64;
+        let stops = [1_000usize, 10_000, 100_000, 1_000_000];
+        let walk = row_settle(&row.profile, &stops, false).unwrap();
+        for (&level, &value) in stops.iter().zip(&walk) {
+            let law = row.constant * (1.0 + c1 / level as f64);
+            let gap = (value - law).abs() * (level * level) as f64;
+            assert!(gap < 2.0, "level {level} {value}");
+        }
+        assert!((walk[3] - row.constant).abs() < 5e-7);
+    }
+
+    #[test]
+    fn even_sides_carry_no_drift_and_no_constant() {
+        for profile in [vec![1, 2, 0], vec![1, 0, 1], vec![1, 3, 0, 0], vec![1, 0]] {
+            let walk = row_settle(&profile, &[1, 2, 10, 1000], true).unwrap();
+            assert!(walk.iter().all(|&value| value == 1.0), "{profile:?}");
+        }
+    }
+
+    #[test]
+    fn the_row_refuses_what_no_design_holds() {
+        assert!(row_law(&[2, 0, 0]).is_err());
+        assert!(row_law(&[0, 0, 0]).is_err());
+        assert!(row_law(&[1, 0, 0, 0, 0]).is_err());
+        assert!(row_profile(7, 4).is_err());
+        assert!(row_settle(&[1, 2, 0], &[3, 2], false).is_err());
+        assert!(parity_product(1, true).is_err());
     }
 
     #[test]

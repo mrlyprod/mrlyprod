@@ -958,6 +958,14 @@
       "items": 0
     },
     {
+      "path": "math::three::sponge",
+      "file": "math/three/sponge.rs",
+      "docs": [
+        "The Menger sponge's distance, its tube inside the plus and its Minkowski profile."
+      ],
+      "items": 10
+    },
+    {
       "path": "math::tourbillon",
       "file": "math/tourbillon.rs",
       "docs": [
@@ -1042,6 +1050,7 @@
         "- `blend`: term ops on sequences, the exact recurrence behind one, its growth rate.",
         "- `boolean`: a truth table's Walsh spectrum, nonlinearity, balance and avalanche.",
         "- `design`: the digit designs on the line, their Mobius meter and the ordinates it carries.",
+        "- `dissection`: the missing-digit sets cut by Dirichlet approximation: the four regions, the digit transform's `l^1` masses, the chain certificate and its wall.",
         "- `factor`: factorizations, divisors, totients, radicals, Mobius values, gcd and lcm.",
         "- `fft`: the fast Fourier transform in one and two dimensions.",
         "- `gauss`: the Gaussian and the Eisenstein integers, their classes, windows and shells.",
@@ -1054,6 +1063,7 @@
         "- `series`: the classic sequences, zeta and its cousins, the partials walking to pi, e and gamma.",
         "- `sieve`: the Wallis sieve and its kin as schedule words, with their rasters and limits.",
         "- `spiral`: the whole numbers wound on the square and the hexagonal lattice, marked and read.",
+        "- `sumset`: the base-3 design plus the base-4 design, Erdos problem 125: its bit array, its density and the energy of its levels.",
         "- `zeta`: zeta on the critical line, its zeros, the prime staircase they rebuild.",
         "",
         "# Doors",
@@ -1105,6 +1115,14 @@
         "The digit designs on the integer line: their elements, their Mobius meter, its density echo and the ordinates its spectrum carries."
       ],
       "items": 15
+    },
+    {
+      "path": "num::dissection",
+      "file": "num/dissection.rs",
+      "docs": [
+        "The unconditional dissection of a missing-digit set: the four regions of the frequency grid, the `l^1` masses of the digit transform, the chain certificate against `1/5`, the constant `kappa_F` and the set's own meter and prime count."
+      ],
+      "items": 24
     },
     {
       "path": "num::factor",
@@ -1194,7 +1212,7 @@
       "docs": [
         "The punctured schedules: the Wallis sieve and its kin, their words, rasters, punctures and limits."
       ],
-      "items": 12
+      "items": 18
     },
     {
       "path": "num::spiral",
@@ -1203,6 +1221,14 @@
         "The spirals: the whole numbers wound on the square and the hexagonal lattice, marked and read along a quadratic."
       ],
       "items": 22
+    },
+    {
+      "path": "num::sumset",
+      "file": "num/sumset.rs",
+      "docs": [
+        "The sumset of Erdos problem 125: the base-3 design `{0, 1}` plus the base-4 design `{0, 1}` as a bit array, its density below `x`, the gaps its level pairs leave and their additive energy."
+      ],
+      "items": 21
     },
     {
       "path": "num::zeta",
@@ -11511,6 +11537,152 @@
       "alias": null
     },
     {
+      "path": "num::dissection::Region",
+      "name": "Region",
+      "defined_at": "num/dissection.rs:25",
+      "docs": [
+        "The four regions the dissection cuts the frequencies `a/y` into by their Dirichlet fraction `l/d` at `Q = y^(3/5)` and height `h = |a d - l y|`."
+      ],
+      "kind": "enum",
+      "cross": {
+        "kind": "uncrossable",
+        "reason": "no serde derives and no methods"
+      },
+      "derives": [
+        "Clone",
+        "Copy",
+        "Debug",
+        "PartialEq",
+        "Eq"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [],
+      "variants": [
+        {
+          "name": "A",
+          "word": null,
+          "docs": [
+            "The minor arcs, `d >= y^(2/5)`."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "B",
+          "word": null,
+          "docs": [
+            "The middle, `d < y^(2/5)` and `max(d, h) >= Z`."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "C1",
+          "word": null,
+          "docs": [
+            "Near a fraction whose denominator has a prime outside the base, `d < Z` and `h < Z`."
+          ],
+          "serde": [],
+          "fields": []
+        },
+        {
+          "name": "C2",
+          "word": null,
+          "docs": [
+            "Near a fraction whose denominator divides a power of the base, `d < Z` and `h < Z`."
+          ],
+          "serde": [],
+          "fields": []
+        }
+      ],
+      "alias": null
+    },
+    {
+      "path": "num::dissection::Tally",
+      "name": "Tally",
+      "defined_at": "num/dissection.rs:259",
+      "docs": [
+        "The set's own sums read on a log grid of `x`: the mass `A_F(x)`, the meter `M_F(x)` and the prime count `psi_F(x) = sum Lambda(n)` over the elements up to `x`."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "uncrossable",
+        "reason": "no serde derives and no methods"
+      },
+      "derives": [],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "log_x",
+          "public": true,
+          "docs": [
+            "The log of `x` at every sample, uniform from the first element to the last."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "f64"
+            }
+          }
+        },
+        {
+          "name": "count",
+          "public": true,
+          "docs": [
+            "The mass `A_F(x)`, the count of elements up to `x`."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "u64"
+            }
+          }
+        },
+        {
+          "name": "meter",
+          "public": true,
+          "docs": [
+            "The meter `M_F(x)`, the sum of `mu(n)` over the elements up to `x`."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "i64"
+            }
+          }
+        },
+        {
+          "name": "primes",
+          "public": true,
+          "docs": [
+            "The prime count `psi_F(x)`, the sum of `Lambda(n)` over the elements up to `x`."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "f64"
+            }
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
       "path": "num::gauss::Census",
       "name": "Census",
       "defined_at": "num/gauss.rs:232",
@@ -12860,6 +13032,189 @@
       "alias": null
     },
     {
+      "path": "num::sieve::Row",
+      "name": "Row",
+      "defined_at": "num/sieve.rs:363",
+      "docs": [
+        "One base-2 design read along the row word of odd sides `3, 5, ..., 2L+1`, out of its fill polynomial `P_F(n) = sum_j a_j n^(dim-j) (n-1)^j`.",
+        "",
+        "The fill ratio is `(w/2^dim)^L L^drift C (1 + c_1/L + O(L^-2))`, `w` the corners, `drift = dim/2 - mean` and `c_1 = dim/8 + drift - var/2` over the odd count of the corners, and `C = Gamma(3/2)^dim / prod_i Gamma(2 - r_i)` over the roots of `P_F`."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "profile",
+          "public": true,
+          "docs": [
+            "The odd-count profile: `a_j` corners with `j` odd coordinates, `j` from 0 to `dim`."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "u64"
+            }
+          }
+        },
+        {
+          "name": "drift",
+          "public": true,
+          "docs": [
+            "The drift, the power of `L` the fill carries past its ratio per level, as a reduced fraction."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "tuple",
+            "items": [
+              {
+                "t": "scalar",
+                "name": "i64"
+              },
+              {
+                "t": "scalar",
+                "name": "i64"
+              }
+            ]
+          }
+        },
+        {
+          "name": "correction",
+          "public": true,
+          "docs": [
+            "The first correction `c_1`, as a reduced fraction."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "tuple",
+            "items": [
+              {
+                "t": "scalar",
+                "name": "i64"
+              },
+              {
+                "t": "scalar",
+                "name": "i64"
+              }
+            ]
+          }
+        },
+        {
+          "name": "roots",
+          "public": true,
+          "docs": [
+            "The roots of the fill polynomial: the zeros, the ones, the rational roots, then the rest."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "class",
+              "path": "num::zeta::Complex",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "constant",
+          "public": true,
+          "docs": [
+            "The constant `C`, the Gamma form at the roots."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "f64"
+          }
+        },
+        {
+          "name": "closed",
+          "public": true,
+          "docs": [
+            "The constant spelled: a rational, a power of `sqrt(pi)`, and the Gamma, `cosh`, `cos` or `sin` values the roots leave."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "string"
+          }
+        },
+        {
+          "name": "reflection",
+          "public": true,
+          "docs": [
+            "The constant by reflection alone, `(sqrt(pi)/2)^(m_0 + m_1) prod_pairs sin(pi r)/(4 r (1-r))`, when every root outside `0, 1/2, 1` pairs with `1 - r`."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "scalar",
+              "name": "f64"
+            }
+          }
+        },
+        {
+          "name": "mirror",
+          "public": true,
+          "docs": [
+            "The constant times the mirror design's, `prod_i sin(pi r_i)/(4 r_i (1 - r_i))` with `pi/4` at a root 0 or 1."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "f64"
+          }
+        },
+        {
+          "name": "parity",
+          "public": true,
+          "docs": [
+            "For a parity design at `dim >= 2`: whether its corners hold an odd count of odd coordinates, and its Wallis sieve product."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "tuple",
+              "items": [
+                {
+                  "t": "scalar",
+                  "name": "bool"
+                },
+                {
+                  "t": "scalar",
+                  "name": "f64"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
       "path": "num::spiral::Diagonal",
       "name": "Diagonal",
       "defined_at": "num/spiral.rs:179",
@@ -13427,6 +13782,129 @@
           "ty": {
             "t": "scalar",
             "name": "i64"
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "num::sumset::Pair",
+      "name": "Pair",
+      "defined_at": "num/sumset.rs:199",
+      "docs": [
+        "A pair of levels: the base-3 level `A_k = A meet [0, 3^k)` against the base-4 level `B_m = B meet [0, 4^m)`, `k` the field `three` and `m` the field `four`."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "class"
+      },
+      "derives": [
+        "Clone",
+        "Copy",
+        "Debug",
+        "PartialEq",
+        "Eq"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "three",
+          "public": true,
+          "docs": [
+            "The base-3 level `k`."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        },
+        {
+          "name": "four",
+          "public": true,
+          "docs": [
+            "The base-4 level `m`."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "num::sumset::Sumset",
+      "name": "Sumset",
+      "defined_at": "num/sumset.rs:18",
+      "docs": [
+        "The sumset `S = A + B` of Erdos problem 125 up to `3^level`: `A` the integers whose base-3 digits are all `0` or `1`, `B` those whose base-4 digits are.",
+        "",
+        "One bit per integer of `[0, 3^level]`: the members of `A` are set directly and each power `4^j <= 3^level` is folded in by one shift-or pass, `S |= S << 4^j`.",
+        "A running count every eight words makes `card(S meet [1, x])` one table read and at most eight popcounts."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "class"
+      },
+      "derives": [],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "level",
+          "public": false,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        },
+        {
+          "name": "top",
+          "public": false,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "words",
+          "public": false,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "u64"
+            }
+          }
+        },
+        {
+          "name": "runs",
+          "public": false,
+          "docs": [],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "u64"
+            }
           }
         }
       ],
@@ -14539,6 +15017,36 @@
       }
     },
     {
+      "path": "math::three::sponge::COVER",
+      "name": "COVER",
+      "defined_at": "math/three/sponge.rs:8",
+      "docs": [
+        "The covering radius of the plus, `sqrt(2)/6`, the distance from the centre of the cube to the sponge: every radius from here on swallows the plus whole."
+      ],
+      "ty": {
+        "t": "scalar",
+        "name": "f64"
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::three::sponge::EDGE",
+      "name": "EDGE",
+      "defined_at": "math/three/sponge.rs:5",
+      "docs": [
+        "The largest radius the closed tube formula reaches, `1/6`: past it the walls across an arm and the centre cube's edge cylinders start to meet."
+      ],
+      "ty": {
+        "t": "scalar",
+        "name": "f64"
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
       "path": "num::apollonian::CIRCLE_CAP",
       "name": "CIRCLE_CAP",
       "defined_at": "num/apollonian.rs:9",
@@ -14632,6 +15140,139 @@
           "name": "f64"
         },
         "len": 14
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::dissection::BAR_A",
+      "name": "BAR_A",
+      "defined_at": "num/dissection.rs:7",
+      "docs": [
+        "The bar region A sets on the certificate exponent, `alpha_1 < 1/5`: the whole `l^1` mass against the minor-arc `x^(4/5)`."
+      ],
+      "ty": {
+        "t": "scalar",
+        "name": "f64"
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::dissection::BAR_B",
+      "name": "BAR_B",
+      "defined_at": "num/dissection.rs:9",
+      "docs": [
+        "The bar region B sets, `alpha_1 < 1/4`: the hybrid `l^1` mass against the `d^(-1/2)` decay."
+      ],
+      "ty": {
+        "t": "scalar",
+        "name": "f64"
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::dissection::CAP_BASE",
+      "name": "CAP_BASE",
+      "defined_at": "num/dissection.rs:13",
+      "docs": [
+        "The base the chain is scanned to; from here the closed-form cap `1 + sqrt(2 (2/pi) log base + 0.97)` keeps it below the bar."
+      ],
+      "ty": {
+        "t": "scalar",
+        "name": "u64"
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::dissection::CERTIFIED",
+      "name": "CERTIFIED",
+      "defined_at": "num/dissection.rs:21",
+      "docs": [
+        "The sets below [`DIGIT_WALL`] certified below `1/5`, as `(base, missing digit)`, printed by `lab/py/digit-transform-norms`, verb `fifth`."
+      ],
+      "ty": {
+        "t": "array",
+        "item": {
+          "t": "tuple",
+          "items": [
+            {
+              "t": "scalar",
+              "name": "u64"
+            },
+            {
+              "t": "scalar",
+              "name": "u64"
+            }
+          ]
+        },
+        "len": 1
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::dissection::DIGIT_WALL",
+      "name": "DIGIT_WALL",
+      "defined_at": "num/dissection.rs:17",
+      "docs": [
+        "The least base whose every one-missing-digit set carries a per-digit shifted-grid certificate below `1/5`, `lab/py/digit-transform-norms`, verbs `fifth` and `fifthbelow`; base 114 missing 56 is certified above."
+      ],
+      "ty": {
+        "t": "scalar",
+        "name": "u64"
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::dissection::FIRST_BELOW",
+      "name": "FIRST_BELOW",
+      "defined_at": "num/dissection.rs:19",
+      "docs": [
+        "The least base with some missing digit certified below `1/5`, `lab/py/digit-transform-norms`, verb `fifth`."
+      ],
+      "ty": {
+        "t": "scalar",
+        "name": "u64"
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::dissection::GAMMA",
+      "name": "GAMMA",
+      "defined_at": "num/dissection.rs:11",
+      "docs": [
+        "The constant `gamma'` of the digit-uniform chain, `(2/pi)(gamma + log(8/pi))` rounded up at seven decimals."
+      ],
+      "ty": {
+        "t": "scalar",
+        "name": "f64"
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::dissection::WINDOW_WALL",
+      "name": "WINDOW_WALL",
+      "defined_at": "num/dissection.rs:15",
+      "docs": [
+        "The least base whose every one-missing-digit set carries a window certificate below `1/5`, `lab/py/prime-dissection`, verb `window`."
+      ],
+      "ty": {
+        "t": "scalar",
+        "name": "u64"
       },
       "cross": {
         "status": "ok"
@@ -14796,13 +15437,43 @@
     {
       "path": "num::sieve::PLANE_LIMIT",
       "name": "PLANE_LIMIT",
-      "defined_at": "num/sieve.rs:5",
+      "defined_at": "num/sieve.rs:7",
       "docs": [
         "The limit of the plane Wallis sieve's surviving area, pi over four."
       ],
       "ty": {
         "t": "scalar",
         "name": "f64"
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::sumset::DEEPEST",
+      "name": "DEEPEST",
+      "defined_at": "num/sumset.rs:5",
+      "docs": [
+        "The deepest level a [`Sumset`] is built to: `S meet [0, 3^20]`, a bit array of `436` MB."
+      ],
+      "ty": {
+        "t": "scalar",
+        "name": "u32"
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::sumset::WIDEST",
+      "name": "WIDEST",
+      "defined_at": "num/sumset.rs:8",
+      "docs": [
+        "The widest level a [`Pair`] names in either base, so `3^k`, `4^m` and every difference string fit a signed 64-bit integer."
+      ],
+      "ty": {
+        "t": "scalar",
+        "name": "u32"
       },
       "cross": {
         "status": "ok"
@@ -48509,6 +49180,300 @@
       }
     },
     {
+      "path": "math::three::sponge::deep",
+      "name": "deep",
+      "module": "math::three::sponge",
+      "defined_at": "math/three/sponge.rs:312",
+      "docs": [
+        "The volume `Deep(radius)` of the points of one arm's quarter beyond the tubes of both walls it touches, at every radius, to double precision.",
+        "",
+        "With `line = min(radius, 1/6)`, the quarter is `[0, line]^2` across the arm times its length,",
+        "and every point of `Deep` sits, through both of its wall coordinates, in one and the same hole",
+        "of the wall carpet that the line `across = line` cuts: a crossing hole. The volume is the sum",
+        "over crossing holes of one arcsine integral, `2^(m-1)` holes of side `3^(-m-1)` at every level",
+        "`m` for `line = 1/6`, none at all for `1/12`, whose triple `1/4 = 0.0202...` has no digit `1`.",
+        "It vanishes from `sqrt(10)/18` on, where the arms are swallowed. Each integral is elementary, but its",
+        "expanded arcsine form cancels at deep levels, so it is summed by 16-point Gauss-Legendre on each smooth",
+        "piece in the angle `asin(R/radius)`, `R` the depth that a wall point needs."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "radius",
+          "ty": {
+            "t": "scalar",
+            "name": "f64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "scalar",
+        "name": "f64"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::three::sponge::dimension",
+      "name": "dimension",
+      "module": "math::three::sponge",
+      "defined_at": "math/three/sponge.rs:254",
+      "docs": [
+        "The Minkowski dimension of the Menger sponge, `log(20)/log(3)`, the similarity dimension of its 20 maps of ratio `1/3`."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "f64"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::three::sponge::distance",
+      "name": "distance",
+      "module": "math::three::sponge",
+      "defined_at": "math/three/sponge.rs:266",
+      "docs": [
+        "The Euclidean distance from a point of the unit cube to the Menger sponge, exact to the last binary place.",
+        "",
+        "The point descends the base-3 digits while its digit triple holds at most one `1`, each step",
+        "dividing the distance by 3, since inside a retained subcube the distance to the sponge is the",
+        "distance to that subcube's copy of it. Once it lands in the plus of seven removed cubes, the",
+        "distance is the one to the twelve edges of the centre cube or to the four carpets walling the",
+        "arm it sits in. Coordinates outside `[0, 1]` are clamped; the window centre `(1/2, 1/2, 0)`",
+        "reads `1/6` and the centre of the cube `sqrt(2)/6`."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "point",
+          "ty": {
+            "t": "array",
+            "item": {
+              "t": "scalar",
+              "name": "f64"
+            },
+            "len": 3
+          }
+        }
+      ],
+      "ret": {
+        "t": "scalar",
+        "name": "f64"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::three::sponge::exact",
+      "name": "exact",
+      "module": "math::three::sponge",
+      "defined_at": "math/three/sponge.rs:341",
+      "docs": [
+        "The volume `T(radius)` of the points of the plus within `radius` of the sponge at every radius, `Deep` included, to double precision.",
+        "",
+        "On `(0, 1/6]` it is the closed form of `tube` less `24 Deep`. On `[1/6, sqrt(2)/6]` the arms",
+        "hold `2/9 - 24 Deep` and the centre cube `pi r^2 - 8 sqrt(2) r^3 - 4 r^2 acos(1/(6r)) +",
+        "(2/3 + 16 c^2) c` with `c = sqrt(r^2 - 1/36)`, the edge cylinders overlapping along the faces;",
+        "from `sqrt(2)/6` on the plus is swallowed, `7/27`."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "radius",
+          "ty": {
+            "t": "scalar",
+            "name": "f64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "scalar",
+        "name": "f64"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::three::sponge::profile",
+      "name": "profile",
+      "module": "math::three::sponge",
+      "defined_at": "math/three/sponge.rs:388",
+      "docs": [
+        "The periodic function `p` of Kombrink, Pearse and Winter at `radius`: the reading's limit profile, unchanged when the radius is multiplied by 3, or `None` on the phases `(1/6, sqrt(2)/6]` where `T` has no closed form.",
+        "",
+        "The radius is first carried by powers of 3 into `(sqrt(2)/18, sqrt(2)/6]`; on",
+        "`(sqrt(2)/18, 1/6]` it is `r^(D-3) (20/27 + sum_(l = 0..40) (27/20)^l T(r/3^l))`, and the",
+        "sponge is Minkowski measurable exactly when this is constant. It is not: the certificate puts",
+        "`p(1/12)` in `[2.122718, 2.122723]` and `p(1/6)` in `[2.135019, 2.136794]`."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "radius",
+          "ty": {
+            "t": "scalar",
+            "name": "f64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "option",
+        "item": {
+          "t": "scalar",
+          "name": "f64"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::three::sponge::reading",
+      "name": "reading",
+      "module": "math::three::sponge",
+      "defined_at": "math/three/sponge.rs:378",
+      "docs": [
+        "The Minkowski reading `radius^(D-3)` times the volume inside the cube, the number whose limit as the radius shrinks would be the sponge's Minkowski content."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "radius",
+          "ty": {
+            "t": "scalar",
+            "name": "f64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "option",
+        "item": {
+          "t": "scalar",
+          "name": "f64"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::three::sponge::tube",
+      "name": "tube",
+      "module": "math::three::sponge",
+      "defined_at": "math/three/sponge.rs:289",
+      "docs": [
+        "The volume `T(radius)` of the points of the plus of seven removed level-1 cubes within `radius` of the sponge, or `None` on `(1/6, sqrt(2)/6)`, where no closed form is known.",
+        "",
+        "On `(0, 1/6]` it is `(pi + 8) r^2 - 8 sqrt(2) r^3 + 48 (V1 - A1)`, the centre cube's edge",
+        "cylinders plus the arcsine hole sums of the 24 wall carpets, `V1` over half a wall and `A1`",
+        "over the strip along a shared edge, both summed level by level and closed by their geometric",
+        "tails. The one term left out is `24 Deep`, `Deep` the corner volume beyond both wall tubes,",
+        "at most `24 x 3.842e-5 < 9.23e-4` at `1/6` and `5.81e-9` at `1/12` by the paper's bound on",
+        "`Deep`, so this is the upper edge of the certified enclosure:",
+        "`T(1/6) = (pi + 8)/36 - sqrt(2)/27`. From `sqrt(2)/6` on the plus is swallowed, `7/27`."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "radius",
+          "ty": {
+            "t": "scalar",
+            "name": "f64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "option",
+        "item": {
+          "t": "scalar",
+          "name": "f64"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::three::sponge::volume",
+      "name": "volume",
+      "module": "math::three::sponge",
+      "defined_at": "math/three/sponge.rs:361",
+      "docs": [
+        "The volume of the points of the unit cube within `radius` of the sponge, `sum_k (20/27)^k T(3^k radius)`, or `None` when some `3^k radius` falls where `T` has no closed form.",
+        "",
+        "The cube is the plus and 20 retained subcubes, each holding a copy of the whole picture at a",
+        "third of the scale, so the volume is `T(radius)` plus `20/27` of the volume at three times the",
+        "radius, and the sum stops at the first radius past `sqrt(2)/6`, where the volume is the cube."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "radius",
+          "ty": {
+            "t": "scalar",
+            "name": "f64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "option",
+        "item": {
+          "t": "scalar",
+          "name": "f64"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
       "path": "math::three::star",
       "name": "star",
       "module": "math::three",
@@ -54342,6 +55307,617 @@
       "ret": {
         "t": "scalar",
         "name": "f64"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::dissection::cap",
+      "name": "cap",
+      "module": "num::dissection",
+      "defined_at": "num/dissection.rs:63",
+      "docs": [
+        "Returns `Q = floor(y^(3/5))`, the largest denominator the dissection admits, exact in integers.",
+        "",
+        "```",
+        "assert_eq!(mrlyrs::num::dissection::cap(1000), 63);",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "y",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "scalar",
+        "name": "u64"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::dissection::chain_exponent",
+      "name": "chain_exponent",
+      "module": "num::dissection",
+      "defined_at": "num/dissection.rs:202",
+      "docs": [
+        "Returns the chain's certificate exponent at one missing digit, `alpha_1 = log_base(z base/(base - 1))`, the same at every missing digit."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "base",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "scalar",
+        "name": "f64"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::dissection::chain_margin",
+      "name": "chain_margin",
+      "module": "num::dissection",
+      "defined_at": "num/dissection.rs:208",
+      "docs": [
+        "Returns the chain's margin at the bar, the cubic cleared of denominators at `w = base^(1/5)(1 - 1/base)`, positive exactly when the root sits below `w` and `alpha_1 < 1/5`."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "base",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "scalar",
+        "name": "f64"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::dissection::chain_root",
+      "name": "chain_root",
+      "module": "num::dissection",
+      "defined_at": "num/dissection.rs:185",
+      "docs": [
+        "Returns the root `z > 1` of the digit-uniform chain at one missing digit, `(z-1)^3 = (2/pi)(log base) z + gamma'(z-1) + (2/pi)(z-1)^2/(base z - 1)`, by bisection."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "base",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "scalar",
+        "name": "f64"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::dissection::chain_wall",
+      "name": "chain_wall",
+      "module": "num::dissection",
+      "defined_at": "num/dissection.rs:214",
+      "docs": [
+        "Returns the chain's wall, one past the last base up to [`CAP_BASE`] whose margin is not positive."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "u64"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::dissection::consecutive",
+      "name": "consecutive",
+      "module": "num::dissection",
+      "defined_at": "num/dissection.rs:254",
+      "docs": [
+        "Returns whether the digit set keeps two consecutive digits, the hypothesis region C1 reads."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "digits",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u64"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "scalar",
+        "name": "bool"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::dissection::fraction",
+      "name": "fraction",
+      "module": "num::dissection",
+      "defined_at": "num/dissection.rs:41",
+      "docs": [
+        "Returns the last continued-fraction convergent `l/d` of `a/y` whose denominator is at most the cap, the Dirichlet fraction of the dissection.",
+        "",
+        "```",
+        "assert_eq!(mrlyrs::num::dissection::fraction(333, 1000, 63), (1, 3));",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "a",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "y",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "cap",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "tuple",
+        "items": [
+          {
+            "t": "scalar",
+            "name": "u64"
+          },
+          {
+            "t": "scalar",
+            "name": "u64"
+          }
+        ]
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::dissection::kappa",
+      "name": "kappa",
+      "module": "num::dissection",
+      "defined_at": "num/dissection.rs:242",
+      "docs": [
+        "Returns `kappa_F = (base/phi(base)) #{f in F : gcd(f, base) = 1}/fill`, the main-term constant of the prime count, as a reduced fraction.",
+        "",
+        "```",
+        "assert_eq!(mrlyrs::num::dissection::kappa(10, &[1, 2, 3, 4, 6, 7, 8, 9]), (5, 4));",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "base",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "digits",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u64"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "tuple",
+        "items": [
+          {
+            "t": "scalar",
+            "name": "u64"
+          },
+          {
+            "t": "scalar",
+            "name": "u64"
+          }
+        ]
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::dissection::masses",
+      "name": "masses",
+      "module": "num::dissection",
+      "defined_at": "num/dissection.rs:157",
+      "docs": [
+        "Returns the unshifted masses `c_j = sum_(a < base^j) |hat F_j(a/base^j)|` for `j = 0..=level`, the `l^1` mass region A pays, `c_0 = 1`."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "base",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "digits",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u64"
+            }
+          }
+        },
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "scalar",
+          "name": "f64"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::dissection::reach",
+      "name": "reach",
+      "module": "num::dissection",
+      "defined_at": "num/dissection.rs:227",
+      "docs": [
+        "Returns how the theorem reaches the set missing one digit: `proof` from the chain's wall, `certificate` at every base from [`DIGIT_WALL`] below it and at the [`CERTIFIED`] sets, `none` elsewhere.",
+        "",
+        "```",
+        "use mrlyrs::num::dissection::reach;",
+        "assert_eq!([reach(584, 3), reach(115, 57), reach(65, 0), reach(65, 32)], [\"proof\", \"certificate\", \"certificate\", \"none\"]);",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "base",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "missing",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "ref",
+        "mutable": false,
+        "lifetime": "'static",
+        "item": {
+          "t": "str"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "&'static return"
+      }
+    },
+    {
+      "path": "num::dissection::reading",
+      "name": "reading",
+      "module": "num::dissection",
+      "defined_at": "num/dissection.rs:168",
+      "docs": [
+        "Returns the `l^1` exponent the top two masses read, `log_base(c_j/(fill c_(j-1)))`: a reading of the growth region A pays, never a certificate."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "base",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "fill",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "masses",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "f64"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "scalar",
+        "name": "f64"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::dissection::regions",
+      "name": "regions",
+      "module": "num::dissection",
+      "defined_at": "num/dissection.rs:88",
+      "docs": [
+        "Returns the region of every frequency `a/y`, `a < y = base^level`, at the cut `Z`, the fraction taken by [`fraction`] at [`cap`]."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "base",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        },
+        {
+          "name": "z",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "opaque",
+          "path": "num::dissection::Region"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "returns uncrossable type num::dissection::Region"
+      }
+    },
+    {
+      "path": "num::dissection::tally",
+      "name": "tally",
+      "module": "num::dissection",
+      "defined_at": "num/dissection.rs:271",
+      "docs": [
+        "Tallies the set below `base^level` on a log grid of the given size, with the Mobius values and the primes sieved to the span."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "base",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "digits",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u64"
+            }
+          }
+        },
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "samples",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "opaque",
+        "path": "num::dissection::Tally"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "skip",
+        "reason": "returns uncrossable type num::dissection::Tally"
+      }
+    },
+    {
+      "path": "num::dissection::weights",
+      "name": "weights",
+      "module": "num::dissection",
+      "defined_at": "num/dissection.rs:152",
+      "docs": [
+        "Returns `|hat F_level(a/base^level)|` at every `a < base^level`, built one digit at a time from `hat F_j(t) = hat F(t) hat F_(j-1)(base t)`.",
+        "",
+        "```",
+        "let row = mrlyrs::num::dissection::weights(3, &[0, 1], 1);",
+        "assert_eq!(row.iter().map(|w| format!(\"{w:.3}\")).collect::<Vec<_>>(), [\"2.000\", \"1.000\", \"1.000\"]);",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "base",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "digits",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u64"
+            }
+          }
+        },
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "scalar",
+          "name": "f64"
+        }
       },
       "dims": [],
       "trait": null,
@@ -61849,7 +63425,7 @@
       "path": "num::sieve::cells",
       "name": "cells",
       "module": "num::sieve",
-      "defined_at": "num/sieve.rs:61",
+      "defined_at": "num/sieve.rs:63",
       "docs": [
         "Returns the cells the word leaves, the product of its letters' fills, one punctured tile a letter.",
         "",
@@ -61901,7 +63477,7 @@
       "path": "num::sieve::exponent",
       "name": "exponent",
       "module": "num::sieve",
-      "defined_at": "num/sieve.rs:120",
+      "defined_at": "num/sieve.rs:122",
       "docs": [
         "Returns the box exponent the word reads at its own scale, the logarithm of its cells over the logarithm of its side, which walks up to the dimension on a schedule of distinct growing letters and stands still on any schedule that reuses its letters.",
         "",
@@ -61957,7 +63533,7 @@
       "path": "num::sieve::flat_word",
       "name": "flat_word",
       "module": "num::sieve",
-      "defined_at": "num/sieve.rs:21",
+      "defined_at": "num/sieve.rs:23",
       "docs": [
         "Returns the constant schedule, one odd side repeated to the count of levels, whose limit set is the fixed-ratio carpet.",
         "",
@@ -62002,7 +63578,7 @@
       "path": "num::sieve::holes",
       "name": "holes",
       "module": "num::sieve",
-      "defined_at": "num/sieve.rs:82",
+      "defined_at": "num/sieve.rs:84",
       "docs": [
         "Returns the punctures the word makes, one per surviving cell at every level.",
         "",
@@ -62054,7 +63630,7 @@
       "path": "num::sieve::limit",
       "name": "limit",
       "module": "num::sieve",
-      "defined_at": "num/sieve.rs:281",
+      "defined_at": "num/sieve.rs:283",
       "docs": [
         "Returns the limit the word's schedule walks to in the given dimension, when the word names a schedule at all.",
         "",
@@ -62115,7 +63691,7 @@
       "path": "num::sieve::odd_word",
       "name": "odd_word",
       "module": "num::sieve",
-      "defined_at": "num/sieve.rs:12",
+      "defined_at": "num/sieve.rs:14",
       "docs": [
         "Returns the classical Wallis schedule, the odd sides three, five, seven and on, to the count of levels.",
         "",
@@ -62150,10 +63726,62 @@
       }
     },
     {
+      "path": "num::sieve::parity_product",
+      "name": "parity_product",
+      "module": "num::sieve",
+      "defined_at": "num/sieve.rs:323",
+      "docs": [
+        "Returns the Wallis sieve product of a parity design, `prod_(N odd >= 3) (1 - N^-dim)` for the corners with an odd count of odd coordinates and `prod (1 + N^-dim)` for the even count, at `dim >= 2`.",
+        "",
+        "At odd `N` the sum of `(-1)^(x_1 + ... + x_dim)` over the box is 1, so the two designs fill `(N^dim -+ 1)/2` and the row word's constant is this product. The logarithm is summed over odd `N` from 3 to 999, smallest term first, and the tail past 1001 is the series `sum_j (-+1)^j / j sum N^(-dim j)`, each inner sum by Euler-Maclaurin through the fourth Bernoulli term, as for the solid limit.",
+        "",
+        "```",
+        "let plane = mrlyrs::num::sieve::parity_product(2, true).unwrap();",
+        "assert!((plane - std::f64::consts::FRAC_PI_4).abs() < 1e-15);",
+        "```",
+        "",
+        "# Errors",
+        "",
+        "Errs below two dimensions, where the product runs off to 0 or to infinity."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "dimension",
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        },
+        {
+          "name": "odd",
+          "ty": {
+            "t": "scalar",
+            "name": "bool"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "scalar",
+          "name": "f64"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
       "path": "num::sieve::punctures",
       "name": "punctures",
       "module": "num::sieve",
-      "defined_at": "num/sieve.rs:185",
+      "defined_at": "num/sieve.rs:187",
       "docs": [
         "Lists every puncture the word makes in the given dimension: its corner along each axis and then its side, all in units of the word's finest cell, so a level-one hole is the widest block in the list.",
         "",
@@ -62211,7 +63839,7 @@
       "path": "num::sieve::raster",
       "name": "raster",
       "module": "num::sieve",
-      "defined_at": "num/sieve.rs:145",
+      "defined_at": "num/sieve.rs:147",
       "docs": [
         "Builds the plane sieve the word spells as a raster: its side, then one byte a site, row by row, one where the site survives and zero where a level punched it out.",
         "",
@@ -62271,7 +63899,7 @@
       "path": "num::sieve::ratio",
       "name": "ratio",
       "module": "num::sieve",
-      "defined_at": "num/sieve.rs:100",
+      "defined_at": "num/sieve.rs:102",
       "docs": [
         "Returns the share of the whole the word leaves, the product of one minus the inverse of each letter's site count, exact as a product of the letters' fills.",
         "",
@@ -62322,10 +63950,224 @@
       }
     },
     {
+      "path": "num::sieve::row_fill",
+      "name": "row_fill",
+      "module": "num::sieve",
+      "defined_at": "num/sieve.rs:875",
+      "docs": [
+        "Returns the cells a design of this profile fills at one side, `sum_j a_j E^(dim-j) O^j` with `E` and `O` the even and the odd positions an axis holds: `P_F(n)` at side `2n - 1` and `w n^dim` at side `2n`.",
+        "",
+        "# Errors",
+        "",
+        "Errs on a profile no design in dim 1 to 3 holds, or when the fill overruns a u128."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "profile",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u64"
+            }
+          }
+        },
+        {
+          "name": "side",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "u128"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::sieve::row_law",
+      "name": "row_law",
+      "module": "num::sieve",
+      "defined_at": "num/sieve.rs:910",
+      "docs": [
+        "Reads the design of this profile along the row word: its drift, its first correction, the roots of its fill polynomial, its constant from the Gamma form, the constant spelled, and the constant again by reflection, against the mirror and as a Wallis sieve product wherever those apply.",
+        "",
+        "The fill polynomial factors as `w n^(m_0) (n-1)^(m_1)` times a core with integer coefficients; its rational roots are found exactly and divided out, and what is left is a constant, an irreducible quadratic or, at dim 3, an irreducible cubic, whose roots are taken in floating point. Each `Gamma(2 - r)` is read against one `Gamma(3/2)` as a ratio, by the recurrence up past 16 and Stirling's series there, so the large terms cancel before they round.",
+        "",
+        "```",
+        "let row = mrlyrs::num::sieve::row_law(&[1, 0, 1]).unwrap();",
+        "assert_eq!(row.closed, \"cosh(pi/2)/2\");",
+        "assert!((row.constant - (std::f64::consts::PI / 2.0).cosh() / 2.0).abs() < 1e-14);",
+        "```",
+        "",
+        "# Errors",
+        "",
+        "Errs on a profile no design in dim 1 to 3 holds."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "profile",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u64"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "plain",
+          "path": "num::sieve::Row"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::sieve::row_profile",
+      "name": "row_profile",
+      "module": "num::sieve",
+      "defined_at": "num/sieve.rs:850",
+      "docs": [
+        "Counts a base-2 design's corners by how many odd coordinates each holds, the profile the row word reads: the code is a bitmask over the corners, corner `i` is the binary digits of `i` as `math::bang::code_to_corners` reads it, so its odd coordinates are the ones of `i`.",
+        "",
+        "```",
+        "assert_eq!(mrlyrs::num::sieve::row_profile(7, 2).unwrap(), vec![1, 2, 0]);",
+        "```",
+        "",
+        "# Errors",
+        "",
+        "Errs outside dim 1 to 3, or on a code out of range for the dimension."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "code",
+          "ty": {
+            "t": "u128"
+          }
+        },
+        {
+          "name": "dimension",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::sieve::row_settle",
+      "name": "row_settle",
+      "module": "num::sieve",
+      "defined_at": "num/sieve.rs:963",
+      "docs": [
+        "Walks the renormalised fill `R_L (2^dim/w)^L / L^drift` of the design of this profile to every stop, `R_L` the product of the letters' fill ratios, on the odd sides `3, 5, ..., 2L+1` or on the even sides `2, 4, ..., 2L`.",
+        "",
+        "Each letter adds `log(1 + (2^dim fill - w side^dim) / (w side^dim))`, the excess taken in exact integers; at an even side the excess is zero and the even word carries no drift, so its walk stands at 1.",
+        "",
+        "# Errors",
+        "",
+        "Errs on a profile no design in dim 1 to 3 holds, or on stops that are not rising whole numbers from 1."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "profile",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u64"
+            }
+          }
+        },
+        {
+          "name": "stops",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "usize"
+            }
+          }
+        },
+        {
+          "name": "even",
+          "ty": {
+            "t": "scalar",
+            "name": "bool"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "scalar",
+            "name": "f64"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
       "path": "num::sieve::side",
       "name": "side",
       "module": "num::sieve",
-      "defined_at": "num/sieve.rs:41",
+      "defined_at": "num/sieve.rs:43",
       "docs": [
         "Returns the side of the word, the product of its letters' sides.",
         "",
@@ -62370,7 +64212,7 @@
       "path": "num::sieve::solid_limit",
       "name": "solid_limit",
       "module": "num::sieve",
-      "defined_at": "num/sieve.rs:254",
+      "defined_at": "num/sieve.rs:256",
       "docs": [
         "Returns the limit of the solid Wallis sieve's surviving volume, the product of one minus n to the minus three over the odd n from three, in closed form.",
         "",
@@ -62984,6 +64826,583 @@
       "ret": {
         "t": "plain",
         "path": "num::spiral::Snail"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::sumset::Pair::clean",
+      "name": "clean",
+      "module": "num::sumset",
+      "defined_at": "num/sumset.rs:241",
+      "docs": [
+        "Whether the pair is clean, `3^k > d(k, m)` and `4^m > d(k, m)`, so that `S meet [0, d] = A_k + B_m`."
+      ],
+      "owner": "num::sumset::Pair",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "bool"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::sumset::Pair::copy",
+      "name": "copy",
+      "module": "num::sumset",
+      "defined_at": "num/sumset.rs:247",
+      "docs": [
+        "Whether the pair is a gap copy, `2 4^m < 3^k + 5`: `A_k + B_m` is then two disjoint translates of `A_(k-1) + B_m` and its energy is twice theirs."
+      ],
+      "owner": "num::sumset::Pair",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "bool"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::sumset::Pair::energy",
+      "name": "energy",
+      "module": "num::sumset",
+      "defined_at": "num/sumset.rs:261",
+      "docs": [
+        "The additive energy `E(k, m) = sum_x r(x)^2`, `r(x)` the number of ways `x = a + b` with `a` in `A_k` and `b` in `B_m`.",
+        "",
+        "Summed as `sum_t 2^(z_3(t) + z_4(t))` over the `3^m` integers `t` with an `m`-digit base-4 string in `{-1, 0, 1}`, `z_4(t)` its zero digits and `z_3(t)` the zero digits of the `k`-digit balanced ternary expansion of `t`, a `t` past `(3^k - 1)/2` adding nothing: a difference of two digit strings from `{0, 1}` is a digit string from `{-1, 0, 1}`, which fixes `t` in either base, and each zero difference arises twice. The cost is `3^m` strings."
+      ],
+      "owner": "num::sumset::Pair",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "u128"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::sumset::Pair::gap",
+      "name": "gap",
+      "module": "num::sumset",
+      "defined_at": "num/sumset.rs:234",
+      "docs": [
+        "The first and the last integer of the open interval `(d(k, m), min(3^k, 4^m))`, which `S` misses, or `None` when it holds none.",
+        "",
+        "A sum with `a < 3^k` and `b < 4^m` is at most `d(k, m)`, and a sum with `a >= 3^k` or `b >= 4^m` is at least `min(3^k, 4^m)`."
+      ],
+      "owner": "num::sumset::Pair",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "option",
+        "item": {
+          "t": "tuple",
+          "items": [
+            {
+              "t": "scalar",
+              "name": "u64"
+            },
+            {
+              "t": "scalar",
+              "name": "u64"
+            }
+          ]
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::sumset::Pair::largest",
+      "name": "largest",
+      "module": "num::sumset",
+      "defined_at": "num/sumset.rs:226",
+      "docs": [
+        "The largest element `d(k, m) = (3^k - 1)/2 + (4^m - 1)/3` of `A_k + B_m`."
+      ],
+      "owner": "num::sumset::Pair",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "u64"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::sumset::Pair::new",
+      "name": "new",
+      "module": "num::sumset",
+      "defined_at": "num/sumset.rs:212",
+      "docs": [
+        "Names the pair `(k, m)`.",
+        "",
+        "# Errors",
+        "",
+        "Errs when either level is zero or past [`WIDEST`]."
+      ],
+      "owner": "num::sumset::Pair",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "three",
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        },
+        {
+          "name": "four",
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "class",
+          "path": "num::sumset::Pair",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::sumset::Pair::ratio",
+      "name": "ratio",
+      "module": "num::sumset",
+      "defined_at": "num/sumset.rs:267",
+      "docs": [
+        "The energy ratio `Q(k, m) = E(k, m) (d + 1)/4^(k+m)` of the energy [`Pair::energy`] returns, the energy against its flat value, at least `1`; `card(A_k + B_m) >= (d + 1)/Q` by Cauchy-Schwarz."
+      ],
+      "owner": "num::sumset::Pair",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "energy",
+          "ty": {
+            "t": "u128"
+          }
+        }
+      ],
+      "ret": {
+        "t": "scalar",
+        "name": "f64"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::sumset::Pair::scale",
+      "name": "scale",
+      "module": "num::sumset",
+      "defined_at": "num/sumset.rs:253",
+      "docs": [
+        "The scaling `tau = 4^m/3^k`."
+      ],
+      "owner": "num::sumset::Pair",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "f64"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::sumset::Sumset::contains",
+      "name": "contains",
+      "module": "num::sumset",
+      "defined_at": "num/sumset.rs:84",
+      "docs": [
+        "Whether `x` is in `S`, or `None` past the top."
+      ],
+      "owner": "num::sumset::Sumset",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "x",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "option",
+        "item": {
+          "t": "scalar",
+          "name": "bool"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::sumset::Sumset::count",
+      "name": "count",
+      "module": "num::sumset",
+      "defined_at": "num/sumset.rs:89",
+      "docs": [
+        "Counts `card(S meet [1, x])`, or `None` past the top."
+      ],
+      "owner": "num::sumset::Sumset",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "x",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "option",
+        "item": {
+          "t": "scalar",
+          "name": "u64"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::sumset::Sumset::density",
+      "name": "density",
+      "module": "num::sumset",
+      "defined_at": "num/sumset.rs:94",
+      "docs": [
+        "Reads the density `D(x) = card(S meet [1, x])/x`, or `None` at zero and past the top."
+      ],
+      "owner": "num::sumset::Sumset",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "x",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "option",
+        "item": {
+          "t": "scalar",
+          "name": "f64"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::sumset::Sumset::extremes",
+      "name": "extremes",
+      "module": "num::sumset",
+      "defined_at": "num/sumset.rs:134",
+      "docs": [
+        "Reads the least and the greatest `D(x)` over each window `[edges[i], edges[i + 1])`, `None` for an empty window.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the edges decrease, start at zero or run past `top + 1`."
+      ],
+      "owner": "num::sumset::Sumset",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "edges",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u64"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "option",
+            "item": {
+              "t": "tuple",
+              "items": [
+                {
+                  "t": "scalar",
+                  "name": "f64"
+                },
+                {
+                  "t": "scalar",
+                  "name": "f64"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::sumset::Sumset::fills",
+      "name": "fills",
+      "module": "num::sumset",
+      "defined_at": "num/sumset.rs:107",
+      "docs": [
+        "Reads the share of members in each of `cells` equal runs of the integers `[low, high)`, the strip of `S` a page draws.",
+        "",
+        "Run `i` is `[low + floor(i n/cells), low + floor((i + 1) n/cells))` with `n = high - low`.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the window is empty or runs past the top, or when `cells` is zero or more than the integers in the window."
+      ],
+      "owner": "num::sumset::Sumset",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "low",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "high",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "cells",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "scalar",
+            "name": "f64"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::sumset::Sumset::level",
+      "name": "level",
+      "module": "num::sumset",
+      "defined_at": "num/sumset.rs:74",
+      "docs": [
+        "The level the array was built to."
+      ],
+      "owner": "num::sumset::Sumset",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "u32"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::sumset::Sumset::new",
+      "name": "new",
+      "module": "num::sumset",
+      "defined_at": "num/sumset.rs:36",
+      "docs": [
+        "Builds `S meet [0, 3^level]`.",
+        "",
+        "```",
+        "let s = mrlyrs::num::sumset::Sumset::new(4).unwrap();",
+        "assert_eq!(s.count(81), Some(79));",
+        "```",
+        "",
+        "# Errors",
+        "",
+        "Errs when the level is zero or past [`DEEPEST`]."
+      ],
+      "owner": "num::sumset::Sumset",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "class",
+          "path": "num::sumset::Sumset",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::sumset::Sumset::top",
+      "name": "top",
+      "module": "num::sumset",
+      "defined_at": "num/sumset.rs:79",
+      "docs": [
+        "The largest integer the array holds, `3^level`."
+      ],
+      "owner": "num::sumset::Sumset",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "u64"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::sumset::pairs",
+      "name": "pairs",
+      "module": "num::sumset",
+      "defined_at": "num/sumset.rs:305",
+      "docs": [
+        "Lists the pairs of the census: every `(k, m)` with `4^m` within a factor `3` of `3^k` and `d(k, m) <= 3^level`, by `d`.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the level is zero or past [`WIDEST`]."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "class",
+            "path": "num::sumset::Pair",
+            "dim": null
+          }
+        }
       },
       "dims": [],
       "trait": null,
