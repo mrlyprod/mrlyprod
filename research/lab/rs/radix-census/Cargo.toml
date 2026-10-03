@@ -1,0 +1,6 @@
+[package]
+name = "radix-census"
+edition.workspace = true
+
+[dependencies]
+mrlyrs.workspace = true

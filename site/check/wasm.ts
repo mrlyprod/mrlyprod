@@ -969,4 +969,19 @@ checks.push(
   ['dissection chain below a fifth', `${cutChain.length} ${cutChain.findIndex((v) => v < 0.2) + 3}`, '4094 584'],
 );
 
+// ARCS
+
+const arcLoops = (code: string, base: number) => [1, 2, 3, 4].map((n) => JSON.parse(m.arcs_read(code, base, n)).loops).join(',');
+const arcCarpet = JSON.parse(m.arcs_read('495', 3, 4));
+const arcSeven = JSON.parse(m.arcs_read('7', 2, 6));
+
+checks.push(
+  ['arcs_read carpet loops 1..4', arcLoops('495', 3), '0,3,50,509'],
+  ['arcs_read code 7 loops 1..4', arcLoops('7', 2), '0,0,2,12'],
+  ['arcs_read carpet level 4', `${arcCarpet.side} ${arcCarpet.filled} ${arcCarpet.strands} ${arcCarpet.law.loops}`, '81 4096 162 509'],
+  ['arcs_read code 7 level 6 law', `${arcSeven.loops} ${arcSeven.law.loops}`, '180 180'],
+  ['arcs_grid code 9 level 1', Array.from(m.arcs_grid('9', 2, 1).types).join(','), '5,4,2,3'],
+  ['arcs_cap bases 2..5', [2, 3, 4, 5].map((b) => m.arcs_cap(b)).join(','), '8,5,4,3'],
+);
+
 export default checks;

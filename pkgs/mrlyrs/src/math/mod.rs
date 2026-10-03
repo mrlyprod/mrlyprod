@@ -25,6 +25,8 @@
 //! [`crate::math::counts::fill`], [`crate::math::three::census::surface`] and
 //! [`crate::math::spectrum::laplacian_spectrum`].
 
+/// The Truchet arcs of a flat design: every cell two quarter arcs, the loops and strands they join into, and the proved loop laws.
+pub mod arcs;
 /// Ready-made tensors: zeros, ones, noise and carpets in two or three dimensions.
 pub mod atoms;
 /// The universe of design codes: corners, symmetries and their counts.

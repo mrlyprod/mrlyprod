@@ -1,0 +1,6 @@
+[package]
+name = "design-windows"
+edition.workspace = true
+
+[dependencies]
+mrlyrs.workspace = true

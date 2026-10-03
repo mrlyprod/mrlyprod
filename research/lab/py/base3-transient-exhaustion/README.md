@@ -14,7 +14,7 @@
 
 ## THE SAME CERTIFICATE THE LANE ALREADY USES
 
-- Column sums satisfy `fill - 3 colsum(c) = (D-1) v_c` exactly, `fill = 2^(D-1)(D+2)`; this is `prop:mass` of `slice-sign-even-half`, proved by root-of-unity filtering, and holds at every `D`.
+- Column sums satisfy `fill - 3 colsum(c) = (D-1) v_c` exactly, `fill = 2^(D-1)(D+2)`; this is Proposition 2.13 of the shelf paper [slice-sign-even-half](https://github.com/carlomitchener/carlomitchener/tree/main/research/slice-sign-even-half), proved by root-of-unity filtering, and holds at every `D`.
 - `--selftest` bites the identity at even `D = 4..60` as a transcription check on this study's matrix; the theorem, not the check, is what carries the reading to `D = 120`.
 - Applying `(M^T)^K` gives `fill beta_K - 3 beta_(K+1) = (D-1) r_K` with `beta_K = (M^T)^K 1`.
 - So the Collatz-Wielandt test `3 beta_(K+1) < fill beta_K` entrywise is `r_K > 0` entrywise: the exhaustion certificate and the even-half certificate are one object.
@@ -64,4 +64,4 @@ uv run python research/lab/py/base3-transient-exhaustion/transient.py --selftest
 
 ## WITNESSES
 
-- the claims line (was `DISCOVERIES.md:215`) - `level* = level_0` on 58 of 58 rows at even `D = 6..120`, the towers at `D = 38, 42, 44`, `level* = 811` at `D = 120`, and the `K_min` split 36/22.
+- the claims line: `level* = level_0` on 58 of 58 rows at even `D = 6..120`, the towers at `D = 38, 42, 44`, `level* = 811` at `D = 120`, and the `K_min` split 36/22.
