@@ -1,6 +1,6 @@
 use mrlyrs::core::rng::Rng;
 use mrlyrs::core::tensor::Tensor;
-use mrlyrs::core::{png, Color, Colorizer};
+use mrlyrs::core::{Color, Colorizer, Image};
 use mrlyrs::font;
 use mrlyrs::gen;
 use mrlyrs::life::{self, Config, Source};
@@ -60,8 +60,11 @@ fn f12(value: f64) -> Value {
     json!(format!("{value:.12}").parse::<f64>().unwrap() + 0.0)
 }
 
-fn sha(bytes: &[u8]) -> Value {
-    json!(sha256::hex(bytes))
+fn pixels(image: &Image) -> Value {
+    json!({
+        "shape": [image.height, image.width],
+        "sha256": sha256::hex(&image.colors.concat()),
+    })
 }
 
 // CORE
@@ -79,7 +82,10 @@ fn core_rows() -> Vec<Value> {
         [0, 0, 255, 255],
         [255, 255, 255, 255],
     ];
-    let bytes = png(&corners, 2, 2, 3).unwrap();
+    let scaled = Image::new(2, 2, corners.to_vec())
+        .unwrap()
+        .scale(3)
+        .unwrap();
     let ramp = Colorizer::gradient_bins(
         Color::from_hex("#000000").unwrap(),
         &[
@@ -106,10 +112,10 @@ fn core_rows() -> Vec<Value> {
             "the house red parsed, then printed back by to_hex",
         ),
         row(
-            "core::png",
+            "core::Image::scale",
             json!({"colors": corners, "width": 2, "height": 2, "scale": 3}),
-            sha(&bytes),
-            "sha256 of the png bytes, which pins the encoder and the scale",
+            pixels(&scaled),
+            "the image crossing: the shape and the sha256 of the rgba bytes, which pins the scale",
         ),
         row(
             "core::Colorizer::color",
@@ -303,8 +309,8 @@ fn gen_rows() -> Vec<Value> {
         row(
             "gen::background",
             json!({"seed": 1, "width": 2, "height": 2}),
-            sha(&gen::background(1, 2, 2).unwrap()),
-            "sha256 of the png bytes of a whole seeded artwork",
+            pixels(&gen::background(1, 2, 2).unwrap()),
+            "the shape and the sha256 of the rgba bytes of a whole seeded artwork",
         ),
     ]
 }
@@ -393,8 +399,8 @@ fn life_rows() -> Vec<Value> {
         row(
             "life::heatmap",
             json!({"grids": {"fn": "life::animate::animate", "in": glider_in()}, "scale": 1}),
-            json!(heat),
-            "the row crossing: the raw png bytes of one heat frame per generation",
+            Value::Array(heat.iter().map(pixels).collect()),
+            "the row crossing: the shape and the sha256 of the rgba bytes of one heat frame per generation",
         ),
     ]
 }

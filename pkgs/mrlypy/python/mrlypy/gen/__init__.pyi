@@ -92,8 +92,8 @@ class Parity:
     def keep(parity: Literal["Evens", "Odds", "Both"], n: int) -> bool:
         """Returns true when the number passes the filter."""
 
-def background(seed: int, width: int, height: int) -> bytes:
-    """Draws one seeded artwork and returns its PNG bytes: a random flat tile under the default recipe
+def background(seed: int, width: int, height: int) -> NDArray[Any]:
+    """Draws one seeded artwork and returns its image: a random flat tile under the default recipe
     constraints and paint, repeated `width` across and `height` down at one pixel per cell."""
 
 def classic_code(design: Literal["Carpet", "Net", "Htree", "Vtree", "Void", "Xtree", "Ytree", "Ztree", "Point", "Dust", "Hline", "Vline", "Star", "Xline", "Yline", "Zline"]) -> int | None:

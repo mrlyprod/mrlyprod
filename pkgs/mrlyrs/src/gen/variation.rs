@@ -1,4 +1,5 @@
 use crate::core::error::{value_error, Error, Result};
+use crate::core::image::Image;
 use crate::core::paint::{self as engine, Config as PaintConfig, Edition, Ink, Paint};
 use crate::core::rng::Rng;
 use crate::gen::build::{build_2d, create_2d, Config2d};
@@ -13,18 +14,18 @@ pub struct File {
     pub width: usize,
     /// The count of tile repetitions down.
     pub height: usize,
-    /// The encoded PNG bytes, empty until rendered and left out of the json.
+    /// The rendered image, absent until rendered and left out of the json.
     #[serde(skip)]
-    pub png: Vec<u8>,
+    pub image: Option<Image>,
 }
 
 impl File {
-    /// Builds a file of the given repetition counts with no PNG bytes.
+    /// Builds a file of the given repetition counts with no image.
     pub fn new(width: usize, height: usize) -> File {
         File {
             width,
             height,
-            png: Vec::new(),
+            image: None,
         }
     }
 }
@@ -184,12 +185,12 @@ pub fn generate(mut variation: Variation, config: &Config, rng: &mut Rng) -> Res
     Ok(variation)
 }
 
-/// Renders every file of the variation to PNG at the given scale, scattering a Random edition
+/// Renders every file of the variation to an image at the given scale, scattering a Random edition
 /// from the stream.
 ///
 /// # Errors
 ///
-/// Errs when generate has not run, or when a file will not tile or encode at the scale.
+/// Errs when generate has not run, when a file will not tile, or on a scale below one.
 pub fn render(mut variation: Variation, scale: usize, rng: &mut Rng) -> Result<Variation> {
     let base = match &variation.base {
         Some(base) => base.clone(),
@@ -208,7 +209,7 @@ pub fn render(mut variation: Variation, scale: usize, rng: &mut Rng) -> Result<V
             engine::apply(&paint, &mut cell, rng)?;
             canvas.cell = cell;
         }
-        file.png = two::png(&canvas, scale, None, 1, two::Shape::Square)?;
+        file.image = Some(two::image(&canvas, scale, None, 1, two::Shape::Square)?);
     }
     variation.files = files;
     Ok(variation)
@@ -248,18 +249,13 @@ mod tests {
             ..config()
         }
     }
-    fn png_size(png: &[u8]) -> (usize, usize) {
-        let w = u32::from_be_bytes(png[16..20].try_into().unwrap()) as usize;
-        let h = u32::from_be_bytes(png[20..24].try_into().unwrap()) as usize;
-        (w, h)
-    }
-    fn bare_png(variation: &Variation, file: &File, scale: usize) -> Vec<u8> {
+    fn bare_image(variation: &Variation, file: &File, scale: usize) -> Option<Image> {
         let base = variation.base.as_ref().unwrap();
         let bare = two::Cell2d::new(base.types().clone())
             .unwrap()
             .tile(file.width, file.height)
             .unwrap();
-        two::png(&bare, scale, None, 1, two::Shape::Square).unwrap()
+        Some(two::image(&bare, scale, None, 1, two::Shape::Square).unwrap())
     }
     fn run(config: &Config, seed: u64, scale: usize) -> Variation {
         let mut rng = Rng::new(seed);
@@ -268,23 +264,18 @@ mod tests {
         render(v, scale, &mut rng).unwrap()
     }
     #[test]
-    fn full_pipeline_produces_png_bytes() {
+    fn full_pipeline_renders_every_file() {
         for s in 0..20 {
             let v = run(&config(), s, 4);
             assert_eq!(v.files.len(), 2);
             for file in &v.files {
-                assert!(
-                    !file.png.is_empty(),
-                    "empty png for {}x{}",
-                    file.width,
-                    file.height
-                );
-                assert_eq!(&file.png[1..4], b"PNG", "not a png header");
+                let image = file.image.as_ref().expect("a rendered file");
                 let expected = (
                     v.tile.width * file.width * 4,
                     v.tile.height * file.height * 4,
                 );
-                assert_eq!(png_size(&file.png), expected, "png size seed {s}");
+                assert_eq!((image.width, image.height), expected, "size seed {s}");
+                assert_eq!(image.colors.len(), expected.0 * expected.1);
             }
         }
     }
@@ -305,7 +296,7 @@ mod tests {
             let mut differed = false;
             for s in 0..8 {
                 let v = run(&config, 1000 * (i as u64 + 1) + s, 2);
-                if v.files.iter().all(|f| f.png != bare_png(&v, f, 2)) {
+                if v.files.iter().all(|f| f.image != bare_image(&v, f, 2)) {
                     differed = true;
                     break;
                 }
@@ -323,7 +314,11 @@ mod tests {
         assert!(v.base.as_ref().unwrap().cell.colors.is_some());
         let v = render(v, 2, &mut rng).unwrap();
         for file in &v.files {
-            assert_ne!(file.png, bare_png(&v, file, 2), "default mapping leaked");
+            assert_ne!(
+                file.image,
+                bare_image(&v, file, 2),
+                "default mapping leaked"
+            );
         }
     }
     #[test]
@@ -337,7 +332,11 @@ mod tests {
         assert!(v.base.as_ref().unwrap().cell.colors.is_some());
         let v = render(v, 2, &mut rng).unwrap();
         for file in &v.files {
-            assert_ne!(file.png, bare_png(&v, file, 2), "default mapping leaked");
+            assert_ne!(
+                file.image,
+                bare_image(&v, file, 2),
+                "default mapping leaked"
+            );
         }
     }
     #[test]
@@ -362,7 +361,7 @@ mod tests {
             assert_eq!((mask.width, mask.height), (3, 3));
             let v = generate(v, &config, &mut rng).unwrap();
             let v = render(v, 2, &mut rng).unwrap();
-            assert!(!v.files[0].png.is_empty());
+            assert!(v.files[0].image.is_some());
         }
     }
     #[test]
@@ -387,13 +386,13 @@ mod tests {
             assert_eq!(a.paint, b.paint);
             for (fa, fb) in a.files.iter().zip(&b.files) {
                 assert_eq!((fa.width, fa.height), (fb.width, fb.height));
-                assert!(!fa.png.is_empty());
-                assert_eq!(fa.png, fb.png, "edition {edition:?}");
+                assert!(fa.image.is_some());
+                assert_eq!(fa.image, fb.image, "edition {edition:?}");
             }
             let c = round_trip(&a);
             assert_eq!(c.paint, a.paint);
             assert!(c.base.is_none());
-            assert!(c.files.iter().all(|f| f.png.is_empty()));
+            assert!(c.files.iter().all(|f| f.image.is_none()));
         }
     }
     #[test]

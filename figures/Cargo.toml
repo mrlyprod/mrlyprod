@@ -7,3 +7,4 @@ publish = false
 [dependencies]
 mrlyrs.workspace = true
 ledger.workspace = true
+png = "0.17"

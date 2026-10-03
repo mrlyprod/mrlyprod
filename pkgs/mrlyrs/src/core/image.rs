@@ -1,10 +1,8 @@
-use super::codec;
-use super::colors::Color;
-use super::error::{value_error, Error, Result};
-use super::resample::{self, Filter};
+use super::error::{shape_error, value_error, Error, Result};
+use super::resample::{self, block, Filter};
 use serde::{Deserialize, Serialize};
 
-/// A paletted image: rows of palette indices and the palette they point into, hex strings in json.
+/// An image: its width, its height and the rgba color of every pixel, row by row from the top.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(try_from = "Parts")]
 pub struct Image {
@@ -12,82 +10,62 @@ pub struct Image {
     pub width: usize,
     /// The height in pixels.
     pub height: usize,
-    /// The palette index of every pixel, row by row.
-    pub rows: Vec<Vec<usize>>,
-    /// The colors the rows index.
-    pub palette: Vec<Color>,
+    /// The rgba color of every pixel, row by row.
+    pub colors: Vec<[u8; 4]>,
 }
 
 impl Image {
-    /// Builds an image from its four parts.
-    pub fn new(width: usize, height: usize, rows: Vec<Vec<usize>>, palette: Vec<Color>) -> Image {
-        Image {
+    /// Builds an image from its width, its height and its colors.
+    ///
+    /// # Errors
+    ///
+    /// Errs when the colors do not count width by height.
+    ///
+    /// ```
+    /// let image = mrlyrs::core::Image::new(2, 1, vec![[255, 0, 0, 255], [0, 0, 255, 255]])?;
+    /// assert_eq!((image.width, image.height, image.colors[1]), (2, 1, [0, 0, 255, 255]));
+    /// assert!(mrlyrs::core::Image::new(2, 2, vec![[0, 0, 0, 255]]).is_err());
+    /// # Ok::<(), mrlyrs::Error>(())
+    /// ```
+    pub fn new(width: usize, height: usize, colors: Vec<[u8; 4]>) -> Result<Image> {
+        if Some(colors.len()) != width.checked_mul(height) {
+            return shape_error("colors length must equal width * height.");
+        }
+        Ok(Image {
             width,
             height,
-            rows,
-            palette,
-        }
+            colors,
+        })
     }
-    /// Builds a paletted image from raw rgba pixels, growing the palette as new colors appear.
-    pub fn from_pixels(width: usize, height: usize, pixels: &[[u8; 4]]) -> Image {
-        let mut palette: Vec<Color> = Vec::new();
-        let mut rows = Vec::with_capacity(height);
-        for y in 0..height {
-            let mut row = Vec::with_capacity(width);
-            for x in 0..width {
-                let px = pixels.get(y * width + x).copied().unwrap_or([0, 0, 0, 0]);
-                let color = Color::rgba(px[0], px[1], px[2], px[3]);
-                let id = match palette.iter().position(|&c| c == color) {
-                    Some(id) => id,
-                    None => {
-                        palette.push(color);
-                        palette.len() - 1
-                    }
-                };
-                row.push(id);
-            }
-            rows.push(row);
-        }
-        Image::new(width, height, rows, palette)
-    }
-    /// Returns the flat rgba pixels, transparent wherever an index misses the palette.
-    pub fn colors(&self) -> Vec<[u8; 4]> {
-        let mut out = Vec::with_capacity(self.width * self.height);
-        for row in &self.rows {
-            for &id in row {
-                let c = self
-                    .palette
-                    .get(id)
-                    .copied()
-                    .unwrap_or(Color::rgba(0, 0, 0, 0));
-                out.push([c.r, c.g, c.b, c.a]);
-            }
-        }
-        out
-    }
-    /// Encodes the image as a png at the given scale.
+    /// Draws every pixel as a scale by scale block, growing both sides by scale.
     ///
     /// # Errors
     ///
-    /// Errs when the codec refuses the scale or the scaled size.
-    pub fn png(&self, scale: usize) -> Result<Vec<u8>> {
-        codec::png(&self.colors(), self.width, self.height, scale)
+    /// Errs on a scale below one, colors that do not count width by height, or a grown size that overflows.
+    pub fn scale(&self, scale: usize) -> Result<Image> {
+        if scale < 1 {
+            return value_error("scale must be at least 1.");
+        }
+        let colors = block(&self.colors, self.width, self.height, scale)?;
+        Ok(Image {
+            width: self.width * scale,
+            height: self.height * scale,
+            colors,
+        })
     }
-    /// Resamples the image to a new size, its palette rebuilt from the blended pixels.
+    /// Resamples the image to a new size.
     ///
     /// # Errors
     ///
-    /// Errs on a side of zero or a size that overflows.
+    /// Errs on a side of zero, colors that do not count width by height, or a size that overflows.
     pub fn resample(&self, width: usize, height: usize, filter: Filter) -> Result<Image> {
-        let pixels = resample::resample(
-            &self.colors(),
-            self.width,
-            self.height,
+        let colors =
+            resample::resample(&self.colors, self.width, self.height, width, height, filter)?;
+        Ok(Image {
             width,
             height,
-            filter,
-        )?;
-        Ok(Image::from_pixels(width, height, &pixels))
+            colors,
+        })
     }
 }
 
@@ -149,27 +127,14 @@ pub fn blur(pixels: &[[u8; 4]], width: usize, height: usize, radius: usize) -> V
 struct Parts {
     width: usize,
     height: usize,
-    rows: Vec<Vec<usize>>,
-    palette: Vec<Color>,
+    colors: Vec<[u8; 4]>,
 }
 
 impl TryFrom<Parts> for Image {
     type Error = Error;
 
     fn try_from(parts: Parts) -> Result<Image> {
-        let Parts {
-            width,
-            height,
-            rows,
-            palette,
-        } = parts;
-        if rows.len() != height || rows.iter().any(|row| row.len() != width) {
-            return value_error("rows must fill the image's width and height.");
-        }
-        if rows.iter().flatten().any(|&id| id >= palette.len()) {
-            return value_error("rows must index the palette.");
-        }
-        Ok(Image::new(width, height, rows, palette))
+        Image::new(parts.width, parts.height, parts.colors)
     }
 }
 
@@ -177,19 +142,19 @@ impl TryFrom<Parts> for Image {
 mod tests {
     use super::*;
     use crate::core::json;
-    use crate::core::unpng;
 
     fn sample() -> Image {
         Image::new(
             2,
             2,
-            vec![vec![0, 1], vec![1, 2]],
             vec![
-                Color::rgb(255, 0, 0),
-                Color::rgb(0, 0, 0),
-                Color::rgba(0, 140, 255, 128),
+                [255, 0, 0, 255],
+                [0, 0, 0, 255],
+                [0, 0, 0, 255],
+                [0, 140, 255, 128],
             ],
         )
+        .unwrap()
     }
 
     fn carpet_pixels() -> Vec<[u8; 4]> {
@@ -213,8 +178,7 @@ mod tests {
     fn json_round_trips() {
         let image = sample();
         let json = serde_json::to_value(&image).unwrap();
-        assert_eq!(json["palette"][0], "#ff0000");
-        assert_eq!(json["palette"][2], "#008cff80");
+        assert_eq!(json["colors"][3], json!([0, 140, 255, 128]));
         let back: Image = serde_json::from_value(json).unwrap();
         assert_eq!(image, back);
     }
@@ -224,46 +188,35 @@ mod tests {
         let read = |value| serde_json::from_value::<Image>(value);
         assert!(read(json!(null)).is_err());
         assert!(read(json!({ "width": 1, "height": 1 })).is_err());
-        let ragged = json!({ "width": 2, "height": 2, "rows": [[0]], "palette": ["#ffffff"] });
-        assert!(read(ragged).is_err());
-        let short = json!({ "width": 1, "height": 2, "rows": [[0]], "palette": ["#ffffff"] });
+        let short = json!({ "width": 1, "height": 2, "colors": [[0, 0, 0, 255]] });
         assert!(read(short).is_err());
-        let loose = json!({ "width": 1, "height": 1, "rows": [[9]], "palette": ["#ffffff"] });
-        assert!(read(loose).is_err());
-        let murky = json!({ "width": 1, "height": 1, "rows": [[0]], "palette": ["soup"] });
-        assert!(read(murky).is_err());
+        let long = json!({ "width": 1, "height": 1, "colors": [[0, 0, 0, 255], [0, 0, 0, 255]] });
+        assert!(read(long).is_err());
+        let thin = json!({ "width": 1, "height": 1, "colors": [[0, 0, 0]] });
+        assert!(read(thin).is_err());
+        let wide = json!({ "width": usize::MAX, "height": 2, "colors": [] });
+        assert!(read(wide).is_err());
     }
 
     #[test]
-    fn pixels_round_trip() {
-        let pixels = vec![
-            [255, 0, 0, 255],
-            [0, 0, 0, 255],
-            [0, 0, 0, 255],
-            [255, 0, 0, 255],
-        ];
-        let image = Image::from_pixels(2, 2, &pixels);
-        assert_eq!(image.rows, vec![vec![0, 1], vec![1, 0]]);
-        assert_eq!(image.palette.len(), 2);
-        assert_eq!(image.colors(), pixels);
+    fn scale_draws_every_pixel_as_a_block() {
+        let image = sample().scale(4).unwrap();
+        assert_eq!((image.width, image.height), (8, 8));
+        assert_eq!(image.colors.len(), 64);
+        assert_eq!(image.colors[0], [255, 0, 0, 255]);
+        assert_eq!(image.colors[3], [255, 0, 0, 255]);
+        assert_eq!(image.colors[4], [0, 0, 0, 255]);
+        assert_eq!(image.colors[63], [0, 140, 255, 128]);
+        assert_eq!(sample().scale(1).unwrap(), sample());
+        assert!(sample().scale(0).is_err());
+        assert!(sample().scale(usize::MAX).is_err());
     }
 
     #[test]
-    fn png_delegates_to_the_codec() {
-        let bytes = sample().png(4).unwrap();
-        let (width, height, pixels) = unpng(&bytes).unwrap();
-        assert_eq!((width, height), (8, 8));
-        assert_eq!(pixels[0], [255, 0, 0, 255]);
-        assert!(sample().png(0).is_err());
-    }
-
-    #[test]
-    fn resample_keeps_the_palette_on_a_nearest_upscale() {
+    fn resample_keeps_the_colors_on_a_nearest_upscale() {
         let image = sample().resample(4, 4, Filter::Nearest).unwrap();
         assert_eq!((image.width, image.height), (4, 4));
-        assert_eq!(image.palette.len(), 3);
-        assert_eq!(image.rows[0], vec![0, 0, 1, 1]);
-        assert_eq!(image.rows[3], vec![1, 1, 2, 2]);
+        assert_eq!(image, sample().scale(2).unwrap());
         assert!(sample().resample(0, 4, Filter::Nearest).is_err());
     }
 }

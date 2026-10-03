@@ -23,7 +23,8 @@
 
 ## KINDS
 
-- `hand`: Tensor, Cell, CellNd (Cell2d, Cell3d), Cell6d, Color, Code, Rng; each `hand.rs` owns their crossing per the plan's CROSSING.
+- `hand`: Tensor, Cell, CellNd (Cell2d, Cell3d), Cell6d, Image, Color, Code, Rng; each `hand.rs` owns their crossing per the plan's CROSSING.
+- `Image` is the one carrier of rendered pixels and crosses with its shape: a numpy `uint8` array `(h, w, 4)` in Python, `{shape: [h, w], colors: Uint8Array}` in JS, serde's `{width, height, colors}` in the CLI; a `Vec<Image>` is a list of those, and an image crossing in is refused unless its colors fill its shape. A bare `Vec<[u8; 4]>` still crosses as `(n, 4)`.
 - `Rng.choice(seq)` and `Rng.shuffle(list)` are written in both `hand.rs`: Rust's `choice` and `shuffle` run on the index list, so a seed draws what Rust draws; the generic Rust fns stay in `skip.txt`.
 - `class`: a struct, or an enum with data, that has a self-taking method; holds the Rust value, public fields as getters and setters, methods as methods; never leaves its wasm unit. A class deriving Deserialize should get a from-data constructor in each backend.
 - A setter reads its value the way a parameter of that type crosses in; a field holding a borrow (`Preset::name: &'static str`) stays read-only.

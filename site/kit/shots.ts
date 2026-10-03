@@ -152,7 +152,8 @@ const MOUNTED = `new Promise((r) => { const root = document.querySelector("#root
 
 const STILL = `document.head.insertAdjacentHTML("beforeend", "<style>canvas:not(.mark) { visibility: hidden !important; }</style>")`;
 
-const READY = `${MOUNTED}.then(() => Promise.all([...document.images].map((i) => { i.loading = "eager"; return (i.complete ? Promise.resolve() : new Promise((r) => { i.onload = i.onerror = r; })).then(() => i.decode().catch(() => 0)); }))).then(() => document.fonts.ready).then(() => { ${STILL}; }).then(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))).then(() => 1)`;
+const ready = (motion: boolean) =>
+  `${MOUNTED}.then(() => Promise.all([...document.images].map((i) => { i.loading = "eager"; return (i.complete ? Promise.resolve() : new Promise((r) => { i.onload = i.onerror = r; })).then(() => i.decode().catch(() => 0)); }))).then(() => document.fonts.ready)${motion ? "" : `.then(() => { ${STILL}; })`}.then(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))).then(() => 1)`;
 
 const WIDE = `JSON.stringify([...document.querySelectorAll("body *")].filter((el) => !el.closest(".pane, .scrim") && getComputedStyle(el).visibility !== "hidden").map((el) => [el, el.getBoundingClientRect()]).filter(([, r]) => r.right > innerWidth + 1 && r.width > 0).sort((a, b) => b[1].right - a[1].right).slice(0, 4).map(([el, r]) => el.tagName.toLowerCase() + (typeof el.className === "string" && el.className ? "." + el.className.trim().split(/\\s+/).join(".") : "") + " right=" + Math.round(r.right) + " width=" + Math.round(r.width)))`;
 
@@ -168,6 +169,7 @@ export async function main(root: string, config?: Record<string, unknown>): Prom
   const args = process.argv.slice(2);
   const print = args.includes("--print");
   const baseline = args.includes("--baseline");
+  const motion = args.includes("--motion");
   const probe = args.includes("--js") ? (args[args.indexOf("--js") + 1] ?? "") : "";
   const scheme = args.includes("--theme") ? (args[args.indexOf("--theme") + 1] ?? "") : "";
   const asked = args.filter((a, i) => !a.startsWith("--") && args[i - 1] !== "--js" && args[i - 1] !== "--theme");
@@ -175,7 +177,7 @@ export async function main(root: string, config?: Record<string, unknown>): Prom
   const out = join(DATA_DIR, "shots", baseline ? "baseline" : "latest");
   const base = join(DATA_DIR, "shots", "baseline");
   const name = (route: string, size: string, act: number) =>
-    `${route.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "home"}${act >= 0 ? `-open${act}` : ""}-${size}${print ? "-print" : ""}${scheme ? `-${scheme}` : ""}.png`;
+    `${route.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "home"}${act >= 0 ? `-open${act}` : ""}-${size}${print ? "-print" : ""}${motion ? "-motion" : ""}${scheme ? `-${scheme}` : ""}.png`;
   mkdirSync(out, { recursive: true });
   const server = LIVE ? null : serve(join(root, "dist"));
   const { proc, page } = await launch(join(DATA_DIR, "profile"));
@@ -189,7 +191,7 @@ export async function main(root: string, config?: Record<string, unknown>): Prom
     await send("Page.enable");
     await send("Runtime.enable");
     await send("Log.enable");
-    await send("Emulation.setEmulatedMedia", { media: print ? "print" : "", features: [{ name: "prefers-reduced-motion", value: "reduce" }, ...(scheme ? [{ name: "prefers-color-scheme", value: scheme }] : [])] });
+    await send("Emulation.setEmulatedMedia", { media: print ? "print" : "", features: [{ name: "prefers-reduced-motion", value: motion ? "no-preference" : "reduce" }, ...(scheme ? [{ name: "prefers-color-scheme", value: scheme }] : [])] });
     for (const [turn, want] of pages.entries()) {
       const [route = "/", act] = want.split("@");
       for (const [size, [width, height, mobile]] of Object.entries(sizes)) {
@@ -204,7 +206,7 @@ export async function main(root: string, config?: Record<string, unknown>): Prom
           console.log(`shots: ${file} FAILED ${(error as Error).message}`);
           continue;
         }
-        await Promise.race([send("Runtime.evaluate", { expression: READY, awaitPromise: true, returnByValue: true }).catch(() => 0), wait(PATIENCE)]);
+        await Promise.race([send("Runtime.evaluate", { expression: ready(motion), awaitPromise: true, returnByValue: true }).catch(() => 0), wait(PATIENCE)]);
         await wait(300);
         if (act) {
           const { result, exceptionDetails } = await send("Runtime.evaluate", { expression: act, returnByValue: true, awaitPromise: true });

@@ -39,6 +39,10 @@
       "types": "./font.d.ts",
       "default": "./font.js"
     },
+    "./view": {
+      "types": "./view.d.ts",
+      "default": "./view/index.js"
+    },
     "./all": {
       "types": "./all.d.ts",
       "default": "./all.js"
@@ -55,6 +59,8 @@
     "life.js",
     "font.js",
     "all.js",
+    "view/",
+    "!view/*.test.js",
     "core.d.ts",
     "num.d.ts",
     "math.d.ts",
@@ -62,6 +68,7 @@
     "life.d.ts",
     "font.d.ts",
     "all.d.ts",
+    "view.d.ts",
     "README.md"
   ],
   "scripts": {

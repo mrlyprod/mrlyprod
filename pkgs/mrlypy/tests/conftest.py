@@ -1,3 +1,4 @@
+import hashlib
 import json
 import pathlib
 
@@ -15,3 +16,11 @@ def row(request):
         return next(r for r in rows if r["fn"] == name)
 
     return pick
+
+
+@pytest.fixture
+def pixels():
+    def pin(image):
+        return {"shape": list(image.shape[:2]), "sha256": hashlib.sha256(image.tobytes()).hexdigest()}
+
+    return pin

@@ -69,6 +69,9 @@ def height(cell: dict[str, Any]) -> int:
 def holes(cell: dict[str, Any]) -> int:
     """Counts the holes of the fill, its piece count less the Euler number of the filled sub-mesh."""
 
+def image(cell: dict[str, Any], scale: int, outline: tuple[int, int, int, int] | None, width: int) -> NDArray[Any]:
+    """Rasters a cell's triangles to an image at the given scale, stroked and padded when an outline is given."""
+
 def is_cube(cell: dict[str, Any]) -> bool:
     """Returns whether the cell's three sides are equal."""
 
@@ -99,9 +102,6 @@ def paint(cell: dict[str, Any], custom: dict[int, list[tuple[int, int, int, int]
 def perforate(cell: dict[str, Any], mask: NDArray[Any], value: int) -> dict[str, Any]:
     """Writes the value wherever the tiled mask is nonzero."""
 
-def png(cell: dict[str, Any], scale: int, outline: tuple[int, int, int, int] | None, width: int) -> bytes:
-    """Rasters a cell's triangles to PNG bytes at the given scale, stroked and padded when an outline is given."""
-
 def pro(cell: dict[str, Any]) -> dict[str, Any]:
     """Projects a cube's three facing sides into a hexagon of fills and voids."""
 
@@ -120,8 +120,8 @@ def radial_mask(radius: int, orient: Literal["Horizontal", "Vertical"]) -> NDArr
 def raster(cell: dict[str, Any], size: int) -> list[float]:
     """Rasterizes a hex cell's fills on a square of the side at the true hex aspect, one for a fill triangle and zero elsewhere."""
 
-def rect_png(cell: dict[str, Any], scale: int, start: int | None = None) -> bytes:
-    """Rasters the hexagon tiled three by three and cropped to one interlocking rectangle to PNG bytes."""
+def rect_image(cell: dict[str, Any], scale: int, start: int | None = None) -> NDArray[Any]:
+    """Rasters the hexagon tiled three by three and cropped to one interlocking rectangle to an image."""
 
 def rect_svg(cell: dict[str, Any], scale: int, start: int | None = None) -> str:
     """Renders the hexagon tiled three by three and cropped to one interlocking rectangle as an SVG string."""

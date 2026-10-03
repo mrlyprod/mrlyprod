@@ -1,5 +1,5 @@
 use mrlyrs::core::colors::{BLUE, LIGHT, ORANGE, WHITE};
-use mrlyrs::core::png;
+use png::{AdaptiveFilterType, BitDepth, ColorType, Compression, Encoder, FilterType};
 use std::path::Path;
 
 pub const WIDTH: usize = 1760;
@@ -190,6 +190,111 @@ pub fn render(series: &Series) -> Vec<[u8; 4]> {
 }
 
 pub fn write(path: &Path, series: &Series) {
-    let bytes = png(&render(series), WIDTH, HEIGHT, 1).expect("the figure encodes");
+    let bytes = png(&render(series));
     std::fs::write(path, &bytes).expect("the figure writes");
+}
+
+// PNG
+
+fn table(pixels: &[[u8; 4]]) -> Option<Vec<[u8; 4]>> {
+    let mut keys: Vec<u32> = Vec::with_capacity(256);
+    for pixel in pixels {
+        let key = u32::from_be_bytes(*pixel);
+        if let Err(slot) = keys.binary_search(&key) {
+            if keys.len() == 256 {
+                return None;
+            }
+            keys.insert(slot, key);
+        }
+    }
+    let mut table: Vec<[u8; 4]> = keys.into_iter().map(u32::to_be_bytes).collect();
+    table.sort_by_key(|color| color[3]);
+    Some(table)
+}
+
+fn depth(count: usize) -> BitDepth {
+    match count {
+        0..=2 => BitDepth::One,
+        3..=4 => BitDepth::Two,
+        5..=16 => BitDepth::Four,
+        _ => BitDepth::Eight,
+    }
+}
+
+fn plte(table: &[[u8; 4]]) -> Vec<u8> {
+    table
+        .iter()
+        .flat_map(|color| [color[0], color[1], color[2]])
+        .collect()
+}
+
+fn trns(table: &[[u8; 4]]) -> Vec<u8> {
+    let opaque = table
+        .iter()
+        .position(|color| color[3] == 255)
+        .unwrap_or(table.len());
+    table[..opaque].iter().map(|color| color[3]).collect()
+}
+
+fn indices(
+    pixels: &[[u8; 4]],
+    table: &[[u8; 4]],
+    width: usize,
+    height: usize,
+    depth: BitDepth,
+) -> Vec<u8> {
+    let mut lookup: Vec<(u32, u8)> = table
+        .iter()
+        .enumerate()
+        .map(|(slot, color)| (u32::from_be_bytes(*color), slot as u8))
+        .collect();
+    lookup.sort_unstable();
+    let bits = depth as usize;
+    let per_byte = 8 / bits;
+    let stride = width.div_ceil(per_byte);
+    let mut data = vec![0u8; stride * height];
+    if width == 0 {
+        return data;
+    }
+    for (y, row) in pixels.chunks_exact(width).enumerate() {
+        for (x, pixel) in row.iter().enumerate() {
+            let key = u32::from_be_bytes(*pixel);
+            let slot = lookup.binary_search_by_key(&key, |entry| entry.0).unwrap();
+            let shift = 8 - bits * (x % per_byte + 1);
+            data[y * stride + x / per_byte] |= lookup[slot].1 << shift;
+        }
+    }
+    data
+}
+
+fn png(pixels: &[[u8; 4]]) -> Vec<u8> {
+    let mut bytes = Vec::with_capacity(pixels.len() + 128);
+    {
+        let mut encoder = Encoder::new(&mut bytes, WIDTH as u32, HEIGHT as u32);
+        encoder.set_compression(Compression::Best);
+        encoder.set_filter(FilterType::Paeth);
+        encoder.set_adaptive_filter(AdaptiveFilterType::Adaptive);
+        let data = match table(pixels) {
+            Some(table) => {
+                let depth = depth(table.len());
+                encoder.set_color(ColorType::Indexed);
+                encoder.set_depth(depth);
+                encoder.set_palette(plte(&table));
+                let veils = trns(&table);
+                if !veils.is_empty() {
+                    encoder.set_trns(veils);
+                }
+                indices(pixels, &table, WIDTH, HEIGHT, depth)
+            }
+            None => {
+                encoder.set_color(ColorType::Rgba);
+                encoder.set_depth(BitDepth::Eight);
+                pixels.concat()
+            }
+        };
+        let mut writer = encoder.write_header().expect("the figure encodes");
+        writer.write_image_data(&data).expect("the figure encodes");
+        writer.finish().expect("the figure encodes");
+    }
+    bytes
 }

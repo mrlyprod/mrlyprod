@@ -1,6 +1,4 @@
 use crate::ink;
-use mrlyrs::core::codec;
-use mrlyrs::core::error::Result;
 use mrlyrs::core::Color;
 
 // FRAME
@@ -335,10 +333,6 @@ impl Board {
                 }
             },
         );
-    }
-    /// Encodes the board as a png at one pixel per point.
-    pub fn png(&self) -> Result<Vec<u8>> {
-        codec::png(&self.pixels, self.width, self.height, 1)
     }
 }
 

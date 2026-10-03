@@ -199,8 +199,9 @@ th { color: var(--dim); font-weight: 500; font-size: 12px; }
 
 /* OPENER */
 
-.opener { margin: 0 auto var(--s6); max-width: 32rem; }
+.opener { position: relative; margin: 0 auto var(--s6); max-width: 32rem; }
 .opener img { width: 100%; height: auto; display: block; border: var(--hair); border-radius: var(--r3); background: var(--art); }
+.opener canvas { position: absolute; inset: 0; width: 100%; height: 100%; border: var(--hair); border-color: transparent; border-radius: var(--r3); }
 
 /* ELSEWHERE */
 
@@ -217,5 +218,6 @@ th { color: var(--dim); font-weight: 500; font-size: 12px; }
   main { max-width: none; padding: 0; }
   .opener { max-width: 20rem; margin-bottom: 1.5rem; }
   .opener img, .tile img { border: 0; }
+  .opener canvas { display: none; }
   .tile { break-inside: avoid; }
 }

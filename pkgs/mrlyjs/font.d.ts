@@ -21,6 +21,11 @@ export interface Cell6d {
     orientation: "Horizontal" | "Vertical";
     start: number;
 }
+/** An image: its height and width, and its flat rgba colors row by row. */
+export interface Image {
+    shape: [number, number];
+    colors: Uint8Array;
+}
 /** A color inside plain data, serde's form. */
 export interface ColorData {
     r: number;

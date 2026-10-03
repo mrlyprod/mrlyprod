@@ -181,7 +181,13 @@
       "width": 2,
       "height": 2
     },
-    "out": "bd5f1aa731045ea8da5d178465c0e0b9aa0660d0267c42479f104764fe900b32",
-    "note": "sha256 of the png bytes of a whole seeded artwork"
+    "out": {
+      "shape": [
+        18,
+        18
+      ],
+      "sha256": "20674db5ad3df7f28cf4aa16d23fc5d6b9a5d5b583ed18cb6661f4ff44c8d192"
+    },
+    "note": "the shape and the sha256 of the rgba bytes of a whole seeded artwork"
   }
 ]

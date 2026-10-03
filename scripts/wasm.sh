@@ -10,6 +10,7 @@ font=$(mktemp)
 trap 'rm -f "$font"' EXIT
 
 units=$(cat pkgs/bridge/units.txt)
+live="math"
 built=target/wasm32-unknown-unknown/release
 
 cargo build --release --target wasm32-unknown-unknown --lib -p demos $(printf -- '-p mrlyjs_%s ' $units)
@@ -19,6 +20,10 @@ for unit in $units; do
   wasm-bindgen "$built/mrlyjs_$unit.wasm" --target web --out-dir "pkgs/mrlyjs/pkg/$unit"
 done
 wasm-bindgen "$built/demos.wasm" --target web --out-dir site/pkg
+for unit in $live; do
+  mkdir -p "site/pkg/$unit"
+  cp "pkgs/mrlyjs/pkg/$unit/mrlyjs_$unit.js" "pkgs/mrlyjs/pkg/$unit/mrlyjs_${unit}_bg.wasm" "site/pkg/$unit/"
+done
 cargo run -q -p mrlyrs --example book > "$font"
 install -m 644 "$font" site/kit/font/font.json
 

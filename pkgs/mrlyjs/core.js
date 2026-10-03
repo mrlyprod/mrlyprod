@@ -5,12 +5,9 @@ export const Rng = wasm.Rng;
 export const Colorizer = wasm.Colorizer;
 export const Dtype = wasm.Dtype;
 export const HEX_RATIO = wasm.HEX_RATIO;
-export const Image = wasm.Image;
-export const PNG_MAGIC = wasm.PNG_MAGIC;
 export const hex_fit = wasm.hex_fit;
 export const hex_size = wasm.hex_size;
 export const resample = wasm.resample;
-export const unpng = wasm.unpng;
 export const cell = {
     anti: wasm.cell_anti,
     binarize: wasm.cell_binarize,
@@ -40,10 +37,6 @@ export const cell = {
     size: wasm.cell_size,
     tile: wasm.cell_tile,
     tile_map: wasm.cell_tile_map,
-};
-export const codec = {
-    gif: wasm.codec_gif,
-    png: wasm.codec_png,
 };
 export const colors = {
     ALPHA: wasm.colors_ALPHA,
@@ -90,6 +83,10 @@ export const error = {
 };
 export const image = {
     blur: wasm.image_blur,
+    new: wasm.image_new,
+    new_: wasm.image_new,
+    resample: wasm.image_resample,
+    scale: wasm.image_scale,
 };
 export const paint = {
     Config: wasm.paint_Config,

@@ -21,6 +21,11 @@ export interface Cell6d {
     orientation: "Horizontal" | "Vertical";
     start: number;
 }
+/** An image: its height and width, and its flat rgba colors row by row. */
+export interface Image {
+    shape: [number, number];
+    colors: Uint8Array;
+}
 /** A color inside plain data, serde's form. */
 export interface ColorData {
     r: number;
@@ -74,12 +79,8 @@ export declare namespace core {
     export function hex_size(width: number, height: number, vertical: boolean): [number, number];
     /** Resamples rgba pixels to a new size. */
     export function resample(pixels: ArrayLike<number>[], width: number, height: number, out_w: number, out_h: number, filter: core.Filter): Uint8Array[];
-    /** Decodes a png to its width, height, and rgba colors. */
-    export function unpng(bytes: ArrayLike<number>): [number, number, Uint8Array[]];
     /** The height of an equilateral triangle over its side, the squash a hex rendering wears. */
     export function HEX_RATIO(): number;
-    /** The eight bytes every png file starts with. */
-    export function PNG_MAGIC(): Uint8Array;
     /** A rule that turns counter values into colors. */
     export type Colorizer = { Bins: { background: ColorData; ramp: ColorData[] } };
     export const Colorizer: {
@@ -102,46 +103,6 @@ export declare namespace core {
     };
     /** The way a resampling weighs the source pixels it reads. */
     export type Filter = "Nearest" | "Linear" | "Box";
-    export interface ImageData {
-        /** The width in pixels. */
-        width: number;
-        /** The height in pixels. */
-        height: number;
-        /** The palette index of every pixel, row by row. */
-        rows: number[][];
-        /** The colors the rows index. */
-        palette: ColorData[];
-    }
-    /** A paletted image: rows of palette indices and the palette they point into, hex strings in json. */
-    export class Image {
-        /** Builds an image from its four parts. */
-        constructor(width: number, height: number, rows: ArrayLike<number>[], palette: Color[]);
-        free(): void;
-        /** Reads the Image from its plain data. */
-        static from(data: ImageData): Image;
-        /** Writes the Image as plain data. */
-        toJSON(): ImageData;
-        /** The width in pixels. */
-        get width(): number;
-        set width(value: number);
-        /** The height in pixels. */
-        get height(): number;
-        set height(value: number);
-        /** The palette index of every pixel, row by row. */
-        get rows(): Uint32Array[];
-        set rows(value: ArrayLike<number>[]);
-        /** The colors the rows index. */
-        get palette(): Color[];
-        set palette(value: Color[]);
-        /** Returns the flat rgba pixels, transparent wherever an index misses the palette. */
-        colors(): Uint8Array[];
-        /** Builds a paletted image from raw rgba pixels, growing the palette as new colors appear. */
-        static from_pixels(width: number, height: number, pixels: ArrayLike<number>[]): core.Image;
-        /** Encodes the image as a png at the given scale. */
-        png(scale: number): Uint8Array;
-        /** Resamples the image to a new size, its palette rebuilt from the blended pixels. */
-        resample(width: number, height: number, filter: core.Filter): core.Image;
-    }
     /** The ways paint picks a color within a type's palette. */
     export type Mode = "Type" | "Tag" | "Index" | "Enumerate" | "Random" | "Row" | "Column" | "Depth";
     export namespace cell {
@@ -199,12 +160,6 @@ export declare namespace core {
         export function tile(cell: Cell, reps: ArrayLike<number>): Cell;
         /** Builds the flat source index of every destination cell after tiling reps copies per axis. */
         export function tile_map(shape: ArrayLike<number>, reps: ArrayLike<number>): Uint32Array;
-    }
-    export namespace codec {
-        /** Encodes indexed frames as an animated gif89a, each source pixel a scale by scale block. */
-        export function gif(frames: ArrayLike<number>[], palette: ArrayLike<number>[], width: number, height: number, scale: number, delay: number): Uint8Array;
-        /** Encodes rgba colors as a png, drawing each source pixel as a scale by scale block. */
-        export function png(colors: ArrayLike<number>[], width: number, height: number, scale: number): Uint8Array;
     }
     export namespace colors {
         /** Returns the color with its alpha set to level. */
@@ -414,6 +369,12 @@ export declare namespace core {
     export namespace image {
         /** Box-blurs rgba pixels by radius, each channel the mean of its edge-padded window. */
         export function blur(pixels: ArrayLike<number>[], width: number, height: number, radius: number): Uint8Array[];
+        /** Builds an image from its width, its height and its colors. */
+        export function new_(width: number, height: number, colors: ArrayLike<number>[]): Image;
+        /** Resamples the image to a new size. */
+        export function resample(image: Image, width: number, height: number, filter: core.Filter): Image;
+        /** Draws every pixel as a scale by scale block, growing both sides by scale. */
+        export function scale(image: Image, scale: number): Image;
     }
     export namespace paint {
         /** Colors the cell from the paint's inks under its edition mode, scattering the Random edition from the stream. */
@@ -713,8 +674,8 @@ export declare namespace font {
     }
 }
 export declare namespace gen {
-    /** Draws one seeded artwork and returns its PNG bytes: a random flat tile under the default recipe */
-    export function background(seed: number | bigint, width: number, height: number): Uint8Array;
+    /** Draws one seeded artwork and returns its image: a random flat tile under the default recipe */
+    export function background(seed: number | bigint, width: number, height: number): Image;
     /** Returns the plane's bang code of a classic design, or None for one outside the plane. */
     export function classic_code(design: gen.recipe.Design): string | undefined;
     /** Returns the bang code of a named design in a dimension, or None where it has no design. */
@@ -1001,7 +962,7 @@ export declare namespace gen {
         export function create(config: gen.variation.Config, rng: Rng): gen.variation.Variation;
         /** Builds the variation's base cell and draws its paint from the stream, painting the base */
         export function generate(variation: gen.variation.Variation, config: gen.variation.Config, rng: Rng): gen.variation.Variation;
-        /** Renders every file of the variation to PNG at the given scale, scattering a Random edition */
+        /** Renders every file of the variation to an image at the given scale, scattering a Random edition */
         export function render(variation: gen.variation.Variation, scale: number, rng: Rng): gen.variation.Variation;
         /** The settings an artwork is drawn under. */
         export interface Config {
@@ -1024,7 +985,7 @@ export declare namespace gen {
         }
         /** One rendering of an artwork, sized in tile repetitions. */
         export class File {
-            /** Builds a file of the given repetition counts with no PNG bytes. */
+            /** Builds a file of the given repetition counts with no image. */
             constructor(width: number, height: number);
             free(): void;
             /** Reads the File from its plain data. */
@@ -1037,9 +998,9 @@ export declare namespace gen {
             /** The count of tile repetitions down. */
             get height(): number;
             set height(value: number);
-            /** The encoded PNG bytes, empty until rendered and left out of the json. */
-            get png(): Uint8Array;
-            set png(value: ArrayLike<number>);
+            /** The rendered image, absent until rendered and left out of the json. */
+            get image(): Image | undefined;
+            set image(value: Image | undefined);
         }
         export interface VariationData {
             /** The random hex identifier. */
@@ -1120,14 +1081,14 @@ export declare namespace life {
     export function design_mask(dimension: number, code: string | number | bigint, number: number, level: number): Tensor;
     /** Returns the grid's binary Shannon entropy in millibits. */
     export function entropy(grid: Cell): bigint;
-    /** Renders grids to white-on-black PNG bytes at a pixel scale. */
-    export function frames(grids: Cell[], scale: number): Uint8Array[];
+    /** Renders grids to white-on-black images at a pixel scale. */
+    export function frames(grids: Cell[], scale: number): Image[];
     /** Returns the base-2 plane design a rule's single seed draws, or None when it draws none. */
     export function gasket(rule: number): string | undefined;
     /** Returns the genus of a rule's cube class: `iso` when it meets a level set, `axis` when it meets an axis-pinned block, else `comp`. */
     export function genus(rule: number): string;
     /** Renders a whole run's cumulative-visit heatmap frames with the heat ramp. */
-    export function heatmap(grids: Cell[], scale: number): Uint8Array[];
+    export function heatmap(grids: Cell[], scale: number): Image[];
     /** Returns the space-time diagram of a seed row, row 0 the seed and then one row per generation. */
     export function history(row: ArrayLike<number>, rule: number, steps: number, wrap: boolean): Tensor;
     /** Returns Langton's lambda, the popcount over eight. */
@@ -1138,8 +1099,6 @@ export declare namespace life {
     export function mask_offsets(mask: Tensor): BigInt64Array[];
     /** Builds the 3 by 3 Moore mask, every site on but the center. */
     export function moore(): Cell;
-    /** Renders grids into one looping black-on-white gif, the delay in hundredths of a second. */
-    export function movie(grids: Cell[], scale: number, delay: number): Uint8Array;
     /** Advances a grid one generation under birth and survive counts, a neighbor mask and a boundary. */
     export function next_grid(cell: Cell, birth: ArrayLike<number>, survive: ArrayLike<number>, mask: Tensor, boundary: life.Boundary): Cell;
     /** Returns the rules a rule reaches under the cube group together with the output complement, its NPN class, in ascending order. */
@@ -1362,8 +1321,8 @@ export declare namespace life {
         export function output(rule: number, l: number, c: number, r: number): number;
     }
     export namespace render {
-        /** Renders one grid to white-on-black PNG bytes at a pixel scale. */
-        export function frame(grid: Cell, scale: number): Uint8Array;
+        /** Renders one grid to a white-on-black image at a pixel scale. */
+        export function frame(grid: Cell, scale: number): Image;
     }
     export namespace source {
         /** Generates the sequence's values up to the limit. */
@@ -2063,8 +2022,8 @@ export declare namespace math {
         export function layer(params: math.moire.Layer): boolean[];
         /** Returns the preset the name picks. */
         export function named(name: string, limit: number): math.moire.Preset;
-        /** Quantizes a field into colored levels and encodes PNG bytes. */
-        export function render(field: math.moire.Field, colorizer: core.Colorizer, levels: number, symmetric: boolean, invert: boolean, scale: number): Uint8Array;
+        /** Quantizes a field into colored levels and renders them as an image, each sample a scale by scale block. */
+        export function render(field: math.moire.Field, colorizer: core.Colorizer, levels: number, symmetric: boolean, invert: boolean, scale: number): Image;
         /** Layers one design at several side numbers into a field under the chosen combine. */
         export function stack(spec: math.moire.Spec, numbers: ArrayLike<number>, combine: math.moire.Combine, level: number, lattice: math.moire.Lattice, size: number, slices: ArrayLike<number>): math.moire.Field;
         /** Sums layers of several designs at one side number into a field. */
@@ -2738,6 +2697,8 @@ export declare namespace math {
         export function height(cell: Cell6d): number;
         /** Counts the holes of the fill, its piece count less the Euler number of the filled sub-mesh. */
         export function holes(cell: Cell6d): number;
+        /** Rasters a cell's triangles to an image at the given scale, stroked and padded when an outline is given. */
+        export function image(cell: Cell6d, scale: number, outline: Color | undefined, width: number): Image;
         /** Returns whether the cell's three sides are equal. */
         export function is_cube(cell: Cell): boolean;
         /** Returns whether the cell's width, height and parity frame a hexagon. */
@@ -2758,8 +2719,6 @@ export declare namespace math {
         export function paint(cell: Cell6d, custom?: Record<string, Color[]>, mode?: core.Mode, rng?: Rng): Cell6d;
         /** Writes the value wherever the tiled mask is nonzero. */
         export function perforate(cell: Cell6d, mask: Tensor, value: number): Cell6d;
-        /** Rasters a cell's triangles to PNG bytes at the given scale, stroked and padded when an outline is given. */
-        export function png(cell: Cell6d, scale: number, outline: Color | undefined, width: number): Uint8Array;
         /** Projects a cube's three facing sides into a hexagon of fills and voids. */
         export function pro(cell: Cell): Cell6d;
         /** Builds the coded 3d design and projects its facing sides. */
@@ -2772,8 +2731,8 @@ export declare namespace math {
         export function radial_mask(radius: number, orient: math.six.Orientation): Tensor;
         /** Rasterizes a hex cell's fills on a square of the side at the true hex aspect, one for a fill triangle and zero elsewhere. */
         export function raster(cell: Cell6d, size: number): Float32Array;
-        /** Rasters the hexagon tiled three by three and cropped to one interlocking rectangle to PNG bytes. */
-        export function rect_png(cell: Cell6d, scale: number, start?: number): Uint8Array;
+        /** Rasters the hexagon tiled three by three and cropped to one interlocking rectangle to an image. */
+        export function rect_image(cell: Cell6d, scale: number, start?: number): Image;
         /** Renders the hexagon tiled three by three and cropped to one interlocking rectangle as an SVG string. */
         export function rect_svg(cell: Cell6d, scale: number, start?: number): string;
         /** Counts the void regions the rim never reaches, the second route to the hole count. */
@@ -3393,6 +3352,8 @@ export declare namespace math {
         export function hline(number: number, level: number): Cell;
         /** Builds the htree fractal, its seed striped along even rows, deepened to the level. */
         export function htree(number: number, level: number): Cell;
+        /** Renders the cell to an image at the given pixel scale, stroked and padded when an outline is given. */
+        export function image(cell: Cell, scale: number, outline: Color | undefined, width: number, shape: math.two.Shape): Image;
         /** Builds the level-set design, filling every residue corner whose digits sum to a named level. */
         export function level_set(number: number, levels: ArrayLike<number>, level: number, rotation: number, base: number): Cell;
         /** Tiles the mask over the shape and crops it, the perforation pattern itself. */
@@ -3409,8 +3370,6 @@ export declare namespace math {
         export function ones(number: number, level: number): Cell;
         /** Counts the faces of filled sites open to emptiness or the border. */
         export function perimeter(cell: Cell): string;
-        /** Renders the cell to PNG bytes at the given pixel scale, stroked and padded when an outline is given. */
-        export function png(cell: Cell, scale: number, outline: Color | undefined, width: number, shape: math.two.Shape): Uint8Array;
         /** Builds the point fractal, its seed on at every odd-odd site, deepened to the level. */
         export function point(number: number, level: number): Cell;
         /** Reads the payload back from a framed sheet, the plain fourth cell naming the sites. */

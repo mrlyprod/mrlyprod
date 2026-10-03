@@ -4,12 +4,12 @@ mod hand;
 
 use wasm_bindgen::prelude::*;
 
-/// Draws one seeded artwork and returns its PNG bytes: a random flat tile under the default recipe
+/// Draws one seeded artwork and returns its image: a random flat tile under the default recipe
 #[wasm_bindgen]
-pub fn background(seed: JsValue, width: usize, height: usize) -> Result<Vec<u8>, JsValue> {
+pub fn background(seed: JsValue, width: usize, height: usize) -> Result<JsValue, JsValue> {
     let seed = hand::u64_from_js(&seed)?;
     let value = mrlyrs::gen::background(seed, width, height).map_err(hand::throw)?;
-    Ok(value)
+    hand::image_to_js(&value)
 }
 
 /// Builds the flat cell the tile describes.
@@ -213,7 +213,7 @@ pub fn variation_generate(
     Ok(variation_Variation { inner: value })
 }
 
-/// Renders every file of the variation to PNG at the given scale, scattering a Random edition
+/// Renders every file of the variation to an image at the given scale, scattering a Random edition
 #[wasm_bindgen]
 pub fn variation_render(
     variation: &variation_Variation,
@@ -678,18 +678,19 @@ impl variation_File {
         self.inner.height = value;
         Ok(())
     }
-    /// The encoded PNG bytes, empty until rendered and left out of the json.
+    /// The rendered image, absent until rendered and left out of the json.
     #[wasm_bindgen(getter)]
-    pub fn png(&self) -> Result<Vec<u8>, JsValue> {
-        let value = self.inner.png.clone();
-        Ok(value)
+    pub fn image(&self) -> Result<JsValue, JsValue> {
+        let value = self.inner.image.clone();
+        hand::option_to_js(value.as_ref(), hand::image_to_js)
     }
     #[wasm_bindgen(setter)]
-    pub fn set_png(&mut self, value: Vec<u8>) -> Result<(), JsValue> {
-        self.inner.png = value;
+    pub fn set_image(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::option_from_js(&value, hand::image_from_js)?;
+        self.inner.image = value;
         Ok(())
     }
-    /// Builds a file of the given repetition counts with no PNG bytes.
+    /// Builds a file of the given repetition counts with no image.
     #[wasm_bindgen(constructor)]
     pub fn new(width: usize, height: usize) -> Result<variation_File, JsValue> {
         let value = mrlyrs::gen::variation::File::new(width, height);

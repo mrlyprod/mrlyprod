@@ -8,7 +8,7 @@
 //! - `mask`: the design masks a rule reads and the lattice they generate.
 //! - `source`: the named sources of neighbor counts, and the counts they lay down.
 //! - `elementary`: the one-line automata and the card of one rule.
-//! - `render`: the PNG frames, the visit heatmap and the gif movie.
+//! - `render`: the frames and the visit heatmap of a run, as images.
 //! - `rule`: the canonical name of a rule.
 //!
 //! The doors: [`next_grid`](crate::life::next_grid), [`animate`](crate::life::animate()),
@@ -29,7 +29,7 @@ pub mod mask;
 pub mod metrics;
 /// The run config and the recorded life.
 pub mod models;
-/// The PNG frames, the cumulative-visit heatmap and the gif movie of grids.
+/// The frames and the cumulative-visit heatmap of grids, as images.
 pub mod render;
 /// The rule name: a life rule's birth and survival counts and whether the edge wraps.
 pub mod rule;
@@ -94,7 +94,7 @@ pub use elementary::{
 pub use mask::{design_mask, lattice_index, mask_offsets};
 pub use metrics::{churn, entropy};
 pub use models::{Config, Life};
-pub use render::{frames, heatmap, movie};
+pub use render::{frames, heatmap};
 pub use rule::Rule;
 pub use source::{counts, Counts, Source};
 pub use step::next_grid;

@@ -1,10 +1,16 @@
 use figures::{ink, plot, save, Board, Frame};
 use mrlyrs::core::error::Result;
 use mrlyrs::core::Color;
+use mrlyrs::Error;
+use std::path::PathBuf;
 
+const NAME: &str = "research-weights";
 const LEVEL: u32 = 8;
 const SAMPLES: usize = 720;
 const CELLS: [(i64, i64); 3] = [(0, 0), (2, 0), (0, 2)];
+const CURVES: [&str; 4] = ["lattice", "smooth", "thin", "fat"];
+
+// FOLDS
 
 fn root(costs: [f64; 3]) -> f64 {
     let (mut lo, mut hi) = (0.0f64, 8.0f64);
@@ -105,6 +111,54 @@ fn length_side(nums: [u64; 3], den: u64) -> (f64, Vec<f64>) {
     (alpha, ys)
 }
 
+// FILE
+
+fn path() -> PathBuf {
+    figures::out::root()
+        .join("files")
+        .join("figures")
+        .join("census")
+        .join(format!("{NAME}.json"))
+}
+
+fn write_data(curves: &[Vec<f64>]) -> Result<PathBuf> {
+    let file = path();
+    let folder = file.parent().unwrap().to_path_buf();
+    std::fs::create_dir_all(&folder)
+        .map_err(|e| Error::Value(format!("cannot make {folder:?}: {e}")))?;
+    let body: Vec<String> = CURVES
+        .iter()
+        .zip(curves)
+        .map(|(key, ys)| {
+            let row: Vec<String> = ys.iter().map(|y| y.to_string()).collect();
+            format!("\"{key}\":[{}]", row.join(","))
+        })
+        .collect();
+    std::fs::write(&file, format!("{{\n{}\n}}\n", body.join(",\n")))
+        .map_err(|e| Error::Value(format!("cannot write {file:?}: {e}")))?;
+    Ok(file)
+}
+
+fn read_data() -> Result<Vec<Vec<f64>>> {
+    let file = path();
+    let text = std::fs::read_to_string(&file)
+        .map_err(|e| Error::Value(format!("cannot read {file:?}: {e}; run -- compute")))?;
+    Ok(text
+        .split('[')
+        .skip(1)
+        .map(|part| {
+            part.split(']')
+                .next()
+                .unwrap_or("")
+                .split(',')
+                .filter_map(|token| token.trim().parse().ok())
+                .collect()
+        })
+        .collect())
+}
+
+// PANEL
+
 fn center(ys: &[f64]) -> Vec<f64> {
     let mean = ys.iter().sum::<f64>() / ys.len() as f64;
     ys.iter().map(|y| y - mean).collect()
@@ -143,25 +197,46 @@ fn panel(board: &mut Board, area: Frame, first: &[f64], second: &[f64]) {
     trace(board, inner, first, span, 2.1, ink::blue());
 }
 
-fn main() -> Result<()> {
+// PRESS
+
+fn compute() -> Result<()> {
     let window = (48.0, 48.0 + 6.0 * 2.0f64.ln());
     let lattice = mass_side(4.0f64.ln(), window);
     let smooth = mass_side(3.0f64.ln(), window);
     assert!((root([2.0f64.ln(), 2.0f64.ln(), 4.0f64.ln()]) - 1.2715533032).abs() < 1e-9);
     assert!((root([2.0f64.ln(), 2.0f64.ln(), 3.0f64.ln()]) - 1.3646005647).abs() < 1e-9);
-
     let (thin, ring_thin) = length_side([2, 2, 1], 5);
     let (fat, ring_fat) = length_side([3, 3, 2], 8);
     assert!((thin - 0.834043767).abs() < 1e-9);
     assert!((fat - 0.892789261).abs() < 1e-9);
+    let curves = [lattice, smooth, ring_thin, ring_fat];
+    assert!(curves.iter().flatten().all(|y| y.is_finite()));
+    let file = write_data(&curves)?;
+    println!(
+        "{NAME} census {} curves of {SAMPLES} -> {file:?}",
+        curves.len()
+    );
+    Ok(())
+}
 
+fn draw() -> Result<()> {
+    let curves = read_data()?;
+    assert_eq!(curves.len(), CURVES.len());
+    assert!(curves.iter().all(|ys| ys.len() == SAMPLES));
     let mut board = Board::square();
     let frame = board.frame(0.08);
     let half = frame.h / 2.0;
     let top = Frame::new(frame.x, frame.y, frame.w, half).inset(14.0);
     let foot = Frame::new(frame.x, frame.y + half, frame.w, half).inset(14.0);
-    panel(&mut board, top, &center(&lattice), &center(&smooth));
-    panel(&mut board, foot, &center(&ring_thin), &center(&ring_fat));
-    save("research-weights", &board)?;
+    panel(&mut board, top, &center(&curves[0]), &center(&curves[1]));
+    panel(&mut board, foot, &center(&curves[2]), &center(&curves[3]));
+    save(NAME, &board)?;
     Ok(())
+}
+
+fn main() -> Result<()> {
+    if std::env::args().nth(1).as_deref() == Some("compute") {
+        return compute();
+    }
+    draw()
 }

@@ -1,7 +1,7 @@
 //! The flat-cell pipeline.
 //!
 //! The shared cell pipeline pinned to two dimensions: coded and carpet cells, their censuses,
-//! their payloads, their text and PNG renderings and their JSON.
+//! their payloads, their text, SVG and pixel renderings and their JSON.
 
 /// The fill, void, perimeter, corner, edge and Euler counts of a flat cell.
 pub mod census;
@@ -11,7 +11,7 @@ pub mod designs;
 pub mod geometry;
 /// The payload a cell's filled sites carry, framed in a sheet.
 pub mod payload;
-/// The text and PNG renderings of a flat cell.
+/// The text, SVG and pixel renderings of a flat cell.
 pub mod renderer;
 /// The JSON form of a flat cell.
 pub mod serializer;
@@ -26,7 +26,7 @@ pub use designs::{
 };
 pub use geometry::{magic, mask, merge, mosaic, special, to_3d};
 pub use payload::{capacity, embed, extract, read, sheet};
-pub use renderer::{png, svg, text, Shape};
+pub use renderer::{image, svg, text, Shape};
 pub use serializer::{from_json, from_strings, to_json};
 
 #[cfg(test)]

@@ -4,6 +4,7 @@ use super::Orientation;
 use crate::core::cell::{mapping, Mode};
 use crate::core::colors::Color;
 use crate::core::error::{value_error, Result};
+use crate::core::image::Image;
 use crate::math::two::Cell2d;
 
 /// A screen triangle: three grid points and an RGBA color.
@@ -476,38 +477,41 @@ fn canvas(view: &Rect, scale: usize, outline: Option<Color>, width: usize) -> Ca
     canvas
 }
 
-/// Rasters a cell's triangles to PNG bytes at the given scale, stroked and padded when an outline is given.
+/// Rasters a cell's triangles to an image at the given scale, stroked and padded when an outline is given.
 ///
 /// # Errors
 ///
-/// Errors when nothing renders, when the scale is zero or when the encoder refuses the size.
-pub fn png(cell: &Cell6d, scale: usize, outline: Option<Color>, width: usize) -> Result<Vec<u8>> {
+/// Errors when nothing renders or when the scale is zero.
+pub fn image(cell: &Cell6d, scale: usize, outline: Option<Color>, width: usize) -> Result<Image> {
     let padding = if outline.is_some() { width as i64 } else { 0 };
     let view = window(cell, padding, None)?;
     plate(&view, scale, outline, width)
 }
 
-/// Rasters the hexagon tiled three by three and cropped to one interlocking rectangle to PNG bytes.
+/// Rasters the hexagon tiled three by three and cropped to one interlocking rectangle to an image.
 ///
 /// # Errors
 ///
-/// Errors for a cell that is not a hexagon, when the scale is zero or when the encoder refuses the size.
-pub fn rect_png(cell: &Cell6d, scale: usize, start: Option<usize>) -> Result<Vec<u8>> {
+/// Errors for a cell that is not a hexagon or when the scale is zero.
+pub fn rect_image(cell: &Cell6d, scale: usize, start: Option<usize>) -> Result<Image> {
     plate(&rectangle(cell, start)?, scale, None, 0)
 }
 
-fn plate(view: &Rect, scale: usize, outline: Option<Color>, width: usize) -> Result<Vec<u8>> {
+fn plate(view: &Rect, scale: usize, outline: Option<Color>, width: usize) -> Result<Image> {
     if scale < 1 {
         return value_error("scale must be at least 1.");
     }
     let raster = canvas(view, scale, outline, width);
-    crate::core::png(&raster.pixels, raster.width, raster.height, 1)
+    Ok(Image {
+        width: raster.width,
+        height: raster.height,
+        colors: raster.pixels,
+    })
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::unpng;
     use crate::math::bang::Code;
     use crate::math::six::designs::iso_design;
     use crate::math::six::geometry::{blank, cut, iso};
@@ -589,33 +593,36 @@ mod tests {
         assert_eq!(flipped[0].0, south(2, 0));
     }
     #[test]
-    fn png_matches_the_drawn_size_and_fill() {
-        let bytes = png(&carpet_cut(), 10, None, 0).unwrap();
-        let (width, height, pixels) = unpng(&bytes).unwrap();
-        assert_eq!((width, height), (120, 120));
-        assert_eq!(pixels.iter().filter(|p| p[3] != 0).count(), 10859);
+    fn image_matches_the_drawn_size_and_fill() {
+        let sheet = image(&carpet_cut(), 10, None, 0).unwrap();
+        assert_eq!((sheet.width, sheet.height), (120, 120));
+        assert_eq!(sheet.colors.iter().filter(|p| p[3] != 0).count(), 10859);
+    }
+    #[test]
+    fn refuses_a_zero_scale() {
+        assert!(image(&carpet_cut(), 0, None, 0).is_err());
+        assert!(rect_image(&carpet_cut(), 0, None).is_err());
     }
     #[test]
     fn vertical_rows_tile_without_seams() {
         let cube = three::carpet(3, 1).unwrap();
         let hex = paint(iso(&cube).unwrap(), None, None, None).unwrap();
-        let (width, height, pixels) = unpng(&png(&hex, 10, None, 0).unwrap()).unwrap();
-        assert_eq!((width, height), (120, 120));
-        assert_eq!(pixels.iter().filter(|p| p[3] == 0).count(), 3541);
+        let sheet = image(&hex, 10, None, 0).unwrap();
+        assert_eq!((sheet.width, sheet.height), (120, 120));
+        assert_eq!(sheet.colors.iter().filter(|p| p[3] == 0).count(), 3541);
     }
     #[test]
     fn rect_svg_carries_the_cropped_window() {
         let s = rect_svg(&carpet_cut(), 10, None).unwrap();
         assert!(s.starts_with("<svg width=\"180\" height=\"120\" viewBox=\"0 0 180 120\""));
-        let (width, height, pixels) = unpng(&rect_png(&carpet_cut(), 10, None).unwrap()).unwrap();
-        assert_eq!((width, height), (180, 120));
-        assert_eq!(pixels.iter().filter(|p| p[3] != 0).count(), 21600);
+        let sheet = rect_image(&carpet_cut(), 10, None).unwrap();
+        assert_eq!((sheet.width, sheet.height), (180, 120));
+        assert_eq!(sheet.colors.iter().filter(|p| p[3] != 0).count(), 21600);
     }
     #[test]
-    fn an_outlined_png_pads_and_strokes() {
-        let (width, height, pixels) =
-            unpng(&png(&carpet_cut(), 10, Some(Color::rgba(255, 0, 0, 255)), 2).unwrap()).unwrap();
-        assert_eq!((width, height), (160, 160));
-        assert!(pixels.contains(&[255, 0, 0, 255]));
+    fn an_outlined_image_pads_and_strokes() {
+        let sheet = image(&carpet_cut(), 10, Some(Color::rgba(255, 0, 0, 255)), 2).unwrap();
+        assert_eq!((sheet.width, sheet.height), (160, 160));
+        assert!(sheet.colors.contains(&[255, 0, 0, 255]));
     }
 }

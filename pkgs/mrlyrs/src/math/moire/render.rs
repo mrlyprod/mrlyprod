@@ -1,8 +1,9 @@
 use super::field::Field;
 use crate::core::error::{value_error, Result};
+use crate::core::image::Image;
 use crate::core::ramp::Colorizer;
 
-/// Quantizes a field into colored levels and encodes PNG bytes.
+/// Quantizes a field into colored levels and renders them as an image, each sample a scale by scale block.
 ///
 /// # Errors
 ///
@@ -14,7 +15,7 @@ pub fn render(
     symmetric: bool,
     invert: bool,
     scale: usize,
-) -> Result<Vec<u8>> {
+) -> Result<Image> {
     if scale < 1 {
         return value_error("scale must be at least 1.");
     }
@@ -29,7 +30,7 @@ pub fn render(
         let c = crate::core::ramp::color(colorizer, bucket + 1, levels);
         rgba[i] = [c.r, c.g, c.b, 255];
     }
-    crate::core::png(&rgba, size, size, scale)
+    Image::new(size, size, rgba)?.scale(scale)
 }
 
 #[cfg(test)]
@@ -37,22 +38,7 @@ mod tests {
     use super::*;
     use crate::math::moire::{stack, Combine, Lattice, Spec};
     #[test]
-    fn renders_png_bytes() {
-        let f = stack(
-            Spec::new(7, 2, 2),
-            &[1, 3, 5],
-            Combine::Sum,
-            1,
-            Lattice::Square,
-            32,
-            &[],
-        )
-        .unwrap();
-        let png = render(&f, &Colorizer::fire(), 64, false, false, 2).unwrap();
-        assert_eq!(&png[1..4], b"PNG");
-    }
-    #[test]
-    fn png_pixels_stay_pinned() {
+    fn image_pixels_stay_pinned() {
         let f = stack(
             Spec::new(7, 2, 2),
             &[1, 3, 5],
@@ -86,9 +72,9 @@ mod tests {
                 [255, 119, 121, 255],
             ),
         ];
-        for (bytes, side, sum, corner, centre) in &cases {
-            let (w, h, pixels) = crate::core::unpng(bytes).unwrap();
-            assert_eq!((w, h), (*side, *side));
+        for (sheet, side, sum, corner, centre) in &cases {
+            let pixels = &sheet.colors;
+            assert_eq!((sheet.width, sheet.height), (*side, *side));
             let bytes: u64 = pixels.iter().flatten().map(|&b| u64::from(b)).sum();
             assert_eq!(bytes, *sum);
             assert_eq!(pixels[0], *corner);

@@ -3,6 +3,7 @@
 use mrlyrs::core::cell::Cell;
 use mrlyrs::core::colors::Color;
 use mrlyrs::core::error::Error;
+use mrlyrs::core::image::Image;
 use mrlyrs::core::rng::Rng as Stream;
 use mrlyrs::core::tensor::{Dtype, Tensor};
 use mrlyrs::core::Json;
@@ -518,6 +519,34 @@ pub fn cell6d_from_js(value: &JsValue) -> Result<Cell6d, JsValue> {
     let orientation: Orientation = from_js(&field(value, "orientation")?)?;
     let start = number_from_js(&field(value, "start")?)? as u8;
     Ok(Cell6d::new(cell, projection, orientation, start))
+}
+
+// IMAGES
+
+pub fn image_to_js(image: &Image) -> Result<JsValue, JsValue> {
+    let out = js_sys::Object::new();
+    put(&out, "shape", shape_to_js(&[image.height, image.width]))?;
+    let flat: Vec<u8> = image.colors.iter().flatten().copied().collect();
+    put(&out, "colors", bytes_to_js(&flat))?;
+    Ok(out.into())
+}
+
+pub fn image_from_js(value: &JsValue) -> Result<Image, JsValue> {
+    let shape = shape_from_js(&field(value, "shape")?)?;
+    let &[height, width] = shape.as_slice() else {
+        return Err(refuse(
+            "an image wants a shape of two lengths, the height and the width.",
+        ));
+    };
+    let flat = bytes_from_js(&field(value, "colors")?)?;
+    if flat.len() % 4 != 0 {
+        return Err(refuse("image colors want four bytes a pixel."));
+    }
+    let colors = flat
+        .chunks_exact(4)
+        .map(|rgba| [rgba[0], rgba[1], rgba[2], rgba[3]])
+        .collect();
+    Image::new(width, height, colors).map_err(throw)
 }
 
 // COLORS

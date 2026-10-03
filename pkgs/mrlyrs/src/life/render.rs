@@ -1,6 +1,7 @@
 use crate::core::cell::Mode;
 use crate::core::colors::{Color, BLACK, WHITE};
 use crate::core::error::{shape_error, value_error, Result};
+use crate::core::image::Image;
 use crate::core::ramp::Colorizer;
 use crate::core::tensor::Tensor;
 use crate::math::two::{self, Cell2d};
@@ -10,7 +11,7 @@ fn default_palette() -> HashMap<u8, Vec<Color>> {
     HashMap::from([(0, vec![BLACK]), (1, vec![WHITE])])
 }
 
-/// Renders grids to white-on-black PNG bytes at a pixel scale.
+/// Renders grids to white-on-black images at a pixel scale.
 ///
 /// ```
 /// use mrlyrs::core::tensor::Tensor;
@@ -23,65 +24,34 @@ fn default_palette() -> HashMap<u8, Vec<Color>> {
 ///
 /// # Errors
 ///
-/// Errs when a grid will not encode to PNG at the scale.
-pub fn frames(grids: &[Cell2d], scale: usize) -> Result<Vec<Vec<u8>>> {
+/// Errs on a scale below one.
+pub fn frames(grids: &[Cell2d], scale: usize) -> Result<Vec<Image>> {
     let palette = default_palette();
     let mut out = Vec::with_capacity(grids.len());
     for grid in grids {
         let painted = grid.clone().paint(&palette, Mode::Type, None)?;
-        out.push(two::png(&painted, scale, None, 1, two::Shape::Square)?);
+        out.push(two::image(&painted, scale, None, 1, two::Shape::Square)?);
     }
     Ok(out)
 }
 
-/// Renders one grid to white-on-black PNG bytes at a pixel scale.
+/// Renders one grid to a white-on-black image at a pixel scale.
 ///
 /// # Errors
 ///
-/// Errs when the grid will not encode to PNG at the scale.
-pub fn frame(grid: &Cell2d, scale: usize) -> Result<Vec<u8>> {
+/// Errs on a scale below one.
+pub fn frame(grid: &Cell2d, scale: usize) -> Result<Image> {
     let painted = grid.clone().paint(&default_palette(), Mode::Type, None)?;
-    two::png(&painted, scale, None, 1, two::Shape::Square)
+    two::image(&painted, scale, None, 1, two::Shape::Square)
 }
 
-/// Renders grids into one looping black-on-white gif, the delay in hundredths of a second.
-///
-/// # Errors
-///
-/// Errs when no grid is given, the grids differ in size, or the gif will not encode.
-pub fn movie(grids: &[Cell2d], scale: usize, delay: usize) -> Result<Vec<u8>> {
-    let Some(first) = grids.first() else {
-        return value_error("a movie needs at least one grid.");
-    };
-    let (width, height) = (first.width(), first.height());
-    let mut frames = Vec::with_capacity(grids.len());
-    for grid in grids {
-        if (grid.width(), grid.height()) != (width, height) {
-            return value_error("every grid must share one size.");
-        }
-        let types = grid.types();
-        frames.push(
-            (0..types.size())
-                .map(|i| u8::from(types.at(i) != 0))
-                .collect::<Vec<u8>>(),
-        );
-    }
-    let views: Vec<&[u8]> = frames.iter().map(|frame| frame.as_slice()).collect();
-    let palette = [
-        [WHITE.r, WHITE.g, WHITE.b, WHITE.a],
-        [BLACK.r, BLACK.g, BLACK.b, BLACK.a],
-    ];
-    crate::core::codec::gif(&views, &palette, width, height, scale, delay)
-}
-
-/// Renders cumulative-visit heatmap frames over a slice of a run, or an error at a bad range.
 fn heatmap_range(
     grids: &[Cell2d],
     start: usize,
     end: usize,
     colorizer: &Colorizer,
     scale: usize,
-) -> Result<Vec<Vec<u8>>> {
+) -> Result<Vec<Image>> {
     if grids.is_empty() {
         return Ok(Vec::new());
     }
@@ -110,7 +80,7 @@ fn heatmap_range(
         let colors = crate::core::ramp::colors(colorizer, &cumulative, max);
         let mut cell = Cell2d::new(Tensor::new(shape.clone()))?;
         cell.cell.colors = Some(colors);
-        out.push(two::png(&cell, scale, None, 1, two::Shape::Square)?);
+        out.push(two::image(&cell, scale, None, 1, two::Shape::Square)?);
     }
     Ok(out)
 }
@@ -128,8 +98,8 @@ fn heatmap_range(
 ///
 /// # Errors
 ///
-/// Errs when the grids differ in shape, or a frame will not encode at the scale.
-pub fn heatmap(grids: &[Cell2d], scale: usize) -> Result<Vec<Vec<u8>>> {
+/// Errs when the grids differ in shape, or on a scale below one.
+pub fn heatmap(grids: &[Cell2d], scale: usize) -> Result<Vec<Image>> {
     heatmap_range(grids, 0, grids.len(), &Colorizer::heat(), scale)
 }
 
@@ -146,28 +116,23 @@ mod tests {
         animate(&blinker(), &config).unwrap()
     }
     #[test]
-    fn frames_are_pngs() {
+    fn frames_paint_the_live_cells_white_on_black() {
         let life = run();
-        let pngs = frames(&life.grids, 4).unwrap();
-        assert_eq!(pngs.len(), life.count);
-        for png in &pngs {
-            assert_eq!(&png[1..4], b"PNG");
+        let sheets = frames(&life.grids, 4).unwrap();
+        assert_eq!(sheets.len(), life.count);
+        let white = [WHITE.r, WHITE.g, WHITE.b, WHITE.a];
+        let black = [BLACK.r, BLACK.g, BLACK.b, BLACK.a];
+        for (sheet, grid) in sheets.iter().zip(&life.grids) {
+            assert_eq!(
+                (sheet.width, sheet.height),
+                (grid.width() * 4, grid.height() * 4)
+            );
+            let lit = sheet.colors.iter().filter(|&&p| p == white).count();
+            let dark = sheet.colors.iter().filter(|&&p| p == black).count();
+            assert_eq!(lit, grid.types().sum() as usize * 16);
+            assert_eq!(lit + dark, sheet.colors.len());
         }
-    }
-    #[test]
-    fn a_run_becomes_one_looping_gif() {
-        let life = run();
-        let gif = movie(&life.grids, 4, 20).unwrap();
-        assert_eq!(&gif[6..10], &[20, 0, 20, 0]);
-        let loose: usize = frames(&life.grids, 4)
-            .unwrap()
-            .iter()
-            .map(|f| f.len())
-            .sum();
-        assert!(gif.len() < loose);
-        assert!(movie(&[], 4, 20).is_err());
-        let smaller = Cell2d::new(Tensor::new(vec![3, 3])).unwrap();
-        assert!(movie(&[smaller, life.grids[0].clone()], 4, 20).is_err());
+        assert_eq!(frame(&life.grids[0], 4).unwrap(), sheets[0]);
     }
     #[test]
     fn a_heatmap_covers_every_generation() {
@@ -177,8 +142,8 @@ mod tests {
     #[test]
     fn a_heatmap_range_renders_its_slice() {
         let life = run();
-        let pngs = heatmap_range(&life.grids, 0, 1, &Colorizer::heat(), 4).unwrap();
-        assert_eq!(pngs.len(), 1);
+        let sheets = heatmap_range(&life.grids, 0, 1, &Colorizer::heat(), 4).unwrap();
+        assert_eq!(sheets.len(), 1);
     }
     #[test]
     fn refuses_heatmap() {

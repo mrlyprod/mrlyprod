@@ -65,7 +65,7 @@
     "note": "the house red parsed, then printed back by to_hex"
   },
   {
-    "fn": "core::png",
+    "fn": "core::Image::scale",
     "in": {
       "colors": [
         [
@@ -97,8 +97,14 @@
       "height": 2,
       "scale": 3
     },
-    "out": "4eefe6c1267c79b22624cc282926bb3cd13378d91a2d8f737a456d90e63a9f46",
-    "note": "sha256 of the png bytes, which pins the encoder and the scale"
+    "out": {
+      "shape": [
+        6,
+        6
+      ],
+      "sha256": "cf7e5de171811cda34c955783aa4017525d6f1b54126450c70fd28974d115d18"
+    },
+    "note": "the image crossing: the shape and the sha256 of the rgba bytes, which pins the scale"
   },
   {
     "fn": "core::Colorizer::color",

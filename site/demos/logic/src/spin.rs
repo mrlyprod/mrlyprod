@@ -62,9 +62,8 @@ fn painted(
         ));
     }
     let field = Field::from_data(data, size)?;
-    let png = render(&field, &ramp_of(ramp), levels, false, invert, 1)?;
-    let (width, height, colors) = mrlyrs::core::unpng(&png)?;
-    Ok(Pixels::of(width, height, colors))
+    let image = render(&field, &ramp_of(ramp), levels, false, invert, 1)?;
+    Ok(Pixels::of(image.width, image.height, image.colors))
 }
 
 /// Paints a ring profile back over a square of the size, quantized into levels through the fire, heat or diverge ramp.

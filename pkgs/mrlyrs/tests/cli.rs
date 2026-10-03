@@ -1,7 +1,8 @@
 #[path = "common/sha256.rs"]
 mod sha256;
 
-use serde_json::Value;
+use mrlyrs::core::Image;
+use serde_json::{json, Value};
 use std::path::Path;
 use std::process::{Command, Output};
 
@@ -35,17 +36,33 @@ fn printed(door: &str, args: &str) -> Value {
     serde_json::from_slice(&out.stdout).expect("the door prints one json value")
 }
 
-fn hashed(value: &Value) -> Value {
-    let bytes: Vec<u8> = serde_json::from_value(value.clone()).expect("a list of bytes");
-    Value::String(sha256::hex(&bytes))
+fn pixels(value: &Value) -> Value {
+    let image: Image = serde_json::from_value(value.clone()).expect("an image");
+    json!({
+        "shape": [image.height, image.width],
+        "sha256": sha256::hex(&image.colors.concat()),
+    })
 }
 
 #[test]
-fn core_replays_its_png() {
-    let colors = "[[[255,0,0,255],[0,255,0,255],[0,0,255,255],[255,255,255,255]],2,2,3]";
+fn core_replays_its_scale() {
+    let corners = r#"{"width":2,"height":2,"colors":[[255,0,0,255],[0,255,0,255],[0,0,255,255],[255,255,255,255]]}"#;
     assert_eq!(
-        hashed(&printed("core.codec.png", colors)),
-        stored("core", "core::png")
+        pixels(&printed("core.image.scale", &format!("[{corners},3]"))),
+        stored("core", "core::Image::scale")
+    );
+}
+
+#[test]
+fn an_image_that_does_not_fill_its_size_is_a_usage_error() {
+    let out = mrly(&[
+        "core.image.scale",
+        r#"[{"width":2,"height":2,"colors":[[0,0,0,255]]},3]"#,
+    ]);
+    assert_eq!(out.status.code(), Some(2));
+    assert!(out.stdout.is_empty());
+    assert!(
+        String::from_utf8_lossy(&out.stderr).contains("colors length must equal width * height.")
     );
 }
 
@@ -68,7 +85,7 @@ fn math_replays_its_fill() {
 #[test]
 fn gen_replays_its_background() {
     assert_eq!(
-        hashed(&printed("gen.background", "[1,2,2]")),
+        pixels(&printed("gen.background", "[1,2,2]")),
         stored("gen", "gen::background")
     );
 }

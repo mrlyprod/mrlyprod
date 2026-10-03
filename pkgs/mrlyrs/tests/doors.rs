@@ -4,7 +4,7 @@ use mrlyrs::core::ramp::Colorizer;
 use mrlyrs::core::resample::{block, resample, Filter};
 use mrlyrs::core::rng::Rng;
 use mrlyrs::core::tensor::{Dtype, Tensor};
-use mrlyrs::core::{gif, png, unpng};
+use mrlyrs::core::Image;
 use mrlyrs::gen::draw::ConfigNd;
 use mrlyrs::gen::name::Tile as Name;
 use mrlyrs::gen::recipe::{Catalog, Design, Group, Source, Tile as Recipe};
@@ -32,6 +32,22 @@ fn square() -> Tensor {
 
 fn unit_cell() -> Cell {
     Cell::new(math::atoms::ones_2d(2))
+}
+
+fn dot() -> Image {
+    Image {
+        width: 1,
+        height: 1,
+        colors: vec![[0, 0, 0, 255]],
+    }
+}
+
+fn torn() -> Image {
+    Image {
+        width: 2,
+        height: 2,
+        colors: vec![[0, 0, 0, 255]],
+    }
 }
 
 fn empty_2d() -> Cell2d {
@@ -144,38 +160,38 @@ const BAD: &[(&str, fn())] = &[
     ("core::colors::to_hex, a transparent color", || {
         let _ = Color::rgba(0, 0, 0, 0).to_hex();
     }),
-    ("core::codec::png, a zero scale", || {
-        let _ = png(&[[0, 0, 0, 255]], 1, 1, 0);
-    }),
     (
-        "core::codec::png, a size that is not the pixel count",
+        "core::image::Image::new, a size that is not the pixel count",
         || {
-            let _ = png(&[[0, 0, 0, 255]], 2, 2, 1);
+            let _ = Image::new(2, 2, vec![[0, 0, 0, 255]]);
         },
     ),
-    ("core::codec::png, no pixels", || {
-        let _ = png(&[], 0, 0, 1);
+    ("core::image::Image::new, a size past usize", || {
+        let _ = Image::new(usize::MAX, 2, Vec::new());
     }),
-    ("core::codec::png, a scale past the width", || {
-        let _ = png(&[[0, 0, 0, 255]], 1, 1, 1 << 40);
+    ("core::image::Image::scale, a zero scale", || {
+        let _ = dot().scale(0);
     }),
-    ("core::codec::unpng, no bytes", || {
-        let _ = unpng(&[]);
+    ("core::image::Image::scale, no pixels", || {
+        let _ = Image::new(0, 0, Vec::new()).map(|image| image.scale(3));
     }),
-    ("core::codec::unpng, bytes that are not a png", || {
-        let _ = unpng(b"not a png at all");
+    ("core::image::Image::scale, a scale past the width", || {
+        let _ = dot().scale(1 << 40);
     }),
-    ("core::codec::gif, a zero delay", || {
-        let _ = gif(&[&[0u8, 1, 1, 0][..]], &[[0, 0, 0, 255]], 2, 2, 0, 5);
-    }),
-    ("core::codec::gif, no frames", || {
-        let _ = gif(&[], &[[0, 0, 0, 255]], 2, 2, 1, 5);
-    }),
-    ("core::codec::gif, an empty palette", || {
-        let _ = gif(&[&[0u8, 1, 1, 0][..]], &[], 2, 2, 1, 5);
-    }),
-    ("core::codec::gif, an index past the palette", || {
-        let _ = gif(&[&[0u8, 1, 2, 0][..]], &[[0, 0, 0, 255]], 2, 2, 1, 5);
+    (
+        "core::image::Image::scale, colors that do not fill the size",
+        || {
+            let _ = torn().scale(2);
+        },
+    ),
+    (
+        "core::image::Image::resample, colors that do not fill the size",
+        || {
+            let _ = torn().resample(4, 4, Filter::Nearest);
+        },
+    ),
+    ("math::two::image, a zero scale", || {
+        let _ = math::two::image(&empty_2d(), 0, None, 1, math::two::Shape::Square);
     }),
     ("core::ramp::color, a zero maximum", || {
         let _ = mrlyrs::core::ramp::color(&Colorizer::heat(), usize::MAX, 0);

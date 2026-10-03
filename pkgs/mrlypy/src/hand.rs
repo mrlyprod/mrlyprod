@@ -1,6 +1,7 @@
 use mrlyrs::core::cell::Cell;
 use mrlyrs::core::colors::Color;
 use mrlyrs::core::error::{Error, Result};
+use mrlyrs::core::image::Image;
 use mrlyrs::core::rng::Rng;
 use mrlyrs::core::tensor::{Dtype, Tensor};
 use mrlyrs::math::bang::Code;
@@ -347,6 +348,47 @@ impl<'py> FromPyObject<'_, 'py> for PyCell6d {
     type Error = PyErr;
     fn extract(obj: Borrowed<'_, 'py, PyAny>) -> PyResult<PyCell6d> {
         Ok(PyCell6d(cell_6d_from_py(&obj)?))
+    }
+}
+
+// IMAGE
+
+/// An image crossing as one (h, w, 4) uint8 array.
+pub struct PyImage(pub Image);
+
+impl<'py> IntoPyObject<'py> for PyImage {
+    type Target = PyAny;
+    type Output = Bound<'py, PyAny>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let Image {
+            width,
+            height,
+            colors,
+        } = self.0;
+        let flat: Vec<u8> = colors.into_iter().flatten().collect();
+        owned(py, &[height, width, 4], flat)
+    }
+}
+
+impl<'py> FromPyObject<'_, 'py> for PyImage {
+    type Error = PyErr;
+    fn extract(obj: Borrowed<'_, 'py, PyAny>) -> PyResult<PyImage> {
+        let view = obj
+            .extract::<PyReadonlyArrayDyn<u8>>()
+            .map_err(|_| bad("an image wants a uint8 array."))?;
+        let (height, width) = match view.shape() {
+            &[height, width, 4] => (height, width),
+            _ => return Err(bad("an image wants an array of shape (h, w, 4).")),
+        };
+        let data = view
+            .as_slice()
+            .map_err(|_| bad("an image wants a C-contiguous array."))?;
+        let colors = data
+            .chunks_exact(4)
+            .map(|rgba| [rgba[0], rgba[1], rgba[2], rgba[3]])
+            .collect();
+        Ok(PyImage(ok(Image::new(width, height, colors))?))
     }
 }
 

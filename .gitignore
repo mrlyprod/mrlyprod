@@ -21,6 +21,7 @@ target/
 
 # DEMOS
 site/node_modules/
+figures/node_modules/
 site/pkg/
 pkgs/mrlyjs/pkg/
 

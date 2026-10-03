@@ -1,7 +1,7 @@
 //! The moire fields.
 //!
 //! One design sampled at many scales and stacked makes an interference pattern; the layers, their
-//! combination, the volume they cut and the PNG they render live here.
+//! combination, the volume they cut and the image they render live here.
 
 use serde::{Deserialize, Serialize};
 
@@ -13,7 +13,7 @@ pub mod layer;
 pub mod pairs;
 /// The named recipes: the parity heatmap, its weave, its hive and the carpet stack.
 pub mod presets;
-/// The quantized PNG rendering of a field.
+/// The quantized rendering of a field as an image.
 pub mod render;
 /// The lattice coordinates and code-membership tests behind the layers.
 pub mod sample;

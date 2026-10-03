@@ -368,6 +368,7 @@ impl<'a> Unit<'a> {
                 "Cell" => "Cell",
                 "CellNd" => "CellNd",
                 "Cell6d" => "Cell6d",
+                "Image" => "Image",
                 "Color" => "Color",
                 "Code" => "Code",
                 _ => "Rng",
@@ -412,6 +413,7 @@ impl<'a> Unit<'a> {
                     _ => return Err(format!("{}: a cell without a dimension", cx.fname)),
                 },
                 "Cell6d" => "mrlyrs::math::six::Cell6d".into(),
+                "Image" => "mrlyrs::core::Image".into(),
                 "Color" => "mrlyrs::core::Color".into(),
                 "Code" => "mrlyrs::math::bang::Code".into(),
                 "Rng" => "mrlyrs::core::Rng".into(),
@@ -503,6 +505,7 @@ impl<'a> Unit<'a> {
                     _ => return Err(format!("{}: a cell without a dimension", cx.fname)),
                 },
                 "Cell6d" => format!("hand::cell6d_from_js({e})?"),
+                "Image" => format!("hand::image_from_js({e})?"),
                 "Color" => format!("hand::color_from_js({e})?"),
                 "Code" => format!("hand::code_from_js({e})?"),
                 other => return Err(format!("{}: {other} cannot cross in by value", cx.fname)),
@@ -587,6 +590,7 @@ impl<'a> Unit<'a> {
                     _ => return Err(format!("{}: a cell without a dimension", cx.fname)),
                 },
                 "Cell6d" => format!("hand::cell6d_to_js({e})?"),
+                "Image" => format!("hand::image_to_js({e})?"),
                 "Color" => format!("hand::color_to_js({})", deref(e)),
                 "Code" => format!("JsValue::from_str(&hand::code_to_js({}))", deref(e)),
                 _ => format!("JsValue::from(hand::Rng::wrap({}.clone()))", place(e)),
@@ -1475,6 +1479,7 @@ impl<'a> Unit<'a> {
                 "Tensor" => "Tensor".into(),
                 "Cell" | "CellNd" => "Cell".into(),
                 "Cell6d" => "Cell6d".into(),
+                "Image" => "Image".into(),
                 "Color" => "Color".into(),
                 "Code" if ret => "string".into(),
                 "Code" => "string | number | bigint".into(),
@@ -1526,6 +1531,7 @@ impl<'a> Unit<'a> {
                 "Cell" => "CellData".into(),
                 "CellNd" => "{ cell: CellData }".into(),
                 "Cell6d" => "Cell6dData".into(),
+                "Image" => "{ width: number; height: number; colors: number[][] }".into(),
                 "Color" => "ColorData".into(),
                 "Code" => "bigint".into(),
                 _ => "unknown".into(),
@@ -1882,6 +1888,16 @@ impl<'a> Unit<'a> {
         )
         .ok();
         writeln!(out, "export interface Cell6d {{\n    cell: Cell;\n    projection: {projection};\n    orientation: {orientation};\n    start: number;\n}}").ok();
+        writeln!(
+            out,
+            "/** An image: its height and width, and its flat rgba colors row by row. */"
+        )
+        .ok();
+        writeln!(
+            out,
+            "export interface Image {{\n    shape: [number, number];\n    colors: Uint8Array;\n}}"
+        )
+        .ok();
         writeln!(out, "/** A color inside plain data, serde's form. */").ok();
         writeln!(out, "export interface ColorData {{\n    r: number;\n    g: number;\n    b: number;\n    a: number;\n}}").ok();
         writeln!(out, "/** A tensor inside plain data, serde's form. */").ok();
@@ -2133,6 +2149,7 @@ fn plain_ty(t: &Type) -> Ty {
 fn hand_self(name: &str) -> &'static str {
     match name {
         "Tensor" => "tensor",
+        "Image" => "image",
         "Color" => "color",
         "Code" => "code",
         "Rng" => "rng",

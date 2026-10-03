@@ -3,7 +3,7 @@
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
-/// The substrate: tensors, cells, colors, images, codecs, resampling and seeded chance.
+/// The substrate: tensors, cells, colors, images, resampling and seeded chance.
 /// The substrate: the road from a grid of bytes to pixels, with nothing mrly on it.
 pub mod core {
     use crate::hand::{ok, PyColor, PyPixels, PyRng, PySerde};
@@ -421,64 +421,6 @@ pub mod core {
             m.add("__all__", names)?;
             parent.add("cell", &m)?;
             sys.set_item("mrlypy._mrlypy.core.cell", &m)?;
-            Ok(())
-        }
-    }
-
-    /// The png and gif codecs, rented from the png and gif crates.
-    /// A png is written paletted whenever 256 colors or fewer fit, rgba otherwise; a gif is always paletted and always loops.
-    pub mod codec {
-        use crate::hand::{ok, PyPixels};
-        use pyo3::prelude::*;
-        use pyo3::types::PyDict;
-        use pyo3::IntoPyObjectExt;
-
-        /// Encodes indexed frames as an animated gif89a, each source pixel a scale by scale block.
-        #[pyfunction]
-        #[pyo3(name = "gif", signature = (frames, palette, width, height, scale, delay))]
-        pub fn gif<'py>(
-            py: Python<'py>,
-            frames: Vec<Vec<u8>>,
-            palette: PyPixels,
-            width: usize,
-            height: usize,
-            scale: usize,
-            delay: usize,
-        ) -> PyResult<Bound<'py, PyAny>> {
-            let frames = frames.iter().map(|y| y.as_slice()).collect::<Vec<_>>();
-            let palette = palette.0;
-            let out = mrlyrs::core::codec::gif(&frames, &palette, width, height, scale, delay);
-            (ok(out)?).into_bound_py_any(py)
-        }
-
-        /// Encodes rgba colors as a png, drawing each source pixel as a scale by scale block.
-        #[pyfunction]
-        #[pyo3(name = "png", signature = (colors, width, height, scale))]
-        pub fn png<'py>(
-            py: Python<'py>,
-            colors: PyPixels,
-            width: usize,
-            height: usize,
-            scale: usize,
-        ) -> PyResult<Bound<'py, PyAny>> {
-            let colors = colors.0;
-            let out = mrlyrs::core::codec::png(&colors, width, height, scale);
-            (ok(out)?).into_bound_py_any(py)
-        }
-
-        pub fn init(
-            py: Python<'_>,
-            parent: &Bound<'_, PyModule>,
-            sys: &Bound<'_, PyDict>,
-        ) -> PyResult<()> {
-            let m = PyModule::new(py, "mrlypy.core.codec")?;
-            m.setattr("__doc__", "The png and gif codecs, rented from the png and gif crates.\nA png is written paletted whenever 256 colors or fewer fit, rgba otherwise; a gif is always paletted and always loops.")?;
-            m.add_function(wrap_pyfunction!(gif, &m)?)?;
-            m.add_function(wrap_pyfunction!(png, &m)?)?;
-            let names: Vec<&str> = vec!["gif", "png"];
-            m.add("__all__", names)?;
-            parent.add("codec", &m)?;
-            sys.set_item("mrlypy._mrlypy.core.codec", &m)?;
             Ok(())
         }
     }
@@ -1160,9 +1102,9 @@ pub mod core {
         }
     }
 
-    /// The paletted image and its rows.
+    /// The image a renderer returns: its size and its rgba pixels.
     pub mod image {
-        use crate::hand::PyPixels;
+        use crate::hand::{ok, PyImage, PyPixels, PySerde};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -1182,15 +1124,64 @@ pub mod core {
             (PyPixels(out)).into_bound_py_any(py)
         }
 
+        /// Builds an image from its width, its height and its colors.
+        #[pyfunction]
+        #[pyo3(name = "new", signature = (width, height, colors))]
+        pub fn new<'py>(
+            py: Python<'py>,
+            width: usize,
+            height: usize,
+            colors: PyPixels,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let colors = colors.0;
+            let out = mrlyrs::core::Image::new(width, height, colors);
+            (PyImage(ok(out)?)).into_bound_py_any(py)
+        }
+
+        /// Resamples the image to a new size.
+        #[pyfunction]
+        #[pyo3(name = "resample", signature = (image, width, height, filter))]
+        pub fn resample<'py>(
+            py: Python<'py>,
+            image: PyImage,
+            width: usize,
+            height: usize,
+            filter: PySerde<mrlyrs::core::Filter>,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let image = image.0;
+            let filter = filter.0;
+            let out = mrlyrs::core::Image::resample(&image, width, height, filter);
+            (PyImage(ok(out)?)).into_bound_py_any(py)
+        }
+
+        /// Draws every pixel as a scale by scale block, growing both sides by scale.
+        #[pyfunction]
+        #[pyo3(name = "scale", signature = (image, scale))]
+        pub fn scale<'py>(
+            py: Python<'py>,
+            image: PyImage,
+            scale: usize,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let image = image.0;
+            let out = mrlyrs::core::Image::scale(&image, scale);
+            (PyImage(ok(out)?)).into_bound_py_any(py)
+        }
+
         pub fn init(
             py: Python<'_>,
             parent: &Bound<'_, PyModule>,
             sys: &Bound<'_, PyDict>,
         ) -> PyResult<()> {
             let m = PyModule::new(py, "mrlypy.core.image")?;
-            m.setattr("__doc__", "The paletted image and its rows.")?;
+            m.setattr(
+                "__doc__",
+                "The image a renderer returns: its size and its rgba pixels.",
+            )?;
             m.add_function(wrap_pyfunction!(blur, &m)?)?;
-            let names: Vec<&str> = vec!["blur"];
+            m.add_function(wrap_pyfunction!(new, &m)?)?;
+            m.add_function(wrap_pyfunction!(resample, &m)?)?;
+            m.add_function(wrap_pyfunction!(scale, &m)?)?;
+            let names: Vec<&str> = vec!["blur", "new", "resample", "scale"];
             m.add("__all__", names)?;
             parent.add("image", &m)?;
             sys.set_item("mrlypy._mrlypy.core.image", &m)?;
@@ -2365,142 +2356,6 @@ pub mod core {
         }
     }
 
-    /// A paletted image: rows of palette indices and the palette they point into, hex strings in json.
-    #[pyclass(name = "Image", module = "mrlypy.core", from_py_object)]
-    #[derive(Clone)]
-    pub struct Image(pub mrlyrs::core::Image);
-
-    #[pymethods]
-    impl Image {
-        /// Builds an image from its four parts.
-        #[new]
-        #[pyo3(signature = (width, height, rows, palette))]
-        pub fn __new__(
-            width: usize,
-            height: usize,
-            rows: Vec<Vec<usize>>,
-            palette: Vec<PyColor>,
-        ) -> PyResult<Self> {
-            let palette = palette.into_iter().map(|x| x.0).collect::<Vec<_>>();
-            let out = mrlyrs::core::Image::new(width, height, rows, palette);
-            Ok(Self(out))
-        }
-        /// The width in pixels.
-        #[getter]
-        #[pyo3(name = "width")]
-        pub fn width<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let value = self.0.width;
-            (value).into_bound_py_any(py)
-        }
-        #[setter]
-        #[pyo3(name = "width")]
-        pub fn set_width(&mut self, value: usize) -> PyResult<()> {
-            self.0.width = value;
-            Ok(())
-        }
-        /// The height in pixels.
-        #[getter]
-        #[pyo3(name = "height")]
-        pub fn height<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let value = self.0.height;
-            (value).into_bound_py_any(py)
-        }
-        #[setter]
-        #[pyo3(name = "height")]
-        pub fn set_height(&mut self, value: usize) -> PyResult<()> {
-            self.0.height = value;
-            Ok(())
-        }
-        /// The palette index of every pixel, row by row.
-        #[getter]
-        #[pyo3(name = "rows")]
-        pub fn rows<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let value = self.0.rows.clone();
-            (value).into_bound_py_any(py)
-        }
-        #[setter]
-        #[pyo3(name = "rows")]
-        pub fn set_rows(&mut self, value: Vec<Vec<usize>>) -> PyResult<()> {
-            self.0.rows = value;
-            Ok(())
-        }
-        /// The colors the rows index.
-        #[getter]
-        #[pyo3(name = "palette")]
-        pub fn palette<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let value = self.0.palette.clone();
-            ((value).into_iter().map(PyColor).collect::<Vec<_>>()).into_bound_py_any(py)
-        }
-        #[setter]
-        #[pyo3(name = "palette")]
-        pub fn set_palette(&mut self, value: Vec<PyColor>) -> PyResult<()> {
-            let value = value.into_iter().map(|x| x.0).collect::<Vec<_>>();
-            self.0.palette = value;
-            Ok(())
-        }
-        /// Returns the flat rgba pixels, transparent wherever an index misses the palette.
-        #[pyo3(name = "colors", signature = ())]
-        pub fn colors<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            let out = mrlyrs::core::Image::colors(&self.0);
-            (PyPixels(out)).into_bound_py_any(py)
-        }
-        /// Builds a paletted image from raw rgba pixels, growing the palette as new colors appear.
-        #[staticmethod]
-        #[pyo3(name = "from_pixels", signature = (width, height, pixels))]
-        pub fn from_pixels<'py>(
-            py: Python<'py>,
-            width: usize,
-            height: usize,
-            pixels: PyPixels,
-        ) -> PyResult<Bound<'py, PyAny>> {
-            let pixels = pixels.0;
-            let out = mrlyrs::core::Image::from_pixels(width, height, &pixels);
-            (crate::gen::core::Image(out)).into_bound_py_any(py)
-        }
-        /// Builds an image from its four parts.
-        #[staticmethod]
-        #[pyo3(name = "new", signature = (width, height, rows, palette))]
-        pub fn new_<'py>(
-            py: Python<'py>,
-            width: usize,
-            height: usize,
-            rows: Vec<Vec<usize>>,
-            palette: Vec<PyColor>,
-        ) -> PyResult<Bound<'py, PyAny>> {
-            let palette = palette.into_iter().map(|x| x.0).collect::<Vec<_>>();
-            let out = mrlyrs::core::Image::new(width, height, rows, palette);
-            (crate::gen::core::Image(out)).into_bound_py_any(py)
-        }
-        /// Encodes the image as a png at the given scale.
-        #[pyo3(name = "png", signature = (scale))]
-        pub fn png<'py>(&self, py: Python<'py>, scale: usize) -> PyResult<Bound<'py, PyAny>> {
-            let out = mrlyrs::core::Image::png(&self.0, scale);
-            (ok(out)?).into_bound_py_any(py)
-        }
-        /// Resamples the image to a new size, its palette rebuilt from the blended pixels.
-        #[pyo3(name = "resample", signature = (width, height, filter))]
-        pub fn resample<'py>(
-            &self,
-            py: Python<'py>,
-            width: usize,
-            height: usize,
-            filter: PySerde<mrlyrs::core::Filter>,
-        ) -> PyResult<Bound<'py, PyAny>> {
-            let filter = filter.0;
-            let out = mrlyrs::core::Image::resample(&self.0, width, height, filter);
-            (crate::gen::core::Image(ok(out)?)).into_bound_py_any(py)
-        }
-        /// Reads plain data into the class.
-        #[staticmethod]
-        pub fn from_dict(data: &Bound<'_, PyAny>) -> PyResult<Self> {
-            Ok(Self(crate::hand::serde_from_py(data)?))
-        }
-        /// Returns the value as plain data.
-        pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-            crate::hand::serde_into_py(py, &self.0)
-        }
-    }
-
     /// A rule that turns counter values into colors.
     #[pyclass(name = "Colorizer", module = "mrlypy.core", skip_from_py_object)]
     pub struct Colorizer;
@@ -2622,50 +2477,31 @@ pub mod core {
         (PyPixels(ok(out)?)).into_bound_py_any(py)
     }
 
-    /// Decodes a png to its width, height, and rgba colors.
-    #[pyfunction]
-    #[pyo3(name = "unpng", signature = (bytes))]
-    pub fn unpng<'py>(py: Python<'py>, bytes: Vec<u8>) -> PyResult<Bound<'py, PyAny>> {
-        let out = mrlyrs::core::unpng(&bytes);
-        ({
-            let t = ok(out)?;
-            (t.0, t.1, PyPixels(t.2))
-        })
-        .into_bound_py_any(py)
-    }
-
     pub fn init(
         py: Python<'_>,
         parent: &Bound<'_, PyModule>,
         sys: &Bound<'_, PyDict>,
     ) -> PyResult<()> {
         let m = PyModule::new(py, "mrlypy.core")?;
-        m.setattr("__doc__", "The substrate: tensors, cells, colors, images, codecs, resampling and seeded chance.\nThe substrate: the road from a grid of bytes to pixels, with nothing mrly on it.\n\n- `tensor` makes and tallies the byte grids; `cell` dresses one in colors and tags.\n- `colors` holds the rgba color, the two themes and the house palette; `paint` spreads a palette over a cell.\n- `ramp` turns counter values into colors; `resample` rescales pixels and squashes them for hex.\n- `image` holds the paletted pixels; `codec` writes them as a png or a gif and reads a png back.\n- `rng` deals seeded chance: one xoshiro256++ stream, passed by hand, never global.\n- `error` holds the one error, its Result and the json parser; `named` names an enum.\n\nThe json value and map are serde_json's, kept under `preserve_order` so an object comes back in the order it was written and both bridges print the same text.\n\nThe doors: [`Tensor::of`](crate::core::tensor::Tensor::of), [`Tensor::rot90`](crate::core::tensor::Tensor::rot90), [`Color::from_hex`](crate::core::colors::Color::from_hex), [`Color::to_hex`](crate::core::colors::Color::to_hex), [`png`](crate::core::png()), [`unpng`](crate::core::unpng()), [`gif`](crate::core::gif()) and [`Colorizer::color`](crate::core::ramp::Colorizer::color).")?;
+        m.setattr("__doc__", "The substrate: tensors, cells, colors, images, resampling and seeded chance.\nThe substrate: the road from a grid of bytes to pixels, with nothing mrly on it.\n\n- `tensor` makes and tallies the byte grids; `cell` dresses one in colors and tags.\n- `colors` holds the rgba color, the two themes and the house palette; `paint` spreads a palette over a cell.\n- `ramp` turns counter values into colors; `resample` rescales pixels and squashes them for hex.\n- `image` holds the rgba pixels a renderer returns; encoding them into a file is the caller's.\n- `rng` deals seeded chance: one xoshiro256++ stream, passed by hand, never global.\n- `error` holds the one error, its Result and the json parser; `named` names an enum.\n\nThe json value and map are serde_json's, kept under `preserve_order` so an object comes back in the order it was written and both bridges print the same text.\n\nThe doors: [`Tensor::of`](crate::core::tensor::Tensor::of), [`Tensor::rot90`](crate::core::tensor::Tensor::rot90), [`Color::from_hex`](crate::core::colors::Color::from_hex), [`Color::to_hex`](crate::core::colors::Color::to_hex), [`Image::scale`](crate::core::image::Image::scale) and [`Colorizer::color`](crate::core::ramp::Colorizer::color).")?;
         m.add_class::<PyRng>()?;
-        m.add_class::<Image>()?;
         m.add_class::<Colorizer>()?;
         m.add_class::<Dtype>()?;
         m.add_function(wrap_pyfunction!(hex_fit, &m)?)?;
         m.add_function(wrap_pyfunction!(hex_size, &m)?)?;
         m.add_function(wrap_pyfunction!(resample, &m)?)?;
-        m.add_function(wrap_pyfunction!(unpng, &m)?)?;
         m.add("HEX_RATIO", mrlyrs::core::HEX_RATIO)?;
-        m.add("PNG_MAGIC", mrlyrs::core::PNG_MAGIC)?;
         let names: Vec<&str> = vec![
             "hex_fit",
             "hex_size",
             "resample",
-            "unpng",
-            "Image",
             "Colorizer",
             "Dtype",
             "HEX_RATIO",
-            "PNG_MAGIC",
             "Rng",
         ];
         m.add("__all__", names)?;
         cell::init(py, &m, sys)?;
-        codec::init(py, &m, sys)?;
         colors::init(py, &m, sys)?;
         error::init(py, &m, sys)?;
         image::init(py, &m, sys)?;
@@ -3079,7 +2915,7 @@ pub mod font {
 /// The generator: the whole pipeline from a recipe to a file.
 /// The generator: the pipeline from a recipe to a file, for datasets, the automator, backgrounds.
 pub mod gen_ {
-    use crate::hand::{ok, PyRng, PySerde, PyTensor};
+    use crate::hand::{ok, PyImage, PyRng, PySerde, PyTensor};
     use pyo3::prelude::*;
     use pyo3::types::PyDict;
     use pyo3::IntoPyObjectExt;
@@ -3688,7 +3524,7 @@ pub mod gen_ {
 
     /// The seeded artwork run from tile recipe to rendered files.
     pub mod variation {
-        use crate::hand::{ok, PyCell2d, PyCellNd, PyRng, PySerde};
+        use crate::hand::{ok, PyCell2d, PyCellNd, PyImage, PyRng, PySerde};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -3700,7 +3536,7 @@ pub mod gen_ {
 
         #[pymethods]
         impl File {
-            /// Builds a file of the given repetition counts with no PNG bytes.
+            /// Builds a file of the given repetition counts with no image.
             #[new]
             #[pyo3(signature = (width, height))]
             pub fn __new__(width: usize, height: usize) -> PyResult<Self> {
@@ -3733,20 +3569,21 @@ pub mod gen_ {
                 self.0.height = value;
                 Ok(())
             }
-            /// The encoded PNG bytes, empty until rendered and left out of the json.
+            /// The rendered image, absent until rendered and left out of the json.
             #[getter]
-            #[pyo3(name = "png")]
-            pub fn png<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.png.clone();
-                (value).into_bound_py_any(py)
+            #[pyo3(name = "image")]
+            pub fn image<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let value = self.0.image.clone();
+                ((value).map(PyImage)).into_bound_py_any(py)
             }
             #[setter]
-            #[pyo3(name = "png")]
-            pub fn set_png(&mut self, value: Vec<u8>) -> PyResult<()> {
-                self.0.png = value;
+            #[pyo3(name = "image")]
+            pub fn set_image(&mut self, value: Option<PyImage>) -> PyResult<()> {
+                let value = value.map(|x| x.0);
+                self.0.image = value;
                 Ok(())
             }
-            /// Builds a file of the given repetition counts with no PNG bytes.
+            /// Builds a file of the given repetition counts with no image.
             #[staticmethod]
             #[pyo3(name = "new", signature = (width, height))]
             pub fn new_<'py>(
@@ -3984,7 +3821,7 @@ pub mod gen_ {
             (crate::gen::gen_::variation::Variation(ok(out)?)).into_bound_py_any(py)
         }
 
-        /// Renders every file of the variation to PNG at the given scale, scattering a Random edition
+        /// Renders every file of the variation to an image at the given scale, scattering a Random edition
         /// from the stream.
         #[pyfunction]
         #[pyo3(name = "render", signature = (variation, scale, rng))]
@@ -4280,7 +4117,7 @@ pub mod gen_ {
         }
     }
 
-    /// Draws one seeded artwork and returns its PNG bytes: a random flat tile under the default recipe
+    /// Draws one seeded artwork and returns its image: a random flat tile under the default recipe
     /// constraints and paint, repeated `width` across and `height` down at one pixel per cell.
     #[pyfunction]
     #[pyo3(name = "background", signature = (seed, width, height))]
@@ -4291,7 +4128,7 @@ pub mod gen_ {
         height: usize,
     ) -> PyResult<Bound<'py, PyAny>> {
         let out = mrlyrs::gen::background(seed, width, height);
-        (ok(out)?).into_bound_py_any(py)
+        (PyImage(ok(out)?)).into_bound_py_any(py)
     }
 
     /// Returns the plane's bang code of a classic design, or None for one outside the plane.
@@ -4403,7 +4240,7 @@ pub mod gen_ {
 /// The engine: a rule over a grid, stepped, recorded, measured and rendered.
 /// The engine: a rule over a grid, stepped, recorded, measured and rendered.
 pub mod life {
-    use crate::hand::{ok, PyCell2d, PyCellNd, PyCode, PySerde, PyTensor};
+    use crate::hand::{ok, PyCell2d, PyCellNd, PyCode, PyImage, PySerde, PyTensor};
     use pyo3::prelude::*;
     use pyo3::types::PyDict;
     use pyo3::IntoPyObjectExt;
@@ -4444,14 +4281,14 @@ pub mod life {
         }
     }
 
-    /// The PNG frames, the cumulative-visit heatmap and the gif movie of grids.
+    /// The frames and the cumulative-visit heatmap of grids, as images.
     pub mod render {
-        use crate::hand::{ok, PyCell2d};
+        use crate::hand::{ok, PyCell2d, PyImage};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
 
-        /// Renders one grid to white-on-black PNG bytes at a pixel scale.
+        /// Renders one grid to a white-on-black image at a pixel scale.
         #[pyfunction]
         #[pyo3(name = "frame", signature = (grid, scale))]
         pub fn frame<'py>(
@@ -4461,7 +4298,7 @@ pub mod life {
         ) -> PyResult<Bound<'py, PyAny>> {
             let grid = grid.0;
             let out = mrlyrs::life::render::frame(&grid, scale);
-            (ok(out)?).into_bound_py_any(py)
+            (PyImage(ok(out)?)).into_bound_py_any(py)
         }
 
         pub fn init(
@@ -4472,7 +4309,7 @@ pub mod life {
             let m = PyModule::new(py, "mrlypy.life.render")?;
             m.setattr(
                 "__doc__",
-                "The PNG frames, the cumulative-visit heatmap and the gif movie of grids.",
+                "The frames and the cumulative-visit heatmap of grids, as images.",
             )?;
             m.add_function(wrap_pyfunction!(frame, &m)?)?;
             let names: Vec<&str> = vec!["frame"];
@@ -5187,7 +5024,7 @@ pub mod life {
         (out).into_bound_py_any(py)
     }
 
-    /// Renders grids to white-on-black PNG bytes at a pixel scale.
+    /// Renders grids to white-on-black images at a pixel scale.
     #[pyfunction]
     #[pyo3(name = "frames", signature = (grids, scale))]
     pub fn frames<'py>(
@@ -5197,7 +5034,7 @@ pub mod life {
     ) -> PyResult<Bound<'py, PyAny>> {
         let grids = grids.into_iter().map(|x| x.0).collect::<Vec<_>>();
         let out = mrlyrs::life::frames(&grids, scale);
-        (ok(out)?).into_bound_py_any(py)
+        ((ok(out)?).into_iter().map(PyImage).collect::<Vec<_>>()).into_bound_py_any(py)
     }
 
     /// Returns the base-2 plane design a rule's single seed draws, or None when it draws none.
@@ -5226,7 +5063,7 @@ pub mod life {
     ) -> PyResult<Bound<'py, PyAny>> {
         let grids = grids.into_iter().map(|x| x.0).collect::<Vec<_>>();
         let out = mrlyrs::life::heatmap(&grids, scale);
-        (ok(out)?).into_bound_py_any(py)
+        ((ok(out)?).into_iter().map(PyImage).collect::<Vec<_>>()).into_bound_py_any(py)
     }
 
     /// Returns the space-time diagram of a seed row, row 0 the seed and then one row per generation.
@@ -5275,20 +5112,6 @@ pub mod life {
     pub fn moore<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let out = mrlyrs::life::moore();
         (PyCellNd(ok(out)?)).into_bound_py_any(py)
-    }
-
-    /// Renders grids into one looping black-on-white gif, the delay in hundredths of a second.
-    #[pyfunction]
-    #[pyo3(name = "movie", signature = (grids, scale, delay))]
-    pub fn movie<'py>(
-        py: Python<'py>,
-        grids: Vec<PyCell2d>,
-        scale: usize,
-        delay: usize,
-    ) -> PyResult<Bound<'py, PyAny>> {
-        let grids = grids.into_iter().map(|x| x.0).collect::<Vec<_>>();
-        let out = mrlyrs::life::movie(&grids, scale, delay);
-        (ok(out)?).into_bound_py_any(py)
     }
 
     /// Advances a grid one generation under birth and survive counts, a neighbor mask and a boundary.
@@ -5417,7 +5240,7 @@ pub mod life {
         sys: &Bound<'_, PyDict>,
     ) -> PyResult<()> {
         let m = PyModule::new(py, "mrlypy.life")?;
-        m.setattr("__doc__", "The engine: a rule over a grid, stepped, recorded, measured and rendered.\nThe engine: a rule over a grid, stepped, recorded, measured and rendered.\n\n- `step`: one generation of a grid under birth and survive counts.\n- `animate`: a seed run until it fixes, loops or times out.\n- `models`: the run config and the recorded life.\n- `metrics`: the entropy and churn readings of a run.\n- `crop`: the centred cropping and tiling of a run's frames.\n- `mask`: the design masks a rule reads and the lattice they generate.\n- `source`: the named sources of neighbor counts, and the counts they lay down.\n- `elementary`: the one-line automata and the card of one rule.\n- `render`: the PNG frames, the visit heatmap and the gif movie.\n- `rule`: the canonical name of a rule.\n\nThe doors: [`next_grid`](crate::life::next_grid), [`animate`](crate::life::animate()),\n[`entropy`](crate::life::entropy), [`churn`](crate::life::churn),\n[`counts`](crate::life::counts), [`frames`](crate::life::frames),\n[`heatmap`](crate::life::heatmap), [`history`](crate::life::history) and\n[`Rule`](crate::life::Rule).")?;
+        m.setattr("__doc__", "The engine: a rule over a grid, stepped, recorded, measured and rendered.\nThe engine: a rule over a grid, stepped, recorded, measured and rendered.\n\n- `step`: one generation of a grid under birth and survive counts.\n- `animate`: a seed run until it fixes, loops or times out.\n- `models`: the run config and the recorded life.\n- `metrics`: the entropy and churn readings of a run.\n- `crop`: the centred cropping and tiling of a run's frames.\n- `mask`: the design masks a rule reads and the lattice they generate.\n- `source`: the named sources of neighbor counts, and the counts they lay down.\n- `elementary`: the one-line automata and the card of one rule.\n- `render`: the frames and the visit heatmap of a run, as images.\n- `rule`: the canonical name of a rule.\n\nThe doors: [`next_grid`](crate::life::next_grid), [`animate`](crate::life::animate()),\n[`entropy`](crate::life::entropy), [`churn`](crate::life::churn),\n[`counts`](crate::life::counts), [`frames`](crate::life::frames),\n[`heatmap`](crate::life::heatmap), [`history`](crate::life::history) and\n[`Rule`](crate::life::Rule).")?;
         m.add_class::<Config>()?;
         m.add_class::<Counts>()?;
         m.add_class::<Life>()?;
@@ -5443,7 +5266,6 @@ pub mod life {
         m.add_function(wrap_pyfunction!(lattice_index, &m)?)?;
         m.add_function(wrap_pyfunction!(mask_offsets, &m)?)?;
         m.add_function(wrap_pyfunction!(moore, &m)?)?;
-        m.add_function(wrap_pyfunction!(movie, &m)?)?;
         m.add_function(wrap_pyfunction!(next_grid, &m)?)?;
         m.add_function(wrap_pyfunction!(npn_class, &m)?)?;
         m.add_function(wrap_pyfunction!(outer_totalistic, &m)?)?;
@@ -5475,7 +5297,6 @@ pub mod life {
             "lattice_index",
             "mask_offsets",
             "moore",
-            "movie",
             "next_grid",
             "npn_class",
             "outer_totalistic",
@@ -9579,7 +9400,7 @@ pub mod math {
     /// The moire fields layered from sampled designs.
     /// The moire fields.
     pub mod moire {
-        use crate::hand::{ok, PySerde, PyTensor};
+        use crate::hand::{ok, PyImage, PySerde, PyTensor};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -10150,7 +9971,7 @@ pub mod math {
             (crate::gen::math::moire::Preset(ok(out)?)).into_bound_py_any(py)
         }
 
-        /// Quantizes a field into colored levels and encodes PNG bytes.
+        /// Quantizes a field into colored levels and renders them as an image, each sample a scale by scale block.
         #[pyfunction]
         #[pyo3(name = "render", signature = (field, colorizer, levels, symmetric, invert, scale))]
         pub fn render<'py>(
@@ -10165,7 +9986,7 @@ pub mod math {
             let colorizer = colorizer.0;
             let out =
                 mrlyrs::math::moire::render(&field.0, &colorizer, levels, symmetric, invert, scale);
-            (ok(out)?).into_bound_py_any(py)
+            (PyImage(ok(out)?)).into_bound_py_any(py)
         }
 
         /// Layers one design at several side numbers into a field under the chosen combine.
@@ -10231,7 +10052,7 @@ pub mod math {
             sys: &Bound<'_, PyDict>,
         ) -> PyResult<()> {
             let m = PyModule::new(py, "mrlypy.math.moire")?;
-            m.setattr("__doc__", "The moire fields layered from sampled designs.\nThe moire fields.\n\nOne design sampled at many scales and stacked makes an interference pattern; the layers, their\ncombination, the volume they cut and the PNG they render live here.")?;
+            m.setattr("__doc__", "The moire fields layered from sampled designs.\nThe moire fields.\n\nOne design sampled at many scales and stacked makes an interference pattern; the layers, their\ncombination, the volume they cut and the image they render live here.")?;
             m.add_class::<Field>()?;
             m.add_class::<Preset>()?;
             m.add_class::<Volume>()?;
@@ -11765,8 +11586,8 @@ pub mod math {
     /// The hexagon world, the projection of `three`.
     pub mod six {
         use crate::hand::{
-            ok, PyCell2d, PyCell3d, PyCell6d, PyCellNd, PyCode, PyColor, PyRgba, PyRng, PySerde,
-            PyTensor,
+            ok, PyCell2d, PyCell3d, PyCell6d, PyCellNd, PyCode, PyColor, PyImage, PyRgba, PyRng,
+            PySerde, PyTensor,
         };
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
@@ -12233,6 +12054,22 @@ pub mod math {
             (ok(out)?).into_bound_py_any(py)
         }
 
+        /// Rasters a cell's triangles to an image at the given scale, stroked and padded when an outline is given.
+        #[pyfunction]
+        #[pyo3(name = "image", signature = (cell, scale, outline, width))]
+        pub fn image<'py>(
+            py: Python<'py>,
+            cell: PyCell6d,
+            scale: usize,
+            outline: Option<PyColor>,
+            width: usize,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let cell = cell.0;
+            let outline = outline.map(|x| x.0);
+            let out = mrlyrs::math::six::image(&cell, scale, outline, width);
+            (PyImage(ok(out)?)).into_bound_py_any(py)
+        }
+
         /// Returns whether the cell's three sides are equal.
         #[pyfunction]
         #[pyo3(name = "is_cube", signature = (cell))]
@@ -12362,22 +12199,6 @@ pub mod math {
             (PyCell6d(ok(out)?)).into_bound_py_any(py)
         }
 
-        /// Rasters a cell's triangles to PNG bytes at the given scale, stroked and padded when an outline is given.
-        #[pyfunction]
-        #[pyo3(name = "png", signature = (cell, scale, outline, width))]
-        pub fn png<'py>(
-            py: Python<'py>,
-            cell: PyCell6d,
-            scale: usize,
-            outline: Option<PyColor>,
-            width: usize,
-        ) -> PyResult<Bound<'py, PyAny>> {
-            let cell = cell.0;
-            let outline = outline.map(|x| x.0);
-            let out = mrlyrs::math::six::png(&cell, scale, outline, width);
-            (ok(out)?).into_bound_py_any(py)
-        }
-
         /// Projects a cube's three facing sides into a hexagon of fills and voids.
         #[pyfunction]
         #[pyo3(name = "pro", signature = (cell))]
@@ -12455,18 +12276,18 @@ pub mod math {
             (ok(out)?).into_bound_py_any(py)
         }
 
-        /// Rasters the hexagon tiled three by three and cropped to one interlocking rectangle to PNG bytes.
+        /// Rasters the hexagon tiled three by three and cropped to one interlocking rectangle to an image.
         #[pyfunction]
-        #[pyo3(name = "rect_png", signature = (cell, scale, start=None))]
-        pub fn rect_png<'py>(
+        #[pyo3(name = "rect_image", signature = (cell, scale, start=None))]
+        pub fn rect_image<'py>(
             py: Python<'py>,
             cell: PyCell6d,
             scale: usize,
             start: Option<usize>,
         ) -> PyResult<Bound<'py, PyAny>> {
             let cell = cell.0;
-            let out = mrlyrs::math::six::rect_png(&cell, scale, start);
-            (ok(out)?).into_bound_py_any(py)
+            let out = mrlyrs::math::six::rect_image(&cell, scale, start);
+            (PyImage(ok(out)?)).into_bound_py_any(py)
         }
 
         /// Renders the hexagon tiled three by three and cropped to one interlocking rectangle as an SVG string.
@@ -12727,6 +12548,7 @@ pub mod math {
             m.add_function(wrap_pyfunction!(giant_network, &m)?)?;
             m.add_function(wrap_pyfunction!(height, &m)?)?;
             m.add_function(wrap_pyfunction!(holes, &m)?)?;
+            m.add_function(wrap_pyfunction!(image, &m)?)?;
             m.add_function(wrap_pyfunction!(is_cube, &m)?)?;
             m.add_function(wrap_pyfunction!(is_hex, &m)?)?;
             m.add_function(wrap_pyfunction!(iso, &m)?)?;
@@ -12737,14 +12559,13 @@ pub mod math {
             m.add_function(wrap_pyfunction!(pad, &m)?)?;
             m.add_function(wrap_pyfunction!(paint, &m)?)?;
             m.add_function(wrap_pyfunction!(perforate, &m)?)?;
-            m.add_function(wrap_pyfunction!(png, &m)?)?;
             m.add_function(wrap_pyfunction!(pro, &m)?)?;
             m.add_function(wrap_pyfunction!(pro_design, &m)?)?;
             m.add_function(wrap_pyfunction!(radial, &m)?)?;
             m.add_function(wrap_pyfunction!(radial_crop, &m)?)?;
             m.add_function(wrap_pyfunction!(radial_mask, &m)?)?;
             m.add_function(wrap_pyfunction!(raster, &m)?)?;
-            m.add_function(wrap_pyfunction!(rect_png, &m)?)?;
+            m.add_function(wrap_pyfunction!(rect_image, &m)?)?;
             m.add_function(wrap_pyfunction!(rect_svg, &m)?)?;
             m.add_function(wrap_pyfunction!(rim_holes, &m)?)?;
             m.add_function(wrap_pyfunction!(skin, &m)?)?;
@@ -12790,6 +12611,7 @@ pub mod math {
                 "giant_network",
                 "height",
                 "holes",
+                "image",
                 "is_cube",
                 "is_hex",
                 "iso",
@@ -12800,14 +12622,13 @@ pub mod math {
                 "pad",
                 "paint",
                 "perforate",
-                "png",
                 "pro",
                 "pro_design",
                 "radial",
                 "radial_crop",
                 "radial_mask",
                 "raster",
-                "rect_png",
+                "rect_image",
                 "rect_svg",
                 "rim_holes",
                 "skin",
@@ -14667,7 +14488,9 @@ pub mod math {
     /// The flat-cell pipeline: designs, tiles, graphs and renderings in two dimensions.
     /// The flat-cell pipeline.
     pub mod two {
-        use crate::hand::{ok, PyCell2d, PyCellNd, PyCode, PyColor, PyRng, PySerde, PyTensor};
+        use crate::hand::{
+            ok, PyCell2d, PyCellNd, PyCode, PyColor, PyImage, PyRng, PySerde, PyTensor,
+        };
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -14867,6 +14690,24 @@ pub mod math {
             (PyCellNd(ok(out)?)).into_bound_py_any(py)
         }
 
+        /// Renders the cell to an image at the given pixel scale, stroked and padded when an outline is given.
+        #[pyfunction]
+        #[pyo3(name = "image", signature = (cell, scale, outline, width, shape))]
+        pub fn image<'py>(
+            py: Python<'py>,
+            cell: PyCell2d,
+            scale: usize,
+            outline: Option<PyColor>,
+            width: usize,
+            shape: PySerde<mrlyrs::math::two::Shape>,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let cell = cell.0;
+            let outline = outline.map(|x| x.0);
+            let shape = shape.0;
+            let out = mrlyrs::math::two::image(&cell, scale, outline, width, shape);
+            (PyImage(ok(out)?)).into_bound_py_any(py)
+        }
+
         /// Builds the level-set design, filling every residue corner whose digits sum to a named level.
         #[pyfunction]
         #[pyo3(name = "level_set", signature = (number, levels, level, rotation, base))]
@@ -14969,24 +14810,6 @@ pub mod math {
             let cell = cell.0;
             let out = mrlyrs::math::two::perimeter(&cell);
             (out).into_bound_py_any(py)
-        }
-
-        /// Renders the cell to PNG bytes at the given pixel scale, stroked and padded when an outline is given.
-        #[pyfunction]
-        #[pyo3(name = "png", signature = (cell, scale, outline, width, shape))]
-        pub fn png<'py>(
-            py: Python<'py>,
-            cell: PyCell2d,
-            scale: usize,
-            outline: Option<PyColor>,
-            width: usize,
-            shape: PySerde<mrlyrs::math::two::Shape>,
-        ) -> PyResult<Bound<'py, PyAny>> {
-            let cell = cell.0;
-            let outline = outline.map(|x| x.0);
-            let shape = shape.0;
-            let out = mrlyrs::math::two::png(&cell, scale, outline, width, shape);
-            (ok(out)?).into_bound_py_any(py)
         }
 
         /// Builds the point fractal, its seed on at every odd-odd site, deepened to the level.
@@ -15167,7 +14990,7 @@ pub mod math {
             sys: &Bound<'_, PyDict>,
         ) -> PyResult<()> {
             let m = PyModule::new(py, "mrlypy.math.two")?;
-            m.setattr("__doc__", "The flat-cell pipeline: designs, tiles, graphs and renderings in two dimensions.\nThe flat-cell pipeline.\n\nThe shared cell pipeline pinned to two dimensions: coded and carpet cells, their censuses,\ntheir payloads, their text and PNG renderings and their JSON.")?;
+            m.setattr("__doc__", "The flat-cell pipeline: designs, tiles, graphs and renderings in two dimensions.\nThe flat-cell pipeline.\n\nThe shared cell pipeline pinned to two dimensions: coded and carpet cells, their censuses,\ntheir payloads, their text, SVG and pixel renderings and their JSON.")?;
             m.add_function(wrap_pyfunction!(capacity, &m)?)?;
             m.add_function(wrap_pyfunction!(carpet, &m)?)?;
             m.add_function(wrap_pyfunction!(census, &m)?)?;
@@ -15182,6 +15005,7 @@ pub mod math {
             m.add_function(wrap_pyfunction!(from_strings, &m)?)?;
             m.add_function(wrap_pyfunction!(hline, &m)?)?;
             m.add_function(wrap_pyfunction!(htree, &m)?)?;
+            m.add_function(wrap_pyfunction!(image, &m)?)?;
             m.add_function(wrap_pyfunction!(level_set, &m)?)?;
             m.add_function(wrap_pyfunction!(mask, &m)?)?;
             m.add_function(wrap_pyfunction!(merge, &m)?)?;
@@ -15190,7 +15014,6 @@ pub mod math {
             m.add_function(wrap_pyfunction!(noise, &m)?)?;
             m.add_function(wrap_pyfunction!(ones, &m)?)?;
             m.add_function(wrap_pyfunction!(perimeter, &m)?)?;
-            m.add_function(wrap_pyfunction!(png, &m)?)?;
             m.add_function(wrap_pyfunction!(point, &m)?)?;
             m.add_function(wrap_pyfunction!(read, &m)?)?;
             m.add_function(wrap_pyfunction!(sheet, &m)?)?;
@@ -15220,6 +15043,7 @@ pub mod math {
                 "from_strings",
                 "hline",
                 "htree",
+                "image",
                 "level_set",
                 "mask",
                 "merge",
@@ -15228,7 +15052,6 @@ pub mod math {
                 "noise",
                 "ones",
                 "perimeter",
-                "png",
                 "point",
                 "read",
                 "sheet",

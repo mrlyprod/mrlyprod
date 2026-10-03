@@ -5,6 +5,8 @@ const bytes = await Bun.file(new URL("./pkg/life/mrlyjs_life_bg.wasm", import.me
 life.initSync({ module: bytes });
 const rows = await Bun.file(new URL("../mrlyrs/fixtures/life.json", import.meta.url)).json();
 const row = (fn) => rows.find((r) => r.fn === fn);
+const sha256 = (bytes) => new Bun.CryptoHasher("sha256").update(bytes).digest("hex");
+const pixels = (image) => ({ shape: image.shape, sha256: sha256(image.colors) });
 const grid = (seed) => ({ shape: seed.shape, types: Uint8Array.from(seed.data) });
 const carpet = grid({ shape: [4, 4], data: [1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0] });
 const fates = { Dead: "dead", Alive: "alive", Loop: "loop", Timeout: "timeout" };
@@ -56,6 +58,5 @@ test("life::counts", () => {
 test("life::heatmap", () => {
   const r = row("life::heatmap");
   const frames = life.heatmap(run(r.in.grids).grids, r.in.scale);
-  expect(frames.length).toBe(r.out.length);
-  frames.forEach((frame, i) => expect(Array.from(frame)).toEqual(r.out[i]));
+  expect(frames.map(pixels)).toEqual(r.out);
 });

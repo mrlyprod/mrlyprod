@@ -224,11 +224,6 @@ static DOORS: &[Door] = &[
     ("core.Colorizer.gradient_bins", "(background: Color, colors: [Color], shades: usize) -> core.Colorizer", Some(door_core_colorizer_gradient_bins)),
     ("core.Colorizer.heat", "() -> core.Colorizer", Some(door_core_colorizer_heat)),
     ("core.Dtype.max", "(self: core.Dtype) -> i64", Some(door_core_dtype_max)),
-    ("core.Image.colors", "(self: core.Image) -> [[u8; 4]]", Some(door_core_image_colors)),
-    ("core.Image.from_pixels", "(width: usize, height: usize, pixels: [[u8; 4]]) -> core.Image", Some(door_core_image_from_pixels)),
-    ("core.Image.new", "(width: usize, height: usize, rows: [[usize]], palette: [Color]) -> core.Image", Some(door_core_image_new)),
-    ("core.Image.png", "(self: core.Image, scale: usize) -> [u8]", Some(door_core_image_png)),
-    ("core.Image.resample", "(self: core.Image, width: usize, height: usize, filter: core.Filter) -> core.Image", Some(door_core_image_resample)),
     ("core.cell.anti", "(self: Cell) -> Cell", Some(door_core_cell_anti)),
     ("core.cell.binarize", "(self: Cell, threshold: u8) -> Cell", Some(door_core_cell_binarize)),
     ("core.cell.binarize_otsu", "(self: Cell) -> Cell", Some(door_core_cell_binarize_otsu)),
@@ -256,8 +251,6 @@ static DOORS: &[Door] = &[
     ("core.cell.size", "(self: Cell) -> usize", Some(door_core_cell_size)),
     ("core.cell.tile", "(self: Cell, reps: [usize]) -> Cell", Some(door_core_cell_tile)),
     ("core.cell.tile_map", "(shape: [usize], reps: [usize]) -> [usize]", Some(door_core_cell_tile_map)),
-    ("core.codec.gif", "(frames: [[u8]], palette: [[u8; 4]], width: usize, height: usize, scale: usize, delay: usize) -> [u8]", Some(door_core_codec_gif)),
-    ("core.codec.png", "(colors: [[u8; 4]], width: usize, height: usize, scale: usize) -> [u8]", Some(door_core_codec_png)),
     ("core.colors.Theme.hues", "(self: core.colors.Theme) -> [Color; 13]", Some(door_core_colors_theme_hues)),
     ("core.colors.Theme.inks", "(self: core.colors.Theme) -> [Color; 6]", Some(door_core_colors_theme_inks)),
     ("core.colors.alpha", "(self: Color, level: u8) -> Color", Some(door_core_colors_alpha)),
@@ -281,6 +274,9 @@ static DOORS: &[Door] = &[
     ("core.hex_fit", "(pixels: [[u8; 4]], width: usize, height: usize, vertical: bool, filter: core.Filter) -> (usize, usize, [[u8; 4]])", Some(door_core_hex_fit)),
     ("core.hex_size", "(width: usize, height: usize, vertical: bool) -> (usize, usize)", Some(door_core_hex_size)),
     ("core.image.blur", "(pixels: [[u8; 4]], width: usize, height: usize, radius: usize) -> [[u8; 4]]", Some(door_core_image_blur)),
+    ("core.image.new", "(width: usize, height: usize, colors: [[u8; 4]]) -> Image", Some(door_core_image_new)),
+    ("core.image.resample", "(self: Image, width: usize, height: usize, filter: core.Filter) -> Image", Some(door_core_image_resample)),
+    ("core.image.scale", "(self: Image, scale: usize) -> Image", Some(door_core_image_scale)),
     ("core.paint.Config.default", "() -> core.paint.Config", Some(door_core_paint_config_default)),
     ("core.paint.Edition.all", "() -> [core.paint.Edition; 7]", Some(door_core_paint_edition_all)),
     ("core.paint.Edition.mode", "(self: core.paint.Edition) -> core.Mode?", Some(door_core_paint_edition_mode)),
@@ -347,7 +343,6 @@ static DOORS: &[Door] = &[
     ("core.tensor.u32", "(data: [u32], shape: [usize]) -> Tensor", Some(door_core_tensor_u32)),
     ("core.tensor.u32s", "(self: Tensor) -> [u32]", Some(door_core_tensor_u32s)),
     ("core.tensor.u8", "(data: [u8], shape: [usize]) -> Tensor", Some(door_core_tensor_u8)),
-    ("core.unpng", "(bytes: [u8]) -> (usize, usize, [[u8; 4]])", Some(door_core_unpng)),
     ("font.Glyph.height", "(self: font.Glyph) -> usize", Some(door_font_glyph_height)),
     ("font.Glyph.new", "(char: char, rows: [String]) -> font.Glyph", Some(door_font_glyph_new)),
     ("font.Glyph.width", "(self: font.Glyph) -> usize", Some(door_font_glyph_width)),
@@ -382,7 +377,7 @@ static DOORS: &[Door] = &[
     ("gen.Tile.new", "(group: gen.Group) -> gen.Tile", Some(door_gen_tile_new)),
     ("gen.Tile.resize", "(self: gen.Tile) -> null # uncallable: mutates its argument in place", None),
     ("gen.Tile.size", "(self: gen.Tile, width: usize, height: usize) -> gen.Tile", Some(door_gen_tile_size)),
-    ("gen.background", "(seed: u64, width: usize, height: usize) -> [u8]", Some(door_gen_background)),
+    ("gen.background", "(seed: u64, width: usize, height: usize) -> Image", Some(door_gen_background)),
     ("gen.build.Config2d.default", "() -> gen.draw.ConfigNd", Some(door_gen_build_config2d_default)),
     ("gen.build.Config3d.default", "() -> gen.draw.ConfigNd", Some(door_gen_build_config3d_default)),
     ("gen.build.build_2d", "(tile: gen.Tile) -> Cell2d", Some(door_gen_build_build_2d)),
@@ -467,21 +462,20 @@ static DOORS: &[Door] = &[
     ("life.design_mask", "(dimension: usize, code: Code, number: usize, level: usize) -> Tensor", Some(door_life_design_mask)),
     ("life.elementary.output", "(rule: u8, l: u8, c: u8, r: u8) -> u8", Some(door_life_elementary_output)),
     ("life.entropy", "(grid: Cell2d) -> i64", Some(door_life_entropy)),
-    ("life.frames", "(grids: [Cell2d], scale: usize) -> [[u8]]", Some(door_life_frames)),
+    ("life.frames", "(grids: [Cell2d], scale: usize) -> [Image]", Some(door_life_frames)),
     ("life.gasket", "(rule: u8) -> String?", Some(door_life_gasket)),
     ("life.genus", "(rule: u8) -> String", Some(door_life_genus)),
-    ("life.heatmap", "(grids: [Cell2d], scale: usize) -> [[u8]]", Some(door_life_heatmap)),
+    ("life.heatmap", "(grids: [Cell2d], scale: usize) -> [Image]", Some(door_life_heatmap)),
     ("life.history", "(row: [u8], rule: u8, steps: usize, wrap: bool) -> Tensor", Some(door_life_history)),
     ("life.lambda", "(rule: u8) -> f64", Some(door_life_lambda)),
     ("life.lattice_index", "(mask: Tensor) -> usize", Some(door_life_lattice_index)),
     ("life.mask_offsets", "(mask: Tensor) -> [[i64]]", Some(door_life_mask_offsets)),
     ("life.moore", "() -> Cell2d", Some(door_life_moore)),
-    ("life.movie", "(grids: [Cell2d], scale: usize, delay: usize) -> [u8]", Some(door_life_movie)),
     ("life.next_grid", "(cell: Cell2d, birth: [usize], survive: [usize], mask: Tensor, boundary: life.Boundary) -> Cell2d", Some(door_life_next_grid)),
     ("life.npn_class", "(rule: u8) -> [u8]", Some(door_life_npn_class)),
     ("life.outer_totalistic", "(rule: u8) -> ([usize], [usize])?", Some(door_life_outer_totalistic)),
     ("life.popcount", "(rule: u8) -> u32", Some(door_life_popcount)),
-    ("life.render.frame", "(grid: Cell2d, scale: usize) -> [u8]", Some(door_life_render_frame)),
+    ("life.render.frame", "(grid: Cell2d, scale: usize) -> Image", Some(door_life_render_frame)),
     ("life.reversible", "(rule: u8) -> bool", Some(door_life_reversible)),
     ("life.rule_degree", "(rule: u8) -> i32", Some(door_life_rule_degree)),
     ("life.rule_name", "(rule: u8) -> String", Some(door_life_rule_name)),
@@ -739,7 +733,7 @@ static DOORS: &[Door] = &[
     ("math.moire.pairs.correlation", "(m: usize, n: usize) -> f64", Some(door_math_moire_pairs_correlation)),
     ("math.moire.pairs.sampled", "(m: usize, n: usize) -> f64", Some(door_math_moire_pairs_sampled)),
     ("math.moire.pairs.witness", "(scale: usize) -> math.moire.pairs.Witness", Some(door_math_moire_pairs_witness)),
-    ("math.moire.render", "(field: math.moire.Field, colorizer: core.Colorizer, levels: usize, symmetric: bool, invert: bool, scale: usize) -> [u8]", Some(door_math_moire_render)),
+    ("math.moire.render", "(field: math.moire.Field, colorizer: core.Colorizer, levels: usize, symmetric: bool, invert: bool, scale: usize) -> Image", Some(door_math_moire_render)),
     ("math.moire.sample.axes", "(size: usize, lattice: math.moire.Lattice, row: usize) -> ([f64], [f64])", Some(door_math_moire_sample_axes)),
     ("math.moire.sample.membership", "(code: u128, base: usize, dimension: usize) -> [bool]", Some(door_math_moire_sample_membership)),
     ("math.moire.sample.pack", "(residues: [usize], base: usize) -> usize", Some(door_math_moire_sample_pack)),
@@ -846,6 +840,7 @@ static DOORS: &[Door] = &[
     ("math.six.giant_network", "(cell: Cell6d) -> math.graph.Network", Some(door_math_six_giant_network)),
     ("math.six.height", "(self: Cell6d) -> usize", Some(door_math_six_height)),
     ("math.six.holes", "(cell: Cell6d) -> usize", Some(door_math_six_holes)),
+    ("math.six.image", "(cell: Cell6d, scale: usize, outline: Color?, width: usize) -> Image", Some(door_math_six_image)),
     ("math.six.is_cube", "(cell: Cell3d) -> bool", Some(door_math_six_is_cube)),
     ("math.six.is_hex", "(cell: Cell2d) -> bool", Some(door_math_six_is_hex)),
     ("math.six.iso", "(cell: Cell3d) -> Cell6d", Some(door_math_six_iso)),
@@ -856,14 +851,13 @@ static DOORS: &[Door] = &[
     ("math.six.pad", "(cell: Cell6d, k: usize, value: u8) -> Cell6d", Some(door_math_six_pad)),
     ("math.six.paint", "(cell: Cell6d, custom: {u8: [Color]}?, mode: core.Mode?, rng: Rng(seed)?) -> Cell6d", Some(door_math_six_paint)),
     ("math.six.perforate", "(self: Cell6d, mask: Tensor, value: u8) -> Cell6d", Some(door_math_six_perforate)),
-    ("math.six.png", "(cell: Cell6d, scale: usize, outline: Color?, width: usize) -> [u8]", Some(door_math_six_png)),
     ("math.six.pro", "(cell: Cell3d) -> Cell6d", Some(door_math_six_pro)),
     ("math.six.pro_design", "(code: Code, number: usize, level: usize, base: usize) -> Cell6d", Some(door_math_six_pro_design)),
     ("math.six.radial", "(cell: Cell6d, radius: usize) -> Cell2d", Some(door_math_six_radial)),
     ("math.six.radial_crop", "(cell: Cell2d, radius: usize, size: (usize, usize)) -> Cell2d", Some(door_math_six_radial_crop)),
     ("math.six.radial_mask", "(radius: usize, orient: math.six.Orientation) -> Tensor", Some(door_math_six_radial_mask)),
     ("math.six.raster", "(cell: Cell6d, size: usize) -> [f32]", Some(door_math_six_raster)),
-    ("math.six.rect_png", "(cell: Cell6d, scale: usize, start: usize?) -> [u8]", Some(door_math_six_rect_png)),
+    ("math.six.rect_image", "(cell: Cell6d, scale: usize, start: usize?) -> Image", Some(door_math_six_rect_image)),
     ("math.six.rect_svg", "(cell: Cell6d, scale: usize, start: usize?) -> String", Some(door_math_six_rect_svg)),
     ("math.six.rim_holes", "(cell: Cell6d) -> usize", Some(door_math_six_rim_holes)),
     ("math.six.skin", "(cell: Cell6d) -> Cell6d", Some(door_math_six_skin)),
@@ -1022,6 +1016,7 @@ static DOORS: &[Door] = &[
     ("math.two.from_strings", "(rows: [String]) -> Cell2d", Some(door_math_two_from_strings)),
     ("math.two.hline", "(number: usize, level: usize) -> Cell2d", Some(door_math_two_hline)),
     ("math.two.htree", "(number: usize, level: usize) -> Cell2d", Some(door_math_two_htree)),
+    ("math.two.image", "(cell: Cell2d, scale: usize, outline: Color?, width: usize, shape: math.two.Shape) -> Image", Some(door_math_two_image)),
     ("math.two.level_set", "(number: usize, levels: [usize], level: usize, rotation: usize, base: usize) -> Cell2d", Some(door_math_two_level_set)),
     ("math.two.mask", "(mask: Tensor, shape: [usize]) -> Tensor", Some(door_math_two_mask)),
     ("math.two.merge", "(cells: [Cell2d], width: usize, height: usize) -> Cell2d", Some(door_math_two_merge)),
@@ -1031,7 +1026,6 @@ static DOORS: &[Door] = &[
     ("math.two.ones", "(number: usize, level: usize) -> Cell2d", Some(door_math_two_ones)),
     ("math.two.payload.frame", "() -> Tensor", Some(door_math_two_payload_frame)),
     ("math.two.perimeter", "(cell: Cell2d) -> u128", Some(door_math_two_perimeter)),
-    ("math.two.png", "(cell: Cell2d, scale: usize, outline: Color?, width: usize, shape: math.two.Shape) -> [u8]", Some(door_math_two_png)),
     ("math.two.point", "(number: usize, level: usize) -> Cell2d", Some(door_math_two_point)),
     ("math.two.read", "(sheet: Cell2d, carrier: Cell2d) -> [u8]", Some(door_math_two_read)),
     ("math.two.sheet", "(cells: [Cell2d; 4], payload: [u8]) -> Cell2d", Some(door_math_two_sheet)),
@@ -1430,57 +1424,6 @@ fn door_core_dtype_max(name: &str, args: &[Value]) -> Done {
     Ok(give!(mrlyrs::core::Dtype::max(a0)))
 }
 
-fn door_core_image_colors(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: mrlyrs::core::Image = take!(name, 0, &args[0]);
-    Ok(give!(mrlyrs::core::Image::colors(&a0)))
-}
-
-fn door_core_image_from_pixels(name: &str, args: &[Value]) -> Done {
-    count(name, args, 3)?;
-    let a0: usize = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    let a2: Vec<[u8; 4]> = take!(name, 2, &args[2]);
-    Ok(give!(mrlyrs::core::Image::from_pixels(a0, a1, &a2)))
-}
-
-fn door_core_image_new(name: &str, args: &[Value]) -> Done {
-    count(name, args, 4)?;
-    let a0: usize = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    let a2: Vec<Vec<usize>> = take!(name, 2, &args[2]);
-    let a3: Vec<mrlyrs::core::Color> = {
-        let mut list0 = Vec::new();
-        for item0 in items(name, 3, &args[3])? {
-            list0.push(color(name, 3, item0)?);
-        }
-        list0
-    };
-    Ok(give!(mrlyrs::core::Image::new(a0, a1, a2, a3)))
-}
-
-fn door_core_image_png(name: &str, args: &[Value]) -> Done {
-    count(name, args, 2)?;
-    let a0: mrlyrs::core::Image = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    match mrlyrs::core::Image::png(&a0, a1) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_core_image_resample(name: &str, args: &[Value]) -> Done {
-    count(name, args, 4)?;
-    let a0: mrlyrs::core::Image = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    let a2: usize = take!(name, 2, &args[2]);
-    let a3: mrlyrs::core::Filter = take!(name, 3, &args[3]);
-    match mrlyrs::core::Image::resample(&a0, a1, a2, a3) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
 fn door_core_cell_anti(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::core::Cell = take!(name, 0, &args[0]);
@@ -1743,33 +1686,6 @@ fn door_core_cell_tile_map(name: &str, args: &[Value]) -> Done {
     }
 }
 
-fn door_core_codec_gif(name: &str, args: &[Value]) -> Done {
-    count(name, args, 6)?;
-    let a0: Vec<Vec<u8>> = take!(name, 0, &args[0]);
-    let b0: Vec<&[u8]> = a0.iter().map(|item| item.as_slice()).collect();
-    let a1: Vec<[u8; 4]> = take!(name, 1, &args[1]);
-    let a2: usize = take!(name, 2, &args[2]);
-    let a3: usize = take!(name, 3, &args[3]);
-    let a4: usize = take!(name, 4, &args[4]);
-    let a5: usize = take!(name, 5, &args[5]);
-    match mrlyrs::core::codec::gif(&b0, &a1, a2, a3, a4, a5) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_core_codec_png(name: &str, args: &[Value]) -> Done {
-    count(name, args, 4)?;
-    let a0: Vec<[u8; 4]> = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    let a2: usize = take!(name, 2, &args[2]);
-    let a3: usize = take!(name, 3, &args[3]);
-    match mrlyrs::core::codec::png(&a0, a1, a2, a3) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
 fn door_core_colors_theme_hues(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::core::colors::Theme = take!(name, 0, &args[0]);
@@ -1987,6 +1903,39 @@ fn door_core_image_blur(name: &str, args: &[Value]) -> Done {
     let a2: usize = take!(name, 2, &args[2]);
     let a3: usize = take!(name, 3, &args[3]);
     Ok(give!(mrlyrs::core::image::blur(&a0, a1, a2, a3)))
+}
+
+fn door_core_image_new(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: usize = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    let a2: Vec<[u8; 4]> = take!(name, 2, &args[2]);
+    match mrlyrs::core::Image::new(a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_core_image_resample(name: &str, args: &[Value]) -> Done {
+    count(name, args, 4)?;
+    let a0: mrlyrs::core::Image = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    let a2: usize = take!(name, 2, &args[2]);
+    let a3: mrlyrs::core::Filter = take!(name, 3, &args[3]);
+    match mrlyrs::core::Image::resample(&a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_core_image_scale(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: mrlyrs::core::Image = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    match mrlyrs::core::Image::scale(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_core_paint_config_default(name: &str, args: &[Value]) -> Done {
@@ -2449,15 +2398,6 @@ fn door_core_tensor_u8(name: &str, args: &[Value]) -> Done {
     let a0: Vec<u8> = take!(name, 0, &args[0]);
     let a1: Vec<usize> = take!(name, 1, &args[1]);
     match mrlyrs::core::Tensor::u8(a0, a1) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_core_unpng(name: &str, args: &[Value]) -> Done {
-    count(name, args, 1)?;
-    let a0: Vec<u8> = take!(name, 0, &args[0]);
-    match mrlyrs::core::unpng(&a0) {
         Ok(value) => Ok(give!(value)),
         Err(error) => Err(Fail::Error(error.to_string())),
     }
@@ -3397,17 +3337,6 @@ fn door_life_mask_offsets(name: &str, args: &[Value]) -> Done {
 fn door_life_moore(name: &str, args: &[Value]) -> Done {
     count(name, args, 0)?;
     match mrlyrs::life::moore() {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
-fn door_life_movie(name: &str, args: &[Value]) -> Done {
-    count(name, args, 3)?;
-    let a0: Vec<mrlyrs::math::cell::models::CellNd<2>> = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    let a2: usize = take!(name, 2, &args[2]);
-    match mrlyrs::life::movie(&a0, a1, a2) {
         Ok(value) => Ok(give!(value)),
         Err(error) => Err(Fail::Error(error.to_string())),
     }
@@ -7169,6 +7098,22 @@ fn door_math_six_holes(name: &str, args: &[Value]) -> Done {
     }
 }
 
+fn door_math_six_image(name: &str, args: &[Value]) -> Done {
+    count(name, args, 4)?;
+    let a0: mrlyrs::math::six::Cell6d = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    let a2: Option<mrlyrs::core::Color> = if Value::is_null(&args[2]) {
+        None
+    } else {
+        Some(color(name, 2, &args[2])?)
+    };
+    let a3: usize = take!(name, 3, &args[3]);
+    match mrlyrs::math::six::image(&a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
 fn door_math_six_is_cube(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
@@ -7290,22 +7235,6 @@ fn door_math_six_perforate(name: &str, args: &[Value]) -> Done {
     }
 }
 
-fn door_math_six_png(name: &str, args: &[Value]) -> Done {
-    count(name, args, 4)?;
-    let a0: mrlyrs::math::six::Cell6d = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    let a2: Option<mrlyrs::core::Color> = if Value::is_null(&args[2]) {
-        None
-    } else {
-        Some(color(name, 2, &args[2])?)
-    };
-    let a3: usize = take!(name, 3, &args[3]);
-    match mrlyrs::math::six::png(&a0, a1, a2, a3) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
-}
-
 fn door_math_six_pro(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::cell::models::CellNd<3> = take!(name, 0, &args[0]);
@@ -7365,12 +7294,12 @@ fn door_math_six_raster(name: &str, args: &[Value]) -> Done {
     }
 }
 
-fn door_math_six_rect_png(name: &str, args: &[Value]) -> Done {
+fn door_math_six_rect_image(name: &str, args: &[Value]) -> Done {
     count(name, args, 3)?;
     let a0: mrlyrs::math::six::Cell6d = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     let a2: Option<usize> = take!(name, 2, &args[2]);
-    match mrlyrs::math::six::rect_png(&a0, a1, a2) {
+    match mrlyrs::math::six::rect_image(&a0, a1, a2) {
         Ok(value) => Ok(give!(value)),
         Err(error) => Err(Fail::Error(error.to_string())),
     }
@@ -8872,6 +8801,23 @@ fn door_math_two_htree(name: &str, args: &[Value]) -> Done {
     }
 }
 
+fn door_math_two_image(name: &str, args: &[Value]) -> Done {
+    count(name, args, 5)?;
+    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    let a2: Option<mrlyrs::core::Color> = if Value::is_null(&args[2]) {
+        None
+    } else {
+        Some(color(name, 2, &args[2])?)
+    };
+    let a3: usize = take!(name, 3, &args[3]);
+    let a4: mrlyrs::math::two::Shape = take!(name, 4, &args[4]);
+    match mrlyrs::math::two::image(&a0, a1, a2, a3, a4) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
 fn door_math_two_level_set(name: &str, args: &[Value]) -> Done {
     count(name, args, 5)?;
     let a0: usize = take!(name, 0, &args[0]);
@@ -8959,23 +8905,6 @@ fn door_math_two_perimeter(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
     Ok(Value::String(mrlyrs::math::two::perimeter(&a0).to_string()))
-}
-
-fn door_math_two_png(name: &str, args: &[Value]) -> Done {
-    count(name, args, 5)?;
-    let a0: mrlyrs::math::cell::models::CellNd<2> = take!(name, 0, &args[0]);
-    let a1: usize = take!(name, 1, &args[1]);
-    let a2: Option<mrlyrs::core::Color> = if Value::is_null(&args[2]) {
-        None
-    } else {
-        Some(color(name, 2, &args[2])?)
-    };
-    let a3: usize = take!(name, 3, &args[3]);
-    let a4: mrlyrs::math::two::Shape = take!(name, 4, &args[4]);
-    match mrlyrs::math::two::png(&a0, a1, a2, a3, a4) {
-        Ok(value) => Ok(give!(value)),
-        Err(error) => Err(Fail::Error(error.to_string())),
-    }
 }
 
 fn door_math_two_point(name: &str, args: &[Value]) -> Done {

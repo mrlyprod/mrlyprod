@@ -1,4 +1,3 @@
-import hashlib
 import json
 
 from mrlypy import gen
@@ -52,8 +51,7 @@ def test_variation_create(row):
     assert name.Tile.of(made.tile).to_json() == r["out"]["tile"]
 
 
-def test_background(row):
+def test_background(row, pixels):
     r = row("gen::background")
     i = r["in"]
-    png = gen.background(i["seed"], i["width"], i["height"])
-    assert hashlib.sha256(png).hexdigest() == r["out"]
+    assert pixels(gen.background(i["seed"], i["width"], i["height"])) == r["out"]

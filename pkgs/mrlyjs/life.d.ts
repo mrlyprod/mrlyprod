@@ -21,6 +21,11 @@ export interface Cell6d {
     orientation: "Horizontal" | "Vertical";
     start: number;
 }
+/** An image: its height and width, and its flat rgba colors row by row. */
+export interface Image {
+    shape: [number, number];
+    colors: Uint8Array;
+}
 /** A color inside plain data, serde's form. */
 export interface ColorData {
     r: number;
@@ -85,14 +90,14 @@ export function cube_orbit(rule: number): Uint8Array;
 export function design_mask(dimension: number, code: string | number | bigint, number: number, level: number): Tensor;
 /** Returns the grid's binary Shannon entropy in millibits. */
 export function entropy(grid: Cell): bigint;
-/** Renders grids to white-on-black PNG bytes at a pixel scale. */
-export function frames(grids: Cell[], scale: number): Uint8Array[];
+/** Renders grids to white-on-black images at a pixel scale. */
+export function frames(grids: Cell[], scale: number): Image[];
 /** Returns the base-2 plane design a rule's single seed draws, or None when it draws none. */
 export function gasket(rule: number): string | undefined;
 /** Returns the genus of a rule's cube class: `iso` when it meets a level set, `axis` when it meets an axis-pinned block, else `comp`. */
 export function genus(rule: number): string;
 /** Renders a whole run's cumulative-visit heatmap frames with the heat ramp. */
-export function heatmap(grids: Cell[], scale: number): Uint8Array[];
+export function heatmap(grids: Cell[], scale: number): Image[];
 /** Returns the space-time diagram of a seed row, row 0 the seed and then one row per generation. */
 export function history(row: ArrayLike<number>, rule: number, steps: number, wrap: boolean): Tensor;
 /** Returns Langton's lambda, the popcount over eight. */
@@ -103,8 +108,6 @@ export function lattice_index(mask: Tensor): number;
 export function mask_offsets(mask: Tensor): BigInt64Array[];
 /** Builds the 3 by 3 Moore mask, every site on but the center. */
 export function moore(): Cell;
-/** Renders grids into one looping black-on-white gif, the delay in hundredths of a second. */
-export function movie(grids: Cell[], scale: number, delay: number): Uint8Array;
 /** Advances a grid one generation under birth and survive counts, a neighbor mask and a boundary. */
 export function next_grid(cell: Cell, birth: ArrayLike<number>, survive: ArrayLike<number>, mask: Tensor, boundary: Boundary): Cell;
 /** Returns the rules a rule reaches under the cube group together with the output complement, its NPN class, in ascending order. */
@@ -327,8 +330,8 @@ export declare namespace elementary {
     export function output(rule: number, l: number, c: number, r: number): number;
 }
 export declare namespace render {
-    /** Renders one grid to white-on-black PNG bytes at a pixel scale. */
-    export function frame(grid: Cell, scale: number): Uint8Array;
+    /** Renders one grid to a white-on-black image at a pixel scale. */
+    export function frame(grid: Cell, scale: number): Image;
 }
 export declare namespace source {
     /** Generates the sequence's values up to the limit. */

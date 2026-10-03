@@ -1,8 +1,12 @@
+use figures::out::root;
 use figures::{ink, plot, save, Board, Frame};
 use mrlyrs::core::error::Result;
 use mrlyrs::num::design::elements;
 use mrlyrs::num::zeta::{Complex, Line};
+use mrlyrs::Error;
+use std::path::PathBuf;
 
+const NAME: &str = "research-zeta";
 const PEEL: u32 = 8;
 const DEPTH: usize = 10;
 const CUT: f64 = 16.0;
@@ -338,9 +342,50 @@ fn panel(board: &mut Board, frame: Frame, p: &Panel) {
     }
 }
 
+// FILE
+
+fn path() -> PathBuf {
+    root()
+        .join("files")
+        .join("figures")
+        .join("census")
+        .join(format!("{NAME}.json"))
+}
+
+fn numbers(values: &[f64]) -> String {
+    let body: Vec<String> = values.iter().map(|value| value.to_string()).collect();
+    format!("[{}]", body.join(","))
+}
+
+fn points(zeros: &[Complex]) -> String {
+    let body: Vec<String> = zeros.iter().map(|z| numbers(&[z.re, z.im])).collect();
+    format!("[{}]", body.join(","))
+}
+
+fn record(p: &Panel) -> String {
+    format!(
+        "{{\"columns\":{},\"ordinates\":{},\"family\":{},\"teeth\":{},\"hollow\":{}}}",
+        numbers(&[p.alpha, p.alpha - 1.0]),
+        numbers(&ordinates(p.lq, HEIGHT)),
+        points(&p.family),
+        points(&p.teeth),
+        points(&p.hollow)
+    )
+}
+
+fn write_data(d: &Panel, f: &Panel) -> Result<PathBuf> {
+    let file = path();
+    let folder = file.parent().unwrap().to_path_buf();
+    std::fs::create_dir_all(&folder)
+        .map_err(|e| Error::Value(format!("cannot make {folder:?}: {e}")))?;
+    let body = format!("{{\"design\":{},\"full\":{}}}", record(d), record(f));
+    std::fs::write(&file, body).map_err(|e| Error::Value(format!("cannot write {file:?}: {e}")))?;
+    Ok(file)
+}
+
 // PRESS
 
-fn main() -> Result<()> {
+fn panels() -> (Panel, Panel) {
     let design = Ladder::new(3, &[0, 1]);
     let full = Ladder::new(2, &[0, 1]);
     let known = Line::new().zeros(6);
@@ -384,7 +429,22 @@ fn main() -> Result<()> {
     assert!(fz
         .iter()
         .all(|z| z.re > full.alpha - WIDE && z.re < full.alpha + REACH));
+    (d, f)
+}
 
+fn compute() -> Result<()> {
+    let (d, f) = panels();
+    let file = write_data(&d, &f)?;
+    println!(
+        "{NAME} census {} and {} zeros -> {file:?}",
+        d.teeth.len() + d.family.len() + d.hollow.len(),
+        f.teeth.len() + f.family.len() + f.hollow.len()
+    );
+    Ok(())
+}
+
+fn draw() -> Result<()> {
+    let (d, f) = panels();
     let mut board = Board::square();
     let area = board.area(0.08);
     let wide = area.w * 0.45;
@@ -393,6 +453,13 @@ fn main() -> Result<()> {
     let bottom = Frame::new(area.x + area.w - wide, area.y + area.h - tall, wide, tall);
     panel(&mut board, top, &d);
     panel(&mut board, bottom, &f);
-    save("research-zeta", &board)?;
+    save(NAME, &board)?;
     Ok(())
+}
+
+fn main() -> Result<()> {
+    if std::env::args().nth(1).as_deref() == Some("compute") {
+        return compute();
+    }
+    draw()
 }

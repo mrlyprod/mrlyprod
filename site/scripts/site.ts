@@ -1,3 +1,4 @@
+import type { BunPlugin } from "bun";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { createElement as h } from "react";
@@ -109,10 +110,71 @@ type Fig = ReturnType<typeof press>;
 
 const pic = (fig: Fig, name: string, route: string, alt: string, extra = "", cls = "") => themed(fig(name, route), alt, cls, extra);
 
-const hero = (fig: Fig, name: string, route: string, alt: string) =>
-  `<figure class="opener">${pic(fig, name, route, alt)}</figure>`;
+const hero = (fig: Fig, name: string, route: string, alt: string, live = false) =>
+  `<figure class="opener"${live ? ` data-live="${name}"` : ""}>${pic(fig, name, route, alt)}</figure>`;
 
 const grid = (nodes: Node[]) => renderToStaticMarkup(h(Grid, { nodes }));
+
+/* LIVE */
+
+type Live = { name: string; file: string; units: string[]; inputs: string[] };
+
+const DRAWS = resolve(org, "../figures");
+const MRLYJS = resolve(org, "../pkgs/mrlyjs");
+const EXPORTS = JSON.parse(read(join(MRLYJS, "package.json"))).exports as Record<string, { default?: string }>;
+const GLUE = join(org, "demos", "live.js");
+const GLUE_SRC = "/live.js";
+const UNIT = /^mrlyjs\/([a-z]+)$/;
+const scanner = new Bun.Transpiler({ loader: "ts" });
+
+const unitWasm = (unit: string) => join(org, "pkg", unit, `mrlyjs_${unit}_bg.wasm`);
+
+let LIVE: Live[] = [];
+
+function sources(file: string, seen = new Set<string>()) {
+  if (seen.has(file)) return seen;
+  seen.add(file);
+  if (!/\.[cm]?[jt]s$/.test(file)) return seen;
+  for (const { path } of scanner.scanImports(read(file))) if (path.startsWith(".")) sources(Bun.resolveSync(path, dirname(file)), seen);
+  return seen;
+}
+
+function live(): Live[] {
+  const kit = walk(join(MRLYJS, "view"), false).filter((file) => !file.endsWith(".test.js"));
+  return walk(DRAWS, false).flatMap((file) => {
+    const name = file.slice(DRAWS.length + 1, -3);
+    if (!file.endsWith(".ts") || !NAME.test(name)) return [];
+    const { exports, imports } = scanner.scan(read(file));
+    if (!exports.includes("loop") || !exports.includes("default")) return [];
+    const units = imports.flatMap((one) => one.path.match(UNIT)?.slice(1) ?? []).filter((unit) => unit !== "view");
+    for (const unit of units) {
+      if (!existsSync(unitWasm(unit))) throw new Error(`site: figures/${name}.ts animates with mrlyjs/${unit}, and site/pkg/${unit}/ does not hold it; scripts/wasm.sh copies the live units there`);
+    }
+    return [{ name, file, units, inputs: [...sources(file), ...kit, ...units.map((unit) => join(MRLYJS, `${unit}.js`))] }];
+  });
+}
+
+function roster(list: Live[]) {
+  const units = [...new Set(list.flatMap((one) => one.units))].sort();
+  return [
+    ...units.map((unit) => `import ${unit} from ${JSON.stringify(unitWasm(unit))};`),
+    `export const units = { ${units.join(", ")} };`,
+    `export const figures = { ${list.map((one) => `${JSON.stringify(one.name)}: () => import(${JSON.stringify(one.file)})`).join(", ")} };`,
+  ].join("\n");
+}
+
+const mrlyjs = (list: Live[]): BunPlugin => ({
+  name: "mrlyjs",
+  setup(build) {
+    build.onResolve({ filter: /^mrlyjs\// }, ({ path }) => {
+      const door = EXPORTS[`./${path.slice(7)}`]?.default;
+      return door ? { path: join(MRLYJS, door) } : undefined;
+    });
+    build.onResolve({ filter: /^\.\/pkg\// }, ({ path, importer }) => (dirname(importer) === MRLYJS ? { path: join(org, path) } : undefined));
+    build.onResolve({ filter: /^live:figures$/ }, ({ path }) => ({ path, namespace: "live" }));
+    build.onLoad({ filter: /.*/, namespace: "live" }, () => ({ contents: roster(list), loader: "js" }));
+  },
+});
 
 /* HEAD */
 
@@ -277,7 +339,7 @@ export const demoTree = (site: Site) => shelved(cards(site));
 
 function demoGroup(site: Site): Route {
   const list = cards(site);
-  const gallery = [demoShell(site, ""), join(demoHome(site, ""), "index.jsx")];
+  const gallery = [demoShell(site, ""), join(demoHome(site, ""), "index.jsx"), GLUE, ...LIVE.flatMap((one) => one.inputs)];
   const inputs = [...gallery, ...["demos", "lib", "pkg", "ui"].flatMap((one) => site.input(one).files)];
   return {
     route: "/demos/",
@@ -359,12 +421,13 @@ async function demos(site: Site, route: Route): Promise<Output[]> {
   const views = relative(home, site.input("demos").path);
   const served = (path: string) => (path.startsWith(`${views}/`) ? `demos/${path.slice(views.length + 1)}` : path);
   const built = await Bun.build({
-    entrypoints: [...list.map((d) => demoShell(site, d.name)), ...widgetFiles(site)],
+    entrypoints: [...list.map((d) => demoShell(site, d.name)), ...widgetFiles(site), ...(LIVE.length ? [GLUE] : [])],
     root: home,
     splitting: true,
     minify: true,
     define: { "process.env.NODE_ENV": '"production"' },
     naming: { chunk: "lib-[hash].[ext]", asset: "[name]-[hash].[ext]" },
+    plugins: [mrlyjs(LIVE)],
   });
   if (!built.success) throw new Error(`site: the demos failed to bundle\n${built.logs.join("\n")}`);
   const shells = new Map(list.map((d) => [relative(home, demoShell(site, d.name)), d]));
@@ -887,7 +950,7 @@ function thin(site: Site, route: Route): Output[] {
 
 /* WIKI */
 
-type Entry = { slug: string; name: string; lead: string; figure: string; needs: string[]; body: string; file: string; href: string };
+type Entry = { slug: string; name: string; lead: string; figure: string; live: boolean; needs: string[]; body: string; file: string; href: string };
 
 type Concept = Omit<Entry, "body" | "file"> & { before: { slug: string; name: string }[]; after: { slug: string; name: string }[] };
 
@@ -916,7 +979,8 @@ function wiki(site: Site): Entry[] {
     const slug = file.slice(home.path.length + 1, -3);
     const { data, body } = front(read(file));
     const needs = (data.prerequisites ?? "").split(",").map((s: string) => s.trim()).filter(Boolean);
-    return { slug, name: data.title ?? slug, lead: data.lead ?? lede(body), figure: data.figure || `wiki-${slug}`, needs, body, file, href: wikiRoute(slug) };
+    const figure = data.figure || `wiki-${slug}`;
+    return { slug, name: data.title ?? slug, lead: data.lead ?? lede(body), figure, live: LIVE.some((one) => one.name === figure), needs, body, file, href: wikiRoute(slug) };
   });
   const known = new Set(list.map((e) => e.slug));
   for (const e of list) for (const need of e.needs) if (!known.has(need)) throw new Error(`site: research/wiki/${e.slug}.md needs ${need}, and research/wiki/${need}.md does not exist`);
@@ -960,7 +1024,7 @@ function concept(site: Site, route: Route): Output[] {
   const after = c.after.length ? `\n<section><h2 id="next">Read next</h2><p>${cite(c.after)}.</p></section>` : "";
   const head = `<div class="lede"><h1 id="${escape(c.slug)}">${escape(c.name)}</h1><p class="lead">${escape(c.lead)}</p></div>`;
   const prose = md(front(read(file)).body, { math, link: links(site, file, out), widget: widgets(site, used) });
-  const body = `${hero(fig, c.figure, route.route, c.name)}\n${head}${before}\n${prose}${after}`;
+  const body = `${hero(fig, c.figure, route.route, c.name, c.live)}\n${head}${before}\n${prose}${after}`;
   const data = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -970,7 +1034,7 @@ function concept(site: Site, route: Route): Output[] {
     image: `${root}/figures/${c.figure}-dark.png`,
     author: { "@type": "Organization", name: AUTHOR },
   };
-  const scripts = [...used].sort().map((name) => `/demos/${name}/widget.js`);
+  const scripts = [...[...used].sort().map((name) => `/demos/${name}/widget.js`), ...(c.live ? [GLUE_SRC] : [])];
   out.push({ path: pageOf(route.route), bytes: shell(site, { route: route.route, name: c.name, description: c.lead, body, data, image: picture(site, c.figure, route.route, fig), scripts }) });
   return out;
 }
@@ -1035,6 +1099,7 @@ const folder = (site: Site, input: string, one: { name: string; href: string }, 
 
 async function collect(site: Site) {
   SHELF = await shelf();
+  LIVE = live();
   const paperList = papers(site);
   const fresh = new Set(paperList.map((p) => p.slug));
   const laneList = lanes().filter((p) => !fresh.has(p.slug));

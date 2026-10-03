@@ -227,8 +227,8 @@ def design_mask(dimension: int, code: int, number: int, level: int) -> NDArray[A
 def entropy(grid: dict[str, Any]) -> int:
     """Returns the grid's binary Shannon entropy in millibits."""
 
-def frames(grids: list[dict[str, Any]], scale: int) -> list[bytes]:
-    """Renders grids to white-on-black PNG bytes at a pixel scale."""
+def frames(grids: list[dict[str, Any]], scale: int) -> list[NDArray[Any]]:
+    """Renders grids to white-on-black images at a pixel scale."""
 
 def gasket(rule: int) -> str | None:
     """Returns the base-2 plane design a rule's single seed draws, or None when it draws none."""
@@ -236,7 +236,7 @@ def gasket(rule: int) -> str | None:
 def genus(rule: int) -> str:
     """Returns the genus of a rule's cube class: `iso` when it meets a level set, `axis` when it meets an axis-pinned block, else `comp`."""
 
-def heatmap(grids: list[dict[str, Any]], scale: int) -> list[bytes]:
+def heatmap(grids: list[dict[str, Any]], scale: int) -> list[NDArray[Any]]:
     """Renders a whole run's cumulative-visit heatmap frames with the heat ramp."""
 
 def history(row: bytes, rule: int, steps: int, wrap: bool) -> NDArray[Any]:
@@ -253,9 +253,6 @@ def mask_offsets(mask: NDArray[Any]) -> list[list[int]]:
 
 def moore() -> dict[str, Any]:
     """Builds the 3 by 3 Moore mask, every site on but the center."""
-
-def movie(grids: list[dict[str, Any]], scale: int, delay: int) -> bytes:
-    """Renders grids into one looping black-on-white gif, the delay in hundredths of a second."""
 
 def next_grid(cell: dict[str, Any], birth: list[int], survive: list[int], mask: NDArray[Any], boundary: Literal["Constant", "Wrap"]) -> dict[str, Any]:
     """Advances a grid one generation under birth and survive counts, a neighbor mask and a boundary."""

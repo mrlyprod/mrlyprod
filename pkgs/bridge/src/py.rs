@@ -26,6 +26,7 @@ const HAND_SELF: &[(&str, &str)] = &[
     ("Cell", "cell"),
     ("CellNd", "cell"),
     ("Cell6d", "cell"),
+    ("Image", "image"),
     ("Color", "color"),
     ("Code", "code"),
     ("Rng", "rng"),
@@ -34,7 +35,7 @@ const HAND_SELF: &[(&str, &str)] = &[
 const HEADER: &str = "#![allow(clippy::too_many_arguments)]\n";
 
 const HAND_NAMES: &[&str] = &[
-    "ok", "PyCell", "PyCell2d", "PyCell3d", "PyCell6d", "PyCellNd", "PyCode", "PyColor",
+    "ok", "PyCell", "PyCell2d", "PyCell3d", "PyCell6d", "PyCellNd", "PyCode", "PyColor", "PyImage",
     "PyPixels", "PyRgba", "PyRng", "PySerde", "PyTensor",
 ];
 
@@ -482,6 +483,7 @@ fn hand_decl(name: &str, dim: Option<u8>) -> Result<String> {
             _ => return Err("a cell of undecided dimension".into()),
         },
         "Cell6d" => "PyCell6d",
+        "Image" => "PyImage",
         "Color" => "PyColor",
         "Code" => "PyCode",
         "Rng" => "PyRng",
@@ -496,6 +498,7 @@ fn hand_into(name: &str) -> Result<&'static str> {
         "Cell" => "PyCell",
         "CellNd" => "PyCellNd",
         "Cell6d" => "PyCell6d",
+        "Image" => "PyImage",
         "Color" => "PyColor",
         "Code" => "PyCode",
         "Rng" => "PyRng",
@@ -1733,7 +1736,7 @@ fn py_type(cx: &Cx, ty: &Ty, here: &str) -> String {
             py_type(cx, value, here)
         ),
         Ty::Hand { name, .. } => match name.as_str() {
-            "Tensor" => "NDArray[Any]".into(),
+            "Tensor" | "Image" => "NDArray[Any]".into(),
             "Color" => "tuple[int, int, int, int]".into(),
             "Code" => "int".into(),
             "Rng" => qualified("core", "Rng", here),

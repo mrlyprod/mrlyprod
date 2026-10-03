@@ -13,8 +13,6 @@ pub enum Error {
     Overflow(String),
     /// A json text that would not parse, carrying the reader's own error.
     Json(serde_json::Error),
-    /// A png or gif codec that refused, carrying its message.
-    Codec(String),
 }
 
 impl fmt::Display for Error {
@@ -24,7 +22,6 @@ impl fmt::Display for Error {
             Error::Shape(message) => write!(f, "{message}"),
             Error::Overflow(message) => write!(f, "{message}"),
             Error::Json(error) => write!(f, "json: {error}"),
-            Error::Codec(message) => write!(f, "{message}"),
         }
     }
 }
@@ -71,24 +68,6 @@ pub fn overflow_error<T>(message: impl Into<String>) -> Result<T> {
 impl From<serde_json::Error> for Error {
     fn from(error: serde_json::Error) -> Error {
         Error::Json(error)
-    }
-}
-
-impl From<png::EncodingError> for Error {
-    fn from(error: png::EncodingError) -> Error {
-        Error::Codec(error.to_string())
-    }
-}
-
-impl From<png::DecodingError> for Error {
-    fn from(error: png::DecodingError) -> Error {
-        Error::Codec(error.to_string())
-    }
-}
-
-impl From<gif::EncodingError> for Error {
-    fn from(error: gif::EncodingError) -> Error {
-        Error::Codec(error.to_string())
     }
 }
 

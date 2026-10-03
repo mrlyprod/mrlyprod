@@ -192,6 +192,58 @@ fn rng_crosses_by_hand_and_is_passed_mutably() {
 }
 
 #[test]
+fn an_image_crosses_by_hand_as_one_shaped_array_and_a_list_of_them() {
+    let lib = "pub mod core { pub mod image { #[derive(Clone, Serialize, Deserialize)] pub struct Image { pub width: usize, pub height: usize, pub colors: Vec<[u8; 4]> } impl Image { pub fn scale(&self, scale: usize) -> Image { self.clone() } } } pub use image::Image; } pub mod life { pub fn frame(scale: usize) -> crate::core::Image { todo!() } pub fn frames(scale: usize) -> Vec<crate::core::Image> { vec![] } }";
+    let m = manifest(lib);
+    assert_eq!(
+        kind(&m, "core::Image"),
+        &TypeCross::Hand {
+            name: "Image".into()
+        }
+    );
+    let image = || Ty::Hand {
+        name: "Image".into(),
+        dim: None,
+    };
+    assert_eq!(function(&m, "life::frame").ret, image());
+    assert_eq!(
+        function(&m, "life::frames").ret,
+        Ty::Vec {
+            item: Box::new(image())
+        }
+    );
+    let scale = function(&m, "core::image::scale");
+    assert_eq!(
+        (scale.self_kind, &scale.cross),
+        (Some(SelfKind::Ref), &Cross::Ok)
+    );
+    let root = scratch("image", lib, "core\nlife\n");
+    let rust = read(&root, "pkgs/mrlypy/src/gen.rs");
+    assert!(rust.contains("image: PyImage,"));
+    assert!(rust.contains("(PyImage(out)).into_bound_py_any(py)"));
+    assert!(rust.contains(".map(PyImage)"));
+    let stub = read(&root, "pkgs/mrlypy/python/mrlypy/life/__init__.pyi");
+    assert!(stub.contains("def frame(scale: int) -> NDArray[Any]:"));
+    assert!(stub.contains("def frames(scale: int) -> list[NDArray[Any]]:"));
+    let wasm = read(&root, "pkgs/mrlyjs/units/life/src/lib.rs");
+    assert!(wasm.contains("hand::image_to_js(&value)"));
+    assert!(wasm.contains("hand::list_to_js(&value, hand::image_to_js)"));
+    let core = read(&root, "pkgs/mrlyjs/units/core/src/lib.rs");
+    assert!(core.contains("let image = hand::image_from_js(&image)?;"));
+    let dts = read(&root, "pkgs/mrlyjs/life.d.ts");
+    assert!(dts.contains(
+        "export interface Image {\n    shape: [number, number];\n    colors: Uint8Array;\n}"
+    ));
+    assert!(dts.contains("export function frame(scale: number): Image;"));
+    assert!(dts.contains("export function frames(scale: number): Image[];"));
+    let cli: String = read(&root, "pkgs/mrlyrs/src/bin/mrly.rs")
+        .split_whitespace()
+        .collect();
+    assert!(cli.contains("(\"life.frames\",\"(scale:usize)->[Image]\""));
+    std::fs::remove_dir_all(root).ok();
+}
+
+#[test]
 fn a_serde_struct_without_self_methods_is_plain_and_keeps_its_constructors() {
     let m = manifest("pub mod gen { #[derive(Serialize, Deserialize)] pub struct Tile { pub side: usize } impl Tile { pub fn new(side: usize) -> Tile { Tile { side } } } }");
     assert_eq!(kind(&m, "gen::Tile"), &TypeCross::Plain);
@@ -204,7 +256,7 @@ fn a_serde_struct_without_self_methods_is_plain_and_keeps_its_constructors() {
 
 #[test]
 fn a_serde_skipped_field_makes_a_class() {
-    let m = manifest("pub mod gen { #[derive(Serialize, Deserialize)] pub struct File { pub width: usize, #[serde(default, skip_serializing_if = \"Vec::is_empty\")] pub tags: Vec<u8>, #[serde(skip)] pub png: Vec<u8> } #[derive(Serialize, Deserialize)] pub struct Tile { #[serde(default, skip_serializing_if = \"Option::is_none\")] pub side: Option<usize> } }");
+    let m = manifest("pub mod gen { #[derive(Serialize, Deserialize)] pub struct File { pub width: usize, #[serde(default, skip_serializing_if = \"Vec::is_empty\")] pub tags: Vec<u8>, #[serde(skip)] pub image: Vec<u8> } #[derive(Serialize, Deserialize)] pub struct Tile { #[serde(default, skip_serializing_if = \"Option::is_none\")] pub side: Option<usize> } }");
     assert_eq!(kind(&m, "gen::File"), &TypeCross::Class);
     assert_eq!(kind(&m, "gen::Tile"), &TypeCross::Plain);
     let file = m
@@ -384,12 +436,15 @@ fn a_private_type_in_a_signature_is_skipped() {
 
 #[test]
 fn a_type_without_serde_or_methods_is_uncrossable() {
-    let m = manifest("pub mod two { pub enum Shape { Square } pub fn png(shape: Shape) {} }");
+    let m = manifest("pub mod two { pub enum Shape { Square } pub fn image(shape: Shape) {} }");
     assert!(matches!(
         kind(&m, "two::Shape"),
         TypeCross::Uncrossable { .. }
     ));
-    assert_eq!(reason(&m, "two::png"), "shape: uncrossable type two::Shape");
+    assert_eq!(
+        reason(&m, "two::image"),
+        "shape: uncrossable type two::Shape"
+    );
 }
 
 #[test]

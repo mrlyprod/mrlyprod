@@ -19,13 +19,13 @@ class File:
     @height.setter
     def height(self, value: int) -> None: ...
     @property
-    def png(self) -> bytes:
-        """The encoded PNG bytes, empty until rendered and left out of the json."""
-    @png.setter
-    def png(self, value: bytes) -> None: ...
+    def image(self) -> NDArray[Any] | None:
+        """The rendered image, absent until rendered and left out of the json."""
+    @image.setter
+    def image(self, value: NDArray[Any] | None) -> None: ...
     @staticmethod
     def new(width: int, height: int) -> File:
-        """Builds a file of the given repetition counts with no PNG bytes."""
+        """Builds a file of the given repetition counts with no image."""
     @staticmethod
     def from_dict(data: Any) -> File:
         """Reads plain data into the class."""
@@ -104,5 +104,5 @@ def generate(variation: Variation, config: dict[str, Any], rng: mrlypy.core.Rng)
     under a prime edition."""
 
 def render(variation: Variation, scale: int, rng: mrlypy.core.Rng) -> Variation:
-    """Renders every file of the variation to PNG at the given scale, scattering a Random edition
+    """Renders every file of the variation to an image at the given scale, scattering a Random edition
     from the stream."""

@@ -8,7 +8,7 @@ description = "MrlyMath, the mathematics of designs: the substrate, the integers
 homepage = "https://mrly.net"
 readme = "README.md"
 rust-version = "1.96"
-keywords = ["mathematics", "fractal", "cellular-automata", "png", "generative"]
+keywords = ["mathematics", "fractal", "cellular-automata", "generative"]
 categories = ["mathematics", "science", "multimedia::images"]
 include = ["src/**", "README.md", "NAMES.md", "fixtures/**"]
 
@@ -17,7 +17,5 @@ name = "mrly"
 path = "src/bin/mrly.rs"
 
 [dependencies]
-png = "0.17"
-gif = { version = "0.14", default-features = false, features = ["std"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }

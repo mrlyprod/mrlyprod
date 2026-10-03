@@ -2,7 +2,7 @@
 #![deny(missing_docs)]
 #![forbid(unsafe_code)]
 
-/// The substrate: tensors, cells, colors, images, codecs, resampling and seeded chance.
+/// The substrate: tensors, cells, colors, images, resampling and seeded chance.
 pub mod core;
 /// The alphabet: the stroked pixel glyphs, their rasters and their writing animations.
 pub mod font;

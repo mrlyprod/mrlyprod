@@ -90,12 +90,12 @@ pub fn entropy(grid: JsValue) -> Result<i64, JsValue> {
     Ok(value)
 }
 
-/// Renders grids to white-on-black PNG bytes at a pixel scale.
+/// Renders grids to white-on-black images at a pixel scale.
 #[wasm_bindgen]
 pub fn frames(grids: JsValue, scale: usize) -> Result<JsValue, JsValue> {
     let grids = hand::list_from_js(&grids, hand::cell2d_from_js)?;
     let value = mrlyrs::life::frames(&grids, scale).map_err(hand::throw)?;
-    hand::list_to_js(&value, |x1| Ok(hand::typed(&(*x1)[..])))
+    hand::list_to_js(&value, hand::image_to_js)
 }
 
 /// Returns the base-2 plane design a rule's single seed draws, or None when it draws none.
@@ -117,7 +117,7 @@ pub fn genus(rule: u8) -> Result<String, JsValue> {
 pub fn heatmap(grids: JsValue, scale: usize) -> Result<JsValue, JsValue> {
     let grids = hand::list_from_js(&grids, hand::cell2d_from_js)?;
     let value = mrlyrs::life::heatmap(&grids, scale).map_err(hand::throw)?;
-    hand::list_to_js(&value, |x1| Ok(hand::typed(&(*x1)[..])))
+    hand::list_to_js(&value, hand::image_to_js)
 }
 
 /// Returns the space-time diagram of a seed row, row 0 the seed and then one row per generation.
@@ -155,14 +155,6 @@ pub fn mask_offsets(mask: JsValue) -> Result<JsValue, JsValue> {
 pub fn moore() -> Result<JsValue, JsValue> {
     let value = mrlyrs::life::moore().map_err(hand::throw)?;
     hand::cell2d_to_js(&value)
-}
-
-/// Renders grids into one looping black-on-white gif, the delay in hundredths of a second.
-#[wasm_bindgen]
-pub fn movie(grids: JsValue, scale: usize, delay: usize) -> Result<Vec<u8>, JsValue> {
-    let grids = hand::list_from_js(&grids, hand::cell2d_from_js)?;
-    let value = mrlyrs::life::movie(&grids, scale, delay).map_err(hand::throw)?;
-    Ok(value)
 }
 
 /// Advances a grid one generation under birth and survive counts, a neighbor mask and a boundary.
@@ -208,12 +200,12 @@ pub fn popcount(rule: u8) -> Result<u32, JsValue> {
     Ok(value)
 }
 
-/// Renders one grid to white-on-black PNG bytes at a pixel scale.
+/// Renders one grid to a white-on-black image at a pixel scale.
 #[wasm_bindgen]
-pub fn render_frame(grid: JsValue, scale: usize) -> Result<Vec<u8>, JsValue> {
+pub fn render_frame(grid: JsValue, scale: usize) -> Result<JsValue, JsValue> {
     let grid = hand::cell2d_from_js(&grid)?;
     let value = mrlyrs::life::render::frame(&grid, scale).map_err(hand::throw)?;
-    Ok(value)
+    hand::image_to_js(&value)
 }
 
 /// Returns whether a rule is reversible, by the pair graph on the de Bruijn nodes pruned to its bi-infinite core.

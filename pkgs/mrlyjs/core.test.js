@@ -6,6 +6,7 @@ core.initSync({ module: bytes });
 const rows = await Bun.file(new URL("../mrlyrs/fixtures/core.json", import.meta.url)).json();
 const row = (fn) => rows.find((r) => r.fn === fn);
 const sha256 = (bytes) => new Bun.CryptoHasher("sha256").update(bytes).digest("hex");
+const pixels = (image) => ({ shape: image.shape, sha256: sha256(image.colors) });
 
 test("core::Tensor::rot90", () => {
   const r = row("core::Tensor::rot90");
@@ -21,9 +22,10 @@ test("core::Color::from_hex", () => {
   expect(core.colors.to_hex(color)).toBe(r.out.hex);
 });
 
-test("core::png", () => {
-  const r = row("core::png");
-  expect(sha256(core.codec.png(r.in.colors, r.in.width, r.in.height, r.in.scale))).toBe(r.out);
+test("core::Image::scale", () => {
+  const r = row("core::Image::scale");
+  const corners = { shape: [r.in.height, r.in.width], colors: Uint8Array.from(r.in.colors.flat()) };
+  expect(pixels(core.image.scale(corners, r.in.scale))).toEqual(r.out);
 });
 
 test("core::Colorizer::color", () => {

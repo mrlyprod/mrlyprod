@@ -2,7 +2,9 @@ use serde::{Deserialize, Serialize};
 
 pub type Result<T> = std::result::Result<T, String>;
 
-pub const HAND: [&str; 7] = ["Tensor", "Cell", "CellNd", "Cell6d", "Color", "Code", "Rng"];
+pub const HAND: [&str; 8] = [
+    "Tensor", "Cell", "CellNd", "Cell6d", "Image", "Color", "Code", "Rng",
+];
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Manifest {

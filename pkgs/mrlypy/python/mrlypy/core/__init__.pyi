@@ -1,10 +1,9 @@
 from typing import Any, Literal
 
 from numpy.typing import NDArray
-from . import cell, codec, colors, error, image, paint, ramp, rng, tensor
+from . import cell, colors, error, image, paint, ramp, rng, tensor
 
 HEX_RATIO: float
-PNG_MAGIC: bytes
 
 class Rng:
     """The seeded random stream, one class, passed wherever Rust takes a mutable stream."""
@@ -26,47 +25,6 @@ class Rng:
         """Draws one item of the sequence, the same draw as Rust's choice."""
     def shuffle(self, seq: list[Any]) -> None:
         """Shuffles the list in place, the same permutation as Rust's shuffle."""
-
-class Image:
-    """A paletted image: rows of palette indices and the palette they point into, hex strings in json."""
-    def __init__(self, width: int, height: int, rows: list[list[int]], palette: list[tuple[int, int, int, int]]) -> None: ...
-    @property
-    def width(self) -> int:
-        """The width in pixels."""
-    @width.setter
-    def width(self, value: int) -> None: ...
-    @property
-    def height(self) -> int:
-        """The height in pixels."""
-    @height.setter
-    def height(self, value: int) -> None: ...
-    @property
-    def rows(self) -> list[list[int]]:
-        """The palette index of every pixel, row by row."""
-    @rows.setter
-    def rows(self, value: list[list[int]]) -> None: ...
-    @property
-    def palette(self) -> list[tuple[int, int, int, int]]:
-        """The colors the rows index."""
-    @palette.setter
-    def palette(self, value: list[tuple[int, int, int, int]]) -> None: ...
-    def colors(self) -> NDArray[Any]:
-        """Returns the flat rgba pixels, transparent wherever an index misses the palette."""
-    @staticmethod
-    def from_pixels(width: int, height: int, pixels: NDArray[Any]) -> Image:
-        """Builds a paletted image from raw rgba pixels, growing the palette as new colors appear."""
-    @staticmethod
-    def new(width: int, height: int, rows: list[list[int]], palette: list[tuple[int, int, int, int]]) -> Image:
-        """Builds an image from its four parts."""
-    def png(self, scale: int) -> bytes:
-        """Encodes the image as a png at the given scale."""
-    def resample(self, width: int, height: int, filter: Literal["Nearest", "Linear", "Box"]) -> Image:
-        """Resamples the image to a new size, its palette rebuilt from the blended pixels."""
-    @staticmethod
-    def from_dict(data: Any) -> Image:
-        """Reads plain data into the class."""
-    def to_dict(self) -> Any:
-        """Returns the value as plain data."""
 
 class Colorizer:
     """A rule that turns counter values into colors."""
@@ -100,6 +58,3 @@ def hex_size(width: int, height: int, vertical: bool) -> tuple[int, int]:
 
 def resample(pixels: NDArray[Any], width: int, height: int, out_w: int, out_h: int, filter: Literal["Nearest", "Linear", "Box"]) -> NDArray[Any]:
     """Resamples rgba pixels to a new size."""
-
-def unpng(bytes: bytes) -> tuple[int, int, NDArray[Any]]:
-    """Decodes a png to its width, height, and rgba colors."""

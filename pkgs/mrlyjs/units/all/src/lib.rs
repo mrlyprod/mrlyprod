@@ -253,37 +253,6 @@ pub fn core_cell_tile_map(shape: &[usize], reps: &[usize]) -> Result<Vec<usize>,
     Ok(value)
 }
 
-/// Encodes indexed frames as an animated gif89a, each source pixel a scale by scale block.
-#[wasm_bindgen]
-pub fn core_codec_gif(
-    frames: JsValue,
-    palette: JsValue,
-    width: usize,
-    height: usize,
-    scale: usize,
-    delay: usize,
-) -> Result<Vec<u8>, JsValue> {
-    let frames = hand::from_js::<Vec<Vec<u8>>>(&frames)?;
-    let frames_view: Vec<&[u8]> = frames.iter().map(Vec::as_slice).collect();
-    let palette = hand::from_js::<Vec<[u8; 4]>>(&palette)?;
-    let value = mrlyrs::core::codec::gif(&frames_view, &palette, width, height, scale, delay)
-        .map_err(hand::throw)?;
-    Ok(value)
-}
-
-/// Encodes rgba colors as a png, drawing each source pixel as a scale by scale block.
-#[wasm_bindgen]
-pub fn core_codec_png(
-    colors: JsValue,
-    width: usize,
-    height: usize,
-    scale: usize,
-) -> Result<Vec<u8>, JsValue> {
-    let colors = hand::from_js::<Vec<[u8; 4]>>(&colors)?;
-    let value = mrlyrs::core::codec::png(&colors, width, height, scale).map_err(hand::throw)?;
-    Ok(value)
-}
-
 /// Returns the color with its alpha set to level.
 #[wasm_bindgen]
 pub fn core_colors_alpha(color: JsValue, level: u8) -> Result<JsValue, JsValue> {
@@ -465,6 +434,36 @@ pub fn core_image_blur(
     let pixels = hand::from_js::<Vec<[u8; 4]>>(&pixels)?;
     let value = mrlyrs::core::image::blur(&pixels, width, height, radius);
     hand::list_to_js(&value, |x1| Ok(hand::typed(&(*x1)[..])))
+}
+
+/// Builds an image from its width, its height and its colors.
+#[wasm_bindgen]
+pub fn core_image_new(width: usize, height: usize, colors: JsValue) -> Result<JsValue, JsValue> {
+    let colors = hand::from_js::<Vec<[u8; 4]>>(&colors)?;
+    let value = mrlyrs::core::Image::new(width, height, colors).map_err(hand::throw)?;
+    hand::image_to_js(&value)
+}
+
+/// Resamples the image to a new size.
+#[wasm_bindgen]
+pub fn core_image_resample(
+    image: JsValue,
+    width: usize,
+    height: usize,
+    filter: JsValue,
+) -> Result<JsValue, JsValue> {
+    let image = hand::image_from_js(&image)?;
+    let filter = hand::from_js::<mrlyrs::core::Filter>(&filter)?;
+    let value = image.resample(width, height, filter).map_err(hand::throw)?;
+    hand::image_to_js(&value)
+}
+
+/// Draws every pixel as a scale by scale block, growing both sides by scale.
+#[wasm_bindgen]
+pub fn core_image_scale(image: JsValue, scale: usize) -> Result<JsValue, JsValue> {
+    let image = hand::image_from_js(&image)?;
+    let value = image.scale(scale).map_err(hand::throw)?;
+    hand::image_to_js(&value)
 }
 
 /// Colors the cell from the paint's inks under its edition mode, scattering the Random edition from the stream.
@@ -1010,17 +1009,6 @@ pub fn core_tensor_u8(data: Vec<u8>, shape: Vec<usize>) -> Result<JsValue, JsVal
     hand::tensor_to_js(&value)
 }
 
-/// Decodes a png to its width, height, and rgba colors.
-#[wasm_bindgen]
-pub fn core_unpng(bytes: &[u8]) -> Result<JsValue, JsValue> {
-    let value = mrlyrs::core::unpng(bytes).map_err(hand::throw)?;
-    Ok(hand::tuple_to_js(&[
-        hand::to_js(&value.0)?,
-        hand::to_js(&value.1)?,
-        hand::list_to_js(&value.2, |x2| Ok(hand::typed(&(*x2)[..])))?,
-    ]))
-}
-
 /// Builds every glyph in font order: uppers, lowers, digits, extras, specials.
 #[wasm_bindgen]
 pub fn font_all() -> Result<JsValue, JsValue> {
@@ -1194,12 +1182,12 @@ pub fn font_uppers() -> Result<JsValue, JsValue> {
     })
 }
 
-/// Draws one seeded artwork and returns its PNG bytes: a random flat tile under the default recipe
+/// Draws one seeded artwork and returns its image: a random flat tile under the default recipe
 #[wasm_bindgen]
-pub fn gen_background(seed: JsValue, width: usize, height: usize) -> Result<Vec<u8>, JsValue> {
+pub fn gen_background(seed: JsValue, width: usize, height: usize) -> Result<JsValue, JsValue> {
     let seed = hand::u64_from_js(&seed)?;
     let value = mrlyrs::gen::background(seed, width, height).map_err(hand::throw)?;
-    Ok(value)
+    hand::image_to_js(&value)
 }
 
 /// Builds the flat cell the tile describes.
@@ -1403,7 +1391,7 @@ pub fn gen_variation_generate(
     Ok(gen_variation_Variation { inner: value })
 }
 
-/// Renders every file of the variation to PNG at the given scale, scattering a Random edition
+/// Renders every file of the variation to an image at the given scale, scattering a Random edition
 #[wasm_bindgen]
 pub fn gen_variation_render(
     variation: &gen_variation_Variation,
@@ -1501,12 +1489,12 @@ pub fn life_entropy(grid: JsValue) -> Result<i64, JsValue> {
     Ok(value)
 }
 
-/// Renders grids to white-on-black PNG bytes at a pixel scale.
+/// Renders grids to white-on-black images at a pixel scale.
 #[wasm_bindgen]
 pub fn life_frames(grids: JsValue, scale: usize) -> Result<JsValue, JsValue> {
     let grids = hand::list_from_js(&grids, hand::cell2d_from_js)?;
     let value = mrlyrs::life::frames(&grids, scale).map_err(hand::throw)?;
-    hand::list_to_js(&value, |x1| Ok(hand::typed(&(*x1)[..])))
+    hand::list_to_js(&value, hand::image_to_js)
 }
 
 /// Returns the base-2 plane design a rule's single seed draws, or None when it draws none.
@@ -1528,7 +1516,7 @@ pub fn life_genus(rule: u8) -> Result<String, JsValue> {
 pub fn life_heatmap(grids: JsValue, scale: usize) -> Result<JsValue, JsValue> {
     let grids = hand::list_from_js(&grids, hand::cell2d_from_js)?;
     let value = mrlyrs::life::heatmap(&grids, scale).map_err(hand::throw)?;
-    hand::list_to_js(&value, |x1| Ok(hand::typed(&(*x1)[..])))
+    hand::list_to_js(&value, hand::image_to_js)
 }
 
 /// Returns the space-time diagram of a seed row, row 0 the seed and then one row per generation.
@@ -1566,14 +1554,6 @@ pub fn life_mask_offsets(mask: JsValue) -> Result<JsValue, JsValue> {
 pub fn life_moore() -> Result<JsValue, JsValue> {
     let value = mrlyrs::life::moore().map_err(hand::throw)?;
     hand::cell2d_to_js(&value)
-}
-
-/// Renders grids into one looping black-on-white gif, the delay in hundredths of a second.
-#[wasm_bindgen]
-pub fn life_movie(grids: JsValue, scale: usize, delay: usize) -> Result<Vec<u8>, JsValue> {
-    let grids = hand::list_from_js(&grids, hand::cell2d_from_js)?;
-    let value = mrlyrs::life::movie(&grids, scale, delay).map_err(hand::throw)?;
-    Ok(value)
 }
 
 /// Advances a grid one generation under birth and survive counts, a neighbor mask and a boundary.
@@ -1619,12 +1599,12 @@ pub fn life_popcount(rule: u8) -> Result<u32, JsValue> {
     Ok(value)
 }
 
-/// Renders one grid to white-on-black PNG bytes at a pixel scale.
+/// Renders one grid to a white-on-black image at a pixel scale.
 #[wasm_bindgen]
-pub fn life_render_frame(grid: JsValue, scale: usize) -> Result<Vec<u8>, JsValue> {
+pub fn life_render_frame(grid: JsValue, scale: usize) -> Result<JsValue, JsValue> {
     let grid = hand::cell2d_from_js(&grid)?;
     let value = mrlyrs::life::render::frame(&grid, scale).map_err(hand::throw)?;
-    Ok(value)
+    hand::image_to_js(&value)
 }
 
 /// Returns whether a rule is reversible, by the pair graph on the de Bruijn nodes pruned to its bi-infinite core.
@@ -3754,7 +3734,7 @@ pub fn math_moire_pairs_witness(scale: usize) -> Result<JsValue, JsValue> {
     hand::to_js(&value)
 }
 
-/// Quantizes a field into colored levels and encodes PNG bytes.
+/// Quantizes a field into colored levels and renders them as an image, each sample a scale by scale block.
 #[wasm_bindgen]
 pub fn math_moire_render(
     field: &math_moire_Field,
@@ -3763,12 +3743,12 @@ pub fn math_moire_render(
     symmetric: bool,
     invert: bool,
     scale: usize,
-) -> Result<Vec<u8>, JsValue> {
+) -> Result<JsValue, JsValue> {
     let colorizer = hand::from_js::<mrlyrs::core::Colorizer>(&colorizer)?;
     let value =
         mrlyrs::math::moire::render(&field.inner, &colorizer, levels, symmetric, invert, scale)
             .map_err(hand::throw)?;
-    Ok(value)
+    hand::image_to_js(&value)
 }
 
 /// Returns the two lattice coordinates of each pixel centre along a row.
@@ -4351,6 +4331,20 @@ pub fn math_six_holes(cell: JsValue) -> Result<usize, JsValue> {
     Ok(value)
 }
 
+/// Rasters a cell's triangles to an image at the given scale, stroked and padded when an outline is given.
+#[wasm_bindgen]
+pub fn math_six_image(
+    cell: JsValue,
+    scale: usize,
+    outline: JsValue,
+    width: usize,
+) -> Result<JsValue, JsValue> {
+    let cell = hand::cell6d_from_js(&cell)?;
+    let outline = hand::option_from_js(&outline, hand::color_from_js)?;
+    let value = mrlyrs::math::six::image(&cell, scale, outline, width).map_err(hand::throw)?;
+    hand::image_to_js(&value)
+}
+
 /// Returns whether the cell's three sides are equal.
 #[wasm_bindgen]
 pub fn math_six_is_cube(cell: JsValue) -> Result<bool, JsValue> {
@@ -4463,20 +4457,6 @@ pub fn math_six_perforate(cell: JsValue, mask: JsValue, value: u8) -> Result<JsV
     hand::cell6d_to_js(&value)
 }
 
-/// Rasters a cell's triangles to PNG bytes at the given scale, stroked and padded when an outline is given.
-#[wasm_bindgen]
-pub fn math_six_png(
-    cell: JsValue,
-    scale: usize,
-    outline: JsValue,
-    width: usize,
-) -> Result<Vec<u8>, JsValue> {
-    let cell = hand::cell6d_from_js(&cell)?;
-    let outline = hand::option_from_js(&outline, hand::color_from_js)?;
-    let value = mrlyrs::math::six::png(&cell, scale, outline, width).map_err(hand::throw)?;
-    Ok(value)
-}
-
 /// Projects a cube's three facing sides into a hexagon of fills and voids.
 #[wasm_bindgen]
 pub fn math_six_pro(cell: JsValue) -> Result<JsValue, JsValue> {
@@ -4535,13 +4515,17 @@ pub fn math_six_raster(cell: JsValue, size: usize) -> Result<Vec<f32>, JsValue> 
     Ok(value)
 }
 
-/// Rasters the hexagon tiled three by three and cropped to one interlocking rectangle to PNG bytes.
+/// Rasters the hexagon tiled three by three and cropped to one interlocking rectangle to an image.
 #[wasm_bindgen]
-pub fn math_six_rect_png(cell: JsValue, scale: usize, start: JsValue) -> Result<Vec<u8>, JsValue> {
+pub fn math_six_rect_image(
+    cell: JsValue,
+    scale: usize,
+    start: JsValue,
+) -> Result<JsValue, JsValue> {
     let cell = hand::cell6d_from_js(&cell)?;
     let start = hand::from_js::<Option<usize>>(&start)?;
-    let value = mrlyrs::math::six::rect_png(&cell, scale, start).map_err(hand::throw)?;
-    Ok(value)
+    let value = mrlyrs::math::six::rect_image(&cell, scale, start).map_err(hand::throw)?;
+    hand::image_to_js(&value)
 }
 
 /// Renders the hexagon tiled three by three and cropped to one interlocking rectangle as an SVG string.
@@ -5897,6 +5881,23 @@ pub fn math_two_htree(number: usize, level: usize) -> Result<JsValue, JsValue> {
     hand::cell2d_to_js(&value)
 }
 
+/// Renders the cell to an image at the given pixel scale, stroked and padded when an outline is given.
+#[wasm_bindgen]
+pub fn math_two_image(
+    cell: JsValue,
+    scale: usize,
+    outline: JsValue,
+    width: usize,
+    shape: JsValue,
+) -> Result<JsValue, JsValue> {
+    let cell = hand::cell2d_from_js(&cell)?;
+    let outline = hand::option_from_js(&outline, hand::color_from_js)?;
+    let shape = hand::from_js::<mrlyrs::math::two::Shape>(&shape)?;
+    let value =
+        mrlyrs::math::two::image(&cell, scale, outline, width, shape).map_err(hand::throw)?;
+    hand::image_to_js(&value)
+}
+
 /// Builds the level-set design, filling every residue corner whose digits sum to a named level.
 #[wasm_bindgen]
 pub fn math_two_level_set(
@@ -5980,22 +5981,6 @@ pub fn math_two_perimeter(cell: JsValue) -> Result<JsValue, JsValue> {
     let cell = hand::cell2d_from_js(&cell)?;
     let value = mrlyrs::math::two::perimeter(&cell);
     Ok(JsValue::from_str(&value.to_string()))
-}
-
-/// Renders the cell to PNG bytes at the given pixel scale, stroked and padded when an outline is given.
-#[wasm_bindgen]
-pub fn math_two_png(
-    cell: JsValue,
-    scale: usize,
-    outline: JsValue,
-    width: usize,
-    shape: JsValue,
-) -> Result<Vec<u8>, JsValue> {
-    let cell = hand::cell2d_from_js(&cell)?;
-    let outline = hand::option_from_js(&outline, hand::color_from_js)?;
-    let shape = hand::from_js::<mrlyrs::math::two::Shape>(&shape)?;
-    let value = mrlyrs::math::two::png(&cell, scale, outline, width, shape).map_err(hand::throw)?;
-    Ok(value)
 }
 
 /// Builds the point fractal, its seed on at every odd-odd site, deepened to the level.
@@ -7713,13 +7698,6 @@ pub fn core_HEX_RATIO() -> Result<f64, JsValue> {
     Ok(value)
 }
 
-/// The eight bytes every png file starts with.
-#[wasm_bindgen]
-pub fn core_PNG_MAGIC() -> Result<Vec<u8>, JsValue> {
-    let value = mrlyrs::core::PNG_MAGIC;
-    Ok(value.to_vec())
-}
-
 /// The fully transparent color.
 #[wasm_bindgen]
 pub fn core_colors_ALPHA() -> Result<JsValue, JsValue> {
@@ -8262,121 +8240,6 @@ pub fn num_sumset_WIDEST() -> Result<u32, JsValue> {
 pub fn num_zeta_JOIN() -> Result<f64, JsValue> {
     let value = mrlyrs::num::zeta::JOIN;
     Ok(value)
-}
-
-/// A paletted image: rows of palette indices and the palette they point into, hex strings in json.
-#[wasm_bindgen]
-pub struct core_Image {
-    inner: mrlyrs::core::Image,
-}
-
-#[wasm_bindgen]
-impl core_Image {
-    /// Reads the Image from its plain data.
-    #[wasm_bindgen(js_name = "from")]
-    pub fn from_plain(data: JsValue) -> Result<core_Image, JsValue> {
-        Ok(core_Image {
-            inner: hand::from_js(&data)?,
-        })
-    }
-    /// Writes the Image as plain data.
-    #[wasm_bindgen(js_name = "toJSON")]
-    pub fn to_plain(&self) -> Result<JsValue, JsValue> {
-        hand::to_js(&self.inner)
-    }
-    /// The width in pixels.
-    #[wasm_bindgen(getter)]
-    pub fn width(&self) -> Result<usize, JsValue> {
-        let value = self.inner.width;
-        Ok(value)
-    }
-    #[wasm_bindgen(setter)]
-    pub fn set_width(&mut self, value: usize) -> Result<(), JsValue> {
-        self.inner.width = value;
-        Ok(())
-    }
-    /// The height in pixels.
-    #[wasm_bindgen(getter)]
-    pub fn height(&self) -> Result<usize, JsValue> {
-        let value = self.inner.height;
-        Ok(value)
-    }
-    #[wasm_bindgen(setter)]
-    pub fn set_height(&mut self, value: usize) -> Result<(), JsValue> {
-        self.inner.height = value;
-        Ok(())
-    }
-    /// The palette index of every pixel, row by row.
-    #[wasm_bindgen(getter)]
-    pub fn rows(&self) -> Result<JsValue, JsValue> {
-        let value = self.inner.rows.clone();
-        hand::list_to_js(&value, |x1| Ok(hand::typed(&(*x1)[..])))
-    }
-    #[wasm_bindgen(setter)]
-    pub fn set_rows(&mut self, value: JsValue) -> Result<(), JsValue> {
-        let value = hand::from_js::<Vec<Vec<usize>>>(&value)?;
-        self.inner.rows = value;
-        Ok(())
-    }
-    /// The colors the rows index.
-    #[wasm_bindgen(getter)]
-    pub fn palette(&self) -> Result<JsValue, JsValue> {
-        let value = self.inner.palette.clone();
-        hand::list_to_js(&value, |x1| Ok(hand::color_to_js(*x1)))
-    }
-    #[wasm_bindgen(setter)]
-    pub fn set_palette(&mut self, value: JsValue) -> Result<(), JsValue> {
-        let value = hand::list_from_js(&value, hand::color_from_js)?;
-        self.inner.palette = value;
-        Ok(())
-    }
-    /// Returns the flat rgba pixels, transparent wherever an index misses the palette.
-    pub fn colors(&self) -> Result<JsValue, JsValue> {
-        let value = self.inner.colors();
-        hand::list_to_js(&value, |x1| Ok(hand::typed(&(*x1)[..])))
-    }
-    /// Builds a paletted image from raw rgba pixels, growing the palette as new colors appear.
-    pub fn from_pixels(
-        width: usize,
-        height: usize,
-        pixels: JsValue,
-    ) -> Result<core_Image, JsValue> {
-        let pixels = hand::from_js::<Vec<[u8; 4]>>(&pixels)?;
-        let value = mrlyrs::core::Image::from_pixels(width, height, &pixels);
-        Ok(core_Image { inner: value })
-    }
-    /// Builds an image from its four parts.
-    #[wasm_bindgen(constructor)]
-    pub fn new(
-        width: usize,
-        height: usize,
-        rows: JsValue,
-        palette: JsValue,
-    ) -> Result<core_Image, JsValue> {
-        let rows = hand::from_js::<Vec<Vec<usize>>>(&rows)?;
-        let palette = hand::list_from_js(&palette, hand::color_from_js)?;
-        let value = mrlyrs::core::Image::new(width, height, rows, palette);
-        Ok(core_Image { inner: value })
-    }
-    /// Encodes the image as a png at the given scale.
-    pub fn png(&self, scale: usize) -> Result<Vec<u8>, JsValue> {
-        let value = self.inner.png(scale).map_err(hand::throw)?;
-        Ok(value)
-    }
-    /// Resamples the image to a new size, its palette rebuilt from the blended pixels.
-    pub fn resample(
-        &self,
-        width: usize,
-        height: usize,
-        filter: JsValue,
-    ) -> Result<core_Image, JsValue> {
-        let filter = hand::from_js::<mrlyrs::core::Filter>(&filter)?;
-        let value = self
-            .inner
-            .resample(width, height, filter)
-            .map_err(hand::throw)?;
-        Ok(core_Image { inner: value })
-    }
 }
 
 /// One theme: the surfaces of a dark or a light ground and the thirteen inks, the same on both.
@@ -9253,18 +9116,19 @@ impl gen_variation_File {
         self.inner.height = value;
         Ok(())
     }
-    /// The encoded PNG bytes, empty until rendered and left out of the json.
+    /// The rendered image, absent until rendered and left out of the json.
     #[wasm_bindgen(getter)]
-    pub fn png(&self) -> Result<Vec<u8>, JsValue> {
-        let value = self.inner.png.clone();
-        Ok(value)
+    pub fn image(&self) -> Result<JsValue, JsValue> {
+        let value = self.inner.image.clone();
+        hand::option_to_js(value.as_ref(), hand::image_to_js)
     }
     #[wasm_bindgen(setter)]
-    pub fn set_png(&mut self, value: Vec<u8>) -> Result<(), JsValue> {
-        self.inner.png = value;
+    pub fn set_image(&mut self, value: JsValue) -> Result<(), JsValue> {
+        let value = hand::option_from_js(&value, hand::image_from_js)?;
+        self.inner.image = value;
         Ok(())
     }
-    /// Builds a file of the given repetition counts with no PNG bytes.
+    /// Builds a file of the given repetition counts with no image.
     #[wasm_bindgen(constructor)]
     pub fn new(width: usize, height: usize) -> Result<gen_variation_File, JsValue> {
         let value = mrlyrs::gen::variation::File::new(width, height);

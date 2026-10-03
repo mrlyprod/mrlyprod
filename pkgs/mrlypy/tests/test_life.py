@@ -63,8 +63,8 @@ def test_counts(row):
     assert life.counts(seq, i["max_neighbors"], i["include_zeros"], i["include_ones"]) == r["out"]
 
 
-def test_heatmap(row):
+def test_heatmap(row, pixels):
     r = row("life::heatmap")
     life_run = run(r["in"]["grids"]["in"])
     frames = life.heatmap(life_run.grids, r["in"]["scale"])
-    assert [list(frame) for frame in frames] == r["out"]
+    assert [pixels(frame) for frame in frames] == r["out"]

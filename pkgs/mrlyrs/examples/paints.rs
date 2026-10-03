@@ -41,7 +41,8 @@ fn main() {
         let paint = paint::paint(&mut cell.cell, &recipe, None, &mut rng)
             .expect("the paint would not apply");
         let colors = cell.cell.colors.clone().expect("the paint left no colors");
-        let image = Image::from_pixels(cell.width(), cell.height(), &colors);
+        let image =
+            Image::new(cell.width(), cell.height(), colors).expect("the paint colored every site");
         rows.push(row(edition, &tile, &paint, &image));
     }
     println!(

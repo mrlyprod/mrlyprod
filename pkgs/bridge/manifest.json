@@ -12,21 +12,21 @@
       "path": "core",
       "file": "core/mod.rs",
       "docs": [
-        "The substrate: tensors, cells, colors, images, codecs, resampling and seeded chance.",
+        "The substrate: tensors, cells, colors, images, resampling and seeded chance.",
         "The substrate: the road from a grid of bytes to pixels, with nothing mrly on it.",
         "",
         "- `tensor` makes and tallies the byte grids; `cell` dresses one in colors and tags.",
         "- `colors` holds the rgba color, the two themes and the house palette; `paint` spreads a palette over a cell.",
         "- `ramp` turns counter values into colors; `resample` rescales pixels and squashes them for hex.",
-        "- `image` holds the paletted pixels; `codec` writes them as a png or a gif and reads a png back.",
+        "- `image` holds the rgba pixels a renderer returns; encoding them into a file is the caller's.",
         "- `rng` deals seeded chance: one xoshiro256++ stream, passed by hand, never global.",
         "- `error` holds the one error, its Result and the json parser; `named` names an enum.",
         "",
         "The json value and map are serde_json's, kept under `preserve_order` so an object comes back in the order it was written and both bridges print the same text.",
         "",
-        "The doors: [`Tensor::of`](crate::core::tensor::Tensor::of), [`Tensor::rot90`](crate::core::tensor::Tensor::rot90), [`Color::from_hex`](crate::core::colors::Color::from_hex), [`Color::to_hex`](crate::core::colors::Color::to_hex), [`png`](crate::core::png()), [`unpng`](crate::core::unpng()), [`gif`](crate::core::gif()) and [`Colorizer::color`](crate::core::ramp::Colorizer::color)."
+        "The doors: [`Tensor::of`](crate::core::tensor::Tensor::of), [`Tensor::rot90`](crate::core::tensor::Tensor::rot90), [`Color::from_hex`](crate::core::colors::Color::from_hex), [`Color::to_hex`](crate::core::colors::Color::to_hex), [`Image::scale`](crate::core::image::Image::scale) and [`Colorizer::color`](crate::core::ramp::Colorizer::color)."
       ],
-      "items": 28
+      "items": 21
     },
     {
       "path": "core::cell",
@@ -35,15 +35,6 @@
         "The cell grid: type bytes with optional per-cell colors and tags."
       ],
       "items": 27
-    },
-    {
-      "path": "core::codec",
-      "file": "core/codec/mod.rs",
-      "docs": [
-        "The png and gif codecs, rented from the png and gif crates.",
-        "A png is written paletted whenever 256 colors or fewer fit, rgba otherwise; a gif is always paletted and always loops."
-      ],
-      "items": 2
     },
     {
       "path": "core::colors",
@@ -65,9 +56,9 @@
       "path": "core::image",
       "file": "core/image.rs",
       "docs": [
-        "The paletted image and its rows."
+        "The image a renderer returns: its size and its rgba pixels."
       ],
-      "items": 1
+      "items": 4
     },
     {
       "path": "core::paint",
@@ -264,7 +255,7 @@
         "- `mask`: the design masks a rule reads and the lattice they generate.",
         "- `source`: the named sources of neighbor counts, and the counts they lay down.",
         "- `elementary`: the one-line automata and the card of one rule.",
-        "- `render`: the PNG frames, the visit heatmap and the gif movie.",
+        "- `render`: the frames and the visit heatmap of a run, as images.",
         "- `rule`: the canonical name of a rule.",
         "",
         "The doors: [`next_grid`](crate::life::next_grid), [`animate`](crate::life::animate()),",
@@ -273,7 +264,7 @@
         "[`heatmap`](crate::life::heatmap), [`history`](crate::life::history) and",
         "[`Rule`](crate::life::Rule)."
       ],
-      "items": 71
+      "items": 70
     },
     {
       "path": "life::animate",
@@ -327,7 +318,7 @@
       "path": "life::render",
       "file": "life/render.rs",
       "docs": [
-        "The PNG frames, the cumulative-visit heatmap and the gif movie of grids."
+        "The frames and the cumulative-visit heatmap of grids, as images."
       ],
       "items": 1
     },
@@ -645,7 +636,7 @@
         "The moire fields.",
         "",
         "One design sampled at many scales and stacked makes an interference pattern; the layers, their",
-        "combination, the volume they cut and the PNG they render live here."
+        "combination, the volume they cut and the image they render live here."
       ],
       "items": 39
     },
@@ -685,7 +676,7 @@
       "path": "math::moire::render",
       "file": "math/moire/render.rs",
       "docs": [
-        "The quantized PNG rendering of a field."
+        "The quantized rendering of a field as an image."
       ],
       "items": 0
     },
@@ -845,7 +836,7 @@
       "path": "math::six::renderer",
       "file": "math/six/renderer.rs",
       "docs": [
-        "The triangle, SVG and PNG renderings of a hex cell."
+        "The triangle, SVG and pixel renderings of a hex cell."
       ],
       "items": 1
     },
@@ -989,7 +980,7 @@
         "The flat-cell pipeline.",
         "",
         "The shared cell pipeline pinned to two dimensions: coded and carpet cells, their censuses,",
-        "their payloads, their text and PNG renderings and their JSON."
+        "their payloads, their text, SVG and pixel renderings and their JSON."
       ],
       "items": 40
     },
@@ -1029,7 +1020,7 @@
       "path": "math::two::renderer",
       "file": "math/two/renderer.rs",
       "docs": [
-        "The text and PNG renderings of a flat cell."
+        "The text, SVG and pixel renderings of a flat cell."
       ],
       "items": 0
     },
@@ -1347,26 +1338,6 @@
               }
             }
           ]
-        },
-        {
-          "name": "Codec",
-          "word": null,
-          "docs": [
-            "A png or gif codec that refused, carrying its message."
-          ],
-          "serde": [],
-          "fields": [
-            {
-              "name": "0",
-              "public": false,
-              "docs": [],
-              "serde": [],
-              "serde_skip": false,
-              "ty": {
-                "t": "string"
-              }
-            }
-          ]
         }
       ],
       "alias": null
@@ -1374,7 +1345,7 @@
     {
       "path": "Result",
       "name": "Result",
-      "defined_at": "core/error.rs:42",
+      "defined_at": "core/error.rs:39",
       "docs": [
         "The crate's result, erring with Error."
       ],
@@ -1742,13 +1713,14 @@
     {
       "path": "core::Image",
       "name": "Image",
-      "defined_at": "core/image.rs:10",
+      "defined_at": "core/image.rs:8",
       "docs": [
-        "A paletted image: rows of palette indices and the palette they point into, hex strings in json."
+        "An image: its width, its height and the rgba color of every pixel, row by row from the top."
       ],
       "kind": "struct",
       "cross": {
-        "kind": "class"
+        "kind": "hand",
+        "name": "Image"
       },
       "derives": [
         "Clone",
@@ -1790,38 +1762,22 @@
           }
         },
         {
-          "name": "rows",
+          "name": "colors",
           "public": true,
           "docs": [
-            "The palette index of every pixel, row by row."
+            "The rgba color of every pixel, row by row."
           ],
           "serde": [],
           "serde_skip": false,
           "ty": {
             "t": "vec",
             "item": {
-              "t": "vec",
+              "t": "array",
               "item": {
                 "t": "scalar",
-                "name": "usize"
-              }
-            }
-          }
-        },
-        {
-          "name": "palette",
-          "public": true,
-          "docs": [
-            "The colors the rows index."
-          ],
-          "serde": [],
-          "serde_skip": false,
-          "ty": {
-            "t": "vec",
-            "item": {
-              "t": "hand",
-              "name": "Color",
-              "dim": null
+                "name": "u8"
+              },
+              "len": 4
             }
           }
         }
@@ -1832,7 +1788,7 @@
     {
       "path": "core::Map",
       "name": "Map",
-      "defined_at": "core/mod.rs:49",
+      "defined_at": "core/mod.rs:46",
       "docs": [
         "An object's entries, kept in insertion order."
       ],
@@ -4424,7 +4380,7 @@
     {
       "path": "gen::variation::Config",
       "name": "Config",
-      "defined_at": "gen/variation.rs:34",
+      "defined_at": "gen/variation.rs:35",
       "docs": [
         "The settings an artwork is drawn under."
       ],
@@ -4499,7 +4455,7 @@
     {
       "path": "gen::variation::File",
       "name": "File",
-      "defined_at": "gen/variation.rs:11",
+      "defined_at": "gen/variation.rs:12",
       "docs": [
         "One rendering of an artwork, sized in tile repetitions."
       ],
@@ -4545,20 +4501,21 @@
           }
         },
         {
-          "name": "png",
+          "name": "image",
           "public": true,
           "docs": [
-            "The encoded PNG bytes, empty until rendered and left out of the json."
+            "The rendered image, absent until rendered and left out of the json."
           ],
           "serde": [
             "skip"
           ],
           "serde_skip": true,
           "ty": {
-            "t": "vec",
+            "t": "option",
             "item": {
-              "t": "scalar",
-              "name": "u8"
+              "t": "hand",
+              "name": "Image",
+              "dim": null
             }
           }
         }
@@ -4569,7 +4526,7 @@
     {
       "path": "gen::variation::Variation",
       "name": "Variation",
-      "defined_at": "gen/variation.rs:55",
+      "defined_at": "gen/variation.rs:56",
       "docs": [
         "One seeded artwork, from tile recipe to rendered files."
       ],
@@ -9060,7 +9017,7 @@
     {
       "path": "math::six::renderer::Triangle",
       "name": "Triangle",
-      "defined_at": "math/six/renderer.rs:10",
+      "defined_at": "math/six/renderer.rs:11",
       "docs": [
         "A screen triangle: three grid points and an RGBA color."
       ],
@@ -10960,7 +10917,7 @@
     {
       "path": "math::two::Shape",
       "name": "Shape",
-      "defined_at": "math/two/renderer.rs:12",
+      "defined_at": "math/two/renderer.rs:13",
       "docs": [
         "The outline a flat cell's sites are drawn with."
       ],
@@ -14186,25 +14143,6 @@
       }
     },
     {
-      "path": "core::PNG_MAGIC",
-      "name": "PNG_MAGIC",
-      "defined_at": "core/codec/png.rs:9",
-      "docs": [
-        "The eight bytes every png file starts with."
-      ],
-      "ty": {
-        "t": "array",
-        "item": {
-          "t": "scalar",
-          "name": "u8"
-        },
-        "len": 8
-      },
-      "cross": {
-        "status": "ok"
-      }
-    },
-    {
       "path": "core::colors::ALPHA",
       "name": "ALPHA",
       "defined_at": "core/colors.rs:20",
@@ -15824,247 +15762,6 @@
       }
     },
     {
-      "path": "core::Image::colors",
-      "name": "colors",
-      "module": "core",
-      "defined_at": "core/image.rs:54",
-      "docs": [
-        "Returns the flat rgba pixels, transparent wherever an index misses the palette."
-      ],
-      "owner": "core::Image",
-      "self_kind": "ref",
-      "params": [],
-      "ret": {
-        "t": "vec",
-        "item": {
-          "t": "array",
-          "item": {
-            "t": "scalar",
-            "name": "u8"
-          },
-          "len": 4
-        }
-      },
-      "dims": [],
-      "trait": null,
-      "source": "written",
-      "constant": false,
-      "cross": {
-        "status": "ok"
-      }
-    },
-    {
-      "path": "core::Image::from_pixels",
-      "name": "from_pixels",
-      "module": "core",
-      "defined_at": "core/image.rs:32",
-      "docs": [
-        "Builds a paletted image from raw rgba pixels, growing the palette as new colors appear."
-      ],
-      "owner": "core::Image",
-      "self_kind": null,
-      "params": [
-        {
-          "name": "width",
-          "ty": {
-            "t": "scalar",
-            "name": "usize"
-          }
-        },
-        {
-          "name": "height",
-          "ty": {
-            "t": "scalar",
-            "name": "usize"
-          }
-        },
-        {
-          "name": "pixels",
-          "ty": {
-            "t": "slice",
-            "mutable": false,
-            "item": {
-              "t": "array",
-              "item": {
-                "t": "scalar",
-                "name": "u8"
-              },
-              "len": 4
-            }
-          }
-        }
-      ],
-      "ret": {
-        "t": "class",
-        "path": "core::Image",
-        "dim": null
-      },
-      "dims": [],
-      "trait": null,
-      "source": "written",
-      "constant": false,
-      "cross": {
-        "status": "ok"
-      }
-    },
-    {
-      "path": "core::Image::new",
-      "name": "new",
-      "module": "core",
-      "defined_at": "core/image.rs:23",
-      "docs": [
-        "Builds an image from its four parts."
-      ],
-      "owner": "core::Image",
-      "self_kind": null,
-      "params": [
-        {
-          "name": "width",
-          "ty": {
-            "t": "scalar",
-            "name": "usize"
-          }
-        },
-        {
-          "name": "height",
-          "ty": {
-            "t": "scalar",
-            "name": "usize"
-          }
-        },
-        {
-          "name": "rows",
-          "ty": {
-            "t": "vec",
-            "item": {
-              "t": "vec",
-              "item": {
-                "t": "scalar",
-                "name": "usize"
-              }
-            }
-          }
-        },
-        {
-          "name": "palette",
-          "ty": {
-            "t": "vec",
-            "item": {
-              "t": "hand",
-              "name": "Color",
-              "dim": null
-            }
-          }
-        }
-      ],
-      "ret": {
-        "t": "class",
-        "path": "core::Image",
-        "dim": null
-      },
-      "dims": [],
-      "trait": null,
-      "source": "written",
-      "constant": false,
-      "cross": {
-        "status": "ok"
-      }
-    },
-    {
-      "path": "core::Image::png",
-      "name": "png",
-      "module": "core",
-      "defined_at": "core/image.rs:73",
-      "docs": [
-        "Encodes the image as a png at the given scale.",
-        "",
-        "# Errors",
-        "",
-        "Errs when the codec refuses the scale or the scaled size."
-      ],
-      "owner": "core::Image",
-      "self_kind": "ref",
-      "params": [
-        {
-          "name": "scale",
-          "ty": {
-            "t": "scalar",
-            "name": "usize"
-          }
-        }
-      ],
-      "ret": {
-        "t": "result",
-        "item": {
-          "t": "vec",
-          "item": {
-            "t": "scalar",
-            "name": "u8"
-          }
-        }
-      },
-      "dims": [],
-      "trait": null,
-      "source": "written",
-      "constant": false,
-      "cross": {
-        "status": "ok"
-      }
-    },
-    {
-      "path": "core::Image::resample",
-      "name": "resample",
-      "module": "core",
-      "defined_at": "core/image.rs:81",
-      "docs": [
-        "Resamples the image to a new size, its palette rebuilt from the blended pixels.",
-        "",
-        "# Errors",
-        "",
-        "Errs on a side of zero or a size that overflows."
-      ],
-      "owner": "core::Image",
-      "self_kind": "ref",
-      "params": [
-        {
-          "name": "width",
-          "ty": {
-            "t": "scalar",
-            "name": "usize"
-          }
-        },
-        {
-          "name": "height",
-          "ty": {
-            "t": "scalar",
-            "name": "usize"
-          }
-        },
-        {
-          "name": "filter",
-          "ty": {
-            "t": "enum",
-            "path": "core::Filter"
-          }
-        }
-      ],
-      "ret": {
-        "t": "result",
-        "item": {
-          "t": "class",
-          "path": "core::Image",
-          "dim": null
-        }
-      },
-      "dims": [],
-      "trait": null,
-      "source": "written",
-      "constant": false,
-      "cross": {
-        "status": "ok"
-      }
-    },
-    {
       "path": "core::block",
       "name": "block",
       "module": "core",
@@ -17304,190 +17001,6 @@
       }
     },
     {
-      "path": "core::codec::gif",
-      "name": "gif",
-      "module": "core::codec",
-      "defined_at": "core/codec/gif.rs:23",
-      "docs": [
-        "Encodes indexed frames as an animated gif89a, each source pixel a scale by scale block.",
-        "",
-        "The frames index one shared palette, the delay is in hundredths of a second, the",
-        "animation loops forever, and the first fully transparent palette entry becomes the",
-        "frame's transparent color.",
-        "",
-        "# Errors",
-        "",
-        "Errs on a scale or side below one, no frames, a palette outside 1 to 256 colors, a frame that is not width by height, an index past the palette, or a scaled side past 16 bits.",
-        "",
-        "```",
-        "let still = [0u8, 1, 1, 0];",
-        "let flip = [1u8, 0, 0, 1];",
-        "let palette = [[0, 0, 0, 255], [255, 255, 255, 255]];",
-        "let bytes = mrlyrs::core::gif(&[&still[..], &flip[..]], &palette, 2, 2, 3, 8).unwrap();",
-        "assert_eq!(bytes[bytes.len() - 1], 0x3b);",
-        "```"
-      ],
-      "owner": null,
-      "self_kind": null,
-      "params": [
-        {
-          "name": "frames",
-          "ty": {
-            "t": "slice",
-            "mutable": false,
-            "item": {
-              "t": "slice",
-              "mutable": false,
-              "item": {
-                "t": "scalar",
-                "name": "u8"
-              }
-            }
-          }
-        },
-        {
-          "name": "palette",
-          "ty": {
-            "t": "slice",
-            "mutable": false,
-            "item": {
-              "t": "array",
-              "item": {
-                "t": "scalar",
-                "name": "u8"
-              },
-              "len": 4
-            }
-          }
-        },
-        {
-          "name": "width",
-          "ty": {
-            "t": "scalar",
-            "name": "usize"
-          }
-        },
-        {
-          "name": "height",
-          "ty": {
-            "t": "scalar",
-            "name": "usize"
-          }
-        },
-        {
-          "name": "scale",
-          "ty": {
-            "t": "scalar",
-            "name": "usize"
-          }
-        },
-        {
-          "name": "delay",
-          "ty": {
-            "t": "scalar",
-            "name": "usize"
-          }
-        }
-      ],
-      "ret": {
-        "t": "result",
-        "item": {
-          "t": "vec",
-          "item": {
-            "t": "scalar",
-            "name": "u8"
-          }
-        }
-      },
-      "dims": [],
-      "trait": null,
-      "source": "written",
-      "constant": false,
-      "cross": {
-        "status": "ok"
-      }
-    },
-    {
-      "path": "core::codec::png",
-      "name": "png",
-      "module": "core::codec",
-      "defined_at": "core/codec/png.rs:26",
-      "docs": [
-        "Encodes rgba colors as a png, drawing each source pixel as a scale by scale block.",
-        "",
-        "Images of 256 colors or fewer are written as a palette png at the smallest bit depth that",
-        "fits; everything else stays 8-bit rgba. Both forms read back through [`unpng`].",
-        "",
-        "# Errors",
-        "",
-        "Errs on a scale below one, a colors length that is not width by height, or a scaled side past 32 bits.",
-        "",
-        "```",
-        "let bytes = mrlyrs::core::png(&[[255, 0, 0, 255], [0, 0, 255, 255]], 2, 1, 1)?;",
-        "let (width, height, colors) = mrlyrs::core::unpng(&bytes)?;",
-        "assert_eq!((width, height, colors[1]), (2, 1, [0, 0, 255, 255]));",
-        "# Ok::<(), mrlyrs::Error>(())",
-        "```"
-      ],
-      "owner": null,
-      "self_kind": null,
-      "params": [
-        {
-          "name": "colors",
-          "ty": {
-            "t": "slice",
-            "mutable": false,
-            "item": {
-              "t": "array",
-              "item": {
-                "t": "scalar",
-                "name": "u8"
-              },
-              "len": 4
-            }
-          }
-        },
-        {
-          "name": "width",
-          "ty": {
-            "t": "scalar",
-            "name": "usize"
-          }
-        },
-        {
-          "name": "height",
-          "ty": {
-            "t": "scalar",
-            "name": "usize"
-          }
-        },
-        {
-          "name": "scale",
-          "ty": {
-            "t": "scalar",
-            "name": "usize"
-          }
-        }
-      ],
-      "ret": {
-        "t": "result",
-        "item": {
-          "t": "vec",
-          "item": {
-            "t": "scalar",
-            "name": "u8"
-          }
-        }
-      },
-      "dims": [],
-      "trait": null,
-      "source": "written",
-      "constant": false,
-      "cross": {
-        "status": "ok"
-      }
-    },
-    {
       "path": "core::colors::Theme::hues",
       "name": "hues",
       "module": "core::colors",
@@ -18252,7 +17765,7 @@
       "path": "core::error::overflow_error",
       "name": "overflow_error",
       "module": "core::error",
-      "defined_at": "core/error.rs:67",
+      "defined_at": "core/error.rs:64",
       "docs": [
         "Wraps a message in an Err of the overflow variant.",
         "",
@@ -18291,7 +17804,7 @@
       "path": "core::error::parse",
       "name": "parse",
       "module": "core::error",
-      "defined_at": "core/error.rs:106",
+      "defined_at": "core/error.rs:85",
       "docs": [
         "Parses JSON text into a value.",
         "",
@@ -18333,7 +17846,7 @@
       "path": "core::error::shape_error",
       "name": "shape_error",
       "module": "core::error",
-      "defined_at": "core/error.rs:58",
+      "defined_at": "core/error.rs:55",
       "docs": [
         "Wraps a message in an Err of the shape variant.",
         "",
@@ -18372,7 +17885,7 @@
       "path": "core::error::value_error",
       "name": "value_error",
       "module": "core::error",
-      "defined_at": "core/error.rs:49",
+      "defined_at": "core/error.rs:46",
       "docs": [
         "Wraps a message in an Err of the value variant.",
         "",
@@ -18564,7 +18077,7 @@
       "path": "core::image::blur",
       "name": "blur",
       "module": "core::image",
-      "defined_at": "core/image.rs:95",
+      "defined_at": "core/image.rs:73",
       "docs": [
         "Box-blurs rgba pixels by radius, each channel the mean of its edge-padded window."
       ],
@@ -18617,6 +18130,165 @@
             "name": "u8"
           },
           "len": 4
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::image::new",
+      "name": "new",
+      "module": "core::image",
+      "defined_at": "core/image.rs:30",
+      "docs": [
+        "Builds an image from its width, its height and its colors.",
+        "",
+        "# Errors",
+        "",
+        "Errs when the colors do not count width by height.",
+        "",
+        "```",
+        "let image = mrlyrs::core::Image::new(2, 1, vec![[255, 0, 0, 255], [0, 0, 255, 255]])?;",
+        "assert_eq!((image.width, image.height, image.colors[1]), (2, 1, [0, 0, 255, 255]));",
+        "assert!(mrlyrs::core::Image::new(2, 2, vec![[0, 0, 0, 255]]).is_err());",
+        "# Ok::<(), mrlyrs::Error>(())",
+        "```"
+      ],
+      "owner": "core::Image",
+      "self_kind": null,
+      "params": [
+        {
+          "name": "width",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "height",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "colors",
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "array",
+              "item": {
+                "t": "scalar",
+                "name": "u8"
+              },
+              "len": 4
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Image",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::image::resample",
+      "name": "resample",
+      "module": "core::image",
+      "defined_at": "core/image.rs:61",
+      "docs": [
+        "Resamples the image to a new size.",
+        "",
+        "# Errors",
+        "",
+        "Errs on a side of zero, colors that do not count width by height, or a size that overflows."
+      ],
+      "owner": "core::Image",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "width",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "height",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "filter",
+          "ty": {
+            "t": "enum",
+            "path": "core::Filter"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Image",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "core::image::scale",
+      "name": "scale",
+      "module": "core::image",
+      "defined_at": "core/image.rs:45",
+      "docs": [
+        "Draws every pixel as a scale by scale block, growing both sides by scale.",
+        "",
+        "# Errors",
+        "",
+        "Errs on a scale below one, colors that do not count width by height, or a grown size that overflows."
+      ],
+      "owner": "core::Image",
+      "self_kind": "ref",
+      "params": [
+        {
+          "name": "scale",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Image",
+          "dim": null
         }
       },
       "dims": [],
@@ -21641,70 +21313,6 @@
       }
     },
     {
-      "path": "core::unpng",
-      "name": "unpng",
-      "module": "core",
-      "defined_at": "core/codec/png.rs:148",
-      "docs": [
-        "Decodes a png to its width, height, and rgba colors.",
-        "",
-        "Grayscale, rgb, palette and 16-bit files all come back as 8-bit rgba.",
-        "",
-        "# Errors",
-        "",
-        "Errs when the bytes are not a png the decoder can expand to rgba."
-      ],
-      "owner": null,
-      "self_kind": null,
-      "params": [
-        {
-          "name": "bytes",
-          "ty": {
-            "t": "slice",
-            "mutable": false,
-            "item": {
-              "t": "scalar",
-              "name": "u8"
-            }
-          }
-        }
-      ],
-      "ret": {
-        "t": "result",
-        "item": {
-          "t": "tuple",
-          "items": [
-            {
-              "t": "scalar",
-              "name": "usize"
-            },
-            {
-              "t": "scalar",
-              "name": "usize"
-            },
-            {
-              "t": "vec",
-              "item": {
-                "t": "array",
-                "item": {
-                  "t": "scalar",
-                  "name": "u8"
-                },
-                "len": 4
-              }
-            }
-          ]
-        }
-      },
-      "dims": [],
-      "trait": null,
-      "source": "written",
-      "constant": false,
-      "cross": {
-        "status": "ok"
-      }
-    },
-    {
       "path": "font::Glyph::height",
       "name": "height",
       "module": "font",
@@ -22958,17 +22566,17 @@
       "path": "gen::background",
       "name": "background",
       "module": "gen",
-      "defined_at": "gen/mod.rs:53",
+      "defined_at": "gen/mod.rs:54",
       "docs": [
-        "Draws one seeded artwork and returns its PNG bytes: a random flat tile under the default recipe",
+        "Draws one seeded artwork and returns its image: a random flat tile under the default recipe",
         "constraints and paint, repeated `width` across and `height` down at one pixel per cell.",
         "",
         "The seed opens one stream, `variation::create` draws its own seed from it, and the paint and",
         "render follow on the same stream, so one seed always paints the same background.",
         "",
         "```",
-        "let png = mrlyrs::gen::background(1, 2, 2)?;",
-        "assert_eq!(png[..8], [137, 80, 78, 71, 13, 10, 26, 10]);",
+        "let image = mrlyrs::gen::background(1, 2, 2)?;",
+        "assert_eq!((image.width, image.height, image.colors.len()), (18, 18, 324));",
         "# Ok::<(), mrlyrs::Error>(())",
         "```",
         "",
@@ -23004,11 +22612,9 @@
       "ret": {
         "t": "result",
         "item": {
-          "t": "vec",
-          "item": {
-            "t": "scalar",
-            "name": "u8"
-          }
+          "t": "hand",
+          "name": "Image",
+          "dim": null
         }
       },
       "dims": [],
@@ -23750,7 +23356,7 @@
       "path": "gen::hex_key",
       "name": "hex_key",
       "module": "gen",
-      "defined_at": "gen/variation.rs:97",
+      "defined_at": "gen/variation.rs:98",
       "docs": [
         "Draws a hex key of the given length from the stream.",
         "",
@@ -24660,7 +24266,7 @@
       "path": "gen::variation::Config::default",
       "name": "default",
       "module": "gen::variation",
-      "defined_at": "gen/variation.rs:43",
+      "defined_at": "gen/variation.rs:44",
       "docs": [
         "Returns the default Config."
       ],
@@ -24683,9 +24289,9 @@
       "path": "gen::variation::File::new",
       "name": "new",
       "module": "gen::variation",
-      "defined_at": "gen/variation.rs:23",
+      "defined_at": "gen/variation.rs:24",
       "docs": [
-        "Builds a file of the given repetition counts with no PNG bytes."
+        "Builds a file of the given repetition counts with no image."
       ],
       "owner": "gen::variation::File",
       "self_kind": null,
@@ -24722,7 +24328,7 @@
       "path": "gen::variation::Variation::is_cover",
       "name": "is_cover",
       "module": "gen::variation",
-      "defined_at": "gen/variation.rs:79",
+      "defined_at": "gen/variation.rs:80",
       "docs": [
         "Returns whether the edition paints the whole tiled canvas."
       ],
@@ -24745,7 +24351,7 @@
       "path": "gen::variation::Variation::is_prime",
       "name": "is_prime",
       "module": "gen::variation",
-      "defined_at": "gen/variation.rs:86",
+      "defined_at": "gen/variation.rs:87",
       "docs": [
         "Returns whether the edition paints the base cell before tiling."
       ],
@@ -24768,7 +24374,7 @@
       "path": "gen::variation::create",
       "name": "create",
       "module": "gen::variation",
-      "defined_at": "gen/variation.rs:124",
+      "defined_at": "gen/variation.rs:125",
       "docs": [
         "Draws a variation's seed from the stream, then the variation itself on that seed, with a",
         "mask when the edition is Neighbors.",
@@ -24834,7 +24440,7 @@
       "path": "gen::variation::generate",
       "name": "generate",
       "module": "gen::variation",
-      "defined_at": "gen/variation.rs:158",
+      "defined_at": "gen/variation.rs:159",
       "docs": [
         "Builds the variation's base cell and draws its paint from the stream, painting the base",
         "under a prime edition.",
@@ -24900,14 +24506,14 @@
       "path": "gen::variation::render",
       "name": "render",
       "module": "gen::variation",
-      "defined_at": "gen/variation.rs:193",
+      "defined_at": "gen/variation.rs:194",
       "docs": [
-        "Renders every file of the variation to PNG at the given scale, scattering a Random edition",
+        "Renders every file of the variation to an image at the given scale, scattering a Random edition",
         "from the stream.",
         "",
         "# Errors",
         "",
-        "Errs when generate has not run, or when a file will not tile or encode at the scale."
+        "Errs when generate has not run, when a file will not tile, or on a scale below one."
       ],
       "owner": null,
       "self_kind": null,
@@ -26478,9 +26084,9 @@
       "path": "life::frames",
       "name": "frames",
       "module": "life",
-      "defined_at": "life/render.rs:27",
+      "defined_at": "life/render.rs:28",
       "docs": [
-        "Renders grids to white-on-black PNG bytes at a pixel scale.",
+        "Renders grids to white-on-black images at a pixel scale.",
         "",
         "```",
         "use mrlyrs::core::tensor::Tensor;",
@@ -26493,7 +26099,7 @@
         "",
         "# Errors",
         "",
-        "Errs when a grid will not encode to PNG at the scale."
+        "Errs on a scale below one."
       ],
       "owner": null,
       "self_kind": null,
@@ -26523,11 +26129,9 @@
         "item": {
           "t": "vec",
           "item": {
-            "t": "vec",
-            "item": {
-              "t": "scalar",
-              "name": "u8"
-            }
+            "t": "hand",
+            "name": "Image",
+            "dim": null
           }
         }
       },
@@ -26606,7 +26210,7 @@
       "path": "life::heatmap",
       "name": "heatmap",
       "module": "life",
-      "defined_at": "life/render.rs:132",
+      "defined_at": "life/render.rs:102",
       "docs": [
         "Renders a whole run's cumulative-visit heatmap frames with the heat ramp.",
         "",
@@ -26621,7 +26225,7 @@
         "",
         "# Errors",
         "",
-        "Errs when the grids differ in shape, or a frame will not encode at the scale."
+        "Errs when the grids differ in shape, or on a scale below one."
       ],
       "owner": null,
       "self_kind": null,
@@ -26651,11 +26255,9 @@
         "item": {
           "t": "vec",
           "item": {
-            "t": "vec",
-            "item": {
-              "t": "scalar",
-              "name": "u8"
-            }
+            "t": "hand",
+            "name": "Image",
+            "dim": null
           }
         }
       },
@@ -26869,66 +26471,6 @@
           "t": "hand",
           "name": "CellNd",
           "dim": 2
-        }
-      },
-      "dims": [],
-      "trait": null,
-      "source": "written",
-      "constant": false,
-      "cross": {
-        "status": "ok"
-      }
-    },
-    {
-      "path": "life::movie",
-      "name": "movie",
-      "module": "life",
-      "defined_at": "life/render.rs:52",
-      "docs": [
-        "Renders grids into one looping black-on-white gif, the delay in hundredths of a second.",
-        "",
-        "# Errors",
-        "",
-        "Errs when no grid is given, the grids differ in size, or the gif will not encode."
-      ],
-      "owner": null,
-      "self_kind": null,
-      "params": [
-        {
-          "name": "grids",
-          "ty": {
-            "t": "slice",
-            "mutable": false,
-            "item": {
-              "t": "hand",
-              "name": "CellNd",
-              "dim": 2
-            }
-          }
-        },
-        {
-          "name": "scale",
-          "ty": {
-            "t": "scalar",
-            "name": "usize"
-          }
-        },
-        {
-          "name": "delay",
-          "ty": {
-            "t": "scalar",
-            "name": "usize"
-          }
-        }
-      ],
-      "ret": {
-        "t": "result",
-        "item": {
-          "t": "vec",
-          "item": {
-            "t": "scalar",
-            "name": "u8"
-          }
         }
       },
       "dims": [],
@@ -27155,13 +26697,13 @@
       "path": "life::render::frame",
       "name": "frame",
       "module": "life::render",
-      "defined_at": "life/render.rs:42",
+      "defined_at": "life/render.rs:43",
       "docs": [
-        "Renders one grid to white-on-black PNG bytes at a pixel scale.",
+        "Renders one grid to a white-on-black image at a pixel scale.",
         "",
         "# Errors",
         "",
-        "Errs when the grid will not encode to PNG at the scale."
+        "Errs on a scale below one."
       ],
       "owner": null,
       "self_kind": null,
@@ -27190,11 +26732,9 @@
       "ret": {
         "t": "result",
         "item": {
-          "t": "vec",
-          "item": {
-            "t": "scalar",
-            "name": "u8"
-          }
+          "t": "hand",
+          "name": "Image",
+          "dim": null
         }
       },
       "dims": [],
@@ -38402,9 +37942,9 @@
       "path": "math::moire::render",
       "name": "render",
       "module": "math::moire",
-      "defined_at": "math/moire/render.rs:10",
+      "defined_at": "math/moire/render.rs:11",
       "docs": [
-        "Quantizes a field into colored levels and encodes PNG bytes.",
+        "Quantizes a field into colored levels and renders them as an image, each sample a scale by scale block.",
         "",
         "# Errors",
         "",
@@ -38470,11 +38010,9 @@
       "ret": {
         "t": "result",
         "item": {
-          "t": "vec",
-          "item": {
-            "t": "scalar",
-            "name": "u8"
-          }
+          "t": "hand",
+          "name": "Image",
+          "dim": null
         }
       },
       "dims": [],
@@ -42513,7 +42051,7 @@
       "path": "math::six::east",
       "name": "east",
       "module": "math::six",
-      "defined_at": "math/six/renderer.rs:30",
+      "defined_at": "math/six/renderer.rs:31",
       "docs": [
         "The three corners of the east-pointing triangle at the grid column and row."
       ],
@@ -42932,6 +42470,76 @@
       }
     },
     {
+      "path": "math::six::image",
+      "name": "image",
+      "module": "math::six",
+      "defined_at": "math/six/renderer.rs:485",
+      "docs": [
+        "Rasters a cell's triangles to an image at the given scale, stroked and padded when an outline is given.",
+        "",
+        "# Errors",
+        "",
+        "Errors when nothing renders or when the scale is zero."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "cell",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "Cell6d",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "scale",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "outline",
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "hand",
+              "name": "Color",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "width",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Image",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
       "path": "math::six::is_cube",
       "name": "is_cube",
       "module": "math::six",
@@ -43167,7 +42775,7 @@
       "path": "math::six::north",
       "name": "north",
       "module": "math::six",
-      "defined_at": "math/six/renderer.rs:20",
+      "defined_at": "math/six/renderer.rs:21",
       "docs": [
         "The three corners of the north-pointing triangle at the grid column and row."
       ],
@@ -43452,78 +43060,6 @@
           "t": "hand",
           "name": "Cell6d",
           "dim": null
-        }
-      },
-      "dims": [],
-      "trait": null,
-      "source": "written",
-      "constant": false,
-      "cross": {
-        "status": "ok"
-      }
-    },
-    {
-      "path": "math::six::png",
-      "name": "png",
-      "module": "math::six",
-      "defined_at": "math/six/renderer.rs:484",
-      "docs": [
-        "Rasters a cell's triangles to PNG bytes at the given scale, stroked and padded when an outline is given.",
-        "",
-        "# Errors",
-        "",
-        "Errors when nothing renders, when the scale is zero or when the encoder refuses the size."
-      ],
-      "owner": null,
-      "self_kind": null,
-      "params": [
-        {
-          "name": "cell",
-          "ty": {
-            "t": "ref",
-            "mutable": false,
-            "lifetime": null,
-            "item": {
-              "t": "hand",
-              "name": "Cell6d",
-              "dim": null
-            }
-          }
-        },
-        {
-          "name": "scale",
-          "ty": {
-            "t": "scalar",
-            "name": "usize"
-          }
-        },
-        {
-          "name": "outline",
-          "ty": {
-            "t": "option",
-            "item": {
-              "t": "hand",
-              "name": "Color",
-              "dim": null
-            }
-          }
-        },
-        {
-          "name": "width",
-          "ty": {
-            "t": "scalar",
-            "name": "usize"
-          }
-        }
-      ],
-      "ret": {
-        "t": "result",
-        "item": {
-          "t": "vec",
-          "item": {
-            "t": "scalar",
-            "name": "u8"
-          }
         }
       },
       "dims": [],
@@ -43852,16 +43388,16 @@
       }
     },
     {
-      "path": "math::six::rect_png",
-      "name": "rect_png",
+      "path": "math::six::rect_image",
+      "name": "rect_image",
       "module": "math::six",
-      "defined_at": "math/six/renderer.rs:495",
+      "defined_at": "math/six/renderer.rs:496",
       "docs": [
-        "Rasters the hexagon tiled three by three and cropped to one interlocking rectangle to PNG bytes.",
+        "Rasters the hexagon tiled three by three and cropped to one interlocking rectangle to an image.",
         "",
         "# Errors",
         "",
-        "Errors for a cell that is not a hexagon, when the scale is zero or when the encoder refuses the size."
+        "Errors for a cell that is not a hexagon or when the scale is zero."
       ],
       "owner": null,
       "self_kind": null,
@@ -43900,11 +43436,9 @@
       "ret": {
         "t": "result",
         "item": {
-          "t": "vec",
-          "item": {
-            "t": "scalar",
-            "name": "u8"
-          }
+          "t": "hand",
+          "name": "Image",
+          "dim": null
         }
       },
       "dims": [],
@@ -43919,7 +43453,7 @@
       "path": "math::six::rect_svg",
       "name": "rect_svg",
       "module": "math::six",
-      "defined_at": "math/six/renderer.rs:221",
+      "defined_at": "math/six/renderer.rs:222",
       "docs": [
         "Renders the hexagon tiled three by three and cropped to one interlocking rectangle as an SVG string.",
         "",
@@ -44253,7 +43787,7 @@
       "path": "math::six::south",
       "name": "south",
       "module": "math::six",
-      "defined_at": "math/six/renderer.rs:25",
+      "defined_at": "math/six/renderer.rs:26",
       "docs": [
         "The three corners of the south-pointing triangle at the grid column and row."
       ],
@@ -44962,7 +44496,7 @@
       "path": "math::six::svg",
       "name": "svg",
       "module": "math::six",
-      "defined_at": "math/six/renderer.rs:201",
+      "defined_at": "math/six/renderer.rs:202",
       "docs": [
         "Renders a cell's triangles to an SVG string at the given scale, stroked and padded when an outline is given.",
         "",
@@ -45382,7 +44916,7 @@
       "path": "math::six::triangles",
       "name": "triangles",
       "module": "math::six",
-      "defined_at": "math/six/renderer.rs:97",
+      "defined_at": "math/six/renderer.rs:98",
       "docs": [
         "Folds a cell into colored screen triangles, dropping the transparent ones, at the cell's start parity or the given override.",
         "",
@@ -45465,7 +44999,7 @@
       "path": "math::six::west",
       "name": "west",
       "module": "math::six",
-      "defined_at": "math/six/renderer.rs:35",
+      "defined_at": "math/six/renderer.rs:36",
       "docs": [
         "The three corners of the west-pointing triangle at the grid column and row."
       ],
@@ -51805,6 +51339,90 @@
       }
     },
     {
+      "path": "math::two::image",
+      "name": "image",
+      "module": "math::two",
+      "defined_at": "math/two/renderer.rs:135",
+      "docs": [
+        "Renders the cell to an image at the given pixel scale, stroked and padded when an outline is given.",
+        "",
+        "```",
+        "let cell = mrlyrs::math::two::carpet(3, 1)?;",
+        "let image = mrlyrs::math::two::image(&cell, 4, None, 1, mrlyrs::math::two::Shape::Square)?;",
+        "assert_eq!((image.width, image.height, image.colors.len()), (12, 12, 144));",
+        "# Ok::<(), mrlyrs::Error>(())",
+        "```",
+        "",
+        "# Errors",
+        "",
+        "Errs on a scale below one."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "cell",
+          "ty": {
+            "t": "ref",
+            "mutable": false,
+            "lifetime": null,
+            "item": {
+              "t": "hand",
+              "name": "CellNd",
+              "dim": 2
+            }
+          }
+        },
+        {
+          "name": "scale",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "outline",
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "hand",
+              "name": "Color",
+              "dim": null
+            }
+          }
+        },
+        {
+          "name": "width",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "shape",
+          "ty": {
+            "t": "enum",
+            "path": "math::two::Shape"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "hand",
+          "name": "Image",
+          "dim": null
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
       "path": "math::two::level_set",
       "name": "level_set",
       "module": "math::two",
@@ -52276,85 +51894,6 @@
       }
     },
     {
-      "path": "math::two::png",
-      "name": "png",
-      "module": "math::two",
-      "defined_at": "math/two/renderer.rs:127",
-      "docs": [
-        "Renders the cell to PNG bytes at the given pixel scale, stroked and padded when an outline is given.",
-        "",
-        "# Errors",
-        "",
-        "Errors when the encoder refuses the cell's size or scale."
-      ],
-      "owner": null,
-      "self_kind": null,
-      "params": [
-        {
-          "name": "cell",
-          "ty": {
-            "t": "ref",
-            "mutable": false,
-            "lifetime": null,
-            "item": {
-              "t": "hand",
-              "name": "CellNd",
-              "dim": 2
-            }
-          }
-        },
-        {
-          "name": "scale",
-          "ty": {
-            "t": "scalar",
-            "name": "usize"
-          }
-        },
-        {
-          "name": "outline",
-          "ty": {
-            "t": "option",
-            "item": {
-              "t": "hand",
-              "name": "Color",
-              "dim": null
-            }
-          }
-        },
-        {
-          "name": "width",
-          "ty": {
-            "t": "scalar",
-            "name": "usize"
-          }
-        },
-        {
-          "name": "shape",
-          "ty": {
-            "t": "enum",
-            "path": "math::two::Shape"
-          }
-        }
-      ],
-      "ret": {
-        "t": "result",
-        "item": {
-          "t": "vec",
-          "item": {
-            "t": "scalar",
-            "name": "u8"
-          }
-        }
-      },
-      "dims": [],
-      "trait": null,
-      "source": "written",
-      "constant": false,
-      "cross": {
-        "status": "ok"
-      }
-    },
-    {
       "path": "math::two::point",
       "name": "point",
       "module": "math::two",
@@ -52628,7 +52167,7 @@
       "path": "math::two::svg",
       "name": "svg",
       "module": "math::two",
-      "defined_at": "math/two/renderer.rs:213",
+      "defined_at": "math/two/renderer.rs:225",
       "docs": [
         "Renders the cell to an SVG string at the given scale, stroked and padded when an outline is given.",
         "",
@@ -52702,7 +52241,7 @@
       "path": "math::two::text",
       "name": "text",
       "module": "math::two",
-      "defined_at": "math/two/renderer.rs:39",
+      "defined_at": "math/two/renderer.rs:40",
       "docs": [
         "Renders the cell as rows of glyphs, or of digits where no glyph is mapped.",
         "",

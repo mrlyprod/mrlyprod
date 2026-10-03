@@ -46,6 +46,9 @@ def hline(number: int, level: int) -> dict[str, Any]:
 def htree(number: int, level: int) -> dict[str, Any]:
     """Builds the htree fractal, its seed striped along even rows, deepened to the level."""
 
+def image(cell: dict[str, Any], scale: int, outline: tuple[int, int, int, int] | None, width: int, shape: Literal["Square", "Circle", "Diamond"]) -> NDArray[Any]:
+    """Renders the cell to an image at the given pixel scale, stroked and padded when an outline is given."""
+
 def level_set(number: int, levels: list[int], level: int, rotation: int, base: int) -> dict[str, Any]:
     """Builds the level-set design, filling every residue corner whose digits sum to a named level."""
 
@@ -69,9 +72,6 @@ def ones(number: int, level: int) -> dict[str, Any]:
 
 def perimeter(cell: dict[str, Any]) -> int:
     """Counts the faces of filled sites open to emptiness or the border."""
-
-def png(cell: dict[str, Any], scale: int, outline: tuple[int, int, int, int] | None, width: int, shape: Literal["Square", "Circle", "Diamond"]) -> bytes:
-    """Renders the cell to PNG bytes at the given pixel scale, stroked and padded when an outline is given."""
 
 def point(number: int, level: int) -> dict[str, Any]:
     """Builds the point fractal, its seed on at every odd-odd site, deepened to the level."""

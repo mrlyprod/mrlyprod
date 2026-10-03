@@ -148,8 +148,8 @@ def layer(params: dict[str, Any]) -> list[bool]:
 def named(name: str, limit: int) -> Preset:
     """Returns the preset the name picks."""
 
-def render(field: Field, colorizer: Any, levels: int, symmetric: bool, invert: bool, scale: int) -> bytes:
-    """Quantizes a field into colored levels and encodes PNG bytes."""
+def render(field: Field, colorizer: Any, levels: int, symmetric: bool, invert: bool, scale: int) -> NDArray[Any]:
+    """Quantizes a field into colored levels and renders them as an image, each sample a scale by scale block."""
 
 def stack(spec: dict[str, Any], numbers: list[int], combine: Literal["Sum", "And", "Xor"], level: int, lattice: Literal["Square", "Hex"], size: int, slices: list[float]) -> Field:
     """Layers one design at several side numbers into a field under the chosen combine."""

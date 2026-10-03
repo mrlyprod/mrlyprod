@@ -18,7 +18,7 @@ mod models;
 pub mod painter;
 /// The square raster of a hex cell's fills at the true aspect.
 pub mod raster;
-/// The triangle, SVG and PNG renderings of a hex cell.
+/// The triangle, SVG and pixel renderings of a hex cell.
 pub mod renderer;
 /// The JSON form of a hex cell and its projection.
 pub mod serializer;
@@ -70,7 +70,7 @@ pub use graph::{slice_core_graph, slice_dual_graph, slice_edge_graph, slice_tunn
 pub use models::Cell6d;
 pub use painter::paint;
 pub use raster::raster;
-pub use renderer::{east, north, png, rect_png, rect_svg, south, svg, triangles, west};
+pub use renderer::{east, image, north, rect_image, rect_svg, south, svg, triangles, west};
 pub use serializer::{from_json, to_json};
 pub use topology::{components, giant, giant_network, holes, rim_holes, spectral_exponent};
 

@@ -54,9 +54,8 @@ pub fn moire(
         "diverge" => Colorizer::diverge(),
         _ => Colorizer::fire(),
     };
-    let png = render(&field, &colorizer, levels, false, invert, 1)?;
-    let (width, height, colors) = mrlyrs::core::unpng(&png)?;
-    Ok(Pixels::of(width, height, colors))
+    let image = render(&field, &colorizer, levels, false, invert, 1)?;
+    Ok(Pixels::of(image.width, image.height, image.colors))
 }
 
 /// Returns the exact Pearson correlation of the flat carpet layers at two scales, area-weighted on their lcm grid, which is zero exactly when the two odd scales are coprime.

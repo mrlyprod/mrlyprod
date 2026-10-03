@@ -6,6 +6,7 @@ gen.initSync({ module: bytes });
 const rows = await Bun.file(new URL("../mrlyrs/fixtures/gen.json", import.meta.url)).json();
 const row = (fn) => rows.find((r) => r.fn === fn);
 const sha256 = (bytes) => new Bun.CryptoHasher("sha256").update(bytes).digest("hex");
+const pixels = (image) => ({ shape: image.shape, sha256: sha256(image.colors) });
 const tileConfig = () => ({ groups: gen.Group.all(), catalog: "Classics", min_size: 3, max_size: 9, parity: "Odds" });
 
 test("gen::name::Tile::recipe", () => {
@@ -54,5 +55,5 @@ test("gen::variation::create", () => {
 
 test("gen::background", () => {
   const r = row("gen::background");
-  expect(sha256(gen.background(r.in.seed, r.in.width, r.in.height))).toBe(r.out);
+  expect(pixels(gen.background(r.in.seed, r.in.width, r.in.height))).toEqual(r.out);
 });

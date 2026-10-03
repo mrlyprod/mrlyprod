@@ -3,6 +3,7 @@ use crate::core::cell::mapping;
 use crate::core::cell::Mode;
 use crate::core::colors::Color;
 use crate::core::error::{value_error, Result};
+use crate::core::image::Image;
 use crate::math::cell::push_glyph;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -117,20 +118,27 @@ fn rim(stencil: &[bool], side: usize, width: usize) -> Vec<bool> {
     out
 }
 
-// PNG
+// IMAGE
 
-/// Renders the cell to PNG bytes at the given pixel scale, stroked and padded when an outline is given.
+/// Renders the cell to an image at the given pixel scale, stroked and padded when an outline is given.
+///
+/// ```
+/// let cell = mrlyrs::math::two::carpet(3, 1)?;
+/// let image = mrlyrs::math::two::image(&cell, 4, None, 1, mrlyrs::math::two::Shape::Square)?;
+/// assert_eq!((image.width, image.height, image.colors.len()), (12, 12, 144));
+/// # Ok::<(), mrlyrs::Error>(())
+/// ```
 ///
 /// # Errors
 ///
-/// Errors when the encoder refuses the cell's size or scale.
-pub fn png(
+/// Errs on a scale below one.
+pub fn image(
     cell: &Cell2d,
     scale: usize,
     outline: Option<Color>,
     width: usize,
     shape: Shape,
-) -> Result<Vec<u8>> {
+) -> Result<Image> {
     if scale < 1 {
         return value_error("scale must be at least 1.");
     }
@@ -164,7 +172,11 @@ pub fn png(
             }
         }
     }
-    crate::core::png(&pixels, img_w, img_h, 1)
+    Ok(Image {
+        width: img_w,
+        height: img_h,
+        colors: pixels,
+    })
 }
 
 // SVG
@@ -245,7 +257,6 @@ mod tests {
     use super::*;
     use crate::core::colors::{ALPHA, RED, WHITE};
     use crate::core::tensor::Tensor;
-    use crate::core::PNG_MAGIC;
     use crate::math::two::designs;
     #[test]
     fn text_digits_and_glyphs() {
@@ -262,31 +273,31 @@ mod tests {
         assert_eq!(text(&c, Some(&glyphs)), vec!["..##"]);
     }
     #[test]
-    fn png_signature_and_size() {
-        let c = designs::carpet(3, 2).unwrap();
-        let bytes = png(&c, 4, None, 1, Shape::Square).unwrap();
-        assert_eq!(&bytes[0..8], &PNG_MAGIC);
-        assert!(bytes.len() > 100);
-    }
-    #[test]
-    fn a_transparent_site_round_trips_the_png() {
+    fn a_transparent_site_stays_transparent() {
         let mut c = Cell2d::new(Tensor::of(vec![0, 0, 0], vec![1, 3]).unwrap()).unwrap();
         let colors: Vec<[u8; 4]> = [WHITE, ALPHA, Color::rgb(17, 17, 17)]
             .iter()
             .map(|c| [c.r, c.g, c.b, c.a])
             .collect();
         c.cell.colors = Some(colors.clone());
-        let bytes = png(&c, 1, None, 0, Shape::Square).unwrap();
-        assert_eq!(crate::core::unpng(&bytes).unwrap(), (3, 1, colors));
+        let sheet = image(&c, 1, None, 0, Shape::Square).unwrap();
+        assert_eq!((sheet.width, sheet.height, sheet.colors), (3, 1, colors));
     }
     #[test]
-    fn outlined_and_round_pngs_differ_from_the_bare_square() {
+    fn outlined_and_round_images_differ_from_the_bare_square() {
         let c = designs::carpet(3, 1).unwrap();
-        let bare = png(&c, 3, None, 1, Shape::Square).unwrap();
-        let lined = png(&c, 3, Some(RED), 1, Shape::Square).unwrap();
-        let round = png(&c, 3, None, 1, Shape::Circle).unwrap();
-        assert!(lined.len() > bare.len());
+        let bare = image(&c, 3, None, 1, Shape::Square).unwrap();
+        let lined = image(&c, 3, Some(RED), 1, Shape::Square).unwrap();
+        let round = image(&c, 3, None, 1, Shape::Circle).unwrap();
+        assert_eq!((bare.width, lined.width), (9, 11));
+        assert!(lined.colors.contains(&[RED.r, RED.g, RED.b, RED.a]));
+        assert_eq!((round.width, round.height), (bare.width, bare.height));
         assert_ne!(round, bare);
+    }
+    #[test]
+    fn refuses_a_zero_scale() {
+        let c = designs::carpet(3, 1).unwrap();
+        assert!(image(&c, 0, None, 1, Shape::Square).is_err());
     }
     #[test]
     fn svg_square_holds_a_rect_a_site() {
@@ -318,32 +329,32 @@ mod golden {
     use super::*;
     use crate::math::two::designs;
     #[test]
-    fn png_pixels_stay_pinned() {
+    fn image_pixels_stay_pinned() {
         let black = [0, 0, 0, 255];
         let white = [255, 255, 255, 255];
         let cases = [
             (
-                png(&designs::carpet(3, 2).unwrap(), 4, None, 1, Shape::Square).unwrap(),
+                image(&designs::carpet(3, 2).unwrap(), 4, None, 1, Shape::Square).unwrap(),
                 36,
                 1024,
                 white,
             ),
             (
-                png(&designs::htree(5, 1).unwrap(), 1, None, 1, Shape::Square).unwrap(),
+                image(&designs::htree(5, 1).unwrap(), 1, None, 1, Shape::Square).unwrap(),
                 5,
                 15,
                 black,
             ),
             (
-                png(&designs::vtree(7, 1).unwrap(), 3, None, 1, Shape::Square).unwrap(),
+                image(&designs::vtree(7, 1).unwrap(), 3, None, 1, Shape::Square).unwrap(),
                 21,
                 252,
                 white,
             ),
         ];
-        for (bytes, side, inked, centre) in &cases {
-            let (w, h, pixels) = crate::core::unpng(bytes).unwrap();
-            assert_eq!((w, h), (*side, *side));
+        for (sheet, side, inked, centre) in &cases {
+            let pixels = &sheet.colors;
+            assert_eq!((sheet.width, sheet.height), (*side, *side));
             assert!(pixels.iter().all(|p| *p == black || *p == white));
             assert_eq!(pixels.iter().filter(|p| **p == black).count(), *inked);
             assert_eq!(pixels[0], black);

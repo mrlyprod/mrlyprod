@@ -21,6 +21,11 @@ export interface Cell6d {
     orientation: "Horizontal" | "Vertical";
     start: number;
 }
+/** An image: its height and width, and its flat rgba colors row by row. */
+export interface Image {
+    shape: [number, number];
+    colors: Uint8Array;
+}
 /** A color inside plain data, serde's form. */
 export interface ColorData {
     r: number;
@@ -777,8 +782,8 @@ export declare namespace moire {
     export function layer(params: moire.Layer): boolean[];
     /** Returns the preset the name picks. */
     export function named(name: string, limit: number): moire.Preset;
-    /** Quantizes a field into colored levels and encodes PNG bytes. */
-    export function render(field: moire.Field, colorizer: core.Colorizer, levels: number, symmetric: boolean, invert: boolean, scale: number): Uint8Array;
+    /** Quantizes a field into colored levels and renders them as an image, each sample a scale by scale block. */
+    export function render(field: moire.Field, colorizer: core.Colorizer, levels: number, symmetric: boolean, invert: boolean, scale: number): Image;
     /** Layers one design at several side numbers into a field under the chosen combine. */
     export function stack(spec: moire.Spec, numbers: ArrayLike<number>, combine: moire.Combine, level: number, lattice: moire.Lattice, size: number, slices: ArrayLike<number>): moire.Field;
     /** Sums layers of several designs at one side number into a field. */
@@ -1452,6 +1457,8 @@ export declare namespace six {
     export function height(cell: Cell6d): number;
     /** Counts the holes of the fill, its piece count less the Euler number of the filled sub-mesh. */
     export function holes(cell: Cell6d): number;
+    /** Rasters a cell's triangles to an image at the given scale, stroked and padded when an outline is given. */
+    export function image(cell: Cell6d, scale: number, outline: Color | undefined, width: number): Image;
     /** Returns whether the cell's three sides are equal. */
     export function is_cube(cell: Cell): boolean;
     /** Returns whether the cell's width, height and parity frame a hexagon. */
@@ -1472,8 +1479,6 @@ export declare namespace six {
     export function paint(cell: Cell6d, custom?: Record<string, Color[]>, mode?: core.Mode, rng?: Rng): Cell6d;
     /** Writes the value wherever the tiled mask is nonzero. */
     export function perforate(cell: Cell6d, mask: Tensor, value: number): Cell6d;
-    /** Rasters a cell's triangles to PNG bytes at the given scale, stroked and padded when an outline is given. */
-    export function png(cell: Cell6d, scale: number, outline: Color | undefined, width: number): Uint8Array;
     /** Projects a cube's three facing sides into a hexagon of fills and voids. */
     export function pro(cell: Cell): Cell6d;
     /** Builds the coded 3d design and projects its facing sides. */
@@ -1486,8 +1491,8 @@ export declare namespace six {
     export function radial_mask(radius: number, orient: six.Orientation): Tensor;
     /** Rasterizes a hex cell's fills on a square of the side at the true hex aspect, one for a fill triangle and zero elsewhere. */
     export function raster(cell: Cell6d, size: number): Float32Array;
-    /** Rasters the hexagon tiled three by three and cropped to one interlocking rectangle to PNG bytes. */
-    export function rect_png(cell: Cell6d, scale: number, start?: number): Uint8Array;
+    /** Rasters the hexagon tiled three by three and cropped to one interlocking rectangle to an image. */
+    export function rect_image(cell: Cell6d, scale: number, start?: number): Image;
     /** Renders the hexagon tiled three by three and cropped to one interlocking rectangle as an SVG string. */
     export function rect_svg(cell: Cell6d, scale: number, start?: number): string;
     /** Counts the void regions the rim never reaches, the second route to the hole count. */
@@ -2107,6 +2112,8 @@ export declare namespace two {
     export function hline(number: number, level: number): Cell;
     /** Builds the htree fractal, its seed striped along even rows, deepened to the level. */
     export function htree(number: number, level: number): Cell;
+    /** Renders the cell to an image at the given pixel scale, stroked and padded when an outline is given. */
+    export function image(cell: Cell, scale: number, outline: Color | undefined, width: number, shape: two.Shape): Image;
     /** Builds the level-set design, filling every residue corner whose digits sum to a named level. */
     export function level_set(number: number, levels: ArrayLike<number>, level: number, rotation: number, base: number): Cell;
     /** Tiles the mask over the shape and crops it, the perforation pattern itself. */
@@ -2123,8 +2130,6 @@ export declare namespace two {
     export function ones(number: number, level: number): Cell;
     /** Counts the faces of filled sites open to emptiness or the border. */
     export function perimeter(cell: Cell): string;
-    /** Renders the cell to PNG bytes at the given pixel scale, stroked and padded when an outline is given. */
-    export function png(cell: Cell, scale: number, outline: Color | undefined, width: number, shape: two.Shape): Uint8Array;
     /** Builds the point fractal, its seed on at every odd-odd site, deepened to the level. */
     export function point(number: number, level: number): Cell;
     /** Reads the payload back from a framed sheet, the plain fourth cell naming the sites. */

@@ -21,6 +21,11 @@ export interface Cell6d {
     orientation: "Horizontal" | "Vertical";
     start: number;
 }
+/** An image: its height and width, and its flat rgba colors row by row. */
+export interface Image {
+    shape: [number, number];
+    colors: Uint8Array;
+}
 /** A color inside plain data, serde's form. */
 export interface ColorData {
     r: number;
@@ -73,12 +78,8 @@ export function hex_fit(pixels: ArrayLike<number>[], width: number, height: numb
 export function hex_size(width: number, height: number, vertical: boolean): [number, number];
 /** Resamples rgba pixels to a new size. */
 export function resample(pixels: ArrayLike<number>[], width: number, height: number, out_w: number, out_h: number, filter: Filter): Uint8Array[];
-/** Decodes a png to its width, height, and rgba colors. */
-export function unpng(bytes: ArrayLike<number>): [number, number, Uint8Array[]];
 /** The height of an equilateral triangle over its side, the squash a hex rendering wears. */
 export function HEX_RATIO(): number;
-/** The eight bytes every png file starts with. */
-export function PNG_MAGIC(): Uint8Array;
 /** A rule that turns counter values into colors. */
 export type Colorizer = { Bins: { background: ColorData; ramp: ColorData[] } };
 export const Colorizer: {
@@ -101,46 +102,6 @@ export const Dtype: {
 };
 /** The way a resampling weighs the source pixels it reads. */
 export type Filter = "Nearest" | "Linear" | "Box";
-export interface ImageData {
-    /** The width in pixels. */
-    width: number;
-    /** The height in pixels. */
-    height: number;
-    /** The palette index of every pixel, row by row. */
-    rows: number[][];
-    /** The colors the rows index. */
-    palette: ColorData[];
-}
-/** A paletted image: rows of palette indices and the palette they point into, hex strings in json. */
-export class Image {
-    /** Builds an image from its four parts. */
-    constructor(width: number, height: number, rows: ArrayLike<number>[], palette: Color[]);
-    free(): void;
-    /** Reads the Image from its plain data. */
-    static from(data: ImageData): Image;
-    /** Writes the Image as plain data. */
-    toJSON(): ImageData;
-    /** The width in pixels. */
-    get width(): number;
-    set width(value: number);
-    /** The height in pixels. */
-    get height(): number;
-    set height(value: number);
-    /** The palette index of every pixel, row by row. */
-    get rows(): Uint32Array[];
-    set rows(value: ArrayLike<number>[]);
-    /** The colors the rows index. */
-    get palette(): Color[];
-    set palette(value: Color[]);
-    /** Returns the flat rgba pixels, transparent wherever an index misses the palette. */
-    colors(): Uint8Array[];
-    /** Builds a paletted image from raw rgba pixels, growing the palette as new colors appear. */
-    static from_pixels(width: number, height: number, pixels: ArrayLike<number>[]): Image;
-    /** Encodes the image as a png at the given scale. */
-    png(scale: number): Uint8Array;
-    /** Resamples the image to a new size, its palette rebuilt from the blended pixels. */
-    resample(width: number, height: number, filter: Filter): Image;
-}
 /** The ways paint picks a color within a type's palette. */
 export type Mode = "Type" | "Tag" | "Index" | "Enumerate" | "Random" | "Row" | "Column" | "Depth";
 export declare namespace cell {
@@ -198,12 +159,6 @@ export declare namespace cell {
     export function tile(cell: Cell, reps: ArrayLike<number>): Cell;
     /** Builds the flat source index of every destination cell after tiling reps copies per axis. */
     export function tile_map(shape: ArrayLike<number>, reps: ArrayLike<number>): Uint32Array;
-}
-export declare namespace codec {
-    /** Encodes indexed frames as an animated gif89a, each source pixel a scale by scale block. */
-    export function gif(frames: ArrayLike<number>[], palette: ArrayLike<number>[], width: number, height: number, scale: number, delay: number): Uint8Array;
-    /** Encodes rgba colors as a png, drawing each source pixel as a scale by scale block. */
-    export function png(colors: ArrayLike<number>[], width: number, height: number, scale: number): Uint8Array;
 }
 export declare namespace colors {
     /** Returns the color with its alpha set to level. */
@@ -413,6 +368,12 @@ export declare namespace error {
 export declare namespace image {
     /** Box-blurs rgba pixels by radius, each channel the mean of its edge-padded window. */
     export function blur(pixels: ArrayLike<number>[], width: number, height: number, radius: number): Uint8Array[];
+    /** Builds an image from its width, its height and its colors. */
+    export function new_(width: number, height: number, colors: ArrayLike<number>[]): Image;
+    /** Resamples the image to a new size. */
+    export function resample(image: Image, width: number, height: number, filter: Filter): Image;
+    /** Draws every pixel as a scale by scale block, growing both sides by scale. */
+    export function scale(image: Image, scale: number): Image;
 }
 export declare namespace paint {
     /** Colors the cell from the paint's inks under its edition mode, scattering the Random edition from the stream. */

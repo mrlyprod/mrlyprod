@@ -2031,7 +2031,7 @@ pub fn moire_pairs_witness(scale: usize) -> Result<JsValue, JsValue> {
     hand::to_js(&value)
 }
 
-/// Quantizes a field into colored levels and encodes PNG bytes.
+/// Quantizes a field into colored levels and renders them as an image, each sample a scale by scale block.
 #[wasm_bindgen]
 pub fn moire_render(
     field: &moire_Field,
@@ -2040,12 +2040,12 @@ pub fn moire_render(
     symmetric: bool,
     invert: bool,
     scale: usize,
-) -> Result<Vec<u8>, JsValue> {
+) -> Result<JsValue, JsValue> {
     let colorizer = hand::from_js::<mrlyrs::core::Colorizer>(&colorizer)?;
     let value =
         mrlyrs::math::moire::render(&field.inner, &colorizer, levels, symmetric, invert, scale)
             .map_err(hand::throw)?;
-    Ok(value)
+    hand::image_to_js(&value)
 }
 
 /// Returns the two lattice coordinates of each pixel centre along a row.
@@ -2603,6 +2603,20 @@ pub fn six_holes(cell: JsValue) -> Result<usize, JsValue> {
     Ok(value)
 }
 
+/// Rasters a cell's triangles to an image at the given scale, stroked and padded when an outline is given.
+#[wasm_bindgen]
+pub fn six_image(
+    cell: JsValue,
+    scale: usize,
+    outline: JsValue,
+    width: usize,
+) -> Result<JsValue, JsValue> {
+    let cell = hand::cell6d_from_js(&cell)?;
+    let outline = hand::option_from_js(&outline, hand::color_from_js)?;
+    let value = mrlyrs::math::six::image(&cell, scale, outline, width).map_err(hand::throw)?;
+    hand::image_to_js(&value)
+}
+
 /// Returns whether the cell's three sides are equal.
 #[wasm_bindgen]
 pub fn six_is_cube(cell: JsValue) -> Result<bool, JsValue> {
@@ -2715,20 +2729,6 @@ pub fn six_perforate(cell: JsValue, mask: JsValue, value: u8) -> Result<JsValue,
     hand::cell6d_to_js(&value)
 }
 
-/// Rasters a cell's triangles to PNG bytes at the given scale, stroked and padded when an outline is given.
-#[wasm_bindgen]
-pub fn six_png(
-    cell: JsValue,
-    scale: usize,
-    outline: JsValue,
-    width: usize,
-) -> Result<Vec<u8>, JsValue> {
-    let cell = hand::cell6d_from_js(&cell)?;
-    let outline = hand::option_from_js(&outline, hand::color_from_js)?;
-    let value = mrlyrs::math::six::png(&cell, scale, outline, width).map_err(hand::throw)?;
-    Ok(value)
-}
-
 /// Projects a cube's three facing sides into a hexagon of fills and voids.
 #[wasm_bindgen]
 pub fn six_pro(cell: JsValue) -> Result<JsValue, JsValue> {
@@ -2783,13 +2783,13 @@ pub fn six_raster(cell: JsValue, size: usize) -> Result<Vec<f32>, JsValue> {
     Ok(value)
 }
 
-/// Rasters the hexagon tiled three by three and cropped to one interlocking rectangle to PNG bytes.
+/// Rasters the hexagon tiled three by three and cropped to one interlocking rectangle to an image.
 #[wasm_bindgen]
-pub fn six_rect_png(cell: JsValue, scale: usize, start: JsValue) -> Result<Vec<u8>, JsValue> {
+pub fn six_rect_image(cell: JsValue, scale: usize, start: JsValue) -> Result<JsValue, JsValue> {
     let cell = hand::cell6d_from_js(&cell)?;
     let start = hand::from_js::<Option<usize>>(&start)?;
-    let value = mrlyrs::math::six::rect_png(&cell, scale, start).map_err(hand::throw)?;
-    Ok(value)
+    let value = mrlyrs::math::six::rect_image(&cell, scale, start).map_err(hand::throw)?;
+    hand::image_to_js(&value)
 }
 
 /// Renders the hexagon tiled three by three and cropped to one interlocking rectangle as an SVG string.
@@ -4132,6 +4132,23 @@ pub fn two_htree(number: usize, level: usize) -> Result<JsValue, JsValue> {
     hand::cell2d_to_js(&value)
 }
 
+/// Renders the cell to an image at the given pixel scale, stroked and padded when an outline is given.
+#[wasm_bindgen]
+pub fn two_image(
+    cell: JsValue,
+    scale: usize,
+    outline: JsValue,
+    width: usize,
+    shape: JsValue,
+) -> Result<JsValue, JsValue> {
+    let cell = hand::cell2d_from_js(&cell)?;
+    let outline = hand::option_from_js(&outline, hand::color_from_js)?;
+    let shape = hand::from_js::<mrlyrs::math::two::Shape>(&shape)?;
+    let value =
+        mrlyrs::math::two::image(&cell, scale, outline, width, shape).map_err(hand::throw)?;
+    hand::image_to_js(&value)
+}
+
 /// Builds the level-set design, filling every residue corner whose digits sum to a named level.
 #[wasm_bindgen]
 pub fn two_level_set(
@@ -4215,22 +4232,6 @@ pub fn two_perimeter(cell: JsValue) -> Result<JsValue, JsValue> {
     let cell = hand::cell2d_from_js(&cell)?;
     let value = mrlyrs::math::two::perimeter(&cell);
     Ok(JsValue::from_str(&value.to_string()))
-}
-
-/// Renders the cell to PNG bytes at the given pixel scale, stroked and padded when an outline is given.
-#[wasm_bindgen]
-pub fn two_png(
-    cell: JsValue,
-    scale: usize,
-    outline: JsValue,
-    width: usize,
-    shape: JsValue,
-) -> Result<Vec<u8>, JsValue> {
-    let cell = hand::cell2d_from_js(&cell)?;
-    let outline = hand::option_from_js(&outline, hand::color_from_js)?;
-    let shape = hand::from_js::<mrlyrs::math::two::Shape>(&shape)?;
-    let value = mrlyrs::math::two::png(&cell, scale, outline, width, shape).map_err(hand::throw)?;
-    Ok(value)
 }
 
 /// Builds the point fractal, its seed on at every odd-odd site, deepened to the level.

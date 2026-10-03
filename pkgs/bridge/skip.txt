@@ -1,4 +1,4 @@
-core::block generic over the pixel type, u8 in gif and [u8; 4] in png
+core::block generic over the element type; core::image::scale crosses for rgba pixels
 core::error::overflow_error an error constructor, generic over the Ok type
 core::error::shape_error an error constructor, generic over the Ok type
 core::error::value_error an error constructor, generic over the Ok type

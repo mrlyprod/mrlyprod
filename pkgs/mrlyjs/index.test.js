@@ -28,11 +28,34 @@ test("a tensor crosses both ways keeping its shape and its typed array kind", ()
   expect(wide.data).toBeInstanceOf(Uint32Array);
 });
 
-test("a seeded png crosses out as a Uint8Array", () => {
-  const png = gen.background(1, 4, 4);
-  expect(png).toBeInstanceOf(Uint8Array);
-  expect(Array.from(png.slice(0, 8))).toEqual(Array.from(core.PNG_MAGIC()));
-  expect(Array.from(png)).toEqual(Array.from(gen.background("1", 4, 4)));
+test("an image crosses out as its shape and a Uint8Array of rgba colors", () => {
+  const image = gen.background(7, 2, 3);
+  expect(image.shape).toEqual([27, 18]);
+  expect(image.colors).toBeInstanceOf(Uint8Array);
+  expect(image.colors.length).toBe(27 * 18 * 4);
+  expect(image).toEqual(gen.background("7", 2, 3));
+});
+
+test("an image crosses in and back with its shape", () => {
+  const image = { shape: [1, 2], colors: Uint8Array.from([255, 0, 0, 255, 0, 0, 255, 255]) };
+  const grown = core.image.scale(image, 2);
+  expect(grown.shape).toEqual([2, 4]);
+  expect(Array.from(grown.colors.slice(0, 16))).toEqual([255, 0, 0, 255, 255, 0, 0, 255, 0, 0, 255, 255, 0, 0, 255, 255]);
+  const file = new gen.variation.File(1, 1);
+  expect(file.image).toBeUndefined();
+  file.image = image;
+  expect(file.image).toEqual(image);
+});
+
+test("an image that does not fill its shape is refused", () => {
+  const scale = (image) => () => core.image.scale(image, 2);
+  expect(scale({ shape: [2, 2], colors: new Uint8Array(4) })).toThrow("colors length must equal width * height.");
+  expect(scale({ shape: [2, 2, 4], colors: new Uint8Array(16) })).toThrow("an image wants a shape of two lengths");
+  expect(scale({ shape: [1, 1], colors: new Uint8Array(3) })).toThrow("image colors want four bytes a pixel.");
+  expect(scale({ colors: new Uint8Array(4) })).toThrow("a shape wants an array of lengths.");
+  expect(scale({ shape: [1, 1] })).toThrow("a Uint8Array or an array of bytes was wanted here.");
+  const file = new gen.variation.File(1, 1);
+  expect(() => (file.image = { shape: [2, 2], colors: new Uint8Array(4) })).toThrow("colors length must equal width * height.");
 });
 
 test("u128 crosses both ways as a decimal string", () => {

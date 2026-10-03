@@ -27,7 +27,6 @@ export const lambda = wasm.lambda;
 export const lattice_index = wasm.lattice_index;
 export const mask_offsets = wasm.mask_offsets;
 export const moore = wasm.moore;
-export const movie = wasm.movie;
 export const next_grid = wasm.next_grid;
 export const npn_class = wasm.npn_class;
 export const outer_totalistic = wasm.outer_totalistic;

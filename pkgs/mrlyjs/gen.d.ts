@@ -21,6 +21,11 @@ export interface Cell6d {
     orientation: "Horizontal" | "Vertical";
     start: number;
 }
+/** An image: its height and width, and its flat rgba colors row by row. */
+export interface Image {
+    shape: [number, number];
+    colors: Uint8Array;
+}
 /** A color inside plain data, serde's form. */
 export interface ColorData {
     r: number;
@@ -67,8 +72,8 @@ export class Rng {
     /** Shuffles the array in place, the same permutation as Rust's shuffle. */
     shuffle<T>(items: T[]): void;
 }
-/** Draws one seeded artwork and returns its PNG bytes: a random flat tile under the default recipe */
-export function background(seed: number | bigint, width: number, height: number): Uint8Array;
+/** Draws one seeded artwork and returns its image: a random flat tile under the default recipe */
+export function background(seed: number | bigint, width: number, height: number): Image;
 /** Returns the plane's bang code of a classic design, or None for one outside the plane. */
 export function classic_code(design: recipe.Design): string | undefined;
 /** Returns the bang code of a named design in a dimension, or None where it has no design. */
@@ -423,7 +428,7 @@ export declare namespace variation {
     export function create(config: variation.Config, rng: Rng): variation.Variation;
     /** Builds the variation's base cell and draws its paint from the stream, painting the base */
     export function generate(variation: variation.Variation, config: variation.Config, rng: Rng): variation.Variation;
-    /** Renders every file of the variation to PNG at the given scale, scattering a Random edition */
+    /** Renders every file of the variation to an image at the given scale, scattering a Random edition */
     export function render(variation: variation.Variation, scale: number, rng: Rng): variation.Variation;
     /** The settings an artwork is drawn under. */
     export interface Config {
@@ -446,7 +451,7 @@ export declare namespace variation {
     }
     /** One rendering of an artwork, sized in tile repetitions. */
     export class File {
-        /** Builds a file of the given repetition counts with no PNG bytes. */
+        /** Builds a file of the given repetition counts with no image. */
         constructor(width: number, height: number);
         free(): void;
         /** Reads the File from its plain data. */
@@ -459,9 +464,9 @@ export declare namespace variation {
         /** The count of tile repetitions down. */
         get height(): number;
         set height(value: number);
-        /** The encoded PNG bytes, empty until rendered and left out of the json. */
-        get png(): Uint8Array;
-        set png(value: ArrayLike<number>);
+        /** The rendered image, absent until rendered and left out of the json. */
+        get image(): Image | undefined;
+        set image(value: Image | undefined);
     }
     export interface VariationData {
         /** The random hex identifier. */

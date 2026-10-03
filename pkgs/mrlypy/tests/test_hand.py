@@ -146,17 +146,55 @@ def test_a_color_crosses_as_four_channel_bytes():
         colors.from_hex("#nope")
 
 
+def test_an_image_crosses_out_as_one_h_by_w_by_4_array():
+    image = gen.background(7, 2, 3)
+    assert image.shape == (27, 18, 4)
+    assert image.dtype == np.uint8
+    assert image.flags.c_contiguous
+    assert image.flags.writeable
+
+
+def test_an_image_crosses_in_and_back_with_its_shape():
+    image = np.arange(24, dtype=np.uint8).reshape(2, 3, 4)
+    grown = core.image.scale(image, 2)
+    assert grown.shape == (4, 6, 4)
+    assert np.array_equal(grown, image.repeat(2, axis=0).repeat(2, axis=1))
+    file = gen.variation.File(1, 1)
+    assert file.image is None
+    file.image = image
+    assert np.array_equal(file.image, image)
+
+
+def test_an_image_that_is_not_h_by_w_by_4_bytes_is_refused():
+    for bad in (
+        np.zeros((2, 3, 3), dtype=np.uint8),
+        np.zeros((6, 4), dtype=np.uint8),
+        np.zeros((2, 3, 4), dtype=np.float32),
+        np.zeros((2, 6, 4), dtype=np.uint8)[:, ::2],
+        [[[0, 0, 0, 255]]],
+    ):
+        with pytest.raises(ValueError):
+            core.image.scale(bad, 2)
+        with pytest.raises(ValueError):
+            gen.variation.File(1, 1).image = bad
+    with pytest.raises(ValueError):
+        core.image.new(2, 2, np.zeros((1, 4), dtype=np.uint8))
+
+
 def test_pixels_cross_out_as_an_n_by_4_array():
-    width, height, pixels = core.unpng(gen.background(1, 2, 2))
-    assert pixels.shape == (width * height, 4)
+    image = gen.background(1, 2, 2)
+    height, width = image.shape[:2]
+    pixels = core.resample(image, width, height, 2 * width, 2 * height, "Nearest")
+    assert pixels.shape == (4 * width * height, 4)
     assert pixels.dtype == np.uint8
-    assert core.codec.png(pixels, width, height, 1) == core.codec.png(pixels.tolist(), width, height, 1)
+    listed = image.reshape(-1, 4).tolist()
+    assert np.array_equal(pixels, core.resample(listed, width, height, 2 * width, 2 * height, "Nearest"))
 
 
 def test_a_vec_of_bytes_crosses_as_bytes():
-    png = gen.background(1, 2, 2)
-    assert isinstance(png, bytes)
-    assert png[:8] == b"\x89PNG\r\n\x1a\n"
+    out = tensor.bytes(np.array([[1, 2], [3, 4]], dtype=np.uint8))
+    assert isinstance(out, bytes)
+    assert out == b"\x01\x02\x03\x04"
 
 
 def test_a_class_holds_the_rust_value_and_round_trips_plain_data():

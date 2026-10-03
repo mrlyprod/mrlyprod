@@ -33,24 +33,25 @@ pub use recipe::{Group, Parity, Tile};
 pub use variation::hex_key;
 
 use crate::core::error::{value_error, Result};
+use crate::core::image::Image;
 use crate::core::rng::Rng;
 
-/// Draws one seeded artwork and returns its PNG bytes: a random flat tile under the default recipe
+/// Draws one seeded artwork and returns its image: a random flat tile under the default recipe
 /// constraints and paint, repeated `width` across and `height` down at one pixel per cell.
 ///
 /// The seed opens one stream, `variation::create` draws its own seed from it, and the paint and
 /// render follow on the same stream, so one seed always paints the same background.
 ///
 /// ```
-/// let png = mrlyrs::gen::background(1, 2, 2)?;
-/// assert_eq!(png[..8], [137, 80, 78, 71, 13, 10, 26, 10]);
+/// let image = mrlyrs::gen::background(1, 2, 2)?;
+/// assert_eq!((image.width, image.height, image.colors.len()), (18, 18, 324));
 /// # Ok::<(), mrlyrs::Error>(())
 /// ```
 ///
 /// # Errors
 ///
 /// Errs when the width or the height is zero, or when the artwork will not draw or render.
-pub fn background(seed: u64, width: usize, height: usize) -> Result<Vec<u8>> {
+pub fn background(seed: u64, width: usize, height: usize) -> Result<Image> {
     if width == 0 || height == 0 {
         return value_error("a background wants a width and a height above zero.");
     }
@@ -62,8 +63,13 @@ pub fn background(seed: u64, width: usize, height: usize) -> Result<Vec<u8>> {
     let drawn = variation::create(&config, &mut rng)?;
     let built = variation::generate(drawn, &config, &mut rng)?;
     let rendered = variation::render(built, 1, &mut rng)?;
-    match rendered.files.into_iter().next() {
-        Some(file) => Ok(file.png),
+    match rendered
+        .files
+        .into_iter()
+        .next()
+        .and_then(|file| file.image)
+    {
+        Some(image) => Ok(image),
         None => value_error("the background rendered no file."),
     }
 }
@@ -72,10 +78,10 @@ pub fn background(seed: u64, width: usize, height: usize) -> Result<Vec<u8>> {
 mod tests {
     use super::*;
     #[test]
-    fn background_is_a_png_of_the_seed() {
+    fn background_is_an_image_of_the_seed() {
         let a = background(7, 2, 3).unwrap();
         let b = background(7, 2, 3).unwrap();
-        assert_eq!(&a[1..4], b"PNG");
+        assert_eq!((a.width, a.height), (18, 27));
         assert_eq!(a, b);
         assert_ne!(a, background(8, 2, 3).unwrap());
     }

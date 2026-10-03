@@ -1,8 +1,6 @@
-import hashlib
-
 import numpy as np
 
-from mrlypy.core import Colorizer, codec, colors, ramp, tensor
+from mrlypy.core import Colorizer, colors, image, ramp, tensor
 
 
 def test_tensor_rot90(row):
@@ -20,11 +18,11 @@ def test_color_from_hex(row):
     assert colors.to_hex(color) == r["out"]["hex"]
 
 
-def test_png(row):
-    r = row("core::png")
+def test_image_scale(row, pixels):
+    r = row("core::Image::scale")
     i = r["in"]
-    png = codec.png(i["colors"], i["width"], i["height"], i["scale"])
-    assert hashlib.sha256(png).hexdigest() == r["out"]
+    corners = np.array(i["colors"], dtype=np.uint8).reshape(i["height"], i["width"], 4)
+    assert pixels(image.scale(corners, i["scale"])) == r["out"]
 
 
 def test_colorizer_color(row):
