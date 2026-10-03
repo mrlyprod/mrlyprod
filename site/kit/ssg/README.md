@@ -1,6 +1,6 @@
 # ssg
 
-- The site builder both sites run, stamped from the kit. One function renders one route; the rest is bookkeeping.
+- The site builder. One function renders one route; the rest is bookkeeping.
 - Generic: it knows routes, inputs, bundles, fingerprints and manifests, never markdown, papers or products.
 - The site brings its `site.json`, a `collect()` that lists routes and a `render()` per route.
 - `md.ts` is the markdown pipeline: `render(md, { link, math, widget })`, `inline`, `sheet`, `front`, `title`, `summary`, `plain`, `slug`, `escape`.
@@ -23,7 +23,7 @@
 
 ## BLOG
 
-- `blog.ts` is the one blog both sites run: a post is `site/blog/<slug>/index.md` with every figure and file beside it.
+- `blog.ts` is the one blog: a post is `site/blog/<slug>/index.md` with every figure and file beside it.
 - The input is declared like any other, `"blog": { "path": "blog", "deep": true }`; no input, no folder or an empty one and the site gets no routes at all.
 - Front matter is `title`, `date` (YYYY-MM-DD) and `lead`; a missing or malformed one throws naming the post, and a slug that is not lowercase words joined by hyphens throws too.
 - A file loose in the blog folder throws: the shape is one folder per post, never a bare `<slug>.md`.
