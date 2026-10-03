@@ -4,8 +4,8 @@
 - One public crate, `pkgs/mrlyrs`, in six modules: `core` the substrate, `num` the integers, `math` the designs in space, `gen` the generator, `life` the engine, `font` the alphabet.
 - `mrly` is the crate's bin and the shell RPC: `mrly list` prints every name, `mrly <module.fn> '<json>'` prints the JSON result; `cargo install mrlyrs` installs it.
 - `pkgs/mrlypy` on PyPI and `pkgs/mrlyjs` on npm are the bridges: every public function under its Rust name, `mrlypy.math.two.carpet` and `two.carpet` for `mrlyrs::math::two::carpet`.
-- `bridge/` is the generator: it parses `pkgs/mrlyrs/src` with `syn` into `bridge/manifest.json` and writes both bridges from it. Generated files are committed and never hand-edited; a wrong line is a generator fix.
-- `pkgs/mrlyjs` ships one wasm per line of `bridge/units.txt`, so a page importing `mrlyjs/life` downloads the life wasm and nothing else.
+- `pkgs/bridge/` is the generator: it parses `pkgs/mrlyrs/src` with `syn` into `pkgs/bridge/manifest.json` and writes both bridges from it. Generated files are committed and never hand-edited; a wrong line is a generator fix.
+- `pkgs/mrlyjs` ships one wasm per line of `pkgs/bridge/units.txt`, so a page importing `mrlyjs/life` downloads the life wasm and nothing else.
 - `scripts/bridge.sh` reruns the generator, `scripts/wasm.sh` builds every wasm, `scripts/publish.sh <rs|py|js>` ships all three at one version.
 - `figures/` the figure press: the drawing kit as its lib and the square figures the site and the papers open on as its bins.
 - `site/demos/logic` the eyes: the crate `demos`, the wasm bridge that hands the designs to a browser, beside the views it draws in `site/demos/views`.

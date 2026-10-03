@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 
-const manifest = await Bun.file(new URL("../../bridge/manifest.json", import.meta.url)).json();
-const units = (await Bun.file(new URL("../../bridge/units.txt", import.meta.url)).text())
+const manifest = await Bun.file(new URL("../bridge/manifest.json", import.meta.url)).json();
+const units = (await Bun.file(new URL("../bridge/units.txt", import.meta.url)).text())
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);

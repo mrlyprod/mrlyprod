@@ -13,7 +13,12 @@ impl Design {
     pub fn new(rule_code: u128, number: usize, rule_base: usize) -> Design {
         let tensor = create(Code::from(rule_code), number, 2, rule_base, 1).expect("code in range");
         let tile = (0..number * number).map(|f| tensor.at(f) == 1).collect();
-        Design { number, rule_base, rule_code, tile }
+        Design {
+            number,
+            rule_base,
+            rule_code,
+            tile,
+        }
     }
 
     pub fn full(code: u128, base: usize) -> Design {
@@ -21,7 +26,12 @@ impl Design {
     }
 
     pub fn full_code(&self) -> u128 {
-        self.tile.iter().enumerate().filter(|(_, &on)| on).map(|(i, _)| 1u128 << i).sum()
+        self.tile
+            .iter()
+            .enumerate()
+            .filter(|(_, &on)| on)
+            .map(|(i, _)| 1u128 << i)
+            .sum()
     }
 
     pub fn parity_code(&self) -> Option<u128> {
@@ -67,7 +77,14 @@ impl Design {
         if level == 0 {
             return (1, vec![true]);
         }
-        let tensor = create(Code::from(self.rule_code), self.number, 2, self.rule_base, level).expect("code in range");
+        let tensor = create(
+            Code::from(self.rule_code),
+            self.number,
+            2,
+            self.rule_base,
+            level,
+        )
+        .expect("code in range");
         (side, (0..side * side).map(|f| tensor.at(f) == 1).collect())
     }
 
@@ -85,7 +102,12 @@ impl Design {
                 tile[a * n + b] = self.tile[i * n + j];
             }
         }
-        let code: u128 = tile.iter().enumerate().filter(|(_, &on)| on).map(|(i, _)| 1u128 << i).sum();
+        let code: u128 = tile
+            .iter()
+            .enumerate()
+            .filter(|(_, &on)| on)
+            .map(|(i, _)| 1u128 << i)
+            .sum();
         Design::full(code, n)
     }
 }

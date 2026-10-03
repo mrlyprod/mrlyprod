@@ -55,16 +55,28 @@ pub fn carpet() {
         println!("  level {level}: side {side}, arcs loops {loops}, strands {strands}, mirror cycle rank {euler}, law {}, {:.2} s", law(level as u32), clock.elapsed().as_secs_f64());
     }
     let s = series(3, &d.tile, 15);
-    let ok = s.iter().enumerate().filter(|(n, &x)| x as i128 == law(*n as u32)).count();
+    let ok = s
+        .iter()
+        .enumerate()
+        .filter(|(n, &x)| x as i128 == law(*n as u32))
+        .count();
     let shown: Vec<String> = s.iter().map(|x| x.to_string()).collect();
     println!("  blocks levels 0..15: {}", shown.join(" "));
-    println!("  law (8^n - 1)/7 - 3^n + n + 1 holds at {ok} of {} levels; {}", s.len(), describe(&s));
+    println!(
+        "  law (8^n - 1)/7 - 3^n + n + 1 holds at {ok} of {} levels; {}",
+        s.len(),
+        describe(&s)
+    );
     let built = blocks(3, &d.tile, 10);
-    let same = (0..=10).filter(|&n| built[n].partner == lemma(n as u32)).count();
+    let same = (0..=10)
+        .filter(|&n| built[n].partner == lemma(n as u32))
+        .count();
     println!("  matching lemma equals the glued matching at {same} of 11 levels 0..10");
-    let splits = (0..15).filter(|&n| {
-        let u = (3i128.pow(n as u32) - 2 * n as i128 - 1) / 2;
-        s[n + 1] as i128 - 8 * s[n] as i128 == 10 * u + 3 * n as i128
-    }).count();
+    let splits = (0..15)
+        .filter(|&n| {
+            let u = (3i128.pow(n as u32) - 2 * n as i128 - 1) / 2;
+            s[n + 1] as i128 - 8 * s[n] as i128 == 10 * u + 3 * n as i128
+        })
+        .count();
     println!("  new loops per gluing = 10 U_n + 3n with U_n = (3^n - 2n - 1)/2 at {splits} of 15 gluings");
 }

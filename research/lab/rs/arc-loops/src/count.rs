@@ -6,7 +6,9 @@ pub struct Dsu {
 
 impl Dsu {
     pub fn new(size: usize) -> Dsu {
-        Dsu { parent: (0..size as u32).collect() }
+        Dsu {
+            parent: (0..size as u32).collect(),
+        }
     }
 
     pub fn find(&mut self, mut i: u32) -> u32 {
@@ -37,7 +39,11 @@ pub fn arcs(side: usize, on: &[bool]) -> (u64, u64) {
     for y in 0..side {
         for x in 0..side {
             let (bottom, top, left, right) = (h(x, y), h(x, y + 1), v(x, y), v(x + 1, y));
-            let pairs = if on[y * side + x] { [(left, bottom), (right, top)] } else { [(bottom, right), (left, top)] };
+            let pairs = if on[y * side + x] {
+                [(left, bottom), (right, top)]
+            } else {
+                [(bottom, right), (left, top)]
+            };
             for (a, b) in pairs {
                 degree[a as usize] += 1;
                 degree[b as usize] += 1;
@@ -66,7 +72,11 @@ pub fn mirrors(side: usize, on: &[bool]) -> i64 {
     let mut comp = (w * w) as i64;
     for y in 0..side {
         for x in 0..side {
-            let (a, b) = if on[y * side + x] { (p(x + 1, y), p(x, y + 1)) } else { (p(x, y), p(x + 1, y + 1)) };
+            let (a, b) = if on[y * side + x] {
+                (p(x + 1, y), p(x, y + 1))
+            } else {
+                (p(x, y), p(x + 1, y + 1))
+            };
             if dsu.union(a, b) {
                 comp -= 1;
             }
@@ -83,8 +93,17 @@ pub struct Block {
 }
 
 pub fn unit(on: bool) -> Block {
-    let partner = if on { vec![3, 2, 1, 0] } else { vec![1, 0, 3, 2] };
-    Block { side: 1, partner, loops: 0, lengths: BTreeMap::new() }
+    let partner = if on {
+        vec![3, 2, 1, 0]
+    } else {
+        vec![1, 0, 3, 2]
+    };
+    Block {
+        side: 1,
+        partner,
+        loops: 0,
+        lengths: BTreeMap::new(),
+    }
 }
 
 pub fn void_partner(s: usize, p: usize) -> usize {
@@ -98,7 +117,12 @@ pub fn void_partner(s: usize, p: usize) -> usize {
 }
 
 pub fn void_block(s: usize) -> Block {
-    Block { side: s, partner: (0..4 * s).map(|p| void_partner(s, p) as u32).collect(), loops: 0, lengths: BTreeMap::new() }
+    Block {
+        side: s,
+        partner: (0..4 * s).map(|p| void_partner(s, p) as u32).collect(),
+        loops: 0,
+        lengths: BTreeMap::new(),
+    }
 }
 
 pub fn glue(n: usize, tile: &[bool], kept: &Block, keep: bool) -> Block {
@@ -106,8 +130,18 @@ pub fn glue(n: usize, tile: &[bool], kept: &Block, keep: bool) -> Block {
     let big = n * s;
     let s4 = 4 * s;
     let mut seen = vec![0u64; (n * n * s4).div_ceil(64)];
-    let mut partner = if keep { vec![u32::MAX; 4 * big] } else { Vec::new() };
-    let inside = |b: usize, p: usize| if tile[b] { kept.partner[p] as usize } else { void_partner(s, p) };
+    let mut partner = if keep {
+        vec![u32::MAX; 4 * big]
+    } else {
+        Vec::new()
+    };
+    let inside = |b: usize, p: usize| {
+        if tile[b] {
+            kept.partner[p] as usize
+        } else {
+            void_partner(s, p)
+        }
+    };
     let outer = |i: usize, j: usize, p: usize| -> Option<usize> {
         let t = p % s;
         match p / s {
@@ -132,7 +166,9 @@ pub fn glue(n: usize, tile: &[bool], kept: &Block, keep: bool) -> Block {
     for i in 0..n {
         for j in 0..n {
             for p in 0..s4 {
-                let Some(start) = outer(i, j, p) else { continue };
+                let Some(start) = outer(i, j, p) else {
+                    continue;
+                };
                 if is_seen(&seen, key(i, j, p)) {
                     continue;
                 }
@@ -179,7 +215,12 @@ pub fn glue(n: usize, tile: &[bool], kept: &Block, keep: bool) -> Block {
         }
     }
     let inner = tile.iter().filter(|&&on| on).count() as u128 * kept.loops;
-    Block { side: big, partner, loops: inner + cycles, lengths }
+    Block {
+        side: big,
+        partner,
+        loops: inner + cycles,
+        lengths,
+    }
 }
 
 pub fn series(n: usize, tile: &[bool], top: usize) -> Vec<u128> {
@@ -226,7 +267,10 @@ mod tests {
         let s = series(3, &Design::new(7, 3, 2).tile, 8);
         for (n, &x) in s.iter().enumerate() {
             let n = n as u32;
-            assert_eq!(x as i128, (8i128.pow(n) - 1) / 7 - 3i128.pow(n) + n as i128 + 1);
+            assert_eq!(
+                x as i128,
+                (8i128.pow(n) - 1) / 7 - 3i128.pow(n) + n as i128 + 1
+            );
         }
     }
 

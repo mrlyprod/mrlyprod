@@ -1022,8 +1022,10 @@ impl Builder<'_> {
         if let Some(reason) = uncrossable(&entry.ret) {
             return skip(format!("returns {reason}"));
         }
-        if let Some(borrow) = borrow(&entry.ret) {
-            return skip(format!("{borrow} return"));
+        match borrow(&entry.ret) {
+            Some(_) if !f.generated && static_str(&entry.ret) => {}
+            Some(borrow) => return skip(format!("{borrow} return")),
+            None => {}
         }
         let unit = entry
             .module
@@ -1092,6 +1094,14 @@ fn borrow(ty: &Ty) -> Option<&'static str> {
     } else {
         None
     }
+}
+
+fn static_str(ty: &Ty) -> bool {
+    matches!(
+        ty,
+        Ty::Ref { mutable: false, lifetime: Some(l), item }
+            if l == "'static" && matches!(**item, Ty::Str)
+    )
 }
 
 fn dim_of(args: &syn::PathArguments) -> Option<u8> {

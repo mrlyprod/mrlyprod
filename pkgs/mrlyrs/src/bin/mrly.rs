@@ -491,6 +491,9 @@ static DOORS: &[Door] = &[
     ("life.surjective", "(rule: u8) -> bool", Some(door_life_surjective)),
     ("life.tessellate", "(grids: [Cell2d], min_canvas: usize) -> [Cell2d]", Some(door_life_tessellate)),
     ("life.wolfram_class", "(rule: u8) -> [u8]", Some(door_life_wolfram_class)),
+    ("math.arcs.draw", "(code: Code, base: usize, level: usize) -> math.arcs.Arcs", Some(door_math_arcs_draw)),
+    ("math.arcs.law", "(code: Code, base: usize, level: usize) -> math.arcs.Law?", Some(door_math_arcs_law)),
+    ("math.arcs.trace", "(side: usize, on: [bool]) -> math.arcs.Arcs", Some(door_math_arcs_trace)),
     ("math.atoms.carpet_2d", "(n: usize) -> Tensor", Some(door_math_atoms_carpet_2d)),
     ("math.atoms.carpet_3d", "(n: usize) -> Tensor", Some(door_math_atoms_carpet_3d)),
     ("math.atoms.carpet_nd", "(n: usize, rank: usize) -> Tensor", Some(door_math_atoms_carpet_nd)),
@@ -971,6 +974,14 @@ static DOORS: &[Door] = &[
     ("math.three.shadow", "(point: [u32; 3]) -> (i64, i64)", Some(door_math_three_shadow)),
     ("math.three.slice", "(cell: Cell3d, axis: usize, index: usize) -> Cell2d", Some(door_math_three_slice)),
     ("math.three.special", "(mask: Tensor, cell: Cell3d) -> Cell3d", Some(door_math_three_special)),
+    ("math.three.sponge.deep", "(radius: f64) -> f64", Some(door_math_three_sponge_deep)),
+    ("math.three.sponge.dimension", "() -> f64", Some(door_math_three_sponge_dimension)),
+    ("math.three.sponge.distance", "(point: [f64; 3]) -> f64", Some(door_math_three_sponge_distance)),
+    ("math.three.sponge.exact", "(radius: f64) -> f64", Some(door_math_three_sponge_exact)),
+    ("math.three.sponge.profile", "(radius: f64) -> f64?", Some(door_math_three_sponge_profile)),
+    ("math.three.sponge.reading", "(radius: f64) -> f64?", Some(door_math_three_sponge_reading)),
+    ("math.three.sponge.tube", "(radius: f64) -> f64?", Some(door_math_three_sponge_tube)),
+    ("math.three.sponge.volume", "(radius: f64) -> f64?", Some(door_math_three_sponge_volume)),
     ("math.three.star", "(number: usize, level: usize) -> Cell3d", Some(door_math_three_star)),
     ("math.three.support", "(counts: [u128]) -> (usize, usize)?", Some(door_math_three_support)),
     ("math.three.surface", "(cell: Cell3d) -> u128", Some(door_math_three_surface)),
@@ -1093,6 +1104,20 @@ static DOORS: &[Door] = &[
     ("num.design.size", "(digits: [u64], depth: usize) -> u128", Some(door_num_design_size)),
     ("num.design.spectrum", "(log_x: [f64], series: [f64]) -> ([f64], [f64])", Some(door_num_design_spectrum)),
     ("num.design.upper_rms", "(series: [f64]) -> f64", Some(door_num_design_upper_rms)),
+    ("num.dissection.cap", "(y: u64) -> u64", Some(door_num_dissection_cap)),
+    ("num.dissection.chain_exponent", "(base: u64) -> f64", Some(door_num_dissection_chain_exponent)),
+    ("num.dissection.chain_margin", "(base: u64) -> f64", Some(door_num_dissection_chain_margin)),
+    ("num.dissection.chain_root", "(base: u64) -> f64", Some(door_num_dissection_chain_root)),
+    ("num.dissection.chain_wall", "() -> u64", Some(door_num_dissection_chain_wall)),
+    ("num.dissection.consecutive", "(digits: [u64]) -> bool", Some(door_num_dissection_consecutive)),
+    ("num.dissection.fraction", "(a: u64, y: u64, cap: u64) -> (u64, u64)", Some(door_num_dissection_fraction)),
+    ("num.dissection.kappa", "(base: u64, digits: [u64]) -> (u64, u64)", Some(door_num_dissection_kappa)),
+    ("num.dissection.masses", "(base: u64, digits: [u64], level: u32) -> [f64]", Some(door_num_dissection_masses)),
+    ("num.dissection.reach", "(base: u64, missing: u64) -> str", Some(door_num_dissection_reach)),
+    ("num.dissection.reading", "(base: u64, fill: usize, masses: [f64]) -> f64", Some(door_num_dissection_reading)),
+    ("num.dissection.regions", "(base: u64, level: u32, z: u64) -> [num.dissection.Region]", Some(door_num_dissection_regions)),
+    ("num.dissection.tally", "(base: u64, digits: [u64], level: usize, samples: usize) -> num.dissection.Tally", Some(door_num_dissection_tally)),
+    ("num.dissection.weights", "(base: u64, digits: [u64], level: u32) -> [f64]", Some(door_num_dissection_weights)),
     ("num.factor.aliquot", "(number: usize) -> usize", Some(door_num_factor_aliquot)),
     ("num.factor.coprime", "(a: usize, b: usize) -> bool", Some(door_num_factor_coprime)),
     ("num.factor.divisors", "(number: u64) -> [u64]", Some(door_num_factor_divisors)),
@@ -1286,9 +1311,14 @@ static DOORS: &[Door] = &[
     ("num.sieve.holes", "(word: [u64], dimension: u32) -> u128", Some(door_num_sieve_holes)),
     ("num.sieve.limit", "(word: [u64], dimension: u32) -> f64?", Some(door_num_sieve_limit)),
     ("num.sieve.odd_word", "(levels: usize) -> [u64]", Some(door_num_sieve_odd_word)),
+    ("num.sieve.parity_product", "(dimension: u32, odd: bool) -> f64", Some(door_num_sieve_parity_product)),
     ("num.sieve.punctures", "(word: [u64], dimension: u32) -> [u64]", Some(door_num_sieve_punctures)),
     ("num.sieve.raster", "(word: [u64]) -> (usize, [u8])", Some(door_num_sieve_raster)),
     ("num.sieve.ratio", "(word: [u64], dimension: u32) -> f64", Some(door_num_sieve_ratio)),
+    ("num.sieve.row_fill", "(profile: [u64], side: u64) -> u128", Some(door_num_sieve_row_fill)),
+    ("num.sieve.row_law", "(profile: [u64]) -> num.sieve.Row", Some(door_num_sieve_row_law)),
+    ("num.sieve.row_profile", "(code: u128, dimension: usize) -> [u64]", Some(door_num_sieve_row_profile)),
+    ("num.sieve.row_settle", "(profile: [u64], stops: [usize], even: bool) -> [f64]", Some(door_num_sieve_row_settle)),
     ("num.sieve.side", "(word: [u64]) -> u128", Some(door_num_sieve_side)),
     ("num.sieve.solid_limit", "() -> f64", Some(door_num_sieve_solid_limit)),
     ("num.spiral.Growth.all", "() -> [num.spiral.Growth; 2]", Some(door_num_spiral_growth_all)),
@@ -1304,6 +1334,23 @@ static DOORS: &[Door] = &[
     ("num.spiral.level_of", "(n: u64, base: u64) -> u32", Some(door_num_spiral_level_of)),
     ("num.spiral.marks", "(mark: num.spiral.Mark, limit: usize) -> [i8]", Some(door_num_spiral_marks)),
     ("num.spiral.snail", "(base: u64, top: u64, growth: num.spiral.Growth) -> num.spiral.Snail", Some(door_num_spiral_snail)),
+    ("num.sumset.Pair.clean", "(self: num.sumset.Pair) -> bool", Some(door_num_sumset_pair_clean)),
+    ("num.sumset.Pair.copy", "(self: num.sumset.Pair) -> bool", Some(door_num_sumset_pair_copy)),
+    ("num.sumset.Pair.energy", "(self: num.sumset.Pair) -> u128", Some(door_num_sumset_pair_energy)),
+    ("num.sumset.Pair.gap", "(self: num.sumset.Pair) -> (u64, u64)?", Some(door_num_sumset_pair_gap)),
+    ("num.sumset.Pair.largest", "(self: num.sumset.Pair) -> u64", Some(door_num_sumset_pair_largest)),
+    ("num.sumset.Pair.new", "(three: u32, four: u32) -> num.sumset.Pair", Some(door_num_sumset_pair_new)),
+    ("num.sumset.Pair.ratio", "(self: num.sumset.Pair, energy: u128) -> f64", Some(door_num_sumset_pair_ratio)),
+    ("num.sumset.Pair.scale", "(self: num.sumset.Pair) -> f64", Some(door_num_sumset_pair_scale)),
+    ("num.sumset.Sumset.contains", "(self: num.sumset.Sumset, x: u64) -> bool? # uncallable: num::sumset::Sumset has no Deserialize", None),
+    ("num.sumset.Sumset.count", "(self: num.sumset.Sumset, x: u64) -> u64? # uncallable: num::sumset::Sumset has no Deserialize", None),
+    ("num.sumset.Sumset.density", "(self: num.sumset.Sumset, x: u64) -> f64? # uncallable: num::sumset::Sumset has no Deserialize", None),
+    ("num.sumset.Sumset.extremes", "(self: num.sumset.Sumset, edges: [u64]) -> [(f64, f64)?] # uncallable: num::sumset::Sumset has no Deserialize", None),
+    ("num.sumset.Sumset.fills", "(self: num.sumset.Sumset, low: u64, high: u64, cells: usize) -> [f64] # uncallable: num::sumset::Sumset has no Deserialize", None),
+    ("num.sumset.Sumset.level", "(self: num.sumset.Sumset) -> u32 # uncallable: num::sumset::Sumset has no Deserialize", None),
+    ("num.sumset.Sumset.new", "(level: u32) -> num.sumset.Sumset # uncallable: num::sumset::Sumset has no Serialize", None),
+    ("num.sumset.Sumset.top", "(self: num.sumset.Sumset) -> u64 # uncallable: num::sumset::Sumset has no Deserialize", None),
+    ("num.sumset.pairs", "(level: u32) -> [num.sumset.Pair]", Some(door_num_sumset_pairs)),
     ("num.zeta.Complex.abs", "(self: num.zeta.Complex) -> f64", Some(door_num_zeta_complex_abs)),
     ("num.zeta.Complex.arg", "(self: num.zeta.Complex) -> f64", Some(door_num_zeta_complex_arg)),
     ("num.zeta.Complex.default", "() -> num.zeta.Complex", Some(door_num_zeta_complex_default)),
@@ -3479,6 +3526,38 @@ fn door_life_wolfram_class(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: u8 = take!(name, 0, &args[0]);
     Ok(give!(mrlyrs::life::wolfram_class(a0)))
+}
+
+fn door_math_arcs_draw(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: mrlyrs::math::bang::Code = mrlyrs::math::bang::Code::from(big(name, 0, &args[0])?);
+    let a1: usize = take!(name, 1, &args[1]);
+    let a2: usize = take!(name, 2, &args[2]);
+    match mrlyrs::math::arcs::draw(a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_arcs_law(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: mrlyrs::math::bang::Code = mrlyrs::math::bang::Code::from(big(name, 0, &args[0])?);
+    let a1: usize = take!(name, 1, &args[1]);
+    let a2: usize = take!(name, 2, &args[2]);
+    match mrlyrs::math::arcs::law(a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_math_arcs_trace(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: usize = take!(name, 0, &args[0]);
+    let a1: Vec<bool> = take!(name, 1, &args[1]);
+    match mrlyrs::math::arcs::trace(a0, &a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_math_atoms_carpet_2d(name: &str, args: &[Value]) -> Done {
@@ -8339,6 +8418,53 @@ fn door_math_three_special(name: &str, args: &[Value]) -> Done {
     }
 }
 
+fn door_math_three_sponge_deep(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: f64 = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::three::sponge::deep(a0)))
+}
+
+fn door_math_three_sponge_dimension(name: &str, args: &[Value]) -> Done {
+    count(name, args, 0)?;
+    Ok(give!(mrlyrs::math::three::sponge::dimension()))
+}
+
+fn door_math_three_sponge_distance(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: [f64; 3] = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::three::sponge::distance(a0)))
+}
+
+fn door_math_three_sponge_exact(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: f64 = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::three::sponge::exact(a0)))
+}
+
+fn door_math_three_sponge_profile(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: f64 = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::three::sponge::profile(a0)))
+}
+
+fn door_math_three_sponge_reading(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: f64 = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::three::sponge::reading(a0)))
+}
+
+fn door_math_three_sponge_tube(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: f64 = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::three::sponge::tube(a0)))
+}
+
+fn door_math_three_sponge_volume(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: f64 = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::math::three::sponge::volume(a0)))
+}
+
 fn door_math_three_star(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: usize = take!(name, 0, &args[0]);
@@ -9595,6 +9721,104 @@ fn door_num_design_upper_rms(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: Vec<f64> = take!(name, 0, &args[0]);
     Ok(give!(mrlyrs::num::design::upper_rms(&a0)))
+}
+
+fn door_num_dissection_cap(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::num::dissection::cap(a0)))
+}
+
+fn door_num_dissection_chain_exponent(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::num::dissection::chain_exponent(a0)))
+}
+
+fn door_num_dissection_chain_margin(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::num::dissection::chain_margin(a0)))
+}
+
+fn door_num_dissection_chain_root(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::num::dissection::chain_root(a0)))
+}
+
+fn door_num_dissection_chain_wall(name: &str, args: &[Value]) -> Done {
+    count(name, args, 0)?;
+    Ok(give!(mrlyrs::num::dissection::chain_wall()))
+}
+
+fn door_num_dissection_consecutive(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: Vec<u64> = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::num::dissection::consecutive(&a0)))
+}
+
+fn door_num_dissection_fraction(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: u64 = take!(name, 1, &args[1]);
+    let a2: u64 = take!(name, 2, &args[2]);
+    Ok(give!(mrlyrs::num::dissection::fraction(a0, a1, a2)))
+}
+
+fn door_num_dissection_kappa(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: Vec<u64> = take!(name, 1, &args[1]);
+    Ok(give!(mrlyrs::num::dissection::kappa(a0, &a1)))
+}
+
+fn door_num_dissection_masses(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: Vec<u64> = take!(name, 1, &args[1]);
+    let a2: u32 = take!(name, 2, &args[2]);
+    Ok(give!(mrlyrs::num::dissection::masses(a0, &a1, a2)))
+}
+
+fn door_num_dissection_reach(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: u64 = take!(name, 1, &args[1]);
+    Ok(give!(mrlyrs::num::dissection::reach(a0, a1)))
+}
+
+fn door_num_dissection_reading(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: usize = take!(name, 1, &args[1]);
+    let a2: Vec<f64> = take!(name, 2, &args[2]);
+    Ok(give!(mrlyrs::num::dissection::reading(a0, a1, &a2)))
+}
+
+fn door_num_dissection_regions(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: u32 = take!(name, 1, &args[1]);
+    let a2: u64 = take!(name, 2, &args[2]);
+    Ok(give!(mrlyrs::num::dissection::regions(a0, a1, a2)))
+}
+
+fn door_num_dissection_tally(name: &str, args: &[Value]) -> Done {
+    count(name, args, 4)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: Vec<u64> = take!(name, 1, &args[1]);
+    let a2: usize = take!(name, 2, &args[2]);
+    let a3: usize = take!(name, 3, &args[3]);
+    Ok(give!(mrlyrs::num::dissection::tally(a0, &a1, a2, a3)))
+}
+
+fn door_num_dissection_weights(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: Vec<u64> = take!(name, 1, &args[1]);
+    let a2: u32 = take!(name, 2, &args[2]);
+    Ok(give!(mrlyrs::num::dissection::weights(a0, &a1, a2)))
 }
 
 fn door_num_factor_aliquot(name: &str, args: &[Value]) -> Done {
@@ -11004,6 +11228,16 @@ fn door_num_sieve_odd_word(name: &str, args: &[Value]) -> Done {
     Ok(give!(mrlyrs::num::sieve::odd_word(a0)))
 }
 
+fn door_num_sieve_parity_product(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: u32 = take!(name, 0, &args[0]);
+    let a1: bool = take!(name, 1, &args[1]);
+    match mrlyrs::num::sieve::parity_product(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
 fn door_num_sieve_punctures(name: &str, args: &[Value]) -> Done {
     count(name, args, 2)?;
     let a0: Vec<u64> = take!(name, 0, &args[0]);
@@ -11028,6 +11262,46 @@ fn door_num_sieve_ratio(name: &str, args: &[Value]) -> Done {
     let a0: Vec<u64> = take!(name, 0, &args[0]);
     let a1: u32 = take!(name, 1, &args[1]);
     match mrlyrs::num::sieve::ratio(&a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_num_sieve_row_fill(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: Vec<u64> = take!(name, 0, &args[0]);
+    let a1: u64 = take!(name, 1, &args[1]);
+    match mrlyrs::num::sieve::row_fill(&a0, a1) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_num_sieve_row_law(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: Vec<u64> = take!(name, 0, &args[0]);
+    match mrlyrs::num::sieve::row_law(&a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_num_sieve_row_profile(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: u128 = big(name, 0, &args[0])?;
+    let a1: usize = take!(name, 1, &args[1]);
+    match mrlyrs::num::sieve::row_profile(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_num_sieve_row_settle(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: Vec<u64> = take!(name, 0, &args[0]);
+    let a1: Vec<usize> = take!(name, 1, &args[1]);
+    let a2: bool = take!(name, 2, &args[2]);
+    match mrlyrs::num::sieve::row_settle(&a0, &a1, a2) {
         Ok(value) => Ok(give!(value)),
         Err(error) => Err(Fail::Error(error.to_string())),
     }
@@ -11136,6 +11410,70 @@ fn door_num_spiral_snail(name: &str, args: &[Value]) -> Done {
     let a1: u64 = take!(name, 1, &args[1]);
     let a2: mrlyrs::num::spiral::Growth = take!(name, 2, &args[2]);
     Ok(give!(mrlyrs::num::spiral::snail(a0, a1, a2)))
+}
+
+fn door_num_sumset_pair_clean(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::num::sumset::Pair = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::num::sumset::Pair::clean(&a0)))
+}
+
+fn door_num_sumset_pair_copy(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::num::sumset::Pair = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::num::sumset::Pair::copy(&a0)))
+}
+
+fn door_num_sumset_pair_energy(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::num::sumset::Pair = take!(name, 0, &args[0]);
+    Ok(Value::String(
+        mrlyrs::num::sumset::Pair::energy(&a0).to_string(),
+    ))
+}
+
+fn door_num_sumset_pair_gap(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::num::sumset::Pair = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::num::sumset::Pair::gap(&a0)))
+}
+
+fn door_num_sumset_pair_largest(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::num::sumset::Pair = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::num::sumset::Pair::largest(&a0)))
+}
+
+fn door_num_sumset_pair_new(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: u32 = take!(name, 0, &args[0]);
+    let a1: u32 = take!(name, 1, &args[1]);
+    match mrlyrs::num::sumset::Pair::new(a0, a1) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_num_sumset_pair_ratio(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: mrlyrs::num::sumset::Pair = take!(name, 0, &args[0]);
+    let a1: u128 = big(name, 1, &args[1])?;
+    Ok(give!(mrlyrs::num::sumset::Pair::ratio(&a0, a1)))
+}
+
+fn door_num_sumset_pair_scale(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::num::sumset::Pair = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::num::sumset::Pair::scale(&a0)))
+}
+
+fn door_num_sumset_pairs(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: u32 = take!(name, 0, &args[0]);
+    match mrlyrs::num::sumset::pairs(a0) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_zeta_complex_abs(name: &str, args: &[Value]) -> Done {

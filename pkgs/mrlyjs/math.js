@@ -2,6 +2,11 @@ import * as wasm from "./pkg/math/mrlyjs_math.js";
 
 export { default, initSync } from "./pkg/math/mrlyjs_math.js";
 export const Rng = wasm.Rng;
+export const arcs = {
+    draw: wasm.arcs_draw,
+    law: wasm.arcs_law,
+    trace: wasm.arcs_trace,
+};
 export const atoms = {
     carpet_2d: wasm.atoms_carpet_2d,
     carpet_3d: wasm.atoms_carpet_3d,
@@ -488,6 +493,18 @@ export const three = {
     zeros: wasm.three_zeros,
     zline: wasm.three_zline,
     ztree: wasm.three_ztree,
+    sponge: {
+        COVER: wasm.three_sponge_COVER,
+        EDGE: wasm.three_sponge_EDGE,
+        deep: wasm.three_sponge_deep,
+        dimension: wasm.three_sponge_dimension,
+        distance: wasm.three_sponge_distance,
+        exact: wasm.three_sponge_exact,
+        profile: wasm.three_sponge_profile,
+        reading: wasm.three_sponge_reading,
+        tube: wasm.three_sponge_tube,
+        volume: wasm.three_sponge_volume,
+    },
 };
 export const tourbillon = {
     eyes: wasm.tourbillon_eyes,

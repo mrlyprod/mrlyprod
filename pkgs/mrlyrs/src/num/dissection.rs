@@ -1,6 +1,7 @@
 use crate::num::design;
 use crate::num::factor::{gcd, mobius_sieve, totient};
 use crate::num::prime::flags;
+use serde::{Deserialize, Serialize};
 use std::f64::consts::PI;
 
 /// The bar region A sets on the certificate exponent, `alpha_1 < 1/5`: the whole `l^1` mass against the minor-arc `x^(4/5)`.
@@ -21,7 +22,7 @@ pub const FIRST_BELOW: u64 = 65;
 pub const CERTIFIED: [(u64, u64); 1] = [(65, 0)];
 
 /// The four regions the dissection cuts the frequencies `a/y` into by their Dirichlet fraction `l/d` at `Q = y^(3/5)` and height `h = |a d - l y|`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Region {
     /// The minor arcs, `d >= y^(2/5)`.
     A,
@@ -256,6 +257,7 @@ pub fn consecutive(digits: &[u64]) -> bool {
 }
 
 /// The set's own sums read on a log grid of `x`: the mass `A_F(x)`, the meter `M_F(x)` and the prime count `psi_F(x) = sum Lambda(n)` over the elements up to `x`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Tally {
     /// The log of `x` at every sample, uniform from the first element to the last.
     pub log_x: Vec<f64>,

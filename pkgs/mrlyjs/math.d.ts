@@ -67,6 +67,32 @@ export class Rng {
     /** Shuffles the array in place, the same permutation as Rust's shuffle. */
     shuffle<T>(items: T[]): void;
 }
+export declare namespace arcs {
+    /** Draws level `level` of `bang dim 2, base b, code c` in arcs: cell `(x, y)` of the `b x b` mask is filled when bit `b y + x` of the code is set, level `level` is its Kronecker power built by [`crate::math::bang::factory::create`], and level 0 is one filled cell. */
+    export function draw(code: string | number | bigint, base: number, level: number): arcs.Arcs;
+    /** Returns the proved loop law of `bang dim 2, base b, code c` at the level, or none where no law is proved: the carpet, base 3 code 495, has `(8^n - 1)/7 - 3^n + n + 1` loops; at base 2 codes 7 and 14 have `3^(n-1) - 2^n + 1`, codes 11 and 13 have `3^(n-1) - 2^(n-1)`, both from level 1 on, code 9 has `2^n - 1`, and the other eleven codes never loop. */
+    export function law(code: string | number | bigint, base: number, level: number): arcs.Law | undefined;
+    /** Draws a `side x side` grid of filled and deleted cells in arcs and counts its curves by union-find over the edge midpoints, a curve being a loop when no midpoint of it lies on the boundary. */
+    export function trace(side: number, on: boolean[]): arcs.Arcs;
+    /** One level of a flat design drawn in Truchet arcs: its side, its cells and the curves its arcs join into. */
+    export interface Arcs {
+        /** The cells per axis. */
+        side: number;
+        /** One byte a cell: bit 0 set when the cell is filled, bit 1 when its lower arc lies on a loop, bit 2 when its upper arc does. */
+        cells: number[];
+        /** The closed loops. */
+        loops: number;
+        /** The open strands, `2 side` at every level: each of the `4 side` boundary midpoints ends one. */
+        strands: number;
+    }
+    /** A proved closed form of a design's loop count, read at one level. */
+    export interface Law {
+        /** The closed form in the level `n`, one line of text. */
+        formula: string;
+        /** The loops the law gives at the level asked. */
+        loops: number;
+    }
+}
 export declare namespace atoms {
     /** Builds an n by n carpet, on where at most one coordinate is odd. */
     export function carpet_2d(n: number): Tensor;
@@ -1961,6 +1987,28 @@ export declare namespace three {
         dot(o: three.Vec3): number;
         /** Multiplies every component by the scalar. */
         scale(s: number): three.Vec3;
+    }
+    export namespace sponge {
+        /** The volume `Deep(radius)` of the points of one arm's quarter beyond the tubes of both walls it touches, at every radius, to double precision. */
+        export function deep(radius: number): number;
+        /** The Minkowski dimension of the Menger sponge, `log(20)/log(3)`, the similarity dimension of its 20 maps of ratio `1/3`. */
+        export function dimension(): number;
+        /** The Euclidean distance from a point of the unit cube to the Menger sponge, exact to the last binary place. */
+        export function distance(point: ArrayLike<number>): number;
+        /** The volume `T(radius)` of the points of the plus within `radius` of the sponge at every radius, `Deep` included, to double precision. */
+        export function exact(radius: number): number;
+        /** The periodic function `p` of Kombrink, Pearse and Winter at `radius`: the reading's limit profile, unchanged when the radius is multiplied by 3, or `None` on the phases `(1/6, sqrt(2)/6]` where `T` has no closed form. */
+        export function profile(radius: number): number | undefined;
+        /** The Minkowski reading `radius^(D-3)` times the volume inside the cube, the number whose limit as the radius shrinks would be the sponge's Minkowski content. */
+        export function reading(radius: number): number | undefined;
+        /** The volume `T(radius)` of the points of the plus of seven removed level-1 cubes within `radius` of the sponge, or `None` on `(1/6, sqrt(2)/6)`, where no closed form is known. */
+        export function tube(radius: number): number | undefined;
+        /** The volume of the points of the unit cube within `radius` of the sponge, `sum_k (20/27)^k T(3^k radius)`, or `None` when some `3^k radius` falls where `T` has no closed form. */
+        export function volume(radius: number): number | undefined;
+        /** The covering radius of the plus, `sqrt(2)/6`, the distance from the centre of the cube to the sponge: every radius from here on swallows the plus whole. */
+        export function COVER(): number;
+        /** The largest radius the closed tube formula reaches, `1/6`: past it the walls across an arm and the centre cube's edge cylinders start to meet. */
+        export function EDGE(): number;
     }
 }
 export declare namespace tourbillon {

@@ -5,7 +5,7 @@ import pathlib
 
 import mrlypy
 
-MANIFEST = pathlib.Path(__file__).resolve().parents[3] / "bridge" / "manifest.json"
+MANIFEST = pathlib.Path(__file__).resolve().parents[2] / "bridge" / "manifest.json"
 
 
 def load():
@@ -41,4 +41,4 @@ def test_every_ok_function_is_callable_under_its_rust_doc():
             else:
                 assert doc.startswith(fn["docs"][0]), fn["path"]
         count += 1
-    assert count == 1120
+    assert count == 1167

@@ -1,3 +1,4 @@
+use crate::disk::save;
 use crate::model::*;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
@@ -48,13 +49,6 @@ pub fn write(manifest: &Manifest, root: &Path) -> Result<()> {
     save(&python.join("py.typed"), "")?;
     save(&pkg.join("tests/test_manifest.py"), &test_file(&cx))?;
     Ok(())
-}
-
-fn save(path: &Path, text: &str) -> Result<()> {
-    if let Some(dir) = path.parent() {
-        std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
-    }
-    std::fs::write(path, text).map_err(|e| format!("{}: {e}", path.display()))
 }
 
 // NAMES
@@ -2096,7 +2090,7 @@ import pathlib
 
 import mrlypy
 
-MANIFEST = pathlib.Path(__file__).resolve().parents[3] / "bridge" / "manifest.json"
+MANIFEST = pathlib.Path(__file__).resolve().parents[2] / "bridge" / "manifest.json"
 
 
 def load():

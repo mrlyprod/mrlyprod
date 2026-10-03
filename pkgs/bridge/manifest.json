@@ -390,6 +390,14 @@
       "items": 0
     },
     {
+      "path": "math::arcs",
+      "file": "math/arcs.rs",
+      "docs": [
+        "The Truchet arcs of a flat design: every cell two quarter arcs, the loops and strands they join into, and the proved loop laws."
+      ],
+      "items": 5
+    },
+    {
       "path": "math::atoms",
       "file": "math/atoms.rs",
       "docs": [
@@ -5536,6 +5544,140 @@
           ]
         }
       ],
+      "alias": null
+    },
+    {
+      "path": "math::arcs::Arcs",
+      "name": "Arcs",
+      "defined_at": "math/arcs.rs:12",
+      "docs": [
+        "One level of a flat design drawn in Truchet arcs: its side, its cells and the curves its arcs join into.",
+        "",
+        "Cell `(x, y)` is column `x` and row `y`, row 0 at the bottom, stored at `y side + x`. Every cell carries two quarter arcs, each joining the midpoints of two adjacent edges: a filled cell takes the arcs around its lower-left and upper-right corners, a deleted cell the arcs around its lower-right and upper-left corners. The lower arc of a cell is the one ending on its bottom edge, the upper arc the one ending on its top edge. Arcs meeting at an edge midpoint join into curves, closed loops and open strands."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "side",
+          "public": true,
+          "docs": [
+            "The cells per axis."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "cells",
+          "public": true,
+          "docs": [
+            "One byte a cell: bit 0 set when the cell is filled, bit 1 when its lower arc lies on a loop, bit 2 when its upper arc does."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "u8"
+            }
+          }
+        },
+        {
+          "name": "loops",
+          "public": true,
+          "docs": [
+            "The closed loops."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "strands",
+          "public": true,
+          "docs": [
+            "The open strands, `2 side` at every level: each of the `4 side` boundary midpoints ends one."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "math::arcs::Law",
+      "name": "Law",
+      "defined_at": "math/arcs.rs:129",
+      "docs": [
+        "A proved closed form of a design's loop count, read at one level."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "formula",
+          "public": true,
+          "docs": [
+            "The closed form in the level `n`, one line of text."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "string"
+          }
+        },
+        {
+          "name": "loops",
+          "public": true,
+          "docs": [
+            "The loops the law gives at the level asked."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        }
+      ],
+      "variants": [],
       "alias": null
     },
     {
@@ -11539,21 +11681,24 @@
     {
       "path": "num::dissection::Region",
       "name": "Region",
-      "defined_at": "num/dissection.rs:25",
+      "defined_at": "num/dissection.rs:26",
       "docs": [
         "The four regions the dissection cuts the frequencies `a/y` into by their Dirichlet fraction `l/d` at `Q = y^(3/5)` and height `h = |a d - l y|`."
       ],
       "kind": "enum",
       "cross": {
-        "kind": "uncrossable",
-        "reason": "no serde derives and no methods"
+        "kind": "enum",
+        "named": false,
+        "words": []
       },
       "derives": [
         "Clone",
         "Copy",
         "Debug",
         "PartialEq",
-        "Eq"
+        "Eq",
+        "Serialize",
+        "Deserialize"
       ],
       "serde": [],
       "const_generic": false,
@@ -11601,16 +11746,21 @@
     {
       "path": "num::dissection::Tally",
       "name": "Tally",
-      "defined_at": "num/dissection.rs:259",
+      "defined_at": "num/dissection.rs:261",
       "docs": [
         "The set's own sums read on a log grid of `x`: the mass `A_F(x)`, the meter `M_F(x)` and the prime count `psi_F(x) = sum Lambda(n)` over the elements up to `x`."
       ],
       "kind": "struct",
       "cross": {
-        "kind": "uncrossable",
-        "reason": "no serde derives and no methods"
+        "kind": "plain"
       },
-      "derives": [],
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Serialize",
+        "Deserialize"
+      ],
       "serde": [],
       "const_generic": false,
       "fields": [
@@ -13791,7 +13941,7 @@
     {
       "path": "num::sumset::Pair",
       "name": "Pair",
-      "defined_at": "num/sumset.rs:199",
+      "defined_at": "num/sumset.rs:201",
       "docs": [
         "A pair of levels: the base-3 level `A_k = A meet [0, 3^k)` against the base-4 level `B_m = B meet [0, 4^m)`, `k` the field `three` and `m` the field `four`."
       ],
@@ -13804,9 +13954,13 @@
         "Copy",
         "Debug",
         "PartialEq",
-        "Eq"
+        "Eq",
+        "Serialize",
+        "Deserialize"
       ],
-      "serde": [],
+      "serde": [
+        "try_from = \"Levels\""
+      ],
       "const_generic": false,
       "fields": [
         {
@@ -13842,7 +13996,7 @@
     {
       "path": "num::sumset::Sumset",
       "name": "Sumset",
-      "defined_at": "num/sumset.rs:18",
+      "defined_at": "num/sumset.rs:19",
       "docs": [
         "The sumset `S = A + B` of Erdos problem 125 up to `3^level`: `A` the integers whose base-3 digits are all `0` or `1`, `B` those whose base-4 digits are.",
         "",
@@ -15148,7 +15302,7 @@
     {
       "path": "num::dissection::BAR_A",
       "name": "BAR_A",
-      "defined_at": "num/dissection.rs:7",
+      "defined_at": "num/dissection.rs:8",
       "docs": [
         "The bar region A sets on the certificate exponent, `alpha_1 < 1/5`: the whole `l^1` mass against the minor-arc `x^(4/5)`."
       ],
@@ -15163,7 +15317,7 @@
     {
       "path": "num::dissection::BAR_B",
       "name": "BAR_B",
-      "defined_at": "num/dissection.rs:9",
+      "defined_at": "num/dissection.rs:10",
       "docs": [
         "The bar region B sets, `alpha_1 < 1/4`: the hybrid `l^1` mass against the `d^(-1/2)` decay."
       ],
@@ -15178,7 +15332,7 @@
     {
       "path": "num::dissection::CAP_BASE",
       "name": "CAP_BASE",
-      "defined_at": "num/dissection.rs:13",
+      "defined_at": "num/dissection.rs:14",
       "docs": [
         "The base the chain is scanned to; from here the closed-form cap `1 + sqrt(2 (2/pi) log base + 0.97)` keeps it below the bar."
       ],
@@ -15193,7 +15347,7 @@
     {
       "path": "num::dissection::CERTIFIED",
       "name": "CERTIFIED",
-      "defined_at": "num/dissection.rs:21",
+      "defined_at": "num/dissection.rs:22",
       "docs": [
         "The sets below [`DIGIT_WALL`] certified below `1/5`, as `(base, missing digit)`, printed by `lab/py/digit-transform-norms`, verb `fifth`."
       ],
@@ -15221,7 +15375,7 @@
     {
       "path": "num::dissection::DIGIT_WALL",
       "name": "DIGIT_WALL",
-      "defined_at": "num/dissection.rs:17",
+      "defined_at": "num/dissection.rs:18",
       "docs": [
         "The least base whose every one-missing-digit set carries a per-digit shifted-grid certificate below `1/5`, `lab/py/digit-transform-norms`, verbs `fifth` and `fifthbelow`; base 114 missing 56 is certified above."
       ],
@@ -15236,7 +15390,7 @@
     {
       "path": "num::dissection::FIRST_BELOW",
       "name": "FIRST_BELOW",
-      "defined_at": "num/dissection.rs:19",
+      "defined_at": "num/dissection.rs:20",
       "docs": [
         "The least base with some missing digit certified below `1/5`, `lab/py/digit-transform-norms`, verb `fifth`."
       ],
@@ -15251,7 +15405,7 @@
     {
       "path": "num::dissection::GAMMA",
       "name": "GAMMA",
-      "defined_at": "num/dissection.rs:11",
+      "defined_at": "num/dissection.rs:12",
       "docs": [
         "The constant `gamma'` of the digit-uniform chain, `(2/pi)(gamma + log(8/pi))` rounded up at seven decimals."
       ],
@@ -15266,7 +15420,7 @@
     {
       "path": "num::dissection::WINDOW_WALL",
       "name": "WINDOW_WALL",
-      "defined_at": "num/dissection.rs:15",
+      "defined_at": "num/dissection.rs:16",
       "docs": [
         "The least base whose every one-missing-digit set carries a window certificate below `1/5`, `lab/py/prime-dissection`, verb `window`."
       ],
@@ -15452,7 +15606,7 @@
     {
       "path": "num::sumset::DEEPEST",
       "name": "DEEPEST",
-      "defined_at": "num/sumset.rs:5",
+      "defined_at": "num/sumset.rs:6",
       "docs": [
         "The deepest level a [`Sumset`] is built to: `S meet [0, 3^20]`, a bit array of `436` MB."
       ],
@@ -15467,7 +15621,7 @@
     {
       "path": "num::sumset::WIDEST",
       "name": "WIDEST",
-      "defined_at": "num/sumset.rs:8",
+      "defined_at": "num/sumset.rs:9",
       "docs": [
         "The widest level a [`Pair`] names in either base, so `3^k`, `4^m` and every difference string fit a signed 64-bit integer."
       ],
@@ -27516,6 +27670,160 @@
         "item": {
           "t": "scalar",
           "name": "u8"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::arcs::draw",
+      "name": "draw",
+      "module": "math::arcs",
+      "defined_at": "math/arcs.rs:112",
+      "docs": [
+        "Draws level `level` of `bang dim 2, base b, code c` in arcs: cell `(x, y)` of the `b x b` mask is filled when bit `b y + x` of the code is set, level `level` is its Kronecker power built by [`crate::math::bang::factory::create`], and level 0 is one filled cell.",
+        "",
+        "# Errors",
+        "",
+        "Errors on a code outside the digit space of the base, or a side past the machine word."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "code",
+          "ty": {
+            "t": "code"
+          }
+        },
+        {
+          "name": "base",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "plain",
+          "path": "math::arcs::Arcs"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::arcs::law",
+      "name": "law",
+      "module": "math::arcs",
+      "defined_at": "math/arcs.rs:141",
+      "docs": [
+        "Returns the proved loop law of `bang dim 2, base b, code c` at the level, or none where no law is proved: the carpet, base 3 code 495, has `(8^n - 1)/7 - 3^n + n + 1` loops; at base 2 codes 7 and 14 have `3^(n-1) - 2^n + 1`, codes 11 and 13 have `3^(n-1) - 2^(n-1)`, both from level 1 on, code 9 has `2^n - 1`, and the other eleven codes never loop.",
+        "",
+        "# Errors",
+        "",
+        "Errors on a code outside the digit space of the base, or a count past 64 bits."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "code",
+          "ty": {
+            "t": "code"
+          }
+        },
+        {
+          "name": "base",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "option",
+          "item": {
+            "t": "plain",
+            "path": "math::arcs::Law"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "math::arcs::trace",
+      "name": "trace",
+      "module": "math::arcs",
+      "defined_at": "math/arcs.rs:47",
+      "docs": [
+        "Draws a `side x side` grid of filled and deleted cells in arcs and counts its curves by union-find over the edge midpoints, a curve being a loop when no midpoint of it lies on the boundary.",
+        "",
+        "# Errors",
+        "",
+        "Errors on side zero or a cell list that is not `side^2` long."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "side",
+          "ty": {
+            "t": "scalar",
+            "name": "usize"
+          }
+        },
+        {
+          "name": "on",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "bool"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "plain",
+          "path": "math::arcs::Arcs"
         }
       },
       "dims": [],
@@ -55320,7 +55628,7 @@
       "path": "num::dissection::cap",
       "name": "cap",
       "module": "num::dissection",
-      "defined_at": "num/dissection.rs:63",
+      "defined_at": "num/dissection.rs:64",
       "docs": [
         "Returns `Q = floor(y^(3/5))`, the largest denominator the dissection admits, exact in integers.",
         "",
@@ -55355,7 +55663,7 @@
       "path": "num::dissection::chain_exponent",
       "name": "chain_exponent",
       "module": "num::dissection",
-      "defined_at": "num/dissection.rs:202",
+      "defined_at": "num/dissection.rs:203",
       "docs": [
         "Returns the chain's certificate exponent at one missing digit, `alpha_1 = log_base(z base/(base - 1))`, the same at every missing digit."
       ],
@@ -55386,7 +55694,7 @@
       "path": "num::dissection::chain_margin",
       "name": "chain_margin",
       "module": "num::dissection",
-      "defined_at": "num/dissection.rs:208",
+      "defined_at": "num/dissection.rs:209",
       "docs": [
         "Returns the chain's margin at the bar, the cubic cleared of denominators at `w = base^(1/5)(1 - 1/base)`, positive exactly when the root sits below `w` and `alpha_1 < 1/5`."
       ],
@@ -55417,7 +55725,7 @@
       "path": "num::dissection::chain_root",
       "name": "chain_root",
       "module": "num::dissection",
-      "defined_at": "num/dissection.rs:185",
+      "defined_at": "num/dissection.rs:186",
       "docs": [
         "Returns the root `z > 1` of the digit-uniform chain at one missing digit, `(z-1)^3 = (2/pi)(log base) z + gamma'(z-1) + (2/pi)(z-1)^2/(base z - 1)`, by bisection."
       ],
@@ -55448,7 +55756,7 @@
       "path": "num::dissection::chain_wall",
       "name": "chain_wall",
       "module": "num::dissection",
-      "defined_at": "num/dissection.rs:214",
+      "defined_at": "num/dissection.rs:215",
       "docs": [
         "Returns the chain's wall, one past the last base up to [`CAP_BASE`] whose margin is not positive."
       ],
@@ -55471,7 +55779,7 @@
       "path": "num::dissection::consecutive",
       "name": "consecutive",
       "module": "num::dissection",
-      "defined_at": "num/dissection.rs:254",
+      "defined_at": "num/dissection.rs:255",
       "docs": [
         "Returns whether the digit set keeps two consecutive digits, the hypothesis region C1 reads."
       ],
@@ -55506,7 +55814,7 @@
       "path": "num::dissection::fraction",
       "name": "fraction",
       "module": "num::dissection",
-      "defined_at": "num/dissection.rs:41",
+      "defined_at": "num/dissection.rs:42",
       "docs": [
         "Returns the last continued-fraction convergent `l/d` of `a/y` whose denominator is at most the cap, the Dirichlet fraction of the dissection.",
         "",
@@ -55564,7 +55872,7 @@
       "path": "num::dissection::kappa",
       "name": "kappa",
       "module": "num::dissection",
-      "defined_at": "num/dissection.rs:242",
+      "defined_at": "num/dissection.rs:243",
       "docs": [
         "Returns `kappa_F = (base/phi(base)) #{f in F : gcd(f, base) = 1}/fill`, the main-term constant of the prime count, as a reduced fraction.",
         "",
@@ -55619,7 +55927,7 @@
       "path": "num::dissection::masses",
       "name": "masses",
       "module": "num::dissection",
-      "defined_at": "num/dissection.rs:157",
+      "defined_at": "num/dissection.rs:158",
       "docs": [
         "Returns the unshifted masses `c_j = sum_(a < base^j) |hat F_j(a/base^j)|` for `j = 0..=level`, the `l^1` mass region A pays, `c_0 = 1`."
       ],
@@ -55671,7 +55979,7 @@
       "path": "num::dissection::reach",
       "name": "reach",
       "module": "num::dissection",
-      "defined_at": "num/dissection.rs:227",
+      "defined_at": "num/dissection.rs:228",
       "docs": [
         "Returns how the theorem reaches the set missing one digit: `proof` from the chain's wall, `certificate` at every base from [`DIGIT_WALL`] below it and at the [`CERTIFIED`] sets, `none` elsewhere.",
         "",
@@ -55711,15 +56019,14 @@
       "source": "written",
       "constant": false,
       "cross": {
-        "status": "skip",
-        "reason": "&'static return"
+        "status": "ok"
       }
     },
     {
       "path": "num::dissection::reading",
       "name": "reading",
       "module": "num::dissection",
-      "defined_at": "num/dissection.rs:168",
+      "defined_at": "num/dissection.rs:169",
       "docs": [
         "Returns the `l^1` exponent the top two masses read, `log_base(c_j/(fill c_(j-1)))`: a reading of the growth region A pays, never a certificate."
       ],
@@ -55768,7 +56075,7 @@
       "path": "num::dissection::regions",
       "name": "regions",
       "module": "num::dissection",
-      "defined_at": "num/dissection.rs:88",
+      "defined_at": "num/dissection.rs:89",
       "docs": [
         "Returns the region of every frequency `a/y`, `a < y = base^level`, at the cut `Z`, the fraction taken by [`fraction`] at [`cap`]."
       ],
@@ -55800,7 +56107,7 @@
       "ret": {
         "t": "vec",
         "item": {
-          "t": "opaque",
+          "t": "enum",
           "path": "num::dissection::Region"
         }
       },
@@ -55809,15 +56116,14 @@
       "source": "written",
       "constant": false,
       "cross": {
-        "status": "skip",
-        "reason": "returns uncrossable type num::dissection::Region"
+        "status": "ok"
       }
     },
     {
       "path": "num::dissection::tally",
       "name": "tally",
       "module": "num::dissection",
-      "defined_at": "num/dissection.rs:271",
+      "defined_at": "num/dissection.rs:273",
       "docs": [
         "Tallies the set below `base^level` on a log grid of the given size, with the Mobius values and the primes sieved to the span."
       ],
@@ -55858,7 +56164,7 @@
         }
       ],
       "ret": {
-        "t": "opaque",
+        "t": "plain",
         "path": "num::dissection::Tally"
       },
       "dims": [],
@@ -55866,15 +56172,14 @@
       "source": "written",
       "constant": false,
       "cross": {
-        "status": "skip",
-        "reason": "returns uncrossable type num::dissection::Tally"
+        "status": "ok"
       }
     },
     {
       "path": "num::dissection::weights",
       "name": "weights",
       "module": "num::dissection",
-      "defined_at": "num/dissection.rs:152",
+      "defined_at": "num/dissection.rs:153",
       "docs": [
         "Returns `|hat F_level(a/base^level)|` at every `a < base^level`, built one digit at a time from `hat F_j(t) = hat F(t) hat F_(j-1)(base t)`.",
         "",
@@ -64839,7 +65144,7 @@
       "path": "num::sumset::Pair::clean",
       "name": "clean",
       "module": "num::sumset",
-      "defined_at": "num/sumset.rs:241",
+      "defined_at": "num/sumset.rs:257",
       "docs": [
         "Whether the pair is clean, `3^k > d(k, m)` and `4^m > d(k, m)`, so that `S meet [0, d] = A_k + B_m`."
       ],
@@ -64862,7 +65167,7 @@
       "path": "num::sumset::Pair::copy",
       "name": "copy",
       "module": "num::sumset",
-      "defined_at": "num/sumset.rs:247",
+      "defined_at": "num/sumset.rs:263",
       "docs": [
         "Whether the pair is a gap copy, `2 4^m < 3^k + 5`: `A_k + B_m` is then two disjoint translates of `A_(k-1) + B_m` and its energy is twice theirs."
       ],
@@ -64885,7 +65190,7 @@
       "path": "num::sumset::Pair::energy",
       "name": "energy",
       "module": "num::sumset",
-      "defined_at": "num/sumset.rs:261",
+      "defined_at": "num/sumset.rs:277",
       "docs": [
         "The additive energy `E(k, m) = sum_x r(x)^2`, `r(x)` the number of ways `x = a + b` with `a` in `A_k` and `b` in `B_m`.",
         "",
@@ -64909,7 +65214,7 @@
       "path": "num::sumset::Pair::gap",
       "name": "gap",
       "module": "num::sumset",
-      "defined_at": "num/sumset.rs:234",
+      "defined_at": "num/sumset.rs:250",
       "docs": [
         "The first and the last integer of the open interval `(d(k, m), min(3^k, 4^m))`, which `S` misses, or `None` when it holds none.",
         "",
@@ -64946,7 +65251,7 @@
       "path": "num::sumset::Pair::largest",
       "name": "largest",
       "module": "num::sumset",
-      "defined_at": "num/sumset.rs:226",
+      "defined_at": "num/sumset.rs:242",
       "docs": [
         "The largest element `d(k, m) = (3^k - 1)/2 + (4^m - 1)/3` of `A_k + B_m`."
       ],
@@ -64969,7 +65274,7 @@
       "path": "num::sumset::Pair::new",
       "name": "new",
       "module": "num::sumset",
-      "defined_at": "num/sumset.rs:212",
+      "defined_at": "num/sumset.rs:228",
       "docs": [
         "Names the pair `(k, m)`.",
         "",
@@ -65015,7 +65320,7 @@
       "path": "num::sumset::Pair::ratio",
       "name": "ratio",
       "module": "num::sumset",
-      "defined_at": "num/sumset.rs:267",
+      "defined_at": "num/sumset.rs:283",
       "docs": [
         "The energy ratio `Q(k, m) = E(k, m) (d + 1)/4^(k+m)` of the energy [`Pair::energy`] returns, the energy against its flat value, at least `1`; `card(A_k + B_m) >= (d + 1)/Q` by Cauchy-Schwarz."
       ],
@@ -65045,7 +65350,7 @@
       "path": "num::sumset::Pair::scale",
       "name": "scale",
       "module": "num::sumset",
-      "defined_at": "num/sumset.rs:253",
+      "defined_at": "num/sumset.rs:269",
       "docs": [
         "The scaling `tau = 4^m/3^k`."
       ],
@@ -65068,7 +65373,7 @@
       "path": "num::sumset::Sumset::contains",
       "name": "contains",
       "module": "num::sumset",
-      "defined_at": "num/sumset.rs:84",
+      "defined_at": "num/sumset.rs:85",
       "docs": [
         "Whether `x` is in `S`, or `None` past the top."
       ],
@@ -65102,7 +65407,7 @@
       "path": "num::sumset::Sumset::count",
       "name": "count",
       "module": "num::sumset",
-      "defined_at": "num/sumset.rs:89",
+      "defined_at": "num/sumset.rs:90",
       "docs": [
         "Counts `card(S meet [1, x])`, or `None` past the top."
       ],
@@ -65136,7 +65441,7 @@
       "path": "num::sumset::Sumset::density",
       "name": "density",
       "module": "num::sumset",
-      "defined_at": "num/sumset.rs:94",
+      "defined_at": "num/sumset.rs:95",
       "docs": [
         "Reads the density `D(x) = card(S meet [1, x])/x`, or `None` at zero and past the top."
       ],
@@ -65170,7 +65475,7 @@
       "path": "num::sumset::Sumset::extremes",
       "name": "extremes",
       "module": "num::sumset",
-      "defined_at": "num/sumset.rs:134",
+      "defined_at": "num/sumset.rs:135",
       "docs": [
         "Reads the least and the greatest `D(x)` over each window `[edges[i], edges[i + 1])`, `None` for an empty window.",
         "",
@@ -65227,7 +65532,7 @@
       "path": "num::sumset::Sumset::fills",
       "name": "fills",
       "module": "num::sumset",
-      "defined_at": "num/sumset.rs:107",
+      "defined_at": "num/sumset.rs:108",
       "docs": [
         "Reads the share of members in each of `cells` equal runs of the integers `[low, high)`, the strip of `S` a page draws.",
         "",
@@ -65284,7 +65589,7 @@
       "path": "num::sumset::Sumset::level",
       "name": "level",
       "module": "num::sumset",
-      "defined_at": "num/sumset.rs:74",
+      "defined_at": "num/sumset.rs:75",
       "docs": [
         "The level the array was built to."
       ],
@@ -65307,7 +65612,7 @@
       "path": "num::sumset::Sumset::new",
       "name": "new",
       "module": "num::sumset",
-      "defined_at": "num/sumset.rs:36",
+      "defined_at": "num/sumset.rs:37",
       "docs": [
         "Builds `S meet [0, 3^level]`.",
         "",
@@ -65351,7 +65656,7 @@
       "path": "num::sumset::Sumset::top",
       "name": "top",
       "module": "num::sumset",
-      "defined_at": "num/sumset.rs:79",
+      "defined_at": "num/sumset.rs:80",
       "docs": [
         "The largest integer the array holds, `3^level`."
       ],
@@ -65374,7 +65679,7 @@
       "path": "num::sumset::pairs",
       "name": "pairs",
       "module": "num::sumset",
-      "defined_at": "num/sumset.rs:305",
+      "defined_at": "num/sumset.rs:321",
       "docs": [
         "Lists the pairs of the census: every `(k, m)` with `4^m` within a factor `3` of `3^k` and `d(k, m) <= 3^level`, by `d`.",
         "",

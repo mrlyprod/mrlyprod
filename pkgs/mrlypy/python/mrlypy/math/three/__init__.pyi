@@ -3,6 +3,7 @@ from typing import Any, Literal
 from numpy.typing import NDArray
 import mrlypy.core
 import mrlypy.math.graph
+from . import sponge
 
 class Vec3:
     """A three-component vector of f32."""

@@ -5512,6 +5512,71 @@ pub mod math {
     use pyo3::prelude::*;
     use pyo3::types::PyDict;
 
+    /// The Truchet arcs of a flat design: every cell two quarter arcs, the loops and strands they join into, and the proved loop laws.
+    pub mod arcs {
+        use crate::hand::{ok, PyCode, PySerde};
+        use pyo3::prelude::*;
+        use pyo3::types::PyDict;
+        use pyo3::IntoPyObjectExt;
+
+        /// Draws level `level` of `bang dim 2, base b, code c` in arcs: cell `(x, y)` of the `b x b` mask is filled when bit `b y + x` of the code is set, level `level` is its Kronecker power built by [`crate::math::bang::factory::create`], and level 0 is one filled cell.
+        #[pyfunction]
+        #[pyo3(name = "draw", signature = (code, base, level))]
+        pub fn draw<'py>(
+            py: Python<'py>,
+            code: PyCode,
+            base: usize,
+            level: usize,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let code = code.0;
+            let out = mrlyrs::math::arcs::draw(code, base, level);
+            (PySerde(ok(out)?)).into_bound_py_any(py)
+        }
+
+        /// Returns the proved loop law of `bang dim 2, base b, code c` at the level, or none where no law is proved: the carpet, base 3 code 495, has `(8^n - 1)/7 - 3^n + n + 1` loops; at base 2 codes 7 and 14 have `3^(n-1) - 2^n + 1`, codes 11 and 13 have `3^(n-1) - 2^(n-1)`, both from level 1 on, code 9 has `2^n - 1`, and the other eleven codes never loop.
+        #[pyfunction]
+        #[pyo3(name = "law", signature = (code, base, level))]
+        pub fn law<'py>(
+            py: Python<'py>,
+            code: PyCode,
+            base: usize,
+            level: usize,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let code = code.0;
+            let out = mrlyrs::math::arcs::law(code, base, level);
+            ((ok(out)?).map(PySerde)).into_bound_py_any(py)
+        }
+
+        /// Draws a `side x side` grid of filled and deleted cells in arcs and counts its curves by union-find over the edge midpoints, a curve being a loop when no midpoint of it lies on the boundary.
+        #[pyfunction]
+        #[pyo3(name = "trace", signature = (side, on))]
+        pub fn trace<'py>(
+            py: Python<'py>,
+            side: usize,
+            on: Vec<bool>,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::math::arcs::trace(side, &on);
+            (PySerde(ok(out)?)).into_bound_py_any(py)
+        }
+
+        pub fn init(
+            py: Python<'_>,
+            parent: &Bound<'_, PyModule>,
+            sys: &Bound<'_, PyDict>,
+        ) -> PyResult<()> {
+            let m = PyModule::new(py, "mrlypy.math.arcs")?;
+            m.setattr("__doc__", "The Truchet arcs of a flat design: every cell two quarter arcs, the loops and strands they join into, and the proved loop laws.")?;
+            m.add_function(wrap_pyfunction!(draw, &m)?)?;
+            m.add_function(wrap_pyfunction!(law, &m)?)?;
+            m.add_function(wrap_pyfunction!(trace, &m)?)?;
+            let names: Vec<&str> = vec!["draw", "law", "trace"];
+            m.add("__all__", names)?;
+            parent.add("arcs", &m)?;
+            sys.set_item("mrlypy._mrlypy.math.arcs", &m)?;
+            Ok(())
+        }
+    }
+
     /// Ready-made tensors: zeros, ones, noise and carpets in two or three dimensions.
     pub mod atoms {
         use crate::hand::{PyRng, PyTensor};
@@ -13433,6 +13498,112 @@ pub mod math {
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
 
+        /// The Menger sponge's distance, its tube inside the plus and its Minkowski profile.
+        pub mod sponge {
+            use pyo3::prelude::*;
+            use pyo3::types::PyDict;
+            use pyo3::IntoPyObjectExt;
+
+            /// The volume `Deep(radius)` of the points of one arm's quarter beyond the tubes of both walls it touches, at every radius, to double precision.
+            #[pyfunction]
+            #[pyo3(name = "deep", signature = (radius))]
+            pub fn deep<'py>(py: Python<'py>, radius: f64) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::math::three::sponge::deep(radius);
+                (out).into_bound_py_any(py)
+            }
+
+            /// The Minkowski dimension of the Menger sponge, `log(20)/log(3)`, the similarity dimension of its 20 maps of ratio `1/3`.
+            #[pyfunction]
+            #[pyo3(name = "dimension", signature = ())]
+            pub fn dimension<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::math::three::sponge::dimension();
+                (out).into_bound_py_any(py)
+            }
+
+            /// The Euclidean distance from a point of the unit cube to the Menger sponge, exact to the last binary place.
+            #[pyfunction]
+            #[pyo3(name = "distance", signature = (point))]
+            pub fn distance<'py>(py: Python<'py>, point: [f64; 3]) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::math::three::sponge::distance(point);
+                (out).into_bound_py_any(py)
+            }
+
+            /// The volume `T(radius)` of the points of the plus within `radius` of the sponge at every radius, `Deep` included, to double precision.
+            #[pyfunction]
+            #[pyo3(name = "exact", signature = (radius))]
+            pub fn exact<'py>(py: Python<'py>, radius: f64) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::math::three::sponge::exact(radius);
+                (out).into_bound_py_any(py)
+            }
+
+            /// The periodic function `p` of Kombrink, Pearse and Winter at `radius`: the reading's limit profile, unchanged when the radius is multiplied by 3, or `None` on the phases `(1/6, sqrt(2)/6]` where `T` has no closed form.
+            #[pyfunction]
+            #[pyo3(name = "profile", signature = (radius))]
+            pub fn profile<'py>(py: Python<'py>, radius: f64) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::math::three::sponge::profile(radius);
+                (out).into_bound_py_any(py)
+            }
+
+            /// The Minkowski reading `radius^(D-3)` times the volume inside the cube, the number whose limit as the radius shrinks would be the sponge's Minkowski content.
+            #[pyfunction]
+            #[pyo3(name = "reading", signature = (radius))]
+            pub fn reading<'py>(py: Python<'py>, radius: f64) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::math::three::sponge::reading(radius);
+                (out).into_bound_py_any(py)
+            }
+
+            /// The volume `T(radius)` of the points of the plus of seven removed level-1 cubes within `radius` of the sponge, or `None` on `(1/6, sqrt(2)/6)`, where no closed form is known.
+            #[pyfunction]
+            #[pyo3(name = "tube", signature = (radius))]
+            pub fn tube<'py>(py: Python<'py>, radius: f64) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::math::three::sponge::tube(radius);
+                (out).into_bound_py_any(py)
+            }
+
+            /// The volume of the points of the unit cube within `radius` of the sponge, `sum_k (20/27)^k T(3^k radius)`, or `None` when some `3^k radius` falls where `T` has no closed form.
+            #[pyfunction]
+            #[pyo3(name = "volume", signature = (radius))]
+            pub fn volume<'py>(py: Python<'py>, radius: f64) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::math::three::sponge::volume(radius);
+                (out).into_bound_py_any(py)
+            }
+
+            pub fn init(
+                py: Python<'_>,
+                parent: &Bound<'_, PyModule>,
+                sys: &Bound<'_, PyDict>,
+            ) -> PyResult<()> {
+                let m = PyModule::new(py, "mrlypy.math.three.sponge")?;
+                m.setattr("__doc__", "The Menger sponge's distance, its tube inside the plus and its Minkowski profile.")?;
+                m.add_function(wrap_pyfunction!(deep, &m)?)?;
+                m.add_function(wrap_pyfunction!(dimension, &m)?)?;
+                m.add_function(wrap_pyfunction!(distance, &m)?)?;
+                m.add_function(wrap_pyfunction!(exact, &m)?)?;
+                m.add_function(wrap_pyfunction!(profile, &m)?)?;
+                m.add_function(wrap_pyfunction!(reading, &m)?)?;
+                m.add_function(wrap_pyfunction!(tube, &m)?)?;
+                m.add_function(wrap_pyfunction!(volume, &m)?)?;
+                m.add("COVER", mrlyrs::math::three::sponge::COVER)?;
+                m.add("EDGE", mrlyrs::math::three::sponge::EDGE)?;
+                let names: Vec<&str> = vec![
+                    "deep",
+                    "dimension",
+                    "distance",
+                    "exact",
+                    "profile",
+                    "reading",
+                    "tube",
+                    "volume",
+                    "COVER",
+                    "EDGE",
+                ];
+                m.add("__all__", names)?;
+                parent.add("sponge", &m)?;
+                sys.set_item("mrlypy._mrlypy.math.three.sponge", &m)?;
+                Ok(())
+            }
+        }
+
         /// A three-component vector of f32.
         #[pyclass(name = "Vec3", module = "mrlypy.math.three", from_py_object)]
         #[derive(Clone)]
@@ -14352,6 +14523,7 @@ pub mod math {
                 "Vec3",
             ];
             m.add("__all__", names)?;
+            sponge::init(py, &m, sys)?;
             parent.add("three", &m)?;
             sys.set_item("mrlypy._mrlypy.math.three", &m)?;
             Ok(())
@@ -15089,6 +15261,7 @@ pub mod math {
         m.setattr("__doc__", "The designs in space: codes, cells, cubes, hexagons, their counts, graphs and names.\nThe designs in space.\n\nA small integer code picks the filled corners of a hypercube, that seed grows level by level\ninto a fractal design, and the same code always unfolds into the same shape, so a design can be\nnamed, counted and drawn again from its number alone. Half the module generates and half\nmeasures; everything rests on the tensors and cells of [`crate::core`] and the sequences of\n[`crate::num`].\n\n- `atoms` fills a tensor with a carpet, a net, beams or noise.\n- `bang` enumerates the design codes, their symmetries and their counts.\n- `cell` holds the N-dimensional cell and the pipeline the fixed dimensions share.\n- `two`, `three` and `six` run that pipeline for flat cells, cubes and hexagons.\n- `counts` gives the same fills, surfaces, hex slices and carry ladder in closed form.\n- `graph` lifts a grid into nodes and branches; `spectrum` reads the Laplacian spectra off it.\n- `shape` crops a cell against a rational shape, cell by cell, with no floats.\n- `rules` marks the cells of a hypercube whose coordinate residues satisfy a rule.\n- `moire` layers one design at many scales into an interference field.\n- `press` weighs the integers a design's digit rule keeps.\n- `spin` spins a raster about its centre; `tourbillon` stacks the turned parity carpets.\n- `spirograph` rolls a byte grid as a wheel; `roulette` counts where its curves cross.\n- `name` prints and parses the one canonical JSON object of every design, rule, tile and word.\n\nThe doors are [`crate::math::atoms::carpet_2d`], [`crate::math::bang::bang`],\n[`crate::math::two::carpet`], [`crate::math::two::census()`], [`crate::math::two::to_json`],\n[`crate::math::counts::fill`], [`crate::math::three::census::surface`] and\n[`crate::math::spectrum::laplacian_spectrum`].")?;
         let names: Vec<&str> = vec![];
         m.add("__all__", names)?;
+        arcs::init(py, &m, sys)?;
         atoms::init(py, &m, sys)?;
         bang::init(py, &m, sys)?;
         cell::init(py, &m, sys)?;
@@ -16023,6 +16196,220 @@ pub mod num {
             m.add("__all__", names)?;
             parent.add("design", &m)?;
             sys.set_item("mrlypy._mrlypy.num.design", &m)?;
+            Ok(())
+        }
+    }
+
+    /// The unconditional dissection of a missing-digit set: the four regions of the frequency grid, the `l^1` masses of the digit transform, the chain certificate against `1/5`, the constant `kappa_F` and the set's own meter and prime count.
+    pub mod dissection {
+        use crate::hand::PySerde;
+        use pyo3::prelude::*;
+        use pyo3::types::PyDict;
+        use pyo3::IntoPyObjectExt;
+
+        /// Returns `Q = floor(y^(3/5))`, the largest denominator the dissection admits, exact in integers.
+        #[pyfunction]
+        #[pyo3(name = "cap", signature = (y))]
+        pub fn cap<'py>(py: Python<'py>, y: u64) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::dissection::cap(y);
+            (out).into_bound_py_any(py)
+        }
+
+        /// Returns the chain's certificate exponent at one missing digit, `alpha_1 = log_base(z base/(base - 1))`, the same at every missing digit.
+        #[pyfunction]
+        #[pyo3(name = "chain_exponent", signature = (base))]
+        pub fn chain_exponent<'py>(py: Python<'py>, base: u64) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::dissection::chain_exponent(base);
+            (out).into_bound_py_any(py)
+        }
+
+        /// Returns the chain's margin at the bar, the cubic cleared of denominators at `w = base^(1/5)(1 - 1/base)`, positive exactly when the root sits below `w` and `alpha_1 < 1/5`.
+        #[pyfunction]
+        #[pyo3(name = "chain_margin", signature = (base))]
+        pub fn chain_margin<'py>(py: Python<'py>, base: u64) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::dissection::chain_margin(base);
+            (out).into_bound_py_any(py)
+        }
+
+        /// Returns the root `z > 1` of the digit-uniform chain at one missing digit, `(z-1)^3 = (2/pi)(log base) z + gamma'(z-1) + (2/pi)(z-1)^2/(base z - 1)`, by bisection.
+        #[pyfunction]
+        #[pyo3(name = "chain_root", signature = (base))]
+        pub fn chain_root<'py>(py: Python<'py>, base: u64) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::dissection::chain_root(base);
+            (out).into_bound_py_any(py)
+        }
+
+        /// Returns the chain's wall, one past the last base up to [`CAP_BASE`] whose margin is not positive.
+        #[pyfunction]
+        #[pyo3(name = "chain_wall", signature = ())]
+        pub fn chain_wall<'py>(py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::dissection::chain_wall();
+            (out).into_bound_py_any(py)
+        }
+
+        /// Returns whether the digit set keeps two consecutive digits, the hypothesis region C1 reads.
+        #[pyfunction]
+        #[pyo3(name = "consecutive", signature = (digits))]
+        pub fn consecutive<'py>(py: Python<'py>, digits: Vec<u64>) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::dissection::consecutive(&digits);
+            (out).into_bound_py_any(py)
+        }
+
+        /// Returns the last continued-fraction convergent `l/d` of `a/y` whose denominator is at most the cap, the Dirichlet fraction of the dissection.
+        #[pyfunction]
+        #[pyo3(name = "fraction", signature = (a, y, cap))]
+        pub fn fraction<'py>(
+            py: Python<'py>,
+            a: u64,
+            y: u64,
+            cap: u64,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::dissection::fraction(a, y, cap);
+            (out).into_bound_py_any(py)
+        }
+
+        /// Returns `kappa_F = (base/phi(base)) #{f in F : gcd(f, base) = 1}/fill`, the main-term constant of the prime count, as a reduced fraction.
+        #[pyfunction]
+        #[pyo3(name = "kappa", signature = (base, digits))]
+        pub fn kappa<'py>(
+            py: Python<'py>,
+            base: u64,
+            digits: Vec<u64>,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::dissection::kappa(base, &digits);
+            (out).into_bound_py_any(py)
+        }
+
+        /// Returns the unshifted masses `c_j = sum_(a < base^j) |hat F_j(a/base^j)|` for `j = 0..=level`, the `l^1` mass region A pays, `c_0 = 1`.
+        #[pyfunction]
+        #[pyo3(name = "masses", signature = (base, digits, level))]
+        pub fn masses<'py>(
+            py: Python<'py>,
+            base: u64,
+            digits: Vec<u64>,
+            level: u32,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::dissection::masses(base, &digits, level);
+            (out).into_bound_py_any(py)
+        }
+
+        /// Returns how the theorem reaches the set missing one digit: `proof` from the chain's wall, `certificate` at every base from [`DIGIT_WALL`] below it and at the [`CERTIFIED`] sets, `none` elsewhere.
+        #[pyfunction]
+        #[pyo3(name = "reach", signature = (base, missing))]
+        pub fn reach<'py>(py: Python<'py>, base: u64, missing: u64) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::dissection::reach(base, missing);
+            ((out).to_string()).into_bound_py_any(py)
+        }
+
+        /// Returns the `l^1` exponent the top two masses read, `log_base(c_j/(fill c_(j-1)))`: a reading of the growth region A pays, never a certificate.
+        #[pyfunction]
+        #[pyo3(name = "reading", signature = (base, fill, masses))]
+        pub fn reading<'py>(
+            py: Python<'py>,
+            base: u64,
+            fill: usize,
+            masses: Vec<f64>,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::dissection::reading(base, fill, &masses);
+            (out).into_bound_py_any(py)
+        }
+
+        /// Returns the region of every frequency `a/y`, `a < y = base^level`, at the cut `Z`, the fraction taken by [`fraction`] at [`cap`].
+        #[pyfunction]
+        #[pyo3(name = "regions", signature = (base, level, z))]
+        pub fn regions<'py>(
+            py: Python<'py>,
+            base: u64,
+            level: u32,
+            z: u64,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::dissection::regions(base, level, z);
+            ((out).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
+        }
+
+        /// Tallies the set below `base^level` on a log grid of the given size, with the Mobius values and the primes sieved to the span.
+        #[pyfunction]
+        #[pyo3(name = "tally", signature = (base, digits, level, samples))]
+        pub fn tally<'py>(
+            py: Python<'py>,
+            base: u64,
+            digits: Vec<u64>,
+            level: usize,
+            samples: usize,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::dissection::tally(base, &digits, level, samples);
+            (PySerde(out)).into_bound_py_any(py)
+        }
+
+        /// Returns `|hat F_level(a/base^level)|` at every `a < base^level`, built one digit at a time from `hat F_j(t) = hat F(t) hat F_(j-1)(base t)`.
+        #[pyfunction]
+        #[pyo3(name = "weights", signature = (base, digits, level))]
+        pub fn weights<'py>(
+            py: Python<'py>,
+            base: u64,
+            digits: Vec<u64>,
+            level: u32,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::dissection::weights(base, &digits, level);
+            (out).into_bound_py_any(py)
+        }
+
+        pub fn init(
+            py: Python<'_>,
+            parent: &Bound<'_, PyModule>,
+            sys: &Bound<'_, PyDict>,
+        ) -> PyResult<()> {
+            let m = PyModule::new(py, "mrlypy.num.dissection")?;
+            m.setattr("__doc__", "The unconditional dissection of a missing-digit set: the four regions of the frequency grid, the `l^1` masses of the digit transform, the chain certificate against `1/5`, the constant `kappa_F` and the set's own meter and prime count.")?;
+            m.add_function(wrap_pyfunction!(cap, &m)?)?;
+            m.add_function(wrap_pyfunction!(chain_exponent, &m)?)?;
+            m.add_function(wrap_pyfunction!(chain_margin, &m)?)?;
+            m.add_function(wrap_pyfunction!(chain_root, &m)?)?;
+            m.add_function(wrap_pyfunction!(chain_wall, &m)?)?;
+            m.add_function(wrap_pyfunction!(consecutive, &m)?)?;
+            m.add_function(wrap_pyfunction!(fraction, &m)?)?;
+            m.add_function(wrap_pyfunction!(kappa, &m)?)?;
+            m.add_function(wrap_pyfunction!(masses, &m)?)?;
+            m.add_function(wrap_pyfunction!(reach, &m)?)?;
+            m.add_function(wrap_pyfunction!(reading, &m)?)?;
+            m.add_function(wrap_pyfunction!(regions, &m)?)?;
+            m.add_function(wrap_pyfunction!(tally, &m)?)?;
+            m.add_function(wrap_pyfunction!(weights, &m)?)?;
+            m.add("BAR_A", mrlyrs::num::dissection::BAR_A)?;
+            m.add("BAR_B", mrlyrs::num::dissection::BAR_B)?;
+            m.add("CAP_BASE", mrlyrs::num::dissection::CAP_BASE)?;
+            m.add("CERTIFIED", mrlyrs::num::dissection::CERTIFIED)?;
+            m.add("DIGIT_WALL", mrlyrs::num::dissection::DIGIT_WALL)?;
+            m.add("FIRST_BELOW", mrlyrs::num::dissection::FIRST_BELOW)?;
+            m.add("GAMMA", mrlyrs::num::dissection::GAMMA)?;
+            m.add("WINDOW_WALL", mrlyrs::num::dissection::WINDOW_WALL)?;
+            let names: Vec<&str> = vec![
+                "cap",
+                "chain_exponent",
+                "chain_margin",
+                "chain_root",
+                "chain_wall",
+                "consecutive",
+                "fraction",
+                "kappa",
+                "masses",
+                "reach",
+                "reading",
+                "regions",
+                "tally",
+                "weights",
+                "BAR_A",
+                "BAR_B",
+                "CAP_BASE",
+                "CERTIFIED",
+                "DIGIT_WALL",
+                "FIRST_BELOW",
+                "GAMMA",
+                "WINDOW_WALL",
+            ];
+            m.add("__all__", names)?;
+            parent.add("dissection", &m)?;
+            sys.set_item("mrlypy._mrlypy.num.dissection", &m)?;
             Ok(())
         }
     }
@@ -18461,7 +18848,7 @@ pub mod num {
 
     /// The punctured schedules: the Wallis sieve and its kin, their words, rasters, punctures and limits.
     pub mod sieve {
-        use crate::hand::ok;
+        use crate::hand::{ok, PySerde};
         use pyo3::prelude::*;
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
@@ -18534,6 +18921,18 @@ pub mod num {
             (out).into_bound_py_any(py)
         }
 
+        /// Returns the Wallis sieve product of a parity design, `prod_(N odd >= 3) (1 - N^-dim)` for the corners with an odd count of odd coordinates and `prod (1 + N^-dim)` for the even count, at `dim >= 2`.
+        #[pyfunction]
+        #[pyo3(name = "parity_product", signature = (dimension, odd))]
+        pub fn parity_product<'py>(
+            py: Python<'py>,
+            dimension: u32,
+            odd: bool,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::sieve::parity_product(dimension, odd);
+            (ok(out)?).into_bound_py_any(py)
+        }
+
         /// Lists every puncture the word makes in the given dimension: its corner along each axis and then its side, all in units of the word's finest cell, so a level-one hole is the widest block in the list.
         #[pyfunction]
         #[pyo3(name = "punctures", signature = (word, dimension))]
@@ -18566,6 +18965,51 @@ pub mod num {
             (ok(out)?).into_bound_py_any(py)
         }
 
+        /// Returns the cells a design of this profile fills at one side, `sum_j a_j E^(dim-j) O^j` with `E` and `O` the even and the odd positions an axis holds: `P_F(n)` at side `2n - 1` and `w n^dim` at side `2n`.
+        #[pyfunction]
+        #[pyo3(name = "row_fill", signature = (profile, side))]
+        pub fn row_fill<'py>(
+            py: Python<'py>,
+            profile: Vec<u64>,
+            side: u64,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::sieve::row_fill(&profile, side);
+            (ok(out)?).into_bound_py_any(py)
+        }
+
+        /// Reads the design of this profile along the row word: its drift, its first correction, the roots of its fill polynomial, its constant from the Gamma form, the constant spelled, and the constant again by reflection, against the mirror and as a Wallis sieve product wherever those apply.
+        #[pyfunction]
+        #[pyo3(name = "row_law", signature = (profile))]
+        pub fn row_law<'py>(py: Python<'py>, profile: Vec<u64>) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::sieve::row_law(&profile);
+            (PySerde(ok(out)?)).into_bound_py_any(py)
+        }
+
+        /// Counts a base-2 design's corners by how many odd coordinates each holds, the profile the row word reads: the code is a bitmask over the corners, corner `i` is the binary digits of `i` as `math::bang::code_to_corners` reads it, so its odd coordinates are the ones of `i`.
+        #[pyfunction]
+        #[pyo3(name = "row_profile", signature = (code, dimension))]
+        pub fn row_profile<'py>(
+            py: Python<'py>,
+            code: u128,
+            dimension: usize,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::sieve::row_profile(code, dimension);
+            (ok(out)?).into_bound_py_any(py)
+        }
+
+        /// Walks the renormalised fill `R_L (2^dim/w)^L / L^drift` of the design of this profile to every stop, `R_L` the product of the letters' fill ratios, on the odd sides `3, 5, ..., 2L+1` or on the even sides `2, 4, ..., 2L`.
+        #[pyfunction]
+        #[pyo3(name = "row_settle", signature = (profile, stops, even))]
+        pub fn row_settle<'py>(
+            py: Python<'py>,
+            profile: Vec<u64>,
+            stops: Vec<usize>,
+            even: bool,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::sieve::row_settle(&profile, &stops, even);
+            (ok(out)?).into_bound_py_any(py)
+        }
+
         /// Returns the side of the word, the product of its letters' sides.
         #[pyfunction]
         #[pyo3(name = "side", signature = (word))]
@@ -18595,9 +19039,14 @@ pub mod num {
             m.add_function(wrap_pyfunction!(holes, &m)?)?;
             m.add_function(wrap_pyfunction!(limit, &m)?)?;
             m.add_function(wrap_pyfunction!(odd_word, &m)?)?;
+            m.add_function(wrap_pyfunction!(parity_product, &m)?)?;
             m.add_function(wrap_pyfunction!(punctures, &m)?)?;
             m.add_function(wrap_pyfunction!(raster, &m)?)?;
             m.add_function(wrap_pyfunction!(ratio, &m)?)?;
+            m.add_function(wrap_pyfunction!(row_fill, &m)?)?;
+            m.add_function(wrap_pyfunction!(row_law, &m)?)?;
+            m.add_function(wrap_pyfunction!(row_profile, &m)?)?;
+            m.add_function(wrap_pyfunction!(row_settle, &m)?)?;
             m.add_function(wrap_pyfunction!(side, &m)?)?;
             m.add_function(wrap_pyfunction!(solid_limit, &m)?)?;
             m.add("PLANE_LIMIT", mrlyrs::num::sieve::PLANE_LIMIT)?;
@@ -18608,9 +19057,14 @@ pub mod num {
                 "holes",
                 "limit",
                 "odd_word",
+                "parity_product",
                 "punctures",
                 "raster",
                 "ratio",
+                "row_fill",
+                "row_law",
+                "row_profile",
+                "row_settle",
                 "side",
                 "solid_limit",
                 "PLANE_LIMIT",
@@ -18819,6 +19273,223 @@ pub mod num {
             m.add("__all__", names)?;
             parent.add("spiral", &m)?;
             sys.set_item("mrlypy._mrlypy.num.spiral", &m)?;
+            Ok(())
+        }
+    }
+
+    /// The sumset of Erdos problem 125: the base-3 design `{0, 1}` plus the base-4 design `{0, 1}` as a bit array, its density below `x`, the gaps its level pairs leave and their additive energy.
+    pub mod sumset {
+        use crate::hand::ok;
+        use pyo3::prelude::*;
+        use pyo3::types::PyDict;
+        use pyo3::IntoPyObjectExt;
+
+        /// A pair of levels: the base-3 level `A_k = A meet [0, 3^k)` against the base-4 level `B_m = B meet [0, 4^m)`, `k` the field `three` and `m` the field `four`.
+        #[pyclass(name = "Pair", module = "mrlypy.num.sumset", from_py_object)]
+        #[derive(Clone)]
+        pub struct Pair(pub mrlyrs::num::sumset::Pair);
+
+        #[pymethods]
+        impl Pair {
+            /// Names the pair `(k, m)`.
+            #[new]
+            #[pyo3(signature = (three, four))]
+            pub fn __new__(three: u32, four: u32) -> PyResult<Self> {
+                let out = mrlyrs::num::sumset::Pair::new(three, four);
+                Ok(Self(ok(out)?))
+            }
+            /// The base-3 level `k`.
+            #[getter]
+            #[pyo3(name = "three")]
+            pub fn three<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let value = self.0.three;
+                (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "three")]
+            pub fn set_three(&mut self, value: u32) -> PyResult<()> {
+                self.0.three = value;
+                Ok(())
+            }
+            /// The base-4 level `m`.
+            #[getter]
+            #[pyo3(name = "four")]
+            pub fn four<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let value = self.0.four;
+                (value).into_bound_py_any(py)
+            }
+            #[setter]
+            #[pyo3(name = "four")]
+            pub fn set_four(&mut self, value: u32) -> PyResult<()> {
+                self.0.four = value;
+                Ok(())
+            }
+            /// Whether the pair is clean, `3^k > d(k, m)` and `4^m > d(k, m)`, so that `S meet [0, d] = A_k + B_m`.
+            #[pyo3(name = "clean", signature = ())]
+            pub fn clean<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::sumset::Pair::clean(&self.0);
+                (out).into_bound_py_any(py)
+            }
+            /// Whether the pair is a gap copy, `2 4^m < 3^k + 5`: `A_k + B_m` is then two disjoint translates of `A_(k-1) + B_m` and its energy is twice theirs.
+            #[pyo3(name = "copy", signature = ())]
+            pub fn copy<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::sumset::Pair::copy(&self.0);
+                (out).into_bound_py_any(py)
+            }
+            /// The additive energy `E(k, m) = sum_x r(x)^2`, `r(x)` the number of ways `x = a + b` with `a` in `A_k` and `b` in `B_m`.
+            #[pyo3(name = "energy", signature = ())]
+            pub fn energy<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::sumset::Pair::energy(&self.0);
+                (out).into_bound_py_any(py)
+            }
+            /// The first and the last integer of the open interval `(d(k, m), min(3^k, 4^m))`, which `S` misses, or `None` when it holds none.
+            #[pyo3(name = "gap", signature = ())]
+            pub fn gap<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::sumset::Pair::gap(&self.0);
+                (out).into_bound_py_any(py)
+            }
+            /// The largest element `d(k, m) = (3^k - 1)/2 + (4^m - 1)/3` of `A_k + B_m`.
+            #[pyo3(name = "largest", signature = ())]
+            pub fn largest<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::sumset::Pair::largest(&self.0);
+                (out).into_bound_py_any(py)
+            }
+            /// Names the pair `(k, m)`.
+            #[staticmethod]
+            #[pyo3(name = "new", signature = (three, four))]
+            pub fn new_<'py>(
+                py: Python<'py>,
+                three: u32,
+                four: u32,
+            ) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::sumset::Pair::new(three, four);
+                (crate::gen::num::sumset::Pair(ok(out)?)).into_bound_py_any(py)
+            }
+            /// The energy ratio `Q(k, m) = E(k, m) (d + 1)/4^(k+m)` of the energy [`Pair::energy`] returns, the energy against its flat value, at least `1`; `card(A_k + B_m) >= (d + 1)/Q` by Cauchy-Schwarz.
+            #[pyo3(name = "ratio", signature = (energy))]
+            pub fn ratio<'py>(&self, py: Python<'py>, energy: u128) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::sumset::Pair::ratio(&self.0, energy);
+                (out).into_bound_py_any(py)
+            }
+            /// The scaling `tau = 4^m/3^k`.
+            #[pyo3(name = "scale", signature = ())]
+            pub fn scale<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::sumset::Pair::scale(&self.0);
+                (out).into_bound_py_any(py)
+            }
+            /// Reads plain data into the class.
+            #[staticmethod]
+            pub fn from_dict(data: &Bound<'_, PyAny>) -> PyResult<Self> {
+                Ok(Self(crate::hand::serde_from_py(data)?))
+            }
+            /// Returns the value as plain data.
+            pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                crate::hand::serde_into_py(py, &self.0)
+            }
+        }
+
+        /// The sumset `S = A + B` of Erdos problem 125 up to `3^level`: `A` the integers whose base-3 digits are all `0` or `1`, `B` those whose base-4 digits are.
+        #[pyclass(name = "Sumset", module = "mrlypy.num.sumset", skip_from_py_object)]
+        pub struct Sumset(pub mrlyrs::num::sumset::Sumset);
+
+        #[pymethods]
+        impl Sumset {
+            /// Builds `S meet [0, 3^level]`.
+            #[new]
+            #[pyo3(signature = (level))]
+            pub fn __new__(level: u32) -> PyResult<Self> {
+                let out = mrlyrs::num::sumset::Sumset::new(level);
+                Ok(Self(ok(out)?))
+            }
+            /// Whether `x` is in `S`, or `None` past the top.
+            #[pyo3(name = "contains", signature = (x))]
+            pub fn contains<'py>(&self, py: Python<'py>, x: u64) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::sumset::Sumset::contains(&self.0, x);
+                (out).into_bound_py_any(py)
+            }
+            /// Counts `card(S meet [1, x])`, or `None` past the top.
+            #[pyo3(name = "count", signature = (x))]
+            pub fn count<'py>(&self, py: Python<'py>, x: u64) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::sumset::Sumset::count(&self.0, x);
+                (out).into_bound_py_any(py)
+            }
+            /// Reads the density `D(x) = card(S meet [1, x])/x`, or `None` at zero and past the top.
+            #[pyo3(name = "density", signature = (x))]
+            pub fn density<'py>(&self, py: Python<'py>, x: u64) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::sumset::Sumset::density(&self.0, x);
+                (out).into_bound_py_any(py)
+            }
+            /// Reads the least and the greatest `D(x)` over each window `[edges[i], edges[i + 1])`, `None` for an empty window.
+            #[pyo3(name = "extremes", signature = (edges))]
+            pub fn extremes<'py>(
+                &self,
+                py: Python<'py>,
+                edges: Vec<u64>,
+            ) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::sumset::Sumset::extremes(&self.0, &edges);
+                (ok(out)?).into_bound_py_any(py)
+            }
+            /// Reads the share of members in each of `cells` equal runs of the integers `[low, high)`, the strip of `S` a page draws.
+            #[pyo3(name = "fills", signature = (low, high, cells))]
+            pub fn fills<'py>(
+                &self,
+                py: Python<'py>,
+                low: u64,
+                high: u64,
+                cells: usize,
+            ) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::sumset::Sumset::fills(&self.0, low, high, cells);
+                (ok(out)?).into_bound_py_any(py)
+            }
+            /// The level the array was built to.
+            #[pyo3(name = "level", signature = ())]
+            pub fn level<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::sumset::Sumset::level(&self.0);
+                (out).into_bound_py_any(py)
+            }
+            /// Builds `S meet [0, 3^level]`.
+            #[staticmethod]
+            #[pyo3(name = "new", signature = (level))]
+            pub fn new_<'py>(py: Python<'py>, level: u32) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::sumset::Sumset::new(level);
+                (crate::gen::num::sumset::Sumset(ok(out)?)).into_bound_py_any(py)
+            }
+            /// The largest integer the array holds, `3^level`.
+            #[pyo3(name = "top", signature = ())]
+            pub fn top<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::sumset::Sumset::top(&self.0);
+                (out).into_bound_py_any(py)
+            }
+        }
+
+        /// Lists the pairs of the census: every `(k, m)` with `4^m` within a factor `3` of `3^k` and `d(k, m) <= 3^level`, by `d`.
+        #[pyfunction]
+        #[pyo3(name = "pairs", signature = (level))]
+        pub fn pairs<'py>(py: Python<'py>, level: u32) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::sumset::pairs(level);
+            ((ok(out)?)
+                .into_iter()
+                .map(crate::gen::num::sumset::Pair)
+                .collect::<Vec<_>>())
+            .into_bound_py_any(py)
+        }
+
+        pub fn init(
+            py: Python<'_>,
+            parent: &Bound<'_, PyModule>,
+            sys: &Bound<'_, PyDict>,
+        ) -> PyResult<()> {
+            let m = PyModule::new(py, "mrlypy.num.sumset")?;
+            m.setattr("__doc__", "The sumset of Erdos problem 125: the base-3 design `{0, 1}` plus the base-4 design `{0, 1}` as a bit array, its density below `x`, the gaps its level pairs leave and their additive energy.")?;
+            m.add_class::<Pair>()?;
+            m.add_class::<Sumset>()?;
+            m.add_function(wrap_pyfunction!(pairs, &m)?)?;
+            m.add("DEEPEST", mrlyrs::num::sumset::DEEPEST)?;
+            m.add("WIDEST", mrlyrs::num::sumset::WIDEST)?;
+            let names: Vec<&str> = vec!["pairs", "Pair", "Sumset", "DEEPEST", "WIDEST"];
+            m.add("__all__", names)?;
+            parent.add("sumset", &m)?;
+            sys.set_item("mrlypy._mrlypy.num.sumset", &m)?;
             Ok(())
         }
     }
@@ -19231,7 +19902,7 @@ pub mod num {
         sys: &Bound<'_, PyDict>,
     ) -> PyResult<()> {
         let m = PyModule::new(py, "mrlypy.num")?;
-        m.setattr("__doc__", "The integers: primes, divisors, series, lattices, spectra and networks.\nThe instruments of number: primes, divisors, series, spectra, lattices and the designs the digits draw.\n\nPlain numbers and byte grids go in; counts, fractions, rates and measurements come out.\nEvery answer is exact where the integers allow and a stated approximation where they do not.\n\n# Files\n\n- `apollonian`: an integral circle packing, the Ford circles on its line, the Farey stack beneath.\n- `automaton`: the Dirichlet series of a memory design, continued through its transfer matrix.\n- `blend`: term ops on sequences, the exact recurrence behind one, its growth rate.\n- `boolean`: a truth table's Walsh spectrum, nonlinearity, balance and avalanche.\n- `design`: the digit designs on the line, their Mobius meter and the ordinates it carries.\n- `factor`: factorizations, divisors, totients, radicals, Mobius values, gcd and lcm.\n- `fft`: the fast Fourier transform in one and two dimensions.\n- `gauss`: the Gaussian and the Eisenstein integers, their classes, windows and shells.\n- `ladder`: the Dirichlet series of a digit design, continued to the plane, each value with its bound.\n- `lattice`: coprime pairs, the Farey nodes of a window, the constant a dimension recovers.\n- `memory`: a rule on consecutive digits, its transfer matrix, its words, its Perron root.\n- `morse`: the Thue-Morse world: the digit rule, the substitution, the lifts and the runs.\n- `prime`: the sieve and its readings, ranks, gaps, counts and the shapes a number makes.\n- `radix`: a digit set inside the residues of a base in a ring, and where its words land.\n- `series`: the classic sequences, zeta and its cousins, the partials walking to pi, e and gamma.\n- `sieve`: the Wallis sieve and its kin as schedule words, with their rasters and limits.\n- `spiral`: the whole numbers wound on the square and the hexagonal lattice, marked and read.\n- `zeta`: zeta on the critical line, its zeros, the prime staircase they rebuild.\n\n# Doors\n\n- The divisor arithmetic: [`gcd`](crate::num::factor::gcd), [`factorial`](crate::num::factor::factorial), [`divisors`](crate::num::factor::divisors), [`mobius`](crate::num::factor::mobius).\n- The primality test: [`is_prime`](crate::num::prime::is_prime).\n- The zeta value above one: [`zeta`](crate::num::series::zeta).")?;
+        m.setattr("__doc__", "The integers: primes, divisors, series, lattices, spectra and networks.\nThe instruments of number: primes, divisors, series, spectra, lattices and the designs the digits draw.\n\nPlain numbers and byte grids go in; counts, fractions, rates and measurements come out.\nEvery answer is exact where the integers allow and a stated approximation where they do not.\n\n# Files\n\n- `apollonian`: an integral circle packing, the Ford circles on its line, the Farey stack beneath.\n- `automaton`: the Dirichlet series of a memory design, continued through its transfer matrix.\n- `blend`: term ops on sequences, the exact recurrence behind one, its growth rate.\n- `boolean`: a truth table's Walsh spectrum, nonlinearity, balance and avalanche.\n- `design`: the digit designs on the line, their Mobius meter and the ordinates it carries.\n- `dissection`: the missing-digit sets cut by Dirichlet approximation: the four regions, the digit transform's `l^1` masses, the chain certificate and its wall.\n- `factor`: factorizations, divisors, totients, radicals, Mobius values, gcd and lcm.\n- `fft`: the fast Fourier transform in one and two dimensions.\n- `gauss`: the Gaussian and the Eisenstein integers, their classes, windows and shells.\n- `ladder`: the Dirichlet series of a digit design, continued to the plane, each value with its bound.\n- `lattice`: coprime pairs, the Farey nodes of a window, the constant a dimension recovers.\n- `memory`: a rule on consecutive digits, its transfer matrix, its words, its Perron root.\n- `morse`: the Thue-Morse world: the digit rule, the substitution, the lifts and the runs.\n- `prime`: the sieve and its readings, ranks, gaps, counts and the shapes a number makes.\n- `radix`: a digit set inside the residues of a base in a ring, and where its words land.\n- `series`: the classic sequences, zeta and its cousins, the partials walking to pi, e and gamma.\n- `sieve`: the Wallis sieve and its kin as schedule words, with their rasters and limits.\n- `spiral`: the whole numbers wound on the square and the hexagonal lattice, marked and read.\n- `sumset`: the base-3 design plus the base-4 design, Erdos problem 125: its bit array, its density and the energy of its levels.\n- `zeta`: zeta on the critical line, its zeros, the prime staircase they rebuild.\n\n# Doors\n\n- The divisor arithmetic: [`gcd`](crate::num::factor::gcd), [`factorial`](crate::num::factor::factorial), [`divisors`](crate::num::factor::divisors), [`mobius`](crate::num::factor::mobius).\n- The primality test: [`is_prime`](crate::num::prime::is_prime).\n- The zeta value above one: [`zeta`](crate::num::series::zeta).")?;
         let names: Vec<&str> = vec![];
         m.add("__all__", names)?;
         apollonian::init(py, &m, sys)?;
@@ -19239,6 +19910,7 @@ pub mod num {
         blend::init(py, &m, sys)?;
         boolean::init(py, &m, sys)?;
         design::init(py, &m, sys)?;
+        dissection::init(py, &m, sys)?;
         factor::init(py, &m, sys)?;
         fft::init(py, &m, sys)?;
         gauss::init(py, &m, sys)?;
@@ -19251,6 +19923,7 @@ pub mod num {
         series::init(py, &m, sys)?;
         sieve::init(py, &m, sys)?;
         spiral::init(py, &m, sys)?;
+        sumset::init(py, &m, sys)?;
         zeta::init(py, &m, sys)?;
         parent.add("num", &m)?;
         sys.set_item("mrlypy._mrlypy.num", &m)?;

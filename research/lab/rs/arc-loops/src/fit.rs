@@ -53,7 +53,16 @@ pub struct Fit {
 
 pub fn fit(s: &[u128]) -> Option<Fit> {
     let c = massey(s);
-    let poly: Vec<i128> = c.iter().map(|&x| if x > P / 2 { x as i128 - P as i128 } else { x as i128 }).collect();
+    let poly: Vec<i128> = c
+        .iter()
+        .map(|&x| {
+            if x > P / 2 {
+                x as i128 - P as i128
+            } else {
+                x as i128
+            }
+        })
+        .collect();
     let l = poly.len() - 1;
     for n in l..s.len() {
         let mut acc = 0i128;
@@ -64,11 +73,15 @@ pub fn fit(s: &[u128]) -> Option<Fit> {
             return None;
         }
     }
-    Some(Fit { poly, margin: s.len() as i64 - 2 * l as i64 })
+    Some(Fit {
+        poly,
+        margin: s.len() as i64 - 2 * l as i64,
+    })
 }
 
 fn eval(poly: &[i128], r: i128) -> Option<i128> {
-    poly.iter().try_fold(0i128, |acc, &k| acc.checked_mul(r)?.checked_add(k))
+    poly.iter()
+        .try_fold(0i128, |acc, &k| acc.checked_mul(r)?.checked_add(k))
 }
 
 pub fn roots(poly: &[i128]) -> (Vec<i128>, Vec<i128>) {
@@ -98,9 +111,19 @@ pub fn show(poly: &[i128]) -> String {
             continue;
         }
         let e = d - i;
-        let sign = if k < 0 { " - " } else if out.is_empty() { "" } else { " + " };
+        let sign = if k < 0 {
+            " - "
+        } else if out.is_empty() {
+            ""
+        } else {
+            " + "
+        };
         let a = k.abs();
-        let lead = if out.is_empty() && k < 0 { "-".to_string() } else { sign.to_string() };
+        let lead = if out.is_empty() && k < 0 {
+            "-".to_string()
+        } else {
+            sign.to_string()
+        };
         let body = match (a, e) {
             (_, 0) => format!("{a}"),
             (1, 1) => "x".to_string(),

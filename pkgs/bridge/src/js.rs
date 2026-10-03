@@ -1,3 +1,4 @@
+use crate::disk::save;
 use crate::model::{
     Const, Cross, Function, Manifest, Result, SelfKind, Ty, Type, TypeCross, TypeKind,
 };
@@ -160,7 +161,7 @@ const ALLOWS: &str = "#![allow(non_camel_case_types, non_snake_case, clippy::too
 
 pub fn write(manifest: &Manifest, root: &Path) -> Result<()> {
     let names =
-        std::fs::read_to_string(root.join("bridge/units.txt")).map_err(|e| e.to_string())?;
+        std::fs::read_to_string(root.join("pkgs/bridge/units.txt")).map_err(|e| e.to_string())?;
     let names: Vec<&str> = names
         .lines()
         .map(str::trim)
@@ -181,16 +182,6 @@ pub fn write(manifest: &Manifest, root: &Path) -> Result<()> {
     }
     save(&js.join("manifest.test.js"), MANIFEST_TEST)?;
     Ok(())
-}
-
-fn save(path: &Path, text: &str) -> Result<()> {
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
-    }
-    if std::fs::read_to_string(path).ok().as_deref() == Some(text) {
-        return Ok(());
-    }
-    std::fs::write(path, text).map_err(|e| format!("{}: {e}", path.display()))
 }
 
 fn cargo_toml(name: &str, version: &str) -> String {
@@ -2242,8 +2233,8 @@ fn rename_all(name: &str, rule: &str) -> String {
 
 const MANIFEST_TEST: &str = r#"import { expect, test } from "bun:test";
 
-const manifest = await Bun.file(new URL("../../bridge/manifest.json", import.meta.url)).json();
-const units = (await Bun.file(new URL("../../bridge/units.txt", import.meta.url)).text())
+const manifest = await Bun.file(new URL("../bridge/manifest.json", import.meta.url)).json();
+const units = (await Bun.file(new URL("../bridge/units.txt", import.meta.url)).text())
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);

@@ -1,5 +1,6 @@
 use super::design::elements;
-use crate::core::error::{value_error, Result};
+use crate::core::error::{value_error, Error, Result};
+use serde::{Deserialize, Serialize};
 
 /// The deepest level a [`Sumset`] is built to: `S meet [0, 3^20]`, a bit array of `436` MB.
 pub const DEEPEST: u32 = 20;
@@ -195,12 +196,27 @@ fn shift_or(words: &mut [u64], shift: u64) {
 // THE PAIRS
 
 /// A pair of levels: the base-3 level `A_k = A meet [0, 3^k)` against the base-4 level `B_m = B meet [0, 4^m)`, `k` the field `three` and `m` the field `four`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(try_from = "Levels")]
 pub struct Pair {
     /// The base-3 level `k`.
     pub three: u32,
     /// The base-4 level `m`.
     pub four: u32,
+}
+
+#[derive(Deserialize)]
+struct Levels {
+    three: u32,
+    four: u32,
+}
+
+impl TryFrom<Levels> for Pair {
+    type Error = Error;
+
+    fn try_from(levels: Levels) -> Result<Pair> {
+        Pair::new(levels.three, levels.four)
+    }
 }
 
 impl Pair {
@@ -452,6 +468,15 @@ mod tests {
             .collect();
         assert_eq!(census.len(), 27);
         assert!(!census.contains(&Pair::new(22, 18).unwrap()));
+    }
+
+    #[test]
+    fn a_pair_read_from_data_keeps_its_levels_in_range() {
+        let read = |text: &str| serde_json::from_str::<Pair>(text);
+        assert_eq!(read(r#"{"three":3,"four":2}"#).ok(), Pair::new(3, 2).ok());
+        for text in [r#"{"three":100,"four":2}"#, r#"{"three":3,"four":0}"#] {
+            assert!(read(text).is_err(), "{text}");
+        }
     }
 
     #[test]

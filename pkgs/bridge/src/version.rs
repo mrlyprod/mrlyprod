@@ -1,8 +1,11 @@
+use crate::disk::save;
 use crate::model::{Manifest, Result};
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use std::process::Command;
+
+pub const MANIFEST: &str = "pkgs/bridge/manifest.json";
 
 const SOURCE: &str = "pkgs/mrlyrs/Cargo.toml";
 
@@ -33,9 +36,7 @@ pub fn write(manifest: &Manifest, root: &Path) -> Result<()> {
         let path = root.join(file);
         let text = load(&path)?;
         let stamped = stamp(&text, key, &manifest.version).map_err(|e| format!("{file}: {e}"))?;
-        if stamped != text {
-            std::fs::write(&path, stamped).map_err(|e| format!("{file}: {e}"))?;
-        }
+        save(&path, &stamped)?;
     }
     Ok(())
 }
@@ -65,7 +66,7 @@ fn load(path: &Path) -> Result<String> {
 // BUMP
 
 pub fn bump(root: &Path) -> Result<()> {
-    let new = json(&load(&root.join("bridge/manifest.json"))?)?;
+    let new = json(&load(&root.join(MANIFEST))?)?;
     let now = new["version"]
         .as_str()
         .ok_or("the manifest has no version")?;
@@ -80,10 +81,7 @@ pub fn bump(root: &Path) -> Result<()> {
         println!("   no other v* tag; {now} is the first release");
         return Ok(());
     };
-    let old = json(&git(
-        root,
-        &["show", &format!("{tag}:bridge/manifest.json")],
-    )?)?;
+    let old = json(&git(root, &["show", &format!("{tag}:{MANIFEST}")])?)?;
     let diff = diff(&old, &new);
     for path in &diff.removed {
         println!("   removed {path}");

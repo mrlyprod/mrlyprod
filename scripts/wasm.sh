@@ -9,7 +9,7 @@ cd "$HERE/.."
 font=$(mktemp)
 trap 'rm -f "$font"' EXIT
 
-units=$(cat bridge/units.txt)
+units=$(cat pkgs/bridge/units.txt)
 built=target/wasm32-unknown-unknown/release
 
 cargo build --release --target wasm32-unknown-unknown --lib -p demos $(printf -- '-p mrlyjs_%s ' $units)

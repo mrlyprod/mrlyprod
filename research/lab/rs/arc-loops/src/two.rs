@@ -51,7 +51,9 @@ pub fn two() {
     for (code, gain) in [(7u128, "2^n - 2"), (11, "2^(n-1)"), (9, "1")] {
         let d = Design::full(code, 2);
         let built = blocks(2, &d.tile, 14);
-        let same = (1..=14).filter(|&n| built[n].partner == lemma(code, n as u32)).count();
+        let same = (1..=14)
+            .filter(|&n| built[n].partner == lemma(code, n as u32))
+            .count();
         let law = |n: u32| -> u128 {
             match code {
                 7 => (1 << n) - 2,
@@ -59,7 +61,9 @@ pub fn two() {
                 _ => 1,
             }
         };
-        let gains = (1..14).filter(|&n| built[n + 1].loops - d.kept() as u128 * built[n].loops == law(n as u32)).count();
+        let gains = (1..14)
+            .filter(|&n| built[n + 1].loops - d.kept() as u128 * built[n].loops == law(n as u32))
+            .count();
         println!("  {}: lemma holds at {same} of 14 levels, new loops per gluing = {gain} at {gains} of 13 gluings", d.name());
     }
 }

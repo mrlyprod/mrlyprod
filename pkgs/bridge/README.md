@@ -1,9 +1,10 @@
 # BRIDGE
 
-- `scripts/bridge.sh` runs `cargo run -q -p bridge` under the cargo lock: it parses `pkgs/mrlyrs/src` (not `src/bin`) with `syn`, writes `bridge/manifest.json`, prints the skip report and the per-unit counts, then runs every backend listed in `BACKENDS` in `main.rs`.
+- `scripts/bridge.sh` runs `cargo run -q -p bridge` under the cargo lock: it parses `pkgs/mrlyrs/src` (not `src/bin`) with `syn`, writes `pkgs/bridge/manifest.json`, prints the skip report and the per-unit counts, then runs every backend listed in `BACKENDS` in `main.rs`.
 - It exits 1 on a name collision, on a skippable written function missing from `skip.txt`, or on a `skip.txt` line naming nothing; the manifest is written first either way.
+- `scripts/bridge.sh check` writes nothing: it prints `stale: <path>` for every file a run would change, the manifest and the version stamps included, and exits 1 on any, or on a refusal above; the research gate runs it, so a new `pub fn` cannot leave the bridge stale.
 - `model.rs` is the contract: `Manifest { krate, version, modules, types, consts, functions }`, serde with `preserve_order`; read the JSON or the types.
-- The one version is the `version` line of `pkgs/mrlyrs/Cargo.toml`: the manifest and the unit crates take it, `version.rs` stamps the `version` line of `pkgs/mrlypy/Cargo.toml` and `pkgs/mrlyjs/package.json`, maturin reads mrlypy's; `scripts/bump.sh` moves it, and `bridge bump` gates a publish against the highest `v*` tag's manifest.
+- The one version is the `version` line of `pkgs/mrlyrs/Cargo.toml`: the manifest and the unit crates take it, `version.rs` stamps the `version` line of `pkgs/mrlypy/Cargo.toml` and `pkgs/mrlyjs/package.json`, maturin reads mrlypy's; `scripts/bump.sh` moves it, and `bridge bump` gates a publish against the highest `v*` tag's manifest, read from the tag at `pkgs/bridge/manifest.json`.
 
 ## NAMES
 
@@ -31,8 +32,8 @@
 - Plain input is strict: a missing key is an error. serde fills missing keys from `Default` only for a type carrying `#[serde(default)]`, in every bridge; no type carries it today, so start from `X.default()` and change keys.
 - `enum`: a fieldless enum with Serialize and Deserialize; a string; `named` carries the `named_enum!` words, and `all()` crosses.
 - `uncrossable`: anything else (`Error`, `Result`, `Pen`); a function touching one is skipped with the reason.
-- A function is `ok`, `skip` with a reason, or `private`. Skips: a type generic, a closure, `impl Trait`, a fn pointer or private type, a `&'static` or explicit-lifetime return, a `&mut` borrow returned, an iterator, a `&mut` plain or slice argument, a class from another unit.
-- An elided borrow return (`fn shape(&self) -> &[usize]`) is copied out and crosses; a `&mut Rng`, `&mut Tensor` or `&mut Class` argument is mutated in place.
+- A function is `ok`, `skip` with a reason, or `private`. Skips: a type generic, a closure, `impl Trait`, a fn pointer or private type, a `&'static` return other than `&'static str`, an explicit-lifetime return, a `&mut` borrow returned, an iterator, a `&mut` plain or slice argument, a class from another unit.
+- An elided borrow return (`fn shape(&self) -> &[usize]`) is copied out and crosses, and a written `&'static str` return (`num::dissection::reach`) crosses as a string; a `&mut Rng`, `&mut Tensor` or `&mut Class` argument is mutated in place.
 - The macro-written `name()` returns `&'static str` and is skipped by rule, no `skip.txt` line: the enum is its word. `skip.txt` lists written functions only, one path then one clause per line.
 - Consts are listed with a `Ty` and skip on the same rules (`font::pens::UPPERS` holds `&'static`); no `skip.txt` line for a const.
 
@@ -45,8 +46,10 @@
 
 ## PLUG IN
 
-- Write `bridge/src/<py|js|cli>.rs` with `pub fn write(manifest: &Manifest, root: &Path) -> Result<()>` (`model::Result`, a `String` error); add `mod x;` and `("x", x::write)` to `BACKENDS` in `main.rs`.
+- Write `pkgs/bridge/src/<py|js|cli>.rs` with `pub fn write(manifest: &Manifest, root: &Path) -> Result<()>` (`model::Result`, a `String` error); add `mod x;` and `("x", x::write)` to `BACKENDS` in `main.rs`.
 - `root` is the workspace root; write generated files under `pkgs/` and never hand-edit them; a wrong line is a generator fix.
+- Write every file through `disk::save`: it runs a `.rs` file through `rustfmt`, so `cargo fmt --all -- --check` holds on generated code, it leaves an unchanged file untouched, so a second run changes nothing, and under `check` it records the path and writes nothing.
+- The CLI lists a door `# uncallable` when an argument holds a type without `Deserialize` or the return one without `Serialize`, at any depth (`Vec<Pair>`).
 - `units.txt` names the wasm units, one per line; a unit is the first segment of a path; `all` is every unit.
 - `docs` are the `///` lines for docstrings; `defined_at` is `file:line` under `pkgs/mrlyrs/src`; `derives` and `serde` attributes are recorded verbatim.
 - `cargo test -p bridge`: one test per rule in `src/tests.rs`, a determinism test, and the count test: entries = `pub fn` grep lines - lines inside `macro_rules` + `pub const fn` + 2 per named enum + trait fns x `impl Named` blocks + 1 per `default`.

@@ -22,7 +22,10 @@ fn check() {
                 let (loops, strands) = arcs(side, &on);
                 let euler = mirrors(side, &on);
                 levels += 1;
-                if loops as u128 != blocks[level] || euler != loops as i64 || strands != 2 * side as u64 {
+                if loops as u128 != blocks[level]
+                    || euler != loops as i64
+                    || strands != 2 * side as u64
+                {
                     bad += 1;
                     println!("mismatch {} level {level}: arcs {loops}/{strands}, mirrors {euler}, blocks {}", d.name(), blocks[level]);
                 }
@@ -48,7 +51,16 @@ fn check() {
             s *= n;
         }
     }
-    for (code, n) in [(7u128, 3usize), (14, 3), (11, 3), (13, 3), (6, 3), (9, 3), (7, 4), (7, 5)] {
+    for (code, n) in [
+        (7u128, 3usize),
+        (14, 3),
+        (11, 3),
+        (13, 3),
+        (6, 3),
+        (9, 3),
+        (7, 4),
+        (7, 5),
+    ] {
         let parity = Design::new(code, n, 2);
         let full = Design::full(parity.full_code(), n);
         for level in 0..=3 {

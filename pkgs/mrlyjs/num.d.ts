@@ -287,6 +287,65 @@ export declare namespace design {
     /** The ordinates of the first fourteen nontrivial zeros of the Riemann zeta function, the imaginary parts of the zeros on the critical line in ascending order. */
     export function ZETA_ORDINATES(): Float64Array;
 }
+export declare namespace dissection {
+    /** Returns `Q = floor(y^(3/5))`, the largest denominator the dissection admits, exact in integers. */
+    export function cap(y: number | bigint): bigint;
+    /** Returns the chain's certificate exponent at one missing digit, `alpha_1 = log_base(z base/(base - 1))`, the same at every missing digit. */
+    export function chain_exponent(base: number | bigint): number;
+    /** Returns the chain's margin at the bar, the cubic cleared of denominators at `w = base^(1/5)(1 - 1/base)`, positive exactly when the root sits below `w` and `alpha_1 < 1/5`. */
+    export function chain_margin(base: number | bigint): number;
+    /** Returns the root `z > 1` of the digit-uniform chain at one missing digit, `(z-1)^3 = (2/pi)(log base) z + gamma'(z-1) + (2/pi)(z-1)^2/(base z - 1)`, by bisection. */
+    export function chain_root(base: number | bigint): number;
+    /** Returns the chain's wall, one past the last base up to [`CAP_BASE`] whose margin is not positive. */
+    export function chain_wall(): bigint;
+    /** Returns whether the digit set keeps two consecutive digits, the hypothesis region C1 reads. */
+    export function consecutive(digits: ArrayLike<number | bigint>): boolean;
+    /** Returns the last continued-fraction convergent `l/d` of `a/y` whose denominator is at most the cap, the Dirichlet fraction of the dissection. */
+    export function fraction(a: number | bigint, y: number | bigint, cap: number | bigint): [bigint, bigint];
+    /** Returns `kappa_F = (base/phi(base)) #{f in F : gcd(f, base) = 1}/fill`, the main-term constant of the prime count, as a reduced fraction. */
+    export function kappa(base: number | bigint, digits: ArrayLike<number | bigint>): [bigint, bigint];
+    /** Returns the unshifted masses `c_j = sum_(a < base^j) |hat F_j(a/base^j)|` for `j = 0..=level`, the `l^1` mass region A pays, `c_0 = 1`. */
+    export function masses(base: number | bigint, digits: ArrayLike<number | bigint>, level: number): Float64Array;
+    /** Returns how the theorem reaches the set missing one digit: `proof` from the chain's wall, `certificate` at every base from [`DIGIT_WALL`] below it and at the [`CERTIFIED`] sets, `none` elsewhere. */
+    export function reach(base: number | bigint, missing: number | bigint): string;
+    /** Returns the `l^1` exponent the top two masses read, `log_base(c_j/(fill c_(j-1)))`: a reading of the growth region A pays, never a certificate. */
+    export function reading(base: number | bigint, fill: number, masses: ArrayLike<number>): number;
+    /** Returns the region of every frequency `a/y`, `a < y = base^level`, at the cut `Z`, the fraction taken by [`fraction`] at [`cap`]. */
+    export function regions(base: number | bigint, level: number, z: number | bigint): dissection.Region[];
+    /** Tallies the set below `base^level` on a log grid of the given size, with the Mobius values and the primes sieved to the span. */
+    export function tally(base: number | bigint, digits: ArrayLike<number | bigint>, level: number, samples: number): dissection.Tally;
+    /** Returns `|hat F_level(a/base^level)|` at every `a < base^level`, built one digit at a time from `hat F_j(t) = hat F(t) hat F_(j-1)(base t)`. */
+    export function weights(base: number | bigint, digits: ArrayLike<number | bigint>, level: number): Float64Array;
+    /** The bar region A sets on the certificate exponent, `alpha_1 < 1/5`: the whole `l^1` mass against the minor-arc `x^(4/5)`. */
+    export function BAR_A(): number;
+    /** The bar region B sets, `alpha_1 < 1/4`: the hybrid `l^1` mass against the `d^(-1/2)` decay. */
+    export function BAR_B(): number;
+    /** The base the chain is scanned to; from here the closed-form cap `1 + sqrt(2 (2/pi) log base + 0.97)` keeps it below the bar. */
+    export function CAP_BASE(): bigint;
+    /** The sets below [`DIGIT_WALL`] certified below `1/5`, as `(base, missing digit)`, printed by `lab/py/digit-transform-norms`, verb `fifth`. */
+    export function CERTIFIED(): [bigint, bigint][];
+    /** The least base whose every one-missing-digit set carries a per-digit shifted-grid certificate below `1/5`, `lab/py/digit-transform-norms`, verbs `fifth` and `fifthbelow`; base 114 missing 56 is certified above. */
+    export function DIGIT_WALL(): bigint;
+    /** The least base with some missing digit certified below `1/5`, `lab/py/digit-transform-norms`, verb `fifth`. */
+    export function FIRST_BELOW(): bigint;
+    /** The constant `gamma'` of the digit-uniform chain, `(2/pi)(gamma + log(8/pi))` rounded up at seven decimals. */
+    export function GAMMA(): number;
+    /** The least base whose every one-missing-digit set carries a window certificate below `1/5`, `lab/py/prime-dissection`, verb `window`. */
+    export function WINDOW_WALL(): bigint;
+    /** The four regions the dissection cuts the frequencies `a/y` into by their Dirichlet fraction `l/d` at `Q = y^(3/5)` and height `h = |a d - l y|`. */
+    export type Region = "A" | "B" | "C1" | "C2";
+    /** The set's own sums read on a log grid of `x`: the mass `A_F(x)`, the meter `M_F(x)` and the prime count `psi_F(x) = sum Lambda(n)` over the elements up to `x`. */
+    export interface Tally {
+        /** The log of `x` at every sample, uniform from the first element to the last. */
+        log_x: number[];
+        /** The mass `A_F(x)`, the count of elements up to `x`. */
+        count: number[];
+        /** The meter `M_F(x)`, the sum of `mu(n)` over the elements up to `x`. */
+        meter: number[];
+        /** The prime count `psi_F(x)`, the sum of `Lambda(n)` over the elements up to `x`. */
+        primes: number[];
+    }
+}
 export declare namespace factor {
     /** Returns the sum of the proper divisors of the number, its divisor sum less itself, zero for zero and for one. */
     export function aliquot(number: number): number;
@@ -883,18 +942,49 @@ export declare namespace sieve {
     export function limit(word: ArrayLike<number | bigint>, dimension: number): number | undefined;
     /** Returns the classical Wallis schedule, the odd sides three, five, seven and on, to the count of levels. */
     export function odd_word(levels: number): BigUint64Array;
+    /** Returns the Wallis sieve product of a parity design, `prod_(N odd >= 3) (1 - N^-dim)` for the corners with an odd count of odd coordinates and `prod (1 + N^-dim)` for the even count, at `dim >= 2`. */
+    export function parity_product(dimension: number, odd: boolean): number;
     /** Lists every puncture the word makes in the given dimension: its corner along each axis and then its side, all in units of the word's finest cell, so a level-one hole is the widest block in the list. */
     export function punctures(word: ArrayLike<number | bigint>, dimension: number): BigUint64Array;
     /** Builds the plane sieve the word spells as a raster: its side, then one byte a site, row by row, one where the site survives and zero where a level punched it out. */
     export function raster(word: ArrayLike<number | bigint>): [number, Uint8Array];
     /** Returns the share of the whole the word leaves, the product of one minus the inverse of each letter's site count, exact as a product of the letters' fills. */
     export function ratio(word: ArrayLike<number | bigint>, dimension: number): number;
+    /** Returns the cells a design of this profile fills at one side, `sum_j a_j E^(dim-j) O^j` with `E` and `O` the even and the odd positions an axis holds: `P_F(n)` at side `2n - 1` and `w n^dim` at side `2n`. */
+    export function row_fill(profile: ArrayLike<number | bigint>, side: number | bigint): string;
+    /** Reads the design of this profile along the row word: its drift, its first correction, the roots of its fill polynomial, its constant from the Gamma form, the constant spelled, and the constant again by reflection, against the mirror and as a Wallis sieve product wherever those apply. */
+    export function row_law(profile: ArrayLike<number | bigint>): sieve.Row;
+    /** Counts a base-2 design's corners by how many odd coordinates each holds, the profile the row word reads: the code is a bitmask over the corners, corner `i` is the binary digits of `i` as `math::bang::code_to_corners` reads it, so its odd coordinates are the ones of `i`. */
+    export function row_profile(code: string | number | bigint, dimension: number): BigUint64Array;
+    /** Walks the renormalised fill `R_L (2^dim/w)^L / L^drift` of the design of this profile to every stop, `R_L` the product of the letters' fill ratios, on the odd sides `3, 5, ..., 2L+1` or on the even sides `2, 4, ..., 2L`. */
+    export function row_settle(profile: ArrayLike<number | bigint>, stops: ArrayLike<number>, even: boolean): Float64Array;
     /** Returns the side of the word, the product of its letters' sides. */
     export function side(word: ArrayLike<number | bigint>): string;
     /** Returns the limit of the solid Wallis sieve's surviving volume, the product of one minus n to the minus three over the odd n from three, in closed form. */
     export function solid_limit(): number;
     /** The limit of the plane Wallis sieve's surviving area, pi over four. */
     export function PLANE_LIMIT(): number;
+    /** One base-2 design read along the row word of odd sides `3, 5, ..., 2L+1`, out of its fill polynomial `P_F(n) = sum_j a_j n^(dim-j) (n-1)^j`. */
+    export interface Row {
+        /** The odd-count profile: `a_j` corners with `j` odd coordinates, `j` from 0 to `dim`. */
+        profile: number[];
+        /** The drift, the power of `L` the fill carries past its ratio per level, as a reduced fraction. */
+        drift: [number, number];
+        /** The first correction `c_1`, as a reduced fraction. */
+        correction: [number, number];
+        /** The roots of the fill polynomial: the zeros, the ones, the rational roots, then the rest. */
+        roots: zeta.ComplexData[];
+        /** The constant `C`, the Gamma form at the roots. */
+        constant: number;
+        /** The constant spelled: a rational, a power of `sqrt(pi)`, and the Gamma, `cosh`, `cos` or `sin` values the roots leave. */
+        closed: string;
+        /** The constant by reflection alone, `(sqrt(pi)/2)^(m_0 + m_1) prod_pairs sin(pi r)/(4 r (1-r))`, when every root outside `0, 1/2, 1` pairs with `1 - r`. */
+        reflection?: number;
+        /** The constant times the mirror design's, `prod_i sin(pi r_i)/(4 r_i (1 - r_i))` with `pi/4` at a root 0 or 1. */
+        mirror: number;
+        /** For a parity design at `dim >= 2`: whether its corners hold an odd count of odd coordinates, and its Wallis sieve product. */
+        parity?: [boolean, number];
+    }
 }
 export declare namespace spiral {
     /** Reads the quadratic a k^2 + b k + c, a at least one, over the sheet the odd side wide: every value from one through the top, its cell, the prime hits and the opening streak. */
@@ -987,6 +1077,71 @@ export declare namespace spiral {
         x: number;
         /** The y of the lower-left corner. */
         y: number;
+    }
+}
+export declare namespace sumset {
+    /** Lists the pairs of the census: every `(k, m)` with `4^m` within a factor `3` of `3^k` and `d(k, m) <= 3^level`, by `d`. */
+    export function pairs(level: number): sumset.Pair[];
+    /** The deepest level a [`Sumset`] is built to: `S meet [0, 3^20]`, a bit array of `436` MB. */
+    export function DEEPEST(): number;
+    /** The widest level a [`Pair`] names in either base, so `3^k`, `4^m` and every difference string fit a signed 64-bit integer. */
+    export function WIDEST(): number;
+    export interface PairData {
+        /** The base-3 level `k`. */
+        three: number;
+        /** The base-4 level `m`. */
+        four: number;
+    }
+    /** A pair of levels: the base-3 level `A_k = A meet [0, 3^k)` against the base-4 level `B_m = B meet [0, 4^m)`, `k` the field `three` and `m` the field `four`. */
+    export class Pair {
+        /** Names the pair `(k, m)`. */
+        constructor(three: number, four: number);
+        free(): void;
+        /** Reads the Pair from its plain data. */
+        static from(data: PairData): Pair;
+        /** Writes the Pair as plain data. */
+        toJSON(): PairData;
+        /** The base-3 level `k`. */
+        get three(): number;
+        set three(value: number);
+        /** The base-4 level `m`. */
+        get four(): number;
+        set four(value: number);
+        /** Whether the pair is clean, `3^k > d(k, m)` and `4^m > d(k, m)`, so that `S meet [0, d] = A_k + B_m`. */
+        clean(): boolean;
+        /** Whether the pair is a gap copy, `2 4^m < 3^k + 5`: `A_k + B_m` is then two disjoint translates of `A_(k-1) + B_m` and its energy is twice theirs. */
+        copy(): boolean;
+        /** The additive energy `E(k, m) = sum_x r(x)^2`, `r(x)` the number of ways `x = a + b` with `a` in `A_k` and `b` in `B_m`. */
+        energy(): string;
+        /** The first and the last integer of the open interval `(d(k, m), min(3^k, 4^m))`, which `S` misses, or `None` when it holds none. */
+        gap(): [bigint, bigint] | undefined;
+        /** The largest element `d(k, m) = (3^k - 1)/2 + (4^m - 1)/3` of `A_k + B_m`. */
+        largest(): bigint;
+        /** The energy ratio `Q(k, m) = E(k, m) (d + 1)/4^(k+m)` of the energy [`Pair::energy`] returns, the energy against its flat value, at least `1`; `card(A_k + B_m) >= (d + 1)/Q` by Cauchy-Schwarz. */
+        ratio(energy: string | number | bigint): number;
+        /** The scaling `tau = 4^m/3^k`. */
+        scale(): number;
+    }
+    export type SumsetData = Record<string, unknown>;
+    /** The sumset `S = A + B` of Erdos problem 125 up to `3^level`: `A` the integers whose base-3 digits are all `0` or `1`, `B` those whose base-4 digits are. */
+    export class Sumset {
+        /** Builds `S meet [0, 3^level]`. */
+        constructor(level: number);
+        free(): void;
+        /** Whether `x` is in `S`, or `None` past the top. */
+        contains(x: number | bigint): boolean | undefined;
+        /** Counts `card(S meet [1, x])`, or `None` past the top. */
+        count(x: number | bigint): bigint | undefined;
+        /** Reads the density `D(x) = card(S meet [1, x])/x`, or `None` at zero and past the top. */
+        density(x: number | bigint): number | undefined;
+        /** Reads the least and the greatest `D(x)` over each window `[edges[i], edges[i + 1])`, `None` for an empty window. */
+        extremes(edges: ArrayLike<number | bigint>): ([number, number] | undefined)[];
+        /** Reads the share of members in each of `cells` equal runs of the integers `[low, high)`, the strip of `S` a page draws. */
+        fills(low: number | bigint, high: number | bigint, cells: number): Float64Array;
+        /** The level the array was built to. */
+        level(): number;
+        /** The largest integer the array holds, `3^level`. */
+        top(): bigint;
     }
 }
 export declare namespace zeta {

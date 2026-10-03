@@ -61,6 +61,30 @@ export const design = {
     spectrum: wasm.design_spectrum,
     upper_rms: wasm.design_upper_rms,
 };
+export const dissection = {
+    BAR_A: wasm.dissection_BAR_A,
+    BAR_B: wasm.dissection_BAR_B,
+    CAP_BASE: wasm.dissection_CAP_BASE,
+    CERTIFIED: wasm.dissection_CERTIFIED,
+    DIGIT_WALL: wasm.dissection_DIGIT_WALL,
+    FIRST_BELOW: wasm.dissection_FIRST_BELOW,
+    GAMMA: wasm.dissection_GAMMA,
+    WINDOW_WALL: wasm.dissection_WINDOW_WALL,
+    cap: wasm.dissection_cap,
+    chain_exponent: wasm.dissection_chain_exponent,
+    chain_margin: wasm.dissection_chain_margin,
+    chain_root: wasm.dissection_chain_root,
+    chain_wall: wasm.dissection_chain_wall,
+    consecutive: wasm.dissection_consecutive,
+    fraction: wasm.dissection_fraction,
+    kappa: wasm.dissection_kappa,
+    masses: wasm.dissection_masses,
+    reach: wasm.dissection_reach,
+    reading: wasm.dissection_reading,
+    regions: wasm.dissection_regions,
+    tally: wasm.dissection_tally,
+    weights: wasm.dissection_weights,
+};
 export const factor = {
     aliquot: wasm.factor_aliquot,
     coprime: wasm.factor_coprime,
@@ -213,9 +237,14 @@ export const sieve = {
     holes: wasm.sieve_holes,
     limit: wasm.sieve_limit,
     odd_word: wasm.sieve_odd_word,
+    parity_product: wasm.sieve_parity_product,
     punctures: wasm.sieve_punctures,
     raster: wasm.sieve_raster,
     ratio: wasm.sieve_ratio,
+    row_fill: wasm.sieve_row_fill,
+    row_law: wasm.sieve_row_law,
+    row_profile: wasm.sieve_row_profile,
+    row_settle: wasm.sieve_row_settle,
     side: wasm.sieve_side,
     solid_limit: wasm.sieve_solid_limit,
 };
@@ -227,6 +256,13 @@ export const spiral = {
     level_of: wasm.spiral_level_of,
     marks: wasm.spiral_marks,
     snail: wasm.spiral_snail,
+};
+export const sumset = {
+    DEEPEST: wasm.sumset_DEEPEST,
+    Pair: wasm.sumset_Pair,
+    Sumset: wasm.sumset_Sumset,
+    WIDEST: wasm.sumset_WIDEST,
+    pairs: wasm.sumset_pairs,
 };
 export const zeta = {
     Complex: wasm.zeta_Complex,

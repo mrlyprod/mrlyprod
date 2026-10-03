@@ -2,7 +2,7 @@ use crate::model::*;
 use crate::parse::{self, Files};
 use crate::report;
 use crate::resolve::{self, Built};
-use crate::{cli, js, py, version};
+use crate::{cli, disk, js, py, version};
 use serde_json::{json, Value};
 use std::path::{Path, PathBuf};
 
@@ -44,8 +44,8 @@ fn kind<'a>(m: &'a Manifest, path: &str) -> &'a TypeCross {
 fn scratch(name: &str, lib: &str, units: &str) -> PathBuf {
     let root = std::env::temp_dir().join(format!("bridge-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&root);
-    std::fs::create_dir_all(root.join("bridge")).expect("a scratch root");
-    std::fs::write(root.join("bridge/units.txt"), units).expect("units.txt");
+    std::fs::create_dir_all(root.join("pkgs/bridge")).expect("a scratch root");
+    std::fs::write(root.join("pkgs/bridge/units.txt"), units).expect("units.txt");
     let m = manifest(lib);
     cli::write(&m, &root).expect("the cli writes");
     py::write(&m, &root).expect("the python bridge writes");
@@ -322,8 +322,14 @@ fn a_closure_parameter_is_skipped() {
 
 #[test]
 fn a_static_return_is_skipped() {
+    let m = manifest("pub fn table() -> &'static [u8] { &[] }");
+    assert_eq!(reason(&m, "table"), "&'static return");
+}
+
+#[test]
+fn a_static_str_return_is_copied_out() {
     let m = manifest("pub fn genus() -> &'static str { \"iso\" }");
-    assert_eq!(reason(&m, "genus"), "&'static return");
+    assert_eq!(function(&m, "genus").cross, Cross::Ok);
 }
 
 #[test]
@@ -445,7 +451,7 @@ fn a_name_collision_fails_the_run() {
 
 #[test]
 fn skip_txt_must_name_every_skipped_function_and_nothing_else() {
-    let m = manifest("pub fn genus() -> &'static str { \"iso\" } pub fn fine() {}");
+    let m = manifest("pub fn genus() -> &'static [u8] { &[] } pub fn fine() {}");
     assert_eq!(report::skip_lines(&m), vec!["genus &'static return"]);
     assert_eq!(
         report::check_skip(&m, ""),
@@ -585,8 +591,10 @@ fn default_crosses_as_a_static_on_the_type_and_an_alias_fixes_n() {
     assert!(read(&root, "pkgs/mrlypy/python/mrlypy/gen/__init__.pyi")
         .contains("class Config2d:\n    @staticmethod\n    def default() -> dict[str, Any]:"));
     assert!(read(&root, "pkgs/mrlyjs/gen.d.ts").contains("static default(): Field;"));
-    assert!(read(&root, "pkgs/mrlyrs/src/bin/mrly.rs")
-        .contains("(\"gen.Config2d.default\", \"() -> gen.ConfigNd\""));
+    let cli: String = read(&root, "pkgs/mrlyrs/src/bin/mrly.rs")
+        .split_whitespace()
+        .collect();
+    assert!(cli.contains("(\"gen.Config2d.default\",\"()->gen.ConfigNd\""));
     std::fs::remove_dir_all(root).ok();
 }
 
@@ -599,6 +607,47 @@ fn the_hand_rng_declares_choice_and_shuffle_in_both_bridges() {
     let dts = read(&root, "pkgs/mrlyjs/core.d.ts");
     assert!(dts.contains("    choice<T>(items: ArrayLike<T>): T;"));
     assert!(dts.contains("    shuffle<T>(items: T[]): void;"));
+    std::fs::remove_dir_all(root).ok();
+}
+
+#[test]
+fn a_nested_type_without_serde_shuts_its_cli_door() {
+    let lib = "pub mod num { #[derive(Clone)] pub struct Pair { pub n: u8 } impl Pair { pub fn size(&self) -> u8 { 0 } } pub fn pairs() -> Vec<Pair> { vec![] } }";
+    let root = scratch("nested", lib, "num\n");
+    let cli = read(&root, "pkgs/mrlyrs/src/bin/mrly.rs");
+    assert!(cli.contains("\"() -> [num.Pair] # uncallable: num::Pair has no Serialize\""));
+    std::fs::remove_dir_all(root).ok();
+}
+
+#[test]
+fn a_watched_run_names_the_stale_files_and_writes_nothing() {
+    let lib = "pub mod core { pub fn add(a: u8, b: u8) -> u8 { a + b } }";
+    let root = scratch("check", lib, "core\n");
+    let m = manifest(lib);
+    let (old, gone) = ("pkgs/mrlypy/src/gen.rs", "pkgs/mrlyjs/core.js");
+    std::fs::write(root.join(old), "stale").expect("a stale file");
+    std::fs::remove_file(root.join(gone)).expect("a missing file");
+    disk::watch();
+    py::write(&m, &root).expect("the python bridge checks");
+    js::write(&m, &root).expect("the js bridge checks");
+    assert_eq!(disk::stale(), [root.join(old), root.join(gone)]);
+    assert_eq!(read(&root, old), "stale");
+    assert!(!root.join(gone).exists());
+    std::fs::remove_dir_all(root).ok();
+}
+
+#[test]
+fn generated_rust_is_saved_formatted() {
+    let lib = "pub mod core { pub fn add(a: u8, b: u8) -> u8 { a + b } }";
+    let root = scratch("fmt", lib, "core\n");
+    for file in [
+        "pkgs/mrlyrs/src/bin/mrly.rs",
+        "pkgs/mrlypy/src/gen.rs",
+        "pkgs/mrlyjs/units/core/src/lib.rs",
+    ] {
+        let text = read(&root, file);
+        assert_eq!(disk::rustfmt(&text).expect("rustfmt runs"), text, "{file}");
+    }
     std::fs::remove_dir_all(root).ok();
 }
 
@@ -664,10 +713,45 @@ fn a_break_needs_the_minor_under_one_and_the_major_from_one() {
     assert_eq!(version::semver("0.2"), None);
 }
 
+#[test]
+fn the_bump_reads_the_tagged_manifest_where_the_bridge_lives() {
+    let root = std::env::temp_dir().join(format!("bridge-bump-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    let file = root.join("pkgs/bridge/manifest.json");
+    std::fs::create_dir_all(root.join("pkgs/bridge")).expect("a scratch root");
+    let git = |args: &[&str]| {
+        let done = std::process::Command::new("git")
+            .arg("-C")
+            .arg(&root)
+            .args(["-c", "user.name=bridge"])
+            .args(["-c", "user.email=bridge@localhost"])
+            .args(["-c", "commit.gpgsign=false"])
+            .args(args)
+            .output()
+            .expect("git runs");
+        assert!(done.status.success(), "git {args:?}");
+    };
+    let write = |version: &str, ret: &str| {
+        let text = json!({"version": version, "functions": [entry("a", ret, "ok")]});
+        std::fs::write(&file, text.to_string()).expect("a manifest");
+    };
+    git(&["init", "-q"]);
+    write("0.1.0", "u8");
+    git(&["add", "-A"]);
+    git(&["commit", "-q", "-m", "one"]);
+    git(&["tag", "v0.1.0"]);
+    write("0.1.1", "u8");
+    assert_eq!(version::bump(&root), Ok(()));
+    write("0.1.1", "u16");
+    let refused = version::bump(&root).expect_err("a break under a patch");
+    assert!(refused.contains("needs 0.2.0"), "{refused}");
+    std::fs::remove_dir_all(root).ok();
+}
+
 fn crate_files() -> Files {
     parse::load(Path::new(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../pkgs/mrlyrs/src"
+        "/../mrlyrs/src"
     )))
     .expect("the crate loads")
 }

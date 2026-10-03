@@ -1,3 +1,4 @@
+use crate::disk::save;
 use crate::model::{
     Cross, Function, Manifest, Result, SelfKind, Source, Ty, Type, TypeCross, TypeKind,
 };
@@ -7,10 +8,7 @@ use std::path::Path;
 pub fn write(manifest: &Manifest, root: &Path) -> Result<()> {
     let shop = Shop::new(manifest);
     let doors = doors(&shop, manifest)?;
-    let file = root.join("pkgs/mrlyrs/src/bin/mrly.rs");
-    let folder = file.parent().ok_or("mrly.rs needs a folder")?;
-    std::fs::create_dir_all(folder).map_err(|error| error.to_string())?;
-    std::fs::write(&file, render(&doors)).map_err(|error| error.to_string())
+    save(&root.join("pkgs/mrlyrs/src/bin/mrly.rs"), &render(&doors))
 }
 
 // SHOP
@@ -121,6 +119,18 @@ fn special(ty: &Ty) -> bool {
         Ty::Map { key, value } => special(key) || special(value),
         _ => false,
     }
+}
+
+fn lacks(shop: &Shop, ty: &Ty, what: &str) -> Option<String> {
+    let mut reason = None;
+    ty.walk(&mut |seen| {
+        if let Ty::Plain { path } | Ty::Enum { path } | Ty::Class { path, .. } = seen {
+            if reason.is_none() && !shop.derives(path, what) {
+                reason = Some(format!("{path} has no {what}"));
+            }
+        }
+    });
+    reason
 }
 
 fn borrowed(ty: &Ty) -> bool {
@@ -467,11 +477,8 @@ fn hold(shop: &Shop, ty: &Ty, at: usize, dim: Option<u8>) -> Result<Bind> {
             return Ok(Bind::Shut("mutates its argument in place".to_string()));
         }
     }
-    let known = bare(ty);
-    if let Ty::Plain { path } | Ty::Enum { path } | Ty::Class { path, .. } = known {
-        if !shop.derives(path, "Deserialize") {
-            return Ok(Bind::Shut(format!("{path} has no Deserialize")));
-        }
+    if let Some(reason) = lacks(shop, ty, "Deserialize") {
+        return Ok(Bind::Shut(reason));
     }
     let start = match read(shop, ty, at, &format!("&{slot}"), 0) {
         Ok(text) => text,
@@ -546,11 +553,8 @@ fn one(shop: &Shop, function: &Function, dim: Option<u8>) -> Result<Made> {
         }
     }
     let call = format!("{}({})", callee(shop, function, dim), passes.join(", "));
-    let known = bare(&function.ret);
-    if let Ty::Plain { path } | Ty::Enum { path } | Ty::Class { path, .. } = known {
-        if !shop.derives(path, "Serialize") {
-            return Ok(Made::Shut(format!("{path} has no Serialize")));
-        }
+    if let Some(reason) = lacks(shop, &function.ret, "Serialize") {
+        return Ok(Made::Shut(reason));
     }
     let tail = match &function.ret {
         Ty::Result { item } => {

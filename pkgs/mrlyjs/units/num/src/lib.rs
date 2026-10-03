@@ -380,6 +380,136 @@ pub fn design_upper_rms(series: &[f64]) -> Result<f64, JsValue> {
     Ok(value)
 }
 
+/// Returns `Q = floor(y^(3/5))`, the largest denominator the dissection admits, exact in integers.
+#[wasm_bindgen]
+pub fn dissection_cap(y: JsValue) -> Result<u64, JsValue> {
+    let y = hand::u64_from_js(&y)?;
+    let value = mrlyrs::num::dissection::cap(y);
+    Ok(value)
+}
+
+/// Returns the chain's certificate exponent at one missing digit, `alpha_1 = log_base(z base/(base - 1))`, the same at every missing digit.
+#[wasm_bindgen]
+pub fn dissection_chain_exponent(base: JsValue) -> Result<f64, JsValue> {
+    let base = hand::u64_from_js(&base)?;
+    let value = mrlyrs::num::dissection::chain_exponent(base);
+    Ok(value)
+}
+
+/// Returns the chain's margin at the bar, the cubic cleared of denominators at `w = base^(1/5)(1 - 1/base)`, positive exactly when the root sits below `w` and `alpha_1 < 1/5`.
+#[wasm_bindgen]
+pub fn dissection_chain_margin(base: JsValue) -> Result<f64, JsValue> {
+    let base = hand::u64_from_js(&base)?;
+    let value = mrlyrs::num::dissection::chain_margin(base);
+    Ok(value)
+}
+
+/// Returns the root `z > 1` of the digit-uniform chain at one missing digit, `(z-1)^3 = (2/pi)(log base) z + gamma'(z-1) + (2/pi)(z-1)^2/(base z - 1)`, by bisection.
+#[wasm_bindgen]
+pub fn dissection_chain_root(base: JsValue) -> Result<f64, JsValue> {
+    let base = hand::u64_from_js(&base)?;
+    let value = mrlyrs::num::dissection::chain_root(base);
+    Ok(value)
+}
+
+/// Returns the chain's wall, one past the last base up to [`CAP_BASE`] whose margin is not positive.
+#[wasm_bindgen]
+pub fn dissection_chain_wall() -> Result<u64, JsValue> {
+    let value = mrlyrs::num::dissection::chain_wall();
+    Ok(value)
+}
+
+/// Returns whether the digit set keeps two consecutive digits, the hypothesis region C1 reads.
+#[wasm_bindgen]
+pub fn dissection_consecutive(digits: JsValue) -> Result<bool, JsValue> {
+    let digits = hand::list_from_js(&digits, hand::u64_from_js)?;
+    let value = mrlyrs::num::dissection::consecutive(&digits);
+    Ok(value)
+}
+
+/// Returns the last continued-fraction convergent `l/d` of `a/y` whose denominator is at most the cap, the Dirichlet fraction of the dissection.
+#[wasm_bindgen]
+pub fn dissection_fraction(a: JsValue, y: JsValue, cap: JsValue) -> Result<JsValue, JsValue> {
+    let a = hand::u64_from_js(&a)?;
+    let y = hand::u64_from_js(&y)?;
+    let cap = hand::u64_from_js(&cap)?;
+    let value = mrlyrs::num::dissection::fraction(a, y, cap);
+    Ok(hand::tuple_to_js(&[
+        JsValue::from(value.0),
+        JsValue::from(value.1),
+    ]))
+}
+
+/// Returns `kappa_F = (base/phi(base)) #{f in F : gcd(f, base) = 1}/fill`, the main-term constant of the prime count, as a reduced fraction.
+#[wasm_bindgen]
+pub fn dissection_kappa(base: JsValue, digits: JsValue) -> Result<JsValue, JsValue> {
+    let base = hand::u64_from_js(&base)?;
+    let digits = hand::list_from_js(&digits, hand::u64_from_js)?;
+    let value = mrlyrs::num::dissection::kappa(base, &digits);
+    Ok(hand::tuple_to_js(&[
+        JsValue::from(value.0),
+        JsValue::from(value.1),
+    ]))
+}
+
+/// Returns the unshifted masses `c_j = sum_(a < base^j) |hat F_j(a/base^j)|` for `j = 0..=level`, the `l^1` mass region A pays, `c_0 = 1`.
+#[wasm_bindgen]
+pub fn dissection_masses(base: JsValue, digits: JsValue, level: u32) -> Result<Vec<f64>, JsValue> {
+    let base = hand::u64_from_js(&base)?;
+    let digits = hand::list_from_js(&digits, hand::u64_from_js)?;
+    let value = mrlyrs::num::dissection::masses(base, &digits, level);
+    Ok(value)
+}
+
+/// Returns how the theorem reaches the set missing one digit: `proof` from the chain's wall, `certificate` at every base from [`DIGIT_WALL`] below it and at the [`CERTIFIED`] sets, `none` elsewhere.
+#[wasm_bindgen]
+pub fn dissection_reach(base: JsValue, missing: JsValue) -> Result<String, JsValue> {
+    let base = hand::u64_from_js(&base)?;
+    let missing = hand::u64_from_js(&missing)?;
+    let value = mrlyrs::num::dissection::reach(base, missing);
+    Ok(value.to_string())
+}
+
+/// Returns the `l^1` exponent the top two masses read, `log_base(c_j/(fill c_(j-1)))`: a reading of the growth region A pays, never a certificate.
+#[wasm_bindgen]
+pub fn dissection_reading(base: JsValue, fill: usize, masses: &[f64]) -> Result<f64, JsValue> {
+    let base = hand::u64_from_js(&base)?;
+    let value = mrlyrs::num::dissection::reading(base, fill, masses);
+    Ok(value)
+}
+
+/// Returns the region of every frequency `a/y`, `a < y = base^level`, at the cut `Z`, the fraction taken by [`fraction`] at [`cap`].
+#[wasm_bindgen]
+pub fn dissection_regions(base: JsValue, level: u32, z: JsValue) -> Result<JsValue, JsValue> {
+    let base = hand::u64_from_js(&base)?;
+    let z = hand::u64_from_js(&z)?;
+    let value = mrlyrs::num::dissection::regions(base, level, z);
+    hand::to_js(&value)
+}
+
+/// Tallies the set below `base^level` on a log grid of the given size, with the Mobius values and the primes sieved to the span.
+#[wasm_bindgen]
+pub fn dissection_tally(
+    base: JsValue,
+    digits: JsValue,
+    level: usize,
+    samples: usize,
+) -> Result<JsValue, JsValue> {
+    let base = hand::u64_from_js(&base)?;
+    let digits = hand::list_from_js(&digits, hand::u64_from_js)?;
+    let value = mrlyrs::num::dissection::tally(base, &digits, level, samples);
+    hand::to_js(&value)
+}
+
+/// Returns `|hat F_level(a/base^level)|` at every `a < base^level`, built one digit at a time from `hat F_j(t) = hat F(t) hat F_(j-1)(base t)`.
+#[wasm_bindgen]
+pub fn dissection_weights(base: JsValue, digits: JsValue, level: u32) -> Result<Vec<f64>, JsValue> {
+    let base = hand::u64_from_js(&base)?;
+    let digits = hand::list_from_js(&digits, hand::u64_from_js)?;
+    let value = mrlyrs::num::dissection::weights(base, &digits, level);
+    Ok(value)
+}
+
 /// Returns the sum of the proper divisors of the number, its divisor sum less itself, zero for zero and for one.
 #[wasm_bindgen]
 pub fn factor_aliquot(number: usize) -> Result<usize, JsValue> {
@@ -1230,6 +1360,13 @@ pub fn sieve_odd_word(levels: usize) -> Result<Vec<u64>, JsValue> {
     Ok(value)
 }
 
+/// Returns the Wallis sieve product of a parity design, `prod_(N odd >= 3) (1 - N^-dim)` for the corners with an odd count of odd coordinates and `prod (1 + N^-dim)` for the even count, at `dim >= 2`.
+#[wasm_bindgen]
+pub fn sieve_parity_product(dimension: u32, odd: bool) -> Result<f64, JsValue> {
+    let value = mrlyrs::num::sieve::parity_product(dimension, odd).map_err(hand::throw)?;
+    Ok(value)
+}
+
 /// Lists every puncture the word makes in the given dimension: its corner along each axis and then its side, all in units of the word's finest cell, so a level-one hole is the widest block in the list.
 #[wasm_bindgen]
 pub fn sieve_punctures(word: JsValue, dimension: u32) -> Result<Vec<u64>, JsValue> {
@@ -1254,6 +1391,43 @@ pub fn sieve_raster(word: JsValue) -> Result<JsValue, JsValue> {
 pub fn sieve_ratio(word: JsValue, dimension: u32) -> Result<f64, JsValue> {
     let word = hand::list_from_js(&word, hand::u64_from_js)?;
     let value = mrlyrs::num::sieve::ratio(&word, dimension).map_err(hand::throw)?;
+    Ok(value)
+}
+
+/// Returns the cells a design of this profile fills at one side, `sum_j a_j E^(dim-j) O^j` with `E` and `O` the even and the odd positions an axis holds: `P_F(n)` at side `2n - 1` and `w n^dim` at side `2n`.
+#[wasm_bindgen]
+pub fn sieve_row_fill(profile: JsValue, side: JsValue) -> Result<JsValue, JsValue> {
+    let profile = hand::list_from_js(&profile, hand::u64_from_js)?;
+    let side = hand::u64_from_js(&side)?;
+    let value = mrlyrs::num::sieve::row_fill(&profile, side).map_err(hand::throw)?;
+    Ok(JsValue::from_str(&value.to_string()))
+}
+
+/// Reads the design of this profile along the row word: its drift, its first correction, the roots of its fill polynomial, its constant from the Gamma form, the constant spelled, and the constant again by reflection, against the mirror and as a Wallis sieve product wherever those apply.
+#[wasm_bindgen]
+pub fn sieve_row_law(profile: JsValue) -> Result<JsValue, JsValue> {
+    let profile = hand::list_from_js(&profile, hand::u64_from_js)?;
+    let value = mrlyrs::num::sieve::row_law(&profile).map_err(hand::throw)?;
+    hand::to_js(&value)
+}
+
+/// Counts a base-2 design's corners by how many odd coordinates each holds, the profile the row word reads: the code is a bitmask over the corners, corner `i` is the binary digits of `i` as `math::bang::code_to_corners` reads it, so its odd coordinates are the ones of `i`.
+#[wasm_bindgen]
+pub fn sieve_row_profile(code: JsValue, dimension: usize) -> Result<Vec<u64>, JsValue> {
+    let code = hand::u128_from_js(&code)?;
+    let value = mrlyrs::num::sieve::row_profile(code, dimension).map_err(hand::throw)?;
+    Ok(value)
+}
+
+/// Walks the renormalised fill `R_L (2^dim/w)^L / L^drift` of the design of this profile to every stop, `R_L` the product of the letters' fill ratios, on the odd sides `3, 5, ..., 2L+1` or on the even sides `2, 4, ..., 2L`.
+#[wasm_bindgen]
+pub fn sieve_row_settle(
+    profile: JsValue,
+    stops: &[usize],
+    even: bool,
+) -> Result<Vec<f64>, JsValue> {
+    let profile = hand::list_from_js(&profile, hand::u64_from_js)?;
+    let value = mrlyrs::num::sieve::row_settle(&profile, stops, even).map_err(hand::throw)?;
     Ok(value)
 }
 
@@ -1314,6 +1488,13 @@ pub fn spiral_snail(base: JsValue, top: JsValue, growth: JsValue) -> Result<JsVa
     let growth = hand::from_js::<mrlyrs::num::spiral::Growth>(&growth)?;
     let value = mrlyrs::num::spiral::snail(base, top, growth);
     hand::to_js(&value)
+}
+
+/// Lists the pairs of the census: every `(k, m)` with `4^m` within a factor `3` of `3^k` and `d(k, m) <= 3^level`, by `d`.
+#[wasm_bindgen]
+pub fn sumset_pairs(level: u32) -> Result<JsValue, JsValue> {
+    let value = mrlyrs::num::sumset::pairs(level).map_err(hand::throw)?;
+    hand::list_to_js(&value, |x1| Ok(JsValue::from(sumset_Pair { inner: *x1 })))
 }
 
 /// The smooth window on [1, 2]: exp(4 - 1/((u - 1)(2 - u))) inside, zero outside, every derivative vanishing at the ends and a peak of one at u = 3/2.
@@ -1440,6 +1621,67 @@ pub fn design_ZETA_ORDINATES() -> Result<Vec<f64>, JsValue> {
     Ok(value.to_vec())
 }
 
+/// The bar region A sets on the certificate exponent, `alpha_1 < 1/5`: the whole `l^1` mass against the minor-arc `x^(4/5)`.
+#[wasm_bindgen]
+pub fn dissection_BAR_A() -> Result<f64, JsValue> {
+    let value = mrlyrs::num::dissection::BAR_A;
+    Ok(value)
+}
+
+/// The bar region B sets, `alpha_1 < 1/4`: the hybrid `l^1` mass against the `d^(-1/2)` decay.
+#[wasm_bindgen]
+pub fn dissection_BAR_B() -> Result<f64, JsValue> {
+    let value = mrlyrs::num::dissection::BAR_B;
+    Ok(value)
+}
+
+/// The base the chain is scanned to; from here the closed-form cap `1 + sqrt(2 (2/pi) log base + 0.97)` keeps it below the bar.
+#[wasm_bindgen]
+pub fn dissection_CAP_BASE() -> Result<u64, JsValue> {
+    let value = mrlyrs::num::dissection::CAP_BASE;
+    Ok(value)
+}
+
+/// The sets below [`DIGIT_WALL`] certified below `1/5`, as `(base, missing digit)`, printed by `lab/py/digit-transform-norms`, verb `fifth`.
+#[wasm_bindgen]
+pub fn dissection_CERTIFIED() -> Result<JsValue, JsValue> {
+    let value = mrlyrs::num::dissection::CERTIFIED;
+    hand::list_to_js(&value, |x1| {
+        Ok(hand::tuple_to_js(&[
+            JsValue::from(x1.0),
+            JsValue::from(x1.1),
+        ]))
+    })
+}
+
+/// The least base whose every one-missing-digit set carries a per-digit shifted-grid certificate below `1/5`, `lab/py/digit-transform-norms`, verbs `fifth` and `fifthbelow`; base 114 missing 56 is certified above.
+#[wasm_bindgen]
+pub fn dissection_DIGIT_WALL() -> Result<u64, JsValue> {
+    let value = mrlyrs::num::dissection::DIGIT_WALL;
+    Ok(value)
+}
+
+/// The least base with some missing digit certified below `1/5`, `lab/py/digit-transform-norms`, verb `fifth`.
+#[wasm_bindgen]
+pub fn dissection_FIRST_BELOW() -> Result<u64, JsValue> {
+    let value = mrlyrs::num::dissection::FIRST_BELOW;
+    Ok(value)
+}
+
+/// The constant `gamma'` of the digit-uniform chain, `(2/pi)(gamma + log(8/pi))` rounded up at seven decimals.
+#[wasm_bindgen]
+pub fn dissection_GAMMA() -> Result<f64, JsValue> {
+    let value = mrlyrs::num::dissection::GAMMA;
+    Ok(value)
+}
+
+/// The least base whose every one-missing-digit set carries a window certificate below `1/5`, `lab/py/prime-dissection`, verb `window`.
+#[wasm_bindgen]
+pub fn dissection_WINDOW_WALL() -> Result<u64, JsValue> {
+    let value = mrlyrs::num::dissection::WINDOW_WALL;
+    Ok(value)
+}
+
 /// The relative rounding allowance the double-precision ladder charges against the scale it carries.
 #[wasm_bindgen]
 pub fn ladder_ROUNDING() -> Result<f64, JsValue> {
@@ -1514,6 +1756,20 @@ pub fn series_VISIBLE() -> Result<f64, JsValue> {
 #[wasm_bindgen]
 pub fn sieve_PLANE_LIMIT() -> Result<f64, JsValue> {
     let value = mrlyrs::num::sieve::PLANE_LIMIT;
+    Ok(value)
+}
+
+/// The deepest level a [`Sumset`] is built to: `S meet [0, 3^20]`, a bit array of `436` MB.
+#[wasm_bindgen]
+pub fn sumset_DEEPEST() -> Result<u32, JsValue> {
+    let value = mrlyrs::num::sumset::DEEPEST;
+    Ok(value)
+}
+
+/// The widest level a [`Pair`] names in either base, so `3^k`, `4^m` and every difference string fit a signed 64-bit integer.
+#[wasm_bindgen]
+pub fn sumset_WIDEST() -> Result<u32, JsValue> {
+    let value = mrlyrs::num::sumset::WIDEST;
     Ok(value)
 }
 
@@ -2243,6 +2499,154 @@ impl radix_Radix {
                 JsValue::from(x1.1),
             ]))
         })
+    }
+}
+
+/// A pair of levels: the base-3 level `A_k = A meet [0, 3^k)` against the base-4 level `B_m = B meet [0, 4^m)`, `k` the field `three` and `m` the field `four`.
+#[wasm_bindgen]
+pub struct sumset_Pair {
+    inner: mrlyrs::num::sumset::Pair,
+}
+
+#[wasm_bindgen]
+impl sumset_Pair {
+    /// Reads the Pair from its plain data.
+    #[wasm_bindgen(js_name = "from")]
+    pub fn from_plain(data: JsValue) -> Result<sumset_Pair, JsValue> {
+        Ok(sumset_Pair {
+            inner: hand::from_js(&data)?,
+        })
+    }
+    /// Writes the Pair as plain data.
+    #[wasm_bindgen(js_name = "toJSON")]
+    pub fn to_plain(&self) -> Result<JsValue, JsValue> {
+        hand::to_js(&self.inner)
+    }
+    /// The base-3 level `k`.
+    #[wasm_bindgen(getter)]
+    pub fn three(&self) -> Result<u32, JsValue> {
+        let value = self.inner.three;
+        Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_three(&mut self, value: u32) -> Result<(), JsValue> {
+        self.inner.three = value;
+        Ok(())
+    }
+    /// The base-4 level `m`.
+    #[wasm_bindgen(getter)]
+    pub fn four(&self) -> Result<u32, JsValue> {
+        let value = self.inner.four;
+        Ok(value)
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_four(&mut self, value: u32) -> Result<(), JsValue> {
+        self.inner.four = value;
+        Ok(())
+    }
+    /// Whether the pair is clean, `3^k > d(k, m)` and `4^m > d(k, m)`, so that `S meet [0, d] = A_k + B_m`.
+    pub fn clean(&self) -> Result<bool, JsValue> {
+        let value = self.inner.clean();
+        Ok(value)
+    }
+    /// Whether the pair is a gap copy, `2 4^m < 3^k + 5`: `A_k + B_m` is then two disjoint translates of `A_(k-1) + B_m` and its energy is twice theirs.
+    pub fn copy(&self) -> Result<bool, JsValue> {
+        let value = self.inner.copy();
+        Ok(value)
+    }
+    /// The additive energy `E(k, m) = sum_x r(x)^2`, `r(x)` the number of ways `x = a + b` with `a` in `A_k` and `b` in `B_m`.
+    pub fn energy(&self) -> Result<JsValue, JsValue> {
+        let value = self.inner.energy();
+        Ok(JsValue::from_str(&value.to_string()))
+    }
+    /// The first and the last integer of the open interval `(d(k, m), min(3^k, 4^m))`, which `S` misses, or `None` when it holds none.
+    pub fn gap(&self) -> Result<JsValue, JsValue> {
+        let value = self.inner.gap();
+        hand::option_to_js(value.as_ref(), |x1| {
+            Ok(hand::tuple_to_js(&[
+                JsValue::from(x1.0),
+                JsValue::from(x1.1),
+            ]))
+        })
+    }
+    /// The largest element `d(k, m) = (3^k - 1)/2 + (4^m - 1)/3` of `A_k + B_m`.
+    pub fn largest(&self) -> Result<u64, JsValue> {
+        let value = self.inner.largest();
+        Ok(value)
+    }
+    /// Names the pair `(k, m)`.
+    #[wasm_bindgen(constructor)]
+    pub fn new(three: u32, four: u32) -> Result<sumset_Pair, JsValue> {
+        let value = mrlyrs::num::sumset::Pair::new(three, four).map_err(hand::throw)?;
+        Ok(sumset_Pair { inner: value })
+    }
+    /// The energy ratio `Q(k, m) = E(k, m) (d + 1)/4^(k+m)` of the energy [`Pair::energy`] returns, the energy against its flat value, at least `1`; `card(A_k + B_m) >= (d + 1)/Q` by Cauchy-Schwarz.
+    pub fn ratio(&self, energy: JsValue) -> Result<f64, JsValue> {
+        let energy = hand::u128_from_js(&energy)?;
+        let value = self.inner.ratio(energy);
+        Ok(value)
+    }
+    /// The scaling `tau = 4^m/3^k`.
+    pub fn scale(&self) -> Result<f64, JsValue> {
+        let value = self.inner.scale();
+        Ok(value)
+    }
+}
+
+/// The sumset `S = A + B` of Erdos problem 125 up to `3^level`: `A` the integers whose base-3 digits are all `0` or `1`, `B` those whose base-4 digits are.
+#[wasm_bindgen]
+pub struct sumset_Sumset {
+    inner: mrlyrs::num::sumset::Sumset,
+}
+
+#[wasm_bindgen]
+impl sumset_Sumset {
+    /// Whether `x` is in `S`, or `None` past the top.
+    pub fn contains(&self, x: JsValue) -> Result<JsValue, JsValue> {
+        let x = hand::u64_from_js(&x)?;
+        let value = self.inner.contains(x);
+        hand::to_js(&value)
+    }
+    /// Counts `card(S meet [1, x])`, or `None` past the top.
+    pub fn count(&self, x: JsValue) -> Result<JsValue, JsValue> {
+        let x = hand::u64_from_js(&x)?;
+        let value = self.inner.count(x);
+        hand::option_to_js(value.as_ref(), |x1| Ok(JsValue::from(*x1)))
+    }
+    /// Reads the density `D(x) = card(S meet [1, x])/x`, or `None` at zero and past the top.
+    pub fn density(&self, x: JsValue) -> Result<JsValue, JsValue> {
+        let x = hand::u64_from_js(&x)?;
+        let value = self.inner.density(x);
+        hand::to_js(&value)
+    }
+    /// Reads the least and the greatest `D(x)` over each window `[edges[i], edges[i + 1])`, `None` for an empty window.
+    pub fn extremes(&self, edges: JsValue) -> Result<JsValue, JsValue> {
+        let edges = hand::list_from_js(&edges, hand::u64_from_js)?;
+        let value = self.inner.extremes(&edges).map_err(hand::throw)?;
+        hand::to_js(&value)
+    }
+    /// Reads the share of members in each of `cells` equal runs of the integers `[low, high)`, the strip of `S` a page draws.
+    pub fn fills(&self, low: JsValue, high: JsValue, cells: usize) -> Result<Vec<f64>, JsValue> {
+        let low = hand::u64_from_js(&low)?;
+        let high = hand::u64_from_js(&high)?;
+        let value = self.inner.fills(low, high, cells).map_err(hand::throw)?;
+        Ok(value)
+    }
+    /// The level the array was built to.
+    pub fn level(&self) -> Result<u32, JsValue> {
+        let value = self.inner.level();
+        Ok(value)
+    }
+    /// Builds `S meet [0, 3^level]`.
+    #[wasm_bindgen(constructor)]
+    pub fn new(level: u32) -> Result<sumset_Sumset, JsValue> {
+        let value = mrlyrs::num::sumset::Sumset::new(level).map_err(hand::throw)?;
+        Ok(sumset_Sumset { inner: value })
+    }
+    /// The largest integer the array holds, `3^level`.
+    pub fn top(&self) -> Result<u64, JsValue> {
+        let value = self.inner.top();
+        Ok(value)
     }
 }
 
