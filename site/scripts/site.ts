@@ -14,6 +14,7 @@ import { Glyph, Grid, Menu, Shell } from "../ui/chrome.jsx";
 import { claimsScript, headScript, inlineScripts, tintCss } from "../ui/config.js";
 import { grid as glyphs, logoSvg } from "../ui/logo.js";
 import SITE from "../lib/site.js";
+import { sections, type Lists } from "./map.ts";
 import { shelf } from "./shelf.ts";
 
 const org = resolve(import.meta.dir, "..");
@@ -966,6 +967,8 @@ function standard(site: Site, route: Route): Output[] {
 
 const counts = { papers: 0, research: 0, blog: 0, demos: 0, wiki: 0 };
 
+let MAP: Lists = { wiki: [], notes: [], claims: [], papers: [], lanes: [], posts: [], math: [], pages: [] };
+
 async function collect(site: Site) {
   SHELF = await shelf();
   const paperList = papers(site);
@@ -1055,6 +1058,7 @@ async function collect(site: Site) {
     routes.push({ route: `/${slug}/`, kind: "page", name: data.title ?? slug, source, inputs: [source] });
   }
   DRESS = { lanes: laneList, papers: paperList, notes: noteList, posts: postList, demos: demoList, wiki: wikiList };
+  MAP = { wiki: wikiList, notes: noteList, claims: claimList, papers: paperList, lanes: laneList, posts: postList, math: names.files, pages: written.files };
   routes.push({
     route: "/menu/",
     kind: "menu",
@@ -1138,6 +1142,7 @@ export const spec: Spec = {
   collect,
   render: draw,
   globals: extras,
+  llms: (site) => sections(site, MAP),
   git: {
     page: GIT ? shell : undefined,
     md: (site, text, from) => md(front(text).body, { math, link: links(site, from) }),

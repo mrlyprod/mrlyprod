@@ -96,14 +96,7 @@
   "git": { "root": "..", "slug": "mrlyprod/mrlyprod", "branch": "main" },
   "llms": {
     "about": "MrlyMath is the mathematics of designs on the corners of a cube: a code says which of the eight corners are filled, the Kronecker product grows that rule into itself level by level, and the object it converges to is a fractal, the Sierpinski carpet and the Menger sponge among them. Everything else on this site is measurement: fills, voids and exposed faces, plane cuts, graph spectra, and the integer sequences the counts write down, with Rust crates doing the arithmetic and the browser only painting. Every claim is proved, checked over a stated finite domain, or labelled a conjecture, and all of it is free and open source.",
-    "links": [
-      { "href": "/raw/README.md", "name": "README", "note": "the repository readme, in markdown" },
-      { "href": "/wiki/", "name": "Wiki", "note": "one concept per page, in prerequisite order, for a reader with school mathematics" },
-      { "href": "/research/", "name": "Research", "note": "working notes, one page per idea" },
-      { "href": "/git/", "name": "Code", "note": "the whole tree, browsable, with raw bytes under /raw/" },
-      { "href": "/papers/", "name": "Papers", "note": "write-ups in markdown that print as papers" },
-      { "href": "/contact/", "name": "Contact", "note": "where to write, and every social account" }
-    ]
+    "legend": "Links are page sources in markdown: /raw/wiki/x.md is /wiki/x/, /raw/research/notes/x.md is /research/x/, /raw/research/papers/x.md is /papers/x/, /raw/research/claims/x.md is /research/discoveries/#x, /raw/site/blog/x/index.md is /blog/x/, /raw/site/pages/x.md is /x/; a link outside /raw/ is the page."
   },
   "inputs": {
     "pages": { "path": "pages", "ext": ".md" },
