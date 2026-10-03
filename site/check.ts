@@ -37,7 +37,7 @@ const read = (name: string): Doc => {
 };
 
 const sheets = (folder: string) =>
-  there(folder) ? readdirSync(at(folder)).filter((n) => n.endsWith('.md')).sort().map((n) => `${folder}/${n}`) : [];
+  there(folder) ? readdirSync(at(folder)).filter((n) => n.endsWith('.md') && n !== 'README.md').sort().map((n) => `${folder}/${n}`) : [];
 
 const under = (folder: string, suffix: string) => {
   const out: string[] = [];
@@ -68,11 +68,12 @@ const claims = sheets('research/claims').map(read);
 const papers = sheets('research/papers').map(read);
 const pages = sheets('site/pages').map(read);
 const posts = sheets('site/blog').map(read);
-const concepts = sheets('wiki').map(read);
-const stems = ['research/README.md', 'research/REFS.md', 'research/sequences.md'].filter((name) => there(name)).map(read);
+const concepts = sheets('research/wiki').map(read);
+const indexes = ['wiki', 'notes', 'claims', 'papers'].map((kind) => `research/${kind}/README.md`);
+const stems = ['research/README.md', 'research/REFS.md', 'research/sequences.md', ...indexes].filter((name) => there(name)).map(read);
 const fronted = [...notes, ...papers, ...pages, ...posts, ...concepts];
 const prose = [...notes, ...claims, ...papers, ...stems, ...pages, ...posts, ...concepts];
-const housed = [...under('research', '.md'), ...sheets('site/pages'), ...sheets('site/blog'), ...sheets('wiki')].map(read);
+const housed = [...under('research', '.md'), ...sheets('site/pages'), ...sheets('site/blog')].map(read);
 const demos = new Set(
   there('site/demos/views')
     ? readdirSync(at('site/demos/views'), { withFileTypes: true })
@@ -112,6 +113,34 @@ for (const doc of claims) {
   });
 }
 report('claims', `${claims.length} files, ${rows.length} claims`, ledger);
+
+// TOP
+
+const TOP = /^- \[[^\]]+\]\(([a-z0-9-]+\.md)\): "(.+)"$/;
+const SOLID = /^- \d{4}-\d{2}-\d{2} \[(Proved|Verified)\] /;
+const top: string[] = [];
+let quoted = 0;
+if (there('research/claims/README.md')) {
+  const doc = read('research/claims/README.md');
+  const from = doc.lines.indexOf('## TOP 10');
+  const until = doc.lines.findIndex((line, i) => i > from && line.startsWith('## '));
+  const seen = new Set<string>();
+  if (from < 0) top.push(`${doc.name} has no TOP 10`);
+  else doc.lines.slice(from + 1, until < 0 ? undefined : until).forEach((line, i) => {
+    if (line === '') return;
+    const where = `${doc.name}:${from + i + 2}`;
+    const hit = TOP.exec(line);
+    if (!hit) { top.push(`${where} is not a top-10 row`); return; }
+    quoted += 1;
+    if (seen.has(hit[1])) top.push(`${where} ${hit[1]} is quoted twice`);
+    seen.add(hit[1]);
+    const held = (claims.find((one) => one.name === `research/claims/${hit[1]}`)?.lines ?? []).filter((row) => row.includes(hit[2]));
+    if (!held.length) top.push(`${where} quote is not in ${hit[1]}`);
+    else if (!held.every((row) => SOLID.test(row))) top.push(`${where} quote is not Proved or Verified`);
+  });
+  if (quoted > 10) top.push(`${doc.name} holds ${quoted} rows`);
+} else top.push('research/claims/README.md is missing');
+report('top', `${quoted} quotes`, top);
 
 // POINTERS
 
@@ -178,7 +207,7 @@ for (const [doc, n, line] of rows) {
   }
   for (const hit of line.matchAll(/\b([a-z0-9-]+)\.md\b/g)) {
     aimed += 1;
-    if (!['research/notes', 'research', 'research/claims', 'research/papers'].some((folder) => there(`${folder}/${hit[1]}.md`)))
+    if (!['research/notes', 'research', 'research/claims', 'research/papers', 'research/wiki'].some((folder) => there(`${folder}/${hit[1]}.md`)))
       blame(`${hit[1]}.md names no page`);
   }
 }
@@ -203,29 +232,11 @@ for (const base of pairs) {
     if (slug !== 'index' && !noted.has(slug) && !there(`research/${slug}.md`)) drawn.push(`${base} shades no note`);
   }
   if (base.startsWith('demo-') && !demos.has(base.slice(5))) drawn.push(`${base} shades no demo`);
-  if (base.startsWith('wiki-') && !there(`wiki/${base.slice(5)}.md`)) drawn.push(`${base} shades no wiki page`);
+  if (base.startsWith('wiki-') && !there(`research/wiki/${base.slice(5)}.md`)) drawn.push(`${base} shades no wiki page`);
 }
 report('figures', `${pairs.length} pairs`, drawn);
 
 // LINKS
-
-const site = (target: string) => {
-  const parts = target.split('/').filter((part) => part !== '');
-  if (parts.length === 0) return true;
-  const [head, next] = parts;
-  if (head === 'research') {
-    if (!next) return true;
-    if (next === 'discoveries') return there('research/claims');
-    return there(`research/notes/${next}.md`) || there(`research/${next}.md`);
-  }
-  if (head === 'demos') return !next || demos.has(next);
-  if (head === 'papers') return !next || there(`research/papers/${next}.md`);
-  if (head === 'blog') return !next || there(`site/blog/${next}.md`);
-  if (head === 'wiki') return !next || there(`wiki/${next}.md`);
-  if (head === 'tools' || head === 'math') return !next;
-  if (head === 'method') return there('research/notes/method.md') || there('site/pages/method.md');
-  return there(`site/pages/${head}.md`);
-};
 
 const dead: string[] = [];
 let aimedAt = 0;
@@ -244,7 +255,9 @@ for (const doc of prose) {
       }
       aimedAt += 1;
       if (target.startsWith('/')) {
-        if (!site(target)) dead.push(`${doc.name}:${n} ${target}`);
+        const [head, name] = target.split('/').filter((part) => part !== '');
+        if (head !== 'demos') dead.push(`${doc.name}:${n} ${target} is a site URL, link the file`);
+        else if (name && !demos.has(name)) dead.push(`${doc.name}:${n} ${target}`);
       } else if (target.includes('/') || target.includes('.')) {
         if (!existsSync(resolve(home, target))) dead.push(`${doc.name}:${n} ${target}`);
       }
@@ -289,7 +302,6 @@ for (const doc of concepts) {
     const where = `${doc.name}:${doc.body + i + 1}`;
     if (line.startsWith('# ')) taught.push(`${where} carries an H1`);
     if (/\b20\d\d-\d\d-\d\d\b/.test(line)) taught.push(`${where} carries a date`);
-    for (const hit of line.matchAll(/\]\(\/wiki\/([a-z0-9-]+)\/?\)/g)) if (!slugs.has(hit[1])) taught.push(`${where} links /wiki/${hit[1]}/, which has no page`);
   });
 }
 report('wiki', `${concepts.length} pages`, taught);

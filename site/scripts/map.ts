@@ -6,15 +6,15 @@ import { front, summary, title } from "../kit/ssg/md.ts";
 
 /* TYPES */
 
-type Wiki = { slug: string; name: string; lead: string; file: string };
+type Wiki = { name: string; lead: string; file: string; href: string };
 
-type Note = { name: string; title: string; lead: string; home: boolean; file: string };
+type Note = { title: string; lead: string; file: string; href: string };
 
-type Claim = { slug: string; title: string; md: string; file: string };
+type Claim = { title: string; md: string; file: string; href: string };
 
-type Paper = { slug: string; name: string; lead: string; file: string };
+type Paper = { name: string; lead: string; file: string; href: string };
 
-type Lane = { slug: string; name: string; blurb: string; md: string };
+type Lane = { name: string; blurb: string; md: string; href: string };
 
 type Post = { slug: string; name: string; lead: string };
 
@@ -43,12 +43,12 @@ export function sections(site: Site, lists: Lists): Section[] {
     return row(name || data.title || title(body) || basename(file, ".md"), data.lead || summary(body), file, page);
   };
   return [
-    { name: "Wiki, in prerequisite order", rows: lists.wiki.map((e) => row(e.name, e.lead, e.file, `/wiki/${e.slug}/`)) },
-    { name: "Research notes", rows: lists.notes.map((n) => row(n.title, n.lead, join(site.input("research").path, n.file), n.home ? "/research/" : `/research/${n.name}/`)) },
-    { name: "Discoveries", rows: lists.claims.map((c) => row(c.title, claimed(c.md), c.file, `/research/discoveries/#${c.slug}`)) },
+    { name: "Wiki, in prerequisite order", rows: lists.wiki.map((e) => row(e.name, e.lead, e.file, e.href)) },
+    { name: "Research notes", rows: lists.notes.map((n) => row(n.title, n.lead, join(site.input("research").path, n.file), n.href)) },
+    { name: "Claims", rows: lists.claims.map((c) => row(c.title, claimed(c.md), c.file, c.href)) },
     {
       name: "Papers",
-      rows: [...lists.papers.map((p) => row(p.name, p.lead, p.file, `/papers/${p.slug}/`)), ...lists.lanes.map((p) => ({ name: p.name, note: p.blurb || summary(p.md), href: `/papers/${p.slug}/` }))],
+      rows: [...lists.papers.map((p) => row(p.name, p.lead, p.file, p.href)), ...lists.lanes.map((p) => ({ name: p.name, note: p.blurb || summary(p.md), href: p.href }))],
     },
     { name: "Blog", rows: lists.posts.map((p) => row(p.name, p.lead, join(site.input("blog").path, p.slug, "index.md"), `/blog/${p.slug}/`)) },
     { name: "Math", rows: lists.math.map((file) => read(file, "/math/", "Math")) },

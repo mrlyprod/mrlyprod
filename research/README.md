@@ -1,12 +1,14 @@
 # MrlyMath
 
-The mathematics of the mrly tree: a parity rule on the corners of a cube, substituted into itself by the Kronecker product, and everything that falls out of those two moves. One subject, one tree, and this page is its law; the index of the notes is built from their front matter at [mrly.net/research](https://mrly.net/research/).
+The mathematics of the mrly tree: a parity rule on the corners of a cube, substituted into itself by the Kronecker product, and everything that falls out of those two moves. One subject, one tree, and this page is its law; the tree is the site at [mrly.net/research](https://mrly.net/research/), built from these files and nothing else.
 
 ## THE LAW
 
+- The tree is the site: `P.md` here is the page `/research/P/`, a folder's `README.md` opens that folder's index page, and `lab/` has no page, only its code.
 - Type folders, not topic folders: a topic is one slug that repeats across `notes/`, `claims/`, `papers/`, `lab/` and `../figures/`, never a box of its own.
+- `wiki/<slug>.md` is a concept page: known mathematics, one idea a page, worked from small cases, opening on a front matter block of `title`, `lead` and `prerequisites` (wiki slugs) and carrying an `## In the tree` section; it never states a claim of this tree.
 - `notes/<slug>.md` is a note: timeless, present tense, no dates and no story, opening on a front matter block of `title`, `lead`, `figure` and `slug`; the index of the notes is built from that block and nothing is registered anywhere.
-- `claims/<slug>.md` is a claims file: one dated line per claim, `- YYYY-MM-DD [Tag] the claim. Witness: its generator`, or for a Proved row the note section that carries the proof, append only; the built page at `/research/discoveries/` reads every file and filters by tag, topic and date.
+- `claims/<slug>.md` is a claims file: one dated line per claim, `- YYYY-MM-DD [Tag] the claim. Witness: its generator`, or for a Proved row the note section that carries the proof, append only; each file is one page with its tag filter, and `claims/README.md` holds the top 10, each row a claim quoted verbatim from the file it links, above the list of every file.
 - Every claim carries exactly one tag, defined here and never restated on a page: **Proved** means a proof is given or restated on the page; **Verified** means recomputed from scratch by a crate test or a lab study, or read at source in the literature; **Conjecture** means checked on a finite domain with no derivation; **Refuted** means killed, with the witness beside it.
 - A claim is never deleted because someone else published it first: a dated cross-reference line is added, and only a counterexample moves a claim.
 - Every printed number names its generator: a crate function in `../crates`, a study in `lab/rs/` or `lab/py/`, a sequence row in `sequences.md`, or an [OEIS](https://oeis.org) entry; a number with no generator keeps its claim at Conjecture.
@@ -16,6 +18,7 @@ The mathematics of the mrly tree: a parity rule on the corners of a cube, substi
 - `../figures/` is one crate: a figure is `src/bin/<name>.rs`, cargo discovers it, `scripts/figures.sh` presses it to `../files/figures/<name>-dark.png` and `<name>-light.png`, and a reel to `.gif`; a figure is drawn by code, never by hand, and a page names a figure by its name alone.
 - `lab/rs/<study>/` is a Rust crate in the root workspace and `lab/py/<study>/` a Python study run with `uv`; a study README says what it computes, how to run it and which claim lines it witnesses, and a study is deleted the day a crate function or a demo computes its numbers.
 - The demos in `../site/demos` run the same crates through wasm; a note links the demo that shows it, and every demo is linked from some page.
+- A link between pages is a relative `.md` path, as `[cuts](notes/cuts.md)` and `[parity](wiki/parity.md)` are from this page, and the site makes the URL; the only site URL in content is a demo's, `/demos/<name>/`.
 - Math is written in backticks so it renders everywhere; lines never wrap; no comment in code beyond a section delimiter, no em-dash anywhere.
 - Author line MrlyProd on every route: Carlo directs, Claude writes and computes, and `/method/` says so.
 - One check: `bun run check` in `../site` passes on this tree or fails on a bad line, and nothing else gates it.

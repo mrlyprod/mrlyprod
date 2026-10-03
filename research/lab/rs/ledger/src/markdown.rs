@@ -99,7 +99,11 @@ fn citations() -> BTreeMap<String, BTreeSet<String>> {
         let Ok(entries) = fs::read_dir(root.join(folder)) else {
             continue;
         };
-        let mut paths: Vec<_> = entries.flatten().map(|entry| entry.path()).collect();
+        let mut paths: Vec<_> = entries
+            .flatten()
+            .map(|entry| entry.path())
+            .filter(|path| path.file_name().is_some_and(|name| name != "README.md"))
+            .collect();
         paths.sort();
         for path in paths {
             let Ok(text) = fs::read_to_string(&path) else {

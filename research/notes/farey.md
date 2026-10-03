@@ -5,9 +5,9 @@ figure: research-farey
 slug: farey
 ---
 
-Lay the same fractal grid on the unit square at many scales at once - scale `n` puts its cell boundaries at `x = k/n` - drop the opacity and add the layers up. The result is a [moire](/wiki/moire/), and a bright point is one that many scales agree on. The question this page answers is what the bright points are, and the answer is not decorative: the lit nodes are the Farey fractions, the amount of new structure each scale contributes is [Euler's totient](/wiki/eulers-totient/) `phi(n)`, and how evenly those nodes spread is - by a pair of theorems from 1924 - literally equivalent to the Riemann hypothesis.
+Lay the same fractal grid on the unit square at many scales at once - scale `n` puts its cell boundaries at `x = k/n` - drop the opacity and add the layers up. The result is a [moire](../wiki/moire.md), and a bright point is one that many scales agree on. The question this page answers is what the bright points are, and the answer is not decorative: the lit nodes are the Farey fractions, the amount of new structure each scale contributes is [Euler's totient](../wiki/eulers-totient.md) `phi(n)`, and how evenly those nodes spread is - by a pair of theorems from 1924 - literally equivalent to the Riemann hypothesis.
 
-The [Farey sequence page](/wiki/farey-sequence/) builds the stack scale by scale, lights the Farey fractions, and shows `phi(n)` novelty peaking at [the primes](/wiki/prime-numbers/).
+The [Farey sequence page](../wiki/farey-sequence.md) builds the stack scale by scale, lights the Farey fractions, and shows `phi(n)` novelty peaking at [the primes](../wiki/prime-numbers.md).
 
 ## Where the lines land
 
@@ -23,7 +23,7 @@ Brightness therefore falls as one over the denominator, which is the Stern-Broco
 | `1/4`, `3/4` | 7 | 7 |
 | `1/5` ... | 6 | 6 |
 
-The lit nodes are also exactly [the lattice points visible from the origin](/wiki/visible-lattice-points/), since `a/b` is in lowest terms precisely when `gcd(a,b) = 1`. That is the "lighthouse" reading of the picture. **Proved.** The density of visible points is `6/pi^2` - the same constant, and the same base-blindness, discussed in [what base 3 hides](bases.md), where it is measured as `0.608042` on a `3000 x 3000` grid. **Verified**, by recounting that grid.
+The lit nodes are also exactly [the lattice points visible from the origin](../wiki/visible-lattice-points.md), since `a/b` is in lowest terms precisely when `gcd(a,b) = 1`. That is the "lighthouse" reading of the picture. **Proved.** The density of visible points is `6/pi^2` - the same constant, and the same base-blindness, discussed in [what base 3 hides](bases.md), where it is measured as `0.608042` on a `3000 x 3000` grid. **Verified**, by recounting that grid.
 
 Those same points draw two further pictures of the one node set. The sunburst is the visible lattice points themselves, the `(a, b)` with `gcd(a, b) = 1` and `abs a, abs b <= n`, joined in angular order into a closed polygon, which reads the lit set as directions rather than as points of the line. The resonance diagram is the spike profile, a spike at the node `a/b` of height `1/b`. **The stack is that diagram up to the floor. Proved**, from the brightness law: normalising gives the node `a/b` the height `floor(Q/b)/Q`, which lies in `(1/b - 1/Q, 1/b]` at every depth and equals `1/b` exactly when `b` divides `Q` (`lab/rs/farey-discrepancy`).
 
@@ -74,7 +74,7 @@ Both sums are computable. Generating `F_Q` exactly and measuring, with `S2 = sum
 
 ## The meter on a digit design
 
-A digit design `S_F` is the set of whole numbers whose every digit lies in a digit set `F`, of dimension `alpha = log |F| / log base`. Restricting the meter to one needs a convention, and the strict one is taken here: `F_Q(S_F)` is the set of reduced fractions `a/b` with `0 < a <= b <= Q` and both `a` and `b` in `S_F`. The weaker denominator convention - `b` in `S_F`, `a` free - is measured beside it, and the unrestricted `F_Q` is the control. Neither is a set the stack produces: [Farey order is the stack](#farey-order-is-the-stack-not-the-design) still holds and every design gives the same stack at fixed `Q`, so `F_Q(S_F)` is a filter laid over the stack's nodes by hand, and all that is at stake is what the Franel-Landau functional reads on it. No [Mobius](/wiki/mobius-function/) sum appears anywhere in this section, so nothing in it bears on the square-root conjecture of [mobius](mobius.md), whose `theta(F)` is a [Mertens](/wiki/mertens-function/) exponent and belongs to that page alone; the exponents here are called `e_2` and `e_1` and are this section's own.
+A digit design `S_F` is the set of whole numbers whose every digit lies in a digit set `F`, of dimension `alpha = log |F| / log base`. Restricting the meter to one needs a convention, and the strict one is taken here: `F_Q(S_F)` is the set of reduced fractions `a/b` with `0 < a <= b <= Q` and both `a` and `b` in `S_F`. The weaker denominator convention - `b` in `S_F`, `a` free - is measured beside it, and the unrestricted `F_Q` is the control. Neither is a set the stack produces: [Farey order is the stack](#farey-order-is-the-stack-not-the-design) still holds and every design gives the same stack at fixed `Q`, so `F_Q(S_F)` is a filter laid over the stack's nodes by hand, and all that is at stake is what the Franel-Landau functional reads on it. No [Mobius](../wiki/mobius-function.md) sum appears anywhere in this section, so nothing in it bears on the square-root conjecture of [mobius](mobius.md), whose `theta(F)` is a [Mertens](../wiki/mertens-function.md) exponent and belongs to that page alone; the exponents here are called `e_2` and `e_1` and are this section's own.
 
 Each convention carries a count that never enumerates a fraction. The denominator convention has `card = sum_{b in S_F, b <= Q} phi(b)`. The strict one has `card = sum_{b in S_F, b <= Q} phi_F(b)` with `phi_F(b) = #{a in S_F : a <= b, gcd(a,b) = 1} = sum_{d | b} mu(d) * #{multiples of d in S_F up to b}`, inclusion-exclusion over the divisors of `b`. **Proved.** Both are sieved independently of the enumeration and match it at every rung of every table below, which is the control that says the object measured is the object defined; the largest check is 9538759028 nodes on the base 3 control at `Q = 3^11`. **Verified** by `lab/rs/farey-discrepancy design`.
 
@@ -122,7 +122,7 @@ The identity behind the denominator lane has a note of its own, [the restricted 
 
 Give scale `n` the weight `mu(n)` instead of weight one and the same stack renders a different arithmetic function: the node `a/b` collects `mu` over the scales that are multiples of `b`, so its brightness is `Sum_{k <= N/b} mu(kb) = mu(b) * Sum_{k <= N/b, gcd(k,b) = 1} mu(k)`, a Mertens-type sum over the integers coprime to `b`. **Proved**, by the same divisor count that gives `floor(N/b)` in the unweighted stack. It is not `M(floor(N/b))`: the two agree at only 64 of 200 denominators at `N = 200` (`lab/py/mertens-meter`), and coincide at `b = 1`, where the node reads `M(N)` exactly.
 
-That makes the picture a Mertens meter rather than a Farey one, and the oscillations of `M(x)/sqrt(x)` are where [the nontrivial zeta zeros](/wiki/riemann-zeta-function/) live, by the explicit formula. Sampling `M(x)/sqrt(x)` in log-space and taking the power spectrum puts peaks at the first eight zeros:
+That makes the picture a Mertens meter rather than a Farey one, and the oscillations of `M(x)/sqrt(x)` are where [the nontrivial zeta zeros](../wiki/riemann-zeta-function.md) live, by the explicit formula. Sampling `M(x)/sqrt(x)` in log-space and taking the power spectrum puts peaks at the first eight zeros:
 
 | known `gamma` | detected | error |
 |---|---|---|

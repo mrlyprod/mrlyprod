@@ -5,7 +5,7 @@ figure: research-windows
 slug: windows
 ---
 
-Fix a base `b` and a plane code at that base, a bitmask over the `b x b` cells of level 1 read in row-major order; let `F` be its filled cells. The level-`level` render `R_level` is the `b^level x b^level` picture with a 1 at `(i, j)` exactly when every base-`b` digit pair `(i_k, j_k)`, `k < level`, lies in `F`. It is the [substitution](/wiki/substitution-tiling/) that replaces a 1 by the level-1 tile and a 0 by the empty tile, run `level` times from one 1. This page reads the infinite design as a set of plane pictures closed under the shift: it counts the `k x k` windows that occur, asks whether finitely many forbidden windows cut the set out, as for a [subshift of finite type](/wiki/subshift-of-finite-type/), and asks how few [Wang tiles](/wiki/wang-tiles/) can lay it.
+Fix a base `b` and a plane code at that base, a bitmask over the `b x b` cells of level 1 read in row-major order; let `F` be its filled cells. The level-`level` render `R_level` is the `b^level x b^level` picture with a 1 at `(i, j)` exactly when every base-`b` digit pair `(i_k, j_k)`, `k < level`, lies in `F`. It is the [substitution](../wiki/substitution-tiling.md) that replaces a 1 by the level-1 tile and a 0 by the empty tile, run `level` times from one 1. This page reads the infinite design as a set of plane pictures closed under the shift: it counts the `k x k` windows that occur, asks whether finitely many forbidden windows cut the set out, as for a [subshift of finite type](../wiki/subshift-of-finite-type.md), and asks how few [Wang tiles](../wiki/wang-tiles.md) can lay it.
 
 ## The objects
 
@@ -80,7 +80,7 @@ A code is a **product** when `F = A x C` for a set `A` of row digits and a set `
 
 ## Not of finite type
 
-Write `X_r` for the pictures whose `r x r` blocks are all blocks of `X_F`. `X_F` is a [subshift of finite type](/wiki/subshift-of-finite-type/) exactly when `X_F = X_r` for some `r`: a finite forbidden list fits in some `r x r` square. Off the boundary codes `L_2` is the set of `2 x 2` blocks of `X_F`, and `X_2` is the cut it makes alone.
+Write `X_r` for the pictures whose `r x r` blocks are all blocks of `X_F`. `X_F` is a [subshift of finite type](../wiki/subshift-of-finite-type.md) exactly when `X_F = X_r` for some `r`: a finite forbidden list fits in some `r x r` square. Off the boundary codes `L_2` is the set of `2 x 2` blocks of `X_F`, and `X_2` is the cut it makes alone.
 
 **Proved, the scaling lemma.** Let `F` be neither empty nor a boundary code. If `X_F = X_r` and `b^n + 1 >= r`, then `sigma^n(Q)` lies in `X_F` for every picture `Q` of `X_2`, and `p(j b^n) >= |L_j(X_2)|` for every `j`, where `L_j(X_2)` is the set of `j x j` blocks of `X_2`. Every `r x r` block of `sigma^n(Q)` lies inside `sigma^n` of a `2 x 2` block of `Q`, which is in `L_2`, and `sigma^n` of a render window is a render window, a block of `X_F` by the first section; so `sigma^n(Q)` is in `X_r = X_F`. `sigma^n` sends distinct `j x j` blocks to distinct `j b^n x j b^n` blocks.
 
@@ -112,7 +112,7 @@ So `X_F` is strictly sofic, sofic and not of finite type, for the `6` codes at b
 
 ## The Wang face
 
-A set of [Wang tiles](/wiki/wang-tiles/) is a subshift of finite type with the tiles as letters, and any two-dimensional subshift of finite type is a Wang set after recoding by blocks. The Wang face of a design is the least Wang set whose tilings, after a map from tiles to `{0, 1}`, are exactly the pictures of `X_F`.
+A set of [Wang tiles](../wiki/wang-tiles.md) is a subshift of finite type with the tiles as letters, and any two-dimensional subshift of finite type is a Wang set after recoding by blocks. The Wang face of a design is the least Wang set whose tilings, after a map from tiles to `{0, 1}`, are exactly the pictures of `X_F`.
 
 **Proved.** For the `492` codes that carry a witness the map cannot be a recoding: being of finite type is kept by every conjugacy, so no Wang set is conjugate to `X_F`, and the face needs tiles that carry hidden information beyond the picture. For the `36` codes of finite type the face is one tile with four edges of one colour, mapped to `0` or to `1`.
 

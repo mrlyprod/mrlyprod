@@ -16,7 +16,7 @@ const demos = (site: Site, tail: string, ext: string) => {
 await main(spec, {
   html: (site) => [{ route: "/demos/", file: demoShell(site, "") }, ...demos(site, "/index.html", "/")],
   scripts: (site) => demos(site, "/widget.jsx", "/widget.js"),
-  disk: (site) => [["/figures/", site.input("figures").path], ["/research/", site.input("research").path]],
+  disk: (site) => [["/figures/", site.input("figures").path]],
   extra: (site, path) => (path === "/demos/tree.json" ? Response.json(demoTree(site)) : null),
   line: () => {
     const count = counted();

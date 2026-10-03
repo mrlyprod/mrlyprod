@@ -5,7 +5,7 @@ figure: research-arcs
 slug: arcs
 ---
 
-Fix a dimension-two design: a mask of filled cells on a `base x base` grid, substituted into itself. Level `level` is the full `side x side` grid, `side = base^level`, each cell filled or deleted. Every cell carries two quarter-circle arcs, each joining the midpoints of two adjacent edges, the two orientations of a [Truchet tile](/wiki/truchet-tiles/). A filled cell takes the arcs around its lower-left and upper-right corners; a deleted cell stays and takes the other pair, around its lower-right and upper-left corners. Arcs meeting at a shared edge midpoint join into curves: `L(level)` closed loops and some open strands ending on the boundary. The [arcs demo](/demos/arcs/) draws any design at bases 2 to 5 this way, its loops in one ink and its strands in another, counted and set against the laws below.
+Fix a dimension-two design: a mask of filled cells on a `base x base` grid, substituted into itself. Level `level` is the full `side x side` grid, `side = base^level`, each cell filled or deleted. Every cell carries two quarter-circle arcs, each joining the midpoints of two adjacent edges, the two orientations of a [Truchet tile](../wiki/truchet-tiles.md). A filled cell takes the arcs around its lower-left and upper-right corners; a deleted cell stays and takes the other pair, around its lower-right and upper-left corners. Arcs meeting at a shared edge midpoint join into curves: `L(level)` closed loops and some open strands ending on the boundary. The [arcs demo](/demos/arcs/) draws any design at bases 2 to 5 this way, its loops in one ink and its strands in another, counted and set against the laws below.
 
 ## The object
 

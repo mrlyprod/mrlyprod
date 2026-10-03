@@ -231,7 +231,7 @@ function App() {
     <Page crumb="morse" title="The Thue-Morse word is one digit rule built twice"
       sub="The most famous aperiodic sequence is a mrly object. Its letter is a digit rule, the same move every design makes; its famous plane pattern is the Kronecker power of one plus-minus tile; and it is the schedule along which the tree computed a component exponent exactly."
       controls={controls}
-      foot={<>Every letter, grid, run and verdict below comes out of the crates through wasm; the page only draws. The plus-minus render is the first on the site: a warm cell is plus one, a cool cell is minus one, and a dark cell is empty. Links: <a href={`../words${wordLink}`}>the words</a> drives a word by this schedule, <a href="../moire">moire</a> stacks one design over its scales, <a href="../sequences">the sequences</a> holds the ledger the designs write. A rule that changes with the scale is a word, and the grammar of one is in <a href="/research/magic/">the magic words note</a>.</>}>
+      foot={<>Every letter, grid, run and verdict below comes out of the crates through wasm; the page only draws. The plus-minus render is the first on the site: a warm cell is plus one, a cool cell is minus one, and a dark cell is empty. Links: <a href={`../words${wordLink}`}>the words</a> drives a word by this schedule, <a href="../moire">moire</a> stacks one design over its scales, <a href="../sequences">the sequences</a> holds the ledger the designs write. A rule that changes with the scale is a word, and the grammar of one is in <a href="/research/notes/magic/">the magic words note</a>.</>}>
 
       <div className="panel">
         <h2>the word <span>0 to 01, 1 to 10, beside the parity of the binary digit sum</span></h2>

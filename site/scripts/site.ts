@@ -35,11 +35,31 @@ const ICONS = [
 ].join("\n");
 
 const read = (p: string) => readFileSync(p, "utf8");
+const INDEX = "README.md";
+const sheets = (files: string[]) => files.filter((file) => !file.endsWith(`/${INDEX}`));
+const pageOf = (route: string) => `${route.slice(1)}index.html`;
 const math = (tex: string, display: boolean) =>
   katex.renderToString(tex, { output: "mathml", throwOnError: false, displayMode: display });
 const untag = (html: string) =>
   html.replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"');
 const brand = (name: string) => (name === SITE.title ? name : `${name} · ${SITE.title}`);
+
+function lede(text: string, max = 200) {
+  const all = summary(text, Infinity);
+  if (all.length <= max) return all;
+  const cut = all.slice(0, max + 1).lastIndexOf(". ");
+  const first = all.indexOf(". ");
+  return cut > 0 ? all.slice(0, cut + 1) : first > 0 ? all.slice(0, first + 1) : all;
+}
+
+/* FOLDERS */
+
+const HUB = "/research/";
+const WIKI = { name: "Wiki", href: `${HUB}wiki/`, figure: "site-wiki", text: "One concept per page, in the order you need them, for a reader with school mathematics." };
+const NOTES = { name: "Notes", href: `${HUB}notes/`, figure: "site-research", text: "The working notes behind the demos and the papers, one page per idea." };
+const CLAIMS = { name: "Claims", href: `${HUB}claims/`, figure: "research-index", text: "Every claim of the tree on one dated, tagged line with its witness." };
+const PAPERS = { name: "Papers", href: `${HUB}papers/`, figure: "site-papers", text: "Write-ups that print as papers, every claim tagged and every number generated." };
+const FOLDERS = [WIKI, NOTES, CLAIMS, PAPERS];
 
 /* LINKS */
 
@@ -371,17 +391,26 @@ async function demos(site: Site, route: Route): Promise<Output[]> {
   return out;
 }
 
+/* README */
+
+function intro(site: Site, file: string, out: Output[]) {
+  const text = read(file);
+  const name = title(text);
+  const html = `<h1 id="${escape(name.toLowerCase())}">${escape(name)}</h1>\n${md(text.replace(/^# .+\n/, ""), { math, link: links(site, file, out) })}`;
+  return { name, lead: lede(text), html };
+}
+
 /* PAPERS */
 
-type Paper = { slug: string; name: string; lead: string; date: string; revised: string; figure: string; shelf: string; body: string; file: string };
+type Paper = { slug: string; name: string; lead: string; date: string; revised: string; figure: string; shelf: string; body: string; file: string; href: string };
 
 function papers(site: Site): Paper[] {
   const home = site.input("papers");
-  return home.files
+  return sheets(home.files)
     .map((file) => {
       const slug = file.slice(home.path.length + 1, -3);
       const { data, body } = front(read(file));
-      return { slug, name: data.title ?? slug, lead: data.lead ?? summary(body), date: data.date ?? "", revised: data.revised ?? "", figure: data.figure || `paper-${slug}`, shelf: data.shelf ?? "", body, file };
+      return { slug, name: data.title ?? slug, lead: data.lead ?? lede(body), date: data.date ?? "", revised: data.revised ?? "", figure: data.figure || `paper-${slug}`, shelf: data.shelf ?? "", body, file, href: `${PAPERS.href}${slug}/` };
     })
     .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : a.slug.localeCompare(b.slug)));
 }
@@ -409,11 +438,11 @@ function written(site: Site, route: Route): Output[] {
     dateModified: p.revised || p.date || undefined,
     license: "https://creativecommons.org/licenses/by/4.0/",
   };
-  out.push({ path: `papers/${p.slug}/index.html`, bytes: shell(site, { route: route.route, name: p.name, description: p.lead, body, data, image: picture(site, p.figure, route.route, fig) }) });
+  out.push({ path: pageOf(route.route), bytes: shell(site, { route: route.route, name: p.name, description: p.lead, body, data, image: picture(site, p.figure, route.route, fig) }) });
   return out;
 }
 
-type Lane = { slug: string; blurb: string; name: string; md: string; published: string; revised: string; pdf: boolean };
+type Lane = { slug: string; blurb: string; name: string; md: string; published: string; revised: string; pdf: boolean; href: string };
 
 let SHELF = "";
 
@@ -438,6 +467,7 @@ function lanes(): Lane[] {
       published: date?.[1] ?? "",
       revised: date?.[2] ?? "",
       pdf: existsSync(join(lane, "paper.pdf")),
+      href: `${PAPERS.href}${slug}/`,
     };
   });
 }
@@ -450,7 +480,7 @@ function paper(site: Site, route: Route): Output[] {
   const out: Output[] = [];
   const fig = press(site, out);
   const lane = join(SHELF, p.slug);
-  const at = `papers/${p.slug}`;
+  const at = route.route.slice(1, -1);
   if (p.pdf) out.push({ path: `${at}/paper.pdf`, bytes: bytes(join(lane, "paper.pdf")) });
   out.push({ path: `${at}/paper.tex`, bytes: bytes(join(lane, "paper.tex")) });
   for (const file of walk(join(lane, "figures"))) out.push({ path: `${at}/figures/${file.slice(join(lane, "figures").length + 1)}`, bytes: bytes(file) });
@@ -463,7 +493,7 @@ function paper(site: Site, route: Route): Output[] {
     "@context": "https://schema.org",
     "@type": "ScholarlyArticle",
     headline: p.name,
-    description: p.blurb || summary(p.md),
+    description: p.blurb || lede(p.md),
     url: root + route.route,
     image: `${root}/figures/paper-${p.slug}-dark.png`,
     author: { "@type": "Organization", name: AUTHOR },
@@ -471,25 +501,25 @@ function paper(site: Site, route: Route): Output[] {
     dateModified: dated(p) || undefined,
     license: "https://creativecommons.org/licenses/by/4.0/",
   };
-  out.push({ path: `${at}/index.html`, bytes: shell(site, { route: route.route, name: p.name, description: p.blurb || summary(p.md), body, data, image: picture(site, `paper-${p.slug}`, route.route, fig) }) });
+  out.push({ path: `${at}/index.html`, bytes: shell(site, { route: route.route, name: p.name, description: p.blurb || lede(p.md), body, data, image: picture(site, `paper-${p.slug}`, route.route, fig) }) });
   return out;
 }
 
 function paperIndex(site: Site, route: Route): Output[] {
   const out: Output[] = [];
   const fig = press(site, out);
-  const lead = "Write-ups of MrlyMath, each claim a theorem with a proof, a computational fact with its exact finite domain, or a conjecture labelled as one; markdown that prints as a paper.";
-  const fresh = new Set(DRESS.papers.map((p) => `/papers/${p.slug}/`));
-  const nodes = wear(site, "/papers/", fig, route.route);
+  const top = intro(site, route.source as string, out);
+  const fresh = new Set(DRESS.papers.map((p) => p.href));
+  const nodes = wear(site, route.route, fig, route.route);
   const shelfNote = `<section><h2 id="shelf">The shelf</h2><p class="lead">The first editions, in LaTeX with a PDF each, deprecated: every paper is rewritten here in turn and the shelf is never edited.</p>${grid(nodes.filter((n) => !fresh.has(n.href ?? "")))}</section>`;
-  const body = `<div class="lede"><h1 id="papers">Papers</h1><p class="lead">${escape(lead)}</p></div>\n${grid(nodes.filter((n) => fresh.has(n.href ?? "")))}\n${nodes.some((n) => !fresh.has(n.href ?? "")) ? shelfNote : ""}`;
-  out.push({ path: "papers/index.html", bytes: shell(site, { route: route.route, name: "Papers", description: lead, body, type: "website", wide: true, bare: true, image: picture(site, "site-papers", route.route, fig) }) });
+  const body = `<article class="prose readme">${top.html}</article>\n${grid(nodes.filter((n) => fresh.has(n.href ?? "")))}\n${nodes.some((n) => !fresh.has(n.href ?? "")) ? shelfNote : ""}`;
+  out.push({ path: pageOf(route.route), bytes: shell(site, { route: route.route, name: top.name, description: top.lead, body, type: "website", wide: true, bare: true, image: picture(site, PAPERS.figure, route.route, fig) }) });
   return out;
 }
 
 /* RESEARCH */
 
-type Note = { file: string; name: string; md: string; home: boolean; topic: boolean; title: string; lead: string; figure: string };
+type Note = { file: string; name: string; md: string; home: boolean; topic: boolean; title: string; lead: string; figure: string; href: string };
 
 const SHARED = new Set(["REFS"]);
 
@@ -515,26 +545,43 @@ function notes(site: Site): Note[] {
     const name = file.slice(0, -3);
     const md = read(source);
     const figure = SHARED.has(name) ? "research-index" : `research-${name}`;
-    return { file, name, md, home: file === "README.md", topic: false, title: title(md) || name, lead: summary(md), figure };
+    const home = file === INDEX;
+    return { file, name, md, home, topic: false, title: title(md) || name, lead: lede(md), figure, href: home ? HUB : `${HUB}${name}/` };
   });
   const home = site.input("notes");
-  const topics = home.files.map((source) => {
+  const topics = sheets(home.files).map((source) => {
     const name = source.slice(home.path.length + 1, -3);
     const { data, body } = front(read(source));
-    return { file: `notes/${name}.md`, name, md: body, home: false, topic: true, title: data.title ?? name, lead: data.lead ?? summary(body), figure: data.figure || `research-${name}` };
+    return { file: `notes/${name}.md`, name, md: body, home: false, topic: true, title: data.title ?? name, lead: data.lead ?? lede(body), figure: data.figure || `research-${name}`, href: `${NOTES.href}${name}/` };
   });
   return [...shared, ...topics].sort((a, b) => (a.home ? -1 : b.home ? 1 : a.name.localeCompare(b.name)));
 }
 
+const noteCards = (list: Note[], fig: Fig, route: string) => dress(list.map((n) => ({ name: n.title, href: n.href })), marks(DRESS), fig, route);
+
 function researchIndex(site: Site, route: Route): Output[] {
-  const { note: n } = route.data as { note: Note; cards: string[][] };
+  const n = route.data as Note;
   const out: Output[] = [];
   const fig = press(site, out);
-  out.push({ path: `research/${n.file}`, bytes: n.md });
-  const lead = summary(n.md);
-  const prose = md(n.md.replace(/^# .+\n/, ""), { math, link: links(site, join(site.input("research").path, n.file), out) });
-  const body = `<div class="lede"><h1 id="research">Research</h1><p class="lead">${escape(lead)}</p></div>\n${grid(wear(site, "/research/", fig, route.route))}\n<article class="prose readme">${prose}</article>`;
-  out.push({ path: "research/index.html", bytes: shell(site, { route: route.route, name: "Research", description: lead, body, type: "website", wide: true, bare: true, image: picture(site, "site-research", route.route, fig) }) });
+  const lead = lede(n.md);
+  const text = n.md.replace(/^# .+\n/, "");
+  const cut = text.search(/^## /m);
+  const link = links(site, route.source as string, out);
+  const top = md(cut < 0 ? text : text.slice(0, cut), { math, link });
+  const rest = cut < 0 ? "" : `\n<article class="prose readme">${md(text.slice(cut), { math, link })}</article>`;
+  const doors = FOLDERS.map((one) => ({ name: one.name, href: one.href, figure: fig(one.figure, route.route), text: one.text }));
+  const ledgers = noteCards(DRESS.notes.filter((one) => !one.home && !one.topic), fig, route.route);
+  const body = `<article class="prose readme"><h1 id="research">Research</h1>\n${top}</article>\n${grid([...doors, ...ledgers])}${rest}`;
+  out.push({ path: pageOf(route.route), bytes: shell(site, { route: route.route, name: "Research", description: lead, body, type: "website", wide: true, bare: true, image: picture(site, "site-research", route.route, fig) }) });
+  return out;
+}
+
+function noteIndex(site: Site, route: Route): Output[] {
+  const out: Output[] = [];
+  const fig = press(site, out);
+  const top = intro(site, route.source as string, out);
+  const body = `<article class="prose readme">${top.html}</article>\n${grid(noteCards(DRESS.notes.filter((one) => one.topic), fig, route.route))}`;
+  out.push({ path: pageOf(route.route), bytes: shell(site, { route: route.route, name: top.name, description: top.lead, body, type: "website", wide: true, bare: true, image: picture(site, NOTES.figure, route.route, fig) }) });
   return out;
 }
 
@@ -542,12 +589,11 @@ function note(site: Site, route: Route): Output[] {
   const n = route.data as Note;
   const out: Output[] = [];
   const fig = press(site, out);
-  out.push({ path: `research/${n.file}`, bytes: n.md });
   const name = n.title;
   const lead = n.lead;
   const head = n.topic ? `<h1 id="${escape(n.name)}">${escape(name)}</h1>\n` : "";
   const used = new Set<string>();
-  const prose = md(n.md, { math, link: links(site, join(site.input("research").path, n.file), out), widget: widgets(site, used) });
+  const prose = md(n.md, { math, link: links(site, route.source as string, out), widget: widgets(site, used) });
   const body = `${hero(fig, n.figure, route.route, name)}\n${head}${n.name === "sequences" ? anchored(prose) : prose}`;
   const data = {
     "@context": "https://schema.org",
@@ -558,60 +604,80 @@ function note(site: Site, route: Route): Output[] {
     image: `${root}/figures/${n.figure}-dark.png`,
     author: { "@type": "Organization", name: AUTHOR },
   };
-  const at = n.home ? "research/index.html" : `research/${n.name}/index.html`;
   const scripts = [...used].sort().map((name) => `/demos/${name}/widget.js`);
-  out.push({ path: at, bytes: shell(site, { route: route.route, name, description: lead, body, type: n.home ? "website" : "article", data, image: picture(site, n.figure, route.route, fig), scripts }) });
+  out.push({ path: pageOf(route.route), bytes: shell(site, { route: route.route, name, description: lead, body, data, image: picture(site, n.figure, route.route, fig), scripts }) });
   return out;
 }
 
 /* CLAIMS */
 
-type Claim = { slug: string; title: string; md: string; file: string };
+type Claim = { slug: string; title: string; md: string; file: string; href: string };
 
 const TAGS = ["Proved", "Verified", "Conjecture", "Refuted"];
+const CLAIM = /^- (\d{4}-\d{2}-\d{2}) \[(Proved|Verified|Conjecture|Refuted)\] (.+)$/gm;
 const LINE = /<li>(\d{4}-\d{2}-\d{2}) \[(Proved|Verified|Conjecture|Refuted)\] /g;
 
 function claims(site: Site): Claim[] {
   const home = site.input("claims");
-  return home.files
+  return sheets(home.files)
     .map((file) => {
       const slug = file.slice(home.path.length + 1, -3);
       const md = read(file);
-      return { slug, title: title(md) || slug, md, file };
+      return { slug, title: title(md) || slug, md, file, href: `${CLAIMS.href}${slug}/` };
     })
     .sort((a, b) => a.title.localeCompare(b.title));
 }
 
-function discoveries(site: Site, route: Route): Output[] {
-  const list = route.data as Claim[];
+function tally(md: string) {
+  const counts = TAGS.map(() => 0);
+  let last = "";
+  for (const [, date, tag] of md.matchAll(CLAIM)) {
+    counts[TAGS.indexOf(tag!)]! += 1;
+    if (date! > last) last = date!;
+  }
+  return { counts, last, total: counts.reduce((a, b) => a + b, 0) };
+}
+
+function claimIndex(site: Site, route: Route): Output[] {
+  const list = route.data as [string, string, number[], string][];
   const out: Output[] = [];
   const fig = press(site, out);
-  const lead = "Every claim of the tree on one dated, tagged line with its witness, one section per topic, filtered by tag, topic and date.";
-  const counts = new Map<string, number>(TAGS.map((tag) => [tag, 0]));
-  const sections = list.map((c) => {
-    const html = md(c.md.replace(/^# .+\n/, ""), { math, link: links(site, c.file, out) }).replace(LINE, (_, date: string, tag: string) => {
-      counts.set(tag, (counts.get(tag) ?? 0) + 1);
-      return `<li data-date="${date}" data-tag="${tag.toLowerCase()}"><time>${date}</time> <b class="tag ${tag.toLowerCase()}">${tag}</b> `;
-    });
-    return `<section class="claims" id="${escape(c.slug)}" data-slug="${escape(c.slug)}"><h2 id="${escape(c.slug)}-claims">${escape(c.title)}</h2>${html}</section>`;
-  });
-  const total = [...counts.values()].reduce((a, b) => a + b, 0);
-  const chips = ["", ...TAGS].map((tag) => `<button type="button" data-tag="${tag.toLowerCase()}"${tag ? "" : ' class="on"'}>${tag || "All"} <span>${tag ? counts.get(tag) : total}</span></button>`).join("");
-  const topics = `<select aria-label="Topic"><option value="">Every topic</option>${list.map((c) => `<option value="${escape(c.slug)}">${escape(c.title)}</option>`).join("")}</select>`;
-  const since = `<label>Since <input type="date" aria-label="Since"></label>`;
-  const bar = `<form class="filter" onsubmit="return false">${chips}${topics}${since}<output>${total} claims</output></form>`;
-  const script = claimsScript();
-  const body = `${hero(fig, "research-index", route.route, "Discoveries")}\n<h1 id="discoveries">Discoveries</h1><p class="lead">${escape(lead)}</p>\n${bar}\n${sections.join("\n")}\n${script}`;
+  const top = intro(site, route.source as string, out);
+  const sums = TAGS.map((_, i) => list.reduce((a, row) => a + row[2][i]!, 0));
+  const head = `<tr><th>File</th>${TAGS.map((tag) => `<th class="right">${tag}</th>`).join("")}<th>Newest</th></tr>`;
+  const rows = list.map(([href, name, counts, last]) => `<tr><td><a href="${href}">${escape(name)}</a></td>${counts.map((n) => `<td class="right num">${n}</td>`).join("")}<td class="num"><time>${last}</time></td></tr>`);
+  const foot = `<tr><th>${list.length} files, ${sums.reduce((a, b) => a + b, 0)} claims</th>${sums.map((n) => `<th class="right num">${n}</th>`).join("")}<th></th></tr>`;
+  const table = `<h2 id="files">Every claims file</h2>\n<div class="table"><table><thead>${head}</thead><tbody>${rows.join("")}</tbody><tfoot>${foot}</tfoot></table></div>`;
+  const body = `${hero(fig, CLAIMS.figure, route.route, top.name)}\n${top.html}\n${table}`;
+  out.push({ path: pageOf(route.route), bytes: shell(site, { route: route.route, name: top.name, description: top.lead, body, type: "website", image: picture(site, CLAIMS.figure, route.route, fig) }) });
+  return out;
+}
+
+function claim(site: Site, route: Route): Output[] {
+  const c = route.data as { slug: string; title: string };
+  const file = route.source as string;
+  const text = read(file);
+  const out: Output[] = [];
+  const fig = press(site, out);
+  const { counts, last, total } = tally(text);
+  const lead = `${total} dated claim${total === 1 ? "" : "s"} on ${c.title}, each with its tag and its witness${last ? `; newest ${last}` : ""}.`;
+  const html = md(text.replace(/^# .+\n/, ""), { math, link: links(site, file, out) }).replace(
+    LINE,
+    (_, date: string, tag: string) => `<li data-date="${date}" data-tag="${tag.toLowerCase()}"><time>${date}</time> <b class="tag ${tag.toLowerCase()}">${tag}</b> `,
+  );
+  const chips = ["", ...TAGS].map((tag, i) => `<button type="button" data-tag="${tag.toLowerCase()}"${tag ? "" : ' class="on"'}>${tag || "All"} <span>${tag ? counts[i - 1] : total}</span></button>`).join("");
+  const bar = `<form class="filter" onsubmit="return false">${chips}<select hidden aria-label="Topic"><option value=""></option></select><label>Since <input type="date" aria-label="Since"></label><output>${total} claims</output></form>`;
+  const body = `<h1 id="${escape(c.slug)}">${escape(c.title)}</h1>\n<p class="meta"><a href="${CLAIMS.href}">${CLAIMS.name}</a> · ${escape(lead)}</p>\n${bar}\n<section class="claims" data-slug="${escape(c.slug)}">${html}</section>\n${claimsScript()}`;
   const data = {
     "@context": "https://schema.org",
     "@type": "Article",
-    headline: "Discoveries",
+    headline: c.title,
     description: lead,
     url: root + route.route,
-    image: `${root}/figures/research-index-dark.png`,
+    image: `${root}/figures/${CLAIMS.figure}-dark.png`,
     author: { "@type": "Organization", name: AUTHOR },
   };
-  out.push({ path: "research/discoveries/index.html", bytes: shell(site, { route: route.route, name: "Discoveries", description: lead, body, data, image: picture(site, "research-index", route.route, fig) }) });
+  out.push({ path: pageOf(route.route), bytes: shell(site, { route: route.route, name: `${c.title} claims`, description: lead, body, data, image: picture(site, CLAIMS.figure, route.route, fig) }) });
   return out;
 }
 
@@ -652,7 +718,7 @@ function page(site: Site, route: Route): Output[] {
   const slug = route.route.slice(1, -1);
   const { data, body } = front(read(source));
   const name = data.title ?? slug;
-  const lead = data.lead ?? summary(body);
+  const lead = data.lead ?? lede(body);
   const out: Output[] = [];
   const fig = press(site, out);
   const open = data.figure ? `${hero(fig, data.figure, route.route, name)}\n` : "";
@@ -673,7 +739,6 @@ let DRESS: Dress = { lanes: [], papers: [], notes: [], posts: [], demos: [], wik
 
 const FIXED: Record<string, string> = {
   "/": "site-home",
-  "/wiki/": "site-wiki",
   "/tools/": "site-tools",
   "/math/": "site-math",
   "/git/": "site-code",
@@ -685,14 +750,12 @@ const FIXED: Record<string, string> = {
 function marks(data: Dress): Map<string, Mark> {
   const map = new Map<string, Mark>();
   for (const d of data.demos) if (d.name) map.set(demoRoute(d.name), { figure: `demo-${d.name}`, text: d.blurb });
-  for (const p of data.papers) map.set(`/papers/${p.slug}/`, { figure: p.figure, text: p.lead, dates: marked(p) });
-  for (const p of data.lanes) map.set(`/papers/${p.slug}/`, { figure: `paper-${p.slug}`, text: p.blurb, dates: stamps(p) });
-  for (const n of data.notes) {
-    if (n.home) continue;
-    map.set(`/research/${n.name}/`, { figure: n.figure, text: n.lead });
-  }
+  for (const p of data.papers) map.set(p.href, { figure: p.figure, text: p.lead, dates: marked(p) });
+  for (const p of data.lanes) map.set(p.href, { figure: `paper-${p.slug}`, text: p.blurb, dates: stamps(p) });
+  for (const n of data.notes) if (!n.home) map.set(n.href, { figure: n.figure, text: n.lead });
   for (const p of data.posts) map.set(`/blog/${p.slug}/`, { figure: p.figure, text: p.lead, dates: [p.date] });
-  for (const e of data.wiki) map.set(wikiRoute(e.slug), { figure: e.figure, text: e.lead });
+  for (const e of data.wiki) map.set(e.href, { figure: e.figure, text: e.lead });
+  for (const one of FOLDERS) map.set(one.href, { figure: one.figure, text: one.text });
   for (const [href, figure] of Object.entries(FIXED)) map.set(href, { figure, text: "" });
   return map;
 }
@@ -747,23 +810,20 @@ function stats(site: Site, route: Route): Output[] {
 const MISSION = SITE.tagline;
 
 const DOORS = [
-  { name: "Wiki", href: "/wiki/", figure: "site-wiki", text: "One concept per page, in the order you need them, for a reader with school mathematics." },
+  WIKI,
   { name: "Demos", href: "/demos/", figure: "site-demos", text: "Browser pages that draw a design and the numbers around it, live." },
-  { name: "Discoveries", href: "/research/discoveries/", figure: "research-index", text: "Every claim of the tree on one dated, tagged line with its witness." },
-  { name: "Papers", href: "/papers/", figure: "site-papers", text: "Write-ups that print as papers, every claim tagged and every number generated." },
-  { name: "Research", href: "/research/", figure: "site-research", text: "The working notes behind the demos and the papers, one page per idea." },
+  CLAIMS,
+  PAPERS,
+  { name: "Research", href: HUB, figure: "site-research", text: "The whole tree in one place: the wiki, the notes, the claims, the papers and the law they follow." },
 ];
 
-type Newest = { date: string; tag: string; text: string; slug: string; file: string };
+type Newest = { date: string; tag: string; text: string; title: string; file: string; href: string };
 
 function newest(list: Claim[]): Newest | null {
   let best: Newest | null = null;
-  for (const c of list) {
-    for (const line of c.md.split("\n")) {
-      const hit = line.match(/^- (\d{4}-\d{2}-\d{2}) \[(Proved|Verified|Conjecture|Refuted)\] (.+)$/);
-      if (hit && (!best || hit[1]! > best.date)) best = { date: hit[1]!, tag: hit[2]!, text: hit[3]!, slug: c.slug, file: c.file };
-    }
-  }
+  for (const c of list)
+    for (const [, date, tag, text] of c.md.matchAll(CLAIM))
+      if (!best || date! > best.date) best = { date: date!, tag: tag!, text: text!, title: c.title, file: c.file, href: c.href };
   return best;
 }
 
@@ -772,13 +832,13 @@ function home(site: Site, route: Route): Output[] {
   const out: Output[] = [];
   const fig = press(site, out);
   const latestClaim = claim
-    ? `<section><h2 id="newest">Newest claim</h2><p class="lead"><time>${claim.date}</time> <b class="chip ${claim.tag.toLowerCase()}">${claim.tag}</b> ${inline(claim.text, { math, link: links(site, claim.file, out) })}</p><p class="lead"><a href="/research/discoveries/#${escape(claim.slug)}">Every claim, dated and tagged</a></p></section>`
+    ? `<section><h2 id="newest">Newest claim</h2><p class="lead"><time>${claim.date}</time> <b class="chip ${claim.tag.toLowerCase()}">${claim.tag}</b> ${inline(claim.text, { math, link: links(site, claim.file, out) })}</p><p class="lead">From <a href="${claim.href}">${escape(claim.title)}</a>. <a href="${CLAIMS.href}">Every claim, dated and tagged</a>.</p></section>`
     : "";
-  const latest = [...fresh.map((p) => ({ name: p.name, slug: p.slug, at: p.revised || p.date })), ...list.map((p) => ({ name: p.name, slug: p.slug, at: dated(p) }))]
+  const latest = [...fresh.map((p) => ({ name: p.name, href: p.href, at: p.revised || p.date })), ...list.map((p) => ({ name: p.name, href: p.href, at: dated(p) }))]
     .map((p, i) => ({ p, i }))
     .sort((a, b) => (a.p.at < b.p.at ? 1 : a.p.at > b.p.at ? -1 : a.i - b.i))
     .slice(0, 3)
-    .map(({ p }) => ({ name: p.name, href: `/papers/${p.slug}/` }));
+    .map(({ p }) => ({ name: p.name, href: p.href }));
   const doors = DOORS.map((d) => ({ name: d.name, href: d.href, figure: fig(d.figure, "/"), text: d.text }));
   const first = posted[0];
   const news = first
@@ -827,11 +887,11 @@ function thin(site: Site, route: Route): Output[] {
 
 /* WIKI */
 
-type Entry = { slug: string; name: string; lead: string; figure: string; needs: string[]; body: string; file: string };
+type Entry = { slug: string; name: string; lead: string; figure: string; needs: string[]; body: string; file: string; href: string };
 
 type Concept = Omit<Entry, "body" | "file"> & { before: { slug: string; name: string }[]; after: { slug: string; name: string }[] };
 
-const WIKI = "One concept per page, in the order you need them, for a reader with school mathematics.";
+const wikiRoute = (slug: string) => `${WIKI.href}${slug}/`;
 
 function ordered(list: Entry[]): Entry[] {
   const byslug = new Map(list.map((e) => [e.slug, e]));
@@ -852,18 +912,16 @@ function ordered(list: Entry[]): Entry[] {
 function wiki(site: Site): Entry[] {
   const home = site.input("wiki");
   if (home.missing) return [];
-  const list = home.files.map((file) => {
+  const list = sheets(home.files).map((file) => {
     const slug = file.slice(home.path.length + 1, -3);
     const { data, body } = front(read(file));
     const needs = (data.prerequisites ?? "").split(",").map((s: string) => s.trim()).filter(Boolean);
-    return { slug, name: data.title ?? slug, lead: data.lead ?? summary(body), figure: data.figure || `wiki-${slug}`, needs, body, file };
+    return { slug, name: data.title ?? slug, lead: data.lead ?? lede(body), figure: data.figure || `wiki-${slug}`, needs, body, file, href: wikiRoute(slug) };
   });
   const known = new Set(list.map((e) => e.slug));
-  for (const e of list) for (const need of e.needs) if (!known.has(need)) throw new Error(`site: wiki/${e.slug}.md needs ${need}, and wiki/${need}.md does not exist`);
+  for (const e of list) for (const need of e.needs) if (!known.has(need)) throw new Error(`site: research/wiki/${e.slug}.md needs ${need}, and research/wiki/${need}.md does not exist`);
   return ordered(list);
 }
-
-const wikiRoute = (slug: string) => `/wiki/${slug}/`;
 
 function concepts(list: Entry[]): [Concept, string][] {
   const name = (slug: string) => ({ slug, name: list.find((e) => e.slug === slug)?.name ?? slug });
@@ -913,7 +971,7 @@ function concept(site: Site, route: Route): Output[] {
     author: { "@type": "Organization", name: AUTHOR },
   };
   const scripts = [...used].sort().map((name) => `/demos/${name}/widget.js`);
-  out.push({ path: `wiki/${c.slug}/index.html`, bytes: shell(site, { route: route.route, name: c.name, description: c.lead, body, data, image: picture(site, c.figure, route.route, fig), scripts }) });
+  out.push({ path: pageOf(route.route), bytes: shell(site, { route: route.route, name: c.name, description: c.lead, body, data, image: picture(site, c.figure, route.route, fig), scripts }) });
   return out;
 }
 
@@ -939,14 +997,15 @@ function wikiIndex(site: Site, route: Route): Output[] {
   const list = (route.data as [string, string, string, string, string[]][]).map(([slug, name, lead, figure, needs]) => ({ slug, name, lead, figure, needs }));
   const out: Output[] = [];
   const fig = press(site, out);
+  const top = intro(site, route.source as string, out);
   const names = new Map(list.map((e) => [e.slug, e.name]));
   const deep = depths(list);
   const rows = new Map<number, Leaf_[]>();
   for (const e of list) rows.set(deep.get(e.slug)!, [...(rows.get(deep.get(e.slug)!) ?? []), e]);
   const sections = [...rows.keys()].sort((a, b) => a - b).map((n) => `<section><h2 id="step-${n}">${step(n)}</h2><div class="gallery grid graph">${rows.get(n)!.map((e) => tile(fig, route.route, e, names)).join("")}</div></section>`);
-  const order = list.length ? `<p class="lead">Every page needs only the pages above it.</p>` : "";
-  const body = `${hero(fig, "site-wiki", route.route, "Wiki")}\n<div class="lede"><h1 id="wiki">Wiki</h1><p class="lead">${escape(WIKI)}</p>${order}</div>\n${sections.join("\n")}`;
-  out.push({ path: "wiki/index.html", bytes: shell(site, { route: route.route, name: "Wiki", description: WIKI, body, type: "website", wide: true, bare: true, image: picture(site, "site-wiki", route.route, fig) }) });
+  const order = list.length ? `\n<p>Every page needs only the pages above it.</p>` : "";
+  const body = `${hero(fig, WIKI.figure, route.route, top.name)}\n<article class="prose readme">${top.html}${order}</article>\n${sections.join("\n")}`;
+  out.push({ path: pageOf(route.route), bytes: shell(site, { route: route.route, name: top.name, description: top.lead, body, type: "website", wide: true, bare: true, image: picture(site, WIKI.figure, route.route, fig) }) });
   return out;
 }
 
@@ -969,6 +1028,11 @@ const counts = { papers: 0, research: 0, blog: 0, demos: 0, wiki: 0 };
 
 let MAP: Lists = { wiki: [], notes: [], claims: [], papers: [], lanes: [], posts: [], math: [], pages: [] };
 
+const folder = (site: Site, input: string, one: { name: string; href: string }, kind: string, files: string[], data?: unknown): Route => {
+  const readme = join(site.input(input).path, INDEX);
+  return { route: one.href, kind, name: one.name, data, source: readme, inputs: [readme, ...files] };
+};
+
 async function collect(site: Site) {
   SHELF = await shelf();
   const paperList = papers(site);
@@ -981,9 +1045,9 @@ async function collect(site: Site) {
   const claimList = claims(site);
   const wikiList = wiki(site);
   readers(demoList, [
-    ...noteList.filter((n) => !n.home).map((n) => ({ name: n.title, href: `/research/${n.name}/`, md: n.md })),
-    ...paperList.map((p) => ({ name: p.name, href: `/papers/${p.slug}/`, md: p.body })),
-    ...wikiList.map((e) => ({ name: e.name, href: wikiRoute(e.slug), md: e.body })),
+    ...noteList.filter((n) => !n.home).map((n) => ({ name: n.title, href: n.href, md: n.md })),
+    ...paperList.map((p) => ({ name: p.name, href: p.href, md: p.body })),
+    ...wikiList.map((e) => ({ name: e.name, href: e.href, md: e.body })),
   ]);
   counts.papers = laneList.length + paperList.length;
   counts.research = noteList.length;
@@ -991,10 +1055,10 @@ async function collect(site: Site) {
   counts.demos = demoList.length;
   counts.wiki = wikiList.length;
   const lists = {
-    wiki: wikiList.map((e) => ({ name: e.name, href: wikiRoute(e.slug) })),
+    wiki: wikiList.map((e) => ({ name: e.name, href: e.href })),
     demos: shelved(demoList),
-    papers: [...paperList, ...laneList].map((p) => ({ name: p.name, href: `/papers/${p.slug}/` })),
-    research: [...(claimList.length ? [{ name: "Discoveries", href: "/research/discoveries/" }] : []), ...noteList.filter((n) => !n.home).map((n) => ({ name: n.title, href: `/research/${n.name}/` }))],
+    papers: [...paperList, ...laneList].map((p) => ({ name: p.name, href: p.href })),
+    research: [...(claimList.length ? [{ name: CLAIMS.name, href: CLAIMS.href, first: true }] : []), ...noteList.filter((n) => !n.home).map((n) => ({ name: n.title, href: n.href }))],
     blog: postList.map((p) => ({ name: p.name, href: `/blog/${p.slug}/` })),
   };
   NAV = tree(lists);
@@ -1010,45 +1074,45 @@ async function collect(site: Site) {
     inputs: [readme],
   });
   for (const route of Object.keys(THIN)) routes.push({ route, kind: "thin", name: THIN[route]!.name });
-  const shelfOfWiki = site.input("wiki");
-  routes.push({ route: "/wiki/", kind: "wiki", name: "Wiki", data: wikiList.map((e) => [e.slug, e.name, e.lead, e.figure, e.needs]), source: shelfOfWiki.path, inputs: shelfOfWiki.missing ? [] : wikiList.map((e) => e.file) });
+  if (wikiList.length) routes.push(folder(site, "wiki", WIKI, "wiki", wikiList.map((e) => e.file), wikiList.map((e) => [e.slug, e.name, e.lead, e.figure, e.needs])));
   for (const [c, file] of concepts(wikiList)) {
-    routes.push({ route: wikiRoute(c.slug), kind: "concept", name: c.name, data: c, source: file, inputs: [file, ...embeds(site, read(file))] });
+    routes.push({ route: c.href, kind: "concept", name: c.name, data: c, source: file, inputs: [file, ...embeds(site, read(file))] });
   }
   const names = site.input("names");
   if (!names.missing) routes.push({ route: "/math/", kind: "math", name: "Math", source: names.files[0]!, inputs: names.files });
   routes.push(group);
   if (laneList.length || paperList.length) {
-    const index = join(SHELF, "README.md");
-    routes.push({ route: "/papers/", kind: "papers", name: "Papers", data: { lanes: laneList, papers: paperList.map((p) => [p.slug, p.name, p.lead, p.date, p.revised, p.figure]) }, source: index, inputs: [index, ...paperList.map((p) => p.file)] });
+    const index = join(SHELF, INDEX);
+    const data = { lanes: laneList, papers: paperList.map((p) => [p.slug, p.name, p.lead, p.date, p.revised, p.figure]) };
+    routes.push({ ...folder(site, "papers", PAPERS, "papers", [index, ...paperList.map((p) => p.file)], data), urls: [{ route: PAPERS.href, name: PAPERS.name, source: index }] });
     for (const p of paperList) {
-      routes.push({ route: `/papers/${p.slug}/`, kind: "written", name: p.name, data: p, source: p.file, inputs: [p.file] });
+      routes.push({ route: p.href, kind: "written", name: p.name, data: p, source: p.file, inputs: [p.file] });
     }
     for (const p of laneList) {
       const lane = join(SHELF, p.slug);
-      routes.push({ route: `/papers/${p.slug}/`, kind: "paper", name: p.name, data: p, source: lane, inputs: [lane] });
+      routes.push({ route: p.href, kind: "paper", name: p.name, data: p, source: lane, inputs: [lane] });
     }
   }
   const notesHome = site.input("research").path;
   if (claimList.length) {
-    routes.push({
-      route: "/research/discoveries/",
-      kind: "discoveries",
-      name: "Discoveries",
-      data: claimList.map((c) => c.slug),
-      source: site.input("claims").path,
-      inputs: claimList.map((c) => c.file),
+    const rows = claimList.map((c) => {
+      const { counts, last } = tally(c.md);
+      return [c.href, c.title, counts, last];
     });
+    routes.push(folder(site, "claims", CLAIMS, "claims", claimList.map((c) => c.file), rows));
+    for (const c of claimList) routes.push({ route: c.href, kind: "claim", name: c.title, data: { slug: c.slug, title: c.title }, source: c.file, inputs: [c.file] });
   }
+  const topics = noteList.filter((n) => n.topic);
+  if (topics.length) routes.push(folder(site, "notes", NOTES, "notes", topics.map((n) => join(notesHome, n.file))));
   for (const n of noteList) {
     const source = join(notesHome, n.file);
     routes.push({
-      route: n.home ? "/research/" : `/research/${n.name}/`,
+      route: n.href,
       kind: n.home ? "research" : "note",
       name: n.home ? "Research" : n.title,
-      data: n.home ? { note: n, cards: noteList.map((one) => [one.name, one.title, one.lead, one.figure]) } : n,
+      data: n,
       source,
-      inputs: [source, ...embeds(site, n.md)],
+      inputs: n.home ? noteList.filter((one) => !one.topic).map((one) => join(notesHome, one.file)) : [source, ...embeds(site, n.md)],
     });
   }
   const written = site.input("pages");
@@ -1079,9 +1143,11 @@ const KINDS: Record<string, (site: Site, route: Route) => Output[] | Promise<Out
   papers: paperIndex,
   paper,
   written,
+  notes: noteIndex,
   note,
   research: researchIndex,
-  discoveries,
+  claims: claimIndex,
+  claim,
   page,
   menu,
   cart,
@@ -1096,7 +1162,6 @@ const KINDS: Record<string, (site: Site, route: Route) => Output[] | Promise<Out
 function draw(site: Site, route: Route) {
   const fn = KINDS[route.kind ?? ""];
   if (!fn) throw new Error(`site: no template for ${route.route}`);
-  if (route.kind === "discoveries") return fn(site, { ...route, data: claims(site) });
   return fn(site, route);
 }
 

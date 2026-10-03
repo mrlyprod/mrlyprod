@@ -14,6 +14,7 @@ fn the_ledger_claims_hold() {
         .expect("the claims folder is readable")
         .map(|entry| entry.expect("an entry reads").path())
         .filter(|path| path.extension().is_some_and(|ext| ext == "md"))
+        .filter(|path| path.file_name().is_some_and(|name| name != "README.md"))
         .collect();
     files.sort();
     let text: String = files

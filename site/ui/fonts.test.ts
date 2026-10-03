@@ -5,7 +5,7 @@ import { join, resolve } from "node:path";
 const site = resolve(import.meta.dir, "..");
 const dist = process.env.MRLY_DIST ? resolve(process.env.MRLY_DIST) : join(site, "dist");
 const master = resolve(site, "..", "files", "fonts", "symbols.ttf");
-const READS = ["wiki", "papers"];
+const READS = ["research/wiki", "research/papers"];
 const FACE = /@font-face\s*\{[^}]*?font-family:\s*"Noto Sans Symbols 2"[^}]*?unicode-range:\s*([^;]+);[^}]*\}/;
 const DROP = /<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi;
 const TAG = /<[^>]*>/g;

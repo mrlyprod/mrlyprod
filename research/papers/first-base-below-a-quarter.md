@@ -128,7 +128,7 @@ Fact 4.8 verifies (4.1) at `w = w_q` for every `125 <= q < 3000`. For `q >= 3000
 
 ## The Mertens bar
 
-Write `M_F(x) = sum_(n in S_F, n <= x) mu(n)`, with `mu` the [Mobius function](/wiki/mobius-function/), and `S_mu(x, theta) = sum_(n <= x) mu(n) e(n theta)`.
+Write `M_F(x) = sum_(n in S_F, n <= x) mu(n)`, with `mu` the [Mobius function](../wiki/mobius-function.md), and `S_mu(x, theta) = sum_(n <= x) mu(n) e(n theta)`.
 
 **Theorem 5.1 (the Mertens bar).** Assume the generalized Riemann hypothesis, that `L(s, chi)` has no zero in `Re s > 1/2` for every Dirichlet character `chi`. Let `F` be any digit set at base `q` with `k >= 2`, dimension `alpha` and `l^1` exponent `alpha_1`. Then for every `eps > 0` and all `x >= 2`,
 

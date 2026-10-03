@@ -40,8 +40,10 @@ const word = (href) => {
   return slug ? (slug[0].toUpperCase() + slug.slice(1)).replace(/-/g, ' ') : '';
 };
 
-const flat = (nodes) => nodes.flatMap((node) => (node.nodes?.length ? flat(node.nodes) : node.href ? [{ name: word(node.href), href: node.href }] : []));
+const flat = (nodes) => nodes.flatMap((node) => (node.nodes?.length ? flat(node.nodes) : node.href ? [{ name: word(node.href), href: node.href, first: !!node.first }] : []));
+
+const order = (a, b) => b.first - a.first || a.name.localeCompare(b.name);
 
 export function sidebar(lists = {}) {
-  return tree(lists).map(({ nodes, ...node }) => (nodes?.length ? { ...node, nodes: flat(nodes).sort((a, b) => a.name.localeCompare(b.name)) } : node));
+  return tree(lists).map(({ nodes, ...node }) => (nodes?.length ? { ...node, nodes: flat(nodes).sort(order).map(({ name, href }) => ({ name, href })) } : node));
 }
