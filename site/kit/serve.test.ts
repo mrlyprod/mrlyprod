@@ -1,4 +1,7 @@
-import { expect, test } from "bun:test";
+import { afterAll, expect, test } from "bun:test";
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import type { Output, Route, Site, Spec } from "./ssg/build.ts";
 import { find, serve } from "./serve.ts";
 
@@ -84,4 +87,61 @@ test("a traversal path is a miss and a 404", async () => {
   expect(await find(spec, site, "/../site.json")).toBeNull();
   expect(await find(spec, site, "/about/./index.html")).toBeNull();
   expect((await serve(spec, site, "/../site.json")).status).toBe(404);
+});
+
+/* MODES */
+
+const home = join(tmpdir(), `kitserve-${process.pid}`);
+rmSync(home, { recursive: true, force: true });
+mkdirSync(home, { recursive: true });
+writeFileSync(join(home, "app.js"), 'document.title = "the-app-runs";\n');
+afterAll(() => rmSync(home, { recursive: true, force: true }));
+
+const moded = {
+  root: home,
+  config: { root: "https://demo.test", modes: { "/app/": { mode: "spa", deep: true }, "/now/": "ssr" } },
+  routes: [{ route: "/app/", entry: join(home, "app.js") }, { route: "/now/" }, { route: "/404.html", hidden: true }],
+  copies: [],
+  made: new Set<string>(),
+} as unknown as Site;
+
+const live = {
+  render: (_: Site, route: Route) => [{ path: `${route.route.slice(1)}index.html`, bytes: `<h1>${route.route} at request</h1>` }],
+  spa: {
+    entries: () => [join(home, "app.js")],
+    page: (_: Site, route: Route, shell: { script: string }) => `<h1>${route.route} shell</h1><script type="module" src="${shell.script}"></script>`,
+  },
+} as unknown as Spec;
+
+test("a deep shell answers every path under its route", async () => {
+  const top = await serve(live, moded, "/app/");
+  const below = await serve(live, moded, "/app/kit/serve.ts");
+  expect(below.status).toBe(200);
+  expect(below.headers.get("content-type")).toBe("text/html; charset=utf-8");
+  expect(await below.text()).toBe(await top.text());
+  expect((await serve(live, moded, "/app/any/folder/")).status).toBe(200);
+});
+
+test("an spa route's script answers at the path its shell names", async () => {
+  const shell = await (await serve(live, moded, "/app/")).text();
+  expect(shell).toContain('src="/app.js"');
+  const hit = await serve(live, moded, "/app.js");
+  expect(hit.headers.get("content-type")).toBe("text/javascript; charset=utf-8");
+  expect(await hit.text()).toContain("the-app-runs");
+});
+
+test("a miss that no spa entry lands on never starts the bundle", async () => {
+  let asked = 0;
+  const cold = { ...moded } as unknown as Site;
+  const lazy = { ...live, spa: { ...live.spa!, plugins: () => (asked++, []) } } as unknown as Spec;
+  expect(await find(lazy, cold, "/nowhere.js")).toBeNull();
+  expect(asked).toBe(0);
+  expect((await find(lazy, cold, "/app.js"))!.status).toBe(200);
+  expect(asked).toBe(1);
+});
+
+test("an ssr route is rendered when it is asked for", async () => {
+  const hit = await serve(live, moded, "/now/");
+  expect(hit.status).toBe(200);
+  expect(await hit.text()).toBe("<h1>/now/ at request</h1>");
 });

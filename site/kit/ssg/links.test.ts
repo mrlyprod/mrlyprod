@@ -24,11 +24,10 @@ const routes: Route[] = [
 ];
 
 const code: Route[] = [
-  { route: "/git/", kind: "gitdir" },
-  { route: "/git/crates/mrly/", kind: "gitdir" },
-  { route: "/git/crates/mrly/README.md", kind: "gitfile" },
-  { route: "/git/research/lab/walk.rs", kind: "gitfile" },
-  { route: "/git/files/figures/carpet.png", kind: "gitfile" },
+  { route: "/git/", kind: "git" },
+  { route: "/raw/crates/mrly/README.md", kind: "raw" },
+  { route: "/raw/research/lab/walk.rs", kind: "raw" },
+  { route: "/raw/files/figures/carpet.png", kind: "raw" },
 ];
 
 function site(git: boolean): Site {

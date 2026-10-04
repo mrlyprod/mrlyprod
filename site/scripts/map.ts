@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { basename, join, relative } from "node:path";
-import { config, rawPath } from "../kit/git/git.ts";
+import { config } from "../kit/git/git.ts";
+import { rawPath } from "../kit/git/view.ts";
 import type { Row, Section, Site } from "../kit/ssg/build.ts";
 import { front, summary, title } from "../kit/ssg/md.ts";
 

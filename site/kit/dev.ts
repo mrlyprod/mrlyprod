@@ -2,6 +2,7 @@ import type { HTMLBundle } from "bun";
 import { existsSync, statSync, watch, type FSWatcher } from "node:fs";
 import { relative, resolve, sep } from "node:path";
 import { escape, forget, scan, type Output, type Site, type Spec } from "./ssg/build.ts";
+import { decode } from "./git/view.ts";
 import { clean, find, lost, reply, type } from "./serve.ts";
 
 /* OPTIONS */
@@ -107,7 +108,7 @@ export async function main(spec: Spec, options: Options = {}) {
     const done = await Bun.build({ entrypoints: [entry.file], root: site.root, define: { "process.env.NODE_ENV": '"development"' }, naming: { asset: "[name]-[hash].[ext]" } });
     if (!done.success) throw new Error(`dev: ${relative(site.root, entry.file)} failed to bundle\n${done.logs.join("\n")}`);
     for (const item of done.outputs) {
-      const at = item.path.replace(/^\.\//, "");
+      const at = item.kind === "entry-point" ? entry.route.slice(1) : item.path.replace(/^\.\//, "");
       built.set(`/${at}`, { path: at, bytes: new Uint8Array(await item.arrayBuffer()) });
     }
     const hit = built.get(path);
@@ -137,7 +138,7 @@ export async function main(spec: Spec, options: Options = {}) {
       message() {},
     },
     async fetch(request) {
-      const path = decodeURIComponent(new URL(request.url).pathname);
+      const path = decode(new URL(request.url).pathname);
       if (path === "/__dev") return server.upgrade(request) ? undefined : new Response("upgrade failed", { status: 400 });
       try {
         return await dressed(await answer(path));

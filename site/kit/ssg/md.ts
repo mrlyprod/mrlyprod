@@ -7,6 +7,9 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import { visit } from "unist-util-visit";
+import { escape } from "./text.ts";
+
+export { escape };
 
 /* TYPES */
 
@@ -21,10 +24,6 @@ export type Options = {
 type Raw = { type: "raw"; value: string };
 
 /* TEXT */
-
-const ESC: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" };
-
-export const escape = (text: unknown) => String(text).replace(/[&<>"]/g, (c) => ESC[c]!);
 
 export const slug = (text: string) => text.toLowerCase().replace(/[^\p{L}\p{N} _-]/gu, "").replace(/ /g, "-");
 

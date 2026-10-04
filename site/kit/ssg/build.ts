@@ -2,9 +2,11 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmdirSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { basename, dirname, extname, join, normalize, relative, resolve } from "node:path";
 import { deflateSync } from "node:zlib";
-import { collect as gitRoutes, forest, isGit, mirror, owner, print as gitPrint, render as gitRender, type Hooks } from "../git/git.ts";
+import { TREE, collect as gitRoutes, forest, isGit, mirror, print as gitPrint, render as gitRender, type Hooks } from "../git/git.ts";
+import { owner } from "../git/view.ts";
 import { collect as blogRoutes, isBlog, render as blogRender, type Hooks as Posts } from "./blog.ts";
 import { index, stamp, type Index } from "./links.ts";
+import { check, deeps, fence, mode, packed, render as spaRender, seal, sealed, type Hooks as Clients, type Mode, type Rule } from "./modes.ts";
 
 /* TYPES */
 
@@ -12,7 +14,7 @@ export type Bytes = string | Uint8Array;
 
 export type Output = { path: string; bytes: Bytes; type?: string };
 
-export type Link = { route: string; name?: string; at?: string; source?: string };
+export type Link = { route: string; name?: string; at?: string; source?: string; entry?: string };
 
 export type Route = {
   route: string;
@@ -25,6 +27,8 @@ export type Route = {
   at?: string;
   hidden?: boolean;
   sitemap?: boolean;
+  mode?: Mode;
+  entry?: string;
 };
 
 export type Node = { name: string; href?: string; nodes?: Node[]; open?: boolean; lazy?: string; icon?: string; figure?: { dark: string; light: string }; text?: string; dates?: string[] };
@@ -68,6 +72,7 @@ export type Config = {
   inputs?: Record<string, { path: string; ext?: string; deep?: boolean }>;
   kit?: Decl;
   assets?: Decl[];
+  modes?: Record<string, Rule>;
   manifest?: Record<string, unknown>;
   robots?: { disallow?: string[] };
   llms?: { about?: string; legend?: string; links?: Row[] };
@@ -90,6 +95,7 @@ export type Spec = {
   icons?: Icons;
   git?: Hooks;
   blog?: Posts;
+  spa?: Clients;
   asset?: (name: string, body: Uint8Array) => Bytes;
 };
 
@@ -279,7 +285,7 @@ export async function scan(spec: Spec): Promise<Site> {
   site.nav = picked.nav ?? [];
   const written = blogRoutes(site);
   if (written.routes.length) site.routes = [...site.routes, ...written.routes];
-  const repo = gitRoutes(site);
+  const repo = gitRoutes(site, spec.git);
   if (repo.routes.length) {
     site.routes = [...site.routes, ...repo.routes];
     if (repo.node && !shows(site.nav, repo.node.href!)) site.nav = [...site.nav, repo.node];
@@ -311,10 +317,12 @@ export function label(site: Site, file: string): string {
 }
 
 export function fingerprint(site: Site, route: Route, spec?: Spec): string {
-  if (isGit(route)) return gitPrint(site, route, spec?.git);
+  const pack = sealed(site, route);
+  if (isGit(route)) return pack ? digest([gitPrint(site, route, spec?.git), pack]).slice(0, 16) : gitPrint(site, route, spec?.git);
   const files = route.inputs ?? (route.source ? [route.source] : []);
   const named = files.map((file) => [label(site, file), file] as const).sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
   const parts: Bytes[] = [route.route, route.kind ?? "", JSON.stringify(route.data ?? null), site.stamp];
+  if (pack) parts.push(pack);
   for (const [name, file] of named) {
     parts.push(name);
     if (!existsSync(file)) {
@@ -330,7 +338,9 @@ export function fingerprint(site: Site, route: Route, spec?: Spec): string {
 /* RENDER */
 
 export async function render(site: Site, route: Route, spec: Spec): Promise<Output[]> {
-  if (isGit(route)) return spec.git?.page ? gitRender(site, route, spec) : [];
+  if (isGit(route) && !spec.git?.page) return [];
+  if (mode(site, route) === "spa") return spaRender(site, route, spec);
+  if (isGit(route)) return gitRender(site, route, spec);
   if (isBlog(route)) return spec.blog?.page ? blogRender(site, route, spec) : [];
   return await spec.render(site, route);
 }
@@ -468,8 +478,11 @@ function llms(site: Site, root: string, spec: Spec): string {
   return `${blocks.filter(Boolean).join("\n\n")}\n`;
 }
 
-export async function globals(site: Site, spec: Spec): Promise<Output[]> {
+export const PACK = "@spa";
+
+export async function globals(site: Site, spec: Spec, lean = false): Promise<Output[]> {
   const out: Output[] = [...site.copies];
+  if (!lean) out.push(...(await packed(site, spec)));
   const root = clean(site.config.root as string);
   const maps = sitemaps(links(site, spec), root);
   out.push(...maps);
@@ -477,8 +490,8 @@ export async function globals(site: Site, spec: Spec): Promise<Output[]> {
   if (site.config.llms) out.push({ path: "llms.txt", bytes: llms(site, root, spec) });
   if (site.config.manifest) out.push({ path: "manifest.webmanifest", bytes: JSON.stringify(site.config.manifest, null, 2) + "\n" });
   if (spec.icons) out.push(...icons(spec.icons));
-  const wood = forest(site);
-  if (wood) out.push({ path: "git/tree.json", bytes: JSON.stringify(wood), type: "application/json" });
+  const wood = forest(site, spec.git);
+  if (wood) out.push({ path: TREE, bytes: JSON.stringify(wood), type: "application/json" });
   const pub = site.config.inputs?.public ? site.input("public") : null;
   if (pub) for (const file of walk(pub.path)) out.push({ path: file.slice(pub.path.length + 1), bytes: bytes(file) });
   if (spec.globals) out.push(...(await spec.globals(site)));
@@ -531,6 +544,9 @@ function typed(outputs: Output[]): Record<string, string> | undefined {
 
 export async function build(spec: Spec, options: { manifest?: string; force?: boolean; verify?: boolean; tick?: (done: number, total: number) => void } = {}) {
   const site = await scan(spec);
+  check(site, spec);
+  await seal(site, spec);
+  const walls = deeps(site.config);
   const path = options.manifest ? resolve(spec.root, options.manifest) : "";
   const old: Manifest = path && existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : {};
   const next: Manifest = {};
@@ -550,6 +566,7 @@ export async function build(spec: Spec, options: { manifest?: string; force?: bo
     if (was && same && (!verify || was.outputs.every((p) => existsSync(join(site.out, p))))) {
       next[route.route] = was;
       route.at = route.at || was.at;
+      fence(walls, was.outputs);
       for (const p of was.outputs) {
         kept.add(p);
         site.made.add(p);
@@ -557,6 +574,7 @@ export async function build(spec: Spec, options: { manifest?: string; force?: bo
       continue;
     }
     const outputs = await render(site, route, spec);
+    fence(walls, outputs.map((o) => o.path));
     for (const item of outputs) {
       if (item.path.endsWith(".html")) guard(item.path, typeof item.bytes === "string" ? item.bytes : new TextDecoder().decode(item.bytes), known);
       if (put(site.out, item)) written++;
@@ -570,10 +588,14 @@ export async function build(spec: Spec, options: { manifest?: string; force?: bo
       site.made.add(item.path);
     }
   }
-  for (const item of await globals(site, spec)) {
+  const shared = await globals(site, spec);
+  fence(walls, shared.map((o) => o.path));
+  for (const item of shared) {
     if (put(site.out, item)) written++;
     kept.add(item.path);
   }
+  const pack = (await packed(site, spec)).map((item) => item.path);
+  if (pack.length) next[PACK] = { hash: digest(pack).slice(0, 16), at: old[PACK]?.at ?? today(), outputs: pack };
   let removed = 0;
   const drop = (p: string) => {
     const file = join(site.out, p);

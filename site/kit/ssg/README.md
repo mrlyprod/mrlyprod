@@ -4,8 +4,10 @@
 - Generic: it knows routes, inputs, bundles, fingerprints and manifests, never markdown, papers or products.
 - The site brings its `site.json`, a `collect()` that lists routes and a `render()` per route.
 - `md.ts` is the markdown pipeline: `render(md, { link, math, widget })`, `inline`, `sheet`, `front`, `title`, `summary`, `plain`, `slug`, `escape`.
+- `text.ts` holds `escape` alone, so `md.ts` and the code viewer's browser half load in a page with no builder.
 - `links.ts` is the one link resolver and `pic.ts` draws a dark and light `<picture>` pair.
-- The one dispatch is `../git`: a `git` block in `site.json` makes `scan` append the repo's own `/git/` and `/raw/` routes, and `render` and `fingerprint` dispatch to that module; no block, nothing git-related runs.
+- The first dispatch is `modes.ts`: `render` hands every `spa` route to it before anything else.
+- The next is `../git`: a `git` block in `site.json` makes `scan` append the `/git/` shell and the repo's `/raw/` routes, `fingerprint` and `render` dispatch to that module; no block, nothing git-related runs.
 - The other dispatch is `blog.ts`: a `blog` input makes `scan` append `/blog/` and every post, and `render` dispatches to that module; no input, no routes.
 - `../serve.ts` maps a path to a route through `render` and `globals`, and `../dev.ts` serves a site through it; neither reads a file by path, and a route lists in `urls` what it publishes beside its page or, as the slash route above, holds whatever is asked for under it.
 
@@ -19,6 +21,7 @@
 - A cycle throws, and naming a file the bundle does not list throws unless an earlier bundle already placed it, which answers with that file's hashed href.
 - `assets`: more bundles of the same shape, for files that must keep their names, such as `fonts/` and `seti/`, whose CSS names its faces by relative url.
 - `manifest`: the webmanifest, written as is. `robots`: `{ disallow }`, appended to the wildcard block alone.
+- `modes`: `{ prefix: mode or { mode, deep } }`, optional; see MODES.
 - `llms`: `{ about, legend, links }`, optional. `about` is the paragraph llms.txt opens on, `legend` one line under it; a link is `{ href, name, note }` and is dropped unless the site publishes that route. No block, no `llms.txt`.
 
 ## BLOG
@@ -31,12 +34,30 @@
 - Every file beside `index.md` ships at `/blog/<slug>/<path>` with its content type on the output, so `push.ts` sets the S3 header without re-rendering.
 - Each one is named in `site.ships` at collect time, repo file to published URL, so the code viewer links that copy and writes no `/raw/` twin, whatever its type.
 - Those files ride a hidden route that never enters the sitemap, and each one is named in the link index, so a relative image in the body answers with its served path.
-- A markdown sibling ships too but is never indexed, so a link to it falls through the resolver to the `/git/` page where the site has one.
+- A markdown sibling ships too but is never indexed, so a link to it falls through the resolver to its `/git/` path where the site has the viewer.
 - `leaf.image` is the og:image: the first figure in the body when it names a shipped file, its bare name when the body names a site figure, else empty.
 - `posts(site)` is the parsed list, memoised per site, so a site's own `collect` can read it for its tree, its cards and its home page.
 - The module never imports the chrome, so `spec.blog` carries it: `{ page, md }`; no `spec.blog.page` means the routes are collected and nothing is rendered.
 - `page(site, leaf)` draws the page, listing and post alike: `leaf.kind` says which, `leaf.posts` is every card, and `leaf.out` is the outputs the page may add beside itself.
 - `md(site, text, from, out)` renders the body the site's way, with `from` set to the post's `index.md`, so relative links and images resolve beside the post.
+
+## MODES
+
+- `modes.ts` says when a route's page is made: `ssg` at build, `spa` in the browser, `ssr` at request.
+- A route's own `mode` wins, then the longest `modes` prefix its path starts with, then `ssg`.
+- `modes` in `site.json` maps a prefix to a word or a rule: `{ "/demos/": "spa", "/git/": { "mode": "spa", "deep": true } }`.
+- A prefix starts and ends with `/`, a mode is `ssg`, `spa` or `ssr`, and only an `spa` prefix may be deep; anything else throws.
+- A deep prefix's shell answers every path under it: in `serve()`, in `shots.ts`, and in the CloudFront router, which reads the same block.
+- `spec.spa` is `{ entries, page, root?, plugins?, place? }`.
+- `entries(site)` lists every browser entry, an `.html` or a script; one `Bun.build`, split and minified, bundles them all once per site, chunks named `lib-[hash]`.
+- `root` roots that build, the site by default; `plugins(site)` hands it Bun plugins; `place(path)` moves a bundled file to its published path and rewrites its relative imports to match.
+- An `spa` route names its entry in `entry`, or a group names one per page in `urls`.
+- Each page gets a `Shell`, `{ route, entry, html, script, ahead }`: `html` the bundled html entry, empty for a script entry; `script` the module it loads; `ahead` that module's static chunks, for `modulepreload`.
+- `page(site, route, shell, out)` returns the page's bytes and may push more outputs into `out`.
+- An `spa` route's outputs are its shells alone; the bundle's files have one owner, `globals`, so each is pushed by its own bytes, and the manifest's `@spa` record lists them so a dead chunk is deleted.
+- The bundle's digest rides in every `spa` route's fingerprint, so a shell re-renders when any entry, import or installed package changes a chunk.
+- The build throws on an `ssr` route, an `spa` route with no entry or no `spec.spa`, a deep prefix with no `spa` route at it, a failed bundle, an entry outside `root` or missing from `entries`, and any output under a deep prefix but its `index.html`.
+- `ssr` is reserved: dev renders it on request like any route, and the build refuses it until an origin exists.
 
 ## EXPORTS
 
@@ -47,7 +68,7 @@
 - `ships` maps a repo file the build publishes byte for byte to that URL, filled at collect time, and the code viewer reads it before it asks the hook.
 - `render(site, route, spec)`: pure, returns `[{ path, bytes, type? }]` for that route alone. A missing input throws here.
 - `type` overrides the content type a path would earn by its extension; it rides in the manifest so a push sets the S3 header without re-rendering.
-- `globals(site, spec)`: the copies, sitemap.xml and its children, robots.txt, llms.txt, the webmanifest, the icons, `git/tree.json`, the public copy, then the site's own extras.
+- `globals(site, spec, lean?)`: the copies, the `spa` bundle's files unless `lean`, sitemap.xml and its children, robots.txt, llms.txt, the webmanifest, the icons, `git.json`, the public copy, then the site's own extras.
 - robots.txt allows everything: an `Allow: /` block per named crawler (GPTBot, ClaudeBot, Claude-Web, CCBot, Google-Extended, anthropic-ai, PerplexityBot), then `*`, then the sitemap line.
 - The map is one `<url>` per entry in every route's `urls`, `lastmod` from the route's `at`, so a group route fills the map with the pages it publishes.
 - sitemap.xml is an index: one child `sitemap-<segment>.xml` per first path segment holding two urls or more, every other url (`/` and each lone segment) in `sitemap-pages.xml`; each entry's `lastmod` is its child's newest.
@@ -56,41 +77,43 @@
 - `fingerprint(site, route, spec?)`: sha256 of the route's input bytes, its data, the templates, the navigator and the link index. Never a date, never an absolute path.
 - A file is named by its declaration, `research/foo.md`, not by where the tree sits; an undeclared file is named by its basename, a directory hashes every inner path and byte relative to itself.
 - So a checkout, a tarball and a lambda fingerprint the same bytes the same way, and one manifest serves them all.
-- `build(spec, { manifest, force, verify })`: scan, fingerprint, render only what changed, write only bytes that differ.
+- `build(spec, { manifest, force, verify })`: scan, check the modes, fingerprint, render only what changed, write only bytes that differ.
 - Then it drops the outputs of dead routes, prunes every folder that empties, and sweeps each bundle's `out/` of any file this build did not write.
 - `verify` is on by default and re-renders a route whose outputs went missing from `out/`; a build against a remote manifest turns it off, because there the disk is a scratch pad.
 - `walk bytes forget digest short escape page today guard label jsonText jsonScript`: the small helpers a site would write twice. `forget()` drops the byte cache, which a watcher calls before it rescans.
 
 ## SPEC
 
-- `root out config templates prepare collect render globals llms inline icons git blog asset`.
+- `root out config templates prepare collect render globals llms inline icons git blog spa asset`.
 - `llms(site)` returns `[{ name, rows }]`, a row `{ href, name, note }`; it runs in `globals`, after every route is collected.
 - `templates` are the dirs whose bytes rebuild every route; the kit itself is always one, so a kit edit re-renders everything.
 - `prepare` runs first, before the scan reads anything, for a site that bundles its client and then lists the bundle as an asset.
 - `collect(site)` returns `{ routes, nav? }`; `nav` is the site tree the chrome draws and the code viewer's node joins it when the site has not placed one.
 - `inline` lists every inline script a page may carry; `build` refuses a page carrying one it does not know.
 - `icons`: `{ rows, svg }`, a square glyph grid of `0`/`1` strings and the favicon svg; the builder writes the svg as `favicon.svg` and draws `favicon.png`, `apple-touch-icon.png`, `icon-192.png` and `icon-512.png` from the grid. No field, no icons.
-- `git` is the code viewer's hooks, `{ page, md, code, served }`: the chrome, the markdown pipeline, the highlighter and the mirror seam the module cannot know by itself.
+- `git` is the code viewer's hooks, `{ page, entry, served }`: the chrome, the browser module and the mirror seam the module cannot know by itself.
+- `spa` is the browser build's hooks; see MODES.
 - `blog` is the blog's hooks, `{ page, md }`, the same seam for `blog.ts`.
 - `asset(name, body)` may rewrite a bundle file's bytes before it is hashed and placed.
-- `Route`: `{ route, kind, name, data, source, inputs, urls, at, hidden, sitemap }`.
+- `Route`: `{ route, kind, name, data, source, inputs, urls, at, hidden, sitemap, mode, entry }`; `mode` and `entry` are MODES'.
 - `hidden` keeps a route out of the navigator and out of every list a reader browses; `sitemap` puts it back on the map anyway.
-- The code viewer sets both, so a thousand pages the tree never shows are still crawlable; `/404.html` sets only `hidden` and stays off.
-- One route may be a group: `urls` lists the pages it publishes, so a bundler route and a code page still fill the sitemap.
+- A `/raw/` route sets both, so every file the tree never shows is still crawlable; `/404.html` sets only `hidden` and stays off.
+- One route may be a group: `urls` lists the pages it publishes, so a bundler route still fills the sitemap.
 - `render` may be async, so a route can run a bundler and hand back its bytes before anything is written.
 - The manifest is `{ route: { hash, at, outputs, types? } }` and lives wherever the caller points it.
 - `at` is the route's own date, else the manifest's while the hash holds, else today, so a tree with no git keeps the dates it was given.
 
 ## LINKS
 
-- `resolve(site, from, url)` in `links.ts` is the one resolver: every markdown render sends its links through it, and `from` is the file the link is written in, absolute or relative to the repo root.
+- `resolve(site, from, url)` in `links.ts` is the one resolver: every markdown render at build sends its links through it, and `from` is the file the link is written in, absolute or relative to the repo root.
 - `https:`, `http:`, `mailto:`, `tel:`, a bare `#fragment` and a rooted `/path` pass through untouched; everything else is a path.
 - The path resolves against the directory of `from`, and its `#fragment` or `?query` is set aside and put back on whatever the resolver answers.
 - `scan()` builds the index once per build: every route's `source`, and every `source` a route names in its `urls`, mapped to that route under both its absolute path and its declared name, so `research/core.md` and `demos/spin` are keys as much as the full paths are.
 - A route that wants to be found by a link names the input it publishes in `source`; a group route names one per page in `urls`, which is how a shelf hands each folder its own route.
 - The index is asked first, for the path, the path plus `.md`, the path with `.md` stripped and the path's own `README.md`, so `bases.md`, `bases`, `../demos/spin/` and a folder whose README is a page all land on the route the site publishes.
-- A miss falls to the repo: `/raw/<path>` for an image or a PDF, `/git/<path>` for a file, `/git/<path>/` for a directory, and only when the code viewer carries that route.
+- A miss falls to the repo: `/raw/<path>` for an image or a PDF, `/git/<path>` for a file, `/git/<path>/` for a directory, and only when the repo tracks that path.
 - A site with git routes but no slug stops there; a site with no git routes falls to `https://github.com/<slug>/blob/<branch>/<path>` when `site.json` names one, and a site with no git block leaves the link as written.
 - Anything else is left exactly as written: a target outside the repo, a paper fetched from another tree, a path nothing publishes.
 - `stamp(index)` is the index as one string, keyed relative to the repo root, and it rides in every fingerprint, so a page re-renders when a route it could link to appears, renames or disappears.
-- So the resolver never asks which page is doing the reading, only which file the link was written in, and one README answers the same under `/git/` and under `/research/`.
+- So the resolver never asks which page is doing the reading, only which file the link was written in.
+- The `/git/` viewer renders in the browser and resolves its own links with `../git/view.ts`, never with this index.

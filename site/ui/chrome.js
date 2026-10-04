@@ -250,8 +250,6 @@ let forest = null;
 
 const fetchTree = (url) => (forest ??= fetch(url).then((reply) => (reply.ok ? reply.json() : null)).catch(() => null));
 
-const named = (path) => (path.slice(path.lastIndexOf('/') + 1).includes('.') ? path : `${path}.txt`);
-
 function find(node, path) {
   let at = node;
   for (const part of path ? path.split('/') : []) {
@@ -272,7 +270,7 @@ function branch(base, kid, path) {
     name.className = 'name';
     name.textContent = kid.n;
     a.append(icon, name);
-    a.href = `${base}${named(path)}`;
+    a.href = `${base}${path}`;
     li.append(a);
     return li;
   }

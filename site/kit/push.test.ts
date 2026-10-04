@@ -1,6 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { cache, changes, IMMUTABLE, kind, mine, REVALIDATE, rules, spread, sweep, typing, type Lister } from "./push.ts";
-import type { Manifest } from "./ssg/build.ts";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { assets, cache, changes, IMMUTABLE, kind, mine, REVALIDATE, rules, seal, spread, sweep, typing, type Lister } from "./push.ts";
+import { build, forget, globals, type Manifest, type Spec } from "./ssg/build.ts";
 
 const SHOP = rules(["(^|/)lib-[^/]+\\.js$", "(^|/)lib-[^/]+\\.css$", "(^|/)js/[^/]+\\.js$", "\\.wasm$", "-[0-9a-f]{8}\\.[^./]+$"]);
 
@@ -76,4 +79,45 @@ describe("push", () => {
     const flat: Lister = { list: async ({ prefix }) => (prefix === "" ? page(["index.html"], ["cdn/"]) : page([], [])) };
     expect(await sweep(flat, "", ["cdn/"])).toEqual(["index.html"]);
   });
+});
+
+/* SPA */
+
+test("an edit only one spa route's entry sees uploads its changed files and deletes its old chunk, whatever the other route's hash", async () => {
+  const home = join(tmpdir(), `kitpush-spa-${process.pid}`);
+  rmSync(home, { recursive: true, force: true });
+  mkdirSync(join(home, "app"), { recursive: true });
+  const file = (name: string) => join(home, "app", name);
+  writeFileSync(file("only.js"), 'export const mark = "first-cut";\n');
+  writeFileSync(file("a.js"), 'const { mark } = await import("./only.js");\ndocument.title = mark;\n');
+  writeFileSync(file("b.js"), 'document.title = "b";\n');
+  const spec: Spec = {
+    root: home,
+    out: join(home, "dist"),
+    config: {},
+    collect: () => ({ routes: [{ route: "/a/", mode: "spa", entry: file("a.js"), inputs: [file("a.js"), file("only.js")] }, { route: "/b/", mode: "spa", entry: file("b.js"), inputs: [file("b.js")] }] }),
+    render: () => [],
+    spa: { entries: () => [file("a.js"), file("b.js")], page: (_site, _route, shell) => `<script type="module" src="${shell.script}"></script>` },
+  };
+  const round = async (old: Manifest) => {
+    forget();
+    writeFileSync(join(home, "manifest.json"), JSON.stringify(old));
+    const done = await build(spec, { manifest: "manifest.json", verify: false });
+    const next: Manifest = { ...done.manifest, ...assets(await globals(done.site, spec), old) };
+    const upload = changes(old, next, [], (path) => seal(readFileSync(join(home, "dist", path)), "", ""));
+    const want = spread(next);
+    return { next, upload, remove: [...spread(old).keys()].filter((path) => !want.has(path)), rendered: done.rendered };
+  };
+  const first = await round({});
+  const chunk = first.upload.find((path) => /^lib-.+\.js$/.test(path))!;
+  expect(first.upload.sort()).toEqual(["a/index.html", "app/a.js", "app/b.js", "b/index.html", chunk, "robots.txt", "sitemap-pages.xml", "sitemap.xml"].sort());
+  expect((await round(first.next)).upload).toEqual([]);
+  writeFileSync(file("only.js"), 'export const mark = "second-cut";\n');
+  const second = await round(first.next);
+  const fresh = second.upload.find((path) => /^lib-.+\.js$/.test(path))!;
+  expect(fresh).not.toBe(chunk);
+  expect(second.upload.sort()).toEqual(["app/a.js", fresh].sort());
+  expect(second.remove).toEqual([chunk]);
+  expect(readFileSync(join(home, "dist", "app/a.js"), "utf8")).toContain(fresh);
+  rmSync(home, { recursive: true, force: true });
 });

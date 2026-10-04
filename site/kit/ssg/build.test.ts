@@ -1,8 +1,9 @@
 import { expect, test } from "bun:test";
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { build, forget, globals, guard, jsonScript, type Output, type Site, type Spec } from "./build.ts";
+import { shell as gitShell } from "../git/git.ts";
+import { build, forget, globals, guard, jsonScript, render, walk, type Output, type Site, type Spec } from "./build.ts";
 
 /* SITE */
 
@@ -27,16 +28,9 @@ const site = (config: Site["config"] = {}) =>
       { route: "/404.html", kind: "missing", hidden: true },
       { route: "/cart/", kind: "cart", hidden: true },
       { route: "/faq/", kind: "page", name: "FAQ", at: "2026-04-04" },
-      { route: "/git/", kind: "gitdir", name: "demo", sitemap: true, at: "2026-02-02" },
-      {
-        route: "/git/README.md",
-        kind: "gitfile",
-        name: "README.md",
-        hidden: true,
-        sitemap: true,
-        at: "2026-03-03",
-        urls: [{ route: "/git/README.md" }, { route: "/raw/README.md" }],
-      },
+      { route: "/git/", kind: "git", name: "demo", sitemap: true, at: "2026-02-02" },
+      { route: "/raw/README.md", kind: "raw", name: "README.md", hidden: true, sitemap: true, at: "2026-03-03", urls: [{ route: "/raw/README.md" }] },
+      { route: "/raw/src/a.rs", kind: "raw", name: "a.rs", hidden: true, sitemap: true, at: "2026-03-05", urls: [{ route: "/raw/src/a.rs" }] },
     ],
     copies: [],
     made: new Set<string>(),
@@ -51,12 +45,12 @@ const made = async (one = site(), spec = {} as unknown as Spec) => {
 
 /* SITEMAP */
 
-test("the sitemap carries every shown route and every raw path with its own date and no hidden one", async () => {
+test("the sitemap carries every shown route, the code viewer once and every raw path, and no hidden one", async () => {
   const { sitemap } = await made();
   expect(sitemap).toContain("<loc>https://demo.test/</loc><lastmod>2026-01-01</lastmod>");
   expect(sitemap).toContain("<loc>https://demo.test/faq/</loc><lastmod>2026-04-04</lastmod>");
   expect(sitemap).toContain("<loc>https://demo.test/git/</loc><lastmod>2026-02-02</lastmod>");
-  expect(sitemap).toContain("<loc>https://demo.test/git/README.md</loc><lastmod>2026-03-03</lastmod>");
+  expect(sitemap).not.toContain("/git/README.md");
   expect(sitemap).toContain("<loc>https://demo.test/raw/README.md</loc><lastmod>2026-03-03</lastmod>");
   expect(sitemap).not.toContain("404.html");
   expect(sitemap).not.toContain("/cart/");
@@ -67,12 +61,12 @@ test("the sitemap indexes one child per first segment, dated by its newest url, 
   const { index, children } = await made();
   expect(index).toBe(
     '<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
-      "<sitemap><loc>https://demo.test/sitemap-git.xml</loc><lastmod>2026-03-03</lastmod></sitemap>\n" +
-      "<sitemap><loc>https://demo.test/sitemap-pages.xml</loc><lastmod>2026-04-04</lastmod></sitemap>\n</sitemapindex>\n",
+      "<sitemap><loc>https://demo.test/sitemap-pages.xml</loc><lastmod>2026-04-04</lastmod></sitemap>\n" +
+      "<sitemap><loc>https://demo.test/sitemap-raw.xml</loc><lastmod>2026-03-05</lastmod></sitemap>\n</sitemapindex>\n",
   );
   const locs = (path: string) => [...(children.find((item) => item.path === path)!.bytes as string).matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
-  expect(locs("sitemap-git.xml")).toEqual(["https://demo.test/git/", "https://demo.test/git/README.md"]);
-  expect(locs("sitemap-pages.xml")).toEqual(["https://demo.test/", "https://demo.test/faq/", "https://demo.test/raw/README.md"]);
+  expect(locs("sitemap-raw.xml")).toEqual(["https://demo.test/raw/README.md", "https://demo.test/raw/src/a.rs"]);
+  expect(locs("sitemap-pages.xml")).toEqual(["https://demo.test/", "https://demo.test/faq/", "https://demo.test/git/"]);
   const crowded = site();
   crowded.routes.push({ route: "/pages/", name: "Pages" }, { route: "/pages/one/", name: "One" });
   await expect(made(crowded)).rejects.toThrow("sitemap-pages.xml");
@@ -80,8 +74,8 @@ test("the sitemap indexes one child per first segment, dated by its newest url, 
 
 test("a route or a file that claims a sitemap's path stops the build", async () => {
   const one = site();
-  one.made.add("sitemap-git.xml");
-  await expect(made(one)).rejects.toThrow("sitemap-git.xml is the sitemap's");
+  one.made.add("sitemap-raw.xml");
+  await expect(made(one)).rejects.toThrow("sitemap-raw.xml is the sitemap's");
 });
 
 /* ROBOTS */
@@ -205,14 +199,49 @@ test("a second build drops a dead route's outputs, prunes their empty folders an
 
 /* GIT OFF */
 
-test("a spec with no git hooks still collects the repo and renders none of it", async () => {
+test("a spec with no git page still collects the repo and renders none of it", async () => {
   const home = fresh("gitoff");
   const out = join(home, "dist");
   writeFileSync(join(home, "README.md"), "# off\n");
-  const done = await build({ root: home, out, config: { git: { root: "." } }, collect: () => ({ routes: [] }), render: () => [] });
-  expect(done.site.routes.map((one) => one.route).sort()).toEqual(["/git/", "/git/README.md"]);
-  expect(Object.keys(done.manifest)).toEqual([]);
-  expect(existsSync(join(out, "git/README.md"))).toBe(false);
+  writeFileSync(join(home, "view.js"), "document.title = 1;\n");
+  const done = await build({
+    root: home,
+    out,
+    config: { git: { root: "." }, modes: { "/git/": { mode: "spa", deep: true } } },
+    collect: () => ({ routes: [] }),
+    render: () => [],
+    git: { entry: "view.js" },
+    spa: { entries: () => [join(home, "view.js")], page: () => "" },
+  });
+  expect(done.site.routes.map((one) => one.route).sort()).toEqual(["/git/", "/raw/README.md", "/raw/view.js"]);
+  expect(Object.keys(done.manifest)).toEqual(["@spa"]);
+  expect(await render(done.site, done.site.routes.find((one) => one.route === "/git/")!, { git: { entry: "view.js" } } as Spec)).toEqual([]);
+  expect(existsSync(join(out, "git/index.html"))).toBe(false);
   expect(existsSync(join(out, "raw/README.md"))).toBe(false);
+  rmSync(home, { recursive: true, force: true });
+});
+
+/* GIT ON */
+
+test("a git block builds one shell under /git/, the tree data beside it and the raw bytes", async () => {
+  const home = fresh("giton");
+  const out = join(home, "dist");
+  writeFileSync(join(home, "Makefile"), "all:\n");
+  writeFileSync(join(home, "view.js"), "document.title = 1;\n");
+  const one: Spec = {
+    root: home,
+    out,
+    config: { git: { root: "." }, modes: { "/git/": { mode: "spa", deep: true } } },
+    collect: () => ({ routes: [] }),
+    render: () => [],
+    git: { entry: "view.js", page: (_site, leaf) => `<main>${leaf.body}</main><script type="module" src="${leaf.scripts![0]}"></script>` },
+    spa: { entries: () => [join(home, "view.js")], page: (site, route, shell) => gitShell(site, route, shell, one) },
+  };
+  await build(one, { manifest: "manifest.json" });
+  expect(walk(join(out, "git")).map((file) => file.slice(out.length + 1))).toEqual(["git/index.html"]);
+  expect(readFileSync(join(out, "git/index.html"), "utf8")).toBe('<main></main><script type="module" src="/view.js"></script>');
+  expect(JSON.parse(readFileSync(join(out, "git.json"), "utf8")).c.map((kid: { n: string }) => kid.n)).toEqual(["Makefile", "view.js"]);
+  expect(readFileSync(join(out, "raw/Makefile"), "utf8")).toBe("all:\n");
+  expect(JSON.parse(readFileSync(join(home, "manifest.json"), "utf8"))["/raw/Makefile"].types).toEqual({ "raw/Makefile": "text/plain; charset=utf-8" });
   rmSync(home, { recursive: true, force: true });
 });

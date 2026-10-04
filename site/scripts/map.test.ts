@@ -7,7 +7,7 @@ import { sections, type Lists } from "./map.ts";
 const site = {
   root: "/repo/site",
   config: { git: { root: ".." } },
-  routes: [{ route: "/git/research/wiki/a.md", urls: [{ route: "/git/research/wiki/a.md" }, { route: "/raw/research/wiki/a.md" }] }],
+  routes: [{ route: "/raw/research/wiki/a.md", kind: "raw", urls: [{ route: "/raw/research/wiki/a.md" }] }],
 } as unknown as Site;
 
 const lists = (some: Partial<Lists>): Lists => ({ wiki: [], notes: [], claims: [], papers: [], lanes: [], posts: [], math: [], pages: [], ...some });

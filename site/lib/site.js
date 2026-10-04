@@ -1,5 +1,7 @@
 import { configure } from '../ui/config.js';
-import site from '../site.json';
+import { title, since, prefix, tint, menu, cart, company, tree, shelves } from '../site.json';
+
+const site = { title, since, prefix, tint, menu, cart, company, tree, shelves };
 
 configure(site);
 

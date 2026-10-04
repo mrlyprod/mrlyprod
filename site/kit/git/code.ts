@@ -1,7 +1,5 @@
-import { readFileSync } from "node:fs";
-import { createRequire } from "node:module";
 import type { HighlighterCore } from "@shikijs/core";
-import { escape } from "../ssg/build.ts";
+import { escape } from "../ssg/text.ts";
 
 /* GRAMMARS */
 
@@ -23,20 +21,6 @@ const GRAMMARS: Record<string, () => Promise<unknown>> = {
   wgsl: () => import("@shikijs/langs/wgsl"),
   yaml: () => import("@shikijs/langs/yaml"),
 };
-
-/* VERSION */
-
-const here = createRequire(import.meta.url);
-
-function installed(): string {
-  try {
-    return JSON.parse(readFileSync(here.resolve("@shikijs/core/package.json"), "utf8")).version;
-  } catch {
-    return "";
-  }
-}
-
-export const version: string = installed();
 
 /* CORE */
 

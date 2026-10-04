@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import { extname, join, relative, resolve } from "node:path";
+import { decode } from "./git/view.ts";
+import { deeps } from "./ssg/modes.ts";
 
 /* WHERE */
 
@@ -38,7 +40,9 @@ const TYPES: Record<string, string> = {
 
 const doc = (bytes: Uint8Array) => new TextDecoder().decode(bytes.subarray(0, 15)).toLowerCase().startsWith("<!doctype html");
 
-function serve(dist: string) {
+const sunk = (deep: string[], path: string) => deep.find((wall) => path.startsWith(wall) && path !== wall);
+
+function serve(dist: string, deep: string[]) {
   const file = (path: string): Response | null => {
     const want = join(dist, path.endsWith("/") ? `${path}index.html` : path);
     if (!want.startsWith(dist) || !existsSync(want) || !statSync(want).isFile()) return null;
@@ -51,8 +55,9 @@ function serve(dist: string) {
   return Bun.serve({
     port: SERVE,
     fetch(req) {
-      const path = decodeURIComponent(new URL(req.url).pathname);
-      const hit = file(path) ?? file(`${path}/`);
+      const path = decode(new URL(req.url).pathname);
+      const wall = sunk(deep, path);
+      const hit = wall ? file(wall) : (file(path) ?? file(`${path}/`));
       if (hit) return hit;
       const lost = file("/404.html");
       return lost ? new Response(lost.body, { status: 404, headers: lost.headers }) : new Response("not found", { status: 404 });
@@ -148,7 +153,7 @@ function driver(ws: WebSocket) {
 
 /* PROBES */
 
-const MOUNTED = `new Promise((r) => { const root = document.querySelector("#root, #app"); if (!root) return r(); const t0 = Date.now(); const poll = () => (root.children.length || Date.now() - t0 > 8000 ? r() : setTimeout(poll, 50)); poll(); })`;
+const MOUNTED = `new Promise((r) => { const root = document.querySelector("#root, #app"); const t0 = Date.now(); const poll = () => (((!root || root.children.length) && !document.querySelector('[aria-busy="true"]')) || Date.now() - t0 > 8000 ? r() : setTimeout(poll, 50)); poll(); })`;
 
 const STILL = `document.head.insertAdjacentHTML("beforeend", "<style>canvas:not(.mark) { visibility: hidden !important; }</style>")`;
 
@@ -179,7 +184,7 @@ export async function main(root: string, config?: Record<string, unknown>): Prom
   const name = (route: string, size: string, act: number) =>
     `${route.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "home"}${act >= 0 ? `-open${act}` : ""}-${size}${print ? "-print" : ""}${motion ? "-motion" : ""}${scheme ? `-${scheme}` : ""}.png`;
   mkdirSync(out, { recursive: true });
-  const server = LIVE ? null : serve(join(root, "dist"));
+  const server = LIVE ? null : serve(join(root, "dist"), deeps(conf));
   const { proc, page } = await launch(join(DATA_DIR, "profile"));
   let shot = 0;
   let changed = 0;

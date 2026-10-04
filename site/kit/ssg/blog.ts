@@ -1,5 +1,6 @@
 import { join, relative } from "node:path";
-import { mime, reads } from "../git/git.ts";
+import { mime } from "../git/git.ts";
+import { reads } from "../git/view.ts";
 import { front } from "./md.ts";
 import { bytes, type Bytes, type Input, type Output, type Route, type Site, type Spec } from "./build.ts";
 

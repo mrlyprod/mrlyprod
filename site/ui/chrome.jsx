@@ -111,7 +111,7 @@ function Node({ node, current }) {
   );
 }
 
-const EXPLORER = '/git/tree.json';
+const EXPLORER = '/git.json';
 
 const hasLazy = (nodes) => nodes.some((node) => node.lazy !== undefined || hasLazy(node.nodes ?? []));
 

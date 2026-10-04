@@ -5,8 +5,9 @@ import { createElement as h } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import katex from "katex";
 import { build, bytes, jsonScript, jsonText, walk, type Node, type Output, type Route, type Site, type Spec } from "../kit/ssg/build.ts";
-import { config as gitConfig, isGit } from "../kit/git/git.ts";
+import { config as gitConfig, shell as gitShell } from "../kit/git/git.ts";
 import { resolve as resolveLink } from "../kit/ssg/links.ts";
+import type { Shell as Entry } from "../kit/ssg/modes.ts";
 import { themed } from "../kit/ssg/pic.ts";
 import { escape, front, inline, plain, render as md, summary, title } from "../kit/ssg/md.ts";
 import { posts as parsed, type Leaf as Posted } from "../kit/ssg/blog.ts";
@@ -14,7 +15,8 @@ import { sidebar, tree } from "../lib/tree.js";
 import { Glyph, Grid, Menu, Shell } from "../ui/chrome.jsx";
 import { claimsScript, headScript, inlineScripts, tintCss } from "../ui/config.js";
 import { grid as glyphs, logoSvg } from "../ui/logo.js";
-import SITE from "../lib/site.js";
+import "../lib/site.js";
+import SITE from "../site.json";
 import { sections, type Lists } from "./map.ts";
 import { shelf } from "./shelf.ts";
 
@@ -348,51 +350,11 @@ function demoGroup(site: Site): Route {
     data: list,
     source: site.input("demos").path,
     inputs,
-    urls: list.map((d) => ({ route: demoRoute(d.name), name: d.title, source: demoHome(site, d.name) })),
+    urls: list.map((d) => ({ route: demoRoute(d.name), name: d.title, source: demoHome(site, d.name), entry: demoShell(site, d.name) })),
   };
 }
 
-const IMPORTS = /\bimport\s*["']([^"']+)["']|\bfrom\s*["']([^"']+)["']/g;
-
 const MODULE = /<script[^>]*type="module"[^>]*>/;
-
-const SRC = /src="([^"]+)"/;
-
-async function imports(outputs: { path: string; text: () => Promise<string> }[]): Promise<Map<string, string[]>> {
-  const trim = (path: string) => path.replace(/^\.\//, "");
-  const known = new Set(outputs.map((item) => trim(item.path)));
-  const edges = new Map<string, string[]>();
-  for (const item of outputs) {
-    const path = trim(item.path);
-    if (!path.endsWith(".js")) continue;
-    const deps: string[] = [];
-    for (const [, bare, named] of (await item.text()).matchAll(IMPORTS)) {
-      const dep = join(dirname(path), bare ?? named);
-      if (known.has(dep) && !deps.includes(dep)) deps.push(dep);
-    }
-    edges.set(path, deps);
-  }
-  return edges;
-}
-
-function closure(edges: Map<string, string[]>, entry: string): string[] {
-  const seen = new Set<string>();
-  const queue = [...(edges.get(entry) ?? [])];
-  while (queue.length) {
-    const next = queue.shift()!;
-    if (seen.has(next)) continue;
-    seen.add(next);
-    queue.push(...(edges.get(next) ?? []));
-  }
-  return [...seen];
-}
-
-function chunks(html: string, path: string, edges: Map<string, string[]>): string[] {
-  const tag = html.match(MODULE);
-  const src = tag?.[0].match(SRC)?.[1];
-  if (!src) return [];
-  return closure(edges, join(dirname(path), src)).map((dep) => `/${dep}`);
-}
 
 function seo(source: string, card: Card, nav: string, image: Picture, fonts: string, preload: string[]) {
   const html = source
@@ -413,45 +375,22 @@ function seo(source: string, card: Card, nav: string, image: Picture, fonts: str
 
 const widgetFiles = (site: Site) => site.input("demos").files.filter((f) => f.endsWith("/widget.jsx"));
 
-const BESIDE = /"\.\/lib-/g;
+const demoEntries = (site: Site) => [...demoNames(site).map((name) => demoShell(site, name)), ...widgetFiles(site), ...(LIVE.length ? [GLUE] : [])];
 
-async function demos(site: Site, route: Route): Promise<Output[]> {
+const demoPlace = (path: string) => (path.startsWith("demos/views/") ? `demos/${path.slice(12)}` : path === "demos/live.js" ? "live.js" : path);
+
+function demoPage(site: Site, route: Route, shell: Entry, out: Output[]) {
   const list = route.data as Card[];
-  const home = demoHome(site, "");
-  const views = relative(home, site.input("demos").path);
-  const served = (path: string) => (path.startsWith(`${views}/`) ? `demos/${path.slice(views.length + 1)}` : path);
-  const built = await Bun.build({
-    entrypoints: [...list.map((d) => demoShell(site, d.name)), ...widgetFiles(site), ...(LIVE.length ? [GLUE] : [])],
-    root: home,
-    splitting: true,
-    minify: true,
-    define: { "process.env.NODE_ENV": '"production"' },
-    naming: { chunk: "lib-[hash].[ext]", asset: "[name]-[hash].[ext]" },
-    plugins: [mrlyjs(LIVE)],
-  });
-  if (!built.success) throw new Error(`site: the demos failed to bundle\n${built.logs.join("\n")}`);
-  const shells = new Map(list.map((d) => [relative(home, demoShell(site, d.name)), d]));
+  const card = list.find((d) => demoRoute(d.name) === shell.route)!;
   const json = jsonText(shelved(list));
-  const nav = `<script type="application/json" id="${SITE.prefix}tree">${json}</script>`;
-  const out: Output[] = [{ path: "demos/tree.json", bytes: json, type: "application/json" }];
   const fig = press(site, out);
-  for (const d of list) if (d.name) fig(`demo-${d.name}`, "/demos/");
-  const edges = await imports(built.outputs);
-  const fonts = site.asset("fonts/fonts.css");
-  for (const item of built.outputs) {
-    const from = item.path.replace(/^\.\//, "");
-    const card = shells.get(from);
-    if (!card) {
-      out.push({ path: served(from), bytes: new Uint8Array(await item.arrayBuffer()) });
-      continue;
-    }
-    const image = picture(site, card.name ? `demo-${card.name}` : "site-demos", demoRoute(card.name), fig);
-    const raw = await item.text();
-    const ahead = chunks(raw, from, edges);
-    const html = card.name ? raw : raw.replace(BESIDE, '"../lib-');
-    out.push({ path: `${demoRoute(card.name).slice(1)}index.html`, bytes: seo(html, card, nav, image, fonts, ahead) });
+  if (!card.name) {
+    out.push({ path: "demos/tree.json", bytes: json, type: "application/json" });
+    for (const d of list) if (d.name) fig(`demo-${d.name}`, "/demos/");
   }
-  return out;
+  const nav = `<script type="application/json" id="${SITE.prefix}tree">${json}</script>`;
+  const image = picture(site, card.name ? `demo-${card.name}` : "site-demos", shell.route, fig);
+  return seo(shell.html, card, nav, image, site.asset("fonts/fonts.css"), shell.ahead);
 }
 
 /* README */
@@ -1204,7 +1143,6 @@ async function collect(site: Site) {
 
 const KINDS: Record<string, (site: Site, route: Route) => Output[] | Promise<Output[]>> = {
   home,
-  demos,
   papers: paperIndex,
   paper,
   written,
@@ -1257,6 +1195,8 @@ function served(site: Site, path: string): string | null {
 
 const GIT = process.env.MRLY_GIT !== "0";
 
+const VIEWER = join(org, "lib", "git.js");
+
 const KEEP = GIT ? ".manifest.json" : ".manifest-nogit.json";
 
 const MANIFEST = process.env.MRLY_DIST ? join(dist, KEEP) : `.cache/${KEEP.slice(1)}`;
@@ -1275,8 +1215,14 @@ export const spec: Spec = {
   llms: (site) => sections(site, MAP),
   git: {
     page: GIT ? shell : undefined,
-    md: (site, text, from) => md(front(text).body, { math, link: links(site, from) }),
+    entry: VIEWER,
     served,
+  },
+  spa: {
+    entries: (site) => [...demoEntries(site), VIEWER],
+    plugins: () => [mrlyjs(LIVE)],
+    place: demoPlace,
+    page: (site, route, shell, out) => (route.kind === "demos" ? demoPage(site, route, shell, out) : gitShell(site, route, shell, spec)),
   },
   blog: {
     page: blogPage,
@@ -1287,8 +1233,8 @@ export const spec: Spec = {
 if (import.meta.main) {
   const done = await build(spec, { manifest: MANIFEST });
   const site = done.site;
-  const code = site.routes.filter(isGit).length;
+  const code = site.routes.filter((one) => one.kind === "raw").length;
   console.log(
-    `site: ${site.routes.length} routes, ${counts.demos} demo shells, ${counts.papers} papers, ${counts.research} research pages, ${counts.blog} posts, ${code} code pages, ${done.rendered} rendered, ${done.written} files written, ${done.removed} removed`,
+    `site: ${site.routes.length} routes, ${counts.demos} demo shells, ${counts.papers} papers, ${counts.research} research pages, ${counts.blog} posts, ${code} code files, ${done.rendered} rendered, ${done.written} files written, ${done.removed} removed`,
   );
 }

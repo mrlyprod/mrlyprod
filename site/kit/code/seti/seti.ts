@@ -39,6 +39,7 @@ export function seti(path: string): string {
   const cut = low.lastIndexOf("/");
   const name = cut < 0 ? low : low.slice(cut + 1);
   const dot = name.lastIndexOf(".");
-  const key = KINDS[name] ?? (dot > 0 ? KINDS[name.slice(dot + 1)] : undefined);
+  const kind = (word: string) => (Object.hasOwn(KINDS, word) ? KINDS[word] : undefined);
+  const key = kind(name) ?? (dot > 0 ? kind(name.slice(dot + 1)) : undefined);
   return key === undefined ? "si" : `si si-${key}`;
 }

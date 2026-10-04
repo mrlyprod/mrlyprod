@@ -1,4 +1,4 @@
-import { escape } from "./md.ts";
+import { escape } from "./text.ts";
 
 /* PAIRS */
 

@@ -1,5 +1,6 @@
 import { dirname, isAbsolute, relative, resolve as under } from "node:path";
-import { config as gitConfig, dirRoute, isGit, link as gitLink, owner } from "../git/git.ts";
+import { HOME, config as gitConfig, isGit } from "../git/git.ts";
+import { dirRoute, link as gitLink, owner } from "../git/view.ts";
 import { label, type Site } from "./build.ts";
 
 /* TYPES */
@@ -23,12 +24,23 @@ export function index(site: Site): Index {
     if (route.source) put(route.source, route.route);
     for (const one of route.urls ?? []) if (one.source) put(one.source, one.route);
   }
+  const code = new Set<string>();
+  for (const route of site.routes) {
+    const page = isGit(route) ? owner(route.route) : null;
+    if (!page) continue;
+    code.add(page);
+    let dir = page.slice(0, page.lastIndexOf("/") + 1);
+    while (dir.length >= HOME.length && !code.has(dir)) {
+      code.add(dir);
+      dir = dir.slice(0, dir.lastIndexOf("/", dir.length - 2) + 1);
+    }
+  }
   return {
     base: git?.root ?? site.root,
     slug: git?.slug ?? "",
     branch: git?.branch ?? "main",
     map,
-    git: new Set(site.routes.filter(isGit).map((route) => route.route)),
+    git: code,
   };
 }
 

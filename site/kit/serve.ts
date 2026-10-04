@@ -1,5 +1,6 @@
 import { extname } from "node:path";
 import { globals, render, type Output, type Route, type Site, type Spec } from "./ssg/build.ts";
+import { deeps, near, packed } from "./ssg/modes.ts";
 
 /* TYPES */
 
@@ -48,6 +49,8 @@ const holder = (site: Site, path: string) =>
     .filter((one) => one.route.endsWith("/") && !one.urls && one.route !== path && path.startsWith(one.route))
     .sort((a, b) => b.route.length - a.route.length)[0] ?? null;
 
+const sunk = (site: Site, path: string) => deeps(site.config).find((wall) => path.startsWith(wall) && path !== wall) ?? null;
+
 /* OUTPUTS */
 
 async function seek(spec: Spec, site: Site, route: Route, want: string): Promise<Output | null> {
@@ -60,7 +63,7 @@ const shared = new WeakMap<Site, Promise<Map<string, Output>>>();
 function extras(spec: Spec, site: Site) {
   let hit = shared.get(site);
   if (!hit) {
-    hit = globals(site, spec).then((list) => new Map(list.map((item) => [item.path, item])));
+    hit = globals(site, spec, true).then((list) => new Map(list.map((item) => [item.path, item])));
     shared.set(site, hit);
   }
   return hit;
@@ -70,6 +73,12 @@ function extras(spec: Spec, site: Site) {
 
 export async function find(spec: Spec, site: Site, path: string): Promise<Response | null> {
   if (!clean(path)) return null;
+  const wall = sunk(site, path);
+  if (wall) {
+    const shell = site.routes.find((one) => one.route === wall);
+    const hit = shell ? await seek(spec, site, shell, file(wall)) : null;
+    return hit ? reply(hit) : null;
+  }
   if (!path.endsWith("/") && site.routes.some((one) => one.route === `${path}/`)) return Response.redirect(`${path}/`, 302);
   const want = file(path);
   const tried = owners(site, path);
@@ -84,7 +93,9 @@ export async function find(spec: Spec, site: Site, path: string): Promise<Respon
     const hit = await seek(spec, site, above, want);
     if (hit) return reply(hit);
   }
-  return null;
+  if (!near(site, spec, want)) return null;
+  const chunk = (await packed(site, spec)).find((item) => item.path === want);
+  return chunk ? reply(chunk) : null;
 }
 
 export async function lost(spec: Spec, site: Site): Promise<Response> {
