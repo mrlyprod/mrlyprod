@@ -18,6 +18,8 @@ const CSP = process.env.CSP ?? "";
 const TALL = 6000;
 const PATIENCE = 15000;
 const REPLY = 30000;
+const FIRST = 5000;
+const PAUSE = 300;
 
 export function block(config: Record<string, unknown>): Block {
   const found = config.shots as Block | undefined;
@@ -117,6 +119,7 @@ function driver(ws: WebSocket) {
   let id = 0;
   const pending = new Map<number, (v: any) => void>();
   const events = new Map<string, () => void>();
+  const heard = new Map<string, (params: any) => void>();
   const noise: string[] = [];
   const said = (text: string) => {
     const line = text.trim().replace(/\s+/g, " ").slice(0, 400);
@@ -133,6 +136,8 @@ function driver(ws: WebSocket) {
       said(`exception: ${m.params.exceptionDetails.exception?.description ?? m.params.exceptionDetails.text}`);
     } else if (m.method === "Log.entryAdded" && /error|warning/.test(m.params.entry.level)) {
       said(`${m.params.entry.level}: ${m.params.entry.text} ${m.params.entry.url ?? ""}`);
+    } else if (m.method && heard.has(m.method)) {
+      heard.get(m.method)!(m.params);
     } else if (m.method && events.has(m.method)) {
       events.get(m.method)!();
       events.delete(m.method);
@@ -148,7 +153,20 @@ function driver(ws: WebSocket) {
       `${method} reply`,
     );
   const once = (method: string) => deadline(new Promise<void>((r) => events.set(method, r)), PATIENCE, method);
-  return { send, once, noise };
+  const on = (method: string, fn: (params: any) => void) => heard.set(method, fn);
+  return { send, once, on, noise };
+}
+
+type Send = ReturnType<typeof driver>["send"];
+
+async function until(send: Send, expression: string, ms: number): Promise<boolean> {
+  const end = Date.now() + ms;
+  for (;;) {
+    const reply = await send("Runtime.evaluate", { expression, returnByValue: true }).catch(() => null);
+    if (reply?.result?.value === true) return true;
+    if (Date.now() >= end) return false;
+    await wait(50);
+  }
 }
 
 /* PROBES */
@@ -160,13 +178,17 @@ const STILL = `document.head.insertAdjacentHTML("beforeend", "<style>canvas:not(
 const ready = (motion: boolean) =>
   `${MOUNTED}.then(() => Promise.all([...document.images].map((i) => { i.loading = "eager"; return (i.complete ? Promise.resolve() : new Promise((r) => { i.onload = i.onerror = r; })).then(() => i.decode().catch(() => 0)); }))).then(() => document.fonts.ready)${motion ? "" : `.then(() => { ${STILL}; })`}.then(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))).then(() => 1)`;
 
+const QUIET = `(() => { for (const i of document.images) { i.loading = "eager"; i.decoding = "sync"; } return document.readyState === "complete" && [...document.images].every((i) => i.complete) && document.fonts.status !== "loading"; })()`;
+
+const painted = (born: number) => `performance.timeOrigin !== ${born} && document.readyState !== "loading" && [...document.querySelectorAll('link[rel="stylesheet"]')].every((one) => one.sheet)`;
+
 const WIDE = `JSON.stringify([...document.querySelectorAll("body *")].filter((el) => !el.closest(".pane, .scrim") && getComputedStyle(el).visibility !== "hidden").map((el) => [el, el.getBoundingClientRect()]).filter(([, r]) => r.right > innerWidth + 1 && r.width > 0).sort((a, b) => b[1].right - a[1].right).slice(0, 4).map(([el, r]) => el.tagName.toLowerCase() + (typeof el.className === "string" && el.className ? "." + el.className.trim().split(/\\s+/).join(".") : "") + " right=" + Math.round(r.right) + " width=" + Math.round(r.width)))`;
 
 const sha = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex").slice(0, 8);
 
 /* RUN */
 
-export async function main(root: string, config?: Record<string, unknown>): Promise<void> {
+export async function main(root: string, config?: Record<string, unknown>, dist = join(root, "dist")): Promise<void> {
   const conf = config ?? (JSON.parse(readFileSync(join(root, "site.json"), "utf8")) as Record<string, unknown>);
   const { routes, sizes } = block(conf);
   const desk = resolve(root, "../..");
@@ -175,16 +197,18 @@ export async function main(root: string, config?: Record<string, unknown>): Prom
   const print = args.includes("--print");
   const baseline = args.includes("--baseline");
   const motion = args.includes("--motion");
+  const nojs = args.includes("--nojs");
+  const first = args.includes("--first");
   const probe = args.includes("--js") ? (args[args.indexOf("--js") + 1] ?? "") : "";
   const scheme = args.includes("--theme") ? (args[args.indexOf("--theme") + 1] ?? "") : "";
   const asked = args.filter((a, i) => !a.startsWith("--") && args[i - 1] !== "--js" && args[i - 1] !== "--theme");
   const pages = asked.length ? asked : routes;
   const out = join(DATA_DIR, "shots", baseline ? "baseline" : "latest");
   const base = join(DATA_DIR, "shots", "baseline");
-  const name = (route: string, size: string, act: number) =>
-    `${route.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "home"}${act >= 0 ? `-open${act}` : ""}-${size}${print ? "-print" : ""}${motion ? "-motion" : ""}${scheme ? `-${scheme}` : ""}.png`;
+  const name = (route: string, size: string, act: number, stage = "") =>
+    `${route.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "home"}${act >= 0 ? `-open${act}` : ""}-${size}${print ? "-print" : ""}${motion ? "-motion" : ""}${nojs ? "-nojs" : ""}${scheme ? `-${scheme}` : ""}${stage}.png`;
   mkdirSync(out, { recursive: true });
-  const server = LIVE ? null : serve(join(root, "dist"), deeps(conf));
+  const server = LIVE ? null : serve(resolve(dist), deeps(conf));
   const { proc, page } = await launch(join(DATA_DIR, "profile"));
   let shot = 0;
   let changed = 0;
@@ -192,60 +216,93 @@ export async function main(root: string, config?: Record<string, unknown>): Prom
   try {
     const ws = new WebSocket(page.webSocketDebuggerUrl);
     await new Promise((r) => (ws.onopen = r));
-    const { send, once, noise } = driver(ws);
+    const { send, once, on, noise } = driver(ws);
     await send("Page.enable");
     await send("Runtime.enable");
     await send("Log.enable");
     await send("Emulation.setEmulatedMedia", { media: print ? "print" : "", features: [{ name: "prefers-reduced-motion", value: motion ? "no-preference" : "reduce" }, ...(scheme ? [{ name: "prefers-color-scheme", value: scheme }] : [])] });
+    if (nojs) await send("Emulation.setScriptExecutionDisabled", { value: true });
+    const held: string[] = [];
+    let holding = false;
+    const pass = (requestId: string) => send("Fetch.continueRequest", { requestId }).catch(() => 0);
+    if (first) {
+      on("Fetch.requestPaused", ({ requestId }) => (holding ? held.push(requestId) : pass(requestId)));
+      await send("Fetch.enable", { patterns: [{ resourceType: "Script" }] });
+    }
+    const value = async (expression: string) => (await send("Runtime.evaluate", { expression, returnByValue: true })).result?.value;
     for (const [turn, want] of pages.entries()) {
       const [route = "/", act] = want.split("@");
       for (const [size, [width, height, mobile]] of Object.entries(sizes)) {
         await send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile });
-        const loaded = once("Page.loadEventFired");
+        const take = async (file: string, view: boolean, note = "") => {
+          const { cssContentSize } = await send("Page.getLayoutMetrics");
+          const full = view ? height : Math.min(Math.ceil(cssContentSize.height), TALL);
+          const cap = await send("Page.captureScreenshot", view ? { format: "png" } : { format: "png", captureBeyondViewport: true, clip: { x: 0, y: 0, width, height: full, scale: 1 } });
+          const bytes = new Uint8Array(Buffer.from(cap.data, "base64"));
+          await Bun.write(join(out, file), bytes);
+          shot++;
+          const wide = Math.ceil(cssContentSize.width) > width;
+          const was = join(base, file);
+          let verdict = "";
+          if (!baseline && existsSync(was)) {
+            const same = sha(new Uint8Array(readFileSync(was))) === sha(bytes);
+            verdict = same ? " same" : " DIFF";
+            if (!same) changed++;
+          } else if (!baseline) {
+            verdict = " new";
+            fresh++;
+          }
+          console.log(`shots: ${file} ${width}x${full} ${sha(bytes)}${note}${wide ? " OVERFLOW" : ""}${verdict}${noise.length ? ` ${noise.length} NOISE` : ""}`);
+          for (const line of [...new Set(noise)]) console.log(`  ${line}`);
+          if (probe) {
+            const { result, exceptionDetails } = await send("Runtime.evaluate", { expression: probe, returnByValue: true, awaitPromise: true });
+            console.log(`  ${exceptionDetails ? `probe failed: ${exceptionDetails.text}` : JSON.stringify(result.value)}`);
+          }
+          if (wide) {
+            const { result } = await send("Runtime.evaluate", { expression: WIDE, returnByValue: true });
+            for (const line of JSON.parse(result.value) as string[]) console.log(`  ${line}`);
+          }
+        };
+        const born = first ? Number(await value("performance.timeOrigin")) : 0;
+        const loaded = once("Page.loadEventFired").then(() => "", (error: Error) => error.message);
         noise.length = 0;
+        held.length = 0;
+        holding = first;
         await send("Page.navigate", { url: `${LIVE || `http://127.0.0.1:${SERVE}`}${route}` });
-        const file = name(route, size, act ? turn : -1);
-        try {
-          await loaded;
-        } catch (error) {
-          console.log(`shots: ${file} FAILED ${(error as Error).message}`);
+        let top = 0;
+        if (first) {
+          const early = name(route, size, -1, "-first");
+          if (await until(send, painted(born), FIRST)) {
+            await wait(PAUSE);
+            top = Number(await value("Math.round(scrollY)"));
+            await take(early, true, ` scroll=${top}`);
+          } else console.log(`shots: ${early} FAILED nothing parsed within ${FIRST / 1000} s with every script held`);
+          holding = false;
+          for (const id of held.splice(0)) pass(id);
+        }
+        const file = first ? name(route, size, -1, "-after") : name(route, size, act ? turn : -1);
+        const lost = await loaded;
+        if (lost) {
+          console.log(`shots: ${file} FAILED ${lost}`);
           continue;
         }
-        await Promise.race([send("Runtime.evaluate", { expression: ready(motion), awaitPromise: true, returnByValue: true }).catch(() => 0), wait(PATIENCE)]);
-        await wait(300);
+        if (nojs) {
+          await until(send, QUIET, PATIENCE);
+          if (!motion) await send("Runtime.evaluate", { expression: STILL });
+        } else await Promise.race([send("Runtime.evaluate", { expression: ready(motion), awaitPromise: true, returnByValue: true }).catch(() => 0), wait(PATIENCE)]);
+        await wait(PAUSE);
         if (act) {
           const { result, exceptionDetails } = await send("Runtime.evaluate", { expression: act, returnByValue: true, awaitPromise: true });
           if (exceptionDetails) console.log(`  act failed: ${exceptionDetails.exception?.description ?? exceptionDetails.text}`);
           else if (result?.value !== undefined && result.value !== 0) console.log(`  act: ${JSON.stringify(result.value)}`);
           await wait(600);
         }
-        const { cssContentSize } = await send("Page.getLayoutMetrics");
-        const full = act ? height : Math.min(Math.ceil(cssContentSize.height), TALL);
-        const cap = await send("Page.captureScreenshot", { format: "png", captureBeyondViewport: !act, clip: { x: 0, y: 0, width, height: full, scale: 1 } });
-        const bytes = new Uint8Array(Buffer.from(cap.data, "base64"));
-        await Bun.write(join(out, file), bytes);
-        shot++;
-        const wide = Math.ceil(cssContentSize.width) > width;
-        const was = join(base, file);
-        let verdict = "";
-        if (!baseline && existsSync(was)) {
-          const same = sha(new Uint8Array(readFileSync(was))) === sha(bytes);
-          verdict = same ? " same" : " DIFF";
-          if (!same) changed++;
-        } else if (!baseline) {
-          verdict = " new";
-          fresh++;
+        if (first) {
+          const now = Number(await value("Math.round(scrollY)"));
+          await take(file, true, ` scroll=${now}${now === top ? "" : " JUMP"}`);
+          continue;
         }
-        console.log(`shots: ${file} ${width}x${full} ${sha(bytes)}${wide ? " OVERFLOW" : ""}${verdict}${noise.length ? ` ${noise.length} NOISE` : ""}`);
-        for (const line of [...new Set(noise)]) console.log(`  ${line}`);
-        if (probe) {
-          const { result, exceptionDetails } = await send("Runtime.evaluate", { expression: probe, returnByValue: true, awaitPromise: true });
-          console.log(`  ${exceptionDetails ? `probe failed: ${exceptionDetails.text}` : JSON.stringify(result.value)}`);
-        }
-        if (wide) {
-          const { result } = await send("Runtime.evaluate", { expression: WIDE, returnByValue: true });
-          for (const line of JSON.parse(result.value) as string[]) console.log(`  ${line}`);
-        }
+        await take(file, Boolean(act));
       }
     }
     ws.close();

@@ -134,7 +134,7 @@ function App() {
   const read = card.read;
 
   return (
-    <Page crumb="wolfram" title="The 256 rules are the 256 cube designs"
+    <Page title="The 256 rules are the 256 cube designs"
       sub="An elementary cellular automaton writes one byte on the eight neighbourhoods of a cell, and a three-dimensional parity design writes one byte on the eight corners of a cube. They are the same byte. Pick a rule and it arrives with a design's card already filled in, and where the rule is additive its own diagram is a plane design of the same tree."
       controls={controls}
       foot={<>Every bit, count and class on this page is computed in the crates and walked through wasm; the page only draws. The single-cell view runs the stable convention, a line padded by the depth and cropped back to the light cone, so the boundary never reaches the window; turning wrap on runs the same seed on a ring instead. Nearby: <a href="../life">life</a> runs birth and survival rules read from named sequences, <a href="../mrlylife">mrlylife</a> runs the same rules on any mask the tree draws, <a href="../universe">the universe</a> is the design gallery these bytes come from. The class lattice, the surjectivity census and the additive bridge are in <a href="/research/notes/automata/">the automata note</a>.</>}>

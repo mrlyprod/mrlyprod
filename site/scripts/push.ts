@@ -1,4 +1,7 @@
 import { main } from "../kit/push.ts";
 import { spec } from "./site.ts";
 
-if (import.meta.main) await main(spec);
+if (import.meta.main) {
+  process.chdir(spec.root);
+  await main(spec);
+}

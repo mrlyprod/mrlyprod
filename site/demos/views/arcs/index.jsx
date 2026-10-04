@@ -109,7 +109,7 @@ function App() {
   );
 
   return (
-    <Page crumb="arcs" title="Loops in arcs" controls={controls}
+    <Page title="Loops in arcs" controls={controls}
       sub="Every cell of a design carries two quarter arcs, each joining the midpoints of two neighbouring edges: a filled cell takes the arcs around its lower-left and upper-right corners, an empty cell the other two. The arcs join into curves. The strands, in blue, run from border to border, and there are always twice the side of them. The loops, in orange, close on themselves, and how many there are is up to the design."
       foot={<>Every count on this page comes from the crate through wasm, by union-find over the edge midpoints; the page only draws. Row 0 is at the bottom, so code 7 at base 2 leaves its upper-right quarter empty. A law shows when one is proved: the carpet, base 3 code 495, and all sixteen codes at base 2. Nearby: <a href="../universe/">the universe</a> lists the designs, <a href="../tile/">the tile</a> repeats one.</>}>
       <Sketch draw={draw} deps={[view, q.cells]} role="img" aria-label={`${view.name ?? 'a design'} at level ${level} drawn in arcs`} />

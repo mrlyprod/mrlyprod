@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { index, resolve, stamp } from "./links.ts";
+import { answer, index, resolve } from "./links.ts";
 import type { Input, Route, Site } from "./build.ts";
 
 /* SITE */
@@ -77,17 +77,19 @@ test("a fragment and a query ride along", () => {
   expect(resolve(mrly, "research/core.md", "../demos/spin/?code=7")).toBe("/demos/spin/?code=7");
 });
 
-/* STAMP */
+/* ASKS */
 
-test("the stamp moves when a route a page could link to disappears", () => {
-  const gone = { ...mrly, routes: mrly.routes.filter((one) => one.route !== "/research/bases/") } as Site;
-  expect(stamp(index(gone))).not.toBe(stamp(mrly.index!));
-});
-
-test("a source outside the repo never lands in the stamp", () => {
-  const away = "/shelf/carpet/README.md";
-  const wide = { ...mrly, routes: [...mrly.routes, { route: "/shelf/carpet/", kind: "note", source: away }] } as Site;
-  expect(stamp(index(wide))).not.toContain(away);
+test("a link asks the route map by a path from the repo root, and the answer moves with the route", () => {
+  const asks = new Set<string>();
+  const asked = { ...mrly, asks } as Site;
+  expect(resolve(asked, "research/core.md", "bases.md")).toBe("/research/bases/");
+  expect(resolve(asked, "research/core.md", "soon.md")).toBe("soon.md");
+  expect([...asks].filter((ask) => !ask.startsWith("/"))).toEqual(["research/bases.md", "research/soon.md"]);
+  expect(answer(mrly.index!, "research/bases.md")).toBe("/research/bases/");
+  expect(answer(mrly.index!, "research/soon.md")).toBe("");
+  const gone = index({ ...mrly, routes: mrly.routes.filter((one) => one.route !== "/research/bases/") } as Site);
+  expect(answer(gone, "research/bases.md")).toBe("");
+  expect(answer(mrly.index!, "/git/research/lab/walk.rs")).toBe("true");
 });
 
 /* FALLBACK */

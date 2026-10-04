@@ -1,4 +1,7 @@
 import { expect, test } from 'bun:test';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { Settings } from '../chrome.jsx';
 import { paints, rng } from './frame.js';
 import { fell } from './matrix.js';
 import { bounce } from './sleep.js';
@@ -39,10 +42,11 @@ test('the sleeper clamps and flips at both walls', () => {
   expect(bounce(50, 4, 100)).toEqual({ p: 50, v: 4, hit: false });
 });
 
-test('the chrome whitelist is the saver list', async () => {
+test('the saver list lives at the door: the chrome names none and the settings offer each', async () => {
   const src = await Bun.file(new URL('../chrome.js', import.meta.url)).text();
-  const listed = /const SCREENS = \[([^\]]*)\]/.exec(src)?.[1] ?? '';
-  expect(listed.split(',').map((one) => one.trim().slice(1, -1))).toEqual(SAVERS);
+  for (const name of SAVERS) expect(src).not.toContain(`'${name}'`);
+  const picks = /data-saver-pick[^>]*>(.*?)<\/select>/.exec(renderToStaticMarkup(createElement(Settings)))[1];
+  expect([...picks.matchAll(/value="([^"]*)"/g)].map((found) => found[1])).toEqual(['', ...SAVERS]);
 });
 
 const lit = (t) => t.cells.reduce((a, b) => a + b, 0);

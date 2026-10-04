@@ -1,40 +1,41 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { createRoot } from 'react-dom/client';
-import { Shell } from '../ui/chrome.jsx';
-import { demos, load, sidebar } from './tree.js';
-import site from './site.js';
+import { Contents } from '../ui/contents.jsx';
+
+let pages = [];
 
 export function mount(node) {
-  createRoot(document.getElementById('root')).render(node);
+  const root = document.getElementById('root');
+  const still = root.nextElementSibling;
+  pages = [...(still?.querySelectorAll('.reads a') ?? [])].map((a) => ({ name: a.textContent, href: a.getAttribute('href') }));
+  still?.remove();
+  createRoot(root).render(node);
 }
 
-export function useShelves() {
-  const [shelves, set] = useState(demos);
+function Bar({ controls, contents = [] }) {
+  const slot = document.querySelector('#right .controls');
   useEffect(() => {
-    let live = true;
-    if (!shelves.length) load().then((list) => live && set(list));
-    return () => { live = false; };
-  }, [shelves.length]);
-  return shelves;
+    if (contents.length) window.dispatchEvent(new Event('wire'));
+  }, [contents.length]);
+  if (!slot) return null;
+  return createPortal(<>{controls}<Contents items={contents} /></>, slot);
 }
 
-const READS = `${site.prefix}reads`;
-
-function reads() {
-  const el = typeof document === 'undefined' ? null : document.getElementById(READS);
-  return el ? JSON.parse(el.textContent) : [];
-}
-
-export function Page({ crumb, title, sub, foot, bare, controls, contents, children }) {
-  const shelves = useShelves();
-  const nodes = sidebar({ demos: shelves });
-  const pages = reads();
+export function Page({ title, sub, foot, bare, controls, contents, children }) {
   return (
-    <Shell route={`/demos/${crumb}/`} title={bare ? undefined : title} lead={sub} tree={nodes} controls={controls} contents={contents} wide>
+    <>
+      {!bare && title && (
+        <div className="lede">
+          <h1>{title}</h1>
+          {sub && <p className="lead">{sub}</p>}
+        </div>
+      )}
       {children}
       {foot && <p className="foot" hidden={bare}>{foot}</p>}
       {pages.length > 0 && <p className="reads" hidden={bare}>Read: {pages.map((page, i) => <span key={page.href}>{i > 0 && ', '}<a href={page.href}>{page.name}</a></span>)}.</p>}
-    </Shell>
+      <Bar controls={controls} contents={contents} />
+    </>
   );
 }
 

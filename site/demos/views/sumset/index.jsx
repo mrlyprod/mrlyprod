@@ -191,7 +191,7 @@ function App() {
   );
 
   return (
-    <Page crumb="sumset" title="Three plus four: Erdos problem 125"
+    <Page title="Three plus four: Erdos problem 125"
       sub={<>Add a number whose base-3 digits are all <code>0</code> or <code>1</code> to one whose base-4 digits are. Just below each near meeting of a power of 3 and a power of 4 the sums <code>S</code> miss a whole run of integers, so the share <code>D(x)</code> of lit integers up to <code>x</code> dips, and along ever closer meetings its lower limit is 0. Whether it returns above one fixed share at arbitrarily large <code>x</code> is open. Jump to a gap, zoom into the strip and watch.</>}
       controls={controls}
       foot={<>The strip is one bit per integer up to <code>3^{level}</code>, built in Rust: the members of <code>A</code> set directly, then each power of 4 folded in by one shift-or pass. Each strip pixel is shaded by the share of lit integers it covers, and the density chart draws the least and the greatest <code>D(x)</code> over each pixel of <code>log x</code>, so every dip shows at its true depth. The energy <code>E(k, m)</code> is summed over the <code>3^m</code> digit strings a difference in <code>B_m</code> can be, each weighted by <code>2</code> to the zero digits it has in base 4 and in balanced ternary. Every count, density, gap and energy comes out of the crates through wasm; the page only draws. The proofs and the census to <code>3^22</code> are on <a href="/research/notes/cobham/">two bases</a>, section Object S.</>}>

@@ -1,18 +1,17 @@
 import type { BunPlugin } from "bun";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { basename, dirname, join, relative, resolve } from "node:path";
 import { createElement as h } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import katex from "katex";
-import { build, bytes, jsonScript, jsonText, probe, walk, type Node, type Output, type Route, type Site, type Spec } from "../kit/ssg/build.ts";
+import { build, bytes, jsonScript, probe, walk, type Node, type Output, type Route, type Site, type Spec } from "../kit/ssg/build.ts";
 import { config as gitConfig, shell as gitShell } from "../kit/git/git.ts";
 import { resolve as resolveLink } from "../kit/ssg/links.ts";
 import type { Shell as Entry } from "../kit/ssg/modes.ts";
 import { themed } from "../kit/ssg/pic.ts";
 import { escape, front, inline, plain, render as md, summary, title } from "../kit/ssg/md.ts";
 import { posts as parsed, type Leaf as Posted } from "../kit/ssg/blog.ts";
-import { sidebar, tree } from "../lib/tree.js";
-import { Glyph, Grid, Menu, Shell } from "../ui/chrome.jsx";
+import { Glyph, Grid, Menu, Settings, Shell } from "../ui/chrome.jsx";
 import { claimsScript, headScript, inlineScripts, tintCss } from "../ui/config.js";
 import { grid as glyphs, logoSvg } from "../ui/logo.js";
 import "../lib/site.js";
@@ -216,8 +215,10 @@ function meta(route: string, name: string, description: string, type: string, im
   ].join("\n");
 }
 
-function headings(body: string) {
-  return [...body.matchAll(HEADING)].map((m) => ({ level: Number(m[1]), id: m[2], text: untag(m[3]) }));
+type Heading = { level: number; id: string; text: string };
+
+function headings(body: string): Heading[] {
+  return [...body.matchAll(HEADING)].map((m) => ({ level: Number(m[1]), id: m[2]!, text: untag(m[3]!) }));
 }
 
 type Leaf = {
@@ -233,14 +234,19 @@ type Leaf = {
   tree?: Node[];
   image?: Picture;
   scripts?: string[];
+  contents?: Heading[];
+  controls?: boolean;
+  sheets?: string[];
+  head?: string;
 };
 
 function shell(site: Site, leaf: Leaf) {
-  const { route, name, description, body, type = "article", wide = false, bare = false, code = false, data } = leaf;
+  const { route, name, description, body, type = "article", wide = false, bare = false, code = false, data, controls = false } = leaf;
   const article = h(bare ? "div" : "article", { className: bare ? undefined : "prose", dangerouslySetInnerHTML: { __html: body } });
-  const main = renderToStaticMarkup(h(Shell, { route, tree: leaf.tree ?? site.nav, contents: headings(body), wide }, article));
+  const main = renderToStaticMarkup(h(Shell, { route, tree: leaf.tree ?? [], contents: leaf.contents ?? headings(body), controls, late: code, wide }, article));
   const ld = data ? `${jsonScript(data)}\n` : "";
   const more = (leaf.scripts ?? []).map((src) => `\n<script type="module" src="${src}"></script>`).join("");
+  const sheets = (leaf.sheets ?? [site.asset(code ? "git.css" : "page.css")]).map((href) => `<link rel="stylesheet" href="${href}">`).join("\n");
   const image = leaf.image ?? (code ? picture(site, "site-code", route) : OG);
   return `<!doctype html>
 <html lang="en" data-prefix="${SITE.prefix}">
@@ -250,9 +256,9 @@ function shell(site: Site, leaf: Leaf) {
 ${BOOT}
 <title>${escape(brand(name))}</title>
 ${meta(route, name, description, type, image)}
-<link rel="stylesheet" href="${site.asset(code ? "git.css" : "page.css")}">
+${sheets}
 ${TINT}
-${ld}<script type="module" src="${site.asset("chrome.js")}"></script>${more}
+${ld}<script type="module" src="${site.asset("chrome.js")}"></script>${more}${leaf.head ?? ""}
 </head>
 <body>
 ${main}
@@ -263,7 +269,7 @@ ${main}
 
 /* DEMOS */
 
-type Card = { name: string; title: string; blurb: string; shelf: string; order: number; reads: Read[] };
+type Card = { name: string; title: string; blurb: string; shelf: string; order: number; bar: boolean; reads: Read[] };
 
 type Read = { name: string; href: string };
 
@@ -273,33 +279,37 @@ type Bay = Node & { key: string };
 
 const SHELVES = (SITE.shelves ?? []) as Shelf[];
 
+const DEMOS = "/demos/";
+
+const EYES = { name: "The eyes of MrlyMath", lead: "Every number and pixel on these pages comes out of the Rust crates through wasm. The browser only draws." };
+
+const NEEDS = { demo: "This demo draws in the browser and needs JavaScript.", widget: "This figure draws in the browser and needs JavaScript.", stats: "These numbers load in the browser and need JavaScript." };
+
 const TITLE = /<title>([^<]*)<\/title>/;
 
-const OWN = /[ \t]*<meta name="?(?:description|shelf|order)"?[^>]*>\n?/g;
+const SHEET = /<link rel="stylesheet"[^>]*?href="([^"]+)"/g;
+
+const CARRIED = /<link rel="modulepreload"[^>]*>|<script\b[^>]*>[\s\S]*?<\/script>/g;
 
 const tag = (html: string, name: string) => {
   const found = html.match(new RegExp(`<meta name="${name}" content="([^"]*)">`));
   return found ? untag(found[1]) : "";
 };
 
-const demoHome = (site: Site, name: string) =>
-  name ? join(site.input("demos").path, name) : dirname(site.input("demos").path);
+const demoHome = (site: Site, name: string) => join(site.input("demos").path, name);
 
-export const demoShell = (site: Site, name: string) => join(demoHome(site, name), "index.html");
+const demoShell = (site: Site, name: string) => join(demoHome(site, name), "index.html");
 
 function demoNames(site: Site) {
   const home = site.input("demos").path;
-  return [
-    "",
-    ...site
-      .input("demos")
-      .files.filter((f) => f.endsWith("/index.html"))
-      .map((f) => dirname(f).slice(home.length + 1))
-      .sort((a, b) => a.localeCompare(b)),
-  ];
+  return site
+    .input("demos")
+    .files.filter((f) => f.endsWith("/index.html"))
+    .map((f) => dirname(f).slice(home.length + 1))
+    .sort((a, b) => a.localeCompare(b));
 }
 
-const demoRoute = (name: string) => (name ? `/demos/${name}/` : "/demos/");
+const demoRoute = (name: string) => `${DEMOS}${name}/`;
 
 function cards(site: Site): Card[] {
   return demoNames(site).map((name) => {
@@ -311,6 +321,7 @@ function cards(site: Site): Card[] {
       blurb: tag(html, "description"),
       shelf: tag(html, "shelf"),
       order: Number(tag(html, "order")) || 0,
+      bar: tag(html, "bar") !== "none",
       reads: [],
     };
   });
@@ -320,7 +331,6 @@ const MENTION = (name: string) => new RegExp(`demos/${name}/`);
 
 function readers(list: Card[], pages: { name: string; href: string; md: string }[]) {
   for (const card of list) {
-    if (!card.name) continue;
     const seen = MENTION(card.name);
     card.reads = pages.filter((p) => seen.test(p.md)).map((p) => ({ name: p.name, href: p.href }));
   }
@@ -337,36 +347,35 @@ function shelved(list: Card[]): Bay[] {
   })).filter((one) => one.nodes.length);
 }
 
-export const demoTree = (site: Site) => shelved(cards(site));
-
-function demoGroup(site: Site): Route {
-  const list = cards(site);
-  const gallery = [demoShell(site, ""), join(demoHome(site, ""), "index.jsx"), GLUE, ...LIVE.flatMap((one) => one.inputs)];
-  const inputs = [...gallery, ...["demos", "lib", "pkg", "ui"].flatMap((one) => site.input(one).files)];
-  return {
-    route: "/demos/",
-    kind: "demos",
-    name: "Demos",
-    data: list,
-    source: site.input("demos").path,
-    inputs,
-    urls: list.map((d) => ({ route: demoRoute(d.name), name: d.title, source: demoHome(site, d.name), entry: demoShell(site, d.name) })),
-  };
+function demoRoutes(site: Site, list: Card[]): Route[] {
+  const home = site.input("demos").path;
+  const shells = list.map((d) => demoShell(site, d.name));
+  return [
+    { route: DEMOS, kind: "gallery", name: "Demos", mode: "ssg", data: shelved(list), source: home, inputs: shells, urls: [{ route: DEMOS, name: EYES.name, source: dirname(home) }] },
+    ...list.map((d, n) => ({ route: demoRoute(d.name), kind: "demo", name: d.title, data: d, source: demoHome(site, d.name), inputs: [shells[n]!], entry: shells[n]! })),
+  ];
 }
 
-function seo(source: string, card: Card, nav: string, image: Picture, fonts: string) {
-  const html = source
-    .replace(/<html([^>]*)>/, (_, attrs: string) => `<html${attrs.replace(/ data-prefix="[^"]*"/, "")} data-prefix="${SITE.prefix}">`)
-    .replace(/<script data-boot>[\s\S]*?<\/script>\n?/, "")
-    .replace(OWN, "");
-  const route = demoRoute(card.name);
-  const found = html.match(TITLE);
-  const name = found ? untag(found[1]) : card.title;
-  const tags = meta(route, name, card.blurb || name, "website", image);
-  const reads = `<script type="application/json" id="${SITE.prefix}reads">${jsonText(card.reads)}</script>`;
-  const block = `${BOOT}\n<title>${escape(brand(name))}</title>\n${tags}\n${nav}\n${reads}\n<link rel="stylesheet" href="${fonts}">`;
-  const page = found ? html.replace(found[0], block) : html.replace("<head>", `<head>\n${block}`);
-  return page.replace("</head>", `${TINT}\n</head>`);
+function gallery(site: Site, route: Route): Output[] {
+  const bays = route.data as Bay[];
+  const out: Output[] = [];
+  const fig = press(site, out);
+  const groups: { name: string; shelves: Shelf[] }[] = [];
+  for (const one of SHELVES) {
+    const last = groups[groups.length - 1];
+    if (last && last.name === one.group) last.shelves.push(one);
+    else groups.push({ name: one.group, shelves: [one] });
+  }
+  const tiles = (key: string) => (bays.find((one) => one.key === key)?.nodes ?? []).map((node) => ({ ...node, figure: fig(`demo-${node.href!.slice(DEMOS.length, -1)}`, route.route) }));
+  const bay = (one: Shelf) => {
+    const nodes = tiles(one.key);
+    return nodes.length ? `<div class="shelf" id="${one.key}"><h2>${escape(one.title)}</h2><p>${escape(one.blurb)}</p></div>${grid(nodes)}` : "";
+  };
+  const contents = groups.flatMap((group) => [{ id: group.name.toLowerCase(), text: group.name, level: 2 }, ...group.shelves.map((one) => ({ id: one.key, text: one.title, level: 3 }))]);
+  const sections = groups.map((group) => `<section id="${group.name.toLowerCase()}"><h2 class="group">${escape(group.name)}</h2>${group.shelves.map(bay).join("")}</section>`);
+  const body = `<div class="lede"><h1 id="demos">${escape(EYES.name)}</h1><p class="lead">${escape(EYES.lead)}</p></div>${sections.join("")}`;
+  out.push({ path: pageOf(route.route), bytes: shell(site, { route: route.route, name: EYES.name, description: EYES.lead, body, type: "website", wide: true, bare: true, contents, image: picture(site, "site-demos", route.route, fig) }) });
+  return out;
 }
 
 const widgetFiles = (site: Site) => site.input("demos").files.filter((f) => f.endsWith("/widget.jsx"));
@@ -375,18 +384,26 @@ const demoEntries = (site: Site) => [...demoNames(site).map((name) => demoShell(
 
 const demoPlace = (path: string) => (path.startsWith("demos/views/") ? `demos/${path.slice(12)}` : path === "demos/live.js" ? "live.js" : path);
 
-function demoPage(site: Site, route: Route, shell: Entry, out: Output[]) {
-  const list = route.data as Card[];
-  const card = list.find((d) => demoRoute(d.name) === shell.route)!;
-  const json = jsonText(shelved(list));
+function demoPage(site: Site, route: Route, entry: Entry, out: Output[]) {
+  const card = route.data as Card;
   const fig = press(site, out);
-  if (!card.name) {
-    out.push({ path: "demos/tree.json", bytes: json, type: "application/json" });
-    for (const d of list) if (d.name) fig(`demo-${d.name}`, "/demos/");
-  }
-  const nav = `<script type="application/json" id="${SITE.prefix}tree">${json}</script>`;
-  const image = picture(site, card.name ? `demo-${card.name}` : "site-demos", shell.route, fig);
-  return seo(shell.html, card, nav, image, site.asset("fonts.css"));
+  const figure = `demo-${card.name}`;
+  const reads = card.reads.length ? `<p class="reads">Read: ${card.reads.map((p) => `<a href="${p.href}">${escape(p.name)}</a>`).join(", ")}.</p>` : "";
+  const still = `<div class="lede"><h1>${escape(card.title)}</h1><p class="lead">${escape(card.blurb)}</p></div>\n${hero(fig, figure, route.route, card.title)}\n<noscript><p>${NEEDS.demo}</p></noscript>${reads}`;
+  return shell(site, {
+    route: route.route,
+    name: card.title,
+    description: card.blurb || card.title,
+    body: `<div id="root"></div><div>${still}</div>`,
+    type: "website",
+    wide: true,
+    bare: true,
+    contents: [],
+    controls: card.bar,
+    image: picture(site, figure, route.route, fig),
+    sheets: [site.asset("fonts.css"), ...[...entry.html.matchAll(SHEET)].map((found) => found[1]!)],
+    head: `\n${(entry.html.match(CARRIED) ?? []).join("")}`,
+  });
 }
 
 /* README */
@@ -507,10 +524,9 @@ function paperIndex(site: Site, route: Route): Output[] {
   const out: Output[] = [];
   const fig = press(site, out);
   const top = intro(site, route.source as string, out);
-  const fresh = new Set(DRESS.papers.map((p) => p.href));
-  const nodes = wear(site, route.route, fig, route.route);
-  const shelfNote = `<section><h2 id="shelf">The shelf</h2><p class="lead">The first editions, in LaTeX with a PDF each, deprecated: every paper is rewritten here in turn and the shelf is never edited.</p>${grid(nodes.filter((n) => !fresh.has(n.href ?? "")))}</section>`;
-  const body = `<article class="prose readme">${top.html}</article>\n${grid(nodes.filter((n) => fresh.has(n.href ?? "")))}\n${nodes.some((n) => !fresh.has(n.href ?? "")) ? shelfNote : ""}`;
+  const cards = (list: { name: string; href: string }[]) => grid(dress(list.map(({ name, href }) => ({ name, href })), marks(DRESS), fig, route.route));
+  const shelfNote = `<section><h2 id="shelf">The shelf</h2><p class="lead">The first editions, in LaTeX with a PDF each, deprecated: every paper is rewritten here in turn and the shelf is never edited.</p>${cards(DRESS.lanes)}</section>`;
+  const body = `<article class="prose readme">${top.html}</article>\n${cards(DRESS.papers)}\n${DRESS.lanes.length ? shelfNote : ""}`;
   out.push({ path: pageOf(route.route), bytes: shell(site, { route: route.route, name: top.name, description: top.lead, body, type: "website", wide: true, bare: true, image: picture(site, PAPERS.figure, route.route, fig) }) });
   return out;
 }
@@ -691,7 +707,7 @@ const posts = (site: Site): Post[] =>
 function blogPage(site: Site, leaf: Posted) {
   const fig = press(site, leaf.out);
   if (leaf.kind === "blog") {
-    const body = `<div class="lede"><h1 id="blog">Blog</h1><p class="lead">${escape(BLOG_LEAD)}</p></div>\n${grid(wear(site, "/blog/", fig, leaf.route))}`;
+    const body = `<div class="lede"><h1 id="blog">Blog</h1><p class="lead">${escape(BLOG_LEAD)}</p></div>\n${grid(dress(leaf.posts.map((one) => ({ name: one.title, href: one.route })), marks(DRESS), fig, leaf.route))}`;
     return shell(site, { route: leaf.route, name: "Blog", description: BLOG_LEAD, body, type: "website", wide: true, bare: true });
   }
   const figure = leaf.front.figure || `blog-${leaf.slug}`;
@@ -711,9 +727,11 @@ function blogPage(site: Site, leaf: Posted) {
 
 /* PAGES */
 
+const pageRoute = (slug: string) => `/${slug}/`;
+
 function page(site: Site, route: Route): Output[] {
   const source = route.source as string;
-  const slug = route.route.slice(1, -1);
+  const slug = basename(source, ".md");
   const { data, body } = front(read(source));
   const name = data.title ?? slug;
   const lead = data.lead ?? lede(body);
@@ -725,19 +743,34 @@ function page(site: Site, route: Route): Output[] {
   const own = data.figure || FIXED[route.route];
   const image = own ? picture(site, own, route.route, fig) : OG;
   const html = shell(site, { route: route.route, name, description: lead, body: `${open}${head}\n${md(body, { math, lazy: Boolean(open), link: links(site, source, out) })}${act}`, type: "website", image });
-  out.push({ path: `${slug}/index.html`, bytes: html });
+  out.push({ path: pageOf(route.route), bytes: html });
   return out;
 }
 
-type Dress = { lanes: Lane[]; papers: Paper[]; notes: Note[]; posts: Post[]; demos: Card[]; wiki: Entry[] };
+/* APPS */
+
+type App = { id: string; title: string; kind: string };
+
+const SETTINGS = { lead: "Theme, font, tint and saver, kept in this browser.", needs: "Settings need JavaScript. Without it the site follows the system theme." };
+
+const APP_KIND: Record<string, string> = { settings: "settings" };
+
+const appRoute = (id: string) => `/${id}/`;
+
+function settings(site: Site, route: Route): Output[] {
+  const app = route.data as App;
+  const body = `<div class="lede"><h1 id="settings">${escape(app.title)}</h1><p class="lead">${escape(SETTINGS.lead)}</p></div>\n<noscript><p>${SETTINGS.needs}</p></noscript>\n${renderToStaticMarkup(h(Settings))}`;
+  return [{ path: pageOf(route.route), bytes: shell(site, { route: route.route, name: app.title, description: SETTINGS.lead, body, type: "website" }) }];
+}
+
+type Dress = { lanes: Lane[]; papers: Paper[]; notes: Note[]; posts: Post[] };
 
 type Mark = { figure: string; text: string; dates?: string[] };
 
-let DRESS: Dress = { lanes: [], papers: [], notes: [], posts: [], demos: [], wiki: [] };
+let DRESS: Dress = { lanes: [], papers: [], notes: [], posts: [] };
 
 const FIXED: Record<string, string> = {
   "/": "site-home",
-  "/tools/": "site-tools",
   "/math/": "site-math",
   "/git/": "site-code",
   "/about/": "site-icon",
@@ -747,43 +780,43 @@ const FIXED: Record<string, string> = {
 
 function marks(data: Dress): Map<string, Mark> {
   const map = new Map<string, Mark>();
-  for (const d of data.demos) if (d.name) map.set(demoRoute(d.name), { figure: `demo-${d.name}`, text: d.blurb });
   for (const p of data.papers) map.set(p.href, { figure: p.figure, text: p.lead, dates: marked(p) });
   for (const p of data.lanes) map.set(p.href, { figure: `paper-${p.slug}`, text: p.blurb, dates: stamps(p) });
   for (const n of data.notes) if (!n.home) map.set(n.href, { figure: n.figure, text: n.lead });
   for (const p of data.posts) map.set(`/blog/${p.slug}/`, { figure: p.figure, text: p.lead, dates: [p.date] });
-  for (const e of data.wiki) map.set(e.href, { figure: e.figure, text: e.lead });
-  for (const one of FOLDERS) map.set(one.href, { figure: one.figure, text: one.text });
-  for (const [href, figure] of Object.entries(FIXED)) map.set(href, { figure, text: "" });
   return map;
 }
 
 function dress(nodes: Node[], map: Map<string, Mark>, fig: Fig, route: string): Node[] {
   return nodes.map((node) => {
-    if (node.nodes?.length) return { ...node, nodes: dress(node.nodes, map, fig, route) };
     const mark = node.href ? map.get(node.href) : undefined;
     if (!mark) return node;
     return { ...node, figure: fig(mark.figure, route), text: mark.text || undefined, dates: mark.dates };
   });
 }
 
-let NAV: Node[] = [];
+/* MENU */
 
-const wear = (site: Site, href: string, fig: Fig, route: string) => dress(NAV.find((node) => node.href === href)?.nodes ?? [], marks(DRESS), fig, route);
+type Door = { name: string; href?: string; figure?: string; nodes?: Door[] };
 
-function elsewhere() {
-  const links = SITE.socials.map((s) => `<li><a href="${escape(s.href)}">${escape(s.name)}</a></li>`).join("");
-  const mail = `<li><a href="mailto:${escape(SITE.contact)}">${escape(SITE.contact)}</a></li>`;
-  return `<section class="elsewhere"><h2>Elsewhere</h2><ul>${links}${mail}</ul></section>`;
+const PLAIN = "site-page";
+
+const shipped = (href: string) => FIXED[href] ?? [...FOLDERS, ...DOORS].find((one) => one.href === href)?.figure;
+
+const folded = (name: string) => ({ Research: shipped(HUB), Apps: "site-apps" })[name];
+
+function filled(fills: Record<string, Door[]>): Door[] {
+  return (SITE.tree as Door[]).map((node) => (node.href ? node : { ...node, nodes: node.nodes ?? fills[node.name.toLowerCase()] ?? [] })).filter((node) => node.href || node.nodes!.length);
 }
 
 function menu(site: Site, route: Route): Output[] {
-  const lead = "Every page on mrly.net.";
+  const lead = "Every door of mrly.net.";
   const out: Output[] = [];
   const fig = press(site, out);
-  const nav = dress(NAV, marks(route.data as Dress), fig, route.route);
-  const list = renderToStaticMarkup(h(Menu, { tree: nav }));
-  const body = `<div class="hero"><h1><span role="img" aria-label="${escape(SITE.title)}">${WORD}</span></h1><p>${escape(lead)}</p></div>\n${list}\n${elsewhere()}`;
+  const icon = (door: Door) => door.figure ?? (door.href ? shipped(door.href) : folded(door.name)) ?? PLAIN;
+  const wear = (door: Door): Node => ({ name: door.name, href: door.href, figure: fig(icon(door), route.route), nodes: door.nodes?.map(wear) });
+  const list = renderToStaticMarkup(h(Menu, { tree: (route.data as Door[]).map(wear) }));
+  const body = `<div class="hero"><h1><span role="img" aria-label="${escape(SITE.title)}">${WORD}</span></h1><p>${escape(lead)}</p></div>\n${list}`;
   out.push({ path: "menu/index.html", bytes: shell(site, { route: route.route, name: "Menu", description: lead, body, type: "website", wide: true, bare: true }) });
   return out;
 }
@@ -800,6 +833,7 @@ const WATCH = "The CDN, the Lambdas and the bucket, read from the bucket every m
 
 function stats(site: Site, route: Route): Output[] {
   const body = `<div class="lede"><h1 id="stats">Stats</h1><p class="lead">${escape(WATCH)} Raw: <a href="/stats/stats.json">stats.json</a>.</p></div>
+<noscript><p>${NEEDS.stats}</p></noscript>
 <section><h2 id="cloud">Cloud</h2><div data-stats="cloud"><p class="fine">Loading</p></div></section>
 <section><h2 id="errors">Errors</h2><div data-stats="errors"><p class="fine">Loading</p></div></section>`;
   return [{ path: "stats/index.html", bytes: shell(site, { route: route.route, name: "Stats", description: WATCH, body, type: "website", scripts: [site.asset("stats.js")] }) }];
@@ -858,29 +892,8 @@ ${what}
 
 function missing(site: Site, route: Route): Output[] {
   const doors = DOORS.map((d) => `<a href="${d.href}">${d.name}</a>`);
-  const body = `<div class="lede"><h1 id="lost">Nothing here</h1><p class="lead">That page does not exist. The <a href="/menu/">Menu</a> lists every page on this site, and the doors are ${doors.slice(0, -1).join(", ")} and ${doors[doors.length - 1]}.</p></div>`;
+  const body = `<div class="lede"><h1 id="lost">Nothing here</h1><p class="lead">That page does not exist. The <a href="/menu/">Menu</a> holds every door of this site, starting with ${doors.slice(0, -1).join(", ")} and ${doors[doors.length - 1]}.</p></div>`;
   return [{ path: "404.html", bytes: shell(site, { route: route.route, name: "Nothing here", description: "That page does not exist.", body, type: "website", bare: true }) }];
-}
-
-/* THIN */
-
-const THIN: Record<string, { name: string; figure: string; lead: string; note: string }> = {
-  "/tools/": {
-    name: "Tools",
-    figure: "site-tools",
-    lead: "A canvas for mrly objects: tiles, slices, rings and roulettes on one sheet, the perforator first.",
-    note: `The first tool is on its way. The <a href="/demos/">demos</a> already draw every object it will place, and <a href="/math/">the standard</a> names them.`,
-  },
-};
-
-function thin(site: Site, route: Route): Output[] {
-  const t = THIN[route.route]!;
-  const out: Output[] = [];
-  const fig = press(site, out);
-  const slug = route.route.slice(1, -1);
-  const body = `${hero(fig, t.figure, route.route, t.name)}\n<div class="lede"><h1 id="${slug}">${t.name}</h1><p class="lead">${escape(t.lead)}</p></div>\n<p>${t.note}</p>`;
-  out.push({ path: `${slug}/index.html`, bytes: shell(site, { route: route.route, name: t.name, description: t.lead, body, type: "website", image: picture(site, t.figure, route.route, fig) }) });
-  return out;
 }
 
 /* WIKI */
@@ -945,7 +958,7 @@ function widgets(site: Site, used: Set<string>) {
     if (!existsSync(file)) throw new Error(`site: demos/${name}/ has no widget.jsx to embed`);
     if (!VIEW(view).test(read(file))) throw new Error(`site: demos/${name}/widget.jsx exports no view named ${view}`);
     used.add(name);
-    return `<figure class="widget" data-demo="${name}" data-view="${view}"><div class="mount"></div><figcaption>${caption}</figcaption></figure>`;
+    return `<figure class="widget" data-demo="${name}" data-view="${view}"><div class="mount"></div><noscript><p>${NEEDS.widget}</p></noscript><figcaption>${caption}</figcaption></figure>`;
   };
 }
 
@@ -1042,8 +1055,7 @@ async function collect(site: Site) {
   const laneList = lanes().filter((p) => !fresh.has(p.slug));
   const noteList = notes(site);
   const postList = posts(site);
-  const group = demoGroup(site);
-  const demoList = group.data as Card[];
+  const demoList = cards(site);
   const claimList = claims(site);
   const wikiList = wiki(site);
   readers(demoList, [
@@ -1056,15 +1068,19 @@ async function collect(site: Site) {
   counts.blog = postList.length;
   counts.demos = demoList.length;
   counts.wiki = wikiList.length;
-  const lists = {
-    wiki: wikiList.map((e) => ({ name: e.name, href: e.href })),
-    demos: shelved(demoList),
-    papers: [...paperList, ...laneList].map((p) => ({ name: p.name, href: p.href })),
-    research: [...(claimList.length ? [{ name: CLAIMS.name, href: CLAIMS.href, first: true }] : []), ...noteList.filter((n) => !n.home).map((n) => ({ name: n.title, href: n.href }))],
-    blog: postList.map((p) => ({ name: p.name, href: `/blog/${p.slug}/` })),
+  const listed = site.input("apps").files[0];
+  const appList = listed ? (JSON.parse(read(listed)) as App[]) : [];
+  const pages = site.input("pages");
+  const pageList = pages.files.map((source) => {
+    const slug = basename(source, ".md");
+    const { data } = front(read(source));
+    return { slug, source, name: data.title ?? slug, figure: data.figure || undefined };
+  });
+  const fills = {
+    pages: pageList.map((p) => ({ name: p.name, href: pageRoute(p.slug), figure: p.figure })),
+    apps: appList.map((one) => ({ name: one.title, href: appRoute(one.id) })),
+    elsewhere: [...SITE.socials, { name: SITE.contact, href: `mailto:${SITE.contact}` }],
   };
-  NAV = tree(lists);
-  const nav = sidebar(lists);
   const routes: Route[] = [];
   const readme = join(org, "README.md");
   routes.push({
@@ -1075,14 +1091,17 @@ async function collect(site: Site) {
     source: readme,
     inputs: [readme],
   });
-  for (const route of Object.keys(THIN)) routes.push({ route, kind: "thin", name: THIN[route]!.name });
+  for (const one of appList) {
+    if (!Object.hasOwn(APP_KIND, one.id)) throw new Error(`site: apps/apps.json names ${one.id}, and no page draws it`);
+    routes.push({ route: appRoute(one.id), kind: APP_KIND[one.id]!, name: one.title, data: one, inputs: [listed!] });
+  }
   if (wikiList.length) routes.push(folder(site, "wiki", WIKI, "wiki", wikiList.map((e) => e.file), wikiList.map((e) => [e.slug, e.name, e.lead, e.figure, e.needs])));
   for (const [c, file] of concepts(wikiList)) {
     routes.push({ route: c.href, kind: "concept", name: c.name, data: c, source: file, inputs: [file, ...embeds(site, read(file))] });
   }
   const names = site.input("names");
   if (!names.missing) routes.push({ route: "/math/", kind: "math", name: "Math", source: names.files[0]!, inputs: names.files });
-  routes.push(group);
+  routes.push(...demoRoutes(site, demoList));
   if (laneList.length || paperList.length) {
     const index = join(SHELF, INDEX);
     const data = { lanes: laneList, papers: paperList.map((p) => [p.slug, p.name, p.lead, p.date, p.revised, p.figure]) };
@@ -1117,30 +1136,21 @@ async function collect(site: Site) {
       inputs: n.home ? noteList.filter((one) => !one.topic).map((one) => join(notesHome, one.file)) : [source, ...embeds(site, n.md)],
     });
   }
-  const written = site.input("pages");
-  for (const source of written.files) {
-    const slug = source.slice(written.path.length + 1, -3);
-    const { data } = front(read(source));
-    routes.push({ route: `/${slug}/`, kind: "page", name: data.title ?? slug, source, inputs: [source] });
-  }
-  DRESS = { lanes: laneList, papers: paperList, notes: noteList, posts: postList, demos: demoList, wiki: wikiList };
-  MAP = { wiki: wikiList, notes: noteList, claims: claimList, papers: paperList, lanes: laneList, posts: postList, math: names.files, pages: written.files };
-  routes.push({
-    route: "/menu/",
-    kind: "menu",
-    name: "Menu",
-    data: DRESS,
-  });
+  for (const p of pageList) routes.push({ route: pageRoute(p.slug), kind: "page", name: p.name, source: p.source, inputs: [p.source] });
+  DRESS = { lanes: laneList, papers: paperList, notes: noteList, posts: postList };
+  MAP = { wiki: wikiList, notes: noteList, claims: claimList, papers: paperList, lanes: laneList, posts: postList, math: names.files, pages: pages.files };
+  routes.push({ route: "/menu/", kind: "menu", name: "Menu", data: filled(fills) });
   routes.push({ route: "/cart/", kind: "cart", name: "Cart", hidden: true });
   routes.push({ route: "/stats/", kind: "stats", name: "Stats", hidden: true });
   routes.push({ route: "/404.html", kind: "missing", name: "Nothing here", hidden: true });
-  return { routes, nav };
+  return { routes };
 }
 
 /* RENDER */
 
 const KINDS: Record<string, (site: Site, route: Route) => Output[] | Promise<Output[]>> = {
   home,
+  gallery,
   papers: paperIndex,
   paper,
   written,
@@ -1150,11 +1160,11 @@ const KINDS: Record<string, (site: Site, route: Route) => Output[] | Promise<Out
   claims: claimIndex,
   claim,
   page,
+  settings,
   menu,
   cart,
   stats,
   missing,
-  thin,
   math: standard,
   wiki: wikiIndex,
   concept,
@@ -1209,7 +1219,7 @@ export const spec: Spec = {
     entries: (site) => [...demoEntries(site), VIEWER],
     plugins: () => [mrlyjs(LIVE)],
     place: demoPlace,
-    page: (site, route, shell, out) => (route.kind === "demos" ? demoPage(site, route, shell, out) : gitShell(site, route, shell, spec)),
+    page: (site, route, shell, out) => (route.kind === "demo" ? demoPage(site, route, shell, out) : gitShell(site, route, shell, spec)),
   },
   blog: {
     page: blogPage,
@@ -1218,6 +1228,7 @@ export const spec: Spec = {
 };
 
 if (import.meta.main) {
+  process.chdir(org);
   const done = await build(spec, { manifest: MANIFEST, force: process.argv.includes("--force") });
   const site = done.site;
   const code = site.routes.filter((one) => one.kind === "raw").length;

@@ -256,7 +256,7 @@ function App() {
   );
 
   return (
-    <Page crumb="tour" title="A dozen sequences the designs write" controls={controls}
+    <Page title="A dozen sequences the designs write" controls={controls}
       sub="A design is a rule on the corners of a square or a cube. Grown level by level or widened side by side it counts something, and the count is an integer sequence the OEIS already holds or has just learnt. Every card draws the design live, reads its terms from the crates, and names the record; slide, and the picture and the terms grow together."
       foot={<>A card is one design, one measure and one axis, the same row the <a href="../sequences/">ledger</a> lists, and where a line is such a row the link under its terms opens it with the terms prefilled; the counts of designs, of fractals, of slice vertices, of gasket points and of Farey nodes are not rows of the ledger and carry no link. The level axis grows the fractal at the smallest side the base allows, the side axis holds level one and widens the odd side. The record after the terms is found by the crate from the terms alone, as a window of the entry's own first terms, and the number after it is the entry's index of the first term shown. Every number on this page is computed in Rust; the page only draws. The ledger these cards read from is the <a href="/research/sequences/">sequences</a> note, and the census behind it is the shelf paper <a href="/research/papers/sequence-census/">the sequence census</a>.</>}>
       <div>

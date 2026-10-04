@@ -78,7 +78,7 @@ function App() {
   );
 
   return (
-    <Page crumb="sponge" title="A code on eight corners grows a sponge" controls={controls}
+    <Page title="A code on eight corners grows a sponge" controls={controls}
       sub="A code picks the filled corners of a cube, the cube grows level by level, and the exposed faces come out of Rust already packed for the screen. Drag to orbit, scroll to zoom."
       foot={<>Filled, empty and exposed counts come from closed formulas, so they answer before any cube is built; the mesh is the crate's own list of outward quads, six floats per vertex, and the Euler number is read off the edge graph while the cube is small enough to walk. Where those formulas come from is <a href="/research/notes/core/">the core</a>.</>}>
       <Stage role="img" aria-label="The sponge" deps={[data, opacity]} onStage={(st) => {

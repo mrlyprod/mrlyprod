@@ -138,7 +138,7 @@ function App() {
   );
 
   return (
-    <Page crumb="radix" title="The place dial"
+    <Page title="The place dial"
       sub="A design writes words of digits and then has to put them somewhere. Today the somewhere is a box of cells at a whole-number scale. Turn the place dial and the scale becomes an element of a ring of the plane, the digits become residues modulo that element, and each one carries a unit twist: the word count never moves, the picture becomes a dragon, a gasket, a snowflake or a tile, and two words can land on one point."
       controls={controls}
       foot={<>Every residue, count, dimension and point on this page comes from the crates through wasm; the page only draws. The level is capped so one drawing stays under 2^16 points. The preset names are the standard ones of the literature: what the crate pins is the arithmetic of each quintuple, never the naming. Nearby: <a href="../memory">the memory dial</a> thins the words the same design accepts, <a href="../gaussian">the plane primes</a> walks the same two rings, <a href="../tile">the tile</a> is what the untwisted whole-number base does.</>}>

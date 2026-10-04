@@ -1,8 +1,10 @@
-import { useEffect } from 'react';
 import { halves } from '../kit/ssg/pic.ts';
 import { letters } from '../kit/font/font.js';
-import { wire } from './chrome.js';
+import { FEW, fills } from './bar.js';
 import { conf, HUES } from './config.js';
+import { Contents } from './contents.jsx';
+import { crumbs } from './crumbs.js';
+import { SAVERS } from './savers/index.js';
 
 /* GLYPHS */
 
@@ -67,19 +69,35 @@ function Header() {
   );
 }
 
-function Dock({ route = '/' }) {
-  const word = decodeURIComponent(route).split('/').filter(Boolean).pop() ?? 'home';
+/* SUBHEADER */
+
+function Opener({ side, label, late }) {
   return (
-    <div className="dock">
-      <button type="button" className="glyph" data-pane="left" aria-controls="left" aria-expanded="false" aria-label="Site tree">
-        <Panel side="left" />
-      </button>
-      <span className="route">
-        <Glyph text={word.toUpperCase()} label={word} />
-      </span>
-      <button type="button" className="glyph" data-pane="right" aria-controls="right" aria-expanded="false" aria-label="Page tools">
-        <Panel side="right" />
-      </button>
+    <button type="button" className="glyph" data-pane={side} aria-controls={side} aria-expanded="false" aria-label={label} hidden={late || undefined} data-few={late ? FEW : undefined}>
+      <Panel side={side} />
+    </button>
+  );
+}
+
+function Subheader({ route = '/', left = false, bar = false, late = false }) {
+  const trail = route.endsWith('/') ? crumbs(route) : [];
+  return (
+    <div className="subheader">
+      {trail.length > 0 && (
+        <nav className="crumbs" aria-label="Breadcrumb">
+          <ol>
+            {trail.map((crumb, n) => (
+              <li key={crumb.href}>
+                <a href={crumb.href} aria-current={n === trail.length - 1 ? 'page' : undefined}>{crumb.name}</a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+      )}
+      <div className="actions">
+        {left && <Opener side="left" label="Files" />}
+        {(bar || late) && <Opener side="right" label="Page tools" late={!bar} />}
+      </div>
     </div>
   );
 }
@@ -139,58 +157,28 @@ function Card({ node }) {
   );
 }
 
-const leaves = (nodes) => nodes.filter((node) => node.href && !(node.nodes && node.nodes.length));
-
-const groups = (nodes) => nodes.filter((node) => node.nodes && node.nodes.length);
-
 export function Grid({ nodes = [] }) {
-  const list = leaves(nodes);
-  if (!list.length) return null;
-  return <div className="gallery grid">{list.map((node) => <Card key={node.href} node={node} />)}</div>;
+  if (!nodes.length) return null;
+  return <div className="gallery grid">{nodes.map((node) => <Card key={node.href} node={node} />)}</div>;
 }
 
+const anchor = (name) => name.toLowerCase();
+
 export function Menu({ tree = [] }) {
-  const pages = leaves(tree);
   return (
     <div className="menu">
-      {groups(tree).map((group) => (
-        <section key={group.name} aria-label={group.name}>
-          <h2>{group.href ? <a href={group.href}>{group.name}</a> : group.name}</h2>
-          <Grid nodes={group.nodes} />
-          {groups(group.nodes).map((shelf) => (
-            <div key={shelf.name} className="shelf">
-              <h3>{shelf.href ? <a href={shelf.href}>{shelf.name}</a> : shelf.name}</h3>
-              <Grid nodes={shelf.nodes} />
-            </div>
-          ))}
+      <Grid nodes={tree.map(({ nodes, ...node }) => (nodes ? { ...node, href: `#${anchor(node.name)}` } : node))} />
+      {tree.filter((node) => node.nodes).map((folder) => (
+        <section key={folder.name} id={anchor(folder.name)} aria-label={folder.name}>
+          <h2>{folder.name}</h2>
+          <Grid nodes={folder.nodes} />
         </section>
       ))}
-      {pages.length > 0 && (
-        <section aria-label="Pages">
-          <h2>Pages</h2>
-          <Grid nodes={pages} />
-        </section>
-      )}
     </div>
   );
 }
 
-/* CONTENTS */
-
-function Contents({ items = [] }) {
-  return (
-    <nav className="contents" aria-label="Contents">
-      <h2>Contents</h2>
-      <ol>
-        {items.map((item) => (
-          <li key={item.id} className={`h${item.level ?? 2}`}>
-            <a href={`#${item.id}`}>{item.text}</a>
-          </li>
-        ))}
-      </ol>
-    </nav>
-  );
-}
+/* BAR */
 
 function Controls({ children }) {
   return <section className="controls" aria-label="Controls">{children}</section>;
@@ -206,13 +194,7 @@ const FACES = [
 
 const TINTS = [['', 'Auto'], ...HUES.map((hue) => [hue, hue[0].toUpperCase() + hue.slice(1)])];
 
-const SCREENS = [
-  ['', 'Wordmark'],
-  ['matrix', 'Matrix'],
-  ['sleep', 'Sleep'],
-  ['mandelbrot', 'Mandelbrot'],
-  ['julia', 'Julia'],
-];
+const SCREENS = [['', 'Wordmark'], ...SAVERS.map((name) => [name, name[0].toUpperCase() + name.slice(1)])];
 
 function Pick({ label, name, options }) {
   return (
@@ -225,10 +207,9 @@ function Pick({ label, name, options }) {
   );
 }
 
-function Settings() {
+export function Settings() {
   return (
     <section className="settings" aria-label="Settings">
-      <h2>Settings</h2>
       <div className="row">
         <button type="button" className="theme" data-theme-toggle>Theme <b>auto</b></button>
         <Pick label="Font" name="data-font-pick" options={FACES} />
@@ -267,34 +248,30 @@ function Footer() {
 
 /* SHELL */
 
-export function Shell({ route = '/', title, lead, tree = [], current = route, contents = [], controls, wide = false, children }) {
-  useEffect(() => {
-    wire();
-  }, []);
+export function Shell({ route = '/', tree = [], current = route, contents = [], controls, late = false, wide = false, children }) {
+  const left = tree.length > 0;
+  const bar = Boolean(controls) || fills(contents);
   return (
     <>
       <a className="skip" href="#main">Skip to content</a>
       <Header />
-      <Dock route={route} />
+      <Subheader route={route} left={left} bar={bar} late={late} />
       <div className="panes">
-        <nav className="pane left" id="left" aria-label="Site">
-          <Tree nodes={tree} current={current} />
-        </nav>
+        {left && (
+          <nav className="pane left" id="left" aria-label="Files">
+            <Tree nodes={tree} current={current} />
+          </nav>
+        )}
         <main id="main" tabIndex={-1} className={wide ? 'wide' : undefined}>
-          {title && (
-            <div className="lede">
-              <h1>{title}</h1>
-              {lead && <p className="lead">{lead}</p>}
-            </div>
-          )}
           {children}
         </main>
-        <aside className="pane right" id="right" aria-label="Page tools">
-          {controls && <Controls>{controls}</Controls>}
-          {contents.length > 0 && <Contents items={contents} />}
-          <Settings />
-        </aside>
-        <div className="scrim"></div>
+        {bar && (
+          <aside className="pane right" id="right" aria-label="Page tools">
+            {controls && <Controls>{controls}</Controls>}
+            <Contents items={contents} />
+          </aside>
+        )}
+        {(left || bar || late) && <div className="scrim"></div>}
       </div>
       <Footer />
     </>

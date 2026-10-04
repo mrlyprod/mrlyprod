@@ -486,7 +486,7 @@ function App() {
   );
 
   return (
-    <Page bare={art} crumb="words" title="One design per level, and the order of the letters counts"
+    <Page bare={art} title="One design per level, and the order of the letters counts"
       sub="One design per level. Same letters in a different order, a different set. Build a word letter by letter, first letter outermost, and every number below comes back out of the crates as a product over the letters."
       controls={controls}
       foot={<>Side, fill, density and dimension are products over the letters, so the readout is exact at any length even where the raster is not: the plane draws to side 243 and the cube to side 128, and a shorter render is labelled with the count of letters it drew because it is the box cover of the whole word at that scale and never a shallower word. Words with two or more letters only; a word of one repeated letter is the ordinary fractal under another name. Links: <a href="../sponge">the sponge</a> grows one cube design level by level, <a href="../moire">moire</a> stacks one design over its scales. The grammar of a word, the families that collapse back into one fractal and the ones that do not are in <a href="/research/notes/magic/">the magic words note</a>, and what a swap costs is the paper <a href="/research/papers/order-sensitivity-of-kronecker-words/">order sensitivity of Kronecker words</a>.</>}>

@@ -69,7 +69,7 @@
 ## EXPORTS
 
 - `scan(spec)`: reads `site.json` and the declared inputs, places every bundle, joins the sheets, calls `collect()`, returns `Site`.
-- `Site`: `root out config inputs kit routes nav stamp index copies serves made ships asks asset input bytes`.
+- `Site`: `root out config inputs kit routes stamp index copies serves made ships asks asset input bytes`.
 - `copies` are the placed bundle files and the sheets, which `globals` writes.
 - `serves` maps a bundled source file to its href and `made` holds every path the build has written; the code viewer's `served` hook reads both.
 - `ships` maps a repo file the build publishes byte for byte to that URL, filled at collect time, and the code viewer reads it before it asks the hook.
@@ -81,11 +81,12 @@
 - sitemap.xml is an index: one child `sitemap-<segment>.xml` per first path segment holding two urls or more, every other url (`/` and each lone segment) in `sitemap-pages.xml`; each entry's `lastmod` is its child's newest.
 - The children sit at the root because a sitemap may only list urls under its own folder. A `/pages/` of two urls throws, and so does any route output, public file or extra on a sitemap's path.
 - llms.txt is the title, the site root, `about`, `legend`, the declared links, then one `## name` block per section of `spec.llms`; a row whose route the site does not publish is dropped, an emptied section with it, and no route writes itself in.
-- `fingerprint(site, route, spec?, asks?, reads?)`: sha256 of the route's input bytes, its data, the site stamp, the `spa` bundle's digest on an `spa` route, the answer to each of its `asks` and the bytes of each of its `reads`. Never a date, never an absolute path.
-- The stamp is the bytes of every module that draws, the navigator, `site.json` whole, the asset names and the route index.
+- `fingerprint(site, route, spec?, asks?, reads?)`: sha256 of the route's input bytes, its data, the site stamp, the `spa` bundle's digest on an `spa` route, the answer to each of its `asks` and the bytes of each of its `reads`. Never a day, never an absolute path.
+- The stamp is the bytes of every module that draws, `site.json` whole, the asset names and the calendar year, which a footer prints. No route list is in it.
 - `graph(roots)` follows every relative import, static or dynamic, from the roots; `drawn(spec)` is that graph from `build.ts` and the spec's `templates`.
 - So a test, a README or a tool that draws no page is outside the stamp, and editing one repaints nothing but its own `/raw/` copy.
-- `asks` are the repo paths a route's links asked the tree about, kept in its manifest record: the route repaints only when one of those answers changes, so a new tracked file repaints only the pages that link to it.
+- `asks` are the questions a route's links put to the route map and to the tracked tree, kept in its manifest record: the route repaints only when one of those answers changes.
+- So a new, renamed or removed page repaints itself, the pages whose data lists it and the pages that link it; a new tracked file repaints only the pages that link to it.
 - `reads` are the files a render read through `bytes()` or looked for through `probe()` outside its inputs, kept in the record relative to the site root: a figure pressed again, or one that appears later, repaints the pages that ship it.
 - A file is named by its declaration, `research/foo.md`, not by where the tree sits; an undeclared file is named by its basename, a directory hashes every inner path and byte relative to itself.
 - So a checkout, a tarball and a lambda fingerprint the same bytes the same way, and one manifest serves them all.
@@ -94,7 +95,7 @@
 - An output that turns from a file into a folder, or back, replaces the old shape.
 - Then it drops the outputs of dead routes, prunes every folder that empties, and sweeps each bundle's `out/` of any file this build did not write.
 - `verify` is on by default and re-renders a route whose outputs went missing from `out/`; a build against a remote manifest turns it off, because there the disk is a scratch pad.
-- `walk bytes probe forget digest short escape page today guard label jsonText jsonScript`: the small helpers. `probe(file)` says whether a file is there. `forget()` drops the byte cache, which the dev watcher calls before it rescans.
+- `walk bytes probe forget digest short escape page today guard label jsonScript`: the small helpers. `probe(file)` says whether a file is there. `forget()` drops the byte cache, which the dev watcher calls before it rescans.
 
 ## SPEC
 
@@ -102,14 +103,14 @@
 - `llms(site)` returns `[{ name, rows }]`, a row `{ href, name, note }`; it runs in `globals`, after every route is collected.
 - `templates` names the modules that draw, `["scripts/site.ts"]`; their import graph, with `build.ts`'s, is hashed into the stamp.
 - `scripts/stamp.test.ts` loads the site in a child process and fails when a module it loaded is missing from that graph.
-- `collect(site)` returns `{ routes, nav? }`; `nav` is the site tree the chrome draws and the code viewer's node joins it when the site has not placed one.
+- `collect(site)` returns `{ routes }`. A page that lists other routes carries that list in its `data` or its `inputs`.
 - `inline` lists every inline script a page may carry; `build` refuses a page carrying one it does not know.
 - `icons`: `{ rows, svg }`, a square glyph grid of `0`/`1` strings and the favicon svg; the builder writes the svg as `favicon.svg` and draws `favicon.png`, `apple-touch-icon.png`, `icon-192.png` and `icon-512.png` from the grid. No field, no icons.
 - `git` is the code viewer's hooks, `{ page, entry, served }`: the chrome, the browser module and the mirror seam.
 - `spa` is the browser build's hooks; see MODES.
 - `blog` is the blog's hooks, `{ page, md }`.
 - `Route`: `{ route, kind, name, data, source, inputs, urls, at, hidden, sitemap, mode, entry }`; `mode` and `entry` are MODES'.
-- `hidden` keeps a route out of the navigator and out of every list a reader browses; `sitemap` puts it back on the map anyway.
+- `hidden` keeps a route out of the sitemap; `sitemap` puts it back on the map anyway.
 - A `/raw/` route sets both, so every file the tree never shows is still crawlable; `/404.html` sets only `hidden` and stays off.
 - One route may be a group: `urls` lists the pages it publishes, so a bundler route still fills the sitemap.
 - `render` may be async, so a route can run a bundler and hand back its bytes before anything is written.
@@ -126,9 +127,9 @@
 - The index is asked first, for the path, the path plus `.md`, the path with `.md` stripped and the path's own `README.md`, so `bases.md`, `bases`, `../demos/spin/` and a folder whose README is a page all land on the route the site publishes.
 - A miss falls to the repo: `/raw/<path>` for an image or a PDF, `/git/<path>` for a file, `/git/<path>/` for a directory, and only when the repo tracks that path.
 - An image or a PDF the site serves elsewhere answers with that copy, from `site.ships` or `spec.git.served`, because its `/raw/` object is never written.
-- Each question put to the tracked tree is logged in `site.asks` while a route renders.
+- Each question is logged in `site.asks` while a route renders: a path from the repo root for the route map, a `/git/` route for the tracked tree.
+- `answer(index, ask)` is the route the map gives that path, empty when it has none, or whether the tree tracks that route.
 - A site with git routes but no slug stops there; a site with no git routes falls to `https://github.com/<slug>/blob/<branch>/<path>` when `site.json` names one, and a site with no git block leaves the link as written.
 - Anything else is left exactly as written: a target outside the repo, a paper fetched from another tree, a path nothing publishes.
-- `stamp(index)` is the route map as one string, keyed relative to the repo root, and it rides in every fingerprint, so a page re-renders when a route it could link to appears, renames or disappears. The tracked tree is not in it.
 - So the resolver never asks which page is doing the reading, only which file the link was written in.
 - The `/git/` viewer renders in the browser and resolves its own links with `../git/view.ts`, never with this index.

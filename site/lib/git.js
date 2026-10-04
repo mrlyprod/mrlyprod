@@ -1,4 +1,5 @@
 import { start } from '../kit/git/client.ts';
+import { crumbs } from '../ui/crumbs.js';
 
 /* MARKDOWN */
 
@@ -10,40 +11,52 @@ async function md(text, link) {
 
 /* CHROME */
 
-const SVG = 'http://www.w3.org/2000/svg';
-
-async function word(path) {
-  const slot = document.querySelector('.dock .route');
-  if (!slot) return;
-  const name = path.split('/').filter(Boolean).pop() ?? 'git';
-  const { letters } = await import('../kit/font/font.js');
-  const { rows, cols, grid } = letters(name.toUpperCase());
-  const svg = document.createElementNS(SVG, 'svg');
-  svg.setAttribute('class', 'glyphs');
-  svg.setAttribute('viewBox', `0 0 ${cols} ${rows}`);
-  svg.setAttribute('role', 'img');
-  svg.setAttribute('aria-label', name);
-  grid.forEach((row, y) =>
-    row.forEach((on, x) => {
-      if (!on) return;
-      const rect = document.createElementNS(SVG, 'rect');
-      for (const [key, value] of [['x', x], ['y', y], ['width', 1], ['height', 1]]) rect.setAttribute(key, value);
-      svg.append(rect);
+function trail() {
+  const list = document.querySelector('.subheader .crumbs ol');
+  if (!list) return;
+  const steps = crumbs(location.pathname);
+  list.replaceChildren(
+    ...steps.map((step, n) => {
+      const item = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = step.href;
+      a.textContent = step.name;
+      if (n === steps.length - 1) a.setAttribute('aria-current', 'page');
+      item.append(a);
+      return item;
     }),
   );
-  slot.replaceChildren(svg);
+}
+
+const opener = () => document.querySelector('[data-pane="right"]');
+
+function bar(nav) {
+  const old = document.getElementById('right');
+  const button = opener();
+  if (button) button.hidden = !nav;
+  if (!nav) {
+    old?.remove();
+    document.documentElement.dataset.right = 'shut';
+    return;
+  }
+  const pane = old ?? document.createElement('aside');
+  pane.className = 'pane right';
+  pane.id = 'right';
+  pane.setAttribute('aria-label', 'Page tools');
+  pane.replaceChildren(nav);
+  if (!old) document.getElementById('main')?.after(pane);
 }
 
 function contents(mount) {
-  const pane = document.querySelector('.pane.right');
-  if (!pane) return;
-  pane.querySelector('.contents')?.remove();
   const heads = [...mount.querySelectorAll('.readme h2[id], .readme h3[id]')];
-  if (!heads.length) return;
+  const few = Number(opener()?.dataset.few) || Infinity;
+  if (heads.length < few) return bar(null);
   const nav = document.createElement('nav');
   nav.className = 'contents';
   nav.setAttribute('aria-label', 'Contents');
-  const title = document.createElement('h2');
+  const fold = document.createElement('details');
+  fold.open = true;
+  const title = document.createElement('summary');
   title.textContent = 'Contents';
   const list = document.createElement('ol');
   for (const head of heads) {
@@ -55,8 +68,9 @@ function contents(mount) {
     item.append(a);
     list.append(item);
   }
-  nav.append(title, list);
-  pane.prepend(nav);
+  fold.append(title, list);
+  nav.append(fold);
+  bar(nav);
 }
 
 /* START */
@@ -68,8 +82,8 @@ start({
   mount: MOUNT,
   md,
   paint: () => import('../kit/git/code.ts').then((one) => one.paint),
-  after: (view) => {
-    word(view.path);
+  after: () => {
+    trail();
     contents(document.querySelector(MOUNT));
   },
 });

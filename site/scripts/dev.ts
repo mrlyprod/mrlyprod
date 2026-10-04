@@ -3,7 +3,7 @@ import { join, resolve } from "node:path";
 import { main } from "../kit/dev.ts";
 import type { Site } from "../kit/ssg/build.ts";
 import { ensureFigures } from "./figs.ts";
-import { counted, demoShell, demoTree, spec } from "./site.ts";
+import { counted, spec } from "./site.ts";
 
 const org = resolve(import.meta.dir, "..");
 const cached = join(org, "data", "shelf", "research");
@@ -15,12 +15,12 @@ const demos = (site: Site, tail: string, ext: string) => {
 };
 
 await main(spec, {
-  html: (site) => [{ route: "/demos/", file: demoShell(site, "") }, ...demos(site, "/index.html", "/")],
+  html: (site) => demos(site, "/index.html", "/"),
   scripts: (site) => demos(site, "/widget.jsx", "/widget.js"),
   disk: (site) => [["/figures/", site.input("figures").path]],
-  extra: async (site, path) => {
+  extra: async (_, path) => {
     if (path.startsWith("/figures/")) await ensureFigures();
-    return path === "/demos/tree.json" ? Response.json(demoTree(site)) : null;
+    return null;
   },
   line: () => {
     const count = counted();

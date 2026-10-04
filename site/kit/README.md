@@ -34,10 +34,13 @@
 - A `manual` event with `force: true` skips the seen and unchanged answers and runs the push with `--force`; any other source ignores the field.
 - `serve.ts` is the request seam: `serve(spec, site, path)` finds the route that publishes a path, renders it and answers a `Response`, the 404 page for anything else, and never a file read by path.
 - A path under a deep `spa` prefix answers that prefix's shell, and a file of the `spa` build answers from the bundle, built only when a path an entry lands on is asked for.
-- `dev.ts` is the dev server over `serve.ts`: it binds 127.0.0.1, renders on request, keeps the Bun HTML routes for the React entries and builds the script entries on demand.
+- `dev.ts` is the dev server over `serve.ts`: it binds 127.0.0.1, renders on request, keeps the Bun HTML routes for the React entries, answers each through the spec's `spa.page` so it wears the site's page, and builds the script entries on demand.
 - It watches every declared input, the modules of the stamp and this folder, pushes `css` or `reload` over one socket, and injects the overlay into every HTML answer, never into `dist/`.
 - Under `bun --hot` a script edit re-runs the entry with fresh modules while the socket stays up.
-- `shots.ts` is the screenshot driver: it serves the built `dist/`, a deep shell for every path under its prefix, drives one headless Chrome on one port with one throwaway profile, and waits out any `aria-busy`.
+- `shots.ts` is the screenshot driver: it serves the built `dist/` or the folder its caller names, a deep shell for every path under its prefix, drives one headless Chrome on one port with one throwaway profile, and waits out any `aria-busy`.
+- `--nojs` shoots with JavaScript off, inline scripts included.
+- `--first` holds every script request and shoots the viewport as first painted (`-first`), then lets them run, runs the route's `@<expr>` if it has one, and shoots it again (`-after`); each line prints its scroll offset, `JUMP` when it moved.
+- A `<route>@<expr>` shot is the viewport as scrolled; every other shot is the full page.
 - The `shots` block in `site.json` names the default routes and the sizes; shots land in `data/<repo>/site/scripts/shots/{latest,baseline}`.
 - `vendor.ts` writes the font folder from the `fonts` block in `site.json`: the Google families and their axes, then the `keep` css of the faces the site cuts itself, verbatim.
 - `stats/handler.py` is the 15-minute stats Lambda: CloudFront, Lambda and bucket numbers into one JSON key.

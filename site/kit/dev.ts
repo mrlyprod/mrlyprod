@@ -4,6 +4,7 @@ import { dirname, relative, resolve, sep } from "node:path";
 import { drawn, escape, forget, scan, type Output, type Site, type Spec } from "./ssg/build.ts";
 import { decode } from "./git/view.ts";
 import { clean, find, lost, reply, type } from "./serve.ts";
+import { moduleSrc } from "./ssg/modes.ts";
 
 /* OPTIONS */
 
@@ -28,6 +29,8 @@ const held = ((globalThis as unknown as { __dev?: Held }).__dev ??= { runs: 0, w
 const HOT = process.execArgv.includes("--hot");
 
 const HTML = { "content-type": "text/html; charset=utf-8" };
+
+const SHELL = "/__shell";
 
 /* OVERLAY */
 
@@ -92,10 +95,16 @@ export async function main(spec: Spec, options: Options = {}) {
   const built = new Map<string, Output>();
   const owned = (path: string) => html.some((one) => path.startsWith(one.route));
   const routes: Record<string, HTMLBundle> = {};
-  for (const one of html) {
-    const page = (await import(one.file)).default as HTMLBundle;
-    routes[one.route] = page;
-    if (one.route.length > 1) routes[one.route.replace(/\/$/, "")] = page;
+  for (const one of html) routes[`${SHELL}${one.route}`] = (await import(one.file)).default as HTMLBundle;
+
+  async function shell(path: string): Promise<Response | null> {
+    const entry = html.find((one) => one.route === path || one.route === `${path}/`);
+    if (!entry) return null;
+    if (entry.route !== path) return Response.redirect(entry.route, 302);
+    const raw = await (await fetch(new URL(`${SHELL}${path}`, server.url))).text();
+    const route = site.routes.find((one) => one.route === path || one.urls?.some((url) => url.route === path));
+    const page = route && spec.spa ? spec.spa.page(site, route, { route: path, entry: entry.file, html: raw, script: moduleSrc(raw) }, []) : raw;
+    return new Response(page as string | Uint8Array, { headers: HTML });
   }
 
   async function script(path: string): Promise<Response | null> {
@@ -117,6 +126,7 @@ export async function main(spec: Spec, options: Options = {}) {
     if (!clean(path)) return lost(spec, site);
     return (
       (await script(path)) ??
+      (await shell(path)) ??
       (await options.extra?.(site, path)) ??
       (owned(path) ? null : await find(spec, site, path)) ??
       disk(mounts, path) ??

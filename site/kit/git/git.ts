@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { seti } from "../code/seti/seti.ts";
-import { bytes, digest, type Bytes, type Node, type Output, type Route, type Site, type Spec } from "../ssg/build.ts";
+import { bytes, digest, escape, type Bytes, type Node, type Output, type Route, type Site, type Spec } from "../ssg/build.ts";
 import { deeps, type Shell } from "../ssg/modes.ts";
 import { HUGE, IMAGE, dirRoute, ext, fileRoute, home, rawPath, reads, stem, type Twig, type Wood } from "./view.ts";
 
@@ -82,11 +82,11 @@ export const isGit = (route: Route) => route.kind === "git" || route.kind === "r
 
 const KIDS = new WeakMap<Site, Map<string, Child[]>>();
 
-export function collect(site: Site, hooks?: Hooks): { routes: Route[]; node: Node | null } {
+export function collect(site: Site, hooks?: Hooks): { routes: Route[] } {
   const git = config(site);
-  if (!git) return { routes: [], node: null };
+  if (!git) return { routes: [] };
   const paths = tree(git);
-  if (!paths.length) return { routes: [], node: null };
+  if (!paths.length) return { routes: [] };
   if (!deeps(site.config).includes(HOME)) throw new Error(`git: site.json declares git, and its modes must make ${HOME} a deep spa route`);
   const kids = new Map<string, Child[]>([["", []]]);
   KIDS.set(site, kids);
@@ -122,7 +122,7 @@ export function collect(site: Site, hooks?: Hooks): { routes: Route[]; node: Nod
       sitemap: true,
     });
   }
-  return { routes, node: { name: "Code", href: HOME } };
+  return { routes };
 }
 
 /* EXPLORER */
@@ -132,7 +132,7 @@ const kindOf = (name: string) => seti(name).replace(/^si( si-)?/, "");
 export function explorer(site: Site): Node[] {
   const git = config(site);
   const kids = KIDS.get(site);
-  if (!git || !kids) return site.nav;
+  if (!git || !kids) return [];
   const nodes = (kids.get("") ?? []).map(([name, , kind]): Node => (kind === "file" ? { name, href: fileRoute(name), icon: seti(name) } : { name, href: dirRoute(name), lazy: name, nodes: [] }));
   return [{ name: git.name, href: HOME, lazy: "", nodes }];
 }
@@ -239,5 +239,7 @@ export function shell(site: Site, route: Route, shell: Shell, spec: Spec): Bytes
   const page = spec.git?.page;
   if (!git || !page) throw new Error("git: the viewer's shell needs a git block in site.json and the spec's git.page");
   const description = `The source of ${git.name}: every tracked file, browsable, with its raw bytes under /raw/.`;
-  return page(site, { route: route.route, name: git.name, description, body: "", type: "website", code: true, tree: explorer(site), scripts: [shell.script] });
+  const hub = git.slug ? ` The same files are on <a href="https://github.com/${escape(git.slug)}">GitHub</a>.` : "";
+  const body = `<noscript><p>The code viewer draws in the browser and needs JavaScript.${hub}</p></noscript>`;
+  return page(site, { route: route.route, name: git.name, description, body, type: "website", code: true, tree: explorer(site), scripts: [shell.script] });
 }

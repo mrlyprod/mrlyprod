@@ -78,7 +78,7 @@ function App() {
   );
 
   return (
-    <Page crumb="modes" title="The modes of a design mask"
+    <Page title="The modes of a design mask"
       sub={<>Lay a design's stencil at the level over every point of a <code>side^level</code> by <code>side^level</code> torus and add up what it covers. That operator has one family of modes, the waves <code>e(&lt;t, x&gt; / side^level)</code>, and each one is stretched by a single number. Pick a frequency and watch its wave; the middle panel is the whole field of those numbers at once.</>}
       controls={controls}
       foot={<>The design is the picker's plane code at its side and its residue base; the filled cells of its level-one tile are the digit set <code>F</code>, and the stencil at the level is every sum of <code>level</code> of them scaled by the powers of the side. The eigenvalue is a product over the digits, so the field <code>|lambda|</code> is <code>level</code> rescaled copies of one small transform multiplied together, which is why it repeats at every scale like the design itself. The middle panel reads the field at its per-level root, <code>|lambda|^(1/level) / fill</code>, the average size of one factor; the printed numbers are the raw ones. The same design stacked over its own scales is <a href="../moire">moire</a>, turned on itself <a href="../radial">radial</a>, and joined into a network whose Laplacian has its own spectrum on <a href="../spectra">spectra</a>; the same stencil run as a neighbourhood is <a href="../mrlylife">mrlylife</a>. Every eigenvalue, every count and every wave comes out of the crates through wasm; the page only draws.</>}>

@@ -149,7 +149,7 @@ function App() {
   );
 
   return (
-    <Page crumb="weights" title="The mass side of a weighted design"
+    <Page title="The mass side of a weighted design"
       sub={<>Give every filled corner of a design a weight and the cell at the level reached by the digit word <code>f_1 ... f_level</code> carries the mass <code>w_(f_1) ... w_(f_level)</code>. The support never moves, the mass does: drag one weight and the picture darkens on one corner and lights on another while the design stays where it is. The curve beside it is the whole multifractal spectrum, and it is a closed form in the weights alone.</>}
       controls={controls}
       foot={<>The design is the picker's plane code at its side and its residue base; the filled cells of its level-one tile are the corners the sliders weight, listed row by row, and the vector is normalised to sum to one inside the crate. The picture is the mass field at the level, one cell a pixel, read at <code>(mass / peak)^gamma</code> through the ground-blue-yellow ramp, so the gamma is display alone and never a printed number. The pressure is summed with the largest exponent factored out, which is why the curve stays exact out to <code>s = 30</code> where the spectrum's two tails are sampled. Equal weights are the 0/1 design itself: the spectrum collapses to the single point <code>(log_side fill, log_side fill)</code>, which is the box dimension the support has at every weighting. The geometry these weights leave alone is the same design fattened on <a href="../tube">the tube</a>, cropped on <a href="../crop">the crop</a> and laid over the torus on <a href="../modes">the modes</a>. Every mass, every exponent and every point of the curve comes out of the crates through wasm; the page only draws.</>}>

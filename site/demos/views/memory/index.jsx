@@ -95,7 +95,7 @@ function App() {
   const sheet = drawn.sheet;
 
   return (
-    <Page crumb="memory" title="The memory dial"
+    <Page title="The memory dial"
       sub="A design accepts every word of digits it can write. Give it a memory of the last k digits and it accepts fewer: the cells thin out, the count stops doubling, and the growth exponent slides off the dimension. At width one the dial is off and the picture is the ordinary design of the same code."
       controls={controls}
       foot={<>Every count, root and exponent on this page comes from the crates through wasm; the page only draws. The sheet is capped at 2^16 sites, so the level runs to {CAPS[1]} in one dimension and to {CAPS[2]} in two. Nearby: <a href="../universe">the universe</a> is the gallery of the codes this dial reads at width one, <a href="../words">words</a> changes the rule level by level instead of digit by digit, <a href="../wolfram">the rules</a> reads the same byte as a cellular automaton.</>}>

@@ -113,7 +113,7 @@ function App() {
   );
 
   return (
-    <Page crumb="life" title="Conway's Life"
+    <Page title="Conway's Life"
       sub="One rule on the eight cells around: a dead cell with exactly three live neighbours is born, a live cell with two or three stays, everything else dies. Drop a soup or a glider, then play it, step it, or run it to its fate."
       foot={<>The neighbourhood is not a hand-drawn ring: it is the side-3 carpet tile `bang dim 2, code 7` with its centre popped, the same eight offsets a design writes at level one. Every generation and every fate below is stepped in Rust through wasm and the page only draws. Life is one point of a much larger family - any mask, any birth and survival list, one or two dimensions - and that family is <a href="../mrlylife">mrlylife</a>.</>}
       controls={controls}>

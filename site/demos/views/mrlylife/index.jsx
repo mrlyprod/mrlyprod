@@ -245,7 +245,7 @@ function App() {
   const reading = index.read === null ? 'unread' : index.read === 0 ? 'index 0: the offsets span no lattice' : index.read === 1 ? 'index 1: one lattice, nothing splits' : `index ${index.read}: ${index.read} interleaved copies`;
 
   return (
-    <Page crumb="mrlylife" title="mrlylife"
+    <Page title="mrlylife"
       sub="Life is one point of a family: pick the neighbourhood as a design rather than a ring, pick the birth and survival counts by hand or from a named sequence, and run it in one dimension or two. The mask is the object; the rule reads only how many of its cells are alive."
       foot={<>The kind is LIFE, outer-totalistic: a dead cell is born when its live neighbour count is in the birth list, a live cell stays when its count is in the survival list, and the mask says which cells are neighbours. Conway is the level-1 carpet `bang dim 2, code 7` with its centre popped, drawn plain on <a href="../life">the Life page</a>; the one-dimensional two-state radius-one masks are the elementary rules on <a href="../wolfram">the Wolfram page</a>. Menger-Life proper lives at dim 3 on the 20 offsets of `bang dim 3, code 23` and is not drawn here, so the Menger chip reads that tile one dimension down. The masks, the indices and every generation come out of the crates through wasm. The research page is <a href="/research/notes/automata/">automata</a>.</>}
       controls={controls}>

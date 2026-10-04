@@ -5,7 +5,7 @@ import { deflateSync } from "node:zlib";
 import { TREE, collect as gitRoutes, forest, isGit, mirror, print as gitPrint, render as gitRender, type Hooks } from "../git/git.ts";
 import { owner } from "../git/view.ts";
 import { collect as blogRoutes, isBlog, render as blogRender, type Hooks as Posts } from "./blog.ts";
-import { index, stamp, type Index } from "./links.ts";
+import { answer, index, type Index } from "./links.ts";
 import { check, deeps, fence, mode, packed, render as spaRender, seal, sealed, type Hooks as Clients, type Mode, type Rule } from "./modes.ts";
 
 /* TYPES */
@@ -46,7 +46,6 @@ export type Site = {
   inputs: Record<string, Input>;
   kit: Bundle | null;
   routes: Route[];
-  nav: Node[];
   stamp: string;
   index: Index | null;
   copies: Output[];
@@ -82,7 +81,7 @@ export type Config = {
   [key: string]: unknown;
 };
 
-export type Picked = { routes: Route[]; nav?: Node[] };
+export type Picked = { routes: Route[] };
 
 export type Spec = {
   root: string;
@@ -300,9 +299,6 @@ function sheets(list: Sheet[], assets: Map<string, string>, copies: Output[], se
   return [...copies.filter((item) => !spent.has(item.path)), ...made];
 }
 
-const shows = (nodes: Node[], href: string): boolean =>
-  nodes.some((node) => node.href === href || shows(node.nodes ?? [], href));
-
 export async function scan(spec: Spec): Promise<Site> {
   const root = resolve(spec.root);
   const config = JSON.parse(readFileSync(join(root, "site.json"), "utf8")) as Config;
@@ -320,7 +316,6 @@ export async function scan(spec: Spec): Promise<Site> {
     inputs: found,
     kit: config.kit ? list[0] : null,
     routes: [],
-    nav: [],
     stamp: "",
     index: null,
     copies,
@@ -341,22 +336,12 @@ export async function scan(spec: Spec): Promise<Site> {
   };
   const picked = await spec.collect(site);
   site.routes = picked.routes;
-  site.nav = picked.nav ?? [];
   const written = blogRoutes(site);
   if (written.routes.length) site.routes = [...site.routes, ...written.routes];
   const repo = gitRoutes(site, spec.git);
-  if (repo.routes.length) {
-    site.routes = [...site.routes, ...repo.routes];
-    if (repo.node && !shows(site.nav, repo.node.href!)) site.nav = [...site.nav, repo.node];
-  }
+  if (repo.routes.length) site.routes = [...site.routes, ...repo.routes];
   site.index = index(site, spec.git);
-  site.stamp = digest([
-    templates(spec),
-    JSON.stringify(site.nav),
-    JSON.stringify(config),
-    JSON.stringify([...assets]),
-    stamp(site.index),
-  ]);
+  site.stamp = digest([templates(spec), JSON.stringify(config), JSON.stringify([...assets]), year()]);
   return site;
 }
 
@@ -382,7 +367,7 @@ export function fingerprint(site: Site, route: Route, spec?: Spec, asks: string[
   const named = files.map((file) => [label(site, file), file] as const).sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
   const parts: Bytes[] = [route.route, route.kind ?? "", JSON.stringify(route.data ?? null), site.stamp];
   if (pack) parts.push(pack);
-  if (asks.length) parts.push(JSON.stringify(asks.map((page) => [page, site.index?.git.has(page) ?? false])));
+  if (asks.length && site.index) parts.push(JSON.stringify(asks.map((ask) => [ask, answer(site.index!, ask)])));
   for (const [name, file] of named) {
     parts.push(name);
     if (!existsSync(file)) {
@@ -586,6 +571,8 @@ export function guard(path: string, html: string, known: Set<string>) {
 
 const today = () => new Date().toISOString().slice(0, 10);
 
+const year = () => String(new Date().getFullYear());
+
 function loose(site: Site, route: Route, files: Set<string>): string[] {
   const held = route.inputs ?? (route.source ? [route.source] : []);
   return [...files]
@@ -710,7 +697,7 @@ export async function build(spec: Spec, options: { manifest?: string; force?: bo
 
 export const page = (route: string) => (route === "/" ? "index.html" : `${route.replace(/^\/|\/$/g, "")}/index.html`);
 
-export const jsonText = (data: unknown) => JSON.stringify(data).replace(/</g, "\\u003c");
+const jsonText = (data: unknown) => JSON.stringify(data).replace(/</g, "\\u003c");
 
 export const jsonScript = (data: unknown) => `<script type="application/ld+json">${jsonText(data)}</script>`;
 

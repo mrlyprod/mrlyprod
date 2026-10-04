@@ -10,17 +10,35 @@
   "tagline": "The mathematics of designs on the corners of a cube, and the instruments that measure them.",
   "tree": [
     { "name": "Home", "href": "/" },
-    { "name": "Wiki", "href": "/research/wiki/", "fill": "wiki" },
-    { "name": "Demos", "href": "/demos/", "fill": "demos" },
-    { "name": "Papers", "href": "/research/papers/", "fill": "papers" },
-    { "name": "Research", "href": "/research/", "fill": "research" },
-    { "name": "Blog", "href": "/blog/", "fill": "blog" },
-    { "name": "Tools", "href": "/tools/" },
+    {
+      "name": "Research",
+      "nodes": [
+        { "name": "Research", "href": "/research/" },
+        { "name": "Wiki", "href": "/research/wiki/" },
+        { "name": "Notes", "href": "/research/notes/" },
+        { "name": "Claims", "href": "/research/claims/" },
+        { "name": "Papers", "href": "/research/papers/" }
+      ]
+    },
+    { "name": "Demos", "href": "/demos/" },
+    { "name": "Blog", "href": "/blog/" },
+    { "name": "Apps" },
     { "name": "Math", "href": "/math/" },
     { "name": "Code", "href": "/git/" },
-    { "name": "About", "href": "/about/" },
-    { "name": "Contact", "href": "/contact/" },
-    { "name": "Donate", "href": "/donate/" }
+    { "name": "Pages" },
+    { "name": "Stats", "href": "/stats/" },
+    { "name": "Cart", "href": "/cart/" },
+    {
+      "name": "Root",
+      "nodes": [
+        { "name": "robots.txt", "href": "/robots.txt" },
+        { "name": "sitemap.xml", "href": "/sitemap.xml" },
+        { "name": "llms.txt", "href": "/llms.txt" },
+        { "name": "404.html", "href": "/404.html" },
+        { "name": "manifest.webmanifest", "href": "/manifest.webmanifest" }
+      ]
+    },
+    { "name": "Elsewhere" }
   ],
   "shelves": [
     {
@@ -101,6 +119,7 @@
   },
   "inputs": {
     "pages": { "path": "pages", "ext": ".md" },
+    "apps": { "path": "apps/apps.json" },
     "blog": { "path": "blog", "deep": true },
     "wiki": { "path": "../research/wiki", "ext": ".md" },
     "research": { "path": "../research", "ext": ".md" },

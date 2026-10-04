@@ -87,6 +87,8 @@ const MODULE = /<script[^>]*type="module"[^>]*>/;
 
 const SRC = /src="([^"]+)"/;
 
+export const moduleSrc = (html: string) => html.match(MODULE)?.[0].match(SRC)?.[1] ?? "";
+
 const trim = (path: string) => path.replace(/^\.\//, "");
 
 const text = (body: Uint8Array) => new TextDecoder().decode(body);
@@ -200,7 +202,7 @@ export async function render(site: Site, route: Route, spec: Spec): Promise<Outp
     const at = done.entries.get(one.entry);
     if (!at) throw new Error(`ssg: ${one.route} names ${relative(site.root, one.entry)}, which the spa entries do not list`);
     const raw = pages.has(at) ? text(done.files.get(at)!) : "";
-    const src = raw.match(MODULE)?.[0].match(SRC)?.[1];
+    const src = moduleSrc(raw);
     const main = raw ? (src ? join(dirname(at), src) : "") : at;
     const html = rebase(done, place, at, page(one.route), raw);
     const shell: Shell = { route: one.route, entry: one.entry, html, script: main ? `/${place(main)}` : "" };

@@ -25,8 +25,7 @@
 - `/raw/<path>` is the bytes, under the file's own name, extension or not: the router passes `/raw/` untouched.
 - Text up to 1 MB and every SVG are `text/plain; charset=utf-8`, the rest keeps its type by extension, and the type rides on the output so `push.ts` sets the S3 header.
 - A file the site already serves elsewhere gets no `/raw/` object: its node carries `u`, the viewer points at that copy, and the sitemap drops the raw URL.
-- `/git/` and every `/raw/` object are on the sitemap; a raw route is `hidden`, so it stays out of the navigator.
-- The node `{ "name": "Code", "href": "/git/" }` joins the site tree only when the site's own nav has no `/git/` href.
+- `/git/` and every `/raw/` object are on the sitemap; a raw route is `hidden`, so no page lists it.
 - `site.ships` answers first, for a file the build publishes byte for byte, then `spec.git.served(site, path)`, so the kit never names an extension or a folder.
 - A served file a bundler may have rewritten keeps its `/raw/` copy unless it is binary, huge, an image or a PDF, because only then are the bytes known to match.
 

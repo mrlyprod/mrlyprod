@@ -172,7 +172,7 @@ function App() {
   );
 
   return (
-    <Page crumb="moire" title="Stack one design over its own scales"
+    <Page title="Stack one design over its own scales"
       sub="One design sampled at scale 1, 3, 5, and so on, the layers stacked into one field. Stacking is where the interference comes from: each new scale adds a finer grid on top of the coarse ones."
       controls={controls}
       foot={<>The heatmap sums the parity of the low corner over the odd scales, the weave folds the same layers to their parity, the hive samples on the hexagonal lattice, and the carpet keeps eight corners of nine in base 3. The field is quantized into levels and painted through a ramp; the pixels arrive already colored. The r-matrix reads a second law off the same stack: two parity carpets at odd scales correlate to exactly zero when the scales are coprime and to a strictly positive number when the scales share a factor, so a scale whose earlier row is all white is prime, the detector the <a href="../primes">primes</a> page stacks, with the closed form and its proof in the paper <a href="/research/papers/moire-correlation-laws/">moire correlation laws</a>, and the stack that counts pi in <a href="/research/notes/pi/">pi out of the stack</a>. Every number in the panel is computed in Rust; the page only draws.</>}>

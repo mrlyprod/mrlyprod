@@ -62,7 +62,7 @@
   --pane: clamp(13rem, 18vw, 17.5rem);
   --read: 72ch;
   --page: 72rem;
-  --frame: calc(var(--page) + 2 * var(--pane));
+  --frame: calc(var(--page) + var(--pane));
   --touch: 44px;
 }
 

@@ -45,11 +45,6 @@ export function index(site: Site, hooks?: Hooks): Index {
   };
 }
 
-/* STAMP */
-
-export const stamp = (idx: Index) =>
-  JSON.stringify([...idx.map].filter(([key]) => key.startsWith(idx.base)).map(([key, route]) => [key.slice(idx.base.length), route]));
-
 /* RESOLVE */
 
 const OUT = /^(https?:|mailto:|tel:|#|\/)/;
@@ -68,6 +63,10 @@ const known = (idx: Index, path: string) => {
   return "";
 };
 
+const routed = (idx: Index, path: string) => known(idx, under(idx.base, path)) || known(idx, path);
+
+export const answer = (idx: Index, ask: string) => (ask.startsWith("/") ? String(idx.git.has(ask)) : routed(idx, ask));
+
 export function resolve(site: Site, from: string, url: string): string {
   const idx = site.index;
   if (denied(url)) return "#";
@@ -79,7 +78,8 @@ export function resolve(site: Site, from: string, url: string): string {
   const file = under(idx.base, from);
   const target = under(dirname(file), head);
   const path = relative(idx.base, target);
-  const hit = known(idx, target) || known(idx, path);
+  if (path) site.asks?.add(path);
+  const hit = routed(idx, path);
   if (hit) return hit + tail;
   if (!path || path.startsWith("..") || isAbsolute(path)) return url;
   if (idx.git.size) {

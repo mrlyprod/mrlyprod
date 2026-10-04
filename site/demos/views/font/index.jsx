@@ -84,7 +84,7 @@ function App() {
   );
 
   return (
-    <Page crumb="font" title="The 108 pens"
+    <Page title="The 108 pens"
       sub="Every glyph of MrlyFont writes itself in the order its pen table gives, one cell a frame at 25 a second, then holds. Under each one: its stroke count against its floor, the least strokes that can write it. A chip marks a glyph penned over its floor or lifting the pen five times or more."
       controls={controls} contents={CONTENTS}
       foot={<>The frames come from the wasm bridge, so this page shows the crate's <code>pens.rs</code> as it is now. A stroke walks 4-adjacent cells; a lift is any step that is not. The floor is the crate's exact minimum cover of the glyph's cells by 4-adjacent paths, so a glyph over its floor is penned that way on purpose, like the wordmark letters, and a glyph on its floor with many lifts can only be helped by a different shape.</>}>

@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, setSystemTime, test } from "bun:test";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
@@ -221,7 +221,7 @@ test("a git block builds one shell under /git/, the tree data beside it and the 
   };
   await build(one, { manifest: "manifest.json" });
   expect(walk(join(out, "git")).map((file) => file.slice(out.length + 1))).toEqual(["git/index.html"]);
-  expect(readFileSync(join(out, "git/index.html"), "utf8")).toBe('<main></main><script type="module" src="/view.js"></script>');
+  expect(readFileSync(join(out, "git/index.html"), "utf8")).toMatch(/^<main><noscript>.+<\/noscript><\/main><script type="module" src="\/view.js"><\/script>$/);
   expect(JSON.parse(readFileSync(join(out, "git.json"), "utf8")).c.map((kid: { n: string }) => kid.n)).toEqual(["Makefile", "site.json", "view.js"]);
   expect(readFileSync(join(out, "raw/Makefile"), "utf8")).toBe("all:\n");
   expect(JSON.parse(readFileSync(join(home, "manifest.json"), "utf8"))["/raw/Makefile"].types).toEqual({ "raw/Makefile": "text/plain; charset=utf-8" });
@@ -320,6 +320,47 @@ test("the stamp follows the imports of the modules that draw, and no file beside
   expect(await count()).toBe(0);
   writeFileSync(join(home, "late.ts"), "export const late = 2;\n");
   expect(await count()).toBe(1);
+  rmSync(home, { recursive: true, force: true });
+});
+
+test("the stamp holds the calendar year, so a page that prints it repaints after a new year", async () => {
+  const home = fresh("year");
+  const spec: Spec = { root: home, out: join(home, "dist"), collect: () => ({ routes: [{ route: "/a/" }] }), render: () => [{ path: "a/index.html", bytes: `<p>${new Date().getFullYear()}</p>` }] };
+  const round = async (day: string) => (setSystemTime(new Date(day)), forget(), (await build(spec, { manifest: "manifest.json" })).rendered);
+  expect(await round("2026-12-30T12:00:00")).toBe(1);
+  expect(await round("2026-12-31T12:00:00")).toBe(0);
+  expect(await round("2027-01-01T12:00:00")).toBe(1);
+  expect(readFileSync(join(home, "dist/a/index.html"), "utf8")).toBe("<p>2027</p>");
+  setSystemTime();
+  rmSync(home, { recursive: true, force: true });
+});
+
+test("a route that appears or goes repaints only itself and the page whose link it answers", async () => {
+  const home = fresh("routes");
+  const names = ["a", "b"];
+  for (const name of [...names, "c"]) writeFileSync(join(home, `${name}.md`), name);
+  const drawn: string[] = [];
+  const spec: Spec = {
+    root: home,
+    out: join(home, "dist"),
+    collect: () => ({ routes: names.map((name) => ({ route: `/${name}/`, source: join(home, `${name}.md`) })) }),
+    render: (site, route) => {
+      drawn.push(route.route);
+      return [{ path: `${route.route.slice(1)}index.html`, bytes: route.route === "/a/" ? `<a href="${link(site, "a.md", "c.md")}">c</a>` : "<p>x</p>" }];
+    },
+  };
+  const round = async () => {
+    drawn.length = 0;
+    forget();
+    await build(spec, { manifest: "manifest.json" });
+    return `${drawn.join(" ")}|${readFileSync(join(home, "dist/a/index.html"), "utf8")}`;
+  };
+  expect(await round()).toBe('/a/ /b/|<a href="c.md">c</a>');
+  names.push("c");
+  expect(await round()).toBe('/a/ /c/|<a href="/c/">c</a>');
+  expect(await round()).toBe('|<a href="/c/">c</a>');
+  names.pop();
+  expect(await round()).toBe('/a/|<a href="c.md">c</a>');
   rmSync(home, { recursive: true, force: true });
 });
 

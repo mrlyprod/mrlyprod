@@ -2,7 +2,6 @@ const DOCK = '(min-width: 74rem)';
 const PREFIX = (typeof document !== 'undefined' && document.documentElement.dataset.prefix) || 'mrly-';
 const KEY = { theme: `${PREFIX}theme`, font: `${PREFIX}font`, tint: `${PREFIX}tint`, saver: `${PREFIX}saver`, cart: `${PREFIX}cart` };
 const WORDMARK = 'wordmark';
-const SCREENS = ['matrix', 'sleep', 'mandelbrot', 'julia'];
 const SIDES = ['left', 'right'];
 const SHADE = 'screen and (prefers-color-scheme: dark)';
 
@@ -26,7 +25,7 @@ const write = (key, value) => {
 const root = () => document.documentElement;
 const docked = () => matchMedia(DOCK).matches;
 const isOpen = (side) => root().dataset[side] === 'open';
-const dock = () => document.querySelector('.dock');
+const sub = () => document.querySelector('.subheader');
 const ready = (fn) => (document.readyState === 'complete' ? fn() : addEventListener('load', fn, { once: true }));
 
 const spot = () => `${PREFIX}spot:${location.href}`;
@@ -53,7 +52,7 @@ function resumed() {
 }
 
 function pin() {
-  const top = dock()?.getBoundingClientRect().top ?? 0;
+  const top = sub()?.getBoundingClientRect().top ?? 0;
   if (top) scrollTo({ top: top + scrollY, behavior: 'instant' });
 }
 
@@ -158,6 +157,7 @@ function cart() {
 /* CONTENTS */
 
 function contents(nav) {
+  nav.querySelector('details')?.setAttribute('open', '');
   const links = [...nav.querySelectorAll('a[href^="#"]')];
   const targets = links.map((a) => document.getElementById(decodeURIComponent(a.hash.slice(1)))).filter(Boolean);
   if (!targets.length) return;
@@ -172,7 +172,7 @@ function contents(nav) {
         else a.removeAttribute('aria-current');
       }
     },
-    { rootMargin: `-${Math.round(dock()?.getBoundingClientRect().height ?? 0)}px 0px -60% 0px` },
+    { rootMargin: `-${Math.round(sub()?.getBoundingClientRect().height ?? 0)}px 0px -60% 0px` },
   );
   for (const t of targets) eye.observe(t);
 }
@@ -207,10 +207,11 @@ async function footer(canvas) {
     const { cycle, mark } = await import('../kit/font/font.js');
     next.stop = mark(next, cycle(next.dataset.text || 'MRLYPROD', 1));
   } else {
+    const { saver, SAVERS } = await import('./savers/index.js');
+    if (!SAVERS.includes(name)) return replay('');
     next.setAttribute('aria-hidden', 'true');
     next.removeAttribute('role');
     next.removeAttribute('aria-label');
-    const { saver } = await import('./savers/index.js');
     next.stop = saver(next, name);
   }
   if (!next.isConnected) next.stop();
@@ -222,26 +223,15 @@ function marked() {
 }
 
 function screen(next) {
-  if (SCREENS.includes(next)) root().dataset.saver = next;
+  if (next) root().dataset.saver = next;
   else delete root().dataset.saver;
-  const now = root().dataset.saver ?? '';
-  write(KEY.saver, now);
-  for (const pick of document.querySelectorAll('[data-saver-pick]')) pick.value = now;
+  write(KEY.saver, next);
+  for (const pick of document.querySelectorAll('[data-saver-pick]')) pick.value = next;
 }
 
 function replay(name) {
   screen(name);
   for (const canvas of [...marks.keys()]) footer(canvas);
-}
-
-/* TREE */
-
-function reveal() {
-  const here = document.querySelector('.tree a[aria-current="page"]');
-  const pane = here?.closest('.pane');
-  if (!here || !pane) return;
-  const top = here.getBoundingClientRect().top - pane.getBoundingClientRect().top + pane.scrollTop;
-  pane.scrollTop = Math.max(0, top - pane.clientHeight / 2);
 }
 
 /* EXPLORER */
@@ -314,7 +304,7 @@ const once = (selector, fn) => {
   }
 };
 
-export function wire() {
+function wire() {
   sync();
   unmark();
   theme(root().dataset.theme ?? '');
@@ -323,7 +313,6 @@ export function wire() {
   screen(root().dataset.saver ?? '');
   cart();
   once('.contents', contents);
-  once('.tree', reveal);
   marked();
 }
 
@@ -357,6 +346,7 @@ function boot() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && shut()) e.preventDefault();
   });
+  window.addEventListener('wire', wire);
   window.addEventListener('cart', cart);
   window.addEventListener('storage', cart);
   window.addEventListener('pageshow', cart);

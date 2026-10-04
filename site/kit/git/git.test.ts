@@ -28,7 +28,7 @@ afterAll(() => rmSync(home, { recursive: true, force: true }));
 
 const modes = { "/git/": { mode: "spa" as const, deep: true } };
 
-const site = (git: unknown, root = home, ships = new Map<string, string>()) => ({ root, config: git ? { git, modes } : {}, nav: [], ships }) as unknown as Site;
+const site = (git: unknown, root = home, ships = new Map<string, string>()) => ({ root, config: git ? { git, modes } : {}, ships }) as unknown as Site;
 
 const repo = { root: ".", slug: "mrlyprod/mrlyprod" };
 
@@ -91,7 +91,7 @@ test("a repo-relative link lands in the viewer, an image or a pdf on its raw byt
 /* COLLECT */
 
 test("no git block in site.json means no routes", () => {
-  expect(collect(site(null))).toEqual({ routes: [], node: null });
+  expect(collect(site(null))).toEqual({ routes: [] });
 });
 
 test("a git block with no deep /git/ rule stops the scan", () => {
@@ -100,9 +100,8 @@ test("a git block with no deep /git/ rule stops the scan", () => {
 });
 
 test("a git block routes one shell for the viewer and the raw bytes of every file, and no page per file", () => {
-  const { routes, node } = collect(site(repo), { entry: "lib/git.js" });
+  const { routes } = collect(site(repo), { entry: "lib/git.js" });
   expect(routes.map((one) => one.route)).toEqual(["/git/", "/raw/.gitignore", "/raw/LICENSE", "/raw/README.md", "/raw/src/a.rs"]);
-  expect(node).toEqual({ name: "Code", href: "/git/" });
   expect(routes[0]).toEqual({ route: "/git/", kind: "git", name: "mrlyprod", entry: join(home, "lib/git.js"), sitemap: true });
   const one = routes.find((route) => route.route === "/raw/src/a.rs")!;
   expect(one.hidden).toBe(true);
@@ -188,13 +187,14 @@ test("a file the build ships verbatim loses its raw copy whatever its type", () 
 
 /* SHELL */
 
-test("the shell is the site's page around an empty body and the viewer's one script", () => {
+test("the shell is the site's page around one noscript line and the viewer's one script", () => {
   const one = site(repo);
   const { routes } = collect(one, { entry: "lib/git.js" });
   const seen: unknown[] = [];
   const spec = { git: { page: (_s: Site, leaf: unknown) => (seen.push(leaf), "<html>") } } as unknown as Spec;
   expect(shell(one, routes[0], { script: "/lib/git.js" } as Shell, spec)).toBe("<html>");
-  expect(seen[0]).toMatchObject({ route: "/git/", name: "mrlyprod", body: "", code: true, scripts: ["/lib/git.js"] });
+  expect(seen[0]).toMatchObject({ route: "/git/", name: "mrlyprod", code: true, scripts: ["/lib/git.js"] });
+  expect((seen[0] as { body: string }).body).toBe('<noscript><p>The code viewer draws in the browser and needs JavaScript. The same files are on <a href="https://github.com/mrlyprod/mrlyprod">GitHub</a>.</p></noscript>');
 });
 
 /* VIEW */

@@ -4,4 +4,4 @@ import { main } from "../kit/shots.ts";
 
 const root = resolve(import.meta.dir, "..");
 
-if (import.meta.main) await main(root, JSON.parse(readFileSync(join(root, "site.json"), "utf8")));
+if (import.meta.main) await main(root, JSON.parse(readFileSync(join(root, "site.json"), "utf8")), process.env.MRLY_DIST || undefined);
