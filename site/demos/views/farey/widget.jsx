@@ -47,4 +47,4 @@ export function stack() {
   );
 }
 
-embed('farey', { stack });
+export const { mount, unmount } = embed({ stack });

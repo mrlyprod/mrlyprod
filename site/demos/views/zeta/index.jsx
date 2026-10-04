@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ready, ink, fit } from '../../../lib/mrly.js';
 import { stamp, useQuery } from '../../../lib/query.js';
-import { mount, Page, Row, Slider, Btn, Stats, Stat, Note } from '../../../lib/app.jsx';
+import { demo, Page, Row, Slider, Btn, Stats, Stat, Note } from '../../../lib/app.jsx';
 import { Sketch } from '../../../lib/draw.jsx';
 import { useSeeds, roll } from '../../../lib/select.jsx';
 import { board, line, axis, tag } from '../../../lib/chart.js';
@@ -56,9 +56,10 @@ function App() {
     if (!playing) return;
     let live = true;
     let last = 0;
+    let next = 0;
     const frame = (clock) => {
       if (!live) return;
-      requestAnimationFrame(frame);
+      next = requestAnimationFrame(frame);
       const dt = last ? Math.min(0.1, (clock - last) / 1000) : 0;
       last = clock;
       if (!dt) return;
@@ -84,8 +85,11 @@ function App() {
         settle();
       }
     };
-    requestAnimationFrame(frame);
-    return () => { live = false; };
+    next = requestAnimationFrame(frame);
+    return () => {
+      live = false;
+      cancelAnimationFrame(next);
+    };
   }, [playing]);
 
   const look = useMemo(() => {
@@ -294,4 +298,4 @@ function App() {
   );
 }
 
-mount(<App />);
+export const { mount, unmount } = demo(<App />);

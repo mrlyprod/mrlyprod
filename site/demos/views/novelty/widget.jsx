@@ -71,4 +71,4 @@ export function meter() {
   );
 }
 
-embed('novelty', { meter });
+export const { mount, unmount } = embed({ meter });

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { ready } from '../../../lib/mrly.js';
 import { web } from '../../../lib/chart.js';
 import { web as solid } from '../../../lib/stage.js';
-import { mount, Page, Row, Pick, Slider, Btn, Stats, Stat, Note } from '../../../lib/app.jsx';
+import { demo, Page, Row, Pick, Slider, Btn, Stats, Stat, Note } from '../../../lib/app.jsx';
 import { Sketch } from '../../../lib/draw.jsx';
 import { Stage } from '../../../lib/stage.jsx';
 import { Picker, useSeeds, roll } from '../../../lib/select.jsx';
@@ -216,4 +216,4 @@ function App() {
   );
 }
 
-mount(<App />);
+export const { mount, unmount } = demo(<App />);

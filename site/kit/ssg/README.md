@@ -111,6 +111,7 @@
 - `blog` is the blog's hooks, `{ page, md }`.
 - `Route`: `{ route, kind, name, data, source, inputs, urls, at, hidden, sitemap, mode, entry }`; `mode` and `entry` are MODES'.
 - `hidden` keeps a route out of the sitemap; `sitemap` puts it back on the map anyway.
+- `shown(site)` is every url of a route no `hidden` covers, `{ route, name }` in route order: what a page may list.
 - A `/raw/` route sets both, so every file the tree never shows is still crawlable; `/404.html` sets only `hidden` and stays off.
 - One route may be a group: `urls` lists the pages it publishes, so a bundler route still fills the sitemap.
 - `render` may be async, so a route can run a bundler and hand back its bytes before anything is written.

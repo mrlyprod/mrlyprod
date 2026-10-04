@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ready, ink } from '../../../lib/mrly.js';
 import { useQuery } from '../../../lib/query.js';
-import { mount, Page, Row, Slider, Pick, Stats, Stat, Note } from '../../../lib/app.jsx';
+import { demo, Page, Row, Slider, Pick, Stats, Stat, Note } from '../../../lib/app.jsx';
 import { Sketch } from '../../../lib/draw.jsx';
 import { board, line, bars, axis, tag } from '../../../lib/chart.js';
 import { meterChart, LOW, HIGH, PER_OCTAVE, ZEROS, CURVE } from './widget.jsx';
@@ -100,4 +100,4 @@ function App() {
   );
 }
 
-mount(<App />);
+export const { mount, unmount } = demo(<App />);

@@ -31,7 +31,8 @@
 
 ## VIEWER
 
-- `start({ tree, mount, md, paint, after })` fetches the tree once, draws the path in `location`, and takes over every plain click on a link under `/git/`.
+- `start({ tree, mount, md, paint, after })` takes the element it draws into, fetches the tree once, draws the path in `location`, and takes over every plain click on a link under `/git/`. It returns a stop: the click and popstate listeners go, a draw under way lands nowhere, and the path retries end.
+- Its popstate draws only a path under the tree's base, so a Back that leaves `/git/` is another router's.
 - A listing is its path bar, its count of folders and files, then folders with their item counts and files with their sizes and seti icons.
 - A file is its path bar with Raw and GitHub links: an image inline, a PDF in an `<embed>`, a file over 1 MB a download link, all with no fetch.
 - Text is fetched from `/raw/` or `u`: a numbered `<pre>`, markdown through `md`, a binary a download link; text over 200 KB drops the numbers.
@@ -63,7 +64,7 @@
 ## HOOKS
 
 - The module never imports the chrome: `spec.git` carries it, `{ page, entry, served }`, and the tests draw through it. No `page` means the routes are collected and nothing is rendered.
-- `page(site, leaf)` wraps the empty body in the site's page template; `leaf.code` asks for the code viewer's stylesheet, the `git.css` sheet, `leaf.tree` is the explorer, `leaf.scripts` the viewer's script.
+- `page(site, leaf)` wraps the empty body in the site's page template; `leaf.code` asks for the code viewer's stylesheet, the `git.css` sheet, `leaf.tree` is the explorer, `leaf.island` the url of the viewer's entry, which the page names on the element the viewer draws into.
 - `entry` is the site's browser module, resolved against the site root, which calls `start()`; the `/git/` route is born from it, and the site lists it in `spa.entries` too.
 - `shell(site, route, shell, spec)` draws the shell through `page`; the site's `spa.page` calls it for the `/git/` route.
 - `served(site, path)` is the mirror seam: it hands back the URL the site already serves that repo file at, or null; `site.serves` maps a bundled source file to its published URL and `site.made` holds every path the build has written.

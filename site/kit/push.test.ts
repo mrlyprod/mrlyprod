@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { assets, cache, changes, IMMUTABLE, kind, mine, REVALIDATE, rules, seal, spread, sweep, typing, type Lister } from "./push.ts";
+import { assets, cache, changes, IMMUTABLE, kind, mine, REVALIDATE, rules, seal, spread, staged, sweep, typing, type Lister } from "./push.ts";
 import { build, forget, globals, type Manifest, type Spec } from "./ssg/build.ts";
 
 const SHOP = rules(["(^|/)lib-[^/]+\\.js$", "(^|/)lib-[^/]+\\.css$", "(^|/)js/[^/]+\\.js$", "\\.wasm$", "-[0-9a-f]{8}\\.[^./]+$"]);
@@ -70,6 +70,12 @@ describe("push", () => {
     const same = (): Manifest => ({ "/": { ...old["/"]! } });
     expect(changes(old, same(), [], sealed)).toEqual([]);
     expect(changes(old, same(), [], sealed, true)).toEqual(["props.json"]);
+  });
+
+  test("hashed files upload first, then the other files, then every page, each group in its own order and its own batches", () => {
+    const type = (path: string) => (path === "git/shell" ? "text/html; charset=utf-8" : kind(path));
+    const order = staged(["index.html", "props.json", "git/shell", "demos/x/index.js", "shop/index.html", "lib-a1.js", "ui/router-8a0bcf6d.js", "search.json"], type, (path) => cache(path, NET));
+    expect(order).toEqual([["lib-a1.js", "ui/router-8a0bcf6d.js"], ["props.json", "demos/x/index.js", "search.json"], ["index.html", "git/shell", "shop/index.html"]]);
   });
 
   test("the guard owns a prefix and a single key alike", () => {

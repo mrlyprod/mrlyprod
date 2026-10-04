@@ -38,7 +38,7 @@ html:not(.js) .actions [data-pane] { display: none; }
 /* PANES */
 
 .panes { display: flex; flex-direction: column; }
-main { min-width: 0; width: 100%; max-width: var(--page); margin-inline: auto; padding: var(--s5) var(--s5) var(--s8); }
+main, dialog > div { min-width: 0; width: 100%; max-width: var(--page); margin-inline: auto; padding: var(--s5) var(--s5) var(--s8); }
 main:focus { outline: none; }
 main:not(.wide) > .lede { max-width: var(--read); margin-inline: auto; }
 .lede { margin-bottom: var(--s5); }
@@ -68,7 +68,7 @@ html:not(.js) .pane:has(> .controls:empty:only-child) { display: none; }
 }
 
 @media (max-width: 40rem) {
-  main { padding: var(--s4) var(--s4) var(--s7); }
+  main, dialog > div { padding: var(--s4) var(--s4) var(--s7); }
   .top .mark svg { height: 0.6rem; }
 }
 
@@ -116,6 +116,22 @@ html:not(.js) main .settings { display: none; }
 .menu section > h2 { border-bottom: var(--hair); padding-bottom: var(--s2); margin-bottom: var(--s4); }
 .menu .gallery.grid { grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr)); }
 .menu .grid .tile h2 { font-size: 0.8rem; overflow-wrap: anywhere; }
+.menu form { display: grid; gap: var(--s5); }
+.menu form input { width: 100%; min-height: 2.75rem; padding: 0 var(--s4); background: var(--panel); color: var(--fg); border: var(--hair); border-radius: var(--r2); font-size: 1rem; }
+.menu form p { grid-column: 1 / -1; }
+
+/* DIALOG */
+
+html:has(dialog[open]) { overflow: hidden; }
+dialog { position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none; padding: 0; border: 0; background: var(--bg); color: var(--fg); overflow-y: auto; overscroll-behavior: contain; opacity: 0; transition: opacity var(--pace) var(--ease), overlay var(--pace) allow-discrete, display var(--pace) allow-discrete; }
+dialog[open] { opacity: 1; }
+@starting-style { dialog[open] { opacity: 0; } }
+dialog > .top { position: sticky; top: 0; z-index: 1; }
+dialog > .top .glyph:only-child { grid-column: 1; }
+dialog > .top svg { rotate: 45deg; }
+dialog .hero { display: none; }
+dialog .menu > section:not([data-view]) { display: none; }
+dialog .menu:has(> [data-view]) > .grid { display: none; }
 
 /* GRID */
 

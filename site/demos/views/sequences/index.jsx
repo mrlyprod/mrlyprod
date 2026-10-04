@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { ready, ink } from '../../../lib/mrly.js';
 import { stamp, useQuery } from '../../../lib/query.js';
-import { mount, Page, Row, Pick, Btn, Stats, Stat, Note, Group } from '../../../lib/app.jsx';
+import { demo, Page, Row, Pick, Btn, Stats, Stat, Note, Group } from '../../../lib/app.jsx';
 import { Grid, Markup, Sketch } from '../../../lib/draw.jsx';
 import { useSeeds, roll } from '../../../lib/select.jsx';
 import { board, bars, axis, tag } from '../../../lib/chart.js';
@@ -366,4 +366,4 @@ function App() {
   );
 }
 
-mount(<App />);
+export const { mount, unmount } = demo(<App />);

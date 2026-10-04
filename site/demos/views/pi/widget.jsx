@@ -25,4 +25,4 @@ export function window() {
   );
 }
 
-embed('pi', { window });
+export const { mount, unmount } = embed({ window });

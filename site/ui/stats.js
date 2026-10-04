@@ -1,9 +1,6 @@
 const PATH = '/stats/stats.json';
 const EVERY = 60 * 1000;
 
-const cloud = document.querySelector('[data-stats="cloud"]');
-const board = document.querySelector('[data-stats="errors"]');
-
 /* FORMAT */
 
 function ago(seconds) {
@@ -76,7 +73,7 @@ const runs = (data) =>
 const lines = (data) =>
   Object.entries(data.errors ?? {}).flatMap(([name, list]) => list.map((one) => `${one.at ?? 'sometime'} ${one.level} ${name} ${one.message}`));
 
-function draw(data) {
+function draw(cloud, board, data) {
   if (!data) {
     note(cloud, 'No data yet.');
     note(board, 'No data yet.');
@@ -106,18 +103,36 @@ async function grab() {
   }
 }
 
-let timer = 0;
+/* ISLAND */
 
-const refresh = async () => draw(await grab());
+const live = new Map();
 
-function run() {
-  clearInterval(timer);
-  if (document.hidden) return;
-  void refresh();
-  timer = setInterval(refresh, EVERY);
-}
-
-if (cloud && board) {
+export function mount(host) {
+  const cloud = host.querySelector('[data-stats="cloud"]');
+  const board = host.querySelector('[data-stats="errors"]');
+  if (live.has(host) || !cloud || !board) return;
+  let timer = 0;
+  let on = true;
+  const refresh = async () => {
+    const data = await grab();
+    if (on) draw(cloud, board, data);
+  };
+  const run = () => {
+    clearInterval(timer);
+    if (document.hidden) return;
+    void refresh();
+    timer = setInterval(refresh, EVERY);
+  };
   document.addEventListener('visibilitychange', run);
   run();
+  live.set(host, () => {
+    on = false;
+    clearInterval(timer);
+    document.removeEventListener('visibilitychange', run);
+  });
+}
+
+export function unmount(host) {
+  live.get(host)?.();
+  live.delete(host);
 }

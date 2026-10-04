@@ -1,22 +1,26 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { createRoot } from 'react-dom/client';
 import { Contents } from '../ui/contents.jsx';
+import { island } from './island.jsx';
 
 let pages = [];
 
-export function mount(node) {
-  const root = document.getElementById('root');
-  const still = root.nextElementSibling;
-  pages = [...(still?.querySelectorAll('.reads a') ?? [])].map((a) => ({ name: a.textContent, href: a.getAttribute('href') }));
-  still?.remove();
-  createRoot(root).render(node);
+export function demo(node) {
+  return island((host) => {
+    const still = host.nextElementSibling;
+    pages = [...(still?.querySelectorAll('.reads a') ?? [])].map((a) => ({ name: a.textContent, href: a.getAttribute('href') }));
+    still?.remove();
+    return { node, close: () => still && host.after(still) };
+  });
 }
 
 function Bar({ controls, contents = [] }) {
   const slot = document.querySelector('#right .controls');
   useEffect(() => {
-    if (contents.length) window.dispatchEvent(new Event('wire'));
+    if (!contents.length) return undefined;
+    const wire = () => window.dispatchEvent(new Event('wire'));
+    wire();
+    return wire;
   }, [contents.length]);
   if (!slot) return null;
   return createPortal(<>{controls}<Contents items={contents} /></>, slot);

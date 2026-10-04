@@ -73,17 +73,28 @@ function contents(mount) {
   bar(nav);
 }
 
-/* START */
+/* ISLAND */
 
-const MOUNT = '#main article';
+const live = new Map();
 
-start({
-  tree: '/git.json',
-  mount: MOUNT,
-  md,
-  paint: () => import('../kit/git/code.ts').then((one) => one.paint),
-  after: () => {
-    trail();
-    contents(document.querySelector(MOUNT));
-  },
-});
+export function mount(host) {
+  if (live.has(host)) return;
+  live.set(
+    host,
+    start({
+      tree: '/git.json',
+      mount: host,
+      md,
+      paint: () => import('../kit/git/code.ts').then((one) => one.paint),
+      after: () => {
+        trail();
+        contents(host);
+      },
+    }),
+  );
+}
+
+export function unmount(host) {
+  live.get(host)?.();
+  live.delete(host);
+}

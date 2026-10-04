@@ -23,7 +23,7 @@ export type Leaf = {
   type?: string;
   code?: boolean;
   tree?: Node[];
-  scripts?: string[];
+  island?: string;
 };
 
 export type Hooks = {
@@ -241,5 +241,5 @@ export function shell(site: Site, route: Route, shell: Shell, spec: Spec): Bytes
   const description = `The source of ${git.name}: every tracked file, browsable, with its raw bytes under /raw/.`;
   const hub = git.slug ? ` The same files are on <a href="https://github.com/${escape(git.slug)}">GitHub</a>.` : "";
   const body = `<noscript><p>The code viewer draws in the browser and needs JavaScript.${hub}</p></noscript>`;
-  return page(site, { route: route.route, name: git.name, description, body, type: "website", code: true, tree: explorer(site), scripts: [shell.script] });
+  return page(site, { route: route.route, name: git.name, description, body, type: "website", code: true, tree: explorer(site), island: shell.script });
 }

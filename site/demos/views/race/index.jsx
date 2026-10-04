@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ready, ink, rgb } from '../../../lib/mrly.js';
-import { mount, Page, Row, Btn, Stats, Stat } from '../../../lib/app.jsx';
+import { demo, Page, Row, Btn, Stats, Stat } from '../../../lib/app.jsx';
 import { useSeeds } from '../../../lib/select.jsx';
 
 const m = await ready();
@@ -183,4 +183,4 @@ function App() {
   );
 }
 
-mount(<App />);
+export const { mount, unmount } = demo(<App />);

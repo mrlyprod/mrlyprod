@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { ready, ink, role } from '../../../lib/mrly.js';
-import { mount, Page, Row, Pick, Check, Btn, Stats, Stat, Note, Group } from '../../../lib/app.jsx';
+import { demo, Page, Row, Pick, Check, Btn, Stats, Stat, Note, Group } from '../../../lib/app.jsx';
 import { Markup, Sketch } from '../../../lib/draw.jsx';
 import { useQuery } from '../../../lib/query.js';
 import { useSeeds, seeded, Picker } from '../../../lib/select.jsx';
@@ -127,4 +127,4 @@ function App() {
   );
 }
 
-mount(<App />);
+export const { mount, unmount } = demo(<App />);

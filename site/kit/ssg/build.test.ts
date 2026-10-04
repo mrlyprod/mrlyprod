@@ -216,7 +216,7 @@ test("a git block builds one shell under /git/, the tree data beside it and the 
     out,
     collect: () => ({ routes: [] }),
     render: () => [],
-    git: { entry: "view.js", page: (_site, leaf) => `<main>${leaf.body}</main><script type="module" src="${leaf.scripts![0]}"></script>` },
+    git: { entry: "view.js", page: (_site, leaf) => `<main>${leaf.body}</main><script type="module" src="${leaf.island}"></script>` },
     spa: { entries: () => [join(home, "view.js")], page: (site, route, shell) => gitShell(site, route, shell, one) },
   };
   await build(one, { manifest: "manifest.json" });

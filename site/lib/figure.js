@@ -81,12 +81,21 @@ export async function play(host, figure, at) {
     });
   paint();
   host.append(node);
-  new IntersectionObserver(([entry]) => {
+  const eye = new IntersectionObserver(([entry]) => {
     seen = entry.isIntersecting;
     wake();
-  }).observe(host);
+  });
+  eye.observe(host);
   scheme.addEventListener('change', shade);
   window.addEventListener('theme', shade);
   document.addEventListener('visibilitychange', wake);
   wake();
+  return () => {
+    halt();
+    eye.disconnect();
+    scheme.removeEventListener('change', shade);
+    window.removeEventListener('theme', shade);
+    document.removeEventListener('visibilitychange', wake);
+    node.remove();
+  };
 }

@@ -29,4 +29,4 @@ export function sieve() {
   );
 }
 
-embed('wallis', { sieve });
+export const { mount, unmount } = embed({ sieve });

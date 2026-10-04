@@ -24,29 +24,53 @@ test("no script the browser loads beside the chrome reaches the chrome, the site
   expect(graph(entries).filter((file) => banned.includes(file))).toEqual([]);
 });
 
-test("the gallery is drawn at build: every demo is a tile and the chrome is its only script", async () => {
+test("the gallery is drawn at build: every demo is a tile and the chrome and the router are its only scripts", async () => {
   const html = await drawn("/demos/", "demos/index.html");
   expect([...html.matchAll(/<a class="tile" href="\/demos\/([a-z0-9-]+)\/">/g)].map((found) => found[1]!).sort()).toEqual(names);
-  expect(modules(html)).toEqual([site.asset("chrome.js")]);
+  expect(modules(html)).toEqual([site.asset("chrome.js"), site.asset("router.js")]);
 });
 
 test("a demo page is the chrome around its title, its still and one line for a reader without scripts", async () => {
   const html = await drawn("/demos/sponge/", "demos/sponge/index.html");
   const main = html.match(/<main[\s\S]*<\/main>/)![0];
   expect(html).toContain('<header class="top">');
-  expect(main).toContain('<div id="root"></div>');
+  expect(main).toContain('<div id="root" data-island="/demos/sponge/index.js"></div>');
   expect(main).toContain("<h1>The sponge</h1>");
   expect(main).toContain('srcset="/figures/demo-sponge-dark.webp"');
   expect(main.match(/<noscript>/g)).toHaveLength(1);
   expect(html).toContain('<section class="controls" aria-label="Controls"></section>');
-  expect(modules(html)).toHaveLength(2);
-  expect(modules(html)[0]).toBe(site.asset("chrome.js"));
+  expect(modules(html)).toEqual([site.asset("chrome.js"), site.asset("router.js")]);
   expect(html).not.toContain("application/json");
 });
 
 test("an embedded widget says what it needs to a reader without scripts", async () => {
   const html = await drawn("/research/wiki/farey-sequence/", "research/wiki/farey-sequence/index.html");
   expect(html).toMatch(/<figure class="widget"[^>]*><div class="mount"><\/div><noscript><p>[^<]+<\/p><\/noscript>/);
+});
+
+test("every page loads the chrome and the router alone; a page names each island's entry in its markup and preloads it and the loader", async () => {
+  const pages = [
+    ["/research/wiki/farey-sequence/", ["/demos/farey/widget.js"]],
+    ["/research/wiki/sierpinski-carpet/", ["/live.js"]],
+    ["/research/claims/automata/", [site.asset("claims.js")]],
+    ["/stats/", [site.asset("stats.js")]],
+    ["/menu/", [site.asset("search.js")]],
+    ["/demos/sponge/", ["/demos/sponge/index.js"]],
+    ["/about/", []],
+  ] as const;
+  for (const [route, entries] of pages) {
+    const html = await drawn(route, `${route.slice(1)}index.html`);
+    expect([route, [...new Set([...html.matchAll(/ data-island="([^"]+)"/g)].map((found) => found[1]!))]]).toEqual([route, [...entries]]);
+    expect([route, modules(html)]).toEqual([route, [site.asset("chrome.js"), site.asset("router.js")]]);
+    expect([route, [...html.matchAll(/<link rel="modulepreload" href="([^"]+)">/g)].map((found) => found[1]!)]).toEqual([route, entries.length ? [site.asset("islands.js"), ...entries] : []]);
+    expect(html).not.toMatch(/<script>|onsubmit=/);
+  }
+});
+
+test("every entry a page can name exports the contract's mount and unmount", () => {
+  const entries = [...names.map((name) => join(views, name, "index.jsx")), ...readdirSync(views).map((name) => join(views, name, "widget.jsx")).filter(existsSync), join(home, "demos", "live.js"), join(home, "lib", "git.js"), join(home, "ui", "stats.js"), join(home, "ui", "claims.js"), join(home, "ui", "search.js")];
+  const scan = new Bun.Transpiler({ loader: "jsx" });
+  for (const file of entries) expect([file, scan.scan(readFileSync(file, "utf8")).exports.filter((name) => name === "mount" || name === "unmount").sort()]).toEqual([file, ["mount", "unmount"]]);
 });
 
 test("a demo's shell says none when its page hands the bar nothing, and that demo gets no pane and no button", async () => {

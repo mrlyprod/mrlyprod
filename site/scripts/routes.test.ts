@@ -57,7 +57,7 @@ test("every written page and every app is a route at the root, and none sits und
 
 test("the menu is two levels: the tree's doors and one tile per folder, then each folder a section of the same page with no url of its own", async () => {
   const html = main(await drawn("/menu/"));
-  const [top, ...rest] = html.slice(html.indexOf('<div class="menu">')).split("<section ");
+  const [top, ...rest] = html.slice(html.indexOf('<div class="menu"')).split("<section ");
   const folders = tree.filter((node) => !node.href);
   expect(hrefs(top!)).toEqual(tree.map((node) => node.href ?? `#${node.name.toLowerCase()}`));
   expect(rest).toHaveLength(folders.length);
@@ -89,6 +89,24 @@ test("a menu entry's icon is the figure its own page ships, site-page when the p
   for (const href of [...icons.keys()].filter((one) => !mine.includes(one) && !one.startsWith("#"))) expect([href, icons.get(href)]).toEqual([href, "site-page"]);
   expect(icons.get("#research")).toBe(icons.get("/research/")!);
   expect(icons.get("#apps")).toBe("site-apps");
+});
+
+test("search.json holds one row per shown route, its title and the figure its own page ships, and no page but the menu names it", async () => {
+  const rows = JSON.parse(text(await globals(site, spec, true), "search.json")) as [string, string, string][];
+  const shown = site.routes.filter((one) => !one.hidden).flatMap((one) => one.urls?.map((url) => url.route) ?? (one.route.endsWith("/") ? [one.route] : []));
+  expect(rows.map((row) => row[1])).toEqual([...shown].sort((a, b) => a.localeCompare(b)));
+  expect(rows.filter((row) => row.length !== 3 || !row[0] || !/^[a-z0-9-]+$/.test(row[2]))).toEqual([]);
+  expect(rows.some((row) => row[1].startsWith("/raw/") || ["/cart/", "/stats/", "/404.html"].includes(row[1]))).toBe(false);
+  const kinds = new Map(site.routes.filter((one) => !one.hidden && one.kind !== "raw").map((one) => [one.kind ?? "", one]));
+  expect(kinds.size).toBeGreaterThan(15);
+  for (const route of kinds.values()) {
+    const href = route.urls?.[0]?.route ?? route.route;
+    const page = text(await render(site, route, spec), `${href.slice(1)}index.html`);
+    expect([href, rows.find((row) => row[1] === href)?.[2]]).toEqual([href, page.match(OG)![1] ?? "site-page"]);
+    expect([href, page.includes("search.json")]).toEqual([href, href === "/menu/"]);
+  }
+  expect(main(await drawn("/menu/"))).toContain(`<div class="menu" data-island="${site.asset("search.js")}" data-search="/search.json">`);
+  expect(main(await drawn("/menu/"))).not.toMatch(/<form|<input/);
 });
 
 test("every file the menu's Root folder links is one the build writes at the root", async () => {
@@ -163,12 +181,13 @@ test("a file path ends on the file itself, so the code viewer's crumbs follow th
   expect(crumbs("/git/a%20b/").map((one) => one.name)).toEqual(["git", "a b"]);
 });
 
-test("the header is three plain links, to the menu, home and the cart, and the subheader repeats none of them", async () => {
+test("the header is three plain links, to the menu, home and the cart, the menu link alone naming the dialog module, and the subheader repeats none of them", async () => {
   for (const route of ["/", "/about/", "/research/wiki/farey-sequence/", "/demos/sponge/", "/git/"]) {
     const html = await drawn(route);
     const head = html.match(/<header class="top">([\s\S]*?)<\/header>/)![1]!;
     expect([...head.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map((one) => one[1]!)).toEqual(CHROME);
     expect(head.replace(/<svg[\s\S]*?<\/svg>/g, "").replace(/<a\b[^>]*>|<\/a>/g, "")).toBe("");
     expect([...sub(html).matchAll(/href="([^"]+)"/g)].map((one) => one[1]!).filter((href) => CHROME.includes(href))).toEqual([]);
+    expect([...head.matchAll(/<a\b[^>]*>/g)].map((one) => one[0].match(/ data-router="([^"]+)"/)?.[1] ?? "")).toEqual([site.asset("dialog.js"), "", ""]);
   }
 });

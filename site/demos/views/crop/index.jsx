@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { ready, ink } from '../../../lib/mrly.js';
 import { faces } from '../../../lib/stage.js';
 import { board, bars, line, axis, rules, tag } from '../../../lib/chart.js';
-import { mount, Page, Row, Pick, Slider, Check, Stats, Stat, Note, Group } from '../../../lib/app.jsx';
+import { demo, Page, Row, Pick, Slider, Check, Stats, Stat, Note, Group } from '../../../lib/app.jsx';
 import { Grid, Markup, Sketch } from '../../../lib/draw.jsx';
 import { Stage } from '../../../lib/stage.jsx';
 import { useSeeds, seeded, Picker } from '../../../lib/select.jsx';
@@ -379,4 +379,4 @@ function App() {
   );
 }
 
-mount(<App />);
+export const { mount, unmount } = demo(<App />);

@@ -1,10 +1,9 @@
-import { createRoot } from 'react-dom/client';
+import { island } from './island.jsx';
 
-export function embed(name, views) {
-  if (typeof document === 'undefined') return;
-  for (const figure of document.querySelectorAll(`figure.widget[data-demo="${name}"]`)) {
-    const View = views[figure.dataset.view];
-    const mount = figure.querySelector('.mount');
-    if (View && mount) createRoot(mount).render(<View />);
-  }
+export function embed(views) {
+  return island((host) => {
+    const View = views[host.dataset.view];
+    const at = host.querySelector('.mount');
+    return View && at ? { at, node: <View /> } : null;
+  });
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { stage } from './stage.js';
 
 export function Stage({ onStage, deps = [], className = 'stage', ...rest }) {
@@ -8,5 +8,9 @@ export function Stage({ onStage, deps = [], className = 'stage', ...rest }) {
     live.current ??= stage(ref.current);
     onStage(live.current);
   }, deps);
+  useLayoutEffect(() => () => {
+    live.current?.dispose();
+    live.current = null;
+  }, []);
   return <canvas ref={ref} className={className} {...rest} />;
 }

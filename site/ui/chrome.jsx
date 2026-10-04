@@ -52,11 +52,11 @@ function Wordmark({ className }) {
 
 /* HEADER */
 
-function Header() {
+function Header({ dialog }) {
   const site = conf();
   return (
     <header className="top">
-      <a className="glyph" href={site.menu} aria-label="Menu">
+      <a className="glyph" href={site.menu} aria-label="Menu" data-router={dialog}>
         <Glyph text="+" />
       </a>
       <a className="mark" href="/" aria-label={`${site.title} home`}>
@@ -164,9 +164,9 @@ export function Grid({ nodes = [] }) {
 
 const anchor = (name) => name.toLowerCase();
 
-export function Menu({ tree = [] }) {
+export function Menu({ tree = [], island, search }) {
   return (
-    <div className="menu">
+    <div className="menu" data-island={island} data-search={search}>
       <Grid nodes={tree.map(({ nodes, ...node }) => (nodes ? { ...node, href: `#${anchor(node.name)}` } : node))} />
       {tree.filter((node) => node.nodes).map((folder) => (
         <section key={folder.name} id={anchor(folder.name)} aria-label={folder.name}>
@@ -248,13 +248,13 @@ function Footer() {
 
 /* SHELL */
 
-export function Shell({ route = '/', tree = [], current = route, contents = [], controls, late = false, wide = false, children }) {
+export function Shell({ route = '/', tree = [], current = route, contents = [], controls, late = false, wide = false, dialog, children }) {
   const left = tree.length > 0;
   const bar = Boolean(controls) || fills(contents);
   return (
     <>
       <a className="skip" href="#main">Skip to content</a>
-      <Header />
+      <Header dialog={dialog} />
       <Subheader route={route} left={left} bar={bar} late={late} />
       <div className="panes">
         {left && (

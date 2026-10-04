@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { ready, ink } from '../../../lib/mrly.js';
-import { mount, Page, Slider, Stats, Stat, Note, Group } from '../../../lib/app.jsx';
+import { demo, Page, Slider, Stats, Stat, Note, Group } from '../../../lib/app.jsx';
 import { Pixels, Sketch } from '../../../lib/draw.jsx';
 import { board, tag } from '../../../lib/chart.js';
 import { useQuery } from '../../../lib/query.js';
@@ -208,4 +208,4 @@ function App() {
   );
 }
 
-mount(<App />);
+export const { mount, unmount } = demo(<App />);

@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useMemo, useRef } from 'react';
 import { ready, ink, fit } from '../../../lib/mrly.js';
 import { stamp, useQuery } from '../../../lib/query.js';
-import { mount, Page, Row, Slider, Btn, Note } from '../../../lib/app.jsx';
+import { demo, Page, Row, Slider, Btn, Note } from '../../../lib/app.jsx';
 import { Grid, Markup, Sketch } from '../../../lib/draw.jsx';
 import { useSeeds, roll } from '../../../lib/select.jsx';
 import { Pins, Terms } from '../../../lib/series.jsx';
@@ -268,4 +268,4 @@ function App() {
   );
 }
 
-mount(<App />);
+export const { mount, unmount } = demo(<App />);

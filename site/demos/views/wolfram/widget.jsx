@@ -29,4 +29,4 @@ export function rule() {
   );
 }
 
-embed('wolfram', { rule });
+export const { mount, unmount } = embed({ rule });

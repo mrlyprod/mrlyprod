@@ -470,6 +470,13 @@ function links(site: Site, spec: Spec): Link[] {
   return out.sort((a, b) => a.route.localeCompare(b.route));
 }
 
+export const shown = (site: Site): Link[] =>
+  site.routes
+    .filter((route) => !route.hidden)
+    .flatMap((route) => route.urls ?? (route.route.endsWith("/") ? [{ route: route.route, name: route.name }] : []))
+    .map((one) => ({ route: one.route, name: one.name ?? one.route }))
+    .sort((a, b) => a.route.localeCompare(b.route));
+
 const XML = `<?xml version="1.0" encoding="UTF-8"?>\n`;
 
 const SCHEMA = "http://www.sitemaps.org/schemas/sitemap/0.9";

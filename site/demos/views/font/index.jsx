@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ready, paint } from '../../../lib/mrly.js';
-import { mount, Page, Row, Slider, Check, Stats, Stat } from '../../../lib/app.jsx';
+import { demo, Page, Row, Slider, Check, Stats, Stat } from '../../../lib/app.jsx';
 
 const m = await ready();
 const FPS = 25;
@@ -105,4 +105,4 @@ function App() {
   );
 }
 
-mount(<App />);
+export const { mount, unmount } = demo(<App />);

@@ -35,7 +35,8 @@ export function stage(canvas) {
     flat.bottom = -half;
     flat.updateProjectionMatrix();
   };
-  new ResizeObserver(resize).observe(canvas);
+  const sized = new ResizeObserver(resize);
+  sized.observe(canvas);
   resize();
   const st = { scene, renderer, controls, group, spin: 0 };
   st.clear = () => {
@@ -70,13 +71,22 @@ export function stage(canvas) {
     camera.lookAt(controls.target);
     controls.update();
   };
+  let next = 0;
   const frame = () => {
-    requestAnimationFrame(frame);
+    next = requestAnimationFrame(frame);
     group.rotation.y += st.spin;
     controls.update();
     renderer.render(scene, camera);
   };
   frame();
+  st.dispose = () => {
+    cancelAnimationFrame(next);
+    sized.disconnect();
+    controls.dispose();
+    st.clear();
+    renderer.dispose();
+    renderer.forceContextLoss();
+  };
   return st;
 }
 

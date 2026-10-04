@@ -35,9 +35,25 @@ export async function ready() {
   await init({ module_or_path: at });
   globalThis.mrly = wasm;
   tint();
-  window.addEventListener('theme', tint);
-  scheme?.addEventListener('change', tint);
   return wasm;
+}
+
+let followers = 0;
+
+export function follow() {
+  if (followers++ === 0) {
+    tint();
+    window.addEventListener('theme', tint);
+    scheme?.addEventListener('change', tint);
+  }
+  let held = true;
+  return () => {
+    if (!held) return;
+    held = false;
+    if (--followers > 0) return;
+    window.removeEventListener('theme', tint);
+    scheme?.removeEventListener('change', tint);
+  };
 }
 
 export function rgb(hex) {

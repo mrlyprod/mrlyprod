@@ -16,7 +16,7 @@ const demos = (site: Site, tail: string, ext: string) => {
 
 await main(spec, {
   html: (site) => demos(site, "/index.html", "/"),
-  scripts: (site) => demos(site, "/widget.jsx", "/widget.js"),
+  scripts: (site) => [...demos(site, "/widget.jsx", "/widget.js"), ...demos(site, "/index.jsx", "/index.js")],
   disk: (site) => [["/figures/", site.input("figures").path]],
   extra: async (_, path) => {
     if (path.startsWith("/figures/")) await ensureFigures();

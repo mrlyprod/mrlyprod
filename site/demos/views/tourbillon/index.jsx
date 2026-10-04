@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ready } from '../../../lib/mrly.js';
-import { mount, Page, Row, Pick, Slider, Text, Btn, Stats, Stat, Note } from '../../../lib/app.jsx';
+import { demo, Page, Row, Pick, Slider, Text, Btn, Stats, Stat, Note } from '../../../lib/app.jsx';
 import { Pixels } from '../../../lib/draw.jsx';
 import { useQuery, stamp } from '../../../lib/query.js';
 
@@ -171,4 +171,4 @@ function App() {
   );
 }
 
-mount(<App />);
+export const { mount, unmount } = demo(<App />);

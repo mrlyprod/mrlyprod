@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ready, ink, blit } from '../../../lib/mrly.js';
-import { mount, Page, Row, Pick, Slider, Check, Btn, Stats, Stat, Note, Group } from '../../../lib/app.jsx';
+import { demo, Page, Row, Pick, Slider, Check, Btn, Stats, Stat, Note, Group } from '../../../lib/app.jsx';
 import { Sketch } from '../../../lib/draw.jsx';
 import { useQuery, stamp } from '../../../lib/query.js';
 import { useSeeds, roll } from '../../../lib/select.jsx';
@@ -154,4 +154,4 @@ function App() {
   );
 }
 
-mount(<App />);
+export const { mount, unmount } = demo(<App />);

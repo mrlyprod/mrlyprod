@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ready, ink, fit } from '../../../lib/mrly.js';
 import { useQuery } from '../../../lib/query.js';
-import { mount, Page, Row, Btn, Stats, Stat, Note } from '../../../lib/app.jsx';
+import { demo, Page, Row, Btn, Stats, Stat, Note } from '../../../lib/app.jsx';
 import { Sketch } from '../../../lib/draw.jsx';
 import { useSeeds, roll } from '../../../lib/select.jsx';
 import { board, bars, axis, tag } from '../../../lib/chart.js';
@@ -14,7 +14,7 @@ const PAGE = 25;
 const BUDGET = 14;
 const WIN = JSON.parse(m.census_window());
 const CEILING = Number(WIN.ceiling);
-const START = JSON.parse(m.census_walk(WIN.tiers[0].keys));
+m.census_walk(WIN.tiers[0].keys);
 
 function shade(count, peak) {
   if (count === 0) return ink.orange;
@@ -26,8 +26,10 @@ function census() {
   return { counts: m.census_counts(), report: JSON.parse(m.census_report()) };
 }
 
-function frame() {
-  return new Promise((resolve) => requestAnimationFrame(resolve));
+function frame(walk) {
+  return new Promise((resolve) => {
+    walk.id = requestAnimationFrame(resolve);
+  });
 }
 
 function App() {
@@ -37,11 +39,12 @@ function App() {
   const [typing, setTyping] = useState(String(value));
   const [page, setPage] = useState(0);
   const [walking, setWalking] = useState(true);
-  const [state, setState] = useState(START);
+  const [state, setState] = useState(() => JSON.parse(m.census_walk(0)));
   const [look, setLook] = useState(census);
   const [error, setError] = useState(null);
   const live = useRef(state);
   live.current = state;
+  const walk = useRef({ on: true, id: 0 });
 
   const choose = (v, typed = false) => {
     const next = Math.min(CEILING, Math.max(1, v || 1));
@@ -58,7 +61,8 @@ function App() {
     let broken = false;
     let now = live.current;
     do {
-      await frame();
+      await frame(walk.current);
+      if (!walk.current.on) return;
       const opened = performance.now();
       while (performance.now() - opened < BUDGET) {
         const clock = performance.now();
@@ -81,7 +85,14 @@ function App() {
     setLook(census());
   };
 
-  useEffect(() => { pass(); }, []);
+  useEffect(() => {
+    walk.current.on = true;
+    pass();
+    return () => {
+      walk.current.on = false;
+      cancelAnimationFrame(walk.current.id);
+    };
+  }, []);
 
   const found = useMemo(() => JSON.parse(m.census_writers(value, page, PAGE)), [value, page, look]);
   const champs = useMemo(() => JSON.parse(m.census_champions(20)), [look]);
@@ -300,4 +311,4 @@ function App() {
   );
 }
 
-mount(<App />);
+export const { mount, unmount } = demo(<App />);

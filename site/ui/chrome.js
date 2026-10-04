@@ -31,6 +31,7 @@ const ready = (fn) => (document.readyState === 'complete' ? fn() : addEventListe
 const spot = () => `${PREFIX}spot:${location.href}`;
 
 function keep() {
+  if (root().getAttribute('aria-busy') === 'true') return;
   try {
     sessionStorage.setItem(spot(), String(scrollY));
   } catch {}
@@ -57,7 +58,7 @@ function pin() {
 }
 
 function land() {
-  const at = saved();
+  const at = saved() || Number(history.state?.y) || 0;
   if (at > 0 && resumed() && !location.hash) scrollTo({ top: at, behavior: 'instant' });
 }
 
@@ -156,6 +157,16 @@ function cart() {
 
 /* CONTENTS */
 
+const eyes = new Map();
+
+function unread() {
+  for (const [nav, eye] of eyes) {
+    if (nav.isConnected) continue;
+    eye.disconnect();
+    eyes.delete(nav);
+  }
+}
+
 function contents(nav) {
   nav.querySelector('details')?.setAttribute('open', '');
   const links = [...nav.querySelectorAll('a[href^="#"]')];
@@ -175,6 +186,7 @@ function contents(nav) {
     { rootMargin: `-${Math.round(sub()?.getBoundingClientRect().height ?? 0)}px 0px -60% 0px` },
   );
   for (const t of targets) eye.observe(t);
+  eyes.set(nav, eye);
 }
 
 /* MARK */
@@ -307,6 +319,7 @@ const once = (selector, fn) => {
 function wire() {
   sync();
   unmark();
+  unread();
   theme(root().dataset.theme ?? '');
   face(root().dataset.font ?? '');
   tint(root().dataset.tint ?? '');
@@ -344,7 +357,7 @@ function boot() {
   });
   document.addEventListener('toggle', expand, true);
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && shut()) e.preventDefault();
+    if (e.key === 'Escape' && !document.querySelector('dialog[open]') && shut()) e.preventDefault();
   });
   window.addEventListener('wire', wire);
   window.addEventListener('cart', cart);

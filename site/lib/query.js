@@ -5,13 +5,14 @@ export function share(values) {
 }
 
 export function stamp(values) {
+  if (document.documentElement.getAttribute('aria-busy') === 'true' || history.state?.dialog) return;
   const params = new URLSearchParams(location.search);
   for (const [key, value] of Object.entries(values)) {
     if (value === null || value === undefined || value === '' || value === false) params.delete(key);
     else params.set(key, value === true ? 1 : value);
   }
   const tail = String(params);
-  history.replaceState(null, '', location.pathname + (tail ? `?${tail}` : ''));
+  history.replaceState(history.state, '', location.pathname + (tail ? `?${tail}` : '') + location.hash);
 }
 
 export function useQuery(defaults) {

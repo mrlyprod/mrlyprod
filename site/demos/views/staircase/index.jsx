@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { ready, ink } from '../../../lib/mrly.js';
 import { useQuery } from '../../../lib/query.js';
-import { mount, Page, Row, Pick, Slider, Btn, Stats, Stat, Note } from '../../../lib/app.jsx';
+import { demo, Page, Row, Pick, Slider, Btn, Stats, Stat, Note } from '../../../lib/app.jsx';
 import { Grid, Sketch } from '../../../lib/draw.jsx';
 import { Picker, useSeeds, seeded } from '../../../lib/select.jsx';
 import { board, line, axis, tag } from '../../../lib/chart.js';
@@ -260,4 +260,4 @@ function App() {
   );
 }
 
-mount(<App />);
+export const { mount, unmount } = demo(<App />);

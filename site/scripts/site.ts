@@ -4,15 +4,15 @@ import { basename, dirname, join, relative, resolve } from "node:path";
 import { createElement as h } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import katex from "katex";
-import { build, bytes, jsonScript, probe, walk, type Node, type Output, type Route, type Site, type Spec } from "../kit/ssg/build.ts";
+import { build, bytes, jsonScript, probe, shown, walk, type Node, type Output, type Route, type Site, type Spec } from "../kit/ssg/build.ts";
 import { config as gitConfig, shell as gitShell } from "../kit/git/git.ts";
 import { resolve as resolveLink } from "../kit/ssg/links.ts";
-import type { Shell as Entry } from "../kit/ssg/modes.ts";
+import { deeps, type Shell as Entry } from "../kit/ssg/modes.ts";
 import { themed } from "../kit/ssg/pic.ts";
 import { escape, front, inline, plain, render as md, summary, title } from "../kit/ssg/md.ts";
 import { posts as parsed, type Leaf as Posted } from "../kit/ssg/blog.ts";
 import { Glyph, Grid, Menu, Settings, Shell } from "../ui/chrome.jsx";
-import { claimsScript, headScript, inlineScripts, tintCss } from "../ui/config.js";
+import { headScript, inlineScripts, tintCss } from "../ui/config.js";
 import { grid as glyphs, logoSvg } from "../ui/logo.js";
 import "../lib/site.js";
 import SITE from "../site.json";
@@ -117,7 +117,7 @@ type Fig = ReturnType<typeof press>;
 const pic = (fig: Fig, name: string, route: string, alt: string, extra = "", cls = "") => themed(fig(name, route), alt, cls, extra);
 
 const hero = (fig: Fig, name: string, route: string, alt: string, live = false) =>
-  `<figure class="opener"${live ? ` data-live="${name}"` : ""}>${pic(fig, name, route, alt)}</figure>`;
+  `<figure class="opener"${live ? ` data-island="${GLUE_SRC}" data-live="${name}"` : ""}>${pic(fig, name, route, alt)}</figure>`;
 
 const grid = (nodes: Node[]) => renderToStaticMarkup(h(Grid, { nodes }));
 
@@ -217,6 +217,8 @@ function meta(route: string, name: string, description: string, type: string, im
 
 type Heading = { level: number; id: string; text: string };
 
+const ISLAND = /<[a-z][^<>]* data-island="([^"]+)"/g;
+
 function headings(body: string): Heading[] {
   return [...body.matchAll(HEADING)].map((m) => ({ level: Number(m[1]), id: m[2]!, text: untag(m[3]!) }));
 }
@@ -233,7 +235,7 @@ type Leaf = {
   data?: object;
   tree?: Node[];
   image?: Picture;
-  scripts?: string[];
+  island?: string;
   contents?: Heading[];
   controls?: boolean;
   sheets?: string[];
@@ -242,14 +244,16 @@ type Leaf = {
 
 function shell(site: Site, leaf: Leaf) {
   const { route, name, description, body, type = "article", wide = false, bare = false, code = false, data, controls = false } = leaf;
-  const article = h(bare ? "div" : "article", { className: bare ? undefined : "prose", dangerouslySetInnerHTML: { __html: body } });
-  const main = renderToStaticMarkup(h(Shell, { route, tree: leaf.tree ?? [], contents: leaf.contents ?? headings(body), controls, late: code, wide }, article));
+  const article = h(bare ? "div" : "article", { className: bare ? undefined : "prose", "data-island": leaf.island, dangerouslySetInnerHTML: { __html: body } });
+  const main = renderToStaticMarkup(h(Shell, { route, tree: leaf.tree ?? [], contents: leaf.contents ?? headings(body), controls, late: code, wide, dialog: site.asset("dialog.js") }, article));
   const ld = data ? `${jsonScript(data)}\n` : "";
-  const more = (leaf.scripts ?? []).map((src) => `\n<script type="module" src="${src}"></script>`).join("");
+  const entries = [...new Set([...main.matchAll(ISLAND)].map((found) => found[1]!))];
+  const more = [...(entries.length ? [site.asset("islands.js")] : []), ...entries].map((src) => `\n<link rel="modulepreload" href="${src}">`).join("");
+  const deep = deeps(site.config).join(" ");
   const sheets = (leaf.sheets ?? [site.asset(code ? "git.css" : "page.css")]).map((href) => `<link rel="stylesheet" href="${href}">`).join("\n");
   const image = leaf.image ?? (code ? picture(site, "site-code", route) : OG);
   return `<!doctype html>
-<html lang="en" data-prefix="${SITE.prefix}">
+<html lang="en" data-prefix="${SITE.prefix}"${deep ? ` data-deep="${deep}"` : ""}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -258,7 +262,8 @@ ${BOOT}
 ${meta(route, name, description, type, image)}
 ${sheets}
 ${TINT}
-${ld}<script type="module" src="${site.asset("chrome.js")}"></script>${more}${leaf.head ?? ""}
+${ld}<script type="module" src="${site.asset("chrome.js")}"></script>
+<script type="module" src="${site.asset("router.js")}"></script>${more}${leaf.head ?? ""}
 </head>
 <body>
 ${main}
@@ -289,7 +294,7 @@ const TITLE = /<title>([^<]*)<\/title>/;
 
 const SHEET = /<link rel="stylesheet"[^>]*?href="([^"]+)"/g;
 
-const CARRIED = /<link rel="modulepreload"[^>]*>|<script\b[^>]*>[\s\S]*?<\/script>/g;
+const CARRIED = /<link rel="modulepreload"[^>]*>/g;
 
 const tag = (html: string, name: string) => {
   const found = html.match(new RegExp(`<meta name="${name}" content="([^"]*)">`));
@@ -380,7 +385,9 @@ function gallery(site: Site, route: Route): Output[] {
 
 const widgetFiles = (site: Site) => site.input("demos").files.filter((f) => f.endsWith("/widget.jsx"));
 
-const demoEntries = (site: Site) => [...demoNames(site).map((name) => demoShell(site, name)), ...widgetFiles(site), ...(LIVE.length ? [GLUE] : [])];
+const demoIsland = (site: Site, name: string) => join(demoHome(site, name), "index.jsx");
+
+const demoEntries = (site: Site) => [...demoNames(site).flatMap((name) => [demoShell(site, name), demoIsland(site, name)]), ...widgetFiles(site), ...(LIVE.length ? [GLUE] : [])];
 
 const demoPlace = (path: string) => (path.startsWith("demos/views/") ? `demos/${path.slice(12)}` : path === "demos/live.js" ? "live.js" : path);
 
@@ -394,7 +401,7 @@ function demoPage(site: Site, route: Route, entry: Entry, out: Output[]) {
     route: route.route,
     name: card.title,
     description: card.blurb || card.title,
-    body: `<div id="root"></div><div>${still}</div>`,
+    body: `<div id="root" data-island="${route.route}index.js"></div><div>${still}</div>`,
     type: "website",
     wide: true,
     bare: true,
@@ -606,8 +613,7 @@ function note(site: Site, route: Route): Output[] {
   const name = n.title;
   const lead = n.lead;
   const head = n.topic ? `<h1 id="${escape(n.name)}">${escape(name)}</h1>\n` : "";
-  const used = new Set<string>();
-  const prose = md(n.md, { math, lazy: true, link: links(site, route.source as string, out), widget: widgets(site, used) });
+  const prose = md(n.md, { math, lazy: true, link: links(site, route.source as string, out), widget: widgets(site) });
   const body = `${hero(fig, n.figure, route.route, name)}\n${head}${n.name === "sequences" ? anchored(prose) : prose}`;
   const data = {
     "@context": "https://schema.org",
@@ -618,8 +624,7 @@ function note(site: Site, route: Route): Output[] {
     image: `${root}/figures/${n.figure}-dark.png`,
     author: { "@type": "Organization", name: AUTHOR },
   };
-  const scripts = [...used].sort().map((name) => `/demos/${name}/widget.js`);
-  out.push({ path: pageOf(route.route), bytes: shell(site, { route: route.route, name, description: lead, body, data, image: picture(site, n.figure, route.route, fig), scripts }) });
+  out.push({ path: pageOf(route.route), bytes: shell(site, { route: route.route, name, description: lead, body, data, image: picture(site, n.figure, route.route, fig) }) });
   return out;
 }
 
@@ -680,8 +685,8 @@ function claim(site: Site, route: Route): Output[] {
     (_, date: string, tag: string) => `<li data-date="${date}" data-tag="${tag.toLowerCase()}"><time>${date}</time> <b class="tag ${tag.toLowerCase()}">${tag}</b> `,
   );
   const chips = ["", ...TAGS].map((tag, i) => `<button type="button" data-tag="${tag.toLowerCase()}"${tag ? "" : ' class="on"'}>${tag || "All"} <span>${tag ? counts[i - 1] : total}</span></button>`).join("");
-  const bar = `<form class="filter" onsubmit="return false">${chips}<select hidden aria-label="Topic"><option value=""></option></select><label>Since <input type="date" aria-label="Since"></label><output>${total} claims</output></form>`;
-  const body = `<h1 id="${escape(c.slug)}">${escape(c.title)}</h1>\n<p class="meta"><a href="${CLAIMS.href}">${CLAIMS.name}</a> · ${escape(lead)}</p>\n${bar}\n<section class="claims" data-slug="${escape(c.slug)}">${html}</section>\n${claimsScript()}`;
+  const bar = `<form class="filter" data-island="${site.asset("claims.js")}">${chips}<label>Since <input type="date" aria-label="Since"></label><output>${total} claims</output></form>`;
+  const body = `<h1 id="${escape(c.slug)}">${escape(c.title)}</h1>\n<p class="meta"><a href="${CLAIMS.href}">${CLAIMS.name}</a> · ${escape(lead)}</p>\n${bar}\n<section class="claims" data-slug="${escape(c.slug)}">${html}</section>`;
   const data = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -813,12 +818,38 @@ function menu(site: Site, route: Route): Output[] {
   const lead = "Every door of mrly.net.";
   const out: Output[] = [];
   const fig = press(site, out);
+  const { tree, search } = route.data as { tree: Door[]; search: string[] };
   const icon = (door: Door) => door.figure ?? (door.href ? shipped(door.href) : folded(door.name)) ?? PLAIN;
   const wear = (door: Door): Node => ({ name: door.name, href: door.href, figure: fig(icon(door), route.route), nodes: door.nodes?.map(wear) });
-  const list = renderToStaticMarkup(h(Menu, { tree: (route.data as Door[]).map(wear) }));
+  const list = renderToStaticMarkup(h(Menu, { tree: tree.map(wear), island: site.asset("search.js"), search: search.join(" ") }));
   const body = `<div class="hero"><h1><span role="img" aria-label="${escape(SITE.title)}">${WORD}</span></h1><p>${escape(lead)}</p></div>\n${list}`;
   out.push({ path: "menu/index.html", bytes: shell(site, { route: route.route, name: "Menu", description: lead, body, type: "website", wide: true, bare: true }) });
   return out;
+}
+
+/* SEARCH */
+
+const SEARCH = "/search.json";
+
+const INDEXES = [SEARCH, "/shop/search.json"];
+
+const indexed = (routes: Route[]) => INDEXES.filter((path) => path === SEARCH || routes.some((one) => one.route === path));
+
+const WORN: Record<string, (route: Route) => string> = {
+  concept: (route) => (route.data as Concept).figure,
+  demo: (route) => `demo-${(route.data as Card).name}`,
+  claim: () => CLAIMS.figure,
+};
+
+function found(site: Site): Output {
+  const map = marks(DRESS);
+  const owner = new Map(site.routes.flatMap((route) => [route, ...(route.urls ?? [])].map((one) => [one.route, route] as const)));
+  const icon = (href: string) => {
+    const route = owner.get(href)!;
+    const own = route.kind === "page" ? front(read(route.source as string)).data.figure : (WORN[route.kind ?? ""]?.(route) ?? map.get(href)?.figure);
+    return own || shipped(href) || PLAIN;
+  };
+  return { path: SEARCH.slice(1), bytes: JSON.stringify(shown(site).map((one) => [one.name, one.route, icon(one.route)])) };
 }
 
 function cart(site: Site, route: Route): Output[] {
@@ -834,9 +865,9 @@ const WATCH = "The CDN, the Lambdas and the bucket, read from the bucket every m
 function stats(site: Site, route: Route): Output[] {
   const body = `<div class="lede"><h1 id="stats">Stats</h1><p class="lead">${escape(WATCH)} Raw: <a href="/stats/stats.json">stats.json</a>.</p></div>
 <noscript><p>${NEEDS.stats}</p></noscript>
-<section><h2 id="cloud">Cloud</h2><div data-stats="cloud"><p class="fine">Loading</p></div></section>
-<section><h2 id="errors">Errors</h2><div data-stats="errors"><p class="fine">Loading</p></div></section>`;
-  return [{ path: "stats/index.html", bytes: shell(site, { route: route.route, name: "Stats", description: WATCH, body, type: "website", scripts: [site.asset("stats.js")] }) }];
+<div data-island="${site.asset("stats.js")}"><section><h2 id="cloud">Cloud</h2><div data-stats="cloud"><p class="fine">Loading</p></div></section>
+<section><h2 id="errors">Errors</h2><div data-stats="errors"><p class="fine">Loading</p></div></section></div>`;
+  return [{ path: "stats/index.html", bytes: shell(site, { route: route.route, name: "Stats", description: WATCH, body, type: "website" }) }];
 }
 
 const MISSION = SITE.tagline;
@@ -952,13 +983,12 @@ const widgetFile = (site: Site, name: string) => join(site.input("demos").path, 
 
 const embeds = (site: Site, body: string) => [...body.matchAll(EMBEDS)].map((m) => widgetFile(site, m[1]!));
 
-function widgets(site: Site, used: Set<string>) {
+function widgets(site: Site) {
   return (name: string, view: string, caption: string) => {
     const file = widgetFile(site, name);
     if (!existsSync(file)) throw new Error(`site: demos/${name}/ has no widget.jsx to embed`);
     if (!VIEW(view).test(read(file))) throw new Error(`site: demos/${name}/widget.jsx exports no view named ${view}`);
-    used.add(name);
-    return `<figure class="widget" data-demo="${name}" data-view="${view}"><div class="mount"></div><noscript><p>${NEEDS.widget}</p></noscript><figcaption>${caption}</figcaption></figure>`;
+    return `<figure class="widget" data-island="${DEMOS}${name}/widget.js" data-view="${view}"><div class="mount"></div><noscript><p>${NEEDS.widget}</p></noscript><figcaption>${caption}</figcaption></figure>`;
   };
 }
 
@@ -967,11 +997,10 @@ function concept(site: Site, route: Route): Output[] {
   const file = route.source as string;
   const out: Output[] = [];
   const fig = press(site, out);
-  const used = new Set<string>();
   const before = c.before.length ? `\n<p class="meta">Before this: ${cite(c.before)}.</p>` : "";
   const after = c.after.length ? `\n<section><h2 id="next">Read next</h2><p>${cite(c.after)}.</p></section>` : "";
   const head = `<div class="lede"><h1 id="${escape(c.slug)}">${escape(c.name)}</h1><p class="lead">${escape(c.lead)}</p></div>`;
-  const prose = md(front(read(file)).body, { math, lazy: true, link: links(site, file, out), widget: widgets(site, used) });
+  const prose = md(front(read(file)).body, { math, lazy: true, link: links(site, file, out), widget: widgets(site) });
   const body = `${hero(fig, c.figure, route.route, c.name, c.live)}\n${head}${before}\n${prose}${after}`;
   const data = {
     "@context": "https://schema.org",
@@ -982,8 +1011,7 @@ function concept(site: Site, route: Route): Output[] {
     image: `${root}/figures/${c.figure}-dark.png`,
     author: { "@type": "Organization", name: AUTHOR },
   };
-  const scripts = [...[...used].sort().map((name) => `/demos/${name}/widget.js`), ...(c.live ? [GLUE_SRC] : [])];
-  out.push({ path: pageOf(route.route), bytes: shell(site, { route: route.route, name: c.name, description: c.lead, body, data, image: picture(site, c.figure, route.route, fig), scripts }) });
+  out.push({ path: pageOf(route.route), bytes: shell(site, { route: route.route, name: c.name, description: c.lead, body, data, image: picture(site, c.figure, route.route, fig) }) });
   return out;
 }
 
@@ -1139,7 +1167,7 @@ async function collect(site: Site) {
   for (const p of pageList) routes.push({ route: pageRoute(p.slug), kind: "page", name: p.name, source: p.source, inputs: [p.source] });
   DRESS = { lanes: laneList, papers: paperList, notes: noteList, posts: postList };
   MAP = { wiki: wikiList, notes: noteList, claims: claimList, papers: paperList, lanes: laneList, posts: postList, math: names.files, pages: pages.files };
-  routes.push({ route: "/menu/", kind: "menu", name: "Menu", data: filled(fills) });
+  routes.push({ route: "/menu/", kind: "menu", name: "Menu", data: { tree: filled(fills), search: indexed(routes) } });
   routes.push({ route: "/cart/", kind: "cart", name: "Cart", hidden: true });
   routes.push({ route: "/stats/", kind: "stats", name: "Stats", hidden: true });
   routes.push({ route: "/404.html", kind: "missing", name: "Nothing here", hidden: true });
@@ -1182,6 +1210,7 @@ function extras(site: Site): Output[] {
   const out: Output[] = [];
   const home = site.input("figures").path;
   out.push({ path: "og.png", bytes: bytes(figure(home, "site-og-dark", "/og.png")) });
+  out.push(found(site));
   return out;
 }
 

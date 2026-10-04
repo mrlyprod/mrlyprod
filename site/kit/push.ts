@@ -132,6 +132,11 @@ export function changes(old: Manifest, next: Manifest, guard: string[], sealed: 
   return out;
 }
 
+export function staged(paths: string[], type: (path: string) => string, header: (path: string) => string): string[][] {
+  const rank = (path: string) => (type(path).startsWith("text/html") ? 2 : header(path) === IMMUTABLE ? 0 : 1);
+  return [0, 1, 2].map((tier) => paths.filter((path) => rank(path) === tier));
+}
+
 /* LOCAL */
 
 export const holding = () => process.env.DRY === "1";
@@ -166,26 +171,35 @@ export async function push(spec: Spec, options: { dry?: boolean; force?: boolean
   const types = typing(next);
   const header = (path: string) => (types.has(path) ? REVALIDATE : cache(path, hashed));
   const type = (path: string) => types.get(path) ?? kind(path);
-  const upload = changes(old, next, conf.guard, (path) => seal(readFileSync(join(done.site.out, path)), type(path), header(path)), options.force);
+  const tiers = staged(changes(old, next, conf.guard, (path) => seal(readFileSync(join(done.site.out, path)), type(path), header(path)), options.force), type, header);
+  const upload = tiers.flat();
   const seen = found || !site ? [...had.keys()] : await sweep(site, conf.prefix, conf.guard);
   const remove = seen.filter((path) => mine(path, conf.guard) && !want.has(path));
   const text = JSON.stringify(next, null, 2) + "\n";
   if (options.dry) {
     const fixed = upload.filter((path) => header(path) === IMMUTABLE);
+    const page = (path: string) => type(path).startsWith("text/html");
+    const cut = upload.findIndex(page);
     for (const path of fixed) console.log(`immutable ${conf.prefix + path}`);
     console.log(`${upload.length - fixed.length} more at max-age 0, ${remove.length} to delete`);
+    if (cut >= 0) console.log(`order: ${cut} files first, ${upload.slice(cut).filter(page).length} pages last from ${conf.prefix + upload[cut]}, ${upload.slice(cut).filter((path) => !page(path)).length} files after a page`);
   } else if (site && store) {
-    for (let i = 0; i < upload.length; i += BATCH) {
-      await Promise.all(
-        upload.slice(i, i + BATCH).map((path) =>
-          putBytes(site, conf.prefix + path, new Uint8Array(readFileSync(join(done.site.out, path))), {
-            type: type(path),
-            cacheControl: header(path),
-          }),
-        ),
-      );
-      const sent = Math.min(i + BATCH, upload.length);
-      if (sent % TICK === 0 || sent === upload.length) console.log(`upload ${sent}/${upload.length}`);
+    let sent = 0;
+    for (const tier of tiers) {
+      for (let i = 0; i < tier.length; i += BATCH) {
+        const batch = tier.slice(i, i + BATCH);
+        await Promise.all(
+          batch.map((path) =>
+            putBytes(site, conf.prefix + path, new Uint8Array(readFileSync(join(done.site.out, path))), {
+              type: type(path),
+              cacheControl: header(path),
+            }),
+          ),
+        );
+        const was = sent;
+        sent += batch.length;
+        if (Math.floor(sent / TICK) > Math.floor(was / TICK) || sent === upload.length) console.log(`upload ${sent}/${upload.length}`);
+      }
     }
     if (remove.length) {
       console.log(`delete ${remove.length}`);

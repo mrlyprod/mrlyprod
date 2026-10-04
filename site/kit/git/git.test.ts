@@ -193,7 +193,7 @@ test("the shell is the site's page around one noscript line and the viewer's one
   const seen: unknown[] = [];
   const spec = { git: { page: (_s: Site, leaf: unknown) => (seen.push(leaf), "<html>") } } as unknown as Spec;
   expect(shell(one, routes[0], { script: "/lib/git.js" } as Shell, spec)).toBe("<html>");
-  expect(seen[0]).toMatchObject({ route: "/git/", name: "mrlyprod", code: true, scripts: ["/lib/git.js"] });
+  expect(seen[0]).toMatchObject({ route: "/git/", name: "mrlyprod", code: true, island: "/lib/git.js" });
   expect((seen[0] as { body: string }).body).toBe('<noscript><p>The code viewer draws in the browser and needs JavaScript. The same files are on <a href="https://github.com/mrlyprod/mrlyprod">GitHub</a>.</p></noscript>');
 });
 
