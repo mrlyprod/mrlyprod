@@ -146,6 +146,7 @@
         "tokens.css",
         "base.css",
         "chrome.css",
+        "pages.css",
         "chrome.js",
         "logo.js",
         "stats.js",
@@ -199,7 +200,6 @@
       "out": "ui",
       "hash": true,
       "files": [
-        "contract.css",
         "code.css",
         "seti/seti.css",
         "seti/seti.woff2"
@@ -213,6 +213,11 @@
         "seti/LICENSE-seti.txt"
       ]
     }
+  ],
+  "sheets": [
+    { "name": "fonts.css", "files": ["fonts/fonts.css"] },
+    { "name": "page.css", "files": ["palette.css", "tokens.css", "base.css", "chrome.css", "fonts/fonts.css", "pages.css"] },
+    { "name": "git.css", "files": ["palette.css", "tokens.css", "base.css", "chrome.css", "fonts/fonts.css", "pages.css", "code.css", "seti/seti.css"] }
   ],
   "manifest": {
     "name": "MrlyProd",

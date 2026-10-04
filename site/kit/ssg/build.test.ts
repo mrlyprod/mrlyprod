@@ -3,7 +3,8 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { shell as gitShell } from "../git/git.ts";
-import { build, forget, globals, guard, jsonScript, render, walk, type Output, type Site, type Spec } from "./build.ts";
+import { build, bytes, forget, globals, graph, guard, jsonScript, probe, render, walk, type Output, type Site, type Spec } from "./build.ts";
+import { resolve as link } from "./links.ts";
 
 /* SITE */
 
@@ -146,41 +147,24 @@ test("the guard passes a listed inline script, json data and a raw mirror, and t
 
 /* BUILD */
 
-const fresh = (name: string) => {
+const fresh = (name: string, config: Site["config"] = {}) => {
   const home = join(tmpdir(), `kitssg-${name}-${process.pid}`);
   rmSync(home, { recursive: true, force: true });
   mkdirSync(home, { recursive: true });
+  writeFileSync(join(home, "site.json"), JSON.stringify(config));
   return home;
 };
 
-test("prepare runs before the scan reads a bundle", async () => {
-  const home = fresh("prepare");
-  const out = join(home, "dist");
-  const done = await build({
-    root: home,
-    out,
-    config: { assets: [{ path: "ui", out: "ui", hash: true, files: ["a.css"] }] },
-    prepare: () => {
-      mkdirSync(join(home, "ui"), { recursive: true });
-      writeFileSync(join(home, "ui", "a.css"), "b{}");
-    },
-    collect: () => ({ routes: [] }),
-    render: () => [],
-  });
-  expect(done.site.styles).toEqual([done.site.asset("a.css")]);
-  expect(existsSync(join(out, done.site.asset("a.css")))).toBe(true);
-  rmSync(home, { recursive: true, force: true });
-});
+const CODE = { git: { root: "." }, modes: { "/git/": { mode: "spa", deep: true } } } as Site["config"];
 
 test("a second build drops a dead route's outputs, prunes their empty folders and sweeps a stale asset", async () => {
-  const home = fresh("sweep");
+  const home = fresh("sweep", { assets: [{ path: "ui", out: "ui", hash: true }] });
   const out = join(home, "dist");
   mkdirSync(join(home, "ui"), { recursive: true });
   writeFileSync(join(home, "ui", "a.css"), "b{}");
   const spec = (routes: string[]): Spec => ({
     root: home,
     out,
-    config: { assets: [{ path: "ui", out: "ui", hash: true }] },
     collect: () => ({ routes: routes.map((route) => ({ route })) }),
     render: (_site, route) => [{ path: `${route.route.slice(1)}index.html`, bytes: "<p>x</p>" }],
   });
@@ -200,20 +184,19 @@ test("a second build drops a dead route's outputs, prunes their empty folders an
 /* GIT OFF */
 
 test("a spec with no git page still collects the repo and renders none of it", async () => {
-  const home = fresh("gitoff");
+  const home = fresh("gitoff", CODE);
   const out = join(home, "dist");
   writeFileSync(join(home, "README.md"), "# off\n");
   writeFileSync(join(home, "view.js"), "document.title = 1;\n");
   const done = await build({
     root: home,
     out,
-    config: { git: { root: "." }, modes: { "/git/": { mode: "spa", deep: true } } },
     collect: () => ({ routes: [] }),
     render: () => [],
     git: { entry: "view.js" },
     spa: { entries: () => [join(home, "view.js")], page: () => "" },
   });
-  expect(done.site.routes.map((one) => one.route).sort()).toEqual(["/git/", "/raw/README.md", "/raw/view.js"]);
+  expect(done.site.routes.map((one) => one.route).sort()).toEqual(["/git/", "/raw/README.md", "/raw/site.json", "/raw/view.js"]);
   expect(Object.keys(done.manifest)).toEqual(["@spa"]);
   expect(await render(done.site, done.site.routes.find((one) => one.route === "/git/")!, { git: { entry: "view.js" } } as Spec)).toEqual([]);
   expect(existsSync(join(out, "git/index.html"))).toBe(false);
@@ -224,14 +207,13 @@ test("a spec with no git page still collects the repo and renders none of it", a
 /* GIT ON */
 
 test("a git block builds one shell under /git/, the tree data beside it and the raw bytes", async () => {
-  const home = fresh("giton");
+  const home = fresh("giton", CODE);
   const out = join(home, "dist");
   writeFileSync(join(home, "Makefile"), "all:\n");
   writeFileSync(join(home, "view.js"), "document.title = 1;\n");
   const one: Spec = {
     root: home,
     out,
-    config: { git: { root: "." }, modes: { "/git/": { mode: "spa", deep: true } } },
     collect: () => ({ routes: [] }),
     render: () => [],
     git: { entry: "view.js", page: (_site, leaf) => `<main>${leaf.body}</main><script type="module" src="${leaf.scripts![0]}"></script>` },
@@ -240,8 +222,135 @@ test("a git block builds one shell under /git/, the tree data beside it and the 
   await build(one, { manifest: "manifest.json" });
   expect(walk(join(out, "git")).map((file) => file.slice(out.length + 1))).toEqual(["git/index.html"]);
   expect(readFileSync(join(out, "git/index.html"), "utf8")).toBe('<main></main><script type="module" src="/view.js"></script>');
-  expect(JSON.parse(readFileSync(join(out, "git.json"), "utf8")).c.map((kid: { n: string }) => kid.n)).toEqual(["Makefile", "view.js"]);
+  expect(JSON.parse(readFileSync(join(out, "git.json"), "utf8")).c.map((kid: { n: string }) => kid.n)).toEqual(["Makefile", "site.json", "view.js"]);
   expect(readFileSync(join(out, "raw/Makefile"), "utf8")).toBe("all:\n");
   expect(JSON.parse(readFileSync(join(home, "manifest.json"), "utf8"))["/raw/Makefile"].types).toEqual({ "raw/Makefile": "text/plain; charset=utf-8" });
+  rmSync(home, { recursive: true, force: true });
+});
+
+/* SHEETS */
+
+test("a sheet is its members' placed bytes in order under one hashed name, and the members ship no more", async () => {
+  const home = fresh("sheets", { assets: [{ path: "ui", out: "ui", hash: true, files: ["a.css", "b.css", "f.woff2"] }], sheets: [{ name: "page.css", files: ["b.css", "a.css"] }] });
+  mkdirSync(join(home, "ui"));
+  writeFileSync(join(home, "ui", "a.css"), "p { color: red; }\n");
+  writeFileSync(join(home, "ui", "b.css"), '@font-face { src: url("f.woff2"); }\np { color: blue; }\n');
+  writeFileSync(join(home, "ui", "f.woff2"), "font");
+  const done = await build({ root: home, out: join(home, "dist"), collect: () => ({ routes: [] }), render: () => [] });
+  const face = done.site.asset("f.woff2");
+  expect(readFileSync(join(home, "dist", done.site.asset("page.css")), "utf8")).toBe(`@font-face { src: url("${face}"); }\np { color: blue; }\np { color: red; }\n`);
+  expect(walk(join(home, "dist/ui")).length).toBe(2);
+  expect(() => done.site.asset("a.css")).toThrow(/no asset named a.css/);
+  rmSync(home, { recursive: true, force: true });
+});
+
+test("a later member of a sheet may carry no @import and no @charset", async () => {
+  const home = fresh("sheetsimport", { assets: [{ path: "ui", out: "ui", hash: true, files: ["a.css", "b.css"] }], sheets: [{ name: "page.css", files: ["a.css", "b.css"] }] });
+  mkdirSync(join(home, "ui"));
+  writeFileSync(join(home, "ui", "a.css"), '@charset "utf-8";\np { color: red; }\n');
+  writeFileSync(join(home, "ui", "b.css"), '@import "x.css";\n');
+  await expect(build({ root: home, out: join(home, "dist"), collect: () => ({ routes: [] }), render: () => [] })).rejects.toThrow(/b.css carries an @import/);
+  rmSync(home, { recursive: true, force: true });
+});
+
+/* READS */
+
+test("a file a render ships or looks for outside its inputs repaints the route when it changes or appears", async () => {
+  const home = fresh("reads");
+  mkdirSync(join(home, "figures"));
+  writeFileSync(join(home, "figures", "a.webp"), "one");
+  const drawn: string[] = [];
+  const spec: Spec = {
+    root: home,
+    out: join(home, "dist"),
+    collect: () => ({ routes: [{ route: "/a/" }, { route: "/b/" }] }),
+    render: (_site, route) => {
+      drawn.push(route.route);
+      const page = { path: `${route.route.slice(1)}index.html`, bytes: "<p>x</p>" };
+      if (route.route === "/b/") return [page];
+      const late = join(home, "figures", "late.webp");
+      return [page, { path: "figures/a.webp", bytes: bytes(join(home, "figures", "a.webp")) }, ...(probe(late) ? [{ path: "figures/late.webp", bytes: bytes(late) }] : [])];
+    },
+  };
+  const round = async () => {
+    drawn.length = 0;
+    forget();
+    const done = await build(spec, { manifest: "manifest.json" });
+    return `${drawn.join(" ")}|${done.manifest["/a/"]!.reads}`;
+  };
+  expect(await round()).toBe("/a/ /b/|figures/a.webp,figures/late.webp");
+  expect(await round()).toBe("|figures/a.webp,figures/late.webp");
+  writeFileSync(join(home, "figures", "a.webp"), "two");
+  expect(await round()).toBe("/a/|figures/a.webp,figures/late.webp");
+  expect(readFileSync(join(home, "dist/figures/a.webp"), "utf8")).toBe("two");
+  writeFileSync(join(home, "figures", "late.webp"), "late");
+  expect(await round()).toBe("/a/|figures/a.webp,figures/late.webp");
+  expect(readFileSync(join(home, "dist/figures/late.webp"), "utf8")).toBe("late");
+  rmSync(home, { recursive: true, force: true });
+});
+
+/* SHAPES */
+
+test("an output that turns from a file into a folder, or back, is written and the old shape is gone", async () => {
+  const home = fresh("shapes");
+  const spec = (paths: string[]): Spec => ({ root: home, out: join(home, "dist"), collect: () => ({ routes: [{ route: "/a/", data: paths }] }), render: () => paths.map((path) => ({ path, bytes: path })) });
+  const files = async (paths: string[]) => (forget(), await build(spec(paths), { manifest: "manifest.json" }), walk(join(home, "dist", "raw")).map((file) => file.slice(home.length + 6)));
+  expect(await files(["raw/x"])).toEqual(["raw/x"]);
+  expect(await files(["raw/x/y"])).toEqual(["raw/x/y"]);
+  expect(await files(["raw/x"])).toEqual(["raw/x"]);
+  rmSync(home, { recursive: true, force: true });
+});
+
+/* STAMP */
+
+test("the stamp follows the imports of the modules that draw, and no file beside them", async () => {
+  const home = fresh("graph");
+  writeFileSync(join(home, "draw.ts"), 'import "./part.js";\nimport data from "./data.json";\nimport { test } from "bun:test";\nexport const late = () => import("./late.ts");\n');
+  writeFileSync(join(home, "part.js"), "export const part = 1;\n");
+  writeFileSync(join(home, "late.ts"), "export const late = 1;\n");
+  writeFileSync(join(home, "data.json"), "{}");
+  writeFileSync(join(home, "draw.test.ts"), 'import "./draw.ts";\n');
+  writeFileSync(join(home, "README.md"), "# kit\n");
+  expect(graph([join(home, "draw.ts")]).map((file) => file.slice(home.length + 1))).toEqual(["data.json", "draw.ts", "late.ts", "part.js"]);
+  const spec: Spec = { root: home, out: join(home, "dist"), templates: ["draw.ts"], collect: () => ({ routes: [{ route: "/a/" }] }), render: () => [{ path: "a/index.html", bytes: "<p>a</p>" }] };
+  const count = async () => (forget(), (await build(spec, { manifest: "manifest.json" })).rendered);
+  expect(await count()).toBe(1);
+  writeFileSync(join(home, "README.md"), "# kit, edited\n");
+  writeFileSync(join(home, "draw.test.ts"), 'import "./draw.ts";\nexport {};\n');
+  expect(await count()).toBe(0);
+  writeFileSync(join(home, "late.ts"), "export const late = 2;\n");
+  expect(await count()).toBe(1);
+  rmSync(home, { recursive: true, force: true });
+});
+
+test("a new repo file repaints only the page whose link it answers", async () => {
+  const home = fresh("asks", CODE);
+  writeFileSync(join(home, "view.js"), "document.title = 1;\n");
+  const drawn: string[] = [];
+  const spec: Spec = {
+    root: home,
+    out: join(home, "dist"),
+    collect: () => ({ routes: [{ route: "/a/" }, { route: "/b/" }] }),
+    render: (site, route) => {
+      drawn.push(route.route);
+      return [{ path: `${route.route.slice(1)}index.html`, bytes: route.route === "/a/" ? `<a href="${link(site, "page.md", "notes.txt")}">a</a>` : "<p>b</p>" }];
+    },
+    git: { entry: "view.js", page: () => "" },
+    spa: { entries: () => [join(home, "view.js")], page: () => "" },
+  };
+  const round = async () => {
+    drawn.length = 0;
+    forget();
+    await build(spec, { manifest: "manifest.json" });
+    return drawn.join(" ");
+  };
+  expect(await round()).toBe("/a/ /b/");
+  expect(readFileSync(join(home, "dist/a/index.html"), "utf8")).toBe('<a href="notes.txt">a</a>');
+  mkdirSync(join(home, "deep"));
+  writeFileSync(join(home, "deep/other.txt"), "x\n");
+  expect(await round()).toBe("");
+  writeFileSync(join(home, "notes.txt"), "x\n");
+  expect(await round()).toBe("/a/");
+  expect(readFileSync(join(home, "dist/a/index.html"), "utf8")).toBe('<a href="/git/notes.txt">a</a>');
   rmSync(home, { recursive: true, force: true });
 });

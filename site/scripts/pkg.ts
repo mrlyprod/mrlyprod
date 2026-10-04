@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { client, list, need } from "../kit/s3.ts";
 
@@ -38,12 +38,19 @@ export async function ensurePkg(root = resolve(import.meta.dir, "..")): Promise<
   const bucket = need("MRLYPROD_BUCKET");
   const s3 = client(bucket);
   const keys = (await list(s3, prefix)).filter((key) => key.length > prefix.length);
-  for (const key of keys) {
-    const to = join(dir, key.slice(prefix.length));
-    mkdirSync(dirname(to), { recursive: true });
-    writeFileSync(to, Buffer.from(await s3.file(key).arrayBuffer()));
-  }
   if (keys.length === 0) throw new Error(`no objects at s3://${bucket}/${prefix}`);
+  const stage = join(root, "pkg.next");
+  rmSync(stage, { recursive: true, force: true });
+  await Promise.all(
+    keys.map(async (key) => {
+      const to = join(stage, key.slice(prefix.length));
+      const body = Buffer.from(await s3.file(key).arrayBuffer());
+      mkdirSync(dirname(to), { recursive: true });
+      writeFileSync(to, body);
+    }),
+  );
+  if (existsSync(dir)) rmSync(dir, { recursive: true });
+  renameSync(stage, dir);
   return dir;
 }
 

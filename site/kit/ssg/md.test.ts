@@ -17,6 +17,18 @@ describe("md", () => {
     expect(render("see ![walk](walks-fig) here", { link })).toBe('<p>see <img src="/L/walks-fig" alt="walk"> here</p>');
   });
 
+  test("every image after the first of a text loads lazily, figure or inline", () => {
+    const html = render("![a](one)\n\nsee ![b](two) and ![c](three)\n\n![d](four)", { link });
+    expect(html.match(/<img[^>]*>/g)).toEqual([
+      '<img src="/L/one" alt="a">',
+      '<img src="/L/two" alt="b" loading="lazy" decoding="async">',
+      '<img src="/L/three" alt="c" loading="lazy" decoding="async">',
+      '<img src="/L/four" alt="d" loading="lazy" decoding="async">',
+    ]);
+    expect(render("![a](one) ![b][two]\n\n[two]: two", { link })).toContain('<img src="/L/two" alt="b" loading="lazy" decoding="async">');
+    expect(render("![a](one)", { link, lazy: true })).toContain('<img src="/L/one" alt="a" loading="lazy" decoding="async">');
+  });
+
   test("the widget line mounts a view through the hook and is a figure without one", () => {
     const widget = (name: string, view: string, caption: string) => `<w ${name} ${view}>${caption}</w>`;
     expect(render("![Life](demos/life/grid)", { widget })).toBe("<w life grid>Life</w>");

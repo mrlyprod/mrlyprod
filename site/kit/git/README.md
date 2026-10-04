@@ -1,6 +1,6 @@
 # git
 
-- The kit's code viewer, optional: `/git/` browses the repo the site lives in, `/raw/` serves its exact bytes.
+- The kit's code viewer: `/git/` browses the repo the site lives in, `/raw/` serves its exact bytes.
 - The input is always this repo's own tree, never another; no `git` block in `site.json` means no routes at all.
 - `/git/` is one deep `spa` route: one shell answers every path under it, the browser draws the page, and no page is rendered per file or folder.
 - `git.ts` is the build half, with `fs` and `git ls-files`; `view.ts` draws, with neither; `client.ts` runs the page; `code.ts` paints.
@@ -10,7 +10,7 @@
 
 - `git`: `{ root, slug, branch }`. `root` is the repo root relative to the site, `slug` is `owner/name` on GitHub, `branch` defaults to `main`.
 - `modes` must make `/git/` deep, `"/git/": { "mode": "spa", "deep": true }`; a `git` block without it stops the scan.
-- The three Shiki packages `deps.json` names under `git` are needed only by a site with this block; `code.ts` imports them on first paint.
+- `code.ts` imports the three Shiki packages on first paint.
 
 ## TREE
 
@@ -58,12 +58,13 @@
 
 ## FINGERPRINT
 
-- A raw route hashes its path, size and bytes, the site stamp and any served copy's URL; the shell hashes its route and the stamp, so a template edit, the kit included, repaints it.
+- A raw route hashes its path, size and bytes, the site stamp and any served copy's URL.
+- The shell hashes its route, the stamp and the repo's root listing, so an edit to a module that draws or a new root-level file repaints it; a file added deeper does not.
 
 ## HOOKS
 
-- The module never imports the chrome, so `spec.git` carries it: `{ page, entry, served }`; no `page` means the routes are collected and nothing is rendered.
-- `page(site, leaf)` wraps the empty body in the site's page template; `leaf.code` asks for the code viewer's stylesheets, `leaf.tree` is the explorer, `leaf.scripts` the viewer's script.
+- The module never imports the chrome: `spec.git` carries it, `{ page, entry, served }`, and the tests draw through it. No `page` means the routes are collected and nothing is rendered.
+- `page(site, leaf)` wraps the empty body in the site's page template; `leaf.code` asks for the code viewer's stylesheet, the `git.css` sheet, `leaf.tree` is the explorer, `leaf.scripts` the viewer's script.
 - `entry` is the site's browser module, resolved against the site root, which calls `start()`; the `/git/` route is born from it, and the site lists it in `spa.entries` too.
 - `shell(site, route, shell, spec)` draws the shell through `page`; the site's `spa.page` calls it for the `/git/` route.
 - `served(site, path)` is the mirror seam: it hands back the URL the site already serves that repo file at, or null; `site.serves` maps a bundled source file to its published URL and `site.made` holds every path the build has written.

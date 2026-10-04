@@ -1,15 +1,15 @@
 import { dirname, isAbsolute, relative, resolve as under } from "node:path";
-import { HOME, config as gitConfig, isGit } from "../git/git.ts";
+import { HOME, config as gitConfig, isGit, type Hooks } from "../git/git.ts";
 import { dirRoute, link as gitLink, owner } from "../git/view.ts";
 import { label, type Site } from "./build.ts";
 
 /* TYPES */
 
-export type Index = { base: string; slug: string; branch: string; map: Map<string, string>; git: Set<string> };
+export type Index = { base: string; slug: string; branch: string; map: Map<string, string>; git: Set<string>; served: (path: string) => string | null };
 
 /* INDEX */
 
-export function index(site: Site): Index {
+export function index(site: Site, hooks?: Hooks): Index {
   const git = gitConfig(site);
   const roots = new Set(Object.values(site.inputs ?? {}).map((one) => one.path));
   const map = new Map<string, string>();
@@ -41,16 +41,14 @@ export function index(site: Site): Index {
     branch: git?.branch ?? "main",
     map,
     git: code,
+    served: (path) => site.ships?.get(under(git?.root ?? site.root, path)) ?? hooks?.served?.(site, path) ?? null,
   };
 }
 
 /* STAMP */
 
 export const stamp = (idx: Index) =>
-  JSON.stringify([
-    [...idx.map].filter(([key]) => key.startsWith(idx.base)).map(([key, route]) => [key.slice(idx.base.length), route]),
-    [...idx.git],
-  ]);
+  JSON.stringify([...idx.map].filter(([key]) => key.startsWith(idx.base)).map(([key, route]) => [key.slice(idx.base.length), route]));
 
 /* RESOLVE */
 
@@ -87,8 +85,12 @@ export function resolve(site: Site, from: string, url: string): string {
   if (idx.git.size) {
     const where = gitLink(relative(idx.base, dirname(file)), head);
     const page = where.startsWith("/raw/") ? (owner(where) ?? "") : where;
-    if (idx.git.has(page)) return where + tail;
-    return idx.git.has(dirRoute(path)) ? dirRoute(path) + tail : url;
+    const tracked = (one: string) => {
+      site.asks?.add(one);
+      return idx.git.has(one);
+    };
+    if (tracked(page)) return ((where.startsWith("/raw/") && idx.served(path)) || where) + tail;
+    return tracked(dirRoute(path)) ? dirRoute(path) + tail : url;
   }
   return idx.slug ? `https://github.com/${idx.slug}/blob/${idx.branch}/${path}${tail}` : url;
 }

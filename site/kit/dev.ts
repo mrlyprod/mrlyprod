@@ -1,7 +1,7 @@
 import type { HTMLBundle } from "bun";
 import { existsSync, statSync, watch, type FSWatcher } from "node:fs";
-import { relative, resolve, sep } from "node:path";
-import { escape, forget, scan, type Output, type Site, type Spec } from "./ssg/build.ts";
+import { dirname, relative, resolve, sep } from "node:path";
+import { drawn, escape, forget, scan, type Output, type Site, type Spec } from "./ssg/build.ts";
 import { decode } from "./git/view.ts";
 import { clean, find, lost, reply, type } from "./serve.ts";
 
@@ -15,7 +15,6 @@ export type Options = {
   html?: (site: Site) => Entry[];
   scripts?: (site: Site) => Entry[];
   disk?: (site: Site) => Mount[];
-  watch?: string[];
   extra?: (site: Site, path: string) => Promise<Response | null> | Response | null;
   line?: (site: Site) => string;
 };
@@ -67,12 +66,11 @@ export function disk(mounts: Mount[], path: string): Response | null {
 
 /* WATCH */
 
-function watched(spec: Spec, site: Site, more: string[]): string[] {
+function watched(spec: Spec, site: Site): string[] {
   const paths = new Set<string>([import.meta.dir]);
   for (const one of Object.values(site.inputs)) if (!one.missing) paths.add(one.path);
   if (site.kit) paths.add(site.kit.path);
-  for (const dir of spec.templates ?? []) paths.add(resolve(site.root, dir));
-  for (const one of more) paths.add(resolve(site.root, one));
+  for (const file of drawn(spec)) if (!file.startsWith(`${import.meta.dir}/`)) paths.add(dirname(file) === site.root ? file : dirname(file));
   return [...paths].filter((path) => existsSync(path));
 }
 
@@ -185,7 +183,7 @@ export async function main(spec: Spec, options: Options = {}) {
     held.timer = setTimeout(refresh, 80);
   }
 
-  for (const path of watched(spec, site, options.watch ?? [])) {
+  for (const path of watched(spec, site)) {
     const dir = statSync(path).isDirectory();
     held.watchers.push(watch(path, { recursive: dir }, (_, file) => changed(dir && file ? resolve(path, String(file)) : path)));
   }

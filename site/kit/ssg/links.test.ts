@@ -101,6 +101,13 @@ test("an image with no route lands on its raw bytes", () => {
   expect(resolve(mrly, "research/core.md", "../files/figures/carpet.png")).toBe("/raw/files/figures/carpet.png");
 });
 
+test("an image the site serves elsewhere lands on that copy, never on a raw object that is not written", () => {
+  const served = { ...mrly, ships: new Map([[`${home}/site/blog/hello/shot.png`, "/blog/hello/shot.png"]]), routes: [...mrly.routes, { route: "/raw/site/blog/hello/shot.png", kind: "raw" }] } as unknown as Site;
+  served.index = index(served, { served: (_site, path) => (path === "files/figures/carpet.png" ? "/figures/carpet.png" : null) });
+  expect(resolve(served, "research/core.md", "../files/figures/carpet.png#top")).toBe("/figures/carpet.png#top");
+  expect(resolve(served, "site/blog/hello.md", "hello/shot.png")).toBe("/blog/hello/shot.png");
+});
+
 test("an extensionless directory lands on its listing", () => {
   expect(resolve(mrly, "research/core.md", "../crates/mrly")).toBe("/git/crates/mrly/");
 });

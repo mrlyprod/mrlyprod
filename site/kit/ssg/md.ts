@@ -6,7 +6,7 @@ import remarkMath from "remark-math";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
-import { visit } from "unist-util-visit";
+import { SKIP, visit } from "unist-util-visit";
 import { escape } from "./text.ts";
 
 export { escape };
@@ -19,6 +19,7 @@ export type Options = {
   link?: Link;
   math?: (tex: string, display: boolean) => string;
   widget?: (name: string, view: string, caption: string) => string;
+  lazy?: boolean;
 };
 
 type Raw = { type: "raw"; value: string };
@@ -72,30 +73,32 @@ export function front(md: string): { data: Record<string, string>; body: string 
 
 const WORD = /[\p{L}\p{N}]/u;
 
-const PROTECTED = new Set(["code", "inlineCode", "math", "inlineMath", "html"]);
+const word = (code: number | null) => code !== null && code > 0 && WORD.test(String.fromCharCode(code));
+
+type Step = (code: number | null) => Step | undefined;
+
+type Effects = { enter: (type: string) => void; exit: (type: string) => void; consume: (code: number | null) => void };
+
+const STAR = {
+  name: "star",
+  tokenize(this: { previous: number | null }, effects: Effects, ok: Step, nok: Step): Step {
+    const before = this.previous;
+    return (code) => {
+      if (!word(before)) return nok(code);
+      effects.enter("data");
+      effects.consume(code);
+      effects.exit("data");
+      return (next) => (word(next) ? ok(next) : nok(next));
+    };
+  },
+};
+
+function stars(this: { data: () => { micromarkExtensions?: unknown[] } }) {
+  const data = this.data();
+  (data.micromarkExtensions ??= []).push({ text: { 42: STAR } });
+}
 
 const unescape = (tex: string) => tex.replace(/\\\\([!-\/:-@[-`{-~])/g, "\\$1");
-
-function literal(src: string, tree: Root): string {
-  const keep: [number, number][] = [];
-  visit(tree, (node) => {
-    if (PROTECTED.has(node.type)) keep.push([node.position!.start.offset!, node.position!.end.offset!]);
-  });
-  keep.sort((a, b) => a[0] - b[0]);
-  let out = "";
-  let at = 0;
-  const prose = (from: number, to: number) => {
-    for (let i = from; i < to; i++) out += src[i] === "*" && WORD.test(src[i - 1] ?? "") && WORD.test(src[i + 1] ?? "") ? "\\*" : src[i]!;
-  };
-  for (const [from, to] of keep) {
-    if (from < at) continue;
-    prose(at, from);
-    out += src.slice(from, to);
-    at = to;
-  }
-  prose(at, src.length);
-  return out;
-}
 
 const FIGURE = /^!\[([^\]]*)\]\(([^)]*)\)$/;
 
@@ -106,7 +109,9 @@ const source = (src: string, node: Nodes) => src.slice(node.position!.start.offs
 const headingText = (src: string, node: Heading) =>
   source(src, node).replace(/^#{1,6}[ \t]+/, "").replace(/[ \t]+#+[ \t]*$/, "").replace(/\n[ \t]*[=-]+[ \t]*$/, "").trim();
 
-function figure(src: string, node: Paragraph, opts: Options): Raw | null {
+const LAZY = ' loading="lazy" decoding="async"';
+
+function figure(src: string, node: Paragraph, opts: Options, lazy: boolean): Raw | null {
   if (node.children.length !== 1 || node.children[0]!.type !== "image") return null;
   const text = source(src, node);
   const widget = opts.widget && text.match(WIDGET);
@@ -115,12 +120,13 @@ function figure(src: string, node: Paragraph, opts: Options): Raw | null {
   if (!image) return null;
   const href = (opts.link ?? ((u) => u))(image[2]!.trim());
   const alt = (node.children[0] as { alt?: string }).alt ?? "";
-  return { type: "raw", value: `<figure><img src="${escape(href)}" alt="${escape(alt)}"><figcaption>${inline(image[1]!, opts)}</figcaption></figure>` };
+  return { type: "raw", value: `<figure><img src="${escape(href)}" alt="${escape(alt)}"${lazy ? LAZY : ""}><figcaption>${inline(image[1]!, opts)}</figcaption></figure>` };
 }
 
 function shape(src: string, opts: Options) {
   return (tree: Root) => {
     const ids = new Map<string, number>();
+    let images = opts.lazy ? 1 : 0;
     visit(tree, (node, index, parent) => {
       if (node.type === "heading") {
         const base = slug(plain(headingText(src, node)));
@@ -129,15 +135,22 @@ function shape(src: string, opts: Options) {
         node.data = { ...node.data, hProperties: { id: seen ? `${base}-${seen}` : base } };
       } else if (node.type === "list") node.spread = false;
       else if (node.type === "listItem") node.spread = false;
-      else if ((node.type === "link" || node.type === "image" || node.type === "definition") && opts.link) node.url = opts.link(node.url);
+      else if (node.type === "image" || node.type === "imageReference") {
+        if (node.type === "image" && opts.link) node.url = opts.link(node.url);
+        if (images++) node.data = { ...node.data, hProperties: { loading: "lazy", decoding: "async" } };
+      } else if ((node.type === "link" || node.type === "definition") && opts.link) node.url = opts.link(node.url);
       else if (node.type === "paragraph" && parent && index !== undefined) {
         const only = node.children.length === 1 ? node.children[0]! : null;
         if (only && only.type === "inlineMath" && source(src, node).startsWith("$$")) {
           parent.children[index] = { type: "math", value: only.value };
           return;
         }
-        const raw = figure(src, node, opts);
-        if (raw) parent.children[index] = raw as never;
+        const raw = figure(src, node, opts, images > 0);
+        if (!raw) return;
+        parent.children[index] = raw as never;
+        if (!raw.value.startsWith("<figure>")) return;
+        images++;
+        return SKIP;
       }
     });
   };
@@ -168,13 +181,12 @@ function tables() {
 const code = (tex: string) => `<code>${escape(tex)}</code>`;
 
 function parser(opts: Options) {
-  const chain = unified().use(remarkParse).use(remarkGfm);
+  const chain = unified().use(remarkParse).use(remarkGfm).use(stars);
   return opts.math ? chain.use(remarkMath) : chain;
 }
 
 export function render(md: string, opts: Options = {}): string {
-  const raw = md.replace(/\r\n?/g, "\n");
-  const src = literal(raw, parser(opts).parse(raw));
+  const src = md.replace(/\r\n?/g, "\n");
   const math = opts.math ?? code;
   const handlers = {
     math: (_: unknown, node: { value: string }) => ({ type: "raw", value: math(unescape(node.value), true) }),

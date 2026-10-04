@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmdirSync, statSync, unlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, rmdirSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { basename, dirname, extname, join, normalize, relative, resolve } from "node:path";
 import { deflateSync } from "node:zlib";
 import { TREE, collect as gitRoutes, forest, isGit, mirror, print as gitPrint, render as gitRender, type Hooks } from "../git/git.ts";
@@ -50,16 +50,18 @@ export type Site = {
   stamp: string;
   index: Index | null;
   copies: Output[];
-  styles: string[];
   serves: Map<string, string>;
   made: Set<string>;
   ships: Map<string, string>;
+  asks?: Set<string>;
   asset: (name: string) => string;
   input: (name: string) => Input;
   bytes: (file: string) => Uint8Array;
 };
 
 export type Decl = { path: string; out?: string; hash?: boolean; files?: string[]; ext?: string };
+
+export type Sheet = { name: string; out?: string; files: string[] };
 
 export type Row = { href: string; name?: string; note?: string };
 
@@ -72,6 +74,7 @@ export type Config = {
   inputs?: Record<string, { path: string; ext?: string; deep?: boolean }>;
   kit?: Decl;
   assets?: Decl[];
+  sheets?: Sheet[];
   modes?: Record<string, Rule>;
   manifest?: Record<string, unknown>;
   robots?: { disallow?: string[] };
@@ -84,9 +87,7 @@ export type Picked = { routes: Route[]; nav?: Node[] };
 export type Spec = {
   root: string;
   out: string;
-  config?: Config;
   templates?: string[];
-  prepare?: () => Promise<void> | void;
   collect: (site: Site) => Promise<Picked> | Picked;
   render: (site: Site, route: Route) => Promise<Output[]> | Output[];
   globals?: (site: Site) => Promise<Output[]> | Output[];
@@ -96,10 +97,9 @@ export type Spec = {
   git?: Hooks;
   blog?: Posts;
   spa?: Clients;
-  asset?: (name: string, body: Uint8Array) => Bytes;
 };
 
-export type Record_ = { hash: string; at: string; outputs: string[]; types?: Record<string, string>; sums?: Record<string, string> };
+export type Record_ = { hash: string; at: string; outputs: string[]; types?: Record<string, string>; sums?: Record<string, string>; asks?: string[]; reads?: string[] };
 
 export type Manifest = Record<string, Record_>;
 
@@ -123,11 +123,24 @@ export function walk(dir: string, deep = true): string[] {
 
 const cache = new Map<string, Uint8Array>();
 
+const sums = new Map<string, string>();
+
 export function forget() {
   cache.clear();
+  sums.clear();
+}
+
+let read: Set<string> | null = null;
+
+const isFile = (file: string) => existsSync(file) && statSync(file).isFile();
+
+export function probe(file: string): boolean {
+  read?.add(file);
+  return isFile(file);
 }
 
 export function bytes(file: string): Uint8Array {
+  read?.add(file);
   const hit = cache.get(file);
   if (hit) return hit;
   const data = new Uint8Array(readFileSync(file));
@@ -140,6 +153,14 @@ const digest = (parts: Bytes[]) => {
   for (const part of parts) h.update(part);
   return h.digest("hex");
 };
+
+function sum(file: string): string {
+  const hit = sums.get(file);
+  if (hit) return hit;
+  const made = digest([bytes(file)]);
+  sums.set(file, made);
+  return made;
+}
 
 const short = (text: string) => text.slice(0, 8);
 
@@ -159,11 +180,28 @@ function inputs(root: string, config: Config): Record<string, Input> {
   return found;
 }
 
+const CODE: Record<string, "ts" | "tsx" | "js" | "jsx"> = { ".ts": "ts", ".mts": "ts", ".tsx": "tsx", ".js": "js", ".mjs": "js", ".jsx": "jsx" };
+
+export function graph(roots: string[]): string[] {
+  const seen = new Set<string>();
+  const visit = (file: string) => {
+    if (seen.has(file)) return;
+    seen.add(file);
+    const loader = CODE[extname(file)];
+    if (!loader) return;
+    const text = new TextDecoder().decode(bytes(file));
+    for (const { path } of new Bun.Transpiler({ loader }).scanImports(text)) if (path.startsWith(".")) visit(Bun.resolveSync(path, dirname(file)));
+  };
+  for (const root of roots) visit(root);
+  return [...seen].sort();
+}
+
+export const drawn = (spec: Spec): string[] => graph([join(import.meta.dir, "build.ts"), ...(spec.templates ?? []).map((file) => resolve(spec.root, file))]);
+
 function templates(spec: Spec): string {
-  const here = resolve(import.meta.dir, "..");
-  const dirs = [here, ...(spec.templates ?? []).map((d) => resolve(spec.root, d))];
+  const root = resolve(spec.root);
   const parts: Bytes[] = [];
-  for (const dir of dirs) for (const file of walk(dir)) parts.push(relative(dir, file), bytes(file));
+  for (const file of drawn(spec)) parts.push(relative(root, file), bytes(file));
   return digest(parts);
 }
 
@@ -188,7 +226,7 @@ const LOADS = /(@import\s+)(["'])([^"']+)\2/g;
 
 const OUTSIDE = /^(?:[a-z][a-z0-9+.-]*:|[/#])/i;
 
-function place(one: Bundle, spec: Spec, assets: Map<string, string>, copies: Output[], serves: Map<string, string>) {
+function place(one: Bundle, assets: Map<string, string>, copies: Output[], serves: Map<string, string>) {
   const known = new Set(one.files);
   const busy = new Set<string>();
   const point = (name: string, target: string): string | null => {
@@ -207,8 +245,7 @@ function place(one: Bundle, spec: Spec, assets: Map<string, string>, copies: Out
     busy.add(name);
     const file = join(one.path, name);
     if (!existsSync(file)) throw new Error(`ssg: asset missing: ${file}`);
-    const raw = bytes(file);
-    let body = spec.asset ? spec.asset(name, raw) : raw;
+    let body: Bytes = bytes(file);
     if (one.hash && /\.m?js$/.test(name)) {
       const text = typeof body === "string" ? body : new TextDecoder().decode(body);
       body = text.replace(IMPORT, (whole, head: string, quote: string, target: string) => {
@@ -240,19 +277,42 @@ function place(one: Bundle, spec: Spec, assets: Map<string, string>, copies: Out
   for (const name of one.files) visit(name);
 }
 
+function sheets(list: Sheet[], assets: Map<string, string>, copies: Output[], serves: Map<string, string>): Output[] {
+  const spent = new Set<string>();
+  const made: Output[] = [];
+  for (const one of list) {
+    const parts = one.files.map((name, n) => {
+      const href = assets.get(name);
+      const copy = href && copies.find((item) => `/${item.path}` === href);
+      if (!copy) throw new Error(`ssg: the sheet ${one.name} names ${name}, which no bundle places`);
+      const body = typeof copy.bytes === "string" ? copy.bytes : new TextDecoder().decode(copy.bytes);
+      if (n && /@(?:import|charset)\b/.test(body)) throw new Error(`ssg: ${name} carries an @import or an @charset, which only the first member of the sheet ${one.name} may`);
+      spent.add(copy.path);
+      return copy.bytes;
+    });
+    const data = new Uint8Array(Buffer.concat(parts.map((part) => (typeof part === "string" ? Buffer.from(part) : part))));
+    const path = `${outDir({ path: "", out: one.out })}/${one.name.replace(/(\.[^.]+)$/, "")}-${short(digest([data]))}${extname(one.name)}`;
+    made.push({ path, bytes: data });
+  }
+  for (const [name, href] of [...assets]) if (spent.has(href.slice(1))) assets.delete(name);
+  for (const [file, href] of [...serves]) if (spent.has(href.slice(1))) serves.delete(file);
+  list.forEach((one, n) => assets.set(one.name, `/${made[n]!.path}`));
+  return [...copies.filter((item) => !spent.has(item.path)), ...made];
+}
+
 const shows = (nodes: Node[], href: string): boolean =>
   nodes.some((node) => node.href === href || shows(node.nodes ?? [], href));
 
 export async function scan(spec: Spec): Promise<Site> {
-  if (spec.prepare) await spec.prepare();
   const root = resolve(spec.root);
-  const config = spec.config ?? (JSON.parse(readFileSync(join(root, "site.json"), "utf8")) as Config);
+  const config = JSON.parse(readFileSync(join(root, "site.json"), "utf8")) as Config;
   const found = inputs(root, config);
   const list = decls(config).map((decl) => bundle(root, decl));
   const assets = new Map<string, string>();
-  const copies: Output[] = [];
+  const placed: Output[] = [];
   const serves = new Map<string, string>();
-  for (const one of list) place(one, spec, assets, copies, serves);
+  for (const one of list) place(one, assets, placed, serves);
+  const copies = sheets(config.sheets ?? [], assets, placed, serves);
   const site: Site = {
     root,
     out: resolve(spec.out),
@@ -264,7 +324,6 @@ export async function scan(spec: Spec): Promise<Site> {
     stamp: "",
     index: null,
     copies,
-    styles: [...assets].filter(([name]) => name.endsWith(".css")).map(([, href]) => href).sort(),
     serves,
     made: new Set(copies.map((one) => one.path)),
     ships: new Map(),
@@ -290,7 +349,7 @@ export async function scan(spec: Spec): Promise<Site> {
     site.routes = [...site.routes, ...repo.routes];
     if (repo.node && !shows(site.nav, repo.node.href!)) site.nav = [...site.nav, repo.node];
   }
-  site.index = index(site);
+  site.index = index(site, spec.git);
   site.stamp = digest([
     templates(spec),
     JSON.stringify(site.nav),
@@ -316,13 +375,14 @@ export function label(site: Site, file: string): string {
   return file === base ? name : `${name}/${file.slice(base.length + 1)}`;
 }
 
-export function fingerprint(site: Site, route: Route, spec?: Spec): string {
+export function fingerprint(site: Site, route: Route, spec?: Spec, asks: string[] = [], reads: string[] = []): string {
   const pack = sealed(site, route);
   if (isGit(route)) return pack ? digest([gitPrint(site, route, spec?.git), pack]).slice(0, 16) : gitPrint(site, route, spec?.git);
   const files = route.inputs ?? (route.source ? [route.source] : []);
   const named = files.map((file) => [label(site, file), file] as const).sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
   const parts: Bytes[] = [route.route, route.kind ?? "", JSON.stringify(route.data ?? null), site.stamp];
   if (pack) parts.push(pack);
+  if (asks.length) parts.push(JSON.stringify(asks.map((page) => [page, site.index?.git.has(page) ?? false])));
   for (const [name, file] of named) {
     parts.push(name);
     if (!existsSync(file)) {
@@ -331,6 +391,10 @@ export function fingerprint(site: Site, route: Route, spec?: Spec): string {
     }
     if (statSync(file).isDirectory()) for (const inner of walk(file)) parts.push(relative(file, inner), bytes(inner));
     else parts.push(bytes(file));
+  }
+  for (const name of reads) {
+    const file = resolve(site.root, name);
+    parts.push(name, isFile(file) ? sum(file) : "gone");
   }
   return digest(parts).slice(0, 16);
 }
@@ -522,14 +586,26 @@ export function guard(path: string, html: string, known: Set<string>) {
 
 const today = () => new Date().toISOString().slice(0, 10);
 
+function loose(site: Site, route: Route, files: Set<string>): string[] {
+  const held = route.inputs ?? (route.source ? [route.source] : []);
+  return [...files]
+    .filter((file) => !held.some((one) => file === one || file.startsWith(`${one}/`)))
+    .map((file) => relative(site.root, file))
+    .sort();
+}
+
 function put(out: string, item: Output): boolean {
   const path = join(out, item.path);
   const body = typeof item.bytes === "string" ? new TextEncoder().encode(item.bytes) : item.bytes;
-  if (existsSync(path)) {
+  if (isFile(path)) {
     const old = new Uint8Array(readFileSync(path));
     if (old.length === body.length && Buffer.compare(old, body) === 0) return false;
+  } else if (existsSync(path)) rmSync(path, { recursive: true });
+  const dir = dirname(path);
+  if (!existsSync(dir) || isFile(dir)) {
+    for (let at = dir; at.length > out.length; at = dirname(at)) if (isFile(at)) unlinkSync(at);
+    mkdirSync(dir, { recursive: true });
   }
-  mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, body);
   return true;
 }
@@ -560,9 +636,9 @@ export async function build(spec: Spec, options: { manifest?: string; force?: bo
     if (++walked % TICK === 0) options.tick?.(walked, site.routes.length);
     if (isGit(route) && !spec.git?.page) continue;
     if (isBlog(route) && !spec.blog?.page) continue;
-    const hash = fingerprint(site, route, spec);
+    const first = fingerprint(site, route, spec, old[route.route]?.asks, old[route.route]?.reads);
     const was = old[route.route];
-    const same = !options.force && !!was && was.hash === hash;
+    const same = !options.force && !!was && was.hash === first;
     if (was && same && (!verify || was.outputs.every((p) => existsSync(join(site.out, p))))) {
       next[route.route] = was;
       route.at = route.at || was.at;
@@ -573,7 +649,15 @@ export async function build(spec: Spec, options: { manifest?: string; force?: bo
       }
       continue;
     }
+    site.asks = new Set();
+    read = new Set();
     const outputs = await render(site, route, spec);
+    const asks = [...site.asks].sort();
+    const reads = loose(site, route, read);
+    site.asks = undefined;
+    read = null;
+    const settled = asks.join("\n") === (was?.asks ?? []).join("\n") && reads.join("\n") === (was?.reads ?? []).join("\n");
+    const hash = settled ? first : fingerprint(site, route, spec, asks, reads);
     fence(walls, outputs.map((o) => o.path));
     for (const item of outputs) {
       if (item.path.endsWith(".html")) guard(item.path, typeof item.bytes === "string" ? item.bytes : new TextDecoder().decode(item.bytes), known);
@@ -581,7 +665,7 @@ export async function build(spec: Spec, options: { manifest?: string; force?: bo
     }
     rendered++;
     const at = route.at || (was && same ? was.at : today());
-    next[route.route] = { hash, at, outputs: outputs.map((o) => o.path), types: typed(outputs) };
+    next[route.route] = { hash, at, outputs: outputs.map((o) => o.path), types: typed(outputs), asks: asks.length ? asks : undefined, reads: reads.length ? reads : undefined };
     route.at = at;
     for (const item of outputs) {
       kept.add(item.path);
@@ -599,7 +683,7 @@ export async function build(spec: Spec, options: { manifest?: string; force?: bo
   let removed = 0;
   const drop = (p: string) => {
     const file = join(site.out, p);
-    if (!existsSync(file)) return;
+    if (!isFile(file)) return;
     unlinkSync(file);
     removed++;
     let dir = dirname(file);
@@ -619,7 +703,7 @@ export async function build(spec: Spec, options: { manifest?: string; force?: bo
     mkdirSync(dirname(path), { recursive: true });
     writeFileSync(path, JSON.stringify(next, null, 2) + "\n");
   }
-  return { site, manifest: next, rendered, written, removed };
+  return { site, manifest: next, rendered, written, removed, shared };
 }
 
 /* HELPERS */

@@ -64,6 +64,14 @@ describe("push", () => {
     expect(next["/"]!.sums).toEqual({ "index.html": "s1", "props.json": "s3" });
   });
 
+  test("a forced push reseals every output, so bytes the fingerprint missed still upload", () => {
+    const old: Manifest = { "/": { hash: "a", at: "2026-09-21", outputs: ["index.html", "props.json"], sums: { "index.html": "s1", "props.json": "s2" } } };
+    const sealed = (path: string) => (path === "index.html" ? "s1" : "s3");
+    const same = (): Manifest => ({ "/": { ...old["/"]! } });
+    expect(changes(old, same(), [], sealed)).toEqual([]);
+    expect(changes(old, same(), [], sealed, true)).toEqual(["props.json"]);
+  });
+
   test("the guard owns a prefix and a single key alike", () => {
     expect(mine("shop/index.html", GUARD)).toBe(true);
     expect(mine("cdn/reel.js", GUARD)).toBe(false);
@@ -91,10 +99,10 @@ test("an edit only one spa route's entry sees uploads its changed files and dele
   writeFileSync(file("only.js"), 'export const mark = "first-cut";\n');
   writeFileSync(file("a.js"), 'const { mark } = await import("./only.js");\ndocument.title = mark;\n');
   writeFileSync(file("b.js"), 'document.title = "b";\n');
+  writeFileSync(join(home, "site.json"), "{}");
   const spec: Spec = {
     root: home,
     out: join(home, "dist"),
-    config: {},
     collect: () => ({ routes: [{ route: "/a/", mode: "spa", entry: file("a.js"), inputs: [file("a.js"), file("only.js")] }, { route: "/b/", mode: "spa", entry: file("b.js"), inputs: [file("b.js")] }] }),
     render: () => [],
     spa: { entries: () => [file("a.js"), file("b.js")], page: (_site, _route, shell) => `<script type="module" src="${shell.script}"></script>` },

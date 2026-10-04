@@ -9,14 +9,13 @@ export type Mode = "ssg" | "spa" | "ssr";
 
 export type Rule = Mode | { mode: Mode; deep?: boolean };
 
-export type Shell = { route: string; entry: string; html: string; script: string; ahead: string[] };
+export type Shell = { route: string; entry: string; html: string; script: string };
 
-export type Pack = { files: Map<string, Uint8Array>; entries: Map<string, string>; edges: Map<string, string[]> };
+export type Pack = { files: Map<string, Uint8Array>; entries: Map<string, string> };
 
 export type Hooks = {
   entries: (site: Site) => string[];
   page: (site: Site, route: Route, shell: Shell, out: Output[]) => Bytes;
-  root?: string;
   plugins?: (site: Site) => BunPlugin[];
   place?: (path: string) => string;
 };
@@ -84,8 +83,6 @@ export function check(site: Site, spec: Spec) {
 
 /* BUNDLE */
 
-const IMPORTS = /\bimport\s*["']([^"']+)["']|\bfrom\s*["']([^"']+)["']/g;
-
 const MODULE = /<script[^>]*type="module"[^>]*>/;
 
 const SRC = /src="([^"]+)"/;
@@ -102,12 +99,11 @@ const lands = (root: string, file: string) => {
 async function pack(site: Site, spec: Spec): Promise<Pack> {
   const hooks = spec.spa;
   if (!hooks) throw new Error("ssg: an spa route needs the spec's spa hooks");
-  const root = resolve(site.root, hooks.root ?? ".");
+  const root = site.root;
   const list = hooks.entries(site);
   const files = new Map<string, Uint8Array>();
-  const edges = new Map<string, string[]>();
   const entries = new Map<string, string>();
-  if (!list.length) return { files, entries, edges };
+  if (!list.length) return { files, entries };
   const built = await Bun.build({
     entrypoints: list,
     root,
@@ -119,21 +115,12 @@ async function pack(site: Site, spec: Spec): Promise<Pack> {
   });
   if (!built.success) throw new Error(`ssg: the spa entries failed to bundle\n${built.logs.join("\n")}`);
   for (const item of built.outputs) files.set(trim(item.path), new Uint8Array(await item.arrayBuffer()));
-  for (const [path, body] of files) {
-    if (!path.endsWith(".js")) continue;
-    const deps: string[] = [];
-    for (const [, bare, named] of text(body).matchAll(IMPORTS)) {
-      const dep = join(dirname(path), bare ?? named);
-      if (files.has(dep) && !deps.includes(dep)) deps.push(dep);
-    }
-    edges.set(path, deps);
-  }
   for (const file of list) {
     const made = lands(root, file);
     if (!files.has(made)) throw new Error(`ssg: the spa entry ${relative(site.root, file)} bundled to no ${made}; an entry lives under the spa root`);
     entries.set(file, made);
   }
-  return { files, entries, edges };
+  return { files, entries };
 }
 
 const packs = new WeakMap<Site, Promise<Pack>>();
@@ -151,21 +138,9 @@ export function near(site: Site, spec: Spec, path: string): boolean {
   if (packs.has(site)) return true;
   const hooks = spec.spa;
   if (!hooks) return false;
-  const root = resolve(site.root, hooks.root ?? ".");
+  const root = site.root;
   const place = hooks.place ?? ((at: string) => at);
   return hooks.entries(site).some((file) => place(lands(root, file)) === path);
-}
-
-function closure(edges: Map<string, string[]>, entry: string): string[] {
-  const seen = new Set<string>();
-  const queue = [...(edges.get(entry) ?? [])];
-  while (queue.length) {
-    const next = queue.shift()!;
-    if (seen.has(next)) continue;
-    seen.add(next);
-    queue.push(...(edges.get(next) ?? []));
-  }
-  return [...seen];
 }
 
 /* MOVED */
@@ -228,7 +203,7 @@ export async function render(site: Site, route: Route, spec: Spec): Promise<Outp
     const src = raw.match(MODULE)?.[0].match(SRC)?.[1];
     const main = raw ? (src ? join(dirname(at), src) : "") : at;
     const html = rebase(done, place, at, page(one.route), raw);
-    const shell: Shell = { route: one.route, entry: one.entry, html, script: main ? `/${place(main)}` : "", ahead: closure(done.edges, main).map((dep) => `/${place(dep)}`) };
+    const shell: Shell = { route: one.route, entry: one.entry, html, script: main ? `/${place(main)}` : "" };
     out.push({ path: page(one.route), bytes: hooks.page(site, route, shell, out) });
   }
   return out;

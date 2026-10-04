@@ -1,6 +1,6 @@
 import type { S3Client } from "bun";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, renameSync, rmSync, symlinkSync } from "node:fs";
 import { join } from "node:path";
 import { client, getText, need, putBytes } from "./s3.ts";
 
@@ -26,13 +26,11 @@ export type Config = {
   shelf?: string;
   sources?: string[];
   prepare?: (site: string, run: Runner) => Promise<string>;
-  hash?: (site: string) => string;
-  local?: string;
 };
 
-export type Wake = { source: string; on: "source" | "shelf" | ""; sha: string };
+export type Wake = { source: string; on: "source" | "shelf" | ""; sha: string; force: boolean };
 
-export type Head = { sha: string; etag: string; shelf: string; shelfEtag: string; data: string };
+export type Head = { sha: string; etag: string; shelf: string; shelfEtag: string };
 
 export type Mark = { sha: string; etag: string };
 
@@ -118,10 +116,6 @@ async function spawn(cmd: string[], cwd: string, env: Record<string, string>): P
 
 export function lambda(config: Config) {
   const SOURCES = new Set(config.sources ?? ["push", "schedule", "manual"]);
-  const DRY = Boolean(config.local) && process.env.DRY === "1";
-  if (DRY) process.env.DEV = "1";
-  const HOLD = process.env.DRY_DIR ?? config.local ?? "";
-  const SRC = config.local ? (process.env.SRC ?? "") : "";
 
   const shelfRepo = () => (config.shelf ? (process.env[config.shelf] ?? "").trim() : "");
 
@@ -139,15 +133,13 @@ export function lambda(config: Config) {
       source: SOURCES.has(word) ? word : "",
       on: repo === config.source ? "source" : repo && repo === shelf ? "shelf" : "",
       sha: SHA.test(named) ? named : "",
+      force: body.force === true && word === "manual",
     };
   }
 
   /* HEAD */
 
-  const held = () => join(HOLD, "head");
-
-  async function readHead(s3: S3Client | null): Promise<Head> {
-    const text = s3 ? await getText(s3, config.head) : existsSync(held()) ? readFileSync(held(), "utf8") : null;
+  function parseHead(text: string | null): Head {
     const lines = (text ?? "").trim().split("\n").map((one) => one.trim());
     const rest = lines.slice(2);
     return {
@@ -155,21 +147,19 @@ export function lambda(config: Config) {
       etag: lines[1] ?? "",
       shelf: config.shelf ? (rest.shift() ?? "") : "",
       shelfEtag: config.shelf ? (rest.shift() ?? "") : "",
-      data: config.hash ? (rest.shift() ?? "") : "",
     };
   }
 
-  async function writeHead(s3: S3Client | null, head: Head): Promise<void> {
+  function headText(head: Head): string {
     const lines = [head.sha, head.etag];
     if (config.shelf) lines.push(head.shelf, head.shelfEtag);
-    if (config.hash) lines.push(head.data);
-    const body = `${lines.join("\n")}\n`;
-    if (!s3) {
-      mkdirSync(HOLD, { recursive: true });
-      writeFileSync(held(), body);
-      return;
-    }
-    await putBytes(s3, config.head, body, { type: "text/plain", cacheControl: "no-store" });
+    return `${lines.join("\n")}\n`;
+  }
+
+  const readHead = async (s3: S3Client): Promise<Head> => parseHead(await getText(s3, config.head));
+
+  async function writeHead(s3: S3Client, head: Head): Promise<void> {
+    await putBytes(s3, config.head, headText(head), { type: "text/plain", cacheControl: "no-store" });
   }
 
   /* GITHUB */
@@ -235,7 +225,7 @@ export function lambda(config: Config) {
   }
 
   function seen(wake: Wake, stored: Head): string {
-    if (config.hash || !wake.sha || !complete(stored)) return "";
+    if (wake.force || !wake.sha || !complete(stored)) return "";
     if (wake.on === "source" && wake.sha === stored.sha) return short(wake.sha);
     if (wake.on === "shelf" && wake.sha === stored.shelf) return `shelf ${short(wake.sha)}`;
     return "";
@@ -256,7 +246,7 @@ export function lambda(config: Config) {
   async function freshen(wake: Wake, stored: Head, get: Get = fetch): Promise<Head> {
     const source = await sourceMark(wake, stored, get);
     const shelf = await shelfMark(wake, stored, get);
-    return { sha: source.sha, etag: source.etag, shelf: shelf.sha, shelfEtag: shelf.etag, data: stored.data };
+    return { sha: source.sha, etag: source.etag, shelf: shelf.sha, shelfEtag: shelf.etag };
   }
 
   /* CHILD */
@@ -288,33 +278,22 @@ export function lambda(config: Config) {
 
   /* BUILD */
 
-  async function build(s3: S3Client | null, next: Head, stored: Head): Promise<string> {
-    if (SRC) log(`source ${SRC}`);
-    else {
-      await unpack(config.source, next.sha, config.dir);
-      log(`source ${short(next.sha)}`);
-    }
+  async function build(s3: S3Client, next: Head, force: boolean): Promise<string> {
+    await unpack(config.source, next.sha, config.dir);
+    log(`source ${short(next.sha)}`);
     const slug = shelfRepo();
     if (slug) {
       await unpack(slug, next.shelf || "main", SHELF_DIR);
       if (!existsSync(join(SHELF_DIR, "research", "README.md"))) throw new Error("shelf: no research/README.md in the tarball");
       log(`shelf ${short(next.shelf)}`);
     }
-    const site = join(SRC || config.dir, config.folder);
+    const site = join(config.dir, config.folder);
     log(await install(site));
     if (config.prepare) {
       const said = await config.prepare(site, run);
       if (said) log(said);
     }
-    if (config.hash) {
-      next.data = config.hash(site);
-      log(`snapshot ${next.data || "none"}`);
-      if (next.sha === stored.sha && next.data === stored.data) {
-        if (next.etag !== stored.etag) await writeHead(s3, next);
-        return `unchanged ${short(next.sha)}, data same`;
-      }
-    }
-    const out = await run([process.execPath, "run", "push"], site);
+    const out = await run([process.execPath, "run", "push", ...(force ? ["--force"] : [])], site);
     const line = out.split("\n").map((one) => one.trim()).find((one) => one.startsWith("push:")) ?? "push: no count line";
     log(line);
     await writeHead(s3, next);
@@ -327,7 +306,7 @@ export function lambda(config: Config) {
   async function once(wake: Wake): Promise<string> {
     const began = Date.now();
     mark = began;
-    const s3 = DRY ? null : client(need(config.bucket));
+    const s3 = client(need(config.bucket));
     const stored = await readHead(s3);
     const known = seen(wake, stored);
     if (known) {
@@ -336,13 +315,13 @@ export function lambda(config: Config) {
     }
     const next = await freshen(wake, stored);
     if (!next.sha) throw new Error(`${config.source}: no sha in the event, in the head or from github`);
-    if (!config.hash && next.sha === stored.sha && next.shelf === stored.shelf) {
+    if (!wake.force && next.sha === stored.sha && next.shelf === stored.shelf) {
       if (next.etag !== stored.etag || next.shelfEtag !== stored.shelfEtag) await writeHead(s3, next);
       log(`unchanged ${short(next.sha)}`);
       return `unchanged ${short(next.sha)}`;
     }
-    log(`${wake.source || "poll"} ${short(next.sha)}${config.shelf ? ` shelf ${short(next.shelf)}` : ""}`);
-    const line = await build(s3, next, stored);
+    log(`${wake.source || "poll"} ${short(next.sha)}${config.shelf ? ` shelf ${short(next.shelf)}` : ""}${wake.force ? " forced" : ""}`);
+    const line = await build(s3, next, wake.force);
     const total = Date.now() - began;
     console.log(`done ${short(next.sha)} ${total}ms`);
     return `${line} in ${total}ms`;
@@ -352,5 +331,5 @@ export function lambda(config: Config) {
     return new Response(`${await once(readEvent(await payload(request)))}\n`);
   }
 
-  return { fetch: handler, once, readEvent, readHead, writeHead, onMain, seen, freshen };
+  return { fetch: handler, once, readEvent, parseHead, headText, onMain, seen, freshen };
 }

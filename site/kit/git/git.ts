@@ -162,6 +162,7 @@ export function forest(site: Site, hooks?: Hooks): Wood | null {
 export function print(site: Site, route: Route, hooks?: Hooks): string {
   const parts: Bytes[] = ["git", route.route, route.kind ?? "", JSON.stringify(route.data ?? null), site.stamp];
   if (route.kind === "raw") parts.push(mirror(site, route, hooks) ?? "");
+  else parts.push(JSON.stringify(explorer(site)));
   for (const file of route.inputs ?? []) {
     parts.push(stem(file));
     parts.push(existsSync(file) ? bytes(file) : "gone");

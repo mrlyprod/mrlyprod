@@ -23,6 +23,7 @@ target/
 site/node_modules/
 figures/node_modules/
 site/pkg/
+site/pkg.next/
 pkgs/mrlyjs/pkg/
 
 # PYTHON

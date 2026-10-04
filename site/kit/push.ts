@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { build, digest, globals, today, type Bytes, type Manifest, type Output, type Spec } from "./ssg/build.ts";
+import { build, digest, today, type Bytes, type Manifest, type Output, type Spec } from "./ssg/build.ts";
 import { client, del, getText, need, putBytes } from "./s3.ts";
 
 /* WHERE */
@@ -15,7 +15,7 @@ const BATCH = 32;
 const TICK = 512;
 
 export function block(spec: Spec): Block {
-  const config = spec.config ?? (JSON.parse(readFileSync(join(spec.root, "site.json"), "utf8")) as Record<string, unknown>);
+  const config = JSON.parse(readFileSync(join(spec.root, "site.json"), "utf8")) as Record<string, unknown>;
   const found = config.push as Block | undefined;
   if (!found) throw new Error("push: site.json has no push block");
   return found;
@@ -116,7 +116,7 @@ export function sums(manifest: Manifest): Map<string, string> {
 
 export const seal = (bytes: Bytes, type: string, control: string) => digest([bytes, type, control]).slice(0, 16);
 
-export function changes(old: Manifest, next: Manifest, guard: string[], sealed: (path: string) => string): string[] {
+export function changes(old: Manifest, next: Manifest, guard: string[], sealed: (path: string) => string, force = false): string[] {
   const had = spread(old);
   const before = sums(old);
   const out: string[] = [];
@@ -124,7 +124,7 @@ export function changes(old: Manifest, next: Manifest, guard: string[], sealed: 
     if (!mine(path, guard)) continue;
     const was = old[name];
     const now = next[name]!;
-    if (was && was.hash === now.hash && had.has(path)) continue;
+    if (!force && was && was.hash === now.hash && had.has(path)) continue;
     const sum = sealed(path);
     now.sums = { ...now.sums, [path]: sum };
     if (before.get(path) !== sum) out.push(path);
@@ -147,7 +147,7 @@ function hold(path: string, text: string) {
 
 /* PUSH */
 
-export async function push(spec: Spec, options: { dry?: boolean } = {}): Promise<{ rendered: number; uploaded: number; deleted: number }> {
+export async function push(spec: Spec, options: { dry?: boolean; force?: boolean } = {}): Promise<{ rendered: number; uploaded: number; deleted: number }> {
   const conf = block(spec);
   const hashed = rules(conf.hashed);
   const local = holding();
@@ -158,15 +158,15 @@ export async function push(spec: Spec, options: { dry?: boolean } = {}): Promise
   const old: Manifest = found ? JSON.parse(found) : {};
   const carry = join(tmpdir(), `push-remote-${process.pid}.json`);
   writeFileSync(carry, JSON.stringify(old, null, 2) + "\n");
-  const done = await build(spec, { manifest: carry, verify: false, tick: (n, total) => console.log(`render ${n}/${total}`) });
+  const done = await build(spec, { manifest: carry, verify: false, force: options.force, tick: (n, total) => console.log(`render ${n}/${total}`) });
   rmSync(carry, { force: true });
-  const next: Manifest = { ...done.manifest, ...assets(await globals(done.site, spec), old) };
+  const next: Manifest = { ...done.manifest, ...assets(done.shared, old) };
   const want = spread(next);
   const had = spread(old);
   const types = typing(next);
   const header = (path: string) => (types.has(path) ? REVALIDATE : cache(path, hashed));
   const type = (path: string) => types.get(path) ?? kind(path);
-  const upload = changes(old, next, conf.guard, (path) => seal(readFileSync(join(done.site.out, path)), type(path), header(path)));
+  const upload = changes(old, next, conf.guard, (path) => seal(readFileSync(join(done.site.out, path)), type(path), header(path)), options.force);
   const seen = found || !site ? [...had.keys()] : await sweep(site, conf.prefix, conf.guard);
   const remove = seen.filter((path) => mine(path, conf.guard) && !want.has(path));
   const text = JSON.stringify(next, null, 2) + "\n";
@@ -200,7 +200,7 @@ export async function push(spec: Spec, options: { dry?: boolean } = {}): Promise
 
 export async function main(spec: Spec): Promise<void> {
   const dry = process.argv.includes("--dry");
-  const done = await push(spec, { dry });
+  const done = await push(spec, { dry, force: process.argv.includes("--force") });
   const guard = block(spec).guard.join(", ");
   console.log(
     `push${dry ? " --dry" : ""}${holding() ? " --local" : ""}: ${done.rendered} rendered, ${done.uploaded} uploaded, ${done.deleted} deleted, ${guard} guarded`,

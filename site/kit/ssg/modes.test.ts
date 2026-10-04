@@ -22,20 +22,22 @@ const fresh = (name: string) => {
 
 const seen: Shell[] = [];
 
-const spec = (home: string, routes: Route[], config: Config = {}, entries = ["a.js", "b.js"]): Spec => ({
-  root: home,
-  out: join(home, "dist"),
-  config,
-  collect: () => ({ routes }),
-  render: (_site, route) => [{ path: `${route.route.slice(1)}index.html`, bytes: "<p>built</p>" }],
-  spa: {
-    entries: () => entries.map((name) => join(home, "app", name)),
-    page: (_site, _route, shell) => {
-      seen.push(shell);
-      return shell.html || `<html><head></head><body><script type="module" src="${shell.script}"></script></body></html>`;
+const spec = (home: string, routes: Route[], config: Config = {}, entries = ["a.js", "b.js"]): Spec => {
+  writeFileSync(join(home, "site.json"), JSON.stringify(config));
+  return {
+    root: home,
+    out: join(home, "dist"),
+    collect: () => ({ routes }),
+    render: (_site, route) => [{ path: `${route.route.slice(1)}index.html`, bytes: "<p>built</p>" }],
+    spa: {
+      entries: () => entries.map((name) => join(home, "app", name)),
+      page: (_site, _route, shell) => {
+        seen.push(shell);
+        return shell.html || `<html><head></head><body><script type="module" src="${shell.script}"></script></body></html>`;
+      },
     },
-  },
-});
+  };
+};
 
 const read = (home: string, path: string) => readFileSync(join(home, "dist", path), "utf8");
 
@@ -75,7 +77,7 @@ test("two spa routes publish one shell each, and the one build that splits what 
   rmSync(home, { recursive: true, force: true });
 });
 
-test("a shell names its script and the chunks to preload, and an html entry hands its bundled page over", async () => {
+test("a shell names its script, and an html entry hands its bundled page over", async () => {
   const home = fresh("shell");
   seen.length = 0;
   const one = spec(home, [{ route: "/x/", mode: "spa", urls: [{ route: "/x/a/", entry: join(home, "app", "b.js") }, { route: "/x/c/", entry: join(home, "app", "c.html") }] }], {}, ["b.js", "c.html"]);
@@ -84,8 +86,6 @@ test("a shell names its script and the chunks to preload, and an html entry hand
   const [a, c] = seen;
   expect(a.html).toBe("");
   expect(a.script).toBe("/x/b.js");
-  expect(a.ahead.length).toBe(1);
-  expect(a.ahead[0]).toMatch(/^\/lib-.+\.js$/);
   expect(c.html).toContain("<title>c</title>");
   expect(c.script).toMatch(/^\/lib-.+\.js$/);
   expect(read(home, "x/c/index.html")).toBe(c.html);

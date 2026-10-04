@@ -1,5 +1,8 @@
 # KIT
 
+- The builder of mrly.net: one site, one kit, a folder with its own tests, not published.
+- Edited in place. The copy in `carlomitchener/site/kit/` is frozen, a UI reference that is never written.
+
 | mode | the page body is made | by | S3 holds |
 |---|---|---|---|
 | `ssg` | at build | the builder Lambda | one html per page |
@@ -7,27 +10,41 @@
 | `ssr` | at request | a Lambda | nothing |
 | dev | at request, on the laptop, all three | `serve()` | nothing |
 
-- `ssg` is the default; `modes` in `site.json` or `mode` on a route picks another, and `ssr` is reserved: dev serves it, the build refuses it.
-- This folder is the one kit, edited in place; the copy in `carlomitchener/site/kit/` is frozen, a UI reference that is never written.
-- `ssg/` is the site builder: `build.ts` scans, fingerprints, renders and writes a site from its `site.json` and a spec; `links.ts` resolves every markdown link; `pic.ts` draws a dark and light picture pair.
-- `ssg/modes.ts` says when each route's page is made and runs the one `spa` `Bun.build`, so every browser entry of a site shares one React.
-- `ssg/md.ts` is the markdown pipeline: front matter, slugs, inline render, full render, sheet; `ssg/text.ts` holds `escape`, so the browser half imports no builder.
-- `git/` is the code viewer, optional: a `git` block in `site.json` enables it, and only then must the site carry the Shiki packages `deps.json` lists for it.
-- `git/git.ts` is its build half, `git/view.ts` draws a page from the tree with no `fs`, `git/client.ts` runs it in the browser, `git/code.ts` is the highlighter.
-- `lambda.ts` is the builder Lambda: the event, the head, the GitHub ancestor check and ETag poll, the `/opt/node` modules layer, the build and the push, over one config object a repo's thin `aws/*.ts` passes in.
-- `stats/handler.py` is the 15-minute stats Lambda: CloudFront, Lambda and bucket numbers into one JSON key, and it names no site of its own.
-- It reads only `STATS_BUCKET`, `STATS_DISTRIBUTION` (empty means no cdn block), `STATS_FUNCTIONS`, `STATS_KEY` and three `label=prefix` count lists: `STATS_SIZES` (`<label>_objects` and `<label>_bytes`), `STATS_COUNTS` (objects under a prefix) and `STATS_FOLDERS` (immediate subfolders, narrowed by an optional regex third field).
-- `push.ts` ships a built site to its bucket by manifest diff: a `push` block in `site.json` names the prefix, the guarded paths, the bucket env keys, the manifest store and the immutable rule; `--dry` lists every hashed path and `DRY=1` holds the manifest on disk instead of S3.
-- `shots.ts` is the screenshot driver: a `shots` block in `site.json` names the default routes and the sizes, it serves the built `dist/` itself, a deep shell for every path under its prefix, drives one headless Chrome on one port with one throwaway profile, waits out any `aria-busy`, and writes into `data/<repo>/site/scripts/shots/{latest,baseline}`.
-- `serve.ts` is the SSR seam: `serve(spec, site, path)` finds the route that publishes a path, its own, one it lists in `urls` or the slash route above it, renders it and answers a `Response` with the type the output carries, a placed copy from the globals, the 404 page for anything else, and never a file read by path; `dev.ts` imports it today and a Lambda imports the same function the day a page needs a request.
-- A path under a deep `spa` prefix answers that prefix's shell, and a file of the `spa` build answers from the bundle itself, built only when a path an entry lands on is asked for.
-- `dev.ts` is the one dev server over `serve.ts`: it binds 127.0.0.1, renders on request, keeps the Bun HTML routes for the React entries a site names and builds its script entries on demand, watches every declared input, template and the kit, pushes `css` or `reload` over one socket, injects the overlay into every HTML answer and never into `dist/`; under `bun --hot` a script edit re-runs the entry with fresh modules while the socket stays up, and each site passes its spec, its entries, its disk mounts and its fixtures from a `scripts/dev.ts` of a handful of lines.
-- `vendor.ts` writes a site's font folder: a `fonts` block in `site.json` names the output folder, the Google families and their axes, the optional icon subset, and a `keep` css of the faces the site cuts itself, which it copies verbatim into `fonts.css` under the vendored ones.
-- `palette.css` is the fifteen generated colours as CSS variables, at the kit root because a site's stylesheet loads it first.
-- `code/` is the code viewer's skin: `code.css`, the SETI icon font, and `contract.css` between them and a site.
-- The kit's CSS reads only `--kit-*` names; `contract.css` gives each one a `--site-*` hook and a plain default.
-- `theme/` is the same colours in JS: `palette.js` the fifteen as an object, `theme.js` the two role maps over them, `dark` and `light`.
-- `font/` is the pixel font that writes a wordmark: `font.js` lays out, writes, folds and plays a text, `font.json` the glyph book `mrlyrs::font` generates.
-- `deps.json` names, per module, the npm packages it imports and the range each site must carry.
-- Every import between kit files is relative and stays inside the kit; nothing reaches out into a site.
-- `bun test ./kit` from a site runs every test, each one beside the file it covers.
+- `ssg` is the default; `modes` in `site.json` or `mode` on a route picks another.
+- `ssr` is reserved: dev serves it, the build refuses it.
+
+## FILES
+
+- `ssg/build.ts` scans, fingerprints, renders and writes the site from `site.json` and the spec in `scripts/site.ts`.
+- `ssg/modes.ts` says when each route's page is made and runs the one `spa` `Bun.build`, so every browser entry shares one React.
+- `ssg/md.ts` is the markdown pipeline, one parse per text; `ssg/text.ts` holds `escape`, so the browser half imports no builder.
+- `ssg/links.ts` resolves every markdown link; `ssg/pic.ts` draws a dark and light picture pair; `ssg/blog.ts` is the blog.
+- `git/` is the code viewer: `git.ts` its build half, `view.ts` draws a page from the tree with no `fs`, `client.ts` runs it in the browser, `code.ts` highlights.
+- `code/` is the viewer's skin: `code.css` and the SETI icon font, reading the site's own tokens.
+- `palette.css` is the fifteen generated colours as CSS variables; it leads every joined stylesheet.
+- `theme/` is the same colours in JS: `palette.js` the fifteen as an object, `theme.js` the two role maps, `dark` and `light`.
+- `font/` is the pixel font that writes the wordmark: `font.js` lays out, writes, folds and plays a text, `font.json` the glyph book `mrlyrs::font` generates.
+- `s3.ts` is the S3 client `push.ts`, `lambda.ts` and `scripts/pkg.ts` share: names and credentials from the environment, no SDK.
+
+## TOOLS
+
+- `push.ts` ships the built site to its bucket by manifest diff; the `push` block in `site.json` names the prefix, the guarded paths, the bucket env keys, the manifest store and the immutable rule.
+- `--dry` lists every hashed path, `--force` repaints every route, and `DRY=1` holds the manifest on disk instead of S3.
+- `lambda.ts` is the builder Lambda: the event, the head, the GitHub ancestor check and ETag poll, the `/opt/node` modules layer, the build and the push, over the config object `aws/net.ts` passes in.
+- A `manual` event with `force: true` skips the seen and unchanged answers and runs the push with `--force`; any other source ignores the field.
+- `serve.ts` is the request seam: `serve(spec, site, path)` finds the route that publishes a path, renders it and answers a `Response`, the 404 page for anything else, and never a file read by path.
+- A path under a deep `spa` prefix answers that prefix's shell, and a file of the `spa` build answers from the bundle, built only when a path an entry lands on is asked for.
+- `dev.ts` is the dev server over `serve.ts`: it binds 127.0.0.1, renders on request, keeps the Bun HTML routes for the React entries and builds the script entries on demand.
+- It watches every declared input, the modules of the stamp and this folder, pushes `css` or `reload` over one socket, and injects the overlay into every HTML answer, never into `dist/`.
+- Under `bun --hot` a script edit re-runs the entry with fresh modules while the socket stays up.
+- `shots.ts` is the screenshot driver: it serves the built `dist/`, a deep shell for every path under its prefix, drives one headless Chrome on one port with one throwaway profile, and waits out any `aria-busy`.
+- The `shots` block in `site.json` names the default routes and the sizes; shots land in `data/<repo>/site/scripts/shots/{latest,baseline}`.
+- `vendor.ts` writes the font folder from the `fonts` block in `site.json`: the Google families and their axes, then the `keep` css of the faces the site cuts itself, verbatim.
+- `stats/handler.py` is the 15-minute stats Lambda: CloudFront, Lambda and bucket numbers into one JSON key.
+- It reads only `STATS_BUCKET`, `STATS_DISTRIBUTION` (empty means no cdn block), `STATS_FUNCTIONS`, `STATS_KEY` and three `label=prefix` count lists: `STATS_SIZES`, `STATS_COUNTS` and `STATS_FOLDERS`.
+
+## RULES
+
+- Every import between kit files is relative and stays inside the kit.
+- The kit never imports the chrome: `spec.git.page`, `spec.blog.page` and `spec.blog.md` carry it, and the kit's tests draw through those hooks with no site.
+- `bun test ./kit` from `site/` runs every test, each one beside the file it covers.
