@@ -59,7 +59,7 @@ function bounds(pts) {
 
 export function raster(width, height, ground = CLEAR) {
   const colors = new Uint8ClampedArray(width * height * 4);
-  new Uint32Array(colors.buffer).fill(new Uint32Array(Uint8ClampedArray.from(ground.slice(0, 4)).buffer)[0]);
+  new Uint32Array(colors.buffer).fill(new Uint32Array(Uint8ClampedArray.from(ground.slice(0, 4), Math.round).buffer)[0]);
   const swatch = [0, 0, 0, 0];
 
   function blend(x, y, c, cover) {
@@ -201,7 +201,8 @@ export function raster(width, height, ground = CLEAR) {
     image(x, y, w, h, pixels) {
       const [sh, sw] = pixels.shape;
       const src = pixels.colors;
-      if (!(sw > 0 && sh > 0) || src.length < sw * sh * 4) return;
+      const cover = pixels.cover;
+      if (!(sw > 0 && sh > 0) || src.length < sw * sh * 4 || (cover && cover.length < sw * sh)) return;
       const x0 = fmax(Math.ceil(x), 0);
       const y0 = fmax(Math.ceil(y), 0);
       const x1 = Math.min(fmax(Math.floor(x + w), 0), width);
@@ -215,7 +216,7 @@ export function raster(width, height, ground = CLEAR) {
           swatch[1] = src[j + 1];
           swatch[2] = src[j + 2];
           swatch[3] = src[j + 3];
-          blend(px, py, swatch, 1);
+          blend(px, py, swatch, cover ? cover[row * sw + col] : 1);
         }
       }
     },

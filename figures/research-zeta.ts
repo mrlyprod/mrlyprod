@@ -1,5 +1,5 @@
 import { frame, plot, type Frame, type Ink, type Pen, type Point } from "mrlyjs/view";
-import census from "../files/figures/census/research-zeta.json" with { type: "json" };
+import census from "./census/research-zeta.json" with { type: "json" };
 
 type Panel = { columns: number[]; ordinates: number[]; family: number[][]; teeth: number[][]; hollow: number[][] };
 

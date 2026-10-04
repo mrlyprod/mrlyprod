@@ -106,3 +106,12 @@ test("image draws the pixels unsmoothed onto its box", () => {
   expect(Array.from(surface.image.data)).toEqual(Array.from(pixels.colors));
   expect(calls[2][1]).toBe(true);
 });
+
+test("image folds its cover into the alpha of the surface it draws", () => {
+  const pixels = { shape: [1, 2], colors: Uint8Array.from([255, 0, 0, 255, 0, 0, 255, 128]), cover: [0.5, 2] };
+  const calls = record((p) => p.image(4, 8, 32, 16, pixels));
+  const surface = calls[1][1];
+  expect(surface.image.data).toBeInstanceOf(Uint8ClampedArray);
+  expect(Array.from(surface.image.data)).toEqual([255, 0, 0, 128, 0, 0, 255, 128]);
+  expect(Array.from(pixels.colors)).toEqual([255, 0, 0, 255, 0, 0, 255, 128]);
+});

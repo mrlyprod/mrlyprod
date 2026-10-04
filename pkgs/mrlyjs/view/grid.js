@@ -32,9 +32,10 @@ export class Grid {
 
   paint(pen, cells, ink) {
     const [height, width] = cells.shape;
+    const types = cells.types ?? cells.data;
     for (let row = 0; row < Math.min(this.rows, height); row++) {
       for (let col = 0; col < Math.min(this.cols, width); col++) {
-        const color = ink(cells.types[row * width + col] & 255);
+        const color = ink(types[row * width + col] & 255);
         if (color) this.fill(pen, col, row, color);
       }
     }

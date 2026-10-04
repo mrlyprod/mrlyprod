@@ -77,3 +77,12 @@ test("image keeps the pixels it was handed at the time it was drawn", async () =
   await pen.text({ png: (p) => ((seen = Array.from(p.colors)), "data:") });
   expect(seen).toEqual([1, 2, 3, 4]);
 });
+
+test("image folds its cover into the alpha it hands the encoder", async () => {
+  const pen = svg(8, 8);
+  pen.image(0, 0, 2, 1, { shape: [1, 2], colors: Uint8Array.from([255, 0, 0, 255, 0, 0, 255, 128]), cover: [0.5, 2] });
+  let seen;
+  await pen.text({ png: (p) => ((seen = p.colors), "data:") });
+  expect(seen).toBeInstanceOf(Uint8Array);
+  expect(Array.from(seen)).toEqual([255, 0, 0, 128, 0, 0, 255, 128]);
+});

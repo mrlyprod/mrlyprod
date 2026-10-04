@@ -1,4 +1,5 @@
 import { CLEAR, board } from "./frame.js";
+import { fold } from "./pixels.js";
 
 const TAU = 2 * Math.PI;
 
@@ -9,7 +10,7 @@ const css = (c) => `rgba(${c[0]},${c[1]},${c[2]},${c[3] / 255})`;
 function surface(pixels) {
   const [h, w] = pixels.shape;
   const src = pixels.colors;
-  const bytes = src instanceof Uint8ClampedArray ? src : new Uint8ClampedArray(src.buffer, src.byteOffset, w * h * 4);
+  const bytes = pixels.cover ? fold(pixels) : src instanceof Uint8ClampedArray ? src : new Uint8ClampedArray(src.buffer, src.byteOffset, w * h * 4);
   const out = new OffscreenCanvas(w, h);
   out.getContext("2d").putImageData(new ImageData(bytes, w, h), 0, 0);
   return out;

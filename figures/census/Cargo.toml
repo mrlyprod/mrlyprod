@@ -1,0 +1,9 @@
+[package]
+name = "census"
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+mrlyrs.workspace = true
+ledger.workspace = true

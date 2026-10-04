@@ -26,6 +26,11 @@ const scenes: Record<string, (pen: Pen) => void> = {
   polygon: (p) => p.polygon(star, theme.fg),
   arc: (p) => p.arc([128.3, 127.6], 80, [0.3, 4.1], 9, theme.fg),
   image: (p) => field.draw(p, p.area(0.125), 8, 8, spots, theme.Ramp.heat()),
+  cover: (p) => {
+    const patch = field.patch(40, 50, 120, 100);
+    for (let py = 50; py < 150; py++) for (let px = 40; px < 160; px++) patch.blend(px, py, theme.orange, ((px - 40) / 120) * ((py - 50) / 100));
+    patch.paint(p);
+  },
   mixed: (p) => {
     p.rect(10, 10, 236, 236, theme.panel);
     field.draw(p, p.area(0.3), 8, 8, spots, theme.Ramp.fire());

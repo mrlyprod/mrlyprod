@@ -1,3 +1,5 @@
+export { patch } from "./pixels.js";
+
 // FIELDS
 
 function range(values) {

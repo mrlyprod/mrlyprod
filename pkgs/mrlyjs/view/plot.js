@@ -63,6 +63,14 @@ export function axis(pen, frame, color) {
   pen.polyline([[x, y], [x + w, y], [x + w, y + h], [x, y + h], [x, y]], thick, color);
 }
 
+export function dashed(pen, frame, y, thick, color) {
+  const step = frame.w / 48;
+  for (let x = frame.x; x < frame.x + frame.w; x += step) {
+    const to = Math.min(x + step * 0.55, frame.x + frame.w);
+    pen.segment([x, y], [to, y], thick, color);
+  }
+}
+
 export function baseline(pen, frame, color) {
   const thick = Math.max(Math.min(frame.w, frame.h) / 512, 1);
   pen.segment([frame.x, frame.y + frame.h], [frame.x + frame.w, frame.y + frame.h], thick, color);

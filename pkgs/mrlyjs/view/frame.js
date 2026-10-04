@@ -42,6 +42,12 @@ class Frame {
     const h = this.h / n;
     return Array.from({ length: n }, (_, i) => new Frame(this.x, this.y + i * h, this.w, h));
   }
+
+  panels(rows, cols, gap) {
+    return this.rows(rows)
+      .flatMap((row) => row.cols(cols))
+      .map((cell) => cell.inset(gap));
+  }
 }
 
 export function frame(x, y, w, h) {

@@ -1,13 +1,13 @@
-import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { createHash, randomBytes } from "node:crypto";
+import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { availableParallelism } from "node:os";
-import { dirname, join, relative, resolve } from "node:path";
+import { basename, dirname, join, relative, resolve } from "node:path";
 import sharp from "sharp";
 import { ink, raster, svg, type Ink, type Palette, type Pen, type Pixels } from "mrlyjs/view";
 
 /* WHERE */
 
-const USAGE = "usage: bun press.ts [name ...] [--svg] [--png]";
+const USAGE = "usage: bun press.ts [name ...] [--svg] [--png]; PRESS_BUDGET=<ms> lifts the draw budget";
 const HERE = import.meta.dir;
 const DESK = resolve(HERE, "../..");
 const MRLYJS = resolve(HERE, "../pkgs/mrlyjs");
@@ -15,14 +15,16 @@ const DATA_DIR = join(DESK, "data", relative(DESK, HERE));
 const STORE = join(DATA_DIR, "store");
 const LOCK = join(DATA_DIR, "figures.lock");
 const BENCH = join(DATA_DIR, "press.txt");
+const MUTEX = `${LOCK}.d`;
 
 /* RECIPE */
 
-const FIGURE = /^(site|research|paper|wiki|demo|blog)-[a-z0-9-]+\.ts$/;
+const NOT_FIGURES = new Set(["press.ts", "diff.ts"]);
+const isFigure = (file: string) => file.endsWith(".ts") && !file.endsWith(".test.ts") && !file.endsWith(".d.ts") && !NOT_FIGURES.has(file);
 const KIT = /^(pkg\/.+\.(js|wasm)|(view\/)?[^/]+\.js)$/;
 const THEMES = ["dark", "light"] as const;
 const SIZE = [1024, 1024];
-const BUDGET = 5000;
+const BUDGET = Number(process.env.PRESS_BUDGET) > 0 ? Number(process.env.PRESS_BUDGET) : 5000;
 const WIDTH = 1024;
 const WEBP = { quality: 90, effort: 6 };
 const PNG = { compressionLevel: 9 };
@@ -89,8 +91,9 @@ async function press(job: Job, ready: Set<string>) {
     const missing = new Set(job.missing);
     mkdirSync(job.dir, { recursive: true });
     const write = (file: string, bytes: Uint8Array | string) => {
-      writeFileSync(join(job.dir, `${file}.tmp`), bytes);
-      renameSync(join(job.dir, `${file}.tmp`), join(job.dir, file));
+      const tmp = join(job.dir, `${file}.${randomBytes(6).toString("hex")}.tmp`);
+      writeFileSync(tmp, bytes);
+      renameSync(tmp, join(job.dir, file));
     };
     const draw = (pen: Pen, tint: Ink) => {
       postMessage("draw");
@@ -191,6 +194,63 @@ function crew(jobs: Job[], cores: number, note: (done: Done) => void) {
   return Promise.all(Array.from({ length: Math.min(cores, jobs.length) }, lane));
 }
 
+/* LOCK */
+
+const atomic = (path: string, text: string) => {
+  const tmp = `${path}.${randomBytes(6).toString("hex")}.tmp`;
+  writeFileSync(tmp, text);
+  renameSync(tmp, path);
+};
+
+async function exclusive<T>(work: () => T) {
+  mkdirSync(DATA_DIR, { recursive: true });
+  const give = Date.now() + 20000;
+  for (;;) {
+    try {
+      mkdirSync(MUTEX);
+      break;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+      if (Date.now() > give) throw new Error(`${MUTEX} is held by another press`);
+      try {
+        if (Date.now() - statSync(MUTEX).mtimeMs > 10000) rmSync(MUTEX, { recursive: true, force: true });
+      } catch {}
+      await Bun.sleep(10 + Math.random() * 20);
+    }
+  }
+  try {
+    return work();
+  } finally {
+    rmSync(MUTEX, { recursive: true, force: true });
+  }
+}
+
+function readLock(): Record<string, string> {
+  if (!existsSync(LOCK)) return {};
+  try {
+    return JSON.parse(readFileSync(LOCK, "utf8"));
+  } catch {
+    throw new Error(`${LOCK} is not JSON`);
+  }
+}
+
+function settle(keys: Record<string, string>, failed: Set<string>, all: string[], full: boolean) {
+  const lock = readLock();
+  if (full) for (const name of Object.keys(lock)) if (!all.includes(name)) delete lock[name];
+  for (const [name, hash] of Object.entries(keys)) {
+    if (!failed.has(name)) lock[name] = hash;
+    else if (full) delete lock[name];
+  }
+  atomic(LOCK, `${JSON.stringify(Object.fromEntries(Object.entries(lock).sort()), null, 2)}\n`);
+  if (full && existsSync(STORE)) {
+    const held = new Set(Object.values(lock));
+    for (const dir of readdirSync(STORE)) {
+      const path = join(STORE, dir);
+      if (!held.has(dir) && statSync(path).mtimeMs < performance.timeOrigin) rmSync(path, { recursive: true, force: true });
+    }
+  }
+}
+
 /* MAIN */
 
 function args(argv: string[]) {
@@ -200,7 +260,7 @@ function args(argv: string[]) {
     if (arg === "--svg") flags.svg = true;
     else if (arg === "--png") flags.png = true;
     else if (arg.startsWith("-")) throw new Error(USAGE);
-    else names.add(arg);
+    else names.add(basename(arg).replace(/\.ts$/, ""));
   }
   return { flags, names: [...names] };
 }
@@ -222,7 +282,7 @@ function line(row: Row) {
 async function main() {
   const { flags, names } = args(process.argv.slice(2));
   const cores = availableParallelism();
-  const all = readdirSync(HERE).filter((file) => FIGURE.test(file)).map((file) => file.slice(0, -3)).sort();
+  const all = readdirSync(HERE).filter(isFigure).map((file) => file.slice(0, -3)).sort();
   const core = await import("mrlyjs/core");
   core.initSync({ module: readFileSync(join(MRLYJS, "pkg/core/mrlyjs_core_bg.wasm")) });
   const palettes: Record<Theme, Palette> = { dark: core.colors.DARK().toJSON(), light: core.colors.LIGHT().toJSON() };
@@ -256,18 +316,14 @@ async function main() {
   const named = (state: Row["state"]) => new Set(rows.filter((row) => row.state === state).map((row) => row.name));
   const failed = named("failed");
   const drawn = [...named("drawn")].filter((name) => !failed.has(name));
-  const lock: Record<string, string> = names.length && existsSync(LOCK) ? JSON.parse(readFileSync(LOCK, "utf8")) : {};
-  for (const [name, hash] of Object.entries(keys)) if (!failed.has(name)) lock[name] = hash;
-  const held = new Set(Object.values(lock));
-  if (!names.length && existsSync(STORE)) {
-    for (const stale of readdirSync(STORE)) if (!held.has(stale)) rmSync(join(STORE, stale), { recursive: true });
-  }
+  const full = names.length === 0;
   const last = `${wanted.length} figures: ${drawn.length} drawn, ${named("cached").size} cached, ${failed.size} failed, wall ${performance.now().toFixed(0)} ms, work ${work.toFixed(0)} ms, ${cores} cores`;
   console.log(last);
-  mkdirSync(DATA_DIR, { recursive: true });
-  writeFileSync(LOCK, `${JSON.stringify(Object.fromEntries(Object.entries(lock).sort()), null, 2)}\n`);
-  const sorted = [...rows].sort((a, b) => (a.name + a.theme < b.name + b.theme ? -1 : 1));
-  writeFileSync(BENCH, `${[...sorted.map(line), last].join("\n")}\n`);
+  await exclusive(() => settle(keys, failed, all, full));
+  if (full) {
+    const sorted = [...rows].sort((a, b) => (a.name + a.theme < b.name + b.theme ? -1 : 1));
+    atomic(BENCH, `${[...sorted.map(line), last].join("\n")}\n`);
+  }
   process.exit(failed.size ? 1 : 0);
 }
 

@@ -1,6 +1,6 @@
 import * as core from "mrlyjs/core";
 import * as math from "mrlyjs/math";
-import type { Ink, Pen } from "mrlyjs/view";
+import { field, type Ink, type Pen } from "mrlyjs/view";
 
 type Profile = { rings: Float64Array; lo: number; hi: number };
 
@@ -52,8 +52,7 @@ export default function draw(pen: Pen, ink: Ink) {
   const y0 = Math.floor(Math.max(cy - reach - 1, 0));
   const x1 = Math.min(Math.floor(cx + reach + 1), pen.width);
   const y1 = Math.min(Math.floor(cy + reach + 1), pen.height);
-  const w = x1 - x0;
-  const colors = new Uint8ClampedArray(w * (y1 - y0) * 4);
+  const disc = field.patch(x0, y0, x1 - x0, y1 - y0);
   for (let py = y0; py < y1; py++) {
     for (let px = x0; px < x1; px++) {
       const dx = px + 0.5 - cx;
@@ -65,8 +64,8 @@ export default function draw(pen: Pen, ink: Ink) {
       const i = Math.min(Math.floor(t), RINGS - 1);
       const f = t - i;
       const value = rings[i] * (1 - f) + rings[i + 1] * f;
-      colors.set(ink.fade(ramp.at((value - lo) / (hi - lo)), cover), ((py - y0) * w + px - x0) * 4);
+      disc.blend(px, py, ramp.at((value - lo) / (hi - lo)), cover);
     }
   }
-  pen.image(x0, y0, w, y1 - y0, { shape: [y1 - y0, w], colors });
+  disc.paint(pen);
 }

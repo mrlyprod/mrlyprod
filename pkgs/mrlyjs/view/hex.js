@@ -72,6 +72,11 @@ export function row_len(n, row) {
   return 2 * (n + reach) + 1;
 }
 
+export function at(slice, side, row, col) {
+  const width = slice.cell.shape[1];
+  return slice.cell.types[row * width + col + Math.floor((width - row_len(side, row)) / 2)];
+}
+
 export function hexagon(pen, frame, n, gap, ink) {
   if (n === 0) return;
   const side = Math.min(frame.w / (2 * n), frame.h / (n * 2 * RATIO));

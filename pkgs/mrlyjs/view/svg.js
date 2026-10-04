@@ -1,4 +1,5 @@
 import { CLEAR, board } from "./frame.js";
+import { fold } from "./pixels.js";
 
 const TAU = 2 * Math.PI;
 
@@ -85,7 +86,7 @@ export function svg(width, height, ground = CLEAR) {
       parts.push(`<path d="M${at(lo)} ${arm} ${at(lo + span / 2)} ${arm} ${at(hi)}"${stroke(c, thick)}${ROUND}/>`);
     },
     image(x, y, w, h, pixels) {
-      parts.push({ x, y, w, h, pixels: { shape: [...pixels.shape], colors: Uint8Array.from(pixels.colors) } });
+      parts.push({ x, y, w, h, pixels: { shape: [...pixels.shape], colors: new Uint8Array(fold(pixels).buffer) } });
     },
   };
 }

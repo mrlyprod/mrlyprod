@@ -88,7 +88,32 @@ test("image paints whole pixels nearest sampled and blends its alpha", () => {
   expect([red(shifted, 8, 8), red(shifted, 9, 8), at(shifted, 11, 8), red(shifted, 12, 8)]).toEqual([0, 255, [0, 255, 0, 255], 0]);
 });
 
+test("image blends each pixel at its own cover, clamped, and leaves a cover of zero alone", () => {
+  const white = [255, 255, 255, 255];
+  const pixels = { shape: [1, 4], colors: Uint8Array.from([...white, ...white, ...white, ...white]), cover: [1, 0.5, 0, 2] };
+  const pen = board((p) => p.image(8, 8, 4, 1, pixels));
+  expect([red(pen, 8, 8), red(pen, 9, 8), red(pen, 10, 8), red(pen, 11, 8)]).toEqual([255, 128, 0, 255]);
+});
+
+test("a cover scales the alpha of its color and lets the ground's alpha show", () => {
+  const pen = raster(4, 2);
+  pen.image(0, 0, 2, 1, { shape: [1, 2], colors: Uint8Array.from([255, 255, 255, 255, 255, 255, 255, 128]), cover: [0.5, 0.5] });
+  expect([at(pen, 0, 0), at(pen, 1, 0), at(pen, 2, 0)]).toEqual([[128, 128, 128, 128], [64, 64, 64, 64], [0, 0, 0, 0]]);
+});
+
+test("image with a short cover paints nothing", () => {
+  const pen = board((p) => p.image(8, 8, 2, 1, { shape: [1, 2], colors: Uint8Array.from([255, 255, 255, 255, 255, 255, 255, 255]), cover: [1] }));
+  expect(red(pen, 8, 8)).toBe(0);
+});
+
 // BOARD
+
+test("the ground floods every pixel, its channels rounded half up", () => {
+  const { colors } = raster(7, 5, [1, 2, 3, 4]).pixels();
+  for (let i = 0; i < colors.length; i += 4) expect(Array.from(colors.slice(i, i + 4))).toEqual([1, 2, 3, 4]);
+  expect(Array.from(raster(1, 1, [1.5, 2.5, 3.4, 254.6]).pixels().colors)).toEqual([2, 3, 3, 255]);
+  expect(raster(3, 3).pixels().colors.every((v) => v === 0)).toBe(true);
+});
 
 test("frame cells tile the frame exactly", () => {
   const frame = raster(1024, 1024, theme.ground).frame(0.08);

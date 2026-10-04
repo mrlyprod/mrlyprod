@@ -1,6 +1,6 @@
 import * as math from "mrlyjs/math";
 import { iso } from "mrlyjs/view";
-import type { Color, Ink, Pen, Point } from "mrlyjs/view";
+import type { Ink, Pen } from "mrlyjs/view";
 
 export const units = { math };
 
@@ -27,36 +27,6 @@ function rows() {
   return memo;
 }
 
-function cage(pen: Pen, cx: number, cy: number, s: number, color: Color) {
-  const corner = (i: number): Point => {
-    const p = iso.project((i & 1) * 2 - 1, ((i >> 1) & 1) * 2 - 1, ((i >> 2) & 1) * 2 - 1);
-    return [cx + p[0] * s, cy + p[1] * s];
-  };
-  for (let a = 0; a < 8; a++) {
-    for (const bit of [1, 2, 4]) if (!(a & bit)) pen.segment(corner(a), corner(a | bit), s / 20, color);
-  }
-}
-
-function stamp(pen: Pen, quads: Quad[], cx: number, cy: number, s: number, shade: Color[], edge: Color) {
-  const faces = [];
-  for (const { normal, verts } of quads) {
-    if (normal.x + normal.y + normal.z <= 0) continue;
-    const tone = normal.z > 0 ? 0 : normal.y > 0 ? 1 : 2;
-    let depth = 0;
-    for (const v of verts) depth += Math.fround(Math.fround(v.x + v.y) + v.z);
-    const pts = verts.map((v): Point => {
-      const p = iso.project(v.x, v.y, v.z);
-      return [cx + p[0] * s, cy + p[1] * s];
-    });
-    faces.push({ depth, tone, pts });
-  }
-  faces.sort((a, b) => a.depth - b.depth);
-  for (const { tone, pts } of faces) {
-    pen.polygon(pts, shade[tone]);
-    pen.polyline([...pts, pts[0]], s / 14, edge);
-  }
-}
-
 export default function draw(pen: Pen, ink: Ink) {
   const frame = pen.frame(0.08);
   const shade = [ink.blue, ink.mix(ink.blue, ink.ground, 0.4), ink.mix(ink.blue, ink.ground, 0.65)];
@@ -69,8 +39,8 @@ export default function draw(pen: Pen, ink: Ink) {
     const cy = my + (r - (ROWS - 1) / 2) * pitch;
     row.forEach((quads, j) => {
       const cx = mx + (j - (row.length - 1) / 2) * step;
-      cage(pen, cx, cy, s, wire);
-      stamp(pen, quads, cx, cy, s, shade, ink.ground);
+      iso.cage(pen, cx, cy, s, 1, s / 20, wire);
+      iso.stamp(pen, quads, cx, cy, s, shade, ink.ground, s / 14);
     });
   });
 }
