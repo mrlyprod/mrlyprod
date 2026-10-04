@@ -14,7 +14,10 @@ BLUE = (0, 140, 255)
 GRAY = (198, 198, 201)
 INK = (0, 0, 0)
 
-OUT = Path("files/figures/bases-fig.png")
+HERE = Path(__file__).resolve().parent
+DESK = HERE.parents[4]
+DATA_DIR = DESK / "data" / HERE.relative_to(DESK)
+OUT = DATA_DIR / "bases-fig.png"
 
 
 def points():
@@ -74,7 +77,7 @@ def main():
     img, seen, total = render()
     OUT.parent.mkdir(parents=True, exist_ok=True)
     Image.fromarray(img, mode="RGB").save(OUT, optimize=True)
-    print(f"wrote {OUT}: {WIDTH}x{HEIGHT} RGB")
+    print(f"wrote {OUT.relative_to(DESK)}: {WIDTH}x{HEIGHT} RGB")
     print(f"in-frame points visible = {seen}/{total} = {seen / total:.4f}")
 
 

@@ -446,15 +446,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "figures"
-version = "0.0.0"
-dependencies = [
- "ledger",
- "mrlyrs",
- "png",
-]
-
-[[package]]
 name = "find-msvc-tools"
 version = "0.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"

@@ -1,18 +1,11 @@
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { readdirSync, statSync } from "node:fs";
 import { availableParallelism } from "node:os";
-import { basename, extname, join, relative, resolve } from "node:path";
+import { basename, extname, join, resolve } from "node:path";
 import sharp from "sharp";
 
 /* ARGS */
 
-const USAGE = "usage: bun diff.ts <a> <b> [--levels N], two images or two folders\n       bun diff.ts --baseline [name ...] [--levels N], the press against the Rust baseline, 2 levels by default";
-const HERE = import.meta.dir;
-const DESK = resolve(HERE, "../..");
-const DATA_DIR = join(DESK, "data", relative(DESK, HERE));
-const STORE = join(DATA_DIR, "store");
-const LOCK = join(DATA_DIR, "figures.lock");
-const BASELINE = join(DATA_DIR, "baseline");
-const THEMES = ["dark", "light"];
+const USAGE = "usage: bun diff.ts <a> <b> [--levels N], two images or two folders";
 const IMAGE = new Set([".png", ".webp", ".svg", ".jpg", ".jpeg", ".gif", ".avif", ".tif", ".tiff"]);
 
 type Pair = { label: string; a: string; b: string };
@@ -22,16 +15,13 @@ type Row = { label: string; max: number; count: number; share: number; size: str
 function args(argv: string[]) {
   const rest: string[] = [];
   let levels: number | undefined;
-  let baseline = false;
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === "--levels") levels = Number(argv[++i]);
-    else if (argv[i] === "--baseline") baseline = true;
     else rest.push(argv[i]);
   }
   if (levels !== undefined && !(Number.isInteger(levels) && levels >= 0)) throw new Error(USAGE);
-  if (baseline) return { baseline: true as const, names: [...new Set(rest.map((name) => basename(name).replace(/\.ts$/, "")))], levels: levels ?? 2 };
   if (rest.length !== 2) throw new Error(USAGE);
-  return { baseline: false as const, a: resolve(rest[0]), b: resolve(rest[1]), levels: levels ?? 0 };
+  return { a: resolve(rest[0]), b: resolve(rest[1]), levels: levels ?? 0 };
 }
 
 /* PAIRS */
@@ -69,32 +59,6 @@ function match(a: string, b: string) {
   }
   for (const names of restRight.values()) lone.push(...names.map((name) => `only b  ${name}`));
   return { pairs: pairs.sort((x, y) => (x.label < y.label ? -1 : 1)), lone: lone.sort() };
-}
-
-function pressed(names: string[]) {
-  if (!existsSync(LOCK)) throw new Error(`${relative(DESK, LOCK)} is missing, press first`);
-  const lock: Record<string, string> = JSON.parse(readFileSync(LOCK, "utf8"));
-  const shelf = existsSync(BASELINE) ? readdirSync(BASELINE) : [];
-  const old = new Set(shelf.filter((file) => /-(dark|light)\.png$/.test(file)).map((file) => file.replace(/-(dark|light)\.png$/, "")));
-  const wanted = names.length ? names : Object.keys(lock);
-  const pairs: Pair[] = [];
-  const lone: string[] = [];
-  for (const name of wanted) {
-    if (!lock[name]) lone.push(`no press  ${name}`);
-    else if (!old.has(name)) lone.push(`no baseline  ${name}`);
-    else {
-      for (const theme of THEMES) {
-        const label = `${name}-${theme}.png`;
-        const a = join(STORE, lock[name], label);
-        const b = join(BASELINE, label);
-        if (!existsSync(b)) lone.push(`no baseline  ${label}`);
-        else if (!existsSync(a)) lone.push(`no png  ${label}, press with --png`);
-        else pairs.push({ label, a, b });
-      }
-    }
-  }
-  if (!names.length) for (const name of [...old].sort()) if (!lock[name]) lone.push(`no press  ${name}`);
-  return { pairs: pairs.sort((x, y) => (x.label < y.label ? -1 : 1)), lone };
 }
 
 /* PIXELS */
@@ -164,7 +128,7 @@ async function pool<T, R>(items: T[], run: (item: T) => Promise<R>) {
 async function main() {
   const given = args(process.argv.slice(2));
   const { levels } = given;
-  const { pairs, lone } = given.baseline ? pressed(given.names) : match(given.a, given.b);
+  const { pairs, lone } = match(given.a, given.b);
   const rows = await pool(pairs, measure);
   for (const row of rows) {
     if (row.size) console.log(`size  ${row.size}  ${row.label}`);

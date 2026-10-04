@@ -9,7 +9,7 @@
 
 `uv run python research/lab/py/eisenstein-visibility/eisenstein_visibility.py` then `uv run python research/lab/py/eisenstein-visibility/makefig.py`
 
-About 3 s and 0.1 s. Domain is the source domain: prec 60, 200000 Dirichlet pairs, lattice norm `<= 4000000` at radius 4400, census `[1,3000]^2`, sieve 400000 pairs in `[-500,500]^2`, figure `880x760` over `[-30,30]^2`.
+About 3 s and 0.1 s. Domain is the source domain: prec 60, 200000 Dirichlet pairs, lattice norm `<= 4000000` at radius 4400, census `[1,3000]^2`, sieve 400000 pairs in `[-500,500]^2`, figure `880x760` over `[-30,30]^2`. `makefig.py` writes `bases-fig.png` to `data/mrlyprod/research/lab/py/eisenstein-visibility/`, and the figures console then pins it.
 
 ## WITNESSES
 
@@ -20,10 +20,10 @@ About 3 s and 0.1 s. Domain is the source domain: prec 60, 200000 Dirichlet pair
 - bases.md:75-76 CF of `L sqrt(3)/pi^2` is `[0, 7, 3, 2, 2, 3, 2, 23, 2, 7, 1, 12, 1, 17, 1, 29, 1, 1, 2, 1, 6, 12]`, ordinary quotients, last convergent denominator `1805284405980`
 - bases.md:77 control `zeta(2)/pi^2` has CF `[0, 5, 1, 10^59]`, convergent `1/6`
 - bases.md:85 `Cl2(pi/3) = 1.0149416064...`
-- bases.md:21 the figure `files/figures/bases-fig.png`; the run also reports `364/612` in-frame points visible `= 0.5948`
+- bases.md:21 the figure `bases-fig`, pinned by the figures console; the run also reports `364/612` in-frame points visible `= 0.5948`
 
 ## NOTE
 
 - bases.md:76 states a bound, not a value: the printed last convergent denominator `1805284405980` is what clears `10^11`.
-- bases.md:173 claims byte-for-byte redrawing; the regenerated figure is pixel-identical to the recorded one but the PNG bytes differ.
+- bases.md:173 claims byte-for-byte redrawing; the regenerated figure is not: on 2026-10-04 it differed from the pinned one by at most 12 levels on 1.1 percent of its pixels.
 - The recorded transcript labels the reflection residual `~1e-40` where the value is `-1.1035169449471404E-42`; bases.md:174 records that already, so the label is dropped here and the identity printed plainly.

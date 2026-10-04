@@ -353,11 +353,12 @@ fn main() {
         spectral.iter().chain(&walker).all(|dw| *dw >= 2.0 - 0.01)
     );
     let here = Path::new(env!("CARGO_MANIFEST_DIR"));
-    let figure = here
-        .join("..")
-        .join("..")
-        .join("figures")
-        .join("walks-fig.png");
+    let desk = here.ancestors().nth(5).expect("the desk");
+    let folder = desk
+        .join("data")
+        .join(here.strip_prefix(desk).expect("under the desk"));
+    std::fs::create_dir_all(&folder).expect("the data folder");
+    let figure = folder.join("walks-fig.png");
     figure::write(
         &figure,
         &figure::Series {
@@ -366,5 +367,8 @@ fn main() {
             fractal: subjects.iter().map(|subject| subject.df).collect(),
         },
     );
-    println!("wrote figures/walks-fig.png");
+    println!(
+        "wrote {}",
+        figure.strip_prefix(desk).expect("under the desk").display()
+    );
 }

@@ -1,14 +1,17 @@
 # Figures
 
 - The figure press of Mrly: it does one thing, draw.
-- The library is the kit every figure shares; each figure is one binary in `src/bin/<name>.rs`, and the press turns it into two square pngs, one on the dark ground of the site and one on the light.
+- A figure is one file, `<name>.ts`, a `draw` through one pen; the press turns it into two square images, one on the dark ground of the site and one on the light, and in a browser the same `draw` can run live.
 - Every figure is hand-authored from a one-line brief tied to its page's mathematics: subject, artist, parameters, palette; the briefs are the FIGURES list below.
 
 ## KIT
 
-- `board` the rgba canvas and its anti-aliased primitives: rect, round rect, disc, ring, segment, polyline, triangle, polygon, arc, all signed-distance with a one pixel feather.
-- `board::Frame` the drawing rectangle: inset, cell, unit coordinates, centre, the largest centred square, rows and columns.
-- `ink` the palette of the house, resolved for the theme in press: `FIGURES_THEME` picks the dark ground or the light one, the six inks are blue, orange, yellow, green, pink and indigo, then mix and fade, and `Ramp` with its heat, fire, diverging and two-tone recipes.
+- The pen and the kit live in `pkgs/mrlyjs/view`, plain JS with a `view.d.ts` for its contract and no mathematics: a figure asks the `mrlyjs` units for its cells, fields and points and only draws them.
+- The pen has nine verbs, rect, round rect, disc, ring, segment, polyline, triangle, polygon and arc, all signed distance with a one pixel feather, and `image` for a field of pixels.
+- Three renderers sit behind one pen: `raster` fills an rgba byte array, the same bytes in Bun and the browser, the pixel oracle; `svg` builds a string, an image going in as an embedded PNG; `canvas` makes native Canvas2D calls, in the browser, for live animation.
+- The kit keeps the module names it had: `frame`, `ink`, `grid`, `hex`, `iso`, `plot`, `field`.
+- `frame` the drawing rectangle: inset, cell, unit coordinates, centre, the largest centred square, rows, columns and panels.
+- `ink` the palette of the house, resolved for the theme: the roles ground, panel, line, fg and dim, thirteen hues among them the six inks blue, orange, yellow, green, pink and indigo, then mix and fade, and `Ramp` with its heat, fire, diverging and two-tone recipes.
 - `grid` the square lattice: fill a cell, paint the type bytes of a flat design, grow a 0/1 mask by Kronecker substitution, lay a carpet.
 - `hex` the triangle mesh of a hex slice, fitted equilateral into a frame, and the plain hexagon whose triangles always number six times its side squared.
 - `iso` the exposed faces of a cube in isometric, back to front, three tones for the top, the left and the right.
@@ -17,15 +20,21 @@
 
 ## PRESS
 
-- One figure is one binary: `src/bin/<name>.rs`, autodiscovered by cargo, no list anywhere; the crate is a workspace member and a bare `cargo check` never touches it.
-- Run one with `bash scripts/figures.sh <name>`, several by naming them, or every figure by passing nothing; the script reads the bin list from `cargo metadata` and every figure prints twice, once a theme; `check` and `test` are its other two verbs.
-- Every figure lands in `files/figures/` as `<name>-dark.png` and `<name>-light.png`, square, 1024 by 1024, on the ground of its theme, with no text and no wordmark. The art speaks.
-- `scripts/webp.py`, run by `figures.sh` after every press, writes a `<name>.webp` twin beside every PNG at 1024 wide, quality 90; the site ships the WebP halves and keeps the dark PNG for the og:image and the raw link.
-- The pngs are CC BY 4.0, the licence beside them in `files/figures/LICENSE.md`; a single png a lab study draws lives there too under its own name.
-- The figures carry private helpers the kit could absorb (a stroked rectangle, a hairline lattice, a hexagon cell reader, an isometric stamp, a frame-mapped scatter); fold one in when a third figure needs it.
-- A figure computes its object at render, inside the five-second press; `research-zeta` hunts its 23 zeros on every core in under two seconds.
-- The two ledger sweeps cannot: `research-integers` and `demo-integers` read `files/figures/census/<name>.json`, committed, written by `bash scripts/cargo.sh cargo run --profile fig -p figures --bin <name> -- compute`, about 80 and 30 seconds on eight cores.
-- Never call that folder `data`: every `data/` folder is gitignored and wiped as disposable, which is how `files/figures/data/` was lost.
+- A figure is `<name>.ts`, named for its route, registered nowhere: `export default function draw(pen, ink, t)` with `t` in [0, 1) over one loop.
+- Its other exports are `size` (default 1024 square), `still` (the `t` the press draws, default 0), `units = { math }` (the `mrlyjs` units it imports, which the caller initializes), and `loop` in seconds, with `frames`, for a figure that animates.
+- A figure asserts its facts and never reads a file; the press fails on a throw and on a draw over five seconds.
+- `bun press.ts [name ...] [--svg] [--png]` presses the named figures, or every figure by naming none, one worker per core.
+- Each figure is drawn per theme by `raster` and encoded by `sharp` to `<name>-dark.webp`, `<name>-light.webp` and one dark `<name>.png` for og:image, square, 1024 by 1024, with no text and no wordmark. The art speaks.
+- `--svg` adds the SVG pair and `--png` the lossless dark and light PNGs to look at.
+- The cache: a figure's key is the sha256 of its source and its imports, the `mrlyjs/view` files, the `mrlyjs` wasm and the palette; a key already pressed is never drawn again, and a kit change redraws every figure.
+- The store is `data/mrlyprod/figures/store/<key>/` with `figures.lock`, name to key, beside it; both are disposable.
+- `census/` is a private crate, one bin a figure, for the numbers no `mrlyjs` door gives: `bash scripts/cargo.sh cargo run -q --profile fig -p census --bin <name>` writes `census/<name>.json`, committed, and the figure imports it and only draws.
+- Never call that folder `data`: every `data/` folder is gitignored and wiped as disposable.
+- No image enters git: the desk's figures console uploads each new key to S3 and pins it in `site/figures.lock`, which is committed with the figure.
+- The site build pulls its images by that lock, and `bun run check` in `site/` is red until the lock matches the press.
+- Four lab study images (`bases-fig`, `cuts-fig`, `walks-fig` and `paper-spin-harmonics-homometric`) are pinned as they are, not pressed; the console re-pins one after its study reruns.
+- The images are CC BY 4.0, the licence beside them in `LICENSE.md`.
+- `bun diff.ts <a> <b> [--levels N]` compares two images or two folders pixel by pixel, the proof that a kit change moved nothing it should not.
 
 ## FIGURES
 

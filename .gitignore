@@ -10,10 +10,6 @@ data/
 dist/
 .cache/
 
-# FIGURES
-files/figures/*.png
-files/figures/*.webp
-
 # RUST
 target/
 

@@ -161,7 +161,6 @@ const lab = there('research/lab/rs')
   : [];
 for (const [crate, src] of [
   ['mrlyrs', 'pkgs/mrlyrs/src'],
-  ['figures', 'figures/src'],
   ['demos', 'site/demos/logic/src'],
   ...lab,
 ] as [string, string][]) {
@@ -373,8 +372,6 @@ report('house', `${housed.length} files, ${ruled} lines`, house);
 
 const registries: string[] = [];
 if (there('site/pages.json')) registries.push('site/pages.json still exists');
-if (there('figures/Cargo.toml') && readFileSync(at('figures/Cargo.toml'), 'utf8').includes('[[example]]'))
-  registries.push('figures Cargo.toml carries an [[example]]');
 report('registries', 'none', registries);
 
 // WASM
