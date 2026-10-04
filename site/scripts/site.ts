@@ -17,6 +17,7 @@ import { claimsScript, headScript, inlineScripts, tintCss } from "../ui/config.j
 import { grid as glyphs, logoSvg } from "../ui/logo.js";
 import "../lib/site.js";
 import SITE from "../site.json";
+import { ensureFigures, said } from "./figs.ts";
 import { sections, type Lists } from "./map.ts";
 import { shelf } from "./shelf.ts";
 
@@ -68,23 +69,19 @@ const FOLDERS = [WIKI, NOTES, CLAIMS, PAPERS];
 
 const NAME = /^[a-z0-9-]+$/;
 
-const IMAGE = /\.(?:png|webp|jpe?g|gif|svg|avif)$/;
-
-function links(site: Site, from: string, out?: Output[]) {
+function links(site: Site, from: string, out: Output[]) {
   const home = site.input("figures").path;
-  return (url: string) => {
-    if (out && NAME.test(url) && probe(join(home, `${url}.png`))) {
+  const fig = press(site, out);
+  return (url: string, image = false) => {
+    const named = NAME.test(url);
+    if (named && (probe(join(home, `${url}.png`)) || probe(join(home, `${url}.webp`)))) {
       const ext = probe(join(home, `${url}.webp`)) ? "webp" : "png";
       const path = `figures/${url}.${ext}`;
       if (!out.some((item) => item.path === path)) out.push({ path, bytes: bytes(join(home, `${url}.${ext}`)) });
       return `/${path}`;
     }
-    const file = resolve(dirname(from), url);
-    if (out && file.startsWith(`${home}/`) && IMAGE.test(file) && probe(file)) {
-      const path = `figures/${file.slice(home.length + 1)}`;
-      if (!out.some((item) => item.path === path)) out.push({ path, bytes: bytes(file) });
-      return `/${path}`;
-    }
+    if (named && probe(join(home, `${url}-light.webp`))) return fig(url, from);
+    if (named && image) throw new Error(`site: ![](${url}) in ${relative(resolve(org, ".."), from)} names no figure; figures.lock has no row for it`);
     return resolveLink(site, from, url);
   };
 }
@@ -95,7 +92,7 @@ const SIDES = ["dark", "light"] as const;
 
 function figure(home: string, name: string, route: string, ext = "png") {
   const file = join(home, `${name}.${ext}`);
-  if (!probe(file)) throw new Error(`site: ${name}.${ext} missing from ${relative(org, home)} for ${route}; draw it with bun run figures`);
+  if (!probe(file)) throw new Error(`site: ${name}.${ext} missing from ${relative(org, home)} for ${route}; figures.lock has no row for it and the press made none`);
   return file;
 }
 
@@ -1037,6 +1034,8 @@ const folder = (site: Site, input: string, one: { name: string; href: string }, 
 
 async function collect(site: Site) {
   SHELF = await shelf();
+  const made = await ensureFigures();
+  if (made.placed || made.removed) console.log(said(made));
   LIVE = live();
   const paperList = papers(site);
   const fresh = new Set(paperList.map((p) => p.slug));
@@ -1180,14 +1179,7 @@ function extras(site: Site): Output[] {
 
 function served(site: Site, path: string): string | null {
   const git = gitConfig(site);
-  if (!git) return null;
-  const file = join(git.root, path);
-  const hit = site.serves.get(file);
-  if (hit) return hit;
-  const home = site.input("figures").path;
-  if (!file.startsWith(`${home}/`)) return null;
-  const at = `figures/${file.slice(home.length + 1)}`;
-  return site.made.has(at) ? `/${at}` : null;
+  return git ? (site.serves.get(join(git.root, path)) ?? null) : null;
 }
 
 /* SPEC */

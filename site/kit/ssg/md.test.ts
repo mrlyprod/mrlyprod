@@ -17,6 +17,23 @@ describe("md", () => {
     expect(render("see ![walk](walks-fig) here", { link })).toBe('<p>see <img src="/L/walks-fig" alt="walk"> here</p>');
   });
 
+  test("a link that answers a pair makes a lone image a picture and an inline image its light half", () => {
+    const pair = { dark: "/f/a-dark.webp", light: "/f/a-light.webp" };
+    const themed = (url: string) => (url === "a" ? pair : link(url));
+    const html = render("![the *walk*](a)", { link: themed });
+    expect(html).toContain('<picture><source data-dark srcset="/f/a-dark.webp"');
+    expect(html).toContain('<img src="/f/a-light.webp" alt="the walk"');
+    expect(html).toContain("<figcaption>the <em>walk</em></figcaption>");
+    expect(render("see ![walk](a) here", { link: themed })).toBe('<p>see <img src="/f/a-light.webp" alt="walk"> here</p>');
+  });
+
+  test("the resolver is told which targets are images, a lone line, an inline one and a reference included", () => {
+    const seen: string[] = [];
+    const spy = (url: string, image?: boolean) => (seen.push(`${url}:${image ? "image" : "link"}`), url);
+    render("![a](one)\n\nsee ![b](two) and [c](three) and ![d][four]\n\n[four]: four\n[five]: five", { link: spy });
+    expect(seen.sort()).toEqual(["five:link", "four:image", "one:image", "three:link", "two:image"]);
+  });
+
   test("every image after the first of a text loads lazily, figure or inline", () => {
     const html = render("![a](one)\n\nsee ![b](two) and ![c](three)\n\n![d](four)", { link });
     expect(html.match(/<img[^>]*>/g)).toEqual([

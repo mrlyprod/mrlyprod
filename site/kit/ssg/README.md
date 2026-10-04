@@ -3,6 +3,7 @@
 - The builder of mrly.net. One function renders one route; the rest is bookkeeping.
 - `scripts/site.ts` holds the spec: a `collect()` that lists routes and a `render()` per route, beside `site.json`.
 - `md.ts` is the markdown pipeline: `render(md, { link, math, widget, lazy })`, `inline`, `sheet`, `front`, `title`, `summary`, `plain`, `slug`, `escape`.
+- `link` answers a string, or a dark and light pair: a lone image line then renders as a `<picture>` figure, and an inline image or a link takes the light half.
 - A text is parsed once: a tokenizer rule keeps an asterisk between two word characters literal, so no second pass rewrites the source.
 - The first image of a text loads eagerly and every later one carries `loading="lazy" decoding="async"`; `lazy: true` says an image already stands above the text, so all of them are lazy.
 - `text.ts` holds `escape` alone, so `md.ts` and the code viewer's browser half load in a page with no builder.

@@ -107,7 +107,7 @@
     "notes": { "path": "../research/notes", "ext": ".md" },
     "claims": { "path": "../research/claims", "ext": ".md" },
     "papers": { "path": "../research/papers", "ext": ".md" },
-    "figures": { "path": "../files/figures", "ext": ".png" },
+    "figures": { "path": "data/figures" },
     "names": { "path": "../pkgs/mrlyrs/NAMES.md" },
     "demos": { "path": "demos/views", "deep": true },
     "lib": { "path": "lib", "deep": true },

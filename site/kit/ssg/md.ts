@@ -7,13 +7,14 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import { SKIP, visit } from "unist-util-visit";
+import { themed, type Pair } from "./pic.ts";
 import { escape } from "./text.ts";
 
 export { escape };
 
 /* TYPES */
 
-export type Link = (url: string) => string;
+export type Link = (url: string, image?: boolean) => string | Pair;
 
 export type Options = {
   link?: Link;
@@ -111,6 +112,8 @@ const headingText = (src: string, node: Heading) =>
 
 const LAZY = ' loading="lazy" decoding="async"';
 
+const flat = (url: string | Pair) => (typeof url === "string" ? url : url.light);
+
 function figure(src: string, node: Paragraph, opts: Options, lazy: boolean): Raw | null {
   if (node.children.length !== 1 || node.children[0]!.type !== "image") return null;
   const text = source(src, node);
@@ -118,14 +121,17 @@ function figure(src: string, node: Paragraph, opts: Options, lazy: boolean): Raw
   if (widget) return { type: "raw", value: opts.widget!(widget[2]!, widget[3]!, inline(widget[1]!, opts)) };
   const image = text.match(FIGURE);
   if (!image) return null;
-  const href = (opts.link ?? ((u) => u))(image[2]!.trim());
+  const href = (opts.link ?? ((u) => u))(image[2]!.trim(), true);
   const alt = (node.children[0] as { alt?: string }).alt ?? "";
-  return { type: "raw", value: `<figure><img src="${escape(href)}" alt="${escape(alt)}"${lazy ? LAZY : ""}><figcaption>${inline(image[1]!, opts)}</figcaption></figure>` };
+  const shown = typeof href === "string" ? `<img src="${escape(href)}" alt="${escape(alt)}"${lazy ? LAZY : ""}>` : themed(href, alt, "", lazy ? LAZY : "");
+  return { type: "raw", value: `<figure>${shown}<figcaption>${inline(image[1]!, opts)}</figcaption></figure>` };
 }
 
 function shape(src: string, opts: Options) {
   return (tree: Root) => {
     const ids = new Map<string, number>();
+    const refs = new Set<string>();
+    visit(tree, "imageReference", (node) => void refs.add(node.identifier));
     let images = opts.lazy ? 1 : 0;
     visit(tree, (node, index, parent) => {
       if (node.type === "heading") {
@@ -136,9 +142,9 @@ function shape(src: string, opts: Options) {
       } else if (node.type === "list") node.spread = false;
       else if (node.type === "listItem") node.spread = false;
       else if (node.type === "image" || node.type === "imageReference") {
-        if (node.type === "image" && opts.link) node.url = opts.link(node.url);
+        if (node.type === "image" && opts.link) node.url = flat(opts.link(node.url, true));
         if (images++) node.data = { ...node.data, hProperties: { loading: "lazy", decoding: "async" } };
-      } else if ((node.type === "link" || node.type === "definition") && opts.link) node.url = opts.link(node.url);
+      } else if ((node.type === "link" || node.type === "definition") && opts.link) node.url = flat(opts.link(node.url, node.type === "definition" && refs.has(node.identifier)));
       else if (node.type === "paragraph" && parent && index !== undefined) {
         const only = node.children.length === 1 ? node.children[0]! : null;
         if (only && only.type === "inlineMath" && source(src, node).startsWith("$$")) {

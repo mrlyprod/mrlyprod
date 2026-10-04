@@ -19,7 +19,7 @@ const slug = (href) => href.split('/').filter(Boolean)[1];
 
 const tile = (node) => ({
   ...node,
-  figure: { dark: `/figures/demo-${slug(node.href)}-dark.png`, light: `/figures/demo-${slug(node.href)}-light.png` },
+  figure: { dark: `/figures/demo-${slug(node.href)}-dark.webp`, light: `/figures/demo-${slug(node.href)}-light.webp` },
 });
 
 function Shelf({ shelf, nodes }) {

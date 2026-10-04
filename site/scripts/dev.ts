@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { main } from "../kit/dev.ts";
 import type { Site } from "../kit/ssg/build.ts";
+import { ensureFigures } from "./figs.ts";
 import { counted, demoShell, demoTree, spec } from "./site.ts";
 
 const org = resolve(import.meta.dir, "..");
@@ -17,7 +18,10 @@ await main(spec, {
   html: (site) => [{ route: "/demos/", file: demoShell(site, "") }, ...demos(site, "/index.html", "/")],
   scripts: (site) => demos(site, "/widget.jsx", "/widget.js"),
   disk: (site) => [["/figures/", site.input("figures").path]],
-  extra: (site, path) => (path === "/demos/tree.json" ? Response.json(demoTree(site)) : null),
+  extra: async (site, path) => {
+    if (path.startsWith("/figures/")) await ensureFigures();
+    return path === "/demos/tree.json" ? Response.json(demoTree(site)) : null;
+  },
   line: () => {
     const count = counted();
     return `${count.papers} papers, ${count.research} research pages, ${count.blog} posts`;

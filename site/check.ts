@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
+import { law } from './check/lock.ts';
 
 const started = performance.now();
 const root = resolve(import.meta.dir, '..');
@@ -81,9 +82,16 @@ const demos = new Set(
         .map((entry) => entry.name)
     : [],
 );
-const figures = new Set(there('files/figures') ? readdirSync(at('files/figures')) : []);
-const pairs = [...figures].filter((name) => name.endsWith('-dark.png')).map((name) => name.slice(0, -9));
-const pair = (name: string) => figures.has(`${name}-dark.png`) && figures.has(`${name}-light.png`);
+const RUNNERS = new Set(['press.ts', 'diff.ts']);
+const made = new Set(
+  there('figures')
+    ? readdirSync(at('figures')).filter((name) => name.endsWith('.ts') && !/\.(test|d)\.ts$/.test(name) && !RUNNERS.has(name)).map((name) => name.slice(0, -3))
+    : [],
+);
+const locked: Record<string, unknown> = there('site/figures.lock') ? JSON.parse(readFileSync(at('site/figures.lock'), 'utf8')) : {};
+const pinned = new Set(Object.entries(locked).filter(([, row]) => typeof row !== 'string').map(([name]) => name));
+const pairs = [...made].sort();
+const pair = (name: string) => made.has(name);
 const noted = new Set(notes.map((doc) => stem(doc.name)));
 
 // CLAIMS
@@ -223,7 +231,7 @@ for (const doc of fronted) {
     for (const hit of line.matchAll(/!\[[^\]\n]*\]\(([^)\s]+)\)/g)) {
       const target = hit[1];
       if (target.includes('/') || target.includes('.')) continue;
-      if (!figures.has(`${target}.png`) && !pair(target)) drawn.push(`${doc.name}:${n} image ${target} is not drawn`);
+      if (!pinned.has(target) && !pair(target)) drawn.push(`${doc.name}:${n} image ${target} is not drawn`);
     }
 }
 for (const base of pairs) {
@@ -235,6 +243,11 @@ for (const base of pairs) {
   if (base.startsWith('wiki-') && !there(`research/wiki/${base.slice(5)}.md`)) drawn.push(`${base} shades no wiki page`);
 }
 report('figures', `${pairs.length} pairs`, drawn);
+
+// LOCK
+
+const pressed = resolve(root, '..', 'data/mrlyprod/figures/figures.lock');
+report('lock', `${Object.keys(locked).length} rows`, law(pairs, locked, existsSync(pressed) ? JSON.parse(readFileSync(pressed, 'utf8')) : null));
 
 // LINKS
 
