@@ -1,6 +1,6 @@
 import type { S3Client } from "bun";
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync, readdirSync, renameSync, rmSync, symlinkSync } from "node:fs";
+import { cpSync, existsSync, readFileSync, readdirSync, renameSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { client, getText, need, putBytes } from "./s3.ts";
 
@@ -269,7 +269,7 @@ export function lambda(config: Config) {
     if (state === "layer") {
       const target = join(site, "node_modules");
       rmSync(target, { recursive: true, force: true });
-      symlinkSync(join(LAYER_DIR, "node_modules"), target);
+      cpSync(join(LAYER_DIR, "node_modules"), target, { recursive: true });
       return "modules layer";
     }
     await run([process.execPath, "install", "--frozen-lockfile"], site);

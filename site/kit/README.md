@@ -30,7 +30,7 @@
 
 - `push.ts` ships the built site to its bucket by manifest diff; the `push` block in `site.json` names the prefix, the guarded paths, the bucket env keys, the manifest store and the immutable rule.
 - `--dry` lists every hashed path, `--force` repaints every route, and `DRY=1` holds the manifest on disk instead of S3.
-- `lambda.ts` is the builder Lambda: the event, the head, the GitHub ancestor check and ETag poll, the `/opt/node` modules layer, the build and the push, over the config object `aws/net.ts` passes in.
+- `lambda.ts` is the builder Lambda: the event, the head, the GitHub ancestor check and ETag poll, the `/opt/node` modules layer copied into the checkout, the build and the push, over the config object `aws/net.ts` passes in.
 - A `manual` event with `force: true` skips the seen and unchanged answers and runs the push with `--force`; any other source ignores the field.
 - `serve.ts` is the request seam: `serve(spec, site, path)` finds the route that publishes a path, renders it and answers a `Response`, the 404 page for anything else, and never a file read by path.
 - A path under a deep `spa` prefix answers that prefix's shell, and a file of the `spa` build answers from the bundle, built only when a path an entry lands on is asked for.
