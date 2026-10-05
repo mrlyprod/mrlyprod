@@ -152,6 +152,50 @@ impl Bits {
             .filter(|&x| self.w[x / 64] >> (x % 64) & 1 == 0)
             .count()
     }
+
+    fn get(&self, x: usize) -> bool {
+        self.w[x / 64] >> (x % 64) & 1 == 1
+    }
+
+    fn each_zero(&self, lo: usize, hi: usize, mut f: impl FnMut(usize) -> bool) -> bool {
+        if lo > hi {
+            return false;
+        }
+        for i in lo / 64..=hi / 64 {
+            let mut word = !self.w[i];
+            while word != 0 {
+                let x = i * 64 + word.trailing_zeros() as usize;
+                word &= word - 1;
+                if x >= lo && x <= hi && f(x) {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
+    fn hole_in(&self, lo: usize, h: usize) -> Option<usize> {
+        if lo > h {
+            return None;
+        }
+        let mut i = h / 64;
+        let keep = h % 64;
+        let mut word = !self.w[i];
+        if keep < 63 {
+            word &= (1u64 << (keep + 1)) - 1;
+        }
+        loop {
+            if word != 0 {
+                let x = i * 64 + 63 - word.leading_zeros() as usize;
+                return if x >= lo { Some(x) } else { None };
+            }
+            if i == lo / 64 {
+                return None;
+            }
+            i -= 1;
+            word = !self.w[i];
+        }
+    }
 }
 
 // CERTIFY
@@ -224,6 +268,158 @@ fn certify(bases: &[u64], k: u32, cap: usize) -> Verdict {
     Verdict::Cap
 }
 
+// WIDE
+
+#[derive(Debug, Clone, PartialEq, Default)]
+struct Lanes {
+    seed: usize,
+    window: usize,
+    pair: usize,
+    last: u8,
+}
+
+fn lane(a: &[u128], pre: &[u128], z: u128) -> u8 {
+    let c = a.partition_point(|&t| t <= z);
+    if c == 0 {
+        0
+    } else if z > pre[c - 1] {
+        1
+    } else {
+        2
+    }
+}
+
+fn wide(bases: &[u64], k: u32, bits: u32) -> (Verdict, Lanes) {
+    wide_with(bases, k, bits, |_, _, _| {})
+}
+
+fn wide_with(
+    bases: &[u64],
+    k: u32,
+    bits: u32,
+    mut log: impl FnMut(usize, u128, u128),
+) -> (Verdict, Lanes) {
+    let (num, den) = sigma(bases);
+    if num <= den {
+        return (Verdict::Cap, Lanes::default());
+    }
+    let c: u128 = bases
+        .iter()
+        .map(|&d| (d as u128).pow(k) * (den / (d - 1) as u128))
+        .sum();
+    let a = elements(bases, k, far());
+    let mut pre = vec![0u128];
+    for &x in &a {
+        pre.push(pre[pre.len() - 1] + x);
+    }
+    let w = 1usize << bits;
+    let wu = w as u128;
+    let mut b = Bits::new(w + 64);
+    let limit = 1usize << 25;
+    let mut sparse: Vec<u128> = vec![];
+    let mut s: u128 = 0;
+    let mut seen = 0usize;
+    let mut top: Option<usize> = None;
+    for n in 0..a.len() - 1 {
+        let x = a[n];
+        let snew = s + x;
+        if snew >> 63 != 0 {
+            return (Verdict::Cap, Lanes::default());
+        }
+        if snew / 2 > wu {
+            let half = snew / 2;
+            if x > s && half > s.max(wu) && half - s.max(wu) > limit as u128 {
+                return (Verdict::Cap, Lanes::default());
+            }
+            let mem = |z: i128| -> bool {
+                if z < 0 || z as u128 > s {
+                    return false;
+                }
+                let z = z as u128;
+                if z <= wu {
+                    b.get(z as usize)
+                } else if z >= s - wu {
+                    b.get((s - z) as usize)
+                } else if 2 * z <= s {
+                    sparse.binary_search(&z).is_err()
+                } else {
+                    sparse.binary_search(&(s - z)).is_err()
+                }
+            };
+            let mut next: Vec<u128> = vec![];
+            let mut keep = |z: u128| -> bool {
+                if z > wu && z <= half && !mem(z as i128 - x as i128) {
+                    next.push(z);
+                }
+                next.len() > limit
+            };
+            let mut spill = false;
+            for &g in &sparse {
+                spill |= keep(g) || keep(s - g);
+            }
+            if s > wu {
+                let d = s as i128 - x as i128;
+                let glo = if d > 0 { ((d + 1) / 2) as usize } else { 0 };
+                let ghi = w.min((s - wu - 1) as usize);
+                spill |= b.each_zero(glo, ghi, |g| keep(s - g as u128));
+            }
+            if x > s {
+                for z in s.max(wu) + 1..=half {
+                    spill |= keep(z);
+                }
+            }
+            if spill {
+                return (Verdict::Cap, Lanes::default());
+            }
+            next.sort();
+            next.dedup();
+            sparse = next;
+        }
+        if x <= wu {
+            b.fold(x as usize, w.min(snew as usize));
+        }
+        s = snew;
+        let h = w.min((s / 2) as usize);
+        let fresh = if h >= seen { b.hole_in(seen, h) } else { None };
+        top = fresh.or_else(|| top.and_then(|t| b.hole_in(0, t)));
+        seen = seen.max(h + 1);
+        let t = match sparse.last() {
+            Some(&z) => z + 1,
+            None => top.map_or(0, |z| z as u128 + 1),
+        };
+        log(n + 1, s, t);
+        if t > a[n + 1] || t == 0 {
+            continue;
+        }
+        if let Some(reach) = grows(&a, n, s, t, (num - den, den, c)) {
+            let mut lanes = Lanes::default();
+            let mut count = |z: u128| match lane(&a, &pre, z) {
+                0 => lanes.seed += 1,
+                1 => lanes.window += 1,
+                _ => lanes.pair += 1,
+            };
+            b.each_zero(0, w.min((t - 1) as usize), |z| {
+                count(z as u128);
+                false
+            });
+            for &z in &sparse {
+                count(z);
+            }
+            lanes.last = lane(&a, &pre, t - 1);
+            let v = Verdict::Found {
+                f: t - 1,
+                gaps: lanes.seed + lanes.window + lanes.pair,
+                n: n + 1,
+                last: a[n],
+                sum: s,
+                reach,
+            };
+            return (v, lanes);
+        }
+    }
+    (Verdict::Cap, Lanes::default())
+}
+
 // CONTROL
 
 fn knapsack(bases: &[u64], k: u32, b: usize) -> Vec<bool> {
@@ -285,6 +481,79 @@ fn control() {
     }
 }
 
+fn wcontrol(bits: u32) {
+    let clock = Instant::now();
+    let (mut agree, mut differ, mut capped, mut past) = (0, 0, 0, 0);
+    for set in minimal(10) {
+        for k in 1..=4 {
+            let full = certify(&set, k, 1 << 30);
+            if full == Verdict::Cap {
+                continue;
+            }
+            let (v, _) = wide(&set, k, bits);
+            match &v {
+                Verdict::Cap => capped += 1,
+                Verdict::Found { sum, .. } => {
+                    past += (*sum > 2u128 << bits) as usize;
+                    if v == full {
+                        agree += 1;
+                    } else {
+                        differ += 1;
+                        println!("{} k {} full {:?} wide {:?}", show(&set), k, full, v);
+                    }
+                }
+            }
+        }
+    }
+    println!(
+        "wide at 2^{} against the full certificate at 2^30, minimal sets in [3, 10], k = 1..4: {} agree, {} differ, {} capped, {} certified with S_n past twice the window; {:.1} s",
+        bits, agree, differ, capped, past, clock.elapsed().as_secs_f64()
+    );
+}
+
+fn split(bases: &[u64], k: u32, x0: u128, count: u128) {
+    let clock = Instant::now();
+    let terms = elements(bases, k, x0 + count);
+    let (l, r) = terms.split_at(terms.len() / 2);
+    let sums = |t: &[u128]| -> Vec<u128> {
+        let mut v = vec![0u128];
+        for &x in t {
+            for i in 0..v.len() {
+                v.push(v[i] + x);
+            }
+        }
+        v.sort();
+        v
+    };
+    let (ls, rs) = (sums(l), sums(r));
+    let hit = |x: u128| -> bool {
+        let (mut i, mut j) = (0usize, rs.len());
+        while i < ls.len() && j > 0 {
+            let v = ls[i] + rs[j - 1];
+            if v == x {
+                return true;
+            }
+            if v < x {
+                i += 1;
+            } else {
+                j -= 1;
+            }
+        }
+        false
+    };
+    let out: Vec<u128> = (x0..x0 + count).filter(|&x| !hit(x)).collect();
+    println!(
+        "{} k {}: meet in the middle over {} terms, the non-sums in [{}, {}] are {:?}; {:.1} s",
+        show(bases),
+        k,
+        terms.len(),
+        x0,
+        x0 + count - 1,
+        out,
+        clock.elapsed().as_secs_f64()
+    );
+}
+
 // CENSUS
 
 fn show(bases: &[u64]) -> String {
@@ -298,11 +567,13 @@ fn show(bases: &[u64]) -> String {
     )
 }
 
-fn census(r: u64, kmax: u32, bits: u32, threads: usize) {
+type Row = Vec<(u32, Verdict, Lanes, f64)>;
+
+fn census(r: u64, kmax: u32, bits: u32, threads: usize, deep: bool) {
     let clock = Instant::now();
     let sets = minimal(r);
     let next = AtomicUsize::new(0);
-    let rows: Mutex<Vec<(usize, Vec<(u32, Verdict, f64)>)>> = Mutex::new(vec![]);
+    let rows: Mutex<Vec<(usize, Row)>> = Mutex::new(vec![]);
     std::thread::scope(|scope| {
         for _ in 0..threads {
             scope.spawn(|| loop {
@@ -313,9 +584,13 @@ fn census(r: u64, kmax: u32, bits: u32, threads: usize) {
                 let mut row = vec![];
                 for k in 1..=kmax {
                     let t = Instant::now();
-                    let v = certify(&sets[i], k, 1usize << bits);
+                    let (v, lanes) = if deep {
+                        wide(&sets[i], k, bits)
+                    } else {
+                        (certify(&sets[i], k, 1usize << bits), Lanes::default())
+                    };
                     let stop = v == Verdict::Cap;
-                    row.push((k, v, t.elapsed().as_secs_f64()));
+                    row.push((k, v, lanes, t.elapsed().as_secs_f64()));
                     if stop {
                         break;
                     }
@@ -336,7 +611,7 @@ fn census(r: u64, kmax: u32, bits: u32, threads: usize) {
             den / gcd(num, den)
         );
         let mut d = 0;
-        for (k, v, t) in row {
+        for (k, v, lanes, t) in row {
             match v {
                 Verdict::Found {
                     f,
@@ -351,6 +626,15 @@ fn census(r: u64, kmax: u32, bits: u32, threads: usize) {
                         " | k {} F {} gaps {} n {} last {} sum {} reach {} {:.2}s",
                         k, f, gaps, n, last, sum, reach, t
                     );
+                    if deep {
+                        line += &format!(
+                            " lanes {}/{}/{} F {}",
+                            lanes.seed,
+                            lanes.window,
+                            lanes.pair,
+                            ["seed", "window", "pair"][lanes.last as usize]
+                        );
+                    }
                 }
                 Verdict::Cap => line += &format!(" | k {} cap 2^{}", k, bits),
             }
@@ -362,6 +646,26 @@ fn census(r: u64, kmax: u32, bits: u32, threads: usize) {
     for (d, count) in depth.iter().enumerate() {
         if *count > 0 {
             println!("certified to k = {}: {} sets", d, count);
+        }
+    }
+    if deep {
+        for k in 1..=kmax {
+            let mut last = [0usize; 3];
+            let mut total = [0usize; 3];
+            for (_, row) in &rows {
+                for (kk, v, lanes, _) in row {
+                    if *kk == k && *v != Verdict::Cap {
+                        last[lanes.last as usize] += 1;
+                        total[0] += lanes.seed;
+                        total[1] += lanes.window;
+                        total[2] += lanes.pair;
+                    }
+                }
+            }
+            println!(
+                "k = {}: F below the least term in {} cells, by the window route in {}, by the pair route in {}; non-sums seed/window/pair {}/{}/{}",
+                k, last[0], last[1], last[2], total[0], total[1], total[2]
+            );
         }
     }
     let floor = rows
@@ -387,6 +691,20 @@ fn cell(bases: &[u64], k: u32, bits: u32) {
         show(bases),
         k,
         v,
+        clock.elapsed().as_secs_f64()
+    );
+}
+
+fn wcell(bases: &[u64], k: u32, bits: u32) {
+    let clock = Instant::now();
+    let (v, lanes) = wide(bases, k, bits);
+    println!(
+        "{} k {} wide 2^{} {:?} {:?} {:.1} s",
+        show(bases),
+        k,
+        bits,
+        v,
+        lanes,
         clock.elapsed().as_secs_f64()
     );
 }
@@ -535,6 +853,466 @@ fn refute(bits_: u32) {
     println!(
         "2 F_m - 1, m >= 2, {} terms to 2^{}: least 2 (S_n - a_(n+1)) - a_(n+1) = {}; {} windows, {} holding a non-sum; {} non-sums below 10^6: {:?}",
         terms.len(), bits_, least, windows, held, low.len(), low
+    );
+}
+
+fn kick(n: usize) -> usize {
+    2 - (n / 2) % 2
+}
+
+fn chainless_terms(cap: usize) -> Vec<usize> {
+    let mut a = vec![4usize, 5, 6];
+    loop {
+        let n = a.len() - 1;
+        let v = a[..n].iter().sum::<usize>() - kick(n) - kick(n + 1);
+        if v > cap {
+            return a;
+        }
+        a.push(v);
+    }
+}
+
+fn forced(bits_: u32) {
+    let cap = 1usize << bits_;
+    for p in [6usize, 8, 10] {
+        for c in [2usize, 3] {
+            let mut a = vec![4usize, 5, 6];
+            loop {
+                let n = a.len() - 1;
+                let s: usize = a[..n].iter().sum();
+                let v = if n >= 6 && n % p == 0 {
+                    s + c
+                } else {
+                    s - kick(n) - kick(n + 1)
+                };
+                if v > cap {
+                    break;
+                }
+                a.push(v);
+            }
+            let bits = missing(&a);
+            let mut sums = vec![0usize];
+            for &x in &a {
+                sums.push(sums[sums.len() - 1] + x);
+            }
+            let least = (1..a.len())
+                .map(|n| 2 * sums[n] as i64 - 3 * a[n] as i64)
+                .min()
+                .unwrap();
+            let open: Vec<usize> = (2..a.len() - 1).filter(|&n| a[n + 1] > sums[n]).collect();
+            let mut chains = 0;
+            for &m in &open {
+                for &n in &open {
+                    if n > m && sums[n] - a[n] < a[m + 1] && sums[m] < a[n + 1] - a[n] {
+                        chains += 1;
+                    }
+                }
+            }
+            let top = a[a.len() - 1];
+            let mut total = 0;
+            bits.each_zero(1, top - 1, |_| {
+                total += 1;
+                false
+            });
+            let mut late = 0;
+            bits.each_zero(a[a.len() - 13], top - 1, |_| {
+                late += 1;
+                false
+            });
+            println!(
+                "E with a_(n+2) = S_n + {} at n >= 6, n = 0 mod {}: {} terms to 2^{}, {} open windows at n >= 2, {} chained pairs, least 2 (S_n - a_(n+1)) - a_(n+1) = {}; {} non-sums below the last term, {} in the last 12 term intervals",
+                c, p, a.len(), bits_, open.len(), chains, least, total, late
+            );
+        }
+    }
+}
+
+fn chainless(bits_: u32) {
+    let a = chainless_terms(1 << bits_);
+    let bits = missing(&a);
+    let mut sums = vec![0usize];
+    for &x in &a {
+        sums.push(sums[sums.len() - 1] + x);
+    }
+    let top = a[a.len() - 1];
+    let early = (0..2).filter(|&n| a[n + 1] > sums[n]).count();
+    let late = (2..a.len() - 1).filter(|&n| a[n + 1] > sums[n]).count();
+    let least = (1..a.len())
+        .map(|n| 2 * sums[n] as i64 - 3 * a[n] as i64)
+        .min()
+        .unwrap();
+    let mut kicks: Vec<i64> = (2..a.len() - 2)
+        .map(|n| a[n + 2] as i64 - a[n + 1] as i64 - a[n] as i64)
+        .collect();
+    kicks.sort();
+    kicks.dedup();
+    let chain: Vec<usize> = (3..a.len() - 1)
+        .filter(|&n| a[n] + kick(n) < a[n + 1])
+        .map(|n| a[n] + kick(n))
+        .collect();
+    let held = chain.iter().filter(|&&x| !bits.get(x)).count();
+    let wide_a: Vec<u128> = a.iter().map(|&x| x as u128).collect();
+    let pre: Vec<u128> = sums.iter().map(|&x| x as u128).collect();
+    let mut lanes = [0usize; 3];
+    bits.each_zero(1, top - 1, |z| {
+        lanes[lane(&wide_a, &pre, z as u128) as usize] += 1;
+        false
+    });
+    let low: Vec<usize> = (1..200).filter(|&x| !bits.get(x)).collect();
+    println!(
+        "a_1..a_3 = 4, 5, 6 and a_(n+2) = S_n - y_n - y_(n+1), y_n = 2 - (floor(n/2) mod 2), {} terms to 2^{}: {:?} ...; windows a_(n+2) > S_n at n < 2: {}, at n >= 2: {}; least 2 (S_n - a_(n+1)) - a_(n+1) = {}; a_(n+3) - a_(n+2) - a_(n+1) over n >= 2 takes {:?}; chain a_(n+1) + y_n, n >= 3: {} of {} non-sums, first {:?}; non-sums below {} by lane seed/window/pair: {}/{}/{}; non-sums below 200: {:?}",
+        a.len(), bits_, &a[..12], early, late, least, kicks, held, chain.len(), &chain[..8], top, lanes[0], lanes[1], lanes[2], low
+    );
+}
+
+fn windowed_terms(cap: usize) -> (Vec<usize>, Vec<i64>) {
+    let mut a = vec![4usize, 5, 6];
+    let mut u = vec![0i64, 0];
+    let rule = |n: usize, a: &[usize], u: &[i64]| -> i64 {
+        let x = |m: usize| a[m] as i64 + u[m];
+        match n % 5 {
+            0 if n >= 5 => 2,
+            1 if n >= 6 => -x(n - 2),
+            2 if n >= 7 => x(n - 3),
+            _ => 1,
+        }
+    };
+    loop {
+        let n = a.len() - 1;
+        while u.len() <= n + 1 {
+            let v = rule(u.len(), &a, &u);
+            u.push(v);
+        }
+        let v = a[..n].iter().sum::<usize>() as i64 - u[n] - u[n + 1];
+        if v as usize > cap {
+            return (a, u);
+        }
+        a.push(v as usize);
+    }
+}
+
+fn windowed(bits_: u32) {
+    let (a, u) = windowed_terms(1 << bits_);
+    let bits = missing(&a);
+    let mut sums = vec![0usize];
+    for &x in &a {
+        sums.push(sums[sums.len() - 1] + x);
+    }
+    let len = a.len();
+    let top = a[len - 1];
+    let sorted = a.windows(2).all(|w| w[0] <= w[1]);
+    let open: Vec<usize> = (2..len - 1).filter(|&n| a[n + 1] > sums[n]).collect();
+    let fifth = open.iter().all(|&n| n % 5 == 0)
+        && (2..len - 1).filter(|&n| n % 5 == 0).count() == open.len();
+    let size = open
+        .iter()
+        .map(|&n| 1000 * (a[n + 1] - sums[n]) / a[n + 1])
+        .min()
+        .unwrap();
+    let mut chains = 0;
+    for &m in &open {
+        for &n in &open {
+            if n > m && sums[n] - a[n] < a[m + 1] && sums[m] < a[n + 1] - a[n] {
+                chains += 1;
+            }
+        }
+    }
+    let held = open
+        .iter()
+        .filter(|&&n| {
+            let mut hit = false;
+            bits.each_zero(sums[n] + 1, a[n + 1] - 1, |_| {
+                hit = true;
+                true
+            });
+            hit
+        })
+        .count();
+    let least = (3..len)
+        .map(|n| 12 * (sums[n] as i64 - a[n] as i64) - a[n] as i64)
+        .min()
+        .unwrap();
+    let steep = (1..len)
+        .map(|n| a[n] as i64 - 3 * a[n - 1] as i64)
+        .max()
+        .unwrap();
+    let mut kicks: Vec<i64> = (3..len - 2)
+        .filter(|&n| n % 5 == 3)
+        .map(|n| a[n + 2] as i64 - a[n + 1] as i64 - a[n] as i64)
+        .collect();
+    kicks.sort();
+    kicks.dedup();
+    let chain: Vec<usize> = (3..len - 1)
+        .filter(|&n| ((a[n] as i64 + u[n]) as usize) < a[n + 1])
+        .map(|n| (a[n] as i64 + u[n]) as usize)
+        .collect();
+    let gone = chain.iter().filter(|&&x| !bits.get(x)).count();
+    let wide_a: Vec<u128> = a.iter().map(|&x| x as u128).collect();
+    let pre: Vec<u128> = sums.iter().map(|&x| x as u128).collect();
+    let mut lanes = [0usize; 3];
+    bits.each_zero(1, top - 1, |z| {
+        lanes[lane(&wide_a, &pre, z as u128) as usize] += 1;
+        false
+    });
+    println!(
+        "V: a_1..a_3 = 4, 5, 6, a_(n+2) = S_n - u_n - u_(n+1), u_n = 2, -x_(n-2), x_(n-3) at n = 0, 1, 2 mod 5 from n = 5, 6, 7, else 1, x_n = a_(n+1) + u_n; {} terms to 2^{}: {:?} ...; sorted {}; windows a_(n+2) > S_n at n >= 2: {} at {:?} ..., exactly n = 0 mod 5: {}; least (a_(n+2) - S_n)/a_(n+2) over them {}/1000; chained pairs {}; windows holding a non-sum {} of {}; least 12 (S_n - a_(n+1)) - a_(n+1) over n >= 3: {}; largest a_(n+1) - 3 a_n: {}; a_(n+3) - a_(n+2) - a_(n+1) at n = 3 mod 5, n >= 3, takes {:?}; chain x_n, 3 <= n, x_n below a_(n+2): {} of {} non-sums, first {:?}; non-sums below {}: {}, by lane seed/window/pair: {}/{}/{}",
+        len, bits_, &a[..14], sorted, open.len(), &open[..open.len().min(6)], fifth, size, chains, held, open.len(), least, steep, kicks, gone, chain.len(), &chain[..8], top, lanes.iter().sum::<usize>(), lanes[0], lanes[1], lanes[2]
+    );
+}
+
+// DEPTH
+
+fn base_of(bases: &[u64], x: u128) -> u64 {
+    for &d in bases {
+        let mut y = x;
+        while y.is_multiple_of(d as u128) {
+            y /= d as u128;
+        }
+        if y == 1 {
+            return d;
+        }
+    }
+    0
+}
+
+fn trace(bases: &[u64], k: u32, bits: u32) {
+    let a = elements(bases, k, far());
+    let mut rows = vec![];
+    let (v, _) = wide_with(bases, k, bits, |n, s, t| rows.push((n, s, t)));
+    println!("{} k {} wide 2^{} {:?}", show(bases), k, bits, v);
+    for (i, &(n, s, t)) in rows.iter().enumerate() {
+        let next = a[n];
+        let rise = rows.get(i + 1).is_some_and(|r| r.2 > t);
+        println!(
+            "n {} a_n {} = {}^. S_n {} a_(n+1) {} R_n {} T_n {} T_n/a_(n+1) {}.{:04}{}",
+            n,
+            a[n - 1],
+            base_of(bases, a[n - 1]),
+            s,
+            next,
+            s as i128 - next as i128,
+            t,
+            t / next,
+            t % next * 10000 / next,
+            if rise { " rises" } else { "" }
+        );
+    }
+}
+
+#[derive(Default, Clone)]
+struct Jumps {
+    rises: usize,
+    pauses: usize,
+    pauses_at_last: usize,
+    last: usize,
+    run: usize,
+    open: usize,
+    bad: usize,
+    birth: usize,
+    y: i128,
+    deep: bool,
+    fs: (u128, u128),
+    peak: (u128, u128, usize),
+}
+
+fn frac(p: (u128, u128), places: u32) -> String {
+    let m = 10u128.pow(places);
+    format!(
+        "{}.{:0w$}",
+        p.0 / p.1,
+        p.0 % p.1 * m / p.1,
+        w = places as usize
+    )
+}
+
+fn jumps_of(
+    bases: &[u64],
+    k: u32,
+    a: &[u128],
+    rows: &[(usize, u128, u128)],
+    f: Option<u128>,
+) -> Jumps {
+    let mut j = Jumps {
+        peak: (0, 1, 0),
+        fs: (1, 1),
+        ..Default::default()
+    };
+    let first = bases.iter().map(|&d| (d as u128).pow(k)).max().unwrap();
+    let all = a.partition_point(|&x| x < first) + 1;
+    let mut run = 0;
+    for i in 0..rows.len() {
+        let (n, s, t) = rows[i];
+        let next = a[n];
+        let d = s as i128 - next as i128;
+        let ti = t as i128;
+        if n >= all && t * j.peak.1 > j.peak.0 * next {
+            j.peak = (t, next, n);
+        }
+        if i > 0 && t > rows[i - 1].2 && d > 2 * ti - 2 {
+            j.bad += 1;
+        }
+        if let Some(f) = f {
+            let s1 = if i + 1 < rows.len() {
+                rows[i + 1].1
+            } else {
+                s + next
+            };
+            if s < 2 * f && 2 * f <= s1 {
+                j.birth = n;
+                j.y = f as i128 - next as i128;
+                j.deep = ti - 1 > d;
+                j.fs = (f, s);
+            }
+        }
+        if i + 1 == rows.len() {
+            break;
+        }
+        let (_, s1, t1) = rows[i + 1];
+        let rise = t1 > t;
+        if n >= all && !rise {
+            j.pauses += 1;
+        }
+        if rise {
+            j.last = n;
+            j.pauses_at_last = j.pauses;
+            j.rises += 1;
+            run += 1;
+            j.run = j.run.max(run);
+            if t1 + t < s + 2 || t1 > s1 / 2 + 1 || d > 2 * ti - 2 {
+                j.bad += 1;
+            }
+        } else {
+            run = 0;
+        }
+        if d < ti - 1 && 2 * (ti - 1) < s as i128 && !rise {
+            j.bad += 1;
+        }
+    }
+    j.open = run;
+    j
+}
+
+type Cell = (usize, u32, Verdict, Lanes, Jumps);
+
+fn jumps(r: u64, kmax: u32, bits: u32, threads: usize) {
+    let clock = Instant::now();
+    let sets = minimal(r);
+    let next = AtomicUsize::new(0);
+    let out: Mutex<Vec<Cell>> = Mutex::new(vec![]);
+    std::thread::scope(|scope| {
+        for _ in 0..threads {
+            scope.spawn(|| loop {
+                let i = next.fetch_add(1, Ordering::SeqCst);
+                if i >= sets.len() {
+                    break;
+                }
+                for k in 1..=kmax {
+                    let a = elements(&sets[i], k, far());
+                    let mut rows = vec![];
+                    let (v, lanes) = wide_with(&sets[i], k, bits, |n, s, t| rows.push((n, s, t)));
+                    let f = match v {
+                        Verdict::Found { f, .. } => Some(f),
+                        Verdict::Cap => None,
+                    };
+                    let j = jumps_of(&sets[i], k, &a, &rows, f);
+                    let stop = v == Verdict::Cap;
+                    out.lock().unwrap().push((i, k, v, lanes, j));
+                    if stop {
+                        break;
+                    }
+                }
+            });
+        }
+    });
+    let mut out = out.into_inner().unwrap();
+    out.sort_by_key(|x| (x.0, x.1));
+    let mut bad = 0;
+    let mut worst: Option<(u128, u128, String)> = None;
+    let mut low: Option<(u128, u128, String)> = None;
+    let mut gaps = vec![0usize; 64];
+    let mut born = 0;
+    let mut caps = (0usize, usize::MAX, 0usize, 0usize);
+    let mut tally = vec![[0usize; 7]; kmax as usize + 1];
+    for (i, k, v, lanes, j) in &out {
+        let name = format!("{} k {}", show(&sets[*i]), k);
+        bad += j.bad;
+        match v {
+            Verdict::Found { f, n, .. } => {
+                if worst
+                    .as_ref()
+                    .is_none_or(|w| j.peak.0 * w.1 > w.0 * j.peak.1)
+                {
+                    worst = Some((j.peak.0, j.peak.1, name.clone()));
+                }
+                if *k >= 2 && low.as_ref().is_none_or(|w| j.peak.0 * w.1 < w.0 * j.peak.1) {
+                    low = Some((j.peak.0, j.peak.1, name.clone()));
+                }
+                gaps[(n - j.last).min(63)] += 1;
+                born += (j.birth == j.last) as usize;
+                let row = &mut tally[*k as usize];
+                row[0] += 1;
+                row[1] += (j.y >= 0) as usize;
+                row[2] += (lanes.last == 2) as usize;
+                row[3] += (lanes.last == 1 && j.deep) as usize;
+                row[5] += j.deep as usize;
+                row[6] += (j.pauses_at_last == 0) as usize;
+                row[4] +=
+                    (j.y >= 0 && lanes.last != 2) as usize + (lanes.last == 1 && !j.deep) as usize;
+                println!(
+                    "{} F {} N {} rises {} longest run {}, steps without a rise from the entry of the last base to the last rise at m {}: {}; F born at b {}, F - a_(b+1) {}, T_b - 1 {} R_b, F/S_b {}, F by {}; peak T_n/a_(n+1) {} at n {}; bad {}",
+                    name, f, n, j.rises, j.run, j.last, j.pauses_at_last, j.birth, j.y, if j.deep { ">" } else { "<=" }, frac(j.fs, 4), ["seed", "window", "pair"][lanes.last as usize], frac((j.peak.0, j.peak.1), 4), j.peak.2, j.bad
+                );
+            }
+            Verdict::Cap => {
+                caps.0 += 1;
+                caps.1 = caps.1.min(j.open);
+                caps.2 = caps.2.max(j.open);
+                caps.3 += (j.open == j.rises) as usize;
+                println!(
+                "{} cap 2^{}: rises {} longest run {}, run open at the cap {}; peak T_n/a_(n+1) {} at n {}; bad {}",
+                name, bits, j.rises, j.run, j.open, frac((j.peak.0, j.peak.1), 4), j.peak.2, j.bad
+                )
+            }
+        }
+        bad += tally[*k as usize][4];
+        tally[*k as usize][4] = 0;
+    }
+    for (k, row) in tally.iter().enumerate().skip(1) {
+        println!(
+            "k = {}: {} certified cells; T rises at every step from the entry of the last base to the last rise in {}; T_b - 1 > R_b at the birth b of F in {}; F >= a_(b+1) in {}; F by the pair route in {}; F by the window route, each with T_b - 1 > R_b, in {}",
+            k, row[0], row[6], row[5], row[1], row[2], row[3]
+        );
+    }
+    if let Some(w) = worst {
+        println!(
+            "largest peak T_n/a_(n+1) after every base enters: {} at {}",
+            frac((w.0, w.1), 4),
+            w.2
+        );
+    }
+    if let Some(w) = low {
+        println!(
+            "least peak T_n/a_(n+1) after every base enters over k >= 2: {} at {}",
+            frac((w.0, w.1), 4),
+            w.2
+        );
+    }
+    let close: Vec<String> = gaps
+        .iter()
+        .enumerate()
+        .filter(|x| *x.1 > 0)
+        .map(|(g, c)| format!("{} steps in {}", g, c))
+        .collect();
+    println!("the certificate closes after the last rise of T: {}; F is born at the last rise in {} cells", close.join(", "), born);
+    println!(
+        "capped cells {}: every rise in one run open at the cap in {}, open runs of {} to {} rises",
+        caps.0, caps.3, caps.1, caps.2
+    );
+    println!(
+        "cells run {}; violations of the jump law and the route lemma {}; {:.1} s",
+        out.len(),
+        bad,
+        clock.elapsed().as_secs_f64()
     );
 }
 
@@ -851,7 +1629,26 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     let num = |i: usize, d: u64| args.get(i).map(|s| s.parse().unwrap()).unwrap_or(d);
     match args.get(1).map(|s| s.as_str()).unwrap_or("") {
-        "census" => census(num(2, 10), num(3, 4) as u32, num(4, 31) as u32, num(5, 4) as usize),
+        "census" => census(num(2, 10), num(3, 4) as u32, num(4, 31) as u32, num(5, 4) as usize, false),
+        "deep" => census(num(2, 10), num(3, 5) as u32, num(4, 31) as u32, num(5, 4) as usize, true),
+        "wcell" => {
+            let bases: Vec<u64> = args[2].split(',').map(|x| x.parse().unwrap()).collect();
+            wcell(&bases, num(3, 1) as u32, num(4, 31) as u32)
+        }
+        "chainless" => chainless(num(2, 27) as u32),
+        "forced" => forced(num(2, 26) as u32),
+        "windowed" => windowed(num(2, 27) as u32),
+        "jumps" => jumps(num(2, 10), num(3, 5) as u32, num(4, 31) as u32, num(5, 4) as usize),
+        "trace" => {
+            let bases: Vec<u64> = args[2].split(',').map(|x| x.parse().unwrap()).collect();
+            trace(&bases, num(3, 1) as u32, num(4, 31) as u32)
+        }
+        "wcontrol" => wcontrol(num(2, 16) as u32),
+        "split" => {
+            let bases: Vec<u64> = args[2].split(',').map(|x| x.parse().unwrap()).collect();
+            let x0: u128 = args[4].parse().unwrap();
+            split(&bases, num(3, 1) as u32, x0, num(5, 64) as u128)
+        }
         "control" => control(),
         "cell" => {
             let bases: Vec<u64> = args[2].split(',').map(|x| x.parse().unwrap()).collect();
@@ -872,7 +1669,7 @@ fn main() {
         "offsets" => offsets(num(2, 420) as usize, num(3, 504) as usize),
         "band" => band(num(2, 419) as usize, num(3, 504) as usize, num(4, 70) as usize, num(5, 8) as usize),
         "route" => route(num(2, 10), 10u128.pow(num(3, 12) as u32)),
-        _ => println!("verbs census R K BITS THREADS, cell D K BITS, set D K B, windows D K E F, graham T P Q BITS, refute BITS, ternary N HI THREADS, probe N TOP THREADS, band LO HI W THREADS, offsets LO HI, control, route R E"),
+        _ => println!("verbs census R K BITS THREADS, deep R K BITS THREADS, jumps R K BITS THREADS, trace D K BITS, windowed BITS, cell D K BITS, wcell D K BITS, chainless BITS, forced BITS, wcontrol BITS, split D K X COUNT, set D K B, windows D K E F, graham T P Q BITS, refute BITS, ternary N HI THREADS, probe N TOP THREADS, band LO HI W THREADS, offsets LO HI, control, route R E"),
     }
 }
 
@@ -959,6 +1756,80 @@ mod tests {
         let floor = [0usize, 1, 3, 8, 22];
         assert_eq!(hunt(5, 59, &floor, 2).0, None);
         assert!(hunt(5, 60, &floor, 2).0.is_some());
+    }
+
+    #[test]
+    fn the_wide_certificate_matches_the_full_one_past_its_window() {
+        let mut truncated = 0;
+        for (bases, k) in [
+            (&[3u64, 4, 5][..], 2),
+            (&[3, 4, 6], 2),
+            (&[3, 5, 6, 7], 2),
+            (&[3, 4, 7, 8], 2),
+        ] {
+            let full = certify(bases, k, 1 << 26);
+            let (v, lanes) = wide(bases, k, 20);
+            assert_eq!(v, full);
+            let Verdict::Found { gaps, sum, .. } = v else {
+                panic!()
+            };
+            assert_eq!(gaps, lanes.seed + lanes.window + lanes.pair);
+            truncated += (sum > 1 << 21) as usize;
+        }
+        assert!(truncated > 0);
+    }
+
+    #[test]
+    fn a_multiset_with_surplus_full_spectrum_and_no_window_is_incomplete() {
+        let a = chainless_terms(1 << 22);
+        assert_eq!(&a[..10], &[4, 5, 6, 7, 12, 18, 31, 50, 80, 129]);
+        let bits = missing(&a);
+        let mut sums = vec![0usize];
+        for &x in &a {
+            sums.push(sums[sums.len() - 1] + x);
+        }
+        for n in 2..a.len() - 1 {
+            assert!(a[n + 1] < sums[n]);
+        }
+        for n in 3..a.len() - 1 {
+            assert!(a[n] + kick(n) < a[n + 1] && !bits.get(a[n] + kick(n)));
+        }
+    }
+
+    #[test]
+    fn windows_at_every_fifth_step_leave_the_chain_open() {
+        let (a, u) = windowed_terms(1 << 22);
+        assert_eq!(&a[..10], &[4, 5, 6, 7, 13, 19, 47, 54, 86, 153]);
+        let bits = missing(&a);
+        let mut sums = vec![0usize];
+        for &x in &a {
+            sums.push(sums[sums.len() - 1] + x);
+        }
+        for n in 2..a.len() - 1 {
+            assert_eq!(a[n + 1] > sums[n], n % 5 == 0);
+            assert!(12 * sums[n + 1] + 2 >= 13 * a[n + 1]);
+        }
+        for n in 3..a.len() - 1 {
+            let x = (a[n] as i64 + u[n]) as usize;
+            assert!(x < a[n + 1] && !bits.get(x));
+        }
+    }
+
+    #[test]
+    fn the_deepest_hole_rises_only_past_the_middle() {
+        for (bases, k) in [(&[3u64, 4, 5][..], 3), (&[3, 4, 6], 2), (&[3, 5, 6, 7], 2)] {
+            let a = elements(bases, k, far());
+            let mut rows = vec![];
+            let (v, lanes) = wide_with(bases, k, 20, |n, s, t| rows.push((n, s, t)));
+            let Verdict::Found { f, .. } = v else {
+                panic!()
+            };
+            let j = jumps_of(bases, k, &a, &rows, Some(f));
+            assert_eq!(j.bad, 0);
+            assert!(j.rises > 10);
+            assert!(j.y < 0 || lanes.last == 2);
+            assert!(lanes.last != 1 || j.deep);
+        }
     }
 
     #[test]

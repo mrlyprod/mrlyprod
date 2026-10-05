@@ -41,4 +41,4 @@ def test_every_ok_function_is_callable_under_its_rust_doc():
             else:
                 assert doc.startswith(fn["docs"][0]), fn["path"]
         count += 1
-    assert count == 1161
+    assert count == 1174

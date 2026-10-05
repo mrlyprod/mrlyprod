@@ -870,6 +870,16 @@ export const num = {
         swap: wasm.num_apollonian_swap,
         touches: wasm.num_apollonian_touches,
     },
+    arrays: {
+        MOST: wasm.num_arrays_MOST,
+        essential: wasm.num_arrays_essential,
+        fractal: wasm.num_arrays_fractal,
+        holes: wasm.num_arrays_holes,
+        law: wasm.num_arrays_law,
+        lost: wasm.num_arrays_lost,
+        paired: wasm.num_arrays_paired,
+        weights: wasm.num_arrays_weights,
+    },
     automaton: {
         Automaton: wasm.num_automaton_Automaton,
         ROUNDING: wasm.num_automaton_ROUNDING,
@@ -972,6 +982,16 @@ export const num = {
         classes: wasm.num_gauss_classes,
         peak: wasm.num_gauss_peak,
         shells: wasm.num_gauss_shells,
+    },
+    kummer: {
+        MOST: wasm.num_kummer_MOST,
+        TABLE: wasm.num_kummer_TABLE,
+        carry: wasm.num_kummer_carry,
+        columns: wasm.num_kummer_columns,
+        count: wasm.num_kummer_count,
+        member: wasm.num_kummer_member,
+        valuation: wasm.num_kummer_valuation,
+        witness: wasm.num_kummer_witness,
     },
     ladder: {
         Design: wasm.num_ladder_Design,

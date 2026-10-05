@@ -6,6 +6,7 @@ Codes cross the boundary as decimal strings, because a design code is a u128 and
 
 ## Modules
 
+- **arrays** wraps `mrlyrs::num`: a fractal sensor array, its essential sensors against the law `(u/L)^r`, its coarray weights with one sensor knocked out and the lags that loss deletes.
 - **automata** wraps `mrlyrs::life`'s elementary rules: rows stepped, space-time diagrams, one rule's card.
 - **bang** wraps `mrlyrs::math`'s universes: codes, symmetries, counts, closed-form fills and names.
 - **blend** wraps `ledger` and `mrlyrs::num`: registry sequences as terms, ratios, differences, recurrences and term operations.
@@ -19,6 +20,7 @@ Codes cross the boundary as decimal strings, because a design code is a u128 and
 - **partials** wraps `mrlyrs::num`: eight partial sums, products and prime counts read at one depth or walked to it.
 - **gauss** wraps `mrlyrs::num`: the Gaussian and Eisenstein windows painted, counted, clicked and weighed by norm.
 - **graph** wraps `mrlyrs::math` and `mrlyrs::num`: design networks as nodes, branches, roles and censuses, relaxed by a seeded force layout.
+- **kummer** wraps `mrlyrs::num`: the carry automaton of a Kummer set `{k : p does not divide C(a k, b k)}`, its board level by level, its count below `p^level` against `((p + 1)/2)^level`, the witness that it is no digit design, and one `k` read column by column beside Legendre's valuation.
 - **lab** wraps `mrlyrs::math`: the sequence press listed and counted, the moire presets rendered to pixels.
 - **lattice** wraps `mrlyrs::num`: the Farey nodes and totients, the lit window counted, painted and walked into pi.
 - **ledger** wraps `ledger` and `mrlyrs::math`: every measure of every design as a sequence, searched, identified and spelled.

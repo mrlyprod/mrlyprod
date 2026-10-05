@@ -20,6 +20,16 @@ export const apollonian = {
     swap: wasm.apollonian_swap,
     touches: wasm.apollonian_touches,
 };
+export const arrays = {
+    MOST: wasm.arrays_MOST,
+    essential: wasm.arrays_essential,
+    fractal: wasm.arrays_fractal,
+    holes: wasm.arrays_holes,
+    law: wasm.arrays_law,
+    lost: wasm.arrays_lost,
+    paired: wasm.arrays_paired,
+    weights: wasm.arrays_weights,
+};
 export const automaton = {
     Automaton: wasm.automaton_Automaton,
     ROUNDING: wasm.automaton_ROUNDING,
@@ -122,6 +132,16 @@ export const gauss = {
     classes: wasm.gauss_classes,
     peak: wasm.gauss_peak,
     shells: wasm.gauss_shells,
+};
+export const kummer = {
+    MOST: wasm.kummer_MOST,
+    TABLE: wasm.kummer_TABLE,
+    carry: wasm.kummer_carry,
+    columns: wasm.kummer_columns,
+    count: wasm.kummer_count,
+    member: wasm.kummer_member,
+    valuation: wasm.kummer_valuation,
+    witness: wasm.kummer_witness,
 };
 export const ladder = {
     Design: wasm.ladder_Design,

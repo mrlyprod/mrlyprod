@@ -6198,6 +6198,73 @@ pub fn num_apollonian_touches(p: JsValue) -> Result<JsValue, JsValue> {
     hand::to_js(&value)
 }
 
+/// Returns whether each sensor is essential, in the order given: whether removing it deletes a lag from the coarray, which happens exactly when some lag `t != 0` has all its pairs through it, the one pair of a lag of weight `1` or the two pairs `(s, s - t)` and `(s + t, s)` of a lag of weight `2`.
+#[wasm_bindgen]
+pub fn num_arrays_essential(sensors: JsValue) -> Result<JsValue, JsValue> {
+    let sensors = hand::list_from_js(&sensors, hand::u64_from_js)?;
+    let value = mrlyrs::num::arrays::essential(&sensors);
+    hand::to_js(&value)
+}
+
+/// Returns the fractal array of the generator at the base and level, ascending: every `sum_(i < level) g_i base^i` with each digit `g_i` in the generator.
+#[wasm_bindgen]
+pub fn num_arrays_fractal(
+    generator: JsValue,
+    base: JsValue,
+    level: u32,
+) -> Result<Vec<u64>, JsValue> {
+    let generator = hand::list_from_js(&generator, hand::u64_from_js)?;
+    let base = hand::u64_from_js(&base)?;
+    let value = mrlyrs::num::arrays::fractal(&generator, base, level).map_err(hand::throw)?;
+    Ok(value)
+}
+
+/// Returns the holes of the coarray, ascending: the lags between `-span` and `span` that no pair of sensors makes.
+#[wasm_bindgen]
+pub fn num_arrays_holes(sensors: JsValue) -> Result<Vec<i64>, JsValue> {
+    let sensors = hand::list_from_js(&sensors, hand::u64_from_js)?;
+    let value = mrlyrs::num::arrays::holes(&sensors);
+    Ok(value)
+}
+
+/// Returns the essential count and the sensor count that Theorem A of the arrays note proves for the fractal array of the generator at base `2a + 1`, `(u^level, L^level)`, `u` the count of [`paired`] digits; `None` off the theorem: a level below 2, a generator without `0`, or a generator whose coarray has a hole.
+#[wasm_bindgen]
+pub fn num_arrays_law(generator: JsValue, level: u32) -> Result<JsValue, JsValue> {
+    let generator = hand::list_from_js(&generator, hand::u64_from_js)?;
+    let value = mrlyrs::num::arrays::law(&generator, level);
+    hand::option_to_js(value.as_ref(), |x1| {
+        Ok(hand::tuple_to_js(&[
+            JsValue::from(x1.0),
+            JsValue::from(x1.1),
+        ]))
+    })
+}
+
+/// Returns the lags that removing the sensor deletes from the coarray, ascending: those every pair of which holds it; empty when the sensor is inessential or absent.
+#[wasm_bindgen]
+pub fn num_arrays_lost(sensors: JsValue, sensor: JsValue) -> Result<Vec<i64>, JsValue> {
+    let sensors = hand::list_from_js(&sensors, hand::u64_from_js)?;
+    let sensor = hand::u64_from_js(&sensor)?;
+    let value = mrlyrs::num::arrays::lost(&sensors, sensor);
+    Ok(value)
+}
+
+/// Returns the paired sensors, ascending: each `g` with a partner `h` whose lag `g - h` has weight `1`, the set `U` of condition C1 of Cohen and Eldar; a paired sensor is essential.
+#[wasm_bindgen]
+pub fn num_arrays_paired(sensors: JsValue) -> Result<Vec<u64>, JsValue> {
+    let sensors = hand::list_from_js(&sensors, hand::u64_from_js)?;
+    let value = mrlyrs::num::arrays::paired(&sensors);
+    Ok(value)
+}
+
+/// Returns the coarray weights of the sensors, `w(t)` for every lag `t` from `-span` to `span` at index `t + span`, `span` the largest sensor less the least: the count of ordered pairs `(p, q)` of sensors with `p - q = t`.
+#[wasm_bindgen]
+pub fn num_arrays_weights(sensors: JsValue) -> Result<Vec<u64>, JsValue> {
+    let sensors = hand::list_from_js(&sensors, hand::u64_from_js)?;
+    let value = mrlyrs::num::arrays::weights(&sensors);
+    Ok(value)
+}
+
 /// Adds two sequences term by term over their shared length.
 #[wasm_bindgen]
 pub fn num_blend_add(a: JsValue, b: JsValue) -> Result<JsValue, JsValue> {
@@ -6853,6 +6920,98 @@ pub fn num_gauss_shells(ring: JsValue, limit: usize) -> Result<Vec<u32>, JsValue
     let ring = hand::from_js::<mrlyrs::num::gauss::Ring>(&ring)?;
     let value = mrlyrs::num::gauss::shells(ring, limit);
     Ok(value)
+}
+
+/// Builds the carry automaton of `K_(a,b)` at the prime, `a` the top and `b` the bottom.
+#[wasm_bindgen]
+pub fn num_kummer_carry(prime: JsValue, top: JsValue, bottom: JsValue) -> Result<JsValue, JsValue> {
+    let prime = hand::u64_from_js(&prime)?;
+    let top = hand::u64_from_js(&top)?;
+    let bottom = hand::u64_from_js(&bottom)?;
+    let value = mrlyrs::num::kummer::carry(prime, top, bottom).map_err(hand::throw)?;
+    hand::to_js(&value)
+}
+
+/// Returns the columns the automaton reads for `k`, units first: one per digit of `k`, then the zeros that spend the carries, ending at the first column that carries or once every digit is read and the state is `(0, 0)` again.
+#[wasm_bindgen]
+pub fn num_kummer_columns(
+    k: JsValue,
+    prime: JsValue,
+    top: JsValue,
+    bottom: JsValue,
+) -> Result<JsValue, JsValue> {
+    let k = hand::u64_from_js(&k)?;
+    let prime = hand::u64_from_js(&prime)?;
+    let top = hand::u64_from_js(&top)?;
+    let bottom = hand::u64_from_js(&bottom)?;
+    let value = mrlyrs::num::kummer::columns(k, prime, top, bottom).map_err(hand::throw)?;
+    hand::to_js(&value)
+}
+
+/// Returns the count of `k < p^level` in `K_(a,b)`: the words of length `level` the automaton allows, summed by the state they end in over the states that close.
+#[wasm_bindgen]
+pub fn num_kummer_count(
+    prime: JsValue,
+    top: JsValue,
+    bottom: JsValue,
+    level: u32,
+) -> Result<JsValue, JsValue> {
+    let prime = hand::u64_from_js(&prime)?;
+    let top = hand::u64_from_js(&top)?;
+    let bottom = hand::u64_from_js(&bottom)?;
+    let value = mrlyrs::num::kummer::count(prime, top, bottom, level).map_err(hand::throw)?;
+    Ok(JsValue::from_str(&value.to_string()))
+}
+
+/// Returns whether `k` lies in `K_(a,b)`, read by the carry automaton: whether the prime does not divide `C(a k, b k)`.
+#[wasm_bindgen]
+pub fn num_kummer_member(
+    k: JsValue,
+    prime: JsValue,
+    top: JsValue,
+    bottom: JsValue,
+) -> Result<bool, JsValue> {
+    let k = hand::u64_from_js(&k)?;
+    let prime = hand::u64_from_js(&prime)?;
+    let top = hand::u64_from_js(&top)?;
+    let bottom = hand::u64_from_js(&bottom)?;
+    let value = mrlyrs::num::kummer::member(k, prime, top, bottom).map_err(hand::throw)?;
+    Ok(value)
+}
+
+/// Returns `v_p(C(a k, b k))` by Legendre's digit sums, `(s_p(b k) + s_p((a - b) k) - s_p(a k))/(p - 1)` with `s_p` the digit sum in base `p`: the carries of `b k + (a - b) k`.
+#[wasm_bindgen]
+pub fn num_kummer_valuation(
+    k: JsValue,
+    prime: JsValue,
+    top: JsValue,
+    bottom: JsValue,
+) -> Result<u32, JsValue> {
+    let k = hand::u64_from_js(&k)?;
+    let prime = hand::u64_from_js(&prime)?;
+    let top = hand::u64_from_js(&top)?;
+    let bottom = hand::u64_from_js(&bottom)?;
+    let value = mrlyrs::num::kummer::valuation(k, prime, top, bottom).map_err(hand::throw)?;
+    Ok(value)
+}
+
+/// Returns the least witness that `K_(a,b)` is no digit design, as the pair `(u, v p)` of elements: digits `u, v < p` with `u` and `v p` in the set and `u + v p` outside it, least `u + v p` first; a digit design holding `u` and `v p` holds `u + v p`. `None` when no two such digits exist, as on the half interval `K_(2,1)`.
+#[wasm_bindgen]
+pub fn num_kummer_witness(
+    prime: JsValue,
+    top: JsValue,
+    bottom: JsValue,
+) -> Result<JsValue, JsValue> {
+    let prime = hand::u64_from_js(&prime)?;
+    let top = hand::u64_from_js(&top)?;
+    let bottom = hand::u64_from_js(&bottom)?;
+    let value = mrlyrs::num::kummer::witness(prime, top, bottom).map_err(hand::throw)?;
+    hand::option_to_js(value.as_ref(), |x1| {
+        Ok(hand::tuple_to_js(&[
+            JsValue::from(x1.0),
+            JsValue::from(x1.1),
+        ]))
+    })
 }
 
 /// Returns the Lyndon cofactor `Z(s) = zeta_F(s) (1 - k q^(-s))` and the bound it is known to.
@@ -8069,6 +8228,13 @@ pub fn num_apollonian_ROOTS() -> Result<JsValue, JsValue> {
     hand::to_js(&value)
 }
 
+/// The most sensors [`fractal`] builds, `2^20`.
+#[wasm_bindgen]
+pub fn num_arrays_MOST() -> Result<u64, JsValue> {
+    let value = mrlyrs::num::arrays::MOST;
+    Ok(value)
+}
+
 /// The relative rounding allowance the double-precision matrix ladder charges against the scale it carries.
 #[wasm_bindgen]
 pub fn num_automaton_ROUNDING() -> Result<f64, JsValue> {
@@ -8141,6 +8307,20 @@ pub fn num_dissection_GAMMA() -> Result<f64, JsValue> {
 #[wasm_bindgen]
 pub fn num_dissection_WINDOW_WALL() -> Result<u64, JsValue> {
     let value = mrlyrs::num::dissection::WINDOW_WALL;
+    Ok(value)
+}
+
+/// The largest top `a` a Kummer set takes here, so an automaton holds at most `32 * 32` carry states.
+#[wasm_bindgen]
+pub fn num_kummer_MOST() -> Result<u64, JsValue> {
+    let value = mrlyrs::num::kummer::MOST;
+    Ok(value)
+}
+
+/// The most moves a [`Carry`] table holds, its states times the prime, `2^24`.
+#[wasm_bindgen]
+pub fn num_kummer_TABLE() -> Result<u64, JsValue> {
+    let value = mrlyrs::num::kummer::TABLE;
     Ok(value)
 }
 

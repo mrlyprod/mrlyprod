@@ -1054,6 +1054,13 @@ static DOORS: &[Door] = &[
     ("num.apollonian.sound", "(q: [num.apollonian.Circle; 4]) -> bool", Some(door_num_apollonian_sound)),
     ("num.apollonian.swap", "(q: [num.apollonian.Circle; 4], at: usize) -> [num.apollonian.Circle; 4]", Some(door_num_apollonian_swap)),
     ("num.apollonian.touches", "(p: num.apollonian.Packing) -> [num.apollonian.Touch]", Some(door_num_apollonian_touches)),
+    ("num.arrays.essential", "(sensors: [u64]) -> [bool]", Some(door_num_arrays_essential)),
+    ("num.arrays.fractal", "(generator: [u64], base: u64, level: u32) -> [u64]", Some(door_num_arrays_fractal)),
+    ("num.arrays.holes", "(sensors: [u64]) -> [i64]", Some(door_num_arrays_holes)),
+    ("num.arrays.law", "(generator: [u64], level: u32) -> (u64, u64)?", Some(door_num_arrays_law)),
+    ("num.arrays.lost", "(sensors: [u64], sensor: u64) -> [i64]", Some(door_num_arrays_lost)),
+    ("num.arrays.paired", "(sensors: [u64]) -> [u64]", Some(door_num_arrays_paired)),
+    ("num.arrays.weights", "(sensors: [u64]) -> [u64]", Some(door_num_arrays_weights)),
     ("num.automaton.Automaton.abscissa", "(self: num.automaton.Automaton) -> f64", Some(door_num_automaton_automaton_abscissa)),
     ("num.automaton.Automaton.base", "(self: num.automaton.Automaton) -> u64", Some(door_num_automaton_automaton_base)),
     ("num.automaton.Automaton.cofactor", "(self: num.automaton.Automaton, s: num.zeta.Complex, tolerance: f64) -> (num.zeta.Complex, f64)", Some(door_num_automaton_automaton_cofactor)),
@@ -1170,6 +1177,12 @@ static DOORS: &[Door] = &[
     ("num.gauss.classes", "(ring: num.gauss.Ring, bound: u64) -> [(i64, i64)]", Some(door_num_gauss_classes)),
     ("num.gauss.peak", "(ring: num.gauss.Ring, limit: usize) -> (usize, u32)", Some(door_num_gauss_peak)),
     ("num.gauss.shells", "(ring: num.gauss.Ring, limit: usize) -> [u32]", Some(door_num_gauss_shells)),
+    ("num.kummer.carry", "(prime: u64, top: u64, bottom: u64) -> num.kummer.Carry", Some(door_num_kummer_carry)),
+    ("num.kummer.columns", "(k: u64, prime: u64, top: u64, bottom: u64) -> [num.kummer.Column]", Some(door_num_kummer_columns)),
+    ("num.kummer.count", "(prime: u64, top: u64, bottom: u64, level: u32) -> u128", Some(door_num_kummer_count)),
+    ("num.kummer.member", "(k: u64, prime: u64, top: u64, bottom: u64) -> bool", Some(door_num_kummer_member)),
+    ("num.kummer.valuation", "(k: u64, prime: u64, top: u64, bottom: u64) -> u32", Some(door_num_kummer_valuation)),
+    ("num.kummer.witness", "(prime: u64, top: u64, bottom: u64) -> (u64, u64)?", Some(door_num_kummer_witness)),
     ("num.ladder.Design.abscissa", "(self: num.ladder.Design) -> f64", Some(door_num_ladder_design_abscissa)),
     ("num.ladder.Design.base", "(self: num.ladder.Design) -> u64", Some(door_num_ladder_design_base)),
     ("num.ladder.Design.digits", "(self: num.ladder.Design) -> [u64]", Some(door_num_ladder_design_digits)),
@@ -9136,6 +9149,55 @@ fn door_num_apollonian_touches(name: &str, args: &[Value]) -> Done {
     Ok(give!(mrlyrs::num::apollonian::touches(&a0)))
 }
 
+fn door_num_arrays_essential(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: Vec<u64> = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::num::arrays::essential(&a0)))
+}
+
+fn door_num_arrays_fractal(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: Vec<u64> = take!(name, 0, &args[0]);
+    let a1: u64 = take!(name, 1, &args[1]);
+    let a2: u32 = take!(name, 2, &args[2]);
+    match mrlyrs::num::arrays::fractal(&a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_num_arrays_holes(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: Vec<u64> = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::num::arrays::holes(&a0)))
+}
+
+fn door_num_arrays_law(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: Vec<u64> = take!(name, 0, &args[0]);
+    let a1: u32 = take!(name, 1, &args[1]);
+    Ok(give!(mrlyrs::num::arrays::law(&a0, a1)))
+}
+
+fn door_num_arrays_lost(name: &str, args: &[Value]) -> Done {
+    count(name, args, 2)?;
+    let a0: Vec<u64> = take!(name, 0, &args[0]);
+    let a1: u64 = take!(name, 1, &args[1]);
+    Ok(give!(mrlyrs::num::arrays::lost(&a0, a1)))
+}
+
+fn door_num_arrays_paired(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: Vec<u64> = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::num::arrays::paired(&a0)))
+}
+
+fn door_num_arrays_weights(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: Vec<u64> = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::num::arrays::weights(&a0)))
+}
+
 fn door_num_automaton_automaton_abscissa(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::num::automaton::Automaton = take!(name, 0, &args[0]);
@@ -10182,6 +10244,76 @@ fn door_num_gauss_shells(name: &str, args: &[Value]) -> Done {
     let a0: mrlyrs::num::gauss::Ring = take!(name, 0, &args[0]);
     let a1: usize = take!(name, 1, &args[1]);
     Ok(give!(mrlyrs::num::gauss::shells(a0, a1)))
+}
+
+fn door_num_kummer_carry(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: u64 = take!(name, 1, &args[1]);
+    let a2: u64 = take!(name, 2, &args[2]);
+    match mrlyrs::num::kummer::carry(a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_num_kummer_columns(name: &str, args: &[Value]) -> Done {
+    count(name, args, 4)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: u64 = take!(name, 1, &args[1]);
+    let a2: u64 = take!(name, 2, &args[2]);
+    let a3: u64 = take!(name, 3, &args[3]);
+    match mrlyrs::num::kummer::columns(a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_num_kummer_count(name: &str, args: &[Value]) -> Done {
+    count(name, args, 4)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: u64 = take!(name, 1, &args[1]);
+    let a2: u64 = take!(name, 2, &args[2]);
+    let a3: u32 = take!(name, 3, &args[3]);
+    match mrlyrs::num::kummer::count(a0, a1, a2, a3) {
+        Ok(value) => Ok(Value::String(value.to_string())),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_num_kummer_member(name: &str, args: &[Value]) -> Done {
+    count(name, args, 4)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: u64 = take!(name, 1, &args[1]);
+    let a2: u64 = take!(name, 2, &args[2]);
+    let a3: u64 = take!(name, 3, &args[3]);
+    match mrlyrs::num::kummer::member(a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_num_kummer_valuation(name: &str, args: &[Value]) -> Done {
+    count(name, args, 4)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: u64 = take!(name, 1, &args[1]);
+    let a2: u64 = take!(name, 2, &args[2]);
+    let a3: u64 = take!(name, 3, &args[3]);
+    match mrlyrs::num::kummer::valuation(a0, a1, a2, a3) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
+}
+
+fn door_num_kummer_witness(name: &str, args: &[Value]) -> Done {
+    count(name, args, 3)?;
+    let a0: u64 = take!(name, 0, &args[0]);
+    let a1: u64 = take!(name, 1, &args[1]);
+    let a2: u64 = take!(name, 2, &args[2]);
+    match mrlyrs::num::kummer::witness(a0, a1, a2) {
+        Ok(value) => Ok(give!(value)),
+        Err(error) => Err(Fail::Error(error.to_string())),
+    }
 }
 
 fn door_num_ladder_design_abscissa(name: &str, args: &[Value]) -> Done {

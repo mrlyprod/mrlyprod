@@ -11,6 +11,8 @@ use wasm_bindgen::prelude::*;
 pub mod apollonian;
 /// The Truchet arcs: a flat design drawn in quarter arcs, its loops and strands counted and its proved loop law read.
 pub mod arcs;
+/// The sparse arrays: a fractal sensor array grown from a generator, its essential sensors against the law of Theorem A, its coarray weights and the holes one knocked-out sensor opens.
+pub mod arrays;
 /// The elementary automata: their rows stepped, their space-time diagrams and the card of one rule.
 pub mod automata;
 /// The universes: codes, symmetries, counts, closed-form fills and names.
@@ -35,6 +37,8 @@ pub mod font;
 pub mod gauss;
 /// The networks of the designs: nodes, branches, roles and censuses, and the force layout that relaxes them.
 pub mod graph;
+/// The Kummer sets: the carry automaton of `{k : p does not divide C(a k, b k)}`, its board level by level, its count against `((p + 1)/2)^level`, the witness that it is no digit design and one `k` read column by column against its valuation.
+pub mod kummer;
 /// The laboratory: the sequence press and the moire presets.
 pub mod lab;
 /// The lattice: the Farey nodes, the totients and the window the stack lights, counted, painted and walked into pi.

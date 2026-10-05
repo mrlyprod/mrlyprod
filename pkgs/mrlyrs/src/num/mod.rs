@@ -6,6 +6,7 @@
 //! # Files
 //!
 //! - `apollonian`: an integral circle packing, the Ford circles on its line, the Farey stack beneath.
+//! - `arrays`: a sparse sensor array, its difference coarray and weights, its essential sensors, and the fractal array a generator grows.
 //! - `automaton`: the Dirichlet series of a memory design, continued through its transfer matrix.
 //! - `blend`: term ops on sequences, the exact recurrence behind one, its growth rate.
 //! - `boolean`: a truth table's Walsh spectrum, nonlinearity, balance and avalanche.
@@ -14,6 +15,7 @@
 //! - `factor`: factorizations, divisors, totients, radicals, Mobius values, gcd and lcm.
 //! - `fft`: the fast Fourier transform in one and two dimensions.
 //! - `gauss`: the Gaussian and the Eisenstein integers, their classes, windows and shells.
+//! - `kummer`: the Kummer sets `{k : p does not divide C(a k, b k)}` read by their carry automaton, their mass and the witness that they are no digit design.
 //! - `ladder`: the Dirichlet series of a digit design, continued to the plane, each value with its bound.
 //! - `lattice`: coprime pairs, the Farey nodes of a window, the constant a dimension recovers.
 //! - `memory`: a rule on consecutive digits, its transfer matrix, its words, its Perron root.
@@ -34,6 +36,8 @@
 
 /// The Apollonian gasket: a packing grown from its root quadruple in exact integers, the Ford circles it rests on the line, and the Farey stack they shadow.
 pub mod apollonian;
+/// The sparse arrays: sensor positions, their difference coarray and its weights, the essential sensors whose loss opens a hole, and the fractal array a generator grows with the essential count Theorem A proves.
+pub mod arrays;
 /// The matrix ladder: the Dirichlet series of a memory design continued through its transfer matrix, its determinant cofactor and the residues on its pole combs.
 ///
 /// A claim witness with no caller in the crate: it witnesses `research/claims/memory-dial.md`.
@@ -52,6 +56,8 @@ pub mod factor;
 pub mod fft;
 /// The primes of the plane: the Gaussian and the Eisenstein integers, their classes, windows and ring weights.
 pub mod gauss;
+/// The Kummer sets: the `k` with a prime `p` not dividing `C(a k, b k)`, read digit by digit from the units by the carry automaton of Kummer's theorem, counted below `p^level` and set against Legendre's valuation.
+pub mod kummer;
 /// The peeled ladder: the Dirichlet series of a digit design continued to the whole plane, its Lyndon cofactor and the residues at its poles, each value carrying its bound.
 ///
 /// A claim witness with no caller in the crate: it witnesses `research/claims/zeros-of-the-design-zeta.md`.

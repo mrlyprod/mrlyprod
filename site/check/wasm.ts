@@ -984,4 +984,39 @@ checks.push(
   ['arcs_cap bases 2..5', [2, 3, 4, 5].map((b) => m.arcs_cap(b)).join(','), '8,5,4,3'],
 );
 
+// ARRAYS
+
+const arrayCounts = (g: string, base: number, top: number) => Array.from({ length: top }, (_, r) => JSON.parse(m.arrays_read(g, base, r + 1)).count).join(',');
+const arrayFigure = JSON.parse(m.arrays_read('0,1,2,4', 9, 4));
+const arrayKnock = JSON.parse(m.arrays_knock('0,1,2,4', 9, 2, 7));
+const arrayLess = m.arrays_weights('0,1,2,4', 9, 2, 7);
+
+checks.push(
+  ['arrays_read 0,1,4,6 base 8 counts 1..6', arrayCounts('0,1,4,6', 8, 6), '4,11,25,53,109,221'],
+  ['arrays_read 0,1,2 base 4 counts 1..7', arrayCounts('0,1,2', 4, 7), '3,2,2,2,2,2,2'],
+  ['arrays_read 0,1,2,4 base 9 level 4', `${arrayFigure.count} ${arrayFigure.total} ${arrayFigure.law.count} ${arrayFigure.paired.join(',')}`, '81 256 81 0,1,4'],
+  ['arrays_knock 0,1,2,4 sensor 13', `${arrayKnock.sensor} ${arrayKnock.digits.join(',')} ${arrayKnock.lost.join(',')} ${arrayLess[40]}`, '13 4,1 -24,-23,23,24 15'],
+  ['arrays_cap 0,1,2,3,7,11 base 15', String(m.arrays_cap('0,1,2,3,7,11', 15)), '4'],
+);
+
+// KUMMER
+
+const kummerRead = (p: number, a: number, b: number) => JSON.parse(m.kummer_read(p, a, b));
+const kummerSeven = kummerRead(7, 3, 1);
+const kummerTrace = (k: number) => JSON.parse(m.kummer_trace(String(k), 7, 3, 1));
+const kummerBoard = Array.from(m.kummer_board(7, 3, 1, 3) as Uint8Array);
+const kummerRow = (from: number, to: number) => kummerBoard.slice(from, to).filter((c) => c > 0).length;
+const kummerRuns = (runs: number[][]) => runs.map(([lo, hi, to]) => `${lo}-${hi}:${to}`).join(',');
+
+checks.push(
+  ['kummer_read (3,1) p 7 counts', kummerSeven.counts.slice(0, 5).join(','), '4,16,64,256,1024'],
+  ['kummer_read (3,1) p 7 runs', kummerSeven.runs.map(kummerRuns).join(' '), '0-2:0,4-4:1 0-1:0,3-4:1'],
+  ['kummer_read (3,1) p 7 witness', `${kummerSeven.witness.u} ${kummerSeven.witness.high} ${kummerSeven.witness.sum}`, '4 14 18'],
+  ['kummer_trace 4 14 18', [4, 14, 18].map((k) => `${kummerTrace(k).member}/${kummerTrace(k).valuation}`).join(' '), 'true/0 true/0 false/1'],
+  ['kummer_read (3,1) p 101 level 5', String(kummerRead(101, 3, 1).counts[4]), '345025251'],
+  ['kummer_read p 3 level 11', `${kummerRead(3, 3, 1).counts[10]} ${kummerRead(3, 4, 1).counts[10]} ${kummerRead(3, 4, 1).law[10]}`, '1 8997 2048'],
+  ['kummer_board (3,1) p 7 rows', `${kummerRow(0, 7)},${kummerRow(7, 56)},${kummerRow(56, 399)}`, '4,16,64'],
+  ['kummer_cap p 3, 7, 101', [3, 7, 101].map((p) => m.kummer_cap(p)).join(','), '8,4,2'],
+);
+
 export default checks;

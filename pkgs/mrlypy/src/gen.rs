@@ -15382,6 +15382,114 @@ pub mod num {
         }
     }
 
+    /// The sparse arrays: sensor positions, their difference coarray and its weights, the essential sensors whose loss opens a hole, and the fractal array a generator grows with the essential count Theorem A proves.
+    pub mod arrays {
+        use crate::hand::ok;
+        use pyo3::prelude::*;
+        use pyo3::types::PyDict;
+        use pyo3::IntoPyObjectExt;
+
+        /// Returns whether each sensor is essential, in the order given: whether removing it deletes a lag from the coarray, which happens exactly when some lag `t != 0` has all its pairs through it, the one pair of a lag of weight `1` or the two pairs `(s, s - t)` and `(s + t, s)` of a lag of weight `2`.
+        #[pyfunction]
+        #[pyo3(name = "essential", signature = (sensors))]
+        pub fn essential<'py>(py: Python<'py>, sensors: Vec<u64>) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::arrays::essential(&sensors);
+            (out).into_bound_py_any(py)
+        }
+
+        /// Returns the fractal array of the generator at the base and level, ascending: every `sum_(i < level) g_i base^i` with each digit `g_i` in the generator.
+        #[pyfunction]
+        #[pyo3(name = "fractal", signature = (generator, base, level))]
+        pub fn fractal<'py>(
+            py: Python<'py>,
+            generator: Vec<u64>,
+            base: u64,
+            level: u32,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::arrays::fractal(&generator, base, level);
+            (ok(out)?).into_bound_py_any(py)
+        }
+
+        /// Returns the holes of the coarray, ascending: the lags between `-span` and `span` that no pair of sensors makes.
+        #[pyfunction]
+        #[pyo3(name = "holes", signature = (sensors))]
+        pub fn holes<'py>(py: Python<'py>, sensors: Vec<u64>) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::arrays::holes(&sensors);
+            (out).into_bound_py_any(py)
+        }
+
+        /// Returns the essential count and the sensor count that Theorem A of the arrays note proves for the fractal array of the generator at base `2a + 1`, `(u^level, L^level)`, `u` the count of [`paired`] digits; `None` off the theorem: a level below 2, a generator without `0`, or a generator whose coarray has a hole.
+        #[pyfunction]
+        #[pyo3(name = "law", signature = (generator, level))]
+        pub fn law<'py>(
+            py: Python<'py>,
+            generator: Vec<u64>,
+            level: u32,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::arrays::law(&generator, level);
+            (out).into_bound_py_any(py)
+        }
+
+        /// Returns the lags that removing the sensor deletes from the coarray, ascending: those every pair of which holds it; empty when the sensor is inessential or absent.
+        #[pyfunction]
+        #[pyo3(name = "lost", signature = (sensors, sensor))]
+        pub fn lost<'py>(
+            py: Python<'py>,
+            sensors: Vec<u64>,
+            sensor: u64,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::arrays::lost(&sensors, sensor);
+            (out).into_bound_py_any(py)
+        }
+
+        /// Returns the paired sensors, ascending: each `g` with a partner `h` whose lag `g - h` has weight `1`, the set `U` of condition C1 of Cohen and Eldar; a paired sensor is essential.
+        #[pyfunction]
+        #[pyo3(name = "paired", signature = (sensors))]
+        pub fn paired<'py>(py: Python<'py>, sensors: Vec<u64>) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::arrays::paired(&sensors);
+            (out).into_bound_py_any(py)
+        }
+
+        /// Returns the coarray weights of the sensors, `w(t)` for every lag `t` from `-span` to `span` at index `t + span`, `span` the largest sensor less the least: the count of ordered pairs `(p, q)` of sensors with `p - q = t`.
+        #[pyfunction]
+        #[pyo3(name = "weights", signature = (sensors))]
+        pub fn weights<'py>(py: Python<'py>, sensors: Vec<u64>) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::arrays::weights(&sensors);
+            (out).into_bound_py_any(py)
+        }
+
+        pub fn init(
+            py: Python<'_>,
+            parent: &Bound<'_, PyModule>,
+            sys: &Bound<'_, PyDict>,
+        ) -> PyResult<()> {
+            let m = PyModule::new(py, "mrlypy.num.arrays")?;
+            m.setattr("__doc__", "The sparse arrays: sensor positions, their difference coarray and its weights, the essential sensors whose loss opens a hole, and the fractal array a generator grows with the essential count Theorem A proves.")?;
+            m.add_function(wrap_pyfunction!(essential, &m)?)?;
+            m.add_function(wrap_pyfunction!(fractal, &m)?)?;
+            m.add_function(wrap_pyfunction!(holes, &m)?)?;
+            m.add_function(wrap_pyfunction!(law, &m)?)?;
+            m.add_function(wrap_pyfunction!(lost, &m)?)?;
+            m.add_function(wrap_pyfunction!(paired, &m)?)?;
+            m.add_function(wrap_pyfunction!(weights, &m)?)?;
+            m.add("MOST", mrlyrs::num::arrays::MOST)?;
+            let names: Vec<&str> = vec![
+                "essential",
+                "fractal",
+                "holes",
+                "law",
+                "lost",
+                "paired",
+                "weights",
+                "MOST",
+            ];
+            m.add("__all__", names)?;
+            parent.add("arrays", &m)?;
+            sys.set_item("mrlypy._mrlypy.num.arrays", &m)?;
+            Ok(())
+        }
+    }
+
     /// The matrix ladder: the Dirichlet series of a memory design continued through its transfer matrix, its determinant cofactor and the residues on its pole combs.
     pub mod automaton {
         use crate::hand::ok;
@@ -17023,6 +17131,127 @@ pub mod num {
             m.add("__all__", names)?;
             parent.add("gauss", &m)?;
             sys.set_item("mrlypy._mrlypy.num.gauss", &m)?;
+            Ok(())
+        }
+    }
+
+    /// The Kummer sets: the `k` with a prime `p` not dividing `C(a k, b k)`, read digit by digit from the units by the carry automaton of Kummer's theorem, counted below `p^level` and set against Legendre's valuation.
+    pub mod kummer {
+        use crate::hand::{ok, PySerde};
+        use pyo3::prelude::*;
+        use pyo3::types::PyDict;
+        use pyo3::IntoPyObjectExt;
+
+        /// Builds the carry automaton of `K_(a,b)` at the prime, `a` the top and `b` the bottom.
+        #[pyfunction]
+        #[pyo3(name = "carry", signature = (prime, top, bottom))]
+        pub fn carry<'py>(
+            py: Python<'py>,
+            prime: u64,
+            top: u64,
+            bottom: u64,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::kummer::carry(prime, top, bottom);
+            (PySerde(ok(out)?)).into_bound_py_any(py)
+        }
+
+        /// Returns the columns the automaton reads for `k`, units first: one per digit of `k`, then the zeros that spend the carries, ending at the first column that carries or once every digit is read and the state is `(0, 0)` again.
+        #[pyfunction]
+        #[pyo3(name = "columns", signature = (k, prime, top, bottom))]
+        pub fn columns<'py>(
+            py: Python<'py>,
+            k: u64,
+            prime: u64,
+            top: u64,
+            bottom: u64,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::kummer::columns(k, prime, top, bottom);
+            ((ok(out)?).into_iter().map(PySerde).collect::<Vec<_>>()).into_bound_py_any(py)
+        }
+
+        /// Returns the count of `k < p^level` in `K_(a,b)`: the words of length `level` the automaton allows, summed by the state they end in over the states that close.
+        #[pyfunction]
+        #[pyo3(name = "count", signature = (prime, top, bottom, level))]
+        pub fn count<'py>(
+            py: Python<'py>,
+            prime: u64,
+            top: u64,
+            bottom: u64,
+            level: u32,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::kummer::count(prime, top, bottom, level);
+            (ok(out)?).into_bound_py_any(py)
+        }
+
+        /// Returns whether `k` lies in `K_(a,b)`, read by the carry automaton: whether the prime does not divide `C(a k, b k)`.
+        #[pyfunction]
+        #[pyo3(name = "member", signature = (k, prime, top, bottom))]
+        pub fn member<'py>(
+            py: Python<'py>,
+            k: u64,
+            prime: u64,
+            top: u64,
+            bottom: u64,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::kummer::member(k, prime, top, bottom);
+            (ok(out)?).into_bound_py_any(py)
+        }
+
+        /// Returns `v_p(C(a k, b k))` by Legendre's digit sums, `(s_p(b k) + s_p((a - b) k) - s_p(a k))/(p - 1)` with `s_p` the digit sum in base `p`: the carries of `b k + (a - b) k`.
+        #[pyfunction]
+        #[pyo3(name = "valuation", signature = (k, prime, top, bottom))]
+        pub fn valuation<'py>(
+            py: Python<'py>,
+            k: u64,
+            prime: u64,
+            top: u64,
+            bottom: u64,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::kummer::valuation(k, prime, top, bottom);
+            (ok(out)?).into_bound_py_any(py)
+        }
+
+        /// Returns the least witness that `K_(a,b)` is no digit design, as the pair `(u, v p)` of elements: digits `u, v < p` with `u` and `v p` in the set and `u + v p` outside it, least `u + v p` first; a digit design holding `u` and `v p` holds `u + v p`. `None` when no two such digits exist, as on the half interval `K_(2,1)`.
+        #[pyfunction]
+        #[pyo3(name = "witness", signature = (prime, top, bottom))]
+        pub fn witness<'py>(
+            py: Python<'py>,
+            prime: u64,
+            top: u64,
+            bottom: u64,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            let out = mrlyrs::num::kummer::witness(prime, top, bottom);
+            (ok(out)?).into_bound_py_any(py)
+        }
+
+        pub fn init(
+            py: Python<'_>,
+            parent: &Bound<'_, PyModule>,
+            sys: &Bound<'_, PyDict>,
+        ) -> PyResult<()> {
+            let m = PyModule::new(py, "mrlypy.num.kummer")?;
+            m.setattr("__doc__", "The Kummer sets: the `k` with a prime `p` not dividing `C(a k, b k)`, read digit by digit from the units by the carry automaton of Kummer's theorem, counted below `p^level` and set against Legendre's valuation.")?;
+            m.add_function(wrap_pyfunction!(carry, &m)?)?;
+            m.add_function(wrap_pyfunction!(columns, &m)?)?;
+            m.add_function(wrap_pyfunction!(count, &m)?)?;
+            m.add_function(wrap_pyfunction!(member, &m)?)?;
+            m.add_function(wrap_pyfunction!(valuation, &m)?)?;
+            m.add_function(wrap_pyfunction!(witness, &m)?)?;
+            m.add("MOST", mrlyrs::num::kummer::MOST)?;
+            m.add("TABLE", mrlyrs::num::kummer::TABLE)?;
+            let names: Vec<&str> = vec![
+                "carry",
+                "columns",
+                "count",
+                "member",
+                "valuation",
+                "witness",
+                "MOST",
+                "TABLE",
+            ];
+            m.add("__all__", names)?;
+            parent.add("kummer", &m)?;
+            sys.set_item("mrlypy._mrlypy.num.kummer", &m)?;
             Ok(())
         }
     }
@@ -19725,10 +19954,11 @@ pub mod num {
         sys: &Bound<'_, PyDict>,
     ) -> PyResult<()> {
         let m = PyModule::new(py, "mrlypy.num")?;
-        m.setattr("__doc__", "The integers: primes, divisors, series, lattices, spectra and networks.\nThe instruments of number: primes, divisors, series, spectra, lattices and the designs the digits draw.\n\nPlain numbers and byte grids go in; counts, fractions, rates and measurements come out.\nEvery answer is exact where the integers allow and a stated approximation where they do not.\n\n# Files\n\n- `apollonian`: an integral circle packing, the Ford circles on its line, the Farey stack beneath.\n- `automaton`: the Dirichlet series of a memory design, continued through its transfer matrix.\n- `blend`: term ops on sequences, the exact recurrence behind one, its growth rate.\n- `boolean`: a truth table's Walsh spectrum, nonlinearity, balance and avalanche.\n- `design`: the digit designs on the line, their Mobius meter and the ordinates it carries.\n- `dissection`: the missing-digit sets cut by Dirichlet approximation: the four regions, the digit transform's `l^1` masses, the chain certificate and its wall.\n- `factor`: factorizations, divisors, totients, radicals, Mobius values, gcd and lcm.\n- `fft`: the fast Fourier transform in one and two dimensions.\n- `gauss`: the Gaussian and the Eisenstein integers, their classes, windows and shells.\n- `ladder`: the Dirichlet series of a digit design, continued to the plane, each value with its bound.\n- `lattice`: coprime pairs, the Farey nodes of a window, the constant a dimension recovers.\n- `memory`: a rule on consecutive digits, its transfer matrix, its words, its Perron root.\n- `morse`: the Thue-Morse world: the digit rule, the substitution, the lifts and the runs.\n- `prime`: the sieve and its readings, ranks, gaps, counts and the shapes a number makes.\n- `radix`: a digit set inside the residues of a base in a ring, and where its words land.\n- `series`: the classic sequences, zeta and its cousins, the partials walking to pi, e and gamma.\n- `sieve`: the Wallis sieve and its kin as schedule words, with their rasters and limits.\n- `spiral`: the whole numbers wound on the square and the hexagonal lattice, marked and read.\n- `sumset`: the base-3 design plus the base-4 design, Erdos problem 125: its bit array, its density and the energy of its levels.\n- `zeta`: zeta on the critical line, its zeros, the prime staircase they rebuild.\n\n# Doors\n\n- The divisor arithmetic: [`gcd`](crate::num::factor::gcd), [`factorial`](crate::num::factor::factorial), [`divisors`](crate::num::factor::divisors), [`mobius`](crate::num::factor::mobius).\n- The primality test: [`is_prime`](crate::num::prime::is_prime).\n- The zeta value above one: [`zeta`](crate::num::series::zeta).")?;
+        m.setattr("__doc__", "The integers: primes, divisors, series, lattices, spectra and networks.\nThe instruments of number: primes, divisors, series, spectra, lattices and the designs the digits draw.\n\nPlain numbers and byte grids go in; counts, fractions, rates and measurements come out.\nEvery answer is exact where the integers allow and a stated approximation where they do not.\n\n# Files\n\n- `apollonian`: an integral circle packing, the Ford circles on its line, the Farey stack beneath.\n- `arrays`: a sparse sensor array, its difference coarray and weights, its essential sensors, and the fractal array a generator grows.\n- `automaton`: the Dirichlet series of a memory design, continued through its transfer matrix.\n- `blend`: term ops on sequences, the exact recurrence behind one, its growth rate.\n- `boolean`: a truth table's Walsh spectrum, nonlinearity, balance and avalanche.\n- `design`: the digit designs on the line, their Mobius meter and the ordinates it carries.\n- `dissection`: the missing-digit sets cut by Dirichlet approximation: the four regions, the digit transform's `l^1` masses, the chain certificate and its wall.\n- `factor`: factorizations, divisors, totients, radicals, Mobius values, gcd and lcm.\n- `fft`: the fast Fourier transform in one and two dimensions.\n- `gauss`: the Gaussian and the Eisenstein integers, their classes, windows and shells.\n- `kummer`: the Kummer sets `{k : p does not divide C(a k, b k)}` read by their carry automaton, their mass and the witness that they are no digit design.\n- `ladder`: the Dirichlet series of a digit design, continued to the plane, each value with its bound.\n- `lattice`: coprime pairs, the Farey nodes of a window, the constant a dimension recovers.\n- `memory`: a rule on consecutive digits, its transfer matrix, its words, its Perron root.\n- `morse`: the Thue-Morse world: the digit rule, the substitution, the lifts and the runs.\n- `prime`: the sieve and its readings, ranks, gaps, counts and the shapes a number makes.\n- `radix`: a digit set inside the residues of a base in a ring, and where its words land.\n- `series`: the classic sequences, zeta and its cousins, the partials walking to pi, e and gamma.\n- `sieve`: the Wallis sieve and its kin as schedule words, with their rasters and limits.\n- `spiral`: the whole numbers wound on the square and the hexagonal lattice, marked and read.\n- `sumset`: the base-3 design plus the base-4 design, Erdos problem 125: its bit array, its density and the energy of its levels.\n- `zeta`: zeta on the critical line, its zeros, the prime staircase they rebuild.\n\n# Doors\n\n- The divisor arithmetic: [`gcd`](crate::num::factor::gcd), [`factorial`](crate::num::factor::factorial), [`divisors`](crate::num::factor::divisors), [`mobius`](crate::num::factor::mobius).\n- The primality test: [`is_prime`](crate::num::prime::is_prime).\n- The zeta value above one: [`zeta`](crate::num::series::zeta).")?;
         let names: Vec<&str> = vec![];
         m.add("__all__", names)?;
         apollonian::init(py, &m, sys)?;
+        arrays::init(py, &m, sys)?;
         automaton::init(py, &m, sys)?;
         blend::init(py, &m, sys)?;
         boolean::init(py, &m, sys)?;
@@ -19737,6 +19967,7 @@ pub mod num {
         factor::init(py, &m, sys)?;
         fft::init(py, &m, sys)?;
         gauss::init(py, &m, sys)?;
+        kummer::init(py, &m, sys)?;
         ladder::init(py, &m, sys)?;
         lattice::init(py, &m, sys)?;
         memory::init(py, &m, sys)?;

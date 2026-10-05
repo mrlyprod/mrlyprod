@@ -3533,6 +3533,24 @@ export declare namespace num {
             k: number;
         }
     }
+    export namespace arrays {
+        /** Returns whether each sensor is essential, in the order given: whether removing it deletes a lag from the coarray, which happens exactly when some lag `t != 0` has all its pairs through it, the one pair of a lag of weight `1` or the two pairs `(s, s - t)` and `(s + t, s)` of a lag of weight `2`. */
+        export function essential(sensors: ArrayLike<number | bigint>): boolean[];
+        /** Returns the fractal array of the generator at the base and level, ascending: every `sum_(i < level) g_i base^i` with each digit `g_i` in the generator. */
+        export function fractal(generator: ArrayLike<number | bigint>, base: number | bigint, level: number): BigUint64Array;
+        /** Returns the holes of the coarray, ascending: the lags between `-span` and `span` that no pair of sensors makes. */
+        export function holes(sensors: ArrayLike<number | bigint>): BigInt64Array;
+        /** Returns the essential count and the sensor count that Theorem A of the arrays note proves for the fractal array of the generator at base `2a + 1`, `(u^level, L^level)`, `u` the count of [`paired`] digits; `None` off the theorem: a level below 2, a generator without `0`, or a generator whose coarray has a hole. */
+        export function law(generator: ArrayLike<number | bigint>, level: number): [bigint, bigint] | undefined;
+        /** Returns the lags that removing the sensor deletes from the coarray, ascending: those every pair of which holds it; empty when the sensor is inessential or absent. */
+        export function lost(sensors: ArrayLike<number | bigint>, sensor: number | bigint): BigInt64Array;
+        /** Returns the paired sensors, ascending: each `g` with a partner `h` whose lag `g - h` has weight `1`, the set `U` of condition C1 of Cohen and Eldar; a paired sensor is essential. */
+        export function paired(sensors: ArrayLike<number | bigint>): BigUint64Array;
+        /** Returns the coarray weights of the sensors, `w(t)` for every lag `t` from `-span` to `span` at index `t + span`, `span` the largest sensor less the least: the count of ordered pairs `(p, q)` of sensors with `p - q = t`. */
+        export function weights(sensors: ArrayLike<number | bigint>): BigUint64Array;
+        /** The most sensors [`fractal`] builds, `2^20`. */
+        export function MOST(): bigint;
+    }
     export namespace automaton {
         /** The relative rounding allowance the double-precision matrix ladder charges against the scale it carries. */
         export function ROUNDING(): number;
@@ -3857,6 +3875,52 @@ export declare namespace num {
             radius(): bigint;
             /** Returns the ring. */
             ring(): num.gauss.Ring;
+        }
+    }
+    export namespace kummer {
+        /** Builds the carry automaton of `K_(a,b)` at the prime, `a` the top and `b` the bottom. */
+        export function carry(prime: number | bigint, top: number | bigint, bottom: number | bigint): num.kummer.Carry;
+        /** Returns the columns the automaton reads for `k`, units first: one per digit of `k`, then the zeros that spend the carries, ending at the first column that carries or once every digit is read and the state is `(0, 0)` again. */
+        export function columns(k: number | bigint, prime: number | bigint, top: number | bigint, bottom: number | bigint): num.kummer.Column[];
+        /** Returns the count of `k < p^level` in `K_(a,b)`: the words of length `level` the automaton allows, summed by the state they end in over the states that close. */
+        export function count(prime: number | bigint, top: number | bigint, bottom: number | bigint, level: number): string;
+        /** Returns whether `k` lies in `K_(a,b)`, read by the carry automaton: whether the prime does not divide `C(a k, b k)`. */
+        export function member(k: number | bigint, prime: number | bigint, top: number | bigint, bottom: number | bigint): boolean;
+        /** Returns `v_p(C(a k, b k))` by Legendre's digit sums, `(s_p(b k) + s_p((a - b) k) - s_p(a k))/(p - 1)` with `s_p` the digit sum in base `p`: the carries of `b k + (a - b) k`. */
+        export function valuation(k: number | bigint, prime: number | bigint, top: number | bigint, bottom: number | bigint): number;
+        /** Returns the least witness that `K_(a,b)` is no digit design, as the pair `(u, v p)` of elements: digits `u, v < p` with `u` and `v p` in the set and `u + v p` outside it, least `u + v p` first; a digit design holding `u` and `v p` holds `u + v p`. `None` when no two such digits exist, as on the half interval `K_(2,1)`. */
+        export function witness(prime: number | bigint, top: number | bigint, bottom: number | bigint): [bigint, bigint] | undefined;
+        /** The largest top `a` a Kummer set takes here, so an automaton holds at most `32 * 32` carry states. */
+        export function MOST(): bigint;
+        /** The most moves a [`Carry`] table holds, its states times the prime, `2^24`. */
+        export function TABLE(): bigint;
+        /** The carry automaton of the Kummer set `K_(a,b) = {k : p does not divide C(a k, b k)}` at a prime `p`. */
+        export interface Carry {
+            /** The prime `p`, the base the digits are read in. */
+            prime: number;
+            /** The top `a` of `C(a k, b k)`. */
+            top: number;
+            /** The bottom `b` of `C(a k, b k)`, at least `1` and below the top. */
+            bottom: number;
+            /** The carry states `(c_1, c_2)` in reading order, `(0, 0)` first: state `c_1 (a - b) + c_2` sits at that index. */
+            states: [number, number][];
+            /** The moves: entry `[s][d]` is the state the digit `d` moves state `s` to, `None` when the digit is refused there. */
+            moves: ((number | undefined)[])[];
+            /** Whether each state closes: whether the zeros read from it are allowed until its carries are spent, so that a word ending there is an element of the set. */
+            closes: boolean[];
+        }
+        /** One column of the addition `b k + (a - b) k` as the automaton reads it. */
+        export interface Column {
+            /** The digit of `k` in this column, `0` above its top digit. */
+            digit: number;
+            /** The state `(c_1, c_2)` the column is read in. */
+            state: [number, number];
+            /** The digit of `b k` in this column, `(b d + c_1) mod p`. */
+            left: number;
+            /** The digit of `(a - b) k` in this column, `((a - b) d + c_2) mod p`. */
+            right: number;
+            /** The state the column moves to, `None` when `left + right >= p` and the addition carries here. */
+            next?: [number, number];
         }
     }
     export namespace ladder {

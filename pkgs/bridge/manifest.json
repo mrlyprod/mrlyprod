@@ -1045,6 +1045,7 @@
         "# Files",
         "",
         "- `apollonian`: an integral circle packing, the Ford circles on its line, the Farey stack beneath.",
+        "- `arrays`: a sparse sensor array, its difference coarray and weights, its essential sensors, and the fractal array a generator grows.",
         "- `automaton`: the Dirichlet series of a memory design, continued through its transfer matrix.",
         "- `blend`: term ops on sequences, the exact recurrence behind one, its growth rate.",
         "- `boolean`: a truth table's Walsh spectrum, nonlinearity, balance and avalanche.",
@@ -1053,6 +1054,7 @@
         "- `factor`: factorizations, divisors, totients, radicals, Mobius values, gcd and lcm.",
         "- `fft`: the fast Fourier transform in one and two dimensions.",
         "- `gauss`: the Gaussian and the Eisenstein integers, their classes, windows and shells.",
+        "- `kummer`: the Kummer sets `{k : p does not divide C(a k, b k)}` read by their carry automaton, their mass and the witness that they are no digit design.",
         "- `ladder`: the Dirichlet series of a digit design, continued to the plane, each value with its bound.",
         "- `lattice`: coprime pairs, the Farey nodes of a window, the constant a dimension recovers.",
         "- `memory`: a rule on consecutive digits, its transfer matrix, its words, its Perron root.",
@@ -1080,6 +1082,14 @@
         "The Apollonian gasket: a packing grown from its root quadruple in exact integers, the Ford circles it rests on the line, and the Farey stack they shadow."
       ],
       "items": 23
+    },
+    {
+      "path": "num::arrays",
+      "file": "num/arrays.rs",
+      "docs": [
+        "The sparse arrays: sensor positions, their difference coarray and its weights, the essential sensors whose loss opens a hole, and the fractal array a generator grows with the essential count Theorem A proves."
+      ],
+      "items": 8
     },
     {
       "path": "num::automaton",
@@ -1146,6 +1156,14 @@
         "The primes of the plane: the Gaussian and the Eisenstein integers, their classes, windows and ring weights."
       ],
       "items": 36
+    },
+    {
+      "path": "num::kummer",
+      "file": "num/kummer.rs",
+      "docs": [
+        "The Kummer sets: the `k` with a prime `p` not dividing `C(a k, b k)`, read digit by digit from the units by the carry automaton of Kummer's theorem, counted below `p^level` and set against Legendre's valuation."
+      ],
+      "items": 10
     },
     {
       "path": "num::ladder",
@@ -12109,6 +12127,249 @@
       "alias": null
     },
     {
+      "path": "num::kummer::Carry",
+      "name": "Carry",
+      "defined_at": "num/kummer.rs:17",
+      "docs": [
+        "The carry automaton of the Kummer set `K_(a,b) = {k : p does not divide C(a k, b k)}` at a prime `p`.",
+        "",
+        "By Kummer's theorem `v_p(C(a k, b k))` counts the carries of the addition `b k + (a - b) k` in base `p`, so `k` lies in the set exactly when that addition carries nowhere. The digits of `k` are read from the units, and the state is the pair `(c_1, c_2)` of carries of the multiplications by `b` and by `a - b`, `c_1 < b` and `c_2 < a - b`. In state `(c_1, c_2)` the digit `d` meets the digits `x = (b d + c_1) mod p` of `b k` and `y = ((a - b) d + c_2) mod p` of `(a - b) k`; it is allowed when `x + y <= p - 1` and moves to `(floor((b d + c_1)/p), floor(((a - b) d + c_2)/p))`. Past the top digit the zeros spend the carries, and `k` lies in the set when every digit and every one of those zeros is allowed."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [
+        "Clone",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "prime",
+          "public": true,
+          "docs": [
+            "The prime `p`, the base the digits are read in."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "top",
+          "public": true,
+          "docs": [
+            "The top `a` of `C(a k, b k)`."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "bottom",
+          "public": true,
+          "docs": [
+            "The bottom `b` of `C(a k, b k)`, at least `1` and below the top."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "states",
+          "public": true,
+          "docs": [
+            "The carry states `(c_1, c_2)` in reading order, `(0, 0)` first: state `c_1 (a - b) + c_2` sits at that index."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "tuple",
+              "items": [
+                {
+                  "t": "scalar",
+                  "name": "u64"
+                },
+                {
+                  "t": "scalar",
+                  "name": "u64"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "moves",
+          "public": true,
+          "docs": [
+            "The moves: entry `[s][d]` is the state the digit `d` moves state `s` to, `None` when the digit is refused there."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "vec",
+              "item": {
+                "t": "option",
+                "item": {
+                  "t": "scalar",
+                  "name": "usize"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "closes",
+          "public": true,
+          "docs": [
+            "Whether each state closes: whether the zeros read from it are allowed until its carries are spent, so that a word ending there is an element of the set."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "vec",
+            "item": {
+              "t": "scalar",
+              "name": "bool"
+            }
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
+      "path": "num::kummer::Column",
+      "name": "Column",
+      "defined_at": "num/kummer.rs:84",
+      "docs": [
+        "One column of the addition `b k + (a - b) k` as the automaton reads it."
+      ],
+      "kind": "struct",
+      "cross": {
+        "kind": "plain"
+      },
+      "derives": [
+        "Clone",
+        "Copy",
+        "Debug",
+        "PartialEq",
+        "Eq",
+        "Serialize",
+        "Deserialize"
+      ],
+      "serde": [],
+      "const_generic": false,
+      "fields": [
+        {
+          "name": "digit",
+          "public": true,
+          "docs": [
+            "The digit of `k` in this column, `0` above its top digit."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "state",
+          "public": true,
+          "docs": [
+            "The state `(c_1, c_2)` the column is read in."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "tuple",
+            "items": [
+              {
+                "t": "scalar",
+                "name": "u64"
+              },
+              {
+                "t": "scalar",
+                "name": "u64"
+              }
+            ]
+          }
+        },
+        {
+          "name": "left",
+          "public": true,
+          "docs": [
+            "The digit of `b k` in this column, `(b d + c_1) mod p`."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "right",
+          "public": true,
+          "docs": [
+            "The digit of `(a - b) k` in this column, `((a - b) d + c_2) mod p`."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "next",
+          "public": true,
+          "docs": [
+            "The state the column moves to, `None` when `left + right >= p` and the addition carries here."
+          ],
+          "serde": [],
+          "serde_skip": false,
+          "ty": {
+            "t": "option",
+            "item": {
+              "t": "tuple",
+              "items": [
+                {
+                  "t": "scalar",
+                  "name": "u64"
+                },
+                {
+                  "t": "scalar",
+                  "name": "u64"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "variants": [],
+      "alias": null
+    },
+    {
       "path": "num::ladder::Design",
       "name": "Design",
       "defined_at": "num/ladder.rs:26",
@@ -15202,6 +15463,21 @@
       }
     },
     {
+      "path": "num::arrays::MOST",
+      "name": "MOST",
+      "defined_at": "num/arrays.rs:5",
+      "docs": [
+        "The most sensors [`fractal`] builds, `2^20`."
+      ],
+      "ty": {
+        "t": "scalar",
+        "name": "u64"
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
       "path": "num::automaton::ROUNDING",
       "name": "ROUNDING",
       "defined_at": "num/automaton.rs:9",
@@ -15361,6 +15637,36 @@
       "defined_at": "num/dissection.rs:16",
       "docs": [
         "The least base whose every one-missing-digit set carries a window certificate below `1/5`, `lab/py/prime-dissection`, verb `window`."
+      ],
+      "ty": {
+        "t": "scalar",
+        "name": "u64"
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::kummer::MOST",
+      "name": "MOST",
+      "defined_at": "num/kummer.rs:6",
+      "docs": [
+        "The largest top `a` a Kummer set takes here, so an automaton holds at most `32 * 32` carry states."
+      ],
+      "ty": {
+        "t": "scalar",
+        "name": "u64"
+      },
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::kummer::TABLE",
+      "name": "TABLE",
+      "defined_at": "num/kummer.rs:9",
+      "docs": [
+        "The most moves a [`Carry`] table holds, its states times the prime, `2^24`."
       ],
       "ty": {
         "t": "scalar",
@@ -53174,6 +53480,348 @@
       }
     },
     {
+      "path": "num::arrays::essential",
+      "name": "essential",
+      "module": "num::arrays",
+      "defined_at": "num/arrays.rs:122",
+      "docs": [
+        "Returns whether each sensor is essential, in the order given: whether removing it deletes a lag from the coarray, which happens exactly when some lag `t != 0` has all its pairs through it, the one pair of a lag of weight `1` or the two pairs `(s, s - t)` and `(s + t, s)` of a lag of weight `2`.",
+        "",
+        "```",
+        "let flags = mrlyrs::num::arrays::essential(&[0, 1, 2]);",
+        "assert_eq!(flags, vec![true, true, true]);",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "sensors",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u64"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "scalar",
+          "name": "bool"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::arrays::fractal",
+      "name": "fractal",
+      "module": "num::arrays",
+      "defined_at": "num/arrays.rs:20",
+      "docs": [
+        "Returns the fractal array of the generator at the base and level, ascending: every `sum_(i < level) g_i base^i` with each digit `g_i` in the generator.",
+        "",
+        "The generator is the digit set of a dim 1 digit design, its least digit `0`; at base `2a + 1`, `a` its largest digit, this is the fractal array of Cohen and Eldar, and every base above `a` gives `L^level` distinct sensors, `L` the size of the generator.",
+        "",
+        "```",
+        "assert_eq!(mrlyrs::num::arrays::fractal(&[0, 1], 3, 2).unwrap(), vec![0, 1, 3, 4]);",
+        "```",
+        "",
+        "# Errors",
+        "",
+        "Errs when the generator is empty, misses `0`, repeats a digit or holds one at or above the base, or when the array passes [`MOST`] sensors."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "generator",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u64"
+            }
+          }
+        },
+        {
+          "name": "base",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::arrays::holes",
+      "name": "holes",
+      "module": "num::arrays",
+      "defined_at": "num/arrays.rs:83",
+      "docs": [
+        "Returns the holes of the coarray, ascending: the lags between `-span` and `span` that no pair of sensors makes.",
+        "",
+        "```",
+        "assert_eq!(mrlyrs::num::arrays::holes(&[0, 1, 4]), vec![-2, 2]);",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "sensors",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u64"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "scalar",
+          "name": "i64"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::arrays::law",
+      "name": "law",
+      "module": "num::arrays",
+      "defined_at": "num/arrays.rs:46",
+      "docs": [
+        "Returns the essential count and the sensor count that Theorem A of the arrays note proves for the fractal array of the generator at base `2a + 1`, `(u^level, L^level)`, `u` the count of [`paired`] digits; `None` off the theorem: a level below 2, a generator without `0`, or a generator whose coarray has a hole.",
+        "",
+        "```",
+        "assert_eq!(mrlyrs::num::arrays::law(&[0, 1, 2, 4], 4), Some((81, 256)));",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "generator",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u64"
+            }
+          }
+        },
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        }
+      ],
+      "ret": {
+        "t": "option",
+        "item": {
+          "t": "tuple",
+          "items": [
+            {
+              "t": "scalar",
+              "name": "u64"
+            },
+            {
+              "t": "scalar",
+              "name": "u64"
+            }
+          ]
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::arrays::lost",
+      "name": "lost",
+      "module": "num::arrays",
+      "defined_at": "num/arrays.rs:137",
+      "docs": [
+        "Returns the lags that removing the sensor deletes from the coarray, ascending: those every pair of which holds it; empty when the sensor is inessential or absent.",
+        "",
+        "```",
+        "assert_eq!(mrlyrs::num::arrays::lost(&[0, 1, 2], 1), vec![-1, 1]);",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "sensors",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u64"
+            }
+          }
+        },
+        {
+          "name": "sensor",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "scalar",
+          "name": "i64"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::arrays::paired",
+      "name": "paired",
+      "module": "num::arrays",
+      "defined_at": "num/arrays.rs:98",
+      "docs": [
+        "Returns the paired sensors, ascending: each `g` with a partner `h` whose lag `g - h` has weight `1`, the set `U` of condition C1 of Cohen and Eldar; a paired sensor is essential.",
+        "",
+        "```",
+        "assert_eq!(mrlyrs::num::arrays::paired(&[0, 1, 2, 4]), vec![0, 1, 4]);",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "sensors",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u64"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "scalar",
+          "name": "u64"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::arrays::weights",
+      "name": "weights",
+      "module": "num::arrays",
+      "defined_at": "num/arrays.rs:65",
+      "docs": [
+        "Returns the coarray weights of the sensors, `w(t)` for every lag `t` from `-span` to `span` at index `t + span`, `span` the largest sensor less the least: the count of ordered pairs `(p, q)` of sensors with `p - q = t`.",
+        "",
+        "```",
+        "let w = mrlyrs::num::arrays::weights(&[0, 1, 4, 6]);",
+        "assert_eq!(w, vec![1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1]);",
+        "```"
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "sensors",
+          "ty": {
+            "t": "slice",
+            "mutable": false,
+            "item": {
+              "t": "scalar",
+              "name": "u64"
+            }
+          }
+        }
+      ],
+      "ret": {
+        "t": "vec",
+        "item": {
+          "t": "scalar",
+          "name": "u64"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
       "path": "num::automaton::Automaton::abscissa",
       "name": "abscissa",
       "module": "num::automaton",
@@ -58306,6 +58954,398 @@
         "item": {
           "t": "scalar",
           "name": "u32"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::kummer::carry",
+      "name": "carry",
+      "module": "num::kummer",
+      "defined_at": "num/kummer.rs:45",
+      "docs": [
+        "Builds the carry automaton of `K_(a,b)` at the prime, `a` the top and `b` the bottom.",
+        "",
+        "At `(3, 1)` and `p = 7` state `0` keeps the digits `0..2` to itself and `4` to state `1`, and state `1` keeps `0, 1` to state `0` and `3, 4` to itself.",
+        "",
+        "```",
+        "let k = mrlyrs::num::kummer::carry(7, 3, 1).unwrap();",
+        "assert_eq!(k.states, vec![(0, 0), (0, 1)]);",
+        "assert_eq!(k.moves[0], vec![Some(0), Some(0), Some(0), None, Some(1), None, None]);",
+        "```",
+        "",
+        "# Errors",
+        "",
+        "Errs when `p` is not a prime, when `1 <= b < a <= MOST` fails, or when the table passes [`TABLE`] moves."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "prime",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "top",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "bottom",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "plain",
+          "path": "num::kummer::Carry"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::kummer::columns",
+      "name": "columns",
+      "module": "num::kummer",
+      "defined_at": "num/kummer.rs:108",
+      "docs": [
+        "Returns the columns the automaton reads for `k`, units first: one per digit of `k`, then the zeros that spend the carries, ending at the first column that carries or once every digit is read and the state is `(0, 0)` again.",
+        "",
+        "```",
+        "let read = mrlyrs::num::kummer::columns(18, 7, 3, 1).unwrap();",
+        "assert_eq!((read[0].digit, read[0].next), (4, Some((0, 1))));",
+        "assert_eq!((read[1].left, read[1].right, read[1].next), (2, 5, None));",
+        "```",
+        "",
+        "# Errors",
+        "",
+        "Errs as [`carry`] does on the prime and the pair."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "k",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "prime",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "top",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "bottom",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "vec",
+          "item": {
+            "t": "plain",
+            "path": "num::kummer::Column"
+          }
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::kummer::count",
+      "name": "count",
+      "module": "num::kummer",
+      "defined_at": "num/kummer.rs:188",
+      "docs": [
+        "Returns the count of `k < p^level` in `K_(a,b)`: the words of length `level` the automaton allows, summed by the state they end in over the states that close.",
+        "",
+        "At every prime `p > a` every state keeps `(p + 1)/2` digits and every state closes, so the count is `((p + 1)/2)^level`; at `p <= a` it can fail, as at `(3, 1)` and `p = 3`.",
+        "",
+        "```",
+        "use mrlyrs::num::kummer::count;",
+        "assert_eq!(count(7, 3, 1, 5).unwrap(), 1024);",
+        "assert_eq!(count(3, 3, 1, 11).unwrap(), 1);",
+        "```",
+        "",
+        "# Errors",
+        "",
+        "Errs as [`carry`] does, and when `p^level` passes a `u128`."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "prime",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "top",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "bottom",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "level",
+          "ty": {
+            "t": "scalar",
+            "name": "u32"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "u128"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::kummer::member",
+      "name": "member",
+      "module": "num::kummer",
+      "defined_at": "num/kummer.rs:141",
+      "docs": [
+        "Returns whether `k` lies in `K_(a,b)`, read by the carry automaton: whether the prime does not divide `C(a k, b k)`.",
+        "",
+        "```",
+        "use mrlyrs::num::kummer::member;",
+        "assert!(member(4, 7, 3, 1).unwrap() && member(14, 7, 3, 1).unwrap());",
+        "assert!(!member(18, 7, 3, 1).unwrap());",
+        "```",
+        "",
+        "# Errors",
+        "",
+        "Errs as [`carry`] does on the prime and the pair."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "k",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "prime",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "top",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "bottom",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "scalar",
+          "name": "bool"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::kummer::valuation",
+      "name": "valuation",
+      "module": "num::kummer",
+      "defined_at": "num/kummer.rs:156",
+      "docs": [
+        "Returns `v_p(C(a k, b k))` by Legendre's digit sums, `(s_p(b k) + s_p((a - b) k) - s_p(a k))/(p - 1)` with `s_p` the digit sum in base `p`: the carries of `b k + (a - b) k`.",
+        "",
+        "```",
+        "assert_eq!(mrlyrs::num::kummer::valuation(18, 7, 3, 1).unwrap(), 1);",
+        "```",
+        "",
+        "# Errors",
+        "",
+        "Errs as [`carry`] does on the prime and the pair."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "k",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "prime",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "top",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "bottom",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "scalar",
+          "name": "u32"
+        }
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::kummer::witness",
+      "name": "witness",
+      "module": "num::kummer",
+      "defined_at": "num/kummer.rs:223",
+      "docs": [
+        "Returns the least witness that `K_(a,b)` is no digit design, as the pair `(u, v p)` of elements: digits `u, v < p` with `u` and `v p` in the set and `u + v p` outside it, least `u + v p` first; a digit design holding `u` and `v p` holds `u + v p`. `None` when no two such digits exist, as on the half interval `K_(2,1)`.",
+        "",
+        "```",
+        "use mrlyrs::num::kummer::witness;",
+        "assert_eq!(witness(7, 3, 1).unwrap(), Some((4, 14)));",
+        "assert_eq!(witness(7, 2, 1).unwrap(), None);",
+        "```",
+        "",
+        "# Errors",
+        "",
+        "Errs as [`carry`] does."
+      ],
+      "owner": null,
+      "self_kind": null,
+      "params": [
+        {
+          "name": "prime",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "top",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        },
+        {
+          "name": "bottom",
+          "ty": {
+            "t": "scalar",
+            "name": "u64"
+          }
+        }
+      ],
+      "ret": {
+        "t": "result",
+        "item": {
+          "t": "option",
+          "item": {
+            "t": "tuple",
+            "items": [
+              {
+                "t": "scalar",
+                "name": "u64"
+              },
+              {
+                "t": "scalar",
+                "name": "u64"
+              }
+            ]
+          }
         }
       },
       "dims": [],
