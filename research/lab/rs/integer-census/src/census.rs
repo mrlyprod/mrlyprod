@@ -105,7 +105,7 @@ pub fn bands(census: &Census) -> Vec<Band> {
     out
 }
 
-pub fn writers<'a>(sheet: &'a Sheet, value: i128) -> Vec<&'a Row> {
+pub fn writers(sheet: &Sheet, value: i128) -> Vec<&Row> {
     sheet
         .rows
         .iter()

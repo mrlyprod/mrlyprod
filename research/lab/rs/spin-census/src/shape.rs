@@ -50,9 +50,9 @@ pub fn oct(n: usize) -> Vec<Vec<usize>> {
                 .map(|f| {
                     let p = [f / (n * n), (f / n) % n, f % n];
                     let mut q = [p[axis[0]], p[axis[1]], p[axis[2]]];
-                    for k in 0..3 {
+                    for (k, v) in q.iter_mut().enumerate() {
                         if signs >> k & 1 == 1 {
-                            q[k] = n - 1 - q[k];
+                            *v = n - 1 - *v;
                         }
                     }
                     (q[0] * n + q[1]) * n + q[2]
@@ -124,9 +124,9 @@ pub fn canon(bits: u128, cells: usize, group: &[Vec<usize>]) -> u128 {
     let mut best = u128::MAX;
     for map in group {
         let mut x = 0u128;
-        for j in 0..cells {
+        for (j, &target) in map.iter().enumerate().take(cells) {
             if bits >> j & 1 == 1 {
-                x |= 1u128 << map[j];
+                x |= 1u128 << target;
             }
         }
         best = best.min(x);
@@ -170,7 +170,7 @@ fn picture(bits: u128) -> String {
         .join("/")
 }
 
-fn solve(matrix: &mut Vec<Vec<f64>>, rhs: &mut Vec<f64>) -> Option<Vec<f64>> {
+fn solve(matrix: &mut [Vec<f64>], rhs: &mut [f64]) -> Option<Vec<f64>> {
     let n = rhs.len();
     for col in 0..n {
         let mut pivot = col;
@@ -184,15 +184,17 @@ fn solve(matrix: &mut Vec<Vec<f64>>, rhs: &mut Vec<f64>) -> Option<Vec<f64>> {
         }
         matrix.swap(col, pivot);
         rhs.swap(col, pivot);
-        for row in 0..n {
+        let lead = matrix[col].clone();
+        let lead_rhs = rhs[col];
+        for (row, (line, value)) in matrix.iter_mut().zip(rhs.iter_mut()).enumerate() {
             if row == col {
                 continue;
             }
-            let f = matrix[row][col] / matrix[col][col];
-            for k in col..n {
-                matrix[row][k] -= f * matrix[col][k];
+            let f = line[col] / lead[col];
+            for (cell, &p) in line[col..n].iter_mut().zip(&lead[col..n]) {
+                *cell -= f * p;
             }
-            rhs[row] -= f * rhs[col];
+            *value -= f * lead_rhs;
         }
     }
     Some((0..n).map(|i| rhs[i] / matrix[i][i]).collect())
@@ -203,22 +205,18 @@ fn rank(rows: &[Vec<f64>], tolerance: f64) -> usize {
     let width = work[0].len();
     let mut got = 0usize;
     for col in 0..width {
-        let mut pivot = None;
-        for row in got..work.len() {
-            if work[row][col].abs() > tolerance {
-                pivot = Some(row);
-                break;
-            }
-        }
-        let Some(pivot) = pivot else { continue };
+        let Some(pivot) = (got..work.len()).find(|&row| work[row][col].abs() > tolerance) else {
+            continue;
+        };
         work.swap(got, pivot);
-        for row in 0..work.len() {
+        let lead = work[got].clone();
+        for (row, line) in work.iter_mut().enumerate() {
             if row == got {
                 continue;
             }
-            let f = work[row][col] / work[got][col];
-            for k in col..width {
-                work[row][k] -= f * work[got][k];
+            let f = line[col] / lead[col];
+            for (cell, &p) in line[col..width].iter_mut().zip(&lead[col..width]) {
+                *cell -= f * p;
             }
         }
         got += 1;
@@ -323,20 +321,24 @@ pub fn control() {
     }
     let mut weights: Vec<Vec<f64>> = Vec::new();
     let mut worst = 0.0f64;
-    for m in 0..13 {
+    let columns: Vec<Vec<f64>> = (0..13)
+        .map(|m| spin1.iter().map(|row| row[m]).collect())
+        .collect();
+    for (m, column) in columns.iter().enumerate() {
         let mut matrix: Vec<Vec<f64>> = chosen.iter().map(|&j| rows[j].clone()).collect();
-        let mut rhs: Vec<f64> = chosen.iter().map(|&j| spin1[j + 1][m]).collect();
+        let mut rhs: Vec<f64> = chosen.iter().map(|&j| column[j + 1]).collect();
         let Some(w) = solve(&mut matrix, &mut rhs) else {
             println!("  the level-1 system is singular at order {m}");
             return;
         };
-        let scale = (1..512usize)
-            .map(|c| spin1[c][m].abs())
+        let scale = column[1..512]
+            .iter()
+            .map(|v| v.abs())
             .fold(0.0f64, f64::max)
             .max(1e-300);
         for (i, row) in rows.iter().enumerate() {
             let predicted: f64 = row.iter().zip(&w).map(|(a, b)| a * b).sum();
-            worst = worst.max((predicted - spin1[i + 1][m]).abs() / scale);
+            worst = worst.max((predicted - column[i + 1]).abs() / scale);
         }
         let top = w.iter().fold(0.0f64, |a, b| a.max(b.abs())).max(1e-300);
         weights.push(w.iter().map(|v| v / top).collect());
@@ -556,8 +558,7 @@ fn level_two_window(
     let mut survivors: Vec<(u32, u32)> = Vec::new();
     let mut scratch = vec![0u32; table.count];
     let mut touched: Vec<u32> = Vec::new();
-    for weight in 0..strata.len() {
-        let stratum = &strata[weight];
+    for (weight, stratum) in strata.iter().enumerate() {
         if stratum.is_empty() {
             continue;
         }

@@ -22,7 +22,7 @@ export const load = (root = document) => Promise.all(named(root).map(pull));
 export function mount(root = document) {
   const jobs = [];
   for (const host of root.querySelectorAll('[data-island]')) {
-    if (live.has(host) || host.closest('dialog:not([open])')) continue;
+    if (live.has(host)) continue;
     const src = host.dataset.island;
     const job = import(src).then((entry) => {
       keep(src);

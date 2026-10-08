@@ -33,7 +33,7 @@ fn carries(n: u64, bits: usize) -> u64 {
 }
 
 fn t_free(n: u64) -> u64 {
-    if n % 2 == 0 {
+    if n.is_multiple_of(2) {
         n / 2
     } else {
         free(n) / 2
@@ -304,27 +304,24 @@ fn report_free() {
     println!("free seconds {:.2}", start.elapsed().as_secs_f64());
 }
 
+type Stat = (&'static str, fn(u64) -> u64);
+
 fn report_refutations() {
     let start = Instant::now();
     let limit = 1u64 << 16;
-    let stats: Vec<(&str, Box<dyn Fn(u64) -> u64>)> = vec![
-        ("popcount", Box::new(|n: u64| u64::from(n.count_ones()))),
-        ("longest_run", Box::new(|n: u64| u64::from(longest_run(n)))),
-        ("v2", Box::new(|n: u64| u64::from(v2(n)))),
-        ("digit_count", Box::new(|n: u64| u64::from(digits(n)))),
-        (
-            "popcount_and_v2",
-            Box::new(|n: u64| u64::from(n.count_ones()) * 128 + u64::from(v2(n))),
-        ),
-        (
-            "all_four",
-            Box::new(|n: u64| {
-                ((u64::from(n.count_ones()) * 128 + u64::from(longest_run(n))) * 128
-                    + u64::from(v2(n)))
-                    * 128
-                    + u64::from(digits(n))
-            }),
-        ),
+    let stats: [Stat; 6] = [
+        ("popcount", |n| u64::from(n.count_ones())),
+        ("longest_run", |n| u64::from(longest_run(n))),
+        ("v2", |n| u64::from(v2(n))),
+        ("digit_count", |n| u64::from(digits(n))),
+        ("popcount_and_v2", |n| {
+            u64::from(n.count_ones()) * 128 + u64::from(v2(n))
+        }),
+        ("all_four", |n| {
+            ((u64::from(n.count_ones()) * 128 + u64::from(longest_run(n))) * 128 + u64::from(v2(n)))
+                * 128
+                + u64::from(digits(n))
+        }),
     ];
     println!("refute statistic least_pair d_loc_pair disagreeing_pairs_below_2^16");
     for (name, key) in &stats {
@@ -434,6 +431,8 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    type Pinned = (&'static str, fn(u64) -> u64, u64, u64, u32, u32);
 
     #[test]
     fn the_carry_word_is_the_defect() {
@@ -556,7 +555,7 @@ mod tests {
 
     #[test]
     fn the_defect_is_no_function_of_its_statistics() {
-        let pinned: [(&str, fn(u64) -> u64, u64, u64, u32, u32); 6] = [
+        let pinned: [Pinned; 6] = [
             ("popcount", |n| u64::from(n.count_ones()), 1, 2, 2, 0),
             ("longest_run", |n| u64::from(longest_run(n)), 1, 2, 2, 0),
             ("v2", |n| u64::from(v2(n)), 1, 3, 2, 3),

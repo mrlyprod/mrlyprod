@@ -1344,11 +1344,13 @@ static DOORS: &[Door] = &[
     ("num.sumset.Pair.clean", "(self: num.sumset.Pair) -> bool", Some(door_num_sumset_pair_clean)),
     ("num.sumset.Pair.copy", "(self: num.sumset.Pair) -> bool", Some(door_num_sumset_pair_copy)),
     ("num.sumset.Pair.energy", "(self: num.sumset.Pair) -> u128", Some(door_num_sumset_pair_energy)),
+    ("num.sumset.Pair.four", "(self: num.sumset.Pair) -> u32", Some(door_num_sumset_pair_four)),
     ("num.sumset.Pair.gap", "(self: num.sumset.Pair) -> (u64, u64)?", Some(door_num_sumset_pair_gap)),
     ("num.sumset.Pair.largest", "(self: num.sumset.Pair) -> u64", Some(door_num_sumset_pair_largest)),
     ("num.sumset.Pair.new", "(three: u32, four: u32) -> num.sumset.Pair", Some(door_num_sumset_pair_new)),
     ("num.sumset.Pair.ratio", "(self: num.sumset.Pair, energy: u128) -> f64", Some(door_num_sumset_pair_ratio)),
     ("num.sumset.Pair.scale", "(self: num.sumset.Pair) -> f64", Some(door_num_sumset_pair_scale)),
+    ("num.sumset.Pair.three", "(self: num.sumset.Pair) -> u32", Some(door_num_sumset_pair_three)),
     ("num.sumset.Sumset.contains", "(self: num.sumset.Sumset, x: u64) -> bool? # uncallable: num::sumset::Sumset has no Deserialize", None),
     ("num.sumset.Sumset.count", "(self: num.sumset.Sumset, x: u64) -> u64? # uncallable: num::sumset::Sumset has no Deserialize", None),
     ("num.sumset.Sumset.density", "(self: num.sumset.Sumset, x: u64) -> f64? # uncallable: num::sumset::Sumset has no Deserialize", None),
@@ -11493,6 +11495,12 @@ fn door_num_sumset_pair_energy(name: &str, args: &[Value]) -> Done {
     ))
 }
 
+fn door_num_sumset_pair_four(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::num::sumset::Pair = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::num::sumset::Pair::four(&a0)))
+}
+
 fn door_num_sumset_pair_gap(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::num::sumset::Pair = take!(name, 0, &args[0]);
@@ -11526,6 +11534,12 @@ fn door_num_sumset_pair_scale(name: &str, args: &[Value]) -> Done {
     count(name, args, 1)?;
     let a0: mrlyrs::num::sumset::Pair = take!(name, 0, &args[0]);
     Ok(give!(mrlyrs::num::sumset::Pair::scale(&a0)))
+}
+
+fn door_num_sumset_pair_three(name: &str, args: &[Value]) -> Done {
+    count(name, args, 1)?;
+    let a0: mrlyrs::num::sumset::Pair = take!(name, 0, &args[0]);
+    Ok(give!(mrlyrs::num::sumset::Pair::three(&a0)))
 }
 
 fn door_num_sumset_pairs(name: &str, args: &[Value]) -> Done {

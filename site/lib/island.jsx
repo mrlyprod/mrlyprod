@@ -1,5 +1,4 @@
 import { createRoot } from 'react-dom/client';
-import { follow } from './mrly.js';
 
 export function island(open) {
   const live = new Map();
@@ -10,11 +9,9 @@ export function island(open) {
       if (!opened) return;
       const { at = host, node, close } = opened;
       const root = createRoot(at);
-      const quit = follow();
       root.render(node);
       live.set(host, () => {
         root.unmount();
-        quit();
         close?.();
       });
     },

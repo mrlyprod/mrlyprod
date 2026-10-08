@@ -11,7 +11,7 @@ export type Paint = (text: string, lang: string) => Promise<string[] | null> | s
 
 export type Tools = {
   load: (url: string) => Promise<Uint8Array | null>;
-  md?: (text: string, link: (url: string) => string) => Promise<string> | string;
+  md?: (text: string, link: (url: string) => string | null) => Promise<string> | string;
 };
 
 export type Code = { text: string; lang: string };
@@ -130,7 +130,9 @@ export function find(wood: Wood, path: string): Twig | null {
 
 const DENY = /^(?:javascript|data|vbscript):/i;
 
-export function link(dir: string, url: string, wood?: Wood): string {
+export function link(dir: string, url: string): string;
+export function link(dir: string, url: string, wood: Wood): string | null;
+export function link(dir: string, url: string, wood?: Wood): string | null {
   if (DENY.test(url.replace(/[\u0000- ]/g, ""))) return "#";
   if (/^(https?:|mailto:|tel:|#|\/)/.test(url)) return url;
   const cut = url.search(/[#?]/);
@@ -144,8 +146,10 @@ export function link(dir: string, url: string, wood?: Wood): string {
     else out.push(part);
   }
   const path = out.join("/");
-  if (head.endsWith("/") || !path) return dirRoute(path) + tail;
-  if (IMAGE.has(ext(path)) || ext(path) === "pdf") return `${(wood && find(wood, path)?.u) || `/${rawPath(path)}`}${tail}`;
+  const twig = wood ? find(wood, decode(path)) : null;
+  if (wood && !twig) return null;
+  if (twig ? twig.k === "d" : head.endsWith("/") || !path) return dirRoute(path) + tail;
+  if (IMAGE.has(ext(path)) || ext(path) === "pdf") return `${twig?.u || `/${rawPath(path)}`}${tail}`;
   return fileRoute(path) + tail;
 }
 

@@ -53,7 +53,7 @@ pub fn make_family_depth(q: u64, digits: Vec<u64>, lmax: usize) -> Family {
     if digit_gcd(&digits) == 1 {
         let top = *digits.iter().max().unwrap();
         let mut a = 2;
-        while a * top <= q - 1 {
+        while a * top < q {
             children.push(a);
             a += 1;
         }
@@ -111,14 +111,14 @@ pub fn sweep(q: u64, digits: &[u64], lmax: usize, visit: &mut impl FnMut(u64, us
 fn twist(a: u64, v: u64, mu_v: i8) -> i64 {
     match a {
         2 => {
-            if v % 2 == 0 {
+            if v.is_multiple_of(2) {
                 0
             } else {
                 -(mu_v as i64)
             }
         }
         3 => {
-            if v % 3 == 0 {
+            if v.is_multiple_of(3) {
                 0
             } else {
                 -(mu_v as i64)

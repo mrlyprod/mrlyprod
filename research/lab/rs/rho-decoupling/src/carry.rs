@@ -63,13 +63,13 @@ fn is_prime(n: u128) -> bool {
         return false;
     }
     for &p in MR_BASES.iter() {
-        if n % p == 0 {
+        if n.is_multiple_of(p) {
             return n == p;
         }
     }
     let mut d = n - 1;
     let mut r = 0;
-    while d % 2 == 0 {
+    while d.is_multiple_of(2) {
         d /= 2;
         r += 1;
     }
@@ -92,11 +92,7 @@ fn is_prime(n: u128) -> bool {
 // FACTORISATION
 
 fn absdiff(a: u128, b: u128) -> u128 {
-    if a > b {
-        a - b
-    } else {
-        b - a
-    }
+    a.abs_diff(b)
 }
 
 fn brent(n: u128, c: u128) -> u128 {
@@ -172,7 +168,7 @@ fn factorise(mut n: u128) -> (BTreeMap<u128, u32>, bool) {
     let mut unknown = false;
     let mut p = 2u128;
     while p <= 100_000 && p * p <= n {
-        while n % p == 0 {
+        while n.is_multiple_of(p) {
             *out.entry(p).or_insert(0) += 1;
             n /= p;
         }
@@ -187,7 +183,7 @@ fn quot_map(m: &BTreeMap<u128, u32>, g: u64) -> BTreeMap<u128, u32> {
     let mut r = g as u128;
     let mut p = 2u128;
     while r > 1 {
-        while r % p == 0 {
+        while r.is_multiple_of(p) {
             let c = out.get_mut(&p).expect("g fails to divide q^t - 1");
             *c -= 1;
             if *c == 0 {
@@ -230,9 +226,9 @@ fn cyclotomic(q: u64, tmax: usize) -> Vec<BigInt> {
     let mut phi: Vec<BigInt> = vec![BigInt::from(1); tmax + 1];
     for d in 1..=tmax {
         let mut v = bigpow(&BigInt::from(q), d) - BigInt::from(1);
-        for e in 1..d {
+        for (e, p) in phi.iter().enumerate().take(d).skip(1) {
             if d % e == 0 {
-                v /= &phi[e];
+                v /= p;
             }
         }
         phi[d] = v;
@@ -289,13 +285,11 @@ fn count_div(q: u64, polys: &[Vec<u128>], l: usize, t: usize, g: u64) -> u128 {
         }
         state.iter_mut().for_each(|x| *x = 0);
         state[0] = 1;
-        for c in 0..t {
+        for (c, &want) in td.iter().enumerate().take(t) {
             let sc = if c < u { s + 1 } else { s };
             let poly = &polys[sc];
             next.iter_mut().for_each(|x| *x = 0);
-            let want = td[c];
-            for cr in 0..=cmax {
-                let v = state[cr];
+            for (cr, &v) in state.iter().enumerate().take(cmax + 1) {
                 if v == 0 {
                     continue;
                 }
@@ -330,7 +324,7 @@ struct Ctx {
 
 impl Ctx {
     fn new(q: u64, digits: Vec<u64>, label: &'static str, lmax: usize) -> Ctx {
-        let gs: Vec<u64> = (1..=q - 1).filter(|g| (q - 1) % g == 0).collect();
+        let gs: Vec<u64> = (1..=q - 1).filter(|g| (q - 1).is_multiple_of(*g)).collect();
         let polys = poly_powers(&digits, lmax);
         let qt: Vec<BigInt> = (0..=lmax)
             .map(|t| bigpow(&BigInt::from(q), t) - BigInt::from(1))
@@ -349,10 +343,10 @@ impl Ctx {
         for t in 0..=lmax {
             let mut m: BTreeMap<u128, u32> = BTreeMap::new();
             let mut unk = false;
-            for d in 1..=t {
+            for (d, (primes, unknown)) in split.iter().enumerate().take(t + 1).skip(1) {
                 if t % d == 0 {
-                    unk |= split[d].1;
-                    for (p, e) in &split[d].0 {
+                    unk |= unknown;
+                    for (p, e) in primes {
                         *m.entry(*p).or_insert(0) += e;
                     }
                 }
@@ -627,7 +621,7 @@ mod tests {
     fn brute(q: u64, digits: &[u64], l: usize, e: u128) -> u128 {
         fn rec(v: u128, len: usize, q: u64, digits: &[u64], l: usize, e: u128, hits: &mut u128) {
             if len == l {
-                if v % e == 0 {
+                if v.is_multiple_of(e) {
                     *hits += 1;
                 }
                 return;
@@ -678,7 +672,7 @@ mod tests {
                     let qt = (q as u128).pow(t as u32) - 1;
                     for &g in &gs {
                         let e = qt / g as u128;
-                        if e < 2 || e > 30000 {
+                        if !(2..=30000).contains(&e) {
                             continue;
                         }
                         assert_eq!(

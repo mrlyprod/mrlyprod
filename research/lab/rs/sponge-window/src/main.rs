@@ -61,11 +61,9 @@ fn integrand(a: f64, radius: f64, hole: &Hole, line: f64) -> f64 {
 
 fn simpson(
     f: &dyn Fn(f64) -> f64,
-    a: f64,
-    b: f64,
-    fa: f64,
+    (a, fa): (f64, f64),
+    (b, fb): (f64, f64),
     fm: f64,
-    fb: f64,
     whole: f64,
     depth: usize,
 ) -> f64 {
@@ -77,7 +75,8 @@ fn simpson(
     if depth == 0 || (left + right - whole).abs() <= 1e-22 {
         return left + right + (left + right - whole) / 15.0;
     }
-    simpson(f, a, m, fa, flm, fm, left, depth - 1) + simpson(f, m, b, fm, frm, fb, right, depth - 1)
+    simpson(f, (a, fa), (m, fm), flm, left, depth - 1)
+        + simpson(f, (m, fm), (b, fb), frm, right, depth - 1)
 }
 
 fn quadrature(radius: f64, hole: &Hole, line: f64) -> f64 {
@@ -96,11 +95,9 @@ fn quadrature(radius: f64, hole: &Hole, line: f64) -> f64 {
         let (fa, fb, fm) = (f(a), f(b), f((a + b) / 2.0));
         total += simpson(
             &f,
-            a,
-            b,
-            fa,
+            (a, fa),
+            (b, fb),
             fm,
-            fb,
             (b - a) * (fa + 4.0 * fm + fb) / 6.0,
             40,
         );

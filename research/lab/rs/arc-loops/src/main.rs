@@ -17,17 +17,14 @@ fn check() {
         for code in 0..1u128 << (base * base) {
             let d = Design::full(code, base);
             let blocks = series(base, &d.tile, top);
-            for level in 0..=top {
+            for (level, &want) in blocks.iter().enumerate() {
                 let (side, on) = d.cells(level);
                 let (loops, strands) = arcs(side, &on);
                 let euler = mirrors(side, &on);
                 levels += 1;
-                if loops as u128 != blocks[level]
-                    || euler != loops as i64
-                    || strands != 2 * side as u64
-                {
+                if loops as u128 != want || euler != loops as i64 || strands != 2 * side as u64 {
                     bad += 1;
-                    println!("mismatch {} level {level}: arcs {loops}/{strands}, mirrors {euler}, blocks {}", d.name(), blocks[level]);
+                    println!("mismatch {} level {level}: arcs {loops}/{strands}, mirrors {euler}, blocks {want}", d.name());
                 }
             }
             for g in 1..4 {

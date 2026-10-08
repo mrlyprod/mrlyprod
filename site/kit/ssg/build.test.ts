@@ -123,14 +123,17 @@ test("a headline that closes a script tag cannot close the ld+json block", () =>
 
 /* ICONS */
 
-test("icons come through the spec: a glyph grid draws five files and no grid draws none", async () => {
+test("icons come through the spec: a glyph grid draws six files and no grid draws none", async () => {
   const rows = ["10101", "01010", "10101", "01010", "10101"];
   const { out } = await made(site(), { icons: { rows, svg: "<svg/>" } } as unknown as Spec);
   const paths = out.map((one) => one.path);
-  for (const path of ["favicon.svg", "favicon.png", "apple-touch-icon.png", "icon-192.png", "icon-512.png"]) expect(paths).toContain(path);
+  for (const path of ["favicon.svg", "favicon.png", "favicon.ico", "apple-touch-icon.png", "icon-192.png", "icon-512.png"]) expect(paths).toContain(path);
   expect(out.find((one) => one.path === "favicon.svg")!.bytes).toBe("<svg/>");
   const png = out.find((one) => one.path === "favicon.png")!.bytes as Uint8Array;
   expect([...png.subarray(0, 8)]).toEqual([137, 80, 78, 71, 13, 10, 26, 10]);
+  const ico = out.find((one) => one.path === "favicon.ico")!.bytes as Uint8Array;
+  expect([...ico.subarray(0, 8)]).toEqual([0, 0, 1, 0, 1, 0, 32, 32]);
+  expect([...ico.subarray(22, 30)]).toEqual([137, 80, 78, 71, 13, 10, 26, 10]);
   expect((await made()).out.map((one) => one.path)).not.toContain("favicon.png");
 });
 

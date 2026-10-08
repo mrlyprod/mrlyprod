@@ -19336,7 +19336,7 @@ pub mod num {
         use pyo3::types::PyDict;
         use pyo3::IntoPyObjectExt;
 
-        /// A pair of levels: the base-3 level `A_k = A meet [0, 3^k)` against the base-4 level `B_m = B meet [0, 4^m)`, `k` the field `three` and `m` the field `four`.
+        /// A pair of levels: the base-3 level `A_k = A meet [0, 3^k)` against the base-4 level `B_m = B meet [0, 4^m)`, `k` read by `three()` and `m` by `four()`.
         #[pyclass(name = "Pair", module = "mrlypy.num.sumset", from_py_object)]
         #[derive(Clone)]
         pub struct Pair(pub mrlyrs::num::sumset::Pair);
@@ -19349,32 +19349,6 @@ pub mod num {
             pub fn __new__(three: u32, four: u32) -> PyResult<Self> {
                 let out = mrlyrs::num::sumset::Pair::new(three, four);
                 Ok(Self(ok(out)?))
-            }
-            /// The base-3 level `k`.
-            #[getter]
-            #[pyo3(name = "three")]
-            pub fn three<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.three;
-                (value).into_bound_py_any(py)
-            }
-            #[setter]
-            #[pyo3(name = "three")]
-            pub fn set_three(&mut self, value: u32) -> PyResult<()> {
-                self.0.three = value;
-                Ok(())
-            }
-            /// The base-4 level `m`.
-            #[getter]
-            #[pyo3(name = "four")]
-            pub fn four<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let value = self.0.four;
-                (value).into_bound_py_any(py)
-            }
-            #[setter]
-            #[pyo3(name = "four")]
-            pub fn set_four(&mut self, value: u32) -> PyResult<()> {
-                self.0.four = value;
-                Ok(())
             }
             /// Whether the pair is clean, `3^k > d(k, m)` and `4^m > d(k, m)`, so that `S meet [0, d] = A_k + B_m`.
             #[pyo3(name = "clean", signature = ())]
@@ -19392,6 +19366,12 @@ pub mod num {
             #[pyo3(name = "energy", signature = ())]
             pub fn energy<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::sumset::Pair::energy(&self.0);
+                (out).into_bound_py_any(py)
+            }
+            /// The base-4 level `m`.
+            #[pyo3(name = "four", signature = ())]
+            pub fn four<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::sumset::Pair::four(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// The first and the last integer of the open interval `(d(k, m), min(3^k, 4^m))`, which `S` misses, or `None` when it holds none.
@@ -19427,6 +19407,12 @@ pub mod num {
             #[pyo3(name = "scale", signature = ())]
             pub fn scale<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                 let out = mrlyrs::num::sumset::Pair::scale(&self.0);
+                (out).into_bound_py_any(py)
+            }
+            /// The base-3 level `k`.
+            #[pyo3(name = "three", signature = ())]
+            pub fn three<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let out = mrlyrs::num::sumset::Pair::three(&self.0);
                 (out).into_bound_py_any(py)
             }
             /// Reads plain data into the class.

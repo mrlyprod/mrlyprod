@@ -362,8 +362,7 @@ pub fn residue_count(design: &Design, level: u32, modulus: u64) -> u128 {
         .collect();
     for _ in 0..level {
         next.iter_mut().for_each(|slot| *slot = 0);
-        for state in 0..states {
-            let weight = cur[state];
+        for (state, &weight) in cur.iter().enumerate() {
             if weight == 0 {
                 continue;
             }
@@ -613,8 +612,8 @@ impl Ctx {
         let mut total = 0i128;
         for set in 0..self.size {
             let rank = (set as u32).count_ones() as usize;
-            for index in 0..=rank {
-                poly[index] = self.ranked[index * self.size + set];
+            for (index, slot) in poly.iter_mut().enumerate().take(rank + 1) {
+                *slot = self.ranked[index * self.size + set];
             }
             for slot in square[..=(2 * rank).min(top)].iter_mut() {
                 *slot = 0;
@@ -647,7 +646,7 @@ impl Ctx {
                     sum as i128
                 };
                 let weight = self.binomial[top - rank][degree - rank] as i128;
-                if (degree - rank) % 2 == 0 {
+                if (degree - rank).is_multiple_of(2) {
                     acc += weight * cube;
                 } else {
                     acc -= weight * cube;
@@ -786,8 +785,8 @@ impl Ctx {
         let mut best_cost = u64::MAX;
         for cap in top / 2..=top {
             let mut cost = (cap as u64 + 1) * slice;
-            for rank in cap + 1..=top {
-                cost += histogram[rank] * (1u64 << (top - rank)) * 12;
+            for (rank, &count) in histogram.iter().enumerate().take(top + 1).skip(cap + 1) {
+                cost += count * (1u64 << (top - rank)) * 12;
             }
             if cost < best_cost {
                 best_cost = cost;
@@ -809,18 +808,18 @@ impl Ctx {
             let rank = (set as u32).count_ones() as usize;
             let degree = rank.min(cap);
             let mut sum = 0u64;
-            for index in 0..=degree {
-                left[index] = self.ranked32[index * size + set] as u64;
-                sum += left[index];
+            for (index, slot) in left.iter_mut().enumerate().take(degree + 1) {
+                *slot = self.ranked32[index * size + set] as u64;
+                sum += *slot;
             }
             if sum == 0 {
                 continue;
             }
             let degree_other = (top - rank).min(cap);
             let mut sum = 0u64;
-            for index in 0..=degree_other {
-                right[index] = self.ranked32[index * size + other] as u64;
-                sum += right[index];
+            for (index, slot) in right.iter_mut().enumerate().take(degree_other + 1) {
+                *slot = self.ranked32[index * size + other] as u64;
+                sum += *slot;
             }
             if sum == 0 {
                 continue;
@@ -950,7 +949,7 @@ fn pair_term<R: Ring>(
         return R::zero();
     }
     let length = 2 * degree - rank + 1;
-    for slot in 0..length {
+    for (slot, cell) in table.iter_mut().enumerate().take(length) {
         let sum = rank + slot;
         let mut i = sum.saturating_sub(degree);
         let mut k = sum - i;
@@ -964,7 +963,7 @@ fn pair_term<R: Ring>(
         if i == k {
             value = value.plus(R::lift(poly[i]).times(R::lift(poly[i])));
         }
-        table[slot] = value;
+        *cell = value;
     }
     let spread = top - rank;
     let lowest = spread + 1 - other.len();
@@ -997,13 +996,15 @@ pub struct Profile {
     pub cells: std::sync::Mutex<Vec<Cell>>,
 }
 
-impl Profile {
-    pub fn new() -> Profile {
+impl Default for Profile {
+    fn default() -> Profile {
         Profile {
             cells: std::sync::Mutex::new(vec![Cell::default(); 40 * METHODS.len()]),
         }
     }
+}
 
+impl Profile {
     pub fn print(&self, level: u32) {
         let cells = self.cells.lock().unwrap();
         println!(
@@ -1041,16 +1042,32 @@ pub struct Level {
     pub seconds: f64,
 }
 
+struct Sieve {
+    fine_mu: Vec<i8>,
+    primes: Vec<u64>,
+    table: Vec<u32>,
+}
+
+impl Sieve {
+    fn new(design: &Design, top: u32) -> Sieve {
+        let span = 3u64.pow(top);
+        Sieve {
+            fine_mu: mobius(std::cmp::min(span, 1 << 16) as usize + 1),
+            primes: primes_to((span as f64).sqrt() as u64 + 2),
+            table: chunk_table(design.invert),
+        }
+    }
+}
+
 fn weight(
     design: &Design,
     level: u32,
-    fine_mu: &[i8],
-    primes: &[u64],
-    table: &[u32],
+    sieve: &Sieve,
     threads: usize,
     mode: Mode,
     profile: Option<&Profile>,
 ) -> i128 {
+    let (fine_mu, primes, table) = (&sieve.fine_mu[..], &sieve.primes[..], &sieve.table[..]);
     let span = 3u64.pow(level);
     let caps = caps_for(level, design.dimension, mode);
     let origin: i128 = if design.zero_filled() { 1 } else { 0 };
@@ -1137,18 +1154,12 @@ pub fn terms_each(
     mode: Mode,
     sink: &mut dyn FnMut(&Level),
 ) -> Vec<Level> {
-    let span = 3u64.pow(top);
-    let root = (span as f64).sqrt() as u64 + 2;
-    let primes = primes_to(root);
-    let fine_mu = mobius(std::cmp::min(span, 1 << 16) as usize + 1);
-    let table = chunk_table(design.invert);
+    let sieve = Sieve::new(design, top);
     let mut previous = 0i128;
     let mut out = Vec::new();
     for level in 1..=top {
         let clock = Instant::now();
-        let current = weight(
-            design, level, &fine_mu, &primes, &table, threads, mode, None,
-        );
+        let current = weight(design, level, &sieve, threads, mode, None);
         let value = if design.zero_filled() {
             current - previous
         } else {
@@ -1167,23 +1178,10 @@ pub fn terms_each(
 }
 
 pub fn profile(design: &Design, level: u32, threads: usize) -> i128 {
-    let span = 3u64.pow(level);
-    let root = (span as f64).sqrt() as u64 + 2;
-    let primes = primes_to(root);
-    let fine_mu = mobius(std::cmp::min(span, 1 << 16) as usize + 1);
-    let table = chunk_table(design.invert);
-    let profile = Profile::new();
+    let sieve = Sieve::new(design, level);
+    let profile = Profile::default();
     let clock = Instant::now();
-    let value = weight(
-        design,
-        level,
-        &fine_mu,
-        &primes,
-        &table,
-        threads,
-        Mode::Auto,
-        Some(&profile),
-    );
+    let value = weight(design, level, &sieve, threads, Mode::Auto, Some(&profile));
     let seconds = clock.elapsed().as_secs_f64();
     profile.print(level);
     println!("W({}) {} wall {:.3}", level, value, seconds);

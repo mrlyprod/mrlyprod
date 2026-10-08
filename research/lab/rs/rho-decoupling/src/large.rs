@@ -192,15 +192,14 @@ pub fn gram_top(g: &Grid, set: &[usize], iterations: usize) -> Gram {
     let mut used = 0usize;
     for it in 0..iterations {
         let mut w = vec![(0.0f64, 0.0f64); m];
-        for i in 0..m {
+        for (i, slot) in w.iter_mut().enumerate() {
             let (mut sr, mut si) = (0.0f64, 0.0f64);
-            for j in 0..m {
+            for (j, &(vr, vi)) in v.iter().enumerate() {
                 let (gr, gi) = entry(i, j);
-                let (vr, vi) = v[j];
                 sr += gr * vr - gi * vi;
                 si += gr * vi + gi * vr;
             }
-            w[i] = (sr, si);
+            *slot = (sr, si);
         }
         let mut num = 0.0f64;
         let mut den = 0.0f64;
@@ -562,8 +561,8 @@ mod tests {
             let f = fam(q, label);
             let g = grid(&f, l);
             let b = brute(q, &f.digits, l);
-            for a in 0..g.n {
-                assert!((g.fh[a].0 - b[a].0).abs() < 1e-7 && (g.fh[a].1 - b[a].1).abs() < 1e-7);
+            for (got, want) in g.fh.iter().zip(&b).take(g.n) {
+                assert!((got.0 - want.0).abs() < 1e-7 && (got.1 - want.1).abs() < 1e-7);
             }
         }
     }

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { front, inline, render, sheet, slug } from "./md.ts";
+import { front, inline, render, sheet, slug, summary } from "./md.ts";
 
 const math = (tex: string, display: boolean) => `<m${display ? " d" : ""}>${tex}</m>`;
 
@@ -89,6 +89,15 @@ describe("md", () => {
     const doc = sheet("# Hi *there*\n\nLead with [a](b).\n\n## Next\n\n- x", link);
     expect(doc).toEqual({ title: "Hi there", lead: 'Lead with <a href="/L/b">a</a>.', text: "Lead with a.", body: '<h2 id="next">Next</h2>\n<ul>\n<li>x</li>\n</ul>' });
     expect(sheet("Just prose.").title).toBe("");
+  });
+
+  test("a summary over the budget ends at its last sentence inside it, at a word only when no sentence ends there", () => {
+    const one = "First one ends here. Second, e.g. this, runs on";
+    expect(summary(one, 40)).toBe("First one ends here.");
+    expect(summary("Words with no stop at all run past the budget", 20)).toBe("Words with no stop");
+    expect(summary("Done. See Fig. 3 and Dr. Smith then", 31)).toBe("Done.");
+    expect(summary('He said "stop." Then on and on', 20)).toBe('He said "stop."');
+    expect(summary("Then (it ran.) And on and on", 18)).toBe("Then (it ran.)");
   });
 
   test("front matter is key colon value lines", () => {

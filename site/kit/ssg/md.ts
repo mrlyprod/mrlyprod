@@ -14,7 +14,7 @@ export { escape };
 
 /* TYPES */
 
-export type Link = (url: string, image?: boolean) => string | Pair;
+export type Link = (url: string, image?: boolean) => string | Pair | null;
 
 export type Options = {
   link?: Link;
@@ -50,11 +50,18 @@ export function title(md: string): string {
   return m ? plain(m[1]!) : "";
 }
 
+const STOP = /[.!?]["'”’)]*(?= (?![a-z]))/g;
+
+const SHORT = /(?<!\p{L})(?:\p{Lu}\p{L}{0,2}\. \p{Lu}|\p{L}{1,3}\. \p{N})$/u;
+
 export function summary(md: string, max = 200): string {
   const skip = /^(#{1,6} |```|\$\$|\||!\[)/;
   const line = md.split("\n").find((l) => l.trim() && !skip.test(l)) ?? "";
   const text = plain(line.replace(/^(- |\d+\. |> )/, ""));
   if (text.length <= max) return text;
+  const ends = [...text.matchAll(STOP)].filter((hit) => hit[0] !== "." || !SHORT.test(text.slice(0, hit.index + 3)));
+  const stop = ends.map((hit) => hit.index + hit[0].length).filter((end) => end <= max).at(-1);
+  if (stop !== undefined) return text.slice(0, stop);
   const cut = text.lastIndexOf(" ", max);
   return text.slice(0, cut > 0 ? cut : max);
 }
@@ -112,7 +119,7 @@ const headingText = (src: string, node: Heading) =>
 
 const LAZY = ' loading="lazy" decoding="async"';
 
-const flat = (url: string | Pair) => (typeof url === "string" ? url : url.light);
+const flat = (url: string, to: string | Pair | null) => (to === null ? url : typeof to === "string" ? to : to.light);
 
 function figure(src: string, node: Paragraph, opts: Options, lazy: boolean): Raw | null {
   if (node.children.length !== 1 || node.children[0]!.type !== "image") return null;
@@ -121,7 +128,7 @@ function figure(src: string, node: Paragraph, opts: Options, lazy: boolean): Raw
   if (widget) return { type: "raw", value: opts.widget!(widget[2]!, widget[3]!, inline(widget[1]!, opts)) };
   const image = text.match(FIGURE);
   if (!image) return null;
-  const href = (opts.link ?? ((u) => u))(image[2]!.trim(), true);
+  const href = (opts.link ?? ((u) => u))(image[2]!.trim(), true) ?? image[2]!.trim();
   const alt = (node.children[0] as { alt?: string }).alt ?? "";
   const shown = typeof href === "string" ? `<img src="${escape(href)}" alt="${escape(alt)}"${lazy ? LAZY : ""}>` : themed(href, alt, "", lazy ? LAZY : "");
   return { type: "raw", value: `<figure>${shown}<figcaption>${inline(image[1]!, opts)}</figcaption></figure>` };
@@ -132,6 +139,13 @@ function shape(src: string, opts: Options) {
     const ids = new Map<string, number>();
     const refs = new Set<string>();
     visit(tree, "imageReference", (node) => void refs.add(node.identifier));
+    const gone = new Set<string>();
+    if (opts.link)
+      visit(tree, "definition", (node) => {
+        const to = opts.link!(node.url, refs.has(node.identifier));
+        if (to === null) gone.add(node.identifier);
+        node.url = flat(node.url, to);
+      });
     let images = opts.lazy ? 1 : 0;
     visit(tree, (node, index, parent) => {
       if (node.type === "heading") {
@@ -142,10 +156,16 @@ function shape(src: string, opts: Options) {
       } else if (node.type === "list") node.spread = false;
       else if (node.type === "listItem") node.spread = false;
       else if (node.type === "image" || node.type === "imageReference") {
-        if (node.type === "image" && opts.link) node.url = flat(opts.link(node.url, true));
+        if (node.type === "image" && opts.link) node.url = flat(node.url, opts.link(node.url, true));
         if (images++) node.data = { ...node.data, hProperties: { loading: "lazy", decoding: "async" } };
-      } else if ((node.type === "link" || node.type === "definition") && opts.link) node.url = flat(opts.link(node.url, node.type === "definition" && refs.has(node.identifier)));
-      else if (node.type === "paragraph" && parent && index !== undefined) {
+      } else if ((node.type === "link" && opts.link) || (node.type === "linkReference" && gone.has(node.identifier))) {
+        const to = node.type === "link" ? opts.link!(node.url, false) : null;
+        if (node.type === "link" && to !== null) node.url = flat(node.url, to);
+        else if (parent && index !== undefined) {
+          parent.children.splice(index, 1, ...(node.children as never[]));
+          return index;
+        }
+      } else if (node.type === "paragraph" && parent && index !== undefined) {
         const only = node.children.length === 1 ? node.children[0]! : null;
         if (only && only.type === "inlineMath" && source(src, node).startsWith("$$")) {
           parent.children[index] = { type: "math", value: only.value };

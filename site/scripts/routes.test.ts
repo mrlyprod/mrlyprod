@@ -27,7 +27,7 @@ const CHROME = ["/menu/", "/", "/cart/"];
 
 const hrefs = (html: string) => [...html.matchAll(/<a class="tile" href="([^"]+)"/g)].map((found) => found[1]!);
 
-const ICON = /<a class="tile" href="([^"]+)"><picture><source data-dark srcset="\/figures\/([a-z0-9-]+)-dark\.webp"/g;
+const ICON = /<a class="tile" href="([^"]+)"><picture><source data-dark srcset="\/figures\/([a-z0-9-]+)-dark-[0-9a-f]{8}\.webp"/g;
 
 const OG = /<meta property="og:image" content="[^"]*\/(?:figures\/([a-z0-9-]+)-dark\.png|og\.png)">/;
 
@@ -41,7 +41,9 @@ const LIST = /^<nav class="contents" aria-label="Contents"><details><summary>Con
 
 const pages = readdirSync(join(home, "pages")).filter((name) => name.endsWith(".md")).map((name) => `/${name.slice(0, -3)}/`).sort();
 
-const apps = (JSON.parse(readFileSync(join(home, "apps", "apps.json"), "utf8")) as { id: string }[]).map((one) => `/${one.id}/`).sort();
+const rows = JSON.parse(readFileSync(join(home, "apps", "apps.json"), "utf8")) as { id: string; kind: string }[];
+
+const apps = rows.map((one) => `/${one.id}/`).sort();
 
 type Door = { name: string; href?: string; nodes?: Door[] };
 
@@ -53,6 +55,21 @@ test("every written page and every app is a route at the root, and none sits und
   for (const route of pages) expect([route, site.routes.find((one) => one.route === route)?.kind]).toEqual([route, "page"]);
   for (const route of apps) expect([route, site.routes.some((one) => one.route === route)]).toEqual([route, true]);
   expect(site.routes.filter((one) => /^\/(pages|apps|tools)\//.test(one.route))).toEqual([]);
+});
+
+test("an app that is not a tool is one spa page: its index.jsx the entry, its still the app figure pair over one line for a reader without scripts", async () => {
+  const made = rows.filter((one) => one.kind !== "tool");
+  expect(made.length).toBeGreaterThan(0);
+  for (const { id } of made) {
+    const route = site.routes.find((one) => one.route === `/${id}/`)!;
+    expect([route.kind, route.mode, route.entry]).toEqual(["app", "spa", join(home, "apps", id, "index.jsx")]);
+    const html = await drawn(`/${id}/`);
+    expect(main(html)).toContain(`<div id="root" data-island="/${id}/index.js" data-app="${id}"></div>`);
+    expect(main(html)).toMatch(new RegExp(`srcset="/figures/app-${id}-dark-[0-9a-f]{8}\\.webp"`));
+    expect(main(html)).toMatch(new RegExp(`src="/figures/app-${id}-light-[0-9a-f]{8}\\.webp"`));
+    expect(main(html).match(/<noscript><p>[^<]+<\/p><\/noscript>/g)).toHaveLength(1);
+    expect(html.match(OG)![1]).toBe(`app-${id}`);
+  }
 });
 
 test("the menu is two levels: the tree's doors and one tile per folder, then each folder a section of the same page with no url of its own", async () => {
@@ -93,18 +110,18 @@ test("a menu entry's icon is the figure its own page ships, site-page when the p
   expect(icons.get("#apps")).toBe("site-apps");
 });
 
-test("search.json holds one row per shown route, its title and the figure its own page ships, and no page but the menu names it", async () => {
-  const rows = JSON.parse(text(await globals(site, spec, true), "search.json")) as [string, string, string][];
+test("search.json holds one row per shown route, its title and the hashed figure pair its own page ships, and no page but the menu names it", async () => {
+  const rows = JSON.parse(text(await globals(site, spec, true), "search.json")) as [string, string, string, string][];
   const shown = site.routes.filter((one) => !one.hidden).flatMap((one) => one.urls?.map((url) => url.route) ?? (one.route.endsWith("/") ? [one.route] : []));
   expect(rows.map((row) => row[1])).toEqual([...shown].sort((a, b) => a.localeCompare(b)));
-  expect(rows.filter((row) => row.length !== 3 || !row[0] || !/^[a-z0-9-]+$/.test(row[2]))).toEqual([]);
+  expect(rows.filter((row) => row.length !== 4 || !row[0] || !/^\/figures\/[a-z0-9-]+-dark-[0-9a-f]{8}\.webp$/.test(row[2]) || row[3] !== row[2].replace(/-dark-[0-9a-f]{8}/, row[3].match(/-light-[0-9a-f]{8}/)?.[0] ?? ""))).toEqual([]);
   expect(rows.some((row) => row[1].startsWith("/raw/") || ["/cart/", "/stats/", "/404.html"].includes(row[1]))).toBe(false);
   const kinds = new Map(site.routes.filter((one) => !one.hidden && one.kind !== "raw").map((one) => [one.kind ?? "", one]));
   expect(kinds.size).toBeGreaterThan(15);
   for (const route of kinds.values()) {
     const href = route.urls?.[0]?.route ?? route.route;
     const page = text(await render(site, route, spec), `${href.slice(1)}index.html`);
-    expect([href, rows.find((row) => row[1] === href)?.[2]]).toEqual([href, page.match(OG)![1] ?? "site-page"]);
+    expect([href, rows.find((row) => row[1] === href)?.[2].replace(/^\/figures\/|-dark-[0-9a-f]{8}\.webp$/g, "")]).toEqual([href, page.match(OG)![1] ?? "site-page"]);
     expect([href, page.includes("search.json")]).toEqual([href, href === "/menu/"]);
   }
   expect(main(await drawn("/menu/"))).toContain(`<div class="menu" data-island="${site.asset("search.js")}" data-search="/search.json">`);
@@ -123,6 +140,14 @@ test("the four settings sit on the settings page alone, beside a line for a read
   expect([...new Set(page.match(SETTING))].sort()).toEqual(["data-font-pick", "data-saver-pick", "data-theme-toggle", "data-tint-pick"]);
   expect(page.match(/<noscript>/g)).toHaveLength(1);
   for (const route of ["/", "/about/", "/research/wiki/farey-sequence/", "/demos/sponge/"]) expect((await drawn(route)).match(SETTING)).toBeNull();
+});
+
+test("the footer is the legal line alone: no canvas, no svg, no link", async () => {
+  for (const route of ["/", "/about/", "/settings/", "/demos/sponge/"]) {
+    const foot = (await drawn(route)).match(/<footer class="base">(.*?)<\/footer>/s)![1]!;
+    expect([route, foot.match(/<(?:canvas|svg|a)[\s>]/)]).toEqual([route, null]);
+    expect([route, foot.includes('class="legal fine"')]).toEqual([route, true]);
+  }
 });
 
 test("the stats page carries one line for a reader without scripts, above its two mounts", async () => {
@@ -158,7 +183,7 @@ test("the code viewer's shell holds the explorer, no right pane, and the right b
   expect(html).toContain('<div class="scrim">');
 });
 
-test("a page's crumbs are the folders of its own path, the last one the page; home and the 404 page have none", async () => {
+test("a page's crumbs are the folders of its own path, the last one the page; home has none and the 404 page has one, not found", async () => {
   for (const route of ["/about/", "/research/", "/research/wiki/farey-sequence/", "/demos/sponge/", "/git/"]) {
     const found = [...sub(await drawn(route)).matchAll(CRUMB)];
     const parts = route.split("/").filter(Boolean);
@@ -168,7 +193,8 @@ test("a page's crumbs are the folders of its own path, the last one the page; ho
   }
   expect(sub(await drawn("/"))).not.toContain("crumbs");
   const lost = text(await render(site, site.routes.find((one) => one.route === "/404.html")!, spec), "404.html");
-  expect(sub(lost)).toBe('<div class="actions"></div>');
+  expect([...sub(lost).matchAll(CRUMB)].map((one) => [one[1], Boolean(one[2]), one[3]])).toEqual([["/404.html", true, "not found"]]);
+  expect(sub(lost)).toMatch(/<div class="actions"><\/div>$/);
 });
 
 test("every folder above a page is a page of its own, so every crumb resolves", () => {
@@ -183,14 +209,14 @@ test("a file path ends on the file itself, so the code viewer's crumbs follow th
   expect(crumbs("/git/a%20b/").map((one) => one.name)).toEqual(["git", "a b"]);
 });
 
-test("the header is three plain links, to the menu, home and the cart, the menu link alone naming the dialog module, and the subheader repeats none of them", async () => {
+test("the header is three plain links, to the menu, home and the cart, none naming a module of its own, and the subheader repeats none of them", async () => {
   for (const route of ["/", "/about/", "/research/wiki/farey-sequence/", "/demos/sponge/", "/git/"]) {
     const html = await drawn(route);
     const head = html.match(/<header class="top">([\s\S]*?)<\/header>/)![1]!;
     expect([...head.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map((one) => one[1]!)).toEqual(CHROME);
     expect(head.replace(/<svg[\s\S]*?<\/svg>/g, "").replace(/<a\b[^>]*>|<\/a>/g, "")).toBe("");
     expect([...sub(html).matchAll(/href="([^"]+)"/g)].map((one) => one[1]!).filter((href) => CHROME.includes(href))).toEqual([]);
-    expect([...head.matchAll(/<a\b[^>]*>/g)].map((one) => one[0].match(/ data-router="([^"]+)"/)?.[1] ?? "")).toEqual([site.asset("dialog.js"), "", ""]);
+    expect([route, html.includes("data-router")]).toEqual([route, false]);
   }
 });
 
@@ -207,4 +233,77 @@ test("home alone carries the welcome: its hall in the page and the folding wordm
   const wiki = await drawn("/research/wiki/");
   expect([home.includes('<div class="welcome" aria-hidden="true"></div>'), home.includes('class="glyphs fold"'), home.includes('<g class="x">')]).toEqual([true, true, true]);
   expect([wiki.includes('class="welcome"'), wiki.includes("glyphs fold")]).toEqual([false, false]);
+});
+
+type Hero = { name: string; href: string; line: string };
+
+const heroes = site.config.heroes as Hero[];
+
+const DOORWAY = /<a class="hero" href="([^"]+)"><div class="art" aria-hidden="true">((?:<i class=[a-z]><\/i>)+)<\/div><div class="plate" style="--col:(\d+);--row:(\d+);--pcol:(\d+);--prow:(\d+)"><h2>([^<]+)<\/h2><p>([^<]+)<\/p><\/div><\/a>/g;
+
+test("home's doorways are the heroes of site.json in order, each a link over its pixel art with the door's name and one line, the tint among its colours", async () => {
+  const found = [...main(await drawn("/")).matchAll(DOORWAY)];
+  expect(found.map((one) => [one[1], one[7], one[8]])).toEqual(heroes.map((one) => [one.href, one.name, one.line]));
+  expect(new Set(heroes.map((one) => one.name)).size).toBe(heroes.length);
+  expect(heroes.filter((one) => !tree.some((node) => node.name === one.name))).toEqual([]);
+  for (const one of found) {
+    const cells = one[2]!.match(/class=([a-z])/g)!;
+    expect([one[7], cells.length, cells.filter((cell) => cell === "class=a").length >= 8]).toEqual([one[7], 144, true]);
+    const [col, row, pcol, prow] = one.slice(3, 7).map(Number) as [number, number, number, number];
+    expect([one[7], col >= 1 && col + 6 <= 17, row >= 1 && row + 2 <= 10, pcol >= 1 && pcol + 7 <= 10, prow >= 1 && prow + 3 <= 17]).toEqual([one[7], true, true, true, true]);
+  }
+  expect(new Set(found.map((one) => one.slice(3, 7).join())).size).toBeGreaterThan(1);
+});
+
+test("home's outline opens with one h1, the site's name, ahead of the heroes", async () => {
+  const html = main(await drawn("/"));
+  expect(html.match(/<h1[ >]/g)).toHaveLength(1);
+  expect(html).toContain(`<h1 class="visually-hidden">${site.config.title}</h1>`);
+  expect(html.indexOf("<h1")).toBeLessThan(html.indexOf('class="hero"'));
+});
+
+const HALF = /<a class="half" href="([^"]+)"><div class="art" aria-hidden="true">((?:<i class=[a-z]><\/i>)+)<\/div><div class="plate" style="--col:(\d+);--row:(\d+);--pcol:(\d+);--prow:(\d+)"><h2>([^<]+)<\/h2><\/div><\/a>/g;
+
+test("home's shelf is one half hero per top-level door of the tree that is neither home nor a hero, in order, each a link over 72 cells of art with the door's name on a plate", async () => {
+  const html = main(await drawn("/"));
+  const shelf = html.match(/<section class="shelf" aria-label="More doors">([\s\S]*?)<\/section>/)![1]!;
+  const rest = tree.filter((node) => node.href !== "/" && !heroes.some((one) => one.name === node.name));
+  const found = [...shelf.matchAll(HALF)];
+  expect(1 + heroes.length + rest.length).toBe(tree.length);
+  expect(found.map((one) => one[0]).join("")).toBe(shelf);
+  expect(found.map((one) => [one[1], one[7]])).toEqual(rest.map((node) => [node.href ?? `/menu/#${node.name.toLowerCase()}`, node.name]));
+  expect(found).toHaveLength(6);
+  for (const one of found) {
+    const cells = one[2]!.match(/class=([a-z])/g)!;
+    const [col, row, pcol, prow] = one.slice(3, 7).map(Number) as [number, number, number, number];
+    expect([one[7], cells.length, cells.filter((cell) => cell === "class=a").length >= 4]).toEqual([one[7], 72, true]);
+    expect([one[7], col >= 1 && col + 5 <= 9, row >= 1 && row <= 9, pcol >= 1 && pcol + 5 <= 10, prow >= 1 && prow <= 8]).toEqual([one[7], true, true, true, true]);
+  }
+  expect(html.indexOf('class="heroes"')).toBeLessThan(html.indexOf('class="shelf"'));
+  expect(html.indexOf('class="shelf"')).toBeLessThan(html.indexOf('class="home"'));
+});
+
+test("home draws no right pane, no pane button and no scrim", async () => {
+  const html = await drawn("/");
+  expect([html.match(RIGHT), html.includes("data-pane="), html.includes('class="scrim"')]).toEqual([null, false, false]);
+});
+
+test("no page of any kind carries a dialog but the keys card, nor names the dialog module", async () => {
+  const kinds = new Map(site.routes.filter((one) => one.kind !== "raw").map((one) => [one.kind ?? "", one]));
+  expect(kinds.size).toBeGreaterThan(15);
+  for (const route of kinds.values()) {
+    const href = route.urls?.[0]?.route ?? route.route;
+    const html = text(await render(site, route, spec), href.endsWith("/") ? `${href.slice(1)}index.html` : href.slice(1));
+    expect([href, html.match(/<dialog(?! class="keys")/g)?.length ?? 0, html.includes("dialog.js")]).toEqual([href, 0, false]);
+  }
+});
+
+test("class=\"hero\" is home's alone: no page of any other kind carries one", async () => {
+  const kinds = new Map(site.routes.filter((one) => one.kind !== "raw").map((one) => [one.kind ?? "", one]));
+  expect(kinds.size).toBeGreaterThan(15);
+  for (const route of kinds.values()) {
+    const href = route.urls?.[0]?.route ?? route.route;
+    const html = text(await render(site, route, spec), href.endsWith("/") ? `${href.slice(1)}index.html` : href.slice(1));
+    expect([href, html.match(/class="hero"/g)?.length ?? 0]).toEqual([href, href === "/" ? heroes.length : 0]);
+  }
 });

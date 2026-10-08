@@ -30,8 +30,8 @@ fn classify(steps: usize, pad: usize) -> Pass {
         folded.insert(diagram.cells.min(mirror));
     }
     let mut sizes: BTreeMap<usize, usize> = BTreeMap::new();
-    for rule in 0..RULES {
-        *sizes.entry(class[rule]).or_insert(0) += 1;
+    for &c in &class {
+        *sizes.entry(c).or_insert(0) += 1;
     }
     let mut histogram: BTreeMap<usize, usize> = BTreeMap::new();
     for size in sizes.values() {
@@ -94,8 +94,8 @@ pub fn report() -> Census {
         .map(|r| (occurring[r], r & occurring[r] as usize))
         .collect();
     let mut members: BTreeMap<usize, Vec<usize>> = BTreeMap::new();
-    for rule in 0..RULES {
-        members.entry(class[rule]).or_default().push(rule);
+    for (rule, &c) in class.iter().enumerate() {
+        members.entry(c).or_default().push(rule);
     }
     let split: Vec<usize> = members
         .values()
@@ -136,8 +136,8 @@ pub fn report() -> Census {
         "the over-separated rules do not fall into two diagram classes"
     );
     let mut occ_sizes: BTreeMap<u32, usize> = BTreeMap::new();
-    for rule in 0..RULES {
-        *occ_sizes.entry(occurring[rule].count_ones()).or_insert(0) += 1;
+    for o in &occurring {
+        *occ_sizes.entry(o.count_ones()).or_insert(0) += 1;
     }
     println!("occurring-set sizes {occ_sizes:?}");
     Census { class, occurring }

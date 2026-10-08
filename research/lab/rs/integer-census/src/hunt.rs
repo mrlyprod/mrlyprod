@@ -362,8 +362,7 @@ fn arithmetic(sheet: &Sheet, book: &Census) {
     let top = squares
         .iter()
         .copied()
-        .filter(|&value| counts[value as usize] > 0)
-        .next_back()
+        .rfind(|&value| counts[value as usize] > 0)
         .unwrap_or(0);
     let writers = census::writers(sheet, top);
     println!(

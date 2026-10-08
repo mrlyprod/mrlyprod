@@ -166,7 +166,7 @@ fn cycles_by_powers(g: &Element, m: i64) -> usize {
         power = matmul(&base, &power, m);
         offset = affine(&base, offset, g.shift, m);
     }
-    assert!(total % k == 0);
+    assert!(total.is_multiple_of(k));
     (total / k) as usize
 }
 

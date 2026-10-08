@@ -238,8 +238,8 @@ impl Lattice {
         let mut total = 0i128;
         for set in 0..size {
             let rank = (set as u32).count_ones() as usize;
-            for degree in 0..=rank {
-                poly[degree] = self.ranked[degree * size + set] as u128;
+            for (degree, slot) in poly.iter_mut().enumerate().take(rank + 1) {
+                *slot = self.ranked[degree * size + set] as u128;
             }
             let reach = (2 * rank).min(top);
             square[..=reach].fill(0);
@@ -255,7 +255,7 @@ impl Lattice {
                     cube += square[left] * poly[degree - left];
                 }
                 let weight = self.choose[top - rank][degree - rank] as i128 * cube as i128;
-                if (degree - rank) % 2 == 0 {
+                if (degree - rank).is_multiple_of(2) {
                     acc += weight;
                 } else {
                     acc -= weight;

@@ -4,7 +4,7 @@ import pytest
 from mrlypy import core, gen, life
 from mrlypy.core import Rng, colors, paint, tensor
 from mrlypy.math import cell, six, three, two
-from mrlypy.num import factor, series
+from mrlypy.num import factor, series, sumset
 
 DTYPES = (np.uint8, np.uint16, np.uint32, np.int32)
 
@@ -202,6 +202,13 @@ def test_a_class_holds_the_rust_value_and_round_trips_plain_data():
     assert tile.group == "Fractal"
     assert gen.Tile.from_dict(tile.to_dict()).to_dict() == tile.to_dict()
     assert gen.Tile.new("Fractal").to_dict() == tile.to_dict()
+
+
+def test_bad_plain_data_is_a_value_error():
+    with pytest.raises(ValueError, match="missing field"):
+        gen.Tile.from_dict({"group": "Fractal"})
+    with pytest.raises(ValueError):
+        sumset.Pair.from_dict({"three": -1, "four": 1})
 
 
 def test_a_python_keyword_grows_a_trailing_underscore():

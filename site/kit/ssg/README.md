@@ -105,7 +105,7 @@
 - `scripts/stamp.test.ts` loads the site in a child process and fails when a module it loaded is missing from that graph.
 - `collect(site)` returns `{ routes }`. A page that lists other routes carries that list in its `data` or its `inputs`.
 - `inline` lists every inline script a page may carry; `build` refuses a page carrying one it does not know.
-- `icons`: `{ rows, svg }`, a square glyph grid of `0`/`1` strings and the favicon svg; the builder writes the svg as `favicon.svg` and draws `favicon.png`, `apple-touch-icon.png`, `icon-192.png` and `icon-512.png` from the grid. No field, no icons.
+- `icons`: `{ rows, svg }`, a square glyph grid of `0`/`1` strings and the favicon svg; the builder writes the svg as `favicon.svg` and draws `favicon.png`, `apple-touch-icon.png`, `icon-192.png` and `icon-512.png` from the grid, and wraps a 32 px png as `favicon.ico` for clients that ask for it unlinked. No field, no icons.
 - `git` is the code viewer's hooks, `{ page, entry, served }`: the chrome, the browser module and the mirror seam.
 - `spa` is the browser build's hooks; see MODES.
 - `blog` is the blog's hooks, `{ page, md }`.

@@ -117,14 +117,14 @@ pub fn sumset_envelope(level: u32, cells: u32) -> Result<Vec<f32>, Fault> {
 pub fn sumset_pairs(level: u32) -> Result<String, Fault> {
     held(level, |sumset| {
         let mut rows = Vec::new();
-        for pair in pairs(level)?.into_iter().filter(|p| p.three >= FIRST) {
+        for pair in pairs(level)?.into_iter().filter(|p| p.three() >= FIRST) {
             let d = pair.largest();
             let energy = pair.energy();
             let ratio = pair.ratio(energy);
             let fill = sumset.count(d).map(|c| (c + 1) as f64 / (d + 1) as f64);
             rows.push(json!({
-                "three": pair.three,
-                "four": pair.four,
+                "three": pair.three(),
+                "four": pair.four(),
                 "scale": pair.scale(),
                 "largest": d,
                 "gap": pair.gap().map(|(a, b)| [a, b]),

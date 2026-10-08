@@ -30,12 +30,12 @@ function pull(url) {
 
 /* TILES */
 
-function tile(model, [title, route, icon]) {
+function tile(model, [title, route, dark, light]) {
   const a = model.cloneNode(true);
   a.setAttribute('href', route);
   a.querySelector('h2').textContent = title;
-  a.querySelector('source').srcset = `/figures/${icon}-dark.webp`;
-  a.querySelector('img').src = `/figures/${icon}-light.webp`;
+  a.querySelector('source').srcset = dark;
+  a.querySelector('img').src = light;
   return a;
 }
 
@@ -117,7 +117,7 @@ export function mount(host) {
   host.prepend(form);
   live.set(host, { gate, form });
   const at = document.activeElement;
-  if (matchMedia('(hover: hover)').matches && (!at || at.matches('body, #main, dialog, dialog > .top button'))) input.focus({ preventScroll: true });
+  if (matchMedia('(hover: hover)').matches && (!at || at.matches('body, #main'))) input.focus({ preventScroll: true });
 }
 
 export function unmount(host) {

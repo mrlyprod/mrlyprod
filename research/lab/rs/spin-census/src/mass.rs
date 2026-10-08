@@ -76,11 +76,10 @@ pub fn nearest_cell(grid: &Tensor, digit: (usize, usize)) -> u64 {
 pub fn horizon(code: u128, digit: (usize, usize), table: &[(usize, usize)]) -> f64 {
     let point = (digit.0 as f64 / 2.0, digit.1 as f64 / 2.0);
     let mut best = f64::INFINITY;
-    for bit in 0..9 {
+    for (bit, &other) in table.iter().enumerate().take(9) {
         if code >> bit & 1 == 0 {
             continue;
         }
-        let other = table[bit];
         if other == digit {
             continue;
         }

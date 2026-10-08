@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ready, ink } from '../../../lib/mrly.js';
 import { board, line, axis, tag } from '../../../lib/chart.js';
 import { faces } from '../../../lib/stage.js';
-import { demo, Page, Row, Pick, Slider, Check, Btn, Stat, Note } from '../../../lib/app.jsx';
+import { demo, Page, Row, Pick, Slider, Check, Btn, Export, Stat, Note } from '../../../lib/app.jsx';
 import { Grid, Pixels, Sketch } from '../../../lib/draw.jsx';
 import { Stage } from '../../../lib/stage.jsx';
 import { Picker, useSeeds, roll } from '../../../lib/select.jsx';
@@ -160,7 +160,6 @@ function App() {
   const [spin, setSpin] = useState(true);
   const [iso, setIso] = useState(false);
   const [probe, setProbe] = useState('4');
-  const [shout, setShout] = useState(null);
 
   const dimension = pick.view === 'solid' ? 3 : 2;
   const codes = slots.map((slot) => slot.code.trim());
@@ -179,10 +178,6 @@ function App() {
     }
     stamp(values);
   }, [sig]);
-
-  useEffect(() => {
-    setShout(null);
-  }, [sig, pick.compare, pick.chart, pick.schedule, pick.length, pick.blocks, art, spin, iso, probe]);
 
   const budget = dimension === 3 ? SOLID : PLANE;
   const word = attempt(() => {
@@ -314,19 +309,6 @@ function App() {
     setSlots(next);
   };
 
-  const png = () => {
-    if (pick.view === 'solid') {
-      setShout(new Error('the solid view saves no picture, and nothing in the crates writes OBJ.'));
-      return;
-    }
-    const canvas = sheetRef.current;
-    if (!canvas) return;
-    const link = document.createElement('a');
-    link.download = `${key || 'word'}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-  };
-
   const member = () => {
     const text = probe.trim();
     if (!text) return '';
@@ -429,7 +411,7 @@ function App() {
       <h3>The picture</h3>
       <Row>
         <Check label="art" checked={art} onChange={setArt} />
-        <Btn onClick={png}>{pick.view === 'solid' ? 'PNG (plane only)' : 'PNG'}</Btn>
+        <Export canvas={() => sheetRef.current} name={key || 'word'} disabled={pick.view === 'solid'} title={pick.view === 'solid' ? 'The solid view saves no picture.' : undefined} />
       </Row>
     </section>
   );
@@ -499,7 +481,7 @@ function App() {
           <div className="stats" hidden={art}>{word.error ? null : word.census.letters.map((letter, i) => (
             <span key={i} className="badge">{i + 1} <b>{letter.name}</b> side {letter.number} fill {letter.fill} dimension {letter.dimension.toFixed(4)}{letter.native ? ' native' : ''}</span>
           ))}</div>
-          <Note error={shout ?? word.error ?? shape.error} />
+          <Note error={word.error ?? shape.error} />
           <p className="sub" hidden={art}>{word.error ? null : scale()}</p>
           <p className="sub">The first letter alone grows level by level in <a href={`../sponge${share({ code: codes[0], base: bases[0], number: numbers[0], level: 3 })}`}>the sponge</a>.</p>
         </div>

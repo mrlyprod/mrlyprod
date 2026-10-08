@@ -3,7 +3,8 @@ import { existsSync, statSync, watch, type FSWatcher } from "node:fs";
 import { dirname, relative, resolve, sep } from "node:path";
 import { drawn, escape, forget, scan, type Output, type Site, type Spec } from "./ssg/build.ts";
 import { decode } from "./git/view.ts";
-import { clean, find, lost, reply, type } from "./serve.ts";
+import { clean, find, lost, reply } from "./serve.ts";
+import { kind } from "./types.ts";
 import { moduleSrc } from "./ssg/modes.ts";
 
 /* OPTIONS */
@@ -62,7 +63,7 @@ export function disk(mounts: Mount[], path: string): Response | null {
     if (!dir || !path.startsWith(at)) continue;
     const found = within(dir, path.slice(at.length));
     if (!found || !existsSync(found) || !statSync(found).isFile()) continue;
-    return new Response(Bun.file(found), { headers: { "content-type": type(found) } });
+    return new Response(Bun.file(found), { headers: { "content-type": kind(found) } });
   }
   return null;
 }

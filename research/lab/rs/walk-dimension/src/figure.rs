@@ -47,10 +47,9 @@ impl Canvas {
             return;
         }
         let seat = y as usize * WIDTH + x as usize;
-        for channel in 0..3 {
-            let under = self.pixels[seat][channel] as f64;
-            self.pixels[seat][channel] =
-                (under + (colour[channel] as f64 - under) * alpha).round() as u8;
+        for (pixel, &paint) in self.pixels[seat].iter_mut().zip(&colour).take(3) {
+            let under = *pixel as f64;
+            *pixel = (under + (paint as f64 - under) * alpha).round() as u8;
         }
     }
 

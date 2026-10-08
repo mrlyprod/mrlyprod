@@ -253,7 +253,7 @@ pub fn run() {
     println!("  the carpet split is an identity at even M only, so it prints at even M only");
     for limit in [53usize, 55] {
         let [s0, s1, s2, s3] = sums(limit);
-        let carpet = if (limit + 1) / 2 % 2 == 0 {
+        let carpet = if limit.div_ceil(2) % 2 == 0 {
             format!("M(I1 - I3 + 1/4) = {:.10}  ", s1 + s3 / 4.0)
         } else {
             String::new()

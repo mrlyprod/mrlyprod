@@ -195,14 +195,12 @@ fn shift_or(words: &mut [u64], shift: u64) {
 
 // THE PAIRS
 
-/// A pair of levels: the base-3 level `A_k = A meet [0, 3^k)` against the base-4 level `B_m = B meet [0, 4^m)`, `k` the field `three` and `m` the field `four`.
+/// A pair of levels: the base-3 level `A_k = A meet [0, 3^k)` against the base-4 level `B_m = B meet [0, 4^m)`, `k` read by `three()` and `m` by `four()`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(try_from = "Levels")]
 pub struct Pair {
-    /// The base-3 level `k`.
-    pub three: u32,
-    /// The base-4 level `m`.
-    pub four: u32,
+    three: u32,
+    four: u32,
 }
 
 #[derive(Deserialize)]
@@ -232,6 +230,16 @@ impl Pair {
             ));
         }
         Ok(Pair { three, four })
+    }
+
+    /// The base-3 level `k`.
+    pub fn three(&self) -> u32 {
+        self.three
+    }
+
+    /// The base-4 level `m`.
+    pub fn four(&self) -> u32 {
+        self.four
     }
 
     fn powers(&self) -> (u64, u64) {

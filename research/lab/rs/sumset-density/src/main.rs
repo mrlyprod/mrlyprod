@@ -77,7 +77,7 @@ fn powers(base: u64, top: u64) -> Vec<u64> {
         .last()
         .unwrap()
         .checked_mul(base)
-        .map_or(false, |p| p <= top)
+        .is_some_and(|p| p <= top)
     {
         v.push(v.last().unwrap() * base);
     }
@@ -315,14 +315,14 @@ fn centres(top: u64) -> Vec<(u32, u32, u64, bool)> {
     let p3 = powers(3, top * 3);
     let p4 = powers(4, top * 4);
     let mut v = Vec::new();
-    for s in 1..p4.len() {
-        for r in 1..p3.len() {
-            let d = (p3[r] - 1) / 2 + (p4[s] - 1) / 3;
+    for (s, &four) in p4.iter().enumerate().skip(1) {
+        for (r, &three) in p3.iter().enumerate().skip(1) {
+            let d = (three - 1) / 2 + (four - 1) / 3;
             if d > top {
                 continue;
             }
-            let clean = p3[r] > d && p4[s] > d;
-            if p3[r] < 3 * p4[s] && p4[s] < 3 * p3[r] {
+            let clean = three > d && four > d;
+            if three < 3 * four && four < 3 * three {
                 v.push((r as u32, s as u32, d, clean));
             }
         }
@@ -482,7 +482,7 @@ fn six(num: u128, den: u128) -> String {
 }
 
 fn six_up(num: u128, den: u128) -> String {
-    let q = (num * 1_000_000 + den - 1) / den;
+    let q = (num * 1_000_000).div_ceil(den);
     format!("{}.{:06}", q / 1_000_000, q % 1_000_000)
 }
 

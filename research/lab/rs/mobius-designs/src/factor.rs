@@ -84,7 +84,7 @@ pub fn is_prime(n: u64) -> bool {
         if n == p {
             return true;
         }
-        if n % p == 0 {
+        if n.is_multiple_of(p) {
             return false;
         }
     }
@@ -191,9 +191,9 @@ pub fn mobius(n: u64, primes: &[u64]) -> i8 {
             settled = true;
             break;
         }
-        if m % p == 0 {
+        if m.is_multiple_of(p) {
             m /= p;
-            if m % p == 0 {
+            if m.is_multiple_of(p) {
                 return 0;
             }
             parity ^= 1;

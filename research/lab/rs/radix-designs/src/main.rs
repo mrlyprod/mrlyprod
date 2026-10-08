@@ -758,11 +758,9 @@ fn orbit_labels(group: &[Vec<usize>], codes: &[usize]) -> (Vec<usize>, usize) {
     (codes.iter().map(|c| seat[c]).collect(), orbits)
 }
 
-fn crossing(
-    orbits: &[usize],
-    classes: &[usize],
-    codes: &[usize],
-) -> (Option<(usize, usize)>, Option<(usize, usize)>) {
+type Witness = Option<(usize, usize)>;
+
+fn crossing(orbits: &[usize], classes: &[usize], codes: &[usize]) -> (Witness, Witness) {
     let mut split = None;
     let mut merge = None;
     for i in 0..codes.len() {

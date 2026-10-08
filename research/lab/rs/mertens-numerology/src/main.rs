@@ -77,7 +77,7 @@ fn psi(q: f64) -> f64 {
 fn psi_chord(q: f64) -> f64 {
     let p = (q / 2.0).floor();
     let h = harmonic_bound(p - 1.0);
-    if (q as u64) % 2 == 0 {
+    if (q as u64).is_multiple_of(2) {
         (q / PI) * (2.0 * h - 1.0 + 1.0 / p) + (1.0 - 2.0 / PI) * q / 2.0
     } else {
         (q / PI) * (2.0 * h - 1.0 + 2.0 / p) + (1.0 - 2.0 / PI) * (q / 2.0 + 1.0 / (2.0 * q))
@@ -228,7 +228,7 @@ fn sci(x: f64, decimals: u32, up: bool) -> String {
 fn label(q: u64) -> String {
     let mut p = q;
     let mut e = 0u32;
-    while p % 10 == 0 {
+    while p.is_multiple_of(10) {
         p /= 10;
         e += 1;
     }
@@ -1095,7 +1095,7 @@ mod tests {
         let psi_exact = |q: f64| {
             let p = (q / 2.0).floor();
             let h = exact(p - 1.0);
-            if (q as u64) % 2 == 0 {
+            if (q as u64).is_multiple_of(2) {
                 (q / PI) * (2.0 * h - 1.0 + 1.0 / p) + (1.0 - 2.0 / PI) * q / 2.0
             } else {
                 (q / PI) * (2.0 * h - 1.0 + 2.0 / p)

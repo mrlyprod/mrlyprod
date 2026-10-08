@@ -1,7 +1,6 @@
 import FONT from './font.json' with { type: 'json' };
 
 const FPS = 25;
-export const HOLD = 25;
 const BLANK = ['000', '000', '000', '000', '000'];
 
 /* GLYPHS */
@@ -146,76 +145,4 @@ export function fold(text, into = 'X', pad = 0) {
   const y = Math.floor((rows - end.height) / 2);
   const last = stamp(end.blocks, end.blocks.map((b) => [x + b.col, y + b.offset]), rows, cols);
   return { rows, cols, fps: FPS, frames: [...merge(text, pad), last] };
-}
-
-export function cycle(text, pad = 1, hold = HOLD) {
-  const fast = bridge('font_cycle');
-  if (fast) return JSON.parse(fast(text, pad, hold));
-  const write = animate(text, pad);
-  const folded = merge(text, pad);
-  const rest = (frame) => Array.from({ length: hold }, () => frame);
-  const frames = [
-    ...write.frames,
-    ...rest(write.frames[write.frames.length - 1]),
-    ...folded,
-    ...rest(folded[folded.length - 1]),
-    ...[...folded].reverse(),
-    ...rest(folded[0]),
-    ...[...write.frames].reverse(),
-    ...rest(write.frames[0]),
-  ];
-  return { rows: write.rows, cols: write.cols, fps: write.fps, frames };
-}
-
-/* PLAYBACK */
-
-export function mark(canvas, anim) {
-  canvas.width = anim.cols;
-  canvas.height = anim.rows;
-  const ctx = canvas.getContext('2d');
-  let ink = getComputedStyle(canvas).color;
-  let last = [];
-  const draw = (frame) => {
-    last = frame;
-    ctx.clearRect(0, 0, anim.cols, anim.rows);
-    ctx.fillStyle = ink;
-    for (const i of frame) ctx.fillRect(i % anim.cols, Math.floor(i / anim.cols), 1, 1);
-  };
-  const shade = matchMedia('(prefers-color-scheme: dark)');
-  const repaint = () => {
-    ink = getComputedStyle(canvas).color;
-    draw(last);
-  };
-  shade.addEventListener('change', repaint);
-  window.addEventListener('theme', repaint);
-  const drop = () => {
-    shade.removeEventListener('change', repaint);
-    window.removeEventListener('theme', repaint);
-  };
-  const full = anim.frames.reduce((a, b) => (b.length > a.length ? b : a), []);
-  const still = matchMedia('(prefers-reduced-motion: reduce)');
-  if (still.matches || anim.frames.length < 2) {
-    draw(full);
-    return drop;
-  }
-  let at = 0;
-  let timer = 0;
-  const tick = () => {
-    draw(anim.frames[at]);
-    at = (at + 1) % anim.frames.length;
-  };
-  const play = () => {
-    if (!timer) timer = setInterval(tick, 1000 / anim.fps);
-  };
-  const pause = () => {
-    clearInterval(timer);
-    timer = 0;
-  };
-  const eye = new IntersectionObserver(([entry]) => (entry.isIntersecting ? play() : pause()));
-  eye.observe(canvas);
-  return () => {
-    pause();
-    eye.disconnect();
-    drop();
-  };
 }

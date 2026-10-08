@@ -51,7 +51,7 @@ fn ordered(a: &[u128], q: usize, c: usize, cp: usize, d: usize, dp: usize) -> u1
 }
 
 pub fn transfer(q: u64, digits: &[u64], p: usize) -> Transfer {
-    assert!(p >= 2 && p % 2 == 0);
+    assert!(p >= 2 && p.is_multiple_of(2));
     let r = p / 2;
     let a = sum_dist(digits, r);
     let mut states = Vec::new();
@@ -82,13 +82,13 @@ impl Transfer {
     fn step(&self, w: &[BigInt]) -> Vec<BigInt> {
         let n = self.n();
         let mut out = vec![BigInt::from(0); n];
-        for i in 0..n {
-            if w[i] == BigInt::from(0) {
+        for (i, wi) in w.iter().enumerate().take(n) {
+            if *wi == BigInt::from(0) {
                 continue;
             }
-            for j in 0..n {
+            for (j, slot) in out.iter_mut().enumerate() {
                 if self.m[i][j] != 0 {
-                    out[j] += &w[i] * BigInt::from(self.m[i][j]);
+                    *slot += wi * BigInt::from(self.m[i][j]);
                 }
             }
         }
@@ -156,14 +156,14 @@ impl Transfer {
             if step > 1 {
                 let am = mul(&a, &mk);
                 mk = am;
-                for i in 0..n {
-                    mk[i][i] += &c[n - step + 1];
+                for (i, row) in mk.iter_mut().enumerate().take(n) {
+                    row[i] += &c[n - step + 1];
                 }
             }
             let am = mul(&a, &mk);
             let mut tr = BigInt::from(0);
-            for i in 0..n {
-                tr += &am[i][i];
+            for (i, row) in am.iter().enumerate().take(n) {
+                tr += &row[i];
             }
             let kk = BigInt::from(step as u64);
             assert!(&tr % &kk == BigInt::from(0), "leverrier division not exact");
@@ -178,9 +178,9 @@ impl Transfer {
         let mut stack = vec![0usize];
         seen[0] = true;
         while let Some(i) = stack.pop() {
-            for j in 0..n {
-                if self.m[i][j] != 0 && !seen[j] {
-                    seen[j] = true;
+            for (j, reached) in seen.iter_mut().enumerate() {
+                if self.m[i][j] != 0 && !*reached {
+                    *reached = true;
                     stack.push(j);
                 }
             }
@@ -469,9 +469,9 @@ fn divisors(n: u128) -> Vec<u128> {
     let mut m = n;
     let mut f = 2u128;
     while f * f <= m {
-        if m % f == 0 {
+        if m.is_multiple_of(f) {
             let mut e = 0;
-            while m % f == 0 {
+            while m.is_multiple_of(f) {
                 m /= f;
                 e += 1;
             }
@@ -747,9 +747,9 @@ fn prime_factors(mut d: u64) -> Vec<u64> {
     let mut out = Vec::new();
     let mut f = 2;
     while f * f <= d {
-        if d % f == 0 {
+        if d.is_multiple_of(f) {
             out.push(f);
-            while d % f == 0 {
+            while d.is_multiple_of(f) {
                 d /= f;
             }
         }
@@ -1094,7 +1094,7 @@ pub fn ratio_row(fam: &Family, m: &Moment) -> String {
 pub(crate) fn transform_table(q: u64, digits: &[u64], l: usize) -> Vec<(f64, f64)> {
     let n = (q as usize).pow(l as u32);
     let mut g = vec![(0.0f64, 0.0f64); n];
-    for b in 0..n {
+    for (b, slot) in g.iter_mut().enumerate() {
         let y = b as f64 / n as f64;
         let mut re = 0.0;
         let mut im = 0.0;
@@ -1103,7 +1103,7 @@ pub(crate) fn transform_table(q: u64, digits: &[u64], l: usize) -> Vec<(f64, f64
             re += t.cos();
             im += t.sin();
         }
-        g[b] = (re, im);
+        *slot = (re, im);
     }
     g
 }
@@ -1125,7 +1125,7 @@ pub fn arcs(fam: &Family, l: usize, s4_exact: &BigInt) -> Arcs {
     let n = (q as usize).pow(l as u32);
     let g = transform_table(q, &fam.digits, l);
     let mut sq = vec![0.0f64; n];
-    for a in 0..n {
+    for (a, slot) in sq.iter_mut().enumerate() {
         let mut b = a;
         let mut v = 1.0f64;
         for _ in 0..l {
@@ -1133,7 +1133,7 @@ pub fn arcs(fam: &Family, l: usize, s4_exact: &BigInt) -> Arcs {
             v *= re * re + im * im;
             b = (b * q as usize) % n;
         }
-        sq[a] = v;
+        *slot = v;
     }
     let x = n as f64;
     let dmax = x.powf(0.4).floor() as u64;

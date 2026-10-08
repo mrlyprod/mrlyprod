@@ -223,9 +223,9 @@ fn dobrushin(matrix: &[Vec<u64>]) -> (u128, u128) {
             }
             let (one, two) = (u128::from(rows[first]), u128::from(rows[second]));
             let mut gap = 0u128;
-            for target in 0..size {
-                let left = u128::from(matrix[first][target]) * two;
-                let right = u128::from(matrix[second][target]) * one;
+            for (&a, &b) in matrix[first].iter().zip(&matrix[second]).take(size) {
+                let left = u128::from(a) * two;
+                let right = u128::from(b) * one;
                 gap += left.max(right) - left.min(right);
             }
             let cell = (gap, 2 * one * two);
@@ -384,12 +384,8 @@ fn ladder(radius: u64, depth: usize, ones: &[u32]) -> Ladder {
     assert_eq!(total, 2 * radius + 1);
     let mut nested = vec![0u64; depth + 1];
     nested[0] = total;
-    for cut in 1..=depth {
-        let mut kept = filled;
-        for position in 0..depth - cut {
-            kept += crest[position];
-        }
-        nested[cut] = kept;
+    for (cut, slot) in nested.iter_mut().enumerate().skip(1) {
+        *slot = filled + crest.iter().take(depth - cut).sum::<u64>();
     }
     assert_eq!(nested[depth], filled);
     let mass = total as f64;
@@ -397,9 +393,9 @@ fn ladder(radius: u64, depth: usize, ones: &[u32]) -> Ladder {
     let mut condition = Vec::with_capacity(depth);
     let mut gain = Vec::with_capacity(depth);
     let mut product = 1.0f64;
-    for position in 0..depth {
+    for (position, &missed) in bad.iter().enumerate() {
         let cut = depth - position;
-        let free = (total - bad[position]) as f64 / mass;
+        let free = (total - missed) as f64 / mass;
         let tight = nested[cut] as f64 / nested[cut - 1] as f64;
         margin.push(free);
         condition.push(tight);
@@ -903,13 +899,13 @@ fn memory(label: &str, radius: u64, deep: u32, shallow: u32, start: u32) {
     let mut level = start;
     while level >= 1 {
         let mut next = vec![0.0f64; size];
-        for source in 0..size {
-            if count[source] == 0.0 || built.rows[source] == 0 {
+        for (source, &weight) in count.iter().enumerate() {
+            if weight == 0.0 || built.rows[source] == 0 {
                 continue;
             }
-            let share = count[source] / built.rows[source] as f64;
-            for target in 0..size {
-                next[target] += share * built.all[source][target] as f64;
+            let share = weight / built.rows[source] as f64;
+            for (slot, &cell) in next.iter_mut().zip(&built.all[source]) {
+                *slot += share * cell as f64;
             }
         }
         model.push(next.iter().sum::<f64>());
@@ -1253,7 +1249,7 @@ pub fn transfer() {
     scan("carpet", 3000, 19682, 1, &base);
     let mut live_levels = 0usize;
     for &radius in &[80u64, 242, 1000, 2186, 6560, 12345, 19682] {
-        live_levels += indexed("carpet", radius) as usize;
+        live_levels += indexed("carpet", radius);
     }
     println!(
         "circle-crop index carpet totals radii=7 live_levels={live_levels} note=every level of these seven radii has cap >= 8/9, so the assert cannot fail there and the numbers are a check on the identities and not on the bound; the bound bites only at R >= 212957 and beats 1/9 only at R >= 23157375"

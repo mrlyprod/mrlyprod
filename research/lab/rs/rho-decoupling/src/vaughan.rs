@@ -18,11 +18,11 @@ pub fn pieces(mu: &[i8], lim: usize, u: u64) -> (Vec<f64>, Vec<f64>) {
     let mut b = vec![0.0f64; lim + 1];
     let mut c = vec![0.0f64; lim + 1];
     let cap = (u as usize).min(lim);
-    for d in 1..=cap {
-        if mu[d] == 0 {
+    for (d, &sign) in mu.iter().enumerate().take(cap + 1).skip(1) {
+        if sign == 0 {
             continue;
         }
-        let m = mu[d] as f64;
+        let m = sign as f64;
         let ld = (d as f64).ln();
         let mut l = d;
         while l <= lim {
@@ -318,10 +318,10 @@ mod tests {
             for l in 1..=lim {
                 let mut s = 0.0f64;
                 let mut sl = 0.0f64;
-                for d in 1..=l {
+                for (d, &sign) in mu.iter().enumerate().take(l + 1).skip(1) {
                     if l % d == 0 && (d as u64) <= u {
-                        s += mu[d] as f64;
-                        sl += mu[d] as f64 * ((l / d) as f64).ln();
+                        s += sign as f64;
+                        sl += sign as f64 * ((l / d) as f64).ln();
                     }
                 }
                 assert!((b[l] - s).abs() < 1e-9, "b at l={l} U={u}");

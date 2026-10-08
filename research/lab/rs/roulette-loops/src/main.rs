@@ -180,16 +180,9 @@ fn draw(
     (curves, frame(&path, &pencils))
 }
 
-fn hits(
-    ax: f64,
-    ay: f64,
-    bx: f64,
-    by: f64,
-    cx: f64,
-    cy: f64,
-    dx: f64,
-    dy: f64,
-) -> Option<(f64, f64)> {
+fn hits(s: [f64; 4], t: [f64; 4]) -> Option<(f64, f64)> {
+    let [ax, ay, bx, by] = s;
+    let [cx, cy, dx, dy] = t;
     let (ux, uy) = (bx - ax, by - ay);
     let (vx, vy) = (dx - cx, dy - cy);
     let det = ux * vy - uy * vx;
@@ -252,7 +245,8 @@ fn nodes(
     }
     let mut seen: std::collections::HashSet<u64> = std::collections::HashSet::new();
     let (mut own, mut between, mut off) = (0, 0, 0.0_f64);
-    let (mut mine, mut yours): (Vec<(f64, f64)>, Vec<(f64, f64)>) = (Vec::new(), Vec::new());
+    let mut mine: Vec<(f64, f64)> = Vec::new();
+    let mut yours: Vec<(f64, f64)> = Vec::new();
     for bin in &bins {
         for u in 0..bin.len() {
             for v in u + 1..bin.len() {
@@ -266,8 +260,7 @@ fn nodes(
                 if !seen.insert((i as u64) << 32 | j as u64) {
                     continue;
                 }
-                let (s, t) = (segs[i], segs[j]);
-                if let Some(spot) = hits(s[0], s[1], s[2], s[3], t[0], t[1], t[2], t[3]) {
+                if let Some(spot) = hits(segs[i], segs[j]) {
                     if owner[i] == owner[j] {
                         own += 1;
                         off = off.max(stray(spot.0, spot.1, axes, tilt));

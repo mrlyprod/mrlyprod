@@ -36,7 +36,7 @@ fn pack_for(d: usize) -> Pack {
     Pack {
         off,
         wid,
-        w: (o as usize + 63) / 64,
+        w: (o as usize).div_ceil(64),
         bits: o,
     }
 }
@@ -231,8 +231,8 @@ impl Layer {
 
     fn decode(&self, i: usize, out: &mut [u32]) {
         let k = self.key(i);
-        for j in 0..=self.deg {
-            out[j] = get(k, j, &self.pk);
+        for (j, o) in out.iter_mut().enumerate().take(self.deg + 1) {
+            *o = get(k, j, &self.pk);
         }
     }
 }
@@ -316,7 +316,7 @@ fn ladder(top: usize, quiet: bool, budget: usize) -> Stats {
                     let slot = v1 * (m2 + 1) + v2;
                     l0.starts[slot] = l0.count as u32;
                     let mut tab = Table::new(w, 1 << 6);
-                    for dp in 0..d {
+                    for (dp, layer) in layers.iter().enumerate().take(d) {
                         let j = d - dp;
                         for t1 in 0..=dp {
                             if v1 < t1 || v1 - t1 > 1 {
@@ -334,18 +334,17 @@ fn ladder(top: usize, quiet: bool, budget: usize) -> Stats {
                                 if v2 < off {
                                     continue;
                                 }
-                                let (lo, hi) = layers[dp].range(t1, v2 - off);
+                                let (lo, hi) = layer.range(t1, v2 - off);
                                 for idx in lo..hi {
-                                    let nu = layers[dp].nus[idx] as i64;
-                                    layers[dp].decode(idx, &mut pc);
-                                    for i in 0..=j {
-                                        let s = &mut shifts[i];
+                                    let nu = layer.nus[idx] as i64;
+                                    layer.decode(idx, &mut pc);
+                                    for (i, s) in shifts.iter_mut().enumerate().take(j + 1) {
                                         for x in s.iter_mut() {
                                             *x = 0;
                                         }
-                                        for k in 0..=dp {
-                                            if pc[k] != 0 {
-                                                put(s, k + i, &pk, pc[k]);
+                                        for (k, &p) in pc.iter().enumerate().take(dp + 1) {
+                                            if p != 0 {
+                                                put(s, k + i, &pk, p);
                                             }
                                         }
                                     }
@@ -361,7 +360,7 @@ fn ladder(top: usize, quiet: bool, budget: usize) -> Stats {
                                         addk(&mut acc, &shifts[j - 2]);
                                     }
                                     tab.add(&acc, nu);
-                                    let f = if j >= 3 { j - 3 } else { 0 };
+                                    let f = j.saturating_sub(3);
                                     for g in 1u64..(1u64 << f) {
                                         let cur = g ^ (g >> 1);
                                         let prev = (g - 1) ^ ((g - 1) >> 1);
@@ -386,9 +385,9 @@ fn ladder(top: usize, quiet: bool, budget: usize) -> Stats {
                     let mut sk = vec![0u64; (hi - lo) * w];
                     for (n, i) in (lo..hi).enumerate() {
                         layers[d - 1].decode(i, &mut pc);
-                        for c in 0..d {
-                            if pc[c] != 0 {
-                                put(&mut sk[n * w..(n + 1) * w], c + 1, &pk, pc[c]);
+                        for (c, &p) in pc.iter().enumerate().take(d) {
+                            if p != 0 {
+                                put(&mut sk[n * w..(n + 1) * w], c + 1, &pk, p);
                             }
                         }
                     }

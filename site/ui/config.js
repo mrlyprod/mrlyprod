@@ -1,3 +1,5 @@
+import { HUES } from './hues.js';
+
 const DEFAULTS = {
   title: '',
   since: new Date().getFullYear(),
@@ -20,7 +22,7 @@ export function conf() {
 
 /* BOOT */
 
-const boot = (prefix) => `(()=>{const d=document.documentElement;d.classList.add('js');try{for(const k of['theme','font','tint','saver']){const v=localStorage.getItem('${prefix}'+k);if(v)d.dataset[k]=v}if(location.pathname==='/'&&CSS.supports('animation-timeline','scroll()'))d.dataset.welcome=localStorage.getItem('${prefix}welcome')||matchMedia('(prefers-reduced-motion: reduce)').matches?'shut':'open'}catch{}})()`;
+const boot = (prefix) => `(()=>{const d=document.documentElement;d.classList.add('js');try{for(const k of['theme','font','tint']){const v=localStorage.getItem('${prefix}'+k);if(v)d.dataset[k]=v}if(location.pathname==='/'&&CSS.supports('animation-timeline','scroll()'))d.dataset.welcome=localStorage.getItem('${prefix}welcome')||matchMedia('(prefers-reduced-motion: reduce)').matches?'shut':'open'}catch{}})()`;
 
 export function headScript(prefix = current.prefix || 'mrly-') {
   return `<script data-boot>${boot(prefix)}</script>`;
@@ -30,9 +32,7 @@ export const inlineScripts = (prefix = current.prefix || 'mrly-') => [boot(prefi
 
 /* TINT */
 
-export const HUES = ['red', 'orange', 'yellow', 'green', 'mint', 'teal', 'cyan', 'blue', 'indigo', 'purple', 'pink', 'brown'];
-
-const rule = (hue, at) => `:root${at} { --accent: var(--${hue}); }`;
+const rule = (hue, at) => `:root${at} { --accent: var(--${hue}); --link: var(--${hue}-link); }`;
 
 export function tintCss(tint = current.tint) {
   const lines = HUES.includes(tint) ? [rule(tint, '')] : [];

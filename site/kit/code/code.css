@@ -2,13 +2,13 @@
 
 .tk-comment { color: var(--dim); }
 .tk-punctuation { color: var(--dim); }
-.tk-keyword { color: var(--accent); }
+.tk-keyword { color: var(--link); }
 .tk-string { color: color-mix(in srgb, var(--green) var(--mix), var(--fg)); }
 .tk-string-expression { color: color-mix(in srgb, var(--green) var(--mix), var(--fg)); }
 .tk-constant { color: color-mix(in srgb, var(--orange) var(--mix), var(--fg)); }
 .tk-function { color: color-mix(in srgb, var(--blue) var(--mix), var(--fg)); }
 .tk-parameter { color: color-mix(in srgb, var(--yellow) var(--mix), var(--fg)); }
-.tk-link { color: var(--accent); }
+.tk-link { color: var(--link); }
 
 /* FACE */
 
@@ -44,7 +44,7 @@
 .code .line .n { display: inline-block; box-sizing: content-box; width: 5ch; padding: 0 var(--s4) 0 var(--s3); text-align: right; color: var(--dim); text-decoration: none; user-select: none; }
 .code .line .t { padding-right: var(--s4); }
 .code .line:target { background: color-mix(in srgb, var(--accent) 14%, transparent); }
-.code .line:target .n { color: var(--accent); }
+.code .line:target .n { color: var(--link); }
 
 /* GUTTER */
 

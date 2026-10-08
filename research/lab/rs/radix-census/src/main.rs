@@ -965,10 +965,9 @@ fn spell_symmetry(lab: &Lab, sym: &Symmetry) -> String {
     }
 }
 
-fn breach(
-    lab: &Lab,
-    action: &[Symmetry],
-) -> Option<(usize, Vec<usize>, usize, Vec<usize>, String)> {
+type Breach = (usize, Vec<usize>, usize, Vec<usize>, String);
+
+fn breach(lab: &Lab, action: &[Symmetry]) -> Option<Breach> {
     let q = lab.residues.len();
     for code in 0..1usize << q {
         let k = code.count_ones() as usize;
@@ -1256,8 +1255,8 @@ fn classify_all(lab: &Lab, list: &[Vec<usize>]) -> Vec<Walk> {
                         if i * chunk >= list.len() {
                             break;
                         }
-                        for j in i * chunk..((i + 1) * chunk).min(list.len()) {
-                            acc.push((j, classify(lab, &list[j])));
+                        for (j, item) in list.iter().enumerate().skip(i * chunk).take(chunk) {
+                            acc.push((j, classify(lab, item)));
                         }
                     }
                     acc
@@ -1378,11 +1377,11 @@ fn test_design(lab: &Lab, design: &Design, walk: bool, tests: &mut Tests) {
         let mut verdicts = vec![
             (
                 brute_steps(lab, design, level),
-                broken.map_or(true, |b| level < b),
+                broken.is_none_or(|b| level < b),
             ),
             (
                 brute_piece(lab, design, level),
-                split.map_or(true, |s| level < s),
+                split.is_none_or(|s| level < s),
             ),
         ];
         let (glued, mapped) = brute_glue(lab, design, level);
@@ -1392,7 +1391,7 @@ fn test_design(lab: &Lab, design: &Design, walk: bool, tests: &mut Tests) {
             let crossing = [glue, end].iter().flatten().min().copied();
             verdicts.push((
                 brute_arc(lab, design, level),
-                crossing.map_or(true, |c| level < c),
+                crossing.is_none_or(|c| level < c),
             ));
         }
         for (seen, said) in verdicts {

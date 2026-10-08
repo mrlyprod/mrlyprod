@@ -184,14 +184,14 @@ fn representation(table: &mut Table) -> Rep {
         )
     );
     let mut built: Vec<Rep> = Vec::new();
-    for which in 0..4 {
+    for (which, &name) in SERIES.iter().enumerate() {
         let rep = build(which, table);
         let classes = rep.classes();
         println!(
             "{}",
             line(
                 &[
-                    SERIES[which].into(),
+                    name.into(),
                     format!("{}", rep.basis.len()),
                     format!("{}", classes.len())
                 ],
@@ -265,8 +265,8 @@ fn representation(table: &mut Table) -> Rep {
         for word in order::words(&CODES, length) {
             let obs = word::observe(&word);
             checked += 1;
-            for which in 0..4 {
-                if built[which].predict(&word) != word::series_value(&obs, which) {
+            for (which, rep) in built.iter().enumerate() {
+                if rep.predict(&word) != word::series_value(&obs, which) {
                     bad += 1;
                 }
             }
@@ -282,8 +282,8 @@ fn representation(table: &mut Table) -> Rep {
             let word: Vec<u8> = (0..length).map(|_| CODES[rng.below(15)]).collect();
             let obs = word::observe(&word);
             long += 1;
-            for which in 0..4 {
-                if built[which].predict(&word) != word::series_value(&obs, which) {
+            for (which, rep) in built.iter().enumerate() {
+                if rep.predict(&word) != word::series_value(&obs, which) {
                     wrong += 1;
                 }
             }

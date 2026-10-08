@@ -59,14 +59,14 @@ struct ControlColumn {
     mmax: Vec<u64>,
 }
 
-fn controls_and_kempner(
-    mu: &[i8],
-) -> (
+type Controls = (
     Vec<ControlColumn>,
     Vec<Vec<i64>>,
     Vec<Vec<u64>>,
     Vec<Vec<u64>>,
-) {
+);
+
+fn controls_and_kempner(mu: &[i8]) -> Controls {
     let mut ctrl: Vec<ControlColumn> = [(3u64, 17usize), (4, 13), (5, 11), (10, 8)]
         .iter()
         .map(|&(q, levels)| ControlColumn {
@@ -336,9 +336,9 @@ fn verify_scalings(jobs: &[Family], outcomes: &[Outcome]) {
         let bout = &outcomes[bi];
         let (_, expected) = bout.twisted.iter().find(|(a, _)| *a == g).unwrap();
         let has01 = base.digits.contains(&0) && base.digits.contains(&1);
-        for lev in 1..=fam.lmax {
+        for (lev, &want) in expected.iter().enumerate().take(fam.lmax + 1).skip(1) {
             assert_eq!(
-                out.meter[lev], expected[lev],
+                out.meter[lev], want,
                 "scaling meter q={} F={} l={lev}",
                 fam.q, fam.label
             );
@@ -439,8 +439,8 @@ mod tests {
             let os = run_family(&fs, &primes);
             let ob = run_family(&fb, &primes);
             let (_, expected) = ob.twisted.iter().find(|(c, _)| *c == a).unwrap();
-            for lev in 1..=8 {
-                assert_eq!(os.meter[lev], expected[lev]);
+            for (lev, &want) in expected.iter().enumerate().take(9).skip(1) {
+                assert_eq!(os.meter[lev], want);
             }
         }
     }
@@ -477,8 +477,8 @@ mod tests {
         let mu = mu_sieve(19683);
         let fam = census::make_family_depth(3, vec![0, 1], 8);
         let out = run_family(&fam, &primes);
-        let mut cum = vec![0i64; 9];
-        let mut cnt = vec![0u64; 9];
+        let mut cum = [0i64; 9];
+        let mut cnt = [0u64; 9];
         sweep(3, &[0, 1], 8, &mut |v, len| {
             cum[len] += mu[v as usize] as i64;
             cnt[len] += 1;
@@ -501,8 +501,8 @@ mod tests {
         let mu = mu_sieve(100_000);
         let mut run = 0i64;
         let mut got = Vec::new();
-        for n in 1..=100_000usize {
-            run += mu[n] as i64;
+        for (n, &sign) in mu.iter().enumerate().take(100_001).skip(1) {
+            run += sign as i64;
             if n == 10 || n == 100 || n == 1000 || n == 10_000 || n == 100_000 {
                 got.push(run);
             }

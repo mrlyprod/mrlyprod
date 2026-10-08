@@ -21,7 +21,7 @@ pub fn factorise(mut value: usize, least: &[u32]) -> Vec<(usize, usize)> {
     while value > 1 {
         let prime = least[value] as usize;
         let mut power = 0;
-        while value % prime == 0 {
+        while value.is_multiple_of(prime) {
             value /= prime;
             power += 1;
         }

@@ -540,8 +540,8 @@ fn digit_census(label: &str, table: &Sweep, fill: u64, dimension: usize) {
             assert!(state.filled + union >= state.total);
             assert!(product > 0.0);
             sum_total += state.total;
-            for slot in 0..level * level {
-                sum_pair[slot] += state.pair[slot];
+            for (sum, &pair) in sum_pair.iter_mut().zip(&state.pair) {
+                *sum += pair;
             }
             let load = union as f64 / state.total as f64;
             load_sum += load;

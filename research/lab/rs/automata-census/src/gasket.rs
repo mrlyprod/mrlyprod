@@ -48,14 +48,14 @@ fn matches(diagram: &Diagram, code: usize, reading: &str) -> bool {
     for level in 1..=DEPTH {
         let grid = tile(code, level);
         let side = 1usize << level;
-        for t in 0..side {
-            for j in 0..side {
+        for (t, row) in grid.iter().enumerate() {
+            for (j, &cell) in row.iter().enumerate() {
                 let offset = match reading {
                     "right" => j as i64,
                     "left" => j as i64 - (side as i64 - 1),
                     _ => 2 * j as i64 - t as i64,
                 };
-                if diagram.signed(t, offset) != grid[t][j] {
+                if diagram.signed(t, offset) != cell {
                     return false;
                 }
             }
@@ -156,11 +156,11 @@ pub fn report() {
     println!("RULE 150");
     let rows = polynomials(129);
     let diagram = single_seed(150, 128);
-    for t in 0..=128usize {
-        for j in 0..=t {
+    for (t, row) in rows.iter().enumerate() {
+        for (j, &cell) in row.iter().enumerate().take(t + 1) {
             assert_eq!(
                 diagram.signed(t, j as i64 - t as i64),
-                rows[t][j],
+                cell,
                 "the GF(2) row polynomial and the evolved diagram disagree at ({t},{j})"
             );
         }

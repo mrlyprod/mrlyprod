@@ -75,7 +75,7 @@ pub fn grid_walk(grid: &Tensor, rng: &mut Rng, walkers: usize, side_cap: f64) ->
         for walker in 0..walkers {
             let drawn = rng.below(2 * dims);
             let axis = drawn / 2;
-            let step: i64 = if drawn % 2 == 0 { 1 } else { -1 };
+            let step: i64 = if drawn.is_multiple_of(2) { 1 } else { -1 };
             let moved = place[walker][axis] + step;
             if moved < 0 || moved >= shape[axis] as i64 {
                 continue;

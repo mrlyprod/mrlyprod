@@ -380,7 +380,7 @@ fn census(w: &Wheel, cs: &[Curve], grid: usize) -> Vec<Node> {
                         }
                     }
                     let seat = 0.5 * (u + v);
-                    if seat < 1e-11 || seat > 1.0 - 1e-11 {
+                    if !(1e-11..=1.0 - 1e-11).contains(&seat) {
                         continue;
                     }
                     let r = ray(seat).clamp(lo, hi);

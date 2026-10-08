@@ -40,6 +40,21 @@
     },
     { "name": "Elsewhere" }
   ],
+  "heroes": [
+    { "name": "Research", "href": "/research/", "line": "The wiki, the notes, the claims and the papers.", "hues": ["teal", "cyan", "blue", "accent"], "seed": 1 },
+    { "name": "Math", "href": "/math/", "line": "A design is a rule on the corners of a cube.", "hues": ["yellow", "orange", "red", "accent"], "seed": 2 },
+    { "name": "Code", "href": "/git/", "line": "The Rust crates do the arithmetic, the browser only paints.", "hues": ["accent", "yellow", "green", "mint"], "seed": 3 },
+    { "name": "Blog", "href": "/blog/", "line": "Notes on what lands on this site and in the crates behind it.", "hues": ["brown", "orange", "pink", "accent"], "seed": 4 },
+    { "name": "Apps", "href": "/menu/#apps", "line": "Screensavers drawn in the browser from a seed.", "hues": ["red", "orange", "yellow", "green", "teal", "blue", "indigo", "purple"], "seed": 5 }
+  ],
+  "tiles": [
+    { "name": "Demos", "hues": ["purple", "pink", "red"] },
+    { "name": "Pages", "hues": ["green", "mint", "teal"] },
+    { "name": "Stats", "hues": ["cyan", "blue", "indigo"] },
+    { "name": "Cart", "hues": ["orange", "yellow"] },
+    { "name": "Root", "hues": ["yellow", "green", "mint"] },
+    { "name": "Elsewhere", "hues": ["indigo", "purple", "pink"] }
+  ],
   "shelves": [
     {
       "key": "designs",
@@ -119,7 +134,7 @@
   },
   "inputs": {
     "pages": { "path": "pages", "ext": ".md" },
-    "apps": { "path": "apps/apps.json" },
+    "apps": { "path": "apps", "deep": true },
     "blog": { "path": "blog", "deep": true },
     "wiki": { "path": "../research/wiki", "ext": ".md" },
     "research": { "path": "../research", "ext": ".md" },
@@ -150,8 +165,6 @@
     "hash": true,
     "files": [
       "palette.css",
-      "theme/palette.js",
-      "theme/theme.js",
       "font/font.js",
       "font/font.json"
     ]
@@ -171,18 +184,10 @@
         "welcome.js",
         "islands.js",
         "router.js",
-        "dialog.js",
         "search.js",
         "claims.js",
         "logo.js",
-        "stats.js",
-        "savers/index.js",
-        "savers/frame.js",
-        "savers/matrix.js",
-        "savers/sleep.js",
-        "savers/tiles.js",
-        "savers/fractal.js",
-        "savers/gl.js"
+        "stats.js"
       ]
     },
     {

@@ -7,6 +7,7 @@ import { seti } from "../code/seti/seti.ts";
 import { paint } from "./code.ts";
 import { block, decode, dirRoute, draw, fileRoute, href, lang, link, owner, rawPath, type Tools, type Wood } from "./view.ts";
 import type { Route, Site, Spec } from "../ssg/build.ts";
+import { render as md } from "../ssg/md.ts";
 import type { Shell } from "../ssg/modes.ts";
 
 const shiki = await import("@shikijs/core").then(
@@ -263,6 +264,21 @@ test("a markdown file is rendered by the site's pipeline with its links resolved
 test("a README link to an image the site serves elsewhere lands on that url, not on a raw object that is not there", () => {
   expect(link("", "docs/shot.png", wood)).toBe("/figures/shot.png");
   expect(link("docs", "paper.pdf#p2", wood)).toBe("/raw/docs/paper.pdf#p2");
+});
+
+test("with the tree, a README link to a missing path is plain text and a folder gets its route with or without a slash", () => {
+  const to = (url: string) => link("", url, wood);
+  expect(["docs", "docs/", "gone.rs", "docs/gone/"].map(to)).toEqual(["/git/docs/", "/git/docs/", null, null]);
+  expect(md("[gone](gone.rs) and [docs](docs)", { link: to })).toBe('<p>gone and <a href="/git/docs/">docs</a></p>');
+});
+
+test("with the tree, a reference link whose definition is a missing path is plain text too", () => {
+  const to = (url: string) => link("", url, wood);
+  expect(md("[gone][g] and [docs][d]\n\n[g]: gone.rs\n[d]: docs", { link: to })).toBe('<p>gone and <a href="/git/docs/">docs</a></p>');
+});
+
+test("with the tree, a README link to a file with a space in its name is found through its percent-encoding", () => {
+  expect(link("", "a%20b.md", { ...wood, c: [...wood.c, { n: "a b.md", k: "f" }] })).toBe("/git/a%20b.md");
 });
 
 test("a file whose bytes do not load says so and offers the raw link", async () => {

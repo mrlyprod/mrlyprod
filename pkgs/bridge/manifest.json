@@ -1245,7 +1245,7 @@
       "docs": [
         "The sumset of Erdos problem 125: the base-3 design `{0, 1}` plus the base-4 design `{0, 1}` as a bit array, its density below `x`, the gaps its level pairs leave and their additive energy."
       ],
-      "items": 21
+      "items": 23
     },
     {
       "path": "num::zeta",
@@ -14161,7 +14161,7 @@
       "name": "Pair",
       "defined_at": "num/sumset.rs:201",
       "docs": [
-        "A pair of levels: the base-3 level `A_k = A meet [0, 3^k)` against the base-4 level `B_m = B meet [0, 4^m)`, `k` the field `three` and `m` the field `four`."
+        "A pair of levels: the base-3 level `A_k = A meet [0, 3^k)` against the base-4 level `B_m = B meet [0, 4^m)`, `k` read by `three()` and `m` by `four()`."
       ],
       "kind": "struct",
       "cross": {
@@ -14183,10 +14183,8 @@
       "fields": [
         {
           "name": "three",
-          "public": true,
-          "docs": [
-            "The base-3 level `k`."
-          ],
+          "public": false,
+          "docs": [],
           "serde": [],
           "serde_skip": false,
           "ty": {
@@ -14196,10 +14194,8 @@
         },
         {
           "name": "four",
-          "public": true,
-          "docs": [
-            "The base-4 level `m`."
-          ],
+          "public": false,
+          "docs": [],
           "serde": [],
           "serde_skip": false,
           "ty": {
@@ -65723,7 +65719,7 @@
       "path": "num::sumset::Pair::clean",
       "name": "clean",
       "module": "num::sumset",
-      "defined_at": "num/sumset.rs:257",
+      "defined_at": "num/sumset.rs:265",
       "docs": [
         "Whether the pair is clean, `3^k > d(k, m)` and `4^m > d(k, m)`, so that `S meet [0, d] = A_k + B_m`."
       ],
@@ -65746,7 +65742,7 @@
       "path": "num::sumset::Pair::copy",
       "name": "copy",
       "module": "num::sumset",
-      "defined_at": "num/sumset.rs:263",
+      "defined_at": "num/sumset.rs:271",
       "docs": [
         "Whether the pair is a gap copy, `2 4^m < 3^k + 5`: `A_k + B_m` is then two disjoint translates of `A_(k-1) + B_m` and its energy is twice theirs."
       ],
@@ -65769,7 +65765,7 @@
       "path": "num::sumset::Pair::energy",
       "name": "energy",
       "module": "num::sumset",
-      "defined_at": "num/sumset.rs:277",
+      "defined_at": "num/sumset.rs:285",
       "docs": [
         "The additive energy `E(k, m) = sum_x r(x)^2`, `r(x)` the number of ways `x = a + b` with `a` in `A_k` and `b` in `B_m`.",
         "",
@@ -65790,10 +65786,33 @@
       }
     },
     {
+      "path": "num::sumset::Pair::four",
+      "name": "four",
+      "module": "num::sumset",
+      "defined_at": "num/sumset.rs:241",
+      "docs": [
+        "The base-4 level `m`."
+      ],
+      "owner": "num::sumset::Pair",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "u32"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
       "path": "num::sumset::Pair::gap",
       "name": "gap",
       "module": "num::sumset",
-      "defined_at": "num/sumset.rs:250",
+      "defined_at": "num/sumset.rs:258",
       "docs": [
         "The first and the last integer of the open interval `(d(k, m), min(3^k, 4^m))`, which `S` misses, or `None` when it holds none.",
         "",
@@ -65830,7 +65849,7 @@
       "path": "num::sumset::Pair::largest",
       "name": "largest",
       "module": "num::sumset",
-      "defined_at": "num/sumset.rs:242",
+      "defined_at": "num/sumset.rs:250",
       "docs": [
         "The largest element `d(k, m) = (3^k - 1)/2 + (4^m - 1)/3` of `A_k + B_m`."
       ],
@@ -65853,7 +65872,7 @@
       "path": "num::sumset::Pair::new",
       "name": "new",
       "module": "num::sumset",
-      "defined_at": "num/sumset.rs:228",
+      "defined_at": "num/sumset.rs:226",
       "docs": [
         "Names the pair `(k, m)`.",
         "",
@@ -65899,7 +65918,7 @@
       "path": "num::sumset::Pair::ratio",
       "name": "ratio",
       "module": "num::sumset",
-      "defined_at": "num/sumset.rs:283",
+      "defined_at": "num/sumset.rs:291",
       "docs": [
         "The energy ratio `Q(k, m) = E(k, m) (d + 1)/4^(k+m)` of the energy [`Pair::energy`] returns, the energy against its flat value, at least `1`; `card(A_k + B_m) >= (d + 1)/Q` by Cauchy-Schwarz."
       ],
@@ -65929,7 +65948,7 @@
       "path": "num::sumset::Pair::scale",
       "name": "scale",
       "module": "num::sumset",
-      "defined_at": "num/sumset.rs:269",
+      "defined_at": "num/sumset.rs:277",
       "docs": [
         "The scaling `tau = 4^m/3^k`."
       ],
@@ -65939,6 +65958,29 @@
       "ret": {
         "t": "scalar",
         "name": "f64"
+      },
+      "dims": [],
+      "trait": null,
+      "source": "written",
+      "constant": false,
+      "cross": {
+        "status": "ok"
+      }
+    },
+    {
+      "path": "num::sumset::Pair::three",
+      "name": "three",
+      "module": "num::sumset",
+      "defined_at": "num/sumset.rs:236",
+      "docs": [
+        "The base-3 level `k`."
+      ],
+      "owner": "num::sumset::Pair",
+      "self_kind": "ref",
+      "params": [],
+      "ret": {
+        "t": "scalar",
+        "name": "u32"
       },
       "dims": [],
       "trait": null,
@@ -66258,7 +66300,7 @@
       "path": "num::sumset::pairs",
       "name": "pairs",
       "module": "num::sumset",
-      "defined_at": "num/sumset.rs:321",
+      "defined_at": "num/sumset.rs:329",
       "docs": [
         "Lists the pairs of the census: every `(k, m)` with `4^m` within a factor `3` of `3^k` and `d(k, m) <= 3^level`, by `d`.",
         "",

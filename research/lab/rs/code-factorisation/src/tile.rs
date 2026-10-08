@@ -109,11 +109,11 @@ pub fn kron(outer: &Tile, inner: &Tile) -> Tile {
 }
 
 pub fn divisors(n: usize) -> Vec<usize> {
-    (1..=n).filter(|d| n % d == 0).collect()
+    (1..=n).filter(|d| n.is_multiple_of(*d)).collect()
 }
 
 pub fn split(tile: &Tile, d: usize) -> Option<(Tile, Tile)> {
-    if tile.side % d != 0 {
+    if !tile.side.is_multiple_of(d) {
         return None;
     }
     let n = tile.side / d;
@@ -218,7 +218,7 @@ pub fn totally_ordered(set: &BTreeSet<usize>) -> bool {
     let list: Vec<usize> = set.iter().copied().collect();
     for i in 0..list.len() {
         for j in i + 1..list.len() {
-            if list[j] % list[i] != 0 {
+            if !list[j].is_multiple_of(list[i]) {
                 return false;
             }
         }
@@ -229,7 +229,7 @@ pub fn totally_ordered(set: &BTreeSet<usize>) -> bool {
 pub fn incomparable(list: &[usize]) -> bool {
     for i in 0..list.len() {
         for j in i + 1..list.len() {
-            if list[j] % list[i] != 0 && list[i] % list[j] != 0 {
+            if !list[j].is_multiple_of(list[i]) && !list[i].is_multiple_of(list[j]) {
                 return true;
             }
         }
@@ -265,7 +265,7 @@ pub fn line_kron(outer: u128, outer_side: usize, inner: u128, inner_side: usize)
 }
 
 pub fn line_split(mask: u128, side: usize, d: usize) -> Option<(u128, u128)> {
-    if side % d != 0 {
+    if !side.is_multiple_of(d) {
         return None;
     }
     let n = side / d;

@@ -97,7 +97,7 @@ pub fn run(args: &[String]) {
         let base = span >> shift;
         for step in 0..3u64 {
             let candidate = base.saturating_sub(step * 7).max(1);
-            if candidate % 3 != 0 && !probes.contains(&candidate) {
+            if !candidate.is_multiple_of(3) && !probes.contains(&candidate) {
                 probes.push(candidate);
             }
         }

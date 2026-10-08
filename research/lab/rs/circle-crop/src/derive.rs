@@ -138,8 +138,8 @@ fn frozen(label: &str, radius: u64) {
             }
             let reach = (top_below + 1).saturating_sub(3 * i).min(3);
             let mut exact = true;
-            for k in 1..4usize {
-                if 3 * i + k <= top_below + 1 && guess[k] != below.high[3 * i + k] as i64 {
+            for (k, &g) in guess.iter().enumerate().skip(1) {
+                if 3 * i + k <= top_below + 1 && g != below.high[3 * i + k] as i64 {
                     exact = false;
                 }
             }
@@ -151,9 +151,9 @@ fn frozen(label: &str, radius: u64) {
             for y in low..=high {
                 boxes += 1;
                 let mut truth = [0i64; 4];
-                for k in 0..4usize {
+                for (k, t) in truth.iter_mut().enumerate() {
                     let column = 3 * i + k;
-                    truth[k] = if column <= top_below + 1 {
+                    *t = if column <= top_below + 1 {
                         below.high[column] as i64 - 3 * y as i64
                     } else {
                         -1
@@ -228,7 +228,7 @@ fn centre(label: &str, radius: u64) {
                 let column = 3 * i + 1;
                 if column <= top_below
                     && below.high[column + 1] <= 3 * y + 1
-                    && 3 * y + 1 <= below.high[column]
+                    && 3 * y < below.high[column]
                 {
                     seated += 1;
                 }
@@ -287,8 +287,8 @@ fn ladder(name: &str, num: i128, den: i128, off: i128, depth: u32) {
         }
     }
     let mut product = 1.0f64;
-    for slot in 0..depth as usize {
-        product *= 1.0 - hits[slot] as f64 / total as f64;
+    for &h in &hits {
+        product *= 1.0 - h as f64 / total as f64;
     }
     let survival = alive as f64 / total as f64;
     let psi = survival / product;
@@ -420,8 +420,8 @@ fn resonance(label: &str, radius: u64) -> u64 {
             if low > 0 && run == low {
                 at_floor += 1;
             }
-            for level in 0..run as usize {
-                budget[level] = budget[level].max(b);
+            for seen in budget.iter_mut().take(run as usize) {
+                *seen = (*seen).max(b);
             }
             println!(
                 "track {label} r={radius} slope={a}/{b} eps=1/{den} run={run} cap={cap} floor={low} boxes={boxes} seats_mod3={s0},{s1},{s2}",
@@ -435,9 +435,8 @@ fn resonance(label: &str, radius: u64) -> u64 {
     println!(
         "track {label} r={radius} levels={deep} slopes={rows} live_caps={live} run_equals_cap={at_cap} run_equals_floor={at_floor}"
     );
-    for level in 0..deep as usize {
+    for (level, &seen) in budget.iter().enumerate() {
         let scale = 3i128.pow(level as u32);
-        let seen = budget[level];
         assert!(seen * seen * scale < 2 * r);
         println!(
             "budget {label} r={radius} level={level} rank={rank} biggest_denominator={seen} denominator_square_times_scale={weight} twice_r={twice}",
@@ -584,11 +583,11 @@ fn finest(radius: i128, left: i128, right: i128) -> Option<(i128, i128)> {
             if !coprime(a, b) {
                 continue;
             }
-            if steeper(left, radius, a * b - 1, b * b) && shallower(right, radius, a * b + 1, b * b)
+            if steeper(left, radius, a * b - 1, b * b)
+                && shallower(right, radius, a * b + 1, b * b)
+                && best.is_none_or(|seen| b > seen.1)
             {
-                if best.is_none_or(|seen| b > seen.1) {
-                    best = Some((a, b));
-                }
+                best = Some((a, b));
             }
         }
     }

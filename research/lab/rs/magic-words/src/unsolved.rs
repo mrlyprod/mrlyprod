@@ -231,9 +231,8 @@ fn ledger() {
     let mut exact = 0usize;
     let mut refuted: Vec<(usize, usize)> = Vec::new();
     let mut between: Vec<(usize, usize)> = Vec::new();
-    for i in 0..CODES.len() {
-        for j in i + 1..CODES.len() {
-            let (a, b) = (CODES[i], CODES[j]);
+    for (i, &a) in CODES.iter().enumerate() {
+        for &b in &CODES[i + 1..] {
             let (wa, wb) = exponent_weights(a, b);
             let key = (class_of(a).min(class_of(b)), class_of(a).max(class_of(b)));
             if wa == weight(a) && wb == weight(b) {
@@ -721,7 +720,7 @@ fn cone(rep: &Rep) {
     let mut escapes = 0usize;
     for vertex in vertices.iter() {
         for gasket in [true, false] {
-            if !inside(&image(vertex.clone(), gasket)) {
+            if !inside(&image(*vertex, gasket)) {
                 escapes += 1;
             }
         }
@@ -731,7 +730,7 @@ fn cone(rep: &Rep) {
     let mut images: Vec<String> = Vec::new();
     let mut widest = Frac::zero();
     for vertex in vertices.iter() {
-        let mut at = vertex.clone();
+        let mut at = *vertex;
         for gasket in [true, false, true] {
             at = image(at, gasket);
         }

@@ -42,3 +42,20 @@ export function kron(base, level = 2) {
 export function tile(design, n = NUMBERS[0], level = 1) {
   return kron(seed(design, n), level);
 }
+
+/* INK */
+
+export function ink(ctx, mark, x, y, side) {
+  const n = mark.size;
+  ctx.beginPath();
+  for (let r = 0; r < n; r++) {
+    const top = Math.round(y + (r * side) / n);
+    const bottom = Math.round(y + ((r + 1) * side) / n);
+    for (let c = 0; c < n; c++) {
+      if (!mark.cells[r * n + c]) continue;
+      const left = Math.round(x + (c * side) / n);
+      ctx.rect(left, top, Math.round(x + ((c + 1) * side) / n) - left, bottom - top);
+    }
+  }
+  ctx.fill();
+}

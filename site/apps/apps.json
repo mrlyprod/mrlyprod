@@ -1,3 +1,9 @@
 [
-  { "id": "settings", "title": "Settings", "kind": "tool" }
+  { "id": "settings", "title": "Settings", "kind": "tool" },
+  { "id": "matrix", "title": "Matrix", "kind": "saver" },
+  { "id": "sleep", "title": "Sleep", "kind": "saver" },
+  { "id": "mandelbrot", "title": "Mandelbrot", "kind": "saver" },
+  { "id": "julia", "title": "Julia", "kind": "saver" },
+  { "id": "lightspeed", "title": "Lightspeed", "kind": "saver" },
+  { "id": "snake", "title": "Snake", "kind": "saver", "line": "Snake, the first game: the mrly marks play food, head and body. A saver when it plays itself." }
 ]

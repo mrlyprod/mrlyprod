@@ -53,10 +53,10 @@ pub fn arcs(side: usize, on: &[bool]) -> (u64, u64) {
     }
     let mut closed = vec![1u8; 2 * rows];
     let mut root = vec![false; 2 * rows];
-    for i in 0..2 * rows {
+    for (i, &deg) in degree.iter().enumerate() {
         let r = dsu.find(i as u32) as usize;
         root[r] = true;
-        if degree[i] != 2 {
+        if deg != 2 {
             closed[r] = 0;
         }
     }
@@ -252,10 +252,10 @@ mod tests {
         for code in 0..16u128 {
             let d = Design::full(code, 2);
             let blocks = series(2, &d.tile, 5);
-            for level in 0..=5 {
+            for (level, &want) in blocks.iter().enumerate() {
                 let (side, on) = d.cells(level);
                 let (loops, strands) = arcs(side, &on);
-                assert_eq!(loops as u128, blocks[level]);
+                assert_eq!(loops as u128, want);
                 assert_eq!(mirrors(side, &on), loops as i64);
                 assert_eq!(strands, 2 * side as u64);
             }

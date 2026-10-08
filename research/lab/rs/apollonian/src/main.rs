@@ -43,11 +43,11 @@ fn frame(q: &Quad) -> bool {
 
 fn reflect(q: &Quad, i: usize) -> Circle {
     let (mut k, mut x, mut y) = (0i64, 0i64, 0i64);
-    for j in 0..4 {
+    for (j, c) in q.iter().enumerate() {
         if j != i {
-            k += q[j].k;
-            x += q[j].x;
-            y += q[j].y;
+            k += c.k;
+            x += c.x;
+            y += c.y;
         }
     }
     Circle {
@@ -250,7 +250,7 @@ fn ford(top: i64) -> Ford {
         if m.k != 2 * r * r || m.x != 2 * p * r || m.y != 1 {
             f.missed += 1;
         }
-        let lhs = (0 + 2 * b * b + 2 * d * d + 2 * r * r) as i128;
+        let lhs = (2 * b * b + 2 * d * d + 2 * r * r) as i128;
         let rhs: i128 = 2
             * ((2 * b * b) as i128 * (2 * b * b) as i128
                 + (2 * d * d) as i128 * (2 * d * d) as i128
@@ -267,7 +267,7 @@ fn ford(top: i64) -> Ford {
         stack.push(([q[0], q[1], m, q[2]], a, b, p, r));
         stack.push(([q[0], m, q[2], q[1]], p, r, c, d));
     }
-    f.bright += (top / 1) as u128;
+    f.bright += top as u128;
     f
 }
 

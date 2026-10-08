@@ -1,4 +1,4 @@
-import { test } from "bun:test";
+import { expect, test } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -37,4 +37,48 @@ test("the site css never repeats a top-level selector with another rule between"
       last.set(sel, n);
     });
   }
+});
+
+/* TOKENS */
+
+const SHEETS = ["chrome.css", "base.css", "pages.css", "../lib/mrly.css"];
+
+const bare = (name: string) => readFileSync(join(import.meta.dir, name), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+
+const values = (css: string, prop: RegExp) => [...css.matchAll(/(?:^|[{;])\s*([a-z-]+)\s*:\s*([^;{}]+)/g)].filter(([, name]) => prop.test(name)).map(([, , value]) => value.trim());
+
+test("the site css and the demo css set no font size in px", () => {
+  for (const name of SHEETS) {
+    for (const value of values(bare(name), /^font(-size)?$/)) {
+      if (/[\d.]+px\b/.test(value.replace(/var\([^)]*\)/g, ""))) throw new Error(`${name}: font ${value}`);
+    }
+  }
+});
+
+test("the site css and the demo css set no bare numeric z-index", () => {
+  for (const name of SHEETS) {
+    for (const value of values(bare(name), /^z-index$/)) {
+      if (/^-?\d/.test(value)) throw new Error(`${name}: z-index ${value}`);
+    }
+  }
+});
+
+test("tokens.css defines every type and layer token the site css reads", () => {
+  const tokens = bare("tokens.css");
+  for (const name of [...readdirSync(import.meta.dir).filter((one) => one.endsWith(".css") && one !== "tokens.css"), "../lib/mrly.css"]) {
+    for (const [, token] of bare(name).matchAll(/var\(--((?:t|lh)\d+|z-[a-z]+)\b/g)) {
+      if (!new RegExp(`--${token}\\s*:`).test(tokens)) throw new Error(`${name}: --${token} undefined`);
+    }
+  }
+});
+
+/* HOME */
+
+const rules = (css: string) => [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, sel, body]) => [sel!.trim().replace(/\s+/g, " "), body!] as const);
+
+test("no rule for a hero, a half hero or a plate on either rounds a corner", () => {
+  const round = readdirSync(import.meta.dir)
+    .filter((one) => one.endsWith(".css"))
+    .flatMap((name) => rules(bare(name)).filter(([sel, body]) => /\.(hero|half|plate)\b/.test(sel) && !/\.paper\b/.test(sel) && /border-radius/.test(body)).map(([sel]) => `${name}: ${sel}`));
+  expect(round).toEqual([]);
 });

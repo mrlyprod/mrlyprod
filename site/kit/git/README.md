@@ -43,8 +43,9 @@
 
 ## LINKS
 
-- A README link resolves in the viewer by `link(dir, url)` in `view.ts`, against the README's own folder, keeping its `#fragment` or `?query`.
+- A README link resolves in the viewer by `link(dir, url, wood)` in `view.ts`, against the README's own folder and the tree, keeping its `#fragment` or `?query`.
 - A path is `/git/<path>`, a trailing slash `/git/<dir>/`, an image or a PDF `/raw/<path>`.
+- Given the tree, the viewer's `/git.json`, a path missing from it is plain text and a folder is `/git/<dir>/` with or without its slash; `md` unwraps a link, inline or reference, its resolver answers `null`.
 - `https:`, `http:`, `mailto:`, `tel:`, `#` and a rooted `/path` pass through; `javascript:`, `data:` and `vbscript:` become `#`.
 - No index of site routes ships, so a README link to a research file opens its `/git/` view, not its site page.
 

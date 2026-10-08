@@ -61,19 +61,20 @@ fn energy(tau: f64, level: u32) -> f64 {
     3f64.powi(level as i32) * p.iter().map(|v| v * v).sum::<f64>()
 }
 
-fn chain(k: u32) -> Pair {
+fn chain(k: u32) -> Result<Pair> {
     let p = 3u64.pow(k);
     let mut m = 0;
     while 4u64.pow(m) < p {
         m += 1;
     }
-    Pair { three: k, four: m }
+    Pair::new(k, m)
 }
 
 // THE CHECKS
 
 fn lattice(pair: Pair) -> f64 {
-    3f64.powi(pair.three as i32) * pair.energy() as f64 / 4f64.powi((pair.three + pair.four) as i32)
+    3f64.powi(pair.three() as i32) * pair.energy() as f64
+        / 4f64.powi((pair.three() + pair.four()) as i32)
 }
 
 fn main() -> Result<()> {
@@ -95,22 +96,22 @@ fn main() -> Result<()> {
         assert!(area > 2.0 && area < 4.0);
     }
 
-    let orbit: Vec<(u32, f64)> = (0..=LEVEL)
-        .map(|k| {
-            let pair = chain(k);
-            let tau = pair.scale();
-            assert!((1.0..4.0).contains(&tau));
-            let h = energy(tau, k);
-            assert!((h - lattice(pair)).abs() < 1e-12 * h);
-            (pair.four, h)
-        })
-        .collect();
+    let mut orbit: Vec<(u32, f64)> = vec![(0, energy(1.0, 0))];
+    assert!((orbit[0].1 - 1.0).abs() < 1e-12);
+    for k in 1..=LEVEL {
+        let pair = chain(k)?;
+        let tau = pair.scale();
+        assert!((1.0..4.0).contains(&tau));
+        let h = energy(tau, k);
+        assert!((h - lattice(pair)).abs() < 1e-12 * h);
+        orbit.push((pair.four(), h));
+    }
     for k in 0..LEVEL as usize {
         let step = orbit[k + 1].1 / orbit[k].1;
         assert!((9.0 / 16.0..=4.5).contains(&step));
     }
-    let least = chain(6);
-    assert_eq!(least.four, 5);
+    let least = chain(6)?;
+    assert_eq!(least.four(), 5);
     assert!((least.ratio(least.energy()) - 858849.0 / 524288.0).abs() < 1e-15);
 
     let kept: Vec<Vec<f64>> = curves

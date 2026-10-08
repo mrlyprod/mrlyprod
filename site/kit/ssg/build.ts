@@ -438,12 +438,28 @@ function png(size: number, dark: (x: number, y: number) => boolean): Uint8Array 
   return out;
 }
 
+function ico(image: Uint8Array, size: number): Uint8Array {
+  const out = new Uint8Array(22 + image.length);
+  const view = new DataView(out.buffer);
+  view.setUint16(2, 1, true);
+  view.setUint16(4, 1, true);
+  out[6] = size;
+  out[7] = size;
+  view.setUint16(10, 1, true);
+  view.setUint16(12, 8, true);
+  view.setUint32(14, image.length, true);
+  view.setUint32(18, 22, true);
+  out.set(image, 22);
+  return out;
+}
+
 function icons({ rows, svg }: Icons): Output[] {
   const n = rows.length;
   const mark = (size: number) => png(size, (x, y) => rows[Math.floor((y * n) / size)][Math.floor((x * n) / size)] === "1");
   return [
     { path: "favicon.svg", bytes: svg },
     { path: "favicon.png", bytes: mark(40) },
+    { path: "favicon.ico", bytes: ico(mark(32), 32) },
     { path: "apple-touch-icon.png", bytes: mark(180) },
     { path: "icon-192.png", bytes: mark(192) },
     { path: "icon-512.png", bytes: mark(512) },

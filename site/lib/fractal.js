@@ -1,4 +1,4 @@
-import { pick, rgb } from './frame.js';
+import { rgb } from './scene.js';
 import { build, drop } from './gl.js';
 
 const CYCLE = 65536;
@@ -9,10 +9,6 @@ const COLOR = 1 / 256;
 const START_SCALE = 1 / 2;
 const SAMPLES = 200;
 const PROBE = 150;
-
-const MANDELBROT = { xMin: -2, xMax: 1, yMin: -1.5, yMax: 1.5 };
-const JULIA = { xMin: -1.5, xMax: 1.5, yMin: -1.5, yMax: 1.5 };
-const PRESETS = [[-0.4, 0.6], [-0.8, 0.156], [0.285, 0.01], [-0.7269, 0.1889], [-0.1, 0.651], [0.355, 0.355]];
 
 /* MATH */
 
@@ -69,9 +65,9 @@ export function wayfind(escape, v, rand) {
   return { x, y };
 }
 
-/* SAVER */
+/* SCENE */
 
-function fractal(canvas, view, home, seed) {
+export function fractal(canvas, view, home, seed) {
   const gl = canvas.getContext('webgl2', { powerPreference: 'low-power' });
   if (!gl) return { draw: () => {} };
   const kit = build(gl);
@@ -90,7 +86,7 @@ function fractal(canvas, view, home, seed) {
   let target = wayfind(escape, start, rand);
   let accent = rgb(view.look().accent);
   let dir = rand() < 0.5 ? 1 : -1;
-  let born = performance.now();
+  let born = view.t;
   let rotation = rand() * Math.PI * 2;
   let clock = 0;
   const again = () => {
@@ -99,11 +95,11 @@ function fractal(canvas, view, home, seed) {
     accent = rgb(view.look().accent);
     dir = rand() < 0.5 ? 1 : -1;
     rotation = rand() * Math.PI * 2;
-    born = performance.now();
+    born = view.t;
   };
   const draw = () => {
-    if (performance.now() - born >= CYCLE) again();
-    const age = performance.now() - born;
+    if (view.t - born >= CYCLE) again();
+    const age = view.t - born;
     const opacity = view.still ? 1 : Math.max(0, Math.min(age / FADE, (CYCLE - age) / FADE, 1));
     canvas.style.opacity = String(opacity);
     if (opacity < 0.01) return;
@@ -132,7 +128,3 @@ function fractal(canvas, view, home, seed) {
   const theme = () => (accent = rgb(view.look().accent));
   return { draw, size: () => (start = wide()), theme, stop };
 }
-
-export const mandelbrot = (canvas, view) => fractal(canvas, view, MANDELBROT, null);
-
-export const julia = (canvas, view) => fractal(canvas, view, JULIA, pick(view.rand, PRESETS));

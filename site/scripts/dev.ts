@@ -1,11 +1,12 @@
 import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { main } from "../kit/dev.ts";
+import { disk, main } from "../kit/dev.ts";
 import type { Site } from "../kit/ssg/build.ts";
 import { ensureFigures } from "./figs.ts";
 import { counted, spec } from "./site.ts";
 
 const org = resolve(import.meta.dir, "..");
+const MARK = /-[0-9a-f]{8}(\.[^./]+)$/;
 const cached = join(org, "data", "shelf", "research");
 if (!process.env.MRLY_SHELF && existsSync(join(cached, "README.md"))) process.env.MRLY_SHELF = cached;
 
@@ -18,9 +19,10 @@ await main(spec, {
   html: (site) => demos(site, "/index.html", "/"),
   scripts: (site) => [...demos(site, "/widget.jsx", "/widget.js"), ...demos(site, "/index.jsx", "/index.js")],
   disk: (site) => [["/figures/", site.input("figures").path]],
-  extra: async (_, path) => {
-    if (path.startsWith("/figures/")) await ensureFigures();
-    return null;
+  extra: async (site, path) => {
+    if (!path.startsWith("/figures/")) return null;
+    await ensureFigures();
+    return disk([["/figures/", site.input("figures").path]], path.replace(MARK, "$1"));
   },
   line: () => {
     const count = counted();

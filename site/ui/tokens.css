@@ -10,6 +10,7 @@
   --fg: var(--black);
   --dim: #555558;
   --accent: var(--blue);
+  --link: var(--blue-link);
   --on-accent: var(--white);
 }
 
@@ -24,11 +25,21 @@
 /* TYPE */
 
 :root {
-  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Noto Sans Symbols 2", "Noto Color Emoji";
-  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif, "Noto Sans Symbols 2", "Noto Color Emoji";
-  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace, "Noto Sans Symbols 2", "Noto Color Emoji";
-  --text: 15px;
-  --read-text: 17px;
+  --sans: "Noto Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Noto Sans Symbols 2", "Noto Color Emoji";
+  --serif: "Noto Serif", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif, "Noto Sans Symbols 2", "Noto Color Emoji";
+  --mono: "Noto Sans Mono", ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace, "Noto Sans Symbols 2", "Noto Color Emoji";
+  --t1: 0.6875rem;
+  --t2: 0.75rem;
+  --t3: 0.8125rem;
+  --t4: 0.9375rem;
+  --t5: 1.0625rem;
+  --t6: 1.25rem;
+  --t7: 1.75rem;
+  --lh1: 1.2;
+  --lh2: 1.4;
+  --lh3: 1.6;
+  --text: var(--t4);
+  --read-text: var(--t5);
 }
 
 /* SPACE */
@@ -53,17 +64,33 @@
   --round: 999px;
   --hair: 1px solid var(--line);
   --ring: 2px solid var(--accent);
+  --float: 0 0 0 1px var(--line), 0 8px 24px color-mix(in srgb, var(--black) 12%, transparent);
 }
 
 /* FRAME */
 
 :root {
   --head: 3rem;
-  --pane: clamp(13rem, 18vw, 17.5rem);
+  --foot: 3rem;
+  --side: 16rem;
+  --sheet: 50svh;
   --read: 72ch;
   --page: 72rem;
-  --frame: calc(var(--page) + var(--pane));
+  --frame: calc(var(--page) + var(--side));
   --touch: 44px;
+}
+
+/* LAYER */
+
+:root {
+  --z-plate: 1;
+  --z-scrim: 30;
+  --z-drawer: 40;
+  --z-sheet: 45;
+  --z-bar: 50;
+  --z-lock: 54;
+  --z-welcome: 55;
+  --z-skip: 60;
 }
 
 /* MOTION */
@@ -75,9 +102,9 @@
 
 /* FACE */
 
-:root[data-font="sans"] { --face: "Noto Sans", var(--sans); }
-:root[data-font="serif"] { --face: "Noto Serif", var(--serif); }
-:root[data-font="mono"] { --face: "Noto Sans Mono", var(--mono); }
+:root[data-font="sans"] { --face: var(--sans); }
+:root[data-font="serif"] { --face: var(--serif); }
+:root[data-font="mono"] { --face: var(--mono); }
 :root[data-font="mrly"] { --face: "MrlyFont", var(--mono); }
 
 /* DARK */
@@ -93,6 +120,7 @@
     --fg: var(--white);
     --dim: var(--gray);
     --scrim: color-mix(in srgb, var(--black) 55%, transparent);
+    --float: 0 0 0 1px var(--line);
     --mix: 100%;
   }
 }
@@ -107,5 +135,6 @@
   --fg: var(--white);
   --dim: var(--gray);
   --scrim: color-mix(in srgb, var(--black) 55%, transparent);
+  --float: 0 0 0 1px var(--line);
   --mix: 100%;
 }

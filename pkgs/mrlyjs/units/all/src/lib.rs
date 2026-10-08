@@ -12238,7 +12238,7 @@ impl num_radix_Radix {
     }
 }
 
-/// A pair of levels: the base-3 level `A_k = A meet [0, 3^k)` against the base-4 level `B_m = B meet [0, 4^m)`, `k` the field `three` and `m` the field `four`.
+/// A pair of levels: the base-3 level `A_k = A meet [0, 3^k)` against the base-4 level `B_m = B meet [0, 4^m)`, `k` read by `three()` and `m` by `four()`.
 #[wasm_bindgen]
 pub struct num_sumset_Pair {
     inner: mrlyrs::num::sumset::Pair,
@@ -12258,28 +12258,6 @@ impl num_sumset_Pair {
     pub fn to_plain(&self) -> Result<JsValue, JsValue> {
         hand::to_js(&self.inner)
     }
-    /// The base-3 level `k`.
-    #[wasm_bindgen(getter)]
-    pub fn three(&self) -> Result<u32, JsValue> {
-        let value = self.inner.three;
-        Ok(value)
-    }
-    #[wasm_bindgen(setter)]
-    pub fn set_three(&mut self, value: u32) -> Result<(), JsValue> {
-        self.inner.three = value;
-        Ok(())
-    }
-    /// The base-4 level `m`.
-    #[wasm_bindgen(getter)]
-    pub fn four(&self) -> Result<u32, JsValue> {
-        let value = self.inner.four;
-        Ok(value)
-    }
-    #[wasm_bindgen(setter)]
-    pub fn set_four(&mut self, value: u32) -> Result<(), JsValue> {
-        self.inner.four = value;
-        Ok(())
-    }
     /// Whether the pair is clean, `3^k > d(k, m)` and `4^m > d(k, m)`, so that `S meet [0, d] = A_k + B_m`.
     pub fn clean(&self) -> Result<bool, JsValue> {
         let value = self.inner.clean();
@@ -12294,6 +12272,11 @@ impl num_sumset_Pair {
     pub fn energy(&self) -> Result<JsValue, JsValue> {
         let value = self.inner.energy();
         Ok(JsValue::from_str(&value.to_string()))
+    }
+    /// The base-4 level `m`.
+    pub fn four(&self) -> Result<u32, JsValue> {
+        let value = self.inner.four();
+        Ok(value)
     }
     /// The first and the last integer of the open interval `(d(k, m), min(3^k, 4^m))`, which `S` misses, or `None` when it holds none.
     pub fn gap(&self) -> Result<JsValue, JsValue> {
@@ -12325,6 +12308,11 @@ impl num_sumset_Pair {
     /// The scaling `tau = 4^m/3^k`.
     pub fn scale(&self) -> Result<f64, JsValue> {
         let value = self.inner.scale();
+        Ok(value)
+    }
+    /// The base-3 level `k`.
+    pub fn three(&self) -> Result<u32, JsValue> {
+        let value = self.inner.three();
         Ok(value)
     }
 }

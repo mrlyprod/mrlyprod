@@ -50,8 +50,8 @@ impl Design {
 
 pub fn card_both(q: usize, keep: &[bool], mu: &[i8]) -> u64 {
     let mut total = 0i64;
-    for d in 1..=q {
-        if mu[d] == 0 {
+    for (d, &sign) in mu.iter().enumerate().take(q + 1).skip(1) {
+        if sign == 0 {
             continue;
         }
         let mut run = 0i64;
@@ -64,7 +64,7 @@ pub fn card_both(q: usize, keep: &[bool], mu: &[i8]) -> u64 {
             }
             m += d;
         }
-        total += mu[d] as i64 * acc;
+        total += sign as i64 * acc;
     }
     total as u64
 }

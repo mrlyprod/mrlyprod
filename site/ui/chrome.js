@@ -3,7 +3,6 @@ import { word } from './word.js';
 const DOCK = '(min-width: 74rem)';
 const PREFIX = (typeof document !== 'undefined' && document.documentElement.dataset.prefix) || 'mrly-';
 const KEY = { theme: `${PREFIX}theme`, font: `${PREFIX}font`, tint: `${PREFIX}tint`, saver: `${PREFIX}saver`, cart: `${PREFIX}cart`, welcome: `${PREFIX}welcome` };
-const WORDMARK = 'wordmark';
 const SIDES = ['left', 'right'];
 const SHADE = 'screen and (prefers-color-scheme: dark)';
 
@@ -85,7 +84,7 @@ function toggle(side) {
   set(side, open);
   if (!open) return;
   set(side === 'left' ? 'right' : 'left', false);
-  document.getElementById(side)?.querySelector('a, button')?.focus();
+  document.getElementById(side)?.querySelector('a, button, input, select, textarea')?.focus();
 }
 
 function shut() {
@@ -191,61 +190,12 @@ function contents(nav) {
   eyes.set(nav, eye);
 }
 
-/* MARK */
-
-const marks = new Map();
-
-const wanted = () => root().dataset.saver || WORDMARK;
-
-function unmark() {
-  for (const canvas of marks.keys()) {
-    if (canvas.isConnected) continue;
-    canvas.stop?.();
-    marks.delete(canvas);
-  }
-}
-
-async function footer(canvas) {
-  canvas.stop?.();
-  marks.delete(canvas);
-  const next = canvas.cloneNode(false);
-  const label = next.dataset.label ?? next.getAttribute('aria-label') ?? '';
-  if (label) next.dataset.label = label;
-  canvas.replaceWith(next);
-  const name = wanted();
-  marks.set(next, name);
-  if (name === WORDMARK) {
-    next.removeAttribute('aria-hidden');
-    next.setAttribute('role', 'img');
-    if (label) next.setAttribute('aria-label', label);
-    const { cycle, mark } = await import('../kit/font/font.js');
-    next.stop = mark(next, cycle(next.dataset.text || 'MRLYPROD', 1));
-  } else {
-    const { saver, SAVERS } = await import('./savers/index.js');
-    if (!SAVERS.includes(name)) return replay('');
-    next.setAttribute('aria-hidden', 'true');
-    next.removeAttribute('role');
-    next.removeAttribute('aria-label');
-    next.stop = saver(next, name);
-  }
-  if (!next.isConnected) next.stop();
-}
-
-function marked() {
-  const name = wanted();
-  for (const canvas of document.querySelectorAll('canvas.mark')) if (marks.get(canvas) !== name) footer(canvas);
-}
+/* SAVER */
 
 function screen(next) {
-  if (next) root().dataset.saver = next;
-  else delete root().dataset.saver;
   write(KEY.saver, next);
-  for (const pick of document.querySelectorAll('[data-saver-pick]')) pick.value = next;
-}
-
-function replay(name) {
-  screen(name);
-  for (const canvas of [...marks.keys()]) footer(canvas);
+  const head = next.split('?')[0];
+  for (const pick of document.querySelectorAll('[data-saver-pick]')) pick.value = [...pick.options].some((one) => one.value === head) ? head : 'random';
 }
 
 /* NAME */
@@ -334,8 +284,11 @@ const PAGING = ['ArrowDown', 'PageDown', ' ', 'End'];
 const LIVE = 'main a[href], main button, main input, main select, main textarea, main summary';
 
 let playing = false;
+let asked = false;
 let quiet = 0;
 let watch = null;
+let owed = false;
+let tapped = 0;
 
 const hall = () => document.querySelector('.welcome');
 const greeting = () => root().dataset.welcome;
@@ -363,6 +316,7 @@ function calm() {
 }
 
 function settle() {
+  unlock();
   const top = Math.max(0, scrollY - (hall()?.offsetHeight ?? 0));
   write(KEY.welcome, '1');
   root().dataset.welcome = 'shut';
@@ -372,23 +326,34 @@ function settle() {
 }
 
 function enter() {
-  if (playing || greeting() !== 'open') return;
-  const h = hall()?.offsetHeight ?? 0;
-  if (!h || scrollY >= h) return settle();
-  const from = scrollY / h;
-  glide((t, height) => height * (from + (1 - from) * t), PLAY * (1 - from), settle);
+  if (greeting() !== 'open') return;
+  asked = playing;
+  if (playing) return;
+  const mine = shown;
+  const go = () => {
+    if (shown !== mine || playing || greeting() !== 'open') return;
+    clearTimeout(nap);
+    delete root().dataset.lock;
+    const h = hall()?.offsetHeight ?? 0;
+    if (!h || scrollY >= h) return settle();
+    const from = scrollY / h;
+    glide((t, height) => height * (from + (1 - from) * t), PLAY * (1 - from), settle);
+  };
+  if (mine?.stop?.leave && root().dataset.lock) return mine.stop.leave(go);
+  go();
 }
 
 function greet() {
   if (playing || greeting() !== 'shut' || !hall()) return;
   const at = scrollY;
   playing = true;
+  asked = false;
   root().dataset.welcome = 'open';
   listen();
   jump(at + hall().offsetHeight);
   setTimeout(() => {
     jump(hall().offsetHeight);
-    glide((t, height) => height * (1 - t), PLAY, () => {});
+    glide((t, height) => height * (1 - t), PLAY, () => (asked ? enter() : lid()));
   }, matchMedia(STILL).matches ? 0 : FADE);
 }
 
@@ -435,6 +400,7 @@ function listen() {
   const options = { passive: false, capture: true, signal: watch.signal };
   for (const type of ['wheel', 'touchmove', 'keydown', 'pointerdown', 'click']) addEventListener(type, hold, options);
   addEventListener('scroll', drift, { passive: true, signal: watch.signal });
+  addEventListener('pointermove', stir, { passive: true, signal: watch.signal });
 }
 
 function unlisten() {
@@ -444,9 +410,17 @@ function unlisten() {
 
 function knock(mark) {
   mark.addEventListener('click', (e) => {
-    if (location.pathname !== '/' || greeting() !== 'shut' || !hall()) return;
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const now = performance.now();
+    const twice = now - tapped < TWICE;
+    tapped = twice ? 0 : now;
+    if (location.pathname === '/' && greeting() === 'shut' && hall()) {
+      e.preventDefault();
+      return greet();
+    }
+    if (!twice) return;
     e.preventDefault();
-    greet();
+    if (!greeting()) owed = true;
   });
 }
 
@@ -461,16 +435,67 @@ async function arrive(mark) {
   svg.style.setProperty('--cols', model.cols);
   svg.innerHTML = markup(model);
   mark.style.setProperty('--cols', model.cols);
+  const due = owed;
+  owed = false;
   if (!rolls()) return;
   root().dataset.welcome = read(KEY.welcome) || matchMedia(STILL).matches ? 'shut' : 'open';
   if (greeting() === 'open') listen();
+  if (due) greet();
 }
 
 function depart(mark) {
+  owed = false;
+  unlock();
   delete root().dataset.welcome;
   unlisten();
   mark.style.removeProperty('--cols');
   mark.querySelector('svg')?.setAttribute('class', 'glyphs');
+}
+
+/* LOCK */
+
+const IDLE = 3000;
+const TWICE = 400;
+
+let shown = null;
+let nap = 0;
+
+async function lid() {
+  const pick = read(KEY.saver);
+  if (!pick || shown || greeting() !== 'open') return;
+  const box = document.createElement('div');
+  box.className = 'lock';
+  box.setAttribute('aria-hidden', 'true');
+  box.append(document.createElement('canvas'));
+  const mine = { box, stop: null };
+  shown = mine;
+  document.body.append(box);
+  const stop = await import('/lock.js').then(({ lock }) => lock(box.firstChild, pick)).catch(() => null);
+  if (stop && stop.pick !== pick) screen(stop.pick);
+  if (stop && shown === mine && !playing && greeting() === 'open') {
+    mine.stop = stop;
+    root().dataset.lock = 'rest';
+    return;
+  }
+  stop?.();
+  if (shown === mine) unlock();
+}
+
+function stir(e) {
+  if (!root().dataset.lock || e.pointerType === 'touch') return;
+  root().dataset.lock = 'wake';
+  clearTimeout(nap);
+  nap = setTimeout(() => {
+    if (root().dataset.lock) root().dataset.lock = 'rest';
+  }, IDLE);
+}
+
+function unlock() {
+  clearTimeout(nap);
+  delete root().dataset.lock;
+  shown?.stop?.();
+  shown?.box.remove();
+  shown = null;
 }
 
 /* EXPLORER */
@@ -545,12 +570,11 @@ const once = (selector, fn) => {
 
 function wire() {
   sync();
-  unmark();
   unread();
   theme(root().dataset.theme ?? '');
   face(root().dataset.font ?? '');
   tint(root().dataset.tint ?? '');
-  screen(root().dataset.saver ?? '');
+  screen(read(KEY.saver));
   cart();
   once('.contents', contents);
   once('.top .mark', (mark) => {
@@ -559,7 +583,6 @@ function wire() {
   });
   if (greeting() === 'open') listen();
   rename();
-  marked();
 }
 
 function boot() {
@@ -577,7 +600,7 @@ function boot() {
     const target = e.target instanceof Element ? e.target : null;
     if (!target) return;
     const button = target.closest('[data-pane]');
-    if (button) return toggle(button.dataset.pane);
+    if (button) return button.closest('.pane') ? shut() : toggle(button.dataset.pane);
     if (target.closest('[data-theme-toggle]')) return turn();
     if (target.closest('.scrim') || target.closest('.pane a[href]')) shut();
   });
@@ -586,13 +609,14 @@ function boot() {
     if (!pick) return;
     if (pick.matches('[data-font-pick]')) return face(pick.value);
     if (pick.matches('[data-tint-pick]')) return tint(pick.value);
-    if (pick.matches('[data-saver-pick]')) return replay(pick.value);
+    if (pick.matches('[data-saver-pick]')) return screen(pick.value);
   });
   document.addEventListener('toggle', expand, true);
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !document.querySelector('dialog[open]') && shut()) e.preventDefault();
   });
   window.addEventListener('wire', wire);
+  window.addEventListener('saver', (e) => screen(e.detail ?? ''));
   window.addEventListener('cart', cart);
   window.addEventListener('storage', cart);
   window.addEventListener('pageshow', cart);

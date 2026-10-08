@@ -391,7 +391,7 @@ struct Width {
 
 fn edge_run(k: i64) -> i64 {
     let hits = (-k..=k)
-        .filter(|j| matches!(j.rem_euclid(8), 3 | 4 | 5))
+        .filter(|j| matches!(j.rem_euclid(8), 3..=5))
         .count() as i64;
     hits + (k + 2).div_euclid(4) - k
 }

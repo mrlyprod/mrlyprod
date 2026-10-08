@@ -38,7 +38,7 @@ let turn = 0;
 
 /* FETCH */
 
-export function grab(url, old = false) {
+function grab(url, old = false) {
   const at = url.origin + key(url);
   const hit = pages.get(at);
   if (hit && (old || performance.now() - hit.born < FRESH)) return hit.text;
@@ -51,7 +51,7 @@ export function grab(url, old = false) {
   return text;
 }
 
-export const read = (text) => new DOMParser().parseFromString(text, 'text/html');
+const read = (text) => new DOMParser().parseFromString(text, 'text/html');
 
 /* HEAD */
 
@@ -181,24 +181,6 @@ export async function go(url, mode = 'push', y = 0, calm = still()) {
   if (mine === turn) html.removeAttribute('aria-busy');
 }
 
-/* TAKERS */
-
-const asks = (a) => Boolean(a.dataset.router) && key(new URL(a.href)) !== here && place(location) === shown;
-
-const ask = (a, live) => import(a.dataset.router).then((taker) => taker.open(a, live));
-
-function held() {
-  const page = state().dialog;
-  const a = page ? [...document.querySelectorAll('a[data-router]')].find((one) => one.getAttribute('href') === page) : null;
-  if (a) ask(a, () => state().dialog === page).catch(() => {});
-}
-
-export function layer(keys) {
-  pin();
-  history.pushState({ ...state(), ...keys }, '');
-  here = key(location);
-}
-
 /* EVENTS */
 
 function aim(event) {
@@ -210,29 +192,17 @@ function click(event) {
   if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
   const a = aim(event);
   if (!a) return;
-  if (asks(a)) {
-    event.preventDefault();
-    const mine = ++turn;
-    html.setAttribute('aria-busy', 'true');
-    return ask(a, () => mine === turn).then(() => mine === turn && html.removeAttribute('aria-busy'), () => mine === turn && plain(new URL(a.href)));
-  }
-  const over = Boolean(state().dialog);
   const kind = sort(a, location, DEEP);
-  if (over && kind === 'page' && key(new URL(a.href)) === here) {
-    event.preventDefault();
-    return history.back();
-  }
   if (kind === 'mark') here = key(location);
-  if (over ? !kind : kind !== 'page') return;
+  if (kind !== 'page') return;
   event.preventDefault();
-  go(new URL(a.href), over || a.href === location.href ? 'replace' : 'push');
+  go(new URL(a.href), a.href === location.href ? 'replace' : 'push');
 }
 
 function hint(event) {
   const a = aim(event);
   if (!a || sort(a, location, DEEP) !== 'page') return;
-  grab(new URL(a.href), Boolean(a.dataset.router)).catch(() => {});
-  if (asks(a)) import(a.dataset.router).catch(() => {});
+  grab(new URL(a.href)).catch(() => {});
 }
 
 function pop(event) {
@@ -265,8 +235,6 @@ if (html) {
   document.addEventListener('pointerenter', hint, true);
   document.addEventListener('focus', hint, true);
   addEventListener('popstate', pop);
-  addEventListener('popstate', held);
   addEventListener('scrollend', note);
   addEventListener('pageshow', back);
-  held();
 }

@@ -2,8 +2,9 @@ import { describe, expect, test } from "bun:test";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { assets, cache, changes, IMMUTABLE, kind, mine, REVALIDATE, rules, seal, spread, staged, sweep, typing, type Lister } from "./push.ts";
+import { assets, cache, changes, GONE, IMMUTABLE, keep, mine, rules, seal, SHORT, spread, staged, sweep, typing, type Lister } from "./push.ts";
 import { build, forget, globals, type Manifest, type Spec } from "./ssg/build.ts";
+import { kind } from "./types.ts";
 
 const SHOP = rules(["(^|/)lib-[^/]+\\.js$", "(^|/)lib-[^/]+\\.css$", "(^|/)js/[^/]+\\.js$", "\\.wasm$", "-[0-9a-f]{8}\\.[^./]+$"]);
 
@@ -38,14 +39,13 @@ describe("push", () => {
   test("a hashed name is immutable for a year, every other name revalidates", () => {
     expect(cache("js/main.js", SHOP)).toBe(IMMUTABLE);
     expect(cache("ui/tokens-8a0bcf6d.css", SHOP)).toBe(IMMUTABLE);
-    expect(cache("index.html", SHOP)).toBe(REVALIDATE);
-    expect(cache("js/main.js", NET)).toBe(REVALIDATE);
+    expect(cache("index.html", SHOP)).toBe(SHORT);
+    expect(cache("js/main.js", NET)).toBe(SHORT);
   });
 
   test("a type declared in the manifest wins over the extension", () => {
     expect(typing(MANIFEST).get("props.json")).toBe("application/json");
     expect(typing(MANIFEST).has("index.html")).toBe(false);
-    expect(kind("index.html")).toBe("text/html; charset=utf-8");
   });
 
   test("every output points back at the record that wrote it", () => {
@@ -76,6 +76,18 @@ describe("push", () => {
     const type = (path: string) => (path === "git/shell" ? "text/html; charset=utf-8" : kind(path));
     const order = staged(["index.html", "props.json", "git/shell", "demos/x/index.js", "shop/index.html", "lib-a1.js", "ui/router-8a0bcf6d.js", "search.json"], type, (path) => cache(path, NET));
     expect(order).toEqual([["lib-a1.js", "ui/router-8a0bcf6d.js"], ["props.json", "demos/x/index.js", "search.json"], ["index.html", "git/shell", "shop/index.html"]]);
+  });
+
+  test("a removed file is kept a week from the day it left, a removed page goes at once", () => {
+    const held = (path: string) => !kind(path).startsWith("text/html");
+    const first = keep(MANIFEST, new Map(), held, "2026-10-08");
+    expect(first).toEqual({
+      [GONE + "props.json"]: { hash: "a", at: "2026-10-08", outputs: ["props.json"] },
+      [GONE + "ui/tokens-8a0bcf6d.css"]: { hash: "c", at: "2026-10-08", outputs: ["ui/tokens-8a0bcf6d.css"] },
+    });
+    expect(keep(first, new Map(), held, "2026-10-14")).toEqual(first);
+    expect(keep(first, new Map(), held, "2026-10-15")).toEqual({});
+    expect(keep(first, spread(MANIFEST), held, "2026-10-09")).toEqual({});
   });
 
   test("the guard owns a prefix and a single key alike", () => {

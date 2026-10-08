@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
+import { dead as gone } from './check/links.ts';
 import { law } from './check/lock.ts';
 
 const started = performance.now();
@@ -52,6 +53,14 @@ const under = (folder: string, suffix: string) => {
   return out;
 };
 
+const folded = (folder: string) =>
+  there(folder)
+    ? readdirSync(at(folder), { withFileTypes: true })
+        .filter((entry) => entry.isDirectory() && there(`${folder}/${entry.name}/index.md`))
+        .map((entry) => `${folder}/${entry.name}/index.md`)
+        .sort()
+    : [];
+
 const stem = (name: string) => name.slice(name.lastIndexOf('/') + 1).replace(/\.[a-z]+$/, '');
 
 const plain = (doc: Doc) => {
@@ -68,13 +77,13 @@ const notes = sheets('research/notes').map(read);
 const claims = sheets('research/claims').map(read);
 const papers = sheets('research/papers').map(read);
 const pages = sheets('site/pages').map(read);
-const posts = sheets('site/blog').map(read);
+const posts = folded('site/blog').map(read);
 const concepts = sheets('research/wiki').map(read);
 const indexes = ['wiki', 'notes', 'claims', 'papers'].map((kind) => `research/${kind}/README.md`);
 const stems = ['research/README.md', 'research/REFS.md', 'research/sequences.md', ...indexes].filter((name) => there(name)).map(read);
 const fronted = [...notes, ...papers, ...pages, ...posts, ...concepts];
 const prose = [...notes, ...claims, ...papers, ...stems, ...pages, ...posts, ...concepts];
-const housed = [...under('research', '.md'), ...sheets('site/pages'), ...sheets('site/blog')].map(read);
+const housed = [...under('research', '.md'), ...sheets('site/pages'), ...folded('site/blog')].map(read);
 const demos = new Set(
   there('site/demos/views')
     ? readdirSync(at('site/demos/views'), { withFileTypes: true })
@@ -362,7 +371,7 @@ for (const doc of housed) {
     if (i > 0 && line === '' && doc.lines[i - 1] === '') house.push(`${doc.name}:${i + 1} two blank lines`);
   });
   for (const [n, line] of plain(doc)) {
-    if (/[–—]/.test(line)) house.push(`${doc.name}:${n} em-dash or en-dash`);
+    if (/[\u2013\u2014]/.test(line)) house.push(`${doc.name}:${n} em-dash or en-dash`);
     if (line.startsWith('#') && n < doc.lines.length && doc.lines[n] !== '') house.push(`${doc.name}:${n} heading without a blank line`);
   }
 }
@@ -373,6 +382,24 @@ report('house', `${housed.length} files, ${ruled} lines`, house);
 const registries: string[] = [];
 if (there('site/pages.json')) registries.push('site/pages.json still exists');
 report('registries', 'none', registries);
+
+// DIST
+
+const dist = process.env.MRLY_DIST ? resolve(process.env.MRLY_DIST) : at('site/dist');
+if (existsSync(join(dist, 'index.html'))) {
+  const site = JSON.parse(readFileSync(at('site/site.json'), 'utf8')) as { root: string; push: { guard: string[] } };
+  const tree = existsSync(join(dist, 'git.json')) ? JSON.parse(readFileSync(join(dist, 'git.json'), 'utf8')) : null;
+  const built = gone(dist, site.root, site.push.guard, tree);
+  report('dist links', `${built.links} links on ${built.pages} pages`, built.dead.map((one) => `${one.page} ${one.url}`));
+  const moves = JSON.parse(readFileSync(at('site/redirects.json'), 'utf8')) as Record<string, { to: string }>;
+  const page = (path: string) => existsSync(join(dist, path.endsWith('/') ? `${path}index.html` : path));
+  const stray = Object.entries(moves).flatMap(([from, { to }]) => [
+    ...(page(from) ? [`${from} is still a page`] : []),
+    ...(page(to) ? [] : [`${from} -> ${to}, no such page`]),
+    ...(to in moves ? [`${from} -> ${to} chains`] : []),
+  ]);
+  report('redirects', `${Object.keys(moves).length} moves, each from a gone path to a built page`, stray);
+} else report('dist links', 'no dist/, build first', []);
 
 // WASM
 

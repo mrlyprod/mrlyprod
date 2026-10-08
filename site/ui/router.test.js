@@ -14,6 +14,8 @@ test('the router takes a page and leaves another origin, a file, a fragment of t
     ['/git/site/kit/ssg/build.ts', '/about/', 'page'],
     ['/git/', '/menu/', 'page'],
     ['/menu/', '/git/site/README.md', 'page'],
+    ['/menu/', '/about/', 'page'],
+    ['/cart/', '/about/', 'page'],
     ['/git/site/', '/git/site/README.md', 'inner'],
     ['#L12', '/git/site/kit/ssg/build.ts', 'inner'],
     ['#proved', '/research/claims/automata/', 'mark'],

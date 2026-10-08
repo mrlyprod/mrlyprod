@@ -1,38 +1,11 @@
-import { extname } from "node:path";
 import { globals, render, type Output, type Route, type Site, type Spec } from "./ssg/build.ts";
 import { deeps, near, packed } from "./ssg/modes.ts";
+import { kind } from "./types.ts";
 
-/* TYPES */
-
-const TYPES: Record<string, string> = {
-  html: "text/html; charset=utf-8",
-  js: "text/javascript; charset=utf-8",
-  mjs: "text/javascript; charset=utf-8",
-  css: "text/css; charset=utf-8",
-  json: "application/json",
-  map: "application/json",
-  webmanifest: "application/manifest+json",
-  xml: "application/xml",
-  txt: "text/plain; charset=utf-8",
-  md: "text/markdown; charset=utf-8",
-  tex: "text/plain; charset=utf-8",
-  wasm: "application/wasm",
-  svg: "image/svg+xml",
-  png: "image/png",
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  gif: "image/gif",
-  webp: "image/webp",
-  ico: "image/x-icon",
-  pdf: "application/pdf",
-  woff2: "font/woff2",
-  mp4: "video/mp4",
-};
-
-export const type = (path: string) => TYPES[extname(path).slice(1)] ?? "application/octet-stream";
+/* REPLY */
 
 export const reply = (item: Output, status = 200) =>
-  new Response(item.bytes as string | Uint8Array, { status, headers: { "content-type": item.type ?? type(item.path) } });
+  new Response(item.bytes as string | Uint8Array, { status, headers: { "content-type": item.type ?? kind(item.path) } });
 
 /* PATHS */
 

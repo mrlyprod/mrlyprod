@@ -39,8 +39,8 @@ pub fn rays(level: u32) -> (u64, Vec<Ray>) {
             if g == 1 {
                 coprime += 1;
             }
-            if g > 0 {
-                keys.push((a / g) << 32 | (b / g));
+            if let (Some(num), Some(den)) = (a.checked_div(g), b.checked_div(g)) {
+                keys.push(num << 32 | den);
             }
             if y == 0 {
                 break;
@@ -121,7 +121,7 @@ pub fn report(level: u32, detail: bool) {
     println!("octaves {}", octaves.join(" "));
     println!("occ(8,n)/3^8 {:.3}", bins[8] as f64 / 6561.0);
     let cut = |j: usize| (bins[..=j].iter().sum::<u64>() as f64).ln() / 3f64.ln() / level as f64;
-    if level % 2 == 0 {
+    if level.is_multiple_of(2) {
         println!("band exponent j <= n/2 {:.4}", cut(level as usize / 2));
     } else {
         println!(

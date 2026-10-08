@@ -94,7 +94,7 @@ fn phase_grid(depth: u32, cap: usize) -> Vec<(String, usize)> {
     let steps = [
         1.0f64,
         1.189_207_115_002_721,
-        1.414_213_562_373_095_1,
+        std::f64::consts::SQRT_2,
         1.681_792_830_507_429,
     ];
     let mut out: Vec<(String, usize)> = Vec::new();
@@ -147,9 +147,9 @@ fn representatives(width: usize) -> Vec<usize> {
         }
         for map in &maps {
             let mut image = 0usize;
-            for w in 0..windows {
+            for (w, &target) in map.iter().enumerate().take(windows) {
                 if (code >> w) & 1 == 1 {
-                    image |= 1 << map[w];
+                    image |= 1 << target;
                 }
             }
             rep[image] = code;
@@ -275,8 +275,8 @@ fn design_meter(mu: &[i8], levels: usize, digits: &[u64]) -> (i64, i64, u64) {
             for tail in 0..tails {
                 let mut value = head * powers[length - 1];
                 let mut rest = tail;
-                for place in 0..(length - 1) {
-                    value += digits[rest % base] * powers[place];
+                for &power in powers.iter().take(length - 1) {
+                    value += digits[rest % base] * power;
                     rest /= base;
                 }
                 meter += mu[value as usize] as i64;
@@ -373,6 +373,8 @@ fn print_rows(tag: &str, width: usize, code: usize, sweep: &Sweep) {
     }
 }
 
+type Control = (&'static str, &'static [u64], &'static [(usize, i64, i64)]);
+
 fn main() {
     let started = Instant::now();
     let depth: u32 = env::args()
@@ -408,7 +410,7 @@ fn main() {
         sweep.mertens
     );
 
-    let designs: [(&str, &[u64], &[(usize, i64, i64)]); 3] = [
+    let designs: [Control; 3] = [
         (
             "0 1",
             &[0, 1],
@@ -446,9 +448,9 @@ fn main() {
     let (plain, zeroed) = recount(limit);
     accepts_agrees(1 << 12);
     let cut = phases.iter().position(|(_, x)| *x == limit).unwrap();
-    for slot in 0..3 {
+    for (slot, want) in plain.iter().enumerate() {
         assert_eq!(
-            sweep.read[slot].mass[cut], plain[slot],
+            sweep.read[slot].mass[cut], *want,
             "the profile recurrence against a direct digit recount at 2^20"
         );
     }
@@ -685,7 +687,7 @@ fn main() {
                     continue;
                 }
                 let level: u32 = label[..label.len() - 3].parse().unwrap();
-                if level % 4 != 0 && level != depth {
+                if !level.is_multiple_of(4) && level != depth {
                     continue;
                 }
                 let a = sweep.read[slot].mass[index][code];
@@ -759,8 +761,8 @@ fn main() {
     for width in 1..=3usize {
         let slot = width - 1;
         let codes = 1usize << (1 << width);
-        for code in 0..codes {
-            if facts[slot][code].mass < 1000 {
+        for (code, fact) in facts[slot].iter().enumerate().take(codes) {
+            if fact.mass < 1000 {
                 continue;
             }
             let mut up = true;
@@ -881,8 +883,8 @@ fn main() {
     let mut running = 0i64;
     let mut ceiling = 0i64;
     let mut early = Vec::new();
-    for n in 1..=400usize {
-        running += mu[n] as i64;
+    for (n, &sign) in mu.iter().enumerate().take(401).skip(1) {
+        running += sign as i64;
         if running.abs() > ceiling {
             ceiling = running.abs();
         }
@@ -1020,14 +1022,14 @@ fn main() {
     for width in 1..=3usize {
         let slot = width - 1;
         let codes = 1usize << (1 << width);
-        for code in 0..codes {
+        for (code, fact) in facts[slot].iter().enumerate().take(codes) {
             let want = match width {
                 1 => code == 0 || code & 1 == 1,
                 2 => (code >> 1) & 1 == 1,
                 _ => (code >> 2) & 1 == 1 && (code >> 3) & 1 == 1,
             };
             assert_eq!(
-                facts[slot][code].closed, want,
+                fact.closed, want,
                 "the zero-closed criterion at k {width} code {code}"
             );
         }

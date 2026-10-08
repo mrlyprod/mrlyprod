@@ -1,11 +1,15 @@
-import { palette } from '../../kit/theme/palette.js';
-import { dark as NIGHT, light as DAY } from '../../kit/theme/theme.js';
+import { palette } from '../kit/theme/palette.js';
+import { dark as NIGHT, light as DAY } from '../kit/theme/theme.js';
+import { HUES, tints } from '../ui/hues.js';
 
 /* RANDOM */
 
 export function rng(seed) {
   if (seed === undefined || seed === null) return Math.random;
-  let s = (seed >>> 0) || 0x9e3779b9;
+  let s = seed >>> 0;
+  s = Math.imul(s ^ (s >>> 16), 0x85ebca6b);
+  s = Math.imul(s ^ (s >>> 13), 0xc2b2ae35);
+  s = (s ^ (s >>> 16)) >>> 0 || 0x9e3779b9;
   return () => {
     s ^= s << 13;
     s ^= s >>> 17;
@@ -37,23 +41,41 @@ export function veil(color, alpha) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-export function paints(canvas) {
+export { HUES };
+
+export const TINTS = tints('Site');
+
+export function paints(canvas, tint = '') {
   const night = typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches;
   const base = night ? NIGHT : DAY;
   const css = typeof getComputedStyle === 'function' && canvas ? getComputedStyle(canvas) : null;
   const read = (name, fallback) => (css && css.getPropertyValue(name).trim()) || fallback;
   const paper = read('--art', read('--ground', base.ground ?? palette.white));
-  const accent = read('--accent', base.accent ?? palette.blue);
+  const accent = HUES.includes(tint) ? read(`--${tint}`, palette[tint]) : read('--accent', base.accent ?? palette.blue);
   return { paper, accent };
+}
+
+/* BOARD */
+
+export function board(view, cols, rows, fit = 1) {
+  const cell = Math.max(1, Math.floor(Math.min((view.w * fit) / cols, (view.h * fit) / rows)));
+  const w = cell * cols;
+  const h = cell * rows;
+  return { x: Math.floor((view.w - w) / 2), y: Math.floor((view.h - h) / 2), w, h, cell };
 }
 
 /* LIFE */
 
+const LAG = 100;
+
 export function run(canvas, make, opts = {}) {
   const rand = rng(opts.seed);
-  const still = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let skin = paints(canvas);
-  const view = { rand, look: () => skin, still, w: 1, h: 1, dpr: 1 };
+  let still = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let skin = paints(canvas, opts.tint);
+  let gone = false;
+  let paused = false;
+  let on = false;
+  const view = { rand, look: () => skin, still, w: 1, h: 1, dpr: 1, t: 0 };
   const size = () => {
     const dpr = Math.min(globalThis.devicePixelRatio || 1, 2);
     const w = Math.max(1, Math.round((canvas.clientWidth || 300) * dpr));
@@ -72,13 +94,20 @@ export function run(canvas, make, opts = {}) {
   let timer = 0;
   let frame = 0;
   let seen = !watched;
-  const loop = () => {
+  let last = 0;
+  const loop = (now) => {
+    if (last) view.t += Math.min(now - last, LAG);
+    last = now;
     saver.draw();
     frame = requestAnimationFrame(loop);
   };
-  const play = () => {
-    if (still || timer || frame) return;
-    if (saver.every) timer = setInterval(() => saver.draw(), saver.every);
+  const tick = () => {
+    view.t += saver.every;
+    saver.draw();
+  };
+  const go = () => {
+    if (still || paused || timer || frame) return;
+    if (saver.every) timer = setInterval(tick, saver.every);
     else frame = requestAnimationFrame(loop);
   };
   const halt = () => {
@@ -86,39 +115,63 @@ export function run(canvas, make, opts = {}) {
     if (frame) cancelAnimationFrame(frame);
     timer = 0;
     frame = 0;
+    last = 0;
   };
-  const wake = () => (seen && !document.hidden ? play() : halt());
+  const watch = () => (seen && !document.hidden ? go() : halt());
+  view.wake = () => {
+    if (!still || gone) return;
+    still = false;
+    view.still = false;
+    watch();
+  };
   const paint = () => {
-    skin = paints(canvas);
+    skin = paints(canvas, opts.tint);
     saver.theme?.();
-    if (still) saver.draw();
+    if (still || paused) saver.draw();
   };
   const grow = () => {
     if (!size()) return;
     saver.size?.();
-    if (still) saver.draw();
+    if (still || paused) saver.draw();
   };
   const spy = ([entry]) => {
     seen = entry.isIntersecting;
-    wake();
+    watch();
   };
   const eye = watched ? new IntersectionObserver(spy) : null;
   const tape = typeof ResizeObserver === 'function' ? new ResizeObserver(grow) : null;
   const shade = typeof matchMedia === 'function' ? matchMedia('(prefers-color-scheme: dark)') : null;
-  eye?.observe(canvas);
-  tape?.observe(canvas);
-  shade?.addEventListener('change', paint);
-  window.addEventListener('theme', paint);
-  document.addEventListener('visibilitychange', wake);
-  if (still) saver.draw();
-  else wake();
-  return () => {
+  const start = () => {
+    if (gone) return;
+    on = true;
+    eye?.observe(canvas);
+    tape?.observe(canvas);
+    shade?.addEventListener('change', paint);
+    window.addEventListener('theme', paint);
+    document.addEventListener('visibilitychange', watch);
+    if (still) saver.draw();
+    else watch();
+  };
+  if (saver.font && document.fonts) document.fonts.load(`1em ${JSON.stringify(saver.font)}`).then(start, start);
+  else start();
+  const stop = () => {
+    gone = true;
     halt();
     eye?.disconnect();
     tape?.disconnect();
     shade?.removeEventListener('change', paint);
     window.removeEventListener('theme', paint);
-    document.removeEventListener('visibilitychange', wake);
+    document.removeEventListener('visibilitychange', watch);
     saver.stop?.();
   };
+  stop.pause = () => {
+    paused = true;
+    halt();
+  };
+  stop.play = () => {
+    paused = false;
+    if (on && !gone) watch();
+  };
+  stop.scene = saver;
+  return stop;
 }

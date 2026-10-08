@@ -7,6 +7,9 @@ import { spec } from "./site.ts";
 const home = resolve(import.meta.dir, "..");
 const views = join(home, "demos", "views");
 const names = readdirSync(views).filter((name) => existsSync(join(views, name, "index.html"))).sort();
+const rows = JSON.parse(readFileSync(join(home, "apps", "apps.json"), "utf8")) as { id: string; kind: string }[];
+const apps = rows.filter((one) => one.kind !== "tool").map((one) => join(home, "apps", one.id, "index.jsx"));
+const saver = rows.find((one) => one.kind === "saver")!.id;
 const site = await scan(spec);
 
 const text = (out: Output[], path: string) => {
@@ -19,7 +22,7 @@ const drawn = async (route: string, path: string) => text(await render(site, sit
 const modules = (html: string) => [...html.matchAll(/<script type="module"[^>]*src="([^"]+)"/g)].map((found) => found[1]!);
 
 test("no script the browser loads beside the chrome reaches the chrome, the site config or the tree", () => {
-  const entries = [...names.map((name) => join(views, name, "index.jsx")), ...names.map((name) => join(views, name, "widget.jsx")).filter(existsSync), join(home, "demos", "live.js"), join(home, "lib", "git.js")];
+  const entries = [...names.map((name) => join(views, name, "index.jsx")), ...names.map((name) => join(views, name, "widget.jsx")).filter(existsSync), join(home, "demos", "live.js"), join(home, "lib", "git.js"), join(home, "lib", "lock.js"), ...apps];
   const banned = ["ui/chrome.js", "ui/chrome.jsx", "ui/config.js", "lib/site.js", "site.json"].map((name) => join(home, name));
   expect(graph(entries).filter((file) => banned.includes(file))).toEqual([]);
 });
@@ -36,7 +39,7 @@ test("a demo page is the chrome around its title, its still and one line for a r
   expect(html).toContain('<header class="top">');
   expect(main).toContain('<div id="root" data-island="/demos/sponge/index.js"></div>');
   expect(main).toContain("<h1>The sponge</h1>");
-  expect(main).toContain('srcset="/figures/demo-sponge-dark.webp"');
+  expect(main).toMatch(/srcset="\/figures\/demo-sponge-dark-[0-9a-f]{8}\.webp"/);
   expect(main.match(/<noscript>/g)).toHaveLength(1);
   expect(html).toContain('<section class="controls" aria-label="Controls"></section>');
   expect(modules(html)).toEqual([site.asset("chrome.js"), site.asset("router.js")]);
@@ -56,6 +59,7 @@ test("every page loads the chrome and the router alone; a page preloads the chro
     ["/stats/", [site.asset("stats.js")]],
     ["/menu/", [site.asset("search.js")]],
     ["/demos/sponge/", ["/demos/sponge/index.js"]],
+    [`/${saver}/`, [`/${saver}/index.js`]],
     ["/about/", []],
   ] as const;
   for (const [route, entries] of pages) {
@@ -68,7 +72,7 @@ test("every page loads the chrome and the router alone; a page preloads the chro
 });
 
 test("every entry a page can name exports the contract's mount and unmount", () => {
-  const entries = [...names.map((name) => join(views, name, "index.jsx")), ...readdirSync(views).map((name) => join(views, name, "widget.jsx")).filter(existsSync), join(home, "demos", "live.js"), join(home, "lib", "git.js"), join(home, "ui", "stats.js"), join(home, "ui", "claims.js"), join(home, "ui", "search.js")];
+  const entries = [...names.map((name) => join(views, name, "index.jsx")), ...readdirSync(views).map((name) => join(views, name, "widget.jsx")).filter(existsSync), join(home, "demos", "live.js"), join(home, "lib", "git.js"), join(home, "ui", "stats.js"), join(home, "ui", "claims.js"), join(home, "ui", "search.js"), ...apps];
   const scan = new Bun.Transpiler({ loader: "jsx" });
   for (const file of entries) expect([file, scan.scan(readFileSync(file, "utf8")).exports.filter((name) => name === "mount" || name === "unmount").sort()]).toEqual([file, ["mount", "unmount"]]);
 });

@@ -9,7 +9,7 @@ use mrlyrs::math::cell::models::CellNd;
 use mrlyrs::math::six::{Cell6d, Orientation, Projection};
 use numpy::ndarray::{ArrayD, IxDyn};
 use numpy::{Element, IntoPyArray, PyReadonlyArrayDyn, PyReadwriteArrayDyn, PyUntypedArrayMethods};
-use pyo3::exceptions::{PyOverflowError, PyValueError};
+use pyo3::exceptions::{PyException, PyOverflowError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList, PyTuple};
 use pyo3::{Borrowed, IntoPyObjectExt};
@@ -516,9 +516,19 @@ pub fn serde_into_py<'py, T: Serialize + ?Sized>(
     Ok(pythonize(py, value)?)
 }
 
-/// Reads plain Python data back into any serde type.
+/// Reads plain Python data back into any serde type, bad data a ValueError and a wrong type a TypeError.
 pub fn serde_from_py<T: DeserializeOwned>(obj: &Bound<'_, PyAny>) -> PyResult<T> {
-    Ok(depythonize(obj)?)
+    let py = obj.py();
+    depythonize(obj).map_err(|error| {
+        let error = PyErr::from(error);
+        if error.get_type(py).is(py.get_type::<PyException>())
+            || error.is_instance_of::<PyOverflowError>(py)
+        {
+            bad(error.value(py).to_string())
+        } else {
+            error
+        }
+    })
 }
 
 impl<'py, T: Serialize> IntoPyObject<'py> for PySerde<T> {

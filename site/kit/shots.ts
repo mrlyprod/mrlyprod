@@ -1,8 +1,9 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync } from "node:fs";
-import { extname, join, relative, resolve } from "node:path";
+import { join, relative, resolve } from "node:path";
 import { decode } from "./git/view.ts";
 import { deeps } from "./ssg/modes.ts";
+import { kind } from "./types.ts";
 
 /* WHERE */
 
@@ -31,17 +32,6 @@ export function block(config: Record<string, unknown>): Block {
 
 /* SERVER */
 
-const TYPES: Record<string, string> = {
-  ".css": "text/css",
-  ".html": "text/html; charset=utf-8",
-  ".js": "text/javascript",
-  ".json": "application/json",
-  ".png": "image/png",
-  ".svg": "image/svg+xml",
-  ".wasm": "application/wasm",
-  ".woff2": "font/woff2",
-};
-
 const doc = (bytes: Uint8Array) => new TextDecoder().decode(bytes.subarray(0, 15)).toLowerCase().startsWith("<!doctype html");
 
 const sunk = (deep: string[], path: string) => deep.find((wall) => path.startsWith(wall) && path !== wall);
@@ -51,7 +41,7 @@ function serve(dist: string, deep: string[]) {
     const want = join(dist, path.endsWith("/") ? `${path}index.html` : path);
     if (!want.startsWith(dist) || !existsSync(want) || !statSync(want).isFile()) return null;
     const bytes = new Uint8Array(readFileSync(want));
-    const type = doc(bytes) ? TYPES[".html"]! : (TYPES[extname(want)] ?? "application/octet-stream");
+    const type = kind(doc(bytes) ? ".html" : want);
     const headers: Record<string, string> = { "content-type": type };
     if (CSP) headers["content-security-policy"] = CSP;
     return new Response(bytes, { headers });
@@ -175,7 +165,7 @@ async function until(send: Send, expression: string, ms: number): Promise<boolea
 
 const MOUNTED = `new Promise((r) => { const root = document.querySelector("#root, #app"); const t0 = Date.now(); const poll = () => (((!root || root.children.length) && !document.querySelector('[aria-busy="true"]')) || Date.now() - t0 > 8000 ? r() : setTimeout(poll, 50)); poll(); })`;
 
-const STILL = `document.head.insertAdjacentHTML("beforeend", "<style>canvas:not(.mark) { visibility: hidden !important; }</style>")`;
+const STILL = `document.head.insertAdjacentHTML("beforeend", "<style>canvas { visibility: hidden !important; }</style>")`;
 
 const ready = (motion: boolean) =>
   `${MOUNTED}.then(() => Promise.all([...document.images].map((i) => { i.loading = "eager"; return (i.complete ? Promise.resolve() : new Promise((r) => { i.onload = i.onerror = r; })).then(() => i.decode().catch(() => 0)); }))).then(() => document.fonts.ready)${motion ? "" : `.then(() => { ${STILL}; })`}.then(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))).then(() => 1)`;

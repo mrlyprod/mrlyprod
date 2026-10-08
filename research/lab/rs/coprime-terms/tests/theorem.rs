@@ -76,7 +76,7 @@ fn bracket_identity() {
     for level in 1..=4u32 {
         let q3 = points(3, &menger, level)
             .iter()
-            .filter(|p| common(p) % 3 != 0)
+            .filter(|p| !common(p).is_multiple_of(3))
             .count() as u64;
         assert_eq!(q3, 19 * 20u64.pow(level - 1));
     }
@@ -84,7 +84,7 @@ fn bracket_identity() {
     for level in 1..=6u32 {
         let q3 = points(3, &carpet, level)
             .iter()
-            .filter(|p| common(p) % 3 != 0)
+            .filter(|p| !common(p).is_multiple_of(3))
             .count() as u64;
         assert_eq!(q3, 7 * 8u64.pow(level - 1));
     }
@@ -92,7 +92,7 @@ fn bracket_identity() {
     for level in 1..=7u32 {
         let q3 = points(3, &vicsek, level)
             .iter()
-            .filter(|p| common(p) % 3 != 0)
+            .filter(|p| !common(p).is_multiple_of(3))
             .count() as u64;
         assert_eq!(q3, 5u64.pow(level));
     }
@@ -160,8 +160,9 @@ fn box_bound() {
             let hits = pts.iter().filter(|p| p.iter().all(|c| c % m == 0)).count() as u128;
             let mut bound = u128::MAX;
             for h in 0..=level {
-                let slab =
-                    (k as u128).pow(level - h) * ((*q as u128).pow(h) / m as u128 + 1).pow(width);
+                let slab = (k as u128)
+                    .saturating_pow(level - h)
+                    .saturating_mul(((*q as u128).pow(h) / m as u128 + 1).saturating_pow(width));
                 bound = bound.min(slab);
             }
             assert!(hits <= bound, "box bound violated at q={} m={}", q, m);

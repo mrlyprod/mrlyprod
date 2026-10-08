@@ -24,14 +24,14 @@ fn residue_counts(q: u64, digits: &[u64], l: usize, d: u64) -> Vec<u128> {
     let mut next = vec![0u128; d];
     for _ in 0..l {
         next.iter_mut().for_each(|x| *x = 0);
-        for r in 0..d {
-            if state[r] == 0 {
+        for (r, &count) in state.iter().enumerate() {
+            if count == 0 {
                 continue;
             }
             let base = (r as u64 * q) % d as u64;
             for &f in digits {
                 let idx = ((base + f) % d as u64) as usize;
-                next[idx] += state[r];
+                next[idx] += count;
             }
         }
         std::mem::swap(&mut state, &mut next);
@@ -323,7 +323,7 @@ mod tests {
     fn brute(q: u64, digits: &[u64], l: usize, d: u64) -> u128 {
         fn rec(v: u128, len: usize, q: u64, digits: &[u64], l: usize, d: u64, hits: &mut u128) {
             if len == l {
-                if v % d as u128 == 0 {
+                if v.is_multiple_of(d as u128) {
                     *hits += 1;
                 }
                 return;

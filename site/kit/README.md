@@ -21,9 +21,10 @@
 - `ssg/links.ts` resolves every markdown link; `ssg/pic.ts` draws a dark and light picture pair; `ssg/blog.ts` is the blog.
 - `git/` is the code viewer: `git.ts` its build half, `view.ts` draws a page from the tree with no `fs`, `client.ts` runs it in the browser, `code.ts` highlights.
 - `code/` is the viewer's skin: `code.css` and the SETI icon font, reading the site's own tokens.
-- `palette.css` is the fifteen generated colours as CSS variables; it leads every joined stylesheet.
+- `palette.css` is generated: the fifteen colours and a `--<hue>-link` shade per hue per theme, as CSS variables; it leads every joined stylesheet.
 - `theme/` is the same colours in JS: `palette.js` the fifteen as an object, `theme.js` the two role maps, `dark` and `light`.
-- `font/` is the pixel font that writes the wordmark: `font.js` lays out, writes, folds and plays a text, `font.json` the glyph book `mrlyrs::font` generates.
+- `font/` is the pixel font that writes the wordmark: `font.js` lays out, writes and folds a text, `font.json` the glyph book `mrlyrs::font` generates.
+- `types.ts` is the one extension table: `kind(path)` answers a path's content type, the extension lowercased; `serve.ts`, `push.ts`, `dev.ts` and `shots.ts` share it.
 - `s3.ts` is the S3 client `push.ts`, `lambda.ts` and `scripts/pkg.ts` share: names and credentials from the environment, no SDK.
 
 ## TOOLS

@@ -1155,13 +1155,8 @@ export declare namespace sumset {
     export function DEEPEST(): number;
     /** The widest level a [`Pair`] names in either base, so `3^k`, `4^m` and every difference string fit a signed 64-bit integer. */
     export function WIDEST(): number;
-    export interface PairData {
-        /** The base-3 level `k`. */
-        three: number;
-        /** The base-4 level `m`. */
-        four: number;
-    }
-    /** A pair of levels: the base-3 level `A_k = A meet [0, 3^k)` against the base-4 level `B_m = B meet [0, 4^m)`, `k` the field `three` and `m` the field `four`. */
+    export type PairData = Record<string, unknown>;
+    /** A pair of levels: the base-3 level `A_k = A meet [0, 3^k)` against the base-4 level `B_m = B meet [0, 4^m)`, `k` read by `three()` and `m` by `four()`. */
     export class Pair {
         /** Names the pair `(k, m)`. */
         constructor(three: number, four: number);
@@ -1170,18 +1165,14 @@ export declare namespace sumset {
         static from(data: PairData): Pair;
         /** Writes the Pair as plain data. */
         toJSON(): PairData;
-        /** The base-3 level `k`. */
-        get three(): number;
-        set three(value: number);
-        /** The base-4 level `m`. */
-        get four(): number;
-        set four(value: number);
         /** Whether the pair is clean, `3^k > d(k, m)` and `4^m > d(k, m)`, so that `S meet [0, d] = A_k + B_m`. */
         clean(): boolean;
         /** Whether the pair is a gap copy, `2 4^m < 3^k + 5`: `A_k + B_m` is then two disjoint translates of `A_(k-1) + B_m` and its energy is twice theirs. */
         copy(): boolean;
         /** The additive energy `E(k, m) = sum_x r(x)^2`, `r(x)` the number of ways `x = a + b` with `a` in `A_k` and `b` in `B_m`. */
         energy(): string;
+        /** The base-4 level `m`. */
+        four(): number;
         /** The first and the last integer of the open interval `(d(k, m), min(3^k, 4^m))`, which `S` misses, or `None` when it holds none. */
         gap(): [bigint, bigint] | undefined;
         /** The largest element `d(k, m) = (3^k - 1)/2 + (4^m - 1)/3` of `A_k + B_m`. */
@@ -1190,6 +1181,8 @@ export declare namespace sumset {
         ratio(energy: string | number | bigint): number;
         /** The scaling `tau = 4^m/3^k`. */
         scale(): number;
+        /** The base-3 level `k`. */
+        three(): number;
     }
     export type SumsetData = Record<string, unknown>;
     /** The sumset `S = A + B` of Erdos problem 125 up to `3^level`: `A` the integers whose base-3 digits are all `0` or `1`, `B` those whose base-4 digits are. */

@@ -1,7 +1,7 @@
 import { useMemo, useRef } from 'react';
 import { mrly } from './mrly.js';
 import { stamp } from './query.js';
-import { Pick, Text, Btn, Slider, Check } from './app.jsx';
+import { Btn, Check, Pick, Slider, Text } from './knobs.jsx';
 
 const FLAT3 = [['carpet', '495'], ['runner', '127']];
 

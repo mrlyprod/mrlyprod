@@ -28,7 +28,7 @@ pub fn mobius(lim: usize, spf: &[u32]) -> Vec<i8> {
     for n in 2..=lim {
         let p = spf[n] as usize;
         let m = n / p;
-        mu[n] = if m % p == 0 { 0 } else { -mu[m] };
+        mu[n] = if m.is_multiple_of(p) { 0 } else { -mu[m] };
     }
     mu
 }
@@ -406,16 +406,15 @@ fn place(v: f64, lo: f64, hi: f64) -> usize {
 }
 
 fn emit(
-    q: u64,
-    label: &str,
+    cell: &Cell,
     l: usize,
-    x: u128,
     kind: &str,
     tag: &str,
     sw: &SignedSweep,
     row: &SignedRow,
     tally: &mut Tally,
 ) {
+    let (q, label, x) = (cell.q, cell.label, qpow(cell.q, l));
     let den = (x as i128) * (x as i128);
     let sig: Vec<i128> = row.num.iter().map(|&n| round_div(n, den)).collect();
     let val = |n: i128| (n as f64) / (den as f64);
@@ -586,7 +585,7 @@ pub fn run() {
                     assert_eq!(chk.r, row.r, "R disagrees with the census routine");
                     assert_eq!(chk.e, row.e, "E_x(M,N) disagrees with the census routine");
                 }
-                emit(c.q, c.label, l, x, "digit", tag, &sw, row, &mut tally);
+                emit(c, l, "digit", tag, &sw, row, &mut tally);
             }
             if d + 1 == c.depths.len() {
                 let mut rng = Rng::new(0x51_6e_ed_00 + c.q * 131 + l as u64);
@@ -599,7 +598,7 @@ pub fn run() {
                     }
                     let tag = if rs.l5.is_some() { "l5" } else { "top" };
                     let row = rs.l5.as_ref().unwrap_or(&rs.top);
-                    emit(c.q, c.label, l, x, "random", tag, &rs, row, &mut tally);
+                    emit(c, l, "random", tag, &rs, row, &mut tally);
                 }
             }
         }

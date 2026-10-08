@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { build, digest, today, type Bytes, type Manifest, type Output, type Spec } from "./ssg/build.ts";
 import { client, del, getText, need, putBytes } from "./s3.ts";
+import { kind } from "./types.ts";
 
 /* WHERE */
 
@@ -24,35 +25,9 @@ export function block(spec: Spec): Block {
 /* HEADERS */
 
 export const IMMUTABLE = "public, max-age=31536000, immutable";
-export const REVALIDATE = "public, max-age=0, must-revalidate";
+export const SHORT = "public, max-age=0, s-maxage=60, stale-while-revalidate=300, stale-if-error=86400";
 
-const TYPES: Record<string, string> = {
-  html: "text/html; charset=utf-8",
-  js: "text/javascript; charset=utf-8",
-  mjs: "text/javascript; charset=utf-8",
-  css: "text/css; charset=utf-8",
-  json: "application/json",
-  map: "application/json",
-  webmanifest: "application/manifest+json",
-  xml: "application/xml",
-  txt: "text/plain; charset=utf-8",
-  md: "text/markdown; charset=utf-8",
-  tex: "text/plain; charset=utf-8",
-  wasm: "application/wasm",
-  svg: "image/svg+xml",
-  png: "image/png",
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  gif: "image/gif",
-  webp: "image/webp",
-  ico: "image/x-icon",
-  pdf: "application/pdf",
-  woff2: "font/woff2",
-};
-
-export const kind = (path: string) => TYPES[(path.match(/\.([^./]+)$/)?.[1] ?? "").toLowerCase()] ?? "application/octet-stream";
-
-export const cache = (path: string, hashed: RegExp[]) => (hashed.some((re) => re.test(path)) ? IMMUTABLE : REVALIDATE);
+export const cache = (path: string, hashed: RegExp[]) => (hashed.some((re) => re.test(path)) ? IMMUTABLE : SHORT);
 
 export const rules = (hashed: string[]) => hashed.map((one) => new RegExp(one));
 
@@ -137,6 +112,24 @@ export function staged(paths: string[], type: (path: string) => string, header: 
   return [0, 1, 2].map((tier) => paths.filter((path) => rank(path) === tier));
 }
 
+/* KEEP */
+
+export const GONE = "~";
+const WEEK = 7;
+
+const days = (from: string, to: string) => (Date.parse(to) - Date.parse(from)) / 86_400_000;
+
+export function keep(old: Manifest, want: Map<string, string>, held: (path: string) => boolean, now = today()): Manifest {
+  const out: Manifest = {};
+  for (const [path, name] of spread(old)) {
+    if (want.has(path)) continue;
+    const was = old[name]!;
+    const parked = name.startsWith(GONE);
+    if (parked ? days(was.at, now) < WEEK : held(path)) out[GONE + path] = { hash: was.hash, at: parked ? was.at : now, outputs: [path] };
+  }
+  return out;
+}
+
 /* LOCAL */
 
 export const holding = () => process.env.DRY === "1";
@@ -152,7 +145,7 @@ function hold(path: string, text: string) {
 
 /* PUSH */
 
-export async function push(spec: Spec, options: { dry?: boolean; force?: boolean } = {}): Promise<{ rendered: number; uploaded: number; deleted: number }> {
+export async function push(spec: Spec, options: { dry?: boolean; force?: boolean } = {}): Promise<{ rendered: number; uploaded: number; deleted: number; kept: number }> {
   const conf = block(spec);
   const hashed = rules(conf.hashed);
   const local = holding();
@@ -169,19 +162,22 @@ export async function push(spec: Spec, options: { dry?: boolean; force?: boolean
   const want = spread(next);
   const had = spread(old);
   const types = typing(next);
-  const header = (path: string) => (types.has(path) ? REVALIDATE : cache(path, hashed));
+  const header = (path: string) => (types.has(path) ? SHORT : cache(path, hashed));
   const type = (path: string) => types.get(path) ?? kind(path);
   const tiers = staged(changes(old, next, conf.guard, (path) => seal(readFileSync(join(done.site.out, path)), type(path), header(path)), options.force), type, header);
   const upload = tiers.flat();
   const seen = found || !site ? [...had.keys()] : await sweep(site, conf.prefix, conf.guard);
-  const remove = seen.filter((path) => mine(path, conf.guard) && !want.has(path));
-  const text = JSON.stringify(next, null, 2) + "\n";
+  const before = typing(old);
+  const parked = keep(old, want, (path) => !(before.get(path) ?? kind(path)).startsWith("text/html"));
+  const remove = seen.filter((path) => mine(path, conf.guard) && !want.has(path) && !(GONE + path in parked));
+  const kept = Object.keys(parked).length;
+  const text = JSON.stringify({ ...next, ...parked }, null, 2) + "\n";
   if (options.dry) {
     const fixed = upload.filter((path) => header(path) === IMMUTABLE);
     const page = (path: string) => type(path).startsWith("text/html");
     const cut = upload.findIndex(page);
     for (const path of fixed) console.log(`immutable ${conf.prefix + path}`);
-    console.log(`${upload.length - fixed.length} more at max-age 0, ${remove.length} to delete`);
+    console.log(`${upload.length - fixed.length} more at max-age 0, ${remove.length} to delete, ${kept} kept a week`);
     if (cut >= 0) console.log(`order: ${cut} files first, ${upload.slice(cut).filter(page).length} pages last from ${conf.prefix + upload[cut]}, ${upload.slice(cut).filter((path) => !page(path)).length} files after a page`);
   } else if (site && store) {
     let sent = 0;
@@ -205,9 +201,9 @@ export async function push(spec: Spec, options: { dry?: boolean; force?: boolean
       console.log(`delete ${remove.length}`);
       await del(site, remove.map((path) => conf.prefix + path), BATCH);
     }
-    await putBytes(store, key, text, { type: "application/json", cacheControl: REVALIDATE });
+    await putBytes(store, key, text, { type: "application/json", cacheControl: SHORT });
   } else hold(where(conf.store), text);
-  return { rendered: done.rendered, uploaded: upload.length, deleted: remove.length };
+  return { rendered: done.rendered, uploaded: upload.length, deleted: remove.length, kept };
 }
 
 /* MAIN */
@@ -217,6 +213,6 @@ export async function main(spec: Spec): Promise<void> {
   const done = await push(spec, { dry, force: process.argv.includes("--force") });
   const guard = block(spec).guard.join(", ");
   console.log(
-    `push${dry ? " --dry" : ""}${holding() ? " --local" : ""}: ${done.rendered} rendered, ${done.uploaded} uploaded, ${done.deleted} deleted, ${guard} guarded`,
+    `push${dry ? " --dry" : ""}${holding() ? " --local" : ""}: ${done.rendered} rendered, ${done.uploaded} uploaded, ${done.deleted} deleted, ${done.kept} kept a week, ${guard} guarded`,
   );
 }
