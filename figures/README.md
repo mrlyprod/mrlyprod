@@ -26,7 +26,8 @@
 - `bun press.ts [name ...] [--svg] [--png]` presses the named figures, or every figure by naming none, one worker per core.
 - Each figure is drawn per theme by `raster` and encoded by `sharp` to `<name>-dark.webp`, `<name>-light.webp` and one dark `<name>.png` for og:image, square, 1024 by 1024, with no text and no wordmark. The art speaks.
 - `--svg` adds the SVG pair and `--png` the lossless dark and light PNGs to look at.
-- The cache: a figure's key is the sha256 of its source and its imports, the `mrlyjs/view` files, the `mrlyjs` wasm and the palette; a key already pressed is never drawn again, and a kit change redraws every figure.
+- The cache: a figure's key is the sha256 of the files it reaches by static import, `mrlyjs` included, each unit's wasm beside its glue, plus the press's own reach and the palette; a key already pressed is never drawn again.
+- So a change to one `mrlyjs` unit redraws only the figures that import it, and a change to `mrlyjs/view` or `press.ts` redraws every figure.
 - The store is `data/mrlyprod/figures/store/<key>/` with `figures.lock`, name to key, beside it; both are disposable.
 - `census/` is a private crate, one bin a figure, for the numbers no `mrlyjs` door gives: `bash scripts/cargo.sh cargo run -q --profile fig -p census --bin <name>` writes `census/<name>.json`, committed, and the figure imports it and only draws.
 - Never call that folder `data`: every `data/` folder is gitignored and wiped as disposable.
@@ -50,6 +51,17 @@
 - `site-wiki`: the door to the wiki, one concept a page in prerequisite order: seven base-2 plane designs at level 2 as a graph of rows one, three and three, each parent joined to its children; grid; codes 7, 14, 3, 5, 9, 6, 15, base 2, level 2, side 9, 283 cells; blue on ground, the root yellow, the edges in line
 - `site-apps`: the icon of the menu's Apps folder: the base-2 carpet, code 7, at level 4 as one sheet inside an 8 percent margin, its 4096 cells the metal and every void punched through to the ground; grid; code 7, base 2, level 4, side 81; dim on ground
 - `site-math`: the door to /math, where a design is one string: the eight corner bits of `{"kind":"bang","dim":2,"code":7}` as a row of eight cells, three of them lit, over the level-3 carpet those bits grow, 512 cells centred below; grid; code 7, base 2, level 3, side 27; fg bits, line empties, blue carpet on ground
+- `site-research-folder`: the icon of the menu's Research folder, where the tree is searched: a magnifying glass, a ring lens and a diagonal handle, drawn cell by cell; grid; 13 by 13 cells; lens fg, handle blue on ground
+- `site-notes`: the door to the notes, one page per idea: a spiral pad, three rings over a sheet ruled with four lines, one short; grid; 11 by 12 cells; sheet fg, rings blue, lines dim on ground
+- `site-claims`: the door to the claims, every line with its witness: a check mark in a box; grid; 13 by 11 cells; box fg, check green on ground
+- `site-blog`: the door to the blog, posts written by hand: a pencil on the diagonal over the line it wrote; grid; 13 by 13 cells; body fg, eraser pink, tip orange, line blue on ground
+- `app-settings`: the door to Settings, the dials of the site: a gear of eight teeth around a hub; grid; 13 by 13 cells; gear fg, hub blue on ground
+- `site-pages`: the icon of the menu's Pages folder: two sheets, the back one offset behind the front one, which carries three ruled lines; grid; 13 by 13 cells; front fg, back dim, lines blue on ground
+- `site-method`: the door to the method, a direction, a writer, a generator: three squares joined by an elbowed path down the diagonal; grid; 13 by 13 cells, squares 3 a side; fg, blue, yellow, path dim on ground
+- `site-stats`: the door to the stats of the cloud: four bars over a bare L axis, heights 4, 7, 5 and 10; grid; 13 by 12 cells; axis fg, bars blue on ground
+- `site-root`: the icon of the menu's Root folder, the files at `/`: a folder with a slash inside; grid; 13 by 12 cells; folder fg, slash blue on ground
+- `site-elsewhere`: the icon of the menu's Elsewhere folder, links off the site: a box open at its corner and an arrow leaving it; grid; 13 by 13 cells; box fg, arrow blue on ground
+- `site-menu`: the door to the menu, every door at once: a 3 by 3 board of squares, the centre lit; grid; 13 by 13 cells, squares 3 a side; fg, centre blue on ground
 - `research-index`: one design grown by the tree's one move: the base-3 carpet, code 495, at levels 1, 2, 3 and 4 as a 2 by 2 board of equal squares, each level drawn to the same size; grid; code 495, base 3, levels 1 to 4; yellow on ground
 - `research-core`: the 16 base-2 dim 2 designs each grown to level 4, laid as a 4x4 census of 16x16 boards in code order; the six canonical representatives yellow, the ten orbit-mates blue; grid; base 2, dim 2, level 4; yellow + blue on ground
 - `research-bijection`: all 256 base-2 dim 3 designs as a 16x16 census, each a 2x4 stamp of its eight corner bits in binary order; the 22 canonical representatives in yellow, the rest in blue; grid; dim 3, 256 codes, 22 orbits; yellow + blue on ground

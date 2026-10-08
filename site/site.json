@@ -167,6 +167,8 @@
         "chrome.css",
         "pages.css",
         "chrome.js",
+        "word.js",
+        "welcome.js",
         "islands.js",
         "router.js",
         "dialog.js",

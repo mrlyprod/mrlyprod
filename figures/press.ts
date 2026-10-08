@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { availableParallelism } from "node:os";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import sharp from "sharp";
@@ -10,7 +10,7 @@ import { ink, raster, svg, type Ink, type Palette, type Pen, type Pixels } from 
 const USAGE = "usage: bun press.ts [name ...] [--svg] [--png]; PRESS_BUDGET=<ms> lifts the draw budget";
 const HERE = import.meta.dir;
 const DESK = resolve(HERE, "../..");
-const MRLYJS = resolve(HERE, "../pkgs/mrlyjs");
+const MRLYJS = realpathSync(resolve(HERE, "../pkgs/mrlyjs"));
 const DATA_DIR = join(DESK, "data", relative(DESK, HERE));
 const STORE = join(DATA_DIR, "store");
 const LOCK = join(DATA_DIR, "figures.lock");
@@ -21,7 +21,6 @@ const MUTEX = `${LOCK}.d`;
 
 const NOT_FIGURES = new Set(["press.ts", "diff.ts"]);
 const isFigure = (file: string) => file.endsWith(".ts") && !file.endsWith(".test.ts") && !file.endsWith(".d.ts") && !NOT_FIGURES.has(file);
-const KIT = /^(pkg\/.+\.(js|wasm)|(view\/)?[^/]+\.js)$/;
 const THEMES = ["dark", "light"] as const;
 const SIZE = [1024, 1024];
 const BUDGET = Number(process.env.PRESS_BUDGET) > 0 ? Number(process.env.PRESS_BUDGET) : 5000;
@@ -49,17 +48,18 @@ function digest(files: string[], root: string) {
   return sha(lines.sort().join(""));
 }
 
-function kit() {
-  const files = (readdirSync(MRLYJS, { recursive: true }) as string[]).filter((file) => KIT.test(file) && !file.endsWith(".test.js"));
-  return digest(files.map((file) => join(MRLYJS, file)), MRLYJS);
-}
+const GLUE = /^pkg\/(\w+)\/mrlyjs_\1\.js$/;
 
-function sources(file: string, seen = new Set<string>()) {
+const followed = (path: string) => path.startsWith(".") || path === "mrlyjs" || path.startsWith("mrlyjs/");
+
+export function sources(file: string, seen = new Set<string>()) {
   if (seen.has(file)) return seen;
   seen.add(file);
+  const glue = relative(MRLYJS, file).match(GLUE);
+  if (glue) seen.add(join(MRLYJS, "pkg", glue[1], `mrlyjs_${glue[1]}_bg.wasm`));
   if (!/\.[cm]?[jt]s$/.test(file)) return seen;
-  for (const { path } of scanner.scanImports(readFileSync(file, "utf8"))) {
-    if (path.startsWith(".")) sources(Bun.resolveSync(path, dirname(file)), seen);
+  for (const { kind, path } of scanner.scanImports(readFileSync(file, "utf8"))) {
+    if (kind !== "dynamic-import" && followed(path)) sources(realpathSync(Bun.resolveSync(path, dirname(file))), seen);
   }
   return seen;
 }
@@ -286,7 +286,7 @@ async function main() {
   const core = await import("mrlyjs/core");
   core.initSync({ module: readFileSync(join(MRLYJS, "pkg/core/mrlyjs_core_bg.wasm")) });
   const palettes: Record<Theme, Palette> = { dark: core.colors.DARK().toJSON(), light: core.colors.LIGHT().toJSON() };
-  const base = sha(JSON.stringify([sha(readFileSync(import.meta.path)), kit(), palettes]));
+  const base = sha(JSON.stringify([digest([...sources(import.meta.path)], HERE), palettes]));
   const rows: Row[] = [];
   const keys: Record<string, string> = {};
   const jobs: Job[] = [];

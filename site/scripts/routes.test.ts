@@ -78,7 +78,7 @@ test("what the menu is fingerprinted by names only the routes of the tree, the p
   expect(site.routes.filter((one) => one.route.endsWith("/")).length - named.length).toBeGreaterThan(200);
 });
 
-test("a menu entry's icon is the figure its own page ships, site-page when the page ships none, and a folder's is its door's or its own", async () => {
+test("a menu entry's icon is the figure its own page ships, site-page when the page ships none, and no two entries but files and links share one", async () => {
   const icons = new Map([...main(await drawn("/menu/")).matchAll(ICON)].map((found) => [found[1]!, found[2]!]));
   const mine = [...icons.keys()].filter((href) => site.routes.some((one) => one.route === href));
   expect(mine.length).toBeGreaterThan(15);
@@ -87,7 +87,9 @@ test("a menu entry's icon is the figure its own page ships, site-page when the p
     expect([href, icons.get(href)]).toEqual([href, page.match(OG)![1] ?? "site-page"]);
   }
   for (const href of [...icons.keys()].filter((one) => !mine.includes(one) && !one.startsWith("#"))) expect([href, icons.get(href)]).toEqual([href, "site-page"]);
-  expect(icons.get("#research")).toBe(icons.get("/research/")!);
+  const own = [...icons.values()].filter((icon) => icon !== "site-page");
+  expect(own.length).toBeGreaterThan(20);
+  expect(new Set(own).size).toBe(own.length);
   expect(icons.get("#apps")).toBe("site-apps");
 });
 
@@ -190,4 +192,19 @@ test("the header is three plain links, to the menu, home and the cart, the menu 
     expect([...sub(html).matchAll(/href="([^"]+)"/g)].map((one) => one[1]!).filter((href) => CHROME.includes(href))).toEqual([]);
     expect([...head.matchAll(/<a\b[^>]*>/g)].map((one) => one[0].match(/ data-router="([^"]+)"/)?.[1] ?? "")).toEqual([site.asset("dialog.js"), "", ""]);
   }
+});
+
+test("the header's middle names the app the page belongs to, and home and the missing page name none", async () => {
+  const page = async (route: string) => text(await render(site, site.routes.find((one) => one.route === route)!, spec), route.endsWith("/") ? `${route.slice(1)}index.html` : route.slice(1));
+  const leaf = site.routes.find((one) => one.route.startsWith("/research/wiki/") && one.route !== "/research/wiki/")!.route;
+  const rows = [["/", ""], [leaf, "wiki"], ["/demos/", "demos"], ["/404.html", ""]];
+  const seen = await Promise.all(rows.map(async ([route]) => (await page(route!)).match(/class="mark"[^>]*data-word="([^"]*)"/)![1]));
+  expect(seen).toEqual(rows.map(([, name]) => name));
+});
+
+test("home alone carries the welcome: its hall in the page and the folding wordmark in the header", async () => {
+  const home = await drawn("/");
+  const wiki = await drawn("/research/wiki/");
+  expect([home.includes('<div class="welcome" aria-hidden="true"></div>'), home.includes('class="glyphs fold"'), home.includes('<g class="x">')]).toEqual([true, true, true]);
+  expect([wiki.includes('class="welcome"'), wiki.includes("glyphs fold")]).toEqual([false, false]);
 });

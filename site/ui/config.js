@@ -20,7 +20,7 @@ export function conf() {
 
 /* BOOT */
 
-const boot = (prefix) => `(()=>{const d=document.documentElement;d.classList.add('js');try{for(const k of['theme','font','tint','saver']){const v=localStorage.getItem('${prefix}'+k);if(v)d.dataset[k]=v}}catch{}})()`;
+const boot = (prefix) => `(()=>{const d=document.documentElement;d.classList.add('js');try{for(const k of['theme','font','tint','saver']){const v=localStorage.getItem('${prefix}'+k);if(v)d.dataset[k]=v}if(location.pathname==='/'&&CSS.supports('animation-timeline','scroll()'))d.dataset.welcome=localStorage.getItem('${prefix}welcome')||matchMedia('(prefers-reduced-motion: reduce)').matches?'shut':'open'}catch{}})()`;
 
 export function headScript(prefix = current.prefix || 'mrly-') {
   return `<script data-boot>${boot(prefix)}</script>`;

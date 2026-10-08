@@ -11,13 +11,14 @@
 .top .glyph, .actions .glyph { width: var(--head); height: var(--head); display: grid; place-items: center; background: none; border: 0; border-radius: 0; padding: 0; color: var(--fg); }
 .top .glyph:hover, .actions .glyph:hover { color: var(--accent); text-decoration: none; }
 .top .glyph:focus-visible, .actions .glyph:focus-visible { outline-offset: -4px; }
-.top .glyph svg, .actions .glyph svg { width: 1rem; height: 1rem; }
+.top, .actions { --cell: 3px; }
+.top .glyph svg, .actions .glyph svg, .top .mark svg { width: calc(var(--cols) * var(--cell)); height: calc(var(--rows) * var(--cell)); }
+.top .mark svg { max-width: 100%; }
 .top .dot { opacity: 0; transition: opacity var(--pace) var(--ease); }
 .top .dot.on { opacity: 1; }
 .top .mark { grid-column: 2; justify-self: center; display: flex; align-items: center; height: var(--head); min-width: 0; padding: 0 var(--s3); color: var(--fg); }
 .top .mark:hover { color: var(--accent); text-decoration: none; }
 .top .mark:focus-visible { outline-offset: -4px; }
-.top .mark svg { height: 0.8rem; width: auto; max-width: 100%; }
 .glyphs { fill: currentColor; shape-rendering: crispEdges; display: block; }
 
 /* SUBHEADER */
@@ -69,7 +70,6 @@ html:not(.js) .pane:has(> .controls:empty:only-child) { display: none; }
 
 @media (max-width: 40rem) {
   main, dialog > div { padding: var(--s4) var(--s4) var(--s7); }
-  .top .mark svg { height: 0.6rem; }
 }
 
 /* TREE */
@@ -251,4 +251,67 @@ h2.group ~ .shelf p { color: var(--dim); font-size: 13px; margin-top: 3px; max-w
   .opener img, .tile img { border: 0; }
   .opener canvas { display: none; }
   .tile { break-inside: avoid; }
+}
+
+/* WELCOME */
+
+@property --size { syntax: "<length>"; inherits: false; initial-value: 3px; }
+
+.welcome { display: none; }
+.fold .l { visibility: hidden; }
+.fold .glint { display: none; }
+[data-welcome] .subheader { display: none; }
+[data-welcome] .top { position: sticky; top: 0; z-index: 55; container-type: inline-size; border-bottom-color: transparent; }
+[data-welcome] :is(.panes, .base) { transition: opacity 400ms var(--ease); }
+[data-welcome="open"] :is(.panes, .base) { opacity: 0; transition-duration: 250ms; }
+[data-welcome] .top::after { content: ""; position: absolute; inset: auto 0 -1px; height: 1px; background: var(--line); }
+[data-welcome] .top .mark { --big: round(down, min((100vw - 4rem) / var(--cols), 2rem), 1px); --peak: max(var(--big), round(down, min(40vw, 12rem) / 5, 1px)); --step: round(var(--size), 1px); position: absolute; grid-column: auto; display: block; height: auto; padding: 0; width: calc(var(--cols) * var(--step)); top: round(calc(var(--head) / 2 - 2.5 * var(--step)), 1px); left: round(calc(50% - var(--cols) / 2 * var(--step)), 1px); }
+[data-welcome] .top .mark svg { width: 100%; height: auto; }
+
+@supports (animation-timeline: scroll()) {
+  [data-welcome="open"] { scrollbar-color: transparent transparent; }
+  [data-welcome="open"]::-webkit-scrollbar { display: none; }
+  [data-welcome="open"] .welcome { display: block; height: 100svh; }
+  [data-welcome="open"] .top, [data-welcome="open"] .top::after, [data-welcome="open"] .top .glyph, [data-welcome="open"] .top .mark, [data-welcome="open"] .fold, [data-welcome="open"] .fold .l, [data-welcome="open"] .fold .x, [data-welcome="open"] .fold .glint { animation-timeline: scroll(root); animation-fill-mode: both; }
+  [data-welcome="open"] .top { animation-name: welcome-ground; animation-range: 85svh 100svh; }
+  [data-welcome="open"] .top::after { animation-name: welcome-draw; animation-range: 85svh 100svh; animation-timing-function: steps(16); }
+  [data-welcome="open"] .top .glyph:first-child { animation-name: welcome-left; animation-range: 82svh 96svh; animation-timing-function: steps(12); }
+  [data-welcome="open"] .top .glyph:last-child { animation-name: welcome-right; animation-range: 82svh 96svh; animation-timing-function: steps(12); }
+  [data-welcome="open"] .top .mark { animation-name: welcome-rise; animation-range: 40svh 85svh; }
+  [data-welcome="open"] .fold { animation-name: welcome-ticks; animation-range: 45svh 85svh; }
+  [data-welcome="open"] .fold .l { visibility: visible; animation-name: welcome-gather, welcome-leave; animation-range: 0svh 40svh, 40svh 41svh; }
+  [data-welcome="open"] .fold .x { animation-name: welcome-arrive; animation-range: 40svh 41svh; }
+  [data-welcome="open"] .fold .glint { display: inline; fill: var(--bg); animation-name: welcome-fade; animation-range: 85svh 95svh; }
+  [data-welcome="open"] .fold .glint rect { opacity: 0; animation: welcome-shimmer 3.2s steps(3) infinite; animation-delay: calc(var(--k) * 40ms - 3.2s); }
+}
+
+@keyframes welcome-ground { from { background: transparent; } }
+@keyframes welcome-draw { from { transform: scaleX(0); } }
+@keyframes welcome-fade { to { opacity: 0; } }
+@keyframes welcome-leave { to { visibility: hidden; } }
+@keyframes welcome-arrive { from { visibility: hidden; } }
+@keyframes welcome-shimmer { 0%, 12% { opacity: 0; } 6% { opacity: 0.6; } }
+@keyframes welcome-left { from { opacity: 0; translate: calc(50cqw - max(0px, (100cqw - var(--frame)) / 2) - var(--head) / 2) 0; } to { opacity: 1; translate: 0 0; } }
+@keyframes welcome-right { from { opacity: 0; translate: calc(max(0px, (100cqw - var(--frame)) / 2) + var(--head) / 2 - 50cqw) 0; } to { opacity: 1; translate: 0 0; } }
+
+@keyframes welcome-rise {
+  0% { --size: var(--big); translate: 0 round(calc(50svh - var(--head) / 2), 1px); animation-timing-function: cubic-bezier(0.3, 0, 0.2, 1); }
+  22% { --size: var(--peak); translate: 0 round(calc(50svh - var(--head) / 2), 1px); animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1); }
+  100% { --size: 3px; translate: 0 0; }
+}
+
+@keyframes welcome-ticks {
+  0%, 10% { rotate: 0deg; animation-timing-function: cubic-bezier(0.3, 0, 0.1, 1); }
+  25%, 35% { rotate: 90deg; animation-timing-function: cubic-bezier(0.3, 0, 0.1, 1); }
+  50%, 60% { rotate: 180deg; animation-timing-function: cubic-bezier(0.3, 0, 0.1, 1); }
+  75%, 85% { rotate: 270deg; animation-timing-function: cubic-bezier(0.3, 0, 0.1, 1); }
+  100% { rotate: 360deg; }
+}
+
+@keyframes welcome-gather {
+  0% { transform: translateX(0); animation-timing-function: steps(6); }
+  25% { transform: translateX(calc(var(--a) * 1px)); animation-timing-function: steps(6); }
+  50% { transform: translateX(calc(var(--b) * 1px)); animation-timing-function: steps(6); }
+  75% { transform: translateX(calc(var(--c) * 1px)); animation-timing-function: steps(3); }
+  100% { transform: translateX(calc(var(--d) * 1px)); }
 }

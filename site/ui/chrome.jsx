@@ -5,6 +5,8 @@ import { conf, HUES } from './config.js';
 import { Contents } from './contents.jsx';
 import { crumbs } from './crumbs.js';
 import { SAVERS } from './savers/index.js';
+import { markup, welcome } from './welcome.js';
+import { word } from './word.js';
 
 /* GLYPHS */
 
@@ -18,7 +20,7 @@ function Cells({ rows, cols, grid, className, label, fill, children }) {
     }),
   );
   return (
-    <svg className={className ? `glyphs ${className}` : 'glyphs'} viewBox={`0 0 ${cols} ${rows}`} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : true}>
+    <svg className={className ? `glyphs ${className}` : 'glyphs'} viewBox={`0 0 ${cols} ${rows}`} style={{ '--rows': rows, '--cols': cols }} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : true}>
       {cells}
       {children}
     </svg>
@@ -52,15 +54,21 @@ function Wordmark({ className }) {
 
 /* HEADER */
 
-function Header({ dialog }) {
+function Fold() {
+  const model = welcome();
+  return <svg className="glyphs fold" viewBox={`0 0 ${model.cols} 5`} style={{ '--rows': 5, '--cols': model.cols }} aria-hidden="true" dangerouslySetInnerHTML={{ __html: markup(model) }} />;
+}
+
+function Header({ route, doors, dialog }) {
   const site = conf();
+  const name = word(route, doors);
   return (
     <header className="top">
       <a className="glyph" href={site.menu} aria-label="Menu" data-router={dialog}>
         <Glyph text="+" />
       </a>
-      <a className="mark" href="/" aria-label={`${site.title} home`}>
-        <Wordmark />
+      <a className="mark" href="/" aria-label={name ? `${name}, ${site.title} home` : `${site.title} home`} data-word={name} data-doors={JSON.stringify(doors)} style={route === '/' ? { '--cols': welcome().cols } : undefined}>
+        {route === '/' ? <Fold /> : <Glyph text={name || 'X'} />}
       </a>
       <a className="glyph" href={site.cart} data-cart aria-label="Cart">
         <Ring />
@@ -248,13 +256,13 @@ function Footer() {
 
 /* SHELL */
 
-export function Shell({ route = '/', tree = [], current = route, contents = [], controls, late = false, wide = false, dialog, children }) {
+export function Shell({ route = '/', tree = [], doors = [], current = route, contents = [], controls, late = false, wide = false, dialog, children }) {
   const left = tree.length > 0;
   const bar = Boolean(controls) || fills(contents);
   return (
     <>
       <a className="skip" href="#main">Skip to content</a>
-      <Header dialog={dialog} />
+      <Header route={route} doors={doors} dialog={dialog} />
       <Subheader route={route} left={left} bar={bar} late={late} />
       <div className="panes">
         {left && (

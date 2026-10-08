@@ -1,6 +1,8 @@
+import { word } from './word.js';
+
 const DOCK = '(min-width: 74rem)';
 const PREFIX = (typeof document !== 'undefined' && document.documentElement.dataset.prefix) || 'mrly-';
-const KEY = { theme: `${PREFIX}theme`, font: `${PREFIX}font`, tint: `${PREFIX}tint`, saver: `${PREFIX}saver`, cart: `${PREFIX}cart` };
+const KEY = { theme: `${PREFIX}theme`, font: `${PREFIX}font`, tint: `${PREFIX}tint`, saver: `${PREFIX}saver`, cart: `${PREFIX}cart`, welcome: `${PREFIX}welcome` };
 const WORDMARK = 'wordmark';
 const SIDES = ['left', 'right'];
 const SHADE = 'screen and (prefers-color-scheme: dark)';
@@ -246,6 +248,231 @@ function replay(name) {
   for (const canvas of [...marks.keys()]) footer(canvas);
 }
 
+/* NAME */
+
+const SVG = 'http://www.w3.org/2000/svg';
+const STILL = '(prefers-reduced-motion: reduce)';
+
+function paint(svg, rows, cols, on) {
+  svg.setAttribute('viewBox', `0 0 ${cols} ${rows}`);
+  svg.style.setProperty('--rows', rows);
+  svg.style.setProperty('--cols', cols);
+  svg.replaceChildren(
+    ...on.map((i) => {
+      const cell = document.createElementNS(SVG, 'rect');
+      for (const [k, v] of [['x', i % cols], ['y', Math.floor(i / cols)], ['width', 1], ['height', 1]]) cell.setAttribute(k, v);
+      return cell;
+    }),
+  );
+}
+
+function folds(mark) {
+  let anim = null;
+  let at = 0;
+  let way = 0;
+  let timer = 0;
+  const halt = () => {
+    clearInterval(timer);
+    timer = 0;
+  };
+  const tick = () => {
+    const next = at + way;
+    if (next < 0 || next >= anim.frames.length) return halt();
+    at = next;
+    paint(mark.querySelector('svg'), anim.rows, anim.cols, anim.frames[at]);
+  };
+  const run = async (dir) => {
+    const text = mark.dataset.word;
+    if (!text || (dir > 0 && matchMedia(STILL).matches)) return;
+    if (anim?.text !== text) {
+      const { fold } = await import('../kit/font/font.js');
+      if (mark.dataset.word !== text) return;
+      anim = { text, ...fold(text) };
+      at = 0;
+    }
+    way = dir;
+    if (!timer) timer = setInterval(tick, 1000 / anim.fps);
+  };
+  mark.addEventListener('pointerenter', (e) => e.pointerType === 'mouse' && run(1));
+  mark.addEventListener('pointerleave', (e) => e.pointerType === 'mouse' && run(-1));
+  mark.refold = () => {
+    halt();
+    anim = null;
+    at = 0;
+  };
+}
+
+async function rename() {
+  const mark = document.querySelector('.top .mark');
+  if (!mark) return;
+  const here = location.pathname;
+  if (mark.seen === undefined || mark.seen === here) {
+    mark.seen = here;
+    return;
+  }
+  mark.seen = here;
+  const next = word(here, JSON.parse(mark.dataset.doors || '[]'));
+  if (next === (mark.dataset.word ?? '')) return;
+  mark.dataset.word = next;
+  const title = mark.getAttribute('aria-label').replace(/^.*, /, '');
+  mark.setAttribute('aria-label', next ? `${next}, ${title}` : title);
+  mark.refold?.();
+  if (here === '/') return arrive(mark);
+  depart(mark);
+  const { letters } = await import('../kit/font/font.js');
+  if (mark.dataset.word !== next) return;
+  const { rows, cols, grid } = letters(next || 'X');
+  paint(mark.querySelector('svg'), rows, cols, grid.flat().flatMap((on, i) => (on ? [i] : [])));
+}
+
+/* WELCOME */
+
+const PLAY = 2000;
+const FADE = 250;
+const QUIET = 200;
+const PAGING = ['ArrowDown', 'PageDown', ' ', 'End'];
+const LIVE = 'main a[href], main button, main input, main select, main textarea, main summary';
+
+let playing = false;
+let quiet = 0;
+let watch = null;
+
+const hall = () => document.querySelector('.welcome');
+const greeting = () => root().dataset.welcome;
+const jump = (top) => scrollTo({ top, behavior: 'instant' });
+const rolls = () => CSS.supports('animation-timeline', 'scroll()');
+
+function glide(path, time, done) {
+  playing = true;
+  const span = matchMedia(STILL).matches ? 0 : time;
+  const start = performance.now();
+  const step = (now) => {
+    const t = span ? Math.min(1, Math.max(0, (now - start) / span)) : 1;
+    jump(path(t, hall()?.offsetHeight ?? 0));
+    if (t < 1) return requestAnimationFrame(step);
+    playing = false;
+    done();
+  };
+  requestAnimationFrame(step);
+}
+
+function calm() {
+  if (greeting() === 'open') return;
+  if (performance.now() < quiet) return setTimeout(calm, QUIET);
+  unlisten();
+}
+
+function settle() {
+  const top = Math.max(0, scrollY - (hall()?.offsetHeight ?? 0));
+  write(KEY.welcome, '1');
+  root().dataset.welcome = 'shut';
+  jump(top);
+  quiet = performance.now() + QUIET;
+  setTimeout(calm, QUIET);
+}
+
+function enter() {
+  if (playing || greeting() !== 'open') return;
+  const h = hall()?.offsetHeight ?? 0;
+  if (!h || scrollY >= h) return settle();
+  const from = scrollY / h;
+  glide((t, height) => height * (from + (1 - from) * t), PLAY * (1 - from), settle);
+}
+
+function greet() {
+  if (playing || greeting() !== 'shut' || !hall()) return;
+  const at = scrollY;
+  playing = true;
+  root().dataset.welcome = 'open';
+  listen();
+  jump(at + hall().offsetHeight);
+  setTimeout(() => {
+    jump(hall().offsetHeight);
+    glide((t, height) => height * (1 - t), PLAY, () => {});
+  }, matchMedia(STILL).matches ? 0 : FADE);
+}
+
+function hold(e) {
+  const open = greeting() === 'open';
+  if (!open && !playing) {
+    if (e.type === 'wheel' && performance.now() < quiet) {
+      e.preventDefault();
+      quiet = performance.now() + QUIET;
+    }
+    return;
+  }
+  const target = e.target instanceof Element ? e.target : null;
+  if (e.type === 'wheel') {
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+    e.preventDefault();
+    return enter();
+  }
+  if (e.type === 'touchmove') {
+    if (e.touches.length > 1) return;
+    e.preventDefault();
+    return enter();
+  }
+  if (e.type === 'keydown') {
+    if (e.metaKey || e.ctrlKey || e.altKey || !PAGING.includes(e.key)) return;
+    e.preventDefault();
+    return enter();
+  }
+  if (target?.closest(LIVE)) {
+    if (open && !playing) settle();
+    return;
+  }
+  if (e.type === 'pointerdown') return enter();
+  e.preventDefault();
+}
+
+function drift() {
+  if (greeting() === 'open' && !playing && scrollY > 0) enter();
+}
+
+function listen() {
+  if (watch) return;
+  watch = new AbortController();
+  const options = { passive: false, capture: true, signal: watch.signal };
+  for (const type of ['wheel', 'touchmove', 'keydown', 'pointerdown', 'click']) addEventListener(type, hold, options);
+  addEventListener('scroll', drift, { passive: true, signal: watch.signal });
+}
+
+function unlisten() {
+  watch?.abort();
+  watch = null;
+}
+
+function knock(mark) {
+  mark.addEventListener('click', (e) => {
+    if (location.pathname !== '/' || greeting() !== 'shut' || !hall()) return;
+    e.preventDefault();
+    greet();
+  });
+}
+
+async function arrive(mark) {
+  const { markup, welcome } = await import('./welcome.js');
+  if (location.pathname !== '/') return;
+  const model = welcome();
+  const svg = mark.querySelector('svg');
+  svg.setAttribute('class', 'glyphs fold');
+  svg.setAttribute('viewBox', `0 0 ${model.cols} 5`);
+  svg.style.setProperty('--rows', 5);
+  svg.style.setProperty('--cols', model.cols);
+  svg.innerHTML = markup(model);
+  mark.style.setProperty('--cols', model.cols);
+  if (!rolls()) return;
+  root().dataset.welcome = read(KEY.welcome) || matchMedia(STILL).matches ? 'shut' : 'open';
+  if (greeting() === 'open') listen();
+}
+
+function depart(mark) {
+  delete root().dataset.welcome;
+  unlisten();
+  mark.style.removeProperty('--cols');
+  mark.querySelector('svg')?.setAttribute('class', 'glyphs');
+}
+
 /* EXPLORER */
 
 let forest = null;
@@ -326,6 +553,12 @@ function wire() {
   screen(root().dataset.saver ?? '');
   cart();
   once('.contents', contents);
+  once('.top .mark', (mark) => {
+    folds(mark);
+    knock(mark);
+  });
+  if (greeting() === 'open') listen();
+  rename();
   marked();
 }
 

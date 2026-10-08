@@ -48,7 +48,7 @@ test("an embedded widget says what it needs to a reader without scripts", async 
   expect(html).toMatch(/<figure class="widget"[^>]*><div class="mount"><\/div><noscript><p>[^<]+<\/p><\/noscript>/);
 });
 
-test("every page loads the chrome and the router alone; a page names each island's entry in its markup and preloads it and the loader", async () => {
+test("every page loads the chrome and the router alone; a page preloads the chrome's one import, names each island's entry in its markup and preloads it and the loader", async () => {
   const pages = [
     ["/research/wiki/farey-sequence/", ["/demos/farey/widget.js"]],
     ["/research/wiki/sierpinski-carpet/", ["/live.js"]],
@@ -62,7 +62,7 @@ test("every page loads the chrome and the router alone; a page names each island
     const html = await drawn(route, `${route.slice(1)}index.html`);
     expect([route, [...new Set([...html.matchAll(/ data-island="([^"]+)"/g)].map((found) => found[1]!))]]).toEqual([route, [...entries]]);
     expect([route, modules(html)]).toEqual([route, [site.asset("chrome.js"), site.asset("router.js")]]);
-    expect([route, [...html.matchAll(/<link rel="modulepreload" href="([^"]+)">/g)].map((found) => found[1]!)]).toEqual([route, entries.length ? [site.asset("islands.js"), ...entries] : []]);
+    expect([route, [...html.matchAll(/<link rel="modulepreload" href="([^"]+)">/g)].map((found) => found[1]!)]).toEqual([route, [site.asset("word.js"), ...(entries.length ? [site.asset("islands.js"), ...entries] : [])]]);
     expect(html).not.toMatch(/<script>|onsubmit=/);
   }
 });

@@ -12,6 +12,7 @@ import { themed } from "../kit/ssg/pic.ts";
 import { escape, front, inline, plain, render as md, summary, title } from "../kit/ssg/md.ts";
 import { posts as parsed, type Leaf as Posted } from "../kit/ssg/blog.ts";
 import { Glyph, Grid, Menu, Settings, Shell } from "../ui/chrome.jsx";
+import { doors } from "../ui/word.js";
 import { headScript, inlineScripts, tintCss } from "../ui/config.js";
 import { grid as glyphs, logoSvg } from "../ui/logo.js";
 import "../lib/site.js";
@@ -59,8 +60,8 @@ function lede(text: string, max = 200) {
 
 const HUB = "/research/";
 const WIKI = { name: "Wiki", href: `${HUB}wiki/`, figure: "site-wiki", text: "One concept per page, in the order you need them, for a reader with school mathematics." };
-const NOTES = { name: "Notes", href: `${HUB}notes/`, figure: "site-research", text: "The working notes behind the demos and the papers, one page per idea." };
-const CLAIMS = { name: "Claims", href: `${HUB}claims/`, figure: "research-index", text: "Every claim of the tree on one dated, tagged line with its witness." };
+const NOTES = { name: "Notes", href: `${HUB}notes/`, figure: "site-notes", text: "The working notes behind the demos and the papers, one page per idea." };
+const CLAIMS = { name: "Claims", href: `${HUB}claims/`, figure: "site-claims", text: "Every claim of the tree on one dated, tagged line with its witness." };
 const PAPERS = { name: "Papers", href: `${HUB}papers/`, figure: "site-papers", text: "Write-ups that print as papers, every claim tagged and every number generated." };
 const FOLDERS = [WIKI, NOTES, CLAIMS, PAPERS];
 
@@ -91,7 +92,7 @@ const SIDES = ["dark", "light"] as const;
 
 function figure(home: string, name: string, route: string, ext = "png") {
   const file = join(home, `${name}.${ext}`);
-  if (!probe(file)) throw new Error(`site: ${name}.${ext} missing from ${relative(org, home)} for ${route}; figures.lock has no row for it and the press made none`);
+  if (!probe(file)) throw new Error(`site: ${name}.${ext} missing from ${relative(org, home)} for ${route}; figures.lock has no row for it, the press made none, or its pin was never pulled (figures.py --local pulls none)`);
   return file;
 }
 
@@ -245,7 +246,7 @@ type Leaf = {
 function shell(site: Site, leaf: Leaf) {
   const { route, name, description, body, type = "article", wide = false, bare = false, code = false, data, controls = false } = leaf;
   const article = h(bare ? "div" : "article", { className: bare ? undefined : "prose", "data-island": leaf.island, dangerouslySetInnerHTML: { __html: body } });
-  const main = renderToStaticMarkup(h(Shell, { route, tree: leaf.tree ?? [], contents: leaf.contents ?? headings(body), controls, late: code, wide, dialog: site.asset("dialog.js") }, article));
+  const main = renderToStaticMarkup(h(Shell, { route, tree: leaf.tree ?? [], doors: DOORWAYS, contents: leaf.contents ?? headings(body), controls, late: code, wide, dialog: site.asset("dialog.js") }, article));
   const ld = data ? `${jsonScript(data)}\n` : "";
   const entries = [...new Set([...main.matchAll(ISLAND)].map((found) => found[1]!))];
   const more = [...(entries.length ? [site.asset("islands.js")] : []), ...entries].map((src) => `\n<link rel="modulepreload" href="${src}">`).join("");
@@ -263,6 +264,7 @@ ${meta(route, name, description, type, image)}
 ${sheets}
 ${TINT}
 ${ld}<script type="module" src="${site.asset("chrome.js")}"></script>
+<link rel="modulepreload" href="${site.asset("word.js")}">
 <script type="module" src="${site.asset("router.js")}"></script>${more}${leaf.head ?? ""}
 </head>
 <body>
@@ -713,7 +715,7 @@ function blogPage(site: Site, leaf: Posted) {
   const fig = press(site, leaf.out);
   if (leaf.kind === "blog") {
     const body = `<div class="lede"><h1 id="blog">Blog</h1><p class="lead">${escape(BLOG_LEAD)}</p></div>\n${grid(dress(leaf.posts.map((one) => ({ name: one.title, href: one.route })), marks(DRESS), fig, leaf.route))}`;
-    return shell(site, { route: leaf.route, name: "Blog", description: BLOG_LEAD, body, type: "website", wide: true, bare: true });
+    return shell(site, { route: leaf.route, name: "Blog", description: BLOG_LEAD, body, type: "website", wide: true, bare: true, image: picture(site, FIXED["/blog/"], leaf.route, fig) });
   }
   const figure = leaf.front.figure || `blog-${leaf.slug}`;
   const head = `${hero(fig, figure, leaf.route, leaf.name)}\n<div class="plate"><h1 id="${escape(leaf.slug)}">${escape(leaf.name)}</h1><p class="by">${escape(leaf.date)} · ${escape(AUTHOR)}</p></div>`;
@@ -765,7 +767,10 @@ const appRoute = (id: string) => `/${id}/`;
 function settings(site: Site, route: Route): Output[] {
   const app = route.data as App;
   const body = `<div class="lede"><h1 id="settings">${escape(app.title)}</h1><p class="lead">${escape(SETTINGS.lead)}</p></div>\n<noscript><p>${SETTINGS.needs}</p></noscript>\n${renderToStaticMarkup(h(Settings))}`;
-  return [{ path: pageOf(route.route), bytes: shell(site, { route: route.route, name: app.title, description: SETTINGS.lead, body, type: "website" }) }];
+  const out: Output[] = [];
+  const fig = press(site, out);
+  out.push({ path: pageOf(route.route), bytes: shell(site, { route: route.route, name: app.title, description: SETTINGS.lead, body, type: "website", image: picture(site, FIXED[route.route], route.route, fig) }) });
+  return out;
 }
 
 type Dress = { lanes: Lane[]; papers: Paper[]; notes: Note[]; posts: Post[] };
@@ -781,6 +786,12 @@ const FIXED: Record<string, string> = {
   "/about/": "site-icon",
   "/contact/": "site-contact",
   "/donate/": "site-donate",
+  "/method/": "site-method",
+  "/blog/": "site-blog",
+  "/stats/": "site-stats",
+  "/cart/": "site-cart",
+  "/menu/": "site-menu",
+  "/settings/": "app-settings",
 };
 
 function marks(data: Dress): Map<string, Mark> {
@@ -806,9 +817,11 @@ type Door = { name: string; href?: string; figure?: string; nodes?: Door[] };
 
 const PLAIN = "site-page";
 
+const DOORWAYS = doors(SITE.tree as Door[]);
+
 const shipped = (href: string) => FIXED[href] ?? [...FOLDERS, ...DOORS].find((one) => one.href === href)?.figure;
 
-const folded = (name: string) => ({ Research: shipped(HUB), Apps: "site-apps" })[name];
+const folded = (name: string) => ({ Research: "site-research-folder", Apps: "site-apps", Pages: "site-pages", Root: "site-root", Elsewhere: "site-elsewhere" })[name];
 
 function filled(fills: Record<string, Door[]>): Door[] {
   return (SITE.tree as Door[]).map((node) => (node.href ? node : { ...node, nodes: node.nodes ?? fills[node.name.toLowerCase()] ?? [] })).filter((node) => node.href || node.nodes!.length);
@@ -823,7 +836,7 @@ function menu(site: Site, route: Route): Output[] {
   const wear = (door: Door): Node => ({ name: door.name, href: door.href, figure: fig(icon(door), route.route), nodes: door.nodes?.map(wear) });
   const list = renderToStaticMarkup(h(Menu, { tree: tree.map(wear), island: site.asset("search.js"), search: search.join(" ") }));
   const body = `<div class="hero"><h1><span role="img" aria-label="${escape(SITE.title)}">${WORD}</span></h1><p>${escape(lead)}</p></div>\n${list}`;
-  out.push({ path: "menu/index.html", bytes: shell(site, { route: route.route, name: "Menu", description: lead, body, type: "website", wide: true, bare: true }) });
+  out.push({ path: "menu/index.html", bytes: shell(site, { route: route.route, name: "Menu", description: lead, body, type: "website", wide: true, bare: true, image: picture(site, FIXED[route.route], route.route, fig) }) });
   return out;
 }
 
@@ -855,7 +868,10 @@ function found(site: Site): Output {
 function cart(site: Site, route: Route): Output[] {
   const lead = "Coming soon.";
   const body = `<div class="lede"><h1 id="cart">Cart</h1><p class="lead">${escape(lead)}</p></div>\n<p>mrly.net has no shop yet.</p>\n<p><a href="/">Back to the home page</a>.</p>`;
-  return [{ path: "cart/index.html", bytes: shell(site, { route: route.route, name: "Cart", description: lead, body, type: "website" }) }];
+  const out: Output[] = [];
+  const fig = press(site, out);
+  out.push({ path: "cart/index.html", bytes: shell(site, { route: route.route, name: "Cart", description: lead, body, type: "website", image: picture(site, FIXED[route.route], route.route, fig) }) });
+  return out;
 }
 
 /* STATS */
@@ -867,7 +883,10 @@ function stats(site: Site, route: Route): Output[] {
 <noscript><p>${NEEDS.stats}</p></noscript>
 <div data-island="${site.asset("stats.js")}"><section><h2 id="cloud">Cloud</h2><div data-stats="cloud"><p class="fine">Loading</p></div></section>
 <section><h2 id="errors">Errors</h2><div data-stats="errors"><p class="fine">Loading</p></div></section></div>`;
-  return [{ path: "stats/index.html", bytes: shell(site, { route: route.route, name: "Stats", description: WATCH, body, type: "website" }) }];
+  const out: Output[] = [];
+  const fig = press(site, out);
+  out.push({ path: "stats/index.html", bytes: shell(site, { route: route.route, name: "Stats", description: WATCH, body, type: "website", image: picture(site, FIXED[route.route], route.route, fig) }) });
+  return out;
 }
 
 const MISSION = SITE.tagline;
@@ -908,7 +927,8 @@ function home(site: Site, route: Route): Output[] {
     ? `<section><h2 id="latest">From the blog</h2><p class="lead"><a href="/blog/${first.slug}/">${escape(first.name)}</a> · ${escape(first.date)}</p><p class="lead">${escape(first.lead)}</p></section>`
     : "";
   const what = `<section class="what"><h2 id="mrlymath">What is MrlyMath</h2><p>A design is a rule on the corners of a cube: a code says which of the eight corners are filled. The Kronecker product grows that rule into itself, level by level, and the object it converges to is a fractal - the Sierpinski carpet and the Menger sponge are two of them.</p><p>Everything else is measurement. Count the fills, the voids and the exposed faces; cut the solid with a plane; join the filled cells into a graph and read its spectrum; collect the integer sequences the counts write down. The Rust crates do the arithmetic, the browser only paints, and a claim is either proved, checked over a stated finite domain, or labelled a conjecture.</p></section>`;
-  const body = `<div class="home">
+  const body = `<div class="welcome" aria-hidden="true"></div>
+<div class="home">
 ${hero(fig, "site-home", "/", SITE.title)}
 <div class="hero"><h1><span role="img" aria-label="${escape(SITE.title)}">${WORD}</span></h1><p>${escape(MISSION)}</p></div>
 <section><h2 id="doors">Five doors</h2>${grid(doors)}</section>
