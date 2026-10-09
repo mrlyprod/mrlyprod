@@ -9,6 +9,7 @@
     "boot": "bun scripts/boot.ts",
     "push": "bun scripts/push.ts",
     "shots": "bun scripts/shots.ts",
+    "film": "bun scripts/film.ts",
     "clean": "rm -rf dist",
     "check": "bun check.ts",
     "test": "bun test ./kit ./scripts ./ui ./check ./apps ./lib",

@@ -18,6 +18,7 @@ import { grid as glyphs, logoSvg } from "../ui/logo.js";
 import "../lib/site.js";
 import SITE from "../site.json";
 import { ensureFigures, said } from "./figs.ts";
+import { doorway, row, tiled } from "./heroes.ts";
 import { sections, type Lists } from "./map.ts";
 import { shelf } from "./shelf.ts";
 
@@ -796,7 +797,7 @@ const LEADS: Record<string, string> = { saver: "A screensaver drawn in the brows
 
 const PARTS = ["scene.js", "widget.jsx", "index.jsx"];
 
-const ROWS = ["tool", "saver"];
+const ROWS = ["tool", "saver", "app"];
 
 let APPS: App[] = [];
 
@@ -829,7 +830,7 @@ let DRESS: Dress = { lanes: [], papers: [], notes: [], posts: [] };
 
 const FIXED: Record<string, string> = {
   "/": "site-home",
-  "/math/": "site-math",
+  "/mrlymath/": "site-math",
   "/git/": "site-code",
   "/about/": "site-icon",
   "/contact/": "site-contact",
@@ -868,9 +869,7 @@ const DOORWAYS = doors(SITE.tree as Door[]);
 
 const shipped = (href: string) => FIXED[href] ?? appFigure(href) ?? [...FOLDERS, ...DOORS].find((one) => one.href === href)?.figure;
 
-const folded = (name: string) => ({ Research: "site-research-folder", Apps: "site-apps", Pages: "site-pages", Root: "site-root", Elsewhere: "site-elsewhere" })[name];
-
-const iconOf = (door: Door) => door.figure ?? (door.href ? shipped(door.href) : folded(door.name)) ?? PLAIN;
+const iconOf = (door: Door) => door.figure ?? shipped(door.href!) ?? PLAIN;
 
 function filled(fills: Record<string, Door[]>): Door[] {
   return (SITE.tree as Door[]).map((node) => (node.href ? node : { ...node, nodes: node.nodes ?? fills[node.name.toLowerCase()] ?? [] })).filter((node) => node.href || node.nodes!.length);
@@ -881,7 +880,7 @@ function menu(site: Site, route: Route): Output[] {
   const out: Output[] = [];
   const fig = press(site, out);
   const { tree, search } = route.data as { tree: Door[]; search: string[] };
-  const wear = (door: Door): Node => ({ name: door.name, href: door.href, figure: fig(iconOf(door), route.route), nodes: door.nodes?.map(wear) });
+  const wear = (door: Door): Node => ({ name: door.name, href: door.href, figure: door.href ? fig(iconOf(door), route.route) : undefined, nodes: door.nodes?.map(wear) });
   const list = renderToStaticMarkup(h(Menu, { tree: tree.map(wear), island: site.asset("search.js"), search: search.join(" ") }));
   const body = `<div class="lede"><h1 id="menu">Menu</h1><p class="lead">${escape(lead)}</p></div>\n${list}`;
   out.push({ path: "menu/index.html", bytes: shell(site, { route: route.route, name: "Menu", description: lead, body, type: "website", wide: true, bare: true, image: picture(site, FIXED[route.route], route.route, fig) }) });
@@ -948,120 +947,33 @@ const DOORS = [
   { name: "Research", href: HUB, figure: "site-research" },
 ];
 
-type Newest = { date: string; tag: string; text: string; title: string; file: string; href: string };
-
-function newest(list: Claim[]): Newest | null {
-  let best: Newest | null = null;
-  for (const c of list)
-    for (const [, date, tag, text] of c.md.matchAll(CLAIM))
-      if (!best || date! > best.date) best = { date: date!, tag: tag!, text: text!, title: c.title, file: c.file, href: c.href };
-  return best;
-}
-
 /* HEROES */
 
 type Hero = { name: string; href: string; line: string; hues: string[]; seed: number };
 
 type Tile = { name: string; hues: string[] };
 
-type Shape = { kind: string; cols: number; rows: number; accent: number; wide: [number, number]; tall: [number, number] };
-
 const HEROES = SITE.heroes as Hero[];
 
 const TILES = SITE.tiles as Tile[];
 
-const ART = { spark: 0.04, jitter: 0.9 };
-
-const WHOLE: Shape = { kind: "hero", cols: 16, rows: 9, accent: 8, wide: [6, 2], tall: [7, 3] };
-
-const HALF: Shape = { kind: "tile", cols: 8, rows: 9, accent: 4, wide: [5, 1], tall: [5, 1] };
-
-const HUE: Record<string, string> = { red: "r", orange: "o", yellow: "y", green: "g", mint: "m", teal: "t", cyan: "c", blue: "b", indigo: "i", purple: "p", pink: "k", brown: "n", accent: "a" };
-
-function rng(seed: number) {
-  let s = seed >>> 0;
-  return () => {
-    s = (s + 0x6d2b79f5) >>> 0;
-    let t = Math.imul(s ^ (s >>> 15), s | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-const seeded = (name: string) => [...name].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0, 2166136261);
-
-function art(name: string, hues: string[], seed: number, shape: Shape) {
-  if (!Array.isArray(hues) || hues.length === 0) throw new Error(`site: site.json gives the ${shape.kind} ${name} no hues, and the hues are ${Object.keys(HUE).join(", ")}`);
-  for (const hue of hues) if (!Object.hasOwn(HUE, hue)) throw new Error(`site: site.json gives the ${shape.kind} ${name} the hue ${hue}, and the hues are ${Object.keys(HUE).join(", ")}`);
-  const roll = rng(seed);
-  const { cols, rows } = shape;
-  const turn = roll() * 2 * Math.PI;
-  const along = (x: number, y: number) => (x + 0.5 - cols / 2) * Math.cos(turn) + (y + 0.5 - rows / 2) * Math.sin(turn);
-  const ends = [along(0, 0), along(cols - 1, 0), along(0, rows - 1), along(cols - 1, rows - 1)];
-  const [low, high] = [Math.min(...ends), Math.max(...ends)];
-  const span = hues.length;
-  const half = Math.ceil(cols / 2);
-  const blocks = Array.from({ length: Math.ceil(rows / 2) * half }, roll);
-  const cells: string[] = [];
-  for (let y = 0; y < rows; y++) {
-    for (let x = 0; x < cols; x++) {
-      const noise = 0.65 * blocks[(y >> 1) * half + (x >> 1)]! + 0.35 * roll() - 0.5;
-      const at = Math.min(Math.max(((along(x, y) - low) / (high - low)) * span + noise * ART.jitter, 0), span - 1e-9);
-      cells.push(HUE[roll() < ART.spark ? "accent" : hues[Math.floor(at)]!]!);
-    }
-  }
-  const lit = HUE.accent!;
-  let have = cells.filter((one) => one === lit).length;
-  while (have < shape.accent) {
-    const at = Math.floor(roll() * cells.length);
-    if (cells[at] === lit) continue;
-    cells[at] = lit;
-    have++;
-  }
-  const spot = (room: number) => 1 + Math.floor(roll() * room);
-  const [wc, wr] = shape.wide;
-  const [tc, tr] = shape.tall;
-  const plate = `--col:${spot(cols - wc + 1)};--row:${spot(rows - wr + 1)};--pcol:${spot(rows - tc + 1)};--prow:${spot(cols - tr + 1)}`;
-  return { art: `<div class="art" aria-hidden="true">${cells.map((one) => `<i class=${one}></i>`).join("")}</div>`, plate };
-}
-
-function doorway(hero: Hero) {
-  const { art: cells, plate } = art(hero.name, hero.hues, hero.seed, WHOLE);
-  return `<a class="hero" href="${escape(hero.href)}">${cells}<div class="plate" style="${plate}"><h2>${escape(hero.name)}</h2><p>${escape(hero.line)}</p></div></a>`;
-}
-
-function tiled(door: Door) {
-  const row = TILES.find((one) => one.name === door.name);
-  if (!row) throw new Error(`site: the tree's door ${door.name} has no row in the tiles of site.json, so it has no hues`);
-  const { art: cells, plate } = art(door.name, row.hues, seeded(door.name), HALF);
-  return `<a class="half" href="${escape(door.href ?? `${SITE.menu}#${door.name.toLowerCase()}`)}">${cells}<div class="plate" style="${plate}"><h2>${escape(door.name)}</h2></div></a>`;
+function half(door: Door, avoid: string) {
+  const one = TILES.find((tile) => tile.name === door.name);
+  if (!one) throw new Error(`site: the tree's door ${door.name} has no row in the tiles of site.json, so it has no hues`);
+  return tiled(door.name, door.href ?? `${SITE.menu}#${door.name.toLowerCase()}`, one.hues, avoid);
 }
 
 function home(site: Site, route: Route): Output[] {
-  const { lanes: list, papers: fresh, doors, claim } = route.data as { lanes: Lane[]; papers: Paper[]; doors: Door[]; claim: Newest | null };
+  const { doors } = route.data as { doors: Door[] };
   const out: Output[] = [];
   const fig = press(site, out);
   for (const hero of HEROES) if (!doors.some((door) => door.name === hero.name)) throw new Error(`site: site.json names the hero ${hero.name}, and the tree has no such door`);
-  const latestClaim = claim
-    ? `<section><h2 id="newest">Newest claim</h2><p class="lead"><time>${claim.date}</time> <b class="chip ${claim.tag.toLowerCase()}">${claim.tag}</b> ${inline(claim.text, { math, link: links(site, claim.file, out) })}</p><p class="lead">From <a href="${claim.href}">${escape(claim.title)}</a>. <a href="${CLAIMS.href}">Every claim, dated and tagged</a>.</p></section>`
-    : "";
-  const latest = [...fresh.map((p) => ({ name: p.name, href: p.href, at: p.revised || p.date })), ...list.map((p) => ({ name: p.name, href: p.href, at: dated(p) }))]
-    .map((p, i) => ({ p, i }))
-    .sort((a, b) => (a.p.at < b.p.at ? 1 : a.p.at > b.p.at ? -1 : a.i - b.i))
-    .slice(0, 3)
-    .map(({ p }) => ({ name: p.name, href: p.href }));
   const rest = doors.filter((door) => door.href !== "/" && !HEROES.some((hero) => hero.name === door.name));
-  for (const tile of TILES) if (!rest.some((door) => door.name === tile.name)) throw new Error(`site: site.json names the tile ${tile.name}, and the tree has no such door beside home and the heroes`);
-  const what = `<section class="what"><h2 id="mrlymath">What is MrlyMath</h2><p>A design is a rule on the corners of a cube: a code says which of the eight corners are filled. The Kronecker product grows that rule into itself, level by level, and the object it converges to is a fractal - the Sierpinski carpet and the Menger sponge are two of them.</p><p>Everything else is measurement. Count the fills, the voids and the exposed faces; cut the solid with a plane; join the filled cells into a graph and read its spectrum; collect the integer sequences the counts write down. The Rust crates do the arithmetic, the browser only paints, and a claim is either proved, checked over a stated finite domain, or labelled a conjecture.</p></section>`;
+  for (const one of TILES) if (!rest.some((door) => door.name === one.name)) throw new Error(`site: site.json names the tile ${one.name}, and the tree has no such door beside home and the heroes`);
   const body = `<h1 class="visually-hidden">${escape(SITE.title)}</h1>
 <div class="welcome" aria-hidden="true"></div>
-<section class="heroes" aria-label="Doors">${HEROES.map(doorway).join("")}</section>
-<section class="shelf" aria-label="More doors">${rest.map(tiled).join("")}</section>
-<div class="home">
-${latestClaim}
-<section><h2 id="papers">Latest papers</h2>${grid(dress(latest, marks(DRESS), fig, "/"))}</section>
-${what}
-</div>`;
+<section class="heroes" aria-label="Doors">${row(HEROES, doorway)}</section>
+<section class="shelf" aria-label="More doors">${row(rest, half)}</section>`;
   out.push({ path: "index.html", bytes: shell(site, { route: "/", name: SITE.title, description: MISSION, body, type: "website", wide: true, bare: true, contents: [], image: picture(site, "site-home", "/", fig) }) });
   return out;
 }
@@ -1213,8 +1125,8 @@ function standard(site: Site, route: Route): Output[] {
   const out: Output[] = [];
   const fig = press(site, out);
   const file = route.source as string;
-  const body = `${opener(fig, "site-math", route.route, "MrlyMath")}\n<h1 id="math">MrlyMath</h1><p class="lead">${escape(STANDARD)}</p>\n${md(read(file).replace(/^# .+\n/, ""), { math, lazy: true, link: links(site, file, out) })}`;
-  out.push({ path: "math/index.html", bytes: shell(site, { route: route.route, name: "Math", description: STANDARD, body, type: "website", image: picture(site, "site-math", route.route, fig) }) });
+  const body = `${opener(fig, "site-math", route.route, "MrlyMath")}\n<h1 id="mrlymath">MrlyMath</h1><p class="lead">${escape(STANDARD)}</p>\n${md(read(file).replace(/^# .+\n/, ""), { math, lazy: true, link: links(site, file, out) })}`;
+  out.push({ path: "mrlymath/index.html", bytes: shell(site, { route: route.route, name: "MrlyMath", description: STANDARD, body, type: "website", image: picture(site, "site-math", route.route, fig) }) });
   return out;
 }
 
@@ -1273,7 +1185,7 @@ async function collect(site: Site) {
     route: "/",
     kind: "home",
     name: SITE.title,
-    data: { lanes: laneList, papers: paperList, doors: filled(fills).map((door) => ({ name: door.name, href: door.href })), claim: newest(claimList) },
+    data: { doors: filled(fills).map((door) => ({ name: door.name, href: door.href })) },
     source: readme,
     inputs: [readme],
   });
@@ -1294,7 +1206,7 @@ async function collect(site: Site) {
     routes.push({ route: c.href, kind: "concept", name: c.name, data: c, source: file, inputs: [file, ...embeds(site, read(file))] });
   }
   const names = site.input("names");
-  if (!names.missing) routes.push({ route: "/math/", kind: "math", name: "Math", source: names.files[0]!, inputs: names.files });
+  if (!names.missing) routes.push({ route: "/mrlymath/", kind: "math", name: "MrlyMath", source: names.files[0]!, inputs: names.files });
   routes.push(...demoRoutes(site, demoList));
   if (laneList.length || paperList.length) {
     const index = join(SHELF, INDEX);

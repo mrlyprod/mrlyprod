@@ -52,7 +52,7 @@ export function sections(site: Site, lists: Lists): Section[] {
       rows: [...lists.papers.map((p) => row(p.name, p.lead, p.file, p.href)), ...lists.lanes.map((p) => ({ name: p.name, note: p.blurb || summary(p.md), href: p.href }))],
     },
     { name: "Blog", rows: lists.posts.map((p) => row(p.name, p.lead, join(site.input("blog").path, p.slug, "index.md"), `/blog/${p.slug}/`)) },
-    { name: "Math", rows: lists.math.map((file) => read(file, "/math/", "Math")) },
+    { name: "MrlyMath", rows: lists.math.map((file) => read(file, "/mrlymath/", "MrlyMath")) },
     { name: "About", rows: lists.pages.map((file) => read(file, `/${basename(file, ".md")}/`)) },
   ];
 }

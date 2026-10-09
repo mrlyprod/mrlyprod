@@ -152,7 +152,7 @@ const anchor = (name) => name.toLowerCase();
 export function Menu({ tree = [], island, search }) {
   return (
     <div className="menu" data-island={island} data-search={search}>
-      <Grid nodes={tree.map(({ nodes, ...node }) => (nodes ? { ...node, href: `#${anchor(node.name)}` } : node))} />
+      <Grid nodes={tree.filter((node) => node.href)} />
       {tree.filter((node) => node.nodes).map((folder) => (
         <section key={folder.name} id={anchor(folder.name)} aria-label={folder.name}>
           <h2>{folder.name}</h2>

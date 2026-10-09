@@ -5,5 +5,10 @@
   { "id": "mandelbrot", "title": "Mandelbrot", "kind": "saver" },
   { "id": "julia", "title": "Julia", "kind": "saver" },
   { "id": "lightspeed", "title": "Lightspeed", "kind": "saver" },
-  { "id": "snake", "title": "Snake", "kind": "saver", "line": "Snake, the first game: the mrly marks play food, head and body. A saver when it plays itself." }
+  { "id": "snake", "title": "Snake", "kind": "saver", "line": "Snake, the first game: the mrly marks play food, head and body. A saver when it plays itself." },
+  { "id": "sfx", "title": "SFX", "kind": "app", "line": "SFX, the sounds of the voyage: synthesised in the browser from a seed, each one to play and to save as a WAV." },
+  { "id": "techno", "title": "Techno", "kind": "app", "line": "Techno, an acid loop grown from a seed on a 16-step grid, synthesised in the browser, to play and to save as a WAV." },
+  { "id": "zoom", "title": "Zoom", "kind": "saver", "line": "Zoom, an endless flight: through the corridors of a 3D mrlybang code, or down into the Mandelbrot set and a Julia set to 1e-30. A door or a mark to pick all the way." },
+  { "id": "planets", "title": "Planets", "kind": "saver", "line": "Planets, worlds lit as a camera sees them: oceans that glint, clouds that cast shadows, city lights, rings and moons, grown in the browser from a seed." },
+  { "id": "voyage", "title": "Voyage", "kind": "saver", "line": "Voyage, a star system grown from a seed: pick a world, jump to lightspeed, ride the tunnel and come out in orbit. A saver when it flies itself." }
 ]

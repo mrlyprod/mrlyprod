@@ -23,7 +23,7 @@
     { "name": "Demos", "href": "/demos/" },
     { "name": "Blog", "href": "/blog/" },
     { "name": "Apps" },
-    { "name": "Math", "href": "/math/" },
+    { "name": "MrlyMath", "href": "/mrlymath/" },
     { "name": "Code", "href": "/git/" },
     { "name": "Pages" },
     { "name": "Stats", "href": "/stats/" },
@@ -42,7 +42,7 @@
   ],
   "heroes": [
     { "name": "Research", "href": "/research/", "line": "The wiki, the notes, the claims and the papers.", "hues": ["teal", "cyan", "blue", "accent"], "seed": 1 },
-    { "name": "Math", "href": "/math/", "line": "A design is a rule on the corners of a cube.", "hues": ["yellow", "orange", "red", "accent"], "seed": 2 },
+    { "name": "MrlyMath", "href": "/mrlymath/", "line": "A design is a rule on the corners of a cube.", "hues": ["yellow", "orange", "red", "accent"], "seed": 2 },
     { "name": "Code", "href": "/git/", "line": "The Rust crates do the arithmetic, the browser only paints.", "hues": ["accent", "yellow", "green", "mint"], "seed": 3 },
     { "name": "Blog", "href": "/blog/", "line": "Notes on what lands on this site and in the crates behind it.", "hues": ["brown", "orange", "pink", "accent"], "seed": 4 },
     { "name": "Apps", "href": "/menu/#apps", "line": "Screensavers drawn in the browser from a seed.", "hues": ["red", "orange", "yellow", "green", "teal", "blue", "indigo", "purple"], "seed": 5 }

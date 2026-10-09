@@ -76,7 +76,7 @@ test("the menu is two levels: the tree's doors and one tile per folder, then eac
   const html = main(await drawn("/menu/"));
   const [top, ...rest] = html.slice(html.indexOf('<div class="menu"')).split("<section ");
   const folders = tree.filter((node) => !node.href);
-  expect(hrefs(top!)).toEqual(tree.map((node) => node.href ?? `#${node.name.toLowerCase()}`));
+  expect(hrefs(top!)).toEqual(tree.flatMap((node) => node.href ?? []));
   expect(rest).toHaveLength(folders.length);
   folders.forEach((folder, n) => {
     expect(rest[n]!.startsWith(`id="${folder.name.toLowerCase()}" aria-label="${folder.name}"><h2>${folder.name}</h2>`)).toBe(true);
@@ -107,7 +107,7 @@ test("a menu entry's icon is the figure its own page ships, site-page when the p
   const own = [...icons.values()].filter((icon) => icon !== "site-page");
   expect(own.length).toBeGreaterThan(20);
   expect(new Set(own).size).toBe(own.length);
-  expect(icons.get("#apps")).toBe("site-apps");
+  expect([...icons.keys()].filter((href) => href.startsWith("#"))).toEqual([]);
 });
 
 test("search.json holds one row per shown route, its title and the hashed figure pair its own page ships, and no page but the menu names it", async () => {
@@ -158,7 +158,7 @@ test("the stats page carries one line for a reader without scripts, above its tw
 
 test("a page gets the right pane, its button and the scrim from three headings up, the contents one closed details", async () => {
   const seen = new Set<boolean>();
-  for (const route of ["/about/", "/settings/", "/research/wiki/farey-sequence/", "/research/notes/apollonian/", "/math/"]) {
+  for (const route of ["/about/", "/settings/", "/research/wiki/farey-sequence/", "/research/notes/apollonian/", "/mrlymath/"]) {
     const html = await drawn(route);
     const heads = main(html).match(HEAD)?.length ?? 0;
     const pane = html.match(RIGHT)?.[1];
@@ -239,20 +239,22 @@ type Hero = { name: string; href: string; line: string };
 
 const heroes = site.config.heroes as Hero[];
 
-const DOORWAY = /<a class="hero" href="([^"]+)"><div class="art" aria-hidden="true">((?:<i class=[a-z]><\/i>)+)<\/div><div class="plate" style="--col:(\d+);--row:(\d+);--pcol:(\d+);--prow:(\d+)"><h2>([^<]+)<\/h2><p>([^<]+)<\/p><\/div><\/a>/g;
+const DOORWAY = /<a class="hero" href="([^"]+)" style="--x:[^"]+"><svg class="art (square|hex|tri)" viewBox="0 0 16 9" aria-hidden="true">(.*?)<\/svg><div class="plate"><h2>([^<]+)<\/h2><p>([^<]+)<\/p><\/div><\/a>/g;
 
-test("home's doorways are the heroes of site.json in order, each a link over its pixel art with the door's name and one line, the tint among its colours", async () => {
+const CELL = /<use href="#[a-z0-9]+" x="-?[\d.]+" y="-?[\d.]+" class="([a-z])" style="--n:\d+"\/>/g;
+
+const LEAST = { square: 144, hex: 90, tri: 80 };
+
+test("home's doorways are the heroes of site.json in order, each a link over its tiled art with the door's name and one line, the tint among its colours", async () => {
   const found = [...main(await drawn("/")).matchAll(DOORWAY)];
-  expect(found.map((one) => [one[1], one[7], one[8]])).toEqual(heroes.map((one) => [one.href, one.name, one.line]));
+  expect(found.map((one) => [one[1], one[4], one[5]])).toEqual(heroes.map((one) => [one.href, one.name, one.line]));
   expect(new Set(heroes.map((one) => one.name)).size).toBe(heroes.length);
   expect(heroes.filter((one) => !tree.some((node) => node.name === one.name))).toEqual([]);
   for (const one of found) {
-    const cells = one[2]!.match(/class=([a-z])/g)!;
-    expect([one[7], cells.length, cells.filter((cell) => cell === "class=a").length >= 8]).toEqual([one[7], 144, true]);
-    const [col, row, pcol, prow] = one.slice(3, 7).map(Number) as [number, number, number, number];
-    expect([one[7], col >= 1 && col + 6 <= 17, row >= 1 && row + 2 <= 10, pcol >= 1 && pcol + 7 <= 10, prow >= 1 && prow + 3 <= 17]).toEqual([one[7], true, true, true, true]);
+    const cells = [...one[3]!.matchAll(CELL)];
+    expect([one[4], cells.length >= LEAST[one[2] as keyof typeof LEAST], cells.filter((cell) => cell[1] === "a").length >= 8]).toEqual([one[4], true, true]);
   }
-  expect(new Set(found.map((one) => one.slice(3, 7).join())).size).toBeGreaterThan(1);
+  expect(new Set(found.map((one) => one[2])).size).toBeGreaterThan(1);
 });
 
 test("home's outline opens with one h1, the site's name, ahead of the heroes", async () => {
@@ -262,25 +264,23 @@ test("home's outline opens with one h1, the site's name, ahead of the heroes", a
   expect(html.indexOf("<h1")).toBeLessThan(html.indexOf('class="hero"'));
 });
 
-const HALF = /<a class="half" href="([^"]+)"><div class="art" aria-hidden="true">((?:<i class=[a-z]><\/i>)+)<\/div><div class="plate" style="--col:(\d+);--row:(\d+);--pcol:(\d+);--prow:(\d+)"><h2>([^<]+)<\/h2><\/div><\/a>/g;
+const HALF = /<a class="half" href="([^"]+)" style="--x:[^"]+"><svg class="art (square|hex|tri)" viewBox="0 0 8 9" aria-hidden="true">(.*?)<\/svg><div class="plate"><h2>([^<]+)<\/h2><\/div><\/a>/g;
 
-test("home's shelf is one half hero per top-level door of the tree that is neither home nor a hero, in order, each a link over 72 cells of art with the door's name on a plate", async () => {
+test("home's shelf is one half hero per top-level door of the tree that is neither home nor a hero, in order, each a link over tiled art with the door's name on a plate, and home ends there", async () => {
   const html = main(await drawn("/"));
   const shelf = html.match(/<section class="shelf" aria-label="More doors">([\s\S]*?)<\/section>/)![1]!;
   const rest = tree.filter((node) => node.href !== "/" && !heroes.some((one) => one.name === node.name));
   const found = [...shelf.matchAll(HALF)];
   expect(1 + heroes.length + rest.length).toBe(tree.length);
   expect(found.map((one) => one[0]).join("")).toBe(shelf);
-  expect(found.map((one) => [one[1], one[7]])).toEqual(rest.map((node) => [node.href ?? `/menu/#${node.name.toLowerCase()}`, node.name]));
+  expect(found.map((one) => [one[1], one[4]])).toEqual(rest.map((node) => [node.href ?? `/menu/#${node.name.toLowerCase()}`, node.name]));
   expect(found).toHaveLength(6);
   for (const one of found) {
-    const cells = one[2]!.match(/class=([a-z])/g)!;
-    const [col, row, pcol, prow] = one.slice(3, 7).map(Number) as [number, number, number, number];
-    expect([one[7], cells.length, cells.filter((cell) => cell === "class=a").length >= 4]).toEqual([one[7], 72, true]);
-    expect([one[7], col >= 1 && col + 5 <= 9, row >= 1 && row <= 9, pcol >= 1 && pcol + 5 <= 10, prow >= 1 && prow <= 8]).toEqual([one[7], true, true, true, true]);
+    const cells = [...one[3]!.matchAll(CELL)];
+    expect([one[4], cells.length >= LEAST[one[2] as keyof typeof LEAST] / 2, cells.filter((cell) => cell[1] === "a").length >= 4]).toEqual([one[4], true, true]);
   }
   expect(html.indexOf('class="heroes"')).toBeLessThan(html.indexOf('class="shelf"'));
-  expect(html.indexOf('class="shelf"')).toBeLessThan(html.indexOf('class="home"'));
+  expect(html.slice(html.indexOf("</section>", html.indexOf('class="shelf"')) + 10)).toMatch(/^(<\/(div|main)>)*$/);
 });
 
 test("home draws no right pane, no pane button and no scrim", async () => {

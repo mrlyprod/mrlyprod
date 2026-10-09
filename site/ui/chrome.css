@@ -221,7 +221,7 @@ kbd { display: inline-grid; place-items: center; min-width: 1.75rem; height: 1.5
 
 .frame { position: relative; overflow: clip; display: grid; grid-template: "left canvas right" minmax(0, 1fr) "bottom bottom bottom" auto / auto minmax(0, 1fr) auto; height: calc(100svh - 2 * var(--head)); }
 .frame > .canvas { grid-area: canvas; position: relative; min-width: 0; min-height: 0; overflow: hidden; background: var(--art); }
-.frame > .canvas > canvas { display: block; width: 100%; height: 100%; }
+.frame > .canvas > canvas { display: block; width: 100%; height: 100%; object-fit: contain; }
 .frame > .canvas[data-gestures] { touch-action: none; }
 .frame > .bottom { grid-area: bottom; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(max-content, 1fr); align-items: center; gap: var(--s3); min-height: var(--foot); padding-inline: var(--s3); background: var(--bg); border-top: var(--hair); color: var(--dim); font-size: var(--t3); }
 .frame .status { grid-column: 1; min-width: 0; overflow: hidden; display: flex; align-items: center; white-space: nowrap; }
@@ -237,6 +237,13 @@ kbd { display: inline-grid; place-items: center; min-width: 1.75rem; height: 1.5
 main:has(.frame) { padding: 0; }
 .panes:has(.frame) ~ .base { display: none; }
 html:has(.frame) { overscroll-behavior: none; }
+.frame .unzen { display: none; }
+html[data-zen] :is(.top, .subheader, .base, .frame > .pane, .frame > .scrim, .frame .hints, .frame .end) { display: none; }
+html[data-zen] .frame { height: 100svh; grid-template: "canvas" minmax(0, 1fr) / minmax(0, 1fr); }
+html[data-zen] .frame > .canvas { margin: 0; }
+html[data-zen] .frame > .bottom { position: absolute; inset: auto 0 0; z-index: var(--z-bar); grid-template-columns: minmax(0, 1fr); min-height: 0; padding: var(--s2) var(--s3); background: none; border: 0; pointer-events: none; }
+html[data-zen] .frame .unzen { display: inline-flex; position: absolute; top: var(--s2); right: var(--s2); z-index: var(--z-bar); opacity: 0.6; }
+html[data-zen] .frame .unzen:hover { opacity: 1; }
 
 @media (width < 74rem) {
   html.js .frame > .pane { position: absolute; top: 0; bottom: var(--foot); }
@@ -256,11 +263,13 @@ html:has(.frame) { overscroll-behavior: none; }
   html.js[data-right="open"] .frame > .pane.right { transform: none; }
   html[data-right="open"] .frame > .scrim { opacity: 0; visibility: hidden; }
   html.js[data-right="open"] .frame > .canvas { margin-bottom: var(--sheet); }
-  .frame > .bottom { grid-template-columns: minmax(0, 1fr) auto max-content; }
+  .frame > .bottom { grid-template-columns: minmax(0, 1fr) max-content; }
+  .frame .end { grid-column: 2; gap: var(--s1); }
+  .frame .actions { gap: var(--s1); }
   .frame .done { display: inline-flex; order: -1; align-self: flex-end; margin: 0 var(--s2) var(--s2); }
   .frame .hints { display: none; }
   .frame .actions .keep { display: none; }
-  .frame .actions .export { gap: 0; min-width: var(--touch); padding: 0; font-size: 0; }
+  .frame .actions :is(.export, .short) { gap: 0; min-width: var(--touch); padding: 0; font-size: 0; }
 }
 
 /* STATS */

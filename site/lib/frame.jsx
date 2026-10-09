@@ -18,6 +18,7 @@ export function calm(box) {
 }
 
 export function slot(frame, side, doc = globalThis.document) {
+  if (side === 'top') return doc?.querySelector('.subheader .actions') ?? null;
   if (frame) return frame.nodes[side] ?? null;
   return side === 'right' ? (doc?.querySelector('#right .controls') ?? null) : null;
 }

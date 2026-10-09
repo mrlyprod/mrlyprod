@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { ICONS } from './icons.js';
 
-const NAMES = ['close', 'export', 'knobs', 'paneLeft', 'paneRight', 'reroll'];
+const NAMES = ['close', 'export', 'knobs', 'music', 'paneLeft', 'paneRight', 'reroll', 'sound', 'unzen', 'wave', 'zen'];
 
 const ARITY = { m: 2, l: 2, h: 1, v: 1, c: 6, s: 4, q: 4, t: 2, a: 7, z: 0 };
 
@@ -18,7 +18,7 @@ function parse(d) {
   });
 }
 
-test('the six icons are paths that start with M, parse, and sit on the 24 grid', () => {
+test('the eleven icons are paths that start with M, parse, and sit on the 24 grid', () => {
   expect(Object.keys(ICONS).sort()).toEqual(NAMES);
   for (const name of NAMES) {
     expect(ICONS[name].startsWith('M')).toBe(true);

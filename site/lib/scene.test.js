@@ -92,3 +92,98 @@ test('a scene that names a font draws nothing until the font loads', async () =>
   unstage();
   expect([asked, early, late]).toEqual([['1em "MrlyFont"'], 0, 1]);
 });
+
+test('under a step every drawn frame adds exactly the step, one per step of wall time and never two in one frame', () => {
+  const frames = stage();
+  const seen = [];
+  const stop = run({ clientWidth: 4, clientHeight: 4 }, (canvas, view) => ({ draw: () => seen.push(view.t) }), { step: 40 });
+  for (const now of [1000, 1016, 1032, 1048, 1100, 1200, 1201, 1202, 1203]) frames.shift()(now);
+  stop();
+  unstage();
+  expect(seen).toEqual([40, 80, 120, 160, 200, 240]);
+});
+
+test('a debt over four steps resets and counts the frames lost as late, which after hears with t after each draw', () => {
+  const frames = stage();
+  const heard = [];
+  const stop = run({ clientWidth: 4, clientHeight: 4 }, () => ({ draw: () => {} }));
+  stop.fix({ step: 40, after: ({ t, late }) => heard.push([t, late]) });
+  for (const now of [1000, 1500, 1540]) frames.shift()(now);
+  const late = stop.late;
+  stop();
+  unstage();
+  expect([heard, late]).toEqual([[[40, 0], [80, 11], [120, 11]], 11]);
+});
+
+test('a fixed frame sets the store, a dpr of its short side over 540 and view.fixed, ignores resizes, and fix(null) returns to the box', () => {
+  stage();
+  let resize;
+  globalThis.ResizeObserver = class {
+    constructor(fn) {
+      resize = fn;
+    }
+    observe() {}
+    disconnect() {}
+  };
+  const canvas = { clientWidth: 4, clientHeight: 4 };
+  const seen = [];
+  const look = (view) => seen.push([view.w, view.h, view.dpr, view.fixed, canvas.width]);
+  const stop = run(canvas, (c, view) => (look(view), { draw: () => {}, size: () => look(view) }), { frame: [1080, 1920] });
+  canvas.clientWidth = 8;
+  resize();
+  stop.fix(null);
+  stop.fix({ frame: [1280, 720] });
+  stop();
+  delete globalThis.ResizeObserver;
+  unstage();
+  expect(seen).toEqual([[1080, 1920, 2, true, 1080], [8, 4, 1, false, 8], [1280, 720, 720 / 540, true, 1280]]);
+});
+
+test('an every scene ignores the step', () => {
+  stage();
+  const ticks = [];
+  const real = { setInterval: globalThis.setInterval, clearInterval: globalThis.clearInterval };
+  Object.assign(globalThis, { setInterval: (fn, ms) => ticks.push([fn, ms]), clearInterval: () => {} });
+  const seen = [];
+  const stop = run({ clientWidth: 4, clientHeight: 4 }, (canvas, view) => ({ every: 50, draw: () => seen.push(view.t) }), { step: 40 });
+  ticks[0][0]();
+  ticks[0][0]();
+  stop();
+  Object.assign(globalThis, real);
+  unstage();
+  expect([ticks[0][1], seen]).toEqual([50, [50, 100]]);
+});
+
+test('a take with a step wakes a reduced-motion scene, which then draws one step a frame', () => {
+  const frames = stage();
+  globalThis.matchMedia = () => ({ matches: true, addEventListener: () => {}, removeEventListener: () => {} });
+  const seen = [];
+  const stop = run({ clientWidth: 4, clientHeight: 4 }, (canvas, view) => ({ draw: () => seen.push([view.t, view.still]) }));
+  const idle = frames.length;
+  stop.fix({ step: 40, after: () => {} });
+  for (const now of [1000, 1040]) frames.shift()(now);
+  stop();
+  delete globalThis.matchMedia;
+  unstage();
+  expect([idle, seen]).toEqual([0, [[0, true], [40, false], [80, false]]]);
+});
+
+test('fix(null) after a take puts a reduced-motion scene back to stillness, drawn once with no frame loop', () => {
+  stage();
+  const queue = new Map();
+  let id = 0;
+  Object.assign(globalThis, { requestAnimationFrame: (fn) => (queue.set(++id, fn), id), cancelAnimationFrame: (n) => queue.delete(n) });
+  globalThis.matchMedia = () => ({ matches: true, addEventListener: () => {}, removeEventListener: () => {} });
+  const seen = [];
+  const stop = run({ clientWidth: 4, clientHeight: 4 }, (canvas, view) => ({ draw: () => seen.push([view.t, view.still]) }));
+  stop.fix({ step: 40, after: () => {} });
+  const [[n, fn]] = queue;
+  queue.delete(n);
+  fn(1000);
+  stop.fix(null);
+  const waiting = queue.size;
+  stop();
+  delete globalThis.matchMedia;
+  unstage();
+  expect([seen, waiting]).toEqual([[[0, true], [40, false], [40, true]], 0]);
+});

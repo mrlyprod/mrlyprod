@@ -19,6 +19,7 @@ const CSP = process.env.CSP ?? "";
 const TALL = 6000;
 const PATIENCE = 15000;
 const REPLY = 30000;
+const ACT = 900000;
 const FIRST = 5000;
 const PAUSE = 300;
 const SETTLE = 600;
@@ -135,13 +136,13 @@ function driver(ws: WebSocket) {
       events.delete(m.method);
     }
   };
-  const send = (method: string, params = {}) =>
+  const send = (method: string, params = {}, ms = REPLY) =>
     deadline(
       new Promise<any>((r) => {
         pending.set(++id, r);
         ws.send(JSON.stringify({ id, method, params }));
       }),
-      REPLY,
+      ms,
       `${method} reply`,
     );
   const once = (method: string) => deadline(new Promise<void>((r) => events.set(method, r)), PATIENCE, method);
@@ -279,6 +280,7 @@ export async function main(root: string, config?: Record<string, unknown>, dist 
     await send("Page.enable");
     await send("Runtime.enable");
     await send("Log.enable");
+    await send("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: out });
     await send("Emulation.setEmulatedMedia", { media: print ? "print" : "", features: [{ name: "prefers-reduced-motion", value: motion ? "no-preference" : "reduce" }, ...(scheme ? [{ name: "prefers-color-scheme", value: scheme }] : [])] });
     if (nojs) await send("Emulation.setScriptExecutionDisabled", { value: true });
     if (keys.length) await send("Emulation.setFocusEmulationEnabled", { enabled: true });
@@ -338,7 +340,7 @@ export async function main(root: string, config?: Record<string, unknown>, dist 
       await wait(PAUSE);
     };
     const run = async (act: string) => {
-      const { result, exceptionDetails } = await send("Runtime.evaluate", { expression: act, returnByValue: true, awaitPromise: true });
+      const { result, exceptionDetails } = await send("Runtime.evaluate", { expression: act, returnByValue: true, awaitPromise: true }, ACT);
       if (exceptionDetails) console.log(`  act failed: ${exceptionDetails.exception?.description ?? exceptionDetails.text}`);
       else if (result?.value !== undefined && result.value !== 0) console.log(`  act: ${JSON.stringify(result.value)}`);
     };

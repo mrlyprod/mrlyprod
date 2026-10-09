@@ -127,10 +127,11 @@ export function Btn({ primary, on, className, onClick, children, ...rest }) {
 
 const FORMATS = [['png', 'PNG'], ['webp', 'WebP']];
 
-export function Export({ canvas, name, draw, label = 'Export', ...rest }) {
+export function Export({ canvas, name, draw, more = [], label = 'Export', ...rest }) {
   const id = `export${useId().replace(/[^\w-]/g, '')}`;
+  const hide = () => document.getElementById(id)?.hidePopover?.();
   const take = (kind) => {
-    document.getElementById(id)?.hidePopover?.();
+    hide();
     const at = typeof canvas === 'function' ? canvas() : canvas;
     if (at) save(at, { name, kind, draw });
   };
@@ -142,6 +143,7 @@ export function Export({ canvas, name, draw, label = 'Export', ...rest }) {
       </Btn>
       <div id={id} popover="auto" className="formats" style={{ positionAnchor: `--${id}` }}>
         {FORMATS.map(([kind, text]) => <button type="button" key={kind} onClick={() => take(kind)}>{text}</button>)}
+        {more.map(([text, fn]) => <button type="button" key={text} onClick={() => (hide(), fn())}>{text}</button>)}
       </div>
     </>
   );

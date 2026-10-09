@@ -1,21 +1,23 @@
 /* HOME */
 
 .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
-.heroes, .heroes ~ .shelf { --gap: var(--s4); container-type: inline-size; display: grid; gap: var(--gap); }
-.heroes { padding-block: var(--gap); }
-.hero, .half { isolation: isolate; display: grid; color: var(--fg); content-visibility: auto; }
+.heroes, .heroes ~ .shelf { --gap: var(--s4); container-type: inline-size; display: grid; gap: var(--gap); padding-bottom: var(--gap); }
+.hero, .half { position: relative; isolation: isolate; display: block; color: var(--fg); content-visibility: auto; }
 .hero:hover, .half:hover { text-decoration: none; }
 .hero:focus-visible, .half:focus-visible { outline-offset: -6px; }
-.hero { --across: 16; --w: round(down, min(100cqw, 3072px), 16px); --cell: calc(var(--w) / 16); grid-template: repeat(9, 1fr) / repeat(16, 1fr); width: var(--w); aspect-ratio: 16 / 9; margin-left: round(down, (100cqw - var(--w)) / 2, 1px); contain-intrinsic-size: var(--w) calc(var(--w) * 9 / 16); }
-.half { --across: 8; --w: round(down, (100cqw - var(--gap)) / 2, 8px); --cell: calc(var(--w) / 8); --lead: round(down, (100cqw - 2 * var(--w) - var(--gap)) / 2, 1px); grid-template: repeat(9, 1fr) / repeat(8, 1fr); width: var(--w); aspect-ratio: 8 / 9; contain-intrinsic-size: var(--w) calc(var(--w) * 9 / 8); }
-.art { grid-area: 1 / 1 / -1 / -1; display: grid; grid-template: subgrid / subgrid; }
-:is(.hero, .half) .plate { z-index: var(--z-plate); display: grid; align-content: center; padding-inline: calc(var(--cell) * 0.3); background: var(--bg); box-shadow: 0 0 0 var(--cell) transparent; font-family: var(--sans); transition: box-shadow var(--pace) var(--ease); }
-.hero .plate { grid-column: var(--col) / span 6; grid-row: var(--row) / span 2; }
-.half .plate { grid-column: var(--col) / span 5; grid-row: var(--row) / span 1; }
-:is(.hero, .half):is(:hover, :focus-visible) .plate { box-shadow: 0 0 0 var(--cell) var(--accent); }
-:is(.hero, .half) .plate h2 { margin: 0; font-size: clamp(1.4rem, var(--cell) * 0.55, 3.5rem); font-weight: 650; line-height: 1.05; letter-spacing: -0.02em; }
-.hero .plate p { margin: calc(var(--cell) * 0.08) 0 0; color: var(--dim); font-size: clamp(0.875rem, var(--cell) * 0.19, 1.05rem); line-height: var(--lh2); }
-.art i { background: var(--k); }
+.hero { --cell: calc(100cqw / 16); width: 100%; aspect-ratio: 16 / 9; contain-intrinsic-size: 100cqw calc(100cqw * 9 / 16); }
+.half { --cell: calc((100cqw - var(--gap)) / 16); width: 100%; aspect-ratio: 8 / 9; contain-intrinsic-size: 50cqw calc(50cqw * 9 / 8); }
+.art { position: absolute; top: 0; left: 0; width: 100%; max-width: none; height: 100%; display: block; transform-origin: 0 0; }
+.art.square { shape-rendering: crispEdges; }
+.art .tall { display: none; }
+.art use { fill: var(--k); stroke: var(--k); stroke-width: 2px; paint-order: stroke; }
+.art .near use { fill: transparent; stroke: transparent; transition: fill var(--pace) var(--ease), stroke var(--pace) var(--ease); }
+.art .plate use { fill: var(--bg); stroke: var(--bg); }
+:is(.hero, .half):is(:hover, :focus-visible) .art .near use { fill: var(--accent); stroke: var(--accent); }
+:is(.hero, .half) > .plate { position: absolute; z-index: var(--z-plate); left: calc(var(--cell) * var(--x)); top: calc(var(--cell) * var(--y)); width: calc(var(--cell) * var(--cx)); height: calc(var(--cell) * var(--cy)); container: plate / size; display: grid; align-content: center; padding-inline: calc(var(--cell) * 0.3); font-family: var(--sans); }
+:is(.hero, .half) .plate h2 { margin: 0; font-size: clamp(1.1rem, var(--cell) * 0.55, 3.5rem); font-weight: 650; line-height: 1.05; letter-spacing: -0.02em; }
+.hero .plate p { display: none; margin: calc(var(--cell) * 0.08) 0 0; color: var(--dim); font-size: clamp(0.875rem, var(--cell) * 0.19, 1.05rem); line-height: var(--lh2); }
+@container plate (min-width: 16rem) and (min-height: 6rem) { .hero .plate p { display: block; } }
 .art .r { --k: var(--red); }
 .art .o { --k: var(--orange); }
 .art .y { --k: var(--yellow); }
@@ -29,25 +31,24 @@
 .art .k { --k: var(--pink); }
 .art .n { --k: var(--brown); }
 .art .a { --k: var(--accent); }
-@media (orientation: portrait) { .hero { --w: round(down, min(100cqw, 3072px), 9px); --cell: calc(var(--w) / 9); grid-template: repeat(16, 1fr) / repeat(9, 1fr); aspect-ratio: 9 / 16; contain-intrinsic-size: var(--w) calc(var(--w) * 16 / 9); } .hero .art { grid-auto-flow: column; } .hero .plate { grid-column: var(--pcol) / span 7; grid-row: var(--prow) / span 3; } }
-@supports (order: sibling-index()) { .art i { --n: calc(sibling-index() - 1); animation: hero-shimmer 6s linear infinite; animation-delay: calc((mod(var(--n), var(--across)) + round(down, var(--n) / var(--across))) * 60ms - 6s); } }
-@keyframes hero-shimmer { 0%, 8% { background-color: var(--k); } 4% { background-color: color-mix(in oklab, var(--k), white 30%); } }
-.heroes ~ .shelf, .home { max-width: var(--page); margin-inline: auto; padding-inline: var(--s5); }
-.heroes ~ .shelf { grid-template-columns: repeat(2, auto); justify-content: start; }
-.half:nth-child(odd) { margin-left: var(--lead); }
-.home { padding-block: var(--s7) var(--s8); }
-.home section > h2 { margin-bottom: var(--s4); }
-.home [id] { scroll-margin-top: var(--s4); }
-.home section + section { margin-top: var(--s8); }
-.what { max-width: var(--read); }
-.what p { margin-top: var(--s3); }
+.art .base use { animation: hero-shimmer 6s linear infinite; animation-delay: calc(var(--n) * 60ms - 6s); }
+@keyframes hero-shimmer { 0%, 8% { fill: var(--k); stroke: var(--k); } 4% { fill: color-mix(in oklab, var(--k), white 30%); stroke: color-mix(in oklab, var(--k), white 30%); } }
+@media (orientation: portrait) {
+  .hero { --cell: calc(100cqw / 9); aspect-ratio: 9 / 16; contain-intrinsic-size: 100cqw calc(100cqw * 16 / 9); }
+  .hero .art { width: calc(var(--cell) * 16); height: calc(var(--cell) * 9); transform: matrix(0, 1, 1, 0, 0, 0); }
+  .hero .art :is(.near, .plate):not(.tall) { display: none; }
+  .hero .art .tall { display: inline; }
+  .hero > .plate { left: calc(var(--cell) * var(--qx)); top: calc(var(--cell) * var(--qy)); width: calc(var(--cell) * var(--qcx)); height: calc(var(--cell) * var(--qcy)); }
+}
+.heroes ~ .shelf { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 
 @media (max-width: 40rem) {
-  .heroes ~ .shelf, .home { padding-inline: var(--s4); }
-  .heroes ~ .shelf { grid-template-columns: auto; }
-  .half { --w: round(down, 100cqw, 9px); --cell: calc(var(--w) / 9); --lead: round(down, (100cqw - var(--w)) / 2, 1px); margin-left: var(--lead); grid-template: repeat(8, 1fr) / repeat(9, 1fr); aspect-ratio: 9 / 8; contain-intrinsic-size: var(--w) calc(var(--w) * 8 / 9); }
-  .half .art { grid-auto-flow: column; }
-  .half .plate { grid-column: var(--pcol) / span 5; grid-row: var(--prow) / span 1; }
+  .heroes ~ .shelf { grid-template-columns: minmax(0, 1fr); }
+  .half { --cell: calc(100cqw / 9); aspect-ratio: 9 / 8; contain-intrinsic-size: 100cqw calc(100cqw * 8 / 9); }
+  .half .art { width: calc(var(--cell) * 8); height: calc(var(--cell) * 9); transform: matrix(0, 1, 1, 0, 0, 0); }
+  .half .art :is(.near, .plate):not(.tall) { display: none; }
+  .half .art .tall { display: inline; }
+  .half > .plate { left: calc(var(--cell) * var(--qx)); top: calc(var(--cell) * var(--qy)); width: calc(var(--cell) * var(--qcx)); height: calc(var(--cell) * var(--qcy)); }
 }
 
 /* PRINT */

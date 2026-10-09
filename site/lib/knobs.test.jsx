@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { Btn, Knobs, Toggle } from './knobs.jsx';
+import { Btn, Export, Knobs, Toggle } from './knobs.jsx';
 
 const SPEC = [
   { key: 'max', label: 'Jump speed', kind: 'slider', def: 14, min: 4, max: 30, step: 1, group: 'Jump' },
@@ -45,4 +45,9 @@ test('a Btn a pointer clicks lets go of focus after its action, one a key presse
   at(1);
   at(0);
   expect(seen).toEqual(['act', 'blur 1', 'act']);
+});
+
+test('Export lists PNG and WebP, then the rows of more in order', () => {
+  const html = renderToStaticMarkup(<Export canvas={null} name="x" more={[['Video 9:16', () => {}], ['Video 16:9', () => {}]]} />);
+  expect([...html.matchAll(/<button type="button">([^<]+)<\/button>/g)].map((found) => found[1])).toEqual(['PNG', 'WebP', 'Video 9:16', 'Video 16:9']);
 });

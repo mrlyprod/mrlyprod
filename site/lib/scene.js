@@ -68,6 +68,10 @@ export function board(view, cols, rows, fit = 1) {
 
 const LAG = 100;
 
+const SHORT = 540;
+
+const DEBT = 4;
+
 export function run(canvas, make, opts = {}) {
   const rand = rng(opts.seed);
   let still = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -75,11 +79,17 @@ export function run(canvas, make, opts = {}) {
   let gone = false;
   let paused = false;
   let on = false;
-  const view = { rand, look: () => skin, still, w: 1, h: 1, dpr: 1, t: 0 };
+  let held = opts.step || opts.frame ? { step: opts.step, frame: opts.frame } : null;
+  let late = 0;
+  let debt = 0;
+  let lent = false;
+  const view = { rand, look: () => skin, still, w: 1, h: 1, dpr: 1, t: 0, fixed: false };
   const size = () => {
-    const dpr = Math.min(globalThis.devicePixelRatio || 1, 2);
-    const w = Math.max(1, Math.round((canvas.clientWidth || 300) * dpr));
-    const h = Math.max(1, Math.round((canvas.clientHeight || 150) * dpr));
+    const shot = held?.frame;
+    view.fixed = Boolean(shot);
+    const dpr = shot ? Math.min(shot[0], shot[1]) / SHORT : Math.min(globalThis.devicePixelRatio || 1, 2);
+    const w = shot ? shot[0] : Math.max(1, Math.round((canvas.clientWidth || 300) * dpr));
+    const h = shot ? shot[1] : Math.max(1, Math.round((canvas.clientHeight || 150) * dpr));
     if (w === view.w && h === view.h && dpr === view.dpr) return false;
     view.dpr = dpr;
     view.w = w;
@@ -95,15 +105,34 @@ export function run(canvas, make, opts = {}) {
   let frame = 0;
   let seen = !watched;
   let last = 0;
-  const loop = (now) => {
-    if (last) view.t += Math.min(now - last, LAG);
+  const after = () => held?.after?.({ t: view.t, late });
+  const paced = (now, step) => {
+    debt = last ? debt + now - last : step;
     last = now;
+    if (debt < step) return;
+    debt -= step;
+    view.t += step;
     saver.draw();
+    if (debt > DEBT * step) {
+      late += Math.floor(debt / step);
+      debt = 0;
+    }
+    after();
+  };
+  const loop = (now) => {
+    if (held?.step) paced(now, held.step);
+    else {
+      if (last) view.t += Math.min(now - last, LAG);
+      last = now;
+      saver.draw();
+      after();
+    }
     frame = requestAnimationFrame(loop);
   };
   const tick = () => {
     view.t += saver.every;
     saver.draw();
+    after();
   };
   const go = () => {
     if (still || paused || timer || frame) return;
@@ -130,7 +159,7 @@ export function run(canvas, make, opts = {}) {
     if (still || paused) saver.draw();
   };
   const grow = () => {
-    if (!size()) return;
+    if (held?.frame || !size()) return;
     saver.size?.();
     if (still || paused) saver.draw();
   };
@@ -172,6 +201,25 @@ export function run(canvas, make, opts = {}) {
     paused = false;
     if (on && !gone) watch();
   };
+  stop.fix = (next) => {
+    if (gone) return;
+    if (next?.step && still) {
+      lent = true;
+      view.wake();
+    } else if (!next?.step && lent) {
+      lent = false;
+      still = true;
+      view.still = true;
+      halt();
+    }
+    held = next ?? null;
+    late = 0;
+    debt = 0;
+    last = 0;
+    if (size()) saver.size?.();
+    if (still || paused) saver.draw();
+  };
+  Object.defineProperty(stop, 'late', { get: () => late });
   stop.scene = saver;
   return stop;
 }
