@@ -42,6 +42,7 @@ const NEAR = 2.4;
 const CLOSE = 40000;
 const FLY = 1.3;
 const PASS = 30000;
+const EPOCH = 0;
 const RISE = 0.6;
 const REACH = 2;
 const HIGH = 0.6;
@@ -95,23 +96,27 @@ function flyby(params, az, t) {
   return { cam: look(pos, add(pos, add(mul(ahead, Math.cos(dip)), mul(up, -Math.sin(dip)))), up), sun };
 }
 
+function eye(params, cam, seed, start, room, t) {
+  if (cam === 'drift') {
+    return { pos: add(around(params, Math.max(AFAR, room), LAT, start + t / 100000), drift(seed, t, 0.25)), at: drift(seed + 1, t, 0.05) };
+  }
+  if (cam === 'approach') {
+    const u = (((t % CLOSE) + CLOSE) % CLOSE) / CLOSE;
+    return { pos: around(params, FAR * (NEAR / FAR) ** ease.out(u, 2), LAT * 0.6, start + t / 200000), at: [0, 0, 0] };
+  }
+  return { pos: around(params, Math.max(ORBIT, room), LAT, start + (TAU * t) / LOOP), at: [0, 0, 0] };
+}
+
 export function shot(params, { cam = 'orbit', sun = 60, seed = 0, t = 0, aspect = 16 / 9 } = {}) {
   const start = rng(((seed >>> 0) ^ SALT) >>> 0)() * TAU;
   if (cam === 'flyby') return flyby(params, start, t);
   const room = fit(params, aspect);
-  let pos;
-  let at = [0, 0, 0];
-  if (cam === 'drift') {
-    pos = add(around(params, Math.max(AFAR, room), LAT, start + t / 100000), drift(seed, t, 0.25));
-    at = drift(seed + 1, t, 0.05);
-  } else if (cam === 'approach') {
-    const u = (((t % CLOSE) + CLOSE) % CLOSE) / CLOSE;
-    pos = around(params, FAR * (NEAR / FAR) ** ease.out(u, 2), LAT * 0.6, start + t / 200000);
-  } else {
-    pos = around(params, Math.max(ORBIT, room), LAT, start + (TAU * t) / LOOP);
-  }
-  const view = look(pos, at, pole(params));
-  return { cam: view, sun: phase(view, at, sun) };
+  const view = (when) => {
+    const { pos, at } = eye(params, cam, seed, start, room, when);
+    return { cam: look(pos, at, pole(params)), at };
+  };
+  const first = view(EPOCH);
+  return { cam: view(t).cam, sun: phase(first.cam, first.at, sun) };
 }
 
 export function make(canvas, view, opts = {}) {

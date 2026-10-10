@@ -1,9 +1,7 @@
 import { expect, test } from 'bun:test';
 import { rng } from '../../lib/scene.js';
-import { codes } from '../../lib/space/bang.js';
-import { FADE, FLOOR, SPAN } from '../../lib/space/deep.js';
 import { gl } from '../../lib/space/fake.js';
-import { make, pickCode } from './scene.js';
+import { PAGE, SPEC, make } from './scene.js';
 
 const canvas = (fake) => ({ width: 1, height: 1, getContext: (kind) => (kind === 'webgl2' ? fake : null) });
 
@@ -15,40 +13,6 @@ const scene = (opts, t = 0, fake = gl()) => {
   made.draw();
   return { made, at, fake };
 };
-
-const picture = (at = 26, row = 31) => {
-  const out = new Uint8Array(64 * 64 * 4);
-  for (let y = 0; y < 64; y++) {
-    for (let x = 0; x < 64; x++) {
-      const inside = x === at && (y === row || y === row + 1);
-      const q = inside ? 0 : Math.round((6 + 0.4 * x + 0.3 * y) * 8);
-      out.set([q >> 8, q & 255, inside ? 128 : 0, 3], 4 * (y * 64 + x));
-    }
-  }
-  return out;
-};
-
-const sealed = () => {
-  const out = new Uint8Array(64 * 64 * 4);
-  for (let i = 0; i < 64 * 64; i++) out.set([0, 0, 128, 3], 4 * i);
-  return out;
-};
-
-const feed = (read) => {
-  const fake = gl();
-  fake.readPixels = (x, y, w, h, format, type, into) => into.set(read(fake));
-  return fake;
-};
-
-const island = () => feed(() => picture());
-
-const wander = () =>
-  feed((fake) => {
-    const { uOff, uU } = fake.draws().at(-1).uniforms;
-    const slip = Math.abs(Math.round(uOff[0] / uU[0])) % 17;
-    const octave = Math.round(-Math.log2(Math.abs(uU[0])));
-    return picture(10 + ((slip + octave) % 40), 10 + ((3 * slip + octave) % 40));
-  });
 
 const play = (made, at, to, step = 100) => {
   for (let t = at.t + step; t <= to; t += step) {
@@ -63,130 +27,52 @@ test('without WebGL2 the scene is the blank one and still draws', () => {
   expect(made.phase()).toBe('cruise');
 });
 
-test('code -1 draws its code from the gated list by the seed', () => {
-  const one = pickCode({ code: -1, n: 3 }, 5);
-  expect(codes(3)).toContain(one);
-  expect(pickCode({ code: -1, n: 3 }, 5)).toBe(one);
-  expect(pickCode({ code: 129, n: 3 }, 5)).toBe(129);
+test('the value is ten knobs and the seed, studio by default, and the page keeps only the default keys', () => {
+  expect(SPEC.map((one) => one.key)).toEqual(['code', 'n', 'pick', 'speed', 'path', 'pilot', 'look', 'palette', 'quality', 'hyper']);
+  expect([SPEC.find((one) => one.key === 'look').def, SPEC.find((one) => one.key === 'look').options.map(([key]) => key), PAGE]).toEqual(['studio', ['graphic', 'studio', 'haze'], { spec: SPEC, record: true }]);
 });
 
-test('a code the gate refuses orbits outside with no way in and no doors', () => {
-  const { made } = scene({ code: 23, n: 5 });
-  expect([made.open, made.marks(), made.said().at(-1)]).toEqual([false, [], 'no way in']);
-});
-
-test('set dives half an octave a second and the HUD shows the kind, the depth and auto', () => {
-  const { made, at } = scene({ kind: 'set' });
-  const home = made.depth();
-  at.t = 4000;
-  made.draw();
-  expect([home, home / made.depth(), made.said()]).toEqual([SPAN, 4, ['set', 'depth 10^0', 'auto']]);
-});
-
-test('julia iterates from the pixel with a seeded c whose critical orbit stays bounded', () => {
-  const { made, fake } = scene({ kind: 'julia' });
-  const [cr, ci] = made.info().c;
-  let [x, y] = [0, 0];
-  for (let n = 0; n < 2000; n++) [x, y] = [x * x - y * y + cr, 2 * x * y + ci];
-  expect(Math.hypot(x, y)).toBeLessThan(2);
-  expect(fake.draws().filter((one) => 'uJulia' in one.uniforms).every((one) => one.uniforms.uJulia === 1)).toBe(true);
-  expect(made.said()[0]).toBe(`julia ${cr.toFixed(3)}${ci < 0 ? '-' : '+'}${Math.abs(ci).toFixed(3)}i`);
-});
-
-test('with no detail in sight the dive fades at the floor into a new one from home', () => {
-  const { made, at } = scene({ kind: 'set' });
-  const floor = 2000 * Math.log2(SPAN / FLOOR);
-  at.t = floor + FADE / 2;
-  made.draw();
-  expect(made.info().phase).toBe('fade');
-  expect(made.depth() / FLOOR).toBeCloseTo(1, 9);
-  at.t = floor + FADE;
-  made.draw();
-  expect([made.info().phase, made.info().dive, made.depth()]).toEqual(['dive', 1, SPAN]);
-});
-
-test('a digit on an island marker arrives on its minibrot, holds and starts again', () => {
-  const { made, at } = scene({ kind: 'set' }, 0, island());
-  const mark = made.marks().find((one) => one.kind === 'island');
-  expect(made.pick(mark.number)).toBe(true);
-  play(made, at, 14000);
-  expect([made.info().phase, made.info().goal, made.said()[2]]).toEqual(['arrive', 3, 'minibrot p 3']);
-  expect(made.depth() / SPAN).toBeCloseTo(0.019, 3);
-  play(made, at, 20000);
-  expect([made.info().phase, made.info().dive]).toEqual(['dive', 1]);
-});
-
-test('a jump in t keeps the depth and the marks on a probe that reads the view', () => {
-  const live = scene({ kind: 'set' }, 0, wander());
-  play(live.made, live.at, 60000);
-  const jump = scene({ kind: 'set' }, 60000, wander());
-  expect(jump.made.depth()).toBe(live.made.depth());
-  expect([live.made.marks().length > 0, jump.made.marks().length > 0]).toEqual([true, true]);
-});
-
-test('past octave 24 the aim spreads over frames and ends before the next mark', () => {
-  const { made, at } = scene({ kind: 'set' }, 0, wander());
-  play(made, at, 47900);
-  expect(made.info().aiming).toBe(false);
-  play(made, at, 48000);
-  expect(made.info().aiming).toBe(true);
-  play(made, at, 49900);
-  expect(made.info().aiming).toBe(false);
-});
-
-test('with auto 0 a probe that turns all interior steers the dive back to the last rim', () => {
-  let reads = 0;
-  const { made, at } = scene({ kind: 'set', auto: 0 }, 0, feed(() => (reads++ ? sealed() : picture())));
-  play(made, at, 1900);
-  const before = made.info().centre;
-  play(made, at, 3600);
-  expect(made.info().centre).not.toEqual(before);
-});
-
-test('a tap on a set marker hits within 44 px times the store px per css px', () => {
-  const { made } = scene({ kind: 'set' }, 0, island());
-  const mark = made.marks()[0];
-  expect([made.tap(mark.x + 60, mark.y, 1), made.tap(mark.x + 60, mark.y, 2)]).toEqual([false, true]);
-});
-
-test('a digit or a tap on a marker chooses the next door', () => {
+test('the HUD teaches the code in five lines: name, level, bits and fill, dimension and class, and the mode', () => {
   const { made } = scene({ code: 23 });
-  const marks = made.marks();
-  expect(marks.length).toBeGreaterThan(1);
-  const other = marks.find((one) => !one.on);
-  expect(made.tap(other.x + 20, other.y)).toBe(true);
-  made.draw();
-  expect(made.said().at(-1)).toBe(`door ${other.number}`);
-  expect([made.pick(9), made.pick(marks[0].number)]).toEqual([false, true]);
-  made.draw();
-  expect(made.said().at(-1)).toBe(`door ${marks[0].number}`);
+  expect(made.said()).toEqual(['carpet 23', 'n 3  level 0', 'bits 00010111  fill 20/27', 'dim 2.73  class 23', 'corridor']);
+  expect(scene({ code: 60 }).made.said()[0]).toBe('bang 60');
+  expect(scene({ code: 255 }).made.said().at(-1)).toBe('skim');
 });
 
-test('without auto the flight holds before the door until a pick', () => {
-  const { made, at } = scene({ code: 23, auto: 0 });
-  for (const t of [30000, 60000]) {
-    at.t = t;
-    made.draw();
-  }
-  expect(made.said().slice(1)).toEqual(['n 3  level 0', 'pick a door']);
-  made.go();
-  at.t = 120000;
-  made.draw();
-  expect(made.said()[1]).not.toBe('n 3  level 0');
+test('the flight is automatic: the scene offers no picking and the HUD draws no markers', () => {
+  const { made, fake } = scene({ code: 23 });
+  expect([made.tap, made.pick, made.go, made.choose, made.marks, fake.draws().some((one) => one.vs.includes('aRing'))]).toEqual([undefined, undefined, undefined, undefined, undefined, false]);
 });
 
-test('without auto the flight slows into the hold instead of stopping dead', () => {
-  const { made, at, fake } = scene({ code: 23, auto: 0 });
-  const eye = () => fake.draws().filter((one) => 'uPos' in one.uniforms).at(-1).uniforms.uPos;
-  let before = eye();
-  const speeds = [];
-  for (let t = 50; t <= 8000; t += 50) {
-    at.t = t;
-    made.draw();
-    const now = eye();
-    if (t > 1000) speeds.push(Math.hypot(...now.map((v, i) => v - before[i])) / 0.05);
-    before = now;
-  }
-  expect(Math.max(...speeds.slice(1).map((v, i) => Math.abs(v - speeds[i])))).toBeLessThan(0.03);
-  expect([speeds[0] > 0.05, speeds.at(-1) < 0.001]).toEqual([true, true]);
+test('code 0 draws nothing and the HUD reads empty', () => {
+  const { made, fake } = scene({ code: 0 });
+  expect([made.said(), made.trails(), fake.draws().some((one) => 'uLo' in one.uniforms)]).toEqual([['empty'], [], false]);
+});
+
+test('path on draws the route ahead as one lit rail in one more draw, path off draws none', () => {
+  const rails = (path) => {
+    const { made, fake } = scene({ code: 23, path }, 5000);
+    return [made.trails().map((one) => one.points.length), fake.draws().filter((one) => 'uHide' in one.uniforms).length];
+  };
+  expect([rails(1), rails(0)]).toEqual([[[32], 1], [[], 0]]);
+});
+
+test('the pilot knob flies the route its own way', () => {
+  const turn = (pilot) => scene({ code: 23, pilot }, 30000).fake.draws().find((one) => 'uLo' in one.uniforms).uniforms.uRot;
+  expect(turn('coaster')).not.toEqual(turn('steady'));
+});
+
+test('each look grades through its own post look, and hyper lays the march over a tunnel already settled at t 0', () => {
+  const vignette = (look) => scene({ code: 23, look }).fake.draws().find((one) => 'uVignette' in one.uniforms).uniforms.uVignette;
+  expect([...['graphic', 'studio', 'haze'].map(vignette), vignette(undefined)]).toEqual([0.25, 0.3, 0.4, 0.3]);
+  const draws = scene({ code: 23, hyper: 1 }).fake.draws();
+  const at = (name) => draws.findIndex((one) => name in one.uniforms);
+  expect([draws[at('uMilk')].uniforms.uMilk, at('uMilk') < at('uK'), at('uK') < at('uVignette'), draws[at('uVignette')].uniforms.uVignette]).toEqual([0.3, true, true, 0.3]);
+});
+
+test('a fresh draw at t lands where play does', () => {
+  const live = scene({ code: 23, pilot: 'fighter' });
+  play(live.made, live.at, 20000);
+  const jump = scene({ code: 23, pilot: 'fighter' }, 20000);
+  expect([jump.made.said(), jump.made.trails()]).toEqual([live.made.said(), live.made.trails()]);
 });

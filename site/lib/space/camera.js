@@ -1,5 +1,5 @@
 import { rng } from '../scene.js';
-import { add, basis, dot, mat3, mul, rot, sub } from './vec.js';
+import { basis, dot, mat3, rot, sub } from './vec.js';
 
 const TAU = Math.PI * 2;
 const FOV = 1;
@@ -46,24 +46,6 @@ export function project(view, cam, p) {
 
 /* PATHS */
 
-export function spline(points, u) {
-  const n = points.length;
-  if (n < 2) return [...points[0]];
-  const x = clamp(u) * (n - 1);
-  const i = Math.min(Math.floor(x), n - 2);
-  const s = x - i;
-  const P = [points[Math.max(i - 1, 0)], points[i], points[i + 1], points[Math.min(i + 2, n - 1)]];
-  const s2 = s * s;
-  const s3 = s2 * s;
-  return mul(add(add(mul(P[0], -s3 + 2 * s2 - s), mul(P[1], 3 * s3 - 5 * s2 + 2)), add(mul(P[2], -3 * s3 + 4 * s2 + s), mul(P[3], s3 - s2))), 0.5);
-}
-
-export function orbit(center, radius, tilt, rate, phase, t) {
-  const a = phase + (rate * t) / 1000;
-  const off = [radius * Math.cos(a), radius * Math.sin(a) * Math.sin(tilt), radius * Math.sin(a) * Math.cos(tilt)];
-  return look(add(center, off), center);
-}
-
 const waves = (seed, n, lo, hi) => {
   const rand = rng(seed >>> 0);
   return Array.from({ length: n }, () => [lo + rand() * (hi - lo), rand() * TAU]);
@@ -80,4 +62,3 @@ export function shake(seed, t, amp) {
   const w = waves(seed ^ 0x2545f491, 6, 7, 13);
   return [sum(w.slice(0, 3), t) * amp, sum(w.slice(3), t) * amp];
 }
-

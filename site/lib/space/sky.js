@@ -19,8 +19,10 @@ const SALT = 0x68e31da4;
 const UNSET = [-1, -1, -1];
 const WHITE = [1, 1, 1];
 
+const clamp = (x) => Math.min(Math.max(x, 0), 1);
+
 const smooth = (x) => {
-  const p = Math.min(Math.max(x, 0), 1);
+  const p = clamp(x);
   return p * p * (3 - 2 * p);
 };
 
@@ -153,7 +155,8 @@ export function sky(gl, view, { seed = 0, density = 1, dust = 1 } = {}) {
       haze.set({ ...uniforms({ w, h }, cam), uDust: cube, uK: dust * gain });
       fill(gl);
     }
-    const s = flow.s ?? 0;
+    const away = clamp(flow.far ?? 0);
+    const s = (flow.s ?? 0) * (1 - away);
     const back = Math.max(0, flow.shutter ?? 0);
     const [ax, ay, az] = norm(flow.axis ?? [0, 0, 1]);
     const m = cam.rot;
@@ -164,13 +167,15 @@ export function sky(gl, view, { seed = 0, density = 1, dust = 1 } = {}) {
     let n = 0;
     for (let i = 0; i < count; i++) {
       const o = i * 8;
-      const reach = INNER + (1 - INNER) * field[o + 3];
+      const deep = INNER + (1 - INNER) * field[o + 3];
+      const reach = deep + (1 - deep) * away;
       const px = field[o] * reach;
       const py = field[o + 1] * reach;
       const pz = field[o + 2] * reach;
       const a0 = px * ax + py * ay + pz * az;
       const a = ((((a0 - s + 1) % 2) + 2) % 2) - 1;
-      const edge = smooth((1 - a) / EDGE) * smooth((a + 1) / EDGE);
+      const wrap = smooth((1 - a) / EDGE) * smooth((a + 1) / EDGE);
+      const edge = wrap + (1 - wrap) * away;
       if (edge <= 0) continue;
       const hx = px + ax * (a - a0);
       const hy = py + ay * (a - a0);
@@ -195,11 +200,11 @@ export function sky(gl, view, { seed = 0, density = 1, dust = 1 } = {}) {
       if (Math.max(sx, ex) < -PAD || Math.min(sx, ex) > w + PAD || Math.max(sy, ey) < -PAD || Math.min(sy, ey) > h + PAD) continue;
       const mag = field[o + 4];
       const phase = field[o + 6];
-      const near = 1 - Math.min(Math.hypot(vx, vy, vz), 1);
-      const far = 1 - Math.min(Math.hypot(tx, ty, tz), 1);
+      const near = (1 - Math.min(Math.hypot(vx, vy, vz), 1)) * (1 - away);
+      const rear = (1 - Math.min(Math.hypot(tx, ty, tz), 1)) * (1 - away);
       const size = (0.7 + 1.6 * mag) * unit;
       const head = size * (0.6 + 0.9 * near);
-      const tail = size * (0.6 + 0.9 * far) * TAPER;
+      const tail = size * (0.6 + 0.9 * rear) * TAPER;
       const twinkle = 1 + TWINKLE * Math.sin(now * TAU * (0.4 + (phase % 1) * 0.6) + phase);
       let bright = (0.15 + 2.2 * mag) * (0.35 + 0.65 * near) * edge * gain * twinkle * smooth((vz - NEAR) / NEAR);
       if (head < THIN) bright *= head / THIN;

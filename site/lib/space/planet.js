@@ -289,10 +289,11 @@ function ringOf(rand, seed, body) {
   return { inner, outer, zones, seed, dark: body ? body.map((c) => c * 0.45) : hsl(hue, 0.15, 0.35), bright: body ? body.map((c) => Math.min(c * 1.15, 0.8)) : hsl(hue, 0.2, 0.7) };
 }
 
-function exo(seed) {
+function exo(seed, type = '') {
   const rand = rng((seed ^ SALT) >>> 0);
   const R = (a, b) => a + rand() * (b - a);
-  const kind = roll(rand);
+  const rolled = roll(rand);
+  const kind = TYPES.includes(type) ? type : rolled;
   const p = { kind, noise: Math.floor(R(0, 997)), tilt: R(-0.5, 0.5), spin: R(0.03, 0.07), phase: R(0, TAU), freq: R(0.95, 1.6), sea: 0, bump: 0.04, cover: 0, lights: 0, drift: R(0.002, 0.006), city: [0, 0, 0], glow: [0, 0, 0], spec: 0, rough: 0.42, limb: 0, flat: 0, air: null, ring: null };
   if (kind === 'terran') {
     const sea = R(0.5, 0.66);
@@ -372,8 +373,8 @@ function exo(seed) {
 
 /* WORLD */
 
-export function world(name, seed = 0, { moons: count = -1, rings = '' } = {}) {
-  const own = name === 'exo' ? exo(seed >>> 0) : { light: [1, 1, 1], ...structuredClone(WORLDS[name] ?? WORLDS.earth) };
+export function world(name, seed = 0, { moons: count = -1, rings = '', type = '' } = {}) {
+  const own = name === 'exo' ? exo(seed >>> 0, type) : { light: [1, 1, 1], ...structuredClone(WORLDS[name] ?? WORLDS.earth) };
   const rand = rng(((seed >>> 0) ^ EXTRA) >>> 0);
   own.name = WORLDS[name] ? name : 'exo';
   own.moons = own.moons.map((m) => ({ ...m, phase: rand() * TAU }));

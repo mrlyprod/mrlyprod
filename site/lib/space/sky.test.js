@@ -8,13 +8,13 @@ test('one seed makes one star field and another seed another', () => {
   expect(stars(7, 500)).not.toEqual(stars(8, 500));
 });
 
-const quads = (flow) => {
+const quads = (flow, cam = look([0, 0, 0], [0, 0, 1])) => {
   const fake = gl();
   const view = { w: 1280, h: 720, dpr: 1, t: 0 };
   const field = sky(fake, view, { seed: 7, dust: 0 });
   fake.viewport(0, 0, 1280, 720);
   fake.log.length = 0;
-  field.draw(look([0, 0, 0], [0, 0, 1]), flow);
+  field.draw(cam, flow);
   const [, , , data, , length] = fake.log.find(([key]) => key === 'bufferSubData');
   return Array.from({ length: length / 8 }, (_, i) => data.slice(i * 8, i * 8 + 8));
 };
@@ -48,4 +48,21 @@ test('with no shutter every streak has its tail on its head', () => {
   const list = quads({ s: 1.3, shutter: 0 });
   expect(list.length).toBeGreaterThan(300);
   expect(list.every((q) => q[0] === q[2] && q[1] === q[3])).toBe(true);
+});
+
+test('with far 1 a star is a direction: the camera turn moves the sky and its position and the flight s move nothing', () => {
+  const flow = { s: 0, shutter: 0.3, far: 1 };
+  const ahead = quads(flow);
+  expect(ahead.length).toBeGreaterThan(300);
+  expect(quads(flow, look([5, 2, -3], [5, 2, -2]))).toEqual(ahead);
+  expect(quads({ ...flow, s: 3.7 })).toEqual(ahead);
+  expect(quads(flow, look([0, 0, 0], [0.3, 0, 1]))).not.toEqual(ahead);
+});
+
+test('the near boost on a star head fades out as far goes from 0 to 1', () => {
+  const widest = (far) => Math.max(...quads({ s: 1.3, shutter: 0.3, far }).map((q) => q[4]));
+  const [near, half, deep] = [0, 0.5, 1].map(widest);
+  expect(near).toBeGreaterThan(half);
+  expect(half).toBeGreaterThan(deep);
+  expect(deep).toBe(1.5);
 });

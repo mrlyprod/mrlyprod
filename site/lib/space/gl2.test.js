@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { gl } from './fake.js';
-import { bake, fill, governor, program, quads, target, texture, tier } from './gl2.js';
+import { bake, fill, governor, hdr, program, quads, target, texture, tier } from './gl2.js';
 
 test('tier reads the short side in css px and the store area, and a fixed frame is never a phone', () => {
   const sizes = [[1170, 2532, 3], [1080, 1920, 2], [2560, 1440, 2], [1920, 1080, 1], [3840, 2160, 2], [2048, 2048, 1]];
@@ -75,6 +75,16 @@ test('a quad batch draws all its instances in one instanced call, each attribute
   batch.draw(prog, 4);
   const divisors = fake.log.filter(([key]) => key === 'vertexAttribDivisor').map(([, , divisor]) => divisor);
   expect([fake.draws().map((one) => [one.mode, one.count, one.instances]), divisors]).toEqual([[[fake.TRIANGLE_STRIP, 4, 4]], [1, 1]]);
+});
+
+test('a target with extra adds a second float attachment and draws to both', () => {
+  const fake = gl();
+  hdr(fake);
+  fake.log.length = 0;
+  const one = target(fake, 8, 4, { hdr: true, extra: 1 });
+  const slots = fake.log.filter(([key]) => key === 'framebufferTexture2D').map(([, , slot, , tex]) => [slot, tex]);
+  const formats = fake.log.filter(([key]) => key === 'texImage2D').map(([, , , inner]) => inner);
+  expect([slots, formats, fake.log.find(([key]) => key === 'drawBuffers')[1]]).toEqual([[[fake.COLOR_ATTACHMENT0, one.tex], [fake.COLOR_ATTACHMENT1, one.aux]], [fake.RGBA16F, fake.RGBA16F], [fake.COLOR_ATTACHMENT0, fake.COLOR_ATTACHMENT1]]);
 });
 
 test('a texture with a depth is 3D and one without is 2D', () => {

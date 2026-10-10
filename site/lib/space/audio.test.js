@@ -1,12 +1,14 @@
 import { expect, test } from 'bun:test';
-import { SONG, acid, clap, drone, engine, hat, hit, kick, noise, pad, pattern, render, riser, swell, tick, wav } from './audio.js';
+import { SONG, acid, arp, bass, clap, drone, engine, hat, hit, kick, noise, pad, pattern, render, riser, swell, tick, wav } from './audio.js';
 import { audio } from './fake.js';
 
 const FLOOR = 0.001;
 
-const VOICES = { kick, hat, clap, acid, pad, riser, drone, hit, swell, tick };
+const VOICES = { kick, hat, clap, acid, pad, arp, bass, riser, drone, hit, swell, tick };
 
-const DRIVE = { name: 'drive', song: { ...SONG, swing: 0 } };
+const STRAIGHT = { ...SONG, swing: 0 };
+
+const DRIVE = { name: 'drive', song: STRAIGHT };
 
 const fixed = (calls) => calls.map(([verb, ...args]) => [verb, ...args.map((v) => +v.toFixed(6))]);
 
@@ -25,6 +27,21 @@ const ends = (node, seen = new Set()) => {
   return [...own, ...node.outputs.flatMap((to) => ends(to, seen))];
 };
 
+const hz = (note) => 440 * 2 ** ((note - 69) / 12);
+
+const film = (arrange, until) => {
+  const ctx = audio();
+  const one = engine({ make: () => ctx });
+  one.start();
+  for (let t = 0; t <= until; t += 10) {
+    ctx.currentTime = t / 1000;
+    one.at(t, { name: 'film', song: STRAIGHT, arrange });
+  }
+  return ctx;
+};
+
+const heard = (ctx, detune) => ctx.find('Oscillator').filter((o) => o.detune.value === detune).map((o) => +o.started[0].toFixed(6));
+
 const starts = (ctx, shift, until) =>
   ctx.log
     .filter(([verb]) => verb === 'start')
@@ -36,6 +53,24 @@ test('pattern is pure: one seed, knobs and bar give one bar of 16 steps', () => 
   const bar = pattern(7, SONG, 3);
   expect(bar).toEqual(pattern(7, SONG, 3));
   expect([bar.kick, bar.hat, bar.open, bar.clap, bar.bass].map((row) => row.length)).toEqual([16, 16, 16, 16, 16]);
+});
+
+test('the drums, bass and chord of a seed stay as they were, so the techno loop is the same', () => {
+  const row = (r) => r.map((v) => (v ? 1 : 0)).join('');
+  const line = (r) => r.map((b) => (b ? `${b.note}${b.accent ? 'a' : ''}${b.slide ? 's' : ''}` : '-')).join(' ');
+  const frozen = (bar) => {
+    const p = pattern(7, SONG, bar);
+    return { kick: row(p.kick), hat: row(p.hat), open: row(p.open), clap: row(p.clap), bass: line(p.bass), chord: p.chord };
+  };
+  expect(frozen(3)).toEqual({ kick: '1000100010001000', hat: '1110001101111111', open: '0010001000100010', clap: '0000100000001000', bass: '- - 52s 52s - 48 40 40 - 52a 52a 40 - 40 40 -', chord: [64, 67, 71, 74] });
+  expect(frozen(8)).toEqual({ kick: '1000100010001000', hat: '1111001101111111', open: '0010001000100010', clap: '0000100000001000', bass: '- - 57s 53 - 53 45 45 - 57a 57a 45 - 45 48a -', chord: [57, 60, 64, 67] });
+});
+
+test('pattern adds 16 arp picks, skips and octave lifts from a stream of its own', () => {
+  const bar = pattern(7, SONG, 3);
+  expect([bar.arp.length, bar.skip.length, bar.octave.length]).toEqual([16, 16, 16]);
+  expect([bar.arp.every((n) => n >= 0 && n < 4), bar.skip.every((v) => typeof v === 'boolean'), bar.octave.every((v) => v === 0 || v === 12)]).toEqual([true, true, true]);
+  expect(pattern(8, SONG, 3).arp).not.toEqual(bar.arp);
 });
 
 test('another seed gives another groove', () => {
@@ -197,4 +232,67 @@ test('render books the bar the live engine plays, at the same offsets', async ()
   const bar = 1.875;
   expect(starts(ctx, 0.05, bar)).toEqual(starts(off, 0, bar));
   expect(starts(off, 0, bar).length).toBeGreaterThan(16);
+});
+
+test('the arp is two saws at -7 and +7 cents through a lowpass of Q 2 that closes to 0.3 of its cutoff in 0.25 s', () => {
+  const ctx = lone(arp, { note: 69, cutoff: 2000 });
+  const [low] = ctx.find('BiquadFilter');
+  const amp = ctx.find('Gain').find((g) => g.gain.calls.length);
+  expect(ctx.find('Oscillator').map((o) => [o.type, o.detune.value, o.frequency.value])).toEqual([['sawtooth', -7, 440], ['sawtooth', 7, 440]]);
+  expect([low.type, low.Q.value, fixed(low.frequency.calls)]).toEqual(['lowpass', 2, [['setValueAtTime', 2000, 1], ['exponentialRampToValueAtTime', 600, 1.25]]]);
+  expect(fixed(amp.gain.calls)).toEqual([['setValueAtTime', 0.0001, 1], ['linearRampToValueAtTime', 0.16, 1.003], ['setValueAtTime', 0.16, 1.023], ['exponentialRampToValueAtTime', 0.0001, 1.243]]);
+});
+
+test('the arp sends 0.35 to the reverb and 0.3 to the delay', () => {
+  const ctx = audio();
+  const [verb, echo] = [ctx.createConvolver(), ctx.createGain()];
+  arp(ctx, ctx.destination, 1, { verb, echo });
+  const sent = ctx.find('Gain').filter((g) => g.outputs[0] === verb || g.outputs[0] === echo);
+  expect(sent.map((g) => [g.gain.value, g.outputs[0] === verb])).toEqual([[0.35, true], [0.3, false]]);
+});
+
+test('the bass is a saw and a quiet square an octave down through two lowpasses of Q 3 that close from 2.5 to 0.6 of the cutoff over its length', () => {
+  const ctx = lone(bass, { note: 45, cutoff: 400, dur: 0.4 });
+  const lows = ctx.find('BiquadFilter');
+  const amp = ctx.find('Gain').find((g) => g.gain.calls.length);
+  expect(ctx.find('Oscillator').map((o) => [o.type, o.frequency.value])).toEqual([['sawtooth', 110], ['square', 55]]);
+  expect(lows.map((f) => [f.Q.value, fixed(f.frequency.calls)])).toEqual(Array(2).fill([3, [['setValueAtTime', 1000, 1], ['exponentialRampToValueAtTime', 240, 1.4]]]));
+  expect(fixed(amp.gain.calls)).toEqual([['setValueAtTime', 0.0001, 1], ['linearRampToValueAtTime', 0.4, 1.004], ['setValueAtTime', 0.4, 1.204], ['exponentialRampToValueAtTime', 0.0001, 1.404]]);
+});
+
+test('the intro books the progression pad once a bar: the chord, then its root an octave up', () => {
+  const ctx = film(() => ({ name: 'intro', swell: 0 }), 3000);
+  const { chord } = pattern(SONG.seed, STRAIGHT, 0);
+  const notes = [chord[0], chord[1], chord[2], chord[0] + 12].map(hz);
+  const pads = ctx.find('Oscillator').filter((o) => o.detune.value === -9 || o.detune.value === 9);
+  expect(pads.map((o) => o.frequency.value).slice(0, 8)).toEqual(notes.flatMap((n) => [n, n]));
+  expect(pads.length).toBe(16);
+});
+
+test('a boost books a kick on step 0', () => {
+  const ctx = film(() => ({ name: 'boost', swell: 0 }), 100);
+  expect(kicks(ctx)[0]).toBe(0.05);
+});
+
+test('a section reached at 1300 ms is heard from the first step after it and never before', () => {
+  const ctx = film((ms) => ({ name: ms < 1300 ? 'intro' : 'boost', swell: 0 }), 2000);
+  expect(heard(ctx, 7).slice(0, 2)).toEqual([1.45625, 1.690625]);
+});
+
+test('a cut books nothing from 100 to 550 ms and the gate ramps to 0 in 10 ms there and back to 1 by its end', () => {
+  const ctx = film((ms) => ({ name: ms >= 100 && ms < 550 ? 'cut' : 'boost', swell: 0 }), 1000);
+  const gate = ctx.find('Gain').find((g) => g.gain.calls.some((c) => c[0] === 'linearRampToValueAtTime' && c[1] === 0));
+  const booked = ctx.log.filter(([verb, , when]) => verb === 'start' && when > 0.1501 && when < 0.5999);
+  expect([booked.length, fixed(gate.gain.calls).slice(2)]).toEqual([0, [['setValueAtTime', 1, 0.15], ['linearRampToValueAtTime', 0, 0.16], ['setValueAtTime', 0, 0.59], ['linearRampToValueAtTime', 1, 0.6]]]);
+});
+
+test('the swell opens the arp filter to 500 + 3200 swell and the bass to half of it', () => {
+  const ctx = film(() => ({ name: 'hyper', swell: 0.5 }), 400);
+  const opened = (q) => ctx.find('BiquadFilter').find((f) => f.Q.value === q).frequency.calls[0][1];
+  expect([opened(2), opened(3) / 2.5]).toEqual([2100, 1050]);
+});
+
+test('the outro plays the kick and the arp only while their flags are up', () => {
+  const played = (flags) => film(() => ({ name: 'outro', swell: 0.3, ...flags }), 1000);
+  expect([kicks(played({ kick: false })).length, kicks(played({ kick: true })).length > 0, heard(played({}), 7).length, heard(played({ arp: true }), 7).length > 0]).toEqual([0, true, 0, true]);
 });

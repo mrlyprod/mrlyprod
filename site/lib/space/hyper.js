@@ -36,9 +36,10 @@ const OCTAVES = [8, 16, 32, 64];
 const WHITE = [1, 1, 1];
 const BLACK = [0, 0, 0];
 const BLOOM = 0.8;
-const FLARE = 12;
 const NEUTRAL = [0.46, 0.76, 0.9];
-const FILMIC = { deep: '#0c1869', mid: '#2d62d5', tip: '#b3e1f3', pale: '#e1fdff' };
+const FILMIC = { pale: '#e1fdff' };
+const GRADE = ['ev', 'bloom', 'aberration', 'vignette', 'grain'];
+const GRADED = ['cruise', 'tunnel'];
 const AHEAD = aim([0, 0, 0], [0, 0, 1]);
 const PATHS = {
   wind: '#040a14',
@@ -104,14 +105,13 @@ const grey = (c) => {
 };
 
 function trails(tint, plain = false) {
-  const hue = tint ? shown(tint) : null;
-  const tone = (hex) => linear(plain ? grey(shown(hex)) : hue ? shade(hue, shown(hex)) : shown(hex));
+  const hue = plain ? null : shown(tint);
+  const tone = (hex) => linear(plain ? grey(shown(hex)) : shade(hue, shown(hex)));
   const lift = (hex) => (plain ? BLACK : tone(hex));
   return { wind: lift(PATHS.wind), lift: lift(PATHS.lift), pile: lift(PATHS.pile), decay: PATHS.decay.map(([k, hex]) => [k, tone(hex)]), streak: PATHS.streak.map(([k, hex]) => [k, tone(hex)]) };
 }
 
 function ramp(tint) {
-  if (!tint) return Object.fromEntries(Object.entries(FILMIC).map(([key, hex]) => [key, shown(hex)]));
   const hue = shown(tint);
   return { deep: blendTo(BLACK, hue, 0.3), mid: hue, tip: blendTo(hue, WHITE, 0.7), pale: blendTo(hue, WHITE, 0.88) };
 }
@@ -247,11 +247,11 @@ void main() {
 
 const lerp = (a, b, k) => a + (b - a) * k;
 
-const quiet = () => ({ tint: 0, hue: null, glass: null, here: 1, extra: 0, there: 0, ev: 0, fov: 1, jolt: 0, aberration: 0, vignette: 0.3, bloom: 0.8, flare: 0, field: null, cloud: 0, milk: 0, fan: 0, reach: 0, core: 1, hot: 0, steer: 0, dest: 1, approach: 1 });
+const quiet = () => ({ tint: 0, hue: null, glass: null, here: 1, extra: 0, there: 0, ev: 0, fov: 1, jolt: 0, aberration: 0, vignette: 0.3, bloom: 0.8, field: null, cloud: 0, milk: 0, fan: 0, reach: 0, core: 1, hot: 0, steer: 0, dest: 1, approach: 1, far: 0 });
 
 /* HYPER */
 
-export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud', speed = 1, idle = 0.015, film: times = FILM, audio = null, mode = null } = {}) {
+export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud', speed = 1, idle = 0.015, film: times = FILM, audio = null, mode = null, floor = '', far = false } = {}) {
   const T = { ...FILM, ...times };
   const top = TOP * speed;
   const full = top * SHUTTER;
@@ -260,14 +260,16 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
   const density = sky.density ?? 1;
   const dust = sky.dust ?? 1;
   const roam = Boolean(sky.next);
-  const lit = Object.fromEntries(Object.entries(ramp(tint)).map(([key, c]) => [key, linear(c)]));
-  const films = trails(tint);
+  const paint = tint || view.look().accent;
+  const lit = Object.fromEntries(Object.entries(ramp(paint)).map(([key, c]) => [key, linear(c)]));
+  const films = trails(paint);
   const greys = trails('', true);
   const bright = linear(grey(shown(FILMIC.pale)));
-  const streak = tint ? blendTo(peakOf(lit.tip), WHITE, 0.35) : peakOf(lit.tip);
+  const streak = blendTo(peakOf(lit.tip), WHITE, 0.35);
   const glow = peakOf(lit.mid);
   const core = blendTo(peakOf(lit.mid), peakOf(lit.pale), 0.35).map((v) => v * 3);
-  const budget = governor(view, NOTCHES[tier(view)]);
+  const notches = NOTCHES[tier(view)];
+  const budget = governor(view, floor === 'cloud' ? notches.slice(0, -1) : notches);
   const flick = wobble(seed);
   const jolts = (seed ^ EXTRA) >>> 0;
   const swing = rng((seed ^ GRAIN) >>> 0);
@@ -313,6 +315,15 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
   const speeds = {
     jump: { wind: [idle, -0.4 * idle, 1], stretch: [-0.4 * idle, top, 2.5], pile: top, flash: [top, 0.4 * top, 1], tunnel: 0.4 * top },
     exit: (from) => ({ bloom: [from, top, 2], white: top, decay: [top, 0.15 * top, 0.5], snap: [0.15 * top, idle, 1] }),
+  };
+  const settled = Math.max(T.decay + T.snap, 1);
+  const sinking = (name, k, from) => {
+    if (name === 'cruise' || name === 'wind') return 1;
+    if (name === 'stretch') return 1 - ease.smooth(k);
+    if (name === 'bloom') return from * (1 - ease.smooth(k));
+    if (name === 'decay') return ease.smooth((k * T.decay) / settled);
+    if (name === 'snap') return ease.smooth((T.decay + k * T.snap) / settled);
+    return 0;
   };
   const where = (t) => {
     if (!trip) return { name: 'cruise', k: 0, since: t - rest.t };
@@ -418,7 +429,6 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
       o.here = b.here * (1 - k);
       o.extra = b.extra * (1 - k);
       o.shutter = lerp(b.shutter, full, sm);
-      o.flare = FLARE * k ** 3;
       o.steer = b.steer * (1 - sm);
       o.fov = lerp(b.fov, 1, sm);
       o.jolt = b.jolt * (1 - k);
@@ -438,7 +448,6 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
       o.there = ease.smooth(w) ** 2;
       o.extra = ease.smooth(w) ** 2;
       o.shutter = full;
-      o.flare = lerp(FLARE, 1, w);
       o.aberration = 0.0035;
       o.vignette = 0.45 * (1 - sm);
       o.bloom = 1;
@@ -452,7 +461,6 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
       o.there = 1;
       o.extra = 1 - k;
       o.shutter = full * 0.15 ** k;
-      o.flare = 1 - sm;
       o.aberration = 0.0035 - 0.0015 * k;
       o.vignette = 0.3 * ease.smooth(k * 2);
       o.bloom = 0.6 + 0.4 * k;
@@ -468,6 +476,7 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
       o.shutter = Math.max(o.shutter, 0.15 * full * (1 - k) ** 2);
       o.aberration = 0.002 * (1 - sm);
     }
+    if (far) o.far = sinking(name, k, b?.far ?? 0);
     if (o.glass) o.field = o.glass.map((c) => c / 2 ** o.ev);
     if (plain) {
       o.cloud = 0;
@@ -599,7 +608,7 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
   const stars = (one, cam, flow, k) => {
     if (k > 0) one.draw(cam, { ...flow, k });
   };
-  const draw = (cam = AHEAD, beneath = null, over = null, scale = 1) => {
+  const draw = (cam = AHEAD, beneath = null, over = null, scale = 1, grade = null) => {
     if (gone) return;
     const t = view.t;
     settle(t);
@@ -609,7 +618,7 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
     sound(t);
     const lens = aimed(cam, o, t);
     const hue = o.hue ? peakOf(o.hue) : streak;
-    const base = { s: o.s, shutter: Math.max(o.shutter, 0), axis: lens.axis };
+    const base = { s: o.s, shutter: Math.max(o.shutter, 0), axis: lens.axis, far: o.far };
     const flow = plain ? { ...base, halo: WHITE, tint: WHITE } : { ...base, halo: o.tint > 0 ? blendTo(NEUTRAL, glow, o.tint) : undefined, tint: blendTo(WHITE, hue, o.tint) };
     shot = { ...flow, k: o.here, flicker: o.flicker };
     const soft = !plain && kit && (o.cloud > 0 || o.fan > 0 || o.hot > 0);
@@ -637,7 +646,8 @@ export function hyper(gl, view, { seed = 0, sky = {}, tint = '', look = 'cloud',
       over(lens.cam);
       blend(gl, null);
     }
-    chain.end({ ev: o.ev, bloom: o.bloom, aberration: o.aberration, vignette: o.vignette, flare: plain || tint ? 0 : o.flare, fade: 1 });
+    const graded = grade && GRADED.includes(o.stage) ? Object.fromEntries(GRADE.filter((key) => grade[key] !== undefined).map((key) => [key, grade[key]])) : {};
+    chain.end({ ev: o.ev, bloom: o.bloom, aberration: o.aberration, vignette: o.vignette, ...graded, fade: 1 });
     fire();
     if (!trip && !gone) prepare();
   };

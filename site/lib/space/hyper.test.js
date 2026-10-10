@@ -270,3 +270,72 @@ test('draw renders the scene at the scale it is given, full size when left out',
   live.trip.draw(undefined, beneath, null, 0.5);
   expect(ports).toEqual([[0, 0, 1280, 720], [0, 0, 640, 360]]);
 });
+
+test('an empty tint takes the accent of the view and a given tint its own paint, in one rule', () => {
+  const mid = (opts, accent) => {
+    const at = { ...view(), look: () => ({ paper: '#000000', accent }) };
+    const fake = gl();
+    const trip = hyper(fake, at, { seed: 7, sky: { density: 0.1 }, ...opts });
+    trip.trigger();
+    for (let t = 0; t <= 2300; t += 50) {
+      at.t = t;
+      trip.draw();
+    }
+    return fake.log.find(([key, one]) => key === 'uniform3fv' && one.name === 'uMid')[2];
+  };
+  const orange = mid({}, '#ff8800');
+  expect(mid({ tint: '#ff8800' }, '#008cff')).toEqual(orange);
+  expect(mid({}, '#008cff')).not.toEqual(orange);
+});
+
+test('a grade replaces the post look in cruise and the tunnel and leaves the jump its own', () => {
+  const live = open();
+  const grade = { ev: 1, aberration: 0.01, vignette: 0.9, grain: 0.05 };
+  const post = (t) => {
+    live.view.t = t;
+    live.fake.log.length = 0;
+    live.trip.draw(undefined, null, null, 1, grade);
+    const last = (name) => live.fake.log.filter(([key, one]) => key === 'uniform1f' && one.name === name).at(-1)[2];
+    return ['uGain', 'uAberration', 'uVignette', 'uGrain'].map(last);
+  };
+  const cruise = post(0);
+  live.trip.trigger();
+  const stretch = post(600);
+  const tunnel = post(3000);
+  expect([cruise, tunnel, stretch[0] !== 2 && stretch[1] !== 0.01]).toEqual([[2, 0.01, 0.9, 0.05], [2, 0.01, 0.9, 0.05], true]);
+});
+
+test('floor cloud keeps the tunnel on its last notch under slow frames, and without it the tunnel falls to plain', () => {
+  const slow = (opts) => {
+    const live = open(opts);
+    live.trip.trigger();
+    for (let t = 0; t <= 12000; t += 50) play(live, [t]);
+    const before = live.fake.draws().length;
+    play(live, [12050]);
+    return live.fake.draws().slice(before).filter(({ fs }) => fs.includes('uMilk')).map(({ viewport }) => viewport);
+  };
+  expect([slow({}), slow({ floor: 'cloud' })]).toEqual([[], [[0, 0, 640, 360]]]);
+});
+
+const depths = (opts) => {
+  const live = open(opts);
+  const far = (...times) => {
+    play(live, times);
+    return live.trip.flow().far;
+  };
+  const list = [far(0)];
+  live.trip.trigger();
+  list.push(far(100), far(750), far(1500), far(3000));
+  live.view.t = 4000;
+  live.trip.exit();
+  list.push(far(4200), far(4500), far(5150), far(6000));
+  return list;
+};
+
+test('with far the stars are a sky in cruise and wind, gain depth through the stretch, and sink back over the decay and snap', () => {
+  expect(depths({ far: true }).map((v) => Math.round(v * 1000) / 1000)).toEqual([1, 1, 0.5, 0, 0, 0, 0, 0.5, 1]);
+});
+
+test('without far the flow never carries it, so lightspeed keeps its field', () => {
+  expect(depths({}).map((v) => v ?? 0)).toEqual(Array(9).fill(0));
+});

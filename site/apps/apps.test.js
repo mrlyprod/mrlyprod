@@ -33,7 +33,7 @@ test('the chrome and the lock name no saver', async () => {
   }
 });
 
-test("every app's value holds ten keys or fewer, and an app whose scene has a spec pages it and starts from defaults it keeps as they are", async () => {
+test("every app's value holds twelve keys or fewer, and an app whose scene has a spec pages it and starts from defaults it keeps as they are", async () => {
   const spy = spyOn(scene, 'page');
   const made = APPS.filter((one) => one.kind !== 'tool');
   for (const { id } of made) await import(`./${id}/index.jsx`);
@@ -44,7 +44,7 @@ test("every app's value holds ten keys or fewer, and an app whose scene has a sp
     const { SPEC } = await import(`./${id}/scene.js`);
     const [, defaults, { spec } = {}] = calls.find(([one]) => one === Widget) ?? [];
     const value = scene.values(defaults, spec);
-    expect([id, Object.keys(value).length <= 10, 'seed' in value, spec === SPEC]).toEqual([id, true, true, true]);
+    expect([id, Object.keys(value).length <= 12, 'seed' in value, spec === SPEC]).toEqual([id, true, true, true]);
     if (spec) expect([id, { ...value, ...tidy(spec, value) }]).toEqual([id, value]);
   }
 });

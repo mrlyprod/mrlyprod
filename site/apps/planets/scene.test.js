@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import { rng } from '../../lib/scene.js';
 import { project } from '../../lib/space/camera.js';
 import { gl } from '../../lib/space/fake.js';
-import { NAMES, world } from '../../lib/space/planet.js';
+import { world } from '../../lib/space/planet.js';
 import { dot, len, norm } from '../../lib/space/vec.js';
 import { CAMS, PAGE, make, next, shot } from './scene.js';
 
@@ -44,12 +44,21 @@ test('the flyby passes 1.3 R from the centre and the sun clears the limb at 60% 
   expect([miss(17000) < 1, miss(19000) > 1]).toEqual([true, true]);
 });
 
-test('the sun stands at the phase angle the knob names', () => {
+test('the sun stands at the phase angle the knob names at t 0', () => {
   for (const cam of ['orbit', 'approach']) {
     for (const deg of [0, 60, 135, 180]) {
-      const { cam: view, sun } = shot(EARTH, { cam, sun: deg, seed: 2, t: 7000 });
+      const { cam: view, sun } = shot(EARTH, { cam, sun: deg, seed: 2, t: 0 });
       expect([cam, deg, ((Math.acos(Math.max(-1, Math.min(1, dot(sun, norm(view.pos))))) * 180) / Math.PI).toFixed(6)]).toEqual([cam, deg, deg.toFixed(6)]);
     }
+  }
+});
+
+test('the sun stays fixed in space while the camera moves', () => {
+  for (const cam of ['orbit', 'drift', 'approach']) {
+    const first = shot(EARTH, { cam, sun: 60, seed: 2, t: 0 });
+    const later = shot(EARTH, { cam, sun: 60, seed: 2, t: 30000 });
+    expect([cam, later.sun]).toEqual([cam, first.sun]);
+    expect([cam, later.cam.pos.some((v, i) => Math.abs(v - first.cam.pos[i]) > 0.1)]).toEqual([cam, true]);
   }
 });
 
@@ -96,8 +105,10 @@ test('a live sun, camera and speed reach the next frame without a new texture', 
   live.current = { world: 'earth', sun: 150, cam: 'approach', speed: 2 };
   view.t = 1000;
   scene.draw();
-  const { uSun, uPos } = planet();
-  expect([fake.log.filter(([key]) => key === 'createTexture').length, Math.round((Math.acos(dot(uSun, norm(uPos))) * 180) / Math.PI)]).toEqual([made, 150]);
+  const { uSun } = planet();
+  const want = shot(world('earth', 0), { cam: 'approach', sun: 150, seed: 0, t: 1000, aspect: 1280 / 720 }).sun;
+  expect(fake.log.filter(([key]) => key === 'createTexture').length).toBe(made);
+  want.forEach((v, i) => expect(uSun[i]).toBeCloseTo(v, 5));
 });
 
 test('a stall over 100 ms never drops a notch', () => {

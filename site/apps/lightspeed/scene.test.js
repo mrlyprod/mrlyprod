@@ -3,11 +3,11 @@ import { rng } from '../../lib/scene.js';
 import { gl } from '../../lib/space/fake.js';
 import { PAGE, make } from './scene.js';
 
-const open = (opts = {}, { paper = '#000000', webgl = true, bad = null } = {}) => {
+const open = (opts = {}, { paper = '#000000', accent = '#008cff', webgl = true, bad = null } = {}) => {
   const fake = gl({ bad });
   const pen = [];
   const canvas = { width: 1280, height: 720, getContext: (kind) => (kind === 'webgl2' ? (webgl ? fake : null) : { fillRect: (...args) => pen.push(args) }) };
-  const view = { rand: rng(opts.seed ?? 7), look: () => ({ paper, accent: '#008cff' }), still: false, w: 1280, h: 720, dpr: 1, t: 0 };
+  const view = { rand: rng(opts.seed ?? 7), look: () => ({ paper, accent }), still: false, w: 1280, h: 720, dpr: 1, t: 0 };
   return { fake, pen, view, scene: make(canvas, view, { seed: 7, ...opts }) };
 };
 
@@ -106,23 +106,18 @@ test('a shader that fails to compile leaves a black scene whose trigger lands at
   expect([seen, live.scene.phase()]).toEqual([['jump', 'done'], 'cruise']);
 });
 
-const TOKEN = 'uStretch';
+const uniform = (live, name) => live.fake.log.filter(([key, one]) => key.startsWith('uniform') && one?.name === name).map((call) => call[2]);
 
-test('totem -1 builds nothing', async () => {
-  const live = open();
-  await live.scene.ready;
-  play(live, [0, 100]);
-  const shaders = live.fake.log.filter(([key]) => key === 'shaderSource').map(([, , source]) => source);
-  expect([shaders.some((source) => source.includes(TOKEN)), live.fake.log.some(([key]) => key === 'scissor')]).toEqual([false, false]);
-});
+const jump = (opts, shell) => {
+  const live = open(opts, shell);
+  live.scene.trigger();
+  for (let t = 0; t <= 2400; t += 100) play(live, [t]);
+  return live;
+};
 
-test('totem 23 draws it over the sky and under the post chain', async () => {
-  const live = open({ totem: 23 });
-  await live.scene.ready;
-  play(live, [0]);
-  const drawn = live.fake.draws();
-  const at = drawn.findIndex((one) => one.fs.includes(TOKEN));
-  const sky = drawn.findIndex((one) => one.instances > 1);
-  const screen = drawn.findIndex((one) => one.fb === null);
-  expect([at > sky, sky >= 0, drawn[at].fb === drawn[sky].fb, screen > at]).toEqual([true, true, true, true]);
+test('classic lays white streaks over black and builds no cloud', () => {
+  const live = jump({ look: 'classic' });
+  const halos = uniform(live, 'uHalo');
+  const cloud = (one) => uniform(one, 'uHalo').some((halo) => [...halo].some((c) => c !== 1));
+  expect([halos.length > 0, halos.every((halo) => [...halo].every((c) => c === 1)), cloud(jump({})), live.fake.draws().some(({ fs }) => fs.includes('uMilk'))]).toEqual([true, true, true, false]);
 });

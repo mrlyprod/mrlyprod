@@ -196,9 +196,10 @@ export function fill(gl) {
 
 /* TEXTURES */
 
-export function target(gl, w, h, { hdr: want = false, mips = false } = {}) {
+export function target(gl, w, h, { hdr: want = false, mips = false, extra = 0 } = {}) {
   const high = want && hdr(gl);
   const tex = gl.createTexture();
+  const aux = extra ? gl.createTexture() : null;
   const fb = gl.createFramebuffer();
   park(gl);
   gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -206,7 +207,14 @@ export function target(gl, w, h, { hdr: want = false, mips = false } = {}) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  const self = { fb, tex, w: 0, h: 0 };
+  if (aux) {
+    gl.bindTexture(gl.TEXTURE_2D, aux);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  }
+  const self = { fb, tex, aux, w: 0, h: 0 };
   self.size = (nw, nh) => {
     const sw = Math.max(1, Math.round(nw));
     const sh = Math.max(1, Math.round(nh));
@@ -217,14 +225,23 @@ export function target(gl, w, h, { hdr: want = false, mips = false } = {}) {
     gl.bindTexture(gl.TEXTURE_2D, tex);
     gl.texImage2D(gl.TEXTURE_2D, 0, high ? gl.RGBA16F : gl.RGBA8, sw, sh, 0, gl.RGBA, high ? gl.HALF_FLOAT : gl.UNSIGNED_BYTE, null);
     if (mips) gl.generateMipmap(gl.TEXTURE_2D);
+    if (aux) {
+      gl.bindTexture(gl.TEXTURE_2D, aux);
+      gl.texImage2D(gl.TEXTURE_2D, 0, high ? gl.RGBA16F : gl.RGBA8, sw, sh, 0, gl.RGBA, high ? gl.HALF_FLOAT : gl.UNSIGNED_BYTE, null);
+    }
     gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+    if (aux) {
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, aux, 0);
+      gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
+    }
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     return self;
   };
   self.drop = () => {
     gl.deleteFramebuffer(fb);
     gl.deleteTexture(tex);
+    if (aux) gl.deleteTexture(aux);
   };
   return self.size(w, h);
 }
