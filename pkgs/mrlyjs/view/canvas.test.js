@@ -7,8 +7,11 @@ const FILL = [["fillStyle", "rgba(255,143,44,1)"], ["fill", "evenodd"]];
 const globals = {};
 
 class Surface {
-  constructor(w, h) {
-    this.size = [w, h];
+  static made = 0;
+
+  constructor(width, height) {
+    Object.assign(this, { width, height });
+    Surface.made++;
   }
 
   getContext() {
@@ -101,7 +104,7 @@ test("image draws the pixels unsmoothed onto its box", () => {
   expect(calls[0][1]).toBe(false);
   const [, surface, ...box] = calls[1];
   expect(box).toEqual([4, 8, 32, 16]);
-  expect(surface.size).toEqual([2, 1]);
+  expect([surface.width, surface.height]).toEqual([2, 1]);
   expect(surface.image.data).toBeInstanceOf(Uint8ClampedArray);
   expect(Array.from(surface.image.data)).toEqual(Array.from(pixels.colors));
   expect(calls[2][1]).toBe(true);
@@ -114,4 +117,13 @@ test("image folds its cover into the alpha of the surface it draws", () => {
   expect(surface.image.data).toBeInstanceOf(Uint8ClampedArray);
   expect(Array.from(surface.image.data)).toEqual([255, 0, 0, 128, 0, 0, 255, 128]);
   expect(Array.from(pixels.colors)).toEqual([255, 0, 0, 255, 0, 0, 255, 128]);
+});
+
+test("image paints every field through one surface, resized when the shape changes", () => {
+  const made = Surface.made;
+  const draw = (shape) => record((p) => p.image(0, 0, 8, 8, { shape, colors: new Uint8Array(shape[0] * shape[1] * 4) }))[1][1];
+  const [a, b, c] = [draw([2, 3]), draw([2, 3]), draw([5, 4])];
+  expect(Surface.made - made).toBeLessThanOrEqual(1);
+  expect([a === b, b === c]).toEqual([true, true]);
+  expect([c.width, c.height, c.image.w, c.image.h]).toEqual([4, 5, 4, 5]);
 });

@@ -8,8 +8,6 @@ import { client, getText, need, putBytes } from "./s3.ts";
 
 const CACHE_DIR = process.env.BUN_INSTALL_CACHE_DIR || "/tmp/bun/cache";
 const LAYER_DIR = process.env.NODE_LAYER_DIR || "/opt/node";
-const SHELF_DIR = "/tmp/shelf";
-const SHELF_ENV = "MRLY_SHELF";
 const TOKEN_ENV = "GITHUB_READ_TOKEN";
 const BACKOFF = [1000, 3000, 9000];
 const SHA = /^[0-9a-f]{7,40}$/;
@@ -23,16 +21,13 @@ export type Config = {
   agent: string;
   bucket: string;
   folder: string;
-  shelf?: string;
   sources?: string[];
   prepare?: (site: string, run: Runner) => Promise<string>;
 };
 
-export type Wake = { source: string; on: "source" | "shelf" | ""; sha: string; force: boolean };
+export type Wake = { source: string; on: "source" | ""; sha: string; force: boolean };
 
-export type Head = { sha: string; etag: string; shelf: string; shelfEtag: string };
-
-export type Mark = { sha: string; etag: string };
+export type Head = { sha: string; etag: string };
 
 export type Reply = {
   ok: boolean;
@@ -117,8 +112,6 @@ async function spawn(cmd: string[], cwd: string, env: Record<string, string>): P
 export function lambda(config: Config) {
   const SOURCES = new Set(config.sources ?? ["push", "schedule", "manual"]);
 
-  const shelfRepo = () => (config.shelf ? (process.env[config.shelf] ?? "").trim() : "");
-
   /* EVENT */
 
   function readEvent(text: string): Wake {
@@ -128,10 +121,9 @@ export function lambda(config: Config) {
     const word = typeof body.source === "string" ? body.source.trim() : "";
     const repo = typeof body.repo === "string" ? body.repo.trim() : "";
     const named = typeof body.sha === "string" ? body.sha.trim().toLowerCase() : "";
-    const shelf = shelfRepo();
     return {
       source: SOURCES.has(word) ? word : "",
-      on: repo === config.source ? "source" : repo && repo === shelf ? "shelf" : "",
+      on: repo === config.source ? "source" : "",
       sha: SHA.test(named) ? named : "",
       force: body.force === true && word === "manual",
     };
@@ -141,20 +133,10 @@ export function lambda(config: Config) {
 
   function parseHead(text: string | null): Head {
     const lines = (text ?? "").trim().split("\n").map((one) => one.trim());
-    const rest = lines.slice(2);
-    return {
-      sha: lines[0] ?? "",
-      etag: lines[1] ?? "",
-      shelf: config.shelf ? (rest.shift() ?? "") : "",
-      shelfEtag: config.shelf ? (rest.shift() ?? "") : "",
-    };
+    return { sha: lines[0] ?? "", etag: lines[1] ?? "" };
   }
 
-  function headText(head: Head): string {
-    const lines = [head.sha, head.etag];
-    if (config.shelf) lines.push(head.shelf, head.shelfEtag);
-    return `${lines.join("\n")}\n`;
-  }
+  const headText = (head: Head): string => `${head.sha}\n${head.etag}\n`;
 
   const readHead = async (s3: S3Client): Promise<Head> => parseHead(await getText(s3, config.head));
 
@@ -171,7 +153,7 @@ export function lambda(config: Config) {
     return sent;
   }
 
-  async function commit(slug: string, etag: string, get: Get = fetch): Promise<Mark | null> {
+  async function commit(slug: string, etag: string, get: Get = fetch): Promise<Head | null> {
     return retry(`github ${slug}`, async () => {
       const sent: Record<string, string> = headers();
       if (etag) sent["if-none-match"] = etag;
@@ -220,47 +202,23 @@ export function lambda(config: Config) {
 
   /* PLAN */
 
-  function complete(stored: Head): boolean {
-    return Boolean(stored.sha) && (!shelfRepo() || Boolean(stored.shelf));
-  }
-
   function seen(wake: Wake, stored: Head): string {
-    if (wake.force || !wake.sha || !complete(stored)) return "";
-    if (wake.on === "source" && wake.sha === stored.sha) return short(wake.sha);
-    if (wake.on === "shelf" && wake.sha === stored.shelf) return `shelf ${short(wake.sha)}`;
-    return "";
-  }
-
-  async function shelfMark(wake: Wake, stored: Head, get: Get): Promise<Mark> {
-    const slug = shelfRepo();
-    if (!slug) return { sha: "", etag: "" };
-    if (wake.on === "shelf" && wake.sha && (await onMain(slug, wake.sha, get))) return { sha: wake.sha, etag: "" };
-    return (await commit(slug, stored.shelf ? stored.shelfEtag : "", get)) ?? { sha: stored.shelf, etag: stored.shelfEtag };
-  }
-
-  async function sourceMark(wake: Wake, stored: Head, get: Get): Promise<Mark> {
-    if (wake.on === "source" && wake.sha && (await onMain(config.source, wake.sha, get))) return { sha: wake.sha, etag: "" };
-    return (await commit(config.source, stored.sha ? stored.etag : "", get)) ?? { sha: stored.sha, etag: stored.etag };
+    if (wake.force || !wake.sha || !stored.sha) return "";
+    return wake.on === "source" && wake.sha === stored.sha ? short(wake.sha) : "";
   }
 
   async function freshen(wake: Wake, stored: Head, get: Get = fetch): Promise<Head> {
-    const source = await sourceMark(wake, stored, get);
-    const shelf = await shelfMark(wake, stored, get);
-    return { sha: source.sha, etag: source.etag, shelf: shelf.sha, shelfEtag: shelf.etag };
+    if (wake.on === "source" && wake.sha && (await onMain(config.source, wake.sha, get))) return { sha: wake.sha, etag: "" };
+    return (await commit(config.source, stored.sha ? stored.etag : "", get)) ?? stored;
   }
 
   /* CHILD */
 
-  function childEnv(): Record<string, string> {
-    const env: Record<string, string> = {
-      ...(process.env as Record<string, string>),
-      HOME: "/tmp",
-      BUN_INSTALL_CACHE_DIR: CACHE_DIR,
-    };
-    if (shelfRepo()) env[SHELF_ENV] = join(SHELF_DIR, "research");
-    else delete env[SHELF_ENV];
-    return env;
-  }
+  const childEnv = (): Record<string, string> => ({
+    ...(process.env as Record<string, string>),
+    HOME: "/tmp",
+    BUN_INSTALL_CACHE_DIR: CACHE_DIR,
+  });
 
   const run: Runner = (cmd, cwd) => spawn(cmd, cwd, childEnv());
 
@@ -281,12 +239,6 @@ export function lambda(config: Config) {
   async function build(s3: S3Client, next: Head, force: boolean): Promise<string> {
     await unpack(config.source, next.sha, config.dir);
     log(`source ${short(next.sha)}`);
-    const slug = shelfRepo();
-    if (slug) {
-      await unpack(slug, next.shelf || "main", SHELF_DIR);
-      if (!existsSync(join(SHELF_DIR, "research", "README.md"))) throw new Error("shelf: no research/README.md in the tarball");
-      log(`shelf ${short(next.shelf)}`);
-    }
     const site = join(config.dir, config.folder);
     log(await install(site));
     if (config.prepare) {
@@ -297,7 +249,7 @@ export function lambda(config: Config) {
     const line = out.split("\n").map((one) => one.trim()).find((one) => one.startsWith("push:")) ?? "push: no count line";
     log(line);
     await writeHead(s3, next);
-    log(`head ${short(next.sha)}${config.shelf ? ` ${short(next.shelf)}` : ""}`);
+    log(`head ${short(next.sha)}`);
     return line;
   }
 
@@ -315,12 +267,12 @@ export function lambda(config: Config) {
     }
     const next = await freshen(wake, stored);
     if (!next.sha) throw new Error(`${config.source}: no sha in the event, in the head or from github`);
-    if (!wake.force && next.sha === stored.sha && next.shelf === stored.shelf) {
-      if (next.etag !== stored.etag || next.shelfEtag !== stored.shelfEtag) await writeHead(s3, next);
+    if (!wake.force && next.sha === stored.sha) {
+      if (next.etag !== stored.etag) await writeHead(s3, next);
       log(`unchanged ${short(next.sha)}`);
       return `unchanged ${short(next.sha)}`;
     }
-    log(`${wake.source || "poll"} ${short(next.sha)}${config.shelf ? ` shelf ${short(next.shelf)}` : ""}${wake.force ? " forced" : ""}`);
+    log(`${wake.source || "poll"} ${short(next.sha)}${wake.force ? " forced" : ""}`);
     const line = await build(s3, next, wake.force);
     const total = Date.now() - began;
     console.log(`done ${short(next.sha)} ${total}ms`);

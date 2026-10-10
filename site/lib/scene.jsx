@@ -81,6 +81,10 @@ export function resume(handle, paused) {
 
 export const keymap = (keys) => [PAUSE, ...keys, ...BASE.filter((row) => !keyed(keys, row.key))];
 
+export const live = (map, value) => map.filter((row) => !row.when || row.when(value));
+
+export const menu = (record, begin, more = []) => [...(record ? RATIOS.map((at) => [`Video ${at}`, () => begin(at)]) : []), ...more];
+
 function App({ Widget, defaults, spec, keys, actions, gestures, record, id, title }) {
   const [raw, set] = useQuery(defaults);
   const value = spec ? { ...raw, ...tidy(spec, raw) } : raw;
@@ -92,6 +96,7 @@ function App({ Widget, defaults, spec, keys, actions, gestures, record, id, titl
   const [taking, setTaking] = useState('');
   const [rec, setRec] = useState('');
   const [zen, setZen] = useState(false);
+  const [more, setMore] = useState([]);
   useEffect(() => {
     quiet(zen);
     if (!zen) return undefined;
@@ -120,7 +125,9 @@ function App({ Widget, defaults, spec, keys, actions, gestures, record, id, titl
     scene.current = handle;
     setPaused(false);
   }, []);
-  const map = useMemo(() => keymap(record ? [...keys, RECORD] : keys), [keys, record]);
+  const all = useMemo(() => (record ? [...keys, RECORD] : keys), [keys, record]);
+  const on = live(all, value);
+  const map = useMemo(() => keymap(on), [all, on.map((row) => all.indexOf(row)).join()]);
   const pause = () => {
     const handle = scene.current;
     if (handle) setPaused(toggle(handle, paused, Boolean(take.current), cut));
@@ -162,7 +169,7 @@ function App({ Widget, defaults, spec, keys, actions, gestures, record, id, titl
   };
   return (
     <Frame label={title} gestures={gestures}>
-      <Widget value={value} onChange={onChange} onReady={ready} />
+      <Widget value={value} onChange={onChange} onReady={ready} onExport={setMore} />
       <Btn className="icon unzen" aria-label="Leave zen" onClick={acts.zen}>
         <Icon name="unzen" />
       </Btn>
@@ -202,7 +209,7 @@ function App({ Widget, defaults, spec, keys, actions, gestures, record, id, titl
             {primary.label}
           </Btn>
         )}
-        <Export className="export" canvas={() => scene.current?.canvas ?? document.querySelector('.frame canvas')} name={`${id}-${value.seed}`} draw={() => scene.current?.draw?.()} more={record ? RATIOS.map((at) => [`Video ${at}`, () => begin(at)]) : []} />
+        <Export className="export" canvas={() => scene.current?.canvas ?? document.querySelector('.frame canvas')} name={`${id}-${value.seed}`} draw={() => scene.current?.draw?.()} more={menu(record, begin, more)} />
         <Btn className="keep" onClick={saver}>{kept === pick ? 'Screensaver set' : 'Set as screensaver'}</Btn>
       </Bar>
       <Keys map={map} />

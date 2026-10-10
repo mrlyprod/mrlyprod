@@ -1,19 +1,8 @@
 import { expect, test } from 'bun:test';
-import { headScript, tintCss } from './config.js';
-import { HUES } from './hues.js';
+import SITE from '../site.json';
+import { tintCss } from './config.js';
 
-test('a tint name sets the site accent and still leaves every hue overridable', () => {
-  const css = tintCss('purple');
-  expect(css).toContain(':root { --accent: var(--purple); --link: var(--purple-link); }');
-  for (const hue of HUES) expect(css).toContain(`:root[data-tint="${hue}"] { --accent: var(--${hue}); --link: var(--${hue}-link); }`);
-  expect(css.indexOf(':root[data-tint="purple"]')).toBeGreaterThan(css.indexOf(':root { --accent'));
-  expect(tintCss(null)).not.toContain(':root { --accent');
-});
-
-test('the head script paints the saved theme, font and tint before the first frame', () => {
-  const boot = headScript('cm-');
-  expect(boot.startsWith('<script data-boot>')).toBe(true);
-  expect(boot).toContain("localStorage.getItem('cm-'+k)");
-  expect(boot).toContain("['theme','font','tint']");
-  expect(boot).toContain("classList.add('js')");
+test("the shell's tint style is the site tint by default and every hue on demand", async () => {
+  const shell = await Bun.file(new URL('./index.html', import.meta.url)).text();
+  expect(shell).toContain(`<style>\n${tintCss(SITE.tint)}</style>`);
 });

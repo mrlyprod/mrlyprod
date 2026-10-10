@@ -19,7 +19,7 @@ target/
 # OS
 .DS_Store
 
-# DEMOS
+# NODE AND WASM
 site/node_modules/
 figures/node_modules/
 site/pkg/

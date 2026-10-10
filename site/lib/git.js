@@ -4,7 +4,7 @@ import { crumbs } from '../ui/crumbs.js';
 /* MARKDOWN */
 
 async function md(text, link) {
-  const [{ front, render }, katex] = await Promise.all([import('../kit/ssg/md.ts'), text.includes('$') ? import('katex') : null]);
+  const [{ front, render }, katex] = await Promise.all([import('../kit/md/md.ts'), text.includes('$') ? import('katex') : null]);
   const math = katex ? (tex, display) => katex.default.renderToString(tex, { output: 'mathml', throwOnError: false, displayMode: display }) : undefined;
   return render(front(text).body, { math, link });
 }
@@ -31,20 +31,14 @@ function trail() {
 const opener = () => document.querySelector('[data-pane="right"]');
 
 function bar(nav) {
-  const old = document.getElementById('right');
+  const pane = document.getElementById('right');
   const button = opener();
   if (button) button.hidden = !nav;
-  if (!nav) {
-    old?.remove();
-    document.documentElement.dataset.right = 'shut';
-    return;
-  }
-  const pane = old ?? document.createElement('aside');
-  pane.className = 'pane right';
-  pane.id = 'right';
-  pane.setAttribute('aria-label', 'Page tools');
-  pane.replaceChildren(nav);
-  if (!old) document.getElementById('main')?.after(pane);
+  if (!nav) document.documentElement.dataset.right = 'shut';
+  if (!pane) return;
+  pane.hidden = !nav;
+  pane.replaceChildren(...(nav ? [nav] : []));
+  if (nav) window.dispatchEvent(new Event('wire'));
 }
 
 function contents(mount) {

@@ -8,7 +8,7 @@ const SIZE = 860;
 
 export const units = { math };
 
-let memo: Float64Array | undefined;
+let memo: { values: Float64Array; lo: number } | undefined;
 
 function crop() {
   if (memo) return memo;
@@ -17,22 +17,22 @@ function crop() {
   if (Math.trunc(sheet.max()) !== SCALES) throw new Error(`site-research: sheet peaks at ${sheet.max()}, want ${SCALES}`);
   if (sheet.size !== SHEET) throw new Error(`site-research: sheet of ${sheet.size}, want ${SHEET}`);
   const data = sheet.data;
-  const out = new Float64Array(SIZE * SIZE);
+  const values = new Float64Array(SIZE * SIZE);
   for (let row = 0; row < SIZE; row++) {
     const base = (START + row) * sheet.size + START;
-    for (let col = 0; col < SIZE; col++) out[row * SIZE + col] = data[base + col];
+    for (let col = 0; col < SIZE; col++) values[row * SIZE + col] = data[base + col];
   }
   sheet.free();
-  memo = out;
+  let lo = Number.MAX_VALUE;
+  for (const v of values) lo = Math.min(lo, v);
+  if (!values.includes(SCALES)) throw new Error(`site-research: no sample reaches ${SCALES}`);
+  memo = { values, lo };
   return memo;
 }
 
 export default function draw(pen: Pen, ink: Ink) {
-  const values = crop();
+  const { values, lo } = crop();
   const hi = SCALES;
-  let lo = Number.MAX_VALUE;
-  for (const v of values) lo = Math.min(lo, v);
-  if (!values.includes(hi)) throw new Error(`site-research: no sample reaches ${hi}`);
   const levels = Math.trunc(hi - lo) + 1;
   const stops = Array.from({ length: levels - 1 }, (_, i) => {
     const t = i / (levels - 2);

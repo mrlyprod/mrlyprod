@@ -1,10 +1,13 @@
 import { expect, test } from "bun:test";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { join, relative, resolve } from "node:path";
+import { readFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { brotliDecompressSync } from "node:zlib";
+import katex from "katex";
+import { front, render } from "../kit/md/md.ts";
+import { state } from "../scripts/site.ts";
 
 const site = resolve(import.meta.dir, "..");
-const dist = process.env.MRLY_DIST ? resolve(process.env.MRLY_DIST) : join(site, "dist");
+const repo = resolve(site, "..");
 const fonts = join(import.meta.dir, "fonts");
 const FACE = /@font-face\s*\{([^}]*)\}/g;
 const SRC = /src:\s*url\("?([^")]+)"?\)/;
@@ -15,28 +18,20 @@ const DROP = /<(head|script|style|annotation)\b[^>]*>[\s\S]*?<\/\1>/gi;
 const TAG = /<[^>]*>/g;
 const INERT = /[\s\p{Cf}]/u;
 const NAMED: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
-const KNOWN = [
-  "U+0338", "U+0394", "U+0398", "U+03A3", "U+03A6", "U+03A9", "U+03B1", "U+03B2", "U+03B3", "U+03B4", "U+03B5",
-  "U+03B6", "U+03B8", "U+03BA", "U+03BB", "U+03BC", "U+03BD", "U+03C0", "U+03C1", "U+03C3", "U+03C4", "U+03C6",
-  "U+03C7", "U+03C8", "U+03C9", "U+03D5", "U+203E", "U+2113", "U+2192", "U+21A6", "U+2200", "U+2208", "U+220F",
-  "U+2211", "U+221E", "U+2223", "U+2224", "U+2229", "U+222A", "U+222B", "U+224D", "U+2260", "U+2261", "U+2264",
-  "U+2265", "U+226A", "U+2282", "U+2286", "U+2295", "U+2297", "U+22C3", "U+22EF", "U+2308", "U+2309", "U+230A",
-  "U+230B", "U+266D", "U+27E8", "U+27E9", "U+27F6", "U+2AAF",
-];
 
-function pages(dir: string): string[] {
-  if (!existsSync(dir)) return [];
-  const out: string[] = [];
-  for (const item of readdirSync(dir, { withFileTypes: true })) {
-    const path = join(dir, item.name);
-    if (item.isDirectory() && path !== join(dist, "raw")) out.push(...pages(path));
-    else if (item.name.endsWith(".html")) out.push(path);
-  }
-  return out;
+const mathml = (tex: string, display: boolean) => katex.renderToString(tex, { output: "mathml", throwOnError: false, displayMode: display });
+
+function pages(): [string, string][] {
+  const shell: [string, string] = ["ui/index.html", readFileSync(join(import.meta.dir, "index.html"), "utf8")];
+  const code = ["ui", "lib", "apps"].flatMap((top) => [...new Bun.Glob(`${top}/**/*.{js,jsx}`).scanSync(site)].filter((file) => !file.includes(".test.")).sort());
+  return [shell, ...state().rows.map((row): [string, string] => {
+    const body = row.source ? render(front(readFileSync(join(repo, row.source), "utf8")).body, { math: mathml }) : "";
+    return [row.route, `<h1>${row.title}</h1><p>${row.lead}</p>${body}`];
+  }), ...code.map((file): [string, string] => [file, readFileSync(join(site, file), "utf8")])];
 }
 
-function words(file: string): string {
-  return readFileSync(file, "utf8")
+function words(html: string): string {
+  return html
     .replace(DROP, " ")
     .replace(TAG, " ")
     .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
@@ -119,21 +114,17 @@ function faces(): ((cp: number) => boolean)[] {
   });
 }
 
-test("every codepoint a built page prints is drawn by a shipped face, but the known gap", () => {
-  const files = pages(dist).sort();
-  if (!files.length) return;
+test("every codepoint a route prints is drawn by a shipped face", () => {
+  const list = pages();
   const draws = faces();
   const gap = new Map<number, string>();
-  for (const file of files) {
-    for (const ch of words(file)) {
+  for (const [route, html] of list) {
+    for (const ch of words(html)) {
       const cp = ch.codePointAt(0)!;
       if (cp <= 0x7f || INERT.test(ch) || gap.has(cp) || draws.some((one) => one(cp))) continue;
-      gap.set(cp, relative(dist, file));
+      gap.set(cp, route);
     }
   }
   const hex = (cp: number) => `U+${cp.toString(16).toUpperCase().padStart(4, "0")}`;
-  const found = [...gap.keys()].sort((a, b) => a - b);
-  const fresh = found.filter((cp) => !KNOWN.includes(hex(cp))).map((cp) => `${hex(cp)} ${String.fromCodePoint(cp)} ${gap.get(cp)}`);
-  const gone = KNOWN.filter((one) => !found.some((cp) => hex(cp) === one)).map((one) => `${one} is drawn or unused now, drop it`);
-  expect([...fresh, ...gone]).toEqual([]);
+  expect([...gap].sort(([a], [b]) => a - b).map(([cp, route]) => `${hex(cp)} ${String.fromCodePoint(cp)} ${route}`)).toEqual([]);
 });

@@ -4,18 +4,15 @@
   "type": "module",
   "scripts": {
     "wasm": "bash ../scripts/wasm.sh",
-    "dev": "bun --hot scripts/dev.ts",
+    "dev": "bun scripts/dev.ts",
     "build": "bun scripts/site.ts",
-    "boot": "bun scripts/boot.ts",
     "push": "bun scripts/push.ts",
-    "shots": "bun scripts/shots.ts",
-    "film": "bun scripts/film.ts",
-    "clean": "rm -rf dist",
     "check": "bun check.ts",
     "test": "bun test ./kit ./scripts ./ui ./check ./apps ./lib",
-    "figures": "bun ../figures/press.ts",
-    "symbols": "uv run --project .. --group font python ../scripts/symbols.py",
-    "vendor": "bun scripts/vendor.ts"
+    "shots": "bun scripts/shots.ts",
+    "film": "bun scripts/film.ts",
+    "vendor": "bun scripts/vendor.ts",
+    "symbols": "uv run --project .. --group font python ../scripts/symbols.py"
   },
   "dependencies": {
     "@shikijs/core": "^4.4.3",

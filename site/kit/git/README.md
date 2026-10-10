@@ -1,33 +1,24 @@
 # git
 
 - The kit's code viewer: `/git/` browses the repo the site lives in, `/raw/` serves its exact bytes.
-- The input is always this repo's own tree, never another; no `git` block in `site.json` means no routes at all.
-- `/git/` is one deep `spa` route: one shell answers every path under it, the browser draws the page, and no page is rendered per file or folder.
+- The input is always this repo's own tree, never another; the `git` block in `site.json` is `{ root, slug, branch }`, `branch` defaulting to `main`.
+- `/git/` is one row of kind `git` with `meta.deep`: the router answers every path under it with that row, and the browser draws each file and folder.
 - `git.ts` is the build half, with `fs` and `git ls-files`; `view.ts` draws, with neither; `client.ts` runs the page; `code.ts` paints.
-- `../ssg/build.ts` calls in: `scan()` appends the routes, `fingerprint()` dispatches on the kind, `render()` sends the shell to the `spa` build and a raw route here, `globals()` writes the tree.
-
-## SITE.JSON
-
-- `git`: `{ root, slug, branch }`. `root` is the repo root relative to the site, `slug` is `owner/name` on GitHub, `branch` defaults to `main`.
-- `modes` must make `/git/` deep, `"/git/": { "mode": "spa", "deep": true }`; a `git` block without it stops the scan.
-- `code.ts` imports the three Shiki packages on first paint.
+- `../../scripts/site.ts` calls `tree()` for the raw list and `forest()` for `git.json`; `../../lib/git.js` calls `start()`.
 
 ## TREE
 
 - The file list is `git ls-files` when a `.git` is there, and a plain walk of the tree when it is not, so a checkout and an untarred Lambda see the same paths.
-- Every tracked file is listed, dotfiles included; the walk fallback skips `.git .cache .venv __pycache__ node_modules dist target data pkg`.
-- `/git.json` is the whole tree: `{ base, name, slug, branch, c }`, a node `{ n, k, i?, s?, u?, c? }` (name, `d` or `f`, seti icon, file size, served copy's URL, children), folders first, then by name.
-- It sits at the root because a deep shell owns every path under `/git/`; the sidebar reads the same file.
+- Every tracked file is listed, dotfiles included, and `scripts/site.ts` drops `research/`; the walk fallback skips `.git .cache .venv __pycache__ node_modules dist target data pkg`.
+- `/git.json` is the whole tree: `{ base, name, slug, branch, c }`, a node `{ n, k, i?, s?, c? }` (name, `d` or `f`, seti icon, file size, children), folders first, then by name.
+- It sits at the root because the `/git/` row owns every path under `/git/`; the left pane's tree reads the same file.
 
 ## ROUTES
 
-- `/git/` is the shell: the site's head and chrome, a one-line description of the repo, an empty body, the viewer's one script, the explorer's root with every folder lazy.
-- `/raw/<path>` is the bytes, under the file's own name, extension or not: the router passes `/raw/` untouched.
+- `/git/<path>` is the shell; the router renders the `git` page, which hands `#main` to the viewer and the tree to `#left`.
+- `/raw/<path>` is the bytes, under the file's own name, extension or not: the edge passes `/raw/` untouched.
 - Text up to 1 MB and every SVG are `text/plain; charset=utf-8`, the rest keeps its type by extension, and the type rides on the output so `push.ts` sets the S3 header.
-- A file the site already serves elsewhere gets no `/raw/` object: its node carries `u`, the viewer points at that copy, and the sitemap drops the raw URL.
-- `/git/` and every `/raw/` object are on the sitemap; a raw route is `hidden`, so no page lists it.
-- `site.ships` answers first, for a file the build publishes byte for byte, then `spec.git.served(site, path)`, so the kit never names an extension or a folder.
-- A served file a bundler may have rewritten keeps its `/raw/` copy unless it is binary, huge, an image or a PDF, because only then are the bytes known to match.
+- `/git/` and every `/raw/` object are on the sitemap.
 
 ## VIEWER
 
@@ -35,7 +26,7 @@
 - Its popstate draws only a path under the tree's base, so a Back that leaves `/git/` is another router's.
 - A listing is its path bar, its count of folders and files, then folders with their item counts and files with their sizes and seti icons.
 - A file is its path bar with Raw and GitHub links: an image inline, a PDF in an `<embed>`, a file over 1 MB a download link, all with no fetch.
-- Text is fetched from `/raw/` or `u`: a numbered `<pre>`, markdown through `md`, a binary a download link; text over 200 KB drops the numbers.
+- Text is fetched from `/raw/`: a numbered `<pre>`, markdown through `md`, a binary a download link; text over 200 KB drops the numbers.
 - The page draws at once and fills when the bytes land; a listing's README fills above its rows the same way, and `aria-busy` holds until the fill and the paint are done.
 - `md` and `paint` are the lazy halves: the site's `md` imports the pipeline, and KaTeX only for a text with a `$`; `paint` imports `code.ts`.
 - Each draw sets the title, the canonical link and the sidebar's current node, opening the lazy folders above it; `after(view)` runs after each draw and each fill, and a click mid-load wins over the old draw.
@@ -47,7 +38,7 @@
 - A path is `/git/<path>`, a trailing slash `/git/<dir>/`, an image or a PDF `/raw/<path>`.
 - Given the tree, the viewer's `/git.json`, a path missing from it is plain text and a folder is `/git/<dir>/` with or without its slash; `md` unwraps a link, inline or reference, its resolver answers `null`.
 - `https:`, `http:`, `mailto:`, `tel:`, `#` and a rooted `/path` pass through; `javascript:`, `data:` and `vbscript:` become `#`.
-- No index of site routes ships, so a README link to a research file opens its `/git/` view, not its site page.
+- The viewer has no route table, so a README link to a page's markdown opens its `/git/` view, not the page.
 
 ## HIGHLIGHT
 
@@ -56,16 +47,3 @@
 - The theme is `createCssVariablesTheme` with prefix `--code-`, and nothing ships that variable: every token becomes a `tk-*` class, so no output carries a `style` attribute.
 - 16 grammars: c css csv html javascript json jsx markdown python rust shellscript toml tsx typescript wgsl yaml. Anything else paints nothing and the escaped text stands.
 - The numbered lines show first and the paint lands on them; `kit/code/code.css` colours the classes and sizes the gutter from the `d2`-`d6` class `block()` writes.
-
-## FINGERPRINT
-
-- A raw route hashes its path, size and bytes, the site stamp and any served copy's URL.
-- The shell hashes its route, the stamp and the repo's root listing, so an edit to a module that draws or a new root-level file repaints it; a file added deeper does not.
-
-## HOOKS
-
-- The module never imports the chrome: `spec.git` carries it, `{ page, entry, served }`, and the tests draw through it. No `page` means the routes are collected and nothing is rendered.
-- `page(site, leaf)` wraps the empty body in the site's page template; `leaf.code` asks for the code viewer's stylesheet, the `git.css` sheet, `leaf.tree` is the explorer, `leaf.island` the url of the viewer's entry, which the page names on the element the viewer draws into.
-- `entry` is the site's browser module, resolved against the site root, which calls `start()`; the `/git/` route is born from it, and the site lists it in `spa.entries` too.
-- `shell(site, route, shell, spec)` draws the shell through `page`; the site's `spa.page` calls it for the `/git/` route.
-- `served(site, path)` is the mirror seam: it hands back the URL the site already serves that repo file at, or null; `site.serves` maps a bundled source file to its published URL and `site.made` holds every path the build has written.

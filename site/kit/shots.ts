@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { decode } from "./git/view.ts";
-import { deeps } from "./ssg/modes.ts";
+import { decide } from "./edge.ts";
 import { kind } from "./types.ts";
 
 /* WHERE */
@@ -35,9 +35,7 @@ export function block(config: Record<string, unknown>): Block {
 
 const doc = (bytes: Uint8Array) => new TextDecoder().decode(bytes.subarray(0, 15)).toLowerCase().startsWith("<!doctype html");
 
-const sunk = (deep: string[], path: string) => deep.find((wall) => path.startsWith(wall) && path !== wall);
-
-function serve(dist: string, deep: string[]) {
+function serve(dist: string) {
   const file = (path: string): Response | null => {
     const want = join(dist, path.endsWith("/") ? `${path}index.html` : path);
     if (!want.startsWith(dist) || !existsSync(want) || !statSync(want).isFile()) return null;
@@ -50,9 +48,10 @@ function serve(dist: string, deep: string[]) {
   return Bun.serve({
     port: SERVE,
     fetch(req) {
-      const path = decode(new URL(req.url).pathname);
-      const wall = sunk(deep, path);
-      const hit = wall ? file(wall) : (file(path) ?? file(`${path}/`));
+      const url = new URL(req.url);
+      const step = decide(decode(url.pathname));
+      if (step.redirect) return Response.redirect(`${step.redirect}${url.search}`, 301);
+      const hit = file(step.uri!);
       if (hit) return hit;
       const lost = file("/404.html");
       return lost ? new Response(lost.body, { status: 404, headers: lost.headers }) : new Response("not found", { status: 404 });
@@ -268,7 +267,7 @@ export async function main(root: string, config?: Record<string, unknown>, dist 
   const name = (route: string, size: string, act: number, stage = "") =>
     `${route.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "home"}${act >= 0 ? `-open${act}` : ""}-${size}${print ? "-print" : ""}${motion ? "-motion" : ""}${nojs ? "-nojs" : ""}${scheme ? `-${scheme}` : ""}${keys.length ? "-keys" : ""}${walk ? "-walk" : ""}${stage}.png`;
   mkdirSync(out, { recursive: true });
-  const server = LIVE ? null : serve(resolve(dist), deeps(conf));
+  const server = LIVE ? null : serve(resolve(dist));
   const { proc, page } = await launch(join(DATA_DIR, "profile"));
   let shot = 0;
   let changed = 0;

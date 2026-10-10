@@ -1,9 +1,9 @@
 import { seti } from "../code/seti/seti.ts";
-import { escape } from "../ssg/text.ts";
+import { escape } from "../md/text.ts";
 
 /* TYPES */
 
-export type Twig = { n: string; k: "d" | "f"; i?: string; s?: number; u?: string; c?: Twig[] };
+export type Twig = { n: string; k: "d" | "f"; i?: string; s?: number; c?: Twig[] };
 
 export type Wood = { base: string; name: string; slug: string; branch: string; c: Twig[] };
 
@@ -46,11 +46,6 @@ export const dirRoute = (dir: string) => (dir ? `/git/${dir}/` : "/git/");
 export const rawPath = (path: string) => `raw/${path}`;
 
 export const href = (url: string) => escape(encodeURI(url).replace(/#/g, "%23").replace(/\?/g, "%3F"));
-
-export function owner(path: string): string | null {
-  if (!path.startsWith("/raw/")) return null;
-  return `/git/${path.slice(5)}`;
-}
 
 /* LANGS */
 
@@ -149,7 +144,7 @@ export function link(dir: string, url: string, wood?: Wood): string | null {
   const twig = wood ? find(wood, decode(path)) : null;
   if (wood && !twig) return null;
   if (twig ? twig.k === "d" : head.endsWith("/") || !path) return dirRoute(path) + tail;
-  if (IMAGE.has(ext(path)) || ext(path) === "pdf") return `${twig?.u || `/${rawPath(path)}`}${tail}`;
+  if (IMAGE.has(ext(path)) || ext(path) === "pdf") return `/${rawPath(path)}${tail}`;
   return fileRoute(path) + tail;
 }
 
@@ -171,7 +166,7 @@ function bar(wood: Wood, path: string, dir: boolean, tools: string[]): string {
 
 const lede = (name: string, lead: string) => `<div class="lede"><h1 id="${anchor(name)}">${escape(name)}</h1><p class="lead">${escape(lead)}</p></div>`;
 
-const source = (path: string, twig: Twig) => twig.u ?? `/${rawPath(path)}`;
+const source = (path: string) => `/${rawPath(path)}`;
 
 const prose = async (wood: Wood, tools: Tools, path: string, text: string) => `<div class="prose readme">${await tools.md!(text, (url) => link(home(path), url, wood))}</div>`;
 
@@ -202,7 +197,7 @@ function listing(wood: Wood, dir: string, twig: Twig): { html: string; more?: Vi
   if (!readme || (readme.s ?? 0) > HUGE) return { html: page("") };
   const path = dir ? `${dir}/${readme.n}` : readme.n;
   const more = async (tools: Tools) => {
-    const body = tools.md ? await tools.load(source(path, readme)) : null;
+    const body = tools.md ? await tools.load(source(path)) : null;
     const text = body ? reads(body) : null;
     return text ? { html: page(await prose(wood, tools, path, text)) } : null;
   };
@@ -234,7 +229,7 @@ export const paints = (text: string) => text.length <= WIDE;
 
 function file(wood: Wood, path: string, twig: Twig): { html: string; more?: View["more"] } {
   const weight = twig.s ?? 0;
-  const raw = href(source(path, twig));
+  const raw = href(source(path));
   const kind = ext(path);
   const name = stem(path);
   const tongue = lang(path);
@@ -246,7 +241,7 @@ function file(wood: Wood, path: string, twig: Twig): { html: string; more?: View
   if (kind === "pdf") return { html: page(`${size(weight)} · pdf`, `<embed class="doc" src="${raw}" type="application/pdf">`) };
   if (IMAGE.has(kind)) return { html: page(`${size(weight)} · ${kind}`, `<figure class="shot"><img src="${raw}" alt="${escape(name)}"></figure>`) };
   const more = async (tools: Tools): Promise<Full | null> => {
-    const body = await tools.load(source(path, twig));
+    const body = await tools.load(source(path));
     if (!body) return { html: page(`${size(weight)} · ${tongue}`, `<p class="lead">${escape(name)} did not load. <a href="${raw}">Open the raw file</a> or reload.</p>`) };
     const text = reads(body);
     if (text === null) return { html: loose };

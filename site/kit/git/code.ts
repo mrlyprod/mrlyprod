@@ -1,5 +1,5 @@
 import type { HighlighterCore } from "@shikijs/core";
-import { escape } from "../ssg/text.ts";
+import { escape } from "../md/text.ts";
 
 /* GRAMMARS */
 

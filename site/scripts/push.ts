@@ -1,7 +1,5 @@
+import { resolve } from "node:path";
 import { main } from "../kit/push.ts";
-import { spec } from "./site.ts";
+import { build } from "./site.ts";
 
-if (import.meta.main) {
-  process.chdir(spec.root);
-  await main(spec);
-}
+if (import.meta.main) await main(resolve(import.meta.dir, ".."), () => build());

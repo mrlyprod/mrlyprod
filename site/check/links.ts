@@ -30,9 +30,10 @@ function files(dist: string, at = '', out: string[] = []): string[] {
   return out;
 }
 
-export function dead(dist: string, origin: string, guard: string[], tree: Wood | null): { links: number; pages: number; dead: { page: string; url: string }[] } {
+export function dead(dist: string, origin: string, guard: string[], tree: Wood | null, routes: Set<string> = new Set()): { links: number; pages: number; dead: { page: string; url: string }[] } {
   const all = new Set(files(dist));
   const held = (key: string) => {
+    if (routes.has(`/${key}`)) return true;
     if (!key || key.endsWith('/')) return all.has(`${key}index.html`);
     return all.has(key) || (!key.slice(key.lastIndexOf('/') + 1).includes('.') && all.has(`${key}/index.html`));
   };

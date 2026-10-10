@@ -178,8 +178,8 @@ export function run(canvas, make, opts = {}) {
     shade?.addEventListener('change', paint);
     window.addEventListener('theme', paint);
     document.addEventListener('visibilitychange', watch);
-    if (still) saver.draw();
-    else watch();
+    if (still || saver.every) saver.draw();
+    if (!still) watch();
   };
   if (saver.font && document.fonts) document.fonts.load(`1em ${JSON.stringify(saver.font)}`).then(start, start);
   else start();

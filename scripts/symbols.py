@@ -1,4 +1,5 @@
 import html
+import json
 import os
 import re
 import shutil
@@ -18,26 +19,22 @@ CSS = FONTS / "fonts.css"
 KEEP = FONTS / "keep.css"
 CONFIG = SITE / "site.json"
 DIST = Path(os.environ.get("MRLY_DIST") or SITE / "dist")
-SKIP = {"git", "raw"}
 FAMILY = "Noto Sans Symbols 2"
 DROP = re.compile(r"<(script|style)\b[^>]*>.*?</\1>", re.S | re.I)
 TAG = re.compile(r"<[^>]*>", re.S)
 
-def pages(dist):
-    out = []
-    for here, dirs, files in os.walk(dist):
-        if Path(here) == dist:
-            dirs[:] = [d for d in dirs if d not in SKIP]
-        out += [Path(here) / name for name in files if name.endswith(".html")]
-    return sorted(out)
-
 def used(dist):
-    seen = set()
-    found = pages(dist)
-    for file in found:
-        text = html.unescape(TAG.sub(" ", DROP.sub(" ", file.read_text(encoding="utf8", errors="replace"))))
-        seen |= {ord(ch) for ch in set(text)}
-    return seen, len(found)
+    rows = json.loads((dist / "routes.json").read_text(encoding="utf8"))["rows"]
+    texts = [html.unescape(TAG.sub(" ", DROP.sub(" ", (dist / "index.html").read_text(encoding="utf8"))))]
+    for row in rows:
+        texts += [row["title"], row["lead"] or ""]
+        if row["source"]:
+            texts.append((dist / "raw" / row["source"]).read_text(encoding="utf8", errors="replace"))
+    for top in ("ui", "lib", "apps"):
+        for file in sorted((SITE / top).rglob("*")):
+            if file.suffix in {".js", ".jsx", ".html"} and ".test." not in file.name:
+                texts.append(file.read_text(encoding="utf8"))
+    return {ord(ch) for text in texts for ch in text}, len(rows)
 
 def source():
     here = FONTS / "symbols.ttf"
@@ -81,14 +78,14 @@ def listed(text):
     return text.replace('"fonts/symbols.ttf"', '"fonts/symbols.woff2"')
 
 def main():
-    if not DIST.exists():
-        raise SystemExit(f"symbols: no dist at {DIST}; build the site first")
+    if not (DIST / "routes.json").exists():
+        raise SystemExit(f"symbols: no routes.json in {DIST}; build the site first")
     seen, count = used(DIST)
     file = source()
     font = TTFont(file, recalcTimestamp=False)
     keep = sorted(cp for cp in seen & set(font.getBestCmap()) if cp > 0x7F)
     if not keep:
-        raise SystemExit("symbols: no page needs a symbol glyph")
+        raise SystemExit("symbols: no route needs a symbol glyph")
     options = Options()
     options.layout_features = ["*"]
     options.name_IDs = ["*"]
@@ -107,7 +104,7 @@ def main():
     CONFIG.write_text(listed(CONFIG.read_text(encoding="utf8")), encoding="utf8")
     was = file.stat().st_size
     now = SHIPPED.stat().st_size
-    print(f"symbols: {count} pages, {len(keep)} glyphs, {len(spans)} ranges, {was:,} -> {now:,} bytes")
+    print(f"symbols: {count} routes, {len(keep)} glyphs, {len(spans)} ranges, {was:,} -> {now:,} bytes")
     print(f"symbols: unicode-range: {ranged}")
     return 0
 

@@ -1,7 +1,6 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { client, list, need } from "../kit/s3.ts";
-import { ensureFigures, said } from "./figs.ts";
 
 /* HASH */
 
@@ -60,5 +59,4 @@ export async function ensurePkg(root = resolve(import.meta.dir, "..")): Promise<
 if (import.meta.main) {
   const dir = await ensurePkg();
   console.log(`${pkgHash(dir)} ${pkgFiles(dir).length} ${dir}`);
-  console.log(said(await ensureFigures()));
 }

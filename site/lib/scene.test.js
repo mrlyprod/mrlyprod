@@ -139,7 +139,7 @@ test('a fixed frame sets the store, a dpr of its short side over 540 and view.fi
   expect(seen).toEqual([[1080, 1920, 2, true, 1080], [8, 4, 1, false, 8], [1280, 720, 720 / 540, true, 1280]]);
 });
 
-test('an every scene ignores the step', () => {
+test('an every scene draws once at start, then at its interval, and ignores the step', () => {
   stage();
   const ticks = [];
   const real = { setInterval: globalThis.setInterval, clearInterval: globalThis.clearInterval };
@@ -151,7 +151,7 @@ test('an every scene ignores the step', () => {
   stop();
   Object.assign(globalThis, real);
   unstage();
-  expect([ticks[0][1], seen]).toEqual([50, [50, 100]]);
+  expect([ticks[0][1], seen]).toEqual([50, [0, 50, 100]]);
 });
 
 test('a take with a step wakes a reduced-motion scene, which then draws one step a frame', () => {

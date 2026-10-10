@@ -1,14 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { assets, cache, changes, GONE, IMMUTABLE, keep, mine, rules, seal, SHORT, spread, staged, sweep, typing, type Lister } from "./push.ts";
-import { build, forget, globals, type Manifest, type Spec } from "./ssg/build.ts";
-import { kind } from "./types.ts";
-
-const SHOP = rules(["(^|/)lib-[^/]+\\.js$", "(^|/)lib-[^/]+\\.css$", "(^|/)js/[^/]+\\.js$", "\\.wasm$", "-[0-9a-f]{8}\\.[^./]+$"]);
-
-const NET = rules(["(^|/)lib-[^/]+\\.js$", "(^|/)lib-[^/]+\\.css$", "\\.wasm$", "-[0-9a-f]{8}\\.[^./]+$"]);
+import { assets, changes, GONE, headers, IMMUTABLE, keep, mine, SHORT, spread, staged, sweep, typing, type Lister, type Manifest } from "./push.ts";
 
 const GUARD = ["cdn/", "art/", "automator/automator.json", "stats/stats.json"];
 
@@ -33,14 +24,23 @@ const TREE: Record<string, ReturnType<typeof page>> = {
   "site/cdn/": page(["site/cdn/never.js"], []),
 };
 
+const cache = headers([
+  { path: "lib-a1b2c3d4.js", hash: "", fixed: true },
+  { path: "fonts/sans-afc7a910.woff2", hash: "", fixed: true },
+  { path: "sitemap-research.xml", hash: "" },
+  { path: "index.html", hash: "" },
+]);
+
 const fake: Lister = { list: async ({ prefix }) => TREE[prefix] ?? page([], []) };
 
 describe("push", () => {
-  test("a hashed name is immutable for a year, every other name revalidates", () => {
-    expect(cache("js/main.js", SHOP)).toBe(IMMUTABLE);
-    expect(cache("ui/tokens-8a0bcf6d.css", SHOP)).toBe(IMMUTABLE);
-    expect(cache("index.html", SHOP)).toBe(SHORT);
-    expect(cache("js/main.js", NET)).toBe(SHORT);
+  test("a file the build hashed is immutable for a year, every other file revalidates, whatever its name", () => {
+    expect([cache("lib-a1b2c3d4.js"), cache("fonts/sans-afc7a910.woff2")]).toEqual([IMMUTABLE, IMMUTABLE]);
+    expect([cache("sitemap-research.xml"), cache("index.html"), cache("raw/site/a-12345678.ts")]).toEqual([SHORT, SHORT, SHORT]);
+  });
+
+  test("a file marked immutable with no hash in its name stops the push", () => {
+    expect(() => headers([{ path: "boot.js", hash: "", fixed: true }])).toThrow(/boot\.js/);
   });
 
   test("a type declared in the manifest wins over the extension", () => {
@@ -57,6 +57,12 @@ describe("push", () => {
     ]);
   });
 
+  test("a file whose bytes did not move keeps its record and its day", () => {
+    const old = assets([{ path: "a.js", hash: "h1" }], {}, "2026-10-01");
+    expect(assets([{ path: "a.js", hash: "h1", type: "text/javascript" }], old, "2026-10-10")).toEqual({ "@a.js": { hash: "h1", at: "2026-10-01", outputs: ["a.js"], types: { "a.js": "text/javascript" } } });
+    expect(assets([{ path: "a.js", hash: "h2" }], old, "2026-10-10")["@a.js"]!.at).toBe("2026-10-10");
+  });
+
   test("a re-rendered output uploads only when its bytes moved", () => {
     const old: Manifest = { "/": { hash: "a", at: "2026-09-21", outputs: ["index.html", "props.json"], sums: { "index.html": "s1", "props.json": "s2" } } };
     const next: Manifest = { "/": { hash: "b", at: "2026-09-21", outputs: ["index.html", "props.json"] } };
@@ -64,7 +70,7 @@ describe("push", () => {
     expect(next["/"]!.sums).toEqual({ "index.html": "s1", "props.json": "s3" });
   });
 
-  test("a forced push reseals every output, so bytes the fingerprint missed still upload", () => {
+  test("a forced push reseals every output, so bytes the hash missed still upload", () => {
     const old: Manifest = { "/": { hash: "a", at: "2026-09-21", outputs: ["index.html", "props.json"], sums: { "index.html": "s1", "props.json": "s2" } } };
     const sealed = (path: string) => (path === "index.html" ? "s1" : "s3");
     const same = (): Manifest => ({ "/": { ...old["/"]! } });
@@ -72,22 +78,21 @@ describe("push", () => {
     expect(changes(old, same(), [], sealed, true)).toEqual(["props.json"]);
   });
 
-  test("hashed files upload first, then the other files, then every page, each group in its own order and its own batches", () => {
-    const type = (path: string) => (path === "git/shell" ? "text/html; charset=utf-8" : kind(path));
-    const order = staged(["index.html", "props.json", "git/shell", "demos/x/index.js", "shop/index.html", "lib-a1.js", "ui/router-8a0bcf6d.js", "search.json"], type, (path) => cache(path, NET));
-    expect(order).toEqual([["lib-a1.js", "ui/router-8a0bcf6d.js"], ["props.json", "demos/x/index.js", "search.json"], ["index.html", "git/shell", "shop/index.html"]]);
+  test("hashed files upload first, then the other files, then the shell and its copy", () => {
+    expect(staged(["index.html", "routes.json", "lib-a1b2c3d4.js", "raw/LICENSE", "404.html", "fonts/sans-afc7a910.woff2"], cache)).toEqual([
+      ["lib-a1b2c3d4.js", "fonts/sans-afc7a910.woff2"],
+      ["routes.json", "raw/LICENSE"],
+      ["index.html", "404.html"],
+    ]);
   });
 
-  test("a removed file is kept a week from the day it left, a removed page goes at once", () => {
-    const held = (path: string) => !kind(path).startsWith("text/html");
-    const first = keep(MANIFEST, new Map(), held, "2026-10-08");
-    expect(first).toEqual({
-      [GONE + "props.json"]: { hash: "a", at: "2026-10-08", outputs: ["props.json"] },
-      [GONE + "ui/tokens-8a0bcf6d.css"]: { hash: "c", at: "2026-10-08", outputs: ["ui/tokens-8a0bcf6d.css"] },
-    });
-    expect(keep(first, new Map(), held, "2026-10-14")).toEqual(first);
-    expect(keep(first, new Map(), held, "2026-10-15")).toEqual({});
-    expect(keep(first, spread(MANIFEST), held, "2026-10-09")).toEqual({});
+  test("every removed file, a page of the old route manifest too, is kept a week from the day it left", () => {
+    const first = keep(MANIFEST, new Map(), "2026-10-08");
+    expect(Object.keys(first).sort()).toEqual([GONE + "index.html", GONE + "props.json", GONE + "shop/index.html", GONE + "ui/tokens-8a0bcf6d.css"]);
+    expect(first[GONE + "shop/index.html"]).toEqual({ hash: "b", at: "2026-10-08", outputs: ["shop/index.html"] });
+    expect(keep(first, new Map(), "2026-10-14")).toEqual(first);
+    expect(keep(first, new Map(), "2026-10-15")).toEqual({});
+    expect(keep(first, spread(MANIFEST), "2026-10-09")).toEqual({});
   });
 
   test("the guard owns a prefix and a single key alike", () => {
@@ -105,45 +110,4 @@ describe("push", () => {
     const flat: Lister = { list: async ({ prefix }) => (prefix === "" ? page(["index.html"], ["cdn/"]) : page([], [])) };
     expect(await sweep(flat, "", ["cdn/"])).toEqual(["index.html"]);
   });
-});
-
-/* SPA */
-
-test("an edit only one spa route's entry sees uploads its changed files and deletes its old chunk, whatever the other route's hash", async () => {
-  const home = join(tmpdir(), `kitpush-spa-${process.pid}`);
-  rmSync(home, { recursive: true, force: true });
-  mkdirSync(join(home, "app"), { recursive: true });
-  const file = (name: string) => join(home, "app", name);
-  writeFileSync(file("only.js"), 'export const mark = "first-cut";\n');
-  writeFileSync(file("a.js"), 'const { mark } = await import("./only.js");\ndocument.title = mark;\n');
-  writeFileSync(file("b.js"), 'document.title = "b";\n');
-  writeFileSync(join(home, "site.json"), "{}");
-  const spec: Spec = {
-    root: home,
-    out: join(home, "dist"),
-    collect: () => ({ routes: [{ route: "/a/", mode: "spa", entry: file("a.js"), inputs: [file("a.js"), file("only.js")] }, { route: "/b/", mode: "spa", entry: file("b.js"), inputs: [file("b.js")] }] }),
-    render: () => [],
-    spa: { entries: () => [file("a.js"), file("b.js")], page: (_site, _route, shell) => `<script type="module" src="${shell.script}"></script>` },
-  };
-  const round = async (old: Manifest) => {
-    forget();
-    writeFileSync(join(home, "manifest.json"), JSON.stringify(old));
-    const done = await build(spec, { manifest: "manifest.json", verify: false });
-    const next: Manifest = { ...done.manifest, ...assets(await globals(done.site, spec), old) };
-    const upload = changes(old, next, [], (path) => seal(readFileSync(join(home, "dist", path)), "", ""));
-    const want = spread(next);
-    return { next, upload, remove: [...spread(old).keys()].filter((path) => !want.has(path)), rendered: done.rendered };
-  };
-  const first = await round({});
-  const chunk = first.upload.find((path) => /^lib-.+\.js$/.test(path))!;
-  expect(first.upload.sort()).toEqual(["a/index.html", "app/a.js", "app/b.js", "b/index.html", chunk, "robots.txt", "sitemap-pages.xml", "sitemap.xml"].sort());
-  expect((await round(first.next)).upload).toEqual([]);
-  writeFileSync(file("only.js"), 'export const mark = "second-cut";\n');
-  const second = await round(first.next);
-  const fresh = second.upload.find((path) => /^lib-.+\.js$/.test(path))!;
-  expect(fresh).not.toBe(chunk);
-  expect(second.upload.sort()).toEqual(["app/a.js", fresh].sort());
-  expect(second.remove).toEqual([chunk]);
-  expect(readFileSync(join(home, "dist", "app/a.js"), "utf8")).toContain(fresh);
-  rmSync(home, { recursive: true, force: true });
 });

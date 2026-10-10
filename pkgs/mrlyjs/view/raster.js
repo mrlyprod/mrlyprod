@@ -41,6 +41,25 @@ function polygonSdf(px, py, pts) {
   return inside ? -dist : dist;
 }
 
+const FAR = 0.5 + 1e-6;
+const own = (c) => [c[0], c[1], c[2], c[3]];
+
+function lines(pts) {
+  const out = new Float64Array(pts.length * 3);
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i];
+    const b = pts[(i + 1) % pts.length];
+    const dx = b[0] - a[0];
+    const dy = b[1] - a[1];
+    const len = Math.sqrt(dx * dx + dy * dy);
+    if (!(len > 0 && len < Infinity && Number.isFinite(a[0] + a[1]))) return null;
+    out[i * 3] = -dy / len;
+    out[i * 3 + 1] = dx / len;
+    out[i * 3 + 2] = (dy * a[0] - dx * a[1]) / len;
+  }
+  return out;
+}
+
 function bounds(pts) {
   let x0 = MAX;
   let y0 = MAX;
@@ -74,7 +93,8 @@ export function raster(width, height, ground = CLEAR) {
     colors[i + 3] = Math.round((a + (colors[i + 3] / 255) * keep) * 255);
   }
 
-  function shade(ax0, ay0, ax1, ay1, c, sdf) {
+  function shade(ax0, ay0, ax1, ay1, color, sdf) {
+    const c = own(color);
     const x0 = fmax(Math.floor(ax0 - 1), 0);
     const y0 = fmax(Math.floor(ay0 - 1), 0);
     const x1 = Math.min(fmax(Math.ceil(ax1 + 1), 0), width);
@@ -84,10 +104,47 @@ export function raster(width, height, ground = CLEAR) {
     }
   }
 
-  function polygon(pts, c) {
+  function polygon(pts, color) {
     if (pts.length < 3) return;
-    const [x0, y0, x1, y1] = bounds(pts);
-    shade(x0, y0, x1, y1, c, (px, py) => polygonSdf(px, py, pts));
+    const [bx0, by0, bx1, by1] = bounds(pts);
+    const near = lines(pts);
+    if (!near) return shade(bx0, by0, bx1, by1, color, (px, py) => polygonSdf(px, py, pts));
+    const c = own(color);
+    const n = pts.length;
+    const x0 = fmax(Math.floor(bx0 - 1), 0);
+    const y0 = fmax(Math.floor(by0 - 1), 0);
+    const x1 = Math.min(fmax(Math.ceil(bx1 + 1), 0), width);
+    const y1 = Math.min(fmax(Math.ceil(by1 + 1), 0), height);
+    const lo = new Float64Array(n);
+    const hi = new Float64Array(n);
+    const cross = new Float64Array(n);
+    for (let py = y0; py < y1; py++) {
+      const cy = py + 0.5;
+      let k = 0;
+      for (let i = 0; i < n; i++) {
+        const a = pts[i];
+        const b = pts[(i + 1) % n];
+        if (a[1] > cy !== b[1] > cy) cross[k++] = a[0] + ((cy - a[1]) / (b[1] - a[1])) * (b[0] - a[0]);
+        const nx = near[i * 3];
+        const off = near[i * 3 + 1] * cy + near[i * 3 + 2];
+        const p = (-FAR - off) / nx;
+        const q = (FAR - off) / nx;
+        lo[i] = nx === 0 ? (Math.abs(off) <= FAR ? -Infinity : Infinity) : Math.min(p, q) - 1e-6;
+        hi[i] = nx === 0 ? (Math.abs(off) <= FAR ? Infinity : -Infinity) : Math.max(p, q) + 1e-6;
+      }
+      for (let px = x0; px < x1; px++) {
+        const cx = px + 0.5;
+        let close = false;
+        for (let i = 0; i < n && !close; i++) close = cx >= lo[i] && cx <= hi[i];
+        if (close) {
+          blend(px, py, c, 0.5 - polygonSdf(cx, cy, pts));
+          continue;
+        }
+        let inside = false;
+        for (let j = 0; j < k; j++) if (cx < cross[j]) inside = !inside;
+        if (inside) blend(px, py, c, 1);
+      }
+    }
   }
 
   return {
@@ -128,8 +185,9 @@ export function raster(width, height, ground = CLEAR) {
       const [x0, y0, x1, y1] = bounds([a, b]);
       shade(x0 - half, y0 - half, x1 + half, y1 + half, c, (px, py) => segmentSdf(px, py, a, b) - half);
     },
-    polyline(pts, thick, c) {
+    polyline(pts, thick, color) {
       if (pts.length < 2) return;
+      const c = own(color);
       const half = thick / 2;
       const pad = half + 1;
       const [bx0, by0, bx1, by1] = bounds(pts);

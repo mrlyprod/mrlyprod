@@ -14,9 +14,9 @@ test('every menu door names itself and home names nothing', () => {
 test('a deep route takes its deepest door, else its first segment, and a file names nothing', () => {
   const rows = [
     ['/research/wiki/rep-tiles/', 'wiki'],
-    ['/research/claims/beneath/', 'claims'],
+    ['/research/claims/beneath/', 'research'],
     ['/research/', 'research'],
-    ['/git/site/kit/ssg/build.ts', 'code'],
+    ['/git/site/kit/push.ts', 'code'],
     ['/demos/sponge/', 'demos'],
     ['/about/', 'about'],
     ['/settings/', 'settings'],

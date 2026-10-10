@@ -1,3 +1,12 @@
+# Archive
+
+- This folder is the public archive of the research tree as of mrlyprod commit `37db942b702797eafe3f57837a606d3122681ff7`.
+- The site, Cargo and Bun ignore it: no route, no workspace member, no test reads it.
+- It is rebuilt into the site one topic at a time; until then it is read, not edited.
+- `demos/` was `site/demos/`, with the demo-only files of `site/lib/` in `demos/lib/`.
+- `figures/` holds the `research-*`, `paper-*`, `wiki-*`, `demo-*` and `moire-*` figures of `figures/` and its `census/` crate.
+- Files keep their content as of that commit, so their paths and imports name that layout.
+
 # MrlyMath
 
 The mathematics of the mrly tree: a parity rule on the corners of a cube, substituted into itself by the Kronecker product, and everything that falls out of those two moves. One subject, one tree, and this page is its law; the tree is the site at [mrly.net/research](https://mrly.net/research/), built from these files and nothing else.

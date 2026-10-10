@@ -1,101 +1,153 @@
-import { load, mount, unmount } from './islands.js';
+import { css } from 'site:css';
+import { pages } from 'site:pages';
+import { rows, site } from 'site:routes';
+import { LAYOUT } from './pages/index.js';
+import { deeps, match, named, sort, trail, walled } from './route.js';
 
 const FRESH = 30000;
-const SHEET = 'link[rel="stylesheet"]';
-const HINT = 'link[rel="modulepreload"]';
-const META = 'meta[name]:not([name="viewport"]), meta[property], link[rel="canonical"], script[type="application/ld+json"]';
 const STILL = '(prefers-reduced-motion: reduce)';
 const SIDES = ['left', 'right'];
-
-/* RULE */
-
-export const walled = (path, deep) => deep.find((wall) => path.startsWith(wall)) ?? '';
-
-export function sort(to, from, deep) {
-  if (to.origin !== from.origin) return '';
-  const wall = walled(to.pathname, deep);
-  if (wall && wall === walled(from.pathname, deep)) return 'inner';
-  if (!wall && !to.pathname.endsWith('/')) return '';
-  if (to.pathname === from.pathname && to.search === from.search && to.href.includes('#')) return 'mark';
-  return 'page';
-}
+const ONCE = `${site.prefix}reload`;
 
 /* STATE */
 
-const html = typeof document === 'undefined' ? null : document.documentElement;
-const DEEP = (html?.dataset.deep ?? '').split(' ').filter(Boolean);
-const first = html ? location.href : '';
-const pages = new Map();
-const loads = new WeakMap();
+const html = document.documentElement;
+const main = document.getElementById('main');
+const panes = { left: document.getElementById('left'), right: document.getElementById('right') };
+const DEEP = deeps(rows);
 const place = (at) => walled(at.pathname, DEEP) || at.pathname;
 const key = (at) => walled(at.pathname, DEEP) || at.pathname + at.search;
 const state = () => (history.state && typeof history.state === 'object' ? history.state : {});
 const frame = () => new Promise((done) => requestAnimationFrame(done));
 const still = () => matchMedia(STILL).matches;
-let here = html ? key(location) : '';
-let shown = html ? place(location) : '';
+let here = key(location);
+let shown = place(location);
 let turn = 0;
+let current = null;
+let art = null;
+let drawn = null;
 
-/* FETCH */
+/* LOAD */
 
-function grab(url, old = false) {
-  const at = url.origin + key(url);
-  const hit = pages.get(at);
-  if (hit && (old || performance.now() - hit.born < FRESH)) return hit.text;
-  const text = fetch(at, { headers: { accept: 'text/html' } }).then((reply) => {
-    if (!reply.ok || reply.redirected || !(reply.headers.get('content-type') ?? '').startsWith('text/html')) throw new Error(`router: ${at} is no page`);
-    return reply.text();
-  });
-  text.catch(() => pages.get(at)?.text === text && pages.delete(at));
-  pages.set(at, { born: performance.now(), text });
+const texts = new Map();
+
+function source(row) {
+  if (!row.source) return Promise.resolve('');
+  const url = `/raw/${row.source}`;
+  const hit = texts.get(url);
+  if (hit && performance.now() - hit.born < FRESH) return hit.text;
+  const text = fetch(url).then((reply) => (reply.ok ? reply.text() : Promise.reject(new Error(`router: ${url} answered ${reply.status}`))));
+  text.catch(() => texts.get(url)?.text === text && texts.delete(url));
+  texts.set(url, { born: performance.now(), text });
   return text;
 }
 
-const read = (text) => new DOMParser().parseFromString(text, 'text/html');
-
-/* HEAD */
-
-const absolute = (node, base) => new URL(node.getAttribute('href'), base).href;
-
-const scripts = (doc) => [...doc.head.querySelectorAll('script[src^="/"]:not([src^="//"])')].map((one) => one.getAttribute('src')).join(' ');
-
-function carry(node, base) {
-  const copy = document.importNode(node, true);
-  if (copy.hasAttribute('href')) copy.setAttribute('href', absolute(node, base));
-  return copy;
+function page(kind) {
+  const thunk = pages[kind];
+  return thunk ? thunk() : Promise.reject(new Error(`router: no page draws the kind ${kind}`));
 }
 
-function wear(doc, url) {
-  const have = new Map([...document.head.querySelectorAll(SHEET)].map((link) => [absolute(link, first), link]));
-  let last = [...have.values()].at(-1);
-  return [...doc.head.querySelectorAll(SHEET)].map((one) => {
-    const at = absolute(one, url);
-    if (have.has(at)) return have.get(at);
+const sheets = new Map();
+
+function wear(name) {
+  const url = name ? css[name] : null;
+  if (!url) return null;
+  if (!sheets.has(url)) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.media = 'not all';
-    link.href = at;
-    loads.set(link, new Promise((ok, no) => {
-      link.onload = ok;
-      link.onerror = no;
-    }));
-    if (last) last.after(link);
-    else document.head.append(link);
-    have.set(at, link);
-    last = link;
-    return link;
-  });
+    link.href = url;
+    sheets.set(url, { link, ready: new Promise((ok, no) => Object.assign(link, { onload: ok, onerror: no })) });
+    document.head.append(link);
+  }
+  return sheets.get(url);
 }
 
-/* BODY */
+function figures() {
+  art ??= Promise.all([import('../lib/figure.js'), import('site:figures')]).then(([one, table]) => {
+    one.start(table);
+    drawn = one;
+    return one;
+  });
+  return art;
+}
 
-function span(doc) {
-  const top = doc.querySelector('body > header');
-  const base = doc.querySelector('body > footer');
-  if (!top || !base) throw new Error('router: the page has no frame');
-  const out = [];
-  for (let node = top.nextSibling; node && node !== base; node = node.nextSibling) out.push(node);
-  return out;
+/* RENDER */
+
+async function prepare(row, url) {
+  const layout = LAYOUT[row.kind] ?? {};
+  const [kind, text] = await Promise.all([page(row.kind), source(row)]);
+  const sheet = wear(layout.sheet);
+  const host = document.createElement(layout.bare ? 'div' : 'article');
+  if (!layout.bare) host.className = 'prose';
+  const side = { left: document.createElement('div'), right: document.createElement('div') };
+  await kind.render(row, site, host, { text, rows, url, ...side });
+  await sheet?.ready;
+  return { row, layout, kind, host, sheet, side };
+}
+
+/* HEAD */
+
+function meta(selector, make) {
+  let node = document.head.querySelector(selector);
+  if (!node && make) {
+    node = make();
+    document.head.append(node);
+  }
+  return node;
+}
+
+function head(row, url) {
+  document.title = named(row, site);
+  meta('meta[name="description"]')?.setAttribute('content', row.lead || site.tagline);
+  const canonical = meta('link[rel="canonical"]', () => Object.assign(document.createElement('link'), { rel: 'canonical' }));
+  canonical.href = site.root + (row.meta?.deep ? url.pathname : row.route);
+  const robots = meta('meta[name="robots"]');
+  if (row.kind === 'missing' && !robots) document.head.append(Object.assign(document.createElement('meta'), { name: 'robots', content: 'noindex' }));
+  if (row.kind !== 'missing') robots?.remove();
+}
+
+function crumbs(row, url) {
+  const list = document.querySelector('.subheader .crumbs ol');
+  const steps = trail(row, url.pathname);
+  list.replaceChildren(
+    ...steps.map((step, n) => {
+      const item = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = step.href;
+      a.textContent = step.name;
+      if (n === steps.length - 1) a.setAttribute('aria-current', 'page');
+      item.append(a);
+      return item;
+    }),
+  );
+}
+
+/* FRAME */
+
+function dress(next) {
+  const { layout, side } = next;
+  main.className = layout.wide ? 'wide' : '';
+  const late = layout.right === 'late';
+  const fill = { left: Boolean(layout.left), right: late || side.right.childNodes.length > 0 };
+  for (const name of SIDES) {
+    const pane = panes[name];
+    pane.replaceChildren(...(side[name].childNodes.length ? [side[name]] : []));
+    pane.hidden = name === 'right' && late;
+    if (fill[name] && !pane.isConnected) (name === 'left' ? main.before(pane) : main.after(pane));
+    if (!fill[name]) pane.remove();
+    const button = document.querySelector(`.subheader .actions [data-pane="${name}"]`);
+    if (button) button.hidden = !fill[name] || (name === 'right' && late);
+    html.dataset[name] = 'shut';
+  }
+  for (const { link } of sheets.values()) link.media = link === next.sheet?.link ? '' : 'not all';
+}
+
+function leave() {
+  drawn?.drop();
+  if (!current) return main.replaceChildren();
+  current.kind.unmount(current.host);
+  current = null;
 }
 
 function target(hash) {
@@ -106,51 +158,60 @@ function target(hash) {
   }
 }
 
-/* SWAP */
-
-async function dress(doc, url) {
-  if (scripts(doc) !== scripts(document)) throw new Error('router: the page runs other scripts');
-  const body = span(doc);
-  const sheets = wear(doc, url);
-  const hints = [...doc.head.querySelectorAll(HINT)].map((one) => carry(one, url));
-  document.head.append(...hints);
-  await Promise.all([...sheets.map((link) => loads.get(link)), load(doc)]);
-  return { doc, body, sheets, hints };
-}
-
 function pin() {
   if (place(location) === shown) history.replaceState({ ...state(), y: Math.round(scrollY) }, '');
 }
 
 function swap(next, url, mode, y) {
   if (mode === 'push') pin();
-  unmount();
+  leave();
   if (mode === 'push') history.pushState(null, '', url.href);
   if (mode === 'replace') history.replaceState(null, '', url.href);
-  document.title = next.doc.title;
-  const meta = [...next.doc.head.querySelectorAll(META)].map((one) => carry(one, url));
-  for (const old of document.head.querySelectorAll(`${META}, ${HINT}`)) if (!next.hints.includes(old)) old.remove();
-  document.head.querySelector('title').after(...meta, ...next.hints);
-  for (const link of document.head.querySelectorAll(SHEET)) {
-    if (next.sheets.includes(link)) link.removeAttribute('media');
-    else link.remove();
-  }
-  for (const node of span(document)) node.remove();
-  document.querySelector('body > footer').before(...next.body);
-  for (const side of SIDES) html.dataset[side] = 'shut';
-  window.dispatchEvent(new Event('wire'));
-  const spot = mode === 'pop' ? null : target(url.hash);
-  if (spot) spot.scrollIntoView();
-  else scrollTo({ top: y, behavior: 'instant' });
-  document.getElementById('main')?.focus({ preventScroll: true });
+  head(next.row, url);
+  crumbs(next.row, url);
+  dress(next);
+  main.replaceChildren(next.host);
+  current = next;
   here = key(location);
   shown = place(location);
-  return mount();
+  const spot = mode === 'pop' ? null : target(url.hash);
+  if (mode === 'boot') return spot?.scrollIntoView();
+  if (spot) spot.scrollIntoView();
+  else scrollTo({ top: y, behavior: 'instant' });
+  main.focus({ preventScroll: true });
+}
+
+async function settle(next, url, mine) {
+  await next.kind.mount?.(next.host, { rows, site, url });
+  if (mine !== turn) return;
+  if (next.host.querySelector('figure[data-figure]')) {
+    const one = await figures();
+    if (mine === turn) one.scan(next.host, Boolean(next.host.querySelector('[data-eager]')));
+  }
+  window.dispatchEvent(new CustomEvent('wire', { detail: { route: next.row.route, doors: site.doors } }));
+}
+
+/* FAIL */
+
+function fail(url, error) {
+  console.error(error);
+  let tried = '';
+  try {
+    tried = sessionStorage.getItem(ONCE) ?? '';
+    if (tried !== url.href) sessionStorage.setItem(ONCE, url.href);
+  } catch {}
+  if (tried !== url.href) return url.href === location.href ? location.reload() : location.assign(url.href);
+  try {
+    sessionStorage.removeItem(ONCE);
+  } catch {}
+  leave();
+  const lede = document.createElement('div');
+  lede.className = 'lede';
+  lede.innerHTML = '<h1 id="error">This page did not load</h1><p class="lead">The network or the site failed twice. <a href="">Reload</a> to try again, or go <a href="/">home</a>.</p>';
+  main.replaceChildren(lede);
 }
 
 /* GO */
-
-const plain = (url) => (url.href === location.href ? location.reload() : location.assign(url.href));
 
 function morph(run, calm) {
   if (calm || !document.startViewTransition) return run();
@@ -163,20 +224,22 @@ function morph(run, calm) {
 export async function go(url, mode = 'push', y = 0, calm = still()) {
   const mine = ++turn;
   html.setAttribute('aria-busy', 'true');
+  const row = match(rows, url.pathname);
   try {
-    const next = await dress(read(await grab(url, mode === 'pop')), url);
-    let up = null;
-    await morph(() => {
-      if (mine === turn) up = swap(next, url, mode, y);
-    }, calm);
-    await up;
-    if (mode === 'pop' && y) {
+    const next = await prepare(row, url);
+    if (mine !== turn) return next.kind.unmount(next.host);
+    await morph(() => swap(next, url, mode, y), calm || mode === 'boot');
+    try {
+      sessionStorage.removeItem(ONCE);
+    } catch {}
+    await settle(next, url, mine);
+    if (mode === 'pop' && y && mine === turn) {
       await frame();
       await frame();
       if (mine === turn) scrollTo({ top: y, behavior: 'instant' });
     }
-  } catch {
-    if (mine === turn) return plain(url);
+  } catch (error) {
+    if (mine === turn) fail(url, error);
   }
   if (mine === turn) html.removeAttribute('aria-busy');
 }
@@ -202,7 +265,9 @@ function click(event) {
 function hint(event) {
   const a = aim(event);
   if (!a || sort(a, location, DEEP) !== 'page') return;
-  grab(new URL(a.href)).catch(() => {});
+  const row = match(rows, a.pathname);
+  page(row.kind).catch(() => {});
+  source(row).catch(() => {});
 }
 
 function pop(event) {
@@ -221,7 +286,7 @@ function back(event) {
 }
 
 function note() {
-  if (document.querySelector('[aria-busy="true"]')) return;
+  if (html.getAttribute('aria-busy') === 'true' || place(location) !== shown) return;
   try {
     history.replaceState({ ...state(), y: Math.round(scrollY) }, '');
   } catch {}
@@ -229,12 +294,19 @@ function note() {
 
 /* BOOT */
 
-if (html) {
-  mount().catch(() => {});
+function boot() {
+  const year = new Date().getFullYear();
+  const legal = document.querySelector('.base .legal');
+  if (legal) legal.textContent = `Copyright © ${site.company || site.title} ${site.since < year ? `${site.since}-${year}` : year}. All rights reserved.`;
+  for (const name of SIDES) panes[name].remove();
   document.addEventListener('click', click);
-  document.addEventListener('pointerenter', hint, true);
-  document.addEventListener('focus', hint, true);
+  for (const type of ['pointerenter', 'focus', 'pointerdown']) document.addEventListener(type, hint, true);
   addEventListener('popstate', pop);
   addEventListener('scrollend', note);
+  addEventListener('pagehide', note);
   addEventListener('pageshow', back);
+  document.addEventListener('visibilitychange', () => document.hidden && note());
+  go(new URL(location.href), 'boot');
 }
+
+boot();

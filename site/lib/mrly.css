@@ -1,8 +1,3 @@
-@import "../kit/palette.css";
-@import "../ui/tokens.css";
-@import "../ui/base.css";
-@import "../ui/chrome.css";
-
 /* TEXT */
 
 .sub { color: var(--dim); margin-top: var(--s2); max-width: 72ch; }
@@ -76,3 +71,12 @@ pre { font: var(--t2)/var(--lh3) var(--mono); color: var(--dim); white-space: pr
 .pens .card p { margin-top: 6px; font: var(--t2) var(--mono); color: var(--dim); display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
 .pens .card p b { color: var(--fg); font-weight: 500; }
 .pens .chip { white-space: nowrap; }
+
+/* DESIGNS */
+
+.designs { display: grid; grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: var(--s1); }
+.designs button { flex-direction: column; gap: 2px; min-height: 0; padding: var(--s1); border-radius: var(--r2); }
+.designs button.on { background: var(--panel); color: var(--fg); border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.designs canvas { display: block; width: 100%; height: auto; aspect-ratio: 1; border-radius: var(--r1); background: var(--art); }
+.designs small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--t1) var(--mono); color: var(--dim); }
+.facts label > .num { max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

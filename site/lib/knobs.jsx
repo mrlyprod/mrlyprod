@@ -1,13 +1,15 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { save } from './export.js';
 import { ICONS, VIEWBOX } from './icons.js';
-import { describe, items, tidy } from './knobs.js';
+import { describe, items, maxOf, optionsOf, tidy } from './knobs.js';
 
 const pair = (option) => (Array.isArray(option) ? option : [option, option]);
 
 const number = (input) => +input.value;
 
 const string = (input) => input.value;
+
+const said = (zero, v) => (zero && v !== '' && Number(v) === 0 ? zero : null);
 
 function useDraft(value, onChange, commit, read) {
   const [draft, setDraft] = useState(null);
@@ -25,7 +27,7 @@ function useDraft(value, onChange, commit, read) {
     return () => input.removeEventListener('change', done);
   }, [commit, read]);
   const type = (e) => (commit ? setDraft(read(e.target)) : onChange(read(e.target)));
-  return [at, draft ?? value, type, draft !== null];
+  return [at, draft ?? value, type];
 }
 
 export function Icon({ name, size = 20 }) {
@@ -60,22 +62,25 @@ export function Pick({ label, value, onChange, options, ...rest }) {
   );
 }
 
-export function Slider({ label, value, onChange, min, max, step = 1, show, unit, commit, ...rest }) {
-  const [at, now, type, dragging] = useDraft(value, onChange, commit, number);
+export function Slider({ label, value, onChange, min, max, step = 1, zero, unit, commit, ...rest }) {
+  const [at, now, type] = useDraft(value, onChange, commit, number);
+  const word = said(zero, now);
   return (
     <label>
       <span>{label}</span>
-      <span className="num">{dragging ? now : (show ?? value)}{unit ? ` ${unit}` : ''}</span>
+      <span className="num">{word ?? now}{unit && !word ? ` ${unit}` : ''}</span>
       <input ref={at} type="range" min={min} max={max} step={step} value={now} onChange={type} {...rest} />
     </label>
   );
 }
 
-export function Text({ label, value, onChange, wide, commit, ...rest }) {
+export function Text({ label, value, onChange, wide, zero, commit, ...rest }) {
   const [at, now, type] = useDraft(value, onChange, commit, string);
+  const word = said(zero, now);
   return (
     <label>
       <span>{label}</span>
+      {word && <span className="num">{word}</span>}
       <input ref={at} type="text" className={wide ? 'wide' : undefined} value={now} onChange={type} {...rest} />
     </label>
   );
@@ -151,33 +156,35 @@ export function Export({ canvas, name, draw, more = [], label = 'Export', ...res
 
 const choice = (option) => String(pair(option)[0]);
 
-function List({ row, value, set }) {
-  const have = items(row, value);
-  const flip = (option) => (on) => set(row.options.map(choice).filter((one) => (one === option ? on : have.includes(one))));
-  return row.options.map(pair).map(([v, text]) => {
+function List({ row, value, values, set }) {
+  const options = optionsOf(row, values);
+  const have = items(row, value, values);
+  const flip = (option) => (on) => set(options.map(choice).filter((one) => (one === option ? on : have.includes(one))));
+  return options.map(pair).map(([v, text]) => {
     const on = have.includes(String(v));
     return <Toggle key={v} label={text} value={on ? 1 : 0} disabled={on && have.length === 1} onChange={flip(String(v))} />;
   });
 }
 
 const KNOB = {
-  slider: (row, props) => <Slider {...props} min={row.min} max={row.max} step={row.step} unit={row.unit} commit />,
-  number: (row, props) => <Text {...props} type="number" inputMode="decimal" min={row.min} max={row.max} step={row.step} commit />,
+  slider: (row, props, values) => <Slider {...props} min={row.min} max={maxOf(row, values)} step={row.step} unit={row.unit} zero={row.zero} commit />,
+  number: (row, props, values) => <Text {...props} type="number" inputMode="decimal" min={row.min} max={maxOf(row, values)} step={row.step} zero={row.zero} commit />,
   toggle: (row, props) => <Toggle {...props} />,
-  pick: (row, props) => <Pick {...props} options={row.options} />,
-  segment: (row, props) => <Segment {...props} options={row.options} />,
-  text: (row, props) => <Text {...props} commit />,
-  list: (row, props) => <List row={row} value={props.value} set={props.onChange} />,
+  pick: (row, props, values) => <Pick {...props} options={optionsOf(row, values)} />,
+  segment: (row, props, values) => <Segment {...props} options={optionsOf(row, values)} />,
+  text: (row, props) => <Text {...props} wide={row.wide} commit />,
+  list: (row, props, values) => <List row={row} value={props.value} values={values} set={props.onChange} />,
 };
 
-export function Knob({ row, value, onChange }) {
-  return KNOB[row.kind](row, { label: row.label ?? row.key, value: value ?? row.def, onChange: (v) => onChange(tidy([row], { [row.key]: v })) });
+export function Knob({ row, value, values, onChange }) {
+  const all = values ?? { [row.key]: value };
+  return KNOB[row.kind](row, { label: row.label ?? row.key, value: value ?? row.def, onChange: (v) => onChange(tidy([row], { ...all, [row.key]: v })) }, all);
 }
 
 export function Knobs({ spec, value, onChange }) {
-  return describe(spec).map(({ name, rows }) => (
+  return describe(spec, value).map(({ name, rows }) => (
     <Group key={name} name={name}>
-      {rows.map((row) => <Knob key={row.key} row={row} value={value?.[row.key]} onChange={onChange} />)}
+      {rows.map((row) => <Knob key={row.key} row={row} value={value?.[row.key]} values={value} onChange={onChange} />)}
     </Group>
   ));
 }

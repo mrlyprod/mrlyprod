@@ -9,7 +9,6 @@ const net = lambda({
   agent: "mrlynet-site-builder",
   bucket: "MRLYDEV_BUCKET",
   folder: "site",
-  shelf: "SHELF_REPO",
   sources: ["push", "schedule", "automator", "manual"],
   prepare: async (site, run) => {
     const out = await run([process.execPath, "scripts/pkg.ts"], site);

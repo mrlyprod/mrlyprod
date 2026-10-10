@@ -1,6 +1,5 @@
 const CAP = 24;
 const live = new Map();
-const pulls = new Map();
 
 /* RULE */
 
@@ -11,67 +10,50 @@ export function meets(words, text) {
   return words.every((word) => hay.includes(word));
 }
 
-/* INDEX */
-
-function pull(url) {
-  if (!pulls.has(url)) {
-    pulls.set(
-      url,
-      fetch(url)
-        .then((reply) => (reply.ok ? reply.json() : Promise.reject(new Error(`search: ${url} did not answer`))))
-        .catch(() => {
-          pulls.delete(url);
-          return [];
-        }),
-    );
-  }
-  return pulls.get(url);
-}
-
-/* TILES */
-
-function tile(model, [title, route, dark, light]) {
-  const a = model.cloneNode(true);
-  a.setAttribute('href', route);
-  a.querySelector('h2').textContent = title;
-  a.querySelector('source').srcset = dark;
-  a.querySelector('img').src = light;
-  return a;
-}
-
-function find(words, doors, model, rows) {
+export function find(words, list) {
   const seen = new Set();
   const out = [];
-  for (const door of doors) {
-    const href = door.getAttribute('href');
-    if (seen.has(href) || !meets(words, `${door.textContent} ${href}`)) continue;
-    seen.add(href);
-    out.push(door.cloneNode(true));
-  }
-  for (const row of rows) {
+  for (const one of list) {
     if (out.length >= CAP) break;
-    if (seen.has(row[1]) || !meets(words, `${row[0]} ${row[1]}`)) continue;
-    seen.add(row[1]);
-    out.push(tile(model, row));
+    if (seen.has(one.route) || !meets(words, `${one.title} ${one.route} ${one.lead ?? ''}`)) continue;
+    seen.add(one.route);
+    out.push(one);
   }
-  return out.slice(0, CAP);
+  return out;
 }
 
-/* ISLAND */
+/* RESULTS */
 
-export function mount(host) {
+function result(one) {
+  const item = document.createElement('li');
+  const a = document.createElement('a');
+  const title = document.createElement('b');
+  const path = document.createElement('span');
+  a.href = one.route;
+  title.textContent = one.title;
+  path.textContent = one.route;
+  a.append(title, path);
+  item.append(a);
+  if (one.lead) {
+    const lead = document.createElement('p');
+    lead.textContent = one.lead;
+    item.append(lead);
+  }
+  return item;
+}
+
+/* MOUNT */
+
+export function mount(host, rows) {
   if (live.has(host)) return;
-  const doors = [...host.querySelectorAll('a.tile')].filter((a) => !a.getAttribute('href').startsWith('#'));
-  const model = doors.find((a) => a.querySelector('picture'));
-  const urls = (host.dataset.search ?? '').split(' ').filter(Boolean);
-  if (!model || !urls.length) return;
+  const extra = [...host.querySelectorAll('a.tile[href]')].map((a) => ({ title: a.querySelector('h2')?.textContent ?? '', route: a.getAttribute('href'), lead: '' }));
+  const list = [...rows.filter((row) => !row.hidden), ...extra];
   const form = document.createElement('form');
   const input = document.createElement('input');
   const said = document.createElement('p');
-  const grid = document.createElement('div');
+  const hits = document.createElement('ol');
   const gate = new AbortController();
   const { signal } = gate;
-  let turn = 0;
   form.setAttribute('role', 'search');
   input.type = 'search';
   input.placeholder = 'Search';
@@ -82,27 +64,20 @@ export function mount(host) {
   said.className = 'fine';
   said.setAttribute('role', 'status');
   said.hidden = true;
-  grid.className = 'gallery grid';
-  grid.hidden = true;
-  form.append(input, grid, said);
-  const run = async () => {
-    const mine = ++turn;
+  hits.className = 'results';
+  hits.hidden = true;
+  form.append(input, hits, said);
+  const run = () => {
     const words = terms(input.value);
     const on = words.length > 0;
     for (const child of host.children) if (child !== form) child.hidden = on;
-    grid.hidden = !on;
+    hits.hidden = !on;
     said.hidden = !on;
-    said.textContent = '';
-    if (!on) return grid.replaceChildren();
-    const near = find(words, doors, model, []);
-    grid.replaceChildren(...near);
-    const rows = (await Promise.all(urls.map(pull))).flat();
-    if (mine !== turn) return;
-    const hits = find(words, doors, model, rows);
-    if (hits.length !== near.length) grid.replaceChildren(...hits);
-    said.textContent = hits.length ? (hits.length < CAP ? `${hits.length} found` : `The first ${CAP}`) : 'Nothing found.';
+    if (!on) return hits.replaceChildren();
+    const found = find(words, list);
+    hits.replaceChildren(...found.map(result));
+    said.textContent = found.length ? (found.length < CAP ? `${found.length} found` : `The first ${CAP}`) : 'Nothing found.';
   };
-  input.addEventListener('focus', () => urls.forEach(pull), { signal });
   input.addEventListener('input', run, { signal });
   input.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape' || !input.value) return;
@@ -112,7 +87,8 @@ export function mount(host) {
   }, { signal });
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    run().then(() => grid.querySelector('a')?.click());
+    run();
+    hits.querySelector('a')?.click();
   }, { signal });
   host.prepend(form);
   live.set(host, { gate, form });

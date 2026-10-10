@@ -5,10 +5,10 @@ import { animate, fold, letters, merge } from './font.js';
 import FONT from './font.json' with { type: 'json' };
 
 const WORDMARK = 'MRLYPROD';
-const PKG = join(import.meta.dir, '..', '..', 'pkg');
-const HAS = existsSync(join(PKG, 'demos.js'));
+const UNIT = join(import.meta.dir, '..', '..', '..', 'pkgs', 'mrlyjs', 'pkg', 'font');
+const HAS = existsSync(join(UNIT, 'mrlyjs_font.js'));
 
-test.skipIf(!HAS)('the wordmark writes itself in stroke order, one cell a frame', () => {
+test('the wordmark writes itself in stroke order, one cell a frame', () => {
   const write = animate(WORDMARK, 1);
   expect([write.rows, write.cols, write.fps]).toEqual([7, 49, 25]);
   expect(write.frames[0]).toEqual([]);
@@ -20,7 +20,7 @@ test.skipIf(!HAS)('the wordmark writes itself in stroke order, one cell a frame'
   expect(write.frames[103].length).toBe(lit);
 });
 
-test.skipIf(!HAS)('the eight letters fold into an X in twenty-two frames', () => {
+test('the eight letters fold into an X in twenty-two frames', () => {
   const folded = merge(WORDMARK, 1);
   expect(folded.length).toBe(22);
   expect(folded[0]).toEqual(animate(WORDMARK, 1).frames[103]);
@@ -41,7 +41,7 @@ test('a word folds from its own letters and lands on the X at its centre', () =>
   expect(folded.frames.at(-1)).toEqual(x);
 });
 
-test.skipIf(!HAS)('any string writes itself and a lone glyph has nothing to merge', () => {
+test('any string writes itself and a lone glyph has nothing to merge', () => {
   for (const text of ['a', 'hi', 'mrly.net', '(1)']) {
     const write = animate(text, 2);
     const { rows, cols, grid } = letters(text);
@@ -52,9 +52,9 @@ test.skipIf(!HAS)('any string writes itself and a lone glyph has nothing to merg
 });
 
 test.skipIf(!HAS)('the kit matches the crate frame for frame', async () => {
-  const wasm = await import(join(PKG, 'demos.js'));
-  await wasm.default({ module_or_path: await Bun.file(join(PKG, 'demos_bg.wasm')).arrayBuffer() });
+  const wasm = await import(join(UNIT, 'mrlyjs_font.js'));
+  await wasm.default({ module_or_path: await Bun.file(join(UNIT, 'mrlyjs_font_bg.wasm')).arrayBuffer() });
   for (const text of ['MRLYPROD', 'SIERPINSKI', 'mrly.net', '(1)', 'Hi 42', 'A']) {
-    expect(animate(text, 1)).toEqual(JSON.parse(wasm.font_animate(text, 1)));
+    expect(animate(text, 1)).toEqual(JSON.parse(JSON.stringify(wasm.animate(text, 1))));
   }
 });

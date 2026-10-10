@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
-import { dark } from "../../../site/kit/theme/theme.js";
+import { dark, light } from "../../../site/kit/theme/theme.js";
+import * as core from "../core.js";
 import { Grid, field, frame, grid, hex, ink, iso, plot, raster } from "./index.js";
 
 const T = ink(dark);
@@ -261,3 +262,14 @@ for (const [name, value] of Object.entries(numbers())) {
     expect(sha(JSON.stringify(value))).toBe(NUMBER_HASH[name]);
   });
 }
+
+// THEME
+
+test("ink from the Rust theme equals ink from the kit theme", async () => {
+  core.initSync({ module: await Bun.file(new URL("../pkg/core/mrlyjs_core_bg.wasm", import.meta.url)).arrayBuffer() });
+  for (const [rust, kit] of [[core.colors.DARK(), dark], [core.colors.LIGHT(), light]]) {
+    const ours = ink(rust);
+    const theirs = ink(kit);
+    for (const key of Object.keys(theirs)) if (Array.isArray(theirs[key])) expect([key, ours[key]]).toEqual([key, theirs[key]]);
+  }
+});

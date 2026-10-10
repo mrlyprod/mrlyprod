@@ -75,6 +75,25 @@ test("polygon fills by the even-odd rule", () => {
   expect([red(pen, 31, 12), red(pen, 32, 32)]).toEqual([255, 0]);
 });
 
+test("polygon paints the bytes its signed distance paints, a repeated vertex taking the slow road", () => {
+  let seed = 11;
+  const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const shapes = [
+    [[3.2, 7.9], [60.1, 3.3], [58.4, 61.7], [6.6, 55.2]],
+    [[32, 2.25], [61.3, 32], [32, 61.75], [2.7, 32]],
+    [[0.5, 30.5], [63.5, 30.5], [63.5, 31.25], [0.5, 31.25]],
+    [[10, 10], [54, 11], [12, 12.5]],
+    ...Array.from({ length: 12 }, () => Array.from({ length: 3 + Math.floor(rand() * 5) }, () => [rand() * 80 - 8, rand() * 80 - 8])),
+  ];
+  for (const pts of shapes) {
+    for (const color of [WHITE, [255, 143, 44, 153]]) {
+      const fast = board((p) => p.polygon(pts, color));
+      const slow = board((p) => p.polygon([pts[0], ...pts], color));
+      expect(fast.pixels().colors).toEqual(slow.pixels().colors);
+    }
+  }
+});
+
 test("arc strokes its sweep alone with round caps", () => {
   const pen = board((p) => p.arc([32, 32.5], 10, [0, Math.PI / 2], 2, WHITE));
   expect([red(pen, 42, 32), red(pen, 38, 39), red(pen, 42, 31), red(pen, 21, 32)]).toEqual([255, 255, 97, 0]);

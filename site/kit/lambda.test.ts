@@ -7,9 +7,6 @@ import { lambda, modules, type Get, type Head, type Wake } from "./lambda.ts";
 /* FIXTURES */
 
 const SHA = "0123456789abcdef0123456789abcdef01234567";
-const SHELF = "fedcba9876543210fedcba9876543210fedcba98";
-
-process.env.SHELF_REPO = "owner/shelf";
 
 const net = lambda({
   source: "owner/net",
@@ -18,7 +15,6 @@ const net = lambda({
   agent: "net-builder",
   bucket: "NET_BUCKET",
   folder: "site",
-  shelf: "SHELF_REPO",
   sources: ["push", "schedule", "automator", "manual"],
 });
 
@@ -31,7 +27,7 @@ const shop = lambda({
   folder: "site",
 });
 
-const stored: Head = { sha: "aaaaaaabbbbbbbcccccccdddddddeeeeeeefffff", etag: "old", shelf: SHELF, shelfEtag: "shelf-old" };
+const stored: Head = { sha: "aaaaaaabbbbbbbcccccccdddddddeeeeeeefffff", etag: "old" };
 
 const reply = (body: unknown, opts: { ok?: boolean; status?: number; etag?: string } = {}) => ({
   ok: opts.ok ?? true,
@@ -51,10 +47,9 @@ const wake = (on: Wake["on"], sha: string, force = false): Wake => ({ source: "p
 
 /* EVENT */
 
-test("the payload parser reads a schedule tick and both push wakes", () => {
+test("the payload parser reads a schedule tick and a push wake", () => {
   expect(net.readEvent(JSON.stringify({ source: "schedule" }))).toEqual({ source: "schedule", on: "", sha: "", force: false });
   expect(net.readEvent(JSON.stringify({ source: "push", repo: "owner/net", sha: SHA }))).toEqual({ source: "push", on: "source", sha: SHA, force: false });
-  expect(net.readEvent(JSON.stringify({ source: "push", repo: "owner/shelf", sha: SHA }))).toEqual({ source: "push", on: "shelf", sha: SHA, force: false });
 });
 
 test("the payload parser survives junk, an unknown source and a source word the site does not take", () => {
@@ -87,7 +82,7 @@ test("the payload parser unwraps the bun-lambda envelope of a direct invoke", ()
 
 test("the ancestor check accepts a sha main is ahead of or identical to", async () => {
   expect(await net.onMain("owner/net", SHA, github({ compare: "ahead" }))).toBe(true);
-  expect(await net.onMain("owner/shelf", SHA, github({ compare: "identical" }))).toBe(true);
+  expect(await net.onMain("owner/net", SHA, github({ compare: "identical" }))).toBe(true);
 });
 
 test("the ancestor check refuses another status, a refused compare and a dead fetch", async () => {
@@ -106,8 +101,6 @@ test("the ancestor check refuses another status, a refused compare and a dead fe
 test("a wake for a sha already built is a no-op, and an unfinished head never answers seen", () => {
   const done: Head = { ...stored, sha: SHA };
   expect(net.seen(wake("source", SHA), done)).toBe(SHA.slice(0, 7));
-  expect(net.seen(wake("shelf", SHELF), done)).toBe(`shelf ${SHELF.slice(0, 7)}`);
-  expect(net.seen(wake("source", SHA), { ...done, shelf: "" })).toBe("");
   expect(net.seen(wake("source", SHA), { ...done, sha: "" })).toBe("");
 });
 
@@ -143,13 +136,11 @@ test("a 304 from the etag poll keeps the stored mark", async () => {
 
 /* HEAD */
 
-test("the head file carries only the lines the site uses", () => {
-  const text = net.headText({ sha: SHA, etag: "e", shelf: SHELF, shelfEtag: "se" });
-  expect(text).toBe(`${SHA}\ne\n${SHELF}\nse\n`);
-  expect(net.parseHead(text)).toEqual({ sha: SHA, etag: "e", shelf: SHELF, shelfEtag: "se" });
-  const bare = shop.headText({ sha: SHA, etag: "e", shelf: "no", shelfEtag: "no" });
-  expect(bare).toBe(`${SHA}\ne\n`);
-  expect(shop.parseHead(bare)).toEqual({ sha: SHA, etag: "e", shelf: "", shelfEtag: "" });
+test("the head file is the sha and the etag, and a longer head reads as its first two lines", () => {
+  const text = net.headText({ sha: SHA, etag: "e" });
+  expect(text).toBe(`${SHA}\ne\n`);
+  expect(net.parseHead(text)).toEqual({ sha: SHA, etag: "e" });
+  expect(shop.parseHead(`${SHA}\ne\nold\nlines\n`)).toEqual({ sha: SHA, etag: "e" });
 });
 
 /* MODULES */

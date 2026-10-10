@@ -2,11 +2,11 @@
 
 .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 .heroes, .heroes ~ .shelf { --gap: var(--s4); container-type: inline-size; display: grid; gap: var(--gap); padding-bottom: var(--gap); }
-.hero, .half { position: relative; isolation: isolate; display: block; color: var(--fg); content-visibility: auto; }
+.hero, .half { position: relative; isolation: isolate; display: block; color: var(--fg); }
 .hero:hover, .half:hover { text-decoration: none; }
 .hero:focus-visible, .half:focus-visible { outline-offset: -6px; }
-.hero { --cell: calc(100cqw / 16); width: 100%; aspect-ratio: 16 / 9; contain-intrinsic-size: 100cqw calc(100cqw * 9 / 16); }
-.half { --cell: calc((100cqw - var(--gap)) / 16); width: 100%; aspect-ratio: 8 / 9; contain-intrinsic-size: 50cqw calc(50cqw * 9 / 8); }
+.hero { --cell: calc(100cqw / 16); width: 100%; aspect-ratio: 16 / 9; }
+.half { --cell: calc((100cqw - var(--gap)) / 16); width: 100%; aspect-ratio: 8 / 9; }
 .art { position: absolute; top: 0; left: 0; width: 100%; max-width: none; height: 100%; display: block; transform-origin: 0 0; }
 .art.square { shape-rendering: crispEdges; }
 .art .tall { display: none; }
@@ -34,7 +34,7 @@
 .art .base use { animation: hero-shimmer 6s linear infinite; animation-delay: calc(var(--n) * 60ms - 6s); }
 @keyframes hero-shimmer { 0%, 8% { fill: var(--k); stroke: var(--k); } 4% { fill: color-mix(in oklab, var(--k), white 30%); stroke: color-mix(in oklab, var(--k), white 30%); } }
 @media (orientation: portrait) {
-  .hero { --cell: calc(100cqw / 9); aspect-ratio: 9 / 16; contain-intrinsic-size: 100cqw calc(100cqw * 16 / 9); }
+  .hero { --cell: calc(100cqw / 9); aspect-ratio: 9 / 16; }
   .hero .art { width: calc(var(--cell) * 16); height: calc(var(--cell) * 9); transform: matrix(0, 1, 1, 0, 0, 0); }
   .hero .art :is(.near, .plate):not(.tall) { display: none; }
   .hero .art .tall { display: inline; }
@@ -44,7 +44,7 @@
 
 @media (max-width: 40rem) {
   .heroes ~ .shelf { grid-template-columns: minmax(0, 1fr); }
-  .half { --cell: calc(100cqw / 9); aspect-ratio: 9 / 8; contain-intrinsic-size: 100cqw calc(100cqw * 8 / 9); }
+  .half { --cell: calc(100cqw / 9); aspect-ratio: 9 / 8; }
   .half .art { width: calc(var(--cell) * 8); height: calc(var(--cell) * 9); transform: matrix(0, 1, 1, 0, 0, 0); }
   .half .art :is(.near, .plate):not(.tall) { display: none; }
   .half .art .tall { display: inline; }
@@ -55,8 +55,6 @@
 
 @media print {
   .heroes, .heroes ~ .shelf { display: none; }
-  .plate.paper { break-after: avoid; }
-  .plate.paper .avatar { max-width: 20rem; border: 0; }
 }
 
 /* PLATE */
@@ -65,22 +63,3 @@
 .plate .by { color: var(--dim); font: var(--t3)/var(--lh3) var(--mono); margin: var(--s2) 0 0; }
 .plate .by + .by { margin-top: 0; }
 .plate .by:last-child { margin-bottom: var(--s6); }
-.plate.paper { text-align: center; }
-.plate.paper .avatar { width: min(100%, 32rem); height: auto; display: block; margin: 0 auto; border: var(--hair); border-radius: var(--r3); background: var(--art); }
-
-/* WIDGET */
-
-.widget { margin: var(--s6) 0; }
-.widget .mount:empty { min-height: 220px; border-radius: var(--r2); background: var(--art); }
-.widget .bars { width: 100%; height: 220px; display: block; border-radius: var(--r2); background: var(--art); }
-.widget .sheet { width: 100%; display: block; border-radius: var(--r2); background: var(--art); image-rendering: pixelated; }
-.widget .sub { color: var(--dim); font-size: var(--t3); margin-top: var(--s2); }
-.widget figcaption { color: var(--dim); font-size: var(--t3); margin-top: var(--s3); }
-
-/* WIKI */
-
-.graph .tile { padding: 0; display: grid; }
-.graph .tile > a { color: inherit; padding: var(--s3); display: block; }
-.graph .tile > a:hover { text-decoration: none; }
-.graph .tile > a img { width: 100%; height: auto; aspect-ratio: 1; display: block; border-radius: var(--r2); background: var(--art); }
-.graph .tile .needs { color: var(--dim); font: var(--t1) var(--mono); padding: 0 var(--s3) var(--s3); margin: 0; }

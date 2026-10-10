@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 
 /* SELECTORS */
 
@@ -37,6 +37,17 @@ test("the site css never repeats a top-level selector with another rule between"
       last.set(sel, n);
     });
   }
+});
+
+/* SHEETS */
+
+const imports = (file: string) => [...readFileSync(file, "utf8").matchAll(/@import "([^"]+)"/g)].map(([, one]) => join(dirname(file), one!));
+
+test("the git and app sheets import nothing the shell sheet already links", () => {
+  const page = join(import.meta.dir, "page.css");
+  const shell = new Set([page, ...imports(page)]);
+  const twice = [join(import.meta.dir, "git.css"), join(import.meta.dir, "..", "lib", "mrly.css")].flatMap((file) => imports(file).filter((one) => shell.has(one)));
+  expect(twice).toEqual([]);
 });
 
 /* TOKENS */

@@ -1,23 +1,37 @@
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { build, digest, today, type Bytes, type Manifest, type Output, type Spec } from "./ssg/build.ts";
 import { client, del, getText, need, putBytes } from "./s3.ts";
 import { kind } from "./types.ts";
 
-/* WHERE */
+/* TYPES */
 
 export type Store = { bucket: string; prefix: string };
 
-export type Block = { prefix: string; guard: string[]; bucket: string; store: Store; hashed: string[] };
+export type Block = { prefix: string; guard: string[]; bucket: string; store: Store };
+
+export type Record_ = { hash: string; at: string; outputs: string[]; types?: Record<string, string>; sums?: Record<string, string> };
+
+export type Manifest = Record<string, Record_>;
+
+export type File = { path: string; hash: string; type?: string; fixed?: boolean };
+
+export type Built = { out: string; rows: unknown[]; files: File[] };
 
 const ASSET = "@";
 const BATCH = 32;
 const TICK = 512;
+const WEEK = 7;
 
-export function block(spec: Spec): Block {
-  const config = JSON.parse(readFileSync(join(spec.root, "site.json"), "utf8")) as Record<string, unknown>;
-  const found = config.push as Block | undefined;
+export const GONE = "~";
+
+export const today = () => new Date().toISOString().slice(0, 10);
+
+const digest = (...parts: (string | Uint8Array)[]) => parts.reduce((h, part) => h.update(part), createHash("sha256")).digest("hex");
+
+export function block(root: string): Block {
+  const found = (JSON.parse(readFileSync(join(root, "site.json"), "utf8")) as { push?: Block }).push;
   if (!found) throw new Error("push: site.json has no push block");
   return found;
 }
@@ -27,20 +41,22 @@ export function block(spec: Spec): Block {
 export const IMMUTABLE = "public, max-age=31536000, immutable";
 export const SHORT = "public, max-age=0, s-maxage=60, stale-while-revalidate=300, stale-if-error=86400";
 
-export const cache = (path: string, hashed: RegExp[]) => (hashed.some((re) => re.test(path)) ? IMMUTABLE : SHORT);
+const HASHED = /-[0-9a-z]{8}\.[^./]+$/;
 
-export const rules = (hashed: string[]) => hashed.map((one) => new RegExp(one));
+export function headers(files: File[]): (path: string) => string {
+  const fixed = new Set(files.filter((one) => one.fixed).map((one) => one.path));
+  const loose = [...fixed].filter((path) => !HASHED.test(path));
+  if (loose.length) throw new Error(`push: ${loose.join(", ")} would be immutable with no hash in the name`);
+  return (path) => (fixed.has(path) ? IMMUTABLE : SHORT);
+}
+
+const SHELL = new Set(["index.html", "404.html"]);
 
 /* GUARD */
 
 export const mine = (path: string, guard: string[]) => !guard.some((one) => path.startsWith(one));
 
-type Page = {
-  contents?: { key: string }[];
-  commonPrefixes?: ({ prefix: string } | string)[];
-  isTruncated?: boolean;
-  nextContinuationToken?: string | null;
-};
+type Page = { contents?: { key: string }[]; commonPrefixes?: ({ prefix: string } | string)[]; isTruncated?: boolean; nextContinuationToken?: string | null };
 
 export type Lister = { list: (options: { prefix: string; delimiter: string; maxKeys: number; continuationToken?: string }) => Promise<Page | null> };
 
@@ -60,36 +76,24 @@ export async function sweep(s3: Lister, root: string, guard: string[], at = root
 
 /* MANIFEST */
 
-export function assets(items: Output[], old: Manifest): Manifest {
+export function assets(files: File[], old: Manifest, now = today()): Manifest {
   const out: Manifest = {};
-  for (const item of items) {
-    const body = typeof item.bytes === "string" ? new TextEncoder().encode(item.bytes) : item.bytes;
-    const hash = digest([body]).slice(0, 16);
-    const was = old[ASSET + item.path];
-    out[ASSET + item.path] = was && was.hash === hash ? was : { hash, at: today(), outputs: [item.path] };
+  for (const one of files) {
+    const was = old[ASSET + one.path];
+    out[ASSET + one.path] = { ...(was && was.hash === one.hash ? was : { hash: one.hash, at: now, outputs: [one.path] }), types: one.type ? { [one.path]: one.type } : undefined };
   }
   return out;
 }
 
-export function typing(manifest: Manifest): Map<string, string> {
-  const out = new Map<string, string>();
-  for (const record of Object.values(manifest)) for (const [path, type] of Object.entries(record.types ?? {})) out.set(path, type);
-  return out;
-}
+const each = <T>(manifest: Manifest, pick: (record: Record_) => Record<string, T> | undefined) => new Map(Object.values(manifest).flatMap((record) => Object.entries(pick(record) ?? {})));
 
-export function spread(manifest: Manifest): Map<string, string> {
-  const out = new Map<string, string>();
-  for (const [key, record] of Object.entries(manifest)) for (const path of record.outputs) out.set(path, key);
-  return out;
-}
+export const typing = (manifest: Manifest) => each(manifest, (record) => record.types);
 
-export function sums(manifest: Manifest): Map<string, string> {
-  const out = new Map<string, string>();
-  for (const record of Object.values(manifest)) for (const [path, sum] of Object.entries(record.sums ?? {})) out.set(path, sum);
-  return out;
-}
+export const sums = (manifest: Manifest) => each(manifest, (record) => record.sums);
 
-export const seal = (bytes: Bytes, type: string, control: string) => digest([bytes, type, control]).slice(0, 16);
+export const spread = (manifest: Manifest) => new Map(Object.entries(manifest).flatMap(([key, record]) => record.outputs.map((path) => [path, key] as const)));
+
+export const seal = (bytes: string | Uint8Array, type: string, control: string) => digest(bytes, type, control).slice(0, 16);
 
 export function changes(old: Manifest, next: Manifest, guard: string[], sealed: (path: string) => string, force = false): string[] {
   const had = spread(old);
@@ -107,25 +111,17 @@ export function changes(old: Manifest, next: Manifest, guard: string[], sealed: 
   return out;
 }
 
-export function staged(paths: string[], type: (path: string) => string, header: (path: string) => string): string[][] {
-  const rank = (path: string) => (type(path).startsWith("text/html") ? 2 : header(path) === IMMUTABLE ? 0 : 1);
-  return [0, 1, 2].map((tier) => paths.filter((path) => rank(path) === tier));
-}
-
-/* KEEP */
-
-export const GONE = "~";
-const WEEK = 7;
+export const staged = (paths: string[], header: (path: string) => string) => [0, 1, 2].map((tier) => paths.filter((path) => (SHELL.has(path) ? 2 : header(path) === IMMUTABLE ? 0 : 1) === tier));
 
 const days = (from: string, to: string) => (Date.parse(to) - Date.parse(from)) / 86_400_000;
 
-export function keep(old: Manifest, want: Map<string, string>, held: (path: string) => boolean, now = today()): Manifest {
+export function keep(old: Manifest, want: Map<string, string>, now = today()): Manifest {
   const out: Manifest = {};
   for (const [path, name] of spread(old)) {
     if (want.has(path)) continue;
     const was = old[name]!;
     const parked = name.startsWith(GONE);
-    if (parked ? days(was.at, now) < WEEK : held(path)) out[GONE + path] = { hash: was.hash, at: parked ? was.at : now, outputs: [path] };
+    if (!parked || days(was.at, now) < WEEK) out[GONE + path] = { hash: was.hash, at: parked ? was.at : now, outputs: [path] };
   }
   return out;
 }
@@ -136,62 +132,37 @@ export const holding = () => process.env.DRY === "1";
 
 const where = (store: Store) => join(process.env.DRY_DIR ?? join(tmpdir(), "push", store.prefix), "manifest.json");
 
-const held = (path: string) => (existsSync(path) ? readFileSync(path, "utf8") : null);
-
-function hold(path: string, text: string) {
-  mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, text);
-}
-
 /* PUSH */
 
-export async function push(spec: Spec, options: { dry?: boolean; force?: boolean } = {}): Promise<{ rendered: number; uploaded: number; deleted: number; kept: number }> {
-  const conf = block(spec);
-  const hashed = rules(conf.hashed);
+export async function push(root: string, build: () => Promise<Built>, options: { dry?: boolean; force?: boolean } = {}) {
+  const conf = block(root);
   const local = holding();
   const site = local ? null : client(need(conf.bucket));
   const store = local ? null : conf.store.bucket === conf.bucket ? site : client(need(conf.store.bucket));
   const key = `${conf.store.prefix}/manifest.json`;
-  const found = store ? await getText(store, key) : held(where(conf.store));
+  const found = store ? await getText(store, key) : existsSync(where(conf.store)) ? readFileSync(where(conf.store), "utf8") : null;
   const old: Manifest = found ? JSON.parse(found) : {};
-  const carry = join(tmpdir(), `push-remote-${process.pid}.json`);
-  writeFileSync(carry, JSON.stringify(old, null, 2) + "\n");
-  const done = await build(spec, { manifest: carry, verify: false, force: options.force, tick: (n, total) => console.log(`render ${n}/${total}`) });
-  rmSync(carry, { force: true });
-  const next: Manifest = { ...done.manifest, ...assets(done.shared, old) };
+  const done = await build();
+  const next = assets(done.files, old);
   const want = spread(next);
-  const had = spread(old);
   const types = typing(next);
-  const header = (path: string) => (types.has(path) ? SHORT : cache(path, hashed));
   const type = (path: string) => types.get(path) ?? kind(path);
-  const tiers = staged(changes(old, next, conf.guard, (path) => seal(readFileSync(join(done.site.out, path)), type(path), header(path)), options.force), type, header);
+  const cache = headers(done.files);
+  const tiers = staged(changes(old, next, conf.guard, (path) => seal(readFileSync(join(done.out, path)), type(path), cache(path)), options.force), cache);
   const upload = tiers.flat();
-  const seen = found || !site ? [...had.keys()] : await sweep(site, conf.prefix, conf.guard);
-  const before = typing(old);
-  const parked = keep(old, want, (path) => !(before.get(path) ?? kind(path)).startsWith("text/html"));
+  const seen = found || !site ? [...spread(old).keys()] : await sweep(site, conf.prefix, conf.guard);
+  const parked = keep(old, want);
   const remove = seen.filter((path) => mine(path, conf.guard) && !want.has(path) && !(GONE + path in parked));
-  const kept = Object.keys(parked).length;
-  const text = JSON.stringify({ ...next, ...parked }, null, 2) + "\n";
+  const text = `${JSON.stringify({ ...next, ...parked }, null, 2)}\n`;
   if (options.dry) {
-    const fixed = upload.filter((path) => header(path) === IMMUTABLE);
-    const page = (path: string) => type(path).startsWith("text/html");
-    const cut = upload.findIndex(page);
-    for (const path of fixed) console.log(`immutable ${conf.prefix + path}`);
-    console.log(`${upload.length - fixed.length} more at max-age 0, ${remove.length} to delete, ${kept} kept a week`);
-    if (cut >= 0) console.log(`order: ${cut} files first, ${upload.slice(cut).filter(page).length} pages last from ${conf.prefix + upload[cut]}, ${upload.slice(cut).filter((path) => !page(path)).length} files after a page`);
+    for (const path of tiers[0]!) console.log(`immutable ${conf.prefix + path}`);
+    console.log(`tiers: ${tiers[0]!.length} immutable first, ${tiers[1]!.length} at max-age 0, then the shell ${tiers[2]!.join(" ") || "unchanged"}; ${remove.length} to delete, ${Object.keys(parked).length} kept a week`);
   } else if (site && store) {
     let sent = 0;
     for (const tier of tiers) {
       for (let i = 0; i < tier.length; i += BATCH) {
         const batch = tier.slice(i, i + BATCH);
-        await Promise.all(
-          batch.map((path) =>
-            putBytes(site, conf.prefix + path, new Uint8Array(readFileSync(join(done.site.out, path))), {
-              type: type(path),
-              cacheControl: header(path),
-            }),
-          ),
-        );
+        await Promise.all(batch.map((path) => putBytes(site, conf.prefix + path, new Uint8Array(readFileSync(join(done.out, path))), { type: type(path), cacheControl: cache(path) })));
         const was = sent;
         sent += batch.length;
         if (Math.floor(sent / TICK) > Math.floor(was / TICK) || sent === upload.length) console.log(`upload ${sent}/${upload.length}`);
@@ -202,17 +173,17 @@ export async function push(spec: Spec, options: { dry?: boolean; force?: boolean
       await del(site, remove.map((path) => conf.prefix + path), BATCH);
     }
     await putBytes(store, key, text, { type: "application/json", cacheControl: SHORT });
-  } else hold(where(conf.store), text);
-  return { rendered: done.rendered, uploaded: upload.length, deleted: remove.length, kept };
+  } else {
+    mkdirSync(dirname(where(conf.store)), { recursive: true });
+    writeFileSync(where(conf.store), text);
+  }
+  return { rows: done.rows.length, uploaded: upload.length, deleted: remove.length, kept: Object.keys(parked).length };
 }
 
 /* MAIN */
 
-export async function main(spec: Spec): Promise<void> {
+export async function main(root: string, build: () => Promise<Built>): Promise<void> {
   const dry = process.argv.includes("--dry");
-  const done = await push(spec, { dry, force: process.argv.includes("--force") });
-  const guard = block(spec).guard.join(", ");
-  console.log(
-    `push${dry ? " --dry" : ""}${holding() ? " --local" : ""}: ${done.rendered} rendered, ${done.uploaded} uploaded, ${done.deleted} deleted, ${done.kept} kept a week, ${guard} guarded`,
-  );
+  const done = await push(root, build, { dry, force: process.argv.includes("--force") });
+  console.log(`push${dry ? " --dry" : ""}${holding() ? " --local" : ""}: ${done.rows} rows, ${done.uploaded} uploaded, ${done.deleted} deleted, ${done.kept} kept a week, ${block(root).guard.join(", ")} guarded`);
 }

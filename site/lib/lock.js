@@ -71,8 +71,11 @@ export async function lock(canvas, pick = '') {
   const kept = known || !head ? pick : RANDOM;
   const id = known ? head : kept && ids.length ? ids[Math.floor(Math.random() * ids.length)] : '';
   if (!id) return Object.assign(() => {}, { pick: kept });
-  const { make } = await scenes[id]();
-  const stop = run(canvas, make, known && at >= 0 ? parse(pick.slice(at + 1)) : {});
+  const scene = await scenes[id]();
+  const held = scene.units ? await scene.units() : {};
+  await held.ready;
+  const { ready, ...units } = held;
+  const stop = run(canvas, scene.make, { ...(known && at >= 0 ? parse(pick.slice(at + 1)) : {}), ...units });
   const { leave, end } = exits(stop.scene);
   const close = () => {
     end();

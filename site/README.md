@@ -1,101 +1,119 @@
-# org
+# SITE
 
-- The mrly.net site: the demos that draw MrlyMath, the papers, the research pages, a blog and an about page, every route static HTML.
-- Vendored: Material Symbols by Google, Apache 2.0, eight paths vendored 2026-10-08 and 2026-10-09 into `lib/icons.js` (`zen` and `unzen` are fullscreen and fullscreen_exit), plus `sound`, `music` and `wave` drawn there on the same grid; `ICONS` holds the `d` strings on a 24 grid and `Icon` of `lib/knobs.jsx` draws one.
-- Rust is the only math; the pages only draw. React renders the demo pages, Three.js draws the 3D; no other dependency.
-- `bun install` fetches them; `bun run wasm` builds `pkg/` from `demos/logic` with wasm-pack and copies each live `mrlyjs` unit into `pkg/<unit>/`, `pkg/math/` today.
-- One demo is one folder: a thin `demos/views/<name>/index.html` shell plus `demos/views/<name>/index.jsx`; the gallery at `/demos/` is drawn at build by `scripts/site.ts` and ships no script of its own, and the Rust behind every view is the `demos` crate at `demos/logic/`.
-- A demo registers nowhere: the folder is the list, its `<title>` is the title, its `description` meta is the blurb, and its `shelf` and `order` metas place it on a shelf; adding a folder adds a route and a gallery tile.
-- A demo fills the right bar unless its shell says `<meta name="bar" content="none">`; a test fails when the shell and what `index.jsx` hands `Page` disagree.
-- A demo's reading list is derived, never declared: every note, paper and wiki page that links or embeds `demos/<name>/` is written into that demo's page as one Read line under its still; `demo` in `app.jsx` reads the line back and `Page` prints it under the foot.
-- The eight shelves are the `shelves` block in `site.json`, `key`, `group`, `title` and `blurb` each; the build groups the demos by them for the gallery, and no page carries the list as data.
-- A demo page is static chrome at build: the header, the subheader, the right pane with an empty controls slot and the footer.
-- Its `<main>` holds an empty `#root`, then the demo's title, blurb, figure and one `<noscript>` line.
-- The demo's mount takes that still out and React draws into `#root` only; its unmount puts the still back. A demo's controls reach the slot through a portal.
-- An embedded widget and the `/git/` viewer carry the same one `<noscript>` line.
-- `lib/` holds the shared code: `mrly.js`, `site.js`, `island.jsx`, `app.jsx`, `widget.jsx`, `figure.js`, `draw.jsx`, `select.jsx`, `stage.jsx` + `stage.js`, `chart.js`, `series.jsx`, `query.js`, `scene.js` + `scene.jsx`, `knobs.js` + `knobs.jsx`, `keys.js` + `keys.jsx`, `export.js`, `icons.js`, `frame.jsx`, `mrly.css`; `series.jsx` is the sequence-view kit, `Pins`, `Staircase`, `Digits`, `Ratios`, `Differences` and the `Terms` ribbon, so no page prints a bare comma list.
-- An island is the part of a page a script draws: a demo, a widget, a live figure, the stats, the `/git/` viewer, the claims filter, the menu's search bar.
-- The markup names the entry: the island's own element, the host, carries `data-island="<module url>"`. `shell` in `scripts/site.ts` reads the urls back out of the tags, never out of prose, and preloads each beside the loader; every page loads `chrome.js` and `router.js` and no other script.
-- An entry exports `mount(host)` and `unmount(host)` and does nothing when imported. One entry serves every host that names it.
-- `unmount` gives back all `mount` took: the React root, every canvas and WebGL context, frame, timer, observer and `window` or `document` listener. It may arrive while `mount` still waits, and a host mounts again after it.
-- `ui/islands.js` is the loader, one instance for the whole visit: `mount(root)` imports and mounts every host under `root` and resolves when all are up, rejecting when an import fails; `unmount(root)` ends them in the same task, while each host is still in the document, and takes a host that already left it too.
-- `load(root)` imports the entries a page names before anything is drawn, and rejects when an entry this visit already imported has other bytes now: a deploy landed, and the module map would run the old code.
-- `ui/router.js` drives both: it mounts the document on a plain load, and on every hop it loads the next page's entries, unmounts, swaps and mounts. The `ui/` README has the router.
-- A React island is `island(open)` from `lib/island.jsx`: `open(host)` answers `{ node, at, close }`. `demo(<App />)` in `app.jsx`, `embed({ view })` in `widget.jsx` and `page(Widget, defaults, { spec, keys, actions })` in `scene.jsx` call it, and an entry's last line exports `{ mount, unmount }` from one of the three.
-- `follow()` in `mrly.js` keeps the wasm on the page's theme while a demo or a widget is up; `island.jsx` is plain React, so an app that draws no wasm loads none; `st.dispose()` in `stage.js` ends a stage, and `Stage` calls it in a layout cleanup, while its canvas is still in the document.
-- The demo gallery draws no thumbnails: every tile is the demo's figure pair, `demo-<name>-dark.webp` and `demo-<name>-light.webp`, and the demos route ships them.
-- The chrome is the kit in `ui/` and its README is the reference for it: the header glyphs, the subheader, the frame, the right bar by need, the drawers, the menu and the settings read from `site.json`, and the footer is the copyright line alone, with no links; `app.jsx` holds `demo` and `Page`, re-exports the kit of `knobs.jsx` and hands a page's controls to `Bar` of `frame.jsx`, and imports nothing of the chrome, so `chrome.js` runs once per page, and `mrly.css` imports the kit and keeps only demo rules; `draw.jsx` wraps every canvas: `Grid`, `Signs`, `Pixels`, `Sketch`, `Markup`.
-- `Signs` is the plus-minus primitive: a warm hue for plus one, a cool hue for minus one, and the dark ground for empty.
-- `select.jsx` is the one picker: design list, code, base and Randomize; `?seed=7` replays the seventh tap, and a typed code drops the seed.
-- `useQuery` in `query.js` keeps page state in the URL, so every view is a link.
-- Words live as markdown: `blog/<slug>/index.md`, `../research/papers/<slug>.md` and every `pages/<slug>.md` open with a `---` front matter block (title, date, lead, optional figure naming a `../figures/<name>.ts`); one page file is one route, `/<slug>/`; `public/` copies straight to the site root.
-- Markdown renders through `kit/ssg/md.ts`, the one remark pipeline: GFM, `$` and `$$` math handed to KaTeX as MathML, heading ids from the slug of the heading text, a lone image line as a figure, the widget line, every link through the resolver, raw HTML shown as text, an asterisk between two word characters kept literal so `3*n*(n+1)` never italicises; `bun run test` covers each rule.
-- The widget line: a wiki page writes `![caption](demos/<name>/<view>)` on a line of its own and the build mounts that view in place; `demos/views/<name>/widget.jsx` exports the view as a component named `<view>` and ends on `export const { mount, unmount } = embed({ <view> })` from `lib/widget.jsx`; the figure names `/demos/<name>/widget.js` as its island, an entry of the kit's one `spa` `Bun.build` call, so a widget shares the React and wasm chunk every demo loads; a widget line naming a missing file or view fails the build.
-- The live figure: a figure that exports `loop`, the seconds of one loop, in `../figures/<name>.ts` animates where a wiki page opens on it; `frames` is the count of pictures in a loop, and without it every animation frame draws. The page ships the same `<picture>` and the figure names `/live.js` as its island, a 1 KB entry of the kit's one `spa` `Bun.build` call that reads the animated figures off their exports, so no list is kept by hand. After `load`, when `figure[data-live]` scrolls into view, it imports the figure's chunk and `lib/figure.js`, which opens the figure's `mrlyjs` units from `pkg/<unit>/`, lays a canvas of the figure's own size over the img and plays `draw(pen, ink, t)` from `still`, pausing off screen and repainting on the theme event. Reduced motion never watches, a failed load mounts nothing, and the still stays. The build resolves `mrlyjs/*` from `../pkgs/mrlyjs/` and the unit glue from `pkg/<unit>/`, so it needs no install; a live figure whose unit `pkg/` lacks fails the build.
-- `../research/wiki/<slug>.md` is the wiki input: front matter `title`, `lead`, `prerequisites` (wiki slugs, comma-separated) and an optional `figure` (default `wiki-<slug>`); `/research/wiki/<slug>/` renders one concept page opening on its figure, its prerequisites above the prose and the pages that need it under Read next; a prerequisite with no page or a circle of prerequisites fails the build.
-- `/research/wiki/` opens on `../research/wiki/README.md`, then the prerequisite graph: one section per depth, Start here for the pages that need nothing, then one step in, two steps in, each tile carrying its figure, its lead and the pages it comes after.
-- `bun run dev` renders on request through `kit/serve.ts`: it scans once, watches every declared input, the modules that draw and the kit, renders the route you ask for, and pushes `css` or `reload` over one socket, so a markdown or CSS edit shows without a refresh; nothing is prebuilt and `dist/` is never read.
-- It runs under `bun --hot`, so an edit to a script or the chrome re-runs the server with fresh modules; a demo's stylesheet comes from its Bun HTML route, each demo is answered through the same `demoPage` as the build so it wears the chrome in dev, `/figures/` is served straight from disk, `/demos/<name>/index.js` and `/demos/<name>/widget.js` are built on demand and an edit reloads the page; the work is `kit/dev.ts` and `scripts/dev.ts` is a handful of lines.
-- `bun run build` writes the whole site to `dist/` with `scripts/site.ts` alone: pure bun, no Chrome, no cargo, no Python; `bun run clean` empties `dist/` by hand when you want a cold start, and `bun run build --force` repaints every route whatever its fingerprint. `MRLY_DIST=/some/dir` writes there instead, manifest included, so two builds never share a folder.
-- A build or a push may start from any folder: `scripts/site.ts` and `scripts/push.ts` move to the site root first, because Bun mixes the starting folder into chunk names.
-- Each demo is one `spa` route and the gallery one `ssg` route: the kit's one `Bun.build()` takes each `demos/views/<name>/index.html` and its `index.jsx`, `place` in `scripts/site.ts` serves a view at `/demos/<name>/`, and `demoPage` writes the page around the bundle's own stylesheet and preload tags and names `/demos/<name>/index.js` as the island, since Bun keeps the exports of a script entry and drops those of a script an HTML entry loads, fingerprinted over the demo's shell, its card and the bundle's own digest.
-- That one call splits by use, and the split is load-bearing: React and the wasm glue land in one shared chunk every demo imports, Three.js in its own chunk only the 3D demos import, and a demo's own code in a chunk of a few KB; chunk names are content hashes served immutable, so a reader downloads React once for every demo until React itself changes. Keep `splitting: true` and the hashed `chunk` naming in `kit/ssg/modes.ts`; without them every demo ships its own React. Each bundled shell carries Bun's own `<link rel="modulepreload">` lines, one per chunk of its entry, so the chunks start with the entry instead of one round trip behind it.
-- `bun run check` reads a built `dist/` too, through `check/links.ts`: every `href`, `src` and `srcset` on every page but the `/raw/` copies lands on a file, a folder's `index.html` or, under `/git/`, a path of `git.json`, or it is red; `/stats/stats.json` is allowed, the stats Lambda writes it. With no `dist/` the row says so and passes.
-- A second `bun run build` renders nothing: every route is fingerprinted into `.cache/manifest.json` with the files it wrote, and dead outputs are deleted by that record.
-- Every route repaints only when a module that draws changes: the import graph of `scripts/site.ts` and `kit/ssg/build.ts`, with `site.json`, the asset names and the calendar year the footer prints. A test, a README or a new file elsewhere repaints no page.
-- A page carries one stylesheet, `page.css` or `git.css`, joined from the `sheets` block in `site.json`; a demo shell carries `fonts.css` and its bundled `lib/mrly.css`.
-- A markdown image under a page's opening figure loads lazily.
-- Two inputs are pinned by a committed lock and never committed themselves: `pkg/` (`pkg.lock`, made by `bun run wasm`) and `data/figures/` (`figures.lock`, made by the build itself from the press, a cache or S3; `bun run figures` only presses); a figure is a pair, `<name>-dark.webp` and `<name>-light.webp`, plus `<name>-dark.png` for og:image, and the page carries the pair as one `<picture>`, the dark WebP in the source and the light WebP in the img, so the reader downloads one half; a figure or image a page asks for that has no file throws while its own route renders and names the route.
-- `scripts/figs.ts` `ensureFigures()` builds `data/figures/` from `figures.lock` under today's names, and `bun scripts/pkg.ts` runs it beside the wasm pull on the Lambda; a row is a pressed name (`"name": "<key>"`, three files `<key>/<name>-dark.webp`, `-light.webp` and `<name>.png`, placed as `<name>-dark.png`) or a pinned image (`"name": {"key": "<sha256>", "files": [...]}`, placed under its own file names); on the desk a row of `data/mrlyprod/figures/figures.lock` whose store folder exists wins, so a fresh press shows before a deploy; a key comes from the desk store, else a cache outside the repo (`MRLY_FIGURES_CACHE`, default `/tmp/mrly-figures`), else `s3://$MRLYPROD_BUCKET/figures/<key>/`; a file whose key marker in `data/figures/.keys.json` matches is left alone and a file no row names is removed. The files keep their names so `reads` repaints a route when a figure is pressed again; the desk's figures console pushes the keys and pins the lock, and `bun run check` is red when a `figures/<name>.ts` has no pressed row, a pressed row has no `.ts`, or the desk press holds a key the lock does not.
-- Figures are named by route: `research-<page>`, `paper-<slug>`, `blog-<slug>`, `wiki-<slug>`, `site-home`, `site-wiki`, `site-demos`, `site-papers`, `site-research`, `site-apps`, `site-math`, `site-contact`, `site-donate`, `site-page`, `demo-<name>` and `site-og` (1200x630); a research or blog page opens on its square figure, a markdown page opens on the one its front matter names, a paper page opens on its avatar, the cards and the doors use the same files.
-- `scripts/shelf.ts` fetches the paper shelf from GitHub into `data/shelf/` at every build and falls back to the cached copy offline; `SHELF_REPO=owner/repo` names the shelf and unset means no fetch, `MRLY_SHELF=/path/to/research` reads a local checkout instead, which `bun run dev` and `bun check.ts` both fall back to, so a rescan never waits on the network and the paper lane is always checked.
-- Routes: `/`, `/demos/`, `/demos/<name>/`, `/research/`, `/research/wiki/`, `/research/wiki/<slug>/`, `/research/notes/`, `/research/notes/<slug>/`, `/research/claims/`, `/research/claims/<slug>/`, `/research/papers/`, `/research/papers/<slug>/`, `/research/REFS/`, `/research/sequences/`, `/blog/`, `/blog/<slug>/`, `/settings/`, `/<app>/` for each row of `apps/apps.json`, `/mrlymath/`, `/menu/`, `/about/`, `/contact/`, `/donate/`, `/method/`, `/cart/`, `/stats/`, `/git/...`, `/raw/...` and `/404.html`, beside `search.json`, `sitemap.xml` (an index of `sitemap-<section>.xml`), `robots.txt`, `llms.txt`, `manifest.webmanifest` and the icons the builder draws from the logo.
-- The research tree is the site tree: `../research/P.md` is `/research/P/` and a folder's `README.md` is the top of that folder's index page, so `/research/` is the hub with one tile per kind, `/research/notes/` the notes by title and lead, `/research/claims/` the top 10 then one row per claims file with its count per tag and its newest date, a claims file one page with its tag filter, and `/research/papers/` the papers then the shelf lanes with their pdf, tex and figures; `lab/` has no page, and no source `.md` ships beside a page, `/raw/` holds the one copy.
-- Home is the front door: five full-screen heroes (Research, MrlyMath, Code, Blog, Apps) and a shelf of the other doors, nothing under them; the `ui/` README has the heroes.
-- The written pages are `pages/<name>.md`, each at `/<name>/`. No route sits under `/pages/` and no index page lists them.
-- `apps/apps.json` is the app list, one row per app: `id`, `title`, `kind`. An app lives at `/<id>/` and no route sits under `/apps/`. A `tool` row is a built page whose kind is its id, and a tool no kind draws stops the build; any other row is the `app` kind, one `spa` route whose entry is `apps/<id>/index.jsx`, and a missing `scene.js`, `widget.jsx` or `index.jsx` stops the build and names the file. `apps/README.md` has the app.
-- The `tree` of `site.json` is the menu: a node with an `href` is a door, a node without one a folder, and a folder has no url of its own. `Research` and `Root` hold their `nodes` there; the build fills `Pages` from `pages/`, `Apps` from `apps/apps.json` and `Elsewhere` from `socials` and `contact`.
-- `/settings/` is the one tool: theme, font, tint and saver, a built page `chrome.js` wires; its saver options are the `saver` rows. No other page holds a setting. Without JavaScript it says so and the site follows the system theme.
-- `sitemap-pages.xml` holds `/` and each lone page; every section of two urls or more has its own `sitemap-<section>.xml`.
-- `/mrlymath/` is the `math` kind and renders `pkgs/mrlyrs/NAMES.md`, the naming standard, under its own lead, so the page and the crate can never disagree; `/math/` redirects to it and stays free for a math app one day.
-- Every page carries its own figure as `og:image`, the dark side at its real pixel size: a note, paper, post or demo its figure, an app `app-<id>`, an index its door, a code page `site-code`, and only `/menu/`, `/cart/`, `/stats/`, `/blog/`, `/404.html` and a markdown page without a figure fall back to `og.png`.
-- `/menu/` is a grid of icons with title labels, two levels and no descriptions: the doors, then each folder as a section of the same page; a folder is a section and never a tile, so every icon is a route. The header's `+` is a plain link to it, which the router takes like any other, and with JavaScript a search bar tops it; the `ui/` README has the search.
-- The folders: `Research` holds the hub and its four sections, `Pages` the written pages, `Apps` the app list, `Root` the root files (`robots.txt`, `sitemap.xml`, `llms.txt`, `404.html`, `manifest.webmanifest`), `Elsewhere` the socials and the contact address, the only place the chrome shows them.
-- A leaf page is found on its section page, never in the menu: the menu route reads the `tree`, `pages/`, `apps/apps.json` and its figures, never the route list, so a new wiki page, note, paper, demo or post leaves its bytes alone.
-- An entry's icon is the figure its own page ships (`shipped` in `scripts/site.ts`, or a page's `figure` front matter), a folder's is `folded` there, and one with none shows `site-page`; a test fails when an entry and its page disagree.
-- `/cart/` is a placeholder and, like `/stats/` and `/404.html`, stays out of the sitemap; the menu links all three.
-- `/search.json` is the search index, a root file the build writes with the other globals: one row per shown route, `[title, route, dark, light]`, the last two the hashed urls of the route's icon pair, in route order. A shown route is one no `hidden` flag covers, the sitemap less `/raw/` (`shown` in `kit/ssg/build.ts`).
-- The icon is the figure the route's own page ships, `site-page` when it ships none (`found` in `scripts/site.ts`); a test fails when a row and its page disagree.
-- No page holds the index. `/menu/` names only the paths, in `data-search`, so a new page changes `/search.json` and leaves the menu's bytes alone; it is rewritten on every build, so a warm build equals a cold one.
-- It is in no sitemap, not in `llms.txt` and not in the menu's Root folder, like `git.json`. The push sends it as `application/json` at the short header below.
-- A route at `/shop/search.json` would add that path to the menu's `data-search`; none exists today.
-- `redirects.json` is the one list of moved urls: `{ "/old/": { "to": "/new/", "since": "YYYY-MM-DD" } }`. The CloudFront router answers each with a 301 before S3 is asked, `/redirects/` (hidden like `/stats/`) lists them, and the 404 page links there. A moved page adds a row; no row expires.
-- `bun run check` is red when a source is still a built page, a target is not one, or a target is itself a source; the router refuses the same.
-- `/stats/` is the cloud mirror, `hidden` like `/cart/`: the page ships a Loading state under one `<noscript>` line and `ui/stats.js` fills it from `/stats/stats.json` every minute while the tab is visible, the CDN and bucket rows, one row per Lambda and the last error lines; the `mrlynet-stats` Lambda writes that key every hour and `push.guard` keeps the site's push off it.
-- `bun run shots` serves `dist/` itself, drives one headless Chrome on one port with one throwaway profile, and writes ten full-page pngs, five routes at phone and desktop, into `data/mrlyprod/site/scripts/shots/latest/`, killing Chrome at the end; routes as arguments replace the five, `<route>@<expr>` runs an expression and shoots the viewport as scrolled, `--print` emulates print media, `--theme dark|light` emulates the colour scheme, `--js <expr>` prints an expression per shot, `--motion` allows motion and shows every canvas for that run, `--nojs` turns JavaScript off, `--first` shoots the viewport with every script request held (`-first`) and again once they ran (`-after`), each with its scroll offset and `JUMP` when it moved, `--size <name>` shoots one size, `--keys <steps>` types, `--walk` follows the routes as links inside one document and counts page loads, `--frames <ms,ms>` takes stills over time (the kit's README has each), `--baseline` keeps a set to compare later runs against by hash, `MRLY_DIST` shoots another built folder and `SITE_URL` a live site instead of `dist/`; every canvas is blanked and reduced motion is emulated so a shot is byte-stable, console errors print under a shot, and a shot names the widest elements when a page overflows.
-- The work is `kit/shots.ts` and `scripts/shots.ts` is a handful of lines; the `shots` block in `site.json` names the five default routes and the two sizes, each a `[width, height, mobile]` triple under the name the file takes.
-- `bun run film <scene.js> --name <n> [--seed 7] [--opts '<json>'] [--cues 600:trigger,4900:exit] [--from 0] [--step 100] [--frames 60] [--video]` bundles one app scene and plays it on a 1280x720 canvas: a contact sheet of `--frames` tiles, 6 columns of 320x180, each `--step` ms of `t` after `--from`, cues applied at their own `t`, shot into `data/mrlyprod/site/scripts/film/<name>/` (`<MRLY_DIST>-film/<name>/` when `MRLY_DIST` is set); `--video` instead records `--frames` frames at 30 fps (at most 900) into `<name>.webm` there, `--step` unused. The work is `scripts/film.ts` and `scripts/film/page.js`.
-- The faces are vendored: `bun run vendor` is four lines over `kit/vendor.ts` and the `fonts` block in `site.json`, which names `ui/fonts` as the output folder, the Google families and their axes, and `ui/fonts/keep.css`, the faces this site cuts itself, MrlyFont and Noto Sans Symbols 2, which it copies verbatim into `fonts.css` under the vendored ones and never overwrites.
-- The faces are cut to the site: `bun run symbols` (`uv run --project .. --group font python ../scripts/symbols.py`) reads the built `dist/`, subsets `files/fonts/symbols.ttf` to the glyphs the pages actually print, writes `ui/fonts/symbols.woff2` with its `unicode-range` into both `ui/fonts/keep.css` and `ui/fonts/fonts.css`, and `ui/fonts.test.ts` reads every built page against every shipped face's cmap and `unicode-range` and fails on a codepoint none draws that its sorted `KNOWN` list does not name, one line each with the glyph and a page, or on a `KNOWN` entry no longer missing.
-- Delivery: the kit's CSS and JS ship under hashed names (`/ui/chrome-1a2b3c4d.js`) and are served immutable for a year, as are the demo chunks, the wasm, and the faces under `fonts/` and `seti/`, whose CSS has its relative `url()` rewritten to the hashed name at build time; figures ship as `figures/<name>-<side>-<8 hex>.webp`, the hash of their bytes, and ride the same rule, while the og `-dark.png` keeps its name for shares; only the licence texts keep their names, and every HTML page and text file goes out at `public, max-age=0, s-maxage=60, stale-while-revalidate=300, stale-if-error=86400`: the edge answers for a minute, serves stale while it refetches, and keeps serving for a day if S3 fails, so a push needs no invalidation and shows within a minute. `kit.hash` and each `assets` bundle's `hash` in `site.json` are the switch and `push.hashed` in `site.json` is the rule.
-- `bun run push` ships `dist/` to the site bucket by manifest diff; `--dry` lists every hashed path it would upload, counts the rest, says the order, and writes nothing; hashed files upload first, then the other files, then every page, so no page is live before its scripts and sheets, and the deletes come last; `--force` repaints every route first. Deletes come from that same diff, the paths the remote manifest carried and this build no longer writes: a page goes at once, any other file is kept a week as a `~<path>` row of the manifest, so a tab opened before the push still loads its chunks and figures; only when the remote manifest is missing does it sweep the bucket instead, never descending into a guarded folder. Either way every `cdn/` key is dropped, so it never uploads to or deletes under that prefix: that space is the game reels', not the site's.
-- The work is `kit/push.ts` and `scripts/push.ts` is a handful of lines; the `push` block in `site.json` names the site bucket, the manifest store, the upload prefix, the guarded paths and the immutable rule, all bucket names as env key names only.
-- `/git/` is the code viewer from `kit/git/`: it browses this repo's own tracked tree, `/raw/` serves the bytes, and the `git` block in `site.json` names the root, the GitHub slug and the branch.
-- No page carries a navigator or a route list: a section index lists its own children, and `/menu/` holds the doors.
-- The right bar is by need: contents from three headings up, a demo's controls, an app's controls. A page with none has no pane, no button and no scrim.
-- Every page carries the subheader under the header, sticky: crumbs on the left, an actions slot on the right. A crumb is one folder of the page's own path and a link; the last is the page itself. Home and `/404.html` have none.
-- Every folder of a path is a page of its own, so every crumb resolves; a test fails when one is not.
-- Only `/git/` keeps a left pane, the explorer; `/git/` is one shell the browser draws every path from, and it plus every `/raw/` object enters the sitemap.
-- A repo binary the site already serves gets no `/raw/` twin: the kit's fonts and icons under `/ui/` are linked where they already live, which keeps a second copy out of `dist/`.
-- `llms.txt` is the reading map: the `about` and `legend` of the `llms` block in `site.json`, then `scripts/map.ts` lists every wiki page, note, claim file, paper, post and page by its `/raw/` source.
-- `robots.txt` allows everything and names GPTBot, ClaudeBot, Claude-Web, CCBot, Google-Extended, anthropic-ai and PerplexityBot one block each.
-- The highlighter is the kit's, Shiki over 16 grammars, imported in the browser on the first code file; `kit/code/code.css` and `seti.css` ride inside the `git.css` sheet on the `/git/` shell.
-- `ui/pages.css` carries only what the chrome has no rule for: the home, the plates, the widget figure and the wiki graph; the code viewer's own CSS lives in the kit, at `kit/code/code.css`.
-- Every route carries a canonical link, a description, Open Graph and Twitter cards pointing at the one `/og.png`, and JSON-LD where it has an author.
-- A note, a page, a post or a paper names a figure by writing its bare name as an image target, `![caption](walks-fig)`: a pinned image ships as `/figures/walks-fig.webp`, a pressed name ships its pair as one `<picture>` with the route, and a bare name that is neither fails the build.
-- `bun run check` prints the fixture numbers the crate's host test asserts; both must agree.
-- `site.json` declares every input the build reads: `pages apps blog wiki research notes claims papers figures names demos lib pkg ui public`; nothing is resolved by hand, so a path moves in one place.
-- The blog is `kit/ssg/blog.ts`: one post is `blog/<slug>/index.md` with every figure and file beside it, served at `/blog/<slug>/<path>`, and the kit collects, orders, renders and fingerprints it while `spec.blog.page` draws the chrome.
-- Every markdown link the build renders, on a research note, a page, a post or a paper, goes through the kit's one resolver in `kit/ssg/links.ts`: it resolves the link against the file it was written in, answers with the route this site publishes for that file, or for the `README.md` of that folder, when there is one, falls to `/git/` or `/raw/` when the repo carries it, and leaves it alone otherwise.
-- `pkg/`, `dist/`, `data/`, `.cache/` and `node_modules/` are build output and stay out of git.
+- mrly.net: one static shell, one router, one table of routes; every page is drawn in the browser.
+- Rust is the only math; the browser only draws.
+- Browser floor: iOS 16.4 / Safari 16.4 (remark-gfm's lookbehind regex in the prose chunk, OffscreenCanvas in the figure pen).
+- Dependencies: React, KaTeX, Shiki, the unified markdown chain and Three.js (the 3D stage of the designs app, loaded lazily); `bun install` fetches them.
+- `ui/README.md` has the shell, the router, the pages and the chrome; `kit/README.md` has the tools; `apps/README.md` has the apps.
 
+## SHAPE
+
+```
+request /about/
+  edge   kit/edge.js: no dot in the last segment -> /index.html
+  shell  ui/index.html: boot.js, page.css, the static chrome, chrome.js + router.js
+  router the site:routes row -> site:pages[kind]() + fetch /raw/<source> -> React into #main
+  figure lib/figure.js draws each host from an intersection queue
+```
+
+## ROUTES
+
+- `scripts/site.ts` collects the rows: `{ route, kind, title, source, date, lead, figure, hidden, meta }`.
+- `source` is the repo path served at `/raw/<source>` for a markdown row, null otherwise; no row carries a body.
+- Kinds: home, hub, prose, app, settings, git, stats, cart, paused, missing, moved, figures.
+- `pages/<slug>.md` is `/<slug>/`: front matter `title`, `lead`, optional `figure`, `button` and `link`.
+- `blog/<slug>/index.md` is `/blog/<slug>/`: front matter `title`, `date` (YYYY-MM-DD), `lead`, optional `figure` (default `blog-<slug>`).
+- `/mrlymath/` renders `pkgs/mrlyrs/NAMES.md`, so the page and the crate never disagree.
+- `apps/apps.json` makes `/<id>/` per row.
+- `/blog/` and `/menu/` are hubs; the menu is the `tree` of `site.json`, filled with the pages, the apps and the socials.
+- `/research/`, `/research/wiki/` and `/demos/` are paused doors: the door's figure, its title, one line that the section is being rebuilt; anything under them is missing.
+- `/cart/`, `/stats/`, `/redirects/`, `/404.html` and `/figures/` are hidden: no sitemap, no `llms.txt`, no search.
+- `/figures/` draws every live figure with its draw time.
+- A missing url renders "Nothing here" with `noindex`, status 200 by design.
+- Every row wears a live figure; the build stops on an unknown name, on a missing source and on two rows for one route.
+- `redirects.json` is the moved urls, `{ "/old/": { "to": "/new/", "since": "YYYY-MM-DD" } }`; the edge answers each with a 301, `/redirects/` lists them, and the build drops a row whose target is no route.
+
+## BUILD
+
+- `bun run build` runs `scripts/site.ts` into `dist/`, or into `MRLY_DIST`; pure Bun, no Chrome, no cargo.
+- Prime: bundle `ui/boot.js`, `ui/git.css` and `lib/mrly.css`; each woff2 ships as `/fonts/<stem>-<sha8>.woff2`.
+- Collect: the rows, the figure roster (`../figures/*.ts`), the wasm units the figures and apps import, the kept redirects, the raw list (`git ls-files` less `research/`).
+- Bundle: one `Bun.build` with splitting over `ui/index.html`, `ui/pages/*.jsx`, `lib/git.js`, every live figure, every `apps/<id>/index.jsx` and `lib/lock.js`.
+- Names: entries `[name]-[hash]`, chunks `lib-[hash]`; the build refuses a bundled file with no hash.
+- Shell: the bundled `index.html` with the hashed boot script swapped in for `/boot.js`; `404.html` is its copy.
+- Copy: `raw/<path>` for every listed file, `public/`, the font licences.
+- Globals: `routes.json`, `llms.txt`, `sitemap.xml` with one `sitemap-<section>.xml` per section and `sitemap-raw.xml`, `robots.txt`, `git.json`, `manifest.webmanifest`, `redirects.json`.
+- Write: `dist/` is emptied, then written whole.
+
+## VIRTUAL MODULES
+
+- `scripts/site.ts` is one Bun plugin; Bun cannot import a computed path, so each lazy family is a module of `() => import()` thunks.
+- `site:routes`: `{ site, rows }`.
+- `site:pages`: kind to page chunk, from `ui/pages/*.jsx`.
+- `site:figures`: name to figure chunk, plus the wasm urls of the live units.
+- `site:apps`: id to app chunk, plus `lock`, the lock screen.
+- `site:css`: the `git` and `mrly` sheet urls.
+- `apps:scenes`: the saver scenes, for the lock screen.
+- `mrlyjs/<door>` resolves through the exports of `pkgs/mrlyjs/package.json`; `pkg/<unit>/mrlyjs_<unit>*` resolves to `site/pkg/`.
+
+## WASM
+
+- `bun run wasm` runs `../scripts/wasm.sh`: it builds every unit of `pkgs/bridge/units.txt` and copies the units `../figures/` and `apps/` import into `pkg/<unit>/`.
+- Live units today: font, life, math.
+- `pkg.lock` pins the copy in S3 the builder Lambda pulls through `scripts/pkg.ts`; the deploy uploads `pkg/` and re-pins it.
+- The build stops when a live unit is missing from `pkg/`.
+
+## DEV
+
+- `bun run --cwd mrlyprod/site dev`, from `site/`, where `bunfig.toml` hands the plugin to Bun's dev server.
+- `scripts/dev.ts` serves 127.0.0.1:3000 (`PORT` overrides) with HMR.
+- A path the edge sends to the shell answers `ui/index.html`, bundled by Bun on request.
+- `/raw/<path>` reads the tree per request, never `research/`; `public/` reads from disk.
+- The globals, the boot script, the sheets and the faces are built once at start, so a new page, post or app needs a restart.
+
+## EDGE
+
+- `kit/edge.js` is the CloudFront function source, one plain file.
+- Rule: www to apex 301; a moved url 301; `/raw/` passes; `/git/...` and a slash-ended path rewrite to `/index.html`; a dotted last segment passes; a bare last segment 301s to its slash form; every 301 keeps the query.
+- The deploy pastes `redirects.json` at its `/*MOVED*/` mark; `kit/edge.ts` does the same for dev and shots.
+
+## PUSH
+
+- `bun run push` builds and ships `dist/` to the bucket by manifest diff.
+- Order: the hashed files (immutable, a year), then the rest (max-age 0, s-maxage 60), the shell last.
+- A file is immutable only when the build hashed it.
+- A removed file stays a week, then goes.
+- `--dry` writes nothing and prints the tiers; `--force` uploads every file; `DRY=1` keeps the manifest on local disk.
+- The `push` block in `site.json` names the bucket and store env keys and the guarded paths, `cdn/` and `stats/stats.json`.
+- The builder Lambda (`kit/lambda.ts`, wired by `../aws/net.ts`) runs `bun run push` on a GitHub push, on its hourly schedule or by hand.
+
+## CHECK
+
+- `bun run check` runs `check.ts`.
+- Source rows: the rows collect; every figure a page or post names is live; every markdown link lands, a rooted one on a route; the house rules (no two blank lines, no em or en dash, a blank line after a heading).
+- Dist rows, over a built `dist/`: every url in the shell is a route or a file; every row's source is under `raw/`; every redirect goes from a gone path to a route.
+- `bun run test` runs every test, each beside the file it covers.
+
+## SHOTS
+
+- `bun run shots [route ...]` serves `dist/` through the edge rule on port 3335 and drives one headless Chrome on port 9335 with a throwaway profile.
+- It writes full-page pngs at phone and desktop into `data/mrlyprod/site/scripts/shots/latest/`.
+- The `shots` block in `site.json` names the default routes and sizes; `kit/README.md` has the flags.
+- `bun run film <scene.js> --name <n>` plays one app scene into a contact sheet, or a video with `--video`, under `data/mrlyprod/site/scripts/film/<name>/`.
+
+## FONTS
+
+- `bun run vendor` writes `ui/fonts/` from the `fonts` block in `site.json`: the Google faces, then `ui/fonts/keep.css` (MrlyFont, Noto Sans Symbols 2) verbatim.
+- `bun run symbols` cuts Noto Sans Symbols 2 to the glyphs the routes, their sources and the browser code print.
+- `ui/fonts.test.ts` checks that a shipped face draws every such glyph.
+- Material Symbols by Google, Apache 2.0: eight paths vendored 2026-10-08 and 2026-10-09 into `lib/icons.js`, plus `sound`, `music` and `wave` drawn there on the same grid.
+
+## PUBLIC
+
+- `public/` copies to the site root: `og.png`, `favicon.svg`, `favicon.png`, `favicon.ico`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`.
+- They are committed images, not drawn at build; the shell and `manifest.webmanifest` name them by absolute url.
+
+## IGNORED
+
+- `../research/` is the archive: no route, no figure, no `/raw/research/`, no `git.json` row, no `llms.txt` line.
+- `pkg/`, `dist/` and `node_modules/` are build output and stay out of git.

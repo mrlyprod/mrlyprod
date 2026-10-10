@@ -14,10 +14,7 @@
       "name": "Research",
       "nodes": [
         { "name": "Research", "href": "/research/" },
-        { "name": "Wiki", "href": "/research/wiki/" },
-        { "name": "Notes", "href": "/research/notes/" },
-        { "name": "Claims", "href": "/research/claims/" },
-        { "name": "Papers", "href": "/research/papers/" }
+        { "name": "Wiki", "href": "/research/wiki/" }
       ]
     },
     { "name": "Demos", "href": "/demos/" },
@@ -41,7 +38,7 @@
     { "name": "Elsewhere" }
   ],
   "heroes": [
-    { "name": "Research", "href": "/research/", "line": "The wiki, the notes, the claims and the papers.", "hues": ["teal", "cyan", "blue", "accent"], "seed": 1 },
+    { "name": "Research", "href": "/research/", "line": "Being rebuilt, one topic at a time.", "hues": ["teal", "cyan", "blue", "accent"], "seed": 1 },
     { "name": "MrlyMath", "href": "/mrlymath/", "line": "A design is a rule on the corners of a cube.", "hues": ["yellow", "orange", "red", "accent"], "seed": 2 },
     { "name": "Code", "href": "/git/", "line": "The Rust crates do the arithmetic, the browser only paints.", "hues": ["accent", "yellow", "green", "mint"], "seed": 3 },
     { "name": "Blog", "href": "/blog/", "line": "Notes on what lands on this site and in the crates behind it.", "hues": ["brown", "orange", "pink", "accent"], "seed": 4 },
@@ -55,56 +52,6 @@
     { "name": "Root", "hues": ["yellow", "green", "mint"] },
     { "name": "Elsewhere", "hues": ["indigo", "purple", "pink"] }
   ],
-  "shelves": [
-    {
-      "key": "designs",
-      "group": "MrlyMath",
-      "title": "Designs",
-      "blurb": "A rule on the corners of a cube, folded into itself, then grown, cropped and counted."
-    },
-    {
-      "key": "sections",
-      "group": "MrlyMath",
-      "title": "Slices and stacks",
-      "blurb": "Meet a design with a plane, or lay it over turned and scaled copies of itself."
-    },
-    {
-      "key": "letters",
-      "group": "MrlyMath",
-      "title": "Words and order",
-      "blurb": "Let the rule change with the scale, and read what the order of the letters costs."
-    },
-    {
-      "key": "networks",
-      "group": "MrlyMath",
-      "title": "Graphs, walks and spectra",
-      "blurb": "Join the filled cells and listen: the network, its spectrum, and the walk it carries."
-    },
-    {
-      "key": "lattice",
-      "group": "Numbers",
-      "title": "Primes in the lattice",
-      "blurb": "Where the primes fall once the whole numbers are laid out on a grid."
-    },
-    {
-      "key": "zeros",
-      "group": "Numbers",
-      "title": "Fractions and zeros",
-      "blurb": "Rational scales and the critical line, both counting the primes the long way."
-    },
-    {
-      "key": "ledger",
-      "group": "Numbers",
-      "title": "The ledger",
-      "blurb": "Every sequence the designs write, every integer they reach, and rules read out of the registry."
-    },
-    {
-      "key": "font",
-      "group": "MrlyFont",
-      "title": "The alphabet",
-      "blurb": "The pixel font that writes the wordmark: every glyph and the order its pen draws it."
-    }
-  ],
   "socials": [
     { "name": "GitHub", "href": "https://github.com/mrlyprod" },
     { "name": "YouTube", "href": "https://youtube.com/@mrlyprod" },
@@ -116,38 +63,19 @@
   ],
   "contact": "help@mrly.net",
   "shots": {
-    "routes": ["/", "/demos/sponge/", "/research/papers/spin-harmonics/", "/research/claims/", "/git/site/kit/ssg/build.ts"],
+    "routes": ["/", "/about/", "/blog/launching-mrlyprod-org/", "/menu/", "/research/", "/git/site/kit/push.ts"],
     "sizes": { "phone": [390, 844, true], "desktop": [1440, 900, false] }
   },
   "push": {
     "prefix": "",
     "guard": ["cdn/", "stats/stats.json"],
     "bucket": "MRLYNET_BUCKET",
-    "store": { "bucket": "MRLYDEV_BUCKET", "prefix": "build/net" },
-    "hashed": ["(^|/)lib-[^/]+\\.js$", "(^|/)lib-[^/]+\\.css$", "\\.wasm$", "-[0-9a-f]{8}\\.[^./]+$"]
+    "store": { "bucket": "MRLYDEV_BUCKET", "prefix": "build/net" }
   },
   "git": { "root": "..", "slug": "mrlyprod/mrlyprod", "branch": "main" },
-  "modes": { "/demos/": "spa", "/git/": { "mode": "spa", "deep": true } },
   "llms": {
     "about": "MrlyMath is the mathematics of designs on the corners of a cube: a code says which of the eight corners are filled, the Kronecker product grows that rule into itself level by level, and the object it converges to is a fractal, the Sierpinski carpet and the Menger sponge among them. Everything else on this site is measurement: fills, voids and exposed faces, plane cuts, graph spectra, and the integer sequences the counts write down, with Rust crates doing the arithmetic and the browser only painting. Every claim is proved, checked over a stated finite domain, or labelled a conjecture, and all of it is free and open source.",
-    "legend": "Links are page sources in markdown: /raw/research/P.md is /research/P/, /raw/site/blog/x/index.md is /blog/x/, /raw/site/pages/x.md is /x/; a link outside /raw/ is the page."
-  },
-  "inputs": {
-    "pages": { "path": "pages", "ext": ".md" },
-    "apps": { "path": "apps", "deep": true },
-    "blog": { "path": "blog", "deep": true },
-    "wiki": { "path": "../research/wiki", "ext": ".md" },
-    "research": { "path": "../research", "ext": ".md" },
-    "notes": { "path": "../research/notes", "ext": ".md" },
-    "claims": { "path": "../research/claims", "ext": ".md" },
-    "papers": { "path": "../research/papers", "ext": ".md" },
-    "figures": { "path": "data/figures" },
-    "names": { "path": "../pkgs/mrlyrs/NAMES.md" },
-    "demos": { "path": "demos/views", "deep": true },
-    "lib": { "path": "lib", "deep": true },
-    "pkg": { "path": "pkg", "deep": true },
-    "ui": { "path": "ui", "deep": true },
-    "public": { "path": "public" }
+    "legend": "Links are page sources in markdown: /raw/site/pages/x.md is /x/, /raw/site/blog/x/index.md is /blog/x/, /raw/pkgs/mrlyrs/NAMES.md is /mrlymath/; a link outside /raw/ is the page."
   },
   "fonts": {
     "out": "ui/fonts",
@@ -159,97 +87,6 @@
       { "family": "Noto Color Emoji", "file": "emoji", "weight": "400", "shards": true, "licence": "notocoloremoji" }
     ]
   },
-  "kit": {
-    "path": "kit",
-    "out": "ui",
-    "hash": true,
-    "files": [
-      "palette.css",
-      "font/font.js",
-      "font/font.json"
-    ]
-  },
-  "assets": [
-    {
-      "path": "ui",
-      "out": "ui",
-      "hash": true,
-      "files": [
-        "tokens.css",
-        "base.css",
-        "chrome.css",
-        "pages.css",
-        "chrome.js",
-        "word.js",
-        "welcome.js",
-        "islands.js",
-        "router.js",
-        "search.js",
-        "claims.js",
-        "logo.js",
-        "stats.js"
-      ]
-    },
-    {
-      "path": "ui",
-      "out": "ui",
-      "hash": true,
-      "files": [
-        "fonts/fonts.css",
-        "fonts/sans.woff2",
-        "fonts/serif.woff2",
-        "fonts/mono.woff2",
-        "fonts/mrly.woff2",
-        "fonts/symbols.woff2",
-        "fonts/emoji.0.woff2",
-        "fonts/emoji.1.woff2",
-        "fonts/emoji.2.woff2",
-        "fonts/emoji.3.woff2",
-        "fonts/emoji.4.woff2",
-        "fonts/emoji.5.woff2",
-        "fonts/emoji.6.woff2",
-        "fonts/emoji.7.woff2",
-        "fonts/emoji.8.woff2",
-        "fonts/emoji.9.woff2",
-        "fonts/emoji.10.woff2"
-      ]
-    },
-    {
-      "path": "ui",
-      "out": "ui",
-      "hash": false,
-      "files": [
-        "fonts/LICENSE-sans.txt",
-        "fonts/LICENSE-serif.txt",
-        "fonts/LICENSE-mono.txt",
-        "fonts/LICENSE-emoji.txt",
-        "fonts/LICENSE-symbols.txt"
-      ]
-    },
-    {
-      "path": "kit/code",
-      "out": "ui",
-      "hash": true,
-      "files": [
-        "code.css",
-        "seti/seti.css",
-        "seti/seti.woff2"
-      ]
-    },
-    {
-      "path": "kit/code",
-      "out": "ui",
-      "hash": false,
-      "files": [
-        "seti/LICENSE-seti.txt"
-      ]
-    }
-  ],
-  "sheets": [
-    { "name": "fonts.css", "files": ["fonts/fonts.css"] },
-    { "name": "page.css", "files": ["palette.css", "tokens.css", "base.css", "chrome.css", "fonts/fonts.css", "pages.css"] },
-    { "name": "git.css", "files": ["palette.css", "tokens.css", "base.css", "chrome.css", "fonts/fonts.css", "pages.css", "code.css", "seti/seti.css"] }
-  ],
   "manifest": {
     "name": "MrlyProd",
     "short_name": "MrlyProd",

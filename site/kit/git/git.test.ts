@@ -2,13 +2,11 @@ import { afterAll, expect, test } from "bun:test";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { collect, explorer, forest, mime, render, shell } from "./git.ts";
+import { config, forest, mime, tree } from "./git.ts";
 import { seti } from "../code/seti/seti.ts";
 import { paint } from "./code.ts";
-import { block, decode, dirRoute, draw, fileRoute, href, lang, link, owner, rawPath, type Tools, type Wood } from "./view.ts";
-import type { Route, Site, Spec } from "../ssg/build.ts";
-import { render as md } from "../ssg/md.ts";
-import type { Shell } from "../ssg/modes.ts";
+import { block, decode, dirRoute, draw, fileRoute, href, lang, link, rawPath, type Tools, type Wood } from "./view.ts";
+import { render as md } from "../md/md.ts";
 
 const shiki = await import("@shikijs/core").then(
   () => true,
@@ -27,11 +25,7 @@ writeFileSync(join(home, "src", "a.rs"), "fn main() {}\n");
 
 afterAll(() => rmSync(home, { recursive: true, force: true }));
 
-const modes = { "/git/": { mode: "spa" as const, deep: true } };
-
-const site = (git: unknown, root = home, ships = new Map<string, string>()) => ({ root, config: git ? { git, modes } : {}, ships }) as unknown as Site;
-
-const repo = { root: ".", slug: "mrlyprod/mrlyprod" };
+const repo = config(home, { root: ".", slug: "mrlyprod/mrlyprod" })!;
 
 /* RULES */
 
@@ -45,11 +39,6 @@ test("a file routes to its own path, with or without an extension", () => {
 test("a directory route ends in a slash", () => {
   expect(dirRoute("")).toBe("/git/");
   expect(dirRoute("crates/a")).toBe("/git/crates/a/");
-});
-
-test("a raw path names its own file route", () => {
-  expect(owner("/raw/src/a.rs")).toBe("/git/src/a.rs");
-  expect(owner("/git/src/a.rs")).toBe(null);
 });
 
 test("an href percent-encodes a path and html-escapes the rest", () => {
@@ -91,47 +80,18 @@ test("a repo-relative link lands in the viewer, an image or a pdf on its raw byt
 
 /* COLLECT */
 
-test("no git block in site.json means no routes", () => {
-  expect(collect(site(null))).toEqual({ routes: [] });
+test("no git block means no repo", () => {
+  expect(config(home)).toBeNull();
 });
 
-test("a git block with no deep /git/ rule stops the scan", () => {
-  const bare = { root: home, config: { git: repo }, ships: new Map() } as unknown as Site;
-  expect(() => collect(bare)).toThrow(/deep spa route/);
+test("outside a git checkout the tree is every file but the skipped folders", () => {
+  mkdirSync(join(home, "node_modules", "x"), { recursive: true });
+  writeFileSync(join(home, "node_modules", "x", "i.js"), "");
+  expect(tree(home)).toEqual([".gitignore", "LICENSE", "README.md", "src/a.rs"]);
 });
 
-test("a git block routes one shell for the viewer and the raw bytes of every file, and no page per file", () => {
-  const { routes } = collect(site(repo), { entry: "lib/git.js" });
-  expect(routes.map((one) => one.route)).toEqual(["/git/", "/raw/.gitignore", "/raw/LICENSE", "/raw/README.md", "/raw/src/a.rs"]);
-  expect(routes[0]).toEqual({ route: "/git/", kind: "git", name: "mrlyprod", entry: join(home, "lib/git.js"), sitemap: true });
-  const one = routes.find((route) => route.route === "/raw/src/a.rs")!;
-  expect(one.hidden).toBe(true);
-  expect(one.sitemap).toBe(true);
-  expect(one.urls).toEqual([{ route: "/raw/src/a.rs", name: "a.rs" }]);
-});
-
-test("the explorer draws the root and leaves every folder lazy", () => {
-  const one = site(repo);
-  collect(one);
-  expect(explorer(one)).toEqual([
-    {
-      name: "mrlyprod",
-      href: "/git/",
-      lazy: "",
-      nodes: [
-        { name: "src", href: "/git/src/", lazy: "src", nodes: [] },
-        { name: ".gitignore", href: "/git/.gitignore", icon: "si si-git" },
-        { name: "LICENSE", href: "/git/LICENSE", icon: "si si-license" },
-        { name: "README.md", href: "/git/README.md", icon: "si si-markdown" },
-      ],
-    },
-  ]);
-});
-
-test("the tree data names the repo and gives every file its icon and its size", () => {
-  const one = site(repo);
-  collect(one);
-  expect(forest(one)).toEqual({
+test("the tree data names the repo and gives every file its icon and its size, folders first", () => {
+  expect(forest(repo, [".gitignore", "LICENSE", "README.md", "src/a.rs"])).toEqual({
     base: "/git/",
     name: "mrlyprod",
     slug: "mrlyprod/mrlyprod",
@@ -145,59 +105,6 @@ test("the tree data names the repo and gives every file its icon and its size", 
   });
 });
 
-/* RAW */
-
-const raw = (routes: Route[], path: string) => routes.find((one) => one.route === `/raw/${path}`)!;
-
-test("a text file with no extension is its own raw object, typed as text", () => {
-  const one = site(repo);
-  const { routes } = collect(one);
-  const out = render(one, raw(routes, "LICENSE"), {} as Spec);
-  expect(out.map((item) => [item.path, item.type])).toEqual([["raw/LICENSE", "text/plain; charset=utf-8"]]);
-  expect(new TextDecoder().decode(out[0].bytes as Uint8Array)).toBe("MIT\n");
-});
-
-test("a binary the site already serves loses its raw copy and the tree data points at the served url", () => {
-  const shelf = join(tmpdir(), `mrlyraw-${process.pid}`);
-  mkdirSync(shelf, { recursive: true });
-  writeFileSync(join(shelf, "logo.png"), Uint8Array.from([137, 80, 78, 71, 13, 10, 26, 10, 0, 1]));
-  writeFileSync(join(shelf, "seal.bin"), Uint8Array.from([0, 1, 2, 3]));
-  const one = site({ root: "." }, shelf);
-  const { routes } = collect(one);
-  const hooks = { served: (_s: Site, path: string) => (path === "logo.png" ? "/figures/logo.png" : null) };
-  const spec = { git: hooks } as unknown as Spec;
-  expect(render(one, raw(routes, "logo.png"), spec)).toEqual([]);
-  expect(render(one, raw(routes, "seal.bin"), spec).map((item) => [item.path, item.type])).toEqual([["raw/seal.bin", "application/octet-stream"]]);
-  expect(forest(one, hooks)!.c).toEqual([
-    { n: "logo.png", k: "f", i: "image", s: 10, u: "/figures/logo.png" },
-    { n: "seal.bin", k: "f", s: 4 },
-  ]);
-  rmSync(shelf, { recursive: true, force: true });
-});
-
-test("a file the build ships verbatim loses its raw copy whatever its type", () => {
-  const shelf = join(tmpdir(), `mrlyship-${process.pid}`);
-  mkdirSync(shelf, { recursive: true });
-  writeFileSync(join(shelf, "make.py"), "print(1)\n");
-  const one = site({ root: "." }, shelf, new Map([[join(shelf, "make.py"), "/blog/post/make.py"]]));
-  const { routes } = collect(one);
-  expect(render(one, raw(routes, "make.py"), {} as Spec)).toEqual([]);
-  expect(forest(one)!.c[0].u).toBe("/blog/post/make.py");
-  rmSync(shelf, { recursive: true, force: true });
-});
-
-/* SHELL */
-
-test("the shell is the site's page around one noscript line and the viewer's one script", () => {
-  const one = site(repo);
-  const { routes } = collect(one, { entry: "lib/git.js" });
-  const seen: unknown[] = [];
-  const spec = { git: { page: (_s: Site, leaf: unknown) => (seen.push(leaf), "<html>") } } as unknown as Spec;
-  expect(shell(one, routes[0], { script: "/lib/git.js" } as Shell, spec)).toBe("<html>");
-  expect(seen[0]).toMatchObject({ route: "/git/", name: "mrlyprod", code: true, island: "/lib/git.js" });
-  expect((seen[0] as { body: string }).body).toBe('<noscript><p>The code viewer draws in the browser and needs JavaScript. The same files are on <a href="https://github.com/mrlyprod/mrlyprod">GitHub</a>.</p></noscript>');
-});
-
 /* VIEW */
 
 const wood: Wood = {
@@ -206,7 +113,7 @@ const wood: Wood = {
   slug: "acme/demo",
   branch: "main",
   c: [
-    { n: "docs", k: "d", c: [{ n: "paper.pdf", k: "f", s: 900 }, { n: "shot.png", k: "f", i: "image", s: 2048, u: "/figures/shot.png" }] },
+    { n: "docs", k: "d", c: [{ n: "paper.pdf", k: "f", s: 900 }, { n: "shot.png", k: "f", i: "image", s: 2048 }] },
     { n: "big.rs", k: "f", i: "rust", s: 2 << 20 },
     { n: "blob.bin", k: "f", s: 4 },
     { n: "Makefile", k: "f", s: 9 },
@@ -241,7 +148,7 @@ test("a listing draws its folders and files with their sizes at once, and its RE
   expect(view.html).not.toContain("readme");
   const full = (await view.more!(tools))!;
   expect(full.html.indexOf('<div class="prose readme">')).toBeLessThan(full.html.indexOf('<ul class="files">'));
-  expect(full.html).toContain("[the shot](/figures/shot.png) and [make](/git/Makefile)");
+  expect(full.html).toContain("[the shot](/raw/docs/shot.png) and [make](/git/Makefile)");
 });
 
 test("a code file shows its bar first, then its numbered lines, and hands its text over for painting", async () => {
@@ -257,13 +164,8 @@ test("a code file shows its bar first, then its numbered lines, and hands its te
 test("a markdown file is rendered by the site's pipeline with its links resolved in the viewer", async () => {
   const full = (await draw(wood, "README.md").more!(tools))!;
   expect(full.html).toContain('<div class="prose readme"># demo');
-  expect(full.html).toContain("(/figures/shot.png)");
+  expect(full.html).toContain("(/raw/docs/shot.png)");
   expect(full.code).toBeUndefined();
-});
-
-test("a README link to an image the site serves elsewhere lands on that url, not on a raw object that is not there", () => {
-  expect(link("", "docs/shot.png", wood)).toBe("/figures/shot.png");
-  expect(link("docs", "paper.pdf#p2", wood)).toBe("/raw/docs/paper.pdf#p2");
 });
 
 test("with the tree, a README link to a missing path is plain text and a folder gets its route with or without a slash", () => {
@@ -289,7 +191,7 @@ test("a file whose bytes do not load says so and offers the raw link", async () 
 test("an image and a pdf are shown from their bytes' url and fetch nothing", () => {
   asked.length = 0;
   const shot = draw(wood, "docs/shot.png");
-  expect(shot.html).toContain('<figure class="shot"><img src="/figures/shot.png" alt="shot.png"></figure>');
+  expect(shot.html).toContain('<figure class="shot"><img src="/raw/docs/shot.png" alt="shot.png"></figure>');
   expect(shot.more).toBeUndefined();
   const paper = draw(wood, "docs/paper.pdf");
   expect(paper.html).toContain('<embed class="doc" src="/raw/docs/paper.pdf" type="application/pdf">');

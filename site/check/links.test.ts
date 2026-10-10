@@ -8,7 +8,9 @@ const dist = join(tmpdir(), `links-${process.pid}`);
 
 const strict = join(tmpdir(), `links-strict-${process.pid}`);
 
-afterAll(() => [dist, strict].forEach((one) => rmSync(one, { recursive: true, force: true })));
+const routed = join(tmpdir(), `links-routed-${process.pid}`);
+
+afterAll(() => [dist, strict, routed].forEach((one) => rmSync(one, { recursive: true, force: true })));
 
 test('an internal href, src or srcset that lands on no file, folder index or tree path is dead, an allowed, outside or raw one is not', () => {
   mkdirSync(join(dist, 'a'), { recursive: true });
@@ -42,4 +44,10 @@ test('a link is held by its exact case, and a folder with a dot in its name only
   writeFileSync(join(strict, 'v.d/index.html'), '');
   writeFileSync(join(strict, 'index.html'), ['/About/', '/About', '/about/', '/ABOUT/INDEX.HTML', '/v.d/', '/v.d/index.html', '/v.d'].map((url) => `<a href="${url}">x</a>`).join(''));
   expect(dead(strict, 'https://mrly.net', [], null).dead.map((one) => one.url)).toEqual(['/about/', '/ABOUT/INDEX.HTML', '/v.d']);
+});
+
+test('a route the build lists is held though no file backs it', () => {
+  mkdirSync(routed, { recursive: true });
+  writeFileSync(join(routed, 'index.html'), '<a href="/menu/">x</a><a href="/cart/">x</a>');
+  expect(dead(routed, 'https://mrly.net', [], null, new Set(['/menu/'])).dead.map((one) => one.url)).toEqual(['/cart/']);
 });

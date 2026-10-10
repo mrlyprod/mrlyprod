@@ -1,58 +1,35 @@
-import { readFileSync } from "node:fs";
-import { basename, join, relative } from "node:path";
-import { config } from "../kit/git/git.ts";
-import { rawPath } from "../kit/git/view.ts";
-import type { Row, Section, Site } from "../kit/ssg/build.ts";
-import { front, summary, title } from "../kit/ssg/md.ts";
-
 /* TYPES */
 
-type Wiki = { name: string; lead: string; file: string; href: string };
+export type Listed = { route: string; kind: string; title: string; source: string | null; lead: string; hidden: boolean; meta: Record<string, unknown> };
 
-type Note = { title: string; lead: string; file: string; href: string };
+export type Line = { name: string; href: string; note: string };
 
-type Claim = { title: string; md: string; file: string; href: string };
-
-type Paper = { name: string; lead: string; file: string; href: string };
-
-type Lane = { name: string; blurb: string; md: string; href: string };
-
-type Post = { slug: string; name: string; lead: string };
-
-export type Lists = { wiki: Wiki[]; notes: Note[]; claims: Claim[]; papers: Paper[]; lanes: Lane[]; posts: Post[]; math: string[]; pages: string[] };
-
-/* CLAIMS */
-
-const CLAIM = /^- (\d{4}-\d{2}-\d{2}) \[(?:Proved|Verified|Conjecture|Refuted)\] /gm;
-
-function claimed(md: string) {
-  const dates = [...md.matchAll(CLAIM)].map((m) => m[1]!).sort();
-  return dates.length ? `${dates.length} claim${dates.length > 1 ? "s" : ""}, newest ${dates.at(-1)}` : "no claim yet";
-}
+export type Section = { name: string; lines: Line[] };
 
 /* SECTIONS */
 
-export function sections(site: Site, lists: Lists): Section[] {
-  const git = config(site);
-  const served = new Set(site.routes.flatMap((route) => (route.urls ?? []).map((one) => one.route)));
-  const row = (name: string, note: string, file: string, page: string): Row => {
-    const raw = git ? `/${rawPath(relative(git.root, file))}` : "";
-    return { name, note, href: served.has(raw) ? raw : page };
-  };
-  const read = (file: string, page: string, name?: string) => {
-    const { data, body } = front(readFileSync(file, "utf8"));
-    return row(name || data.title || title(body) || basename(file, ".md"), data.lead || summary(body), file, page);
-  };
-  return [
-    { name: "Wiki, in prerequisite order", rows: lists.wiki.map((e) => row(e.name, e.lead, e.file, e.href)) },
-    { name: "Research notes", rows: lists.notes.map((n) => row(n.title, n.lead, join(site.input("research").path, n.file), n.href)) },
-    { name: "Claims", rows: lists.claims.map((c) => row(c.title, claimed(c.md), c.file, c.href)) },
-    {
-      name: "Papers",
-      rows: [...lists.papers.map((p) => row(p.name, p.lead, p.file, p.href)), ...lists.lanes.map((p) => ({ name: p.name, note: p.blurb || summary(p.md), href: p.href }))],
-    },
-    { name: "Blog", rows: lists.posts.map((p) => row(p.name, p.lead, join(site.input("blog").path, p.slug, "index.md"), `/blog/${p.slug}/`)) },
-    { name: "MrlyMath", rows: lists.math.map((file) => read(file, "/mrlymath/", "MrlyMath")) },
-    { name: "About", rows: lists.pages.map((file) => read(file, `/${basename(file, ".md")}/`)) },
-  ];
+const GROUPS: [string, (row: Listed) => boolean][] = [
+  ["Blog", (row) => row.meta.was === "post"],
+  ["MrlyMath", (row) => row.meta.was === "math"],
+  ["About", (row) => row.meta.was === "page"],
+  ["Apps", (row) => row.kind === "app" || row.kind === "settings"],
+  ["Doors", () => true],
+];
+
+export function sections(rows: Listed[], raw: Set<string>): Section[] {
+  const left = rows.filter((row) => !row.hidden);
+  const line = (row: Listed): Line => ({ name: row.title, note: row.lead, href: row.source && raw.has(row.source) ? `/raw/${row.source}` : row.route });
+  return GROUPS.map(([name, pick]) => {
+    const taken = left.filter(pick);
+    for (const row of taken) left.splice(left.indexOf(row), 1);
+    return { name, lines: taken.map(line) };
+  }).filter((one) => one.lines.length);
+}
+
+/* LLMS */
+
+export function llms(title: string, root: string, words: { about?: string; legend?: string }, rows: Listed[], raw: Set<string>): string {
+  const list = (lines: Line[]) => lines.map((one) => `- [${one.name}](${root}${one.href})${one.note ? `: ${one.note}` : ""}`).join("\n");
+  const blocks = [`# ${title}`, `> ${root}`, words.about, words.legend, ...sections(rows, raw).map((one) => `## ${one.name}\n\n${list(one.lines)}`)];
+  return `${blocks.filter(Boolean).join("\n\n")}\n`;
 }

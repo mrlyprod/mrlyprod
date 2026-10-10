@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
-members = ["pkgs/mrlyrs", "pkgs/bridge", "pkgs/mrlypy", "pkgs/mrlyjs/units/*", "figures/census", "site/demos/logic", "research/lab/rs/*"]
-default-members = ["pkgs/mrlyrs", "site/demos/logic"]
+members = ["pkgs/mrlyrs", "pkgs/bridge", "pkgs/mrlypy", "pkgs/mrlyjs/units/*"]
+default-members = ["pkgs/mrlyrs"]
 
 [workspace.package]
 edition = "2021"
@@ -13,17 +13,5 @@ lto = true
 codegen-units = 1
 strip = true
 
-[profile.fig]
-inherits = "release"
-lto = false
-codegen-units = 16
-strip = false
-
 [workspace.dependencies]
-demos = { path = "site/demos/logic" }
 mrlyrs = { path = "pkgs/mrlyrs" }
-ledger = { path = "research/lab/rs/ledger" }
-atlas = { path = "research/lab/rs/atlas" }
-num-bigint = "0.4"
-num-rational = "0.4"
-faer = "0.24"

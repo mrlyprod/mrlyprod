@@ -1,10 +1,10 @@
+import { lock as saver } from 'site:apps';
 import { word } from './word.js';
 
 const DOCK = '(min-width: 74rem)';
 const PREFIX = (typeof document !== 'undefined' && document.documentElement.dataset.prefix) || 'mrly-';
 const KEY = { theme: `${PREFIX}theme`, font: `${PREFIX}font`, tint: `${PREFIX}tint`, saver: `${PREFIX}saver`, cart: `${PREFIX}cart`, welcome: `${PREFIX}welcome` };
 const SIDES = ['left', 'right'];
-const SHADE = 'screen and (prefers-color-scheme: dark)';
 
 const read = (key) => {
   try {
@@ -27,7 +27,6 @@ const root = () => document.documentElement;
 const docked = () => matchMedia(DOCK).matches;
 const isOpen = (side) => root().dataset[side] === 'open';
 const sub = () => document.querySelector('.subheader');
-const ready = (fn) => (document.readyState === 'complete' ? fn() : addEventListener('load', fn, { once: true }));
 
 const spot = () => `${PREFIX}spot:${location.href}`;
 
@@ -95,22 +94,24 @@ function shut() {
   return open.length > 0;
 }
 
-/* HALVES */
-
-function halves() {
-  const set = root().dataset.theme;
-  const media = set === 'dark' ? 'screen' : set === 'light' ? 'not all' : SHADE;
-  for (const source of document.querySelectorAll('picture source[data-dark]')) source.media = media;
-}
-
 /* THEME */
+
+let painted = null;
+
+function repaint() {
+  const now = `${root().dataset.theme ?? ''} ${root().dataset.tint ?? ''}`;
+  if (painted === null) painted = now;
+  if (now === painted) return;
+  painted = now;
+  window.dispatchEvent(new Event('theme'));
+}
 
 function theme(next) {
   if (next) root().dataset.theme = next;
   else delete root().dataset.theme;
   write(KEY.theme, next);
   for (const label of document.querySelectorAll('[data-theme-toggle] b')) label.textContent = next || 'auto';
-  window.dispatchEvent(new Event('theme'));
+  repaint();
 }
 
 /* TINT */
@@ -120,7 +121,7 @@ function tint(next) {
   else delete root().dataset.tint;
   write(KEY.tint, next);
   for (const pick of document.querySelectorAll('[data-tint-pick]')) pick.value = next || '';
-  window.dispatchEvent(new Event('theme'));
+  repaint();
 }
 
 function turn() {
@@ -252,26 +253,28 @@ function folds(mark) {
   };
 }
 
+const FOLD = 'fold';
+
+let route = '';
+let doors = [];
+let drawn = FOLD;
+
 async function rename() {
   const mark = document.querySelector('.top .mark');
-  if (!mark) return;
-  const here = location.pathname;
-  if (mark.seen === undefined || mark.seen === here) {
-    mark.seen = here;
-    return;
-  }
-  mark.seen = here;
-  const next = word(here, JSON.parse(mark.dataset.doors || '[]'));
-  if (next === (mark.dataset.word ?? '')) return;
+  if (!mark || !route) return;
+  const next = word(route, doors);
+  const want = route === '/' ? FOLD : next || 'X';
   mark.dataset.word = next;
   const title = mark.getAttribute('aria-label').replace(/^.*, /, '');
   mark.setAttribute('aria-label', next ? `${next}, ${title}` : title);
+  if (want === drawn) return;
+  drawn = want;
   mark.refold?.();
-  if (here === '/') return arrive(mark);
+  if (want === FOLD) return arrive(mark);
   depart(mark);
   const { letters } = await import('../kit/font/font.js');
-  if (mark.dataset.word !== next) return;
-  const { rows, cols, grid } = letters(next || 'X');
+  if (drawn !== want) return;
+  const { rows, cols, grid } = letters(want);
   paint(mark.querySelector('svg'), rows, cols, grid.flat().flatMap((on, i) => (on ? [i] : [])));
 }
 
@@ -414,7 +417,7 @@ function knock(mark) {
     const now = performance.now();
     const twice = now - tapped < TWICE;
     tapped = twice ? 0 : now;
-    if (location.pathname === '/' && greeting() === 'shut' && hall()) {
+    if (route === '/' && greeting() === 'shut' && hall()) {
       e.preventDefault();
       return greet();
     }
@@ -426,7 +429,7 @@ function knock(mark) {
 
 async function arrive(mark) {
   const { markup, welcome } = await import('./welcome.js');
-  if (location.pathname !== '/') return;
+  if (drawn !== FOLD) return;
   const model = welcome();
   const svg = mark.querySelector('svg');
   svg.setAttribute('class', 'glyphs fold');
@@ -470,7 +473,7 @@ async function lid() {
   const mine = { box, stop: null };
   shown = mine;
   document.body.append(box);
-  const stop = await import('/lock.js').then(({ lock }) => lock(box.firstChild, pick)).catch(() => null);
+  const stop = await saver().then(({ lock }) => lock(box.firstChild, pick)).catch(() => null);
   if (stop && stop.pick !== pick) screen(stop.pick);
   if (stop && shown === mine && !playing && greeting() === 'open') {
     mine.stop = stop;
@@ -568,7 +571,14 @@ const once = (selector, fn) => {
   }
 };
 
-function wire() {
+let landed = false;
+
+function wire(event) {
+  if (event?.detail?.route) ({ route, doors } = event.detail);
+  if (!landed && route) {
+    landed = true;
+    land();
+  }
   sync();
   unread();
   theme(root().dataset.theme ?? '');
@@ -588,8 +598,6 @@ function wire() {
 function boot() {
   root().classList.add('js');
   if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
-  ready(land);
-  window.addEventListener('theme', halves);
   theme(read(KEY.theme));
   face(read(KEY.font));
   tint(read(KEY.tint));
@@ -621,8 +629,7 @@ function boot() {
   window.addEventListener('storage', cart);
   window.addEventListener('pageshow', cart);
   window.addEventListener('pagehide', keep);
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire);
-  else wire();
+  cart();
 }
 
 if (typeof document !== 'undefined') boot();

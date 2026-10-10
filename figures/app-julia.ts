@@ -36,15 +36,27 @@ function slowest(col: number, row: number) {
   return most;
 }
 
+let memo: Uint8Array | undefined;
+
+function counts() {
+  if (memo) return memo;
+  const out = new Uint8Array(SIDE * SIDE);
+  for (let row = 0; row < SIDE; row++) for (let col = 0; col < SIDE; col++) out[row * SIDE + col] = slowest(col, row);
+  for (let at = 0; at < out.length; at++) if (out[at] !== out[out.length - 1 - at]) throw new Error(`app-julia: cell ${at} breaks the symmetry z to -z`);
+  const inside = out.filter((n) => n === MAX).length;
+  if (inside !== 761) throw new Error(`app-julia: ${inside} cells hold the set, want 761`);
+  memo = out;
+  return memo;
+}
+
 export default function draw(pen: Pen, ink: Ink) {
   const w = CELL * SIDE;
   const cells = new Grid(frame(Math.round((pen.width - w) / 2), Math.round((pen.height - w) / 2), w, w), SIDE, SIDE, 0);
   const tones = BANDS.map(([from, share]) => [from, ink.mix(ink.ground, ink.blue, share)] as const);
-  const counts = new Uint8Array(SIDE * SIDE);
+  const steps = counts();
   for (let row = 0; row < SIDE; row++) {
     for (let col = 0; col < SIDE; col++) {
-      const n = slowest(col, row);
-      counts[row * SIDE + col] = n;
+      const n = steps[row * SIDE + col];
       if (n === MAX) cells.fill(pen, col, row, ink.fg);
       else {
         const band = tones.find(([from]) => n >= from);
@@ -52,7 +64,4 @@ export default function draw(pen: Pen, ink: Ink) {
       }
     }
   }
-  for (let at = 0; at < counts.length; at++) if (counts[at] !== counts[counts.length - 1 - at]) throw new Error(`app-julia: cell ${at} breaks the symmetry z to -z`);
-  const inside = counts.filter((n) => n === MAX).length;
-  if (inside !== 761) throw new Error(`app-julia: ${inside} cells hold the set, want 761`);
 }
