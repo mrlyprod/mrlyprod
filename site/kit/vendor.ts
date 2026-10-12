@@ -5,6 +5,7 @@ const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36";
 const CSS2 = "https://fonts.googleapis.com/css2";
 const OFL = "https://raw.githubusercontent.com/google/fonts/main/ofl";
+const MATERIAL = "https://raw.githubusercontent.com/google/material-design-icons/master";
 
 export type Family = {
   family: string;
@@ -12,13 +13,12 @@ export type Family = {
   axes?: string;
   weight: string;
   display?: string;
-  shards?: boolean;
   licence: string;
 };
 
-export type Icons = Family & { names: string[]; full: string };
+export type Fonts = { out: string; faces: Family[]; keep?: string };
 
-export type Fonts = { out: string; faces: Family[]; icons?: Icons; keep?: string };
+export type Icons = { names: string; out: string };
 
 /* FETCH */
 
@@ -38,36 +38,29 @@ const licence = (name: string) => (/^https?:/.test(name) ? name : `${OFL}/${name
 
 /* PARSE */
 
-type Face = { subset: string; url: string; range: string | null };
+type Face = { url: string; range: string | null };
 
 function faces(css: string): Face[] {
   const out: Face[] = [];
-  let subset = "";
-  const comment = /\/\*\s*([^*]+?)\s*\*\//g;
-  const block = /@font-face\s*\{([^}]+)\}/g;
-  let at = 0;
-  let found: RegExpExecArray | null;
-  while ((found = block.exec(css)) !== null) {
-    comment.lastIndex = at;
-    let label = "";
-    let tag: RegExpExecArray | null;
-    while ((tag = comment.exec(css)) !== null && tag.index < found.index) label = tag[1];
-    subset = label || subset;
-    const body = found[1];
+  for (const [, body] of css.matchAll(/@font-face\s*\{([^}]+)\}/g)) {
     const url = /url\((\S+?)\)\s*format/.exec(body);
     if (!url) continue;
     const range = /unicode-range:\s*([^;]+);/.exec(body);
-    out.push({ subset, url: url[1], range: range ? range[1].trim() : null });
-    at = block.lastIndex;
+    out.push({ url: url[1], range: range ? range[1].trim() : null });
   }
   return out;
 }
 
-function latin(css: string): Face {
-  const all = faces(css);
-  const hit = all.find((f) => f.subset === "latin");
-  if (!hit) throw new Error("no latin subset in css");
-  return hit;
+function symbol(svg: string): { box: string; d: string } {
+  const box = /viewBox="([^"]+)"/.exec(svg);
+  const paths = [...svg.matchAll(/<path d="([^"]+)"\/>/g)];
+  if (!box || paths.length !== 1) throw new Error("vendor: expected one viewBox and one path");
+  return { box: box[1], d: paths[0][1] };
+}
+
+function source(box: string, icons: [string, string][]): string {
+  const rows = icons.map(([name, d]) => `  ${name}: '${d}',`);
+  return `export const VIEWBOX = '${box}';\n\nexport const ICONS = {\n${rows.join("\n")}\n};\n`;
 }
 
 /* FACES */
@@ -89,68 +82,55 @@ function rule(family: string, file: string, weight: string, display: string, ran
 /* MAIN */
 
 export async function main(root: string) {
-  const config = JSON.parse(await readFile(join(root, "site.json"), "utf8")) as { fonts?: Fonts };
-  const fonts = config.fonts;
-  if (!fonts) throw new Error("vendor: site.json carries no fonts block");
+  const config = JSON.parse(await readFile(join(root, "site.json"), "utf8")) as { fonts?: Fonts; icons?: Icons };
+  const { fonts, icons } = config;
+  if (!fonts || !icons) throw new Error("vendor: site.json needs a fonts and an icons block");
   const out = resolve(root, fonts.out);
   await mkdir(out, { recursive: true });
 
   const sizes: [string, number][] = [];
-  const save = async (name: string, data: Uint8Array | string) => {
+  const save = async (file: string, data: Uint8Array | string) => {
     const body = typeof data === "string" ? new TextEncoder().encode(data) : data;
-    await writeFile(join(out, name), body);
-    sizes.push([name, body.byteLength]);
+    await writeFile(file, body);
+    sizes.push([file.slice(root.length + 1), body.byteLength]);
   };
   const font = async (name: string, url: string) => {
     const data = await get(url);
     const tag = String.fromCharCode(data[0], data[1], data[2], data[3]);
     if (tag !== "wOF2") throw new Error(`${name}: expected wOF2 magic, got ${JSON.stringify(tag)}`);
-    await save(name, data);
+    await save(join(out, name), data);
   };
 
   const sheet: string[] = [];
   const licences: [string, string][] = [];
 
   for (const one of fonts.faces) {
-    const css = await text(`${CSS2}?${query(one)}`);
     const display = one.display ?? "swap";
-    if (one.shards) {
-      for (const [i, shard] of faces(css).entries()) {
-        const name = `${one.file}.${i}.woff2`;
-        await font(name, shard.url);
-        sheet.push(rule(one.family, name, one.weight, display, shard.range));
-      }
-    } else {
-      const hit = latin(css);
-      const name = `${one.file}.woff2`;
-      await font(name, hit.url);
-      sheet.push(rule(one.family, name, one.weight, display, hit.range));
+    for (const [i, shard] of faces(await text(`${CSS2}?${query(one)}`)).entries()) {
+      const name = `${one.file}.${i}.woff2`;
+      await font(name, shard.url);
+      sheet.push(rule(one.family, name, one.weight, display, shard.range));
     }
     licences.push([`LICENSE-${one.file}.txt`, licence(one.licence)]);
   }
 
-  const icons = fonts.icons;
-  let subset = true;
-  if (icons) {
-    const name = `${icons.file}.woff2`;
-    try {
-      const css = await text(`${CSS2}?${query(icons)}&icon_names=${[...icons.names].sort().join(",")}`);
-      await font(name, faces(css)[0].url);
-    } catch (err) {
-      subset = false;
-      console.log(`icons subset failed (${err}); falling back to the full variable font`);
-      await font(name, icons.full);
-    }
-    sheet.push(rule(icons.family, name, icons.weight, icons.display ?? "block", null));
-    licences.push([`LICENSE-${icons.file}.txt`, licence(icons.licence)]);
-  }
-
   const kept = fonts.keep ? (await readFile(resolve(root, fonts.keep), "utf8")).trim() : "";
-  await save("fonts.css", sheet.join("\n\n") + (kept ? `\n\n${kept}` : "") + "\n");
-  if (icons) await save(`${icons.file}.json`, JSON.stringify(icons.names, null, 2) + "\n");
-  for (const [name, url] of licences) await save(name, await get(url));
+  await save(join(out, "fonts.css"), sheet.join("\n\n") + (kept ? `\n\n${kept}` : "") + "\n");
+
+  const names = JSON.parse(await readFile(resolve(root, icons.names), "utf8")) as string[];
+  const drawn: [string, string][] = [];
+  let box = "";
+  for (const name of names) {
+    const one = symbol(await text(`${MATERIAL}/symbols/web/${name}/materialsymbolsoutlined/${name}_24px.svg`));
+    if (box && one.box !== box) throw new Error(`vendor: ${name} has viewBox ${one.box}, not ${box}`);
+    box = one.box;
+    drawn.push([name, one.d]);
+  }
+  await save(resolve(root, icons.out), source(box, drawn));
+  licences.push(["LICENSE-icons.txt", `${MATERIAL}/LICENSE`]);
+
+  for (const [name, url] of licences) await save(join(out, name), await get(url));
 
   const width = Math.max(...sizes.map(([name]) => name.length));
-  for (const [name, n] of sizes) console.log(`${fonts.out}/${name.padEnd(width)}  ${n} bytes`);
-  if (icons) console.log(`icons: ${icons.names.length} names, ${subset ? "subset" : "FULL FONT (subset failed)"}`);
+  for (const [name, n] of sizes) console.log(`${name.padEnd(width)}  ${n} bytes`);
 }

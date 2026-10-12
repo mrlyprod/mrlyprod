@@ -1,5 +1,6 @@
 [
   { "id": "settings", "title": "Settings", "kind": "tool" },
+  { "id": "polygons", "title": "Polygons", "kind": "saver", "line": "Polygons, the desktop: a mosaic of squares, triangles, hexagons, cubes or all three at once, coloured by a drifting field of hues; waves of light sweep across it and repaint it, and a tap sends a ripple of your own." },
   { "id": "matrix", "title": "Matrix", "kind": "saver" },
   { "id": "sleep", "title": "Sleep", "kind": "saver" },
   { "id": "mandelbrot", "title": "Mandelbrot", "kind": "saver" },

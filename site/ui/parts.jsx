@@ -117,7 +117,7 @@ export function Settings({ savers }) {
         <Pick label="Tint" options={TINTS} data-tint-pick defaultValue="" />
       </Group>
       <Group name="Screensaver">
-        <Pick label="Saver" options={[['', 'None'], ['random', 'Random'], ...savers.map((one) => [one.id, one.title])]} data-saver-pick defaultValue="" />
+        <Pick label="Saver" options={[['random', 'Random'], ...savers.map((one) => [one.id, one.title])]} data-saver-pick defaultValue={savers[0]?.id ?? 'random'} />
       </Group>
     </section>
   );

@@ -8,4 +8,5 @@
     }
     if (['/', '/index.html'].includes(location.pathname) && CSS.supports('animation-timeline', 'scroll()')) d.dataset.welcome = localStorage.getItem('mrly-welcome') || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'shut' : 'open';
   } catch {}
+  if (['/', '/index.html'].includes(location.pathname)) d.dataset.desk = '';
 })();

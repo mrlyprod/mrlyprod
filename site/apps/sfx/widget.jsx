@@ -71,11 +71,11 @@ export function Widget({ value, onChange, onReady }) {
       <Scene make={scene} value={value} onReady={ready} />
       <Bar side="actions">
         <Btn className="short" on={sound === 1} aria-pressed={sound === 1} onClick={mute}>
-          <Icon name="sound" />
+          <Icon name="volume_up" />
           Sound
         </Btn>
         <Btn className="short" onClick={save} disabled={busy}>
-          <Icon name="wave" />
+          <Icon name="graphic_eq" />
           WAV
         </Btn>
       </Bar>

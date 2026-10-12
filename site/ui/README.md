@@ -15,7 +15,7 @@
 
 - `index.html`: head (title, description, canonical, og tags, icons, manifest), `boot.js` as a blocking classic script, `page.css`, the tint style, then the static chrome: header, subheader with crumbs and the two pane openers, `.welcome`, `#left`, `#main`, `#right`, scrim, footer.
 - The header was rendered once by hand: the `+` to the menu, the fold of the wordmark in the middle (home's welcome needs it before any script), the cart ring.
-- `boot.js` imports nothing: it adds `js`, replays theme, font and tint from localStorage and opens the welcome hall on `/`.
+- `boot.js` imports nothing: it adds `js`, replays theme, font and tint from localStorage, marks `/` with `data-desk` and opens the welcome hall there.
 - `chrome.js` and `router.js` are the two module scripts; Bun merges them into one entry chunk.
 
 ## ROUTER
@@ -32,7 +32,7 @@
 
 - `pages/<kind>.jsx` exports `render(row, site, host, { text, rows, url, left, right })`, an optional `mount(host)` after the swap and `unmount(host)`.
 - `pages/index.js` is the layout table per kind: `left` (the git tree), `right` (`contents`, or `late` for git), `wide`, `bare` (a div, not `article.prose`), `sheet`.
-- Kinds: home (heroes from `heroes.js`), hub (`/blog/` grid, `/menu/` doors and search), prose (pages, posts, `/mrlymath/` through `kit/md` and its resolver; KaTeX only when the text holds `$`), app (the chunk from `site:apps`, `mount(host)`/`unmount(host)`), git (`lib/git.js`), stats, settings, cart, paused, missing, moved, figures (hidden: every live figure with its draw ms).
+- Kinds: home (a hidden title over the desk), hub (`/blog/` grid, `/menu/` doors and search), prose (pages, posts, `/mrlymath/` through `kit/md` and its resolver; KaTeX only when the text holds `$`), app (the chunk from `site:apps`, `mount(host)`/`unmount(host)`), git (`lib/git.js`), stats, settings, cart, paused, missing, moved, figures (hidden: every live figure with its draw ms).
 - `parts.jsx`: `show`/`hide` (a React root per host, flushed sync), `Figure`, `Lede`, `Card`, `Grid`, `Menu`, `Settings`, `Contents`, `heads`, `filled` (the site tree with apps, pages and socials filled in).
 - `search.js` searches the rows by title, route and lead and lists text rows; menu tiles are figure hosts.
 
@@ -46,8 +46,11 @@
 
 - `chrome.js` owns the drawers, theme, font, tint, saver, cart dots, contents highlight, the git tree's lazy folders, the wordmark (`word.js`, the fold on home) and the welcome hall, all by delegated listeners.
 - `theme` fires only when the theme or the tint really changes.
-- The lock screen loads the saver chunk through the `lock` thunk of `site:apps`.
+- The desk is home: the header and one full-screen saver canvas, no scroll, no subheader, no footer (`data-desk`). `chrome.js` appends it on `/` and drops it on leaving; it loads the saver through the `lock` thunk of `site:apps`.
+- The pick is the Settings Saver, unset meaning the first saver row; the lock rolls a seed and names what it ran (`stop.as`), and the chrome reuses that while the pick stands, so the desk is the same picture all visit.
+- First visit (the welcome hall open) is the lock screen: the saver plays under the big wordmark, which fades after 3 s of no mouse. Unlocking leaves the scene (`leave`), glides the wordmark into the X and coasts the saver to a standstill over 3 s (`stop.coast`): the screensaver becomes the desktop picture.
+- A later visit plays the desk 3 s, then coasts. Tapping the X replays the lock: the frozen desk resumes and the wordmark unfolds over it.
 
 ## TESTS
 
-- `route.test.js`, `pages/index.test.js`, `heroes.test.js`, `search.test.js`, `word.test.js`, `welcome.test.js`, `config.test.js`, `css.test.ts`, `fonts.test.ts`, and `../lib/figure.test.js`.
+- `route.test.js`, `pages/index.test.js`, `search.test.js`, `word.test.js`, `welcome.test.js`, `config.test.js`, `css.test.ts`, `fonts.test.ts`, and `../lib/figure.test.js`.

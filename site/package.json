@@ -11,8 +11,7 @@
     "test": "bun test ./kit ./scripts ./ui ./check ./apps ./lib",
     "shots": "bun scripts/shots.ts",
     "film": "bun scripts/film.ts",
-    "vendor": "bun scripts/vendor.ts",
-    "symbols": "uv run --project .. --group font python ../scripts/symbols.py"
+    "vendor": "bun scripts/vendor.ts"
   },
   "dependencies": {
     "@shikijs/core": "^4.4.3",

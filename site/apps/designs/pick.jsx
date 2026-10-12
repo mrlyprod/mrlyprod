@@ -95,7 +95,7 @@ export function Picker({ value, onChange, math, dims = [2, 3] }) {
       <Text label={DESIGN[2].label} value={code} commit onChange={(v) => write({ code: v })} />
       {'level' in value && <Slider label="Level" value={value.level} min={1} max={cap(dim)} step={1} onChange={(v) => onChange({ level: v })} />}
       <Btn disabled={!math} onClick={() => write({ code: roll(math, dim, base) })}>
-        <Icon name="reroll" />
+        <Icon name="casino" />
         Random
       </Btn>
       {reps.length > 0 && reps.length <= STRIP && <Thumbs math={math} dim={dim} base={base} codes={reps.map((one) => one.code)} code={code} names={names} onPick={(v) => write({ code: v })} px={40} />}

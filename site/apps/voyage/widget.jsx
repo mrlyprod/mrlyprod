@@ -70,11 +70,11 @@ export function Widget({ value, onChange, onReady }) {
       )}
       <Bar side="actions">
         <Btn className="short" on={value.sound === 1} aria-pressed={value.sound === 1} onClick={() => flip('sound')}>
-          <Icon name="sound" />
+          <Icon name="volume_up" />
           Sound
         </Btn>
         <Btn className="short" on={value.music === 1} aria-pressed={value.music === 1} onClick={() => flip('music')}>
-          <Icon name="music" />
+          <Icon name="music_note" />
           Music
         </Btn>
       </Bar>

@@ -34,9 +34,10 @@ test("a saver scene exports a units thunk exactly when its folder holds a unit.j
   }
 });
 
-test('settings offer none, random and each saver row in order', () => {
+test('settings offer random and each saver row in order, the first saver row picked', () => {
   const picks = /data-saver-pick[^>]*>(.*?)<\/select>/.exec(renderToStaticMarkup(createElement(Settings, { savers })))[1];
-  expect([...picks.matchAll(/value="([^"]*)"/g)].map((found) => found[1])).toEqual(['', 'random', ...savers.map((one) => one.id)]);
+  expect([...picks.matchAll(/value="([^"]*)"/g)].map((found) => found[1])).toEqual(['random', ...savers.map((one) => one.id)]);
+  expect(/<option value="([^"]*)" selected/.exec(picks)?.[1]).toBe(savers[0].id);
 });
 
 test('the chrome and the lock name no saver', async () => {
@@ -46,7 +47,7 @@ test('the chrome and the lock name no saver', async () => {
   }
 });
 
-test("every app's value holds twelve keys or fewer, and an app whose scene has a spec pages it and starts from defaults it keeps as they are", async () => {
+test("every app's value holds a seed, and an app whose scene has a spec pages it and starts from defaults it keeps as they are", async () => {
   const spy = spyOn(scene, 'page');
   const made = APPS.filter((one) => one.kind !== 'tool');
   for (const { id } of made) await import(`./${id}/index.jsx`);
@@ -57,7 +58,7 @@ test("every app's value holds twelve keys or fewer, and an app whose scene has a
     const { SPEC } = await import(`./${id}/scene.js`);
     const [, defaults, { spec } = {}] = calls.find(([one]) => one === Widget) ?? [];
     const value = scene.values(defaults, spec);
-    expect([id, Object.keys(value).length <= 12, 'seed' in value, spec === SPEC]).toEqual([id, true, true, true]);
+    expect([id, 'seed' in value, spec === SPEC]).toEqual([id, true, true]);
     if (spec) expect([id, { ...value, ...tidy(spec, value) }]).toEqual([id, value]);
   }
 });

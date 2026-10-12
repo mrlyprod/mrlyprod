@@ -39,7 +39,7 @@ function Tiles({ math, code, onChange }) {
       <Pick label="Named" value={word(names, code) ? code : ''} options={[['', 'Code'], ...names.map((one) => [one.code, one.name])]} onChange={(v) => v && onChange(v)} />
       <Text label="Code" value={code} commit onChange={onChange} />
       <Btn onClick={() => onChange(roll(Math.random))}>
-        <Icon name="reroll" />
+        <Icon name="casino" />
         Random
       </Btn>
       {reps.length > 0 && <Thumbs math={math} dim={DIM} base={BASE} codes={reps.map((one) => one.code)} code={code} names={names} onPick={onChange} px={40} />}

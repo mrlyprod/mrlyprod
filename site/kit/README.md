@@ -36,7 +36,7 @@
 - `--walk` reads the routes as hops in one document: it clicks the page's own link to each next route, `back`, `forward` and `reload` move through history, and the run ends on the count of page loads.
 - `--frames <ms,ms,...>` shoots the viewport at each offset; with `--motion` the stills show motion.
 - `--baseline` writes to `baseline/` instead of `latest/`.
-- `vendor.ts` writes the font folder from the `fonts` block in `site.json`: the Google families and their axes, then the `keep` css verbatim.
+- `vendor.ts` writes the font folder from the `fonts` block in `site.json` (every Google slice, then the `keep` css verbatim) and the icon module from the `icons` block (the Material SVGs `icons.json` names).
 - `stats/handler.py` is the stats Lambda: CloudFront, Lambda and bucket numbers into one JSON key, read by `/stats/`.
 - It reads `STATS_BUCKET`, `STATS_DISTRIBUTION` (empty means no cdn block), `STATS_FUNCTIONS`, `STATS_KEY` and the `label=prefix` lists `STATS_SIZES`, `STATS_COUNTS` and `STATS_FOLDERS`, each empty when unset.
 

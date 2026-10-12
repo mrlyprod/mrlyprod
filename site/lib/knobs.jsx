@@ -143,7 +143,7 @@ export function Export({ canvas, name, draw, more = [], label = 'Export', ...res
   return (
     <>
       <Btn popoverTarget={id} style={{ anchorName: `--${id}` }} {...rest}>
-        <Icon name="export" />
+        <Icon name="download" />
         {label}
       </Btn>
       <div id={id} popover="auto" className="formats" style={{ positionAnchor: `--${id}` }}>

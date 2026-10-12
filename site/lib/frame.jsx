@@ -6,7 +6,7 @@ const Slots = createContext(null);
 
 const BOTTOM = ['status', 'hints', 'actions'];
 
-const OPENERS = { left: ['Browse', 'paneLeft'], right: ['Knobs', 'knobs'] };
+const OPENERS = { left: ['Browse', 'left_panel_open'], right: ['Knobs', 'tune'] };
 
 export function calm(box) {
   let by = '';

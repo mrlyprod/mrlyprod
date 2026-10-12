@@ -46,8 +46,6 @@ html:not(.js) .subheader .actions [data-pane] { display: none; }
 .panes { display: flex; flex-direction: column; }
 main { min-width: 0; width: 100%; max-width: var(--page); margin-inline: auto; padding: var(--s5) var(--s5) var(--s8); }
 main:focus { outline: none; }
-main:has(.heroes) { max-width: none; padding: 0; }
-.panes:has(.heroes) { max-width: none; }
 main:not(.wide) > .lede { max-width: var(--read); margin-inline: auto; }
 .lede { margin-bottom: var(--s5); }
 .pane { background: var(--bg); padding: var(--s3) var(--s2); font-size: var(--t3); }
@@ -197,7 +195,7 @@ html:not(.js) main .controls { opacity: 0.5; pointer-events: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .pane * { transition-property: none; }
-  .lock, [data-welcome] .top .mark { transition: none; }
+  .desk, [data-welcome] .top .mark { transition: none; }
 }
 
 /* KEYS */
@@ -333,7 +331,7 @@ th { color: var(--dim); font-weight: 500; font-size: var(--t2); }
 /* PRINT */
 
 @media print {
-  .skip, .top, .subheader, .pane, .scrim, .base, .lock { display: none !important; }
+  .skip, .top, .subheader, .pane, .scrim, .base, .desk { display: none !important; }
   .panes { display: block; }
   main { max-width: none; padding: 0; }
   .opener { max-width: 20rem; margin-bottom: 1.5rem; }
@@ -404,9 +402,13 @@ th { color: var(--dim); font-weight: 500; font-size: var(--t2); }
   100% { transform: translateX(calc(var(--d) * 1px)); }
 }
 
-/* LOCK */
+/* DESK */
 
-.lock { position: fixed; inset: 0; z-index: var(--z-lock); pointer-events: none; opacity: 0; transition: opacity 800ms var(--ease); }
-.lock canvas { display: block; width: 100%; height: 100%; }
-[data-lock] .lock { opacity: 1; @starting-style { opacity: 0; } }
+[data-desk] :is(.subheader, .base) { display: none; }
+[data-desk] .panes { height: calc(100svh - var(--head)); }
+[data-desk]:not([data-welcome="open"]) { overflow: hidden; }
+.desk { position: fixed; inset: 0; z-index: var(--z-desk); pointer-events: none; opacity: 0; transition: opacity 800ms var(--ease); }
+.desk canvas { display: block; width: 100%; height: 100%; }
+.desk.on { opacity: 1; }
+[data-welcome="open"] .desk { z-index: var(--z-lock); }
 [data-lock="rest"] .top .mark { opacity: 0; }

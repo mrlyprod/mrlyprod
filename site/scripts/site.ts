@@ -197,7 +197,7 @@ export function state(): State {
   const moves = JSON.parse(read(join(org, "redirects.json"))) as Record<string, { to: string; since: string }>;
   const kept = Object.fromEntries(Object.entries(moves).filter(([, row]) => seen.has(row.to)));
   const site = {
-    ...Object.fromEntries(["title", "company", "tagline", "since", "prefix", "tint", "menu", "cart", "socials", "contact", "tree", "heroes", "tiles"].map((key) => [key, SITE[key as keyof typeof SITE]])),
+    ...Object.fromEntries(["title", "company", "tagline", "since", "prefix", "tint", "menu", "cart", "socials", "contact", "tree"].map((key) => [key, SITE[key as keyof typeof SITE]])),
     root,
     doors: doors(SITE.tree),
     apps: list,

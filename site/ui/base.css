@@ -20,6 +20,7 @@ h3 { font-size: var(--t5); }
 .lead { color: var(--dim); max-width: var(--read); margin-top: var(--s2); }
 .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 .mono { font-family: var(--mono); }
+math { font-family: var(--math); }
 .dim { color: var(--dim); }
 .fine { color: var(--dim); font-size: var(--t3); }
 

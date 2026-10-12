@@ -51,9 +51,9 @@ request /about/
 - `site:routes`: `{ site, rows }`.
 - `site:pages`: kind to page chunk, from `ui/pages/*.jsx`.
 - `site:figures`: name to figure chunk, plus the wasm urls of the live units.
-- `site:apps`: id to app chunk, plus `lock`, the lock screen.
+- `site:apps`: id to app chunk, plus `lock`, the desk and its lock screen.
 - `site:css`: the `git` and `mrly` sheet urls.
-- `apps:scenes`: the saver scenes, for the lock screen.
+- `apps:scenes`: the saver scenes in `apps.json` order, for the desk.
 - `mrlyjs/<door>` resolves through the exports of `pkgs/mrlyjs/package.json`; `pkg/<unit>/mrlyjs_<unit>*` resolves to `site/pkg/`.
 
 ## WASM
@@ -101,12 +101,16 @@ request /about/
 - The `shots` block in `site.json` names the default routes and sizes; `kit/README.md` has the flags.
 - `bun run film <scene.js> --name <n>` plays one app scene into a contact sheet, or a video with `--video`, under `data/mrlyprod/site/scripts/film/<name>/`.
 
-## FONTS
+## FONTS AND ICONS
 
-- `bun run vendor` writes `ui/fonts/` from the `fonts` block in `site.json`: the Google faces, then `ui/fonts/keep.css` (MrlyFont, Noto Sans Symbols 2) verbatim.
-- `bun run symbols` cuts Noto Sans Symbols 2 to the glyphs the routes, their sources and the browser code print.
-- `ui/fonts.test.ts` checks that a shipped face draws every such glyph.
-- Material Symbols by Google, Apache 2.0: eight paths vendored 2026-10-08 and 2026-10-09 into `lib/icons.js`, plus `sound`, `music` and `wave` drawn there on the same grid.
+- Fonts: Noto Sans, Serif, Mono, Math and Color Emoji, named in the `fonts` block of `site.json`.
+- `bun run vendor` downloads every slice Google serves for each face into `ui/fonts/`, each with its `unicode-range`; a browser fetches only the slices a page prints.
+- `ui/fonts/keep.css` (MrlyFont) is appended to `fonts.css` verbatim.
+- `<math>` (KaTeX writes MathML only) draws in Noto Sans Math through `--math`.
+- `ui/fonts.test.ts` checks that a shipped face draws every character the routes, their sources and the browser code print.
+- Icons: Material Symbols by Google, Apache 2.0; `icons.json` lists the names we use, the one source of truth.
+- `bun run vendor` downloads each one's outlined 24px SVG from `google/material-design-icons` and writes `lib/icons.js`; draw one with `<Icon name="close" />`.
+- To add an icon: add its Material name to `icons.json`, run `bun run vendor`.
 
 ## PUBLIC
 

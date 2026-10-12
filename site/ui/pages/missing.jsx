@@ -1,7 +1,8 @@
 import { hide, show } from '../parts.jsx';
 
-export function render(row, site, host) {
-  const doors = site.heroes.map((one) => <a key={one.href} href={one.href}>{one.name}</a>);
+export function render(row, site, host, { rows }) {
+  const open = new Set(rows.filter((one) => !one.hidden).map((one) => one.route));
+  const doors = site.tree.filter((one) => one.href !== '/' && open.has(one.href)).map((one) => <a key={one.href} href={one.href}>{one.name}</a>);
   const list = doors.flatMap((one, n) => (n === 0 ? [one] : [n === doors.length - 1 ? ' and ' : ', ', one]));
   show(
     host,

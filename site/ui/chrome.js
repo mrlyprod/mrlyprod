@@ -196,7 +196,10 @@ function contents(nav) {
 function screen(next) {
   write(KEY.saver, next);
   const head = next.split('?')[0];
-  for (const pick of document.querySelectorAll('[data-saver-pick]')) pick.value = [...pick.options].some((one) => one.value === head) ? head : 'random';
+  for (const pick of document.querySelectorAll('[data-saver-pick]')) {
+    const known = [...pick.options].some((one) => one.value === head);
+    pick.value = known ? head : head ? 'random' : ([...pick.options].find((one) => one.defaultSelected)?.value ?? 'random');
+  }
 }
 
 /* NAME */
@@ -320,6 +323,7 @@ function calm() {
 
 function settle() {
   unlock();
+  shown?.stop?.coast?.(SETTLE);
   const top = Math.max(0, scrollY - (hall()?.offsetHeight ?? 0));
   write(KEY.welcome, '1');
   root().dataset.welcome = 'shut';
@@ -335,8 +339,8 @@ function enter() {
   const mine = shown;
   const go = () => {
     if (shown !== mine || playing || greeting() !== 'open') return;
-    clearTimeout(nap);
-    delete root().dataset.lock;
+    unlock();
+    mine?.stop?.coast?.(SETTLE);
     const h = hall()?.offsetHeight ?? 0;
     if (!h || scrollY >= h) return settle();
     const from = scrollY / h;
@@ -351,6 +355,8 @@ function greet() {
   const at = scrollY;
   playing = true;
   asked = false;
+  clearTimeout(later);
+  shown?.stop?.play?.();
   root().dataset.welcome = 'open';
   listen();
   jump(at + hall().offsetHeight);
@@ -442,60 +448,83 @@ async function arrive(mark) {
   owed = false;
   if (!rolls()) return;
   root().dataset.welcome = read(KEY.welcome) || matchMedia(STILL).matches ? 'shut' : 'open';
-  if (greeting() === 'open') listen();
+  if (greeting() === 'open') {
+    listen();
+    lid();
+  }
   if (due) greet();
 }
 
 function depart(mark) {
   owed = false;
-  unlock();
+  close();
   delete root().dataset.welcome;
   unlisten();
   mark.style.removeProperty('--cols');
   mark.querySelector('svg')?.setAttribute('class', 'glyphs');
 }
 
-/* LOCK */
+/* DESK */
 
 const IDLE = 3000;
 const TWICE = 400;
+const HOLD = 3000;
+const SETTLE = 3000;
 
 let shown = null;
+let pinned = null;
 let nap = 0;
+let later = 0;
 
-async function lid() {
-  const pick = read(KEY.saver);
-  if (!pick || shown || greeting() !== 'open') return;
+async function desk() {
+  if (shown) return;
   const box = document.createElement('div');
-  box.className = 'lock';
+  box.className = 'desk';
   box.setAttribute('aria-hidden', 'true');
   box.append(document.createElement('canvas'));
   const mine = { box, stop: null };
   shown = mine;
   document.body.append(box);
-  const stop = await saver().then(({ lock }) => lock(box.firstChild, pick)).catch(() => null);
-  if (stop && stop.pick !== pick) screen(stop.pick);
-  if (stop && shown === mine && !playing && greeting() === 'open') {
-    mine.stop = stop;
-    root().dataset.lock = 'rest';
-    return;
-  }
-  stop?.();
-  if (shown === mine) unlock();
+  const want = read(KEY.saver);
+  const use = pinned?.pick === want ? pinned.as : want;
+  const stop = await saver().then(({ lock }) => lock(box.firstChild, use)).catch(() => null);
+  if (shown !== mine) return stop?.();
+  if (!stop) return close();
+  if (use === want && stop.pick !== want) screen(stop.pick);
+  pinned = { pick: read(KEY.saver), as: stop.as };
+  mine.stop = stop;
+  box.classList.add('on');
+  if (greeting() === 'open') return lid();
+  later = setTimeout(() => stop.coast?.(SETTLE), HOLD);
 }
 
-function stir(e) {
-  if (!root().dataset.lock || e.pointerType === 'touch') return;
+function lid() {
+  if (!shown?.stop || playing || greeting() !== 'open') return;
   root().dataset.lock = 'wake';
+  doze();
+}
+
+function doze() {
   clearTimeout(nap);
   nap = setTimeout(() => {
     if (root().dataset.lock) root().dataset.lock = 'rest';
   }, IDLE);
 }
 
+function stir(e) {
+  if (!root().dataset.lock || e.pointerType === 'touch') return;
+  root().dataset.lock = 'wake';
+  doze();
+}
+
 function unlock() {
   clearTimeout(nap);
   delete root().dataset.lock;
+}
+
+function close() {
+  unlock();
+  clearTimeout(later);
   shown?.stop?.();
   shown?.box.remove();
   shown = null;
@@ -592,6 +621,10 @@ function wire(event) {
     knock(mark);
   });
   if (greeting() === 'open') listen();
+  if (route === '/') {
+    root().dataset.desk = '';
+    desk();
+  } else delete root().dataset.desk;
   rename();
 }
 

@@ -171,11 +171,11 @@ function App({ Widget, defaults, spec, keys, actions, gestures, record, id, titl
     <Frame label={title} gestures={gestures}>
       <Widget value={value} onChange={onChange} onReady={ready} onExport={setMore} />
       <Btn className="icon unzen" aria-label="Leave zen" onClick={acts.zen}>
-        <Icon name="unzen" />
+        <Icon name="fullscreen_exit" />
       </Btn>
       <Bar side="top">
         <Btn className="icon" aria-label="Zen" onClick={acts.zen}>
-          <Icon name="zen" />
+          <Icon name="fullscreen" />
         </Btn>
       </Bar>
       {spec && (
@@ -184,7 +184,7 @@ function App({ Widget, defaults, spec, keys, actions, gestures, record, id, titl
           <Group name="Seed">
             <Knob row={{ ...SEED, def: value.seed }} value={value.seed} onChange={onChange} />
             <Btn onClick={acts.reroll}>
-              <Icon name="reroll" />
+              <Icon name="casino" />
               Reroll
             </Btn>
           </Group>

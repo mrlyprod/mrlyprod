@@ -21,6 +21,7 @@ function exits(scene) {
     clearTimeout(cap);
     const then = go;
     go = null;
+    left = false;
     then?.();
   };
   const fall = () => {
@@ -47,10 +48,7 @@ function exits(scene) {
   const leave = (then) => {
     if (left) return;
     go = then;
-    if (typeof matchMedia === 'function' && matchMedia(STILL).matches) {
-      left = true;
-      return done();
-    }
+    if (typeof matchMedia === 'function' && matchMedia(STILL).matches) return done();
     if (scene.hold) stay();
     else fall();
   };
@@ -69,17 +67,18 @@ export async function lock(canvas, pick = '') {
   const head = at < 0 ? pick : pick.slice(0, at);
   const known = Object.hasOwn(scenes, head);
   const kept = known || !head ? pick : RANDOM;
-  const id = known ? head : kept && ids.length ? ids[Math.floor(Math.random() * ids.length)] : '';
-  if (!id) return Object.assign(() => {}, { pick: kept });
+  const id = known ? head : kept ? ids[Math.floor(Math.random() * ids.length)] : ids[0];
+  if (!id) return Object.assign(() => {}, { pick: kept, as: '' });
+  const value = { seed: Math.floor(Math.random() * 4294967296), ...(known && at >= 0 ? parse(pick.slice(at + 1)) : {}) };
   const scene = await scenes[id]();
   const held = scene.units ? await scene.units() : {};
   await held.ready;
   const { ready, ...units } = held;
-  const stop = run(canvas, scene.make, { ...(known && at >= 0 ? parse(pick.slice(at + 1)) : {}), ...units });
+  const stop = run(canvas, scene.make, { ...value, ...units });
   const { leave, end } = exits(stop.scene);
   const close = () => {
     end();
     stop();
   };
-  return Object.assign(close, stop, { pick: kept, leave });
+  return Object.assign(close, stop, { pick: kept, as: `${id}?${new URLSearchParams(value)}`, leave });
 }

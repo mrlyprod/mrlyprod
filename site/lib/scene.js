@@ -83,6 +83,8 @@ export function run(canvas, make, opts = {}) {
   let late = 0;
   let debt = 0;
   let lent = false;
+  let fall = null;
+  let owed = 0;
   const view = { rand, look: () => skin, still, w: 1, h: 1, dpr: 1, t: 0, fixed: false };
   const size = () => {
     const shot = held?.frame;
@@ -119,20 +121,36 @@ export function run(canvas, make, opts = {}) {
     }
     after();
   };
+  const rate = (now) => {
+    if (!fall) return 1;
+    const k = (now - fall.from) / fall.span;
+    if (k < 1) return (1 - k) ** 2;
+    fall = null;
+    paused = true;
+    return 0;
+  };
   const loop = (now) => {
+    frame = 0;
+    const r = rate(now);
     if (held?.step) paced(now, held.step);
     else {
-      if (last) view.t += Math.min(now - last, LAG);
+      if (last) view.t += Math.min(now - last, LAG) * r;
       last = now;
       saver.draw();
       after();
     }
+    if (paused) return halt();
     frame = requestAnimationFrame(loop);
   };
   const tick = () => {
-    view.t += saver.every;
-    saver.draw();
-    after();
+    owed += rate(performance.now());
+    if (owed >= 1) {
+      owed -= 1;
+      view.t += saver.every;
+      saver.draw();
+      after();
+    }
+    if (paused) halt();
   };
   const go = () => {
     if (still || paused || timer || frame) return;
@@ -199,7 +217,13 @@ export function run(canvas, make, opts = {}) {
   };
   stop.play = () => {
     paused = false;
+    fall = null;
+    owed = 0;
     if (on && !gone) watch();
+  };
+  stop.coast = (span) => {
+    if (gone || still || paused || fall) return;
+    fall = { from: performance.now(), span };
   };
   stop.fix = (next) => {
     if (gone) return;
